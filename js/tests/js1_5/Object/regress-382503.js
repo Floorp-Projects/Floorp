@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-383503.js';
+var gTestfile = 'regress-382503.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 382503;
 var summary = 'Do not assert: with prototype=regexp';

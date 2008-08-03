@@ -257,13 +257,6 @@ int16	NPP_HandleEvent(NPP instance, void* event)
   return rv;
 }
 
-#ifdef OJI
-jref NPP_GetJavaClass (void)
-{
-  return NULL;
-}
-#endif
-
 /**************************************************/
 /*                                                */
 /*                     Mac                        */
@@ -336,11 +329,6 @@ void Private_Print(NPP instance, NPPrint* platformPrint)
 void Private_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 {
   NPP_URLNotify(instance, url, reason, notifyData);
-}
-
-jref Private_GetJavaClass(void)
-{
-  return NULL;
 }
 
 NPError Private_GetValue(NPP instance, NPPVariable variable, void *result)

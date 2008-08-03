@@ -265,6 +265,7 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mUnicodeBidi;  // NEW
   nsCSSValue mLineHeight;
   nsCSSValue mWhiteSpace;
+  nsCSSValue mWordWrap;
 private:
   nsCSSText(const nsCSSText& aOther); // NOT IMPLEMENTED
 };
@@ -354,6 +355,8 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSValue  mOutlineOffset;
   nsCSSRect   mOutlineRadius; // (extension)
   nsCSSValue  mFloatEdge; // NEW
+  nsCSSValue  mBorderImage;
+  nsCSSValueList* mBoxShadow;
 private:
   nsCSSMargin(const nsCSSMargin& aOther); // NOT IMPLEMENTED
 };
@@ -548,6 +551,7 @@ struct nsCSSXUL : public nsCSSStruct  {
   nsCSSValue  mBoxOrient;
   nsCSSValue  mBoxPack;
   nsCSSValue  mBoxOrdinal;
+  nsCSSValue  mStackSizing;
 private:
   nsCSSXUL(const nsCSSXUL& aOther); // NOT IMPLEMENTED
 };
@@ -565,6 +569,9 @@ struct nsCSSColumn : public nsCSSStruct  {
   nsCSSValue  mColumnCount;
   nsCSSValue  mColumnWidth;
   nsCSSValue  mColumnGap;
+  nsCSSValue  mColumnRuleColor;
+  nsCSSValue  mColumnRuleWidth;
+  nsCSSValue  mColumnRuleStyle;
 private:
   nsCSSColumn(const nsCSSColumn& aOther); // NOT IMPLEMENTED
 };

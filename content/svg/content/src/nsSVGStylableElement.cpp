@@ -38,7 +38,6 @@
 
 #include "nsSVGStylableElement.h"
 #include "nsICSSOMFactory.h"
-#include "nsSVGAnimatedString.h"
 #include "nsGkAtoms.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsIDOMClassInfo.h"

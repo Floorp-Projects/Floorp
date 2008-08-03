@@ -293,6 +293,16 @@ nsIWidget* nsBaseWidget::GetParent(void)
 
 //-------------------------------------------------------------------------
 //
+// Get this nsBaseWidget's top (non-sheet) parent (if it's a sheet)
+//
+//-------------------------------------------------------------------------
+nsIWidget* nsBaseWidget::GetSheetWindowParent(void)
+{
+  return nsnull;
+}
+
+//-------------------------------------------------------------------------
+//
 // Add a child to the list of children
 //
 //-------------------------------------------------------------------------
@@ -847,7 +857,7 @@ nsBaseWidget::EndSecureKeyboardInput()
 }
 
 NS_IMETHODIMP
-nsBaseWidget::SetWindowTitlebarColor(nscolor aColor)
+nsBaseWidget::SetWindowTitlebarColor(nscolor aColor, PRBool aActive)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

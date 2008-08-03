@@ -122,6 +122,7 @@ public:
   static const PRInt32 kBackgroundRepeatKTable[];
   static const PRInt32 kBorderCollapseKTable[];
   static const PRInt32 kBorderColorKTable[];
+  static const PRInt32 kBorderImageKTable[];
   static const PRInt32 kBorderStyleKTable[];
   static const PRInt32 kBorderWidthKTable[];
   static const PRInt32 kBoxAlignKTable[];
@@ -177,6 +178,7 @@ public:
   static const PRInt32 kSpeakNumeralKTable[];
   static const PRInt32 kSpeakPunctuationKTable[];
   static const PRInt32 kSpeechRateKTable[];
+  static const PRInt32 kStackSizingKTable[];
   static const PRInt32 kTableLayoutKTable[];
   static const PRInt32 kTextAlignKTable[];
   static const PRInt32 kTextDecorationKTable[];
@@ -191,6 +193,7 @@ public:
   static const PRInt32 kVolumeKTable[];
   static const PRInt32 kWhitespaceKTable[];
   static const PRInt32 kWidthKTable[]; // also min-width, max-width
+  static const PRInt32 kWordwrapKTable[];
 };
 
 #endif /* nsCSSProps_h___ */

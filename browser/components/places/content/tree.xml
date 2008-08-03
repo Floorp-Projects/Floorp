@@ -585,7 +585,14 @@
       -->
       <method name="selectItems">
         <parameter name="aIDs"/>
+        <parameter name="aOpenContainers"/>
         <body><![CDATA[
+          // By default, we do search and select within containers which were
+          // closed (note that containers in which nodes were not found are
+          // closed).
+          if (aOpenContainers === undefined)
+            aOpenContainers = true;
+
           var ids = aIDs; // don't manipulate the caller's array
 
           // Array of nodes found by findNodes which are to be selected
@@ -625,8 +632,11 @@
                 nodesURIChecked.indexOf(node.uri) != -1)
               return foundOne;
 
-            nodesURIChecked.push(node.uri);
             asContainer(node);
+            if (!aOpenContainers && !node.containerOpen)
+              return foundOne;
+
+            nodesURIChecked.push(node.uri);
 
             // Remember the beginning state so that we can re-close
             // this node if we don't find any additional results here.
@@ -653,11 +663,13 @@
           // index in the tree.
           var resultview = this.getResultView();
           var selection = this.view.selection;
+          selection.selectEventsSuppressed = true;
           selection.clearSelection();
           for (var i=0; i < nodes.length; i++) {
             var index = resultview.treeIndexForNode(nodes[i]);
             selection.rangedSelect(index, index, true);
           }
+          selection.selectEventsSuppressed = false;
         ]]></body>
       </method>
 

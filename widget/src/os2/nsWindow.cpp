@@ -2230,6 +2230,21 @@ BOOL nsWindow::NotifyForeignChildWindows(HWND aWnd)
 
 //-------------------------------------------------------------------------
 //
+// Force a resize of child windows after a scroll to reset hover positions.
+//
+//-------------------------------------------------------------------------
+void nsWindow::ScrollChildWindows(PRInt32 aX, PRInt32 aY)
+{
+  nsIWidget *child = GetFirstChild();
+  while (child) {
+    nsRect rect;
+    child->GetBounds(rect);
+    child->Resize(rect.x + aX, rect.y + aY, rect.width, rect.height, PR_FALSE);
+    child = child->GetNextSibling();
+  }
+}
+//-------------------------------------------------------------------------
+//
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
@@ -2244,19 +2259,20 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     rcl.yBottom = aClipRect->y + aClipRect->height;
     rcl.xRight = rcl.xLeft + aClipRect->width;
     rcl.yTop = rcl.yBottom + aClipRect->height;
-    NS2PM( rcl);
+    NS2PM(rcl);
     // this rect is inex
   }
 
-    // this prevents screen corruption while scrolling during a
-    // Moz-originated drag - during a native drag, the screen
-    // isn't updated until the drag ends. so there's no corruption
+  // this prevents screen corruption while scrolling during a
+  // Moz-originated drag - during a native drag, the screen
+  // isn't updated until the drag ends. so there's no corruption
   HPS hps = 0;
   CheckDragStatus(ACTION_SCROLL, &hps);
 
   NotifyForeignChildWindows(mWnd);
-  WinScrollWindow( mWnd, aDx, -aDy, aClipRect ? &rcl : 0, 0, 0,
-                   0, SW_SCROLLCHILDREN | SW_INVALIDATERGN);
+  WinScrollWindow(mWnd, aDx, -aDy, aClipRect ? &rcl : 0, 0, 0,
+                  0, SW_SCROLLCHILDREN | SW_INVALIDATERGN);
+  ScrollChildWindows(aDx, aDy);
   Update();
 
   if (hps)
@@ -2753,10 +2769,14 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
         case WM_BUTTON3DOWN:
+          if (!mIsScrollBar)
+            WinSetCapture( HWND_DESKTOP, mWnd);
           result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, mp1, mp2, PR_FALSE,
                                       nsMouseEvent::eMiddleButton);
           break;
         case WM_BUTTON3UP:
+          if (!mIsScrollBar)
+            WinSetCapture( HWND_DESKTOP, 0); // release
           result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, mp1, mp2, PR_FALSE,
                                       nsMouseEvent::eMiddleButton);
           break;
@@ -3580,9 +3600,9 @@ nsWindow::GetLastInputEventTime(PRUint32& aTime)
    ULONG ulStatus = WinQueryQueueStatus(HWND_DESKTOP);
 
    // If there is pending input then return the current time.
-   if (ulStatus && (QS_KEY | QS_MOUSE | QS_MOUSEBUTTON | QS_MOUSEMOVE)) {
+   if (ulStatus & (QS_KEY | QS_MOUSE)) {
      gLastInputEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
-   } 
+   }
 
    aTime = gLastInputEventTime;
 

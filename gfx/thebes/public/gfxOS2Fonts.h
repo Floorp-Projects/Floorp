@@ -69,6 +69,9 @@ public:
         return mSpaceGlyph;
     }
 
+    static already_AddRefed<gfxOS2Font> GetOrMakeFont(const nsAString& aName,
+                                                      const gfxFontStyle *aStyle);
+
 protected:
     gfxMatrix mCTM;
     virtual PRBool SetupCairoFont(gfxContext *aContext);
@@ -79,6 +82,8 @@ private:
     Metrics *mMetrics;
     gfxFloat mAdjustedSize;
     PRUint32 mSpaceGlyph;
+    int mHinting;
+    PRBool mAntialias;
 };
 
 

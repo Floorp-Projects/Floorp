@@ -97,13 +97,6 @@ pref("editor.toolbars.showbutton.absolutePosition", true);
 pref("editor.toolbars.showbutton.decreaseZIndex", true);
 pref("editor.toolbars.showbutton.increaseZIndex", true);
 
-pref("editor.auto_save",                    false);
-pref("editor.auto_save_delay",              10);    // minutes
-pref("editor.use_html_editor",              0);
-pref("editor.html_editor",                  "");
-pref("editor.use_image_editor",             0);
-pref("editor.image_editor",                 "");
-
 pref("editor.history.url_maximum", 10);
 
 pref("editor.publish.",                      "");
@@ -136,3 +129,10 @@ pref("editor.dont_lock_spell_files", true);
 #endif
 
 pref("editor.CR_creates_new_p",      false);
+
+// Pasting images from the clipboard, order of encoding preference: 
+// JPEG-PNG-GIF=0, PNG-JPEG-GIF=1, GIF-JPEG-PNG=2
+pref("clipboard.paste_image_type", 1);
+#ifdef XP_WIN
+pref("clipboard.paste_image_quality", 92); // for JPEG on Windows only
+#endif

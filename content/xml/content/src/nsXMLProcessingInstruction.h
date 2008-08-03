@@ -85,7 +85,7 @@ protected:
    */
   PRBool GetAttrValue(nsIAtom *aName, nsAString& aValue);
 
-  nsAutoString mTarget;
+  nsString mTarget;
 };
 
 #endif //nsIXMLProcessingInstruction_h___

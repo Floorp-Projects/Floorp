@@ -145,6 +145,16 @@ nsAttrAndChildArray::GetSafeChildAt(PRUint32 aPos) const
   return nsnull;
 }
 
+nsIContent * const *
+nsAttrAndChildArray::GetChildArray() const
+{
+  if (!mImpl) {
+    return nsnull;
+  }
+  
+  return reinterpret_cast<nsIContent**>(mImpl->mBuffer + AttrSlotsSize());
+}
+
 nsresult
 nsAttrAndChildArray::InsertChildAt(nsIContent* aChild, PRUint32 aPos)
 {

@@ -148,4 +148,9 @@ new TestCase( SECTION,
 	      Math.PI/360,
 	      Math.acos(0.9999619230642));
 
+new TestCase( SECTION,
+	      "Math.acos(-3.0)",
+	      Number.NaN,
+	      Math.acos(-3.0));
+
 test();

@@ -762,14 +762,26 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
 {
   LOG(("OBJLC [%p]: Got frame %p (mInstantiating=%i)\n", this, aFrame,
        mInstantiating));
-  if (!mInstantiating && aFrame && mType == eType_Plugin) {
+
+  // "revoke" any existing instantiate event as it likely has out of
+  // date data (frame pointer etc).
+  mPendingInstantiateEvent = nsnull;
+
+  nsCOMPtr<nsIPluginInstance> instance;
+  aFrame->GetPluginInstance(*getter_AddRefs(instance));
+
+  if (instance) {
+    // The frame already has a plugin instance, that means the plugin
+    // has already been instantiated.
+
+    return NS_OK;
+  }
+
+  if (!mInstantiating && mType == eType_Plugin) {
     // Asynchronously call Instantiate
     // This can go away once plugin loading moves to content
     // This must be done asynchronously to ensure that the frame is correctly
     // initialized (has a view etc)
-
-    // "revoke" any existing instantiate event.
-    mPendingInstantiateEvent = nsnull;
 
     // When in a plugin document, the document will take care of calling
     // instantiate
@@ -1075,11 +1087,8 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
 
   nsCAutoString overrideType;
   if ((caps & eOverrideServerType) &&
-      (!aTypeHint.IsEmpty() ||
+      ((!aTypeHint.IsEmpty() && IsSupportedPlugin(aTypeHint)) ||
        (aURI && IsPluginEnabledByExtension(aURI, overrideType)))) {
-    NS_ASSERTION(aTypeHint.IsEmpty() ^ overrideType.IsEmpty(),
-                 "Exactly one of aTypeHint and overrideType should be empty!");
-
     ObjectType newType;
     if (overrideType.IsEmpty()) {
       newType = GetTypeOfContent(aTypeHint);
@@ -1669,6 +1678,15 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
 {
   NS_ASSERTION(aFrame, "Must have a frame here");
 
+  // We're instantiating now, invalidate any pending async instantiate
+  // calls.
+  mPendingInstantiateEvent = nsnull;
+
+  // Mark that we're instantiating now so that we don't end up
+  // re-entering instantiation code.
+  PRBool oldInstantiatingValue = mInstantiating;
+  mInstantiating = PR_TRUE;
+
   nsCString typeToUse(aMIMEType);
   if (typeToUse.IsEmpty() && aURI) {
     IsPluginEnabledByExtension(aURI, typeToUse);
@@ -1690,7 +1708,11 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
   NS_ASSERTION(aURI || !typeToUse.IsEmpty(), "Need a URI or a type");
   LOG(("OBJLC [%p]: Calling [%p]->Instantiate(<%s>, %p)\n", this, aFrame,
        typeToUse.get(), aURI));
-  return aFrame->Instantiate(typeToUse.get(), aURI);
+  nsresult rv = aFrame->Instantiate(typeToUse.get(), aURI);
+
+  mInstantiating = oldInstantiatingValue;
+
+  return rv;
 }
 
 nsresult

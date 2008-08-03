@@ -143,6 +143,8 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
   { "ui.IMEUnderlineRelativeSize", eMetricFloat_IMEUnderlineRelativeSize,
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
+  { "ui.caretAspectRatio", eMetricFloat_CaretAspectRatio, PR_FALSE,
+    nsLookAndFeelTypeFloat, 0 },
 };
 
 
@@ -168,6 +170,7 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.textSelectForeground",
   "ui.textSelectBackgroundDisabled",
   "ui.textSelectBackgroundAttention",
+  "ui.textHighlightBackground",
   "ui.IMERawInputBackground",
   "ui.IMERawInputForeground",
   "ui.IMERawInputUnderline",
@@ -240,7 +243,8 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-mac-alternateprimaryhighlight",
   "ui.-moz-mac-secondaryhighlight",
   "ui.-moz-win-mediatext",
-  "ui.-moz-win-communicationstext"
+  "ui.-moz-win-communicationstext",
+  "ui.-moz-nativehyperlinktext"
 };
 
 PRInt32 nsXPLookAndFeel::sCachedColors[nsILookAndFeel::eColor_LAST_COLOR] = {0};
@@ -579,6 +583,13 @@ nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     // This makes the selection stand out when typeaheadfind is on
     // Used with nsISelectionController::SELECTION_ATTENTION
     aColor = NS_RGB(0x38, 0xd8, 0x78);
+    return NS_OK;
+  }
+
+  if (aID == eColor_TextHighlightBackground) {
+    // This makes the matched text stand out when findbar highlighting is on
+    // Used with nsISelectionController::SELECTION_FIND
+    aColor = NS_RGB(0xf0, 0xe0, 0x20);
     return NS_OK;
   }
 

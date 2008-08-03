@@ -204,8 +204,7 @@ nsCommonWidget::Show(PRBool aState)
 NS_IMETHODIMP
 nsCommonWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-    mBounds.width = aWidth;
-    mBounds.height = aHeight;
+    mBounds.SizeTo(GetSafeWindowSize(nsSize(aWidth, aHeight)));
 
     if (!mCreated)
         return NS_OK;
@@ -278,8 +277,7 @@ nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 {
     mBounds.x = aX;
     mBounds.y = aY;
-    mBounds.width = aWidth;
-    mBounds.height = aHeight;
+    mBounds.SizeTo(GetSafeWindowSize(nsSize(aWidth, aHeight)));
 
     mPlaced = PR_TRUE;
 

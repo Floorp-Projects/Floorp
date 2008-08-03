@@ -24,7 +24,7 @@
  *   Pierre Chanial (chanial@noos.fr)
  *   Kevin Gerich (kevin@kmgerich.com)
  *   Pamela Greene (pamg.bugs@gmail.com)
- *   Dao Gottwald (dao@design-noir.de)
+ *   Dão Gottwald (dao@mozilla.com)
  *   Stephen Horlander (stephen@noved.org)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -45,14 +45,67 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
+@namespace svg url("http://www.w3.org/2000/svg");
 
 #main-window {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
-  -moz-appearance: none;
 }
 
 #main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
   border-top: 1px solid rgba(0,0,0,0.65);
+  -moz-appearance: none;
+  background-color: #eeeeee;
+}
+
+/* ----- INACTIVE WINDOW ----- */
+
+#main-window:not([active="true"]) > #navigator-toolbox > toolbar {
+  border-top-color: rgba(255,255,255,0.45);
+  border-bottom-color: rgba(0,0,0,0.35);
+  background-color: #cfcfcf;
+}
+
+#main-window:not([active="true"]) > #navigator-toolbox > #nav-bar {
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
+}
+
+#main-window:not([active="true"]) > #navigator-toolbox > #PersonalToolbar {
+  background-image: url("chrome://browser/skin/bookmark_toolbar_background-inactive.png");
+}
+
+#main-window:not([active="true"]) > #navigator-toolbox > toolbar > toolbaritem,
+#main-window:not([active="true"]) > #navigator-toolbox > toolbar > toolbarbutton,
+#main-window:not([active="true"]) > #browser-bottombox {
+  opacity: 0.75;
+}
+
+#main-window:not([active="true"]) > #browser > vbox > #sidebar,
+#main-window:not([active="true"]) > #browser > vbox > sidebarheader { 
+  background-color: #e8e8e8;
+}
+
+#main-window:not([active="true"]) .tabbrowser-strip {
+  background-color: #cfcfcf;
+}
+
+#main-window:not([active="true"]) .tabbrowser-tab {
+  color: #575757;
+}
+
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-middle,
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-closebutton,
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-close-button {
+  background-image: url("chrome://browser/skin/tabbrowser/tab-middle-inactive.png");
+}
+
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-left,
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"][chromedir="rtl"] > .tab-image-right {
+  background: url("chrome://browser/skin/tabbrowser/tab-left-inactive.png") no-repeat;
+}
+
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-right,
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"][chromedir="rtl"] > .tab-image-left {
+  background: url("chrome://browser/skin/tabbrowser/tab-right-inactive.png") no-repeat;
 }
 
 /* ----- SEARCH FIELD ----- */
@@ -225,7 +278,7 @@ toolbarbutton.bookmark-item .toolbarbutton-text {
 }
 
 .bookmark-item[query][dayContainer] {
-  list-style-image: url("chrome://global/skin/tree/folder.png");
+  list-style-image: url("chrome://browser/skin/places/history.png");
 }
 
 .bookmark-item[query][hostContainer] {
@@ -279,6 +332,20 @@ toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
 
 #bookmarksToolbarFolderMenu {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");  
+}
+
+/* ----- BOOKMARK PANEL DROPDOWN MENU ITEMS ----- */	
+
+#editBMPanel_toolbarFolderItem {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;  
+}
+
+#editBMPanel_bmRootItem {
+  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;  
+}
+
+#editBMPanel_unfiledRootItem {
+  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.png") !important;  
 }
 
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */	
@@ -795,7 +862,7 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
   border: none;
   background: url("chrome://browser/skin/urlbar/endcap.png") transparent right center no-repeat;
   margin: 0px 4px 1px 4px;
-  -moz-padding-end: 8px;
+  -moz-padding-end: 10px;
   font: icon !important;
   width: 7em;
   min-width: 7em;
@@ -870,7 +937,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 
 /* ----- PAGE PROXY ICON ----- */
 
-#page-proxy-stack,
 #page-proxy-favicon,
 #urlbar-throbber {
   width: 16px;
@@ -880,7 +946,10 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 
 #page-proxy-stack {
-  -moz-margin-start: 11px;
+  -moz-margin-start: 9px;
+  width: 24px;
+  height: 20px;
+  padding: 2px 4px;
   opacity: 1.0;
 }
 
@@ -924,6 +993,13 @@ statusbarpanel#statusbar-display {
   height: 16px;
 }
 
+.ac-result-type-keyword,
+.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
+  list-style-image: url(chrome://global/skin/icons/search-textbox.png);
+  width: 16px;
+  height: 16px;
+}
+
 richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
@@ -946,7 +1022,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 }
 
 .ac-url-text {
-  color: #144fae;
+  color: -moz-nativehyperlinktext;
   font-size: 0.95em;
 }
 
@@ -1380,6 +1456,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 
 /* ----- SIDEBAR ELEMENTS ----- */
 
+#sidebar,
 sidebarheader { 
   background-color: #d4dde5;
   padding: 2px;
@@ -1567,12 +1644,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tab-text {
-  font: message-box;
   margin-top: 0 !important;
 }
 
 .tab-text,
 .tab-text-shadow {
+  font: message-box;
   font-weight: bold !important;
 }
 
@@ -1950,7 +2027,7 @@ tabpanels.plain {
 
 #identity-box {
   background: url("chrome://browser/skin/urlbar/startcap.png") left center no-repeat;
-  min-width: 42px;
+  min-width: 44px;
 }
 
 #urlbar[focused="true"] > #identity-box {
@@ -1962,7 +2039,7 @@ tabpanels.plain {
   -moz-outline-radius: 2px;
 }
 
-#identity-box:active,
+#identity-box:hover:active,
 #identity-box[open="true"] {
   background-image: url("chrome://browser/skin/urlbar/startcap-active.png");
 }
@@ -1972,72 +2049,117 @@ tabpanels.plain {
   color: black;
   padding: 2px 6px 3px;
   -moz-padding-end: 14px;
+}
+
+#identity-box.unknownIdentity > hbox > #identity-icon-label {
+  display: none;
+}
+
+
+/* Verified domain */
+/* - Normal state */
+#identity-box.verifiedDomain {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start.png");
+  -moz-padding-start: 12px;
+}
+
+#identity-box.verifiedDomain > hbox {
+  padding: 0;
+  background: url("chrome://browser/skin/urlbar/startcap-secure-mid.png") repeat-x center center;
+  -moz-box-pack: center;
+}
+
+#identity-box.verifiedDomain > hbox > #identity-icon-label {
   background: url("chrome://browser/skin/urlbar/startcap-secure-end.png") no-repeat center right;
 }
 
-#urlbar[focused="true"] > #identity-box > hbox > #identity-icon-label {
+/* - Active state */
+#identity-box.verifiedDomain:hover:active {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-active.png");
+}
+
+#identity-box.verifiedDomain:hover:active > hbox {
+  padding: 0;
+  background: url("chrome://browser/skin/urlbar/startcap-secure-mid-active.png") repeat-x center center;
+  -moz-box-pack: center;
+}
+
+#identity-box.verifiedDomain:hover:active > hbox > #identity-icon-label {
+  background: url("chrome://browser/skin/urlbar/startcap-secure-end-active.png") no-repeat center right;
+}
+
+/* - Focus state */
+#urlbar[focused="true"] > #identity-box.verifiedDomain {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-focused.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedDomain > hbox {
+  background-image: url("chrome://browser/skin/urlbar/startcap-secure-mid-focused.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedDomain > hbox > #identity-icon-label {
   background-image: url("chrome://browser/skin/urlbar/startcap-secure-end-focused.png");
+}
+
+#identity-box.verifiedDomain > hbox > #identity-icon-label[value=""] {
+  -moz-padding-start: 3px !important;
+  -moz-padding-end: 8px !important;
+}
+
+
+/* Verified Identity */
+/* - Normal state */
+#identity-box.verifiedIdentity {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start.png");
+  -moz-padding-start: 12px;
+}
+
+#identity-box.verifiedIdentity > hbox {
+  padding: 0;
+  background: url("chrome://browser/skin/urlbar/startcap-verified-mid.png") repeat-x center center;
+  -moz-box-pack: center;
 }
 
 #identity-box.verifiedIdentity > hbox > #identity-icon-label {
   background: url("chrome://browser/skin/urlbar/startcap-verified-end.png") no-repeat center right;
 }
 
+/* - Active state */
+#identity-box.verifiedIdentity:hover:active {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-active.png");
+}
+
+#identity-box.verifiedIdentity:hover:active > hbox {
+  background: url("chrome://browser/skin/urlbar/startcap-verified-mid-active.png") repeat-x center center;
+}
+
+#identity-box.verifiedIdentity:hover:active > hbox > #identity-icon-label {
+  background: url("chrome://browser/skin/urlbar/startcap-verified-end-active.png") no-repeat center right;
+}
+
+/* - Focus state */
+#urlbar[focused="true"] > #identity-box.verifiedIdentity {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-focused.png");
+}
+
+#urlbar[focused="true"] > #identity-box.verifiedIdentity > hbox {
+  background-image: url("chrome://browser/skin/urlbar/startcap-verified-mid-focused.png");
+}
+
 #urlbar[focused="true"] > #identity-box.verifiedIdentity > hbox > #identity-icon-label {
   background-image: url("chrome://browser/skin/urlbar/startcap-verified-end-focused.png");
 }
 
-#identity-box.verifiedDomain {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start.png") !important;
-  -moz-padding-start: 11px;
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedDomain {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-start-focused.png") !important;
-}
-
-#identity-box.verifiedIdentity {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start.png") !important;
-  -moz-padding-start: 12px;
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedIdentity {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-start-focused.png") !important;
-}
-
-#identity-box.verifiedDomain > hbox {
-  padding: 0;
-  background: url("chrome://browser/skin/urlbar/startcap-secure-mid.png") repeat-x center center !important;
-  -moz-box-pack: center;
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedDomain > hbox {
-  background-image: url("chrome://browser/skin/urlbar/startcap-secure-mid-focused.png") !important;
-}
-
-#identity-box.verifiedDomain > hbox > #identity-icon-label[value=""] {
-  -moz-padding-start: 3px !important;
-  -moz-padding-end: 12px !important;
-}
-
-#identity-box.verifiedIdentity > hbox {
-  padding: 0;
-  background: url("chrome://browser/skin/urlbar/startcap-verified-mid.png") repeat-x center center !important;
-  -moz-box-pack: center;
-}
-
-#urlbar[focused="true"] > #identity-box.verifiedIdentity > hbox {
-  background-image: url("chrome://browser/skin/urlbar/startcap-verified-mid-focused.png") !important;
-}
-
+/* Favicon Glow */
 #identity-box.verifiedIdentity > hbox > #page-proxy-stack,
 #identity-box.verifiedDomain > hbox > #page-proxy-stack {
-  -moz-margin-start: 0;
+  -moz-margin-start: -3px;
+  width: 24px;
+  height: 20px;
+  padding: 2px 4px;
+  background: url("chrome://browser/skin/urlbar/urlbar-favicon-glow.png") center center no-repeat;
 }
 
-#identity-box.unknownIdentity > hbox > #identity-icon-label {
-  display: none;
-}
 
 /* Popup Icons */
 #identity-popup-icon {
@@ -2147,4 +2269,49 @@ tabpanels.plain {
 
 #download-monitor {
   list-style-image: url("chrome://mozapps/skin/downloads/downloadStatusIcon.png");
+}
+
+/* ::::: Keyboard UI Panel ::::: */
+.KUI-panel {
+  -moz-appearance: none;
+  background: rgba(0, 0, 0, .8) url(KUI-background.png) repeat-x;
+  color: white;
+  border: 3px solid #ccc;
+  -moz-border-top-colors: #ccc #ccc black;
+  -moz-border-right-colors: #ccc #ccc black;
+  -moz-border-bottom-colors: #ccc #ccc black;
+  -moz-border-left-colors: #ccc #ccc black;
+  -moz-border-radius: 10px;
+  margin-top: -3px;
+  margin-left: -3px;
+}
+
+/* ::::: Ctrl-Tab Panel ::::: */
+#ctrlTab-panel {
+  margin-top: -18px;
+  border-bottom-width: 5px;
+  -moz-border-bottom-colors: #ccc #ccc black black black;
+}
+
+#ctrlTab-label {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 6px;
+  margin-bottom: 10px;
+}
+
+svg|*.ctrlTab-thumbnailborder {
+  stroke: white;
+  stroke-width: 1px;
+}
+
+svg|*#ctrlTab-fadeGradientTop {
+  stop-color: black;
+  stop-opacity: .5;
+}
+
+svg|*#ctrlTab-fadeGradientBottom {
+  stop-color: black;
+  stop-opacity: 1;
 }

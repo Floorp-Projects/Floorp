@@ -26,7 +26,7 @@
  *   Dean Tessman (dean_tessman@hotmail.com)
  *   Blake Ross (blake@cs.stanford.edu)
  *   Pamela Greene (pamg.bugs@gmail.com)
- *   Dao Gottwald (dao@design-noir.de)
+ *   Dão Gottwald (dao@mozilla.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +47,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
+@namespace svg url("http://www.w3.org/2000/svg");
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -138,6 +139,19 @@ menuitem.bookmark-item {
   -moz-padding-start: 0px;
 }
 
+/* Bookmark panel dropdown menu items */
+#editBMPanel_toolbarFolderItem {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;  
+}
+
+#editBMPanel_bmRootItem {
+  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;  
+}
+
+#editBMPanel_unfiledRootItem {
+  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png") !important;  
+}
+
 /* Bookmark drag and drop styles */
 .bookmark-item[dragover-into="true"] {
   background: Highlight !important;
@@ -205,7 +219,7 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item[query][dayContainer] {
-  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
+  list-style-image: url("chrome://browser/skin/places/calendar.png");
 }
 
 .bookmark-item[query][hostContainer] {
@@ -837,7 +851,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 /* Favicon */
-#page-proxy-stack,
 #page-proxy-favicon,
 #urlbar-throbber {
   width: 16px;
@@ -845,7 +858,10 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 #page-proxy-stack {
-  margin: 2px 3px;
+  width: 24px;
+  height: 20px;
+  padding: 2px 4px;
+  background: url(urlbar-favicon-glow.png) center center no-repeat;
 }
 
 #page-proxy-favicon:not([src]) {
@@ -912,7 +928,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #identity-popup-content-box > description,
 #identity-popup-encryption-label {
   white-space: pre-wrap;
-  color: black;
   padding-left: 15px;
   margin: 2px 0 4px;
 }
@@ -956,7 +971,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 /* Identity popup bounding box */
 #identity-popup-container {
   background-image: none;
-  background-color: white;
   min-width: 280px;
   padding: 10px;
 }
@@ -1025,6 +1039,13 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
   height: 16px;
 }
 
+.ac-result-type-keyword,
+.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
+  list-style-image: url(chrome://browser/skin/Search-glass.png);
+  width: 16px;
+  height: 16px;
+}
+
 .ac-result-type-tag,
 .autocomplete-treebody::-moz-tree-image(tag, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/tag.png");
@@ -1041,7 +1062,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 .ac-url-text {
-  color: GrayText;
+  color: -moz-nativehyperlinktext;
 }
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
@@ -1066,10 +1087,6 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 #go-button {
   padding: 3px 2px 2px 2px;
   list-style-image: url("chrome://browser/skin/Go-arrow.png");
-}
-
-#go-button[chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/Go-arrow-rtl.png");
 }
 
 /* Star button */
@@ -1385,4 +1402,27 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 #download-monitor {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+/* ::::: Ctrl-Tab Panel ::::: */
+#ctrlTab-label {
+  font-weight: bold;
+  text-align: center;
+  margin-top: .5em;
+  margin-bottom: .7em;
+}
+
+svg|*.ctrlTab-thumbnailborder {
+  stroke: ThreeDDarkShadow;
+  stroke-width: .7px;
+}
+
+svg|*#ctrlTab-fadeGradientTop {
+  stop-color: ThreeDShadow;
+  stop-opacity: .75;
+}
+
+svg|*#ctrlTab-fadeGradientBottom {
+  stop-color: -moz-dialog;
+  stop-opacity: 1;
 }

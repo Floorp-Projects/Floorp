@@ -3,25 +3,23 @@
 # Filenames that should be ignored wherever they appear
 ~$
 \.pyc$
+(^|/)TAGS$
 
 # User files that may appear at the root
 ^\.mozconfig$
+^mozconfig$
 ^\.mozconfig\.mk$
 ^\.mozconfig\.out$
 ^configure$
 ^config\.cache$
 ^config\.log$
+^ID$
 
-# subtrees from other repositories
-^nsprpub/
-^dbm/
-^security/nss/
-^security/coreconf/
-^security/dbm/
+# Empty marker file that's generated when we check out NSS
+^security/manager/\.nss\.checkout$
 
 # Build directories
-^obj-
-^objdir
+^obj
 
 # Build directories for js shell
 _DBG\.OBJ/

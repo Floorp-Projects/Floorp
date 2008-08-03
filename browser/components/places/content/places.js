@@ -230,7 +230,8 @@ var PlacesOrganizer = {
     }
 
     this._setSearchScopeForNode(node);
-    this._fillDetailsPane(node);
+    if (this._places.treeBoxObject.focused)
+      this._fillDetailsPane(node);
   },
 
   /**
@@ -501,7 +502,7 @@ var PlacesOrganizer = {
       return;
 
     try {
-      PlacesUtils.restoreBookmarksFromJSONFile(aFile);
+      PlacesUtils.restoreBookmarksFromJSONFile(aFile, [PlacesUIUtils.leftPaneFolderId]);
     }
     catch(ex) {
       this._showErrorAlert(PlacesUIUtils.getString("bookmarksRestoreParseError"));
@@ -541,11 +542,11 @@ var PlacesOrganizer = {
                                                         [date]);
 
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
-      PlacesUtils.backupBookmarksToFile(fp.file);
+      PlacesUtils.backupBookmarksToFile(fp.file, [PlacesUIUtils.leftPaneFolderId]);
 
       // copy new backup to /backups dir (bug 424389)
       var latestBackup = PlacesUtils.getMostRecentBackup();
-      if (latestBackup != fp.file) {
+      if (!latestBackup || latestBackup != fp.file) {
         latestBackup.remove(false);
         var date = new Date().toLocaleFormat("%Y-%m-%d");
         var name = PlacesUtils.getFormattedString("bookmarksArchiveFilename",
@@ -591,6 +592,9 @@ var PlacesOrganizer = {
      */
     var infoBox = document.getElementById("infoBox");
     var infoBoxExpander = document.getElementById("infoBoxExpander");
+#ifdef XP_WIN
+    var infoBoxExpanderLabel = document.getElementById("infoBoxExpanderLabel");
+#endif
     if (aNode.itemId != -1 &&
         ((PlacesUtils.nodeIsFolder(aNode) &&
           !PlacesUtils.nodeIsLivemarkContainer(aNode)) ||
@@ -599,12 +603,18 @@ var PlacesOrganizer = {
         infoBox.setAttribute("wasminimal", "true");
       infoBox.removeAttribute("minimal");
       infoBoxExpander.hidden = true;
+#ifdef XP_WIN
+      infoBoxExpanderLabel.hidden = true;
+#endif
     }
     else {
       if (infoBox.getAttribute("wasminimal") == "true")
         infoBox.setAttribute("minimal", "true");
       infoBox.removeAttribute("wasminimal");
       infoBoxExpander.hidden = false;
+#ifdef XP_WIN
+      infoBoxExpanderLabel.hidden = false;
+#endif
     }
   },
 
@@ -619,7 +629,8 @@ var PlacesOrganizer = {
   },
 
   onContentTreeSelect: function PO_onContentTreeSelect() {
-    this._fillDetailsPane(this._content.selectedNode);
+    if (this._content.treeBoxObject.focused)
+      this._fillDetailsPane(this._content.selectedNode);
   },
 
   _fillDetailsPane: function PO__fillDetailsPane(aSelectedNode) {
@@ -643,7 +654,6 @@ var PlacesOrganizer = {
  
     if (aSelectedNode && !PlacesUtils.nodeIsSeparator(aSelectedNode)) {
       detailsDeck.selectedIndex = 1;
-      infoBox.hidden = false;
       // Using the concrete itemId is arguably wrong. The bookmarks API
       // does allow setting properties for folder shortcuts as well, but since
       // the UI does not distinct between the couple, we better just show
@@ -664,9 +674,6 @@ var PlacesOrganizer = {
     }
     else {
       detailsDeck.selectedIndex = 0;
-      // The details deck has the height of its biggest child, so we hide the
-      // infoBox to allow it shrinking when there is no selection.
-      infoBox.hidden = true;
       var selectItemDesc = document.getElementById("selectItemDescription");
       var itemsCountLabel = document.getElementById("itemsCountText");
       var rowCount = this._content.treeBoxObject.view.rowCount;
@@ -712,15 +719,30 @@ var PlacesOrganizer = {
   toggleAdditionalInfoFields: function PO_toggleAdditionalInfoFields() {
     var infoBox = document.getElementById("infoBox");
     var infoBoxExpander = document.getElementById("infoBoxExpander");
+#ifdef XP_WIN
+    var infoBoxExpanderLabel = document.getElementById("infoBoxExpanderLabel");
+#endif
     if (infoBox.getAttribute("minimal") == "true") {
       infoBox.removeAttribute("minimal");
+#ifdef XP_WIN
+      infoBoxExpanderLabel.value = infoBoxExpanderLabel.getAttribute("lesslabel");
+      infoBoxExpanderLabel.setAttribute("accesskey", infoBoxExpanderLabel.getAttribute("lessaccesskey"));
+      infoBoxExpander.className = "expander-up";
+#else
       infoBoxExpander.label = infoBoxExpander.getAttribute("lesslabel");
       infoBoxExpander.accessKey = infoBoxExpander.getAttribute("lessaccesskey");
+#endif
     }
     else {
       infoBox.setAttribute("minimal", "true");
+#ifdef XP_WIN
+      infoBoxExpanderLabel.value = infoBoxExpanderLabel.getAttribute("morelabel");
+      infoBoxExpanderLabel.setAttribute("accesskey", infoBoxExpanderLabel.getAttribute("moreaccesskey"));
+      infoBoxExpander.className = "expander-down";
+#else
       infoBoxExpander.label = infoBoxExpander.getAttribute("morelabel");
       infoBoxExpander.accessKey = infoBoxExpander.getAttribute("moreaccesskey");
+#endif
     }
   },
 
@@ -750,7 +772,7 @@ var PlacesOrganizer = {
     // a real dialog and localize when we're sure this is the UI we want.
     var title = PlacesUIUtils.getString("saveSearch.title");
     var inputLabel = PlacesUIUtils.getString("saveSearch.inputLabel");
-    var defaultText = PlacesUIUtils.getString("saveSearch.defaultText");
+    var defaultText = PlacesUIUtils.getString("saveSearch.inputDefaultText");
 
     var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].
                   getService(Ci.nsIPromptService);
@@ -831,6 +853,10 @@ var PlacesSearchBox = {
       //scopeBtn.label = PlacesOrganizer._places.selectedNode.title;
       break;
     case "bookmarks":
+      // Make sure we're getting uri results.
+      // We do not yet support searching into grouped queries or into
+      // tag containers, so we must fall to the default case.
+      currentOptions.resultType = currentOptions.RESULT_TYPE_URI;
       content.applyFilter(filterString,
                           [PlacesUtils.bookmarksMenuFolderId,
                            PlacesUtils.toolbarFolderId,
@@ -1630,7 +1656,7 @@ var ViewMenu = {
       splitter = null;
 
     if (element.getAttribute("checked") == "true") {
-      column.removeAttribute("hidden");
+      column.setAttribute("hidden", "false");
       if (splitter)
         splitter.removeAttribute("hidden");
     }

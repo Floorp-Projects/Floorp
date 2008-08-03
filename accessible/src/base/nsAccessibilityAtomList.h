@@ -149,7 +149,7 @@ ACCESSIBILITY_ATOM(tooltip, "tooltip")   // XUL
 ACCESSIBILITY_ATOM(tr, "tr")
 ACCESSIBILITY_ATOM(ul, "ul")
 
-  // Alphabetical list of attributes
+  // Alphabetical list of attributes (DOM)
 ACCESSIBILITY_ATOM(acceltext, "acceltext")
 ACCESSIBILITY_ATOM(accesskey, "accesskey")
 ACCESSIBILITY_ATOM(alt, "alt")
@@ -157,6 +157,7 @@ ACCESSIBILITY_ATOM(anonid, "anonid") // Used for ID's in XBL
 ACCESSIBILITY_ATOM(contenteditable, "contenteditable")
 ACCESSIBILITY_ATOM(control, "control")
 ACCESSIBILITY_ATOM(disabled, "disabled")
+ACCESSIBILITY_ATOM(display, "display")
 ACCESSIBILITY_ATOM(_class, "class")
 ACCESSIBILITY_ATOM(cycles, "cycles") // used for XUL cycler attribute
 ACCESSIBILITY_ATOM(curpos, "curpos") // XUL
@@ -184,6 +185,10 @@ ACCESSIBILITY_ATOM(title, "title")
 ACCESSIBILITY_ATOM(tooltiptext, "tooltiptext")
 ACCESSIBILITY_ATOM(type, "type")
 ACCESSIBILITY_ATOM(value, "value")
+
+  // Alphabetical list of text attributes (AT API)
+ACCESSIBILITY_ATOM(invalid, "invalid")
+ACCESSIBILITY_ATOM(language, "language")
 
   // ARIA (DHTML accessibility) attributes
   // Also add to nsARIAMap.cpp and nsARIAMap.h

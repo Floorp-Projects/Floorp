@@ -272,7 +272,7 @@ XPCJSContextStack::SetSafeJSContext(JSContext * aSafeJSContext)
        mOwnSafeJSContext == mSafeJSContext &&
        mOwnSafeJSContext != aSafeJSContext)
     {
-        JS_DestroyContext(mOwnSafeJSContext);
+        JS_DestroyContextNoGC(mOwnSafeJSContext);
         mOwnSafeJSContext = nsnull;
         SyncJSContexts();
     }
@@ -622,6 +622,8 @@ XPCPerThreadData::GetDataImpl(JSContext *cx)
         sMainJSThread = cx->thread;
 
         sMainThreadData = data;
+
+        sMainThreadData->mThread = PR_GetCurrentThread();
     }
 
     return data;

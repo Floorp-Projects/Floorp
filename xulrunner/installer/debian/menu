@@ -1,0 +1,2 @@
+?package(xulrunner):needs="X11|text|vc|wm" section="Apps/Internet"\
+  title="xulrunner" command="/usr/bin/xulrunner"

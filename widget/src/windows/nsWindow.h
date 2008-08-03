@@ -49,7 +49,6 @@
 #include "nsToolkit.h"
 
 #include "nsIWidget.h"
-#include "nsIKBStateControl.h"
 
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
@@ -61,12 +60,12 @@
 class nsNativeDragTarget;
 class nsIRollupListener;
 
-class nsIMenuBar;
 class nsIFile;
 
 class imgIContainer;
 
 struct nsAlternativeCharCode;
+struct nsFakeCharMessage;
 
 #ifdef ACCESSIBILITY
 #include "OLEACC.H"
@@ -114,8 +113,7 @@ const LPCSTR kClassNameDialog         = "MozillaDialogClass";
  */
 
 class nsWindow : public nsSwitchToUIThread,
-                 public nsBaseWidget,
-                 public nsIKBStateControl
+                 public nsBaseWidget
 {
 public:
   nsWindow();
@@ -189,7 +187,7 @@ public:
   NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
   NS_IMETHOD              SetTitle(const nsAString& aTitle);
   NS_IMETHOD              SetIcon(const nsAString& aIconSpec);
-  NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; }
+  NS_IMETHOD              SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; }
   NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; }
   NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
   NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
@@ -222,8 +220,6 @@ private:
   nsresult                SetupTranslucentWindowMemoryBitmap(PRBool aTransparent);
 public:
 #endif
-
-  // nsIKBStateControl interface
 
   NS_IMETHOD ResetInputState();
   NS_IMETHOD SetIMEOpenState(PRBool aState);
@@ -308,11 +304,12 @@ protected:
   virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool          OnPaint(HDC aDC = nsnull);
   virtual PRBool          OnResize(nsRect &aWindowRect);
-
-  BOOL                    OnChar(UINT charCode, LPARAM keyData, PRUint32 aFlags = 0);
-
-  BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
-  BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
+  
+  void                    SetupModKeyState();
+  BOOL                    OnChar(UINT charCode, UINT aScanCode, PRUint32 aFlags = 0);
+  BOOL                    OnKeyDown( UINT aVirtualKeyCode, LPARAM aKeyCode,
+                                     nsFakeCharMessage* aFakeCharMessage);
+  BOOL                    OnKeyUp( UINT aVirtualKeyCode, LPARAM aKeyCode);
   UINT                    MapFromNativeToDOM(UINT aNativeKeyCode);
 
 
@@ -367,6 +364,12 @@ protected:
 
   PRBool CanTakeFocus();
 
+  virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                            PRInt32 aNativeKeyCode,
+                                            PRUint32 aModifierFlags,
+                                            const nsAString& aCharacters,
+                                            const nsAString& aUnmodifiedCharacters);
+
 private:
 
 
@@ -416,11 +419,7 @@ protected:
   nsRefPtr<gfxWindowsSurface> mTransparentSurface;
 
   HDC           mMemoryDC;
-  HBITMAP       mMemoryBitmap;
-  PRUint8*      mMemoryBits;
-  PRUint8*      mAlphaMask;
   PRPackedBool  mIsTransparent;
-  PRPackedBool  mIsTopTransparent;     // Topmost window itself or any of it's child windows has tranlucency enabled
 #endif
   PRPackedBool  mHasAeroGlass;
   PRPackedBool  mIsTopWidgetWindow;

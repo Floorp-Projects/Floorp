@@ -66,7 +66,7 @@ REQUIRES = xpcom \
 		  intl \
 		  exthandler \
 		  appshell \
-                  lcms \
+		  lcms \
 		  thebes \
 		  js \
 		  xpconnect \
@@ -84,8 +84,6 @@ endif
 EXPORTS = \
 		mozView.h \
 		nsChangeObserver.h \
-		nsIMenu.h \
-		nsIMenuItem.h \
 		$(NULL)
 
 CMMSRCS = \
@@ -95,6 +93,7 @@ CMMSRCS = \
 		nsMenuBarX.mm \
 		nsMenuItemX.mm \
 		nsMenuItemIconX.mm \
+		nsMenuUtilsX.mm \
 		nsFilePicker.mm \
 		nsDragService.mm \
 		nsToolkit.mm \

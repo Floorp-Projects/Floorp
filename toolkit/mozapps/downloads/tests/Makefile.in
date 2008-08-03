@@ -49,6 +49,6 @@ XPCSHELL_TESTS = \
   unit \
   $(NULL)
 
-DIRS += browser
+DIRS += chrome
 
 include $(topsrcdir)/config/rules.mk

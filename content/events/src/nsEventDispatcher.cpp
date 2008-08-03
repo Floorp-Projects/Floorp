@@ -376,11 +376,6 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   NS_ASSERTION(aEvent, "Trying to dispatch without nsEvent!");
   NS_ENSURE_TRUE(!NS_IS_EVENT_IN_DISPATCH(aEvent),
                  NS_ERROR_ILLEGAL_VALUE);
-  // This is strange, but nsEvents are sometimes reused and they don't need
-  // re-initialization.
-  NS_ENSURE_TRUE(!(aDOMEvent &&
-                   (aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY)),
-                 NS_ERROR_ILLEGAL_VALUE);
 
 #ifdef DEBUG
   if (aDOMEvent) {
@@ -527,12 +522,17 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
       privEvt->GetInternalNSEvent(&innerEvent);
       NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);
 
-      PRBool trusted;
-      nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(privEvt));
+      PRBool dontResetTrusted = PR_FALSE;
+      if (innerEvent->flags & NS_EVENT_DISPATCHED) {
+        innerEvent->target = nsnull;
+        innerEvent->originalTarget = nsnull;
+      }
+      else {
+        nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(privEvt));
+        nsevent->GetIsTrusted(&dontResetTrusted);
+      }
 
-      nsevent->GetIsTrusted(&trusted);
-
-      if (!trusted) {
+      if (!dontResetTrusted) {
         //Check security state to determine if dispatcher is trusted
         privEvt->SetTrusted(nsContentUtils::IsCallerTrustedForWrite());
       }
@@ -657,6 +657,10 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMDataContainerEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("messageevent"))
     return NS_NewDOMMessageEvent(aDOMEvent, aPresContext, nsnull);
+#ifdef MOZ_MEDIA
+  if (aEventType.LowerCaseEqualsLiteral("progressevent"))
+    return NS_NewDOMProgressEvent(aDOMEvent, aPresContext, nsnull);
+#endif // MOZ_MEDIA
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

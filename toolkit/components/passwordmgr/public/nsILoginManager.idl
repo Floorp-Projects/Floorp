@@ -41,8 +41,9 @@ interface nsIURI;
 interface nsILoginInfo;
 interface nsIAutoCompleteResult;
 interface nsIDOMHTMLInputElement;
+interface nsIDOMHTMLFormElement;
 
-[scriptable, uuid(579f45b7-682f-479f-9085-3f8075488803)]
+[scriptable, uuid(04dbfa30-4238-11dd-ae16-0800200c9a66)]
 
 interface nsILoginManager : nsISupports {
 
@@ -211,6 +212,16 @@ interface nsILoginManager : nsISupports {
     nsIAutoCompleteResult autoCompleteSearch(in AString aSearchString,
                                     in nsIAutoCompleteResult aPreviousResult,
                                     in nsIDOMHTMLInputElement aElement);
+
+    /**
+     * Fill a form with login information if we have it. This method will fill
+     * aForm regardless of the signon.autofillForms preference.
+     *
+     * @param aForm
+     *        The form to fill
+     * @return Success of attempt fill form
+     */
+    boolean fillForm(in nsIDOMHTMLFormElement aForm);
 };
 
 %{C++

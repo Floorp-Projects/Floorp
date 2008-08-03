@@ -36,10 +36,16 @@
 
 /**
  * Test bug 251337 to make sure old downloads are expired and removed.
+ * Make sure bug 431346 and bug 431597 don't cause crashes when batching.
  */
 
 function run_test()
 {
+  // Like the code, we check to see if nav-history-service exists
+  // (i.e MOZ_PLACES is enabled), so that we don't run this test if it doesn't.
+  if (!("@mozilla.org/browser/nav-history-service;1" in Cc))
+    return;
+
   let dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
   let db = dm.DBConnection;
@@ -85,6 +91,10 @@ function run_test()
   histsvc.addVisit(theURI, Date.now() * 1000, null,
                    histsvc.TRANSITION_DOWNLOAD, false, 0);
 
+  // Get the download manager as history observer and batch expirations
+  let histobs = dm.QueryInterface(Ci.nsINavHistoryObserver);
+  histobs.onBeginUpdateBatch();
+
   // Look for the removed download notification
   let obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
@@ -99,6 +109,7 @@ function run_test()
       do_check_eq(id.data, theId);
 
       // We're done!
+      histobs.onEndUpdateBatch();
       obs.removeObserver(testObs, kRemoveTopic);
       do_test_finished();
     }

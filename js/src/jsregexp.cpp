@@ -238,7 +238,7 @@ GetCompactIndexWidth(size_t index)
     return width;
 }
 
-static JS_INLINE jsbytecode *
+static JS_ALWAYS_INLINE jsbytecode *
 WriteCompactIndex(jsbytecode *pc, size_t index)
 {
     size_t next;
@@ -251,7 +251,7 @@ WriteCompactIndex(jsbytecode *pc, size_t index)
     return pc;
 }
 
-static JS_INLINE jsbytecode *
+static JS_ALWAYS_INLINE jsbytecode *
 ReadCompactIndex(jsbytecode *pc, size_t *result)
 {
     size_t nextByte;
@@ -354,7 +354,7 @@ typedef struct REGlobalData {
  *    code point value is less than decimal 128, then return ch.
  * 6. Return cu.
  */
-static JS_INLINE uintN
+static JS_ALWAYS_INLINE uintN
 upcase(uintN ch)
 {
     uintN cu;
@@ -370,7 +370,7 @@ upcase(uintN ch)
     return (cu < 128) ? ch : cu;
 }
 
-static JS_INLINE uintN
+static JS_ALWAYS_INLINE uintN
 downcase(uintN ch)
 {
     JS_ASSERT((uintN) (jschar) ch == ch);
@@ -2164,7 +2164,7 @@ FlatNMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
 }
 #endif
 
-static JS_INLINE REMatchState *
+static JS_ALWAYS_INLINE REMatchState *
 FlatNIMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
               size_t length)
 {
@@ -2529,7 +2529,7 @@ ReallocStateStack(REGlobalData *gData)
  * true, then update the current state's cp. Always update startpc to the next
  * op.
  */
-static JS_INLINE REMatchState *
+static JS_ALWAYS_INLINE REMatchState *
 SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
             jsbytecode **startpc, JSBool updatecp)
 {
@@ -2738,7 +2738,7 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
     return NULL;
 }
 
-static JS_INLINE REMatchState *
+static JS_ALWAYS_INLINE REMatchState *
 ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 {
     REMatchState *result = NULL;
@@ -3622,12 +3622,17 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
+    while (OBJ_GET_CLASS(cx, obj) != &js_RegExpClass) {
+        obj = OBJ_GET_PROTO(cx, obj);
+        if (!obj)
+            return JS_TRUE;
+    }
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX)
         return JS_GetReservedSlot(cx, obj, 0, vp);
 
     JS_LOCK_OBJ(cx, obj);
-    re = (JSRegExp *) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
+    re = (JSRegExp *) JS_GetPrivate(cx, obj);
     if (re) {
         switch (slot) {
           case REGEXP_SOURCE:
@@ -3661,6 +3666,11 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     ok = JS_TRUE;
     if (!JSVAL_IS_INT(id))
         return ok;
+    while (OBJ_GET_CLASS(cx, obj) != &js_RegExpClass) {
+        obj = OBJ_GET_PROTO(cx, obj);
+        if (!obj)
+            return JS_TRUE;
+    }
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX) {
         if (!JS_ValueToNumber(cx, *vp, &lastIndex))
@@ -3877,8 +3887,8 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
         obj = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
-        STOBJ_SET_PARENT(obj, NULL);
-        STOBJ_SET_PROTO(obj, NULL);
+        STOBJ_CLEAR_PARENT(obj);
+        STOBJ_CLEAR_PROTO(obj);
         re = js_NewRegExp(xdr->cx, NULL, source, (uint8)flagsword, JS_FALSE);
         if (!re)
             return JS_FALSE;

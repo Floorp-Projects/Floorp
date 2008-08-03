@@ -128,6 +128,64 @@ run_series(function(child, elt, elts, node, nodes) {
            " match :-moz-last-node");
     });
 
+styleText.data = "span:nth-child(1) { background: lime; }";
+run_series(function(child, elt, elts, node, nodes) {
+        var matches = elt == 0;
+        is(cs(child).backgroundColor, matches ? LIME : WHITE,
+           "child " + node + " should " + (matches ? "" : "NOT ") +
+           " match " + styleText.data);
+    });
+
+styleText.data = "span:nth-last-child(0n+2) { color: green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        var matches = (elt == elts - 2);
+        is(cs(child).color, matches ? GREEN : BLACK,
+           "child " + node + " should " + (matches ? "" : "NOT ") +
+           " match " + styleText.data);
+    });
+
+styleText.data = "span:nth-of-type(2n+3) { color: green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        var nidx = elt + 1;
+        var matches = nidx % 2 == 1 && nidx >= 3;
+        is(cs(child).color, matches ? GREEN : BLACK,
+           "child " + node + " should " + (matches ? "" : "NOT ") +
+           " match " + styleText.data);
+    });
+
+styleText.data = "span:nth-last-of-type(-2n+5) { color: green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        var nlidx = elts - elt;
+        var matches = nlidx % 2 == 1 && nlidx <= 5;
+        is(cs(child).color, matches ? GREEN : BLACK,
+           "child " + node + " should " + (matches ? "" : "NOT ") +
+           " match " + styleText.data);
+    });
+
+styleText.data = "span:first-of-type { color: green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        var matches = (elt == 0);
+        is(cs(child).color, matches ? GREEN : BLACK,
+           "child " + node + " should " + (matches ? "" : "NOT ") +
+           " match " + styleText.data);
+    });
+
+styleText.data = "span:last-of-type { color: green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        var matches = (elt == elts - 1);
+        is(cs(child).color, matches ? GREEN : BLACK,
+           "child " + node + " should " + (matches ? "" : "NOT ") +
+           " match " + styleText.data);
+    });
+
+styleText.data = "span:only-of-type { color: green; }";
+run_series(function(child, elt, elts, node, nodes) {
+        var matches = elts == 1;
+        is(cs(child).color, matches ? GREEN : BLACK,
+           "child " + node + " should " + (matches ? "" : "NOT ") +
+           " match " + styleText.data);
+    });
+
 </script>
 </pre>
 </body>

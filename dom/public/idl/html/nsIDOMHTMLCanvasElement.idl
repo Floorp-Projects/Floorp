@@ -52,6 +52,7 @@ interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute long width;
   attribute long height;
+  attribute boolean mozOpaque;
 
   nsISupports getContext(in DOMString contextId);
 

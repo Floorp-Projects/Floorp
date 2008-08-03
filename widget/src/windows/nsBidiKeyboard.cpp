@@ -156,11 +156,11 @@ nsresult nsBidiKeyboard::SetupBidiKeyboards()
   while (keyboards--) {
     locale = buf[keyboards];
     if (IsRTLLanguage(locale)) {
-      sprintf(mRTLKeyboard, "%.*x", KL_NAMELENGTH - 1, LANGIDFROMLCID(locale));
+      sprintf(mRTLKeyboard, "%.*x", KL_NAMELENGTH - 1, LANGIDFROMLCID((DWORD)locale));
       isRTLKeyboardSet = PR_TRUE;
     }
     else {
-      sprintf(mLTRKeyboard, "%.*x", KL_NAMELENGTH - 1, LANGIDFROMLCID(locale));
+      sprintf(mLTRKeyboard, "%.*x", KL_NAMELENGTH - 1, LANGIDFROMLCID((DWORD)locale));
       isLTRKeyboardSet = PR_TRUE;
     }
   }
@@ -210,7 +210,7 @@ nsresult nsBidiKeyboard::SetupBidiKeyboards()
 PRBool nsBidiKeyboard::IsRTLLanguage(HKL aLocale)
 {
   LOCALESIGNATURE localesig;
-  return (::GetLocaleInfoW(PRIMARYLANGID(aLocale),
+  return (::GetLocaleInfoW(PRIMARYLANGID((DWORD)aLocale),
                            LOCALE_FONTSIGNATURE,
                            (LPWSTR)&localesig,
                            (sizeof(localesig)/sizeof(WCHAR))) &&

@@ -204,6 +204,7 @@
 
             var height = aNotification.boxObject.height;
             var change = height / this.slideSteps;
+            var margin;
             if (aSlideIn) {
               if (this.currentNotification &&
                   this.currentNotification.boxObject.height > height)
@@ -215,6 +216,7 @@
               aNotification.style.removeProperty("top");
               aNotification.style.marginTop = -height + "px";
               aNotification.style.opacity = 0;
+              margin = -height;
             }
             else {
               change = -change;
@@ -225,45 +227,46 @@
                 this.currentNotification = notifications[idx];
               else
                 this.currentNotification = null;
+              var style = window.getComputedStyle(aNotification, null);
+              margin = style.getPropertyCSSValue("margin-top").
+                         getFloatValue(CSSPrimitiveValue.CSS_PX);
             }
             var opacitychange = change / height;
+            const FRAME_LENGTH = 50;
 
-            var self = this;
-            var slide = function slideInFn()
-            {
-              var done = false;
+            function slide(self, off) {
+              var framesToHandle = 1;
 
-              var style = window.getComputedStyle(aNotification, null);
-              var margin = style.getPropertyCSSValue("margin-top").
-                             getFloatValue(CSSPrimitiveValue.CSS_PX);
+              // Skip frames if we aren't getting the desired frame rate.
+              if (off > 0)
+                framesToHandle += Math.round(off / FRAME_LENGTH);
 
-              if (change > 0 && margin + change >= 0) {
+              margin += framesToHandle * change;
+
+              if (change > 0 && margin >= 0) {
                 aNotification.style.marginTop = "0px";
                 aNotification.style.opacity = 1;
-                done = true;
               }
-              else if (change < 0 && margin + change <= -height) {
+              else if (change < 0 && margin <= -height) {
                 aNotification.style.marginTop = -height + "px";
-                done = true;
               }
               else {
-                aNotification.style.marginTop = (margin + change).toFixed(4) + "px";
+                aNotification.style.marginTop = margin.toFixed(4) + "px";
                 if (opacitychange)
                   aNotification.style.opacity =
-                    Number(aNotification.style.opacity) + opacitychange;
+                    Number(aNotification.style.opacity) + framesToHandle * opacitychange;
+                return;
               }
 
-              if (done) {
-                clearInterval(self._timer);
-                self._timer = null;
-                if (self._closedNotification)
-                  self._closedNotification.parentNode.
-                    removeChild(self._closedNotification);
-                self._setBlockingState(self.currentNotification);
-              }
+              clearInterval(self._timer);
+              self._timer = null;
+              if (self._closedNotification)
+                self._closedNotification.parentNode.
+                  removeChild(self._closedNotification);
+              self._setBlockingState(self.currentNotification);
             }
 
-            this._timer = setInterval(slide, 50);
+            this._timer = setInterval(slide, FRAME_LENGTH, this);
           ]]>
         </body>
       </method>

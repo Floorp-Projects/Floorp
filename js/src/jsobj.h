@@ -168,11 +168,15 @@ struct JSObject {
     JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PROTO])
 #define STOBJ_SET_PROTO(obj,proto)                                            \
     ((obj)->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto))
+#define STOBJ_CLEAR_PROTO(obj)                                                \
+    ((obj)->fslots[JSSLOT_PROTO] = JSVAL_NULL)
 
 #define STOBJ_GET_PARENT(obj)                                                 \
     JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PARENT])
 #define STOBJ_SET_PARENT(obj,parent)                                          \
     ((obj)->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent))
+#define STOBJ_CLEAR_PARENT(obj)                                               \
+    ((obj)->fslots[JSSLOT_PARENT] = JSVAL_NULL)
 
 /*
  * We use JSSLOT_CLASS to store both JSClass* and the system flag as an int-
@@ -273,15 +277,13 @@ struct JSObject {
 #endif /* !JS_THREADSAFE */
 
 /* Thread-safe proto, parent, and class access macros. */
-#define OBJ_GET_PROTO(cx,obj) \
-    STOBJ_GET_PROTO(obj)
-#define OBJ_SET_PROTO(cx,obj,proto) \
-    STOBJ_SET_SLOT(obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(proto))
+#define OBJ_GET_PROTO(cx,obj)           STOBJ_GET_PROTO(obj)
+#define OBJ_SET_PROTO(cx,obj,proto)     STOBJ_SET_PROTO(obj, proto)
+#define OBJ_CLEAR_PROTO(cx,obj)         STOBJ_CLEAR_PROTO(obj)
 
-#define OBJ_GET_PARENT(cx,obj) \
-    STOBJ_GET_PARENT(obj)
-#define OBJ_SET_PARENT(cx,obj,parent) \
-    STOBJ_SET_SLOT(obj, JSSLOT_PARENT, OBJECT_TO_JSVAL(parent))
+#define OBJ_GET_PARENT(cx,obj)          STOBJ_GET_PARENT(obj)
+#define OBJ_SET_PARENT(cx,obj,parent)   STOBJ_SET_PARENT(obj, parent)
+#define OBJ_CLEAR_PARENT(cx,obj)        STOBJ_CLEAR_PARENT(obj)
 
 /*
  * Class is invariant and comes from the fixed JSSLOT_CLASS. Thus no locking
@@ -310,7 +312,6 @@ extern JSClass  js_BlockClass;
  *   JSSLOT_BLOCK_DEPTH   int               depth of block slots in frame
  *
  * After JSSLOT_BLOCK_DEPTH come one or more slots for the block locals.
- * OBJ_BLOCK_COUNT depends on this arrangement.
  *
  * A With object is like a Block object, in that both have one reserved slot
  * telling the stack depth of the relevant slots (the slot whose value is the
@@ -321,8 +322,10 @@ extern JSClass  js_BlockClass;
  */
 #define JSSLOT_BLOCK_DEPTH      (JSSLOT_PRIVATE + 1)
 
+#define OBJ_IS_CLONED_BLOCK(obj)                                              \
+    (OBJ_SCOPE(obj)->object != (obj))
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
-    ((obj)->map->freeslot - (JSSLOT_BLOCK_DEPTH + 1))
+    (OBJ_SCOPE(obj)->entryCount)
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
     JSVAL_TO_INT(STOBJ_GET_SLOT(obj, JSSLOT_BLOCK_DEPTH))
 #define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \
@@ -606,21 +609,12 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
 extern JSBool
 js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
-extern JSIdArray *
-js_NewIdArray(JSContext *cx, jsint length);
-
-/*
- * Unlike realloc(3), this function frees ida on failure.
- */
-extern JSIdArray *
-js_SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length);
-
 extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp);
 
 extern void
-js_TraceNativeIteratorStates(JSTracer *trc);
+js_TraceNativeEnumerators(JSTracer *trc);
 
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
@@ -687,6 +681,13 @@ js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
 extern JSBool
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
+
+/*
+ * obj must be locked.
+ */
+extern JSBool
+js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
+                JSBool exactAllocation);
 
 extern JSObject *
 js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller);

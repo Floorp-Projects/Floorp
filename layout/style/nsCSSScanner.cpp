@@ -167,6 +167,15 @@ nsCSSToken::AppendToString(nsString& aBuffer)
     case eCSSToken_Dashmatch:
       aBuffer.AppendLiteral("|=");
       break;
+    case eCSSToken_Beginsmatch:
+      aBuffer.AppendLiteral("^=");
+      break;
+    case eCSSToken_Endsmatch:
+      aBuffer.AppendLiteral("$=");
+      break;
+    case eCSSToken_Containsmatch:
+      aBuffer.AppendLiteral("*=");
+      break;
     case eCSSToken_Error:
       aBuffer.Append(mSymbol);
       aBuffer.Append(mIdent);
@@ -392,7 +401,7 @@ void nsCSSScanner::ReportUnexpectedParams(const char* aMessage,
   AddToError(str);
 }
 
-// aMessage must take no parameters
+// aLookingFor is a plain string, not a format string
 void nsCSSScanner::ReportUnexpectedEOF(const char* aLookingFor)
 {
   ENSURE_STRINGBUNDLE;
@@ -404,6 +413,22 @@ void nsCSSScanner::ReportUnexpectedEOF(const char* aLookingFor)
   const PRUnichar *params[] = {
     innerStr.get()
   };
+  nsXPIDLString str;
+  gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
+                                      params, NS_ARRAY_LENGTH(params),
+                                      getter_Copies(str));
+  AddToError(str);
+}
+
+// aLookingFor is a single character
+void nsCSSScanner::ReportUnexpectedEOF(PRUnichar aLookingFor)
+{
+  ENSURE_STRINGBUNDLE;
+
+  const PRUnichar lookingForStr[] = {
+    PRUnichar('\''), aLookingFor, PRUnichar('\''), PRUnichar(0)
+  };
+  const PRUnichar *params[] = { lookingForStr };
   nsXPIDLString str;
   gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
                                       params, NS_ARRAY_LENGTH(params),
@@ -625,10 +650,12 @@ PRBool nsCSSScanner::Next(nsresult& aErrorCode, nsCSSToken& aToken)
   // AT_KEYWORD
   if (ch == '@') {
     PRInt32 nextChar = Read(aErrorCode);
-    PRInt32 followingChar = Peek(aErrorCode);
-    Pushback(nextChar);
-    if (StartsIdent(nextChar, followingChar))
-      return ParseAtKeyword(aErrorCode, ch, aToken);
+    if (nextChar >= 0) {
+      PRInt32 followingChar = Peek(aErrorCode);
+      Pushback(nextChar);
+      if (StartsIdent(nextChar, followingChar))
+        return ParseAtKeyword(aErrorCode, ch, aToken);
+    }
   }
 
   // NUMBER or DIM
@@ -728,7 +755,7 @@ PRBool nsCSSScanner::Next(nsresult& aErrorCode, nsCSSToken& aToken)
         aToken.mType = eCSSToken_Containsmatch;
       }
       return PR_TRUE;
-    } else {
+    } else if (nextChar >= 0) {
       Pushback(nextChar);
     }
   }
@@ -1000,7 +1027,8 @@ PRBool nsCSSScanner::ParseNumber(nsresult& aErrorCode, PRInt32 c,
 {
   nsString& ident = aToken.mIdent;
   ident.SetLength(0);
-  PRBool gotDot = (c == '.') ? PR_TRUE : PR_FALSE;
+  PRBool gotDot = (c == '.');
+  aToken.mHasSign = (c == '+' || c == '-');
   if (c != '+') {
     ident.Append(PRUnichar(c));
   }
@@ -1023,11 +1051,18 @@ PRBool nsCSSScanner::ParseNumber(nsresult& aErrorCode, PRInt32 c,
   PRInt32 ec;
   float value = ident.ToFloat(&ec);
 
-  // Look at character that terminated the number
+  // Set mIntegerValid for all cases (except %, below) because we need
+  // it for the "2n" in :nth-child(2n).
   aToken.mIntegerValid = PR_FALSE;
+  if (!gotDot) {
+    aToken.mInteger = ident.ToInteger(&ec);
+    aToken.mIntegerValid = PR_TRUE;
+  }
+  ident.SetLength(0);
+
+  // Look at character that terminated the number
   if (c >= 0) {
     if (StartsIdent(c, Peek(aErrorCode))) {
-      ident.SetLength(0);
       if (!GatherIdent(aErrorCode, c, ident)) {
         return PR_FALSE;
       }
@@ -1035,23 +1070,11 @@ PRBool nsCSSScanner::ParseNumber(nsresult& aErrorCode, PRInt32 c,
     } else if ('%' == c) {
       type = eCSSToken_Percentage;
       value = value / 100.0f;
-      ident.SetLength(0);
+      aToken.mIntegerValid = PR_FALSE;
     } else {
       // Put back character that stopped numeric scan
       Pushback(c);
-      if (!gotDot) {
-        aToken.mInteger = ident.ToInteger(&ec);
-        aToken.mIntegerValid = PR_TRUE;
-      }
-      ident.SetLength(0);
     }
-  }
-  else {  // stream ended
-    if (!gotDot) {
-      aToken.mInteger = ident.ToInteger(&ec);
-      aToken.mIntegerValid = PR_TRUE;
-    }
-    ident.SetLength(0);
   }
   aToken.mNumber = value;
   aToken.mType = type;

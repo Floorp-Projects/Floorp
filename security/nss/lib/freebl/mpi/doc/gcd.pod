@@ -1,0 +1,27 @@
+=head1 NAME
+
+ gcd - compute greatest common divisor of two integers
+
+=head1 SYNOPSIS
+
+ gcd <a> <b>
+
+=head1 DESCRIPTION
+
+The B<gcd> program computes the greatest common divisor of two
+arbitrary-precision integers I<a> and I<b>.  The result is written in
+standard decimal notation to the standard output.
+
+If I<b> is zero, B<gcd> will print an error message and exit.
+
+=head1 SEE ALSO
+
+invmod(1), isprime(1), lap(1)
+
+=head1 AUTHOR
+
+ Michael J. Fromberger <sting@linguist.dartmouth.edu>
+ Thayer School of Engineering, Hanover, New Hampshire, USA
+ 
+ $Date: 2000/07/14 00:44:32 $
+

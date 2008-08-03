@@ -52,7 +52,7 @@
 
 /* Core XPCOM declarations. */
 
-/**
+/** 
  * Macros defining the target platform...
  */
 #ifdef _WIN32
@@ -253,19 +253,6 @@
 # define NS_DEPRECATED __declspec(deprecated)
 #else
 # define NS_DEPRECATED
-#endif
-
-/**
- * Attributes defined to help Dehydra GCC analysis.	
- */
-#ifdef STATIC_CHECKING
-# define NS_SCRIPTABLE __attribute__((user("NS_script")))
-# define NS_OUTPARAM  __attribute__((user("NS_outparam")))
-# define NS_INOUTPARAM __attribute__((user("NS_inoutparam")))
-#else
-# define NS_SCRIPTABLE
-# define NS_OUTPARAM
-# define NS_INOUTPARAM
 #endif
 
 /**
@@ -507,6 +494,21 @@ typedef PRUint32 nsrefcnt;
 #else
 #define NS_STACK_CLASS
 #define NS_FINAL_CLASS
+#endif
+
+/**
+ * Attributes defined to help Dehydra GCC analysis.	
+ */
+#ifdef NS_STATIC_CHECKING
+# define NS_SCRIPTABLE __attribute__((user("NS_script")))
+# define NS_INPARAM __attribute__((user("NS_inparam")))
+# define NS_OUTPARAM  __attribute__((user("NS_outparam")))
+# define NS_INOUTPARAM __attribute__((user("NS_inoutparam")))
+#else
+# define NS_SCRIPTABLE
+# define NS_INPARAM
+# define NS_OUTPARAM
+# define NS_INOUTPARAM
 #endif
 
 #endif /* nscore_h___ */

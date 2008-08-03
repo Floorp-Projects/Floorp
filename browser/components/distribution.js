@@ -226,7 +226,7 @@ DistributionCustomizer.prototype = {
 
     if (!bmProcessed) {
       if (sections["BookmarksMenu"])
-        this._parseBookmarksSection(this._bmSvc.bookmarksRoot,
+        this._parseBookmarksSection(this._bmSvc.bookmarksMenuFolder,
                                     "BookmarksMenu");
       if (sections["BookmarksToolbar"])
         this._parseBookmarksSection(this._bmSvc.toolbarFolder,
@@ -271,10 +271,10 @@ DistributionCustomizer.prototype = {
         try {
           let value = eval(this._ini.getString("Preferences", key));
           switch (typeof value) {
-          case "bool":
+          case "boolean":
             defaults.setBoolPref(key, value);
             break;
-          case "int":
+          case "number":
             defaults.setIntPref(key, value);
             break;
           case "string":

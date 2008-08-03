@@ -37,103 +37,116 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/******
+/**
+ * This file is used to help create a mapping from a specified SVG element to
+ * attributes supported by that element. This mapping can be used to help
+ * ensure that we don't accidentally implement support for attributes like
+ * requiredFeatures on elements for which the SVG specification does not
+ * define support.
+ *
+ * To use, include this file into another file after defining the SVG_ELEMENT
+ * C preprocessor macro as appropriate.
+ *
+ * The following constants represent the following attributes:
+ *
+ * ATTRS_CONDITIONAL
+ *   The requiredFeatures, requiredExtensions, and systemLanguage attributes
+ *
+ * ATTRS_EXTERNAL
+ *   The externalResourcesRequired attribute
+ *
+ * ATTRS_ALL
+ *   A convenience value indicating support for all of the above
+ *
+ * ATTRS_NONE
+ *   A convenience value indicating support for none of the above
+ */
 
-  This file contains the list of all SVG elements.  It is designed
-  to be used by the C preprocessor for the purposes of creating a
-  table of support for various elements such as support for the
-  requiredFeatures, requiredExtensions, and requiredLanguage
-  conditionals
-  
- ******/
-
-// Define the LangSpace & Tests support
-#define SUPPORTS_NONE 0
-#define SUPPORTS_LANG 1
-#define SUPPORTS_TEST 2
-#define SUPPORTS_EXTERNAL 4
-#define SUPPORTS_ALL 7
+#define ATTRS_NONE        0x00
+#define ATTRS_CONDITIONAL 0x01
+#define ATTRS_EXTERNAL    0x02
+#define ATTRS_ALL         (ATTRS_CONDITIONAL | ATTRS_EXTERNAL)
 // tags
-SVG_ELEMENT(a, SUPPORTS_LANG|SUPPORTS_TEST)
-SVG_ELEMENT(altGlyph, SUPPORTS_ALL)
-SVG_ELEMENT(altGlyphDef, SUPPORTS_NONE)
-SVG_ELEMENT(altGlyphItem, SUPPORTS_NONE)
-SVG_ELEMENT(animate, SUPPORTS_EXTERNAL|SUPPORTS_TEST)
-SVG_ELEMENT(animateColor, SUPPORTS_EXTERNAL|SUPPORTS_TEST)
-SVG_ELEMENT(animateMotion, SUPPORTS_EXTERNAL|SUPPORTS_TEST)
-SVG_ELEMENT(animateTransform, SUPPORTS_EXTERNAL|SUPPORTS_TEST)
-SVG_ELEMENT(circle, SUPPORTS_ALL)
-SVG_ELEMENT(clipPath, SUPPORTS_ALL)
-SVG_ELEMENT(colorProfile, SUPPORTS_NONE)
-SVG_ELEMENT(cursor, SUPPORTS_ALL)
-SVG_ELEMENT(definition_src, SUPPORTS_NONE)
-SVG_ELEMENT(defs, SUPPORTS_ALL)
-SVG_ELEMENT(desc, SUPPORTS_LANG)
-SVG_ELEMENT(ellipse, SUPPORTS_ALL)
-SVG_ELEMENT(feBlend, SUPPORTS_NONE)
-SVG_ELEMENT(feColorMatrix, SUPPORTS_NONE)
-SVG_ELEMENT(feComponentTransfer, SUPPORTS_NONE)
-SVG_ELEMENT(feComposite, SUPPORTS_NONE)
-SVG_ELEMENT(feConvolveMatrix, SUPPORTS_NONE)
-SVG_ELEMENT(feDiffuseLighting, SUPPORTS_NONE)
-SVG_ELEMENT(feDisplacementMap, SUPPORTS_NONE)
-SVG_ELEMENT(feDistantLight, SUPPORTS_NONE)
-SVG_ELEMENT(feFlood, SUPPORTS_NONE)
-SVG_ELEMENT(feFuncR, SUPPORTS_NONE)
-SVG_ELEMENT(feFuncG, SUPPORTS_NONE)
-SVG_ELEMENT(feFuncB, SUPPORTS_NONE)
-SVG_ELEMENT(feFuncA, SUPPORTS_NONE)
-SVG_ELEMENT(feGaussianBlur, SUPPORTS_NONE)
-SVG_ELEMENT(feImage, SUPPORTS_EXTERNAL|SUPPORTS_LANG)
-SVG_ELEMENT(feMerge, SUPPORTS_NONE)
-SVG_ELEMENT(feMergeNode, SUPPORTS_NONE)
-SVG_ELEMENT(feMorphology, SUPPORTS_NONE)
-SVG_ELEMENT(feOffset, SUPPORTS_NONE)
-SVG_ELEMENT(fePointLight, SUPPORTS_NONE)
-SVG_ELEMENT(feSpecularLighting, SUPPORTS_NONE)
-SVG_ELEMENT(feSpotLight, SUPPORTS_NONE)
-SVG_ELEMENT(feTile, SUPPORTS_NONE)
-SVG_ELEMENT(feTurbulence, SUPPORTS_NONE)
-SVG_ELEMENT(filter, SUPPORTS_LANG|SUPPORTS_EXTERNAL)
-SVG_ELEMENT(font, SUPPORTS_EXTERNAL)
-SVG_ELEMENT(font_face, SUPPORTS_NONE)
-SVG_ELEMENT(font_face_format, SUPPORTS_NONE)
-SVG_ELEMENT(font_face_name, SUPPORTS_NONE)
-SVG_ELEMENT(font_face_src, SUPPORTS_NONE)
-SVG_ELEMENT(font_face_uri, SUPPORTS_NONE)
+SVG_ELEMENT(a, ATTRS_ALL)
+SVG_ELEMENT(altGlyph, ATTRS_ALL)
+SVG_ELEMENT(altGlyphDef, ATTRS_NONE)
+SVG_ELEMENT(altGlyphItem, ATTRS_NONE)
+SVG_ELEMENT(animate, ATTRS_ALL)
+SVG_ELEMENT(animateColor, ATTRS_ALL)
+SVG_ELEMENT(animateMotion, ATTRS_ALL)
+SVG_ELEMENT(animateTransform, ATTRS_ALL)
+SVG_ELEMENT(circle, ATTRS_ALL)
+SVG_ELEMENT(clipPath, ATTRS_ALL)
+SVG_ELEMENT(colorProfile, ATTRS_NONE)
+SVG_ELEMENT(cursor, ATTRS_ALL)
+SVG_ELEMENT(definition_src, ATTRS_NONE)
+SVG_ELEMENT(defs, ATTRS_ALL)
+SVG_ELEMENT(desc, ATTRS_NONE)
+SVG_ELEMENT(ellipse, ATTRS_ALL)
+SVG_ELEMENT(feBlend, ATTRS_NONE)
+SVG_ELEMENT(feColorMatrix, ATTRS_NONE)
+SVG_ELEMENT(feComponentTransfer, ATTRS_NONE)
+SVG_ELEMENT(feComposite, ATTRS_NONE)
+SVG_ELEMENT(feConvolveMatrix, ATTRS_NONE)
+SVG_ELEMENT(feDiffuseLighting, ATTRS_NONE)
+SVG_ELEMENT(feDisplacementMap, ATTRS_NONE)
+SVG_ELEMENT(feDistantLight, ATTRS_NONE)
+SVG_ELEMENT(feFlood, ATTRS_NONE)
+SVG_ELEMENT(feFuncR, ATTRS_NONE)
+SVG_ELEMENT(feFuncG, ATTRS_NONE)
+SVG_ELEMENT(feFuncB, ATTRS_NONE)
+SVG_ELEMENT(feFuncA, ATTRS_NONE)
+SVG_ELEMENT(feGaussianBlur, ATTRS_NONE)
+SVG_ELEMENT(feImage, ATTRS_EXTERNAL)
+SVG_ELEMENT(feMerge, ATTRS_NONE)
+SVG_ELEMENT(feMergeNode, ATTRS_NONE)
+SVG_ELEMENT(feMorphology, ATTRS_NONE)
+SVG_ELEMENT(feOffset, ATTRS_NONE)
+SVG_ELEMENT(fePointLight, ATTRS_NONE)
+SVG_ELEMENT(feSpecularLighting, ATTRS_NONE)
+SVG_ELEMENT(feSpotLight, ATTRS_NONE)
+SVG_ELEMENT(feTile, ATTRS_NONE)
+SVG_ELEMENT(feTurbulence, ATTRS_NONE)
+SVG_ELEMENT(filter, ATTRS_EXTERNAL)
+SVG_ELEMENT(font, ATTRS_EXTERNAL)
+SVG_ELEMENT(font_face, ATTRS_NONE)
+SVG_ELEMENT(font_face_format, ATTRS_NONE)
+SVG_ELEMENT(font_face_name, ATTRS_NONE)
+SVG_ELEMENT(font_face_src, ATTRS_NONE)
+SVG_ELEMENT(font_face_uri, ATTRS_NONE)
 #ifdef MOZ_SVG_FOREIGNOBJECT
-SVG_ELEMENT(foreignObject, SUPPORTS_ALL)
+SVG_ELEMENT(foreignObject, ATTRS_ALL)
 #endif
-SVG_ELEMENT(g, SUPPORTS_ALL)
-SVG_ELEMENT(glyph, SUPPORTS_NONE)
-SVG_ELEMENT(glyphRef, SUPPORTS_NONE)
-SVG_ELEMENT(hkern, SUPPORTS_NONE)
-SVG_ELEMENT(image, SUPPORTS_ALL)
-SVG_ELEMENT(line, SUPPORTS_ALL)
-SVG_ELEMENT(linearGradient, SUPPORTS_EXTERNAL)
-SVG_ELEMENT(marker, SUPPORTS_EXTERNAL|SUPPORTS_LANG)
-SVG_ELEMENT(mask, SUPPORTS_ALL)
-SVG_ELEMENT(metadata, SUPPORTS_NONE)
-SVG_ELEMENT(missingGlyph, SUPPORTS_NONE)
-SVG_ELEMENT(mpath, SUPPORTS_EXTERNAL)
-SVG_ELEMENT(path, SUPPORTS_ALL)
-SVG_ELEMENT(pattern, SUPPORTS_ALL)
-SVG_ELEMENT(polygon, SUPPORTS_ALL)
-SVG_ELEMENT(polyline, SUPPORTS_ALL)
-SVG_ELEMENT(radialGradient, SUPPORTS_EXTERNAL)
-SVG_ELEMENT(rect, SUPPORTS_ALL)
-SVG_ELEMENT(script, SUPPORTS_EXTERNAL)
-SVG_ELEMENT(set, SUPPORTS_TEST|SUPPORTS_EXTERNAL)
-SVG_ELEMENT(stop, SUPPORTS_NONE)
-SVG_ELEMENT(style, SUPPORTS_NONE)
-SVG_ELEMENT(svg, SUPPORTS_ALL)
-SVG_ELEMENT(svgSwitch, SUPPORTS_ALL) // switch is a C++ keyword, hence svgSwitch
-SVG_ELEMENT(symbol, SUPPORTS_LANG|SUPPORTS_EXTERNAL)
-SVG_ELEMENT(text, SUPPORTS_ALL)
-SVG_ELEMENT(textPath, SUPPORTS_ALL)
-SVG_ELEMENT(title, SUPPORTS_LANG)
-SVG_ELEMENT(tref, SUPPORTS_ALL)
-SVG_ELEMENT(tspan, SUPPORTS_ALL)
-SVG_ELEMENT(use, SUPPORTS_ALL)
-SVG_ELEMENT(view, SUPPORTS_EXTERNAL)
-SVG_ELEMENT(vkern, SUPPORTS_NONE)
+SVG_ELEMENT(g, ATTRS_ALL)
+SVG_ELEMENT(glyph, ATTRS_NONE)
+SVG_ELEMENT(glyphRef, ATTRS_NONE)
+SVG_ELEMENT(hkern, ATTRS_NONE)
+SVG_ELEMENT(image, ATTRS_ALL)
+SVG_ELEMENT(line, ATTRS_ALL)
+SVG_ELEMENT(linearGradient, ATTRS_EXTERNAL)
+SVG_ELEMENT(marker, ATTRS_NONE)
+SVG_ELEMENT(mask, ATTRS_ALL)
+SVG_ELEMENT(metadata, ATTRS_NONE)
+SVG_ELEMENT(missingGlyph, ATTRS_NONE)
+SVG_ELEMENT(mpath, ATTRS_EXTERNAL)
+SVG_ELEMENT(path, ATTRS_ALL)
+SVG_ELEMENT(pattern, ATTRS_ALL)
+SVG_ELEMENT(polygon, ATTRS_ALL)
+SVG_ELEMENT(polyline, ATTRS_ALL)
+SVG_ELEMENT(radialGradient, ATTRS_EXTERNAL)
+SVG_ELEMENT(rect, ATTRS_ALL)
+SVG_ELEMENT(script, ATTRS_EXTERNAL)
+SVG_ELEMENT(set, ATTRS_ALL)
+SVG_ELEMENT(stop, ATTRS_NONE)
+SVG_ELEMENT(style, ATTRS_NONE)
+SVG_ELEMENT(svg, ATTRS_ALL)
+SVG_ELEMENT(svgSwitch, ATTRS_ALL) // switch is a C++ keyword, hence svgSwitch
+SVG_ELEMENT(symbol, ATTRS_NONE)
+SVG_ELEMENT(text, ATTRS_ALL)
+SVG_ELEMENT(textPath, ATTRS_ALL)
+SVG_ELEMENT(title, ATTRS_NONE)
+SVG_ELEMENT(tref, ATTRS_ALL)
+SVG_ELEMENT(tspan, ATTRS_ALL)
+SVG_ELEMENT(use, ATTRS_ALL)
+SVG_ELEMENT(view, ATTRS_EXTERNAL)
+SVG_ELEMENT(vkern, ATTRS_NONE)

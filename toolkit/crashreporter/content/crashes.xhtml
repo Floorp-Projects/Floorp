@@ -8,11 +8,6 @@
   %crashesDTD;
 ]>
 
-#ifdef MOZ_THUNDERBIRD
-#ifdef XP_MACOSX
-#define FORCE_DIR
-#endif
-#endif
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <style type="text/css">
@@ -101,17 +96,7 @@ function populateReportList() {
   var directoryService = Cc["@mozilla.org/file/directory_service;1"].
                          getService(Ci.nsIProperties);
 
-#ifdef FORCE_DIR
-  var app = Cc["@mozilla.org/xre/app-info;1"].
-            getService(Ci.nsIXULAppInfo);
-
-  // Doesn't appear to be a key for the app support directory
-  reportsDir = directoryService.get("ULibDir", Ci.nsIFile);
-  reportsDir.append("Application Support");
-  reportsDir.append(app.name);
-#else
   reportsDir = directoryService.get("UAppData", Ci.nsIFile);
-#endif
   reportsDir.append("Crash Reports");
   reportsDir.append("submitted");
 

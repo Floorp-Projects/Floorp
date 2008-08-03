@@ -715,6 +715,12 @@ OpenAndValidateArchive(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrin
         return nsInstall::INVALID_SIGNATURE;
     }
 
+    if (NS_FAILED(hZip->Test("install.rdf")))
+    {
+        NS_WARNING("Archive did not contain an install manifest!");
+        return nsInstall::NO_INSTALL_SCRIPT;
+    }
+
     return nsInstall::SUCCESS;
 }
 

@@ -235,6 +235,6 @@
 #define NS_THEME_MENUITEMTEXT                              220
 
 // Vista Rebars
-#define NS_THEME_COMMUNICATIONS_TOOLBOX                    221
-#define NS_THEME_MEDIA_TOOLBOX                             222
-#define NS_THEME_BROWSER_TAB_BAR_TOOLBOX                   223
+#define NS_THEME_WIN_COMMUNICATIONS_TOOLBOX                221
+#define NS_THEME_WIN_MEDIA_TOOLBOX                         222
+#define NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX               223

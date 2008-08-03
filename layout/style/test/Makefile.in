@@ -68,7 +68,8 @@ css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_
 
 GARBAGE += css_properties.js
 
-_TEST_FILES =	test_bug73586.html \
+_TEST_FILES =	test_acid3_test46.html \
+		test_bug73586.html \
 		test_bug74880.html \
 		test_bug98997.html \
 		test_bug221428.html \
@@ -93,19 +94,26 @@ _TEST_FILES =	test_bug73586.html \
 		test_bug401046.html \
 		test_bug405818.html \
 		test_bug412901.html \
+		test_bug437915.html \
+		test_cascade.html \
 		test_compute_data_with_start_struct.html \
+		test_css_eof_handling.html \
 		test_dont_use_document_colors.html \
-		test_inherit_storage.html \
 		test_inherit_computation.html \
-		test_initial_storage.html \
+		test_inherit_storage.html \
 		test_initial_computation.html \
+		test_initial_storage.html \
+		test_media_queries.html \
+		test_media_queries_dynamic_xbl.html \
+		test_of_type_selectors.xhtml \
 		test_parse_rule.html \
 		test_property_database.html \
 		test_property_syntax_errors.html \
 		test_selectors.html \
+		test_selectors_on_anonymous_content.html \
 		test_style_struct_copy_constructors.html \
-		test_value_storage.html \
 		test_value_computation.html \
+		test_value_storage.html \
 		css_properties.js \
 		property_database.js \
 		unstyled.xml \
@@ -121,6 +129,12 @@ _TEST_FILES =	test_bug73586.html \
 		redirect-3.css \
 		redirect-3.css^headers^ \
 		post-redirect-3.css \
+		xbl_bindings.xml \
+		empty.html \
+		media_queries_iframe.html \
+		media_queries_dynamic_xbl_binding.xml \
+		media_queries_dynamic_xbl_iframe.html \
+		media_queries_dynamic_xbl_style.css \
 		$(NULL)
 
 

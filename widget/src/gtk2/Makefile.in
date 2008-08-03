@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  pref \
 		  dom \
+		  docshell \
 		  necko \
 		  uconv \
 		  intl \
@@ -104,14 +105,24 @@ CPPSRCS		= \
 		nsNativeKeyBindings.cpp \
 		nsScreenGtk.cpp \
 		nsScreenManagerGtk.cpp \
-		nsDeviceContextSpecG.cpp \
-		nsPrintOptionsGTK.cpp \
 		nsImageToPixbuf.cpp \
 		nsAccessibilityHelper.cpp \
-		nsIdleServiceGTK.cpp \
+		$(NULL)
+
+ifdef NS_OSSO
+CPPSRCS         += nsIdleServiceOSSO.cpp
+else
+CPPSRCS         += nsIdleServiceGTK.cpp
+endif
+
+ifdef NS_PRINTING
+CPPSRCS		+= \
+		nsDeviceContextSpecG.cpp \
+		nsPrintOptionsGTK.cpp \
 		nsPrintDialogGTK.cpp \
 		nsPrintSettingsGTK.cpp \
 		$(NULL)
+endif
 
 # build our subdirs, too
 ifdef ACCESSIBILITY

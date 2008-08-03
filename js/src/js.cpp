@@ -308,7 +308,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         if (script) {
             if (!compileOnly) {
                 ok = JS_ExecuteScript(cx, obj, script, &result);
-                if (ok && result != JSVAL_VOID) {
+                if (ok && !JSVAL_IS_VOID(result)) {
                     str = JS_ValueToString(cx, result);
                     if (str)
                         fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
@@ -541,6 +541,8 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         case 'z':
             obj = split_setup(cx);
+            if (!obj)
+                return gExitCode;
             break;
 #ifdef MOZ_SHARK
         case 'k':
@@ -851,7 +853,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GCZeal(JSContext *cx, uintN argc, jsval *vp)
 {
-    uintN zeal;
+    uint32 zeal;
 
     if (!JS_ValueToECMAUint32(cx, vp[2], &zeal))
         return JS_FALSE;
@@ -865,7 +867,7 @@ typedef struct JSCountHeapNode JSCountHeapNode;
 
 struct JSCountHeapNode {
     void                *thing;
-    uint32              kind;
+    int32               kind;
     JSCountHeapNode     *next;
 };
 
@@ -1078,7 +1080,7 @@ TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
                            rval)) {
         return JSTRAP_ERROR;
     }
-    if (*rval != JSVAL_VOID)
+    if (!JSVAL_IS_VOID(*rval))
         return JSTRAP_RETURN;
     return JSTRAP_CONTINUE;
 }
@@ -1234,7 +1236,7 @@ SrcNotes(JSContext *cx, JSScript *script)
             }
         }
         fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
-                PTRDIFF(sn, notes, jssrcnote), offset, delta, name);
+                (uintN) PTRDIFF(sn, notes, jssrcnote), offset, delta, name);
         switch (type) {
           case SRC_SETLINE:
             fprintf(gOutFile, " lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
@@ -1366,9 +1368,11 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
     for (i = 0; i < argc; i++) {
         script = ValueToScript(cx, argv[i]);
-        if (!script)
+        if (!script) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                 JSSMSG_SCRIPTS_ONLY);
             return JS_FALSE;
-
+        }
         if (VALUE_IS_FUNCTION(cx, argv[i])) {
             JSFunction *fun = JS_ValueToFunction(cx, argv[i]);
             if (fun && (fun->flags & JSFUN_FLAGS_MASK)) {
@@ -1393,8 +1397,11 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             }
         }
         
-        if (!js_Disassemble(cx, script, lines, stdout))
+        if (!js_Disassemble(cx, script, lines, stdout)) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                 JSSMSG_CANT_DISASSEMBLE);
             return JS_FALSE;
+        }
         SrcNotes(cx, script);
         TryNotes(cx, script);
     }
@@ -1415,12 +1422,9 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     for (i = 0; i < argc; i++) {
         script = ValueToScript(cx, argv[i]);
-        if (!script)
-            return JS_FALSE;
-
         if (!script || !script->filename) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                                            JSSMSG_FILE_SCRIPTS_ONLY);
+                                 JSSMSG_FILE_SCRIPTS_ONLY);
             return JS_FALSE;
         }
 
@@ -1468,8 +1472,11 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             len = js_Disassemble1(cx, script, pc,
                                   PTRDIFF(pc, script->code, jsbytecode),
                                   JS_TRUE, stdout);
-            if (!len)
+            if (!len) {
+                JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                     JSSMSG_CANT_DISASSEMBLE);
                 return JS_FALSE;
+            }
             pc += len;
         }
 
@@ -2038,7 +2045,7 @@ static const jschar badSurrogate[] = { 'A', 'B', 'C', 0xDEEE, 'D', 'E', 0 };
 static JSBool
 TestUTF8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    intN mode = 1;
+    int32 mode = 1;
     jschar chars[20];
     size_t charsLength = 5;
     char bytes[20];
@@ -2083,6 +2090,7 @@ ThrowError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 /* A class for easily testing the inner/outer object callbacks. */
 typedef struct ComplexObject {
     JSBool isInner;
+    JSBool frozen;
     JSObject *inner;
     JSObject *outer;
 } ComplexObject;
@@ -2209,7 +2217,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!JS_NextProperty(cx, iterator, idp))
             return JS_FALSE;
 
-        if (*idp != JSVAL_VOID)
+        if (!JSVAL_IS_VOID(*idp))
             break;
         /* Fall through. */
 
@@ -2300,12 +2308,17 @@ split_innerObject(JSContext *cx, JSObject *obj)
     ComplexObject *cpx;
 
     cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
+    if (cpx->frozen) {
+        JS_ASSERT(!cpx->isInner);
+        return obj;
+    }
     return !cpx->isInner ? cpx->inner : obj;
 }
 
 static JSExtendedClass split_global_class = {
     {"split_global",
-    JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE | JSCLASS_IS_EXTENDED,
+    JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE |
+    JSCLASS_IS_EXTENDED,
     split_addProperty, split_delProperty,
     split_getProperty, split_setProperty,
     (JSEnumerateOp)split_enumerate,
@@ -2326,17 +2339,17 @@ split_create_outer(JSContext *cx)
     cpx = (ComplexObject *) JS_malloc(cx, sizeof *obj);
     if (!cpx)
         return NULL;
-    cpx->outer = NULL;
-    cpx->inner = NULL;
     cpx->isInner = JS_FALSE;
+    cpx->frozen = JS_TRUE;
+    cpx->inner = NULL;
+    cpx->outer = NULL;
 
     obj = JS_NewObject(cx, &split_global_class.base, NULL, NULL);
-    if (!obj) {
+    if (!obj || !JS_SetParent(cx, obj, NULL)) {
         JS_free(cx, cpx);
         return NULL;
     }
 
-    JS_ASSERT(!JS_GetParent(cx, obj));
     if (!JS_SetPrivate(cx, obj, cpx)) {
         JS_free(cx, cpx);
         return NULL;
@@ -2356,9 +2369,10 @@ split_create_inner(JSContext *cx, JSObject *outer)
     cpx = (ComplexObject *) JS_malloc(cx, sizeof *cpx);
     if (!cpx)
         return NULL;
-    cpx->outer = outer;
-    cpx->inner = NULL;
     cpx->isInner = JS_TRUE;
+    cpx->frozen = JS_FALSE;
+    cpx->inner = NULL;
+    cpx->outer = outer;
 
     obj = JS_NewObject(cx, &split_global_class.base, NULL, NULL);
     if (!obj || !JS_SetParent(cx, obj, NULL) || !JS_SetPrivate(cx, obj, cpx)) {
@@ -2368,6 +2382,7 @@ split_create_inner(JSContext *cx, JSObject *outer)
 
     outercpx = (ComplexObject *) JS_GetPrivate(cx, outer);
     outercpx->inner = obj;
+    outercpx->frozen = JS_FALSE;
 
     return obj;
 }
@@ -2814,6 +2829,17 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("connectShark",    js_ConnectShark,    0,0,0),
     JS_FS("disconnectShark", js_DisconnectShark, 0,0,0),
 #endif
+#ifdef MOZ_CALLGRIND
+    JS_FS("startCallgrind",  js_StartCallgrind,  0,0,0),
+    JS_FS("stopCallgrind",   js_StopCallgrind,   0,0,0),
+    JS_FS("dumpCallgrind",   js_DumpCallgrind,   1,0,0),
+#endif
+#ifdef MOZ_VTUNE
+    JS_FS("startVtune",      js_StartVtune,    1,0,0),
+    JS_FS("stopVtune",       js_StopVtune,     0,0,0),
+    JS_FS("pauseVtune",      js_PauseVtune,    0,0,0),
+    JS_FS("resumeVtune",     js_ResumeVtune,   0,0,0),
+#endif
 #ifdef DEBUG_ARRAYS
     JS_FS("arrayInfo",       js_ArrayInfo,       1,0,0),
 #endif
@@ -2890,6 +2916,17 @@ static const char *const shell_help_messages[] = {
 "connectShark()           Connect to Shark.\n"
 "                         The -k switch does this automatically.",
 "disconnectShark()        Disconnect from Shark.",
+#endif
+#ifdef MOZ_CALLGRIND
+"startCallgrind()         Start callgrind instrumentation.\n",
+"stopCallgrind()          Stop callgrind instumentation.",
+"dumpCallgrind([name])    Dump callgrind counters.\n",
+#endif
+#ifdef MOZ_VTUNE
+"startVtune([filename])   Start vtune instrumentation.\n",
+"stopVtune()              Stop vtune instumentation.",
+"pauseVtune()             Pause vtune collection.\n",
+"resumeVtune()            Resume vtune collection.\n",
 #endif
 #ifdef DEBUG_ARRAYS
 "arrayInfo(a1, a2, ...)   Report statistics about arrays.",
@@ -3175,7 +3212,7 @@ its_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
  */
 static JSBool
 its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-		  jsval *statep, jsid *idp)
+              jsval *statep, jsid *idp)
 {
     JSObject *iterator;
 
@@ -3203,7 +3240,7 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!JS_NextProperty(cx, iterator, idp))
             return JS_FALSE;
 
-        if (*idp != JSVAL_VOID)
+        if (!JSVAL_IS_VOID(*idp))
             break;
         /* Fall through. */
 

@@ -474,7 +474,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
 #elif defined(XP_WIN)
   _wchdir(applyToDir.get());
 
-  if (!WinLaunchChild(updaterPathW.get(), appArgc + 4, argv, 1))
+  if (!WinLaunchChild(updaterPathW.get(), appArgc + 4, argv, 0))
     return;
   _exit(0);
 #else

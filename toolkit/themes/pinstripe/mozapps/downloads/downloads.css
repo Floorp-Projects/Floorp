@@ -12,7 +12,7 @@ richlistitem[type="download"] {
   min-height: 40px !important;
 }
 
-richlistitem[type="download"][alternate="true"]:not([selected="true"]) {
+richlistitem[type="download"]:not([selected="true"]):nth-child(odd) {
   background-color: -moz-oddtreerow;
 }
 
@@ -109,6 +109,15 @@ richlistitem[type="download"] button {
   background-color: #9f9f9f;
   background-repeat: repeat-x;
   background-position: top left;
+}
+
+#downloadManager:not([active="true"]) #search {
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
+  background-color: #cfcfcf;
+}
+
+#downloadManager:not([active="true"]) #search > * {
+  opacity: 0.7;
 }
 
 #clearListButton {

@@ -80,7 +80,7 @@ class nsIPageSequenceFrame;
 class nsString;
 class nsAString;
 class nsStringArray;
-class nsICaret;
+class nsCaret;
 class nsStyleContext;
 class nsFrameSelection;
 class nsFrameManager;
@@ -102,10 +102,11 @@ class gfxContext;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// 228a7d67-811b-4d75-85c0-1ee22c0d2af0
+
+// 23e048f6-49bb-4ac4-b900-c63865363ad3
 #define NS_IPRESSHELL_IID \
-{ 0x228a7d67, 0x811b, 0x4d75, \
-  { 0x85, 0xc0, 0x1e, 0xe2, 0x2c, 0x0d, 0x2a, 0xf0 } }
+{ 0x23e048f6, 0x49bb, 0x4ac4, \
+  { 0xb9, 0x00, 0xc6, 0x38, 0x65, 0x36, 0x3a, 0xd3 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -385,6 +386,8 @@ public:
    */
   NS_IMETHOD RecreateFramesFor(nsIContent* aContent) = 0;
 
+  void PostRecreateFramesFor(nsIContent* aContent);
+  
   /**
    * Determine if it is safe to flush all pending notifications
    * @param aIsSafeToFlush PR_TRUE if it is safe, PR_FALSE otherwise.
@@ -509,7 +512,7 @@ public:
   /**
    * Get the caret, if it exists. AddRefs it.
    */
-  NS_IMETHOD GetCaret(nsICaret **aOutCaret) = 0;
+  NS_IMETHOD GetCaret(nsCaret **aOutCaret) = 0;
 
   /**
    * Invalidate the caret's current position if it's outside of its frame's
@@ -521,7 +524,7 @@ public:
   /**
    * Set the current caret to a new caret. To undo this, call RestoreCaret.
    */
-  virtual void SetCaret(nsICaret *aNewCaret) = 0;
+  virtual void SetCaret(nsCaret *aNewCaret) = 0;
 
   /**
    * Restore the caret to the original caret that this pres shell was created

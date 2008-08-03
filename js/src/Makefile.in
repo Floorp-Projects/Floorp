@@ -205,6 +205,12 @@ include $(topsrcdir)/config/config.mk
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
+ifdef MOZ_MEMORY
+ifeq ($(OS_ARCH),SunOS)
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DIST)/lib)
+endif
+endif
+
 # When using gcc the assembly is inlined in the C-file (see jslock.cpp)
 ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
@@ -236,6 +242,10 @@ JSJAVA_CFLAGS	= \
 
 HOST_SIMPLE_PROGRAMS += host_jskwgen$(HOST_BIN_SUFFIX)
 GARBAGE += jsautokw.h host_jskwgen$(HOST_BIN_SUFFIX)
+
+HOST_SIMPLE_PROGRAMS += host_jsoplengen$(HOST_BIN_SUFFIX)
+GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
+
 USE_HOST_CXX = 1
 
 ifdef HAVE_DTRACE
@@ -293,9 +303,15 @@ NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
 ifdef MOZ_SHARK
-DEFINES += -DMOZ_SHARK
 CFLAGS += -F/System/Library/PrivateFrameworks
+CXXFLAGS += -F/System/Library/PrivateFrameworks
 LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
+endif
+
+ifdef MOZ_VTUNE
+CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
+EXTRA_DSO_LDOPTS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
+LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
 
 LDFLAGS		+= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
@@ -346,6 +362,12 @@ ifeq ($(OS_RELEASE),4.1)
 LDFLAGS		+= -ldl -lnsl
 else
 LDFLAGS		+= -lposix4 -ldl -lnsl -lsocket
+endif
+endif
+
+ifdef MOZ_MEMORY
+ifeq ($(OS_ARCH),Darwin)
+LDFLAGS += -ljemalloc
 endif
 endif
 
@@ -439,13 +461,19 @@ jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.cpp Makefile.in
 endif
 endif
 
-# Extra dependancies and rules for keyword switch code
-jsscan.$(OBJ_SUFFIX): jsautokw.h jskeyword.tbl
-
+# Extra dependancies and rules for auto-generated headers
 host_jskwgen.$(OBJ_SUFFIX): jsconfig.h jskeyword.tbl
 
 jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
 	./host_jskwgen$(HOST_BIN_SUFFIX) $@
+
+host_jsoplengen.$(OBJ_SUFFIX): jsopcode.tbl
+
+jsautooplen.h: host_jsoplengen$(HOST_BIN_SUFFIX)
+	./host_jsoplengen$(HOST_BIN_SUFFIX) $@
+
+# Force auto-header generation before compiling any source that may use them
+$(CPPSRCS:%.cpp=%.$(OBJ_SUFFIX)): jsautokw.h jsautooplen.h
 
 ifdef HAVE_DTRACE
 javascript-trace.h: $(srcdir)/javascript-trace.d
@@ -453,4 +481,3 @@ javascript-trace.h: $(srcdir)/javascript-trace.d
 	sed 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
 	    javascript-trace.h.in > javascript-trace.h
 endif
-

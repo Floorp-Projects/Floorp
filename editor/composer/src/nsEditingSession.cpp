@@ -1025,12 +1025,22 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
   
     if (makeEditable)
     {
-      // do we already have an editor here?
-      nsCOMPtr<nsIEditor> editor;
-      rv = editorDocShell->GetEditor(getter_AddRefs(editor));
-      if (NS_FAILED(rv))
-        return rv;
-      if (!editor)
+      // To keep pre Gecko 1.9 behavior, setup editor always when
+      // mMakeWholeDocumentEditable.
+      PRBool needsSetup;
+      if (mMakeWholeDocumentEditable) {
+        needsSetup = PR_TRUE;
+      } else {
+        // do we already have an editor here?
+        nsCOMPtr<nsIEditor> editor;
+        rv = editorDocShell->GetEditor(getter_AddRefs(editor));
+        if (NS_FAILED(rv))
+           return rv;
+
+        needsSetup = !editor;
+      }
+
+      if (needsSetup)
       {
         mCanCreateEditor = PR_FALSE;
         rv = SetupEditorOnWindow(domWindow);
@@ -1394,7 +1404,9 @@ nsEditingSession::RestoreAnimationMode(nsIDOMWindow *aWindow)
 nsresult
 nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
 {
-  NS_ASSERTION(mEditorFlags != 0, "mEditorFlags should not be 0");
+  if (!mDoneSetup)
+    return NS_OK;
+
   NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
 
   // Kill any existing reload timer
@@ -1421,7 +1433,9 @@ nsEditingSession::DetachFromWindow(nsIDOMWindow* aWindow)
 nsresult
 nsEditingSession::ReattachToWindow(nsIDOMWindow* aWindow)
 {
-  NS_ASSERTION(mEditorFlags != 0, "mEditorFlags should still be valid...");
+  if (!mDoneSetup)
+    return NS_OK;
+
   NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
 
   // Imitate nsEditorDocShell::MakeEditable() to reattach the

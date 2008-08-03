@@ -160,13 +160,14 @@ let DownloadUtils = {
    *        Last time remaining in seconds or Infinity for unknown
    * @return A pair: [download status text, new value of "last seconds"]
    */
-  getDownloadStatus: function(aCurrBytes, aMaxBytes, aSpeed, aLastSec)
+  getDownloadStatus: function DU_getDownloadStatus(aCurrBytes, aMaxBytes,
+                                                   aSpeed, aLastSec)
   {
-    if (isNil(aMaxBytes))
+    if (aMaxBytes == null)
       aMaxBytes = -1;
-    if (isNil(aSpeed))
+    if (aSpeed == null)
       aSpeed = -1;
-    if (isNil(aLastSec))
+    if (aLastSec == null)
       aLastSec = Infinity;
 
     // Calculate the time remaining if we have valid values
@@ -208,9 +209,9 @@ let DownloadUtils = {
    *        Total number of bytes or -1 for unknown
    * @return The transfer progress text
    */
-  getTransferTotal: function(aCurrBytes, aMaxBytes)
+  getTransferTotal: function DU_getTransferTotal(aCurrBytes, aMaxBytes)
   {
-    if (isNil(aMaxBytes))
+    if (aMaxBytes == null)
       aMaxBytes = -1;
 
     let [progress, progressUnits] = DownloadUtils.convertByteUnits(aCurrBytes);
@@ -245,9 +246,9 @@ let DownloadUtils = {
    *        Last time remaining in seconds or Infinity for unknown
    * @return A pair: [time left text, new value of "last seconds"]
    */
-  getTimeLeft: function(aSeconds, aLastSec)
+  getTimeLeft: function DU_getTimeLeft(aSeconds, aLastSec)
   {
-    if (isNil(aLastSec))
+    if (aLastSec == null)
       aLastSec = Infinity;
 
     if (aSeconds < 0)
@@ -316,7 +317,7 @@ let DownloadUtils = {
    *        The URI string to try getting an eTLD + 1, etc.
    * @return A pair: [display host for the URI string, full host name]
    */
-  getURIHost: function(aURIString)
+  getURIHost: function DU_getURIHost(aURIString)
   {
     let ioService = Cc["@mozilla.org/network/io-service;1"].
                     getService(Ci.nsIIOService);
@@ -379,7 +380,7 @@ let DownloadUtils = {
    *        Number of bytes to convert
    * @return A pair: [new value with 3 sig. figs., its unit]
    */
-  convertByteUnits: function(aBytes)
+  convertByteUnits: function DU_convertByteUnits(aBytes)
   {
     let unitIndex = 0;
 
@@ -405,7 +406,7 @@ let DownloadUtils = {
    *        Seconds to convert into the appropriate 2 units
    * @return 4-item array [first value, its unit, second value, its unit]
    */
-  convertTimeUnits: function(aSecs)
+  convertTimeUnits: function DU_convertTimeUnits(aSecs)
   {
     // These are the maximum values for seconds, minutes, hours corresponding
     // with gStr.timeUnits without the last item
@@ -484,18 +485,6 @@ function convertTimeUnitsUnits(aTime, aIndex)
 function replaceInsert(aText, aIndex, aValue)
 {
   return aText.replace("#" + aIndex, aValue);
-}
-
-/**
- * Private helper function to determine if an argument is null or undefined
- *
- * @param aArg
- *        The argument to check for nullness or undefinedness
- * @return true if null or undefined, false otherwise
- */
-function isNil(aArg)
-{
-  return (aArg == null) || (aArg == undefined);
 }
 
 /**

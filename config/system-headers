@@ -20,6 +20,9 @@ Aliases.h
 all.h
 alloca.h
 alloc.h
+alsa/asoundlib.h
+alsa/pcm.h
+alsa/mixer.h
 ansi_parms.h
 a.out.h
 app/Cursor.h
@@ -196,6 +199,7 @@ FixMath.h
 float.h
 Folders.h
 fontconfig/fontconfig.h
+fontconfig/fcfreetype.h
 Font.h
 Fonts.h
 fp.h
@@ -221,6 +225,7 @@ gdk/gdk.h
 gdk/gdkkeysyms.h
 gdk/gdkpango.h
 gdk/gdkprivate.h
+gdk/gdkscreen.h
 gdk/gdkregion.h
 gdk/gdkwindow.h
 gdk/gdkx.h

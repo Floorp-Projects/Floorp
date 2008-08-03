@@ -464,7 +464,7 @@ nsRwsService::HandlerFromPath(const char *aPath, PRUint32 *aHandle,
     nsAutoString classViewer;
     AssignNLSString(NS_LITERAL_STRING("classViewerOS2").get(), classViewer);
     int pos = -1;
-    if ((pos = classViewer.Find("%S")) > -1);
+    if ((pos = classViewer.Find("%S")) > -1)
       classViewer.Replace(pos, 2, buffer.Elements());
     _retval.Assign(classViewer);
     rv = NS_OK;

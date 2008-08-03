@@ -135,7 +135,7 @@ class nsRangeUpdater
  * preservation of dom points across editor actions
  */
 
-class nsAutoTrackDOMPoint
+class NS_STACK_CLASS nsAutoTrackDOMPoint
 {
   private:
     nsRangeUpdater &mRU;
@@ -170,7 +170,7 @@ class nsAutoTrackDOMPoint
  * Will/DidReplaceContainer()
  */
 
-class nsAutoReplaceContainerSelNotify
+class NS_STACK_CLASS nsAutoReplaceContainerSelNotify
 {
   private:
     nsRangeUpdater &mRU;
@@ -198,7 +198,7 @@ class nsAutoReplaceContainerSelNotify
  * Will/DidRemoveContainer()
  */
 
-class nsAutoRemoveContainerSelNotify
+class NS_STACK_CLASS nsAutoRemoveContainerSelNotify
 {
   private:
     nsRangeUpdater &mRU;
@@ -233,7 +233,7 @@ class nsAutoRemoveContainerSelNotify
  * Will/DidInsertContainer()
  */
 
-class nsAutoInsertContainerSelNotify
+class NS_STACK_CLASS nsAutoInsertContainerSelNotify
 {
   private:
     nsRangeUpdater &mRU;
@@ -257,7 +257,7 @@ class nsAutoInsertContainerSelNotify
  * Will/DidMoveNode()
  */
 
-class nsAutoMoveNodeSelNotify
+class NS_STACK_CLASS nsAutoMoveNodeSelNotify
 {
   private:
     nsRangeUpdater &mRU;

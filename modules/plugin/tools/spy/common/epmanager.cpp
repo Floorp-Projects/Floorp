@@ -112,7 +112,7 @@ void NPPEntryPointManager::createEntryPointsForPlugin(char * mimetype, NPPluginF
     eps->realNPPFuncs.print         = funcs->print;
     eps->realNPPFuncs.event         = funcs->event;
     eps->realNPPFuncs.urlnotify     = funcs->urlnotify;
-    eps->realNPPFuncs.javaClass     = funcs->javaClass;
+    eps->realNPPFuncs.javaClass     = NULL;
     eps->realNPPFuncs.getvalue      = funcs->getvalue;
     eps->realNPPFuncs.setvalue      = funcs->setvalue;
   }

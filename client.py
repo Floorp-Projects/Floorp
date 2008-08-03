@@ -1,19 +1,15 @@
 #!/usr/bin/python
 
-NSPR_CO_TAG = 'NSPR_4_7_1_BETA2'
-NSS_CO_TAG  = 'NSS_3_12_RC2'
-
 NSPR_DIRS = ('nsprpub',)
 NSS_DIRS  = ('dbm',
              'security/nss',
              'security/coreconf',
              'security/dbm')
 
-# URL of the default hg repository to clone for Tamarin.
-DEFAULT_TAMARIN_REPO = 'http://hg.mozilla.org/tamarin-central/'
-
 import os
 import sys
+import datetime
+import shutil
 from optparse import OptionParser
 
 topsrcdir = os.path.dirname(__file__)
@@ -47,92 +43,54 @@ def do_hg_pull(dir, repository, hg):
         if repository is not None:
             cmd.append(repository)
         check_call_noisy(cmd)
+    check_call([hg, 'parent', '-R', fulldir,
+                '--template=Updated to revision {node}.\n'])
 
-def do_cvs_checkout(modules, tag, cvsroot, cvs):
-    """Check out a CVS directory.
+def do_cvs_export(modules, tag, cvsroot, cvs):
+    """Check out a CVS directory without CVS metadata, using "export"
     modules is a list of directories to check out, e.g. ['nsprpub']
     """
     for module in modules:
+        fullpath = os.path.join(topsrcdir, module)
+        if os.path.exists(fullpath):
+            print "Removing '%s'" % fullpath
+            shutil.rmtree(fullpath)
+
         (parent, leaf) = os.path.split(module)
+        print "CVS export begin: " + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
         check_call_noisy([cvs, '-d', cvsroot,
-                          'checkout', '-P', '-r', tag, '-d', leaf,
+                          'export', '-r', tag, '-d', leaf,
                           'mozilla/%s' % module],
                          cwd=os.path.join(topsrcdir, parent))
+        print "CVS export end: " + datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 
-o = OptionParser(usage="client.py [options] checkout")
-o.add_option("-m", "--mozilla-repo", dest="mozilla_repo",
-             default=None,
-             help="URL of Mozilla repository to pull from (default: use hg default in .hg/hgrc)")
+o = OptionParser(usage="client.py [options] update_nspr tagname | update_nss tagname")
 o.add_option("--skip-mozilla", dest="skip_mozilla",
              action="store_true", default=False,
-             help="Skip pulling the Mozilla repository.")
+             help="Obsolete")
 
-o.add_option("-t", "--tamarin-repo", dest="tamarin_repo",
-             default=None,
-             help="URL of Tamarin repository to pull from (default: use hg default in js/tamarin/.hg/hgrc; or if that file doesn't exist, use \"" + DEFAULT_TAMARIN_REPO + "\".)")
-o.add_option("--skip-tamarin", dest="skip_tamarin",
-             action="store_true", default=False,
-             help="Skip pulling the Tamarin repository.")
-
-o.add_option("--skip-nspr", dest="skip_nspr",
-             action="store_true", default=False,
-             help="Skip pulling the NSPR repository.")
-o.add_option("--skip-nss", dest="skip_nss",
-             action="store_true", default=False,
-             help="Skip pulling the NSS repository.")
-
-o.add_option("--hg", dest="hg", default=os.environ.get('HG', 'hg'),
-             help="The location of the hg binary")
 o.add_option("--cvs", dest="cvs", default=os.environ.get('CVS', 'cvs'),
              help="The location of the cvs binary")
 o.add_option("--cvsroot", dest="cvsroot",
              default=os.environ.get('CVSROOT', ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'),
              help="The CVSROOT (default: :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot")
 
-
-def fixup_repo_options(options):
-    """ Check options.mozilla_repo and options.tamarin_repo values;
-    populate tamarin_repo if needed.
-
-    options.mozilla_repo and options.tamarin_repo are normally None.
-    This is fine-- our "hg pull" commands will omit the repo URL.
-    The exception is the initial checkout, which does an "hg clone"
-    for Tamarin.  That command requires a repository URL.
-    """
-
-    if (options.mozilla_repo is None
-            and not os.path.exists(os.path.join(topsrcdir, '.hg'))):
-        o.print_help()
-        print
-        print "*** The -m option is required for the initial checkout."
-        sys.exit(2)
-
-    # Handle special case: initial checkout of Tamarin.
-    if (options.tamarin_repo is None
-            and not os.path.exists(os.path.join(topsrcdir, 'js', 'tamarin'))):
-        options.tamarin_repo = DEFAULT_TAMARIN_REPO
-
 try:
-    (options, (action,)) = o.parse_args()
-except ValueError:
+    options, args = o.parse_args()
+    action = args[0]
+except IndexError:
     o.print_help()
     sys.exit(2)
 
-fixup_repo_options(options)
-
 if action in ('checkout', 'co'):
-    if not options.skip_nspr:
-        do_cvs_checkout(NSPR_DIRS, NSPR_CO_TAG, options.cvsroot, options.cvs)
-
-    if not options.skip_nss:
-        do_cvs_checkout(NSS_DIRS, NSS_CO_TAG, options.cvsroot, options.cvs)
-
-    if not options.skip_tamarin:
-        do_hg_pull('js/tamarin', options.tamarin_repo, options.hg)
-
-    if not options.skip_mozilla:
-        do_hg_pull('.', options.mozilla_repo, options.hg)
-
+    print >>sys.stderr, "Warning: client.py checkout is obsolete."
+    pass
+elif action in ('update_nspr'):
+    tag, = args[1:]
+    do_cvs_export(NSPR_DIRS, tag, options.cvsroot, options.cvs)
+elif action in ('update_nss'):
+    tag, = args[1:]
+    do_cvs_export(NSS_DIRS, tag, options.cvsroot, options.cvs)
 else:
     o.print_help()
     sys.exit(2)

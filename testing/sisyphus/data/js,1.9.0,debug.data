@@ -1,4 +1,4 @@
 product=js
 branch=1.9.0
-sourcepath=${BUILDDIR}/1.9.0/mozilla/js/src
+jsshellsourcepath=${BUILDDIR}/1.9.0/mozilla/js/src
 buildtype=debug

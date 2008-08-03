@@ -149,6 +149,23 @@ var gCSSProperties = {
 		other_values: [ "thin", "thick", "1px", "2em" ],
 		invalid_values: [ "5%" ]
 	},
+	"-moz-border-image": {
+		domProp: "MozBorderImage",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "url('border.png') 27 27 27 27",
+		                "url('border.png') 27",
+		                "url('border.png') 27 27 27 27 repeat",
+		                "url('border.png') 27 27 27 27 / 1em",
+		                "url('border.png') 27 27 27 27 / 1em 1em 1em 1em repeat",
+		                "url('border.png') 27 27 27 27 / 1em 1em 1em 1em stretch round" ],
+		invalid_values: [ "url('border.png')",
+		                  "url('border.png') 27 27 27 27 27",
+		                  "url('border.png') 27 27 27 27 / 1em 1em 1em 1em 1em",
+		                  "url('border.png') / repeat",
+		                  "url('border.png') 27 27 27 27 /" ]
+	},
 	"-moz-border-left-colors": {
 		domProp: "MozBorderLeftColors",
 		inherited: false,
@@ -300,6 +317,15 @@ var gCSSProperties = {
 		other_values: [ "center", "end", "justify" ],
 		invalid_values: []
 	},
+	"-moz-box-shadow": {
+		domProp: "MozBoxShadow",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		prerequisites: { "color": "blue" },
+		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px 2px 2px", "blue 3px 2px", "2px 2px 1px 5px green", "2px 2px red", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px, 1px 2px 3px 2px orange", "3px 0 0 0" ],
+		invalid_values: [ "3% 3%", "1px 1px 1px 1px 1px", "2px 2px, none", "red 2px 2px blue", "inherit, 2px 2px", "2px 2px, inherit", "2px 2px -5px" ]
+	},
 	"-moz-box-sizing": {
 		domProp: "MozBoxSizing",
 		inherited: false,
@@ -315,7 +341,7 @@ var gCSSProperties = {
 		initial_values: [ "auto" ],
 		other_values: [ "1", "0", "17" ],
 		invalid_values: [
-			// "-1", unclear: see http://lists.w3.org/Archives/Public/www-style/2007Apr/0030
+			"-1", //unclear: see http://lists.w3.org/Archives/Public/www-style/2007Apr/0030
 			"3px"
 		]
 	},
@@ -335,12 +361,48 @@ var gCSSProperties = {
 		other_values: [ "15px", "50%" ],
 		invalid_values: [ "20", "-1px" ]
 	},
+	"-moz-column-rule-width": {
+		domProp: "MozColumnRuleWidth",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "-moz-column-rule-style": "solid" },
+		initial_values: [ "medium" ],
+		other_values: [ "thin", "15px" ],
+		invalid_values: [ "20", "-1px", "red", "50%" ]
+	},
+	"-moz-column-rule-style": {
+		domProp: "MozColumnRuleStyle",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "solid", "hidden", "ridge", "groove", "inset", "outset", "double", "dotted", "dashed" ],
+		invalid_values: [ "20", "foo" ]
+	},
+	"-moz-column-rule-color": {
+		domProp: "MozColumnRuleColor",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "green" },
+		initial_values: [ "currentColor" ],
+		other_values: [ "red", "blue", "#ffff00" ],
+		invalid_values: [ ]
+	},
+	"-moz-column-rule": {
+		domProp: "MozColumnRule",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		prerequisites: { "color": "green" },
+		subproperties: [ "-moz-column-rule-width", "-moz-column-rule-style", "-moz-column-rule-color" ],
+		initial_values: [ "medium none currentColor" ],
+		other_values: [ "2px blue solid", "red dotted 1px", "ridge 4px orange" ],
+		invalid_values: [ "2px 3px 4px red", "dotted dashed", "5px dashed green 3px" ]
+	},
 	"-moz-float-edge": {
 		domProp: "MozFloatEdge",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "content-box" ],
-		other_values: [ "border-box", "padding-box", "margin-box" ],
+		other_values: [ "margin-box" ],
 		invalid_values: [ "content", "padding", "border", "margin" ]
 	},
 	"-moz-force-broken-image-icon": {
@@ -440,6 +502,14 @@ var gCSSProperties = {
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
 		other_values: [ "1px", "3em" ],
+		invalid_values: []
+	},
+	"-moz-stack-sizing": {
+		domProp: "MozStackSizing",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "stretch-to-fit" ],
+		other_values: [ "ignore" ],
 		invalid_values: []
 	},
 	"-moz-user-focus": {
@@ -775,7 +845,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		/* XXX should test currentColor, but may or may not be initial */
 		initial_values: [ "black", "#000" ],
-		other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent" ],
+		other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent", "-moz-nativehyperlinktext", "rgba(255,128,0,0.5)" ],
 		invalid_values: [ "fff", "ffffff", "#f", "#ff", "#ffff", "#fffff", "#fffffff", "#ffffffff", "#fffffffff" ]
 	},
 	"content": {
@@ -1491,12 +1561,12 @@ var gCSSProperties = {
 	},
 	"text-shadow": {
 		domProp: "textShadow",
-		inherited: false,
-		backend_only: true,
+		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
+		prerequisites: { "color": "blue" },
 		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px" ],
-		invalid_values: [ "3% 3%", "2px 2px 2px 2px", "2px 2px, none" ]
+		invalid_values: [ "3% 3%", "2px 2px 2px 2px", "2px 2px, none", "none, 2px 2px", "inherit, 2px 2px", "2px 2px, inherit" ]
 	},
 	"text-transform": {
 		domProp: "textTransform",
@@ -1595,6 +1665,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal", "0", "0px", "-0em" ],
 		other_values: [ "1em", "2px", "-3px" ],
+		invalid_values: []
+	},
+	"word-wrap": {
+		domProp: "wordWrap",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "normal" ],
+		other_values: [ "break-word" ],
 		invalid_values: []
 	},
 	"z-index": {

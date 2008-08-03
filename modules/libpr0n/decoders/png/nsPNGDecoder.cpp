@@ -378,7 +378,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
                    int color_type, PRUint32 *inType, PRUint32 *intent)
 {
   cmsHPROFILE profile = nsnull;
-  *intent = INTENT_PERCEPTUAL;   // XXX: should this be the default?
+  *intent = INTENT_PERCEPTUAL; // Our default
 
 #ifndef PNG_NO_READ_iCCP
   // First try to see if iCCP chunk is present
@@ -499,7 +499,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 /*  int number_passes;   NOT USED  */
   png_uint_32 width, height;
   int bit_depth, color_type, interlace_type, compression_type, filter_type;
-  int channels;
+  unsigned int channels;
   double aGamma;
 
   png_bytep trans = NULL;
@@ -531,10 +531,14 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (bit_depth == 16)
     png_set_strip_16(png_ptr);
 
-  PRUint32 inType, intent;
+  PRUint32 inType, intent, pIntent;
   if (gfxPlatform::IsCMSEnabled()) {
+    intent = gfxPlatform::GetRenderingIntent();
     decoder->mInProfile = PNGGetColorProfile(png_ptr, info_ptr,
-                                             color_type, &inType, &intent);
+                                             color_type, &inType, &pIntent);
+    /* If we're not mandating an intent, use the one from the image. */
+    if (intent == -1)
+      intent = pIntent;
   }
   if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
     PRUint32 outType;
@@ -655,7 +659,8 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   }
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
-    decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels * width * height);
+    if (height < PR_INT32_MAX / (width * channels))
+      decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(channels * width * height);
     if (!decoder->interlacebuf) {
       longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
     }

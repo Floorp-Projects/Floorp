@@ -78,10 +78,6 @@ endif
 # tier "gecko" - core components
 #
 
-ifdef NS_TRACE_MALLOC
-tier_gecko_dirs += tools/trace-malloc/lib
-endif
-
 tier_gecko_dirs += \
 		js/src/xpconnect \
 		intl/chardet \
@@ -118,6 +114,18 @@ endif
 
 ifdef MOZ_JSDEBUGGER
 tier_gecko_dirs += js/jsd
+endif
+
+ifdef MOZ_OGG
+tier_gecko_dirs += \
+		modules/libfishsound \
+		modules/libogg \
+		modules/liboggplay \
+		modules/liboggplay_audio \
+		modules/liboggz \
+		modules/libtheora \
+		modules/libvorbis \
+		$(NULL)
 endif
 
 tier_gecko_dirs	+= \

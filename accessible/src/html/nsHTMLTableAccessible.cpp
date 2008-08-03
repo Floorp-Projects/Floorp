@@ -1171,11 +1171,13 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
     nsIFrame *docFrame = docAccessNode->GetFrame();
     NS_ENSURE_TRUE(docFrame , NS_ERROR_FAILURE);
     nsSize docSize = docFrame->GetSize();
-    PRInt32 percentageOfDocWidth = (100 * tableSize.width) / docSize.width;
-    if (percentageOfDocWidth > 95) {
-      // 3-4 columns, no borders, not a lot of rows, and 95% of the doc's width
-      // Probably for layout
-      RETURN_LAYOUT_ANSWER(PR_TRUE, "<=4 columns, width hardcoded in pixels and 95% of document width");
+    if (docSize.width > 0) {
+      PRInt32 percentageOfDocWidth = (100 * tableSize.width) / docSize.width;
+      if (percentageOfDocWidth > 95) {
+        // 3-4 columns, no borders, not a lot of rows, and 95% of the doc's width
+        // Probably for layout
+        RETURN_LAYOUT_ANSWER(PR_TRUE, "<=4 columns, width hardcoded in pixels and 95% of document width");
+      }
     }
   }
 

@@ -27,6 +27,7 @@
    -     Jason Barnabe <jason_barnabe@fastmail.fm>
    -     Asaf Romano <mano@mozilla.com>
    -     Ehsan Akhgari <ehsan.akhgari@gmail.com>
+   -     Graeme McCutcheon <graememcc_firefox@graeme-online.co.uk>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -431,9 +432,37 @@
       </method>
 
       <!--
+        - Gets the selection controller for the current browser 
+        -->
+      <method name="_getSelectionController">
+        <body><![CDATA[
+          // Yuck. See bug 138068.
+          var Ci = Components.interfaces;
+          var controller = this.browser.docShell
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsISelectionDisplay)
+                               .QueryInterface(Ci.nsISelectionController);
+          return controller;
+        ]]></body>
+      </method>
+
+      <method name="_getEditableNode">
+        <parameter name="aNode"/>
+        <body><![CDATA[
+          while (aNode) {
+            if (aNode instanceof Components.interfaces.nsIDOMNSEditableElement) {
+              return aNode.editor ? aNode : null;
+            }
+            aNode = aNode.parentNode;
+          }
+          return null;           
+        ]]></body>
+      </method>
+
+      <!--
         - Turns highlight on or off.
         - @param aHighlight (boolean)
-        -        Whether to turn on highlight
+        -        Whether to turn the highlight on or off
         -->
       <method name="toggleHighlight">
         <parameter name="aHighlight"/>
@@ -442,14 +471,13 @@
           if (aHighlight) {
             // We have to update the status because we might still have the status
             // of another tab
-            if (this._highlightDoc("yellow", "black", word))
+            if (this._highlightDoc(aHighlight, word))
               this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
             else
               this._updateStatusUI(this.nsITypeAheadFind.FIND_NOTFOUND);
           }
           else {
-            this._highlightDoc(null, null, null);
-            this._lastHighlightString = null;
+            this._highlightDoc(aHighlight, this._lastHighlightString, null);
           }
         ]]></body>
       </method>
@@ -457,11 +485,8 @@
       <!--
         - (Un)highlights each instance of the searched word in the passed
         - window's content.
-        - @param aHighBackColor
-        -        the background color for the highlight
-        - @param aHighTextColor
-        -        the text color for the highlight, or null to make it
-        -        unhighlight
+        - @param aHighlight (boolean)
+        -        Whether to turn on highlight
         - @param aWord
         -        the word to search for
         - @param aWindow
@@ -470,16 +495,19 @@
         - @returns true if aWord was found
         -->
       <method name="_highlightDoc">
-        <parameter name="aHighBackColor"/>
-        <parameter name="aHighTextColor"/>
+        <parameter name="aHighlight"/>
         <parameter name="aWord"/>
         <parameter name="aWindow"/>
         <body><![CDATA[
           var win = aWindow || this.browser.contentWindow;
 
+          if (!aWord)
+            return false;
+
           var textFound = false;
+
           for (var i = 0; win.frames && i < win.frames.length; i++) {
-            if (this._highlightDoc(aHighBackColor, aHighTextColor, aWord, win.frames[i]))
+            if (this._highlightDoc(aHighlight, aWord, win.frames[i]))
               textFound = true;
           }
 
@@ -502,85 +530,22 @@
           this._endPt.setStart(body, count);
           this._endPt.setEnd(body, count);
 
-          if (!aHighBackColor) {
-            // Remove highlighting.  We use the find API again rather than
-            // searching for our span elements so that we gain access to the
-            // anonymous content that nsIFind searches.
-
-            if (!this._lastHighlightString)
-              return textFound;
-
-            var retRange = null;
-            var finder = Components.classes["@mozilla.org/embedcomp/rangefind;1"]
-                                   .createInstance(Components.interfaces.nsIFind);
-
-            while ((retRange = finder.Find(this._lastHighlightString,
-                                           this._searchRange, this._startPt,
-                                           this._endPt))) {
-              var startContainer = retRange.startContainer;
-              var elem = null;
-              try {
-                elem = startContainer.parentNode;
-              }
-              catch (ex) { }
-
-              if (elem && elem.className == "__mozilla-findbar-search") {
-                var child = null;
-                var docfrag = doc.createDocumentFragment();
-                var next = elem.nextSibling;
-                var parent = elem.parentNode;
-
-                while ((child = elem.firstChild)) {
-                  docfrag.appendChild(child);
-                }
-
-                this._startPt = doc.createRange();
-                this._startPt.setStartAfter(elem);
-
-                parent.removeChild(elem);
-                parent.insertBefore(docfrag, next);
-                parent.normalize();
-              }
-              else {
-                // Somehow we didn't highlight this instance; just skip it.
-                this._startPt = doc.createRange();
-                this._startPt.setStart(retRange.endContainer,
-                                       retRange.endOffset);
-              }
-
-              this._startPt.collapse(true);
-
-              textFound = true;
-            }
-            return textFound;
+          var controller = this._getSelectionController();
+          if (!controller) {
+            // Without the selection controller, 
+            // we are unable to (un)highlight any matches
+            return false;
           }
 
-          var baseNode = doc.createElementNS("http://www.w3.org/1999/xhtml", "span");
-          baseNode.style.backgroundColor = aHighBackColor;
-          baseNode.style.color = aHighTextColor;
-          baseNode.style.display = "inline";
-          baseNode.style.fontSize = "inherit";
-          baseNode.style.padding = "0";
-          baseNode.className = "__mozilla-findbar-search";
+          // This code should look for individual matches and highlight them
+          // However, as there's no way to access editable elements individual
+          // selection controllers from the top level doc, we also have to use
+          // this to find all the editable matches when clearing the highlight,
+          // which is horribly inefficient, but still faster than the DOM 
+          // manipulation of old.
+          // Fixing bug 339400 would make this go away, and allow the removal case
+          // to be reduced to something like findSelection.removeAllRanges() 
 
-          return this._highlightText(aWord, baseNode) || textFound;
-        ]]></body>
-      </method>
-
-      <!--
-        - Highlights each instance of the searched word in the current range.
-        -
-        - @param aWord
-        -        the word to search for.
-        - @param aBaseNode
-        -        a node to use as a template for what will replace the searched
-        -        word.
-        - @returns true if aWord was found
-        -->
-      <method name="_highlightText">
-        <parameter name="aWord"/>
-        <parameter name="aBaseNode"/>
-        <body><![CDATA[
           var retRange = null;
           var finder = Components.classes["@mozilla.org/embedcomp/rangefind;1"]
                                  .createInstance()
@@ -588,20 +553,26 @@
 
           finder.caseSensitive = this._shouldBeCaseSensitive(aWord);
 
-          var textFound = false;
           while((retRange = finder.Find(aWord, this._searchRange,
                                         this._startPt, this._endPt))) {
-            // Highlight
-            var nodeSurround = aBaseNode.cloneNode(true);
-            var node = this._highlight(retRange, nodeSurround);
-            this._startPt = node.ownerDocument.createRange();
-            this._startPt.setStart(node, node.childNodes.length);
-            this._startPt.setEnd(node, node.childNodes.length);
+            this._highlight(aHighlight, retRange, controller);
+            this._startPt = retRange.endContainer.ownerDocument.createRange();
+            this._startPt.setStart(retRange.endContainer, retRange.endOffset);
+            this._startPt.setEnd(retRange.endContainer, retRange.endOffset);
 
             textFound = true;
           }
 
-          this._lastHighlightString = aWord;
+          if (textFound) {
+            if (aHighlight)
+             this._lastHighlightString = aWord;
+            else {
+              var sel = controller.getSelection(this.nsISelectionController.SELECTION_FIND);
+              sel.removeAllRanges();
+            }
+            controller.setDisplaySelection(this.nsISelectionController.SELECTION_ON);
+            controller.repaintSelection(this.nsISelectionController.SELECTION_FIND);
+          }
 
           return textFound;
         ]]></body>
@@ -610,25 +581,31 @@
      <!--
        - Highlights the word in the passed range.
        -
+       - @param aHighlight
+       -        whether the highlight should be on or off
        - @param aRange
        -        the range that contains the word to highlight
-       - @param aNode
-       -        the node replace the searched word with
-       - @returns the node that replaced the searched word
+       - @param aController
+       -        the current document's selection controller
        -->
       <method name="_highlight">
+        <parameter name="aHighlight"/>
         <parameter name="aRange"/>
-        <parameter name="aNode"/>
+        <parameter name="aController"/>
         <body><![CDATA[
-          var startContainer = aRange.startContainer;
-          var startOffset = aRange.startOffset;
-          var endOffset = aRange.endOffset;
-          var docfrag = aRange.extractContents();
-          var before = startContainer.splitText(startOffset);
-          var parent = before.parentNode;
-          aNode.appendChild(docfrag);
-          parent.insertBefore(aNode, before);
-          return aNode;
+          var node = aRange.startContainer;
+          var controller = aController;
+          var isEditable = this._getEditableNode(node);
+          if (isEditable)
+            controller = isEditable.editor.selectionController;
+          var findSelection = controller.getSelection(this.nsISelectionController.SELECTION_FIND);
+          if (aHighlight)
+            findSelection.addRange(aRange);
+          if (isEditable) {
+            if (!aHighlight)
+              findSelection.removeAllRanges();
+            controller.repaintSelection(this.nsISelectionController.SELECTION_FIND);
+          }
         ]]></body>
       </method>
 
@@ -1216,7 +1193,8 @@
           var selText;
 
           if (focusedElement instanceof Components.interfaces.nsIDOMNSEditableElement &&
-            focusedElement.ownerDocument.defaultView.top == this._browser.contentWindow)
+              focusedElement.editor &&
+              focusedElement.ownerDocument.defaultView.top == this._browser.contentWindow)
           {
             // The user may have a selection in an input or textarea
             selText = focusedElement.editor.selectionController

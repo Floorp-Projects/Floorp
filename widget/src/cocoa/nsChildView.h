@@ -54,14 +54,12 @@
 #include "nsWeakPtr.h"
 
 #include "nsIWidget.h"
-#include "nsIKBStateControl.h"
 #include "nsIAppShell.h"
 
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 #include "nsString.h"
 #include "nsIDragService.h"
-#include "nsIMenuBar.h"
 
 #include "nsplugindefs.h"
 
@@ -197,6 +195,8 @@ public:
   static PRBool IsIMEEnabled() { return sIsIMEEnabled; }
   static PRBool IgnoreCommit() { return sIgnoreCommit; }
 
+  static void OnDestroyView(NSView<mozView>* aDestroyingView);
+
   // Note that we cannot get the actual state in TSM. But we can trust this
   // value. Because nsIMEStateManager reset this at every focus changing.
   static PRBool IsRomanKeyboardsOnly() { return sIsRomanKeyboardsOnly; }
@@ -230,8 +230,7 @@ private:
 //-------------------------------------------------------------------------
 
 class nsChildView : public nsBaseWidget,
-                    public nsIPluginWidget,
-                    public nsIKBStateControl
+                    public nsIPluginWidget
 {
 private:
   typedef nsBaseWidget Inherited;
@@ -241,16 +240,6 @@ public:
   virtual                 ~nsChildView();
   
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIKBStateControl interface
-  NS_IMETHOD              ResetInputState();
-  NS_IMETHOD              SetIMEOpenState(PRBool aState);
-  NS_IMETHOD              GetIMEOpenState(PRBool* aState);
-  NS_IMETHOD              SetIMEEnabled(PRUint32 aState);
-  NS_IMETHOD              GetIMEEnabled(PRUint32* aState);
-  NS_IMETHOD              CancelIMEComposition();
-  NS_IMETHOD              GetToggledKeyState(PRUint32 aKeyCode,
-                                             PRBool* aLEDState);
 
   // nsIWidget interface
   NS_IMETHOD              Create(nsIWidget *aParent,
@@ -328,7 +317,7 @@ public:
   void              LocalToWindowCoordinate(nscoord& aX, nscoord& aY)   { ConvertToDeviceCoordinates(aX, aY); }
   void              LocalToWindowCoordinate(nsRect& aRect)              { ConvertToDeviceCoordinates(aRect.x, aRect.y); }
 
-  NS_IMETHOD        SetMenuBar(nsIMenuBar * aMenuBar);
+  NS_IMETHOD        SetMenuBar(void* aMenuBar);
   NS_IMETHOD        ShowMenuBar(PRBool aShow);
 
   NS_IMETHOD        GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
@@ -341,6 +330,18 @@ public:
   NS_IMETHOD        SetTitle(const nsAString& title);
 
   NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
+
+  NS_IMETHOD        ActivateNativeMenuItemAt(const nsAString& indexString);
+  NS_IMETHOD        ForceNativeMenuReload();
+
+  NS_IMETHOD        ResetInputState();
+  NS_IMETHOD        SetIMEOpenState(PRBool aState);
+  NS_IMETHOD        GetIMEOpenState(PRBool* aState);
+  NS_IMETHOD        SetIMEEnabled(PRUint32 aState);
+  NS_IMETHOD        GetIMEEnabled(PRUint32* aState);
+  NS_IMETHOD        CancelIMEComposition();
+  NS_IMETHOD        GetToggledKeyState(PRUint32 aKeyCode,
+                                       PRBool* aLEDState);
 
   // nsIPluginWidget
   NS_IMETHOD        GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible);
@@ -384,6 +385,12 @@ protected:
   // caller must retain.
   virtual NSView*   CreateCocoaView(NSRect inFrame);
   void              TearDownView();
+
+  virtual nsresult SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
+                                            PRInt32 aNativeKeyCode,
+                                            PRUint32 aModifierFlags,
+                                            const nsAString& aCharacters,
+                                            const nsAString& aUnmodifiedCharacters);
 
 protected:
 

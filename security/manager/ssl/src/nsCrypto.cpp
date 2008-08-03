@@ -2272,8 +2272,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
   CMMFPKIStatus reqStatus;
   CERTCertificate *currCert;
   PK11SlotInfo *slot;
-  PRBool freeLocalNickname = PR_FALSE;
-  char *localNick;
+  nsCAutoString localNick;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsresult rv = NS_OK;
   CERTCertList *caPubs = nsnull;
@@ -2351,8 +2350,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
       localNick = currCert->nickname;
     }
     else if (nickname == nsnull || nickname[0] == '\0') {
-      localNick = nsNSSCertificateDB::default_nickname(currCert, ctx);
-      freeLocalNickname = PR_TRUE;
+      nsNSSCertificateDB::get_default_nickname(currCert, ctx, localNick);
     } else {
       //This is the case where we're getting a brand new
       //cert that doesn't have the same subjectName as a cert
@@ -2360,10 +2358,9 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
       //designated a nickname to use for the newly issued cert.
       localNick = nickname;
     }
-    slot = PK11_ImportCertForKey(currCert, localNick, ctx);
-    if (freeLocalNickname) {
-      nsMemory::Free(localNick);
-      freeLocalNickname = PR_FALSE;
+    {
+      char *cast_const_away = const_cast<char*>(localNick.get());
+      slot = PK11_ImportCertForKey(currCert, cast_const_away, ctx);
     }
     if (slot == nsnull) {
       rv = NS_ERROR_FAILURE;

@@ -47,7 +47,7 @@ printStatus (summary);
  
 function q1(n) {
   var c = [];
-  c[Math.pow(10, n)] = 1;
+  c[n] = 1;
   c = c.join(" ");
   var d = Date.now();
   var e = c.match(/(.*)foo$/);
@@ -57,7 +57,7 @@ function q1(n) {
 
 function q2(n) {
   var c = [];
-  c[Math.pow(10, n)] = 1;
+  c[n] = 1;
   c = c.join(" ");
   var d = Date.now();
   var e = /foo$/.test(c) && c.match(/(.*)foo$/);
@@ -68,7 +68,7 @@ function q2(n) {
 var data1 = {X:[], Y:[]};
 var data2 = {X:[], Y:[]};
 
-for (var x = 0; x < 5; x++)
+for (var x = 500; x < 5000; x += 500)
 {
   var y1 = q1(x);
   var y2 = q2(x);

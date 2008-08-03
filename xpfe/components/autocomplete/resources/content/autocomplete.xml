@@ -55,10 +55,10 @@
         this.ifSetAttribute("disableKeyNavigation", true);
         
         // initialize the search sessions
-        if (this.hasAttribute("searchSessions"))
-          this.initSearchSessions();
         if (this.hasAttribute("autocompletesearch"))
           this.initAutoCompleteSearch();
+        if (this.hasAttribute("searchSessions"))
+          this.initSearchSessions();
         
         // hack to work around lack of bottom-up constructor calling
         if ("initialize" in this.resultsPopup)
@@ -149,28 +149,28 @@
       <!-- option for filling the textbox with the best match while typing 
            and selecting the difference -->
       <property name="autoFill"
-                onset="this.setAttribute('autoFill', val); return val;"
-                onget="return this.getAttribute('autoFill') == 'true';"/>
+                onset="this.setAttribute('autofill', val); return val;"
+                onget="return this.getAttribute('autofill') == 'true';"/>
 
       <!-- if the resulting match string is not at the beginning of the typed string,
            this will optionally autofill like this "bar |>> foobar|" -->
       <property name="autoFillAfterMatch"
-                onset="this.setAttribute('autoFillAfterMatch', val); return val;"
-                onget="return this.getAttribute('autoFillAfterMatch') == 'true';"/>
+                onset="this.setAttribute('autofillaftermatch', val); return val;"
+                onget="return this.getAttribute('autofillaftermatch') == 'true';"/>
 
       <!--  if this attribute is set, allow different style for 
             non auto-completed lines -->
       <property name="highlightNonMatches"
-                onset="this.setAttribute('highlightNonMatches', val); return val;"
-                onget="return this.getAttribute('highlightNonMatches') == 'true';"/>
+                onset="this.setAttribute('highlightnonmatches', val); return val;"
+                onget="return this.getAttribute('highlightnonmatches') == 'true';"/>
 
       <!-- toggles a second column in the results list which contains
            the string in the comment field of each autocomplete result -->
       <property name="showCommentColumn"
-                onget="return this.getAttribute('showCommentColumn') == 'true';">
+                onget="return this.getAttribute('showcommentcolumn') == 'true';">
         <setter><![CDATA[
           this.resultsPopup.showCommentColumn = val;
-          this.setAttribute('showCommentColumn', val); return val;
+          this.setAttribute('showcommentcolumn', val); return val;
         ]]></setter>
       </property>
 
@@ -178,8 +178,8 @@
       <!-- option for completing to the default result whenever the user hits
            enter or the textbox loses focus -->
       <property name="forceComplete"
-                onset="this.setAttribute('forceComplete', val); return val;"
-                onget="return this.getAttribute('forceComplete') == 'true';"/>
+                onset="this.setAttribute('forcecomplete', val); return val;"
+                onget="return this.getAttribute('forcecomplete') == 'true';"/>
 
       <!-- option to show the popup containing the results -->
       <property name="showPopup"
@@ -189,13 +189,13 @@
       <!-- option to allow scrolling through the list via the tab key, rather than
            tab moving focus out of the textbox -->
       <property name="tabScrolling"
-                onset="return this.setAttribute('tabScrolling', val); return val;"
-                onget="return this.getAttribute('tabScrolling') == 'true';"/>
+                onset="return this.setAttribute('tabscrolling', val); return val;"
+                onget="return this.getAttribute('tabscrolling') == 'true';"/>
 
       <!-- option to turn off autocomplete -->
-      <property name="disableAutocomplete"
-                onset="this.setAttribute('disableAutocomplete', val); return val;"
-                onget="return this.getAttribute('disableAutocomplete') == 'true';"/>
+      <property name="disableAutoComplete"
+                onset="this.setAttribute('disableautocomplete', val); return val;"
+                onget="return this.getAttribute('disableautocomplete') == 'true';"/>
 
       <!-- option to completely ignore any blur events while  
            searches are still going on.  This is useful so that nothing
@@ -204,12 +204,12 @@
            brought up so that the user can enter a password to authenticate
            to an LDAP server).  -->
       <property name="ignoreBlurWhileSearching"
-                onset="this.setAttribute('ignoreBlurWhileSearching', val); return val;"
-                onget="return this.getAttribute('ignoreBlurWhileSearching') == 'true';"/>
+                onset="this.setAttribute('ignoreblurwhilesearching', val); return val;"
+                onget="return this.getAttribute('ignoreblurwhilesearching') == 'true';"/>
 
       <property name="minResultsForPopup"
-                onset="this.setAttribute('minResultsForPopup', val); return val;"
-                onget="var t = this.getAttribute('minResultsForPopup'); return t ? parseInt(t) : 1;"/>
+                onset="this.setAttribute('minresultsforpopup', val); return val;"
+                onget="var t = this.getAttribute('minresultsforpopup'); return t ? parseInt(t) : 1;"/>
       
       <!-- state which indicates the current action being performed by the user.
            Possible values are : none, typing, scrolling -->
@@ -376,6 +376,12 @@
         document.getAnonymousElementByAttribute(this, "anonid", "input");
       ]]></field>
 
+      <field name="mMenuAccessKey"><![CDATA[
+        Components.classes["@mozilla.org/preferences-service;1"]
+                 .getService(Components.interfaces.nsIPrefBranch)
+                 .getIntPref("ui.key.menuAccessKey");
+      ]]></field>
+
       <!-- =================== PUBLIC METHODS =================== -->
 
       <!-- get the result object from the autocomplete results from a specific session -->
@@ -526,7 +532,9 @@
         <body><![CDATA[
           for (var name in this.mLastResults) {
             var results = this.mLastResults[name];
-            if (results && results.items.Count() > 0)
+            var status = this.mLastStatus[name];
+            if (results && results.items.Count() > 0 && status !=
+                Components.interfaces.nsIAutoCompleteStatus.failureItems)
               return name;
           }
           return null;
@@ -558,7 +566,7 @@
 
           me.clearTimer();
             
-          if (me.disableAutocomplete)
+          if (me.disableAutoComplete)
             return;
 
           switch (aAction) {
@@ -587,7 +595,6 @@
           this.mFailureCount = 0;
           this.mFailureItems = 0;
           this.mDefaultMatchFilled = false; // clear out our prefill state.
-          this.removeAttribute("noMatchesFound");
 
           // tell each session to start searching...
           for (var name in this.mSessions)
@@ -624,7 +631,7 @@
         <parameter name="aResults"/>
         <parameter name="aStatus"/>
         <body><![CDATA[
-          if (this.disableAutocomplete)
+          if (this.disableAutoComplete)
             return;
 
           --this.mSessionReturns;
@@ -643,18 +650,17 @@
           {
             this.mLastResults[aSessionName] = null;
             if (firstReturn)
-              this.clearResults(false);
+              this.clearResultElements(false);
             this.searchFailed();
             return;
-          } else if (aStatus == 
-                     Components.interfaces.nsIAutoCompleteStatus.failureItems){
-            ++this.mFailureItems;
           }
+          if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failureItems)
+            ++this.mFailureItems;
           
           if (firstReturn) {
             if (this.view.mTree)
               this.view.mTree.beginUpdateBatch();
-            this.clearResults(false); // clear results, but don't repaint yet
+            this.clearResultElements(false); // clear results, but don't repaint yet
           }
           this.mLastResults[aSessionName] = aResults;
 
@@ -720,12 +726,9 @@
           }
           this.noMatch = failed;
           if (this.noMatch)
-            this.setAttribute("nomatch", 1);
+            this.setAttribute("nomatch", true);
           else
             this.removeAttribute("nomatch");
-          
-          if (!this.mDefaultMatchFilled && this.highlightNonMatches)
-            this.setAttribute("noMatchesFound", true);
           
           // if we have processed all of our searches, and none of them gave us a default index,
           // then we should try to auto fill the input field with the first match. 
@@ -735,6 +738,9 @@
              if (defaultSession)
                 this.autoFillInput(defaultSession, this.mLastResults[defaultSession], true);         
           }
+
+	  // Now we've finished, fire an event to let everyone know
+	  this._fireEvent("searchcomplete");
         ]]></body>
       </method>
 
@@ -747,7 +753,7 @@
         <body><![CDATA[
           this.mFinishAfterSearch = false;
           this.mFireAfterSearch = false;
-          if (this.mNeedToFinish && !this.disableAutocomplete) {
+          if (this.mNeedToFinish && !this.disableAutoComplete) {
             // set textbox value to either override value, or default search result 
             var val = this.resultsPopup.overrideValue;
             if (val) {
@@ -809,7 +815,6 @@
           }
           
           this.mNeedToComplete = false;
-          this.removeAttribute("noMatchesFound");
           this.clearTimer();
 
           if (aFireTextCommand)
@@ -899,7 +904,7 @@
           if (this.ignoreInputEvent)
             return;
           
-          if (this.disableAutocomplete)
+          if (this.disableAutoComplete)
             return;
 
           this.userAction = "typing";
@@ -909,9 +914,20 @@
           var str = this.value;
           this.currentSearchString = str;
           this.resultsPopup.clearSelection();
-          this.removeAttribute("noMatchesFound");
           
           this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="processKeyDown">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.keyCode && aEvent.keyCode == this.mMenuAccessKey) {
+              this.finishAutoComplete(false, false, aEvent);
+              this.clearTimer();
+              this.closeResultPopup();
+          }
         ]]></body>
       </method>
 
@@ -1021,14 +1037,25 @@
               k == KeyEvent.DOM_VK_UP || k == KeyEvent.DOM_VK_DOWN ||
               k == KeyEvent.DOM_VK_PAGE_UP || k == KeyEvent.DOM_VK_PAGE_DOWN)
           {
-            // up/down keys while menu is closed will open menu
             if (!this.mMenuOpen) {
+              // Original xpfe style was to allow the up and down keys to have
+              // their default Mac action if the popup could not be opened.
+              // For compatibility for toolkit we now have to predict which
+              // keys have a default action that we can always allow to fire.
+              if (/Mac/.test(navigator.platform) &&
+                  ((k == KeyEvent.DOM_VK_UP &&
+                   (this.selectionStart != 0 ||
+                    this.selectionEnd != 0)) ||
+                  (k == KeyEvent.DOM_VK_DOWN &&
+                   (this.selectionStart != this.value.length ||
+                    this.selectionEnd != this.value.length))))
+                return false;
               if (this.currentSearchString != this.value) {
                  this.processInput();
                  return true;
               }
               if (this.view.rowCount < this.minResultsForPopup)
-                return false;
+                return true; // used to be false, see above
 
               this.mNeedToFinish = true;
               this.openResultPopup();
@@ -1124,7 +1151,7 @@
       <!--  -->
       <method name="openResultPopup">
         <body><![CDATA[
-          if (!this.mMenuOpen && this.showPopup && this.focused &&
+          if (!this.mMenuOpen && this.focused &&
                (this.getResultCount("") >= this.minResultsForPopup
                 || this.mFailureItems)) {
             var w = this.boxObject.width;
@@ -1151,7 +1178,7 @@
         <parameter name="aSessionName"/>
         <parameter name="aResults"/>
         <body><![CDATA[
-          if (this.focused) {
+          if (this.focused && this.showPopup) {
             this.view.addResults(aResults);
             this.resultsPopup.adjustHeight();
           }
@@ -1342,7 +1369,7 @@
             try { 
               if (aCol.id == "treecolAutoCompleteValue") {
                 var className = this.mTextbox.getResultAt(aIndex).className;
-                  if ( className != "" ) {
+                  if ( className ) {
                     aProperties.AppendElement(this.createAtom(className));
                   }
               }
@@ -1386,6 +1413,9 @@
     <handlers>
       <handler event="input"
                action="this.processInput();"/>
+
+      <handler event="keydown" phase="capturing"
+                action="return this.processKeyDown(event);"/>
 
       <handler event="keypress" phase="capturing"
                 action="return this.processKeyPress(event);"/>
@@ -1579,12 +1609,22 @@
             this.input = aInput;
             this.invalidate();
 
+            var viewer = aElement
+                .ownerDocument
+                .defaultView
+                .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIWebNavigation)
+                .QueryInterface(Components.interfaces.nsIDocShell)
+                .contentViewer
+                .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
             var rect = aElement.getBoundingClientRect();
-            var width = rect.right - rect.left;
+            var width = Math.round((rect.right - rect.left) * viewer.fullZoom);
             this.setAttribute("width", width > 100 ? width : 100);
+            const nsIPopupBoxObject = Components.interfaces.nsIPopupBoxObject;
+            this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent
+              ? nsIPopupBoxObject.ROLLUP_CONSUME
+              : nsIPopupBoxObject.ROLLUP_NO_CONSUME);
             this.openPopup(aElement, "after_start", 0, 0, false, false);
-
-            this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent);
           }
         ]]></body>
       </method>

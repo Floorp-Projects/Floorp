@@ -52,6 +52,8 @@
 #include "nsITimer.h"
 #include "nsWidgetAtoms.h"
 
+#include "gfxASurface.h"
+
 #include <gtk/gtk.h>
 
 #include <gdk/gdkx.h>
@@ -65,13 +67,9 @@
 #ifdef USE_XIM
 #include <gtk/gtkimmulticontext.h>
 #include "pldhash.h"
-#include "nsIKBStateControl.h"
 #endif
 
 class nsWindow : public nsCommonWidget, public nsSupportsWeakReference
-#ifdef USE_XIM
-                ,public nsIKBStateControl
-#endif
 {
 public:
     nsWindow();
@@ -139,7 +137,7 @@ public:
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
-    NS_IMETHOD         SetMenuBar(nsIMenuBar * aMenuBar);
+    NS_IMETHOD         SetMenuBar(void * aMenuBar);
     NS_IMETHOD         ShowMenuBar(PRBool aShow);
     NS_IMETHOD         WidgetToScreen(const nsRect& aOldRect,
                                       nsRect& aNewRect);
@@ -244,6 +242,7 @@ public:
                                     PRBool  aRepaint);
 
     void               NativeShow  (PRBool  aAction);
+    virtual nsSize     GetSafeWindowSize(nsSize aSize);
 
     void               EnsureGrabs  (void);
     void               GrabPointer  (void);
@@ -295,6 +294,7 @@ public:
     nsWindow*          IMEComposingWindow(void);
     void               IMECreateContext  (void);
     PRBool             IMEFilterEvent    (GdkEventKey *aEvent);
+    void               IMESetCursorPosition(const nsTextEventReply& aReply);
 
     /*
      *  |mIMEData| has all IME data for the window and its children widgets.
@@ -339,12 +339,11 @@ public:
             mComposingWindow = nsnull;
             mOwner           = aOwner;
             mRefCount        = 1;
-            mEnabled         = nsIKBStateControl::IME_STATUS_ENABLED;
+            mEnabled         = nsIWidget::IME_STATUS_ENABLED;
         }
     };
     nsIMEData          *mIMEData;
 
-    // nsIKBStateControl interface
     NS_IMETHOD ResetInputState();
     NS_IMETHOD SetIMEOpenState(PRBool aState);
     NS_IMETHOD GetIMEOpenState(PRBool* aState);
@@ -363,6 +362,9 @@ public:
                                                             PRUint8* aAlphas, PRInt32 aStride);
 
     gfxASurface       *GetThebesSurface();
+
+    static already_AddRefed<gfxASurface> GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
+                                                                  const nsSize& aSize);
 
 #ifdef ACCESSIBILITY
     static PRBool      sAccessibilityEnabled;

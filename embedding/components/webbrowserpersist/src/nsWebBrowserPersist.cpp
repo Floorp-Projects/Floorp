@@ -86,6 +86,8 @@
 #include "nsIPrompt.h"
 #include "nsISHEntry.h"
 #include "nsIWebPageDescriptor.h"
+#include "nsIFormControl.h"
+#include "nsIDOM3Node.h"
 
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -105,7 +107,10 @@
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLAppletElement.h"
+#include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIDOMText.h"
 #ifdef MOZ_SVG
 #include "nsIDOMSVGImageElement.h"
 #include "nsIDOMSVGScriptElement.h"
@@ -2356,7 +2361,7 @@ public:
     }
 };
 
-struct FixRedirectData
+struct NS_STACK_CLASS FixRedirectData
 {
     nsCOMPtr<nsIChannel> mNewChannel;
     nsCOMPtr<nsIURI> mOriginalURI;
@@ -2840,8 +2845,14 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
                 mCurrentBaseURI = baseURI;
             }
         }
-        StoreURIAttribute(aNode, "code");
-        StoreURIAttribute(aNode, "archive");
+
+        URIData *archiveURIData = nsnull;
+        StoreURIAttribute(aNode, "archive", PR_TRUE, &archiveURIData);
+        // We only store 'code' locally if there is no 'archive',
+        // otherwise we assume the archive file(s) contains it (bug 430283).
+        if (!archiveURIData)
+            StoreURIAttribute(aNode, "code");
+
         // restore the base URI we really want to have
         mCurrentBaseURI = oldBase;
         return NS_OK;
@@ -2965,11 +2976,12 @@ nsWebBrowserPersist::GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut)
 }
 
 nsresult
-nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
-    nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut)
+nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
+    nsIDOMNode *aNodeIn, PRBool *aSerializeCloneKids, nsIDOMNode **aNodeOut)
 {
     nsresult rv;
     *aNodeOut = nsnull;
+    *aSerializeCloneKids = PR_FALSE;
 
     // Fixup xml-stylesheet processing instructions
     nsCOMPtr<nsIDOMProcessingInstruction> nodeAsPI = do_QueryInterface(aNodeIn);
@@ -3260,6 +3272,62 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
                 imgCon->SetLoadingEnabled(PR_FALSE);
 
             FixupNodeAttribute(*aNodeOut, "src");
+
+            nsAutoString valueStr;
+            NS_NAMED_LITERAL_STRING(valueAttr, "value");
+            // Update element node attributes with user-entered form state
+            nsCOMPtr<nsIDOMHTMLInputElement> outElt = do_QueryInterface(*aNodeOut);
+            nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(*aNodeOut);
+            switch (formControl->GetType()) {
+                case NS_FORM_INPUT_TEXT:
+                    nodeAsInput->GetValue(valueStr);
+                    // Avoid superfluous value="" serialization
+                    if (valueStr.IsEmpty())
+                      outElt->RemoveAttribute(valueAttr);
+                    else
+                      outElt->SetAttribute(valueAttr, valueStr);
+                    break;
+                case NS_FORM_INPUT_CHECKBOX:
+                case NS_FORM_INPUT_RADIO:
+                    PRBool checked;
+                    nodeAsInput->GetChecked(&checked);
+                    outElt->SetDefaultChecked(checked);
+                    break;
+                default:
+                    break;
+            }
+        }
+        return rv;
+    }
+
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> nodeAsTextArea = do_QueryInterface(aNodeIn);
+    if (nodeAsTextArea)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {
+            // Tell the document encoder to serialize the text child we create below
+            *aSerializeCloneKids = PR_TRUE;
+
+            nsAutoString valueStr;
+            nodeAsTextArea->GetValue(valueStr);
+            
+            nsCOMPtr<nsIDOM3Node> out = do_QueryInterface(*aNodeOut);
+            out->SetTextContent(valueStr);
+        }
+        return rv;
+    }
+
+    nsCOMPtr<nsIDOMHTMLOptionElement> nodeAsOption = do_QueryInterface(aNodeIn);
+    if (nodeAsOption)
+    {
+        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        if (NS_SUCCEEDED(rv) && *aNodeOut)
+        {          
+            nsCOMPtr<nsIDOMHTMLOptionElement> outElt = do_QueryInterface(*aNodeOut);
+            PRBool selected;
+            nodeAsOption->GetSelected(&selected);
+            outElt->SetDefaultSelected(selected);
         }
         return rv;
     }
@@ -4091,7 +4159,7 @@ NS_INTERFACE_MAP_END
 
 
 NS_IMETHODIMP nsEncoderNodeFixup::FixupNode(
-    nsIDOMNode *aNode, nsIDOMNode **aOutNode)
+    nsIDOMNode *aNode, PRBool *aSerializeCloneKids, nsIDOMNode **aOutNode)
 {
     NS_ENSURE_ARG_POINTER(aNode);
     NS_ENSURE_ARG_POINTER(aOutNode);
@@ -4105,7 +4173,7 @@ NS_IMETHODIMP nsEncoderNodeFixup::FixupNode(
     if (type == nsIDOMNode::ELEMENT_NODE ||
         type == nsIDOMNode::PROCESSING_INSTRUCTION_NODE)
     {
-        return mWebBrowserPersist->CloneNodeWithFixedUpURIAttributes(aNode, aOutNode);
+        return mWebBrowserPersist->CloneNodeWithFixedUpAttributes(aNode, aSerializeCloneKids, aOutNode);
     }
 
     return NS_OK;

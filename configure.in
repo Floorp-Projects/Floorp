@@ -68,6 +68,11 @@ TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
 TARGET_OS="${target_os}"
 
+
+MOZ_DEB_TIMESTAMP=`date +"%a, %d  %b %Y %T %z"   2>&1` 
+AC_SUBST(MOZ_DEB_TIMESTAMP)
+
+
 dnl ========================================================
 dnl =
 dnl = Don't change the following two lines.  Doing so breaks:
@@ -201,6 +206,20 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
                            Disable compiler/library checks.],
     COMPILE_ENVIRONMENT=1,
     COMPILE_ENVIRONMENT= )
+
+MOZ_ARG_WITH_STRING(l10n-base,
+[  --with-l10nbase=DIR     path to l10n repositories],
+    L10NBASEDIR=$withval)
+if test ! -z "$L10NBASEDIR"; then
+    if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
+        AC_MSG_ERROR([--with-l10n-base must specify a path])
+    elif test -d "$L10NBASEDIR"; then
+        L10NBASEDIR=`cd "$L10NBASEDIR" && pwd`
+    else
+        AC_MSG_ERROR([Invalid value --with-l10n-base, $L10NBASEDIR doesn't exist])
+    fi
+fi
+AC_SUBST(L10NBASEDIR)
 
 dnl ========================================================
 dnl Checks for compilers.
@@ -483,6 +502,7 @@ case "$target" in
         elif test "$_CC_MAJOR_VERSION" = "15"; then
             _CC_SUITE=9
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
+            LDFLAGS="$LDFLAGS -MANIFESTUAC:NO"
             _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
@@ -945,7 +965,7 @@ MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
 
 MOZ_JS_LIBS='-L$(LIBXUL_DIST)/bin -lmozjs'
 DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxpcom -lxpcom_core'
-MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin:/usr/lib:/usr/local/lib:/lib'
+MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin'
 XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin -lxpcom'
 LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) -lxul'
 XPCOM_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) $(XPCOM_FROZEN_LDOPTS)'
@@ -1242,6 +1262,10 @@ Alpha | alpha | ALPHA)
     CPU_ARCH=Alpha
     ;;
 
+hppa* | parisc)
+    CPU_ARCH=hppa
+    ;;
+
 sun4u | sparc*)
     CPU_ARCH=sparc
     ;;
@@ -1292,11 +1316,16 @@ if test "$GNU_CC"; then
     # -Wconversion - complained when char's or short's were used a function args
     # -Wshadow - removed because it generates more noise than help --pete
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
-    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc" \
-       && test -z "$INTEL_CC"; then
-        # don't use -Wcast-align on ia64 or sparc, it's noisy on those platforms
-        # icc doesn't support this flag.
+    if test -z "$INTEL_CC"; then
+       # Don't use -Wcast-align with ICC
+       case "$CPU_ARCH" in
+           # And don't use it on hppa, ia64, sparc, since it's noisy there
+           hppa | ia64 | sparc)
+           ;;
+           *)
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
+           ;;
+       esac
     fi
 
     dnl Turn pedantic on but disable the warnings for long long
@@ -1332,11 +1361,16 @@ if test "$GNU_CXX"; then
     CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
-    if test "$CPU_ARCH" != "ia64" && test "$CPU_ARCH" != "sparc" \
-       && test -z "$INTEL_CC"; then
-        # don't use -Wcast-align on ia64 or sparc, it's noisy on those platforms
-        # icc doesn't support this flag.
+    if test -z "$INTEL_CC"; then
+       # Don't use -Wcast-align with ICC
+       case "$CPU_ARCH" in
+           # And don't use it on hppa, ia64, sparc, since it's noisy there
+           hppa | ia64 | sparc)
+           ;;
+           *)
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
+           ;;
+       esac
     fi
 
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h'
@@ -1548,6 +1582,21 @@ SEAMONKEY_VERSION=`cat $topsrcdir/suite/config/version.txt`
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
 
+PKG_CHECK_MODULES(LIBHILONMIME,libhildonmime,
+                  NS_HILDON=1,
+                  NS_HILDON=)
+if test $NS_HILDON; then
+   AC_DEFINE(NS_HILDON)
+fi
+
+PKG_CHECK_MODULES(LIBOSSO,libosso,
+                  NS_OSSO=1,
+                  NS_OSSO=)
+
+if test $NS_OSSO; then
+   AC_DEFINE(NS_OSSO)     
+fi
+
 dnl ========================================================
 dnl System overrides of the defaults for target
 dnl ========================================================
@@ -1668,22 +1717,29 @@ case "$target" in
     # set MACOSX to generate lib/mac/MoreFiles/Makefile
     MACOSX=1
 
-    dnl check for the presence of the -dead_strip linker flag
-    AC_MSG_CHECKING([for -dead_strip option to ld])
-    _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -Wl,-dead_strip"
-    AC_TRY_LINK(,[return 0;],_HAVE_DEAD_STRIP=1,_HAVE_DEAD_STRIP=)
-    if test -n "$_HAVE_DEAD_STRIP" ; then
-        AC_MSG_RESULT([yes])
-        MOZ_OPTIMIZE_LDFLAGS="-Wl,-dead_strip"
+    dnl DTrace and -dead_strip don't interact well. See bug 403132.
+    dnl ===================================================================
+    if test "x$enable_dtrace" = "xyes"; then
+        echo "Skipping -dead_strip because DTrace is enabled. See bug 403132."
     else
-        AC_MSG_RESULT([no])
+        dnl check for the presence of the -dead_strip linker flag
+        AC_MSG_CHECKING([for -dead_strip option to ld])
+        _SAVE_LDFLAGS=$LDFLAGS
+        LDFLAGS="$LDFLAGS -Wl,-dead_strip"
+        AC_TRY_LINK(,[return 0;],_HAVE_DEAD_STRIP=1,_HAVE_DEAD_STRIP=)
+        if test -n "$_HAVE_DEAD_STRIP" ; then
+            AC_MSG_RESULT([yes])
+            MOZ_OPTIMIZE_LDFLAGS="-Wl,-dead_strip"
+        else
+            AC_MSG_RESULT([no])
+        fi
+        
+        LDFLAGS=$_SAVE_LDFLAGS
     fi
-    LDFLAGS=$_SAVE_LDFLAGS
     ;;
 
 *-freebsd*)
-    if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo aout` != "elf"; then
+    if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo elf` != "elf"; then
 	DLL_SUFFIX=".so.1.0"
 	DSO_LDOPTS="-shared"
     fi
@@ -2119,7 +2175,7 @@ case "$target" in
 
 
     case "$host_os" in
-    cygwin*)
+    cygwin*|msvc*|mks*)
         AC_MSG_WARN([Using a cygwin build environment is unsupported. Configure cannot check for the presence of necessary headers. Please upgrade to MozillaBuild; see http://developer.mozilla.org/en/docs/Windows_Build_Prerequisites])
         ;;
 
@@ -2774,11 +2830,11 @@ dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
     AC_CACHE_CHECK(for compiler -fshort-wchar option, 
         ac_cv_have_usable_wchar_option_v2,
         [AC_TRY_LINK([#include <stddef.h>
-                         $configure_static_assert_macros],
-                        [CONFIGURE_STATIC_ASSERT(sizeof(wchar_t) == 2);
-                         CONFIGURE_STATIC_ASSERT((wchar_t)-1 > (wchar_t) 0)],
-                        ac_cv_have_usable_wchar_option_v2="yes",
-                        ac_cv_have_usable_wchar_option_v2="no")])
+                      $configure_static_assert_macros],
+                     [CONFIGURE_STATIC_ASSERT(sizeof(wchar_t) == 2);
+                      CONFIGURE_STATIC_ASSERT((wchar_t)-1 > (wchar_t) 0)],
+                     ac_cv_have_usable_wchar_option_v2="yes",
+                     ac_cv_have_usable_wchar_option_v2="no")])
 
     if test "$ac_cv_have_usable_wchar_option_v2" = "yes"; then
         AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
@@ -4255,6 +4311,18 @@ MOZ_ARG_WITH_STRING(java-bin-path,
     JAVA_BIN_PATH=$withval)
 
 dnl ========================================================
+dnl Use ARM userspace kernel helpers; tell NSPR to enable
+dnl their usage and use them in spidermonkey.
+dnl ========================================================
+MOZ_ARG_WITH_BOOL(arm-kuser,
+[  --with-arm-kuser         Use kuser helpers (Linux/ARM only -- requires kernel 2.6.13 or later)],
+    USE_ARM_KUSER=1,
+    USE_ARM_KUSER=)
+if test -n "$USE_ARM_KUSER"; then
+   AC_DEFINE(USE_ARM_KUSER)
+fi
+
+dnl ========================================================
 dnl =
 dnl = Application
 dnl =
@@ -4290,7 +4358,9 @@ MOZ_NO_ACTIVEX_SUPPORT=1
 MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_XPCOM_OBSOLETE=
 MOZ_NO_FAST_LOAD=
-MOZ_OJI=
+MOZ_OGG=1
+MOZ_MEDIA=
+MOZ_OJI=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=
 MOZ_PLAINTEXT_EDITOR_ONLY=
@@ -4365,7 +4435,6 @@ MOZ_ARG_ENABLE_STRING(application,
                             suite
                             browser (Firefox)
                             mail (Thunderbird)
-                            minimo
                             composer
                             calendar (Sunbird)
                             xulrunner
@@ -4382,16 +4451,7 @@ if test "$MOZ_BUILD_APP" = "macbrowser"; then
     MOZ_BUILD_APP=camino
 fi
 
-case "$MOZ_BUILD_APP" in
-minimo)
-  MOZ_EMBEDDING_PROFILE=basic
-  ;;
-
-*)
-  MOZ_EMBEDDING_PROFILE=default
-  ;;
-esac
-
+MOZ_EMBEDDING_PROFILE=default
 MOZ_ARG_WITH_STRING(embedding-profile,
 [  --with-embedding-profile=default|basic|minimal
                        see http://wiki.mozilla.org/Gecko:Small_Device_Support],
@@ -4580,10 +4640,6 @@ browser)
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
-minimo)
-  AC_DEFINE(MINIMO)
-  ;;
-
 mail)
   AC_DEFINE(MOZ_THUNDERBIRD)
   ;;
@@ -4739,7 +4795,7 @@ cairo-mac|cairo-cocoa)
     AC_DEFINE(XP_MACOSX)
     AC_DEFINE(TARGET_CARBON)
     AC_DEFINE(TARGET_API_MAC_CARBON)
-    TK_LIBS='-framework Carbon'
+    TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit'
     TK_CFLAGS="-I${MACOS_SDK_DIR}/Developer/Headers/FlatCarbon"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
@@ -5040,6 +5096,11 @@ then
         ])
     fi
 
+    if test "$MOZ_ENABLE_GCONF"; then
+        AC_DEFINE(MOZ_ENABLE_GCONF)
+    fi
+
+    AC_SUBST(MOZ_ENABLE_GCONF)
     AC_SUBST(MOZ_GCONF_CFLAGS)
     AC_SUBST(MOZ_GCONF_LIBS)
 
@@ -5156,10 +5217,10 @@ MOZ_ARG_DISABLE_BOOL(plugins,
 dnl ========================================================
 dnl = Open JVM Interface (OJI) support
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(oji,
-[  --enable-oji           Enable Open JVM Integration support],
-    MOZ_OJI=1,
-    MOZ_OJI=)
+MOZ_ARG_DISABLE_BOOL(oji,
+[  --disable-oji           Disable Open JVM Integration support],
+    MOZ_OJI=,
+    MOZ_OJI=1)
 if test -n "$MOZ_OJI"; then
     AC_DEFINE(OJI)
 fi
@@ -5319,6 +5380,36 @@ AC_SUBST(MOZ_NO_FAST_LOAD)
 
 if test -n "$MOZ_NO_FAST_LOAD"; then
     AC_DEFINE(MOZ_NO_FAST_LOAD)
+fi
+
+dnl ========================================================
+dnl = Enable Ogg Codecs
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(ogg,
+[  --disable-ogg           Disable Ogg Codec support],
+    MOZ_OGG=,
+    MOZ_OGG=1)
+
+AC_SUBST(MOZ_OGG)
+
+if test -n "$MOZ_OGG"; then
+    AC_DEFINE(MOZ_OGG)
+    MOZ_MEDIA=1
+fi
+
+AC_SUBST(MOZ_MEDIA)
+
+if test -n "$MOZ_MEDIA"; then
+    AC_DEFINE(MOZ_MEDIA)
+fi
+
+dnl If using Ogg with Linux, ensure that the alsa library is available
+if test -n "$MOZ_OGG"; then
+   case "$target_os" in
+linux*)
+      AC_CHECK_LIB(asound, snd_pcm_open,,AC_MSG_ERROR([Ogg support on Linux requires the alsa library]))
+      ;;
+   esac
 fi
 
 dnl ========================================================
@@ -5994,6 +6085,9 @@ if test -n "$MOZ_HELP_VIEWER"; then
      AC_DEFINE(MOZ_HELP_VIEWER)
 fi
 AC_SUBST(MOZ_HELP_VIEWER)
+if test "$MOZ_BUILD_APP" = "browser" -a -n "$MOZ_HELP_VIEWER"; then
+    AC_MSG_ERROR([Cannot build Firefox with --enable-help-viewer.])
+fi
 
 dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)
@@ -6430,6 +6524,28 @@ MOZ_ARG_ENABLE_BOOL(shark,
     MOZ_SHARK= )
 if test -n "$MOZ_SHARK"; then
     AC_DEFINE(MOZ_SHARK)
+fi
+
+dnl ========================================================
+dnl callgrind
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(callgrind,
+[  --enable-callgrind      Enable callgrind profiling],
+    MOZ_CALLGRIND=1,
+    MOZ_CALLGRIND= )
+if test -n "$MOZ_CALLGRIND"; then
+    AC_DEFINE(MOZ_CALLGRIND)
+fi
+
+dnl ========================================================
+dnl vtune
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(vtune,
+[  --enable-vtune          Enable vtune profiling],
+    MOZ_VTUNE=1,
+    MOZ_VTUNE= )
+if test -n "$MOZ_VTUNE"; then
+    AC_DEFINE(MOZ_VTUNE)
 fi
 
 dnl ========================================================
@@ -7261,7 +7377,11 @@ fi
 
 if test -z "$SKIP_PATH_CHECKS"; then
 if test -z "${GLIB_CFLAGS}" || test -z "${GLIB_LIBS}" ; then
-    PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
+    if test "$MOZ_ENABLE_GTK2"; then
+        PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
+    else
+        AM_PATH_GLIB(${GLIB_VERSION})
+    fi
 fi
 fi
 
@@ -7424,6 +7544,10 @@ if test "$MOZ_TREE_CAIRO"; then
             fi
         fi
     fi
+
+    CAIRO_FEATURES_H=gfx/cairo/cairo/src/cairo-features.h
+    mv -f $CAIRO_FEATURES_H "$CAIRO_FEATURES_H".orig 2> /dev/null
+
 else
    PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION freetype2 fontconfig)
    MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
@@ -7788,6 +7912,8 @@ AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MINIMO)
+AC_SUBST(NS_HILDON)
+AC_SUBST(NS_OSSO)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_PERMISSIONS)
@@ -7824,6 +7950,8 @@ AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
+AC_SUBST(MOZ_CALLGRIND)
+AC_SUBST(MOZ_VTUNE)
 AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)
@@ -8279,6 +8407,15 @@ echo $MAKEFILES > unallmakefiles
 
 AC_OUTPUT($MAKEFILES)
 
+dnl Prevent the regeneration of cairo-features.h forcing rebuilds of gfx stuff
+if test "$CAIRO_FEATURES_H"; then
+  if cmp -s $CAIRO_FEATURES_H "$CAIRO_FEATURES_H".orig; then
+    mv -f "$CAIRO_FEATURES_H".orig "$CAIRO_FEATURES_H" 2> /dev/null
+  else
+    rm -f "$CAIRO_FEATURES_H".orig 2> /dev/null
+  fi
+fi
+
 dnl ========================================================
 dnl = Setup a nice relatively clean build environment for
 dnl = sub-configures.
@@ -8311,6 +8448,9 @@ if test -z "$MOZ_NATIVE_NSPR" || test "$MOZ_LDAP_XPCOM"; then
     fi
     if test -n "$HAVE_64BIT_OS"; then
         ac_configure_args="$ac_configure_args --enable-64bit"
+    fi
+    if test -n "$USE_ARM_KUSER"; then
+        ac_configure_args="$ac_configure_args --with-arm-kuser"
     fi
     AC_OUTPUT_SUBDIRS(nsprpub)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"

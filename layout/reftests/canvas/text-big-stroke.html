@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test to ensure fillText and strokeText look different</title>
+</head>
+<body>
+<canvas id="c" width="128" height="64"></canvas>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  var str = 'text';
+  ctx.fillStyle = 'black';
+  ctx.strokeStyle = 'black';
+  ctx.font = 'bold 64px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.strokeText(str, 0, 0);
+
+</script>
+</body>
+</html>

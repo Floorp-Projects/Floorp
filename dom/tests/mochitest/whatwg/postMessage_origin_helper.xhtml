@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title>postMessage throwing page</title>
+  <title>postMessage origin-testing helper page</title>
   <script type="application/javascript"><![CDATA[
 function receiveMessage(evt)
 {
@@ -14,10 +14,10 @@ function receiveMessage(evt)
   if (evt.data !== "PASS")
     response += " wrong-data(" + evt.data + ")";
 
-  window.parent.postMessage(response);
+  window.parent.postMessage(response, "http://localhost:8888");
 }
 
-document.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage, false);
 
 
 // Aids for identifying origins
@@ -25,7 +25,7 @@ document.addEventListener("message", receiveMessage, false);
 function setup()
 {
   var target = document.getElementById("location");
-  target.textContent = document.domain + ":" + (location.port || 80);
+  target.textContent = location.hostname + ":" + (location.port || 80);
 }
 
 window.addEventListener("load", setup, false);

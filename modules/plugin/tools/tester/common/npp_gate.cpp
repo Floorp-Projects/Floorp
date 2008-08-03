@@ -418,15 +418,6 @@ Return:
   return ret;
 }
 
-jref NPP_GetJavaClass (void)
-{
-  DWORD dwTickEnter = XP_GetTickCount();
-  DWORD dwTickReturn = XP_GetTickCount();
-  if(pLogger)
-    pLogger->appendToLog(action_npp_get_java_class, dwTickEnter, dwTickReturn, 0L);
-  return NULL;
-}
-
 /**************************************************/
 /*                                                */
 /*                     Mac                        */
@@ -521,11 +512,6 @@ void Private_URLNotify(NPP instance, const char* url, NPReason reason, void* not
   EnterCodeResource();
   NPP_URLNotify(instance, url, reason, notifyData);
   ExitCodeResource();
-}
-
-jref Private_GetJavaClass(void)
-{
-  return NULL;
 }
 
 NPError Private_GetValue(NPP instance, NPPVariable variable, void *result)

@@ -327,10 +327,9 @@ PlacesTreeView.prototype = {
     }
 
     // now update the number of elements
-    if (previouslySelectedNodes.length > 0)
-      selection.selectEventsSuppressed = true;
-
+    selection.selectEventsSuppressed = true;
     this._tree.beginUpdateBatch();
+
     if (replaceCount)
       this._tree.rowCountChanged(startReplacement, -replaceCount);
     if (newElements.length)
@@ -349,8 +348,8 @@ PlacesTreeView.prototype = {
         }
         // if we don't have a parent, we made it all the way to the root
         // and didn't find a match, so we can open our item
-        if (!parent)
-          item.containerOpen = !item.containerOpen;
+        if (!parent && !item.containerOpen)
+          item.containerOpen = true;
       }
     }
 
@@ -394,9 +393,8 @@ PlacesTreeView.prototype = {
         selection.rangedSelect(previouslySelectedNodes[0].oldIndex,
                                previouslySelectedNodes[0].oldIndex, true);
       }
-
-      selection.selectEventsSuppressed = false;
     }
+    selection.selectEventsSuppressed = false;
   },
 
   _convertPRTimeToString: function PTV__convertPRTimeToString(aTime) {
@@ -941,10 +939,18 @@ PlacesTreeView.prototype = {
       if (!node.parent)
         return true;
 
-      // treat non-expandable queries as non-containers
+      // Flat-lists may ignore expandQueries and other query options when
+      // they are asked to open a container.
+      if (this._flatList)
+        return true;
+
+      // treat non-expandable childless queries as non-containers
       if (PlacesUtils.nodeIsQuery(node)) {
-        asQuery(node);
-        return node.queryOptions.expandQueries;
+        var parent = node.parent;
+        if((PlacesUtils.nodeIsQuery(parent) ||
+            PlacesUtils.nodeIsFolder(parent)) &&
+           !node.hasChildren)
+          return asQuery(parent).queryOptions.expandQueries;
       }
       return true;
     }

@@ -21,13 +21,24 @@
         try {
           return this.mAttrs.getStringProperty(aName);
         } catch (e) {
-          alert(e);
           return "";
         }
       }
 
       this.mAcc = gAccService.getAccessibleFor(document.getElementById(aId));
-      this.mAttrs = this.mAcc.attributes;
+      ok(this.mAcc, "Can't get accessible for " + aId);
+
+      if (this.mAcc)
+        this.mAttrs = this.mAcc.attributes;
+    }
+
+    function testGroupAttrs(aID, aPosInSet, aSetSize, aLevel)
+    {
+      var attrs = new accAttributes(aID);
+      is(attrs.getAttribute("posinset"), aPosInSet, "Wrong posinset on " + aID);
+      is(attrs.getAttribute("setsize"), aSetSize, "Wrong setsize on " + aID);
+      if (aLevel)
+        is(attrs.getAttribute("level"), aLevel, "Wrong level on " + aID);
     }
 
     function doTest()
@@ -36,15 +47,38 @@
       gAccService = Components.classes["@mozilla.org/accessibleRetrieval;1"].
                     getService(Components.interfaces.nsIAccessibleRetrieval);
 
-      var attrs = new accAttributes("item1");
-      is(attrs.getAttribute("posinset"), "1", "Wrong posinset on item1.");
-      is(attrs.getAttribute("setsize"), "2", "Wrong setsize on item1.");
+      //////////////////////////////////////////////////////////////////////////
+      // xul:listbox (bug 417317)
+      testGroupAttrs("item1", "1", "2");
+      testGroupAttrs("item2", "2", "2");
 
-      attrs = new accAttributes("item2");
-      is(attrs.getAttribute("posinset"), "2", "Wrong posinset on item2.");
-      is(attrs.getAttribute("setsize"), "2", "Wrong setsize on item2.");
+      //////////////////////////////////////////////////////////////////////////
+      // xul:menu (bug 443881)
+      var menu1 = document.getElementById("menu_item1");
+      menu1.open = true;
 
-      SimpleTest.finish();
+      window.setTimeout(function() {
+        var menu2 = document.getElementById("menu_item2");
+        menu2.open = true;
+
+        window.setTimeout(function() {
+          testGroupAttrs("menu_item1.1", "1", "1");
+          testGroupAttrs("menu_item1.2", "1", "3");
+          testGroupAttrs("menu_item1.4", "2", "3");
+          testGroupAttrs("menu_item2", "3", "3");
+          testGroupAttrs("menu_item2.1", "1", "2", "1");
+          testGroupAttrs("menu_item2.2", "2", "2", "1");
+
+          SimpleTest.finish();
+        }, 0);
+      }, 0);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA menu (bug 441888)
+      testGroupAttrs("aria-menuitem", "1", "3");
+      testGroupAttrs("aria-menuitemcheckbox", "2", "3");
+      testGroupAttrs("aria-menuitemradio", "3", "3");
+      testGroupAttrs("aria-menuitem2", "1", "1");
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -57,7 +91,18 @@
        href="https://bugzilla.mozilla.org/show_bug.cgi?id=417317"
        title="Certain types of LISTITEM accessibles no longer get attributes set like 'x of y', regression from fix for bug 389926">
       Mozilla Bug 417317
-    </a>
+    </a><br/>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=443881"
+       title="take into account separators in xul menus when group attributes are calculating">
+      Mozilla Bug 443881
+    </a><br/>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=441888"
+       title="ARIA checked menu items are not included in the total list of menu items">
+      Mozilla Bug 441888
+    </a><br/>
+
     <p id="display"></p>
     <div id="content" style="display: none">
     </div>
@@ -69,5 +114,37 @@
     <listitem label="item1" id="item1"/>
     <listitem label="item2" id="item2"/>
   </listbox>
+
+  <menubar>
+    <menu label="item1" id="menu_item1">
+      <menupopup>
+        <menuitem label="item1.1" id="menu_item1.1"/>
+        <menuseparator/>
+        <menuitem label="item1.2" id="menu_item1.2"/>
+        <menuitem label="item1.3" hidden="true"/>
+        <menuitem label="item1.4" id="menu_item1.4"/>
+        <menu label="item2" id="menu_item2">
+          <menupopup>
+            <menuitem label="item2.1" id="menu_item2.1"/>
+            <menuitem label="item2.2" id="menu_item2.2"/>
+          </menupopup>
+        </menu>
+      </menupopup>
+    </menu>
+  </menubar>
+
+  <vbox>
+    <description role="menuitem" id="aria-menuitem"
+                 value="conventional menuitem"/>
+    <description role="menuitemcheckbox" id="aria-menuitemcheckbox"
+                 value="conventional checkbox menuitem"/>
+    <description role="menuitem" hidden="true"/>
+    <description role="menuitemradio" id="aria-menuitemradio"
+                 value="conventional radio menuitem"/>
+    <description role="separator"
+                 value="conventional separator"/>
+    <description role="menuitem" id="aria-menuitem2"
+                 value="conventional menuitem"/>
+  </vbox>
 </window>
 

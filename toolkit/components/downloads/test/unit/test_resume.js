@@ -141,6 +141,7 @@ function run_test()
     onProgressChange: function(a, b, c, d, e, f, g) { },
     onSecurityChange: function(a, b, c, d) { }
   });
+  dm.addListener(getDownloadListener());
 
   /**
    * 4. Start the download

@@ -72,6 +72,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  pref \
 		  imglib2 \
+		  docshell \
 		  $(NULL)
 
 EXPORTS		= \
@@ -117,6 +118,7 @@ EXPORTS		= \
 		nsStyleSet.h \
 		nsStyleStruct.h \
 		nsStyleStructFwd.h \
+		nsStyleStructInlines.h \
 		nsStyleStructList.h \
 		nsStyleUtil.h \
 		$(NULL)
@@ -150,6 +152,7 @@ CPPSRCS		= \
 		nsHTMLStyleSheet.cpp \
 		nsInspectorCSSUtils.cpp \
 		nsLayoutStylesheetCache.cpp \
+		nsMediaFeatures.cpp \
 		nsROCSSPrimitiveValue.cpp \
 		nsRuleNode.cpp \
 		nsStyleContext.cpp \

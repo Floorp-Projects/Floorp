@@ -59,7 +59,6 @@ var gShorthandsWithoutCondensingSerialize = {
 
 var gNotAccepted = {
   "-moz-column-width": [ "50%" ],
-  "-moz-user-select": [ "auto" ],
   "list-style": [ "none disc outside" ],
 };
 
@@ -200,14 +199,14 @@ function test_property(property)
         step1comps.push(gComputedStyle.getPropertyValue(info.subproperties[idx]));
 
     func = xfail_accepted(property, value) ? todo_isnot : isnot;
-    func(step1val, "", "setting '" + value + "' on '" + property);
+    func(step1val, "", "setting '" + value + "' on '" + property + "'");
     if ("subproperties" in info)
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
         func = xfail_accepted_split(property, subprop, value)
                  ? todo_isnot : isnot;
         func(gDeclaration.getPropertyValue(subprop), "",
-             "setting '" + value + "' on '" + property);
+             "setting '" + value + "' on '" + property + "'");
       }
 
     // We don't care particularly about the whitespace or the placement of

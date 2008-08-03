@@ -1,0 +1,45 @@
+#############################################################
+# script to watch for cores during QA runs, so they won't overwrite one
+# another
+# Not activated for efficiency reasons, and problems on MKS, us
+# only when needed and remember to remove afterwards
+#############################################################
+
+#############################################################
+# to activate put the following into all.sh (after the HOSTDIR 
+# has been exported
+#############################################################
+# sh `dirname $0`/core_watch $HOSTDIR ${HOSTDIR} &    
+# CORE_WATCH_PID=$!
+# if [ -n "${KILLPIDS}" ]
+# then
+#     echo $CORE_WATCH_PID >>"${KILLPIDS}"            
+# fi
+#############################################################
+
+#############################################################
+# or put the following into nssqa to watch the whole RESULTDIR
+# start it shortly before run_all
+#
+# NOTE: the more efficient way is above, this is potentially going
+# thru 1000ds of files every 30 seconds
+#############################################################
+# sh `dirname $0`/core_watch $RESULTDIR &    
+# echo $! >>"${KILLPIDS}"        #so Exit() can hopefully kill the core_watch
+#############################################################
+
+# in both cases remember to kill the process when done, since 
+# the PIDs that end up in ${KILLPIDS} might not work for all OS
+# something like "kill_by_name core_watch
+
+echo $$ >>"${KILLPIDS}"     #so Exit() can hopefully kill this shell
+while [ 1 ]
+do
+    for w in `find $1 -name "core" -print`
+    do
+        echo "Found core $w"
+        mv $w $w.`date +%H%M%S`
+    done
+    sleep 30
+done
+

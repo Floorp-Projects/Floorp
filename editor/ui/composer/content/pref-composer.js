@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Stefan Hermes <stefanh@inbox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -34,119 +35,60 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-// This is mostly a modified version of code in EdColorProps.xul
 
-// Initialize in case we can't get them from prefs???
-var defaultTextColor = "#000000";
-var defaultLinkColor = "#000099";
-var defaultActiveColor = "#000099";
-var defaultVisitedColor = "#990099";
-var defaultBackgroundColor = "#FFFFFF";
+var gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch2);
+const browserPrefsObserver =
+{
+  observe: function(aSubject, aTopic, aData)
+  {
+    if (aTopic != "nsPref:changed" || document.getElementById("editor.use_custom_colors").value)
+      return;
 
-var customTextColor;
-var customLinkColor;
-var customActiveColor;
-var customVisitedColor;
-var customBackgroundColor;
-var previewBGColor;
-var backgroundImage = "";
-
-// Strings we use often
-const styleStr =       "style";
-const textStr =        "text";
-const linkStr =        "link";
-const vlinkStr =       "vlink";
-const alinkStr =       "alink";
-const bgcolorStr =     "bgcolor";
-const backgroundStr =  "background";
-const colorStyle =     "color: ";
-const backColorStyle = "background-color: ";
-const backImageStyle = "; background-image: url(";
-
-var browserColors;
-var dialog;
+    switch (aData)
+    {
+      case "browser.anchor_color":
+        SetColorPreview("linkText", gPrefService.getCharPref(aData));
+        break;
+      case "browser.active_color":
+        SetColorPreview("activeLinkText", gPrefService.getCharPref(aData));
+        break;
+      case "browser.visited_color":
+        SetColorPreview("visitedLinkText", gPrefService.getCharPref(aData));
+        break;
+      default:
+        SetBgAndFgColors(gPrefService.getBoolPref("browser.display.use_system_colors"))
+    }
+  }
+};
 
 function Startup()
 {
-  gDialog.ColorPreview = document.getElementById("ColorPreview");
-  gDialog.NormalText = document.getElementById("NormalText");
-  gDialog.LinkText = document.getElementById("LinkText");
-  gDialog.ActiveLinkText = document.getElementById("ActiveLinkText");
-  gDialog.VisitedLinkText = document.getElementById("VisitedLinkText");
-  gDialog.DefaultColorsRadio = document.getElementById("DefaultColorsRadio");
-  gDialog.CustomColorsRadio = document.getElementById("CustomColorsRadio");
-  gDialog.BackgroundImageInput = document.getElementById("BackgroundImageInput");
+  // Add browser prefs observers
+  gPrefService.addObserver("browser.display.use_system_colors", browserPrefsObserver, false);
+  gPrefService.addObserver("browser.display.foreground_color", browserPrefsObserver, false);
+  gPrefService.addObserver("browser.display.background_color", browserPrefsObserver, false);
+  gPrefService.addObserver("browser.anchor_color", browserPrefsObserver, false);
+  gPrefService.addObserver("browser.active_color", browserPrefsObserver, false);
+  gPrefService.addObserver("browser.visited_color", browserPrefsObserver, false);
 
-  // The data elements that hold the pref values
-  gDialog.NormalData = document.getElementById("textData");
-  gDialog.LinkData = document.getElementById("linkData");
-  gDialog.ActiveLinkData = document.getElementById("aLinkData");
-  gDialog.VisitedLinkData = document.getElementById("fLinkData");
-  gDialog.BackgroundColorData = document.getElementById("backgroundColorData");
-  gDialog.BackgroundImageData = document.getElementById("backgroundImageData");
-
-  browserColors = GetDefaultBrowserColors();
-
-  // Use author's browser pref colors passed into dialog
-  defaultTextColor = browserColors.TextColor;
-  defaultLinkColor = browserColors.LinkColor;
-  defaultActiveColor = browserColors.ActiveLinkColor;
-  defaultVisitedColor =  browserColors.VisitedLinkColor;
-  defaultBackgroundColor=  browserColors.BackgroundColor;
-
-  // Get the colors and image set by prefs init code 
-  customTextColor = gDialog.NormalData.getAttribute("value"); 
-  customLinkColor = gDialog.LinkData.getAttribute("value");
-  customActiveColor = gDialog.ActiveLinkData.getAttribute("value");
-  customVisitedColor = gDialog.VisitedLinkData.getAttribute("value");
-  customBackgroundColor = gDialog.BackgroundColorData.getAttribute("value");
-  backgroundImage = gDialog.BackgroundImageData.getAttribute("value");
-  if (backgroundImage)
-    gDialog.BackgroundImageInput.value = backgroundImage;
-
-  // "value" attribute value is a string conversion of boolean!
-  if( document.getElementById( "useCustomColors" ).value == "true" )
-    UseCustomColors();
-  else
-    UseDefaultColors();
-
-  return true;
+  // Add event listener so we can remove our observers
+  window.addEventListener("unload", WindowOnUnload, false);
+  UpdateDependent(document.getElementById("editor.use_custom_colors").value);
 }
 
-function GetColorAndUpdate(ColorWellID)
+function GetColorAndUpdatePref(aType, aButtonID)
 {
-  // Only allow selecting when in custom mode
-  if (!gDialog.CustomColorsRadio.selected) return;
-
-  var colorWell = document.getElementById(ColorWellID);
-  if (!colorWell) return;
-
   // Don't allow a blank color, i.e., using the "default"
   var colorObj = { NoDefault:true, Type:"", TextColor:0, PageColor:0, Cancel:false };
+  var preference = document.getElementById("editor." + aButtonID + "_color");
 
-  switch( ColorWellID )
-  {
-    case "textCW":
-      colorObj.Type = "Text";
-      colorObj.TextColor = customTextColor;
-      break;
-    case "linkCW":
-      colorObj.Type = "Link";
-      colorObj.TextColor = customLinkColor;
-      break;
-    case "activeCW":
-      colorObj.Type = "ActiveLink";
-      colorObj.TextColor = customActiveColor;
-      break;
-    case "visitedCW":
-      colorObj.Type = "VisitedLink";
-      colorObj.TextColor = customVisitedColor;
-      break;
-    case "backgroundCW":
-      colorObj.Type = "Page";
-      colorObj.PageColor = customBackgroundColor;
-      break;
-  }
+  if (aButtonID == "background")
+    colorObj.PageColor = preference.value;
+  else
+    colorObj.TextColor = preference.value;
+
+  colorObj.Type = aType;
 
   window.openDialog("chrome://editor/content/EdColorPicker.xul", "_blank", "chrome,close,titlebar,modal", "", colorObj);
 
@@ -154,162 +96,126 @@ function GetColorAndUpdate(ColorWellID)
   if (colorObj.Cancel)
     return;
 
-  var color = "";
-  switch( ColorWellID )
-  {
-    case "textCW":
-      color = customTextColor = colorObj.TextColor;
-      gDialog.NormalData.setAttribute("value", color); 
-      break;
-    case "linkCW":
-      color = customLinkColor = colorObj.TextColor;
-      gDialog.LinkData.setAttribute("value", color);
-      break;
-    case "activeCW":
-      color = customActiveColor = colorObj.TextColor;
-      gDialog.ActiveLinkData.setAttribute("value", color);
-      break;
-    case "visitedCW":
-      color = customVisitedColor = colorObj.TextColor;
-      gDialog.VisitedLinkData.setAttribute("value", color);
-      break;
-    case "backgroundCW":
-      color = customBackgroundColor = colorObj.BackgroundColor;
-      gDialog.BackgroundColorData.setAttribute("value", color);
-      break;
-  }
-  setColorWell(ColorWellID, color); 
-  SetColorPreview(ColorWellID, color);
+  // Update preference with picked color
+  if (aType == "Page")
+    preference.value = colorObj.BackgroundColor;
+  else
+    preference.value = colorObj.TextColor;
 }
 
-function SetColorPreview(ColorWellID, color)
+function UpdateDependent(aCustomEnabled)
 {
-  switch( ColorWellID )
-  {
-    case "textCW":
-      gDialog.NormalText.setAttribute(styleStr,colorStyle+color);
-      break;
-    case "linkCW":
-      gDialog.LinkText.setAttribute(styleStr,colorStyle+color);
-      break;
-    case "activeCW":
-      gDialog.ActiveLinkText.setAttribute(styleStr,colorStyle+color);
-      break;
-    case "visitedCW":
-      gDialog.VisitedLinkText.setAttribute(styleStr,colorStyle+color);
-      break;
-    case "backgroundCW":
-      // Must combine background color and image style values
-      var styleValue = backColorStyle+color;
-      if (backgroundImage)
-        styleValue += ";"+backImageStyle+backgroundImage+");";
+  ToggleElements(aCustomEnabled);
 
-      gDialog.ColorPreview.setAttribute(styleStr,styleValue);
-      previewBGColor = color;
-      break;
-  }
-}
-
-function UseCustomColors()
-{
-  SetElementEnabledById("TextButton", true);
-  SetElementEnabledById("LinkButton", true);
-  SetElementEnabledById("ActiveLinkButton", true);
-  SetElementEnabledById("VisitedLinkButton", true);
-  SetElementEnabledById("BackgroundButton", true);
-  SetElementEnabledById("Text", true);
-  SetElementEnabledById("Link", true);
-  SetElementEnabledById("Active", true);
-  SetElementEnabledById("Visited", true);
-  SetElementEnabledById("Background", true);
-
-  SetColorPreview("textCW",       customTextColor);
-  SetColorPreview("linkCW",       customLinkColor);
-  SetColorPreview("activeCW",     customActiveColor);
-  SetColorPreview("visitedCW",    customVisitedColor);
-  SetColorPreview("backgroundCW", customBackgroundColor);
-
-  setColorWell("textCW",          customTextColor);
-  setColorWell("linkCW",          customLinkColor);
-  setColorWell("activeCW",        customActiveColor);
-  setColorWell("visitedCW",       customVisitedColor);
-  setColorWell("backgroundCW",    customBackgroundColor);
-
-  gDialog.NormalData.setAttribute("value",          customTextColor); 
-  gDialog.LinkData.setAttribute("value",            customLinkColor);
-  gDialog.ActiveLinkData.setAttribute("value",      customActiveColor);
-  gDialog.VisitedLinkData.setAttribute("value",     customVisitedColor);
-  gDialog.BackgroundColorData.setAttribute("value", customBackgroundColor);
-}
-
-function UseDefaultColors()
-{
-  SetColorPreview("textCW",       defaultTextColor);
-  SetColorPreview("linkCW",       defaultLinkColor);
-  SetColorPreview("activeCW",     defaultActiveColor);
-  SetColorPreview("visitedCW",    defaultVisitedColor);
-  SetColorPreview("backgroundCW", defaultBackgroundColor);
-
-  // Setting to blank color will remove color from buttons,
-  setColorWell("textCW",       "");
-  setColorWell("linkCW",       "");
-  setColorWell("activeCW",     "");
-  setColorWell("visitedCW",    "");
-  setColorWell("backgroundCW", "");
-
-  // Disable color buttons and labels
-  SetElementEnabledById("TextButton", false);
-  SetElementEnabledById("LinkButton", false);
-  SetElementEnabledById("ActiveLinkButton", false);
-  SetElementEnabledById("VisitedLinkButton", false);
-  SetElementEnabledById("BackgroundButton", false);
-  SetElementEnabledById("Text", false);
-  SetElementEnabledById("Link", false);
-  SetElementEnabledById("Active", false);
-  SetElementEnabledById("Visited", false);
-  SetElementEnabledById("Background", false);
-  
-  // Note that we leave custom colors set even if 
-  //  custom colors pref is false (we just ignore the colors)
-}
-  
-function ChooseImageFile()
-{
-  // Get a local image file, converted into URL format
-  var fileName = GetLocalFileURL("img");
-  if (fileName)
-  {
-    gDialog.BackgroundImageInput.value = fileName;
-    ValidateAndPreviewImage(true);
-  }
-  SetTextboxFocus(gDialog.BackgroundImageInput);
-}
-
-function ChangeBackgroundImage()
-{
-  // Don't show error message for image while user is typing
-  ValidateAndPreviewImage(false);
-}
-
-function ValidateAndPreviewImage(ShowErrorMessage)
-{
-  // First make a string with just background color
-  var styleValue = backColorStyle+previewBGColor+";";
-
-  var image = TrimString(gDialog.BackgroundImageInput.value);
-  if (image)
-  {
-    backgroundImage = image;
-    // Append image style
-    styleValue += backImageStyle+backgroundImage+");";
+  if (aCustomEnabled)
+  { // Set current editor colors on preview and buttons
+    SetColors("textCW", "normalText", document.getElementById("editor.text_color").value);
+    SetColors("linkCW", "linkText", document.getElementById("editor.link_color").value);
+    SetColors("activeCW", "activeLinkText", document.getElementById("editor.active_link_color").value);
+    SetColors("visitedCW", "visitedLinkText", document.getElementById("editor.followed_link_color").value);
+    SetColors("backgroundCW", "ColorPreview", document.getElementById("editor.background_color").value);
   }
   else
-    backgroundImage = "";
-
-  // Set style on preview (removes image if not valid)
-  gDialog.ColorPreview.setAttribute(styleStr, styleValue);
-  
-  // Set the pref data so pref code saves it 
-  gDialog.BackgroundImageData.setAttribute("value", backgroundImage ? backgroundImage : "");
+  { // Set current browser colors on preview
+    SetBgAndFgColors(gPrefService.getBoolPref("browser.display.use_system_colors"));
+    SetColorPreview("linkText", gPrefService.getCharPref("browser.anchor_color"));
+    SetColorPreview("activeLinkText", gPrefService.getCharPref("browser.active_color"));
+    SetColorPreview("visitedLinkText", gPrefService.getCharPref("browser.visited_color"));
+  }
 }
 
+function ToggleElements(aCustomEnabled)
+{
+  var buttons = document.getElementById("color-rows").getElementsByTagName("button");
+  
+  for (var i = 0; i < buttons.length; i++)
+  {
+    let isLocked = CheckLocked(buttons[i].id);
+    buttons[i].disabled = !aCustomEnabled || isLocked;
+    buttons[i].previousSibling.disabled = !aCustomEnabled || isLocked;
+    buttons[i].firstChild.setAttribute("default", !aCustomEnabled || isLocked);
+  }
+}
+
+function CheckLocked(aButtonID)
+{
+  return document.getElementById("editor." + aButtonID + "_color").locked;
+}
+
+// Updates preview and button color when a editor color pref change
+function UpdateColors(aColorWellID, aPreviewID, aColor)
+{
+  // Only show editor colors from prefs if we're in custom mode
+  if (!document.getElementById("editor.use_custom_colors").value)
+    return;
+
+  SetColors(aColorWellID, aPreviewID, aColor)
+}
+
+function SetColors(aColorWellID, aPreviewID, aColor)
+{
+  SetColorWell(aColorWellID, aColor);
+  SetColorPreview(aPreviewID, aColor);
+}
+
+function SetColorWell(aColorWellID, aColor)
+{
+  document.getElementById(aColorWellID).style.backgroundColor = aColor;
+}
+
+function SetColorPreview(aPreviewID, aColor)
+{
+  if (aPreviewID == "ColorPreview")
+    document.getElementById(aPreviewID).style.backgroundColor = aColor;
+  else
+    document.getElementById(aPreviewID).style.color = aColor;
+}
+
+function UpdateBgImagePreview(aImage)
+{
+  var colorPreview = document.getElementById("ColorPreview");
+  colorPreview.style.backgroundImage = aImage && "url(" + aImage + ")";
+}
+
+// Sets browser background/foreground colors
+function SetBgAndFgColors(aSysPrefEnabled)
+{
+  if (aSysPrefEnabled)
+  { // Use system colors
+    SetColorPreview("normalText", "windowtext");
+    SetColorPreview("ColorPreview", "window");
+  }
+  else
+  {
+    SetColorPreview("normalText", gPrefService.getCharPref("browser.display.foreground_color"));
+    SetColorPreview("ColorPreview", gPrefService.getCharPref("browser.display.background_color"));
+  }
+}
+
+function ChooseImageFile()
+{
+  const nsIFilePicker = Components.interfaces.nsIFilePicker;
+  var fp = Components.classes["@mozilla.org/filepicker;1"]
+                     .createInstance(nsIFilePicker);
+  var editorBundle = document.getElementById("bundle_editor");
+  var title = editorBundle.getString("SelectImageFile");
+  fp.init(window, title, nsIFilePicker.modeOpen);
+  fp.appendFilters(nsIFilePicker.filterImages);
+  if (fp.show() == nsIFilePicker.returnOK)
+    document.getElementById("editor.default_background_image").value = fp.fileURL.spec;
+
+  var textbox = document.getElementById("backgroundImageInput");
+  textbox.focus();
+  textbox.select();
+}
+
+function WindowOnUnload()
+{
+  gPrefService.removeObserver("browser.display.use_system_colors", browserPrefsObserver, false);
+  gPrefService.removeObserver("browser.display.foreground_color", browserPrefsObserver, false);
+  gPrefService.removeObserver("browser.display.background_color", browserPrefsObserver, false);
+  gPrefService.removeObserver("browser.anchor_color", browserPrefsObserver, false);
+  gPrefService.removeObserver("browser.active_color", browserPrefsObserver, false);
+  gPrefService.removeObserver("browser.visited_color", browserPrefsObserver, false);
+  window.removeEventListener("unload", WindowOnUnload, false);
+}

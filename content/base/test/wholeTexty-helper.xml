@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE document
+  [
+    <!ENTITY foobar "baz<quux/>">
+  ]>
+<document><![CDATA[]]><entity>&foobar;</entity></document>

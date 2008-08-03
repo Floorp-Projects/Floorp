@@ -30,6 +30,8 @@
 
 #include "pixman-private.h"
 
+#define Alpha(x) ((x) >> 24)
+
 static void
 init_source_image (source_image_t *image)
 {
@@ -79,8 +81,8 @@ allocate_image (void)
     {
 	image_common_t *common = &image->common;
 
-	pixman_region_init (&common->full_region);
-	pixman_region_init (&common->clip_region);
+	pixman_region32_init (&common->full_region);
+	pixman_region32_init (&common->clip_region);
 	common->src_clip = &common->full_region;
 	common->has_client_clip = FALSE;
 	common->transform = NULL;
@@ -99,7 +101,7 @@ allocate_image (void)
 }
 
 /* Ref Counting */
-pixman_image_t *
+PIXMAN_EXPORT pixman_image_t *
 pixman_image_ref (pixman_image_t *image)
 {
     image->common.ref_count++;
@@ -108,7 +110,7 @@ pixman_image_ref (pixman_image_t *image)
 }
 
 /* returns TRUE when the image is freed */
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 pixman_image_unref (pixman_image_t *image)
 {
     image_common_t *common = (image_common_t *)image;
@@ -117,8 +119,8 @@ pixman_image_unref (pixman_image_t *image)
 
     if (common->ref_count == 0)
     {
-	pixman_region_fini (&common->clip_region);
-	pixman_region_fini (&common->full_region);
+	pixman_region32_fini (&common->clip_region);
+	pixman_region32_fini (&common->full_region);
 
 	if (common->transform)
 	    free (common->transform);
@@ -156,7 +158,7 @@ pixman_image_unref (pixman_image_t *image)
 }
 
 /* Constructors */
-pixman_image_t *
+PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_solid_fill (pixman_color_t *color)
 {
     pixman_image_t *img = allocate_image();
@@ -171,7 +173,7 @@ pixman_image_create_solid_fill (pixman_color_t *color)
     return img;
 }
 
-pixman_image_t *
+PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_linear_gradient (pixman_point_fixed_t         *p1,
 				     pixman_point_fixed_t         *p2,
 				     const pixman_gradient_stop_t *stops,
@@ -204,7 +206,7 @@ pixman_image_create_linear_gradient (pixman_point_fixed_t         *p1,
 }
 
 
-pixman_image_t *
+PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
 				     pixman_point_fixed_t         *outer,
 				     pixman_fixed_t                inner_radius,
@@ -248,7 +250,7 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
     return image;
 }
 
-pixman_image_t *
+PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
 				      pixman_fixed_t angle,
 				      const pixman_gradient_stop_t *stops,
@@ -321,20 +323,20 @@ create_bits (pixman_format_code_t format,
 static void
 reset_clip_region (pixman_image_t *image)
 {
-    pixman_region_fini (&image->common.clip_region);
+    pixman_region32_fini (&image->common.clip_region);
 
     if (image->type == BITS)
     {
-	pixman_region_init_rect (&image->common.clip_region, 0, 0,
-				 image->bits.width, image->bits.height);
+	pixman_region32_init_rect (&image->common.clip_region, 0, 0,
+				   image->bits.width, image->bits.height);
     }
     else
     {
-	pixman_region_init (&image->common.clip_region);
+	pixman_region32_init (&image->common.clip_region);
     }
 }
 
-pixman_image_t *
+PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_bits (pixman_format_code_t  format,
 			  int                   width,
 			  int                   height,
@@ -376,15 +378,34 @@ pixman_image_create_bits (pixman_format_code_t  format,
 								  */
     image->bits.indexed = NULL;
 
-    pixman_region_fini (&image->common.full_region);
-    pixman_region_init_rect (&image->common.full_region, 0, 0,
-			     image->bits.width, image->bits.height);
+    pixman_region32_fini (&image->common.full_region);
+    pixman_region32_init_rect (&image->common.full_region, 0, 0,
+			       image->bits.width, image->bits.height);
 
     reset_clip_region (image);
     return image;
 }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
+pixman_image_set_clip_region32 (pixman_image_t *image,
+				pixman_region32_t *region)
+{
+    image_common_t *common = (image_common_t *)image;
+
+    if (region)
+    {
+	return pixman_region32_copy (&common->clip_region, region);
+    }
+    else
+    {
+	reset_clip_region (image);
+
+	return TRUE;
+    }
+}
+
+
+PIXMAN_EXPORT pixman_bool_t
 pixman_image_set_clip_region (pixman_image_t    *image,
 			      pixman_region16_t *region)
 {
@@ -392,7 +413,7 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 
     if (region)
     {
-	return pixman_region_copy (&common->clip_region, region);
+	return pixman_region32_copy_from_region16 (&common->clip_region, region);
     }
     else
     {
@@ -404,14 +425,14 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 
 /* Sets whether the clip region includes a clip region set by the client
  */
-void
+PIXMAN_EXPORT void
 pixman_image_set_has_client_clip (pixman_image_t *image,
 				  pixman_bool_t	  client_clip)
 {
     image->common.has_client_clip = client_clip;
 }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 pixman_image_set_transform (pixman_image_t           *image,
 			    const pixman_transform_t *transform)
 {
@@ -445,14 +466,14 @@ pixman_image_set_transform (pixman_image_t           *image,
     return TRUE;
 }
 
-void
+PIXMAN_EXPORT void
 pixman_image_set_repeat (pixman_image_t  *image,
 			 pixman_repeat_t  repeat)
 {
     image->common.repeat = repeat;
 }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 pixman_image_set_filter (pixman_image_t       *image,
 			 pixman_filter_t       filter,
 			 const pixman_fixed_t *params,
@@ -485,7 +506,7 @@ pixman_image_set_filter (pixman_image_t       *image,
     return TRUE;
 }
 
-void
+PIXMAN_EXPORT void
 pixman_image_set_source_clipping (pixman_image_t  *image,
 				  pixman_bool_t    source_clipping)
 {
@@ -501,7 +522,7 @@ pixman_image_set_source_clipping (pixman_image_t  *image,
  * copy the content of indexed. Doing this copying is simply
  * way, way too expensive.
  */
-void
+PIXMAN_EXPORT void
 pixman_image_set_indexed (pixman_image_t	 *image,
 			  const pixman_indexed_t *indexed)
 {
@@ -510,7 +531,7 @@ pixman_image_set_indexed (pixman_image_t	 *image,
     bits->indexed = indexed;
 }
 
-void
+PIXMAN_EXPORT void
 pixman_image_set_alpha_map (pixman_image_t *image,
 			    pixman_image_t *alpha_map,
 			    int16_t         x,
@@ -535,7 +556,7 @@ pixman_image_set_alpha_map (pixman_image_t *image,
     common->alpha_origin.y = y;
 }
 
-void
+PIXMAN_EXPORT void
 pixman_image_set_component_alpha   (pixman_image_t       *image,
 				    pixman_bool_t         component_alpha)
 {
@@ -543,7 +564,7 @@ pixman_image_set_component_alpha   (pixman_image_t       *image,
 }
 
 
-void
+PIXMAN_EXPORT void
 pixman_image_set_accessors (pixman_image_t             *image,
 			    pixman_read_memory_func_t	read_func,
 			    pixman_write_memory_func_t	write_func)
@@ -554,7 +575,7 @@ pixman_image_set_accessors (pixman_image_t             *image,
     image->common.write_func = write_func;
 }
 
-uint32_t *
+PIXMAN_EXPORT uint32_t *
 pixman_image_get_data (pixman_image_t *image)
 {
     if (image->type == BITS)
@@ -563,7 +584,7 @@ pixman_image_get_data (pixman_image_t *image)
     return NULL;
 }
 
-int
+PIXMAN_EXPORT int
 pixman_image_get_width (pixman_image_t *image)
 {
     if (image->type == BITS)
@@ -572,7 +593,7 @@ pixman_image_get_width (pixman_image_t *image)
     return 0;
 }
 
-int
+PIXMAN_EXPORT int
 pixman_image_get_height (pixman_image_t *image)
 {
     if (image->type == BITS)
@@ -581,7 +602,7 @@ pixman_image_get_height (pixman_image_t *image)
     return 0;
 }
 
-int
+PIXMAN_EXPORT int
 pixman_image_get_stride (pixman_image_t *image)
 {
     if (image->type == BITS)
@@ -590,7 +611,7 @@ pixman_image_get_stride (pixman_image_t *image)
     return 0;
 }
 
-int
+PIXMAN_EXPORT int
 pixman_image_get_depth (pixman_image_t *image)
 {
     if (image->type == BITS)
@@ -599,7 +620,7 @@ pixman_image_get_depth (pixman_image_t *image)
     return 0;
 }
 
-pixman_bool_t
+static pixman_bool_t
 color_to_pixel (pixman_color_t *color,
 		uint32_t       *pixel,
 		pixman_format_code_t format)
@@ -640,7 +661,7 @@ color_to_pixel (pixman_color_t *color,
     return TRUE;
 }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 pixman_image_fill_rectangles (pixman_op_t		    op,
 			      pixman_image_t		   *dest,
 			      pixman_color_t		   *color,
@@ -677,23 +698,23 @@ pixman_image_fill_rectangles (pixman_op_t		    op,
 	{
 	    for (i = 0; i < n_rects; ++i)
 	    {
-		pixman_region16_t fill_region;
+		pixman_region32_t fill_region;
 		int n_boxes, j;
-		pixman_box16_t *boxes;
+		pixman_box32_t *boxes;
 
-		pixman_region_init_rect (&fill_region, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
-		pixman_region_intersect (&fill_region, &fill_region, &dest->common.clip_region);
+		pixman_region32_init_rect (&fill_region, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+		pixman_region32_intersect (&fill_region, &fill_region, &dest->common.clip_region);
 
-		boxes = pixman_region_rectangles (&fill_region, &n_boxes);
+		boxes = pixman_region32_rectangles (&fill_region, &n_boxes);
 		for (j = 0; j < n_boxes; ++j)
 		{
-		    const pixman_box16_t *box = &(boxes[j]);
+		    const pixman_box32_t *box = &(boxes[j]);
 		    pixman_fill (dest->bits.bits, dest->bits.rowstride, PIXMAN_FORMAT_BPP (dest->bits.format),
 				 box->x1, box->y1, box->x2 - box->x1, box->y2 - box->y1,
 				 pixel);
 		}
 
-		pixman_region_fini (&fill_region);
+		pixman_region32_fini (&fill_region);
 	    }
 	    return TRUE;
 	}

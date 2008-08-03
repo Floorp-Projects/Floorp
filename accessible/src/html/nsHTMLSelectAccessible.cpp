@@ -335,7 +335,7 @@ nsHTMLSelectListAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   nsCOMPtr<nsIDOMHTMLSelectElement> select (do_QueryInterface(mDOMNode));
   if (select) {
-    if (*aState | nsIAccessibleStates::STATE_FOCUSED) {
+    if (*aState & nsIAccessibleStates::STATE_FOCUSED) {
       // Treat first focusable option node as actual focus, in order
       // to avoid confusing JAWS, which needs focus on the option
       nsCOMPtr<nsIDOMNode> focusedOption;
@@ -621,7 +621,7 @@ nsHTMLSelectOptionAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // Upcall to nsAccessible, but skip nsHyperTextAccessible impl
   // because we don't want EXT_STATE_EDITABLE or EXT_STATE_SELECTABLE_TEXT
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
-  NS_ENSURE_TRUE(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!mDOMNode)
     return NS_OK;
 

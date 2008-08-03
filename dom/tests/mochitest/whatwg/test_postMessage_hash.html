@@ -25,17 +25,18 @@ function receiveMessage(evt)
 {
   is(evt.origin, "http://localhost:8888", "wrong origin");
   ok(evt.source === window.frames.kid, "wrong source");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
 
   is(evt.data, "response-message", "wrong data");
 
   SimpleTest.finish();
 }
 
-document.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage, false);
 
 function run()
 {
-  window.frames.kid.postMessage("from-parent");
+  window.frames.kid.postMessage("from-parent", "http://localhost:8888");
 }
 
 window.addEventListener("load", run, false);

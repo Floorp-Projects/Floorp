@@ -49,6 +49,7 @@
 #include "prlock.h"
 
 #include "mozIStorageService.h"
+#include "mozStorageBackground.h"
 
 class mozStorageConnection;
 
@@ -76,6 +77,11 @@ private:
      * can ensure that the state of sqlite3_enable_shared_cache is sane.
      */
     PRLock *mLock;
+
+    /**
+     * The background service needs to stay around just as long as this does.
+     */
+    mozStorageBackground mBackground;
 protected:
     nsCOMPtr<nsIFile> mProfileStorageFile;
 

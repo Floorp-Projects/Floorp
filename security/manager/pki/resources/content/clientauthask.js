@@ -42,6 +42,7 @@ const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 
 var dialogParams;
 var itemCount = 0;
+var rememberBox;
 
 function onLoad()
 {
@@ -53,6 +54,28 @@ function onLoad()
     cn = dialogParams.GetString(0);
     org = dialogParams.GetString(1);
     issuer = dialogParams.GetString(2);
+
+    // added with bug 431819. reuse string from caps in order to avoid string changes
+    var capsBundle = srGetStrBundle("chrome://global/locale/security/caps.properties");
+    var rememberString = capsBundle.GetStringFromName("CheckMessage");
+    var rememberSetting = true;
+
+    var pref = Components.classes['@mozilla.org/preferences-service;1']
+	       .getService(Components.interfaces.nsIPrefService);
+    if (pref) {
+      pref = pref.getBranch(null);
+      try {
+	rememberSetting = 
+	  pref.getBoolPref("security.remember_cert_checkbox_default_setting");
+      }
+      catch(e) {
+	// pref is missing
+      }
+    }
+
+    rememberBox = document.getElementById("rememberBox");
+    rememberBox.label = rememberString;
+    rememberBox.checked = rememberSetting;
 
     var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
     var message1 = bundle.formatStringFromName("clientAuthMessage1", 
@@ -98,11 +121,14 @@ function doOK()
   dialogParams.SetInt(0,1);
   var index = parseInt(document.getElementById("nicknames").value);
   dialogParams.SetInt(1, index);
+  dialogParams.SetInt(2, rememberBox.checked);
   return true;
 }
 
 function doCancel()
 {
   dialogParams.SetInt(0,0);
+  dialogParams.SetInt(1, -1); // invalid value
+  dialogParams.SetInt(2, rememberBox.checked);
   return true;
 }

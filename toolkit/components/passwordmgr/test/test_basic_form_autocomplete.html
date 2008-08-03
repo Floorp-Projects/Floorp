@@ -15,14 +15,44 @@ Login Manager test: multiple login autocomplete
 <!-- we presumably can't hide the content for this test. -->
 <div id="content">
 
+  <!-- form1 tests multiple matching logins -->
   <form id="form1" action="http://autocomplete:8888/formtest.js" onsubmit="return false;">
     <input  type="text"       name="uname">
     <input  type="password"   name="pword">
-
     <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
   </form>
 
+  <!-- other forms test single logins, with autocomplete=off set -->
+  <form id="form2" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form3" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname" autocomplete="off">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form4" action="http://autocomplete2" onsubmit="return false;" autocomplete="off">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form5" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname" autocomplete="off">
+    <input  type="password"   name="pword" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- control -->
+  <form id="form6" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
 </div>
 
 <pre id="test">
@@ -68,12 +98,18 @@ var login4 = new nsLoginInfo(
     "http://localhost:8888", "http://autocomplete:8888", null,
     "zzzuser4", "zzzpass4", "uname", "pword");
 
+// login 5 only used in the single-user forms
+var login5 = new nsLoginInfo(
+    "http://localhost:8888", "http://autocomplete2", null,
+    "singleuser5", "singlepass5", "uname", "pword");
+
 // try/catch in case someone runs the tests manually, twice.
 try {
     pwmgr.addLogin(login1);
     pwmgr.addLogin(login2);
     pwmgr.addLogin(login3);
     pwmgr.addLogin(login4);
+    pwmgr.addLogin(login5);
 } catch (e) {
     ok(false, "addLogin threw: " + e);
 }
@@ -89,8 +125,9 @@ function restoreForm() {
 
 // Check for expected username/password in form.
 function checkACForm(expectedUsername, expectedPassword) {
-  is(uname.value, expectedUsername, "Checking form username");
-  is(pword.value, expectedPassword, "Checking form password");
+  var formID = uname.parentNode.id;
+  is(uname.value, expectedUsername, "Checking " + formID + " username");
+  is(pword.value, expectedPassword, "Checking " + formID + " password");
 }
 
 
@@ -407,8 +444,100 @@ function runTest(testNum) {
         checkACForm("", "");
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 0, "Correct number of logins after deleting one");
+        testNum = 99;
+        break;
+
+
+    /* Tests for single-user forms with autocomplete=off */
+
+    case 100:
+        // Turn our attention to form2
+        uname = $_(2, "uname");
+        pword = $_(2, "pword");
+        checkACForm("", "");
+
+        // Trigger autocomplete popup
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 101:
+        // Check first entry
+        doKey("down");
+        checkACForm("", ""); // value shouldn't update
+        doKey("return"); // not "enter"!
+        checkACForm("singleuser5", "singlepass5");
+        break;
+
+    case 102:
+        // Turn our attention to form3
+        uname = $_(3, "uname");
+        pword = $_(3, "pword");
+        checkACForm("", "");
+
+        // Trigger autocomplete popup
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 103:
+        // Check first entry
+        doKey("down");
+        checkACForm("", ""); // value shouldn't update
+        doKey("return"); // not "enter"!
+        checkACForm("singleuser5", "singlepass5");
+        break;
+
+    case 104:
+        // Turn our attention to form4
+        uname = $_(4, "uname");
+        pword = $_(4, "pword");
+        checkACForm("", "");
+
+        // Trigger autocomplete popup
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 105:
+        // Check first entry
+        doKey("down");
+        checkACForm("", ""); // value shouldn't update
+        doKey("return"); // not "enter"!
+        checkACForm("singleuser5", "singlepass5");
+        break;
+
+    case 106:
+        // Turn our attention to form5
+        uname = $_(5, "uname");
+        pword = $_(5, "pword");
+        checkACForm("", "");
+
+        // Trigger autocomplete popup
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 107:
+        // Check first entry
+        doKey("down");
+        checkACForm("", ""); // value shouldn't update
+        doKey("return"); // not "enter"!
+        checkACForm("singleuser5", "singlepass5");
+        break;
+
+    case 108:
+        // Turn our attention to form6
+        // (this is a control, w/o autocomplete=off, to ensure the login
+        // that was being suppressed would have been filled in otherwise)
+        uname = $_(6, "uname");
+        pword = $_(6, "pword");
+        checkACForm("singleuser5", "singlepass5");
+
+        /* FALLTHRU */
 
     default:
+        pwmgr.removeLogin(login5);
         SimpleTest.finish();
         return;
   }

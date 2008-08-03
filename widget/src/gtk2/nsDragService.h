@@ -142,6 +142,14 @@ private:
     // get a list of the sources in gtk's format
     GtkTargetList *GetSourceList(void);
 
+    // attempts to create a semi-transparent drag image. Returns TRUE if
+    // successful, FALSE if not
+    PRBool SetAlphaPixmap(gfxASurface    *aPixbuf,
+                          GdkDragContext *aContext,
+                          PRInt32         aXOffset,
+                          PRInt32         aYOffset,
+                          const nsRect&   dragRect);
+
 };
 
 #endif // nsDragService_h__

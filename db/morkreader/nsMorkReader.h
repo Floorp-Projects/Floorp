@@ -53,7 +53,7 @@
 //  http://www.mozilla.org/mailnews/arch/mork/grammar.txt
 //  http://www.jwz.org/hacks/mork.pl
 
-class nsMorkReader
+class NS_STACK_CLASS nsMorkReader
 {
  public:
   // This string type has built-in storage for the hex string representation

@@ -17,7 +17,7 @@
 	<key>CFBundleSignature</key>
 	<string>MOSS</string>
 	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>1.0.0.15</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 </dict>

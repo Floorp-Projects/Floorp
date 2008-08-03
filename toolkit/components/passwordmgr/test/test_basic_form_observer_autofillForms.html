@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Login Manager</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: simple form with autofillForms disabled and notifying observers
+<p id="display"></p>
+
+<div id="content" style="display: block">
+
+  <form id="form1" action="formtest.js">
+    <p>This is form 1.</p>
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: simple form with autofillForms disabled and notifying observers **/
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefService);
+prefs = prefs.getBranch("signon.");
+// Assume that the pref starts out true, so set to false
+prefs.setBoolPref("autofillForms", false);
+
+var TestObserver = {
+  receivedNotification : false,
+  data : "",
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  observe : function (subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var pwmgr = Cc["@mozilla.org/login-manager;1"].
+                getService(Ci.nsILoginManager);
+    if (topic == "passwordmgr-found-form") {
+      this.receivedNotification = true;
+      this.data = data;
+      // Now fill the form
+      pwmgr.fillForm(subject);
+    }
+  }
+};
+
+// Add the observer
+var os = Cc["@mozilla.org/observer-service;1"].
+         getService(Ci.nsIObserverService);
+os.addObserver(TestObserver, "passwordmgr-found-form", false);
+
+function startTest(){
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  // Test that observer is notified & got correct data
+  is(TestObserver.receivedNotification, true, "Checking observer was notified");
+  is(TestObserver.data, "noAutofillForms", "Checking observer got correct data");
+
+  // Check that form1 was filled
+  is($_(1, "uname").value, "testuser", "Checking for filled username");
+  is($_(1, "pword").value, "testpass", "Checking for filled password");
+
+  // Reset pref (since we assumed it was true to start)
+  prefs.setBoolPref("autofillForms", true);
+
+  // Remove the observer
+  os.removeObserver(TestObserver, "passwordmgr-found-form");
+
+  SimpleTest.finish();
+}
+
+window.onload = startTest;
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

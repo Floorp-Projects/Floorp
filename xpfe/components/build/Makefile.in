@@ -64,6 +64,8 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= nsModule.cpp
 
+include $(topsrcdir)/config/config.mk
+
 ifdef MOZ_PERF_METRICS
 SHARED_LIBRARY_LIBS += $(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX)
 endif
@@ -90,13 +92,16 @@ REQUIRES	+= \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS += \
-	../download-manager/src/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
 	../related/src/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
 	$(NULL)
 LOCAL_INCLUDES += \
-	-I$(srcdir)/../download-manager/src \
 	-I$(srcdir)/../related/src       \
 	$(NULL)
+
+ifdef SUITE_USING_XPFE_DM
+SHARED_LIBRARY_LIBS += ../download-manager/src/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES += -I$(srcdir)/../download-manager/src
+endif
 
 ifndef MOZ_PLACES
 REQUIRES += history

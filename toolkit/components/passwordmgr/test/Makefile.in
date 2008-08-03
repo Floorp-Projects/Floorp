@@ -50,12 +50,15 @@ MODULE		= test_passwordmgr
 MOCHI_TESTS = \
 		test_0init.html \
 		test_basic_form.html \
+		test_basic_form_2.html \
 		test_basic_form_0pw.html \
 		test_basic_form_1pw.html \
 		test_basic_form_2pw_1.html \
 		test_basic_form_2pw_2.html \
 		test_basic_form_3pw_1.html \
 		test_basic_form_autocomplete.html \
+		test_basic_form_observer_autofillForms.html \
+		test_basic_form_observer_autocomplete.html \
 		test_basic_form_pwonly.html \
 		test_bug_227640.html \
 		test_bug_242956.html \
@@ -63,6 +66,7 @@ MOCHI_TESTS = \
 		test_bug_360493_2.html \
 		test_bug_391514.html \
 		test_bug_427033.html \
+		test_notifications.html \
 		test_prompt.html \
 		test_xhr.html \
 		test_xml_load.html \
@@ -73,6 +77,13 @@ MOCHI_CONTENT = \
 		pwmgr_common.js \
 		prompt_common.js \
 		authenticate.sjs \
+		formsubmit.sjs \
+		subtst_notifications_1.html \
+		subtst_notifications_2.html \
+		subtst_notifications_3.html \
+		subtst_notifications_4.html \
+		subtst_notifications_5.html \
+		subtst_notifications_6.html \
 		$(NULL)
 
 XPCSHELL_TESTS  = unit

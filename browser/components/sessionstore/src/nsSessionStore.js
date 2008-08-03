@@ -2053,19 +2053,6 @@ SessionStoreService.prototype = {
   },
 
   /**
-   * Convenience method to get localized string bundles
-   * @param aURI
-   * @returns nsIStringBundle
-   */
-  _getStringBundle: function sss_getStringBundle(aURI) {
-     var bundleService = Cc["@mozilla.org/intl/stringbundle;1"].
-                         getService(Ci.nsIStringBundleService);
-     var appLocale = Cc["@mozilla.org/intl/nslocaleservice;1"].
-                     getService(Ci.nsILocaleService).getApplicationLocale();
-     return bundleService.createBundle(aURI, appLocale);
-  },
-
-  /**
    * Get nsIURI from string
    * @param string
    * @returns nsIURI

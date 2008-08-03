@@ -52,7 +52,7 @@
  * node APIs, since it handles XBL-generated anonymous content as
  * well.
  */
-class ChildIterator
+class NS_STACK_CLASS ChildIterator
 {
 protected:
   nsCOMPtr<nsIContent> mContent;

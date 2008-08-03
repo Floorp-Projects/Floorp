@@ -227,6 +227,15 @@ pref("browser.urlbar.maxRichResults", 12);
 pref("browser.urlbar.search.chunkSize", 1000);
 pref("browser.urlbar.search.timeout", 100);
 
+// The special characters below can be typed into the urlbar to either restrict
+// the search to visited history, bookmarked, tagged pages; or force a match on
+// just the title text or url.
+pref("browser.urlbar.restrict.history", "^");
+pref("browser.urlbar.restrict.bookmark", "*");
+pref("browser.urlbar.restrict.tag", "+");
+pref("browser.urlbar.match.title", "#");
+pref("browser.urlbar.match.url", "@");
+
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to 
 // picking a filename without that info in hand so that the user sees some
@@ -239,9 +248,7 @@ pref("browser.download.manager.showAlertOnComplete", true);
 pref("browser.download.manager.showAlertInterval", 2000);
 pref("browser.download.manager.retention", 2);
 pref("browser.download.manager.showWhenStarting", true);
-pref("browser.download.manager.useWindow", true);
 pref("browser.download.manager.closeWhenDone", false);
-pref("browser.download.manager.openDelay", 0);
 pref("browser.download.manager.focusWhenStarting", false);
 pref("browser.download.manager.flashCount", 2);
 pref("browser.download.manager.addToRecentDocs", true);
@@ -328,6 +335,10 @@ pref("browser.tabs.closeButtons", 1);
 // true   return to the tab that opened this tab (its owner)
 // false  return to the adjacent tab (old default)
 pref("browser.tabs.selectOwnerOnClose", true);
+
+pref("browser.ctrlTab.mostRecentlyUsed", true);
+pref("browser.ctrlTab.previewsCount", 3);
+pref("browser.ctrlTab.smoothScroll", true);
 
 // Default bookmark sorting
 pref("browser.bookmarks.sort.direction", "descending");
@@ -445,6 +456,7 @@ pref("alerts.slideIncrementTime", 10);
 pref("alerts.totalOpenTime", 4000);
 
 pref("browser.xul.error_pages.enabled", true);
+pref("browser.xul.error_pages.expert_bad_cert", false);
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
@@ -483,7 +495,7 @@ pref("accessibility.typeaheadfind.flashBar", 1);
 pref("plugin.default_plugin_disabled", true);
 
 // plugin finder service url
-pref("pfs.datasource.url", "https://pfs.mozilla.org/plugins/PluginFinderService.php?mimetype=%PLUGIN_MIMETYPE%&appID=%APP_ID%&appVersion=%APP_VERSION%&clientOS=%CLIENT_OS%&chromeLocale=%CHROME_LOCALE%");
+pref("pfs.datasource.url", "https://pfs.mozilla.org/plugins/PluginFinderService.php?mimetype=%PLUGIN_MIMETYPE%&appID=%APP_ID%&appVersion=%APP_VERSION%&clientOS=%CLIENT_OS%&chromeLocale=%CHROME_LOCALE%&appRelease=%APP_RELEASE%");
 
 // by default we show an infobar message when pages require plugins the user has not installed
 pref("plugins.hide_infobar_for_missing_plugin", false);
@@ -634,16 +646,40 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 // the database.
 pref("urlclassifier.confirm-age", 2700);
 
+#ifdef MOZ_WIDGET_GTK2
+#define RESTRICT_CACHEMAX
+#endif
+#ifdef XP_OS2
+#define RESTRICT_CACHEMAX
+#endif
+
+// Maximum size of the sqlite3 cache during an update, in bytes
+#ifdef RESTRICT_CACHEMAX
+pref("urlclassifier.updatecachemax", 104857600);
+#else
+pref("urlclassifier.updatecachemax", -1);
+#endif
+
 // URL for checking the reason for a malware warning.
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 
 #endif
 
-// defaults to true
-pref("browser.EULA.2.accepted", true);
+// defaults to true on Windows and Mac, because the installer shows this
+#ifdef XP_MACOSX
+pref("browser.EULA.3.accepted", true);
+#elifdef XP_WIN
+pref("browser.EULA.3.accepted", true);
+#else
+pref("browser.EULA.3.accepted", false);
+#endif
 
 // if we rev the EULA again, we should bump this so users agree to the new EULA
-pref("browser.EULA.version", 2);
+pref("browser.EULA.version", 3);
+
+#ifdef DEBUG
+pref("browser.EULA.override", true);
+#endif
 
 pref("browser.sessionstore.enabled", true);
 pref("browser.sessionstore.resume_from_crash", true);

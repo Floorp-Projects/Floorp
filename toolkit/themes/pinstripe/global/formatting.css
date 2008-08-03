@@ -204,9 +204,10 @@
 /* class for text with a 'link' appearance */
   .text-link
     {
-      color                 : blue;
+      color                 : -moz-nativehyperlinktext;
       text-decoration       : underline;
       border                : 1px solid transparent;
+      cursor                : pointer;
     }
   
   .text-link:focus
@@ -214,11 +215,6 @@
       color                 : red;
       border                : 1px dotted -moz-DialogText;
     }
-
-  .text-link:hover
-    {
-      cursor                : pointer;
-    } 
   
   .text-link:hover:active
     {

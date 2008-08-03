@@ -191,8 +191,7 @@ NS_IMETHODIMP nsAccessNode::Init()
   // so that nsDocAccessible::RefreshNodes() can find the anonymous subtree to release when
   // the root node goes away
   nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
-  if (content && (content->IsNativeAnonymous() ||
-                  content->GetBindingParent())) {
+  if (content && content->IsInAnonymousSubtree()) {
     // Specific examples of where this is used: <input type="file"> and <xul:findbar>
     nsCOMPtr<nsIAccessible> parentAccessible;
     docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE, getter_AddRefs(parentAccessible));
@@ -794,7 +793,7 @@ nsAccessNode::GetCacheEntry(nsAccessNodeHashtable& aCache,
 
 PLDHashOperator nsAccessNode::ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg)
 {
-  NS_ASSERTION(!aAccessNode, "Calling ClearCacheEntry with a NULL pointer!");
+  NS_ASSERTION(aAccessNode, "Calling ClearCacheEntry with a NULL pointer!");
   if (aAccessNode) {
     nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(aAccessNode));
     privateAccessNode->Shutdown();
@@ -876,10 +875,7 @@ nsAccessNode::GetLanguage(nsAString& aLanguage)
     }
   }
 
-  nsIContent *walkUp = content;
-  while (walkUp && !walkUp->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::lang, aLanguage)) {
-    walkUp = walkUp->GetParent();
-  }
+  nsAccUtils::GetLanguageFor(content, nsnull, aLanguage);
 
   if (aLanguage.IsEmpty()) { // Nothing found, so use document's language
     nsIDocument *doc = content->GetOwnerDoc();

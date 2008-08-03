@@ -177,6 +177,30 @@ P@VAR@ASS
     self.pp.do_include(f)
     self.assertEqual(self.pp.out.getvalue(), "PASS\n")
   
+  def test_filter_emptyLines(self):
+    f = NamedIO('filter_emptyLines.in', '''lines with a
+
+blank line
+#filter emptyLines
+lines with
+
+no blank lines
+#unfilter emptyLines
+yet more lines with
+
+blank lines
+''')
+    self.pp.do_include(f)
+    self.assertEqual(self.pp.out.getvalue(), '''lines with a
+
+blank line
+lines with
+no blank lines
+yet more lines with
+
+blank lines
+''')
+  
   def test_filter_slashslash(self):
     f = NamedIO('filter_slashslash.in', '''#filter slashslash
 PASS//FAIL  // FAIL
@@ -371,6 +395,14 @@ FAIL
 ''')
     self.pp.do_include(f)
     self.assertEqual(self.pp.out.getvalue(), "PASS\n")
+
+  def test_lineEndings(self):
+    f = NamedIO('lineEndings.in', '''first
+#literal second
+''')
+    self.pp.setLineEndings('cr')
+    self.pp.do_include(f)
+    self.assertEqual(self.pp.out.getvalue(), "first\rsecond\r")
 
 if __name__ == '__main__':
   unittest.main()

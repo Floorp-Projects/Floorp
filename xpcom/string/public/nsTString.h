@@ -487,7 +487,7 @@ class nsTFixedString_CharT : public nsTString_CharT
    * Subclass of nsTString_CharT that adds support for stack-based string
    * allocation.  Do not allocate this class on the heap! ;-)
    */
-class nsTAutoString_CharT : public nsTFixedString_CharT
+class NS_STACK_CLASS nsTAutoString_CharT : public nsTFixedString_CharT
   {
     public:
 
@@ -631,7 +631,7 @@ class nsTXPIDLString_CharT : public nsTString_CharT
    *      // ...
    *    }
    */
-class nsTGetterCopies_CharT
+class NS_STACK_CLASS nsTGetterCopies_CharT
   {
     public:
       typedef CharT char_type;

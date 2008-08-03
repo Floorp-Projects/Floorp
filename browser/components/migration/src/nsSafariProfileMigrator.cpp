@@ -980,8 +980,8 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
 
     if (::CFDictionaryContainsKey(entry, CFSTR("Children")) &&
         type.EqualsLiteral("WebBookmarkTypeList")) {
-      nsCAutoString title;
-      if (!GetDictionaryCStringValue(entry, CFSTR("Title"), title, kCFStringEncodingUTF8))
+      nsAutoString title;
+      if (!GetDictionaryStringValue(entry, CFSTR("Title"), title))
         continue;
 
       CFArrayRef children = (CFArrayRef)::CFDictionaryGetValue(entry,
@@ -1009,7 +1009,7 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
         // Encountered a Folder, so create one in our Bookmarks DataSource and then
         // parse the contents of the Safari one into it...
         PRInt64 folder;
-        rv |= aBookmarksService->CreateFolder(aParentFolder, title,
+        rv |= aBookmarksService->CreateFolder(aParentFolder, NS_ConvertUTF16toUTF8(title),
                                               nsINavBookmarksService::DEFAULT_INDEX,
                                               &folder);
         rv |= ParseBookmarksFolder(children,

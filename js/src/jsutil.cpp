@@ -89,7 +89,7 @@ BinToVal(uintN logscale, uintN bin)
     if (logscale == 2)
         return JS_BIT(bin);
     JS_ASSERT(logscale == 10);
-    return (uint32) pow(10, (double) bin);
+    return (uint32) pow(10.0, (double) bin);
 }
 
 static uintN
@@ -250,7 +250,7 @@ CallTree(void **bp)
 
         csp = &parent->kids;
         while ((site = *csp) != NULL) {
-            if (site->pc == pc) {
+            if (site->pc == (uint32)pc) {
                 /* Put the most recently used site at the front of siblings. */
                 *csp = site->siblings;
                 site->siblings = parent->kids;
@@ -264,7 +264,7 @@ CallTree(void **bp)
 
         /* Check for recursion: see if pc is on our ancestor line. */
         for (site = parent; site; site = site->parent) {
-            if (site->pc == pc)
+            if (site->pc == (uint32)pc)
                 goto upward;
         }
 
@@ -296,7 +296,7 @@ CallTree(void **bp)
             return NULL;
 
         /* Insert the new site into the tree. */
-        site->pc = pc;
+        site->pc = (uint32)pc;
         site->name = method;
         site->library = info.dli_fname;
         site->offset = offset;

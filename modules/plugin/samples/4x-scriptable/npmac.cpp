@@ -63,7 +63,6 @@
 #define ExitCodeResource()
 #endif
 
-#include "jri.h"
 #include "npapi.h"
 
 //
@@ -295,16 +294,6 @@ void NPN_ReloadPlugins(NPBool reloadPages)
 }
 
 
-JRIEnv* NPN_GetJavaEnv(void)
-{
-	return CallNPN_GetJavaEnvProc( gNetscapeFuncs.getJavaEnv );
-}
-
-jref  NPN_GetJavaPeer(NPP instance)
-{
-	return CallNPN_GetJavaPeerProc( gNetscapeFuncs.getJavaPeer, instance );
-}
-
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void *value)
 {
 	return CallNPN_GetValueProc( gNetscapeFuncs.getvalue, instance, variable, value);
@@ -353,7 +342,6 @@ void		Private_StreamAsFile(NPP instance, NPStream* stream, const char* fname);
 void		Private_Print(NPP instance, NPPrint* platformPrint);
 int16 		Private_HandleEvent(NPP instance, void* event);
 void        Private_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData);
-jref		Private_GetJavaClass(void);
 NPError     Private_GetValue(NPP instance, NPPVariable variable, void *result);
 NPError     Private_SetValue(NPP instance, NPNVariable variable, void *value);
 
@@ -484,21 +472,6 @@ void Private_URLNotify(NPP instance, const char* url, NPReason reason, void* not
 	ExitCodeResource();
 }
 
-
-jref Private_GetJavaClass(void)
-{
-	EnterCodeResource();
-	PLUGINDEBUGSTR("\pGetJavaClass;g;");
-
-    jref clazz = NPP_GetJavaClass();
-    ExitCodeResource();
-    if (clazz)
-    {
-		JRIEnv* env = NPN_GetJavaEnv();
-		return (jref)JRI_NewGlobalRef(env, clazz);
-    }
-    return NULL;
-}
 
 NPError Private_GetValue(NPP instance, NPPVariable variable, void *result)
 {
@@ -678,8 +651,8 @@ NPError main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs, NPP_ShutdownU
 		gNetscapeFuncs.reloadplugins = nsTable->reloadplugins;
 		if( navMinorVers >= NPVERS_HAS_LIVECONNECT )
 		{
-			gNetscapeFuncs.getJavaEnv = nsTable->getJavaEnv;
-			gNetscapeFuncs.getJavaPeer = nsTable->getJavaPeer;
+			gNetscapeFuncs.getJavaEnv = NULL;
+			gNetscapeFuncs.getJavaPeer = NULL;
 		}
 		if( navMinorVers >= NPVERS_HAS_NOTIFICATION )
 		{	
@@ -718,7 +691,7 @@ NPError main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs, NPP_ShutdownU
 		}
 		if( navMinorVers >= NPVERS_HAS_LIVECONNECT )
 		{
-			pluginFuncs->javaClass	= (JRIGlobalRef) Private_GetJavaClass();
+			pluginFuncs->javaClass	= NULL;
 			pluginFuncs->getvalue = NewNPP_GetValueProc(Private_GetValue);
 			pluginFuncs->setvalue = NewNPP_SetValueProc(Private_SetValue);
 		}

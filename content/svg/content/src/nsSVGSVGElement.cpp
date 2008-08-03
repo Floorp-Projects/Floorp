@@ -1401,7 +1401,7 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
   case nsSVGUtils::Y:
     return h;
   case nsSVGUtils::XY:
-    return (float)sqrt((w*w+h*h)/2.0);
+    return float(nsSVGUtils::ComputeNormalizedHypotenuse(w, h));
   }
   return 0;
 }

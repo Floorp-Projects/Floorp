@@ -29,6 +29,7 @@
 #   Pierre Chanial <chanial@noos.fr>
 #   Dean Tessman <dean_tessman@hotmail.com>
 #   Johnathan Nightingale <johnath@mozilla.com>
+#   Dão Gottwald <dao@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,6 +62,7 @@
 
 <window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:svg="http://www.w3.org/2000/svg"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
         contenttitlesetting="true"
@@ -227,14 +229,37 @@
     <tooltip id="urlTooltip">
       <label crop="center" flex="1"/>
     </tooltip>
+
+    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true">
+      <label id="ctrlTab-label" flex="1"/>
+      <svg:svg id="ctrlTab-svgRoot">
+        <svg:defs>
+          <svg:linearGradient id="ctrlTab-fadeGradient" x1="1" y1="1" x2="1" y2="0">
+            <svg:stop id="ctrlTab-fadeGradientBottom" offset="0"/>
+            <svg:stop id="ctrlTab-fadeGradientTop" offset="1"/>
+          </svg:linearGradient>
+          <svg:filter id="ctrlTab-iconShadow">
+            <svg:feOffset result="shadow" in="SourceAlpha" dx="2" dy="-1"/>
+            <svg:feColorMatrix result="transparent-shadow" in="shadow"
+                               values="1 0 0 0   0
+                                       0 1 0 0   0
+                                       0 0 1 0   0
+                                       0 0 0 0.5 0"/>
+            <svg:feBlend in="SourceGraphic" in2="transparent-shadow"/>
+          </svg:filter>
+        </svg:defs>
+        <svg:g id="ctrlTab-container"/>
+        <svg:rect id="ctrlTab-groundFade" fill="url(#ctrlTab-fadeGradient)" width="100%"/>
+      </svg:svg>
+    </panel>
   </popupset>
 
   <!-- bookmarks toolbar tooltip -->
   <tooltip id="btTooltip" noautohide="true"
            onpopupshowing="return BookmarksEventHandler.fillInBTTooltip(document.tooltipNode)">
     <vbox id="btTooltipTextBox" flex="1">
-      <label id="btTitleText" />
-      <label id="btUrlText" />
+      <label id="btTitleText" class="tooltip-label" />
+      <label id="btUrlText" class="tooltip-label" />
     </vbox>
   </tooltip>
 
@@ -324,7 +349,7 @@
                  enablehistory="true"
                  maxrows="6"
                  newlines="stripsurroundingwhitespace"
-                 oninput="URLBarOnInput(event);"
+                 oninput="gBrowser.userTypedValue = this.value;"
                  ontextentered="return handleURLBarCommand(param);"
                  ontextreverted="return handleURLBarRevert();"
                  pageproxystate="invalid"
@@ -345,6 +370,7 @@
                      onclick="PageProxyClickHandler(event);">
                 <image id="urlbar-throbber" busy="false"/>
                 <image id="page-proxy-favicon" validate="never"
+                       pageproxystate="invalid"
                        ondraggesture="PageProxyDragGesture(event);"
                        onerror="this.removeAttribute('src');"/>
               </stack>
@@ -363,19 +389,14 @@
                          oncommand="return FeedHandler.subscribeToFeed(null, event);"
                          onclick="checkForMiddleClick(this, event);"/>
             </button>
-#ifdef MOZ_SAFE_BROWSING
-            <image id="safebrowsing-urlbar-icon" tooltiptext="&safeb.urlbaricon.tooltip;"
-                   level="safe"
+            <image id="star-button"
                    class="urlbar-icon"
-                   onclick="goDoCommand('safebrowsing-show-warning')"/>
-#endif
-          <image id="star-button"
-                 class="urlbar-icon"
-                 onclick="PlacesStarButton.onClick(event);"/>
-          <image id="go-button" chromedir="&locale.dir;"
-                 class="urlbar-icon"
-                 tooltiptext="&goEndCap.tooltip;"
-                 onclick="handleURLBarCommand(event);"/>
+                   onclick="PlacesStarButton.onClick(event);"/>
+            <image id="go-button"
+                   chromedir="&locale.dir;"
+                   class="urlbar-icon"
+                   tooltiptext="&goEndCap.tooltip;"
+                   onclick="handleURLBarCommand(event);"/>
           </hbox>
         </textbox>
       </toolbaritem>
@@ -396,8 +417,10 @@
       </toolbaritem>
 
       <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
-         <hbox id="bookmarksBarContent" flex="1" type="places"
-               context="placesContext" asyncinit="true"
+         <hbox id="bookmarksBarContent" flex="1"
+               type="places"
+               place="place:folder=TOOLBAR"
+               context="placesContext"
                onclick="BookmarksEventHandler.onClick(event);"
                oncommand="BookmarksEventHandler.onCommand(event);"
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"

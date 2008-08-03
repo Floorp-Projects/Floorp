@@ -175,13 +175,6 @@ GARBAGE += \
 	$(RDF_UTIL_SRC_LCPPSRCS) \
 	$(NULL)
 endif
-else
-ifdef NS_TRACE_MALLOC
-# In libxul builds, tracemalloc is part of libxul instead.
-ifndef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LIBS += tracemalloc
-endif
-endif
 endif
 
 ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
@@ -213,16 +206,33 @@ EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CXXFLAGS	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
+	-framework SystemConfiguration \
 	-framework QuickTime \
 	-framework IOKit \
 	-lcrypto \
 	$(TK_LIBS) \
 	$(NULL)
+
+ifdef MOZ_OGG
+EXTRA_DSO_LDOPTS += \
+	-framework CoreAudio \
+ 	-framework AudioToolbox \
+	-framework AudioUnit \
+	$(NULL)
+endif
+endif
+
+ifdef MOZ_ENABLE_DBUS
+EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
 endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS) $(XT_LIBS) -lgthread-2.0
 EXTRA_DSO_LDOPTS += $(FT2_LIBS)
+endif
+
+ifdef NS_OSSO
+EXTRA_DSO_LDOPTS += -llocation -lgpsbt -losso
 endif
 
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
@@ -268,12 +278,4 @@ endif
 
 ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
 DEFINES += -DMOZ_ENABLE_EXTENSION_LAYOUT_DEBUG
-endif
-
-ifdef MOZ_MEMORY
-ifneq ($(OS_ARCH),WINNT)
-ifneq ($(OS_ARCH),Darwin)
-EXTRA_DSO_LDOPTS += $(DEPTH)/memory/jemalloc/$(LIB_PREFIX)jemalloc.$(LIB_SUFFIX)
-endif
-endif
 endif

@@ -713,6 +713,10 @@ nsStandardURL::ParseURL(const char *spec, PRInt32 specLen)
                                      &mPort);
         if (NS_FAILED(rv)) return rv;
 
+        // Don't allow mPort to be set to this URI's default port
+        if (mPort == mDefaultPort)
+            mPort = -1;
+
         mUsername.mPos += mAuthority.mPos;
         mPassword.mPos += mAuthority.mPos;
         mHost.mPos += mAuthority.mPos;
@@ -2203,6 +2207,7 @@ nsStandardURL::SetRef(const nsACString &input)
     
     if (mRef.mLen < 0) {
         mSpec.Append('#');
+        ++mPath.mLen;  // Include the # in the path.
         mRef.mPos = mSpec.Length();
         mRef.mLen = 0;
     }

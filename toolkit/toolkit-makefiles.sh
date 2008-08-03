@@ -161,7 +161,6 @@ MAKEFILES_intl="
 
 MAKEFILES_js="
   js/src/Makefile
-  js/src/fdlibm/Makefile
 "
 
 MAKEFILES_liveconnect="
@@ -281,6 +280,55 @@ MAKEFILES_libutil="
   modules/libutil/Makefile
   modules/libutil/public/Makefile
   modules/libutil/src/Makefile
+"
+
+MAKEFILES_libvorbis="
+  modules/libvorbis/Makefile
+  modules/libvorbis/lib/Makefile
+  modules/libvorbis/include/Makefile
+  modules/libvorbis/include/vorbis/Makefile
+"
+
+MAKEFILES_libtheora="
+  modules/libtheora/Makefile
+  modules/libtheora/lib/Makefile
+  modules/libtheora/include/Makefile
+  modules/libtheora/include/theora/Makefile
+"
+
+MAKEFILES_liboggz="
+  modules/liboggz/Makefile
+  modules/liboggz/src/Makefile
+  modules/liboggz/src/liboggz/Makefile
+  modules/liboggz/include/Makefile
+  modules/liboggz/include/oggz/Makefile
+"
+
+MAKEFILES_libogg="
+  modules/libogg/Makefile
+  modules/libogg/src/Makefile
+  modules/libogg/include/Makefile
+  modules/libogg/include/ogg/Makefile
+"
+
+MAKEFILES_libfishsound="
+  modules/libfishsound/Makefile
+  modules/libfishsound/src/Makefile
+  modules/libfishsound/src/libfishsound/Makefile
+  modules/libfishsound/include/Makefile
+  modules/libfishsound/include/fishsound/Makefile
+"
+
+MAKEFILES_liboggplay="
+  modules/liboggplay/Makefile
+  modules/liboggplay/src/Makefile
+  modules/liboggplay/src/liboggplay/Makefile
+  modules/liboggplay/include/Makefile
+  modules/liboggplay/include/oggplay/Makefile
+"
+
+MAKEFILES_liboggplay_audio="
+  modules/liboggplay_audio/Makefile
 "
 
 MAKEFILES_oji="
@@ -533,9 +581,6 @@ MAKEFILES_xpfe="
   xpfe/components/download-manager/src/Makefile
   xpfe/components/download-manager/public/Makefile
   xpfe/components/download-manager/resources/Makefile
-  xpfe/components/extensions/Makefile
-  xpfe/components/extensions/src/Makefile
-  xpfe/components/extensions/public/Makefile
   xpfe/components/find/Makefile
   xpfe/components/find/public/Makefile
   xpfe/components/find/src/Makefile
@@ -555,14 +600,8 @@ MAKEFILES_xpfe="
   xpfe/components/autocomplete/Makefile
   xpfe/components/autocomplete/public/Makefile
   xpfe/components/autocomplete/src/Makefile
-  xpfe/components/updates/Makefile
-  xpfe/components/updates/src/Makefile
   xpfe/components/winhooks/Makefile
   xpfe/components/windowds/Makefile
-  xpfe/components/alerts/Makefile
-  xpfe/components/alerts/public/Makefile
-  xpfe/components/alerts/src/Makefile
-  xpfe/components/console/Makefile
   xpfe/components/resetPref/Makefile
   xpfe/components/build/Makefile
   xpfe/components/xremote/Makefile
@@ -658,6 +697,7 @@ MAKEFILES_xulapp="
   toolkit/components/filepicker/Makefile
   toolkit/system/gnome/Makefile
   toolkit/system/unixproxy/Makefile
+  toolkit/system/osxproxy/Makefile
   toolkit/components/help/Makefile
   toolkit/components/history/Makefile
   toolkit/components/history/public/Makefile
@@ -919,10 +959,6 @@ if test -n "$MOZ_CALENDAR"; then
   "
 fi
 
-if [ "$MOZ_MAIL_NEWS" ]; then
-  . "${srcdir}/mailnews/makefiles.sh"
-fi
-
 if test -n "$MOZ_IPCD"; then
   add_makefiles "
     ipc/ipcd/Makefile
@@ -1147,3 +1183,24 @@ else
     "
   fi
 fi # MOZ_COMPONENTLIB
+
+if [ "$MOZ_MEDIA" ]; then
+ add_makefiles "
+   content/media/Makefile
+   content/media/video/Makefile
+   content/media/video/public/Makefile
+   content/media/video/src/Makefile
+ "
+fi
+
+if [ "$MOZ_OGG" ]; then
+ add_makefiles "
+   $MAKEFILES_libvorbis
+   $MAKEFILES_libtheora
+   $MAKEFILES_liboggz
+   $MAKEFILES_libogg
+   $MAKEFILES_libfishsound
+   $MAKEFILES_liboggplay
+   $MAKEFILES_liboggplay_audio
+ "
+fi

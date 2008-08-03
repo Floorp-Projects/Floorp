@@ -28,15 +28,16 @@ function receiveMessage(evt)
   ok(evt.source === window, "wrong source");
 
   is(evt.data, "generate-event", "wrong data");
+  is(evt.lastEventId, "", "wrong lastEventId");
 
   SimpleTest.finish();
 }
 
-document.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage, false);
 
 function run()
 {
-  window.postMessage("generate-event");
+  window.postMessage("generate-event", "http://localhost:8888");
 }
 
 window.addEventListener("load", run, false);

@@ -23,6 +23,7 @@ function receiveMessage(evt)
 {
   is(evt.origin, "http://localhost:8888", "wrong origin");
   ok(evt.source === openedWindow, "wrong source");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
 
   is(evt.data, "message", "wrong data");
   if (evt.data !== "message")
@@ -33,7 +34,7 @@ function receiveMessage(evt)
   function afterClose()
   {
     document.removeEventListener("message", receiveMessage, false);
-    evt.source.postMessage("NOT-RECEIVED");
+    evt.source.postMessage("NOT-RECEIVED", "*");
 
     var iframe = document.createElement("iframe");
     iframe.id = "insertedIframe";
@@ -45,7 +46,7 @@ function receiveMessage(evt)
   setTimeout(afterClose, 0);
 }
 
-document.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage, false);
 
 function iframeLoaded(evt)
 {
@@ -54,7 +55,7 @@ function iframeLoaded(evt)
 
   var iframeWindow = iframe.contentWindow;
   $("holder").removeChild($("insertedIframe"));
-  iframeWindow.postMessage("NOT-RECEIVED");
+  iframeWindow.postMessage("NOT-RECEIVED", "*");
 
   SimpleTest.finish();
 }

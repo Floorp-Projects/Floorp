@@ -104,6 +104,7 @@ public:
               const char* aDescription,
               const char* aFileName,
               const char* aFullPath,
+              const char* aVersion,
               const char* const* aMimeTypes,
               const char* const* aMimeDescriptions,
               const char* const* aExtensions,
@@ -166,6 +167,7 @@ public:
   PRPackedBool  mIsNPRuntimeEnabledJavaPlugin;
   nsCString     mFileName; // UTF-8
   nsCString     mFullPath; // UTF-8
+  nsCString     mVersion;  // UTF-8
   PRInt64       mLastModifiedTime;
 private:
   PRUint32      mFlags;
@@ -420,10 +422,6 @@ private:
   // in the plugin list but found in some different place
   PRBool IsDuplicatePlugin(nsPluginTag * aPluginTag);
 
-  // checks whether the given plugin is an unwanted Java plugin
-  // (e.g. no OJI support is compiled in)
-  PRBool IsUnwantedJavaPlugin(nsPluginTag * aPluginTag);
-
   nsresult EnsurePrivateDirServiceProvider();
 
   nsresult GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt);
@@ -474,7 +472,7 @@ private:
   static nsPluginHostImpl* sInst;
 };
 
-class PluginDestructionGuard : protected PRCList
+class NS_STACK_CLASS PluginDestructionGuard : protected PRCList
 {
 public:
   PluginDestructionGuard(nsIPluginInstance *aInstance)

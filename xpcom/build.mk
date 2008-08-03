@@ -37,4 +37,8 @@
 
 TIERS += xpcom
 
-tier_xpcom_dirs = xpcom
+ifdef NS_TRACE_MALLOC
+tier_xpcom_dirs = tools/trace-malloc/lib
+endif
+
+tier_xpcom_dirs += xpcom

@@ -51,8 +51,6 @@
 #include "nsIComponentManager.h"
 #include "nsIDateTimeFormat.h"
 #include "nsIDOMElement.h"
-#include "nsILocale.h"
-#include "nsILocaleService.h"
 #include "nsILocalFile.h"
 #include "nsIDynamicContainer.h"
 #include "nsIServiceManager.h"
@@ -104,7 +102,16 @@ inline PRInt32 CompareIntegers(PRUint32 a, PRUint32 b)
 
 // nsNavHistoryResultNode ******************************************************
 
-NS_IMPL_CYCLE_COLLECTION_0(nsNavHistoryResultNode)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryResultNode)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResultNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END 
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryResultNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mParent, nsINavHistoryContainerResultNode);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResultNode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryResultNode)
@@ -136,12 +143,12 @@ nsNavHistoryResultNode::nsNavHistoryResultNode(
 NS_IMETHODIMP
 nsNavHistoryResultNode::GetIcon(nsIURI** aURI)
 {
-  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
-  NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
   if (mFaviconURI.IsEmpty()) {
     *aURI = nsnull;
     return NS_OK;
   }
+  nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
+  NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
   return faviconService->GetFaviconLinkForIconString(mFaviconURI, aURI);
 }
 
@@ -2095,7 +2102,7 @@ nsNavHistoryQueryResultNode::CanExpand()
 PRBool
 nsNavHistoryQueryResultNode::IsContainersQuery()
 {
-  PRUint16 resultType = mOptions->ResultType();
+  PRUint16 resultType = Options()->ResultType();
   return resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY ||
@@ -2263,15 +2270,24 @@ NS_IMETHODIMP
 nsNavHistoryQueryResultNode::GetQueryOptions(
                                       nsINavHistoryQueryOptions** aQueryOptions)
 {
-  nsresult rv = VerifyQueriesParsed();
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(mOptions, "Options invalid");
-
-  *aQueryOptions = mOptions;
+  *aQueryOptions = Options();
   NS_ADDREF(*aQueryOptions);
   return NS_OK;
 }
 
+// nsNavHistoryQueryResultNode::Options
+//
+//  Safe options getter, ensures queries are parsed first.
+
+nsNavHistoryQueryOptions*
+nsNavHistoryQueryResultNode::Options()
+{
+  nsresult rv = VerifyQueriesParsed();
+  if (NS_FAILED(rv))
+    return nsnull;
+  NS_ASSERTION(mOptions, "Options invalid, cannot generate from URI");
+  return mOptions;
+}
 
 // nsNavHistoryQueryResultNode::VerifyQueriesParsed
 
@@ -2432,10 +2448,12 @@ nsNavHistoryQueryResultNode::ClearChildren(PRBool aUnregister)
 nsresult
 nsNavHistoryQueryResultNode::Refresh()
 {
-  // Some query can return other queries, in this case we could call Refresh
-  // for each child query causing a major slowdown. We should not refresh
-  // nested queries since we are already refreshing the containining one.
-  if (mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS)
+  // Some queries can return other queries. In this case calling Refresh
+  // for each child query could cause a major slowdown. We should not refresh
+  // nested queries that are not currently expanded, since we are already 
+  // refreshing the containing one.
+  if (mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
+      !mExpanded)
     return NS_OK;
 
   // Ignore refreshes when there is a batch, EndUpdateBatch will do a refresh
@@ -2862,15 +2880,18 @@ nsNavHistoryQueryResultNode::OnItemChanged(PRInt64 aItemId,
                                            PRBool aIsAnnotationProperty,
                                            const nsACString& aValue)
 {
-  // history observers should not get OnItemChanged
-  // but should get the corresponding history notifications instead
-  // for bookmark queries, "all bookmark" observers should get OnItemChanged
-  // for example, when a title of a bookmark change, we want that to refresh
+  // History observers should not get OnItemChanged
+  // but should get the corresponding history notifications instead.
+  // For bookmark queries, "all bookmark" observers should get OnItemChanged.
+  // For example, when a title of a bookmark changes, we want that to refresh.
   if (mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
-    return Refresh();
+    (void)Refresh();
   else
     NS_WARNING("history observers should not get OnItemChanged, but should get the corresponding history notifications instead");
-  return NS_OK;
+
+  return nsNavHistoryResultNode::OnItemChanged(aItemId, aProperty,
+                                               aIsAnnotationProperty,
+                                               aValue);
 }
 
 NS_IMETHODIMP
@@ -3667,14 +3688,42 @@ nsNavHistorySeparatorResultNode::nsNavHistorySeparatorResultNode()
 // nsNavHistoryResult **********************************************************
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryResult)
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+RemoveBookmarkFolderObserversCallback(nsTrimInt64HashKey::KeyType aKey,
+                                      nsNavHistoryResult::FolderObserverList*& aData,
+                                      void* userArg)
+{
+  delete aData;
+  return PL_DHASH_REMOVE;
+}
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResult)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRootNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mView)
+  tmp->mBookmarkFolderObservers.Enumerate(&RemoveBookmarkFolderObserversCallback, nsnull);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END 
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+TraverseBookmarkFolderObservers(nsTrimInt64HashKey::KeyType aKey,
+                                nsNavHistoryResult::FolderObserverList*& aData,
+                                void* aUserArg)
+{
+  nsCycleCollectionTraversalCallback* cb =
+    static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
+  PRUint32 i, count = aData->Length();
+  for (i = 0; i < count; ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
+                                       "mBookmarkFolderObservers value[i]");
+    nsNavHistoryResultNode* node = aData->ElementAt(i);
+    cb->NoteXPCOMChild(node);
+  }
+  return PL_DHASH_NEXT;
+}
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryResult)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mRootNode, nsINavHistoryContainerResultNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mView)
+  tmp->mBookmarkFolderObservers.Enumerate(&TraverseBookmarkFolderObservers, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNavHistoryResult)
@@ -3697,15 +3746,6 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot) :
   mBatchInProgress(PR_FALSE)
 {
   mRootNode->mResult = this;
-}
-
-PR_STATIC_CALLBACK(PLDHashOperator)
-RemoveBookmarkFolderObserversCallback(nsTrimInt64HashKey::KeyType aKey,
-                                      nsNavHistoryResult::FolderObserverList*& aData,
-                                      void* userArg)
-{
-  delete aData;
-  return PL_DHASH_REMOVE;
 }
 
 nsNavHistoryResult::~nsNavHistoryResult()
@@ -4064,10 +4104,13 @@ nsNavHistoryResult::OnBeginUpdateBatch()
 NS_IMETHODIMP
 nsNavHistoryResult::OnEndUpdateBatch()
 {
-  NS_ASSERTION(mBatchInProgress, "EndUpdateBatch without a begin");
-  mBatchInProgress = PR_FALSE;
-  ENUMERATE_HISTORY_OBSERVERS(OnEndUpdateBatch());
-  ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnEndUpdateBatch());
+  if (mBatchInProgress) {
+    mBatchInProgress = PR_FALSE;
+    ENUMERATE_HISTORY_OBSERVERS(OnEndUpdateBatch());
+    ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnEndUpdateBatch());
+  }
+  else
+    NS_WARNING("EndUpdateBatch without a begin");
   return NS_OK;
 }
 
@@ -4135,10 +4178,10 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
     return NS_OK;
 
   for (PRUint32 i = 0; i < list->Length(); i++) {
-    nsNavHistoryFolderResultNode* folder = list->ElementAt(i);
+    nsRefPtr<nsNavHistoryFolderResultNode> folder = list->ElementAt(i);
     if (folder) {
       PRUint32 nodeIndex;
-      nsNavHistoryResultNode* node = folder->FindChildById(aItemId, &nodeIndex);
+      nsRefPtr<nsNavHistoryResultNode> node = folder->FindChildById(aItemId, &nodeIndex);
       // if ExcludeItems is true we don't update non visible items
       if (node &&
           (!folder->mOptions->ExcludeItems() ||

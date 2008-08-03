@@ -121,8 +121,8 @@ BOOL nsPluginThread::init()
   wrapperNPNFuncs.memfree          = NPN_MemFree;
   wrapperNPNFuncs.memflush         = NPN_MemFlush;
   wrapperNPNFuncs.reloadplugins    = NPN_ReloadPlugins;
-  wrapperNPNFuncs.getJavaEnv       = NPN_GetJavaEnv;
-  wrapperNPNFuncs.getJavaPeer      = NPN_GetJavaPeer;
+  wrapperNPNFuncs.getJavaEnv       = NULL;
+  wrapperNPNFuncs.getJavaPeer      = NULL;
   wrapperNPNFuncs.getvalue         = NPN_GetValue;
   wrapperNPNFuncs.setvalue         = NPN_SetValue;
   wrapperNPNFuncs.invalidaterect   = NPN_InvalidateRect;
@@ -217,7 +217,7 @@ void nsPluginThread::dispatch()
       pluginNPPFuncs.urlnotify((NPP)mP1, (const char*)mP2, (NPReason)mP3, (void*)mP4);
       break;
     case action_npp_get_java_class:
-      //pluginNPPFuncs.javaClass;
+      // Deprecated action
       break;
     case action_npp_get_value:
       pluginNPPFuncs.getvalue((NPP)mP1, (NPPVariable)mP2, (void *)mP3);

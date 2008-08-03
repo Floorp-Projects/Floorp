@@ -84,6 +84,15 @@ LoginManager.prototype = {
     },
 
 
+    __observerService : null, // Observer Service, for notifications
+    get _observerService() {
+        if (!this.__observerService)
+            this.__observerService = Cc["@mozilla.org/observer-service;1"].
+                                     getService(Ci.nsIObserverService);
+        return this.__observerService;
+    },
+
+
     __storage : null, // Storage component which contains the saved logins
     get _storage() {
         if (!this.__storage) {
@@ -155,10 +164,8 @@ LoginManager.prototype = {
 
 
         // Form submit observer checks forms for new logins and pw changes.
-        var observerService = Cc["@mozilla.org/observer-service;1"].
-                              getService(Ci.nsIObserverService);
-        observerService.addObserver(this._observer, "earlyformsubmit", false);
-        observerService.addObserver(this._observer, "xpcom-shutdown", false);
+        this._observerService.addObserver(this._observer, "earlyformsubmit", false);
+        this._observerService.addObserver(this._observer, "xpcom-shutdown", false);
 
         // WebProgressListener for getting notification of new doc loads.
         var progress = Cc["@mozilla.org/docloaderservice;1"].
@@ -278,18 +285,17 @@ LoginManager.prototype = {
             if (!(domDoc instanceof Ci.nsIDOMHTMLDocument))
                 return;
 
-            this._pwmgr.log("onStateChange accepted: req = " + (aRequest ?
-                        aRequest.name : "(null)") + ", flags = " + aStateFlags);
+            this._pwmgr.log("onStateChange accepted: req = " +
+                            (aRequest ?  aRequest.name : "(null)") +
+                            ", flags = 0x" + aStateFlags.toString(16));
 
-            // fastback navigation... We won't get a DOMContentLoaded
-            // event again, so process any forms now.
+            // Fastback doesn't fire DOMContentLoaded, so process forms now.
             if (aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) {
                 this._pwmgr.log("onStateChange: restoring document");
                 return this._pwmgr._fillDocument(domDoc);
             }
 
             // Add event listener to process page when DOM is complete.
-            this._pwmgr.log("onStateChange: adding dom listeners");
             domDoc.addEventListener("DOMContentLoaded",
                                     this._domEventListener, false);
             return;
@@ -364,8 +370,19 @@ LoginManager.prototype = {
         if (login.password == null || login.password.length == 0)
             throw "Can't add a login with a null or empty password.";
 
-        if (!login.httpRealm && !login.formSubmitURL)
+        if (login.formSubmitURL || login.formSubmitURL == "") {
+            // We have a form submit URL. Can't have a HTTP realm.
+            if (login.httpRealm != null)
+                throw "Can't add a login with both a httpRealm and formSubmitURL.";
+        } else if (login.httpRealm) {
+            // We have a HTTP realm. Can't have a form submit URL.
+            if (login.formSubmitURL != null)
+                throw "Can't add a login with both a httpRealm and formSubmitURL.";
+        } else {
+            // Need one or the other!
             throw "Can't add a login without a httpRealm or formSubmitURL.";
+        }
+
 
         // Look for an existing entry.
         var logins = this.findLogins({}, login.hostname, login.formSubmitURL,
@@ -706,6 +723,20 @@ LoginManager.prototype = {
 
 
     /*
+     * _isAutoCompleteDisabled
+     *
+     * Returns true if the page requests autocomplete be disabled for the
+     * specified form input.
+     */
+    _isAutocompleteDisabled :  function (element) {
+        if (element && element.hasAttribute("autocomplete") &&
+            element.getAttribute("autocomplete").toLowerCase() == "off")
+            return true;
+
+        return false;
+    },
+
+    /*
      * _onFormSubmit
      *
      * Called by the our observer when notified of a form submission.
@@ -714,15 +745,6 @@ LoginManager.prototype = {
      * our stored password.
      */
     _onFormSubmit : function (form) {
-
-        // local helper function
-        function autocompleteDisabled(element) {
-            if (element && element.hasAttribute("autocomplete") &&
-                element.getAttribute("autocomplete").toLowerCase() == "off")
-                return true;
-
-           return false;
-        };
 
         // local helper function
         function getPrompter(aWindow) {
@@ -759,10 +781,10 @@ LoginManager.prototype = {
         // Check for autocomplete=off attribute. We don't use it to prevent
         // autofilling (for existing logins), but won't save logins when it's
         // present.
-        if (autocompleteDisabled(form) ||
-            autocompleteDisabled(usernameField) ||
-            autocompleteDisabled(newPasswordField) ||
-            autocompleteDisabled(oldPasswordField)) {
+        if (this._isAutocompleteDisabled(form) ||
+            this._isAutocompleteDisabled(usernameField) ||
+            this._isAutocompleteDisabled(newPasswordField) ||
+            this._isAutocompleteDisabled(oldPasswordField)) {
                 this.log("(form submission ignored -- autocomplete=off found)");
                 return;
         }
@@ -820,11 +842,11 @@ LoginManager.prototype = {
             if (!login.username && formLogin.username) {
                 var restoreMe = formLogin.username;
                 formLogin.username = ""; 
-                same = formLogin.matches(login);
+                same = formLogin.matches(login, false);
                 formLogin.username = restoreMe;
             } else if (!formLogin.username && login.username) {
                 formLogin.username = login.username;
-                same = formLogin.matches(login);
+                same = formLogin.matches(login, false);
                 formLogin.username = ""; // we know it's always blank.
             } else {
                 same = formLogin.matches(login, true);
@@ -938,108 +960,180 @@ LoginManager.prototype = {
 
         var autofillForm = this._prefBranch.getBoolPref("autofillForms");
         var previousActionOrigin = null;
+        var foundLogins = null;
 
         for (var i = 0; i < forms.length; i++) {
             var form = forms[i];
-
-            // Heuristically determine what the user/pass fields are
-            // We do this before checking to see if logins are stored,
-            // so that the user isn't prompted for a master password
-            // without need.
-            var [usernameField, passwordField, ignored] =
-                this._getFormFields(form, false);
-
-            // Need a valid password field to do anything.
-            if (passwordField == null)
-                continue;
-
 
             // Only the actionOrigin might be changing, so if it's the same
             // as the last form on the page we can reuse the same logins.
             var actionOrigin = this._getActionOrigin(form);
             if (actionOrigin != previousActionOrigin) {
-                var foundLogins =
-                    this.findLogins({}, formOrigin, actionOrigin, null);
-
-                this.log("form[" + i + "]: got " +
-                         foundLogins.length + " logins.");
-
+                foundLogins = null;
                 previousActionOrigin = actionOrigin;
-            } else {
-                this.log("form[" + i + "]: using logins from last form.");
             }
-
-
-            // Discard logins which have username/password values that don't
-            // fit into the fields (as specified by the maxlength attribute).
-            // The user couldn't enter these values anyway, and it helps
-            // with sites that have an extra PIN to be entered (bug 391514)
-            var maxUsernameLen = Number.MAX_VALUE;
-            var maxPasswordLen = Number.MAX_VALUE;
-
-            // If attribute wasn't set, default is -1.
-            if (usernameField && usernameField.maxLength >= 0)
-                maxUsernameLen = usernameField.maxLength;
-            if (passwordField.maxLength >= 0)
-                maxPasswordLen = passwordField.maxLength;
-
-            logins = foundLogins.filter(function (l) {
-                    var fit = (l.username.length <= maxUsernameLen &&
-                               l.password.length <= maxPasswordLen);
-                    if (!fit)
-                        this.log("Ignored " + l.username + " login: won't fit");
-
-                    return fit;
-                }, this);
-
-
-            // Nothing to do if we have no matching logins available.
-            if (logins.length == 0)
-                continue;
-
-
-            // Attach autocomplete stuff to the username field, if we have
-            // one. This is normally used to select from multiple accounts,
-            // but even with one account we should refill if the user edits.
-            if (usernameField)
-                this._attachToInput(usernameField);
-
-            if (autofillForm) {
-
-                if (usernameField && usernameField.value) {
-                    // If username was specified in the form, only fill in the
-                    // password if we find a matching login.
-
-                    var username = usernameField.value;
-
-                    var matchingLogin;
-                    var found = logins.some(function(l) {
-                                                matchingLogin = l;
-                                                return (l.username == username);
-                                            });
-                    if (found)
-                        passwordField.value = matchingLogin.password;
-
-                } else if (usernameField && logins.length == 2) {
-                    // Special case, for sites which have a normal user+pass
-                    // login *and* a password-only login (eg, a PIN)...
-                    // When we have a username field and 1 of 2 available
-                    // logins is password-only, go ahead and prefill the
-                    // one with a username.
-                    if (!logins[0].username && logins[1].username) {
-                        usernameField.value = logins[1].username;
-                        passwordField.value = logins[1].password;
-                    } else if (!logins[1].username && logins[0].username) {
-                        usernameField.value = logins[0].username;
-                        passwordField.value = logins[0].password;
-                    }
-                } else if (logins.length == 1) {
-                    if (usernameField)
-                        usernameField.value = logins[0].username;
-                    passwordField.value = logins[0].password;
-                }
-            }
+            this.log("_fillDocument processing form[" + i + "]");
+            foundLogins = this._fillForm(form, autofillForm, false, foundLogins)[1];
         } // foreach form
+    },
+
+
+    /*
+     * _fillform
+     *
+     * Fill the form with login information if we can find it. This will find
+     * an array of logins if not given any, otherwise it will use the logins
+     * passed in. The logins are returned so they can be reused for
+     * optimization. Success of action is also returned in format
+     * [success, foundLogins]. autofillForm denotes if we should fill the form
+     * in automatically, ignoreAutocomplete denotes if we should ignore
+     * autocomplete=off attributes, and foundLogins is an array of nsILoginInfo
+     * for optimization
+     */
+    _fillForm : function (form, autofillForm, ignoreAutocomplete, foundLogins) {
+        // Heuristically determine what the user/pass fields are
+        // We do this before checking to see if logins are stored,
+        // so that the user isn't prompted for a master password
+        // without need.
+        var [usernameField, passwordField, ignored] =
+            this._getFormFields(form, false);
+
+        // Need a valid password field to do anything.
+        if (passwordField == null)
+            return [false, foundLogins];
+
+        // If there's only a password field and it has a value, there's
+        // nothing for us to do. (Don't clobber the existing value)
+        if (!usernameField && passwordField.value)
+            return [false, foundLogins];
+
+        // Need to get a list of logins if we weren't given them
+        if (foundLogins == null) {
+            var formOrigin = 
+                this._getPasswordOrigin(form.ownerDocument.documentURI);
+            var actionOrigin = this._getActionOrigin(form);
+            foundLogins = this.findLogins({}, formOrigin, actionOrigin, null);
+            this.log("found " + foundLogins.length + " matching logins.");
+        } else {
+            this.log("reusing logins from last form.");
+        }
+
+        // Discard logins which have username/password values that don't
+        // fit into the fields (as specified by the maxlength attribute).
+        // The user couldn't enter these values anyway, and it helps
+        // with sites that have an extra PIN to be entered (bug 391514)
+        var maxUsernameLen = Number.MAX_VALUE;
+        var maxPasswordLen = Number.MAX_VALUE;
+
+        // If attribute wasn't set, default is -1.
+        if (usernameField && usernameField.maxLength >= 0)
+            maxUsernameLen = usernameField.maxLength;
+        if (passwordField.maxLength >= 0)
+            maxPasswordLen = passwordField.maxLength;
+
+        logins = foundLogins.filter(function (l) {
+                var fit = (l.username.length <= maxUsernameLen &&
+                           l.password.length <= maxPasswordLen);
+                if (!fit)
+                    this.log("Ignored " + l.username + " login: won't fit");
+
+                return fit;
+            }, this);
+
+
+        // Nothing to do if we have no matching logins available.
+        if (logins.length == 0)
+            return [false, foundLogins];
+
+
+        // Attach autocomplete stuff to the username field, if we have
+        // one. This is normally used to select from multiple accounts,
+        // but even with one account we should refill if the user edits.
+        if (usernameField)
+            this._attachToInput(usernameField);
+
+        // If the form has an autocomplete=off attribute in play, don't
+        // fill in the login automatically. We check this after attaching
+        // the autocomplete stuff to the username field, so the user can
+        // still manually select a login to be filled in.
+        var isFormDisabled = false;
+        if (!ignoreAutocomplete &&
+            (this._isAutocompleteDisabled(form) ||
+             this._isAutocompleteDisabled(usernameField) ||
+             this._isAutocompleteDisabled(passwordField))) {
+
+            isFormDisabled = true;
+            this.log("form not filled, has autocomplete=off");
+        }
+
+        // Variable such that we reduce code duplication and can be sure we
+        // should be firing notifications if and only if we can fill the form.
+        var selectedLogin = null;
+
+        if (usernameField && usernameField.value) {
+            // If username was specified in the form, only fill in the
+            // password if we find a matching login.
+
+            var username = usernameField.value;
+
+            var matchingLogin;
+            var found = logins.some(function(l) {
+                                        matchingLogin = l;
+                                        return (l.username == username);
+                                    });
+            if (found)
+                selectedLogin = matchingLogin;
+            else
+                this.log("Password not filled. None of the stored " +
+                         "logins match the username already present.");
+
+        } else if (usernameField && logins.length == 2) {
+            // Special case, for sites which have a normal user+pass
+            // login *and* a password-only login (eg, a PIN)...
+            // When we have a username field and 1 of 2 available
+            // logins is password-only, go ahead and prefill the
+            // one with a username.
+            if (!logins[0].username && logins[1].username)
+                selectedLogin = logins[1];
+            else if (!logins[1].username && logins[0].username)
+                selectedLogin = logins[0];
+        } else if (logins.length == 1) {
+            selectedLogin = logins[0];
+        } else {
+            this.log("Multiple logins for form, so not filling any.");
+        }
+
+        var didFillForm = false;
+        if (selectedLogin && autofillForm && !isFormDisabled) {
+            // Fill the form
+            if (usernameField)
+                usernameField.value = selectedLogin.username;
+            passwordField.value = selectedLogin.password;
+            didFillForm = true;
+        } else if (selectedLogin && !autofillForm) {
+            // For when autofillForm is false, but we still have the information
+            // to fill a form, we notify observers.
+            this._observerService.notifyObservers(form, "passwordmgr-found-form", "noAutofillForms");
+            this.log("autofillForms=false but form can be filled; notified observers");
+        } else if (selectedLogin && isFormDisabled) {
+            // For when autocomplete is off, but we still have the information
+            // to fill a form, we notify observers.
+            this._observerService.notifyObservers(form, "passwordmgr-found-form", "autocompleteOff");
+            this.log("autocomplete=off but form can be filled; notified observers");
+        }
+
+        return [didFillForm, foundLogins];
+    },
+
+
+    /*
+     * fillForm
+     *
+     * Fill the form with login information if we can find it.
+     */
+    fillForm : function (form) {
+        this.log("fillForm processing form[id=" + form.id + "]");
+        return this._fillForm(form, true, true, null)[0];
     },
 
 

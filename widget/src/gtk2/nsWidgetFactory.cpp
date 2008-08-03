@@ -53,14 +53,23 @@
 #include "nsBidiKeyboard.h"
 #include "nsNativeKeyBindings.h"
 #include "nsScreenManagerGtk.h"
+
+#ifdef NS_PRINTING
 #include "nsPrintOptionsGTK.h"
 #include "nsPrintSession.h"
 #include "nsDeviceContextSpecG.h"
+#endif
+
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsImageToPixbuf.h"
-#include "nsIdleServiceGTK.h"
 #include "nsPrintDialogGTK.h"
+
+#ifdef NS_OSSO
+#include "nsIdleServiceOSSO.h"
+#else
+#include "nsIdleServiceGTK.h"
+#endif
 
 #ifdef NATIVE_THEME_SUPPORT
 #include "nsNativeThemeGTK.h"
@@ -89,16 +98,24 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
 #ifdef NATIVE_THEME_SUPPORT
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
 #endif
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
+
+#ifdef NS_OSSO
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceOSSO)
+#else
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceGTK)
+#endif
+
+#ifdef NS_PRINTING
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsGTK, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceGTK, Init)
+#endif
 
 static NS_IMETHODIMP
 nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
@@ -250,6 +267,7 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/chrome/chrome-native-theme;1",
      nsNativeThemeGTKConstructor },
 #endif
+#ifdef NS_PRINTING
   { "PrintSettings Service",
     NS_PRINTSETTINGSSERVICE_CID,
     "@mozilla.org/gfx/printsettings-service;1",
@@ -268,18 +286,27 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/device_context_spec/gtk;1",
     "@mozilla.org/gfx/devicecontextspec;1",
     nsDeviceContextSpecGTKConstructor },
-  { "Image to gdk-pixbuf converter",
-    NS_IMAGE_TO_PIXBUF_CID,
-    "@mozilla.org/widget/image-to-gdk-pixbuf;1",
-    nsImageToPixbufConstructor },
-  { "User Idle Service",
-    NS_IDLE_SERVICE_CID,
-    "@mozilla.org/widget/idleservice;1",
-    nsIdleServiceGTKConstructor },
   { "Native Print Dialog",
     NS_PRINTDIALOGSERVICE_CID,
     NS_PRINTDIALOGSERVICE_CONTRACTID,
     nsPrintDialogServiceGTKConstructor },
+#endif 
+  { "Image to gdk-pixbuf converter",
+    NS_IMAGE_TO_PIXBUF_CID,
+    "@mozilla.org/widget/image-to-gdk-pixbuf;1",
+    nsImageToPixbufConstructor },
+#ifdef NS_OSSO
+  { "User Idle Service",
+    NS_IDLE_SERVICE_CID,
+    "@mozilla.org/widget/idleservice;1",
+    nsIdleServiceOSSOConstructor },  
+#else
+{ "User Idle Service",
+    NS_IDLE_SERVICE_CID,
+    "@mozilla.org/widget/idleservice;1",
+    nsIdleServiceGTKConstructor },
+#endif //NS_OSSO
+
 };
 
 PR_STATIC_CALLBACK(void)

@@ -105,6 +105,10 @@
          key="&cmd.find.commandKey;"
          modifiers="accel"
          command="cmd_findDownload"/>
+    <key id="key_findDownload2"
+         key="&cmd.search.commandKey;"
+         modifiers="accel"
+         command="cmd_findDownload"/>
     <key id="key_selectAllDownloads"
          key="&selectAllCmd.key;"
          modifiers="accel"

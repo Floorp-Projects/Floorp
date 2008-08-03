@@ -46,7 +46,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-NS_IMPL_ISUPPORTS1(nsSound, nsISound)
+NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
 nsSound::nsSound()
 {

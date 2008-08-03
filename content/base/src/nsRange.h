@@ -119,6 +119,15 @@ private:
 
   nsINode* IsValidBoundary(nsINode* aNode);
  
+  /**
+   * Cut or delete the range's contents.
+   *
+   * @param aFragment nsIDOMDocumentFragment containing the nodes.
+   *                  May be null to indicate the caller doesn't want a fragment.
+   */
+  nsresult CutContents(nsIDOMDocumentFragment** frag);
+
+
 public:
 /******************************************************************************
  *  Utility routine to detect if a content node starts before a range and/or 

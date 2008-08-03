@@ -90,9 +90,6 @@ static NPError fillPluginFunctionTable(NPPluginFuncs* aNPPFuncs)
   aNPPFuncs->getvalue      = NPP_GetValue;
   aNPPFuncs->setvalue      = NPP_SetValue;
 #endif
-#ifdef OJI
-  aNPPFuncs->javaClass     = NULL;
-#endif
 
   return NPERR_NO_ERROR;
 }
@@ -124,10 +121,6 @@ static NPError fillNetscapeFunctionTable(NPNetscapeFuncs* aNPNFuncs)
   NPNFuncs.memfree          = aNPNFuncs->memfree;
   NPNFuncs.memflush         = aNPNFuncs->memflush;
   NPNFuncs.reloadplugins    = aNPNFuncs->reloadplugins;
-#ifdef OJI
-  NPNFuncs.getJavaEnv       = aNPNFuncs->getJavaEnv;
-  NPNFuncs.getJavaPeer      = aNPNFuncs->getJavaPeer;
-#endif
   NPNFuncs.getvalue         = aNPNFuncs->getvalue;
   NPNFuncs.setvalue         = aNPNFuncs->setvalue;
   NPNFuncs.invalidaterect   = aNPNFuncs->invalidaterect;

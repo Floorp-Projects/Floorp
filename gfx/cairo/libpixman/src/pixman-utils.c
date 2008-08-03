@@ -30,7 +30,7 @@
 #include "pixman-private.h"
 #include "pixman-mmx.h"
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 pixman_transform_point_3d (pixman_transform_t *transform,
 			   pixman_vector_t *vector)
 {
@@ -62,7 +62,7 @@ pixman_transform_point_3d (pixman_transform_t *transform,
     return TRUE;
 }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 pixman_blt (uint32_t *src_bits,
 	    uint32_t *dst_bits,
 	    int src_stride,
@@ -156,7 +156,7 @@ pixman_fill32 (uint32_t *bits,
     }
 }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 pixman_fill (uint32_t *bits,
 	     int stride,
 	     int bpp,
@@ -204,7 +204,7 @@ pixman_fill (uint32_t *bits,
  * grid row
  */
 
-pixman_fixed_t
+PIXMAN_EXPORT pixman_fixed_t
 pixman_sample_ceil_y (pixman_fixed_t y, int n)
 {
     pixman_fixed_t   f = pixman_fixed_frac(y);
@@ -225,7 +225,7 @@ pixman_sample_ceil_y (pixman_fixed_t y, int n)
  * Compute the largest value no greater than y which is on a
  * grid row
  */
-pixman_fixed_t
+PIXMAN_EXPORT pixman_fixed_t
 pixman_sample_floor_y (pixman_fixed_t y, int n)
 {
     pixman_fixed_t   f = pixman_fixed_frac(y);
@@ -243,7 +243,7 @@ pixman_sample_floor_y (pixman_fixed_t y, int n)
 /*
  * Step an edge by any amount (including negative values)
  */
-void
+PIXMAN_EXPORT void
 pixman_edge_step (pixman_edge_t *e, int n)
 {
     pixman_fixed_48_16_t	ne;
@@ -298,7 +298,7 @@ _pixman_edge_tMultiInit (pixman_edge_t *e, int n, pixman_fixed_t *stepx_p, pixma
  * Initialize one edge structure given the line endpoints and a
  * starting y value
  */
-void
+PIXMAN_EXPORT void
 pixman_edge_init (pixman_edge_t	*e,
 		  int		n,
 		  pixman_fixed_t		y_start,
@@ -342,7 +342,7 @@ pixman_edge_init (pixman_edge_t	*e,
  * Initialize one edge structure given a line, starting y value
  * and a pixel offset for the line
  */
-void
+PIXMAN_EXPORT void
 pixman_line_fixed_edge_init (pixman_edge_t *e,
 			     int	    n,
 			     pixman_fixed_t	    y,
@@ -428,7 +428,7 @@ pixman_malloc_abc (unsigned int a,
  *
  * Return value: the encoded version.
  **/
-int
+PIXMAN_EXPORT int
 pixman_version (void)
 {
     return PIXMAN_VERSION;
@@ -445,7 +445,7 @@ pixman_version (void)
  *
  * Return value: a string containing the version.
  **/
-const char*
+PIXMAN_EXPORT const char*
 pixman_version_string (void)
 {
     return PIXMAN_VERSION_STRING;
@@ -462,11 +462,13 @@ pixman_version_string (void)
  * Currently, all pixman_format_code_t values are supported
  * except for the YUV formats.
  **/
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 pixman_format_supported_destination (pixman_format_code_t format)
 {
     switch (format) {
     /* 32 bpp formats */
+    case PIXMAN_a2b10g10r10:
+    case PIXMAN_x2b10g10r10:
     case PIXMAN_a8r8g8b8:
     case PIXMAN_x8r8g8b8:
     case PIXMAN_a8b8g8r8:
@@ -530,7 +532,7 @@ pixman_format_supported_destination (pixman_format_code_t format)
  *
  * Currently, all pixman_format_code_t values are supported.
  **/
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 pixman_format_supported_source (pixman_format_code_t format)
 {
     switch (format) {

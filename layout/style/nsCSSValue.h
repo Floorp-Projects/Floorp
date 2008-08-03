@@ -319,10 +319,18 @@ public:
     }
 
     void AddRef() {
+      if (mRefCnt == PR_UINT16_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::Array");
+        return;
+      }
       ++mRefCnt;
       NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Array", sizeof(*this));
     }
     void Release() {
+      if (mRefCnt == PR_UINT16_MAX) {
+        NS_WARNING("refcount overflow, leaking nsCSSValue::Array");
+        return;
+      }
       --mRefCnt;
       NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::Array");
       if (mRefCnt == 0)
