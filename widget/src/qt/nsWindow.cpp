@@ -890,12 +890,6 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
 }
 
 NS_IMETHODIMP
-nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::ShowMenuBar(PRBool aShow)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
