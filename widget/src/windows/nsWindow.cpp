@@ -3432,6 +3432,11 @@ BOOL nsWindow::OnChar(UINT charCode, UINT aScanCode, PRUint32 aFlags)
   if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
     return FALSE;
   }
+  
+  // Ignore Ctrl+Enter (bug 318235)
+  if (mIsControlDown && charCode == 0xA) {
+    return FALSE;
+  }
 
   // WM_CHAR with Control and Alt (== AltGr) down really means a normal character
   PRBool saveIsAltDown = mIsAltDown;
