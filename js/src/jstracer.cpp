@@ -1697,7 +1697,7 @@ TraceRecorder::ifop()
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
               lir->ins_eq0(lir->ins2(LIR_and,
                                      lir->insLoadi(get(&v), offsetof(JSString, length)),
-                                     lir->insImm(JSSTRING_LENGTH_MASK))));
+                                     INS_CONST(JSSTRING_LENGTH_MASK))));
     } else {
         JS_NOT_REACHED("ifop");
     }
@@ -3350,7 +3350,7 @@ TraceRecorder::forInProlog(LIns*& iterobj_ins)
                                              lir->insLoadi(iterobj_ins,
                                                            offsetof(JSObject, fslots) +
                                                            JSSLOT_ITER_FLAGS * sizeof(jsval)),
-                                             lir->insImm(~JSITER_ENUMERATE))),
+                                             INS_CONST(~JSITER_ENUMERATE))),
                       "guard(iter flags is JSITER_ENUMERATE)"));
 
         JSObject* obj = STOBJ_GET_PARENT(iterobj);
