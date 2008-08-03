@@ -47,7 +47,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITRACEREFCNT
 
-  static NS_COM void Startup();  
+  static NS_COM void Startup();
   static NS_COM void Shutdown();
 
   enum StatisticsType {
@@ -57,10 +57,10 @@ public:
 
   static NS_COM nsresult DumpStatistics(StatisticsType type = ALL_STATS,
                                         FILE* out = 0);
-  
+
   static NS_COM void ResetStatistics(void);
 
-  static NS_COM void DemangleSymbol(const char * aSymbol, 
+  static NS_COM void DemangleSymbol(const char * aSymbol,
                                     char * aBuffer,
                                     int aBufLen);
 
@@ -88,7 +88,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // And now for that utility that you've all been asking for...
 
-extern "C" NS_COM void 
+extern "C" NS_COM void
 NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
                  double *meanResult, double *stdDevResult);
 
