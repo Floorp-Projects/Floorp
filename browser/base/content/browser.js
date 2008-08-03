@@ -115,7 +115,11 @@ var gEditUIVisible = true;
     if (!element)
       return null;
     delete window[name];
-    return window[name] = element; 
+    return window[name] = element;
+  });
+  window.__defineSetter__(name, function (val) {
+    delete window[name];
+    return window[name] = val;
   });
 });
 
