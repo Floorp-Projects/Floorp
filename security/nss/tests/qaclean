@@ -1,0 +1,144 @@
+#! /bin/sh
+
+########################################################################
+#
+# /u/sonmi/bin/qaclean
+#
+# is supposed to clean up after a "hanging" QA
+#
+# 1) see if there is a lockfile 
+#    if yes: 
+#    1a) kill the process of the lockfile and if possible it's children
+#    1b) rm the lockfile
+# 2) kill selfservers
+# 3) clean up old tmp files
+#
+########################################################################
+
+if [ -z "$TMP" ]
+then
+    if [  -z "$TEMP" ]
+    then
+        TMP="/tmp"
+    else
+        TMP=$TEMP
+    fi
+fi
+if [ ! -w "$TMP" ]
+then
+    echo "Can't write to tmp directory $TMP - exiting"
+    echo "Can't write to tmp directory $TMP - exiting" >&2
+    exit 1
+fi
+
+########################### Ps #########################################
+# platform specific ps
+########################################################################
+Ps()
+{
+    if [ `uname -s` = "SunOS" ]
+    then
+        /usr/5bin/ps -e
+    else
+        ps -e
+    fi
+}
+
+Kill()
+{
+    if [ "$1" = "$$" ]
+    then
+        return
+    fi
+    echo "Killing PID $1"
+    kill $1
+    sleep 1
+    kill -9 $1 2>/dev/null
+}
+
+########################### kill_by_name ################################
+# like killall, only without permissionproblems, kills the process whose 
+# name is given as parameter
+########################################################################
+kill_by_name()
+{
+    echo "Killing all $1"
+ 
+    for PID in `Ps | grep "$1" | grep -v grep | \
+        sed -e "s/^[     ]*//g" -e "s/[     ].*//"`
+    do
+        Kill $PID
+    done
+}
+
+kill_the_rest()
+{
+i=0
+while [ $i -lt $1 ]
+do
+    kill_by_name nssqa
+    kill_by_name selfserv
+    kill_by_name strsclnt
+    kill_by_name all.sh
+    kill_by_name sdr.sh
+    kill_by_name ssl.sh
+    kill_by_name smime.sh
+    i=`expr $i + 1`
+done
+}
+
+nt_warning()
+{
+os_name=`uname -s`
+case $os_name in
+    CYGWIN*|WIN*|Win*)
+        echo
+        echo
+        echo
+        echo "Another Windows problem... If you have not already done so"
+        echo "after this script completes, please reboot, and log in as"
+        echo "user svbld again"
+        echo
+        echo
+        echo
+        ;;
+esac
+}
+
+nt_warning
+case $1 in 
+    -all)
+        for w in tommy booboo kentuckyderby galileo shame axilla columbus \
+                 smarch charm hp64 biggayal orville kwyjibo hbombaix raven \
+                 jordan hornet phaedrus louie box dbldog huey washer dryer \
+                 shabadoo trex bummer compaqtor jellyfish sjsu
+        do
+                echo $w
+                ping $w && rsh $w '/u/sonmi/bin/qaclean'
+        done
+
+        ;;
+    ?*)
+        rsh $1 '/u/sonmi/bin/qaclean'
+        exit
+        ;;
+esac
+
+uname -a
+echo
+
+if [ -f ${TMP}/nssqa.* ]
+then
+    echo "nssqa seems to be running ${TMP}/nssqa.*"
+    #cat ${TMP}/nssqa.*
+    NSSQA_PID=`ls ${TMP}/nssqa.* | sed -e 's/[^.]*\.//'`
+    Kill $NSSQA_PID
+    rm ${TMP}/nssqa.*
+fi
+
+kill_the_rest 3
+ls -l ${TMP}/nsstmp.*
+rm ${TMP}/nsstmp.* 2>/dev/null
+rm ${TMP}/certutilout.* 2>/dev/null
+rm ${TMP}/Pk12*
+nt_warning

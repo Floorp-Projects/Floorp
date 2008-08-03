@@ -138,9 +138,28 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/jsurl/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/storage/$(LIB_PREFIX)jsdomstorage_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/offline/$(LIB_PREFIX)jsdomoffline_s.$(LIB_SUFFIX) \
+ 	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
 	$(NULL)
+
+ifdef MOZ_MEDIA
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/video/src/$(LIB_PREFIX)gkconvideo_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
+ifdef MOZ_OGG
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/modules/libfishsound/src/libfishsound/$(LIB_PREFIX)fishsound.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/liboggplay/src/liboggplay/$(LIB_PREFIX)oggplay.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/liboggz/src/liboggz/$(LIB_PREFIX)oggz.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/liboggplay_audio/$(LIB_PREFIX)oggplay_audio.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/libtheora/lib/$(LIB_PREFIX)theora.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
+	$(NULL)
+endif
 
 ifdef NS_PRINTING
 SHARED_LIBRARY_LIBS += \
@@ -216,10 +235,6 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
-ifdef NS_TRACE_MALLOC
-EXTRA_DSO_LIBS	+= tracemalloc
-endif
-
 ifdef MOZ_ENABLE_GTK2
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
 		    -lXrender \
@@ -235,6 +250,12 @@ endif
 # Add explicit X11 dependency when building against X11 toolkits
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
+endif
+
+ifdef MOZ_OGG
+ifeq ($(OS_ARCH),Darwin)
+OS_LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -265,6 +286,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/dom/src/jsurl \
 		   -I$(topsrcdir)/dom/src/storage \
 		   -I$(topsrcdir)/dom/src/offline \
+		   -I$(topsrcdir)/dom/src/geolocation \
 		   -I. \
 		   -I$(topsrcdir)/editor/libeditor/base \
 		   -I$(topsrcdir)/editor/libeditor/text \

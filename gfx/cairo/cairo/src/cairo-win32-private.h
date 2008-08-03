@@ -36,8 +36,8 @@
 #ifndef CAIRO_WIN32_PRIVATE_H
 #define CAIRO_WIN32_PRIVATE_H
 
-#include <cairo-win32.h>
-#include <cairoint.h>
+#include "cairo-win32.h"
+#include "cairoint.h"
 
 #ifndef SHADEBLENDCAPS
 #define SHADEBLENDCAPS 120
@@ -143,7 +143,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_pattern_t	*source,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
-				  cairo_scaled_font_t	*scaled_font);
+				  cairo_scaled_font_t	*scaled_font,
+				  int			*remaining_glyphs);
 
 cairo_surface_t *
 _cairo_win32_surface_create_similar (void	    *abstract_src,
@@ -183,5 +184,8 @@ _cairo_win32_debug_dump_hrgn (HRGN rgn, char *header);
 
 cairo_bool_t
 _cairo_win32_scaled_font_is_type1 (cairo_scaled_font_t *scaled_font);
+
+cairo_bool_t
+_cairo_win32_scaled_font_is_bitmap (cairo_scaled_font_t *scaled_font);
 
 #endif /* CAIRO_WIN32_PRIVATE_H */

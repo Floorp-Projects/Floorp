@@ -46,6 +46,8 @@ MODULE = appcomps
 
 EXPORTS = nsXPFEComponentsCID.h
 
+include $(topsrcdir)/config/config.mk
+
 MOZ_HAVE_BROWSER=1
 ifdef MOZ_THUNDERBIRD
 MOZ_HAVE_BROWSER=
@@ -88,17 +90,13 @@ DIRS += \
         related \
         autocomplete \
         $(NULL)
-ifneq ($(MOZ_BUILD_APP),camino)
+        
+ifdef SUITE_USING_XPFE_DM
 DIRS += download-manager
 endif
+
 ifndef MOZ_XUL_APP
-DIRS += \
-        console \
-        updates \
-        startup \
-        alerts \
-        extensions \
-        $(NULL)
+DIRS += startup
 endif
 ifndef MOZ_PLACES
 DIRS += history
@@ -120,7 +118,6 @@ else
 
 DIRS += \
         autocomplete \
-        history/public \
         $(NULL)
 
 endif

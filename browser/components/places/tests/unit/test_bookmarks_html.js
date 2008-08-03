@@ -64,6 +64,13 @@ try {
   do_throw("Could not get livemark service\n");
 } 
 
+// Get favicon service
+try {
+  var iconsvc = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
+} catch(ex) {
+  do_throw("Could not get favicon service\n");
+} 
+
 // Get microsummary service
 try {
   var mssvc = Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
@@ -81,6 +88,9 @@ try {
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";
+
+const TEST_FAVICON_PAGE_URL = "http://en-US.www.mozilla.com/en-US/firefox/central/";
+const TEST_FAVICON_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg==";
 
 // main
 function run_test() {
@@ -306,4 +316,9 @@ function testCanonicalBookmarks(aFolder) {
   unfiledBookmarks.containerOpen = true;
   do_check_eq(unfiledBookmarks.childCount, 1);
   unfiledBookmarks.containerOpen = false;
+
+  // favicons
+  var faviconURI = iconsvc.getFaviconForPage(uri(TEST_FAVICON_PAGE_URL));
+  var dataURL = iconsvc.getFaviconDataAsDataURL(faviconURI);
+  do_check_eq(TEST_FAVICON_DATA_URL, dataURL);
 }

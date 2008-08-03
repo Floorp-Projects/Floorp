@@ -26,6 +26,7 @@ function run_test()
     var more = lis.readLine(out);
     var line = out.value;
 
+    line = line.replace(/^\s+/, "");
     var firstTwo = line.substring(0, 2); // a misnomer, but whatever
     if (firstTwo == "" || firstTwo == "//")
       continue;

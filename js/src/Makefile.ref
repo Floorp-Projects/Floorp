@@ -87,11 +87,20 @@ CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 INTERP_CFLAGS   += $(INTERP_OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(INTERP_XCFLAGS)
 
 LDFLAGS		= $(XLDFLAGS)
+LDFLAGS += $(OS_LDFLAGS)
 
 ifdef MOZ_SHARK
 DEFINES += -DMOZ_SHARK
 CFLAGS += -F/System/Library/PrivateFrameworks
 LDFLAGS += -F/System/Library/PrivateFrameworks -framework CHUD
+endif
+ifdef MOZ_CALLGRIND
+DEFINES += -DMOZ_CALLGRIND
+endif
+ifdef MOZ_VTUNE
+DEFINES += -DMOZ_VTUNE
+CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
+OTHER_LIBS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
 
 ifndef NO_LIBM
@@ -129,7 +138,7 @@ ifdef JS_EDITLINE
 # Use the editline library, built locally.
 PREDIRS += editline
 DEFINES += -DEDITLINE
-PROG_LIBS += editline/$(OBJDIR)/libedit.a
+PROG_LIBS += $(OBJDIR)/editline/libedit.a
 endif
 endif
 
@@ -276,38 +285,39 @@ nsinstall-target:
 	cd ../../config; $(MAKE) OBJDIR=$(OBJDIR) OBJDIR_NAME=$(OBJDIR)
 
 #
-# Rules for keyword switch generation
+# Automatic header generation
 #
 
-GARBAGE += $(OBJDIR)/jsautokw.h $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX)
-GARBAGE += $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
+AUTO_HEADERS = $(OBJDIR)/jsautokw.h $(OBJDIR)/jsautooplen.h
 
-$(OBJDIR)/jsscan.$(OBJ_SUFFIX): $(OBJDIR)/jsautokw.h jskeyword.tbl
+$(OBJDIR)/jsautokw.h: jskeyword.tbl
 
-$(OBJDIR)/jskwgen.$(OBJ_SUFFIX): jskwgen.cpp jskeyword.tbl
+$(OBJDIR)/jsautooplen.h: jsopcode.tbl
 
-$(OBJDIR)/jsautokw.h: $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX) jskeyword.tbl
-	$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX) $@
+GARBAGE += $(AUTO_HEADERS)
+GARBAGE	+= $(AUTO_HEADERS:$(OBJDIR)/jsauto%.h=$(OBJDIR)/js%gen$(HOST_BIN_SUFFIX))
 
 ifdef USE_MSVC
 
-$(OBJDIR)/jskwgen.obj: jskwgen.cpp jskeyword.tbl
+GARBAGE	+= $(AUTO_HEADERS:$(OBJDIR)/jsauto%.h=$(OBJDIR)/js%gen.obj)
+
+$(AUTO_HEADERS): $(OBJDIR)/jsauto%.h: js%gen.cpp
 	@$(MAKE_OBJDIR)
 	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $<
-
-$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX): $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
-	link.exe -out:"$@" $(EXE_LINK_FLAGS) $^
-
+	link.exe -out:"$(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX)" $(EXE_LINK_FLAGS) $(OBJDIR)/js$*gen.obj
+	$(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $@
 else
 
-$(OBJDIR)/jskwgen.o: jskwgen.cpp jskeyword.tbl
+GARBAGE	+= $(AUTO_HEADERS:$(OBJDIR)/jsauto%.h=$(OBJDIR)/js%gen.d)
+$(AUTO_HEADERS): $(OBJDIR)/jsauto%.h: js%gen.cpp
 	@$(MAKE_OBJDIR)
-	$(CXX) -o $@ -c $(CFLAGS) $<
-
-$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX): $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
-	$(CXX) -o $@ $(CFLAGS) $(LDFLAGS) $^
+	$(CXX) -o $(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $(CFLAGS) $(LDFLAGS) $<
+	$(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $@
 
 endif
+
+# force creation of autoheaders before compiling any source that may use them
+$(LIB_OBJS) : $(AUTO_HEADERS)
 
 #
 # JS shell executable
@@ -328,22 +338,21 @@ $(PROGRAM).pure: $(PROG_OBJS) $(LIBRARY)
 		$(OTHER_LIBS) $(PROG_LIBS)
 
 ifndef PREBUILT_CPUCFG
-$(HFILES) $(CPPFILES): $(OBJDIR)/jsautocfg.h
+$(filter-out jscpucfg.h $(OBJDIR)/jsautocfg.h, $(HFILES)) $(CPPFILES): $(OBJDIR)/jsautocfg.h
 
 $(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
 	rm -f $@
 	$(OBJDIR)/jscpucfg > $@
 
 $(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
-	$(CXX) -o $@ $(OBJDIR)/jscpucfg.o
+	$(CXX) $(OS_LDFLAGS) -o $@ $(OBJDIR)/jscpucfg.o
 
-# Add to TARGETS for clobber rule
-TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg \
-	$(OBJDIR)/jscpucfg.o
+GARBAGE += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg \
+	   $(OBJDIR)/jscpucfg.o $(OBJDIR)/jscpucfg.d
 endif
 
 # Automatic make dependencies files
-DEPENDENCIES    = $(CFILES:%.c=$(OBJDIR)/%.d)
+DEPENDENCIES    = $(CPPFILES:%.cpp=$(OBJDIR)/%.d)
 
 #
 # Hardwire dependencies for jsinvoke.c

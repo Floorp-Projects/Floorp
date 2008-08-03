@@ -49,7 +49,12 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-if (typeof document != 'undefined')
+if (typeof document == 'undefined')
+{
+  expect = actual = 'Test requires browser: skipped';
+  reportCompare(expect, actual, summary);
+}
+else
 {
   status = summary + ' ' + inSection(1) + ' if (document.all) ';
   expect = false;

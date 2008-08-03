@@ -20,6 +20,7 @@ if (!profileDir) {
   // It will simply return the current directory.
   var provider = {
     getFile: function(prop, persistent) {
+      dump("getting file " + prop + "\n");
       persistent.value = true;
       if (prop == NS_APP_USER_PROFILE_50_DIR ||
           prop == NS_APP_USER_PROFILE_LOCAL_50_DIR) {

@@ -214,7 +214,7 @@ _draw_with_xlib_direct (cairo_t *cr,
     int rect_count;
     double device_offset_x, device_offset_y;
     int max_rectangles;
-    Display *dpy;
+    Screen *screen;
     Visual *visual;
     cairo_bool_t have_rectangular_clip;
 
@@ -291,17 +291,22 @@ _draw_with_xlib_direct (cairo_t *cr,
     }
     
     /* Check that the display is supported */  
-    dpy = cairo_xlib_surface_get_display (target);
-    if (!(capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_DISPLAY) &&
-        dpy != default_display) {
+    screen = cairo_xlib_surface_get_screen (target);
+    if (!(capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_SCREEN) &&
+        screen != DefaultScreenOfDisplay (default_display)) {
         CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: non-default display\n");
         return False;
     }
         
-    /* Check that the visual is supported */  
+    /* Check that there is a visual */
     visual = cairo_xlib_surface_get_visual (target);
+    if (!visual) {
+        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: no Visual for surface\n");
+        return False;
+    }        
+    /* Check that the visual is supported */
     if (!(capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_NONDEFAULT_VISUAL) &&
-        DefaultVisual (dpy, DefaultScreen (dpy)) != visual) {
+        DefaultVisualOfScreen (screen) != visual) {
         CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: non-default visual\n");
         return False;
     }
@@ -309,7 +314,7 @@ _draw_with_xlib_direct (cairo_t *cr,
     /* we're good to go! */
     CAIRO_XLIB_DRAWING_NOTE("TAKING FAST PATH\n");
     cairo_surface_flush (target);
-    callback (closure, dpy, d, visual, offset_x, offset_y, rectangles,
+    callback (closure, screen, d, visual, offset_x, offset_y, rectangles,
               needs_clip ? rect_count : 0);
     cairo_surface_mark_dirty (target);
     return True;
@@ -338,16 +343,16 @@ _create_temp_xlib_surface (cairo_t *cr, Display *dpy, int width, int height,
     /* make the temporary surface match target_drawable to the extent supported
        by the native rendering code */
     if (target_drawable) {
-        Display *target_display = cairo_xlib_surface_get_display (target);
+        Screen *target_screen = cairo_xlib_surface_get_screen (target);
         Visual *target_visual = cairo_xlib_surface_get_visual (target);
-        if ((target_display == dpy ||
-             (capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_DISPLAY)) &&
-            (target_visual == visual ||
+        if ((target_screen == screen ||
+             (capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_SCREEN)) &&
+            target_visual &&
+            (target_visual == DefaultVisualOfScreen (target_screen) ||
              (capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_NONDEFAULT_VISUAL))) {
             drawable = target_drawable;
-            dpy = target_display;
+            dpy = cairo_xlib_surface_get_display (target);
             visual = target_visual;
-            screen = cairo_xlib_surface_get_screen (target);
             depth = cairo_xlib_surface_get_depth (target);
         }
     }
@@ -381,7 +386,7 @@ _draw_onto_temp_xlib_surface (cairo_surface_t *temp_xlib_surface,
                               double background_gray_value)
 {
     Drawable d = cairo_xlib_surface_get_drawable (temp_xlib_surface);
-    Display *dpy = cairo_xlib_surface_get_display (temp_xlib_surface);
+    Screen *screen = cairo_xlib_surface_get_screen (temp_xlib_surface);
     Visual *visual = cairo_xlib_surface_get_visual (temp_xlib_surface);
     cairo_bool_t result;
     cairo_t *cr = cairo_create (temp_xlib_surface);
@@ -394,7 +399,7 @@ _draw_onto_temp_xlib_surface (cairo_surface_t *temp_xlib_surface,
     cairo_surface_flush (temp_xlib_surface);
     /* no clipping is needed because the callback can't draw outside the native
        surface anyway */
-    result = callback (closure, dpy, d, visual, 0, 0, NULL, 0);
+    result = callback (closure, screen, d, visual, 0, 0, NULL, 0);
     cairo_surface_mark_dirty (temp_xlib_surface);
     return result;
 }

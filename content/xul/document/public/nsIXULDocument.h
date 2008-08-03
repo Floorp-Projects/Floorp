@@ -47,10 +47,10 @@ class nsIContent;
 class nsIScriptGlobalObjectOwner;
 
 
-// {57314526-f749-4cf0-b6b6-3723eba21480}
+// {AF676EDD-1FB9-4C75-9B1F-CB4E02E1C779}
 #define NS_IXULDOCUMENT_IID \
-{ 0x57314526, 0xf749, 0x4cf0, \
-  { 0xb6, 0xb6, 0x37, 0x23, 0xeb, 0xa2, 0x14, 0x80 } }
+{ 0xaf676edd, 0x1fb9, 0x4c75, \
+  { 0x9b, 0x1f, 0xcb, 0x4e, 0x02, 0xe1, 0xc7, 0x79 } }
 
 
 /*
@@ -69,16 +69,11 @@ public:
   /**
    * Add an entry to the ID-to-element map.
    */
-  NS_IMETHOD AddElementForID(const nsAString& aID, nsIContent* aElement) = 0;
+  NS_IMETHOD AddElementForID(nsIContent* aElement) = 0;
 
   /**
-   * Remove an entry from the ID-to-element map.
-   */
-  NS_IMETHOD RemoveElementForID(const nsAString& aID, nsIContent* aElement) = 0;
-
-  /**
-   * Get the elements for a particular resource in the resource-to-element
-   * map. The nsCOMArray will be truncated and filled in with
+   * Get the elements for a particular resource --- all elements whose 'id'
+   * or 'ref' is aID. The nsCOMArray will be truncated and filled in with
    * nsIContent pointers.
    */
   NS_IMETHOD GetElementsForID(const nsAString& aID, nsCOMArray<nsIContent>& aElements) = 0;

@@ -75,11 +75,7 @@ public:
 
   static nsUrlClassifierDBService* GetInstance(nsresult *result);
 
-#ifdef MOZILLA_1_8_BRANCH
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_URLCLASSIFIERDBSERVICE_CID)
-#else
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_URLCLASSIFIERDBSERVICE_CID)
-#endif
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERDBSERVICE
@@ -99,9 +95,6 @@ private:
 
   nsresult LookupURI(nsIURI* uri, nsIUrlClassifierCallback* c);
 
-  // Make sure the event queue is intialized before we use it.
-  void EnsureThreadStarted();
-  
   // Close db connection and join the background thread if it exists. 
   nsresult Shutdown();
   

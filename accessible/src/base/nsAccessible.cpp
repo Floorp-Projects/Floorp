@@ -1593,15 +1593,6 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
   nsAutoString textEquivalent;
   if (!aContent->IsNodeOfType(nsINode::eHTML)) {
     if (aContent->IsNodeOfType(nsINode::eXUL)) {
-      nsCOMPtr<nsIPresShell> shell = GetPresShell();
-      if (!shell) {
-        return NS_ERROR_FAILURE;  
-      }
-      nsIFrame *frame = shell->GetPrimaryFrameFor(aContent);
-      if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
-        return NS_OK;
-      }
-
       nsCOMPtr<nsIDOMXULLabeledControlElement> labeledEl(do_QueryInterface(aContent));
       if (labeledEl) {
         labeledEl->GetLabel(textEquivalent);
@@ -1661,8 +1652,17 @@ nsresult nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, nsAStri
   if (isAlreadyHere) {
     return NS_OK;
   }
+
   isAlreadyHere = PR_TRUE;
-  nsresult rv = AppendFlatStringFromSubtreeRecurse(aContent, aFlatString);
+
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
+  nsIFrame *frame = shell->GetPrimaryFrameFor(aContent);
+  PRBool isHidden = (!frame || !frame->GetStyleVisibility()->IsVisible());
+  nsresult rv = AppendFlatStringFromSubtreeRecurse(aContent, aFlatString,
+                                                   isHidden);
+
   isAlreadyHere = PR_FALSE;
 
   if (NS_SUCCEEDED(rv) && !aFlatString->IsEmpty()) {
@@ -1681,7 +1681,10 @@ nsresult nsAccessible::AppendFlatStringFromSubtree(nsIContent *aContent, nsAStri
   return rv;
 }
 
-nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString)
+nsresult
+nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent,
+                                                 nsAString *aFlatString,
+                                                 PRBool aIsRootHidden)
 {
   // Depth first search for all text nodes that are decendants of content node.
   // Append all the text into one flat string
@@ -1698,10 +1701,25 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
   }
 
   // There are relevant children: use them to get the text.
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
   PRUint32 index;
   for (index = 0; index < numChildren; index++) {
-    AppendFlatStringFromSubtreeRecurse(aContent->GetChildAt(index), aFlatString);
+    nsCOMPtr<nsIContent> childContent = aContent->GetChildAt(index);
+
+    // Walk into hidden subtree if the the root parent is also hidden. This
+    // happens when the author explictly uses a hidden label or description.
+    if (!aIsRootHidden) {
+      nsIFrame *childFrame = shell->GetPrimaryFrameFor(childContent);
+      if (!childFrame || !childFrame->GetStyleVisibility()->IsVisible())
+        continue;
+    }
+
+    AppendFlatStringFromSubtreeRecurse(childContent, aFlatString,
+                                       aIsRootHidden);
   }
+
   return NS_OK;
 }
 
@@ -2045,6 +2063,9 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);  // In/out param. Created if necessary.
   
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
   if (!content) {
     return NS_ERROR_FAILURE;
@@ -2114,13 +2135,21 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     // If accessible is invisible we don't want to calculate group ARIA
     // attributes for it.
     if ((role == nsIAccessibleRole::ROLE_LISTITEM ||
-        role == nsIAccessibleRole::ROLE_MENUITEM ||
-        role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
-        role == nsIAccessibleRole::ROLE_PAGETAB ||
-        role == nsIAccessibleRole::ROLE_OPTION ||
-        role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
-        role == nsIAccessibleRole::ROLE_OUTLINEITEM) &&
+         role == nsIAccessibleRole::ROLE_MENUITEM ||
+         role == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
+         role == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM ||
+         role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
+         role == nsIAccessibleRole::ROLE_PAGETAB ||
+         role == nsIAccessibleRole::ROLE_OPTION ||
+         role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
+         role == nsIAccessibleRole::ROLE_OUTLINEITEM) &&
         0 == (State(this) & nsIAccessibleStates::STATE_INVISIBLE)) {
+
+      PRUint32 baseRole = role;
+      if (role == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
+          role == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM)
+        baseRole = nsIAccessibleRole::ROLE_MENUITEM;
+
       nsCOMPtr<nsIAccessible> parent = GetParent();
       NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
 
@@ -2132,10 +2161,17 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       NS_ENSURE_TRUE(sibling, NS_ERROR_FAILURE);
 
       PRBool foundCurrent = PR_FALSE;
-      PRUint32 siblingRole;
+      PRUint32 siblingRole, siblingBaseRole;
       while (sibling) {
         sibling->GetFinalRole(&siblingRole);
-        if (siblingRole == role &&
+
+        siblingBaseRole = siblingRole;
+        if (siblingRole == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
+            siblingRole == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM)
+          siblingBaseRole = nsIAccessibleRole::ROLE_MENUITEM;
+
+        // If sibling is visible and has the same base role.
+        if (siblingBaseRole == baseRole &&
             !(State(sibling) & nsIAccessibleStates::STATE_INVISIBLE)) {
           ++ setSize;
           if (!foundCurrent) {
@@ -2144,6 +2180,17 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
               foundCurrent = PR_TRUE;
           }
         }
+
+        // If the sibling is separator
+        if (siblingRole == nsIAccessibleRole::ROLE_SEPARATOR) {
+          if (foundCurrent) // the our group is ended
+            break;
+
+          // not our group, continue the searching
+          positionInGroup = 0;
+          setSize = 0;
+        }
+
         sibling->GetNextSibling(getter_AddRefs(nextSibling));
         sibling = nextSibling;
       }
@@ -2250,6 +2297,14 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     startContent = parentDoc->FindContentForSubDocument(doc);      
   }
 
+  // Expose 'display' attribute.
+  nsAutoString displayValue;
+  nsresult rv = GetComputedStyleValue(EmptyString(),
+                                      NS_LITERAL_STRING("display"),
+                                      displayValue);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::display,
+                           displayValue);
   return NS_OK;
 }
 
@@ -2468,23 +2523,38 @@ nsAccessible::GetARIAState(PRUint32 *aState)
     ++ index;
   }
 
-  if (!mRoleMapEntry)
-    return NS_OK;
+  if (mRoleMapEntry) {
+    // Once DHTML role is used, we're only readonly if DHTML readonly used
+    *aState &= ~nsIAccessibleStates::STATE_READONLY;
 
-  // Once DHTML role is used, we're only readonly if DHTML readonly used
-  *aState &= ~nsIAccessibleStates::STATE_READONLY;
-
-  if (content->HasAttr(kNameSpaceID_None, content->GetIDAttributeName())) {
-    // If has a role & ID and aria-activedescendant on the container, assume focusable
-    nsIContent *ancestorContent = content;
-    while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
-      if (ancestorContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant)) {
-          // ancestor has activedescendant property, this content could be active
-        *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
-        break;
+    if (content->HasAttr(kNameSpaceID_None, content->GetIDAttributeName())) {
+      // If has a role & ID and aria-activedescendant on the container, assume focusable
+      nsIContent *ancestorContent = content;
+      while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
+        if (ancestorContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_activedescendant)) {
+            // ancestor has activedescendant property, this content could be active
+          *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
+          break;
+        }
       }
     }
   }
+
+  if (*aState & nsIAccessibleStates::STATE_FOCUSABLE) {
+    // Special case: aria-disabled propagates from ancestors down to any focusable descendant
+    nsIContent *ancestorContent = content;
+    while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
+      if (ancestorContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::aria_disabled,
+                                       nsAccessibilityAtoms::_true, eCaseMatters)) {
+          // ancestor has aria-disabled property, this is disabled
+        *aState |= nsIAccessibleStates::STATE_UNAVAILABLE;
+        break;
+      }
+    }    
+  }
+
+  if (!mRoleMapEntry)
+    return NS_OK;
 
   *aState |= mRoleMapEntry->state;
   if (MappedAttrState(content, aState, &mRoleMapEntry->attributeMap1) &&
@@ -2659,8 +2729,11 @@ nsAccessible::GetNumActions(PRUint8 *aNumActions)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
+  if (!content)
+    return NS_OK;
+
   // Check if it's an simple xlink.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (nsAccUtils::IsXLink(content)) {
     *aNumActions = 1;
     return NS_OK;

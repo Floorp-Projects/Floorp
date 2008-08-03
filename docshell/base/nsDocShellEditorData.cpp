@@ -73,12 +73,12 @@ nsDocShellEditorData::~nsDocShellEditorData()
 void
 nsDocShellEditorData::TearDownEditor()
 {
-  NS_ASSERTION(mIsDetached, "We should be detached before tearing down");
   if (mEditor) {
     mEditor->PreDestroy();
     mEditor = nsnull;
   }
   mEditingSession = nsnull;
+  mIsDetached = PR_FALSE;
 }
 
 
@@ -244,12 +244,16 @@ nsDocShellEditorData::DetachFromWindow()
   if (htmlDoc)
     mDetachedEditingState = htmlDoc->GetEditingState();
 
+  mDocShell = nsnull;
+
   return NS_OK;
 }
 
 nsresult
-nsDocShellEditorData::ReattachToWindow(nsIDOMWindow *aWindow)
+nsDocShellEditorData::ReattachToWindow(nsIDocShell* aDocShell)
 {
+  mDocShell = aDocShell;
+
   nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(mDocShell);
   nsresult rv = mEditingSession->ReattachToWindow(domWindow);
   NS_ENSURE_SUCCESS(rv, rv);

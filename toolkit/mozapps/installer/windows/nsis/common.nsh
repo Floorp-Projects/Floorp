@@ -3093,6 +3093,7 @@
 
 /**
  * Checks if a handler's open command points to this installation directory.
+ * Uses SHCTX to determine the registry hive (e.g. HKLM or HKCU) to check.
  *
  * @param   _HANDLER_NAME
  *          The registry name for the handler.
@@ -3126,7 +3127,7 @@
 
       StrCpy $R8 "$R9"
       StrCpy $R9 "false"
-      ReadRegStr $R7 HKCR "$R8\shell\open\command" ""
+      ReadRegStr $R7 SHCTX "Software\Classes\$R8\shell\open\command" ""
       StrCmp "$R7" "" end
 
       ${GetPathFromString} "$R7" $R7
@@ -4464,9 +4465,22 @@
 
       !ifdef ___WINVER__NSH___
         ${Unless} ${AtLeastWin2000}
-          MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
-          ; Nothing initialized so no need to call OnEndCommon
-          Quit
+          ; XXX-rstrong - some systems fail the AtLeastWin2000 test for an
+          ; unknown reason. To work around this also check if the Windows NT
+          ; registry Key exists and if it does if the first char in
+          ; CurrentVersion is equal to 3 (Windows NT 3.5 and 3.5.1) or 4
+          ; (Windows NT 4).
+          StrCpy $R8 ""
+          ClearErrors
+          ReadRegStr $R8 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
+          StrCpy $R8 "$R8" 1
+          ${If} ${Errors}
+          ${OrIf} "$R8" == "3"
+          ${OrIf} "$R8" == "4"
+            MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
+            ; Nothing initialized so no need to call OnEndCommon
+            Quit
+          ${EndIf}
         ${EndUnless}
       !endif
 
@@ -4609,7 +4623,7 @@
 !macro InstallOnInitCommonCall _WARN_UNSUPPORTED_MSG
   !verbose push
   !verbose ${_MOZFUNC_VERBOSE}
-  Push ${_WARN_UNSUPPORTED_MSG}
+  Push "${_WARN_UNSUPPORTED_MSG}"
   Call InstallOnInitCommon
   !verbose pop
 !macroend

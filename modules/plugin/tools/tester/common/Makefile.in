@@ -44,8 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE          = plugin
 LIBRARY_NAME    = plcommon_s
-REQUIRES        = java \
-                  plugin \
+REQUIRES        = plugin \
                   $(NULL)
 
 CPPSRCS        = \

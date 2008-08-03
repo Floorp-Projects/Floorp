@@ -50,6 +50,7 @@ _TEST_FILES	= \
 	test_badManifestMagic.html \
 	test_badManifestMime.html \
 	test_missingFile.html \
+	test_noManifest.html \
 	test_simpleManifest.html \
 	test_identicalManifest.html \
 	test_changingManifest.html \

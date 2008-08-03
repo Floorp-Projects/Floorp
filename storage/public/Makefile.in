@@ -58,6 +58,11 @@ XPIDLSRCS = \
 	mozIStorageStatementWrapper.idl \
 	mozIStorageDataSet.idl \
 	mozIStorageValueArray.idl \
+	mozIStorageResultSet.idl \
+	mozIStorageRow.idl \
+  mozIStorageError.idl \
+  mozIStorageStatementCallback.idl \
+  mozIStoragePendingStatement.idl \
 	$(NULL)
 
 EXPORTS = \

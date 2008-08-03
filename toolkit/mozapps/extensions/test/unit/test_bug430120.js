@@ -48,6 +48,7 @@ const PREF_GENERAL_USERAGENT_LOCALE   = "general.useragent.locale";
 do_import_script("netwerk/test/httpserver/httpd.js");
 var testserver;
 var gOSVersion;
+var gBlocklist;
 
 // This is a replacement for the timer service so we can trigger timers
 var timerService = {
@@ -95,6 +96,9 @@ function pathHandler(metadata, response) {
               "xpcshell@tests.mozilla.org&1&XPCShell&1&2007010101&" +
               "XPCShell_noarch-spidermonkey&locale&updatechannel&" + 
               gOSVersion + "&1.9&distribution&distribution-version");
+  gBlocklist.observe(null, "quit-application", "");
+  gBlocklist.observe(null, "xpcom-shutdown", "");
+  testserver.stop();
   do_test_finished();
 }
 
@@ -116,7 +120,6 @@ function run_test() {
   catch (e) {
   }
 
-
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   testserver = new nsHttpServer();
@@ -125,11 +128,11 @@ function run_test() {
   testserver.start(4444);
 
   // Initialise the blocklist service
-  var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
-                            .getService(Components.interfaces.nsIBlocklistService)
-                            .QueryInterface(Components.interfaces.nsIObserver);
-  blocklist.observe(null, "app-startup", "");
-  blocklist.observe(null, "profile-after-change", "");
+  gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
+                         .getService(Components.interfaces.nsIBlocklistService)
+                         .QueryInterface(Components.interfaces.nsIObserver);
+  gBlocklist.observe(null, "app-startup", "");
+  gBlocklist.observe(null, "profile-after-change", "");
 
   do_check_true(timerService.hasTimer(BLOCKLIST_TIMER));
 

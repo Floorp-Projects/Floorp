@@ -181,17 +181,11 @@ PR_BEGIN_EXTERN_C
   static void* NP_CALLBACK
   _memalloc (uint32 size);
 
-#ifdef OJI
-  static JRIEnv* NP_CALLBACK
+  // Deprecated entry points for the old Java plugin.
+  static void* NP_CALLBACK /* OJI type: JRIEnv* */
   _getJavaEnv(void);
-
-#if 1
-
-  static jref NP_CALLBACK
+  static void* NP_CALLBACK /* OJI type: jref */
   _getJavaPeer(NPP npp);
-
-#endif
-#endif /* OJI */
 
 PR_END_EXTERN_C
 
@@ -312,13 +306,11 @@ ns4xPlugin::CheckClassInitialized(void)
   CALLBACKS.reloadplugins =
     NewNPN_ReloadPluginsProc(FP2TV(_reloadplugins));
 
-#ifdef OJI
+  // Deprecated API callbacks.
   CALLBACKS.getJavaEnv =
     NewNPN_GetJavaEnvProc(FP2TV(_getJavaEnv));
-
   CALLBACKS.getJavaPeer =
     NewNPN_GetJavaPeerProc(FP2TV(_getJavaPeer));
-#endif
 
   CALLBACKS.geturlnotify =
     NewNPN_GetURLNotifyProc(FP2TV(_geturlnotify));
@@ -2035,6 +2027,26 @@ _construct(NPP npp, NPObject* npobj, const NPVariant *args,
   return npobj->_class->construct(npobj, args, argCount, result);
 }
 
+#ifdef MOZ_MEMORY_WINDOWS
+extern "C" size_t malloc_usable_size(const void *ptr);
+
+BOOL
+InHeap(HANDLE hHeap, LPVOID lpMem)
+{
+  BOOL success = FALSE;
+  PROCESS_HEAP_ENTRY he;
+  he.lpData = NULL;
+  while (HeapWalk(hHeap, &he) != 0) {
+    if (he.lpData == lpMem) {
+      success = TRUE;
+      break;
+    }
+  }
+  HeapUnlock(hHeap);
+  return success;
+}
+#endif
+
 void NP_CALLBACK
 _releasevariantvalue(NPVariant* variant)
 {
@@ -2052,9 +2064,28 @@ _releasevariantvalue(NPVariant* variant)
     {
       const NPString *s = &NPVARIANT_TO_STRING(*variant);
 
-      if (s->utf8characters)
+      if (s->utf8characters) {
+#ifdef MOZ_MEMORY_WINDOWS
+        if (malloc_usable_size((void *)s->utf8characters) != 0) {
+          PR_Free((void *)s->utf8characters);
+        } else {
+          void *p = (void *)s->utf8characters;
+          DWORD nheaps = 0;
+          nsAutoTArray<HANDLE, 50> heaps;
+          nheaps = GetProcessHeaps(0, heaps.Elements());
+          heaps.AppendElements(nheaps);
+          GetProcessHeaps(nheaps, heaps.Elements());
+          for (DWORD i = 0; i < nheaps; i++) {
+            if (InHeap(heaps[i], p)) {
+              HeapFree(heaps[i], 0, p);
+              break;
+            }
+          }
+        }
+#else
         PR_Free((void *)s->utf8characters);
-
+#endif
+      }
       break;
     }
   case NPVariantType_Object:
@@ -2157,9 +2188,13 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 #ifdef MOZ_WIDGET_GTK2
     if (npp) {
       ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
-      NPBool rtv = PR_FALSE;
-      inst->GetValue((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &rtv);
-      if (rtv) {
+      PRBool windowless = PR_FALSE;
+      inst->GetValue(nsPluginInstanceVariable_WindowlessBool, &windowless);
+      NPBool needXEmbed = PR_FALSE;
+      if (!windowless) {
+        inst->GetValue((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &needXEmbed);
+      }
+      if (windowless || needXEmbed) {
         (*(Display **)result) = GDK_DISPLAY();
         return NPERR_NO_ERROR;
       }
@@ -2481,14 +2516,13 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
 }
 
 ////////////////////////////////////////////////////////////////////////
-#ifdef OJI
-JRIEnv* NP_CALLBACK
+// Deprecated, only stubbed out
+void* NP_CALLBACK /* OJI type: JRIEnv* */
 _getJavaEnv(void)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaEnv\n"));
   return NULL;
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 const char * NP_CALLBACK
@@ -2524,16 +2558,14 @@ _memalloc (uint32 size)
   return nsMemory::Alloc(size);
 }
 
-#ifdef OJI
 ////////////////////////////////////////////////////////////////////////
-jref NP_CALLBACK
+// Deprecated, only stubbed out
+void* NP_CALLBACK /* OJI type: jref */
 _getJavaPeer(NPP npp)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaPeer: npp=%p\n", (void*)npp));
   return NULL;
 }
-
-#endif /* OJI */
 
 void NP_CALLBACK
 _pushpopupsenabledstate(NPP npp, NPBool enabled)

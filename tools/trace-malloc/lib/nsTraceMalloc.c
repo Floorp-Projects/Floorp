@@ -140,7 +140,10 @@ static logfile   *logfile_list = NULL;
 static logfile   **logfile_tail = &logfile_list;
 static logfile   *logfp = &default_logfile;
 static PRLock    *tmlock = NULL;
-static char      *sdlogname = NULL; /* filename for shutdown leak log */
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+static char      sdlogname[PATH_MAX] = ""; /* filename for shutdown leak log */
 
 /*
  * This enables/disables trace-malloc logging.
@@ -1349,7 +1352,7 @@ PR_IMPLEMENT(int)
 NS_TraceMallocStartupArgs(int argc, char **argv)
 {
     int i, logfd = -1, consumed, logflags;
-    char *tmlogname = NULL; /* note global |sdlogname| */
+    char *tmlogname = NULL, *sdlogname_local = NULL;
 
     /*
      * Look for the --trace-malloc <logfile> option early, to avoid missing
@@ -1360,8 +1363,8 @@ NS_TraceMallocStartupArgs(int argc, char **argv)
         consumed = 0;
         if (SHOULD_PARSE_ARG(TMLOG_OPTION, tmlogname, argv[i]))
             PARSE_ARG(TMLOG_OPTION, tmlogname, argv, i, consumed);
-        else if (SHOULD_PARSE_ARG(SDLOG_OPTION, sdlogname, argv[i]))
-            PARSE_ARG(SDLOG_OPTION, sdlogname, argv, i, consumed);
+        else if (SHOULD_PARSE_ARG(SDLOG_OPTION, sdlogname_local, argv[i]))
+            PARSE_ARG(SDLOG_OPTION, sdlogname_local, argv, i, consumed);
 
         if (consumed) {
 #ifndef XP_WIN32 /* If we don't comment this out, it will crash Windows. */
@@ -1461,6 +1464,11 @@ NS_TraceMallocStartupArgs(int argc, char **argv)
         }
     }
 
+    if (sdlogname_local) {
+        strncpy(sdlogname, sdlogname_local, sizeof(sdlogname));
+        sdlogname[sizeof(sdlogname) - 1] = '\0';
+    }
+
     NS_TraceMallocStartup(logfd);
     return argc;
 }
@@ -1470,7 +1478,7 @@ NS_TraceMallocShutdown(void)
 {
     logfile *fp;
 
-    if (sdlogname)
+    if (sdlogname[0])
         NS_TraceMallocDumpAllocations(sdlogname);
 
     if (tmstats.backtrace_failures) {

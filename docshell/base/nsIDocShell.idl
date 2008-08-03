@@ -68,7 +68,7 @@ interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 interface nsIDOMStorage;
 
-[scriptable, uuid(4b00222a-8d0a-46d7-a1fe-43bd89d19324)]
+[scriptable, uuid(7d1cf6b9-daa3-476d-8f9f-9eb2a971a95c)]
 interface nsIDocShell : nsISupports
 {
   /**

@@ -107,11 +107,10 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   // top-padding then this step is skipped because it will be a margin
   // root.  It is also skipped if the frame is a margin root for other
   // reasons.
-  void* bf;
   nsIFrame* frame = DescendIntoBlockLevelFrame(aRS.frame);
   nsPresContext* prescontext = frame->PresContext();
   if (0 == aRS.mComputedBorderPadding.top &&
-      NS_SUCCEEDED(frame->QueryInterface(kBlockFrameCID, &bf)) &&
+      nsLayoutUtils::GetAsBlock(frame) &&
       !nsBlockFrame::BlockIsMarginRoot(frame)) {
     // iterate not just through the lines of 'block' but also its
     // overflow lines and the normal and overflow lines of its next in

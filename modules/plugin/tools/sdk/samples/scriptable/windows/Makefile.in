@@ -48,7 +48,6 @@ LIBRARY_NAME = npscriptable
 NO_DIST_INSTALL = 1
 
 REQUIRES = plugin \
-           java \
            xpcom \
            $(NULL)
 

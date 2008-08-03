@@ -114,7 +114,7 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
     nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                              NS_PRINTDIALOGSERVICE_CONTRACTID));
     if (dlgPrint)
-      return dlgPrint->Show(printSettings);
+      return dlgPrint->Show(parent, printSettings);
 
     // Show the built-in dialog instead
     ParamBlock block;
@@ -189,7 +189,7 @@ nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *p
     nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                              NS_PRINTDIALOGSERVICE_CONTRACTID));
     if (dlgPrint)
-      return dlgPrint->ShowPageSetup(printSettings);
+      return dlgPrint->ShowPageSetup(parent, printSettings);
 
     ParamBlock block;
     nsresult rv = block.Init();

@@ -186,9 +186,6 @@ var security = {
 };
 
 function securityOnLoad() {
-  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var pageInfoBundle = document.getElementById("pageinfobundle");
-
   var info = security._getSecurityInfo();
   if (!info) {
     document.getElementById("securityTab").hidden = true;
@@ -199,6 +196,8 @@ function securityOnLoad() {
     document.getElementById("securityTab").hidden = false;
     document.getElementById("securityBox").collapsed = false;
   }
+
+  const pageInfoBundle = document.getElementById("pageinfobundle");
 
   /* Set Identity section text */
   setText("security-identity-domain-value", info.hostName);
@@ -273,35 +272,36 @@ function securityOnLoad() {
   }
 
   /* Set the Technical Detail section messages */
+  const pkiBundle = document.getElementById("pkiBundle");
   var hdr;
   var msg1;
   var msg2;
 
   if (info.isBroken) {
-    hdr = bundle.GetStringFromName("pageInfo_MixedContent");
-    msg1 = bundle.GetStringFromName("pageInfo_Privacy_Mixed1");
-    msg2 = bundle.GetStringFromName("pageInfo_Privacy_None2");
+    hdr = pkiBundle.getString("pageInfo_MixedContent");
+    msg1 = pkiBundle.getString("pageInfo_Privacy_Mixed1");
+    msg2 = pkiBundle.getString("pageInfo_Privacy_None2");
   }
   else if (info.encryptionStrength >= 90) {
-    hdr = bundle.formatStringFromName("pageInfo_StrongEncryption",
-                          [ info.encryptionAlgorithm, info.encryptionStrength + "" ], 2);
-    msg1 = bundle.GetStringFromName("pageInfo_Privacy_Strong1");
-    msg2 = bundle.GetStringFromName("pageInfo_Privacy_Strong2");
+    hdr = pkiBundle.getFormattedString("pageInfo_StrongEncryption",
+                                       [info.encryptionAlgorithm, info.encryptionStrength + ""]);
+    msg1 = pkiBundle.getString("pageInfo_Privacy_Strong1");
+    msg2 = pkiBundle.getString("pageInfo_Privacy_Strong2");
     security._cert = info.cert;
   }
   else if (info.encryptionStrength > 0) {
-    hdr  = bundle.formatStringFromName("pageInfo_WeakEncryption",
-                          [ info.encryptionAlgorithm, info.encryptionStrength + "" ], 2);
-    msg1 = bundle.formatStringFromName("pageInfo_Privacy_Weak1", [ info.hostName ], 1);
-    msg2 = bundle.GetStringFromName("pageInfo_Privacy_Weak2");
+    hdr  = pkiBundle.getFormattedString("pageInfo_WeakEncryption",
+                                        [info.encryptionAlgorithm, info.encryptionStrength + ""]);
+    msg1 = pkiBundle.getFormattedString("pageInfo_Privacy_Weak1", [info.hostName]);
+    msg2 = pkiBundle.getString("pageInfo_Privacy_Weak2");
   }
   else {
-    hdr = bundle.GetStringFromName("pageInfo_NoEncryption");
+    hdr = pkiBundle.getString("pageInfo_NoEncryption");
     if (info.hostName != null)
-      msg1 = bundle.formatStringFromName("pageInfo_Privacy_None1", [ info.hostName ], 1);
+      msg1 = pkiBundle.getFormattedString("pageInfo_Privacy_None1", [info.hostName]);
     else
-      msg1 = bundle.GetStringFromName("pageInfo_Privacy_None3");
-    msg2 = bundle.GetStringFromName("pageInfo_Privacy_None2");
+      msg1 = pkiBundle.getString("pageInfo_Privacy_None3");
+    msg2 = pkiBundle.getString("pageInfo_Privacy_None2");
   }
   setText("security-technical-shortform", hdr);
   setText("security-technical-longform1", msg1);

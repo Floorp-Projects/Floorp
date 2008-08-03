@@ -276,6 +276,47 @@ cairo_type1_font_subset_find_segments (cairo_type1_font_subset_t *font)
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* Search for the definition of key and erase it by overwriting with spaces.
+ * This function is looks for definitions of the form:
+ *
+ * /key1 1234 def
+ * /key2 [12 34 56] def
+ *
+ * ie a key defined as an integer or array of integers.
+ *
+ */
+static void
+cairo_type1_font_erase_dict_key (cairo_type1_font_subset_t *font,
+				 const char *key)
+{
+    const char *start, *p, *segment_end;
+
+    segment_end = font->header_segment + font->header_segment_size;
+
+    start = font->header_segment;
+    do {
+	start = find_token (start, segment_end, key);
+	if (start) {
+	    p = start + strlen(key);
+	    /* skip integers or array of integers */
+	    while (p < segment_end &&
+		   (isspace(*p) ||
+		    isdigit(*p) ||
+		    *p == '[' ||
+		    *p == ']'))
+	    {
+		p++;
+	    }
+
+	    if (p + 3 < segment_end && memcmp(p, "def", 3) == 0) {
+		/* erase definition of the key */
+		memset((char *) start, ' ', p + 3 - start);
+	    }
+	    start += strlen(key);
+	}
+    } while (start);
+}
+
 static cairo_status_t
 cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
 					 const char *name)
@@ -283,14 +324,57 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
     const char *start, *end, *segment_end;
     unsigned int i;
 
+    /* FIXME:
+     * This function assumes that /FontName always appears
+     * before /Encoding. This appears to always be the case with Type1
+     * fonts.
+     *
+     * The more recently added code for removing the UniqueID and XUID
+     * keys can not make any assumptions about the position of the
+     * keys in the dictionary so it is implemented by overwriting the
+     * key definition with spaces before we start copying the font to
+     * the output.
+     *
+     * This code should be rewritten to not make any assumptions about
+     * the order of dictionary keys. This will allow UniqueID to be
+     * stripped out instead of leaving a bunch of spaces in the
+     * output.
+     */
+    cairo_type1_font_erase_dict_key (font, "/UniqueID");
+    cairo_type1_font_erase_dict_key (font, "/XUID");
+
     segment_end = font->header_segment + font->header_segment_size;
 
-    start = find_token (font->header_segment, segment_end, "/FontName");
+    /* Type 1 fonts created by Fontforge have some PostScript code at
+     * the start of the font that skips the font if the printer has a
+     * cached copy of the font with the same unique id. This breaks
+     * our subsetted font so we disable it by searching for the
+     * PostScript operator "known" when used to check for the
+     * "/UniqueID" dictionary key. We append " pop false " after it to
+     * pop the result of this check off the stack and replace it with
+     * "false" to make the PostScript code think "/UniqueID" does not
+     * exist.
+     */
+    end = font->header_segment;
+    start = find_token (font->header_segment, segment_end, "/UniqueID");
+    if (start) {
+	start += 9;
+	while (start < segment_end && isspace (*start))
+	    start++;
+	if (start + 5 < segment_end && memcmp(start, "known", 5) == 0) {
+	    _cairo_output_stream_write (font->output, font->header_segment,
+					start + 5 - font->header_segment);
+	    _cairo_output_stream_printf (font->output, " pop false ");
+	    end = start + 5;
+	}
+    }
+
+    start = find_token (end, segment_end, "/FontName");
     if (start == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    _cairo_output_stream_write (font->output, font->header_segment,
-				start - font->header_segment);
+    _cairo_output_stream_write (font->output, end,
+				start - end);
 
     _cairo_output_stream_printf (font->output, "/FontName /%s def", name);
 
@@ -382,6 +466,7 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
     unsigned char *in, *end;
     char *out;
     int c, p;
+    int i;
 
     in = (unsigned char *) font->eexec_segment;
     end = (unsigned char *) in + font->eexec_segment_size;
@@ -406,6 +491,23 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
 	*out++ = p;
     }
     font->cleartext_end = out;
+
+    /* Overwrite random bytes with spaces.
+     *
+     * The first 4 bytes of the cleartext are the random bytes
+     * required by the encryption algorithm. When encrypting the
+     * cleartext, the first ciphertext byte must not be a white space
+     * character and the first 4 bytes must not be an ASCII Hex
+     * character. Some fonts do not check that their randomly chosen
+     * bytes results in ciphertext that complies with this
+     * restriction. This may cause problems for some PDF consumers. By
+     * replacing the random bytes with spaces, the first four bytes of
+     * ciphertext will always be 0xf9, 0x83, 0xef, 0x00 which complies
+     * with this restriction. Using spaces also means we don't have to
+     * skip over the random bytes when parsing the cleartext.
+     */
+    for (i = 0; i < 4 && i < font->eexec_segment_size; i++)
+	font->cleartext[i] = ' ';
 
     return CAIRO_STATUS_SUCCESS;
 }

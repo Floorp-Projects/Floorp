@@ -61,7 +61,6 @@
 #include "gfxOS2Surface.h"
 #include "gfxContext.h"
 
-class nsIMenuBar;
 class imgIContainer;
 
 //#define DEBUG_FOCUS
@@ -104,7 +103,7 @@ class nsWindow : public nsBaseWidget,
    nsWindow();
    virtual ~nsWindow();
 
-  static void ReleaseGlobals();
+   static void ReleaseGlobals();
 
    // nsIWidget
 
@@ -129,7 +128,7 @@ class nsWindow : public nsBaseWidget,
    // Hierarchy: only interested in widget children (it seems)
    virtual nsIWidget *GetParent();
 
-    NS_IMETHOD              SetSizeMode(PRInt32 aMode);
+   NS_IMETHOD SetSizeMode(PRInt32 aMode);
 
    // Physical properties
    NS_IMETHOD Show( PRBool bState);
@@ -178,7 +177,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
    NS_IMETHOD              SetTitle( const nsAString& aTitle); 
    NS_IMETHOD              SetIcon(const nsAString& aIconSpec); 
-   NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; } 
+   NS_IMETHOD              SetMenuBar(void * aMenuBar) { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 
    NS_IMETHOD              Invalidate( PRBool aIsSynchronous);
    NS_IMETHOD              Invalidate( const nsRect & aRect, PRBool aIsSynchronous);
@@ -194,7 +193,7 @@ class nsWindow : public nsBaseWidget,
    virtual HWND   GetMainWindow() const           { return mWnd; }
 
    // nsSwitchToPMThread interface
-    virtual BOOL            CallMethod(MethodInfo *info);
+   virtual BOOL CallMethod(MethodInfo *info);
 
    // PM methods which need to be public (menus, etc)
    ULONG  GetNextID()    { return mNextID++; }
@@ -203,12 +202,12 @@ class nsWindow : public nsBaseWidget,
    void   NS2PM( RECTL &rcl);
 
 protected:
-    static  BOOL            DealWithPopups ( ULONG inMsg, MRESULT* outResult ) ;
+   static  BOOL            DealWithPopups ( ULONG inMsg, MRESULT* outResult ) ;
 
-    static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
+   static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
 
-    static  nsWindow *      GetNSWindowPtr(HWND aWnd);
-    static  BOOL            SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
+   static  nsWindow *      GetNSWindowPtr(HWND aWnd);
+   static  BOOL            SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
 
    static  nsWindow*   gCurrentWindow;
    // nsWindow methods subclasses must provide for creation to work
@@ -281,7 +280,6 @@ protected:
    PRInt32        mPreferredHeight;
    PRInt32        mPreferredWidth;
    nsToolkit     *mOS2Toolkit;
-   nsIMenuBar    *mMenuBar;
    PRInt32        mWindowState;
    nsRefPtr<gfxOS2Surface> mThebesSurface;
 
@@ -331,6 +329,7 @@ protected:
                                   PRUint32 aWidth, PRUint32 aHeight);
 
    BOOL NotifyForeignChildWindows(HWND aWnd);
+   void ScrollChildWindows(PRInt32 aX, PRInt32 aY);
 
    // Enumeration of the methods which are accessible on the PM thread
    enum {

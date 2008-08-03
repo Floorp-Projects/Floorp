@@ -1,0 +1,115 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla code.
+ *
+ * The Initial Developer of the Original Code is the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Chris Double <chris.double@double.co.nz>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIDOMHTMLElement.idl"
+#include "nsIDOMHTMLMediaError.idl"
+#include "nsIDOMHTMLTimeRanges.idl"
+#include "nsIDOMHTMLByteRanges.idl"
+#include "nsIDOMHTMLVoidCallback.idl"
+
+/**
+ * The nsIDOMHTMLMediaElement interface is an interface to be implemented by the HTML
+ * <audio> and <video> elements.
+ *
+ * For more information on this interface, please see
+ * http://www.whatwg.org/specs/web-apps/current-work/#htmlmediaelement
+ *
+ * @status UNDER_DEVELOPMENT
+ */
+
+[scriptable, uuid(c8ce31b9-d18b-48c4-8309-944f0ccb1435)]
+interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
+{
+  // error state
+  readonly attribute nsIDOMHTMLMediaError error;
+
+  // network state
+           attribute DOMString src;
+  readonly attribute DOMString currentSrc;
+  const unsigned short EMPTY = 0;
+  const unsigned short LOADING = 1;
+  const unsigned short LOADED_METADATA = 2;
+  const unsigned short LOADED_FIRST_FRAME = 3;
+  const unsigned short LOADED = 4;
+  readonly attribute unsigned short networkState;
+  readonly attribute float bufferingRate;
+  readonly attribute boolean bufferingThrottled;
+  readonly attribute nsIDOMHTMLTimeRanges buffered;
+  readonly attribute nsIDOMHTMLByteRanges bufferedBytes;
+  readonly attribute unsigned long totalBytes;
+  void load();
+
+  // ready state
+  const unsigned short DATA_UNAVAILABLE = 0;
+  const unsigned short CAN_SHOW_CURRENT_FRAME = 1;
+  const unsigned short CAN_PLAY = 2;
+  const unsigned short CAN_PLAY_THROUGH = 3;
+  readonly attribute unsigned short readyState;
+  readonly attribute boolean seeking;
+
+  // playback state
+           attribute float currentTime;
+  readonly attribute float duration;
+  readonly attribute unsigned short paused;
+           attribute float defaultPlaybackRate;
+           attribute float playbackRate;
+  readonly attribute nsIDOMHTMLTimeRanges played;
+  readonly attribute nsIDOMHTMLTimeRanges seekable;
+  readonly attribute boolean ended;
+           attribute boolean autoplay;
+  void play();
+  void pause();
+
+  // looping
+           attribute float start;
+           attribute float end;
+           attribute float loopStart;
+           attribute float loopEnd;
+           attribute unsigned long playCount;
+           attribute unsigned long currentLoop;
+
+  // cue points
+  void addCueRange(in DOMString className, in float start, in float end, in boolean pauseOnExit, in nsIDOMHTMLVoidCallback enterCallback, in nsIDOMHTMLVoidCallback exitCallback);
+  void removeCueRanges(in DOMString className);
+
+
+  // controls
+           attribute boolean controls;
+           attribute float volume;
+           attribute boolean muted;
+};

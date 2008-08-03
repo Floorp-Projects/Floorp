@@ -737,7 +737,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 nsCOMPtr<nsIXULDocument> xuldoc =
                     do_QueryInterface(mRoot->GetDocument());
                 if (xuldoc)
-                    xuldoc->AddElementForID(id, realKid);
+                    xuldoc->AddElementForID(realKid);
             }
 
             // Set up the element's 'container' and 'empty' attributes.

@@ -55,6 +55,10 @@ REQUIRES = \
 		string \
 		$(NULL)
 
+ifdef NS_TRACE_MALLOC
+REQUIRES += tracemalloc
+endif
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../build \
 		$(NULL)

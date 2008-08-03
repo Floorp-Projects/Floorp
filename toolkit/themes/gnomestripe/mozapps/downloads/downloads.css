@@ -20,7 +20,7 @@ richlistitem[type="download"][selected="true"] {
   background-image: url(chrome://mozapps/skin/extensions/itemEnabledFader.png);
 }
 
-richlistitem[type="download"][alternate="true"]:not([selected="true"]) {
+richlistitem[type="download"]:not([selected="true"]):nth-child(odd) {
   background-color: -moz-oddtreerow;
 }
 
@@ -30,11 +30,6 @@ richlistitem[type="download"] .name {
 
 richlistitem[type="download"] .dateTime {
   font-size: smaller;
-}
-
-richlistitem[type="download"]:not([selected="true"]) .dateTime,
-richlistitem[type="download"]:not([selected="true"]) .status {
-  color: MenuText;
 }
 
 .mini-button {

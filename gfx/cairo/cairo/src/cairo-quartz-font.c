@@ -127,9 +127,9 @@ struct _cairo_quartz_font_face {
     CGFontRef cgFont;
 };
 
-/**
- ** font face backend
- **/
+/*
+ * font face backend
+ */
 
 static void
 _cairo_quartz_font_face_destroy (void *abstract_face)
@@ -165,7 +165,7 @@ _cairo_quartz_font_face_scaled_font_create (void *abstract_face,
 
     status = _cairo_scaled_font_init (&font->base,
 				      &font_face->base, font_matrix, ctm, options,
-				      &cairo_quartz_scaled_font_backend);
+				      &_cairo_quartz_scaled_font_backend);
     if (status)
 	goto FINISH;
 
@@ -187,6 +187,12 @@ _cairo_quartz_font_face_scaled_font_create (void *abstract_face,
 
 	quartz_CGFontMetrics *m;
 	m = CGFontGetHMetricsPtr (font_face->cgFont);
+
+	/* On OX 10.4, GetHMetricsPtr sometimes returns NULL for unknown reasons */
+	if (!m) {
+	    status = _cairo_error(CAIRO_STATUS_NULL_POINTER);
+	    goto FINISH;
+	}
 
 	fs_metrics.ascent = (m->ascent / ems);
 	fs_metrics.descent = - (m->descent / ems);
@@ -255,9 +261,9 @@ cairo_quartz_font_face_create_for_cgfont (CGFontRef font)
     return &font_face->base;
 }
 
-/**
- ** scaled font backend
- **/
+/*
+ * scaled font backend
+ */
 
 static cairo_quartz_font_face_t *
 _cairo_quartz_scaled_to_face (void *abstract_font)
@@ -735,7 +741,7 @@ _cairo_quartz_ucs4_to_index (void *abstract_font,
     return glyph;
 }
 
-const cairo_scaled_font_backend_t cairo_quartz_scaled_font_backend = {
+const cairo_scaled_font_backend_t _cairo_quartz_scaled_font_backend = {
     CAIRO_FONT_TYPE_QUARTZ,
     _cairo_quartz_font_create_toy,
     _cairo_quartz_font_fini,

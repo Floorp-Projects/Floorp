@@ -51,14 +51,23 @@
 class THEBES_API gfxImageSurface : public gfxASurface {
 public:
     /**
-     * Construct an image surface.
+     * Construct an image surface around an existing buffer of image data.
+     * @param aData A buffer containing the image data
+     * @param aSize The size of the buffer
+     * @param aStride The stride of the buffer
      * @param format Format of the data
-     * @param width Width of the surface in pixels
-     * @param height Height in pixels
      *
      * @see gfxImageFormat
+     */
+    gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
+                    long aStride, gfxImageFormat aFormat);
+
+    /**
+     * Construct an image surface.
+     * @param aSize The size of the buffer
+     * @param format Format of the data
      *
-     * XXX why not unsigned long for the dimensions? And, why not gfxSize?
+     * @see gfxImageFormat
      */
     gfxImageSurface(const gfxIntSize& size, gfxImageFormat format);
     gfxImageSurface(cairo_surface_t *csurf);
@@ -69,17 +78,23 @@ public:
     gfxImageFormat Format() const { return mFormat; }
 
     const gfxIntSize& GetSize() const { return mSize; }
+    PRInt32 Width() const { return mSize.width; }
+    PRInt32 Height() const { return mSize.height; }
 
     /**
      * Distance in bytes between the start of a line and the start of the
      * next line.
      */
-    long Stride() const { return mStride; }
+    PRInt32 Stride() const { return mStride; }
     /**
      * Returns a pointer for the image data. Users of this function can
      * write to it, but must not attempt to free the buffer.
      */
-    unsigned char* Data() { return mData; } // delete this data under us and die.
+    unsigned char* Data() const { return mData; } // delete this data under us and die.
+    /**
+     * Returns the total size of the image data.
+     */
+    PRInt32 GetDataSize() const { return mStride*mSize.height; }
 
     /* Fast copy from another image surface; returns TRUE if successful, FALSE otherwise */
     PRBool CopyFrom (gfxImageSurface *other);

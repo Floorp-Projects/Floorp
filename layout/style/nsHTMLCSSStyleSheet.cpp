@@ -342,7 +342,6 @@ public:
   NS_IMETHOD GetBaseURI(nsIURI** aBaseURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
-  NS_IMETHOD_(PRBool) UseForMedium(nsPresContext* aPresContext) const;
   NS_IMETHOD_(PRBool) HasRules() const;
 
   NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
@@ -367,6 +366,8 @@ public:
 
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsReStyleHint* aResult);
+  NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,
+                                  PRBool* aResult);
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -493,6 +494,13 @@ HTMLCSSStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aD
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::MediumFeaturesChanged(nsPresContext* aPresContext,
+                                             PRBool* aRulesChanged)
+{
+  *aRulesChanged = PR_FALSE;
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP 
@@ -535,12 +543,6 @@ HTMLCSSStyleSheetImpl::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/html");
   return NS_OK;
-}
-
-NS_IMETHODIMP_(PRBool)
-HTMLCSSStyleSheetImpl::UseForMedium(nsPresContext* aPresContext) const
-{
-  return PR_TRUE; // works for all media
 }
 
 NS_IMETHODIMP_(PRBool)

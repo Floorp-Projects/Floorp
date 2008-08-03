@@ -58,7 +58,7 @@ class nsDocShellEditorData;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 
 
-[scriptable, uuid(abe54136-49e5-44ca-a749-290038c6b85d)]
+[scriptable, uuid(c16fde76-3108-450e-8c8c-ae8286f286ed)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */

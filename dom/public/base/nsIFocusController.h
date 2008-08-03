@@ -90,7 +90,7 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFocusController, NS_IFOCUSCONTROLLER_IID)
 
-class nsFocusSuppressor {
+class NS_STACK_CLASS nsFocusSuppressor {
 public:
   ~nsFocusSuppressor()
   {
@@ -128,7 +128,7 @@ private:
   const char *mReason;
 };
 
-class nsFocusScrollSuppressor
+class NS_STACK_CLASS nsFocusScrollSuppressor
 {
 public:
   nsFocusScrollSuppressor(nsIFocusController* aController = nsnull)

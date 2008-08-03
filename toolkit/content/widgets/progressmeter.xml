@@ -63,10 +63,12 @@
     </content>
 
     <implementation>
+      <field name="_alive">true</field>
       <method name="_init">
         <body><![CDATA[
           var stack = document.getAnonymousElementByAttribute(this, "anonid", "stack");
           var spacer = document.getAnonymousElementByAttribute(this, "anonid", "spacer");
+          var self = this;
 
           var isLTR = 
            document.defaultView.getComputedStyle(this, null).direction == "ltr";
@@ -77,14 +79,9 @@
               var width = stack.boxObject.width;
               if (!width) {
                 // Maybe we've been removed from the document.
-                var currentNode = stack;
-                while (currentNode && currentNode != stack.ownerDocument) {
-                  currentNode = currentNode.parentNode;
-                }
-                if (!currentNode) {
+                if (!self._alive)
                   clearInterval(interval);
-                  return;
-                }
+                return;
               }
               width = width >> 2;
               spacer.height = stack.boxObject.height;
@@ -113,15 +110,28 @@
 
   <binding id="progressmeter-periodic-redraw"
            extends="chrome://global/content/bindings/progressmeter.xml#progressmeter">
+    <content>
+      <xul:spacer anonid="visibility-detector" flex="1"/>
+    </content>
     <implementation>
+      <field name="_alive">true</field>
       <method name="_init">
         <body><![CDATA[
           var step = 0;
           var self = this;
+          var spacer = document.getAnonymousElementByAttribute(this, "anonid", "visibility-detector");
           var interval = setInterval(function nextStep() {
             try {
+              // Only bother redrawing when we're visible
+              var width = spacer.boxObject.width;
+              if (!width) {
+                // Maybe we've been removed from the document.
+                if (!self._alive)
+                  clearInterval(interval);
+                return;
+              }
               // Trigger redraw by changing the step attribute
-              step = (step + 1) % 2;
+              step = 1 - step;
               self.setAttribute('step', step);
             } catch (e) {
               clearInterval(interval);

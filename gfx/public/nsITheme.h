@@ -83,7 +83,7 @@ public:
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aClipRect)=0;
+                                  const nsRect& aDirtyRect)=0;
 
   /**
    * Get the computed CSS border for the widget, in pixels.

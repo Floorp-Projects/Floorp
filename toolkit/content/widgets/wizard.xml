@@ -175,12 +175,9 @@
         try {
           // need to create string bundle manually instead of using <xul:stringbundle/>
           // see bug 63370 for details
-          var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
-                                .getService(Components.interfaces.nsILocaleService);
-          var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                      .getService(Components.interfaces.nsIStringBundleService);
-          var bundleURL = "chrome://global/locale/wizard.properties";
-          this._bundle = stringBundleService.createBundle(bundleURL);
+          this._bundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                   .getService(Components.interfaces.nsIStringBundleService)
+                                   .createBundle("chrome://global/locale/wizard.properties");
         } catch (e) {
           // This fails in remote XUL, which has to provide titles for all pages
           // see bug 142502

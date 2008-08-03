@@ -88,11 +88,6 @@ public:
   NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
 
-  // nsSVGGeometryFrame overload:
-  // Lie about our fill/stroke so hit detection works
-  virtual nsresult GetStrokePaintType() { return eStyleSVGPaintType_None; }
-  virtual nsresult GetFillPaintType() { return eStyleSVGPaintType_Color; }
-
   // nsSVGPathGeometryFrame methods:
   virtual PRUint16 GetHittestMask();
 

@@ -109,8 +109,8 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIFocusEventSuppressor.h"
 
-#if defined(XP_MACOSX)
-#include "nsIMenuBar.h"
+#ifdef XP_MACOSX
+#include "nsINativeMenuService.h"
 #define USE_NATIVE_MENUS
 #endif
 
@@ -121,9 +121,6 @@ static PRUint32 gWebShellWindowCount = 0;
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
-
-#include "nsWidgetsCID.h"
-static NS_DEFINE_CID(kMenuBarCID,          NS_MENUBAR_CID);
 
 #define SIZE_PERSISTENCE_TIMEOUT 500 // msec
 
@@ -149,9 +146,11 @@ nsWebShellWindow::~nsWebShellWindow()
   if (gFocusedWindowBeforeSuppression == this) {
     gFocusedWindowBeforeSuppression = nsnull;
   }
-  if (mWindow)
+  if (mWindow) {
     mWindow->SetClientData(0);
-  mWindow = nsnull; // Force release here.
+    mWindow->Destroy();
+    mWindow = nsnull; // Force release here.
+  }
 
   if (mSPTimerLock) {
     PR_Lock(mSPTimerLock);
@@ -552,23 +551,17 @@ static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow)
   aDOMDoc->GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
                                   NS_LITERAL_STRING("menubar"),
                                   getter_AddRefs(menubarElements));
-  
+
   nsCOMPtr<nsIDOMNode> menubarNode;
   if (menubarElements)
     menubarElements->Item(0, getter_AddRefs(menubarNode));
-
   if (!menubarNode)
     return;
 
-  nsCOMPtr<nsIMenuBar> pnsMenuBar = do_CreateInstance(kMenuBarCID);
-  if (!pnsMenuBar)
-    return;
-
-  pnsMenuBar->Create(aParentWindow);
-
-  // fake event
-  nsMenuEvent fake(PR_TRUE, 0, nsnull);
-  pnsMenuBar->MenuConstruct(fake, aParentWindow, menubarNode);
+  nsCOMPtr<nsINativeMenuService> nms = do_GetService("@mozilla.org/widget/nativemenuservice;1");
+  nsCOMPtr<nsIContent> menubarContent(do_QueryInterface(menubarNode));
+  if (nms && menubarContent)
+    nms->CreateNativeMenuBar(aParentWindow, menubarContent);
 }
 #endif
 

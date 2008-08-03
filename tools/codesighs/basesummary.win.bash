@@ -39,9 +39,6 @@
 # ***** END LICENSE BLOCK *****
 
 
-MANIFEST="./mozilla/embedding/config/basebrowser-win"
-
-
 #
 # Check for optional objdir
 # 
@@ -52,6 +49,16 @@ shift
 else
 OBJROOT="./mozilla"
 fi
+
+if [ "$1" = "-s" ]; then 
+SRCROOT="$2"
+shift
+shift
+else
+SRCROOT="./mozilla"
+fi
+
+MANIFEST="$SRCROOT/embedding/config/basebrowser-win"
 
 #
 #   A little help for my friends.

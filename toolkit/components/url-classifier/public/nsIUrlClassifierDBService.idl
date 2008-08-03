@@ -57,7 +57,7 @@ interface nsIUrlClassifierCallback : nsISupports {
  * clients streaming updates to the url-classifier (usually
  * nsUrlClassifierStreamUpdater.
  */
-[scriptable, uuid(1c9bd1c2-f6fe-43a8-a2b9-48359eb4a9b1)]
+[scriptable, uuid(bbb33c65-e783-476c-8db0-6ddb91826c07)]
 interface nsIUrlClassifierUpdateObserver : nsISupports {
   /**
    * The update requested a new URL whose contents should be downloaded
@@ -83,8 +83,10 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
    * A stream update has completed.
    *
    * @param status The state of the update process.
+   * @param delay The amount of time the updater should wait to fetch the
+   *              next URL in ms.
    */
-  void streamFinished(in nsresult status);
+  void streamFinished(in nsresult status, in unsigned long delay);
 
   /* The update has encountered an error and should be cancelled */
   void updateError(in nsresult error);

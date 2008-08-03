@@ -64,11 +64,15 @@ extern JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
-js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector);
+js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector,
+                  JSBool holey = JS_FALSE);
 
 /* Create an array object that starts out already made slow/sparse. */
 extern JSObject *
 js_NewSlowArrayObject(JSContext *cx);
+
+extern JSBool
+js_MakeArraySlow(JSContext *cx, JSObject *obj);
 
 #define JSSLOT_ARRAY_LENGTH            JSSLOT_PRIVATE
 #define JSSLOT_ARRAY_COUNT             (JSSLOT_ARRAY_LENGTH + 1)

@@ -666,7 +666,7 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
   if (!GetPrevContinuation()) {
     aData->currentLine +=
       GetCoord(stylePadding->mPadding.Get(startSide), 0) +
-      styleBorder->GetBorderWidth(startSide) +
+      styleBorder->GetActualBorderWidth(startSide) +
       GetCoord(styleMargin->mMargin.Get(startSide), 0);
   }
 
@@ -703,7 +703,7 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
   if (!lastInFlow->GetNextContinuation()) {
     aData->currentLine +=
       GetCoord(stylePadding->mPadding.Get(endSide), 0) +
-      styleBorder->GetBorderWidth(endSide) +
+      styleBorder->GetActualBorderWidth(endSide) +
       GetCoord(styleMargin->mMargin.Get(endSide), 0);
   }
 }
@@ -1010,7 +1010,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
 
         tracker.Insert(nif, frameStatus);
       }
-      aStatus = NS_FRAME_MERGE_INCOMPLETE(aStatus, frameStatus);
+      NS_MergeReflowStatusInto(&aStatus, frameStatus);
       // At this point it would be nice to assert !frame->GetOverflowRect().IsEmpty(),
       // but we have some unsplittable frames that, when taller than
       // availableHeight will push zero-height content into a next-in-flow.

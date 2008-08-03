@@ -351,8 +351,9 @@
               they're not - this preference uses *those strings* as its values.
               I KID YOU NOT.
             -->
-            <radiogroup id="certSelection" orient="horizontal" preftype="string" 
-	                      preference="security.default_personal_cert" aria-abelledby="CertGroupCaption CertSelectionDesc">
+            <radiogroup id="certSelection" orient="horizontal" preftype="string"
+                        preference="security.default_personal_cert"
+                        aria-labelledby="CertGroupCaption CertSelectionDesc">
               <radio label="&certs.auto;" accesskey="&certs.auto.accesskey;" 
                      value="Select Automatically"/>
               <radio label="&certs.ask;" accesskey="&certs.ask.accesskey;" 

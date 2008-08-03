@@ -1,0 +1,90 @@
+This file describes how pi is computed by the program in 'pi.c' (see
+the utils subdirectory).
+
+Basically, we use Machin's formula, which is what everyone in the
+world uses as a simple method for computing approximations to pi.
+This works for up to a few thousand digits without too much effort.
+Beyond that, though, it gets too slow.
+
+Machin's formula states:
+
+	 pi := 16 * arctan(1/5) - 4 * arctan(1/239)
+
+We compute this in integer arithmetic by first multiplying everything
+through by 10^d, where 'd' is the number of digits of pi we wanted to
+compute.  It turns out, the last few digits will be wrong, but the
+number that are wrong is usually very small (ordinarly only 2-3).
+Having done this, we compute the arctan() function using the formula:
+
+                       1      1       1       1       1     
+       arctan(1/x) := --- - ----- + ----- - ----- + ----- - ...
+                       x    3 x^3   5 x^5   7 x^7   9 x^9
+
+This is done iteratively by computing the first term manually, and
+then iteratively dividing x^2 and k, where k = 3, 5, 7, ... out of the
+current figure.  This is then added to (or subtracted from) a running
+sum, as appropriate.  The iteration continues until we overflow our
+available precision and the current figure goes to zero under integer
+division.  At that point, we're finished.
+
+Actually, we get a couple extra bits of precision out of the fact that
+we know we're computing y * arctan(1/x), by setting up the multiplier
+as:
+
+      y * 10^d
+
+... instead of just 10^d.  There is also a bit of cleverness in how
+the loop is constructed, to avoid special-casing the first term.
+Check out the code for arctan() in 'pi.c', if you are interested in
+seeing how it is set up.
+
+Thanks to Jason P. for this algorithm, which I assembled from notes
+and programs found on his cool "Pile of Pi Programs" page, at:
+
+      http://www.isr.umd.edu/~jasonp/pipage.html
+
+Thanks also to Henrik Johansson <Henrik.Johansson@Nexus.Comm.SE>, from
+whose pi program I borrowed the clever idea of pre-multiplying by x in
+order to avoid a special case on the loop iteration.
+
+------------------------------------------------------------------
+***** BEGIN LICENSE BLOCK *****
+Version: MPL 1.1/GPL 2.0/LGPL 2.1
+
+The contents of this file are subject to the Mozilla Public License Version 
+1.1 (the "License"); you may not use this file except in compliance with 
+the License. You may obtain a copy of the License at 
+http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+for the specific language governing rights and limitations under the
+License.
+
+The Original Code is the MPI Arbitrary Precision Integer Arithmetic
+library.
+
+The Initial Developer of the Original Code is
+Michael J. Fromberger <sting@linguist.dartmouth.edu>
+Portions created by the Initial Developer are Copyright (C) 1998, 2000
+the Initial Developer. All Rights Reserved.
+
+Contributor(s):
+
+Alternatively, the contents of this file may be used under the terms of
+either the GNU General Public License Version 2 or later (the "GPL"), or
+the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+in which case the provisions of the GPL or the LGPL are applicable instead
+of those above. If you wish to allow use of your version of this file only
+under the terms of either the GPL or the LGPL, and not to allow others to
+use your version of this file under the terms of the MPL, indicate your
+decision by deleting the provisions above and replace them with the notice
+and other provisions required by the GPL or the LGPL. If you do not delete
+the provisions above, a recipient may use your version of this file under
+the terms of any one of the MPL, the GPL or the LGPL.
+
+***** END LICENSE BLOCK *****
+
+$Id: pi.txt,v 1.2 2005/02/02 22:28:22 gerv%gerv.net Exp $
+
+

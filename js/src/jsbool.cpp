@@ -54,6 +54,11 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+/* Check pseudo-booleans values. */
+JS_STATIC_ASSERT(JSVAL_VOID == JSVAL_TRUE + JSVAL_ALIGN);
+JS_STATIC_ASSERT(JSVAL_HOLE == JSVAL_VOID + JSVAL_ALIGN);
+JS_STATIC_ASSERT(JSVAL_ARETURN == JSVAL_HOLE + JSVAL_ALIGN);
+
 JSClass js_BooleanClass = {
     "Boolean",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),

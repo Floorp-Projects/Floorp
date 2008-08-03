@@ -38,8 +38,8 @@
 #ifndef CAIRO_H
 #define CAIRO_H
 
-#include <cairo-features.h>
-#include <cairo-deprecated.h>
+#include "cairo-features.h"
+#include "cairo-deprecated.h"
 
 CAIRO_BEGIN_DECLS
 
@@ -203,6 +203,11 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_CLIP_NOT_REPRESENTABLE: clip region not representable in desired format (Since 1.4)
  * @CAIRO_STATUS_TEMP_FILE_ERROR: error creating or writing to a temporary file (Since 1.6)
  * @CAIRO_STATUS_INVALID_STRIDE: invalid value for stride (Since 1.6)
+ * @CAIRO_STATUS_FONT_TYPE_MISMATCH: the font type is not appropriate for the operation (Since 1.8)
+ * @CAIRO_STATUS_USER_FONT_IMMUTABLE: the user-font is immutable (Since 1.8)
+ * @CAIRO_STATUS_USER_FONT_ERROR: error occurred in a user-font callback function (Since 1.8)
+ * @CAIRO_STATUS_NEGATIVE_COUNT: negative number used where it is not allowed (Since 1.8)
+ * @CAIRO_STATUS_INVALID_CLUSTERS: input clusters do not represent the accompanying text and glyph array (Since 1.8)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -237,7 +242,12 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_INDEX,
     CAIRO_STATUS_CLIP_NOT_REPRESENTABLE,
     CAIRO_STATUS_TEMP_FILE_ERROR,
-    CAIRO_STATUS_INVALID_STRIDE
+    CAIRO_STATUS_INVALID_STRIDE,
+    CAIRO_STATUS_FONT_TYPE_MISMATCH,
+    CAIRO_STATUS_USER_FONT_IMMUTABLE,
+    CAIRO_STATUS_USER_FONT_ERROR,
+    CAIRO_STATUS_NEGATIVE_COUNT,
+    CAIRO_STATUS_INVALID_CLUSTERS
     /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h */
 } cairo_status_t;
 
@@ -272,8 +282,8 @@ typedef enum _cairo_content {
  * closure which was specified by the user at the time the write
  * function was registered, the data to write and the length of the
  * data in bytes.  The write function should return
- * CAIRO_STATUS_SUCCESS if all the data was successfully written,
- * CAIRO_STATUS_WRITE_ERROR otherwise.
+ * %CAIRO_STATUS_SUCCESS if all the data was successfully written,
+ * %CAIRO_STATUS_WRITE_ERROR otherwise.
  *
  * Returns: the status code of the write operation
  **/
@@ -292,8 +302,8 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
  * closure which was specified by the user at the time the read
  * function was registered, the buffer to read the data into and the
  * length of the data in bytes.  The read function should return
- * CAIRO_STATUS_SUCCESS if all the data was successfully read,
- * CAIRO_STATUS_READ_ERROR otherwise.
+ * %CAIRO_STATUS_SUCCESS if all the data was successfully read,
+ * %CAIRO_STATUS_READ_ERROR otherwise.
  *
  * Returns: the status code of the read operation
  **/
@@ -811,10 +821,15 @@ typedef struct _cairo_font_face cairo_font_face_t;
  * with respect to the overall origin
  **/
 typedef struct {
-  unsigned long        index;
-  double               x;
-  double               y;
+    unsigned long        index;
+    double               x;
+    double               y;
 } cairo_glyph_t;
+
+typedef struct {
+    int        num_bytes;
+    int        num_glyphs;
+} cairo_text_cluster_t;
 
 /**
  * cairo_text_extents_t:
@@ -910,9 +925,9 @@ typedef struct {
  * Specifies variants of a font face based on their slant.
  **/
 typedef enum _cairo_font_slant {
-  CAIRO_FONT_SLANT_NORMAL,
-  CAIRO_FONT_SLANT_ITALIC,
-  CAIRO_FONT_SLANT_OBLIQUE
+    CAIRO_FONT_SLANT_NORMAL,
+    CAIRO_FONT_SLANT_ITALIC,
+    CAIRO_FONT_SLANT_OBLIQUE
 } cairo_font_slant_t;
 
 /**
@@ -923,8 +938,8 @@ typedef enum _cairo_font_slant {
  * Specifies variants of a font face based on their weight.
  **/
 typedef enum _cairo_font_weight {
-  CAIRO_FONT_WEIGHT_NORMAL,
-  CAIRO_FONT_WEIGHT_BOLD
+    CAIRO_FONT_WEIGHT_NORMAL,
+    CAIRO_FONT_WEIGHT_BOLD
 } cairo_font_weight_t;
 
 /**
@@ -1116,6 +1131,19 @@ cairo_show_text (cairo_t *cr, const char *utf8);
 cairo_public void
 cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs);
 
+cairo_public cairo_bool_t
+cairo_has_show_text_glyphs (cairo_t *cr);
+
+cairo_public void
+cairo_show_text_glyphs (cairo_t			   *cr,
+			const char		   *utf8,
+			int			    utf8_len,
+			const cairo_glyph_t	   *glyphs,
+			int			    num_glyphs,
+			const cairo_text_cluster_t *clusters,
+			int			    num_clusters,
+			cairo_bool_t		    backward);
+
 cairo_public void
 cairo_text_path  (cairo_t *cr, const char *utf8);
 
@@ -1151,12 +1179,14 @@ cairo_font_face_get_reference_count (cairo_font_face_t *font_face);
 cairo_public cairo_status_t
 cairo_font_face_status (cairo_font_face_t *font_face);
 
+
 /**
  * cairo_font_type_t:
  * @CAIRO_FONT_TYPE_TOY: The font was created using cairo's toy font api
  * @CAIRO_FONT_TYPE_FT: The font is of type FreeType
  * @CAIRO_FONT_TYPE_WIN32: The font is of type Win32
  * @CAIRO_FONT_TYPE_QUARTZ: The font is of type Quartz (Since: 1.6)
+ * @CAIRO_FONT_TYPE_USER: The font was create using cairo's user font api (Since: 1.8)
  *
  * #cairo_font_type_t is used to describe the type of a given font
  * face or scaled font. The font types are also known as "font
@@ -1164,7 +1194,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  *
  * The type of a font face is determined by the function used to
  * create it, which will generally be of the form
- * cairo_<emphasis>type</emphasis>_font_face_create. The font face type can be queried
+ * cairo_<emphasis>type</emphasis>_font_face_create(). The font face type can be queried
  * with cairo_font_face_get_type()
  *
  * The various #cairo_font_face_t functions can be used with a font face
@@ -1178,7 +1208,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  * fonts of any type, but some font backends also provide
  * type-specific functions that must only be called with a scaled font
  * of the appropriate type. These functions have names that begin with
- * cairo_<emphasis>type</emphasis>_scaled_font such as cairo_ft_scaled_font_lock_face().
+ * cairo_<emphasis>type</emphasis>_scaled_font() such as cairo_ft_scaled_font_lock_face().
  *
  * The behavior of calling a type-specific function with a scaled font
  * of the wrong type is undefined.
@@ -1191,7 +1221,8 @@ typedef enum _cairo_font_type {
     CAIRO_FONT_TYPE_TOY,
     CAIRO_FONT_TYPE_FT,
     CAIRO_FONT_TYPE_WIN32,
-    CAIRO_FONT_TYPE_QUARTZ
+    CAIRO_FONT_TYPE_QUARTZ,
+    CAIRO_FONT_TYPE_USER
 } cairo_font_type_t;
 
 cairo_public cairo_font_type_t
@@ -1267,8 +1298,202 @@ cairo_scaled_font_get_ctm (cairo_scaled_font_t	*scaled_font,
 			   cairo_matrix_t	*ctm);
 
 cairo_public void
+cairo_scaled_font_get_scale_matrix (cairo_scaled_font_t	*scaled_font,
+				    cairo_matrix_t	*scale_matrix);
+
+cairo_public void
 cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,
 				    cairo_font_options_t	*options);
+
+/* User fonts */
+
+cairo_public cairo_font_face_t *
+cairo_user_font_face_create (void);
+
+/* User-font method signatures */
+
+/**
+ * cairo_user_scaled_font_init_func_t:
+ * @scaled_font: the scaled-font being created
+ * @extents: font extents to fill in, in font space
+ *
+ * #cairo_user_scaled_font_init_func_t is the type of function which is
+ * called when a scaled-font needs to be created for a user font-face.
+ *
+ * The @extents argument is where the user font sets the font extents for
+ * @scaled_font.  It is in font space, which means that for most cases its
+ * ascent and descent members should add to 1.0.  @extents is preset to
+ * hold a value of 1.0 for ascent, height, and max_x_advance, and 0.0 for
+ * descent and max_y_advance members.
+ *
+ * The callback is optional.  If not set, default font extents as described
+ * in the previous paragraph will be used.
+ *
+ * Note that @scaled_font is not fully initialized at this
+ * point and trying to use it for text operations in the callback will result
+ * in deadlock.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success, or
+ * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Returns: the status code of the operation
+ *
+ * Since: 1.8
+ **/
+typedef cairo_status_t (*cairo_user_scaled_font_init_func_t) (cairo_scaled_font_t  *scaled_font,
+							      cairo_font_extents_t *extents);
+
+/**
+ * cairo_user_scaled_font_render_glyph_func_t:
+ * @scaled_font: user scaled-font
+ * @glyph: glyph code to render
+ * @cr: cairo context to draw to, in font space
+ * @extents: glyph extents to fill in, in font space
+ *
+ * #cairo_user_scaled_font_render_glyph_func_t is the type of function which
+ * is called when a user scaled-font needs to render a glyph.
+ *
+ * The callback is mandatory, and expected to draw the glyph with code @glyph to
+ * the cairo context @cr.  @cr is prepared such that the glyph drawing is done in
+ * font space.  That is, the matrix set on @cr is the scale matrix of @scaled_font,
+ * The @extents argument is where the user font sets the font extents for
+ * @scaled_font.  However, if user prefers to draw in user space, they can
+ * achieve that by changing the matrix on @cr.  All cairo rendering operations
+ * to @cr are permitted, however, the result is undefined if any source other
+ * than the default source on @cr is used.  That means, glyph bitmaps should
+ * be rendered using cairo_mask() instead of cairo_paint().
+ *
+ * Other non-default settings on @cr include a font size of 1.0 (given that
+ * it is set up to be in font space), and font options corresponding to
+ * @scaled_font.
+ *
+ * The @extents argument is preset to have <literal>x_bearing</literal>,
+ * <literal>width</literal>, and <literal>y_advance</literal> of zero,
+ * <literal>y_bearing</literal> set to <literal>-font_extents.ascent</literal>,
+ * <literal>height</literal> to <literal>font_extents.ascent+font_extents.descent</literal>,
+ * and <literal>x_advance</literal> to <literal>font_extents.max_x_advance</literal>.
+ * The only field user needs to set in majority of cases is
+ * <literal>x_advance</literal>.
+ * If the <literal>width</literal> field is zero upon the callback returning
+ * (which is its preset value), the glyph extents are automatically computed
+ * based on the drawings done to @cr.  This is in most cases exactly what the
+ * desired behavior is.  However, if for any reason the callback sets the
+ * extents, it must be ink extents, and include the extents of all drawing
+ * done to @cr in the callback.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success, or
+ * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Since: 1.8
+ **/
+typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scaled_font_t  *scaled_font,
+								      unsigned long         glyph,
+								      cairo_t              *cr,
+								      cairo_text_extents_t *extents);
+
+/**
+ * cairo_user_scaled_font_text_to_glyphs_func_t:
+ * @scaled_font: the scaled-font being created
+ * @utf8: input string of text, encoded in UTF-8
+ * @glyphs: output array of glyphs, in font space
+ * @num_glyphs: number of output glyphs
+ *
+ * #cairo_user_scaled_font_text_to_glyphs_func_t is the type of function which
+ * is called to convert input text to an array of glyphs.  This is used by the
+ * cairo_show_text() operation.
+ *
+ * Using this callback the user font has full control on glyphs and their
+ * positions.  That means, it allows for features like ligatures and kerning,
+ * as well as complex <firstterm>shaping</firstterm> required for scripts like
+ * Arabic and Indic.
+ *
+ * The @num_glyphs argument is preset to -1.  The callback should allocate an
+ * array for the resulting glyphs (using malloc()), and populate the glyph indices and
+ * positions (in font space) assuming that the text is to be shown at the
+ * origin.  Cairo will free the glyph array when done with it, no matter what
+ * the return value of the callback is.
+ *
+ * The callback is optional.  If not set, or if @num_glyphs is negative upon
+ * the callback returning (which by default is), the unicode_to_glyph callback
+ * is tried.  See #cairo_user_scaled_font_unicode_to_glyph_func_t.
+ *
+ * Note: The signature and details of this callback is expected to change
+ * before cairo 1.8.0 is released.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success, or
+ * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Since: 1.8
+ **/
+typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_scaled_font_t   *scaled_font,
+									const char            *utf8,
+									cairo_glyph_t        **glyphs,
+									int                   *num_glyphs);
+
+/**
+ * cairo_user_scaled_font_unicode_to_glyph_func_t:
+ * @scaled_font: the scaled-font being created
+ * @unicode: input unicode character code-point
+ * @glyph_index: output glyph index
+ *
+ * #cairo_user_scaled_font_unicode_to_glyph_func_t is the type of function which
+ * is called to convert an input Unicode character to a single glyph.
+ * This is used by the cairo_show_text() operation.
+ *
+ * This callback is used to provide the same functionality as the
+ * text_to_glyphs callback does (see #cairo_user_scaled_font_text_to_glyphs_func_t)
+ * but has much less control on the output,
+ * in exchange for increased ease of use.  The inherent assumption to using
+ * this callback is that each character maps to one glyph, and that the
+ * mapping is context independent.  It also assumes that glyphs are positioned
+ * according to their advance width.  These mean no ligatures, kerning, or
+ * complex scripts can be implemented using this callback.
+ *
+ * The callback is optional, and only used if text_to_glyphs callback is not
+ * set or fails to return glyphs.  If this callback is not set, an identity
+ * mapping from Unicode code-points to glyph indices is assumed.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success, or
+ * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Since: 1.8
+ **/
+typedef cairo_status_t (*cairo_user_scaled_font_unicode_to_glyph_func_t) (cairo_scaled_font_t *scaled_font,
+									  unsigned long        unicode,
+									  unsigned long       *glyph_index);
+
+/* User-font method setters */
+
+cairo_public void
+cairo_user_font_face_set_init_func (cairo_font_face_t                  *font_face,
+				    cairo_user_scaled_font_init_func_t  init_func);
+
+cairo_public void
+cairo_user_font_face_set_render_glyph_func (cairo_font_face_t                          *font_face,
+					    cairo_user_scaled_font_render_glyph_func_t  render_glyph_func);
+
+cairo_public void
+cairo_user_font_face_set_text_to_glyphs_func (cairo_font_face_t                            *font_face,
+					      cairo_user_scaled_font_text_to_glyphs_func_t  text_to_glyphs_func);
+
+cairo_public void
+cairo_user_font_face_set_unicode_to_glyph_func (cairo_font_face_t                              *font_face,
+					        cairo_user_scaled_font_unicode_to_glyph_func_t  unicode_to_glyph_func);
+
+/* User-font method getters */
+
+cairo_public cairo_user_scaled_font_init_func_t
+cairo_user_font_face_get_init_func (cairo_font_face_t *font_face);
+
+cairo_public cairo_user_scaled_font_render_glyph_func_t
+cairo_user_font_face_get_render_glyph_func (cairo_font_face_t *font_face);
+
+cairo_public cairo_user_scaled_font_text_to_glyphs_func_t
+cairo_user_font_face_get_text_to_glyphs_func (cairo_font_face_t *font_face);
+
+cairo_public cairo_user_scaled_font_unicode_to_glyph_func_t
+cairo_user_font_face_get_unicode_to_glyph_func (cairo_font_face_t *font_face);
+
 
 /* Query functions */
 
@@ -1369,26 +1594,26 @@ typedef enum _cairo_path_data_type {
  *
  * <informalexample><programlisting>
  *      int i;
- *      #cairo_path_t *path;
- *      #cairo_path_data_t *data;
+ *      cairo_path_t *path;
+ *      cairo_path_data_t *data;
  * &nbsp;
  *      path = cairo_copy_path (cr);
  * &nbsp;
  *      for (i=0; i < path->num_data; i += path->data[i].header.length) {
  *          data = &amp;path->data[i];
  *          switch (data->header.type) {
- *          case %CAIRO_PATH_MOVE_TO:
+ *          case CAIRO_PATH_MOVE_TO:
  *              do_move_to_things (data[1].point.x, data[1].point.y);
  *              break;
- *          case %CAIRO_PATH_LINE_TO:
+ *          case CAIRO_PATH_LINE_TO:
  *              do_line_to_things (data[1].point.x, data[1].point.y);
  *              break;
- *          case %CAIRO_PATH_CURVE_TO:
+ *          case CAIRO_PATH_CURVE_TO:
  *              do_curve_to_things (data[1].point.x, data[1].point.y,
  *                                  data[2].point.x, data[2].point.y,
  *                                  data[3].point.x, data[3].point.y);
  *              break;
- *          case %CAIRO_PATH_CLOSE_PATH:
+ *          case CAIRO_PATH_CLOSE_PATH:
  *              do_close_path_things ();
  *              break;
  *          }
@@ -1515,7 +1740,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * any type, but some backends also provide type-specific functions
  * that must only be called with a surface of the appropriate
  * type. These functions have names that begin with
- * cairo_<emphasis>type</emphasis>_surface such as cairo_image_surface_get_width().
+ * cairo_<emphasis>type</emphasis>_surface<!-- --> such as cairo_image_surface_get_width().
  *
  * The behavior of calling a type-specific function with a surface of
  * the wrong type is undefined.
@@ -1602,6 +1827,11 @@ cairo_public void
 cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
 				       double		 x_pixels_per_inch,
 				       double		 y_pixels_per_inch);
+
+cairo_public void
+cairo_surface_get_fallback_resolution (cairo_surface_t	*surface,
+				       double		*x_pixels_per_inch,
+				       double		*y_pixels_per_inch);
 
 cairo_public void
 cairo_surface_copy_page (cairo_surface_t *surface);
@@ -1746,7 +1976,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
  * The type of a pattern is determined by the function used to create
  * it. The cairo_pattern_create_rgb() and cairo_pattern_create_rgba()
  * functions create SOLID patterns. The remaining
- * cairo_pattern_create functions map to pattern types in obvious
+ * cairo_pattern_create<!-- --> functions map to pattern types in obvious
  * ways.
  *
  * The pattern type can be queried with cairo_pattern_get_type()

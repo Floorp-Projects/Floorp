@@ -50,7 +50,6 @@ EXPORTS		= \
 		widgetCore.h \
 		nsStringUtil.h \
 		nsIWidget.h \
-		nsIKBStateControl.h \
 		nsGUIEvent.h \
 		nsEvent.h \
 		nsIMouseListener.h \
@@ -64,7 +63,7 @@ EXPORTS		= \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXPORTS		+= nsIMenuBar.h
+EXPORTS		+= nsINativeMenuService.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

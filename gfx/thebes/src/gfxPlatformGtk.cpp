@@ -43,6 +43,7 @@
 
 #include "gfxFontconfigUtils.h"
 #include "gfxPangoFonts.h"
+#include "gfxContext.h"
 
 #include "cairo.h"
 #include <gtk/gtk.h>
@@ -145,25 +146,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
         XRenderPictFormat* xrenderFormat =
             XRenderFindStandardFormat(display, xrenderFormatID);
 
-        if (!xrenderFormat) {
-            // We don't have Render; see if we can just create a pixmap
-            // of the requested depth.
-            GdkVisual* vis;
-
-            if (imageFormat == gfxASurface::ImageFormatRGB24) {
-                vis = gdk_rgb_get_visual();
-                if (vis->type == GDK_VISUAL_TRUE_COLOR)
-                    pixmap = gdk_pixmap_new(nsnull, size.width, size.height, vis->depth);
-            }
-
-            if (pixmap) {
-                gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), nsnull);
-                newSurface = new gfxXlibSurface(display,
-                                                GDK_PIXMAP_XID(GDK_DRAWABLE(pixmap)),
-                                                GDK_VISUAL_XVISUAL(vis),
-                                                size);
-            }
-        } else {
+        if (xrenderFormat) {
             pixmap = gdk_pixmap_new(nsnull, size.width, size.height,
                                     xrenderFormat->depth);
 
@@ -174,25 +157,25 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
                                                 xrenderFormat,
                                                 size);
             }
-        }
 
-        if (newSurface && newSurface->CairoStatus() == 0) {
-            // set up the surface to auto-unref the gdk pixmap when the surface
-            // is released
-            newSurface->SetData(&cairo_gdk_pixmap_key,
-                                pixmap,
-                                do_gdk_pixmap_unref);
-        } else {
-            // something went wrong with the surface creation.  Ignore and let's fall back
-            // to image surfaces.
-            if (pixmap)
-                gdk_pixmap_unref(pixmap);
-            newSurface = nsnull;
+            if (newSurface && newSurface->CairoStatus() == 0) {
+                // set up the surface to auto-unref the gdk pixmap when
+                // the surface is released
+                newSurface->SetData(&cairo_gdk_pixmap_key,
+                                    pixmap,
+                                    do_gdk_pixmap_unref);
+            } else {
+                // something went wrong with the surface creation.
+                // Ignore and let's fall back to image surfaces.
+                if (pixmap)
+                    gdk_pixmap_unref(pixmap);
+                newSurface = nsnull;
+            }
         }
 
         if (!newSurface) {
-            // we couldn't create an xlib surface for whatever reason; fall back to
-            // image surface for the data.
+            // We don't have Render or we couldn't create an xlib surface for
+            // whatever reason; fall back to image surface for the data.
             newSurface = new gfxImageSurface(gfxIntSize(size.width, size.height), imageFormat);
         }
 
@@ -223,6 +206,12 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
         glitz_surface_attach(gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
         newSurface = new gfxGlitzSurface(gdraw, gsurf, PR_TRUE);
 #endif
+    }
+
+    if (newSurface) {
+        gfxContext tmpCtx(newSurface);
+        tmpCtx.SetOperator(gfxContext::OPERATOR_CLEAR);
+        tmpCtx.Paint();
     }
 
     return newSurface.forget();

@@ -66,6 +66,9 @@ struct THEBES_API gfxIntSize {
     gfxIntSize operator-() const {
         return gfxIntSize(- width, - height);
     }
+    gfxIntSize operator-(const gfxIntSize& s) const {
+        return gfxIntSize(width - s.width, height - s.height);
+    }
     gfxIntSize operator*(const PRInt32 v) const {
         return gfxIntSize(width * v, height * v);
     }
@@ -94,6 +97,9 @@ struct THEBES_API gfxSize {
     }
     gfxSize operator-() const {
         return gfxSize(- width, - height);
+    }
+    gfxSize operator-(const gfxSize& s) const {
+        return gfxSize(width - s.width, height - s.height);
     }
     gfxSize operator*(const gfxFloat v) const {
         return gfxSize(width * v, height * v);

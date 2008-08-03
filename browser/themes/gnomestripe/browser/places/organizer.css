@@ -49,6 +49,10 @@
   color: -moz-DialogText;
 }
 
+#placesMenu > menu:hover:not(:active):not([open="true"]) {
+  color: -moz-buttonhovertext;
+}
+
 #placesMenu > menu > .menubar-right {
   -moz-appearance: toolbarbutton-dropdown;
   width: 12px;
@@ -58,10 +62,6 @@
 /* Root View */
 #placesView {
   background-color: Window;
-}
-
-#splitter {
-  min-width: 3px;
 }
 
 /* Place List, Place Content */
@@ -86,6 +86,17 @@
 /* Search Bar */
 #searchbar {
   margin: 6px -4px 0px 2px;
+}
+
+.textbox-input-searchimage {
+  margin: 2px 0;
+  -moz-margin-end: 2px;
+  list-style-image: url("chrome://global/skin/icons/Search-glass.png");
+  cursor: default;
+}
+
+.textbox-input-searchimage[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/icons/Search-glass-rtl.png");
 }
 
 .textbox-input-closebutton {

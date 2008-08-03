@@ -49,7 +49,8 @@
 
 __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
-
+import subprocess
+import sys
 import os
 import time
 import threading
@@ -98,10 +99,23 @@ def GetCpuTime(pid, sampleTime=1):
   # return all zeros on this platform as per the 7/18/07 perf meeting
   return 0
 
+def GetXRes(pid):
+  """Returns the total bytes used by X"""
+  try: 
+    cmdline = "xrestop -m 1 -b | grep -A 15 " + str(pid) + " | tr -d \"\n\" | sed \"s/.*total bytes.*: ~//g\""
+    pipe = subprocess.Popen(cmdline, shell=True, stdout=-1).stdout
+    data = pipe.read()
+    pipe.close()
+    return data
+  except:
+    print "Unexpected error:", sys.exc_info()
+    return -1
+
 counterDict = {}
 counterDict["Private Bytes"] = GetPrivateBytes
 counterDict["RSS"] = GetResidentSize
 counterDict["% Processor Time"] = GetCpuTime
+counterDict["XRes"] = GetXRes
 
 class CounterManager(threading.Thread):
   """This class manages the monitoring of a process with any number of

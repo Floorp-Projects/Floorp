@@ -1,0 +1,14 @@
+<html>
+<head>
+<script>
+function crash() {
+  window.frames[0].onload = null;
+  window.frames[0].location = 'data:text/html;charset=utf-8,2nd%20page';
+}
+</script>
+</head>
+<body onload="crash()">
+  <!-- iframe contents: <html><body onload="document.body.setAttribute('spellcheck', true);"></body></html> -->
+  <iframe src="data:text/html;charset=utf-8;base64,PGh0bWw%2BPGJvZHkgb25sb2FkPSJkb2N1bWVudC5ib2R5LnNldEF0dHJpYnV0ZSgnc3BlbGxjaGVjaycsIHRydWUpOyI%2BPC9ib2R5PjwvaHRtbD4%3D"></iframe>
+</body>
+</html>

@@ -73,8 +73,6 @@
 #include <Resources.h>
 #include <ToolUtils.h>
 
-#include "jri.h"
-
 // The Mixed Mode procInfos defined in npupp.h assume Think C-
 // style calling conventions.  These conventions are used by
 // Metrowerks with the exception of pointer return types, which
@@ -133,7 +131,6 @@ void    Private_StreamAsFile(NPP instance, NPStream* stream, const char* fname);
 void    Private_Print(NPP instance, NPPrint* platformPrint);
 int16   Private_HandleEvent(NPP instance, void* event);
 void    Private_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData);
-jref    Private_GetJavaClass(void);
 NPError Private_GetValue(NPP instance, NPPVariable variable, void *result);
 NPError Private_SetValue(NPP instance, NPNVariable variable, void *value);
 

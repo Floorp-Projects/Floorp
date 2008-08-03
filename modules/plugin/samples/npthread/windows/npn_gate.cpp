@@ -202,24 +202,6 @@ void NPN_ReloadPlugins(NPBool reloadPages)
   NPNFuncs.reloadplugins(reloadPages);
 }
 
-JRIEnv* NPN_GetJavaEnv(void)
-{
-  dbgOut1("wrapper: NPN_GetJavaEnv");
-
-  JRIEnv * rv = NULL;
-	rv = NPNFuncs.getJavaEnv();
-  return rv;
-}
-
-jref NPN_GetJavaPeer(NPP instance)
-{
-  dbgOut1("wrapper: NPN_GetJavaPeer");
-
-  jref rv;
-	rv = NPNFuncs.getJavaPeer(instance);
-  return rv;
-}
-
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void *value)
 {
   dbgOut1("wrapper: NPN_GetValue");

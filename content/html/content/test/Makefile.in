@@ -70,6 +70,8 @@ _TEST_FILES = 	test_bug589.html \
 		bug277890_iframe.html \
 		bug277890_load.html \
 		test_bug277890.html \
+		test_bug287465.html \
+		test_bug295561.html \
 		test_bug300691-1.html \
 		test_bug300691-2.html \
 		test_bug300691-3.xhtml \
@@ -106,13 +108,16 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug394700.html \
 		test_bug395107.html \
 		test_bug401160.xhtml \
+		test_bug406596.html \
 		test_bug408231.html \
 		test_bug417760.html \
 		file_bug417760.png \
-		test_bug428135.xhtml \
-		test_bug406596.html \
+		test_bug418756.html \
 		test_bug421640.html \
+		test_bug424698.html \
+		test_bug428135.xhtml \
 		test_bug430351.html \
+		test_bug430392.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

@@ -95,7 +95,6 @@
 #include "nsParserCIID.h"
 #include "nsStringAPI.h"
 #include "nsUnicharUtils.h"
-#include "plbase64.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsIPrefService.h"
@@ -424,7 +423,7 @@ protected:
   nsresult PopFrame();
 
   nsresult SetFaviconForURI(nsIURI* aPageURI, nsIURI* aFaviconURI,
-                            const nsCString& aData);
+                            const nsString& aData);
 
   PRInt64 ConvertImportedIdToInternalId(const nsCString& aId);
   PRTime ConvertImportedDateToInternalDate(const nsACString& aDate);
@@ -950,8 +949,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
     nsCOMPtr<nsIURI> iconUriObject;
     NS_NewURI(getter_AddRefs(iconUriObject), iconUri);
     if (!icon.IsEmpty() || iconUriObject) {
-      rv = SetFaviconForURI(frame.mPreviousLink, iconUriObject,
-                            NS_ConvertUTF16toUTF8(icon));
+      rv = SetFaviconForURI(frame.mPreviousLink, iconUriObject, icon);
     }
   }
 
@@ -1275,7 +1273,7 @@ BookmarkContentSink::PopFrame()
 
 nsresult
 BookmarkContentSink::SetFaviconForURI(nsIURI* aPageURI, nsIURI* aIconURI,
-                                      const nsCString& aData)
+                                      const nsString& aData)
 {
   nsresult rv;
   static PRUint32 serialNumber = 0; // for made-up favicon URIs
@@ -1315,53 +1313,13 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aPageURI, nsIURI* aIconURI,
     serialNumber++;
   }
 
-  nsCOMPtr<nsIURI> dataURI;
-  rv = NS_NewURI(getter_AddRefs(dataURI), aData);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // use the data: protocol handler to convert the data
-  nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIProtocolHandler> protocolHandler;
-  rv = ioService->GetProtocolHandler("data", getter_AddRefs(protocolHandler));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = protocolHandler->NewChannel(dataURI, getter_AddRefs(channel));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // blocking stream is OK for data URIs
-  nsCOMPtr<nsIInputStream> stream;
-  rv = channel->Open(getter_AddRefs(stream));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 available;
-  rv = stream->Available(&available);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (available == 0)
-    return NS_ERROR_FAILURE;
-
-  // read all the decoded data
-  PRUint8* buffer = static_cast<PRUint8*>
-                               (nsMemory::Alloc(sizeof(PRUint8) * available));
-  if (!buffer)
-    return NS_ERROR_OUT_OF_MEMORY;
-  PRUint32 numRead;
-  rv = stream->Read(reinterpret_cast<char*>(buffer), available, &numRead);
-  if (NS_FAILED(rv) || numRead != available) {
-    nsMemory::Free(buffer);
-    return rv;
-  }
-
-  nsCAutoString mimeType;
-  rv = channel->GetContentType(mimeType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // save in service
-  rv = faviconService->SetFaviconData(faviconURI, buffer, available, mimeType, 0);
-  nsMemory::Free(buffer);
+  rv = faviconService->SetFaviconDataFromDataURL(faviconURI, aData, 0);
   NS_ENSURE_SUCCESS(rv, rv);
+
   rv = faviconService->SetFaviconUrlForPage(aPageURI, faviconURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK; 
 }
 
@@ -1496,27 +1454,6 @@ WriteContainerEpilogue(const nsACString& aIndent, nsIOutputStream* aOutput)
 }
 
 
-// DataToDataURI
-
-static nsresult
-DataToDataURI(PRUint8* aData, PRUint32 aDataLen, const nsACString& aMimeType,
-              nsACString& aDataURI)
-{
-  char* encoded = PL_Base64Encode(reinterpret_cast<const char*>(aData),
-                                  aDataLen, nsnull);
-  if (!encoded)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  aDataURI.AssignLiteral("data:");
-  aDataURI.Append(aMimeType);
-  aDataURI.AppendLiteral(";base64,");
-  aDataURI.Append(encoded);
-
-  nsMemory::Free(encoded);
-  return NS_OK;
-}
-
-
 // WriteFaviconAttribute
 //
 //    This writes the 'ICON="data:asdlfkjas;ldkfja;skdljfasdf"' attribute for
@@ -1560,22 +1497,14 @@ WriteFaviconAttribute(const nsACString& aURI, nsIOutputStream* aOutput)
   if (!faviconScheme.EqualsLiteral("chrome")) {
     // only store data for non-chrome URIs
 
-    // get the data - BE SURE TO FREE
-    nsCAutoString mimeType;
-    PRUint32 dataLen;
-    PRUint8* data;
-    rv = faviconService->GetFaviconData(faviconURI, mimeType, &dataLen, &data);
+    nsAutoString faviconContents;
+    rv = faviconService->GetFaviconDataAsDataURL(faviconURI, faviconContents);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (dataLen > 0) {
-      // convert to URI
-      nsCString faviconContents;
-      rv = DataToDataURI(data, dataLen, mimeType, faviconContents);
-      nsMemory::Free(data);
-      NS_ENSURE_SUCCESS(rv, rv);
-
+    if (faviconContents.Length() > 0) {
       rv = aOutput->Write(kIconAttribute, sizeof(kIconAttribute)-1, &dummy);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = aOutput->Write(faviconContents.get(), faviconContents.Length(), &dummy);
+      NS_ConvertUTF16toUTF8 utf8Favicon(faviconContents);
+      rv = aOutput->Write(utf8Favicon.get(), utf8Favicon.Length(), &dummy);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
       NS_ENSURE_SUCCESS(rv, rv);

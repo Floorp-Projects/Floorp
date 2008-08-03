@@ -156,7 +156,6 @@ struct nsContentAndOffset
 #define CALC_DEBUG             0
 
 
-#include "nsICaret.h"
 #include "nsILineIterator.h"
 
 //non Hack prototypes
@@ -278,6 +277,17 @@ nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIn
 }
 #endif
 // end nsIFrameDebug
+
+void
+NS_MergeReflowStatusInto(nsReflowStatus* aPrimary, nsReflowStatus aSecondary)
+{
+  *aPrimary |= aSecondary &
+    (NS_FRAME_NOT_COMPLETE | NS_FRAME_OVERFLOW_INCOMPLETE |
+     NS_FRAME_TRUNCATED | NS_FRAME_REFLOW_NEXTINFLOW);
+  if (*aPrimary & NS_FRAME_NOT_COMPLETE) {
+    *aPrimary &= ~NS_FRAME_OVERFLOW_INCOMPLETE;
+  }
+}
 
 void
 nsWeakFrame::Init(nsIFrame* aFrame)
@@ -576,7 +586,7 @@ nsIFrame::GetUsedBorder() const
     return result;
   }
 
-  return GetStyleBorder()->GetBorder();
+  return GetStyleBorder()->GetActualBorder();
 }
 
 /* virtual */ nsMargin
@@ -784,7 +794,7 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
   gfxRGBA c(color);
   c.a = .5;
 
-  nsRefPtr<gfxContext> ctx = aCtx->ThebesContext();
+  gfxContext *ctx = aCtx->ThebesContext();
   ctx->SetColor(c);
 
   nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
@@ -902,6 +912,12 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
   // their parent is hidden.
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
+
+  if (GetStyleBorder()->mBoxShadow) {
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+        nsDisplayBoxShadow(this));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Here we don't try to detect background propagation. Frames that might
   // receive a propagated background should just set aForceBackground to
@@ -2324,7 +2340,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
                            parentContent, aEvent, aEventStatus);
 }
 
-struct FrameContentRange {
+struct NS_STACK_CLASS FrameContentRange {
   FrameContentRange(nsIContent* aContent, PRInt32 aStart, PRInt32 aEnd) :
     content(aContent), start(aStart), end(aEnd) { }
   nsCOMPtr<nsIContent> content;
@@ -2512,10 +2528,8 @@ static FrameTarget GetSelectionClosestFrameForLine(
 static FrameTarget GetSelectionClosestFrameForBlock(nsIFrame* aFrame,
                                                     nsPoint aPoint)
 {
-  nsresult rv;
-  nsBlockFrame* bf; // used only for QI
-  rv = aFrame->QueryInterface(kBlockFrameCID, (void**)&bf);
-  if (NS_FAILED(rv))
+  nsBlockFrame* bf = nsLayoutUtils::GetAsBlock(aFrame); // used only for QI
+  if (!bf)
     return FrameTarget::Null();
 
   // This code searches for the correct line
@@ -2952,11 +2966,6 @@ AddCoord(const nsStyleCoord& aStyle,
     case eStyleUnit_Percent:
       *aPercent += aStyle.GetPercentValue();
       break;
-    case eStyleUnit_Chars: {
-      *aCoord += nsLayoutUtils::CharsToCoord(aStyle, aRenderingContext,
-                                             aFrame->GetStyleContext());
-      break;
-    }
     default:
       break;
   }
@@ -2980,8 +2989,8 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
            &result.hPadding, &result.hPctPadding);
 
   const nsStyleBorder *styleBorder = GetStyleBorder();
-  result.hBorder += styleBorder->GetBorderWidth(NS_SIDE_LEFT);
-  result.hBorder += styleBorder->GetBorderWidth(NS_SIDE_RIGHT);
+  result.hBorder += styleBorder->GetActualBorderWidth(NS_SIDE_LEFT);
+  result.hBorder += styleBorder->GetActualBorderWidth(NS_SIDE_RIGHT);
 
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (IsThemed(disp)) {
@@ -3077,16 +3086,16 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 
   if (!IsAutoHeight(stylePos->mHeight, aCBSize.height)) {
     result.height =
-      nsLayoutUtils::ComputeHeightDependentValue(aRenderingContext, this,
-        aCBSize.height, stylePos->mHeight) -
+      nsLayoutUtils::ComputeHeightDependentValue(aCBSize.height,
+                                                 stylePos->mHeight) -
       boxSizingAdjust.height;
   }
 
   if (result.height != NS_UNCONSTRAINEDSIZE) {
     if (!IsAutoHeight(stylePos->mMaxHeight, aCBSize.height)) {
       nscoord maxHeight =
-        nsLayoutUtils::ComputeHeightDependentValue(aRenderingContext, this,
-          aCBSize.height, stylePos->mMaxHeight) -
+        nsLayoutUtils::ComputeHeightDependentValue(aCBSize.height,
+                                                   stylePos->mMaxHeight) -
         boxSizingAdjust.height;
       if (maxHeight < result.height)
         result.height = maxHeight;
@@ -3094,8 +3103,8 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 
     if (!IsAutoHeight(stylePos->mMinHeight, aCBSize.height)) {
       nscoord minHeight =
-        nsLayoutUtils::ComputeHeightDependentValue(aRenderingContext, this,
-          aCBSize.height, stylePos->mMinHeight) -
+        nsLayoutUtils::ComputeHeightDependentValue(aCBSize.height,
+                                                   stylePos->mMinHeight) -
         boxSizingAdjust.height;
       if (minHeight > result.height)
         result.height = minHeight;
@@ -3466,7 +3475,20 @@ nsIntRect nsIFrame::GetScreenRectExternal() const
 
 nsIntRect nsIFrame::GetScreenRect() const
 {
-  nsIntRect retval(0,0,0,0);
+  nsRect r = GetScreenRectInAppUnits().ScaleRoundOutInverse(PresContext()->AppUnitsPerDevPixel());
+  // nsRect and nsIntRect are not necessarily the same
+  return nsIntRect(r.x, r.y, r.width, r.height);
+}
+
+// virtual
+nsRect nsIFrame::GetScreenRectInAppUnitsExternal() const
+{
+  return GetScreenRectInAppUnits();
+}
+
+nsRect nsIFrame::GetScreenRectInAppUnits() const
+{
+  nsRect retval(0,0,0,0);
   nsPoint toViewOffset(0,0);
   nsIView* view = GetClosestView(&toViewOffset);
 
@@ -3475,14 +3497,14 @@ nsIntRect nsIFrame::GetScreenRect() const
     nsIWidget* widget = view->GetNearestWidget(&toWidgetOffset);
 
     if (widget) {
-      nsRect ourRect = mRect;
-      ourRect.MoveTo(toViewOffset + toWidgetOffset);
-      ourRect.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
-      // Is it safe to pass the same rect for both args of WidgetToScreen?
-      // It's not clear, so let's not...
-      nsIntRect ourPxRect(ourRect.x, ourRect.y, ourRect.width, ourRect.height);
-      
-      widget->WidgetToScreen(ourPxRect, retval);
+      // WidgetToScreen really should take nsIntRect, not nsRect
+      nsIntRect localRect(0,0,0,0), screenRect;
+      widget->WidgetToScreen(localRect, screenRect);
+
+      retval = mRect;
+      retval.MoveTo(toViewOffset + toWidgetOffset);
+      retval.x += PresContext()->DevPixelsToAppUnits(screenRect.x);
+      retval.y += PresContext()->DevPixelsToAppUnits(screenRect.y);
     }
   }
 
@@ -3759,7 +3781,7 @@ nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
   // may be moving.
   const nsStyleBorder* border = GetStyleBorder();
   NS_FOR_CSS_SIDES(side) {
-    if (border->GetBorderWidth(side) != 0) {
+    if (border->GetActualBorderWidth(side) != 0) {
       Invalidate(nsRect(0, 0, mRect.width, mRect.height));
       return;
     }
@@ -4593,12 +4615,10 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
     return result;
   
   // Check the frame itself
-  nsBlockFrame* bf; // used only for QI
-  rv = aFrame->QueryInterface(kBlockFrameCID, (void**)&bf);
   // Fall through "special" block frames because their mContent is the content
   // of the inline frames they were created from. The first/last child of
   // such frames is the real block frame we're looking for.
-  if (NS_SUCCEEDED(rv) && !(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) ||
+  if (nsLayoutUtils::GetAsBlock(aFrame) && !(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) ||
       aFrame->GetType() == nsGkAtoms::brFrame) {
     nsIContent* content = aFrame->GetContent();
     result.mContent = content->GetParent();
@@ -4644,7 +4664,6 @@ nsresult
 nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct *aPos)
 {
   nsIFrame* frame = this;
-  nsBlockFrame* bf;  // used only for QI
   nsContentAndOffset blockFrameOrBR;
   blockFrameOrBR.mContent = nsnull;
   PRBool reachedBlockAncestor = PR_FALSE;
@@ -4674,7 +4693,7 @@ nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct *aPos)
         break;
       }
       frame = parent;
-      reachedBlockAncestor = NS_SUCCEEDED(frame->QueryInterface(kBlockFrameCID, (void**)&bf));
+      reachedBlockAncestor = (nsLayoutUtils::GetAsBlock(frame) != nsnull);
     }
     if (reachedBlockAncestor) { // no "stop frame" found
       aPos->mResultContent = frame->GetContent();
@@ -4699,7 +4718,7 @@ nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct *aPos)
         break;
       }
       frame = parent;
-      reachedBlockAncestor = NS_SUCCEEDED(frame->QueryInterface(kBlockFrameCID, (void**)&bf));
+      reachedBlockAncestor = (nsLayoutUtils::GetAsBlock(frame) != nsnull);
     }
     if (reachedBlockAncestor) { // no "stop frame" found
       aPos->mResultContent = frame->GetContent();
@@ -5358,14 +5377,51 @@ IsInlineFrame(nsIFrame *aFrame)
          type == nsGkAtoms::positionedInlineFrame;
 }
 
+nsRect
+nsIFrame::GetAdditionalOverflow(const nsRect& aOverflowArea,
+                                const nsSize& aNewSize)
+{
+  nsRect overflowRect;
+
+  // outline
+  PRBool hasOutline;
+  overflowRect = ComputeOutlineRect(this, &hasOutline, aOverflowArea);
+
+  // box-shadow
+  nsCSSShadowArray* boxShadows = GetStyleBorder()->mBoxShadow;
+  if (boxShadows) {
+    for (PRUint32 i = 0; i < boxShadows->Length(); ++i) {
+      nsRect tmpRect(nsPoint(0, 0), aNewSize);
+      nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
+      nscoord xOffset = shadow->mXOffset.GetCoordValue();
+      nscoord yOffset = shadow->mYOffset.GetCoordValue();
+      nscoord outsetRadius = shadow->mRadius.GetCoordValue() +
+                             shadow->mSpread.GetCoordValue();
+
+      tmpRect.MoveBy(nsPoint(xOffset, yOffset));
+      tmpRect.Inflate(outsetRadius, outsetRadius);
+
+      overflowRect.UnionRect(overflowRect, tmpRect);
+    }
+  }
+
+  // Absolute position clipping
+  PRBool hasAbsPosClip;
+  nsRect absPosClipRect;
+  hasAbsPosClip = GetAbsPosClipRect(GetStyleDisplay(), &absPosClipRect, aNewSize);
+  if (hasAbsPosClip) {
+    overflowRect.IntersectRect(overflowRect, absPosClipRect);
+  }
+
+  return overflowRect;
+}
+
 void 
 nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
 {
   // This is now called FinishAndStoreOverflow() instead of 
   // StoreOverflow() because frame-generic ways of adding overflow
   // can happen here, e.g. CSS2 outline and native theme.
-  // If we find more things other than outline that need to be added,
-  // we should think about starting a new method like GetAdditionalOverflow()
   NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
                aOverflowArea->Contains(nsRect(nsPoint(0, 0), aNewSize)),
                "Computed overflow area must contain frame bounds");
@@ -5402,21 +5458,13 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     geometricOverflow = PR_FALSE;
   }
 
-  PRBool hasOutline;
-  nsRect outlineRect(ComputeOutlineRect(this, &hasOutline, *aOverflowArea));
+  nsRect overflowRect = GetAdditionalOverflow(*aOverflowArea, aNewSize);
 
-  PRBool hasAbsPosClip;
-  nsRect absPosClipRect;
-  hasAbsPosClip = GetAbsPosClipRect(disp, &absPosClipRect, aNewSize);
-  if (hasAbsPosClip) {
-    outlineRect.IntersectRect(outlineRect, absPosClipRect);
-  }
-
-  if (outlineRect != nsRect(nsPoint(0, 0), aNewSize)) {
+  if (overflowRect != nsRect(nsPoint(0, 0), aNewSize)) {
     mState |= NS_FRAME_OUTSIDE_CHILDREN;
     nsRect* overflowArea = GetOverflowAreaProperty(PR_TRUE); 
     NS_ASSERTION(overflowArea, "should have created rect");
-    *aOverflowArea = *overflowArea = outlineRect;
+    *aOverflowArea = *overflowArea = overflowRect;
   } 
   else {
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
@@ -5669,7 +5717,7 @@ nsFrame::GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame)
     //see bug 278197 comment #12 #13 for details
     while ((siblingFrame = child->GetNextSibling()) &&
            (content = siblingFrame->GetContent()) &&
-           !content->IsNativeAnonymous())
+           !content->IsRootOfNativeAnonymousSubtree())
       child = siblingFrame;
     *aFrame = child;
   }
@@ -5801,7 +5849,8 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
       if (!isFocusable && !aWithMouse &&
           GetType() == nsGkAtoms::scrollFrame &&
           mContent->IsNodeOfType(nsINode::eHTML) &&
-          !mContent->IsNativeAnonymous() && mContent->GetParent() &&
+          !mContent->IsRootOfNativeAnonymousSubtree() &&
+          mContent->GetParent() &&
           !mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex)) {
         // Elements with scrollable view are focusable with script & tabbable
         // Otherwise you couldn't scroll them with keyboard, which is

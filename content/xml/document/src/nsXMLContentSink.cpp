@@ -589,6 +589,10 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
   if ((nodeInfo->NamespaceID() == kNameSpaceID_XHTML &&
        (nodeInfo->NameAtom() == nsGkAtoms::select ||
         nodeInfo->NameAtom() == nsGkAtoms::textarea ||
+#ifdef MOZ_MEDIA
+        nodeInfo->NameAtom() == nsGkAtoms::video ||
+        nodeInfo->NameAtom() == nsGkAtoms::audio ||
+#endif
         nodeInfo->NameAtom() == nsGkAtoms::object ||
         nodeInfo->NameAtom() == nsGkAtoms::applet))
 #ifdef MOZ_XTF
@@ -1156,7 +1160,8 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
   DidAddContent();
 
 #ifdef MOZ_SVG
-  if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
+  if (mDocument &&
+      content->GetNameSpaceID() == kNameSpaceID_SVG &&
       content->HasAttr(kNameSpaceID_None, nsGkAtoms::onload)) {
     FlushTags();
 
@@ -1388,6 +1393,33 @@ nsXMLContentSink::ParsePIData(const nsString &aData, nsString &aHref,
   nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::alternate, alternate);
 
   aIsAlternate = alternate.EqualsLiteral("yes");
+}
+
+/*
+ * Extends nsContentSink::ProcessMETATag to grab the 'viewport' meta tag. This
+ * information is ignored by the generic content sink because it only stores
+ * http-equiv meta tags. We need it in the XMLContentSink for XHTML documents.
+ *
+ * Initially implemented for bug #436083
+ */
+nsresult
+nsXMLContentSink::ProcessMETATag(nsIContent *aContent) {
+
+  /* Call the superclass method. */
+  nsContentSink::ProcessMETATag(aContent);
+
+  nsresult rv = NS_OK;
+
+  /* Look for the viewport meta tag. If we find it, process it and put the
+   * data into the document header. */
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                            nsGkAtoms::viewport, eIgnoreCase)) {
+    nsAutoString value;
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, value);
+    rv = nsContentUtils::ProcessViewportInfo(mDocument, value);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP

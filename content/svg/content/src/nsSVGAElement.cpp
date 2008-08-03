@@ -39,7 +39,7 @@
 #include "nsIDOMSVGAElement.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsILink.h"
-#include "nsSVGAnimatedString.h"
+#include "nsSVGString.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 
@@ -54,7 +54,6 @@ protected:
   friend nsresult NS_NewSVGAElement(nsIContent **aResult,
                                     nsINodeInfo *aNodeInfo);
   nsSVGAElement(nsINodeInfo *aNodeInfo);
-  nsresult Init();
 
 public:
   // interfaces:
@@ -87,11 +86,20 @@ public:
 
 protected:
 
-  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
-  nsCOMPtr<nsIDOMSVGAnimatedString> mTarget;
+  virtual StringAttributesInfo GetStringInfo();
+
+  enum { HREF, TARGET };
+  nsSVGString mStringAttributes[2];
+  static StringInfo sStringInfo[2];
 
   // The cached visited state (for the implementation of nsILink)
   nsLinkState mLinkState;
+};
+
+nsSVGElement::StringInfo nsSVGAElement::sStringInfo[2] =
+{
+  { &nsGkAtoms::href, kNameSpaceID_XLink },
+  { &nsGkAtoms::target, kNameSpaceID_None }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(A)
@@ -122,37 +130,6 @@ nsSVGAElement::nsSVGAElement(nsINodeInfo *aNodeInfo)
 {
 }
 
-nsresult
-nsSVGAElement::Init()
-{
-  nsresult rv = nsSVGAElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // nsIDOMSVGURIReference properties
-
-  // DOM property: href , #REQUIRED attrib: xlink:href
-  // XXX: enforce requiredness
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mHref));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = AddMappedSVGValue(nsGkAtoms::href, mHref, kNameSpaceID_XLink);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // nsIDOMSVGURIReference properties
-
-  // DOM property: target , #IMPLIED attrib: target
-  {
-    rv = NS_NewSVGAnimatedString(getter_AddRefs(mTarget));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = AddMappedSVGValue(nsGkAtoms::target, mTarget);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-
 //----------------------------------------------------------------------
 // nsIDOMSVGURIReference methods
 
@@ -160,9 +137,7 @@ nsSVGAElement::Init()
 NS_IMETHODIMP
 nsSVGAElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 {
-  *aHref = mHref;
-  NS_IF_ADDREF(*aHref);
-  return NS_OK;
+  return mStringAttributes[HREF].ToDOMAnimatedString(aHref, this);
 }
 
 
@@ -194,9 +169,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGAElement)
 NS_IMETHODIMP
 nsSVGAElement::GetTarget(nsIDOMSVGAnimatedString * *aTarget)
 {
-  *aTarget = mTarget;
-  NS_IF_ADDREF(*aTarget);
-  return NS_OK;
+  return mStringAttributes[TARGET].ToDOMAnimatedString(aTarget, this);
 }
 
 
@@ -303,9 +276,32 @@ nsSVGAElement::GetLinkTarget(nsAString& aTarget)
 {
   GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
+
+    static nsIContent::AttrValuesArray sShowVals[] =
+      { &nsGkAtoms::_new, &nsGkAtoms::replace, nsnull };
+
+    switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
+                            sShowVals, eCaseMatters)) {
+    case 0:
+      aTarget.AssignLiteral("_blank");
+      return;
+    case 1:
+      return;
+    }
     nsIDocument* ownerDoc = GetOwnerDoc();
     if (ownerDoc) {
       ownerDoc->GetBaseTarget(aTarget);
     }
   }
 }
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::StringAttributesInfo
+nsSVGAElement::GetStringInfo()
+{
+  return StringAttributesInfo(mStringAttributes, sStringInfo,
+                              NS_ARRAY_LENGTH(sStringInfo));
+}
+

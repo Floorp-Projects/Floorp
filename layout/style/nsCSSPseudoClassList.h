@@ -78,6 +78,13 @@ CSS_PSEUDO_CLASS(firstNode, ":-moz-first-node")
 CSS_PSEUDO_CLASS(lastChild, ":last-child")
 CSS_PSEUDO_CLASS(lastNode, ":-moz-last-node")
 CSS_PSEUDO_CLASS(onlyChild, ":only-child")
+CSS_PSEUDO_CLASS(firstOfType, ":first-of-type")
+CSS_PSEUDO_CLASS(lastOfType, ":last-of-type")
+CSS_PSEUDO_CLASS(onlyOfType, ":only-of-type")
+CSS_PSEUDO_CLASS(nthChild, ":nth-child")
+CSS_PSEUDO_CLASS(nthLastChild, ":nth-last-child")
+CSS_PSEUDO_CLASS(nthOfType, ":nth-of-type")
+CSS_PSEUDO_CLASS(nthLastOfType, ":nth-last-of-type")
 
 // Image, object, etc state pseudo-classes
 CSS_PSEUDO_CLASS(mozBroken, ":-moz-broken")

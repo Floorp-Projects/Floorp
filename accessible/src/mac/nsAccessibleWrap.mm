@@ -169,8 +169,18 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return FirePlatformEvent(aEvent);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+nsresult
+nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   PRUint32 eventType;
-  rv = aEvent->GetEventType(&eventType);
+  nsresult rv = aEvent->GetEventType(&eventType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ignore everything but focus-changed and value-changed events for now.

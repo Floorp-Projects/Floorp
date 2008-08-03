@@ -283,36 +283,6 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
   return NS_OK;
 }
 
-#ifdef DEBUG_john
-nsresult
-nsHTMLSelectElement::PrintOptions(nsIContent* aOptions, PRInt32 tabs)
-{
-  for (PRInt32 i=0;i<tabs;i++) {
-    printf("  ");
-  }
-
-  nsCOMPtr<nsIDOMHTMLElement> elem(do_QueryInterface(aOptions));
-  if (elem) {
-    nsAutoString s;
-    elem->GetTagName(s);
-    printf("<%s>\n", NS_ConvertUTF16toUTF8(s).get());
-  } else {
-    printf(">>text\n");
-  }
-
-  // Recurse down into optgroups
-  if (IsOptGroup(aOptions)) {
-    PRUint32 numChildren = aOptions->GetChildCount();
-
-    for (PRUint32 i = 0; i < numChildren; ++i) {
-      PrintOptions(aOptions->GetChildAt(i), tabs + 1);
-    }
-  }
-
-  return NS_OK;
-}
-#endif
-
 nsresult
 nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
                                            PRInt32 aListIndex,

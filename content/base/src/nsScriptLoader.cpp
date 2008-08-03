@@ -537,8 +537,12 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  nsIScriptGlobalObject *globalObject = mDocument->GetScriptGlobalObject();
-  NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
+  nsPIDOMWindow *pwin = mDocument->GetInnerWindow();
+  if (!pwin || !pwin->IsInnerWindow()) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIScriptGlobalObject> globalObject = do_QueryInterface(pwin);
+  NS_ASSERTION(globalObject, "windows must be global objects");
 
   // Get the script-type to be used by this element.
   nsCOMPtr<nsIContent> scriptContent(do_QueryInterface(aRequest->mElement));

@@ -60,17 +60,24 @@ treechildren::-moz-tree-image(container, OrganizerQuery_BookmarksMenu) {
   -moz-image-region: auto;
 }
 
+treechildren::-moz-tree-image(container, OrganizerQuery_UnfiledBookmarks) {
+  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
+  -moz-image-region: auto;
+}
+
 /* query-nodes should be styled even if they're not expandable */
 treechildren::-moz-tree-image(title, query) {
   list-style-image: url("chrome://browser/skin/places/query.png");
 }
 
-treechildren::-moz-tree-image(title, query, tagContainer) {
+treechildren::-moz-tree-image(title, query, tagContainer),
+treechildren::-moz-tree-image(container, OrganizerQuery_Tags) {
   list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
 }
 
+/* calendar icon for folders grouping items by date */
 treechildren::-moz-tree-image(title, query, dayContainer) {
-  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
+  list-style-image: url("chrome://browser/skin/places/calendar.png");
 }
 
 treechildren::-moz-tree-image(title, query, hostContainer) {

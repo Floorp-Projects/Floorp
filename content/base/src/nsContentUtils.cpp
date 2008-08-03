@@ -136,7 +136,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsTPtrArray.h"
 #include "nsGUIEvent.h"
 #include "nsMutationEvent.h"
-#include "nsIKBStateControl.h"
 #include "nsIMEStateManager.h"
 #include "nsContentErrors.h"
 #include "nsUnicharUtilCIID.h"
@@ -151,6 +150,10 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIRunnable.h"
 #include "nsDOMJSUtils.h"
+#include "nsGenericHTMLElement.h"
+#include "nsAttrValue.h"
+#include "nsReferencedElement.h"
+#include "nsIUGenCategory.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -192,6 +195,7 @@ PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsICaseConversion *nsContentUtils::sCaseConv;
+nsIUGenCategory *nsContentUtils::sGenCat;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
 PRInt32 nsContentUtils::sScriptRootCount[NS_STID_ARRAY_UBOUND];
@@ -293,6 +297,9 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = CallGetService(NS_UNICHARUTIL_CONTRACTID, &sCaseConv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Ignore failure and just don't load images
@@ -429,6 +436,28 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::onSVGZoom,                     { NS_SVG_ZOOM, EventNameType_None }},
     { &nsGkAtoms::onzoom,                        { NS_SVG_ZOOM, EventNameType_SVGSVG }}
 #endif // MOZ_SVG
+#ifdef MOZ_MEDIA 
+   ,{ &nsGkAtoms::onloadstart,                   { NS_LOADSTART, EventNameType_HTML }},
+    { &nsGkAtoms::onprogress,                    { NS_PROGRESS, EventNameType_HTML }},
+    { &nsGkAtoms::onloadedmetadata,              { NS_LOADEDMETADATA, EventNameType_HTML }},
+    { &nsGkAtoms::onloadedfirstframe,            { NS_LOADEDFIRSTFRAME, EventNameType_HTML }},
+    { &nsGkAtoms::onemptied,                     { NS_EMPTIED, EventNameType_HTML }},
+    { &nsGkAtoms::onstalled,                     { NS_STALLED, EventNameType_HTML }},
+    { &nsGkAtoms::onplay,                        { NS_PLAY, EventNameType_HTML }},
+    { &nsGkAtoms::onpause,                       { NS_PAUSE, EventNameType_HTML }},
+    { &nsGkAtoms::onwaiting,                     { NS_WAITING, EventNameType_HTML }},
+    { &nsGkAtoms::onseeking,                     { NS_SEEKING, EventNameType_HTML }},
+    { &nsGkAtoms::onseeked,                      { NS_SEEKED, EventNameType_HTML }},
+    { &nsGkAtoms::ontimeupdate,                  { NS_TIMEUPDATE, EventNameType_HTML }},
+    { &nsGkAtoms::onended,                       { NS_ENDED, EventNameType_HTML }},
+    { &nsGkAtoms::ondataunavailable,             { NS_DATAUNAVAILABLE, EventNameType_HTML }},
+    { &nsGkAtoms::oncanshowcurrentframe,         { NS_CANSHOWCURRENTFRAME, EventNameType_HTML }},
+    { &nsGkAtoms::oncanplay,                     { NS_CANPLAY, EventNameType_HTML }},
+    { &nsGkAtoms::oncanplaythrough,              { NS_CANPLAYTHROUGH, EventNameType_HTML }},
+    { &nsGkAtoms::onratechange,                  { NS_RATECHANGE, EventNameType_HTML }},
+    { &nsGkAtoms::ondurationchange,              { NS_DURATIONCHANGE, EventNameType_HTML }},
+    { &nsGkAtoms::onvolumechange,                { NS_VOLUMECHANGE, EventNameType_HTML }},
+#endif //MOZ_MEDIA
   };
 
   sEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;
@@ -673,16 +702,68 @@ nsContentUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSr
 // Updated to fix the regression (bug 263411). The list contains
 // characters of the following Unicode character classes : Ps, Pi, Po, Pf, Pe.
 // (ref.: http://www.w3.org/TR/2004/CR-CSS21-20040225/selector.html#first-letter)
-// Note that the file does NOT yet include non-BMP characters.
-#include "punct_marks.ccmap"
-DEFINE_CCMAP(gPuncCharsCCMap, const);
+#include "punct_marks.x-ccmap"
+DEFINE_X_CCMAP(gPuncCharsCCMapExt, const);
 
 // static
 PRBool
-nsContentUtils::IsPunctuationMark(PRUnichar aChar)
+nsContentUtils::IsPunctuationMark(PRUint32 aChar)
 {
-  return CCMAP_HAS_CHAR(gPuncCharsCCMap, aChar);
+  return CCMAP_HAS_CHAR_EXT(gPuncCharsCCMapExt, aChar);
 }
+
+// static
+PRBool
+nsContentUtils::IsPunctuationMarkAt(const nsTextFragment* aFrag, PRUint32 aOffset)
+{
+  PRUnichar h = aFrag->CharAt(aOffset);
+  if (!IS_SURROGATE(h)) {
+    return IsPunctuationMark(h);
+  }
+  if (NS_IS_HIGH_SURROGATE(h) && aOffset + 1 < aFrag->GetLength()) {
+    PRUnichar l = aFrag->CharAt(aOffset + 1);
+    if (NS_IS_LOW_SURROGATE(l)) {
+      return IsPunctuationMark(SURROGATE_TO_UCS4(h, l));
+    }
+  }
+  return PR_FALSE;
+}
+
+// static
+PRBool nsContentUtils::IsAlphanumeric(PRUint32 aChar)
+{
+  nsIUGenCategory::nsUGenCategory cat = sGenCat->Get(aChar);
+
+  return (cat == nsIUGenCategory::kLetter || cat == nsIUGenCategory::kNumber);
+}
+ 
+// static
+PRBool nsContentUtils::IsAlphanumericAt(const nsTextFragment* aFrag, PRUint32 aOffset)
+{
+  PRUnichar h = aFrag->CharAt(aOffset);
+  if (!IS_SURROGATE(h)) {
+    return IsAlphanumeric(h);
+  }
+  if (NS_IS_HIGH_SURROGATE(h) && aOffset + 1 < aFrag->GetLength()) {
+    PRUnichar l = aFrag->CharAt(aOffset + 1);
+    if (NS_IS_LOW_SURROGATE(l)) {
+      return IsAlphanumeric(SURROGATE_TO_UCS4(h, l));
+    }
+  }
+  return PR_FALSE;
+}
+
+/* static */
+PRBool
+nsContentUtils::IsHTMLWhitespace(PRUnichar aChar)
+{
+  return aChar == PRUnichar(0x0009) ||
+         aChar == PRUnichar(0x000A) ||
+         aChar == PRUnichar(0x000C) ||
+         aChar == PRUnichar(0x000D) ||
+         aChar == PRUnichar(0x0020);
+}
+
 
 /* static */
 void
@@ -787,6 +868,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
   NS_IF_RELEASE(sCaseConv);
+  NS_IF_RELEASE(sGenCat);
 #ifdef MOZ_XTF
   NS_IF_RELEASE(sXTFService);
 #endif
@@ -1808,7 +1890,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   NS_ENSURE_TRUE(aContent, NS_ERROR_FAILURE);
 
   // Don't capture state for anonymous content
-  if (aContent->IsNativeAnonymous() || aContent->GetBindingParent()) {
+  if (aContent->IsInAnonymousSubtree()) {
     return NS_OK;
   }
 
@@ -2599,34 +2681,16 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  nsCOMPtr<nsINode> node(do_QueryInterface(aCurrentTarget));
-  nsCOMPtr<nsIDocument> document;
-
-  if (node) {
-    document = node->GetOwnerDoc();
-    if (document) {
-      PRBool hasHadScriptObject = PR_TRUE;
-      sgo = document->GetScriptHandlingObject(hasHadScriptObject);
-      // It is bad if the document doesn't have event handling context,
-      // but it used to have one.
-      NS_ENSURE_TRUE(sgo || !hasHadScriptObject, PR_FALSE);
-    }
-  } else {
-    sgo = do_QueryInterface(aCurrentTarget);
-  }
-
-  JSContext *cx = nsnull;
-
+  nsCOMPtr<nsPIDOMEventTarget> eventTarget = do_QueryInterface(aCurrentTarget);
+  NS_ENSURE_TRUE(eventTarget, PR_FALSE);
   nsCOMPtr<nsIScriptContext> scx;
+  nsresult rv = eventTarget->GetContextForEventHandlers(getter_AddRefs(scx));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  JSContext* cx = nsnull;
 
-  if (sgo) {
-    scx = sgo->GetContext();
-
-    if (scx) {
-      cx = (JSContext *)scx->GetNativeContext();
-    }
-    // Bad, no JSContext from script global object!
+  if (scx) {
+    cx = static_cast<JSContext*>(scx->GetNativeContext());
+    // Bad, no JSContext from script context!
     NS_ENSURE_TRUE(cx, PR_FALSE);
   }
 
@@ -3073,120 +3137,13 @@ nsContentUtils::CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
   return found;
 }
 
-static PRBool EqualExceptRef(nsIURL* aURL1, nsIURL* aURL2)
-{
-  nsCOMPtr<nsIURI> u1;
-  nsCOMPtr<nsIURI> u2;
-
-  nsresult rv = aURL1->Clone(getter_AddRefs(u1));
-  if (NS_SUCCEEDED(rv)) {
-    rv = aURL2->Clone(getter_AddRefs(u2));
-  }
-  if (NS_FAILED(rv))
-    return PR_FALSE;
-
-  nsCOMPtr<nsIURL> url1 = do_QueryInterface(u1);
-  nsCOMPtr<nsIURL> url2 = do_QueryInterface(u2);
-  if (!url1 || !url2) {
-    NS_WARNING("Cloning a URL produced a non-URL");
-    return PR_FALSE;
-  }
-  url1->SetRef(EmptyCString());
-  url2->SetRef(EmptyCString());
-
-  PRBool equal;
-  rv = url1->Equals(url2, &equal);
-  return NS_SUCCEEDED(rv) && equal;
-}
-
 /* static */
 nsIContent*
 nsContentUtils::GetReferencedElement(nsIURI* aURI, nsIContent *aFromContent)
 {
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
-  if (!url)
-    return nsnull;
-
-  nsCAutoString refPart;
-  url->GetRef(refPart);
-  // Unescape %-escapes in the reference. The result will be in the
-  // origin charset of the URL, hopefully...
-  NS_UnescapeURL(refPart);
-
-  nsCAutoString charset;
-  url->GetOriginCharset(charset);
-  nsAutoString ref;
-  nsresult rv = ConvertStringFromCharset(charset, refPart, ref);
-  if (NS_FAILED(rv)) {
-    CopyUTF8toUTF16(refPart, ref);
-  }
-  if (ref.IsEmpty())
-    return nsnull;
-
-  // Get the current document
-  nsIDocument *doc = aFromContent->GetCurrentDoc();
-  if (!doc)
-    return nsnull;
-
-  // This will be the URI of the document the content belongs to
-  // (the URI of the XBL document if the content is anonymous
-  // XBL content)
-  nsCOMPtr<nsIURL> documentURL = do_QueryInterface(doc->GetDocumentURI());
-  nsIContent* bindingParent = aFromContent->GetBindingParent();
-  PRBool isXBL = PR_FALSE;
-  if (bindingParent) {
-    nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
-    if (binding) {
-      // XXX sXBL/XBL2 issue
-      // If this is an anonymous XBL element then the URI is
-      // relative to the binding document. A full fix requires a
-      // proper XBL2 implementation but for now URIs that are
-      // relative to the binding document should be resolve to the
-      // copy of the target element that has been inserted into the
-      // bound document.
-      documentURL = do_QueryInterface(binding->PrototypeBinding()->DocURI());
-      isXBL = PR_TRUE;
-    }
-  }
-  if (!documentURL)
-    return nsnull;
-
-  if (!EqualExceptRef(url, documentURL)) {
-    // Oops -- we don't support off-document references
-    return nsnull;
-  }
-
-  // Get the element
-  nsCOMPtr<nsIContent> content;
-  if (isXBL) {
-    nsCOMPtr<nsIDOMNodeList> anonymousChildren;
-    doc->BindingManager()->
-      GetAnonymousNodesFor(bindingParent, getter_AddRefs(anonymousChildren));
-
-    if (anonymousChildren) {
-      PRUint32 length;
-      anonymousChildren->GetLength(&length);
-      for (PRUint32 i = 0; i < length && !content; ++i) {
-        nsCOMPtr<nsIDOMNode> node;
-        anonymousChildren->Item(i, getter_AddRefs(node));
-        nsCOMPtr<nsIContent> c = do_QueryInterface(node);
-        if (c) {
-          content = MatchElementId(c, ref);
-        }
-      }
-    }
-  } else {
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
-    NS_ASSERTION(domDoc, "Content doesn't reference a dom Document");
-
-    nsCOMPtr<nsIDOMElement> element;
-    rv = domDoc->GetElementById(ref, getter_AddRefs(element));
-    if (element) {
-      content = do_QueryInterface(element);
-    }
-  }
-
-  return content;
+  nsReferencedElement ref;
+  ref.Reset(aFromContent, aURI);
+  return ref.get();
 }
 
 /* static */
@@ -3817,18 +3774,18 @@ nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
 
 /* static */
 PRUint32
-nsContentUtils::GetKBStateControlStatusFromIMEStatus(PRUint32 aState)
+nsContentUtils::GetWidgetStatusFromIMEStatus(PRUint32 aState)
 {
   switch (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
     case nsIContent::IME_STATUS_DISABLE:
-      return nsIKBStateControl::IME_STATUS_DISABLED;
+      return nsIWidget::IME_STATUS_DISABLED;
     case nsIContent::IME_STATUS_ENABLE:
-      return nsIKBStateControl::IME_STATUS_ENABLED;
+      return nsIWidget::IME_STATUS_ENABLED;
     case nsIContent::IME_STATUS_PASSWORD:
-      return nsIKBStateControl::IME_STATUS_PASSWORD;
+      return nsIWidget::IME_STATUS_PASSWORD;
     default:
       NS_ERROR("The given state doesn't have valid enable state");
-      return nsIKBStateControl::IME_STATUS_ENABLED;
+      return nsIWidget::IME_STATUS_ENABLED;
   }
 }
 
@@ -4022,6 +3979,32 @@ nsContentUtils::DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
   return PR_TRUE;
 }
 
+static PRBool
+HasASCIIDigit(const nsTArray<nsShortcutCandidate>& aCandidates)
+{
+  for (PRUint32 i = 0; i < aCandidates.Length(); ++i) {
+    PRUint32 ch = aCandidates[i].mCharCode;
+    if (ch >= '0' && ch <= '9')
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+static PRBool
+CharsCaseInsensitiveEqual(PRUint32 aChar1, PRUint32 aChar2)
+{
+  return aChar1 == aChar2 ||
+         (IS_IN_BMP(aChar1) && IS_IN_BMP(aChar2) &&
+          ToLowerCase(PRUnichar(aChar1)) == ToLowerCase(PRUnichar(aChar2)));
+}
+
+static PRBool
+IsCaseChangeableChar(PRUint32 aChar)
+{
+  return IS_IN_BMP(aChar) &&
+         ToLowerCase(PRUnichar(aChar)) != ToUpperCase(PRUnichar(aChar));
+}
+
 /* static */
 void
 nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
@@ -4054,9 +4037,9 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
       aCandidates.AppendElement(key);
     }
 
+    PRUint32 len = nativeKeyEvent->alternativeCharCodes.Length();
     if (!nativeKeyEvent->isShift) {
-      for (PRUint32 i = 0;
-           i < nativeKeyEvent->alternativeCharCodes.Length(); ++i) {
+      for (PRUint32 i = 0; i < len; ++i) {
         PRUint32 ch =
           nativeKeyEvent->alternativeCharCodes[i].mUnshiftedCharCode;
         if (!ch || ch == nativeKeyEvent->charCode)
@@ -4065,9 +4048,23 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
         nsShortcutCandidate key(ch, PR_FALSE);
         aCandidates.AppendElement(key);
       }
+      // If unshiftedCharCodes doesn't have numeric but shiftedCharCode has it,
+      // this keyboard layout is AZERTY or similar layout, probably.
+      // In this case, Accel+[0-9] should be accessible without shift key.
+      // However, the priority should be lowest.
+      if (!HasASCIIDigit(aCandidates)) {
+        for (PRUint32 i = 0; i < len; ++i) {
+          PRUint32 ch =
+            nativeKeyEvent->alternativeCharCodes[i].mShiftedCharCode;
+          if (ch >= '0' && ch <= '9') {
+            nsShortcutCandidate key(ch, PR_FALSE);
+            aCandidates.AppendElement(key);
+            break;
+          }
+        }
+      }
     } else {
-      for (PRUint32 i = 0;
-           i < nativeKeyEvent->alternativeCharCodes.Length(); ++i) {
+      for (PRUint32 i = 0; i < len; ++i) {
         PRUint32 ch = nativeKeyEvent->alternativeCharCodes[i].mShiftedCharCode;
         if (!ch)
           continue;
@@ -4079,13 +4076,18 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
 
         // If the char is an alphabet, the shift key state should not be
         // ignored. E.g., Ctrl+Shift+C should not execute Ctrl+C.
+
         // And checking the charCode is same as unshiftedCharCode too.
         // E.g., for Ctrl+Shift+(Plus of Numpad) should not run Ctrl+Plus.
         PRUint32 unshiftCh =
           nativeKeyEvent->alternativeCharCodes[i].mUnshiftedCharCode;
-        if (ch == unshiftCh ||
-            (IS_IN_BMP(ch) && IS_IN_BMP(unshiftCh) &&
-             ToLowerCase(PRUnichar(ch)) == ToLowerCase(PRUnichar(unshiftCh))))
+        if (CharsCaseInsensitiveEqual(ch, unshiftCh))
+          continue;
+
+        // On the Hebrew keyboard layout on Windows, the unshifted char is a
+        // localized character but the shifted char is a Latin alphabet,
+        // then, we should not execute without the shift state. See bug 433192.
+        if (IsCaseChangeableChar(ch))
           continue;
 
         // Setting the alternative charCode candidates for retry without shift
@@ -4200,6 +4202,94 @@ nsContentUtils::AddScriptRunner(nsIRunnable* aRunnable)
   return PR_TRUE;
 }
 
+/* 
+ * Helper function for nsContentUtils::ProcessViewportInfo.
+ *
+ * Handles a single key=value pair. If it corresponds to a valid viewport
+ * attribute, add it to the document header data. No validation is done on the
+ * value itself (this is done at display time).
+ */
+static void ProcessViewportToken(nsIDocument *aDocument, 
+                                 const nsAString &token) {
+
+  /* Iterators. */
+  nsAString::const_iterator tip, tail, end;
+  token.BeginReading(tip);
+  tail = tip;
+  token.EndReading(end);
+
+  /* Move tip to the '='. */
+  while ((tip != end) && (*tip != '='))
+    ++tip;
+
+  /* If we didn't find an '=', punt. */
+  if (tip == end)
+    return;
+
+  /* Extract the key and value. */
+  const nsAString &key = Substring(tail, tip);
+  const nsAString &value = Substring(++tip, end);
+
+  /* Check for known keys. If we find a match, insert the appropriate
+   * information into the document header. */
+  nsCOMPtr<nsIAtom> key_atom = do_GetAtom(key);
+  if (key_atom == nsGkAtoms::height)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_height, value);
+  else if (key_atom == nsGkAtoms::width)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_width, value);
+  else if (key_atom == nsGkAtoms::initial_scale)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_initial_scale, value);
+  else if (key_atom == nsGkAtoms::minimum_scale)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_minimum_scale, value);
+  else if (key_atom == nsGkAtoms::maximum_scale)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_maximum_scale, value);
+  else if (key_atom == nsGkAtoms::user_scalable)
+    aDocument->SetHeaderData(nsGkAtoms::viewport_user_scalable, value);
+}
+
+#define IS_SEPARATOR(c) ((c == ' ') || (c == ',') || (c == ';'))
+/* static */
+nsresult
+nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
+                                    const nsAString &viewportInfo) {
+
+  /* We never fail. */
+  nsresult rv = NS_OK;
+
+  /* Iterators. */
+  nsAString::const_iterator tip, tail, end;
+  viewportInfo.BeginReading(tip);
+  tail = tip;
+  viewportInfo.EndReading(end);
+
+  /* Read the tip to the first non-separator character. */
+  while ((tip != end) && IS_SEPARATOR(*tip))
+    ++tip;
+
+  /* Read through and find tokens seperated by separators. */
+  while (tip != end) {
+    
+    /* Synchronize tip and tail. */
+    tail = tip;
+
+    /* Advance tip past non-separator characters. */
+    while ((tip != end) && !IS_SEPARATOR(*tip))
+      ++tip;
+
+    /* Our token consists of the characters between tail and tip. */
+    ProcessViewportToken(aDocument, Substring(tail, tip));
+
+    /* Skip separators. */
+    while ((tip != end) && IS_SEPARATOR(*tip))
+      ++tip;
+  }
+
+  return rv;
+
+}
+
+#undef IS_SEPARATOR
+
 /* static */
 void
 nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
@@ -4231,8 +4321,60 @@ nsContentUtils::URIIsLocalFile(nsIURI *aURI)
 }
 
 /* static */
+nsresult
+nsContentUtils::GetContextForEventHandlers(nsINode* aNode,
+                                           nsIScriptContext** aContext)
+{
+  *aContext = nsnull;
+  nsIDocument* ownerDoc = aNode->GetOwnerDoc();
+  NS_ENSURE_STATE(ownerDoc);
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  PRBool hasHadScriptObject = PR_TRUE;
+  sgo = ownerDoc->GetScriptHandlingObject(hasHadScriptObject);
+  // It is bad if the document doesn't have event handling context,
+  // but it used to have one.
+  NS_ENSURE_STATE(sgo || !hasHadScriptObject);
+  if (sgo) {
+    NS_IF_ADDREF(*aContext = sgo->GetContext());
+    // Bad, no context from script global object!
+    NS_ENSURE_STATE(*aContext);
+  }
+
+  return NS_OK;
+}
+
+/* static */
 void
 nsAutoGCRoot::Shutdown()
 {
   NS_IF_RELEASE(sJSRuntimeService);
+}
+
+nsIAtom*
+nsContentUtils::IsNamedItem(nsIContent* aContent)
+{
+  // Only the content types reflected in Level 0 with a NAME
+  // attribute are registered. Images, layers and forms always get
+  // reflected up to the document. Applets and embeds only go
+  // to the closest container (which could be a form).
+  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aContent);
+  if (!elm) {
+    return nsnull;
+  }
+
+  nsIAtom* tag = elm->Tag();
+  if (tag != nsGkAtoms::img    &&
+      tag != nsGkAtoms::form   &&
+      tag != nsGkAtoms::applet &&
+      tag != nsGkAtoms::embed  &&
+      tag != nsGkAtoms::object) {
+    return nsnull;
+  }
+
+  const nsAttrValue* val = elm->GetParsedAttr(nsGkAtoms::name);
+  if (val && val->Type() == nsAttrValue::eAtom) {
+    return val->GetAtomValue();
+  }
+
+  return nsnull;
 }

@@ -195,7 +195,7 @@ GetBorderPadding(nsStyleContext* aContext, nsMargin& aMargin)
   if (!aContext->GetStylePadding()->GetPadding(aMargin)) {
     NS_NOTYETIMPLEMENTED("percentage padding");
   }
-  aMargin += aContext->GetStyleBorder()->GetBorder();
+  aMargin += aContext->GetStyleBorder()->GetActualBorder();
 }
 
 static void
@@ -1315,21 +1315,16 @@ nsTreeBodyFrame::CheckTextForBidi(nsAutoString& aText)
   const PRUnichar* text = aText.get();
   PRUint32 length = aText.Length();
   PRUint32 i;
-  PRBool maybeRTL = PR_FALSE;
   for (i = 0; i < length; ++i) {
     PRUnichar ch = text[i];
     // To simplify things, anything that could be a surrogate or RTL
     // presentation form is covered just by testing >= 0xD800). It's fine to
     // enable bidi in rare cases where it actually isn't needed.
     if (ch >= 0xD800 || IS_IN_BMP_RTL_BLOCK(ch)) {
-      maybeRTL = PR_TRUE;
+      PresContext()->SetBidiEnabled();
       break;
     }
   }
-  if (!maybeRTL)
-    return;
-
-  PresContext()->SetBidiEnabled(PR_TRUE);
 }
 
 void
@@ -4119,7 +4114,7 @@ nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* 
     // it is contained in our scratch array.  If we have a miss, then
     // we aren't a match.  If all items in the pseudoclass list are
     // present in the scratch array, then we have a match.
-    nsAtomStringList* curr = aSelector->mPseudoClassList;
+    nsPseudoClassList* curr = aSelector->mPseudoClassList;
     while (curr) {
       PRInt32 index;
       mScratchArray->GetIndexOf(curr->mAtom, &index);

@@ -69,6 +69,8 @@ nsBaseFilePicker::~nsBaseFilePicker()
 
 }
 
+// XXXdholbert -- this function is duplicated in nsPrintDialogGTK.cpp
+// and needs to be unified in some generic utility class.
 nsIWidget *nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw)
 {
   nsCOMPtr<nsIWidget> widget;

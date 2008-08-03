@@ -119,6 +119,9 @@ NS_IMETHODIMP nsZipWriter::GetInQueue(PRBool *aInQueue)
 /* readonly attribute nsIFile file; */
 NS_IMETHODIMP nsZipWriter::GetFile(nsIFile **aFile)
 {
+    if (!mFile)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsCOMPtr<nsIFile> file;
     nsresult rv = mFile->Clone(getter_AddRefs(file));
     NS_ENSURE_SUCCESS(rv, rv);

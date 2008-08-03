@@ -87,7 +87,7 @@ private:
 // Class that will automatically call WillModify and DidModify in its ctor
 // and dtor respectively (for functions that have multiple exit points).
 
-class nsSVGValueAutoNotifier
+class NS_STACK_CLASS nsSVGValueAutoNotifier
 {
 public:
   nsSVGValueAutoNotifier(nsSVGValue* aVal,

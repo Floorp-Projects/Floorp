@@ -1011,12 +1011,9 @@ nsDocShell::FirePageHideNotification(PRBool aIsUnload)
                 kids[i]->FirePageHideNotification(aIsUnload);
             }
         }
-    }
-
-    // Now make sure our editor, if any, is detached before we go
-    // any farther.
-    if (mEditorData && aIsUnload) {
-      DetachEditorFromWindow();
+        // Now make sure our editor, if any, is detached before we go
+        // any farther.
+        DetachEditorFromWindow();
     }
 
     return NS_OK;
@@ -3036,6 +3033,12 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         if (!messageStr.IsEmpty()) {
             if (errorClass == nsINSSErrorsService::ERROR_CLASS_BAD_CERT) {
                 error.AssignLiteral("nssBadCert");
+                PRBool expert = PR_FALSE;
+                mPrefs->GetBoolPref("browser.xul.error_pages.expert_bad_cert",
+                                    &expert);
+                if (expert) {
+                    cssClass.AssignLiteral("expertBadCert");
+                }
             } else {
                 error.AssignLiteral("nssFailure2");
             }
@@ -3371,11 +3374,6 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
     }
     
 
-    // Need to purge detached editor here, else when we reload a page,
-    // the detached editor state causes SetDesignMode() to fail.
-    if (mOSHE)
-      mOSHE->SetEditorData(nsnull);
-
     return rv;
 }
 
@@ -3672,6 +3670,13 @@ nsDocShell::Destroy()
     // Fire unload event before we blow anything away.
     (void) FirePageHideNotification(PR_TRUE);
 
+    // Clear pointers to any detached nsEditorData that's lying
+    // around in shistory entries. Breaks cycle. See bug 430921.
+    if (mOSHE)
+      mOSHE->SetEditorData(nsnull);
+    if (mLSHE)
+      mLSHE->SetEditorData(nsnull);
+      
     // Note: mContentListener can be null if Init() failed and we're being
     // called from the destructor.
     if (mContentListener) {
@@ -4879,8 +4884,13 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
             SetBaseUrlForWyciwyg(aContentViewer);
     }
     // XXX What if SetupNewViewer fails?
-    if (mLSHE)
+    if (mLSHE) {
+        // Restore the editing state, if it's stored in session history.
+        if (mLSHE->HasDetachedEditor()) {
+            ReattachEditorToWindow(mLSHE);
+        }
         SetHistoryEntry(&mOSHE, mLSHE);
+    }
 
     PRBool updateHistory = PR_TRUE;
 
@@ -5326,29 +5336,20 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType,
     return PR_TRUE;
 }
 
-PRBool
-nsDocShell::HasDetachedEditor()
-{
-  return (mOSHE && mOSHE->HasDetachedEditor()) ||
-         (mLSHE && mLSHE->HasDetachedEditor());
-}
-
 void
-nsDocShell::ReattachEditorToWindow(nsIDOMWindow *aWindow, nsISHEntry *aSHEntry)
+nsDocShell::ReattachEditorToWindow(nsISHEntry *aSHEntry)
 {
     NS_ASSERTION(!mEditorData,
                  "Why reattach an editor when we already have one?");
-    NS_ASSERTION(aWindow,
-                 "Need a window to reattach to.");
-    NS_ASSERTION(HasDetachedEditor(),
+    NS_ASSERTION(aSHEntry && aSHEntry->HasDetachedEditor(),
                  "Reattaching when there's not a detached editor.");
 
-    if (mEditorData || !aWindow || !aSHEntry)
+    if (mEditorData || !aSHEntry)
       return;
 
     mEditorData = aSHEntry->ForgetEditorData();
     if (mEditorData) {
-        nsresult res = mEditorData->ReattachToWindow(aWindow);
+        nsresult res = mEditorData->ReattachToWindow(this);
         NS_ASSERTION(NS_SUCCEEDED(res), "Failed to reattach editing session");
     }
 }
@@ -5356,18 +5357,21 @@ nsDocShell::ReattachEditorToWindow(nsIDOMWindow *aWindow, nsISHEntry *aSHEntry)
 void
 nsDocShell::DetachEditorFromWindow(nsISHEntry *aSHEntry)
 {
-    if (!aSHEntry || !mEditorData)
+    if (!mEditorData)
         return;
 
-    NS_ASSERTION(!aSHEntry->HasDetachedEditor(),
-                 "Why detach an editor twice?");
+    NS_ASSERTION(!aSHEntry || !aSHEntry->HasDetachedEditor(),
+                 "Detaching editor when it's already detached.");
 
     nsresult res = mEditorData->DetachFromWindow();
     NS_ASSERTION(NS_SUCCEEDED(res), "Failed to detach editor");
 
     if (NS_SUCCEEDED(res)) {
-      // Make aSHEntry hold the owning ref to the editor data.
-      aSHEntry->SetEditorData(mEditorData.forget());
+        // Make aSHEntry hold the owning ref to the editor data.
+        if (aSHEntry)
+            aSHEntry->SetEditorData(mEditorData.forget());
+        else
+            mEditorData = nsnull;
     }
 
 #ifdef DEBUG
@@ -5384,7 +5388,8 @@ nsDocShell::DetachEditorFromWindow(nsISHEntry *aSHEntry)
 void
 nsDocShell::DetachEditorFromWindow()
 {
-    DetachEditorFromWindow(mOSHE);
+    if (mOSHE)
+        DetachEditorFromWindow(mOSHE);
 }
 
 nsresult
@@ -5534,6 +5539,10 @@ nsDocShell::FinishRestore()
         if (child) {
             child->FinishRestore();
         }
+    }
+
+    if (mOSHE && mOSHE->HasDetachedEditor()) {
+      ReattachEditorToWindow(mOSHE);
     }
 
     if (mContentViewer) {
@@ -6002,11 +6011,6 @@ nsDocShell::RestoreFromHistory()
             widget->Resize(newBounds.x, newBounds.y, newBounds.width,
                            newBounds.height, PR_FALSE);
         }
-    }
-
-    if (HasDetachedEditor()) {
-      nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(privWin);
-      ReattachEditorToWindow(domWin, mLSHE);
     }
 
     // Simulate the completion of the load.
@@ -6712,21 +6716,21 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     nsCOMPtr<nsISupports> owner(aOwner);
     //
     // Get an owner from the current document if necessary.  Note that we only
-    // do this for URIs that inherit a security context; in particular we do
-    // NOT do this for about:blank.  This way, random about:blank loads that
-    // have no owner (which basically means they were done by someone from
-    // chrome manually messing with our nsIWebNavigation or by C++ setting
-    // document.location) don't get a funky principal.  If callers want
-    // something interesting to happen with the about:blank principal in this
-    // case, they should pass an owner in.
+    // do this for URIs that inherit a security context and local file URIs;
+    // in particular we do NOT do this for about:blank.  This way, random
+    // about:blank loads that have no owner (which basically means they were
+    // done by someone from chrome manually messing with our nsIWebNavigation
+    // or by C++ setting document.location) don't get a funky principal.  If
+    // callers want something interesting to happen with the about:blank
+    // principal in this case, they should pass an owner in.
     //
     {
         PRBool inherits;
         // One more twist: Don't inherit the owner for external loads.
         if (aLoadType != LOAD_NORMAL_EXTERNAL && !owner &&
             (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_OWNER) &&
-            NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
-            inherits) {
+            ((NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
+              inherits) || URIIsLocalFile(aURI))) {
 
             // Don't allow loads that would inherit our security context
             // if this document came from an unsafe channel.
@@ -7147,10 +7151,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
     mLoadType = aLoadType;
 
-    // Detach the current editor so that it can be restored from the
-    // bfcache later.
-    DetachEditorFromWindow();
-
     // mLSHE should be assigned to aSHEntry, only after Stop() has
     // been called. But when loading an error page, do not clear the
     // mLSHE for the real page.
@@ -7213,22 +7213,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     if (NS_FAILED(rv)) {
         nsCOMPtr<nsIChannel> chan(do_QueryInterface(req));
         DisplayLoadError(rv, aURI, nsnull, chan);
-    }
-    
-    if (aSHEntry) {
-        if (aLoadType & LOAD_CMD_HISTORY) {
-            // We've just loaded a page from session history. Reattach
-            // its editing session if it has one.
-            nsCOMPtr<nsIDOMWindow> domWin;
-            CallGetInterface(this, static_cast<nsIDOMWindow**>(getter_AddRefs(domWin)));
-            ReattachEditorToWindow(domWin, aSHEntry);
-        } else {
-            // This is a non-history load from a session history entry. Purge any
-            // previous editing sessions, so that the the editing session will
-            // be recreated. This can happen when we reload something that's
-            // in the bfcache.
-            aSHEntry->SetEditorData(nsnull);
-        }
     }
 
     return rv;
@@ -8456,7 +8440,7 @@ nsDocShell::WalkHistoryEntries(nsISHEntry *aRootEntry,
 }
 
 // callback data for WalkHistoryEntries
-struct CloneAndReplaceData
+struct NS_STACK_CLASS CloneAndReplaceData
 {
     CloneAndReplaceData(PRUint32 aCloneID, nsISHEntry *aReplaceEntry,
                         nsISHEntry *aDestTreeParent)
@@ -8729,9 +8713,12 @@ nsDocShell::ShouldDiscardLayoutState(nsIHttpChannel * aChannel)
 NS_IMETHODIMP nsDocShell::GetEditor(nsIEditor * *aEditor)
 {
   NS_ENSURE_ARG_POINTER(aEditor);
-  nsresult rv = EnsureEditorData();
-  if (NS_FAILED(rv)) return rv;
-  
+
+  if (!mEditorData) {
+    *aEditor = nsnull;
+    return NS_OK;
+  }
+
   return mEditorData->GetEditor(aEditor);
 }
 
@@ -9037,9 +9024,12 @@ nsDocShell::EnsureScriptEnvironment()
 NS_IMETHODIMP
 nsDocShell::EnsureEditorData()
 {
-    NS_ASSERTION(!HasDetachedEditor(), "EnsureEditorData() called when detached.\n");
-
-    if (!mEditorData && !mIsBeingDestroyed && !HasDetachedEditor()) {
+    PRBool openDocHasDetachedEditor = mOSHE && mOSHE->HasDetachedEditor();
+    if (!mEditorData && !mIsBeingDestroyed && !openDocHasDetachedEditor) {
+        // We shouldn't recreate the editor data if it already exists, or
+        // we're shutting down, or we already have a detached editor data
+        // stored in the session history. We should only have one editordata
+        // per docshell.
         mEditorData = new nsDocShellEditorData(this);
     }
 

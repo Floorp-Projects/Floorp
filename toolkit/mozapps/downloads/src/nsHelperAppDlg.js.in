@@ -440,14 +440,14 @@ nsUnknownContentTypeDialog.prototype = {
                                     this.mLauncher.targetFileIsExecutable);
       if (shouldntRememberChoice && !this.openWithDefaultOK()) {
         // hide featured choice 
-        this.mDialog.document.getElementById("normalBox").collapsed = "true";
+        this.dialogElement("normalBox").collapsed = true;
         // show basic choice 
-        this.mDialog.document.getElementById("basicBox").collapsed = "false";
+        this.dialogElement("basicBox").collapsed = false;
         // change button labels
         this.mDialog.document.documentElement.getButton("accept").label = this.dialogElement("strings").getString("unknownAccept.label");
         this.mDialog.document.documentElement.getButton("cancel").label = this.dialogElement("strings").getString("unknownCancel.label");
         // hide other handler
-        this.mDialog.document.getElementById("openHandler").collapsed = "true";
+        this.dialogElement("openHandler").collapsed = true;
         // set save as the selected option
         this.dialogElement("mode").selectedItem = this.dialogElement("save");
       }

@@ -137,6 +137,12 @@ function init() {
   helpGlossaryPanel = document.getElementById("help-glossary-panel");
   helpBrowser = document.getElementById("help-content");
 
+  // Turn off unnecessary features for security
+  helpBrowser.docShell.allowJavascript = false;
+  helpBrowser.docShell.allowPlugins = false;
+  helpBrowser.docShell.allowSubframes = false;
+  helpBrowser.docShell.allowMetaRedirects = false;
+
   strBundle = document.getElementById("bundle_help");
   emptySearchText = strBundle.getString("emptySearchText");
 

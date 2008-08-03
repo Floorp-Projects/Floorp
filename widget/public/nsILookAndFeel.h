@@ -75,6 +75,7 @@ public:
     eColor_TextSelectForeground,
     eColor_TextSelectBackgroundDisabled,
     eColor_TextSelectBackgroundAttention,
+    eColor_TextHighlightBackground,
 
     eColor_IMERawInputBackground,
     eColor_IMERawInputForeground,
@@ -164,6 +165,11 @@ public:
     // vista rebars
     eColor__moz_win_mediatext,                     // media rebar text
     eColor__moz_win_communicationstext,            // communications rebar text
+
+    // Hyperlink color extracted from the system, not affected by the browser.anchor_color user pref.
+    // There is no OS-specified safe background color for this text, 
+    // but it is used regularly within Windows and the Gnome DE on Dialog and Window colors.
+    eColor__moz_nativehyperlinktext,		
 
     // keep this one last, please
     eColor_LAST_COLOR
@@ -300,7 +306,11 @@ public:
     eMetricFloat_ListHorizontalInsidePadding,
     eMetricFloat_ButtonVerticalInsidePadding,
     eMetricFloat_ButtonHorizontalInsidePadding,
-    eMetricFloat_IMEUnderlineRelativeSize
+    eMetricFloat_IMEUnderlineRelativeSize,
+
+    // The width/height ratio of the cursor. If used, the CaretWidth int metric
+    // should be added to the calculated caret width.
+    eMetricFloat_CaretAspectRatio
   } nsMetricFloatID;
 
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor) = 0;

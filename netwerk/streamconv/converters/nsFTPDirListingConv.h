@@ -77,7 +77,7 @@ private:
     char*    DigestBufferLines(char *aBuffer, nsCString &aString);
 
     // member data
-    nsCAutoString       mBuffer;            // buffered data.
+    nsCString           mBuffer;            // buffered data.
     PRBool              mSentHeading;       // have we sent 100, 101, 200, and 300 lines yet?
 
     nsIStreamListener   *mFinalListener; // this guy gets the converted data via his OnDataAvailable()

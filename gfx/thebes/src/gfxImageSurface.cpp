@@ -41,8 +41,34 @@
 
 #include "cairo.h"
 
+gfxImageSurface::gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
+                                 long aStride, gfxImageFormat aFormat)
+  : mSize(aSize)
+  , mOwnsData(PR_FALSE)
+  , mData(aData)
+  , mFormat(aFormat)
+  , mStride(aStride)
+{
+    if (!CheckSurfaceSize(aSize))
+        return;
+
+    cairo_surface_t *surface =
+        cairo_image_surface_create_for_data((unsigned char*)mData,
+                                            (cairo_format_t)mFormat,
+                                            mSize.width,
+                                            mSize.height,
+                                            mStride);
+
+    // cairo_image_surface_create_for_data can return a 'null' surface
+    // in out of memory conditions. The gfxASurface::Init call checks
+    // the surface it receives to see if there is an error with the
+    // surface and handles it appropriately. That is why there is
+    // no check here.
+    Init(surface);
+}
+
 gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) :
-    mSize(size), mFormat(format)
+    mSize(size), mOwnsData(PR_FALSE), mFormat(format)
 {
     mStride = ComputeStride();
 
@@ -51,7 +77,7 @@ gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) 
 
     // if we have a zero-sized surface, just set mData to nsnull
     if (mSize.height * mStride > 0) {
-        mData = (unsigned char *) malloc(mSize.height * mStride);
+        mData = (unsigned char *) calloc(mSize.height, mStride);
         if (!mData)
             return;
     } else {
@@ -83,13 +109,8 @@ gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)
 
 gfxImageSurface::~gfxImageSurface()
 {
-    if (!mSurfaceValid)
-        return;
-
-    if (mOwnsData) {
+    if (mOwnsData)
         free(mData);
-        mData = nsnull;
-    }
 }
 
 long

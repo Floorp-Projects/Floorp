@@ -66,6 +66,9 @@ try {
 
 // main
 function run_test() {
+  // TODO bug 442778 - re-enable test once PR_Now() issue is resolved
+  return;
+
   var uri1 = uri("http://foo.bar/");
 
   // create 2 bookmarks

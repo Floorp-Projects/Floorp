@@ -45,7 +45,7 @@
   It is designed to be used as inline input to nsCSSKeywords.cpp *only*
   through the magic of C preprocessing.
 
-  All entires must be enclosed in the macro CSS_KEY which will have cruel
+  All entries must be enclosed in the macro CSS_KEY which will have cruel
   and unusual things done to it
 
   It is recommended (but not strictly necessary) to keep all entries
@@ -53,14 +53,14 @@
 
   Requirements:
 
-  Entries are in the form: (name,id). 'id' must always be the same as 'name'
+  Entries are in the form: (name, id). 'id' must always be the same as 'name'
   except that all hyphens ('-') in 'name' are converted to underscores ('_')
-  in 'id'. This lets us do nice things with the macros without having to 
-  copy/convert strings at runtime. 
-  
+  in 'id'. This lets us do nice things with the macros without having to
+  copy/convert strings at runtime.
+
   'name' entries *must* use only lowercase characters.
 
-  ** Break these invariants and bad things will happen. **    
+  ** Break these invariants and bad things will happen. **
 
  ******/
 
@@ -154,6 +154,7 @@ CSS_KEY(-moz-menubarhovertext, _moz_menubarhovertext)
 CSS_KEY(-moz-middle-with-baseline, _moz_middle_with_baseline)
 CSS_KEY(-moz-min-content, _moz_min_content)
 CSS_KEY(-moz-myanmar, _moz_myanmar)
+CSS_KEY(-moz-nativehyperlinktext, _moz_nativehyperlinktext)
 CSS_KEY(-moz-none, _moz_none)
 CSS_KEY(-moz-oddtreerow, _moz_oddtreerow)
 CSS_KEY(-moz-oriya, _moz_oriya)
@@ -213,6 +214,7 @@ CSS_KEY(both, both)
 CSS_KEY(bottom, bottom)
 CSS_KEY(bottom-outside, bottom_outside)
 CSS_KEY(bounding-box, bounding_box)
+CSS_KEY(break-word, break_word)
 CSS_KEY(button, button)
 CSS_KEY(buttonface, buttonface)
 CSS_KEY(buttonhighlight, buttonhighlight)
@@ -291,6 +293,7 @@ CSS_KEY(hz, hz)
 CSS_KEY(icon, icon)
 CSS_KEY(ignore, ignore)
 CSS_KEY(in, in)
+CSS_KEY(interlace, interlace)
 CSS_KEY(inactive, inactive)
 CSS_KEY(inactiveborder, inactiveborder)
 CSS_KEY(inactivecaption, inactivecaption)
@@ -372,6 +375,7 @@ CSS_KEY(portrait, portrait)
 CSS_KEY(pre, pre)
 CSS_KEY(pre-wrap, pre_wrap)
 CSS_KEY(progress, progress)
+CSS_KEY(progressive, progressive)
 CSS_KEY(pt, pt)
 CSS_KEY(px, px)
 CSS_KEY(rad, rad)
@@ -386,6 +390,7 @@ CSS_KEY(ridge, ridge)
 CSS_KEY(right, right)
 CSS_KEY(right-side, right_side)
 CSS_KEY(rightwards, rightwards)
+CSS_KEY(round, round)
 CSS_KEY(row-resize, row_resize)
 CSS_KEY(rtl, rtl)
 CSS_KEY(s, s)
@@ -418,6 +423,7 @@ CSS_KEY(start, start)
 CSS_KEY(static, static)
 CSS_KEY(status-bar, status_bar)
 CSS_KEY(stretch, stretch)
+CSS_KEY(stretch-to-fit, stretch_to_fit)
 CSS_KEY(sub, sub)
 CSS_KEY(super, super)
 CSS_KEY(sw-resize, sw_resize)
@@ -558,9 +564,9 @@ CSS_KEY(radio-container, radiocontainer)
 CSS_KEY(checkbox-label, checkboxlabel)
 CSS_KEY(radio-label, radiolabel)
 CSS_KEY(button-focus, buttonfocus)
-CSS_KEY(media-toolbox, media_toolbox)
-CSS_KEY(communications-toolbox, communications_toolbox)
-CSS_KEY(browsertabbar-toolbox, browsertabbar_toolbox)
+CSS_KEY(-moz-win-media-toolbox, _moz_win_media_toolbox)
+CSS_KEY(-moz-win-communications-toolbox, _moz_win_communications_toolbox)
+CSS_KEY(-moz-win-browsertabbar-toolbox, _moz_win_browsertabbar_toolbox)
 CSS_KEY(-moz-win-mediatext, _moz_win_mediatext)
 CSS_KEY(-moz-win-communicationstext, _moz_win_communicationstext)
 
@@ -589,7 +595,6 @@ CSS_KEY(optimizelegibility, optimizelegibility)
 CSS_KEY(optimizespeed, optimizespeed)
 CSS_KEY(painted, painted)
 CSS_KEY(reset-size, reset_size)
-CSS_KEY(round, round)
 //CSS_KEY(square, square)
 //CSS_KEY(start, start)
 CSS_KEY(srgb, srgb)

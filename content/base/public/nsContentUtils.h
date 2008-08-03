@@ -58,6 +58,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEvent.h"
 #include "nsTArray.h"
+#include "nsTextFragment.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -98,6 +99,7 @@ class nsIPref;
 class nsVoidArray;
 struct JSRuntime;
 class nsICaseConversion;
+class nsIUGenCategory;
 class nsIWidget;
 class nsPIDOMWindow;
 #ifdef MOZ_XTF
@@ -364,10 +366,26 @@ public:
                                                    PRBool aTrimTrailing = PR_TRUE);
 
   /**
-   * Returns true if aChar is of class Ps, Pi, Po, Pf, or Pe. (Does not
-   * currently handle non-BMP characters.)
+   * Returns true if aChar is of class Ps, Pi, Po, Pf, or Pe.
    */
-  static PRBool IsPunctuationMark(PRUnichar aChar);
+  static PRBool IsPunctuationMark(PRUint32 aChar);
+  static PRBool IsPunctuationMarkAt(const nsTextFragment* aFrag, PRUint32 aOffset);
+ 
+  /**
+   * Returns true if aChar is of class Lu, Ll, Lt, Lm, Lo, Nd, Nl or No
+   */
+  static PRBool IsAlphanumeric(PRUint32 aChar);
+  static PRBool IsAlphanumericAt(const nsTextFragment* aFrag, PRUint32 aOffset);
+
+  /*
+   * Is the character an HTML whitespace character?
+   *
+   * We define whitespace using the list in HTML5 and css3-selectors:
+   * U+0009, U+000A, U+000C, U+000D, U+0020
+   *
+   * HTML 4.01 also lists U+200B (zero-width space).
+   */
+  static PRBool IsHTMLWhitespace(PRUnichar aChar);
 
   static void Shutdown();
 
@@ -565,6 +583,11 @@ public:
   static nsICaseConversion* GetCaseConv()
   {
     return sCaseConv;
+  }
+
+  static nsIUGenCategory* GetGenCat()
+  {
+    return sGenCat;
   }
 
   /**
@@ -1087,9 +1110,9 @@ public:
   static nsresult DropJSObjects(void* aScriptObjectHolder);
 
   /**
-   * Convert nsIContent::IME_STATUS_* to nsIKBStateControll::IME_STATUS_*
+   * Convert nsIContent::IME_STATUS_* to nsIWidget::IME_STATUS_*
    */
-  static PRUint32 GetKBStateControlStatusFromIMEStatus(PRUint32 aState);
+  static PRUint32 GetWidgetStatusFromIMEStatus(PRUint32 aState);
 
   /*
    * Notify when the first XUL menu is opened and when the all XUL menus are
@@ -1201,6 +1224,12 @@ public:
   static PRBool URIIsLocalFile(nsIURI *aURI);
 
   /**
+   * If aContent is an HTML element with a DOM level 0 'name', then
+   * return the name. Otherwise return null.
+   */
+  static nsIAtom* IsNamedItem(nsIContent* aContent);
+
+  /**
    * Get the application manifest URI for this context.  The manifest URI
    * is specified in the manifest= attribute of the root element of the
    * toplevel window.
@@ -1277,6 +1306,17 @@ public:
     return sRemovableScriptBlockerCount;
   }
 
+  /* Process viewport META data. This gives us information for the scale
+   * and zoom of a page on mobile devices. We stick the information in
+   * the document header and use it later on after rendering.
+   *
+   * See Bug #436083
+   */
+  static nsresult ProcessViewportInfo(nsIDocument *aDocument,
+                                      const nsAString &viewportInfo);
+
+  static nsresult GetContextForEventHandlers(nsINode* aNode,
+                                             nsIScriptContext** aContext);
 private:
 
   static PRBool InitializeEventTable();
@@ -1336,6 +1376,7 @@ private:
   static nsILineBreaker* sLineBreaker;
   static nsIWordBreaker* sWordBreaker;
   static nsICaseConversion* sCaseConv;
+  static nsIUGenCategory* sGenCat;
 
   // Holds pointers to nsISupports* that should be released at shutdown
   static nsVoidArray* sPtrsToPtrsToRelease;
@@ -1363,7 +1404,7 @@ private:
   nsContentUtils::DropJSObjects(NS_CYCLE_COLLECTION_UPCAST(obj, clazz))
 
 
-class nsCxPusher
+class NS_STACK_CLASS nsCxPusher
 {
 public:
   nsCxPusher();

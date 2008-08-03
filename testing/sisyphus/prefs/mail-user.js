@@ -23,3 +23,5 @@ user_pref("mailnews.start_page.welcome_url", "http://test.mozilla.com/bin/instal
 user_pref("browser.warnOnQuit", false);
 user_pref("extensions.checkCompatibility", false);
 user_pref("extensions.checkUpdateSecurity", false);
+user_pref("browser.EULA.override", true);
+

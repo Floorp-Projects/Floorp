@@ -60,14 +60,6 @@ typedef enum JSOp {
     JSOP_LIMIT
 } JSOp;
 
-typedef enum JSOpLength {
-#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
-    op##_LENGTH = length,
-#include "jsopcode.tbl"
-#undef OPDEF
-    JSOP_LIMIT_LENGTH
-} JSOpLength;
-
 /*
  * JS bytecode formats.
  */
@@ -249,10 +241,10 @@ JS_STATIC_ASSERT(sizeof(uint32) * JS_BITS_PER_BYTE >= INDEX_LIMIT_LOG2 + 1);
 #define ARGNO_LEN               2
 #define ARGNO_LIMIT             UINT16_LIMIT
 
-#define GET_VARNO(pc)           GET_UINT16(pc)
-#define SET_VARNO(pc,varno)     SET_UINT16(pc,varno)
-#define VARNO_LEN               2
-#define VARNO_LIMIT             UINT16_LIMIT
+#define GET_SLOTNO(pc)          GET_UINT16(pc)
+#define SET_SLOTNO(pc,varno)    SET_UINT16(pc,varno)
+#define SLOTNO_LEN              2
+#define SLOTNO_LIMIT            UINT16_LIMIT
 
 struct JSCodeSpec {
     int8                length;         /* length including opcode byte */
@@ -343,6 +335,12 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
         uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
         JS_GET_SCRIPT_REGEXP((script), index_, obj);                          \
     JS_END_MACRO
+
+/*
+ * Get the length of variable-length bytecode like JSOP_TABLESWITCH.
+ */
+extern uintN
+js_GetVariableBytecodeLength(jsbytecode *pc);
 
 #ifdef DEBUG
 /*

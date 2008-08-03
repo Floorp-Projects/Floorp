@@ -45,7 +45,7 @@ class nsSVGBoolean
 {
 
 public:
-    void Init(PRUint8 aAttrEnum = 0xff, PRBool aValue = PR_FALSE) {
+  void Init(PRUint8 aAttrEnum = 0xff, PRBool aValue = PR_FALSE) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
   }

@@ -529,13 +529,14 @@ CheckArgShell(const char* aArg)
 }
 
 /**
- * Spins up Windows DDE when the app needs to restart or the profile manager
- * will be displayed during startup and the app has been launched by the Windows
- * shell to open an url. This prevents Windows from displaying an error message
- * due to the DDE message not being acknowledged.
+ * Enabled Native App Support to process DDE messages when the app needs to
+ * restart and the app has been launched by the Windows shell to open an url.
+ * When aWait is false this will process the DDE events manually. This prevents
+ * Windows from displaying an error message due to the DDE message not being
+ * acknowledged.
  */
 static void
-ProcessDDE(nsINativeAppSupport* aNative)
+ProcessDDE(nsINativeAppSupport* aNative, PRBool aWait)
 {
   // When the app is launched by the windows shell the windows shell
   // expects the app to be available for DDE messages and if it isn't
@@ -549,13 +550,15 @@ ProcessDDE(nsINativeAppSupport* aNative)
   ar = CheckArgShell("requestpending");
   if (ar == ARG_FOUND) {
     aNative->Enable(); // enable win32 DDE responses
-    nsIThread *thread = NS_GetCurrentThread();
-    // This is just a guesstimate based on testing different values.
-    // If count is 8 or less windows will display an error dialog.
-    PRInt32 count = 20;
-    while(--count >= 0) {
-      NS_ProcessNextEvent(thread);
-      PR_Sleep(PR_MillisecondsToInterval(1));
+    if (aWait) {
+      nsIThread *thread = NS_GetCurrentThread();
+      // This is just a guesstimate based on testing different values.
+      // If count is 8 or less windows will display an error dialog.
+      PRInt32 count = 20;
+      while(--count >= 0) {
+        NS_ProcessNextEvent(thread);
+        PR_Sleep(PR_MillisecondsToInterval(1));
+      }
     }
   }
 }
@@ -836,6 +839,12 @@ nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
                                   const nsACString& data)
 {
   return CrashReporter::AnnotateCrashReport(key, data);
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::AppendAppNotesToCrashReport(const nsACString& data)
+{
+  return CrashReporter::AppendAppNotesToCrashReport(data);
 }
 
 NS_IMETHODIMP
@@ -1546,8 +1555,7 @@ int OS2LaunchChild(const char *aExePath, int aArgc, char **aArgv)
 // blank command line instead of being launched with the same command line that
 // it was initially started with.
 static nsresult LaunchChild(nsINativeAppSupport* aNative,
-                            PRBool aBlankCommandLine = PR_FALSE,
-                            int needElevation = 0)
+                            PRBool aBlankCommandLine = PR_FALSE)
 {
   aNative->Quit(); // release DDE mutex, if we're holding it
 
@@ -1575,7 +1583,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   if (NS_FAILED(rv))
     return rv;
 
-  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, needElevation))
+  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, 0))
     return NS_ERROR_FAILURE;
 
 #else
@@ -1722,7 +1730,9 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
 #endif
 
 #ifdef XP_WIN
-    ProcessDDE(aNative);
+    // we don't have to wait here because profile manager window will pump
+    // and DDE message will be handled
+    ProcessDDE(aNative, PR_FALSE);
 #endif
 
     { //extra scoping is needed so we release these components before xpcom shutdown
@@ -2783,6 +2793,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     QApplication app(gArgc, gArgv);
 #endif
 #if defined(MOZ_WIDGET_GTK2)
+#ifdef MOZ_MEMORY
+    // Disable the slice allocator, since jemalloc already uses similar layout
+    // algorithms, and using a sub-allocator tends to increase fragmentation.
+    // This must be done before g_thread_init() is called.
+    g_slice_set_config(G_SLICE_CONFIG_ALWAYS_MALLOC, 1);
+#endif
     g_thread_init(NULL);
     // setup for private colormap.  Ideally we'd like to do this
     // in nsAppShell::Create, but we need to get in before gtk
@@ -3209,7 +3225,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           needsRestart = PR_TRUE;
 
 #ifdef XP_WIN
-          ProcessDDE(nativeApp);
+          ProcessDDE(nativeApp, PR_TRUE);
 #endif
 
 #ifdef XP_MACOSX
@@ -3272,7 +3288,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       MOZ_gdk_display_close(display);
 #endif
 
-      rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
+      rv = LaunchChild(nativeApp, appInitiatedRestart);
 
 #ifdef MOZ_CRASHREPORTER
       if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)

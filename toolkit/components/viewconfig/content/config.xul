@@ -79,7 +79,7 @@
   <vbox id="warningScreen" flex="1" align="center">
     <spacer flex="1"/>
     <hbox id="warningBox" align="top">
-      <image id="exclam" class="alert-icon"/>
+      <image id="exclam"/>
       <vbox id="warningInnerBox" flex="1">
         <label id="warningTitle">&aboutWarningTitle.label;</label>
         <label id="warningText">&aboutWarningText.label;</label>

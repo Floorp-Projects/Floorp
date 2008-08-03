@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="750">
+	<defs>
+		<filter id="filter">
+			<!-- <boolean> (preserveAlpha) -->
+			<!-- <enum> (edgeMode) -->
+			<!-- <number> (divisor) -->
+			<!-- <integer> (targetX) -->
+			<!-- <string> (result) -->
+			<feConvolveMatrix id="convolve"/>
+		</filter>
+		<!-- <angle> (orient) -->
+		<!-- <length> (markerWidth) -->
+		<marker id="marker"/>
+	</defs>
+</svg>

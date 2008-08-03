@@ -227,6 +227,10 @@ nsXPCWrappedJS::Release(void)
 {
     NS_PRECONDITION(0 != mRefCnt, "dup release");
 
+    // need to take the map lock here to prevent GetNewOrUsed from trying
+    // to reuse a wrapper on one thread while it's being destroyed on another
+    XPCAutoLock lock(nsXPConnect::GetRuntime()->GetMapLock());
+
 do_decrement:
 
     nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
@@ -323,21 +327,23 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
     if(!rootJSObj)
         goto return_wrapper;
 
-    // look for the root wrapper
+    // look for the root wrapper, and if found, hold the map lock until
+    // we've added our ref to prevent another thread from destroying it
+    // under us
     {   // scoped lock
         XPCAutoLock lock(rt->GetMapLock());
         root = map->Find(rootJSObj);
-    }
-    if(root)
-    {
-        if((nsnull != (wrapper = root->Find(aIID))) ||
-           (nsnull != (wrapper = root->FindInherited(aIID))))
+        if(root)
         {
-            NS_ADDREF(wrapper);
-            goto return_wrapper;
+            if((nsnull != (wrapper = root->Find(aIID))) ||
+               (nsnull != (wrapper = root->FindInherited(aIID))))
+            {
+                NS_ADDREF(wrapper);
+                goto return_wrapper;
+            }
         }
     }
-    else
+    if(!root)
     {
         // build the root wrapper
         if(rootJSObj == aJSObj)
@@ -430,7 +436,7 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCCallContext& ccx,
 
     InitStub(GetClass()->GetIID());
 
-    // intensionally do double addref - see Release().
+    // intentionally do double addref - see Release().
     NS_ADDREF_THIS();
     NS_ADDREF_THIS();
     NS_ADDREF(aClass);

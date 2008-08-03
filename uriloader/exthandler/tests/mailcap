@@ -1,0 +1,2 @@
+text/plain; cat '%s'; needsterminal
+text/plain; sed '%s'

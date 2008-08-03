@@ -1,0 +1,9 @@
+== basic.html basic-ref.html
+== basic-negcoord.html basic-negcoord-ref.html
+!= blur.html blur-notref.html
+== color-inherit.html color-inherit-ref.html
+== color-parserorder.html color-parserorder-ref.html
+== decorations-multiple-zorder.html decorations-multiple-zorder-ref.html
+== multiple-noblur.html multiple-noblur-ref.html
+== quirks-decor-noblur.html quirks-decor-noblur-ref.html
+== standards-decor-noblur.html standards-decor-noblur-ref.html

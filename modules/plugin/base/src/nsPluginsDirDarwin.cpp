@@ -241,6 +241,16 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
         return NS_ERROR_NULL_POINTER;
 
     nsCAutoString temp;
+    mPlugin->GetNativeLeafName(temp);
+    /*
+     * Don't load the VDP fake plugin, to avoid tripping a bad bug in OS X
+     * 10.5.3 (see bug 436575).
+     */
+    if (!strcmp(temp.get(), "VerifiedDownloadPlugin.plugin")) {
+        NS_WARNING("Preventing load of VerifiedDownloadPlugin.plugin (see bug 436575)");
+        return NS_ERROR_FAILURE;
+    }
+
     mPlugin->GetNativePath(temp);
     path = temp.get();
 
@@ -315,9 +325,22 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
   info.fFileName = p2cstrdup(spec.name);
   
   info.fFullPath = PL_strdup(path.get());
+  info.fVersion = nsnull;
   CFBundleRef bundle = getPluginBundle(path.get());
   if (bundle) {
     info.fBundle = PR_TRUE;
+    // Look for the release version first
+    CFStringRef version = (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(bundle, CFSTR("CFBundleShortVersionString"));
+    // If not try the build version
+    if (!version)
+      version = (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(bundle, kCFBundleVersionKey);
+    if (version) {
+      CFIndex versionLength = ::CFStringGetLength(version);
+      info.fVersion = (char*)malloc(versionLength + 1);
+      if (! ::CFStringGetCString(version, info.fVersion, versionLength + 1, 
+                                 kCFStringEncodingUTF8))
+        delete[] info.fVersion;
+    }
     CFRelease(bundle);
   }
   else {
@@ -416,6 +439,7 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     delete[] info.fExtensionArray;
     delete[] info.fFileName;
     delete[] info.fFullPath;
+    delete[] info.fVersion;
   }
 
   return NS_OK;

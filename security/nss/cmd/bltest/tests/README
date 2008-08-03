@@ -1,0 +1,49 @@
+This directory contains a set of tests for each cipher supported by
+BLAPI.  Each subdirectory contains known plaintext and ciphertext pairs
+(and keys and/or iv's if needed).  The tests can be run as a full set
+with:
+    bltest -T
+or as subsets, for example:
+    bltest -T -m des_ecb,md2,rsa
+
+In each subdirectory, the plaintext, key, and iv are ascii, and treated
+as such.  The ciphertext is base64-encoded to avoid the hassle of binary
+files.
+
+To add a test, incremement the value in the numtests file.  Create a
+plaintext, key, and iv file, such that the name of the file is
+incrememted one from the last set of tests.  For example, if you are
+adding the second test, put your data in files named plaintext1, key1,
+and iv1 (ignoring key and iv if they are not needed, of course).  Make
+sure your key and iv are the correct number of bytes for your cipher (a
+trailing \n is okay, but any other trailing bytes will be used!).  Once
+you have your input data, create output data by running bltest on a
+trusted implementation.  For example, for a new DES ECB test, run
+    bltest -E -m des_ecb -i plaintext1 -k key1 -o ciphertext1 -a in the
+tests/des_ecb directory.  Then run
+    bltest -T des_ecb from the cmd/bltest directory in the tree of the
+implementation you want to test.
+
+Note that the -a option above is important, it tells bltest to expect
+the input to be straight ASCII, and not base64 encoded binary!
+
+Special cases:
+
+RC5:
+RC5 can take additional parameters, the number of rounds to perform and
+the wordsize to use.  The number of rounds is between is between 0 and
+255, and the wordsize is either is either 16, 32, or 64 bits (at this
+time only 32-bit is supported).  These parameters are specified in a
+paramsN file, where N is an index as above.  The format of the file is
+"rounds=R\nwordsize=W\n".
+
+public key modes (RSA and DSA):
+Asymmetric key ciphers use keys with special properties, so creating a
+key file with "Mozilla!" in it will not get you very far!  To create a
+public key, run bltest with the plaintext you want to encrypt, using a
+trusted implementation.  bltest will generate a key and store it in
+"tmp.key", rename that file to keyN.  For example:
+    bltest -E -m rsa -i plaintext0 -o ciphertext0 -e 65537 -g 32 -a
+    mv tmp.key key0
+
+[note: specifying a keysize (-g) when using RSA is important!]

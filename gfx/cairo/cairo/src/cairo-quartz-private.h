@@ -41,7 +41,7 @@
 #include "cairoint.h"
 
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
-#include <cairo-quartz.h>
+#include "cairo-quartz.h"
 
 typedef struct cairo_quartz_surface {
     cairo_surface_t base;

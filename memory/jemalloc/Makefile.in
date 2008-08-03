@@ -45,6 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jemalloc
 
+# jemalloc.c properly uses 'static', so don't burden it with manually exposing
+# symbols.
+VISIBILITY_FLAGS=
+
 ifeq (WINNT,$(OS_TARGET))
 # Two options for Windows, either you build the CRT from source,
 # or you use a pre-built DLL.
@@ -68,8 +72,10 @@ $(CRT_OBJ_DIR)/jemalloc.c: $(srcdir)/crtsp1.diff
 	$(CRT_OBJ_DIR) $(srcdir)/ed.exe
 
 $(CRT_OBJ_DIR)/build/intel/mozcrt19.dll: \
-  $(CRT_OBJ_DIR)/jemalloc.c $(srcdir)/jemalloc.c $(srcdir)/tree.h
-	cp $(srcdir)/jemalloc.c $(srcdir)/tree.h $(CRT_OBJ_DIR)
+  $(CRT_OBJ_DIR)/jemalloc.c $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h \
+  $(srcdir)/ql.h $(srcdir)/qr.h $(srcdir)/rb.h
+	cp $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h $(srcdir)/ql.h \
+	$(srcdir)/qr.h $(srcdir)/rb.h $(CRT_OBJ_DIR)
 # this pretty much sucks, but nmake and make don't play well together
 	$(PYTHON) $(srcdir)/build-crt.py $(CRT_OBJ_DIR)
 	#XXX: these don't link right for some reason
@@ -91,15 +97,9 @@ endif
 
 LIBRARY_NAME	= jemalloc
 
-ifeq (Darwin,$(OS_TARGET))
-# Build jemalloc as a shared lib, so that the library init function is executed.
+# Build jemalloc as a shared lib.  This is mandatory for Darwin, since a library
+# init function is used on that platform.
 FORCE_SHARED_LIB= 1
-else
-# Make jemalloc part of libxul, in order to reduce dynamic loading overhead.
-MODULE		= jemalloc
-LIBXUL_LIBRARY	= 1
-FORCE_STATIC_LIB = 1
-endif
 
 CSRCS		= \
 		jemalloc.c \

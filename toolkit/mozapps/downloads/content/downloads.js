@@ -156,10 +156,8 @@ function downloadCompleted(aDownload)
       while (next && next.inProgress)
         next = next.nextSibling;
 
-      // Move the item and color everything after where it moved from
-      let fixup = dl.nextSibling;
+      // Move the item
       gDownloadsView.insertBefore(dl, next);
-      stripeifyList(fixup);
     } else {
       removeFromView(dl);
     }
@@ -286,7 +284,7 @@ function showDownload(aDownload)
 function onDownloadDblClick(aEvent)
 {
   // Only do the default action for double primary clicks
-  if (aEvent.button == 0)
+  if (aEvent.button == 0 && aEvent.target.selected)
     doDefaultForSelected();
 }
 
@@ -1082,9 +1080,6 @@ function removeFromView(aDownload)
   gDownloadsView.removeChild(aDownload);
   gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
 
-  // Color everything after from the newly selected item
-  stripeifyList(gDownloadsView.selectedItem);
-
   // We might have removed the last item, so update the clear list button
   updateClearListButton();
 }
@@ -1165,6 +1160,7 @@ function stepListBuilder(aNumItems) {
     // If we're done adding all items, we can quit
     if (!gStmt.executeStep()) {
       // Send a notification that we finished, but wait for clear list to update
+      updateClearListButton();
       setTimeout(function() Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService).
         notifyObservers(window, "download-manager-ui-done", null), 0);
@@ -1199,9 +1195,8 @@ function stepListBuilder(aNumItems) {
     // Make the item and add it to the end if it's active or matches the search
     let item = createDownloadItem(attrs);
     if (item && (isActive || downloadMatchesSearch(item))) {
-      // Add item to the end and color just that one item
+      // Add item to the end
       gDownloadsView.appendChild(item);
-      stripeifyList(item);
     
       // Because of the joys of XBL, we can't update the buttons until the
       // download object is in the document.
@@ -1252,9 +1247,8 @@ function prependList(aDownload)
   // Make the item and add it to the beginning
   let item = createDownloadItem(attrs);
   if (item) {
-    // Add item to the beginning and color the whole list
+    // Add item to the beginning
     gDownloadsView.insertBefore(item, gDownloadsView.firstChild);
-    stripeifyList(item);
     
     // Because of the joys of XBL, we can't update the buttons until the
     // download object is in the document.
@@ -1288,27 +1282,6 @@ function downloadMatchesSearch(aItem)
       return false;
 
   return true;
-}
-
-/**
- * Stripeify the download list by setting or clearing the "alternate" attribute
- * on items starting from a particular item and continuing to the end.
- *
- * @param aItem
- *        Download rishlist item to start stripeifying
- */
-function stripeifyList(aItem)
-{
-  let alt = "alternate";
-  // Set the item to be opposite of the other
-  let flipFrom = function(aOther) aOther && aOther.hasAttribute(alt) ?
-    aItem.removeAttribute(alt) : aItem.setAttribute(alt, "true");
-
-  // Keep coloring items as the opposite of its previous until no more
-  while (aItem) {
-    flipFrom(aItem.previousSibling);
-    aItem = aItem.nextSibling;
-  }
 }
 
 // we should be using real URLs all the time, but until

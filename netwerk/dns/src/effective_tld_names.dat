@@ -1,3 +1,42 @@
+// ***** BEGIN LICENSE BLOCK *****
+// Version: MPL 1.1/GPL 2.0/LGPL 2.1
+// 
+// The contents of this file are subject to the Mozilla Public License Version 
+// 1.1 (the "License"); you may not use this file except in compliance with 
+// the License. You may obtain a copy of the License at 
+// http://www.mozilla.org/MPL/
+// 
+// Software distributed under the License is distributed on an "AS IS" basis,
+// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+// for the specific language governing rights and limitations under the
+// License.
+// 
+// The Original Code is the Public Suffix List.
+// 
+// The Initial Developer of the Original Code is
+// Jo Hermans <jo.hermans@gmail.com>.
+// Portions created by the Initial Developer are Copyright (C) 2007
+// the Initial Developer. All Rights Reserved.
+// 
+// Contributor(s):
+//   Ruben Arakelyan <ruben@wackomenace.co.uk>
+//   Gervase Markham <gerv@gerv.net>
+//   The kind representatives of many TLD registries
+// 
+// Alternatively, the contents of this file may be used under the terms of
+// either the GNU General Public License Version 2 or later (the "GPL"), or
+// the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+// in which case the provisions of the GPL or the LGPL are applicable instead
+// of those above. If you wish to allow use of your version of this file only
+// under the terms of either the GPL or the LGPL, and not to allow others to
+// use your version of this file under the terms of the MPL, indicate your
+// decision by deleting the provisions above and replace them with the notice
+// and other provisions required by the GPL or the LGPL. If you do not delete
+// the provisions above, a recipient may use your version of this file under
+// the terms of any one of the MPL, the GPL or the LGPL.
+// 
+// ***** END LICENSE BLOCK *****
+
 // ac : http://en.wikipedia.org/wiki/.ac
 ac
 com.ac
@@ -184,11 +223,16 @@ urn.arpa
 as
 
 // at : http://en.wikipedia.org/wiki/.at
+// Confirmed by registry <it@nic.at> 2008-06-17
 at
 gv.at
 ac.at
 co.at
 or.at
+
+// priv.at : http://www.nic.priv.at/
+// Submitted by registry <lendl@nic.at> 2008-06-09
+priv.at
 
 // au : http://en.wikipedia.org/wiki/.au
 *.au
@@ -257,6 +301,7 @@ org.bb
 *.bd
 
 // be : http://en.wikipedia.org/wiki/.be
+// Confirmed by registry <tech@dns.be> 2008-06-08
 be
 ac.be
 
@@ -381,6 +426,9 @@ gov.bs
 // bt : http://en.wikipedia.org/wiki/.bt
 *.bt
 
+// bv : No registrations at this time.
+// Submitted by registry <jarle@uninett.no> 2006-06-16
+
 // bw : http://en.wikipedia.org/wiki/.bw
 // list of 2nd level tlds ?
 bw
@@ -443,6 +491,7 @@ cl
 cm
 
 // cn : http://en.wikipedia.org/wiki/.cn
+// Submitted by registry <tanyaling@cnnic.cn> 2008-06-11
 cn
 ac.cn
 com.cn
@@ -450,6 +499,10 @@ edu.cn
 gov.cn
 net.cn
 org.cn
+mil.cn
+公司.cn
+网络.cn
+網絡.cn
 // cn geographic names
 ah.cn
 bj.cn
@@ -482,12 +535,50 @@ xj.cn
 xz.cn
 yn.cn
 zj.cn
+hk.cn
+mo.cn
+tw.cn
 
 // co : http://en.wikipedia.org/wiki/.co
-*.co
+// Submitted by registry <tecnico@uniandes.edu.co> 2008-06-11
+co
+arts.co
+com.co
+edu.co
+firm.co
+gov.co
+info.co
+int.co
+mil.co
+net.co
+nom.co
+org.co
+rec.co
+web.co
 
 // com : http://en.wikipedia.org/wiki/.com
 com
+
+// CentralNic names : http://www.centralnic.com/names/domains
+// Confirmed by registry <gavin.brown@centralnic.com> 2008-06-09
+ar.com
+br.com
+cn.com
+de.com
+eu.com
+gb.com
+hu.com
+jpn.com
+kr.com
+no.com
+qc.com
+ru.com
+sa.com
+se.com
+uk.com
+us.com
+uy.com
+za.com
 
 // coop : http://en.wikipedia.org/wiki/.coop
 coop
@@ -523,6 +614,7 @@ de
 dj
 
 // dk : http://en.wikipedia.org/wiki/.dk
+// Confirmed by registry <robert@dk-hostmaster.dk> 2008-06-17
 dk
 
 // dm : http://en.wikipedia.org/wiki/.dm
@@ -635,6 +727,9 @@ veterinaire.fr
 // ga : http://en.wikipedia.org/wiki/.ga
 ga
 
+// gb : This registry is effectively dormant
+// Submitted by registry <Damien.Shaw@ja.net> 2008-06-12
+
 // gd : http://en.wikipedia.org/wiki/.gd
 gd
 
@@ -678,7 +773,13 @@ gl
 gm
 
 // gn : http://psg.com/dns/gn/gn.txt
-*.gn
+// Submitted by registry <randy@psg.com> 2008-06-17
+ac.gn
+com.gn
+edu.gn
+gov.gn
+org.gn
+net.gn
 
 // gov : http://en.wikipedia.org/wiki/.gov
 gov
@@ -693,7 +794,8 @@ org.gp
 // gq : http://en.wikipedia.org/wiki/.gq
 gq
 
-// gr : https://grweb.ics.forth.gr/english/1617-B-2002.html
+// gr : https://grweb.ics.forth.gr/english/1617-B-2005.html
+// Submitted by registry <segred@ics.forth.gr> 2008-06-09
 gr
 com.gr
 edu.gr
@@ -716,7 +818,8 @@ gw
 // gy : http://en.wikipedia.org/wiki/.gy
 gy
 
-// hk : http://en.wikipedia.org/wiki/.hk
+// hk : https://www.hkdnr.hk
+// Submitted by registry <hk.tech@hkirc.hk> 2008-06-11
 hk
 com.hk
 edu.hk
@@ -724,6 +827,21 @@ gov.hk
 idv.hk
 net.hk
 org.hk
+公司.hk
+教育.hk
+敎育.hk
+政府.hk
+個人.hk
+个人.hk
+箇人.hk
+網络.hk
+网络.hk
+组織.hk
+網絡.hk
+网絡.hk
+组织.hk
+組織.hk
+組织.hk 
 
 // hm : http://en.wikipedia.org/wiki/.hm
 hm
@@ -765,6 +883,7 @@ gouv.ht
 perso.ht
 
 // hu : http://www.domain.hu/domain/English/sld.html
+// Confirmed by registry <pasztor@iszt.hu> 2008-06-12
 hu
 co.hu
 info.hu
@@ -861,6 +980,7 @@ org.ir
 sch.ir
 
 // is : http://www.isnic.is/domain/rules.php
+// Confirmed by registry <marius@isgate.is> 2008-12-06
 is
 net.is
 com.is
@@ -1120,21 +1240,26 @@ gov.je
 // jm : http://www.com.jm/register.html
 *.jm
 
-// jo : http://www.nis.gov.jo/dns/reg.html
+// jo : http://www.dns.jo/Registration_policy.aspx
 jo
 com.jo
 org.jo
 net.jo
 edu.jo
+sch.jo
 gov.jo
 mil.jo
+name.jo
 myname.jo
 
 // jobs : http://en.wikipedia.org/wiki/.jobs
 jobs
 
 // jp : http://en.wikipedia.org/wiki/.jp
+// http://jprs.co.jp/en/jpdomain.html
+// Submitted by registry <yone@jprs.co.jp> 2008-06-11
 jp
+// jp organizational type names 
 ac.jp
 ad.jp
 co.jp
@@ -1144,8 +1269,8 @@ gr.jp
 lg.jp
 ne.jp
 or.jp
-// jp geographical names
-// I can't find an official English explanation, but used https://bugzilla.mozilla.org/show_bug.cgi?id=252342#c31
+// jp geographic type names
+// http://jprs.jp/doc/rule/saisoku-1.html
 *.aichi.jp
 *.akita.jp
 *.aomori.jp
@@ -1255,6 +1380,7 @@ or.jp
 !city.kobe.jp
 !city.kyoto.jp
 !city.nagoya.jp
+!city.niigata.jp
 !city.osaka.jp
 !city.saitama.jp
 !city.sapporo.jp
@@ -1331,6 +1457,7 @@ ulsan.kr
 *.kw
 
 // ky : http://www.icta.ky/da_ky_reg_dom.php
+// Confirmed by registry <kysupport@perimeterusa.com> 2008-06-17
 ky
 edu.ky
 gov.ky
@@ -1348,10 +1475,26 @@ mil.kz
 com.kz
 
 // la : http://en.wikipedia.org/wiki/.la
+// Submitted by registry <gavin.brown@nic.la> 2008-06-10
 la
+int.la
+net.la
+info.la
+edu.la
+gov.la
+per.la
+com.la
+org.la
+// see http://www.c.la/
+c.la
 
 // lb : http://en.wikipedia.org/wiki/.lb
-*.lb
+// Submitted by registry <randy@psg.com> 2008-06-17
+com.lb
+edu.lb
+gov.lb
+net.lb
+org.lb
 
 // lc : http://en.wikipedia.org/wiki/.lc
 lc
@@ -1381,7 +1524,12 @@ grp.lk
 hotel.lk
 
 // lr : http://psg.com/dns/lr/lr.txt
-*.lr
+// Submitted by registry <randy@psg.com> 2008-06-17
+com.lr
+edu.lr
+gov.lr
+org.lr
+net.lr
 
 // ls : http://en.wikipedia.org/wiki/.ls
 ls
@@ -1484,6 +1632,7 @@ gov.mo
 mobi
 
 // mp : http://www.dot.mp/
+// Confirmed by registry <dcamacho@saipan.com> 2008-06-17
 mp
 
 // mq : http://en.wikipedia.org/wiki/.mq
@@ -1523,7 +1672,15 @@ net.mw
 org.mw
 
 // mx : http://www.nic.mx/
-*.mx
+// 2008-06-23 - Wikipedia says second level registrations are prohibited,
+// but several exist. So, for safety, switched from "*.mx" to the below
+// ruleset until the situation is more clear.
+mx
+com.mx
+org.mx
+gob.mx
+edu.mx
+net.mx
 
 // my : http://www.mynic.net.my/
 *.my
@@ -1547,6 +1704,12 @@ ne
 // net : http://en.wikipedia.org/wiki/.net
 net
 
+// CentralNic names : http://www.centralnic.com/names/domains
+// Submitted by registry <gavin.brown@centralnic.com> 2008-06-17
+gb.net
+se.net
+uk.net
+
 // nf : http://en.wikipedia.org/wiki/.nf
 nf
 com.nf
@@ -1561,22 +1724,36 @@ other.nf
 store.nf
 
 // ng : http://psg.com/dns/ng/
-ng
+// Submitted by registry <randy@psg.com> 2008-06-17
+ac.ng
+com.ng
+edu.ng
+gov.ng
+net.ng
+org.ng
 
 // ni : http://www.nic.ni/dominios.htm
 *.ni
 
 // nl : http://www.domain-registry.nl/ace.php/c,728,122,,,,Home.html
+// Confirmed by registry <Antoin.Verschuren@sidn.nl> (with technical
+// reservations) 2008-06-08
 nl
 
 // no : http://www.norid.no/regelverk/index.en.html
+// The Norwegian registry has declined to notify us of updates. The web pages
+// referenced below are the official source of the data. There is also an
+// announce mailing list: 
+// https://postlister.uninett.no/sympa/info/norid-diskusjon
 no
+// Norid generic domains : http://www.norid.no/regelverk/vedlegg-c.en.html
 fhs.no
 vgs.no
 fylkesbibl.no
 folkebibl.no
 museum.no
 idrett.no
+// Non-Norid generic domains : http://www.norid.no/regelverk/vedlegg-d.en.html
 mil.no
 stat.no
 dep.no
@@ -2147,6 +2324,7 @@ råde.no
 salangen.no
 siellak.no
 saltdal.no
+salat.no
 sálát.no
 sálat.no
 samnanger.no
@@ -2286,7 +2464,7 @@ utsira.no
 vadso.no
 vadsø.no
 cahcesuolo.no
-cáhcesuolo.no
+čáhcesuolo.no
 vaksdal.no
 valle.no
 vang.no
@@ -2333,6 +2511,7 @@ våler.hedmark.no
 *.np
 
 // nr : http://cenpac.net.nr/dns/index.html
+// Confirmed by registry <technician@cenpac.net.nr> 2008-06-17
 nr
 biz.nr
 info.nr
@@ -2351,8 +2530,12 @@ nu
 // om : http://en.wikipedia.org/wiki/.om
 *.om
 
-// org : http://en.wikipedia.org/wiki/.og
+// org : http://en.wikipedia.org/wiki/.org
 org
+
+// CentralNic names : http://www.centralnic.com/names/domains
+// Submitted by registry <gavin.brown@centralnic.com> 2008-06-17
+ae.org
 
 // pa : http://www.nic.pa/
 *.pa
@@ -2370,7 +2553,7 @@ edu.pf
 *.pg
 
 // ph : http://www.domains.ph/FAQ2.asp
-// list of 2nd level tlds ?
+// Submitted by registry <jed@email.com.ph> 2008-06-13
 ph
 com.ph
 net.ph
@@ -2379,6 +2562,7 @@ gov.ph
 edu.ph
 ngo.ph
 mil.ph
+i.ph
 
 // pk : http://pk5.pknic.net.pk/pk5/msgNamepk.PK
 pk
@@ -2697,7 +2881,13 @@ gouv.rw
 *.sa
 
 // sb : http://www.sbnic.net.sb/
-*.sb
+// Submitted by registry <lee.humphries@telekom.com.sb> 2008-06-08
+sb
+com.sb
+edu.sb
+gov.sb
+net.sb
+org.sb
 
 // sc : http://www.nic.sc/
 sc
@@ -2708,13 +2898,13 @@ org.sc
 edu.sc
 
 // sd : http://www.isoc.sd/sudanic.isoc.sd/billing_pricing.htm
+// Submitted by registry <admin@isoc.sd> 2008-06-17
 sd
 com.sd
 net.sd
 org.sd
 edu.sd
 med.sd
-tv.sd
 gov.sd
 info.sd
 
@@ -2765,12 +2955,20 @@ sh
 // si : http://en.wikipedia.org/wiki/.si
 si
 
+// sj : No registrations at this time.
+// Submitted by registry <jarle@uninett.no> 2008-06-16
+
 // sk : http://en.wikipedia.org/wiki/.sk
 sk
 
-// sl : http://en.wikipedia.org/wiki/.sl
-// list of 2nd level domains ?
+// sl : http://www.nic.sl
+// Submitted by registry <adam@neoip.com> 2008-06-12
 sl
+com.sl
+net.sl
+edu.sl
+gov.sl
+org.sl
 
 // sm : http://en.wikipedia.org/wiki/.sm
 sm
@@ -2812,7 +3010,15 @@ tf
 tg
 
 // th : http://en.wikipedia.org/wiki/.th
-*.th
+// Submitted by registry <krit@thains.co.th> 2008-06-17
+th
+ac.th
+co.th
+go.th
+in.th
+mi.th
+net.th
+or.th
 
 // tj : http://www.nic.tj/policy.htm
 tj
@@ -2846,8 +3052,14 @@ tm
 tn
 
 // to : http://en.wikipedia.org/wiki/.to
-// list of 2nd level tlds ?
+// Submitted by registry <egullich@colo.to> 2008-06-17
 to
+com.to
+gov.to
+net.to
+org.to
+edu.to
+mil.to
 
 // tr : http://en.wikipedia.org/wiki/.tr
 *.tr
@@ -2896,7 +3108,12 @@ club.tw
 商業.tw
 
 // tz : http://en.wikipedia.org/wiki/.tz
-*.tz
+// Submitted by registry <randy@psg.com> 2008-06-17
+ac.tz
+co.tz
+go.tz
+ne.tz
+or.tz
 
 // ua : http://www.nic.net.ua/
 ua
@@ -3062,8 +3279,14 @@ co.uz
 va
 
 // vc : http://en.wikipedia.org/wiki/.vc
-// list of 2nd level tlds ?
+// Submitted by registry <kshah@ca.afilias.info> 2008-06-13
 vc
+com.vc
+net.vc
+org.vc
+gov.vc
+mil.vc
+edu.vc
 
 // ve : http://registro.nic.ve/nicve/registro/index.html
 *.ve
@@ -3114,4 +3337,3 @@ ws
 
 // zw : http://en.wikipedia.org/wiki/.zw
 *.zw
-

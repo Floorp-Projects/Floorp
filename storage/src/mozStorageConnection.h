@@ -43,7 +43,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsString.h"
-#include "nsDataHashtable.h"
+#include "nsInterfaceHashtable.h"
 #include "mozIStorageProgressHandler.h"
 #include "mozIStorageConnection.h"
 
@@ -81,8 +81,6 @@ protected:
     void HandleSqliteError(const char *aSqlStatement);
     static PLDHashOperator s_FindFuncEnum(const nsACString &aKey,
                                           nsISupports* aData, void* userArg);
-    static PLDHashOperator s_ReleaseFuncEnum(const nsACString &aKey,
-                                             nsISupports* aData, void* userArg);
     PRBool FindFunctionByInstance(nsISupports *aInstance);
 
     static int s_ProgressHelper(void *arg);
@@ -95,7 +93,7 @@ protected:
     nsCOMPtr<nsIFile> mDatabaseFile;
     PRBool mTransactionInProgress;
 
-    nsDataHashtable<nsCStringHashKey, nsISupports*> mFunctions;
+    nsInterfaceHashtable<nsCStringHashKey, nsISupports> mFunctions;
 
     nsCOMPtr<mozIStorageProgressHandler> mProgressHandler;
 

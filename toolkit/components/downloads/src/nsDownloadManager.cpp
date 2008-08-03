@@ -959,6 +959,8 @@ nsDownloadManager::Init()
   mObserverService->AddObserver(this, "offline-requested", PR_FALSE);
   mObserverService->AddObserver(this, "sleep_notification", PR_FALSE);
   mObserverService->AddObserver(this, "wake_notification", PR_FALSE);
+  mObserverService->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, PR_FALSE);
+  mObserverService->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, PR_FALSE);
 
   if (history)
     (void)history->AddObserver(this, PR_FALSE);
@@ -1802,11 +1804,8 @@ nsDownloadManager::OnBeginUpdateBatch()
 NS_IMETHODIMP
 nsDownloadManager::OnEndUpdateBatch()
 {
-  if (mHistoryTransaction) {
-    // Delete the transaction and cause it to commit
-    delete mHistoryTransaction;
-    mHistoryTransaction = nsnull;
-  }
+  // Get rid of the transaction and cause it to commit
+  mHistoryTransaction = nsnull;
 
   return NS_OK;
 }
@@ -1923,7 +1922,17 @@ nsDownloadManager::Observe(nsISupports *aSubject,
                            NS_LITERAL_STRING("offlineCancelDownloadsAlertMsgMultiple").get(),
                            NS_LITERAL_STRING("offlineCancelDownloadsAlertMsg").get(),
                            NS_LITERAL_STRING("dontGoOfflineButton").get());
-  } else if (strcmp(aTopic, "alertclickcallback") == 0) {
+  }
+  else if (strcmp(aTopic, NS_IOSERVICE_GOING_OFFLINE_TOPIC) == 0) {
+    // Pause all downloads, and mark them to auto-resume.
+    (void)PauseAllDownloads(PR_TRUE);
+  }
+  else if (strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC) == 0 &&
+           nsDependentString(aData).EqualsLiteral(NS_IOSERVICE_ONLINE)) {
+    // We can now resume all downloads that are supposed to auto-resume.
+    (void)ResumeAllDownloads(PR_FALSE);
+  }
+  else if (strcmp(aTopic, "alertclickcallback") == 0) {
     nsCOMPtr<nsIDownloadManagerUI> dmui =
       do_GetService("@mozilla.org/download-manager-ui;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);

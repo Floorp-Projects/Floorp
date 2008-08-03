@@ -171,8 +171,18 @@
             round = Math.ceil;
           }
 
-          function processFrame(self, scrollAmounts) {
-            self.scrollBoxObject.scrollBy(scrollAmounts.shift(), 0);
+          const FRAME_LENGTH = 60;
+
+          function processFrame(self, scrollAmounts, off) {
+            var distance = scrollAmounts.shift();
+
+            // Skip frames if we aren't getting the desired frame rate.
+            if (off > 0) {
+              for (var i = Math.round(off / FRAME_LENGTH); i > 0; i--)
+                distance += scrollAmounts.shift() || 0;
+            }
+
+            self.scrollBoxObject.scrollBy(distance, 0);
             if (!scrollAmounts.length)
               self._stopSmoothScroll();
           }
@@ -182,7 +192,7 @@
           var scrollAmount, scrollAmounts = [];
           if (amountToScroll > 2 || amountToScroll < -2) {
             scrollAmount = round(amountToScroll * 0.2);
-            scrollAmounts.push (scrollAmount, scrollAmount, scrollAmount);
+            scrollAmounts.push(scrollAmount, scrollAmount, scrollAmount);
             amountToScroll -= 3 * scrollAmount;
           }
           while (this._isScrolling < 0 && amountToScroll < 0 ||
@@ -190,8 +200,8 @@
             amountToScroll -= (scrollAmount = round(amountToScroll * 0.5));
             scrollAmounts.push(scrollAmount);
           }
-          this._smoothScrollTimer = setInterval(processFrame, 60, this, scrollAmounts);
-          processFrame(this, scrollAmounts);
+          this._smoothScrollTimer = setInterval(processFrame, FRAME_LENGTH, this, scrollAmounts);
+          processFrame(this, scrollAmounts, 0);
         ]]></body>
       </method>
 

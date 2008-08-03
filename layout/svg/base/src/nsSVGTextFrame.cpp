@@ -267,6 +267,16 @@ nsSVGTextFrame::UpdateCoveredRegion()
 }
 
 NS_IMETHODIMP
+nsSVGTextFrame::InitialUpdate()
+{
+  nsresult rv = nsSVGTextFrameBase::InitialUpdate();
+  
+  UpdateGlyphPositioning(PR_FALSE);
+
+  return rv;
+}  
+
+NS_IMETHODIMP
 nsSVGTextFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   UpdateGlyphPositioning(PR_TRUE);

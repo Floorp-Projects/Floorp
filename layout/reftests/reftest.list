@@ -1,40 +1,36 @@
 # If you mark a test as failing or random, you MUST file a bug report in
 # bugzilla and note the bug number as a comment on the line with the
 # failing test.
+#
+# Please keep the tests in alphabetical order unless there is a reason
+# for something to not be in order.
 
 # verify the tests work
 include reftest-sanity/reftest.list
 
-#images
+# images (if libpr0n is busted, could result in weird failures in other tests)
 include ../../modules/libpr0n/test/reftest/reftest.list
 
-# printing
-include printing/reftest.list
-include pagination/reftest.list
+# bidi/
+include bidi/reftest.list
+
+# border-image
+include border-image/reftest.list
+
+# box-properties/
+include box-properties/reftest.list
+
+# box-shadow/
+include box-shadow/reftest.list
 
 # bugs/
 include bugs/reftest.list
 
-# object/
-include object/reftest.list
+# canvas 2D
+include canvas/reftest.list
 
-# pixel-rounding/
-include pixel-rounding/reftest.list
-
-# table-dom/
-include table-dom/reftest.list
-
-# table-background/
-include table-background/reftest.list
-
-# table-width/
-include table-width/reftest.list
-
-# xul-document-load/
-include xul-document-load/reftest.list
-
-# box-properties/
-include box-properties/reftest.list
+# columns/
+include columns/reftest.list
 
 # counters/
 include counters/reftest.list
@@ -45,8 +41,48 @@ include first-letter/reftest.list
 # first-line/
 include first-line/reftest.list
 
+# forms
+include forms/reftest.list
+
+# block-inside-inline splits
+include ib-split/reftest.list
+
+# image-region/
+include image-region/reftest.list
+
+# line-breaking/
+include line-breaking/reftest.list
+
+# mathml/
+include mathml/reftest.list
+
+# native-theme/
+include native-theme/reftest.list
+
+# object/
+include object/reftest.list
+
+# percent-overflow-sizing/
+include percent-overflow-sizing/reftest.list
+
+# pixel-rounding/
+include pixel-rounding/reftest.list
+
+# printing
+include printing/reftest.list
+include pagination/reftest.list
+
 # svg/
 include svg/reftest.list
+
+# table-background/
+include table-background/reftest.list
+
+# table-dom/
+include table-dom/reftest.list
+
+# table-width/
+include table-width/reftest.list
 
 # text/
 include text/reftest.list
@@ -57,37 +93,17 @@ include text-decoration/reftest.list
 # text-indent/
 include text-indent/reftest.list
 
+# text-shadow/
+include text-shadow/reftest.list
+
 # text-transform/
 include text-transform/reftest.list
 
-# native-theme/
-include native-theme/reftest.list
+# xul-document-load/
+include xul-document-load/reftest.list
 
-# bidi
-include bidi/reftest.list
+# xul grid
+include ../xul/base/src/grid/reftests/reftest.list
 
 # z-index/
 include z-index/reftest.list
- 
-# columns/
-include columns/reftest.list
-
-# image-region/
-include image-region/reftest.list
-
-# block-inside-inline splits
-include ib-split/reftest.list
-
-# line-breaking
-include line-breaking/reftest.list
-
-# percent-overflow-sizing
-include percent-overflow-sizing/reftest.list
-
-# forms
-include forms/reftest.list
-
-# mathml
-include mathml/reftest.list
-
-include ../xul/base/src/grid/reftests/reftest.list

@@ -97,7 +97,8 @@ public:
 protected:
   void Initialize();
   nsresult SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
-                              PRInt32 aEndOffset, nsAString& aStr);
+                              PRInt32 aEndOffset, nsAString& aStr,
+                              nsIDOMNode* aOriginalNode = nsnull);
   nsresult SerializeToStringRecursive(nsIDOMNode* aNode,
                                       nsAString& aStr,
                                       PRBool aDontSerializeRoot);
@@ -259,28 +260,36 @@ nsDocumentEncoder::IncludeInContext(nsIDOMNode *aNode)
 }
 
 nsresult
-nsDocumentEncoder::SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
+nsDocumentEncoder::SerializeNodeStart(nsIDOMNode* aNode,
+                                      PRInt32 aStartOffset,
                                       PRInt32 aEndOffset,
-                                      nsAString& aStr)
+                                      nsAString& aStr,
+                                      nsIDOMNode* aOriginalNode)
 {
   PRUint16 type;
 
   nsCOMPtr<nsIDOMNode> node;
-  if (mNodeFixup)
-  {
-    mNodeFixup->FixupNode(aNode, getter_AddRefs(node));
+
+  // Caller didn't do fixup, so we'll do it ourselves
+  if (!aOriginalNode) {
+    aOriginalNode = aNode;
+    if (mNodeFixup) { 
+      PRBool dummy;
+      mNodeFixup->FixupNode(aNode, &dummy, getter_AddRefs(node));
+    }
   }
+
+  // Either there was no fixed-up node,
+  // or the caller did fixup themselves and aNode is already fixed
   if (!node)
-  {
-    node = do_QueryInterface(aNode);
-  }
+    node = aNode;
 
   node->GetNodeType(&type);
   switch (type) {
     case nsIDOMNode::ELEMENT_NODE:
     {
       nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-      nsCOMPtr<nsIDOMElement> originalElement = do_QueryInterface(aNode);
+      nsCOMPtr<nsIDOMElement> originalElement = do_QueryInterface(aOriginalNode);
       mSerializer->AppendElementStart(element, originalElement, aStr);
       break;
     }
@@ -345,18 +354,32 @@ nsDocumentEncoder::SerializeToStringRecursive(nsIDOMNode* aNode,
                                               PRBool aDontSerializeRoot)
 {
   nsresult rv = NS_OK;
+  PRBool serializeClonedChildren;
+  nsCOMPtr<nsIDOMNode> maybeFixedNode;
+  
+  if (mNodeFixup)
+    mNodeFixup->FixupNode(aNode, &serializeClonedChildren, getter_AddRefs(maybeFixedNode));
+
+  if (!maybeFixedNode)
+    maybeFixedNode = aNode;
+
   if (!aDontSerializeRoot) {
-    rv = SerializeNodeStart(aNode, 0, -1, aStr);
+    rv = SerializeNodeStart(maybeFixedNode, 0, -1, aStr, aNode);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  PRBool hasChildren = PR_FALSE;
+  nsIDOMNode *node;
+  if (serializeClonedChildren)
+    node = maybeFixedNode;
+  else  
+    node = aNode;
 
-  aNode->HasChildNodes(&hasChildren);
+  PRBool hasChildren = PR_FALSE;
+  node->HasChildNodes(&hasChildren);
 
   if (hasChildren) {
     nsCOMPtr<nsIDOMNodeList> childNodes;
-    rv = aNode->GetChildNodes(getter_AddRefs(childNodes));
+    rv = node->GetChildNodes(getter_AddRefs(childNodes));
     NS_ENSURE_TRUE(childNodes, NS_SUCCEEDED(rv) ? NS_ERROR_FAILURE : rv);
 
     PRInt32 index, count;
@@ -374,7 +397,7 @@ nsDocumentEncoder::SerializeToStringRecursive(nsIDOMNode* aNode,
   }
 
   if (!aDontSerializeRoot) {
-    rv = SerializeNodeEnd(aNode, aStr);
+    rv = SerializeNodeEnd(node, aStr);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

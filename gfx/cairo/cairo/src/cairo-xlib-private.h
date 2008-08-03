@@ -34,6 +34,7 @@
 #define CAIRO_XLIB_PRIVATE_H
 
 #include "cairo-xlib.h"
+#include "cairo-xlib-xrender-private.h"
 
 #include "cairo-compiler-private.h"
 #include "cairo-freelist-private.h"
@@ -61,6 +62,8 @@ struct _cairo_xlib_display {
     Display *display;
     cairo_xlib_screen_info_t *screens;
 
+    XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_A1 + 1];
+
     cairo_xlib_job_t *workqueue;
     cairo_freelist_t wq_freelist;
 
@@ -70,15 +73,24 @@ struct _cairo_xlib_display {
     unsigned int closed :1;
 };
 
+/* size of color cube */
+#define CUBE_SIZE 6
+/* size of gray ramp */
+#define RAMP_SIZE 16
+
 typedef struct _cairo_xlib_visual_info {
     VisualID visualid;
-    XColor colors[256];
-    unsigned long rgb333_to_pseudocolor[512];
+    struct { uint8_t a, r, g, b; } colors[256];
+    uint8_t cube_to_pseudocolor[CUBE_SIZE][CUBE_SIZE][CUBE_SIZE];
+    uint8_t field8_to_cube[256];
+    int8_t  dither8_to_cube[256];
+    uint8_t gray8_to_pseudocolor[256];
 } cairo_xlib_visual_info_t;
 
 struct _cairo_xlib_screen_info {
     cairo_xlib_screen_info_t *next;
     cairo_reference_count_t ref_count;
+    cairo_mutex_t mutex;
 
     cairo_xlib_display_t *display;
     Screen *screen;
@@ -116,6 +128,10 @@ _cairo_xlib_display_queue_resource (cairo_xlib_display_t *display,
 				   XID resource);
 cairo_private void
 _cairo_xlib_display_notify (cairo_xlib_display_t *display);
+
+cairo_private XRenderPictFormat *
+_cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
+	                                cairo_format_t		 format);
 
 cairo_private cairo_xlib_screen_info_t *
 _cairo_xlib_screen_info_get (Display *display, Screen *screen);

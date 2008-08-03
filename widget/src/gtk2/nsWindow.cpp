@@ -383,14 +383,8 @@ nsWindow::ReleaseGlobals()
   }
 }
 
-#ifndef USE_XIM
 NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsCommonWidget,
                              nsISupportsWeakReference)
-#else
-NS_IMPL_ISUPPORTS_INHERITED2(nsWindow, nsCommonWidget,
-                             nsISupportsWeakReference,
-                             nsIKBStateControl)
-#endif
 
 NS_IMETHODIMP
 nsWindow::Create(nsIWidget        *aParent,
@@ -1373,7 +1367,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
 }
 
 NS_IMETHODIMP
-nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
+nsWindow::SetMenuBar(void * aMenuBar)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1677,7 +1671,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     GetHasTransparentBackground(translucent);
     nsIntRect boundsRect;
     GdkPixmap* bufferPixmap = nsnull;
-    nsRefPtr<gfxXlibSurface> bufferPixmapSurface;
+    nsRefPtr<gfxASurface> bufferPixmapSurface;
 
     updateRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y,
                                  &boundsRect.width, &boundsRect.height);
@@ -1715,13 +1709,11 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         gint depth = gdk_drawable_get_depth(d);
         bufferPixmap = gdk_pixmap_new(d, boundsRect.width, boundsRect.height, depth);
         if (bufferPixmap) {
-            GdkVisual* visual = gdk_drawable_get_visual(GDK_DRAWABLE(bufferPixmap));
-            Visual* XVisual = gdk_x11_visual_get_xvisual(visual);
-            Display* display = gdk_x11_drawable_get_xdisplay(GDK_DRAWABLE(bufferPixmap));
-            Drawable drawable = gdk_x11_drawable_get_xid(GDK_DRAWABLE(bufferPixmap));
-            bufferPixmapSurface =
-                new gfxXlibSurface(display, drawable, XVisual,
-                                   gfxIntSize(boundsRect.width, boundsRect.height));
+            bufferPixmapSurface = GetSurfaceForGdkDrawable(GDK_DRAWABLE(bufferPixmap),
+                                                           boundsRect.Size());
+            if (bufferPixmapSurface && bufferPixmapSurface->CairoStatus()) {
+                bufferPixmapSurface = nsnull;
+            }
             if (bufferPixmapSurface) {
                 bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
                 nsCOMPtr<nsIRenderingContext> newRC;
@@ -2286,13 +2278,13 @@ nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 }
 
 static PRUint32
-GetCharCodeFor(const GdkEventKey *aEvent, GdkModifierType aShiftState,
+GetCharCodeFor(const GdkEventKey *aEvent, guint aShiftState,
                gint aGroup)
 {
     guint keyval;
-    if (gdk_keymap_translate_keyboard_state(NULL,
-                                            aEvent->hardware_keycode,
-                                            aShiftState, aGroup,
+    if (gdk_keymap_translate_keyboard_state(NULL, aEvent->hardware_keycode,
+                                            GdkModifierType(aShiftState),
+                                            aGroup,
                                             &keyval, NULL, NULL, NULL)) {
         GdkEventKey tmpEvent = *aEvent;
         tmpEvent.state = guint(aShiftState);
@@ -2416,6 +2408,9 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         gint level = GetKeyLevel(aEvent);
         if ((event.isControl || event.isAlt || event.isMeta) &&
             (level == 0 || level == 1)) {
+            guint baseState =
+                aEvent->state & ~(GDK_SHIFT_MASK | GDK_CONTROL_MASK |
+                                  GDK_MOD1_MASK | GDK_MOD4_MASK);
             // We shold send both shifted char and unshifted char,
             // all keyboard layout users can use all keys.
             // Don't change event.charCode. On some keyboard layouts,
@@ -2423,11 +2418,12 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
             nsAlternativeCharCode altCharCodes(0, 0);
             // unshifted charcode of current keyboard layout.
             altCharCodes.mUnshiftedCharCode =
-                GetCharCodeFor(aEvent, GdkModifierType(0), aEvent->group);
+                GetCharCodeFor(aEvent, baseState, aEvent->group);
             PRBool isLatin = (altCharCodes.mUnshiftedCharCode <= 0xFF);
             // shifted charcode of current keyboard layout.
             altCharCodes.mShiftedCharCode =
-                GetCharCodeFor(aEvent, GDK_SHIFT_MASK, aEvent->group);
+                GetCharCodeFor(aEvent, baseState | GDK_SHIFT_MASK,
+                               aEvent->group);
             isLatin = isLatin && (altCharCodes.mShiftedCharCode <= 0xFF);
             if (altCharCodes.mUnshiftedCharCode ||
                 altCharCodes.mShiftedCharCode) {
@@ -2452,18 +2448,33 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
                     g_free(keys);
                 }
                 if (minGroup >= 0) {
+                    PRUint32 unmodifiedCh =
+                               event.isShift ? altCharCodes.mShiftedCharCode :
+                                               altCharCodes.mUnshiftedCharCode;
                     // unshifted charcode of found keyboard layout.
                     PRUint32 ch =
-                        GetCharCodeFor(aEvent, GdkModifierType(0), minGroup);
+                        GetCharCodeFor(aEvent, baseState, minGroup);
                     altCharCodes.mUnshiftedCharCode =
                         IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
                     // shifted charcode of found keyboard layout.
-                    ch = GetCharCodeFor(aEvent, GDK_SHIFT_MASK, minGroup);
+                    ch = GetCharCodeFor(aEvent, baseState | GDK_SHIFT_MASK,
+                                        minGroup);
                     altCharCodes.mShiftedCharCode =
                         IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
                     if (altCharCodes.mUnshiftedCharCode ||
                         altCharCodes.mShiftedCharCode) {
                         event.alternativeCharCodes.AppendElement(altCharCodes);
+                    }
+                    // If the charCode is not Latin, and the level is 0 or 1,
+                    // we should replace the charCode to Latin char if Alt and
+                    // Meta keys are not pressed. (Alt should be sent the
+                    // localized char for accesskey like handling of Web
+                    // Applications.)
+                    ch = event.isShift ? altCharCodes.mShiftedCharCode :
+                                         altCharCodes.mUnshiftedCharCode;
+                    if (ch && !(event.isAlt || event.isMeta) &&
+                        event.charCode == unmodifiedCh) {
+                        event.charCode = ch;
                     }
                 }
             }
@@ -3553,6 +3564,32 @@ nsWindow::NativeShow (PRBool  aAction)
             moz_drawingarea_set_visibility(mDrawingarea, FALSE);
         }
     }
+}
+
+nsSize
+nsWindow::GetSafeWindowSize(nsSize aSize)
+{
+    GdkScreen* screen = NULL;
+    if (mContainer) {
+        screen = gdk_drawable_get_screen(GTK_WIDGET(mContainer)->window);
+    }
+    else if (mDrawingarea) {
+        screen = gdk_drawable_get_screen(mDrawingarea->inner_window);
+    }
+
+    if (!screen)
+        return aSize;
+
+    nsSize result = aSize;
+    if (aSize.width > 2 * gdk_screen_get_width(screen)) {
+        NS_WARNING("Clamping huge window width");
+        result.width = 2 * gdk_screen_get_width(screen);
+    }
+    if (aSize.height > 2 * gdk_screen_get_height(screen)) {
+        NS_WARNING("Clamping huge window height");
+        result.height = 2 * gdk_screen_get_height(screen);
+    }
+    return result;
 }
 
 void
@@ -5453,7 +5490,7 @@ nsWindow::IMEDestroyContext(void)
     }
 
     mIMEData->mOwner   = nsnull;
-    mIMEData->mEnabled = nsIKBStateControl::IME_STATUS_DISABLED;
+    mIMEData->mEnabled = nsIWidget::IME_STATUS_DISABLED;
 
     if (mIMEData->mContext) {
         workaround_gtk_im_display_closed(GTK_WIDGET(mContainer),
@@ -5537,20 +5574,7 @@ nsWindow::IMEComposeStart(void)
     if (NS_UNLIKELY(mIsDestroyed))
         return;
 
-    gint x1, y1, x2, y2;
-    GtkWidget *widget =
-        get_gtk_widget_for_gdk_window(this->mDrawingarea->inner_window);
-
-    gdk_window_get_origin(widget->window, &x1, &y1);
-    gdk_window_get_origin(this->mDrawingarea->inner_window, &x2, &y2);
-
-    GdkRectangle area;
-    area.x = compEvent.theReply.mCursorPosition.x + (x2 - x1);
-    area.y = compEvent.theReply.mCursorPosition.y + (y2 - y1);
-    area.width  = 0;
-    area.height = compEvent.theReply.mCursorPosition.height;
-
-    gtk_im_context_set_cursor_location(IMEGetContext(), &area);
+    IMESetCursorPosition(compEvent.theReply);
 }
 
 void
@@ -5596,20 +5620,7 @@ nsWindow::IMEComposeText(const PRUnichar *aText,
     if (NS_UNLIKELY(mIsDestroyed))
         return;
 
-    gint x1, y1, x2, y2;
-    GtkWidget *widget =
-        get_gtk_widget_for_gdk_window(this->mDrawingarea->inner_window);
-
-    gdk_window_get_origin(widget->window, &x1, &y1);
-    gdk_window_get_origin(this->mDrawingarea->inner_window, &x2, &y2);
-
-    GdkRectangle area;
-    area.x = textEvent.theReply.mCursorPosition.x + (x2 - x1);
-    area.y = textEvent.theReply.mCursorPosition.y + (y2 - y1);
-    area.width  = 0;
-    area.height = textEvent.theReply.mCursorPosition.height;
-
-    gtk_im_context_set_cursor_location(IMEGetContext(), &area);
+    IMESetCursorPosition(textEvent.theReply);
 }
 
 void
@@ -5640,7 +5651,7 @@ nsWindow::IMEGetContext()
 static PRBool
 IsIMEEnabledState(PRUint32 aState)
 {
-    return aState == nsIKBStateControl::IME_STATUS_ENABLED;
+    return aState == nsIWidget::IME_STATUS_ENABLED;
 }
 
 PRBool
@@ -5652,8 +5663,8 @@ nsWindow::IMEIsEnabledState(void)
 static PRBool
 IsIMEEditableState(PRUint32 aState)
 {
-    return aState == nsIKBStateControl::IME_STATUS_ENABLED ||
-           aState == nsIKBStateControl::IME_STATUS_PASSWORD;
+    return aState == nsIWidget::IME_STATUS_ENABLED ||
+           aState == nsIWidget::IME_STATUS_PASSWORD;
 }
 
 PRBool
@@ -5744,7 +5755,42 @@ nsWindow::IMEFilterEvent(GdkEventKey *aEvent)
     return retval;
 }
 
-/* nsIKBStateControl */
+void
+nsWindow::IMESetCursorPosition(const nsTextEventReply& aReply)
+{
+    nsIWidget *refWidget = aReply.mReferenceWidget;
+    if (!refWidget) {
+        NS_WARNING("mReferenceWidget is null");
+        refWidget = this;
+    }
+    nsWindow* refWindow = static_cast<nsWindow*>(refWidget);
+
+    nsWindow* ownerWindow = IM_get_owning_window(mDrawingarea);
+    if (!ownerWindow) {
+        NS_ERROR("there is no owner");
+        return;
+    }
+
+    // Get the position of the refWindow in screen.
+    gint refX, refY;
+    gdk_window_get_origin(refWindow->mDrawingarea->inner_window,
+                          &refX, &refY);
+
+    // Get the position of IM context owner window in screen.
+    gint ownerX, ownerY;
+    gdk_window_get_origin(ownerWindow->mDrawingarea->inner_window,
+                          &ownerX, &ownerY);
+
+    // Compute the caret position in the IM owner window.
+    GdkRectangle area;
+    area.x = aReply.mCursorPosition.x + refX - ownerX;
+    area.y = aReply.mCursorPosition.y + refY - ownerY;
+    area.width  = 0;
+    area.height = aReply.mCursorPosition.height;
+
+    gtk_im_context_set_cursor_location(IMEGetContext(), &area);
+}
+
 NS_IMETHODIMP
 nsWindow::ResetInputState()
 {
@@ -5831,7 +5877,7 @@ nsWindow::GetIMEEnabled(PRUint32* aState)
     IMEInitData();
 
     *aState =
-      mIMEData ? mIMEData->mEnabled : nsIKBStateControl::IME_STATUS_DISABLED;
+      mIMEData ? mIMEData->mEnabled : nsIWidget::IME_STATUS_DISABLED;
     return NS_OK;
 }
 
@@ -6152,14 +6198,29 @@ IM_get_input_context(nsWindow *aWindow)
     nsWindow::nsIMEData *data = aWindow->mIMEData;
     if (!data)
         return nsnull;
-    if (data->mEnabled == nsIKBStateControl::IME_STATUS_ENABLED)
+    if (data->mEnabled == nsIWidget::IME_STATUS_ENABLED)
         return data->mContext;
-    if (data->mEnabled == nsIKBStateControl::IME_STATUS_PASSWORD)
+    if (data->mEnabled == nsIWidget::IME_STATUS_PASSWORD)
         return data->mSimpleContext;
     return data->mDummyContext;
 }
 
 #endif
+
+/* static */ already_AddRefed<gfxASurface>
+nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
+                                   const nsSize& aSize)
+{
+    GdkVisual* visual = gdk_drawable_get_visual(aDrawable);
+    Visual* xVisual = gdk_x11_visual_get_xvisual(visual);
+    Display* xDisplay = gdk_x11_drawable_get_xdisplay(aDrawable);
+    Drawable xDrawable = gdk_x11_drawable_get_xid(aDrawable);
+
+    gfxASurface* result = new gfxXlibSurface(xDisplay, xDrawable, xVisual,
+                                       gfxIntSize(aSize.width, aSize.height));
+    NS_IF_ADDREF(result);
+    return result;
+}
 
 // return the gfxASurface for rendering to this widget
 gfxASurface*

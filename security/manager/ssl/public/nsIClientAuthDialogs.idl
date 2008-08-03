@@ -61,6 +61,12 @@ interface nsIClientAuthDialogs : nsISupports
                         out boolean canceled);
 };
 
+[scriptable, uuid(95c4373e-bdd4-4a63-b431-f5b000367721)]
+interface nsIClientAuthUserDecision : nsISupports
+{
+  attribute boolean rememberClientAuthCertificate;
+};
+
 %{C++
 #define NS_CLIENTAUTHDIALOGS_CONTRACTID "@mozilla.org/nsClientAuthDialogs;1"
 %}

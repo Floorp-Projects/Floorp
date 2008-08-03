@@ -152,6 +152,8 @@
 #include "nsEventDispatcher.h"
 #include "nsPresShellIterator.h"
 #include "mozAutoDocUpdate.h"
+#include "nsIDOMXULCommandEvent.h"
+#include "nsIDOMNSEvent.h"
 
 /**
  * Three bits are used for XUL Element's lazy state.
@@ -542,9 +544,10 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
     if (!doc)
         return NS_ERROR_UNEXPECTED; // XXX
 
+    nsPIDOMWindow *window;
     nsIContent *root = doc->GetRootContent();
-    if ((!root || root == this) && !mNodeInfo->Equals(nsGkAtoms::overlay)) {
-        nsPIDOMWindow *window = doc->GetInnerWindow();
+    if ((!root || root == this) && !mNodeInfo->Equals(nsGkAtoms::overlay) &&
+        (window = doc->GetInnerWindow()) && window->IsInnerWindow()) {
 
         nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(window);
         if (!piTarget)
@@ -944,6 +947,16 @@ nsXULElement::GetChildAt(PRUint32 aIndex) const
     return mAttrsAndChildren.GetSafeChildAt(aIndex);
 }
 
+nsIContent * const *
+nsXULElement::GetChildArray() const
+{
+    if (NS_FAILED(EnsureContentsGenerated())) {
+        return nsnull;
+    }
+
+    return mAttrsAndChildren.GetChildArray();
+}
+
 PRInt32
 nsXULElement::IndexOf(nsINode* aPossibleChild) const
 {
@@ -1073,6 +1086,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
             if (mNodeInfo->Equals(nsGkAtoms::label)) {
                 // For anonymous labels the unregistering must
                 // occur on the binding parent control.
+                // XXXldb: And what if the binding parent is null?
                 content = GetBindingParent();
             }
 
@@ -1143,9 +1157,10 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             HideWindowChrome(aValue && NS_LITERAL_STRING("true").Equals(*aValue));
         }
 
-        // titlebarcolor is settable on any root node (windows, dialogs, etc)
+        // (in)activetitlebarcolor is settable on any root node (windows, dialogs, etc)
         nsIDocument *document = GetCurrentDoc();
-        if (aName == nsGkAtoms::titlebarcolor &&
+        if ((aName == nsGkAtoms::activetitlebarcolor ||
+             aName == nsGkAtoms::inactivetitlebarcolor) &&
             document && document->GetRootContent() == this) {
 
             nscolor color = NS_RGBA(0, 0, 0, 0);
@@ -1153,7 +1168,7 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             attrValue.ParseColor(*aValue, document);
             attrValue.GetColorValue(color);
 
-            SetTitlebarColor(color);
+            SetTitlebarColor(color, aName == nsGkAtoms::activetitlebarcolor);
         }
 
         if (aName == nsGkAtoms::src && document) {
@@ -1396,10 +1411,11 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
             HideWindowChrome(PR_FALSE);
         }
 
-        if (aName == nsGkAtoms::titlebarcolor &&
+        if ((aName == nsGkAtoms::activetitlebarcolor ||
+             aName == nsGkAtoms::inactivetitlebarcolor) &&
             doc && doc->GetRootContent() == this) {
             // Use 0, 0, 0, 0 as the "none" color.
-            SetTitlebarColor(NS_RGBA(0, 0, 0, 0));
+            SetTitlebarColor(NS_RGBA(0, 0, 0, 0), aName == nsGkAtoms::activetitlebarcolor);
         }
 
         // If the accesskey attribute is removed, unregister it here
@@ -1645,6 +1661,22 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
                                                    EmptyString(),
                                                    &aVisitor.mDOMEvent);
                 }
+
+                nsCOMPtr<nsIDOMNSEvent> nsevent =
+                    do_QueryInterface(aVisitor.mDOMEvent);
+                while (nsevent) {
+                    nsCOMPtr<nsIDOMEventTarget> oTarget;
+                    nsevent->GetOriginalTarget(getter_AddRefs(oTarget));
+                    NS_ENSURE_STATE(!SameCOMIdentity(oTarget, commandContent));
+                    nsCOMPtr<nsIDOMEvent> tmp;
+                    nsCOMPtr<nsIDOMXULCommandEvent> commandEvent =
+                        do_QueryInterface(nsevent);
+                    if (commandEvent) {
+                        commandEvent->GetSourceEvent(getter_AddRefs(tmp));
+                    }
+                    nsevent = do_QueryInterface(tmp);
+                }
+
                 event.sourceEvent = aVisitor.mDOMEvent;
 
                 nsEventStatus status = nsEventStatus_eIgnore;
@@ -2453,7 +2485,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
 }
 
 void
-nsXULElement::SetTitlebarColor(nscolor aColor)
+nsXULElement::SetTitlebarColor(nscolor aColor, PRBool aActive)
 {
     nsIDocument* doc = GetCurrentDoc();
     if (!doc || doc->GetRootContent() != this) {
@@ -2468,7 +2500,7 @@ nsXULElement::SetTitlebarColor(nscolor aColor)
             nsCOMPtr<nsIWidget> mainWidget;
             baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
             if (mainWidget) {
-                mainWidget->SetWindowTitlebarColor(aColor);
+                mainWidget->SetWindowTitlebarColor(aColor, aActive);
             }
         }
     }

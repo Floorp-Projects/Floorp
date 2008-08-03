@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab 
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -42,18 +43,13 @@
 interface mozIStorageConnection;
 interface mozIStorageDataSet;
 interface nsISimpleEnumerator;
+interface mozIStorageStatementCallback;
+interface mozIStoragePendingStatement;
 
 [ptr] native sqlite3stmtptr(struct sqlite3_stmt);
 
-[scriptable, uuid(42fad13e-c67d-4b2c-bd61-2c5b17186772)]
+[scriptable, uuid(4a712295-d076-4007-9c78-8c0e15373b9f)]
 interface mozIStorageStatement : mozIStorageValueArray {
-  /**
-   * Initialize this query with the given SQL statement.
-   *
-   */
-  void initialize(in mozIStorageConnection aDBConnection,
-                  in AUTF8String aSQLStatement);
-
   /**
    * Finalizes a statement so you can successfully close a database connection.
    * This method does not need to be used from native callers since you can just
@@ -155,6 +151,19 @@ interface mozIStorageStatement : mozIStorageValueArray {
    *
    */
   boolean executeStep();
+
+  /**
+   * Execute a query asynchronously using any currently bound parameters.  This
+   * statement can be reused immediately, and reset does not need to be called.
+   *
+   * @param aCallback [optional]
+   *        The callback object that will be notified of progress, errors, and
+   *        completion.
+   * @returns an object that can be used to cancel the statements execution.
+   */
+  mozIStoragePendingStatement executeAsync(
+    [optional] in mozIStorageStatementCallback aCallback
+  );
 
   /**
    * The current state.  Row getters are only valid while

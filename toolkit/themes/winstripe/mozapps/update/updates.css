@@ -6,7 +6,7 @@
 }
 
 link {
-  color: blue;
+  color: -moz-nativehyperlinktext;
   border: 1px solid transparent;
   margin-top: 1px;
   margin-bottom: 4px;

@@ -73,11 +73,8 @@ GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBX
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 
 ifdef MOZ_MEMORY
-ifeq ($(OS_ARCH),Darwin)
+ifneq ($(OS_ARCH),WINNT)
 LIBS += -ljemalloc
-endif
-ifeq ($(OS_ARCH),SunOS)
-SOLARIS_JEMALLOC_LDFLAGS = -L$(LIBXUL_DIST)/bin -lxul
 endif
 endif
 
@@ -163,16 +160,7 @@ ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 
-ifndef BUILD_STATIC_LIBS
-
-ifdef NS_TRACE_MALLOC
-# when libxul is enabled, trace-malloc is part of it
-ifndef MOZ_ENABLE_LIBXUL
-EXTRA_DSO_LIBS += tracemalloc
-endif
-endif
-
-else
+ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-config.mk
 
 EXTRA_DEPS	+= \

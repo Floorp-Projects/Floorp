@@ -1494,13 +1494,6 @@ ns4xPluginInstance::GetJSObject(JSContext *cx)
 void
 ns4xPluginInstance::DefineJavaProperties()
 {
-  // Enable this code only if OJI is defined, even though this is the
-  // code that does what OJI does in the case where a Java plugin with
-  // NPRuntime support is installed. We do this because OJI being
-  // defined also states whether or not window.java etc is defined,
-  // which this code is all about.
-
-#ifdef OJI
   NPObject *plugin_obj = nsnull;
 
   // The dummy Java plugin's scriptable object is what we want to
@@ -1548,7 +1541,6 @@ ns4xPluginInstance::DefineJavaProperties()
   _releaseobject(window_obj);
   _releaseobject(plugin_obj);
   _releaseobject(java_obj);
-#endif
 }
 
 nsresult

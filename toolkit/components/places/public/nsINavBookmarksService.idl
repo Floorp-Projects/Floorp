@@ -562,9 +562,11 @@ interface nsINavBookmarksService : nsISupports
   void removeObserver(in nsINavBookmarkObserver observer);
 
   /**
-   * Runs the passed callback in batch mode. Use this when a lot of things
-   * are about to change. Calls can be nested, observers will only be
-   * notified when all batches begin/end.
+   * Runs the passed callback inside of a database transaction.
+   * Use this when a lot of things are about to change, for example
+   * adding or deleting a large number of bookmark items. Calls can
+   * be nested. Observers are notified when batches begin and end, via 
+   * nsINavBookmarkObserver.onBeginUpdateBatch/onEndUpdateBatch.
    *
    * @param aCallback
    *        nsINavHistoryBatchCallback interface to call.

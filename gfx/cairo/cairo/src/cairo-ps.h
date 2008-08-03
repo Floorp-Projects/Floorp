@@ -37,7 +37,7 @@
 #ifndef CAIRO_PS_H
 #define CAIRO_PS_H
 
-#include <cairo.h>
+#include "cairo.h"
 
 #if CAIRO_HAS_PS_SURFACE
 

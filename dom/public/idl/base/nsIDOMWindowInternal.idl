@@ -44,7 +44,7 @@ interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
 
-[scriptable, uuid(89b9ff5a-78db-430b-b3b4-66469457435a)]
+[scriptable, uuid(3414EBC7-731F-4697-9F43-ACA6F5050875)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -205,15 +205,19 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    * Implements a safe message-passing system which can cross same-origin
    * boundaries.
    *
-   * This method, when called, causes a MessageEvent to be dispatched at the
-   * primary document for the window upon which this method is called.  (Note
-   * that the postMessage property on windows is allAccess and thus is readable
-   * cross-origin.)  The dispatched event will have message as its data, the
-   * calling context's window as its source, and a domain and URI determined by
-   * the calling context's main document URI.
+   * This method, when called, causes a MessageEvent to be asynchronously
+   * dispatched at the primary document for the window upon which this method is
+   * called.  (Note that the postMessage property on windows is allAccess and
+   * thus is readable cross-origin.)  The dispatched event will have message as
+   * its data, the calling context's window as its source, and an origin
+   * determined by the calling context's main document URI.  The targetOrigin
+   * argument specifies a URI and is used to restrict the message to be sent
+   * only when the target window has the same origin as targetOrigin (since,
+   * when the sender and the target have different origins, neither can read the
+   * location of the other).
    * 
    * See the WHATWG HTML5 specification, section 6.4, for more details.
    */
   [binaryname(PostMessageMoz)] void postMessage(in DOMString message,
-                                                [optional] in DOMString origin);
+                                                in DOMString targetOrigin);
 };

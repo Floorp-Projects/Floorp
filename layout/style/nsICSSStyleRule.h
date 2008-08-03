@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -75,24 +76,36 @@ private:
   nsAtomList& operator=(const nsAtomList& aCopy); 
 };
 
-struct nsAtomStringList {
+struct nsPseudoClassList {
 public:
-  nsAtomStringList(nsIAtom* aAtom, const PRUnichar *aString = nsnull);
-  nsAtomStringList(const nsString& aAtomValue, const PRUnichar *aString = nsnull);
-  ~nsAtomStringList(void);
+  nsPseudoClassList(nsIAtom* aAtom);
+  nsPseudoClassList(nsIAtom* aAtom, const PRUnichar *aString);
+  nsPseudoClassList(nsIAtom* aAtom, const PRInt32 *aIntPair);
+  ~nsPseudoClassList(void);
 
   /** Do a deep clone.  Should be used only on the first in the linked list. */
-  nsAtomStringList* Clone() const { return Clone(PR_TRUE); }
+  nsPseudoClassList* Clone() const { return Clone(PR_TRUE); }
 
   nsCOMPtr<nsIAtom> mAtom;
-  PRUnichar*        mString;
-  nsAtomStringList* mNext;
+  union {
+    // For a given value of mAtom, we have either:
+    //   a. no value, which means mMemory is always null
+    //      (if neither of the conditions for (b) or (c) is true)
+    //   b. a string value, which means mString/mMemory is non-null
+    //      (if nsCSSPseudoClasses::HasStringArg(mAtom))
+    //   c. an integer pair value, which means mNumbers/mMemory is non-null
+    //      (if nsCSSPseudoClasses::HasNthPairArg(mAtom))
+    void*           mMemory; // both pointer types use NS_Alloc/NS_Free
+    PRUnichar*      mString;
+    PRInt32*        mNumbers;
+  } u;
+  nsPseudoClassList* mNext;
 private: 
-  nsAtomStringList* Clone(PRBool aDeep) const;
+  nsPseudoClassList* Clone(PRBool aDeep) const;
 
   // These are not supported and are not implemented! 
-  nsAtomStringList(const nsAtomStringList& aCopy);
-  nsAtomStringList& operator=(const nsAtomStringList& aCopy); 
+  nsPseudoClassList(const nsPseudoClassList& aCopy);
+  nsPseudoClassList& operator=(const nsPseudoClassList& aCopy); 
 };
 
 #define NS_ATTR_FUNC_SET        0     // [attr]
@@ -142,8 +155,9 @@ public:
   void SetTag(const nsString& aTag);
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
-  void AddPseudoClass(const nsString& aPseudoClass, const PRUnichar* aString = nsnull);
-  void AddPseudoClass(nsIAtom* aPseudoClass, const PRUnichar* aString = nsnull);
+  void AddPseudoClass(nsIAtom* aPseudoClass);
+  void AddPseudoClass(nsIAtom* aPseudoClass, const PRUnichar* aString);
+  void AddPseudoClass(nsIAtom* aPseudoClass, const PRInt32* aIntPair);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
                     const nsString& aValue, PRBool aCaseSensitive);
@@ -155,6 +169,7 @@ public:
                 PRBool aAppend = PR_FALSE) const;
 
 private:
+  void AddPseudoClassInternal(nsPseudoClassList *aPseudoClass);
   nsCSSSelector* Clone(PRBool aDeepNext, PRBool aDeepNegations) const;
 
   void AppendNegationToString(nsAString& aString);
@@ -167,8 +182,8 @@ public:
   nsCOMPtr<nsIAtom> mTag;
   nsAtomList*     mIDList;
   nsAtomList*     mClassList;
-  nsAtomStringList* mPseudoClassList; // atom for the pseudo, string for
-                                      // the argument to functional pseudos
+  nsPseudoClassList* mPseudoClassList; // atom for the pseudo, string for
+                                       // the argument to functional pseudos
   nsAttrSelector* mAttrList;
   PRUnichar       mOperator;
   nsCSSSelector*  mNegations;

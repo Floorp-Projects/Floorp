@@ -77,7 +77,6 @@ CPPSRCS		= nsXULControllers.cpp
 
 ifdef MOZ_XUL
 CPPSRCS		+= \
-		nsElementMap.cpp \
 		nsXULCommandDispatcher.cpp \
 		nsXULContentSink.cpp \
 		nsXULDocument.cpp \

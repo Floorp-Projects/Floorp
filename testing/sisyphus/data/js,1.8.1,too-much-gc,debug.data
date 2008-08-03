@@ -1,4 +1,4 @@
 product=js
 branch=1.8.1
-sourcepath=${BUILDDIR}/1.8.1-too-much-gc/mozilla/js/src
+jsshellsourcepath=${BUILDDIR}/1.8.1-too-much-gc/mozilla/js/src
 buildtype=debug
