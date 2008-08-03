@@ -373,7 +373,7 @@ typedef enum _cairo_scaled_glyph_info {
     CAIRO_SCALED_GLYPH_INFO_METRICS	 = (1 << 0),
     CAIRO_SCALED_GLYPH_INFO_SURFACE	 = (1 << 1),
     CAIRO_SCALED_GLYPH_INFO_PATH	 = (1 << 2),
-    CAIRO_SCALED_GLYPH_INFO_META_SURFACE = (1 << 3),
+    CAIRO_SCALED_GLYPH_INFO_META_SURFACE = (1 << 3)
 } cairo_scaled_glyph_info_t;
 
 typedef struct _cairo_scaled_font_subset {
