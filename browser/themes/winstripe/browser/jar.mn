@@ -8,6 +8,7 @@ classic.jar:
 *       skin/classic/browser/engineManager.css                       (engineManager.css)
         skin/classic/browser/Info.png                                (Info.png)
         skin/classic/browser/identity.png                            (identity.png)
+        skin/classic/browser/KUI-background.png
         skin/classic/browser/pageInfo.css
         skin/classic/browser/pageInfo.png                            (pageInfo.png)
         skin/classic/browser/page-livemarks.png                      (feeds/feedIcon16.png)
@@ -25,7 +26,6 @@ classic.jar:
         skin/classic/browser/Go-arrow.png                            (Go-arrow.png)
         skin/classic/browser/Go-arrow-rtl.png                        (Go-arrow-rtl.png)
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
-        skin/classic/browser/Search-close.png                        (Search-close.png)
         skin/classic/browser/Search-glass.png                        (Search-glass.png)
         skin/classic/browser/Search-glass-rtl.png                    (Search-glass-rtl.png)
         skin/classic/browser/Search-addengines.png
@@ -34,7 +34,8 @@ classic.jar:
         skin/classic/browser/menu-forward.png                        (menu-forward.png)
         skin/classic/browser/monitor.png
         skin/classic/browser/monitor_16-10.png
-        skin/classic/browser/navbar-textbox-buttons.png              (navbar-textbox-buttons.png)
+        skin/classic/browser/navbar-textbox-buttons.png
+        skin/classic/browser/urlbar-favicon-glow.png
         skin/classic/browser/feeds/feed-icons-16.png                 (feeds/feed-icons-16.png)
         skin/classic/browser/feeds/feedIcon.png                      (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png                    (feeds/feedIcon16.png)
@@ -70,7 +71,6 @@ classic.jar:
         skin/classic/browser/preferences/application.png             (preferences/application.png)
         skin/classic/browser/preferences/mail.png                    (preferences/mail.png)
         skin/classic/browser/preferences/Options.png                 (preferences/Options.png)
-        skin/classic/browser/preferences/plugin.png                  (preferences/plugin.png)
         skin/classic/browser/preferences/saveFile.png                (preferences/saveFile.png)
         skin/classic/browser/preferences/preferences.css             (preferences/preferences.css)
         skin/classic/browser/preferences/applications.css            (preferences/applications.css)
@@ -95,6 +95,7 @@ classic.jar:
 *       skin/classic/aero/browser/engineManager.css                  (engineManager.css)
         skin/classic/aero/browser/Info.png                           (Info-aero.png)
         skin/classic/aero/browser/identity.png                       (identity-aero.png)
+        skin/classic/aero/browser/KUI-background.png
         skin/classic/aero/browser/pageInfo.css
         skin/classic/aero/browser/pageInfo.png                       (pageInfo-aero.png)
         skin/classic/aero/browser/page-livemarks.png                 (feeds/feedIcon16-aero.png)
@@ -112,7 +113,6 @@ classic.jar:
         skin/classic/aero/browser/Go-arrow.png                       (Go-arrow-aero.png)
         skin/classic/aero/browser/Go-arrow-rtl.png                   (Go-arrow-rtl-aero.png)
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
-        skin/classic/aero/browser/Search-close.png                   (Search-close-aero.png)
         skin/classic/aero/browser/Search-glass.png                   (Search-glass-aero.png)
         skin/classic/aero/browser/Search-glass-rtl.png               (Search-glass-rtl-aero.png)
         skin/classic/aero/browser/Search-addengines.png
@@ -122,6 +122,7 @@ classic.jar:
         skin/classic/aero/browser/monitor.png
         skin/classic/aero/browser/monitor_16-10.png
         skin/classic/aero/browser/navbar-textbox-buttons.png         (navbar-textbox-buttons-aero.png)
+        skin/classic/aero/browser/urlbar-favicon-glow.png
         skin/classic/aero/browser/feeds/feed-icons-16.png            (feeds/feed-icons-16-aero.png)
         skin/classic/aero/browser/feeds/feedIcon.png                 (feeds/feedIcon-aero.png)
         skin/classic/aero/browser/feeds/feedIcon16.png               (feeds/feedIcon16-aero.png)

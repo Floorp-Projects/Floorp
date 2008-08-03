@@ -44,7 +44,7 @@
 
 #define XPTI_STRING_ARENA_BLOCK_SIZE    (1024 * 1)
 #define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 1)
-#define XPTI_HASHTABLE_SIZE             128
+#define XPTI_HASHTABLE_SIZE             2048
 
 /***************************************************************************/
 

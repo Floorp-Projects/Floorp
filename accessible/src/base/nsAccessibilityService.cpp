@@ -1328,15 +1328,6 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   }
 #endif
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  if (content && content->Tag() == nsAccessibilityAtoms::map) {
-    // Don't walk into maps, they take up no space.
-    // The nsHTMLAreaAccessible's they contain are attached as
-    // children of the appropriate nsHTMLImageAccessible.
-    *aIsHidden = PR_TRUE;
-    return NS_OK;
-  }
-
   // Check to see if we already have an accessible for this
   // node in the cache
   nsCOMPtr<nsIAccessNode> accessNode;
@@ -1344,12 +1335,18 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
   nsCOMPtr<nsIAccessible> newAcc;
   if (accessNode) {
-    // Retrieved from cache
-    // QI might not succeed if it's a node that's not accessible
+    // Retrieved from cache. QI might not succeed if it's a node that's not
+    // accessible. In this case try to create new accessible because one and
+    // the same DOM node may be accessible or not in time (for example,
+    // when it is visible or hidden).
     newAcc = do_QueryInterface(accessNode);
-    NS_IF_ADDREF(*aAccessible = newAcc);
-    return NS_OK;
+    if (newAcc) {
+      NS_ADDREF(*aAccessible = newAcc);
+      return NS_OK;
+    }
   }
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
   // No cache entry, so we must create the accessible
   // Check to see if hidden first
@@ -1461,6 +1458,27 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     return InitAccessible(newAcc, aAccessible, nsnull);
   }
 
+  PRBool isHTML = content->IsNodeOfType(nsINode::eHTML);
+  if (isHTML && content->Tag() == nsAccessibilityAtoms::map) {
+    // Create hyper text accessible for HTML map if it is used to group links
+    // (see http://www.w3.org/TR/WCAG10-HTML-TECHS/#group-bypass). If the HTML
+    // map doesn't have 'name' attribute (or has empty name attribute) then we
+    // suppose it is used for links grouping. Otherwise we think it is used in
+    // conjuction with HTML image element and in this case we don't create any
+    // accessible for it and don't walk into it. The accessibles for HTML area
+    // (nsHTMLAreaAccessible) the map contains are attached as children of the
+    // appropriate accessible for HTML image (nsHTMLImageAccessible).
+    nsAutoString name;
+    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::name, name);
+    if (!name.IsEmpty()) {
+      *aIsHidden = PR_TRUE;
+      return NS_OK;
+    }
+    
+    nsresult rv = CreateHyperTextAccessible(frame, getter_AddRefs(newAcc));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(aNode);
   if (roleMapEntry && !nsCRT::strcmp(roleMapEntry->roleString, "presentation") &&
       !content->IsFocusable()) { // For presentation only
@@ -1474,8 +1492,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // say what kind of accessible to create.
   nsresult rv = GetAccessibleByType(aNode, getter_AddRefs(newAcc));
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  PRBool isHTML = content->IsNodeOfType(nsINode::eHTML);
+
   if (!newAcc && !isHTML) {
     if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
              content->Tag() == nsAccessibilityAtoms::svg) {
@@ -1526,7 +1543,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           }
           break;
         }
-        else if (tableFrame->GetType() == nsAccessibilityAtoms::tableCellFrame) {
+        else if (tableContent->Tag() == nsAccessibilityAtoms::table) {
           // Stop before we are fooled by any additional table ancestors
           // This table cell frameis part of a separate ancestor table.
           tryTagNameOrFrame = PR_FALSE;
@@ -2049,14 +2066,15 @@ nsAccessibilityService::GetAccessibleForDeckChildren(nsIDOMNode *aNode, nsIAcces
       // If deck frame is for xul:tabpanels element then the given node has
       // tabpanel accessible.
       nsCOMPtr<nsIContent> parentContent = parentFrame->GetContent();
+#ifdef MOZ_XUL
       if (parentContent->NodeInfo()->Equals(nsAccessibilityAtoms::tabpanels,
                                             kNameSpaceID_XUL)) {
         *aAccessible = new nsXULTabpanelAccessible(aNode, weakShell);
-      } else {
+      } else
+#endif
         *aAccessible =
           new nsEnumRoleAccessible(aNode, weakShell,
                                    nsIAccessibleRole::ROLE_PROPERTYPAGE);
-      }
 
       NS_ENSURE_TRUE(*aAccessible, NS_ERROR_OUT_OF_MEMORY);
 

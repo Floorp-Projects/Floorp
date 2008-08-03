@@ -2,17 +2,12 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://inspector/locale/prefs.dtd">
 
-<overlay id="ovPrefs" 
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
   <treechildren id="advancedChildren">
-    <treeitem id="inspector">
-      <treerow>       
-        <treecell class="treecell-indent" url="chrome://inspector/content/prefs/pref-inspector.xul" label="&Inspector.label;"/> 
-      </treerow>
-    </treeitem>
+    <treeitem id="inspectorItem" label="&Inspector.label;"
+              prefpane="inspector_pane" helpTopic="advanced_pref_dom_inspector"
+              url="chrome://inspector/content/prefs/pref-inspector.xul"/>
   </treechildren>
 
 </overlay>
-
-        

@@ -1688,7 +1688,9 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                                 Metrics *aMetrics, PRBool aTightBoundingBox,
                                 gfxContext *aRefContext,
                                 PRBool *aUsedHyphenation,
-                                PRUint32 *aLastBreak)
+                                PRUint32 *aLastBreak,
+                                PRBool aCanWordWrap,
+                                gfxBreakPriority *aBreakPriority)
 {
     aMaxLength = PR_MIN(aMaxLength, mCharacterCount - aStart);
 
@@ -1742,29 +1744,38 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             }
         }
 
-        PRBool lineBreakHere = mCharacterGlyphs[i].CanBreakBefore() &&
-            (!aSuppressInitialBreak || i > aStart);
-        if (lineBreakHere || (haveHyphenation && hyphenBuffer[i - bufferStart])) {
-            gfxFloat hyphenatedAdvance = advance;
-            PRBool hyphenation = !lineBreakHere;
-            if (hyphenation) {
-                hyphenatedAdvance += aProvider->GetHyphenWidth();
-            }
-            
-            if (lastBreak < 0 || width + hyphenatedAdvance - trimmableAdvance <= aWidth) {
-                // We can break here.
-                lastBreak = i;
-                lastBreakTrimmableChars = trimmableChars;
-                lastBreakTrimmableAdvance = trimmableAdvance;
-                lastBreakUsedHyphenation = hyphenation;
-            }
+        // There can't be a word-wrap break opportunity at the beginning of the
+        // line: if the width is too small for even one character to fit, it 
+        // could be the first and last break opportunity on the line, and that
+        // would trigger an infinite loop.
+        if (!aSuppressInitialBreak || i > aStart) {
+            PRBool lineBreakHere = mCharacterGlyphs[i].CanBreakBefore();
+            PRBool hyphenation = haveHyphenation && hyphenBuffer[i - bufferStart];
+            PRBool wordWrapping = aCanWordWrap && *aBreakPriority <= eWordWrapBreak;
 
-            width += advance;
-            advance = 0;
-            if (width - trimmableAdvance > aWidth) {
-                // No more text fits. Abort
-                aborted = PR_TRUE;
-                break;
+            if (lineBreakHere || hyphenation || wordWrapping) {
+                gfxFloat hyphenatedAdvance = advance;
+                if (!lineBreakHere && !wordWrapping) {
+                    hyphenatedAdvance += aProvider->GetHyphenWidth();
+                }
+            
+                if (lastBreak < 0 || width + hyphenatedAdvance - trimmableAdvance <= aWidth) {
+                    // We can break here.
+                    lastBreak = i;
+                    lastBreakTrimmableChars = trimmableChars;
+                    lastBreakTrimmableAdvance = trimmableAdvance;
+                    lastBreakUsedHyphenation = !lineBreakHere && !wordWrapping;
+                    *aBreakPriority = hyphenation || lineBreakHere ?
+                        eNormalBreak : eWordWrapBreak;
+                }
+
+                width += advance;
+                advance = 0;
+                if (width - trimmableAdvance > aWidth) {
+                    // No more text fits. Abort
+                    aborted = PR_TRUE;
+                    break;
+                }
             }
         }
         

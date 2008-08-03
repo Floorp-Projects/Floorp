@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<svg width="7.5cm" height="5cm" viewBox="0 0 200 120"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <filter id="MyFilter" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="120">
+
+      <feOffset in="SourceAlpha" result="offset" dx="4" dy="4" y="76"/>
+
+      <feSpecularLighting in="offset" result="specOut"
+                          surfaceScale="5" specularConstant=".75" specularExponent="20">
+        <fePointLight x="-5000" y="-10000" z="20000"/>
+      </feSpecularLighting>
+
+      <feComposite in="SourceAlpha" in2="SourceAlpha" result="litPaint"
+                   operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
+
+      <feMerge>
+        <feMergeNode in="offset"/>
+        <feMergeNode in="litPaint"/>
+      </feMerge>
+
+    </filter>
+  </defs>
+
+  <g filter="url(#MyFilter)"/>
+
+</svg>

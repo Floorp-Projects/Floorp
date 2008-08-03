@@ -193,20 +193,6 @@ void NPN_ReloadPlugins(NPBool reloadPages)
   CallNPN_ReloadPluginsProc(NPNFuncs.reloadplugins, reloadPages);
 }
 
-JRIEnv* NPN_GetJavaEnv(void)
-{
-  JRIEnv * rv = NULL;
-	rv = CallNPN_GetJavaEnvProc(NPNFuncs.getJavaEnv);
-  return rv;
-}
-
-jref NPN_GetJavaPeer(NPP instance)
-{
-  jref rv;
-  rv = CallNPN_GetJavaPeerProc(NPNFuncs.getJavaPeer, instance);
-  return rv;
-}
-
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void *value)
 {
   NPError rv = CallNPN_GetValueProc(NPNFuncs.getvalue, instance, variable, value);

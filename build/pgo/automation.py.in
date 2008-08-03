@@ -37,11 +37,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
+import codecs
 from datetime import datetime
 import itertools
 import logging
 import shutil
 import os
+import re
 import signal
 import sys
 import threading
@@ -54,62 +56,13 @@ for setting up the browser environment.
 __all__ = [
            "UNIXISH",
            "IS_WIN32",
+           "IS_MAC",
            "runApp",
            "Process",
            "initializeProfile",
            "DIST_BIN",
            "DEFAULT_APP",
           ]
-
-# Since some tests require cross-domain support in Mochitest, across ports,
-# domains, subdomains, etc. we use a proxy autoconfig hack to map a bunch of
-# servers onto localhost:8888.  We have to grant them the same privileges as
-# localhost:8888 here, since the browser only knows them as the URLs they're
-# pretending to be.  We also have two servers which are set up but don't have
-# privileges, for testing privilege functionality.
-#
-# These lists must be kept in sync with the following list:
-#
-# http://developer.mozilla.org/en/docs/Mochitest#How_do_I_test_issues_which_only_show_up_when_tests_are_run_across_domains.3F
-#
-servers = [
-           "localhost:8888", # MUST be first -- see PAC pref-setting code
-           "example.org:80",
-           "test1.example.org:80",
-           "test2.example.org:80",
-           "sub1.test1.example.org:80",
-           "sub1.test2.example.org:80",
-           "sub2.test1.example.org:80",
-           "sub2.test2.example.org:80",
-           "example.org:8000",
-           "test1.example.org:8000",
-           "test2.example.org:8000",
-           "sub1.test1.example.org:8000",
-           "sub1.test2.example.org:8000",
-           "sub2.test1.example.org:8000",
-           "sub2.test2.example.org:8000",
-           "example.com:80",
-           "test1.example.com:80",
-           "test2.example.com:80",
-           "sub1.test1.example.com:80",
-           "sub1.test2.example.com:80",
-           "sub2.test1.example.com:80",
-           "sub2.test2.example.com:80",
-           "sectest1.example.org:80",
-           "sub.sectest2.example.org:80",
-           "sub1.xn--lt-uia.example.org:8000", # U+00E4 U+006C U+0074
-           "sub2.xn--lt-uia.example.org:80",   # U+00E4 U+006C U+0074
-           "xn--exmple-cua.test:80",
-           "sub1.xn--exmple-cua.test:80",
-           "xn--hxajbheg2az3al.xn--jxalpdlp:80", # Greek IDN for example.test
-           "sub1.xn--hxajbheg2az3al.xn--jxalpdlp:80",
-          ]
-
-unprivilegedServers = [
-                       "sectest2.example.org:80",
-                       "sub.sectest1.example.org:80",
-                      ]
-
 
 # These are generated in mozilla/build/Makefile.in
 #expand DIST_BIN = "./" + __XPC_BIN_PATH__
@@ -120,6 +73,7 @@ unprivilegedServers = [
 #else
 IS_CYGWIN = False
 #endif
+#expand IS_CAMINO = __IS_CAMINO__ != 0
 
 UNIXISH = not IS_WIN32 and not IS_MAC
 
@@ -221,6 +175,88 @@ class Process:
 # PROFILE SETUP #
 #################
 
+class SyntaxError(Exception):
+  "Signifies a syntax error on a particular line in server-locations.txt."
+
+  def __init__(self, lineno, msg = None):
+    self.lineno = lineno
+    self.msg = msg
+
+  def __str__(self):
+    s = "Syntax error on line " + str(self.lineno)
+    if self.msg:
+      s += ": %s." % self.msg
+    else:
+      s += "."
+    return s
+
+
+class Location:
+  "Represents a location line in server-locations.txt."
+
+  def __init__(self, scheme, host, port, options):
+    self.scheme = scheme
+    self.host = host
+    self.port = port
+    self.options = options
+
+
+def readLocations():
+  """
+  Reads the locations at which the Mochitest HTTP server is available from
+  server-locations.txt.
+  """
+
+  locationFile = codecs.open("server-locations.txt", "r", "UTF-8")
+
+  # Perhaps more detail than necessary, but it's the easiest way to make sure
+  # we get exactly the format we want.  See server-locations.txt for the exact
+  # format guaranteed here.
+  lineRe = re.compile(r"^(?P<scheme>[a-z][-a-z0-9+.]*)"
+                      r"://"
+                      r"(?P<host>"
+                        r"\d+\.\d+\.\d+\.\d+"
+                        r"|"
+                        r"(?:[a-z0-9](?:[-a-z0-9]*[a-z0-9])?\.)*"
+                        r"[a-z](?:[-a-z0-9]*[a-z0-9])?"
+                      r")"
+                      r":"
+                      r"(?P<port>\d+)"
+                      r"(?:"
+                      r"\s+"
+                      r"(?P<options>\w+(?:,\w+)*)"
+                      r")?$")
+  locations = []
+  lineno = 0
+  seenPrimary = False
+  for line in locationFile:
+    lineno += 1
+    if line.startswith("#") or line == "\n":
+      continue
+      
+    match = lineRe.match(line)
+    if not match:
+      raise SyntaxError(lineno)
+
+    options = match.group("options")
+    if options:
+      options = options.split(",")
+      if "primary" in options:
+        if seenPrimary:
+          raise SyntaxError(lineno, "multiple primary locations")
+        seenPrimary = True
+    else:
+      options = []
+
+    locations.append(Location(match.group("scheme"), match.group("host"),
+                              match.group("port"), options))
+
+  if not seenPrimary:
+    raise SyntaxError(lineno + 1, "missing primary location")
+
+  return locations
+
+
 def initializeProfile(profileDir):
   "Sets up the standard testing profile."
 
@@ -232,6 +268,7 @@ def initializeProfile(profileDir):
 
   part = """\
 user_pref("browser.dom.window.dump.enabled", true);
+user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
 user_pref("dom.max_script_run_time", 0); // no slow script dialogs
 user_pref("signed.applets.codebase_principal_support", true);
@@ -241,50 +278,62 @@ user_pref("browser.warnOnQuit", false);
 user_pref("accessibility.typeaheadfind.autostart", false);
 user_pref("javascript.options.showInConsole", true);
 user_pref("layout.debug.enable_data_xbl", true);
+user_pref("browser.EULA.override", true);
+
+user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 """
   prefs.append(part)
 
-  # Grant God-power to all the servers on which tests can run.
-  for (i, server) in itertools.izip(itertools.count(1), servers):
+  locations = readLocations()
+
+  # Grant God-power to all the privileged servers on which tests run.
+  privileged = filter(lambda loc: "privileged" in loc.options, locations)
+  for (i, l) in itertools.izip(itertools.count(1), privileged):
     part = """
 user_pref("capability.principal.codebase.p%(i)d.granted",
           "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite \
            UniversalPreferencesRead UniversalPreferencesWrite \
            UniversalFileRead");
-user_pref("capability.principal.codebase.p%(i)d.id", "http://%(server)s");
+user_pref("capability.principal.codebase.p%(i)d.id", "%(origin)s");
 user_pref("capability.principal.codebase.p%(i)d.subjectName", "");
-"""  % {"i": i, "server": server}
+"""  % { "i": i,
+         "origin": (l.scheme + "://" + l.host + ":" + l.port) }
     prefs.append(part)
 
-  # Now add the two servers that do NOT have God-power so we can properly test
-  # the granting and receiving of God-power.  Strip off the first server because
-  # we proxy all the others to it.
-  allServers = servers[1:] + unprivilegedServers
-
-
-  # Now actually create the preference to make the proxying happen.
-  quotedServers = ", ".join(map(lambda x: "'" + x + "'", allServers))
+  # We need to proxy every server but the primary one.
+  origins = ["'%s://%s:%s'" % (l.scheme, l.host, l.port)
+             for l in filter(lambda l: "primary" not in l.options, locations)]
+  origins = ", ".join(origins)
 
   pacURL = """data:text/plain,
 function FindProxyForURL(url, host)
 {
-  var servers = [%(quotedServers)s];
-  var regex = new RegExp('http://(?:[^/@]*@)?(.*?(:\\\\\\\\d+)?)/');
+  var origins = [%(origins)s];
+  var regex = new RegExp('^([a-z][-a-z0-9+.]*)' +
+                         '://' +
+                         '(?:[^/@]*@)?' +
+                         '(.*?)' +
+                         '(?::(\\\\\\\\d+))?/');
   var matches = regex.exec(url);
   if (!matches)
     return 'DIRECT';
-  var hostport = matches[1], port = matches[2];
-  if (!port)
-    hostport += ':80';
-  if (servers.indexOf(hostport) >= 0)
+  var isHttp = matches[1] == 'http';
+  if (!matches[3])
+    matches[3] = isHttp ? '80' : '443';
+  var origin = matches[1] + '://' + matches[2] + ':' + matches[3];
+  if (origins.indexOf(origin) < 0)
+    return 'DIRECT';
+  if (isHttp)
     return 'PROXY localhost:8888';
   return 'DIRECT';
-}""" % {"quotedServers": quotedServers}
+}""" % { "origins": origins }
   pacURL = "".join(pacURL.splitlines())
 
   part = """
 user_pref("network.proxy.type", 2);
 user_pref("network.proxy.autoconfig_url", "%(pacURL)s");
+
+user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless to others
 """ % {"pacURL": pacURL}
   prefs.append(part)
 
@@ -305,7 +354,7 @@ def runApp(testURL, env, app, profileDir, extraArgs):
 
   # now run with the profile we created
   cmd = app
-  if IS_MAC and not cmd.endswith("-bin"):
+  if IS_MAC and not IS_CAMINO and not cmd.endswith("-bin"):
     cmd += "-bin"
   cmd = os.path.abspath(cmd)
 
@@ -318,7 +367,11 @@ def runApp(testURL, env, app, profileDir, extraArgs):
   else:
     profileDirectory = profileDir + "/"
 
-  args.extend(("-no-remote", "-profile", profileDirectory, testURL))
+  args.extend(("-no-remote", "-profile", profileDirectory))
+  if IS_CAMINO:
+    args.extend(("-url", testURL))
+  else:
+    args.append((testURL))
   args.extend(extraArgs)
   proc = Process(cmd, args, env = env)
   log.info("Application pid: %d", proc.pid)

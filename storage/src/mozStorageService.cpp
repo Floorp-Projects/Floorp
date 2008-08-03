@@ -121,6 +121,9 @@ mozStorageService::Init()
     if (!mLock)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    nsresult rv = mBackground.initialize();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // This makes multiple connections to the same database share the same pager
     // cache.  We do not need to lock here with mLock because this function is
     // only ever called from mozStorageService::GetSingleton, which will only

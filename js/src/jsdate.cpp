@@ -928,7 +928,7 @@ GetUTCTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
 {
     jsval v;
 
-    if (vp && !JS_InstanceOf(cx, obj, &js_DateClass, vp + 2))
+    if (!JS_InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
         return JS_FALSE;
     if (!JS_GetReservedSlot(cx, obj, UTC_TIME_SLOT, &v))
         return JS_FALSE;

@@ -138,6 +138,8 @@ DECL_FUNC_PTR(gtk_image_new);
 DECL_FUNC_PTR(gtk_misc_set_padding);
 DECL_FUNC_PTR(gtk_file_chooser_set_local_only);
 
+// XXXdholbert -- this function is duplicated in nsPrintDialogGTK.cpp
+// and needs to be unified in some generic utility class.
 static GtkWindow *
 get_gtk_window_for_nsiwidget(nsIWidget *widget)
 {

@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>text to ensure text attributes are saved in the context state</title>
+</head>
+<body>
+<canvas id="c" width="128" height="64" style="direction:ltr"></canvas>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+  
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.font = '16px sans-serif';
+
+  ctx.save();
+
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = '24px serif';
+
+  ctx.save();
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.font = '10px sans-serif';
+
+  ctx.fillText('something', 80, 60);
+
+  ctx.restore();
+
+  ctx.fillText('other thing', 128, 40);
+
+  ctx.restore();
+
+  ctx.fillText('yet another thing', 0, 0);
+
+</script>
+</body>
+</html>

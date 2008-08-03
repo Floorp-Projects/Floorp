@@ -2961,7 +2961,7 @@ nsXPCComponents_Utils::ReportError()
 #include "nsNetUtil.h"
 const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
 
-NS_IMPL_ISUPPORTS1(PrincipalHolder, nsIScriptObjectPrincipal)
+NS_IMPL_THREADSAFE_ISUPPORTS1(PrincipalHolder, nsIScriptObjectPrincipal)
 
 nsIPrincipal *
 PrincipalHolder::GetPrincipal()

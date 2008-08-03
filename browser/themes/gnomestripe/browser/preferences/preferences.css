@@ -103,11 +103,11 @@ filefield {
   margin: 1px;
 }
 
-filefield[disabled="true"] .fileFieldContentBox {
+.fileFieldContentBox[disabled="true"] {
   opacity: 0.5;
 }
 
-filefield[disabled="true"] .fileFieldIcon {
+.fileFieldIcon[disabled="true"] {
   opacity: 0.2;
 }
 

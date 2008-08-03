@@ -1,6 +1,5 @@
 mozilla/js/src/*
 mozilla/js/src/config/*
-mozilla/js/src/fdlibm/*
 mozilla/js/src/liveconnect/*
 mozilla/js/src/liveconnect/_jni/*
 mozilla/js/src/liveconnect/classes/*

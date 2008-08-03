@@ -36,7 +36,7 @@
 #ifndef CAIRO_QUARTZ_IMAGE_H
 #define CAIRO_QUARTZ_IMAGE_H
 
-#include <cairo.h>
+#include "cairo.h"
 
 #if CAIRO_HAS_QUARTZ_IMAGE_SURFACE
 

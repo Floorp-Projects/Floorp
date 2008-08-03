@@ -44,6 +44,10 @@ class nsTableCellFrame;
 class nsCellMap;
 class BCCellData;
 
+
+#define MAX_ROWSPAN 8190 // the cellmap can not handle more
+#define MAX_COLSPAN 1000 // limit as IE and opera do
+
 /** 
   * Data stored by nsCellMap to rationalize rowspan and colspan cells.
   */

@@ -105,6 +105,9 @@ class nsHashKey;
 #endif // MOZ_SVG
 #define NS_XUL_COMMAND_EVENT              32
 #define NS_QUERY_CONTENT_EVENT            33
+#ifdef MOZ_MEDIA
+#define NS_MEDIA_EVENT                    34
+#endif // MOZ_MEDIA
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -120,7 +123,8 @@ class nsHashKey;
 #define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
 #define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
 #define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
-#define NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY 0x0400 // @see nsIDOM3Event::stopImmediatePropagation()
+// Event has been dispatched at least once
+#define NS_EVENT_DISPATCHED               0x0400
 #define NS_EVENT_FLAG_DISPATCHING         0x0800
 
 #define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
@@ -356,6 +360,33 @@ class nsHashKey;
 // Query for the caret rect of nth insertion point. The offset of the result is
 // relative position from the top level widget.
 #define NS_QUERY_CARET_RECT             (NS_QUERY_CONTENT_EVENT_START + 3)
+
+// Video events
+#ifdef MOZ_MEDIA
+#define NS_MEDIA_EVENT_START            3300
+#define NS_LOADSTART           (NS_MEDIA_EVENT_START)
+#define NS_PROGRESS            (NS_MEDIA_EVENT_START+1)
+#define NS_LOADEDMETADATA      (NS_MEDIA_EVENT_START+2)
+#define NS_LOADEDFIRSTFRAME    (NS_MEDIA_EVENT_START+3)
+#define NS_EMPTIED             (NS_MEDIA_EVENT_START+4)
+#define NS_STALLED             (NS_MEDIA_EVENT_START+5)
+#define NS_PLAY                (NS_MEDIA_EVENT_START+6)
+#define NS_PAUSE               (NS_MEDIA_EVENT_START+7)
+#define NS_WAITING             (NS_MEDIA_EVENT_START+8)
+#define NS_SEEKING             (NS_MEDIA_EVENT_START+9)
+#define NS_SEEKED              (NS_MEDIA_EVENT_START+10)
+#define NS_TIMEUPDATE          (NS_MEDIA_EVENT_START+11)
+#define NS_ENDED               (NS_MEDIA_EVENT_START+12)
+#define NS_DATAUNAVAILABLE     (NS_MEDIA_EVENT_START+13)
+#define NS_CANSHOWCURRENTFRAME (NS_MEDIA_EVENT_START+14)
+#define NS_CANPLAY             (NS_MEDIA_EVENT_START+15)
+#define NS_CANPLAYTHROUGH      (NS_MEDIA_EVENT_START+16)
+#define NS_RATECHANGE          (NS_MEDIA_EVENT_START+17)
+#define NS_DURATIONCHANGE      (NS_MEDIA_EVENT_START+18)
+#define NS_VOLUMECHANGE        (NS_MEDIA_EVENT_START+19)
+#define NS_MEDIA_ABORT         (NS_MEDIA_EVENT_START+20)
+#define NS_MEDIA_ERROR         (NS_MEDIA_EVENT_START+21)
+#endif // MOZ_MEDIA
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -759,12 +790,13 @@ typedef nsTextRange* nsTextRangeArray;
 struct nsTextEventReply
 {
   nsTextEventReply()
-    : mCursorIsCollapsed(PR_FALSE)
+    : mCursorIsCollapsed(PR_FALSE), mReferenceWidget(nsnull)
   {
   }
 
   nsRect mCursorPosition;
   PRBool mCursorIsCollapsed;
+  nsIWidget* mReferenceWidget;
 };
 
 typedef struct nsTextEventReply nsTextEventReply;
@@ -1123,7 +1155,7 @@ enum nsDragDropEventStatus {
   NS_ASSERTION(NS_IS_EVENT_IN_DISPATCH(event), \
                "Event never got marked for dispatch!"); \
   (event)->flags &= ~NS_EVENT_FLAG_DISPATCHING; \
-  (event)->flags |= NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY;
+  (event)->flags |= NS_EVENT_DISPATCHED;
 
 /*
  * Virtual key bindings for keyboard events.

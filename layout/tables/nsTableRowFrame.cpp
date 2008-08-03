@@ -164,9 +164,6 @@ nsTableRowFrame::Init(nsIContent*      aContent,
   // Let the base class do its initialization
   rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  // record that children that are ignorable whitespace should be excluded 
-  mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
-
   if (aPrevInFlow) {
     // Set the row index
     nsTableRowFrame* rowFrame = (nsTableRowFrame*)aPrevInFlow;

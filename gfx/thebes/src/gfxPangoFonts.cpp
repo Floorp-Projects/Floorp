@@ -963,10 +963,16 @@ gfxPangoFont::GetMetrics()
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
     gfxSize isz, lsz;
+    PRUint32 zeroGlyph;
     GetCharSize(' ', isz, lsz, &mSpaceGlyph);
     mMetrics.spaceWidth = lsz.width;
     GetCharSize('x', isz, lsz);
     mMetrics.xHeight = isz.height;
+    GetCharSize('0', isz, lsz, &zeroGlyph);
+    if (zeroGlyph)
+        mMetrics.zeroOrAveCharWidth = lsz.width;
+    else
+        mMetrics.zeroOrAveCharWidth = mMetrics.aveCharWidth;
 
     FT_Face face = NULL;
     if (pfm && PANGO_IS_FC_FONT(font))
@@ -1270,6 +1276,8 @@ SetupClusterBoundaries(gfxTextRun* aTextRun, const gchar *aUTF8, PRUint32 aUTF8L
         NS_ASSERTION(ch != 0, "Shouldn't have NUL in pango_break");
         NS_ASSERTION(!IS_SURROGATE(ch), "Shouldn't have surrogates in UTF8");
         if (ch >= 0x10000) {
+            // set glyph info for the UTF-16 low surrogate
+            aTextRun->SetGlyphs(aUTF16Offset, g.SetComplex(PR_FALSE, PR_FALSE, 0), nsnull);
             ++aUTF16Offset;
         }
         // We produced this utf8 so we don't need to worry about malformed stuff

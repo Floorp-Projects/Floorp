@@ -458,6 +458,7 @@ _TEST_FILES_D = \
 	test_2d.drawImage.alpha.html \
 	test_2d.drawImage.clip.html \
 	test_2d.drawImage.composite.html \
+	test_2d.drawImage.self.html \
 	$(NULL)
 
 _TEST_FILES_E = \
@@ -503,6 +504,11 @@ _TEST_FILES_E = \
 	image_red.png \
 	image_transparent.png \
 	image_green.png \
+	test_text.font.html \
+	test_text.textAlign.html \
+	test_text.textBaseline.html \
+	test_text.measure.html \
+	test_text.space.replace.html \
 	$(NULL)
 
 # This one test crashes Mac for now.  Bug 407104

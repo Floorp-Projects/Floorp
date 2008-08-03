@@ -161,10 +161,13 @@ function startTest() {
   numStartingLogins = countLogins();
   ok(numStartingLogins > 0, "counting logins at start");
 
-  // Check first set of forms, which should be filled by pwmgr.
+  // Check first set of forms, which should not be filled by pwmgr.
   for (var i = 1; i <= 7; i++) {
-    is($_(i, "uname").value, "testuser", "Checking for filled username " + i);
-    is($_(i, "pword").value, "testpass", "Checking for filled password " + i);
+    is($_(i, "uname").value, "", "Checking for unfilled username " + i);
+    is($_(i, "pword").value, "", "Checking for unfilled password " + i);
+    // Set the field values to that of an existing login
+    $_(i, "uname").value = "testuser";
+    $_(i, "pword").value = "testpass";
   }
 
   // Check second set of forms, which should have preset values (and are unknown to pwmgr).

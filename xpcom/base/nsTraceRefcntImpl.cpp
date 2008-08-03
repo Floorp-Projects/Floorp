@@ -927,6 +927,9 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
     PRInt32 serialno = 0;
     if (gSerialNumbers && loggingThisType) {
       serialno = GetSerialNumber(aPtr, aRefcnt == 1);
+      NS_ASSERTION(serialno != 0,
+                   "Serial number requested for unrecognized pointer!  "
+                   "Are you memmoving a refcounted object?");
       PRInt32* count = GetRefCount(aPtr);
       if(count)
         (*count)++;
@@ -978,6 +981,9 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClazz)
     PRInt32 serialno = 0;
     if (gSerialNumbers && loggingThisType) {
       serialno = GetSerialNumber(aPtr, PR_FALSE);
+      NS_ASSERTION(serialno != 0,
+                   "Serial number requested for unrecognized pointer!  "
+                   "Are you memmoving a refcounted object?");
       PRInt32* count = GetRefCount(aPtr);
       if(count)
         (*count)--;

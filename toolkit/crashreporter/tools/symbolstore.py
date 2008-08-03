@@ -158,8 +158,7 @@ class CVSFileInfo(VCSFileInfo):
         if len(parts) > 1:
             # we don't want the extra colon
             return parts[1].replace(":","")
-        print >> sys.stderr, "Failed to get CVS Root for %s" % filename
-        return None
+        return self.root.replace(":","")
 
     def GetRevision(self):
         (path, filename) = os.path.split(self.file)
@@ -193,20 +192,21 @@ class CVSFileInfo(VCSFileInfo):
             return "cvs:%s:%s:%s" % (self.clean_root, file, self.revision)
         return file
 
+# This regex separates protocol and optional username/password from a url.
+# For instance, all the following urls will be transformed into
+# 'foo.com/bar':
+#
+#   http://foo.com/bar
+#   svn+ssh://user@foo.com/bar
+#   svn+ssh://user:pass@foo.com/bar
+#
+# This is used by both SVN and HG
+rootRegex = re.compile(r'^\S+?:/+(?:[^\s/]*@)?(\S+)$')
+
 class SVNFileInfo(VCSFileInfo):
     url = None
     repo = None
     svndata = {}
-
-    # This regex separates protocol and optional username/password from a url.
-    # For instance, all the following urls will be transformed into
-    # 'foo.com/bar':
-    #
-    #   http://foo.com/bar
-    #   svn+ssh://user@foo.com/bar
-    #   svn+ssh://user:pass@foo.com/bar
-    #
-    rootRegex = re.compile(r'^\S+?:/+(?:[^\s/]*@)?(\S+)$')
 
     def __init__(self, file):
         """ We only want to run subversion's info tool once so pull all the data
@@ -232,7 +232,7 @@ class SVNFileInfo(VCSFileInfo):
     def GetRoot(self):
         key = "Repository Root"
         if key in self.svndata:
-            match = self.rootRegex.match(self.svndata[key])
+            match = rootRegex.match(self.svndata[key])
             if match:
                 return match.group(1)
         print >> sys.stderr, "Failed to get SVN Root for %s" % self.file
@@ -258,11 +258,76 @@ class SVNFileInfo(VCSFileInfo):
         print >> sys.stderr, "Failed to get SVN Filename for %s" % self.file
         return self.file
 
+class HGRepoInfo():
+    # HG info is per-repo, so cache it in a static
+    # member var
+    repos = {}
+    def __init__(self, path, rev, cleanroot):
+        self.path = path
+        self.rev = rev
+        self.cleanroot = cleanroot
+
+class HGFileInfo(VCSFileInfo):
+    def __init__(self, file, srcdir):
+        VCSFileInfo.__init__(self, file)
+        # we should only have to collect this info once per-repo
+        if not srcdir in HGRepoInfo.repos:
+            rev = os.popen('hg identify -i "%s"' % srcdir, "r").readlines()[0].rstrip()
+            # could have a + if there are uncommitted local changes
+            if rev.endswith('+'):
+                rev = rev[:-1]
+
+            path = os.popen('hg -R "%s" showconfig paths.default' % srcdir, "r").readlines()[0].rstrip()
+            if path == '':
+                hg_root = os.environ.get("SRCSRV_ROOT")
+                if hg_root:
+                    path = hg_root
+                else:
+                    print >> sys.stderr, "Failed to get HG Repo for %s" % srcdir
+            if path != '': # not there?
+                match = rootRegex.match(path)
+                if match:
+                    cleanroot = match.group(1)
+                    if cleanroot.endswith('/'):
+                        cleanroot = cleanroot[:-1]
+            HGRepoInfo.repos[srcdir] = HGRepoInfo(path, rev, cleanroot)
+        self.repo = HGRepoInfo.repos[srcdir]
+        self.file = file
+        self.srcdir = srcdir
+
+    def GetRoot(self):
+        return self.repo.path
+
+    def GetCleanRoot(self):
+        return self.repo.cleanroot
+
+    def GetRevision(self):
+        return self.repo.rev
+
+    def GetFilename(self):
+        file = self.file
+        if self.revision and self.clean_root:
+            if self.srcdir:
+                # strip the base path off
+                file = os.path.normpath(file)
+                if IsInDir(file, self.srcdir):
+                    file = file[len(self.srcdir):]
+                if file.startswith('/') or file.startswith('\\'):
+                    file = file[1:]
+            return "hg:%s:%s:%s" % (self.clean_root, file, self.revision)
+        return file
+
 # Utility functions
 
 # A cache of files for which VCS info has already been determined. Used to
 # prevent extra filesystem activity or process launching.
 vcsFileInfoCache = {}
+
+def IsInDir(file, dir):
+    # the lower() is to handle win32+vc8, where
+    # the source filenames come out all lowercase,
+    # but the srcdir can be mixed case
+    return os.path.abspath(file).lower().startswith(os.path.abspath(dir).lower())
 
 def GetVCSFilename(file, srcdir):
     """Given a full path to a file, and the top source directory,
@@ -291,6 +356,9 @@ def GetVCSFilename(file, srcdir):
         elif os.path.isdir(os.path.join(path, ".svn")) or \
              os.path.isdir(os.path.join(path, "_svn")):
             fileInfo = SVNFileInfo(file);
+        elif os.path.isdir(os.path.join(srcdir, '.hg')) and \
+             IsInDir(file, srcdir):
+            fileInfo = HGFileInfo(file, srcdir)
         vcsFileInfoCache[file] = fileInfo
 
     if fileInfo:

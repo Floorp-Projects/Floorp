@@ -73,10 +73,41 @@
 #include <math.h>
 
 #include "prlog.h"
+#include "prinit.h"
 static PRLogModuleInfo *gFontLog = PR_NewLogModule("winfonts");
 
 #define ROUND(x) floor((x) + 0.5)
 
+BYTE 
+FontTypeToOutPrecision(PRUint8 fontType)
+{
+#ifdef WINCE
+    return OUT_DEFAULT_PRECIS;
+#else
+    BYTE ret;
+    switch (fontType) {
+    case GFX_FONT_TYPE_TT_OPENTYPE:
+    case GFX_FONT_TYPE_TRUETYPE:
+        ret = OUT_TT_ONLY_PRECIS;
+        break;
+    case GFX_FONT_TYPE_PS_OPENTYPE:
+        ret = OUT_PS_ONLY_PRECIS;
+        break;
+    case GFX_FONT_TYPE_TYPE1:
+        ret = OUT_OUTLINE_PRECIS;
+        break;
+    case GFX_FONT_TYPE_RASTER:
+        ret = OUT_RASTER_PRECIS;
+        break;
+    case GFX_FONT_TYPE_DEVICE:
+        ret = OUT_DEVICE_PRECIS;
+        break;
+    default:
+        ret = OUT_DEFAULT_PRECIS;
+    }
+    return ret;
+#endif
+}
 
 struct DCFromContext {
     DCFromContext(gfxContext *aContext) {
@@ -92,6 +123,7 @@ struct DCFromContext {
         }
         if (!dc) {
             dc = GetDC(NULL);
+            SetGraphicsMode(dc, GM_ADVANCED);
             needsRelease = PR_TRUE;
         }
     }
@@ -163,10 +195,37 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     // Some fonts claim to support things > 900, but we don't so clamp the sizes
     logFont.lfWeight = PR_MAX(PR_MIN(logFont.lfWeight, 900), 100);
 
+    gfxWindowsFontType feType;
+    if (metrics.ntmFlags & NTM_TYPE1)
+        feType = GFX_FONT_TYPE_TYPE1;
+    else if (metrics.ntmFlags & (NTM_PS_OPENTYPE))
+        feType = GFX_FONT_TYPE_PS_OPENTYPE;
+    else if (metrics.ntmFlags & (NTM_TT_OPENTYPE))
+        feType = GFX_FONT_TYPE_TT_OPENTYPE;
+    else if (fontType == TRUETYPE_FONTTYPE)
+        feType = GFX_FONT_TYPE_TRUETYPE;
+    else if (fontType == RASTER_FONTTYPE)
+        feType = GFX_FONT_TYPE_RASTER;
+    else if (fontType == DEVICE_FONTTYPE)
+        feType = GFX_FONT_TYPE_DEVICE;
+    else
+        feType = GFX_FONT_TYPE_UNKNOWN;
+
     FontEntry *fe = nsnull;
     for (PRUint32 i = 0; i < ff->mVariations.Length(); ++i) {
         fe = ff->mVariations[i];
+        if (feType > fe->mFontType) {
+            // if the new type is better than the old one, remove the old entries
+            ff->mVariations.RemoveElementAt(i);
+            --i;
+        } else if (feType < fe->mFontType) {
+            // otherwise if the new type is worse, skip it
+            return 1;
+        }
+    }
 
+    for (PRUint32 i = 0; i < ff->mVariations.Length(); ++i) {
+        fe = ff->mVariations[i];
         // check if we already know about this face
         if (fe->mWeight == logFont.lfWeight &&
             fe->mItalic == (logFont.lfItalic == 0xFF)) {
@@ -178,16 +237,13 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
 
     fe = new FontEntry(ff->mName);
     ff->mVariations.AppendElement(fe);
+    fe->mFontType = feType;
 
     fe->mItalic = (logFont.lfItalic == 0xFF);
     fe->mWeight = logFont.lfWeight;
 
-    if (metrics.ntmFlags & NTM_TYPE1)
-        fe->mIsType1 = fe->mForceGDI = PR_TRUE;
-
-    // fontType == TRUETYPE_FONTTYPE when (metrics.ntmFlags & NTM_TT_OPENTYPE)
-    if (fontType == TRUETYPE_FONTTYPE || metrics.ntmFlags & (NTM_PS_OPENTYPE))
-        fe->mTrueType = PR_TRUE;
+    if (fe->IsType1())
+        fe->mForceGDI = PR_TRUE;
 
     // mark the charset bit
     fe->mCharset[metrics.tmCharSet] = 1;
@@ -214,6 +270,8 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
 
     // read in the character map
     logFont.lfCharSet = DEFAULT_CHARSET;
+    logFont.lfOutPrecision = FontTypeToOutPrecision(fe->mFontType);
+
     HFONT font = CreateFontIndirectW(&logFont);
 
     NS_ASSERTION(font, "This font creation should never ever ever fail");
@@ -224,7 +282,7 @@ FontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         if (NS_FAILED(ReadCMAP(hdc, fe))) {
             // Type1 fonts aren't necessarily Unicode but
             // this is the best guess we can make here
-            if (fe->mIsType1)
+            if (fe->IsType1())
                 fe->mUnicodeFont = PR_TRUE;
             else
                 fe->mUnicodeFont = PR_FALSE;
@@ -254,6 +312,7 @@ FontFamily::FindStyleVariations()
     mHasStyles = PR_TRUE;
 
     HDC hdc = GetDC(nsnull);
+    SetGraphicsMode(hdc, GM_ADVANCED);
 
     LOGFONTW logFont;
     memset(&logFont, 0, sizeof(LOGFONTW));
@@ -496,6 +555,7 @@ gfxWindowsFont::ComputeMetrics()
         NS_WARNING("Calling ComputeMetrics multiple times");
 
     HDC dc = GetDC((HWND)nsnull);
+    SetGraphicsMode(dc, GM_ADVANCED);
 
     HGDIOBJ oldFont = SelectObject(dc, mFont);
 
@@ -571,6 +631,15 @@ gfxWindowsFont::ComputeMetrics()
     GetTextExtentPoint32(dc, " ", 1, &size);
     mMetrics->spaceWidth = ROUND(size.cx);
 
+    // Cache the width of digit zero.
+    // XXX MSDN (http://msdn.microsoft.com/en-us/library/ms534223.aspx)
+    // does not say what the failure modes for GetTextExtentPoint32 are -
+    // is it safe to assume it will fail iff the font has no '0'?
+    if (GetTextExtentPoint32(dc, "0", 1, &size))
+        mMetrics->zeroOrAveCharWidth = ROUND(size.cx);
+    else
+        mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
+
     mSpaceGlyph = 0;
     if (metrics.tmPitchAndFamily & TMPF_TRUETYPE) {
         WORD glyph;
@@ -605,11 +674,7 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize)
     mLogFont.lfUnderline      = FALSE;
     mLogFont.lfStrikeOut      = FALSE;
     mLogFont.lfCharSet        = DEFAULT_CHARSET;
-#ifndef WINCE
-    mLogFont.lfOutPrecision   = OUT_TT_PRECIS;
-#else
-    mLogFont.lfOutPrecision   = OUT_DEFAULT_PRECIS;
-#endif
+    mLogFont.lfOutPrecision   = FontTypeToOutPrecision(mFontEntry->mFontType);
     mLogFont.lfClipPrecision  = CLIP_TURNOFF_FONTASSOCIATION;
     mLogFont.lfQuality        = DEFAULT_QUALITY;
     mLogFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
@@ -776,16 +841,29 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
     }
 
     if (mFontEntries.Length() == 0) {
-        // Should append default GUI font if there are no available fonts.
+        // It is pretty important that we have at least one font, so
+        // try a few system fonts that should be there.
+        nsAutoString str;
         HGDIOBJ hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
         LOGFONTW logFont;
-        if (!hGDI ||
-            !::GetObjectW(hGDI, sizeof(logFont), &logFont)) {
-            NS_ERROR("Failed to create font group");
-            return;
+        if (hGDI && ::GetObjectW(hGDI, sizeof(logFont), &logFont)) {
+            str.AppendLiteral("\"");
+            str.Append(nsDependentString(logFont.lfFaceName));
+            str.AppendLiteral("\"");
         }
-        nsRefPtr<FontEntry> fe = gfxWindowsPlatform::GetPlatform()->FindFontEntry(nsDependentString(logFont.lfFaceName), *aStyle);
-        mFontEntries.AppendElement(fe);
+
+        NONCLIENTMETRICSW ncm;
+        ncm.cbSize = sizeof(ncm);
+        BOOL status = ::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 
+                                              sizeof(ncm), &ncm, 0);
+        if (status) {
+            str.AppendLiteral(",\"");
+            str.Append(nsDependentString(ncm.lfMessageFont.lfFaceName));
+            str.AppendLiteral("\"");
+        }
+
+        FamilyListToArrayList(str, mStyle.langGroup, &mFontEntries);
+
         // Keep length of mFonts in sync with length of mFontEntries.
         // Maybe we should eagerly set up mFonts[0] like we do above,
         // but if the resulting gfxWindowsFont is invalid then we can't
@@ -793,7 +871,7 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
         // its mUnknownCMAP will be set to true, and HasCharacter will
         // just report false for all characters, so the fact that the font
         // is bogus should not cause problems.
-        mFonts.AppendElements(1);
+        mFonts.AppendElements(mFontEntries.Length());
     }
 
     if (!mStyle.systemFont) {
@@ -927,7 +1005,7 @@ SetupDCFont(HDC dc, gfxWindowsFont *aFont)
 
     // GetGlyphIndices is buggy for bitmap and vector fonts, so send them to uniscribe
     // Also sent Symbol fonts through Uniscribe as it has special code to deal with them
-    if (!aFont->GetFontEntry()->mTrueType || aFont->GetFontEntry()->mSymbolFont)
+    if (!aFont->GetFontEntry()->IsTrueType() || aFont->GetFontEntry()->mSymbolFont)
         return PR_FALSE;
 
     return PR_TRUE;
@@ -1243,7 +1321,7 @@ public:
             if (rv == E_PENDING) {
                 if (shapeDC == mDC) {
                     // we already tried this once, something failed, give up
-                    return GDI_ERROR;
+                    return E_PENDING;
                 }
 
                 SelectFont();
@@ -1336,8 +1414,10 @@ public:
         SelectFont();
 
         nsAutoTArray<int,500> partialWidthArray;
+        // Callers incorrectly assume this code is infallible,
+        // so we must abort on this OOM condition.
         if (!partialWidthArray.SetLength(mNumGlyphs))
-            return GDI_ERROR;
+            PR_Abort();
         SIZE size;
 
         GetTextExtentExPointI(mDC,
@@ -1568,6 +1648,7 @@ public:
                 return PR_FALSE;
 
             HDC dc = GetDC((HWND)nsnull);
+            SetGraphicsMode(dc, GM_ADVANCED);
             HFONT hfont = font->GetHFONT();
             HFONT oldFont = (HFONT)SelectObject(dc, hfont);
 
@@ -1575,7 +1656,7 @@ public:
             WORD glyph[1];
 
             PRBool hasGlyph = PR_FALSE;
-            if (aFontEntry->mIsType1) {
+            if (aFontEntry->IsType1()) {
                 // Type1 fonts and uniscribe APIs don't get along.  ScriptGetCMap will return E_HANDLE
                 DWORD ret = GetGlyphIndicesW(dc, str, 1, glyph, GGI_MARK_NONEXISTING_GLYPHS);
                 if (ret != GDI_ERROR && glyph[0] != 0xFFFF)
@@ -2131,10 +2212,12 @@ gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun
                 rv = item->Shape();
             }
 
-            NS_ASSERTION(SUCCEEDED(rv), "Failed to shape -- we should never hit this");
+            NS_ASSERTION(SUCCEEDED(rv), "Failed to shape, twice -- we should never hit this");
 
-            rv = item->Place();
-            NS_ASSERTION(SUCCEEDED(rv), "Failed to place -- this is pretty bad.");
+            if (SUCCEEDED(rv)) {
+                rv = item->Place();
+                NS_ASSERTION(SUCCEEDED(rv), "Failed to place -- this is pretty bad.");
+            }
 
             if (FAILED(rv)) {
                 aRun->ResetGlyphRuns();

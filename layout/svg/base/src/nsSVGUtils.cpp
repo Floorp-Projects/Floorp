@@ -177,7 +177,6 @@ public:
     mFrame->RemoveStateBits(NS_STATE_SVG_FILTERED);
   }
 
-  nsRect GetRect() { return mFilterRect; }
   nsSVGFilterFrame *GetFilterFrame();
   void UpdateRect();
 
@@ -205,11 +204,8 @@ nsSVGFilterProperty::nsSVGFilterProperty(nsIContent *aFilter,
                                          nsIFrame *aFilteredFrame)
   : nsSVGPropertyBase(aFilter, aFilteredFrame, nsGkAtoms::filter)
 {
-  nsSVGFilterFrame *filterFrame = GetFilterFrame();
-  if (filterFrame)
-    mFilterRect = filterFrame->GetInvalidationRegion(mFrame);
-
   mFrame->AddStateBits(NS_STATE_SVG_FILTERED);
+  UpdateRect();
 }
 
 nsSVGFilterFrame *
@@ -230,8 +226,11 @@ void
 nsSVGFilterProperty::UpdateRect()
 {
   nsSVGFilterFrame *filter = GetFilterFrame();
-  if (filter)
-    mFilterRect = filter->GetInvalidationRegion(mFrame);
+  if (filter) {
+    nsISVGChildFrame *svg;
+    CallQueryInterface(mFrame, &svg);
+    mFilterRect = filter->GetInvalidationRegion(mFrame, svg->GetCoveredRegion());
+  }
 }
 
 void
@@ -239,9 +238,9 @@ nsSVGFilterProperty::DoUpdate()
 {
   nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
   if (outerSVGFrame) {
-    outerSVGFrame->InvalidateCoveredRegion(mFrame);
+    outerSVGFrame->InvalidateRect(mFilterRect);
     UpdateRect();
-    outerSVGFrame->InvalidateCoveredRegion(mFrame);
+    outerSVGFrame->InvalidateRect(mFilterRect);
   }
 }
 
@@ -855,9 +854,9 @@ nsSVGUtils::GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval)
 }
 
 nsRect
-nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
+nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
 {
-  nsRect rect;
+  nsRect rect = aRect;
 
   while (aFrame) {
     if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)
@@ -867,7 +866,10 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame)
       nsSVGFilterProperty *property;
       property = static_cast<nsSVGFilterProperty *>
                             (aFrame->GetProperty(nsGkAtoms::filter));
-      rect = property->GetRect();
+      nsSVGFilterFrame *filter = property->GetFilterFrame();
+      if (filter) {
+        rect = filter->GetInvalidationRegion(aFrame, rect);
+      }
     }
     aFrame = aFrame->GetParent();
   }
@@ -908,15 +910,10 @@ nsSVGUtils::UpdateGraphic(nsISVGChildFrame *aSVGFrame)
   } else {
     frame->RemoveStateBits(NS_STATE_SVG_DIRTY);
 
-    // Invalidate the area we used to cover
-    outerSVGFrame->InvalidateCoveredRegion(frame);
-
-    aSVGFrame->UpdateCoveredRegion();
-
-    // Invalidate the area we now cover
-    outerSVGFrame->InvalidateCoveredRegion(frame);
-
-    NotifyAncestorsOfFilterRegionChange(frame);
+    PRBool changed = outerSVGFrame->UpdateAndInvalidateCoveredRegion(frame);
+    if (changed) {
+      NotifyAncestorsOfFilterRegionChange(frame);
+    }
   }
 }
 
@@ -944,6 +941,12 @@ nsSVGUtils::NotifyAncestorsOfFilterRegionChange(nsIFrame *aFrame)
   }
 }
 
+double
+nsSVGUtils::ComputeNormalizedHypotenuse(double aWidth, double aHeight)
+{
+  return sqrt((aWidth*aWidth + aHeight*aHeight)/2);
+}
+
 float
 nsSVGUtils::ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength)
 {
@@ -961,7 +964,7 @@ nsSVGUtils::ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength)
     float width, height;
     aRect->GetWidth(&width);
     aRect->GetHeight(&height);
-    axis = sqrt(width * width + height * height)/sqrt(2.0f);
+    axis = float(ComputeNormalizedHypotenuse(width, height));
   }
   }
 
@@ -1318,11 +1321,11 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
   nsFrameState state = aFrame->GetStateBits();
 
   /* Check if we need to draw anything */
-  if (aDirtyRect) {
+  if (aDirtyRect && svgChildFrame->HasValidCoveredRect()) {
     if (state & NS_STATE_SVG_FILTERED) {
-      if (!aDirtyRect->Intersects(FindFilterInvalidation(aFrame)))
+      if (!aDirtyRect->Intersects(FindFilterInvalidation(aFrame, aFrame->GetRect())))
         return;
-    } else if (svgChildFrame->HasValidCoveredRect()) {
+    } else {
       if (!aDirtyRect->Intersects(aFrame->GetRect()))
         return;
     }
@@ -1375,7 +1378,7 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
   /* Paint the child */
   nsSVGFilterFrame *filterFrame = GetFilterFrame(state, aFrame);
   if (filterFrame) {
-    filterFrame->FilterPaint(aContext, svgChildFrame);
+    filterFrame->FilterPaint(aContext, svgChildFrame, aDirtyRect);
   } else {
     svgChildFrame->PaintSVG(aContext, aDirtyRect);
   }
@@ -1680,6 +1683,26 @@ nsSVGUtils::SetClipRect(gfxContext *aContext,
   aContext->Multiply(matrix);
   aContext->Clip(gfxRect(aX, aY, aWidth, aHeight));
   aContext->SetMatrix(oldMatrix);
+}
+
+void
+nsSVGUtils::ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect)
+{
+  gfxRect r = aGfxRect;
+  r.RoundOut();
+  gfxRect r2(aRect->x, aRect->y, aRect->width, aRect->height);
+  r = r.Intersect(r2);
+  *aRect = nsIntRect(PRInt32(r.X()), PRInt32(r.Y()),
+                     PRInt32(r.Width()), PRInt32(r.Height()));
+}
+
+nsresult
+nsSVGUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
+{
+  *aOut = nsIntRect(PRInt32(aIn.X()), PRInt32(aIn.Y()),
+                    PRInt32(aIn.Width()), PRInt32(aIn.Height()));
+  return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height) == aIn
+    ? NS_OK : NS_ERROR_FAILURE;
 }
 
 PRBool

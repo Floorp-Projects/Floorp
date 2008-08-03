@@ -956,12 +956,15 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, PRInt32 aNsID
                 return NS_ERROR_OUT_OF_MEMORY;
             }
 
+            // Indicate that there is no internal subset (not just an empty one)
+            nsAutoString voidString;
+            voidString.SetIsVoid(PR_TRUE);
             rv = NS_NewDOMDocumentType(getter_AddRefs(documentType),
                                        mNodeInfoManager, nsnull,
                                        doctypeName, nsnull, nsnull,
                                        mOutputFormat.mPublicId,
                                        mOutputFormat.mSystemId,
-                                       EmptyString());
+                                       voidString);
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsCOMPtr<nsIContent> docType = do_QueryInterface(documentType);

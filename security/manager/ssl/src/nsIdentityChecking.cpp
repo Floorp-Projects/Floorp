@@ -277,6 +277,31 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     nsnull
   },
   {
+    // CN=Network Solutions Certificate Authority,O=Network Solutions L.L.C.,C=US
+    "1.3.6.1.4.1.782.1.2.1.8.1",
+    "Network Solutions EV OID",
+    SEC_OID_UNKNOWN,
+    "74:F8:A3:C3:EF:E7:B3:90:06:4B:83:90:3C:21:64:60:20:E5:DF:CE",
+    "MGIxCzAJBgNVBAYTAlVTMSEwHwYDVQQKExhOZXR3b3JrIFNvbHV0aW9ucyBMLkwu"
+    "Qy4xMDAuBgNVBAMTJ05ldHdvcmsgU29sdXRpb25zIENlcnRpZmljYXRlIEF1dGhv"
+    "cml0eQ==",
+    "V8szb8JcFuZHFhfjkDFo4A==",
+    nsnull
+  },
+  {
+    // CN=Entrust Root Certification Authority,OU="(c) 2006 Entrust, Inc.",OU=www.entrust.net/CPS is incorporated by reference,O="Entrust, Inc.",C=US
+    "2.16.840.1.114028.10.1.2",
+    "Entrust EV OID",
+    SEC_OID_UNKNOWN,
+    "B3:1E:B1:B7:40:E3:6C:84:02:DA:DC:37:D4:4D:F5:D4:67:49:52:F9",
+    "MIGwMQswCQYDVQQGEwJVUzEWMBQGA1UEChMNRW50cnVzdCwgSW5jLjE5MDcGA1UE"
+    "CxMwd3d3LmVudHJ1c3QubmV0L0NQUyBpcyBpbmNvcnBvcmF0ZWQgYnkgcmVmZXJl"
+    "bmNlMR8wHQYDVQQLExYoYykgMjAwNiBFbnRydXN0LCBJbmMuMS0wKwYDVQQDEyRF"
+    "bnRydXN0IFJvb3QgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=",
+    "RWtQVA==",
+    nsnull
+  },
+  {
     // OU=Sample Certification Authority,O=\"Sample, Inc.\",C=US
     "0.0.0.0",
     0, // for real entries use a string like "Sample INVALID EV OID"
@@ -572,7 +597,7 @@ getRootsForOidFromExternalRootsFile(CERTCertList* certList,
     if (!ev)
       continue;
     if (policyOIDTag == ev->oid_tag)
-      CERT_AddCertToListTail(certList, ev->cert);
+      CERT_AddCertToListTail(certList, CERT_DupCertificate(ev->cert));
   }
 
   return PR_FALSE;
@@ -641,7 +666,7 @@ getRootsForOid(SECOidTag oid_tag)
     if (!entry.oid_name) // invalid or placeholder list entry
       continue;
     if (entry.oid_tag == oid_tag)
-      CERT_AddCertToListTail(certList, entry.cert);
+      CERT_AddCertToListTail(certList, CERT_DupCertificate(entry.cert));
   }
 
 #ifdef PSM_ENABLE_TEST_EV_ROOTS
@@ -863,7 +888,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
     return NS_OK;
 
   CERTCertList *rootList = getRootsForOid(oid_tag);
-  CERTCertListCleaner rootListCleaner();
+  CERTCertListCleaner rootListCleaner(rootList);
 
   CERTRevocationMethodIndex preferedRevMethods[1] = { 
     cert_revocation_method_ocsp

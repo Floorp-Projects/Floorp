@@ -950,7 +950,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
   // the screen rectangle of the anchor, or if null, the root frame, in dev pixels.
   nsRect anchorScreenRect;
-  nsRect rootScreenRect = rootFrame->GetScreenRect();
+  nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
 
   nsIDeviceContext* devContext = PresContext()->DeviceContext();
   nscoord offsetForContextMenu = 0;
@@ -961,9 +961,11 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     // the most room. The combination of anchor and alignment dictate if we readjust 
     // above/below or to the left/right.
     if (mAnchorContent) {
-      anchorScreenRect = aAnchorFrame->GetScreenRect();
-      xpos = presContext->DevPixelsToAppUnits(anchorScreenRect.x - rootScreenRect.x);
-      ypos = presContext->DevPixelsToAppUnits(anchorScreenRect.y - rootScreenRect.y);
+      anchorScreenRect = aAnchorFrame->GetScreenRectInAppUnits();
+      // adjust for differences in the anchor frame's scaling
+      anchorScreenRect.ScaleRoundOut(adj);
+      xpos = anchorScreenRect.x - rootScreenRect.x;
+      ypos = anchorScreenRect.y - rootScreenRect.y;
 
       // move the popup according to the anchor and alignment. This will also tell us
       // which axis the popup is flush against in case we have to move it around later.
@@ -981,8 +983,8 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     xpos += presContext->CSSPixelsToAppUnits(mXPos);
     ypos += presContext->CSSPixelsToAppUnits(mYPos);
 
-    screenViewLocX = presContext->DevPixelsToAppUnits(rootScreenRect.x) + xpos;
-    screenViewLocY = presContext->DevPixelsToAppUnits(rootScreenRect.y) + ypos;
+    screenViewLocX = rootScreenRect.x + xpos;
+    screenViewLocY = rootScreenRect.y + ypos;
   }
   else {
     // the popup is positioned at a screen coordinate.
@@ -1009,8 +1011,8 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
     // determine the x and y position by subtracting the desired screen
     // position from the screen position of the root frame.
-    xpos = screenViewLocX - presContext->DevPixelsToAppUnits(rootScreenRect.x);
-    ypos = screenViewLocY - presContext->DevPixelsToAppUnits(rootScreenRect.y);
+    xpos = screenViewLocX - rootScreenRect.x;
+    ypos = screenViewLocY - rootScreenRect.y;
   }
 
   // Compute info about the screen dimensions. Because of multiple monitor systems,
@@ -1030,7 +1032,6 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
   // for content shells, clip to the client area rather than the screen area
   if (mInContentShell) {
-    rootScreenRect.ScaleRoundIn(presContext->AppUnitsPerDevPixel());
     rect.IntersectRect(rect, rootScreenRect);
   }
 
@@ -1076,7 +1077,6 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
            screenViewLocX < screenLeftTwips ||
           (screenViewLocY + mRect.height) > screenBottomTwips ) {
       nsRect screenParentFrameRect(anchorScreenRect);
-      screenParentFrameRect.ScaleRoundOut(PresContext()->AppUnitsPerDevPixel());
 
       // figure out which side of the parent has the most free space so we can move/resize
       // the popup there. This should still work if the parent frame is partially screen.
@@ -1129,8 +1129,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
          */
 
         if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
-          // XXX Bug 84121 comment 48 says the next line has to use screenHeightTwips, why not screenBottomTwips?
-          PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenHeightTwips;
+          PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenBottomTwips;
           if ( screenViewLocY - moveDistY < screenTopTwips )
             moveDistY = screenViewLocY - screenTopTwips;          
           screenViewLocY -= moveDistY;

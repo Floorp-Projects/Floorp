@@ -73,6 +73,7 @@
     <description>&clientAuthAsk.message3;</description>
     <textbox readonly="true" id="details" multiline="true"
       style="height: 11em;"/>
+    <checkbox id="rememberBox" checked="true"/>
   </groupbox>
 
 </dialog>

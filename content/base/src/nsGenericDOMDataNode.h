@@ -45,12 +45,14 @@
 
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOM3Text.h"
 #include "nsTextFragment.h"
 #include "nsVoidArray.h"
 #include "nsDOMError.h"
 #include "nsIEventListenerManager.h"
 #include "nsGenericElement.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsContentUtils.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -171,6 +173,7 @@ public:
   // nsINode methods
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
+  virtual nsIContent * const * GetChildArray() const;
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
   virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                  PRBool aNotify);
@@ -187,6 +190,10 @@ public:
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
+  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext)
+  {
+    return nsContentUtils::GetContextForEventHandlers(this, aContext);
+  }
 
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -262,6 +269,9 @@ public:
     return NS_OK;
   }
 
+  nsresult SplitData(PRUint32 aOffset, nsIContent** aReturn,
+                     PRBool aCloneAfterOriginal = PR_TRUE);
+
   //----------------------------------------
 
 #ifdef DEBUG
@@ -310,6 +320,19 @@ protected:
 
   nsresult SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
 
+  friend class nsText3Tearoff;
+
+  static PRInt32 FirstLogicallyAdjacentTextNode(nsIContent* aParent,
+                                                PRInt32 aIndex);
+
+  static PRInt32 LastLogicallyAdjacentTextNode(nsIContent* aParent,
+                                               PRInt32 aIndex,
+                                               PRUint32 aCount);
+
+  nsresult GetWholeText(nsAString& aWholeText);
+
+  nsresult ReplaceWholeText(const nsAFlatString& aContent, nsIDOMText **aReturn);
+
   nsresult SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
                            const PRUnichar* aBuffer, PRUint32 aLength,
                            PRBool aNotify);
@@ -331,6 +354,27 @@ private:
   void SetBidiStatus();
 
   already_AddRefed<nsIAtom> GetCurrentValueAtom();
+};
+
+/** Tearoff class for the nsIDOM3Text portion of nsGenericDOMDataNode. */
+class nsText3Tearoff : public nsIDOM3Text
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  NS_DECL_NSIDOM3TEXT
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsText3Tearoff)
+
+  nsText3Tearoff(nsGenericDOMDataNode *aNode) : mNode(aNode)
+  {
+  }
+
+protected:
+  virtual ~nsText3Tearoff() {}
+
+private:
+  nsRefPtr<nsGenericDOMDataNode> mNode;
 };
 
 //----------------------------------------------------------------------

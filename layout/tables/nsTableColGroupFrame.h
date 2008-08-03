@@ -69,13 +69,6 @@ public:
     */
   friend nsIFrame* NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  /** sets defaults for the colgroup.
-    * @see nsIFrame::Init
-    */
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
-
   /** Initialize the colgroup frame with a set of children.
     * @see nsIFrame::SetInitialChildList
     */
@@ -150,6 +143,12 @@ public:
   /* needed only because we use Reflow in a hacky way, see
      nsTableFrame::ReflowColGroups */
   virtual PRBool IsContainingBlock() const;
+
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsHTMLContainerFrame::IsFrameOfType(aFlags &
+      ~nsIFrame::eExcludesIgnorableWhitespace);
+  }
 
   /**
    * Get the "type" of the frame

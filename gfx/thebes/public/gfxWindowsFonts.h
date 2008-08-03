@@ -53,6 +53,26 @@
 
 
 /**
+ * List of different types of fonts we support on Windows.
+ * These can generally be lumped in to 3 categories where we have to
+ * do special things:  Really old fonts bitmap and vector fonts (device
+ * and raster), Type 1 fonts, and TrueType/OpenType fonts.
+ * 
+ * This list is sorted in order from least prefered to most prefered.
+ * We prefer Type1 fonts over OpenType fonts to avoid falling back to
+ * things like Arial (opentype) when you ask for Helvetica (type1)
+ **/
+enum gfxWindowsFontType {
+    GFX_FONT_TYPE_UNKNOWN = 0,
+    GFX_FONT_TYPE_DEVICE,
+    GFX_FONT_TYPE_RASTER,
+    GFX_FONT_TYPE_TRUETYPE,
+    GFX_FONT_TYPE_PS_OPENTYPE,
+    GFX_FONT_TYPE_TT_OPENTYPE,
+    GFX_FONT_TYPE_TYPE1
+};
+
+/**
  * FontFamily is a class that describes one of the fonts on the users system.  It holds
  * each FontEntry (maps more directly to a font face) which holds font type, charset info
  * and character map info.
@@ -92,8 +112,8 @@ public:
     THEBES_INLINE_DECL_REFCOUNTING(FontEntry)
 
     FontEntry(const nsString& aFaceName) : 
-        mFaceName(aFaceName), mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
-        mTrueType(PR_FALSE), mIsType1(PR_FALSE),
+        mFaceName(aFaceName), mFontType(GFX_FONT_TYPE_UNKNOWN),
+        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
         mIsBadUnderlineFont(PR_FALSE), mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
         mCharset(0), mUnicodeRanges(0)
     {
@@ -103,10 +123,9 @@ public:
         mFaceName(aFontEntry.mFaceName),
         mWindowsFamily(aFontEntry.mWindowsFamily),
         mWindowsPitch(aFontEntry.mWindowsPitch),
+        mFontType(aFontEntry.mFontType),
         mUnicodeFont(aFontEntry.mUnicodeFont),
         mSymbolFont(aFontEntry.mSymbolFont),
-        mTrueType(aFontEntry.mTrueType),
-        mIsType1(aFontEntry.mIsType1),
         mIsBadUnderlineFont(aFontEntry.mIsBadUnderlineFont),
         mForceGDI(aFontEntry.mForceGDI),
         mUnknownCMAP(aFontEntry.mUnknownCMAP),
@@ -122,9 +141,19 @@ public:
         return mFaceName;
     }
 
+    PRBool IsType1() const {
+        return (mFontType == GFX_FONT_TYPE_TYPE1);
+    }
+
+    PRBool IsTrueType() const {
+        return (mFontType == GFX_FONT_TYPE_TRUETYPE ||
+                mFontType == GFX_FONT_TYPE_PS_OPENTYPE ||
+                mFontType == GFX_FONT_TYPE_TT_OPENTYPE);
+    }
+
     PRBool IsCrappyFont() const {
         /* return if it is a bitmap not a unicode font */
-        return (!mUnicodeFont || mSymbolFont || mIsType1);
+        return (!mUnicodeFont || mSymbolFont || IsType1());
     }
 
     PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
@@ -219,10 +248,9 @@ public:
     PRUint8 mWindowsFamily;
     PRUint8 mWindowsPitch;
 
+    gfxWindowsFontType mFontType;
     PRPackedBool mUnicodeFont : 1;
     PRPackedBool mSymbolFont  : 1;
-    PRPackedBool mTrueType    : 1;
-    PRPackedBool mIsType1     : 1;
     PRPackedBool mIsBadUnderlineFont : 1;
     PRPackedBool mForceGDI    : 1;
     PRPackedBool mUnknownCMAP : 1;

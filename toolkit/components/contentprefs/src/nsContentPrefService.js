@@ -83,6 +83,15 @@ ContentPrefService.prototype = {
     return this.__consoleSvc;
   },
 
+  // Preferences Service
+  __prefSvc: null,
+  get _prefSvc ContentPrefService_get__prefSvc() {
+    if (!this.__prefSvc)
+      this.__prefSvc = Cc["@mozilla.org/preferences-service;1"].
+                       getService(Ci.nsIPrefBranch2);
+    return this.__prefSvc;
+  },
+
 
   //**************************************************************************//
   // Destruction
@@ -720,6 +729,21 @@ ContentPrefService.prototype = {
         }
       }
     }
+
+    // Turn off disk synchronization checking to reduce disk churn and speed up
+    // operations when prefs are changed rapidly (such as when a user repeatedly
+    // changes the value of the browser zoom setting for a site).
+    //
+    // Note: this could cause database corruption if the OS crashes or machine
+    // loses power before the data gets written to disk, but this is considered
+    // a reasonable risk for the not-so-critical data stored in this database.
+    //
+    // If you really don't want to take this risk, however, just set the
+    // toolkit.storage.synchronous pref to 1 (NORMAL synchronization) or 2
+    // (FULL synchronization), in which case mozStorageConnection::Initialize
+    // will use that value, and we won't override it here.
+    if (!this._prefSvc.prefHasUserValue("toolkit.storage.synchronous"))
+      dbConnection.executeSimpleSQL("PRAGMA synchronous = OFF");
 
     this._dbConnection = dbConnection;
   },

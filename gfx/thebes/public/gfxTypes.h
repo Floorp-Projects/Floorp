@@ -55,6 +55,31 @@ typedef double gfxFloat;
 #endif
 
 /**
+ * Priority of a line break opportunity.
+ *
+ * eNoBreak       The line has no break opportunities
+ * eWordWrapBreak The line has a break opportunity only within a word. With
+ *                word-wrap: break-word we will break at this point only if
+ *                there are no other break opportunities in the line.
+ * eNormalBreak   The line has a break opportunity determined by the standard
+ *                line-breaking algorithm.
+ *
+ * Future expansion: split eNormalBreak into multiple priorities, e.g.
+ *                    punctuation break and whitespace break (bug 389710).
+ *                   As and when we implement it, text-wrap: unrestricted will
+ *                    mean that priorities are ignored and all line-break
+ *                    opportunities are equal.
+ *
+ * @see gfxTextRun::BreakAndMeasureText
+ * @see nsLineLayout::NotifyOptionalBreakPosition
+ */
+enum gfxBreakPriority {
+    eNoBreak       = 0,
+    eWordWrapBreak,
+    eNormalBreak
+};
+
+/**
  * Define refcounting for Thebes.  For now use the stuff from nsISupportsImpl
  * even though it forces the functions to be virtual...
  */

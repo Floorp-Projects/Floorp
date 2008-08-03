@@ -19,10 +19,13 @@ include moz-only/reftest.list
 == dynamic-rect-01.svg dynamic-rect-01-ref.svg
 == dynamic-rect-02.svg dynamic-rect-02-ref.svg
 == dynamic-rect-03.svg dynamic-rect-03-ref.svg
+== dynamic-rect-04.xhtml pass.svg
 == dynamic-reflow-01.svg dynamic-reflow-01-ref.svg
+== dynamic-switch-01.svg pass.svg
 == dynamic-text-01.svg dynamic-text-01-ref.svg
 == dynamic-text-02.svg dynamic-text-02-ref.svg
 == dynamic-text-03.svg dynamic-text-03-ref.svg
+== dynamic-use-01.svg pass.svg
 == fallback-color-01a.svg pass.svg
 == fallback-color-01b.svg pass.svg
 == fallback-color-02a.svg fallback-color-02-ref.svg
@@ -47,7 +50,9 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg # bug 379610
+# skip the next test on cocoa, since behaviour depends on the -minor- version of the 10.4 OS.
+# See bugs 379610 and 432298.
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
 == opacity-and-pattern-01.svg pass.svg
 == pseudo-classes-01.svg pass.svg
 == pseudo-classes-02.svg pseudo-classes-02-ref.svg
@@ -57,11 +62,12 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg # 
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
-fails == style-property-not-on-script-element-01.svg pass.svg
+== style-property-not-on-script-element-01.svg pass.svg
 == style-without-type-attribute.svg pass.svg
 == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01-ref.xhtml
 == svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.xhtml # reuse -01-ref.xhtml
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
+== switch-01.svg pass.svg
 == text-gradient-01.svg text-gradient-01-ref.svg
 == text-in-link-01.svg text-in-link-01-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg

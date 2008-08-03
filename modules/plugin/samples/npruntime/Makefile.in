@@ -47,7 +47,6 @@ CPPSRCS = \
 
 REQUIRES = \
 		plugin		\
-		java		\
 		$(NULL)
 
 LOCAL_INCLUDES  = -I$(srcdir)/.. -I$(srcdir)/../../public \

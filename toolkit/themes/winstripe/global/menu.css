@@ -80,15 +80,15 @@ menuitem.spell-suggestion {
 }
 
 .menu-text {
-  -moz-padding-start: 1.28em !important;
+  -moz-padding-start: 1.45em !important;
   -moz-appearance: menuitemtext;
 }
 
 .menu-text,
 .menu-iconic-text {
   font-weight: inherit;
-  padding-left: 2px;
-  padding-right: 2px;
+  -moz-margin-start: 2px !important;
+  -moz-padding-end: 2px;
 }
 
 .menu-description {
@@ -106,7 +106,7 @@ menuitem.spell-suggestion {
 
 .menu-iconic-left,
 .menu-right {
-  min-width:  1.28em;
+  min-width:  1.45em;
   min-height: 1.21em;
 }
 
@@ -117,9 +117,14 @@ menuitem.spell-suggestion {
 
 menu.menu-iconic > .menu-iconic-left,
 menuitem.menuitem-iconic > .menu-iconic-left {
-  /* there's only space for 15px - make room for one more */
-  -moz-margin-start: -1px;
   -moz-appearance: menuimage;
+}
+
+menu.menu-iconic > .menu-iconic-left > .menu-iconic-icon,
+menuitem.menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
+  /* reduce icon-text crowding */
+  -moz-margin-start: -1px;
+  -moz-margin-end: 1px;
 }
 
 /* ..... menu arrow box ..... */

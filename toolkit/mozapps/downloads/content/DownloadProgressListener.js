@@ -103,9 +103,11 @@ DownloadProgressListener.prototype = {
     } catch (e) { }
   },
 
-  onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress,
-                             aMaxSelfProgress, aCurTotalProgress,
-                             aMaxTotalProgress, aDownload)
+  onProgressChange: function dlPL_onProgressChange(aWebProgress, aRequest,
+                                                   aCurSelfProgress,
+                                                   aMaxSelfProgress,
+                                                   aCurTotalProgress,
+                                                   aMaxTotalProgress, aDownload)
   {
     var download = getDownload(aDownload.id);
 

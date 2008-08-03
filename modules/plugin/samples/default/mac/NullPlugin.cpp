@@ -293,14 +293,6 @@ void NPP_URLNotify(NPP /*instance*/, const char* /*url*/, NPReason /*reason*/, v
 }
 
 
-#ifdef OJI
-jref NPP_GetJavaClass(void)
-{
-  return NULL;
-}
-#endif /* OJI */
-
-
 NPError CPlugin::Initialize()
 {
   Handle string;

@@ -100,6 +100,26 @@ function doTest()
     is(accTable4.cellRefAt(1,1).firstChild.name, "cell3", "wrong cell");
   }
 
+  // Test table with display:inline and an outside table. We shouldn't be fooled
+  // by the outside table and shouldn't create table accessible and table cell
+  // accessible in this case
+  var table5 = document.getElementById("table5");
+  accNotCreated = false;
+  try {
+    var accTable1 = accService.getAccessibleFor(table1);
+  } catch (e) {
+    accNotCreated = true;
+  }
+  ok(accNotCreated, "wrongly created table accessible");
+  var t5Cell = document.getElementById("t5_cell");
+  accNotCreated = false;
+  try {
+    var accCell = accService.getAccessibleFor(t5Cell);
+  } catch (e) {
+    accNotCreated = true;
+  }
+  ok(accNotCreated, "wrongly created table cell accessible");
+
   SimpleTest.finish();
 }
 SimpleTest.waitForExplicitFinish();
@@ -150,6 +170,18 @@ addLoadEvent(doTest);
      <td>cell3</td>
     </tr>
    </table>
+
+   <table>
+   <tr>
+   <td style="display:block">
+     <table style="display:inline" id="table5">
+       <tr><td id="t5_cell">cell0</td></tr>
+     </table>
+   </td>
+   <td>cell1</td>
+   </tr>
+   </table>
+
   </center>
  </body>
 </html>

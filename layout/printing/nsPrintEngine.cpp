@@ -2232,9 +2232,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
                 nscoord pageWidth, pageHeight;
                 mPrt->mPrintDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
                 pageHeight -= totalMargin.top + totalMargin.bottom;
-                // XXXdholbert does this num-pages calculation need to take
-                // aPO->mZoomRatio into consideration?
-                PRInt32 totalPages = NSToIntCeil(float(selectionHgt) / float(pageHeight));
+                PRInt32 totalPages = NSToIntCeil(float(selectionHgt) * aPO->mZoomRatio / float(pageHeight));
                 pageSequence->SetTotalNumPages(totalPages);
               }
             }

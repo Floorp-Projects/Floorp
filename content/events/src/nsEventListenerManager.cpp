@@ -39,7 +39,7 @@
 #include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
 #include "nsEventListenerManager.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMMouseListener.h"
@@ -1176,6 +1176,7 @@ found:
                                            EmptyString(), aDOMEvent);
           }
           if (*aDOMEvent) {
+            nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = ls->mListener;
             if (useTypeInterface) {
               DispatchToInterface(*aDOMEvent, ls->mListener,
                                   dispData->method, *typeData->iid);
@@ -1445,7 +1446,7 @@ nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
   nsresult rv;
 
   // check caret visibility
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   rv = aShell->GetCaret(getter_AddRefs(caret));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   NS_ENSURE_TRUE(caret, PR_FALSE);
@@ -1455,10 +1456,9 @@ nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
   if (NS_FAILED(rv) || ! caretVisible)
     return PR_FALSE;
 
-  // caret selection, watch out: GetCaretDOMSelection can return null but NS_OK
-  nsCOMPtr<nsISelection> domSelection;
-  rv = caret->GetCaretDOMSelection(getter_AddRefs(domSelection));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  // caret selection, this is a temporary weak reference, so no refcounting is 
+  // needed
+  nsISelection* domSelection = caret->GetCaretDOMSelection();
   NS_ENSURE_TRUE(domSelection, PR_FALSE);
 
   // since the match could be an anonymous textnode inside a
@@ -1521,7 +1521,7 @@ nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
   PRBool isCollapsed;
   nsIView* view;
   nsRect caretCoords;
-  rv = caret->GetCaretCoordinates(nsICaret::eRenderingViewCoordinates,
+  rv = caret->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates,
                                   domSelection, &caretCoords, &isCollapsed,
                                   &view);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);

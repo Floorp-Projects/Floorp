@@ -105,7 +105,7 @@ function cleanup()
   // removing rdf
   var rdfFile = dirSvc.get("DLoads", Ci.nsIFile);
   if (rdfFile.exists()) rdfFile.remove(true);
-  
+
   // removing database
   var dbFile = dirSvc.get("ProfD", Ci.nsIFile);
   dbFile.append("downloads.sqlite");
@@ -135,14 +135,12 @@ function addDownload(aResultFileName)
 
   var destFile = dirSvc.get("ProfD", Ci.nsIFile);
   destFile.append(aResultFileName || "download.result");
-  var srcFile = dirSvc.get("ProfD", Ci.nsIFile);
-  srcFile.append("LICENSE");
 
   // it is part of the active downloads the moment addDownload is called
   gDownloadCount++;
 
   var dl = dm.addDownload(nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
-                          createURI("http://localhost:4444/LICENSE"),
+                          createURI("http://localhost:4444/res/language.properties"),
                           createURI(destFile), null, null,
                           Math.round(Date.now() * 1000), null, persist);
 
@@ -161,14 +159,16 @@ function getDownloadListener()
   return {
     onDownloadStateChange: function(aState, aDownload)
     {
-      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED)
-        gDownloadCount--;
+      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_QUEUED)
+        do_test_pending();
 
-      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_CANCELED ||
+      if (aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED ||
+          aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_CANCELED ||
           aDownload.state == Ci.nsIDownloadManager.DOWNLOAD_FAILED) {
           gDownloadCount--;
+        do_test_finished();
       }
-      
+
       if (gDownloadCount == 0)
         httpserv.stop();
     },
@@ -177,6 +177,10 @@ function getDownloadListener()
     onSecurityChange: function(a, b, c, d) { }
   };
 }
+
+// Disable alert service notifications
+let ps = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefBranch);
+ps.setBoolPref("browser.download.manager.showAlertOnComplete", false);
 
 cleanup();
 

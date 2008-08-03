@@ -583,8 +583,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   if (parent &&
       parent->GetStylePosition()->mBoxSizing != NS_STYLE_BOX_SIZING_BORDER) {
     const nsStyleBorder* border = parent->GetStyleBorder();
-    origin.x -= border->GetBorderWidth(NS_SIDE_LEFT);
-    origin.y -= border->GetBorderWidth(NS_SIDE_TOP);
+    origin.x -= border->GetActualBorderWidth(NS_SIDE_LEFT);
+    origin.y -= border->GetActualBorderWidth(NS_SIDE_TOP);
   }
 
   // XXX We should really consider subtracting out padding for
@@ -1358,7 +1358,13 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
     // override BindToTree for those classes and munge event listeners there?
     nsIDocument *document = GetOwnerDoc();
     nsresult rv = NS_OK;
-    if (document && (win = document->GetInnerWindow())) {
+
+    // FIXME (https://bugzilla.mozilla.org/show_bug.cgi?id=431767)
+    // nsDocument::GetInnerWindow can return an outer window in some cases,
+    // we don't want to stick an event listener on an outer window, so
+    // bail if it does.
+    if (document &&
+        (win = document->GetInnerWindow()) && win->IsInnerWindow()) {
       nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(win));
       NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
@@ -2340,6 +2346,28 @@ nsGenericHTMLElement::SetIntAttr(nsIAtom* aAttr, PRInt32 aValue)
 {
   nsAutoString value;
   value.AppendInt(aValue);
+
+  return SetAttr(kNameSpaceID_None, aAttr, value, PR_TRUE);
+}
+
+nsresult
+nsGenericHTMLElement::GetFloatAttr(nsIAtom* aAttr, float aDefault, float* aResult)
+{
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
+  if (attrVal && attrVal->Type() == nsAttrValue::eFloatValue) {
+    *aResult = attrVal->GetFloatValue();
+  }
+  else {
+    *aResult = aDefault;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLElement::SetFloatAttr(nsIAtom* aAttr, float aValue)
+{
+  nsAutoString value;
+  value.AppendFloat(aValue);
 
   return SetAttr(kNameSpaceID_None, aAttr, value, PR_TRUE);
 }

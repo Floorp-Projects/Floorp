@@ -129,8 +129,8 @@ static NPError fillNetscapeFunctionTable(NPNetscapeFuncs* aNPNFuncs)
   NPNFuncs.memfree          = aNPNFuncs->memfree;
   NPNFuncs.memflush         = aNPNFuncs->memflush;
   NPNFuncs.reloadplugins    = aNPNFuncs->reloadplugins;
-  NPNFuncs.getJavaEnv       = aNPNFuncs->getJavaEnv;
-  NPNFuncs.getJavaPeer      = aNPNFuncs->getJavaPeer;
+  NPNFuncs.getJavaEnv       = NULL;
+  NPNFuncs.getJavaPeer      = NULL;
   NPNFuncs.getvalue         = aNPNFuncs->getvalue;
   NPNFuncs.setvalue         = aNPNFuncs->setvalue;
   NPNFuncs.invalidaterect   = aNPNFuncs->invalidaterect;

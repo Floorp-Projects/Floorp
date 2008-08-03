@@ -25,6 +25,7 @@
  *   Christopher A. Aillon <christopher@aillon.com>
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Christian Biesinger <cbiesinger@web.de>
+ *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -60,6 +61,7 @@
 #include "nsHTMLReflowState.h"
 #include "nsThemeConstants.h"
 #include "nsStyleUtil.h"
+#include "nsStyleStructInlines.h"
 
 #include "nsPresContext.h"
 #include "nsIDocument.h"
@@ -487,6 +489,18 @@ nsComputedDOMStyle::GetBottom(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetStackSizing(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  val->SetIdent(GetStyleXUL()->mStretchStack ? nsGkAtoms::stretch_to_fit :
+                nsGkAtoms::ignore);
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
                                    nscolor aColor)
 {
@@ -595,6 +609,55 @@ nsComputedDOMStyle::GetColumnGap(nsIDOMCSSValue** aValue)
     SetValueToCoord(val, GetStyleColumn()->mColumnGap);
   }
 
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetColumnRuleWidth(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  if (!val)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  SetValueToCoord(val, GetStyleColumn()->GetComputedColumnRuleWidth());
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetColumnRuleStyle(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  if (!val)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  const nsStyleColumn* column = GetStyleColumn();
+  if (column->mColumnRuleStyle == NS_STYLE_BORDER_STYLE_NONE) {
+    val->SetIdent(nsGkAtoms::none);
+  } else {
+    const nsAFlatCString& style =
+      nsCSSProps::ValueToKeyword(column->mColumnRuleStyle,
+                                 nsCSSProps::kBorderStyleKTable);
+    val->SetIdent(style);
+  }
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetColumnRuleColor(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  if (!val)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  const nsStyleColumn* column = GetStyleColumn();
+  nscolor ruleColor;
+  if (column->mColumnRuleColorIsForeground) {
+    ruleColor = GetStyleColor()->mColor;
+  } else {
+    ruleColor = column->mColumnRuleColor;
+  }
+
+  SetToRGBAColor(val, ruleColor);
   return CallQueryInterface(val, aValue);
 }
 
@@ -1196,9 +1259,8 @@ nsComputedDOMStyle::GetBorderSpacing(nsIDOMCSSValue** aValue)
   }
 
   const nsStyleTableBorder *border = GetStyleTableBorder();
-  // border-spacing will always be a coord
-  xSpacing->SetAppUnits(border->mBorderSpacingX.GetCoordValue());
-  ySpacing->SetAppUnits(border->mBorderSpacingY.GetCoordValue());
+  SetValueToCoord(xSpacing, border->mBorderSpacingX);
+  SetValueToCoord(ySpacing, border->mBorderSpacingY);
 
   return CallQueryInterface(valueList, aValue);
 }
@@ -1558,6 +1620,92 @@ nsComputedDOMStyle::GetOutlineRadiusFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
+                                      const nscolor& aDefaultColor,
+                                      PRBool aUsesSpread,
+                                      nsIDOMCSSValue** aValue)
+{
+  if (!aArray) {
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    val->SetIdent(nsGkAtoms::none);
+    return CallQueryInterface(val, aValue);
+  }
+
+  static nsStyleCoord nsCSSShadowItem::* const shadowValuesNoSpread[] = {
+    &nsCSSShadowItem::mXOffset,
+    &nsCSSShadowItem::mYOffset,
+    &nsCSSShadowItem::mRadius
+  };
+
+  static nsStyleCoord nsCSSShadowItem::* const shadowValuesWithSpread[] = {
+    &nsCSSShadowItem::mXOffset,
+    &nsCSSShadowItem::mYOffset,
+    &nsCSSShadowItem::mRadius,
+    &nsCSSShadowItem::mSpread
+  };
+
+  nsStyleCoord nsCSSShadowItem::* const * shadowValues;
+  PRUint32 shadowValuesLength;
+  if (aUsesSpread) {
+    shadowValues = shadowValuesWithSpread;
+    shadowValuesLength = NS_ARRAY_LENGTH(shadowValuesWithSpread);
+  } else {
+    shadowValues = shadowValuesNoSpread;
+    shadowValuesLength = NS_ARRAY_LENGTH(shadowValuesNoSpread);
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+
+  for (nsCSSShadowItem *item = aArray->ShadowAt(0),
+                    *item_end = item + aArray->Length();
+       item < item_end; ++item) {
+    nsDOMCSSValueList *itemList = GetROCSSValueList(PR_FALSE);
+    if (!itemList || !valueList->AppendCSSValue(itemList)) {
+      delete itemList;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Color is either the specified shadow color or the foreground color
+    nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+    if (!val || !itemList->AppendCSSValue(val)) {
+      delete val;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    nscolor shadowColor;
+    if (item->mHasColor) {
+      shadowColor = item->mColor;
+    } else {
+      shadowColor = aDefaultColor;
+    }
+    SetToRGBAColor(val, shadowColor);
+
+    // Set the offsets, blur radius, and spread if available
+    for (PRUint32 i = 0; i < shadowValuesLength; ++i) {
+      val = GetROCSSPrimitiveValue();
+      if (!val || !itemList->AppendCSSValue(val)) {
+        delete val;
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      SetValueToCoord(val, item->*(shadowValues[i]));
+    }
+  }
+
+  return CallQueryInterface(valueList, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBoxShadow(nsIDOMCSSValue** aValue)
+{
+  return GetCSSShadowArray(GetStyleBorder()->mBoxShadow,
+                           GetStyleColor()->mColor,
+                           PR_TRUE, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetZIndex(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
@@ -1780,6 +1928,14 @@ nsComputedDOMStyle::GetTextIndent(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetTextShadow(nsIDOMCSSValue** aValue)
+{
+  return GetCSSShadowArray(GetStyleText()->mTextShadow,
+                           GetStyleColor()->mColor,
+                           PR_FALSE, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetTextTransform(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -1834,6 +1990,26 @@ nsComputedDOMStyle::GetWhiteSpace(nsIDOMCSSValue** aValue)
       nsCSSProps::ValueToKeyword(text->mWhiteSpace,
                                  nsCSSProps::kWhitespaceKTable);
     val->SetIdent(whiteSpace);
+  } else {
+    val->SetIdent(nsGkAtoms::normal);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetWordWrap(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleText *text = GetStyleText();
+
+  if (text->mWordWrap != NS_STYLE_WORDWRAP_NORMAL) {
+    const nsAFlatCString& wordWrap =
+      nsCSSProps::ValueToKeyword(text->mWordWrap,
+                                 nsCSSProps::kWordwrapKTable);
+    val->SetIdent(wordWrap);
   } else {
     val->SetIdent(nsGkAtoms::normal);
   }
@@ -2065,6 +2241,93 @@ nsComputedDOMStyle::GetBoxSizing(nsIDOMCSSValue** aValue)
   val->SetIdent(boxSizingIdent);
 
   return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetBorderImage(nsIDOMCSSValue** aValue)
+{
+  const nsStyleBorder* border = GetStyleBorder();
+  
+  // none
+  if (!border->GetBorderImage()) {
+    nsROCSSPrimitiveValue *valNone = GetROCSSPrimitiveValue();
+    NS_ENSURE_TRUE(valNone, NS_ERROR_OUT_OF_MEMORY);
+    valNone->SetIdent(nsGkAtoms::none);
+    return CallQueryInterface(valNone, aValue);
+  }
+  
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_FALSE);
+  NS_ENSURE_TRUE(valueList, NS_ERROR_OUT_OF_MEMORY);
+  
+  // uri
+  nsROCSSPrimitiveValue *valURI = GetROCSSPrimitiveValue();
+  if (!valURI || !valueList->AppendCSSValue(valURI)) {
+    delete valURI;
+    delete valueList;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsCOMPtr<nsIURI> uri;
+  border->GetBorderImage()->GetURI(getter_AddRefs(uri));
+  valURI->SetURI(uri);
+  
+  // four split numbers
+  NS_FOR_CSS_SIDES(side) {
+    nsROCSSPrimitiveValue *valSplit = GetROCSSPrimitiveValue();
+    if (!valSplit || !valueList->AppendCSSValue(valSplit)) {
+      delete valSplit;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    SetValueToCoord(valSplit, border->mBorderImageSplit.Get(side), nsnull,
+                    nsnull);
+  }
+  
+  // copy of border-width
+  if (border->mHaveBorderImageWidth) {
+    nsROCSSPrimitiveValue *slash = GetROCSSPrimitiveValue();
+    if (!slash || !valueList->AppendCSSValue(slash)) {
+      delete slash;
+      delete valueList;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    slash->SetString(NS_LITERAL_STRING("/"));
+    NS_FOR_CSS_SIDES(side) {
+      nsROCSSPrimitiveValue *borderWidth = GetROCSSPrimitiveValue();
+      if (!borderWidth || !valueList->AppendCSSValue(borderWidth)) {
+        delete borderWidth;
+        delete valueList;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      nscoord width = GetStyleBorder()->mBorderImageWidth.side(side);
+      borderWidth->SetAppUnits(width);
+    }
+  }
+  
+  // first keyword
+  nsROCSSPrimitiveValue *keyword = GetROCSSPrimitiveValue();
+  if (!keyword || !valueList->AppendCSSValue(keyword)) {
+    delete keyword;
+    delete valueList;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  const nsAFlatCString& borderImageIdent =
+            nsCSSProps::ValueToKeyword(GetStyleBorder()->mBorderImageHFill,
+                                       nsCSSProps::kBorderImageKTable);
+  keyword->SetIdent(borderImageIdent);
+  
+  // second keyword
+  nsROCSSPrimitiveValue *keyword2 = GetROCSSPrimitiveValue();
+  if (!keyword2 || !valueList->AppendCSSValue(keyword2)) {
+    delete keyword2;
+    delete valueList;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  const nsAFlatCString& borderImageIdent2 =
+            nsCSSProps::ValueToKeyword(GetStyleBorder()->mBorderImageVFill,
+                                       nsCSSProps::kBorderImageKTable);
+  keyword2->SetIdent(borderImageIdent2);
+  
+  return CallQueryInterface(valueList, aValue);
 }
 
 nsresult
@@ -2700,7 +2963,6 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
 
   NS_ASSERTION(coord.GetUnit() == eStyleUnit_Coord ||
                coord.GetUnit() == eStyleUnit_Percent ||
-               coord.GetUnit() == eStyleUnit_Chars ||
                coord.GetUnit() == eStyleUnit_Auto,
                "Unexpected unit");
   
@@ -2762,19 +3024,7 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 PRBool
 nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord)
 {
-  // Get a rendering context
-  nsCOMPtr<nsIRenderingContext> cx;
-  nsIFrame* frame = mPresShell->FrameManager()->GetRootFrame();
-  if (frame) {
-    mPresShell->CreateRenderingContext(frame, getter_AddRefs(cx));
-  }
-  if (!cx) {
-    // Give up
-    aCoord = 0;
-    return PR_FALSE;
-  }
-  
-  aCoord = nsHTMLReflowState::CalcLineHeight(cx, mStyleContextHolder);
+  aCoord = nsHTMLReflowState::CalcLineHeight(mStyleContextHolder);
   
   // CalcLineHeight uses font->mFont.size, but we want to use
   // font->mSize as the font size.  Adjust for that.  Also adjust for
@@ -2861,7 +3111,7 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
     FlushPendingReflows();
     width = mInnerFrame->GetUsedBorder().side(aSide);
   } else {
-    width = GetStyleBorder()->GetBorderWidth(aSide);
+    width = GetStyleBorder()->GetActualBorderWidth(aSide);
   }
   val->SetAppUnits(width);
 
@@ -2987,24 +3237,6 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
                                                   aTable));
       break;
       
-    case eStyleUnit_Chars: {
-      // Get a rendering context
-      nsCOMPtr<nsIRenderingContext> cx;
-      nsIFrame* frame = mPresShell->FrameManager()->GetRootFrame();
-      if (frame) {
-        mPresShell->CreateRenderingContext(frame, getter_AddRefs(cx));
-      }
-      if (cx) {
-        nscoord val =
-          nsLayoutUtils::CharsToCoord(aCoord, cx, mStyleContextHolder);
-        aValue->SetAppUnits(PR_MAX(aMinAppUnits, PR_MIN(val, aMaxAppUnits)));
-      } else {
-        // Oh, well.  Give up.
-        aValue->SetAppUnits(0);
-      }
-      break;
-    }
-
     case eStyleUnit_None:
       aValue->SetIdent(nsGkAtoms::none);
       break;
@@ -3024,21 +3256,6 @@ nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
   switch (aCoord.GetUnit()) {
     case eStyleUnit_Coord:
       return aCoord.GetCoordValue();
-    case eStyleUnit_Chars:
-      {
-        // Get a rendering context
-        nsCOMPtr<nsIRenderingContext> cx;
-        nsIFrame* frame = mPresShell->FrameManager()->GetRootFrame();
-        if (frame) {
-          mPresShell->CreateRenderingContext(frame, getter_AddRefs(cx));
-        }
-        if (!cx) {
-          // Return the default value, I guess
-          break;
-        }
-
-        return nsLayoutUtils::CharsToCoord(aCoord, cx, mStyleContextHolder);
-      }
     case eStyleUnit_Percent:
       {
         nscoord percentageBase;
@@ -3758,7 +3975,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(text_align,                    TextAlign),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration,               TextDecoration),
     COMPUTED_STYLE_MAP_ENTRY(text_indent,                   TextIndent),
-    // COMPUTED_STYLE_MAP_ENTRY(text_shadow,                TextShadow),
+    COMPUTED_STYLE_MAP_ENTRY(text_shadow,                   TextShadow),
     COMPUTED_STYLE_MAP_ENTRY(text_transform,                TextTransform),
     COMPUTED_STYLE_MAP_ENTRY(top,                           Top),
     COMPUTED_STYLE_MAP_ENTRY(unicode_bidi,                  UnicodeBidi),
@@ -3782,6 +3999,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_origin,        BackgroundOrigin),
     COMPUTED_STYLE_MAP_ENTRY(binding,                       Binding),
     COMPUTED_STYLE_MAP_ENTRY(border_bottom_colors,          BorderBottomColors),
+    COMPUTED_STYLE_MAP_ENTRY(border_image,                  BorderImage),
     COMPUTED_STYLE_MAP_ENTRY(border_left_colors,            BorderLeftColors),
     COMPUTED_STYLE_MAP_ENTRY(border_right_colors,           BorderRightColors),
     COMPUTED_STYLE_MAP_ENTRY(border_top_colors,             BorderTopColors),
@@ -3795,10 +4013,15 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(box_ordinal_group,             BoxOrdinalGroup),
     COMPUTED_STYLE_MAP_ENTRY(box_orient,                    BoxOrient),
     COMPUTED_STYLE_MAP_ENTRY(box_pack,                      BoxPack),
+    COMPUTED_STYLE_MAP_ENTRY(box_shadow,                    BoxShadow),
     COMPUTED_STYLE_MAP_ENTRY(box_sizing,                    BoxSizing),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_count,             ColumnCount),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_width,             ColumnWidth),
     COMPUTED_STYLE_MAP_ENTRY(_moz_column_gap,               ColumnGap),
+    //// COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule,         ColumnRule),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_color,        ColumnRuleColor),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_width,        ColumnRuleWidth),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_column_rule_style,        ColumnRuleStyle),
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
     COMPUTED_STYLE_MAP_ENTRY(force_broken_image_icon,  ForceBrokenImageIcon),
     COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
@@ -3806,10 +4029,12 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topRight,   OutlineRadiusTopRight),
+    COMPUTED_STYLE_MAP_ENTRY(stack_sizing,                  StackSizing),
     COMPUTED_STYLE_MAP_ENTRY(user_focus,                    UserFocus),
     COMPUTED_STYLE_MAP_ENTRY(user_input,                    UserInput),
     COMPUTED_STYLE_MAP_ENTRY(user_modify,                   UserModify),
-    COMPUTED_STYLE_MAP_ENTRY(user_select,                   UserSelect)
+    COMPUTED_STYLE_MAP_ENTRY(user_select,                   UserSelect),
+    COMPUTED_STYLE_MAP_ENTRY(word_wrap,                     WordWrap)
 
 #ifdef MOZ_SVG
     ,

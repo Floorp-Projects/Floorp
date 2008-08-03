@@ -16,7 +16,7 @@
 #bookmarksPanel > hbox,
 #history-panel > hbox {
   -moz-appearance: none !important;
-  background-color: #d4dde5 !important;
+  background-color: transparent !important;
   border-top: none !important;
 }
 
@@ -144,12 +144,14 @@ treechildren::-moz-tree-image(query) {
   list-style-image: url("chrome://browser/skin/places/query.png");
 }
 
-treechildren::-moz-tree-image(title, query, tagContainer) {
+treechildren::-moz-tree-image(title, query, tagContainer),
+treechildren::-moz-tree-image(container, OrganizerQuery_Tags) {
   list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
 }
 
+/* calendar icon for folders grouping items by date */
 treechildren::-moz-tree-image(title, query, dayContainer) {
-  list-style-image: url("chrome://global/skin/tree/folder.png");
+  list-style-image: url("chrome://browser/skin/places/history.png");
 }
 
 treechildren::-moz-tree-image(title, query, hostContainer) {

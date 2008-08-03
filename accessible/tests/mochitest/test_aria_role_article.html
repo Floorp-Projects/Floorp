@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=429666
+-->
+<head>
+  <title>Expose ROLE_DOCUMENT for ARIA landmarks that inherit from document chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var accRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+                       getService(Components.interfaces.nsIAccessibleRetrieval);
+
+      // Test article exposed as document
+      var articleElement = document.getElementById("testArticle");
+      var articleAcc = null;
+      try {
+        articleAcc = accRetrieval.getAccessibleFor(articleElement);
+      } catch(e) { }
+      ok(articleAcc, "no accessible for article!");
+      if (articleAcc) {
+        is(articleAcc.finalRole,
+           Components.interfaces.nsIAccessibleRole.ROLE_DOCUMENT,
+           "Wrong role for article!");
+        is(articleAcc.name, "Test article", "Wrong name for article!");
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=429666">Mozilla Bug 429666</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="testArticle" role="article" title="Test article">
+    <p>This is a paragraph inside the article.</p>
+  </div>
+</body>
+</html>

@@ -40,6 +40,7 @@
 
 #include "nsCWebBrowser.h"
 #include "nsIComponentManager.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWidget.h"
 
@@ -409,6 +410,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   gtk_window_set_resizable(GTK_WINDOW(sTipWindow), TRUE);
   // needed to get colors + fonts etc correctly
   gtk_widget_set_name(sTipWindow, "gtk-tooltips");
+  gtk_window_set_type_hint(GTK_WINDOW(sTipWindow), GDK_WINDOW_TYPE_HINT_TOOLTIP);
   
   // set up the popup window as a transient of the widget.
   GtkWidget *toplevel_window;
@@ -439,7 +441,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   // and show it.
   gtk_widget_show_all(sTipWindow);
 
-  nsMemory::Free( (void*)tipString );
+  NS_Free( (void*)tipString );
 
   return NS_OK;
 }

@@ -97,7 +97,7 @@
 /* legend: op         val name          image       len use def prec  format */
 
 /* Longstanding JavaScript bytecodes. */
-OPDEF(JSOP_NOP,       0,  "nop",        NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_INTERRUPT, 0,  "interrupt",  NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_PUSH,      1,  "push",       NULL,         1,  0,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_POPV,      2,  "popv",       NULL,         1,  1,  0,  2,  JOF_BYTE)
 OPDEF(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         1,  1,  1,  0,  JOF_BYTE|JOF_PARENHEAD)
@@ -234,9 +234,10 @@ OPDEF(JSOP_ARGDEC,    101,"argdec",     NULL,         3,  0,  1, 15,  JOF_QARG |
 OPDEF(JSOP_VARDEC,    102,"vardec",     NULL,         3,  0,  1, 15,  JOF_QVAR |JOF_NAME|JOF_DEC|JOF_POST)
 
 /*
- * Initialize for-in iterator. See also JSOP_FOREACH and JSOP_FOREACHKEYVAL.
+ * Initialize for-in iterator using the JSITER_* flag bits in this op's uint8
+ * immediate operand. See also JSOP_ENDITER.
  */
-OPDEF(JSOP_FORIN,     103,"forin",      NULL,         1,  1,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_ITER,      103,"iter",       NULL,         2,  1,  1,  0,  JOF_2BYTE)
 
 /* ECMA-compliant for/in ops. */
 OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_FOR)
@@ -266,7 +267,7 @@ OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_EXCEPTION, 116,"exception",  NULL,         1,  0,  1,  0,  JOF_BYTE)
 
 /* Embedded lineno to speedup pc->line mapping. */
-OPDEF(JSOP_LINENO, 117,"lineno",        NULL,         3,  0,  0,  0,  JOF_UINT16)
+OPDEF(JSOP_LINENO,    117,"lineno",     NULL,         3,  0,  0,  0,  JOF_UINT16)
 
 /*
  * ECMA-compliant switch statement ops.
@@ -331,9 +332,9 @@ OPDEF(JSOP_TRY,         133,"try",        NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_FINALLY,     134,"finally",    NULL,       1,  0,  0,  0,  JOF_BYTE)
 
 /*
- * Swap the top two stack elements.
+ * Generic nop for the decompiler.
  */
-OPDEF(JSOP_SWAP,        135,"swap",       NULL,       1,  2,  2,  0,  JOF_BYTE)
+OPDEF(JSOP_NOP,         135,"nop",        NULL,       1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Bytecodes that avoid making an arguments object in most cases:
@@ -410,7 +411,7 @@ OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_CALLPROP,      184,"callprop",   NULL,     3,  1,  2, 18,  JOF_ATOM|JOF_PROP|JOF_CALLOP)
 OPDEF(JSOP_GETFUNNS,      185,"getfunns",   NULL,     1,  0,  1, 19,  JOF_BYTE)
-OPDEF(JSOP_FOREACH,       186,"foreach",    NULL,     1,  1,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED186,     186,"unused186",  NULL,     1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
 
 /*
@@ -477,7 +478,7 @@ OPDEF(JSOP_GENERATOR,     210,"generator",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_YIELD,         211,"yield",       NULL,    1,  1,  1,  1,  JOF_BYTE)
 OPDEF(JSOP_ARRAYPUSH,     212,"arraypush",   NULL,    3,  1,  0,  3,  JOF_LOCAL)
 
-OPDEF(JSOP_FOREACHKEYVAL, 213,"foreachkeyval",NULL,   1,  1,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED213,     213,"unused213",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Variant of JSOP_ENUMELEM for destructuring const (const [a, b] = ...).
@@ -521,3 +522,10 @@ OPDEF(JSOP_INT32,         228, "int32",        NULL,  5,  0,  1, 16,  JOF_INT32)
  * Get the value of the 'length' property from a stacked object.
  */
 OPDEF(JSOP_LENGTH,        229, "length",       NULL,  1,  1,  1, 18,  JOF_BYTE|JOF_PROP)
+
+/*
+ * JSOP_NEWARRAY optimizes array literal evaluation using the interpreter stack.
+ * JSOP_HOLE pushes a JSVAL_HOLE (used with JSOP_NEWINIT and JSOP_NEWARRAY).
+ */
+OPDEF(JSOP_NEWARRAY,      230,"newarray",      NULL,  4, -1,  1, 19,  JOF_UINT24)
+OPDEF(JSOP_HOLE,          231,"hole",          NULL,  1,  0,  1,  0,  JOF_BYTE)

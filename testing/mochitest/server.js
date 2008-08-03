@@ -134,14 +134,8 @@ function runServer()
   serverBasePath.append("_tests");
   serverBasePath.append("testing");
   serverBasePath.append("mochitest");
-  server = new nsHttpServer();
-  server.registerDirectory("/", serverBasePath);
 
-  server.registerPathHandler("/server/shutdown", serverShutdown);
-
-  server.registerContentType("sjs", "sjs"); // .sjs == CGI-like functionality
-
-  server.setIndexHandler(defaultDirHandler);
+  server = createMochitestServer(serverBasePath);
   server.start(SERVER_PORT);
 
   // touch a file in the profile directory to indicate we're alive
@@ -183,6 +177,93 @@ function runServer()
     thread.processNextEvent(true);
 }
 
+/** Creates and returns an HTTP server configured to serve Mochitests. */
+function createMochitestServer(serverBasePath)
+{
+  var server = new nsHttpServer();
+
+  server.registerDirectory("/", serverBasePath);
+  server.registerPathHandler("/server/shutdown", serverShutdown);
+  server.registerContentType("sjs", "sjs"); // .sjs == CGI-like functionality
+  server.setIndexHandler(defaultDirHandler);
+
+  processLocations(server);
+
+  return server;
+}
+
+/**
+ * Notifies the HTTP server about all the locations at which it might receive
+ * requests, so that it can properly respond to requests on any of the hosts it
+ * serves.
+ */
+function processLocations(server)
+{
+  var serverLocations = serverBasePath.clone();
+  serverLocations.append("server-locations.txt");
+
+  const PR_RDONLY = 0x01;
+  var fis = new FileInputStream(serverLocations, PR_RDONLY, 0444,
+                                Ci.nsIFileInputStream.CLOSE_ON_EOF);
+
+  var lis = new ConverterInputStream(fis, "UTF-8", 1024, 0x0);
+  lis.QueryInterface(Ci.nsIUnicharLineInputStream);
+
+  const LINE_REGEXP =
+    new RegExp("^([a-z][-a-z0-9+.]*)" +
+               "://" +
+               "(" +
+                 "\\d+\\.\\d+\\.\\d+\\.\\d+" +
+                 "|" +
+                 "(?:[a-z0-9](?:[-a-z0-9]*[a-z0-9])?\\.)*" +
+                 "[a-z](?:[-a-z0-9]*[a-z0-9])?" +
+               ")" +
+               ":" +
+               "(\\d+)" +
+               "(?:" +
+               "\\s+" +
+               "(\\w+(?:,\\w+)*)" +
+               ")?$");
+
+  var line = {};
+  var lineno = 0;
+  var seenPrimary = false;
+  do
+  {
+    var more = lis.readLine(line);
+    lineno++;
+
+    var lineValue = line.value;
+    if (lineValue.charAt(0) == "#" || lineValue == "")
+      continue;
+
+    var match = LINE_REGEXP.exec(lineValue);
+    if (!match)
+      throw "Syntax error in server-locations.txt, line " + lineno;
+
+    var [, scheme, host, port, options] = match;
+    if (options)
+    {
+      if (options.split(",").indexOf("primary") >= 0)
+      {
+        if (seenPrimary)
+        {
+          throw "Multiple primary locations in server-locations.txt, " +
+                "line " + lineno;
+        }
+  
+        server.identity.setPrimary(scheme, host, port);
+        seenPrimary = true;
+        continue;
+      }
+    }
+
+    server.identity.add(scheme, host, port);
+  }
+  while (more);
+}
+
+
 // PATH HANDLERS
 
 // /server/shutdown
@@ -208,9 +289,9 @@ function serverShutdown(metadata, response)
  */
 function dirIter(dir)
 {
-  var enum = dir.directoryEntries;
-  while (enum.hasMoreElements()) {
-    var file = enum.getNext();
+  var en = dir.directoryEntries;
+  while (en.hasMoreElements()) {
+    var file = en.getNext();
     yield file.QueryInterface(Ci.nsILocalFile);
   }
 }

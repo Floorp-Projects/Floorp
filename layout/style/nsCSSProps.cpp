@@ -266,9 +266,9 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_menuarrow,              NS_THEME_MENUARROW,
   eCSSKeyword_menuimage,              NS_THEME_MENUIMAGE,
   eCSSKeyword_menuitemtext,           NS_THEME_MENUITEMTEXT,
-  eCSSKeyword_media_toolbox,          NS_THEME_MEDIA_TOOLBOX,
-  eCSSKeyword_communications_toolbox, NS_THEME_COMMUNICATIONS_TOOLBOX,
-  eCSSKeyword_browsertabbar_toolbox,  NS_THEME_BROWSER_TAB_BAR_TOOLBOX,
+  eCSSKeyword__moz_win_media_toolbox, NS_THEME_WIN_MEDIA_TOOLBOX,
+  eCSSKeyword__moz_win_communications_toolbox, NS_THEME_WIN_COMMUNICATIONS_TOOLBOX,
+  eCSSKeyword__moz_win_browsertabbar_toolbox,  NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -349,6 +349,13 @@ const PRInt32 nsCSSProps::kBorderCollapseKTable[] = {
 const PRInt32 nsCSSProps::kBorderColorKTable[] = {
   eCSSKeyword_transparent, NS_STYLE_COLOR_TRANSPARENT,
   eCSSKeyword__moz_use_text_color, NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kBorderImageKTable[] = {
+  eCSSKeyword_stretch, NS_STYLE_BORDER_IMAGE_STRETCH,
+  eCSSKeyword_repeat, NS_STYLE_BORDER_IMAGE_REPEAT,
+  eCSSKeyword_round, NS_STYLE_BORDER_IMAGE_ROUND,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -466,6 +473,9 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_oddtreerow, nsILookAndFeel::eColor__moz_oddtreerow,
   eCSSKeyword__moz_visitedhyperlinktext, NS_COLOR_MOZ_VISITEDHYPERLINKTEXT,
   eCSSKeyword_currentcolor, NS_COLOR_CURRENTCOLOR,
+  eCSSKeyword__moz_win_mediatext, nsILookAndFeel::eColor__moz_win_mediatext,
+  eCSSKeyword__moz_win_communicationstext, nsILookAndFeel::eColor__moz_win_communicationstext,
+  eCSSKeyword__moz_nativehyperlinktext, nsILookAndFeel::eColor__moz_nativehyperlinktext,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -593,8 +603,6 @@ const PRInt32 nsCSSProps::kFloatKTable[] = {
 
 const PRInt32 nsCSSProps::kFloatEdgeKTable[] = {
   eCSSKeyword_content_box,  NS_STYLE_FLOAT_EDGE_CONTENT,
-  eCSSKeyword_border_box,  NS_STYLE_FLOAT_EDGE_BORDER,
-  eCSSKeyword_padding_box,  NS_STYLE_FLOAT_EDGE_PADDING,
   eCSSKeyword_margin_box,  NS_STYLE_FLOAT_EDGE_MARGIN,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -858,6 +866,12 @@ const PRInt32 nsCSSProps::kSpeechRateKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kStackSizingKTable[] = {
+  eCSSKeyword_ignore, NS_STYLE_STACK_SIZING_IGNORE,
+  eCSSKeyword_stretch_to_fit, NS_STYLE_STACK_SIZING_STRETCH_TO_FIT,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kTableLayoutKTable[] = {
   eCSSKeyword_fixed, NS_STYLE_TABLE_LAYOUT_FIXED,
   eCSSKeyword_UNKNOWN,-1
@@ -975,6 +989,12 @@ const PRInt32 nsCSSProps::kWidthKTable[] = {
   eCSSKeyword__moz_min_content, NS_STYLE_WIDTH_MIN_CONTENT,
   eCSSKeyword__moz_fit_content, NS_STYLE_WIDTH_FIT_CONTENT,
   eCSSKeyword__moz_available, NS_STYLE_WIDTH_AVAILABLE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kWordwrapKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_WORDWRAP_NORMAL,
+  eCSSKeyword_break_word, NS_STYLE_WORDWRAP_BREAK_WORD,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1585,6 +1605,13 @@ static const nsCSSProperty gOutlineSubpropTable[] = {
   eCSSProperty_outline_color,
   eCSSProperty_outline_style,
   eCSSProperty_outline_width,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gMozColumnRuleSubpropTable[] = {
+  eCSSProperty__moz_column_rule_width,
+  eCSSProperty__moz_column_rule_style,
+  eCSSProperty__moz_column_rule_color,
   eCSSProperty_UNKNOWN
 };
 

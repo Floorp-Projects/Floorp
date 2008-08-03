@@ -9,7 +9,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <style type="text/css">
 
-  #one, #three { background: blue; color: yellow; border: thin solid red; }
+  #one, #three { background: blue; color: yellow; border: thin solid red; -moz-column-rule: 2px solid green; }
   #two { background: transparent; border: thin solid; }
   #five, #six {border: thick solid red; -moz-border-start-color:green; -moz-border-end-color:blue}
 
@@ -87,6 +87,8 @@ function part1()
        "border-left-color applies");
     is(cs1.borderBottomColor, cs3.borderBottomColor, 
        "border-top-color applies");
+    is(cs1.MozColumnRuleColor, cs3.MozColumnRuleColor,
+       "-moz-column-rule-color applies");
     isnot(cs5.borderRightColor, cs2.borderRightColor,
           "-moz-border-end-color applies");
     isnot(cs5.borderLeftColor, cs2.borderLeftColor,
@@ -106,6 +108,8 @@ function part1()
           "border-left-color applies");
     isnot(cs3.borderBottomColor, cs4.borderBottomColor,
           "border-bottom-color applies");
+    isnot(cs2.MozColumnRuleColor, cs3.MozColumnRuleColor,
+       "-moz-column-rule-color applies");
     transparentBackgroundColor = cs2.backgroundColor;
     inputBackgroundColor = cs4.backgroundColor;
     inputColor = cs4.color;
@@ -137,6 +141,8 @@ function part2()
        "-moz-border-end-color is blocked");
     is(cs1.borderBottomColor, cs2.borderBottomColor,
        "border-bottom-color is blocked");
+    is(cs2.MozColumnRuleColor, cs3.MozColumnRuleColor,
+       "-moz-column-rule-color is blocked");
     is(cs3.backgroundColor, cs1.backgroundColor, "background-color transparency preserved (opaque)");
     is(cs3.color, cs4.color, "color is blocked");
     is(cs3.borderTopColor, cs4.borderTopColor, "border-top-color is blocked");

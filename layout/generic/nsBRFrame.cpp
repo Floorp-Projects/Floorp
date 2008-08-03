@@ -127,11 +127,9 @@ BRFrame::Reflow(nsPresContext* aPresContext,
   if (ll) {
     // Note that the compatibility mode check excludes AlmostStandards
     // mode, since this is the inline box model.  See bug 161691.
-    if ( ll->CanPlaceFloatNow() ||
+    if ( ll->LineIsEmpty() ||
          aPresContext->CompatibilityMode() == eCompatibility_FullStandards ) {
-      // If we can place a float on the line now it means that the
-      // line is effectively empty (there may be zero sized compressed
-      // white-space frames on the line, but they are to be ignored).
+      // The line is logically empty; any whitespace is trimmed away.
       //
       // If this frame is going to terminate the line we know
       // that nothing else will go on the line. Therefore, in this
@@ -152,8 +150,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
         nscoord ascent, descent;
         fm->GetMaxAscent(ascent);
         fm->GetMaxDescent(descent);
-        nscoord logicalHeight =
-          aReflowState.CalcLineHeight(aReflowState.rendContext, this);
+        nscoord logicalHeight = aReflowState.CalcLineHeight(this);
         nscoord leading = logicalHeight - ascent - descent;
         aMetrics.height = logicalHeight;
         aMetrics.ascent = ascent + (leading/2);
@@ -276,8 +273,10 @@ NS_IMETHODIMP BRFrame::GetAccessible(nsIAccessible** aAccessible)
   NS_ENSURE_TRUE(mContent, NS_ERROR_FAILURE);
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIContent> parent = mContent->GetBindingParent();
-  if (parent && parent->IsNativeAnonymous() && parent->GetChildCount() == 1) {
+  nsIContent *parent = mContent->GetParent();
+  if (parent &&
+      parent->IsRootOfNativeAnonymousSubtree() &&
+      parent->GetChildCount() == 1) {
     // This <br> is the only node in a text control, therefore it is the hacky
     // "bogus node" used when there is no text in the control
     return NS_ERROR_FAILURE;

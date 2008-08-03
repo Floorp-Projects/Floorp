@@ -204,6 +204,13 @@ public:
     inline void Remove(XPCWrappedNative* wrapper)
     {
         NS_PRECONDITION(wrapper,"bad param");
+#ifdef DEBUG
+        XPCWrappedNative* wrapperInMap = Find(wrapper->GetIdentityObject());
+        NS_ASSERTION(!wrapperInMap || wrapperInMap == wrapper,
+                     "About to remove a different wrapper with the same "
+                     "nsISupports identity! This will most likely cause serious "
+                     "problems!");
+#endif
         JS_DHashTableOperate(mTable, wrapper->GetIdentityObject(), JS_DHASH_REMOVE);
     }
 

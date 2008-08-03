@@ -2,6 +2,16 @@
   -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
 }
 
+#extensionsManager:not([active="true"]) > #topStackBar > #viewGroup {
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
+  background-color: #cfcfcf;
+  border-bottom: 1px solid rgba(0,0,0,0.35);
+}
+
+#extensionsManager:not([active="true"]) > #topStackBar > #viewGroup > .radiogroupWrapper {
+  opacity: 0.7;
+}
+
 #extensionsBox {
   padding: 0;
   min-width:1px;

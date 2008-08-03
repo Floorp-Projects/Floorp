@@ -75,6 +75,8 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozAutoDocUpdate.h"
+#include "nsCSSDeclaration.h"
+#include "nsRuleNode.h"
 
 // -------------------------------
 // Style Rule List for the DOM
@@ -163,6 +165,316 @@ CSSRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
   return result;
 }
 
+template <class Numeric>
+PRInt32 DoCompare(Numeric a, Numeric b)
+{
+  if (a == b)
+    return 0;
+  if (a < b)
+    return -1;
+  return 1;
+}
+
+PRBool
+nsMediaExpression::Matches(nsPresContext *aPresContext,
+                           const nsCSSValue& aActualValue) const
+{
+  const nsCSSValue& actual = aActualValue;
+  const nsCSSValue& required = mValue;
+
+  // If we don't have the feature, the match fails.
+  if (actual.GetUnit() == eCSSUnit_Null) {
+    return PR_FALSE;
+  }
+
+  // If the expression had no value to match, the match succeeds,
+  // unless the value is an integer 0.
+  if (required.GetUnit() == eCSSUnit_Null) {
+    return actual.GetUnit() != eCSSUnit_Integer ||
+           actual.GetIntValue() != 0;
+  }
+
+  NS_ASSERTION(mFeature->mRangeType == nsMediaFeature::eMinMaxAllowed ||
+               mRange == nsMediaExpression::eEqual, "yikes");
+  PRInt32 cmp; // -1 (actual < required)
+               //  0 (actual == required)
+               //  1 (actual > required)
+  switch (mFeature->mValueType) {
+    case nsMediaFeature::eLength:
+      {
+        NS_ASSERTION(actual.IsLengthUnit(), "bad actual value");
+        NS_ASSERTION(required.IsLengthUnit(), "bad required value");
+        nscoord actualCoord = nsRuleNode::CalcLengthWithInitialFont(
+                                aPresContext, actual);
+        nscoord requiredCoord = nsRuleNode::CalcLengthWithInitialFont(
+                                  aPresContext, required);
+        cmp = DoCompare(actualCoord, requiredCoord);
+      }
+      break;
+    case nsMediaFeature::eInteger:
+      {
+        NS_ASSERTION(actual.GetUnit() == eCSSUnit_Integer,
+                     "bad actual value");
+        NS_ASSERTION(required.GetUnit() == eCSSUnit_Integer,
+                     "bad required value");
+        cmp = DoCompare(actual.GetIntValue(), required.GetIntValue());
+      }
+      break;
+    case nsMediaFeature::eIntRatio:
+      {
+        NS_ASSERTION(actual.GetUnit() == eCSSUnit_Array &&
+                     actual.GetArrayValue()->Count() == 2 &&
+                     actual.GetArrayValue()->Item(0).GetUnit() ==
+                       eCSSUnit_Integer &&
+                     actual.GetArrayValue()->Item(1).GetUnit() ==
+                       eCSSUnit_Integer,
+                     "bad actual value");
+        NS_ASSERTION(required.GetUnit() == eCSSUnit_Array &&
+                     required.GetArrayValue()->Count() == 2 &&
+                     required.GetArrayValue()->Item(0).GetUnit() ==
+                       eCSSUnit_Integer &&
+                     required.GetArrayValue()->Item(1).GetUnit() ==
+                       eCSSUnit_Integer,
+                     "bad required value");
+        // Convert to PRInt64 so we can multiply without worry.  Note
+        // that while the spec requires that both halves of |required|
+        // be positive, the numerator or denominator of |actual| might
+        // be zero (e.g., when testing 'aspect-ratio' on a 0-width or
+        // 0-height iframe).
+        PRInt64 actualNum = actual.GetArrayValue()->Item(0).GetIntValue(),
+                actualDen = actual.GetArrayValue()->Item(1).GetIntValue(),
+                requiredNum = required.GetArrayValue()->Item(0).GetIntValue(),
+                requiredDen = required.GetArrayValue()->Item(1).GetIntValue();
+        cmp = DoCompare(actualNum * requiredDen, requiredNum * actualDen);
+      }
+      break;
+    case nsMediaFeature::eResolution:
+      {
+        NS_ASSERTION(actual.GetUnit() == eCSSUnit_Inch ||
+                     actual.GetUnit() == eCSSUnit_Centimeter,
+                     "bad actual value");
+        NS_ASSERTION(required.GetUnit() == eCSSUnit_Inch ||
+                     required.GetUnit() == eCSSUnit_Centimeter,
+                     "bad required value");
+        float actualDPI = actual.GetFloatValue();
+        if (actual.GetUnit() == eCSSUnit_Centimeter)
+          actualDPI = actualDPI * 2.54f;
+        float requiredDPI = required.GetFloatValue();
+        if (required.GetUnit() == eCSSUnit_Centimeter)
+          requiredDPI = requiredDPI * 2.54f;
+        cmp = DoCompare(actualDPI, requiredDPI);
+      }
+      break;
+    case nsMediaFeature::eEnumerated:
+      {
+        NS_ASSERTION(actual.GetUnit() == eCSSUnit_Enumerated,
+                     "bad actual value");
+        NS_ASSERTION(required.GetUnit() == eCSSUnit_Enumerated,
+                     "bad required value");
+        NS_ASSERTION(mFeature->mRangeType == nsMediaFeature::eMinMaxNotAllowed,
+                     "bad range"); // we asserted above about mRange
+        // We don't really need DoCompare, but it doesn't hurt (and
+        // maybe the compiler will condense this case with eInteger).
+        cmp = DoCompare(actual.GetIntValue(), required.GetIntValue());
+      }
+      break;
+  }
+  switch (mRange) {
+    case nsMediaExpression::eMin:
+      return cmp != -1;
+    case nsMediaExpression::eMax:
+      return cmp != 1;
+    case nsMediaExpression::eEqual:
+      return cmp == 0;
+  }
+  NS_NOTREACHED("unexpected mRange");
+  return PR_FALSE;
+}
+
+void
+nsMediaQueryResultCacheKey::AddExpression(const nsMediaExpression* aExpression,
+                                          PRBool aExpressionMatches)
+{
+  const nsMediaFeature *feature = aExpression->mFeature;
+  FeatureEntry *entry = nsnull;
+  for (PRUint32 i = 0; i < mFeatureCache.Length(); ++i) {
+    if (mFeatureCache[i].mFeature == feature) {
+      entry = &mFeatureCache[i];
+      break;
+    }
+  }
+  if (!entry) {
+    entry = mFeatureCache.AppendElement();
+    if (!entry) {
+      return; /* out of memory */
+    }
+    entry->mFeature = feature;
+  }
+
+  ExpressionEntry eentry = { *aExpression, aExpressionMatches };
+  entry->mExpressions.AppendElement(eentry);
+}
+
+PRBool
+nsMediaQueryResultCacheKey::Matches(nsPresContext* aPresContext) const
+{
+  if (aPresContext->Medium() != mMedium) {
+    return PR_FALSE;
+  }
+
+  for (PRUint32 i = 0; i < mFeatureCache.Length(); ++i) {
+    const FeatureEntry *entry = &mFeatureCache[i];
+    nsCSSValue actual;
+    nsresult rv = (entry->mFeature->mGetter)(aPresContext, actual);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE); // any better ideas?
+
+    for (PRUint32 j = 0; j < entry->mExpressions.Length(); ++j) {
+      const ExpressionEntry &eentry = entry->mExpressions[j];
+      if (eentry.mExpression.Matches(aPresContext, actual) !=
+          eentry.mExpressionMatches) {
+        return PR_FALSE;
+      }
+    }
+  }
+
+  return PR_TRUE;
+}
+
+void
+nsMediaQuery::AppendToString(nsAString& aString) const
+{
+  nsAutoString buffer;
+
+  if (mHadUnknownExpression) {
+    aString.AppendLiteral("not all");
+    return;
+  }
+
+  NS_ASSERTION(!mNegated || !mHasOnly, "can't have not and only");
+  NS_ASSERTION(!mTypeOmitted || (!mNegated && !mHasOnly),
+               "can't have not or only when type is omitted");
+  if (!mTypeOmitted) {
+    if (mNegated) {
+      aString.AppendLiteral("not ");
+    } else if (mHasOnly) {
+      aString.AppendLiteral("only ");
+    }
+    mMediaType->ToString(buffer);
+    aString.Append(buffer);
+    buffer.Truncate();
+  }
+
+  for (PRUint32 i = 0, i_end = mExpressions.Length(); i < i_end; ++i) {
+    if (i > 0 || !mTypeOmitted)
+      aString.AppendLiteral(" and ");
+    aString.AppendLiteral("(");
+
+    const nsMediaExpression &expr = mExpressions[i];
+    if (expr.mRange == nsMediaExpression::eMin) {
+      aString.AppendLiteral("min-");
+    } else if (expr.mRange == nsMediaExpression::eMax) {
+      aString.AppendLiteral("max-");
+    }
+
+    const nsMediaFeature *feature = expr.mFeature;
+    (*feature->mName)->ToString(buffer);
+    aString.Append(buffer);
+    buffer.Truncate();
+
+    if (expr.mValue.GetUnit() != eCSSUnit_Null) {
+      aString.AppendLiteral(": ");
+      switch (feature->mValueType) {
+        case nsMediaFeature::eLength:
+          NS_ASSERTION(expr.mValue.IsLengthUnit(), "bad unit");
+          // Use 'width' as a property that takes length values
+          // written in the normal way.
+          nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_width,
+                                                   expr.mValue, aString);
+          break;
+        case nsMediaFeature::eInteger:
+          NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Integer,
+                       "bad unit");
+          // Use 'z-index' as a property that takes integer values
+          // written without anything extra.
+          nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_z_index,
+                                                   expr.mValue, aString);
+          break;
+        case nsMediaFeature::eIntRatio:
+          {
+            NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Array,
+                         "bad unit");
+            nsCSSValue::Array *array = expr.mValue.GetArrayValue();
+            NS_ASSERTION(array->Count() == 2, "unexpected length");
+            NS_ASSERTION(array->Item(0).GetUnit() == eCSSUnit_Integer,
+                         "bad unit");
+            NS_ASSERTION(array->Item(1).GetUnit() == eCSSUnit_Integer,
+                         "bad unit");
+            nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_z_index,
+                                                     array->Item(0), aString);
+            aString.AppendLiteral("/");
+            nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_z_index,
+                                                     array->Item(1), aString);
+          }
+          break;
+        case nsMediaFeature::eResolution:
+          buffer.AppendFloat(expr.mValue.GetFloatValue());
+          aString.Append(buffer);
+          buffer.Truncate();
+          if (expr.mValue.GetUnit() == eCSSUnit_Inch) {
+            aString.AppendLiteral("dpi");
+          } else {
+            NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Centimeter,
+                         "bad unit");
+            aString.AppendLiteral("dpcm");
+          }
+          break;
+        case nsMediaFeature::eEnumerated:
+          NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Enumerated,
+                       "bad unit");
+          AppendASCIItoUTF16(
+              nsCSSProps::ValueToKeyword(expr.mValue.GetIntValue(),
+                                         feature->mKeywordTable),
+              aString);
+          break;
+      }
+    }
+
+    aString.AppendLiteral(")");
+  }
+}
+
+nsMediaQuery*
+nsMediaQuery::Clone() const
+{
+  nsAutoPtr<nsMediaQuery> result(new nsMediaQuery(*this));
+  NS_ENSURE_TRUE(result &&
+                   result->mExpressions.Length() == mExpressions.Length(),
+                 nsnull);
+  return result.forget();
+}
+
+PRBool
+nsMediaQuery::Matches(nsPresContext* aPresContext,
+                      nsMediaQueryResultCacheKey& aKey) const
+{
+  if (mHadUnknownExpression)
+    return PR_FALSE;
+
+  PRBool match =
+    mMediaType == aPresContext->Medium() || mMediaType == nsGkAtoms::all;
+  for (PRUint32 i = 0, i_end = mExpressions.Length(); match && i < i_end; ++i) {
+    const nsMediaExpression &expr = mExpressions[i];
+    nsCSSValue actual;
+    nsresult rv = (expr.mFeature->mGetter)(aPresContext, actual);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE); // any better ideas?
+
+    match = expr.Matches(aPresContext, actual);
+    aKey.AddExpression(&expr, match);
+  }
+
+  return match == !mNegated;
+}
+
 NS_INTERFACE_MAP_BEGIN(nsMediaList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -174,7 +486,8 @@ NS_IMPL_RELEASE(nsMediaList)
 
 
 nsMediaList::nsMediaList()
-  : mStyleSheet(nsnull)
+  : mIsEmpty(PR_TRUE)
+  , mStyleSheet(nsnull)
 {
 }
 
@@ -187,13 +500,16 @@ nsMediaList::GetText(nsAString& aMediaText)
 {
   aMediaText.Truncate();
 
-  for (PRInt32 i = 0, i_end = mArray.Count(); i < i_end; ++i) {
-    nsIAtom* medium = mArray[i];
-    NS_ENSURE_TRUE(medium, NS_ERROR_FAILURE);
+  if (mArray.Length() == 0 && !mIsEmpty) {
+    aMediaText.AppendLiteral("not all");
+  }
 
-    nsAutoString buffer;
-    medium->ToString(buffer);
-    aMediaText.Append(buffer);
+  for (PRInt32 i = 0, i_end = mArray.Length(); i < i_end; ++i) {
+    nsMediaQuery* query = mArray[i];
+    NS_ENSURE_TRUE(query, NS_ERROR_FAILURE);
+
+    query->AppendToString(aMediaText);
+
     if (i + 1 < i_end) {
       aMediaText.AppendLiteral(", ");
     }
@@ -224,18 +540,16 @@ nsMediaList::SetText(const nsAString& aMediaText)
                                 this, htmlMode);
 }
 
-/*
- * aMatch is true when we contain the desired medium or contain the
- * "all" medium or contain no media at all, which is the same as
- * containing "all"
- */
 PRBool
-nsMediaList::Matches(nsPresContext* aPresContext)
+nsMediaList::Matches(nsPresContext* aPresContext,
+                     nsMediaQueryResultCacheKey& aKey)
 {
-  if (-1 != mArray.IndexOf(aPresContext->Medium()) ||
-      -1 != mArray.IndexOf(nsGkAtoms::all))
-    return PR_TRUE;
-  return mArray.Count() == 0;
+  for (PRInt32 i = 0, i_end = mArray.Length(); i < i_end; ++i) {
+    if (mArray[i]->Matches(aPresContext, aKey)) {
+      return PR_TRUE;
+    }
+  }
+  return mIsEmpty;
 }
 
 nsresult
@@ -251,10 +565,13 @@ nsresult
 nsMediaList::Clone(nsMediaList** aResult)
 {
   nsRefPtr<nsMediaList> result = new nsMediaList();
-  if (!result)
+  if (!result || !result->mArray.AppendElements(mArray.Length()))
     return NS_ERROR_OUT_OF_MEMORY;
-  if (!result->mArray.AppendObjects(mArray))
-    return NS_ERROR_OUT_OF_MEMORY;
+  for (PRInt32 i = 0, i_end = mArray.Length(); i < i_end; ++i) {
+    if (!(result->mArray[i] = mArray[i]->Clone())) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
   NS_ADDREF(*aResult = result);
   return NS_OK;
 }
@@ -310,7 +627,7 @@ nsMediaList::GetLength(PRUint32* aLength)
 {
   NS_ENSURE_ARG_POINTER(aLength);
 
-  *aLength = mArray.Count();
+  *aLength = mArray.Length();
   return NS_OK;
 }
 
@@ -319,7 +636,11 @@ nsMediaList::Item(PRUint32 aIndex, nsAString& aReturn)
 {
   PRInt32 index = aIndex;
   if (0 <= index && index < Count()) {
-    MediumAt(aIndex)->ToString(aReturn);
+    nsMediaQuery* query = mArray[index];
+    NS_ENSURE_TRUE(query, NS_ERROR_FAILURE);
+
+    aReturn.Truncate();
+    query->AppendToString(aReturn);
   } else {
     SetDOMStringToNull(aReturn);
   }
@@ -367,18 +688,19 @@ nsMediaList::Delete(const nsAString& aOldMedium)
   if (aOldMedium.IsEmpty())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
 
-  nsCOMPtr<nsIAtom> old = do_GetAtom(aOldMedium);
-  NS_ENSURE_TRUE(old, NS_ERROR_OUT_OF_MEMORY);
+  for (PRInt32 i = 0, i_end = mArray.Length(); i < i_end; ++i) {
+    nsMediaQuery* query = mArray[i];
+    NS_ENSURE_TRUE(query, NS_ERROR_FAILURE);
 
-  PRInt32 indx = mArray.IndexOf(old);
-
-  if (indx < 0) {
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
+    nsAutoString buf;
+    query->AppendToString(buf);
+    if (buf == aOldMedium) {
+      mArray.RemoveElementAt(i);
+      return NS_OK;
+    }
   }
 
-  mArray.RemoveObjectAt(indx);
-
-  return NS_OK;
+  return NS_ERROR_DOM_NOT_FOUND_ERR;
 }
 
 nsresult
@@ -387,18 +709,31 @@ nsMediaList::Append(const nsAString& aNewMedium)
   if (aNewMedium.IsEmpty())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
 
-  nsCOMPtr<nsIAtom> media = do_GetAtom(aNewMedium);
-  NS_ENSURE_TRUE(media, NS_ERROR_OUT_OF_MEMORY);
+  Delete(aNewMedium);
 
-  PRInt32 indx = mArray.IndexOf(media);
-
-  if (indx >= 0) {
-    mArray.RemoveObjectAt(indx);
+  nsresult rv = NS_OK;
+  nsTArray<nsAutoPtr<nsMediaQuery> > buf;
+#ifdef DEBUG
+  PRBool ok = 
+#endif
+    mArray.SwapElements(buf);
+  NS_ASSERTION(ok, "SwapElements should never fail when neither array "
+                   "is an auto array");
+  SetText(aNewMedium);
+  if (mArray.Length() == 1) {
+    nsMediaQuery *query = mArray[0].forget();
+    if (!buf.AppendElement(query)) {
+      delete query;
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
   }
-
-  mArray.AppendObject(media);
-
-  return NS_OK;
+#ifdef DEBUG
+  ok = 
+#endif
+    mArray.SwapElements(buf);
+  NS_ASSERTION(ok, "SwapElements should never fail when neither array "
+                   "is an auto array");
+  return rv;
 }
 
 // -------------------------------
@@ -834,11 +1169,12 @@ nsCSSStyleSheet::GetType(nsString& aType) const
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsCSSStyleSheet::UseForMedium(nsPresContext* aPresContext) const
+PRBool
+nsCSSStyleSheet::UseForPresentation(nsPresContext* aPresContext,
+                                    nsMediaQueryResultCacheKey& aKey) const
 {
   if (mMedia) {
-    return mMedia->Matches(aPresContext);
+    return mMedia->Matches(aPresContext, aKey);
   }
   return PR_TRUE;
 }

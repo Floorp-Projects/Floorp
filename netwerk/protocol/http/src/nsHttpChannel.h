@@ -193,6 +193,9 @@ private:
     nsresult InstallCacheListener(PRUint32 offset = 0);
     nsresult InstallOfflineCacheListener();
 
+    // Handle the bogus Content-Encoding Apache sometimes sends
+    void ClearBogusContentEncodingIfNeeded();
+
     // byte range request specific methods
     nsresult SetupByteRangeRequest(PRUint32 partialLen);
     nsresult ProcessPartialContent();

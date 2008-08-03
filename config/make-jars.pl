@@ -49,7 +49,7 @@ foreach my $arg (@ARGV) {
 }
 my $defines = join(' ', @ARGV[ $ddindex .. $#ARGV ]);
 
-getopts("d:s:t:c:j:f:avlD:o:p:xz:e");
+getopts("d:s:t:c:j:f:avqlD:o:p:xz:e");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
@@ -84,6 +84,11 @@ if (defined($::opt_j)) {
 my $verbose = 0;
 if (defined($::opt_v)) {
     $verbose = 1;
+}
+
+my $quiet = 0;
+if (defined($::opt_q)) {
+    $quiet = 1;
 }
 
 my $fileformat = "jar";
@@ -279,7 +284,7 @@ sub JarIt
 
     if (!($overrides eq "")) {
         my $err = 0; 
-        print "+++ overriding $overrides\n";
+        print "+++ overriding $overrides\n" unless $quiet;
           
         while (length($overrides) > $maxCmdline) {
             #print "Exceeding POSIX cmdline limit: " . length($overrides) . "\n";
@@ -340,7 +345,7 @@ sub UniqIt
     my %lines = map { $_ => 1 } @_;
 
     my $lockfile = "$manifest.lck";
-    print "+++ updating chrome $manifest\n";
+    print "+++ updating chrome $manifest\n" unless $quiet;
 
     my $dir = dirname($manifest);
     mkpath($dir, 0, 0755);
@@ -487,7 +492,7 @@ sub EnsureFileInDir
                 open(TMP, ">$tmpFile") || die("$tmpFile: $!");
                 print(TMP "$^X $preprocessor $preproc_flags $defines $preproc_file > $destPath");
                 close(TMP);
-                print "+++ preprocessing $preproc_file > $destPath\n";
+                print "+++ preprocessing $preproc_file > $destPath\n" unless $quiet;
                 if (system("bash \"$tmpFile\"") != 0) {
                     die "Preprocessing of $file failed (VMS): ".($? >> 8);
                 }
@@ -529,7 +534,7 @@ start:
         my $cwd = cwd();
         my @manifestLines;
 
-        print "+++ making chrome $cwd  => $jarDir/$jarfile.jar\n";
+        print "+++ making chrome $cwd  => $jarDir/$jarfile.jar\n" unless $quiet;
         while (defined($_ = shift @gLines)) {
             if (/^\s+([\w\d.\-\_\\\/\+]+)\s*(\(\%?[\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;

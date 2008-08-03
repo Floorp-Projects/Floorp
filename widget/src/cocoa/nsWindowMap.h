@@ -88,6 +88,10 @@
 }
 
 - (id)initWithWindow:(NSWindow*)inWindow;
++ (void)activateInWindow:(NSWindow*)aWindow;
++ (void)deactivateInWindow:(NSWindow*)aWindow;
++ (void)activateInWindowViews:(NSWindow*)aWindow;
++ (void)deactivateInWindowViews:(NSWindow*)aWindow;
 
 @end
 

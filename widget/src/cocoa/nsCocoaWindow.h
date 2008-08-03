@@ -46,9 +46,11 @@
 
 #include "nsBaseWidget.h"
 #include "nsPIWidgetCocoa.h"
+#include "nsAutoPtr.h"
 
 class nsCocoaWindow;
 class nsChildView;
+class nsMenuBarX;
 
 typedef struct _nsCocoaWindowList {
   _nsCocoaWindowList() : prev(NULL), window(NULL) {}
@@ -101,12 +103,19 @@ typedef struct _nsCocoaWindowList {
 @interface WindowDelegate : NSObject
 {
   nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)
+  // Used to avoid duplication when we send NS_ACTIVATE/NS_GOTFOCUS and
+  // NS_DEACTIVATE/NS_LOSTFOCUS to Gecko for toplevel widgets.  Starts out
+  // PR_FALSE.
+  PRBool mToplevelActiveState;
 }
 + (void)paintMenubarForWindow:(NSWindow*)aWindow;
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
 - (void)windowDidResize:(NSNotification*)aNotification;
 - (void)sendFocusEvent:(PRUint32)eventType;
 - (nsCocoaWindow*)geckoWidget;
+- (PRBool)toplevelActiveState;
+- (void)sendToplevelActivateEvents;
+- (void)sendToplevelDeactivateEvents;
 @end
 
 
@@ -114,19 +123,22 @@ typedef struct _nsCocoaWindowList {
 // and for background of the window.
 @interface TitlebarAndBackgroundColor : NSColor
 {
-  NSColor *mTitlebarColor;
+  NSColor *mActiveTitlebarColor;
+  NSColor *mInactiveTitlebarColor;
   NSColor *mBackgroundColor;
   NSWindow *mWindow; // [WEAK] (we are owned by the window)
   float mTitlebarHeight;
 }
 
-- (id)initWithTitlebarColor:(NSColor*)aTitlebarColor 
-         andBackgroundColor:(NSColor*)aBackgroundColor
-                  forWindow:(NSWindow*)aWindow;
+- (id)initWithActiveTitlebarColor:(NSColor*)aActiveTitlebarColor
+            inactiveTitlebarColor:(NSColor*)aInactiveTitlebarColor
+                  backgroundColor:(NSColor*)aBackgroundColor
+                        forWindow:(NSWindow*)aWindow;
 
 // Pass nil here to get the default appearance.
-- (void)setTitlebarColor:(NSColor*)aColor;
-- (NSColor*)titlebarColor;
+- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
+- (NSColor*)activeTitlebarColor;
+- (NSColor*)inactiveTitlebarColor;
 
 - (void)setBackgroundColor:(NSColor*)aColor;
 - (NSColor*)backgroundColor;
@@ -140,8 +152,9 @@ typedef struct _nsCocoaWindowList {
 {
   TitlebarAndBackgroundColor *mColor;
 }
-- (void)setTitlebarColor:(NSColor*)aColor;
-- (NSColor*)titlebarColor;
+- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
+- (NSColor*)activeTitlebarColor;
+- (NSColor*)inactiveTitlebarColor;
 // This method is also available on NSWindows (via a category), and is the 
 // preferred way to check the background color of a window.
 - (NSColor*)windowBackgroundColor;
@@ -191,6 +204,7 @@ public:
                                     nsNativeWidget aNativeWindow = nsnull);
 
     NS_IMETHOD              Show(PRBool aState);
+    virtual nsIWidget*      GetSheetWindowParent(void);
     NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
     NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
     NS_IMETHOD              Enable(PRBool aState);
@@ -198,8 +212,8 @@ public:
     NS_IMETHOD              SetModal(PRBool aState);
     NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE);
-    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar);
-    virtual nsIMenuBar*     GetMenuBar();
+    NS_IMETHOD              SetMenuBar(void* aMenuBar);
+    virtual nsMenuBarX*     GetMenuBar();
     NS_IMETHOD              ShowMenuBar(PRBool aShow);
     NS_IMETHOD WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
     NS_IMETHOD ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
@@ -235,7 +249,7 @@ public:
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);
     NS_IMETHOD GetHasTransparentBackground(PRBool& aTransparent);
     NS_IMETHOD SetHasTransparentBackground(PRBool aTransparent);
-    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor);
+    NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
 
     virtual gfxASurface* GetThebesSurface();
 
@@ -263,7 +277,7 @@ protected:
   nsIWidget*           mParent;         // if we're a popup, this is our parent [WEAK]
   NSWindow*            mWindow;         // our cocoa window [STRONG]
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
-  nsCOMPtr<nsIMenuBar> mMenuBar;
+  nsRefPtr<nsMenuBarX> mMenuBar;
   NSWindow*            mSheetWindowParent; // if this is a sheet, this is the NSWindow it's attached to
   nsChildView*         mPopupContentView; // if this is a popup, this is its content widget
 

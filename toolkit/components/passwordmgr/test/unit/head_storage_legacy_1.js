@@ -81,15 +81,15 @@ const LoginTest = {
   checkExpectedError : function (aExpectedError, aActualError) {
     if (aExpectedError) {
         if (!aActualError)
-            throw "Storage didn't throw as expected (" + aExpectedError + ")";
+            throw "Test didn't throw as expected (" + aExpectedError + ")";
 
         if (!aExpectedError.test(aActualError))
-            throw "Storage threw (" + aActualError + "), not (" + aExpectedError;
+            throw "Test threw (" + aActualError + "), not (" + aExpectedError;
 
         // We got the expected error, so make a note in the test log.
         dump("...that error was expected.\n\n");
     } else if (aActualError) {
-        throw "Component threw unexpected error: " + aActualError;
+        throw "Test threw unexpected error: " + aActualError;
     }
   },
 

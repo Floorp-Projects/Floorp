@@ -44,8 +44,9 @@
 typedef long nsAccessibleTextBoundary;
 
 interface nsIAccessible;
+interface nsIPersistentProperties;
 
-[scriptable, uuid(caa4f543-070e-4705-8428-2e53575c41bb)]
+[scriptable, uuid(0f4633b1-550c-4b50-8c04-0eb1005eef2f)]
 interface nsIAccessibleText : nsISupports
 {
   // In parameters for character offsets:
@@ -102,13 +103,24 @@ interface nsIAccessibleText : nsISupports
   wchar getCharacterAtOffset (in long offset);
 
   /**
-   * Get the accessible and start/end offsets around the given offset.
-   * This accessible get return the DOM node and layout frame
-   * with the uniform attributes for this range of text
+   * Get the accessible start/end offsets around the given offset,
+   * return the text attributes for this range of text.
+   *
+   * @param  includeDefAttrs   [in] points whether text attributes applied to
+   *                           the entire accessible should be included or not.
+   * @param  offset            [in] text offset
+   * @param  rangeStartOffset  [out] start offset of the range of text
+   * @param  rangeEndOffset    [out] end offset of the range of text
    */
-  nsIAccessible getAttributeRange (in long offset,
-                                   out long rangeStartOffset,
-                                   out long rangeEndOffset);
+  nsIPersistentProperties getTextAttributes(in boolean includeDefAttrs,
+                                            in long offset,
+                                            out long rangeStartOffset,
+                                            out long rangeEndOffset);
+
+  /**
+   * Return the text attributes that apply to the entire accessible.
+   */
+  readonly attribute nsIPersistentProperties defaultTextAttributes;
 
   /**
    * Returns the bounding box of the specified position.
@@ -222,11 +234,6 @@ interface nsIAccessibleText : nsISupports
  The following methods will throw an exception on failure
  (since not every text component will allow every operation):
  setSelectionBounds, addSelection, removeSelection, setCaretOffset.
-
- getRangeAttributes defined to return an nsISupports
- interface instead of a pango specific data structure.
- It may be that some other return type is more appropriate
- for mozilla text attributes.
 
  we assume that all text components support the idea of
  a caret offset, whether visible or "virtual".  If this

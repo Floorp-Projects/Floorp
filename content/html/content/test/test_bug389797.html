@@ -36,7 +36,8 @@ function HTML_TAG(aTagName, aImplClass) {
       "nsIDOMNSElement",
       "nsIDOMEventTarget",
       "nsIDOMNSHTMLElement",
-      "nsIDOMElementCSSInlineStyle" ];
+      "nsIDOMElementCSSInlineStyle",
+      "nsIDOMNodeSelector" ];
 
   // Some interfaces don't appear in classinfo because other interfaces that
   // inherit from them do.
@@ -156,7 +157,7 @@ HTML_TAG("head", "Head");
 HTML_TAG("hr", "HR");
 HTML_TAG("html", "Html");
 HTML_TAG("i", "Span");
-HTML_TAG("iframe", "IFrame", [ "nsIDOMNSHTMLFrameElement" ],
+HTML_TAG("iframe", "IFrame", [ "nsIDOMNSHTMLFrameElement", "nsIDOMGetSVGDocument" ],
                              [ "nsIFrameLoaderOwner" ]);
 HTML_TAG("image", "Span");
 HTML_TAG("img", "Image", [], [ "imgIDecoderObserver",
@@ -182,7 +183,7 @@ HTML_TAG("nobr", "Span");
 HTML_TAG("noembed", "Div");
 HTML_TAG("noframes", "Div");
 HTML_TAG("noscript", "Div");
-HTML_TAG("object", "Object", [],
+HTML_TAG("object", "Object", [ "nsIDOMGetSVGDocument" ],
                              objectIfaces.concat([ "nsIImageLoadingContent" ]));
 HTML_TAG("ol", "OList");
 HTML_TAG("optgroup", "OptGroup");

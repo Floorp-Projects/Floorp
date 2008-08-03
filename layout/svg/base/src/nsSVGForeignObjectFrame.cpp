@@ -688,13 +688,6 @@ nsSVGForeignObjectFrame::FlushDirtyRegion()
   if (outerSVGFrame->IsRedrawSuspended())
     return;
 
-  nsRect rect = nsSVGUtils::FindFilterInvalidation(this);
-  if (!rect.IsEmpty()) {
-    outerSVGFrame->InvalidateRect(rect);
-    mDirtyRegion.SetEmpty();
-    return;
-  }
-  
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
   nsRect r = mDirtyRegion.GetBounds();
   r.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
@@ -705,6 +698,7 @@ nsSVGForeignObjectFrame::FlushDirtyRegion()
   // See bug 418063
   r.UnionRect(r, mRect);
 
+  r = nsSVGUtils::FindFilterInvalidation(this, r);
   outerSVGFrame->InvalidateRect(r);
 
   mDirtyRegion.SetEmpty();

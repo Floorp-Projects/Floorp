@@ -7,12 +7,12 @@
     {
       throw 17;
     }
-    document.addEventListener("message", receiveMessage, false);
+    window.addEventListener("message", receiveMessage, false);
 
     function setup()
     {
       var target = document.getElementById("location");
-      target.textContent = document.domain;
+      target.textContent = location.hostname + ":" + (location.port || 80);
     }
 
     window.addEventListener("load", setup, false);

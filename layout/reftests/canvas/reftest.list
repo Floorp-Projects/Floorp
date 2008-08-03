@@ -1,0 +1,35 @@
+!= text-ltr-left.html text-blank.html
+!= text-ltr-right.html text-blank.html
+!= text-rtl-left.html text-blank.html
+!= text-rtl-right.html text-blank.html
+
+== text-ltr-start.html text-ltr-left.html
+== text-ltr-end.html text-ltr-right.html
+!= text-ltr-left.html text-ltr-right.html
+== text-rtl-start.html text-rtl-right.html
+== text-rtl-end.html text-rtl-left.html
+!= text-rtl-left.html text-rtl-right.html
+
+== text-ltr-left.html text-rtl-left.html
+
+== text-ltr-alignment-test.html text-ltr-alignment-ref.html
+== text-rtl-alignment-test.html text-rtl-alignment-ref.html
+
+== text-horzline-with-bottom.html text-horzline.html
+== text-horzline-with-top.html text-horzline.html
+
+!= text-big-stroke.html text-blank.html
+!= text-big-stroke.html text-big-fill.html
+
+== text-context-state-test.html text-context-state-ref.html
+== text-font-inherit.html text-big-fill.html
+== text-space-replace-test.html text-space-replace-ref.html
+
+== text-no-frame-test.html text-no-frame-ref.html
+== text-no-frame-2-test.html text-not-in-doc-ref.html
+== text-not-in-doc-test.html text-not-in-doc-ref.html
+
+# weird pixel-rounding on mac prevents these tests from passing
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == text-bidi-ltr-test.html text-bidi-ltr-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == text-bidi-rtl-test.html text-bidi-rtl-ref.html
+

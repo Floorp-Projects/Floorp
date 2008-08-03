@@ -179,7 +179,7 @@ nsStringEnumerator::GetNext(nsACString& aResult)
 
 template<class T>
 static inline nsresult
-StringEnumeratorTail(T** aResult)
+StringEnumeratorTail(T** aResult NS_INPARAM)
 {
     if (!*aResult)
         return NS_ERROR_OUT_OF_MEMORY;

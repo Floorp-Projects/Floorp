@@ -55,6 +55,9 @@ var opRegExp = new RegExp(opRegExpSrc);
 // A regexp to match floating point literals (but not integer literals).
 var fpRegExp = /^\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?/;
 
+// A regexp to match regexp literals.
+var reRegExp = /^\/((?:\\.|\[(?:\\.|[^\]])*\]|[^\/])+)\/([gimy]*)/;
+
 function Tokenizer(s, f, l) {
     this.cursor = 0;
     this.source = String(s);
@@ -161,11 +164,10 @@ Tokenizer.prototype = {
             var id = match[0];
             token.type = keywords[id] || IDENTIFIER;
             token.value = id;
-        } else if ((match = /^"(?:\\.|[^"])*"|^'(?:[^']|\\.)*'/(input))) { //"){
+        } else if ((match = /^"(?:\\.|[^"])*"|^'(?:\\.|[^'])*'/(input))) { //"){
             token.type = STRING;
             token.value = eval(match[0]);
-        } else if (this.scanOperand &&
-                   (match = /^\/((?:\\.|[^\/])+)\/([gimy]*)/(input))) {
+        } else if (this.scanOperand && (match = reRegExp(input))) {
             token.type = REGEXP;
             token.value = new RegExp(match[1], match[2]);
         } else if ((match = opRegExp(input))) {

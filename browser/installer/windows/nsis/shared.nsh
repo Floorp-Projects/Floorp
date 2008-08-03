@@ -41,6 +41,7 @@
   SetShellVarContext current  ; Set SHCTX to the current user (e.g. HKCU)
   ${RegCleanMain} "Software\Mozilla"
   ${RegCleanUninstall}
+  ${UpdateProtocolHandlers}
 
   ClearErrors
   WriteRegStr HKLM "Software\Mozilla\InstallerTest" "InstallerTest" "Test"
@@ -55,6 +56,7 @@
     ${SetStartMenuInternet}
     ${FixShellIconHandler}
     ${SetUninstallKeys}
+    ${UpdateProtocolHandlers}
 
     ReadRegStr $0 HKLM "Software\mozilla.org\Mozilla" "CurrentVersion"
     ${If} "$0" != "${GREVersion}"
@@ -67,7 +69,6 @@
   ; Add Software\Mozilla\ registry entries
   ${SetAppKeys}
   ${FixClassKeys}
-  ${UpdateProtocolHandlers}
 
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.
@@ -108,7 +109,6 @@
   ${FixShellIconHandler}
   WriteRegStr HKCU "Software\Clients\StartMenuInternet" "" "$R9"
 
-!ifdef ___WINVER__NSH___
   ${If} ${AtLeastWinVista}
     ClearErrors
     ReadRegStr $0 HKLM "Software\RegisteredApplications" "${AppRegName}"
@@ -118,7 +118,6 @@
       AppAssocReg::SetAppAsDefaultAll "${AppRegName}"
     ${EndUnless}
   ${EndIf}
-!endif
 
   ${RemoveDeprecatedKeys}
 
@@ -157,11 +156,11 @@
   ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
     ShellLink::GetShortCutArgs "$DESKTOP\${BrandFullName}.lnk"
     Pop $0
-    ${If} $0 == ""
+    ${If} "$0" == ""
       ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
       Pop $0
       ; Needs to handle short paths
-      ${If} $0 == "$INSTDIR\${FileMainEXE}"
+      ${If} "$0" == "$INSTDIR\${FileMainEXE}"
         Delete "$DESKTOP\${BrandFullName}.lnk"
       ${EndIf}
     ${EndIf}
@@ -170,11 +169,11 @@
   ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
     ShellLink::GetShortCutArgs "$QUICKLAUNCH\${BrandFullName}.lnk"
     Pop $0
-    ${If} $0 == ""
+    ${If} "$0" == ""
       ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandFullName}.lnk"
       Pop $0
       ; Needs to handle short paths
-      ${If} $0 == "$INSTDIR\${FileMainEXE}"
+      ${If} "$0" == "$INSTDIR\${FileMainEXE}"
         Delete "$QUICKLAUNCH\${BrandFullName}.lnk"
       ${EndIf}
     ${EndIf}
@@ -227,7 +226,7 @@
     WriteRegStr SHCTX "$0\.shtml" "" "FirefoxHTML"
   ${EndIf}
 
-  ReadRegStr $6 HKCR ".hht" ""
+  ReadRegStr $6 HKCR ".xht" ""
   ${If} "$6" != "FirefoxHTML"
     WriteRegStr SHCTX "$0\.xht"   "" "FirefoxHTML"
   ${EndIf}
@@ -362,7 +361,7 @@
   ${If} ${FileExists} "$DESKTOP\${BrandFullName}.lnk"
     ShellLink::GetShortCutArgs "$DESKTOP\${BrandFullName}.lnk"
     Pop $1
-    ${If} $1 == ""
+    ${If} "$1" == ""
       ShellLink::GetShortCutTarget "$DESKTOP\${BrandFullName}.lnk"
       Pop $1
       ${GetLongPath} "$1" $1
@@ -376,7 +375,7 @@
 
   ; XXXrstrong - need a cleaner way to prevent unsetting SHCTX from HKLM when
   ; trying to find the desktop shortcut.
-  ${If} $TmpVal == "HKCU"
+  ${If} "$TmpVal" == "HKCU"
     SetShellVarContext current ; Set SHCTX to the current user (e.g. HKCU)
   ${Else}
     SetShellVarContext all     ; Set SHCTX to all users (e.g. HKLM)
@@ -385,11 +384,11 @@
   ${If} ${FileExists} "$QUICKLAUNCH\${BrandFullName}.lnk"
     ShellLink::GetShortCutArgs "$QUICKLAUNCH\${BrandFullName}.lnk"
     Pop $1
-    ${If} $1 == ""
+    ${If} "$1" == ""
       ShellLink::GetShortCutTarget "$QUICKLAUNCH\${BrandFullName}.lnk"
       Pop $1
       ${GetLongPath} "$1" $1
-      ${If} $1 == "$8\${FileMainEXE}"
+      ${If} "$1" == "$8\${FileMainEXE}"
         ${WriteRegDWORD2} $TmpVal "$0" "Create Quick Launch Shortcut" 1 0
       ${Else}
         ${WriteRegDWORD2} $TmpVal "$0" "Create Quick Launch Shortcut" 0 0
@@ -544,7 +543,7 @@
   ; Delete gopher from the user's UrlAssociations if it points to FirefoxURL.
   StrCpy $0 "Software\Microsoft\Windows\Shell\Associations\UrlAssociations\gopher"
   ReadRegStr $2 HKCU "$0\UserChoice" "Progid"
-  ${If} $2 == "FirefoxURL"
+  ${If} "$2" == "FirefoxURL"
     DeleteRegKey HKCU "$0"
   ${EndIf}
 !macroend

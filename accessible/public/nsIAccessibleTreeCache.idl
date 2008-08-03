@@ -47,7 +47,7 @@ interface nsIAccessible;
  *
  * @status UNDER_REVIEW
  */
-[uuid(7e0f50b0-6444-4372-b00f-4ce81c6b058a)]
+[uuid(1dde5c3b-bede-43d1-aabf-dabc461113bd)]
 interface nsIAccessibleTreeCache : nsISupports
 {
   /**
@@ -82,6 +82,12 @@ interface nsIAccessibleTreeCache : nsISupports
    */
   void treeViewInvalidated(in long aStartRow, in long aEndRow,
                            in long aStartCol, in long aEndCol);
+
+  /**
+   * Invalidates children created for previous tree view.
+   */
+  void treeViewChanged();
+
 };
 
 [uuid(b71532f9-53b2-4647-a5b2-1c5f57e9aed6)]

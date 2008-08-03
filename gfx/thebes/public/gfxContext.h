@@ -141,6 +141,16 @@ public:
     void ClosePath();
 
     /**
+     * Copies the current path and returns the copy.
+     */
+    already_AddRefed<gfxPath> CopyPath();
+
+    /**
+     * Appends the given path to the current path.
+     */
+    void AppendPath(gfxPath* path);
+
+    /**
      * Moves the pen to a new point without drawing a line.
      */
     void MoveTo(const gfxPoint& pt);
@@ -164,9 +174,14 @@ public:
     void LineTo(const gfxPoint& pt);
 
     /**
-     * Draws a quadratic Bézier curve with control points pt1, pt2 and pt3.
+     * Draws a cubic Bézier curve with control points pt1, pt2 and pt3.
      */
     void CurveTo(const gfxPoint& pt1, const gfxPoint& pt2, const gfxPoint& pt3);
+
+    /**
+     * Draws a quadratic Bézier curve with control points pt1, pt2 and pt3.
+     */
+    void QuadraticCurveTo(const gfxPoint& pt1, const gfxPoint& pt2);
 
     /**
      * Draws a clockwise arc (i.e. a circle segment).
@@ -200,8 +215,31 @@ public:
      * @param snapToPixels ?
      */
     void Rectangle(const gfxRect& rect, PRBool snapToPixels = PR_FALSE);
+
+    /**
+     * Draw an ellipse at the center corner with the given dimensions.
+     * It extends dimensions.width / 2.0 in the horizontal direction
+     * from the center, and dimensions.height / 2.0 in the vertical
+     * direction.
+     */
     void Ellipse(const gfxPoint& center, const gfxSize& dimensions);
+
+    /**
+     * Draw a polygon from the given points
+     */
     void Polygon(const gfxPoint *points, PRUint32 numPoints);
+
+    /*
+     * Draw a rounded rectangle, with the given outer rect and
+     * corners.  The corners specify the radii of the two axes of an
+     * ellipse (the horizontal and vertical directions given by the
+     * width and height, respectively).  By default the ellipse is
+     * drawn in a clockwise direction; if draw_clockwise is PR_FALSE,
+     * then it's drawn counterclockwise.
+     */
+    void RoundedRectangle(const gfxRect& rect,
+                          const gfxCornerSizes& corners,
+                          PRBool draw_clockwise = PR_TRUE);
 
     /**
      ** Transformation Matrix manipulation
@@ -337,7 +375,8 @@ public:
      * Uses a surface for drawing. This is a shorthand for creating a
      * pattern and setting it.
      *
-     * @param offset ?
+     * @param offset from the source surface, to use only part of it.
+     *        May need to make it negative.
      */
     void SetSource(gfxASurface *surface, const gfxPoint& offset = gfxPoint(0.0, 0.0));
 

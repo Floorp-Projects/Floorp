@@ -323,6 +323,7 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
      return;
 
    case NS_DEBUG_ABORT:
+     nsTraceRefcntImpl::WalkTheStack(stderr);
      Abort(buf.buffer);
      return;
    }

@@ -44,6 +44,7 @@
 #include "prlink.h"
 #include "plstr.h"
 #include "prmem.h"
+#include "prprf.h"
 #include "nsPluginDefs.h"
 
 #include "nsString.h"
@@ -75,6 +76,34 @@ static char *LoadRCDATAString( HMODULE hMod, ULONG resid)
          string[ ulSize - 1] = '\0';
 
          DosFreeResource( readOnlyString);
+      }
+   }
+
+   return string;
+}
+
+/* Load a version string stored as RCDATA in a resource segment */
+/* Returned string needs to be PR_Free'd by caller */
+static char *LoadRCDATAVersion(HMODULE hMod, ULONG resid)
+{
+   APIRET rc;
+   ULONG  ulSize = 0;
+   char  *string = 0;
+
+   rc = DosQueryResourceSize(hMod, RT_RCDATA, resid, &ulSize);
+
+   // version info is should be 8 chars
+   if (rc == NO_ERROR && ulSize == 8)
+   {
+      char *version = NULL;
+      rc = DosGetResource(hMod, RT_RCDATA, resid, (void**) &version);
+
+      if (rc == NO_ERROR)
+      {
+         string = PR_smprintf("%d.%d.%d.%d\n",
+                              version[0], version[2], version[4], version[6]);
+
+         DosFreeResource(version);
       }
    }
 
@@ -195,12 +224,15 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
    mPlugin->GetNativePath(temp);
    path = temp.get();
    ret = DosLoadModule( failure, CCHMAXPATH, path, &hPlug);
+   info.fVersion = nsnull;
 
    while( ret == NO_ERROR)
    {
       info.fPluginInfoSize = sizeof( nsPluginInfo);
 
       info.fName = LoadRCDATAString( hPlug, NS_INFO_ProductName);
+
+      info.fVersion = LoadRCDATAVersion( hPlug, NS_INFO_ProductVersion);
 
       // get description (doesn't matter if it's missing)...
       info.fDescription = LoadRCDATAString( hPlug, NS_INFO_FileDescription);
@@ -241,6 +273,12 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
    if(info.fName != nsnull)
      PL_strfree(info.fName);
+ 
+   if(info.fFileName != nsnull)
+     PL_strfree(info.fFileName);
+ 
+   if(info.fVersion != nsnull)
+     PL_strfree(info.fVersion);
  
    if(info.fDescription != nsnull)
      PL_strfree(info.fDescription);

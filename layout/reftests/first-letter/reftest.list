@@ -12,6 +12,7 @@
 == nested-1d.html nested-1-ref.html
 == nested-1e.html nested-1-ref.html
 == nested-1f.html nested-1-ref.html
+== nested-1g.html nested-1-ref.html
 == quote-1a.html quote-1-ref.html
 fails == quote-1b.html quote-1-ref.html
 fails == quote-1c.html quote-1-ref.html
@@ -29,5 +30,16 @@ random == dynamic-3b.html dynamic-3-ref.html
 == 23605-5.html 23605-5-ref.html
 == 23605-6.html 23605-6-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 329069-1.html 329069-1-ref.html # failure is font-dependent, may be related to bug 404848
+!= 229764-1.html 229764-ref.html
+== 229764-2.html 229764-ref.html
 == 342120-1.xhtml 342120-1-ref.xhtml
 == 379799-1.html 379799-1-ref.html
+== 399941-1.html 399941-1-ref.html
+== 399941-2.html 399941-2-ref.html
+== 399941-3.html 399941-3-ref.html
+== 399941-4.html 399941-4-ref.html
+== 399941-5.html 399941-5-ref.html
+== 399941-6.html 399941-6-ref.html
+== 399941-7.html 399941-7-ref.html
+== 399941-8.html 399941-8-ref.html
+== 399941-9.html 399941-9-ref.html

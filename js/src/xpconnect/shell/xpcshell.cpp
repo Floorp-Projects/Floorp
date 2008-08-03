@@ -64,6 +64,9 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIXPCSecurityManager.h"
+#ifdef XP_MACOSX
+#include "xpcshellMacUtils.h"
+#endif
 
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
@@ -81,7 +84,7 @@
 
 #include "nsIJSContextStack.h"
 
-#ifdef MOZ_SHARK
+#if defined(MOZ_SHARK) || defined(MOZ_CALLGRIND)
 #include "jsdbgapi.h"
 #endif
 
@@ -436,6 +439,11 @@ static JSFunctionSpec glob_functions[] = {
     {"connectShark",    js_ConnectShark,    0,0,0},
     {"disconnectShark", js_DisconnectShark, 0,0,0},
 #endif
+#ifdef MOZ_CALLGRIND
+    {"startCallgrind",  js_StartCallgrind,  0,0,0},
+    {"stopCallgrind",   js_StopCallgrind,   0,0,0},
+    {"dumpCallgrind",   js_DumpCallgrind,   1,0,0},
+#endif
     {nsnull,nsnull,0,0,0}
 };
 
@@ -572,13 +580,8 @@ typedef enum JSShellErrNum {
 } JSShellErrNum;
 
 JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
-#if JS_HAS_DFLT_MSG_STRINGS
 #define MSG_DEF(name, number, count, exception, format) \
     { format, count } ,
-#else
-#define MSG_DEF(name, number, count, exception, format) \
-    { NULL, count } ,
-#endif
 #include "jsshell.msg"
 #undef MSG_DEF
 };
@@ -1310,6 +1313,9 @@ ContextCallback(JSContext *cx, uintN contextOp)
 int
 main(int argc, char **argv, char **envp)
 {
+#ifdef XP_MACOSX
+    InitAutoreleasePool();
+#endif
     JSRuntime *rt;
     JSContext *cx;
     JSObject *glob, *envobj;
@@ -1482,6 +1488,10 @@ main(int argc, char **argv, char **envp)
     JSContext* bogusCX;
     bogus->Peek(&bogusCX);
     bogus = nsnull;
+#endif
+
+#ifdef XP_MACOSX
+    FinishAutoreleasePool();
 #endif
 
     return result;

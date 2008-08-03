@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for CSS Selectors</title>
+  <!--
+      Separate from test_selectors.html so we don't need to deal with
+      waiting for the binding document to load.
+    -->
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+  #display { -moz-binding: url(xbl_bindings.xml#onedivchild); }
+
+  </style>
+</head>
+<body onload="run()">
+<div id="display"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+
+    function setup_style() {
+        var style_elem = document.createElement("style");
+        style_elem.setAttribute("type", "text/css");
+        document.getElementsByTagName("head")[0].appendChild(style_elem);
+        var style_text = document.createTextNode("");
+        style_elem.appendChild(style_text);
+        return style_text;
+    }
+
+    var style_text = setup_style();
+
+    var gCounter = 0;
+
+    function test_selector(selector, matches_docdiv, matches_anondiv)
+    {
+        var zi = ++gCounter;
+        style_text.data = selector + "{ z-index: " + zi + " }";
+
+        var doc_div = document.getElementById("display");
+        var anon_div = document.getAnonymousNodes(doc_div)[0];
+        var should_match = [];
+        var should_not_match = [];
+        (matches_docdiv ? should_match : should_not_match).push(doc_div);
+        (matches_anondiv ? should_match : should_not_match).push(anon_div);
+
+        for (var i = 0; i < should_match.length; ++i) {
+            var e = should_match[i];
+            is(getComputedStyle(e, "").zIndex, zi,
+               "element matched " + selector);
+        }
+        for (var i = 0; i < should_not_match.length; ++i) {
+            var e = should_not_match[i];
+            is(getComputedStyle(e, "").zIndex, "auto",
+               "element did not match " + selector);
+        }
+
+        style_text.data = "";
+    }
+
+    // Test that the root of an XBL1 anonymous content subtree doesn't
+    // match :nth-child().
+    test_selector("div.anondiv", false, true);
+    test_selector("div:nth-child(odd)", true, false);
+    test_selector("div:nth-child(even)", false, false);
+
+    SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

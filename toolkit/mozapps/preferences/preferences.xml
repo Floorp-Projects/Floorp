@@ -8,9 +8,9 @@
   <binding id="fileField" extends="chrome://global/content/bindings/general.xml#control-item">
     <content>
       <xul:stringbundle anonid="bundle" src="chrome://mozapps/locale/preferences/preferences.properties"/>
-      <xul:hbox class="fileFieldContentBox" align="center" flex="1">
-        <xul:image class="fileFieldIcon" xbl:inherits="src=image"/>
-        <xul:textbox class="fileFieldLabel" xbl:inherits="value=label,disabled,accesskey,tabindex" flex="1" readonly="true"/>
+      <xul:hbox class="fileFieldContentBox" align="center" flex="1" xbl:inherits="disabled">
+        <xul:image class="fileFieldIcon" xbl:inherits="src=image,disabled"/>
+        <xul:textbox class="fileFieldLabel" xbl:inherits="value=label,disabled,accesskey,tabindex,aria-labelledby" flex="1" readonly="true"/>
       </xul:hbox>
     </content>
     <implementation implements="nsIDOMXULLabeledControlElement">

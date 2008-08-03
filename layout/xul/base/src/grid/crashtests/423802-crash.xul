@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<window xmlns  = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<grid>
+  <columns>
+    <column id="col1" flex="1"/>
+  <column id="col2" flex="1"/>
+    <column id="col3" flex="P-2"/>
+  </columns>
+</grid>
+
+</window>

@@ -63,6 +63,16 @@ static const PRLogModuleInfo *gUrlClassifierHashCompleterLog = nsnull;
 #define LOG_ENABLED() (PR_FALSE)
 #endif
 
+// Back off from making server requests if we have at least
+// gBackoffErrors errors
+static const PRUint32 gBackoffErrors = 2;
+// .. within gBackoffTime seconds
+static const PRUint32 gBackoffTime = 5 * 60;
+// ... and back off gBackoffInterval seconds, doubling seach time
+static const PRUint32 gBackoffInterval = 30 * 60;
+// ... up to a maximum of gBackoffMax.
+static const PRUint32 gBackoffMax = 8 * 60 * 60;
+
 NS_IMPL_ISUPPORTS3(nsUrlClassifierHashCompleterRequest,
                    nsIRequestObserver,
                    nsIStreamListener,
@@ -72,6 +82,13 @@ nsresult
 nsUrlClassifierHashCompleterRequest::Begin()
 {
   LOG(("nsUrlClassifierHashCompleterRequest::Begin [%p]", this));
+
+  if (PR_IntervalNow() < mCompleter->GetNextRequestTime()) {
+    NS_WARNING("Gethash server backed off, failing gethash request.");
+    NotifyFailure(NS_ERROR_ABORT);
+    return NS_ERROR_ABORT;
+  }
+
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService("@mozilla.org/observer-service;1");
   if (observerService)
@@ -469,6 +486,8 @@ nsUrlClassifierHashCompleterRequest::OnStopRequest(nsIRequest *request,
     }
   }
 
+  mCompleter->NoteServerResponse(NS_SUCCEEDED(status));
+
   if (NS_SUCCEEDED(status))
     status = HandleResponse();
 
@@ -662,4 +681,42 @@ nsUrlClassifierHashCompleter::RekeyRequested()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+void
+nsUrlClassifierHashCompleter::NoteServerResponse(PRBool success)
+{
+  LOG(("nsUrlClassifierHashCompleter::NoteServerResponse [%p, %d]",
+       this, success));
+
+  if (success) {
+    mBackoff = PR_FALSE;
+    mNextRequestTime = 0;
+    mBackoffTime = 0;
+    return;
+  }
+
+  PRIntervalTime now = PR_IntervalNow();
+
+  // Record the error time.
+  mErrorTimes.AppendElement(now);
+  if (mErrorTimes.Length() > gBackoffErrors) {
+    mErrorTimes.RemoveElementAt(0);
+  }
+
+  if (mBackoff) {
+    mBackoffTime *= 2;
+    LOG(("Doubled backoff time to %d seconds", mBackoffTime));
+  } else if (mErrorTimes.Length() == gBackoffErrors &&
+             PR_IntervalToSeconds(now - mErrorTimes[0]) <= gBackoffTime) {
+    mBackoff = PR_TRUE;
+    mBackoffTime = gBackoffInterval;
+    LOG(("Starting backoff, backoff time is %d seconds", mBackoffTime));
+  }
+
+  if (mBackoff) {
+    mBackoffTime = PR_MIN(mBackoffTime, gBackoffMax);
+    LOG(("Using %d for backoff time", mBackoffTime));
+    mNextRequestTime = now + PR_SecondsToInterval(mBackoffTime);
+  }
 }

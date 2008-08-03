@@ -117,6 +117,11 @@
 #define PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT     "urlbar.filter.javascript"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_AUTOCOMPLETE_MAX_RICH_RESULTS      "urlbar.maxRichResults"
+#define PREF_AUTOCOMPLETE_RESTRICT_HISTORY      "urlbar.restrict.history"
+#define PREF_AUTOCOMPLETE_RESTRICT_BOOKMARK     "urlbar.restrict.bookmark"
+#define PREF_AUTOCOMPLETE_RESTRICT_TAG          "urlbar.restrict.tag"
+#define PREF_AUTOCOMPLETE_MATCH_TITLE           "urlbar.match.title"
+#define PREF_AUTOCOMPLETE_MATCH_URL             "urlbar.match.url"
 #define PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE     "urlbar.search.chunkSize"
 #define PREF_AUTOCOMPLETE_SEARCH_TIMEOUT        "urlbar.search.timeout"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
@@ -286,6 +291,7 @@ const PRInt32 nsNavHistory::kAutoCompleteIndex_FaviconURL = 2;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_ParentId = 3;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_BookmarkTitle = 4;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Tags = 5;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_VisitCount = 6;
 
 static const char* gQuitApplicationMessage = "quit-application";
 static const char* gXpcomShutdown = "xpcom-shutdown";
@@ -331,8 +337,18 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
                                mAutoCompleteOnlyTyped(PR_FALSE),
                                mAutoCompleteMatchBehavior(MATCH_BOUNDARY_ANYWHERE),
                                mAutoCompleteMaxResults(25),
+                               mAutoCompleteRestrictHistory(NS_LITERAL_STRING("^")),
+                               mAutoCompleteRestrictBookmark(NS_LITERAL_STRING("*")),
+                               mAutoCompleteRestrictTag(NS_LITERAL_STRING("+")),
+                               mAutoCompleteMatchTitle(NS_LITERAL_STRING("#")),
+                               mAutoCompleteMatchUrl(NS_LITERAL_STRING("@")),
                                mAutoCompleteSearchChunkSize(100),
                                mAutoCompleteSearchTimeout(100),
+                               mRestrictHistory(PR_FALSE),
+                               mRestrictBookmark(PR_FALSE),
+                               mRestrictTag(PR_FALSE),
+                               mMatchTitle(PR_FALSE),
+                               mMatchUrl(PR_FALSE),
                                mPreviousChunkOffset(-1),
                                mAutoCompleteFinishedSearch(PR_FALSE),
                                mExpireDaysMin(0),
@@ -393,11 +409,6 @@ nsNavHistory::Init()
     rv = InitDB(&migrationType);
   }
   NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef IN_MEMORY_LINKS
-  rv = InitMemDB();
-  NS_ENSURE_SUCCESS(rv, rv);
-#endif
 
 #ifdef MOZ_XUL
   rv = InitAutoComplete();
@@ -477,6 +488,11 @@ nsNavHistory::Init()
     pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_BEHAVIOR, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_FILTER_JAVASCRIPT, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_MAX_RICH_RESULTS, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_HISTORY, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_BOOKMARK, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_RESTRICT_TAG, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_TITLE, this, PR_FALSE);
+    pbi->AddObserver(PREF_AUTOCOMPLETE_MATCH_URL, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_CHUNK_SIZE, this, PR_FALSE);
     pbi->AddObserver(PREF_AUTOCOMPLETE_SEARCH_TIMEOUT, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, this, PR_FALSE);
@@ -635,6 +651,12 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   pageSizePragma.AppendInt(DEFAULT_DB_PAGE_SIZE);
   rv = mDBConn->ExecuteSimpleSQL(pageSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef IN_MEMORY_SQLITE_TEMP_STORE
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "PRAGMA temp_store = MEMORY"));
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
@@ -1615,64 +1637,6 @@ nsNavHistory::CleanUpOnQuit()
 }
 
 
-#ifdef IN_MEMORY_LINKS
-// nsNavHistory::InitMemDB
-//
-//    Should be called after InitDB
-
-nsresult
-nsNavHistory::InitMemDB()
-{
-  nsresult rv = mDBService->OpenSpecialDatabase("memory", getter_AddRefs(mMemDBConn));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // create our table and index
-  rv = mMemDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE moz_memhistory (url LONGVARCHAR UNIQUE)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // In-memory links indexes
-  rv = mMemDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX moz_memhistory_index ON moz_memhistory (url)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // prepackaged statements
-  rv = mMemDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT url FROM moz_memhistory WHERE url = ?1"),
-      getter_AddRefs(mMemDBGetPage));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMemDBConn->CreateStatement(
-      NS_LITERAL_CSTRING("INSERT OR IGNORE INTO moz_memhistory VALUES (?1)"),
-      getter_AddRefs(mMemDBAddPage));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Copy the URLs over: sort by URL because the original table already has
-  // and index. We can therefor not spend time sorting the whole thing another
-  // time by inserting in order.
-  nsCOMPtr<mozIStorageStatement> selectStatement;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT url FROM moz_places WHERE visit_count > 0 ORDER BY url"),
-                                getter_AddRefs(selectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool hasMore = PR_FALSE;
-  //rv = mMemDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN TRANSACTION"));
-  mozStorageTransaction transaction(mMemDBConn, PR_FALSE);
-  nsCString url;
-  while(NS_SUCCEEDED(rv = selectStatement->ExecuteStep(&hasMore)) && hasMore) {
-    rv = selectStatement->GetUTF8String(0, url);
-    if (NS_SUCCEEDED(rv) && ! url.IsEmpty()) {
-      rv = mMemDBAddPage->BindUTF8StringParameter(0, url);
-      if (NS_SUCCEEDED(rv))
-        mMemDBAddPage->Execute();
-    }
-  }
-  transaction.Commit();
-
-  return NS_OK;
-}
-#endif
-
-
 // nsNavHistory::GetUrlIdFor
 //
 //    Called by the bookmarks and annotation services, this function returns the
@@ -1860,16 +1824,6 @@ nsNavHistory::FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
 
 PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 {
-#ifdef IN_MEMORY_LINKS
-  // check the memory DB
-  nsresult rv = mMemDBGetPage->BindUTF8StringParameter(0, aURIString);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  PRBool hasPage = PR_FALSE;
-  mMemDBGetPage->ExecuteStep(&hasPage);
-  mMemDBGetPage->Reset();
-  return hasPage;
-#else
-
 #ifdef LAZY_ADD
   // check the lazy list to see if this has recently been added
   for (PRUint32 i = 0; i < mLazyMessages.Length(); i ++) {
@@ -1889,7 +1843,6 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
   rv = mDBIsPageVisited->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   return hasMore;
-#endif
 }
 
 
@@ -1939,6 +1892,23 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
                           &mAutoCompleteSearchChunkSize);
   mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_SEARCH_TIMEOUT,
                           &mAutoCompleteSearchTimeout);
+  nsXPIDLCString prefStr;
+  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_HISTORY,
+                           getter_Copies(prefStr));
+  mAutoCompleteRestrictHistory = NS_ConvertUTF8toUTF16(prefStr);
+  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_BOOKMARK,
+                           getter_Copies(prefStr));
+  mAutoCompleteRestrictBookmark = NS_ConvertUTF8toUTF16(prefStr);
+  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_RESTRICT_TAG,
+                           getter_Copies(prefStr));
+  mAutoCompleteRestrictTag = NS_ConvertUTF8toUTF16(prefStr);
+  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_MATCH_TITLE,
+                           getter_Copies(prefStr));
+  mAutoCompleteMatchTitle = NS_ConvertUTF8toUTF16(prefStr);
+  mPrefBranch->GetCharPref(PREF_AUTOCOMPLETE_MATCH_URL,
+                           getter_Copies(prefStr));
+  mAutoCompleteMatchUrl = NS_ConvertUTF8toUTF16(prefStr);
+
   if (!aInitializing && oldCompleteOnlyTyped != mAutoCompleteOnlyTyped) {
     // update the autocomplete statements if the option has changed.
     nsresult rv = CreateAutoCompleteQueries();
@@ -2501,13 +2471,6 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
     *aVisitID = 0;
     return NS_OK;
   }
-
-  // in-memory version
-#ifdef IN_MEMORY_LINKS
-  rv = BindStatementURI(mMemDBAddPage, 0, aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mMemDBAddPage->Execute();
-#endif
 
   // This will prevent corruption since we have to do a two-phase add.
   // Generally this won't do anything because AddURI has its own transaction.
@@ -3178,9 +3141,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
   history->GetStringFromName(NS_LITERAL_STRING("localhost").get(), localFiles);
   mAddParams.Put(NS_LITERAL_CSTRING(":localhost"), localFiles);
 
-  // We want just sites, but from whole database - we omit join with visits, 
-  // it could happen, that we get later empty host, when we click on it, but 
-  // this should be much faster.
+  // We want just sites, but from whole database.
   if (mConditions.IsEmpty()) {
 
     mQueryString = nsPrintfCString(2048,
@@ -3190,6 +3151,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
       "WHERE EXISTS(SELECT '*' "
                    "FROM moz_places "
                    "WHERE hidden <> 1 AND rev_host = '.' "
+                     "AND visit_count > 0 "
                      "AND url BETWEEN 'file://' AND 'file:/~') "
       "UNION ALL "
       "SELECT DISTINCT null, "
@@ -3198,7 +3160,8 @@ PlacesSQLQueryBuilder::SelectAsSite()
       "FROM (SELECT get_unreversed_host(rev_host) host "
             "FROM (SELECT DISTINCT rev_host "
                   "FROM moz_places "
-                  "WHERE hidden <> 1 AND rev_host <> '.') inner0 "
+                  "WHERE hidden <> 1 AND rev_host <> '.' "
+                    "AND visit_count > 0 ) inner0 "
             "ORDER BY 1 ASC) inner1",
       nsINavHistoryQueryOptions::RESULTS_AS_URI,
       nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING,
@@ -3216,6 +3179,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
                    "FROM moz_places h  "
                         "JOIN moz_historyvisits v ON h.id = v.place_id "
                    "WHERE h.hidden <> 1 AND h.rev_host = '.' "
+                     "AND h.visit_count > 0 "
                      "AND h.url BETWEEN 'file://' AND 'file:/~' "
                      "AND v.visit_type NOT IN (0,4) {ADDITIONAL_CONDITIONS} ) "
       "UNION ALL "
@@ -3228,6 +3192,7 @@ PlacesSQLQueryBuilder::SelectAsSite()
                   "FROM moz_places h "
                        "JOIN moz_historyvisits v ON h.id = v.place_id "
                   "WHERE h.hidden <> 1 AND h.rev_host <> '.' "
+                    "AND h.visit_count > 0 "
                     "AND v.visit_type NOT IN (0,4) "
                     "{ADDITIONAL_CONDITIONS} ) inner0 "
             "ORDER BY 1 ASC) inner1",
@@ -4468,7 +4433,6 @@ nsNavHistory::GetPageTitle(nsIURI* aURI, nsAString& aTitle)
 }
 
 
-#ifndef MOZILLA_1_8_BRANCH
 // nsNavHistory::GetURIGeckoFlags
 //
 //    FIXME: should we try to use annotations for this stuff?
@@ -4489,7 +4453,6 @@ nsNavHistory::SetURIGeckoFlags(nsIURI* aURI, PRUint32 aFlags)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-#endif
 
 // nsIGlobalHistory3 ***********************************************************
 
@@ -4868,8 +4831,6 @@ nsNavHistory::CommitLazyMessages()
       case LazyMessage::Type_Favicon: {
         nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
         if (faviconService) {
-          nsCString spec;
-          message.uri->GetSpec(spec);
           faviconService->DoSetAndLoadFaviconForPage(message.uri,
                                                      message.favicon,
                                                      message.alwaysLoadFavicon);

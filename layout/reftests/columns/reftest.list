@@ -16,3 +16,7 @@
 == column-balancing-002.html column-balancing-002.ref.html
 == column-balancing-003.html column-balancing-000.ref.html
 == column-balancing-004.html column-balancing-004.ref.html
+== columnrule-basic.html columnrule-basic-ref.html
+== columnrule-complex.html columnrule-complex-ref.html
+!= columnrule-linestyles.html columnrule-linestyles-notref.html
+== columnrule-padding.html columnrule-padding-ref.html

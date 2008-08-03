@@ -46,6 +46,9 @@ MODULE		= tracemalloc
 LIBRARY_NAME	= tracemalloc
 EXPORT_LIBRARY	= 1
 DEFFILE		= $(win_srcdir)/tm.def
+
+FORCE_STATIC_LIB = 1
+
 LIBXUL_LIBRARY	= 1
 
 REQUIRES	= xpcom

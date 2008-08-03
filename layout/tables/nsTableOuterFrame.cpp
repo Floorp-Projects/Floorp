@@ -220,20 +220,6 @@ nsTableOuterFrame::IsContainingBlock() const
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
-nsTableOuterFrame::Init(
-                   nsIContent*           aContent,
-                   nsIFrame*             aParent,
-                   nsIFrame*             aPrevInFlow)
-{
-  nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
-  
-  // record that children that are ignorable whitespace should be excluded 
-  mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
-
-  return rv;
-}
-
 void
 nsTableOuterFrame::Destroy()
 {

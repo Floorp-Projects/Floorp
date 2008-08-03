@@ -43,6 +43,7 @@
 #include "nsIRenderingContext.h"
 #include "nsStyleConsts.h"
 #include "gfxContext.h"
+#include "gfxImageSurface.h"
 struct nsPoint;
 class nsStyleContext;
 class nsPresContext;
@@ -59,6 +60,11 @@ public:
    */
   static void Shutdown();
   
+  static void PaintBoxShadow(nsPresContext* aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             nsIFrame* aForFrame,
+                             const nsPoint& aForFramePt);
+
   /**
    * Render the border for an element using css rendering rules
    * for borders. aSkipSides is a bitmask of the sides to skip
@@ -267,6 +273,22 @@ public:
 
 protected:
 
+  static void DrawBorderImage(nsPresContext* aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              nsIFrame* aForFrame,
+                              const nsRect& aBorderArea,
+                              const nsStyleBorder& aBorderStyle,
+                              nscoord aHardBorderSize);
+
+  static void DrawBorderImageSide(gfxContext *aThebesContext,
+                                  nsIDeviceContext* aDeviceContext,
+                                  imgIContainer* aImage,
+                                  gfxRect& aDestRect,
+                                  gfxSize& aInterSize,
+                                  gfxRect& aSourceRect,
+                                  PRUint8 aHFillType,
+                                  PRUint8 aVFillType);
+
   static void PaintBackgroundColor(nsPresContext* aPresContext,
                                    nsIRenderingContext& aRenderingContext,
                                    nsIFrame* aForFrame,
@@ -304,7 +326,94 @@ protected:
                                                const gfxFloat aOffset,
                                                const PRUint8 aDecoration,
                                                const PRUint8 aStyle);
+
+  /* Returns FALSE iff all returned aTwipsRadii == 0, TRUE otherwise */
+  static PRBool GetBorderRadiusTwips(const nsStyleSides& aBorderRadius,
+                                     const nscoord& aFrameWidth,
+                                     PRInt32 aTwipsRadii[4]);
 };
 
+/*
+ * nsContextBoxBlur
+ * Creates an 8-bit alpha channel context for callers to draw in, blurs the
+ * contents of that context and applies it as a 1-color mask on a
+ * different existing context.
+ *
+ * You must call Init() first to create a suitable temporary surface to draw on.
+ * You must then draw any desired content onto the given context, then call DoPaint()
+ * to apply the blurred content as a single-color mask. You can only call Init() once,
+ * so objects cannot be reused.
+ *
+ * This is very useful for creating drop shadows or silhouettes.
+ */
+class nsContextBoxBlur {
+public:
+  /**
+   * Prepares a gfxContext to draw on. Do not call this twice; if you want to
+   * get the gfxContext again use GetContext().
+   *
+   * @param aRect                The coordinates of the surface to create.
+   *                             All coordinates must be in app units.
+   *                             This must not include the blur radius, pass it as the
+   *                             second parameter and everything is taken care of.
+   *
+   * @param aBlurRadius          The blur radius in app units.
+   *
+   * @param aAppUnitsPerDevPixel The number of app units in a device pixel, for conversion.
+   *                             Most of the time you'll pass this from the current
+   *                             PresContext if available.
+   *
+   * @param aDestinationCtx      The graphics context to apply the blurred mask to
+   *                             when you call DoPaint(). Make sure it is not destroyed
+   *                             before you call DoPaint(). To set the color of the resulting
+   *                             blurred graphic mask, you must set the color on this
+   *                             context before calling Init().
+   *
+   * @return            A blank 8-bit alpha-channel-only graphics context to draw on, or null on
+   *                    error. Must not be freed. The context has a device offset applied to it given
+   *                    by aRect. This means you can use coordinates as if it were at the desired position
+   *                    at aRect and you don't need to worry about translating any coordinates to draw
+   *                    on this temporary surface.
+   *
+   * If aBlurRadius is 0, the returned context is aDestinationCtx and DoPaint() does nothing,
+   * because no blurring is required. Therefore, you should prepare the destination context as
+   * if you were going to draw directly on it instead of any temporary surface created in this class.
+   */
+  gfxContext* Init(const gfxRect& aRect, nscoord aBlurRadius, PRInt32 aAppUnitsPerDevPixel,
+                   gfxContext* aDestinationCtx);
+
+  /**
+   * Does the actual blurring and mask applying. Users of this object *must*
+   * have called Init() first, then have drawn whatever they want to be
+   * blurred onto the internal gfxContext before calling this.
+   */
+  void DoPaint();
+
+  /**
+   * Gets the internal gfxContext at any time. Must not be freed. Avoid calling
+   * this before calling Init() since the context would not be constructed at that
+   * point.
+   */
+  gfxContext* GetContext();
+
+protected:
+  void BoxBlurHorizontal(unsigned char* aInput,
+                         unsigned char* aOutput,
+                         PRUint32 aLeftLobe,
+                         PRUint32 aRightLobe);
+  void BoxBlurVertical(unsigned char* aInput,
+                       unsigned char* aOutput,
+                       PRUint32 aTopLobe,
+                       PRUint32 aBottomLobe);
+
+  nsRefPtr<gfxContext> mContext;
+  nsRefPtr<gfxImageSurface> mImageSurface;
+  gfxContext* mDestinationCtx;
+
+  // Contrary to what is passed as parameters, these are in device pixels
+  gfxRect mRect;
+  PRInt32 mBlurRadius;
+  
+};
 
 #endif /* nsCSSRendering_h___ */

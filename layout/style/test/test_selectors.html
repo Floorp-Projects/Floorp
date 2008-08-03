@@ -43,7 +43,13 @@ function run() {
     function test_selector_in_html(selector, body_contents, match_fn, notmatch_fn)
     {
         var zi = ++gCounter;
-        ifdoc.body.innerHTML = body_contents;
+        if (typeof(body_contents) == "string") {
+            ifdoc.body.innerHTML = body_contents;
+        } else {
+            // It's a function.
+            ifdoc.body.innerHTML = "";
+            body_contents(ifdoc.body);
+        }
         style_text.data = selector + "{ z-index: " + zi + " }";
         var should_match = match_fn(ifdoc);
         var should_not_match = notmatch_fn(ifdoc);
@@ -92,6 +98,123 @@ function run() {
         style_text.data = "";
     }
 
+    function test_parseable(selector)
+    {
+        var zi = ++gCounter;
+        ifdoc.body.innerHTML = "<p></p>";
+        style_text.data = "p, " + selector + "{ z-index: " + zi + " }";
+        var should_match = ifdoc.getElementsByTagName("p")[0];
+        is(ifwin.getComputedStyle(should_match, "").zIndex, zi,
+           "selector " + selector + " was parsed");
+        ifdoc.body.innerHTML = "";
+        style_text.data = "";
+    }
+
+    function test_balanced_unparseable(selector)
+    {
+        var zi1 = ++gCounter;
+        var zi2 = ++gCounter;
+        ifdoc.body.innerHTML = "<p></p><div></div>";
+        style_text.data = "p, " + selector + "{ z-index: " + zi1 + " }" +
+                          "div { z-index: " + zi2 + " }";
+        var should_not_match = ifdoc.getElementsByTagName("p")[0];
+        var should_match = ifdoc.getElementsByTagName("div")[0];
+        is(ifwin.getComputedStyle(should_not_match, "").zIndex, "auto",
+           "selector " + selector + " was a parser error");
+        is(ifwin.getComputedStyle(should_match, "").zIndex, zi2,
+           "selector " + selector + " error was recovered from");
+        ifdoc.body.innerHTML = "";
+        style_text.data = "";
+    }
+
+    // [attr= ] selector
+    test_parseable("[attr=\"x\"]");
+    test_parseable("[attr='x']");
+    test_parseable("[attr=x]");
+    test_parseable("[attr=\"\"]");
+    test_parseable("[attr='']");
+    test_parseable("[attr=\"foo bar\"]");
+
+    test_balanced_unparseable("[attr=]");
+    test_balanced_unparseable("[attr=foo bar]");
+
+    test_selector_in_html(
+        '[title=""]',
+        '<p title=""></p>'
+        + '<div lang=" "></div><div lang="\t"></div><div lang="\n"></div>',
+        function(doc) { return doc.getElementsByTagName("p"); },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // [attr~= ] selector
+    test_parseable("[attr~=\"x\"]");
+    test_parseable("[attr~='x']");
+    test_parseable("[attr~=x]");
+    test_parseable("[attr~=\"\"]");
+    test_parseable("[attr~='']");
+    test_parseable("[attr~=\"foo bar\"]");
+
+    test_balanced_unparseable("[attr~=]");
+    test_balanced_unparseable("[attr~=foo bar]");
+
+    test_selector_in_html(
+        '[class~="x x"]',
+        '<div class="x x"></div><div class="x"></div><div class="x\tx"></div>div class="x\nx"></div>',
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // [attr|="x"]
+    test_parseable('[attr|="x"]');
+    test_parseable("[attr|='x']");
+    test_parseable('[attr|=x]');
+
+    test_parseable('[attr|=""]');
+    test_parseable("[attr|='']");
+    test_balanced_unparseable('[attr|=]');
+
+    test_selector_in_html(
+        '[lang|=""]',
+        '<p lang=""></p><p lang="-"></p><p lang="-GB"></p>'
+        + '<div lang="en-GB"></div><div lang="en-"></div>',
+        function(doc) { return doc.getElementsByTagName("p"); },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // [attr$= ] selector
+    test_parseable("[attr$=\"x\"]");
+    test_parseable("[attr$='x']");
+    test_parseable("[attr$=x]");
+    test_parseable("[attr$=\"\"]");
+    test_parseable("[attr$='']");
+    test_parseable("[attr$=\"foo bar\"]");
+
+    test_balanced_unparseable("[attr$=]");
+    test_balanced_unparseable("[attr$=foo bar]");
+
+    // [attr^= ] selector
+    test_parseable("[attr^=\"x\"]");
+    test_parseable("[attr^='x']");
+    test_parseable("[attr^=x]");
+    test_parseable("[attr^=\"\"]");
+    test_parseable("[attr^='']");
+    test_parseable("[attr^=\"foo bar\"]");
+
+    test_balanced_unparseable("[attr^=]");
+    test_balanced_unparseable("[attr^=foo bar]");
+
+    // attr[*= ] selector
+    test_parseable("[attr*=\"x\"]");
+    test_parseable("[attr*='x']");
+    test_parseable("[attr*=x]");
+    test_parseable("[attr*=\"\"]");
+    test_parseable("[attr*='']");
+    test_parseable("[attr*=\"foo bar\"]");
+
+    test_balanced_unparseable("[attr*=]");
+    test_balanced_unparseable("[attr*=foo bar]");
+
+
     // Bug 420814
     test_selector_in_html(
         "div ~ div p",
@@ -100,6 +223,186 @@ function run() {
         function(doc) { return []; }
     );
 
+    // Bug 420245
+    test_selector_in_html(
+        "p[attr$=\"\"]",
+        "<p attr=\"foo\">This should not match</p>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("p"); }
+    );
+    test_selector_in_html(
+        "div + p[attr~=\"\"]",
+        "<div>Dummy</div><p attr=\"foo\">This should not match</p>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("p"); }
+    );
+    test_selector_in_html(
+        "div[attr^=\"\"]",
+        "<div attr=\"dummy1\">Dummy</div><div attr=\"dummy2\">Dummy</div>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+    test_selector_in_html(
+        "div[attr*=\"\"]",
+        "<div attr=\"dummy1\">Dummy</div><div attr=\"dummy2\">Dummy</div>",
+        function(doc) { return []; },
+        function(doc) { return doc.getElementsByTagName("div"); }
+    );
+
+    // :nth-child(), etc.
+    // Follow the whitespace rules as proposed in
+    // http://lists.w3.org/Archives/Public/www-style/2008Mar/0121.html
+    test_balanced_unparseable(":nth-child()");
+    test_balanced_unparseable(":nth-of-type( )");
+    test_parseable(":nth-last-child( odd)");
+    test_parseable(":nth-last-of-type(even )");
+    test_parseable(":nth-child(n )");
+    test_parseable(":nth-of-type( 2n)");
+    test_parseable(":nth-last-child( -n)");
+    test_parseable(":nth-last-of-type(-2n )");
+    test_balanced_unparseable(":nth-child(- n)");
+    test_balanced_unparseable(":nth-of-type(-2 n)");
+    test_balanced_unparseable(":nth-last-of-type(2n1)");
+    test_balanced_unparseable(":nth-child(2n++1)");
+    test_balanced_unparseable(":nth-of-type(2n-+1)");
+    test_balanced_unparseable(":nth-last-child(2n+-1)");
+    test_balanced_unparseable(":nth-last-of-type(2n--1)");
+    test_parseable(":nth-child( 3n + 1 )");
+    test_parseable(":nth-child( +3n - 2 )");
+    test_parseable(":nth-child( -n+ 6)");
+    test_parseable(":nth-child( +6 )");
+    test_balanced_unparseable(":nth-child(3 n)");
+    test_balanced_unparseable(":nth-child(+ 2n)");
+    test_balanced_unparseable(":nth-child(+ 2)");
+    test_parseable(":nth-child(3)");
+    test_parseable(":nth-of-type(-3)");
+    test_parseable(":nth-last-child(+3)");
+    test_parseable(":nth-last-of-type(0)");
+    test_parseable(":nth-child(-0)");
+    test_parseable(":nth-of-type(3n)");
+    test_parseable(":nth-last-child(-3n)");
+    test_parseable(":nth-last-of-type(+3n)");
+    test_parseable(":nth-last-of-type(0n)");
+    test_parseable(":nth-child(-0n)");
+    test_parseable(":nth-of-type(n)");
+    test_parseable(":nth-last-child(-n)");
+    test_parseable(":nth-last-of-type(2n+1)");
+    test_parseable(":nth-child(2n-1)");
+    test_parseable(":nth-of-type(2n+0)");
+    test_parseable(":nth-last-child(2n-0)");
+    test_parseable(":nth-child(-0n+0)");
+    test_parseable(":nth-of-type(n+1)");
+    test_parseable(":nth-last-child(n-1)");
+    test_parseable(":nth-last-of-type(-n+1)");
+    test_parseable(":nth-child(-n-1)");
+    test_balanced_unparseable(":nth-child(2-n)");
+    test_balanced_unparseable(":nth-child(2-n-1)");
+    test_balanced_unparseable(":nth-child(n-2-1)");
+
+    // exercise the an+b matching logic particularly hard for
+    // :nth-child() (since we know we use the same code for all 4)
+    var seven_ps = "<p></p><p></p><p></p><p></p><p></p><p></p><p></p>";
+    function pset(indices) { // takes an array of 1-based indices
+        return function pset_filter(doc) {
+            var a = doc.getElementsByTagName("p");
+            var result = [];
+            for (var i in indices)
+                result.push(a[indices[i] - 1]);
+            return result;
+        }
+    }
+    test_selector_in_html(":nth-child(0)", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(-3)", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(3)", seven_ps,
+                          pset([3]), pset([1, 2, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(0n+3)", seven_ps,
+                          pset([3]), pset([1, 2, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(-0n+3)", seven_ps,
+                          pset([3]), pset([1, 2, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(8)", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(odd)", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child(even)", seven_ps,
+                          pset([2, 4, 6]), pset([1, 3, 5, 7]));
+    test_selector_in_html(":nth-child(2n-1)", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child( 2n - 1 )", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child(2n+1)", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child( 2n + 1 )", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child(2n+0)", seven_ps,
+                          pset([2, 4, 6]), pset([1, 3, 5, 7]));
+    test_selector_in_html(":nth-child(2n-0)", seven_ps,
+                          pset([2, 4, 6]), pset([1, 3, 5, 7]));
+    test_selector_in_html(":nth-child(-n+3)", seven_ps,
+                          pset([1, 2, 3]), pset([4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(-n-3)", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(n)", seven_ps,
+                          pset([1, 2, 3, 4, 5, 6, 7]), pset([]));
+    test_selector_in_html(":nth-child(n-3)", seven_ps,
+                          pset([1, 2, 3, 4, 5, 6, 7]), pset([]));
+    test_selector_in_html(":nth-child(n+3)", seven_ps,
+                          pset([3, 4, 5, 6, 7]), pset([1, 2]));
+    test_selector_in_html(":nth-child(2n+3)", seven_ps,
+                          pset([3, 5, 7]), pset([1, 2, 4, 6]));
+    test_selector_in_html(":nth-child(2n)", seven_ps,
+                          pset([2, 4, 6]), pset([1, 3, 5, 7]));
+    test_selector_in_html(":nth-child(2n-3)", seven_ps,
+                          pset([1, 3, 5, 7]), pset([2, 4, 6]));
+    test_selector_in_html(":nth-child(-1n+3)", seven_ps,
+                          pset([1, 2, 3]), pset([4, 5, 6, 7]));
+    test_selector_in_html(":nth-child(-2n+3)", seven_ps,
+                          pset([1, 3]), pset([2, 4, 5, 6, 7]));
+    // And a few spot-checks for the other :nth-* selectors
+    test_selector_in_html(":nth-child(4n+1)", seven_ps,
+                          pset([1, 5]), pset([2, 3, 4, 6, 7]));
+    test_selector_in_html(":nth-last-child(4n+1)", seven_ps,
+                          pset([3, 7]), pset([1, 2, 4, 5, 6]));
+    test_selector_in_html(":nth-of-type(4n+1)", seven_ps,
+                          pset([1, 5]), pset([2, 3, 4, 6, 7]));
+    test_selector_in_html(":nth-last-of-type(4n+1)", seven_ps,
+                          pset([3, 7]), pset([1, 2, 4, 5, 6]));
+    test_selector_in_html(":nth-child(6)", seven_ps,
+                          pset([6]), pset([1, 2, 3, 4, 5, 7]));
+    test_selector_in_html(":nth-last-child(6)", seven_ps,
+                          pset([2]), pset([1, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":nth-of-type(6)", seven_ps,
+                          pset([6]), pset([1, 2, 3, 4, 5, 7]));
+    test_selector_in_html(":nth-last-of-type(6)", seven_ps,
+                          pset([2]), pset([1, 3, 4, 5, 6, 7]));
+
+    // And a bunch of tests for the of-type aspect of :nth-of-type() and
+    // :nth-last-of-type().  Note that the last div here contains two
+    // children.
+    var mixed_elements="<p></p><p></p><div></div><p></p><div><p></p><address></address></div><address></address>";
+    function pdaset(ps, divs, addresses) { // takes an array of 1-based indices
+        var l = { p: ps, div: divs, address: addresses };
+        return function pdaset_filter(doc) {
+            var result = [];
+            for (var tag in l) {
+                var a = doc.getElementsByTagName(tag);
+                var indices = l[tag];
+                for (var i in indices)
+                    result.push(a[indices[i] - 1]);
+            }
+            return result;
+        }
+    }
+    test_selector_in_html(":nth-of-type(odd)", mixed_elements,
+                          pdaset([1, 3, 4], [1], [1, 2]),
+                          pdaset([2], [2], []));
+    test_selector_in_html(":nth-of-type(2n-0)", mixed_elements,
+                          pdaset([2], [2], []),
+                          pdaset([1, 3, 4], [1], [1, 2]));
+    test_selector_in_html(":nth-last-of-type(even)", mixed_elements,
+                          pdaset([2], [1], []),
+                          pdaset([1, 3, 4], [2], [1, 2]));
 
     SimpleTest.finish();
 }

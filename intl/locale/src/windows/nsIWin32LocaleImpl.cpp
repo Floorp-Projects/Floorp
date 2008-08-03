@@ -46,10 +46,7 @@
 #include <windows.h>
 #include "nsCRT.h"
  #include "nsReadableUtils.h"
-
-#define USER_DEFINED_PRIMARYLANG	0x0200
-#define USER_DEFINED_SUBLANGUAGE	0x20
-
+#include "nsXPCOMStrings.h"
 
 struct iso_pair 
 {
@@ -157,10 +154,6 @@ struct iso_map
 #define SUBLANG_ENGLISH_PHILIPPINES         0x0d
 #endif
 
-
-// Turn this on when ParseLocaleString(), GetXPLocale(), and 
-// GetPlatformLocale() are fixed to support three letter lang codes.
-#undef THREE_LETTER_LANG_CODE_SUPPORTED
 
 //
 // This list is used to map between ISO language
@@ -372,12 +365,10 @@ iso_map iso_list[] =
 		{ "KR", SUBLANG_KOREAN },
 		{ "", 0}}
 	},
-#ifdef THREE_LETTER_LANG_CODE_SUPPORTED
 	{ "kok", LANG_KONKANI, {
 		{ "IN", SUBLANG_DEFAULT }, 
 		{ "", 0}}
 	},
-#endif
 	{ "ky", LANG_KYRGYZ, {
 		{ "KG", SUBLANG_DEFAULT }, // Kygyzstan
 		{ "", 0}}
@@ -407,12 +398,20 @@ iso_map iso_list[] =
 		{ "BN", SUBLANG_MALAY_BRUNEI_DARUSSALAM }, // XXX
 		{ "", 0}}
 	},
+	{"nb",	LANG_NORWEGIAN, {
+		{ "NO",  SUBLANG_NORWEGIAN_BOKMAL },
+		{ "", SUBLANG_NORWEGIAN_BOKMAL}}
+	},
 	{"nl",	LANG_DUTCH, {
 		{"NL", SUBLANG_DUTCH },
 		{"BE", SUBLANG_DUTCH_BELGIAN },
 		{ "", 0}}
 	},
-	{"no",	LANG_NORWEGIAN, {     // XXX : Nynorsk vs Bokmal 
+	{"nn",	LANG_NORWEGIAN, {
+		{ "NO",  SUBLANG_NORWEGIAN_NYNORSK },
+		{ "", SUBLANG_NORWEGIAN_NYNORSK}}
+	},
+	{"no",	LANG_NORWEGIAN, {
 		{ "NO",  SUBLANG_DEFAULT },
 		{ "", 0}}
 	},
@@ -564,16 +563,16 @@ iso_pair dbg_list[] =
 	{"ka",	LANG_GEORGIAN},
 	{"kn",  LANG_KANNADA},
 	{"ko",	LANG_KOREAN},
-#ifdef THREE_LETTER_LANG_CODE_SUPPORTED
 	{"kok", LANG_KONKANI},
-#endif
 	{"lt",	LANG_LITHUANIAN},
 	{"lv",	LANG_LATVIAN},
 	{"mk",	LANG_MACEDONIAN},
 	{"mn",  LANG_MONGOLIAN},
 	{"mr",  LANG_MARATHI},
 	{"ms",	LANG_MALAY},
+	{"nb",	LANG_NORWEGIAN},
 	{"nl",	LANG_DUTCH},
+	{"nn",	LANG_NORWEGIAN},
 	{"no",	LANG_NORWEGIAN},
 	{"pa",  LANG_PUNJABI},
 	{"pl",	LANG_POLISH},
@@ -625,18 +624,22 @@ nsIWin32LocaleImpl::~nsIWin32LocaleImpl(void)
 NS_IMETHODIMP
 nsIWin32LocaleImpl::GetPlatformLocale(const nsAString& locale,LCID* winLCID)
 {
-  char    language_code[3];
-  char    country_code[3];
-  char    region_code[3];
+  char    locale_string[9] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0'};
+  char*   language_code;
+  char*   country_code;
   int     i,j;
 
-  if (!ParseLocaleString(NS_LossyConvertUTF16toASCII(locale).get(),language_code,country_code,region_code)) {
-    *winLCID = MAKELCID(MAKELANGID(USER_DEFINED_PRIMARYLANG,USER_DEFINED_SUBLANGUAGE),
-                        SORT_DEFAULT);
-    return NS_OK;
+  // parse the locale
+  const PRUnichar* data;
+  j = NS_StringGetData(locale, &data);
+  for (i = 0; i < 7 && i < j; i++) {
+    locale_string[i] = data[i] == '-' ? '\0' : data[i];
   }
-  // we have a LL-CC-RR style string
 
+  language_code = locale_string;
+  country_code = locale_string + strlen(locale_string) + 1;
+
+  // convert parsed locale to Windows LCID
   for(i=0;i<LENGTH_MAPPING_LIST;i++) {
     if (strcmp(language_code,iso_list[i].iso_code)==0) {
       for(j=0;iso_list[i].sublang_list[j].win_code;j++) {
@@ -662,6 +665,21 @@ nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsAString& locale)
 
   lang_id = PRIMARYLANGID(LANGIDFROMLCID(winLCID));
   sublang_id = SUBLANGID(LANGIDFROMLCID(winLCID));
+
+  /* Special-case Norwegian Bokmal and Norwegian Nynorsk, which have the same
+     LANG_ID on Windows, but have separate ISO-639-2 codes */
+  if (lang_id == LANG_NORWEGIAN) {
+    if (sublang_id == SUBLANG_NORWEGIAN_BOKMAL) {
+      locale.AssignASCII("nb-NO");
+      return NS_OK;
+    }
+    if (sublang_id == SUBLANG_NORWEGIAN_NYNORSK) {
+      locale.AssignASCII("nn-NO");
+      return NS_OK;
+    }
+    locale.AssignASCII("no-NO");
+    return NS_OK;
+  }
 
   for(i=0;i<LENGTH_MAPPING_LIST;i++) {
     if (lang_id==iso_list[i].win_code) {
@@ -695,50 +713,6 @@ nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsAString& locale)
   return NS_OK;
 
 }
-
-//
-// returns PR_FALSE/PR_TRUE depending on if it was of the form LL-CC-RR
-PRBool
-nsIWin32LocaleImpl::ParseLocaleString(const char* locale_string, char* language, char* country, char* region)
-{
-	size_t		len = strlen(locale_string);
-
-	if (len==0 || (len!=2 && len!=5 && len!=8))
-		return PR_FALSE;
-	
-	if (len==2) {
-		language[0]=locale_string[0];
-		language[1]=locale_string[1];
-		language[2]=0;
-		country[0]=0;
-		region[0]=0;
-	} else if (len==5) {
-		language[0]=locale_string[0];
-		language[1]=locale_string[1];
-		language[2]=0;
-		country[0]=locale_string[3];
-		country[1]=locale_string[4];
-		country[2]=0;
-		region[0]=0;
-		if (locale_string[2]!='-') return PR_FALSE;
-	} else if (len==8) {
-		language[0]=locale_string[0];
-		language[1]=locale_string[1];
-		language[2]=0;
-		country[0]=locale_string[3];
-		country[1]=locale_string[4];
-		country[2]=0;
-		region[0]=locale_string[6];
-		region[1]=locale_string[7];
-		region[2]=0;
-		if (locale_string[2]!='-' || locale_string[5]!='-') return PR_FALSE;
-	} else {
-		return PR_FALSE;
-	}
-
-	return PR_TRUE;
-}
-
 
 #ifdef DEBUG
 void

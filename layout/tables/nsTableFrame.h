@@ -372,6 +372,12 @@ public:
                                         nsIFrame**      aProviderFrame,
                                         PRBool*         aIsChild);
 
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsHTMLContainerFrame::IsFrameOfType(aFlags &
+      ~nsIFrame::eExcludesIgnorableWhitespace);
+  }
+
   /**
    * Get the "type" of the frame
    *

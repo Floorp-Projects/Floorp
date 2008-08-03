@@ -41,20 +41,85 @@ topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
+# MAKE_DIRS: List of directories to build while looping over directories.
+MAKE_DIRS               += $(MDDEPDIR)
+GARBAGE_DIRS            += $(MDDEPDIR)
+
 include $(DEPTH)/config/autoconf.mk
 
-STATIC_FAILURE_TESTCASES = \
+FINAL_FAILURE_TESTCASES = \
   TestFinal.cpp \
   TestFinalTemplate.cpp \
+  $(NULL)
+
+STACK_FAILURE_TESTCASES = \
   TestStack.cpp \
   TestStackTemplate.cpp \
+  StackNoConstructor.cpp \
+  StackVector.cpp \
+  $(NULL)
+
+STACK_PASS_TESTCASES = \
+  StackPlacementNewOK.cpp \
+  $(NULL)
+
+OUTPARAMS_WARNING_TESTCASES = \
+  e1.cpp \
+  e2.cpp \
+  e3.cpp \
+  e4.cpp \
+  e5.cpp \
+  e6.cpp \
+  e7.cpp \
+  e8.cpp \
+  e9.cpp \
+  e10.cpp \
+  e11.cpp \
+  e12.cpp \
+  e13.cpp \
+  $(NULL)
+
+OUTPARAMS_PASS_TESTCASES = \
+  o1.cpp \
+  o2.cpp \
+  o3.cpp \
+  o4.cpp \
+  o5.cpp \
+  o6.cpp \
+  o7.cpp \
+  o8.cpp \
+  o9.cpp \
+  o10.cpp \
+  o11.cpp \
+  o12.cpp \
+  o13.cpp \
+  o14.cpp \
+  o15.cpp \
+  o16.cpp \
+  $(NULL)
+
+STATIC_FAILURE_TESTCASES = \
+  $(FINAL_FAILURE_TESTCASES) \
+  $(STACK_FAILURE_TESTCASES) \
+  $(NULL)
+
+STATIC_WARNING_TESTCASES = \
+  $(OUTPARAMS_WARNING_TESTCASES) \
+  $(NULL)
+
+STATIC_PASS_TESTCASES = \
+  $(OUTPARAMS_PASS_TESTCASES) \
+  $(STACK_PASS_TESTCASES) \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 # We want to compile each file and invert the result to ensure that
 # compilation failed.
-check:: $(STATIC_FAILURE_TESTCASES:.cpp=.s-fail)
+check:: \
+  $(STATIC_FAILURE_TESTCASES:.cpp=.s-fail) \
+  $(STATIC_WARNING_TESTCASES:.cpp=.s-warn) \
+  $(STATIC_PASS_TESTCASES:.cpp=.s-pass)
 
 %.s-fail: %.cpp Makefile Makefile.in $(DEHYDRA_SCRIPTS)
 	@printf "Compiling $(<F) to check that the static-analysis script is checking properly..."
@@ -63,4 +128,26 @@ check:: $(STATIC_FAILURE_TESTCASES:.cpp=.s-fail)
 	  exit 1; \
 	else \
 	  printf "ok.\n"; \
+	fi
+
+%.s-warn: %.cpp Makefile Makefile.in $(DEHYDRA_SCRIPTS)
+	@printf "Compiling $(<F) to check that the static-analysis script is checking properly..."
+	@if $(CCC) -Werror $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).errlog 2>&1; then \
+	  printf "fail:\nerror: compilation of $(<F) succeeded with -Werror. It shouldn't have!\n" \
+	  exit 1; \
+	fi
+	@if $(CCC) $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).werrlog 2>&1; then \
+	  printf "ok.\n"; \
+	else \
+	  printf "fail:\nerror: compilation of $(<F) without -Werror failed. A warning should have been issued.\n" \
+	  exit 1; \
+	fi
+
+%.s-pass: %.cpp Makefile Makefile.in $(DEHYDRA_SCRIPTS)
+	@printf "Compiling $(<F) to check that the static-analysis script is checking properly..."
+	@if $(CCC) -Werror $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).errlog 2>&1; then \
+	  printf "ok.\n"; \
+	else \
+	  printf "fail:\nerror: compilation of $(<F) failed. It shouldn't have!\n"; \
+	  exit 1; \
 	fi

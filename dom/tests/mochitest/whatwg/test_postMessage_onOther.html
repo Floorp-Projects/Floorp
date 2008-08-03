@@ -14,10 +14,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 
-<iframe src="http://localhost:8888/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html"
-        name="firstFrame"></iframe>
-<iframe src="http://example.org:8000/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html"
-        name="secondFrame"></iframe>
+<iframe src="http://example.com/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html"
+        name="topDomainFrame"></iframe>
+<iframe src="http://test1.example.com/tests/dom/tests/mochitest/whatwg/postMessage_onOther.html"
+        name="subDomainFrame"></iframe>
 
 
 <pre id="test">
@@ -26,50 +26,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=postMessage
 
 SimpleTest.waitForExplicitFinish();
 
-var finished = false;
-
 /** Receives MessageEvents to this window. */
 function messageReceiver(evt)
 {
   ok(evt instanceof MessageEvent, "wrong event type");
-  is(evt.origin, "http://example.org:8000", "unexpected origin");
-  is(evt.data, "response-to-sibling-sent-message",
+  is(evt.origin, "http://test1.example.com", "unexpected origin");
+  is(evt.lastEventId, "", "postMessage creates events with empty lastEventId");
+  is(evt.data, "test-finished",
      "unexpected data in message");
 
-  // Handle buggy browsers that might somehow have received a message twice
-  if (finished)
-    return;
-
-  finished = true;
   SimpleTest.finish();
 }
 
-function postToSecondFrameThroughFirstFrame()
+function run()
 {
-  try
-  {
-    window.frames.firstFrame.testSiblingPostMessage();
-  }
-  catch (e)
-  {
-    ok(false, "threw exception trying to post through firstFrame: " + e);
-  }
+  window.frames.subDomainFrame.postMessage("start-test",
+                                           "http://test1.example.com");
 }
 
-/** For buggy browsers that didn't send a response. */
-function sentinel()
-{
-  if (!finished)
-  {
-    ok(false, "should have been finished by now -- didn't receive response?");
-    SimpleTest.finish();
-  }
-}
-
-document.addEventListener("message", messageReceiver, false);
-
-addLoadEvent(postToSecondFrameThroughFirstFrame);
-addLoadEvent(sentinel);
+window.addEventListener("message", messageReceiver, false);
+window.addEventListener("load", run, false);
 </script>
 </pre>
 </body>

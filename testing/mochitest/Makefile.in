@@ -54,7 +54,6 @@ include $(topsrcdir)/config/rules.mk
 
 # files that get copied into $objdir/_tests/
 _SERV_FILES = 	\
-		runtests.pl \
 		runtests.py \
 		automation.py \
 		gen_template.pl \
@@ -68,7 +67,9 @@ _SERV_FILES = 	\
 		redirect-a11y.html \
 		redirect.html \
 		redirect.js \
+		$(topsrcdir)/build/pgo/server-locations.txt \
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
+		mozprefs.js \
 		$(NULL)	
 
 
@@ -80,6 +81,9 @@ else
 PROGRAM = $(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
 endif
 
+ifeq ($(MOZ_BUILD_APP),camino)
+browser_path = \"../$(DIST)/Camino.app/Contents/MacOS/Camino\"
+else
 ifeq ($(OS_ARCH),Darwin)
 ifdef MOZ_DEBUG
 browser_path = \"../$(DIST)/$(MOZ_APP_DISPLAYNAME)Debug.app/Contents/MacOS/$(PROGRAM)\"
@@ -88,6 +92,7 @@ browser_path = \"../$(DIST)/$(MOZ_APP_DISPLAYNAME).app/Contents/MacOS/$(PROGRAM)
 endif
 else
 browser_path = \"../$(DIST)/bin/$(PROGRAM)\"
+endif
 endif
 
 # These go in _tests/ so they need to go up an extra path segement
@@ -102,13 +107,15 @@ else
 TEST_DRIVER_PPARGS += -DIS_MAC=0
 endif
 
+ifeq ($(MOZ_BUILD_APP),camino)
+TEST_DRIVER_PPARGS += -DIS_CAMINO=1
+else
+TEST_DRIVER_PPARGS += -DIS_CAMINO=0
+endif
+
 ifeq ($(host_os), cygwin)
 TEST_DRIVER_PPARGS += -DIS_CYGWIN=1
 endif
-
-runtests.pl: runtests.pl.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
 runtests.py: runtests.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
@@ -118,7 +125,7 @@ automation.py: $(topsrcdir)/build/pgo/automation.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
-GARBAGE += runtests.pl runtests.py automation.py
+GARBAGE += runtests.py automation.py
 
 libs:: $(_SERV_FILES)
 	$(INSTALL) $^ $(_DEST_DIR)

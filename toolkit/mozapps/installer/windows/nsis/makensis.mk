@@ -56,8 +56,8 @@ TOOLKIT_NSIS_FILES = \
 	$(NULL)
 
 $(CONFIG_DIR)/setup.exe::
-	$(INSTALL) $(addprefix $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
-	$(INSTALL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && makensis.exe installer.nsi
 # Support for building the uninstaller when repackaging locales
 ifeq ($(CONFIG_DIR),l10ngen)
@@ -78,8 +78,8 @@ installer::
 # For building the uninstaller during the application build so it can be
 # included for mar file generation.
 uninstaller::
-	$(INSTALL) $(addprefix $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
-	$(INSTALL) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
+	$(INSTALL) $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) $(CONFIG_DIR)
+	$(INSTALL) $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/setup.ico $(CONFIG_DIR)
 	cd $(CONFIG_DIR) && makensis.exe uninstaller.nsi
 	$(NSINSTALL) -D $(DIST)/bin/uninstall
 ifdef MOZ_SUNBIRD

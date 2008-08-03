@@ -36,7 +36,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsICaret.h"
 #include "nsCRT.h"
 
 #include "nsReadableUtils.h"
@@ -4600,7 +4599,8 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
     // get the prev sibling of the right node, and see if it's leftTextNode
     nsCOMPtr<nsIDOMNode> prevSibOfRightNode;
-    result = GetPriorHTMLSibling(rightTextNode, address_of(prevSibOfRightNode));
+    result =
+      rightTextNode->GetPreviousSibling(getter_AddRefs(prevSibOfRightNode));
     if (NS_FAILED(result)) return result;
     if (prevSibOfRightNode && (prevSibOfRightNode == leftTextNode))
     {
@@ -5928,7 +5928,7 @@ nsHTMLEditor::IsAnonymousElement(nsIDOMElement * aElement, PRBool * aReturn)
 {
   NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  *aReturn = content->IsNativeAnonymous();
+  *aReturn = content->IsRootOfNativeAnonymousSubtree();
   return NS_OK;
 }
 

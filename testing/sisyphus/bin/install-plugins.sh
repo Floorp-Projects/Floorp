@@ -52,7 +52,7 @@ $SCRIPT -p product -b branch -x executablepath -D directory [-d datafiles]
 variable            description
 ===============     ============================================================
 -p product          required. firefox|thunderbird
--b branch           required. 1.8.0|1.8.1|1.9.0
+-b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
 -x executablepath   required. path to browser executable
 -D directory        required. path to location of plugins/components
 -d datafiles        optional. one or more filenames of files containing 
@@ -80,12 +80,7 @@ while getopts $options optname ;
 done
 
 # include environment variables
-if [[ -n "$datafiles" ]]; then
-    for datafile in $datafiles; do 
-        cat $datafile | sed 's|^|data: |'
-        source $datafile
-    done
-fi
+loadata $datafiles
 
 if [[ -z "$product" || -z "$branch" || \
     -z "$executablepath" || -z "$directory" ]]; then
@@ -97,14 +92,6 @@ if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
 fi
 
 executable=`get_executable $product $branch $executablepath`
-
-if [[ -z "$executable" ]]; then
-    error "get_executable $product $branch $executablepath returned empty path" $LINENO
-fi
-
-if [[ ! -x "$executable" ]]; then 
-    error "executable \"$executable\" is not executable" $LINENO
-fi
 
 executablepath=`dirname $executable`
 

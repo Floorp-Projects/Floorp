@@ -62,6 +62,8 @@ include $(topsrcdir)/config/insure.mk
 endif
 endif
 
+COMMA = ,
+
 # Sanity check some variables
 CHECK_VARS := \
  XPI_NAME \
@@ -410,28 +412,6 @@ endif
 endif
 endif
 
-ifdef MINIMO
-ifdef LIBXUL_LIBRARY
-DEFINES += \
-		-D_IMPL_NS_COM \
-		-DEXPORT_XPT_API \
-		-DEXPORT_XPTC_API \
-		-DEXPORT_XPTI_API \
-		-D_IMPL_NS_COM_OBSOLETE \
-		-D_IMPL_NS_GFX \
-		-D_IMPL_NS_WIDGET \
-		-DIMPL_XREAPI \
-		-DIMPL_NS_NET \
-		-DIMPL_THEBES \
-		$(NULL)
-endif
-
-ifdef WINCE
-DEFINES += -D_NSPR_BUILD_
-endif
-
-endif
-
 # Force _all_ exported methods to be |_declspec(dllexport)| when we're
 # building them into the executable.
 
@@ -522,10 +502,27 @@ endif
 # The entire tree should be subject to static analysis using the XPCOM
 # script. Additional scripts may be added by specific subdirectories.
 
-DEHYDRA_SCRIPTS = $(topsrcdir)/xpcom/static-checking.js
+DEHYDRA_SCRIPT = $(topsrcdir)/xpcom/analysis/static-checking.js
+
+DEHYDRA_MODULES = \
+  $(topsrcdir)/xpcom/analysis/final.js \
+  $(NULL)
+
+TREEHYDRA_MODULES = \
+  $(topsrcdir)/xpcom/analysis/outparams.js \
+  $(topsrcdir)/xpcom/analysis/stack.js \
+  $(NULL)
+
+DEHYDRA_ARGS = \
+  --topsrcdir=$(topsrcdir) \
+  --objdir=$(DEPTH) \
+  --dehydra-modules=$(subst $(NULL) ,$(COMMA),$(strip $(DEHYDRA_MODULES))) \
+  --treehydra-modules=$(subst $(NULL) ,$(COMMA),$(strip $(TREEHYDRA_MODULES))) \
+  $(NULL)
+
+DEHYDRA_FLAGS = -fplugin=$(DEHYDRA_PATH) -fplugin-arg="$(DEHYDRA_SCRIPT) $(DEHYDRA_ARGS)"
 
 ifdef DEHYDRA_PATH
-DEHYDRA_FLAGS = -fplugin=$(DEHYDRA_PATH) $(foreach script,$(DEHYDRA_SCRIPTS),-fplugin-arg=$(script))
 OS_CXXFLAGS += $(DEHYDRA_FLAGS)
 endif
 
@@ -780,6 +777,7 @@ endif
 #
 # Include any personal overrides the user might think are needed.
 #
+-include $(topsrcdir)/$(MOZ_BUILD_APP)/app-config.mk
 -include $(MY_CONFIG)
 
 ######################################################################
@@ -870,7 +868,11 @@ endif
 # overridden by the command line. (Besides, AB_CD is prettier).
 AB_CD = $(MOZ_UI_LOCALE)
 
-EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/$(1)/en-US,$(topsrcdir)/../l10n/$(AB_CD)/$(subst /locales,,$(1)))
+ifndef L10NBASEDIR
+L10NBASEDIR = $(error L10NBASEDIR not defined by configure)
+endif
+
+EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/$(1)/en-US,$(L10NBASEDIR)/$(AB_CD)/$(subst /locales,,$(1)))
 
 ifdef relativesrcdir
 LOCALE_SRCDIR = $(call EXPAND_LOCALE_SRCDIR,$(relativesrcdir))

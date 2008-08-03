@@ -49,8 +49,6 @@ DIRS		= base/public
 ifdef MOZ_PLUGINS
 DIRS		+= base/src 
 
-ifndef MINIMO
-
 ifneq (,$(filter gtk2 ,$(MOZ_WIDGET_TOOLKIT)))
 TOOL_DIRS += samples/unixprinting
 endif
@@ -62,14 +60,15 @@ ifdef MOZ_ENABLE_GTK2
 TOOL_DIRS += samples/default/unix
 endif
 
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 TOOL_DIRS += samples/default/windows
 endif
 
 ifeq ($(OS_ARCH),OS2)
 TOOL_DIRS += samples/default/os2
+ifdef MOZ_OJI
+TOOL_DIRS += os2wrapper
+endif
 ifdef ENABLE_TESTS
 TOOL_DIRS += tools/tester/common tools/tester/os2
 endif

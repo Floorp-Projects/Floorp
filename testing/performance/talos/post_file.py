@@ -6,6 +6,7 @@
 #   This recipe is covered under the Python license: http://www.python.org/license
 
 import httplib, mimetypes, urllib2
+from socket import error, herror, gaierror, timeout
 
 def link_exists(host, selector):
     """
@@ -14,8 +15,9 @@ def link_exists(host, selector):
     try:
       site = urllib2.urlopen("http://" + host + selector)
       meta = site.info()
-    except urllib2.URLError:
-      print "FAIL: http://" + host + selector + " raises URLError (check if link exists)"
+    except urllib2.URLError, e:
+      print "FAIL: graph server does not resolve" 
+      print "FAIL: " + str(e.reason)
       return 0
     return 1
 
@@ -26,15 +28,23 @@ def post_multipart(host, selector, fields, files):
     files is a sequence of (name, filename, value) elements for data to be uploaded as files
     Return the server's response page.
     """
-    content_type, body = encode_multipart_formdata(fields, files)
-    h = httplib.HTTP(host)
-    h.putrequest('POST', selector)
-    h.putheader('content-type', content_type)
-    h.putheader('content-length', str(len(body)))
-    h.endheaders()
-    h.send(body)
-    errcode, errmsg, headers = h.getreply()
-    return h.file.read()
+    try:
+      content_type, body = encode_multipart_formdata(fields, files)
+      h = httplib.HTTP(host)
+      h.putrequest('POST', selector)
+      h.putheader('content-type', content_type)
+      h.putheader('content-length', str(len(body)))
+      h.endheaders()
+      h.send(body)
+      errcode, errmsg, headers = h.getreply()
+      return h.file.read()
+    except (httplib.HTTPException, error, herror, gaierror, timeout), e:
+      print "FAIL: graph server unreachable"
+      print "FAIL: " + str(e)
+      raise
+    except:
+      print "FAIL: graph server unreachable"
+      raise
 
 def encode_multipart_formdata(fields, files):
     """

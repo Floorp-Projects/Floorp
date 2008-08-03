@@ -23,6 +23,7 @@ classic.jar:
   skin/classic/browser/Throbber-small.png
   skin/classic/browser/Toolbar.png
   skin/classic/browser/Toolbar-small.png
+  skin/classic/browser/urlbar-favicon-glow.png
   skin/classic/browser/feeds/feedIcon.png             (feeds/feedIcon.png)
   skin/classic/browser/feeds/feedIcon16.png           (feeds/feedIcon16.png)
   skin/classic/browser/feeds/videoFeedIcon.png        (feeds/videoFeedIcon.png)
@@ -47,12 +48,12 @@ classic.jar:
   skin/classic/browser/places/starPage.png            (places/starPage.png)
   skin/classic/browser/places/tag.png                 (places/tag.png)
   skin/classic/browser/places/toolbarDropMarker.png   (places/toolbarDropMarker.png)
+  skin/classic/browser/places/unsortedBookmarks.png   (places/unsortedBookmarks.png)
   skin/classic/browser/places/wrench.png              (places/wrench.png)
   skin/classic/browser/preferences/alwaysAsk.png      (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/application.png    (preferences/application.png)
   skin/classic/browser/preferences/mail.png           (preferences/mail.png)
   skin/classic/browser/preferences/Options.png        (preferences/Options.png)
-  skin/classic/browser/preferences/plugin.png         (preferences/plugin.png)
 * skin/classic/browser/preferences/preferences.css    (preferences/preferences.css)
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)
   skin/classic/browser/tabbrowser/tab-arrow-end.png    (tabbrowser/tab-arrow-end.png)

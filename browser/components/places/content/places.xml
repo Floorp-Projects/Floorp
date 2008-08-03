@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+]>
+
 <bindings id="placesBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
@@ -22,6 +27,8 @@
       </xul:hbox>
       <xul:hbox>
         <xul:button class="textbox-input-closebutton"/>
+        <xul:image class="textbox-input-searchimage"
+                   chromedir="&locale.dir;"/>
       </xul:hbox>
     </content>
     <implementation>

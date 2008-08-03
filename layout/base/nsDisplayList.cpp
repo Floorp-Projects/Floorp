@@ -50,6 +50,7 @@
 #include "nsRegion.h"
 #include "nsFrameManager.h"
 #include "gfxContext.h"
+#include "nsStyleStructInlines.h"
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     PRBool aIsForEvents, PRBool aBuildCaret)
@@ -143,9 +144,9 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
   PL_FinishArenaPool(&mPool);
 }
 
-nsICaret *
+nsCaret *
 nsDisplayListBuilder::GetCaret() {
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   CurrentPresShellState()->mPresShell->GetCaret(getter_AddRefs(caret));
   return caret;
 }
@@ -163,7 +164,7 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   if (!mBuildCaret)
     return;
 
-  nsCOMPtr<nsICaret> caret;
+  nsRefPtr<nsCaret> caret;
   state->mPresShell->GetCaret(getter_AddRefs(caret));
   state->mCaretFrame = caret->GetCaretFrame();
 
@@ -597,8 +598,7 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   // Note: Because we exist, we know that the caret is visible, so we don't
   // need to check for the caret's visibility.
-  mCaret->PaintCaret(aBuilder, aCtx, aBuilder->ToReferenceFrame(mFrame),
-                     mFrame->GetStyleColor()->mColor);
+  mCaret->PaintCaret(aBuilder, aCtx, mFrame, aBuilder->ToReferenceFrame(mFrame));
 }
 
 PRBool
@@ -609,11 +609,16 @@ nsDisplayBorder::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
 
   nsRect paddingRect = mFrame->GetPaddingRect() - mFrame->GetPosition() +
     aBuilder->ToReferenceFrame(mFrame);
+  const nsStyleBorder *styleBorder;
   if (paddingRect.Contains(aVisibleRegion->GetBounds()) &&
-      !nsLayoutUtils::HasNonZeroSide(mFrame->GetStyleBorder()->mBorderRadius)) {
+      !(styleBorder = mFrame->GetStyleBorder())->IsBorderImageLoaded() &&
+      !nsLayoutUtils::HasNonZeroSide(styleBorder->mBorderRadius)) {
     // the visible region is entirely inside the content rect, and no part
     // of the border is rendered inside the content rect, so we are not
     // visible
+    // Skip this if there's a border-image (which draws a background
+    // too) or if there is a border-radius (which makes the border draw
+    // further in).
     return PR_FALSE;
   }
 
@@ -628,6 +633,19 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
                               aDirtyRect, nsRect(offset, mFrame->GetSize()),
                               *mFrame->GetStyleBorder(),
                               mFrame->GetStyleContext(), mFrame->GetSkipSides());
+}
+
+void
+nsDisplayBoxShadow::Paint(nsDisplayListBuilder* aBuilder,
+     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+  nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+  nsCSSRendering::PaintBoxShadow(mFrame->PresContext(), *aCtx,
+                                 mFrame, offset);
+}
+
+nsRect
+nsDisplayBoxShadow::GetBounds(nsDisplayListBuilder* aBuilder) {
+  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsIFrame* aFrame, nsDisplayList* aList)
@@ -784,10 +802,6 @@ PRBool nsDisplayOpacity::IsOpaque(nsDisplayListBuilder* aBuilder) {
 void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
                              nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  // XXX This way of handling 'opacity' creates exponential time blowup in the
-  // depth of nested translucent elements. This will be fixed when we move to
-  // cairo with support for real alpha channels in surfaces, so we don't have
-  // to do this white/black hack anymore.
   float opacity = mFrame->GetStyleDisplay()->mOpacity;
 
   nsRect bounds;
@@ -795,18 +809,15 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
 
   nsCOMPtr<nsIDeviceContext> devCtx;
   aCtx->GetDeviceContext(*getter_AddRefs(devCtx));
-  float a2p = 1.0f / devCtx->AppUnitsPerDevPixel();
 
-  nsRefPtr<gfxContext> ctx = aCtx->ThebesContext();
+  gfxContext* ctx = aCtx->ThebesContext();
 
   ctx->Save();
 
   ctx->NewPath();
-  ctx->Rectangle(gfxRect(bounds.x * a2p,
-                         bounds.y * a2p,
-                         bounds.width * a2p,
-                         bounds.height * a2p),
-                 PR_TRUE);
+  gfxRect r(bounds.x, bounds.y, bounds.width, bounds.height);
+  r.ScaleInverse(devCtx->AppUnitsPerDevPixel());
+  ctx->Rectangle(r, PR_TRUE);
   ctx->Clip();
 
   if (mNeedAlpha)

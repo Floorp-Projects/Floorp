@@ -39,7 +39,6 @@
 #define nsWidget_h__
 
 #include "nsBaseWidget.h"
-#include "nsIKBStateControl.h"
 #include "nsIRegion.h"
 #ifdef PHOTON_DND
 #include "nsIDragService.h"
@@ -61,7 +60,7 @@ class nsWidget;
  * Base of all Photon native widgets.
  */
 
-class nsWidget : public nsBaseWidget, nsIKBStateControl
+class nsWidget : public nsBaseWidget
 {
 public:
   nsWidget();
@@ -210,16 +209,6 @@ public:
 		}
 
   NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
-
-
-  // nsIKBStateControl
-  NS_IMETHOD ResetInputState();
-  NS_IMETHOD SetIMEOpenState(PRBool aState);
-  NS_IMETHOD GetIMEOpenState(PRBool* aState);
-  NS_IMETHOD SetIMEEnabled(PRUint32 aState);
-  NS_IMETHOD GetIMEEnabled(PRUint32* aState);
-  NS_IMETHOD CancelIMEComposition();
-  NS_IMETHOD GetToggledKeyState(PRUint32 aKeyCode, PRBool* aLEDState);
 
   inline void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull)
 		{

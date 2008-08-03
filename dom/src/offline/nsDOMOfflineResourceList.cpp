@@ -275,12 +275,13 @@ nsDOMOfflineResourceList::Disconnect()
 NS_IMETHODIMP
 nsDOMOfflineResourceList::GetLength(PRUint32 *aLength)
 {
+  if (!mManifestURI) {
+    *aLength = 0;
+    return NS_OK;
+  }
+
   nsresult rv = Init();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
 
   rv = CacheKeys();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -294,10 +295,6 @@ nsDOMOfflineResourceList::Item(PRUint32 aIndex, nsAString& aURI)
 {
   nsresult rv = Init();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
 
   SetDOMStringToNull(aURI);
 

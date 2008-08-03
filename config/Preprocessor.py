@@ -147,7 +147,9 @@ class Preprocessor:
         self.writtenLines = ln
     for f in self.filters:
       aLine = f[1](aLine)
-    aLine = aLine.rstrip('\r\n') + self.LE
+    # ensure our line ending. Only need to handle \n, as we're reading
+    # with universal line ending support, at least for files.
+    aLine = re.sub('\n', self.LE, aLine)
     self.out.write(aLine)
   
   def handleCommandLine(self, args, defaultToStdin = False):
@@ -185,7 +187,7 @@ class Preprocessor:
     p.add_option('-U', action='callback', callback=handleU, type="string",
                  metavar="VAR", help='Undefine a variable')
     p.add_option('-F', action='callback', callback=handleF, type="string",
-                 metavar="FILTER", help='Enabble the specified filter')
+                 metavar="FILTER", help='Enable the specified filter')
     p.add_option('--line-endings', action='callback', callback=handleLE,
                  type="string", metavar="[cr|lr|crlf]",
                  help='Use the specified line endings [Default: OS dependent]')
@@ -347,7 +349,7 @@ class Preprocessor:
     lst.append('\n') # add back the newline
     self.write(reduce(lambda x, y: x+y, lst, ''))
   def do_literal(self, args):
-    self.write(args)
+    self.write(args + self.LE)
   def do_filter(self, args):
     filters = [f for f in args.split(' ') if hasattr(self, 'filter_' + f)]
     if len(filters) == 0:
@@ -417,7 +419,7 @@ class Preprocessor:
         args = str(args)
         if not os.path.isabs(args):
           args = os.path.join(self.context['DIRECTORY'], args)
-        args = open(args)
+        args = open(args, 'rU')
       except:
         raise Preprocessor.Error(self, 'FILE_NOT_FOUND', str(args))
     self.checkLineNumbers = bool(re.search('\.js(?:\.in)?$', args.name))
