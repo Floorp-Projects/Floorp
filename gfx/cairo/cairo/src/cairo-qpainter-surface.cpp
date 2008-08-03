@@ -1313,7 +1313,8 @@ _cairo_qpainter_surface_show_glyphs (void *abstract_surface,
                                      cairo_pattern_t *source,
                                      cairo_glyph_t *glyphs,
                                      int num_glyphs,
-                                     cairo_scaled_font_t *scaled_font)
+                                     cairo_scaled_font_t *scaled_font,
+                                     int *remaining_glyphs)
 {
     cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
 
@@ -1356,7 +1357,7 @@ _cairo_qpainter_surface_show_glyphs (void *abstract_surface,
 	}
 
         return (cairo_int_status_t)
-               _cairo_surface_show_glyphs (qs->xlib_equiv, op, source, glyphs, num_glyphs, scaled_font);
+               _cairo_surface_show_text_glyphs (qs->xlib_equiv, op, source, NULL, 0, glyphs, num_glyphs, NULL, 0, FALSE, scaled_font);
     }
 #endif
 
