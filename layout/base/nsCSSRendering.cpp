@@ -3489,7 +3489,7 @@ nsContextBoxBlur::BoxBlurVertical(unsigned char* aInput,
     for (PRUint32 i = 0; i < boxSize; i++) {
       PRInt32 pos = i - aTopLobe;
       pos = PR_MAX(pos, 0);
-      pos = PR_MIN(pos, stride - 1);
+      pos = PR_MIN(pos, rows - 1);
       alphaSum += aInput[stride * pos + x];
     }
     for (PRUint32 y = 0; y < rows; y++) {
