@@ -317,6 +317,9 @@ private:
   // the metadata then it should start playing.
   PRPackedBool mPlayAfterLoad;
 
+  // True if we are registered with the observer service for shutdown.
+  PRPackedBool mNotifyOnShutdown;
+
   /******
    * The following member variables can be accessed from any thread.
    ******/
