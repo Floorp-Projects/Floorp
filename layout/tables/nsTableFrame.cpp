@@ -1537,13 +1537,17 @@ nsTableFrame::SetColumnDimensions(nscoord         aHeight,
   nscoord colHeight = aHeight -= aBorderPadding.top + aBorderPadding.bottom +
                                  2* cellSpacingY;
 
-  nsIFrame* colGroupFrame = mColGroups.FirstChild();
-  PRInt32 colX = 0;
+  nsTableIterator iter(mColGroups); 
+  nsIFrame* colGroupFrame = iter.First();
+  PRBool tableIsLTR = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
+  PRInt32 colX =tableIsLTR ? 0 : PR_MAX(0, GetColCount() - 1);
+  PRInt32 tableColIncr = tableIsLTR ? 1 : -1; 
   nsPoint colGroupOrigin(aBorderPadding.left + cellSpacingX,
                          aBorderPadding.top + cellSpacingY);
   while (nsnull != colGroupFrame) {
     nscoord colGroupWidth = 0;
-    nsIFrame* colFrame = colGroupFrame->GetFirstChild(nsnull);
+    nsTableIterator iterCol(*colGroupFrame);  
+    nsIFrame* colFrame = iterCol.First();
     nsPoint colOrigin(0,0);
     while (nsnull != colFrame) {
       if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
@@ -1554,9 +1558,9 @@ nsTableFrame::SetColumnDimensions(nscoord         aHeight,
         colFrame->SetRect(colRect);
         colOrigin.x += colWidth + cellSpacingX;
         colGroupWidth += colWidth + cellSpacingX;
-        colX++;
+        colX += tableColIncr;
       }
-      colFrame = colFrame->GetNextSibling();
+      colFrame = iterCol.Next();      
     }
     if (colGroupWidth) {
       colGroupWidth -= cellSpacingX;
@@ -1564,7 +1568,7 @@ nsTableFrame::SetColumnDimensions(nscoord         aHeight,
 
     nsRect colGroupRect(colGroupOrigin.x, colGroupOrigin.y, colGroupWidth, colHeight);
     colGroupFrame->SetRect(colGroupRect);
-    colGroupFrame = colGroupFrame->GetNextSibling();
+    colGroupFrame = iter.Next();
     colGroupOrigin.x += colGroupWidth + cellSpacingX;
   }
 }
