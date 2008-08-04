@@ -292,7 +292,7 @@ function StartCurrentTest()
     }
     else {
         var currentTest = gTotalTests - gURLs.length;
-        window.title = "reftest: " + currentTest + " / " + gTotalTests +
+        document.title = "reftest: " + currentTest + " / " + gTotalTests +
             " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)";
         StartCurrentURI(1);
     }
