@@ -1338,7 +1338,7 @@ nsNavHistory::MigrateV7Up(mozIStorageConnection* aDBConn)
   ), getter_AddRefs(triggerDetection));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Check for exisitance
+  // Check for existence
   PRBool triggerExists;
   rv = triggerDetection->BindUTF8StringParameter(
     0, NS_LITERAL_CSTRING("moz_historyvisits_afterinsert_v1_trigger")
@@ -1370,7 +1370,7 @@ nsNavHistory::MigrateV7Up(mozIStorageConnection* aDBConn)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Check for exisitance
+  // Check for existence
   rv = triggerDetection->BindUTF8StringParameter(
     0, NS_LITERAL_CSTRING("moz_bookmarks_beforedelete_v1_trigger")
   );
