@@ -138,7 +138,7 @@ pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.flashBar", 1);
 pref("accessibility.typeaheadfind.linksonly", false);
-pref("accessibility.typeaheadfind.casesensitive", false);
+pref("accessibility.typeaheadfind.casesensitive", 0);
 
 // pointer to the default engine name
 pref("browser.search.defaultenginename",      "chrome://browser/locale/region.properties");
