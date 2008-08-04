@@ -1714,7 +1714,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     const char *name;
     JSLocalKind localKind;
 
-    stmt = js_LexicalLookup(tc, atom, NULL, 0);
+    stmt = js_LexicalLookup(tc, atom, NULL);
     ATOM_LIST_SEARCH(ale, &tc->decls, atom);
     op = data->op;
     if ((stmt && stmt->type != STMT_WITH) || ale) {
