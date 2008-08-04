@@ -2921,15 +2921,24 @@ nsresult nsPluginHostImpl::UserAgent(const char **retstring)
   if (NS_SUCCEEDED(res))
   {
     if(NS_RETURN_UASTRING_SIZE > uaString.Length())
-    {
       PL_strcpy(resultString, uaString.get());
-      *retstring = resultString;
-    }
     else
     {
-      *retstring = nsnull;
-      res = NS_ERROR_OUT_OF_MEMORY;
+      // Copy as much of UA string as we can (terminate at right-most space).
+      PL_strncpy(resultString, uaString.get(), NS_RETURN_UASTRING_SIZE);
+      for (int i = NS_RETURN_UASTRING_SIZE - 1; i >= 0; i--)
+      {
+        if (0 == i)
+          resultString[NS_RETURN_UASTRING_SIZE - 1] = '\0';
+        else if (resultString[i] == ' ')
+        {
+          resultString[i] = '\0';
+          break;
+        }
+      }
     }
+
+    *retstring = resultString;
   }
   else
     *retstring = nsnull;
