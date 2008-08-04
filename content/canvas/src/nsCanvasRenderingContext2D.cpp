@@ -376,6 +376,12 @@ protected:
     PRUint32 mSaveCount;
 
     /**
+     * Flag to avoid duplicate calls to InvalidateFrame. Set to true whenever
+     * Redraw is called, reset to false when Render is called.
+     */
+    PRBool mIsFrameInvalid;
+
+    /**
      * Draws a rectangle in the given style; used by FillRect and StrokeRect.
      */
     nsresult DrawRect(const gfxRect& rect, Style style);
@@ -551,7 +557,7 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
     : mValid(PR_FALSE), mOpaque(PR_FALSE), mCanvasElement(nsnull),
-      mSaveCount(0), mStyleStack(20)
+      mSaveCount(0), mIsFrameInvalid(PR_FALSE), mStyleStack(20)
 {
 }
 
@@ -566,6 +572,7 @@ nsCanvasRenderingContext2D::Destroy()
     mSurface = nsnull;
     mThebes = nsnull;
     mValid = PR_FALSE;
+    mIsFrameInvalid = PR_FALSE;
 }
 
 nsresult
@@ -737,7 +744,12 @@ nsCanvasRenderingContext2D::Redraw()
     if (!mCanvasElement)
         return NS_OK;
 
-    return mCanvasElement->InvalidateFrame();
+    if (!mIsFrameInvalid) {
+        mIsFrameInvalid = PR_TRUE;
+        return mCanvasElement->InvalidateFrame();
+    }
+
+    return NS_OK;
 }
 
 void
@@ -855,6 +867,7 @@ nsCanvasRenderingContext2D::Render(gfxContext *ctx)
     if (mOpaque)
         ctx->SetOperator(op);
 
+    mIsFrameInvalid = PR_FALSE;
     return rv;
 }
 
@@ -1378,7 +1391,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Clip()
 {
     mThebes->Clip();
-    return Redraw();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
