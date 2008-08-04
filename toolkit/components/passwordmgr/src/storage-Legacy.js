@@ -814,10 +814,9 @@ LoginManagerStorage_legacy.prototype = {
 
         this.log("Reading passwords from " + this._signonsFile.path);
 
-        // If it doesn't exist, just create an empty file and bail out.
+        // If it doesn't exist, just bail out.
         if (!this._signonsFile.exists()) {
-            this.log("Creating new signons file...");
-            this._writeFile();
+            this.log("No existing signons file found.");
             return;
         }
 
