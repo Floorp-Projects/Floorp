@@ -637,7 +637,8 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
     if (!entry)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = GlobalForLocation(aComponentFile, &entry->global, &entry->location);
+    rv = GlobalForLocation(aComponentFile, &entry->global, &entry->location,
+                           nsnull);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_shaver
         fprintf(stderr, "GlobalForLocation failed!\n");
@@ -1060,7 +1061,8 @@ mozJSComponentLoader::WriteScript(nsIFastLoadService *flSvc, JSScript *script,
 nsresult
 mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
                                         JSObject **aGlobal,
-                                        char **aLocation)
+                                        char **aLocation,
+                                        jsval *exception)
 {
     nsresult rv;
 
@@ -1190,6 +1192,15 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
         // The script wasn't in the fastload cache, so compile it now.
         LOG(("Slow loading %s\n", nativePath.get()));
 
+        // If |exception| is non-null, then our caller wants to propagate any
+        // exceptions out to our caller. Ensure that the engine doesn't
+        // eagerly report the exception.
+        uint32 oldopts = 0;
+        if (exception) {
+            oldopts = JS_GetOptions(cx);
+            JS_SetOptions(cx, oldopts | JSOPTION_DONT_REPORT_UNCAUGHT);
+        }
+
 #ifdef HAVE_PR_MEMMAP
         PRInt64 fileSize;
         rv = aComponent->GetFileSize(&fileSize);
@@ -1251,8 +1262,19 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
                                                    fileHandle, jsPrincipals);
 
         /* JS will close the filehandle after compilation is complete. */
-
 #endif /* HAVE_PR_MEMMAP */
+
+        // Propagate the exception, if one exists. Also, don't leave the stale
+        // exception on this context.
+        // NB: The caller must stick exception into a rooted slot (probably on
+        // its context) as soon as possible to avoid GC hazards.
+        if (exception) {
+            JS_SetOptions(cx, oldopts);
+            if (!script) {
+                JS_GetPendingException(cx, exception);
+                JS_ClearPendingException(cx);
+            }
+        }
     }
 
     if (!script) {
@@ -1474,14 +1496,27 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
         if (!newEntry || !mInProgressImports.Put(lfhash, newEntry))
             return NS_ERROR_OUT_OF_MEMORY;
 
+        jsval exception = JSVAL_VOID;
         rv = GlobalForLocation(componentFile, &newEntry->global,
-                               &newEntry->location);
+                               &newEntry->location, &exception);
 
         mInProgressImports.Remove(lfhash);
 
         if (NS_FAILED(rv)) {
             *_retval = nsnull;
-            return NS_ERROR_FILE_NOT_FOUND;
+
+            if (!JSVAL_IS_VOID(exception)) {
+                // An exception was thrown during compilation. Propagate it
+                // out to our caller so they can report it.
+                JSContext *callercx;
+                cc->GetJSContext(&callercx);
+                JS_SetPendingException(callercx, exception);
+                cc->SetExceptionWasThrown(PR_TRUE);
+                return NS_OK;
+            }
+
+            // Something failed, but we don't know what it is, guess.
+            return rv;
         }
 
         mod = newEntry;
