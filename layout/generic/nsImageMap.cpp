@@ -983,7 +983,8 @@ nsImageMap::Blur(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
+nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus)
+{
   //Set which one of our areas changed focus
   nsCOMPtr<nsIDOMEventTarget> target;
   if (NS_SUCCEEDED(aEvent->GetTarget(getter_AddRefs(target))) && target) {
@@ -994,28 +995,27 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
         Area* area = (Area*) mAreas.ElementAt(i);
         nsCOMPtr<nsIContent> areaContent;
         area->GetArea(getter_AddRefs(areaContent));
-        if (areaContent) {
-          if (areaContent.get() == targetContent.get()) {
-            //Set or Remove internal focus
-            area->HasFocus(aFocus);
-            //Now invalidate the rect
-            nsCOMPtr<nsIDocument> doc = targetContent->GetDocument();
-            //This check is necessary to see if we're still attached to the doc
-            if (doc) {
-              nsIPresShell *presShell = doc->GetPrimaryShell();
-              if (presShell) {
-                nsIFrame* imgFrame = presShell->GetPrimaryFrameFor(targetContent);
-                if (imgFrame) {
-                  nsPresContext *presContext = presShell->GetPresContext();
-                  if (presContext) {
-                    nsRect dmgRect;
-                    area->GetRect(presContext, dmgRect);
-                    imgFrame->Invalidate(dmgRect, PR_TRUE);
-                  }
+        if (areaContent.get() == targetContent.get()) {
+          //Set or Remove internal focus
+          area->HasFocus(aFocus);
+          //Now invalidate the rect
+          nsCOMPtr<nsIDocument> doc = targetContent->GetDocument();
+          //This check is necessary to see if we're still attached to the doc
+          if (doc) {
+            nsIPresShell *presShell = doc->GetPrimaryShell();
+            if (presShell) {
+              nsIFrame* imgFrame = presShell->GetPrimaryFrameFor(targetContent);
+              if (imgFrame) {
+                nsPresContext *presContext = presShell->GetPresContext();
+                if (presContext) {
+                  nsRect dmgRect;
+                  area->GetRect(presContext, dmgRect);
+                  imgFrame->Invalidate(dmgRect, PR_FALSE);
                 }
               }
             }
           }
+          break;
         }
       }
     }
