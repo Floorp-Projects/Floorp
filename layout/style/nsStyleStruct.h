@@ -627,7 +627,7 @@ struct nsStyleOutline {
 #endif
  
   nsStyleSides  mOutlineRadius;    // [reset] length, percent
-  																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
+                                   // (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
 
   // Note that these are specified values.  You can get the actual values with
   // GetOutlineWidth and GetOutlineOffset.  You cannot get the computed values
@@ -853,13 +853,13 @@ struct nsStyleVisibility {
   nsCOMPtr<nsIAtom> mLangGroup;        // [inherited]
  
   PRBool IsVisible() const {
-		return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);
-	}
+    return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);
+  }
 
-	PRBool IsVisibleOrCollapsed() const {
-		return ((mVisible == NS_STYLE_VISIBILITY_VISIBLE) ||
-						(mVisible == NS_STYLE_VISIBILITY_COLLAPSE));
-	}
+  PRBool IsVisibleOrCollapsed() const {
+    return ((mVisible == NS_STYLE_VISIBILITY_VISIBLE) ||
+            (mVisible == NS_STYLE_VISIBILITY_COLLAPSE));
+  }
 };
 
 struct nsStyleDisplay {
