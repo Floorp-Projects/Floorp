@@ -173,7 +173,6 @@ nsresult nsVideoDecoder::StartProgress()
 
 nsresult nsVideoDecoder::StopProgress()
 {
-  return NS_OK;
   nsresult rv = NS_OK;
   if (mProgressTimer) {
     rv = mProgressTimer->Cancel();
