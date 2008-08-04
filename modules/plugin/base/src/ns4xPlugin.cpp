@@ -2451,7 +2451,6 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         }
         return NS_SUCCEEDED(rv) ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
       }
-      break;
 
     case NPPVpluginKeepLibraryInMemory: {
       NPBool bCached = (result != nsnull);
