@@ -53,15 +53,15 @@
 #include "jsarray.h"            // higher-level library and API headers
 #include "jsbool.h"
 #include "jscntxt.h"
+#include "jsdbgapi.h"
+#include "jsemit.h"
 #include "jsfun.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsscript.h"
 #include "jsscope.h"
-#include "jsemit.h"
-#include "jsdbgapi.h"
+#include "jsscript.h"
 #include "jstracer.h"
 
 #include "jsautooplen.h"        // generated headers last
@@ -423,25 +423,25 @@ public:
 
 /* Iterate over all slots in the frame, consisting of args, vars, and stack
    (except for the top-level frame which does not have args or vars. */
-#define FORALL_FRAME_SLOTS(f, depth, code)                                    \
+#define FORALL_FRAME_SLOTS(fp, depth, code)                                   \
     JS_BEGIN_MACRO                                                            \
         jsval* vp;                                                            \
         jsval* vpstop;                                                        \
-        if (f->callee) {                                                      \
+        if (fp->callee) {                                                     \
             if (depth == 0) {                                                 \
                 SET_VPNAME("this");                                           \
-                vp = &f->argv[-1];                                            \
+                vp = &fp->argv[-1];                                           \
                 code;                                                         \
                 SET_VPNAME("argv");                                           \
-                vp = &f->argv[0]; vpstop = &f->argv[f->fun->nargs];           \
+                vp = &fp->argv[0]; vpstop = &fp->argv[fp->fun->nargs];        \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
             }                                                                 \
             SET_VPNAME("vars");                                               \
-            vp = f->slots; vpstop = &f->slots[f->script->nfixed];             \
+            vp = fp->slots; vpstop = &fp->slots[fp->script->nfixed];          \
             while (vp < vpstop) { code; ++vp; INC_VPNUM(); }                  \
         }                                                                     \
         SET_VPNAME("stack");                                                  \
-        vp = StackBase(f); vpstop = f->regs->sp;                              \
+        vp = StackBase(fp); vpstop = fp->regs->sp;                            \
         while (vp < vpstop) { code; ++vp; INC_VPNUM(); }                      \
     JS_END_MACRO
 
@@ -456,15 +456,16 @@ public:
         for (n = 0; n < callDepth; ++n) { fp = fp->down; }                    \
         entryFrame = fp;                                                      \
         unsigned frames = callDepth+1;                                        \
-        JSStackFrame** fstack = (JSStackFrame **)alloca(frames * sizeof (JSStackFrame *)); \
+        JSStackFrame** fstack =                                               \
+            (JSStackFrame**) alloca(frames * sizeof (JSStackFrame*));         \
         JSStackFrame** fspstop = &fstack[frames];                             \
         JSStackFrame** fsp = fspstop-1;                                       \
         fp = currentFrame;                                                    \
         for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }  \
         unsigned depth;                                                       \
         for (depth = 0, fsp = fstack; fsp < fspstop; ++fsp, ++depth) {        \
-            JSStackFrame* f = (*fsp);                                         \
-            FORALL_FRAME_SLOTS(f, depth, code);                               \
+            fp = (*fsp);                                                      \
+            FORALL_FRAME_SLOTS(fp, depth, code);                              \
         }                                                                     \
     JS_END_MACRO
 
@@ -515,14 +516,14 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     /* the first time we compile a tree this will be empty as we add entries lazily */
     uint16* gslots = treeInfo->globalSlots.data();
     uint8* m = globalTypeMap;
-    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, 
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         import(gp_ins, nativeGlobalOffset(vp), vp, *m, vpname, vpnum, NULL);
-        m++; 
+        m++;
     );
     ptrdiff_t offset = -treeInfo->nativeStackBase + 8;
     m = stackTypeMap;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        import(lirbuf->sp, offset, vp, *m, vpname, vpnum, f);
+        import(lirbuf->sp, offset, vp, *m, vpname, vpnum, fp);
         m++; offset += sizeof(double);
     );
 
@@ -634,22 +635,22 @@ done:
     fp = currentFrame;
     for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }
     for (fsp = fstack; fsp < fspstop; ++fsp) {
-        JSStackFrame* f = *fsp;
-        if (f->callee) {
+        fp = *fsp;
+        if (fp->callee) {
             if (fsp == fstack) {
-                unsigned nargs = JS_MAX(f->fun->nargs, f->argc);
-                if (size_t(p - &f->argv[-1]) < nargs + 1)
-                    RETURN(offset + size_t(p - &f->argv[-1]) * sizeof(double));
+                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
+                if (size_t(p - &fp->argv[-1]) < nargs + 1)
+                    RETURN(offset + size_t(p - &fp->argv[-1]) * sizeof(double));
                 offset += (nargs + 1) * sizeof(double);
             }
-            if (size_t(p - &f->slots[0]) < f->script->nfixed)
-                RETURN(offset + size_t(p - &f->slots[0]) * sizeof(double));
-            offset += f->script->nfixed * sizeof(double);
+            if (size_t(p - &fp->slots[0]) < fp->script->nfixed)
+                RETURN(offset + size_t(p - &fp->slots[0]) * sizeof(double));
+            offset += fp->script->nfixed * sizeof(double);
         }
-        jsval* spbase = StackBase(f);
-        if (size_t(p - spbase) < size_t(f->regs->sp - spbase))
+        jsval* spbase = StackBase(fp);
+        if (size_t(p - spbase) < size_t(fp->regs->sp - spbase))
             RETURN(offset + size_t(p - spbase) * sizeof(double));
-        offset += size_t(f->regs->sp - spbase) * sizeof(double);
+        offset += size_t(fp->regs->sp - spbase) * sizeof(double);
     }
 
     /*
@@ -784,7 +785,7 @@ BuildNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         if (!ValueToNative(*vp, *mp, np + gslots[n]))
             return false;
-        ++mp; 
+        ++mp;
     );
     debug_only(printf("\n");)
     return true;
@@ -813,10 +814,11 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
     uint8* mp_base = mp;
     /* Root all string and object references first (we don't need to call the GC for this). */
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && 
-                !NativeToValue(cx, *vp, *mp, np + gslots[n]))
+        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) &&
+            !NativeToValue(cx, *vp, *mp, np + gslots[n])) {
             return false;
-        ++mp; 
+        }
+        ++mp;
     );
     /* Now do this again but this time for all values (properly quicker than actually checking
        the type and excluding strings and objects). The GC might kick in when we store doubles,
@@ -825,7 +827,7 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         if (!NativeToValue(cx, *vp, *mp, np + gslots[n]))
             return false;
-        ++mp; 
+        ++mp;
     );
     debug_only(printf("\n");)
     return true;
@@ -847,8 +849,8 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 
     // Restore thisp from the now-restored argv[-1] in each pending frame.
     unsigned n = callDepth;
-    for (JSStackFrame* f = cx->fp; n-- != 0; f = f->down)
-        f->thisp = JSVAL_TO_OBJECT(f->argv[-1]);
+    for (JSStackFrame* fp = cx->fp; n-- != 0; fp = fp->down)
+        fp->thisp = JSVAL_TO_OBJECT(fp->argv[-1]);
 
     /* Now do this again but this time for all values (properly quicker than actually checking
        the type and excluding strings and objects). The GC might kick in when we store doubles,
@@ -930,8 +932,8 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     unsigned index = treeInfo->globalSlots.length();
     treeInfo->globalSlots.add(slot);
     treeInfo->globalTypeMap.add(getCoercedType(*vp));
-    import(gp_ins, slot*sizeof(double), vp, treeInfo->globalTypeMap.data()[index], 
-            "global", index, NULL);
+    import(gp_ins, slot*sizeof(double), vp, treeInfo->globalTypeMap.data()[index],
+           "global", index, NULL);
     return true;
 }
 
@@ -1462,7 +1464,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     printf("entering trace at %s:%u@%u\n",
            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
            cx->fp->regs->pc - cx->fp->script->code);
-#endif    
+#endif
     if (!BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap.data(), global) ||
         !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
         AUDIT(typeMapMismatchAtEntry);
@@ -1541,7 +1543,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* is the recorder currently active? */
-    if (tm->recorder) 
+    if (tm->recorder)
         return js_ContinueRecording(cx, tm->recorder, oldpc);
 
     /* check if our quick cache has an entry for this ip, otherwise ask fragmento. */
@@ -1558,12 +1560,12 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 
     /* if we have not compiled code for this entry point yet, consider doing so now. */
     if (!f->code()) {
-        if (++f->hits() >= HOTLOOP) 
+        if (++f->hits() >= HOTLOOP)
             return js_RecordTree(cx, tm, f);
         return false;
     }
     JS_ASSERT(!tm->recorder);
-    
+
     return js_ExecuteTree(cx, f, inlineCallCount);
 }
 
