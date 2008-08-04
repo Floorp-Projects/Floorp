@@ -408,6 +408,8 @@ nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParse
 
 nsHTMLMediaElement::~nsHTMLMediaElement()
 {
+  if (mDecoder) 
+    mDecoder->Stop();
 }
 
 NS_IMETHODIMP
