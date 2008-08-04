@@ -1312,6 +1312,8 @@ public:
   nsresult OnFileAvailable(nsIFile* aFile);
 
   nsresult ServeStreamAsFile(nsIRequest *request, nsISupports *ctxt);
+  
+  nsIPluginInstance *GetPluginInstance() { return mInstance; }
 
 private:
   nsresult SetUpCache(nsIURI* aURL); // todo: see about removing this...
@@ -2030,13 +2032,23 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   if (httpChannel) {
     PRUint32 responseCode = 0;
     rv = httpChannel->GetResponseStatus(&responseCode);
-    if (NS_FAILED(rv) || responseCode > 206) { // not normal
+    if (NS_FAILED(rv)) {
       // NPP_Notify() will be called from OnStopRequest
       // in ns4xPluginStreamListener::CleanUpStream
       // return error will cancel this request
       // ...and we also need to tell the plugin that
       mRequestFailed = PR_TRUE;
       return NS_ERROR_FAILURE;
+    }
+
+    if (responseCode > 206) { // not normal
+      PRBool bWantsAllNetworkStreams = PR_FALSE;
+      mInstance->GetValue(nsPluginInstanceVariable_WantsAllNetworkStreams,
+                          (void *)&bWantsAllNetworkStreams);
+      if(!bWantsAllNetworkStreams) {
+        mRequestFailed = PR_TRUE;
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 
@@ -7122,8 +7134,22 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
 
   PRUint32 responseCode = 0;
   rv = httpChannel->GetResponseStatus(&responseCode);
-  if (NS_FAILED(rv) || responseCode != 200) {
+  if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
+  }
+  
+  // get nsPluginStreamListenerPeer* ptr from finalStreamListener
+  nsPluginStreamListenerPeer *pslp =
+    reinterpret_cast<nsPluginStreamListenerPeer*>(finalStreamListener.get());
+
+  if (responseCode != 200) {
+    PRBool bWantsAllNetworkStreams = PR_FALSE;
+    pslp->GetPluginInstance()->
+      GetValue(nsPluginInstanceVariable_WantsAllNetworkStreams,
+               (void *)&bWantsAllNetworkStreams);
+    if (!bWantsAllNetworkStreams){
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // if server cannot continue with byte range (206 status) and sending us whole object (200 status)
@@ -7131,9 +7157,6 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
   mStreamConverter = finalStreamListener;
   mRemoveMagicNumber = PR_TRUE;
 
-  //get nsPluginStreamListenerPeer* ptr from finalStreamListener
-  nsPluginStreamListenerPeer *pslp = reinterpret_cast<nsPluginStreamListenerPeer*>
-                                                     (finalStreamListener.get());
   rv = pslp->ServeStreamAsFile(request, ctxt);
   return rv;
 }
