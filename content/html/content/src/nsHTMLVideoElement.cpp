@@ -143,10 +143,10 @@ nsresult nsHTMLVideoElement::BindToTree(nsIDocument* aDocument, nsIContent* aPar
 void nsHTMLVideoElement::UnbindFromTree(PRBool aDeep,
                                         PRBool aNullParent)
 {
+  nsHTMLMediaElement::UnbindFromTree(aDeep, aNullParent);
+
   if (mDecoder) 
     mDecoder->ElementUnavailable();
-
-  nsHTMLMediaElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 nsresult nsHTMLVideoElement::InitializeDecoder(nsAString& aChosenMediaResource)
