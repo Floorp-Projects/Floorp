@@ -614,10 +614,6 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             goto out;
         }
 
-        /*
-         * FIXME bug 346749: let declarations at the top level in a script are
-         * turned into var declarations and do not introduce block nodes.
-         */
         JS_ASSERT(!cg.treeContext.blockNode);
 
         if (!js_FoldConstants(cx, pn, &cg.treeContext) ||
@@ -3330,16 +3326,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             JS_ASSERT(tc->blockChain == stmt->u.blockObj);
             obj = tc->blockChain;
         } else {
-            if (!stmt) {
+            if (!stmt || (stmt->flags & SIF_BODY_BLOCK)) {
                 /*
-                 * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=346749
-                 *
-                 * This is a hard case that requires more work. In particular,
-                 * in many cases, we're trying to emit code as we go. However,
-                 * this means that we haven't necessarily finished processing
-                 * all let declarations in the implicit top-level block when
-                 * we emit a reference to one of them.  For now, punt on this
-                 * and pretend this is a var declaration.
+                 * ES4 specifies that let at top level and at body-block scope
+                 * does not shadow var, so convert back to var.
                  */
                 CURRENT_TOKEN(ts).type = TOK_VAR;
                 CURRENT_TOKEN(ts).t_op = JSOP_DEFVAR;
