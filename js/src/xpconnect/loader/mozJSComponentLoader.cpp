@@ -1192,8 +1192,8 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponent,
         // The script wasn't in the fastload cache, so compile it now.
         LOG(("Slow loading %s\n", nativePath.get()));
 
-        // If |exception| is non-null, then our caller wants to propagate any
-        // exceptions out to our caller. Ensure that the engine doesn't
+        // If |exception| is non-null, then our caller wants us to propagate
+        // any exceptions out to our caller. Ensure that the engine doesn't
         // eagerly report the exception.
         uint32 oldopts = 0;
         if (exception) {
