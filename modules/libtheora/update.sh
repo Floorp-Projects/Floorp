@@ -47,3 +47,4 @@ cp $1/lib/internal.h ./lib/internal.h
 cp $1/include/theora/theora.h ./include/theora/theora.h
 cp $1/include/theora/theoradec.h ./include/theora/theoradec.h
 cp $1/include/theora/codec.h ./include/theora/codec.h
+patch -p3 <changeset_r15144.diff
