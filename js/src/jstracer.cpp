@@ -1547,10 +1547,10 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
     /* check if our quick cache has an entry for this ip, otherwise ask fragmento. */
     jsbytecode* pc = cx->fp->regs->pc;
     Fragment* f;
-    JSFragmentCacheEntry* cacheEntry = &tm->fcache[((long)pc) % JS_FRAGMENT_CACHE_SIZE];
-    if (cacheEntry->pc == pc)
+    JSFragmentCacheEntry* cacheEntry = &tm->fcache[jsuword(pc) & JS_FRAGMENT_CACHE_MASK];
+    if (cacheEntry->pc == pc) {
         f = cacheEntry->fragment;
-    else {
+    } else {
         f = tm->fragmento->getLoop(pc);
         cacheEntry->pc = pc;
         cacheEntry->fragment = f;
