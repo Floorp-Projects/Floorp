@@ -93,7 +93,9 @@ oggplay_callback_theora (OGGZ * oggz, ogg_packet * op, long serialno,
    * always decode headers
    */
   if (theora_packet_isheader(op)) {
-    theora_decode_header(&(decoder->video_info), &(decoder->video_comment), op);
+    if (theora_decode_header(&(decoder->video_info), &(decoder->video_comment), op) < 0)
+      return -1;
+
     /*
      * initialise width/stride/height data (this is common to all frames).
      * Use the buffer stride for the width to avoid passing negative stride
@@ -108,7 +110,14 @@ oggplay_callback_theora (OGGZ * oggz, ogg_packet * op, long serialno,
     }
     return 0;
   } 
-  
+  else if (decoder->remaining_header_packets != 0) {
+    /*
+     * Invalid Ogg file. Missing headers
+     *
+     */
+    return -1;
+  }
+
   if (!decoder->decoder.active) {
     /*
      * don't decode other packets
@@ -130,8 +139,11 @@ oggplay_callback_theora (OGGZ * oggz, ogg_packet * op, long serialno,
   gettimeofday(&tv, NULL);
 #endif
 
-  theora_decode_packetin(&(decoder->video_handle), op);
-  theora_decode_YUVout(&(decoder->video_handle), &buffer);
+  if (theora_decode_packetin(&(decoder->video_handle), op) < 0)
+    return -1;
+
+  if (theora_decode_YUVout(&(decoder->video_handle), &buffer) < 0)
+    return -1;
 
 #if TIME_THEORA_DECODE
   gettimeofday(&tv2, NULL);
