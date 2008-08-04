@@ -44,6 +44,7 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsAnnotationService.h"
+#include "nsPlacesTables.h"
 
 #include "nsIArray.h"
 #include "nsArrayEnumerator.h"
@@ -792,16 +793,7 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   // moz_places
   if (!tableExists) {
     *aMadeChanges = DB_MIGRATION_CREATED;
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_places ("
-        "id INTEGER PRIMARY KEY, "
-        "url LONGVARCHAR, "
-        "title LONGVARCHAR, "
-        "rev_host LONGVARCHAR, "
-        "visit_count INTEGER DEFAULT 0, "
-        "hidden INTEGER DEFAULT 0 NOT NULL, "
-        "typed INTEGER DEFAULT 0 NOT NULL, "
-        "favicon_id INTEGER, "
-        "frecency INTEGER DEFAULT -1 NOT NULL)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -830,13 +822,7 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_historyvisits"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_historyvisits ("
-        "id INTEGER PRIMARY KEY, "
-        "from_visit INTEGER, "
-        "place_id INTEGER, "
-        "visit_date INTEGER, "
-        "visit_type INTEGER, "
-        "session INTEGER)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -865,11 +851,7 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_inputhistory"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!tableExists) {
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_inputhistory ("
-        "place_id INTEGER NOT NULL, "
-        "input LONGVARCHAR NOT NULL, "
-        "use_count INTEGER, "
-        "PRIMARY KEY (place_id, input))"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_INPUTHISTORY);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
