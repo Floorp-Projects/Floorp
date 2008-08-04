@@ -1843,8 +1843,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
      */
     tc = &cg->treeContext;
     atom = pn->pn_atom;
-    if (declType != VAR_DECL &&
-        (stmt = js_LexicalLookup(tc, atom, &slot, declType))) {
+    if ((stmt = js_LexicalLookup(tc, atom, &slot, declType))) {
         if (stmt->type == STMT_WITH)
             return JS_TRUE;
 
@@ -1885,14 +1884,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         /*
          * We are compiling a script or eval, and eval is not inside a function
          * activation.
-         *
-         * We can't optimize if this name use is within a with statement in
-         * the same compilation unit, or if the compiler was invoked by eval
-         * called inside a with statement in its caller.
          */
-        if (js_InWithStatement(tc))
-            return JS_TRUE;
-
         fp = cx->fp;
         if (fp->scopeChain != fp->varobj)
             return JS_TRUE;
