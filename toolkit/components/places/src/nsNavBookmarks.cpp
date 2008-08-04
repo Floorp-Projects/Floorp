@@ -50,6 +50,7 @@
 #include "nsIUUIDGenerator.h"
 #include "prprf.h"
 #include "nsILivemarkService.h"
+#include "nsPlacesTriggers.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Type = 1;
@@ -381,6 +382,10 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
         "CREATE TABLE moz_keywords ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "keyword TEXT UNIQUE)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Create trigger to update as well
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_KEYWORD_VALIDITY_TRIGGER);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

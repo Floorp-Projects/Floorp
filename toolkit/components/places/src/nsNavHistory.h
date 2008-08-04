@@ -461,10 +461,10 @@ protected:
   nsresult InitDB(PRInt16 *aMadeChanges);
   nsresult InitFunctions();
   nsresult InitStatements();
-  nsresult CreateTriggers();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
   nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
+  nsresult MigrateV7Up(mozIStorageConnection *aDBConn);
   nsresult EnsureCurrentSchema(mozIStorageConnection* aDBConn, PRBool *aMadeChanges);
   nsresult CleanUpOnQuit();
 
