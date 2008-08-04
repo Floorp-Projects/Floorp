@@ -379,8 +379,8 @@ nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
     // anonymous ones due to cells in rows.
     InsertColGroups(0, mColGroups.FirstChild());
     AppendRowGroups(mFrames.FirstChild());
-    // calc collapsing borders if this is the default (row group, col group, child list)
-    if (!aChildList && IsBorderCollapse()) {
+    // calc collapsing borders 
+    if (IsBorderCollapse()) {
       nsRect damageArea(0, 0, GetColCount(), GetRowCount());
       SetBCDamageArea(damageArea);
     }
