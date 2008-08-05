@@ -87,6 +87,8 @@ EXPORTS		= \
 		nsCSSPseudoClasses.h \
 		nsCSSPseudoElementList.h \
 		nsCSSPseudoElements.h \
+		nsCSSRuleProcessor.h \
+		nsCSSStyleSheet.h \
 		nsCSSStruct.h \
 		nsCSSValue.h \
 		nsDOMCSSDeclaration.h \

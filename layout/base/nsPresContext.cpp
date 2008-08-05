@@ -79,6 +79,7 @@
 #include "nsLayoutUtils.h"
 #include "nsIViewManager.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsCSSRuleProcessor.h"
 #include "nsStyleChangeList.h"
 #include "nsRuleNode.h"
 
@@ -1385,6 +1386,9 @@ nsPresContext::ThemeChangedInternal()
     mLookAndFeel->LookAndFeelChanged();
     sLookAndFeelChanged = PR_FALSE;
   }
+
+  // This will force the system metrics to be generated the next time they're used
+  nsCSSRuleProcessor::FreeSystemMetrics();
 
   // Changes in theme can change system colors (whose changes are
   // properly reflected in computed style data), system fonts (whose
