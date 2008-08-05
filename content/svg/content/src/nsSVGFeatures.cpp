@@ -189,6 +189,10 @@ ElementSupportsAttributes(const nsIAtom *aTagName, PRUint16 aAttr)
 PRBool
 NS_SVG_PassesConditionalProcessingTests(nsIContent *aContent)
 {
+  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+    return PR_FALSE;
+  }
+
   if (!ElementSupportsAttributes(aContent->Tag(), ATTRS_CONDITIONAL)) {
     return PR_TRUE;
   }
