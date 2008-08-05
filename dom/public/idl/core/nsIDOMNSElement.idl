@@ -41,7 +41,7 @@
 
 interface nsIDOMNodeList;
 
-[scriptable, uuid(A1901819-5EB1-41FF-B0E3-E1EC61E1BF1E)]
+[scriptable, uuid(f0aef489-18c5-4de6-99d5-58b3758b098c)]
 interface nsIDOMNSElement : nsISupports
 {
   /*
@@ -126,4 +126,27 @@ interface nsIDOMNSElement : nsISupports
    * scrollable, the scroll bars are included inside this width.
    */
   readonly attribute long             clientWidth;
+
+  /**
+   * Similar as the attributes on nsIDOMNode, but navigates just elements
+   * rather than all nodes.
+   *
+   * Defined by the ElementTraversal spec.
+   */
+  readonly attribute nsIDOMElement firstElementChild;
+  readonly attribute nsIDOMElement lastElementChild;
+  readonly attribute nsIDOMElement previousElementSibling;
+  readonly attribute nsIDOMElement nextElementSibling;
+
+  /**
+   * Returns the number of child nodes that are nsIDOMElements.
+   *
+   * Defined by the ElementTraversal spec.
+   */
+  readonly attribute unsigned long childElementCount;
+  
+  /**
+   * Returns a live nsIDOMNodeList of the current child elements.
+   */
+  readonly attribute nsIDOMNodeList children;
 };

@@ -784,6 +784,164 @@ nsNode3Tearoff::IsDefaultNamespace(const nsAString& aNamespaceURI,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNSElementTearoff::GetFirstElementChild(nsIDOMElement** aResult)
+{
+  *aResult = nsnull;
+
+  nsXULElement* xul = nsXULElement::FromContent(mContent);
+  if (xul) {
+    xul->EnsureContentsGenerated();
+  }
+
+  nsAttrAndChildArray& children = mContent->mAttrsAndChildren;
+  PRUint32 i, count = children.ChildCount();
+  for (i = 0; i < count; ++i) {
+    nsIContent* child = children.ChildAt(i);
+    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+      return CallQueryInterface(child, aResult);
+    }
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetLastElementChild(nsIDOMElement** aResult)
+{
+  *aResult = nsnull;
+
+  nsXULElement* xul = nsXULElement::FromContent(mContent);
+  if (xul) {
+    xul->EnsureContentsGenerated();
+  }
+
+  nsAttrAndChildArray& children = mContent->mAttrsAndChildren;
+  PRUint32 i = children.ChildCount();
+  while (i > 0) {
+    nsIContent* child = children.ChildAt(--i);
+    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+      return CallQueryInterface(child, aResult);
+    }
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetPreviousElementSibling(nsIDOMElement** aResult)
+{
+  *aResult = nsnull;
+
+  nsIContent* parent = mContent->GetParent();
+  if (!parent) {
+    return NS_OK;
+  }
+
+  nsXULElement* xul = nsXULElement::FromContent(parent);
+  if (xul) {
+    xul->EnsureContentsGenerated();
+  }
+
+  NS_ASSERTION(parent->IsNodeOfType(nsINode::eELEMENT) ||
+               parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
+               "Parent content must be an element or a doc fragment");
+
+  nsAttrAndChildArray& children =
+    static_cast<nsGenericElement*>(parent)->mAttrsAndChildren;
+  PRInt32 index = children.IndexOfChild(mContent);
+  if (index < 0) {
+    return NS_OK;
+  }
+
+  PRUint32 i = index;
+  while (i > 0) {
+    nsIContent* child = children.ChildAt((PRUint32)--i);
+    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+      return CallQueryInterface(child, aResult);
+    }
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetNextElementSibling(nsIDOMElement** aResult)
+{
+  *aResult = nsnull;
+
+  nsIContent* parent = mContent->GetParent();
+  if (!parent) {
+    return NS_OK;
+  }
+
+  nsXULElement* xul = nsXULElement::FromContent(parent);
+  if (xul) {
+    xul->EnsureContentsGenerated();
+  }
+
+  NS_ASSERTION(parent->IsNodeOfType(nsINode::eELEMENT) ||
+               parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
+               "Parent content must be an element or a doc fragment");
+
+  nsAttrAndChildArray& children =
+    static_cast<nsGenericElement*>(parent)->mAttrsAndChildren;
+  PRInt32 index = children.IndexOfChild(mContent);
+  if (index < 0) {
+    return NS_OK;
+  }
+
+  PRUint32 i, count = children.ChildCount();
+  for (i = (PRUint32)index + 1; i < count; ++i) {
+    nsIContent* child = children.ChildAt(i);
+    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+      return CallQueryInterface(child, aResult);
+    }
+  }
+  
+  return NS_OK;
+}
+
+nsContentList*
+nsNSElementTearoff::GetChildrenList()
+{
+  nsGenericElement::nsDOMSlots *slots = mContent->GetDOMSlots();
+  NS_ENSURE_TRUE(slots, nsnull);
+
+  if (!slots->mChildrenList) {
+    slots->mChildrenList = new nsContentList(mContent, nsGkAtoms::_asterix,
+                                             kNameSpaceID_Wildcard, PR_FALSE);
+  }
+
+  return slots->mChildrenList;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetChildElementCount(PRUint32* aResult)
+{
+  *aResult = 0;
+
+  nsContentList* list = GetChildrenList();
+  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+
+  *aResult = list->Length(PR_TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetChildren(nsIDOMNodeList** aResult)
+{
+  *aResult = nsnull;
+
+  nsContentList* list = GetChildrenList();
+  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*aResult = list);
+
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 
 
@@ -3885,6 +4043,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
       }
       if (tmp->IsNodeOfType(nsINode::eXUL))
         NS_IF_RELEASE(slots->mControllers);
+      slots->mChildrenList = nsnull;
     }
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -3941,6 +4100,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
       cb.NoteXPCOMChild(slots->mAttributeMap.get());
       if (tmp->IsNodeOfType(nsINode::eXUL))
         cb.NoteXPCOMChild(slots->mControllers);
+      cb.NoteXPCOMChild(
+        static_cast<nsIDOMNodeList*>(slots->mChildrenList.get()));
     }
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
