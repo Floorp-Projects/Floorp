@@ -7144,7 +7144,14 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewSVGAFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsGkAtoms::text) {
-    newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
+    nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
+    if (ancestorFrame) {
+      nsISVGTextContentMetrics* metrics;
+      CallQueryInterface(ancestorFrame, &metrics);
+      // Text cannot be nested
+      if (!metrics)
+        newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
+    }
   }
   else if (aTag == nsGkAtoms::tspan) {
     nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
