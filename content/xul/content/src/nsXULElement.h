@@ -643,6 +643,9 @@ protected:
     //     access to mPrototype anymore.
     friend class nsNodeUtils;
 
+    // This can be removed if EnsureContentsGenerated dies.
+    friend class nsNSElementTearoff;
+
     nsXULElement(nsINodeInfo* aNodeInfo);
 
     // Implementation methods
