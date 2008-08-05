@@ -253,6 +253,14 @@ DAVCollection.prototype = {
     return this._makeRequest.async(this, onComplete, "POST", path,
                                    this._defaultHeaders, data);
   },
+  
+  formPost: function DC_formPOST(path, data, onComplete) {
+    let headers = {'Content-type': 'application/x-www-form-urlencoded'};
+    headers.__proto__ = this._defaultHeaders;
+    
+    return this._makeRequest.async(this, onComplete, "POST", path,
+                                   headers, data);
+  },
 
   PUT: function DC_PUT(path, data, onComplete) {
     return this._makeRequest.async(this, onComplete, "PUT", path,
