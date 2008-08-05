@@ -1527,7 +1527,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
             }
 
             // Something failed, but we don't know what it is, guess.
-            return rv;
+            return NS_ERROR_FILE_NOT_FOUND;
         }
 
         mod = newEntry;
