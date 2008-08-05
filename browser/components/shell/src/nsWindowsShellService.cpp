@@ -312,7 +312,7 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
     rv = OpenKeyForReading(HKEY_CLASSES_ROOT, key, &theKey);
     if (NS_FAILED(rv)) {
       *aIsDefaultBrowser = PR_FALSE;
-      break;
+      return NS_OK;
     }
 
     DWORD len = sizeof currValue;
