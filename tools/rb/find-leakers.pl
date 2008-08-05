@@ -36,14 +36,16 @@
 #
 # ***** END LICENSE BLOCK *****
 
+use strict;
+
 my %allocs;
+my %classes;
 my %counter;
-my $id = 0;
 
 LINE: while (<>) {
     next LINE if (! /^</);
-    my @fields = split(/ /, $_);
 
+    my @fields = split(/ /, $_);
     my $class = shift(@fields);
     my $obj   = shift(@fields);
     my $sno   = shift(@fields);
@@ -51,15 +53,28 @@ LINE: while (<>) {
     my $cnt   = shift(@fields);
 
     if ($op eq 'AddRef' && $cnt == 1) {
+        # Example: <nsStringBuffer> 0x01AFD3B8 1 AddRef 1
+
         $allocs{$obj} = ++$counter{$class}; # the order of allocation
         $classes{$obj} = $class;
     }
     elsif ($op eq 'Release' && $cnt == 0) {
+        # Example: <nsStringBuffer> 0x01AFD3B8 1 Release 0
+
         delete($allocs{$obj});
+        delete($classes{$obj});
     }
 }
 
-foreach $key (keys(%allocs)) {
+
+sub sort_by_value {
+    my %x = @_;
+    sub _by_value($) { my %x = @_; $x{$a} cmp $x{$b}; } 
+    sort _by_value keys(%x);
+} 
+
+
+foreach my $key (&sort_by_value(%allocs)) {
+    # Example: 0x03F1D818 (2078) @ <nsStringBuffer>
     print "$key (", $allocs{$key}, ") @ ", $classes{$key}, "\n";
 }
-
