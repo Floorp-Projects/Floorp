@@ -54,12 +54,14 @@
 
 var EXPORTED_SYMBOLS = ["SpatialNavigation"];
 
-function SpatialNavigation (browser, callback)
-{
-  browser.addEventListener("keypress", function (event) { _onInputKeyPress(event, callback) }, true);
-};
+var SpatialNavigation = {
 
-SpatialNavigation.prototype = {
+  init: function(browser, callback) {
+    browser.addEventListener("keypress", function (event) { _onInputKeyPress(event, callback) }, true);
+  },
+  
+  uninit: function() {
+  }
 };
 
 
@@ -78,8 +80,6 @@ var gDirectionalBias = 10;
 var gRectFudge = 1;
 
 function _onInputKeyPress (event, callback) {
-  
-  var target = event.target;
 
   // If it isn't an arrow key, bail.
   if (event.keyCode != event.DOM_VK_LEFT  &&
@@ -90,6 +90,13 @@ function _onInputKeyPress (event, callback) {
   
   // check to see if we are in a textarea or text input element, and if so,
   // ensure that we let the arrow keys work properly.
+
+  var target = event.target;
+  
+  if (target instanceof Ci.nsIDOMHTMLHtmlElement) {
+      _focusNextUsingCmdDispatcher(event, callback);
+      return;
+  }
 
   if ((target instanceof Ci.nsIDOMHTMLInputElement && (target.type == "text" || target.type == "password")) ||
       target instanceof Ci.nsIDOMHTMLTextAreaElement ) {
@@ -131,7 +138,7 @@ function _onInputKeyPress (event, callback) {
   }
 
   function snavfilter(node) {
-    
+
     if (node instanceof Ci.nsIDOMHTMLLinkElement ||
         node instanceof Ci.nsIDOMHTMLAnchorElement) {
       // if a anchor doesn't have a href, don't target it.
@@ -155,13 +162,14 @@ function _onInputKeyPress (event, callback) {
   var distanceToBestElement = Infinity;
   var focusedRect = _inflateRect(target.getBoundingClientRect(),
                                  - gRectFudge);
+
   var doc = target.ownerDocument;
-  
+
   var treeWalker = doc.createTreeWalker(doc, Ci.nsIDOMNodeFilter.SHOW_ELEMENT, snavfilter, false);
   var nextNode;
   
   while ((nextNode = treeWalker.nextNode())) {
-    
+
     if (nextNode == target)
       continue;
 
@@ -170,8 +178,10 @@ function _onInputKeyPress (event, callback) {
     
     if (! _isRectInDirection(event, focusedRect, nextRect))
       continue;
-    
+
     var distance = _spatialDistance(event, focusedRect, nextRect);
+
+    //dump("looking at: " + nextNode + " " + distance);
     
     if (distance <= distanceToBestElement && distance > 0) {
       distanceToBestElement = distance;
@@ -180,7 +190,8 @@ function _onInputKeyPress (event, callback) {
   }
   
   if (bestElementToFocus != null) {
-    dump("focusing element  " + bestElementToFocus.nodeName + " " + bestElementToFocus) + "id=" + bestElementToFocus.getAttribute("id");
+    //dump("focusing element  " + bestElementToFocus.nodeName + " " + bestElementToFocus) + "id=" + bestElementToFocus.getAttribute("id");
+
     // Wishing we could do element.focus()
     doc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).focus(bestElementToFocus);
 
@@ -196,20 +207,26 @@ function _onInputKeyPress (event, callback) {
     
   } else {
     // couldn't find anything.  just advance and hope.
-    var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
-    var window = windowMediator.getMostRecentWindow("navigator:browser");
-    
-    if (event.keyCode == event.DOM_VK_RIGHT || event.keyCode != event.DOM_VK_DOWN  )
-      window.document.commandDispatcher.advanceFocus();
-    else
-      window.document.commandDispatcher.rewindFocus();
-    
-    if (callback != undefined)
-      callback(null);
+    _focusNextUsingCmdDispatcher(event, callback);
   }
   
   event.preventDefault();
   event.stopPropagation();
+}
+
+function _focusNextUsingCmdDispatcher(event, callback) {
+
+    var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
+    var window = windowMediator.getMostRecentWindow("navigator:browser");
+
+    if (event.keyCode == event.DOM_VK_RIGHT || event.keyCode == event.DOM_VK_DOWN  ) {
+      window.document.commandDispatcher.advanceFocus();
+    } else {
+      window.document.commandDispatcher.rewindFocus();
+    }
+
+    if (callback != undefined)
+      callback(null);
 }
 
 function _isRectInDirection(event, focusedRect, anotherRect)
