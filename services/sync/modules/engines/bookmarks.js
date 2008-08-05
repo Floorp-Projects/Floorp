@@ -20,6 +20,7 @@
  * Contributor(s):
  *  Dan Mills <thunder@mozilla.com>
  *  Jono DiCarlo <jdicarlo@mozilla.org>
+ *  Anant Narayanan <anant@kix.in>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -290,6 +291,34 @@ BookmarksSharingManager.prototype = {
     self.done( true );
   },
 
+  /* FIXME! Gets all shares, not just the new ones. Doesn't impact
+     functionality because _incomingShareOffer does not create
+     duplicates, but annoys the user by showing notification of ALL
+     shares on EVERY sync :(
+  */
+  getNewShares: function BmkSharing_getNewShares(onComplete) {
+    this._getNewShares.async(this, onComplete);
+  },
+  _getNewShares: function BmkSharing__getNewShares() {
+    let self = yield;
+
+    let sharingApi = new Sharing.Api( DAV );
+    let result = yield sharingApi.getShares(self.cb);
+
+		this._log.info("Got Shares: " + result);
+		let shares = result.split(',');
+		if (shares.length > 1) {
+		  this._log.info('Found shares');
+		  for (var i = 0; i < shares.length - 1; i++) {
+		    let share = shares[i].split(':');
+		    let name = share[0];
+		    let user = share[1];
+		    let path = share[2];
+		    this._incomingShareOffer(user, '/user/' + user + '/' + path, name);
+		  }
+		}
+  },
+  
   updateAllIncomingShares: function BmkSharing_updateAllIncoming(onComplete) {
     this._updateAllIncomingShares.async(this, onComplete);
   },
@@ -436,8 +465,9 @@ BookmarksSharingManager.prototype = {
     // Call Atul's js api for setting htaccess:
     let sharingApi = new Sharing.Api( DAV );
     let result = yield sharingApi.shareWithUsers( serverPath,
-						  [username],
+						  [username], folderName,
 						  self.cb );
+		this._log.info(result.errorText);
     // return the server path:
     self.done( serverPath );
   },
@@ -725,6 +755,7 @@ BookmarksEngine.prototype = {
     /* After syncing the regular bookmark folder contents,
      * also update both the incoming and outgoing shared folders. */
     let self = yield;
+    let ret = yield this._sharing.getNewShares(self.cb);
     this.__proto__.__proto__._sync.async(this, self.cb );
     yield;
     this._sharing.updateAllOutgoingShares(self.cb);
