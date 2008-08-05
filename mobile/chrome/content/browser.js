@@ -164,7 +164,6 @@ var Browser = {
     }
 
     geolocationService.prompt = function(request) {
-
       var notificationBox = Browser.getNotificationBox();
       var notification = notificationBox.getNotificationWithValue("geolocation");
 
@@ -173,17 +172,17 @@ var Browser = {
         var buttons = [{
             label: bundle_browser.getString("gelocation.exactLocation"),
             accessKey: bundle_browser.getString("gelocation.exactLocationKey"),
-            callback: function(){request.allow()},
+            callback: function(){request.allow()}
           },
           {
             label: bundle_browser.getString("gelocation.neighborhoodLocation"),
             accessKey: bundle_browser.getString("gelocation.neighborhoodLocationKey"),
-            callback: function(){request.allowButFuzz()},
+            callback: function(){request.allowButFuzz()}
           },
           {
             label: bundle_browser.getString("gelocation.nothingLocation"),
             accessKey: bundle_browser.getString("gelocation.nothingLocationKey"),
-            callback: function(){request.cancel()},
+            callback: function(){request.cancel()}
           }];
 
         var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);
@@ -194,7 +193,7 @@ var Browser = {
                                            buttons);
         return 1;
       }
-    };
+    }
   },
 
   get content() {
@@ -302,8 +301,9 @@ var Browser = {
       findbar.onFindCommand();
     else
       findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
-  },  
-  translatePhoneNumbers: function(){
+  },
+  
+  translatePhoneNumbers: function() {
     let doc = getBrowser().contentDocument;
     let textnodes = doc.evaluate("//text()",
                                  doc,
@@ -312,21 +312,21 @@ var Browser = {
                                  null);
     let s, node, lastLastIndex;
     let re = /(\+?1? ?-?\(?\d{3}\)?[ +-\.]\d{3}[ +-\.]\d{4})/
-     for (var i = 0; i < textnodes.snapshotLength; i++) {
-       node = textnodes.snapshotItem(i);
-       s = node.data;
-       if(s.match(re)){
-         s = s.replace(re,"<a href='tel:$1'> $1 </a>");   
-         try{
-           let replacement = doc.createElement("span");
-           replacement.innerHTML = s;
-           node.parentNode.insertBefore(replacement,node);
-           node.parentNode.removeChild(node);
-         }catch(e){
-           //do nothing, but continue
-         }
-       }
-     }
+    for (var i = 0; i < textnodes.snapshotLength; i++) {
+      node = textnodes.snapshotItem(i);
+      s = node.data;
+      if (s.match(re)) {
+        s = s.replace(re, "<a href='tel:$1'> $1 </a>");
+        try {
+          let replacement = doc.createElement("span");
+          replacement.innerHTML = s;
+          node.parentNode.insertBefore(replacement, node);
+          node.parentNode.removeChild(node);
+        } catch(e) {
+          //do nothing, but continue
+        }
+      }
+    }
   }
 };
 
