@@ -40,10 +40,9 @@
  *
  * Components.utils.import("resource://gre/modules/SpatialNavigation.js");
  *
- * Usage:
+ * Usage: (Literal class)
  *
- *
- * var snav = new SpatialNavigation(browser_element, optional_callback);
+ * SpatialNavigation(browser_element, optional_callback);
  *
  * optional_callback will be called when a new element is focused.
  *
