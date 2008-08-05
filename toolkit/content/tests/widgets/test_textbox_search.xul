@@ -48,7 +48,11 @@ function doTests() {
 
   function iconClick(aIcon) {
     is(icons.selectedPanel, aIcon, aIcon.className + " icon must be displayed in order to be clickable");
+
+    //XXX synthesizeMouse worked on Linux but failed on Windows an Mac
+    //    for unknown reasons. Manually dispatch the event for now.
     //synthesizeMouse(aIcon, 0, 0, {});
+
     var event = document.createEvent("MouseEvent");
     event.initMouseEvent("click", true, true, window, 1,
                          0, 0, 0, 0,
