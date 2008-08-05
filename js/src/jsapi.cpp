@@ -741,6 +741,8 @@ JS_NewRuntime(uint32 maxbytes)
     JS_INIT_CLIST(&rt->trapList);
     JS_INIT_CLIST(&rt->watchPointList);
 
+    if (!js_InitDtoa())
+        goto bad;
     if (!js_InitGC(rt, maxbytes))
         goto bad;
     if (!js_InitAtomState(rt))
