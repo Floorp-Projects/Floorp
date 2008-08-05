@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Atul Varma <varmaa@toolness.com>
+ *  Anant Narayanan <anant@kix.in>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,14 +51,29 @@ function Api(dav) {
 }
 
 Api.prototype = {
-  shareWithUsers: function Api_shareWithUsers(path, users, onComplete) {
-    this._shareGenerator.async(this,
+  shareWithUsers: function Api_shareWithUsers(path, users, folder, onComplete) {
+    return this._shareGenerator.async(this,
                                onComplete,
                                path,
-                               users);
+                               users, folder);
   },
 
-  _shareGenerator: function Api__shareGenerator(path, users) {
+  getShares: function Api_getShares(onComplete) {
+    return this._getShareGenerator.async(this, onComplete);
+  },
+  
+  _getShareGenerator: function Api__getShareGenerator() {
+    let self = yield;
+    let id = ID.get(this._dav.identity);
+    
+    this._dav.formPost("/api/share/get.php", ("uid=" + escape(id.username) +
+                                              "&password=" + escape(id.password)),
+                                              self.cb);
+    let xhr = yield;
+    self.done(xhr.responseText);
+  },
+
+  _shareGenerator: function Api__shareGenerator(path, users, folder) {
     let self = yield;
     let id = ID.get(this._dav.identity);
 
@@ -67,10 +83,11 @@ Api.prototype = {
     let jsonSvc = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
     let json = jsonSvc.encode(cmd);
 
-    this._dav.POST("/api/share/",
+    this._dav.formPost("/api/share/",
                    ("cmd=" + escape(json) +
                     "&uid=" + escape(id.username) +
-                    "&password=" + escape(id.password)),
+                    "&password=" + escape(id.password) +
+                    "&name=" + escape(folder)),
                    self.cb);
     let xhr = yield;
 
