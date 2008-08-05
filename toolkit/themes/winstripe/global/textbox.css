@@ -91,7 +91,7 @@ textbox[disabled="true"] {
   cursor: default;
   background-color: -moz-Dialog;
   color: GrayText;
-} 
+}
 
 /* ::::: plain textbox ::::: */
 
@@ -100,6 +100,44 @@ textbox.plain {
   padding: 0px !important;
   margin: 0px !important;
   border: none !important;
+}
+
+/* ::::: search textbox ::::: */
+
+.textbox-search-icon {
+  list-style-image: url(chrome://global/skin/icons/Search-glass.png);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.textbox-search-icon[chromedir="rtl"] {
+  list-style-image: url(chrome://global/skin/icons/Search-glass-rtl.png);
+}
+
+.textbox-search-icon[searchbutton]:not([disabled]) {
+  cursor: pointer;
+}
+
+.textbox-search-clear {
+  list-style-image: url(chrome://global/skin/icons/Search-close.png);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.textbox-search-clear:not([disabled]) {
+  cursor: default;
+}
+
+.textbox-search-clear[chromedir="rtl"] {
+  list-style-image: url(chrome://global/skin/icons/Search-close-rtl.png);
+}
+
+.textbox-search-clear:not([disabled]):hover ,
+.textbox-search-icon[searchbutton]:not([disabled]):hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.textbox-search-clear:not([disabled]):hover:active ,
+.textbox-search-icon[searchbutton]:not([disabled]):hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 /* ::::: textboxes inside toolbarpaletteitems ::::: */
