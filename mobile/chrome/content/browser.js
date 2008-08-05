@@ -108,7 +108,7 @@ var Browser = {
     this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
     BrowserUI.init();
 
-    this._spatialNavigation  = new SpatialNavigation(this.content);
+    SpatialNavigation.init(this.content);
 
     this.setupGeolocationPrompt();
 
