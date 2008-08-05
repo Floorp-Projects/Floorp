@@ -189,7 +189,7 @@
             accesskey="&cmd.clearList.accesskey;"
             tooltiptext="&cmd.clearList.tooltip;"/>
     <spacer flex="1"/>
-    <textbox type="timed" timeout="500" id="searchbox"
+    <textbox type="search" id="searchbox"
              oncommand="buildDownloadList();" emptytext="&searchBox.label;"/>
   </hbox>
 
