@@ -59,7 +59,8 @@ LoginTest.initStorage(storage, OUTDIR, filename);
 
 LoginTest.checkStorageData(storage, [], []);
 
-file.remove(false);
+if (file.exists())
+    file.remove(false);
 
 /* ========== 3 ========== */
 testnum++;
