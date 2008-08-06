@@ -1406,8 +1406,11 @@ js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
     return false;
 }
 
+GuardRecord*
+js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount);
+
 bool
-js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc)
+js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
     if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->title.ownercx != cx) {
@@ -1435,8 +1438,7 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc)
     return true; /* keep recording (attempting to unroll inner loop) */
 }
 
-
-bool
+GuardRecord*
 js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
 {
     AUDIT(traceTriggered);
@@ -1450,7 +1452,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
                           (jsbytecode*)f->root->ip - cx->fp->script->code,
                           js_PCToLineNumber(cx, cx->fp->script, (jsbytecode*)f->root->ip));)
         js_TrashTree(cx, f);
-        return false;
+        return NULL;
     }
 
     unsigned ngslots = ti->globalSlots.length();
@@ -1469,7 +1471,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
         !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch, skipping trace.\n");)
-        return false;
+        return NULL;
     }
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double) +
                               (cx->fp->regs->sp - StackBase(cx->fp) - 1)];
@@ -1519,22 +1521,11 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     AUDIT(sideExitIntoInterpreter);
 
     if (!lr) /* did the tree actually execute? */
-        return false;
+        return NULL;
 
     inlineCallCount += lr->exit->calldepth;
-    switch (lr->exit->exitType) {
-    case BRANCH_EXIT:
-        /* if its a branch, try to extend the tree */
-        return js_AttemptToExtendTree(cx, lr, f);
-    case LOOP_EXIT:
-        /* if this exits the loop, resume interpretation */
-        return false;
-    default:
-        JS_ASSERT(lr->exit->exitType == DONT_GROW);
-        /* We ran out of heap, or an unsupported instruction. Exit for now and re-enter once the
-           GC ran. */
-        return false;
-    }
+    
+    return lr;
 }
 
 bool
@@ -1544,7 +1535,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 
     /* is the recorder currently active? */
     if (tm->recorder)
-        return js_ContinueRecording(cx, tm->recorder, oldpc);
+        return js_ContinueRecording(cx, tm->recorder, oldpc, inlineCallCount);
 
     /* check if our quick cache has an entry for this ip, otherwise ask fragmento. */
     jsbytecode* pc = cx->fp->regs->pc;
@@ -1566,7 +1557,12 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
     }
     JS_ASSERT(!tm->recorder);
 
-    return js_ExecuteTree(cx, f, inlineCallCount);
+    /* if this is a local branch in the same loop, grow the tree */
+    GuardRecord* lr = js_ExecuteTree(cx, f, inlineCallCount);
+    if (lr && lr->exit->exitType == BRANCH_EXIT)
+        return js_AttemptToExtendTree(cx, lr, f);
+    /* if this exits the loop, resume interpretation */
+    return false;
 }
 
 void
