@@ -63,6 +63,8 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsApplicationAccessible,
+                                           nsAccessible)
 
   // nsPIAccessNode
   NS_IMETHOD Init();

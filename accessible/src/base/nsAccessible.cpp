@@ -140,9 +140,23 @@ nsAccessibleDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
  * Class nsAccessible
  */
 
-//-----------------------------------------------------
-// construction 
-//-----------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessible. nsISupports
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsAccessible)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsAccessible, nsAccessNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstChild)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNextSibling)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsAccessible, nsAccessNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstChild)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mNextSibling)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_ADDREF_INHERITED(nsAccessible, nsAccessNode)
 NS_IMPL_RELEASE_INHERITED(nsAccessible, nsAccessNode)
 
@@ -188,7 +202,12 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // Custom-built QueryInterface() knows when we support nsIAccessibleSelectable
   // based on role attribute and aria-multiselectable
   *aInstancePtr = nsnull;
-  
+
+  if (aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant))) {
+    *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(nsAccessible);
+    return NS_OK;
+  }
+
   if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
     *aInstancePtr = static_cast<nsIAccessible*>(this);
     NS_ADDREF_THIS();
@@ -483,7 +502,7 @@ NS_IMETHODIMP nsAccessible::SetFirstChild(nsIAccessible *aFirstChild)
 
 NS_IMETHODIMP nsAccessible::SetNextSibling(nsIAccessible *aNextSibling)
 {
-  mNextSibling = aNextSibling? aNextSibling: DEAD_END_ACCESSIBLE;
+  mNextSibling = aNextSibling;
   return NS_OK;
 }
 
@@ -538,15 +557,13 @@ NS_IMETHODIMP nsAccessible::InvalidateChildren()
   // CacheChildren() is called.
   // Note: we don't want to start creating accessibles at this point,
   // so don't use GetNextSibling() here. (bug 387252)
-  nsAccessible* child = static_cast<nsAccessible*>(mFirstChild);
+  nsAccessible* child = static_cast<nsAccessible*>(mFirstChild.get());
   while (child) {
     child->mParent = nsnull;
-    if (child->mNextSibling == DEAD_END_ACCESSIBLE) {
-      break;
-    }
-    nsIAccessible *next = child->mNextSibling;
+
+    nsCOMPtr<nsIAccessible> next = child->mNextSibling;
     child->mNextSibling = nsnull;
-    child = static_cast<nsAccessible*>(next);
+    child = static_cast<nsAccessible*>(next.get());
   }
 
   mAccChildCount = eChildCountUninitialized;
@@ -608,9 +625,8 @@ NS_IMETHODIMP nsAccessible::GetNextSibling(nsIAccessible * *aNextSibling)
   if (mNextSibling || !mParent) {
     // If no parent, don't try to calculate a new sibling
     // It either means we're at the root or shutting down the parent
-    if (mNextSibling != DEAD_END_ACCESSIBLE) {
-      NS_IF_ADDREF(*aNextSibling = mNextSibling);
-    }
+    NS_IF_ADDREF(*aNextSibling = mNextSibling);
+
     return NS_OK;
   }
 
