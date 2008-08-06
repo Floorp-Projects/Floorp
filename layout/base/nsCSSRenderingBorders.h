@@ -105,8 +105,7 @@ struct nsCSSBorderRenderer {
                       const nscolor* aBorderColors,
                       nsBorderColors* const* aCompositeColors,
                       PRIntn aSkipSides,
-                      nscolor aBackgroundColor,
-                      const gfxRect* aGapRect = nsnull);
+                      nscolor aBackgroundColor);
 
   // core app units per pixel
   PRInt32 mAUPP;
@@ -127,11 +126,9 @@ struct nsCSSBorderRenderer {
   const nscolor* mBorderColors;
   nsBorderColors* const* mCompositeColors;
 
-  // misc -- which sides to skip, the background color, and whether we should
-  // leave a gap in the border (e.g. for a label)
+  // misc -- which sides to skip, the background color
   PRIntn mSkipSides;
   nscolor mBackgroundColor;
-  const gfxRect* mGapRect;
 
   // calculated values
   PRPackedBool mOneUnitBorder;
