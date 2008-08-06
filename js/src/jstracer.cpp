@@ -1533,8 +1533,11 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* is the recorder currently active? */
-    if (tm->recorder)
-        return js_ContinueRecording(cx, tm->recorder, oldpc, inlineCallCount);
+    if (tm->recorder) {
+        if (js_ContinueRecording(cx, tm->recorder, oldpc, inlineCallCount))
+            return true;
+        /* recording was aborted, treat like a regular loop edge hit */
+    }
 
     /* check if our quick cache has an entry for this ip, otherwise ask fragmento. */
     jsbytecode* pc = cx->fp->regs->pc;
