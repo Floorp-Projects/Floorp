@@ -1731,6 +1731,14 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
     // document.
     nsresult rv;
 
+    if (aElement->NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
+        nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
+        if (xblService) {
+            nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(aElement));
+            xblService->DetachGlobalKeyHandler(piTarget);
+        }
+    }
+
     // 1. Remove any children from the document.
     PRUint32 count = aElement->GetChildCount();
 
