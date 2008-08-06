@@ -677,7 +677,7 @@ RemoteStore.prototype = {
     if ((id - this.status.data.snapVersion) > KEEP_DELTAS) {
       this._os.notifyObservers(null, "weave:service:sync:status",
                                "status.uploading-snapshot");
-      yield this.snapshot.put(self.cb, snapshot.data);
+      yield this._snapshot.put(self.cb, snapshot.data);
       this.status.data.snapVersion = id;
     }
 
