@@ -50,7 +50,9 @@
 
 #include <stdio.h>
 #include <gtk/gtk.h>
+#ifdef MOZ_X11
 #include <gdk/gdkx.h>
+#endif
 #include <gdk/gdkkeysyms.h>
 
 /* Xlib/Xt stuff */
