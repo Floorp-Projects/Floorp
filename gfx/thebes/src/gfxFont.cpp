@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   John Daggett <jdaggett@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -72,6 +73,77 @@ static PRUint32 gGlyphExtentsSetupEagerTight = 0;
 static PRUint32 gGlyphExtentsSetupLazyTight = 0;
 static PRUint32 gGlyphExtentsSetupFallBackToTight = 0;
 #endif
+
+gfxFontEntry::~gfxFontEntry() {
+
+}
+
+
+PRBool gfxFontEntry::TestCharacterMap(PRUint32 aCh) {
+    if (!mCmapInitialized) ReadCMAP();
+    return mCharacterMap.test(aCh);
+}
+
+
+gfxFontEntry *gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBold)
+{
+    gfxFontEntry *weightList[10] = { 0 };
+
+    aNeedsBold = PR_FALSE;
+
+    FindWeightsForStyle(weightList, aFontStyle);
+
+    PRInt8 baseWeight, weightDistance;
+    aFontStyle.ComputeWeightAndOffset(&baseWeight, &weightDistance);
+
+    // 500 isn't quite bold so we want to treat it as 400 if we don't
+    // have a 500 weight
+    if (baseWeight == 5 && weightDistance == 0) {
+        // If we have a 500 weight then use it
+        if (weightList[5])
+            return weightList[5];
+
+        // Otherwise treat as 400
+        baseWeight = 4;
+    }
+
+    PRInt8 matchBaseWeight = 0;
+    PRInt8 direction = (baseWeight > 5) ? 1 : -1;
+    for (PRInt8 i = baseWeight; ; i += direction) {
+        if (weightList[i]) {
+            matchBaseWeight = i;
+            break;
+        }
+
+        // if we've reached one side without finding a font,
+        // go the other direction until we find a match
+        if (i == 1 || i == 9)
+            direction = -direction;
+    }
+
+    gfxFontEntry *matchFE;
+    const PRInt8 absDistance = abs(weightDistance);
+    direction = (weightDistance >= 0) ? 1 : -1;
+    PRInt8 i, k;
+    for (i = matchBaseWeight, k = 0; i < 10 && i > 0; i += direction) {
+        if (weightList[i]) {
+            matchFE = weightList[i];
+            k++;
+        }
+        if (k > absDistance)
+            break;
+    }
+
+    if (weightDistance > 0 && k <= absDistance) {
+        aNeedsBold = PR_TRUE;
+    }
+
+    if (!matchFE)
+        matchFE = weightList[matchBaseWeight];
+
+    NS_ASSERTION(matchFE, "we should always be able to return something here");
+    return matchFE;
+}
 
 nsresult
 gfxFontCache::Init()
@@ -174,8 +246,8 @@ gfxFontCache::DestroyFont(gfxFont *aFont)
     delete aFont;
 }
 
-gfxFont::gfxFont(const nsAString &aName, const gfxFontStyle *aFontStyle) :
-    mName(aName), mStyle(*aFontStyle), mSyntheticBoldOffset(0)
+gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle) :
+    mIsValid(PR_TRUE), mStyle(*aFontStyle), mFontEntry(aFontEntry), mSyntheticBoldOffset(0)
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     ++gFontCount;
@@ -251,7 +323,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     GlyphBuffer glyphs;
     cairo_glyph_t *glyph;
     cairo_t *cr = aContext->GetCairo();
-    
+
     if (aSpacing) {
         x += direction*aSpacing[0].mBefore;
     }
@@ -635,6 +707,8 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
     }
 }
 
+
+
 gfxGlyphExtents::~gfxGlyphExtents()
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
@@ -666,7 +740,7 @@ gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
             return PR_FALSE;
         }
     }
-    
+
     *aExtents = gfxRect(entry->x, entry->y, entry->width, entry->height);
     return PR_TRUE;
 }
@@ -953,6 +1027,113 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
     return textRun.forget();
 }
 
+
+
+already_AddRefed<gfxFont>
+gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNextCh, gfxFont *aPrevMatchedFont)
+{
+    nsRefPtr<gfxFont>    selectedFont;
+
+    // if this character or the next one is a joiner use the
+    // same font as the previous range if we can
+    if (gfxFontUtils::IsJoiner(aCh) || gfxFontUtils::IsJoiner(aPrevCh) || gfxFontUtils::IsJoiner(aNextCh)) {
+        if (aPrevMatchedFont && aPrevMatchedFont->HasCharacter(aCh)) {
+            selectedFont = aPrevMatchedFont;
+            return selectedFont.forget();
+        }
+    }
+
+    // 1. check fonts in the font group
+    for (PRUint32 i = 0; i < FontListLength(); i++) {
+        nsRefPtr<gfxFont> font = GetFontAt(i);
+        if (font->HasCharacter(aCh))
+            return font.forget();
+    }
+
+    // if match, return
+    if (selectedFont)
+        return selectedFont.forget();
+        
+    // if character is in Private Use Area, don't do matching against pref or system fonts
+    if ((aCh >= 0xE000  && aCh <= 0xF8FF) || (aCh >= 0xF0000 && aCh <= 0x10FFFD))
+        return nsnull;
+
+    // 2. search pref fonts
+    if ((selectedFont = WhichPrefFontSupportsChar(aCh))) {
+        return selectedFont.forget();
+    }
+
+    // 3. use fallback fonts
+    // -- before searching for something else check the font used for the previous character
+    if (!selectedFont && aPrevMatchedFont && aPrevMatchedFont->HasCharacter(aCh)) {
+        selectedFont = aPrevMatchedFont;
+        return selectedFont.forget();
+    }
+
+    // -- otherwise look for other stuff
+    if (!selectedFont) {
+        selectedFont = WhichSystemFontSupportsChar(aCh);
+        return selectedFont.forget();
+    }
+
+    return nsnull;
+}
+
+
+void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges, const PRUnichar *aString, PRUint32 begin, PRUint32 end)
+{
+    const PRUnichar *str = aString + begin;
+    PRUint32 len = end - begin;
+
+    aRanges.Clear();
+
+    PRUint32 prevCh = 0;
+    for (PRUint32 i = 0; i < len; i++) {
+
+        const PRUint32 origI = i; // save off in case we increase for surrogate
+
+        // set up current ch
+        PRUint32 ch = str[i];
+        if ((i+1 < len) && NS_IS_HIGH_SURROGATE(ch) && NS_IS_LOW_SURROGATE(str[i+1])) {
+            i++;
+            ch = SURROGATE_TO_UCS4(ch, str[i]);
+        }
+
+        // set up next ch
+        PRUint32 nextCh = 0;
+        if (i+1 < len) {
+            nextCh = str[i+1];
+            if ((i+2 < len) && NS_IS_HIGH_SURROGATE(nextCh) && NS_IS_LOW_SURROGATE(str[i+2]))
+                nextCh = SURROGATE_TO_UCS4(nextCh, str[i+2]);
+        }
+        
+        // find the font for this char
+        nsRefPtr<gfxFont> font = FindFontForChar(ch, prevCh, nextCh, (aRanges.Length() == 0) ? nsnull : aRanges[aRanges.Length() - 1].font);
+
+        prevCh = ch;
+
+        if (aRanges.Length() == 0) {
+            // first char ==> make a new range
+            gfxTextRange r(0,1);
+            r.font = font;
+            aRanges.AppendElement(r);
+        } else {
+            // if font has changed, make a new range
+            gfxTextRange& prevRange = aRanges[aRanges.Length() - 1];
+            if (prevRange.font != font) {
+                // close out the previous range
+                prevRange.end = origI;
+
+                gfxTextRange r(origI, i+1);
+                r.font = font;
+                aRanges.AppendElement(r);
+            }
+        }
+    }
+    aRanges[aRanges.Length()-1].end = len;
+}
+
+
 #define DEFAULT_PIXEL_FONT_SIZE 16.0f
 
 gfxFontStyle::gfxFontStyle() :
@@ -1091,11 +1272,11 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
     if (aParams->mSkipChars) {
         mSkipChars.TakeFrom(aParams->mSkipChars);
     }
-    
+
     mCharacterGlyphs = reinterpret_cast<CompressedGlyph*>
         (reinterpret_cast<PRUint8*>(this) + aObjectSize);
     memset(mCharacterGlyphs, 0, sizeof(CompressedGlyph)*aLength);
-    
+
     if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
         mText.mSingle = static_cast<const PRUint8 *>(aText);
         if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
@@ -1414,11 +1595,11 @@ struct BufferAlphaColor {
     BufferAlphaColor(gfxContext *aContext)
         : mContext(aContext)
     {
-    
+
     }
-    
+
     ~BufferAlphaColor() {}
-    
+
     void PushSolidColor(const gfxRect& aBounds, const gfxRGBA& aAlphaColor, PRUint32 appsPerDevUnit)
     {
         mContext->Save();
@@ -1432,7 +1613,7 @@ struct BufferAlphaColor {
         mContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
         mAlpha = aAlphaColor.a;
     }
-    
+
     void PopAlpha()
     {
         // pop the text, using the color alpha as the opacity
@@ -1508,7 +1689,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
     BufferAlphaColor syntheticBoldBuffer(aContext);
     gfxRGBA currentColor;
     PRBool needToRestore = PR_FALSE;
-    
+
     if (HasNonOpaqueColor(aContext, currentColor) && HasSyntheticBold(this, aStart, aLength)) {
         needToRestore = PR_TRUE;
         // measure text, use the bounding box
@@ -1516,7 +1697,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
         metrics.mBoundingBox.MoveBy(aPt);
         syntheticBoldBuffer.PushSolidColor(metrics.mBoundingBox, currentColor, GetAppUnitsPerDevUnit());
     }
-    
+
     GlyphRunIterator iter(this, aStart, aLength);
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
@@ -1613,7 +1794,7 @@ gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont,
     Metrics metrics;
     AccumulateMetricsForRun(aFont, data.mLigatureStart, data.mLigatureEnd,
                             aTight, aRefContext, aProvider, aStart, aEnd, &metrics);
-    
+
     // Clip the bounding box to the ligature part
     gfxFloat bboxLeft = metrics.mBoundingBox.X();
     gfxFloat bboxRight = metrics.mBoundingBox.XMost();
