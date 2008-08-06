@@ -965,7 +965,7 @@ MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
 
 MOZ_JS_LIBS='-L$(LIBXUL_DIST)/bin -lmozjs'
 DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxpcom -lxpcom_core'
-MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin'
+MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(PREFIX)/lib'
 XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin -lxpcom'
 LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) -lxul'
 XPCOM_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) $(XPCOM_FROZEN_LDOPTS)'
@@ -4708,6 +4708,7 @@ MOZ_ARG_HEADER(Toolkit Options)
                             OS/2 - cairo-os2
                             Win32 - cairo-windows
                             WinCE - windows
+                            Gtk2 with DirectFB - cairo-gtk2-dfb
                             * - cairo-gtk2],
     [ _DEFAULT_TOOLKIT=$enableval ],
     [ _DEFAULT_TOOLKIT=$_PLATFORM_DEFAULT_TOOLKIT])
@@ -4715,6 +4716,8 @@ MOZ_ARG_HEADER(Toolkit Options)
     if test "$_DEFAULT_TOOLKIT" = "photon" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-dfb" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-x11" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-mac" \
@@ -4724,11 +4727,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         dnl so ignore everything after the first comma (",").
         MOZ_WIDGET_TOOLKIT=`echo "$_DEFAULT_TOOLKIT" | sed -e "s/,.*$//"`
     else
-        if test "$no_x" != "yes"; then
-            AC_MSG_ERROR([Toolkit must be cairo-gtk2.])
-        else
-            AC_MSG_ERROR([Toolkit must be $_PLATFORM_DEFAULT_TOOLKIT (if supported).])
-        fi
+        AC_MSG_ERROR([You must specify a default toolkit (perhaps $_PLATFORM_DEFAULT_TOOLKIT).])
     fi
 
 AC_DEFINE_UNQUOTED(MOZ_DEFAULT_TOOLKIT,"$MOZ_WIDGET_TOOLKIT")
@@ -4748,15 +4747,37 @@ cairo-windows)
     MOZ_GFX_TOOLKIT=cairo
     ;;
 
-cairo-gtk2)
+cairo-gtk2|cairo-gtk2-x11)
     MOZ_WIDGET_TOOLKIT=gtk2
     MOZ_GFX_TOOLKIT=cairo
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
+
+    AC_DEFINE(MOZ_X11)
+    MOZ_X11=1
+
     TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
     TK_LIBS='$(MOZ_GTK2_LIBS)'
     AC_DEFINE(MOZ_WIDGET_GTK2)
     ;;
+
+cairo-gtk2-dfb)
+    MOZ_WIDGET_TOOLKIT=gtk2
+    MOZ_GFX_TOOLKIT=cairo
+    MOZ_ENABLE_GTK2=1
+
+    AC_DEFINE(MOZ_DFB)
+    MOZ_DFB=1
+
+    TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
+    TK_LIBS='$(MOZ_GTK2_LIBS)'
+    AC_DEFINE(MOZ_WIDGET_GTK2)
+    if test "$no_x" != "yes"; then
+        AC_MSG_WARN([Disabling X when DirectFB is specified.])
+        no_x=yes
+    fi
+    ;;
+
 cairo-beos)
     MOZ_WIDGET_TOOLKIT=beos
     MOZ_GFX_TOOLKIT=cairo
@@ -4796,10 +4817,17 @@ if test "$MOZ_ENABLE_XREMOTE"; then
 fi
 
 if test "$COMPILE_ENVIRONMENT"; then
-if test "$MOZ_ENABLE_GTK2"
-then
-    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 gdk-x11-2.0 glib-2.0 gobject-2.0)
-fi
+  if test "$MOZ_ENABLE_GTK2"; then
+    if test "$MOZ_X11"; then
+      GDK_PACKAGES=gdk-x11-2.0
+    elif test "$MOZ_DFB"; then
+      PKG_CHECK_MODULES(MOZ_DFB, directfb >= 1.1.0)
+      GDK_PACKAGES=directfb
+    fi
+
+    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 gobject-2.0 $GDK_PACKAGES)
+  fi
+
 fi # COMPILE_ENVIRONMENT
 
 AC_SUBST(MOZ_DEFAULT_TOOLKIT)
@@ -4853,11 +4881,7 @@ AC_SUBST(MOZ_GTK2_LIBS)
 
 AC_SUBST(MOC)
 
-if test "$MOZ_ENABLE_GTK2"
-then
-    AC_DEFINE(MOZ_X11)
-    MOZ_X11=1
-fi
+AC_SUBST(MOZ_DFB)
 AC_SUBST(MOZ_X11)
 
 dnl ========================================================
@@ -4972,19 +4996,47 @@ fi
 AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
 
+
+dnl ========================================================
+dnl complex text support off by default
+dnl ========================================================
+MOZ_PANGO=1
+MOZ_ARG_DISABLE_BOOL(pango,
+[  --disable-pango Disable usage of Pango ],
+    MOZ_PANGO=,
+    MOZ_PANGO=1)
+
+
 dnl ========================================================
 dnl = Xft and Pango
 dnl ========================================================
 if test "$MOZ_ENABLE_GTK2"
 then
-    PKG_CHECK_MODULES(MOZ_XFT, xft)
-    AC_SUBST(MOZ_XFT_CFLAGS)
-    AC_SUBST(MOZ_XFT_LIBS)
+    if test "$MOZ_X11"; then
+        PKG_CHECK_MODULES(MOZ_XFT, xft)
+        AC_SUBST(MOZ_XFT_CFLAGS)
+        AC_SUBST(MOZ_XFT_LIBS)
+    fi
+
+    AC_SUBST(MOZ_PANGO)
 
     PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
-    PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangocairo >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
-    AC_SUBST(MOZ_PANGO_CFLAGS)
-    AC_SUBST(MOZ_PANGO_LIBS)
+
+    if test "$MOZ_PANGO"
+    then
+        PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangocairo >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
+        AC_SUBST(MOZ_PANGO_CFLAGS)
+        AC_SUBST(MOZ_PANGO_LIBS)
+        AC_DEFINE(MOZ_PANGO)
+    else
+        PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
+        AC_SUBST(MOZ_PANGO_CFLAGS)
+        AC_SUBST(MOZ_PANGO_LIBS)
+
+        PKG_CHECK_MODULES(FT2, freetype2 > 6.1.0 fontconfig)
+        AC_SUBST(FT2_CFLAGS)
+        AC_SUBST(FT2_LIBS)
+    fi
 fi
 
 dnl ========================================================
