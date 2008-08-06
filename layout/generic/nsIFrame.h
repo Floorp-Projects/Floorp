@@ -374,6 +374,9 @@ typedef PRUint32 nsReflowStatus;
 // The type of break requested can be found in these bits.
 #define NS_INLINE_BREAK_TYPE_MASK    0xF000
 
+// Set when a break was induced by completion of a first-letter
+#define NS_INLINE_BREAK_FIRST_LETTER_COMPLETE 0x10000
+
 //----------------------------------------
 // Macros that use those bits
 
