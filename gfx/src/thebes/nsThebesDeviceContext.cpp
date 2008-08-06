@@ -55,11 +55,14 @@
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
-#include <gdk/gdkx.h>
+
 #include "nsFont.h"
 
 #include <pango/pango.h>
+#ifdef MOZ_X11
+#include <gdk/gdkx.h>
 #include <pango/pangox.h>
+#endif /* MOZ_X11 */
 #include <pango/pango-fontmap.h>
 #endif /* GTK2 */
 
@@ -92,7 +95,7 @@ static nsSystemFontsMac *gSystemFonts = nsnull;
 #error Need to declare gSystemFonts!
 #endif
 
-#ifdef MOZ_ENABLE_GTK2
+#if defined(MOZ_ENABLE_GTK2) && defined(MOZ_X11)
 extern "C" {
 static int x11_error_handler (Display *dpy, XErrorEvent *err) {
     NS_ASSERTION(PR_FALSE, "X Error");
@@ -271,7 +274,7 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
     SetDPI();
 
 
-#ifdef MOZ_ENABLE_GTK2
+#if defined(MOZ_ENABLE_GTK2) && defined(MOZ_X11)
     if (getenv ("MOZ_X_SYNC")) {
         PR_LOG (gThebesGFXLog, PR_LOG_DEBUG, ("+++ Enabling XSynchronize\n"));
         XSynchronize (gdk_x11_get_default_xdisplay(), True);
