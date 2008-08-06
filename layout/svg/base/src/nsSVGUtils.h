@@ -43,7 +43,6 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsISVGValue.h"
 #include "nsRect.h"
 
 class nsIDocument;
@@ -61,7 +60,6 @@ class nsIURI;
 class nsSVGOuterSVGFrame;
 class nsIPresShell;
 class nsIDOMSVGAnimatedPreserveAspectRatio;
-class nsISVGValueObserver;
 class nsIAtom;
 class nsSVGLength2;
 class nsSVGElement;
