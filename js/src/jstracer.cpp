@@ -1470,7 +1470,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
         !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch, trashing trace.\n");)
-        //js_TrashTree(cx, f);
         return NULL;
     }
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double) - 1];
