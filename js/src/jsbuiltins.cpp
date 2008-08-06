@@ -39,19 +39,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jsstddef.h"
 #include <math.h>
 
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsbool.h"
-#include "jsnum.h"
-#include "jsgc.h"
 #include "jscntxt.h"
-#include "nanojit/avmplus.h"
-#include "nanojit/nanojit.h"
+#include "jsgc.h"
+#include "jsiter.h"
 #include "jsmath.h"
+#include "jsnum.h"
 #include "jsstr.h"
 #include "jstracer.h"
+
+#include "nanojit/avmplus.h"
+#include "nanojit/nanojit.h"
 
 using namespace nanojit;
 
@@ -155,7 +158,7 @@ jsdouble FASTCALL builtin_Math_sqrt(jsdouble d)
     return sqrt(d);
 }
 
-bool FASTCALL builtin_Array_dense_setelem(JSContext *cx, JSObject *obj, jsint i, jsval v)
+bool FASTCALL builtin_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
 {
     JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
 
@@ -173,14 +176,14 @@ bool FASTCALL builtin_Array_dense_setelem(JSContext *cx, JSObject *obj, jsint i,
 }
 
 JSString* FASTCALL
-builtin_String_p_substring(JSContext *cx, JSString *str, jsint begin, jsint end)
+builtin_String_p_substring(JSContext* cx, JSString* str, jsint begin, jsint end)
 {
     JS_ASSERT(end >= begin);
     return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
 }
 
 JSString* FASTCALL
-builtin_String_p_substring_1(JSContext *cx, JSString *str, jsint begin)
+builtin_String_p_substring_1(JSContext* cx, JSString* str, jsint begin)
 {
     jsint end = JSSTRING_LENGTH(str);
     JS_ASSERT(end >= begin);
@@ -200,8 +203,7 @@ builtin_String_getelem(JSContext* cx, JSString* str, jsint i)
     if ((size_t)i >= JSSTRING_LENGTH(str))
         return NULL;
     /* XXX check for string freelist space */
-    str = js_GetUnitString(cx, str, (size_t)i);
-    return str;
+    return js_GetUnitString(cx, str, (size_t)i);
 }
 
 JSString* FASTCALL
@@ -268,6 +270,35 @@ builtin_StringToInt32(JSContext* cx, JSString* str)
     if (!js_strtod(cx, bp, end, &ep, &d) || js_SkipWhiteSpace(ep, end) != end)
         return 0;
     return (jsint)d;
+}
+
+jsval FASTCALL
+builtin_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
+{
+    jsval v;
+    if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(STRING_TO_JSVAL(idstr)), &v))
+        return JSVAL_ERROR_COOKIE;
+    return v;
+}
+
+bool FASTCALL
+builtin_Any_setelem(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
+{
+    return OBJ_SET_PROPERTY(cx, obj, ATOM_TO_JSID(STRING_TO_JSVAL(idstr)), &v);
+}
+
+JSObject* FASTCALL
+builtin_ValueToIterator(JSContext* cx, jsval v)
+{
+    if (!js_ValueToIterator(cx, JSITER_ENUMERATE, &v))
+        return NULL;
+    return JSVAL_TO_OBJECT(v);
+}
+
+bool FASTCALL
+builtin_CloseIterator(JSContext* cx, jsval v)
+{
+    return js_CloseIterator(cx, v);
 }
 
 #define LO ARGSIZE_LO
