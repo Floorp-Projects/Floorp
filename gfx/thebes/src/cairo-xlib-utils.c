@@ -322,22 +322,32 @@ _create_temp_xlib_surface (cairo_t *cr, Display *dpy, int width, int height,
     GdkDrawable *gdk_target_drawable = GDK_DRAWABLE(gdk_xid_table_lookup(target_drawable));
 
     GdkPixmap *pixmap = NULL;
+    GdkVisual *gvis = NULL;
     if (gdk_target_drawable) {
-        pixmap = gdk_pixmap_new(gdk_target_drawable,
-                                width, height,
-                                -1);
-    } else {
+        gvis = gdk_drawable_get_visual(gdk_target_drawable);
+        if (gvis) {
+            pixmap = gdk_pixmap_new(gdk_target_drawable,
+                                    width, height,
+                                    -1);
+        }
+    }
+
+    if (!pixmap) {
         int screen_index = DefaultScreen (dpy);
         int depth = DefaultDepth (dpy, screen_index);
 
+        GdkColormap *rgb = gdk_rgb_get_colormap();
+        gvis = gdk_colormap_get_visual(rgb);
+
         pixmap = gdk_pixmap_new(NULL,
                                 width, height,
-                                depth);
+                                gvis->depth);
+        gdk_drawable_set_colormap(pixmap, rgb);
     }
 
     result = cairo_xlib_surface_create (gdk_x11_drawable_get_xdisplay(pixmap),
                                         gdk_x11_drawable_get_xid(pixmap),
-                                        gdk_x11_visual_get_xvisual(gdk_drawable_get_visual(pixmap)),
+                                        gdk_x11_visual_get_xvisual(gvis),
                                         width, height);
     if (cairo_surface_status (result) != CAIRO_STATUS_SUCCESS) {
         pixmap_free_func (pixmap);
