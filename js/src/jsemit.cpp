@@ -1971,14 +1971,14 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 JS_ASSERT(localKind == JSLOCAL_VAR ||
                           localKind == JSLOCAL_CONST);
                 switch (op) {
-                  case JSOP_NAME:     op = JSOP_GETVAR; break;
-                  case JSOP_SETNAME:  op = JSOP_SETVAR; break;
-                  case JSOP_SETCONST: op = JSOP_SETVAR; break;
-                  case JSOP_INCNAME:  op = JSOP_INCVAR; break;
-                  case JSOP_NAMEINC:  op = JSOP_VARINC; break;
-                  case JSOP_DECNAME:  op = JSOP_DECVAR; break;
-                  case JSOP_NAMEDEC:  op = JSOP_VARDEC; break;
-                  case JSOP_FORNAME:  op = JSOP_FORVAR; break;
+                  case JSOP_NAME:     op = JSOP_GETLOCAL; break;
+                  case JSOP_SETNAME:  op = JSOP_SETLOCAL; break;
+                  case JSOP_SETCONST: op = JSOP_SETLOCAL; break;
+                  case JSOP_INCNAME:  op = JSOP_INCLOCAL; break;
+                  case JSOP_NAMEINC:  op = JSOP_LOCALINC; break;
+                  case JSOP_DECNAME:  op = JSOP_DECLOCAL; break;
+                  case JSOP_NAMEDEC:  op = JSOP_LOCALDEC; break;
+                  case JSOP_FORNAME:  op = JSOP_FORLOCAL; break;
                   case JSOP_DELNAME:  op = JSOP_FALSE; break;
                   default: JS_ASSERT(0);
                 }
@@ -2211,9 +2211,6 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
           case JSOP_NAME:
             op = JSOP_CALLNAME;
             break;
-          case JSOP_GETVAR:
-            op = JSOP_CALLVAR;
-            break;
           case JSOP_GETGVAR:
             op = JSOP_CALLGVAR;
             break;
@@ -2295,7 +2292,6 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
              * Try to optimize:
              *  - arguments.length into JSOP_ARGCNT
              *  - argname.prop into JSOP_GETARGPROP
-             *  - varname.prop into JSOP_GETVARPROP
              *  - localname.prop into JSOP_GETLOCALPROP
              */
             if (!BindNameToSlot(cx, cg, pn2))
@@ -2308,9 +2304,6 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
 
               case JSOP_GETARG:
                 op = JSOP_GETARGPROP;
-                goto do_indexconst;
-              case JSOP_GETVAR:
-                op = JSOP_GETVARPROP;
                 goto do_indexconst;
               case JSOP_GETLOCAL:
                 op = JSOP_GETLOCALPROP;
@@ -3311,7 +3304,6 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             break;
 
           case JSOP_SETARG:
-          case JSOP_SETVAR:
           case JSOP_SETGVAR:
             slot = (jsuint) pn->pn_slot;
             EMIT_UINT16_IMM_OP(PN_OP(pn), slot);
@@ -4350,8 +4342,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     switch (op) {
                       case JSOP_GETARG:   /* FALL THROUGH */
                       case JSOP_SETARG:   op = JSOP_FORARG; break;
-                      case JSOP_GETVAR:   /* FALL THROUGH */
-                      case JSOP_SETVAR:   op = JSOP_FORVAR; break;
                       case JSOP_GETGVAR:  /* FALL THROUGH */
                       case JSOP_SETGVAR:  op = JSOP_FORNAME; break;
                       case JSOP_GETLOCAL: /* FALL THROUGH */
@@ -4366,7 +4356,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
                 if (pn3->pn_slot >= 0) {
                     if (pn3->pn_const) {
-                        JS_ASSERT(op == JSOP_FORVAR);
+                        JS_ASSERT(op == JSOP_FORLOCAL);
                         op = JSOP_FORCONST;
                     }
                     atomIndex = (jsatomid) pn3->pn_slot;
@@ -5397,9 +5387,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                                        ? JSOP_GETGVAR
                                        : (pn2->pn_op == JSOP_SETARG)
                                        ? JSOP_GETARG
-                                       : (pn2->pn_op == JSOP_SETLOCAL)
-                                       ? JSOP_GETLOCAL
-                                       : JSOP_GETVAR,
+                                       : JSOP_GETLOCAL,
                                        atomIndex);
                     break;
                 }
@@ -5718,7 +5706,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     /* Incrementing a declared const: just get its value. */
                     op = (JOF_OPTYPE(op) == JOF_ATOM)
                          ? JSOP_GETGVAR
-                         : JSOP_GETVAR;
+                         : JSOP_GETLOCAL;
                 }
                 atomIndex = (jsatomid) pn2->pn_slot;
                 EMIT_UINT16_IMM_OP(op, atomIndex);
