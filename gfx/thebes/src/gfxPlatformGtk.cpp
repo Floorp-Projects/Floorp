@@ -120,13 +120,9 @@ gfxPlatformGtk::gfxPlatformGtk()
     FT_Init_FreeType(&gPlatformFTLibrary);
 
     gPlatformFonts = new FontTable();
-    /* FIXME: DFB */
-    //gPlatformFonts->Init(100);
-    gPlatformFonts->Init(20);
+    gPlatformFonts->Init(100);
     gPlatformFontAliases = new FontTable();
-    /* FIXME: DFB */
-    //gPlatformFontAliases->Init(100);
-    gPlatformFontAliases->Init(20);
+    gPlatformFontAliases->Init(100);
     UpdateFontList();
 #endif
 
@@ -263,6 +259,10 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
         newSurface = new gfxGlitzSurface(gdraw, gsurf, PR_TRUE);
 #endif
     }
+#endif
+
+#ifdef MOZ_DFB
+    newSurface = new gfxDirectFBSurface(size, imageFormat);
 #endif
 
     if (newSurface) {
