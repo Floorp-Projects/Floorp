@@ -5655,8 +5655,6 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance,
     return NS_OK;
   }
 
-  NS_ASSERTION(instance->GetSurfaceRect().Size() == instance->GetFilterSpaceSize(),
-               "Surface size optimization should have been disabled, see ComputeNeededSourceBBoxes");
   PRInt32 width = instance->GetSurfaceWidth();
   PRInt32 height = instance->GetSurfaceHeight();
 
