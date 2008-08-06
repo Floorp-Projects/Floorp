@@ -273,7 +273,7 @@ namespace avmplus
 {
     struct InterpState
     {
-        void* ip;
+        const void* ip;
         void* sp;
         void* rp;
         void* gp;
