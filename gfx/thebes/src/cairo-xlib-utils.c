@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "cairo-xlib-utils.h"
+#include "cairo-gdk-utils.h"
 
 #include "cairo-xlib.h"
 #include <stdlib.h>
@@ -50,9 +50,9 @@
 
 #if 0
 #include <stdio.h>
-#define CAIRO_XLIB_DRAWING_NOTE(m) fprintf(stderr, m)
+#define CAIRO_GDK_DRAWING_NOTE(m) fprintf(stderr, m)
 #else
-#define CAIRO_XLIB_DRAWING_NOTE(m) do {} while (0)
+#define CAIRO_GDK_DRAWING_NOTE(m) do {} while (0)
 #endif
 
 static cairo_user_data_key_t pixmap_free_key;
@@ -200,10 +200,10 @@ FINISH:
 static cairo_bool_t
 _draw_with_xlib_direct (cairo_t *cr,
                         Display *default_display,
-                        cairo_xlib_drawing_callback callback,
+                        cairo_gdk_drawing_callback callback,
                         void *closure,
                         int bounds_width, int bounds_height,
-                        cairo_xlib_drawing_support_t capabilities)
+                        cairo_gdk_drawing_support_t capabilities)
 {
     cairo_surface_t *target;
     Drawable d;
@@ -227,22 +227,22 @@ _draw_with_xlib_direct (cairo_t *cr,
     /* Check that the matrix is a pure translation */
     /* XXX test some approximation to == 1.0 here? */
     if (matrix.xx != 1.0 || matrix.yy != 1.0 || matrix.xy != 0.0 || matrix.yx != 0.0) {
-        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: matrix not a pure translation\n");
+        CAIRO_GDK_DRAWING_NOTE("TAKING SLOW PATH: matrix not a pure translation\n");
         return False;
     }
     /* Check that the matrix translation offsets (adjusted for
        device offset) are integers */
     if (!_convert_coord_to_short (matrix.x0 + device_offset_x, &offset_x) ||
         !_convert_coord_to_short (matrix.y0 + device_offset_y, &offset_y)) {
-        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: non-integer offset\n");
+        CAIRO_GDK_DRAWING_NOTE("TAKING SLOW PATH: non-integer offset\n");
         return False;
     }
     
     max_rectangles = 0;
-    if (capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_CLIP_RECT) {
+    if (capabilities & CAIRO_GDK_DRAWING_SUPPORTS_CLIP_RECT) {
       max_rectangles = 1;
     }
-    if (capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_CLIP_LIST) {
+    if (capabilities & CAIRO_GDK_DRAWING_SUPPORTS_CLIP_LIST) {
       max_rectangles = MAX_STATIC_CLIP_RECTANGLES;
     }
     
@@ -259,26 +259,26 @@ _draw_with_xlib_direct (cairo_t *cr,
                                rectangles, max_rectangles, &rect_count);
     cairo_set_matrix (cr, &matrix);
     if (!have_rectangular_clip) {
-        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: unsupported clip\n");
+        CAIRO_GDK_DRAWING_NOTE("TAKING SLOW PATH: unsupported clip\n");
         return False;
     }
 
     /* Stop now if everything is clipped out */
     if (needs_clip && rect_count == 0) {
-        CAIRO_XLIB_DRAWING_NOTE("TAKING FAST PATH: all clipped\n");
+        CAIRO_GDK_DRAWING_NOTE("TAKING FAST PATH: all clipped\n");
         return True;
     }
       
     /* Check that the operator is OVER */
     if (cairo_get_operator (cr) != CAIRO_OPERATOR_OVER) {
-        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: non-OVER operator\n");
+        CAIRO_GDK_DRAWING_NOTE("TAKING SLOW PATH: non-OVER operator\n");
         return False;
     }
     
     /* Check that the offset is supported */  
-    if (!(capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_OFFSET) &&
+    if (!(capabilities & CAIRO_GDK_DRAWING_SUPPORTS_OFFSET) &&
         (offset_x != 0 || offset_y != 0)) {
-        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: unsupported offset\n");
+        CAIRO_GDK_DRAWING_NOTE("TAKING SLOW PATH: unsupported offset\n");
         return False;
     }
     
@@ -286,35 +286,36 @@ _draw_with_xlib_direct (cairo_t *cr,
        we might complete early above when when the object to be drawn is
        completely clipped out. */
     if (!d) {
-        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: non-X surface\n");
+        CAIRO_GDK_DRAWING_NOTE("TAKING SLOW PATH: non-X surface\n");
         return False;
     }
     
     /* Check that the display is supported */  
     screen = cairo_xlib_surface_get_screen (target);
-    if (!(capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_SCREEN) &&
+    if (!(capabilities & CAIRO_GDK_DRAWING_SUPPORTS_ALTERNATE_SCREEN) &&
         screen != DefaultScreenOfDisplay (default_display)) {
-        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: non-default display\n");
+        CAIRO_GDK_DRAWING_NOTE("TAKING SLOW PATH: non-default display\n");
         return False;
     }
         
     /* Check that there is a visual */
     visual = cairo_xlib_surface_get_visual (target);
     if (!visual) {
-        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: no Visual for surface\n");
+        CAIRO_GDK_DRAWING_NOTE("TAKING SLOW PATH: no Visual for surface\n");
         return False;
     }        
     /* Check that the visual is supported */
-    if (!(capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_NONDEFAULT_VISUAL) &&
+    if (!(capabilities & CAIRO_GDK_DRAWING_SUPPORTS_NONDEFAULT_VISUAL) &&
         DefaultVisualOfScreen (screen) != visual) {
-        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: non-default visual\n");
+        CAIRO_GDK_DRAWING_NOTE("TAKING SLOW PATH: non-default visual\n");
         return False;
     }
   
     /* we're good to go! */
-    CAIRO_XLIB_DRAWING_NOTE("TAKING FAST PATH\n");
+    CAIRO_GDK_DRAWING_NOTE("TAKING FAST PATH\n");
     cairo_surface_flush (target);
-    callback (closure, screen, d, visual, offset_x, offset_y, rectangles,
+    callback (closure, GDK_DRAWABLE(gdk_xid_table_lookup(d)), 
+            offset_x, offset_y, rectangles,
               needs_clip ? rect_count : 0);
     cairo_surface_mark_dirty (target);
     return True;
@@ -322,7 +323,7 @@ _draw_with_xlib_direct (cairo_t *cr,
 
 static cairo_surface_t *
 _create_temp_xlib_surface (cairo_t *cr, Display *dpy, int width, int height,
-                           cairo_xlib_drawing_support_t capabilities)
+                           cairo_gdk_drawing_support_t capabilities)
 {
     /* base the temp surface on the *screen* surface, not any intermediate
      * group surface, because the screen surface is more likely to have
@@ -346,10 +347,10 @@ _create_temp_xlib_surface (cairo_t *cr, Display *dpy, int width, int height,
         Screen *target_screen = cairo_xlib_surface_get_screen (target);
         Visual *target_visual = cairo_xlib_surface_get_visual (target);
         if ((target_screen == screen ||
-             (capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_ALTERNATE_SCREEN)) &&
+             (capabilities & CAIRO_GDK_DRAWING_SUPPORTS_ALTERNATE_SCREEN)) &&
             target_visual &&
             (target_visual == DefaultVisualOfScreen (target_screen) ||
-             (capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_NONDEFAULT_VISUAL))) {
+             (capabilities & CAIRO_GDK_DRAWING_SUPPORTS_NONDEFAULT_VISUAL))) {
             drawable = target_drawable;
             dpy = cairo_xlib_surface_get_display (target);
             visual = target_visual;
@@ -381,7 +382,7 @@ _create_temp_xlib_surface (cairo_t *cr, Display *dpy, int width, int height,
 
 static cairo_bool_t
 _draw_onto_temp_xlib_surface (cairo_surface_t *temp_xlib_surface,
-                              cairo_xlib_drawing_callback callback,
+                              cairo_gdk_drawing_callback callback,
                               void *closure,
                               double background_gray_value)
 {
@@ -399,7 +400,8 @@ _draw_onto_temp_xlib_surface (cairo_surface_t *temp_xlib_surface,
     cairo_surface_flush (temp_xlib_surface);
     /* no clipping is needed because the callback can't draw outside the native
        surface anyway */
-    result = callback (closure, screen, d, visual, 0, 0, NULL, 0);
+    result = callback (closure, GDK_DRAWABLE(gdk_xid_table_lookup(d)),
+            0, 0, NULL, 0);
     cairo_surface_mark_dirty (temp_xlib_surface);
     return result;
 }
@@ -451,7 +453,7 @@ static void
 _compute_alpha_values (uint32_t *black_data,
                        uint32_t *white_data,
                        int width, int height,
-                       cairo_xlib_drawing_result_t *analysis)
+                       cairo_gdk_drawing_result_t *analysis)
 {
     int num_pixels = width*height;
     int i;
@@ -511,21 +513,22 @@ _compute_alpha_values (uint32_t *black_data,
     }
 }
 
-void
-cairo_draw_with_xlib (cairo_t *cr,
-                      cairo_xlib_drawing_callback callback,
-                      void *closure,
-                      Display *dpy,
-                      unsigned int width, unsigned int height,
-                      cairo_xlib_drawing_opacity_t is_opaque,
-                      cairo_xlib_drawing_support_t capabilities,
-                      cairo_xlib_drawing_result_t *result)
+void 
+cairo_draw_with_gdk (cairo_t *cr,
+                     GdkDrawable * drawable,
+                     cairo_gdk_drawing_callback callback,
+                     void * closure,
+                     unsigned int width, unsigned int height,
+                     cairo_gdk_drawing_opacity_t is_opaque,
+                     cairo_gdk_drawing_support_t capabilities,
+                     cairo_gdk_drawing_result_t *result)
 {
     cairo_surface_t *temp_xlib_surface;
     cairo_surface_t *black_image_surface;
     cairo_surface_t *white_image_surface;
     unsigned char *black_data;
     unsigned char *white_data;
+    Display *dpy = gdk_x11_drawable_get_xdisplay(drawable);
   
     if (result) {
         result->surface = NULL;
@@ -556,7 +559,7 @@ cairo_draw_with_xlib (cairo_t *cr,
         return;
     }
   
-    if (is_opaque == CAIRO_XLIB_DRAWING_OPAQUE) {
+    if (is_opaque == CAIRO_GDK_DRAWING_OPAQUE) {
         cairo_set_source_surface (cr, temp_xlib_surface, 0.0, 0.0);
         cairo_paint (cr);
         if (result) {
