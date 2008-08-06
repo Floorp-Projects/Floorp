@@ -56,7 +56,13 @@
 
 #include <gtk/gtk.h>
 
+#ifdef MOZ_DFB
+#include <gdk/gdkdirectfb.h>
+#endif /* MOZ_DFB */
+
+#ifdef MOZ_X11
 #include <gdk/gdkx.h>
+#endif /* MOZ_X11 */
 #include <gtk/gtkwindow.h>
 
 #ifdef ACCESSIBILITY
@@ -256,12 +262,16 @@ public:
     };
 
     void               SetPluginType(PluginType aPluginType);
+#ifdef MOZ_X11
     void               SetNonXEmbedPluginFocus(void);
     void               LoseNonXEmbedPluginFocus(void);
+#endif /* MOZ_X11 */
 
     void               ThemeChanged(void);
 
+#ifdef MOZ_X11
     Window             mOldFocusWindow;
+#endif /* MOZ_X11 */
 
     static guint32     mLastButtonPressTime;
     static guint32     mLastButtonReleaseTime;
@@ -401,6 +411,14 @@ private:
     PRInt32             mTransparencyBitmapHeight;
 
     nsRefPtr<gfxASurface> mThebesSurface;
+
+#ifdef MOZ_DFB
+    int                    mDFBCursorX;
+    int                    mDFBCursorY;
+    PRUint32               mDFBCursorCount;
+    IDirectFB             *mDFB;
+    IDirectFBDisplayLayer *mDFBLayer;
+#endif
 
 #ifdef ACCESSIBILITY
     nsCOMPtr<nsIAccessible> mRootAccessible;
