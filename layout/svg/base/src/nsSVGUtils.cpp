@@ -1391,7 +1391,7 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
 }
 
 void
-nsSVGUtils::StyleEffects(nsIFrame *aFrame)
+nsSVGUtils::UpdateEffects(nsIFrame *aFrame)
 {
   aFrame->DeleteProperty(nsGkAtoms::filter);
   aFrame->DeleteProperty(nsGkAtoms::mask);

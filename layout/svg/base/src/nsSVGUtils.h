@@ -336,11 +336,12 @@ public:
                         nsRect *aDirtyRect,
                         nsIFrame *aFrame);
 
-  /* Style change for effects (filter/clip/mask/opacity) - call when
-   * the frame's style has changed to make sure the effects properties
-   * stay in sync. */
+  /**
+   * Called by nsCSSFrameConstructor when style changes require the
+   * effect properties on aFrame to be updated
+   */
   static void
-  StyleEffects(nsIFrame *aFrame);
+  UpdateEffects(nsIFrame *aFrame);
 
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  (x,y) are specified in device pixels relative to the
