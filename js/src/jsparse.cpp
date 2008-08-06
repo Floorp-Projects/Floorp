@@ -649,8 +649,8 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             if (JOF_TYPE(cs->format) == JOF_LOCAL ||
                 (JOF_TYPE(cs->format) == JOF_SLOTATOM)) {
                 /*
-                 * JSOP_GETARGPROP and JSOP_GETVARPROP also have JOF_SLOTATOM
-                 * type, but they may be emitted only for a function.
+                 * JSOP_GETARGPROP also has JOF_SLOTATOM type, but it may be
+                 * emitted only for a function.
                  */
                 JS_ASSERT((JOF_TYPE(cs->format) == JOF_SLOTATOM) ==
                           (op == JSOP_GETLOCALPROP));
@@ -1200,7 +1200,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * object property (it might also need the activation property, if the
          * outer function contains with statements, e.g., but the stack slot
          * wins when jsemit.c's BindNameToSlot can optimize a JSOP_NAME into a
-         * JSOP_GETVAR bytecode).
+         * JSOP_GETLOCAL bytecode).
          */
         if (AT_TOP_LEVEL(tc) && (tc->flags & TCF_IN_FUNCTION)) {
             JSLocalKind localKind;
