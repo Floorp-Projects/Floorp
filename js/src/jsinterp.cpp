@@ -2468,7 +2468,7 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL(JSVAL_INT_MAX)));
  * is named by the JS_OPMETER_FILE envariable, and defaults to /tmp/ops.dot.
  *
  * Bonus feature: JS_OPMETER also enables counters for stack-addressing ops
- * such as JSOP_GETVAR, JSOP_INCARG, via METER_SLOT_OP.  The resulting counts
+ * such as JSOP_GETLOCAL, JSOP_INCARG, via METER_SLOT_OP. The resulting counts
  * are written to JS_OPMETER_HIST, defaulting to /tmp/ops.hist.
  */
 #ifndef JS_OPMETER
@@ -2521,7 +2521,6 @@ JS_STATIC_ASSERT(JSOP_INTERRUPT == 0);
  */
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETGVAR_LENGTH == JSOP_CALLGVAR_LENGTH);
-JS_STATIC_ASSERT(JSOP_GETVAR_LENGTH == JSOP_CALLVAR_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
 JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
@@ -3170,13 +3169,12 @@ js_Interpret(JSContext *cx)
             /* FALL THROUGH */
 
           BEGIN_CASE(JSOP_FORARG)
-          BEGIN_CASE(JSOP_FORVAR)
           BEGIN_CASE(JSOP_FORCONST)
           BEGIN_CASE(JSOP_FORLOCAL)
             /*
-             * JSOP_FORARG, JSOP_FORVAR, JSOP_FORLOCAL don't require any lval
-             * computation here, because they address slots on the stack (in
-             * fp->args and fp->slots, respectively).
+             * These bytecodes don't require any lval computation here,
+             * because they address slots on the stack (in fp->args or
+             * fp->slots).
              */
             /* FALL THROUGH */
 
@@ -3214,7 +3212,6 @@ js_Interpret(JSContext *cx)
                 break;
 
               case JSOP_FORLOCAL:
-              case JSOP_FORVAR:
                 slot = GET_SLOTNO(regs.pc);
                 JS_ASSERT(slot < fp->script->nslots);
                 vp = &fp->slots[slot];
@@ -4098,15 +4095,11 @@ js_Interpret(JSContext *cx)
             goto do_int_fast_incop;
 
           BEGIN_CASE(JSOP_DECLOCAL)
-          BEGIN_CASE(JSOP_DECVAR)
             incr = -2; incr2 = -2; goto do_local_incop;
           BEGIN_CASE(JSOP_LOCALDEC)
-          BEGIN_CASE(JSOP_VARDEC)
             incr = -2; incr2 =  0; goto do_local_incop;
           BEGIN_CASE(JSOP_INCLOCAL)
-          BEGIN_CASE(JSOP_INCVAR)
             incr =  2; incr2 =  2; goto do_local_incop;
-          BEGIN_CASE(JSOP_VARINC)
           BEGIN_CASE(JSOP_LOCALINC)
             incr =  2; incr2 =  0;
 
@@ -4224,7 +4217,6 @@ js_Interpret(JSContext *cx)
             goto do_getprop_body;
 
           BEGIN_CASE(JSOP_GETLOCALPROP)
-          BEGIN_CASE(JSOP_GETVARPROP)
             i = SLOTNO_LEN;
             slot = GET_SLOTNO(regs.pc);
             JS_ASSERT(slot < script->nslots);
@@ -5540,28 +5532,25 @@ js_Interpret(JSContext *cx)
           END_SET_CASE(JSOP_SETARG)
 
           BEGIN_CASE(JSOP_GETLOCAL)
-          BEGIN_CASE(JSOP_GETVAR)
             slot = GET_SLOTNO(regs.pc);
             JS_ASSERT(slot < script->nslots);
             PUSH_OPND(fp->slots[slot]);
-          END_CASE(JSOP_GETVAR)
+          END_CASE(JSOP_GETLOCAL)
 
           BEGIN_CASE(JSOP_CALLLOCAL)
-          BEGIN_CASE(JSOP_CALLVAR)
             slot = GET_SLOTNO(regs.pc);
             JS_ASSERT(slot < script->nslots);
             PUSH_OPND(fp->slots[slot]);
             PUSH_OPND(JSVAL_NULL);
-          END_CASE(JSOP_GETVAR)
+          END_CASE(JSOP_CALLLOCAL)
 
           BEGIN_CASE(JSOP_SETLOCAL)
-          BEGIN_CASE(JSOP_SETVAR)
             slot = GET_SLOTNO(regs.pc);
             JS_ASSERT(slot < script->nslots);
             vp = &fp->slots[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
-          END_SET_CASE(JSOP_SETVAR)
+          END_SET_CASE(JSOP_SETLOCAL)
 
           BEGIN_CASE(JSOP_GETGVAR)
           BEGIN_CASE(JSOP_CALLGVAR)
@@ -6818,7 +6807,16 @@ js_Interpret(JSContext *cx)
 # endif
 
           L_JSOP_UNUSED186:
+          L_JSOP_UNUSED201:
+          L_JSOP_UNUSED202:
+          L_JSOP_UNUSED203:
+          L_JSOP_UNUSED204:
+          L_JSOP_UNUSED205:
+          L_JSOP_UNUSED206:
+          L_JSOP_UNUSED207:
           L_JSOP_UNUSED213:
+          L_JSOP_UNUSED219:
+          L_JSOP_UNUSED226:
 
 #else /* !JS_THREADED_INTERP */
           default:
