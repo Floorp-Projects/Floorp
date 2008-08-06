@@ -2091,7 +2091,15 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext,
                                           PRBool* aRulesChanged)
 {
   RuleCascadeData *old = mRuleCascades;
-  RefreshRuleCascade(aPresContext);
+  // We don't want to do anything if there aren't any sets of rules
+  // cached yet (or somebody cleared them and is thus responsible for
+  // rebuilding things), since we should not build the rule cascade too
+  // early (e.g., before we know whether the quirk style sheet should be
+  // enabled).  And if there's nothing cached, it doesn't matter if
+  // anything changed.  See bug 448281.
+  if (old) {
+    RefreshRuleCascade(aPresContext);
+  }
   *aRulesChanged = (old != mRuleCascades);
   return NS_OK;
 }
