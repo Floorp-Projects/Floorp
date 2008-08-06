@@ -75,8 +75,6 @@ public:
     return GetFirstChild(nsnull)->GetContentInsertionFrame();
   }
 
-  NS_IMETHOD DidSetStyleContext();
-
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,

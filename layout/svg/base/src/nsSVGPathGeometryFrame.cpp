@@ -599,8 +599,6 @@ nsSVGPathGeometryFrame::UpdateMarkerProperty()
 void
 nsSVGPathGeometryFrame::RemovePathProperties()
 {
-  nsSVGUtils::StyleEffects(this);
-
   if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
     DeleteProperty(nsGkAtoms::marker);
 }
