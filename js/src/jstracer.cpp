@@ -526,8 +526,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
         import(lirbuf->sp, offset, vp, *m, vpname, vpnum, fp);
         m++; offset += sizeof(double);
     );
-
-    recompileFlag = false;
     backEdgeCount = 0;
 }
 
@@ -1068,7 +1066,7 @@ TraceRecorder::guard(bool expected, LIns* cond, ExitType exitType)
 /* Try to match the type of a slot to type t. checkType is used to verify that the type of
    values flowing into the loop edge is compatible with the type we expect in the loop header. */
 bool
-TraceRecorder::checkType(jsval& v, uint8& t)
+TraceRecorder::checkType(jsval& v, uint8& t, bool& recompile)
 {
     if (t == JSVAL_INT) { /* initially all whole numbers cause the slot to be demoted */
         if (!isNumber(v))
@@ -1087,7 +1085,7 @@ TraceRecorder::checkType(jsval& v, uint8& t)
             if (fragment->root == fragment) /* BUG! can't fix miss-speculation without
                                                recompiling root fragment as well */
                 t = JSVAL_DOUBLE; /* next time make this slot a double */
-            recompileFlag = true;
+            recompile = true;
             return true; /* keep checking types, but request re-compilation */
         }
         /* looks good, slot is an int32, the last instruction should be i2f */
@@ -1110,6 +1108,9 @@ TraceRecorder::checkType(jsval& v, uint8& t)
     return JSVAL_TAG(v) == t;
 }
 
+static void
+js_TrashTree(JSContext* cx, Fragment* f);
+
 /* Make sure that the current values in the given stack frame and all stack frames
    up and including entryFrame are type-compatible with the entry map. */
 bool
@@ -1119,23 +1120,21 @@ TraceRecorder::verifyTypeStability()
     uint16* gslots = treeInfo->globalSlots.data();
     uint8* m = treeInfo->globalTypeMap.data();
     JS_ASSERT(treeInfo->globalTypeMap.length() == ngslots);
+    bool recompile = false;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if (!checkType(*vp, *m))
+        if (!checkType(*vp, *m, recompile))
             return false;
         ++m
     );
     m = treeInfo->stackTypeMap.data();
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        if (!checkType(*vp, *m))
+        if (!checkType(*vp, *m, recompile))
             return false;
         ++m
     );
-    /* BUG: We can't recompile if this is not the root fragment. */
-    if (recompileFlag && fragment->root != fragment) {
-        fragment->blacklist();
-        return false;
-    }
-    return !recompileFlag;
+    if (recompile && fragment->root != fragment)
+        js_TrashTree(cx, fragment);
+    return !recompile;
 }
 
 /* Check whether the current pc location is the loop header of the loop this recorder records. */
@@ -1419,7 +1418,7 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
 #endif
         return false; /* we stay away from shared global objects */
     }
-#endif
+#endif  
     if (r->isLoopHeader(cx)) { /* did we hit the start point? */
         AUDIT(traceCompleted);
         r->closeLoop(JS_TRACE_MONITOR(cx).fragmento);
@@ -1470,7 +1469,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     if (!BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap.data(), global) ||
         !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
         AUDIT(typeMapMismatchAtEntry);
-        debug_only(printf("type-map mismatch, skipping trace.\n");)
+        debug_only(printf("type-map mismatch, trashing trace.\n");)
+        //js_TrashTree(cx, f);
         return NULL;
     }
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double) - 1];
