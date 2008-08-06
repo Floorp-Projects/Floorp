@@ -43,29 +43,21 @@
 #include "nsRect.h"
 #include "nsAutoPtr.h"
 
+#include <gdk/gdkx.h>
+#include <gtk/gtk.h>
+
 #define SCREEN_MANAGER_LIBRARY_LOAD_FAILED ((PRLibrary*)1)
 
-#ifdef MOZ_DFB
-#include <directfb.h>
-#endif
-
-#ifdef MOZ_X11
-#include <gdk/gdkx.h>
 // prototypes from Xinerama.h
 typedef Bool (*_XnrmIsActive_fn)(Display *dpy);
 typedef XineramaScreenInfo* (*_XnrmQueryScreens_fn)(Display *dpy, int *number);
-#endif
-
-#include <gtk/gtk.h>
-
 
 static GdkFilterReturn
 root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
                          gpointer aClosure)
 {
-  nsScreenManagerGtk *manager = static_cast<nsScreenManagerGtk*>(aClosure);
-#ifdef MOZ_X11
   XEvent *xevent = static_cast<XEvent*>(aGdkXEvent);
+  nsScreenManagerGtk *manager = static_cast<nsScreenManagerGtk*>(aClosure);
 
   // See comments in nsScreenGtk::Init below.
   switch (xevent->type) {
@@ -83,24 +75,6 @@ root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
     default:
       break;
   }
-#endif
-
-#ifdef MOZ_DFB
-  DFBWindowEvent * dfbEvent = static_cast<DFBWindowEvent *> (aGdkXEvent);
-
-  switch (dfbEvent->type)
-  {
-      case DWET_POSITION :
-      case DWET_SIZE :
-          manager->Init();
-      break;
-
-          /* TODO: Need to find out PropertyNotify equivalent in
-           * DFB.. */
-      default :
-      break;
-  }
-#endif
 
   return GDK_FILTER_CONTINUE;
 }
@@ -123,11 +97,9 @@ nsScreenManagerGtk :: ~nsScreenManagerGtk()
     mRootWindow = nsnull;
   }
 
-#ifdef MOZ_X11
   if (mXineramalib && mXineramalib != SCREEN_MANAGER_LIBRARY_LOAD_FAILED) {
     PR_UnloadLibrary(mXineramalib);
   }
-#endif
 }
 
 
@@ -156,10 +128,8 @@ nsScreenManagerGtk :: EnsureInit()
                                      GDK_STRUCTURE_MASK |
                                      GDK_PROPERTY_CHANGE_MASK));
   gdk_window_add_filter(mRootWindow, root_window_event_filter, this);
-#ifdef MOZ_X11
   mNetWorkareaAtom =
     XInternAtom(GDK_WINDOW_XDISPLAY(mRootWindow), "_NET_WORKAREA", False);
-#endif
 
   return Init();
 }
@@ -167,7 +137,6 @@ nsScreenManagerGtk :: EnsureInit()
 nsresult
 nsScreenManagerGtk :: Init()
 {
-#ifdef MOZ_X11
   XineramaScreenInfo *screenInfo = NULL;
   int numScreens;
 
@@ -193,9 +162,8 @@ nsScreenManagerGtk :: Init()
   // screenInfo == NULL if either Xinerama couldn't be loaded or
   // isn't running on the current display
   if (!screenInfo || numScreens == 1) {
-    numScreens = 1;
-#endif
     nsRefPtr<nsScreenGtk> screen;
+    numScreens = 1;
 
     if (mCachedScreenArray.Count() > 0) {
       screen = static_cast<nsScreenGtk*>(mCachedScreenArray[0]);
@@ -207,7 +175,6 @@ nsScreenManagerGtk :: Init()
     }
 
     screen->Init(mRootWindow);
-#ifdef MOZ_X11
   }
   // If Xinerama is enabled and there's more than one screen, fill
   // in the info for all of the screens.  If that's not the case
@@ -239,7 +206,6 @@ nsScreenManagerGtk :: Init()
   if (screenInfo) {
     XFree(screenInfo);
   }
-#endif
 
   return NS_OK;
 }

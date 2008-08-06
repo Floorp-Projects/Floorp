@@ -35,22 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFXGDKNATIVERENDER_H_
-#define GFXGDKNATIVERENDER_H_
+#ifndef GFXXLIBNATIVERENDER_H_
+#define GFXXLIBNATIVERENDER_H_
 
 #include "gfxColor.h"
-#include <gdk/gdk.h>
+#include <X11/Xlib.h>
 
 class gfxASurface;
 class gfxContext;
 
 /**
- * This class lets us take code that draws into an GDK drawable and lets us
+ * This class lets us take code that draws into an X drawable and lets us
  * use it to draw into any Thebes context. The user should subclass this class,
  * override NativeDraw, and then call Draw(). The drawing will be subjected
  * to all Thebes transformations, clipping etc.
  */
-class THEBES_API gfxGdkNativeRenderer {
+class THEBES_API gfxXlibNativeRenderer {
 public:
     /**
      * Perform the native drawing.
@@ -60,8 +60,10 @@ public:
      * @param numClipRects the number of rects in the array, or zero if
      * no clipping is required
      */
-    virtual nsresult NativeDraw(GdkDrawable * drawable, short offsetX, 
-            short offsetY, GdkRectangle * clipRects, PRUint32 numClipRects) = 0;
+    virtual nsresult NativeDraw(Screen* screen, Drawable drawable,
+                                Visual* visual, Colormap colormap,
+                                short offsetX, short offsetY,
+                                XRectangle* clipRects, PRUint32 numClipRects) = 0;
   
     enum {
         // If set, then Draw() is opaque, i.e., every pixel in the intersection
@@ -78,7 +80,7 @@ public:
         // nor CLIP_RECT are set, then numClipRects will be zero
         DRAW_SUPPORTS_CLIP_LIST = 0x08,
         // If set, then the visual passed in can be any visual, otherwise the
-        // visual passed in must be the default visual for dpy's default screen
+        // visual passed in must be the default visual for 'screen'
         DRAW_SUPPORTS_NONDEFAULT_VISUAL = 0x10,
         // If set, then the Screen 'screen' in the callback can be different
         // from the default Screen of the display passed to 'Draw' and can be
@@ -103,8 +105,8 @@ public:
      * successful, a pointer to the new gfxASurface is stored in *resultSurface,
      * otherwise *resultSurface is set to nsnull.
      */
-    nsresult Draw(gfxContext* ctx, int width, int height,
+    nsresult Draw(Display* dpy, gfxContext* ctx, int width, int height,
                   PRUint32 flags, DrawOutput* output);
 };
 
-#endif /*GFXGDKNATIVERENDER_H_*/
+#endif /*GFXXLIBNATIVERENDER_H_*/
