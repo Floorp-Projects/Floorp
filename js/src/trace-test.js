@@ -449,7 +449,22 @@ function andTestHelper(a, b, n)
   }
 })();
 
-function nonEmptyStack()
+function nonEmptyStack1Helper(o, farble) {
+    var a = [];
+    var j = 0;
+    for (var i in o)
+        a[j++] = i;
+    return a.join();
+}
+
+function nonEmptyStack1() {
+    nonEmptyStack1Helper({a:1,b:2,c:3,d:4,e:5,f:6,g:7,h:8}, "hi");
+}
+
+nonEmptyStack2.expected = "abcdefgh";
+test(nonEmptyStack2);
+
+function nonEmptyStack2()
 {
   var a = 0;
   for (var c in {a:1, b:2, c:3}) {
@@ -458,8 +473,8 @@ function nonEmptyStack()
   }
   return String(a);
 }
-nonEmptyStack.expected = "135";
-test(nonEmptyStack);
+nonEmptyStack2.expected = "135";
+test(nonEmptyStack2);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
