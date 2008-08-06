@@ -41,6 +41,7 @@
 #include "nsIScreen.h"
 #include "nsRect.h"
 #include "gdk/gdk.h"
+#ifdef MOZ_X11
 #include <X11/Xlib.h>
 
 // from Xinerama.h
@@ -51,6 +52,7 @@ typedef struct {
    short width;
    short height;
 } XineramaScreenInfo;
+#endif /* MOZ_X11 */
 
 //------------------------------------------------------------------------
 
@@ -64,7 +66,9 @@ public:
   NS_DECL_NSISCREEN
 
   void Init(GdkWindow *aRootWindow);
+#ifdef MOZ_X11
   void Init(XineramaScreenInfo *aScreenInfo);
+#endif /* MOZ_X11 */
 
 private:
   PRUint32 mScreenNum;

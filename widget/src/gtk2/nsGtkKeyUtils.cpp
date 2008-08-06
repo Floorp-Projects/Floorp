@@ -39,7 +39,9 @@
 
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkevents.h>
+#ifdef MOZ_X11
 #include <gdk/gdkx.h>
+#endif /* MOZ_X11 */
 #include "nsGUIEvent.h"
 #include "keysym2ucs.h"
 
@@ -154,8 +156,10 @@ struct nsKeyConverter nsKeycodes[] = {
     { NS_VK_EQUALS, GDK_plus }
 };
 
+#ifdef MOZ_X11
 #define IS_XSUN_XSERVER(dpy) \
     (strstr(XServerVendor(dpy), "Sun Microsystems") != NULL)
+#endif /* MOZ_X11 */
 
 // map Sun Keyboard special keysyms on to NS_VK keys
 struct nsKeyConverter nsSunKeycodes[] = {
@@ -193,6 +197,7 @@ GdkKeyCodeToDOMKeyCode(int aKeysym)
     if (aKeysym >= GDK_KP_0 && aKeysym <= GDK_KP_9)
         return aKeysym - GDK_KP_0 + NS_VK_NUMPAD0;
 
+#ifdef MOZ_X11
     // map Sun Keyboard special keysyms
     if (IS_XSUN_XSERVER(GDK_DISPLAY())) {
         length = sizeof(nsSunKeycodes) / sizeof(struct nsKeyConverter);
@@ -201,6 +206,7 @@ GdkKeyCodeToDOMKeyCode(int aKeysym)
                 return(nsSunKeycodes[i].vkCode);
         }
     }
+#endif /* MOZ_X11 */
 
     // misc other things
     length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
