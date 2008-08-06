@@ -45,11 +45,7 @@
  * (UCS, Unicode) values.
  */
 
-#ifdef MOZ_X11
 #include <X11/X.h>
-#else
-#define KeySym unsigned int
-#endif /* MOZ_X11 */
 
 #ifdef __cplusplus
 extern "C" { 
