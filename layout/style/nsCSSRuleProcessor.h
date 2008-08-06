@@ -96,6 +96,12 @@ public:
   NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,
                                    PRBool* aRulesChanged);
 
+#ifdef DEBUG
+  void AssertQuirksChangeOK() {
+    NS_ASSERTION(!mRuleCascades, "too late to set quirks style sheet");
+  }
+#endif
+
 protected:
   RuleCascadeData* GetRuleCascade(nsPresContext* aPresContext);
   void RefreshRuleCascade(nsPresContext* aPresContext);
