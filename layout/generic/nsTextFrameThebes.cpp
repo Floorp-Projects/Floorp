@@ -5895,6 +5895,10 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   } else if (breakAfter) {
     aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
   }
+  if (completedFirstLetter) {
+    lineLayout.SetFirstLetterStyleOK(PR_FALSE);
+    aStatus |= NS_INLINE_BREAK_FIRST_LETTER_COMPLETE;
+  }
 
   // Compute space and letter counts for justification, if required
   if (NS_STYLE_TEXT_ALIGN_JUSTIFY == textStyle->mTextAlign &&
