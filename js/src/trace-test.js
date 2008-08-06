@@ -449,6 +449,18 @@ function andTestHelper(a, b, n)
   }
 })();
 
+function nonEmptyStack()
+{
+  var a = 0;
+  for (var c in {a:1, b:2, c:3}) {
+    for (var i = 0; i < 10; i++)
+      a += i;
+  }
+  return String(a);
+}
+nonEmptyStack.expected = "135";
+test(nonEmptyStack);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
