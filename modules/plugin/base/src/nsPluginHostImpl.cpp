@@ -174,7 +174,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
 
-#if defined(XP_UNIX) && defined(MOZ_WIDGET_GTK2)
+#if defined(XP_UNIX) && defined(MOZ_WIDGET_GTK2) & defined(MOZ_X11)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
 #endif
 
