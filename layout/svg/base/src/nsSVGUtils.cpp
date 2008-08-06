@@ -124,6 +124,10 @@ protected:
     nsSVGPropertyBase* mContainer;
   };
   
+  /**
+   * @param aOK this is only for the convenience of callers. We set *aOK to false
+   * if this function returns null.
+   */
   nsIFrame* GetReferencedFrame(nsIAtom* aFrameType, PRBool* aOK) {
     if (mElement.get()) {
       nsIFrame *frame =
