@@ -48,6 +48,8 @@
 #include <sys/int_types.h>
 #endif
 
+#include <gdk/gdkx.h>
+
 #if 0
 #include <stdio.h>
 #define CAIRO_GDK_DRAWING_NOTE(m) fprintf(stderr, m)
@@ -56,17 +58,10 @@
 #endif
 
 static cairo_user_data_key_t pixmap_free_key;
-
-typedef struct {
-    Display *dpy;
-    Pixmap   pixmap;
-} pixmap_free_struct;
-
 static void pixmap_free_func (void *data)
 {
-    pixmap_free_struct *pfs = (pixmap_free_struct *) data;
-    XFreePixmap (pfs->dpy, pfs->pixmap);
-    free (pfs);
+    GdkPixmap *pixmap = (GdkPixmap *) data;
+    g_object_unref(pixmap);
 }
 
 /* We have three basic strategies available:
@@ -84,17 +79,9 @@ static void pixmap_free_func (void *data)
 */
 
 static cairo_bool_t
-_convert_coord_to_short (double coord, short *v)
+_convert_coord_to_int (double coord, int *v)
 {
-    *v = (short)coord;
-    /* XXX allow some tolerance here? */
-    return *v == coord;
-}
-
-static cairo_bool_t
-_convert_coord_to_unsigned_short (double coord, unsigned short *v)
-{
-    *v = (unsigned short)coord;
+    *v = (int)coord;
     /* XXX allow some tolerance here? */
     return *v == coord;
 }
@@ -119,7 +106,7 @@ _get_rectangular_clip (cairo_t *cr,
                        int bounds_x, int bounds_y,
                        int bounds_width, int bounds_height,
                        cairo_bool_t *need_clip,
-                       XRectangle *rectangles, int max_rectangles,
+                       GdkRectangle *rectangles, int max_rectangles,
                        int *num_rectangles)
 {
     cairo_rectangle_list_t *cliplist;
@@ -161,17 +148,17 @@ _get_rectangular_clip (cairo_t *cr,
                                  &intersect_x, &intersect_x_most) &&
             _intersect_interval (b_y, b_y_most, clips[i].y, clips[i].y + clips[i].height,
                                  &intersect_y, &intersect_y_most)) {
-            XRectangle *rect = &rectangles[rect_count];
+            GdkRectangle *rect = &rectangles[rect_count];
 
             if (rect_count >= max_rectangles) {
                 retval = False;
                 goto FINISH;
             }
 
-            if (!_convert_coord_to_short (intersect_x, &rect->x) ||
-                !_convert_coord_to_short (intersect_y, &rect->y) ||
-                !_convert_coord_to_unsigned_short (intersect_x_most - intersect_x, &rect->width) ||
-                !_convert_coord_to_unsigned_short (intersect_y_most - intersect_y, &rect->height))
+            if (!_convert_coord_to_int (intersect_x, &rect->x) ||
+                !_convert_coord_to_int (intersect_y, &rect->y) ||
+                !_convert_coord_to_int (intersect_x_most - intersect_x, &rect->width) ||
+                !_convert_coord_to_int (intersect_y_most - intersect_y, &rect->height))
             {
                 retval = False;
                 goto FINISH;
@@ -208,9 +195,9 @@ _draw_with_xlib_direct (cairo_t *cr,
     cairo_surface_t *target;
     Drawable d;
     cairo_matrix_t matrix;
-    short offset_x, offset_y;
+    int offset_x, offset_y;
     cairo_bool_t needs_clip;
-    XRectangle rectangles[MAX_STATIC_CLIP_RECTANGLES];
+    GdkRectangle rectangles[MAX_STATIC_CLIP_RECTANGLES];
     int rect_count;
     double device_offset_x, device_offset_y;
     int max_rectangles;
@@ -232,8 +219,8 @@ _draw_with_xlib_direct (cairo_t *cr,
     }
     /* Check that the matrix translation offsets (adjusted for
        device offset) are integers */
-    if (!_convert_coord_to_short (matrix.x0 + device_offset_x, &offset_x) ||
-        !_convert_coord_to_short (matrix.y0 + device_offset_y, &offset_y)) {
+    if (!_convert_coord_to_int (matrix.x0 + device_offset_x, &offset_x) ||
+        !_convert_coord_to_int (matrix.y0 + device_offset_y, &offset_y)) {
         CAIRO_GDK_DRAWING_NOTE("TAKING SLOW PATH: non-integer offset\n");
         return False;
     }
@@ -315,7 +302,7 @@ _draw_with_xlib_direct (cairo_t *cr,
     CAIRO_GDK_DRAWING_NOTE("TAKING FAST PATH\n");
     cairo_surface_flush (target);
     callback (closure, GDK_DRAWABLE(gdk_xid_table_lookup(d)), 
-            offset_x, offset_y, rectangles,
+              offset_x, offset_y, rectangles,
               needs_clip ? rect_count : 0);
     cairo_surface_mark_dirty (target);
     return True;
@@ -325,58 +312,39 @@ static cairo_surface_t *
 _create_temp_xlib_surface (cairo_t *cr, Display *dpy, int width, int height,
                            cairo_gdk_drawing_support_t capabilities)
 {
+    cairo_surface_t *result = NULL;
+
     /* base the temp surface on the *screen* surface, not any intermediate
      * group surface, because the screen surface is more likely to have
      * characteristics that the xlib-using code is likely to be happy with */
     cairo_surface_t *target = cairo_get_target (cr);
     Drawable target_drawable = cairo_xlib_surface_get_drawable (target);
+    GdkDrawable *gdk_target_drawable = GDK_DRAWABLE(gdk_xid_table_lookup(target_drawable));
 
-    int screen_index = DefaultScreen (dpy);
-    Drawable drawable = RootWindow (dpy, screen_index);
-    Screen *screen = DefaultScreenOfDisplay (dpy);
-    Visual *visual = DefaultVisual (dpy, screen_index);
-    int depth = DefaultDepth (dpy, screen_index);
+    GdkPixmap *pixmap = NULL;
+    if (gdk_target_drawable) {
+        pixmap = gdk_pixmap_new(gdk_target_drawable,
+                                width, height,
+                                -1);
+    } else {
+        int screen_index = DefaultScreen (dpy);
+        int depth = DefaultDepth (dpy, screen_index);
 
-    Pixmap pixmap;
-    cairo_surface_t *result;
-    pixmap_free_struct *pfs;
-    
-    /* make the temporary surface match target_drawable to the extent supported
-       by the native rendering code */
-    if (target_drawable) {
-        Screen *target_screen = cairo_xlib_surface_get_screen (target);
-        Visual *target_visual = cairo_xlib_surface_get_visual (target);
-        if ((target_screen == screen ||
-             (capabilities & CAIRO_GDK_DRAWING_SUPPORTS_ALTERNATE_SCREEN)) &&
-            target_visual &&
-            (target_visual == DefaultVisualOfScreen (target_screen) ||
-             (capabilities & CAIRO_GDK_DRAWING_SUPPORTS_NONDEFAULT_VISUAL))) {
-            drawable = target_drawable;
-            dpy = cairo_xlib_surface_get_display (target);
-            visual = target_visual;
-            depth = cairo_xlib_surface_get_depth (target);
-        }
+        pixmap = gdk_pixmap_new(NULL,
+                                width, height,
+                                depth);
     }
-    
-    pfs = malloc (sizeof(pixmap_free_struct));
-    if (pfs == NULL)
-        return NULL;
-        
-    pixmap = XCreatePixmap (dpy, drawable, width, height, depth);
-    if (!pixmap) {
-        free (pfs);
-        return NULL;
-    }
-    pfs->dpy = dpy;
-    pfs->pixmap = pixmap;
-  
-    result = cairo_xlib_surface_create (dpy, pixmap, visual, width, height);
+
+    result = cairo_xlib_surface_create (gdk_x11_drawable_get_xdisplay(pixmap),
+                                        gdk_x11_drawable_get_xid(pixmap),
+                                        gdk_x11_visual_get_xvisual(gdk_drawable_get_visual(pixmap)),
+                                        width, height);
     if (cairo_surface_status (result) != CAIRO_STATUS_SUCCESS) {
-        pixmap_free_func (pfs);
+        pixmap_free_func (pixmap);
         return NULL;
     }
     
-    cairo_surface_set_user_data (result, &pixmap_free_key, pfs, pixmap_free_func);
+    cairo_surface_set_user_data (result, &pixmap_free_key, pixmap, pixmap_free_func);
     return result;
 }
 
@@ -387,9 +355,8 @@ _draw_onto_temp_xlib_surface (cairo_surface_t *temp_xlib_surface,
                               double background_gray_value)
 {
     Drawable d = cairo_xlib_surface_get_drawable (temp_xlib_surface);
-    Screen *screen = cairo_xlib_surface_get_screen (temp_xlib_surface);
-    Visual *visual = cairo_xlib_surface_get_visual (temp_xlib_surface);
     cairo_bool_t result;
+
     cairo_t *cr = cairo_create (temp_xlib_surface);
     cairo_set_source_rgb (cr, background_gray_value, background_gray_value,
                           background_gray_value);
