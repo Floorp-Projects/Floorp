@@ -3336,10 +3336,9 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
                                       PR_FALSE);
       }
     }
-    else if (amountUsed > 0 && yOriginRG != rgFrame->GetPosition().y) {
-      NS_ASSERTION(rgFrame->GetPosition().x == 0, "Unexpected position");
+    else if (amountUsed > 0 && yOriginRG != rgRect.y) {
       rgFrame->InvalidateOverflowRect();
-      rgFrame->SetPosition(nsPoint(0, yOriginRG));
+      rgFrame->SetPosition(nsPoint(rgRect.x, yOriginRG));
       // Make sure child views are properly positioned
       nsTableFrame::RePositionViews(rgFrame);
       rgFrame->InvalidateOverflowRect();
@@ -3497,10 +3496,9 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
       // Make sure child views are properly positioned
       // XXX what happens if childFrame is a scroll frame and this gets skipped? see also below
     }
-    else if (amountUsed > 0 && yOriginRG != rgFrame->GetPosition().y) {
-      NS_ASSERTION(rgFrame->GetPosition().x == 0, "Unexpected position");
+    else if (amountUsed > 0 && yOriginRG != rgRect.y) {
       rgFrame->InvalidateOverflowRect();
-      rgFrame->SetPosition(nsPoint(0, yOriginRG));
+      rgFrame->SetPosition(nsPoint(rgRect.x, yOriginRG));
       // Make sure child views are properly positioned
       nsTableFrame::RePositionViews(rgFrame);
       rgFrame->InvalidateOverflowRect();
