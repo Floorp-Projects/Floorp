@@ -481,7 +481,7 @@ gfxWindowsPlatform::FindFontForCharProc(nsStringHashKey::KeyType aKey,
         rank += 1;
 
     if (rank > data->matchRank ||
-        (rank == data->matchRank && Compare(fe->GetName(), data->bestMatch->GetName()) > 0)) {
+        (rank == data->matchRank && Compare(fe->Name(), data->bestMatch->Name()) > 0)) {
         data->bestMatch = fe;
         data->matchRank = rank;
     }

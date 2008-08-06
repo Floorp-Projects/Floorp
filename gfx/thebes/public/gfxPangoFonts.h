@@ -59,9 +59,20 @@
 
 class gfxPangoTextRun;
 
+// stub class until fuller implementation is flushed out
+class gfxPangoFontEntry : public gfxFontEntry {
+public:
+    gfxPangoFontEntry(const nsAString& aName)
+        : gfxFontEntry(aName)
+    { }
+
+    ~gfxPangoFontEntry() {}
+        
+};
+
 class gfxPangoFont : public gfxFont {
 public:
-    gfxPangoFont (const nsAString& aName,
+    gfxPangoFont (gfxPangoFontEntry *aFontEntry,
                   const gfxFontStyle *aFontStyle);
     virtual ~gfxPangoFont ();
     static already_AddRefed<gfxPangoFont> GetOrMakeFont(PangoFont *aPangoFont);
@@ -96,7 +107,7 @@ protected:
     Metrics  mMetrics;
     gfxFloat mAdjustedSize;
 
-    gfxPangoFont(PangoFont *aPangoFont, const nsAString &aName,
+    gfxPangoFont(PangoFont *aPangoFont, gfxPangoFontEntry *aFontEntry,
                  const gfxFontStyle *aFontStyle);
     void RealizePangoFont();
     void GetCharSize(const char aChar, gfxSize& aInkSize, gfxSize& aLogSize,
