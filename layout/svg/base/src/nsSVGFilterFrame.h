@@ -77,7 +77,4 @@ private:
                           nsSVGFilterInstance **aInstance);
 };
 
-nsIContent *
-NS_GetSVGFilterElement(nsIURI *aURI, nsIContent *aContent);
-
 #endif
