@@ -53,22 +53,8 @@ endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-
-ifdef MOZ_X11
-EXPORTS += gfxXlibSurface.h
-endif
-
-ifdef MOZ_PANGO 
-EXPORTS += gfxPangoFonts.h
-else
-EXPORTS += gfxFT2Fonts.h
-endif
-
-ifdef MOZ_DFB
-EXPORTS += gfxDirectFBSurface.h
-endif
-
-EXPORTS +=  gfxPlatformGtk.h gfxGdkNativeRenderer.h
+EXPORTS +=      gfxXlibSurface.h gfxPlatformGtk.h gfxXlibNativeRenderer.h
+EXPORTS +=	gfxPangoFonts.h
 EXPORTS +=	gfxPDFSurface.h gfxPSSurface.h
 
 ifdef MOZ_ENABLE_GLITZ
