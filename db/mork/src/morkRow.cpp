@@ -945,7 +945,7 @@ morkRow::NewRowCellCursor(morkEnv* ev, mdb_pos inPos)
         {
           if ( ev->Good() )
           {
-            cursor->mCursor_Pos = inPos;
+            cursor->mRowCellCursor_Col = inPos;
             outCursor = cursor;
           }
           else
