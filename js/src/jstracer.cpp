@@ -521,7 +521,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
         import(gp_ins, nativeGlobalOffset(vp), vp, *m, vpname, vpnum, NULL);
         m++;
     );
-    ptrdiff_t offset = -treeInfo->nativeStackBase + 8;
+    ptrdiff_t offset = -treeInfo->nativeStackBase;
     m = stackTypeMap;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         import(lirbuf->sp, offset, vp, *m, vpname, vpnum, fp);
@@ -797,6 +797,7 @@ BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 {
     debug_only(printf("stack: ");)
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        debug_only(printf("%s%u=", vpname, vpnum);)
         if (!ValueToNative(*vp, *mp, np))
             return false;
         ++mp; ++np;
@@ -857,6 +858,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
     mp = mp_base;
     np = np_base;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        debug_only(printf("%s%u=", vpname, vpnum);)
         if (!NativeToValue(cx, *vp, *mp, np))
             return false;
         ++mp; ++np
@@ -952,16 +954,18 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
        the same source address (p) and use the same offset/base. */
     LIns* x;
     if ((x = nativeFrameTracker.get(p)) == NULL) {
-        nativeFrameTracker.set(p, !isGlobal(p) /* not a global */
-                ? lir->insStorei(i, lirbuf->sp,
-                        -treeInfo->nativeStackBase + nativeStackOffset(p) + 8)
-                : lir->insStorei(i, gp_ins,
-                        nativeGlobalOffset(p)));
+        if (isGlobal(p)) {
+            x = lir->insStorei(i, gp_ins, nativeGlobalOffset(p));
+        } else {
+            ptrdiff_t offset = nativeStackOffset(p);
+            x = lir->insStorei(i, lirbuf->sp, -treeInfo->nativeStackBase + offset);
+        }
+        nativeFrameTracker.set(p, x);
     } else {
 #define ASSERT_VALID_CACHE_HIT(base, offset)                                  \
     JS_ASSERT(base == lirbuf->sp || base == gp_ins);                          \
     JS_ASSERT(offset == ((base == lirbuf->sp)                                 \
-        ? -treeInfo->nativeStackBase + nativeStackOffset(p) + 8               \
+        ? -treeInfo->nativeStackBase + nativeStackOffset(p)                   \
         : nativeGlobalOffset(p)));                                            \
 
         if (x->isop(LIR_ld) || x->isop(LIR_ldq)) {
@@ -1029,7 +1033,9 @@ TraceRecorder::snapshot(ExitType exitType)
         exitType = LOOP_EXIT;
     /* generate the entry map and stash it in the trace */
     unsigned stackSlots = nativeStackSlots(callDepth, fp);
-    trackNativeStackUse(stackSlots);
+    /* its sufficient to track the native stack use here since all stores above the
+       stack watermark defined by guards are killed. */
+    trackNativeStackUse(stackSlots + 1);
     /* reserve space for the type map */
     unsigned ngslots = treeInfo->globalSlots.length();
     LIns* data = lir_buf_writer->skip((stackSlots + ngslots) * sizeof(uint8));
@@ -1463,9 +1469,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
     debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
 #ifdef DEBUG
-    printf("entering trace at %s:%u@%u\n",
+    printf("entering trace at %s:%u@%u, native stack slots: %u\n",
            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
-           cx->fp->regs->pc - cx->fp->script->code);
+           cx->fp->regs->pc - cx->fp->script->code, ti->maxNativeStackSlots);
 #endif
     if (!BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap.data(), global) ||
         !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
@@ -1473,7 +1479,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
         debug_only(printf("type-map mismatch, trashing trace.\n");)
         return NULL;
     }
-    double* entry_sp = &stack[ti->nativeStackBase/sizeof(double) - 1];
+    double* entry_sp = &stack[ti->nativeStackBase/sizeof(double)];
 
     FrameInfo* callstack = (FrameInfo*) alloca(ti->maxCallDepth * sizeof(FrameInfo));
     InterpState state;
