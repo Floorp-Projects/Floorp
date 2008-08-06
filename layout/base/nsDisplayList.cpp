@@ -567,8 +567,8 @@ nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintOutline(mFrame->PresContext(), *aCtx, mFrame,
                                aDirtyRect, nsRect(offset, mFrame->GetSize()),
                                *mFrame->GetStyleBorder(),
-                               *mFrame->GetStyleOutline(),                              
-                               mFrame->GetStyleContext(), 0);
+                               *mFrame->GetStyleOutline(),
+                               mFrame->GetStyleContext());
 }
 
 PRBool
@@ -632,7 +632,8 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintBorder(mFrame->PresContext(), *aCtx, mFrame,
                               aDirtyRect, nsRect(offset, mFrame->GetSize()),
                               *mFrame->GetStyleBorder(),
-                              mFrame->GetStyleContext(), mFrame->GetSkipSides());
+                              mFrame->GetStyleContext(),
+                              mFrame->GetSkipSides());
 }
 
 void
