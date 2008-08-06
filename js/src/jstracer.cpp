@@ -1473,8 +1473,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
         debug_only(printf("type-map mismatch, skipping trace.\n");)
         return NULL;
     }
-    double* entry_sp = &stack[ti->nativeStackBase/sizeof(double) +
-                              (cx->fp->regs->sp - StackBase(cx->fp) - 1)];
+    double* entry_sp = &stack[ti->nativeStackBase/sizeof(double) - 1];
 
     FrameInfo* callstack = (FrameInfo*) alloca(ti->maxCallDepth * sizeof(FrameInfo));
     InterpState state;
