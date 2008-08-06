@@ -60,18 +60,6 @@ NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCont
   return new (aPresShell) nsSVGFilterFrame(aContext);
 }
 
-nsIContent *
-NS_GetSVGFilterElement(nsIURI *aURI, nsIContent *aContent)
-{
-  nsIContent* content = nsContentUtils::GetReferencedElement(aURI, aContent);
-
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(content);
-  if (filter)
-    return content;
-
-  return nsnull;
-}
-
 static nsIntRect
 MapDeviceRectToFilterSpace(const gfxMatrix& aMatrix,
                            const gfxIntSize& aFilterSize,

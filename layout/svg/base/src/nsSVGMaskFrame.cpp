@@ -59,19 +59,6 @@ NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContex
   return new (aPresShell) nsSVGMaskFrame(aContext);
 }
 
-nsIContent *
-NS_GetSVGMaskElement(nsIURI *aURI, nsIContent *aContent)
-{
-  nsIContent* content = nsContentUtils::GetReferencedElement(aURI, aContent);
-
-  nsCOMPtr<nsIDOMSVGMaskElement> mask = do_QueryInterface(content);
-
-  if (mask)
-    return content;
-
-  return nsnull;
-}
-
 already_AddRefed<gfxPattern>
 nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
                                  nsISVGChildFrame* aParent,
