@@ -4515,12 +4515,18 @@ nsTextFrame::HasSelectionOverflowingDecorations(nsPresContext* aPresContext,
   if (ratio <= 1.0f)
     return PR_FALSE;
 
-  for (SelectionDetails *sd = GetSelectionDetails(); sd; sd = sd->mNext) {
+  SelectionDetails *details = GetSelectionDetails();
+  PRBool retval = PR_FALSE;
+  for (SelectionDetails *sd = details; sd; sd = sd->mNext) {
     if (sd->mStart != sd->mEnd &&
-        sd->mType & SelectionTypesWithDecorations)
-      return PR_TRUE;
+        sd->mType & SelectionTypesWithDecorations) {
+      retval = PR_TRUE;
+      break;
+    }
   }
-  return PR_FALSE;
+  DestroySelectionDetails(details);
+  
+  return retval;
 }
 
 //null range means the whole thing
