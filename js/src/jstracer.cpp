@@ -431,7 +431,8 @@ public:
                 vp = &fp->argv[-1];                                           \
                 code;                                                         \
                 SET_VPNAME("argv");                                           \
-                vp = &fp->argv[0]; vpstop = &fp->argv[fp->fun->nargs];        \
+                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);            \
+                vp = &fp->argv[0]; vpstop = &fp->argv[nargs];                 \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
             }                                                                 \
             SET_VPNAME("vars");                                               \
@@ -568,8 +569,10 @@ nativeStackSlots(unsigned callDepth, JSStackFrame* fp)
         if (fp->callee)
             slots += fp->script->nfixed;
         if (callDepth-- == 0) {
-            if (fp->callee)
-                slots += 1/*this*/ + fp->fun->nargs;
+            if (fp->callee) {
+                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
+                slots += 1/*this*/ + nargs;
+            }
             return slots;
         }
         fp = fp->down;
