@@ -239,31 +239,28 @@ Oracle::isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) 
     return _dontDemote.get(hash);
 }
 
-/* Invalidate the stored hash code for a type map */
-void TypeMap::rehash()
+/* Calculate the total number of native frame slots we need from this frame
+   all the way back to the entry frame, including the current stack usage. */
+static unsigned
+nativeStackSlots(unsigned callDepth, JSStackFrame* fp)
 {
-    _hashcode = 0;
-}
-
-/* Calculate (and cache) hash code for a type map */
-uint32 TypeMap::hashcode()
-{
-    if (_hashcode)
-        return _hashcode;
-    uint8* p = data();
-    unsigned len = length();
-    unsigned hash = 0;
-    while (len-- > 0) {
-        hash += *p++;
-        hash ^= hash << 10;
-        hash += hash >> 1;
+    unsigned slots = 0;
+    for (;;) {
+        unsigned operands = fp->regs->sp - StackBase(fp);
+        JS_ASSERT(operands <= fp->script->nslots - fp->script->nfixed);
+        slots += operands;
+        if (fp->callee)
+            slots += fp->script->nfixed;
+        if (callDepth-- == 0) {
+            if (fp->callee) {
+                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
+                slots += 1/*this*/ + nargs;
+            }
+            return slots;
+        }
+        fp = fp->down;
     }
-    _hashcode = hash;
-#ifdef DEBUG    
-    if (!hash)
-        printf("hashcode is 0 for typemap, this will be slow.\n");
-#endif        
-    return hash;
+    JS_NOT_REACHED("nativeStackSlots");
 }
 
 static LIns* demote(LirWriter *out, LInsp i)
@@ -537,6 +534,52 @@ public:
         FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code);                  \
     JS_END_MACRO
 
+/* Invalidate the stored hash code for a type map. */
+void 
+TypeMap::rehash()
+{
+    _hashcode = 0;
+}
+
+/* Calculate (and cache) hash code for a type map. */
+uint32 
+TypeMap::hashcode()
+{
+    if (_hashcode)
+        return _hashcode;
+    uint8* p = data();
+    unsigned len = length();
+    unsigned hash = 0;
+    while (len-- > 0) {
+        hash += *p++;
+        hash ^= hash << 10;
+        hash += hash >> 1;
+    }
+    _hashcode = hash;
+#ifdef DEBUG    
+    if (!hash)
+        printf("hashcode is 0 for typemap, this will be slow.\n");
+#endif        
+    return hash;
+}
+
+/* Capture the typemap for the currently pending stack frames. */
+void 
+TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
+{
+    setLength(nativeStackSlots(callDepth, cx->fp));
+    uint8* map = data();
+    uint8* m = map;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        uint8 type = getCoercedType(*vp);
+        if ((type == JSVAL_INT) && oracle.isStackSlotUndemotable(cx->fp->script,
+                cx->fp->regs->pc, unsigned(m - map)))
+            type = JSVAL_DOUBLE;
+        *m++ = type;
+    );
+    rehash();
+}
+
 TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
         Fragment* _fragment, unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap)
 {
@@ -617,30 +660,6 @@ unsigned
 TraceRecorder::getCallDepth() const
 {
     return callDepth;
-}
-
-/* Calculate the total number of native frame slots we need from this frame
-   all the way back to the entry frame, including the current stack usage. */
-static unsigned
-nativeStackSlots(unsigned callDepth, JSStackFrame* fp)
-{
-    unsigned slots = 0;
-    for (;;) {
-        unsigned operands = fp->regs->sp - StackBase(fp);
-        JS_ASSERT(operands <= fp->script->nslots - fp->script->nfixed);
-        slots += operands;
-        if (fp->callee)
-            slots += fp->script->nfixed;
-        if (callDepth-- == 0) {
-            if (fp->callee) {
-                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
-                slots += 1/*this*/ + nargs;
-            }
-            return slots;
-        }
-        fp = fp->down;
-    }
-    JS_NOT_REACHED("nativeStackSlots");
 }
 
 /* Determine the offset in the native global frame for a jsval we track */
@@ -999,6 +1018,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(slot))
         type = JSVAL_DOUBLE;
     treeInfo->globalTypeMap.add(type);
+    treeInfo->globalTypeMap.rehash();
     import(gp_ins, slot*sizeof(double), vp, treeInfo->globalTypeMap.data()[index],
            "global", index, NULL);
     return true;
@@ -1481,8 +1501,15 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     TreeInfo* ti = new TreeInfo(f); // TODO: deallocate when fragment dies
     f->vmprivate = ti;
 
+    /* we shouldn't have any interned globals for a new tree */
+    JS_ASSERT(!ti->globalSlots.length());
+    
+    /* capture the coerced type of each active slot in the stack type map */
+    ti->stackTypeMap.captureStackTypes(cx, 0/*callDepth*/);
+    
     /* determine the native frame layout at the entry point */
-    unsigned entryNativeStackSlots = nativeStackSlots(0/*callDepth*/, cx->fp);
+    unsigned entryNativeStackSlots = ti->stackTypeMap.length();
+    JS_ASSERT(entryNativeStackSlots == nativeStackSlots(0/*callDepth*/, cx->fp));
     ti->entryNativeStackSlots = entryNativeStackSlots;
     ti->nativeStackBase = (entryNativeStackSlots -
             (cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
@@ -1491,23 +1518,6 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 
     /* create the list of global properties we want to intern */
     ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
-
-    /* ensure the stack type map has the right length */
-    ti->stackTypeMap.setLength(ti->entryNativeStackSlots);
-
-    /* we shouldn't have any interned globals for a new tree */
-    JS_ASSERT(!ti->globalSlots.length());
-    
-    /* update the coerced type of each active slot in the stack type map */
-    uint8* map = ti->stackTypeMap.data();
-    uint8* m = map;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
-        uint8 type = getCoercedType(*vp);
-        if ((type == JSVAL_INT) && oracle.isStackSlotUndemotable(cx->fp->script,
-                cx->fp->regs->pc, unsigned(m - map)))
-            type = JSVAL_DOUBLE;
-        *m++ = type;
-    );
 
     /* recording primary trace */
     return js_StartRecorder(cx, NULL, f, ti->globalSlots.length(),
