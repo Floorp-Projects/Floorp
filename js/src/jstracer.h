@@ -277,6 +277,7 @@ public:
     nanojit::Fragment* getFragment() const { return fragment; }
     bool isLoopHeader(JSContext* cx) const;
     void closeLoop(nanojit::Fragmento* fragmento);
+    void blacklist() { fragment->blacklist(); }
     void emitTreeCall(nanojit::Fragment* inner, nanojit::GuardRecord* lr);
     
     bool record_EnterFrame();
