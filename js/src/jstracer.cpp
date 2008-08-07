@@ -534,35 +534,6 @@ public:
         FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code);                  \
     JS_END_MACRO
 
-/* Invalidate the stored hash code for a type map. */
-void 
-TypeMap::rehash()
-{
-    _hashcode = 0;
-}
-
-/* Calculate (and cache) hash code for a type map. */
-uint32 
-TypeMap::hashcode()
-{
-    if (_hashcode)
-        return _hashcode;
-    uint8* p = data();
-    unsigned len = length();
-    unsigned hash = 0;
-    while (len-- > 0) {
-        hash += *p++;
-        hash ^= hash << 10;
-        hash += hash >> 1;
-    }
-    _hashcode = hash;
-#ifdef DEBUG    
-    if (!hash)
-        printf("hashcode is 0 for typemap, this will be slow.\n");
-#endif        
-    return hash;
-}
-
 /* Capture the typemap for the currently pending stack frames. */
 void 
 TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
@@ -577,7 +548,14 @@ TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
             type = JSVAL_DOUBLE;
         *m++ = type;
     );
-    rehash();
+}
+
+/* Compare this type map to another one and see whether they match. */
+bool
+TypeMap::matches(TypeMap& other)
+{
+    JS_ASSERT(length() == other.length()); /* this should be called with compatible maps only */
+    return !(data(), other.data(), length());
 }
 
 TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
@@ -1018,7 +996,6 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(slot))
         type = JSVAL_DOUBLE;
     treeInfo->globalTypeMap.add(type);
-    treeInfo->globalTypeMap.rehash();
     import(gp_ins, slot*sizeof(double), vp, treeInfo->globalTypeMap.data()[index],
            "global", index, NULL);
     return true;
