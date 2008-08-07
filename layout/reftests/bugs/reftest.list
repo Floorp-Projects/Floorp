@@ -863,4 +863,4 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 == 438981-1.xhtml about:blank
 == 439004-1.html 439004-1-ref.html
 == 439910.html 439910-ref.html
-== 448987.html 448987-ref.html
+# == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
