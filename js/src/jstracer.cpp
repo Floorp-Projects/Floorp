@@ -1496,10 +1496,12 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     if (OBJ_SCOPE(globalObj)->shape != ti->globalShape) {
         AUDIT(globalShapeMismatchAtEntry);
-        debug_only(printf("global shape mismatch, discarding trace (started pc %u line %u).\n",
-                          (jsbytecode*)f->root->ip - cx->fp->script->code,
-                          js_PCToLineNumber(cx, cx->fp->script, (jsbytecode*)f->root->ip));)
-        js_TrashTree(cx, f);
+        //debug_only(printf("global shape mismatch, discarding trace (started pc %u line %u).\n",
+        //        (jsbytecode*)f->root->ip - cx->fp->script->code,
+        //        js_PCToLineNumber(cx, cx->fp->script, (jsbytecode*)f->root->ip));)
+        //js_TrashTree(cx, f);
+        debug_only(printf("global shape mismatch, flushing cache.\n"));
+        js_FlushJITCache(cx);
         return NULL;
     }
 
@@ -1660,6 +1662,28 @@ js_DestroyJIT(JSContext* cx)
            "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
 #endif
+}
+
+extern void
+js_FlushJITCache(JSContext* cx)
+{
+#ifdef DEBUG
+    printf("Flushing cache.\n");
+#endif 
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    if (tm->recorder)
+        js_AbortRecording(cx, NULL, "flush cache");
+    Fragmento* fragmento = tm->fragmento;
+    if (fragmento) {
+        // TODO: deallocate vmprivate -> TreeInfo for root fragments
+        fragmento->clearFrags();
+#ifdef DEBUG        
+        JS_ASSERT(fragmento->labels);
+        delete fragmento->labels;
+        fragmento->labels = new (&gc) LabelMap(core, NULL);
+#endif        
+    }
+    memset(&tm->fcache, 0, sizeof(tm->fcache));
 }
 
 jsval&
