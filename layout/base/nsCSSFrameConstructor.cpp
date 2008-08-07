@@ -1116,6 +1116,9 @@ public:
   PRBool                    mFirstLineStyle;
   nsCOMPtr<nsILayoutHistoryState> mFrameState;
   nsPseudoFrames            mPseudoFrames;
+  // These bits will be added to the state bits of any frame we construct
+  // using this state.
+  nsFrameState              mAdditionalStateBits; 
 
   // Constructor
   // Use the passed-in history state.
@@ -1220,7 +1223,8 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
     mFrameState(aHistoryState),
-    mPseudoFrames()
+    mPseudoFrames(),
+    mAdditionalStateBits(0)
 {
   MOZ_COUNT_CTOR(nsFrameConstructorState);
 }
@@ -1241,7 +1245,8 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mFloatedItems(aFloatContainingBlock),
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
-    mPseudoFrames()
+    mPseudoFrames(),
+    mAdditionalStateBits(0)
 {
   MOZ_COUNT_CTOR(nsFrameConstructorState);
   mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
@@ -1432,6 +1437,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
       return rv;
     }
 
+    placeholderFrame->AddStateBits(mAdditionalStateBits);
     // Add the placeholder frame to the flow
     aFrameItems.AddChild(placeholderFrame);
   }
@@ -1879,99 +1885,99 @@ nsIXBLService * nsCSSFrameConstructor::GetXBLService()
   return gXBLService;
 }
 
+// XXX it would be great if we could use a state bit for this ... or a fast
+// property
+static PRBool
+HasCounterIncrementOrReset(nsIFrame* aFrame)
+{
+  const nsStyleContent *styleContent = aFrame->GetStyleContent();
+  return styleContent->CounterIncrementCount() ||
+         styleContent->CounterResetCount();
+}
+
 void
 nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
   NS_PRECONDITION(mUpdateCount != 0,
                   "Should be in an update while destroying frames");
 
-  if (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
-    if (mQuoteList.DestroyNodesFor(aFrame))
+  nsIFrame* parentFrame = aFrame->GetParent();
+  if (!parentFrame) {
+    NS_ASSERTION(!aFrame->IsGeneratedContentFrame(),
+                 "Root frame was generated?");
+    // The root frame can't be generated...
+    return;
+  }
+
+  if ((aFrame->IsGeneratedContentFrame() &&
+       !parentFrame->IsGeneratedContentFrame()) ||
+      (!mCounterManager.IsEmpty() && HasCounterIncrementOrReset(aFrame))) {
+    // Destroying outermost generated content frame OR a frame with
+    // counter increments/resets
+    nsIContent* content;
+    nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudoType();
+    // The frame may be a pseudo that's not 'before' or 'after'; if so,
+    // treat it as no pseudo since the frame may be non-generated content
+    // associated with a counter, and the counter pseudo is always only
+    // 'before', 'after' or null.
+    if (pseudo == nsCSSPseudoElements::before ||
+        pseudo == nsCSSPseudoElements::after) {
+      content = parentFrame->GetContent();
+    } else {
+      pseudo = nsnull;
+      content = aFrame->GetContent();
+    }
+
+    if (mQuoteList.DestroyNodesFor(content, pseudo)) {
       QuotesDirty();
-  }
-
-  if (mCounterManager.DestroyNodesFor(aFrame)) {
-    // Technically we don't need to update anything if we destroyed only
-    // USE nodes.  However, this is unlikely to happen in the real world
-    // since USE nodes generally go along with INCREMENT nodes.
-    CountersDirty();
-  }
-}
-
-nsresult
-nsCSSFrameConstructor::CreateAttributeContent(nsIContent* aParentContent,
-                                              nsIFrame* aParentFrame,
-                                              PRInt32 aAttrNamespace,
-                                              nsIAtom* aAttrName,
-                                              nsStyleContext* aStyleContext,
-                                              nsCOMArray<nsIContent>& aGeneratedContent,
-                                              nsIContent** aNewContent,
-                                              nsIFrame** aNewFrame)
-{
-  *aNewFrame = nsnull;
-  *aNewContent = nsnull;
-  nsCOMPtr<nsIContent> content;
-  nsresult rv = NS_NewAttributeContent(mDocument->NodeInfoManager(),
-                                       aAttrNamespace, aAttrName,
-                                       getter_AddRefs(content));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  content->SetNativeAnonymous();
-
-  // Set aParentContent as the parent content so that event handling works.
-  // It is also the binding parent.
-  rv = content->BindToTree(mDocument, aParentContent, aParentContent, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    content->UnbindFromTree();
-    return rv;
-  }
-
-  // Create a text frame and initialize it
-  nsIFrame* textFrame = NS_NewTextFrame(mPresShell, aStyleContext);
-  rv = textFrame->Init(content, aParentFrame, nsnull);
-  if (NS_SUCCEEDED(rv)) {
-    if (NS_UNLIKELY(!aGeneratedContent.AppendObject(content))) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+    // Note that we might call DestroyNodesFor multiple times for the same
+    // content+pseudo pair: once for the outermost generated content frame
+    // and once for an inner frame that actually has the content
+    // increments/resets on it (e.g. an inner table frame). That's OK though.
+    if (mCounterManager.DestroyNodesFor(content, pseudo)) {
+      // Technically we don't need to update anything if we destroyed only
+      // USE nodes.  However, this is unlikely to happen in the real world
+      // since USE nodes generally go along with INCREMENT nodes.
+      CountersDirty();
     }
   }
-
-  if (NS_FAILED(rv)) {
-    content->UnbindFromTree();
-    textFrame->Destroy();
-    textFrame = nsnull;
-    content = nsnull;
-  }
-
-  *aNewFrame = textFrame;
-  content.swap(*aNewContent);
-  return rv;
 }
 
-nsresult
-nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFrame,
-                                               nsIContent*           aContent,
-                                               nsStyleContext*       aStyleContext,
-                                               const nsStyleContent* aStyleContent,
-                                               PRUint32              aContentIndex,
-                                               nsCOMArray<nsIContent>& aGeneratedContent,
-                                               nsIFrame**            aFrame)
+already_AddRefed<nsIContent>
+nsCSSFrameConstructor::CreateTextNode(const nsString& aString,
+                                      nsCOMPtr<nsIDOMCharacterData>* aText)
 {
-  *aFrame = nsnull;  // initialize OUT parameter
-
-  // The QuoteList needs the content attached to the frame.
-  nsCOMPtr<nsIDOMCharacterData>* textPtr = nsnull;
-
-  // Get the content value
-  const nsStyleContentData &data = aStyleContent->ContentAt(aContentIndex);
-  nsStyleContentType  type = data.mType;
-
   nsCOMPtr<nsIContent> content;
+  NS_NewTextNode(getter_AddRefs(content), mDocument->NodeInfoManager());
+  if (!content) {
+    // XXX The quotes/counters code doesn't like the text pointer
+    // being null in case of dynamic changes!
+    NS_ASSERTION(!aText, "this OOM case isn't handled very well");
+    return nsnull;
+  }
+  content->SetText(aString, PR_FALSE);
+  if (aText) {
+    *aText = do_QueryInterface(content);
+  }
+  return content.forget();
+}
+
+already_AddRefed<nsIContent>
+nsCSSFrameConstructor::CreateGeneratedContent(nsIContent*     aParentContent,
+                                              nsStyleContext* aStyleContext,
+                                              PRUint32        aContentIndex)
+{
+  // Get the content value
+  const nsStyleContentData &data =
+    aStyleContext->GetStyleContent()->ContentAt(aContentIndex);
+  nsStyleContentType type = data.mType;
 
   if (eStyleContentType_Image == type) {
     if (!data.mContent.mImage) {
       // CSS had something specified that couldn't be converted to an
       // image object
-      return NS_ERROR_FAILURE;
+      return nsnull;
     }
     
     // Create an image content object and pass it the image request.
@@ -1979,339 +1985,240 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
     mDocument->NodeInfoManager()->GetNodeInfo(nsGkAtoms::img, nsnull,
-                                              kNameSpaceID_None,
+                                              kNameSpaceID_XHTML,
                                               getter_AddRefs(nodeInfo));
 
-    nsresult rv = NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo,
-                                           data.mContent.mImage);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    content->SetNativeAnonymous();
-  
-    // Set aContent as the parent content and set the document object. This
-    // way event handling works.  It is also the binding parent.
-    rv = content->BindToTree(mDocument, aContent, aContent, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      content->UnbindFromTree();
-      return rv;
-    }
-    
-    // Create an image frame and initialize it
-    nsIFrame* imageFrame = NS_NewImageFrame(mPresShell, aStyleContext);
-    if (NS_UNLIKELY(!imageFrame)) {
-      content->UnbindFromTree();
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    rv = imageFrame->Init(content, aParentFrame, nsnull);
-    if (NS_FAILED(rv) || NS_UNLIKELY(!aGeneratedContent.AppendObject(content))) {
-      content->UnbindFromTree();
-      imageFrame->Destroy();
-      return NS_FAILED(rv) ? rv : NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Return the image frame
-    *aFrame = imageFrame;
-
-  } else {
-
-    nsAutoString contentString;
-
-    switch (type) {
-    case eStyleContentType_String:
-      contentString = data.mContent.mString;
-      break;
-  
-    case eStyleContentType_Attr:
-      {
-        nsCOMPtr<nsIAtom> attrName;
-        PRInt32 attrNameSpace = kNameSpaceID_None;
-        contentString = data.mContent.mString;
-        PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
-        if (-1 != barIndex) {
-          nsAutoString  nameSpaceVal;
-          contentString.Left(nameSpaceVal, barIndex);
-          PRInt32 error;
-          attrNameSpace = nameSpaceVal.ToInteger(&error, 10);
-          contentString.Cut(0, barIndex + 1);
-          if (contentString.Length()) {
-            attrName = do_GetAtom(contentString);
-          }
-        }
-        else {
-          attrName = do_GetAtom(contentString);
-        }
-
-        if (!attrName) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        nsresult rv =
-          CreateAttributeContent(aContent, aParentFrame, attrNameSpace,
-                                 attrName, aStyleContext, aGeneratedContent,
-                                 getter_AddRefs(content), aFrame);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      break;
-  
-    case eStyleContentType_Counter:
-    case eStyleContentType_Counters:
-      {
-        nsCSSValue::Array *counters = data.mContent.mCounters;
-        nsCounterList *counterList = mCounterManager.CounterListFor(
-            nsDependentString(counters->Item(0).GetStringBufferValue()));
-        if (!counterList)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        nsCounterUseNode* node =
-          new nsCounterUseNode(counters, aParentFrame, aContentIndex,
-                               type == eStyleContentType_Counters);
-        if (!node)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-        counterList->Insert(node);
-        PRBool dirty = counterList->IsDirty();
-        if (!dirty) {
-          if (counterList->IsLast(node)) {
-            node->Calc(counterList);
-            node->GetText(contentString);
-          }
-          // In all other cases (list already dirty or node not at the end),
-          // just start with an empty string for now and when we recalculate
-          // the list we'll change the value to the right one.
-          else {
-            counterList->SetDirty();
-            CountersDirty();
-          }
-        }
-
-        textPtr = &node->mText; // text node assigned below
-      }
-      break;
-
-    case eStyleContentType_Image:
-      NS_NOTREACHED("handled by if above");
-      return NS_ERROR_UNEXPECTED;
-  
-    case eStyleContentType_OpenQuote:
-    case eStyleContentType_CloseQuote:
-    case eStyleContentType_NoOpenQuote:
-    case eStyleContentType_NoCloseQuote:
-      {
-        nsQuoteNode* node = new nsQuoteNode(type, aParentFrame, aContentIndex);
-        if (!node)
-          return NS_ERROR_OUT_OF_MEMORY;
-        mQuoteList.Insert(node);
-        if (mQuoteList.IsLast(node))
-          mQuoteList.Calc(node);
-        else
-          QuotesDirty();
-
-        // Don't generate a text node or any text for 'no-open-quote' and
-        // 'no-close-quote'.
-        if (node->IsHiddenQuote())
-          return NS_OK;
-
-        textPtr = &node->mText; // text node assigned below
-        contentString = *node->Text();
-      }
-      break;
-  
-    case eStyleContentType_AltContent:
-      {
-        // Use the "alt" attribute; if that fails and the node is an HTML
-        // <input>, try the value attribute and then fall back to some default
-        // localized text we have.
-        nsresult rv = NS_OK;
-        if (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::alt)) {
-          rv = CreateAttributeContent(aContent, aParentFrame,
-                                      kNameSpaceID_None, nsGkAtoms::alt,
-                                      aStyleContext, aGeneratedContent,
-                                      getter_AddRefs(content), aFrame);
-        } else if (aContent->IsNodeOfType(nsINode::eHTML) &&
-                   aContent->NodeInfo()->Equals(nsGkAtoms::input)) {
-          if (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
-            rv = CreateAttributeContent(aContent, aParentFrame,
-                                        kNameSpaceID_None, nsGkAtoms::value,
-                                        aStyleContext, aGeneratedContent,
-                                        getter_AddRefs(content), aFrame);
-          } else {
-            nsXPIDLString temp;
-            rv = nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                                    "Submit", temp);
-            contentString = temp;
-          }
-        } else {
-          *aFrame = nsnull;
-          rv = NS_ERROR_NOT_AVAILABLE;
-          return rv; // Don't fall through to the warning below.
-        }
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      break;
-    } // switch
-  
-
-    if (!content) {
-      // Create a text content node
-      nsIFrame* textFrame = nsnull;
-      nsCOMPtr<nsIContent> textContent;
-      NS_NewTextNode(getter_AddRefs(textContent),
-                     mDocument->NodeInfoManager());
-      if (textContent) {
-        // Set the text
-        textContent->SetText(contentString, PR_TRUE);
-
-        if (textPtr) {
-          *textPtr = do_QueryInterface(textContent);
-          NS_ASSERTION(*textPtr, "must implement nsIDOMCharacterData");
-        }
-
-        textContent->SetNativeAnonymous();
-
-        // Set aContent as the parent content so that event handling works.
-        nsresult rv = textContent->BindToTree(mDocument, aContent, aContent,
-                                              PR_TRUE);
-        if (NS_FAILED(rv)) {
-          textContent->UnbindFromTree();
-          return rv;
-        }
-
-        // Create a text frame and initialize it
-        textFrame = NS_NewTextFrame(mPresShell, aStyleContext);
-        if (!textFrame) {
-          // XXX The quotes/counters code doesn't like the text pointer
-          // being null in case of dynamic changes!
-          NS_NOTREACHED("this OOM case isn't handled very well");
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        textFrame->Init(textContent, aParentFrame, nsnull);
-
-        content = textContent;
-        if (NS_UNLIKELY(!aGeneratedContent.AppendObject(content))) {
-          NS_NOTREACHED("this OOM case isn't handled very well");
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      } else {
-        // XXX The quotes/counters code doesn't like the text pointer
-        // being null in case of dynamic changes!
-        NS_NOTREACHED("this OOM case isn't handled very well");
-      }
-
-      // Return the text frame
-      *aFrame = textFrame;
-    }
+    nsCOMPtr<nsIContent> content;
+    NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo,
+                             data.mContent.mImage);
+    return content.forget();
   }
 
-  return NS_OK;
+  switch (type) {
+  case eStyleContentType_String:
+    return CreateTextNode(nsDependentString(data.mContent.mString), nsnull);
+
+  case eStyleContentType_Attr:
+    {
+      nsCOMPtr<nsIAtom> attrName;
+      PRInt32 attrNameSpace = kNameSpaceID_None;
+      nsAutoString contentString(data.mContent.mString);
+      PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
+      if (-1 != barIndex) {
+        nsAutoString  nameSpaceVal;
+        contentString.Left(nameSpaceVal, barIndex);
+        PRInt32 error;
+        attrNameSpace = nameSpaceVal.ToInteger(&error, 10);
+        contentString.Cut(0, barIndex + 1);
+        if (contentString.Length()) {
+          attrName = do_GetAtom(contentString);
+        }
+      }
+      else {
+        attrName = do_GetAtom(contentString);
+      }
+
+      if (!attrName) {
+        return nsnull;
+      }
+
+      nsCOMPtr<nsIContent> content;
+      NS_NewAttributeContent(mDocument->NodeInfoManager(),
+                             attrNameSpace, attrName, getter_AddRefs(content));
+      return content.forget();
+    }
+  
+  case eStyleContentType_Counter:
+  case eStyleContentType_Counters:
+    {
+      nsCSSValue::Array *counters = data.mContent.mCounters;
+      nsCounterList *counterList = mCounterManager.CounterListFor(
+          nsDependentString(counters->Item(0).GetStringBufferValue()));
+      if (!counterList)
+        return nsnull;
+
+      nsCounterUseNode* node =
+        new nsCounterUseNode(counters, aParentContent, aStyleContext,
+                             aContentIndex, type == eStyleContentType_Counters);
+      if (!node)
+        return nsnull;
+
+      nsAutoString contentString;
+
+      // Note that if there are increments or resets for this generated
+      // content, they will be added *later* when we create the frame subtree
+      // for the generated content. That's OK correctness-wise since
+      // the counter manager will insert them before this "use" node. It's
+      // not so great for performance though. This !dirty optimization here
+      // isn't going to be much use since adding the increments and resets
+      // later will almost certainly dirty everything.
+      counterList->Insert(node);
+      PRBool dirty = counterList->IsDirty();
+      if (!dirty) {
+        if (counterList->IsLast(node)) {
+          node->Calc(counterList);
+          node->GetText(contentString);
+        }
+        // In all other cases (list already dirty or node not at the end),
+        // just start with an empty string for now and when we recalculate
+        // the list we'll change the value to the right one.
+        else {
+          counterList->SetDirty();
+          CountersDirty();
+        }
+      }
+
+      return CreateTextNode(contentString, &node->mText);
+    }
+
+  case eStyleContentType_Image:
+    NS_NOTREACHED("handled by if above");
+    return nsnull;
+
+  case eStyleContentType_OpenQuote:
+  case eStyleContentType_CloseQuote:
+  case eStyleContentType_NoOpenQuote:
+  case eStyleContentType_NoCloseQuote:
+    {
+      nsQuoteNode* node =
+        new nsQuoteNode(type, aParentContent, aContentIndex, aStyleContext);
+      if (!node)
+        return nsnull;
+      mQuoteList.Insert(node);
+      if (mQuoteList.IsLast(node))
+        mQuoteList.Calc(node);
+      else
+        QuotesDirty();
+
+      // Don't generate a text node or any text for 'no-open-quote' and
+      // 'no-close-quote'.
+      if (node->IsHiddenQuote())
+        return nsnull;
+
+      return CreateTextNode(*node->Text(), &node->mText);
+    }
+  
+  case eStyleContentType_AltContent:
+    {
+      // Use the "alt" attribute; if that fails and the node is an HTML
+      // <input>, try the value attribute and then fall back to some default
+      // localized text we have.
+      // XXX what if the 'alt' attribute is added later, how will we
+      // detect that and do the right thing here?
+      if (aParentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::alt)) {
+        nsCOMPtr<nsIContent> content;
+        NS_NewAttributeContent(mDocument->NodeInfoManager(),
+                               kNameSpaceID_None, nsGkAtoms::alt, getter_AddRefs(content));
+        return content.forget();
+      }
+
+      if (aParentContent->IsNodeOfType(nsINode::eHTML) &&
+          aParentContent->NodeInfo()->Equals(nsGkAtoms::input)) {
+        if (aParentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
+          nsCOMPtr<nsIContent> content;
+          NS_NewAttributeContent(mDocument->NodeInfoManager(),
+                                 kNameSpaceID_None, nsGkAtoms::value, getter_AddRefs(content));
+          return content.forget();
+        }
+
+        nsXPIDLString temp;
+        nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                           "Submit", temp);
+        return CreateTextNode(temp, nsnull);
+      }
+
+      break;
+    }
+  } // switch
+
+  return nsnull;
+}
+
+static void DestroyContent(void *aObject,
+                           nsIAtom *aPropertyName,
+                           void *aPropertyValue,
+                           void *aData)
+{
+  nsIContent* content = static_cast<nsIContent*>(aPropertyValue);
+  content->UnbindFromTree();
+  NS_RELEASE(content);
 }
 
 /*
- *
- * aFrame - the frame that should be the parent of the generated
+ * aParentFrame - the frame that should be the parent of the generated
  *   content.  This is the frame for the corresponding content node,
  *   which must not be a leaf frame.
+ * 
+ * Any frames created are added to aFrameItems (or possibly left
+ * in the table pseudoframe state in aState).
+ * 
+ * We create an XML element (tag _moz_generated_content_before or
+ * _moz_generated_content_after) representing the pseudoelement. We
+ * create a DOM node for each 'content' item and make those nodes the
+ * children of the XML element. Then we create a frame subtree for
+ * the XML element as if it were a regular child of
+ * aParentFrame/aParentContent, giving the XML element the ::before or
+ * ::after style.
  */
-PRBool
+void
 nsCSSFrameConstructor::CreateGeneratedContentFrame(nsFrameConstructorState& aState,
-                                                   nsIFrame*        aFrame,
-                                                   nsIContent*      aContent,
+                                                   nsIFrame*        aParentFrame,
+                                                   nsIContent*      aParentContent,
                                                    nsStyleContext*  aStyleContext,
                                                    nsIAtom*         aPseudoElement,
-                                                   nsIFrame**       aResult)
+                                                   nsFrameItems&    aFrameItems)
 {
-  *aResult = nsnull; // initialize OUT parameter
-
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT))
-    return PR_FALSE;
+  if (!aParentContent->IsNodeOfType(nsINode::eELEMENT))
+    return;
 
   nsStyleSet *styleSet = mPresShell->StyleSet();
 
   // Probe for the existence of the pseudo-element
   nsRefPtr<nsStyleContext> pseudoStyleContext;
-  pseudoStyleContext = styleSet->ProbePseudoStyleFor(aContent,
+  pseudoStyleContext = styleSet->ProbePseudoStyleFor(aParentContent,
                                                      aPseudoElement,
                                                      aStyleContext);
+  if (!pseudoStyleContext)
+    return;
+  // |ProbePseudoStyleFor| checked the 'display' property and the
+  // |ContentCount()| of the 'content' property for us.
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsIAtom* elemName = aPseudoElement == nsCSSPseudoElements::before ?
+    nsGkAtoms::mozgeneratedcontentbefore : nsGkAtoms::mozgeneratedcontentafter;
+  mDocument->NodeInfoManager()->GetNodeInfo(elemName, nsnull,
+                                            kNameSpaceID_None,
+                                            getter_AddRefs(nodeInfo));
+  nsIContent* container;
+  nsresult rv = NS_NewXMLElement(&container, nodeInfo);
+  if (NS_FAILED(rv))
+    return;
+  container->SetNativeAnonymous();
+  // Transfer ownership to the frame
+  aParentFrame->SetProperty(aPseudoElement, container, DestroyContent);
 
-  if (pseudoStyleContext) {
-    // |ProbePseudoStyleContext| checks the 'display' property and the
-    // |ContentCount()| of the 'content' property for us.
-
-    // Create a block box or an inline box depending on the value of
-    // the 'display' property
-    nsIFrame*     containerFrame;
-    nsFrameItems  childFrames;
-    nsresult rv;
-
-    const PRUint8 disp = pseudoStyleContext->GetStyleDisplay()->mDisplay;
-    if (disp == NS_STYLE_DISPLAY_BLOCK ||
-        disp == NS_STYLE_DISPLAY_INLINE_BLOCK) {
-      PRUint32 flags = 0;
-      if (disp == NS_STYLE_DISPLAY_INLINE_BLOCK) {
-        flags = NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT;
-      }
-      containerFrame = NS_NewBlockFrame(mPresShell, pseudoStyleContext, flags);
-    } else {
-      containerFrame = NS_NewInlineFrame(mPresShell, pseudoStyleContext);
-    }
-
-    if (NS_UNLIKELY(!containerFrame)) {
-      return PR_FALSE;
-    }
-    InitAndRestoreFrame(aState, aContent, aFrame, nsnull, containerFrame);
-    // XXXbz should we be passing in a non-null aContentParentFrame?
-    nsHTMLContainerFrame::CreateViewForFrame(containerFrame, nsnull, PR_FALSE);
-
-    // Mark the frame as being associated with generated content
-    containerFrame->AddStateBits(NS_FRAME_GENERATED_CONTENT);
-
-    // Create an array to hold all the generated content created for this
-    // frame below in CreateGeneratedFrameFor. No destructor function is
-    // specified because the property is only set here and is removed in
-    // a single place - nsContainerFrame::Destroy.
-    nsCOMArray<nsIContent>* generatedContent = new nsCOMArray<nsIContent>;
-    rv = containerFrame->SetProperty(nsGkAtoms::generatedContent,
-                                     generatedContent);
-    if (NS_UNLIKELY(!generatedContent) || NS_FAILED(rv)) {
-      containerFrame->Destroy(); // this also destroys the created view
-      delete generatedContent;
-      return PR_FALSE;
-    }
-
-    // Create another pseudo style context to use for all the generated child
-    // frames
-    nsRefPtr<nsStyleContext> textStyleContext;
-    textStyleContext = styleSet->ResolveStyleForNonElement(pseudoStyleContext);
-
-    // Now create content objects (and child frames) for each value of the
-    // 'content' property
-
-    const nsStyleContent* styleContent = pseudoStyleContext->GetStyleContent();
-    PRUint32 contentCount = styleContent->ContentCount();
-    for (PRUint32 contentIndex = 0; contentIndex < contentCount; contentIndex++) {
-      nsIFrame* frame;
-
-      // Create a frame
-      rv = CreateGeneratedFrameFor(containerFrame,
-                                   aContent, textStyleContext,
-                                   styleContent, contentIndex,
-                                   *generatedContent, &frame);
-      // Non-elements can't possibly have a view, so don't bother checking
-      if (NS_SUCCEEDED(rv) && frame) {
-        // Add it to the list of child frames
-        childFrames.AddChild(frame);
-      }
-    }
-
-    if (childFrames.childList) {
-      containerFrame->SetInitialChildList(nsnull, childFrames.childList);
-    }
-    *aResult = containerFrame;
-    return PR_TRUE;
+  rv = container->BindToTree(mDocument, aParentContent, aParentContent, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    container->UnbindFromTree();
+    return;
   }
 
-  return PR_FALSE;
+  PRUint32 contentCount = pseudoStyleContext->GetStyleContent()->ContentCount();
+  for (PRUint32 contentIndex = 0; contentIndex < contentCount; contentIndex++) {
+    nsCOMPtr<nsIContent> content =
+      CreateGeneratedContent(aParentContent, pseudoStyleContext, contentIndex);
+    if (content) {
+      container->AppendChildTo(content, PR_FALSE);
+    }
+  }
+
+  nsFrameState savedStateBits = aState.mAdditionalStateBits;
+  // Ensure that frames created here are all tagged with
+  // NS_FRAME_GENERATED_CONTENT.
+  aState.mAdditionalStateBits |= NS_FRAME_GENERATED_CONTENT;
+
+  ConstructFrameInternal(aState, container, aParentFrame,
+    elemName, kNameSpaceID_None, pseudoStyleContext, aFrameItems, PR_TRUE);
+  aState.mAdditionalStateBits = savedStateBits;
 }
 
 nsresult
@@ -3635,7 +3542,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
     }
 
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aNewInnerFrame, PR_FALSE, childItems,
+    rv = ProcessChildren(aState, aContent, aNewInnerFrame, PR_TRUE, childItems,
                          PR_FALSE);
     // XXXbz what about cleaning up?
     if (NS_FAILED(rv)) return rv;
@@ -3764,7 +3671,7 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aSta
 
   if (!aIsPseudo) {
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aNewFrame, PR_FALSE, childItems,
+    rv = ProcessChildren(aState, aContent, aNewFrame, PR_TRUE, childItems,
                          PR_FALSE);
     
     if (NS_FAILED(rv)) return rv;
@@ -3825,7 +3732,7 @@ nsCSSFrameConstructor::ConstructTableColGroupFrame(nsFrameConstructorState& aSta
 
   if (!aIsPseudo) {
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aNewFrame, PR_FALSE, childItems,
+    rv = ProcessChildren(aState, aContent, aNewFrame, PR_TRUE, childItems,
                          PR_FALSE);
     if (NS_FAILED(rv)) return rv;
     aNewFrame->SetInitialChildList(nsnull, childItems.childList);
@@ -3881,7 +3788,7 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsFrameConstructorState& aState,
   nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
   if (!aIsPseudo) {
     nsFrameItems childItems;
-    rv = ProcessChildren(aState, aContent, aNewFrame, PR_FALSE, childItems,
+    rv = ProcessChildren(aState, aContent, aNewFrame, PR_TRUE, childItems,
                          PR_FALSE);
     if (NS_FAILED(rv)) return rv;
     // if there are any anonymous children for the table, create frames for them
@@ -4085,9 +3992,15 @@ static PRBool
 NeedFrameFor(nsIFrame*   aParentFrame,
              nsIContent* aChildContent) 
 {
-  // don't create a whitespace frame if aParentFrame doesn't want it
-  return !aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace) ||
-         !TextIsOnlyWhitespace(aChildContent);
+  // don't create a whitespace frame if aParentFrame doesn't want it.
+  // always create frames for children in generated content. counter(),
+  // quotes, and attr() content can easily change dynamically and we don't
+  // want to be reconstructing frames. It's not even clear that these
+  // should be considered ignorable just because they evaluate to
+  // whitespace.
+  return !aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace)
+    || !TextIsOnlyWhitespace(aChildContent)
+    || aParentFrame->IsGeneratedContentFrame();
 }
 
 const nsStyleDisplay* 
@@ -6759,6 +6672,7 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
 
   // Initialize the frame
   rv = aNewFrame->Init(aContent, aParentFrame, aPrevInFlow);
+  aNewFrame->AddStateBits(aState.mAdditionalStateBits);
 
   if (aState.mFrameState && aState.mFrameManager) {
     // Restore frame state for just the newly created frame.
@@ -8587,13 +8501,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     // Perform special check for diddling around with the frames in
     // a special inline frame.
 
-    // We can't have a block ::after inside an inline, so it's safe to ignore
-    // the fact that we're not really appending if there's ::after content.
-    // Indeed, if we're inserting before the ::after content that means the
-    // ::after content is not the last child of the block in the {ib} split,
-    // which is the only case in which we care whether we're appending.
+    // If we're appending before :after content, then we're not really
+    // appending, so let WipeContainingBlock know that.
     if (WipeContainingBlock(state, containingBlock, parentFrame, frameItems,
-                            PR_TRUE, nsnull)) {
+                            !parentAfterFrame, nsnull)) {
       return NS_OK;
     }
 
@@ -8993,13 +8904,11 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
   // Perform special check for diddling around with the frames in
   // a special inline frame.
-  // We can't have a block ::after inside an inline, so it's safe to ignore
-  // the fact that we're not really appending if there's ::after content.
-  // Indeed, if we're inserting before the ::after content that means the
-  // ::after content is not the last child of the block in the {ib} split,
-  // which is the only case in which we care whether we're appending.
+
+  // If we're appending before :after content, then we're not really
+  // appending, so let WipeContainingBlock know that.
   if (WipeContainingBlock(state, containingBlock, parentFrame, frameItems,
-                          isAppend, prevSibling))
+                          isAppend && !appendAfterFrame, prevSibling))
     return NS_OK;
 
   if (haveFirstLineStyle && parentFrame == containingBlock) {
@@ -10232,7 +10141,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
           nsIContent* headerFooter = rowGroupFrame->GetContent();
           headerFooterFrame->Init(headerFooter, newFrame, nsnull);
           ProcessChildren(state, headerFooter, headerFooterFrame,
-                          PR_FALSE, childItems, PR_FALSE);
+                          PR_TRUE, childItems, PR_FALSE);
           NS_ASSERTION(!state.mFloatedItems.childList, "unexpected floated element");
           headerFooterFrame->SetInitialChildList(nsnull, childItems.childList);
           headerFooterFrame->SetRepeatable(PR_TRUE);
@@ -11224,21 +11133,16 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   nsStyleContext* styleContext =
     nsFrame::CorrectStyleParentFrame(aFrame, nsnull)->GetStyleContext();
     
-  if (aCanHaveGeneratedContent) {
-    // Probe for generated content before
-    nsIFrame* generatedFrame;
-    if (CreateGeneratedContentFrame(aState, aFrame, aContent,
-                                    styleContext, nsCSSPseudoElements::before,
-                                    &generatedFrame)) {
-      // Add the generated frame to the child list
-      aFrameItems.AddChild(generatedFrame);
-    }
-  }
-
- 
   // save the incoming pseudo frame state
   nsPseudoFrames priorPseudoFrames;
   aState.mPseudoFrames.Reset(&priorPseudoFrames);
+
+  if (aCanHaveGeneratedContent) {
+    // Probe for generated content before
+    CreateGeneratedContentFrame(aState, aFrame, aContent,
+                                styleContext, nsCSSPseudoElements::before,
+                                aFrameItems);
+  }
 
   ChildIterator iter, last;
   for (ChildIterator::Init(aContent, &iter, &last);
@@ -11250,6 +11154,13 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
       return rv;
   }
 
+  if (aCanHaveGeneratedContent) {
+    // Probe for generated content after
+    CreateGeneratedContentFrame(aState, aFrame, aContent,
+                                styleContext, nsCSSPseudoElements::after,
+                                aFrameItems);
+  }
+
   // process the current pseudo frame state
   if (!aState.mPseudoFrames.IsEmpty()) {
     ProcessPseudoFrames(aState, aFrameItems);
@@ -11257,17 +11168,6 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
 
   // restore the incoming pseudo frame state
   aState.mPseudoFrames = priorPseudoFrames;
-
-  if (aCanHaveGeneratedContent) {
-    // Probe for generated content after
-    nsIFrame* generatedFrame;
-    if (CreateGeneratedContentFrame(aState, aFrame, aContent,
-                                    styleContext, nsCSSPseudoElements::after,
-                                    &generatedFrame)) {
-      // Add the generated frame to the child list
-      aFrameItems.AddChild(generatedFrame);
-    }
-  }
 
   if (aParentIsBlock) {
     if (aState.mFirstLetterStyle) {
@@ -12606,14 +12506,10 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsFrameConstructorState& aState,
 
   if (aCanHaveGeneratedContent) {
     // Probe for generated content before
-    nsIFrame* generatedFrame;
     styleContext = aFrame->GetStyleContext();
-    if (CreateGeneratedContentFrame(aState, aFrame, aContent,
-                                    styleContext, nsCSSPseudoElements::before,
-                                    &generatedFrame)) {
-      // Add the generated frame to the child list
-      aFrameItems.AddChild(generatedFrame);
-    }
+    CreateGeneratedContentFrame(aState, aFrame, aContent,
+                                styleContext, nsCSSPseudoElements::before,
+                                aFrameItems);
   }
 
   // Iterate the child content objects and construct frames
@@ -12654,13 +12550,9 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsFrameConstructorState& aState,
 
   if (aCanHaveGeneratedContent) {
     // Probe for generated content after
-    nsIFrame* generatedFrame;
-    if (CreateGeneratedContentFrame(aState, aFrame, aContent,
-                                    styleContext, nsCSSPseudoElements::after,
-                                    &generatedFrame)) {
-      // Add the generated frame to the child list
-      aFrameItems.AddChild(generatedFrame);
-    }
+    CreateGeneratedContentFrame(aState, aFrame, aContent,
+                                styleContext, nsCSSPseudoElements::after,
+                                aFrameItems);
   }
 
   // process the current pseudo frame state

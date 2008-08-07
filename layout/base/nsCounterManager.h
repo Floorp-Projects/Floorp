@@ -45,6 +45,7 @@
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 
+class nsIFrame;
 class nsCounterList;
 struct nsCounterUseNode;
 struct nsCounterChangeNode;
@@ -86,14 +87,15 @@ struct nsCounterNode : public nsGenConNode {
     inline nsCounterUseNode* UseNode();
     inline nsCounterChangeNode* ChangeNode();
 
-    // For RESET and INCREMENT nodes, aPseudoFrame need not be a
-    // pseudo-element, and aContentIndex represents the index within the
+    // For RESET and INCREMENT nodes, aStyleContext may have a null
+    // psuedo type, and aContentIndex represents the index within the
     // 'counter-reset' or 'counter-increment' property instead of within
     // the 'content' property but offset to ensure that (reset,
     // increment, use) sort in that order.  (This slight weirdness
     // allows sharing a lot of code with 'quotes'.)
-    nsCounterNode(nsIFrame* aPseudoFrame, PRInt32 aContentIndex, Type aType)
-        : nsGenConNode(aPseudoFrame, aContentIndex)
+    nsCounterNode(nsIContent* aParentContent, nsStyleContext* aStyleContext,
+                  PRInt32 aContentIndex, Type aType)
+        : nsGenConNode(aParentContent, aStyleContext, aContentIndex)
         , mType(aType)
         , mValueAfter(0)
         , mScopeStart(nsnull)
@@ -115,9 +117,10 @@ struct nsCounterUseNode : public nsCounterNode {
     PRBool mAllCounters;
 
     // args go directly to member variables here and of nsGenConNode
-    nsCounterUseNode(nsCSSValue::Array* aCounterStyle, nsIFrame* aPseudoFrame,
+    nsCounterUseNode(nsCSSValue::Array* aCounterStyle,
+                     nsIContent* aParentContent, nsStyleContext* aStyleContext,
                      PRUint32 aContentIndex, PRBool aAllCounters)
-        : nsCounterNode(aPseudoFrame, aContentIndex, USE)
+        : nsCounterNode(aParentContent, aStyleContext, aContentIndex, USE)
         , mCounterStyle(aCounterStyle)
         , mAllCounters(aAllCounters)
     {
@@ -135,16 +138,13 @@ struct nsCounterUseNode : public nsCounterNode {
 struct nsCounterChangeNode : public nsCounterNode {
     PRInt32 mChangeValue; // the numeric value of the increment or reset
 
-    // |aPseudoFrame| is not necessarily a pseudo-element's frame, but
-    // since it is for every other subclass of nsGenConNode, we follow
-    // the naming convention here.
     // |aPropIndex| is the index of the value within the list in the
     // 'counter-increment' or 'counter-reset' property.
-    nsCounterChangeNode(nsIFrame* aPseudoFrame,
+    nsCounterChangeNode(nsIContent* aContent, nsStyleContext* aStyleContext,
                         nsCounterNode::Type aChangeType,
                         PRInt32 aChangeValue,
                         PRInt32 aPropIndex)
-        : nsCounterNode(aPseudoFrame,
+        : nsCounterNode(aContent, aStyleContext,
                         // Fake a content index for resets and increments
                         // that comes before all the real content, with
                         // the resets first, in order, and then the increments.
@@ -245,9 +245,11 @@ public:
     // Clean up data in any dirty counter lists.
     void RecalcAll();
 
-    // Destroy nodes for the frame in any lists, and return whether any
-    // nodes were destroyed.
-    PRBool DestroyNodesFor(nsIFrame *aFrame);
+    // Destroy nodes for the given content and pseudo in any lists, and
+    // return whether any nodes were destroyed. aPseudo may be null to
+    // indicate that the counter is an increment or reset directly
+    // associated with the content.
+    PRBool DestroyNodesFor(nsIContent* aParentContent, nsIAtom* aPseudo);
 
     // Clear all data.
     void Clear() { mNames.Clear(); }
@@ -255,10 +257,14 @@ public:
 #ifdef DEBUG
     void Dump();
 #endif
+    
+    PRBool IsEmpty() { return mNames.Count() == 0; }
 
 private:
     // for |AddCounterResetsAndIncrements| only
-    PRBool AddResetOrIncrement(nsIFrame *aFrame, PRInt32 aIndex,
+    PRBool AddResetOrIncrement(nsIContent *aContent,
+                               nsStyleContext *aStyleContext,
+                               PRInt32 aIndex,
                                const nsStyleCounterData *aCounterData,
                                nsCounterNode::Type aType);
 

@@ -39,8 +39,11 @@
 /* implementation of CSS counters (for numbering things) */
 
 #include "nsCounterManager.h"
+
+#include "nsIFrame.h"
 #include "nsBulletFrame.h" // legacy location for list style type to text code
 #include "nsContentUtils.h"
+#include "nsCSSPseudoElements.h"
 
 // assign the correct |mValueAfter| value to a node that has been inserted
 // Should be called immediately after calling |Insert|.
@@ -93,6 +96,19 @@ nsCounterUseNode::GetText(nsString& aResult)
     }
 }
 
+// Get the content that determines the scope for aNode. For non-generated
+// content, this is the parent of the element associated with aNode,
+// otherwise it's the mParentContent stored in aNode.
+static nsIContent *
+GetScopeContent(nsCounterNode *aNode)
+{
+  nsIContent *content = aNode->mParentContent;
+  if (!aNode->mPseudoType) {
+    content = content->GetParent();
+  }
+  return content;
+}
+
 void
 nsCounterList::SetScope(nsCounterNode *aNode)
 {
@@ -112,16 +128,7 @@ nsCounterList::SetScope(nsCounterNode *aNode)
         return;
     }
 
-    // Get the content node for aNode's rendering object's *parent*,
-    // since scope includes siblings, so we want a descendant check on
-    // parents.  If aNode is for a pseudo-element, then the parent
-    // rendering object is the frame's content; if aNode is for an
-    // element, then the parent rendering object is the frame's
-    // content's parent.
-    nsIContent *nodeContent = aNode->mPseudoFrame->GetContent();
-    if (!aNode->mPseudoFrame->GetStyleContext()->GetPseudoType()) {
-        nodeContent = nodeContent->GetParent();
-    }
+    nsIContent *nodeContent = GetScopeContent(aNode);
 
     for (nsCounterNode *prev = Prev(aNode), *start;
          prev; prev = start->mScopePrev) {
@@ -134,10 +141,7 @@ nsCounterList::SetScope(nsCounterNode *aNode)
                   ? prev : prev->mScopeStart;
 
         // |startContent| is analogous to |nodeContent| (see above).
-        nsIContent *startContent = start->mPseudoFrame->GetContent();
-        if (!start->mPseudoFrame->GetStyleContext()->GetPseudoType()) {
-            startContent = startContent->GetParent();
-        }
+        nsIContent *startContent = GetScopeContent(start);
         NS_ASSERTION(nodeContent || !startContent,
                      "null check on startContent should be sufficient to "
                      "null check nodeContent as well, since if nodeContent "
@@ -197,33 +201,53 @@ nsCounterManager::nsCounterManager()
 PRBool
 nsCounterManager::AddCounterResetsAndIncrements(nsIFrame *aFrame)
 {
-    const nsStyleContent *styleContent = aFrame->GetStyleContent();
+    nsStyleContext *styleContext = aFrame->GetStyleContext();
+    const nsStyleContent *styleContent = styleContext->GetStyleContent();
     if (!styleContent->CounterIncrementCount() &&
         !styleContent->CounterResetCount())
         return PR_FALSE;
+
+    nsIContent *content = aFrame->GetContent();
+    nsIAtom *pseudo =
+      nsGenConNode::ToGeneratedContentType(styleContext->GetPseudoType());
+    if (pseudo) {
+        // The frame with counter increments/resets on it should be either
+        // non-generated content or else a frame for the anonymous
+        // generated content container
+        NS_ASSERTION(content->Tag() ==
+                     (pseudo == nsCSSPseudoElements::before
+                         ? nsGkAtoms::mozgeneratedcontentbefore 
+                         : nsGkAtoms::mozgeneratedcontentafter),
+                     "Not a generated content node");
+        // The parent of the container is the real content node
+        content = content->GetParent();
+    }
 
     // Add in order, resets first, so all the comparisons will be optimized
     // for addition at the end of the list.
     PRInt32 i, i_end;
     PRBool dirty = PR_FALSE;
     for (i = 0, i_end = styleContent->CounterResetCount(); i != i_end; ++i)
-        dirty |= AddResetOrIncrement(aFrame, i,
+        dirty |= AddResetOrIncrement(content, styleContext, i,
                                      styleContent->GetCounterResetAt(i),
                                      nsCounterChangeNode::RESET);
     for (i = 0, i_end = styleContent->CounterIncrementCount(); i != i_end; ++i)
-        dirty |= AddResetOrIncrement(aFrame, i,
+        dirty |= AddResetOrIncrement(content, styleContext, i,
                                      styleContent->GetCounterIncrementAt(i),
                                      nsCounterChangeNode::INCREMENT);
     return dirty;
 }
 
 PRBool
-nsCounterManager::AddResetOrIncrement(nsIFrame *aFrame, PRInt32 aIndex,
+nsCounterManager::AddResetOrIncrement(nsIContent *aContent,
+                                      nsStyleContext *aStyleContext,
+                                      PRInt32 aIndex,
                                       const nsStyleCounterData *aCounterData,
                                       nsCounterNode::Type aType)
 {
     nsCounterChangeNode *node =
-        new nsCounterChangeNode(aFrame, aType, aCounterData->mValue, aIndex);
+        new nsCounterChangeNode(aContent, aStyleContext, aType,
+                                aCounterData->mValue, aIndex);
     if (!node)
         return PR_FALSE;
 
@@ -282,13 +306,15 @@ nsCounterManager::RecalcAll()
 }
 
 struct DestroyNodesData {
-    DestroyNodesData(nsIFrame *aFrame)
-        : mFrame(aFrame)
+    DestroyNodesData(nsIContent* aParentContent, nsIAtom *aPseudo)
+        : mParentContent(aParentContent)
+        , mPseudo(aPseudo)
         , mDestroyedAny(PR_FALSE)
     {
     }
 
-    nsIFrame *mFrame;
+    nsIContent *mParentContent;
+    nsIAtom *mPseudo;
     PRBool mDestroyedAny;
 };
 
@@ -296,7 +322,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 DestroyNodesInList(const nsAString& aKey, nsCounterList* aList, void* aClosure)
 {
     DestroyNodesData *data = static_cast<DestroyNodesData*>(aClosure);
-    if (aList->DestroyNodesFor(data->mFrame)) {
+    if (aList->DestroyNodesFor(data->mParentContent, data->mPseudo)) {
         data->mDestroyedAny = PR_TRUE;
         aList->SetDirty();
     }
@@ -304,9 +330,9 @@ DestroyNodesInList(const nsAString& aKey, nsCounterList* aList, void* aClosure)
 }
 
 PRBool
-nsCounterManager::DestroyNodesFor(nsIFrame *aFrame)
+nsCounterManager::DestroyNodesFor(nsIContent* aParentContent, nsIAtom *aPseudo)
 {
-    DestroyNodesData data(aFrame);
+    DestroyNodesData data(aParentContent, aPseudo);
     mNames.EnumerateRead(DestroyNodesInList, &data);
     return data.mDestroyedAny;
 }
@@ -321,10 +347,14 @@ DumpList(const nsAString& aKey, nsCounterList* aList, void* aClosure)
     if (node) {
         PRInt32 i = 0;
         do {
+            nsCAutoString pseudo;
+            if (node->mPseudoType) {
+              node->mPseudoType->ToUTF8String(pseudo);
+            }
             const char *types[] = { "RESET", "INCREMENT", "USE" };
-            printf("  Node #%d @%p frame=%p index=%d type=%s valAfter=%d\n"
+            printf("  Node #%d @%p content=%p pseudo=%s index=%d type=%s valAfter=%d\n"
                    "       scope-start=%p scope-prev=%p",
-                   i++, (void*)node, (void*)node->mPseudoFrame,
+                   i++, (void*)node, (void*)node->mParentContent, pseudo.get(),
                    node->mContentIndex, types[node->mType], node->mValueAfter,
                    (void*)node->mScopeStart, (void*)node->mScopePrev);
             if (node->mType == nsCounterNode::USE) {
