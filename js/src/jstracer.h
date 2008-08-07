@@ -143,6 +143,32 @@ public:
     void            clear();
 };
 
+/*
+ * The oracle keeps track of slots that should not be demoted to int because we know them
+ * to overflow or they result in type-unstable traces. We are using a simple hash table. 
+ * Collisions lead to loss of optimization (demotable slots are not demoted) but have no
+ * correctness implications.
+ */
+#define ORACLE_SIZE 4096
+
+class Oracle {
+    avmplus::BitSet _dontDemote;
+public:
+    void markGlobalSlotUndemotable(unsigned slot);
+    bool isGlobalSlotUndemotable(unsigned slot) const;
+    void markStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot);
+    bool isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) const;
+};
+
+class TypeMap : public Queue<uint8> {
+    uint32 _hashcode;
+public:
+    TypeMap() { rehash(); }
+    
+    void rehash();
+    uint32 hashcode();
+};
+
 class TreeInfo {
     nanojit::Fragment*      fragment;
 public:
@@ -152,8 +178,8 @@ public:
     unsigned                maxCallDepth;
     uint32                  globalShape;
     Queue<uint16>           globalSlots;
-    Queue<uint8>            stackTypeMap;
-    Queue<uint8>            globalTypeMap;
+    TypeMap                 stackTypeMap;
+    TypeMap                 globalTypeMap;
     Queue<nanojit::Fragment*> outerTrees;
     
     TreeInfo(nanojit::Fragment* _fragment) { fragment = _fragment; }
@@ -170,7 +196,6 @@ class TraceRecorder {
     Tracker                 tracker;
     Tracker                 nativeFrameTracker;
     char*                   entryTypeMap;
-    struct JSFrameRegs*     entryRegs;
     unsigned                callDepth;
     JSAtom**                atoms;
     nanojit::GuardRecord*   anchor;
@@ -205,7 +230,7 @@ class TraceRecorder {
     nanojit::LIns* get(jsval* p);
     void set(jsval* p, nanojit::LIns* l, bool initializing = false);
 
-    bool checkType(jsval& v, uint8& type, bool& recompile);
+    bool checkType(jsval& v, uint8 type, bool& recompile);
     bool verifyTypeStability();
 
     jsval& argval(unsigned n) const;
