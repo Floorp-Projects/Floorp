@@ -2925,7 +2925,7 @@ nsTextPaintStyle::InitCommonColors()
 
 static nsIFrame* GetNonGeneratedAncestor(nsIFrame* f) {
   while (f->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
-    f = nsLayoutUtils::GetParentOrPlaceholderFor(f->PresContext()->FrameManager(), f);
+    f = f->GetParent();
   }
   return f;
 }
