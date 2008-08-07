@@ -45,12 +45,16 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS	= \
 	data \
+	unit \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
 	index.html \
+	offset.html \
+	test.js \
+	fix.html \
 	$(NULL)
 
 libs::	$(_TEST_FILES)

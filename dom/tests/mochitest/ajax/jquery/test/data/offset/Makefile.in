@@ -35,11 +35,11 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../../../..
+DEPTH		= ../../../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir	= dom/tests/mochitest/ajax/jquery/src/selector
+relativesrcdir	= dom/tests/mochitest/ajax/jquery/test/data/offset
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -49,8 +49,12 @@ DIRS	= \
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
-	selector.js \
-	selectorTest.js \
+	absolute.html \
+	fixed.html \
+	relative.html \
+	scroll.html \
+	static.html \
+	table.html \
 	$(NULL)
 
 libs::	$(_TEST_FILES)
