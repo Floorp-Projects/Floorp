@@ -72,9 +72,6 @@
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
 #define HOTEXIT 0
 
-/* Number of backedges permitted before a loop is terminated */
-#define MAX_XJUMPS 5
-
 /* Max call depths or inlining */
 #define MAX_CALLDEPTH 5
 
@@ -1440,16 +1437,13 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
         js_DeleteRecorder(cx);
         return false; /* done recording */
     }
-    if (++r->backEdgeCount >= MAX_XJUMPS) {
-        AUDIT(returnToDifferentLoopHeader);
-        debug_only(printf("loop edge %d -> %d, header %d\n",
-                oldpc - cx->fp->script->code,
-                cx->fp->regs->pc - cx->fp->script->code,
-                (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
-        js_AbortRecording(cx, oldpc, "Loop edge does not return to header");
-        return false; /* done recording */
-    }
-    return true; /* keep recording (attempting to unroll inner loop) */
+    AUDIT(returnToDifferentLoopHeader);
+    debug_only(printf("loop edge %d -> %d, header %d\n",
+            oldpc - cx->fp->script->code,
+            cx->fp->regs->pc - cx->fp->script->code,
+            (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
+    js_AbortRecording(cx, oldpc, "Loop edge does not return to header");
+    return false; /* done recording */
 }
 
 GuardRecord*
