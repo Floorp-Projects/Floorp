@@ -54,8 +54,8 @@
  * class gfxOS2Font
  **********************************************************************/
 
-gfxOS2Font::gfxOS2Font(const nsAString &aName, const gfxFontStyle *aFontStyle)
-    : gfxFont(aName, aFontStyle),
+gfxOS2Font::gfxOS2Font(gfxOS2FontEntry *aFontEntry, const gfxFontStyle *aFontStyle)
+    : gfxFont(aFontEntry, aFontStyle),
       mFontFace(nsnull), mScaledFont(nsnull),
       mMetrics(nsnull), mAdjustedSize(0),
       mHinting(FC_HINT_MEDIUM), mAntialias(FcTrue)
@@ -231,7 +231,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
                "  emAsc=%f emDesc=%f maxH=%f\n"
                "  maxAsc=%f maxDes=%f maxAdv=%f\n",
                (unsigned)this,
-               NS_LossyConvertUTF16toASCII(mName).get(),
+               NS_LossyConvertUTF16toASCII(GetName()).get(),
                os2 && os2->version != 0xFFFF ? "has OS/2 table" : "no OS/2 table!",
                mMetrics->emHeight, GetStyle()->size, mAdjustedSize,
                mMetrics->maxHeight, mMetrics->xHeight,
@@ -277,14 +277,14 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
     if (!mFontFace) {
 #ifdef DEBUG_thebes
         printf("gfxOS2Font[%#x]::CairoFontFace(): create it for %s, %f\n",
-               (unsigned)this, NS_LossyConvertUTF16toASCII(mName).get(), GetStyle()->size);
+               (unsigned)this, NS_LossyConvertUTF16toASCII(GetName()).get(), GetStyle()->size);
 #endif
         FcPattern *fcPattern = FcPatternCreate();
 
         // add (family) name to pattern
         // (the conversion should work, font names don't contain high bit chars)
         FcPatternAddString(fcPattern, FC_FAMILY,
-                           (FcChar8 *)NS_LossyConvertUTF16toASCII(mName).get());
+                           (FcChar8 *)NS_LossyConvertUTF16toASCII(GetName()).get());
 
         // adjust font weight using the offset
         // The requirements outlined in gfxFont.h are difficult to meet without
@@ -348,14 +348,14 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         FcPatternGetInteger(fcMatch, FC_SLANT, 0, &i2);
         FcPatternGetDouble(fcMatch, FC_PIXEL_SIZE, 0, &s2);
         printf("  input=%s,%d,%d,%f\n  fcPattern=%s,%d,%d,%f\n  fcMatch=%s,%d,%d,%f\n",
-               NS_LossyConvertUTF16toASCII(mName).get(),
+               NS_LossyConvertUTF16toASCII(GetName()).get(),
                GetStyle()->weight, GetStyle()->style, GetStyle()->size,
                (char *)str1, w1, i1, s1,
                (char *)str2, w2, i2, s2);
 #endif
         FcPatternDestroy(fcPattern);
 
-        if (mName == NS_LITERAL_STRING("Workplace Sans") && fcW >= FC_WEIGHT_DEMIBOLD) {
+        if (GetName() == NS_LITERAL_STRING("Workplace Sans") && fcW >= FC_WEIGHT_DEMIBOLD) {
             // if we are dealing with Workplace Sans and want a bold font, we
             // need to artificially embolden it (no bold counterpart yet)
             FcPatternAddBool(fcMatch, FC_EMBOLDEN, FcTrue);
@@ -383,7 +383,7 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
     if (!mScaledFont) {
 #ifdef DEBUG_thebes_2
         printf("gfxOS2Font[%#x]::CairoScaledFont(): create it for %s, %f\n",
-               (unsigned)this, NS_LossyConvertUTF16toASCII(mName).get(), GetStyle()->size);
+               (unsigned)this, NS_LossyConvertUTF16toASCII(GetName()).get(), GetStyle()->size);
 #endif
 
         double size = mAdjustedSize ? mAdjustedSize : GetStyle()->size;
@@ -404,12 +404,12 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
 nsString gfxOS2Font::GetUniqueName()
 {
 #ifdef DEBUG_thebes
-    printf("gfxOS2Font::GetUniqueName()=%s\n", (char *)mName.get());
+    printf("gfxOS2Font::GetUniqueName()=%s\n", (char *)GetName().get());
 #endif
-    // gfxFont::mName should already be unique enough
+    // gfxFont::GetName() should already be unique enough
     // Atsui uses that, too, while Win appends size, and properties...
     // doesn't seem to get called at all anyway
-    return mName;
+    return GetName();
 }
 
 PRBool gfxOS2Font::SetupCairoFont(gfxContext *aContext)
@@ -441,7 +441,8 @@ already_AddRefed<gfxOS2Font> gfxOS2Font::GetOrMakeFont(const nsAString& aName,
 {
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aName, aStyle);
     if (!font) {
-        font = new gfxOS2Font(aName, aStyle);
+        nsRefPtr<gfxOS2FontEntry> fe = new gfxOS2FontEntry(aName);
+        font = new gfxOS2Font(fe, aStyle);
         if (!font)
             return nsnull;
         gfxFontCache::GetCache()->AddNew(font);
