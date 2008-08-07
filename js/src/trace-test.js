@@ -461,7 +461,7 @@ function nonEmptyStack1() {
     return nonEmptyStack1Helper({a:1,b:2,c:3,d:4,e:5,f:6,g:7,h:8}, "hi");
 }
 
-nonEmptyStack1.expected = "abcdefgh"; 
+nonEmptyStack1.expected = "abcdefgh";
 test(nonEmptyStack1);
 
 function nonEmptyStack2()
@@ -475,6 +475,23 @@ function nonEmptyStack2()
 }
 nonEmptyStack2.expected = "135";
 test(nonEmptyStack2);
+
+function arityMismatchMissingArg(arg)
+{
+  for (var a = 0, i = 1; i < 10000; i *= 2) {
+    a += i;
+  }
+  return a;
+}
+arityMismatchMissingArg.expected = 16383;
+test(arityMismatchMissingArg);
+
+function arityMismatchExtraArg()
+{
+  return arityMismatchMissingArg(1, 2);
+}
+arityMismatchExtraArg.expected = 16383;
+test(arityMismatchExtraArg);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
