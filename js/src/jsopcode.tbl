@@ -187,12 +187,11 @@ OPDEF(JSOP_STRICTNE,  73, "strictne",   NULL,         1,  2,  1,  10,  JOF_BYTE|
 /* Lexical closure constructor. */
 OPDEF(JSOP_CLOSURE,   74, "closure",    NULL,         3,  0,  0,  0,  JOF_OBJECT)
 
-/* Export and import ops. */
-OPDEF(JSOP_EXPORTALL, 75, "exportall",  NULL,         1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_EXPORTNAME,76, "exportname", NULL,         3,  0,  0,  0,  JOF_ATOM|JOF_NAME)
-OPDEF(JSOP_IMPORTALL, 77, "importall",  NULL,         1,  1,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_IMPORTPROP,78, "importprop", NULL,         3,  1,  0,  0,  JOF_ATOM|JOF_PROP|JOF_IMPORT)
-OPDEF(JSOP_IMPORTELEM,79, "importelem", NULL,         1,  2,  0,  0,  JOF_BYTE |JOF_ELEM|JOF_IMPORT)
+OPDEF(JSOP_UNUSED75,  75, "unused75",   NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED76,  76, "unused76",   NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED77,  77, "unused77",   NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED78,  78, "unused78",   NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED79,  79, "unused79",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* Push object literal. */
 OPDEF(JSOP_OBJECT,    80, "object",     NULL,         3,  0,  1, 19,  JOF_OBJECT)

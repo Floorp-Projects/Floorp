@@ -2370,15 +2370,8 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
                        CG_OFFSET(cg) - pn2->pn_offset) < 0) {
         return JS_FALSE;
     }
-    if (!pn->pn_atom) {
-        JS_ASSERT(op == JSOP_IMPORTALL);
-        if (js_Emit1(cx, cg, op) < 0)
-            return JS_FALSE;
-    } else {
-        if (!EmitAtomOp(cx, pn, op, cg))
-            return JS_FALSE;
-    }
-    return JS_TRUE;
+
+    return EmitAtomOp(cx, pn, op, cg);
 }
 
 static JSBool
@@ -2391,7 +2384,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
     top = CG_OFFSET(cg);
     if (pn->pn_arity == PN_LIST) {
         /* Left-associative operator chain to avoid too much recursion. */
-        JS_ASSERT(pn->pn_op == JSOP_GETELEM || pn->pn_op == JSOP_IMPORTELEM);
+        JS_ASSERT(pn->pn_op == JSOP_GETELEM);
         JS_ASSERT(pn->pn_count >= 3);
         left = pn->pn_head;
         right = PN_LAST(pn);
@@ -4019,42 +4012,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
       }
 
-#if JS_HAS_EXPORT_IMPORT
-      case TOK_EXPORT:
-        pn2 = pn->pn_head;
-        if (pn2->pn_type == TOK_STAR) {
-            /*
-             * 'export *' must have no other elements in the list (what would
-             * be the point?).
-             */
-            if (js_Emit1(cx, cg, JSOP_EXPORTALL) < 0)
-                return JS_FALSE;
-        } else {
-            /*
-             * If not 'export *', the list consists of NAME nodes identifying
-             * properties of the variables object to flag as exported.
-             */
-            do {
-                ale = js_IndexAtom(cx, pn2->pn_atom, &cg->atomList);
-                if (!ale)
-                    return JS_FALSE;
-                EMIT_INDEX_OP(JSOP_EXPORTNAME, ALE_INDEX(ale));
-            } while ((pn2 = pn2->pn_next) != NULL);
-        }
-        break;
-
-      case TOK_IMPORT:
-        for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-            /*
-             * Each subtree on an import list is rooted by a DOT or LB node.
-             * A DOT may have a null pn_atom member, in which case pn_op must
-             * be JSOP_IMPORTALL -- see EmitPropOp above.
-             */
-            if (!js_EmitTree(cx, cg, pn2))
-                return JS_FALSE;
-        }
-        break;
-#endif /* JS_HAS_EXPORT_IMPORT */
 
       case TOK_IF:
         /* Initialize so we can detect else-if chains and avoid recursion. */

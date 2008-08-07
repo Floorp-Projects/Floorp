@@ -97,26 +97,25 @@ typedef enum JSOp {
 #define JOF_INC          (2U<<10) /* increment (++, not --) opcode */
 #define JOF_INCDEC       (3U<<10) /* increment or decrement opcode */
 #define JOF_POST         (1U<<12) /* postorder increment or decrement */
-#define JOF_IMPORT       (1U<<13) /* import property op */
-#define JOF_FOR          (1U<<14) /* for-in property op */
+#define JOF_FOR          (1U<<13) /* for-in property op */
 #define JOF_ASSIGNING     JOF_SET /* hint for JSClass.resolve, used for ops
                                      that do simplex assignment */
-#define JOF_DETECTING    (1U<<15) /* object detection for JSNewResolveOp */
-#define JOF_BACKPATCH    (1U<<16) /* backpatch placeholder during codegen */
-#define JOF_LEFTASSOC    (1U<<17) /* left-associative operator */
-#define JOF_DECLARING    (1U<<18) /* var, const, or function declaration op */
-#define JOF_INDEXBASE    (1U<<19) /* atom segment base setting prefix op */
-#define JOF_CALLOP       (1U<<20) /* call operation that pushes function and
+#define JOF_DETECTING    (1U<<14) /* object detection for JSNewResolveOp */
+#define JOF_BACKPATCH    (1U<<15) /* backpatch placeholder during codegen */
+#define JOF_LEFTASSOC    (1U<<16) /* left-associative operator */
+#define JOF_DECLARING    (1U<<17) /* var, const, or function declaration op */
+#define JOF_INDEXBASE    (1U<<18) /* atom segment base setting prefix op */
+#define JOF_CALLOP       (1U<<19) /* call operation that pushes function and
                                      this */
-#define JOF_PARENHEAD    (1U<<21) /* opcode consumes value of expression in
+#define JOF_PARENHEAD    (1U<<20) /* opcode consumes value of expression in
                                      parenthesized statement head */
-#define JOF_INVOKE       (1U<<22) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
-#define JOF_TMPSLOT      (1U<<23) /* interpreter uses extra temporary slot
+#define JOF_INVOKE       (1U<<21) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
+#define JOF_TMPSLOT      (1U<<22) /* interpreter uses extra temporary slot
                                      to root intermediate objects besides
                                      the slots opcode uses */
-#define JOF_TMPSLOT2     (2U<<23) /* interpreter uses extra 2 temporary slot
+#define JOF_TMPSLOT2     (2U<<22) /* interpreter uses extra 2 temporary slot
                                      besides the slots opcode uses */
-#define JOF_TMPSLOT_SHIFT 23
+#define JOF_TMPSLOT_SHIFT 22
 #define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
 
 /* Shorthands for type from format and type from opcode. */
