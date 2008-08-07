@@ -180,7 +180,6 @@ jsdtrace_function_name(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
           case JSOP_CALLGVAR:
           case JSOP_GETGVAR:
           case JSOP_SETGVAR:
-          case JSOP_CALLVAR:
           case JSOP_CALLARG:
           case JSOP_CALLLOCAL:
             /* FIXME: try to recover a name from these ops. */
