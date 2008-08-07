@@ -311,4 +311,7 @@ js_InitJIT(JSContext* cx);
 extern void
 js_DestroyJIT(JSContext* cx);
 
+extern void
+js_FlushJITCache(JSContext* cx);
+
 #endif /* jstracer_h___ */
