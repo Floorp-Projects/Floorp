@@ -1544,8 +1544,8 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
         return false; /* we stay away from shared global objects */
     }
 #endif  
+    Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
     if (r->isLoopHeader(cx)) { /* did we hit the start point? */
-        Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
         if (fragmento->assm()->error()) {
             /* error during recording, blacklist the fragment we were recording */
             r->blacklist();
@@ -1559,6 +1559,12 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
         js_DeleteRecorder(cx);
         return false; /* done recording */
     }
+    /* does this branch go to an inner loop? */
+    Fragment* f = fragmento->getLoop(cx->fp->regs->pc);
+    if (f && !r->getCallDepth()) { /* currently we can't call trees in inlined scopes */
+        /* call the inner tree, and continue recording if the inner tree exited on a loop edge */
+    }
+    /* not returning to our own loop header, not an inner loop we can call, abort trace */
     AUDIT(returnToDifferentLoopHeader);
     debug_only(printf("loop edge %d -> %d, header %d\n",
             oldpc - cx->fp->script->code,

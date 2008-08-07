@@ -219,7 +219,6 @@ class TraceRecorder {
 
     bool lazilyImportGlobalSlot(unsigned slot);
     
-    unsigned getCallDepth() const;
     nanojit::LIns* guard(bool expected, nanojit::LIns* cond, 
             nanojit::ExitType exitType = nanojit::DONT_GROW);
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
@@ -301,6 +300,7 @@ public:
     void closeLoop(nanojit::Fragmento* fragmento);
     void blacklist() { fragment->blacklist(); }
     void emitTreeCall(nanojit::Fragment* inner, nanojit::GuardRecord* lr);
+    unsigned getCallDepth() const;
     
     bool record_EnterFrame();
     bool record_LeaveFrame();
