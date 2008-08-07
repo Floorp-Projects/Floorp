@@ -161,14 +161,9 @@ public:
 };
 
 class TypeMap : public Queue<uint8> {
-    uint32 _hashcode;
-
 public:
-    TypeMap() { rehash(); }
-    
-    void rehash();
-    uint32 hashcode();
     void captureStackTypes(JSContext* cx, unsigned callDepth);
+    bool matches(TypeMap& other);
 };
 
 class TreeInfo {
