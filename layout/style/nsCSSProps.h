@@ -65,8 +65,13 @@ public:
     return (aProperty >= eCSSProperty_COUNT_no_shorthands);
   }
 
+  // Same but for @font-face descriptors
+  static nsCSSFontDesc LookupFontDesc(const nsAString& aProperty);
+  static nsCSSFontDesc LookupFontDesc(const nsACString& aProperty);
+
   // Given a property enum, get the string value
   static const nsAFlatCString& GetStringValue(nsCSSProperty aProperty);
+  static const nsAFlatCString& GetStringValue(nsCSSFontDesc aFontDesc);
 
   // Given a CSS Property and a Property Enum Value
   // Return back a const nsString& representation of the 
