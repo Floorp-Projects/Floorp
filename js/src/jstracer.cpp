@@ -1495,6 +1495,9 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     /* ensure the stack type map has the right length */
     ti->stackTypeMap.setLength(ti->entryNativeStackSlots);
 
+    /* we shouldn't have any interned globals for a new tree */
+    JS_ASSERT(!ti->globalSlots.length());
+    
     /* update the coerced type of each active slot in the stack type map */
     uint8* map = ti->stackTypeMap.data();
     uint8* m = map;
