@@ -1872,7 +1872,6 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   MoveOverflowToChildList(aPresContext);
 
   PRBool haveDesiredHeight = PR_FALSE;
-  PRBool reflowedChildren  = PR_FALSE;
   SetHaveReflowedColGroups(PR_FALSE);
 
   if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE ||
@@ -1925,7 +1924,6 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
 
     ReflowTable(aDesiredSize, aReflowState, availHeight,
                 lastChildReflowed, aStatus);
-    reflowedChildren = PR_TRUE;
 
     // reevaluate special height reflow conditions
     if (GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)
@@ -1957,9 +1955,14 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
                               lastChildReflowed->GetRect().YMost();
       }
       haveDesiredHeight = PR_TRUE;
-      reflowedChildren  = PR_TRUE;
 
       mutable_rs.mFlags.mSpecialHeightReflow = PR_FALSE;
+    }
+  }
+  else {
+    // Calculate the overflow area contribution from our children.
+    for (nsIFrame* kid = GetFirstChild(nsnull); kid; kid = kid->GetNextSibling()) {
+      ConsiderChildOverflow(aDesiredSize.mOverflowArea, kid);
     }
   }
 
@@ -1989,12 +1992,6 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   }
   aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, tableRect);
   
-  if (!reflowedChildren) {
-    // use the old overflow area
-     aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea,
-                                          GetOverflowRect());
-  }
-
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     // Fulfill the promise InvalidateFrame makes.
     Invalidate(aDesiredSize.mOverflowArea);
