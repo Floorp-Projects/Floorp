@@ -1215,7 +1215,7 @@ TraceRecorder::verifyTypeStability()
         }
         ++m
     );
-    if (recompile && fragment->root != fragment)
+    if (recompile)
         js_TrashTree(cx, fragment);
     return !recompile;
 }
@@ -1475,8 +1475,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 #endif
     }
 
-    if (f->vmprivate)
-        delete (TreeInfo*)f->vmprivate;
+    JS_ASSERT(!f->vmprivate);
     
     /* setup the VM-private treeInfo structure for this fragment */
     TreeInfo* ti = new TreeInfo(f); // TODO: deallocate when fragment dies
