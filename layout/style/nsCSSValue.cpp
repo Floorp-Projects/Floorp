@@ -80,8 +80,8 @@ nsCSSValue::nsCSSValue(float aValue, nsCSSUnit aUnit)
 nsCSSValue::nsCSSValue(const nsString& aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
-  NS_ASSERTION((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Attr), "not a string value");
-  if ((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Attr)) {
+  NS_ASSERTION(UnitHasStringValue(), "not a string value");
+  if (UnitHasStringValue()) {
     mValue.mString = BufferFromString(aValue);
     if (NS_UNLIKELY(!mValue.mString)) {
       // XXXbz not much we can do here; just make sure that our promise of a
@@ -133,7 +133,7 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_Percent <= mUnit) {
     mValue.mFloat = aCopy.mValue.mFloat;
   }
-  else if (eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Attr) {
+  else if (UnitHasStringValue()) {
     mValue.mString = aCopy.mValue.mString;
     mValue.mString->AddRef();
   }
@@ -175,7 +175,7 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
     if (mUnit <= eCSSUnit_Dummy) {
       return PR_TRUE;
     }
-    else if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Attr)) {
+    else if (UnitHasStringValue()) {
       return (NS_strcmp(GetBufferValue(mValue.mString),
                         GetBufferValue(aOther.mValue.mString)) == 0);
     }
@@ -247,7 +247,7 @@ nscoord nsCSSValue::GetLengthTwips() const
 
 void nsCSSValue::DoReset()
 {
-  if (eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Attr) {
+  if (UnitHasStringValue()) {
     mValue.mString->Release();
   } else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
     mValue.mArray->Release();
@@ -291,17 +291,18 @@ void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit)
 void nsCSSValue::SetStringValue(const nsString& aValue,
                                 nsCSSUnit aUnit)
 {
-  NS_ASSERTION((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Attr), "not a string unit");
   Reset();
-  if ((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Attr)) {
-    mUnit = aUnit;
+  mUnit = aUnit;
+  NS_ASSERTION(UnitHasStringValue(), "not a string unit");
+  if (UnitHasStringValue()) {
     mValue.mString = BufferFromString(aValue);
     if (NS_UNLIKELY(!mValue.mString)) {
       // XXXbz not much we can do here; just make sure that our promise of a
       // non-null mValue.mString holds for string units.
       mUnit = eCSSUnit_Null;
     }
-  }
+  } else
+    mUnit = eCSSUnit_Null;
 }
 
 void nsCSSValue::SetColorValue(nscolor aValue)
