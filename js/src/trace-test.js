@@ -454,15 +454,15 @@ function nonEmptyStack1Helper(o, farble) {
     var j = 0;
     for (var i in o)
         a[j++] = i;
-    return a.join();
+    return a.join("");
 }
 
 function nonEmptyStack1() {
-    nonEmptyStack1Helper({a:1,b:2,c:3,d:4,e:5,f:6,g:7,h:8}, "hi");
+    return nonEmptyStack1Helper({a:1,b:2,c:3,d:4,e:5,f:6,g:7,h:8}, "hi");
 }
 
-nonEmptyStack2.expected = "abcdefgh";
-test(nonEmptyStack2);
+nonEmptyStack1.expected = "abcdefgh"; 
+test(nonEmptyStack1);
 
 function nonEmptyStack2()
 {
