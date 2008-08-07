@@ -1481,7 +1481,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     if (!BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap.data(), global) ||
         !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
         AUDIT(typeMapMismatchAtEntry);
-        debug_only(printf("type-map mismatch, trashing trace.\n");)
+        debug_only(printf("type-map mismatch.\n");)
         return NULL;
     }
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double)];
