@@ -121,7 +121,6 @@ JS_BEGIN_EXTERN_C
 #define JSPROP_ENUMERATE        0x01    /* property is visible to for/in loop */
 #define JSPROP_READONLY         0x02    /* not settable: assignment is no-op */
 #define JSPROP_PERMANENT        0x04    /* property cannot be deleted */
-#define JSPROP_EXPORTED         0x08    /* property is exported from object */
 #define JSPROP_GETTER           0x10    /* property holds getter function */
 #define JSPROP_SETTER           0x20    /* property holds setter function */
 #define JSPROP_SHARED           0x40    /* don't allocate a value slot for this

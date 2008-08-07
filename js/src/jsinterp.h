@@ -535,9 +535,6 @@ extern JSBool
 js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
 
 extern JSBool
-js_ImportProperty(JSContext *cx, JSObject *obj, jsid id);
-
-extern JSBool
 js_OnUnknownMethod(JSContext *cx, jsval *vp);
 
 /*
