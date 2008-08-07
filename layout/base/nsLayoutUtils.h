@@ -71,7 +71,7 @@ class nsLayoutUtils
 {
 public:
   /**
-   * GetBeforeFrame returns the :before frame of the given frame, if
+   * GetBeforeFrame returns the outermost :before frame of the given frame, if
    * one exists.  This is typically O(1).  The frame passed in must be
    * the first-in-flow.   
    *
@@ -81,7 +81,7 @@ public:
   static nsIFrame* GetBeforeFrame(nsIFrame* aFrame);
 
   /**
-   * GetAfterFrame returns the :after frame of the given frame, if one
+   * GetAfterFrame returns the outermost :after frame of the given frame, if one
    * exists.  This will walk the in-flow chain to the last-in-flow if
    * needed.  This function is typically O(N) in the number of child
    * frames, following in-flows, etc.
@@ -116,8 +116,11 @@ public:
   }
 
   /**
-   * IsGeneratedContentFor returns PR_TRUE if aFrame is generated
-   * content of type aPseudoElement for aContent
+   * IsGeneratedContentFor returns PR_TRUE if aFrame is the outermost
+   * frame for generated content of type aPseudoElement for aContent.
+   * aFrame *might not* have the aPseudoElement pseudo-style! For example
+   * it might be a table outer frame and the inner table frame might
+   * have the pseudo-style.
    *
    * @param aContent the content node we're looking at.  If this is
    *        null, then we just assume that aFrame has the right content
