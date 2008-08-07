@@ -1189,6 +1189,43 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     lir->insCall(F_CallTree, args);
 }
 
+/* Register an outer tree of this tree. */
+void
+TreeInfo::addOuterTree(Fragment* outer)
+{
+    if (!outerTrees.contains(outer)) {
+        outerTrees.add(outer);
+        ((TreeInfo*)outer->vmprivate)->mergeGlobalsFromInnerTree(this->fragment);
+    }
+}
+
+/* Merge globals of another tree into this tree's globals. */
+void
+TreeInfo::mergeGlobalsFromInnerTree(Fragment* inner)
+{
+    TreeInfo* ti = (TreeInfo*)inner->vmprivate;
+    Queue<uint16>* gslots = &ti->globalSlots;
+    uint16* data = gslots->data();
+    unsigned length = gslots->length();
+    /* add any slots we don't have yet */
+    bool changed = false;
+    for (unsigned n = 0; n < length; ++n) {
+        uint16 slot = data[n];
+        if (!globalSlots.contains(slot)) {
+            globalSlots.add(slot);
+            changed = true;
+        }
+    }
+    /* if we added a slot, notify our outer trees as well */
+    if (changed) {
+        Queue<Fragment*>* trees = &ti->outerTrees;
+        Fragment** data = trees->data();
+        unsigned length = trees->length();
+        for (unsigned n = 0; n < length; ++n) 
+            ((TreeInfo*)(data[n]->vmprivate))->mergeGlobalsFromInnerTree(this->fragment);
+    }
+}
+
 int
 nanojit::StackFilter::getTop(LInsp guard)
 {
@@ -1363,7 +1400,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
     if (!ti) {
         /* setup the VM-private treeInfo structure for this fragment */
-        ti = new TreeInfo(); // TODO: deallocate when fragment dies
+        ti = new TreeInfo(f); // TODO: deallocate when fragment dies
         f->vmprivate = ti;
 
         /* determine the native frame layout at the entry point */
