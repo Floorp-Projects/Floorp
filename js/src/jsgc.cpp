@@ -3222,10 +3222,13 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         memset(acx->thread->gcFreeLists, 0, sizeof acx->thread->gcFreeLists);
         GSN_CACHE_CLEAR(&acx->thread->gsnCache);
         js_FlushPropertyCache(acx);
+        js_FlushJITCache(acx);
     }
 #else
     /* The thread-unsafe case just has to clear the runtime's GSN cache. */
     GSN_CACHE_CLEAR(&rt->gsnCache);
+    /* Flush the JIT code cache. */
+    js_FlushJITCache(cx);
 #endif
 
   restart:
@@ -3236,9 +3239,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     /* Reset the property cache's type id generator so we can compress ids. */
     rt->shapeGen = 0;
 
-    /* Flush the JIT code cache. */
-    js_FlushJITCache(cx);
-    
     /*
      * Mark phase.
      */
