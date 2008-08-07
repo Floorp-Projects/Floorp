@@ -87,6 +87,13 @@ public:
         free(_data);
     }
     
+    bool contains(T a) {
+        for (unsigned n = 0; n < _len; ++n)
+            if (_data[n] == a)
+                return true;
+        return false;
+    }
+    
     void add(T a) {
         JS_ASSERT(_len <= _max);
         ensure(_len + 1);
