@@ -41,7 +41,6 @@
 #define nsQuoteList_h___
 
 #include "nsGenConList.h"
-#include "nsStyleContext.h"
 
 struct nsQuoteNode : public nsGenConNode {
   // open-quote, close-quote, no-open-quote, or no-close-quote
@@ -50,14 +49,12 @@ struct nsQuoteNode : public nsGenConNode {
   // Quote depth before this quote, which is always non-negative.
   PRInt32 mDepthBefore;
 
-  nsRefPtr<nsStyleContext> mStyleContext;
 
-  nsQuoteNode(nsStyleContentType& aType, nsIContent* aContentParent,
-              PRUint32 aContentIndex, nsStyleContext* aStyleContext)
-    : nsGenConNode(aContentParent, aStyleContext, aContentIndex)
+  nsQuoteNode(nsStyleContentType& aType, nsIFrame* aPseudoFrame,
+              PRUint32 aContentIndex)
+    : nsGenConNode(aPseudoFrame, aContentIndex)
     , mType(aType)
     , mDepthBefore(0)
-    , mStyleContext(aStyleContext)
   {
     NS_ASSERTION(aType == eStyleContentType_OpenQuote ||
                  aType == eStyleContentType_CloseQuote ||

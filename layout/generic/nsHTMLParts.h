@@ -89,8 +89,7 @@ class nsTableColFrame;
 nsIFrame*
 NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags = 0);
 
-// Special Generated Content Node. It contains text taken from an
-// attribute of its *grandparent* content node. 
+// Special Generated Content Frame
 nsresult
 NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
                        PRInt32 aNameSpaceID, nsIAtom* aAttrName,

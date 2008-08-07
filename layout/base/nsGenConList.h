@@ -40,21 +40,18 @@
 #ifndef nsGenConList_h___
 #define nsGenConList_h___
 
-#include "nsIContent.h"
+#include "nsIFrame.h"
 #include "nsStyleStruct.h"
-#include "nsStyleContext.h"
 #include "prclist.h"
 #include "nsIDOMCharacterData.h"
 #include "nsCSSPseudoElements.h"
 
 struct nsGenConNode : public PRCList {
-  // The content associated with this node. This is never a generated
-  // content element. When mPseudoType is non-null, this is the element
-  // for which we generated the anonymous content. If mPseudoType is null,
-  // this is the element associated with a counter reset or increment.  
-  nsIContent* mParentContent;
-  // nsGkAtoms::before, nsGkAtoms::after, or null
-  nsIAtom*    mPseudoType;
+  // The wrapper frame for all of the pseudo-element's content.  This
+  // frame generally has useful style data and has the
+  // NS_FRAME_GENERATED_CONTENT bit set (so we use it to track removal),
+  // but does not necessarily for |nsCounterChangeNode|s.
+  nsIFrame* const mPseudoFrame;
 
   // Index within the list of things specified by the 'content' property,
   // which is needed to do 'content: open-quote open-quote' correctly,
@@ -65,27 +62,25 @@ struct nsGenConNode : public PRCList {
   // counter nodes for increments and resets (rather than uses)
   nsCOMPtr<nsIDOMCharacterData> mText;
 
-  static nsIAtom* ToGeneratedContentType(nsIAtom* aPseudoType)
-  {
-    if (aPseudoType == nsCSSPseudoElements::before ||
-        aPseudoType == nsCSSPseudoElements::after)
-      return aPseudoType;
-    return nsnull;
-  }
-  
-  nsGenConNode(nsIContent* aParentContent, nsStyleContext* aStyleContext,
-               PRInt32 aContentIndex)
-    : mParentContent(aParentContent)
-    , mPseudoType(ToGeneratedContentType(aStyleContext->GetPseudoType()))
+  nsGenConNode(nsIFrame* aPseudoFrame, PRInt32 aContentIndex)
+    : mPseudoFrame(aPseudoFrame)
     , mContentIndex(aContentIndex)
   {
     NS_ASSERTION(aContentIndex <
-                 PRInt32(aStyleContext->GetStyleContent()->ContentCount()),
+                   PRInt32(aPseudoFrame->GetStyleContent()->ContentCount()),
                  "index out of range");
     // We allow negative values of mContentIndex for 'counter-reset' and
     // 'counter-increment'.
-    NS_ASSERTION(aContentIndex < 0 || mPseudoType,
+
+    NS_ASSERTION(aContentIndex < 0 ||
+                 aPseudoFrame->GetStyleContext()->GetPseudoType() ==
+                   nsCSSPseudoElements::before ||
+                 aPseudoFrame->GetStyleContext()->GetPseudoType() ==
+                   nsCSSPseudoElements::after,
                  "not :before/:after generated content and not counter change");
+    NS_ASSERTION(aContentIndex < 0 ||
+                 aPseudoFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT,
+                 "not generated content and not counter change");
   }
 
   virtual ~nsGenConNode() {} // XXX Avoid, perhaps?
@@ -106,11 +101,8 @@ public:
     return static_cast<nsGenConNode*>(PR_PREV_LINK(aNode));
   }
   void Insert(nsGenConNode* aNode);
-  /**
-   * Destroy all nodes whose aContent/aPseudo match.
-   * @return true if some nodes were destroyed
-   */
-  PRBool DestroyNodesFor(nsIContent* aParentContent, nsIAtom* aPseudo);
+  // returns whether any nodes have been destroyed
+  PRBool DestroyNodesFor(nsIFrame* aFrame); //destroy all nodes with aFrame as parent
 
   // Return true if |aNode1| is after |aNode2|.
   static PRBool NodeAfter(const nsGenConNode* aNode1,
