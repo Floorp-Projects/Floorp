@@ -51,9 +51,15 @@
 
 #include "nsICharsetConverterManager.h"
 
+class gfxOS2FontEntry : public gfxFontEntry {
+public:
+    gfxOS2FontEntry(const nsAString& aName) : gfxFontEntry(aName) {}
+    ~gfxOS2FontEntry() {}
+};
+
 class gfxOS2Font : public gfxFont {
 public:
-    gfxOS2Font(const nsAString &aName, const gfxFontStyle *aFontStyle);
+    gfxOS2Font(gfxOS2FontEntry *aFontEntry, const gfxFontStyle *aFontStyle);
     virtual ~gfxOS2Font();
 
     virtual const gfxFont::Metrics& GetMetrics();
