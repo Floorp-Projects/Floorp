@@ -1293,6 +1293,8 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f,
         js_AbortRecording(cx, NULL, "setting up recorder failed");
         return false;
     }
+    /* clear any leftover error state */
+    JS_TRACE_MONITOR(cx).fragmento->assm()->setError(None);
     return true;
 }
 
