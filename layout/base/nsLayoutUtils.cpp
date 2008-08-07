@@ -248,19 +248,12 @@ nsLayoutUtils::IsGeneratedContentFor(nsIContent* aContent,
   if (!aFrame->IsGeneratedContentFrame()) {
     return PR_FALSE;
   }
-  nsIFrame* parent = aFrame->GetParent();
-  NS_ASSERTION(parent, "Generated content can't be root frame");
-  if (parent->IsGeneratedContentFrame()) {
-    // Not the root of the generated content
-    return PR_FALSE;
-  }
   
-  if (aContent && parent->GetContent() != aContent) {
+  if (aContent && aFrame->GetContent() != aContent) {
     return PR_FALSE;
   }
 
-  return (aFrame->GetContent()->Tag() == nsGkAtoms::mozgeneratedcontentbefore) ==
-    (aPseudoElement == nsCSSPseudoElements::before);
+  return aFrame->GetStyleContext()->GetPseudoType() == aPseudoElement;
 }
 
 // static

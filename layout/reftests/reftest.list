@@ -35,9 +35,6 @@ include columns/reftest.list
 # counters/
 include counters/reftest.list
 
-# generated-content/
-include generated-content/reftest.list
-
 # first-letter/
 include first-letter/reftest.list
 
