@@ -144,6 +144,7 @@ public:
 };
 
 class TreeInfo {
+    nanojit::Fragment*      fragment;
 public:
     unsigned                entryNativeStackSlots;
     unsigned                maxNativeStackSlots;
@@ -153,6 +154,12 @@ public:
     Queue<uint16>           globalSlots;
     Queue<uint8>            stackTypeMap;
     Queue<uint8>            globalTypeMap;
+    Queue<nanojit::Fragment*> outerTrees;
+    
+    TreeInfo(nanojit::Fragment* _fragment) { fragment = _fragment; }
+    
+    void addOuterTree(nanojit::Fragment* outer);
+    void mergeGlobalsFromInnerTree(nanojit::Fragment* inner);
 };
 
 extern struct nanojit::CallInfo builtins[];
