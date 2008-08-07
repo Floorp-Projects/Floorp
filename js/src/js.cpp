@@ -1565,7 +1565,6 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
         DUMP_ATTR(ENUMERATE);
         DUMP_ATTR(READONLY);
         DUMP_ATTR(PERMANENT);
-        DUMP_ATTR(EXPORTED);
         DUMP_ATTR(GETTER);
         DUMP_ATTR(SETTER);
 #undef  DUMP_ATTR
@@ -1721,42 +1720,6 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #endif /* DEBUG */
-
-#ifdef TEST_EXPORT
-static JSBool
-DoExport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    jsid id;
-    JSObject *obj2;
-    JSProperty *prop;
-    JSBool ok;
-    uintN attrs;
-
-    if (argc != 2) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_DOEXP_USAGE);
-        return JS_FALSE;
-    }
-    if (!JS_ValueToObject(cx, argv[0], &obj))
-        return JS_FALSE;
-    argv[0] = OBJECT_TO_JSVAL(obj);
-    if (!js_ValueToStringId(cx, argv[1], &id))
-        return JS_FALSE;
-    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
-        return JS_FALSE;
-    if (!prop) {
-        ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, NULL, NULL,
-                                 JSPROP_EXPORTED, NULL);
-    } else {
-        ok = OBJ_GET_ATTRIBUTES(cx, obj, id, prop, &attrs);
-        if (ok) {
-            attrs |= JSPROP_EXPORTED;
-            ok = OBJ_SET_ATTRIBUTES(cx, obj, id, prop, &attrs);
-        }
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
-    }
-    return ok;
-}
-#endif
 
 #ifdef TEST_CVTARGS
 #include <ctype.h>
@@ -2813,9 +2776,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("tracing",        Tracing,        0,0,0),
     JS_FS("stats",          DumpStats,      1,0,0),
 #endif
-#ifdef TEST_EXPORT
-    JS_FS("xport",          DoExport,       2,0,0),
-#endif
 #ifdef TEST_CVTARGS
     JS_FS("cvtargs",        ConvertArgs,    0,0,12),
 #endif
@@ -2895,9 +2855,6 @@ static const char *const shell_help_messages[] = {
 "notes([fun])             Show source notes for functions",
 "tracing([toggle])        Turn tracing on or off",
 "stats([string ...])      Dump 'arena', 'atom', 'global' stats",
-#endif
-#ifdef TEST_EXPORT
-"xport(obj, property)     Export the given property of obj",
 #endif
 #ifdef TEST_CVTARGS
 "cvtargs(arg1..., arg12)  Test argument formater",

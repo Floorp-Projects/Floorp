@@ -1851,8 +1851,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
             format = cs->format;
             if (((fp && fp->regs && pc == fp->regs->pc) ||
                  (pc == startpc && cs->nuses != 0)) &&
-                format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_IMPORT|JOF_FOR|
-                          JOF_VARPROP)) {
+                format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_FOR|JOF_VARPROP)) {
                 mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
                     /*
@@ -4191,49 +4190,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = -2;
                 goto do_function;
                 break;
-
-#if JS_HAS_EXPORT_IMPORT
-              case JSOP_EXPORTALL:
-                js_printf(jp, "\texport *;\n");
-                todo = -2;
-                break;
-
-              case JSOP_EXPORTNAME:
-                LOAD_ATOM(0);
-                rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
-                if (!rval)
-                    return NULL;
-                RETRACT(&ss->sprinter, rval);
-                js_printf(jp, "\texport %s;\n", rval);
-                todo = -2;
-                break;
-
-              case JSOP_IMPORTALL:
-                lval = POP_STR();
-                js_printf(jp, "\timport %s.*;\n", lval);
-                todo = -2;
-                break;
-
-              case JSOP_IMPORTPROP:
-              do_importprop:
-                GET_ATOM_QUOTE_AND_FMT("\timport %s[%s];\n",
-                                       "\timport %s.%s;\n",
-                                       rval);
-                lval = POP_STR();
-                js_printf(jp, fmt, lval, rval);
-                todo = -2;
-                break;
-
-              case JSOP_IMPORTELEM:
-                xval = POP_STR();
-                op = JSOP_GETELEM;
-                if (JOF_OPMODE(lastop) == JOF_XMLNAME)
-                    goto do_importprop;
-                lval = POP_STR();
-                js_printf(jp, "\timport %s[%s];\n", lval, xval);
-                todo = -2;
-                break;
-#endif /* JS_HAS_EXPORT_IMPORT */
 
               case JSOP_TRAP:
                 saveop = op = JS_GetTrapOpcode(cx, jp->script, pc);
