@@ -354,7 +354,7 @@ nsDocumentEncoder::SerializeToStringRecursive(nsIDOMNode* aNode,
                                               PRBool aDontSerializeRoot)
 {
   nsresult rv = NS_OK;
-  PRBool serializeClonedChildren;
+  PRBool serializeClonedChildren = PR_FALSE;
   nsCOMPtr<nsIDOMNode> maybeFixedNode;
   
   if (mNodeFixup)
