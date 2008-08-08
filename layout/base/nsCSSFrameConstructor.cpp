@@ -1794,6 +1794,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   : mDocument(aDocument)
   , mPresShell(aPresShell)
   , mInitialContainingBlock(nsnull)
+  , mRootElementStyleFrame(nsnull)
   , mFixedContainingBlock(nsnull)
   , mDocElementContainingBlock(nsnull)
   , mGfxScrollFrame(nsnull)
@@ -4379,6 +4380,16 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
 
   mInitialContainingBlock = contentFrame;
   mInitialContainingBlockIsAbsPosContainer = PR_FALSE;
+
+  // Figure out which frame has the main style for the document element,
+  // assigning it to mRootElementStyleFrame.
+  // Backgrounds should be propagated from that frame to the viewport.
+  PRBool isChild;
+  contentFrame->GetParentStyleContextFrame(aState.mPresContext,
+          &mRootElementStyleFrame, &isChild);
+  if (!isChild) {
+    mRootElementStyleFrame = mInitialContainingBlock;
+  }
 
   // if it was a table then we don't need to process our children.
   if (!docElemIsTable) {
@@ -7654,6 +7665,9 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
             return rv;
           }
         }
+        
+        mInitialContainingBlock = nsnull;
+        mRootElementStyleFrame = nsnull;
 
         // Create the new document element hierarchy
         nsIFrame* newChild;
@@ -9460,7 +9474,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
 
     if (mInitialContainingBlock == childFrame) {
       mInitialContainingBlock = nsnull;
-      mInitialContainingBlockIsAbsPosContainer = PR_FALSE;
+      mRootElementStyleFrame = nsnull;
     }
 
     if (haveFLS && mInitialContainingBlock) {
