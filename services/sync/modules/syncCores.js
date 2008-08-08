@@ -180,7 +180,8 @@ SyncCore.prototype = {
     for (let i = 0; i < list.length; i++) {
       if (!list[i])
         continue;
-      if (list[i].data && list[i].data.parentGUID == oldGUID)
+      if (list[i].data && list[i].data.parentGUID &&
+          list[i].data.parentGUID == oldGUID)
         list[i].data.parentGUID = newGUID;
       for (let j = 0; j < list[i].parents.length; j++) {
         if (list[i].parents[j] == oldGUID)
@@ -222,6 +223,7 @@ SyncCore.prototype = {
 		    " against " + listB.length + " commands");
 
     let guidChanges = [];
+    let edits = [];
     for (let i = 0; i < listA.length; i++) {
       let a = listA[i];
 
@@ -233,32 +235,40 @@ SyncCore.prototype = {
         if (skip)
           return true;
 
-        if (Utils.deepEquals(a, b)) {
-          delete listA[i]; // a
+        if (a.GUID == b.GUID) {
+          // delete both commands
+          // XXX this relies on the fact that we actually dump
+          // outgoing commands and generate new ones by doing a fresh
+          // diff after applying local changes
           skip = true;
-          return false; // b
+          delete listA[i]; // delete a
+          return false; // delete b
 
         } else if (this._commandLike(a, b)) {
           this._fixParents(listA, a.GUID, b.GUID);
           guidChanges.push({action: "edit",
       		      GUID: a.GUID,
       		      data: {GUID: b.GUID}});
-          delete listA[i]; // a
           skip = true;
-          return false; // b, but we add it back from guidChanges
-        }
-
-        // watch out for create commands with GUIDs that already exist
-        if (b.action == "create" && this._store._itemExists(b.GUID)) {
-          this._log.error("Remote command has GUID that already exists " +
-                          "locally. Dropping command.");
+          delete listA[i]; // delete a
           return false; // delete b
         }
         return true; // keep b
       }, this);
     }
 
-    listA = listA.filter(function(elt) { return elt });
+    listB = listB.filter(function(b) {
+      // watch out for create commands with GUIDs that already exist
+      if (b.action == "create" && this._store._itemExists(b.GUID)) {
+        this._log.error("Remote command has GUID that already exists " +
+                        "locally. Dropping command.");
+        return false; // delete b
+      }
+      return true; // keep b
+    }, this);
+
+    listA = listA.filter(function(elt) { return elt }); // removes any holes
+    listA = listA.concat(edits);
     listB = guidChanges.concat(listB);
 
     for (let i = 0; i < listA.length; i++) {
