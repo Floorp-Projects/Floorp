@@ -4480,7 +4480,6 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             if (!fun)
                 return JS_FALSE;
             fun->u.n.extra = (uint16)fs->extra;
-            fun->u.n.minargs = (uint16)(fs->extra >> 16);
 
             /*
              * As jsapi.h notes, fs must point to storage that lives as long
@@ -4496,7 +4495,6 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
         if (!fun)
             return JS_FALSE;
         fun->u.n.extra = (uint16)fs->extra;
-        fun->u.n.minargs = (uint16)(fs->extra >> 16);
     }
     return JS_TRUE;
 }
