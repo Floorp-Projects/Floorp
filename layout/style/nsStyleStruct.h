@@ -627,12 +627,12 @@ struct nsStyleOutline {
 #endif
  
   nsStyleSides  mOutlineRadius;    // [reset] length, percent
-  																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
+                                   // (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
 
   // Note that these are specified values.  You can get the actual values with
   // GetOutlineWidth and GetOutlineOffset.  You cannot get the computed values
   // directly.
-  nsStyleCoord  mOutlineOffset;   // [reset] length
+  nsStyleCoord  mOutlineOffset;   // [reset] length XXX Why nsStyleCoord?
   nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
 
   PRBool GetOutlineOffset(nscoord& aOffset) const
@@ -750,7 +750,7 @@ struct nsStylePosition {
   static nsChangeHint MaxDifference();
 #endif
   
-  nsStyleSides  mOffset;                // [reset]
+  nsStyleSides  mOffset;                // [reset] coord, percent, auto
   nsStyleCoord  mWidth;                 // [reset] coord, percent, auto, enum
   nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum
   nsStyleCoord  mMaxWidth;              // [reset] coord, percent, null, enum
@@ -758,7 +758,7 @@ struct nsStylePosition {
   nsStyleCoord  mMinHeight;             // [reset] coord, percent
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, null
   PRUint8       mBoxSizing;             // [reset] see nsStyleConsts.h
-  nsStyleCoord  mZIndex;                // [reset] 
+  nsStyleCoord  mZIndex;                // [reset] integer, auto
 };
 
 struct nsStyleTextReset {
@@ -782,7 +782,7 @@ struct nsStyleTextReset {
   PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
   PRUint8 mUnicodeBidi;                 // [reset] see nsStyleConsts.h
 
-  nsStyleCoord  mVerticalAlign;         // [reset] see nsStyleConsts.h for enums
+  nsStyleCoord  mVerticalAlign;         // [reset] coord, percent, enum (see nsStyleConsts.h)
 };
 
 struct nsStyleText {
@@ -808,10 +808,10 @@ struct nsStyleText {
   PRUint8 mWhiteSpace;                  // [inherited] see nsStyleConsts.h
   PRUint8 mWordWrap;                    // [inherited] see nsStyleConsts.h
 
-  nsStyleCoord  mLetterSpacing;         // [inherited] 
-  nsStyleCoord  mLineHeight;            // [inherited] 
-  nsStyleCoord  mTextIndent;            // [inherited] 
-  nsStyleCoord  mWordSpacing;           // [inherited] 
+  nsStyleCoord  mLetterSpacing;         // [inherited] coord, normal
+  nsStyleCoord  mLineHeight;            // [inherited] coord, factor, normal
+  nsStyleCoord  mTextIndent;            // [inherited] coord, percent
+  nsStyleCoord  mWordSpacing;           // [inherited] coord, normal
 
   nsRefPtr<nsCSSShadowArray> mTextShadow; // [inherited] NULL in case of a zero-length
   
@@ -853,13 +853,13 @@ struct nsStyleVisibility {
   nsCOMPtr<nsIAtom> mLangGroup;        // [inherited]
  
   PRBool IsVisible() const {
-		return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);
-	}
+    return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);
+  }
 
-	PRBool IsVisibleOrCollapsed() const {
-		return ((mVisible == NS_STYLE_VISIBILITY_VISIBLE) ||
-						(mVisible == NS_STYLE_VISIBILITY_COLLAPSE));
-	}
+  PRBool IsVisibleOrCollapsed() const {
+    return ((mVisible == NS_STYLE_VISIBILITY_VISIBLE) ||
+            (mVisible == NS_STYLE_VISIBILITY_COLLAPSE));
+  }
 };
 
 struct nsStyleDisplay {
@@ -997,8 +997,8 @@ struct nsStyleTableBorder {
   static nsChangeHint MaxDifference();
 #endif
   
-  nsStyleCoord  mBorderSpacingX;// [inherited]
-  nsStyleCoord  mBorderSpacingY;// [inherited]
+  nsStyleCoord  mBorderSpacingX;// [inherited] coord
+  nsStyleCoord  mBorderSpacingY;// [inherited] coord
   PRUint8       mBorderCollapse;// [inherited]
   PRUint8       mCaptionSide;   // [inherited]
   PRUint8       mEmptyCells;    // [inherited]
@@ -1207,7 +1207,7 @@ struct nsStyleContent {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  nsStyleCoord  mMarkerOffset;  // [reset]
+  nsStyleCoord  mMarkerOffset;  // [reset] coord, auto
 
 protected:
   PRUint32            mContentCount;
@@ -1332,8 +1332,8 @@ struct nsStyleColumn {
 #endif
 
   PRUint32     mColumnCount; // [reset] see nsStyleConsts.h
-  nsStyleCoord mColumnWidth; // [reset]
-  nsStyleCoord mColumnGap;   // [reset] coord
+  nsStyleCoord mColumnWidth; // [reset] coord, auto
+  nsStyleCoord mColumnGap;   // [reset] coord, percent, normal
 
   nscolor      mColumnRuleColor;  // [reset]
   PRUint8      mColumnRuleStyle;  // [reset]
@@ -1402,10 +1402,10 @@ struct nsStyleSVG {
   nsCOMPtr<nsIURI> mMarkerEnd;        // [inherited]
   nsCOMPtr<nsIURI> mMarkerMid;        // [inherited]
   nsCOMPtr<nsIURI> mMarkerStart;      // [inherited]
-  nsStyleCoord    *mStrokeDasharray;  // [inherited]
+  nsStyleCoord    *mStrokeDasharray;  // [inherited] coord, percent, factor
 
-  nsStyleCoord     mStrokeDashoffset; // [inherited]
-  nsStyleCoord     mStrokeWidth;      // [inherited]
+  nsStyleCoord     mStrokeDashoffset; // [inherited] coord, percent, factor
+  nsStyleCoord     mStrokeWidth;      // [inherited] coord, percent, factor
 
   float            mFillOpacity;      // [inherited]
   float            mStrokeMiterlimit; // [inherited]

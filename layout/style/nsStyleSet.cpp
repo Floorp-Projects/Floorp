@@ -369,6 +369,12 @@ nsStyleSet::EnableQuirkStyleSheet(PRBool aEnable)
   }
   NS_ASSERTION(mQuirkStyleSheet, "no quirk stylesheet");
   if (mQuirkStyleSheet) {
+#ifdef DEBUG
+    if (mRuleProcessors[eAgentSheet]) {
+      static_cast<nsCSSRuleProcessor*>(static_cast<nsIStyleRuleProcessor*>(
+        mRuleProcessors[eAgentSheet]))->AssertQuirksChangeOK();
+    }
+#endif
 #ifdef DEBUG_dbaron_off // XXX Make this |DEBUG| once it stops firing.
     PRBool applicableNow;
     mQuirkStyleSheet->GetApplicable(applicableNow);

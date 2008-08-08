@@ -4515,12 +4515,18 @@ nsTextFrame::HasSelectionOverflowingDecorations(nsPresContext* aPresContext,
   if (ratio <= 1.0f)
     return PR_FALSE;
 
-  for (SelectionDetails *sd = GetSelectionDetails(); sd; sd = sd->mNext) {
+  SelectionDetails *details = GetSelectionDetails();
+  PRBool retval = PR_FALSE;
+  for (SelectionDetails *sd = details; sd; sd = sd->mNext) {
     if (sd->mStart != sd->mEnd &&
-        sd->mType & SelectionTypesWithDecorations)
-      return PR_TRUE;
+        sd->mType & SelectionTypesWithDecorations) {
+      retval = PR_TRUE;
+      break;
+    }
   }
-  return PR_FALSE;
+  DestroySelectionDetails(details);
+  
+  return retval;
 }
 
 //null range means the whole thing
@@ -5894,6 +5900,10 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     lineLayout.SetLineEndsInBR(PR_TRUE);
   } else if (breakAfter) {
     aStatus = NS_INLINE_LINE_BREAK_AFTER(aStatus);
+  }
+  if (completedFirstLetter) {
+    lineLayout.SetFirstLetterStyleOK(PR_FALSE);
+    aStatus |= NS_INLINE_BREAK_FIRST_LETTER_COMPLETE;
   }
 
   // Compute space and letter counts for justification, if required

@@ -81,7 +81,12 @@ public:
   virtual void GetScriptText(nsAString& text) = 0;
 
   virtual void GetScriptCharset(nsAString& charset) = 0;
-  
+
+  /**
+   * Is the script deferred. Currently only supported by HTML scripts.
+   */
+  virtual PRBool GetScriptDeferred() = 0;
+
   void SetScriptLineNumber(PRUint32 aLineNumber)
   {
     mLineNumber = aLineNumber;

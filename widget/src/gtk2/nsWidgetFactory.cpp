@@ -225,6 +225,7 @@ static const nsModuleComponentInfo components[] =
     NS_TRANSFERABLE_CID,
     "@mozilla.org/widget/transferable;1",
     nsTransferableConstructor },
+#ifdef MOZ_X11
   { "Gtk Clipboard",
     NS_CLIPBOARD_CID,
     "@mozilla.org/widget/clipboard;1",
@@ -237,6 +238,7 @@ static const nsModuleComponentInfo components[] =
     NS_DRAGSERVICE_CID,
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
+#endif
   { "HTML Format Converter",
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter;1",

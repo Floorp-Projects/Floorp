@@ -70,7 +70,7 @@ typedef enum JSOp {
 #define JOF_TABLESWITCH   4       /* table switch */
 #define JOF_LOOKUPSWITCH  5       /* lookup switch */
 #define JOF_QARG          6       /* quickened get/set function argument ops */
-#define JOF_QVAR          7       /* quickened get/set local variable ops */
+#define JOF_LOCAL         7       /* var or block-local variable */
 #define JOF_SLOTATOM      8       /* uint16 slot index + constant pool index */
 #define JOF_JUMPX         9       /* signed 32-bit jump offset immediate */
 #define JOF_TABLESWITCHX  10      /* extended (32-bit offset) table switch */
@@ -78,12 +78,11 @@ typedef enum JSOp {
 #define JOF_UINT24        12      /* extended unsigned 24-bit literal (index) */
 #define JOF_2BYTE         13      /* 2-byte opcode, e.g., upper 8 bits of 24-bit
                                      atom index */
-#define JOF_LOCAL         14      /* block-local operand stack variable */
+#define JOF_INT32         14      /* int32 immediate operand */
 #define JOF_OBJECT        15      /* unsigned 16-bit object pool index */
 #define JOF_SLOTOBJECT    16      /* uint16 slot index + object pool index */
 #define JOF_REGEXP        17      /* unsigned 16-bit regexp pool index */
 #define JOF_INT8          18      /* int8 immediate operand */
-#define JOF_INT32         19      /* int32 immediate operand */
 #define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
 
 #define JOF_NAME          (1U<<5) /* name operation */
@@ -98,26 +97,25 @@ typedef enum JSOp {
 #define JOF_INC          (2U<<10) /* increment (++, not --) opcode */
 #define JOF_INCDEC       (3U<<10) /* increment or decrement opcode */
 #define JOF_POST         (1U<<12) /* postorder increment or decrement */
-#define JOF_IMPORT       (1U<<13) /* import property op */
-#define JOF_FOR          (1U<<14) /* for-in property op */
+#define JOF_FOR          (1U<<13) /* for-in property op */
 #define JOF_ASSIGNING     JOF_SET /* hint for JSClass.resolve, used for ops
                                      that do simplex assignment */
-#define JOF_DETECTING    (1U<<15) /* object detection for JSNewResolveOp */
-#define JOF_BACKPATCH    (1U<<16) /* backpatch placeholder during codegen */
-#define JOF_LEFTASSOC    (1U<<17) /* left-associative operator */
-#define JOF_DECLARING    (1U<<18) /* var, const, or function declaration op */
-#define JOF_INDEXBASE    (1U<<19) /* atom segment base setting prefix op */
-#define JOF_CALLOP       (1U<<20) /* call operation that pushes function and
+#define JOF_DETECTING    (1U<<14) /* object detection for JSNewResolveOp */
+#define JOF_BACKPATCH    (1U<<15) /* backpatch placeholder during codegen */
+#define JOF_LEFTASSOC    (1U<<16) /* left-associative operator */
+#define JOF_DECLARING    (1U<<17) /* var, const, or function declaration op */
+#define JOF_INDEXBASE    (1U<<18) /* atom segment base setting prefix op */
+#define JOF_CALLOP       (1U<<19) /* call operation that pushes function and
                                      this */
-#define JOF_PARENHEAD    (1U<<21) /* opcode consumes value of expression in
+#define JOF_PARENHEAD    (1U<<20) /* opcode consumes value of expression in
                                      parenthesized statement head */
-#define JOF_INVOKE       (1U<<22) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
-#define JOF_TMPSLOT      (1U<<23) /* interpreter uses extra temporary slot
+#define JOF_INVOKE       (1U<<21) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
+#define JOF_TMPSLOT      (1U<<22) /* interpreter uses extra temporary slot
                                      to root intermediate objects besides
                                      the slots opcode uses */
-#define JOF_TMPSLOT2     (2U<<23) /* interpreter uses extra 2 temporary slot
+#define JOF_TMPSLOT2     (2U<<22) /* interpreter uses extra 2 temporary slot
                                      besides the slots opcode uses */
-#define JOF_TMPSLOT_SHIFT 23
+#define JOF_TMPSLOT_SHIFT 22
 #define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
 
 /* Shorthands for type from format and type from opcode. */
@@ -235,7 +233,7 @@ JS_STATIC_ASSERT(sizeof(uint32) * JS_BITS_PER_BYTE >= INDEX_LIMIT_LOG2 + 1);
 #define GET_ARGC(pc)            GET_UINT16(pc)
 #define ARGC_LIMIT              UINT16_LIMIT
 
-/* Synonyms for quick JOF_QARG and JOF_QVAR bytecodes. */
+/* Synonyms for quick JOF_QARG and JOF_LOCAL bytecodes. */
 #define GET_ARGNO(pc)           GET_UINT16(pc)
 #define SET_ARGNO(pc,argno)     SET_UINT16(pc,argno)
 #define ARGNO_LEN               2

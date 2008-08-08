@@ -43,7 +43,6 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsISVGValue.h"
 #include "nsRect.h"
 
 class nsIDocument;
@@ -61,7 +60,6 @@ class nsIURI;
 class nsSVGOuterSVGFrame;
 class nsIPresShell;
 class nsIDOMSVGAnimatedPreserveAspectRatio;
-class nsISVGValueObserver;
 class nsIAtom;
 class nsSVGLength2;
 class nsSVGElement;
@@ -87,23 +85,19 @@ class nsISVGChildFrame;
 // SVG Frame state bits
 #define NS_STATE_IS_OUTER_SVG         0x00100000
 
-#define NS_STATE_SVG_CLIPPED          0x00200000
-#define NS_STATE_SVG_FILTERED         0x00400000
-#define NS_STATE_SVG_MASKED           0x00800000
+#define NS_STATE_SVG_HAS_MARKERS      0x00200000
 
-#define NS_STATE_SVG_HAS_MARKERS      0x01000000
-
-#define NS_STATE_SVG_DIRTY            0x02000000
+#define NS_STATE_SVG_DIRTY            0x00400000
 
 /* Do we have a paint server for fill with a valid URL? */
-#define NS_STATE_SVG_FILL_PSERVER     0x04000000
+#define NS_STATE_SVG_FILL_PSERVER     0x00800000
 /* Do we have a paint server for stroke with a valid URL? */
-#define NS_STATE_SVG_STROKE_PSERVER   0x08000000
+#define NS_STATE_SVG_STROKE_PSERVER   0x01000000
 /* Do we have any paint servers with valid URLs? */
-#define NS_STATE_SVG_PSERVER_MASK     0x0c000000
+#define NS_STATE_SVG_PSERVER_MASK     0x01800000
 
 /* are we the child of a non-display container? */
-#define NS_STATE_SVG_NONDISPLAY_CHILD 0x10000000
+#define NS_STATE_SVG_NONDISPLAY_CHILD 0x02000000
 
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
@@ -132,6 +126,9 @@ class nsISVGChildFrame;
  * to cairo.h usage) can still query this information.
  */
 PRBool NS_SVGEnabled();
+
+// GRRR WINDOWS HATE HATE HATE
+#undef CLIP_MASK
 
 class nsSVGRenderState
 {
@@ -340,11 +337,12 @@ public:
                         nsRect *aDirtyRect,
                         nsIFrame *aFrame);
 
-  /* Style change for effects (filter/clip/mask/opacity) - call when
-   * the frame's style has changed to make sure the effects properties
-   * stay in sync. */
+  /**
+   * Called by nsCSSFrameConstructor when style changes require the
+   * effect properties on aFrame to be updated
+   */
   static void
-  StyleEffects(nsIFrame *aFrame);
+  UpdateEffects(nsIFrame *aFrame);
 
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  (x,y) are specified in device pixels relative to the

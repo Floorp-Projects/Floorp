@@ -455,7 +455,9 @@ void nsTimerImpl::Fire()
   }
 #endif
 
-  if (mType == TYPE_REPEATING_SLACK) {
+  // Reschedule REPEATING_SLACK timers, but make sure that we aren't armed
+  // already (which can happen if the callback reinitialized the timer).
+  if (mType == TYPE_REPEATING_SLACK && !mArmed) {
     SetDelayInternal(mDelay); // force mTimeout to be recomputed.
     if (gThread)
       gThread->AddTimer(this);

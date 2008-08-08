@@ -45,16 +45,13 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS	= \
 	dist \
-	src \
 	test \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
-	GPL-LICENSE.txt \
 	manifest.json \
-	MIT-LICENSE.txt \
 	test_jQuery.html \
 	$(NULL)
 

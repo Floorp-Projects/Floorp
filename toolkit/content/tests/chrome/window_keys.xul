@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Key Tests"
+  onfocus="setTimeout(runTest, 0);"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gExpected = null;
+
+var keysToTest = [
+  ["k-v", "V", { } ],
+  ["", "V", { shiftKey: true } ],
+  ["k-v-scy", "V", { ctrlKey: true } ],
+  ["", "V", { altKey: true } ],
+  ["", "V", { metaKey: true } ],
+  ["k-v-scy", "V", { shiftKey: true, ctrlKey: true } ],
+  ["", "V", { shiftKey: true, ctrlKey: true, altKey: true } ],
+  ["k-e-y", "E", { } ],
+  ["", "E", { shiftKey: true } ],
+  ["", "E", { ctrlKey: true } ],
+  ["", "E", { altKey: true } ],
+  ["", "E", { metaKey: true } ],
+  ["k-d-a", "D", { altKey: true } ],
+  ["k-8-m", "8", { metaKey: true } ],
+  ["k-c-scaym", "C", { metaKey: true } ],
+  ["k-c-scaym", "C", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true } ],
+  ["", "V", { shiftKey: true, ctrlKey: true, altKey: true } ],
+  ["k-h-l", "H", { accelKey: true } ],
+//  ["k-j-s", "J", { accessKey: true } ],
+  ["", "T", { } ],
+  ["scommand", "Y", { } ],
+  ["", "U", { } ],
+];
+
+function runTest()
+{
+  iterateKeys(true, "normal");
+
+  var keyset = document.getElementById("keyset");
+  keyset.setAttribute("disabled", "true");
+  iterateKeys(false, "disabled");
+
+  var keyset = document.getElementById("keyset");
+  keyset.removeAttribute("disabled");
+  iterateKeys(true, "reenabled");
+
+  keyset.parentNode.removeChild(keyset);
+  iterateKeys(false, "removed");
+
+  document.documentElement.appendChild(keyset);
+  iterateKeys(true, "appended");
+
+  window.close();
+  window.opener.wrappedJSObject.SimpleTest.finish();
+}
+
+function iterateKeys(enabled, testid)
+{
+  for (var k = 0; k < keysToTest.length; k++) {
+    gExpected = keysToTest[k];
+    var expectedKey = gExpected[0];
+    if (!gExpected[2].accessKey || navigator.platform.indexOf("Mac") == -1) {
+      synthesizeKey(gExpected[1], gExpected[2]);
+      ok((enabled && expectedKey) || expectedKey == "k-d-a" ?
+         !gExpected : gExpected, testid + " key step " + (k + 1));
+    }
+  }
+}
+
+function checkKey(event)
+{
+  // the first element of the gExpected array holds the id of the <key> element
+  // that was expected. If this is empty, a handler wasn't expected to be called
+  if (gExpected[0])
+    is(event.originalTarget.id, gExpected[0], "key " + gExpected[1]);
+  else
+    is("key " + event.originalTarget.id + " was activated", "", "key " + gExpected[1]);
+  gExpected = null;
+}
+
+function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
+function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
+
+]]>
+</script>
+
+<command id="scommand" oncommand="checkKey(event)"/>
+<command id="scommand-disabled" disabled="true"/>
+
+<keyset id="keyset">
+  <key id="k-v" key="v" oncommand="checkKey(event)"/>
+  <key id="k-v-scy" key="v" modifiers="shift any control" oncommand="checkKey(event)"/>
+  <key id="k-e-y" key="e" modifiers="any" oncommand="checkKey(event)"/>
+  <key id="k-8-m" key="8" modifiers="meta" oncommand="checkKey(event)"/>
+  <key id="k-c-scaym" key="c" modifiers="shift control alt any meta" oncommand="checkKey(event)"/>
+  <key id="k-h-l" key="h" modifiers="accel" oncommand="checkKey(event)"/>
+  <key id="k-j-s" key="j" modifiers="access" oncommand="checkKey(event)"/>
+  <key id="k-t-y" disabled="true" key="t" oncommand="checkKey(event)"/>
+  <key id="k-y" key="y" command="scommand"/>
+  <key id="k-u" key="u" command="scommand-disabled"/>
+</keyset>
+
+<keyset id="keyset2">
+  <key id="k-d-a" key="d" modifiers="alt" oncommand="checkKey(event)"/>
+</keyset>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

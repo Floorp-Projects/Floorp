@@ -45,6 +45,7 @@
 #include "nsEnumeratorUtils.h"
 #include "nsReadableUtils.h"
 #include "nsPrintfCString.h"
+#include "nsDependentString.h"
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsPersistentProperties.h"
@@ -97,6 +98,389 @@ static const struct PLDHashTableOps property_HashTableOps = {
   nsnull,
 };
 
+//
+// parser stuff
+//
+enum EParserState {
+  eParserState_AwaitingKey,
+  eParserState_Key,
+  eParserState_AwaitingValue,
+  eParserState_Value,
+  eParserState_Comment
+};
+
+enum EParserSpecial {
+  eParserSpecial_None,          // not parsing a special character
+  eParserSpecial_Escaped,       // awaiting a special character
+  eParserSpecial_Unicode        // parsing a \Uxxx value
+};
+
+class nsPropertiesParser
+{
+public:
+  nsPropertiesParser(nsIPersistentProperties* aProps) :
+    mHaveMultiLine(PR_FALSE), mState(eParserState_AwaitingKey),
+    mProps(aProps) {}
+
+  void FinishValueState(nsAString& aOldValue) {
+    static const char trimThese[] = " \t";
+    mKey.Trim(trimThese, PR_FALSE, PR_TRUE);
+
+    // This is really ugly hack but it should be fast
+    PRUnichar backup_char;
+    if (mMinLength)
+    {
+      backup_char = mValue[mMinLength-1];
+      mValue.SetCharAt('x', mMinLength-1);
+    }
+    mValue.Trim(trimThese, PR_FALSE, PR_TRUE);
+    if (mMinLength)
+      mValue.SetCharAt(backup_char, mMinLength-1);
+
+    mProps->SetStringProperty(NS_ConvertUTF16toUTF8(mKey), mValue, aOldValue);
+    mSpecialState = eParserSpecial_None;
+    WaitForKey();
+  }
+
+  EParserState GetState() { return mState; }
+
+  static NS_METHOD SegmentWriter(nsIUnicharInputStream* aStream,
+                                 void* aClosure,
+                                 const PRUnichar *aFromSegment,
+                                 PRUint32 aToOffset,
+                                 PRUint32 aCount,
+                                 PRUint32 *aWriteCount);
+
+  nsresult ParseBuffer(const PRUnichar* aBuffer, PRUint32 aBufferLength);
+
+private:
+  PRBool ParseValueCharacter(
+    PRUnichar c,                  // character that is just being parsed
+    const PRUnichar* cur,         // pointer to character c in the buffer
+    const PRUnichar* &tokenStart, // string copying is done in blocks as big as
+                                  // possible, tokenStart points to the beginning
+                                  // of this block
+    nsAString& oldValue);         // when duplicate property is found, new value
+                                  // is stored into hashtable and the old one is
+                                  // placed in this variable
+
+  void WaitForKey() {
+    mState = eParserState_AwaitingKey;
+  }
+
+  void EnterKeyState() {
+    mKey.Truncate();
+    mState = eParserState_Key;
+  }
+
+  void WaitForValue() {
+    mState = eParserState_AwaitingValue;
+  }
+
+  void EnterValueState() {
+    mValue.Truncate();
+    mMinLength = 0;
+    mState = eParserState_Value;
+    mSpecialState = eParserSpecial_None;
+  }
+
+  void EnterCommentState() {
+    mState = eParserState_Comment;
+  }
+
+  nsAutoString mKey;
+  nsAutoString mValue;
+
+  PRUint32  mUnicodeValuesRead; // should be 4!
+  PRUnichar mUnicodeValue;      // currently parsed unicode value
+  PRBool    mHaveMultiLine;     // is TRUE when last processed characters form
+                                // any of following sequences:
+                                //  - "\\\r"
+                                //  - "\\\n"
+                                //  - "\\\r\n"
+                                //  - any sequence above followed by any
+                                //    combination of ' ' and '\t'
+  PRBool    mMultiLineCanSkipN; // TRUE if "\\\r" was detected
+  PRUint32  mMinLength;         // limit right trimming at the end to not trim
+                                // escaped whitespaces
+  EParserState mState;
+  // if we see a '\' then we enter this special state
+  EParserSpecial mSpecialState;
+  nsIPersistentProperties* mProps;
+};
+
+inline PRBool IsWhiteSpace(PRUnichar aChar)
+{
+  return (aChar == ' ') || (aChar == '\t') ||
+         (aChar == '\r') || (aChar == '\n');
+}
+
+inline PRBool IsEOL(PRUnichar aChar)
+{
+  return (aChar == '\r') || (aChar == '\n');
+}
+
+
+PRBool nsPropertiesParser::ParseValueCharacter(
+    PRUnichar c, const PRUnichar* cur, const PRUnichar* &tokenStart,
+    nsAString& oldValue)
+{
+  switch (mSpecialState) {
+
+    // the normal state - look for special characters
+  case eParserSpecial_None:
+    switch (c) {
+    case '\\':
+      if (mHaveMultiLine)
+        // there is nothing to append to mValue yet
+        mHaveMultiLine = PR_FALSE;
+      else
+        mValue += Substring(tokenStart, cur);
+
+      mSpecialState = eParserSpecial_Escaped;
+      break;
+
+    case '\n':
+      // if we detected multiline and got only "\\\r" ignore next "\n" if any
+      if (mHaveMultiLine && mMultiLineCanSkipN) {
+        // but don't allow another '\n' to be skipped
+        mMultiLineCanSkipN = PR_FALSE;
+        // Now there is nothing to append to the mValue since we are skipping
+        // whitespaces at the beginning of the new line of the multiline
+        // property. Set tokenStart properly to ensure that nothing is appended
+        // if we find regular line-end or the end of the buffer.
+        tokenStart = cur+1;
+        break;
+      }
+      // no break
+
+    case '\r':
+      // we're done! We have a key and value
+      mValue += Substring(tokenStart, cur);
+      FinishValueState(oldValue);
+      mHaveMultiLine = PR_FALSE;
+      break;
+
+    default:
+      // there is nothing to do with normal characters,
+      // but handle multilines correctly
+      if (mHaveMultiLine) {
+        if (c == ' ' || c == '\t') {
+          // don't allow another '\n' to be skipped
+          mMultiLineCanSkipN = PR_FALSE;
+          // Now there is nothing to append to the mValue since we are skipping
+          // whitespaces at the beginning of the new line of the multiline
+          // property. Set tokenStart properly to ensure that nothing is appended
+          // if we find regular line-end or the end of the buffer.
+          tokenStart = cur+1;
+          break;
+        }
+        mHaveMultiLine = PR_FALSE;
+        tokenStart = cur;
+      }
+      break; // from switch on (c)
+    }
+    break; // from switch on (mSpecialState)
+
+    // saw a \ character, so parse the character after that
+  case eParserSpecial_Escaped:
+    // probably want to start parsing at the next token
+    // other characters, like 'u' might override this
+    tokenStart = cur+1;
+    mSpecialState = eParserSpecial_None;
+
+    switch (c) {
+
+      // the easy characters - \t, \n, and so forth
+    case 't':
+      mValue += PRUnichar('\t');
+      mMinLength = mValue.Length();
+      break;
+    case 'n':
+      mValue += PRUnichar('\n');
+      mMinLength = mValue.Length();
+      break;
+    case 'r':
+      mValue += PRUnichar('\r');
+      mMinLength = mValue.Length();
+      break;
+    case '\\':
+      mValue += PRUnichar('\\');
+      break;
+
+      // switch to unicode mode!
+    case 'u':
+    case 'U':
+      mSpecialState = eParserSpecial_Unicode;
+      mUnicodeValuesRead = 0;
+      mUnicodeValue = 0;
+      break;
+
+      // a \ immediately followed by a newline means we're going multiline
+    case '\r':
+    case '\n':
+      mHaveMultiLine = PR_TRUE;
+      mMultiLineCanSkipN = (c == '\r');
+      mSpecialState = eParserSpecial_None;
+      break;
+
+    default:
+      // don't recognize the character, so just append it
+      mValue += c;
+      break;
+    }
+    break;
+
+    // we're in the middle of parsing a 4-character unicode value
+    // like \u5f39
+  case eParserSpecial_Unicode:
+
+    if(('0' <= c) && (c <= '9'))
+      mUnicodeValue =
+        (mUnicodeValue << 4) | (c - '0');
+    else if(('a' <= c) && (c <= 'f'))
+      mUnicodeValue =
+        (mUnicodeValue << 4) | (c - 'a' + 0x0a);
+    else if(('A' <= c) && (c <= 'F'))
+      mUnicodeValue =
+        (mUnicodeValue << 4) | (c - 'A' + 0x0a);
+    else {
+      // non-hex character. Append what we have, and move on.
+      mValue += mUnicodeValue;
+      mMinLength = mValue.Length();
+      mSpecialState = eParserSpecial_None;
+
+      // leave tokenStart at this unknown character, so it gets appended
+      tokenStart = cur;
+
+      // ensure parsing this non-hex character again
+      return PR_FALSE;
+    }
+
+    if (++mUnicodeValuesRead >= 4) {
+      tokenStart = cur+1;
+      mSpecialState = eParserSpecial_None;
+      mValue += mUnicodeValue;
+      mMinLength = mValue.Length();
+    }
+
+    break;
+  }
+
+  return PR_TRUE;
+}
+
+NS_METHOD nsPropertiesParser::SegmentWriter(nsIUnicharInputStream* aStream,
+                                            void* aClosure,
+                                            const PRUnichar *aFromSegment,
+                                            PRUint32 aToOffset,
+                                            PRUint32 aCount,
+                                            PRUint32 *aWriteCount)
+{
+  nsPropertiesParser *parser = 
+    static_cast<nsPropertiesParser *>(aClosure);
+  
+  parser->ParseBuffer(aFromSegment, aCount);
+
+  *aWriteCount = aCount;
+  return NS_OK;
+}
+
+nsresult nsPropertiesParser::ParseBuffer(const PRUnichar* aBuffer,
+                                         PRUint32 aBufferLength)
+{
+  const PRUnichar* cur = aBuffer;
+  const PRUnichar* end = aBuffer + aBufferLength;
+
+  // points to the start/end of the current key or value
+  const PRUnichar* tokenStart = nsnull;
+
+  // if we're in the middle of parsing a key or value, make sure
+  // the current token points to the beginning of the current buffer
+  if (mState == eParserState_Key ||
+      mState == eParserState_Value) {
+    tokenStart = aBuffer;
+  }
+
+  nsAutoString oldValue;
+
+  while (cur != end) {
+
+    PRUnichar c = *cur;
+
+    switch (mState) {
+    case eParserState_AwaitingKey:
+      if (c == '#' || c == '!')
+        EnterCommentState();
+
+      else if (!IsWhiteSpace(c)) {
+        // not a comment, not whitespace, we must have found a key!
+        EnterKeyState();
+        tokenStart = cur;
+      }
+      break;
+
+    case eParserState_Key:
+      if (c == '=' || c == ':') {
+        mKey += Substring(tokenStart, cur);
+        WaitForValue();
+      }
+      break;
+
+    case eParserState_AwaitingValue:
+      if (IsEOL(c)) {
+        // no value at all! mimic the normal value-ending
+        EnterValueState();
+        FinishValueState(oldValue);
+      }
+
+      // ignore white space leading up to the value
+      else if (!IsWhiteSpace(c)) {
+        tokenStart = cur;
+        EnterValueState();
+
+        // make sure to handle this first character
+        if (ParseValueCharacter(c, cur, tokenStart, oldValue))
+          cur++;
+        // If the character isn't consumed, don't do cur++ and parse
+        // the character again. This can happen f.e. for char 'X' in sequence
+        // "\u00X". This character can be control character and must be
+        // processed again.
+        continue;
+      }
+      break;
+
+    case eParserState_Value:
+      if (ParseValueCharacter(c, cur, tokenStart, oldValue))
+        cur++;
+      // See few lines above for reason of doing this
+      continue;
+
+    case eParserState_Comment:
+      // stay in this state till we hit EOL
+      if (c == '\r' || c== '\n')
+        WaitForKey();
+      break;
+    }
+
+    // finally, advance to the next character
+    cur++;
+  }
+
+  // if we're still parsing the value and are in eParserSpecial_None, then
+  // append whatever we have..
+  if (mState == eParserState_Value && tokenStart &&
+      mSpecialState == eParserSpecial_None) {
+    mValue += Substring(tokenStart, cur);
+  }
+  // if we're still parsing the key, then append whatever we have..
+  else if (mState == eParserState_Key && tokenStart) {
+    mKey += Substring(tokenStart, cur);
+  }
+
+  return NS_OK;
+}
+
 nsPersistentProperties::nsPersistentProperties()
 : mIn(nsnull)
 {
@@ -146,135 +530,31 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsPersistentProperties, nsIPersistentProperties, n
 NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream *aIn)
 {
-  PRInt32  c;
-  nsresult ret = nsSimpleUnicharStreamFactory::GetInstance()->
-    CreateInstanceFromUTF8Stream(aIn, &mIn);
+  nsresult rv = nsSimpleUnicharStreamFactory::GetInstance()->
+    CreateInstanceFromUTF8Stream(aIn, getter_AddRefs(mIn));
 
-  if (ret != NS_OK) {
-    NS_WARNING("NS_NewUTF8ConverterStream failed");
+  if (rv != NS_OK) {
+    NS_WARNING("Error creating UnicharInputStream");
     return NS_ERROR_FAILURE;
   }
-  c = Read();
-  while (1) {
-    c = SkipWhiteSpace(c);
-    if (c < 0) {
-      break;
-    }
-    else if ((c == '#') || (c == '!')) {
-      c = SkipLine(c);
-      continue;
-    }
-    else {
-      nsAutoString key;
-      while ((c >= 0) && (c != '=') && (c != ':')) {
-        key.Append(PRUnichar(c));
-        c = Read();
-      }
-      if (c < 0) {
-        break;
-      }
-      static const char trimThese[] = " \t";
-      key.Trim(trimThese, PR_FALSE, PR_TRUE);
-      c = Read();
-      nsAutoString value, tempValue;
-      while ((c >= 0) && (c != '\r') && (c != '\n')) {
-        if (c == '\\') {
-          c = Read();
-          switch(c) {
-            case '\r':
-            case '\n':
-              // Only skip first EOL characters and then next line's
-              // whitespace characters. Skipping all EOL characters
-              // and all upcoming whitespace is too agressive.
-              if (c == '\r')
-                c = Read();
-              if (c == '\n')
-                c = Read();
-              while (c == ' ' || c == '\t')
-                c = Read();
-              continue;
-            default:
-              tempValue.Append((PRUnichar) '\\');
-              tempValue.Append((PRUnichar) c);
-          } // switch(c)
-        } else {
-          tempValue.Append((PRUnichar) c);
-        }
-        c = Read();
-      }
-      tempValue.Trim(trimThese, PR_TRUE, PR_TRUE);
 
-      PRUint32 state  = 0;
-      PRUnichar uchar = 0;
-      for (PRUint32 i = 0; i < tempValue.Length(); ++i) {
-        PRUnichar ch = tempValue[i];
-        switch(state) {
-          case 0:
-           if (ch == '\\') {
-             ++i;
-             if (i == tempValue.Length())
-               break;
-             ch = tempValue[i];
-             switch(ch) {
-               case 'u':
-               case 'U':
-                 state = 1;
-                 uchar=0;
-                 break;
-               case 't':
-                 value.Append(PRUnichar('\t'));
-                 break;
-               case 'n':
-                 value.Append(PRUnichar('\n'));
-                 break;
-               case 'r':
-                 value.Append(PRUnichar('\r'));
-                 break;
-               default:
-                 value.Append(ch);
-             } // switch(ch)
-           } else {
-             value.Append(ch);
-           }
-           continue;
-         case 1:
-         case 2:
-         case 3:
-         case 4:
-           if (('0' <= ch) && (ch <= '9')) {
-               uchar = (uchar << 4) | (ch - '0');
-              state++;
-              continue;
-           }
-           if (('a' <= ch) && (ch <= 'f')) {
-              uchar = (uchar << 4) | (ch - 'a' + 0x0a);
-              state++;
-              continue;
-           }
-           if (('A' <= ch) && (ch <= 'F')) {
-              uchar = (uchar << 4) | (ch - 'A' + 0x0a);
-              state++;
-              continue;
-           }
-           // if not hex digit, fall through
-         case 5:
-           value.Append((PRUnichar) uchar);
-           state = 0;
-           --i;
-           break;
-        }
-      }
-      if (state != 0) {
-        value.Append((PRUnichar) uchar);
-        state = 0;
-      }
-      
-      nsAutoString oldValue;
-      mSubclass->SetStringProperty(NS_ConvertUTF16toUTF8(key), value, oldValue);
-    }
+  nsPropertiesParser parser(mSubclass);
+
+  PRUint32 nProcessed;
+  // If this 4096 is changed to some other value, make sure to adjust
+  // the bug121341.properties test file accordingly.
+  while (NS_SUCCEEDED(rv = mIn->ReadSegments(nsPropertiesParser::SegmentWriter, &parser, 4096, &nProcessed)) &&
+         nProcessed != 0);
+  mIn = nsnull;
+  if (NS_FAILED(rv))
+    return rv;
+
+  // We may have an unprocessed value at this point
+  // if the last line did not have a proper line ending.
+  if (parser.GetState() == eParserState_Value) {
+    nsAutoString oldValue;  
+    parser.FinishValueState(oldValue);
   }
-  mIn->Close();
-  NS_RELEASE(mIn);
 
   return NS_OK;
 }
@@ -284,11 +564,6 @@ nsPersistentProperties::SetStringProperty(const nsACString& aKey,
                                           const nsAString& aNewValue,
                                           nsAString& aOldValue)
 {
-#if 0
-  cout << "will add " << aKey.get() << "=" <<
-    NS_LossyConvertUCS2ToASCII(aNewValue).get() << endl;
-#endif
-
   const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
   PropertyTableEntry *entry =
     static_cast<PropertyTableEntry*>
@@ -370,60 +645,15 @@ nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
 
   // We know the necessary size; we can avoid growing it while adding elements
   if (!propArray->SizeTo(mTable.entryCount))
-   return NS_ERROR_OUT_OF_MEMORY;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Step through hash entries populating a transient array
   PRUint32 n =
     PL_DHashTableEnumerate(&mTable, AddElemToArray, (void *)propArray);
   if (n < mTable.entryCount)
-      return NS_ERROR_OUT_OF_MEMORY;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_NewArrayEnumerator(aResult, propArray);
-}
-
-
-PRInt32
-nsPersistentProperties::Read()
-{
-  PRUnichar  c;
-  PRUint32  nRead;
-  nsresult  ret;
-
-  ret = mIn->Read(&c, 1, &nRead);
-  if (ret == NS_OK && nRead == 1) {
-    return c;
-  }
-
-  return -1;
-}
-
-#define IS_WHITE_SPACE(c) \
-  (((c) == ' ') || ((c) == '\t') || ((c) == '\r') || ((c) == '\n'))
-
-PRInt32
-nsPersistentProperties::SkipWhiteSpace(PRInt32 c)
-{
-  while (IS_WHITE_SPACE(c)) {
-    c = Read();
-  }
-
-  return c;
-}
-
-PRInt32
-nsPersistentProperties::SkipLine(PRInt32 c)
-{
-  while ((c >= 0) && (c != '\r') && (c != '\n')) {
-    c = Read();
-  }
-  if (c == '\r') {
-    c = Read();
-  }
-  if (c == '\n') {
-    c = Read();
-  }
-
-  return c;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -450,7 +680,13 @@ nsPersistentProperties::Undefine(const char* prop)
 NS_IMETHODIMP
 nsPersistentProperties::Has(const char* prop, PRBool *result)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PropertyTableEntry *entry =
+    static_cast<PropertyTableEntry*>
+               (PL_DHashTableOperate(&mTable, prop, PL_DHASH_LOOKUP));
+
+  *result = (entry && PL_DHASH_ENTRY_IS_BUSY(entry));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -462,7 +698,6 @@ nsPersistentProperties::GetKeys(PRUint32 *count, char ***keys)
 ////////////////////////////////////////////////////////////////////////////////
 // PropertyElement
 ////////////////////////////////////////////////////////////////////////////////
-
 
 NS_METHOD
 nsPropertyElement::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

@@ -190,10 +190,16 @@ STDMETHODIMP nsDataObj::CStream::Read(void* pvBuffer,
   NS_ENSURE_TRUE(mInputStream, E_FAIL);
 
   nsresult rv;
-  PRUint32 read = 0;
-  rv = mInputStream->Read((char*)pvBuffer, nBytesToRead, &read);
-  *nBytesRead = read;
-  NS_ENSURE_SUCCESS(rv, S_FALSE);
+  PRUint32 read;
+  *nBytesRead = 0;
+
+  do {
+    read = 0;
+    rv = mInputStream->Read((char*)pvBuffer + *nBytesRead, nBytesToRead - *nBytesRead, &read);
+    NS_ENSURE_SUCCESS(rv, S_FALSE);
+
+    *nBytesRead += read;
+  } while ((*nBytesRead < nBytesToRead) && read);
 
   return S_OK;
 }

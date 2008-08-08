@@ -113,7 +113,11 @@ private:
     ~nsLocalFile() {}
 
 protected:
+#ifdef HAVE_STAT64
+    struct stat64 mCachedStat;
+#else
     struct stat  mCachedStat;
+#endif
     nsCString    mPath;
     PRPackedBool mHaveCachedStat;
 
