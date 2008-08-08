@@ -306,6 +306,9 @@ builtin_CloseIterator(JSContext* cx, jsval v)
 GuardRecord* FASTCALL
 builtin_CallTree(InterpState* outer, Fragment* f)
 {
+    /* current we can't deal with inner trees that have globals so report an error */
+    if (((TreeInfo*)f->vmprivate)->globalSlots.length())
+        return NULL;
     InterpState state;
     state.ip = f->ip;
     state.sp = outer->sp;
