@@ -418,10 +418,32 @@ Keychain.prototype = {
     identity.bulkKey = symkey;
     identity.bulkIV  = iv;
   },
+  _setKey: function KeyChain__setKey(bulkID, newID) {
+    /* FIXME!: It's possible that the keyring is changed on the server
+       after we do a GET. Then we're just uploading this new local keyring,
+       thereby losing any changes made on the server keyring since this GET.
+    
+       Also, if this.data was not instantiated properly (i.e. you're
+       using KeyChain directly instead of getting it from the engine),
+       you run the risk of wiping the server-side keychain.
+    */
+    let self = yield;
+
+    this.get(self.cb);
+    yield;
+    
+    let wrappedKey = yield Crypto.wrapKey.async(Crypto, self.cb,
+                          bulkID.bulkKey, newID);
+    this.data.ring[newID.username] = wrappedKey;
+    this.put(self.cb, this.data);
+    yield;
+  },
   getKeyAndIV: function Keychain_getKeyAndIV(onComplete, identity) {
     this._getKeyAndIV.async(this, onComplete, identity);
+  },
+  setKey: function Keychain_setKey(onComplete, bulkID, newID) {
+    this._setKey.async(this, onComplete, bulkID, newID);
   }
-  // FIXME: implement setKey()
 };
 
 function RemoteStore(engine) {
@@ -682,7 +704,7 @@ RemoteStore.prototype = {
     if ((id - this.status.data.snapVersion) > KEEP_DELTAS) {
       this._os.notifyObservers(null, "weave:service:sync:status",
                                "status.uploading-snapshot");
-      yield this.snapshot.put(self.cb, snapshot.data);
+      yield this._snapshot.put(self.cb, snapshot.data);
       this.status.data.snapVersion = id;
     }
 

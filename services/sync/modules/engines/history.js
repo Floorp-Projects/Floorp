@@ -121,6 +121,7 @@ function HistoryStore() {
 }
 HistoryStore.prototype = {
   _logName: "HistStore",
+  _lookup: null,
 
   __hsvc: null,
   get _hsvc() {
@@ -133,6 +134,20 @@ HistoryStore.prototype = {
     return this.__hsvc;
   },
 
+  __histDB: null,
+  get _histDB() {
+    if (!this.__histDB) {
+      let file = Cc["@mozilla.org/file/directory_service;1"].
+                 getService(Ci.nsIProperties).
+                 get("ProfD", Ci.nsIFile);
+      file.append("places.sqlite");
+      let stor = Cc["@mozilla.org/storage/service;1"].
+                 getService(Ci.mozIStorageService);
+      this.__histDB = stor.openDatabase(file);
+    }
+    return this.__histDB;
+  },
+
   _itemExists: function HistStore__itemExists(GUID) {
     // we don't care about already-existing items; just try to re-add them
     return false;
@@ -142,8 +157,12 @@ HistoryStore.prototype = {
     this._log.debug("  -> creating history entry: " + command.GUID);
     try {
       let uri = Utils.makeURI(command.data.URI);
+      let redirect = false;
+      if (command.data.transition == 5 || command.data.transition == 6)
+        redirect = true;
+
       this._hsvc.addVisit(uri, command.data.time, null,
-                          this._hsvc.TRANSITION_TYPED, false, null);
+                          command.data.transition, redirect, 0);
       this._hsvc.setPageTitle(uri, command.data.title);
     } catch (e) {
       this._log.error("Exception caught: " + (e.message? e.message : e));
@@ -178,20 +197,44 @@ HistoryStore.prototype = {
     return root;
   },
 
+  /* UGLY, UGLY way of syncing visit type !
+     We'll just have to wait for bug #320831 */
+  _getVisitType: function HistStore__getVisitType(uri) {
+    let visitStmnt = this._histDB.createStatement("SELECT visit_type FROM moz_historyvisits WHERE place_id = ?1");
+    let pidStmnt = this._histDB.createStatement("SELECT id FROM moz_places WHERE url = ?1");
+    
+    pidStmnt.bindUTF8StringParameter(0, uri);
+    
+    let placeID = null;
+    if (pidStmnt.executeStep()) {
+      placeID = pidStmnt.getInt32(0);
+    }
+
+    if (placeID) {
+      visitStmnt.bindInt32Parameter(0, placeID);
+      if (visitStmnt.executeStep())
+        return visitStmnt.getInt32(0);
+    }
+    return null;
+  },
+  
   wrap: function HistStore_wrap() {
     let root = this._historyRoot();
     root.containerOpen = true;
     let items = {};
     for (let i = 0; i < root.childCount; i++) {
       let item = root.getChild(i);
-      let guid = item.time + ":" + item.uri
+      let guid = item.time + ":" + item.uri;
+      let vType = this._getVisitType(item.uri);
       items[guid] = {parentGUID: '',
 			 title: item.title,
 			 URI: item.uri,
-			 time: item.time
+			 time: item.time,
+			 transition: vType
 			};
-      // FIXME: sync transition type - requires FULL_VISITs
     }
+    
+    this._lookup = items;
     return items;
   },
 
