@@ -195,7 +195,7 @@ SnapshotStore.prototype = {
     if ("GUID" in command.data) {
       // special-case guid changes
       let newGUID = command.data.GUID,
-      oldGUID = command.GUID;
+          oldGUID = command.GUID;
 
       this._data[newGUID] = this._data[oldGUID];
       delete this._data[oldGUID];
