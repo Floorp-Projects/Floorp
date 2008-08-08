@@ -49,7 +49,17 @@ enum nsChangeHint {
   nsChangeHint_ReflowFrame = 0x02,   // change requires reflow (e.g., WIDTH=)
   nsChangeHint_SyncFrameView = 0x04, // change requires view to be updated, if there is one (e.g., clip:)
   nsChangeHint_UpdateCursor = 0x08,  // The currently shown mouse cursor needs to be updated
-  nsChangeHint_ReconstructFrame = 0x10   // change requires frame change (e.g., display:)
+  /**
+   * SVG filter/mask/clip effects need to be recomputed because the URI
+   * in the filter/mask/clip-path property has changed. This wipes
+   * out cached nsSVGPropertyBase and subclasses which hold a reference to
+   * the element referenced by the URI, and a mutation observer for
+   * the DOM subtree rooted at that element. Also, for filters they store a
+   * bounding-box for the filter result so that if the filter changes we can
+   * invalidate the old covered area.
+   */
+  nsChangeHint_UpdateEffects = 0x10,
+  nsChangeHint_ReconstructFrame = 0x20   // change requires frame change (e.g., display:)
                                          // This subsumes all the above
   // TBD: add nsChangeHint_ForceFrameView to force frame reconstruction if the frame doesn't yet
   // have a view

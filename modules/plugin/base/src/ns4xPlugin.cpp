@@ -2451,13 +2451,17 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         }
         return NS_SUCCEEDED(rv) ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
       }
-      break;
 
     case NPPVpluginKeepLibraryInMemory: {
       NPBool bCached = (result != nsnull);
       return inst->SetCached(bCached);
     }
-      
+
+    case NPPVpluginWantsAllNetworkStreams: {
+      PRBool bWantsAllNetworkStreams = (result != nsnull);
+      return inst->SetWantsAllNetworkStreams(bWantsAllNetworkStreams);
+    }
+
 #ifdef XP_MACOSX
     case NPPVpluginDrawingModel: {
       if (inst) {

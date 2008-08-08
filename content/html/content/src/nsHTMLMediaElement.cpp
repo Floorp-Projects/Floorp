@@ -408,6 +408,8 @@ nsHTMLMediaElement::nsHTMLMediaElement(nsINodeInfo *aNodeInfo, PRBool aFromParse
 
 nsHTMLMediaElement::~nsHTMLMediaElement()
 {
+  if (mDecoder) 
+    mDecoder->Stop();
 }
 
 NS_IMETHODIMP
@@ -513,6 +515,9 @@ nsresult nsHTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aPar
 void nsHTMLMediaElement::UnbindFromTree(PRBool aDeep,
                                         PRBool aNullParent)
 {
+  if (!mPaused && mNetworkState != nsIDOMHTMLMediaElement::EMPTY)
+    Pause();
+
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 

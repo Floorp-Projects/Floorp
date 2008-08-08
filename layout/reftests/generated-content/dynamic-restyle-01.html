@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+body::before {
+  content:"Before";
+  border:inherit;
+}
+.cl::after {
+  display:block;
+  content:"After";
+}
+</style>
+<script>
+function fixupDOM() {
+  document.body.setAttribute("style", "border:2px solid red;");
+  document.body.className = "cl";
+  document.documentElement.className = "";
+}
+</script>
+</head>
+<body onload="fixupDOM()">
+</body>
+</html>

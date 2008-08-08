@@ -110,7 +110,8 @@ class mozJSComponentLoader : public nsIModuleLoader,
 
     nsresult GlobalForLocation(nsILocalFile *aComponent,
                                JSObject **aGlobal,
-                               char **location);
+                               char **location,
+                               jsval *exception);
 
     nsresult StartFastLoad(nsIFastLoadService *flSvc);
     nsresult ReadScript(nsIFastLoadService *flSvc, const char *nativePath,

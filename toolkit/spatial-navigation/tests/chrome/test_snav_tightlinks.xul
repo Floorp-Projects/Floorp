@@ -94,7 +94,7 @@ var moveTable = [
 function onLoad()
 {
     var x = document.getElementById("some-content");
-    var snav = new SpatialNavigation(x);
+    SpatialNavigation.init(x);
 
     // get to a known place.
     document.getElementById("1").focus();
@@ -102,6 +102,8 @@ function onLoad()
     testMoves(moveTable);
 
     SimpleTest.waitForExplicitFinish();
+
+    SpatialNavigation.uninit();
 }
 
 ]]></script>

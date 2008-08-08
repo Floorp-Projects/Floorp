@@ -491,6 +491,9 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   // Copy the input search string for case-insensitive search
   ToLowerCase(mOrigSearchString, mCurrentSearchString);
 
+  // Fix up the search the same way we fix up the entry url
+  mCurrentSearchString = FixupURIText(mCurrentSearchString);
+
   mCurrentListener = aListener;
 
   nsresult rv;
@@ -1006,6 +1009,15 @@ nsNavHistory::FixupURIText(const nsAString &aURIText)
 {
   // Unescaping utilities expect UTF8 strings
   NS_ConvertUTF16toUTF8 escaped(aURIText);
+
+  // Strip off some prefixes so we don't have to match the exact protocol for
+  // sites. E.g., http://mozilla.org/ can match other mozilla.org pages.
+  if (StringBeginsWith(escaped, NS_LITERAL_CSTRING("https://")))
+    escaped.Cut(0, 8);
+  else if (StringBeginsWith(escaped, NS_LITERAL_CSTRING("http://")))
+    escaped.Cut(0, 7);
+  else if (StringBeginsWith(escaped, NS_LITERAL_CSTRING("ftp://")))
+    escaped.Cut(0, 6);
 
   nsString fixedUp;
   // Use the service if we have it to avoid invalid UTF8 strings

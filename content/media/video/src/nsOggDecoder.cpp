@@ -260,6 +260,7 @@ nsOggDecoder::nsOggDecoder() :
   mVideoNextFrameTime(0.0),
   mLoadInProgress(PR_FALSE),
   mPlayAfterLoad(PR_FALSE),
+  mNotifyOnShutdown(PR_FALSE),
   mVideoCurrentFrameTime(0.0),
   mInitialVolume(1.0),
   mAudioRate(0),
@@ -285,15 +286,6 @@ PRBool nsOggDecoder::Init()
 
   mDecodeEvent = new nsVideoDecodeEvent(this);
   mPresentationEvent = new nsVideoPresentationEvent(this);
-
-  nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
-  if (observerService) {
-    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
-  }
-  else {
-    NS_WARNING("Could not get an observer service. Video decoding events may not shutdown cleanly.");
-  }
 
   return mFirstFrameLock &&
     mFirstFrameCondVar &&
@@ -473,6 +465,20 @@ nsresult nsOggDecoder::Play()
     StartPlaybackThreads();
   }
 
+  if (!mNotifyOnShutdown) {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (observerService) {
+      mNotifyOnShutdown = 
+        NS_SUCCEEDED(observerService->AddObserver(this, 
+                                                  NS_XPCOM_SHUTDOWN_OBSERVER_ID, 
+                                                  PR_FALSE));
+    }
+    else {
+      NS_WARNING("Could not get an observer service. Video decoding events may not shutdown cleanly.");
+    }
+  }
+
   return NS_OK;
 } 
 
@@ -514,6 +520,15 @@ void nsOggDecoder::Stop()
   }
   mPaused = PR_TRUE;
   mVideoCurrentFrameTime = 0.0;
+
+  if (mNotifyOnShutdown) {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (observerService) {
+      mNotifyOnShutdown = PR_FALSE;
+      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    }
+  }
 }
 
 void nsOggDecoder::HandleVideoData(int track_num, OggPlayVideoData* video_data) {

@@ -106,10 +106,6 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
 void nsSVGForeignObjectFrame::Destroy()
 {
   nsSVGUtils::GetOuterSVGFrame(this)->UnregisterForeignObject(this);
-  // Delete any clipPath/filter/mask properties _before_ we die. The properties
-  // and property hash table have weak pointers to us that are dereferenced
-  // when the properties are destroyed.
-  nsSVGUtils::StyleEffects(this);
   nsSVGForeignObjectFrameBase::Destroy();
 }
 
@@ -140,13 +136,6 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32  aNameSpaceID,
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGForeignObjectFrame::DidSetStyleContext()
-{
-  nsSVGUtils::StyleEffects(this);
   return NS_OK;
 }
 

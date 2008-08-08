@@ -192,6 +192,8 @@ _TEST_FILES = 	test_bug5141.html \
 		test_NodeIterator_basics_filters.xhtml \
 		test_NodeIterator_mutations_1.xhtml \
 		test_NodeIterator_mutations_2.html \
+		test_bug28293.html \
+		file_bug28293.sjs \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

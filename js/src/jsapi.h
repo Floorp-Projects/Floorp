@@ -121,7 +121,6 @@ JS_BEGIN_EXTERN_C
 #define JSPROP_ENUMERATE        0x01    /* property is visible to for/in loop */
 #define JSPROP_READONLY         0x02    /* not settable: assignment is no-op */
 #define JSPROP_PERMANENT        0x04    /* property cannot be deleted */
-#define JSPROP_EXPORTED         0x08    /* property is exported from object */
 #define JSPROP_GETTER           0x10    /* property holds getter function */
 #define JSPROP_SETTER           0x20    /* property holds setter function */
 #define JSPROP_SHARED           0x40    /* don't allocate a value slot for this
@@ -1467,10 +1466,9 @@ struct JSFunctionSpec {
  * in preference to JS_FS if the native in question does not need its own stack
  * frame when activated.
  */
-#define JS_FN(name,fastcall,minargs,nargs,flags)                              \
+#define JS_FN(name,fastcall,nargs,flags)                                      \
     {name, (JSNative)(fastcall), nargs,                                       \
-     (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS,                          \
-     (minargs) << 16}
+     (flags) | JSFUN_FAST_NATIVE | JSFUN_STUB_GSOPS, 0}
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,

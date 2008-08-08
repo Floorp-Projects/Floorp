@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448534
+-->
+
+<head>
+  <title>Test for Bug 448534</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448535">Mozilla Bug 448534</a>
+<!-- Ogg video obtained from Theora test suite: http://v2v.cc/~j/theora_testsuite/ -->
+<video id='v' 
+       src='320x240.ogg' 
+       onplay='return started();' 
+       onpause='return stopped();'></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var v = $('v');
+var played = false;
+var passed = false;
+function started() {
+  ok(!v.paused, "Video should not be paused while playing");
+  v.parentNode.removeChild(v);
+  played = true;
+  return false;
+}
+
+function stopped() {
+  ok(v.paused, "Video should be paused after removing from the Document");
+  passed = true;
+  return false;
+}
+
+setTimeout(function () {
+             ok(played, "Video did not send play event");
+             ok(passed, "Video was not paused when removed from the Document");
+             SimpleTest.finish();
+             return false;
+           }, 6000); 
+
+v.play();
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

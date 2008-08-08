@@ -35,16 +35,21 @@
 #
 # ***** END LICENSE BLOCK *****
 
+echo Setting environment for using Microsoft Visual Studio 6
+
+# Visual Studio 6 Installation Directory
+export VS6INSTALLDIR=${VS6INSTALLDIR:-'C:\Program Files\Microsoft Visual Studio'}
+
 # Root of Visual Developer Studio Common files.
-export VSCommonDir='C:\Program Files\Microsoft Visual Studio\Common'
+export VSCommonDir="$VS6INSTALLDIR\\Common"
 export VSCommonDir_cyg=`cygpath -u "$VSCommonDir"`
 
 # Root of Visual Developer Studio installed files.
-export MSDevDir='C:\Program Files\Microsoft Visual Studio\Common\MSDev98'
+export MSDevDir="$VSCommonDir\\MSDev98"
 export MSDevDir_cyg=`cygpath -u "$MSDevDir"`
 
 # Root of Visual C++ installed files.
-export MSVCDir='C:\Program Files\Microsoft Visual Studio\VC98'
+export MSVCDir="$VS6INSTALLDIR\\VC98"
 export MSVCDir_cyg=`cygpath -u "$MSVCDir"`
 
 # VcOsDir is used to help create either a Windows 95 or Windows NT specific path.
@@ -52,8 +57,6 @@ export VcOsDir=WIN95
 if [[ "$OS" == "Windows_NT" ]]; then
     export VcOsDir=WINNT
 fi
-
-echo Setting environment for using Microsoft Visual C++ tools.
 
 if [[ "$OS" == "Windows_NT" ]]; then
     export PATH="$MSDevDir_cyg/Bin":"$MSVCDir_cyg/Bin":"$VSCommonDir_cyg/Tools/$VcOsDir":"$VSCommonDir_cyg/Tools":"$MOZ_TOOLS/bin":"$PATH"

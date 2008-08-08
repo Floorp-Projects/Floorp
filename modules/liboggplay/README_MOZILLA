@@ -1,9 +1,0 @@
-The source from this directory was copied from the liboggplay svn
-source using the update.sh script. The only changes made were those
-applied by update.sh and the addition/upate of Makefile.in files for
-the Mozilla build system.
-
-http://svn.annodex.net/liboggplay/trunk/
-
-The svn revision number used was r3602. There is currently no official
-source release of liboggplay, hence the reason an svn build was used.

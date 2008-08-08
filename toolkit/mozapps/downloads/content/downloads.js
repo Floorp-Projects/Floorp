@@ -463,15 +463,11 @@ function Startup()
   // Clear the search box and move focus to the list on escape from the box
   gSearchBox.addEventListener("keypress", function(e) {
     if (e.keyCode == e.DOM_VK_ESCAPE) {
-      // Clear the input as if the user did it
-      gSearchBox.value = "";
-      gSearchBox.doCommand();
-
       // Move focus to the list instead of closing the window
       gDownloadsView.focus();
       e.preventDefault();
     }
-  }, true);
+  }, false);
 }
 
 function Shutdown()

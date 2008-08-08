@@ -641,6 +641,24 @@ nsSVGElement::ResetOldStyleBaseType(nsISVGValue *svg_value)
   }
 }
 
+nsChangeHint
+nsSVGElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                     PRInt32 aModType) const
+{
+  nsChangeHint retval =
+    nsSVGElementBase::GetAttributeChangeHint(aAttribute, aModType);
+
+  if (aAttribute == nsGkAtoms::requiredFeatures ||
+      aAttribute == nsGkAtoms::requiredExtensions ||
+      aAttribute == nsGkAtoms::systemLanguage) {
+    // It would be nice to only reconstruct the frame if the value returned by
+    // NS_SVG_PassesConditionalProcessingTests has changed, but we don't know
+    // that
+    NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
+  }
+  return retval;
+}
+
 PRBool
 nsSVGElement::IsNodeOfType(PRUint32 aFlags) const
 {

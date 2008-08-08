@@ -274,7 +274,9 @@ static char **gRestartArgv;
 
 #if defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
+#ifdef MOZ_X11
 #include <gdk/gdkx.h>
+#endif /* MOZ_X11 */
 #include "nsGTKToolkit.h"
 #endif
 
@@ -2391,6 +2393,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
   // gdk_display_manager_set_default_display (gdk_display_manager_get(), NULL)
   // was also broken.
   if (gtk_check_version(2,10,0) != NULL) {
+#ifdef MOZ_X11
     // Version check failed - broken gdk_display_close.
     //
     // Let the gdk structures leak but at least close the Display,
@@ -2398,6 +2401,9 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     Display* dpy = GDK_DISPLAY_XDISPLAY(display);
     if (!theme_is_qt)
       XCloseDisplay(dpy);
+#else
+    gdk_display_close(display);
+#endif /* MOZ_X11 */
   }
   else {
     if (!theme_is_qt)
