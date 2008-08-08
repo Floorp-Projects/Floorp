@@ -83,6 +83,7 @@ Cu.import("resource://weave/engines/history.js");
 Cu.import("resource://weave/engines/passwords.js");
 Cu.import("resource://weave/engines/forms.js");
 Cu.import("resource://weave/engines/tabs.js");
+Cu.import("resource://weave/engines/input.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -108,6 +109,7 @@ Cu.import("resource://weave/engines/bookmarks.js", Weave);
 Cu.import("resource://weave/engines/history.js", Weave);
 Cu.import("resource://weave/engines/forms.js", Weave);
 Cu.import("resource://weave/engines/tabs.js", Weave);
+Cu.import("resource://weave/engines/input.js", Weave);
 
 Utils.lazy(Weave, 'Service', WeaveSvc);
 
