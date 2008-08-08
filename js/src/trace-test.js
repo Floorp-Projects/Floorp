@@ -493,6 +493,22 @@ function arityMismatchExtraArg()
 arityMismatchExtraArg.expected = 16383;
 test(arityMismatchExtraArg);
 
+function MyConstructor(i)
+{
+  this.i = i;
+}
+MyConstructor.prototype.toString = function() {return this.i + ""};
+
+function NewTest()
+{
+  var a = [];
+  for (var i = 0; i < 10; i++)
+    a[i] = new MyConstructor(i);
+  return a.join("");
+}
+NewTest.expected = "0123456789";
+test(NewTest);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
