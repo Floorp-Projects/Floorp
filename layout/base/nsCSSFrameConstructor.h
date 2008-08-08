@@ -248,13 +248,7 @@ public:
 
   nsresult RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame);
 
-  // This is misnamed! This returns the outermost frame for the root element
   nsIFrame* GetInitialContainingBlock() { return mInitialContainingBlock; }
-  // This returns the outermost frame for the root element
-  nsIFrame* GetRootElementFrame() { return mInitialContainingBlock; }
-  // This returns the frame for the root element that does not
-  // have a psuedo-element style
-  nsIFrame* GetRootElementStyleFrame() { return mRootElementStyleFrame; }
   nsIFrame* GetPageSequenceFrame() { return mPageSequenceFrame; }
 
 private:
@@ -1150,15 +1144,8 @@ private:
   nsIDocument*        mDocument;  // Weak ref
   nsIPresShell*       mPresShell; // Weak ref
 
-  // This is not the real CSS 2.1 "initial containing block"! It is just
-  // the outermost frame for the root element.
   nsIFrame*           mInitialContainingBlock;
-  // This is the frame for the root element that has no pseudo-element style.
-  nsIFrame*           mRootElementStyleFrame;
-  // This is the containing block for fixed-pos frames --- the viewport
   nsIFrame*           mFixedContainingBlock;
-  // This is the containing block that contains the root element ---
-  // the real "initial containing block" according to CSS 2.1.
   nsIFrame*           mDocElementContainingBlock;
   nsIFrame*           mGfxScrollFrame;
   nsIFrame*           mPageSequenceFrame;

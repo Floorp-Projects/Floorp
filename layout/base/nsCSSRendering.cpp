@@ -78,7 +78,6 @@
 #include "gfxPlatform.h"
 #include "gfxImageSurface.h"
 #include "nsStyleStructInlines.h"
-#include "nsCSSFrameConstructor.h"
 
 #include "nsCSSRenderingBorders.h"
 
@@ -1008,52 +1007,80 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
  * canvas.
  */
 
-// Returns true if aFrame is a canvas frame.
+// Returns nsnull if aFrame is not a canvas frame.
+// Otherwise, it returns the frame we should look for the background on.
+// This is normally aFrame but if aFrame is the viewport, we need to
+// look for the background starting at the scroll root (which shares
+// style context with the document root) or the document root itself.
 // We need to treat the viewport as canvas because, even though
 // it does not actually paint a background, we need to get the right
 // background style so we correctly detect transparent documents.
-inline PRBool
+inline nsIFrame*
 IsCanvasFrame(nsIFrame *aFrame)
 {
   nsIAtom* frameType = aFrame->GetType();
-  return frameType == nsGkAtoms::canvasFrame ||
-         frameType == nsGkAtoms::rootFrame ||
-         frameType == nsGkAtoms::pageFrame ||
-         frameType == nsGkAtoms::pageContentFrame ||
-         frameType == nsGkAtoms::viewportFrame;
+  if (frameType == nsGkAtoms::canvasFrame ||
+      frameType == nsGkAtoms::rootFrame ||
+      frameType == nsGkAtoms::pageFrame ||
+      frameType == nsGkAtoms::pageContentFrame) {
+    return aFrame;
+  } else if (frameType == nsGkAtoms::viewportFrame) {
+    nsIFrame* firstChild = aFrame->GetFirstChild(nsnull);
+    if (firstChild) {
+      return firstChild;
+    }
+  }
+  
+  return nsnull;
 }
 
 inline PRBool
-FindCanvasBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
+FindCanvasBackground(nsIFrame* aForFrame,
                      const nsStyleBackground** aBackground)
 {
-  if (aRootElementFrame) {
-    const nsStyleBackground* result = aRootElementFrame->GetStyleBackground();
+  // XXXldb What if the root element is positioned, etc.?  (We don't
+  // allow that yet, do we?)
+  nsIFrame *firstChild = aForFrame->GetFirstChild(nsnull);
+  if (firstChild) {
+    const nsStyleBackground* result = firstChild->GetStyleBackground();
+    nsIFrame* topFrame = aForFrame;
+
+    if (firstChild->GetType() == nsGkAtoms::pageContentFrame) {
+      topFrame = firstChild->GetFirstChild(nsnull);
+      NS_ASSERTION(topFrame,
+                   "nsPageContentFrame is missing a normal flow child");
+      if (!topFrame) {
+        return PR_FALSE;
+      }
+      NS_ASSERTION(topFrame->GetContent(),
+                   "nsPageContentFrame child without content");
+      result = topFrame->GetStyleBackground();
+    }
 
     // Check if we need to do propagation from BODY rather than HTML.
     if (result->IsTransparent()) {
-      nsIContent* content = aRootElementFrame->GetContent();
-      // The root element content can't be null. We wouldn't know what
-      // frame to create for aRootElementFrame.
-      // Use |GetOwnerDoc| so it works during destruction.
-      nsIDocument* document = content->GetOwnerDoc();
-      nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
-      if (htmlDoc) {
-        nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
-        // We need to null check the body node (bug 118829) since
-        // there are cases, thanks to the fix for bug 5569, where we
-        // will reflow a document with no body.  In particular, if a
-        // SCRIPT element in the head blocks the parser and then has a
-        // SCRIPT that does "document.location.href = 'foo'", then
-        // nsParser::Terminate will call |DidBuildModel| methods
-        // through to the content sink, which will call |StartLayout|
-        // and thus |InitialReflow| on the pres shell.  See bug 119351
-        // for the ugly details.
-        if (bodyContent) {
-          nsIFrame *bodyFrame = aForFrame->PresContext()->GetPresShell()->
-            GetPrimaryFrameFor(bodyContent);
-          if (bodyFrame)
-            result = bodyFrame->GetStyleBackground();
+      nsIContent* content = topFrame->GetContent();
+      if (content) {
+        // Use |GetOwnerDoc| so it works during destruction.
+        nsIDocument* document = content->GetOwnerDoc();
+        nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
+        if (htmlDoc) {
+          nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
+          // We need to null check the body node (bug 118829) since
+          // there are cases, thanks to the fix for bug 5569, where we
+          // will reflow a document with no body.  In particular, if a
+          // SCRIPT element in the head blocks the parser and then has a
+          // SCRIPT that does "document.location.href = 'foo'", then
+          // nsParser::Terminate will call |DidBuildModel| methods
+          // through to the content sink, which will call |StartLayout|
+          // and thus |InitialReflow| on the pres shell.  See bug 119351
+          // for the ugly details.
+          if (bodyContent) {
+            nsIFrame *bodyFrame = aForFrame->PresContext()->GetPresShell()->
+              GetPrimaryFrameFor(bodyContent);
+            if (bodyFrame)
+              result = bodyFrame->GetStyleBackground();
+          }
         }
       }
     }
@@ -1070,12 +1097,16 @@ FindCanvasBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
 }
 
 inline PRBool
-FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
+FindElementBackground(nsIFrame* aForFrame,
                       const nsStyleBackground** aBackground)
 {
-  if (aForFrame == aRootElementFrame) {
-    // We must have propagated our background to the viewport or canvas. Abort.
-    return PR_FALSE;
+  nsIFrame *parentFrame = aForFrame->GetParent();
+  // XXXldb We shouldn't have to null-check |parentFrame| here.
+  if (parentFrame && IsCanvasFrame(parentFrame) == parentFrame) {
+    // Check that we're really the root (rather than in another child list).
+    nsIFrame *childFrame = parentFrame->GetFirstChild(nsnull);
+    if (childFrame == aForFrame)
+      return PR_FALSE; // Background was already drawn for the canvas.
   }
 
   *aBackground = aForFrame->GetStyleBackground();
@@ -1083,14 +1114,18 @@ FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
   // Return true unless the frame is for a BODY element whose background
   // was propagated to the viewport.
 
-  nsIContent* content = aForFrame->GetContent();
-  if (!content || content->Tag() != nsGkAtoms::body)
-    return PR_TRUE; // not frame for a "body" element
-  // It could be a non-HTML "body" element but that's OK, we'd fail the
-  // bodyContent check below
-
   if (aForFrame->GetStyleContext()->GetPseudoType())
     return PR_TRUE; // A pseudo-element frame.
+
+  nsIContent* content = aForFrame->GetContent();
+  if (!content || !content->IsNodeOfType(nsINode::eHTML))
+    return PR_TRUE;  // not frame for an HTML element
+
+  if (!parentFrame)
+    return PR_TRUE; // no parent to look at
+
+  if (content->Tag() != nsGkAtoms::body)
+    return PR_TRUE; // not frame for <BODY> element
 
   // We should only look at the <html> background if we're in an HTML document
   nsIDocument* document = content->GetOwnerDoc();
@@ -1102,13 +1137,7 @@ FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame,
   if (bodyContent != content)
     return PR_TRUE; // this wasn't the background that was propagated
 
-  // This can be called even when there's no root element yet, during frame
-  // construction, via nsLayoutUtils::FrameHasTransparency and
-  // nsContainerFrame::SyncFrameViewProperties.
-  if (!aRootElementFrame)
-    return PR_TRUE;
-
-  const nsStyleBackground* htmlBG = aRootElementFrame->GetStyleBackground();
+  const nsStyleBackground* htmlBG = parentFrame->GetStyleBackground();
   return !htmlBG->IsTransparent();
 }
 
@@ -1118,13 +1147,11 @@ nsCSSRendering::FindBackground(nsPresContext* aPresContext,
                                const nsStyleBackground** aBackground,
                                PRBool* aIsCanvas)
 {
-  nsIFrame* rootElementFrame =
-    aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
-  PRBool isCanvasFrame = IsCanvasFrame(aForFrame);
-  *aIsCanvas = isCanvasFrame;
-  return isCanvasFrame
-      ? FindCanvasBackground(aForFrame, rootElementFrame, aBackground)
-      : FindElementBackground(aForFrame, rootElementFrame, aBackground);
+  nsIFrame* canvasFrame = IsCanvasFrame(aForFrame);
+  *aIsCanvas = canvasFrame != nsnull;
+  return canvasFrame
+      ? FindCanvasBackground(canvasFrame, aBackground)
+      : FindElementBackground(aForFrame, aBackground);
 }
 
 void
