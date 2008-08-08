@@ -154,8 +154,8 @@ public:
 class Oracle {
     avmplus::BitSet _dontDemote;
 public:
-    void markGlobalSlotUndemotable(unsigned slot);
-    bool isGlobalSlotUndemotable(unsigned slot) const;
+    void markGlobalSlotUndemotable(JSScript* script, unsigned slot);
+    bool isGlobalSlotUndemotable(JSScript* script, unsigned slot) const;
     void markStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot);
     bool isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) const;
 };
