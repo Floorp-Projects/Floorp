@@ -2178,6 +2178,9 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
     return true;
 }
 
+// So box_jsval can emit no LIR_or at all to tag an object jsval.
+JS_STATIC_ASSERT(JSVAL_OBJECT == 0);
+
 bool
 TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
 {
@@ -2191,6 +2194,8 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
     switch (JSVAL_TAG(v)) {
       case JSVAL_BOOLEAN:
         v_ins = lir->ins2i(LIR_or, lir->ins2i(LIR_lsh, v_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
+        return true;
+      case JSVAL_OBJECT:
         return true;
       case JSVAL_STRING:
         v_ins = lir->ins2(LIR_or, v_ins, INS_CONST(JSVAL_STRING));
@@ -2333,8 +2338,11 @@ TraceRecorder::record_LeaveFrame()
 {
     if (callDepth-- <= 0)
         return false;
+
+    // LeaveFrame gets called after the interpreter popped the frame and
+    // stored rval, so cx->fp not cx->fp->down, and -1 not 0.
     atoms = cx->fp->script->atomMap.vector;
-    stack(-1, rval_ins); // LeaveFrame gets called after the interpreter stored rval, so -1 not 0
+    stack(-1, rval_ins);
     return true;
 }
 
@@ -2369,7 +2377,11 @@ bool TraceRecorder::record_JSOP_LEAVEWITH()
 bool
 TraceRecorder::record_JSOP_RETURN()
 {
-    rval_ins = stack(-1);
+    jsval& rval = stackval(-1);
+    if (cx->fp->flags & JSFRAME_CONSTRUCTING) {
+        // guard JSVAL_IS_PRIMITIVE(rval)
+    }
+    rval_ins = get(&rval);
     clearFrameSlotsFromCache();
     return true;
 }
@@ -2601,7 +2613,38 @@ TraceRecorder::record_JSOP_NEG()
 bool
 TraceRecorder::record_JSOP_NEW()
 {
-    return false;
+    /* Get immediate argc and find the constructor function. */
+    unsigned argc = GET_ARGC(cx->fp->regs->pc);
+    jsval& v = stackval(0 - (2 + argc));
+    JS_ASSERT(&v >= StackBase(cx->fp));
+
+    /*
+     * Require that the callee be a function object, to avoid guarding on its
+     * class here. We know if the callee and this were pushed by JSOP_CALLNAME
+     * or JSOP_CALLPROP that callee is a function since these hit the property
+     * cache and guard on the object (this) in which the callee was found.
+     *
+     * Other bytecode sequences that push [callee, this] must guard on callee
+     * class being "function".
+     */
+    JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v));
+
+    if (guardInterpretedFunction(fun, get(&v))) {
+        LIns* args[] = { get(&v), cx_ins };
+        LIns* tv_ins = lir->insCall(F_NewObject, args);
+        guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
+        jsval& tv = stackval(0 - (1 + argc));
+        set(&tv, tv_ins);
+        return interpretedFunctionCall(v, fun, argc);
+    }
+
+    if (fun->u.n.clasp) {
+        ABORT_TRACE("NYI");
+        return true;
+    }
+
+    ABORT_TRACE("can't trace unknown constructor");
 }
 
 bool
@@ -2737,24 +2780,27 @@ TraceRecorder::record_JSOP_SETPROP()
     JSPropCacheEntry* entry = &cache->table[PROPERTY_CACHE_HASH_PC(pc, kshape)];
     if (entry->kpc != pc || entry->kshape != kshape)
         ABORT_TRACE("cache miss");
+    if (!PCVAL_IS_SPROP(entry->vword))
+        ABORT_TRACE("hit non-sprop cache value");
 
     LIns* map_ins = lir->insLoadi(obj_ins, offsetof(JSObject, map));
     LIns* ops_ins;
     if (!map_is_native(obj->map, map_ins, ops_ins))
         return false;
 
-    if (obj != globalObj) { // global object's shape is guarded at trace entry
+    // The global object's shape is guarded at trace entry.
+    if (obj != globalObj) {
         LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
         guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"));
     }
 
     JSScope* scope = OBJ_SCOPE(obj);
-    if (scope->object != obj)
-        ABORT_TRACE("not scope owner");
-
     JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
-    if (!SCOPE_HAS_PROPERTY(scope, sprop))
-        ABORT_TRACE("sprop not in scope");
+    if (scope->object != obj || !SCOPE_HAS_PROPERTY(scope, sprop)) {
+        LIns* args[] = { lir->insImmPtr(sprop), obj_ins, cx_ins };
+        LIns* ok_ins = lir->insCall(F_AddProperty, args);
+        guard(false, lir->ins_eq0(ok_ins));
+    }
 
     LIns* dslots_ins = NULL;
     LIns* v_ins = get(&r);
@@ -2901,46 +2947,79 @@ JSBool
 js_math_random(JSContext* cx, uintN argc, jsval* vp);
 
 bool
-TraceRecorder::record_JSOP_CALL()
+TraceRecorder::guardInterpretedFunction(JSFunction* fun, LIns* fun_ins)
 {
-    JSStackFrame* fp = cx->fp;
-    uintN argc = GET_ARGC(fp->regs->pc);
-    jsval& fval = stackval(0 - (argc + 2));
-    LIns* thisval_ins = stack(0 - (argc + 1));
-
-    if (!VALUE_IS_FUNCTION(cx, fval))
-        ABORT_TRACE("CALL on non-function");
-
-    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
     if (FUN_INTERPRETED(fun)) {
-        // TODO: make sure args are not copied, or track the copying via the tracker
-        if (argc < fun->nargs &&
-            jsuword(fp->regs->sp + (fun->nargs - argc)) > cx->stackPool.current->limit) {
-            ABORT_TRACE("can't trace calls with too few args requiring argv move");
-        }
-
-        FrameInfo fi = {
-            JSVAL_TO_OBJECT(fval),
-            fp->regs->pc,
-            fp->regs->sp + (fun->nargs - argc) - fp->slots,
-            argc
-        };
-
-        unsigned callDepth = getCallDepth();
-        if (callDepth >= treeInfo->maxCallDepth)
-            treeInfo->maxCallDepth = callDepth + 1;
-
-        lir->insStorei(lir->insImmPtr(fi.callee), lirbuf->rp,
-                       callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callee));
-        lir->insStorei(lir->insImmPtr(fi.callpc), lirbuf->rp,
-                       callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callpc));
-        lir->insStorei(lir->insImm(fi.word), lirbuf->rp,
-                       callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, word));
-
-        atoms = fun->u.i.script->atomMap.vector;
+        guard(false,
+              lir->ins_eq0(lir->ins2(LIR_and,
+                                     lir->insLoadi(fun_ins, offsetof(JSFunction, flags) & ~3),
+                                     lir->insImm(
+#ifdef IS_LITTLE_ENDIAN
+                                                 JSFUN_INTERPRETED << 16
+#else
+                                                 JSFUN_INTERPRETED
+#endif
+                                     ))));
         return true;
     }
+    return false;
+}
 
+bool
+TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
+{
+    JSStackFrame* fp = cx->fp;
+
+    // TODO: make sure args are not copied, or track the copying via the tracker
+    if (argc < fun->nargs &&
+        jsuword(fp->regs->sp + (fun->nargs - argc)) > cx->stackPool.current->limit) {
+        ABORT_TRACE("can't trace calls with too few args requiring argv move");
+    }
+
+    FrameInfo fi = {
+        JSVAL_TO_OBJECT(fval),
+        fp->regs->pc,
+        fp->regs->sp + (fun->nargs - argc) - fp->slots,
+        argc
+    };
+
+    unsigned callDepth = getCallDepth();
+    if (callDepth >= treeInfo->maxCallDepth)
+        treeInfo->maxCallDepth = callDepth + 1;
+
+    lir->insStorei(lir->insImmPtr(fi.callee), lirbuf->rp,
+                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callee));
+    lir->insStorei(lir->insImmPtr(fi.callpc), lirbuf->rp,
+                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callpc));
+    lir->insStorei(lir->insImm(fi.word), lirbuf->rp,
+                   callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, word));
+
+    atoms = fun->u.i.script->atomMap.vector;
+    return true;
+}
+
+bool
+TraceRecorder::record_JSOP_CALL()
+{
+    uintN argc = GET_ARGC(cx->fp->regs->pc);
+    jsval& fval = stackval(0 - (argc + 2));
+
+    /*
+     * Require that the callee be a function object, to avoid guarding on its
+     * class here. We know if the callee and this were pushed by JSOP_CALLNAME
+     * or JSOP_CALLPROP that callee is a function since these hit the property
+     * cache and guard on the object (this) in which the callee was found.
+     *
+     * Other bytecode sequences that push [callee, this] must guard on callee
+     * class being "function".
+     */
+    JS_ASSERT(VALUE_IS_FUNCTION(cx, fval));
+    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
+
+    if (guardInterpretedFunction(fun, get(&fval)))
+        return interpretedFunctionCall(fval, fun, argc);
+
+    // XXXbe need to guard this condition
     if (FUN_SLOW_NATIVE(fun))
         ABORT_TRACE("slow native");
 
@@ -2976,6 +3055,8 @@ TraceRecorder::record_JSOP_CALL()
         LIns* args[5];
         LIns** argp = &args[argc + prefixc - 1];
         char argtype;
+
+        LIns* thisval_ins = stack(0 - (argc + 1));
 
 #define HANDLE_PREFIX(i)                                                       \
         argtype = known->prefix[i];                                            \
@@ -4299,10 +4380,21 @@ TraceRecorder::record_JSOP_CALLELEM()
 bool
 TraceRecorder::record_JSOP_STOP()
 {
-    // We know falling off the end of a function returns undefined, and we do
-    // not support script rval (eval, API users who want the result of the last
-    // expression-statement, debugger API calls).
-    rval_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+    /*
+     * We know falling off the end of a constructor returns the new object that
+     * was passed in via fp->argv[-1], while falling off the end of a function
+     * returns undefined.
+     *
+     * NB: we do not support script rval (eval, API users who want the result
+     * of the last expression-statement, debugger API calls).
+     */
+    JSStackFrame *fp = cx->fp;
+    if (fp->flags & JSFRAME_CONSTRUCTING) {
+        JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
+        rval_ins = get(&fp->argv[-1]);
+    } else {
+        rval_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+    }
     clearFrameSlotsFromCache();
     return true;
 }

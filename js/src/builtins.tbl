@@ -63,3 +63,5 @@ BUILTIN4(Any_setelem,           LO, LO, LO, LO, LO, bool,  JSContext*, JSObject*
 BUILTIN2(ValueToIterator,       LO,     LO, LO, JSObject*, JSContext*, jsval, 1, 1)
 BUILTIN2(CloseIterator,         LO,     LO, LO, bool,      JSContext*, jsval, 1, 1)
 BUILTIN2(CallTree,              LO,     LO, LO, nanojit::GuardRecord*, avmplus::InterpState*, nanojit::Fragment*, 0, 0)
+BUILTIN2(NewObject,             LO,     LO, LO, JSObject*, JSContext*, JSObject*, 1, 1)
+BUILTIN3(AddProperty,           LO, LO, LO, LO, bool,      JSContext*, JSObject*, JSScopeProperty*, 1, 1)

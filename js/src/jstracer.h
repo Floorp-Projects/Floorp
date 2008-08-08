@@ -264,6 +264,8 @@ class TraceRecorder {
     bool guardDenseArrayIndex(JSObject* obj, jsint idx, nanojit::LIns* obj_ins,
                               nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins);
     void clearFrameSlotsFromCache();
+    bool guardInterpretedFunction(JSFunction* fun, nanojit::LIns* fun_ins);
+    bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc);
     bool forInProlog(nanojit::LIns*& iterobj_ins);
 
 public:

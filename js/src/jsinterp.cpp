@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -3054,6 +3054,17 @@ js_Interpret(JSContext *cx)
                         js_SetVersion(cx, currentVersion);
                 }
 
+                /*
+                 * If inline-constructing, replace primitive rval with the new
+                 * object passed in via |this|, and instrument this constructor
+                 * invocation
+                 */
+                if (fp->flags & JSFRAME_CONSTRUCTING) {
+                    if (JSVAL_IS_PRIMITIVE(fp->rval))
+                        fp->rval = OBJECT_TO_JSVAL(fp->thisp);
+                    JS_RUNTIME_METER(cx->runtime, constructs);
+                }
+
                 /* Restore caller's registers. */
                 regs = ifp->callerRegs;
 
@@ -3949,18 +3960,6 @@ js_Interpret(JSContext *cx)
             }
           END_CASE(JSOP_POS)
 
-          BEGIN_CASE(JSOP_NEW)
-            /* Get immediate argc and find the constructor function. */
-            argc = GET_ARGC(regs.pc);
-            vp = regs.sp - (2 + argc);
-            JS_ASSERT(vp >= StackBase(fp));
-
-            if (!js_InvokeConstructor(cx, argc, vp))
-                goto error;
-            regs.sp = vp + 1;
-            LOAD_INTERRUPT_HANDLER(cx);
-          END_CASE(JSOP_NEW)
-
           BEGIN_CASE(JSOP_DELNAME)
             LOAD_ATOM(0);
             id = ATOM_TO_JSID(atom);
@@ -4772,6 +4771,50 @@ js_Interpret(JSContext *cx)
             regs.sp -= 3;
           END_CASE(JSOP_ENUMELEM)
 
+          BEGIN_CASE(JSOP_NEW)
+            /* Get immediate argc and find the constructor function. */
+            argc = GET_ARGC(regs.pc);
+            vp = regs.sp - (2 + argc);
+            JS_ASSERT(vp >= StackBase(fp));
+
+            /*
+             * Assign lval, obj, and fun exactly as the code at inline_call:
+             * expects to find them, to avoid nesting a js_Interpret call via
+             * js_InvokeConstructor.
+             */
+            lval = *vp;
+            if (VALUE_IS_FUNCTION(cx, lval)) {
+                obj = JSVAL_TO_OBJECT(lval);
+                fun = GET_FUNCTION_PRIVATE(cx, obj);
+                if (FUN_INTERPRETED(fun)) {
+                    /* Root as we go using vp[1]. */
+                    if (!OBJ_GET_PROPERTY(cx, obj,
+                                          ATOM_TO_JSID(cx->runtime->atomState
+                                                       .classPrototypeAtom),
+                                          &vp[1])) {
+                        goto error;
+                    }
+                    rval = vp[1];
+                    obj2 = js_NewObject(cx, &js_ObjectClass,
+                                        JSVAL_IS_OBJECT(rval)
+                                        ? JSVAL_TO_OBJECT(rval)
+                                        : NULL,
+                                        OBJ_GET_PARENT(cx, obj2),
+                                        0);
+                    if (!obj2)
+                        goto error;
+                    vp[1] = OBJECT_TO_JSVAL(obj2);
+                    flags = JSFRAME_CONSTRUCTING;
+                    goto inline_call;
+                }
+            }
+
+            if (!js_InvokeConstructor(cx, argc, vp))
+                goto error;
+            regs.sp = vp + 1;
+            LOAD_INTERRUPT_HANDLER(cx);
+          END_CASE(JSOP_NEW)
+
           BEGIN_CASE(JSOP_CALL)
           BEGIN_CASE(JSOP_EVAL)
             argc = GET_ARGC(regs.pc);
@@ -4781,7 +4824,11 @@ js_Interpret(JSContext *cx)
                 obj = JSVAL_TO_OBJECT(lval);
                 fun = GET_FUNCTION_PRIVATE(cx, obj);
 
-                if (FUN_INTERPRETED(fun)) {
+                /* Clear frame flags since this is not a constructor call. */
+                flags = 0;
+                if (FUN_INTERPRETED(fun))
+              inline_call:
+                {
                     uintN nframeslots, nvars, missing;
                     JSArena *a;
                     jsuword nbytes;
@@ -4868,7 +4915,7 @@ js_Interpret(JSContext *cx)
                     newifp->frame.scopeChain = parent = OBJ_GET_PARENT(cx, obj);
                     newifp->frame.sharpDepth = 0;
                     newifp->frame.sharpArray = NULL;
-                    newifp->frame.flags = 0;
+                    newifp->frame.flags = flags;
                     newifp->frame.dormantNext = NULL;
                     newifp->frame.xmlNamespace = NULL;
                     newifp->frame.blockChain = NULL;
