@@ -843,7 +843,7 @@ NS_IMETHODIMP
 nsWindow::SetTitle(const nsAString& aTitle)
 {
     if (mDrawingArea) {
-        QString qStr(NS_ConvertUTF16toUTF8(aTitle).get());
+        QString qStr(QString::fromUtf16(aTitle.BeginReading(), aTitle.Length()));
         mDrawingArea->setWindowTitle(qStr);
     }
 
