@@ -148,17 +148,17 @@ typedef struct JSInlineFrame {
 #define PROPERTY_CACHE_SIZE     JS_BIT(PROPERTY_CACHE_LOG2)
 #define PROPERTY_CACHE_MASK     JS_BITMASK(PROPERTY_CACHE_LOG2)
 
+/*
+ * Add kshape rather than xor it to avoid collisions between nearby bytecode
+ * that are evolving an object by setting successive properties, incrementing
+ * the object's scope->shape on each set.
+ */
 #define PROPERTY_CACHE_HASH(pc,kshape)                                        \
-    ((((jsuword)(pc) >> PROPERTY_CACHE_LOG2) ^ (jsuword)(pc) ^ (kshape)) &    \
+    (((((jsuword)(pc) >> PROPERTY_CACHE_LOG2) ^ (jsuword)(pc)) + (kshape)) &  \
      PROPERTY_CACHE_MASK)
 
-/*
- * We shift kshape left by 1 to let the low bit of the pc avoid collisions
- * between nearby bytecode that are evolving an object by setting properties
- * and incrementing the object's scope->shape on each set.
- */
 #define PROPERTY_CACHE_HASH_PC(pc,kshape)                                     \
-    PROPERTY_CACHE_HASH(pc, (kshape) << 1)
+    PROPERTY_CACHE_HASH(pc, kshape)
 
 #define PROPERTY_CACHE_HASH_ATOM(atom,obj,pobj)                               \
     PROPERTY_CACHE_HASH((jsuword)(atom) >> 2, OBJ_SCOPE(obj)->shape)
