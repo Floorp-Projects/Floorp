@@ -509,6 +509,53 @@ function NewTest()
 NewTest.expected = "0123456789";
 test(NewTest);
 
+function ShapelessArgCalleeLoop(f, a)
+{
+  for (var i = 0; i < 10; i++)
+    f(i, a);
+}
+
+function ShapelessVarCalleeLoop(f, a)
+{
+  var g = f;
+  for (var i = 0; i < 10; i++)
+    g(i, a);
+}
+
+function ShapelessLetCalleeLoop(f, a)
+{
+  for (var i = 0; i < 10; i++) {
+    let g = f;
+    g(i, a);
+  }
+}
+
+function ShapelessUnknownCalleeLoop(f, g, a)
+{
+  for (var i = 0; i < 10; i++) {
+    (f || g)(i, a);
+    f = null;
+  }
+}
+
+function ShapelessCalleeTest()
+{
+  var a = [];
+  ShapelessArgCalleeLoop(function (i, a) a[i] = i, a);
+  ShapelessVarCalleeLoop(function (i, a) a[10 + i] = i, a);
+  ShapelessLetCalleeLoop(function (i, a) a[20 + i] = i, a);
+  ShapelessUnknownCalleeLoop(null, function (i, a) a[30 + i] = i, a);
+  try {
+    ShapelessUnknownCalleeLoop(null, {hack: 42}, a);
+  } catch (e) {
+    if (e + "" != "TypeError: g is not a function")
+      print("ShapelessUnknownCalleeLoop: unexpected exception " + e);
+  }
+  return a.join("");
+}
+ShapelessCalleeTest.expected = "0123456789012345678901234567890123456789";
+test(ShapelessCalleeTest);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));

@@ -1002,7 +1002,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
 bool
 TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
 {
-    if (slot != (uint16)slot) /* we use a table of 16-bit ints, bail out if thats not enough */
+    if (slot != (uint16)slot) /* we use a table of 16-bit ints, bail out if that's not enough */
         return false;
     jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
     if (tracker.has(vp))
@@ -3037,6 +3037,18 @@ TraceRecorder::guardInterpretedFunction(JSFunction* fun, LIns* fun_ins)
 }
 
 bool
+TraceRecorder::guardShapelessCallee(jsval& callee)
+{
+    if (JSVAL_IS_PRIMITIVE(callee))
+        return false;
+
+    JSObject* callee_obj = JSVAL_TO_OBJECT(callee);
+    LIns* callee_ins = get(&callee);
+    return guardClass(callee_obj, callee_ins, &js_FunctionClass) &&
+           guardInterpretedFunction(GET_FUNCTION_PRIVATE(cx, callee_obj), callee_ins);
+}
+
+bool
 TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
 {
     JSStackFrame* fp = cx->fp;
@@ -4642,21 +4654,37 @@ TraceRecorder::record_JSOP_INDEXBASE3()
 bool
 TraceRecorder::record_JSOP_CALLGVAR()
 {
-    return record_JSOP_GETGVAR();
+    jsval slotval = cx->fp->slots[GET_SLOTNO(cx->fp->regs->pc)];
+    if (JSVAL_IS_NULL(slotval))
+        return true; // We will see JSOP_CALLNAME from the interpreter's jump, so no-op here.
+
+    uint32 slot = JSVAL_TO_INT(slotval);
+
+    if (!lazilyImportGlobalSlot(slot))
+         ABORT_TRACE("lazy import of global slot failed");
+
+    jsval* vp = &STOBJ_GET_SLOT(cx->fp->scopeChain, slot);
+    stack(0, get(vp));
+    stack(1, lir->insImmPtr(NULL));
+    return record_JSOP_GETGVAR() && guardShapelessCallee(*vp);
 }
 
 bool
 TraceRecorder::record_JSOP_CALLVAR()
 {
+    uintN slot = GET_SLOTNO(cx->fp->regs->pc);
+    stack(0, var(slot));
     stack(1, lir->insImmPtr(NULL));
-    return record_JSOP_GETVAR();
+    return guardShapelessCallee(varval(slot));
 }
 
 bool
 TraceRecorder::record_JSOP_CALLARG()
 {
+    uintN slot = GET_ARGNO(cx->fp->regs->pc);
+    stack(0, arg(slot));
     stack(1, lir->insImmPtr(NULL));
-    return record_JSOP_GETARG();
+    return guardShapelessCallee(argval(slot));
 }
 
 bool
