@@ -21,6 +21,7 @@ pref("extensions.weave.engine.cookies", true );
 pref("extensions.weave.engine.passwords", false);
 pref("extensions.weave.engine.forms", false);
 pref("extensions.weave.engine.tabs", true);
+pref("extensions.weave.engine.input", false);
 
 pref("extensions.weave.log.appender.console", "Warn");
 pref("extensions.weave.log.appender.dump", "Error");

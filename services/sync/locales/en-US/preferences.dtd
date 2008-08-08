@@ -37,6 +37,7 @@
 <!ENTITY passwordsCheckbox.label            "Saved Passwords">
 <!ENTITY formsCheckbox.label                "Saved Form Data">
 <!ENTITY tabsCheckbox.label                 "Tabs">
+<!ENTITY inputCheckbox.label                "Input History">
 <!ENTITY extensionsCheckbox.label           "Extensions">
 <!ENTITY themesCheckbox.label               "Themes">
 <!ENTITY pluginsCheckbox.label              "Search Plugins">
