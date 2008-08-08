@@ -3568,14 +3568,12 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   
   *aLineReflowStatus = LINE_REFLOW_OK;
 
-  // If it's currently ok to be reflowing in first-letter style then
-  // we must be about to reflow a frame that has first-letter style.
-  PRBool reflowingFirstLetter = aLineLayout.GetFirstLetterStyleOK();
 #ifdef NOISY_FIRST_LETTER
   ListTag(stdout);
   printf(": reflowing ");
   nsFrame::ListTag(stdout, aFrame);
-  printf(" reflowingFirstLetter=%s\n", reflowingFirstLetter ? "on" : "off");
+  printf(" reflowingFirstLetter=%s\n",
+         aLineLayout.GetFirstLetterStyleOK() ? "on" : "off");
 #endif
 
   // Reflow the inline frame
@@ -3715,18 +3713,10 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       aLine->SetLineWrapped(PR_TRUE);
     }
     
-    // If we are reflowing the first letter frame or a placeholder then 
+    // If we just ended a first-letter frame or reflowed a placeholder then 
     // don't split the line and don't stop the line reflow...
-    PRBool splitLine = !reflowingFirstLetter && 
-      nsGkAtoms::placeholderFrame != frameType;
-    if (reflowingFirstLetter) {
-      if ((nsGkAtoms::inlineFrame == frameType) ||
-          (nsGkAtoms::lineFrame == frameType)) {
-        splitLine = PR_TRUE;
-      }
-    }
-
-    if (splitLine) {
+    if (!(frameReflowStatus & NS_INLINE_BREAK_FIRST_LETTER_COMPLETE) && 
+        nsGkAtoms::placeholderFrame != frameType) {
       // Split line after the current frame
       *aLineReflowStatus = LINE_REFLOW_STOP;
       rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);

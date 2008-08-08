@@ -35,20 +35,22 @@
 #
 # ***** END LICENSE BLOCK *****
 
-export VSINSTALLDIR='C:\Program Files\Microsoft Visual Studio 8'
-export VS80COMNTOOLS="$VSINSTALLDIR\\Common7\\Tools\\"
-export VCINSTALLDIR="$VSINSTALLDIR\\VC"
-export FrameworkDir='C:\WINDOWS\Microsoft.NET\Framework'
-export FrameworkVersion='v2.0.50727'
-export FrameworkSDKDir="$VSINSTALLDIR\\SDK\\v2.0"
-export DevEnvDir="$VSINSTALLDIR\\Common7\\IDE"
-export MSVCDir="$VSINSTALLDIR\\VC"
+echo Setting environment for using Microsoft Visual Studio 8
+
+export VS8INSTALLDIR=${VS8INSTALLDIR:-'C:\Program Files\Microsoft Visual Studio 8'}
+export VS8COMNTOOLS="$VS8INSTALLDIR\\Common7\\Tools\\"
+export VCINSTALLDIR="$VS8INSTALLDIR\\VC"
+export FrameworkDir=${FrameworkDir:-'C:\WINDOWS\Microsoft.NET\Framework'}
+export FrameworkVersion=${FrameworkVersion:-'v2.0.50727'}
+export FrameworkSDKDir="$VS8INSTALLDIR\\SDK\\v2.0"
+export DevEnvDir="$VS8INSTALLDIR\\Common7\\IDE"
+export MSVCDir="$VS8INSTALLDIR\\VC"
 export PlatformSDKDir="$MSVCDir"\\PlatformSDK
 
 # Windows SDK 6 or later is required after https://bugzilla.mozilla.org/show_bug.cgi?id=412374
 # v6.0 - Windows SDK Update for Vista
 # v6.1 - Windows SDK for Windows Server 2008
-export WindowsSDK6='c:\Program Files\Microsoft SDKs\Windows\v6.0'
+export WindowsSDK6=${WindowsSDK6:-'c:\Program Files\Microsoft SDKs\Windows\v6.0'}
 export WindowsSDK6_cyg=`cygpath -u "$WindowsSDK6"`
 
 if [[ ! -d "$WindowsSDK6_cyg" ]]; then
@@ -56,8 +58,8 @@ if [[ ! -d "$WindowsSDK6_cyg" ]]; then
     export WindowsSDK6_cyg=`cygpath -u "$WindowsSDK6"`
 fi
 
-export VSINSTALLDIR_cyg=`cygpath -u "$VSINSTALLDIR"`
-export VS80COMNTOOLS_cyg=`cygpath -u "$VSINSTALLDIR"`
+export VS8INSTALLDIR_cyg=`cygpath -u "$VS8INSTALLDIR"`
+export VS8COMNTOOLS_cyg=`cygpath -u "$VS8COMNTOOLS"`
 export VCINSTALLDIR_cyg=`cygpath -u "$VCINSTALLDIR"`
 export FrameworkDir_cyg=`cygpath -u "$FrameworkDir"`
 export DevEnvDir_cyg=`cygpath -u "$DevEnvDir"`
@@ -87,8 +89,8 @@ export PATH="\
 $WindowsSDK6_cyg/bin:\
 $DevEnvDir_cyg:\
 $MSVCDir_cyg/bin:\
-$VS80COMNTOOLS_cyg:\
-$VS80COMNTOOLS_cyg/bin:\
+$VS8COMNTOOLS_cyg:\
+$VS8COMNTOOLS_cyg/bin:\
 $PlatformSDKDir_cyg/bin:\
 $FrameworkSDKDir_cyg/bin:\
 $FrameworkDir_cyg/$FrameworkVersion:\

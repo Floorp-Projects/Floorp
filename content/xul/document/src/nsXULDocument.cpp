@@ -441,6 +441,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
     mChannel = aChannel;
 
+    mHaveInputEncoding = PR_TRUE;
+
     // Get the URI.  Note that this should match nsDocShell::OnLoadingSite
     nsresult rv =
         NS_GetFinalChannelURI(aChannel, getter_AddRefs(mDocumentURI));
@@ -1730,6 +1732,14 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
     // Do a bunch of cleanup to remove an element from the XUL
     // document.
     nsresult rv;
+
+    if (aElement->NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
+        nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
+        if (xblService) {
+            nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(aElement));
+            xblService->DetachGlobalKeyHandler(piTarget);
+        }
+    }
 
     // 1. Remove any children from the document.
     PRUint32 count = aElement->GetChildCount();

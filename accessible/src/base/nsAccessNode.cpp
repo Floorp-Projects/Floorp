@@ -112,12 +112,23 @@ nsIAccessibilityService *nsAccessNode::GetAccService()
  * Class nsAccessNode
  */
  
-//-----------------------------------------------------
-// construction 
-//-----------------------------------------------------
-NS_IMPL_QUERY_INTERFACE2(nsAccessNode, nsIAccessNode, nsPIAccessNode)
-NS_IMPL_ADDREF(nsAccessNode)
-NS_IMPL_RELEASE_WITH_DESTROY(nsAccessNode, LastRelease())
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessible. nsISupports
+
+NS_IMPL_CYCLE_COLLECTION_0(nsAccessNode)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsAccessNode)
+  NS_INTERFACE_MAP_ENTRY(nsIAccessNode)
+  NS_INTERFACE_MAP_ENTRY(nsPIAccessNode)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessNode)
+NS_INTERFACE_MAP_END
+ 
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsAccessNode, nsIAccessNode)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(nsAccessNode, nsIAccessNode,
+                                      LastRelease())
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessible. Constructor
 
 nsAccessNode::nsAccessNode(nsIDOMNode *aNode, nsIWeakReference* aShell): 
   mDOMNode(aNode), mWeakShell(aShell)

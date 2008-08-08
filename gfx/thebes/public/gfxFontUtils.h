@@ -42,7 +42,6 @@
 #include "gfxTypes.h"
 
 #include "prtypes.h"
-#include "gfxFont.h"
 #include "prcpucfg.h"
 
 #include "nsDataHashtable.h"
@@ -51,6 +50,9 @@
 #include "nsCOMPtr.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 /* Bug 341128 - w32api defines min/max which causes problems with <bitset> */
 #ifdef __MINGW32__

@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+body::before {
+  content:attr(my-attr);
+}
+body::after {
+  content:attr(my-attr-2);
+}
+</style>
+<script>
+function fixupDOM() {
+  document.body.setAttribute("my-attr", "before");
+  document.body.setAttribute("my-attr-2", "after");
+  document.documentElement.className = "";
+}
+</script>
+</head>
+<body my-attr-2="xyz" onload="fixupDOM()">
+</body>
+</html>

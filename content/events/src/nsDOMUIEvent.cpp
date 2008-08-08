@@ -370,35 +370,10 @@ nsDOMUIEvent::GetPreventDefault(PRBool* aReturn)
 
 NS_METHOD nsDOMUIEvent::GetCompositionReply(nsTextEventReply** aReply)
 {
-  if((mEvent->eventStructType == NS_RECONVERSION_EVENT) ||
-     (mEvent->message == NS_COMPOSITION_START) ||
+  if((mEvent->message == NS_COMPOSITION_START) ||
      (mEvent->message == NS_COMPOSITION_QUERY))
   {
     *aReply = &(static_cast<nsCompositionEvent*>(mEvent)->theReply);
-    return NS_OK;
-  }
-  *aReply = nsnull;
-  return NS_ERROR_FAILURE;
-}
-
-NS_METHOD
-nsDOMUIEvent::GetReconversionReply(nsReconversionEventReply** aReply)
-{
-  if (mEvent->eventStructType == NS_RECONVERSION_EVENT)
-  {
-    *aReply = &(static_cast<nsReconversionEvent*>(mEvent)->theReply);
-    return NS_OK;
-  }
-  *aReply = nsnull;
-  return NS_ERROR_FAILURE;
-}
-
-NS_METHOD
-nsDOMUIEvent::GetQueryCaretRectReply(nsQueryCaretRectEventReply** aReply)
-{
-  if (mEvent->eventStructType == NS_QUERYCARETRECT_EVENT)
-  {
-    *aReply = &(static_cast<nsQueryCaretRectEvent*>(mEvent)->theReply);
     return NS_OK;
   }
   *aReply = nsnull;

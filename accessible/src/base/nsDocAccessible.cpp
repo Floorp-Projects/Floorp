@@ -135,7 +135,34 @@ nsDocAccessible::~nsDocAccessible()
 {
 }
 
-NS_INTERFACE_MAP_BEGIN(nsDocAccessible)
+////////////////////////////////////////////////////////////////////////////////
+// nsDocAccessible. nsISupports
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+ElementTraverser(const void *aKey, nsIAccessNode *aAccessNode,
+                 void *aUserArg)
+{
+  nsCycleCollectionTraversalCallback *cb = 
+    static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, aAccessNode);
+  cb->NoteXPCOMChild(aAccessNode);
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocAccessible)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mEventsToFire)
+  tmp->mAccessNodeCache.EnumerateRead(ElementTraverser, &cb); 
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDocAccessible, nsAccessible)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mEventsToFire)
+  tmp->ClearCache(tmp->mAccessNodeCache);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsPIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)

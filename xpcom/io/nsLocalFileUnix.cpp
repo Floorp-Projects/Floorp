@@ -280,12 +280,21 @@ nsLocalFile::nsLocalFileConstructor(nsISupports *outer,
 
 nsresult 
 nsLocalFile::FillStatCache() {
+#ifdef HAVE_STAT64
+    if (stat64(mPath.get(), &mCachedStat) == -1) {
+        // try lstat it may be a symlink
+        if (lstat64(mPath.get(), &mCachedStat) == -1) {
+            return NSRESULT_FOR_ERRNO();
+        }
+    }
+#else
     if (stat(mPath.get(), &mCachedStat) == -1) {
         // try lstat it may be a symlink
         if (lstat(mPath.get(), &mCachedStat) == -1) {
             return NSRESULT_FOR_ERRNO();
         }
     }
+#endif
     mHaveCachedStat = PR_TRUE;
     return NS_OK;
 }
@@ -1109,9 +1118,12 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
     }
 #endif
 
-    /* XXX autoconf for and use stat64 if available */
     if (!S_ISDIR(mCachedStat.st_mode)) {
+#ifdef HAVE_STAT64
+        *aFileSize = mCachedStat.st_size;
+#else
         LL_UI2L(*aFileSize, (PRUint32)mCachedStat.st_size);
+#endif
     }
     return NS_OK;
 }
@@ -1136,11 +1148,17 @@ nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
     CHECK_mPath();
     NS_ENSURE_ARG(aFileSize);
 
+#ifdef HAVE_LSTAT64
+    struct stat64 sbuf;
+    if (lstat64(mPath.get(), &sbuf) == -1)
+        return NSRESULT_FOR_ERRNO();
+    *aFileSize = sbuf.st_size;
+#else
     struct stat sbuf;
     if (lstat(mPath.get(), &sbuf) == -1)
         return NSRESULT_FOR_ERRNO();
-    /* XXX autoconf for and use lstat64 if available */
     LL_UI2L(*aFileSize, (PRUint32)sbuf.st_size);
+#endif
     return NS_OK;
 }
 

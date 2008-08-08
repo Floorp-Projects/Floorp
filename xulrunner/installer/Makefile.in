@@ -130,12 +130,24 @@ install:: $(pkg_config_files)
 
 GARBAGE += $(MOZILLA_VERSION).system.conf $(pkg_config_files)
 
+GARBAGE += debian/changelog
 
 DEBDESTDIR=debian/$(MOZ_BUILD_APP)
 
+GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
+GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
+MOZ_DEB_TIMESTAMP = "$(shell date  +"%a, %d  %b %Y %T %z" )"
+
+DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID) -DMOZ_DEB_TIMESTAMP=$(MOZ_DEB_TIMESTAMP)
+
 
 ifeq ($(OS_TARGET),Linux)
-deb: 
+debian/changelog: $(srcdir)/debian/changelog.in 
+	mkdir -p debian
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+
+deb: debian/changelog
 	$(NSINSTALL)  $(topsrcdir)/$(MOZ_BUILD_APP)/installer/debian .
 	rm -rf $(DEBDESTDIR)/usr/local/*
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/local

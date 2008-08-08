@@ -99,14 +99,6 @@ nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGTextFrame::DidSetStyleContext()
-{
-  nsSVGUtils::StyleEffects(this);
-
-  return NS_OK;
-}
-
 nsIAtom *
 nsSVGTextFrame::GetType() const
 {

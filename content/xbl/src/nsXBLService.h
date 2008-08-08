@@ -88,6 +88,7 @@ class nsXBLService : public nsIXBLService,
 
   // Used by XUL key bindings and for window XBL.
   NS_IMETHOD AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget);
+  NS_IMETHOD DetachGlobalKeyHandler(nsPIDOMEventTarget* aTarget);
 
   NS_DECL_NSIOBSERVER
 

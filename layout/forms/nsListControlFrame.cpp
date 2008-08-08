@@ -365,14 +365,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
              nsILookAndFeel::eColor_WidgetSelectForeground :
              nsILookAndFeel::eColor_WidgetSelectBackground, color);
 
-  nscoord onePixelInTwips = nsPresContext::CSSPixelsToAppUnits(1);
-
-  nsRect dirty;
-  nscolor colors[] = {color, color, color, color};
-  PRUint8 borderStyle[] = {NS_STYLE_BORDER_STYLE_DOTTED, NS_STYLE_BORDER_STYLE_DOTTED, NS_STYLE_BORDER_STYLE_DOTTED, NS_STYLE_BORDER_STYLE_DOTTED};
-  nsRect innerRect = fRect;
-  innerRect.Deflate(nsSize(onePixelInTwips, onePixelInTwips));
-  nsCSSRendering::DrawDashedSides(0, aRC, dirty, borderStyle, colors, fRect, innerRect, 0, nsnull);
+  nsCSSRendering::PaintFocus(presContext, aRC, fRect, color);
 }
 
 void

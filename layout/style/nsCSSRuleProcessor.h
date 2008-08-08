@@ -72,7 +72,7 @@ public:
 public:
   nsresult ClearRuleCascades();
 
-  static void Shutdown();
+  static void FreeSystemMetrics();
 
   /*
    * Returns true if the given RuleProcessorData matches one of the
@@ -95,6 +95,12 @@ public:
 
   NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,
                                    PRBool* aRulesChanged);
+
+#ifdef DEBUG
+  void AssertQuirksChangeOK() {
+    NS_ASSERTION(!mRuleCascades, "too late to set quirks style sheet");
+  }
+#endif
 
 protected:
   RuleCascadeData* GetRuleCascade(nsPresContext* aPresContext);

@@ -1711,6 +1711,8 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
   mMayStartLayout = PR_FALSE;
 
+  mHaveInputEncoding = PR_TRUE;
+
   if (aReset) {
     Reset(aChannel, aLoadGroup);
   }
@@ -3174,6 +3176,10 @@ nsDocument::BeginLoad()
   // unblocking it while we know the document is loading.
   BlockOnload();
 
+  if (mScriptLoader) {
+    mScriptLoader->BeginDeferringScripts();
+  }
+
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginLoad, (this));
 }
 
@@ -3415,6 +3421,10 @@ nsDocument::DispatchContentLoadedEvents()
       
       parent = parent->GetParentDocument();
     } while (parent);
+  }
+
+  if (mScriptLoader) {
+    mScriptLoader->EndDeferringScripts();
   }
 
   UnblockOnload(PR_TRUE);
@@ -4959,7 +4969,12 @@ nsDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 NS_IMETHODIMP
 nsDocument::GetInputEncoding(nsAString& aInputEncoding)
 {
-  return GetCharacterSet(aInputEncoding);
+  if (mHaveInputEncoding) {
+    return GetCharacterSet(aInputEncoding);
+  }
+
+  SetDOMStringToNull(aInputEncoding);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

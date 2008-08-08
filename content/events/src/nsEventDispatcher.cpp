@@ -562,8 +562,6 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
                                     static_cast<nsMutationEvent*>(aEvent));
     case NS_GUI_EVENT:
     case NS_COMPOSITION_EVENT:
-    case NS_RECONVERSION_EVENT:
-    case NS_QUERYCARETRECT_EVENT:
     case NS_SCROLLPORT_EVENT:
       return NS_NewDOMUIEvent(aDOMEvent, aPresContext,
                               static_cast<nsGUIEvent*>(aEvent));

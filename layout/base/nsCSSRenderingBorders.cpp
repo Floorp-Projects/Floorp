@@ -79,7 +79,6 @@
  * DrawBorders
  *   |- separate corners?
  *   |- dashed side mask
- *   |- gap clip
  *   |
  *   -> can border be drawn in 1 pass? (e.g., solid border same color all around)
  *      |- DrawBorderSides with all 4 sides
@@ -176,8 +175,7 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(PRInt32 aAppUnitsPerPixel,
                                          const nscolor* aBorderColors,
                                          nsBorderColors* const* aCompositeColors,
                                          PRIntn aSkipSides,
-                                         nscolor aBackgroundColor,
-                                         const gfxRect* aGapRect)
+                                         nscolor aBackgroundColor)
   : mAUPP(aAppUnitsPerPixel),
     mContext(aDestContext),
     mOuterRect(aOuterRect),
@@ -187,8 +185,7 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(PRInt32 aAppUnitsPerPixel,
     mBorderColors(aBorderColors),
     mCompositeColors(aCompositeColors),
     mSkipSides(aSkipSides),
-    mBackgroundColor(aBackgroundColor),
-    mGapRect(aGapRect)
+    mBackgroundColor(aBackgroundColor)
 {
   if (!mCompositeColors) {
     static nsBorderColors * const noColors[4] = { NULL };
@@ -1103,24 +1100,6 @@ nsCSSBorderRenderer::DrawBorders()
     mat.y0 = floor(mat.y0 + 0.5);
     mContext->SetMatrix(mat);
   }
-
-  // Only do this clip if we have to clip out a gap; otherwise,
-  // intersecting with this clip is pretty expensive.
-  if (mGapRect) {
-    mContext->NewPath();
-    mContext->Rectangle(mOuterRect);
-
-    // draw the rectangle backwards, so that we get it
-    // clipped out via the winding rule
-    mContext->MoveTo(mGapRect->pos);
-    mContext->LineTo(mGapRect->pos + gfxSize(0.0, mGapRect->size.height));
-    mContext->LineTo(mGapRect->pos + mGapRect->size);
-    mContext->LineTo(mGapRect->pos + gfxSize(mGapRect->size.width, 0.0));
-    mContext->ClosePath();
-
-    mContext->Clip();
-  }
-
 
   if (allBordersSame && !forceSeparateCorners) {
     /* Draw everything in one go */

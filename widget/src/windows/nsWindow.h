@@ -395,11 +395,9 @@ protected:
   static PRInt32    sIMECompClauseArrayLength;
   static PRInt32    sIMECompClauseArraySize;
   static long       sIMECursorPosition;
-  static PRUnichar* sIMEReconvertUnicode; // reconvert string
 
   // For describing composing frame
   static RECT*      sIMECompCharPos;
-  static PRInt32    sIMECaretHeight;
 
   static PRBool     sIsInEndSession;
 

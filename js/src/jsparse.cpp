@@ -614,10 +614,6 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             goto out;
         }
 
-        /*
-         * FIXME bug 346749: let declarations at the top level in a script are
-         * turned into var declarations and do not introduce block nodes.
-         */
         JS_ASSERT(!cg.treeContext.blockNode);
 
         if (!js_FoldConstants(cx, pn, &cg.treeContext) ||
@@ -653,8 +649,8 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             if (JOF_TYPE(cs->format) == JOF_LOCAL ||
                 (JOF_TYPE(cs->format) == JOF_SLOTATOM)) {
                 /*
-                 * JSOP_GETARGPROP and JSOP_GETVARPROP also have JOF_SLOTATOM
-                 * type, but they may be emitted only for a function.
+                 * JSOP_GETARGPROP also has JOF_SLOTATOM type, but it may be
+                 * emitted only for a function.
                  */
                 JS_ASSERT((JOF_TYPE(cs->format) == JOF_SLOTATOM) ==
                           (op == JSOP_GETLOCALPROP));
@@ -1204,7 +1200,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
          * object property (it might also need the activation property, if the
          * outer function contains with statements, e.g., but the stack slot
          * wins when jsemit.c's BindNameToSlot can optimize a JSOP_NAME into a
-         * JSOP_GETVAR bytecode).
+         * JSOP_GETLOCAL bytecode).
          */
         if (AT_TOP_LEVEL(tc) && (tc->flags & TCF_IN_FUNCTION)) {
             JSLocalKind localKind;
@@ -1391,9 +1387,9 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     /*
      * If we collected flags that indicate nested heavyweight functions, or
      * this function contains heavyweight-making statements (references to
-     * __parent__ or __proto__; use of with, eval, import, or export; and
-     * assignment to arguments), flag the function as heavyweight (requiring
-     * a call object per invocation).
+     * __parent__ or __proto__; use of with, or eval; and assignment to 
+     * arguments), flag the function as heavyweight (requiring a call object 
+     * per invocation).
      */
     if (funtc.flags & TCF_FUN_HEAVYWEIGHT) {
         fun->flags |= JSFUN_HEAVYWEIGHT;
@@ -1582,82 +1578,6 @@ MatchLabel(JSContext *cx, JSTokenStream *ts, JSParseNode *pn)
     return JS_TRUE;
 }
 
-#if JS_HAS_EXPORT_IMPORT
-static JSParseNode *
-ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
-{
-    JSParseNode *pn, *pn2;
-    JSTokenType tt;
-
-    MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_IMPORT_NAME);
-    pn = NewParseNode(cx, ts, PN_NAME, tc);
-    if (!pn)
-        return NULL;
-    pn->pn_op = JSOP_NAME;
-    pn->pn_atom = CURRENT_TOKEN(ts).t_atom;
-    pn->pn_slot = -1;
-
-    ts->flags |= TSF_OPERAND;
-    while ((tt = js_GetToken(cx, ts)) == TOK_DOT || tt == TOK_LB) {
-        ts->flags &= ~TSF_OPERAND;
-        if (pn->pn_op == JSOP_IMPORTALL)
-            goto bad_import;
-
-        if (tt == TOK_DOT) {
-            pn2 = NewParseNode(cx, ts, PN_NAME, tc);
-            if (!pn2)
-                return NULL;
-            ts->flags |= TSF_KEYWORD_IS_NAME;
-            if (js_MatchToken(cx, ts, TOK_STAR)) {
-                pn2->pn_op = JSOP_IMPORTALL;
-                pn2->pn_slot = -1;
-            } else {
-                MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NAME_AFTER_DOT);
-                pn2->pn_op = JSOP_GETPROP;
-                pn2->pn_atom = CURRENT_TOKEN(ts).t_atom;
-                pn2->pn_slot = -1;
-            }
-            ts->flags &= ~TSF_KEYWORD_IS_NAME;
-            pn2->pn_expr = pn;
-            pn2->pn_pos.begin = pn->pn_pos.begin;
-            pn2->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
-        } else {
-            /* Make a TOK_LB binary node. */
-            pn2 = NewBinary(cx, tt, JSOP_GETELEM, pn, Expr(cx, ts, tc), tc);
-            if (!pn2)
-                return NULL;
-
-            MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
-        }
-
-        pn = pn2;
-        ts->flags |= TSF_OPERAND;
-    }
-    ts->flags &= ~TSF_OPERAND;
-    if (tt == TOK_ERROR)
-        return NULL;
-    js_UngetToken(ts);
-
-    switch (pn->pn_op) {
-      case JSOP_GETPROP:
-        pn->pn_op = JSOP_IMPORTPROP;
-        break;
-      case JSOP_GETELEM:
-        pn->pn_op = JSOP_IMPORTELEM;
-        break;
-      case JSOP_IMPORTALL:
-        break;
-      default:
-        goto bad_import;
-    }
-    return pn;
-
-  bad_import:
-    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, JSMSG_BAD_IMPORT);
-    return NULL;
-}
-#endif /* JS_HAS_EXPORT_IMPORT */
-
 static JSBool
 BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 {
@@ -1714,7 +1634,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     const char *name;
     JSLocalKind localKind;
 
-    stmt = js_LexicalLookup(tc, atom, NULL, 0);
+    stmt = js_LexicalLookup(tc, atom, NULL);
     ATOM_LIST_SEARCH(ale, &tc->decls, atom);
     op = data->op;
     if ((stmt && stmt->type != STMT_WITH) || ale) {
@@ -2466,49 +2386,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif
 
     switch (tt) {
-#if JS_HAS_EXPORT_IMPORT
-      case TOK_EXPORT:
-        pn = NewParseNode(cx, ts, PN_LIST, tc);
-        if (!pn)
-            return NULL;
-        PN_INIT_LIST(pn);
-        if (js_MatchToken(cx, ts, TOK_STAR)) {
-            pn2 = NewParseNode(cx, ts, PN_NULLARY, tc);
-            if (!pn2)
-                return NULL;
-            PN_APPEND(pn, pn2);
-        } else {
-            do {
-                MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_EXPORT_NAME);
-                pn2 = NewParseNode(cx, ts, PN_NAME, tc);
-                if (!pn2)
-                    return NULL;
-                pn2->pn_op = JSOP_NAME;
-                pn2->pn_atom = CURRENT_TOKEN(ts).t_atom;
-                pn2->pn_slot = -1;
-                PN_APPEND(pn, pn2);
-            } while (js_MatchToken(cx, ts, TOK_COMMA));
-        }
-        pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
-        tc->flags |= TCF_FUN_HEAVYWEIGHT;
-        break;
-
-      case TOK_IMPORT:
-        pn = NewParseNode(cx, ts, PN_LIST, tc);
-        if (!pn)
-            return NULL;
-        PN_INIT_LIST(pn);
-        do {
-            pn2 = ImportExpr(cx, ts, tc);
-            if (!pn2)
-                return NULL;
-            PN_APPEND(pn, pn2);
-        } while (js_MatchToken(cx, ts, TOK_COMMA));
-        pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
-        tc->flags |= TCF_FUN_HEAVYWEIGHT;
-        break;
-#endif /* JS_HAS_EXPORT_IMPORT */
-
       case TOK_FUNCTION:
 #if JS_HAS_XML_SUPPORT
         ts->flags |= TSF_KEYWORD_IS_NAME;
@@ -3330,16 +3207,10 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             JS_ASSERT(tc->blockChain == stmt->u.blockObj);
             obj = tc->blockChain;
         } else {
-            if (!stmt) {
+            if (!stmt || (stmt->flags & SIF_BODY_BLOCK)) {
                 /*
-                 * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=346749
-                 *
-                 * This is a hard case that requires more work. In particular,
-                 * in many cases, we're trying to emit code as we go. However,
-                 * this means that we haven't necessarily finished processing
-                 * all let declarations in the implicit top-level block when
-                 * we emit a reference to one of them.  For now, punt on this
-                 * and pretend this is a var declaration.
+                 * ES4 specifies that let at top level and at body-block scope
+                 * does not shadow var, so convert back to var.
                  */
                 CURRENT_TOKEN(ts).type = TOK_VAR;
                 CURRENT_TOKEN(ts).t_op = JSOP_DEFVAR;
@@ -5887,10 +5758,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #endif
         break;
 
-#if !JS_HAS_EXPORT_IMPORT
-      case TOK_EXPORT:
-      case TOK_IMPORT:
-#endif
       case TOK_ERROR:
         /* The scanner or one of its subroutines reported the error. */
         return NULL;
@@ -6598,11 +6465,6 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         goto do_binary_op;
 
       case TOK_STAR:
-        /* The * in 'import *;' parses as a nullary star node. */
-        if (pn->pn_arity == PN_NULLARY)
-            break;
-        /* FALL THROUGH */
-
       case TOK_SHOP:
       case TOK_MINUS:
       case TOK_DIVOP:

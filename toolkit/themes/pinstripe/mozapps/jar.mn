@@ -13,7 +13,6 @@ classic.jar:
   skin/classic/mozapps/extensions/viewButtons.png                 (extensions/viewButtons.png)
   skin/classic/mozapps/extensions/ratings.png                     (extensions/ratings.png)
   skin/classic/mozapps/extensions/extensionIcons.png              (extensions/extensionIcons.png)
-  skin/classic/mozapps/extensions/searchIcons.png                 (extensions/searchIcons.png)
   skin/classic/mozapps/extensions/about.css                       (extensions/about.css)
   skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)
   skin/classic/mozapps/extensions/extensions.xml                  (extensions/extensions.xml)

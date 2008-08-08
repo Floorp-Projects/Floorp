@@ -187,6 +187,24 @@ public:
   static PRBool ShouldExecuteScript(nsIDocument* aDocument,
                                     nsIChannel* aChannel);
 
+  /**
+   * Starts deferring deferred scripts and puts them in the mDeferredRequests
+   * queue instead.
+   */
+  void BeginDeferringScripts()
+  {
+    mDeferEnabled = PR_TRUE;
+  }
+
+  /**
+   * Stops defering scripts and immediately processes the mDeferredRequests
+   * queue.
+   *
+   * WARNING: This function will syncronously execute content scripts, so be
+   * prepared that the world might change around you.
+   */
+  void EndDeferringScripts();
+
 protected:
   /**
    * Process any pending requests asyncronously (i.e. off an event) if there
@@ -229,14 +247,18 @@ protected:
                                 PRUint32 aStringLen,
                                 const PRUint8* aString);
 
+  // Returns the first pending (non deferred) request
+  nsScriptLoadRequest* GetFirstPendingRequest();
+
   nsIDocument* mDocument;                   // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
-  nsCOMArray<nsScriptLoadRequest> mPendingRequests;
+  nsCOMArray<nsScriptLoadRequest> mRequests;
   nsCOMPtr<nsIScriptElement> mCurrentScript;
   // XXXbz do we want to cycle-collect these or something?  Not sure.
   nsTArray< nsRefPtr<nsScriptLoader> > mPendingChildLoaders;
   PRUint32 mBlockerCount;
   PRPackedBool mEnabled;
+  PRPackedBool mDeferEnabled;
 };
 
 #endif //__nsScriptLoader_h__
