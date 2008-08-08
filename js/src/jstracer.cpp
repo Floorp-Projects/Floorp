@@ -1997,16 +1997,31 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         if (protoIndex < 0)
             ABORT_TRACE("failed to lookup property");
 
-        sprop = (JSScopeProperty*) prop;
-        js_FillPropertyCache(cx, obj, OBJ_SCOPE(obj)->shape, 0, protoIndex, obj2, sprop, &entry);
+        if (prop) {
+            sprop = (JSScopeProperty*) prop;
+            js_FillPropertyCache(cx, obj, OBJ_SCOPE(obj)->shape, 0, protoIndex, obj2, sprop,
+                                 &entry);
+        }
     }
 
-    if (!entry)
+    if (!prop) {
+        // Propagate obj from js_FindPropertyHelper to record_JSOP_BINDNAME
+        // via our obj2 out-parameter.
+        obj2 = obj;
+        pcval = PCVAL_NULL;
+        return true;
+    }
+
+    if (!entry) {
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
         ABORT_TRACE("failed to fill property cache");
+    }
 
     if (obj != globalObj) {
-        if (PCVCAP_TAG(entry->vcap) > 1)
+        if (PCVCAP_TAG(entry->vcap) > 1) {
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
             ABORT_TRACE("can't (yet) trace multi-level property cache hit");
+        }
 
         LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
         guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"));
@@ -2017,8 +2032,10 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             LIns* obj2_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
             map_ins = lir->insLoadi(obj2_ins, offsetof(JSObject, map));
             LIns* ops_ins;
-            if (!map_is_native(obj2->map, map_ins, ops_ins))
+            if (!map_is_native(obj2->map, map_ins, ops_ins)) {
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
                 return false;
+            }
 
             shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
             guard(true, addName(lir->ins2i(LIR_eq, shape_ins, PCVCAP_SHAPE(entry->vcap)),
@@ -2070,6 +2087,12 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
      */
     if (!test_property_cache(obj, obj_ins, obj2, pcval))
         return false;
+
+    /* No such property means invalid slot, which callers must check for first. */
+    if (PCVAL_IS_NULL(pcval)) {
+        slot = SPROP_INVALID_SLOT;
+        return true;
+    }
 
     /* Handle only gets and sets on the directly addressed object. */
     if (obj2 != obj)
@@ -2842,10 +2865,11 @@ TraceRecorder::record_JSOP_CALLNAME()
     JSObject* obj2;
     jsuword pcval;
     if (!test_property_cache(obj, obj_ins, obj2, pcval))
-        ABORT_TRACE("missed prop");
+        return false;
 
-    if (!PCVAL_IS_OBJECT(pcval))
-        ABORT_TRACE("PCE not object");
+    if (PCVAL_IS_NULL(pcval) || !PCVAL_IS_OBJECT(pcval))
+        ABORT_TRACE("callee is not an object");
+    JS_ASSERT(HAS_FUNCTION_CLASS(PCVAL_TO_OBJECT(pcval)));
 
     stack(0, lir->insImmPtr(PCVAL_TO_OBJECT(pcval)));
     stack(1, obj_ins);
@@ -3047,6 +3071,15 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
 
+    /* Check for non-existent property reference, which results in undefined. */
+    if (slot == SPROP_INVALID_SLOT) {
+        const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
+        JS_ASSERT(cs.ndefs == 1);
+        v_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        stack(-cs.nuses, v_ins);
+        return true;
+    }
+
     LIns* dslots_ins = NULL;
     v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
     if (!unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins))
@@ -3133,6 +3166,8 @@ TraceRecorder::record_JSOP_NAME()
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
+    if (slot == SPROP_INVALID_SLOT)
+        ABORT_TRACE("JSOP_NAME can't find named property");
 
     if (!lazilyImportGlobalSlot(slot))
         ABORT_TRACE("lazy import of global slot failed");
@@ -3574,7 +3609,7 @@ TraceRecorder::record_JSOP_BINDNAME()
 {
     JSObject* obj = cx->fp->scopeChain;
     if (obj != globalObj)
-        return false;
+        ABORT_TRACE("JSOP_BINDNAME crosses global scopes");
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
@@ -3582,6 +3617,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     jsuword pcval;
     if (!test_property_cache(obj, obj_ins, obj2, pcval))
         return false;
+    JS_ASSERT(obj2 == obj);
 
     stack(0, obj_ins);
     return true;
@@ -3608,6 +3644,7 @@ TraceRecorder::record_JSOP_SETNAME()
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
+    JS_ASSERT(slot != SPROP_INVALID_SLOT);
 
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
@@ -4175,24 +4212,16 @@ TraceRecorder::record_JSOP_CALLPROP()
         stack(0, obj_ins); // |this| for subsequent call
     } else {
         jsint i;
-#ifdef DEBUG
-        const char* protoname = NULL;
-#endif
+        debug_only(const char* protoname = NULL;)
         if (JSVAL_IS_STRING(l)) {
             i = JSProto_String;
-#ifdef DEBUG
-            protoname = "String.prototype";
-#endif
+            debug_only(protoname = "String.prototype";)
         } else if (JSVAL_IS_NUMBER(l)) {
             i = JSProto_Number;
-#ifdef DEBUG
-            protoname = "Number.prototype";
-#endif
+            debug_only(protoname = "Number.prototype";)
         } else if (JSVAL_IS_BOOLEAN(l)) {
             i = JSProto_Boolean;
-#ifdef DEBUG
-            protoname = "Boolean.prototype";
-#endif
+            debug_only(protoname = "Boolean.prototype";)
         } else {
             JS_ASSERT(JSVAL_IS_NULL(l) || JSVAL_IS_VOID(l));
             ABORT_TRACE("callprop on null or void");
@@ -4202,19 +4231,18 @@ TraceRecorder::record_JSOP_CALLPROP()
             ABORT_TRACE("GetClassPrototype failed!");
 
         obj_ins = lir->insImmPtr((void*)obj);
-#ifdef DEBUG
-        obj_ins = addName(obj_ins, protoname);
-#endif
+        debug_only(obj_ins = addName(obj_ins, protoname);)
         stack(0, get(&l)); // use primitive as |this|
     }
 
     JSObject* obj2;
     jsuword pcval;
     if (!test_property_cache(obj, obj_ins, obj2, pcval))
-        ABORT_TRACE("missed prop");
+        return false;
 
-    if (!PCVAL_IS_OBJECT(pcval))
-        ABORT_TRACE("PCE not object");
+    if (PCVAL_IS_NULL(pcval) || !PCVAL_IS_OBJECT(pcval))
+        ABORT_TRACE("callee is not an object");
+    JS_ASSERT(HAS_FUNCTION_CLASS(PCVAL_TO_OBJECT(pcval)));
 
     stack(-1, lir->insImmPtr(PCVAL_TO_OBJECT(pcval)));
     return true;
@@ -4294,6 +4322,7 @@ TraceRecorder::record_JSOP_GETXPROP()
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
+    JS_ASSERT(slot != SPROP_INVALID_SLOT);
 
     if (!lazilyImportGlobalSlot(slot))
         ABORT_TRACE("lazy import of global slot failed");
@@ -4456,14 +4485,14 @@ TraceRecorder::record_JSOP_CALLGVAR()
 bool
 TraceRecorder::record_JSOP_CALLVAR()
 {
-    stack(1, lir->insImmPtr(0));
+    stack(1, lir->insImmPtr(NULL));
     return record_JSOP_GETVAR();
 }
 
 bool
 TraceRecorder::record_JSOP_CALLARG()
 {
-    stack(1, lir->insImmPtr(0));
+    stack(1, lir->insImmPtr(NULL));
     return record_JSOP_GETARG();
 }
 
