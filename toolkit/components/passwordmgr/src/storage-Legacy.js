@@ -316,6 +316,9 @@ LoginManagerStorage_legacy.prototype = {
         // decrypt entries for caller.
         [result, userCanceled] = this._decryptLogins(result);
 
+        if (userCanceled)
+            throw "User canceled Master Password entry";
+
         count.value = result.length; // needed for XPCOM
         return result;
     },
