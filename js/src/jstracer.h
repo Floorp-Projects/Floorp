@@ -180,12 +180,8 @@ public:
     SlotList                globalSlots;
     TypeMap                 stackTypeMap;
     TypeMap                 globalTypeMap;
-    Queue<nanojit::Fragment*> outerTrees;
     
     TreeInfo(nanojit::Fragment* _fragment) { fragment = _fragment; }
-    
-    void addOuterTree(nanojit::Fragment* outer);
-    void mergeGlobalsFromInnerTree(nanojit::Fragment* inner);
 };
 
 extern struct nanojit::CallInfo builtins[];
