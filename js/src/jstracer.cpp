@@ -1279,44 +1279,6 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     lir->insCall(F_CallTree, args);
 }
 
-/* Register an outer tree of this tree. */
-void
-TreeInfo::addOuterTree(Fragment* outer)
-{
-    if (!outerTrees.contains(outer)) {
-        outerTrees.add(outer);
-        ((TreeInfo*)outer->vmprivate)->mergeGlobalsFromInnerTree(this->fragment);
-    }
-}
-
-/* Merge globals of another tree into this tree's globals. */
-void
-TreeInfo::mergeGlobalsFromInnerTree(Fragment* inner)
-{
-    TreeInfo* ti = (TreeInfo*)inner->vmprivate;
-    uint16* slots = ti->globalSlots.data();
-    uint8* types = ti->globalTypeMap.data();
-    unsigned length = ti->globalSlots.length();
-    /* add any slots we don't have yet */
-    bool changed = false;
-    for (unsigned n = 0; n < length; ++n) {
-        uint16 slot = slots[n];
-        if (!globalSlots.contains(slot)) {
-            globalSlots.add(slot);
-            globalTypeMap.add(types[n]);
-            changed = true;
-        }
-    }
-    /* if we added a slot, notify our outer trees as well */
-    if (changed) {
-        Queue<Fragment*>* trees = &ti->outerTrees;
-        Fragment** data = trees->data();
-        unsigned length = trees->length();
-        for (unsigned n = 0; n < length; ++n) 
-            ((TreeInfo*)(data[n]->vmprivate))->mergeGlobalsFromInnerTree(this->fragment);
-    }
-}
-
 int
 nanojit::StackFilter::getTop(LInsp guard)
 {
@@ -1396,19 +1358,8 @@ js_TrashTree(JSContext* cx, Fragment* f)
     debug_only(printf("Trashing tree info.\n");)
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
     if (ti) {
-        /* unlink tree info early to avoid cycles */
-        f->vmprivate = NULL;
-        unsigned ntrees = ti->outerTrees.length();
-        Fragment** trees = ti->outerTrees.data();
-        /* go through all outer trees and trash them as well */
-        while (ntrees-- > 0) {
-            Fragment* outer = *trees++;
-            ti = (TreeInfo*)outer->vmprivate;
-            if (ti) /* if that tree is still alive, trash it now */
-                js_TrashTree(cx, outer);
-        }
-        /* we are done, its safe to delete the tree info object now */
         delete ti;
+        f->vmprivate = NULL;
     }
     f->releaseCode(JS_TRACE_MONITOR(cx).fragmento);
 }
