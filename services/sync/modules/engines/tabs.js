@@ -55,7 +55,7 @@ function TabEngine(pbeId) {
 }
 
 TabEngine.prototype = {
-  __proto__: new FileEngine(),
+  __proto__: new BlobEngine(),
 
   get name() "tabs",
   get displayName() { return "Tabs"; },

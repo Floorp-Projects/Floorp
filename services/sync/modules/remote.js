@@ -429,9 +429,16 @@ function RemoteStore(engine) {
   this._log = Log4Moz.Service.getLogger("Service.RemoteStore");
 }
 RemoteStore.prototype = {
-  __proto__: new Store(),
   get serverPrefix() this._engine.serverPrefix,
   get engineId() this._engine.engineId,
+
+  __os: null,
+  get _os() {
+    if (!this.__os)
+      this.__os = Cc["@mozilla.org/observer-service;1"]
+        .getService(Ci.nsIObserverService);
+    return this.__os;
+  },
 
   get status() {
     let status = new Resource(this.serverPrefix + "status.json");
@@ -462,7 +469,7 @@ RemoteStore.prototype = {
     return deltas;
   },
 
-  _openSession: function RStore__openSession() {
+  _openSession: function RStore__openSession(lastSyncSnap) {
     let self = yield;
 
     if (!this.serverPrefix || !this.engineId)
@@ -472,6 +479,7 @@ RemoteStore.prototype = {
     this.keys.data = null;
     this._snapshot.data = null;
     this._deltas.data = null;
+    this._lastSyncSnap = lastSyncSnap;
 
     let ret = yield DAV.MKCOL(this.serverPrefix + "deltas", self.cb);
     if (!ret)
@@ -491,9 +499,24 @@ RemoteStore.prototype = {
                       ENGINE_STORAGE_FORMAT_VERSION);
       throw "Incompatible remote store format";
     }
+
+    if (this.status.data.GUID != lastSyncSnap.GUID) {
+      this._log.trace("Remote GUID: " + this.status.data.GUID);
+      this._log.trace("Local GUID: " + lastSyncSnap.GUID);
+      this._log.debug("Server wipe since last sync, resetting last sync snapshot");
+      lastSyncSnap.wipe();
+      lastSyncSnap.GUID = this.status.data.GUID;
+      // yield this._store.resetGUIDs(self.cb); // XXX not sure if this is really needed (and it needs to be done from the engine if so)
+    }
+
+    this._log.info("Last sync snapshot version: " + lastSyncSnap.version);
+    this._log.info("Server maxVersion: " + this.status.data.maxVersion);
+
+    if ("none" != Utils.prefs.getCharPref("encryption"))
+      yield this.keys.getKeyAndIV(self.cb, this.engineId);
   },
-  openSession: function RStore_openSession(onComplete) {
-    this._openSession.async(this, onComplete);
+  openSession: function RStore_openSession(onComplete, lastSyncSnap) {
+    this._openSession.async(this, onComplete, lastSyncSnap);
   },
 
   closeSession: function RStore_closeSession() {
@@ -501,6 +524,7 @@ RemoteStore.prototype = {
     this.keys.data = null;
     this._snapshot.data = null;
     this._deltas.data = null;
+    this._lastSyncSnap = null;
   },
 
   // Does a fresh upload of the given snapshot to a new store
@@ -511,7 +535,6 @@ RemoteStore.prototype = {
     yield this.keys.initialize(self.cb, this.engineId);
     this._os.notifyObservers(null, "weave:service:sync:status", "status.uploading-snapshot");
     yield this._snapshot.put(self.cb, snapshot.data);
-    //yield this._deltas.put(self.cb, []);
 
     let c = 0;
     for (GUID in snapshot.data)
@@ -533,6 +556,7 @@ RemoteStore.prototype = {
   },
 
   // Removes server files - you may want to run initialize() after this
+  // FIXME: might want to do a PROPFIND instead (to catch all deltas in one go)
   _wipe: function Engine__wipe() {
     let self = yield;
     this._log.debug("Deleting remote store data");
@@ -550,57 +574,58 @@ RemoteStore.prototype = {
   // (snapshot + deltas)
   _getLatestFromScratch: function RStore__getLatestFromScratch() {
     let self = yield;
-    let status = this.status.data;
 
     this._log.info("Downloading all server data from scratch");
     this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-snapshot");
 
     let snap = new SnapshotStore();
     snap.data = yield this._snapshot.get(self.cb);
-    snap.version = status.maxVersion;
 
+    this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-deltas");
+    let status = this.status.data;
     for (let id = status.snapVersion + 1; id <= status.maxVersion; id++) {
       let delta = yield this._deltas.get(self.cb, id);
       yield snap.applyCommands.async(snap, self.cb, delta);
     }
 
-    self.done(snap);
+    self.done(snap.data);
   },
 
   // Gets the latest server snapshot by downloading only the necessary
   // deltas from the given snapshot (but may fall back to a full download)
-  _getLatestFromSnap: function RStore__getLatestFromSnap(lastSyncSnap) {
+  _getLatestFromSnap: function RStore__getLatestFromSnap() {
     let self = yield;
     let deltas, snap = new SnapshotStore();
     snap.version = this.status.data.maxVersion;
 
-    if (lastSyncSnap.version < this.status.data.snapVersion) {
-      this._log.trace("Getting latest from snap --> scratch");
-      snap = yield this._getLatestFromScratch.async(this, self.cb);
-      self.done(snap);
+    if (!this._lastSyncSnap ||
+        this._lastSyncSnap.version < this.status.data.snapVersion) {
+      this._log.trace("Getting latest from scratch (last sync snap too old)");
+      snap.data = yield this._getLatestFromScratch.async(this, self.cb);
+      self.done(snap.data);
       return;
 
-    } else if (lastSyncSnap.version >= this.status.data.snapVersion &&
-               lastSyncSnap.version < this.status.data.maxVersion) {
+    } else if (this._lastSyncSnap.version >= this.status.data.snapVersion &&
+               this._lastSyncSnap.version < this.status.data.maxVersion) {
       this._log.debug("Using last sync snapshot as starting point for server snapshot");
-      snap.data = Utils.deepCopy(lastSyncSnap.data);
+      snap.data = Utils.deepCopy(this._lastSyncSnap.data);
       this._log.info("Downloading server deltas");
       this._os.notifyObservers(null, "weave:service:sync:status", "status.downloading-deltas");
       deltas = [];
-      let min = lastSyncSnap.version + 1;
+      let min = this._lastSyncSnap.version + 1;
       let max = this.status.data.maxVersion;
       for (let id = min; id <= max; id++) {
         let delta = yield this._deltas.get(self.cb, id);
         deltas.push(delta);
       }
 
-    } else if (lastSyncSnap.version == this.status.data.maxVersion) {
+    } else if (this._lastSyncSnap.version == this.status.data.maxVersion) {
       this._log.debug("Using last sync snapshot as server snapshot (snap version == max version)");
       this._log.trace("Local snapshot version == server maxVersion");
-      snap.data = Utils.deepCopy(lastSyncSnap.data);
+      snap.data = Utils.deepCopy(this._lastSyncSnap.data);
       deltas = [];
 
-    } else { // lastSyncSnap.version > this.status.data.maxVersion
+    } else { // this._lastSyncSnap.version > this.status.data.maxVersion
       this._log.error("Server snapshot is older than local snapshot");
       throw "Server snapshot is older than local snapshot";
     }
@@ -613,23 +638,21 @@ RemoteStore.prototype = {
       this._log.warn("Error applying remote deltas to saved snapshot, attempting a full download");
       this._log.debug("Exception: " + Utils.exceptionStr(e));
       this._log.trace("Stack:\n" + Utils.stackTrace(e));
-      snap = yield this._getLatestFromScratch.async(this, self.cb);
+      snap.data = yield this._getLatestFromScratch.async(this, self.cb);
     }
 
-    self.done(snap);
+    self.done(snap.data);
   },
 
   // get the latest server snapshot.  If a snapshot is given, try to
   // download only the necessary deltas to get to the latest
-  _wrap: function RStore__wrap(snapshot) {
+  _wrap: function RStore__wrap() {
     let self = yield;
-    if (snapshot)
-      self.done(yield this._getLatestFromSnap.async(this, self.cb, snapshot));
-    else
-      self.done(yield this._getLatestFromScratch.async(this, self.cb));
+    let ret = yield this._getLatestFromSnap.async(this, self.cb);
+    self.done(ret);
   },
-  wrap: function RStore_wrap(onComplete, snapshot) {
-    this._wrap.async(this, onComplete, snapshot);
+  wrap: function RStore_wrap(onComplete) {
+    this._wrap.async(this, onComplete);
   },
 
   // Adds a new set of changes (a delta) to this store
@@ -641,8 +664,12 @@ RemoteStore.prototype = {
         this.status.data[key] = metadata[key];
     }
 
-    // FIXME: we should increment maxVersion here instead of in Engine
-    let id = this.status.data.maxVersion;
+    let c = 0;
+    for (item in snapshot.data)
+      c++;
+    this.status.data.itemCount = c;
+
+    let id = ++this.status.data.maxVersion;
 
     // upload the delta even if we upload a new snapshot, so other clients
     // can be spared of a full re-download
