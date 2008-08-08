@@ -101,6 +101,9 @@ using namespace nanojit;
 static GC gc = GC();
 static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
 
+/* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
+static bool nesting_enabled = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "nesting");
+
 /* The entire VM shares one oracle. Collisions and concurrent updates are tolerated and worst
    case cause performance regressions. */
 static Oracle oracle;
@@ -225,7 +228,7 @@ Oracle::isGlobalSlotUndemotable(JSScript* script, unsigned slot) const
 void 
 Oracle::markStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot)
 {
-    uint32 hash = uint32(ip) + slot;
+    uint32 hash = uint32(ip) + (slot << 5);
     hash %= ORACLE_SIZE;
     _dontDemote.set(&gc, hash);
 }
@@ -234,7 +237,7 @@ Oracle::markStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot
 bool 
 Oracle::isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) const
 {
-    uint32 hash = uint32(ip) + slot;
+    uint32 hash = uint32(ip) + (slot << 5);
     hash %= ORACLE_SIZE;
     return _dontDemote.get(hash);
 }
@@ -269,6 +272,8 @@ static LIns* demote(LirWriter *out, LInsp i)
         return callArgN(i,0);
     if (i->isop(LIR_i2f) || i->isop(LIR_u2f))
         return i->oprnd1();
+    if (i->isconst())
+        return i;
     AvmAssert(i->isconstq());
     double cf = i->constvalf();
     int32_t ci = cf > 0x7fffffff ? uint32_t(cf) : int32_t(cf);
@@ -278,13 +283,15 @@ static LIns* demote(LirWriter *out, LInsp i)
 static bool isPromoteInt(LIns* i)
 {
     jsdouble d;
-    return i->isop(LIR_i2f) || (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsint)d));
+    return i->isop(LIR_i2f) || i->isconst() ||
+        (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsint)d));
 }
 
 static bool isPromoteUint(LIns* i)
 {
     jsdouble d;
-    return i->isop(LIR_u2f) || (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsuint)d));
+    return i->isop(LIR_u2f) || i->isconst() ||
+        (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsuint)d));
 }
 
 static bool isPromote(LIns* i)
@@ -613,20 +620,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     cx_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, cx)), "cx");
     gp_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, gp)), "gp");
 
-    /* the first time we compile a tree this will be empty as we add entries lazily */
-    uint16* gslots = treeInfo->globalSlots.data();
-    uint8* m = globalTypeMap;
-    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        import(gp_ins, nativeGlobalOffset(vp), vp, *m, vpname, vpnum, NULL);
-        m++;
-    );
-    ptrdiff_t offset = -treeInfo->nativeStackBase;
-    m = stackTypeMap;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        import(lirbuf->sp, offset, vp, *m, vpname, vpnum, fp);
-        m++; offset += sizeof(double);
-    );
-    backEdgeCount = 0;
+    /* read into registers all values on the stack and all globals we know so far */
+    import(ngslots, globalTypeMap, stackTypeMap); 
 }
 
 TraceRecorder::~TraceRecorder()
@@ -998,6 +993,24 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
 #endif
 }
 
+void
+TraceRecorder::import(unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap)
+{
+    /* the first time we compile a tree this will be empty as we add entries lazily */
+    uint16* gslots = treeInfo->globalSlots.data();
+    uint8* m = globalTypeMap;
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
+        import(gp_ins, nativeGlobalOffset(vp), vp, *m, vpname, vpnum, NULL);
+        m++;
+    );
+    ptrdiff_t offset = -treeInfo->nativeStackBase;
+    m = stackTypeMap;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        import(lirbuf->sp, offset, vp, *m, vpname, vpnum, fp);
+        m++; offset += sizeof(double);
+    );
+}
+
 /* Lazily import a global slot if we don't already have it in the tracker. */
 bool
 TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
@@ -1275,8 +1288,11 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 void
 TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
 {
-    LIns* args[] = { lirbuf->state, lir->insImmPtr(inner) };
-    lir->insCall(F_CallTree, args);
+    LIns* args[] = { lir->insImmPtr(inner), lirbuf->state };
+    LIns* ret = lir->insCall(F_CallTree, args);
+    LIns* g = guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
+    SideExit* exit = g->exit();
+    import(exit->numGlobalSlots, exit->typeMap, exit->typeMap + exit->numGlobalSlots);
 }
 
 int
@@ -1544,9 +1560,18 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
     }
     /* does this branch go to an inner loop? */
     Fragment* f = fragmento->getLoop(cx->fp->regs->pc);
-    if (f->code() && !r->getCallDepth()) { /* currently we can't call trees in inlined scopes */
+    if (nesting_enabled &&
+            f->code() && !r->getCallDepth()) { /* currently we can't call trees in inlined scopes */
         JS_ASSERT(f->vmprivate);
-        /* call the inner tree, and continue recording if the inner tree exited on a loop edge */
+        /* call the inner tree */
+        GuardRecord* lr = js_ExecuteTree(cx, f, inlineCallCount);
+        if (!lr || (lr->exit->exitType != LOOP_EXIT)) {
+            js_AbortRecording(cx, oldpc, "Inner tree not suitable for calling");
+            return false; /* tree didn't activate or not a loop exit, abort recording */
+        }
+        /* emit a call to the inner tree and continue recording the outer tree trace */
+        r->emitTreeCall(f, lr);
+        return true;
     }
     /* not returning to our own loop header, not an inner loop we can call, abort trace */
     AUDIT(returnToDifferentLoopHeader);
@@ -1679,7 +1704,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 
     /* if this is a local branch in the same loop, grow the tree */
     GuardRecord* lr = js_ExecuteTree(cx, f, inlineCallCount);
-    if (lr && lr->exit->exitType == BRANCH_EXIT)
+    if (lr && (lr->from->root == f) && (lr->exit->exitType == BRANCH_EXIT))
         return js_AttemptToExtendTree(cx, lr, f);
     /* if this exits the loop, resume interpretation */
     return false;
