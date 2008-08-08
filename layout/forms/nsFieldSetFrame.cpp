@@ -507,6 +507,14 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
       kidReflowState.SetComputedHeight(PR_MAX(0, aReflowState.ComputedHeight() - mLegendSpace));
     }
 
+    kidReflowState.mComputedMinHeight =
+      PR_MAX(0, aReflowState.mComputedMinHeight - mLegendSpace);
+
+    if (aReflowState.mComputedMaxHeight != NS_UNCONSTRAINEDSIZE) {
+      kidReflowState.mComputedMaxHeight =
+        PR_MAX(0, aReflowState.mComputedMaxHeight - mLegendSpace);
+    }
+
     nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
     // Reflow the frame
     NS_ASSERTION(kidReflowState.mComputedMargin == nsMargin(0,0,0,0),
