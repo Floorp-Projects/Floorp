@@ -50,6 +50,7 @@
 #include "jsiter.h"
 #include "jsmath.h"
 #include "jsnum.h"
+#include "jsscope.h"
 #include "jsstr.h"
 #include "jstracer.h"
 
@@ -314,6 +315,93 @@ builtin_CallTree(InterpState* outer, Fragment* f)
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
     return u.func(&state, NULL);
+}
+
+JSObject* FASTCALL
+builtin_NewObject(JSContext* cx, JSObject* ctor)
+{
+    JS_ASSERT(HAS_FUNCTION_CLASS(ctor));
+
+    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCF_DONT_BLOCK | GCX_OBJECT, sizeof(JSObject));
+    if (!obj)
+        return NULL;
+
+    JS_LOCK_OBJ(cx, ctor);
+    JSScope *scope = OBJ_SCOPE(ctor);
+    JS_ASSERT(scope->object == ctor);
+    JSAtom* atom = cx->runtime->atomState.classPrototypeAtom;
+
+    JSScopeProperty *sprop = SCOPE_GET_PROPERTY(scope, ATOM_TO_JSID(atom));
+    JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
+    jsval v = LOCKED_OBJ_GET_SLOT(ctor, sprop->slot);
+    JS_UNLOCK_SCOPE(cx, scope);
+
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+    JSObject* proto = JSVAL_TO_OBJECT(v);
+
+    obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
+    obj->fslots[JSSLOT_PARENT] = ctor->fslots[JSSLOT_PARENT];
+    obj->fslots[JSSLOT_CLASS] = PRIVATE_TO_JSVAL(&js_ObjectClass);
+    for (unsigned i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
+        obj->fslots[i] = JSVAL_VOID;
+
+    obj->map = js_HoldObjectMap(cx, proto->map);
+    obj->dslots = NULL;
+    return obj;
+}
+
+bool FASTCALL
+builtin_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
+{
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
+
+    JS_LOCK_OBJ(cx, obj);
+    JSScope* scope = OBJ_SCOPE(obj);
+    if (scope->object == obj) {
+        JS_ASSERT(!SCOPE_HAS_PROPERTY(scope, sprop));
+    } else {
+        scope = js_GetMutableScope(cx, obj);
+        if (!scope) {
+            JS_UNLOCK_OBJ(cx, obj);
+            return false;
+        }
+    }
+
+    uint32 slot = sprop->slot;
+    if (!scope->table && sprop->parent == scope->lastProp && slot == scope->map.freeslot) {
+        if (slot < STOBJ_NSLOTS(obj) && !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
+            ++scope->map.freeslot;
+        } else {
+            if (!js_AllocSlot(cx, obj, &slot)) {
+                JS_UNLOCK_SCOPE(cx, scope);
+                return false;
+            }
+
+            if (slot != sprop->slot)
+                goto slot_changed;
+        }
+
+        SCOPE_EXTEND_SHAPE(cx, scope, sprop);
+        ++scope->entryCount;
+        scope->lastProp = sprop;
+        JS_UNLOCK_SCOPE(cx, scope);
+        return true;
+    }
+
+    JSScopeProperty* sprop2 = js_AddScopeProperty(cx, scope, sprop->id,
+                                                  sprop->getter, sprop->setter, SPROP_INVALID_SLOT,
+                                                  sprop->attrs, sprop->flags, sprop->shortid);
+    if (sprop2 == sprop) {
+        JS_UNLOCK_SCOPE(cx, scope);
+        return true;
+    }
+    slot = sprop2->slot;
+
+  slot_changed:
+    js_FreeSlot(cx, obj, slot);
+    JS_UNLOCK_SCOPE(cx, scope);
+    return false;
 }
 
 #define LO ARGSIZE_LO
