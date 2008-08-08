@@ -1769,6 +1769,7 @@ js_InitJIT(JSContext* cx)
 extern void
 js_DestroyJIT(JSContext* cx)
 {
+    // TODO: figure out how to properly free fragmento and a potentially pending trace recorder
 #ifdef DEBUG
     printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
            "trees trashed(%llu), slot promoted(%llu), "
