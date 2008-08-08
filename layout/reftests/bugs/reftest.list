@@ -861,11 +861,6 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 == 436356-1.html 436356-1-ref.html
 == 436356-2.html 436356-2-ref.html
 == 438981-1.xhtml about:blank
-== 438987-1.html 438987-1-ref.html
-== 438987-2a.html 438987-2-ref.html
-== 438987-2b.html 438987-2-ref.html
-== 438987-2c.html 438987-2-ref.html
-!= about:blank 438987-2-ref.html # check that backgrounds work at all 
 == 439004-1.html 439004-1-ref.html
 == 439910.html 439910-ref.html
 # == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
