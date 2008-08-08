@@ -405,18 +405,20 @@ js_FinishSharingTitle(JSContext *cx, JSTitle *title)
     scope = (JSScope *)map;
 
     obj = scope->object;
-    nslots = scope->map.freeslot;
-    for (i = 0; i != nslots; ++i) {
-        v = STOBJ_GET_SLOT(obj, i);
-        if (JSVAL_IS_STRING(v) &&
-            !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
-            /*
-             * FIXME bug 363059: The following error recovery changes runtime
-             * execution semantics, arbitrarily and silently ignoring errors
-             * except out-of-memory, which should have been reported through
-             * JS_ReportOutOfMemory at this point.
-             */
-            STOBJ_SET_SLOT(obj, i, JSVAL_VOID);
+    if (obj) {
+        nslots = scope->map.freeslot;
+        for (i = 0; i != nslots; ++i) {
+            v = STOBJ_GET_SLOT(obj, i);
+            if (JSVAL_IS_STRING(v) &&
+                !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
+                /*
+                 * FIXME bug 363059: The following error recovery changes
+                 * runtime execution semantics, arbitrarily and silently
+                 * ignoring errors except out-of-memory, which should have been
+                 * reported through JS_ReportOutOfMemory at this point.
+                 */
+                STOBJ_SET_SLOT(obj, i, JSVAL_VOID);
+            }
         }
     }
 
