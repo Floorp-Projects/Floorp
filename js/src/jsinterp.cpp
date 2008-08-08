@@ -1052,7 +1052,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     JSNative native;
     JSFunction *fun;
     JSScript *script;
-    uintN nslots, i, skip;
+    uintN nslots, i;
     uint32 rootedArgsFlag;
     JSInterpreterHook hook;
     void *hookData;
@@ -1145,7 +1145,7 @@ have_fun:
         } else if (!JSVAL_IS_OBJECT(vp[1])) {
             JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
             if (PRIMITIVE_THIS_TEST(fun, vp[1]))
-                goto init_slots;
+                goto start_call;
         }
     }
 
@@ -1171,7 +1171,25 @@ have_fun:
         }
     }
 
-  init_slots:
+  start_call:
+    if (native && fun && (fun->flags & JSFUN_FAST_NATIVE)) {
+#ifdef DEBUG_NOT_THROWING
+        JSBool alreadyThrowing = cx->throwing;
+#endif
+        JS_ASSERT(nslots == 0);
+#if JS_HAS_LVALUE_RETURN
+        /* Set by JS_SetCallReturnValue2, used to return reference types. */
+        cx->rval2set = JS_FALSE;
+#endif
+        ok = ((JSFastNative) native)(cx, argc, vp);
+        JS_RUNTIME_METER(cx->runtime, nativeCalls);
+#ifdef DEBUG_NOT_THROWING
+        if (ok && !alreadyThrowing)
+            ASSERT_NOT_THROWING(cx);
+#endif
+        goto out2;
+    }
+
     argv = vp + 2;
     sp = argv + argc;
 
@@ -1200,35 +1218,6 @@ have_fun:
         do {
             *sp++ = JSVAL_VOID;
         } while (--i != 0);
-    }
-
-    if (native && fun && (fun->flags & JSFUN_FAST_NATIVE)) {
-        JSTempValueRooter tvr;
-#ifdef DEBUG_NOT_THROWING
-        JSBool alreadyThrowing = cx->throwing;
-#endif
-#if JS_HAS_LVALUE_RETURN
-        /* Set by JS_SetCallReturnValue2, used to return reference types. */
-        cx->rval2set = JS_FALSE;
-#endif
-        /* Root the slots that are not covered by [vp..vp+2+argc). */
-        skip = rootedArgsFlag ? 2 + argc : 0;
-        JS_PUSH_TEMP_ROOT(cx, 2 + argc + nslots - skip, argv - 2 + skip, &tvr);
-        ok = ((JSFastNative) native)(cx, argc, argv - 2);
-
-        /*
-         * To avoid extra checks we always copy the result to *vp even if we
-         * have not copied argv and vp == argv - 2.
-         */
-        *vp = argv[-2];
-        JS_POP_TEMP_ROOT(cx, &tvr);
-
-        JS_RUNTIME_METER(cx->runtime, nativeCalls);
-#ifdef DEBUG_NOT_THROWING
-        if (ok && !alreadyThrowing)
-            ASSERT_NOT_THROWING(cx);
-#endif
-        goto out2;
     }
 
     /* Allocate space for local variables and stack of interpreted function. */
@@ -4789,24 +4778,8 @@ js_Interpret(JSContext *cx)
 
                 if (fun->flags & JSFUN_FAST_NATIVE) {
                     JS_ASSERT(fun->u.n.extra == 0);
-                    if (argc < fun->u.n.minargs) {
-                        uintN nargs;
-
-                        /*
-                         * If we can't fit missing args and local roots in
-                         * this frame's operand stack, take the slow path.
-                         */
-                        nargs = fun->u.n.minargs - argc;
-                        if (regs.sp + nargs > fp->slots + script->nslots)
-                            goto do_invoke;
-                        do {
-                            PUSH(JSVAL_VOID);
-                        } while (--nargs != 0);
-                    }
-
                     JS_ASSERT(JSVAL_IS_OBJECT(vp[1]) ||
                               PRIMITIVE_THIS_TEST(fun, vp[1]));
-
                     ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
 #ifdef INCLUDE_MOZILLA_DTRACE
                     if (VALUE_IS_FUNCTION(cx, lval)) {
@@ -4823,7 +4796,6 @@ js_Interpret(JSContext *cx)
                 }
             }
 
-          do_invoke:
             ok = js_Invoke(cx, argc, vp, 0);
 #ifdef INCLUDE_MOZILLA_DTRACE
             /* DTrace function return, non-inlines */

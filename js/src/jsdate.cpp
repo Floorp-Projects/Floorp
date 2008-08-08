@@ -469,7 +469,7 @@ msFromTime(jsdouble t)
 /**
  * end of ECMA 'support' functions
  */
-
+
 /*
  * Other Support routines and definitions
  */
@@ -601,7 +601,6 @@ date_msecFromArgs(JSContext *cx, uintN argc, jsval *argv, jsdouble *rval)
     return JS_TRUE;
 }
 
-
 /*
  * See ECMA 15.9.4.[3-10];
  */
@@ -893,9 +892,14 @@ date_parse(JSContext *cx, uintN argc, jsval *vp)
     JSString *str;
     jsdouble result;
 
+    if (argc == 0) {
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        return JS_TRUE;
+    }
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
+    vp[2] = STRING_TO_JSVAL(str);
     if (!date_parseString(str, &result)) {
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
@@ -1259,10 +1263,24 @@ date_getTimezoneOffset(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
+SetDateToNaN(JSContext *cx, jsval *vp)
+{
+    JSObject *obj;
+
+    obj = JS_THIS_OBJECT(cx, vp);
+    if (!SetUTCTimePtr(cx, obj, NULL, cx->runtime->jsNaN))
+        return JS_FALSE;
+    *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+    return JS_TRUE;
+}
+
+static JSBool
 date_setTime(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble result;
 
+    if (argc == 0)
+        return SetDateToNaN(cx, vp);
     result = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
@@ -1306,22 +1324,18 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, jsval *vp)
      * d.setMilliseconds()" returns NaN.  Blech.
      */
     if (argc == 0)
-        argc = 1;   /* should be safe, because length of all setters is 1 */
-    else if (argc > maxargs)
+        return SetDateToNaN(cx, vp);
+    if (argc > maxargs)
         argc = maxargs;  /* clamp argc */
-    JS_ASSERT(1 <= argc && argc <= 4);
+    JS_ASSERT(argc <= 4);
 
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
         args[i] = js_ValueToNumber(cx, &argv[i]);
         if (JSVAL_IS_NULL(argv[i]))
             return JS_FALSE;
-        if (!JSDOUBLE_IS_FINITE(args[i])) {
-            if (!SetUTCTimePtr(cx, obj, NULL, cx->runtime->jsNaN))
-                return JS_FALSE;
-            *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-            return JS_TRUE;
-        }
+        if (!JSDOUBLE_IS_FINITE(args[i]))
+            return SetDateToNaN(cx, vp);
         args[i] = js_DoubleToInteger(args[i]);
     }
 
@@ -1434,8 +1448,8 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, jsval *vp)
 
     /* see complaint about ECMA in date_MakeTime */
     if (argc == 0)
-        argc = 1;   /* should be safe, because length of all setters is 1 */
-    else if (argc > maxargs)
+        return SetDateToNaN(cx, vp);
+    if (argc > maxargs)
         argc = maxargs;   /* clamp argc */
     JS_ASSERT(1 <= argc && argc <= 3);
 
@@ -1444,12 +1458,8 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, jsval *vp)
         args[i] = js_ValueToNumber(cx, &argv[i]);
         if (JSVAL_IS_NULL(argv[i]))
             return JS_FALSE;
-        if (!JSDOUBLE_IS_FINITE(args[i])) {
-            if (!SetUTCTimePtr(cx, obj, NULL, cx->runtime->jsNaN))
-                return JS_FALSE;
-            *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-            return JS_TRUE;
-        }
+        if (!JSDOUBLE_IS_FINITE(args[i]))
+            return SetDateToNaN(cx, vp);
         args[i] = js_DoubleToInteger(args[i]);
     }
 
@@ -1542,14 +1552,13 @@ date_setYear(JSContext *cx, uintN argc, jsval *vp)
     if (!GetUTCTime(cx, obj, vp, &result))
         return JS_FALSE;
 
+    if (argc == 0)
+        return SetDateToNaN(cx, vp);
     year = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    if (!JSDOUBLE_IS_FINITE(year)) {
-        if (!SetUTCTimePtr(cx, obj, NULL, cx->runtime->jsNaN))
-            return JS_FALSE;
-        return js_NewNumberInRootedValue(cx, *cx->runtime->jsNaN, vp);
-    }
+    if (!JSDOUBLE_IS_FINITE(year))
+        return SetDateToNaN(cx, vp);
 
     year = js_DoubleToInteger(year);
 
@@ -1956,66 +1965,65 @@ date_valueOf(JSContext *cx, uintN argc, jsval *vp)
     return date_toString(cx, argc, vp);
 }
 
-
 /*
  * creation and destruction
  */
 
 static JSFunctionSpec date_static_methods[] = {
-    JS_FN("UTC",                 date_UTC,                2,MAXARGS,0),
-    JS_FN("parse",               date_parse,              1,1,0),
-    JS_FN("now",                 date_now,                0,0,0),
+    JS_FN("UTC",                 date_UTC,                MAXARGS,0),
+    JS_FN("parse",               date_parse,              1,0),
+    JS_FN("now",                 date_now,                0,0),
     JS_FS_END
 };
 
 static JSFunctionSpec date_methods[] = {
-    JS_FN("getTime",             date_getTime,            0,0,0),
-    JS_FN("getTimezoneOffset",   date_getTimezoneOffset,  0,0,0),
-    JS_FN("getYear",             date_getYear,            0,0,0),
-    JS_FN("getFullYear",         date_getFullYear,        0,0,0),
-    JS_FN("getUTCFullYear",      date_getUTCFullYear,     0,0,0),
-    JS_FN("getMonth",            date_getMonth,           0,0,0),
-    JS_FN("getUTCMonth",         date_getUTCMonth,        0,0,0),
-    JS_FN("getDate",             date_getDate,            0,0,0),
-    JS_FN("getUTCDate",          date_getUTCDate,         0,0,0),
-    JS_FN("getDay",              date_getDay,             0,0,0),
-    JS_FN("getUTCDay",           date_getUTCDay,          0,0,0),
-    JS_FN("getHours",            date_getHours,           0,0,0),
-    JS_FN("getUTCHours",         date_getUTCHours,        0,0,0),
-    JS_FN("getMinutes",          date_getMinutes,         0,0,0),
-    JS_FN("getUTCMinutes",       date_getUTCMinutes,      0,0,0),
-    JS_FN("getSeconds",          date_getUTCSeconds,      0,0,0),
-    JS_FN("getUTCSeconds",       date_getUTCSeconds,      0,0,0),
-    JS_FN("getMilliseconds",     date_getUTCMilliseconds, 0,0,0),
-    JS_FN("getUTCMilliseconds",  date_getUTCMilliseconds, 0,0,0),
-    JS_FN("setTime",             date_setTime,            1,1,0),
-    JS_FN("setYear",             date_setYear,            1,1,0),
-    JS_FN("setFullYear",         date_setFullYear,        1,3,0),
-    JS_FN("setUTCFullYear",      date_setUTCFullYear,     1,3,0),
-    JS_FN("setMonth",            date_setMonth,           1,2,0),
-    JS_FN("setUTCMonth",         date_setUTCMonth,        1,2,0),
-    JS_FN("setDate",             date_setDate,            1,1,0),
-    JS_FN("setUTCDate",          date_setUTCDate,         1,1,0),
-    JS_FN("setHours",            date_setHours,           1,4,0),
-    JS_FN("setUTCHours",         date_setUTCHours,        1,4,0),
-    JS_FN("setMinutes",          date_setMinutes,         1,3,0),
-    JS_FN("setUTCMinutes",       date_setUTCMinutes,      1,3,0),
-    JS_FN("setSeconds",          date_setSeconds,         1,2,0),
-    JS_FN("setUTCSeconds",       date_setUTCSeconds,      1,2,0),
-    JS_FN("setMilliseconds",     date_setMilliseconds,    1,1,0),
-    JS_FN("setUTCMilliseconds",  date_setUTCMilliseconds, 1,1,0),
-    JS_FN("toUTCString",         date_toGMTString,        0,0,0),
-    JS_FN(js_toLocaleString_str, date_toLocaleString,     0,0,0),
-    JS_FN("toLocaleDateString",  date_toLocaleDateString, 0,0,0),
-    JS_FN("toLocaleTimeString",  date_toLocaleTimeString, 0,0,0),
-    JS_FN("toLocaleFormat",      date_toLocaleFormat,     0,0,0),
-    JS_FN("toDateString",        date_toDateString,       0,0,0),
-    JS_FN("toTimeString",        date_toTimeString,       0,0,0),
+    JS_FN("getTime",             date_getTime,            0,0),
+    JS_FN("getTimezoneOffset",   date_getTimezoneOffset,  0,0),
+    JS_FN("getYear",             date_getYear,            0,0),
+    JS_FN("getFullYear",         date_getFullYear,        0,0),
+    JS_FN("getUTCFullYear",      date_getUTCFullYear,     0,0),
+    JS_FN("getMonth",            date_getMonth,           0,0),
+    JS_FN("getUTCMonth",         date_getUTCMonth,        0,0),
+    JS_FN("getDate",             date_getDate,            0,0),
+    JS_FN("getUTCDate",          date_getUTCDate,         0,0),
+    JS_FN("getDay",              date_getDay,             0,0),
+    JS_FN("getUTCDay",           date_getUTCDay,          0,0),
+    JS_FN("getHours",            date_getHours,           0,0),
+    JS_FN("getUTCHours",         date_getUTCHours,        0,0),
+    JS_FN("getMinutes",          date_getMinutes,         0,0),
+    JS_FN("getUTCMinutes",       date_getUTCMinutes,      0,0),
+    JS_FN("getSeconds",          date_getUTCSeconds,      0,0),
+    JS_FN("getUTCSeconds",       date_getUTCSeconds,      0,0),
+    JS_FN("getMilliseconds",     date_getUTCMilliseconds, 0,0),
+    JS_FN("getUTCMilliseconds",  date_getUTCMilliseconds, 0,0),
+    JS_FN("setTime",             date_setTime,            1,0),
+    JS_FN("setYear",             date_setYear,            1,0),
+    JS_FN("setFullYear",         date_setFullYear,        3,0),
+    JS_FN("setUTCFullYear",      date_setUTCFullYear,     3,0),
+    JS_FN("setMonth",            date_setMonth,           2,0),
+    JS_FN("setUTCMonth",         date_setUTCMonth,        2,0),
+    JS_FN("setDate",             date_setDate,            1,0),
+    JS_FN("setUTCDate",          date_setUTCDate,         1,0),
+    JS_FN("setHours",            date_setHours,           4,0),
+    JS_FN("setUTCHours",         date_setUTCHours,        4,0),
+    JS_FN("setMinutes",          date_setMinutes,         3,0),
+    JS_FN("setUTCMinutes",       date_setUTCMinutes,      3,0),
+    JS_FN("setSeconds",          date_setSeconds,         2,0),
+    JS_FN("setUTCSeconds",       date_setUTCSeconds,      2,0),
+    JS_FN("setMilliseconds",     date_setMilliseconds,    1,0),
+    JS_FN("setUTCMilliseconds",  date_setUTCMilliseconds, 1,0),
+    JS_FN("toUTCString",         date_toGMTString,        0,0),
+    JS_FN(js_toLocaleString_str, date_toLocaleString,     0,0),
+    JS_FN("toLocaleDateString",  date_toLocaleDateString, 0,0),
+    JS_FN("toLocaleTimeString",  date_toLocaleTimeString, 0,0),
+    JS_FN("toLocaleFormat",      date_toLocaleFormat,     0,0),
+    JS_FN("toDateString",        date_toDateString,       0,0),
+    JS_FN("toTimeString",        date_toTimeString,       0,0),
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,       date_toSource,           0,0,0),
+    JS_FN(js_toSource_str,       date_toSource,           0,0),
 #endif
-    JS_FN(js_toString_str,       date_toString,           0,0,0),
-    JS_FN(js_valueOf_str,        date_valueOf,            0,0,0),
+    JS_FN(js_toString_str,       date_toString,           0,0),
+    JS_FN(js_valueOf_str,        date_valueOf,            0,0),
     JS_FS_END
 };
 

@@ -1422,6 +1422,11 @@ obj_watch(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     uintN attrs;
 
+    if (argc <= 1) {
+        js_ReportMissingArg(cx, vp, 1);
+        return JS_FALSE;
+    }
+
     callable = js_ValueToCallableObject(cx, &vp[3], 0);
     if (!callable)
         return JS_FALSE;
@@ -1452,7 +1457,8 @@ obj_unwatch(JSContext *cx, uintN argc, jsval *vp)
     if (!obj)
         return JS_FALSE;
     *vp = JSVAL_VOID;
-    return JS_ClearWatchPoint(cx, obj, vp[2], NULL, NULL);
+    return JS_ClearWatchPoint(cx, obj, argc != 0 ? vp[2] : JSVAL_VOID,
+                              NULL, NULL);
 }
 
 #endif /* JS_HAS_OBJ_WATCHPOINT */
@@ -1470,18 +1476,19 @@ obj_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
 
     obj = JS_THIS_OBJECT(cx, vp);
     return obj &&
-           js_HasOwnPropertyHelper(cx, obj->map->ops->lookupProperty, vp);
+           js_HasOwnPropertyHelper(cx, obj->map->ops->lookupProperty, argc, vp);
 }
 
 JSBool
-js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, jsval *vp)
+js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
+                        jsval *vp)
 {
     jsid id;
     JSObject *obj, *obj2;
     JSProperty *prop;
     JSScopeProperty *sprop;
 
-    if (!JS_ValueToId(cx, vp[2], &id))
+    if (!JS_ValueToId(cx, argc != 0 ? vp[2] : JSVAL_VOID, &id))
         return JS_FALSE;
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !lookup(cx, obj, id, &obj2, &prop))
@@ -1539,8 +1546,10 @@ obj_isPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
 {
     JSBool b;
 
-    if (!js_IsDelegate(cx, JS_THIS_OBJECT(cx, vp), vp[2], &b))
+    if (!js_IsDelegate(cx, JS_THIS_OBJECT(cx, vp),
+                       argc != 0 ? vp[2] : JSVAL_VOID, &b)) {
         return JS_FALSE;
+    }
     *vp = BOOLEAN_TO_JSVAL(b);
     return JS_TRUE;
 }
@@ -1555,7 +1564,7 @@ obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
     JSProperty *prop;
     JSBool ok;
 
-    if (!JS_ValueToId(cx, vp[2], &id))
+    if (!JS_ValueToId(cx, argc != 0 ? vp[2] : JSVAL_VOID, &id))
         return JS_FALSE;
 
     obj = JS_THIS_OBJECT(cx, vp);
@@ -1602,13 +1611,13 @@ obj_defineGetter(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     uintN attrs;
 
-    fval = vp[3];
-    if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
+    if (argc <= 1 || JS_TypeOfValue(cx, vp[3]) != JSTYPE_FUNCTION) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              js_getter_str);
         return JS_FALSE;
     }
+    fval = vp[3];
 
     if (!JS_ValueToId(cx, vp[2], &id))
         return JS_FALSE;
@@ -1637,13 +1646,13 @@ obj_defineSetter(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     uintN attrs;
 
-    fval = vp[3];
-    if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
+    if (argc <= 1 || JS_TypeOfValue(cx, vp[3]) != JSTYPE_FUNCTION) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              js_setter_str);
         return JS_FALSE;
     }
+    fval = vp[3];
 
     if (!JS_ValueToId(cx, vp[2], &id))
         return JS_FALSE;
@@ -1672,7 +1681,7 @@ obj_lookupGetter(JSContext *cx, uintN argc, jsval *vp)
     JSProperty *prop;
     JSScopeProperty *sprop;
 
-    if (!JS_ValueToId(cx, vp[2], &id))
+    if (!JS_ValueToId(cx, argc != 0 ? vp[2] : JSVAL_VOID, &id))
         return JS_FALSE;
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
@@ -1697,7 +1706,7 @@ obj_lookupSetter(JSContext *cx, uintN argc, jsval *vp)
     JSProperty *prop;
     JSScopeProperty *sprop;
 
-    if (!JS_ValueToId(cx, vp[2], &id))
+    if (!JS_ValueToId(cx, argc != 0 ? vp[2] : JSVAL_VOID, &id))
         return JS_FALSE;
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
@@ -1721,12 +1730,17 @@ obj_getPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj;
     uintN attrs;
 
+    if (argc == 0) {
+        js_ReportMissingArg(cx, vp, 0);
+        return JS_FALSE;
+    }
+
     obj = js_ValueToNonNullObject(cx, vp[2]);
     if (!obj)
         return JS_FALSE;
     vp[2] = OBJECT_TO_JSVAL(obj);
 
-    return OBJ_CHECK_ACCESS(cx, JSVAL_TO_OBJECT(vp[2]),
+    return OBJ_CHECK_ACCESS(cx, obj,
                             ATOM_TO_JSID(cx->runtime->atomState.protoAtom),
                             JSACC_PROTO, vp, &attrs);
 }
@@ -1747,29 +1761,29 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,             obj_toSource, 0,0,0),
+    JS_FN(js_toSource_str,             obj_toSource, 0,0),
 #endif
-    JS_FN(js_toString_str,             obj_toString,             0,0,0),
-    JS_FN(js_toLocaleString_str,       obj_toLocaleString,       0,0,0),
-    JS_FN(js_valueOf_str,              obj_valueOf,              0,0,0),
+    JS_FN(js_toString_str,             obj_toString,             0,0),
+    JS_FN(js_toLocaleString_str,       obj_toLocaleString,       0,0),
+    JS_FN(js_valueOf_str,              obj_valueOf,              0,0),
 #if JS_HAS_OBJ_WATCHPOINT
-    JS_FN(js_watch_str,                obj_watch,                2,2,0),
-    JS_FN(js_unwatch_str,              obj_unwatch,              1,1,0),
+    JS_FN(js_watch_str,                obj_watch,                2,0),
+    JS_FN(js_unwatch_str,              obj_unwatch,              1,0),
 #endif
-    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,       1,1,0),
-    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,        1,1,0),
-    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,1,0),
+    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,       1,0),
+    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,        1,0),
+    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,0),
 #if JS_HAS_GETTER_SETTER
-    JS_FN(js_defineGetter_str,         obj_defineGetter,         2,2,0),
-    JS_FN(js_defineSetter_str,         obj_defineSetter,         2,2,0),
-    JS_FN(js_lookupGetter_str,         obj_lookupGetter,         1,1,0),
-    JS_FN(js_lookupSetter_str,         obj_lookupSetter,         1,1,0),
+    JS_FN(js_defineGetter_str,         obj_defineGetter,         2,0),
+    JS_FN(js_defineSetter_str,         obj_defineSetter,         2,0),
+    JS_FN(js_lookupGetter_str,         obj_lookupGetter,         1,0),
+    JS_FN(js_lookupSetter_str,         obj_lookupSetter,         1,0),
 #endif
     JS_FS_END
 };
 
 static JSFunctionSpec object_static_methods[] = {
-    JS_FN("getPrototypeOf",            obj_getPrototypeOf,       1,1,0),
+    JS_FN("getPrototypeOf",            obj_getPrototypeOf,       1,0),
     JS_FS_END
 };
 

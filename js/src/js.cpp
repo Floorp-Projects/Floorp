@@ -811,17 +811,20 @@ GC(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GCParameter(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval *argv;
     JSString *str;
     const char *paramName;
     JSGCParamKey param;
     uint32 value;
 
-    argv = JS_ARGV(cx, vp);
-    str = JS_ValueToString(cx, argv[0]);
-    if (!str)
-        return JS_FALSE;
-    argv[0] = STRING_TO_JSVAL(str);
+    if (argc == 0) {
+        str = JS_ValueToString(cx, JSVAL_VOID);
+        JS_ASSERT(str);
+    } else {
+        str = JS_ValueToString(cx, vp[2]);
+        if (!str)
+            return JS_FALSE;
+        vp[2] = STRING_TO_JSVAL(str);
+    }
     paramName = JS_GetStringBytes(str);
     if (!paramName)
         return JS_FALSE;
@@ -836,7 +839,7 @@ GCParameter(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
-    if (!JS_ValueToECMAUint32(cx, argv[1], &value))
+    if (!JS_ValueToECMAUint32(cx, argc < 2 ? JSVAL_VOID : vp[3], &value))
         return JS_FALSE;
     if (value == 0) {
         JS_ReportError(cx,
@@ -855,7 +858,7 @@ GCZeal(JSContext *cx, uintN argc, jsval *vp)
 {
     uint32 zeal;
 
-    if (!JS_ValueToECMAUint32(cx, vp[2], &zeal))
+    if (!JS_ValueToECMAUint32(cx, argc == 0 ? JSVAL_VOID : vp[2], &zeal))
         return JS_FALSE;
     JS_SetGCZeal(cx, zeal);
     *vp = JSVAL_VOID;
@@ -1863,7 +1866,7 @@ Intern(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
 
-    str = JS_ValueToString(cx, vp[2]);
+    str = JS_ValueToString(cx, argc == 0 ? JSVAL_VOID : vp[2]);
     if (!str)
         return JS_FALSE;
     if (!JS_InternUCStringN(cx, JS_GetStringChars(str),
@@ -1920,7 +1923,7 @@ GetPDA(JSContext *cx, uintN argc, jsval *vp)
     uint32 i;
     jsval v;
 
-    if (!JS_ValueToObject(cx, vp[2], &vobj))
+    if (!JS_ValueToObject(cx, argc == 0 ? JSVAL_VOID : vp[2], &vobj))
         return JS_FALSE;
     if (!vobj)
         return JS_TRUE;
@@ -1966,7 +1969,7 @@ GetSLX(JSContext *cx, uintN argc, jsval *vp)
 {
     JSScript *script;
 
-    script = ValueToScript(cx, vp[2]);
+    script = ValueToScript(cx, argc == 0 ? JSVAL_VOID : vp[2]);
     if (!script)
         return JS_FALSE;
     *vp = INT_TO_JSVAL(js_GetScriptLineExtent(script));
@@ -1978,7 +1981,7 @@ ToInt32(JSContext *cx, uintN argc, jsval *vp)
 {
     int32 i;
 
-    if (!JS_ValueToInt32(cx, vp[2], &i))
+    if (!JS_ValueToInt32(cx, argc == 0 ? JSVAL_VOID : vp[2], &i))
         return JS_FALSE;
     return JS_NewNumberValue(cx, i, vp);
 }
@@ -2493,7 +2496,7 @@ Sleep(JSContext *cx, uintN argc, jsval *vp)
     PRUint32 t_ticks;
     jsrefcount rc;
 
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "d", &t_secs))
+    if (!JS_ValueToNumber(cx, argc == 0 ? JSVAL_VOID : vp[2], &t_secs))
         return JS_FALSE;
 
     if (t_secs < 0 || JSDOUBLE_IS_NaN(t_secs))
@@ -2605,8 +2608,10 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
     sd.threads = NULL;
     sd.status = SCATTER_WAIT;
 
-    if (JSVAL_IS_PRIMITIVE(JS_ARGV(cx, vp)[0]))
+    if (argc == 0 || JSVAL_IS_PRIMITIVE(JS_ARGV(cx, vp)[0])) {
+        JS_ReportError(cx, "the first argument must be an object");
         goto fail;
+    }
 
     inArr = JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]);
     ok = JS_GetArrayLength(cx, inArr, &n);
@@ -2750,28 +2755,28 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("version",        Version,        0,0,0),
     JS_FS("options",        Options,        0,0,0),
     JS_FS("load",           Load,           1,0,0),
-    JS_FN("readline",       ReadLine,       0,0,0),
+    JS_FN("readline",       ReadLine,       0,0),
     JS_FS("print",          Print,          0,0,0),
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
-    JS_FN("gc",             GC,             0,0,0),
-    JS_FN("gcparam",        GCParameter,    2,2,0),
-    JS_FN("countHeap",      CountHeap,      0,0,0),
+    JS_FN("gc",             GC,             0,0),
+    JS_FN("gcparam",        GCParameter,    2,0),
+    JS_FN("countHeap",      CountHeap,      0,0),
 #ifdef JS_GC_ZEAL
-    JS_FN("gczeal",         GCZeal,         1,1,0),
+    JS_FN("gczeal",         GCZeal,         1,0),
 #endif
     JS_FS("trap",           Trap,           3,0,0),
     JS_FS("untrap",         Untrap,         2,0,0),
     JS_FS("line2pc",        LineToPC,       0,0,0),
     JS_FS("pc2line",        PCToLine,       0,0,0),
-    JS_FN("stackQuota",     StackQuota,     0,0,0),
+    JS_FN("stackQuota",     StackQuota,     0,0),
     JS_FS("stringsAreUTF8", StringsAreUTF8, 0,0,0),
     JS_FS("testUTF8",       TestUTF8,       1,0,0),
     JS_FS("throwError",     ThrowError,     0,0,0),
 #ifdef DEBUG
     JS_FS("dis",            Disassemble,    1,0,0),
     JS_FS("dissrc",         DisassWithSrc,  1,0,0),
-    JS_FN("dumpHeap",       DumpHeap,       0,0,0),
+    JS_FN("dumpHeap",       DumpHeap,       0,0),
     JS_FS("notes",          Notes,          1,0,0),
     JS_FS("tracing",        Tracing,        0,0,0),
     JS_FS("stats",          DumpStats,      1,0,0),
@@ -2779,14 +2784,14 @@ static JSFunctionSpec shell_functions[] = {
 #ifdef TEST_CVTARGS
     JS_FS("cvtargs",        ConvertArgs,    0,0,12),
 #endif
-    JS_FN("build",          BuildDate,      0,0,0),
+    JS_FN("build",          BuildDate,      0,0),
     JS_FS("clear",          Clear,          0,0,0),
-    JS_FN("intern",         Intern,         1,1,0),
+    JS_FN("intern",         Intern,         1,0),
     JS_FS("clone",          Clone,          1,0,0),
     JS_FS("seal",           Seal,           1,0,1),
-    JS_FN("getpda",         GetPDA,         1,1,0),
-    JS_FN("getslx",         GetSLX,         1,1,0),
-    JS_FN("toint32",        ToInt32,        1,1,0),
+    JS_FN("getpda",         GetPDA,         1,0),
+    JS_FN("getslx",         GetSLX,         1,0),
+    JS_FN("toint32",        ToInt32,        1,0),
     JS_FS("evalcx",         EvalInContext,  1,0,0),
 #ifdef MOZ_SHARK
     JS_FS("startShark",      js_StartShark,      0,0,0),
@@ -2809,8 +2814,8 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("arrayInfo",       js_ArrayInfo,       1,0,0),
 #endif
 #ifdef JS_THREADSAFE
-    JS_FN("sleep",          Sleep,          1,1,0),
-    JS_FN("scatter",        Scatter,        1,1,0),
+    JS_FN("sleep",          Sleep,          1,0),
+    JS_FN("scatter",        Scatter,        1,0),
 #endif
     JS_FS_END
 };
