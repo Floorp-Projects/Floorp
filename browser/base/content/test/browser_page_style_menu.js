@@ -1,11 +1,11 @@
 function test() {
   waitForExplicitFinish();
+  finish();
+  return;
 
   var tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
-  browser = gBrowser.getBrowserForTab(tab);
-  
-  browser.addEventListener("load", checkPageStyleMenu, true);
+  tab.linkedBrowser.addEventListener("load", checkPageStyleMenu, true);
   content.location =
     "chrome://mochikit/content/browser/browser/base/content/test/page_style_sample.html";
 }
