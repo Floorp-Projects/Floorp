@@ -72,6 +72,7 @@ Cu.import("resource://weave/wrap.js");
 Cu.import("resource://weave/faultTolerance.js");
 Cu.import("resource://weave/crypto.js");
 Cu.import("resource://weave/engines.js");
+Cu.import("resource://weave/oauth.js");
 Cu.import("resource://weave/dav.js");
 Cu.import("resource://weave/identity.js");
 Cu.import("resource://weave/async.js");
@@ -82,6 +83,7 @@ Cu.import("resource://weave/engines/history.js");
 Cu.import("resource://weave/engines/passwords.js");
 Cu.import("resource://weave/engines/forms.js");
 Cu.import("resource://weave/engines/tabs.js");
+Cu.import("resource://weave/engines/input.js");
 
 Function.prototype.async = Async.sugar;
 
@@ -99,6 +101,7 @@ Cu.import("resource://weave/dav.js", Weave);
 Cu.import("resource://weave/stores.js", Weave);
 Cu.import("resource://weave/syncCores.js", Weave);
 Cu.import("resource://weave/engines.js", Weave);
+Cu.import("resource://weave/oauth.js", Weave);
 Cu.import("resource://weave/service.js", Weave);
 Cu.import("resource://weave/engines/cookies.js", Weave);
 Cu.import("resource://weave/engines/passwords.js", Weave);
@@ -106,6 +109,7 @@ Cu.import("resource://weave/engines/bookmarks.js", Weave);
 Cu.import("resource://weave/engines/history.js", Weave);
 Cu.import("resource://weave/engines/forms.js", Weave);
 Cu.import("resource://weave/engines/tabs.js", Weave);
+Cu.import("resource://weave/engines/input.js", Weave);
 
 Utils.lazy(Weave, 'Service', WeaveSvc);
 
@@ -550,6 +554,9 @@ WeaveSvc.prototype = {
 
     this._log.debug("Verifying passphrase");
 
+    this.username = username;
+    ID.get('WeaveID').setTempPassword(password);
+    
     let id = new Identity('Passphrase Verification', username);
     id.setTempPassword(passphrase);
 
