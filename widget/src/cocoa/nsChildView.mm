@@ -1158,6 +1158,29 @@ NS_IMETHODIMP nsChildView::EndResizingChildren(void)
 }
 
 
+static const PRInt32 resizeIndicatorWidth = 15;
+static const PRInt32 resizeIndicatorHeight = 15;
+PRBool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
+{
+  NSView *topLevelView = mView, *superView = nil;
+  while (superView = [topLevelView superview])
+    topLevelView = superView;
+
+  if (![[topLevelView window] showsResizeIndicator])
+    return PR_FALSE;
+
+  if (aResizerRect) {
+    NSSize bounds = [topLevelView bounds].size;
+    NSPoint corner = NSMakePoint(bounds.width, [topLevelView isFlipped] ? bounds.height : 0);
+    corner = [topLevelView convertPoint:corner toView:mView];
+    aResizerRect->SetRect(NSToIntRound(corner.x) - resizeIndicatorWidth,
+                          NSToIntRound(corner.y) - resizeIndicatorHeight,
+                          resizeIndicatorWidth, resizeIndicatorHeight);
+  }
+  return PR_TRUE;
+}
+
+
 NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
