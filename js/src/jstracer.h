@@ -214,6 +214,7 @@ class TraceRecorder {
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
                 const char *prefix, int index, JSStackFrame *fp);
+    void import(unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap);
     void trackNativeStackUse(unsigned slots);
 
     bool lazilyImportGlobalSlot(unsigned slot);
@@ -287,8 +288,6 @@ class TraceRecorder {
     bool forInProlog(nanojit::LIns*& iterobj_ins);
 
 public:
-    int backEdgeCount;
-
     TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, 
             unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap);
     ~TraceRecorder();
