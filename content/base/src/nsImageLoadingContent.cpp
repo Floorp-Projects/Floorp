@@ -486,6 +486,22 @@ nsImageLoadingContent::LoadImage(const nsAString& aNewURI,
   NS_ENSURE_SUCCESS(rv, rv);
   // XXXbiesi fire onerror if that failed?
 
+  PRBool equal;
+
+  if (aNewURI.IsEmpty() &&
+      doc->GetDocumentURI() &&
+      NS_SUCCEEDED(doc->GetDocumentURI()->Equals(imageURI,&equal)) && 
+      equal)  {
+
+    // Loading an embedded img from the same URI as the document URI will not work
+    // as a resource cannot recursively embed itself. Attempting to do so generally
+    // results in having to pre-emptively close down an in-flight HTTP transaction 
+    // and then incurring the significant cost of establishing a new TCP channel.
+    // This is generally triggered from <img src=""> 
+    // In light of that, just skip loading it..
+    return NS_OK;
+  }
+
   NS_TryToSetImmutable(imageURI);
 
   return LoadImage(imageURI, aForce, aNotify, doc);
