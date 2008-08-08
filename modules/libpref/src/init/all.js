@@ -1170,10 +1170,10 @@ pref("font.name-list.sans-serif.ko", "Gulim, 굴림");
 pref("font.name-list.monospace.ko", "GulimChe, 굴림체"); 
 pref("font.name-list.cursive.ko", "Gungseo, 궁서"); 
 
-pref("font.name.serif.th", "Times New Roman");
-pref("font.name.sans-serif.th", "Arial");
-pref("font.name.monospace.th", "Courier New");
-pref("font.name.cursive.th", "Comic Sans MS");
+pref("font.name.serif.th", "Tahoma");
+pref("font.name.sans-serif.th", "Tahoma");
+pref("font.name.monospace.th", "Tahoma");
+pref("font.name.cursive.th", "Tahoma");
 
 pref("font.name.serif.tr", "Times New Roman");
 pref("font.name.sans-serif.tr", "Arial");
@@ -1352,6 +1352,7 @@ pref("font.size.fixed.ko", 16);
 pref("font.default.th", "serif");
 pref("font.size.variable.th", 16);
 pref("font.size.fixed.th", 13);
+pref("font.minimum-size.th", 10);
 
 pref("font.default.tr", "serif");
 pref("font.size.variable.tr", 16);
@@ -1572,10 +1573,10 @@ pref("font.name-list.sans-serif.ko", "AppleGothic");
 pref("font.name-list.monospace.ko", "AppleGothic"); 
 
 pref("font.name.serif.th", "Thonburi");
-pref("font.name.sans-serif.th", "Krungthep");
+pref("font.name.sans-serif.th", "Thonburi");
 pref("font.name.monospace.th", "Ayuthaya");
 pref("font.name-list.serif.th", "Thonburi");
-pref("font.name-list.sans-serif.th", "Krungthep");
+pref("font.name-list.sans-serif.th", "Thonburi");
 pref("font.name-list.monospace.th", "Ayuthaya");
 
 pref("font.name.serif.tr", "Times");
@@ -1793,6 +1794,7 @@ pref("font.size.fixed.ko", 16);
 pref("font.default.th", "serif");
 pref("font.size.variable.th", 16);
 pref("font.size.fixed.th", 13);
+pref("font.minimum-size.th", 10);
 
 pref("font.default.tr", "serif");
 pref("font.size.variable.tr", 16);
@@ -2303,7 +2305,9 @@ pref("font.name.serif.ko", "serif");
 pref("font.name.sans-serif.ko", "sans-serif");
 pref("font.name.monospace.ko", "monospace");
 
-// th
+pref("font.name.serif.th", "serif");
+pref("font.name.sans-serif.th", "sans-serif");
+pref("font.name.monospace.th", "monospace");
 
 pref("font.name.serif.tr", "serif");
 pref("font.name.sans-serif.tr", "sans-serif");
@@ -2367,7 +2371,8 @@ pref("font.size.fixed.ko", 16);
 
 pref("font.default.th", "serif");
 pref("font.size.variable.th", 16);
-pref("font.size.fixed.th", 12);
+pref("font.size.fixed.th", 13);
+pref("font.minimum-size.th", 13);
 
 pref("font.default.tr", "serif");
 pref("font.size.variable.tr", 16);
