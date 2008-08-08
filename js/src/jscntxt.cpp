@@ -55,6 +55,7 @@
 #include "jsconfig.h"
 #include "jsdbgapi.h"
 #include "jsexn.h"
+#include "jsfun.h"
 #include "jsgc.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -1279,6 +1280,28 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
 
     JS_free(cx, bytes);
     return ok;
+}
+
+void
+js_ReportMissingArg(JSContext *cx, jsval *vp, uintN arg)
+{
+    char argbuf[11];
+    char *bytes;
+    JSAtom *atom;
+
+    JS_snprintf(argbuf, sizeof argbuf, "%u", arg);
+    bytes = NULL;
+    if (VALUE_IS_FUNCTION(cx, *vp)) {
+        atom = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(*vp))->atom;
+        bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, *vp,
+                                           ATOM_TO_STRING(atom));
+        if (!bytes)
+            return;
+    }
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_MISSING_FUN_ARG, argbuf,
+                         bytes ? bytes : "");
+    JS_free(cx, bytes);
 }
 
 JSBool
