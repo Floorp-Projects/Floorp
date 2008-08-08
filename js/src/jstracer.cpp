@@ -534,6 +534,23 @@ public:
         FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code);                  \
     JS_END_MACRO
 
+/* Capture the typemap for the selected slots of the global object. */
+void
+TypeMap::captureGlobalTypes(JSContext* cx, Queue<uint16>& slots)
+{
+    unsigned ngslots = slots.length();
+    uint16* gslots = slots.data();
+    setLength(ngslots);
+    uint8* map = data();
+    uint8* m = map;
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, 
+        uint8 type = getCoercedType(*vp);
+        if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(gslots[n]))
+            type = JSVAL_DOUBLE;
+        *m++ = type;
+    );
+}
+
 /* Capture the typemap for the currently pending stack frames. */
 void 
 TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)

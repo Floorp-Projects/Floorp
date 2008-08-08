@@ -162,6 +162,7 @@ public:
 
 class TypeMap : public Queue<uint8> {
 public:
+    void captureGlobalTypes(JSContext* cx, Queue<uint16>& slots);
     void captureStackTypes(JSContext* cx, unsigned callDepth);
     bool matches(TypeMap& other);
 };
