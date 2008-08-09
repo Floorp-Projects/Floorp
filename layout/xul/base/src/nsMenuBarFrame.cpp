@@ -53,7 +53,6 @@
 #include "nsMenuPopupFrame.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
-#include "nsICaret.h"
 #include "nsIFocusController.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"

@@ -130,25 +130,33 @@ install:: $(pkg_config_files)
 
 GARBAGE += $(MOZILLA_VERSION).system.conf $(pkg_config_files)
 
+GARBAGE += debian/changelog
 
 DEBDESTDIR=debian/$(MOZ_BUILD_APP)
 
+GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
+GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
+MOZ_DEB_TIMESTAMP = "$(shell date  +"%a, %d  %b %Y %T %z" )"
+
+DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID) -DMOZ_DEB_TIMESTAMP=$(MOZ_DEB_TIMESTAMP)
+
 
 ifeq ($(OS_TARGET),Linux)
-deb: 
+debian/changelog: $(srcdir)/debian/changelog.in 
+	mkdir -p debian
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+
+deb: debian/changelog
 	$(NSINSTALL)  $(topsrcdir)/$(MOZ_BUILD_APP)/installer/debian .
 	rm -rf $(DEBDESTDIR)/usr/local/*
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/local
 	cd $(DEBDESTDIR)/usr/local; cat ../../../../$(DEPTH)/dist/$(PKG_BASENAME)$(PKG_SUFFIX) | $(UNMAKE_PACKAGE)
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
 	cp debian/$(MOZ_BUILD_APP).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_BUILD_APP).service
-ifdef NS_HILDON
-	$(NSINSTALL) $(DEPTH)/dist/bin/components/softkey.xpt $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/components/
-	$(NSINSTALL) $(DEPTH)/dist/bin/components/libsoftkey.so $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/components/
-	$(NSINSTALL) $(DEPTH)/dist/bin/libsoftokn3.* $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/	
-endif
 	$(NSINSTALL) debian/postinst $(DEBDESTDIR)/DEBIAN
 	$(NSINSTALL) debian/prerm $(DEBDESTDIR)/DEBIAN
+	rm  $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/xpidl
 	dh_shlibdeps; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
 endif
 

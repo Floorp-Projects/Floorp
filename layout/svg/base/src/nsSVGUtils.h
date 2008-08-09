@@ -43,7 +43,6 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsISVGValue.h"
 #include "nsRect.h"
 
 class nsIDocument;
@@ -61,7 +60,6 @@ class nsIURI;
 class nsSVGOuterSVGFrame;
 class nsIPresShell;
 class nsIDOMSVGAnimatedPreserveAspectRatio;
-class nsISVGValueObserver;
 class nsIAtom;
 class nsSVGLength2;
 class nsSVGElement;
@@ -87,23 +85,19 @@ class nsISVGChildFrame;
 // SVG Frame state bits
 #define NS_STATE_IS_OUTER_SVG         0x00100000
 
-#define NS_STATE_SVG_CLIPPED          0x00200000
-#define NS_STATE_SVG_FILTERED         0x00400000
-#define NS_STATE_SVG_MASKED           0x00800000
+#define NS_STATE_SVG_HAS_MARKERS      0x00200000
 
-#define NS_STATE_SVG_HAS_MARKERS      0x01000000
-
-#define NS_STATE_SVG_DIRTY            0x02000000
+#define NS_STATE_SVG_DIRTY            0x00400000
 
 /* Do we have a paint server for fill with a valid URL? */
-#define NS_STATE_SVG_FILL_PSERVER     0x04000000
+#define NS_STATE_SVG_FILL_PSERVER     0x00800000
 /* Do we have a paint server for stroke with a valid URL? */
-#define NS_STATE_SVG_STROKE_PSERVER   0x08000000
+#define NS_STATE_SVG_STROKE_PSERVER   0x01000000
 /* Do we have any paint servers with valid URLs? */
-#define NS_STATE_SVG_PSERVER_MASK     0x0c000000
+#define NS_STATE_SVG_PSERVER_MASK     0x01800000
 
 /* are we the child of a non-display container? */
-#define NS_STATE_SVG_NONDISPLAY_CHILD 0x10000000
+#define NS_STATE_SVG_NONDISPLAY_CHILD 0x02000000
 
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
@@ -132,6 +126,9 @@ class nsISVGChildFrame;
  * to cairo.h usage) can still query this information.
  */
 PRBool NS_SVGEnabled();
+
+// GRRR WINDOWS HATE HATE HATE
+#undef CLIP_MASK
 
 class nsSVGRenderState
 {
@@ -259,11 +256,14 @@ public:
    */
   static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
 
-  /*
+  /**
    * Figures out the worst case invalidation area for a frame, taking
    * filters into account.
+   * @param aRect the area in device pixels that needs to be invalidated in aFrame
+   * @return the rect in device pixels that should be invalidated, taking
+   * filters into account. Will return aRect when no filters are present.
    */
-  static nsRect FindFilterInvalidation(nsIFrame *aFrame);
+  static nsRect FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect);
 
   /*
    * Update the filter invalidation region for this frame, if relevant.
@@ -282,6 +282,11 @@ public:
 
   /* enum for specifying coordinate direction for ObjectSpace/UserSpace */
   enum ctxDirection { X, Y, XY };
+
+  /**
+   * Computes sqrt((aWidth^2 + aHeight^2)/2);
+   */
+  static double ComputeNormalizedHypotenuse(double aWidth, double aHeight);
 
   /* Computes the input length in terms of object space coordinates.
      Input: rect - bounding box
@@ -332,11 +337,12 @@ public:
                         nsRect *aDirtyRect,
                         nsIFrame *aFrame);
 
-  /* Style change for effects (filter/clip/mask/opacity) - call when
-   * the frame's style has changed to make sure the effects properties
-   * stay in sync. */
+  /**
+   * Called by nsCSSFrameConstructor when style changes require the
+   * effect properties on aFrame to be updated
+   */
   static void
-  StyleEffects(nsIFrame *aFrame);
+  UpdateEffects(nsIFrame *aFrame);
 
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  (x,y) are specified in device pixels relative to the
@@ -428,6 +434,18 @@ public:
   static void SetClipRect(gfxContext *aContext,
                           nsIDOMSVGMatrix *aCTM, float aX, float aY,
                           float aWidth, float aHeight);
+
+  /**
+   * If aIn can be represented exactly using an nsIntRect (i.e. integer-aligned edges and
+   * coordinates in the PRInt32 range) then we set aOut to that rectangle, otherwise
+   * return failure.
+   */
+  static nsresult GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut);
+
+  /**
+   * Restricts aRect to pixels that intersect aGfxRect.
+   */
+  static void ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect);
 
   /* Using group opacity instead of fill or stroke opacity on a
    * geometry object seems to be a common authoring mistake.  If we're

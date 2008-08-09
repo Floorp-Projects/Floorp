@@ -168,11 +168,15 @@ struct JSObject {
     JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PROTO])
 #define STOBJ_SET_PROTO(obj,proto)                                            \
     ((obj)->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto))
+#define STOBJ_CLEAR_PROTO(obj)                                                \
+    ((obj)->fslots[JSSLOT_PROTO] = JSVAL_NULL)
 
 #define STOBJ_GET_PARENT(obj)                                                 \
     JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PARENT])
 #define STOBJ_SET_PARENT(obj,parent)                                          \
     ((obj)->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent))
+#define STOBJ_CLEAR_PARENT(obj)                                               \
+    ((obj)->fslots[JSSLOT_PARENT] = JSVAL_NULL)
 
 /*
  * We use JSSLOT_CLASS to store both JSClass* and the system flag as an int-
@@ -273,15 +277,13 @@ struct JSObject {
 #endif /* !JS_THREADSAFE */
 
 /* Thread-safe proto, parent, and class access macros. */
-#define OBJ_GET_PROTO(cx,obj) \
-    STOBJ_GET_PROTO(obj)
-#define OBJ_SET_PROTO(cx,obj,proto) \
-    STOBJ_SET_SLOT(obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(proto))
+#define OBJ_GET_PROTO(cx,obj)           STOBJ_GET_PROTO(obj)
+#define OBJ_SET_PROTO(cx,obj,proto)     STOBJ_SET_PROTO(obj, proto)
+#define OBJ_CLEAR_PROTO(cx,obj)         STOBJ_CLEAR_PROTO(obj)
 
-#define OBJ_GET_PARENT(cx,obj) \
-    STOBJ_GET_PARENT(obj)
-#define OBJ_SET_PARENT(cx,obj,parent) \
-    STOBJ_SET_SLOT(obj, JSSLOT_PARENT, OBJECT_TO_JSVAL(parent))
+#define OBJ_GET_PARENT(cx,obj)          STOBJ_GET_PARENT(obj)
+#define OBJ_SET_PARENT(cx,obj,parent)   STOBJ_SET_PARENT(obj, parent)
+#define OBJ_CLEAR_PARENT(cx,obj)        STOBJ_CLEAR_PARENT(obj)
 
 /*
  * Class is invariant and comes from the fixed JSSLOT_CLASS. Thus no locking
@@ -386,7 +388,8 @@ extern void
 js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map);
 
 extern JSBool
-js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, jsval *vp);
+js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
+                        jsval *vp);
 
 extern JSObject *
 js_InitBlockClass(JSContext *cx, JSObject* obj);

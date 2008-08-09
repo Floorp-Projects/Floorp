@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>test of -moz-border-image</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+  div.p1 {
+    background: red; /* fail if this shows through */
+    background-image: url('3x3multicolor.png'); /* fail if this shows through */
+    -moz-border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px repeat;
+    -khtml-border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px repeat;
+    border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px repeat;
+  }
+
+  div.p2 {
+    background: red; /* fail if this shows through */
+    background-image: url('3x3multicolor.png'); /* fail if this shows through */
+    -moz-border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px;
+    -khtml-border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px;
+    border-image: url('4x4multicolor.png') 1 1 1 1 / 1px 3px;
+  }
+
+  </style>
+</head>
+<body>
+<div class="p1" style="width: 4px; height: 2px"></div>
+<!--<div class="p2" style="width: 4px; height: 2px"></div> -->
+</body>
+</html>

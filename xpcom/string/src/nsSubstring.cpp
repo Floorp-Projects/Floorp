@@ -333,3 +333,11 @@ nsStringBuffer::ToString(PRUint32 len, nsACString &str)
 #include "string-template-def-char.h"
 #include "nsTSubstring.cpp"
 #include "string-template-undef.h"
+
+// Check that internal and external strings have the same size.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=430581
+
+#include "prlog.h"
+#include "nsXPCOMStrings.h"
+
+PR_STATIC_ASSERT(sizeof(nsStringContainer_base) == sizeof(nsSubstring));

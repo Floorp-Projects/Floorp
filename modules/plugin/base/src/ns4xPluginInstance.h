@@ -115,6 +115,8 @@ public:
 
     NPError SetTransparent(PRBool aTransparent);
 
+    NPError SetWantsAllNetworkStreams(PRBool aWantsAllNetworkStreams);
+
 #ifdef XP_MACOSX
     void SetDrawingModel(NPDrawingModel aModel);
     NPDrawingModel GetDrawingModel();
@@ -187,6 +189,7 @@ protected:
     PRPackedBool  mStarted;
     PRPackedBool  mCached;
     PRPackedBool  mIsJavaPlugin;
+    PRPackedBool  mWantsAllNetworkStreams;
 
 public:
     // True while creating the plugin, or calling NPP_SetWindow() on

@@ -84,6 +84,7 @@
 #include "nsLayoutStatics.h"
 #include "nsDOMError.h"
 #include "nsIHTMLDocument.h"
+#include "nsIDOM3Document.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -702,9 +703,15 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
   nsresult rv = NS_OK;
 
   nsCAutoString dataCharset;
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOM3Document> document(do_QueryInterface(mDocument));
   if (document) {
-    dataCharset = document->GetDocumentCharacterSet();
+    nsAutoString inputEncoding;
+    document->GetInputEncoding(inputEncoding);
+    if (DOMStringIsNull(inputEncoding)) {
+      dataCharset.AssignLiteral("UTF-8");
+    } else {
+      CopyUTF16toUTF8(inputEncoding, dataCharset);
+    }
   } else {
     if (NS_FAILED(DetectCharset(dataCharset)) || dataCharset.IsEmpty()) {
       // MS documentation states UTF-8 is default for responseText
@@ -1998,7 +2005,7 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     const char *kInvalidHeaders[] = {
       "accept-charset", "accept-encoding", "connection", "content-length",
       "content-transfer-encoding", "date", "expect", "host", "keep-alive",
-      "proxy-connection", "referer", "access-control-origin", "te", "trailer",
+      "referer", "access-control-origin", "te", "trailer",
       "transfer-encoding", "upgrade", "via", "xmlhttprequest-security-check"
     };
     PRUint32 i;
@@ -2007,6 +2014,13 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
         NS_WARNING("refusing to set request header");
         return NS_OK;
       }
+    }
+    if (StringBeginsWith(header, NS_LITERAL_CSTRING("proxy-"),
+                         nsCaseInsensitiveCStringComparator()) ||
+        StringBeginsWith(header, NS_LITERAL_CSTRING("sec-"),
+                         nsCaseInsensitiveCStringComparator())) {
+      NS_WARNING("refusing to set request header");
+      return NS_OK;
     }
   }
 

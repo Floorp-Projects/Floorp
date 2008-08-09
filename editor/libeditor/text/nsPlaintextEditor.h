@@ -86,9 +86,9 @@ public:
   NS_DECL_NSIEDITORMAILSUPPORT
 
   /* ------------ nsIEditorIMESupport overrides -------------- */
-  
-  NS_IMETHOD SetCompositionString(const nsAString & aCompositionString, nsIPrivateTextRangeList * aTextRange, nsTextEventReply * aReply);
-  NS_IMETHOD GetReconversionString(nsReconversionEventReply* aReply);
+  NS_IMETHOD SetCompositionString(const nsAString &aCompositionString,
+                                  nsIPrivateTextRangeList *aTextRange,
+                                  nsTextEventReply *aReply);
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
   NS_IMETHOD BeginComposition(nsTextEventReply* aReply);

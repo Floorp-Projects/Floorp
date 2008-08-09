@@ -159,6 +159,44 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
     return base + GET_UINT16(pc + pcoff);
 }
 
+uintN
+js_GetVariableBytecodeLength(jsbytecode *pc)
+{
+    JSOp op;
+    uintN jmplen, ncases;
+    jsint low, high;
+
+    op = (JSOp) *pc;
+    JS_ASSERT(js_CodeSpec[op].length == -1);
+    switch (op) {
+      case JSOP_TABLESWITCHX:
+        jmplen = JUMPX_OFFSET_LEN;
+        goto do_table;
+      case JSOP_TABLESWITCH:
+        jmplen = JUMP_OFFSET_LEN;
+      do_table:
+        /* Structure: default-jump case-low case-high case1-jump ... */
+        pc += jmplen;
+        low = GET_JUMP_OFFSET(pc);
+        pc += JUMP_OFFSET_LEN;
+        high = GET_JUMP_OFFSET(pc);
+        ncases = (uintN)(high - low + 1);
+        return 1 + jmplen + INDEX_LEN + INDEX_LEN + ncases * jmplen;
+
+      case JSOP_LOOKUPSWITCHX:
+        jmplen = JUMPX_OFFSET_LEN;
+        goto do_lookup;
+      default:
+        JS_ASSERT(op == JSOP_LOOKUPSWITCH);
+        jmplen = JUMP_OFFSET_LEN;
+      do_lookup:
+        /* Structure: default-jump case-count (case1-value case1-jump) ... */
+        pc += jmplen;
+        ncases = GET_UINT16(pc);
+        return 1 + jmplen + INDEX_LEN + ncases * (INDEX_LEN + jmplen);
+    }
+}
+
 #ifdef DEBUG
 
 JS_FRIEND_API(JSBool)
@@ -259,7 +297,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_JUMP:
       case JOF_JUMPX:
         off = GetJumpOffset(pc, pc);
-        fprintf(fp, " %u (%d)", loc + off, off);
+        fprintf(fp, " %u (%d)", loc + (intN) off, (intN) off);
         break;
 
       case JOF_ATOM:
@@ -283,7 +321,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         break;
 
       case JOF_UINT16:
-      case JOF_LOCAL:
         i = (jsint)GET_UINT16(pc);
         goto print_int;
 
@@ -306,10 +343,10 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += JUMP_OFFSET_LEN;
         high = GET_JUMP_OFFSET(pc2);
         pc2 += JUMP_OFFSET_LEN;
-        fprintf(fp, " defaultOffset %d low %d high %d", off, low, high);
+        fprintf(fp, " defaultOffset %d low %d high %d", (intN) off, low, high);
         for (i = low; i <= high; i++) {
             off = GetJumpOffset(pc, pc2);
-            fprintf(fp, "\n\t%d: %d", i, off);
+            fprintf(fp, "\n\t%d: %d", i, (intN) off);
             pc2 += jmplen;
         }
         len = 1 + pc2 - pc;
@@ -329,7 +366,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += jmplen;
         npairs = GET_UINT16(pc2);
         pc2 += UINT16_LEN;
-        fprintf(fp, " offset %d npairs %u", off, (uintN) npairs);
+        fprintf(fp, " offset %d npairs %u", (intN) off, (uintN) npairs);
         while (npairs) {
             JS_GET_SCRIPT_ATOM(script, GET_INDEX(pc2), atom);
             pc2 += INDEX_LEN;
@@ -339,7 +376,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             bytes = ToDisassemblySource(cx, ATOM_KEY(atom));
             if (!bytes)
                 return 0;
-            fprintf(fp, "\n\t%s: %d", bytes, off);
+            fprintf(fp, "\n\t%s: %d", bytes, (intN) off);
             npairs--;
         }
         len = 1 + pc2 - pc;
@@ -350,14 +387,14 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         fprintf(fp, " %u", GET_ARGNO(pc));
         break;
 
-      case JOF_QVAR:
-        fprintf(fp, " %u", GET_VARNO(pc));
+      case JOF_LOCAL:
+        fprintf(fp, " %u", GET_SLOTNO(pc));
         break;
 
       case JOF_SLOTATOM:
       case JOF_SLOTOBJECT:
-        fprintf(fp, " %u", GET_VARNO(pc));
-        index = js_GetIndexFromBytecode(cx, script, pc, VARNO_LEN);
+        fprintf(fp, " %u", GET_SLOTNO(pc));
+        index = js_GetIndexFromBytecode(cx, script, pc, SLOTNO_LEN);
         if (type == JOF_SLOTATOM) {
             JS_GET_SCRIPT_ATOM(script, index, atom);
             v = ATOM_KEY(atom);
@@ -638,7 +675,7 @@ struct JSPrinter {
 #define JS_IN_GROUP_CONTEXT 0x10000
 
 JSPrinter *
-JS_NEW_PRINTER(JSContext *cx, const char *name,  JSFunction *fun,
+JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
                uintN indent, JSBool pretty)
 {
     JSPrinter *jp;
@@ -891,8 +928,8 @@ PushOff(SprintStack *ss, ptrdiff_t off, JSOp op)
 
     /* ss->top points to the next free slot; be paranoid about overflow. */
     top = ss->top;
-    JS_ASSERT(top < ss->printer->script->depth);
-    if (top >= ss->printer->script->depth) {
+    JS_ASSERT(top < StackDepth(ss->printer->script));
+    if (top >= StackDepth(ss->printer->script)) {
         JS_ReportOutOfMemory(ss->sprinter.context);
         return JS_FALSE;
     }
@@ -1139,20 +1176,12 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
     JS_END_MACRO
 
 static JSAtom *
-GetSlotAtom(JSPrinter *jp, JSBool argument, uintN slot)
+GetArgOrVarAtom(JSPrinter *jp, uintN slot)
 {
-    JSFunction *fun;
     JSAtom *name;
 
-    fun = jp->fun;
     LOCAL_ASSERT_RV(jp->fun, NULL);
-    LOCAL_ASSERT_RV(jp->localNames, NULL);
-    if (argument) {
-        LOCAL_ASSERT_RV(slot < fun->nargs, NULL);
-    } else {
-        LOCAL_ASSERT_RV(slot < fun->u.i.nvars, NULL);
-        slot += fun->nargs;
-    }
+    LOCAL_ASSERT_RV(slot < JS_GET_LOCAL_NAME_COUNT(jp->fun), NULL);
     name = JS_LOCAL_NAME_TO_ATOM(jp->localNames[slot]);
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -1187,7 +1216,8 @@ GetLocal(SprintStack *ss, jsint i)
     cx = ss->sprinter.context;
     script = ss->printer->script;
     LOCAL_ASSERT(script->objectsOffset != 0);
-    for (j = 0, n = JS_SCRIPT_OBJECTS(script)->length; j < n; j++) {
+    for (j = 0, n = JS_SCRIPT_OBJECTS(script)->length; ; j++) {
+        LOCAL_ASSERT(j < n);
         JS_GET_SCRIPT_OBJECT(script, j, obj);
         if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
             depth = OBJ_BLOCK_DEPTH(cx, obj);
@@ -1197,7 +1227,6 @@ GetLocal(SprintStack *ss, jsint i)
         }
     }
 
-    LOCAL_ASSERT(j < n);
     i -= depth;
     for (sprop = OBJ_SCOPE(obj)->lastProp; sprop; sprop = sprop->parent) {
         if (sprop->shortid == i)
@@ -1220,6 +1249,25 @@ GetLocal(SprintStack *ss, jsint i)
 #define LOCAL_ASSERT(expr)  LOCAL_ASSERT_RV(expr, NULL)
 #define LOAD_OP_DATA(pc)    (oplen = (cs = &js_CodeSpec[op=(JSOp)*pc])->length)
 
+static JSBool
+IsVarSlot(JSPrinter *jp, jsbytecode *pc, jsint *indexp)
+{
+    uintN slot;
+
+    slot = GET_SLOTNO(pc);
+    if (slot < jp->script->nfixed) {
+        /* The slot refers to a variable with name stored in jp->localNames. */
+        *indexp = jp->fun->nargs + slot;
+        return JS_TRUE;
+    }
+
+    /* We have a local which index is relative to the stack base. */
+    slot -= jp->script->nfixed;
+    JS_ASSERT(slot < StackDepth(jp->script));
+    *indexp = slot;
+    return JS_FALSE;
+}
+
 static jsbytecode *
 DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc);
 
@@ -1231,7 +1279,8 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
     JSPrinter *jp;
     JSOp op;
     const JSCodeSpec *cs;
-    uintN oplen, i;
+    uintN oplen;
+    jsint i;
     const char *lval, *xval;
     ptrdiff_t todo;
     JSAtom *atom;
@@ -1262,21 +1311,22 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         break;
 
       case JSOP_SETARG:
-      case JSOP_SETVAR:
       case JSOP_SETGVAR:
       case JSOP_SETLOCAL:
         LOCAL_ASSERT(pc[oplen] == JSOP_POP || pc[oplen] == JSOP_POPN);
         /* FALL THROUGH */
 
       case JSOP_SETLOCALPOP:
-        i = GET_UINT16(pc);
         atom = NULL;
         lval = NULL;
-        if (op == JSOP_SETARG || op == JSOP_SETVAR) {
-            atom = GetSlotAtom(jp, op == JSOP_SETARG, i);
+        if (op == JSOP_SETARG) {
+            atom = GetArgOrVarAtom(jp, GET_SLOTNO(pc));
             LOCAL_ASSERT(atom);
         } else if (op == JSOP_SETGVAR) {
             GET_ATOM_FROM_BYTECODE(jp->script, pc, 0, atom);
+        } else if (IsVarSlot(jp, pc, &i)) {
+            atom = GetArgOrVarAtom(jp, i);
+            LOCAL_ASSERT(atom);
         } else {
             lval = GetLocal(ss, i);
         }
@@ -1666,7 +1716,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
     static const char ss_format[]        = "%s%s";
 
     /* Argument and variables decompilation uses the following to share code. */
-    JS_STATIC_ASSERT(ARGNO_LEN == VARNO_LEN);
+    JS_STATIC_ASSERT(ARGNO_LEN == SLOTNO_LEN);
 
 /*
  * Local macros
@@ -1801,21 +1851,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
             format = cs->format;
             if (((fp && fp->regs && pc == fp->regs->pc) ||
                  (pc == startpc && cs->nuses != 0)) &&
-                format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_IMPORT|JOF_FOR|
-                          JOF_VARPROP)) {
+                format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_FOR|JOF_VARPROP)) {
                 mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
                     /*
                      * JOF_NAME does not imply JOF_ATOM, so we must check for
                      * the QARG and QVAR format types, and translate those to
-                     * JSOP_GETARG or JSOP_GETVAR appropriately, instead of to
-                     * JSOP_NAME.
+                     * JSOP_GETARG or JSOP_GETLOCAL appropriately, instead of
+                     * to JSOP_NAME.
                      */
                     type = JOF_TYPE(format);
                     op = (type == JOF_QARG)
                          ? JSOP_GETARG
-                         : (type == JOF_QVAR)
-                         ? JSOP_GETVAR
                          : (type == JOF_LOCAL)
                          ? JSOP_GETLOCAL
                          : JSOP_NAME;
@@ -1865,7 +1912,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                              * of the property accessed via |this|, so do not
                              * rewrite op to JSOP_THIS.
                              *
-                             * The next three cases should not change op if
+                             * The next two cases should not change op if
                              * js_DecompileValueGenerator was called from the
                              * the property getter. They should rewrite only
                              * if the base object in the arg/var/local is null
@@ -1874,9 +1921,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             break;
                           case JSOP_GETARGPROP:
                             op = JSOP_GETARG;
-                            break;
-                          case JSOP_GETVARPROP:
-                            op = JSOP_GETVAR;
                             break;
                           case JSOP_GETLOCALPROP:
                             op = JSOP_GETLOCAL;
@@ -2253,7 +2297,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                                 goto do_forloop;
                             }
                             if (SN_TYPE(sn) == SRC_DECL) {
-                                if (ss->top == jp->script->depth) {
+                                if (ss->top == StackDepth(jp->script)) {
                                     /*
                                      * This must be an empty destructuring
                                      * in the head of a let whose body block
@@ -2556,7 +2600,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     } else {
 #endif
                         LOCAL_ASSERT(*pc == JSOP_SETLOCALPOP);
-                        i = GET_UINT16(pc);
+                        i = GET_SLOTNO(pc) - jp->script->nfixed;
                         pc += JSOP_SETLOCALPOP_LENGTH;
                         atom = atomv[i - OBJ_BLOCK_DEPTH(cx, obj)];
                         str = ATOM_TO_STRING(atom);
@@ -2650,7 +2694,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_CALLLOCAL:
               case JSOP_GETLOCAL:
-                i = GET_UINT16(pc);
+                if (IsVarSlot(jp, pc, &i)) {
+                    atom = GetArgOrVarAtom(jp, i);
+                    LOCAL_ASSERT(atom);
+                    goto do_name;
+                }
                 LOCAL_ASSERT((uintN)i < ss->top);
                 sn = js_GetSrcNote(jp->script, pc);
 
@@ -2671,28 +2719,34 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_SETLOCAL:
               case JSOP_SETLOCALPOP:
-                i = GET_UINT16(pc);
+                if (IsVarSlot(jp, pc, &i)) {
+                    atom = GetArgOrVarAtom(jp, i);
+                    LOCAL_ASSERT(atom);
+                    goto do_setname;
+                }
                 lval = GetStr(ss, i);
                 rval = POP_STR();
                 goto do_setlval;
 
               case JSOP_INCLOCAL:
               case JSOP_DECLOCAL:
-                i = GET_UINT16(pc);
+                if (IsVarSlot(jp, pc, &i)) {
+                    atom = GetArgOrVarAtom(jp, i);
+                    LOCAL_ASSERT(atom);
+                    goto do_incatom;
+                }
                 lval = GetLocal(ss, i);
                 goto do_inclval;
 
               case JSOP_LOCALINC:
               case JSOP_LOCALDEC:
-                i = GET_UINT16(pc);
+                if (IsVarSlot(jp, pc, &i)) {
+                    atom = GetArgOrVarAtom(jp, i);
+                    LOCAL_ASSERT(atom);
+                    goto do_atominc;
+                }
                 lval = GetLocal(ss, i);
                 goto do_lvalinc;
-
-              case JSOP_FORLOCAL:
-                i = GET_UINT16(pc);
-                lval = GetStr(ss, i);
-                atom = NULL;
-                goto do_forlvalinloop;
 
               case JSOP_RETRVAL:
                 todo = -2;
@@ -3041,15 +3095,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 goto do_logical_connective;
 
               case JSOP_FORARG:
-                atom = GetSlotAtom(jp, JS_TRUE, GET_ARGNO(pc));
+                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
                 goto do_fornameinloop;
 
-              case JSOP_FORVAR:
               case JSOP_FORCONST:
-                atom = GetSlotAtom(jp, JS_FALSE, GET_VARNO(pc));
-                LOCAL_ASSERT(atom);
-                goto do_fornameinloop;
+              case JSOP_FORLOCAL:
+                if (IsVarSlot(jp, pc, &i)) {
+                    atom = GetArgOrVarAtom(jp, i);
+                    LOCAL_ASSERT(atom);
+                    goto do_fornameinloop;
+                }
+                JS_ASSERT(op == JSOP_FORLOCAL);
+                lval = GetStr(ss, i);
+                atom = NULL;
+                goto do_forlvalinloop;
 
               case JSOP_FORNAME:
                 LOAD_ATOM(0);
@@ -3276,12 +3336,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_SETARG:
-                atom = GetSlotAtom(jp, JS_TRUE, GET_ARGNO(pc));
-                LOCAL_ASSERT(atom);
-                goto do_setname;
-
-              case JSOP_SETVAR:
-                atom = GetSlotAtom(jp, JS_FALSE, GET_VARNO(pc));
+                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
                 goto do_setname;
 
@@ -3456,13 +3511,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_INCARG:
               case JSOP_DECARG:
-                atom = GetSlotAtom(jp, JS_TRUE, GET_ARGNO(pc));
-                LOCAL_ASSERT(atom);
-                goto do_incatom;
-
-              case JSOP_INCVAR:
-              case JSOP_DECVAR:
-                atom = GetSlotAtom(jp, JS_FALSE, GET_VARNO(pc));
+                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
                 goto do_incatom;
 
@@ -3518,13 +3567,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_ARGINC:
               case JSOP_ARGDEC:
-                atom = GetSlotAtom(jp, JS_TRUE, GET_ARGNO(pc));
-                LOCAL_ASSERT(atom);
-                goto do_atominc;
-
-              case JSOP_VARINC:
-              case JSOP_VARDEC:
-                atom = GetSlotAtom(jp, JS_FALSE, GET_VARNO(pc));
+                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
                 goto do_atominc;
 
@@ -3606,10 +3649,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_GETARGPROP:
-              case JSOP_GETVARPROP:
                 /* Get the name of the argument or variable. */
-                atom = GetSlotAtom(ss->printer, op == JSOP_GETARGPROP,
-                                   GET_UINT16(pc));
+                i = GET_ARGNO(pc);
+
+              do_getarg_prop:
+                atom = GetArgOrVarAtom(ss->printer, i);
                 LOCAL_ASSERT(atom);
                 LOCAL_ASSERT(ATOM_IS_STRING(atom));
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
@@ -3621,8 +3665,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 goto do_getprop;
 
               case JSOP_GETLOCALPROP:
-                LOAD_ATOM(2);
-                i = GET_UINT16(pc);
+                if (IsVarSlot(jp, pc, &i))
+                    goto do_getarg_prop;
                 LOCAL_ASSERT((uintN)i < ss->top);
                 lval = GetLocal(ss, i);
                 if (!lval)
@@ -3630,6 +3674,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = SprintCString(&ss->sprinter, lval);
                 if (todo < 0 || !PushOff(ss, todo, op))
                     return NULL;
+                LOAD_ATOM(2);
                 goto do_getprop;
 
               case JSOP_SETPROP:
@@ -3718,7 +3763,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_CALLARG:
               case JSOP_GETARG:
                 i = GET_ARGNO(pc);
-                atom = GetSlotAtom(jp, JS_TRUE, i);
+                atom = GetArgOrVarAtom(jp, i);
 #if JS_HAS_DESTRUCTURING
                 if (!atom) {
                     todo = Sprint(&ss->sprinter, "%s[%d]", js_arguments_str, i);
@@ -3727,12 +3772,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #else
                 LOCAL_ASSERT(atom);
 #endif
-                goto do_name;
-
-              case JSOP_CALLVAR:
-              case JSOP_GETVAR:
-                atom = GetSlotAtom(jp, JS_FALSE, GET_VARNO(pc));
-                LOCAL_ASSERT(atom);
                 goto do_name;
 
               case JSOP_CALLNAME:
@@ -3807,7 +3846,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * before returning.
                      */
                     mark = JS_ARENA_MARK(&cx->tempPool);
-                    if (!InitSprintStack(cx, &ss2, jp, inner->depth))
+                    if (!InitSprintStack(cx, &ss2, jp, StackDepth(inner)))
                         return NULL;
                     ss2.inGenExp = JS_TRUE;
 
@@ -4151,49 +4190,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = -2;
                 goto do_function;
                 break;
-
-#if JS_HAS_EXPORT_IMPORT
-              case JSOP_EXPORTALL:
-                js_printf(jp, "\texport *;\n");
-                todo = -2;
-                break;
-
-              case JSOP_EXPORTNAME:
-                LOAD_ATOM(0);
-                rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
-                if (!rval)
-                    return NULL;
-                RETRACT(&ss->sprinter, rval);
-                js_printf(jp, "\texport %s;\n", rval);
-                todo = -2;
-                break;
-
-              case JSOP_IMPORTALL:
-                lval = POP_STR();
-                js_printf(jp, "\timport %s.*;\n", lval);
-                todo = -2;
-                break;
-
-              case JSOP_IMPORTPROP:
-              do_importprop:
-                GET_ATOM_QUOTE_AND_FMT("\timport %s[%s];\n",
-                                       "\timport %s.%s;\n",
-                                       rval);
-                lval = POP_STR();
-                js_printf(jp, fmt, lval, rval);
-                todo = -2;
-                break;
-
-              case JSOP_IMPORTELEM:
-                xval = POP_STR();
-                op = JSOP_GETELEM;
-                if (JOF_OPMODE(lastop) == JOF_XMLNAME)
-                    goto do_importprop;
-                lval = POP_STR();
-                js_printf(jp, "\timport %s[%s];\n", lval, xval);
-                todo = -2;
-                break;
-#endif /* JS_HAS_EXPORT_IMPORT */
 
               case JSOP_TRAP:
                 saveop = op = JS_GetTrapOpcode(cx, jp->script, pc);
@@ -4651,7 +4647,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
     jsbytecode *oldcode, *oldmain, *code;
     char *last;
 
-    depth = script->depth;
+    depth = StackDepth(script);
     JS_ASSERT(pcdepth <= depth);
 
     /* Initialize a sprinter for use with the offset stack. */
@@ -4804,7 +4800,7 @@ js_DecompileFunction(JSPrinter *jp)
             if (i > 0)
                 js_puts(jp, ", ");
 
-            param = GetSlotAtom(jp, JS_TRUE, i);
+            param = GetArgOrVarAtom(jp, i);
 
 #if JS_HAS_DESTRUCTURING
 #define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, JS_FALSE)
@@ -4818,7 +4814,7 @@ js_DecompileFunction(JSPrinter *jp)
                 LOCAL_ASSERT(*pc == JSOP_DUP);
                 if (!ss.printer) {
                     ok = InitSprintStack(jp->sprinter.context, &ss, jp,
-                                         fun->u.i.script->depth);
+                                         StackDepth(fun->u.i.script));
                     if (!ok)
                         break;
                 }
@@ -4886,7 +4882,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     JSScript *script;
     JSFrameRegs *regs;
     intN pcdepth;
-    jsval *sp;
+    jsval *sp, *stackBase;
     char *name;
 
     JS_ASSERT(spindex < 0 ||
@@ -4914,7 +4910,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
          * populated interpreter's stack with its current content.
          */
         pcstack = (jsbytecode **)
-                  JS_malloc(cx, script->depth * sizeof *pcstack);
+                  JS_malloc(cx, StackDepth(script) * sizeof *pcstack);
         if (!pcstack)
             return NULL;
         pcdepth = ReconstructPCStack(cx, script, regs->pc, pcstack);
@@ -4933,16 +4929,17 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * calculated value matching v under assumption that it is
              * it that caused exception, see bug 328664.
              */
-            JS_ASSERT((size_t) (regs->sp - fp->spbase) <= script->depth);
+            stackBase = StackBase(fp);
+            JS_ASSERT((size_t) (regs->sp - stackBase) <= StackDepth(script));
             sp = regs->sp;
             do {
-                if (sp == fp->spbase) {
+                if (sp == stackBase) {
                     pcdepth = -1;
                     goto release_pcstack;
                 }
             } while (*--sp != v);
 
-            if (sp >= fp->spbase + pcdepth) {
+            if (sp >= stackBase + pcdepth) {
                 /*
                  * This happens when the value comes from a temporary slot
                  * that the interpreter uses for GC roots. Assume that it is
@@ -4950,7 +4947,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                  */
                 pc = regs->pc;
             } else {
-                pc = pcstack[sp - fp->spbase];
+                pc = pcstack[sp - stackBase];
             }
         }
 
@@ -5064,7 +5061,8 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
         goto out;
     }
 
-    pcstack = (jsbytecode **) JS_malloc(cx, script->depth * sizeof *pcstack);
+    pcstack = (jsbytecode **)
+              JS_malloc(cx, StackDepth(script) * sizeof *pcstack);
     if (!pcstack) {
         name = NULL;
         goto out;
@@ -5110,8 +5108,6 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
     const JSCodeSpec *cs;
     ptrdiff_t oplen;
     jssrcnote *sn;
-    uint32 type;
-    jsbytecode *pc2;
     intN i;
 
 #define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
@@ -5132,6 +5128,8 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
             op = JS_GetTrapOpcode(cx, script, pc);
         cs = &js_CodeSpec[op];
         oplen = cs->length;
+        if (oplen < 0)
+            oplen = js_GetVariableBytecodeLength(pc);
 
         if (op == JSOP_POPN) {
             pcdepth -= GET_UINT16(pc);
@@ -5180,51 +5178,6 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
             }
         }
 
-        type = JOF_TYPE(cs->format);
-        switch (type) {
-          case JOF_TABLESWITCH:
-          case JOF_TABLESWITCHX:
-          {
-            jsint jmplen, low, high;
-
-            jmplen = (type == JOF_TABLESWITCH) ? JUMP_OFFSET_LEN
-                                               : JUMPX_OFFSET_LEN;
-            pc2 = pc;
-            pc2 += jmplen;
-            low = GET_JUMP_OFFSET(pc2);
-            pc2 += JUMP_OFFSET_LEN;
-            high = GET_JUMP_OFFSET(pc2);
-            pc2 += JUMP_OFFSET_LEN;
-            for (i = low; i <= high; i++)
-                pc2 += jmplen;
-            oplen = 1 + pc2 - pc;
-            break;
-          }
-
-          case JOF_LOOKUPSWITCH:
-          case JOF_LOOKUPSWITCHX:
-          {
-            jsint jmplen;
-            jsatomid npairs;
-
-            jmplen = (type == JOF_LOOKUPSWITCH) ? JUMP_OFFSET_LEN
-                                                : JUMPX_OFFSET_LEN;
-            pc2 = pc;
-            pc2 += jmplen;
-            npairs = GET_UINT16(pc2);
-            pc2 += INDEX_LEN;
-            while (npairs) {
-                pc2 += INDEX_LEN;
-                pc2 += jmplen;
-                npairs--;
-            }
-            oplen = 1 + pc2 - pc;
-            break;
-          }
-
-          default:;
-        }
-
         if (sn && SN_TYPE(sn) == SRC_HIDDEN)
             continue;
 
@@ -5257,7 +5210,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
             ndefs = OBJ_BLOCK_COUNT(cx, obj);
         }
 
-        LOCAL_ASSERT((uintN)(pcdepth + ndefs) <= script->depth);
+        LOCAL_ASSERT((uintN)(pcdepth + ndefs) <= StackDepth(script));
 
         /*
          * Fill the slots that the opcode defines withs its pc unless it just

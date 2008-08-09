@@ -104,7 +104,7 @@ struct JSGenerator {
     JSStackFrame        frame;
     JSFrameRegs         savedRegs;
     JSArena             arena;
-    jsval               stack[1];
+    jsval               slots[1];
 };
 
 #define FRAME_TO_GENERATOR(fp) \

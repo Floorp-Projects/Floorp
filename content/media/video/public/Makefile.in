@@ -47,4 +47,12 @@ EXPORTS		= \
 		nsVideoDecoder.h \
 		$(NULL)
 
+ifdef MOZ_OGG
+EXPORTS		+= \
+		nsAudioStream.h \
+		nsChannelReader.h \
+		nsOggDecoder.h \
+		$(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk

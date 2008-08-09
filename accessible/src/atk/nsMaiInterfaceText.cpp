@@ -41,8 +41,9 @@
 
 #include "nsMaiInterfaceText.h"
 #include "nsString.h"
+#include "nsIPersistentProperties2.h"
 
-AtkAttributeSet * GetAttributeSet(nsIAccessible* aAccessible);
+AtkAttributeSet* ConvertToAtkAttributeSet(nsIPersistentProperties* aAttributes);
 
 void
 textInterfaceInitCB(AtkTextIface *aIface)
@@ -245,6 +246,9 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
                    gint *aStartOffset,
                    gint *aEndOffset)
 {
+    *aStartOffset = -1;
+    *aEndOffset = -1;
+
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
     if (!accWrap)
         return nsnull;
@@ -254,24 +258,37 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
                             getter_AddRefs(accText));
     NS_ENSURE_TRUE(accText, nsnull);
 
-    nsCOMPtr<nsIAccessible> accessibleWithAttrs;
+    nsCOMPtr<nsIPersistentProperties> attributes;
     PRInt32 startOffset = 0, endOffset = 0;
-    nsresult rv =
-        accText->GetAttributeRange(aOffset, &startOffset, &endOffset,
-                                   getter_AddRefs(accessibleWithAttrs));
+    nsresult rv = accText->GetTextAttributes(PR_FALSE, aOffset,
+                                             &startOffset, &endOffset,
+                                             getter_AddRefs(attributes));
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
     *aStartOffset = startOffset;
     *aEndOffset = endOffset;
-    if (NS_FAILED(rv))
-        return nsnull;
 
-    return GetAttributeSet(accessibleWithAttrs);
+    return ConvertToAtkAttributeSet(attributes);
 }
 
 AtkAttributeSet *
 getDefaultAttributesCB(AtkText *aText)
 {
-    /* not supported ??? */
-    return nsnull;
+    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+    if (!accWrap)
+        return nsnull;
+
+    nsCOMPtr<nsIAccessibleText> accText;
+    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
+                            getter_AddRefs(accText));
+    NS_ENSURE_TRUE(accText, nsnull);
+
+    nsCOMPtr<nsIPersistentProperties> attributes;
+    nsresult rv = accText->GetDefaultTextAttributes(getter_AddRefs(attributes));
+    if (NS_FAILED(rv))
+        return nsnull;
+
+    return ConvertToAtkAttributeSet(attributes);
 }
 
 void

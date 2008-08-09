@@ -40,7 +40,6 @@
 #define _nsAccessible_H_
 
 #include "nsAccessNodeWrap.h"
-#include "nsAccessibilityUtils.h"
 
 #include "nsIAccessible.h"
 #include "nsPIAccessible.h"
@@ -69,9 +68,6 @@ class nsIView;
 
 #define NS_OK_NO_ARIA_VALUE \
 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x21)
-
-// When mNextSibling is set to this, it indicates there ar eno more siblings
-#define DEAD_END_ACCESSIBLE static_cast<nsIAccessible*>((void*)1)
 
 // Saves a data member -- if child count equals this value we haven't
 // cached children or child count yet
@@ -107,6 +103,8 @@ public:
   virtual ~nsAccessible();
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsAccessible, nsAccessNode)
+
   NS_DECL_NSIACCESSIBLE
   NS_DECL_NSPIACCESSIBLE
   NS_DECL_NSIACCESSIBLEHYPERLINK
@@ -197,7 +195,22 @@ protected:
   // helper method to verify frames
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
   static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
-  nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
+
+  /**
+   * Walk into subtree and calculate the string which is used as the accessible
+   * name or description.
+   *
+   * @param aContent      [in] traversed content
+   * @param aFlatString   [in, out] result string
+   * @param aIsRootHidden [in] specifies whether root content (we started to
+   *                      traverse from) is hidden, in this case the result
+   *                      string is calculated from hidden children
+   *                      (this is used when hidden root content is explicitly
+   *                      specified as label or description by author)
+   */
+  nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent,
+                                              nsAString *aFlatString,
+                                              PRBool aIsRootHidden);
 
   // Helpers for dealing with children
   virtual void CacheChildren();
@@ -258,7 +271,9 @@ protected:
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;
-  nsIAccessible *mFirstChild, *mNextSibling;
+  nsCOMPtr<nsIAccessible> mFirstChild;
+  nsCOMPtr<nsIAccessible> mNextSibling;
+
   nsRoleMapEntry *mRoleMapEntry; // Non-null indicates author-supplied role; possibly state & value as well
   PRInt32 mAccChildCount;
 };

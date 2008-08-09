@@ -269,7 +269,8 @@ nsGfxCheckboxControlFrame::PaintCheckBoxFromStyle(
                                         this, aDirtyRect, rect, *myBackground,
                                         *myBorder, *myPadding, PR_FALSE);
   nsCSSRendering::PaintBorder(PresContext(), aRenderingContext, this,
-                              aDirtyRect, rect, *myBorder, mCheckButtonFaceStyle, 0);
+                              aDirtyRect, rect, *myBorder,
+                              mCheckButtonFaceStyle);
 }
 
 //------------------------------------------------------------

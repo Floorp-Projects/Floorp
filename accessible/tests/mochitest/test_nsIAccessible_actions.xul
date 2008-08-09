@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/a11y/accessible/nsIAccessible_name.css"
+                 type="text/css"?>
+
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="nsIAccessible actions testing">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_actions.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    function doTest()
+    {
+      var actionsArray = [
+        {
+          ID: "menu",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "submenu",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "menuitem",
+          actionName: "click",
+          events: ALL_EVENTS
+        },
+        {
+          ID: "button",
+          actionName: "press",
+          events: ALL_EVENTS
+        },
+        {
+          ID: "buttonmenu",
+          actionName: "press",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "buttonmenu_item",
+          actionName: "click",
+          events: CLICK_EVENTS
+        }
+      ];
+      testActions(actionsArray);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=410765"
+       title="nsIAccessible actions testing">
+      Mozilla Bug 410765
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <menubar>
+    <menu label="menu" id="menu">
+      <menupopup>
+        <menuitem label="menu item" id="menuitem"/>
+        <menu label="submenu" id="submenu">
+          <menupopup>
+            <menuitem label="menu item"/>
+          </menupopup>
+        </menu>
+      </menupopup>
+    </menu>
+  </menubar>
+
+  <button label="button" id="button"/>
+
+  <button type="menu" id="buttonmenu" label="button">
+    <menupopup>
+      <menuitem label="item1" id="buttonmenu_item"/>
+      <menuitem label="item1"/>
+    </menupopup>
+  </button>
+</window>
+

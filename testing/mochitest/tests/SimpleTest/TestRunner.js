@@ -1,7 +1,7 @@
 /**
  * TestRunner: A test runner for SimpleTest
  * TODO:
- * 
+ *
  *  * Avoid moving iframes: That causes reloads on mozilla and opera.
  *
  *
@@ -38,7 +38,7 @@ TestRunner._checkForHangs = function() {
 
       frameWindow.SimpleTest.finish();
     }
-    TestRunner.deferred = callLater(30, TestRunner._checkForHangs); 
+    TestRunner.deferred = callLater(30, TestRunner._checkForHangs);
   }
 }
 
@@ -82,13 +82,15 @@ TestRunner._makeIframe = function (url, retry) {
             return;
         }
 
-        var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
-                          $('testframe').contentWindow;
-        frameWindow.SimpleTest.ok(false, "Unable to restore focus, expect failures and timeouts.");
+        if (TestRunner.logEnabled) {
+            var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
+                              $('testframe').contentWindow;
+            TestRunner.logger.log("Error: Unable to restore focus, expect failures and timeouts.");
+        }
     }
     window.scrollTo(0, $('indicator').offsetTop);
     iframe.src = url;
-    iframe.name = url; 
+    iframe.name = url;
     iframe.width = "500";
     return iframe;
 };
@@ -102,7 +104,7 @@ TestRunner._makeIframe = function (url, retry) {
 TestRunner.runTests = function (/*url...*/) {
     if (TestRunner.logEnabled)
         TestRunner.logger.log("SimpleTest START");
-  
+
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
     TestRunner._checkForHangs();
@@ -122,12 +124,12 @@ TestRunner.runNextTest = function() {
         TestRunner.currentTestURL = url;
 
         $("current-test-path").innerHTML = url;
-        
+
         TestRunner._currentTestStartTime = new Date().valueOf();
 
         if (TestRunner.logEnabled)
             TestRunner.logger.log("Running " + url + "...");
-        
+
         TestRunner._makeIframe(url, 0);
     }  else {
         $("current-test").innerHTML = "<b>Finished</b>";
@@ -148,10 +150,10 @@ TestRunner.runNextTest = function() {
 **/
 TestRunner.testFinished = function(doc) {
     var finishedURL = TestRunner._urls[TestRunner._currentTest];
-    
+
     if (TestRunner.logEnabled)
         TestRunner.logger.debug("SimpleTest finished " + finishedURL);
-    
+
     TestRunner.updateUI();
     TestRunner._currentTest++;
     TestRunner.runNextTest();
@@ -181,7 +183,7 @@ TestRunner.updateUI = function() {
   $("pass-count").innerHTML = passCount;
   $("fail-count").innerHTML = failCount;
   $("todo-count").innerHTML = todoCount;
-  
+
   // Set the top Green/Red bar
   var indicator = $("indicator");
   if (failCount > 0) {
@@ -191,7 +193,7 @@ TestRunner.updateUI = function() {
     indicator.innerHTML = "Status: Pass";
     indicator.style.backgroundColor = "green";
   }
-  
+
   // Set the table values
   var trID = "tr-" + $('current-test-path').innerHTML;
   var row = $(trID);

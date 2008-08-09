@@ -53,6 +53,15 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 
+#ifdef NS_OSSO
+struct DBusMessage;  /* libosso.h references internals of dbus */
+
+#include <dbus/dbus.h>
+#include <dbus/dbus-protocol.h>
+#include <libosso.h>
+
+#endif
+
 #define MIN_GTK_MAJOR_VERSION 2
 #define MIN_GTK_MINOR_VERSION 10
 #define UNSUPPORTED_GTK_MSG "We're sorry, this application requires a version of the GTK+ library that is not installed on your computer.\n\n\
@@ -189,11 +198,63 @@ class nsNativeAppSupportUnix : public nsNativeAppSupportBase
 {
 public:
   NS_IMETHOD Start(PRBool* aRetVal);
+  NS_IMETHOD Stop( PRBool *aResult);
+
+private:
+#ifdef NS_OSSO
+  osso_context_t *m_osso_context;    
+  /* A note about why we need to have m_hw_state:
+     the osso hardware callback does not tell us what changed, just
+     that something has changed.  We need to keep track of state so
+     that we can determine what has changed.
+  */  
+  osso_hw_state_t m_hw_state;
+#endif
 };
+
+#ifdef NS_OSSO
+static void OssoHardwareCallback(osso_hw_state_t *state, gpointer data)
+{
+  NS_ASSERTION(state, "osso_hw_state_t must not be null.");
+  NS_ASSERTION(data, "data must not be null.");
+
+  osso_hw_state_t* ourState = (osso_hw_state_t*) data;
+
+  if (state->shutdown_ind) {
+    nsCOMPtr<nsIAppStartup> appService =  do_GetService("@mozilla.org/toolkit/app-startup;1");
+    if (appService)
+      appService->Quit(nsIAppStartup::eForceQuit);
+    return;
+  }
+    
+  if (state->memory_low_ind) {
+    if (ourState->memory_low_ind) {
+      nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+      if (os)
+        os->NotifyObservers(nsnull, "memory-pressure", NS_LITERAL_STRING("low-memory").get());
+    }
+  }
+  
+  if (state->system_inactivity_ind != ourState->system_inactivity_ind) {
+      nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+      if (!os)
+        return;
+ 
+      if (state->system_inactivity_ind)
+          os->NotifyObservers(nsnull, "system-idle", nsnull);
+      else
+          os->NotifyObservers(nsnull, "system-active", nsnull);
+  }
+
+  memcpy(ourState, state, sizeof(osso_hw_state_t));
+}
+
+#endif
 
 NS_IMETHODIMP
 nsNativeAppSupportUnix::Start(PRBool *aRetVal)
 {
+  NS_ASSERTION(gAppData, "gAppData must not be null.");
 
   if (gtk_major_version < MIN_GTK_MAJOR_VERSION ||
       (gtk_major_version == MIN_GTK_MAJOR_VERSION && gtk_minor_version < MIN_GTK_MINOR_VERSION)) {
@@ -212,7 +273,31 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
     exit(0);
   }
 
+#ifdef NS_OSSO
+  /* zero state out. */
+  memset(&m_hw_state, 0, sizeof(osso_hw_state_t));
+
+  /* Initialize maemo application */
+  m_osso_context = osso_initialize(gAppData->name, 
+                                   gAppData->version ? gAppData->version : "1.0",
+                                   PR_TRUE,
+                                   nsnull);
+
+  /* Check that initilialization was ok */
+  if (m_osso_context == nsnull) {
+      return NS_ERROR_FAILURE;
+  }
+
+  osso_hw_set_event_cb(m_osso_context,
+                       nsnull,
+                       OssoHardwareCallback,
+                       &m_hw_state);
+
+#endif
+
   *aRetVal = PR_TRUE;
+
+#ifdef MOZ_X11
 
   PRLibrary *gnomeuiLib = PR_LoadLibrary("libgnomeui-2.so.0");
   if (!gnomeuiLib)
@@ -233,6 +318,8 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
     return NS_OK;
   }
 
+#endif /* MOZ_X11 */
+
 #ifdef ACCESSIBILITY
   // We will load gail, atk-bridge by ourself later
   // We can't run atk-bridge init here, because gail get the control
@@ -242,7 +329,9 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   setenv(accEnv, "0", 1);
 #endif
 
+#ifdef MOZ_X11
   gnome_program_init("Gecko", "1.0", libgnomeui_module_info_get(), gArgc, gArgv, NULL);
+#endif /* MOZ_X11 */
 
 #ifdef ACCESSIBILITY
   if (accOldValue) { 
@@ -256,6 +345,7 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   // gnome_program_init causes atexit handlers to be registered. Strange
   // crashes will occur if these libraries are unloaded.
 
+#ifdef MOZ_X11
   gnome_client_request_interaction = (_gnome_client_request_interaction_fn)
     PR_FindFunctionSymbol(gnomeuiLib, "gnome_client_request_interaction");
   gnome_interaction_key_return = (_gnome_interaction_key_return_fn)
@@ -269,7 +359,25 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   GnomeClient *client = gnome_master_client();
   g_signal_connect(client, "save-yourself", G_CALLBACK(save_yourself_cb), NULL);
   g_signal_connect(client, "die", G_CALLBACK(die_cb), NULL);
+#endif /* MOZ_X11 */
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportUnix::Stop( PRBool *aResult )
+{
+  NS_ENSURE_ARG( aResult );
+  *aResult = PR_TRUE;
+
+#ifdef NS_OSSO
+  if (m_osso_context)
+  {
+    osso_hw_unset_event_cb(m_osso_context, nsnull);
+    osso_deinitialize(m_osso_context);
+    m_osso_context = nsnull;
+  }
+#endif
   return NS_OK;
 }
 

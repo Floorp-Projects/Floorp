@@ -138,6 +138,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/src/jsurl/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/storage/$(LIB_PREFIX)jsdomstorage_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/offline/$(LIB_PREFIX)jsdomoffline_s.$(LIB_SUFFIX) \
+ 	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
 	$(NULL)
@@ -145,6 +146,18 @@ SHARED_LIBRARY_LIBS = \
 ifdef MOZ_MEDIA
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/content/media/video/src/$(LIB_PREFIX)gkconvideo_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
+ifdef MOZ_OGG
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libfishsound/src/libfishsound/$(LIB_PREFIX)fishsound.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
+	$(DEPTH)/media/liboggplay/src/liboggplay/$(LIB_PREFIX)oggplay.$(LIB_SUFFIX) \
+	$(DEPTH)/media/liboggz/src/liboggz/$(LIB_PREFIX)oggz.$(LIB_SUFFIX) \
+	$(DEPTH)/media/liboggplay_audio/$(LIB_PREFIX)oggplay_audio.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libtheora/lib/$(LIB_PREFIX)theora.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
@@ -239,6 +252,12 @@ ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
 endif
 
+ifdef MOZ_OGG
+ifeq ($(OS_ARCH),Darwin)
+OS_LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	+= -I$(srcdir)/../base \
@@ -267,6 +286,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/dom/src/jsurl \
 		   -I$(topsrcdir)/dom/src/storage \
 		   -I$(topsrcdir)/dom/src/offline \
+		   -I$(topsrcdir)/dom/src/geolocation \
 		   -I. \
 		   -I$(topsrcdir)/editor/libeditor/base \
 		   -I$(topsrcdir)/editor/libeditor/text \

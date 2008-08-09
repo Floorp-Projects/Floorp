@@ -78,7 +78,6 @@ public:
   NS_IMETHOD GetBaseURI(nsIURI** aBaseURI) const = 0;
   NS_IMETHOD GetTitle(nsString& aTitle) const = 0;
   NS_IMETHOD GetType(nsString& aType) const = 0;
-  NS_IMETHOD_(PRBool) UseForMedium(nsPresContext* aPresContext) const = 0;
   NS_IMETHOD_(PRBool) HasRules() const = 0;
 
   /**

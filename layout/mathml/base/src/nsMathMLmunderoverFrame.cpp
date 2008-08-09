@@ -436,12 +436,19 @@ nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
 
   GetItalicCorrection(bmAnonymousBase, correction);
 
-  nscoord maxWidth = PR_MAX(bmAnonymousBase.width, bmUnder.width);
-  if (NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {    
-    dxUnder = (maxWidth - bmUnder.width)/2;;
+  // Width of non-spacing marks is zero so use left and right bearing.
+  nscoord underWidth = bmUnder.width;
+  if (!underWidth) {
+    underWidth = bmUnder.rightBearing - bmUnder.leftBearing;
+    dxUnder = -bmUnder.leftBearing;
+  }
+
+  nscoord maxWidth = PR_MAX(bmAnonymousBase.width, underWidth);
+  if (NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {
+    dxUnder += (maxWidth - underWidth)/2;;
   }
   else {
-    dxUnder = -correction/2 + (maxWidth - bmUnder.width)/2;
+    dxUnder += -correction/2 + (maxWidth - underWidth)/2;
   }
   nscoord dxAnonymousBase = (maxWidth - bmAnonymousBase.width)/2;
 

@@ -879,25 +879,7 @@ nsHttpChannel::ProcessNormal()
     // being called inside our OnDataAvailable (see bug 136678).
     mCachedContentIsPartial = PR_FALSE;
 
-    // For .gz files, apache sends both a Content-Type: application/x-gzip
-    // as well as Content-Encoding: gzip, which is completely wrong.  In
-    // this case, we choose to ignore the rogue Content-Encoding header. We
-    // must do this early on so as to prevent it from being seen up stream.
-    // The same problem exists for Content-Encoding: compress in default
-    // Apache installs.
-    if (mResponseHead->HasHeaderValue(nsHttp::Content_Encoding, "gzip") && (
-        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP) ||
-        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP2) ||
-        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP3))) {
-        // clear the Content-Encoding header
-        mResponseHead->ClearHeader(nsHttp::Content_Encoding);
-    }
-    else if (mResponseHead->HasHeaderValue(nsHttp::Content_Encoding, "compress") && (
-             mResponseHead->ContentType().EqualsLiteral(APPLICATION_COMPRESS) ||
-             mResponseHead->ContentType().EqualsLiteral(APPLICATION_COMPRESS2))) {
-        // clear the Content-Encoding header
-        mResponseHead->ClearHeader(nsHttp::Content_Encoding);
-    }
+    ClearBogusContentEncodingIfNeeded();
 
     // this must be called before firing OnStartRequest, since http clients,
     // such as imagelib, expect our cache entry to already have the correct
@@ -1199,6 +1181,9 @@ nsHttpChannel::ProcessPartialContent()
     NS_ENSURE_TRUE(mCachedResponseHead, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_INITIALIZED);
 
+    // Make sure to clear bogus content-encodings before looking at the header
+    ClearBogusContentEncodingIfNeeded();
+    
     // Check if the content-encoding we now got is different from the one we
     // got before
     if (PL_strcasecmp(mResponseHead->PeekHeader(nsHttp::Content_Encoding),
@@ -2231,6 +2216,30 @@ nsHttpChannel::InstallOfflineCacheListener()
     mListener = tee;
 
     return NS_OK;
+}
+
+void
+nsHttpChannel::ClearBogusContentEncodingIfNeeded()
+{
+    // For .gz files, apache sends both a Content-Type: application/x-gzip
+    // as well as Content-Encoding: gzip, which is completely wrong.  In
+    // this case, we choose to ignore the rogue Content-Encoding header. We
+    // must do this early on so as to prevent it from being seen up stream.
+    // The same problem exists for Content-Encoding: compress in default
+    // Apache installs.
+    if (mResponseHead->HasHeaderValue(nsHttp::Content_Encoding, "gzip") && (
+        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP) ||
+        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP2) ||
+        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP3))) {
+        // clear the Content-Encoding header
+        mResponseHead->ClearHeader(nsHttp::Content_Encoding);
+    }
+    else if (mResponseHead->HasHeaderValue(nsHttp::Content_Encoding, "compress") && (
+             mResponseHead->ContentType().EqualsLiteral(APPLICATION_COMPRESS) ||
+             mResponseHead->ContentType().EqualsLiteral(APPLICATION_COMPRESS2))) {
+        // clear the Content-Encoding header
+        mResponseHead->ClearHeader(nsHttp::Content_Encoding);
+    }
 }
 
 //-----------------------------------------------------------------------------

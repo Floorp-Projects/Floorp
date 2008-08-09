@@ -51,6 +51,8 @@
         persist="screenX screenY">
 
   <script type="application/javascript"
+          src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"
           src="chrome://browser/content/preferences/applicationManager.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/preferences/applications.js"/>

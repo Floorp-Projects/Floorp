@@ -304,6 +304,7 @@ CSS_PROP_SHORTHAND(-moz-border-end-width, border_end_width, MozBorderEndWidth)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-end-width-value, border_end_width_value, X, Margin, mBorderEndWidth, eCSSType_Value, kBorderWidthKTable)
 #endif
+CSS_PROP_BORDER(-moz-border-image, border_image, MozBorderImage, Margin, mBorderImage, eCSSType_Value, kBorderImageKTable)
 CSS_PROP_SHORTHAND(border-left, border_left, BorderLeft)
 CSS_PROP_SHORTHAND(border-left-color, border_left_color, BorderLeftColor)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
@@ -375,9 +376,13 @@ CSS_PROP_COLOR(color, color, Color, Color, mColor, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-count, _moz_column_count, MozColumnCount, Column, mColumnCount, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-width, _moz_column_width, MozColumnWidth, Column, mColumnWidth, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-gap, _moz_column_gap, MozColumnGap, Column, mColumnGap, eCSSType_Value, nsnull)
+CSS_PROP_SHORTHAND(-moz-column-rule, _moz_column_rule, MozColumnRule)
+CSS_PROP_COLUMN(-moz-column-rule-color, _moz_column_rule_color, MozColumnRuleColor, Column, mColumnRuleColor, eCSSType_Value, nsnull)
+CSS_PROP_COLUMN(-moz-column-rule-style, _moz_column_rule_style, MozColumnRuleStyle, Column, mColumnRuleStyle, eCSSType_Value, kBorderStyleKTable)
+CSS_PROP_COLUMN(-moz-column-rule-width, _moz_column_rule_width, MozColumnRuleWidth, Column, mColumnRuleWidth, eCSSType_Value, kBorderWidthKTable)
 CSS_PROP_CONTENT(content, content, Content, Content, mContent, eCSSType_ValueList, kContentKTable)
-CSS_PROP_CONTENT(counter-increment, counter_increment, CounterIncrement, Content, mCounterIncrement, eCSSType_CounterData, nsnull) // XXX bug 137285
-CSS_PROP_CONTENT(counter-reset, counter_reset, CounterReset, Content, mCounterReset, eCSSType_CounterData, nsnull) // XXX bug 137285
+CSS_PROP_CONTENT(counter-increment, counter_increment, CounterIncrement, Content, mCounterIncrement, eCSSType_ValuePairList, nsnull) // XXX bug 137285
+CSS_PROP_CONTENT(counter-reset, counter_reset, CounterReset, Content, mCounterReset, eCSSType_ValuePairList, nsnull) // XXX bug 137285
 CSS_PROP_SHORTHAND(cue, cue, Cue)
 CSS_PROP_BACKENDONLY(cue-after, cue_after, CueAfter, Aural, mCueAfter, eCSSType_Value, nsnull)
 CSS_PROP_BACKENDONLY(cue-before, cue_before, CueBefore, Aural, mCueBefore, eCSSType_Value, nsnull)
@@ -479,7 +484,7 @@ CSS_PROP_BACKENDONLY(pause-before, pause_before, PauseBefore, Aural, mPauseBefor
 CSS_PROP_BACKENDONLY(pitch, pitch, Pitch, Aural, mPitch, eCSSType_Value, kPitchKTable)
 CSS_PROP_BACKENDONLY(pitch-range, pitch_range, PitchRange, Aural, mPitchRange, eCSSType_Value, nsnull)
 CSS_PROP_DISPLAY(position, position, Position, Display, mPosition, eCSSType_Value, kPositionKTable)
-CSS_PROP_QUOTES(quotes, quotes, Quotes, Content, mQuotes, eCSSType_Quotes, nsnull)
+CSS_PROP_QUOTES(quotes, quotes, Quotes, Content, mQuotes, eCSSType_ValuePairList, nsnull)
 CSS_PROP_BACKENDONLY(richness, richness, Richness, Aural, mRichness, eCSSType_Value, nsnull)
 CSS_PROP_POSITION(right, right, Right, Position, mOffset.mRight, eCSSType_Value, nsnull)
 CSS_PROP_BACKENDONLY(size, size, Size, Page, mSize, eCSSType_ValuePair, kPageSizeKTable)
@@ -509,6 +514,7 @@ CSS_PROP_TEXT(white-space, white_space, WhiteSpace, Text, mWhiteSpace, eCSSType_
 CSS_PROP_BACKENDONLY(widows, widows, Widows, Breaks, mWidows, eCSSType_Value, nsnull)
 CSS_PROP_POSITION(width, width, Width, Position, mWidth, eCSSType_Value, kWidthKTable)
 CSS_PROP_TEXT(word-spacing, word_spacing, WordSpacing, Text, mWordSpacing, eCSSType_Value, nsnull)
+CSS_PROP_TEXT(word-wrap, word_wrap, WordWrap, Text, mWordWrap, eCSSType_Value, kWordwrapKTable)
 CSS_PROP_POSITION(z-index, z_index, ZIndex, Position, mZIndex, eCSSType_Value, nsnull)
 
 CSS_PROP_XUL(-moz-box-align, box_align, MozBoxAlign, XUL, mBoxAlign, eCSSType_Value, kBoxAlignKTable) // XXX bug 3935

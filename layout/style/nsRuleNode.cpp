@@ -53,7 +53,8 @@
 #include "nsIDeviceContext.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
-#include "nsIFontMetrics.h"
+#include "nsIThebesFontMetrics.h"
+#include "gfxFont.h"
 #include "nsStyleUtil.h"
 #include "nsCSSPseudoElements.h"
 #include "nsThemeConstants.h"
@@ -67,47 +68,7 @@
 #include "nsILanguageAtomService.h"
 #include "nsIStyleRule.h"
 #include "nsBidiUtils.h"
-
-/*
- * For storage of an |nsRuleNode|'s children in a linked list.
- */
-struct nsRuleList {
-  nsRuleNode* mRuleNode;
-  nsRuleList* mNext;
-  
-public:
-  nsRuleList(nsRuleNode* aNode, nsRuleList* aNext= nsnull) {
-    MOZ_COUNT_CTOR(nsRuleList);
-    mRuleNode = aNode;
-    mNext = aNext;
-  }
- 
-  ~nsRuleList() {
-    MOZ_COUNT_DTOR(nsRuleList);
-    mRuleNode->Destroy();
-    if (mNext)
-      mNext->Destroy(mNext->mRuleNode->mPresContext);
-  }
-
-  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
-    return aContext->AllocateFromShell(sz);
-  }
-  void operator delete(void* aPtr) {} // Does nothing. The arena will free us up when the rule tree
-                                      // dies.
-
-  void Destroy(nsPresContext* aContext) {
-    this->~nsRuleList();
-    aContext->FreeToShell(sizeof(nsRuleList), this);
-  }
-
-  // Destroy this node, but not its rule node or the rest of the list.
-  nsRuleList* DestroySelf(nsPresContext* aContext) {
-    nsRuleList *next = mNext;
-    MOZ_COUNT_DTOR(nsRuleList); // hack
-    aContext->FreeToShell(sizeof(nsRuleList), this);
-    return next;
-  }
-};
+#include "nsStyleStructInlines.h"
 
 /*
  * For storage of an |nsRuleNode|'s children in a PLDHashTable.
@@ -231,8 +192,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     aFontSize = aStyleFont->mFont.size;
   }
   switch (unit) {
-    case eCSSUnit_EM:
-    case eCSSUnit_Char: {
+    case eCSSUnit_EM: {
       return NSToCoordRound(aValue.GetFloatValue() * float(aFontSize));
       // XXX scale against font metrics height instead?
     }
@@ -252,6 +212,18 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       nscoord capHeight = ((aFontSize / 3) * 2); // XXX HACK!
       return NSToCoordRound(aValue.GetFloatValue() * float(capHeight));
     }
+    case eCSSUnit_Char: {
+      nsFont font = aStyleFont->mFont;
+      font.size = aFontSize;
+      nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font);
+      nsCOMPtr<nsIThebesFontMetrics> tfm(do_QueryInterface(fm));
+      gfxFloat zeroWidth = (tfm->GetThebesFontGroup()->GetFontAt(0)
+                            ->GetMetrics().zeroOrAveCharWidth);
+
+      return NSToCoordRound(aValue.GetFloatValue() *
+                            NS_ceil(aPresContext->AppUnitsPerDevPixel() *
+                                    zeroWidth));
+    }
     default:
       NS_NOTREACHED("unexpected unit");
       break;
@@ -267,6 +239,16 @@ static nscoord CalcLength(const nsCSSValue& aValue,
   NS_ASSERTION(aStyleContext, "Must have style data");
 
   return CalcLengthWith(aValue, -1, nsnull, aStyleContext, aPresContext, aInherited);
+}
+
+/* static */ nscoord
+nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
+                                      const nsCSSValue& aValue)
+{
+  nsStyleFont defaultFont(aPresContext);
+  PRBool inherited;
+  return CalcLengthWith(aValue, -1, &defaultFont, nsnull, aPresContext,
+                        inherited);
 }
 
 #define SETCOORD_NORMAL                 0x01   // N
@@ -308,10 +290,6 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   if (aValue.GetUnit() == eCSSUnit_Null) {
     result = PR_FALSE;
   }
-  else if (((aMask & SETCOORD_LENGTH) != 0) && 
-           (aValue.GetUnit() == eCSSUnit_Char)) {
-    aCoord.SetIntValue(NSToIntFloor(aValue.GetFloatValue()), eStyleUnit_Chars);
-  } 
   else if (((aMask & SETCOORD_LENGTH) != 0) && 
            aValue.IsLengthUnit()) {
     aCoord.SetCoordValue(CalcLength(aValue, aStyleContext, aPresContext, aInherited));
@@ -441,11 +419,61 @@ nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
   return aPresContext->AllocateFromShell(sz);
 }
 
+/* static */ PR_CALLBACK PLDHashOperator
+nsRuleNode::EnqueueRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                                    PRUint32 number, void *arg)
+{
+  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
+  nsRuleNode ***destroyQueueTail = static_cast<nsRuleNode***>(arg);
+  **destroyQueueTail = entry->mRuleNode;
+  *destroyQueueTail = &entry->mRuleNode->mNextSibling;
+  return PL_DHASH_NEXT;
+}
+
 // Overridden to prevent the global delete from being called, since the memory
 // came out of an nsIArena instead of the global delete operator's heap.
 void 
-nsRuleNode::Destroy()
+nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
 {
+  nsRuleNode *destroyQueue, **destroyQueueTail;
+  if (aDestroyQueueTail) {
+    destroyQueueTail = *aDestroyQueueTail;
+  } else {
+    destroyQueue = nsnull;
+    destroyQueueTail = &destroyQueue;
+  }
+
+  if (ChildrenAreHashed()) {
+    PLDHashTable *children = ChildrenHash();
+    PL_DHashTableEnumerate(children, EnqueueRuleNodeChildren,
+                           &destroyQueueTail);
+    *destroyQueueTail = nsnull; // ensure null-termination
+    PL_DHashTableDestroy(children);
+  } else if (HaveChildren()) {
+    *destroyQueueTail = ChildrenList();
+    do {
+      destroyQueueTail = &(*destroyQueueTail)->mNextSibling;
+    } while (*destroyQueueTail);
+  }
+  mChildrenTaggedPtr = nsnull;
+
+  if (aDestroyQueueTail) {
+    // Our caller destroys the queue.
+    *aDestroyQueueTail = destroyQueueTail;
+  } else {
+    // We have to do destroy the queue.  When we destroy each node, it
+    // will add its children to the queue.
+    while (destroyQueue) {
+      nsRuleNode *cur = destroyQueue;
+      destroyQueue = destroyQueue->mNextSibling;
+      if (!destroyQueue) {
+        NS_ASSERTION(destroyQueueTail == &cur->mNextSibling, "mangled list");
+        destroyQueueTail = &destroyQueue;
+      }
+      cur->DestroyInternal(&destroyQueueTail);
+    }
+  }
+
   // Destroy ourselves.
   this->~nsRuleNode();
   
@@ -480,26 +508,11 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
   NS_ASSERTION(IsRoot() || IsImportantRule() == aIsImportant, "yikes");
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
-DeleteRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                       PRUint32 number, void *arg)
-{
-  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
-  entry->mRuleNode->Destroy();
-  return PL_DHASH_NEXT;
-}
-
 nsRuleNode::~nsRuleNode()
 {
   MOZ_COUNT_DTOR(nsRuleNode);
   if (mStyleData.mResetData || mStyleData.mInheritedData)
     mStyleData.Destroy(0, mPresContext);
-  if (ChildrenAreHashed()) {
-    PLDHashTable *children = ChildrenHash();
-    PL_DHashTableEnumerate(children, DeleteRuleNodeChildren, nsnull);
-    PL_DHashTableDestroy(children);
-  } else if (HaveChildren())
-    ChildrenList()->Destroy(mPresContext);
   NS_IF_RELEASE(mRule);
 }
 
@@ -512,13 +525,13 @@ nsRuleNode::Transition(nsIStyleRule* aRule, PRUint8 aLevel,
 
   if (HaveChildren() && !ChildrenAreHashed()) {
     PRInt32 numKids = 0;
-    nsRuleList* curr = ChildrenList();
-    while (curr && curr->mRuleNode->GetKey() != key) {
-      curr = curr->mNext;
+    nsRuleNode* curr = ChildrenList();
+    while (curr && curr->GetKey() != key) {
+      curr = curr->mNextSibling;
       ++numKids;
     }
     if (curr)
-      next = curr->mRuleNode;
+      next = curr;
     else if (numKids >= kMaxChildrenInList)
       ConvertChildrenToHash();
   }
@@ -546,12 +559,8 @@ nsRuleNode::Transition(nsIStyleRule* aRule, PRUint8 aLevel,
     if (!next) {
       return nsnull;
     }
-    nsRuleList* newChildrenList = new (mPresContext) nsRuleList(next, ChildrenList());
-    if (NS_UNLIKELY(!newChildrenList)) {
-      next->Destroy();
-      return nsnull;
-    }
-    SetChildrenList(newChildrenList);
+    next->mNextSibling = ChildrenList();
+    SetChildrenList(next);
   }
   
   return next;
@@ -567,13 +576,12 @@ nsRuleNode::ConvertChildrenToHash()
                                         kMaxChildrenInList * 4);
   if (!hash)
     return;
-  for (nsRuleList* curr = ChildrenList(); curr;
-       curr = curr->DestroySelf(mPresContext)) {
+  for (nsRuleNode* curr = ChildrenList(); curr; curr = curr->mNextSibling) {
     // This will never fail because of the initial size we gave the table.
-    ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>
-                                          (PL_DHashTableOperate(hash, curr->mRuleNode->mRule, PL_DHASH_ADD));
+    ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(
+      PL_DHashTableOperate(hash, curr->mRule, PL_DHASH_ADD));
     NS_ASSERTION(!entry->mRuleNode, "duplicate entries in list");
-    entry->mRuleNode = curr->mRuleNode;
+    entry->mRuleNode = curr;
   }
   SetChildrenHash(hash);
 }
@@ -958,17 +966,10 @@ ValueListArrayAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
                            (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
-inline const nsCSSCounterData*
-CounterDataAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
+inline const nsCSSValuePairList*
+ValuePairListAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
 {
-  return * reinterpret_cast<const nsCSSCounterData*const*>
-                           (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
-}
-
-inline const nsCSSQuotes*
-QuotesAtOffset(const nsRuleDataStruct& aRuleDataStruct, size_t aOffset)
-{
-  return * reinterpret_cast<const nsCSSQuotes*const*>
+  return * reinterpret_cast<const nsCSSValuePairList*const*>
                            (reinterpret_cast<const char*>(&aRuleDataStruct) + aOffset);
 }
 
@@ -1032,28 +1033,14 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
         }
         break;
 
-      case eCSSType_CounterData:
+      case eCSSType_ValuePairList:
         {
           ++total;
-          const nsCSSCounterData* counterData =
-              CounterDataAtOffset(aRuleDataStruct, prop->offset);
-          if (counterData) {
-            ++specified;
-            if (eCSSUnit_Inherit == counterData->mCounter.GetUnit()) {
-              ++inherited;
-            }
-          }
-        }
-        break;
-
-      case eCSSType_Quotes:
-        {
-          ++total;
-          const nsCSSQuotes* quotes =
-              QuotesAtOffset(aRuleDataStruct, prop->offset);
+          const nsCSSValuePairList* quotes =
+              ValuePairListAtOffset(aRuleDataStruct, prop->offset);
           if (quotes) {
             ++specified;
-            if (eCSSUnit_Inherit == quotes->mOpen.GetUnit()) {
+            if (eCSSUnit_Inherit == quotes->mXValue.GetUnit()) {
               ++inherited;
             }
           }
@@ -1705,7 +1692,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
 
     case eStyleStruct_Column:
     {
-      nsStyleColumn* column = new (mPresContext) nsStyleColumn();
+      nsStyleColumn* column = new (mPresContext) nsStyleColumn(mPresContext);
       if (NS_LIKELY(column != nsnull)) {
         aContext->SetStyle(eStyleStruct_Column, column);
       }
@@ -2802,6 +2789,19 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
            SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
            aContext, mPresContext, inherited);
 
+  // word-wrap: enum, normal, inherit
+  if (eCSSUnit_Enumerated == textData.mWordWrap.GetUnit()) {
+    text->mWordWrap = textData.mWordWrap.GetIntValue();
+  }
+  else if (eCSSUnit_Normal == textData.mWordWrap.GetUnit() ||
+           eCSSUnit_Initial == textData.mWordWrap.GetUnit()) {
+    text->mWordWrap = NS_STYLE_WORDWRAP_NORMAL;
+  }
+  else if (eCSSUnit_Inherit == textData.mWordWrap.GetUnit()) {
+    inherited = PR_TRUE;
+    text->mWordWrap = parentText->mWordWrap;
+  }
+
   COMPUTE_END_INHERITED(Text, text)
 }
 
@@ -3769,23 +3769,21 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
       // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
       else if (SetCoord(value, coord, nsStyleCoord(), SETCOORD_LENGTH,
                         aContext, mPresContext, inherited)) {
-        if (coord.GetUnit() == eStyleUnit_Coord) {
-          border->SetBorderWidth(side, coord.GetCoordValue());
-        }
-#ifdef DEBUG
-        else {
-          NS_ASSERTION(coord.GetUnit() == eStyleUnit_Chars, "unexpected unit");
-          NS_WARNING("Border set in chars; we don't handle that");
-        }
-#endif        
+        NS_ASSERTION(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+        border->SetBorderWidth(side, coord.GetCoordValue());
       }
       else if (eCSSUnit_Inherit == value.GetUnit()) {
         inherited = PR_TRUE;
-        border->SetBorderWidth(side, parentBorder->GetBorderWidth(side));
+        border->SetBorderWidth(side,
+                               parentBorder->GetComputedBorder().side(side));
       }
       else if (eCSSUnit_Initial == value.GetUnit()) {
         border->SetBorderWidth(side,
           (mPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM]);
+      }
+      else {
+        NS_ASSERTION(eCSSUnit_Null == value.GetUnit(),
+                     "missing case handling border width");
       }
     }
   }
@@ -3922,6 +3920,78 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   }
   else if (eCSSUnit_Initial == marginData.mFloatEdge.GetUnit()) {
     border->mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
+  }
+  
+  // border-image
+  if (eCSSUnit_Array == marginData.mBorderImage.GetUnit()) {
+    nsCSSValue::Array *arr = marginData.mBorderImage.GetArrayValue();
+    
+    // the image
+    if (eCSSUnit_Image == arr->Item(0).GetUnit()) {
+      border->SetBorderImage(arr->Item(0).GetImageValue());
+    }
+    
+    // the numbers saying where to split the image
+    NS_FOR_CSS_SIDES(side) {
+      // an uninitialized parentCoord is ok because I'm not passing SETCOORD_INHERIT
+      if (SetCoord(arr->Item(1 + side), coord, nsStyleCoord(),
+                   SETCOORD_FACTOR | SETCOORD_PERCENT, aContext,
+                   mPresContext, inherited)) {
+        border->mBorderImageSplit.Set(side, coord);
+      }
+    }
+    
+    // possible replacement for border-width
+    // if have one - have all four (see CSSParserImpl::ParseBorderImage())
+    if (eCSSUnit_Null != arr->Item(5).GetUnit()) {
+      NS_FOR_CSS_SIDES(side) {
+        // an uninitialized parentCoord is ok because I'm not passing SETCOORD_INHERIT
+        if (!SetCoord(arr->Item(5 + side), coord, nsStyleCoord(),
+                      SETCOORD_LENGTH, aContext, mPresContext, inherited)) {
+          NS_NOTREACHED("SetCoord for border-width replacement from border-image failed");
+        }
+        if (coord.GetUnit() == eStyleUnit_Coord) {
+          border->SetBorderImageWidthOverride(side, coord.GetCoordValue());
+        } else {
+          NS_WARNING("a border-width replacement from border-image "
+                     "has a unit that's not eStyleUnit_Coord");
+          border->SetBorderImageWidthOverride(side, 0);
+        }
+      }
+      border->mHaveBorderImageWidth = PR_TRUE;
+    } else {
+      border->mHaveBorderImageWidth = PR_FALSE;
+    }
+    
+    // stretch/round/repeat keywords
+    if (eCSSUnit_Null == arr->Item(9).GetUnit()) {
+      // default, both horizontal and vertical are stretch
+      border->mBorderImageHFill = NS_STYLE_BORDER_IMAGE_STRETCH;
+      border->mBorderImageVFill = NS_STYLE_BORDER_IMAGE_STRETCH;
+    } else {
+      // have horizontal value
+      border->mBorderImageHFill = arr->Item(9).GetIntValue();
+      if (eCSSUnit_Null == arr->Item(10).GetUnit()) {
+        // vertical same as horizontal
+        border->mBorderImageVFill = border->mBorderImageHFill;
+      } else {
+        // have vertical value
+        border->mBorderImageVFill = arr->Item(10).GetIntValue();
+      }
+    }
+  } else if (eCSSUnit_None == marginData.mBorderImage.GetUnit() ||
+             eCSSUnit_Initial == marginData.mBorderImage.GetUnit()) {
+    border->mHaveBorderImageWidth = PR_FALSE;
+    border->SetBorderImage(nsnull);
+  } else if (eCSSUnit_Inherit == marginData.mBorderImage.GetUnit()) {
+    NS_FOR_CSS_SIDES(side) {
+      border->SetBorderImageWidthOverride(side, parentBorder->mBorderImageWidth.side(side));
+    }
+    border->mBorderImageSplit = parentBorder->mBorderImageSplit;
+    border->mBorderImageHFill = parentBorder->mBorderImageHFill;
+    border->mBorderImageVFill = parentBorder->mBorderImageVFill;
+    border->mHaveBorderImageWidth = parentBorder->mHaveBorderImageWidth;
+    border->SetBorderImage(parentBorder->GetBorderImage());
   }
 
   COMPUTE_END_RESET(Border, border)
@@ -4397,13 +4467,13 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   }
 
   // counter-increment: [string [int]]+, none, inherit
-  nsCSSCounterData* ourIncrement = contentData.mCounterIncrement;
+  nsCSSValuePairList* ourIncrement = contentData.mCounterIncrement;
   if (ourIncrement) {
-    if (eCSSUnit_None == ourIncrement->mCounter.GetUnit() ||
-        eCSSUnit_Initial == ourIncrement->mCounter.GetUnit()) {
+    if (eCSSUnit_None == ourIncrement->mXValue.GetUnit() ||
+        eCSSUnit_Initial == ourIncrement->mXValue.GetUnit()) {
       content->AllocateCounterIncrements(0);
     }
-    else if (eCSSUnit_Inherit == ourIncrement->mCounter.GetUnit()) {
+    else if (eCSSUnit_Inherit == ourIncrement->mXValue.GetUnit()) {
       inherited = PR_TRUE;
       count = parentContent->CounterIncrementCount();
       if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
@@ -4414,7 +4484,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
         }
       }
     }
-    else if (eCSSUnit_String == ourIncrement->mCounter.GetUnit()) {
+    else if (eCSSUnit_String == ourIncrement->mXValue.GetUnit()) {
       count = 0;
       while (ourIncrement) {
         count++;
@@ -4425,13 +4495,13 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
         ourIncrement = contentData.mCounterIncrement;
         while (ourIncrement) {
           PRInt32 increment;
-          if (eCSSUnit_Integer == ourIncrement->mValue.GetUnit()) {
-            increment = ourIncrement->mValue.GetIntValue();
+          if (eCSSUnit_Integer == ourIncrement->mYValue.GetUnit()) {
+            increment = ourIncrement->mYValue.GetIntValue();
           }
           else {
             increment = 1;
           }
-          ourIncrement->mCounter.GetStringValue(buffer);
+          ourIncrement->mXValue.GetStringValue(buffer);
           content->SetCounterIncrementAt(count++, buffer, increment);
           ourIncrement = ourIncrement->mNext;
         }
@@ -4440,13 +4510,13 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
   }
 
   // counter-reset: [string [int]]+, none, inherit
-  nsCSSCounterData* ourReset = contentData.mCounterReset;
+  nsCSSValuePairList* ourReset = contentData.mCounterReset;
   if (ourReset) {
-    if (eCSSUnit_None == ourReset->mCounter.GetUnit() ||
-        eCSSUnit_Initial == ourReset->mCounter.GetUnit()) {
+    if (eCSSUnit_None == ourReset->mXValue.GetUnit() ||
+        eCSSUnit_Initial == ourReset->mXValue.GetUnit()) {
       content->AllocateCounterResets(0);
     }
-    else if (eCSSUnit_Inherit == ourReset->mCounter.GetUnit()) {
+    else if (eCSSUnit_Inherit == ourReset->mXValue.GetUnit()) {
       inherited = PR_TRUE;
       count = parentContent->CounterResetCount();
       if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
@@ -4457,7 +4527,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
         }
       }
     }
-    else if (eCSSUnit_String == ourReset->mCounter.GetUnit()) {
+    else if (eCSSUnit_String == ourReset->mXValue.GetUnit()) {
       count = 0;
       while (ourReset) {
         count++;
@@ -4468,13 +4538,13 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
         ourReset = contentData.mCounterReset;
         while (ourReset) {
           PRInt32 reset;
-          if (eCSSUnit_Integer == ourReset->mValue.GetUnit()) {
-            reset = ourReset->mValue.GetIntValue();
+          if (eCSSUnit_Integer == ourReset->mYValue.GetUnit()) {
+            reset = ourReset->mYValue.GetIntValue();
           }
           else {
             reset = 0;
           }
-          ourReset->mCounter.GetStringValue(buffer);
+          ourReset->mXValue.GetStringValue(buffer);
           content->SetCounterResetAt(count++, buffer, reset);
           ourReset = ourReset->mNext;
         }
@@ -4503,12 +4573,12 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
   // quotes: [string string]+, none, inherit
   PRUint32 count;
   nsAutoString  buffer;
-  nsCSSQuotes* ourQuotes = contentData.mQuotes;
+  nsCSSValuePairList* ourQuotes = contentData.mQuotes;
   if (ourQuotes) {
     nsAutoString  closeBuffer;
     // FIXME Bug 389406: Implement eCSSUnit_Initial (correctly, unlike
     // style structs), and remove the "initial" value from ua.css.
-    if (eCSSUnit_Inherit == ourQuotes->mOpen.GetUnit()) {
+    if (eCSSUnit_Inherit == ourQuotes->mXValue.GetUnit()) {
       inherited = PR_TRUE;
       count = parentQuotes->QuotesCount();
       if (NS_SUCCEEDED(quotes->AllocateQuotes(count))) {
@@ -4518,10 +4588,10 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
         }
       }
     }
-    else if (eCSSUnit_None == ourQuotes->mOpen.GetUnit()) {
+    else if (eCSSUnit_None == ourQuotes->mXValue.GetUnit()) {
       quotes->AllocateQuotes(0);
     }
-    else if (eCSSUnit_String == ourQuotes->mOpen.GetUnit()) {
+    else if (eCSSUnit_String == ourQuotes->mXValue.GetUnit()) {
       count = 0;
       while (ourQuotes) {
         count++;
@@ -4531,8 +4601,8 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
         count = 0;
         ourQuotes = contentData.mQuotes;
         while (ourQuotes) {
-          ourQuotes->mOpen.GetStringValue(buffer);
-          ourQuotes->mClose.GetStringValue(closeBuffer);
+          ourQuotes->mXValue.GetStringValue(buffer);
+          ourQuotes->mYValue.GetStringValue(closeBuffer);
           Unquote(buffer);
           Unquote(closeBuffer);
           quotes->SetQuotesAt(count++, buffer, closeBuffer);
@@ -4644,7 +4714,7 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
                               nsRuleNode* aHighestNode,
                               const RuleDetail aRuleDetail, PRBool aInherited)
 {
-  COMPUTE_START_RESET(Column, (), column, parent, Column, columnData)
+  COMPUTE_START_RESET(Column, (mPresContext), column, parent, Column, columnData)
 
   // column-width: length, auto, inherit
   SetCoord(columnData.mColumnWidth,
@@ -4669,6 +4739,61 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   } else if (eCSSUnit_Inherit == columnData.mColumnCount.GetUnit()) {
     inherited = PR_TRUE;
     column->mColumnCount = parent->mColumnCount;
+  }
+
+  // column-rule-width: length, enum, inherit
+  const nsCSSValue& widthValue = columnData.mColumnRuleWidth;
+  if (eCSSUnit_Initial == widthValue.GetUnit()) {
+    column->SetColumnRuleWidth(
+        (mPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM]);
+  }
+  else if (eCSSUnit_Enumerated == widthValue.GetUnit()) {
+    NS_ASSERTION(widthValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_THIN ||
+                 widthValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_MEDIUM ||
+                 widthValue.GetIntValue() == NS_STYLE_BORDER_WIDTH_THICK,
+                 "Unexpected enum value");
+    column->SetColumnRuleWidth(
+        (mPresContext->GetBorderWidthTable())[widthValue.GetIntValue()]);
+  }
+  else if (eCSSUnit_Inherit == widthValue.GetUnit()) {
+    column->SetColumnRuleWidth(parent->GetComputedColumnRuleWidth());
+    inherited = PR_TRUE;
+  }
+  else if (widthValue.IsLengthUnit()) {
+    column->SetColumnRuleWidth(CalcLength(widthValue, aContext,
+                                          mPresContext, inherited));
+  }
+
+  // column-rule-style: enum, none, inherit
+  const nsCSSValue& styleValue = columnData.mColumnRuleStyle;
+  if (eCSSUnit_Enumerated == styleValue.GetUnit()) {
+    column->mColumnRuleStyle = styleValue.GetIntValue();
+  }
+  else if (eCSSUnit_None == styleValue.GetUnit() ||
+           eCSSUnit_Initial == styleValue.GetUnit()) {
+    column->mColumnRuleStyle = NS_STYLE_BORDER_STYLE_NONE;
+  }
+  else if (eCSSUnit_Inherit == styleValue.GetUnit()) {
+    inherited = PR_TRUE;
+    column->mColumnRuleStyle = parent->mColumnRuleStyle;
+  }
+
+  // column-rule-color: color, inherit
+  const nsCSSValue& colorValue = columnData.mColumnRuleColor;
+  if (eCSSUnit_Inherit == colorValue.GetUnit()) {
+    inherited = PR_TRUE;
+    column->mColumnRuleColorIsForeground = PR_FALSE;
+    if (parent->mColumnRuleColorIsForeground) {
+      column->mColumnRuleColor = parentContext->GetStyleColor()->mColor;
+    } else {
+      column->mColumnRuleColor = parent->mColumnRuleColor;
+    }
+  }
+  else if (eCSSUnit_Initial == colorValue.GetUnit()) {
+    column->mColumnRuleColorIsForeground = PR_TRUE;
+  }
+  else if (SetColor(colorValue, 0, mPresContext, aContext, column->mColumnRuleColor, inherited)) {
+    column->mColumnRuleColorIsForeground = PR_FALSE;
   }
 
   COMPUTE_END_RESET(Column, column)
@@ -5251,15 +5376,15 @@ nsRuleNode::Sweep()
       PLDHashTable *children = ChildrenHash();
       PL_DHashTableEnumerate(children, SweepRuleNodeChildren, nsnull);
     } else {
-      for (nsRuleList **children = ChildrenListPtr(); *children; ) {
-        if ((*children)->mRuleNode->Sweep()) {
-          // This rule node was destroyed, so remove this entry, and
-          // implicitly advance by making *children point to the next
-          // entry.
-          *children = (*children)->DestroySelf(mPresContext);
+      for (nsRuleNode **children = ChildrenListPtr(); *children; ) {
+        nsRuleNode *next = (*children)->mNextSibling;
+        if ((*children)->Sweep()) {
+          // This rule node was destroyed, so implicitly advance by
+          // making *children point to the next entry.
+          *children = next;
         } else {
           // Advance.
-          children = &(*children)->mNext;
+          children = &(*children)->mNextSibling;
         }
       }
     }

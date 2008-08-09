@@ -67,6 +67,7 @@
 #include "nsIContent.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOM3Node.h"
+#include "nsIDOMNodeSelector.h"
 #include "nsIPrincipal.h"
 #include "nsIParser.h"
 #include "nsBindingManager.h"
@@ -102,6 +103,7 @@
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
 #include "nsPresShellIterator.h"
+#include "nsContentUtils.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -403,6 +405,7 @@ class nsDocument : public nsIDocument,
                    public nsIDOMNSEventTarget,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer,
+                   public nsIDOMNodeSelector,
                    public nsStubMutationObserver
 {
 public:
@@ -649,6 +652,10 @@ public:
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
+  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext)
+  {
+    return nsContentUtils::GetContextForEventHandlers(this, aContext);
+  }
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -728,6 +735,9 @@ public:
 
   // nsIDOMNSEventTarget
   NS_DECL_NSIDOMNSEVENTTARGET
+
+  // nsIDOMNodeSelector
+  NS_DECL_NSIDOMNODESELECTOR
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
@@ -934,6 +944,12 @@ protected:
   PRPackedBool mHasWarnedAboutBoxObjects:1;
 
   PRPackedBool mDelayFrameLoaderInitialization:1;
+
+  PRPackedBool mSynchronousDOMContentLoaded:1;
+
+  // If true, we have an input encoding.  If this is false, then the
+  // document was created entirely in memory
+  PRPackedBool mHaveInputEncoding:1;
 
   PRUint8 mXMLDeclarationBits;
 

@@ -12,7 +12,7 @@ o.add_option("--print-buildid", action="store_true", dest="print_buildid")
 (options, args) = o.parse_args()
 
 if options.print_buildid:
-    print datetime.now().strftime('%Y%m%d%H')
+    print datetime.now().strftime('%Y%m%d%H%M%S')
     sys.exit(0)
 
 if not options.buildid:

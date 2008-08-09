@@ -147,7 +147,7 @@ nsTimerImpl::nsTimerImpl() :
   mTimeout(0)
 {
   // XXXbsmedberg: shouldn't this be in Init()?
-  mCallingThread = do_GetCurrentThread();
+  mEventTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
 
   mCallback.c = nsnull;
 
@@ -347,6 +347,26 @@ NS_IMETHODIMP nsTimerImpl::GetCallback(nsITimerCallback **aCallback)
 }
 
 
+NS_IMETHODIMP nsTimerImpl::GetTarget(nsIEventTarget** aTarget)
+{
+  NS_IF_ADDREF(*aTarget = mEventTarget);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsTimerImpl::SetTarget(nsIEventTarget* aTarget)
+{
+  NS_ENSURE_TRUE(mCallbackType == CALLBACK_TYPE_UNKNOWN,
+                 NS_ERROR_ALREADY_INITIALIZED);
+
+  if (aTarget)
+    mEventTarget = aTarget;
+  else
+    mEventTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
+  return NS_OK;
+}
+
+
 void nsTimerImpl::Fire()
 {
   if (mCanceled)
@@ -435,7 +455,9 @@ void nsTimerImpl::Fire()
   }
 #endif
 
-  if (mType == TYPE_REPEATING_SLACK) {
+  // Reschedule REPEATING_SLACK timers, but make sure that we aren't armed
+  // already (which can happen if the callback reinitialized the timer).
+  if (mType == TYPE_REPEATING_SLACK && !mArmed) {
     SetDelayInternal(mDelay); // force mTimeout to be recomputed.
     if (gThread)
       gThread->AddTimer(this);
@@ -522,7 +544,7 @@ nsresult nsTimerImpl::PostTimerEvent()
     }
   }
 
-  nsresult rv = mCallingThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  nsresult rv = mEventTarget->Dispatch(event, NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv) && gThread)
     gThread->RemoveTimer(this);
   return rv;

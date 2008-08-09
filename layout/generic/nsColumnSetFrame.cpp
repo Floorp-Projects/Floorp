@@ -49,6 +49,8 @@
 #include "nsStyleConsts.h"
 #include "nsCOMPtr.h"
 #include "nsLayoutUtils.h"
+#include "nsDisplayList.h"
+#include "nsCSSRendering.h"
 
 class nsColumnSetFrame : public nsHTMLContainerFrame {
 public:
@@ -95,6 +97,10 @@ public:
                               const nsDisplayListSet& aLists);
 
   virtual nsIAtom* GetType() const;
+
+  virtual void PaintColumnRule(nsIRenderingContext* aCtx,
+                               const nsRect&        aDirtyRect,
+                               const nsPoint&       aPt);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
@@ -192,6 +198,87 @@ nsColumnSetFrame::GetType() const
   return nsGkAtoms::columnSetFrame;
 }
 
+static void
+PaintColumnRule(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+                const nsRect& aDirtyRect, nsPoint aPt)
+{
+  static_cast<nsColumnSetFrame*>(aFrame)->PaintColumnRule(aCtx, aDirtyRect, aPt);
+}
+
+void
+nsColumnSetFrame::PaintColumnRule(nsIRenderingContext* aCtx,
+                                  const nsRect& aDirtyRect,
+                                  const nsPoint& aPt)
+{
+  nsIFrame* child = mFrames.FirstChild();
+  if (!child)
+    return;  // no columns
+
+  nsIFrame* nextSibling = child->GetNextSibling();
+  if (!nextSibling)
+    return;  // 1 column only - this means no gap to draw on
+
+  PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+  const nsStyleColumn* colStyle = GetStyleColumn();
+
+  PRUint8 ruleStyle;
+  // Per spec, inset => ridge and outset => groove
+  if (colStyle->mColumnRuleStyle == NS_STYLE_BORDER_STYLE_INSET)
+    ruleStyle = NS_STYLE_BORDER_STYLE_RIDGE;
+  else if (colStyle->mColumnRuleStyle == NS_STYLE_BORDER_STYLE_OUTSET)
+    ruleStyle = NS_STYLE_BORDER_STYLE_GROOVE;
+  else
+    ruleStyle = colStyle->mColumnRuleStyle;
+
+  nsPresContext* presContext = PresContext();
+  nscoord ruleWidth = colStyle->GetComputedColumnRuleWidth();
+  if (!ruleWidth)
+    return;
+
+  nscolor ruleColor;
+  if (colStyle->mColumnRuleColorIsForeground)
+    ruleColor = GetStyleColor()->mColor;
+  else
+    ruleColor = colStyle->mColumnRuleColor;
+
+  // In order to re-use a large amount of code, we treat the column rule as a border.
+  // We create a new border style object and fill in all the details of the column rule as
+  // the left border. PaintBorder() does all the rendering for us, so we not
+  // only save an enormous amount of code but we'll support all the line styles that
+  // we support on borders!
+  nsStyleBorder border(presContext);
+  border.SetBorderWidth(NS_SIDE_LEFT, ruleWidth);
+  border.SetBorderStyle(NS_SIDE_LEFT, ruleStyle);
+  border.SetBorderColor(NS_SIDE_LEFT, ruleColor);
+
+  // Get our content rect as an absolute coordinate, not relative to
+  // our parent (which is what the X and Y normally is)
+  nsRect contentRect = GetContentRect() - GetRect().TopLeft() + aPt;
+  nsSize ruleSize(ruleWidth, contentRect.height);
+
+  while (nextSibling) {
+    // The frame tree goes RTL in RTL
+    nsIFrame* leftSibling = isRTL ? nextSibling : child;
+    nsIFrame* rightSibling = isRTL ? child : nextSibling;
+
+    // Each child frame's position coordinates is actually relative to this nsColumnSetFrame.
+    // linePt will be at the top-left edge to paint the line.
+    nsPoint edgeOfLeftSibling = leftSibling->GetRect().TopRight() + aPt;
+    nsPoint edgeOfRightSibling = rightSibling->GetRect().TopLeft() + aPt;
+    nsPoint linePt((edgeOfLeftSibling.x + edgeOfRightSibling.x - ruleWidth) / 2,
+                   contentRect.y);
+
+    nsRect lineRect(linePt, ruleSize);
+    nsCSSRendering::PaintBorder(presContext, *aCtx, this, aDirtyRect,
+                                lineRect, border, GetStyleContext(),
+                                // Remember, we only have the "left" "border". Skip everything else
+                                (1 << NS_SIDE_TOP | 1 << NS_SIDE_RIGHT | 1 << NS_SIDE_BOTTOM));
+
+    child = nextSibling;
+    nextSibling = nextSibling->GetNextSibling();
+  }
+}
+
 NS_IMETHODIMP
 nsColumnSetFrame::SetInitialChildList(nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
@@ -229,15 +316,12 @@ GetAvailableContentHeight(const nsHTMLReflowState& aReflowState)
 
 static nscoord
 GetColumnGap(nsColumnSetFrame*    aFrame,
-             const nsStyleColumn* aColStyle,
-             nsIRenderingContext* aRenderingContext)
+             const nsStyleColumn* aColStyle)
 {
-  nscoord colGap;
   if (eStyleUnit_Normal == aColStyle->mColumnGap.GetUnit())
     return aFrame->GetStyleFont()->mFont.size;
-  else if (nsLayoutUtils::GetAbsoluteCoord(aColStyle->mColumnGap,
-                                           aRenderingContext,
-                                           aFrame, colGap)) {
+  if (eStyleUnit_Coord == aColStyle->mColumnGap.GetUnit()) {
+    nscoord colGap = aColStyle->mColumnGap.GetCoordValue();
     NS_ASSERTION(colGap >= 0, "negative column gap");
     return colGap;
   }
@@ -259,13 +343,12 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
     colHeight = aReflowState.ComputedHeight();
   }
 
-  nscoord colGap = GetColumnGap(this, colStyle, aReflowState.rendContext);
+  nscoord colGap = GetColumnGap(this, colStyle);
   PRInt32 numColumns = colStyle->mColumnCount;
 
   nscoord colWidth;
-  if (nsLayoutUtils::GetAbsoluteCoord(colStyle->mColumnWidth,
-                                      aReflowState.rendContext,
-                                      this, colWidth)) {
+  if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
+    colWidth = colStyle->mColumnWidth.GetCoordValue();
     NS_ASSERTION(colWidth >= 0, "negative column width");
     // Reduce column count if necessary to make columns fit in the
     // available width. Compute max number of columns that fit in
@@ -371,16 +454,17 @@ nsColumnSetFrame::GetMinWidth(nsIRenderingContext *aRenderingContext) {
   }
   const nsStyleColumn* colStyle = GetStyleColumn();
   nscoord colWidth;
-  if (nsLayoutUtils::GetAbsoluteCoord(colStyle->mColumnWidth,
-                                      aRenderingContext, this, colWidth)) {
-    // As available width reduces to zero, we reduce our number of columns to one,
-    // and don't enforce the column width, so just return the min of the
-    // child's min-width with any specified column width.
+  if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
+    colWidth = colStyle->mColumnWidth.GetCoordValue();
+    // As available width reduces to zero, we reduce our number of columns
+    // to one, and don't enforce the column width, so just return the min
+    // of the child's min-width with any specified column width.
     width = PR_MIN(width, colWidth);
   } else {
-    NS_ASSERTION(colStyle->mColumnCount > 0, "column-count and column-width can't both be auto");
-    // As available width reduces to zero, we still have mColumnCount columns, so
-    // multiply the child's min-width by the number of columns.
+    NS_ASSERTION(colStyle->mColumnCount > 0,
+                 "column-count and column-width can't both be auto");
+    // As available width reduces to zero, we still have mColumnCount columns,
+    // so multiply the child's min-width by the number of columns.
     colWidth = width;
     width *= colStyle->mColumnCount;
     // The multiplication above can make 'width' negative (integer overflow),
@@ -394,21 +478,20 @@ nsColumnSetFrame::GetMinWidth(nsIRenderingContext *aRenderingContext) {
 
 nscoord
 nsColumnSetFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext) {
-  // Our preferred width is our desired column width, if specified, otherwise the
-  // child's preferred width, times the number of columns, plus the width of any
-  // required column gaps
+  // Our preferred width is our desired column width, if specified, otherwise
+  // the child's preferred width, times the number of columns, plus the width
+  // of any required column gaps
   // XXX what about forced column breaks here?
   const nsStyleColumn* colStyle = GetStyleColumn();
-  nscoord colGap = GetColumnGap(this, colStyle, aRenderingContext);
+  nscoord colGap = GetColumnGap(this, colStyle);
 
   nscoord colWidth;
-  if (!nsLayoutUtils::GetAbsoluteCoord(colStyle->mColumnWidth,
-                                       aRenderingContext, this, colWidth)) {
-    if (mFrames.FirstChild()) {
-      colWidth = mFrames.FirstChild()->GetPrefWidth(aRenderingContext);
-    } else {
-      colWidth = 0;
-    }
+  if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
+    colWidth = colStyle->mColumnWidth.GetCoordValue();
+  } else if (mFrames.FirstChild()) {
+    colWidth = mFrames.FirstChild()->GetPrefWidth(aRenderingContext);
+  } else {
+    colWidth = 0;
   }
 
   PRInt32 numColumns = colStyle->mColumnCount;
@@ -929,6 +1012,9 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                    const nsDisplayListSet& aLists) {
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+      nsDisplayGeneric(this, ::PaintColumnRule, "ColumnRule"));
   
   nsIFrame* kid = mFrames.FirstChild();
   // Our children won't have backgrounds so it doesn't matter where we put them.

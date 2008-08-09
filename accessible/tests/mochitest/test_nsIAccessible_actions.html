@@ -1,0 +1,49 @@
+<html>
+
+<head>
+  <title>nsIAccessible actions testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_actions.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var actionsArray = [
+        {
+          ID: "clickable",
+          actionName: "click",
+          events: CLICK_EVENTS
+        }
+      ];
+      testActions(actionsArray);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=410765"
+     title="nsIAccessible actions testing">
+    Mozilla Bug 410765
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="clickable" onclick="">Clickable text</div>
+
+</body>
+</html>

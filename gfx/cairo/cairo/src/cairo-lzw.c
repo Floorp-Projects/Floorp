@@ -82,7 +82,7 @@ _lzw_buf_init (lzw_buf_t *buf, int size)
 
 /* Increase the buffer size by doubling.
  *
- * Returns %CAIRO_STATUS_SUCCESS or CAIRO_STATUS_NO_MEMORY
+ * Returns %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
  */
 static cairo_status_t
 _lzw_buf_grow (lzw_buf_t *buf)

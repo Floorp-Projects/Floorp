@@ -1,0 +1,186 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=378028
+-->
+<window title="Mozilla Bug 378028"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=378028"
+     target="_blank">Mozilla Bug 378028</a>
+  </body>
+
+  <!-- richlistbox currently has no way of giving us a defined number of
+       rows, so we just choose an arbitrary height limit that should give
+       us plenty of vertical scrollability -->
+  <richlistbox id="richlistbox" style="height:50px;">
+    <richlistitem id="richlistbox_item1"><label value="Item 1"/></richlistitem>
+    <richlistitem id="richlistbox_item2"><label value="Item 2"/></richlistitem>
+    <richlistitem id="richlistbox_item3"><label value="Item 3"/></richlistitem>
+    <richlistitem id="richlistbox_item4"><label value="Item 4"/></richlistitem>
+    <richlistitem id="richlistbox_item5"><label value="Item 5"/></richlistitem>
+    <richlistitem id="richlistbox_item6"><label value="Item 6"/></richlistitem>
+    <richlistitem id="richlistbox_item7"><label value="Item 7"/></richlistitem>
+    <richlistitem id="richlistbox_item8"><label value="Item 8"/></richlistitem>
+  </richlistbox>
+  
+  <listbox id="listbox" rows="2">
+    <listitem id="listbox_item1" label="Item 1"/>
+    <listitem id="listbox_item2" label="Item 2"/>
+    <listitem id="listbox_item3" label="Item 3"/>
+    <listitem id="listbox_item4" label="Item 4"/>
+    <listitem id="listbox_item5" label="Item 5"/>
+    <listitem id="listbox_item6" label="Item 6"/>
+    <listitem id="listbox_item7" label="Item 7"/>
+    <listitem id="listbox_item8" label="Item 8"/>
+  </listbox>
+  
+  <box orient="horizontal">
+    <arrowscrollbox id="hscrollbox" clicktoscroll="true" orient="horizontal"
+     smoothscroll="false" style="max-width:80px;" flex="1">
+      <hbox style="width:40px; height:20px; background:white;"/>
+      <hbox style="width:40px; height:20px; background:black;"/>
+      <hbox style="width:40px; height:20px; background:white;"/>
+      <hbox style="width:40px; height:20px; background:black;"/>
+      <hbox style="width:40px; height:20px; background:white;"/>
+      <hbox style="width:40px; height:20px; background:black;"/>
+      <hbox style="width:40px; height:20px; background:white;"/>
+      <hbox style="width:40px; height:20px; background:black;"/>
+    </arrowscrollbox>
+  </box>
+  
+  <arrowscrollbox id="vscrollbox" clicktoscroll="true" orient="vertical"
+   smoothscroll="false" style="max-height:80px;" flex="1">
+      <vbox style="width:100px; height:40px; background:white;"/>
+      <vbox style="width:100px; height:40px; background:black;"/>
+      <vbox style="width:100px; height:40px; background:white;"/>
+      <vbox style="width:100px; height:40px; background:black;"/>
+      <vbox style="width:100px; height:40px; background:white;"/>
+      <vbox style="width:100px; height:40px; background:black;"/>
+      <vbox style="width:100px; height:40px; background:white;"/>
+      <vbox style="width:100px; height:40px; background:black;"/>
+      <vbox style="width:100px; height:40px; background:white;"/>
+      <vbox style="width:100px; height:40px; background:black;"/>
+  </arrowscrollbox>
+  
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+/** Test for Bug 378028 **/
+SimpleTest.waitForExplicitFinish();
+
+function testListbox(id)
+{
+  var listbox = document.getElementById(id);
+  
+  function helper(aStart, aDelta)
+  {
+    listbox.scrollToIndex(aStart);
+    synthesizeMouseScroll(listbox, 10, 10,
+                          {axis:"vertical", delta:aDelta});
+    is(listbox.getIndexOfFirstVisibleRow(), aStart + aDelta,
+       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta);
+
+    // Check that horizontal scrolling has no effect
+    listbox.scrollToIndex(aStart);
+    synthesizeMouseScroll(listbox, 10, 10,
+                          {axis:"horizontal", delta:aDelta});  
+    is(listbox.getIndexOfFirstVisibleRow(), aStart,
+       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta);
+  }
+  
+  helper(2, -1);
+  helper(2, 1);
+  helper(2, -2);
+  helper(2, 2);
+}
+
+function testRichListbox(id)
+{
+  var listbox = document.getElementById(id);
+  
+  function helper(aStart, aDelta, aExpected)
+  {
+    listbox.scrollToIndex(aStart);
+    synthesizeMouseScroll(listbox, 10, 10,
+                          {axis:"vertical", delta:aDelta});
+    is(listbox.getIndexOfFirstVisibleRow(), aExpected,
+       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta);
+
+    // Check that horizontal scrolling has no effect
+    listbox.scrollToIndex(aStart);
+    synthesizeMouseScroll(listbox, 10, 10,
+                          {axis:"horizontal", delta:aDelta});  
+    is(listbox.getIndexOfFirstVisibleRow(), aStart,
+       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta);
+  }
+  
+  // richlistbox currently uses native XUL scrolling, so the "line"
+  // amounts don't necessarily correspond 1-to-1 with listbox items. So
+  // we just check that scrolling up/down a lot hits the first/last items
+  helper(2, -100, 0);
+  helper(2, 100, listbox.getRowCount() - listbox.getNumberOfVisibleRows());
+}
+
+function testArrowScrollbox(id)
+{
+  var scrollbox = document.getElementById(id);
+  var scrollBoxObject = scrollbox.scrollBoxObject;
+  var orient = scrollbox.getAttribute("orient");
+  
+  function helper(aStart, aDelta, aExpected)
+  {
+    var xpos = {};
+    var ypos = {};
+    var pos = orient == "horizontal" ? xpos : ypos;
+
+    scrollBoxObject.scrollTo(aStart, aStart);
+    synthesizeMouseScroll(scrollbox, 5, 5,
+                          {axis:"vertical", delta:aDelta});
+    scrollBoxObject.getPosition(xpos, ypos);
+    // Note, vertical mouse scrolling is allowed to scroll horizontal
+    // arrowscrollboxes, because many users have no horizontal mouse scroll
+    // capability
+    is(pos.value, aExpected,
+       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta);
+
+    scrollBoxObject.scrollTo(aStart, aStart);
+    synthesizeMouseScroll(scrollbox, 5, 5,
+                          {axis:"horizontal", delta:aDelta});
+    // horizontal mouse scrolling is never allowed to scroll vertical
+    // arrowscrollboxes
+    scrollBoxObject.getPosition(xpos, ypos);
+    var expected = orient == "horizontal" ? aExpected : aStart;
+    is(pos.value, expected,
+       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta);
+  }
+
+  var scrolledWidth = {};
+  var scrolledHeight = {};
+  scrollBoxObject.getScrolledSize(scrolledWidth, scrolledHeight);
+  var scrollMaxX = scrolledWidth.value - scrollBoxObject.width;
+  var scrollMaxY = scrolledHeight.value - scrollBoxObject.height;
+  var scrollMax = orient == "horizontal" ? scrollMaxX : scrollMaxY;
+
+  helper(50, -100, 0);
+  helper(50, 100, scrollMax);
+}
+
+function runTests()
+{
+  testRichListbox("richlistbox");
+  testListbox("listbox");
+  testArrowScrollbox("hscrollbox");
+  testArrowScrollbox("vscrollbox");
+  SimpleTest.finish();
+}
+
+window.onload = function() { setTimeout(runTests, 0); };
+  ]]></script>
+</window>

@@ -146,9 +146,11 @@ nsWebShellWindow::~nsWebShellWindow()
   if (gFocusedWindowBeforeSuppression == this) {
     gFocusedWindowBeforeSuppression = nsnull;
   }
-  if (mWindow)
+  if (mWindow) {
     mWindow->SetClientData(0);
-  mWindow = nsnull; // Force release here.
+    mWindow->Destroy();
+    mWindow = nsnull; // Force release here.
+  }
 
   if (mSPTimerLock) {
     PR_Lock(mSPTimerLock);

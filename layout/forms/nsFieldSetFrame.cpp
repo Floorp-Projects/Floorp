@@ -262,7 +262,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
   const nsStyleBorder* borderStyle = GetStyleBorder();
   const nsStylePadding* paddingStyle = GetStylePadding();
        
-  nscoord topBorder = borderStyle->GetBorderWidth(NS_SIDE_TOP);
+  nscoord topBorder = borderStyle->GetActualBorderWidth(NS_SIDE_TOP);
   nscoord yoff = 0;
   nsPresContext* presContext = PresContext();
      
@@ -294,7 +294,8 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
+                                aDirtyRect, rect, *borderStyle, mStyleContext,
+                                skipSides);
 
     aRenderingContext.PopState();
 
@@ -308,7 +309,8 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
+                                aDirtyRect, rect, *borderStyle, mStyleContext,
+                                skipSides);
 
     aRenderingContext.PopState();
 
@@ -321,7 +323,8 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                aDirtyRect, rect, *borderStyle, mStyleContext, skipSides);
+                                aDirtyRect, rect, *borderStyle, mStyleContext,
+                                skipSides);
 
     aRenderingContext.PopState();
   } else {
@@ -502,6 +505,14 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     // height is unconstrained (in which case the child's will be too).
     if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE) {
       kidReflowState.SetComputedHeight(PR_MAX(0, aReflowState.ComputedHeight() - mLegendSpace));
+    }
+
+    kidReflowState.mComputedMinHeight =
+      PR_MAX(0, aReflowState.mComputedMinHeight - mLegendSpace);
+
+    if (aReflowState.mComputedMaxHeight != NS_UNCONSTRAINEDSIZE) {
+      kidReflowState.mComputedMaxHeight =
+        PR_MAX(0, aReflowState.mComputedMaxHeight - mLegendSpace);
     }
 
     nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);

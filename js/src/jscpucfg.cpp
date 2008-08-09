@@ -376,10 +376,10 @@ int main(int argc, char **argv)
     printf("#define JS_HAVE_LONG_LONG\n");
     printf("\n");
 
-    #if defined __GNUC__ && defined __x86_64__
-    printf("#define HAVE_VA_LIST_AS_ARRAY\n");
+#if defined __GNUC__ && defined __x86_64__
+    printf("#define HAVE_VA_LIST_AS_ARRAY 1\n");
     printf("\n");
-    #endif
+#endif
 
     printf("#endif /* js_cpucfg___ */\n");
 

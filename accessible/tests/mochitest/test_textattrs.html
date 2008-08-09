@@ -1,0 +1,476 @@
+<html>
+
+<head>
+  <title>Text attributes tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript">
+    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
+    const nsIAccessibleText = Components.interfaces.nsIAccessibleText;
+    const nsIAccessibleEvent = Components.interfaces.nsIAccessibleEvent;
+
+    const nsIDOMNSEditableElement =
+      Components.interfaces.nsIDOMNSEditableElement;
+    const nsIObserverService = Components.interfaces.nsIObserverService;
+
+    var gAccRetrieval = null;
+
+    /**
+     * Test text attributes.
+     *
+     * @param aID               the ID of DOM element having text accessible
+     * @param aOffset           the offset inside text accessible to fetch
+     *                          text attributes
+     * @param aAttrs            the map of text attributes (name/value pairs)
+     * @param aStartOffset      the start offset where text attributes are
+     *                          applied
+     * @param aEndOffset        the end offset where text attribute are applied
+     * @param aDefAttrs         the list of default text attributes (name/value
+     *                          pairs)
+     */
+    function testTextAttrs(aID, aOffset,
+                           aAttrs, aStartOffset, aEndOffset, aDefAttrs)
+    {
+      var node = document.getElementById(aID);
+      if (!node) {
+        ok(false, "Can't get the element with ID " + aID);
+        return;
+      }
+
+      var accessible = null;
+      try {
+        accessible = gAccRetrieval.getAccessibleFor(node);
+        accessible.QueryInterface(nsIAccessibleText);
+      } catch (e) {
+      }
+
+      if (!accessible) {
+        ok(false, "Can't query nsIAccessibleText interface for " + aID);
+        return;
+      }
+
+      var startOffset = { value: -1 };
+      var endOffset = { value: -1 };
+      var attrs = null;
+      try {
+        attrs = accessible.getTextAttributes(false,
+                                             aOffset,
+                                             startOffset, endOffset);
+      } catch (e) {
+      }
+
+      if (!attrs) {
+        ok(false, "Can't get text attributes for " + aID);
+        return;
+      }
+
+      var errorMsg = " for " + aID + "at offset " + aOffset;
+      is(startOffset.value, aStartOffset,
+         "Wrong start offset" + errorMsg);
+      is(endOffset.value, aEndOffset,
+          "Wrong end offset" + errorMsg);
+
+      compareTextAttrs(errorMsg, attrs, aAttrs);
+
+      var defAttrs = null;
+      try{
+        defAttrs = accessible.defaultTextAttributes;
+      } catch (e) {
+      }
+
+      if (!defAttrs) {
+        ok(false, "Can't get default attributes for " + aID);
+        return;
+      }
+
+      compareTextAttrs(errorMsg, defAttrs, aDefAttrs);
+    }
+
+    function compareTextAttrs(aErrorMsg, aAttrs, aExpectedAttrs)
+    {
+      var enumerate = aAttrs.enumerate();
+      while (enumerate.hasMoreElements()) {
+        var prop = enumerate.getNext().
+          QueryInterface(Components.interfaces.nsIPropertyElement);
+
+        if (!(prop.key in aExpectedAttrs))
+          ok(false,
+             "Unexpected attribute '" + prop.key + "'" + aErrorMsg);
+        else
+          is(prop.value, aExpectedAttrs[prop.key],
+             "Attribute '" + prop.key + "' has wrong value" + aErrorMsg);
+      }
+
+      for (var name in aExpectedAttrs) {
+        var value = "";
+        try {
+          value = aAttrs.getStringProperty(name);
+        } catch(e) {
+        }
+
+        if (!value)
+          ok(false,
+             "There is no expected attribute '" + name + "'" + aErrorMsg);
+      }
+    }
+
+    var gObserverService = null;
+    var gA11yEventObserver = null;
+
+    function testSpellTextAttrs()
+    {
+      gA11yEventObserver = {
+        observe: function observe(aSubject, aTopic, aData)
+        {
+          if (aTopic != "accessible-event")
+            return;
+
+          
+          var event = aSubject.QueryInterface(nsIAccessibleEvent);
+
+          if (event.eventType == nsIAccessibleEvent.EVENT_TEXT_ATTRIBUTE_CHANGED)
+            this.mTextAttrChangedEventCounter++;
+        },
+
+        mTextAttrChangedEventCounter: 0
+      };
+
+      // Add accessibility event listeners
+      var gObserverService = Components.classes["@mozilla.org/observer-service;1"].
+                            getService(nsIObserverService);
+
+      gObserverService.addObserver(gA11yEventObserver, "accessible-event",
+                                  false);
+
+      ID = "area8";
+  
+      var node = document.getElementById(ID);
+      node.focus();
+
+      var editor = node.QueryInterface(nsIDOMNSEditableElement).editor;
+      var spellchecker = editor.getInlineSpellChecker(true);
+      spellchecker.enableRealTimeSpell = true;
+
+      window.setTimeout(function()
+        {
+          var defAttrs = {
+            "font-style": "normal",
+            "text-align": "start",
+            "font-size": "11px",
+            "background-color": "rgb(255, 255, 255)",
+            "font-weight": "400",
+            "text-indent": "0px",
+            "color": "rgb(0, 0, 0)",
+            "font-family": "Lucida Grande",
+            "text-position": "baseline"
+          };
+
+          var attrs = { "background-color": "transparent" };
+          var misspelledAttrs = {
+            "background-color": "transparent",
+            "invalid": "spelling"
+          };
+
+          testTextAttrs(ID, 0, attrs, 0, 11, defAttrs);
+          testTextAttrs(ID, 11, misspelledAttrs, 11, 17, defAttrs);
+          testTextAttrs(ID, 18, misspelledAttrs, 18, 22, defAttrs);
+
+          is(gA11yEventObserver.mTextAttrChangedEventCounter, 2,
+             "Wrong count of 'text attribute changed' events for " + ID);
+
+          // Remove a11y events listener
+          gObserverService.removeObserver(gA11yEventObserver,
+                                          "accessible-event");
+
+          SimpleTest.finish();
+        }, 0);
+    }
+
+    function doTest()
+    {
+      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
+                      getService(nsIAccessibleRetrieval);
+
+      //////////////////////////////////////////////////////////////////////////
+      // area1
+      var ID = "area1";
+      var defAttrs = {
+        "font-style": "normal",
+        "text-align": "start",
+        "font-size": "16px",
+        "background-color": "transparent",
+        "font-weight": "400",
+        "text-indent": "0px",
+        "color": "rgb(0, 0, 0)",
+        "font-family": "serif",
+        "text-position": "baseline"
+      };
+
+      var attrs = {};
+      testTextAttrs(ID, 0, attrs, 0, 7, defAttrs);
+
+      attrs = {"font-weight": "401"};
+      testTextAttrs(ID, 7, attrs, 7, 11, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 12, attrs, 11, 18, defAttrs);
+
+      //////////////////////////////////////////////////////////////////////////
+      // area2
+      ID = "area2";
+      defAttrs = {
+        "font-style": "normal",
+        "text-align": "start",
+        "font-size": "16px",
+        "background-color": "transparent",
+        "font-weight": "400",
+        "text-indent": "0px",
+        "color": "rgb(0, 0, 0)",
+        "font-family": "serif",
+        "text-position": "baseline"
+      };
+
+      attrs = {};
+      testTextAttrs(ID, 0, attrs, 0, 7, defAttrs);
+
+      attrs = {"font-weight": "401"};
+      testTextAttrs(ID, 7, attrs, 7, 12, defAttrs);
+
+      attrs = {"font-style": "italic", "font-weight": "401"};
+      testTextAttrs(ID, 13, attrs, 12, 19, defAttrs);
+
+      attrs = {"font-weight": "401"};
+      testTextAttrs(ID, 20, attrs, 19, 23, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 24, attrs, 23, 30, defAttrs);
+
+      //////////////////////////////////////////////////////////////////////////
+      // area3
+      ID = "area3";
+      defAttrs = {
+        "font-style": "normal",
+        "text-align": "start",
+        "font-size": "16px",
+        "background-color": "transparent",
+        "font-weight": "400",
+        "text-indent": "0px",
+        "color": "rgb(0, 0, 0)",
+        "font-family": "serif",
+        "text-position": "baseline"
+      };
+
+      attrs = {"color": "rgb(0, 128, 0)"};
+      testTextAttrs(ID, 0, attrs, 0, 6, defAttrs);
+
+      attrs = {"color": "rgb(255, 0, 0)"};
+      testTextAttrs(ID, 6, attrs, 6, 26, defAttrs);
+
+      attrs = {"color": "rgb(0, 128, 0)"};
+      testTextAttrs(ID, 26, attrs, 26, 50, defAttrs);
+
+      //////////////////////////////////////////////////////////////////////////
+      // area4
+      ID = "area4";
+      defAttrs = {
+        "font-style": "normal",
+        "text-align": "start",
+        "font-size": "16px",
+        "background-color": "transparent",
+        "font-weight": "400",
+        "text-indent": "0px",
+        "color": "rgb(0, 0, 0)",
+        "font-family": "serif",
+        "text-position": "baseline"
+      };
+
+      attrs = {"color": "rgb(0, 128, 0)"};
+      testTextAttrs(ID, 0, attrs, 0, 16, defAttrs);
+
+      attrs = {"color": "rgb(255, 0, 0)"};
+      testTextAttrs(ID, 16, attrs, 16, 33, defAttrs);
+
+      attrs = {"color": "rgb(0, 128, 0)"};
+      testTextAttrs(ID, 34, attrs, 33, 46, defAttrs);
+
+      //////////////////////////////////////////////////////////////////////////
+      // area5
+      ID = "area5";
+      defAttrs = {
+        "font-style": "normal",
+        "text-align": "start",
+        "font-size": "16px",
+        "background-color": "transparent",
+        "font-weight": "400",
+        "text-indent": "0px",
+        "color": "rgb(0, 0, 0)",
+        "font-family": "serif",
+        "text-position": "baseline"
+      };
+
+      attrs = {"color": "rgb(0, 128, 0)"};
+      testTextAttrs(ID, 0, attrs, 0, 5, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 7, attrs, 5, 8, defAttrs);
+
+      attrs = {"color": "rgb(255, 0, 0)"};
+      testTextAttrs(ID, 9, attrs, 8, 11, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 11, attrs, 11, 18, defAttrs);
+
+      //////////////////////////////////////////////////////////////////////////
+      // area6 (CSS vertical-align property, bug 445938)
+      ID = "area6";
+      defAttrs = {
+        "font-style": "normal",
+        "text-align": "start",
+        "font-size": "16px",
+        "background-color": "transparent",
+        "font-weight": "400",
+        "text-indent": "0px",
+        "color": "rgb(0, 0, 0)",
+        "font-family": "serif",
+        "text-position": "baseline"
+      };
+
+      attrs = {};
+      testTextAttrs(ID, 0, attrs, 0, 5, defAttrs);
+
+      attrs = {"text-position": "super", "font-size": "13px" };
+      testTextAttrs(ID, 5, attrs, 5, 13, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 13, attrs, 13, 27, defAttrs);
+
+      attrs = {"text-position": "super" };
+      testTextAttrs(ID, 27, attrs, 27, 35, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 35, attrs, 35, 39, defAttrs);
+
+      attrs = {"text-position": "sub", "font-size": "13px" };
+      testTextAttrs(ID, 39, attrs, 39, 50, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 50, attrs, 50, 55, defAttrs);
+
+      attrs = {"text-position": "sub" };
+      testTextAttrs(ID, 55, attrs, 55, 64, defAttrs);
+
+      //////////////////////////////////////////////////////////////////////////
+      // area7
+      ID = "area7";
+      defAttrs = {
+        "font-style": "normal",
+        "text-align": "start",
+        "font-size": "16px",
+        "background-color": "transparent",
+        "font-weight": "400",
+        "text-indent": "0px",
+        "color": "rgb(0, 0, 0)",
+        "font-family": "serif",
+        "text-position": "baseline"
+      };
+
+      attrs = {"language": "ru"};
+      testTextAttrs(ID, 0, attrs, 0, 12, defAttrs);
+
+      attrs = {"language": "en"};
+      testTextAttrs(ID, 12, attrs, 12, 13, defAttrs);
+
+      attrs = {"language" :"en", "background-color": "rgb(0, 0, 255)"};
+      testTextAttrs(ID, 13, attrs, 13, 26, defAttrs);
+
+      attrs = {"language": "en" };
+      testTextAttrs(ID, 26, attrs, 26, 27, defAttrs);
+
+      attrs = {"language": "de"};
+      testTextAttrs(ID, 27, attrs, 27, 42, defAttrs);
+
+      attrs = {"language": "en"};
+      testTextAttrs(ID, 42, attrs, 42, 43, defAttrs);
+
+      attrs = {};
+      testTextAttrs(ID, 43, attrs, 43, 50, defAttrs);
+
+      attrs = {"color": "rgb(255, 0, 255)"};
+      testTextAttrs(ID, 50, attrs, 50, 57, defAttrs);
+
+      attrs = {"font-weight": "401", "color": "rgb(255, 0, 255)" };
+      testTextAttrs(ID, 57, attrs, 57, 61, defAttrs);
+
+      attrs = {"color": "rgb(255, 0, 255)"};
+      testTextAttrs(ID, 61, attrs, 61, 68, defAttrs);
+
+      //////////////////////////////////////////////////////////////////////////
+      // test spelling text attributes
+      testSpellTextAttrs(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=345759"
+     title="Implement text attributes">
+    Mozilla Bug 345759
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <p id="area1">Normal <b>Bold</b> Normal</p>
+  <p id="area2">Normal <b>Bold <i>Italic </i>Bold</b> Normal</p>
+  <p id="area3">
+    <span style="color: green">
+      Green
+      <span style="color: red">but children are red</span>
+    </span><span style="color: green">
+      Another green section.
+    </span>
+  </p>
+  <p id="area4">
+    <span style="color: green">
+      Green
+    </span><span style="color: green">
+      Green too
+      <span style="color: red">with red children</span>
+      Green again
+    </span>
+  </p>
+  <p id="area5">
+    <span style="color: green">Green</span>
+    <img src="moz.png" alt="image"/>
+    <span style="color: red">Red</span>Normal
+  </p>
+  <p id="area6">
+    This <sup>sentence</sup> has the word 
+    <span style="vertical-align:super;">sentence</span> in 
+    <sub>superscript</sub> and 
+    <span style="vertical-align:sub;">subscript</span>
+  </p>
+
+  <p lang="en" id="area7">
+    <span lang="ru">Привет</span>
+    <span style="background-color: blue">Blue BG color</span>
+    <span lang="de">Ich bin/Du bist</span>
+    <span lang="en">
+      Normal
+      <span style="color: magenta">Magenta<b>Bold</b>Magenta</span>
+    </span>
+  </p>
+
+  <input id="area8" value="valid text inalid tixt"/>
+
+  <p id="output"/>
+</body>
+</html>

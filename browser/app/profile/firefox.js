@@ -227,6 +227,15 @@ pref("browser.urlbar.maxRichResults", 12);
 pref("browser.urlbar.search.chunkSize", 1000);
 pref("browser.urlbar.search.timeout", 100);
 
+// The special characters below can be typed into the urlbar to either restrict
+// the search to visited history, bookmarked, tagged pages; or force a match on
+// just the title text or url.
+pref("browser.urlbar.restrict.history", "^");
+pref("browser.urlbar.restrict.bookmark", "*");
+pref("browser.urlbar.restrict.tag", "+");
+pref("browser.urlbar.match.title", "#");
+pref("browser.urlbar.match.url", "@");
+
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to 
 // picking a filename without that info in hand so that the user sees some
@@ -326,6 +335,9 @@ pref("browser.tabs.closeButtons", 1);
 // true   return to the tab that opened this tab (its owner)
 // false  return to the adjacent tab (old default)
 pref("browser.tabs.selectOwnerOnClose", true);
+
+pref("browser.ctrlTab.mostRecentlyUsed", true);
+pref("browser.ctrlTab.smoothScroll", true);
 
 // Default bookmark sorting
 pref("browser.bookmarks.sort.direction", "descending");

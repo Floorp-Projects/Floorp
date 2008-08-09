@@ -243,7 +243,7 @@ interface nsIXMLHttpRequest : nsISupports
    *             Type header via the setRequestHeader method before
    *             calling send.
    */
-  void   send(in nsIVariant body);
+  void   send([optional] in nsIVariant body);
 
   /**
    * A variant of the send() method used to send binary data.

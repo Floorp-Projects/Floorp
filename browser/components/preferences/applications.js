@@ -982,6 +982,10 @@ var gApplicationsPane = {
       self._rebuildVisibleTypes();
       self._sortVisibleTypes();
       self._rebuildView();
+
+      // Notify observers that the UI is now ready
+      Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService).
+      notifyObservers(window, "app-handler-pane-loaded", null);
     }
     setTimeout(_delayedPaneLoad, 0, this);
   },
@@ -1598,36 +1602,7 @@ var gApplicationsPane = {
    * Filter the list when the user enters a filter term into the filter field.
    */
   filter: function() {
-    if (this._filter.value == "") {
-      this.clearFilter();
-      return;
-    }
-
     this._rebuildView();
-
-    document.getElementById("clearFilter").disabled = false;
-  },
-
-  _filterTimeout: null,
-
-  onFilterInput: function() {
-    if (this._filterTimeout)
-      clearTimeout(this._filterTimeout);
-   
-    this._filterTimeout = setTimeout("gApplicationsPane.filter()", 500);
-  },
-
-  onFilterKeyPress: function(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE)
-      this.clearFilter();
-  },
-  
-  clearFilter: function() {
-    this._filter.value = "";
-    this._rebuildView();
-
-    this._filter.focus();
-    document.getElementById("clearFilter").disabled = true;
   },
 
   focusFilterBox: function() {

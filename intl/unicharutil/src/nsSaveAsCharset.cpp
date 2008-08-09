@@ -52,9 +52,6 @@
 //
 NS_IMPL_ISUPPORTS1(nsSaveAsCharset, nsISaveAsCharset)
 
-#include "ignorables_abjadpoints.x-ccmap"
-DEFINE_X_CCMAP(gIgnorableCCMapExt, const);
-
 //
 // nsSaveAsCharset
 //
@@ -259,11 +256,6 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
       } else {
         unMappedChar = inString[pos1-1];
       }
-
-      // if we're asked to ignore default ignorable code points, skip them.
-      if (MASK_IGNORABLE_FALLBACK(mAttribute) &&
-          CCMAP_HAS_CHAR_EXT(gIgnorableCCMapExt, unMappedChar)) 
-				continue;
 
       rv = mEncoder->GetMaxLength(inString+pos1, inStringLength-pos1, &dstLength);
       if (NS_FAILED(rv)) 

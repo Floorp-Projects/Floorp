@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<!--
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Unknown Content Type UI Test Code.
+ *
+ * The Initial Developer of the Original Code is
+ * Sylvain Pasche <sylvain.pasche@gmail.coml>.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/**
+ * The unknownContentType popup can have two different layouts depending on
+ * whether a helper application can be selected or not.
+ * This tests that both layouts have correct collapsed elements.
+ */
+-->
+
+<window title="Unknown Content Type Dialog Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="init()">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome/toolkit/mozapps/downloads/tests/chrome/utils.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xul";
+
+let testIndex = 0;
+let tests = [
+  { // This URL will trigger the simple UI, where only the Save an Cancel buttons are available
+    url: "http://localhost:8888/chrome/toolkit/mozapps/downloads/tests/chrome/unknownContentType_dialog_layout_data.pif",
+    elements: {
+      basicBox: { collapsed: false },
+      normalBox: { collapsed: true }
+    }
+  },
+  { // This URL will trigger the full UI
+    url: "http://localhost:8888/chrome/toolkit/mozapps/downloads/tests/chrome/unknownContentType_dialog_layout_data.txt",
+    elements: {
+      basicBox: { collapsed: true },
+      normalBox: { collapsed: false }
+    }
+  }
+];
+
+let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+         getService(Ci.nsIWindowWatcher);
+
+SimpleTest.waitForExplicitFinish();
+
+let windowObserver = {
+  observe: function(aSubject, aTopic, aData) {
+    let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+
+    win.addEventListener("load", function onLoad(event) {
+      win.removeEventListener("load", onLoad, false);
+      if (win.document.documentURI != UCT_URI)
+        return;
+
+      // Let the dialog initialize
+      executeSoon(function() {
+        checkWindow(win);
+        testIndex++;
+        if (!tests[testIndex]) {
+          ww.unregisterNotification(windowObserver);
+          SimpleTest.finish();
+          return;
+        }
+        loadNextTest();
+      });
+    }, false);
+  }
+};
+
+function init() {
+  ww.registerNotification(windowObserver);
+  loadNextTest();
+}
+
+function loadNextTest() {
+  let frame = document.getElementById("testframe");
+  frame.setAttribute("src", tests[testIndex].url);
+}
+
+function checkWindow(win) {
+  for (let [id, props] in Iterator(tests[testIndex].elements)) {
+    let elem = win.dialog.dialogElement(id);
+    for (let [prop, value] in Iterator(props)) {
+      is(elem[prop], value,
+         "Element with id " + id + " has property " +
+         prop + " set to " + value);
+    }
+  }
+  win.document.documentElement.cancelDialog();
+}
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+
+  <iframe xmlns="http://www.w3.org/1999/xhtml"
+          id="testframe">
+  </iframe>
+</window>

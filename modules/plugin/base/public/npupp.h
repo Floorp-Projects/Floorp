@@ -707,6 +707,7 @@ extern "C" {
 
 /* plugin meta member functions */
 
+NP_EXPORT(char*)   NP_GetPluginVersion(void);
 NP_EXPORT(char*)   NP_GetMIMEDescription(void);
 NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs*, NPPluginFuncs*);
 NP_EXPORT(NPError) NP_Shutdown(void);
