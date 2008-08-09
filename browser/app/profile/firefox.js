@@ -337,7 +337,6 @@ pref("browser.tabs.closeButtons", 1);
 pref("browser.tabs.selectOwnerOnClose", true);
 
 pref("browser.ctrlTab.mostRecentlyUsed", true);
-pref("browser.ctrlTab.previewsCount", 3);
 pref("browser.ctrlTab.smoothScroll", true);
 
 // Default bookmark sorting
