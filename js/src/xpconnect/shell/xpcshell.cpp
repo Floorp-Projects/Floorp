@@ -756,7 +756,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-PswWxCi] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-PswWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -896,6 +896,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'C':
             compileOnly = JS_TRUE;
             isInteractive = JS_FALSE;
+            break;
+        case 'j':
+            JS_ToggleOptions(cx, JSOPTION_JIT);
             break;
 #ifdef MOZ_SHARK
         case 'k':
