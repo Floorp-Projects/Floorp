@@ -85,7 +85,6 @@ class nsHashKey;
 #define NS_SCRIPT_ERROR_EVENT             12
 #define NS_TEXT_EVENT                     13
 #define NS_COMPOSITION_EVENT              14
-#define NS_RECONVERSION_EVENT             15
 #define NS_MOUSE_SCROLL_EVENT             16
 #define NS_SCROLLPORT_EVENT               18
 #define NS_MUTATION_EVENT                 19 // |nsMutationEvent| in content
@@ -97,7 +96,6 @@ class nsHashKey;
 #define NS_POPUPBLOCKED_EVENT             25
 #define NS_BEFORE_PAGE_UNLOAD_EVENT       26
 #define NS_UI_EVENT                       27
-#define NS_QUERYCARETRECT_EVENT           28
 #define NS_PAGETRANSITION_EVENT           29
 #ifdef MOZ_SVG
 #define NS_SVG_EVENT                      30
@@ -296,10 +294,6 @@ class nsHashKey;
 #define NS_COMPOSITION_END            (NS_COMPOSITION_EVENT_START + 1)
 #define NS_COMPOSITION_QUERY          (NS_COMPOSITION_EVENT_START + 2)
 
-// reconversion events
-#define NS_RECONVERSION_START         2300
-#define NS_RECONVERSION_QUERY         (NS_RECONVERSION_START)
-
 // text events
 #define NS_TEXT_START                 2400
 #define NS_TEXT_TEXT                  (NS_TEXT_START)
@@ -310,10 +304,6 @@ class nsHashKey;
 #define NS_UI_ACTIVATE             (NS_UI_EVENT_START)
 #define NS_UI_FOCUSIN              (NS_UI_EVENT_START + 1)
 #define NS_UI_FOCUSOUT             (NS_UI_EVENT_START + 2)
-
-// query caret rect events
-#define NS_QUERYCARETRECT_START    2600
-#define NS_QUERYCARETRECT          (NS_QUERYCARETRECT_START)
 
 // pagetransition events
 #define NS_PAGETRANSITION_START    2700
@@ -848,48 +838,6 @@ public:
   PRInt32               delta;
 };
 
-struct nsReconversionEventReply {
-  nsReconversionEventReply()
-    : mReconversionString(nsnull)
-  {
-  }
-
-  PRUnichar *mReconversionString;
-};
-
-class nsReconversionEvent : public nsInputEvent
-{
-public:
-  nsReconversionEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsInputEvent(isTrusted, msg, w, NS_RECONVERSION_EVENT)
-  {
-  }
-
-  nsReconversionEventReply  theReply;
-};
-
-struct nsQueryCaretRectEventReply
-{
-  nsQueryCaretRectEventReply()
-    : mRectIsValid(PR_FALSE)
-  {
-  }
-
-  PRBool mRectIsValid;
-  nsRect mCaretRect;
-};
-
-class nsQueryCaretRectEvent : public nsInputEvent
-{
-public:
-  nsQueryCaretRectEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsInputEvent(isTrusted, msg, w, NS_QUERYCARETRECT_EVENT)
-  {
-  }
-
-  nsQueryCaretRectEventReply theReply;
-};
-
 class nsQueryContentEvent : public nsGUIEvent
 {
 public:
@@ -1123,8 +1071,6 @@ enum nsDragDropEventStatus {
        (((evnt)->message == NS_TEXT_TEXT) ||  \
         ((evnt)->message == NS_COMPOSITION_START) ||  \
         ((evnt)->message == NS_COMPOSITION_END) || \
-        ((evnt)->message == NS_RECONVERSION_QUERY) || \
-        ((evnt)->message == NS_QUERYCARETRECT) || \
         ((evnt)->message == NS_COMPOSITION_QUERY))
 
 #define NS_IS_FOCUS_EVENT(evnt) \
