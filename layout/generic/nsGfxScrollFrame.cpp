@@ -2497,6 +2497,34 @@ static void LayoutAndInvalidate(nsBoxLayoutState& aState,
     aBox->Invalidate(aBox->GetOverflowRect());
 }
 
+static void AdjustScrollbarRect(nsIView* aView, nsPresContext* aPresContext,
+                                nsRect& aRect, PRBool aVertical)
+{
+  if ((aVertical ? aRect.width : aRect.height) == 0)
+    return;
+
+  nsPoint offset;
+  nsIWidget* widget = aView->GetNearestWidget(&offset);
+
+  nsIntRect widgetRect;
+  if (!widget->ShowsResizeIndicator(&widgetRect))
+    return;
+
+  nsRect resizerRect =
+      nsRect(aPresContext->DevPixelsToAppUnits(widgetRect.x) - offset.x,
+             aPresContext->DevPixelsToAppUnits(widgetRect.y) - offset.y,
+             aPresContext->DevPixelsToAppUnits(widgetRect.width),
+             aPresContext->DevPixelsToAppUnits(widgetRect.height));
+
+  if (!aRect.Intersects(resizerRect))
+    return;
+
+  if (aVertical)
+    aRect.height = PR_MAX(0, resizerRect.y - aRect.y);
+  else
+    aRect.width = PR_MAX(0, resizerRect.x - aRect.x);
+}
+
 void
 nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
                                         const nsRect& aContentArea,
@@ -2506,6 +2534,8 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
   NS_ASSERTION(!mSupppressScrollbarUpdate,
                "This should have been suppressed");
     
+  nsIView* view = mOuter->GetView();
+  nsPresContext* presContext = mScrolledFrame->PresContext();
   if (mVScrollbarBox) {
     NS_PRECONDITION(mVScrollbarBox->IsBoxFrame(), "Must be a box frame!");
     nsRect vRect(aScrollArea);
@@ -2514,6 +2544,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nsMargin margin;
     mVScrollbarBox->GetMargin(margin);
     vRect.Deflate(margin);
+    AdjustScrollbarRect(view, presContext, vRect, PR_TRUE);
     LayoutAndInvalidate(aState, mVScrollbarBox, vRect);
   }
 
@@ -2525,6 +2556,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nsMargin margin;
     mHScrollbarBox->GetMargin(margin);
     hRect.Deflate(margin);
+    AdjustScrollbarRect(view, presContext, hRect, PR_FALSE);
     LayoutAndInvalidate(aState, mHScrollbarBox, hRect);
   }
 

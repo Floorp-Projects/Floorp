@@ -273,6 +273,14 @@ public:
    */
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsReStyleHint* aResult) = 0;
+
+  /**
+   * Do any processing that needs to happen as a result of a change in
+   * the characteristics of the medium, and return whether this rule
+   * processor's rules have changed (e.g., because of media queries).
+   */
+  NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,
+                                   PRBool* aRulesChanged) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleRuleProcessor,

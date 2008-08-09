@@ -299,73 +299,38 @@ nsCSSPage::~nsCSSPage(void)
 
 // --- nsCSSContent support -----------------
 
-nsCSSCounterData::nsCSSCounterData(void)
+nsCSSValuePairList::nsCSSValuePairList()
   : mNext(nsnull)
 {
-  MOZ_COUNT_CTOR(nsCSSCounterData);
+  MOZ_COUNT_CTOR(nsCSSValuePairList);
 }
 
-nsCSSCounterData::nsCSSCounterData(const nsCSSCounterData& aCopy)
-  : mCounter(aCopy.mCounter),
-    mValue(aCopy.mValue),
+nsCSSValuePairList::nsCSSValuePairList(const nsCSSValuePairList& aCopy)
+  : mXValue(aCopy.mXValue),
+    mYValue(aCopy.mYValue),
     mNext(nsnull)
 {
-  MOZ_COUNT_CTOR(nsCSSCounterData);
-  CSS_IF_COPY(mNext, nsCSSCounterData);
+  MOZ_COUNT_CTOR(nsCSSValuePairList);
+  CSS_IF_COPY(mNext, nsCSSValuePairList);
 }
 
-nsCSSCounterData::~nsCSSCounterData(void)
+nsCSSValuePairList::~nsCSSValuePairList()
 {
-  MOZ_COUNT_DTOR(nsCSSCounterData);
+  MOZ_COUNT_DTOR(nsCSSValuePairList);
   CSS_IF_DELETE(mNext);
 }
 
 /* static */ PRBool
-nsCSSCounterData::Equal(nsCSSCounterData* aList1, nsCSSCounterData* aList2)
+nsCSSValuePairList::Equal(nsCSSValuePairList* aList1,
+                          nsCSSValuePairList* aList2)
 {
   if (aList1 == aList2)
     return PR_TRUE;
 
-  nsCSSCounterData *p1 = aList1, *p2 = aList2;
+  nsCSSValuePairList *p1 = aList1, *p2 = aList2;
   for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
-    if (p1->mCounter != p2->mCounter ||
-        p1->mValue != p2->mValue)
-      return PR_FALSE;
-  }
-  return !p1 && !p2; // true if same length, false otherwise
-}
-
-nsCSSQuotes::nsCSSQuotes(void)
-  : mNext(nsnull)
-{
-  MOZ_COUNT_CTOR(nsCSSQuotes);
-}
-
-nsCSSQuotes::nsCSSQuotes(const nsCSSQuotes& aCopy)
-  : mOpen(aCopy.mOpen),
-    mClose(aCopy.mClose),
-    mNext(nsnull)
-{
-  MOZ_COUNT_CTOR(nsCSSQuotes);
-  CSS_IF_COPY(mNext, nsCSSQuotes);
-}
-
-nsCSSQuotes::~nsCSSQuotes(void)
-{
-  MOZ_COUNT_DTOR(nsCSSQuotes);
-  CSS_IF_DELETE(mNext);
-}
-
-/* static */ PRBool
-nsCSSQuotes::Equal(nsCSSQuotes* aList1, nsCSSQuotes* aList2)
-{
-  if (aList1 == aList2)
-    return PR_TRUE;
-
-  nsCSSQuotes *p1 = aList1, *p2 = aList2;
-  for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
-    if (p1->mOpen != p2->mOpen ||
-        p1->mClose != p2->mClose)
+    if (p1->mXValue != p2->mXValue ||
+        p1->mYValue != p2->mYValue)
       return PR_FALSE;
   }
   return !p1 && !p2; // true if same length, false otherwise

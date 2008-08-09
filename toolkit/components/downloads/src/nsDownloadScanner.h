@@ -7,7 +7,7 @@
 #undef WIN32_LEAN_AND_MEAN
 #endif
 #define INITGUID
-#include <Windows.h>
+#include <windows.h>
 #define AVVENDOR
 #include <msoav.h>
 // To cope with both msvs8 header and sdk6 header

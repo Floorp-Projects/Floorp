@@ -16,3 +16,7 @@ load 437170-1.html
 skip load 439184-1.html # skip until we figure out how to test this
 load 444237-1.html
 load 444848-1.html 
+load 447776-1.html
+load 447783-1.html
+load 448161-1.html
+load 448161-2.html

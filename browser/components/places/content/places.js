@@ -853,6 +853,10 @@ var PlacesSearchBox = {
       //scopeBtn.label = PlacesOrganizer._places.selectedNode.title;
       break;
     case "bookmarks":
+      // Make sure we're getting uri results.
+      // We do not yet support searching into grouped queries or into
+      // tag containers, so we must fall to the default case.
+      currentOptions.resultType = currentOptions.RESULT_TYPE_URI;
       content.applyFilter(filterString,
                           [PlacesUtils.bookmarksMenuFolderId,
                            PlacesUtils.toolbarFolderId,

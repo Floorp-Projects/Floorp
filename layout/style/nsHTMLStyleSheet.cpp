@@ -562,6 +562,14 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLStyleSheet::MediumFeaturesChanged(nsPresContext* aPresContext,
+                                        PRBool* aRulesChanged)
+{
+  *aRulesChanged = PR_FALSE;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
@@ -606,12 +614,6 @@ nsHTMLStyleSheet::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/html");
   return NS_OK;
-}
-
-NS_IMETHODIMP_(PRBool)
-nsHTMLStyleSheet::UseForMedium(nsPresContext* aPresContext) const
-{
-  return PR_TRUE; // works for all media
 }
 
 NS_IMETHODIMP_(PRBool)

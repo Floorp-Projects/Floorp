@@ -255,45 +255,22 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
           }
         } while (val);
       } break;
-      case eCSSType_CounterData: {
-        const nsCSSCounterData* counter =
-            *static_cast<nsCSSCounterData*const*>(storage);
+      case eCSSType_ValuePairList: {
+        const nsCSSValuePairList* item =
+            *static_cast<nsCSSValuePairList*const*>(storage);
         do {
-          if (AppendCSSValueToString(aProperty, counter->mCounter, aResult)) {
-            if (counter->mValue.GetUnit() != eCSSUnit_Null) {
-              aResult.Append(PRUnichar(' '));
-              AppendCSSValueToString(aProperty, counter->mValue, aResult);
-            }
+          NS_ASSERTION(item->mXValue.GetUnit() != eCSSUnit_Null,
+                       "unexpected null unit");
+          AppendCSSValueToString(aProperty, item->mXValue, aResult);
+          if (item->mYValue.GetUnit() != eCSSUnit_Null) {
+            aResult.Append(PRUnichar(' '));
+            AppendCSSValueToString(aProperty, item->mYValue, aResult);
           }
-          counter = counter->mNext;
-          if (counter) {
+          item = item->mNext;
+          if (item) {
             aResult.Append(PRUnichar(' '));
           }
-        } while (counter);
-      } break;
-      case eCSSType_Quotes: {
-        const nsCSSQuotes* quotes = 
-            *static_cast<nsCSSQuotes*const*>(storage);
-        NS_ASSERTION((quotes->mOpen.GetUnit() == eCSSUnit_String) ||
-                     (quotes->mNext == nsnull),
-                     "non-strings must be alone");
-        do {
-          AppendCSSValueToString(aProperty, quotes->mOpen, aResult);
-          NS_ASSERTION((quotes->mOpen.GetUnit() == eCSSUnit_String) ==
-                       (quotes->mClose.GetUnit() == eCSSUnit_String),
-                       "strings must come in pairs");
-          NS_ASSERTION((quotes->mOpen.GetUnit() != eCSSUnit_String) ==
-                       (quotes->mClose.GetUnit() == eCSSUnit_Null),
-                       "non-strings must be alone");
-          if (quotes->mClose.GetUnit() != eCSSUnit_Null) {
-            aResult.Append(PRUnichar(' '));
-            AppendCSSValueToString(aProperty, quotes->mClose, aResult);
-          }
-          quotes = quotes->mNext;
-          if (quotes) {
-            aResult.Append(PRUnichar(' '));
-          }
-        } while (quotes);
+        } while (item);
       } break;
     }
   }

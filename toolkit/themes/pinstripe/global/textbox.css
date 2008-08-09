@@ -118,7 +118,7 @@ textbox.plain {
 
 /* ::::: rounded search box ::::: */
 
-#search-box {
+textbox[type="search"] {
   -moz-appearance: none;
   border: 3px solid;
   -moz-border-top-colors: #5F5F5F #CFCFCF -moz-Field;
@@ -126,15 +126,32 @@ textbox.plain {
   -moz-border-right-colors: #7F7F7F #EEE -moz-Field;
   -moz-border-left-colors: #7F7F7F #EFEFEF -moz-Field;
   -moz-border-radius: 11px;
-  background: url("chrome://global/skin/icons/search-textbox.png") -moz-Field no-repeat 1px center;
-  -moz-background-clip: border !important;
   padding: 0 8px;
+}
+
+textbox[type="search"]:not([searchbutton]) {
+  background-image: url("chrome://global/skin/icons/Search-glass.png");
+  background-repeat: no-repeat;
+  background-position: 1px center;
   -moz-padding-start: 17px;
 }
 
-#search-box[focused="true"] {
+textbox[type="search"][focused="true"] {
   outline: 2px solid #4A8BC7;
   outline-offset: -2px;
   -moz-outline-radius: 11px;
+}
+
+.textbox-search-icon[searchbutton] {
+  list-style-image: url(chrome://global/skin/icons/Search-glass.png);
+}
+
+.textbox-search-clear {
+  list-style-image: url(chrome://global/skin/icons/Search-close.png);
+}
+
+.textbox-search-icon[searchbutton]:not([disabled]) ,
+.textbox-search-clear:not([disabled]) {
+  cursor: default;
 }
 

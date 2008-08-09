@@ -16,7 +16,7 @@ function isStack(c)
       return true;
 
     for each (let base in c.bases)
-      if (isStack(base))
+      if (isStack(base.type))
         return true;
 
     for each (let member in c.members) {

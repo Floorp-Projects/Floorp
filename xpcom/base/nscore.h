@@ -52,7 +52,7 @@
 
 /* Core XPCOM declarations. */
 
-/**
+/** 
  * Macros defining the target platform...
  */
 #ifdef _WIN32

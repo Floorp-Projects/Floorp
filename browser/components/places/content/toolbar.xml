@@ -385,7 +385,7 @@
         <getter><![CDATA[
           // By default, the insertion point is at the top level, at the end. 
           var index = PlacesUtils.bookmarks.DEFAULT_INDEX;
-          var folderId = PlacesUtils.getConcreteItemId(this._result.root);
+          var container = this._result.root;
           var orientation = Ci.nsITreeView.DROP_BEFORE;
           var isTag = false;
 
@@ -395,19 +395,36 @@
             if (!popupNode.node) {
               // If a static menuitem is selected the insertion point
               // is inside the folder, at the end.
-              folderId = PlacesUtils.getConcreteItemId(selectedNode);
+              container = selectedNode;
               orientation = Ci.nsITreeView.DROP_ON;
             }
             else {
               // In all other cases the insertion point is before that node.
-              folderId = PlacesUtils.getConcreteItemId(selectedNode.parent);
+              container = selectedNode.parent;
               index = PlacesUtils.getIndexOfNode(selectedNode);
               isTag = PlacesUtils.nodeIsTagQuery(selectedNode.parent);
             }
           }
-          return new InsertionPoint(folderId, index, orientation, isTag);
+
+          if (this._disallowInsertion(container))
+            return null;
+
+          return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
+                                    index, orientation, isTag);
         ]]></getter>
       </property>
+
+      <method name="_disallowInsertion">
+        <parameter name="aContainer"/>
+        <body><![CDATA[
+          // allow dropping into Tag containers
+          if (PlacesUtils.nodeIsTagQuery(aContainer))
+            return false;
+          // Disallow insertion of items under readonly folders
+          return (!PlacesUtils.nodeIsFolder(aContainer) ||
+                   PlacesUtils.nodeIsReadOnly(aContainer));
+        ]]></body>
+      </method>
 
       <!-- nsIPlacesView -->
       <method name="selectAll">

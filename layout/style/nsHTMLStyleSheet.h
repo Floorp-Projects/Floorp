@@ -64,7 +64,6 @@ public:
   NS_IMETHOD GetBaseURI(nsIURI** aBaseURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
-  NS_IMETHOD_(PRBool) UseForMedium(nsPresContext* aPresContext) const;
   NS_IMETHOD_(PRBool) HasRules() const;
   NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
   NS_IMETHOD SetEnabled(PRBool aEnabled);
@@ -84,6 +83,8 @@ public:
                                     nsReStyleHint* aResult);
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsReStyleHint* aResult);
+  NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,
+                                   PRBool* aRulesChanged);
 
   nsresult Init(nsIURI* aURL, nsIDocument* aDocument);
   nsresult Reset(nsIURI* aURL);

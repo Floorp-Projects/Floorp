@@ -59,19 +59,6 @@ NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCo
   return new (aPresShell) nsSVGClipPathFrame(aContext);
 }
 
-nsIContent *
-NS_GetSVGClipPathElement(nsIURI *aURI, nsIContent *aContent)
-{
-  nsIContent* content = nsContentUtils::GetReferencedElement(aURI, aContent);
-
-  nsCOMPtr<nsIDOMSVGClipPathElement> clipPath = do_QueryInterface(content);
-
-  if (clipPath)
-    return content;
-
-  return nsnull;
-}
-
 nsresult
 nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
                               nsISVGChildFrame* aParent,

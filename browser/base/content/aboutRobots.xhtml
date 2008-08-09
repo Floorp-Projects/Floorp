@@ -29,6 +29,7 @@
 #   Jeff Walden <jwalden+code@mit.edu>
 #   Johnathan Nightingale <johnath@mozilla.com>
 #   Justin Dolske <dolske@mozilla.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -80,13 +81,32 @@
         }
       }
     ]]></script>
+
+    <style type="text/css"><![CDATA[
+      #errorPageContainer {
+        background: url('chrome://browser/content/aboutRobots-icon.png') left 0 no-repeat -moz-Field;
+        -moz-background-origin: content;
+      }
+
+      #errorTrailerDescText {
+        float: right;
+      }
+
+      body[dir=rtl] #errorPageContainer {
+        background-image: url('chrome://browser/content/aboutRobots-icon-rtl.png');
+        background-position: right 0;
+      }
+
+      body[dir=rtl] #errorTrailerDescText {
+        float: left;
+      }
+    ]]></style>
   </head>
 
   <body dir="&locale.dir;">
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
-    <div id="errorPageContainer"
-         style="background: url('chrome://browser/content/aboutRobots-icon.png') left 0 no-repeat -moz-Field; -moz-background-origin: content;">
+    <div id="errorPageContainer">
     
       <!-- Error Title -->
       <div id="errorTitle">
@@ -113,7 +133,7 @@
 
         <!-- Short Description -->
         <div id="errorTrailerDesc">
-          <p id="errorTrailerDescText" style="float: right;">&robots.errorTrailerDescText;</p>
+          <p id="errorTrailerDescText">&robots.errorTrailerDescText;</p>
         </div>
 
       </div>

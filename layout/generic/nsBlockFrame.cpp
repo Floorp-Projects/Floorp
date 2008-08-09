@@ -3231,6 +3231,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
     PRBool allowPullUp = PR_TRUE;
     nsIContent* forceBreakInContent = nsnull;
     PRInt32 forceBreakOffset = -1;
+    gfxBreakPriority forceBreakPriority = eNoBreak;
     do {
       nsSpaceManager::SavedState spaceManagerState;
       aState.mReflowState.mSpaceManager->PushState(&spaceManagerState);
@@ -3261,7 +3262,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
           // If there is no saved break position, then this will set
           // set forceBreakInContent to null and we won't back up, which is
           // correct.
-          forceBreakInContent = lineLayout.GetLastOptionalBreakPosition(&forceBreakOffset);
+          forceBreakInContent = lineLayout.GetLastOptionalBreakPosition(&forceBreakOffset, &forceBreakPriority);
         } else {
           forceBreakInContent = nsnull;
         }
@@ -3389,7 +3390,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   if (impactedByFloats) {
     // There is a soft break opportunity at the start of the line, because
     // we can always move this line down below float(s).
-    if (aLineLayout.NotifyOptionalBreakPosition(frame->GetContent(), 0, PR_TRUE)) {
+    if (aLineLayout.NotifyOptionalBreakPosition(frame->GetContent(), 0, PR_TRUE, eNormalBreak)) {
       lineReflowStatus = LINE_REFLOW_REDO_NEXT_BAND;
     }
   }
@@ -3467,7 +3468,8 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   if (needsBackup) {
     // We need to try backing up to before a text run
     PRInt32 offset;
-    nsIContent* breakContent = aLineLayout.GetLastOptionalBreakPosition(&offset);
+    gfxBreakPriority breakPriority;
+    nsIContent* breakContent = aLineLayout.GetLastOptionalBreakPosition(&offset, &breakPriority);
     // XXX It's possible, in fact not unusual, for the break opportunity to already
     // be the end of the line. We should detect that and optimize to not
     // re-do the line.
@@ -3566,14 +3568,12 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   
   *aLineReflowStatus = LINE_REFLOW_OK;
 
-  // If it's currently ok to be reflowing in first-letter style then
-  // we must be about to reflow a frame that has first-letter style.
-  PRBool reflowingFirstLetter = aLineLayout.GetFirstLetterStyleOK();
 #ifdef NOISY_FIRST_LETTER
   ListTag(stdout);
   printf(": reflowing ");
   nsFrame::ListTag(stdout, aFrame);
-  printf(" reflowingFirstLetter=%s\n", reflowingFirstLetter ? "on" : "off");
+  printf(" reflowingFirstLetter=%s\n",
+         aLineLayout.GetFirstLetterStyleOK() ? "on" : "off");
 #endif
 
   // Reflow the inline frame
@@ -3713,18 +3713,10 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       aLine->SetLineWrapped(PR_TRUE);
     }
     
-    // If we are reflowing the first letter frame or a placeholder then 
+    // If we just ended a first-letter frame or reflowed a placeholder then 
     // don't split the line and don't stop the line reflow...
-    PRBool splitLine = !reflowingFirstLetter && 
-      nsGkAtoms::placeholderFrame != frameType;
-    if (reflowingFirstLetter) {
-      if ((nsGkAtoms::inlineFrame == frameType) ||
-          (nsGkAtoms::lineFrame == frameType)) {
-        splitLine = PR_TRUE;
-      }
-    }
-
-    if (splitLine) {
+    if (!(frameReflowStatus & NS_INLINE_BREAK_FIRST_LETTER_COMPLETE) && 
+        nsGkAtoms::placeholderFrame != frameType) {
       // Split line after the current frame
       *aLineReflowStatus = LINE_REFLOW_STOP;
       rv = SplitLine(aState, aLineLayout, aLine, aFrame->GetNextSibling(), aLineReflowStatus);

@@ -1,0 +1,70 @@
+2007-01-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  dist uninstalled pc file
+	* oggz-uninstalled.pc.in:
+	  added
+	* configure.ac:
+	  increase package version so liboggplay can require > 0.9.5
+
+2005-11-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* doc/Makefile.am:
+	  Work also with docbook2man as installed on Fedora
+
+2005-06-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* autogen.sh:
+	* m4/as-ac-expand.m4:
+	  add m4 dir and use it
+	  add an expand macro
+	* configure.ac:
+	  uniformize configure's output across the annodex stack
+
+2005-06-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* doc/Makefile.am:
+	  the doxygen stamp file is a build marker and should not be installed
+
+2005-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* src/tools/oggz-basetime.c: (filter_page), (read_page):
+	  Don't adjust granulepos of the three header packets' pages
+
+2005-06-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* src/tools/oggzrip.c:
+	  fixes memory corruption detected by glibc on Fedora Core
+
+2005-06-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* include/oggz/Makefile.am:
+	  don't override includedir
+
+Fri Jan 21 17:38:33 EST 2005 Conrad Parker <conrad@annodex.net>
+
+	* added FLAC header parsing from Tobias Gehrig
+	* added CMML header parsing
+
+Fri May 28 11:08:34 EST 2004 Conrad Parker <conrad@annodex.net>
+
+	* removed use of floating point in liboggz
+
+Fri May 21 16:48:34 EST 2004 Conrad Parker <conrad@annodex.net>
+
+	* Version 0.8.3
+	* fixes for win32 build procedure
+	* improved API documentation for seeking, OGGZ_AUTO and OggzIO
+
+Thu Mar 11 11:00:00 EST 2004 Silvia Pfeiffer <silvia.pfeiffer@csiro.au>
+	* Version 0.8.2
+	* fixed up the Makefiles to not include the CVS subdirectories
+	
+Sun Mar 07 16:00:00 EST 2004 Silvia Pfeiffer <silvia.pfeiffer@csiro.au>
+	* Version 0.8.1
+	* includes Windows port with Makefile & VC6 workspace & .NET solution
+	
+Thu Oct 16 21:55:07 EST 2003 Conrad Parker <conrad@annodex.net>
+
+	* split liboggz out from libannodex sources, started ChangeLog

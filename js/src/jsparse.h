@@ -71,13 +71,6 @@ JS_BEGIN_EXTERN_C
  *
  * <Statements>
  * TOK_LC       list        pn_head: list of pn_count statements
- * TOK_EXPORT   list        pn_head: list of pn_count TOK_NAMEs or one TOK_STAR
- *                            (which is not a multiply node)
- * TOK_IMPORT   list        pn_head: list of pn_count sub-trees of the form
- *                            a.b.*, a[b].*, a.*, a.b, or a[b] -- but never a.
- *                            Each member is expressed with TOK_DOT or TOK_LB.
- *                            Each sub-tree's root node has a pn_op in the set
- *                            JSOP_IMPORT{ALL,PROP,ELEM}
  * TOK_IF       ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else or null
  * TOK_SWITCH   binary      pn_left: discriminant
  *                          pn_right: list of TOK_CASE nodes, with at most one

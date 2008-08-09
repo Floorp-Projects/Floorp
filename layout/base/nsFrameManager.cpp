@@ -91,6 +91,7 @@
 #include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
 #include "imgIRequest.h"
+#include "nsStyleStructInlines.h"
 
 #include "nsFrameManager.h"
 #ifdef ACCESSIBILITY
@@ -1063,6 +1064,24 @@ CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
   return aMinChange;
 }
 
+static PRBool
+ShouldStopImage(imgIRequest *aOldImage, imgIRequest *aNewImage)
+{
+  if (!aOldImage)
+    return PR_FALSE;
+
+  PRBool stopImages = !aNewImage;
+  if (!stopImages) {
+    nsCOMPtr<nsIURI> oldURI, newURI;
+    aOldImage->GetURI(getter_AddRefs(oldURI));
+    aNewImage->GetURI(getter_AddRefs(newURI));
+    PRBool equal;
+    stopImages =
+      NS_FAILED(oldURI->Equals(newURI, &equal)) || !equal;
+  }
+  return stopImages;
+}
+
 nsChangeHint
 nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
                                       nsIFrame          *aFrame,
@@ -1200,23 +1219,30 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
         }
         // if old context had image and new context does not have the same image, 
         // stop the image load for the frame
-        const nsStyleBackground* oldColor = oldContext->GetStyleBackground();
-        const nsStyleBackground* newColor = newContext->GetStyleBackground();
+        if (ShouldStopImage(
+              oldContext->GetStyleBackground()->mBackgroundImage,
+              newContext->GetStyleBackground()->mBackgroundImage)) {
+          // stop the image loading for the frame, the image has changed
+          aPresContext->StopBackgroundImageFor(aFrame);
+        }
 
-        if (oldColor->mBackgroundImage) {
-          PRBool stopImages = !newColor->mBackgroundImage;
-          if (!stopImages) {
-            nsCOMPtr<nsIURI> oldURI, newURI;
-            oldColor->mBackgroundImage->GetURI(getter_AddRefs(oldURI));
-            newColor->mBackgroundImage->GetURI(getter_AddRefs(newURI));
-            PRBool equal;
-            stopImages =
-              NS_FAILED(oldURI->Equals(newURI, &equal)) || !equal;
-          }
-          if (stopImages) {
-            // stop the image loading for the frame, the image has changed
-            aPresContext->StopImagesFor(aFrame);
-          }
+        imgIRequest *newBorderImage =
+          newContext->GetStyleBorder()->GetBorderImage();
+        if (ShouldStopImage(oldContext->GetStyleBorder()->GetBorderImage(),
+                            newBorderImage)) {
+          // stop the image loading for the frame, the image has changed
+          aPresContext->StopBorderImageFor(aFrame);
+        }
+
+        // Since the CalcDifference call depended on the result of
+        // GetActualBorder() and that result depends on whether the
+        // image has loaded, start the image load now so that we'll get
+        // notified when it completes loading and can do a restyle.
+        // Otherwise, the image might finish loading from the network
+        // before we start listening to its notifications, and then
+        // we'll never know that it's finished loading.
+        if (newBorderImage) {
+          aPresContext->LoadBorderImage(newBorderImage, aFrame);
         }
       }
       oldContext->Release();

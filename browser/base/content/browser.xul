@@ -104,10 +104,14 @@
     <!-- for url bar autocomplete -->
     <panel type="autocomplete-richlistbox" chromedir="&locale.dir;" id="PopupAutoCompleteRichResult" noautofocus="true" hidden="true"/>
 
+    <!-- XXX panel element that has one or more text fields should not be
+             top-most panel, for IME users. See bug 433340 comment 100. -->
     <panel id="editBookmarkPanel"
            orient="vertical"
            ignorekeys="true"
            hidden="true"
+           noautohide="true"
+           onpopupshowing="this.removeAttribute('noautohide');"
            onpopupshown="StarUI.panelShown(event);"
            aria-labelledby="editBookmarkPanelTitle">
       <hbox flex="1" align="top">

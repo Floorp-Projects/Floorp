@@ -65,6 +65,7 @@
 #include "nsIEventStateManager.h"
 #include "nsISelection2.h"
 #include "nsISelectionController.h"
+#include "nsGUIEvent.h"
 
 #include "nsContentCID.h"
 #include "nsComponentManagerUtils.h"
@@ -289,6 +290,48 @@ nsAccUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
   aContent->GetListenerManager(PR_FALSE, getter_AddRefs(listenerManager));
 
   return listenerManager && listenerManager->HasListenersFor(aEventType);  
+}
+
+PRBool
+nsAccUtils::DispatchMouseEvent(PRUint32 aEventType,
+                               nsIPresShell *aPresShell,
+                               nsIContent *aContent)
+{
+  nsIFrame *frame = aPresShell->GetPrimaryFrameFor(aContent);
+  if (!frame)
+    return PR_FALSE;
+
+  nsIFrame* rootFrame = aPresShell->GetRootFrame();
+  if (!rootFrame)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIWidget> rootWidget = rootFrame->GetWindow();
+  if (!rootWidget)
+    return PR_FALSE;
+
+  // Compute x and y coordinates.
+  nsPoint point = frame->GetOffsetToExternal(rootFrame);
+  nsSize size = frame->GetSize();
+
+  nsPresContext* presContext = aPresShell->GetPresContext();
+
+  PRInt32 x = presContext->AppUnitsToDevPixels(point.x + size.width / 2);
+  PRInt32 y = presContext->AppUnitsToDevPixels(point.y + size.height / 2);
+  
+  // Fire mouse event.
+  nsMouseEvent event(PR_TRUE, aEventType, rootWidget,
+                     nsMouseEvent::eReal, nsMouseEvent::eNormal);
+
+  event.refPoint = nsIntPoint(x, y);
+  
+  event.clickCount = 1;
+  event.button = nsMouseEvent::eLeftButton;
+  event.time = PR_IntervalNow();
+  
+  nsEventStatus status = nsEventStatus_eIgnore;
+  aPresShell->HandleEventWithTarget(&event, frame, aContent, &status);
+
+  return PR_TRUE;
 }
 
 PRUint32
@@ -792,11 +835,9 @@ nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode,
                                         nsIAtom *aTagName,
                                         PRUint32 aAncestorLevelsToSearch)
 {
-  nsCOMPtr<nsIContent> binding;
   nsAutoString controlID;
   if (!nsAccUtils::GetID(aForNode, controlID)) {
-    binding = aForNode->GetBindingParent();
-    if (binding == aForNode)
+    if (!aForNode->IsInAnonymousSubtree())
       return nsnull;
 
     aForNode->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::anonid, controlID);
@@ -805,6 +846,7 @@ nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode,
   }
 
   // Look for label in subtrees of nearby ancestors
+  nsCOMPtr<nsIContent> binding(aForNode->GetBindingParent());
   PRUint32 count = 0;
   nsIContent *labelContent = nsnull;
   nsIContent *prevSearched = nsnull;

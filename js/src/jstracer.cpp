@@ -3476,36 +3476,6 @@ TraceRecorder::record_JSOP_CLOSURE()
 }
 
 bool
-TraceRecorder::record_JSOP_EXPORTALL()
-{
-    return false;
-}
-
-bool
-TraceRecorder::record_JSOP_EXPORTNAME()
-{
-    return false;
-}
-
-bool
-TraceRecorder::record_JSOP_IMPORTALL()
-{
-    return false;
-}
-
-bool
-TraceRecorder::record_JSOP_IMPORTPROP()
-{
-    return false;
-}
-
-bool
-TraceRecorder::record_JSOP_IMPORTELEM()
-{
-    return false;
-}
-
-bool
 TraceRecorder::record_JSOP_OBJECT()
 {
     return false;
@@ -3545,14 +3515,14 @@ TraceRecorder::record_JSOP_SETARG()
 }
 
 bool
-TraceRecorder::record_JSOP_GETVAR()
+TraceRecorder::record_JSOP_GETLOCAL()
 {
     stack(0, var(GET_SLOTNO(cx->fp->regs->pc)));
     return true;
 }
 
 bool
-TraceRecorder::record_JSOP_SETVAR()
+TraceRecorder::record_JSOP_SETLOCAL()
 {
     var(GET_SLOTNO(cx->fp->regs->pc), stack(-1));
     return true;
@@ -3610,7 +3580,7 @@ TraceRecorder::record_JSOP_INCARG()
 }
 
 bool
-TraceRecorder::record_JSOP_INCVAR()
+TraceRecorder::record_JSOP_INCLOCAL()
 {
     return inc(varval(GET_SLOTNO(cx->fp->regs->pc)), 1);
 }
@@ -3622,7 +3592,7 @@ TraceRecorder::record_JSOP_DECARG()
 }
 
 bool
-TraceRecorder::record_JSOP_DECVAR()
+TraceRecorder::record_JSOP_DECLOCAL()
 {
     return inc(varval(GET_SLOTNO(cx->fp->regs->pc)), -1);
 }
@@ -3634,7 +3604,7 @@ TraceRecorder::record_JSOP_ARGINC()
 }
 
 bool
-TraceRecorder::record_JSOP_VARINC()
+TraceRecorder::record_JSOP_LOCALINC()
 {
     return inc(varval(GET_SLOTNO(cx->fp->regs->pc)), 1, false);
 }
@@ -3646,7 +3616,7 @@ TraceRecorder::record_JSOP_ARGDEC()
 }
 
 bool
-TraceRecorder::record_JSOP_VARDEC()
+TraceRecorder::record_JSOP_LOCALDEC()
 {
     return inc(varval(GET_SLOTNO(cx->fp->regs->pc)), -1, false);
 }
@@ -3743,7 +3713,7 @@ TraceRecorder::record_JSOP_FORARG()
 }
 
 bool
-TraceRecorder::record_JSOP_FORVAR()
+TraceRecorder::record_JSOP_FORLOCAL()
 {
     LIns* iterobj_ins;
     if (!forInProlog(iterobj_ins))
@@ -3773,12 +3743,6 @@ TraceRecorder::record_JSOP_FORVAR()
     // Stack an unboxed true to make JSOP_IFEQ loop.
     stack(0, lir->insImm(1));
     return true;
-}
-
-bool
-TraceRecorder::record_JSOP_FORLOCAL()
-{
-    return false;
 }
 
 bool
@@ -4438,12 +4402,6 @@ TraceRecorder::record_JSOP_CALLPROP()
 }
 
 bool
-TraceRecorder::record_JSOP_UNUSED186()
-{
-    return false;
-}
-
-bool
 TraceRecorder::record_JSOP_DELDESC()
 {
     return false;
@@ -4556,42 +4514,6 @@ TraceRecorder::record_JSOP_LEAVEBLOCK()
 }
 
 bool
-TraceRecorder::record_JSOP_GETLOCAL()
-{
-    return false;
-}
-
-bool
-TraceRecorder::record_JSOP_SETLOCAL()
-{
-    return false;
-}
-
-bool
-TraceRecorder::record_JSOP_INCLOCAL()
-{
-    return false;
-}
-
-bool
-TraceRecorder::record_JSOP_DECLOCAL()
-{
-    return false;
-}
-
-bool
-TraceRecorder::record_JSOP_LOCALINC()
-{
-    return false;
-}
-
-bool
-TraceRecorder::record_JSOP_LOCALDEC()
-{
-    return false;
-}
-
-bool
 TraceRecorder::record_JSOP_GENERATOR()
 {
     return false;
@@ -4605,12 +4527,6 @@ TraceRecorder::record_JSOP_YIELD()
 
 bool
 TraceRecorder::record_JSOP_ARRAYPUSH()
-{
-    return false;
-}
-
-bool
-TraceRecorder::record_JSOP_UNUSED213()
 {
     return false;
 }
@@ -4644,15 +4560,9 @@ TraceRecorder::record_JSOP_GETARGPROP()
 }
 
 bool
-TraceRecorder::record_JSOP_GETVARPROP()
-{
-    return getProp(varval(GET_SLOTNO(cx->fp->regs->pc)));
-}
-
-bool
 TraceRecorder::record_JSOP_GETLOCALPROP()
 {
-    return false;
+    return getProp(varval(GET_SLOTNO(cx->fp->regs->pc)));
 }
 
 bool
@@ -4695,7 +4605,7 @@ TraceRecorder::record_JSOP_CALLGVAR()
 }
 
 bool
-TraceRecorder::record_JSOP_CALLVAR()
+TraceRecorder::record_JSOP_CALLLOCAL()
 {
     uintN slot = GET_SLOTNO(cx->fp->regs->pc);
     stack(0, var(slot));
@@ -4710,12 +4620,6 @@ TraceRecorder::record_JSOP_CALLARG()
     stack(0, arg(slot));
     stack(1, lir->insImmPtr(NULL));
     return guardShapelessCallee(argval(slot));
-}
-
-bool
-TraceRecorder::record_JSOP_CALLLOCAL()
-{
-    return false;
 }
 
 bool
@@ -4777,3 +4681,22 @@ TraceRecorder::record_JSOP_HOLE()
     stack(0, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_HOLE)));
     return true;
 }
+
+#define UNUSED(op) bool TraceRecorder::record_##op() { return false; }
+
+UNUSED(JSOP_UNUSED75)
+UNUSED(JSOP_UNUSED76)
+UNUSED(JSOP_UNUSED77)
+UNUSED(JSOP_UNUSED78)
+UNUSED(JSOP_UNUSED79)
+UNUSED(JSOP_UNUSED186)
+UNUSED(JSOP_UNUSED201)
+UNUSED(JSOP_UNUSED202)
+UNUSED(JSOP_UNUSED203)
+UNUSED(JSOP_UNUSED204)
+UNUSED(JSOP_UNUSED205)
+UNUSED(JSOP_UNUSED206)
+UNUSED(JSOP_UNUSED207)
+UNUSED(JSOP_UNUSED213)
+UNUSED(JSOP_UNUSED219)
+UNUSED(JSOP_UNUSED226)

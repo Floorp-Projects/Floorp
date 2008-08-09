@@ -424,7 +424,10 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
        // anything totally below the fold, but we can't position frames
        // across next-in-flow breaks yet.
   if (constrainHeight) {
-    kidReflowState.availableHeight = aReflowState.availableHeight - aKidFrame->GetRect().y;
+    kidReflowState.availableHeight = aReflowState.availableHeight - border.top
+                                     - kidReflowState.mComputedMargin.top;
+    if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.top)
+      kidReflowState.availableHeight -= kidReflowState.mComputedOffsets.top;
   }
 
   // Do the reflow

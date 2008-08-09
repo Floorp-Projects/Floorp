@@ -50,6 +50,7 @@
 #include "nsString.h"
 #include "nsVariant.h"
 #include "nsNavBookmarks.h"
+#include "nsPlacesTables.h"
 
 const PRInt32 nsAnnotationService::kAnnoIndex_ID = 0;
 const PRInt32 nsAnnotationService::kAnnoIndex_PageOrItem = 1;
@@ -248,16 +249,7 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
   rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_annos"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! exists) {
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_annos ("
-        "id INTEGER PRIMARY KEY,"
-        "place_id INTEGER NOT NULL,"
-        "anno_attribute_id INTEGER,"
-        "mime_type VARCHAR(32) DEFAULT NULL,"
-        "content LONGVARCHAR, flags INTEGER DEFAULT 0,"
-        "expiration INTEGER DEFAULT 0,"
-        "type INTEGER DEFAULT 0,"
-        "dateAdded INTEGER DEFAULT 0," 
-        "lastModified INTEGER DEFAULT 0)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_MOZ_ANNOS);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -268,26 +260,14 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
   rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_anno_attributes"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! exists) {
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE TABLE moz_anno_attributes ("
-        "id INTEGER PRIMARY KEY,"
-        "name VARCHAR(32) UNIQUE NOT NULL)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_MOZ_ANNO_ATTRIBUTES);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_items_annos"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! exists) {
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_items_annos ("
-        "id INTEGER PRIMARY KEY,"
-        "item_id INTEGER NOT NULL,"
-        "anno_attribute_id INTEGER,"
-        "mime_type VARCHAR(32) DEFAULT NULL,"
-        "content LONGVARCHAR, flags INTEGER DEFAULT 0,"
-        "expiration INTEGER DEFAULT 0,"
-        "type INTEGER DEFAULT 0,"
-        "dateAdded INTEGER DEFAULT 0," 
-        "lastModified INTEGER DEFAULT 0)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_MOZ_ITEMS_ANNOS);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         "CREATE UNIQUE INDEX moz_items_annos_itemattributeindex ON moz_items_annos (item_id, anno_attribute_id)"));

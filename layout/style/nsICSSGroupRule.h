@@ -48,6 +48,7 @@
 
 class nsIAtom;
 class nsPresContext;
+class nsMediaQueryResultCacheKey;
 
 // IID for the nsICSSGroupRule interface {67b8492e-6d8d-43a5-8037-71eb269f24fe}
 #define NS_ICSS_GROUP_RULE_IID     \
@@ -75,7 +76,8 @@ public:
                                  nsCOMArray<nsICSSRule>& aRules) = 0;
   NS_IMETHOD  ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew) = 0;
 
-  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext) = 0;
+  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext,
+                                         nsMediaQueryResultCacheKey& aKey) = 0;
    
 };
 

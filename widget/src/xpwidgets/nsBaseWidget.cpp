@@ -862,6 +862,12 @@ nsBaseWidget::SetWindowTitlebarColor(nscolor aColor, PRBool aActive)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+PRBool
+nsBaseWidget::ShowsResizeIndicator(nsIntRect* aResizerRect)
+{
+  return PR_FALSE;
+}
+
 
 /**
  * Modifies aFile to point at an icon file with the given name and suffix.  The

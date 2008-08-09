@@ -94,7 +94,10 @@ EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += oleaut32.lib
+OS_LIBS += \
+	oleaut32.lib \
+	version.lib \
+	$(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
