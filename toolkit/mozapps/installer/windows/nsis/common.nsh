@@ -3093,6 +3093,7 @@
 
 /**
  * Checks if a handler's open command points to this installation directory.
+ * Uses SHCTX to determine the registry hive (e.g. HKLM or HKCU) to check.
  *
  * @param   _HANDLER_NAME
  *          The registry name for the handler.
@@ -3126,7 +3127,7 @@
 
       StrCpy $R8 "$R9"
       StrCpy $R9 "false"
-      ReadRegStr $R7 HKCR "$R8\shell\open\command" ""
+      ReadRegStr $R7 SHCTX "Software\Classes\$R8\shell\open\command" ""
       StrCmp "$R7" "" end
 
       ${GetPathFromString} "$R7" $R7

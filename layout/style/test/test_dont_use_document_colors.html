@@ -80,6 +80,8 @@ function part1()
           "border-left-color applies");
     isnot(cs1.borderBottomColor, cs2.borderBottomColor,
           "border-top-color applies");
+    isnot(cs1.MozColumnRuleColor, cs2.MozColumnRuleColor,
+       "-moz-column-rule-color applies");
     is(cs1.borderTopColor, cs3.borderTopColor, "border-top-color applies");
     is(cs1.borderRightColor, cs3.borderRightColor,
        "border-right-color applies");
@@ -108,8 +110,6 @@ function part1()
           "border-left-color applies");
     isnot(cs3.borderBottomColor, cs4.borderBottomColor,
           "border-bottom-color applies");
-    isnot(cs2.MozColumnRuleColor, cs3.MozColumnRuleColor,
-       "-moz-column-rule-color applies");
     transparentBackgroundColor = cs2.backgroundColor;
     inputBackgroundColor = cs4.backgroundColor;
     inputColor = cs4.color;
@@ -141,7 +141,7 @@ function part2()
        "-moz-border-end-color is blocked");
     is(cs1.borderBottomColor, cs2.borderBottomColor,
        "border-bottom-color is blocked");
-    is(cs2.MozColumnRuleColor, cs3.MozColumnRuleColor,
+    is(cs1.MozColumnRuleColor, cs2.MozColumnRuleColor,
        "-moz-column-rule-color is blocked");
     is(cs3.backgroundColor, cs1.backgroundColor, "background-color transparency preserved (opaque)");
     is(cs3.color, cs4.color, "color is blocked");

@@ -130,6 +130,9 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 201293-1c.html 201293-1-ref.html
 == 201293-1d.html 201293-1-ref.html
 == 206516-1.html 206516-1-ref.html
+== 210094-1a.html 210094-1-ref.html
+== 210094-1b.html 210094-1-ref.html
+!= 210094-1c.html 210094-1-ref.html
 == 210876-1.html 210876-1-ref.html
 == 212563-1.html 212563-1-ref.html
 == 214077-1a.html 214077-1-ref.html
@@ -169,6 +172,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 253701-1.html 253701-1-ref.html
 == 255820-1.html 255820-1-ref.html
 == 262151-1.html 262151-1-ref.html
+#== 263683-1.html 263683-1-ref.html
 == 267353-1.html 267353-1-ref.html
 == 273681-1.html 273681-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
@@ -176,6 +180,8 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") HTTP == 289480.html#top 289480-ref.html # 
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
 == 291262-1.html 291262-1-ref.html
+== 294306-1.html 294306-1a-ref.html
+!= 294306-1.html 294306-1b-ref.html
 == 296904-1.html 296904-1-ref.html
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
@@ -628,6 +634,7 @@ skip-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-
 == 395130-1.html 395130-1-ref.html
 == 395130-2.html 395130-2-ref.html
 == 395331-1.xml 395331-1-ref.xml
+== 395390-1.html 395390-1-ref.html
 == 396286-1.html about:blank  # crash test
 == 397428-1.html 397428-1-ref.html
 == 397844-1.xhtml 397844-1-ref.xhtml
@@ -789,6 +796,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 417676.html 417676-ref.html
 == 418766-1a.html 418766-1-ref.html
 == 418766-1b.html 418766-1-ref.html
+== 419285-1.html 419285-1-ref.html
 == 419060.html 419060-ref.html
 == 419531-1.html 419531-1-ref.html
 == 420069-1.html 420069-1-ref.html
@@ -838,6 +846,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 427129-table-caption.html 427129-table-caption-ref.html
 == 427370-1.html 427370-1-ref.html
 == 427730-1.html 427730-1-ref.html
+== 428278.html 428278-ref.html
 == 428423-1a.html 428423-1-ref.html
 == 428423-1b.html 428423-1-ref.html
 == 428521-1a.html 428521-1-ref.html
@@ -848,11 +857,20 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 == 430813-1.html 430813-1-ref.html
 == 430813-2.html 430813-2-ref.html
 == 430813-3.html 430813-3-ref.html
+== 431341-1.html 431341-1-ref.html
+== 431341-2.html 431341-2-ref.html
+== 431520-1.html 431520-1-ref.html
 == 440112.html 440112-ref.html
 == 433640-1.html 433640-1-ref.html
 == 433700.html 433700-ref.html
 == 436356-1.html 436356-1-ref.html
 == 436356-2.html 436356-2-ref.html
 == 438981-1.xhtml about:blank
+== 438987-1.html 438987-1-ref.html
+== 438987-2a.html 438987-2-ref.html
+== 438987-2b.html 438987-2-ref.html
+== 438987-2c.html 438987-2-ref.html
+!= about:blank 438987-2-ref.html # check that backgrounds work at all 
 == 439004-1.html 439004-1-ref.html
 == 439910.html 439910-ref.html
+# == 448987.html 448987-ref.html  # Disabled for now - it needs privileges

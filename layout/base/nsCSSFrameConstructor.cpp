@@ -147,6 +147,9 @@
 #ifdef MOZ_MATHML
 #include "nsMathMLParts.h"
 #endif
+#ifdef MOZ_SVG
+#include "nsSVGUtils.h"
+#endif
 
 nsIFrame*
 NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -1791,6 +1794,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   : mDocument(aDocument)
   , mPresShell(aPresShell)
   , mInitialContainingBlock(nsnull)
+  , mRootElementStyleFrame(nsnull)
   , mFixedContainingBlock(nsnull)
   , mDocElementContainingBlock(nsnull)
   , mGfxScrollFrame(nsnull)
@@ -1915,8 +1919,9 @@ nsCSSFrameConstructor::CreateAttributeContent(nsIContent* aParentContent,
 
   content->SetNativeAnonymous();
 
-  // Set aContent as the parent content so that event handling works.
-  rv = content->BindToTree(mDocument, aParentContent, content, PR_TRUE);
+  // Set aParentContent as the parent content so that event handling works.
+  // It is also the binding parent.
+  rv = content->BindToTree(mDocument, aParentContent, aParentContent, PR_TRUE);
   if (NS_FAILED(rv)) {
     content->UnbindFromTree();
     return rv;
@@ -1985,11 +1990,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
     content->SetNativeAnonymous();
   
     // Set aContent as the parent content and set the document object. This
-    // way event handling works
-    // Hack the binding parent to make document rules not match (not
-    // like it matters, since we already have a non-element style
-    // context... which is totally wacky, but anyway).
-    rv = content->BindToTree(mDocument, aContent, content, PR_TRUE);
+    // way event handling works.  It is also the binding parent.
+    rv = content->BindToTree(mDocument, aContent, aContent, PR_TRUE);
     if (NS_FAILED(rv)) {
       content->UnbindFromTree();
       return rv;
@@ -2169,7 +2171,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
         textContent->SetNativeAnonymous();
 
         // Set aContent as the parent content so that event handling works.
-        nsresult rv = textContent->BindToTree(mDocument, aContent, textContent,
+        nsresult rv = textContent->BindToTree(mDocument, aContent, aContent,
                                               PR_TRUE);
         if (NS_FAILED(rv)) {
           textContent->UnbindFromTree();
@@ -3406,7 +3408,8 @@ IsSpecialContent(nsIContent*     aContent,
       aTag == nsGkAtoms::menuitem ||
       aTag == nsGkAtoms::menubutton ||
       aTag == nsGkAtoms::menubar ||
-      (aTag == nsGkAtoms::popupgroup && aContent->IsNativeAnonymous()) ||
+      (aTag == nsGkAtoms::popupgroup &&
+       aContent->IsRootOfNativeAnonymousSubtree()) ||
       aTag == nsGkAtoms::iframe ||
       aTag == nsGkAtoms::editor ||
       aTag == nsGkAtoms::browser ||
@@ -4378,6 +4381,16 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   mInitialContainingBlock = contentFrame;
   mInitialContainingBlockIsAbsPosContainer = PR_FALSE;
 
+  // Figure out which frame has the main style for the document element,
+  // assigning it to mRootElementStyleFrame.
+  // Backgrounds should be propagated from that frame to the viewport.
+  PRBool isChild;
+  contentFrame->GetParentStyleContextFrame(aState.mPresContext,
+          &mRootElementStyleFrame, &isChild);
+  if (!isChild) {
+    mRootElementStyleFrame = mInitialContainingBlock;
+  }
+
   // if it was a table then we don't need to process our children.
   if (!docElemIsTable) {
     // Process the child content
@@ -5315,7 +5328,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
                                           PRBool                   aHasPseudoParent)
 {
   // Ignore the tag if it's not HTML content and if it doesn't extend (via XBL)
-  // a valid HTML namespace.
+  // a valid HTML namespace.  This check must match the one in
+  // ShouldHaveFirstLineStyle.
   if (!aContent->IsNodeOfType(nsINode::eHTML) &&
       aNameSpaceID != kNameSpaceID_XHTML) {
     return NS_OK;
@@ -5699,20 +5713,17 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
     nsIContent* content = newAnonymousItems[i];
     NS_ASSERTION(content, "null anonymous content?");
 
-    nsIContent* bindingParent = content;
 #ifdef MOZ_SVG
     // least-surprise CSS binding until we do the SVG specified
     // cascading rules for <svg:use> - bug 265894
-    if (aParent &&
-        aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG)) {
-      bindingParent = aParent;
-    } else
+    if (!aParent ||
+        !aParent->NodeInfo()->Equals(nsGkAtoms::use, kNameSpaceID_SVG))
 #endif
     {
       content->SetNativeAnonymous();
     }
 
-    rv = content->BindToTree(aDocument, aParent, bindingParent, PR_TRUE);
+    rv = content->BindToTree(aDocument, aParent, aParent, PR_TRUE);
     if (NS_FAILED(rv)) {
       content->UnbindFromTree();
       return rv;
@@ -5912,7 +5923,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
         newFrame = NS_NewMenuBarFrame(mPresShell, aStyleContext);
       }
-      else if (aTag == nsGkAtoms::popupgroup && aContent->IsNativeAnonymous()) {
+      else if (aTag == nsGkAtoms::popupgroup &&
+               aContent->IsRootOfNativeAnonymousSubtree()) {
         // This frame contains child popups
         newFrame = NS_NewPopupSetFrame(mPresShell, aStyleContext);
       }
@@ -6174,7 +6186,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     }
 
 #ifdef MOZ_XUL
-    if (aTag == nsGkAtoms::popupgroup && aContent->IsNativeAnonymous()) {
+    if (aTag == nsGkAtoms::popupgroup &&
+        aContent->IsRootOfNativeAnonymousSubtree()) {
       nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
       if (rootBox) {
         NS_ASSERTION(rootBox->GetPopupSetFrame() == newFrame,
@@ -7145,7 +7158,14 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewSVGAFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsGkAtoms::text) {
-    newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
+    nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
+    if (ancestorFrame) {
+      nsISVGTextContentMetrics* metrics;
+      CallQueryInterface(ancestorFrame, &metrics);
+      // Text cannot be nested
+      if (!metrics)
+        newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
+    }
   }
   else if (aTag == nsGkAtoms::tspan) {
     nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
@@ -7645,6 +7665,9 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
             return rv;
           }
         }
+        
+        mInitialContainingBlock = nsnull;
+        mRootElementStyleFrame = nsnull;
 
         // Create the new document element hierarchy
         nsIFrame* newChild;
@@ -9451,7 +9474,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
 
     if (mInitialContainingBlock == childFrame) {
       mInitialContainingBlock = nsnull;
-      mInitialContainingBlockIsAbsPosContainer = PR_FALSE;
+      mRootElementStyleFrame = nsnull;
     }
 
     if (haveFLS && mInitialContainingBlock) {
@@ -9815,6 +9838,11 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       RecreateFramesForContent(content);
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");
+#ifdef MOZ_SVG
+      if (hint & nsChangeHint_UpdateEffects) {
+        nsSVGUtils::UpdateEffects(frame);
+      }
+#endif
       if (hint & nsChangeHint_ReflowFrame) {
         StyleChangeReflow(frame);
       }
@@ -10569,13 +10597,15 @@ static PRBool
 IsBindingAncestor(nsIContent* aContent, nsIContent* aBindingRoot)
 {
   while (PR_TRUE) {
+    // Native-anonymous content doesn't contain insertion points, so
+    // we don't need to search through it.
+    if (aContent->IsRootOfNativeAnonymousSubtree())
+      return PR_FALSE;
     nsIContent* bindingParent = aContent->GetBindingParent();
     if (!bindingParent)
       return PR_FALSE;
     if (bindingParent == aBindingRoot)
       return PR_TRUE;
-    if (bindingParent == aContent)
-      return PR_FALSE;
     aContent = bindingParent;
   }
 }
@@ -10673,6 +10703,8 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
           // child frames, too.
           // We also need to search if the child content is anonymous and scoped
           // to the parent content.
+          // XXXldb What makes us continue the search once we're inside
+          // the anonymous subtree?
           if (aParentContent == kidContent ||
               (aParentContent && IsBindingAncestor(kidContent, aParentContent))) 
           {
@@ -11151,9 +11183,22 @@ PRBool
 nsCSSFrameConstructor::ShouldHaveFirstLineStyle(nsIContent* aContent,
                                                 nsStyleContext* aStyleContext)
 {
-  return nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext,
-                                       nsCSSPseudoElements::firstLine,
-                                       mPresShell->GetPresContext());
+  PRBool hasFirstLine =
+    nsLayoutUtils::HasPseudoStyle(aContent, aStyleContext,
+                                  nsCSSPseudoElements::firstLine,
+                                  mPresShell->GetPresContext());
+  if (hasFirstLine) {
+    // But disable for fieldsets
+    PRInt32 namespaceID;
+    nsIAtom* tag = mDocument->BindingManager()->ResolveTag(aContent,
+                                                           &namespaceID);
+    // This check must match the one in ConstructHTMLFrame.
+    hasFirstLine = tag != nsGkAtoms::fieldset ||
+      (namespaceID != kNameSpaceID_XHTML &&
+       !aContent->IsNodeOfType(nsINode::eHTML));
+  }
+
+  return hasFirstLine;
 }
 
 void
@@ -11652,7 +11697,7 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   // its primary frame to be a text frame).  So use its parent for the
   // first-letter.
   nsIContent* letterContent = aTextContent->GetParent();
-  NS_ASSERTION(letterContent->GetBindingParent() != letterContent,
+  NS_ASSERTION(!letterContent->IsRootOfNativeAnonymousSubtree(),
                "Reframes of this letter frame will mess with the root of a "
                "native anonymous content subtree!");
   InitAndRestoreFrame(aState, letterContent,
@@ -11777,7 +11822,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsFrameConstructorState& aState,
         // content for a non-text frame (because we want its primary frame to
         // be a text frame).  So use its parent for the first-letter.
         nsIContent* letterContent = aTextContent->GetParent();
-        NS_ASSERTION(letterContent->GetBindingParent() != letterContent,
+        NS_ASSERTION(!letterContent->IsRootOfNativeAnonymousSubtree(),
                      "Reframes of this letter frame will mess with the root "
                      "of a native anonymous content subtree!");
         letterFrame->Init(letterContent, aParentFrame, nsnull);
@@ -11874,7 +11919,8 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   while (frame) {
     nsIFrame* nextFrame = frame->GetNextSibling();
 
-    if (nsGkAtoms::textFrame == frame->GetType()) {
+    nsIAtom* frameType = frame->GetType();
+    if (nsGkAtoms::textFrame == frameType) {
       // Wrap up first-letter content in a letter frame
       nsIContent* textContent = frame->GetContent();
       if (IsFirstLetterContent(textContent)) {
@@ -11893,7 +11939,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
         return NS_OK;
       }
     }
-    else if (IsInlineFrame(frame)) {
+    else if (IsInlineFrame(frame) && frameType != nsGkAtoms::brFrame) {
       nsIFrame* kids = frame->GetFirstChild(nsnull);
       WrapFramesInFirstLetterFrame(aState, aBlockFrame, frame, kids,
                                    aModifiedParent, aTextFrame,
@@ -12947,8 +12993,8 @@ nsCSSFrameConstructor::RestyleForAppend(nsIContent* aContainer,
         NS_ASSERTION(index != aNewIndexInContainer, "yikes, nothing appended");
         break;
       }
-      NS_ASSERTION(!content->IsNativeAnonymous(),
-                   "native anonymous nodes should not be in child lists");
+      NS_ASSERTION(!content->IsRootOfAnonymousSubtree(),
+                   "anonymous nodes should not be in child lists");
     }
   }
 #endif
@@ -13006,8 +13052,8 @@ void
 nsCSSFrameConstructor::RestyleForInsertOrChange(nsIContent* aContainer,
                                                 nsIContent* aChild)
 {
-  NS_ASSERTION(!aChild->IsNativeAnonymous(),
-               "native anonymous nodes should not be in child lists");
+  NS_ASSERTION(!aChild->IsRootOfAnonymousSubtree(),
+               "anonymous nodes should not be in child lists");
   PRUint32 selectorFlags =
     aContainer ? (aContainer->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags == 0)
@@ -13087,8 +13133,8 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
                                         nsIContent* aOldChild,
                                         PRInt32 aIndexInContainer)
 {
-  NS_ASSERTION(!aOldChild->IsNativeAnonymous(),
-               "native anonymous nodes should not be in child lists");
+  NS_ASSERTION(!aOldChild->IsRootOfAnonymousSubtree(),
+               "anonymous nodes should not be in child lists");
   PRUint32 selectorFlags =
     aContainer ? (aContainer->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
   if (selectorFlags == 0)

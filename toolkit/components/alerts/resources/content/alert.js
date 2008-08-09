@@ -198,22 +198,24 @@ function animateAlert()
     setTimeout(animateAlert, gSlideTime);
   }
   else
-    setTimeout(closeAlert, gOpenTime);  
+    setTimeout(animateCloseAlert, gOpenTime);  
 }
 
-function closeAlert()
+function animateCloseAlert()
 {
   if (gCurrentSize > 1)
   {
     animate(-gSlideIncrement);
-    setTimeout(closeAlert, gSlideTime);
+    setTimeout(animateCloseAlert, gSlideTime);
   }
   else
-  {
-    if (gAlertListener)
-      gAlertListener.observe(null, "alertfinished", gAlertCookie); 
-    window.close(); 
-  }
+    closeAlert();
+}
+
+function closeAlert() {
+  if (gAlertListener)
+    gAlertListener.observe(null, "alertfinished", gAlertCookie); 
+  window.close(); 
 }
 
 function onAlertClick()

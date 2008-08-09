@@ -205,6 +205,18 @@ EXTRA_DSO_LDOPTS += \
 	-lcrypto \
 	$(TK_LIBS) \
 	$(NULL)
+
+ifdef MOZ_OGG
+EXTRA_DSO_LDOPTS += \
+	-framework CoreAudio \
+ 	-framework AudioToolbox \
+	-framework AudioUnit \
+	$(NULL)
+endif
+endif
+
+ifdef MOZ_ENABLE_DBUS
+EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
 endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))

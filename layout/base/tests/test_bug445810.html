@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=445810
+-->
+<head>
+  <title>Test for Bug 445810</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=445810">Mozilla Bug 445810</a>
+<div><p id="display"></p></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 445810 **/
+
+function new_image_url()
+{
+  var width = 10;
+  var height = 10;
+
+  var canvas = document.createElement("canvas");
+  canvas.setAttribute("width", width);
+  canvas.setAttribute("height", height);
+  var cx = canvas.getContext("2d");
+  function random_color() {
+    function random_component() {
+      return Math.floor(Math.random() * 256);
+    }
+    return "rgb(" + random_component() + "," +
+                    random_component() + "," +
+                    random_component() + ")";
+  }
+  for (var x = 0; x < width; ++x) {
+    for (var y = 0; y < height; ++y) {
+      cx.fillStyle = random_color();
+      cx.fillRect(x, y, 1, 1);
+    }
+  }
+  return canvas.toDataURL();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+var p = document.getElementById("display");
+var div = p.parentNode;
+var divcs = getComputedStyle(div, "");
+
+div.style.width = "-moz-min-content";
+p.style.width = "5px";
+p.style.height = "5px";
+is(divcs.width, "5px", "correct width without a border");
+is(divcs.height, "5px", "correct height without a border");
+p.style.border = "3px solid";
+is(divcs.width, "11px", // 3 (border-left) + 5 (width) + 3 (border-right)
+   "correct width without a border image");
+is(divcs.height, "11px", // 3 (border-top) + 5 (height) + 3 (border-bottom)
+   "correct height without a border image");
+
+p.style.MozBorderImage = "url( " + new_image_url() + ") 2 2 2 2 / 7px 2px";
+is(divcs.width, "11px", "border image not loaded yet");
+is(divcs.height, "11px", "border image not loaded yet");
+
+setTimeout(step2, 0);
+function step2() {
+  is(divcs.width, "9px", "border image loading caused reflow");
+  is(divcs.height, "19px", "border image loading caused reflow");
+
+  p.style.border = "";
+  is(divcs.width, "9px", "border image still shows with border-style:none");
+  is(divcs.height, "19px", "border image still shows with border-style:none");
+
+  p.style.MozBorderImage = "";
+  is(divcs.width, "5px", "correct width without a border");
+  is(divcs.height, "5px", "correct height without a border");
+
+  p.style.MozBorderImage = "url( " + new_image_url() + ") 2 2 2 2 / 7px 2px";
+  is(divcs.width, "5px", "border image not loaded yet");
+  is(divcs.height, "5px", "border image not loaded yet");
+  setTimeout(step3, 0);
+}
+
+function step3() {
+  is(divcs.width, "9px", "border image loading caused reflow");
+  is(divcs.height, "19px", "border image loading caused reflow");
+
+  p.style.MozBorderImage = "url( " + new_image_url() + ") 2 2 2 2";
+  p.style.border = "3px none";
+  is(divcs.width, "5px", "border image not loaded yet");
+  is(divcs.height, "5px", "border image not loaded yet");
+  setTimeout(step4, 0);
+}
+
+function step4() {
+  is(divcs.width, "11px", "border image loading caused reflow");
+  is(divcs.height, "11px", "border image loading caused reflow");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -192,10 +192,13 @@ endif
 	+$(LOOP_OVER_DIRS)
 
 clean:
+	+$(LOOP_OVER_PREDIRS)
 	rm -rf $(OBJS) $(GARBAGE)
 
 clobber:
-	rm -rf $(OBJS) $(TARGETS) $(DEPENDENCIES)
+	+$(LOOP_OVER_PREDIRS)
+	rm -rf $(OBJS) $(TARGETS) $(DEPENDENCIES) $(GARBAGE)
+	if test -d $(OBJDIR); then rmdir $(OBJDIR); fi
 
 tar:
 	tar cvf $(TARNAME) $(TARFILES)

@@ -6050,24 +6050,26 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              PR_FALSE,          // aDialog
                              PR_TRUE,           // aContentModal
                              PR_TRUE,           // aCalledNoScript
-                             PR_FALSE,          // aDoJSFixups
+                             PR_TRUE,           // aDoJSFixups
                              nsnull, aArgs,     // args
                              GetPrincipal(),    // aCalleePrincipal
                              nsnull,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
-  if (NS_FAILED(rv) || !dlgWin)
-    return NS_OK;
 
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(dlgWin));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (dlgWin) {
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(dlgWin));
 
-  nsPIDOMWindow *inner = win->GetCurrentInnerWindow();
+    nsPIDOMWindow *inner = win->GetCurrentInnerWindow();
 
-  nsCOMPtr<nsIDOMModalContentWindow> dlgInner(do_QueryInterface(inner));
+    nsCOMPtr<nsIDOMModalContentWindow> dlgInner(do_QueryInterface(inner));
 
-  if (dlgInner) {
-    dlgInner->GetReturnValue(aRetVal);
+    if (dlgInner) {
+      dlgInner->GetReturnValue(aRetVal);
+    }
   }
-
+  
   return NS_OK;
 }
 
@@ -6808,6 +6810,27 @@ nsGlobalWindow::Deactivate()
   return FireWidgetEvent(mDocShell, NS_DEACTIVATE);
 }
 
+void
+nsGlobalWindow::SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler)
+{
+  SetChromeEventHandlerInternal(aChromeEventHandler);
+  if (IsOuterWindow()) {
+    // update the chrome event handler on all our inner windows
+    for (nsGlobalWindow *inner = (nsGlobalWindow *)PR_LIST_HEAD(this);
+         inner != this;
+         inner = (nsGlobalWindow*)PR_NEXT_LINK(inner)) {
+      NS_ASSERTION(inner->mOuterWindow == this, "bad outer window pointer");
+      inner->SetChromeEventHandlerInternal(aChromeEventHandler);
+    }
+  } else if (mOuterWindow) {
+    // Need the cast to be able to call the protected method on a
+    // superclass. We could make the method public instead, but it's really
+    // better this way.
+    static_cast<nsGlobalWindow*>(mOuterWindow)->
+      SetChromeEventHandlerInternal(aChromeEventHandler);
+  }
+}
+
 nsIFocusController*
 nsGlobalWindow::GetRootFocusController()
 {
@@ -7292,8 +7315,6 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                   "Can't pass in arguments both ways");
   NS_PRECONDITION(!aCalledNoScript || (!argv && argc == 0),
                   "Can't pass JS args when called via the noscript methods");
-  NS_PRECONDITION(!aDoJSFixups || !aCalledNoScript,
-                  "JS fixups should not be done when called noscript");
   NS_PRECONDITION(!aJSCallerContext || !aCalledNoScript,
                   "Shouldn't have caller context when called noscript");
 

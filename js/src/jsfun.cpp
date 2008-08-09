@@ -1773,11 +1773,11 @@ out:
 
 static JSFunctionSpec function_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,   fun_toSource,   0,0,0),
+    JS_FN(js_toSource_str,   fun_toSource,   0,0),
 #endif
-    JS_FN(js_toString_str,   fun_toString,   0,0,0),
-    JS_FN("apply",           fun_apply,      0,2,0),
-    JS_FN(call_str,          fun_call,       0,1,0),
+    JS_FN(js_toString_str,   fun_toString,   0,0),
+    JS_FN("apply",           fun_apply,      2,0),
+    JS_FN(call_str,          fun_call,       1,0),
 #ifdef NARCISSUS
     JS_FN("__applyConstructor__", fun_applyConstructor, 0,1,0),
 #endif
@@ -2092,7 +2092,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     } else {
         fun->u.n.native = native;
         fun->u.n.extra = 0;
-        fun->u.n.minargs = 0;
+        fun->u.n.spare = 0;
         fun->u.n.clasp = NULL;
     }
     fun->atom = atom;

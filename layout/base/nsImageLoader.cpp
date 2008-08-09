@@ -214,11 +214,8 @@ nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
     nsIPresShell *shell = mPresContext->GetPresShell();
     nsresult rv = shell->FrameNeedsReflow(mFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not reflow after loading border-image");
-    // Note that we're assuming that the resulting reflow will
-    // invalidate the entire frame.  Given that we only set
-    // mReflowOnLoad if the actual border width will change when we do
-    // this reflow, this invalidate should happen.
-    return;
+    // The reflow might not do all the invalidation we need, so continue
+    // on with the invalidation codepath.
   }
   // NOTE: It is not sufficient to invalidate only the size of the image:
   //       the image may be tiled! 

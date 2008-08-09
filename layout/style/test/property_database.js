@@ -341,7 +341,7 @@ var gCSSProperties = {
 		initial_values: [ "auto" ],
 		other_values: [ "1", "0", "17" ],
 		invalid_values: [
-			// "-1", unclear: see http://lists.w3.org/Archives/Public/www-style/2007Apr/0030
+			"-1", //unclear: see http://lists.w3.org/Archives/Public/www-style/2007Apr/0030
 			"3px"
 		]
 	},
@@ -1665,6 +1665,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal", "0", "0px", "-0em" ],
 		other_values: [ "1em", "2px", "-3px" ],
+		invalid_values: []
+	},
+	"word-wrap": {
+		domProp: "wordWrap",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "normal" ],
+		other_values: [ "break-word" ],
 		invalid_values: []
 	},
 	"z-index": {

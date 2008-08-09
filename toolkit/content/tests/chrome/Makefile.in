@@ -55,6 +55,8 @@ _TEST_FILES = 	findbar_window.xul \
 		test_bug366992.xul \
 		bug331215_window.xul \
 		test_bug331215.xul \
+		bug263683_window.xul \
+		test_bug263683.xul \
 		test_popup_preventdefault_chrome.xul \
 		window_popup_preventdefault_chrome.xul \
 		test_largemenu.xul \
@@ -65,6 +67,8 @@ _TEST_FILES = 	findbar_window.xul \
 		test_preferences.xul \
 		window_preferences.xul \
 		test_autocomplete2.xul \
+		test_keys.xul \
+		window_keys.xul \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

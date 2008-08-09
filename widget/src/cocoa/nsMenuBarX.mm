@@ -226,12 +226,14 @@ nsresult nsMenuBarX::InsertMenuAtIndex(nsMenuX* aMenu, PRUint32 aIndex)
   nsIContent* menuContent = aMenu->Content();
   if (menuContent->GetChildCount() > 0 &&
       !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
-    NSMenuItem* newMenuItem = aMenu->NativeMenuItem();
-    // If the application menu is in our menu bar we need to insert past it
-    PRUint32 targetIndex = aIndex;
+    PRUint32 insertAfter = 0;
+    nsresult rv = nsMenuUtilsX::CountVisibleBefore(this, aMenu, &insertAfter);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsMenuUtilsX::CountVisibleBefore failed!\n");
+    if (NS_FAILED(rv))
+      return rv;
     if (MenuContainsAppMenu())
-      targetIndex++;
-    [mNativeMenu insertItem:newMenuItem atIndex:targetIndex];
+      insertAfter++;
+    [mNativeMenu insertItem:aMenu->NativeMenuItem() atIndex:insertAfter];
   }
 
   return NS_OK;
@@ -289,21 +291,23 @@ nsresult nsMenuBarX::Paint()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NSMenu* outgoingMenu = [NSApp mainMenu];
-  NS_ASSERTION([outgoingMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
+  // Don't try to optimize anything in this painting by checking
+  // sLastGeckoMenuBarPainted because the menubar can be manipulated by
+  // native dialogs and sheet code and other things besides this paint method.
 
   // We have to keep the same menu item for the Application menu so we keep
   // passing it along.
-  if (sLastGeckoMenuBarPainted != this) {
-    NSMenuItem* appMenuItem = [[outgoingMenu itemAtIndex:0] retain];
-    [outgoingMenu removeItemAtIndex:0];
-    [mNativeMenu insertItem:appMenuItem atIndex:0];
-    [appMenuItem release];
-    
-    // Set menu bar and event target.
-    [NSApp setMainMenu:mNativeMenu];
-    nsMenuBarX::sLastGeckoMenuBarPainted = this;
-  }
+  NSMenu* outgoingMenu = [NSApp mainMenu];
+  NS_ASSERTION([outgoingMenu numberOfItems] > 0, "Main menu does not have any items, something is terribly wrong!");
+
+  NSMenuItem* appMenuItem = [[outgoingMenu itemAtIndex:0] retain];
+  [outgoingMenu removeItemAtIndex:0];
+  [mNativeMenu insertItem:appMenuItem atIndex:0];
+  [appMenuItem release];
+
+  // Set menu bar and event target.
+  [NSApp setMainMenu:mNativeMenu];
+  nsMenuBarX::sLastGeckoMenuBarPainted = this;
 
   gSomeMenuBarPainted = YES;
 

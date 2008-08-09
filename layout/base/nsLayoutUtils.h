@@ -767,6 +767,14 @@ public:
                                       nsRect* aHStrip, nsRect* aVStrip);
 
   /**
+   * Get a device context that can be used to get up-to-date device
+   * dimensions for the given docshell.  For some reason, this is more
+   * complicated than it ought to be in multi-monitor situations.
+   */
+  static nsIDeviceContext*
+  GetDeviceContextForScreenInfo(nsIDocShell* aDocShell);
+
+  /**
    * Indicates if the nsIFrame::GetUsedXXX assertions in nsFrame.cpp should
    * disabled.
    */

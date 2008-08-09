@@ -183,9 +183,9 @@
   <notificationbox id="addonsMsg" flex="1">
     <vbox id="extensionsBox" flex="1">
       <hbox id="searchPanel" align="center">
-        <textbox id="searchbox" emptytext="&searchAddons.label;"
-                 oncommand="retrieveRepositoryAddons(this.value);"
-                 persist="value"/>
+        <textbox id="searchfield" emptytext="&searchAddons.label;"
+                 type="search" searchbutton="true"
+                 oncommand="retrieveRepositoryAddons(this.value);"/>
         <spacer flex="1"/>
         <label id="browseAddons" class="text-link" value="&browseAddons.label;"
                onclick="openURL(this.getAttribute('homepageURL'));"/>

@@ -1511,7 +1511,7 @@ array_join(JSContext *cx, uintN argc, jsval *vp)
     JSString *str;
     JSObject *obj;
 
-    if (JSVAL_IS_VOID(vp[2])) {
+    if (argc == 0 || JSVAL_IS_VOID(vp[2])) {
         str = NULL;
     } else {
         str = js_ValueToString(cx, vp[2]);
@@ -2550,6 +2550,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, jsval *vp)
 {
     JSObject *obj;
     jsuint length, i, stop;
+    jsval tosearch;
     jsint direction;
     JSBool hole;
 
@@ -2561,9 +2562,11 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, jsval *vp)
 
     if (argc <= 1) {
         i = isLast ? length - 1 : 0;
+        tosearch = (argc != 0) ? vp[2] : JSVAL_VOID;
     } else {
         jsdouble start;
 
+        tosearch = vp[2];
         start = js_ValueToNumber(cx, &vp[3]);
         if (JSVAL_IS_NULL(vp[3]))
             return JS_FALSE;
@@ -2599,7 +2602,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, jsval *vp)
             !GetArrayElement(cx, obj, (jsuint)i, &hole, vp)) {
             return JS_FALSE;
         }
-        if (!hole && js_StrictlyEqual(cx, *vp, vp[2]))
+        if (!hole && js_StrictlyEqual(cx, *vp, tosearch))
             return js_NewNumberInRootedValue(cx, i, vp);
         if (i == stop)
             goto not_found;
@@ -2655,6 +2658,10 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
      * First, get or compute our callee, so that we error out consistently
      * when passed a non-callable object.
      */
+    if (argc == 0) {
+        js_ReportMissingArg(cx, vp, 0);
+        return JS_FALSE;
+    }
     argv = vp + 2;
     callable = js_ValueToCallableObject(cx, &argv[0], JSV2F_SEARCH_STACK);
     if (!callable)
@@ -2867,35 +2874,35 @@ static JSPropertySpec array_props[] = {
 
 static JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,      array_toSource,     0,0,0),
+    JS_FN(js_toSource_str,      array_toSource,     0,0),
 #endif
-    JS_FN(js_toString_str,      array_toString,     0,0,0),
-    JS_FN(js_toLocaleString_str,array_toLocaleString,0,0,0),
+    JS_FN(js_toString_str,      array_toString,     0,0),
+    JS_FN(js_toLocaleString_str,array_toLocaleString,0,0),
 
     /* Perl-ish methods. */
-    JS_FN("join",               array_join,         1,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("reverse",            array_reverse,      0,0,JSFUN_GENERIC_NATIVE),
-    JS_FN("sort",               array_sort,         0,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("push",               array_push,         1,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("pop",                array_pop,          0,0,JSFUN_GENERIC_NATIVE),
-    JS_FN("shift",              array_shift,        0,0,JSFUN_GENERIC_NATIVE),
-    JS_FN("unshift",            array_unshift,      0,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("splice",             array_splice,       0,2,JSFUN_GENERIC_NATIVE),
+    JS_FN("join",               array_join,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("reverse",            array_reverse,      0,JSFUN_GENERIC_NATIVE),
+    JS_FN("sort",               array_sort,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("push",               array_push,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("pop",                array_pop,          0,JSFUN_GENERIC_NATIVE),
+    JS_FN("shift",              array_shift,        0,JSFUN_GENERIC_NATIVE),
+    JS_FN("unshift",            array_unshift,      1,JSFUN_GENERIC_NATIVE),
+    JS_FN("splice",             array_splice,       2,JSFUN_GENERIC_NATIVE),
 
     /* Pythonic sequence methods. */
-    JS_FN("concat",             array_concat,       0,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("slice",              array_slice,        0,2,JSFUN_GENERIC_NATIVE),
+    JS_FN("concat",             array_concat,       1,JSFUN_GENERIC_NATIVE),
+    JS_FN("slice",              array_slice,        2,JSFUN_GENERIC_NATIVE),
 
 #if JS_HAS_ARRAY_EXTRAS
-    JS_FN("indexOf",            array_indexOf,      1,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("lastIndexOf",        array_lastIndexOf,  1,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("forEach",            array_forEach,      1,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("map",                array_map,          1,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("reduce",             array_reduce,       1,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("reduceRight",        array_reduceRight,  1,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("filter",             array_filter,       1,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("some",               array_some,         1,1,JSFUN_GENERIC_NATIVE),
-    JS_FN("every",              array_every,        1,1,JSFUN_GENERIC_NATIVE),
+    JS_FN("indexOf",            array_indexOf,      1,JSFUN_GENERIC_NATIVE),
+    JS_FN("lastIndexOf",        array_lastIndexOf,  1,JSFUN_GENERIC_NATIVE),
+    JS_FN("forEach",            array_forEach,      1,JSFUN_GENERIC_NATIVE),
+    JS_FN("map",                array_map,          1,JSFUN_GENERIC_NATIVE),
+    JS_FN("reduce",             array_reduce,       1,JSFUN_GENERIC_NATIVE),
+    JS_FN("reduceRight",        array_reduceRight,  1,JSFUN_GENERIC_NATIVE),
+    JS_FN("filter",             array_filter,       1,JSFUN_GENERIC_NATIVE),
+    JS_FN("some",               array_some,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("every",              array_every,        1,JSFUN_GENERIC_NATIVE),
 #endif
 
     JS_FS_END

@@ -79,9 +79,8 @@ public:
   virtual void ParseCoords(const nsAString& aSpec);
 
   virtual PRBool IsInside(nscoord x, nscoord y) const = 0;
-  virtual void Draw(nsPresContext* aCX,
-                    nsIRenderingContext& aRC) = 0;
-  virtual void GetRect(nsPresContext* aCX, nsRect& aRect) = 0;
+  virtual void Draw(nsIFrame* aFrame, nsIRenderingContext& aRC) = 0;
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) = 0;
 
   void HasFocus(PRBool aHasFocus);
 
@@ -337,9 +336,8 @@ public:
   DefaultArea(nsIContent* aArea);
 
   virtual PRBool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsPresContext* aCX,
-                    nsIRenderingContext& aRC);
-  virtual void GetRect(nsPresContext* aCX, nsRect& aRect);
+  virtual void Draw(nsIFrame* aFrame, nsIRenderingContext& aRC);
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
 };
 
 DefaultArea::DefaultArea(nsIContent* aArea)
@@ -352,12 +350,28 @@ PRBool DefaultArea::IsInside(nscoord x, nscoord y) const
   return PR_TRUE;
 }
 
-void DefaultArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
+void DefaultArea::Draw(nsIFrame* aFrame, nsIRenderingContext& aRC)
 {
+  if (mHasFocus) {
+    nsRect r = aFrame->GetRect();
+    r.MoveTo(0, 0);
+    nscoord x1 = r.x;
+    nscoord y1 = r.y;
+    const nscoord kOnePixel = nsPresContext::CSSPixelsToAppUnits(1);
+    nscoord x2 = r.XMost() - kOnePixel;
+    nscoord y2 = r.YMost() - kOnePixel;
+    // XXX aRC.DrawRect(r) result is ugly, that's why we use DrawLine.
+    aRC.DrawLine(x1, y1, x1, y2);
+    aRC.DrawLine(x1, y2, x2, y2);
+    aRC.DrawLine(x1, y1, x2, y1);
+    aRC.DrawLine(x2, y1, x2, y2);
+  }
 }
 
-void DefaultArea::GetRect(nsPresContext* aCX, nsRect& aRect)
+void DefaultArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 {
+  aRect = aFrame->GetRect();
+  aRect.MoveTo(0, 0);
 }
 
 //----------------------------------------------------------------------
@@ -368,9 +382,8 @@ public:
 
   virtual void ParseCoords(const nsAString& aSpec);
   virtual PRBool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsPresContext* aCX,
-                    nsIRenderingContext& aRC);
-  virtual void GetRect(nsPresContext* aCX, nsRect& aRect);
+  virtual void Draw(nsIFrame* aFrame, nsIRenderingContext& aRC);
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
 };
 
 RectArea::RectArea(nsIContent* aArea)
@@ -431,7 +444,7 @@ PRBool RectArea::IsInside(nscoord x, nscoord y) const
   return PR_FALSE;
 }
 
-void RectArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
+void RectArea::Draw(nsIFrame* aFrame, nsIRenderingContext& aRC)
 {
   if (mHasFocus) {
     if (mNumCoords >= 4) {
@@ -449,7 +462,7 @@ void RectArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
   }
 }
 
-void RectArea::GetRect(nsPresContext* aCX, nsRect& aRect)
+void RectArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 {
   if (mNumCoords >= 4) {
     nscoord x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
@@ -471,9 +484,8 @@ public:
 
   virtual void ParseCoords(const nsAString& aSpec);
   virtual PRBool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsPresContext* aCX,
-                    nsIRenderingContext& aRC);
-  virtual void GetRect(nsPresContext* aCX, nsRect& aRect);
+  virtual void Draw(nsIFrame* aFrame, nsIRenderingContext& aRC);
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
 };
 
 PolyArea::PolyArea(nsIContent* aArea)
@@ -562,7 +574,7 @@ PRBool PolyArea::IsInside(nscoord x, nscoord y) const
   return PR_FALSE;
 }
 
-void PolyArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
+void PolyArea::Draw(nsIFrame* aFrame, nsIRenderingContext& aRC)
 {
   if (mHasFocus) {
     if (mNumCoords >= 6) {
@@ -583,7 +595,7 @@ void PolyArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
   }
 }
 
-void PolyArea::GetRect(nsPresContext* aCX, nsRect& aRect)
+void PolyArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 {
   if (mNumCoords >= 6) {
     nscoord x1, x2, y1, y2, xtmp, ytmp;
@@ -610,9 +622,8 @@ public:
 
   virtual void ParseCoords(const nsAString& aSpec);
   virtual PRBool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsPresContext* aCX,
-                    nsIRenderingContext& aRC);
-  virtual void GetRect(nsPresContext* aCX, nsRect& aRect);
+  virtual void Draw(nsIFrame* aFrame, nsIRenderingContext& aRC);
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
 };
 
 CircleArea::CircleArea(nsIContent* aArea)
@@ -670,7 +681,7 @@ PRBool CircleArea::IsInside(nscoord x, nscoord y) const
   return PR_FALSE;
 }
 
-void CircleArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
+void CircleArea::Draw(nsIFrame* aFrame, nsIRenderingContext& aRC)
 {
   if (mHasFocus) {
     if (mNumCoords >= 3) {
@@ -688,7 +699,7 @@ void CircleArea::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
   }
 }
 
-void CircleArea::GetRect(nsPresContext* aCX, nsRect& aRect)
+void CircleArea::GetRect(nsIFrame* aFrame, nsRect& aRect)
 {
   if (mNumCoords >= 3) {
     nscoord x1 = nsPresContext::CSSPixelsToAppUnits(mCoords[0]);
@@ -728,12 +739,21 @@ nsImageMap::GetBoundsForAreaContent(nsIContent *aContent,
                                    nsPresContext* aPresContext, 
                                    nsRect& aBounds)
 {
+  NS_ENSURE_TRUE(aContent && aPresContext, NS_ERROR_INVALID_ARG);
+
   // Find the Area struct associated with this content node, and return bounds
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
     if (area->mArea == aContent) {
-      area->GetRect(aPresContext, aBounds);
+      aBounds = nsRect();
+      nsIPresShell* shell = aPresContext->PresShell();
+      if (shell) {
+        nsIFrame* frame = shell->GetPrimaryFrameFor(aContent);
+        if (frame) {
+          area->GetRect(frame, aBounds);
+        }
+      }
       return NS_OK;
     }
   }
@@ -905,12 +925,12 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
 }
 
 void
-nsImageMap::Draw(nsPresContext* aCX, nsIRenderingContext& aRC)
+nsImageMap::Draw(nsIFrame* aFrame, nsIRenderingContext& aRC)
 {
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
-    area->Draw(aCX, aRC);
+    area->Draw(aFrame, aRC);
   }
 }
 
@@ -983,7 +1003,8 @@ nsImageMap::Blur(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
+nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus)
+{
   //Set which one of our areas changed focus
   nsCOMPtr<nsIDOMEventTarget> target;
   if (NS_SUCCEEDED(aEvent->GetTarget(getter_AddRefs(target))) && target) {
@@ -994,28 +1015,24 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
         Area* area = (Area*) mAreas.ElementAt(i);
         nsCOMPtr<nsIContent> areaContent;
         area->GetArea(getter_AddRefs(areaContent));
-        if (areaContent) {
-          if (areaContent.get() == targetContent.get()) {
-            //Set or Remove internal focus
-            area->HasFocus(aFocus);
-            //Now invalidate the rect
-            nsCOMPtr<nsIDocument> doc = targetContent->GetDocument();
-            //This check is necessary to see if we're still attached to the doc
-            if (doc) {
-              nsIPresShell *presShell = doc->GetPrimaryShell();
-              if (presShell) {
-                nsIFrame* imgFrame = presShell->GetPrimaryFrameFor(targetContent);
-                if (imgFrame) {
-                  nsPresContext *presContext = presShell->GetPresContext();
-                  if (presContext) {
-                    nsRect dmgRect;
-                    area->GetRect(presContext, dmgRect);
-                    imgFrame->Invalidate(dmgRect, PR_TRUE);
-                  }
-                }
+        if (areaContent.get() == targetContent.get()) {
+          //Set or Remove internal focus
+          area->HasFocus(aFocus);
+          //Now invalidate the rect
+          nsCOMPtr<nsIDocument> doc = targetContent->GetDocument();
+          //This check is necessary to see if we're still attached to the doc
+          if (doc) {
+            nsIPresShell *presShell = doc->GetPrimaryShell();
+            if (presShell) {
+              nsIFrame* imgFrame = presShell->GetPrimaryFrameFor(targetContent);
+              if (imgFrame) {
+                nsRect dmgRect;
+                area->GetRect(imgFrame, dmgRect);
+                imgFrame->Invalidate(dmgRect, PR_FALSE);
               }
             }
           }
+          break;
         }
       }
     }

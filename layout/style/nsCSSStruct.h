@@ -154,30 +154,17 @@ struct nsCSSValueListRect {
   static const side_type sides[4];
 };
 
-// Should be replaced with nsCSSValueList and nsCSSValue::Array.
-struct nsCSSCounterData {
-  nsCSSCounterData(void);
-  nsCSSCounterData(const nsCSSCounterData& aCopy);
-  ~nsCSSCounterData(void);
+// Maybe should be replaced with nsCSSValueList and nsCSSValue::Array?
+struct nsCSSValuePairList {
+  nsCSSValuePairList(void);
+  nsCSSValuePairList(const nsCSSValuePairList& aCopy);
+  ~nsCSSValuePairList(void);
 
-  static PRBool Equal(nsCSSCounterData* aList1, nsCSSCounterData* aList2);
+  static PRBool Equal(nsCSSValuePairList* aList1, nsCSSValuePairList* aList2);
 
-  nsCSSValue        mCounter;
-  nsCSSValue        mValue;
-  nsCSSCounterData* mNext;
-};
-
-// Should be replaced with nsCSSValueList and nsCSSValue::Array.
-struct nsCSSQuotes {
-  nsCSSQuotes(void);
-  nsCSSQuotes(const nsCSSQuotes& aCopy);
-  ~nsCSSQuotes(void);
-
-  static PRBool Equal(nsCSSQuotes* aList1, nsCSSQuotes* aList2);
-
-  nsCSSValue    mOpen;
-  nsCSSValue    mClose;
-  nsCSSQuotes*  mNext;
+  nsCSSValue          mXValue;
+  nsCSSValue          mYValue;
+  nsCSSValuePairList* mNext;
 };
 
 /****************************************************************************/
@@ -265,6 +252,7 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mUnicodeBidi;  // NEW
   nsCSSValue mLineHeight;
   nsCSSValue mWhiteSpace;
+  nsCSSValue mWordWrap;
 private:
   nsCSSText(const nsCSSText& aOther); // NOT IMPLEMENTED
 };
@@ -472,11 +460,11 @@ struct nsCSSContent : public nsCSSStruct  {
   nsCSSContent(void);
   ~nsCSSContent(void);
 
-  nsCSSValueList*   mContent;
-  nsCSSCounterData* mCounterIncrement;
-  nsCSSCounterData* mCounterReset;
-  nsCSSValue        mMarkerOffset;
-  nsCSSQuotes*      mQuotes;
+  nsCSSValueList*     mContent;
+  nsCSSValuePairList* mCounterIncrement;
+  nsCSSValuePairList* mCounterReset;
+  nsCSSValue          mMarkerOffset;
+  nsCSSValuePairList* mQuotes;
 private:
   nsCSSContent(const nsCSSContent& aOther); // NOT IMPLEMENTED
 };

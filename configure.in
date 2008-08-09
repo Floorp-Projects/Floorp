@@ -4358,8 +4358,9 @@ MOZ_NO_ACTIVEX_SUPPORT=1
 MOZ_NO_INSPECTOR_APIS=
 MOZ_NO_XPCOM_OBSOLETE=
 MOZ_NO_FAST_LOAD=
+MOZ_OGG=1
 MOZ_MEDIA=
-MOZ_OJI=
+MOZ_OJI=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=
 MOZ_PLAINTEXT_EDITOR_ONLY=
@@ -4783,7 +4784,7 @@ cairo-mac|cairo-cocoa)
     AC_DEFINE(XP_MACOSX)
     AC_DEFINE(TARGET_CARBON)
     AC_DEFINE(TARGET_API_MAC_CARBON)
-    TK_LIBS='-framework Carbon'
+    TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit'
     TK_CFLAGS="-I${MACOS_SDK_DIR}/Developer/Headers/FlatCarbon"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
@@ -5162,10 +5163,10 @@ MOZ_ARG_DISABLE_BOOL(plugins,
 dnl ========================================================
 dnl = Open JVM Interface (OJI) support
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(oji,
-[  --enable-oji           Enable Open JVM Integration support],
-    MOZ_OJI=1,
-    MOZ_OJI=)
+MOZ_ARG_DISABLE_BOOL(oji,
+[  --disable-oji           Disable Open JVM Integration support],
+    MOZ_OJI=,
+    MOZ_OJI=1)
 if test -n "$MOZ_OJI"; then
     AC_DEFINE(OJI)
 fi
@@ -5328,17 +5329,33 @@ if test -n "$MOZ_NO_FAST_LOAD"; then
 fi
 
 dnl ========================================================
-dnl = Enable HTML video and audio support
+dnl = Enable Ogg Codecs
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(media,
-[  --enable-media           Enable HTML5 media support],
-    MOZ_MEDIA=1,
-    MOZ_MEDIA=)
+MOZ_ARG_DISABLE_BOOL(ogg,
+[  --disable-ogg           Disable Ogg Codec support],
+    MOZ_OGG=,
+    MOZ_OGG=1)
+
+AC_SUBST(MOZ_OGG)
+
+if test -n "$MOZ_OGG"; then
+    AC_DEFINE(MOZ_OGG)
+    MOZ_MEDIA=1
+fi
 
 AC_SUBST(MOZ_MEDIA)
 
 if test -n "$MOZ_MEDIA"; then
     AC_DEFINE(MOZ_MEDIA)
+fi
+
+dnl If using Ogg with Linux, ensure that the alsa library is available
+if test -n "$MOZ_OGG"; then
+   case "$target_os" in
+linux*)
+      AC_CHECK_LIB(asound, snd_pcm_open,,AC_MSG_ERROR([Ogg support on Linux requires the alsa library]))
+      ;;
+   esac
 fi
 
 dnl ========================================================
@@ -6014,6 +6031,9 @@ if test -n "$MOZ_HELP_VIEWER"; then
      AC_DEFINE(MOZ_HELP_VIEWER)
 fi
 AC_SUBST(MOZ_HELP_VIEWER)
+if test "$MOZ_BUILD_APP" = "browser" -a -n "$MOZ_HELP_VIEWER"; then
+    AC_MSG_ERROR([Cannot build Firefox with --enable-help-viewer.])
+fi
 
 dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)
@@ -6456,11 +6476,22 @@ dnl ========================================================
 dnl callgrind
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(callgrind,
-[  --enable-callgrind          Enable callgrind profiling],
+[  --enable-callgrind      Enable callgrind profiling],
     MOZ_CALLGRIND=1,
     MOZ_CALLGRIND= )
 if test -n "$MOZ_CALLGRIND"; then
     AC_DEFINE(MOZ_CALLGRIND)
+fi
+
+dnl ========================================================
+dnl vtune
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(vtune,
+[  --enable-vtune          Enable vtune profiling],
+    MOZ_VTUNE=1,
+    MOZ_VTUNE= )
+if test -n "$MOZ_VTUNE"; then
+    AC_DEFINE(MOZ_VTUNE)
 fi
 
 dnl ========================================================
@@ -7455,6 +7486,10 @@ if test "$MOZ_TREE_CAIRO"; then
             fi
         fi
     fi
+
+    CAIRO_FEATURES_H=gfx/cairo/cairo/src/cairo-features.h
+    mv -f $CAIRO_FEATURES_H "$CAIRO_FEATURES_H".orig 2> /dev/null
+
 else
    PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION freetype2 fontconfig)
    MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
@@ -7858,6 +7893,7 @@ AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_CALLGRIND)
+AC_SUBST(MOZ_VTUNE)
 AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)
@@ -8312,6 +8348,15 @@ rm conftest.sh
 echo $MAKEFILES > unallmakefiles
 
 AC_OUTPUT($MAKEFILES)
+
+dnl Prevent the regeneration of cairo-features.h forcing rebuilds of gfx stuff
+if test "$CAIRO_FEATURES_H"; then
+  if cmp -s $CAIRO_FEATURES_H "$CAIRO_FEATURES_H".orig; then
+    mv -f "$CAIRO_FEATURES_H".orig "$CAIRO_FEATURES_H" 2> /dev/null
+  else
+    rm -f "$CAIRO_FEATURES_H".orig 2> /dev/null
+  fi
+fi
 
 dnl ========================================================
 dnl = Setup a nice relatively clean build environment for

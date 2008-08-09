@@ -223,9 +223,7 @@ public:
   virtual void SetBaseTarget(const nsAString &aBaseTarget) = 0;
 
   /**
-   * Return a standard name for the document's character set. This
-   * will trigger a startDocumentLoad if necessary to answer the
-   * question.
+   * Return a standard name for the document's character set.
    */
   const nsCString& GetDocumentCharacterSet() const
   {

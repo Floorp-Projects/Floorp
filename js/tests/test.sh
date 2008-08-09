@@ -263,7 +263,14 @@ else
     TEST_CPUSPEED=fast
 fi
 
-pattern="TEST_BRANCH=($branch|[.][*]), TEST_BUILDTYPE=($buildtype|[.][*]), TEST_TYPE=($testtype|[.][*]), TEST_OS=($OSID|[.][*]), TEST_KERNEL=($TEST_KERNEL|[.][*]), TEST_PROCESSORTYPE=($TEST_PROCESSORTYPE|[.][*]), TEST_MEMORY=($TEST_MEMORY|[.][*]), TEST_CPUSPEED=($TEST_CPUSPEED|[.][*]),"
+if [[ -z "$TEST_MOZILLA_HG" ]]; then
+    repo=CVS
+else
+    repo=`basename $TEST_MOZILLA_HG`
+fi
+debug "repo=$repo"
+
+pattern="TEST_BRANCH=($branch|[.][*]), TEST_REPO=($repo|[.][*]), TEST_BUILDTYPE=($buildtype|[.][*]), TEST_TYPE=($testtype|[.][*]), TEST_OS=($OSID|[.][*]), TEST_KERNEL=($TEST_KERNEL|[.][*]), TEST_PROCESSORTYPE=($TEST_PROCESSORTYPE|[.][*]), TEST_MEMORY=($TEST_MEMORY|[.][*]), TEST_CPUSPEED=($TEST_CPUSPEED|[.][*]),"
 
 if [[ -z "$timeouts" ]]; then
     echo "# exclude tests that time out" >> $excludetestsfile

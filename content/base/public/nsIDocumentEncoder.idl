@@ -44,7 +44,7 @@ interface nsISelection;
 interface nsIDOMNode;
 interface nsIOutputStream;
 
-[scriptable, uuid(e770c650-b3d3-11da-a94d-0800200c9a66)]
+[scriptable, uuid(3c556e41-0f73-4e1d-b724-1474884fe2e3)]
 interface nsIDocumentEncoderNodeFixup : nsISupports
 {
   /**
@@ -53,9 +53,12 @@ interface nsIDocumentEncoderNodeFixup : nsISupports
    * may return a new node with fixed up attributes or null. If null is
    * returned the node should be used as-is.
    * @param aNode Node to fixup.
+   * @param [OUT] aSerializeCloneKids True if the document encoder should
+   * apply recursive serialization to the children of the fixed up node
+   * instead of the children of the original node.
    * @return The resulting fixed up node.
    */
-  nsIDOMNode fixupNode(in nsIDOMNode aNode);
+  nsIDOMNode fixupNode(in nsIDOMNode aNode, out boolean aSerializeCloneKids);
 };
 
 [scriptable, uuid(f85c5a20-258d-11db-a98b-0800200c9a66)]

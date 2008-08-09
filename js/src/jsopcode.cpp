@@ -297,7 +297,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_JUMP:
       case JOF_JUMPX:
         off = GetJumpOffset(pc, pc);
-        fprintf(fp, " %u (%d)", loc + off, off);
+        fprintf(fp, " %u (%d)", loc + (intN) off, (intN) off);
         break;
 
       case JOF_ATOM:
@@ -321,7 +321,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         break;
 
       case JOF_UINT16:
-      case JOF_LOCAL:
         i = (jsint)GET_UINT16(pc);
         goto print_int;
 
@@ -340,10 +339,10 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += JUMP_OFFSET_LEN;
         high = GET_JUMP_OFFSET(pc2);
         pc2 += JUMP_OFFSET_LEN;
-        fprintf(fp, " defaultOffset %d low %d high %d", off, low, high);
+        fprintf(fp, " defaultOffset %d low %d high %d", (intN) off, low, high);
         for (i = low; i <= high; i++) {
             off = GetJumpOffset(pc, pc2);
-            fprintf(fp, "\n\t%d: %d", i, off);
+            fprintf(fp, "\n\t%d: %d", i, (intN) off);
             pc2 += jmplen;
         }
         len = 1 + pc2 - pc;
@@ -363,7 +362,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += jmplen;
         npairs = GET_UINT16(pc2);
         pc2 += UINT16_LEN;
-        fprintf(fp, " offset %d npairs %u", off, (uintN) npairs);
+        fprintf(fp, " offset %d npairs %u", (intN) off, (uintN) npairs);
         while (npairs) {
             JS_GET_SCRIPT_ATOM(script, GET_INDEX(pc2), atom);
             pc2 += INDEX_LEN;
@@ -373,7 +372,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             bytes = ToDisassemblySource(cx, ATOM_KEY(atom));
             if (!bytes)
                 return 0;
-            fprintf(fp, "\n\t%s: %d", bytes, off);
+            fprintf(fp, "\n\t%s: %d", bytes, (intN) off);
             npairs--;
         }
         len = 1 + pc2 - pc;
@@ -384,7 +383,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         fprintf(fp, " %u", GET_ARGNO(pc));
         break;
 
-      case JOF_QVAR:
+      case JOF_LOCAL:
         fprintf(fp, " %u", GET_SLOTNO(pc));
         break;
 
@@ -1177,20 +1176,12 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
     JS_END_MACRO
 
 static JSAtom *
-GetSlotAtom(JSPrinter *jp, JSBool argument, uintN slot)
+GetArgOrVarAtom(JSPrinter *jp, uintN slot)
 {
-    JSFunction *fun;
     JSAtom *name;
 
-    fun = jp->fun;
     LOCAL_ASSERT_RV(jp->fun, NULL);
-    LOCAL_ASSERT_RV(jp->localNames, NULL);
-    if (argument) {
-        LOCAL_ASSERT_RV(slot < fun->nargs, NULL);
-    } else {
-        LOCAL_ASSERT_RV(slot < fun->u.i.nvars, NULL);
-        slot += fun->nargs;
-    }
+    LOCAL_ASSERT_RV(slot < JS_GET_LOCAL_NAME_COUNT(jp->fun), NULL);
     name = JS_LOCAL_NAME_TO_ATOM(jp->localNames[slot]);
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -1258,6 +1249,25 @@ GetLocal(SprintStack *ss, jsint i)
 #define LOCAL_ASSERT(expr)  LOCAL_ASSERT_RV(expr, NULL)
 #define LOAD_OP_DATA(pc)    (oplen = (cs = &js_CodeSpec[op=(JSOp)*pc])->length)
 
+static JSBool
+IsVarSlot(JSPrinter *jp, jsbytecode *pc, jsint *indexp)
+{
+    uintN slot;
+
+    slot = GET_SLOTNO(pc);
+    if (slot < jp->script->nfixed) {
+        /* The slot refers to a variable with name stored in jp->localNames. */
+        *indexp = jp->fun->nargs + slot;
+        return JS_TRUE;
+    }
+
+    /* We have a local which index is relative to the stack base. */
+    slot -= jp->script->nfixed;
+    JS_ASSERT(slot < StackDepth(jp->script));
+    *indexp = slot;
+    return JS_FALSE;
+}
+
 static jsbytecode *
 DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc);
 
@@ -1269,7 +1279,8 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
     JSPrinter *jp;
     JSOp op;
     const JSCodeSpec *cs;
-    uintN oplen, i;
+    uintN oplen;
+    jsint i;
     const char *lval, *xval;
     ptrdiff_t todo;
     JSAtom *atom;
@@ -1300,23 +1311,24 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         break;
 
       case JSOP_SETARG:
-      case JSOP_SETVAR:
       case JSOP_SETGVAR:
       case JSOP_SETLOCAL:
         LOCAL_ASSERT(pc[oplen] == JSOP_POP || pc[oplen] == JSOP_POPN);
         /* FALL THROUGH */
 
       case JSOP_SETLOCALPOP:
-        i = GET_SLOTNO(pc);
         atom = NULL;
         lval = NULL;
-        if (op == JSOP_SETARG || op == JSOP_SETVAR) {
-            atom = GetSlotAtom(jp, op == JSOP_SETARG, i);
+        if (op == JSOP_SETARG) {
+            atom = GetArgOrVarAtom(jp, GET_SLOTNO(pc));
             LOCAL_ASSERT(atom);
         } else if (op == JSOP_SETGVAR) {
             GET_ATOM_FROM_BYTECODE(jp->script, pc, 0, atom);
+        } else if (IsVarSlot(jp, pc, &i)) {
+            atom = GetArgOrVarAtom(jp, i);
+            LOCAL_ASSERT(atom);
         } else {
-            lval = GetLocal(ss, i - jp->script->nfixed);
+            lval = GetLocal(ss, i);
         }
         if (atom)
             lval = js_AtomToPrintableString(cx, atom);
@@ -1839,21 +1851,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
             format = cs->format;
             if (((fp && fp->regs && pc == fp->regs->pc) ||
                  (pc == startpc && cs->nuses != 0)) &&
-                format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_IMPORT|JOF_FOR|
-                          JOF_VARPROP)) {
+                format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_FOR|JOF_VARPROP)) {
                 mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
                     /*
                      * JOF_NAME does not imply JOF_ATOM, so we must check for
                      * the QARG and QVAR format types, and translate those to
-                     * JSOP_GETARG or JSOP_GETVAR appropriately, instead of to
-                     * JSOP_NAME.
+                     * JSOP_GETARG or JSOP_GETLOCAL appropriately, instead of
+                     * to JSOP_NAME.
                      */
                     type = JOF_TYPE(format);
                     op = (type == JOF_QARG)
                          ? JSOP_GETARG
-                         : (type == JOF_QVAR)
-                         ? JSOP_GETVAR
                          : (type == JOF_LOCAL)
                          ? JSOP_GETLOCAL
                          : JSOP_NAME;
@@ -1903,7 +1912,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                              * of the property accessed via |this|, so do not
                              * rewrite op to JSOP_THIS.
                              *
-                             * The next three cases should not change op if
+                             * The next two cases should not change op if
                              * js_DecompileValueGenerator was called from the
                              * the property getter. They should rewrite only
                              * if the base object in the arg/var/local is null
@@ -1912,9 +1921,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             break;
                           case JSOP_GETARGPROP:
                             op = JSOP_GETARG;
-                            break;
-                          case JSOP_GETVARPROP:
-                            op = JSOP_GETVAR;
                             break;
                           case JSOP_GETLOCALPROP:
                             op = JSOP_GETLOCAL;
@@ -2688,7 +2694,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_CALLLOCAL:
               case JSOP_GETLOCAL:
-                i = GET_SLOTNO(pc) - jp->script->nfixed;
+                if (IsVarSlot(jp, pc, &i)) {
+                    atom = GetArgOrVarAtom(jp, i);
+                    LOCAL_ASSERT(atom);
+                    goto do_name;
+                }
                 LOCAL_ASSERT((uintN)i < ss->top);
                 sn = js_GetSrcNote(jp->script, pc);
 
@@ -2709,28 +2719,34 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_SETLOCAL:
               case JSOP_SETLOCALPOP:
-                i = GET_SLOTNO(pc) - jp->script->nfixed;
+                if (IsVarSlot(jp, pc, &i)) {
+                    atom = GetArgOrVarAtom(jp, i);
+                    LOCAL_ASSERT(atom);
+                    goto do_setname;
+                }
                 lval = GetStr(ss, i);
                 rval = POP_STR();
                 goto do_setlval;
 
               case JSOP_INCLOCAL:
               case JSOP_DECLOCAL:
-                i = GET_SLOTNO(pc) - jp->script->nfixed;
+                if (IsVarSlot(jp, pc, &i)) {
+                    atom = GetArgOrVarAtom(jp, i);
+                    LOCAL_ASSERT(atom);
+                    goto do_incatom;
+                }
                 lval = GetLocal(ss, i);
                 goto do_inclval;
 
               case JSOP_LOCALINC:
               case JSOP_LOCALDEC:
-                i = GET_SLOTNO(pc) - jp->script->nfixed;
+                if (IsVarSlot(jp, pc, &i)) {
+                    atom = GetArgOrVarAtom(jp, i);
+                    LOCAL_ASSERT(atom);
+                    goto do_atominc;
+                }
                 lval = GetLocal(ss, i);
                 goto do_lvalinc;
-
-              case JSOP_FORLOCAL:
-                i = GET_SLOTNO(pc) - jp->script->nfixed;
-                lval = GetStr(ss, i);
-                atom = NULL;
-                goto do_forlvalinloop;
 
               case JSOP_RETRVAL:
                 todo = -2;
@@ -3079,15 +3095,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 goto do_logical_connective;
 
               case JSOP_FORARG:
-                atom = GetSlotAtom(jp, JS_TRUE, GET_ARGNO(pc));
+                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
                 goto do_fornameinloop;
 
-              case JSOP_FORVAR:
               case JSOP_FORCONST:
-                atom = GetSlotAtom(jp, JS_FALSE, GET_SLOTNO(pc));
-                LOCAL_ASSERT(atom);
-                goto do_fornameinloop;
+              case JSOP_FORLOCAL:
+                if (IsVarSlot(jp, pc, &i)) {
+                    atom = GetArgOrVarAtom(jp, i);
+                    LOCAL_ASSERT(atom);
+                    goto do_fornameinloop;
+                }
+                JS_ASSERT(op == JSOP_FORLOCAL);
+                lval = GetStr(ss, i);
+                atom = NULL;
+                goto do_forlvalinloop;
 
               case JSOP_FORNAME:
                 LOAD_ATOM(0);
@@ -3314,12 +3336,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_SETARG:
-                atom = GetSlotAtom(jp, JS_TRUE, GET_ARGNO(pc));
-                LOCAL_ASSERT(atom);
-                goto do_setname;
-
-              case JSOP_SETVAR:
-                atom = GetSlotAtom(jp, JS_FALSE, GET_SLOTNO(pc));
+                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
                 goto do_setname;
 
@@ -3494,13 +3511,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_INCARG:
               case JSOP_DECARG:
-                atom = GetSlotAtom(jp, JS_TRUE, GET_ARGNO(pc));
-                LOCAL_ASSERT(atom);
-                goto do_incatom;
-
-              case JSOP_INCVAR:
-              case JSOP_DECVAR:
-                atom = GetSlotAtom(jp, JS_FALSE, GET_SLOTNO(pc));
+                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
                 goto do_incatom;
 
@@ -3556,13 +3567,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_ARGINC:
               case JSOP_ARGDEC:
-                atom = GetSlotAtom(jp, JS_TRUE, GET_ARGNO(pc));
-                LOCAL_ASSERT(atom);
-                goto do_atominc;
-
-              case JSOP_VARINC:
-              case JSOP_VARDEC:
-                atom = GetSlotAtom(jp, JS_FALSE, GET_SLOTNO(pc));
+                atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
                 goto do_atominc;
 
@@ -3644,10 +3649,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 break;
 
               case JSOP_GETARGPROP:
-              case JSOP_GETVARPROP:
                 /* Get the name of the argument or variable. */
-                atom = GetSlotAtom(ss->printer, op == JSOP_GETARGPROP,
-                                   GET_UINT16(pc));
+                i = GET_ARGNO(pc);
+
+              do_getarg_prop:
+                atom = GetArgOrVarAtom(ss->printer, i);
                 LOCAL_ASSERT(atom);
                 LOCAL_ASSERT(ATOM_IS_STRING(atom));
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
@@ -3659,8 +3665,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 goto do_getprop;
 
               case JSOP_GETLOCALPROP:
-                LOAD_ATOM(2);
-                i = GET_SLOTNO(pc) - jp->script->nfixed;
+                if (IsVarSlot(jp, pc, &i))
+                    goto do_getarg_prop;
                 LOCAL_ASSERT((uintN)i < ss->top);
                 lval = GetLocal(ss, i);
                 if (!lval)
@@ -3668,6 +3674,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = SprintCString(&ss->sprinter, lval);
                 if (todo < 0 || !PushOff(ss, todo, op))
                     return NULL;
+                LOAD_ATOM(2);
                 goto do_getprop;
 
               case JSOP_SETPROP:
@@ -3756,7 +3763,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_CALLARG:
               case JSOP_GETARG:
                 i = GET_ARGNO(pc);
-                atom = GetSlotAtom(jp, JS_TRUE, i);
+                atom = GetArgOrVarAtom(jp, i);
 #if JS_HAS_DESTRUCTURING
                 if (!atom) {
                     todo = Sprint(&ss->sprinter, "%s[%d]", js_arguments_str, i);
@@ -3765,12 +3772,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #else
                 LOCAL_ASSERT(atom);
 #endif
-                goto do_name;
-
-              case JSOP_CALLVAR:
-              case JSOP_GETVAR:
-                atom = GetSlotAtom(jp, JS_FALSE, GET_SLOTNO(pc));
-                LOCAL_ASSERT(atom);
                 goto do_name;
 
               case JSOP_CALLNAME:
@@ -4189,49 +4190,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = -2;
                 goto do_function;
                 break;
-
-#if JS_HAS_EXPORT_IMPORT
-              case JSOP_EXPORTALL:
-                js_printf(jp, "\texport *;\n");
-                todo = -2;
-                break;
-
-              case JSOP_EXPORTNAME:
-                LOAD_ATOM(0);
-                rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
-                if (!rval)
-                    return NULL;
-                RETRACT(&ss->sprinter, rval);
-                js_printf(jp, "\texport %s;\n", rval);
-                todo = -2;
-                break;
-
-              case JSOP_IMPORTALL:
-                lval = POP_STR();
-                js_printf(jp, "\timport %s.*;\n", lval);
-                todo = -2;
-                break;
-
-              case JSOP_IMPORTPROP:
-              do_importprop:
-                GET_ATOM_QUOTE_AND_FMT("\timport %s[%s];\n",
-                                       "\timport %s.%s;\n",
-                                       rval);
-                lval = POP_STR();
-                js_printf(jp, fmt, lval, rval);
-                todo = -2;
-                break;
-
-              case JSOP_IMPORTELEM:
-                xval = POP_STR();
-                op = JSOP_GETELEM;
-                if (JOF_OPMODE(lastop) == JOF_XMLNAME)
-                    goto do_importprop;
-                lval = POP_STR();
-                js_printf(jp, "\timport %s[%s];\n", lval, xval);
-                todo = -2;
-                break;
-#endif /* JS_HAS_EXPORT_IMPORT */
 
               case JSOP_TRAP:
                 saveop = op = JS_GetTrapOpcode(cx, jp->script, pc);
@@ -4842,7 +4800,7 @@ js_DecompileFunction(JSPrinter *jp)
             if (i > 0)
                 js_puts(jp, ", ");
 
-            param = GetSlotAtom(jp, JS_TRUE, i);
+            param = GetArgOrVarAtom(jp, i);
 
 #if JS_HAS_DESTRUCTURING
 #define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, JS_FALSE)

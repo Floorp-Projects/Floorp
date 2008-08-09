@@ -65,6 +65,8 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
                         public nsSupportsWeakReference
 {  
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDocAccessible, nsAccessible)
+
   NS_DECL_NSIACCESSIBLEDOCUMENT
   NS_DECL_NSPIACCESSIBLEDOCUMENT
   NS_DECL_NSIOBSERVER

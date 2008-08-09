@@ -149,6 +149,18 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifdef MOZ_OGG
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libfishsound/src/libfishsound/$(LIB_PREFIX)fishsound.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
+	$(DEPTH)/media/liboggplay/src/liboggplay/$(LIB_PREFIX)oggplay.$(LIB_SUFFIX) \
+	$(DEPTH)/media/liboggz/src/liboggz/$(LIB_PREFIX)oggz.$(LIB_SUFFIX) \
+	$(DEPTH)/media/liboggplay_audio/$(LIB_PREFIX)oggplay_audio.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libtheora/lib/$(LIB_PREFIX)theora.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 ifdef NS_PRINTING
 SHARED_LIBRARY_LIBS += \
 		../printing/$(LIB_PREFIX)gkprinting_s.$(LIB_SUFFIX) \
@@ -238,6 +250,12 @@ endif
 # Add explicit X11 dependency when building against X11 toolkits
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
+endif
+
+ifdef MOZ_OGG
+ifeq ($(OS_ARCH),Darwin)
+OS_LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework Carbon
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

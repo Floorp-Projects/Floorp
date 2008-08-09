@@ -4555,6 +4555,8 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // Process pending restyles, since any flush of the presshell wants
     // up-to-date style data.
     if (!mIsDestroying) {
+      mPresContext->FlushPendingMediaFeatureValuesChanged();
+
       mFrameConstructor->ProcessPendingRestyles();
     }
 
@@ -4635,7 +4637,7 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
   nsIContent *container = aContent->GetParent();
   PRUint32 selectorFlags =
     container ? (container->GetFlags() & NODE_ALL_SELECTOR_FLAGS) : 0;
-  if (selectorFlags != 0 && !aContent->IsNativeAnonymous()) {
+  if (selectorFlags != 0 && !aContent->IsRootOfAnonymousSubtree()) {
     PRUint32 index;
     if (aInfo->mAppend &&
         container->GetChildAt((index = container->GetChildCount() - 1)) ==

@@ -564,7 +564,7 @@ ClearDoubleArenaFlags(JSGCArenaInfo *a)
     bitmap[DOUBLES_ARENA_BITMAP_WORDS - 1] = mask << nused;
 }
 
-static JS_INLINE JSBool
+static JS_ALWAYS_INLINE JSBool
 IsMarkedDouble(JSGCArenaInfo *a, uint32 index)
 {
     jsbitmap *bitmap;

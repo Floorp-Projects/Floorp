@@ -63,6 +63,7 @@
 #include "nsStringStream.h"
 #include "mozStorageHelper.h"
 #include "plbase64.h"
+#include "nsPlacesTables.h"
 
 // For favicon optimization
 #include "imgITools.h"
@@ -194,12 +195,7 @@ nsFaviconService::InitTables(mozIStorageConnection* aDBConn)
   PRBool exists = PR_FALSE;
   aDBConn->TableExists(NS_LITERAL_CSTRING("moz_favicons"), &exists);
   if (! exists) {
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TABLE moz_favicons (id INTEGER PRIMARY KEY, "
-                                  "url LONGVARCHAR UNIQUE, "
-                                  "data BLOB, "
-                                  "mime_type VARCHAR(32), "
-                                  "expiration LONG)"));
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_MOZ_FAVICONS);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;

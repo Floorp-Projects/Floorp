@@ -90,8 +90,8 @@ public:
 // Protected members
 protected:    
     virtual ~nsWebBrowserPersist();
-    nsresult CloneNodeWithFixedUpURIAttributes(
-        nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
+    nsresult CloneNodeWithFixedUpAttributes(
+        nsIDOMNode *aNodeIn, PRBool *aSerializeCloneKids, nsIDOMNode **aNodeOut);
     nsresult SaveURIInternal(
         nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer,
         nsIInputStream *aPostData, const char *aExtraHeaders, nsIURI *aFile,
@@ -250,7 +250,7 @@ public:
     nsEncoderNodeFixup();
     
     NS_DECL_ISUPPORTS
-    NS_IMETHOD FixupNode(nsIDOMNode *aNode, nsIDOMNode **aOutNode);
+    NS_IMETHOD FixupNode(nsIDOMNode *aNode, PRBool *aSerializeCloneKids, nsIDOMNode **aOutNode);
     
     nsWebBrowserPersist *mWebBrowserPersist;
 

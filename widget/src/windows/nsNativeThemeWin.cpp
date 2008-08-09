@@ -956,11 +956,11 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        const nsRect& aRect,
-                                       const nsRect& aClipRect)
+                                       const nsRect& aDirtyRect)
 {
   HANDLE theme = GetTheme(aWidgetType);
   if (!theme)
-    return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aClipRect); 
+    return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aDirtyRect); 
 
   if (!nsUXThemeData::drawThemeBG)
     return NS_ERROR_FAILURE;    
@@ -976,10 +976,10 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   RECT widgetRect;
   RECT clipRect;
   gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
-          cr(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
+          dr(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 
   tr.ScaleInverse(p2a);
-  cr.ScaleInverse(p2a);
+  dr.ScaleInverse(p2a);
 
   /* See GetWidgetOverflow */
   if (aWidgetType == NS_THEME_DROPDOWN_BUTTON &&
@@ -989,14 +989,14 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
     tr.size.width += 1.0;
     tr.size.height += 2.0;
 
-    cr.pos.y -= 1.0;
-    cr.size.width += 1.0;
-    cr.size.height += 2.0;
+    dr.pos.y -= 1.0;
+    dr.size.width += 1.0;
+    dr.size.height += 2.0;
   }
 
   nsRefPtr<gfxContext> ctx = aContext->ThebesContext();
 
-  gfxWindowsNativeDrawing nativeDrawing(ctx, cr, GetWidgetNativeDrawingFlags(aWidgetType));
+  gfxWindowsNativeDrawing nativeDrawing(ctx, dr, GetWidgetNativeDrawingFlags(aWidgetType));
 
 RENDER_AGAIN:
 
@@ -1005,13 +1005,13 @@ RENDER_AGAIN:
     return NS_ERROR_FAILURE;
 
   nativeDrawing.TransformToNativeRect(tr, widgetRect);
-  nativeDrawing.TransformToNativeRect(cr, clipRect);
+  nativeDrawing.TransformToNativeRect(dr, clipRect);
 
 #if 0
   {
     fprintf (stderr, "xform: %f %f %f %f [%f %f]\n", m.xx, m.yx, m.xy, m.yy, m.x0, m.y0);
-    fprintf (stderr, "tr: [%d %d %d %d]\ncr: [%d %d %d %d]\noff: [%f %f]\n",
-             tr.x, tr.y, tr.width, tr.height, cr.x, cr.y, cr.width, cr.height,
+    fprintf (stderr, "tr: [%d %d %d %d]\ndr: [%d %d %d %d]\noff: [%f %f]\n",
+             tr.x, tr.y, tr.width, tr.height, dr.x, dr.y, dr.width, dr.height,
              offset.x, offset.y);
   }
 #endif
@@ -2384,7 +2384,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aClipRect)
+                                  const nsRect& aDirtyRect)
 {
   PRInt32 part, state;
   PRBool focused;
@@ -2398,14 +2398,14 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   gfxFloat p2a = gfxFloat(dc->AppUnitsPerDevPixel());
   RECT widgetRect;
   gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
-          cr(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
+          dr(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 
   tr.ScaleInverse(p2a);
-  cr.ScaleInverse(p2a);
+  dr.ScaleInverse(p2a);
 
   nsRefPtr<gfxContext> ctx = aContext->ThebesContext();
 
-  gfxWindowsNativeDrawing nativeDrawing(ctx, cr, GetWidgetNativeDrawingFlags(aWidgetType));
+  gfxWindowsNativeDrawing nativeDrawing(ctx, dr, GetWidgetNativeDrawingFlags(aWidgetType));
 
 RENDER_AGAIN:
 

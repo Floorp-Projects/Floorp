@@ -239,6 +239,41 @@ js_MakeStringImmutable(JSContext *cx, JSString *str)
     return JS_TRUE;
 }
 
+static JSString *
+ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
+{
+    JSObject *obj;
+    JSString *str;
+
+    if (arg >= argc)
+        return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
+    vp += 2 + arg;
+
+    if (JSVAL_IS_OBJECT(*vp)) {
+        obj = JSVAL_TO_OBJECT(*vp);
+        if (!obj)
+            return ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
+        if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_STRING, vp))
+            return NULL;
+    }
+    if (JSVAL_IS_STRING(*vp))
+        return JSVAL_TO_STRING(*vp);
+    if (JSVAL_IS_INT(*vp)) {
+        str = js_NumberToString(cx, JSVAL_TO_INT(*vp));
+    } else if (JSVAL_IS_DOUBLE(*vp)) {
+        str = js_NumberToString(cx, *JSVAL_TO_DOUBLE(*vp));
+    } else if (JSVAL_IS_BOOLEAN(*vp)) {
+        return ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[
+                                  JSVAL_TO_BOOLEAN(*vp)? 1 : 0]);
+    } else {
+        JS_ASSERT(JSVAL_IS_VOID(*vp));
+        return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
+    }
+    if (str)
+        *vp = STRING_TO_JSVAL(str);
+    return str;
+}
+
 /*
  * Forward declarations for URI encode/decode and helper routines
  */
@@ -327,10 +362,9 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
         }
     }
 
-    str = js_ValueToString(cx, argv[0]);
+    str = ArgToRootedString(cx, argc, argv - 2, 0);
     if (!str)
         return JS_FALSE;
-    argv[0] = STRING_TO_JSVAL(str);
 
     JSSTRING_CHARS_AND_LENGTH(str, chars, length);
     newlength = length;
@@ -417,10 +451,9 @@ str_unescape(JSContext *cx, uintN argc, jsval *vp)
     jschar *newchars;
     jschar ch;
 
-    str = js_ValueToString(cx, vp[2]);
+    str = ArgToRootedString(cx, argc, vp, 0);
     if (!str)
         return JS_FALSE;
-    vp[2] = STRING_TO_JSVAL(str);
 
     JSSTRING_CHARS_AND_LENGTH(str, chars, length);
 
@@ -467,7 +500,7 @@ str_uneval(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
 
-    str = js_ValueToSource(cx, vp[2]);
+    str = js_ValueToSource(cx, argc != 0 ? vp[2] : JSVAL_VOID);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -486,15 +519,15 @@ const char js_decodeURIComponent_str[] = "decodeURIComponent";
 const char js_encodeURIComponent_str[] = "encodeURIComponent";
 
 static JSFunctionSpec string_functions[] = {
-    JS_FN(js_escape_str,             str_escape,                1,1,0),
-    JS_FN(js_unescape_str,           str_unescape,              1,1,0),
+    JS_FN(js_escape_str,             str_escape,                1,0),
+    JS_FN(js_unescape_str,           str_unescape,              1,0),
 #if JS_HAS_UNEVAL
-    JS_FN(js_uneval_str,             str_uneval,                1,1,0),
+    JS_FN(js_uneval_str,             str_uneval,                1,0),
 #endif
-    JS_FN(js_decodeURI_str,          str_decodeURI,             1,1,0),
-    JS_FN(js_encodeURI_str,          str_encodeURI,             1,1,0),
-    JS_FN(js_decodeURIComponent_str, str_decodeURI_Component,   1,1,0),
-    JS_FN(js_encodeURIComponent_str, str_encodeURI_Component,   1,1,0),
+    JS_FN(js_decodeURI_str,          str_decodeURI,             1,0),
+    JS_FN(js_encodeURI_str,          str_encodeURI,             1,0),
+    JS_FN(js_decodeURIComponent_str, str_decodeURI_Component,   1,0),
+    JS_FN(js_encodeURIComponent_str, str_encodeURI_Component,   1,0),
 
     JS_FS_END
 };
@@ -850,16 +883,15 @@ str_localeCompare(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 str_charAt(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval t, v;
+    jsval t;
     JSString *str;
     jsint i;
     jsdouble d;
 
     t = vp[1];
-    v = vp[2];
-    if (JSVAL_IS_STRING(t) && JSVAL_IS_INT(v)) {
+    if (JSVAL_IS_STRING(t) && argc != 0 && JSVAL_IS_INT(vp[2])) {
         str = JSVAL_TO_STRING(t);
-        i = JSVAL_TO_INT(v);
+        i = JSVAL_TO_INT(vp[2]);
         if ((size_t)i >= JSSTRING_LENGTH(str))
             goto out_of_range;
     } else {
@@ -895,16 +927,15 @@ out_of_range:
 JSBool
 js_str_charCodeAt(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval t, v;
+    jsval t;
     JSString *str;
     jsint i;
     jsdouble d;
 
     t = vp[1];
-    v = vp[2];
-    if (JSVAL_IS_STRING(t) && JSVAL_IS_INT(v)) {
+    if (JSVAL_IS_STRING(t) && argc != 0 && JSVAL_IS_INT(vp[2])) {
         str = JSVAL_TO_STRING(t);
-        i = JSVAL_TO_INT(v);
+        i = JSVAL_TO_INT(vp[2]);
         if ((size_t)i >= JSSTRING_LENGTH(str))
             goto out_of_range;
     } else {
@@ -969,26 +1000,24 @@ js_BoyerMooreHorspool(const jschar *text, jsint textlen,
 static JSBool
 str_indexOf(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval t, v;
+    jsval t;
     JSString *str, *str2;
     const jschar *text, *pat;
     jsint i, j, index, textlen, patlen;
     jsdouble d;
 
     t = vp[1];
-    v = vp[2];
-    if (JSVAL_IS_STRING(t) && JSVAL_IS_STRING(v)) {
+    if (JSVAL_IS_STRING(t) && argc != 0 && JSVAL_IS_STRING(vp[2])) {
         str = JSVAL_TO_STRING(t);
-        str2 = JSVAL_TO_STRING(v);
+        str2 = JSVAL_TO_STRING(vp[2]);
     } else {
         str = NormalizeThis(cx, vp);
         if (!str)
             return JS_FALSE;
 
-        str2 = js_ValueToString(cx, v);
-        if (!str2)
+        str2 = ArgToRootedString(cx, argc, vp, 0);
+        if (!str)
             return JS_FALSE;
-        vp[2] = STRING_TO_JSVAL(str2);
     }
 
     text = JSSTRING_CHARS(str);
@@ -1053,10 +1082,9 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
     text = JSSTRING_CHARS(str);
     textlen = (jsint) JSSTRING_LENGTH(str);
 
-    str2 = js_ValueToString(cx, vp[2]);
-    if (!str2)
+    str2 = ArgToRootedString(cx, argc, vp, 0);
+    if (!str)
         return JS_FALSE;
-    vp[2] = STRING_TO_JSVAL(str2);
     pat = JSSTRING_CHARS(str2);
     patlen = (jsint) JSSTRING_LENGTH(str2);
 
@@ -1139,15 +1167,14 @@ match_or_replace(JSContext *cx,
     NORMALIZE_THIS(cx, vp, str);
     data->str = str;
 
-    if (JSVAL_IS_REGEXP(cx, vp[2])) {
+    if (argc != 0 && JSVAL_IS_REGEXP(cx, vp[2])) {
         reobj = JSVAL_TO_OBJECT(vp[2]);
         re = (JSRegExp *) JS_GetPrivate(cx, reobj);
     } else {
-        src = js_ValueToString(cx, vp[2]);
+        src = ArgToRootedString(cx, argc, vp, 0);
         if (!src)
             return JS_FALSE;
         if (data->optarg < argc) {
-            vp[2] = STRING_TO_JSVAL(src);
             opt = js_ValueToString(cx, vp[2 + data->optarg]);
             if (!opt)
                 return JS_FALSE;
@@ -1588,14 +1615,14 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
     jschar *chars;
     size_t leftlen, rightlen, length;
 
-    if (JS_TypeOfValue(cx, vp[3]) == JSTYPE_FUNCTION) {
+    if (argc >= 2 && JS_TypeOfValue(cx, vp[3]) == JSTYPE_FUNCTION) {
         lambda = JSVAL_TO_OBJECT(vp[3]);
         repstr = NULL;
     } else {
-        if (!JS_ConvertValue(cx, vp[3], JSTYPE_STRING, &vp[3]))
-            return JS_FALSE;
-        repstr = JSVAL_TO_STRING(vp[3]);
         lambda = NULL;
+        repstr = ArgToRootedString(cx, argc, vp, 1);
+        if (!repstr)
+            return JS_FALSE;
     }
 
     /*
@@ -2109,14 +2136,14 @@ tagify(JSContext *cx, const char *begin, JSString *param, const char *end,
 }
 
 static JSBool
-tagify_value(JSContext *cx, const char *begin, const char *end, jsval *vp)
+tagify_value(JSContext *cx, uintN argc, jsval *vp,
+             const char *begin, const char *end)
 {
     JSString *param;
 
-    param = js_ValueToString(cx, vp[2]);
+    param = ArgToRootedString(cx, argc, vp, 0);
     if (!param)
         return JS_FALSE;
-    vp[2] = STRING_TO_JSVAL(param);
     return tagify(cx, begin, param, end, vp);
 }
 
@@ -2141,25 +2168,25 @@ str_fixed(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 str_fontsize(JSContext *cx, uintN argc, jsval *vp)
 {
-    return tagify_value(cx, "font size", "font", vp);
+    return tagify_value(cx, argc, vp, "font size", "font");
 }
 
 static JSBool
 str_fontcolor(JSContext *cx, uintN argc, jsval *vp)
 {
-    return tagify_value(cx, "font color", "font", vp);
+    return tagify_value(cx, argc, vp, "font color", "font");
 }
 
 static JSBool
 str_link(JSContext *cx, uintN argc, jsval *vp)
 {
-    return tagify_value(cx, "a href", "a", vp);
+    return tagify_value(cx, argc, vp, "a href", "a");
 }
 
 static JSBool
 str_anchor(JSContext *cx, uintN argc, jsval *vp)
 {
-    return tagify_value(cx, "a name", "a", vp);
+    return tagify_value(cx, argc, vp, "a name", "a");
 }
 
 static JSBool
@@ -2205,52 +2232,52 @@ str_sub(JSContext *cx, uintN argc, jsval *vp)
 
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN("quote",             str_quote,             0,0,GENERIC_PRIMITIVE),
-    JS_FN(js_toSource_str,     str_toSource,          0,0,JSFUN_THISP_STRING),
+    JS_FN("quote",             str_quote,             0,GENERIC_PRIMITIVE),
+    JS_FN(js_toSource_str,     str_toSource,          0,JSFUN_THISP_STRING),
 #endif
 
     /* Java-like methods. */
-    JS_FN(js_toString_str,     str_toString,          0,0,JSFUN_THISP_STRING),
-    JS_FN(js_valueOf_str,      str_toString,          0,0,JSFUN_THISP_STRING),
-    JS_FN("substring",         js_str_substring,      0,2,GENERIC_PRIMITIVE),
-    JS_FN("toLowerCase",       str_toLowerCase,       0,0,GENERIC_PRIMITIVE),
-    JS_FN("toUpperCase",       str_toUpperCase,       0,0,GENERIC_PRIMITIVE),
-    JS_FN("charAt",            str_charAt,            1,1,GENERIC_PRIMITIVE),
-    JS_FN("charCodeAt",        js_str_charCodeAt,     1,1,GENERIC_PRIMITIVE),
-    JS_FN("indexOf",           str_indexOf,           1,1,GENERIC_PRIMITIVE),
-    JS_FN("lastIndexOf",       str_lastIndexOf,       1,1,GENERIC_PRIMITIVE),
-    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,0,GENERIC_PRIMITIVE),
-    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,0,GENERIC_PRIMITIVE),
-    JS_FN("localeCompare",     str_localeCompare,     1,1,GENERIC_PRIMITIVE),
+    JS_FN(js_toString_str,     str_toString,          0,JSFUN_THISP_STRING),
+    JS_FN(js_valueOf_str,      str_toString,          0,JSFUN_THISP_STRING),
+    JS_FN("substring",         js_str_substring,      2,GENERIC_PRIMITIVE),
+    JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
+    JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
+    JS_FN("charAt",            str_charAt,            1,GENERIC_PRIMITIVE),
+    JS_FN("charCodeAt",        js_str_charCodeAt,     1,GENERIC_PRIMITIVE),
+    JS_FN("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE),
+    JS_FN("lastIndexOf",       str_lastIndexOf,       1,GENERIC_PRIMITIVE),
+    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,GENERIC_PRIMITIVE),
+    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,GENERIC_PRIMITIVE),
+    JS_FN("localeCompare",     str_localeCompare,     1,GENERIC_PRIMITIVE),
 
     /* Perl-ish methods (search is actually Python-esque). */
-    JS_FN("match",             str_match,             1,1,GENERIC_PRIMITIVE),
-    JS_FN("search",            str_search,            1,1,GENERIC_PRIMITIVE),
-    JS_FN("replace",           str_replace,           2,2,GENERIC_PRIMITIVE),
-    JS_FN("split",             str_split,             0,2,GENERIC_PRIMITIVE),
+    JS_FN("match",             str_match,             1,GENERIC_PRIMITIVE),
+    JS_FN("search",            str_search,            1,GENERIC_PRIMITIVE),
+    JS_FN("replace",           str_replace,           2,GENERIC_PRIMITIVE),
+    JS_FN("split",             str_split,             2,GENERIC_PRIMITIVE),
 #if JS_HAS_PERL_SUBSTR
-    JS_FN("substr",            str_substr,            0,2,GENERIC_PRIMITIVE),
+    JS_FN("substr",            str_substr,            2,GENERIC_PRIMITIVE),
 #endif
 
     /* Python-esque sequence methods. */
-    JS_FN("concat",            str_concat,            0,1,GENERIC_PRIMITIVE),
-    JS_FN("slice",             str_slice,             1,2,GENERIC_PRIMITIVE),
+    JS_FN("concat",            str_concat,            1,GENERIC_PRIMITIVE),
+    JS_FN("slice",             str_slice,             2,GENERIC_PRIMITIVE),
 
     /* HTML string methods. */
 #if JS_HAS_STR_HTML_HELPERS
-    JS_FN("bold",              str_bold,              0,0,PRIMITIVE),
-    JS_FN("italics",           str_italics,           0,0,PRIMITIVE),
-    JS_FN("fixed",             str_fixed,             0,0,PRIMITIVE),
-    JS_FN("fontsize",          str_fontsize,          1,1,PRIMITIVE),
-    JS_FN("fontcolor",         str_fontcolor,         1,1,PRIMITIVE),
-    JS_FN("link",              str_link,              1,1,PRIMITIVE),
-    JS_FN("anchor",            str_anchor,            1,1,PRIMITIVE),
-    JS_FN("strike",            str_strike,            0,0,PRIMITIVE),
-    JS_FN("small",             str_small,             0,0,PRIMITIVE),
-    JS_FN("big",               str_big,               0,0,PRIMITIVE),
-    JS_FN("blink",             str_blink,             0,0,PRIMITIVE),
-    JS_FN("sup",               str_sup,               0,0,PRIMITIVE),
-    JS_FN("sub",               str_sub,               0,0,PRIMITIVE),
+    JS_FN("bold",              str_bold,              0,PRIMITIVE),
+    JS_FN("italics",           str_italics,           0,PRIMITIVE),
+    JS_FN("fixed",             str_fixed,             0,PRIMITIVE),
+    JS_FN("fontsize",          str_fontsize,          1,PRIMITIVE),
+    JS_FN("fontcolor",         str_fontcolor,         1,PRIMITIVE),
+    JS_FN("link",              str_link,              1,PRIMITIVE),
+    JS_FN("anchor",            str_anchor,            1,PRIMITIVE),
+    JS_FN("strike",            str_strike,            0,PRIMITIVE),
+    JS_FN("small",             str_small,             0,PRIMITIVE),
+    JS_FN("big",               str_big,               0,PRIMITIVE),
+    JS_FN("blink",             str_blink,             0,PRIMITIVE),
+    JS_FN("sup",               str_sup,               0,PRIMITIVE),
+    JS_FN("sub",               str_sub,               0,PRIMITIVE),
 #endif
 
     JS_FS_END
@@ -2318,7 +2345,7 @@ js_str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec string_static_methods[] = {
-    JS_FN("fromCharCode",    js_str_fromCharCode,       0,1,0),
+    JS_FN("fromCharCode",    js_str_fromCharCode,    1,0),
     JS_FS_END
 };
 
@@ -4799,10 +4826,9 @@ str_decodeURI(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
 
-    str = js_ValueToString(cx, vp[2]);
+    str = ArgToRootedString(cx, argc, vp, 0);
     if (!str)
         return JS_FALSE;
-    vp[2] = STRING_TO_JSVAL(str);
     return Decode(cx, str, js_uriReservedPlusPound_ucstr, vp);
 }
 
@@ -4811,10 +4837,9 @@ str_decodeURI_Component(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
 
-    str = js_ValueToString(cx, vp[2]);
+    str = ArgToRootedString(cx, argc, vp, 0);
     if (!str)
         return JS_FALSE;
-    vp[2] = STRING_TO_JSVAL(str);
     return Decode(cx, str, js_empty_ucstr, vp);
 }
 
@@ -4823,10 +4848,9 @@ str_encodeURI(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
 
-    str = js_ValueToString(cx, vp[2]);
+    str = ArgToRootedString(cx, argc, vp, 0);
     if (!str)
         return JS_FALSE;
-    vp[2] = STRING_TO_JSVAL(str);
     return Encode(cx, str, js_uriReservedPlusPound_ucstr, js_uriUnescaped_ucstr,
                   vp);
 }
@@ -4836,10 +4860,9 @@ str_encodeURI_Component(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
 
-    str = js_ValueToString(cx, vp[2]);
+    str = ArgToRootedString(cx, argc, vp, 0);
     if (!str)
         return JS_FALSE;
-    vp[2] = STRING_TO_JSVAL(str);
     return Encode(cx, str, js_uriUnescaped_ucstr, NULL, vp);
 }
 

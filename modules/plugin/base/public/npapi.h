@@ -120,7 +120,7 @@
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 19
+#define NP_VERSION_MINOR 20
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
@@ -411,7 +411,14 @@ typedef enum {
    * NPN_MemAlloc() to allocate memory for the string data. Introduced
    * in Mozilla 1.8b2 (NPAPI minor version 15).
    */
-  NPPVformValue = 16
+  NPPVformValue = 16,
+  
+  NPPVpluginUrlRequestsDisplayedBool = 17,
+  
+  /* Checks if the plugin is interested in receiving the http body of
+   * all http requests (including failed ones, http status != 200).
+   */
+  NPPVpluginWantsAllNetworkStreams = 18
 #ifdef XP_MACOSX
   /* Used for negotiating drawing models */
   , NPPVpluginDrawingModel = 1000
@@ -658,6 +665,7 @@ enum NPEventType {
 #define NPVERS_HAS_RESPONSE_HEADERS         17
 #define NPVERS_HAS_NPOBJECT_ENUM            18
 #define NPVERS_HAS_PLUGIN_THREAD_ASYNC_CALL 19
+#define NPVERS_HAS_ALL_NETWORK_STREAMS      20
 
 /*----------------------------------------------------------------------*/
 /*                        Function Prototypes                           */

@@ -1063,6 +1063,9 @@ extern JSBool
 js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
                            JSString *fallback);
 
+extern void
+js_ReportMissingArg(JSContext *cx, jsval *vp, uintN arg);
+
 /*
  * Report error using js_DecompileValueGenerator(cx, spindex, v, fallback) as
  * the first argument for the error message. If the error message has less
