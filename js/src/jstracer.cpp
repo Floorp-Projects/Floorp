@@ -1620,7 +1620,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
 
     FrameInfo* callstack = (FrameInfo*) alloca(ti->maxCallDepth * sizeof(FrameInfo));
     InterpState state;
-    state.ip = cx->fp->regs->pc;
     state.sp = (void*)entry_sp;
     state.rp = callstack;
     state.gp = global;
@@ -1643,7 +1642,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
               nativeStackSlots(lr->calldepth, fp));
     fp->regs->sp += (e->sp_adj / sizeof(double)) + ti->entryNativeStackSlots -
                     nativeStackSlots(lr->calldepth, fp);
-    fp->regs->pc = (jsbytecode*)state.ip + e->ip_adj;
+    fp->regs->pc = (jsbytecode*)lr->from->root->ip + e->ip_adj;
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
     printf("leaving trace at %s:%u@%u, sp=%p, ip=%p, cycles=%llu\n",
