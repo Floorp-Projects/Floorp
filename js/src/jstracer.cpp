@@ -1288,11 +1288,29 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 void
 TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
 {
-    LIns* args[] = { lir->insImmPtr(inner), lirbuf->state };
+    /* The inner tree expects to be called from the current scope. If the outer tree (this
+       trace is currently inside a function inlining code (calldepth > 0), we have to advance
+       the native stack pointer such that we match what the inner trace expects to see. We
+       move it back when we come out of the inner tree call. */
+    if (callDepth > 0) {
+        /* The inner tree sees the current frame but nothing above that, so calculate the total
+           size of those and adjust state->sp accordingly. */
+        unsigned sp_adj = nativeStackSlots(callDepth - 1, cx->fp->down) * sizeof(double);
+        lir->insStorei(lir->ins2i(LIR_add, lirbuf->sp, sp_adj), 
+                lirbuf->state, offsetof(InterpState, sp));
+    }
+    /* Invoke the inner tree. */
+    LIns* args[] = { lir->insImmPtr(inner), lirbuf->state }; /* reverse order */
     LIns* ret = lir->insCall(F_CallTree, args);
+    /* Guard that we come out of the inner tree along the same side exit we came out when
+       we called the inner tree at recording time. */
     LIns* g = guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
+    /* Re-read all values from the native frames since the inner tree might have changed them. */
     SideExit* exit = g->exit();
     import(exit->numGlobalSlots, exit->typeMap, exit->typeMap + exit->numGlobalSlots);
+    /* Restore state->sp to its original value (we still have it in a register). */
+    if (callDepth > 0)
+        lir->insStorei(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp));
 }
 
 int
@@ -1560,8 +1578,7 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
     }
     /* does this branch go to an inner loop? */
     Fragment* f = fragmento->getLoop(cx->fp->regs->pc);
-    if (nesting_enabled &&
-            f->code() && !r->getCallDepth()) { /* currently we can't call trees in inlined scopes */
+    if (nesting_enabled && f->code()) {
         JS_ASSERT(f->vmprivate);
         /* call the inner tree */
         GuardRecord* lr = js_ExecuteTree(cx, f, inlineCallCount);
