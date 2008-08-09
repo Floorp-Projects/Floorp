@@ -170,7 +170,7 @@ gfxQtPlatform::UpdateFontList()
             gPlatformFonts->Put(key, ff);
         }
 
-        nsRefPtr<FontEntry> fe = new FontEntry(ff->mName);
+        nsRefPtr<FontEntry> fe = new FontEntry(ff->Name());
         ff->mFaces.AppendElement(fe);
 
         if (FcPatternGetString(fs->fonts[i], FC_FILE, 0, (FcChar8 **) &str) == FcResultMatch) {
@@ -262,7 +262,7 @@ gfxQtPlatform::ResolveFontName(const nsAString& aFontName,
     nsRefPtr<FontFamily> ff;
     if (gPlatformFonts->Get(name, &ff) ||
         gPlatformFontAliases->Get(name, &ff)) {
-        aAborted = !(*aCallback)(ff->mName, aClosure);
+        aAborted = !(*aCallback)(ff->Name(), aClosure);
         return NS_OK;
     }
 
