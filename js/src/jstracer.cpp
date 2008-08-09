@@ -1720,6 +1720,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 
     /* if this is a local branch in the same loop, grow the tree */
     GuardRecord* lr = js_ExecuteTree(cx, f, inlineCallCount);
+    JS_ASSERT(!(lr && (lr->exit->exitType == NESTED_EXIT)));
     if (lr && (lr->from->root == f) && (lr->exit->exitType == BRANCH_EXIT))
         return js_AttemptToExtendTree(cx, lr, f);
     /* if this exits the loop, resume interpretation */
