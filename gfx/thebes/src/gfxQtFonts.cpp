@@ -49,12 +49,7 @@
  */
 
 FontEntry::FontEntry(const FontEntry& aFontEntry) :
-    mFaceName(aFontEntry.mFaceName),
-    mUnicodeFont(aFontEntry.mUnicodeFont),
-    mSymbolFont(aFontEntry.mSymbolFont),
-    mItalic(aFontEntry.mItalic),
-    mWeight(aFontEntry.mWeight),
-    mCharacterMap(aFontEntry.mCharacterMap)
+    gfxFontEntry(aFontEntry)
 {
     if (aFontEntry.mFontFace)
         mFontFace = cairo_font_face_reference(aFontEntry.mFontFace);
@@ -707,14 +702,15 @@ gfxQtFontGroup::AddRange(gfxTextRun *aTextRun, gfxQtFont *font, const PRUnichar 
  */
 gfxQtFont::gfxQtFont(FontEntry *aFontEntry,
                      const gfxFontStyle *aFontStyle)
-    : gfxFont(aFontEntry->GetName(), aFontStyle),
+    : gfxFont(aFontEntry, aFontStyle),
     mScaledFont(nsnull),
     mHasSpaceGlyph(PR_FALSE),
     mSpaceGlyph(0),
     mHasMetrics(PR_FALSE),
-    mAdjustedSize(0),
-    mFontEntry(aFontEntry)
+    mAdjustedSize(0)
 {
+    mFontEntry = aFontEntry;
+    NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
 }
 
 gfxQtFont::~gfxQtFont()
@@ -866,7 +862,7 @@ gfxQtFont::GetMetrics()
 nsString
 gfxQtFont::GetUniqueName()
 {
-    return mName;
+    return GetFontEntry()->Name();
 }
 
 PRUint32
@@ -888,13 +884,19 @@ gfxQtFont::GetSpaceGlyph()
     return mSpaceGlyph;
 }
 
+FontEntry*
+gfxQtFont::GetFontEntry()
+{
+    return static_cast<FontEntry*> (mFontEntry.get());
+}
+
 cairo_font_face_t *
 gfxQtFont::CairoFontFace()
 {
     // XXX we need to handle fake bold here (or by having a sepaerate font entry)
-    if (mStyle.weight >= 600 && mFontEntry->mWeight < 600)
+    if (mStyle.weight >= 600 && GetFontEntry()->mWeight < 600)
         printf("** We want fake weight\n");
-    return mFontEntry->CairoFontFace();
+    return GetFontEntry()->CairoFontFace();
 }
 
 cairo_scaled_font_t *
@@ -909,7 +911,7 @@ gfxQtFont::CairoScaledFont()
         cairo_matrix_init_identity(&identityMatrix);
 
         // synthetic oblique by skewing via the font matrix
-        PRBool needsOblique = (!mFontEntry->mItalic && (mStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)));
+        PRBool needsOblique = (!GetFontEntry()->mItalic && (mStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)));
 
         if (needsOblique) {
             const double kSkewFactor = 0.25;

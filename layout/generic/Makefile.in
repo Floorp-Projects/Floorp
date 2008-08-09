@@ -201,6 +201,10 @@ ifdef MOZ_ENABLE_GTK2
 CXXFLAGS += $(MOZ_GTK2_CFLAGS)
 endif
 
+ifdef MOZ_ENABLE_QT
+CXXFLAGS += $(MOZ_QT_CFLAGS)
+endif
+
 libs::
 	$(INSTALL) $(RESOURCES_HTML) $(DIST)/bin/res/html
 	$(INSTALL) $(RESOURCES) $(DIST)/bin/res

@@ -113,11 +113,11 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
-CPPSRCS += gfxXlibSurface.cpp gfxXlibNativeRenderer.cpp
+CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
 CPPSRCS += gfxQtFonts.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
-CSRCS = cairo-xlib-utils.c
+#CSRCS = cairo-xlib-utils.c
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) $(MOZ_XFT_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS)
 endif
 
