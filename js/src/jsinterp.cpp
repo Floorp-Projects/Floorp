@@ -4670,7 +4670,7 @@ js_Interpret(JSContext *cx)
                                         JSVAL_IS_OBJECT(rval)
                                         ? JSVAL_TO_OBJECT(rval)
                                         : NULL,
-                                        OBJ_GET_PARENT(cx, obj2),
+                                        OBJ_GET_PARENT(cx, obj),
                                         0);
                     if (!obj2)
                         goto error;
