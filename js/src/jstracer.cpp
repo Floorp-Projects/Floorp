@@ -2946,8 +2946,14 @@ TraceRecorder::record_JSOP_GETELEM()
 
     if (!JSVAL_IS_PRIMITIVE(l) && JSVAL_IS_STRING(r)) {
         jsval v;
-        if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(l), ATOM_TO_JSID(r), &v))
+        jsid id;
+
+        if (!js_ValueToStringId(cx, r, &id))
             return false;
+        r = ID_TO_VALUE(id);
+        if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(l), id, &v))
+            return false;
+
         LIns* args[] = { get(&r), get(&l), cx_ins };
         LIns* v_ins = lir->insCall(F_Any_getelem, args);
         guard(false, lir->ins2(LIR_eq, v_ins, lir->insImmPtr((void*)JSVAL_ERROR_COOKIE)));
