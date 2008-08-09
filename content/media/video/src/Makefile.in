@@ -41,6 +41,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_OGG
+ifeq ($(OS_ARCH),Linux)
+DEFINES += -DSYDNEY_AUDIO_NO_POSITION
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+DEFINES += -DSYDNEY_AUDIO_NO_VOLUME -DSYDNEY_AUDIO_NO_POSITION
+endif
+endif
+
 MODULE		= content
 LIBRARY_NAME	= gkconvideo_s
 LIBXUL_LIBRARY 	= 1
@@ -81,6 +91,14 @@ REQUIRES	= \
 CPPSRCS		= \
 		nsVideoDecoder.cpp \
 		$(NULL)
+
+ifdef MOZ_OGG
+CPPSRCS		+= \
+		nsAudioStream.cpp \
+		nsChannelReader.cpp \
+		nsOggDecoder.cpp \
+		$(NULL)
+endif
 
 FORCE_STATIC_LIB = 1
 

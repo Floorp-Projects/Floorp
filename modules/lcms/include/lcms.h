@@ -1046,10 +1046,14 @@ LCMSAPI void          LCMSEXPORT cmsSetProfileID(cmsHPROFILE hProfile, LPBYTE Pr
 
 // Intents
 
+/* Note - If the numbers here change, the rendering_intent pref in Mozilla's
+   modules/libpref/init/all.js must change as well! */
 #define INTENT_PERCEPTUAL                 0
 #define INTENT_RELATIVE_COLORIMETRIC      1
 #define INTENT_SATURATION                 2
 #define INTENT_ABSOLUTE_COLORIMETRIC      3
+#define INTENT_MIN INTENT_PERCEPTUAL
+#define INTENT_MAX INTENT_ABSOLUTE_COLORIMETRIC
 
 // Flags
 

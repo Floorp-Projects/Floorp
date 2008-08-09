@@ -440,7 +440,7 @@ nsEditor::GetDesiredSpellCheckState()
     return PR_FALSE;
   }
 
-  if (content->IsNativeAnonymous()) {
+  if (content->IsRootOfNativeAnonymousSubtree()) {
     content = content->GetParent();
   }
 
@@ -1982,8 +1982,15 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
 
       // XXX_kin: END HACK! HACK! HACK!
 
-      result = caretP->GetCaretCoordinates(nsCaret::eIMECoordinates, selection,
-		                      &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed), nsnull);
+      nsIView *view = nsnull;
+      result =
+        caretP->GetCaretCoordinates(nsCaret::eIMECoordinates,
+                                    selection,
+                                    &(aReply->mCursorPosition),
+                                    &(aReply->mCursorIsCollapsed),
+                                    &view);
+      if (NS_SUCCEEDED(result) && view)
+        aReply->mReferenceWidget = view->GetWidget();
     }
   }
   return result;
@@ -5241,7 +5248,7 @@ nsEditor::GetPIDOMEventTarget()
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
 
-  if (content && content->IsNativeAnonymous())
+  if (content && content->IsRootOfNativeAnonymousSubtree())
   {
     mEventTarget = do_QueryInterface(content->GetParent());
     piTarget = mEventTarget;

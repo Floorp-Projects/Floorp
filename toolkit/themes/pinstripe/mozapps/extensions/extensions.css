@@ -350,46 +350,6 @@ vbox[typeName="status"][type="header-recommended"] {
   border-bottom: 1px solid #878787;
 }
 
-#searchbox {
-  -moz-appearance: none;
-  border: 3px solid;
-  -moz-border-top-colors: #5F5F5F #CFCFCF -moz-Field;
-  -moz-border-bottom-colors: #9F9F9F #EEE -moz-Field;
-  -moz-border-right-colors: #7F7F7F #EEE -moz-Field;
-  -moz-border-left-colors: #7F7F7F #EFEFEF -moz-Field;
-  -moz-border-radius: 11px;
-  -moz-background-clip: border !important;
-  padding: 0 8px;
-}
-
-#searchbox[focused="true"] {
-  outline: 2px solid #4A8BC7;
-  outline-offset: -2px;
-  -moz-outline-radius: 11px;
-}
-
-
-.searchbox-search, .searchbox-cancel {
-  list-style-image: url(chrome://mozapps/skin/extensions/searchIcons.png);
-  -moz-appearance: none;
-  cursor: default;
-  margin: 0;
-  border: 0;
-  padding: 0;
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  min-height: 16px;
-}
-
-.searchbox-search {
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
-.searchbox-cancel {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
 #progressBox {
   padding: 5px 5px 5px 5px;
 }

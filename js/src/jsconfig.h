@@ -86,7 +86,6 @@
 #define JS_HAS_OBJ_PROTO_PROP   0       /* has o.__proto__ etc. */
 #endif
 #define JS_HAS_OBJ_WATCHPOINT   0       /* has o.watch and o.unwatch */
-#define JS_HAS_EXPORT_IMPORT    0       /* has export fun; import obj.fun */
 #define JS_HAS_EVAL_THIS_SCOPE  0       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       0       /* has #n=, #n# for object literals */
 #define JS_HAS_SCRIPT_OBJECT    0       /* has (new Script("x++")).exec() */
@@ -120,7 +119,6 @@
 #define JS_HAS_PERL_SUBSTR      1       /* has str.substr */
 #define JS_HAS_OBJ_PROTO_PROP   1       /* has o.__proto__ etc. */
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
-#define JS_HAS_EXPORT_IMPORT    1       /* has export fun; import obj.fun */
 #define JS_HAS_EVAL_THIS_SCOPE  1       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
 #define JS_HAS_SCRIPT_OBJECT    1       /* has (new Script("x++")).exec() */
@@ -150,7 +148,6 @@
 #define JS_HAS_PERL_SUBSTR      1       /* has str.substr */
 #define JS_HAS_OBJ_PROTO_PROP   1       /* has o.__proto__ etc. */
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
-#define JS_HAS_EXPORT_IMPORT    1       /* has export fun; import obj.fun */
 #define JS_HAS_EVAL_THIS_SCOPE  1       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
 #define JS_HAS_SCRIPT_OBJECT    1       /* has (new Script("x++")).exec() */
@@ -180,7 +177,6 @@
 #define JS_HAS_PERL_SUBSTR      1       /* has str.substr */
 #define JS_HAS_OBJ_PROTO_PROP   1       /* has o.__proto__ etc. */
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
-#define JS_HAS_EXPORT_IMPORT    1       /* has export fun; import obj.fun */
 #define JS_HAS_EVAL_THIS_SCOPE  1       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
 #define JS_HAS_SCRIPT_OBJECT    0       /* has (new Script("x++")).exec() */
@@ -210,7 +206,6 @@
 #define JS_HAS_PERL_SUBSTR      1       /* has str.substr */
 #define JS_HAS_OBJ_PROTO_PROP   1       /* has o.__proto__ etc. */
 #define JS_HAS_OBJ_WATCHPOINT   1       /* has o.watch and o.unwatch */
-#define JS_HAS_EXPORT_IMPORT    1       /* has export fun; import obj.fun */
 #define JS_HAS_EVAL_THIS_SCOPE  1       /* Math.eval is same as with (Math) */
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
 #define JS_HAS_SCRIPT_OBJECT    0       /* has (new Script("x++")).exec() */

@@ -41,6 +41,7 @@
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsCoord.h"
+#include "nsRect.h"
 
 #include "prthread.h"
 #include "nsEvent.h"
@@ -53,7 +54,6 @@ class   nsIFontMetrics;
 class   nsIRenderingContext;
 class   nsIDeviceContext;
 class   nsIRegion;
-struct  nsRect;
 struct  nsFont;
 class   nsIEventListener;
 class   nsIRollupListener;
@@ -94,10 +94,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 594d22a3-ef2d-4189-9bc1-3c3da586f47a
+// 3d304df2-8e6b-4f09-8782-98bd649c7e96
 #define NS_IWIDGET_IID \
-{ 0x594d22a3, 0xef2d, 0x4189, \
-  { 0x9b, 0xc1, 0x3c, 0x3d, 0xa5, 0x86, 0xf4, 0x7a } }
+{ 0x3d304df2, 0x8e6b, 0x4f09, \
+  { 0x87, 0x82, 0x98, 0xbd, 0x64, 0x9c, 0x7e, 0x96 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -1045,6 +1045,17 @@ class nsIWidget : public nsISupports {
      *                windows.
      */
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive) = 0;
+    
+    /*
+     * Determine whether the widget shows a resize widget. If it does,
+     * aResizerRect returns the resizer's rect.
+     *
+     * Returns false on any platform that does not support it.
+     *
+     * @param aResizerRect The resizer's rect in device pixels.
+     * @return Whether a resize widget is shown.
+     */
+    virtual PRBool ShowsResizeIndicator(nsIntRect* aResizerRect) = 0;
 
     /**
      * Get the Thebes surface associated with this widget.

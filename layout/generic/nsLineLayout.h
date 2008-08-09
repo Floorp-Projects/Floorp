@@ -55,6 +55,7 @@
 #include "nsLineBox.h"
 #include "nsBlockReflowState.h"
 #include "plarena.h"
+#include "gfxTypes.h"
 
 class nsBlockFrame;
 
@@ -273,18 +274,24 @@ public:
    * 
    * @param aFits set to true if the break position is within the available width.
    * 
+   * @param aPriority the priority of the break opportunity. If we are
+   * prioritizing break opportunities, we will not set a break if we have
+   * already set a break with a higher priority. @see gfxBreakPriority.
+   *
    * @return PR_TRUE if we are actually reflowing with forced break position and we
    * should break here
    */
   PRBool NotifyOptionalBreakPosition(nsIContent* aContent, PRInt32 aOffset,
-                                     PRBool aFits) {
+                                     PRBool aFits, gfxBreakPriority aPriority) {
     NS_ASSERTION(!aFits || !GetFlag(LL_NEEDBACKUP),
                   "Shouldn't be updating the break position with a break that fits after we've already flagged an overrun");
     // Remember the last break position that fits; if there was no break that fit,
     // just remember the first break
-    if (aFits || !mLastOptionalBreakContent) {
+    if ((aFits && aPriority >= mLastOptionalBreakPriority) ||
+        !mLastOptionalBreakContent) {
       mLastOptionalBreakContent = aContent;
       mLastOptionalBreakContentOffset = aOffset;
+      mLastOptionalBreakPriority = aPriority;
     }
     return aContent && mForceBreakContent == aContent &&
       mForceBreakContentOffset == aOffset;
@@ -294,9 +301,11 @@ public:
    * to be set, because the caller is merely pruning some saved break position(s)
    * that are actually not feasible.
    */
-  void RestoreSavedBreakPosition(nsIContent* aContent, PRInt32 aOffset) {
+  void RestoreSavedBreakPosition(nsIContent* aContent, PRInt32 aOffset,
+                                 gfxBreakPriority aPriority) {
     mLastOptionalBreakContent = aContent;
     mLastOptionalBreakContentOffset = aOffset;
+    mLastOptionalBreakPriority = aPriority;
   }
   /**
    * Signal that no backing up will be required after all.
@@ -305,11 +314,14 @@ public:
     SetFlag(LL_NEEDBACKUP, PR_FALSE);
     mLastOptionalBreakContent = nsnull;
     mLastOptionalBreakContentOffset = -1;
+    mLastOptionalBreakPriority = eNoBreak;
   }
   // Retrieve last set optional break position. When this returns null, no
   // optional break has been recorded (which means that the line can't break yet).
-  nsIContent* GetLastOptionalBreakPosition(PRInt32* aOffset) {
+  nsIContent* GetLastOptionalBreakPosition(PRInt32* aOffset,
+                                           gfxBreakPriority* aPriority) {
     *aOffset = mLastOptionalBreakContentOffset;
+    *aPriority = mLastOptionalBreakPriority;
     return mLastOptionalBreakContent;
   }
   
@@ -340,7 +352,7 @@ public:
   /**
    * This can't be null. It usually returns a block frame but may return
    * some other kind of frame when inline frames are reflowed in a non-block
-   * context (e.g. MathML).
+   * context (e.g. MathML or floating first-letter).
    */
   nsIFrame* GetLineContainerFrame() const { return mBlockReflowState->frame; }
   const nsLineList::iterator* GetLine() const {
@@ -369,6 +381,7 @@ protected:
   nsIContent* mForceBreakContent;
   PRInt32     mLastOptionalBreakContentOffset;
   PRInt32     mForceBreakContentOffset;
+  gfxBreakPriority mLastOptionalBreakPriority;
   
   // XXX remove this when landing bug 154892 (splitting absolute positioned frames)
   friend class nsInlineFrame;

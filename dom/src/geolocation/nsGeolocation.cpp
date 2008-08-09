@@ -131,7 +131,7 @@ nsGeolocationRequest::MarkCleared()
 void
 nsGeolocationRequest::SendLocation(nsIDOMGeolocation* location)
 {
-  if (mCleared)
+  if (mCleared || !mAllowed)
     return;
 
   //TODO mFuzzLocation.  Needs to be defined what we do here.

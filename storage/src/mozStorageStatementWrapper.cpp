@@ -522,8 +522,6 @@ NS_IMETHODIMP
 mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    *_retval = PR_FALSE;
-
     if (JSVAL_IS_STRING(id)) {
         nsDependentString jsid((PRUnichar *)::JS_GetStringChars(JSVAL_TO_STRING(id)),
                                ::JS_GetStringLength(JSVAL_TO_STRING(id)));
@@ -536,7 +534,7 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
                     double dval = sqlite3_column_double(NativeStatement(), i);
                     if (!JS_NewNumberValue(cx, dval, vp)) {
                         *_retval = PR_FALSE;
-                        return NS_ERROR_OUT_OF_MEMORY;
+                        return NS_OK;
                     }
                 } else if (ctype == SQLITE_TEXT) {
                     JSString *str = JS_NewUCStringCopyN(cx,
@@ -544,7 +542,7 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
                                                         sqlite3_column_bytes16(NativeStatement(), i)/2);
                     if (!str) {
                         *_retval = PR_FALSE;
-                        return NS_ERROR_OUT_OF_MEMORY;
+                        return NS_OK;
                     }
                     *vp = STRING_TO_JSVAL(str);
                 } else if (ctype == SQLITE_BLOB) {
@@ -553,7 +551,7 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
                                                       sqlite3_column_bytes(NativeStatement(), i));
                     if (!str) {
                         *_retval = PR_FALSE;
-                        return NS_ERROR_OUT_OF_MEMORY;
+                        return NS_OK;
                     }
                 } else if (ctype == SQLITE_NULL) {
                     *vp = JSVAL_NULL;
@@ -561,7 +559,6 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
                     NS_ERROR("sqlite3_column_type returned unknown column type, what's going on?");
                 }
 
-                *_retval = PR_TRUE;
                 break;
             }
         }

@@ -13,6 +13,11 @@ var _config = {
 	asyncTimeout: 2 // seconds for async timeout
 };
 
+_config.filters = location.search.length > 1 && //restrict modules/tests by get parameters
+		$.map( location.search.slice(1).split('&'), decodeURIComponent );
+
+var isLocal = !!(window.location.protocol == 'file:');
+
 $(function() {
 	$('#userAgent').html(navigator.userAgent);
 	runTest();	
@@ -39,19 +44,44 @@ function stop(allowFailure) {
 		ok( false, "Test timed out" );
 		start();
 	};
-	_config.timeout = setTimeout(handler, _config.asyncTimeout * 1000);
+	// Disabled, caused too many random errors
+	//_config.timeout = setTimeout(handler, _config.asyncTimeout * 1000);
 }
 function start() {
-	if(_config.timeout)
-		clearTimeout(_config.timeout);
-	_config.blocking = false;
-	process();
+	// A slight delay, to avoid any current callbacks
+	setTimeout(function(){
+		if(_config.timeout)
+			clearTimeout(_config.timeout);
+		_config.blocking = false;
+		process();
+	}, 13);
+}
+
+function validTest( name ) {
+	var filters = _config.filters;
+	if( !filters )
+		return true;
+
+	var i = filters.length,
+		run = false;
+	while( i-- ){
+		var filter = filters[i],
+			not = filter.charAt(0) == '!';
+		if( not ) 
+			filter = filter.slice(1);
+		if( name.indexOf(filter) != -1 )
+			return !not;
+		if( not )
+			run = true;
+	}
+	return run;
 }
 
 function runTest() {
 	_config.blocking = false;
 	var time = new Date();
 	_config.fixture = document.getElementById('main').innerHTML;
+	_config.ajaxSettings = $.ajaxSettings;
 	synchronize(function() {
 		time = new Date() - time;
 		$("<div>").html(['<p class="result">Tests completed in ',
@@ -62,6 +92,7 @@ function runTest() {
 		$("#banner").addClass(_config.stats.bad ? "fail" : "pass");
 		if ( parent.runAJAXTest )
 			parent.runAJAXTest();
+
 	});
 }
 
@@ -69,8 +100,7 @@ function test(name, callback, nowait) {
 	if(_config.currentModule)
 		name = _config.currentModule + " module: " + name;
 		
-	var filter = location.search.slice(1);
-	if ( filter && encodeURIComponent(name) != filter )
+	if ( !validTest(name) )
 		return;
 		
 	synchronize(function() {
@@ -83,7 +113,7 @@ function test(name, callback, nowait) {
 				console.error(e);
 				console.warn(callback.toString());
 			}
-			_config.Test.push( [ false, "Died on test #" + (_config.Test.length+1) + ": " + e ] );
+			_config.Test.push( [ false, "Died on test #" + (_config.Test.length+1) + ": " + e.message ] );
 		}
 	});
 	synchronize(function() {
@@ -113,9 +143,9 @@ function test(name, callback, nowait) {
 				bad++;
 				_config.stats.bad++;
 			} else good++;
-
-			if ( parent.SimpleTest )
-				parent.SimpleTest.ok( _config.Test[i][0], name, _config.Test[i][1] );
+			
+			if ( parent.SimpleTest ){
+				parent.SimpleTest.ok( _config.Test[i][0], name, _config.Test[i][1] );}
 		}
 	
 		var li = document.createElement("li");
@@ -160,7 +190,9 @@ function expect(asserts) {
  * Resets the test setup. Useful for tests that modify the DOM.
  */
 function reset() {
-	document.getElementById('main').innerHTML = _config.fixture;
+	$("#main").html( _config.fixture );
+	$.event.global = {};
+	$.ajaxSettings = $.extend({}, _config.ajaxSettings);
 }
 
 /**
@@ -223,7 +255,7 @@ function serialArray( a ) {
             r.push( str );
         }
 
-	return "[ " + r.join(", ") + " ]"
+	return "[ " + r.join(", ") + " ]";
 }
 
 /**
@@ -272,11 +304,11 @@ function url(value) {
  *
  * @example equals( "Expected 2 characters.", v.formatMessage("Expected {0} characters.", 2) );
  *
- * @param Object expected
  * @param Object actual
+ * @param Object expected
  * @param String message (optional)
  */
-function equals(expected, actual, message) {
+function equals(actual, expected, message) {
 	var result = expected == actual;
 	message = message || (result ? "okay" : "failed");
 	_config.Test.push( [ result, result ? message + ": " + expected : message + " expected: " + expected + " actual: " + actual ] );

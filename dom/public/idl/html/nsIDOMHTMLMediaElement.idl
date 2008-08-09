@@ -39,6 +39,7 @@
 #include "nsIDOMHTMLElement.idl"
 #include "nsIDOMHTMLMediaError.idl"
 #include "nsIDOMHTMLTimeRanges.idl"
+#include "nsIDOMHTMLByteRanges.idl"
 #include "nsIDOMHTMLVoidCallback.idl"
 
 /**
@@ -67,7 +68,10 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
   const unsigned short LOADED = 4;
   readonly attribute unsigned short networkState;
   readonly attribute float bufferingRate;
+  readonly attribute boolean bufferingThrottled;
   readonly attribute nsIDOMHTMLTimeRanges buffered;
+  readonly attribute nsIDOMHTMLByteRanges bufferedBytes;
+  readonly attribute unsigned long totalBytes;
   void load();
 
   // ready state
@@ -96,16 +100,16 @@ interface nsIDOMHTMLMediaElement : nsIDOMHTMLElement
            attribute float end;
            attribute float loopStart;
            attribute float loopEnd;
-           attribute unsigned long loopCount;
+           attribute unsigned long playCount;
            attribute unsigned long currentLoop;
 
   // cue points
-  void addCuePoint(in float time, in nsIDOMHTMLVoidCallback callback, in boolean pause);
-  void removeCuePoint(in float time, in nsIDOMHTMLVoidCallback callback);
+  void addCueRange(in DOMString className, in float start, in float end, in boolean pauseOnExit, in nsIDOMHTMLVoidCallback enterCallback, in nsIDOMHTMLVoidCallback exitCallback);
+  void removeCueRanges(in DOMString className);
+
 
   // controls
            attribute boolean controls;
            attribute float volume;
            attribute boolean muted;
 };
-
