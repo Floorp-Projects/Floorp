@@ -110,12 +110,11 @@
       <key key="&focusSearch2.key;" modifiers="accel" oncommand="gApplicationsPane.focusFilterBox();"/>
     </keyset>
 
-    <hbox align="center">
-      <label accesskey="&filter.accesskey;" control="filter">&filter.label;</label>
-      <textbox id="filter" flex="1" oninput="gApplicationsPane.onFilterInput();" 
-              onkeypress="gApplicationsPane.onFilterKeyPress(event);"/>
-      <button id="clearFilter" icon="clear" label="&clear.label;" accesskey="&clear.accesskey;" 
-              oncommand="gApplicationsPane.clearFilter();" disabled="true"/>
+    <hbox>
+      <textbox id="filter" flex="1"
+               type="search"
+               emptytext="&filter.emptytext;"
+               oncommand="gApplicationsPane.filter();"/>
     </hbox>
 
     <separator class="thin"/>

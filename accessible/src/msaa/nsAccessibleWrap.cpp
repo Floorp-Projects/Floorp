@@ -117,7 +117,7 @@ __try {
       *ppv = static_cast<IEnumVARIANT*>(this);
   } else if (IID_IServiceProvider == iid)
     *ppv = static_cast<IServiceProvider*>(this);
-  else if (IID_IAccessible2 == iid)
+  else if (IID_IAccessible2 == iid && !gIsIA2Disabled)
     *ppv = static_cast<IAccessible2*>(this);
 
   if (NULL == *ppv) {

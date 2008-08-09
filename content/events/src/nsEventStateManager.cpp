@@ -160,7 +160,7 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
-nsPresContext* gLastFocusedPresContext = 0; // Weak reference
+nsPresContext* gLastFocusedPresContextWeak = 0; // Weak reference
 
 enum nsTextfieldSelectModel {
   eTextfieldSelect_unset = -1,
@@ -693,6 +693,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventStateManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastFocus);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastContentFocus);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstBlurEvent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstDocumentBlurEvent);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstFocusEvent);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstMouseOverEventElement);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstMouseOutEventElement);
@@ -716,6 +717,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventStateManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastFocus);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastContentFocus);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBlurEvent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstDocumentBlurEvent);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstFocusEvent);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstMouseOverEventElement);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstMouseOutEventElement);
@@ -874,7 +876,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         break;
 
       if (mDocument) {
-        if (gLastFocusedDocument && gLastFocusedPresContext) {
+        if (gLastFocusedDocument && gLastFocusedPresContextWeak) {
           nsCOMPtr<nsPIDOMWindow> ourWindow =
             gLastFocusedDocument->GetWindow();
 
@@ -907,7 +909,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             blurevent.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
 
             nsEventDispatcher::Dispatch(gLastFocusedDocument,
-                                        gLastFocusedPresContext,
+                                        gLastFocusedPresContextWeak,
                                         &blurevent, nsnull, &blurstatus);
 
             if (!mCurrentFocus && gLastFocusedContent) {
@@ -918,7 +920,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
               nsCOMPtr<nsIContent> blurContent = gLastFocusedContent;
               blurevent.target = nsnull;
               nsEventDispatcher::Dispatch(gLastFocusedContent,
-                                          gLastFocusedPresContext,
+                                          gLastFocusedPresContextWeak,
                                           &blurevent, nsnull, &blurstatus);
 
               // XXX bryner this isn't quite right -- it can result in
@@ -1011,7 +1013,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
         NS_IF_RELEASE(gLastFocusedDocument);
         gLastFocusedDocument = mDocument;
-        gLastFocusedPresContext = aPresContext;
+        gLastFocusedPresContextWeak = aPresContext;
         NS_IF_ADDREF(gLastFocusedDocument);
       }
 
@@ -1068,7 +1070,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         nsEvent event(PR_TRUE, NS_BLUR_CONTENT);
         event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
 
-        if (gLastFocusedDocument && gLastFocusedPresContext) {
+        if (gLastFocusedDocument && gLastFocusedPresContextWeak) {
           if (gLastFocusedContent) {
             // Retrieve this content node's pres context. it can be out of sync
             // in the Ender widget case.
@@ -1090,29 +1092,32 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             }
           }
 
+          // Clear our global variables before firing the event to prevent
+          // duplicate blur events (bug 112294).
+          nsCOMPtr<nsIDocument> lastFocusedDocument;
+          lastFocusedDocument.swap(gLastFocusedDocument);
+          nsCOMPtr<nsPresContext> lastFocusedPresContext = gLastFocusedPresContextWeak;
+          gLastFocusedPresContextWeak = nsnull;
+          mCurrentTarget = nsnull;
+
           // fire blur on document and window
-          if (gLastFocusedDocument) {
+          if (lastFocusedDocument) {
             // get the window here, in case the event causes
             // gLastFocusedDocument to change.
 
-            nsCOMPtr<nsPIDOMWindow> window(gLastFocusedDocument->GetWindow());
+            nsCOMPtr<nsPIDOMWindow> window(lastFocusedDocument->GetWindow());
 
             event.target = nsnull;
-            nsEventDispatcher::Dispatch(gLastFocusedDocument,
-                                        gLastFocusedPresContext,
+            nsEventDispatcher::Dispatch(lastFocusedDocument,
+                                        lastFocusedPresContext,
                                         &event, nsnull, &status);
 
             if (window) {
               event.target = nsnull;
-              nsEventDispatcher::Dispatch(window, gLastFocusedPresContext,
+              nsEventDispatcher::Dispatch(window, lastFocusedPresContext,
                                           &event, nsnull, &status);
             }
           }
-
-          // Now clear our our global variables
-          mCurrentTarget = nsnull;
-          NS_IF_RELEASE(gLastFocusedDocument);
-          gLastFocusedPresContext = nsnull;
         }
       }
 #endif
@@ -1233,8 +1238,15 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
       // Now fire blurs.  Blur the content, then the document, then the window.
 
-      if (gLastFocusedDocument && gLastFocusedDocument == mDocument) {
+      if (gLastFocusedDocument && gLastFocusedDocument == mDocument &&
+          gLastFocusedDocument != mFirstDocumentBlurEvent) {
 
+        PRBool clearFirstDocumentBlurEvent = PR_FALSE;
+        if (!mFirstDocumentBlurEvent) {
+          mFirstDocumentBlurEvent = gLastFocusedDocument;
+          clearFirstDocumentBlurEvent = PR_TRUE;
+        }
+          
         nsEventStatus status = nsEventStatus_eIgnore;
         nsEvent event(PR_TRUE, NS_BLUR_CONTENT);
         event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
@@ -1264,6 +1276,12 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           }
         }
 
+        // Clear our global variables before firing the event to prevent
+        // duplicate blur events (bug 112294).
+        mCurrentTarget = nsnull;
+        NS_IF_RELEASE(gLastFocusedDocument);
+        gLastFocusedPresContextWeak = nsnull;
+
         // fire blur on document and window
         event.target = nsnull;
         nsEventDispatcher::Dispatch(mDocument, aPresContext, &event, nsnull,
@@ -1274,11 +1292,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           nsEventDispatcher::Dispatch(ourWindow, aPresContext, &event, nsnull,
                                       &status);
         }
-
-        // Now clear our our global variables
-        mCurrentTarget = nsnull;
-        NS_IF_RELEASE(gLastFocusedDocument);
-        gLastFocusedPresContext = nsnull;
+        if (clearFirstDocumentBlurEvent) {
+          mFirstDocumentBlurEvent = nsnull;
+        }
       }
 
       if (focusController) {
@@ -2664,8 +2680,8 @@ nsEventStateManager::SetPresContext(nsPresContext* aPresContext)
   if (aPresContext == nsnull) {
     // XXX should we move this block to |NotifyDestroyPresContext|?
     // A pres context is going away. Make sure we do cleanup.
-    if (mPresContext == gLastFocusedPresContext) {
-      gLastFocusedPresContext = nsnull;
+    if (mPresContext == gLastFocusedPresContextWeak) {
+      gLastFocusedPresContextWeak = nsnull;
       NS_IF_RELEASE(gLastFocusedDocument);
       NS_IF_RELEASE(gLastFocusedContent);
     }
@@ -4465,7 +4481,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
   // Track the old focus controller if any focus suppressions is used on it.
   nsFocusSuppressor oldFocusSuppressor;
   
-  if (nsnull != gLastFocusedPresContext) {
+  if (nsnull != gLastFocusedPresContextWeak) {
 
     nsCOMPtr<nsIContent> focusAfterBlur;
 
@@ -4584,14 +4600,14 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
         }
       }
 
-      gLastFocusedPresContext->EventStateManager()->SetFocusedContent(nsnull);
+      gLastFocusedPresContextWeak->EventStateManager()->SetFocusedContent(nsnull);
       nsCOMPtr<nsIDocument> temp = gLastFocusedDocument;
       NS_RELEASE(gLastFocusedDocument);
       gLastFocusedDocument = nsnull;
 
       nsCxPusher pusher;
       if (pusher.Push(temp)) {
-        nsEventDispatcher::Dispatch(temp, gLastFocusedPresContext, &event,
+        nsEventDispatcher::Dispatch(temp, gLastFocusedPresContextWeak, &event,
                                     nsnull, &status);
         pusher.Pop();
       }
@@ -4606,7 +4622,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
       }
 
       if (pusher.Push(window)) {
-        nsEventDispatcher::Dispatch(window, gLastFocusedPresContext, &event,
+        nsEventDispatcher::Dispatch(window, gLastFocusedPresContextWeak, &event,
                                     nsnull, &status);
 
         if (previousFocus && mCurrentFocus != previousFocus) {

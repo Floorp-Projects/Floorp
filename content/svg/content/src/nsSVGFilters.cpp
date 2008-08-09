@@ -63,6 +63,7 @@
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
 #include "nsIImage.h"
+#include "nsNetUtil.h"
 #include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -5194,10 +5195,11 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEImageElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEImageElementBase::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  // nsSVGElement
+  virtual void DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
-  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify);
+  // nsIContent
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -5217,6 +5219,8 @@ public:
 private:
   // Invalidate users of the filter containing this element.
   void Invalidate();
+
+  nsresult LoadSVGImage(PRBool aForce, PRBool aNotify);
 
 protected:
   virtual PRBool OperatesOnSRGB(nsSVGFilterInstance*,
@@ -5293,24 +5297,24 @@ nsSVGFEImageElement::Init()
 }
 
 //----------------------------------------------------------------------
-// nsIContent methods:
 
 nsresult
-nsSVGFEImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                  const nsAString* aValue, PRBool aNotify)
+nsSVGFEImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
 {
-  if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
-    nsAutoString href;
-    if (GetAttr(kNameSpaceID_XLink, nsGkAtoms::href, href)) {
-      // Note: no need to notify here; since we're just now being bound
-      // we don't have any frames or anything yet.
-      LoadImage(href, PR_FALSE, PR_FALSE);
-    }
-  }
+  // resolve href attribute
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
-  return nsSVGFEImageElementBase::AfterSetAttr(aNamespaceID, aName,
-                                               aValue, aNotify);
+  nsAutoString href(mStringAttributes[HREF].GetAnimValue());
+  href.Trim(" \t\n\r");
+
+  if (baseURI && !href.IsEmpty())
+    NS_MakeAbsoluteURI(href, href, baseURI);
+
+  return LoadImage(href, aForce, aNotify);
 }
+
+//----------------------------------------------------------------------
+// nsIContent methods:
 
 nsresult
 nsSVGFEImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -5324,12 +5328,9 @@ nsSVGFEImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Our base URI may have changed; claim that our URI changed, and the
   // nsImageLoadingContent will decide whether a new image load is warranted.
-  nsAutoString href;
-  if (GetAttr(kNameSpaceID_XLink, nsGkAtoms::href, href)) {
-    // Note: no need to notify here; since we're just now being bound
-    // we don't have any frames or anything yet.
-    LoadImage(href, PR_FALSE, PR_FALSE);
-  }
+  // Note: no need to notify here; since we're just now being bound
+  // we don't have any frames or anything yet.
+  LoadSVGImage(PR_FALSE, PR_FALSE);
 
   return rv;
 }
@@ -5431,6 +5432,16 @@ nsSVGFEImageElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               NS_ARRAY_LENGTH(sStringInfo));
+}
+
+void
+nsSVGFEImageElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  nsSVGFEImageElementBase::DidChangeString(aAttrEnum, aDoSetAttr);
+
+  if (aAttrEnum == HREF) {
+    LoadSVGImage(PR_TRUE, PR_TRUE);
+  }
 }
 
 //----------------------------------------------------------------------
@@ -5655,8 +5666,6 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance,
     return NS_OK;
   }
 
-  NS_ASSERTION(instance->GetSurfaceRect().Size() == instance->GetFilterSpaceSize(),
-               "Surface size optimization should have been disabled, see ComputeNeededSourceBBoxes");
   PRInt32 width = instance->GetSurfaceWidth();
   PRInt32 height = instance->GetSurfaceHeight();
 

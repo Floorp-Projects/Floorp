@@ -256,12 +256,8 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
                       nsIContent::ATTR_VALUE_NO_MATCH) {
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
     // Get absolute URI
-    // XXX: should really be using href->GetStringValue(), but nsSVGElement::
-    // ParseAttribute has set the nsAttrValue type to eSVGValue, so we need
-    // to use the more expensive ToString (generates, rather than fetches).
-    nsAutoString hrefStr;
-    href->ToString(hrefStr);
-    nsContentUtils::NewURIWithDocumentCharset(aURI, hrefStr,
+    nsContentUtils::NewURIWithDocumentCharset(aURI,
+                                              mStringAttributes[HREF].GetAnimValue(),
                                               GetOwnerDoc(), baseURI);
     // must promise out param is non-null if we return true
     return !!*aURI;
@@ -274,8 +270,20 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
 void
 nsSVGAElement::GetLinkTarget(nsAString& aTarget)
 {
-  GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
+  aTarget = mStringAttributes[TARGET].GetAnimValue();
   if (aTarget.IsEmpty()) {
+
+    static nsIContent::AttrValuesArray sShowVals[] =
+      { &nsGkAtoms::_new, &nsGkAtoms::replace, nsnull };
+
+    switch (FindAttrValueIn(kNameSpaceID_XLink, nsGkAtoms::show,
+                            sShowVals, eCaseMatters)) {
+    case 0:
+      aTarget.AssignLiteral("_blank");
+      return;
+    case 1:
+      return;
+    }
     nsIDocument* ownerDoc = GetOwnerDoc();
     if (ownerDoc) {
       ownerDoc->GetBaseTarget(aTarget);

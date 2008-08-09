@@ -42,7 +42,6 @@
  * for shared application glue for the Communicator suite of applications
  **/
 
-var goPrefWindow = 0;
 var gBidiUI = false;
 
 function getBrowserURL()

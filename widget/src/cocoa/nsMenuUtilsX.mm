@@ -38,6 +38,7 @@
 
 #include "nsMenuUtilsX.h"
 #include "nsMenuBarX.h"
+#include "nsMenuX.h"
 #include "nsMenuItemX.h"
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
@@ -194,4 +195,45 @@ PRBool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* inContent)
                                  nsWidgetAtoms::_true, eCaseMatters) ||
           inContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::collapsed,
                                  nsWidgetAtoms::_true, eCaseMatters));
+}
+
+
+// Determines how many items are visible among the siblings in a menu that are
+// before the given child. Note that this will not count the application menu.
+nsresult nsMenuUtilsX::CountVisibleBefore(nsMenuObjectX* aParentMenu, nsMenuObjectX* aChild, PRUint32* outVisibleBefore)
+{
+  NS_ASSERTION(outVisibleBefore, "bad index param in nsMenuX::CountVisibleBefore");
+
+  nsMenuObjectTypeX parentType = aParentMenu->MenuObjectType();
+  if (parentType == eMenuBarObjectType) {
+    *outVisibleBefore = 0;
+    nsMenuBarX* menubarParent = static_cast<nsMenuBarX*>(aParentMenu);
+    PRUint32 numMenus = menubarParent->GetMenuCount();
+    for (PRUint32 i = 0; i < numMenus; i++) {
+      nsMenuX* currMenu = menubarParent->GetMenuAt(i);
+      if (currMenu == aChild)
+        return NS_OK; // we found ourselves, break out
+      if (currMenu) {
+        nsIContent* menuContent = currMenu->Content();
+        if (menuContent->GetChildCount() > 0 &&
+            !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
+          ++(*outVisibleBefore);
+        }
+      }
+    }
+  }
+  else if (parentType == eSubmenuObjectType) {
+    *outVisibleBefore = 0;
+    nsMenuX* menuParent = static_cast<nsMenuX*>(aParentMenu);
+    PRUint32 numItems = menuParent->GetItemCount();
+    for (PRUint32 i = 0; i < numItems; i++) {
+      // Using GetItemAt instead of GetVisibleItemAt to avoid O(N^2)
+      nsMenuObjectX* currItem = menuParent->GetItemAt(i);
+      if (currItem == aChild)
+        return NS_OK; // we found ourselves, break out
+      if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(currItem->Content()))
+        ++(*outVisibleBefore);
+    }
+  }
+  return NS_ERROR_FAILURE;
 }

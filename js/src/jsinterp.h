@@ -93,13 +93,13 @@ struct JSStackFrame {
 #endif
 };
 
-static inline jsval *
+static JS_INLINE jsval *
 StackBase(JSStackFrame *fp)
 {
     return fp->slots + fp->script->nfixed;
 }
 
-static inline uintN
+static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
 {
     uintN n;
@@ -538,9 +538,6 @@ js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
 
 extern JSBool
 js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
-
-extern JSBool
-js_ImportProperty(JSContext *cx, JSObject *obj, jsid id);
 
 extern JSBool
 js_OnUnknownMethod(JSContext *cx, jsval *vp);

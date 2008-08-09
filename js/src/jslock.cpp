@@ -71,7 +71,7 @@ _InterlockedCompareExchange(long *volatile dest, long exchange, long comp);
 JS_END_EXTERN_C
 #pragma intrinsic(_InterlockedCompareExchange)
 
-static JS_INLINE int
+static JS_ALWAYS_INLINE int
 NativeCompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
 {
     _InterlockedCompareExchange(w, nv, ov);
@@ -80,7 +80,7 @@ NativeCompareAndSwapHelper(jsword *w, jsword ov, jsword nv)
     }
 }
 
-static JS_INLINE int
+static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     return (NativeCompareAndSwapHelper(w, ov, nv) & 1);
@@ -90,7 +90,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #include <libkern/OSAtomic.h>
 
-static JS_INLINE int
+static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     /* Details on these functions available in the manpage for atomic */
@@ -104,7 +104,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 #elif defined(__GNUC__) && defined(__i386__)
 
 /* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
-static JS_INLINE int
+static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     unsigned int res;
@@ -121,7 +121,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 }
 
 #elif defined(__GNUC__) && defined(__x86_64__)
-static JS_INLINE int
+static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     unsigned int res;
@@ -139,7 +139,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #elif defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)
 
-static JS_INLINE int
+static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
 #if defined(__GNUC__)
@@ -167,7 +167,7 @@ mov 0,%0\n\
 
 #include <sys/atomic_op.h>
 
-static JS_INLINE int
+static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     return !_check_lock((atomic_p)w, ov, nv);
@@ -184,7 +184,7 @@ typedef int (__kernel_cmpxchg_t)(int oldval, int newval, volatile int *ptr);
 
 JS_STATIC_ASSERT(sizeof(jsword) == sizeof(int));
 
-static JS_INLINE int
+static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     volatile int *vp = (volatile int *) w;
@@ -405,18 +405,20 @@ js_FinishSharingTitle(JSContext *cx, JSTitle *title)
     scope = (JSScope *)map;
 
     obj = scope->object;
-    nslots = scope->map.freeslot;
-    for (i = 0; i != nslots; ++i) {
-        v = STOBJ_GET_SLOT(obj, i);
-        if (JSVAL_IS_STRING(v) &&
-            !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
-            /*
-             * FIXME bug 363059: The following error recovery changes runtime
-             * execution semantics, arbitrarily and silently ignoring errors
-             * except out-of-memory, which should have been reported through
-             * JS_ReportOutOfMemory at this point.
-             */
-            STOBJ_SET_SLOT(obj, i, JSVAL_VOID);
+    if (obj) {
+        nslots = scope->map.freeslot;
+        for (i = 0; i != nslots; ++i) {
+            v = STOBJ_GET_SLOT(obj, i);
+            if (JSVAL_IS_STRING(v) &&
+                !js_MakeStringImmutable(cx, JSVAL_TO_STRING(v))) {
+                /*
+                 * FIXME bug 363059: The following error recovery changes
+                 * runtime execution semantics, arbitrarily and silently
+                 * ignoring errors except out-of-memory, which should have been
+                 * reported through JS_ReportOutOfMemory at this point.
+                 */
+                STOBJ_SET_SLOT(obj, i, JSVAL_VOID);
+            }
         }
     }
 
@@ -916,14 +918,14 @@ js_CleanupLocks()
 
 #ifdef NSPR_LOCK
 
-static JS_INLINE void
+static JS_ALWAYS_INLINE void
 ThinLock(JSThinLock *tl, jsword me)
 {
     JS_ACQUIRE_LOCK((JSLock *) tl->fat);
     tl->owner = me;
 }
 
-static JS_INLINE void
+static JS_ALWAYS_INLINE void
 ThinUnlock(JSThinLock *tl, jsword /*me*/)
 {
     tl->owner = 0;
@@ -1047,7 +1049,7 @@ js_Dequeue(JSThinLock *tl)
     js_ResumeThread(tl);
 }
 
-static JS_INLINE void
+static JS_ALWAYS_INLINE void
 ThinLock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));
@@ -1061,7 +1063,7 @@ ThinLock(JSThinLock *tl, jsword me)
 #endif
 }
 
-static JS_INLINE void
+static JS_ALWAYS_INLINE void
 ThinUnlock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(CURRENT_THREAD_IS_ME(me));

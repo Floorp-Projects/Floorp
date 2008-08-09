@@ -116,6 +116,18 @@ ifdef MOZ_JSDEBUGGER
 tier_gecko_dirs += js/jsd
 endif
 
+ifdef MOZ_OGG
+tier_gecko_dirs += \
+		media/libfishsound \
+		media/libogg \
+		media/liboggplay \
+		media/liboggplay_audio \
+		media/liboggz \
+		media/libtheora \
+		media/libvorbis \
+		$(NULL)
+endif
+
 tier_gecko_dirs	+= \
 		uriloader \
 		modules/libimg \

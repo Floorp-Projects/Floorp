@@ -957,6 +957,39 @@
         ]]>
         </body>
       </method>
+
+      <method name="swapDocShells">
+        <parameter name="aOtherBrowser"/>
+        <body>
+        <![CDATA[
+          // We need to swap fields that are tied to our docshell
+          var fieldsToSwap = [ "_docShell", "_webBrowserFind" ];
+
+          var ourTabBrowser = this.getTabBrowser();
+
+          // _fastFind is tied to the docshell if we don't have a tabbrowser
+          if ((ourTabBrowser != null) !=
+              (aOtherBrowser.getTabBrowser() != null))
+            throw "Unable to perform swap on <browsers> if one is in a <tabbrowser> and one is not";
+
+          if (!ourTabBrowser)
+            fieldsToSwap.push("_fastFind");
+
+          var ourFieldValues = {};
+          var otherFieldValues = {};
+          for each (var field in fieldsToSwap) {
+            ourFieldValues[field] = this[field];
+            otherFieldValues[field] = aOtherBrowser[field];
+          }
+          this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
+              .swapFrameLoaders(aOtherBrowser);
+          for each (var field in fieldsToSwap) {
+            this[field] = otherFieldValues[field];
+            aOtherBrowser[field] = ourFieldValues[field];
+          }
+        ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>

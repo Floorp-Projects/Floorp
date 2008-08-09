@@ -20,3 +20,6 @@
 == content-inserted-007.xhtml content-inserted-002.ref.xhtml
 == content-inserted-008.xhtml content-inserted-001.ref.xhtml
 == content-inserted-009.xhtml content-inserted-002.ref.xhtml
+== abspos-breaking-000.xhtml abspos-breaking-000.ref.xhtml
+== abspos-breaking-001.xhtml abspos-breaking-000.ref.xhtml
+== abspos-breaking-002.xhtml abspos-breaking-000.ref.xhtml

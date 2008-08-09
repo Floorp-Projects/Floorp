@@ -702,6 +702,10 @@ textbox[type="timed"] {
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#timed-textbox");
 }
 
+textbox[type="search"] {
+  -moz-binding: url("chrome://global/content/bindings/textbox.xml#search-textbox");
+}
+
 textbox[type="number"] {
   -moz-binding: url("chrome://global/content/bindings/numberbox.xml#numberbox");
 }

@@ -112,12 +112,23 @@ nsIAccessibilityService *nsAccessNode::GetAccService()
  * Class nsAccessNode
  */
  
-//-----------------------------------------------------
-// construction 
-//-----------------------------------------------------
-NS_IMPL_QUERY_INTERFACE2(nsAccessNode, nsIAccessNode, nsPIAccessNode)
-NS_IMPL_ADDREF(nsAccessNode)
-NS_IMPL_RELEASE_WITH_DESTROY(nsAccessNode, LastRelease())
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessible. nsISupports
+
+NS_IMPL_CYCLE_COLLECTION_0(nsAccessNode)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsAccessNode)
+  NS_INTERFACE_MAP_ENTRY(nsIAccessNode)
+  NS_INTERFACE_MAP_ENTRY(nsPIAccessNode)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessNode)
+NS_INTERFACE_MAP_END
+ 
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsAccessNode, nsIAccessNode)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(nsAccessNode, nsIAccessNode,
+                                      LastRelease())
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessible. Constructor
 
 nsAccessNode::nsAccessNode(nsIDOMNode *aNode, nsIWeakReference* aShell): 
   mDOMNode(aNode), mWeakShell(aShell)
@@ -191,8 +202,7 @@ NS_IMETHODIMP nsAccessNode::Init()
   // so that nsDocAccessible::RefreshNodes() can find the anonymous subtree to release when
   // the root node goes away
   nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
-  if (content && (content->IsNativeAnonymous() ||
-                  content->GetBindingParent())) {
+  if (content && content->IsInAnonymousSubtree()) {
     // Specific examples of where this is used: <input type="file"> and <xul:findbar>
     nsCOMPtr<nsIAccessible> parentAccessible;
     docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE, getter_AddRefs(parentAccessible));

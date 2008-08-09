@@ -43,7 +43,7 @@
  *                    future releases.
  */
 
-[scriptable, uuid(4d6449fe-d642-45e5-9773-41af5793c99a)]
+[scriptable, uuid(189c9392-157c-445f-84db-900eb46d4839)]
 interface nsICrashReporter : nsISupports
 {
   /**
@@ -59,6 +59,19 @@ interface nsICrashReporter : nsISupports
    *                             '\n'.  Invalid character for data is '\0'.
    */
   void annotateCrashReport(in ACString key, in ACString data);
+
+  /**
+   * Append some data to the "Notes" field, to be submitted with a crash report.
+   * Unlike annotateCrashReport, this method will append to existing data.
+   *
+   * @param data
+   *        Data to be added.
+   *
+   * @throw NS_ERROR_NOT_INITIALIZED if crash reporting not initialized
+   * @throw NS_ERROR_INVALID_ARG if or data contains invalid characters.
+   *                             The only invalid character is '\0'.
+   */
+  void appendAppNotesToCrashReport(in ACString data);
   
   /**
     * Write a minidump immediately, with the user-supplied exception

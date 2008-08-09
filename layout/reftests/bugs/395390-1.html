@@ -1,0 +1,14 @@
+<html class="reftest-wait">
+<head>
+<script type='text/javascript'>
+function changeAltText(img)
+{
+        img.alt = img.alt + ". I'M INVISIBLE!";
+        document.documentElement.className = "";
+}
+</script>
+</head>
+<body onload="changeAltText(document.images[0])">
+<img src='data:text/plain,' alt="initial">
+</body>
+</html>
