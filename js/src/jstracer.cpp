@@ -965,19 +965,22 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
     JS_ASSERT(strlen(prefix) < 10);
     void* mark = NULL;
     jsuword* localNames = NULL;
+    const char* funName = NULL;
     if (*prefix == 'a' || *prefix == 'v') {
         mark = JS_ARENA_MARK(&cx->tempPool);
         localNames = js_GetLocalNameArray(cx, fp->fun, &cx->tempPool);
+        funName = fp->fun->atom ? js_AtomToPrintableString(cx, fp->fun->atom) : "<anonymous>";
     }
-
     if (!strcmp(prefix, "argv")) {
         JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index]);
-        JS_snprintf(name, sizeof name, "$%s.%s", js_AtomToPrintableString(cx, fp->fun->atom),
-                    js_AtomToPrintableString(cx, atom));
+        if (atom) {
+            JS_snprintf(name, sizeof name, "$%s.%s", funName, js_AtomToPrintableString(cx, atom));
+        } else {
+            JS_snprintf(name, sizeof name, "$%s.<arg%d>", funName, index);
+        }
     } else if (!strcmp(prefix, "vars")) {
         JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[fp->fun->nargs + index]);
-        JS_snprintf(name, sizeof name, "$%s.%s", js_AtomToPrintableString(cx, fp->fun->atom),
-                    js_AtomToPrintableString(cx, atom));
+        JS_snprintf(name, sizeof name, "$%s.%s", funName, js_AtomToPrintableString(cx, atom));
     } else {
         JS_snprintf(name, sizeof name, "$%s%d", prefix, index);
     }
