@@ -44,13 +44,25 @@ relativesrcdir	= dom/tests/mochitest/ajax/jquery/test/data
 include $(DEPTH)/config/autoconf.mk
 
 DIRS	= \
+	offset \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
+	cow.jpg \
+	dashboard.xml \
+	iframe.html \
+	json_assigned_obj.js \
+	json_obj.js \
+	name.html \
+	test.html \
+	test.js \
+	test2.html \
+	test3.html \
 	testrunner.js \
 	testsuite.css \
+	with_fries.xml \
 	$(NULL)
 
 libs::	$(_TEST_FILES)

@@ -87,6 +87,9 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const;
+
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
   virtual already_AddRefed<nsIURI> GetBaseURI() const;

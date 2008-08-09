@@ -4,6 +4,8 @@
 [
   <!ENTITY % mozillaDTD SYSTEM "chrome://global/locale/mozilla.dtd" >
   %mozillaDTD;
+  <!ENTITY % directionDTD SYSTEM "chrome://global/locale/global.dtd" >
+  %directionDTD;
 ]>
 
 <!-- ***** BEGIN LICENSE BLOCK *****
@@ -49,7 +51,7 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>The Book of Mozilla, 11:9</title>
+<title>&mozilla.title;</title>
 <style type="text/css">
 html {
   background: maroon;
@@ -82,7 +84,7 @@ a {
 }
 </style>
 </head>
-<body>
+<body dir="&locale.dir;">
 
 <p id="moztext">
 &mozilla.quote;

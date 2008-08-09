@@ -116,10 +116,10 @@ struct JSScript {
 #define JSSF_NO_SCRIPT_RVAL     0x01    /* no need for result value of last
                                            expression statement */
 
-static inline uintN
+static JS_INLINE uintN
 StackDepth(JSScript *script)
 {
-    return script->nslots- script->nfixed;
+    return script->nslots - script->nfixed;
 }
 
 /* No need to store script->notes now that it is allocated right after code. */

@@ -338,26 +338,6 @@ vbox[typeName="status"][type="header-recommended"] {
   background: -moz-dialog;
 }
 
-.searchbox-search, .searchbox-cancel {
-  -moz-appearance: none;
-  cursor: default;
-  background-color: transparent;
-  margin: 0;
-  border: 0;
-  padding: 0;
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-}
-
-.searchbox-search {
-  list-style-image: url("chrome://mozapps/skin/extensions/searchIcons.png");
-}
-
-.searchbox-cancel {
-  list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
-}
-
 #progressBox {
   padding: 5px 5px 5px 5px;
 }

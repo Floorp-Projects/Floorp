@@ -141,13 +141,6 @@ nsSVGGFrame::GetCanvasTM()
 }
 
 NS_IMETHODIMP
-nsSVGGFrame::DidSetStyleContext()
-{
-  nsSVGUtils::StyleEffects(this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSVGGFrame::AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType)

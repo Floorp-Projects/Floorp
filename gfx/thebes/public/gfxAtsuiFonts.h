@@ -85,16 +85,13 @@ public:
     PRBool TestCharacterMap(PRUint32 aCh);
 
     MacOSFontEntry* GetFontEntry();
-    PRBool Valid() { return mValid; }
+    PRBool Valid() { return mIsValid; }
 
 protected:
     const gfxFontStyle *mFontStyle;
 
     ATSUStyle mATSUStyle;
 
-    nsRefPtr<MacOSFontEntry> mFontEntry;
-
-    PRBool mValid;
     PRBool mHasMirroring;
     PRBool mHasMirroringLookedUp;
 
@@ -151,9 +148,9 @@ public:
     }
 
    // search through pref fonts for a character, return nsnull if no matching pref font
-   already_AddRefed<gfxAtsuiFont> WhichPrefFontSupportsChar(PRUint32 aCh);
+   already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh);
    
-   already_AddRefed<gfxAtsuiFont> FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh, PRUint32 aNextCh, gfxAtsuiFont* aPrevMatchedFont);
+   already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh);
 
 protected:
     static PRBool FindATSUFont(const nsAString& aName,

@@ -44,6 +44,7 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsAnnotationService.h"
+#include "nsPlacesTables.h"
 
 #include "nsIArray.h"
 #include "nsArrayEnumerator.h"
@@ -85,6 +86,7 @@
 #include "mozIStorageFunction.h"
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
+#include "nsPlacesTriggers.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIIdleService.h"
 #include "nsILivemarkService.h"
@@ -632,7 +634,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
 //
 
 
-#define PLACES_SCHEMA_VERSION 6
+#define PLACES_SCHEMA_VERSION 7
 
 nsresult
 nsNavHistory::InitDB(PRInt16 *aMadeChanges)
@@ -718,7 +720,13 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // XXX Upgrades >V6 must add migration code here.
+      // Migrate historyvisits and bookmarks up to V7
+      if (DBSchemaVersion < 7) {
+        rv = MigrateV7Up(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // XXX Upgrades >V7 must add migration code here.
 
     } else {
       // Downgrading
@@ -785,16 +793,7 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   // moz_places
   if (!tableExists) {
     *aMadeChanges = DB_MIGRATION_CREATED;
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_places ("
-        "id INTEGER PRIMARY KEY, "
-        "url LONGVARCHAR, "
-        "title LONGVARCHAR, "
-        "rev_host LONGVARCHAR, "
-        "visit_count INTEGER DEFAULT 0, "
-        "hidden INTEGER DEFAULT 0 NOT NULL, "
-        "typed INTEGER DEFAULT 0 NOT NULL, "
-        "favicon_id INTEGER, "
-        "frecency INTEGER DEFAULT -1 NOT NULL)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -823,13 +822,7 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_historyvisits"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_historyvisits ("
-        "id INTEGER PRIMARY KEY, "
-        "from_visit INTEGER, "
-        "place_id INTEGER, "
-        "visit_date INTEGER, "
-        "visit_type INTEGER, "
-        "session INTEGER)"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -846,17 +839,19 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         "CREATE INDEX moz_historyvisits_dateindex ON moz_historyvisits (visit_date)"));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Create our triggers for this table
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_VISIT_COUNT_INSERT_TRIGGER);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_VISIT_COUNT_DELETE_TRIGGER);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // moz_inputhistory
   rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_inputhistory"), &tableExists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!tableExists) {
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_inputhistory ("
-        "place_id INTEGER NOT NULL, "
-        "input LONGVARCHAR NOT NULL, "
-        "use_count INTEGER, "
-        "PRIMARY KEY (place_id, input))"));
+    rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_INPUTHISTORY);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -869,9 +864,6 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = CreateTriggers();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // --- PUT SCHEMA-MODIFYING THINGS (like create table) ABOVE THIS LINE ---
 
   // DO NOT PUT ANY SCHEMA-MODIFYING THINGS HERE
@@ -880,117 +872,6 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = InitStatements();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-// nsNavHistory::CreateTriggers
-//
-//  This creates our triggers
-//  When creating a trigger we must ensure that related records are correct
-//  and be sure that there are no other queries that could change the 
-//  triggered values, especially for counting triggers.
-//
-// NOTE: never create loops between triggers!
-
-nsresult
-nsNavHistory::CreateTriggers()
-{
-  // we are creating 2 triggers on moz_historyvisits to maintain
-  // moz_places.visit_count in sync with moz_historyvisits, for this
-  // to work we must ensure that all visit_count values are correct
-  // See bug 416313 for details
-  nsCOMPtr<mozIStorageStatement> detectVisitCountTrigger;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT name FROM sqlite_master WHERE type = 'trigger' AND "
-      "name = 'moz_historyvisits_afterinsert_v1_trigger'"),
-    getter_AddRefs(detectVisitCountTrigger));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool hasTrigger;
-  rv = detectVisitCountTrigger->ExecuteStep(&hasTrigger);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = detectVisitCountTrigger->Reset();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!hasTrigger) {
-    mozStorageTransaction createTriggersTransaction(mDBConn, PR_FALSE);
-
-    // do a one-time reset of all the visit_count values
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "UPDATE moz_places SET visit_count = "
-      "(SELECT count(*) FROM moz_historyvisits "
-      "WHERE place_id = moz_places.id AND visit_type NOT IN (0,4,7))"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_historyvisits_afterinsert_v1_trigger
-    // increment visit_count by 1 for each inserted visit
-    // excluding invalid, embed, download visits
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TRIGGER IF NOT EXISTS moz_historyvisits_afterinsert_v1_trigger "
-      "AFTER INSERT ON moz_historyvisits FOR EACH ROW "
-      "WHEN NEW.visit_type NOT IN (0,4,7) "
-      "BEGIN "
-        "UPDATE moz_places SET visit_count = visit_count + 1 "
-        "WHERE moz_places.id = NEW.place_id; "
-      "END"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_historyvisits_afterdelete_v1_trigger
-    // decrement visit_count by 1 for each deleted visit
-    // ensure that we can't become negative
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TRIGGER IF NOT EXISTS moz_historyvisits_afterdelete_v1_trigger "
-      "AFTER DELETE ON moz_historyvisits FOR EACH ROW "
-      "WHEN OLD.visit_type NOT IN (0,4,7) "
-      "BEGIN "
-        "UPDATE moz_places SET visit_count = visit_count - 1 "
-        "WHERE moz_places.id = OLD.place_id AND visit_count > 0; "
-      "END"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = createTriggersTransaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // we are creating 1 trigger on moz_bookmarks to remove unused keywords
-  nsCOMPtr<mozIStorageStatement> detectRemoveKeywordsTrigger;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT name FROM sqlite_master WHERE type = 'trigger' AND "
-      "name = 'moz_bookmarks_beforedelete_v1_trigger'"),
-    getter_AddRefs(detectRemoveKeywordsTrigger));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  hasTrigger = PR_FALSE;
-  rv = detectRemoveKeywordsTrigger->ExecuteStep(&hasTrigger);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = detectRemoveKeywordsTrigger->Reset();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!hasTrigger) {
-    // Remove dangling keywords.
-    // We must remove old keywords that have not been deleted with bookmarks.
-    // See bug 421180 for details.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_keywords WHERE id IN ("
-          "SELECT k.id FROM moz_keywords k "
-          "LEFT OUTER JOIN moz_bookmarks b ON b.keyword_id = k.id "
-          "WHERE b.id IS NULL)"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_bookmarks_beforedelete_v1_trigger
-    // Remove keywords if there are no more bookmarks using them.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "CREATE TRIGGER IF NOT EXISTS moz_bookmarks_beforedelete_v1_trigger "
-      "BEFORE DELETE ON moz_bookmarks FOR EACH ROW "
-      "WHEN OLD.keyword_id NOT NULL "
-      "BEGIN "
-        "DELETE FROM moz_keywords WHERE id = OLD.keyword_id AND "
-        " NOT EXISTS (SELECT id FROM moz_bookmarks "
-          "WHERE keyword_id = OLD.keyword_id AND id <> OLD.id LIMIT 1); "
-      "END"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   return NS_OK;
 }
@@ -1376,6 +1257,8 @@ nsNavHistory::MigrateV3Up(mozIStorageConnection* aDBConn)
 nsresult
 nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn) 
 {
+  mozStorageTransaction transaction(aDBConn, PR_FALSE);
+
   // if dateAdded & lastModified cols are already there, then a partial update occurred,
   // and so we should not attempt to add these cols.
   nsCOMPtr<mozIStorageStatement> statement;
@@ -1418,7 +1301,89 @@ nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn)
     NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_anno_attributes_nameindex"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+  return transaction.Commit();
+}
+
+// nsNavHistory::MigrateV7Up
+nsresult
+nsNavHistory::MigrateV7Up(mozIStorageConnection* aDBConn) 
+{
+  mozStorageTransaction transaction(aDBConn, PR_FALSE);
+
+  // Create a statement to test for trigger creation
+  nsCOMPtr<mozIStorageStatement> triggerDetection;
+  nsresult rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT name "
+    "FROM sqlite_master "
+    "WHERE type = 'trigger' "
+    "AND name = ?"
+  ), getter_AddRefs(triggerDetection));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Check for existence
+  PRBool triggerExists;
+  rv = triggerDetection->BindUTF8StringParameter(
+    0, NS_LITERAL_CSTRING("moz_historyvisits_afterinsert_v1_trigger")
+  );
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = triggerDetection->ExecuteStep(&triggerExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = triggerDetection->Reset();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We need to create two triggers on moz_historyvists to maintain the
+  // accuracy of moz_places.visit_count.  For this to work, we must ensure that
+  // all moz_places.visit_count values are correct.
+  // See bug 416313 for details.
+  if (!triggerExists) {
+    // First, we do a one-time reset of all the moz_places.visit_count values.
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "UPDATE moz_places SET visit_count = "
+        "(SELECT count(*) FROM moz_historyvisits "
+         "WHERE place_id = moz_places.id "
+         "AND visit_type NOT IN (0, 4, 7))") /* invalid, EMBED, DOWNLOAD */
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Now we create our two triggers
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_VISIT_COUNT_INSERT_TRIGGER);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_VISIT_COUNT_DELETE_TRIGGER);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Check for existence
+  rv = triggerDetection->BindUTF8StringParameter(
+    0, NS_LITERAL_CSTRING("moz_bookmarks_beforedelete_v1_trigger")
+  );
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = triggerDetection->ExecuteStep(&triggerExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = triggerDetection->Reset();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We need to create one trigger on moz_bookmarks to remove unused keywords.
+  // See bug 421180 for details.
+  if (!triggerExists) {
+    // First, remove any existing dangling keywords
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_keywords "
+      "WHERE id IN ("
+        "SELECT k.id "
+        "FROM moz_keywords k "
+        "LEFT OUTER JOIN moz_bookmarks b "
+        "ON b.keyword_id = k.id "
+        "WHERE b.id IS NULL"
+      ")")
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Now we create our trigger
+    rv = aDBConn->ExecuteSimpleSQL(CREATE_KEYWORD_VALIDITY_TRIGGER);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return transaction.Commit();
 }
 
 nsresult

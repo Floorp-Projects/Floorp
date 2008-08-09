@@ -286,7 +286,7 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* Swap script for obj's old script, if any. */
     v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
-    oldscript = !JSVAL_IS_VOID(v) ? JSVAL_TO_PRIVATE(v) : NULL;
+    oldscript = (JSScript*) (!JSVAL_IS_VOID(v) ? JSVAL_TO_PRIVATE(v) : NULL);
     LOCKED_OBJ_SET_SLOT(obj, JSSLOT_PRIVATE, PRIVATE_TO_JSVAL(script));
     JS_UNLOCK_OBJ(cx, obj);
 
@@ -895,7 +895,7 @@ Script(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     /* If not constructing, replace obj with a new Script object. */
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
-        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
         if (!obj)
             return JS_FALSE;
 

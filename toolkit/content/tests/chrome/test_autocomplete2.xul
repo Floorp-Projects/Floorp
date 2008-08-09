@@ -80,10 +80,37 @@ componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete
                                  autoCompleteSimpleName, autoCompleteSimple);
 
 
-// The main test code.
+// Test Bug 441530 - correctly setting "nomatch"
+// Test Bug 441526 - correctly setting style with "highlightnonmatches"
 
 SimpleTest.waitForExplicitFinish();
-setTimeout(check, 0);
+setTimeout(startTest, 0);
+
+function startTest() {
+  var autocomplete = $("autocomplete");
+
+  // Ensure highlightNonMatches can be set correctly.
+
+  // This should not be set by default.
+  is(autocomplete.hasAttribute("highlightnonmatches"), false,
+     "highlight nonmatches not set by default");
+
+  autocomplete.highlightNonMatches = "true";
+
+  is(autocomplete.getAttribute("highlightnonmatches"), "true",
+     "highlight non matches attribute set correctly");
+  is(autocomplete.highlightNonMatches, true,
+     "highlight non matches getter returned correctly");
+
+  autocomplete.highlightNonMatches = "false";
+
+  is(autocomplete.getAttribute("highlightnonmatches"), "false",
+     "highlight non matches attribute set to false correctly");
+  is(autocomplete.highlightNonMatches, false,
+     "highlight non matches getter returned false correctly");
+
+  check();
+}
 
 function check() {
   var autocomplete = $("autocomplete");
@@ -97,17 +124,44 @@ function check() {
 
 function checkResult() {
   var autocomplete = $("autocomplete");
+  var style = window.getComputedStyle(autocomplete, "");
 
   if (returnResult) {
     // Result was returned, so there should not be a nomatch attribute
     is(autocomplete.hasAttribute("nomatch"), false,
        "nomatch attribute shouldn't be present here");
+
+    // Ensure that the style is set correctly whichever way highlightNonMatches
+    // is set.
+    autocomplete.highlightNonMatches = "true";
+
+    is(style.getPropertyCSSValue("color").cssText, "rgb(0, 0, 0)",
+       "not nomatch and highlightNonMatches - should be black");
+
+    autocomplete.highlightNonMatches = "false";
+
+    is(style.getPropertyCSSValue("color").cssText, "rgb(0, 0, 0)",
+       "not nomatch and not highlightNonMatches - should be black");
+
     setTimeout(check, 0);
   }
   else {
     // No result was returned, so there should be nomatch attribute
     is(autocomplete.getAttribute("nomatch"), "true",
        "nomatch attribute not correctly set when expected");
+
+    // Ensure that the style is set correctly whichever way highlightNonMatches
+    // is set.
+    autocomplete.highlightNonMatches = "true";
+
+    is(style.getPropertyCSSValue("color").cssText, "rgb(255, 0, 0)",
+       "nomatch and highlightNonMatches - should be red");
+
+    autocomplete.highlightNonMatches = "false";
+
+    is(style.getPropertyCSSValue("color").cssText, "rgb(0, 0, 0)",
+       "nomatch and not highlightNonMatches - should be black");
+
     setTimeout(function() {
       // Unregister the factory so that we don't get in the way of other tests
       componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);

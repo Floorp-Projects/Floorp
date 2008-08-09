@@ -255,14 +255,6 @@ nsMenuObjectX* nsMenuX::GetItemAt(PRUint32 aPos)
 }
 
 
-// Checks submenus and menu items. Not suitable for submenus that are children
-// of a menu bar, which has slightly different rules for visiblity.
-static PRBool MenuNodeIsVisible(nsMenuObjectX* item)
-{
-  return (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(item->Content()));
-}
-
-
 // Only includes visible items
 nsresult nsMenuX::GetVisibleItemCount(PRUint32 &aCount)
 {
@@ -289,7 +281,7 @@ nsMenuObjectX* nsMenuX::GetVisibleItemAt(PRUint32 aPos)
   PRUint32 visibleNodeIndex = 0;
   for (PRUint32 i = 0; i < count; i++) {
     item = mMenuObjectsArray[i];
-    if (MenuNodeIsVisible(item)) {
+    if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(item->Content())) {
       if (aPos == visibleNodeIndex) {
         // we found the visible node we're looking for, return it
         return item;
@@ -750,54 +742,6 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 }
 
 
-// Determines how many menus are visible among the siblings that are before me.
-// It doesn't matter if I am visible. Note that this will always count the
-// Application menu, since we always put it in there.
-nsresult nsMenuX::CountVisibleBefore(PRUint32* outVisibleBefore)
-{
-  NS_ASSERTION(outVisibleBefore, "bad index param in nsMenuX::CountVisibleBefore");
-  
-  nsMenuObjectTypeX parentType = mParent->MenuObjectType();
-  if (parentType == eMenuBarObjectType) {
-    nsMenuBarX* menubarParent = static_cast<nsMenuBarX*>(mParent);
-    PRUint32 numMenus = menubarParent->GetMenuCount();
-
-    // Find this menu among the children of my parent menubar
-    *outVisibleBefore = 1; // start at 1, the Application menu will always be there
-    for (PRUint32 i = 0; i < numMenus; i++) {
-      nsMenuX* currMenu = menubarParent->GetMenuAt(i);
-      if (currMenu == this) {
-        // we found ourselves, break out
-        return NS_OK;
-      }
-
-      if (currMenu) {
-        nsIContent* menuContent = currMenu->Content();
-        if (menuContent->GetChildCount() > 0 &&
-            !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
-          ++(*outVisibleBefore);
-        }
-      }
-    }
-  }
-  else if (parentType == eSubmenuObjectType) {
-    // Find this menu among the children of my parent menu
-    nsMenuX* menuParent = static_cast<nsMenuX*>(mParent);
-    PRUint32 numItems = menuParent->GetItemCount();
-    for (PRUint32 i = 0; i < numItems; i++) {
-      // Using GetItemAt instead of GetVisibleItemAt to avoid O(N^2)
-      nsMenuObjectX* currItem = menuParent->GetItemAt(i);
-      if (currItem == this)
-        return NS_OK; // we found ourselves, break out
-      // If the node is visible increment the outparam.
-      if (MenuNodeIsVisible(currItem))
-        ++(*outVisibleBefore);
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
-
 NSMenuItem* nsMenuX::NativeMenuItem()
 {
   return mNativeMenuItem;
@@ -865,8 +809,15 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
     }
     else {
       PRUint32 insertAfter = 0;
-      if (NS_SUCCEEDED(CountVisibleBefore(&insertAfter))) {
+      if (NS_SUCCEEDED(nsMenuUtilsX::CountVisibleBefore(mParent, this, &insertAfter))) {
         if (parentType == eMenuBarObjectType || parentType == eSubmenuObjectType) {
+          if (parentType == eMenuBarObjectType) {
+            // Before inserting we need to figure out if we should take the native
+            // application menu into account.
+            nsMenuBarX* mb = static_cast<nsMenuBarX*>(mParent);
+            if (mb->MenuContainsAppMenu())
+              insertAfter++;
+          }
           NSMenu* parentMenu = (NSMenu*)mParent->NativeData();
           [parentMenu insertItem:mNativeMenuItem atIndex:insertAfter];
           [mNativeMenuItem setSubmenu:mNativeMenu];

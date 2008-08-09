@@ -610,7 +610,9 @@ GetIndexFromSelectionType(SelectionType aType)
     case nsISelectionController::SELECTION_IME_CONVERTEDTEXT: return 4; break;
     case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT: return 5; break;
     case nsISelectionController::SELECTION_ACCESSIBILITY: return 6; break;
-    default:return -1;break;
+    case nsISelectionController::SELECTION_FIND: return 7; break;
+    default:
+      return -1; break;
     }
     /* NOTREACHED */
     return 0;
@@ -621,15 +623,16 @@ GetSelectionTypeFromIndex(PRInt8 aIndex)
 {
   switch (aIndex)
   {
-    case 0: return nsISelectionController::SELECTION_NORMAL;break;
-    case 1: return nsISelectionController::SELECTION_SPELLCHECK;break;
-    case 2: return nsISelectionController::SELECTION_IME_RAWINPUT;break;
-    case 3: return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT;break;
-    case 4: return nsISelectionController::SELECTION_IME_CONVERTEDTEXT;break;
-    case 5: return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;break;
-    case 6: return nsISelectionController::SELECTION_ACCESSIBILITY;break;
+    case 0: return nsISelectionController::SELECTION_NORMAL; break;
+    case 1: return nsISelectionController::SELECTION_SPELLCHECK; break;
+    case 2: return nsISelectionController::SELECTION_IME_RAWINPUT; break;
+    case 3: return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT; break;
+    case 4: return nsISelectionController::SELECTION_IME_CONVERTEDTEXT; break;
+    case 5: return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT; break;
+    case 6: return nsISelectionController::SELECTION_ACCESSIBILITY; break;
+    case 7: return nsISelectionController::SELECTION_FIND; break;
     default:
-      return nsISelectionController::SELECTION_NORMAL;break;
+      return nsISelectionController::SELECTION_NORMAL; break;
   }
   /* NOTREACHED */
   return 0;

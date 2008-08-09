@@ -188,11 +188,14 @@ nsLinkableAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 NS_IMETHODIMP
 nsLinkableAccessible::DoAction(PRUint8 aIndex)
 {
+  if (aIndex != eAction_Jump)
+    return NS_ERROR_INVALID_ARG;
+  
   nsCOMPtr<nsIAccessible> actionAcc = GetActionAccessible();
   if (actionAcc)
     return actionAcc->DoAction(aIndex);
-
-  return NS_ERROR_INVALID_ARG;
+  
+  return nsHyperTextAccessibleWrap::DoAction(aIndex);
 }
 
 NS_IMETHODIMP

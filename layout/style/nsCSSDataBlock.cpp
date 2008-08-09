@@ -48,10 +48,10 @@
 
 /*
  * nsCSSCompressedDataBlock holds property-value pairs corresponding to
- * CSS declaration blocks.  The value is stored in one of the six CSS
- * data types.  These six types are nsCSSValue, nsCSSRect,
- * nsCSSValueList, nsCSSCounterData, nsCSSQuotes, and nsCSSValuePair, and
- * each correspond to a value of the nsCSSType enumeration.
+ * CSS declaration blocks.  The value is stored in one of the five CSS
+ * data types: nsCSSValue, nsCSSRect, nsCSSValueList, nsCSSValuePair,
+ * and nsCSSValuePairList, which each correspond to a value of the
+ * nsCSSType enumeration.
  *
  * The storage strategy uses the CDB*Storage structs below to help
  * ensure that all the types remain properly aligned.  nsCSSValue's
@@ -152,23 +152,13 @@ inline nsCSSValueList* ValueListAtCursor(const char *aCursor) {
                       (reinterpret_cast<const CDBPointerStorage*>(aCursor)->value);
 }
 
-inline nsCSSCounterData*& CounterDataAtCursor(char *aCursor) {
-    return * reinterpret_cast<nsCSSCounterData**>
+inline nsCSSValuePairList*& ValuePairListAtCursor(char *aCursor) {
+    return * reinterpret_cast<nsCSSValuePairList**>
                              (& reinterpret_cast<CDBPointerStorage*>(aCursor)->value);
 }
 
-inline nsCSSCounterData* CounterDataAtCursor(const char *aCursor) {
-    return static_cast<nsCSSCounterData*>
-                      (reinterpret_cast<const CDBPointerStorage*>(aCursor)->value);
-}
-
-inline nsCSSQuotes*& QuotesAtCursor(char *aCursor) {
-    return * reinterpret_cast<nsCSSQuotes**>
-                             (& reinterpret_cast<CDBPointerStorage*>(aCursor)->value);
-}
-
-inline nsCSSQuotes* QuotesAtCursor(const char *aCursor) {
-    return static_cast<nsCSSQuotes*>
+inline nsCSSValuePairList* ValuePairListAtCursor(const char *aCursor) {
+    return static_cast<nsCSSValuePairList*>
                       (reinterpret_cast<const CDBPointerStorage*>(aCursor)->value);
 }
 
@@ -310,8 +300,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                             }
                     }
                 // fall through
-                case eCSSType_CounterData:
-                case eCSSType_Quotes: {
+                case eCSSType_ValuePairList: {
                     void** target = static_cast<void**>(prop);
                     if (!*target) {
                         void* val = PointerAtCursor(cursor);
@@ -345,8 +334,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                 } break;
 
                 case eCSSType_ValueList:
-                case eCSSType_CounterData:
-                case eCSSType_Quotes: {
+                case eCSSType_ValuePairList: {
                     cursor += CDBPointerStorage_advance;
                 } break;
             }
@@ -386,8 +374,7 @@ nsCSSCompressedDataBlock::StorageFor(nsCSSProperty aProperty) const
                     return ValuePairAtCursor(cursor);
                 }
                 case eCSSType_ValueList:
-                case eCSSType_CounterData:
-                case eCSSType_Quotes: {
+                case eCSSType_ValuePairList: {
                     return &PointerAtCursor(const_cast<char*>(cursor));
                 }
             }
@@ -406,8 +393,7 @@ nsCSSCompressedDataBlock::StorageFor(nsCSSProperty aProperty) const
             } break;
 
             case eCSSType_ValueList:
-            case eCSSType_CounterData:
-            case eCSSType_Quotes: {
+            case eCSSType_ValuePairList: {
                 cursor += CDBPointerStorage_advance;
             } break;
         }
@@ -465,8 +451,7 @@ nsCSSCompressedDataBlock::Clone() const
             } break;
 
             case eCSSType_ValueList:
-            case eCSSType_CounterData:
-            case eCSSType_Quotes: {
+            case eCSSType_ValuePairList: {
                 void *copy;
                 NS_ASSERTION(PointerAtCursor(cursor), "oops");
                 switch (nsCSSProps::kTypeTable[iProp]) {
@@ -477,12 +462,8 @@ nsCSSCompressedDataBlock::Clone() const
                     case eCSSType_ValueList:
                         copy = new nsCSSValueList(*ValueListAtCursor(cursor));
                         break;
-                    case eCSSType_CounterData:
-                        copy =
-                            new nsCSSCounterData(*CounterDataAtCursor(cursor));
-                        break;
-                    case eCSSType_Quotes:
-                        copy = new nsCSSQuotes(*QuotesAtCursor(cursor));
+                    case eCSSType_ValuePairList:
+                        copy = new nsCSSValuePairList(*ValuePairListAtCursor(cursor));
                         break;
                 }
                 if (!copy) {
@@ -544,15 +525,8 @@ nsCSSCompressedDataBlock::Destroy()
                 cursor += CDBPointerStorage_advance;
             } break;
 
-            case eCSSType_CounterData: {
-                nsCSSCounterData* val = CounterDataAtCursor(cursor);
-                NS_ASSERTION(val, "oops");
-                delete val;
-                cursor += CDBPointerStorage_advance;
-            } break;
-
-            case eCSSType_Quotes: {
-                nsCSSQuotes* val = QuotesAtCursor(cursor);
+            case eCSSType_ValuePairList: {
+                nsCSSValuePairList* val = ValuePairListAtCursor(cursor);
                 NS_ASSERTION(val, "oops");
                 delete val;
                 cursor += CDBPointerStorage_advance;
@@ -669,8 +643,7 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
             } break;
 
             case eCSSType_ValueList:
-            case eCSSType_CounterData:
-            case eCSSType_Quotes: {
+            case eCSSType_ValuePairList: {
                 void* val = PointerAtCursor(cursor);
                 void** dest = static_cast<void**>(prop);
                 NS_ASSERTION(val, "oops");
@@ -746,8 +719,7 @@ nsCSSExpandedDataBlock::ComputeSize()
                 } break;
 
                 case eCSSType_ValueList:
-                case eCSSType_CounterData:
-                case eCSSType_Quotes: {
+                case eCSSType_ValuePairList: {
 #ifdef DEBUG
                     void* val = *static_cast<void**>(prop);
                     NS_ASSERTION(val, "Null pointer while computing size");
@@ -854,8 +826,7 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
                 } break;
 
                 case eCSSType_ValueList:
-                case eCSSType_CounterData:
-                case eCSSType_Quotes: {
+                case eCSSType_ValuePairList: {
                     void*& val = *static_cast<void**>(prop);
                     NS_ASSERTION(val, "Null pointer while compressing");
                     CDBPointerStorage *storage =
@@ -939,17 +910,9 @@ nsCSSExpandedDataBlock::ClearProperty(nsCSSProperty aPropID)
             }
         } break;
 
-        case eCSSType_CounterData: {
-            nsCSSCounterData*& val =
-                *static_cast<nsCSSCounterData**>(prop);
-            if (val) {
-                delete val;
-                val = nsnull;
-            }
-        } break;
-
-        case eCSSType_Quotes: {
-            nsCSSQuotes*& val = *static_cast<nsCSSQuotes**>(prop);
+        case eCSSType_ValuePairList: {
+            nsCSSValuePairList*& val =
+              *static_cast<nsCSSValuePairList**>(prop);
             if (val) {
                 delete val;
                 val = nsnull;
@@ -1004,14 +967,9 @@ nsCSSExpandedDataBlock::DoAssertInitialState()
                 NS_ASSERTION(val == nsnull, "not initial state");
             } break;
 
-            case eCSSType_CounterData: {
-                nsCSSCounterData* val =
-                    *static_cast<nsCSSCounterData**>(prop);
-                NS_ASSERTION(val == nsnull, "not initial state");
-            } break;
-
-            case eCSSType_Quotes: {
-                nsCSSQuotes* val = *static_cast<nsCSSQuotes**>(prop);
+            case eCSSType_ValuePairList: {
+                nsCSSValuePairList* val =
+                  *static_cast<nsCSSValuePairList**>(prop);
                 NS_ASSERTION(val == nsnull, "not initial state");
             } break;
         }

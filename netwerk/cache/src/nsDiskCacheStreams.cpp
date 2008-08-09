@@ -873,6 +873,11 @@ nsDiskCacheStreamIO::SetEOF()
                 rv = ReadCacheBlocks();
                 if (NS_FAILED(rv))  return rv;
             }
+
+            // We need to make sure we reflect this change in Flush().
+            // In particular, if mStreamPos is 0 and we never write to
+            // the buffer, we want the storage to be deleted.
+            mBufDirty = PR_TRUE;
         }
     }
     

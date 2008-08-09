@@ -254,6 +254,9 @@
         ok(testItem("1|3|1", "cmd_NewItem4"), sa);
         ok(testItem("1|3|2", "cmd_NewItem5"), sa);
 
+        // At this point in the tests the state of the menus has been returned
+        // to the originally diagramed state.
+
         // Remove menu.
         menubarNode.removeChild(newMenu0);
         forceNativeMenuReload();
@@ -264,6 +267,27 @@
         ok(!testItem("1|3|0", ""), sna);
         ok(!testItem("1|3|1", ""), sna);
         ok(!testItem("1|3|2", ""), sna);
+        // return state to original diagramed state
+        menubarNode.appendChild(newMenu0);
+
+        // Test for bug 447042, make sure that adding a menu node with no children
+        // to the menu bar and then adding another menu node with children works.
+        // Menus with no children don't get their native menu items shown and that
+        // caused internal arrays to get out of sync and an append crashed.
+        var tmpMenu0 = createXULMenu("tmpMenu0");
+        menubarNode.removeChild(newMenu0);
+        menubarNode.appendChild(tmpMenu0);
+        menubarNode.appendChild(newMenu0);
+        forceNativeMenuReload();
+        ok(runBaseMenuTests());
+        ok(testItem("1|0", "cmd_NewItem0"), sa);
+        ok(testItem("1|1", "cmd_NewItem1"), sa);
+        ok(testItem("1|2", "cmd_NewItem2"), sa);
+        ok(testItem("1|3|0", "cmd_NewItem3"), sa);
+        ok(testItem("1|3|1", "cmd_NewItem4"), sa);
+        ok(testItem("1|3|2", "cmd_NewItem5"), sa);
+        // return state to original diagramed state
+        menubarNode.removeChild(tmpMenu0);
 
         onTestsFinished();
       }

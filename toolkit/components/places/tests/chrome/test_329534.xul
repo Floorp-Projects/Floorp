@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="file:///c:/mozbuild/fx3.1/mozilla-central/testing/mochitest/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Distribute to loading Livemark"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+   src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+<script type="application/javascript">
+<![CDATA[
+/*
+ Test distribute the load of livemark update
+ */
+SimpleTest.waitForExplicitFinish();
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+function uri(spec) {
+  return iosvc.newURI(spec, null, null);
+}
+
+var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
+              getService(Ci.nsILivemarkService);
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
+
+var toolbarFolderId = bmsvc.toolbarFolder;
+var status = 0;
+var secondFolderId = 0;
+var firstLoadTime = 0;
+
+// add 2 feeds
+const FEED1 = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/rss_as_html.rss";
+gLivemarkId1 = lmsvc.createLivemarkFolderOnly( toolbarFolderId, "foo",
+                                             uri("http:/localhost:8888/"),
+                                             uri(FEED1), -1);
+bmsvc.removeChildAt( gLivemarkId1, 0 );
+
+const FEED2 = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom";
+gLivemarkId2 = lmsvc.createLivemarkFolderOnly( toolbarFolderId, "bar",
+                                             uri("http:/localhost:8888/"),
+                                             uri(FEED2), -1);
+bmsvc.removeChildAt( gLivemarkId2, 0 );
+
+var observer =
+{
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsINavBookmarkObserver) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsINavBookmarkObserver
+  onBeginUpdateBatch: function(){},
+  onEndUpdateBatch: function(){},
+  onItemAdded: function(bookmarkId, folderId, index) {
+    if ( status == 0 ) {
+      runTest1( folderId );
+    } else {
+      runTest2( folderId );
+      if ( status == 2 ) {
+        bmsvc.removeObserver(this);
+        bmsvc.removeFolder(gLivemarkId1);
+        bmsvc.removeFolder(gLivemarkId2);
+        SimpleTest.finish();
+      }
+    }
+  },
+  onItemRemoved: function(bookmarkId, bookmark, folder, index){},
+  onItemChanged: function(bookmarkId, property, isAnnotationProperty, value){},
+  onItemVisited: function(bookmarkId, bookmark, aVisitID, time){},
+  onItemMoved: function(itemId, oldParent, oldIndex, newParent, newIndex){}
+};
+bmsvc.addObserver(observer, false);
+
+// start updating livemarks
+lmsvc.start();
+
+// First
+function runTest1( folderId ) {
+  if ( folderId == gLivemarkId1 )
+    secondFolderId = gLivemarkId2
+  else if ( folderId == gLivemarkId2 )
+    secondFolderId = gLivemarkId1;
+
+  if ( secondFolderId != 0 ) {
+    status++;
+    firstLoadTime = new Date();
+
+    /* first folder is loading now */
+    var options = histsvc.getNewQueryOptions();
+    var query = histsvc.getNewQuery();
+    query.setFolders([folderId], 1);
+    var result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    var cc = rootNode.childCount;
+    ok( cc == 1, "first livemark is empty" );
+    var node = rootNode.getChild( 0 );
+    ok( node.uri == "about:livemark-loading",
+        "first livemark item is invalid value "+node.uri);
+
+    /* second folder has no item */
+    options = histsvc.getNewQueryOptions();
+    query = histsvc.getNewQuery();
+    query.setFolders([secondFolderId], 1);
+    result = histsvc.executeQuery(query, options);
+    rootNode = result.root;
+    rootNode.containerOpen = true;
+    cc = rootNode.childCount;
+    ok( cc == 0, "second livemark is not empty" );
+  }
+}
+
+// Second
+function runTest2( folderId ) {
+  if ( folderId == secondFolderId ) {
+    status++;
+    var secondLoadTime = new Date();
+
+    /* second folder is loading now */
+    var options = histsvc.getNewQueryOptions();
+    var query = histsvc.getNewQuery();
+    query.setFolders([folderId], 1);
+    var result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    var cc = rootNode.childCount;
+    ok( cc == 1, "second livemark is empty" );
+    var node = rootNode.getChild( 0 );
+    ok( node.uri == "about:livemark-loading",
+        "second livemark item is invalid value "+node.uri);
+
+    /* check passed 3sec */
+    t = parseInt( (secondLoadTime - firstLoadTime) / 1000 );
+    ok( t >= 3, "not passed 3sec when second livemark loading" );
+  }
+}
+
+
+]]>
+</script>
+
+</window>

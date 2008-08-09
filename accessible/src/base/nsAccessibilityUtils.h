@@ -125,6 +125,17 @@ public:
   static PRBool HasListener(nsIContent *aContent, const nsAString& aEventType);
 
   /**
+   * Send mouse events to the given element.
+   *
+   * @param aEventType  an event type (see nsGUIEvent.h for constants)
+   * @param aPresShell  the presshell for the given element
+   * @param aContent    the element element
+   */
+  static PRBool DispatchMouseEvent(PRUint32 aEventType,
+                                   nsIPresShell *aPresShell,
+                                   nsIContent *aContent);
+
+  /**
    * Return an accesskey registered on the given element by
    * nsIEventStateManager or 0 if there is no registered accesskey.
    *
