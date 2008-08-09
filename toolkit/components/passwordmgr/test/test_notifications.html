@@ -1,0 +1,384 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Login Manager</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Login Manager test: notifications
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: notifications. **/
+
+var subtests = [
+                   "subtst_notifications_1.html", // 1
+                   "subtst_notifications_1.html", // 2
+                   "subtst_notifications_1.html", // 3
+                   "subtst_notifications_1.html", // 4
+                   "subtst_notifications_1.html", // 5
+                   "subtst_notifications_1.html", // 6
+                   "subtst_notifications_1.html", // 7
+                   "subtst_notifications_1.html", // 8
+                   "subtst_notifications_2.html", // 9
+                   "subtst_notifications_3.html", // 10
+                   "subtst_notifications_4.html", // 11
+                   "subtst_notifications_5.html", // 12
+                   "subtst_notifications_1.html", // 13
+                   "subtst_notifications_6.html", // 14
+                   "subtst_notifications_1.html", // 15
+                   "subtst_notifications_6.html"
+               ];
+
+/*
+ *  getNotificationBox
+ *
+ * Fetches the notification box for the specified window.
+ */
+function getNotificationBox(aWindow) {
+/*
+    var chromeWin = aWindow
+                        .QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIDocShellTreeItem)
+                        .rootTreeItem
+                        .QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindow);
+    // Don't need .wrappedJSObject here, unlike when chrome does this.
+    var browserWin = chromeWin.browserDOMWindow;
+    var notifyBox = browserWin.getNotificationBox(aWindow);
+    return notifyBox;
+*/
+    // Find the <browser> which contains aWindow, by looking
+    // through all the open windows and all the <browsers> in each.
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
+    var enumerator = wm.getEnumerator("navigator:browser");
+    var tabbrowser = null;
+    var foundBrowser = null;
+
+    while (!foundBrowser && enumerator.hasMoreElements()) {
+        var win = enumerator.getNext();
+        tabbrowser = win.getBrowser(); 
+        foundBrowser = tabbrowser.getBrowserForDocument(aWindow.document);
+    }
+
+    // Return the notificationBox associated with the browser.
+    return tabbrowser.getNotificationBox(foundBrowser);
+}
+
+
+/*
+ * getNotificationBar
+ *
+ */
+function getNotificationBar(aBox, aKind) {
+    ok(true, "Looking for " + aKind + " notification bar");
+    return aBox.getNotificationWithValue(aKind);
+}
+
+
+/*
+ * clickNotificationButton
+ *
+ * Clicks the specified notification button.
+ */
+function clickNotificationButton(aBar, aButtonName) {
+    // This is a bit of a hack. The notification doesn't have an API to
+    // trigger buttons, so we dive down into the implementation and twiddle
+    // the buttons directly.
+    var buttons = aBar.getElementsByTagName("button");
+    var clicked = false;
+    for (var i = 0; i < buttons.length; i++) {
+        if (buttons[i].label == aButtonName) {
+            buttons[i].click();
+            clicked = true;
+            break;
+        }
+    }
+
+    ok(clicked, "Clicked \"" + aButtonName + "\" button"); 
+}
+
+
+var ignoreLoad = false;
+function handleLoad(aEvent) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    // ignore every other load event ... We get one for loading the subtest (which
+    // we want to ignore), and another when the subtest's form submits itself
+    // (which we want to handle, to start the next test).
+    ignoreLoad = !ignoreLoad;
+    if (ignoreLoad) {
+        ok(true, "Ignoring load of subtest #" + testNum);
+        return;
+    }
+    ok(true, "Processing submission of subtest #" + testNum);
+
+    checkTest();
+
+    testNum++;
+
+
+    // Remove any notification bar that might be lingering from a failed test.
+    notifyBox.removeAllNotifications(true);
+
+    if (testNum <= subtests.length) {
+        ok(true, "Starting test #" + testNum);
+        iframe.src = subtests[testNum-1];
+    } else {
+        ok(true, "notification tests finished.");
+        SimpleTest.finish();
+    }
+}
+
+
+// Remember, Never for This Site, Not Now
+function checkTest() {
+    var bar;
+
+    // The document generated from formsubmit.sjs contains the user/pass it
+    // received inside <span id="blah">value</span>
+    var gotUser = iframe.contentDocument.getElementById("user").textContent;
+    var gotPass = iframe.contentDocument.getElementById("pass").textContent;
+
+
+    switch(testNum) {
+
+      /* Basic Yes/No/Never tests... */
+
+      case 1:
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Not Now");
+        break;
+
+      case 2:
+        // Same subtest, this time click Never
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        is(true, pwmgr.getLoginSavingEnabled("http://localhost:8888"),
+           "Checking for login saving enabled");
+        clickNotificationButton(bar, "Never for This Site");
+        break;
+
+      case 3:
+        // Same subtest, make sure Never took effect
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+        is(false, pwmgr.getLoginSavingEnabled("http://localhost:8888"),
+           "Checking for login saving disabled");
+        // reenable login saving.
+        pwmgr.setLoginSavingEnabled("http://localhost:8888", true);
+        break;
+
+      case 4:
+        // Same subtest, this time click Remember
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Remember");
+        break;
+
+      case 5:
+        // Same subtest, make sure we didn't prompt for an existing login.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+        // remove that login
+        pwmgr.removeLogin(login1);
+        break;
+
+      /* signons.rememberSignons pref tests... */
+
+      case 6:
+        // Same subtest, make sure we're getting the bar again.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Not Now");
+        // Change prefs to no longer remember signons
+        prefs.setBoolPref("rememberSignons", false);
+        break;
+
+      case 7:
+        // Same subtest, make sure we're not prompting.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+        // Change prefs to remember signons again
+        prefs.setBoolPref("rememberSignons", true);
+        break;
+
+      case 8:
+        // Same subtest, make sure we're getting the bar again.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Not Now");
+        break;
+
+      /* autocomplete=off tests... */
+
+      case 9:
+        // Check for no notification bar when autocomplete=off present
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+        break;
+
+      case 10:
+        // Check for no notification bar when autocomplete=off present
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+        break;
+
+      case 11:
+        // Check for no notification bar when autocomplete=off present
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+        break;
+
+      /* no password field test... */
+
+      case 12:
+        // Check for no notification bar when no password field present
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "null",     "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+
+        // Add login for the next test.
+        pwmgr.addLogin(login2);
+        break;
+
+      case 13:
+        // Check for no notification bar when existing pw-only login matches form.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+        pwmgr.removeLogin(login2);
+
+        // Add login for the next test
+        pwmgr.addLogin(login1);
+        break;
+
+      case 14:
+        // Check for no notification bar when pw-only form matches existing login.
+        is(gotUser, "null",     "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(!bar, "checking for no notification bar");
+        pwmgr.removeLogin(login1);
+
+        // Add login for the next test
+        pwmgr.addLogin(login2B);
+        break;
+
+      case 15:
+        // Check for notification bar when existing pw-only login doesn't match form.
+        is(gotUser, "notifyu1", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Not Now");
+        pwmgr.removeLogin(login2B);
+
+        // Add login for the next test
+        pwmgr.addLogin(login1B);
+        break;
+
+      case 16:
+        // Check for notification bar when pw-only form doesn't match existing login.
+        is(gotUser, "null",     "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Not Now");
+        pwmgr.removeLogin(login1B);
+        break;
+
+      default:
+        ok(false, "Unexpected call to checkTest for test #" + testNum);
+
+    }
+
+    // TODO:
+    // * existing login test, form has different password --> change password, no save prompt
+}
+
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+ok(Ci != null, "Access Ci");
+ok(Cc != null, "Access Cc");
+
+var pwmgr = Cc["@mozilla.org/login-manager;1"].
+            getService(Ci.nsILoginManager);
+ok(pwmgr != null, "Access pwmgr");
+
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefService);
+ok(prefs != null, "Access prefs");
+prefs = prefs.getBranch("signon.");
+ok(prefs != null, "Access pref branch");
+
+var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                             Ci.nsILoginInfo, "init");
+var login1 = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
+                             "notifyu1", "notifyp1", "user", "pass");
+var login2 = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
+                             "", "notifyp1", "", "pass");
+var login1B = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
+                              "notifyu1B", "notifyp1B", "user", "pass");
+var login2B = new nsLoginInfo("http://localhost:8888", "http://localhost:8888", null,
+                              "", "notifyp1B", "", "pass");
+
+var iframe = document.getElementById("iframe");
+iframe.onload = handleLoad;
+
+// The notification box (not *bar*) is a constant, per-tab container. So, we
+// only need to fetch it once.
+var notifyBox = getNotificationBox(window.top);
+ok(notifyBox, "Got notification box");
+
+// Remove any notification bars that might be left over from other tests.
+notifyBox.removeAllNotifications(true);
+
+var testNum = 1;
+ok(true, "Starting test #" + testNum);
+iframe.src = subtests[testNum-1];
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

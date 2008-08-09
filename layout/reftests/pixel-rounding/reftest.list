@@ -173,3 +173,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-6.html image-left-10-ref.ht
 == rounded-background-color-width-left-6.html rounded-background-color-width-6.html
 
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == background-image-tiling.html background-image-tiling-ref.html # probably bug 379317
+
+!= border-image-width-0.html border-image-width-10.html
+== border-image-width-4.html border-image-width-0.html
+== border-image-width-9.html border-image-width-0.html

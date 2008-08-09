@@ -71,7 +71,11 @@
 
 gfxPlatform *gPlatform = nsnull;
 int gGlitzState = -1;
+
+// These two may point to the same profile
 static cmsHPROFILE gCMSOutputProfile = nsnull;
+static cmsHPROFILE gCMSsRGBProfile = nsnull;
+
 static cmsHTRANSFORM gCMSRGBTransform = nsnull;
 static cmsHTRANSFORM gCMSInverseRGBTransform = nsnull;
 static cmsHTRANSFORM gCMSRGBATransform = nsnull;
@@ -183,6 +187,33 @@ gfxPlatform::Shutdown()
 #if defined(XP_MACOSX)
     gfxQuartzFontCache::Shutdown();
 #endif
+
+    // Free the various non-null transforms and loaded profiles
+    if (gCMSRGBTransform) {
+        cmsDeleteTransform(gCMSRGBTransform);
+        gCMSRGBTransform = nsnull;
+    }
+    if (gCMSInverseRGBTransform) {
+        cmsDeleteTransform(gCMSInverseRGBTransform);
+        gCMSInverseRGBTransform = nsnull;
+    }
+    if (gCMSRGBATransform) {
+        cmsDeleteTransform(gCMSRGBATransform);
+        gCMSRGBATransform = nsnull;
+    }
+    if (gCMSOutputProfile) {
+        cmsCloseProfile(gCMSOutputProfile);
+
+        // handle the aliased case
+        if (gCMSsRGBProfile == gCMSOutputProfile)
+            gCMSsRGBProfile = nsnull;
+        gCMSOutputProfile = nsnull;
+    }
+    if (gCMSsRGBProfile) {
+        cmsCloseProfile(gCMSsRGBProfile);
+        gCMSsRGBProfile = nsnull;
+    }
+    
     delete gPlatform;
     gPlatform = nsnull;
 }
@@ -438,6 +469,45 @@ gfxPlatform::IsCMSEnabled()
     return sEnabled;
 }
 
+/* Chris Murphy (CM consultant) suggests this as a default in the event that we
+cannot reproduce relative + Black Point Compensation.  BPC brings an
+unacceptable performance overhead, so we go with perceptual. */
+#define INTENT_DEFAULT INTENT_PERCEPTUAL
+
+PRBool
+gfxPlatform::GetRenderingIntent()
+{
+    /* -2 means that we haven't tried querying the pref service yet. */
+    static int sIntent = -2;
+
+    if (sIntent == -2) {
+
+        /* Try to query the pref system for a rendering intent. */
+        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs) {
+            PRInt32 pIntent;
+            nsresult rv = prefs->GetIntPref("gfx.color_management.rendering_intent", 
+                                            &pIntent);
+            if (NS_SUCCEEDED(rv)) {
+              
+                /* If the pref is within range, use it as an override. */
+                if ((pIntent >= INTENT_MIN) && (pIntent <= INTENT_MAX))
+                    sIntent = pIntent;
+
+                /* If the pref is out of range, use embedded profile. */
+                else
+                    sIntent = -1;
+            }
+        }
+
+        /* If we didn't get a valid intent from prefs, use the default. */
+        if (sIntent == -2) 
+            sIntent = INTENT_DEFAULT;
+    }
+    return sIntent;
+}
+
+
 cmsHPROFILE
 gfxPlatform::GetPlatformCMSOutputProfile()
 {
@@ -478,11 +548,19 @@ gfxPlatform::GetCMSOutputProfile()
         }
 
         if (!gCMSOutputProfile) {
-            gCMSOutputProfile = cmsCreate_sRGBProfile();
+            gCMSOutputProfile = GetCMSsRGBProfile();
         }
     }
 
     return gCMSOutputProfile;
+}
+
+cmsHPROFILE
+gfxPlatform::GetCMSsRGBProfile()
+{
+    if (!gCMSsRGBProfile)
+        gCMSsRGBProfile = cmsCreate_sRGBProfile();
+    return gCMSsRGBProfile;
 }
 
 cmsHTRANSFORM
@@ -491,7 +569,7 @@ gfxPlatform::GetCMSRGBTransform()
     if (!gCMSRGBTransform) {
         cmsHPROFILE inProfile, outProfile;
         outProfile = GetCMSOutputProfile();
-        inProfile = cmsCreate_sRGBProfile();
+        inProfile = GetCMSsRGBProfile();
 
         if (!inProfile || !outProfile)
             return nsnull;
@@ -510,7 +588,7 @@ gfxPlatform::GetCMSInverseRGBTransform()
     if (!gCMSInverseRGBTransform) {
         cmsHPROFILE inProfile, outProfile;
         inProfile = GetCMSOutputProfile();
-        outProfile = cmsCreate_sRGBProfile();
+        outProfile = GetCMSsRGBProfile();
 
         if (!inProfile || !outProfile)
             return nsnull;
@@ -529,7 +607,7 @@ gfxPlatform::GetCMSRGBATransform()
     if (!gCMSRGBATransform) {
         cmsHPROFILE inProfile, outProfile;
         outProfile = GetCMSOutputProfile();
-        inProfile = cmsCreate_sRGBProfile();
+        inProfile = GetCMSsRGBProfile();
 
         if (!inProfile || !outProfile)
             return nsnull;

@@ -98,8 +98,7 @@ FixedTableLayoutStrategy::GetMinWidth(nsIRenderingContext* aRenderingContext)
         }
         const nsStyleCoord *styleWidth =
             &colFrame->GetStylePosition()->mWidth;
-        if (styleWidth->GetUnit() == eStyleUnit_Coord ||
-            styleWidth->GetUnit() == eStyleUnit_Chars) {
+        if (styleWidth->GetUnit() == eStyleUnit_Coord) {
             result += nsLayoutUtils::ComputeWidthValue(aRenderingContext,
                         colFrame, 0, 0, 0, *styleWidth);
         } else if (styleWidth->GetUnit() == eStyleUnit_Percent) {
@@ -118,7 +117,6 @@ FixedTableLayoutStrategy::GetMinWidth(nsIRenderingContext* aRenderingContext)
             if (cellFrame) {
                 styleWidth = &cellFrame->GetStylePosition()->mWidth;
                 if (styleWidth->GetUnit() == eStyleUnit_Coord ||
-                    styleWidth->GetUnit() == eStyleUnit_Chars ||
                     (styleWidth->GetUnit() == eStyleUnit_Enumerated &&
                      (styleWidth->GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
                       styleWidth->GetIntValue() == NS_STYLE_WIDTH_MIN_CONTENT))) {
@@ -216,8 +214,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
         const nsStyleCoord *styleWidth =
             &colFrame->GetStylePosition()->mWidth;
         nscoord colWidth;
-        if (styleWidth->GetUnit() == eStyleUnit_Coord ||
-            styleWidth->GetUnit() == eStyleUnit_Chars) {
+        if (styleWidth->GetUnit() == eStyleUnit_Coord) {
             colWidth = nsLayoutUtils::ComputeWidthValue(
                          aReflowState.rendContext,
                          colFrame, 0, 0, 0, *styleWidth);
@@ -240,7 +237,6 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
             if (cellFrame) {
                 styleWidth = &cellFrame->GetStylePosition()->mWidth;
                 if (styleWidth->GetUnit() == eStyleUnit_Coord ||
-                    styleWidth->GetUnit() == eStyleUnit_Chars ||
                     (styleWidth->GetUnit() == eStyleUnit_Enumerated &&
                      (styleWidth->GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
                       styleWidth->GetIntValue() == NS_STYLE_WIDTH_MIN_CONTENT))) {

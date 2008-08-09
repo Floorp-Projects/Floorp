@@ -38,7 +38,7 @@
 var gTestfile = 'regress-368516.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 368516;
-var summary = 'Ignore unicode BOM characters';
+var summary = 'Treat unicode BOM characters as whitespace';
 var actual = '';
 var expect = '';
 
@@ -58,12 +58,13 @@ function test()
 
   for (var i = 0; i < bomchars.length; i++)
   {
-    expect = 'No Error';
-    actual = 'No Error';
+    expect = 'howdie';
+    actual = '';
 
     try
     {
-      eval("hi" + bomchars[i] + "there = 'howdie';");
+      eval("var" + bomchars[i] + "hithere = 'howdie';");
+      actual = hithere;
     }
     catch(ex)
     {

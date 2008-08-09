@@ -355,7 +355,7 @@ function showView(aView) {
                     [ ["statusMessage", "true", null] ] ];
       var displays = [ "richlistitem", "vbox" ];
       showCheckUpdatesAll = false;
-      document.getElementById("searchbox").disabled = isOffline("offlineSearchMsg");
+      document.getElementById("searchfield").disabled = isOffline("offlineSearchMsg");
       break;
     case "extensions":
       prefURL = PREF_EXTENSIONS_GETMOREEXTENSIONSURL;
@@ -643,9 +643,9 @@ function displaySearchThrobber(aKey) {
 
 // Clears the search box and updates the result list
 function resetSearch() {
-  var searchbox = document.getElementById("searchbox");
-  searchbox.value = "";
-  searchbox.focus();
+  var searchfield = document.getElementById("searchfield");
+  searchfield.value = "";
+  searchfield.focus();
   retrieveRepositoryAddons("");
 }
 
@@ -798,9 +798,8 @@ function displaySearchResults(addons, count, isRecommended) {
                      gRDF.GetResource(PREFIX_NS_EM + "count"),
                      gRDF.GetIntLiteral(count),
                      true);
-    var searchbox = document.getElementById("searchbox");
-    // The value attribute will be the persisted value of the last search run
-    url = gAddonRepository.getSearchURL(searchbox.getAttribute("value"));
+    var searchfield = document.getElementById("searchfield");
+    url = gAddonRepository.getSearchURL(searchfield.value);
   }
   gSearchDS.Assert(labelNode,
                    gRDF.GetResource(PREFIX_NS_EM + "link"),
@@ -875,7 +874,7 @@ function initSearchDS() {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(nsIIOService);
   if (!ioService.offline)
-    retrieveRepositoryAddons(document.getElementById("searchbox").value);
+    retrieveRepositoryAddons(document.getElementById("searchfield").value);
 }
 
 function initPluginsDS()
@@ -927,6 +926,7 @@ function rebuildPluginsDS()
         homepageURL = /<A\s+HREF=["']?([^>"'\s]*)/i.exec(plugin.description)[1];
 
       gPlugins[name][desc] = { filename    : plugin.filename,
+                               version     : plugin.version,
                                homepageURL : homepageURL,
                                disabled    : plugin.disabled,
                                blocklisted : plugin.blocklisted,
@@ -943,6 +943,10 @@ function rebuildPluginsDS()
       gPluginsDS.Assert(pluginNode,
                         gRDF.GetResource(PREFIX_NS_EM + "name"),
                         gRDF.GetLiteral(pluginName),
+                        true);
+      gPluginsDS.Assert(pluginNode,
+                        gRDF.GetResource(PREFIX_NS_EM + "version"),
+                        gRDF.GetLiteral(plugin.version),
                         true);
       gPluginsDS.Assert(pluginNode,
                         gRDF.GetResource(PREFIX_NS_EM + "addonID"),
@@ -1964,9 +1968,9 @@ const gAddonsMsgObserver = {
       ioService.offline = false;
       // If no results have been retrieved start pulling some
       if (!gRetrievedResults)
-        retrieveRepositoryAddons(document.getElementById("searchbox").value);
+        retrieveRepositoryAddons(document.getElementById("searchfield").value);
       if (gView == "search")
-        document.getElementById("searchbox").disabled = false;
+        document.getElementById("searchfield").disabled = false;
       break;
     case "addons-message-dismiss":
       break;

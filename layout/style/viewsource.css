@@ -49,6 +49,7 @@
 }
 #viewsource.wrap {
   white-space: pre-wrap;
+  word-wrap: break-word;
 }
 pre {
   font: inherit;

@@ -40,6 +40,7 @@
 
 #include "nsCWebBrowser.h"
 #include "nsIComponentManager.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWidget.h"
 
@@ -440,7 +441,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   // and show it.
   gtk_widget_show_all(sTipWindow);
 
-  nsMemory::Free( (void*)tipString );
+  NS_Free( (void*)tipString );
 
   return NS_OK;
 }

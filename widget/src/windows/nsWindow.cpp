@@ -178,29 +178,6 @@ static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 #define MAPVK_VK_TO_CHAR 2
 #endif
 
-#ifdef MOZ_XUL
-
-#ifndef AC_SRC_ALPHA
-#define AC_SRC_ALPHA            0x01
-#endif
-
-#ifndef WS_EX_LAYERED
-#define WS_EX_LAYERED           0x00080000
-#endif
-
-#ifndef ULW_ALPHA
-#define ULW_ALPHA               0x00000002
-extern "C"
-WINUSERAPI
-BOOL WINAPI UpdateLayeredWindow(HWND hWnd, HDC hdcDst, POINT *pptDst,
-                                SIZE *psize, HDC hdcSrc, POINT *pptSrc,
-                                COLORREF crKey, BLENDFUNCTION *pblend,
-                                DWORD dwFlags);
-#endif
-
-#endif
-
-
 #ifdef WINCE
 static PRBool gSoftKeyMenuBar = PR_FALSE;
 void CreateSoftKeyMenuBar(HWND wnd)
@@ -254,13 +231,7 @@ static PRBool IsCursorTranslucencySupported() {
   if (!didCheck) {
     didCheck = PR_TRUE;
     // Cursor translucency is supported on Windows XP and newer
-    OSVERSIONINFO osversion;
-    memset(&osversion, 0, sizeof(OSVERSIONINFO));
-    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    if (GetVersionEx(&osversion))
-      isSupported = osversion.dwMajorVersion > 5 || // Newer Windows versions
-                    osversion.dwMajorVersion == 5 &&
-                       osversion.dwMinorVersion >= 1; // WinXP, Server 2003
+    isSupported = GetWindowsVersion() >= 0x501;
   }
 
   return isSupported;
@@ -321,10 +292,8 @@ PRUint32*  nsWindow::sIMECompClauseArray       = NULL;
 PRInt32    nsWindow::sIMECompClauseArrayLength = 0;
 PRInt32    nsWindow::sIMECompClauseArraySize   = 0;
 long       nsWindow::sIMECursorPosition        = 0;
-PRUnichar* nsWindow::sIMEReconvertUnicode      = NULL;
 
 RECT*      nsWindow::sIMECompCharPos           = nsnull;
-PRInt32    nsWindow::sIMECaretHeight           = 0;
 
 PRBool nsWindow::sIsInEndSession = PR_FALSE;
 
@@ -678,12 +647,8 @@ nsWindow::nsWindow() : nsBaseWidget()
   mHas3DBorder        = PR_FALSE;
 #ifdef MOZ_XUL
   mIsTransparent      = PR_FALSE;
-  mIsTopTransparent   = PR_FALSE;
   mTransparentSurface = nsnull;
   mMemoryDC           = NULL;
-  mMemoryBitmap       = NULL;
-  mMemoryBits         = NULL;
-  mAlphaMask          = nsnull;
 #endif
   mWindowType         = eWindowType_child;
   mBorderStyle        = eBorderStyle_default;
@@ -696,7 +661,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mOldExStyle         = 0;
   mPainting           = 0;
   mOldIMC             = NULL;
-  mIMEEnabled         = nsIKBStateControl::IME_STATUS_ENABLED;
+  mIMEEnabled         = nsIWidget::IME_STATUS_ENABLED;
 
   mLeadByte = '\0';
   mBlurEventSuppressionLevel = 0;
@@ -779,8 +744,6 @@ nsWindow::~nsWindow()
       delete [] sIMEAttributeArray;
     if (sIMECompClauseArray) 
       delete [] sIMECompClauseArray;
-    if (sIMEReconvertUnicode)
-      nsMemory::Free(sIMEReconvertUnicode);
 
     NS_IF_RELEASE(gCursorImgContainer);
 
@@ -796,7 +759,7 @@ nsWindow::~nsWindow()
 
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsBaseWidget, nsIKBStateControl)
+NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
@@ -1491,8 +1454,6 @@ NS_METHOD nsWindow::Destroy()
     {
       SetupTranslucentWindowMemoryBitmap(PR_FALSE);
 
-      delete [] mAlphaMask;
-      mAlphaMask = nsnull;
     }
 #endif
 
@@ -1643,9 +1604,14 @@ PRBool nsWindow::CanTakeFocus()
 
 NS_METHOD nsWindow::Show(PRBool bState)
 {
+  PRBool wasVisible = mIsVisible;
+  // Set the status now so that anyone asking during ShowWindow or
+  // SetWindowPos would get the correct answer.
+  mIsVisible = bState;
+
   if (mWnd) {
     if (bState) {
-      if (!mIsVisible && mWindowType == eWindowType_toplevel) {
+      if (!wasVisible && mWindowType == eWindowType_toplevel) {
         switch (mSizeMode) {
           case nsSizeMode_Maximized :
             ::ShowWindow(mWnd, SW_SHOWMAXIMIZED);
@@ -1673,7 +1639,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
         }
       } else {
         DWORD flags = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
-        if (mIsVisible)
+        if (wasVisible)
           flags |= SWP_NOZORDER;
 
         if (mWindowType == eWindowType_popup) {
@@ -1703,11 +1669,9 @@ NS_METHOD nsWindow::Show(PRBool bState)
   }
   
 #ifdef MOZ_XUL
-  if (!mIsVisible && bState && mIsTopTransparent)
+  if (!wasVisible && bState)
     Invalidate(PR_FALSE);
 #endif
-
-  mIsVisible = bState;
 
   return NS_OK;
 }
@@ -3462,6 +3426,11 @@ BOOL nsWindow::OnChar(UINT charCode, UINT aScanCode, PRUint32 aFlags)
 {
   // ignore [shift+]alt+space so the OS can handle it
   if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
+    return FALSE;
+  }
+  
+  // Ignore Ctrl+Enter (bug 318235)
+  if (mIsControlDown && charCode == 0xA) {
     return FALSE;
   }
 
@@ -6510,7 +6479,6 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
       sIMECompCharPos[sIMECursorPosition].top = cursorPosition.y;
       sIMECompCharPos[sIMECursorPosition].bottom = cursorPosition.YMost();
     }
-    sIMECaretHeight = cursorPosition.height;
   } else {
     // for some reason we don't know yet, theReply may contain invalid result
     // need more debugging in nsCaret to find out the reason
@@ -6528,11 +6496,6 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
   // However, the composition start event should occur only once.
   if (sIMEIsComposing)
     return PR_TRUE;
-
-  if (sIMEReconvertUnicode) {
-    nsMemory::Free(sIMEReconvertUnicode);
-    sIMEReconvertUnicode = NULL;
-  }
 
   nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_START, this);
   nsPoint point(0, 0);
@@ -6576,7 +6539,6 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
       sIMECompCharPos[0].top = cursorPosition.y;
       sIMECompCharPos[0].bottom = cursorPosition.YMost();
     }
-    sIMECaretHeight = cursorPosition.height;
   } else {
     // for some reason we don't know yet, theReply may contain invalid result
     // need more debugging in nsCaret to find out the reason
@@ -6609,7 +6571,6 @@ nsWindow::HandleEndComposition(void)
   DispatchWindowEvent(&event);
   PR_FREEIF(sIMECompCharPos);
   sIMECompCharPos = nsnull;
-  sIMECaretHeight = 0;
   sIMEIsComposing = PR_FALSE;
 }
 
@@ -7069,70 +7030,48 @@ PRBool nsWindow::OnIMEReconvert(LPARAM aData, LRESULT *oResult)
   printf("OnIMEReconvert\n");
 #endif
 
-  PRBool           result  = PR_FALSE;
+  *oResult = 0;
   RECONVERTSTRING* pReconv = (RECONVERTSTRING*) aData;
-  int              len = 0;
+
+  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
+  nsPoint point(0, 0);
+  InitEvent(selection, &point);
+  DispatchWindowEvent(&selection);
+  if (!selection.mSucceeded)
+    return PR_FALSE;
 
   if (!pReconv) {
-
-    //
-    // When reconvert, it must return need size to reconvert.
-    //
-    if (sIMEReconvertUnicode) {
-      nsMemory::Free(sIMEReconvertUnicode);
-      sIMEReconvertUnicode = NULL;
-    }
-
-    // Get reconversion string
-    nsReconversionEvent event(PR_TRUE, NS_RECONVERSION_QUERY, this);
-    nsPoint point(0, 0);
-
-    InitEvent(event, &point);
-    event.theReply.mReconversionString = NULL;
-    DispatchWindowEvent(&event);
-
-    sIMEReconvertUnicode = event.theReply.mReconversionString;
-
-    // Return need size
-
-    if (sIMEReconvertUnicode) {
-      len = nsCRT::strlen(sIMEReconvertUnicode);
-      *oResult = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
-
-      result = PR_TRUE;
-    }
-  } else {
-
-    //
-    // Fill reconvert struct
-    //
-
-    len = nsCRT::strlen(sIMEReconvertUnicode);
-    *oResult = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
-
-    if (pReconv->dwSize < *oResult) {
-      *oResult = 0;
+    // Return need size to reconvert.
+    if (selection.mReply.mString.IsEmpty())
       return PR_FALSE;
-    }
-
-    DWORD tmpSize = pReconv->dwSize;
-    ::ZeroMemory(pReconv, tmpSize);
-    pReconv->dwSize            = tmpSize;
-    pReconv->dwVersion         = 0;
-    pReconv->dwStrLen          = len;
-    pReconv->dwStrOffset       = sizeof(RECONVERTSTRING);
-    pReconv->dwCompStrLen      = len;
-    pReconv->dwCompStrOffset   = 0;
-    pReconv->dwTargetStrLen    = len;
-    pReconv->dwTargetStrOffset = 0;
-
-    ::CopyMemory((LPVOID) (aData + sizeof(RECONVERTSTRING)),
-                 sIMEReconvertUnicode, len * sizeof(WCHAR));
-
-    result = PR_TRUE;
+    PRUint32 len = selection.mReply.mString.Length();
+    *oResult = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
+    return PR_TRUE;
   }
 
-  return result;
+  // Fill reconvert struct
+  PRUint32 len = selection.mReply.mString.Length();
+  PRUint32 needSize = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
+
+  if (pReconv->dwSize < needSize)
+    return PR_FALSE;
+
+  *oResult = needSize;
+
+  DWORD tmpSize = pReconv->dwSize;
+  ::ZeroMemory(pReconv, tmpSize);
+  pReconv->dwSize            = tmpSize;
+  pReconv->dwVersion         = 0;
+  pReconv->dwStrLen          = len;
+  pReconv->dwStrOffset       = sizeof(RECONVERTSTRING);
+  pReconv->dwCompStrLen      = len;
+  pReconv->dwCompStrOffset   = 0;
+  pReconv->dwTargetStrLen    = len;
+  pReconv->dwTargetStrOffset = 0;
+
+  ::CopyMemory((LPVOID) (aData + sizeof(RECONVERTSTRING)),
+               selection.mReply.mString.get(), len * sizeof(WCHAR));
+  return PR_TRUE;
 }
 
 //==========================================================================
@@ -7141,72 +7080,57 @@ PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult)
 #ifdef DEBUG_IME
   printf("OnIMEQueryCharPosition\n");
 #endif
+
+  PRUint32 len = sIMEIsComposing ? sIMECompUnicode->Length() : 0;
+  *oResult = FALSE;
   IMECHARPOSITION* pCharPosition = (IMECHARPOSITION*)aData;
   if (!pCharPosition ||
       pCharPosition->dwSize < sizeof(IMECHARPOSITION) ||
-      ::GetFocus() != mWnd) {
-    *oResult = FALSE;
+      ::GetFocus() != mWnd ||
+      pCharPosition->dwCharPos > len)
     return PR_FALSE;
+
+  nsPoint point(0, 0);
+
+  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, this);
+  InitEvent(selection, &point);
+  DispatchWindowEvent(&selection);
+  if (!selection.mSucceeded)
+    return PR_FALSE;
+
+  PRUint32 offset = selection.mReply.mOffset + pCharPosition->dwCharPos;
+  PRBool useCaretRect = selection.mReply.mString.IsEmpty();
+
+  nsRect r;
+  if (!useCaretRect) {
+    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_CHARACTER_RECT, this);
+    charRect.InitForQueryCharacterRect(offset);
+    InitEvent(charRect, &point);
+    DispatchWindowEvent(&charRect);
+    if (charRect.mSucceeded)
+      r = charRect.mReply.mRect;
+    else
+      useCaretRect = PR_TRUE;
   }
 
-  if (!sIMEIsComposing) {  // Including |!sIMECompUnicode| and |!sIMECompUnicode->IsEmpty|.
-    if (pCharPosition->dwCharPos != 0) {
-      *oResult = FALSE;
+  if (useCaretRect) {
+    nsQueryContentEvent caretRect(PR_TRUE, NS_QUERY_CARET_RECT, this);
+    caretRect.InitForQueryCaretRect(offset);
+    InitEvent(caretRect, &point);
+    DispatchWindowEvent(&caretRect);
+    if (!caretRect.mSucceeded)
       return PR_FALSE;
-    }
-    nsPoint point(0, 0);
-    nsQueryCaretRectEvent event(PR_TRUE, NS_QUERYCARETRECT, this);
-    InitEvent(event, &point);
-    DispatchWindowEvent(&event);
-    // The active widget doesn't support this event.
-    if (!event.theReply.mRectIsValid) {
-      *oResult = FALSE;
-      return PR_FALSE;
-    }
-
-    nsRect screenRect;
-    ResolveIMECaretPos(nsnull, event.theReply.mCaretRect, screenRect);
-    pCharPosition->pt.x = screenRect.x;
-    pCharPosition->pt.y = screenRect.y;
-
-    pCharPosition->cLineHeight = event.theReply.mCaretRect.height;
-
-    ::GetWindowRect(mWnd, &pCharPosition->rcDocument);
-
-    *oResult = TRUE;
-    return PR_TRUE;
+    r = caretRect.mReply.mRect;
   }
 
-  // If the char positions are not cached, we should not return the values by LPARAM.
-  // Because in this case, the active widget is not editor.
-  if (!sIMECompCharPos) {
-    *oResult = FALSE;
-    return PR_FALSE;
-  }
+  nsRect screenRect;
+  ResolveIMECaretPos(nsnull, r, screenRect);
+  pCharPosition->pt.x = screenRect.x;
+  pCharPosition->pt.y = screenRect.y;
 
-  long charPosition;
-  if (pCharPosition->dwCharPos > sIMECompUnicode->Length()) {
-    *oResult = FALSE;
-    return PR_FALSE;
-  }
-  charPosition = pCharPosition->dwCharPos;
+  pCharPosition->cLineHeight = r.height;
 
-  // We only support insertion at the cursor position or at the leftmost position.
-  // Because sIMECompCharPos may be broken by user converting the string.
-  // But leftmost position and cursor position is always correctly.
-  if ((charPosition != 0 && charPosition != sIMECursorPosition) ||
-      charPosition > IME_MAX_CHAR_POS) {
-    *oResult = FALSE;
-    return PR_FALSE;
-  }
-  POINT pt;
-  pt.x = sIMECompCharPos[charPosition].left;
-  pt.y = sIMECompCharPos[charPosition].top;
-  ::ClientToScreen(mWnd, &pt);
-  pCharPosition->pt = pt;
-
-  pCharPosition->cLineHeight = sIMECaretHeight;
-
+  // XXX Should we create "query focused content rect event"?
   ::GetWindowRect(mWnd, &pCharPosition->rcDocument);
 
   *oResult = TRUE;
@@ -7331,7 +7255,7 @@ NS_IMETHODIMP nsWindow::SetIMEEnabled(PRUint32 aState)
   if (sIMEIsComposing)
     ResetInputState();
   mIMEEnabled = aState;
-  PRBool enable = (aState == nsIKBStateControl::IME_STATUS_ENABLED);
+  PRBool enable = (aState == nsIWidget::IME_STATUS_ENABLED);
   if (!enable != !mOldIMC)
     return NS_OK;
   mOldIMC = ::ImmAssociateContext(mWnd, enable ? mOldIMC : NULL);
@@ -8053,7 +7977,6 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
 
   mTransparentSurface = new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
   mMemoryDC = mTransparentSurface->GetDC();
-  mMemoryBitmap = NULL;
 }
 
 NS_IMETHODIMP nsWindow::GetHasTransparentBackground(PRBool& aTransparent)
@@ -8096,39 +8019,15 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTransparent)
     exStyle |= WS_EX_LAYERED;
   } else
   {
-    style = WindowStyle();
-    exStyle = WindowExStyle();
+    style = topWindow->WindowStyle();
+    exStyle = topWindow->WindowExStyle();
   }
   ::SetWindowLongW(hWnd, GWL_STYLE, style);
   ::SetWindowLongW(hWnd, GWL_EXSTYLE, exStyle);
 
   mIsTransparent = aTransparent;
-  topWindow->mIsTopTransparent = aTransparent;
 
-  nsresult rv = NS_OK;
-
-  rv = SetupTranslucentWindowMemoryBitmap(aTransparent);
-
-  if (aTransparent)
-  {
-    if (!mBounds.IsEmpty())
-    {
-      PRInt32 alphaBytes = mBounds.width * mBounds.height;
-      mAlphaMask = new PRUint8 [alphaBytes];
-
-      if (mAlphaMask)
-        memset(mAlphaMask, 255, alphaBytes);
-      else
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    } else
-      mAlphaMask = nsnull;
-  } else
-  {
-    delete [] mAlphaMask;
-    mAlphaMask = nsnull;
-  }
-
-  return rv;
+  return SetupTranslucentWindowMemoryBitmap(aTransparent);
 }
 
 nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTransparent)
@@ -8138,7 +8037,6 @@ nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTransparent)
   } else {
     mTransparentSurface = nsnull;
     mMemoryDC = NULL;
-    mMemoryBitmap = NULL;
   }
 
   return NS_OK;

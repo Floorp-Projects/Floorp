@@ -55,7 +55,7 @@
           <xul:label xbl:inherits="value=type"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:label xbl:inherits="value=feedURL" class="text-link" flex="1"
+          <xul:label xbl:inherits="value=feedURL,tooltiptext=feedURL" class="text-link" flex="1"
                      onclick="openUILink(this.value, event);" crop="end"/>
           <xul:spacer flex="10000"/>
         </xul:hbox>

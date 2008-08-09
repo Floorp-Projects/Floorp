@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,7 +42,12 @@
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
+#include "prlink.h"
+#include "gdk/gdk.h"
+#ifdef MOZ_X11
+#include <X11/Xlib.h>
+#endif
 
 //------------------------------------------------------------------------
 
@@ -54,16 +60,26 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREENMANAGER
 
+#ifdef MOZ_X11
+  Atom NetWorkareaAtom() { return mNetWorkareaAtom; }
+#endif
+  
+  // For internal use, or reinitialization from change notification.
+  nsresult Init();
+
 private:
 
-  nsresult EnsureInit(void);
+  nsresult EnsureInit();
 
-  // cache the primary screen object to avoid memory allocation every
-  // time
-  nsCOMPtr<nsISupportsArray> mCachedScreenArray;
-  // how many screens do we have?
-  int mNumScreens;
+  // Cached screen array.  Its length is the number of screens we have.
+  nsCOMArray<nsIScreen> mCachedScreenArray;
 
+  PRLibrary *mXineramalib;
+
+  GdkWindow *mRootWindow;
+#ifdef MOZ_X11
+  Atom mNetWorkareaAtom;
+#endif
 };
 
 #endif  // nsScreenManagerGtk_h___ 

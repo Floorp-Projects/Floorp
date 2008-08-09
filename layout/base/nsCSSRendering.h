@@ -80,10 +80,7 @@ public:
                           const nsRect& aBorderArea,
                           const nsStyleBorder& aBorderStyle,
                           nsStyleContext* aStyleContext,
-                          PRIntn aSkipSides,
-                          nsRect* aGap = 0,
-                          nscoord aHardBorderSize = 0,
-                          PRBool aShouldIgnoreRounded = PR_FALSE);
+                          PRIntn aSkipSides = 0);
 
   /**
    * Render the outline for an element using css rendering rules
@@ -100,8 +97,18 @@ public:
                           const nsRect& aBorderArea,
                           const nsStyleBorder& aBorderStyle,
                           const nsStyleOutline& aOutlineStyle,
-                          nsStyleContext* aStyleContext,
-                          nsRect* aGap = 0);
+                          nsStyleContext* aStyleContext);
+
+  /**
+   * Render keyboard focus on an element.
+   * |aFocusRect| is the outer rectangle of the focused element.
+   * Uses a fixed style equivalent to "1px dotted |aColor|".
+   * Not used for controls, because the native theme may differ.
+   */
+  static void PaintFocus(nsPresContext* aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect& aFocusRect,
+                         nscolor aColor);
 
   /**
    * Fill in an nsStyleBackground to be used to paint the background for
@@ -163,29 +170,6 @@ public:
    * inline background data cache.
    */
   static void DidPaint();
-
-
-  static void DrawDashedSides(PRIntn startSide,
-                              nsIRenderingContext& aContext,
-                              const nsRect& aDirtyRect,
-                              const PRUint8 borderStyles[],
-                              const nscolor borderColors[],    
-                              const nsRect& borderOutside,
-                              const nsRect& borderInside,
-                              PRIntn aSkipSides,
-                              nsRect* aGap);
-
-  static void DrawDashedSides(PRIntn startSide,
-                              nsIRenderingContext& aContext,
-                              const nsRect& aDirtyRect,
-                              const nsStyleColor* aColorStyle,
-                              const nsStyleBorder* aBorderStyle,  
-                              const nsStyleOutline* aOutlineStyle,  
-                              PRBool aDoOutline,
-                              const nsRect& borderOutside,
-                              const nsRect& borderInside,
-                              PRIntn aSkipSides,
-                              nsRect* aGap);
 
   // Draw a border segment in the table collapsing border model without beveling corners
   static void DrawTableBorderSegment(nsIRenderingContext&     aContext,
@@ -272,6 +256,21 @@ public:
                                       const PRUint8 aStyle);
 
 protected:
+
+  static void DrawBorderImage(nsPresContext* aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              nsIFrame* aForFrame,
+                              const nsRect& aBorderArea,
+                              const nsStyleBorder& aBorderStyle);
+
+  static void DrawBorderImageSide(gfxContext *aThebesContext,
+                                  nsIDeviceContext* aDeviceContext,
+                                  imgIContainer* aImage,
+                                  gfxRect& aDestRect,
+                                  gfxSize& aInterSize,
+                                  gfxRect& aSourceRect,
+                                  PRUint8 aHFillType,
+                                  PRUint8 aVFillType);
 
   static void PaintBackgroundColor(nsPresContext* aPresContext,
                                    nsIRenderingContext& aRenderingContext,

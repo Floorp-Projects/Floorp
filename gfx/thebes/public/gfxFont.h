@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Stuart Parmenter <stuart@mozilla.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   John Daggett <jdaggett@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,6 +44,7 @@
 #include "gfxTypes.h"
 #include "nsString.h"
 #include "gfxPoint.h"
+#include "gfxFontUtils.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
@@ -90,7 +92,7 @@ struct THEBES_API gfxFontStyle {
     // True if the character set quirks (for treatment of "Symbol",
     // "Wingdings", etc.) should be applied.
     PRPackedBool familyNameQuirks : 1;
-    
+
     // The weight of the font.  100, 200, ... 900 are the weights, and
     // single integer offsets request the next bolder/lighter font
     // available.  For example, for a font available in weights 200,
@@ -137,6 +139,89 @@ struct THEBES_API gfxFontStyle {
             (sizeAdjust == other.sizeAdjust);
     }
 };
+
+
+class gfxFontEntry {
+public:
+    THEBES_INLINE_DECL_REFCOUNTING(gfxFontEntry)
+
+    gfxFontEntry(const nsAString& aName) : 
+        mName(aName), mCmapInitialized(PR_FALSE)
+    { }
+
+    gfxFontEntry(const gfxFontEntry& aEntry) : 
+        mName(aEntry.mName), mItalic(aEntry.mItalic), mFixedPitch(aEntry.mFixedPitch),
+        mUnicodeFont(aEntry.mUnicodeFont), mSymbolFont(aEntry.mSymbolFont), mTrueType(aEntry.mTrueType),
+        mIsType1(aEntry.mIsType1), mWeight(aEntry.mWeight), mCmapInitialized(aEntry.mCmapInitialized),
+        mCharacterMap(aEntry.mCharacterMap)
+    { }
+
+    virtual ~gfxFontEntry();
+
+    // unique name for the face, *not* the family
+    const nsString& Name() const { return mName; }
+
+    PRInt32 Weight() { return mWeight; }
+
+    PRBool IsFixedPitch() { return mFixedPitch; }
+    PRBool IsItalic() { return mItalic; }
+    PRBool IsBold() { return mWeight >= 6; } // bold == weights 600 and above
+
+    inline PRBool HasCharacter(PRUint32 ch) {
+        if (mCharacterMap.test(ch))
+            return PR_TRUE;
+            
+        return TestCharacterMap(ch);
+    }
+
+    virtual PRBool TestCharacterMap(PRUint32 aCh);
+    virtual nsresult ReadCMAP() { return 0; }
+
+    nsString mName;
+
+    PRPackedBool     mItalic      : 1;
+    PRPackedBool     mFixedPitch  : 1;
+
+    PRPackedBool     mUnicodeFont : 1;
+    PRPackedBool     mSymbolFont  : 1;
+    PRPackedBool     mTrueType    : 1;
+    PRPackedBool     mIsType1     : 1;
+
+    PRUint16         mWeight;
+
+    PRPackedBool     mCmapInitialized;
+    gfxSparseBitSet  mCharacterMap;
+};
+
+
+class gfxFontFamily {
+public:
+    THEBES_INLINE_DECL_REFCOUNTING(gfxFontFamily)
+
+    gfxFontFamily(const nsAString& aName) :
+        mName(aName) { }
+
+    virtual ~gfxFontFamily() { }
+
+    const nsString& Name() { return mName; }
+
+    // choose a specific face to match a style using CSS font matching rules (weight matching occurs here)
+    gfxFontEntry *FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBold);
+
+protected:
+    // fills in an array with weights of faces that match style, returns number of weights in array
+    virtual PRBool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[], const gfxFontStyle& aFontStyle) { return PR_FALSE; }
+
+    nsString mName;
+};
+
+struct gfxTextRange {
+    gfxTextRange(PRUint32 aStart,  PRUint32 aEnd) : start(aStart), end(aEnd) { }
+    PRUint32 Length() const { return end - start; }
+    nsRefPtr<gfxFont> font;
+    PRUint32 start, end;
+};
+
 
 /**
  * Font cache design:
@@ -383,10 +468,10 @@ protected:
     nsAutoRefCnt mRefCnt;
 
 public:
-    gfxFont(const nsAString &aName, const gfxFontStyle *aFontGroup);
+    gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle);
     virtual ~gfxFont();
 
-    const nsString& GetName() const { return mName; }
+    const nsString& GetName() const { return mFontEntry->Name(); }
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
     virtual nsString GetUniqueName() = 0;
@@ -415,6 +500,9 @@ public:
 
         gfxFloat aveCharWidth;
         gfxFloat spaceWidth;
+        gfxFloat zeroOrAveCharWidth;  // width of '0', or if there is
+                                      // no '0' glyph in this font,
+                                      // equal to .aveCharWidth
     };
     virtual const gfxFont::Metrics& GetMetrics() = 0;
 
@@ -545,16 +633,25 @@ public:
     PRBool IsSyntheticBold() { return mSyntheticBoldOffset != 0; }
     PRUint32 GetSyntheticBoldOffset() { return mSyntheticBoldOffset; }
     
+    gfxFontEntry *GetFontEntry() { return mFontEntry.get(); }
+    PRBool HasCharacter(PRUint32 ch) {
+        if (!mIsValid)
+            return PR_FALSE;
+        return mFontEntry->HasCharacter(ch); 
+    }
+
 protected:
+    nsRefPtr<gfxFontEntry> mFontEntry;
+
     // The family name of the font
-    nsString                   mName;
+    PRPackedBool               mIsValid;
     nsExpirationState          mExpirationState;
     gfxFontStyle               mStyle;
     nsAutoTArray<gfxGlyphExtents*,1> mGlyphExtentsArray;
 
     // synthetic bolding for environments where this is not supported by the platform
     PRUint32                   mSyntheticBoldOffset;  // number of devunit pixels to offset double-strike, 0 ==> no bolding
-    
+
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
     void SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont);
@@ -917,6 +1014,13 @@ public:
      * or PR_UINT32_MAX if no such N exists, where GetAdvanceWidth assumes
      * the effect of
      * SetLineBreaks(aStart, N, aLineBreakBefore, N < aMaxLength, aProvider)
+     *
+     * @param aCanWordWrap true if we can break between any two grapheme
+     * clusters. This is set by word-wrap: break-word
+     *
+     * @param aBreakPriority in/out the priority of the break opportunity
+     * saved in the line. If we are prioritizing break opportunities, we will
+     * not set a break with a lower priority. @see gfxBreakPriority.
      * 
      * Note that negative advance widths are possible especially if negative
      * spacing is provided.
@@ -929,7 +1033,9 @@ public:
                                  Metrics *aMetrics, PRBool aTightBoundingBox,
                                  gfxContext *aRefContextForTightBoundingBox,
                                  PRBool *aUsedHyphenation,
-                                 PRUint32 *aLastBreak);
+                                 PRUint32 *aLastBreak,
+                                 PRBool aCanWordWrap,
+                                 gfxBreakPriority *aBreakPriority);
 
     /**
      * Update the reference context.
@@ -1475,6 +1581,15 @@ public:
         return mUnderlineOffset;
     }
 
+    already_AddRefed<gfxFont> FindFontForChar(PRUint32 ch, PRUint32 prevCh, PRUint32 nextCh, gfxFont *aPrevMatchedFont);
+
+    virtual already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh) { return nsnull; }
+
+    virtual already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh) { return nsnull; }
+
+    void ComputeRanges(nsTArray<gfxTextRange>& mRanges, const PRUnichar *aString, PRUint32 begin, PRUint32 end);
+
+
 protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
@@ -1502,5 +1617,16 @@ protected:
                                       void *closure);
 
     static PRBool FontResolverProc(const nsAString& aName, void *aClosure);
+
+    inline gfxFont* WhichFontSupportsChar(nsTArray< nsRefPtr<gfxFont> >& aFontList, PRUint32 aCh) {
+        PRUint32 len = aFontList.Length();
+        for (PRUint32 i = 0; i < len; i++) {
+            gfxFont* font = aFontList.ElementAt(i).get();
+            if (font && font->HasCharacter(aCh))
+                return font;
+        }
+        return nsnull;
+    }
+
 };
 #endif

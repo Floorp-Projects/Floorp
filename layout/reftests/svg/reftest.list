@@ -12,15 +12,19 @@ include moz-only/reftest.list
 
 == clipPath-basic-01.svg pass.svg
 == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
+== conditions-01.svg pass.svg
 == currentColor-01.svg pass.svg
 == currentColor-02.svg pass.svg
 == currentColor-03.svg pass.svg
+== dynamic-conditions-01.svg pass.svg
+== dynamic-clipPath-01.svg pass.svg
 == dynamic-link-style-01.svg pass.svg
 == dynamic-rect-01.svg dynamic-rect-01-ref.svg
 == dynamic-rect-02.svg dynamic-rect-02-ref.svg
 == dynamic-rect-03.svg dynamic-rect-03-ref.svg
 == dynamic-rect-04.xhtml pass.svg
 == dynamic-reflow-01.svg dynamic-reflow-01-ref.svg
+== dynamic-switch-01.svg pass.svg
 == dynamic-text-01.svg dynamic-text-01-ref.svg
 == dynamic-text-02.svg dynamic-text-02-ref.svg
 == dynamic-text-03.svg dynamic-text-03-ref.svg
@@ -43,6 +47,7 @@ include moz-only/reftest.list
 fails == inline-in-xul-basic-01.xul pass.svg
 == image-scaling-01.svg pass.svg
 == image-scaling-02.svg pass.svg
+== invalid-text-01.svg pass.svg
 == linearGradient-basic-01.svg pass.svg
 == linearGradient-basic-02.svg pass.svg
 == nested-viewBox-01.svg pass.svg
@@ -66,6 +71,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
 == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01-ref.xhtml
 == svg-in-foreignObject-02.xhtml svg-in-foreignObject-01-ref.xhtml # reuse -01-ref.xhtml
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
+== switch-01.svg pass.svg
 == text-gradient-01.svg text-gradient-01-ref.svg
 == text-in-link-01.svg text-in-link-01-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg

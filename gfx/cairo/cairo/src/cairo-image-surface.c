@@ -124,7 +124,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     if (surface == NULL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&surface->base, &cairo_image_surface_backend,
+    _cairo_surface_init (&surface->base, &_cairo_image_surface_backend,
 			 _cairo_content_from_pixman_format (pixman_format));
 
     surface->pixman_image = pixman_image;
@@ -392,7 +392,8 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  * stride = cairo_format_stride_for_width (format, width);
  * data = malloc (stride * height);
  * surface = cairo_image_surface_create_for_data (data, format,
- *						  width, height);
+ *						  width, height,
+ *						  stride);
  * </programlisting></informalexample>
  *
  * Return value: the appropriate stride to use given the desired
@@ -1192,7 +1193,7 @@ _cairo_image_surface_set_clip_region (void *abstract_surface,
 {
     cairo_image_surface_t *surface = (cairo_image_surface_t *) abstract_surface;
 
-    if (! pixman_image_set_clip_region (surface->pixman_image, &region->rgn))
+    if (! pixman_image_set_clip_region32 (surface->pixman_image, &region->rgn))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     surface->has_clip = region != NULL;
@@ -1246,10 +1247,10 @@ _cairo_image_surface_reset (void *abstract_surface)
 cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface)
 {
-    return surface->backend == &cairo_image_surface_backend;
+    return surface->backend == &_cairo_image_surface_backend;
 }
 
-const cairo_surface_backend_t cairo_image_surface_backend = {
+const cairo_surface_backend_t _cairo_image_surface_backend = {
     CAIRO_SURFACE_TYPE_IMAGE,
     _cairo_image_surface_create_similar,
     _cairo_image_surface_finish,

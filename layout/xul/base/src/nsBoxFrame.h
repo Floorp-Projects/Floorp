@@ -145,12 +145,19 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
+    // record that children that are ignorable whitespace should be excluded 
+    // (When content was loaded via the XUL content sink, it's already
+    // been excluded, but we need this for when the XUL namespace is used
+    // in other MIME types or when the XUL CSS display types are used with
+    // non-XUL elements.)
+
     // This is bogus, but it's what we've always done.
     // (Given that we're replaced, we need to say we're a replaced element
     // that contains a block so nsHTMLReflowState doesn't tell us to be
     // NS_INTRINSICSIZE wide.)
     return nsContainerFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock | eXULBox));
+      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock | eXULBox |
+        nsIFrame::eExcludesIgnorableWhitespace));
   }
 
 #ifdef DEBUG

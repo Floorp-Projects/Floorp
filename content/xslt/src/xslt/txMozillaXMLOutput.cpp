@@ -764,7 +764,6 @@ txMozillaXMLOutput::startHTMLElement(nsIContent* aElement, PRBool aIsHTML)
 nsresult
 txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
 {
-    nsresult rv;
     nsIAtom *atom = aElement->Tag();
 
     if (mTableState == ADDED_TBODY) {
@@ -809,10 +808,11 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
 
         aElement->GetAttr(kNameSpaceID_None, txHTMLAtoms::href, value);
         nsCOMPtr<nsIURI> baseURI;
-        rv = NS_NewURI(getter_AddRefs(baseURI), value, nsnull);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_NewURI(getter_AddRefs(baseURI), value, nsnull);
 
-        doc->SetBaseURI(baseURI); // The document checks if it is legal to set this base
+        if (baseURI) {
+            doc->SetBaseURI(baseURI); // The document checks if it is legal to set this base
+        }
     }
     else if (mCreatingNewDocument && atom == txHTMLAtoms::meta) {
         // handle HTTP-EQUIV data

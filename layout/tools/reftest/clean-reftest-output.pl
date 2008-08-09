@@ -56,7 +56,7 @@ while (<>) {
     next unless /REFTEST/;
     chomp;
     chop if /\r$/;
-    s,(PASS|FAIL)([^:]*):( \(!=\))? (.*),\1\2:\3 <a href="\4">\4</a>,;
+    s,(TEST-)([^\|]*) \| ([^\|]*) \|(.*),\1\2: <a href="\3">\3</a>\4,;
     s,(IMAGE[^:]*): (data:.*),<a href="\2">\1</a>,;
     print;
     print "\n";

@@ -50,7 +50,7 @@ sub daysFromBuildID
 {
     my ($buildid,) = @_;
 
-    my ($y, $m, $d, $h) = ($buildid =~ /^(\d{4})(\d{2})(\d{2})(\d{2})$/);
+    my ($y, $m, $d, $h) = ($buildid =~ /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/);
     $d || die("Unrecognized buildid string.");
 
     my $secondstodays = 60 * 60 * 24;

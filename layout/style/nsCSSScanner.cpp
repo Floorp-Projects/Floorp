@@ -325,13 +325,6 @@ void nsCSSScanner::OutputError()
 {
   if (mError.IsEmpty()) return;
  
-#ifdef DEBUG
-  if (gReportErrors)
-    fprintf(stderr, "CSS Error (%s :%u.%u): %s\n",
-                    mFileName.get(), mErrorLineNumber, mErrorColNumber,
-                    NS_ConvertUTF16toUTF8(mError).get());
-#endif
-
   // Log it to the Error console
 
   if (InitGlobals() && gReportErrors) {
@@ -401,7 +394,7 @@ void nsCSSScanner::ReportUnexpectedParams(const char* aMessage,
   AddToError(str);
 }
 
-// aMessage must take no parameters
+// aLookingFor is a plain string, not a format string
 void nsCSSScanner::ReportUnexpectedEOF(const char* aLookingFor)
 {
   ENSURE_STRINGBUNDLE;
@@ -413,6 +406,22 @@ void nsCSSScanner::ReportUnexpectedEOF(const char* aLookingFor)
   const PRUnichar *params[] = {
     innerStr.get()
   };
+  nsXPIDLString str;
+  gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
+                                      params, NS_ARRAY_LENGTH(params),
+                                      getter_Copies(str));
+  AddToError(str);
+}
+
+// aLookingFor is a single character
+void nsCSSScanner::ReportUnexpectedEOF(PRUnichar aLookingFor)
+{
+  ENSURE_STRINGBUNDLE;
+
+  const PRUnichar lookingForStr[] = {
+    PRUnichar('\''), aLookingFor, PRUnichar('\''), PRUnichar(0)
+  };
+  const PRUnichar *params[] = { lookingForStr };
   nsXPIDLString str;
   gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
                                       params, NS_ARRAY_LENGTH(params),

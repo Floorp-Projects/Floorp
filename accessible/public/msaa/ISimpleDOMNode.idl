@@ -133,13 +133,9 @@ cpp_quote("")
 
 import "objidl.idl";
 import "oaidl.idl";
-        
-const long DISPID_NODE_NODEINFO   = -5900;
-const long DISPID_NODE_ATTRIBUTES = -5901;
-const long DISPID_NODE_ATTRIBUTESFORNAMES = -5902;
-const long DISPID_NODE_COMPSTYLE  = -5903;
-const long DISPID_NODE_COMPSTYLEFORPROPS = -5904;
-const long DISPID_NODE_LANGUAGE = -5905;
+
+import "ISimpleDOMText.idl";
+import "ISimpleDOMDocument.idl";
 
 [object, uuid(1814ceeb-49e2-407f-af99-fa755a7d2607)]
 interface ISimpleDOMNode : IUnknown
@@ -157,7 +153,7 @@ interface ISimpleDOMNode : IUnknown
   const unsigned short NODETYPE_DOCUMENT_FRAGMENT = 11;
   const unsigned short NODETYPE_NOTATION = 12;
 
-  [propget, id(DISPID_NODE_NODEINFO)] HRESULT nodeInfo(
+  [propget] HRESULT nodeInfo(
     [out] BSTR *nodeName,   // for performance returns NULL for text nodes (true nodeName would be "#text")
     [out] short *nameSpaceID,
     [out] BSTR *nodeValue,
@@ -166,7 +162,7 @@ interface ISimpleDOMNode : IUnknown
     [out, retval] unsigned short *nodeType
   );
 
-  [propget, id(DISPID_NODE_ATTRIBUTES)] HRESULT attributes(  
+  [propget] HRESULT attributes(  
     [in] unsigned short maxAttribs,
     [out, size_is(maxAttribs), length_is(*numAttribs)] BSTR *attribNames, 
     [out, size_is(maxAttribs), length_is(*numAttribs)] short *nameSpaceID,  
@@ -174,14 +170,14 @@ interface ISimpleDOMNode : IUnknown
     [out, retval] unsigned short *numAttribs
   );
 
-  [propget, id(DISPID_NODE_ATTRIBUTESFORNAMES)] HRESULT attributesForNames(  
+  [propget] HRESULT attributesForNames(  
     [in] unsigned short numAttribs,
     [in, size_is(numAttribs), length_is(numAttribs)] BSTR *attribNames, 
     [in, size_is(numAttribs), length_is(numAttribs)] short *nameSpaceID,  
     [out, retval, size_is(numAttribs), length_is(numAttribs)] BSTR *attribValues
   );
 
-  [propget, id(DISPID_NODE_COMPSTYLE)] HRESULT computedStyle(  
+  [propget] HRESULT computedStyle(  
     [in] unsigned short maxStyleProperties,
     [in] boolean useAlternateView,  // If TRUE, returns properites for media as set in nsIDOMDocument::set_alternateViewMediaTypes
     [out, size_is(maxStyleProperties), length_is(*numStyleProperties)] BSTR *styleProperties, 
@@ -189,7 +185,7 @@ interface ISimpleDOMNode : IUnknown
     [out, retval] unsigned short *numStyleProperties
   );
 
-  [propget, id(DISPID_NODE_COMPSTYLEFORPROPS)] HRESULT computedStyleForProperties(  
+  [propget] HRESULT computedStyleForProperties(  
     [in] unsigned short numStyleProperties, 
     [in] boolean useAlternateView,  // If TRUE, returns properites for media as set in nsIDOMDocument::set_alternateViewMediaTypes
     [in, size_is(numStyleProperties), length_is(numStyleProperties)] BSTR *styleProperties, 
@@ -210,7 +206,18 @@ interface ISimpleDOMNode : IUnknown
 
   [propget, local] HRESULT localInterface([out][retval] void **localInterface);
 
-  [propget, id(DISPID_NODE_LANGUAGE)] HRESULT language([out, retval] BSTR *language);
+  [propget] HRESULT language([out, retval] BSTR *language);
 }
 
+
+[
+    uuid(a6245497-9c0b-4449-85a5-bd6ad07df8ea), 
+    helpstring("ISimpleDOM Type Library")
+] 
+library ISimpleDOM 
+{
+  interface ISimpleDOMNode;
+  interface ISimpleDOMText;
+  interface ISimpleDOMDocument;
+};
 

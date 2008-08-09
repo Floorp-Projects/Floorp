@@ -592,8 +592,11 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                   (!aBindingParent && aParent &&
                    aParent->GetBindingParent() == GetBindingParent()),
                   "Already have a binding parent.  Unbind first!");
-  NS_PRECONDITION(aBindingParent != this || IsNativeAnonymous(),
-                  "Only native anonymous content should have itself as its "
+  NS_PRECONDITION(aBindingParent != this,
+                  "Content must not be its own binding parent");
+  NS_PRECONDITION(!IsRootOfNativeAnonymousSubtree() || 
+                  aBindingParent == aParent,
+                  "Native anonymous content must have its parent as its "
                   "own binding parent");
 
   if (!aBindingParent && aParent) {
@@ -605,13 +608,14 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsDataSlots *slots = GetDataSlots();
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_ASSERTION(IsNativeAnonymous() || !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
+    NS_ASSERTION(IsRootOfNativeAnonymousSubtree() ||
+                 !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
                  aBindingParent->IsInNativeAnonymousSubtree(),
                  "Trying to re-bind content from native anonymous subtree to"
                  "non-native anonymous parent!");
     slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
-    if (IsNativeAnonymous() ||
-        aBindingParent->IsInNativeAnonymousSubtree()) {
+    if (IsRootOfNativeAnonymousSubtree() ||
+        aParent->IsInNativeAnonymousSubtree()) {
       SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
     }
   }
@@ -908,8 +912,10 @@ nsGenericDOMDataNode::CreateSlots()
 // Implementation of the nsIDOMText interface
 
 nsresult
-nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
+nsGenericDOMDataNode::SplitData(PRUint32 aOffset, nsIContent** aReturn,
+                                PRBool aCloneAfterOriginal)
 {
+  *aReturn = nsnull;
   nsresult rv = NS_OK;
   nsAutoString cutText;
   PRUint32 length = TextLength();
@@ -918,12 +924,14 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  rv = SubstringData(aOffset, length - aOffset, cutText);
+  PRUint32 cutStartOffset = aCloneAfterOriginal ? aOffset : 0;
+  PRUint32 cutLength = aCloneAfterOriginal ? length - aOffset : aOffset;
+  rv = SubstringData(cutStartOffset, cutLength, cutText);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = DeleteData(aOffset, length - aOffset);
+  rv = DeleteData(cutStartOffset, cutLength);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -940,20 +948,29 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
 
   newContent->SetText(cutText, PR_TRUE);
 
-  nsIContent* parent = GetParent();
+  nsCOMPtr<nsINode> parent = GetNodeParent();
 
   if (parent) {
-    PRInt32 index = parent->IndexOf(this);
-
-    nsCOMPtr<nsIContent> content(do_QueryInterface(newContent));
-
-    parent->InsertChildAt(content, index+1, PR_TRUE);
+    PRInt32 insertionIndex = parent->IndexOf(this);
+    if (aCloneAfterOriginal) {
+      ++insertionIndex;
+    }
+    parent->InsertChildAt(newContent, insertionIndex, PR_TRUE);
   }
 
-  // No need to handle the case of document being the parent since text
-  // isn't allowed as direct child of documents
+  newContent.swap(*aReturn);
+  return rv;
+}
 
-  return CallQueryInterface(newContent, aReturn);
+nsresult
+nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
+{
+  nsCOMPtr<nsIContent> newChild;
+  nsresult rv = SplitData(aOffset, getter_AddRefs(newChild));
+  if (NS_SUCCEEDED(rv)) {
+    rv = CallQueryInterface(newChild, aReturn);
+  }
+  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -998,9 +1015,9 @@ nsText3Tearoff::ReplaceWholeText(const nsAString& aContent,
 
 // Implementation of the nsIDOM3Text interface
 
-/* static */ PRUint32
+/* static */ PRInt32
 nsGenericDOMDataNode::FirstLogicallyAdjacentTextNode(nsIContent* aParent,
-                                                     PRUint32 aIndex)
+                                                     PRInt32 aIndex)
 {
   while (aIndex-- > 0) {
     nsIContent* sibling = aParent->GetChildAt(aIndex);
@@ -1010,12 +1027,12 @@ nsGenericDOMDataNode::FirstLogicallyAdjacentTextNode(nsIContent* aParent,
   return 0;
 }
 
-/* static */ PRUint32
+/* static */ PRInt32
 nsGenericDOMDataNode::LastLogicallyAdjacentTextNode(nsIContent* aParent,
-                                                    PRUint32 aIndex,
+                                                    PRInt32 aIndex,
                                                     PRUint32 aCount)
 {
-  while (++aIndex < aCount) {
+  while (++aIndex < PRInt32(aCount)) {
     nsIContent* sibling = aParent->GetChildAt(aIndex);
     if (!sibling->IsNodeOfType(nsINode::eTEXT))
       return aIndex - 1;
@@ -1032,10 +1049,14 @@ nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText)
   if (!parent)
     return GetData(aWholeText);
 
-  PRUint32 index = parent->IndexOf(this);
-  PRUint32 first =
+  PRInt32 index = parent->IndexOf(this);
+  NS_WARN_IF_FALSE(index >= 0,
+                   "Trying to use .wholeText with an anonymous"
+                    "text node child of a binding parent?");
+  NS_ENSURE_TRUE(index >= 0, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  PRInt32 first =
     FirstLogicallyAdjacentTextNode(parent, index);
-  PRUint32 last =
+  PRInt32 last =
     LastLogicallyAdjacentTextNode(parent, index, parent->GetChildCount());
 
   aWholeText.Truncate();
@@ -1072,14 +1093,18 @@ nsGenericDOMDataNode::ReplaceWholeText(const nsAFlatString& aContent,
     return CallQueryInterface(this, aReturn);
   }
 
+  PRInt32 index = parent->IndexOf(this);
+  NS_WARN_IF_FALSE(index >= 0,
+                   "Trying to use .replaceWholeText with an anonymous"
+                   "text node child of a binding parent?");
+  NS_ENSURE_TRUE(index >= 0, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
   // We don't support entity references or read-only nodes, so remove the
   // logically adjacent text nodes (which therefore must all be siblings of
   // this) and set this one to the provided text, if that text isn't empty.
-
-  PRUint32 index = parent->IndexOf(this);
-  PRUint32 first =
+  PRInt32 first =
     FirstLogicallyAdjacentTextNode(parent, index);
-  PRUint32 last =
+  PRInt32 last =
     LastLogicallyAdjacentTextNode(parent, index, parent->GetChildCount());
 
   do {

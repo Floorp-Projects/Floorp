@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -78,6 +79,7 @@
 #include "nsLayoutUtils.h"
 #include "nsIViewManager.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsCSSRuleProcessor.h"
 #include "nsStyleChangeList.h"
 #include "nsRuleNode.h"
 
@@ -728,6 +730,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       nscoord height = NSToCoordRound(oldHeightDevPixels*AppUnitsPerDevPixel());
       vm->SetWindowDimensions(width, height);
 
+      MediaFeatureValuesChanged(PR_TRUE);
       RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
     }
     return;
@@ -799,6 +802,9 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 
   if (!mImageLoaders.Init())
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  if (!mBorderImageLoaders.Init())
     return NS_ERROR_OUT_OF_MEMORY;
   
   // Get the look and feel service here; default colors will be initialized
@@ -1160,6 +1166,7 @@ nsPresContext::SetFullZoom(float aZoom)
   mFullZoom = aZoom;
   GetViewManager()->SetWindowDimensions(NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
                                         NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
+  MediaFeatureValuesChanged(PR_TRUE);
   RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
 
   mSupressResizeReflow = PR_FALSE;
@@ -1168,18 +1175,21 @@ nsPresContext::SetFullZoom(float aZoom)
 }
 
 imgIRequest*
-nsPresContext::LoadImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
+nsPresContext::DoLoadImage(nsPresContext::ImageLoaderTable& aTable,
+                           imgIRequest* aImage,
+                           nsIFrame* aTargetFrame,
+                           PRBool aReflowOnLoad)
 {
   // look and see if we have a loader for the target frame.
   nsCOMPtr<nsImageLoader> loader;
-  mImageLoaders.Get(aTargetFrame, getter_AddRefs(loader));
+  aTable.Get(aTargetFrame, getter_AddRefs(loader));
 
   if (!loader) {
     loader = new nsImageLoader();
     if (!loader)
       return nsnull;
 
-    loader->Init(aTargetFrame, this);
+    loader->Init(aTargetFrame, this, aReflowOnLoad);
     mImageLoaders.Put(aTargetFrame, loader);
   }
 
@@ -1190,21 +1200,40 @@ nsPresContext::LoadImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
   return request;
 }
 
+imgIRequest*
+nsPresContext::LoadImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
+{
+  return DoLoadImage(mImageLoaders, aImage, aTargetFrame, PR_FALSE);
+}
+
+imgIRequest*
+nsPresContext::LoadBorderImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
+{
+  return DoLoadImage(mBorderImageLoaders, aImage, aTargetFrame,
+                     aTargetFrame->GetStyleBorder()->ImageBorderDiffers());
+}
 
 void
 nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
 {
+  StopBackgroundImageFor(aTargetFrame);
+  StopBorderImageFor(aTargetFrame);
+}
+
+void
+nsPresContext::DoStopImageFor(nsPresContext::ImageLoaderTable& aTable,
+                              nsIFrame* aTargetFrame)
+{
   nsCOMPtr<nsImageLoader> loader;
-  mImageLoaders.Get(aTargetFrame, getter_AddRefs(loader));
+  aTable.Get(aTargetFrame, getter_AddRefs(loader));
 
   if (loader) {
     loader->Destroy();
 
-    mImageLoaders.Remove(aTargetFrame);
+    aTable.Remove(aTargetFrame);
   }
 }
-
-
+  
 void
 nsPresContext::SetContainer(nsISupports* aHandler)
 {
@@ -1358,6 +1387,9 @@ nsPresContext::ThemeChangedInternal()
     sLookAndFeelChanged = PR_FALSE;
   }
 
+  // This will force the system metrics to be generated the next time they're used
+  nsCSSRuleProcessor::FreeSystemMetrics();
+
   // Changes in theme can change system colors (whose changes are
   // properly reflected in computed style data), system fonts (whose
   // changes are not), and -moz-appearance (whose changes likewise are
@@ -1417,6 +1449,39 @@ nsPresContext::PostRebuildAllStyleDataEvent()
     return;
   }
   mShell->FrameConstructor()->PostRebuildAllStyleDataEvent();
+}
+
+void
+nsPresContext::MediaFeatureValuesChanged(PRBool aCallerWillRebuildStyleData)
+{
+  mPendingMediaFeatureValuesChanged = PR_FALSE;
+  if (mShell->StyleSet()->MediumFeaturesChanged(this) &&
+      !aCallerWillRebuildStyleData) {
+    RebuildAllStyleData(nsChangeHint(0));
+  }
+}
+
+void
+nsPresContext::PostMediaFeatureValuesChangedEvent()
+{
+  if (!mPendingMediaFeatureValuesChanged) {
+    nsCOMPtr<nsIRunnable> ev =
+      new nsRunnableMethod<nsPresContext>(this,
+                         &nsPresContext::HandleMediaFeatureValuesChangedEvent);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+      mPendingMediaFeatureValuesChanged = PR_TRUE;
+    }
+  }
+}
+
+void
+nsPresContext::HandleMediaFeatureValuesChangedEvent()
+{
+  // Null-check mShell in case the shell has been destroyed (and the
+  // event is the only thing holding the pres context alive).
+  if (mPendingMediaFeatureValuesChanged && mShell) {
+    MediaFeatureValuesChanged(PR_FALSE);
+  }
 }
 
 void

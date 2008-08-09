@@ -529,7 +529,7 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 
   if (!mCaret)
   {
-    mCaret = do_CreateInstance("@mozilla.org/layout/caret;1");
+    NS_NewCaret(getter_AddRefs(mCaret));
     if (mCaret)
     {
       mCaret->Init(presShell);
@@ -870,43 +870,6 @@ nsTextEditorCompositionListener::HandleEndComposition(nsIDOMEvent* aCompositionE
    return mEditor->EndComposition();
 }
 
-
-nsresult
-nsTextEditorCompositionListener::HandleQueryReconversion(nsIDOMEvent* aReconversionEvent)
-{
-#ifdef DEBUG_IME
-  printf("nsTextEditorCompositionListener::HandleQueryReconversion\n");
-#endif
-  nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aReconversionEvent);
-  if (!pCompositionEvent)
-    return NS_ERROR_FAILURE;
-
-  nsReconversionEventReply* eventReply;
-  nsresult rv = pCompositionEvent->GetReconversionReply(&eventReply);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return mEditor->GetReconversionString(eventReply);
-}
-
-nsresult
-nsTextEditorCompositionListener::HandleQueryCaretRect(nsIDOMEvent* aQueryCaretRectEvent)
-{
-#ifdef DEBUG_IME
-  printf("nsTextEditorCompositionListener::HandleQueryCaretRect\n");
-#endif
-  nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aQueryCaretRectEvent);
-  if (!pCompositionEvent)
-    return NS_ERROR_FAILURE;
-
-  nsQueryCaretRectEventReply* eventReply;
-  nsresult rv = pCompositionEvent->GetQueryCaretRectReply(&eventReply);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return mEditor->GetQueryCaretRect(eventReply);
-}
-
 /*
  * Factory functions
  */
@@ -1129,7 +1092,6 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
   // turn on selection and caret
   if (mEditor)
   {
-    nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
     PRUint32 flags;
     mEditor->GetFlags(&flags);
     if (! (flags & nsIPlaintextEditor::eEditorDisabledMask))
@@ -1156,7 +1118,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
 
         nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
         if (presShell) {
-          nsCOMPtr<nsICaret> caret;
+          nsRefPtr<nsCaret> caret;
           presShell->GetCaret(getter_AddRefs(caret));
           if (caret) {
             caret->SetIgnoreUserModify(PR_FALSE);
@@ -1188,9 +1150,6 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
         }
       }
     }
-
-    if (imeEditor)
-      imeEditor->NotifyIMEOnFocus();
   }
   return NS_OK;
 }
@@ -1202,13 +1161,6 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
   // turn off selection and caret
   if (mEditor && mIsFocused)
   {
-    // when imeEditor exists, call ForceCompositionEnd() to tell
-    // the input focus is leaving first
-    nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
-    if (imeEditor) {
-      imeEditor->NotifyIMEOnBlur();
-    }
-
     nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
     if (editor)
     {
@@ -1228,7 +1180,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
 
         nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
         if (presShell) {
-          nsCOMPtr<nsICaret> caret;
+          nsRefPtr<nsCaret> caret;
           presShell->GetCaret(getter_AddRefs(caret));
           if (caret) {
             caret->SetIgnoreUserModify(PR_TRUE);

@@ -1,1 +1,1 @@
-MOZ_APP_DISPLAYNAME="GranParadiso"
+MOZ_APP_DISPLAYNAME="Shiretoko"

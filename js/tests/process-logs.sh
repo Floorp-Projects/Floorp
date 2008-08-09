@@ -61,7 +61,7 @@ fi
 
 source $TEST_DIR/bin/library.sh
 
-TEST_JSDIR=`dirname $0`
+TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
 
 usage()
 {
@@ -73,34 +73,14 @@ variable            description
 testlogfiles        The test log to be processed. If testlogfiles is a file 
                     pattern it must be single quoted to prevent the shell from
                     expanding it before it is passed to the script.
-
-kernel              optional. The machine kernel as specified by uname -r
-                    If not specified, the script will attempt to determine the 
-                    value from the TEST_KERNEL line in the log. 
-                    'all'     - do not filter on machine kernel. Use this for
-                                Windows.
-                    For Linux distros, use the value of uname -r 
-                    and replace the minor version numbers with .* as in 
-                    2.6.23.1-21.fc7 -> 2.6.23.*fc7
-arch                optional. The machine architecture as specified by uname -p
-                    If not specified, the script will attempt to determine the 
-                    value from the TEST_PROCESSORTYPE line in each log.
-                    'all'     - do not filter on machine architecture. Use this 
-                                for Windows.
-                    'i686'    - Linux distros such as Fedora Core or RHEL or CentOS.
-                    'i386'    - Mac Intel
-                    'powerpc' - Mac PowerPC
-
 EOF
     exit 2
 }
 
-while getopts "l:A:K:" optname; 
+while getopts "l:" optname; 
 do
     case $optname in
         l) testlogfiles=$OPTARG;;
-        A) optarch=$OPTARG;;
-        K) optkernel=$OPTARG;;
     esac
 done
 
@@ -162,6 +142,12 @@ for testlogfile in `ls $testlogfiles`; do
 
     debug "branch=$branch"
 
+    repo=`grep -m 1 '^environment: TEST_MOZILLA_HG=' $worktestlogfile | sed 's|.*TEST_MOZILLA_HG=http://hg.mozilla.org/\(.*\)|\1|'`
+    if [[ -z "$repo" ]]; then
+        repo=CVS
+    fi
+    debug "repo=$repo"
+
     case "$testlogfile" in 
         *,nt,*) OSID=nt;;
         *,linux,*) OSID=linux;;
@@ -176,23 +162,13 @@ for testlogfile in `ls $testlogfiles`; do
 
     debug "OSID=$OSID"
 
-    if [[ -n "$optkernel" ]]; then
-        kernel="$optkernel"
-    else
-        kernel=`grep -m 1 '^environment: TEST_KERNEL=' $worktestlogfile | sed 's|.*TEST_KERNEL=\(.*\)|\1|'`
-        if [[ "$OSID" == "linux" ]]; then
-            kernel=`echo $kernel | sed 's|\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*|\1.\2.\3|'`
-        fi
+    kernel=`grep -m 1 '^environment: TEST_KERNEL=' $worktestlogfile | sed 's|.*TEST_KERNEL=\(.*\)|\1|'`
+    if [[ "$OSID" == "linux" ]]; then
+        kernel=`echo $kernel | sed 's|\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\).*|\1.\2.\3|'`
     fi
-
     debug "kernel=$kernel"
 
-    if [[ -n "$optarch" ]]; then
-        arch="$optarch"
-    else
-        arch=`grep -m 1 '^environment: TEST_PROCESSORTYPE=' $worktestlogfile | sed 's|.*TEST_PROCESSORTYPE=\(.*\)|\1|'`
-    fi
-
+    arch=`grep -m 1 '^environment: TEST_PROCESSORTYPE=' $worktestlogfile | sed 's|.*TEST_PROCESSORTYPE=\(.*\)|\1|'`
     debug "arch=$arch"
 
     memory=`grep -m 1 '^environment: TEST_MEMORY=' $worktestlogfile | sed 's|.*TEST_MEMORY=\(.*\)|\1|'`
@@ -213,6 +189,7 @@ for testlogfile in `ls $testlogfiles`; do
     $TEST_DIR/tests/mozilla.org/js/known-failures.pl \
         -b "$branch" \
         -T "$buildtype" \
+        -R "$repo" \
         -t "$testtype" \
         -o "$OSID" \
         -K "$kernel" \

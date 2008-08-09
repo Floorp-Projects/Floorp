@@ -34,7 +34,11 @@
               url="chrome://editor/content/pref-composer.xul"
               helpTopic="composer_prefs_general">
       <treechildren id="composerChildren">
-      <!-- XXX Move pref panes from below to here as they are migrated -->
+        <treeitem id="editingItem"
+                  label="&editing.label;"
+                  prefpane="editing_pane"
+                  url="chrome://editor/content/pref-editing.xul"
+                  helpTopic="composer_prefs_newpage"/>
         <treeitem id="toolbarsItem"
                   label="&toolbars.label;"
                   prefpane="toolbars_pane"
@@ -50,20 +54,12 @@
       <treerow>       
         <treecell label="Migrated: &compose.label;"/> 
       </treerow>
-      <!-- XXX Move these up as we migrate the panels -->
       <treechildren>
         <treeitem>
           <treerow>
-            <treecell url="chrome://editor/content/pref-editing.xul" label="&editing.label;"/> 
+            <treecell label="Migrated: &editing.label;"/> 
           </treerow>
         </treeitem>
-        <!--     
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://editor/content/pref-publish.xul" label="&publish.label;"/> 
-          </treerow>
-        </treeitem>  
-        -->
         <treeitem>
           <treerow>
             <treecell label="Migrated: &toolbars.label;"/> 

@@ -106,10 +106,6 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
 void nsSVGForeignObjectFrame::Destroy()
 {
   nsSVGUtils::GetOuterSVGFrame(this)->UnregisterForeignObject(this);
-  // Delete any clipPath/filter/mask properties _before_ we die. The properties
-  // and property hash table have weak pointers to us that are dereferenced
-  // when the properties are destroyed.
-  nsSVGUtils::StyleEffects(this);
   nsSVGForeignObjectFrameBase::Destroy();
 }
 
@@ -140,13 +136,6 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32  aNameSpaceID,
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGForeignObjectFrame::DidSetStyleContext()
-{
-  nsSVGUtils::StyleEffects(this);
   return NS_OK;
 }
 
@@ -688,13 +677,6 @@ nsSVGForeignObjectFrame::FlushDirtyRegion()
   if (outerSVGFrame->IsRedrawSuspended())
     return;
 
-  nsRect rect = nsSVGUtils::FindFilterInvalidation(this);
-  if (!rect.IsEmpty()) {
-    outerSVGFrame->InvalidateRect(rect);
-    mDirtyRegion.SetEmpty();
-    return;
-  }
-  
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
   nsRect r = mDirtyRegion.GetBounds();
   r.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
@@ -705,6 +687,7 @@ nsSVGForeignObjectFrame::FlushDirtyRegion()
   // See bug 418063
   r.UnionRect(r, mRect);
 
+  r = nsSVGUtils::FindFilterInvalidation(this, r);
   outerSVGFrame->InvalidateRect(r);
 
   mDirtyRegion.SetEmpty();

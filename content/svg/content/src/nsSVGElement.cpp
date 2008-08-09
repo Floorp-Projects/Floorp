@@ -38,6 +38,7 @@
 
 #include "nsSVGElement.h"
 #include "nsSVGSVGElement.h"
+#include "nsSVGSwitchElement.h"
 #include "nsIDocument.h"
 #include "nsRange.h"
 #include "nsIDOMAttr.h"
@@ -181,8 +182,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGElementBase)
 
 nsresult
 nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                            nsIContent* aBindingParent,
-                            PRBool aCompileEventHandlers)
+                         nsIContent* aBindingParent,
+                         PRBool aCompileEventHandlers)
 {
   nsresult rv = nsSVGElementBase::BindToTree(aDocument, aParent,
                                              aBindingParent,
@@ -236,6 +237,33 @@ nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  if (aNamespaceID == kNameSpaceID_None &&
+      (aName == nsGkAtoms::requiredFeatures ||
+       aName == nsGkAtoms::requiredExtensions ||
+       aName == nsGkAtoms::systemLanguage)) {
+
+    nsIContent* parent = nsnull;
+  
+    nsIContent* bindingParent = GetBindingParent();
+    if (bindingParent) {
+      nsIDocument* doc = bindingParent->GetOwnerDoc();
+      if (doc) {
+        parent = doc->BindingManager()->GetInsertionParent(bindingParent);
+      }
+    }
+
+    if (!parent) {
+      // if we didn't find an anonymous parent, use the explicit one,
+      // whether it's null or not...
+      parent = GetParent();
+    }
+
+    if (parent &&
+        parent->NodeInfo()->Equals(nsGkAtoms::svgSwitch, kNameSpaceID_SVG)) {
+      static_cast<nsSVGSwitchElement*>(parent)->MaybeInvalidate();
+    }
+  }
+
   return nsSVGElementBase::AfterSetAttr(aNamespaceID, aName, aValue, aNotify);
 }
 
@@ -269,7 +297,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       // The value was rejected. This happens e.g. in a XUL template
       // when trying to set a value like "?x" on a value object that
       // expects a length.
-      // To accomodate this "erronous" value, we'll insert a proxy
+      // To accommodate this "erroneous" value, we'll insert a proxy
       // object between ourselves and the actual value object:
       ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
       nsCOMPtr<nsISVGValue> proxy;
@@ -611,6 +639,24 @@ nsSVGElement::ResetOldStyleBaseType(nsISVGValue *svg_value)
     tl->GetBaseVal(getter_AddRefs(transform));
     transform->Clear();
   }
+}
+
+nsChangeHint
+nsSVGElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                     PRInt32 aModType) const
+{
+  nsChangeHint retval =
+    nsSVGElementBase::GetAttributeChangeHint(aAttribute, aModType);
+
+  if (aAttribute == nsGkAtoms::requiredFeatures ||
+      aAttribute == nsGkAtoms::requiredExtensions ||
+      aAttribute == nsGkAtoms::systemLanguage) {
+    // It would be nice to only reconstruct the frame if the value returned by
+    // NS_SVG_PassesConditionalProcessingTests has changed, but we don't know
+    // that
+    NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
+  }
+  return retval;
 }
 
 PRBool

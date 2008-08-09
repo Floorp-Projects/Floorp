@@ -61,7 +61,7 @@ fi
 
 source $TEST_DIR/bin/library.sh
 
-TEST_JSDIR=`dirname $0`
+TEST_JSDIR=${TEST_JSDIR:-$TEST_DIR/tests/mozilla.org/js}
 
 TEST_JSSHELL_TIMEOUT=${TEST_JSSHELL_TIMEOUT:-480}
 TEST_JSEACH_TIMEOUT=${TEST_JSEACH_TIMEOUT:-485}
@@ -263,7 +263,14 @@ else
     TEST_CPUSPEED=fast
 fi
 
-pattern="TEST_BRANCH=($branch|[.][*]), TEST_BUILDTYPE=($buildtype|[.][*]), TEST_TYPE=($testtype|[.][*]), TEST_OS=($OSID|[.][*]), TEST_KERNEL=($TEST_KERNEL|[.][*]), TEST_PROCESSORTYPE=($TEST_PROCESSORTYPE|[.][*]), TEST_MEMORY=($TEST_MEMORY|[.][*]), TEST_CPUSPEED=($TEST_CPUSPEED|[.][*]),"
+if [[ -z "$TEST_MOZILLA_HG" ]]; then
+    repo=CVS
+else
+    repo=`basename $TEST_MOZILLA_HG`
+fi
+debug "repo=$repo"
+
+pattern="TEST_BRANCH=($branch|[.][*]), TEST_REPO=($repo|[.][*]), TEST_BUILDTYPE=($buildtype|[.][*]), TEST_TYPE=($testtype|[.][*]), TEST_OS=($OSID|[.][*]), TEST_KERNEL=($TEST_KERNEL|[.][*]), TEST_PROCESSORTYPE=($TEST_PROCESSORTYPE|[.][*]), TEST_MEMORY=($TEST_MEMORY|[.][*]), TEST_CPUSPEED=($TEST_CPUSPEED|[.][*]),"
 
 if [[ -z "$timeouts" ]]; then
     echo "# exclude tests that time out" >> $excludetestsfile

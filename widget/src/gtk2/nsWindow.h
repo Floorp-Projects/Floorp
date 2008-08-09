@@ -56,7 +56,13 @@
 
 #include <gtk/gtk.h>
 
+#ifdef MOZ_DFB
+#include <gdk/gdkdirectfb.h>
+#endif /* MOZ_DFB */
+
+#ifdef MOZ_X11
 #include <gdk/gdkx.h>
+#endif /* MOZ_X11 */
 #include <gtk/gtkwindow.h>
 
 #ifdef ACCESSIBILITY
@@ -67,13 +73,9 @@
 #ifdef USE_XIM
 #include <gtk/gtkimmulticontext.h>
 #include "pldhash.h"
-#include "nsIKBStateControl.h"
 #endif
 
 class nsWindow : public nsCommonWidget, public nsSupportsWeakReference
-#ifdef USE_XIM
-                ,public nsIKBStateControl
-#endif
 {
 public:
     nsWindow();
@@ -260,12 +262,16 @@ public:
     };
 
     void               SetPluginType(PluginType aPluginType);
+#ifdef MOZ_X11
     void               SetNonXEmbedPluginFocus(void);
     void               LoseNonXEmbedPluginFocus(void);
+#endif /* MOZ_X11 */
 
     void               ThemeChanged(void);
 
+#ifdef MOZ_X11
     Window             mOldFocusWindow;
+#endif /* MOZ_X11 */
 
     static guint32     mLastButtonPressTime;
     static guint32     mLastButtonReleaseTime;
@@ -298,6 +304,7 @@ public:
     nsWindow*          IMEComposingWindow(void);
     void               IMECreateContext  (void);
     PRBool             IMEFilterEvent    (GdkEventKey *aEvent);
+    void               IMESetCursorPosition(const nsTextEventReply& aReply);
 
     /*
      *  |mIMEData| has all IME data for the window and its children widgets.
@@ -342,12 +349,11 @@ public:
             mComposingWindow = nsnull;
             mOwner           = aOwner;
             mRefCount        = 1;
-            mEnabled         = nsIKBStateControl::IME_STATUS_ENABLED;
+            mEnabled         = nsIWidget::IME_STATUS_ENABLED;
         }
     };
     nsIMEData          *mIMEData;
 
-    // nsIKBStateControl interface
     NS_IMETHOD ResetInputState();
     NS_IMETHOD SetIMEOpenState(PRBool aState);
     NS_IMETHOD GetIMEOpenState(PRBool* aState);
@@ -405,6 +411,14 @@ private:
     PRInt32             mTransparencyBitmapHeight;
 
     nsRefPtr<gfxASurface> mThebesSurface;
+
+#ifdef MOZ_DFB
+    int                    mDFBCursorX;
+    int                    mDFBCursorY;
+    PRUint32               mDFBCursorCount;
+    IDirectFB             *mDFB;
+    IDirectFBDisplayLayer *mDFBLayer;
+#endif
 
 #ifdef ACCESSIBILITY
     nsCOMPtr<nsIAccessible> mRootAccessible;

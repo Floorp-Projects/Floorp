@@ -309,8 +309,8 @@ iterator_self(JSContext *cx, uintN argc, jsval *vp)
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)
 
 static JSFunctionSpec iterator_methods[] = {
-    JS_FN(js_iterator_str,  iterator_self,  0,0,JSPROP_ROPERM),
-    JS_FN(js_next_str,      iterator_next,  0,0,JSPROP_ROPERM),
+    JS_FN(js_iterator_str,  iterator_self,  0,JSPROP_ROPERM),
+    JS_FN(js_next_str,      iterator_next,  0,JSPROP_ROPERM),
     JS_FS_END
 };
 
@@ -722,7 +722,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     JSObject *obj;
     uintN argc, nargs, nvars, nslots;
     JSGenerator *gen;
-    jsval *newsp;
+    jsval *slots;
 
     /* After the following return, failing control flow must goto bad. */
     obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL, 0);
@@ -732,8 +732,8 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     /* Load and compute stack slot counts. */
     argc = fp->argc;
     nargs = JS_MAX(argc, fp->fun->nargs);
-    nvars = fp->nvars;
-    nslots = 2 + nargs + nvars + fp->script->depth;
+    nvars = fp->fun->u.i.nvars;
+    nslots = 2 + nargs + fp->script->nslots;
 
     /* Allocate obj's private data struct. */
     gen = (JSGenerator *)
@@ -764,37 +764,28 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->frame.callee = fp->callee;
     gen->frame.fun = fp->fun;
 
-    /* Use newsp to carve space out of gen->stack. */
-    newsp = gen->stack;
+    /* Use slots to carve space out of gen->slots. */
+    slots = gen->slots;
     gen->arena.next = NULL;
-    gen->arena.base = (jsuword) newsp;
-    gen->arena.limit = gen->arena.avail = (jsuword) (newsp + nslots);
+    gen->arena.base = (jsuword) slots;
+    gen->arena.limit = gen->arena.avail = (jsuword) (slots + nslots);
 
-#define COPY_STACK_ARRAY(vec,cnt,num)                                         \
-    JS_BEGIN_MACRO                                                            \
-        gen->frame.cnt = cnt;                                                 \
-        gen->frame.vec = newsp;                                               \
-        newsp += (num);                                                       \
-        memcpy(gen->frame.vec, fp->vec, (num) * sizeof(jsval));               \
-    JS_END_MACRO
-
-    /* Copy argv, rval, and vars. */
-    *newsp++ = fp->argv[-2];
-    *newsp++ = fp->argv[-1];
-    COPY_STACK_ARRAY(argv, argc, nargs);
+    /* Copy rval, argv and vars. */
     gen->frame.rval = fp->rval;
-    COPY_STACK_ARRAY(vars, nvars, nvars);
-
-#undef COPY_STACK_ARRAY
+    memcpy(slots, fp->argv - 2, (2 + nargs) * sizeof(jsval));
+    gen->frame.argc = nargs;
+    gen->frame.argv = slots + 2;
+    slots += 2 + nargs;
+    memcpy(slots, fp->slots, fp->script->nfixed * sizeof(jsval));
 
     /* Initialize or copy virtual machine state. */
     gen->frame.down = NULL;
     gen->frame.annotation = NULL;
     gen->frame.scopeChain = fp->scopeChain;
 
-    gen->frame.spbase = newsp;
-    JS_ASSERT(fp->spbase == fp->regs->sp);
-    gen->savedRegs.sp = newsp;
+    gen->frame.slots = slots;
+    JS_ASSERT(StackBase(fp) == fp->regs->sp);
+    gen->savedRegs.sp = slots + fp->script->nfixed;
     gen->savedRegs.pc = fp->regs->pc;
     gen->frame.regs = &gen->savedRegs;
 
@@ -943,7 +934,7 @@ CloseGenerator(JSContext *cx, JSObject *obj)
  * Common subroutine of generator_(next|send|throw|close) methods.
  */
 static JSBool
-generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp)
+generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
 {
     JSObject *obj;
     JSGenerator *gen;
@@ -966,7 +957,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp)
             break;
 
           case JSGENOP_SEND:
-            if (!JSVAL_IS_VOID(vp[2])) {
+            if (argc >= 1 && !JSVAL_IS_VOID(vp[2])) {
                 js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
                                     JSDVG_SEARCH_STACK, vp[2], NULL);
                 return JS_FALSE;
@@ -985,7 +976,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp)
           case JSGENOP_SEND:
             return js_ThrowStopIteration(cx);
           case JSGENOP_THROW:
-            JS_SetPendingException(cx, vp[2]);
+            JS_SetPendingException(cx, argc >= 1 ? vp[2] : JSVAL_VOID);
             return JS_FALSE;
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
@@ -993,7 +984,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp)
         }
     }
 
-    arg = (op == JSGENOP_SEND || op == JSGENOP_THROW)
+    arg = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0)
           ? vp[2]
           : JSVAL_VOID;
     if (!SendToGenerator(cx, op, obj, gen, arg))
@@ -1005,33 +996,33 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp)
 static JSBool
 generator_send(JSContext *cx, uintN argc, jsval *vp)
 {
-    return generator_op(cx, JSGENOP_SEND, vp);
+    return generator_op(cx, JSGENOP_SEND, vp, argc);
 }
 
 static JSBool
 generator_next(JSContext *cx, uintN argc, jsval *vp)
 {
-    return generator_op(cx, JSGENOP_NEXT, vp);
+    return generator_op(cx, JSGENOP_NEXT, vp, argc);
 }
 
 static JSBool
 generator_throw(JSContext *cx, uintN argc, jsval *vp)
 {
-    return generator_op(cx, JSGENOP_THROW, vp);
+    return generator_op(cx, JSGENOP_THROW, vp, argc);
 }
 
 static JSBool
 generator_close(JSContext *cx, uintN argc, jsval *vp)
 {
-    return generator_op(cx, JSGENOP_CLOSE, vp);
+    return generator_op(cx, JSGENOP_CLOSE, vp, argc);
 }
 
 static JSFunctionSpec generator_methods[] = {
-    JS_FN(js_iterator_str,  iterator_self,      0,0,JSPROP_ROPERM),
-    JS_FN(js_next_str,      generator_next,     0,0,JSPROP_ROPERM),
-    JS_FN(js_send_str,      generator_send,     1,1,JSPROP_ROPERM),
-    JS_FN(js_throw_str,     generator_throw,    1,1,JSPROP_ROPERM),
-    JS_FN(js_close_str,     generator_close,    0,0,JSPROP_ROPERM),
+    JS_FN(js_iterator_str,  iterator_self,      0,JSPROP_ROPERM),
+    JS_FN(js_next_str,      generator_next,     0,JSPROP_ROPERM),
+    JS_FN(js_send_str,      generator_send,     1,JSPROP_ROPERM),
+    JS_FN(js_throw_str,     generator_throw,    1,JSPROP_ROPERM),
+    JS_FN(js_close_str,     generator_close,    0,JSPROP_ROPERM),
     JS_FS_END
 };
 

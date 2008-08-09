@@ -65,8 +65,13 @@ public:
     return (aProperty >= eCSSProperty_COUNT_no_shorthands);
   }
 
+  // Same but for @font-face descriptors
+  static nsCSSFontDesc LookupFontDesc(const nsAString& aProperty);
+  static nsCSSFontDesc LookupFontDesc(const nsACString& aProperty);
+
   // Given a property enum, get the string value
   static const nsAFlatCString& GetStringValue(nsCSSProperty aProperty);
+  static const nsAFlatCString& GetStringValue(nsCSSFontDesc aFontDesc);
 
   // Given a CSS Property and a Property Enum Value
   // Return back a const nsString& representation of the 
@@ -122,6 +127,7 @@ public:
   static const PRInt32 kBackgroundRepeatKTable[];
   static const PRInt32 kBorderCollapseKTable[];
   static const PRInt32 kBorderColorKTable[];
+  static const PRInt32 kBorderImageKTable[];
   static const PRInt32 kBorderStyleKTable[];
   static const PRInt32 kBorderWidthKTable[];
   static const PRInt32 kBoxAlignKTable[];
@@ -192,6 +198,7 @@ public:
   static const PRInt32 kVolumeKTable[];
   static const PRInt32 kWhitespaceKTable[];
   static const PRInt32 kWidthKTable[]; // also min-width, max-width
+  static const PRInt32 kWordwrapKTable[];
 };
 
 #endif /* nsCSSProps_h___ */

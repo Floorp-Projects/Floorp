@@ -174,7 +174,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
 
-#if defined(XP_UNIX) && defined(MOZ_WIDGET_GTK2)
+#if defined(XP_UNIX) && defined(MOZ_WIDGET_GTK2) & defined(MOZ_X11)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
 #endif
 
@@ -202,7 +202,8 @@
 // 0.07 changed nsIRegistry to flat file support for caching plugins info
 // 0.08 mime entry point on MachO, bug 137535
 // 0.09 the file encoding is changed to UTF-8, bug 420285
-static const char *kPluginRegistryVersion = "0.09";
+// 0.10 added plugin versions on appropriate platforms, bug 427743
+static const char *kPluginRegistryVersion = "0.10";
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
@@ -744,6 +745,7 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
     mIsNPRuntimeEnabledJavaPlugin(aPluginTag->mIsNPRuntimeEnabledJavaPlugin),
     mFileName(aPluginTag->mFileName),
     mFullPath(aPluginTag->mFullPath),
+    mVersion(aPluginTag->mVersion),
     mLastModifiedTime(0),
     mFlags(NS_PLUGIN_FLAG_ENABLED)
 {
@@ -783,6 +785,7 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
     mIsNPRuntimeEnabledJavaPlugin(PR_FALSE),
     mFileName(aPluginInfo->fFileName),
     mFullPath(aPluginInfo->fFullPath),
+    mVersion(aPluginInfo->fVersion),
     mLastModifiedTime(0),
     mFlags(NS_PLUGIN_FLAG_ENABLED)
 {
@@ -857,6 +860,7 @@ nsPluginTag::nsPluginTag(const char* aName,
                          const char* aDescription,
                          const char* aFileName,
                          const char* aFullPath,
+                         const char* aVersion,
                          const char* const* aMimeTypes,
                          const char* const* aMimeDescriptions,
                          const char* const* aExtensions,
@@ -878,6 +882,7 @@ nsPluginTag::nsPluginTag(const char* aName,
     mIsNPRuntimeEnabledJavaPlugin(PR_FALSE),
     mFileName(aFileName),
     mFullPath(aFullPath),
+    mVersion(aVersion),
     mLastModifiedTime(aLastModifiedTime),
     mFlags(0) // Caller will read in our flags from cache
 {
@@ -1017,6 +1022,13 @@ NS_IMETHODIMP
 nsPluginTag::GetFilename(nsACString& aFileName)
 {
   aFileName = mFileName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginTag::GetVersion(nsACString& aVersion)
+{
+  aVersion = mVersion;
   return NS_OK;
 }
 
@@ -1300,6 +1312,8 @@ public:
   nsresult OnFileAvailable(nsIFile* aFile);
 
   nsresult ServeStreamAsFile(nsIRequest *request, nsISupports *ctxt);
+  
+  nsIPluginInstance *GetPluginInstance() { return mInstance; }
 
 private:
   nsresult SetUpCache(nsIURI* aURL); // todo: see about removing this...
@@ -2018,7 +2032,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   if (httpChannel) {
     PRUint32 responseCode = 0;
     rv = httpChannel->GetResponseStatus(&responseCode);
-    if (NS_FAILED(rv) || responseCode > 206) { // not normal
+    if (NS_FAILED(rv)) {
       // NPP_Notify() will be called from OnStopRequest
       // in ns4xPluginStreamListener::CleanUpStream
       // return error will cancel this request
@@ -2026,12 +2040,17 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
       mRequestFailed = PR_TRUE;
       return NS_ERROR_FAILURE;
     }
-  }
 
-  nsCAutoString contentType;
-  rv = channel->GetContentType(contentType);
-  if (NS_FAILED(rv)) 
-    return rv;
+    if (responseCode > 206) { // not normal
+      PRBool bWantsAllNetworkStreams = PR_FALSE;
+      mInstance->GetValue(nsPluginInstanceVariable_WantsAllNetworkStreams,
+                          (void *)&bWantsAllNetworkStreams);
+      if(!bWantsAllNetworkStreams) {
+        mRequestFailed = PR_TRUE;
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
 
   // do a little sanity check to make sure our frame isn't gone
   // by getting the tag type and checking for an error, we can determine if
@@ -2042,20 +2061,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
     nsPluginTagType tagType;
     if (NS_FAILED(pti2->GetTagType(&tagType)))
       return NS_ERROR_FAILURE;  // something happened to our object frame, so bail!
-
-    // Now that we know the content type, tell the DOM element.
-    nsCOMPtr<nsIDOMElement> element;
-    pti2->GetDOMElement(getter_AddRefs(element));
-
-    nsCOMPtr<nsIDOMHTMLObjectElement> object(do_QueryInterface(element));
-    if (object) {
-      object->SetType(NS_ConvertASCIItoUTF16(contentType));
-    } else {
-      nsCOMPtr<nsIDOMHTMLEmbedElement> embed(do_QueryInterface(element));
-      if (embed) {
-        embed->SetType(NS_ConvertASCIItoUTF16(contentType));
-      }
-    }
   }
 
   // Get the notification callbacks from the channel and save it as
@@ -2916,15 +2921,24 @@ nsresult nsPluginHostImpl::UserAgent(const char **retstring)
   if (NS_SUCCEEDED(res))
   {
     if(NS_RETURN_UASTRING_SIZE > uaString.Length())
-    {
       PL_strcpy(resultString, uaString.get());
-      *retstring = resultString;
-    }
     else
     {
-      *retstring = nsnull;
-      res = NS_ERROR_OUT_OF_MEMORY;
+      // Copy as much of UA string as we can (terminate at right-most space).
+      PL_strncpy(resultString, uaString.get(), NS_RETURN_UASTRING_SIZE);
+      for (int i = NS_RETURN_UASTRING_SIZE - 1; i >= 0; i--)
+      {
+        if (0 == i)
+          resultString[NS_RETURN_UASTRING_SIZE - 1] = '\0';
+        else if (resultString[i] == ' ')
+        {
+          resultString[i] = '\0';
+          break;
+        }
+      }
     }
+
+    *retstring = resultString;
   }
   else
     *retstring = nsnull;
@@ -3986,6 +4000,12 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   PRBool isJavaPlugin = pluginTag->mIsJavaPlugin;
 
   if (isJavaPlugin && !pluginTag->mIsNPRuntimeEnabledJavaPlugin) {
+#if !defined(OJI) && defined(XP_MACOSX)
+    // The MRJ plugin hangs if you try to load it with OJI disabled,
+    // don't even try to go there.
+    return NS_ERROR_FAILURE;
+#endif
+
     // We must make sure LiveConnect is started, if needed.
     nsCOMPtr<nsIDocument> document;
     aOwner->GetDocument(getter_AddRefs(document));
@@ -5607,11 +5627,14 @@ nsPluginHostImpl::WritePluginInfo()
       // store each plugin info into the registry
       // filename & fullpath are on separate line
       // because they can contain field delimiter char
-      PR_fprintf(fd, "%s%c%c\n%s%c%c\n",
+      PR_fprintf(fd, "%s%c%c\n%s%c%c\n%s%c%c\n",
         (!tag->mFileName.IsEmpty() ? tag->mFileName.get() : ""),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         PLUGIN_REGISTRY_END_OF_LINE_MARKER,
         (!tag->mFullPath.IsEmpty() ? tag->mFullPath.get() : ""),
+        PLUGIN_REGISTRY_FIELD_DELIMITER,
+        PLUGIN_REGISTRY_END_OF_LINE_MARKER,
+        (!tag->mVersion.IsEmpty() ? tag->mVersion.get() : ""),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         PLUGIN_REGISTRY_END_OF_LINE_MARKER);
 
@@ -5768,6 +5791,10 @@ nsPluginHostImpl::ReadPluginInfo()
     if (!reader.NextLine())
       return rv;
 
+    char *version = reader.LinePtr();
+    if (!reader.NextLine())
+      return rv;
+
     // lastModifiedTimeStamp|canUnload|tag.mFlag
     if (3 != reader.ParseLine(values, 3))
       return rv;
@@ -5829,6 +5856,7 @@ nsPluginHostImpl::ReadPluginInfo()
       description,
       filename,
       (*fullpath ? fullpath : 0), // we have to pass 0 prt if it's empty str
+      version,
       (const char* const*)mimetypes,
       (const char* const*)mimedescriptions,
       (const char* const*)extensions,
@@ -7115,8 +7143,22 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
 
   PRUint32 responseCode = 0;
   rv = httpChannel->GetResponseStatus(&responseCode);
-  if (NS_FAILED(rv) || responseCode != 200) {
+  if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
+  }
+  
+  // get nsPluginStreamListenerPeer* ptr from finalStreamListener
+  nsPluginStreamListenerPeer *pslp =
+    reinterpret_cast<nsPluginStreamListenerPeer*>(finalStreamListener.get());
+
+  if (responseCode != 200) {
+    PRBool bWantsAllNetworkStreams = PR_FALSE;
+    pslp->GetPluginInstance()->
+      GetValue(nsPluginInstanceVariable_WantsAllNetworkStreams,
+               (void *)&bWantsAllNetworkStreams);
+    if (!bWantsAllNetworkStreams){
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // if server cannot continue with byte range (206 status) and sending us whole object (200 status)
@@ -7124,9 +7166,6 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
   mStreamConverter = finalStreamListener;
   mRemoveMagicNumber = PR_TRUE;
 
-  //get nsPluginStreamListenerPeer* ptr from finalStreamListener
-  nsPluginStreamListenerPeer *pslp = reinterpret_cast<nsPluginStreamListenerPeer*>
-                                                     (finalStreamListener.get());
   rv = pslp->ServeStreamAsFile(request, ctxt);
   return rv;
 }

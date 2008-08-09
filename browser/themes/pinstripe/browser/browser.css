@@ -24,7 +24,7 @@
  *   Pierre Chanial (chanial@noos.fr)
  *   Kevin Gerich (kevin@kmgerich.com)
  *   Pamela Greene (pamg.bugs@gmail.com)
- *   Dao Gottwald (dao@design-noir.de)
+ *   Dão Gottwald (dao@mozilla.com)
  *   Stephen Horlander (stephen@noved.org)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -45,6 +45,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
+@namespace svg url("http://www.w3.org/2000/svg");
 
 #main-window {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
@@ -992,6 +993,13 @@ statusbarpanel#statusbar-display {
   height: 16px;
 }
 
+.ac-result-type-keyword,
+.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
+  list-style-image: url(chrome://global/skin/icons/search-textbox.png);
+  width: 16px;
+  height: 16px;
+}
+
 richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
@@ -1014,7 +1022,7 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 }
 
 .ac-url-text {
-  color: #144fae;
+  color: -moz-nativehyperlinktext;
   font-size: 0.95em;
 }
 
@@ -2261,4 +2269,49 @@ tabpanels.plain {
 
 #download-monitor {
   list-style-image: url("chrome://mozapps/skin/downloads/downloadStatusIcon.png");
+}
+
+/* ::::: Keyboard UI Panel ::::: */
+.KUI-panel {
+  -moz-appearance: none;
+  background: rgba(0, 0, 0, .8) url(KUI-background.png) repeat-x;
+  color: white;
+  border: 3px solid #ccc;
+  -moz-border-top-colors: #ccc #ccc black;
+  -moz-border-right-colors: #ccc #ccc black;
+  -moz-border-bottom-colors: #ccc #ccc black;
+  -moz-border-left-colors: #ccc #ccc black;
+  -moz-border-radius: 10px;
+  margin-top: -3px;
+  margin-left: -3px;
+}
+
+/* ::::: Ctrl-Tab Panel ::::: */
+#ctrlTab-panel {
+  margin-top: -18px;
+  border-bottom-width: 5px;
+  -moz-border-bottom-colors: #ccc #ccc black black black;
+}
+
+#ctrlTab-label {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 6px;
+  margin-bottom: 10px;
+}
+
+svg|*.ctrlTab-thumbnailborder {
+  stroke: white;
+  stroke-width: 1px;
+}
+
+svg|*#ctrlTab-fadeGradientTop {
+  stop-color: black;
+  stop-opacity: .5;
+}
+
+svg|*#ctrlTab-fadeGradientBottom {
+  stop-color: black;
+  stop-opacity: 1;
 }

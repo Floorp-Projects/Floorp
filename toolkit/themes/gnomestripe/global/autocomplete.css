@@ -57,6 +57,10 @@ textbox[enablehistory="true"] {
   background-color: transparent;
 }
 
+textbox[nomatch="true"][highlightnonmatches="true"] {
+  color: red;
+}
+
 /* Used by autocomplete widgets that don't have an icon. Gross. -dwh */
 textbox.padded {
   padding-top: 1px;
