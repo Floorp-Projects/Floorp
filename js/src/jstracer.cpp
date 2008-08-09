@@ -3156,15 +3156,15 @@ TraceRecorder::record_JSOP_CALL()
         const char  *argtypes;
         JSTNErrType  errtype;
     } knownNatives[] = {
-        { js_math_sin,      F_Math_sin,           "",   "d",    INFALLIBLE, },
-        { js_math_cos,      F_Math_cos,           "",   "d",    INFALLIBLE, },
-        { js_math_pow,      F_Math_pow,           "",   "dd",   INFALLIBLE, },
-        { js_math_sqrt,     F_Math_sqrt,          "",   "d",    INFALLIBLE, },
-        { js_str_substring, F_String_p_substring, "TC", "ii",   FAIL_NULL, },
-        { js_str_substring, F_String_p_substring_1, "TC", "i",  FAIL_NULL, },
-        { js_str_fromCharCode, F_String_fromCharCode, "C", "i", FAIL_NULL, },
-        { js_str_charCodeAt, F_String_p_charCodeAt, "T", "i",   FAIL_NEG, },
-        { js_math_random,   F_Math_random,        "R",  "",     INFALLIBLE, }
+        { js_math_sin,         F_Math_sin,             "",    "d",    INFALLIBLE, },
+        { js_math_cos,         F_Math_cos,             "",    "d",    INFALLIBLE, },
+        { js_math_pow,         F_Math_pow,             "",   "dd",    INFALLIBLE, },
+        { js_math_sqrt,        F_Math_sqrt,            "",    "d",    INFALLIBLE, },
+        { js_str_substring,    F_String_p_substring,   "TC", "ii",    FAIL_NULL, },
+        { js_str_substring,    F_String_p_substring_1, "TC",  "i",    FAIL_NULL, },
+        { js_str_fromCharCode, F_String_fromCharCode,  "C",   "i",    FAIL_NULL, },
+        { js_str_charCodeAt,   F_String_p_charCodeAt,  "T",   "i",    FAIL_NEG, },
+        { js_math_random,      F_Math_random,          "R",    "",    INFALLIBLE, }
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
