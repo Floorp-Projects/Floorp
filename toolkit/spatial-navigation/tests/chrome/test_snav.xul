@@ -13,7 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 
   <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="SpatialNavUtils.js"></script>
 
 <body id="some-content" xmlns="http://www.w3.org/1999/xhtml">
 
@@ -45,34 +46,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 <![CDATA[
 Components.utils.import("resource://gre/modules/SpatialNavigation.js");
 
+var moveTable = [
+["DOWN", "1"],
+["DOWN", "4"],
+["DOWN", "7"],
+["RIGHT", "8"],
+["RIGHT", "9"],
+["UP", "6"],
+["UP", "3"],
+["LEFT", "2"],
+["LEFT", "1"],
+["DONE", "DONE"]
+];
+
 function onLoad()
 {
     var x = document.getElementById("some-content");
-    var snav = new SpatialNavigation(x);
+    SpatialNavigation.init(x);
 
-    function moveAndVerify(direction, value)
-    {
-        sendKey(direction, document.activeElement);
-        ok(document.activeElement.getAttribute("id") == value, "Move");
-    }
-    
     // get to a known place.
     document.getElementById("start").focus();
     
-    // from start.
-    moveAndVerify("DOWN", "1");
-    
-    for (var i = 1 ; i < 10 ; i ++) {
-        moveAndVerify("DOWN", "4");
-        moveAndVerify("DOWN", "7");
-        moveAndVerify("RIGHT", "8");
-        moveAndVerify("RIGHT", "9");
-        moveAndVerify("UP", "6");
-        moveAndVerify("UP", "3");
-        moveAndVerify("LEFT", "2");
-        moveAndVerify("LEFT", "1");
-    }
-    SimpleTest.finish();
+    testMoves(moveTable);
+
+    SimpleTest.waitForExplicitFinish();
+
+    SpatialNavigation.uninit();
 }
 
 ]]></script>

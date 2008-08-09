@@ -297,7 +297,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       // The value was rejected. This happens e.g. in a XUL template
       // when trying to set a value like "?x" on a value object that
       // expects a length.
-      // To accomodate this "erronous" value, we'll insert a proxy
+      // To accommodate this "erroneous" value, we'll insert a proxy
       // object between ourselves and the actual value object:
       ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
       nsCOMPtr<nsISVGValue> proxy;
@@ -639,6 +639,24 @@ nsSVGElement::ResetOldStyleBaseType(nsISVGValue *svg_value)
     tl->GetBaseVal(getter_AddRefs(transform));
     transform->Clear();
   }
+}
+
+nsChangeHint
+nsSVGElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                     PRInt32 aModType) const
+{
+  nsChangeHint retval =
+    nsSVGElementBase::GetAttributeChangeHint(aAttribute, aModType);
+
+  if (aAttribute == nsGkAtoms::requiredFeatures ||
+      aAttribute == nsGkAtoms::requiredExtensions ||
+      aAttribute == nsGkAtoms::systemLanguage) {
+    // It would be nice to only reconstruct the frame if the value returned by
+    // NS_SVG_PassesConditionalProcessingTests has changed, but we don't know
+    // that
+    NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
+  }
+  return retval;
 }
 
 PRBool

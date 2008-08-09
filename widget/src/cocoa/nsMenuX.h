@@ -103,7 +103,6 @@ protected:
   nsresult       SetEnabled(PRBool aIsEnabled);
   nsresult       GetEnabled(PRBool* aIsEnabled);
   nsresult       SetupIcon();
-  nsresult       CountVisibleBefore(PRUint32* outVisibleBefore);
   void           GetMenuPopupContent(nsIContent** aResult);
   PRBool         OnOpen();
   PRBool         OnOpened();

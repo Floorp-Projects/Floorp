@@ -174,7 +174,7 @@ function SetColorPreview(aPreviewID, aColor)
 function UpdateBgImagePreview(aImage)
 {
   var colorPreview = document.getElementById("ColorPreview");
-  colorPreview.style.backgroundImage = !aImage ? "" : "url(" + aImage + ")";
+  colorPreview.style.backgroundImage = aImage && "url(" + aImage + ")";
 }
 
 // Sets browser background/foreground colors

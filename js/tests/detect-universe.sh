@@ -65,7 +65,7 @@ fi
 usage()
 {
     cat <<EOF
-usage: detect-universe.sh -p products -b branches -T buildtypes
+usage: detect-universe.sh -p products -b branches -R repositories -T buildtypes
 
 Outputs to stdout the universe data for this machine.
 
@@ -73,6 +73,7 @@ variable            description
 ===============     ============================================================
 -p products         required. one or more of firefox, thunderbird, js
 -b branches         required. one or more of 1.8.0, 1.8.1, 1.9.0, 1.9.1
+-R repositories     required. one or more of CVS, mozilla-central, ...
 -T buildtype        required. one or more of opt debug
 
 if an argument contains more than one value, it must be quoted.
@@ -80,13 +81,15 @@ EOF
     exit 2
 }
 
-while getopts "p:b:T:" optname
+while getopts "p:b:R:T:" optname
 do 
     case $optname in
         p) 
             products=$OPTARG;;
         b) 
             branches=$OPTARG;;
+        R)
+            repos=$OPTARG;;
         T) 
             buildtypes=$OPTARG;;
     esac
@@ -109,13 +112,24 @@ fi
 
 (for product in $products; do
     for branch in $branches; do
-	for buildtype in $buildtypes; do
-	    if [[ $product == "js" ]]; then
-		testtype=shell
-	    else
-		testtype=browser
-	    fi
-	    echo "TEST_OS=$OSID, TEST_KERNEL=$TEST_KERNEL, TEST_PROCESSORTYPE=$TEST_PROCESSORTYPE, TEST_MEMORY=$TEST_MEMORY, TEST_CPUSPEED=$TEST_CPUSPEED, TEST_TIMEZONE=$TEST_TIMEZONE, TEST_BRANCH=$branch, TEST_BUILDTYPE=$buildtype, TEST_TYPE=$testtype"
-	done
+        for repo in $repos; do
+
+            if [[ "$branch" == "1.9.1" && $repo == "CVS" ]]; then
+                continue;
+            fi
+
+            if [[ "$branch" != "1.9.1" && $repo != "CVS" ]]; then
+                continue
+            fi
+
+	        for buildtype in $buildtypes; do
+	            if [[ $product == "js" ]]; then
+		            testtype=shell
+	            else
+		            testtype=browser
+	            fi
+	            echo "TEST_OS=$OSID, TEST_KERNEL=$TEST_KERNEL, TEST_PROCESSORTYPE=$TEST_PROCESSORTYPE, TEST_MEMORY=$TEST_MEMORY, TEST_CPUSPEED=$TEST_CPUSPEED, TEST_TIMEZONE=$TEST_TIMEZONE, TEST_BRANCH=$branch, TEST_REPO=$repo, TEST_BUILDTYPE=$buildtype, TEST_TYPE=$testtype"
+	        done
+        done
     done
 done) | sort -u

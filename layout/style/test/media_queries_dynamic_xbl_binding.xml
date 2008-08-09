@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="binding">
+    <resources>
+      <stylesheet src="media_queries_dynamic_xbl_style.css" />
+    </resources>
+    <content>
+      <html:div xmlns:html="http://www.w3.org/1999/xhtml">
+        <children/>
+      </html:div>
+    </content>
+  </binding>
+</bindings>

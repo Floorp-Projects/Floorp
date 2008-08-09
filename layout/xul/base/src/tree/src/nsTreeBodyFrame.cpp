@@ -3793,11 +3793,11 @@ nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
                                         PR_TRUE);
 
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, aRect, *myBorder, mStyleContext, 0);
+                              aDirtyRect, aRect, *myBorder, mStyleContext);
 
   nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
                                aDirtyRect, aRect, *myBorder, *myOutline,
-                               aStyleContext, 0);
+                               aStyleContext);
 }
 
 // Scrolling

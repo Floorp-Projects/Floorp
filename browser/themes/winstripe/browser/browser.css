@@ -1208,7 +1208,7 @@ statusbarpanel#statusbar-display {
 }
 
 .ac-url-text {
-  color: MenuText;
+  color: -moz-nativehyperlinktext;
 }
 
 .ac-url-text:-moz-system-metric(windows-default-theme) {

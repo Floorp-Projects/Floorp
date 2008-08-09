@@ -434,7 +434,7 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
   // Note that differences in mBorder don't affect rendering (which should only
   // use mComputedBorder), so don't need to be tested for here.
   if (mTwipsPerPixel == aOther.mTwipsPerPixel &&
-      mComputedBorder == aOther.mComputedBorder && 
+      GetActualBorder() == aOther.GetActualBorder() && 
       mFloatEdge == aOther.mFloatEdge) {
     // Note that mBorderStyle stores not only the border style but also
     // color-related flags.  Given that we've already done an mComputedBorder
@@ -451,6 +451,17 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
     if (mBorderRadius != aOther.mBorderRadius ||
         !mBorderColors != !aOther.mBorderColors) {
       return NS_STYLE_HINT_VISUAL;
+    }
+
+    if (IsBorderImageLoaded() || aOther.IsBorderImageLoaded()) {
+      if (mBorderImage != aOther.mBorderImage ||
+          mBorderImageHFill != aOther.mBorderImageHFill ||
+          mBorderImageVFill != aOther.mBorderImageVFill ||
+          mBorderImageSplit != aOther.mBorderImageSplit) {
+        return NS_STYLE_HINT_VISUAL;
+      }
+      // The call to GetActualBorder above already considered
+      // mBorderImageWidth and mHaveBorderImageWidth.
     }
 
     // Note that at this point if mBorderColors is non-null so is
@@ -874,25 +885,34 @@ nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
 
 nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) const
 {
+  nsChangeHint hint = nsChangeHint(0);
+
+  if (!EqualURIs(mClipPath, aOther.mClipPath) ||
+      !EqualURIs(mFilter, aOther.mFilter)     ||
+      !EqualURIs(mMask, aOther.mMask)) {
+    NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
+    NS_UpdateHint(hint, nsChangeHint_ReflowFrame);
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
+
   if (mStopColor             != aOther.mStopColor     ||
       mFloodColor            != aOther.mFloodColor    ||
       mLightingColor         != aOther.mLightingColor ||
-      !EqualURIs(mClipPath, aOther.mClipPath)         ||
-      !EqualURIs(mFilter, aOther.mFilter)             ||
-      !EqualURIs(mMask, aOther.mMask)                 ||
       mStopOpacity           != aOther.mStopOpacity   ||
       mFloodOpacity          != aOther.mFloodOpacity  ||
       mDominantBaseline != aOther.mDominantBaseline)
-    return NS_STYLE_HINT_VISUAL;
-  
-  return NS_STYLE_HINT_NONE;
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+
+  return hint;
 }
 
 #ifdef DEBUG
 /* static */
 nsChangeHint nsStyleSVGReset::MaxDifference()
 {
-  return NS_STYLE_HINT_VISUAL;
+  return NS_CombineHint(NS_CombineHint(nsChangeHint_UpdateEffects,
+                                       nsChangeHint_ReflowFrame),
+                                       nsChangeHint_RepaintFrame);
 }
 #endif
 
@@ -1643,6 +1663,7 @@ nsStyleText::nsStyleText(void)
   mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
   mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
   mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
+  mWordWrap = NS_STYLE_WORDWRAP_NORMAL;
 
   mLetterSpacing.SetNormalValue();
   mLineHeight.SetNormalValue();
@@ -1656,6 +1677,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
   : mTextAlign(aSource.mTextAlign),
     mTextTransform(aSource.mTextTransform),
     mWhiteSpace(aSource.mWhiteSpace),
+    mWordWrap(aSource.mWordWrap),
     mLetterSpacing(aSource.mLetterSpacing),
     mLineHeight(aSource.mLineHeight),
     mTextIndent(aSource.mTextIndent),
@@ -1670,6 +1692,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
   if ((mTextAlign != aOther.mTextAlign) ||
       (mTextTransform != aOther.mTextTransform) ||
       (mWhiteSpace != aOther.mWhiteSpace) ||
+      (mWordWrap != aOther.mWordWrap) ||
       (mLetterSpacing != aOther.mLetterSpacing) ||
       (mLineHeight != aOther.mLineHeight) ||
       (mTextIndent != aOther.mTextIndent) ||

@@ -325,6 +325,7 @@
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
+#include "nsIDOMCSSFontFaceRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMCSSStyleRule.h"
@@ -814,7 +815,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSStyleDeclaration, nsCSSStyleDeclSH,
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ComputedCSSStyleDeclaration, nsCSSStyleDeclSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ROCSSPrimitiveValue, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -1252,6 +1253,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
  
    NS_DEFINE_CLASSINFO_DATA(Geolocator, nsDOMGenericSH,
                             DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSFontFaceStyleDecl, nsCSSStyleDeclSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
 
 #if defined(MOZ_MEDIA) 
   NS_DEFINE_CLASSINFO_DATA(HTMLVideoElement, nsHTMLElementSH,
@@ -3438,6 +3444,15 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Geolocator, nsIDOMGeolocator)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeolocator)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFaceRule)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(CSSFontFaceStyleDecl,
+                                      nsIDOMCSSStyleDeclaration)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
   DOM_CLASSINFO_MAP_END
 
 #if defined(MOZ_MEDIA)

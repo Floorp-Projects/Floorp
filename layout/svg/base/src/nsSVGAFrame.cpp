@@ -65,8 +65,6 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  NS_IMETHOD DidSetStyleContext();
-
   /**
    * Get the "type" of the frame
    *
@@ -127,14 +125,6 @@ nsSVGAFrame::AttributeChanged(PRInt32         aNameSpaceID,
   }
 
  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGAFrame::DidSetStyleContext()
-{
-  nsSVGUtils::StyleEffects(this);
-
-  return NS_OK;
 }
 
 nsIAtom *

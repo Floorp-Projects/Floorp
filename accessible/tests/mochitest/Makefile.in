@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =\
 		moz.png \
+		nsIAccessible_actions.js \
 		nsIAccessible_name.css \
 		nsIAccessible_name.xbl \
 		test_aria_activedescendant.html \
@@ -56,6 +57,8 @@ _TEST_FILES =\
 		test_cssattrs.html \
 		test_groupattrs.xul \
 	$(warning test_table_indexes.html temporarily disabled) \
+		test_nsIAccessible_actions.html \
+		test_nsIAccessible_actions.xul \
 		test_nsIAccessible_name.html \
 		test_nsIAccessible_name.xul \
 		test_nsIAccessibleTable_1.html \

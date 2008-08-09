@@ -110,11 +110,10 @@ IsAncestorBinding(nsIDocument* aDocument,
   NS_ASSERTION(aChild, "expected a child content");
 
   PRUint32 bindingRecursion = 0;
-  nsIContent* bindingParent = aChild->GetBindingParent();
   nsBindingManager* bindingManager = aDocument->BindingManager();
-  for (nsIContent* prev = aChild;
-       bindingParent && prev != bindingParent;
-       prev = bindingParent, bindingParent = bindingParent->GetBindingParent()) {
+  for (nsIContent *bindingParent = aChild->GetBindingParent();
+       bindingParent;
+       bindingParent = bindingParent->GetBindingParent()) {
     nsXBLBinding* binding = bindingManager->GetBinding(bindingParent);
     if (!binding) {
       continue;
@@ -164,10 +163,12 @@ PRBool CheckTagNameWhiteList(PRInt32 aNameSpaceID, nsIAtom *aTagName)
       }
     }
   }
+#ifdef MOZ_SVG
   else if (aNameSpaceID == kNameSpaceID_SVG &&
            aTagName == nsGkAtoms::generic) {
     return PR_TRUE;
   }
+#endif
 
   return PR_FALSE;
 }
@@ -698,6 +699,10 @@ nsXBLService::AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
     
   if (!piTarget)
     return NS_ERROR_FAILURE;
+
+  // the listener already exists, so skip this
+  if (contentNode && contentNode->GetProperty(nsGkAtoms::listener))
+    return NS_OK;
     
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(contentNode));
 
@@ -719,8 +724,53 @@ nsXBLService::AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
   target->AddGroupedEventListener(NS_LITERAL_STRING("keypress"), handler, 
                                   PR_FALSE, systemGroup);
 
-  // Release.  Do this so that only the event receiver holds onto the key handler.
+  if (contentNode)
+    return contentNode->SetProperty(nsGkAtoms::listener, handler,
+                                    nsPropertyTable::SupportsDtorFunc, PR_TRUE);
+
+  // release the handler. The reference will be maintained by the event target,
+  // and, if there is a content node, the property.
   NS_RELEASE(handler);
+  return NS_OK;
+}
+
+//
+// DetachGlobalKeyHandler
+//
+// Removes a key handler added by DeatchGlobalKeyHandler.
+//
+NS_IMETHODIMP
+nsXBLService::DetachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
+{
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = aTarget;
+  nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
+  if (!contentNode) // detaching is only supported for content nodes
+    return NS_ERROR_FAILURE;
+
+  // Only attach if we're really in a document
+  nsCOMPtr<nsIDocument> doc = contentNode->GetCurrentDoc();
+  if (doc)
+    piTarget = do_QueryInterface(doc);
+  if (!piTarget)
+    return NS_ERROR_FAILURE;
+
+  nsIDOMEventListener* handler =
+    static_cast<nsIDOMEventListener*>(contentNode->GetProperty(nsGkAtoms::listener));
+  if (!handler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMEventGroup> systemGroup;
+  piTarget->GetSystemEventGroup(getter_AddRefs(systemGroup));
+  nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(piTarget);
+
+  target->RemoveGroupedEventListener(NS_LITERAL_STRING("keydown"), handler,
+                                     PR_FALSE, systemGroup);
+  target->RemoveGroupedEventListener(NS_LITERAL_STRING("keyup"), handler, 
+                                     PR_FALSE, systemGroup);
+  target->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"), handler, 
+                                     PR_FALSE, systemGroup);
+
+  contentNode->DeleteProperty(nsGkAtoms::listener);
 
   return NS_OK;
 }

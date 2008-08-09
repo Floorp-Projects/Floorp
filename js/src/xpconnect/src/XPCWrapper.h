@@ -84,11 +84,23 @@ CanAccessWrapper(JSContext *cx, JSObject *wrappedObj);
 inline JSBool
 XPC_XOW_ClassNeedsXOW(const char *name)
 {
-  // TODO Make a perfect hash of these and use that?
-  return !strcmp(name, "Window")            ||
-         !strcmp(name, "Location")          ||
-         !strcmp(name, "HTMLIFrameElement") ||
-         !strcmp(name, "HTMLFrameElement");
+  switch (*name) {
+    case 'W':
+      return strcmp(++name, "indow") == 0;
+    case 'L':
+      return strcmp(++name, "ocation") == 0;
+    case 'H':
+      if (strncmp(++name, "TML", 3))
+        break;
+      name += 3;
+      if (*name == 'I')
+        ++name;
+      return strcmp(name, "FrameElement") == 0;
+    default:
+      break;
+  }
+
+  return JS_FALSE;
 }
 
 extern JSExtendedClass sXPC_XOW_JSClass;

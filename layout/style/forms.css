@@ -126,6 +126,7 @@ textarea {
   text-indent: 0;
   -moz-user-select: text;
   text-shadow: none;
+  word-wrap: break-word !important;
 }
 
 textarea > scrollbar {
@@ -592,10 +593,6 @@ input[type="file"] > input[type="text"] {
   }
 
   input[type="file"] { height: 2em; }
-}
-
-video {
-  background-color: black;
 }
 
 video > xul|videocontrols {

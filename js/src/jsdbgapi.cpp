@@ -1843,3 +1843,123 @@ js_DumpCallgrind(JSContext *cx, JSObject *obj,
 }
 
 #endif /* MOZ_CALLGRIND */
+
+#ifdef MOZ_VTUNE
+#include <VTuneApi.h>
+
+static const char *vtuneErrorMessages[] = {
+  "unknown, error #0",
+  "invalid 'max samples' field",
+  "invalid 'samples per buffer' field",
+  "invalid 'sample interval' field",
+  "invalid path",
+  "sample file in use",
+  "invalid 'number of events' field",
+  "unknown, error #7",
+  "internal error",
+  "bad event name",
+  "VTStopSampling called without calling VTStartSampling",
+  "no events selected for event-based sampling",
+  "events selected cannot be run together",
+  "no sampling parameters",
+  "sample database already exists",
+  "sampling already started",
+  "time-based sampling not supported",
+  "invalid 'sampling parameters size' field",
+  "invalid 'event size' field",
+  "sampling file already bound",
+  "invalid event path",
+  "invalid license",
+  "invalid 'global options' field",
+
+};
+
+JS_FRIEND_API(JSBool)
+js_StartVtune(JSContext *cx, JSObject *obj,
+              uintN argc, jsval *argv, jsval *rval)
+{
+    VTUNE_EVENT events[] = { 
+	{ 1000000, 0, 0, 0, "CPU_CLK_UNHALTED.CORE" },
+	{ 1000000, 0, 0, 0, "INST_RETIRED.ANY" },
+    };
+
+    U32 n_events = sizeof(events) / sizeof(VTUNE_EVENT);
+    char *default_filename = "mozilla-vtune.tb5";
+    JSString *str;
+    U32 status;
+
+    VTUNE_SAMPLING_PARAMS params = { 
+        sizeof(VTUNE_SAMPLING_PARAMS),
+        sizeof(VTUNE_EVENT),
+        0, 0, /* Reserved fields */
+        1,    /* Initialize in "paused" state */
+        0,    /* Max samples, or 0 for "continuous" */
+        4096, /* Samples per buffer */
+        0.1,  /* Sampling interval in ms */
+        1,    /* 1 for event-based sampling, 0 for time-based */
+
+        n_events,
+        events,
+        default_filename,
+    };
+
+    if (argc > 0 && JSVAL_IS_STRING(argv[0])) {
+        str = JSVAL_TO_STRING(argv[0]);
+        params.tb5Filename = js_DeflateString(cx, 
+                                              JSSTRING_CHARS(str), 
+                                              JSSTRING_LENGTH(str));
+    }
+    
+    status = VTStartSampling(&params);
+
+    if (params.tb5Filename != default_filename)
+        JS_free(cx, params.tb5Filename);
+    
+    if (status != 0) { 
+        if (status == VTAPI_MULTIPLE_RUNS)
+            VTStopSampling(0);
+        if (status < sizeof(vtuneErrorMessages))
+            JS_ReportError(cx, "Vtune setup error: %s", 
+                           vtuneErrorMessages[status]);
+        else
+            JS_ReportError(cx, "Vtune setup error: %d", 
+                           status);            
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_StopVtune(JSContext *cx, JSObject *obj,
+             uintN argc, jsval *argv, jsval *rval)
+{
+    U32 status = VTStopSampling(1);
+    if (status) {
+        if (status < sizeof(vtuneErrorMessages))
+            JS_ReportError(cx, "Vtune shutdown error: %s", 
+                           vtuneErrorMessages[status]);
+        else
+            JS_ReportError(cx, "Vtune shutdown error: %d", 
+                           status);
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_PauseVtune(JSContext *cx, JSObject *obj,
+              uintN argc, jsval *argv, jsval *rval)
+{
+    VTPause();
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_ResumeVtune(JSContext *cx, JSObject *obj,
+               uintN argc, jsval *argv, jsval *rval)
+{
+    VTResume();
+    return JS_TRUE;
+}
+
+#endif /* MOZ_VTUNE */

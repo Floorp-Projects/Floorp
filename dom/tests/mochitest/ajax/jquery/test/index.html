@@ -1,23 +1,32 @@
-<html id="html">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr" id="html">
 <head>
-	<meta http-equiv="Content-Type" content="text/css; charset=utf-8" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<title>jQuery Test Suite</title>
 	<link rel="Stylesheet" media="screen" href="data/testsuite.css" />
+	<script>var jQuery = "jQuery", $ = "$"; // For testing .noConflict()</script>
 	<script type="text/javascript" src="../dist/jquery.js"></script>
 	<script type="text/javascript" src="data/testrunner.js"></script>
-	<script type="text/javascript" src="../src/jquery/coreTest.js"></script>
-	<script type="text/javascript" src="../src/selector/selectorTest.js"></script>
-	<script type="text/javascript" src="../src/event/eventTest.js"></script>
-	<script type="text/javascript" src="../src/fx/fxTest.js"></script>
+	<script type="text/javascript" src="unit/core.js"></script>
+	<script type="text/javascript" src="unit/dimensions.js"></script>
+	<script type="text/javascript" src="unit/selector.js"></script>
+	<script type="text/javascript" src="unit/event.js"></script>
+	<script type="text/javascript" src="unit/ajax.js"></script>
+	<script type="text/javascript" src="unit/fx.js"></script>
 </head>
 
 <body id="body">
-	<h1>jQuery Test Suite</h1>
+	<h1 id="header">jQuery Test Suite</h1>
 	<h2 id="banner"></h2>
 	<h2 id="userAgent"></h2>
 	
 	<!-- Test HTML -->
-	<dl style="display:none;">
+	<div id="nothiddendiv" style="height:1px;background:white;">
+		<div id="nothiddendivchild"></div>
+	</div>
+	<!-- this iframe is outside the #main so it won't reload constantly wasting time, but it means the tests must be "safe" and clean up after themselves -->
+	<iframe id="loadediframe" name="loadediframe" style="display:none;" src="data/iframe.html"></iframe>
+	<dl id="dl" style="display:none;">
 	<div id="main" style="display: none;">
 		<p id="firstp">See <a id="simon1" href="http://simon.incutio.com/archive/2003/03/25/#getElementsBySelector" rel="bookmark">this blog entry</a> for more information.</p>
 		<p id="ap">
@@ -37,13 +46,13 @@
 		<ul id="firstUL"></ul>
 		<ol id="empty"></ol>
 		<form id="form" action="formaction">
-			<input type="text" name="action" value="Test" id="text1"/>
+			<input type="text" name="action" value="Test" id="text1" maxlength="30"/>
 			<input type="text" name="text2" value="Test" id="text2" disabled="disabled"/>
-			<input type="radio" name="radio1" id="radio1"/>
+			<input type="radio" name="radio1" id="radio1" value="on"/>
 
 			<input type="radio" name="radio2" id="radio2" checked="checked"/>
 			<input type="checkbox" name="check" id="check1" checked="checked"/>
-			<input type="checkbox" id="check2"/>
+			<input type="checkbox" id="check2" value="on"/>
 
 			<input type="hidden" name="hidden" id="hidden1"/>
 			<input type="text" style="display:none;" name="foo[bar]" id="hidden2"/>
@@ -52,22 +61,22 @@
 			
 			<button id="button" name="button">Button</button>
 			
-			<textarea id="area1">foobar</textarea>
+			<textarea id="area1" maxlength="30">foobar</textarea>
 			
 			<select name="select1" id="select1">
-				<option id="option1a" value="">Nothing</option>
+				<option id="option1a" class="emptyopt" value="">Nothing</option>
 				<option id="option1b" value="1">1</option>
 				<option id="option1c" value="2">2</option>
 				<option id="option1d" value="3">3</option>
 			</select>
 			<select name="select2" id="select2">
-				<option id="option2a" value="">Nothing</option>
+				<option id="option2a" class="emptyopt" value="">Nothing</option>
 				<option id="option2b" value="1">1</option>
 				<option id="option2c" value="2">2</option>
 				<option id="option2d" selected="selected" value="3">3</option>
 			</select>
 			<select name="select3" id="select3" multiple="multiple">
-				<option id="option3a" value="">Nothing</option>
+				<option id="option3a" class="emptyopt" value="">Nothing</option>
 				<option id="option3b" selected="selected" value="1">1</option>
 				<option id="option3c" selected="selected" value="2">2</option>
 				<option id="option3d" value="3">3</option>
@@ -90,10 +99,86 @@
 		<b id="floatTest">Float test.</b>
 		<iframe id="iframe" name="iframe"></iframe>
 		<form id="lengthtest">
-			<input type="text" id="length" name="test">
-			<input type="text" id="idTest" name="id">
+			<input type="text" id="length" name="test"/>
+			<input type="text" id="idTest" name="id"/>
 		</form>
 		<table id="table"></table>
+		
+		<div id="fx-queue">
+			<div id="fadein" class='chain test'>fadeIn<div>fadeIn</div></div>
+			<div id="fadeout" class='chain test out'>fadeOut<div>fadeOut</div></div>
+			
+			<div id="show" class='chain test'>show<div>show</div></div>
+			<div id="hide" class='chain test out'>hide<div>hide</div></div>
+			
+			<div id="togglein" class='chain test'>togglein<div>togglein</div></div>
+			<div id="toggleout" class='chain test out'>toggleout<div>toggleout</div></div>
+		
+			
+			<div id="slideup" class='chain test'>slideUp<div>slideUp</div></div>
+			<div id="slidedown" class='chain test out'>slideDown<div>slideDown</div></div>
+			
+			<div id="slidetogglein" class='chain test'>slideToggleIn<div>slideToggleIn</div></div>
+			<div id="slidetoggleout" class='chain test out'>slideToggleOut<div>slideToggleOut</div></div>
+		</div>
+		
+		<div id="fx-tests"></div>
+
+		<form id="testForm" action="#" method="get">
+			<textarea name="T3" rows="2" cols="15">?
+Z</textarea>
+			<input type="hidden" name="H1" value="x" />
+			<input type="hidden" name="H2" />
+			<input name="PWD" type="password" value="" />
+			<input name="T1" type="text" />
+			<input name="T2" type="text" value="YES" readonly="readonly" />
+			<input type="checkbox" name="C1" value="1" />
+			<input type="checkbox" name="C2" />
+			<input type="radio" name="R1" value="1" />
+			<input type="radio" name="R1" value="2" />
+			<input type="text" name="My Name" value="me" />
+			<input type="reset" name="reset" value="NO" />
+			<select name="S1">
+				<option value="abc">ABC</option>
+				<option value="abc">ABC</option>
+				<option value="abc">ABC</option>
+			</select>
+			<select name="S2" multiple="multiple" size="3">
+				<option value="abc">ABC</option>
+				<option value="abc">ABC</option>
+				<option value="abc">ABC</option>
+			</select>
+			<select name="S3">
+				<option selected="selected">YES</option>
+			</select>
+			<select name="S4">
+				<option value="" selected="selected">NO</option>
+			</select>
+			<input type="submit" name="sub1" value="NO" />
+			<input type="submit" name="sub2" value="NO" />
+			<input type="image" name="sub3" value="NO" />
+			<button name="sub4" type="submit" value="NO">NO</button>
+			<input name="D1" type="text" value="NO" disabled="disabled" />
+			<input type="checkbox" checked="checked" disabled="disabled" name="D2" value="NO" />
+			<input type="radio" name="D3" value="NO" checked="checked" disabled="disabled" />
+			<select name="D4" disabled="disabled">
+				<option selected="selected" value="NO">NO</option>
+			</select>
+		</form>
+		<div id="moretests">
+			<form>
+				<div id="checkedtest" style="display:none;">
+					<input type="radio" name="checkedtestradios" checked="checked"/>
+					<input type="radio" name="checkedtestradios" value="on"/>
+					<input type="checkbox" name="checkedtestcheckboxes" checked="checked"/>
+					<input type="checkbox" name="checkedtestcheckboxes" />
+				</div>
+			</form>
+			<div id="nonnodes"><span>hi</span> there <!-- mon ami --></div>
+			<div id="t2037">
+				<div><div class="hidden">hidden</div></div>
+			</div>
+		</div>
 	</div>
 	</dl>
 	

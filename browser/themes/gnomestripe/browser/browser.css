@@ -1062,7 +1062,7 @@ toolbar[iconsize="small"] #paste-button[disabled="true"] {
 }
 
 .ac-url-text {
-  color: GrayText;
+  color: -moz-nativehyperlinktext;
 }
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {

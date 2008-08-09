@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
  *   Brian Ryner    <bryner@brianryner.com>
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -142,6 +143,13 @@ class nsStyleSet
                                            nsIAtom*       aAttribute,
                                            PRInt32        aModType,
                                            PRUint32       aStateMask);
+
+  /*
+   * Do any processing that needs to happen as a result of a change in
+   * the characteristics of the medium, and return whether style rules
+   * may have changed as a result.
+   */
+  PRBool MediumFeaturesChanged(nsPresContext* aPresContext);
 
   // APIs for registering objects that can supply additional
   // rules during processing.

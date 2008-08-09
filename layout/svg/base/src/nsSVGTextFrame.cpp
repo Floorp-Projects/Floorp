@@ -99,14 +99,6 @@ nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGTextFrame::DidSetStyleContext()
-{
-  nsSVGUtils::StyleEffects(this);
-
-  return NS_OK;
-}
-
 nsIAtom *
 nsSVGTextFrame::GetType() const
 {
@@ -265,6 +257,16 @@ nsSVGTextFrame::UpdateCoveredRegion()
   
   return nsSVGTextFrameBase::UpdateCoveredRegion();
 }
+
+NS_IMETHODIMP
+nsSVGTextFrame::InitialUpdate()
+{
+  nsresult rv = nsSVGTextFrameBase::InitialUpdate();
+  
+  UpdateGlyphPositioning(PR_FALSE);
+
+  return rv;
+}  
 
 NS_IMETHODIMP
 nsSVGTextFrame::GetBBox(nsIDOMSVGRect **_retval)

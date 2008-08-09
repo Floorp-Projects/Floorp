@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -46,11 +47,134 @@
 
 #include "nsIDOMMediaList.h"
 #include "nsAString.h"
-#include "nsCOMArray.h"
+#include "nsTArray.h"
+#include "nsTPtrArray.h"
 #include "nsIAtom.h"
+#include "nsMediaFeatures.h"
+#include "nsCSSValue.h"
+
 class nsPresContext;
 class nsICSSStyleSheet;
 class nsCSSStyleSheet;
+
+struct nsMediaExpression {
+  enum Range { eMin, eMax, eEqual };
+
+  const nsMediaFeature *mFeature;
+  Range mRange;
+  nsCSSValue mValue;
+
+  // aActualValue must be obtained from mFeature->mGetter
+  PRBool Matches(nsPresContext* aPresContext,
+                 const nsCSSValue& aActualValue) const;
+};
+
+/**
+ * An nsMediaQueryResultCacheKey records what feature/value combinations
+ * a set of media query results are valid for.  This allows the caller
+ * to quickly learn whether a prior result of media query evaluation is
+ * still valid (e.g., due to a window size change) without rerunning all
+ * of the evaluation and rebuilding the list of rules.
+ *
+ * This object may not be used after any media rules in any of the
+ * sheets it was given to have been modified.  However, this is
+ * generally not a problem since ClearRuleCascades is called on the
+ * sheet whenever this happens, and these objects are stored inside the
+ * rule cascades.  (FIXME: We're not actually doing this all the time.)
+ *
+ * The implementation could be further optimized in the future to store
+ * ranges (combinations of less-than, less-than-or-equal, greater-than,
+ * greater-than-or-equal, equal, not-equal, present, not-present) for
+ * each feature rather than simply storing the list of expressions.
+ * However, this requires combining any such ranges.
+ */
+class nsMediaQueryResultCacheKey {
+public:
+  nsMediaQueryResultCacheKey(nsIAtom* aMedium)
+    : mMedium(aMedium)
+  {}
+
+  /**
+   * Record that aExpression was tested while building the cached set
+   * that this cache key is for, and that aExpressionMatches was whether
+   * it matched.
+   */
+  void AddExpression(const nsMediaExpression* aExpression,
+                     PRBool aExpressionMatches);
+  PRBool Matches(nsPresContext* aPresContext) const;
+private:
+  struct ExpressionEntry {
+    // FIXME: if we were better at maintaining invariants about clearing
+    // rule cascades when media lists change, this could be a |const
+    // nsMediaExpression*| instead.
+    nsMediaExpression mExpression;
+    PRBool mExpressionMatches;
+  };
+  struct FeatureEntry {
+    const nsMediaFeature *mFeature;
+    nsTArray<ExpressionEntry> mExpressions;
+  };
+  nsCOMPtr<nsIAtom> mMedium;
+  nsTArray<FeatureEntry> mFeatureCache;
+};
+
+class nsMediaQuery {
+public:
+  nsMediaQuery()
+    : mNegated(PR_FALSE)
+    , mHasOnly(PR_FALSE)
+    , mTypeOmitted(PR_FALSE)
+    , mHadUnknownExpression(PR_FALSE)
+  {
+  }
+
+private:
+  // for Clone only
+  nsMediaQuery(const nsMediaQuery& aOther)
+    : mNegated(aOther.mNegated)
+    , mHasOnly(aOther.mHasOnly)
+    , mTypeOmitted(aOther.mTypeOmitted)
+    , mHadUnknownExpression(aOther.mHadUnknownExpression)
+    , mMediaType(aOther.mMediaType)
+    // Clone checks the result of this deep copy for allocation failure
+    , mExpressions(aOther.mExpressions)
+  {
+  }
+
+public:
+
+  void SetNegated()                     { mNegated = PR_TRUE; }
+  void SetHasOnly()                     { mHasOnly = PR_TRUE; }
+  void SetTypeOmitted()                 { mTypeOmitted = PR_TRUE; }
+  void SetHadUnknownExpression()        { mHadUnknownExpression = PR_TRUE; }
+  void SetType(nsIAtom* aMediaType)     { 
+                                          NS_ASSERTION(aMediaType,
+                                                       "expected non-null");
+                                          mMediaType = aMediaType;
+                                        }
+
+  // Return a new nsMediaExpression in the array for the caller to fill
+  // in.  The caller must either fill it in completely, or call
+  // SetHadUnknownExpression on this nsMediaQuery.
+  // Returns null on out-of-memory.
+  nsMediaExpression* NewExpression()    { return mExpressions.AppendElement(); }
+
+  void AppendToString(nsAString& aString) const;
+
+  nsMediaQuery* Clone() const;
+
+  // Does this query apply to the presentation?
+  PRBool Matches(nsPresContext* aPresContext,
+                 nsMediaQueryResultCacheKey& aKey) const;
+
+private:
+  PRPackedBool mNegated;
+  PRPackedBool mHasOnly; // only needed for serialization
+  PRPackedBool mTypeOmitted; // only needed for serialization
+  PRPackedBool mHadUnknownExpression;
+  nsCOMPtr<nsIAtom> mMediaType;
+  nsTArray<nsMediaExpression> mExpressions;
+};
 
 class nsMediaList : public nsIDOMMediaList {
 public:
@@ -62,17 +186,27 @@ public:
 
   nsresult GetText(nsAString& aMediaText);
   nsresult SetText(const nsAString& aMediaText);
-  PRBool Matches(nsPresContext* aPresContext);
+  PRBool Matches(nsPresContext* aPresContext,
+                 nsMediaQueryResultCacheKey& aKey);
   nsresult SetStyleSheet(nsICSSStyleSheet* aSheet);
-  nsresult AppendAtom(nsIAtom* aMediumAtom) {
-    return mArray.AppendObject(aMediumAtom) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  nsresult AppendQuery(nsAutoPtr<nsMediaQuery>& aQuery) {
+    // Takes ownership of aQuery (if it succeeds)
+    if (!mArray.AppendElement(aQuery.get())) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aQuery.forget();
+    return NS_OK;
   }
 
   nsresult Clone(nsMediaList** aResult);
 
-  PRInt32 Count() { return mArray.Count(); }
-  nsIAtom* MediumAt(PRInt32 aIndex) { return mArray[aIndex]; }
-  void Clear() { mArray.Clear(); }
+  PRInt32 Count() { return mArray.Length(); }
+  nsMediaQuery* MediumAt(PRInt32 aIndex) { return mArray[aIndex]; }
+  void Clear() { mArray.Clear(); mIsEmpty = PR_TRUE; }
+  // a media list with no items may not represent the lack of a media
+  // list; it could represent the empty string or something with parser
+  // errors, which means that the media list should never match
+  void SetNonEmpty() { mIsEmpty = PR_FALSE; }
 
 protected:
   ~nsMediaList();
@@ -80,7 +214,8 @@ protected:
   nsresult Delete(const nsAString & aOldMedium);
   nsresult Append(const nsAString & aOldMedium);
 
-  nsCOMArray<nsIAtom> mArray;
+  nsTArray<nsAutoPtr<nsMediaQuery> > mArray;
+  PRBool mIsEmpty;
   // not refcounted; sheet will let us know when it goes away
   // mStyleSheet is the sheet that needs to be dirtied when this medialist
   // changes

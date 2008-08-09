@@ -1312,6 +1312,8 @@ public:
   nsresult OnFileAvailable(nsIFile* aFile);
 
   nsresult ServeStreamAsFile(nsIRequest *request, nsISupports *ctxt);
+  
+  nsIPluginInstance *GetPluginInstance() { return mInstance; }
 
 private:
   nsresult SetUpCache(nsIURI* aURL); // todo: see about removing this...
@@ -2030,13 +2032,23 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
   if (httpChannel) {
     PRUint32 responseCode = 0;
     rv = httpChannel->GetResponseStatus(&responseCode);
-    if (NS_FAILED(rv) || responseCode > 206) { // not normal
+    if (NS_FAILED(rv)) {
       // NPP_Notify() will be called from OnStopRequest
       // in ns4xPluginStreamListener::CleanUpStream
       // return error will cancel this request
       // ...and we also need to tell the plugin that
       mRequestFailed = PR_TRUE;
       return NS_ERROR_FAILURE;
+    }
+
+    if (responseCode > 206) { // not normal
+      PRBool bWantsAllNetworkStreams = PR_FALSE;
+      mInstance->GetValue(nsPluginInstanceVariable_WantsAllNetworkStreams,
+                          (void *)&bWantsAllNetworkStreams);
+      if(!bWantsAllNetworkStreams) {
+        mRequestFailed = PR_TRUE;
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 
@@ -2909,15 +2921,24 @@ nsresult nsPluginHostImpl::UserAgent(const char **retstring)
   if (NS_SUCCEEDED(res))
   {
     if(NS_RETURN_UASTRING_SIZE > uaString.Length())
-    {
       PL_strcpy(resultString, uaString.get());
-      *retstring = resultString;
-    }
     else
     {
-      *retstring = nsnull;
-      res = NS_ERROR_OUT_OF_MEMORY;
+      // Copy as much of UA string as we can (terminate at right-most space).
+      PL_strncpy(resultString, uaString.get(), NS_RETURN_UASTRING_SIZE);
+      for (int i = NS_RETURN_UASTRING_SIZE - 1; i >= 0; i--)
+      {
+        if (0 == i)
+          resultString[NS_RETURN_UASTRING_SIZE - 1] = '\0';
+        else if (resultString[i] == ' ')
+        {
+          resultString[i] = '\0';
+          break;
+        }
+      }
     }
+
+    *retstring = resultString;
   }
   else
     *retstring = nsnull;
@@ -3979,6 +4000,12 @@ nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   PRBool isJavaPlugin = pluginTag->mIsJavaPlugin;
 
   if (isJavaPlugin && !pluginTag->mIsNPRuntimeEnabledJavaPlugin) {
+#if !defined(OJI) && defined(XP_MACOSX)
+    // The MRJ plugin hangs if you try to load it with OJI disabled,
+    // don't even try to go there.
+    return NS_ERROR_FAILURE;
+#endif
+
     // We must make sure LiveConnect is started, if needed.
     nsCOMPtr<nsIDocument> document;
     aOwner->GetDocument(getter_AddRefs(document));
@@ -7116,8 +7143,22 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
 
   PRUint32 responseCode = 0;
   rv = httpChannel->GetResponseStatus(&responseCode);
-  if (NS_FAILED(rv) || responseCode != 200) {
+  if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
+  }
+  
+  // get nsPluginStreamListenerPeer* ptr from finalStreamListener
+  nsPluginStreamListenerPeer *pslp =
+    reinterpret_cast<nsPluginStreamListenerPeer*>(finalStreamListener.get());
+
+  if (responseCode != 200) {
+    PRBool bWantsAllNetworkStreams = PR_FALSE;
+    pslp->GetPluginInstance()->
+      GetValue(nsPluginInstanceVariable_WantsAllNetworkStreams,
+               (void *)&bWantsAllNetworkStreams);
+    if (!bWantsAllNetworkStreams){
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // if server cannot continue with byte range (206 status) and sending us whole object (200 status)
@@ -7125,9 +7166,6 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
   mStreamConverter = finalStreamListener;
   mRemoveMagicNumber = PR_TRUE;
 
-  //get nsPluginStreamListenerPeer* ptr from finalStreamListener
-  nsPluginStreamListenerPeer *pslp = reinterpret_cast<nsPluginStreamListenerPeer*>
-                                                     (finalStreamListener.get());
   rv = pslp->ServeStreamAsFile(request, ctxt);
   return rv;
 }

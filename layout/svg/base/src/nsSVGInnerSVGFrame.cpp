@@ -64,9 +64,6 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
 public:
-  // nsIFrame:
-  NS_IMETHOD DidSetStyleContext();
-
   // We don't define an AttributeChanged method since changes to the
   // 'x', 'y', 'width' and 'height' attributes of our content object
   // are handled in nsSVGSVGElement::DidModifySVGObservable
@@ -402,12 +399,5 @@ nsSVGInnerSVGFrame::DidModifySVGObservable (nsISVGValue* observable,
                                             nsISVGValue::modificationType aModType)
 {
   NotifyViewportChange();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGInnerSVGFrame::DidSetStyleContext()
-{
-  nsSVGUtils::StyleEffects(this);
   return NS_OK;
 }

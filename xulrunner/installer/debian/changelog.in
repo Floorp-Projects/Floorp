@@ -1,4 +1,5 @@
-xulrunner (@MOZ_APP_VERSION@)  unstable; urgency=low
+#filter substitution
+xulrunner (@GRE_MILESTONE@-@GRE_BUILDID@)  unstable; urgency=low
 
   * Mozilla Nightly (Closes: #nnnn)  <nnnn is the bug number of your ITP>
 
