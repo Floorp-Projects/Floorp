@@ -45,7 +45,7 @@
   It is designed to be used as inline input to nsCSSKeywords.cpp *only*
   through the magic of C preprocessing.
 
-  All entires must be enclosed in the macro CSS_KEY which will have cruel
+  All entries must be enclosed in the macro CSS_KEY which will have cruel
   and unusual things done to it
 
   It is recommended (but not strictly necessary) to keep all entries
@@ -53,14 +53,14 @@
 
   Requirements:
 
-  Entries are in the form: (name,id). 'id' must always be the same as 'name'
+  Entries are in the form: (name, id). 'id' must always be the same as 'name'
   except that all hyphens ('-') in 'name' are converted to underscores ('_')
-  in 'id'. This lets us do nice things with the macros without having to 
-  copy/convert strings at runtime. 
-  
+  in 'id'. This lets us do nice things with the macros without having to
+  copy/convert strings at runtime.
+
   'name' entries *must* use only lowercase characters.
 
-  ** Break these invariants and bad things will happen. **    
+  ** Break these invariants and bad things will happen. **
 
  ******/
 
@@ -214,6 +214,7 @@ CSS_KEY(both, both)
 CSS_KEY(bottom, bottom)
 CSS_KEY(bottom-outside, bottom_outside)
 CSS_KEY(bounding-box, bounding_box)
+CSS_KEY(break-word, break_word)
 CSS_KEY(button, button)
 CSS_KEY(buttonface, buttonface)
 CSS_KEY(buttonhighlight, buttonhighlight)
@@ -292,6 +293,7 @@ CSS_KEY(hz, hz)
 CSS_KEY(icon, icon)
 CSS_KEY(ignore, ignore)
 CSS_KEY(in, in)
+CSS_KEY(interlace, interlace)
 CSS_KEY(inactive, inactive)
 CSS_KEY(inactiveborder, inactiveborder)
 CSS_KEY(inactivecaption, inactivecaption)
@@ -373,6 +375,7 @@ CSS_KEY(portrait, portrait)
 CSS_KEY(pre, pre)
 CSS_KEY(pre-wrap, pre_wrap)
 CSS_KEY(progress, progress)
+CSS_KEY(progressive, progressive)
 CSS_KEY(pt, pt)
 CSS_KEY(px, px)
 CSS_KEY(rad, rad)
@@ -387,6 +390,7 @@ CSS_KEY(ridge, ridge)
 CSS_KEY(right, right)
 CSS_KEY(right-side, right_side)
 CSS_KEY(rightwards, rightwards)
+CSS_KEY(round, round)
 CSS_KEY(row-resize, row_resize)
 CSS_KEY(rtl, rtl)
 CSS_KEY(s, s)
@@ -591,7 +595,6 @@ CSS_KEY(optimizelegibility, optimizelegibility)
 CSS_KEY(optimizespeed, optimizespeed)
 CSS_KEY(painted, painted)
 CSS_KEY(reset-size, reset_size)
-CSS_KEY(round, round)
 //CSS_KEY(square, square)
 //CSS_KEY(start, start)
 CSS_KEY(srgb, srgb)

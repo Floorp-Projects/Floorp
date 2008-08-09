@@ -939,6 +939,11 @@ PlacesTreeView.prototype = {
       if (!node.parent)
         return true;
 
+      // Flat-lists may ignore expandQueries and other query options when
+      // they are asked to open a container.
+      if (this._flatList)
+        return true;
+
       // treat non-expandable childless queries as non-containers
       if (PlacesUtils.nodeIsQuery(node)) {
         var parent = node.parent;

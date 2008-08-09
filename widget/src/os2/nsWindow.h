@@ -103,7 +103,7 @@ class nsWindow : public nsBaseWidget,
    nsWindow();
    virtual ~nsWindow();
 
-  static void ReleaseGlobals();
+   static void ReleaseGlobals();
 
    // nsIWidget
 
@@ -128,7 +128,7 @@ class nsWindow : public nsBaseWidget,
    // Hierarchy: only interested in widget children (it seems)
    virtual nsIWidget *GetParent();
 
-    NS_IMETHOD              SetSizeMode(PRInt32 aMode);
+   NS_IMETHOD SetSizeMode(PRInt32 aMode);
 
    // Physical properties
    NS_IMETHOD Show( PRBool bState);
@@ -193,7 +193,7 @@ class nsWindow : public nsBaseWidget,
    virtual HWND   GetMainWindow() const           { return mWnd; }
 
    // nsSwitchToPMThread interface
-    virtual BOOL            CallMethod(MethodInfo *info);
+   virtual BOOL CallMethod(MethodInfo *info);
 
    // PM methods which need to be public (menus, etc)
    ULONG  GetNextID()    { return mNextID++; }
@@ -202,12 +202,12 @@ class nsWindow : public nsBaseWidget,
    void   NS2PM( RECTL &rcl);
 
 protected:
-    static  BOOL            DealWithPopups ( ULONG inMsg, MRESULT* outResult ) ;
+   static  BOOL            DealWithPopups ( ULONG inMsg, MRESULT* outResult ) ;
 
-    static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
+   static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
 
-    static  nsWindow *      GetNSWindowPtr(HWND aWnd);
-    static  BOOL            SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
+   static  nsWindow *      GetNSWindowPtr(HWND aWnd);
+   static  BOOL            SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
 
    static  nsWindow*   gCurrentWindow;
    // nsWindow methods subclasses must provide for creation to work

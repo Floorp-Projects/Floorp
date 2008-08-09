@@ -57,7 +57,7 @@ public:
   NS_IMETHOD DrawWidgetBackground(nsIRenderingContext* aContext,
                                   nsIFrame* aFrame, PRUint8 aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aClipRect);
+                                  const nsRect& aDirtyRect);
 
   NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
                              PRUint8 aWidgetType, nsMargin* aResult);

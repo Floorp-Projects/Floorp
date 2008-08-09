@@ -65,6 +65,7 @@
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNavigator.h"
+#include "nsIDOMNavigatorGeolocator.h"
 #include "nsIDOMNSLocation.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
@@ -124,6 +125,7 @@ class PostMessageEvent;
 
 class nsDOMOfflineResourceList;
 class nsDOMOfflineLoadStatusList;
+class nsGeolocator;
 
 // permissible values for CheckOpenAllow
 enum OpenAllowValue {
@@ -288,6 +290,7 @@ public:
   virtual NS_HIDDEN_(nsPIDOMWindow*) GetPrivateRoot();
   virtual NS_HIDDEN_(nsresult) Activate();
   virtual NS_HIDDEN_(nsresult) Deactivate();
+  virtual NS_HIDDEN_(void) SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler);
   virtual NS_HIDDEN_(nsIFocusController*) GetRootFocusController();
 
   virtual NS_HIDDEN_(void) SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal);
@@ -329,6 +332,7 @@ public:
   virtual NS_HIDDEN_(nsresult) RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                                         const nsIID& aIID);
   virtual NS_HIDDEN_(nsresult) GetSystemEventGroup(nsIDOMEventGroup** aGroup);
+  virtual NS_HIDDEN_(nsresult) GetContextForEventHandlers(nsIScriptContext** aContext);
 
   virtual NS_HIDDEN_(void) SetDocShell(nsIDocShell* aDocShell);
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
@@ -804,7 +808,8 @@ protected:
 
 class nsNavigator : public nsIDOMNavigator,
                     public nsIDOMJSNavigator,
-                    public nsIDOMClientInformation
+                    public nsIDOMClientInformation,
+                    public nsIDOMNavigatorGeolocator
 {
 public:
   nsNavigator(nsIDocShell *aDocShell);
@@ -814,6 +819,7 @@ public:
   NS_DECL_NSIDOMNAVIGATOR
   NS_DECL_NSIDOMJSNAVIGATOR
   NS_DECL_NSIDOMCLIENTINFORMATION
+  NS_DECL_NSIDOMNAVIGATORGEOLOCATOR
   
   void SetDocShell(nsIDocShell *aDocShell);
   nsIDocShell *GetDocShell()
@@ -827,6 +833,7 @@ public:
 protected:
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
+  nsRefPtr<nsGeolocator> mGeolocator;
   nsIDocShell* mDocShell; // weak reference
 
   static jsval       sPrefInternal_id;

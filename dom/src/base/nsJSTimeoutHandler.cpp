@@ -99,7 +99,7 @@ private:
 
   // filename, line number and JS language version string of the
   // caller of setTimeout()
-  nsCAutoString mFileName;
+  nsCString mFileName;
   PRUint32 mLineNo;
   PRUint32 mVersion;
   nsCOMPtr<nsIArray> mArgv;

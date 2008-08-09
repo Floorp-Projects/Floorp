@@ -159,11 +159,14 @@ enum { XKeyPress = KeyPress };
 #ifdef KeyPress
 #undef KeyPress
 #endif
-#include "gfxXlibNativeRenderer.h"
 #ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdkwindow.h>
 #include <gdk/gdkx.h>
 #endif
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+#include "gfxGdkNativeRenderer.h"
 #endif
 
 #ifdef XP_WIN
@@ -361,7 +364,7 @@ public:
   void Paint(const nsRect& aDirtyRect, HDC ndc);
 #elif defined(XP_MACOSX)
   void Paint(const nsRect& aDirtyRect);  
-#elif defined(MOZ_X11)
+#elif defined(MOZ_X11) || defined(MOZ_DFB)
   void Paint(gfxContext* aContext,
              const gfxRect& aFrameRect,
              const gfxRect& aDirtyRect);
@@ -477,18 +480,16 @@ private:
 
   nsresult EnsureCachedAttrParamArrays();
 
-#ifdef MOZ_X11
-  class Renderer : public gfxXlibNativeRenderer {
+#ifdef MOZ_WIDGET_GTK2
+  class Renderer : public gfxGdkNativeRenderer {
   public:
     Renderer(nsPluginWindow* aWindow, nsIPluginInstance* aInstance,
              const nsIntSize& aPluginSize, const nsIntRect& aDirtyRect)
       : mWindow(aWindow), mInstance(aInstance),
         mPluginSize(aPluginSize), mDirtyRect(aDirtyRect)
     {}
-    virtual nsresult NativeDraw(Screen* screen, Drawable drawable,
-                                Visual* visual, Colormap colormap,
-                                short offsetX, short offsetY,
-                                XRectangle* clipRects, PRUint32 numClipRects);
+    virtual nsresult NativeDraw(GdkDrawable * drawable, short offsetX, 
+            short offsetY, GdkRectangle * clipRects, PRUint32 numClipRects);
   private:
     nsPluginWindow* mWindow;
     nsIPluginInstance* mInstance;
@@ -1372,7 +1373,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       mInstanceOwner->Paint(aDirtyRect);
     }
   }
-#elif defined(MOZ_X11)
+#elif defined(MOZ_X11) || defined(MOZ_DFB)
   if (mInstanceOwner)
     {
       nsPluginWindow * window;
@@ -2398,20 +2399,12 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
   nsresult rv = NS_ERROR_FAILURE;
 
   if (mOwner && invalidRect && mWidgetVisible) {
-    //no reference count on view
-    nsIView* view = mOwner->GetView();
-
-    if (view) {
-      nsPresContext* presContext = mOwner->PresContext();
-
-      nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
-            presContext->DevPixelsToAppUnits(invalidRect->top),
-            presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
-            presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
-
-      //set flags to not do a synchronous update, force update does the redraw
-      view->GetViewManager()->UpdateView(view, rect, NS_VMREFRESH_NO_SYNC);
-    }
+    nsPresContext* presContext = mOwner->PresContext();
+    nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
+                presContext->DevPixelsToAppUnits(invalidRect->top),
+                presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
+                presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
+    mOwner->Invalidate(rect);
   }
 
   return rv;
@@ -2510,7 +2503,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
         if (!gdkWindow)
           return rv;
         gdkWindow = gdk_window_get_toplevel(gdkWindow);
+#ifdef MOZ_X11
         *static_cast<Window*>(value) = GDK_WINDOW_XID(gdkWindow);
+#endif
         return NS_OK;
 #endif
       } else NS_ASSERTION(mOwner, "plugin owner has no owner in getting doc's window handle");
@@ -4050,7 +4045,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
 }
 #endif
 
-#ifdef MOZ_X11
+#if defined(MOZ_X11) || defined(MOZ_DFB)
 void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                                   const gfxRect& aFrameRect,
                                   const gfxRect& aDirtyRect)
@@ -4113,16 +4108,11 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   gfxContextAutoSaveRestore autoSR(aContext);
   aContext->Translate(pluginRect.pos);
 
-  // The display used by gfxXlibNativeRenderer will be the one for the cairo
-  // surface (provided that it is an Xlib surface) but the display argument
-  // here needs to be non-NULL for cairo_draw_with_xlib ->
-  // _create_temp_xlib_surface -> DefaultScreen(dpy).
-  NPSetWindowCallbackStruct* ws_info = 
-    static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
-  renderer.Draw(ws_info->display, aContext, pluginSize.width, pluginSize.height,
+  renderer.Draw(aContext, window->width, window->height,
                 rendererFlags, nsnull);
 }
 
+#ifdef MOZ_X11
 static int
 DepthOfVisual(const Screen* screen, const Visual* visual)
 {
@@ -4137,14 +4127,20 @@ DepthOfVisual(const Screen* screen, const Visual* visual)
   NS_ERROR("Visual not on Screen.");
   return 0;
 }
+#endif
 
 nsresult
-nsPluginInstanceOwner::Renderer::NativeDraw(Screen* screen, Drawable drawable,
-                                            Visual* visual, Colormap colormap,
+nsPluginInstanceOwner::Renderer::NativeDraw(GdkDrawable * drawable, 
                                             short offsetX, short offsetY,
-                                            XRectangle* clipRects,
+                                            GdkRectangle * clipRects, 
                                             PRUint32 numClipRects)
+
 {
+#ifdef MOZ_X11
+  Visual * visual = GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(drawable));
+  Colormap colormap = GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(drawable));
+  Screen * screen = GDK_SCREEN_XSCREEN (gdk_drawable_get_screen(drawable));
+#endif
   // See if the plugin must be notified of new window parameters.
   PRBool doupdatewindow = PR_FALSE;
 
@@ -4160,25 +4156,31 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Screen* screen, Drawable drawable,
     doupdatewindow = PR_TRUE;
   }
 
-  // The clip rect is relative to plugin top-left.
+  // The clip rect is relative to drawable top-left.
   NS_ASSERTION(numClipRects <= 1, "We don't support multiple clip rectangles!");
-  nsPluginRect newClipRect;
+  nsIntRect clipRect;
   if (numClipRects) {
-    newClipRect.left = clipRects[0].x;
-    newClipRect.top = clipRects[0].y;
-    newClipRect.right  = clipRects[0].x + clipRects[0].width;
-    newClipRect.bottom = clipRects[0].y + clipRects[0].height;
+    clipRect.x = clipRects[0].x;
+    clipRect.y = clipRects[0].y;
+    clipRect.width  = clipRects[0].width;
+    clipRect.height = clipRects[0].height;
   }
   else {
-    // We should have been given a clip if an offset is -ve.
+    // nsPluginRect members are unsigned, but
+    // we should have been given a clip if an offset is -ve.
     NS_ASSERTION(offsetX >= 0 && offsetY >= 0,
                  "Clip rectangle offsets are negative!");
-    newClipRect.left = offsetX;
-    newClipRect.top  = offsetY;
-    newClipRect.right  = offsetX + mWindow->width;
-    newClipRect.bottom = offsetY + mWindow->height;
+    clipRect.x = offsetX;
+    clipRect.y = offsetY;
+    clipRect.width  = mWindow->width;
+    clipRect.height = mWindow->height;
   }
 
+  nsPluginRect newClipRect;
+  newClipRect.left = clipRect.x;
+  newClipRect.top = clipRect.y;
+  newClipRect.right = clipRect.XMost();
+  newClipRect.bottom = clipRect.YMost();
   if (mWindow->clipRect.left    != newClipRect.left   ||
       mWindow->clipRect.top     != newClipRect.top    ||
       mWindow->clipRect.right   != newClipRect.right  ||
@@ -4189,22 +4191,32 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Screen* screen, Drawable drawable,
 
   NPSetWindowCallbackStruct* ws_info = 
     static_cast<NPSetWindowCallbackStruct*>(mWindow->ws_info);
+#ifdef MOZ_X11
   if (ws_info->visual != visual || ws_info->colormap != colormap) {
     ws_info->visual = visual;
     ws_info->colormap = colormap;
     ws_info->depth = DepthOfVisual(screen, visual);
     doupdatewindow = PR_TRUE;
   }
+#endif
 
   if (doupdatewindow)
       mInstance->SetWindow(mWindow);
+
+#ifdef MOZ_X11
+  // Translate the dirty rect to drawable coordinates.
+  nsIntRect dirtyRect = mDirtyRect + nsIntPoint(offsetX, offsetY);
+  // Intersect the dirty rect with the clip rect to ensure that it lies within
+  // the drawable.
+  if (!dirtyRect.IntersectRect(dirtyRect, clipRect))
+    return NS_OK;
 
   nsPluginEvent pluginEvent;
   XGraphicsExposeEvent& exposeEvent = pluginEvent.event.xgraphicsexpose;
   // set the drawing info
   exposeEvent.type = GraphicsExpose;
   exposeEvent.display = DisplayOfScreen(screen);
-  exposeEvent.drawable = drawable;
+  exposeEvent.drawable = GDK_DRAWABLE_XID(drawable);
   exposeEvent.x = mDirtyRect.x + offsetX;
   exposeEvent.y = mDirtyRect.y + offsetY;
   exposeEvent.width  = mDirtyRect.width;
@@ -4218,6 +4230,7 @@ nsPluginInstanceOwner::Renderer::NativeDraw(Screen* screen, Drawable drawable,
 
   PRBool eventHandled = PR_FALSE;
   mInstance->HandleEvent(&pluginEvent, &eventHandled);
+#endif
 
   return NS_OK;
 }

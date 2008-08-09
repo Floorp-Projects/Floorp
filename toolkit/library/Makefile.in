@@ -205,11 +205,27 @@ EXTRA_DSO_LDOPTS += \
 	-lcrypto \
 	$(TK_LIBS) \
 	$(NULL)
+
+ifdef MOZ_OGG
+EXTRA_DSO_LDOPTS += \
+	-framework CoreAudio \
+ 	-framework AudioToolbox \
+	-framework AudioUnit \
+	$(NULL)
+endif
+endif
+
+ifdef MOZ_ENABLE_DBUS
+EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
 endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS) $(XT_LIBS) -lgthread-2.0
 EXTRA_DSO_LDOPTS += $(FT2_LIBS)
+endif
+
+ifdef NS_OSSO
+EXTRA_DSO_LDOPTS += -llocation -lgpsbt -losso
 endif
 
 ifdef MOZ_ENABLE_STARTUP_NOTIFICATION

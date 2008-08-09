@@ -48,6 +48,8 @@ SetDatablockOptimize on
 SetCompress off
 CRCCheck on
 
+RequestExecutionLevel user
+
 !addplugindir ./
 
 ; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
@@ -65,25 +67,13 @@ Var TmpVal
 !include MUI.nsh
 !include TextFunc.nsh
 !include WinMessages.nsh
+!include WinVer.nsh
 !include WordFunc.nsh
-
-; WinVer.nsh was added in the same release that RequestExecutionLevel so check
-; if ___WINVER__NSH___ is defined to determine if RequestExecutionLevel is
-; available.
-!include /NONFATAL WinVer.nsh
-!ifdef ___WINVER__NSH___
-  RequestExecutionLevel user
-!else
-  !warning "Installer will be created without Vista compatibility.$\n            \
-            Upgrade your NSIS installation to at least version 2.22 to resolve."
-!endif
 
 !insertmacro StrFilter
 !insertmacro WordReplace
 
 !insertmacro un.GetParent
-!insertmacro un.LineFind
-!insertmacro un.TrimNewLines
 
 ; The following includes are custom.
 !include branding.nsi
@@ -95,6 +85,7 @@ Var TmpVal
 ; This is named BrandShortName helper because we use this for software update
 ; post update cleanup.
 VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
+VIAddVersionKey "OriginalFilename" "helper.exe"
 
 !insertmacro AddDDEHandlerValues
 !insertmacro CleanVirtualStore

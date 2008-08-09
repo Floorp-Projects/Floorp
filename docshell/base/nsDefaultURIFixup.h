@@ -72,7 +72,7 @@ private:
     const char * GetCharsetForUrlBar();
 
     nsCOMPtr<nsIPrefBranch> mPrefBranch;
-    nsCAutoString mFsCharset;
+    nsCString mFsCharset;
 };
 
 #endif

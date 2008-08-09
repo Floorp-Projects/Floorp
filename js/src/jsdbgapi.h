@@ -475,6 +475,26 @@ js_DumpCallgrind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 #endif /* MOZ_CALLGRIND */
 
+#ifdef MOZ_VTUNE
+
+extern JS_FRIEND_API(JSBool)
+js_StartVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval);
+
+extern JS_FRIEND_API(JSBool)
+js_StopVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+             jsval *rval);
+
+extern JS_FRIEND_API(JSBool)
+js_PauseVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval);
+
+extern JS_FRIEND_API(JSBool)
+js_ResumeVtune(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+               jsval *rval);
+
+#endif /* MOZ_VTUNE */
+
 JS_END_EXTERN_C
 
 #endif /* jsdbgapi_h___ */

@@ -1034,7 +1034,7 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
   // Paint the border
   nsRecessedBorder recessedBorder(borderEdgeWidth, PresContext());
   nsCSSRendering::PaintBorder(PresContext(), aRenderingContext, this, inner,
-                              inner, recessedBorder, mStyleContext, 0);
+                              inner, recessedBorder, mStyleContext);
 
   // Adjust the inner rect to account for the one pixel recessed border,
   // and a six pixel padding on each edge
@@ -1132,7 +1132,7 @@ static void PaintDebugImageMap(nsIFrame* aFrame, nsIRenderingContext* aCtx,
   aCtx->SetColor(NS_RGB(0, 0, 0));
   aCtx->PushState();
   aCtx->Translate(inner.x, inner.y);
-  f->GetImageMap(pc)->Draw(pc, *aCtx);
+  f->GetImageMap(pc)->Draw(aFrame, *aCtx);
   aCtx->PopState();
 }
 #endif
@@ -1189,7 +1189,7 @@ nsImageFrame::PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
     aRenderingContext.Translate(inner.x, inner.y);
-    map->Draw(presContext, aRenderingContext);
+    map->Draw(this, aRenderingContext);
     aRenderingContext.PopState();
   }
 }

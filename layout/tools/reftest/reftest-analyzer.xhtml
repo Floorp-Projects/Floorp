@@ -141,17 +141,18 @@ function process_log(contents) {
 		if (!match)
 			continue;
 		line = match[1];
-		match = line.match(/^(PASS|UNEXPECTED PASS|KNOWN FAIL|UNEXPECTED FAIL)( \(RESULT EXPECTED TO BE RANDOM\)| \(SKIP\)|): (.*)/);
+		match = line.match(/^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL)(\(EXPECTED RANDOM\)|) \| ([^\|]+) \|(.*)/);
 		if (match) {
 			var state = match[1];
-			var extra = match[2];
+			var random = match[2];
 			var url = match[3];
+                        var extra = match[4];
 			gTestItems.push(
 				{
 					pass: !state.match(/FAIL$/),
 					// only one of the following three should ever be true
-					unexpected: !!state.match(/^UNEXPECTED/),
-					random: (extra == " (RESULT EXPECTED TO BE RANDOM)"),
+					unexpected: !!state.match(/^TEST-UNEXPECTED/),
+					random: (random == "(EXPECTED RANDOM)"),
 					skip: (extra == " (SKIP)"),
 					url: url,
 					images: []

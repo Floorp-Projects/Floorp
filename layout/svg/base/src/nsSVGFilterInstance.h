@@ -39,116 +39,162 @@
 
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGRect.h"
-#include "nsInterfaceHashtable.h"
-#include "nsClassHashtable.h"
 #include "nsIDOMSVGFilters.h"
 #include "nsRect.h"
 #include "nsIContent.h"
 #include "nsAutoPtr.h"
+#include "nsSVGFilters.h"
+#include "nsISVGChildFrame.h"
+#include "nsSVGString.h"
 
 #include "gfxImageSurface.h"
 
 class nsSVGLength2;
 class nsSVGElement;
 
+/**
+ * This class performs all filter processing.
+ * 
+ * We build a graph of the filter image data flow, essentially
+ * converting the filter graph to SSA. This lets us easily propagate
+ * analysis data (such as bounding-boxes) over the filter primitive graph.
+ */
 class NS_STACK_CLASS nsSVGFilterInstance
 {
 public:
-  class ColorModel {
-  public:
-    enum ColorSpace { SRGB, LINEAR_RGB };
-    enum AlphaChannel { UNPREMULTIPLIED, PREMULTIPLIED };
-
-    ColorModel(ColorSpace aColorSpace, AlphaChannel aAlphaChannel) :
-      mColorSpace(aColorSpace), mAlphaChannel(aAlphaChannel) {}
-    PRBool operator==(const ColorModel& aOther) const {
-      return mColorSpace == aOther.mColorSpace &&
-             mAlphaChannel == aOther.mAlphaChannel;
-    }
-    ColorSpace   mColorSpace;
-    AlphaChannel mAlphaChannel;
-  };
-
   float GetPrimitiveLength(nsSVGLength2 *aLength) const;
 
-  void GetFilterSubregion(nsIContent *aFilter,
-                          nsRect defaultRegion,
-                          nsRect *result);
+  nsSVGFilterInstance(nsISVGChildFrame *aTargetFrame,
+                      nsIContent* aFilterElement,
+                      nsIDOMSVGRect *aTargetBBox,
+                      const gfxRect& aFilterRect,
+                      const nsIntSize& aFilterSpaceSize,
+                      nsIDOMSVGMatrix *aFilterSpaceToDeviceSpaceTransform,
+                      const nsIntRect& aDirtyOutputRect,
+                      const nsIntRect& aDirtyInputRect,
+                      PRUint16 aPrimitiveUnits) :
+    mTargetFrame(aTargetFrame),
+    mFilterElement(aFilterElement),
+    mTargetBBox(aTargetBBox),
+    mFilterSpaceToDeviceSpaceTransform(aFilterSpaceToDeviceSpaceTransform),
+    mFilterRect(aFilterRect),
+    mFilterSpaceSize(aFilterSpaceSize),
+    mDirtyOutputRect(aDirtyOutputRect),
+    mDirtyInputRect(aDirtyInputRect),
+    mSurfaceRect(nsIntPoint(0, 0), aFilterSpaceSize),
+    mPrimitiveUnits(aPrimitiveUnits) {
+  }
+  
+  // The area covered by temporary images, in filter space
+  void SetSurfaceRect(const nsIntRect& aRect) { mSurfaceRect = aRect; }
+
+  gfxRect GetFilterRect() const { return mFilterRect; }
+
+  const nsIntSize& GetFilterSpaceSize() { return mFilterSpaceSize; }
+  PRUint32 GetFilterResX() const { return mFilterSpaceSize.width; }
+  PRUint32 GetFilterResY() const { return mFilterSpaceSize.height; }
+  
+  const nsIntRect& GetSurfaceRect() const { return mSurfaceRect; }
+  PRInt32 GetSurfaceWidth() const { return mSurfaceRect.width; }
+  PRInt32 GetSurfaceHeight() const { return mSurfaceRect.height; }
+  
+  nsresult Render(gfxASurface** aOutput);
+  nsresult ComputeOutputDirtyRect(nsIntRect* aDirty);
+
+  already_AddRefed<nsIDOMSVGMatrix> GetUserSpaceToFilterSpaceTransform() const;
+  nsIDOMSVGMatrix* GetFilterSpaceToDeviceSpaceTransform() const {
+    return mFilterSpaceToDeviceSpaceTransform.get();
+  }
+
+private:
+  typedef nsSVGFE::Image Image;
+  typedef nsSVGFE::ColorModel ColorModel;
+
+  struct PrimitiveInfo {
+    nsSVGFE*  mFE;
+    // the bounding box of the result image produced by this primitive, in
+    // filter space
+    nsIntRect mResultBoundingBox;
+    // the bounding box of the part of the result image that is actually
+    // needed by other primitives or by the filter result, in filter space
+    // (used for Render only)
+    nsIntRect mResultNeededBox;
+    // the bounding box of the part of the result image that could be
+    // changed by changes to mDirtyInputRect in the source image(s)
+    // (used for ComputeOutputDirtyRect only)
+    nsIntRect mResultChangeBox;
+    Image     mImage;
+    PRInt32   mImageUsers;
+  
+    // Can't use nsAutoTArray here, because these Info objects
+    // live in nsTArrays themselves and nsTArray moves the elements
+    // around in memory, which breaks nsAutoTArray.
+    nsTArray<PrimitiveInfo*> mInputs;
+
+    PrimitiveInfo() : mFE(nsnull), mImageUsers(0) {}
+  };
+
+  class ImageAnalysisEntry : public nsStringHashKey {
+  public:
+    ImageAnalysisEntry(KeyTypePointer aStr) : nsStringHashKey(aStr) { }
+    ImageAnalysisEntry(const ImageAnalysisEntry& toCopy) : nsStringHashKey(toCopy),
+      mInfo(toCopy.mInfo) { }
+
+    PrimitiveInfo* mInfo;
+  };
+
+  nsresult BuildSources();
+  // Build graph of PrimitiveInfo nodes describing filter primitives
+  nsresult BuildPrimitives();
+  // Compute bounding boxes of the filter primitive outputs
+  void ComputeResultBoundingBoxes();
+  // Compute bounding boxes of what we actually *need* from the filter
+  // primitive outputs
+  void ComputeNeededBoxes();
+  // Compute bounding boxes of what could have changed given some changes
+  // to the source images.
+  void ComputeResultChangeBoxes();
+  nsIntRect ComputeUnionOfAllNeededBoxes();
+  nsresult BuildSourceImages();
 
   // Allocates an image surface that covers mSurfaceRect (it uses
   // device offsets so that its origin is positioned at mSurfaceRect.TopLeft()
   // when using cairo to draw into the surface). The surface is cleared
   // to transparent black.
-  already_AddRefed<gfxImageSurface> GetImage();
+  already_AddRefed<gfxImageSurface> CreateImage();
 
-  void LookupImage(const nsAString &aName,
-                   gfxImageSurface **aImage,
-                   nsRect *aRegion,
-                   const ColorModel &aColorModel);
-  nsRect LookupImageRegion(const nsAString &aName);
-  ColorModel LookupImageColorModel(const nsAString &aName);
-  void DefineImage(const nsAString &aName,
-                   gfxImageSurface *aImage,
-                   const nsRect &aRegion,
-                   const ColorModel &aColorModel);
-  void GetFilterBox(float *x, float *y, float *width, float *height) const {
-    *x = mFilterX;
-    *y = mFilterY;
-    *width = mFilterWidth;
-    *height = mFilterHeight;
+  void ComputeFilterPrimitiveSubregion(PrimitiveInfo* aInfo);
+  void EnsureColorModel(PrimitiveInfo* aPrimitive,
+                        ColorModel aColorModel);
+
+  gfxRect UserSpaceToFilterSpace(const gfxRect& aUserSpace) const;
+  void ClipToFilterSpace(nsIntRect* aRect) const
+  {
+    nsIntRect filterSpace(nsIntPoint(0, 0), mFilterSpaceSize);
+    aRect->IntersectRect(*aRect, filterSpace);
+  }
+  void ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfx) const;
+  nsSVGElement* TargetElement() const
+  {
+    nsIFrame* f;
+    CallQueryInterface(mTargetFrame, &f);
+    return static_cast<nsSVGElement*>(f->GetContent());
   }
 
-  nsSVGFilterInstance(nsSVGElement *aTarget,
-                      nsIDOMSVGRect *aTargetBBox,
-                      float aFilterX, float aFilterY,
-                      float aFilterWidth, float aFilterHeight,
-                      PRUint32 aFilterResX, PRUint32 aFilterResY,
-                      PRUint16 aPrimitiveUnits) :
-    mTarget(aTarget),
-    mTargetBBox(aTargetBBox),
-    mLastImage(nsnull),
-    mFilterX(aFilterX), mFilterY(aFilterY),
-    mFilterWidth(aFilterWidth), mFilterHeight(aFilterHeight),
-    mFilterResX(aFilterResX), mFilterResY(aFilterResY),
-    mSurfaceRect(0, 0, aFilterResX, aFilterResY),
-    mPrimitiveUnits(aPrimitiveUnits) {
-    mImageDictionary.Init();
-  }
-  
-  void SetSurfaceRect(const nsRect& aRect) { mSurfaceRect = aRect; }
-  
-  const nsRect& GetSurfaceRect() const { return mSurfaceRect; }
-  PRInt32 GetSurfaceWidth() const { return mSurfaceRect.width; }
-  PRInt32 GetSurfaceHeight() const { return mSurfaceRect.height; }
-  PRInt32 GetSurfaceStride() const { return mSurfaceStride; }
-  
-  PRUint32 GetFilterResX() const { return mFilterResX; }
-  PRUint32 GetFilterResY() const { return mFilterResY; }
-
-private:
-  class ImageEntry {
-  public:
-    ImageEntry(gfxImageSurface *aImage,
-               const nsRect &aRegion,
-               const ColorModel &aColorModel) :
-      mImage(aImage), mRegion(aRegion), mColorModel(aColorModel) {
-    }
-
-    nsRefPtr<gfxImageSurface> mImage;
-    nsRect mRegion;
-    ColorModel mColorModel;
-  };
-
-  nsClassHashtable<nsStringHashKey,ImageEntry> mImageDictionary;
-  nsRefPtr<nsSVGElement> mTarget;
+  nsISVGChildFrame*       mTargetFrame;
+  nsIContent*             mFilterElement;
   nsCOMPtr<nsIDOMSVGRect> mTargetBBox;
-  ImageEntry *mLastImage;
+  nsCOMPtr<nsIDOMSVGMatrix> mFilterSpaceToDeviceSpaceTransform;
+  gfxRect                 mFilterRect;
+  nsIntSize               mFilterSpaceSize;
+  nsIntRect               mDirtyOutputRect;
+  nsIntRect               mDirtyInputRect;
+  nsIntRect               mSurfaceRect;
+  PRUint16                mPrimitiveUnits;
 
-  float mFilterX, mFilterY, mFilterWidth, mFilterHeight;
-  PRUint32 mFilterResX, mFilterResY;
-  nsRect mSurfaceRect;
-  PRInt32 mSurfaceStride;
-  PRUint16 mPrimitiveUnits;
+  PrimitiveInfo           mSourceColorAlpha;
+  PrimitiveInfo           mSourceAlpha;
+  nsTArray<PrimitiveInfo> mPrimitives;
 };
 
 #endif

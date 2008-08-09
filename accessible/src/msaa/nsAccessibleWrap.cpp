@@ -117,7 +117,7 @@ __try {
       *ppv = static_cast<IEnumVARIANT*>(this);
   } else if (IID_IServiceProvider == iid)
     *ppv = static_cast<IServiceProvider*>(this);
-  else if (IID_IAccessible2 == iid)
+  else if (IID_IAccessible2 == iid && !gIsIA2Disabled)
     *ppv = static_cast<IAccessible2*>(this);
 
   if (NULL == *ppv) {
@@ -1584,60 +1584,7 @@ __try {
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 
-  if (!attributes)
-    return S_FALSE;
-
-  nsCOMPtr<nsISimpleEnumerator> propEnum;
-  attributes->Enumerate(getter_AddRefs(propEnum));
-  if (!propEnum)
-    return E_FAIL;
-
-  nsAutoString strAttrs;
-
-  const char kCharsToEscape[] = ":;=,\\";
-
-  PRBool hasMore = PR_FALSE;
-  while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> propSupports;
-    propEnum->GetNext(getter_AddRefs(propSupports));
-
-    nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(propSupports));
-    if (!propElem)
-      return E_FAIL;
-
-    nsCAutoString name;
-    rv = propElem->GetKey(name);
-    if (NS_FAILED(rv))
-      return GetHRESULT(rv);
-
-    PRUint32 offset = 0;
-    while ((offset = name.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
-      name.Insert('\\', offset);
-      offset += 2;
-    }
-
-    nsAutoString value;
-    rv = propElem->GetValue(value);
-    if (NS_FAILED(rv))
-      return E_FAIL;
-
-    offset = 0;
-    while ((offset = value.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
-      value.Insert('\\', offset);
-      offset += 2;
-    }
-
-    AppendUTF8toUTF16(name, strAttrs);
-    strAttrs.Append(':');
-    strAttrs.Append(value);
-    strAttrs.Append(';');
-  }
-
-  if (strAttrs.IsEmpty())
-    return S_FALSE;
-
-  *aAttributes = ::SysAllocStringLen(strAttrs.get(), strAttrs.Length());
-  return *aAttributes ? S_OK : E_OUTOFMEMORY;
+  return ConvertToIA2Attributes(attributes, aAttributes);
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;
@@ -1827,6 +1774,69 @@ nsAccessibleWrap::GetHWNDFor(nsIAccessible *aAccessible)
   }
 
   return hWnd;
+}
+
+HRESULT
+nsAccessibleWrap::ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
+                                         BSTR *aIA2Attributes)
+{
+  *aIA2Attributes = NULL;
+
+  // The format is name:value;name:value; with \ for escaping these
+  // characters ":;=,\".
+
+  if (!aAttributes)
+    return S_FALSE;
+
+  nsCOMPtr<nsISimpleEnumerator> propEnum;
+  aAttributes->Enumerate(getter_AddRefs(propEnum));
+  if (!propEnum)
+    return E_FAIL;
+
+  nsAutoString strAttrs;
+
+  const char kCharsToEscape[] = ":;=,\\";
+
+  PRBool hasMore = PR_FALSE;
+  while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> propSupports;
+    propEnum->GetNext(getter_AddRefs(propSupports));
+
+    nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(propSupports));
+    if (!propElem)
+      return E_FAIL;
+
+    nsCAutoString name;
+    if (NS_FAILED(propElem->GetKey(name)))
+      return E_FAIL;
+
+    PRUint32 offset = 0;
+    while ((offset = name.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
+      name.Insert('\\', offset);
+      offset += 2;
+    }
+
+    nsAutoString value;
+    if (NS_FAILED(propElem->GetValue(value)))
+      return E_FAIL;
+
+    offset = 0;
+    while ((offset = value.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
+      value.Insert('\\', offset);
+      offset += 2;
+    }
+
+    AppendUTF8toUTF16(name, strAttrs);
+    strAttrs.Append(':');
+    strAttrs.Append(value);
+    strAttrs.Append(';');
+  }
+
+  if (strAttrs.IsEmpty())
+    return S_FALSE;
+
+  *aIA2Attributes = ::SysAllocStringLen(strAttrs.get(), strAttrs.Length());
+  return *aIA2Attributes ? S_OK : E_OUTOFMEMORY;
 }
 
 IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)

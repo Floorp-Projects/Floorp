@@ -59,7 +59,6 @@ public:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
-  NS_IMETHOD DidSetStyleContext();
 
   /**
    * Get the "type" of the frame
@@ -87,6 +86,7 @@ public:
   NS_IMETHOD PaintSVG(nsSVGRenderState* aContext, nsRect *aDirtyRect);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD UpdateCoveredRegion();
+  NS_IMETHOD InitialUpdate();
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsSVGContainerFrame methods:

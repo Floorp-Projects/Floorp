@@ -278,7 +278,6 @@
             mTab: aTab,
             mBrowser: aBrowser,
             mBlank: aStartsBlank,
-            mLastURI: null,
 
             // cache flags for correct status bar update after tab switching
             mStateFlags: 0,
@@ -1391,6 +1390,18 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
+            this._endRemoveTab(this._beginRemoveTab(aTab, true));
+          ]]>
+        </body>
+      </method>
+
+      <!-- Returns the tab being removed.  This might not be the same as aTab,
+           in cases when aTab is not actually a tab -->
+      <method name="_beginRemoveTab">
+        <parameter name="aTab"/>
+        <parameter name="aFireBeforeUnload"/>
+        <body>
+          <![CDATA[
             this._browsers = null; // invalidate cache
             if (aTab.localName != "tab")
               aTab = this.mCurrentTab;
@@ -1403,9 +1414,11 @@
               return;
             }
 
-            var ds = this.getBrowserForTab(aTab).docShell;
-            if (ds.contentViewer && !ds.contentViewer.permitUnload())
-              return;
+            if (aFireBeforeUnload) {
+              var ds = this.getBrowserForTab(aTab).docShell;
+              if (ds.contentViewer && !ds.contentViewer.permitUnload())
+                return;
+            }
 
             // see notes in addTab
             var _delayedUpdate = function(aTabContainer) {
@@ -1435,15 +1448,7 @@
             evt.initEvent("TabClose", true, false);
             aTab.dispatchEvent(evt);
 
-            var index = -1;
-            if (this.mCurrentTab == aTab)
-              index = this.mTabContainer.selectedIndex;
-            else {
-              // Find and locate the tab in our list.
-              for (var i = 0; i < l; i++)
-                if (this.mTabContainer.childNodes[i] == aTab)
-                  index = i;
-            }
+            var index = aTab._tPos;
 
             // Remove the tab's filter and progress listener.
             const filter = this.mTabFilters[index];
@@ -1459,21 +1464,33 @@
             // We are no longer the primary content area.
             oldBrowser.setAttribute("type", "content-targetable");
 
-            // Get the index of the tab we're removing before unselecting it
-            var currentIndex = this.mTabContainer.selectedIndex;
-
-            var oldTab = aTab;
-
-            // clean up the before/afterselected attributes before removing the tab
-            oldTab._selected = false;
-
             // Remove this tab as the owner of any other tabs, since it's going away.
-            for (i = 0; i < this.mTabContainer.childNodes.length; ++i) {
+            for (var i = 0; i < this.mTabs.length; ++i) {
               var tab = this.mTabContainer.childNodes[i];
-              if ("owner" in tab && tab.owner == oldTab)
+              if ("owner" in tab && tab.owner == aTab)
                 // |tab| is a child of the tab we're removing, make it an orphan
                 tab.owner = null;
             }
+
+            return aTab;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_endRemoveTab">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            var browser = this.getBrowserForTab(aTab);
+            var length = this.mTabs.length;
+
+            // Get the index of the tab we're removing before unselecting it
+            var currentIndex = this.mTabContainer.selectedIndex;
+            var index = aTab._tPos;
+
+            // clean up the before/afterselected attributes before removing the
+            // tab.  But make sure this happens after we grab currentIndex.
+            aTab._selected = false;
 
             // Because of the way XBL works (fields just set JS
             // properties on the element) and the code we have in place
@@ -1485,16 +1502,18 @@
             // XBL implementation of nsIObserver still works.  But
             // clearing focusedWindow happens below because it gets
             // reset by updateCurrentBrowser.
-            oldBrowser.destroy();
+            browser.destroy();
 
-            if (oldBrowser == this.mCurrentBrowser)
+            if (browser == this.mCurrentBrowser)
               this.mCurrentBrowser = null;
 
             // Remove the tab
-            this.mTabContainer.removeChild(oldTab);
+            this.mTabContainer.removeChild(aTab);
+            // Update our length
+            --length;
             // invalidate cache, because mTabContainer is about to change
             this._browsers = null; 
-            this.mPanelContainer.removeChild(oldBrowser.parentNode);
+            this.mPanelContainer.removeChild(browser.parentNode);
 
             try {
               // if we're at the right side (and not the logical end,
@@ -1523,24 +1542,24 @@
             else if (currentIndex < index)
               newIndex = currentIndex;
             else {
-              if ("owner" in oldTab && oldTab.owner &&
+              if ("owner" in aTab && aTab.owner &&
                   this.mPrefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
-                for (i = 0; i < this.mTabContainer.childNodes.length; ++i) {
+                for (var i = 0; i < length; ++i) {
                   tab = this.mTabContainer.childNodes[i];
-                  if (tab == oldTab.owner) {
+                  if (tab == aTab.owner) {
                     newIndex = i;
                     break;
                   }
                 }
               }
               if (newIndex == -1)
-                newIndex = (index == l - 1) ? index - 1 : index;
+                newIndex = (index == length) ? index - 1 : index;
             }
 
             // Select the new tab
-            this.selectedTab = this.mTabContainer.childNodes[newIndex];
+            this.selectedTab = this.mTabs[newIndex];
 
-            for (i = oldTab._tPos; i < this.mTabContainer.childNodes.length; i++) {
+            for (i = aTab._tPos; i < length; i++) {
               this.mTabContainer.childNodes[i]._tPos = i;
             }
             this.mTabBox.selectedPanel = this.getBrowserForTab(this.mCurrentTab).parentNode;
@@ -1549,8 +1568,53 @@
             this.updateCurrentBrowser();
 
             // see comment above destroy above
-            oldBrowser.focusedWindow = null;
-            oldBrowser.focusedElement = null;
+            browser.focusedWindow = null;
+            browser.focusedElement = null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="swapBrowsersAndCloseOther">
+        <parameter name="aOurTab"/>
+        <parameter name="aOtherTab"/>
+        <body>
+          <![CDATA[
+            var remoteBrowser =
+              aOtherTab.ownerDocument.defaultView.getBrowser();
+            var tabCount = remoteBrowser.mTabs.length;
+
+            // First, start teardown of the other browser.  Make sure to not
+            // fire the beforeunload event in the process.
+            var tabToRemove = remoteBrowser._beginRemoveTab(aOtherTab, false);
+
+            // Unhook our progress listener
+            var ourIndex = aOurTab._tPos;
+            const filter = this.mTabFilters[ourIndex];
+            var tabListener = this.mTabListeners[ourIndex];
+            var ourBrowser = this.getBrowserForTab(aOurTab);
+            ourBrowser.webProgress.removeProgressListener(filter);
+            filter.removeProgressListener(tabListener);
+            var tabListenerBlank = tabListener.mBlank;
+
+            // Swap the docshells
+            ourBrowser.swapDocShells(remoteBrowser.getBrowserForTab(aOtherTab));
+
+            // Finish tearing down the tab that's going away.
+            remoteBrowser._endRemoveTab(tabToRemove);
+
+            // Restore the progress listener
+            tabListener = this.mTabProgressListener(aOurTab, ourBrowser,
+                                                    tabListenerBlank);
+            this.mTabListeners[ourIndex] = tabListener;
+            filter.addProgressListener(tabListener,
+              Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+              
+            ourBrowser.webProgress.addProgressListener(filter,
+              Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+
+            // close the other window if this was its last tab
+            if (tabCount == 1)
+              aOtherTab.ownerDocument.defaultView.close();
           ]]>
         </body>
       </method>
@@ -1879,19 +1943,26 @@
               }
             }
             else if (draggedTab) {
-              // copy the dropped tab and remove it from the other window
-              // (making it seem to have moved between windows)
+              // swap the dropped tab with a new one we create and then close
+              // it in the other window (making it seem to have moved between
+              // windows)
               newIndex = this.getNewIndex(aEvent);
-              newTab = this.duplicateTab(draggedTab);
-              this.moveTabTo(newTab, newIndex);
-              this.selectedTab = newTab;
+              newTab = this.addTab("about:blank");
+              var newBrowser = this.getBrowserForTab(newTab);
+              // Stop the about:blank load
+              newBrowser.stop();
+              // make sure it has a docshell
+              newBrowser.docShell;
               
-              var remoteBrowser = draggedTab.ownerDocument.defaultView.getBrowser();
-              var tabCount = remoteBrowser.tabContainer.childNodes.length;
-              remoteBrowser.removeTab(draggedTab);
-              // close the other window if this was its last tab
-              if (tabCount == 1)
-                draggedTab.ownerDocument.defaultView.close();
+              this.moveTabTo(newTab, newIndex);
+              
+              this.swapBrowsersAndCloseOther(newTab, draggedTab);
+
+              // We need to set selectedTab after we've done
+              // swapBrowsersAndCloseOther, so that the updateCurrentBrowser
+              // it triggers will correctly update our URL bar.
+              this.selectedTab = newTab;
+              this.setTabTitle(newTab);
             }
             else {
               var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);

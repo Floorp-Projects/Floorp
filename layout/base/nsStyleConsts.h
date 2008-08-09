@@ -271,6 +271,11 @@
 // derived from a table with its rules attribute set
 #define NS_STYLE_BORDER_STYLE_RULES_MARKER      0x10  
 
+// See nsStyleBorder mBorderImage
+#define NS_STYLE_BORDER_IMAGE_STRETCH           0
+#define NS_STYLE_BORDER_IMAGE_REPEAT            1
+#define NS_STYLE_BORDER_IMAGE_ROUND             2
+
 // See nsStyleDisplay
 #define NS_STYLE_CLEAR_NONE                     0
 #define NS_STYLE_CLEAR_LEFT                     1
@@ -598,6 +603,10 @@
 #define NS_STYLE_WHITESPACE_PRE_WRAP            3
 
 // See nsStyleText
+#define NS_STYLE_WORDWRAP_NORMAL                0
+#define NS_STYLE_WORDWRAP_BREAK_WORD            1
+
+// See nsStyleText
 #define NS_STYLE_UNICODE_BIDI_NORMAL            0
 #define NS_STYLE_UNICODE_BIDI_EMBED             1
 #define NS_STYLE_UNICODE_BIDI_OVERRIDE          2
@@ -736,5 +745,17 @@
 #define NS_STYLE_COLOR_INTERPOLATION_LINEARRGB      2
 
 #endif // MOZ_SVG
+
+/*****************************************************************************
+ * Constants for media features.                                             *
+ *****************************************************************************/
+
+// orientation
+#define NS_STYLE_ORIENTATION_PORTRAIT           0
+#define NS_STYLE_ORIENTATION_LANDSCAPE          1
+
+// scan
+#define NS_STYLE_SCAN_PROGRESSIVE               0
+#define NS_STYLE_SCAN_INTERLACE                 1
 
 #endif /* nsStyleConsts_h___ */

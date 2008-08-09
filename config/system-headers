@@ -20,6 +20,9 @@ Aliases.h
 all.h
 alloca.h
 alloc.h
+alsa/asoundlib.h
+alsa/pcm.h
+alsa/mixer.h
 ansi_parms.h
 a.out.h
 app/Cursor.h
@@ -77,7 +80,6 @@ cairo-atsui.h
 cairo-beos.h
 cairo-ft.h
 cairo-glitz.h
-cairo-nquartz.h
 cairo-os2.h
 cairo-pdf.h
 cairo-ps.h
@@ -85,6 +87,8 @@ cairo-quartz.h
 cairo-win32.h
 cairo-xlib.h
 cairo-xlib-xrender.h
+cairo-directfb.h
+cairo-qpainter.h
 #endif
 callconv.h
 Carbon/Carbon.h
@@ -196,6 +200,7 @@ FixMath.h
 float.h
 Folders.h
 fontconfig/fontconfig.h
+fontconfig/fcfreetype.h
 Font.h
 Fonts.h
 fp.h

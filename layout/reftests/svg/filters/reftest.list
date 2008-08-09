@@ -25,6 +25,10 @@
 
 == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
 == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
+# != feGaussianBlur-3.svg feGaussianBlur-3-ref.svg
+== feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
+== feGaussianBlur-5.svg feGaussianBlur-5-ref.svg
+== feGaussianBlur-6.svg about:blank
 
 == feImage-1.svg feImage-1-ref.svg
 

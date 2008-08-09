@@ -27,6 +27,7 @@
 #include <config.h>
 #endif
 
+#include <stdlib.h>
 #include <math.h>
 
 #include "pixman-private.h"
@@ -678,4 +679,31 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
             }
         }
     }
+}
+
+/*
+ * For now, just evaluate the source picture at 32bpp and expand.  We could
+ * produce smoother gradients by evaluating them at higher color depth, but
+ * that's a project for the future.
+ */
+void pixmanFetchSourcePict64(source_image_t * pict, int x, int y, int width,
+                             uint64_t *buffer, uint64_t *mask, uint32_t maskBits)
+{
+    uint32_t *mask8 = NULL;
+
+    // Contract the mask image, if one exists, so that the 32-bit fetch function
+    // can use it.
+    if (mask) {
+        mask8 = pixman_malloc_ab(width, sizeof(uint32_t));
+        pixman_contract(mask8, mask, width);
+    }
+
+    // Fetch the source image into the first half of buffer.
+    pixmanFetchSourcePict(pict, x, y, width, (uint32_t*)buffer, mask8,
+                          maskBits);
+
+    // Expand from 32bpp to 64bpp in place.
+    pixman_expand(buffer, (uint32_t*)buffer, PIXMAN_a8r8g8b8, width);
+
+    free(mask8);
 }

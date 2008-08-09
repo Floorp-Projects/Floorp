@@ -2188,9 +2188,13 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 #ifdef MOZ_WIDGET_GTK2
     if (npp) {
       ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
-      NPBool rtv = PR_FALSE;
-      inst->GetValue((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &rtv);
-      if (rtv) {
+      PRBool windowless = PR_FALSE;
+      inst->GetValue(nsPluginInstanceVariable_WindowlessBool, &windowless);
+      NPBool needXEmbed = PR_FALSE;
+      if (!windowless) {
+        inst->GetValue((nsPluginInstanceVariable)NPPVpluginNeedsXEmbed, &needXEmbed);
+      }
+      if (windowless || needXEmbed) {
         (*(Display **)result) = GDK_DISPLAY();
         return NPERR_NO_ERROR;
       }
@@ -2447,13 +2451,17 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         }
         return NS_SUCCEEDED(rv) ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
       }
-      break;
 
     case NPPVpluginKeepLibraryInMemory: {
       NPBool bCached = (result != nsnull);
       return inst->SetCached(bCached);
     }
-      
+
+    case NPPVpluginWantsAllNetworkStreams: {
+      PRBool bWantsAllNetworkStreams = (result != nsnull);
+      return inst->SetWantsAllNetworkStreams(bWantsAllNetworkStreams);
+    }
+
 #ifdef XP_MACOSX
     case NPPVpluginDrawingModel: {
       if (inst) {

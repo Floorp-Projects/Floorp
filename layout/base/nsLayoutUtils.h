@@ -583,31 +583,6 @@ public:
   static PRBool IsViewportScrollbarFrame(nsIFrame* aFrame);
 
   /**
-   * Return the value of aStyle as an nscoord if it can be determined without
-   * reference to ancestors or children (e.g. is not a percentage width)
-   * @param aStyle the style coord
-   * @param aRenderingContext the rendering context to use for font measurement
-   * @param aFrame the frame whose style context should be used for font information
-   * @param aResult the nscoord value of the style coord
-   * @return TRUE if the unit is eStyleUnit_Coord or eStyleUnit_Chars
-   */
-  static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
-                                 nsIRenderingContext* aRenderingContext,
-                                 nsIFrame* aFrame,
-                                 nscoord& aResult)
-  {
-    return GetAbsoluteCoord(aStyle, aRenderingContext,
-                            aFrame->GetStyleContext(), aResult);
-  }
-
-  /**
-   * Same as above but doesn't need a frame
-   */
-  static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
-                                 nsIRenderingContext* aRenderingContext,
-                                 nsStyleContext* aStyleContext,
-                                 nscoord& aResult);
-  /**
    * Get the contribution of aFrame to its containing block's intrinsic
    * width.  This considers the child's intrinsic width, its 'width',
    * 'min-width', and 'max-width' properties, and its padding, border,
@@ -623,8 +598,6 @@ public:
    * containing block width.
    */
   static nscoord ComputeWidthDependentValue(
-                   nsIRenderingContext* aRenderingContext,
-                   nsIFrame*            aFrame,
                    nscoord              aContainingBlockWidth,
                    const nsStyleCoord&  aCoord);
 
@@ -658,8 +631,6 @@ public:
    * containing block height.
    */
   static nscoord ComputeHeightDependentValue(
-                   nsIRenderingContext* aRenderingContext,
-                   nsIFrame*            aFrame,
                    nscoord              aContainingBlockHeight,
                    const nsStyleCoord&  aCoord);
 
@@ -762,17 +733,6 @@ public:
   static void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
 
   /**
-   * Convert an eStyleUnit_Chars nsStyleCoord to an nscoord.
-   *
-   * @param aStyle the style coord
-   * @param aRenderingContext the rendering context to use for font measurement
-   * @param aStyleContext the style context to use for font infomation
-   */
-  static nscoord CharsToCoord(const nsStyleCoord& aStyle,
-                              nsIRenderingContext* aRenderingContext,
-                              nsStyleContext* aStyleContext);
-
-  /**
    * Determine if any style coordinate is nonzero
    *   @param aCoord the style sides
    *   @return PR_TRUE unless all the coordinates are 0%, 0 or null.
@@ -805,6 +765,14 @@ public:
    */
   static void GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
                                       nsRect* aHStrip, nsRect* aVStrip);
+
+  /**
+   * Get a device context that can be used to get up-to-date device
+   * dimensions for the given docshell.  For some reason, this is more
+   * complicated than it ought to be in multi-monitor situations.
+   */
+  static nsIDeviceContext*
+  GetDeviceContextForScreenInfo(nsIDocShell* aDocShell);
 
   /**
    * Indicates if the nsIFrame::GetUsedXXX assertions in nsFrame.cpp should

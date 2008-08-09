@@ -39,6 +39,7 @@
 /* rules in a CSS stylesheet other than style rules (e.g., @import rules) */
 
 #include "nsCSSRules.h"
+#include "nsCSSValue.h"
 #include "nsICSSImportRule.h"
 #include "nsICSSNameSpaceRule.h"
 
@@ -47,6 +48,7 @@
 #include "nsIURL.h"
 
 #include "nsCSSRule.h"
+#include "nsCSSProps.h"
 #include "nsICSSStyleSheet.h"
 
 #include "nsCOMPtr.h"
@@ -56,6 +58,7 @@
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 #include "nsIDOMCSSCharsetRule.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIMediaList.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMCSSRuleList.h"
@@ -66,6 +69,8 @@
 #include "nsContentUtils.h"
 #include "nsStyleConsts.h"
 #include "nsDOMError.h"
+#include "nsStyleUtil.h"
+#include "nsCSSDeclaration.h"
 
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
@@ -1013,7 +1018,7 @@ nsCSSMediaRule::GetMedia(nsIDOMMediaList* *aMedia)
     return NS_OK;
   }
 
-  return CallQueryInterface(mMedia, aMedia);
+  return CallQueryInterface(mMedia.get(), aMedia);
 }
 
 NS_IMETHODIMP
@@ -1036,10 +1041,11 @@ nsCSSMediaRule::DeleteRule(PRUint32 aIndex)
 
 // nsICSSGroupRule interface
 NS_IMETHODIMP_(PRBool)
-nsCSSMediaRule::UseForPresentation(nsPresContext* aPresContext)
+nsCSSMediaRule::UseForPresentation(nsPresContext* aPresContext,
+                                   nsMediaQueryResultCacheKey& aKey)
 {
   if (mMedia) {
-    return mMedia->Matches(aPresContext);
+    return mMedia->Matches(aPresContext, aKey);
   }
   return PR_TRUE;
 }
@@ -1196,7 +1202,8 @@ nsCSSDocumentRule::DeleteRule(PRUint32 aIndex)
 
 // nsICSSGroupRule interface
 NS_IMETHODIMP_(PRBool)
-nsCSSDocumentRule::UseForPresentation(nsPresContext* aPresContext)
+nsCSSDocumentRule::UseForPresentation(nsPresContext* aPresContext,
+                                      nsMediaQueryResultCacheKey& aKey)
 {
   nsIURI *docURI = aPresContext->Document()->GetDocumentURI();
   nsCAutoString docURISpec;
@@ -1448,4 +1455,425 @@ CSSNameSpaceRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
   }
   *aParentRule = nsnull;
   return NS_OK;
+}
+
+// -------------------------------------------
+// nsCSSFontFaceStyleDecl and related routines
+//
+
+// A src: descriptor is represented as an array value; each entry in
+// the array can be eCSSUnit_URL, eCSSUnit_Local_Font, or
+// eCSSUnit_Font_Format.  Blocks of eCSSUnit_Font_Format may appear
+// only after one of the first two.  (css3-fonts only contemplates
+// annotating URLs with formats, but we handle the general case.)
+static void
+SerializeFontSrc(const nsCSSValue& src, nsAString & aResult NS_OUTPARAM)
+{
+  NS_PRECONDITION(src.GetUnit() == eCSSUnit_Null ||
+                  src.GetUnit() == eCSSUnit_Array,
+                  "improper value unit for src:");
+  aResult.Truncate();
+  if (src.GetUnit() != eCSSUnit_Array)
+    return;
+
+  const nsCSSValue::Array& sources = *src.GetArrayValue();
+  PRUint32 i = 0;
+
+  while (i < sources.Count()) {
+    nsAutoString formats;
+
+    if (sources[i].GetUnit() == eCSSUnit_URL) {
+      nsDependentString url(sources[i].GetOriginalURLValue());
+      nsAutoString escapedUrl;
+      nsStyleUtil::EscapeCSSString(url, escapedUrl);
+      aResult.AppendLiteral("url(\"");
+      aResult.Append(escapedUrl);
+      aResult.AppendLiteral("\")");
+    } else if (sources[i].GetUnit() == eCSSUnit_Local_Font) {
+      nsDependentString local(sources[i].GetStringBufferValue());
+      nsAutoString escapedLocal;
+      nsStyleUtil::EscapeCSSString(local, escapedLocal);
+      aResult.AppendLiteral("local(\"");
+      aResult.Append(escapedLocal);
+      aResult.AppendLiteral("\")");
+    } else {
+      NS_NOTREACHED("entry in src: descriptor with improper unit");
+      i++;
+      continue;
+    }
+
+    i++;
+    formats.Truncate();
+    while (i < sources.Count() &&
+           sources[i].GetUnit() == eCSSUnit_Font_Format) {
+      formats.Append('"');
+      formats.Append(sources[i].GetStringBufferValue());
+      formats.AppendLiteral("\", ");
+      i++;
+    }
+    if (formats.Length() > 0) {
+      formats.Truncate(formats.Length() - 2); // remove the last comma
+      aResult.AppendLiteral(" format(");
+      aResult.Append(formats);
+      aResult.Append(')');
+    }
+    aResult.AppendLiteral(", ");
+  }
+  aResult.Truncate(aResult.Length() - 2); // remove the last comma-space
+}
+
+// Mapping from nsCSSFontDesc codes to nsCSSFontFaceStyleDecl fields.
+// Keep this in sync with enum nsCSSFontDesc in nsCSSProperty.h.
+nsCSSValue nsCSSFontFaceStyleDecl::* const
+nsCSSFontFaceStyleDecl::Fields[] = {
+    &nsCSSFontFaceStyleDecl::mFamily,
+    &nsCSSFontFaceStyleDecl::mStyle,
+    &nsCSSFontFaceStyleDecl::mWeight,
+    &nsCSSFontFaceStyleDecl::mStretch,
+    &nsCSSFontFaceStyleDecl::mSrc,
+    &nsCSSFontFaceStyleDecl::mUnicodeRange
+};
+
+// QueryInterface implementation for nsCSSFontFaceStyleDecl
+NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceStyleDecl)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSFontFaceStyleDecl)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF_USING_AGGREGATOR(nsCSSFontFaceStyleDecl, ContainingRule())
+NS_IMPL_RELEASE_USING_AGGREGATOR(nsCSSFontFaceStyleDecl, ContainingRule())
+
+// helper for string GetPropertyValue and RemovePropertyValue
+nsresult
+nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
+                                         nsAString & aResult NS_OUTPARAM) const
+{
+  NS_ENSURE_ARG_RANGE(aFontDescID, eCSSFontDesc_UNKNOWN,
+                      eCSSFontDesc_COUNT - 1);
+
+  aResult.Truncate();
+  if (aFontDescID == eCSSFontDesc_UNKNOWN)
+    return NS_OK;
+
+  const nsCSSValue& val = this->*nsCSSFontFaceStyleDecl::Fields[aFontDescID];
+
+  switch (aFontDescID) {
+  case eCSSFontDesc_Family: {
+      // we don't use AppendCSSValueToString here because it doesn't
+      // canonicalize the way we want, and anyway it's overkill when
+      // we know we have eCSSUnit_String
+      nsDependentString family(val.GetStringBufferValue());
+      nsAutoString escapedFamily;
+      nsStyleUtil::EscapeCSSString(family, escapedFamily);
+      aResult.Append('"');
+      aResult.Append(escapedFamily);
+      aResult.Append('"');
+      return NS_OK;
+    }
+
+  case eCSSFontDesc_Style:
+    nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_font_style, val,
+                                             aResult);
+    return NS_OK;
+
+  case eCSSFontDesc_Weight:
+    nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_font_weight, val,
+                                             aResult);
+    return NS_OK;
+    
+  case eCSSFontDesc_Stretch:
+    nsCSSDeclaration::AppendCSSValueToString(eCSSProperty_font_stretch, val,
+                                             aResult);
+    return NS_OK;
+
+  case eCSSFontDesc_Src:
+    SerializeFontSrc(val, aResult);
+    return NS_OK;
+
+  case eCSSFontDesc_UnicodeRange:
+    // these are not implemented, so always return an empty string
+    return NS_OK;
+
+  case eCSSFontDesc_UNKNOWN:
+  case eCSSFontDesc_COUNT:
+    ;
+  }
+  NS_NOTREACHED("nsCSSFontFaceStyleDecl::GetPropertyValue: "
+                "out-of-range value got to the switch");
+  return NS_ERROR_INVALID_ARG;
+}
+
+
+// attribute DOMString cssText;
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::GetCssText(nsAString & aCssText)
+{
+  nsAutoString descStr;
+
+  aCssText.Truncate();
+  for (nsCSSFontDesc id = nsCSSFontDesc(eCSSFontDesc_UNKNOWN + 1);
+       id < eCSSFontDesc_COUNT;
+       id = nsCSSFontDesc(id + 1)) {
+    if ((this->*nsCSSFontFaceStyleDecl::Fields[id]).GetUnit()
+          != eCSSUnit_Null &&
+        NS_SUCCEEDED(GetPropertyValue(id, descStr))) {
+      NS_ASSERTION(descStr.Length() > 0,
+                   "GetCssText: non-null unit, empty property value");
+      aCssText.AppendLiteral("  ");
+      aCssText.AppendASCII(nsCSSProps::GetStringValue(id).get());
+      aCssText.AppendLiteral(": ");
+      aCssText.Append(descStr);
+      aCssText.AppendLiteral(";\n");
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::SetCssText(const nsAString & aCssText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
+}
+
+// DOMString getPropertyValue (in DOMString propertyName);
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::GetPropertyValue(const nsAString & propertyName,
+                                         nsAString & aResult NS_OUTPARAM)
+{
+  return GetPropertyValue(nsCSSProps::LookupFontDesc(propertyName), aResult);
+}
+
+// nsIDOMCSSValue getPropertyCSSValue (in DOMString propertyName);
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::GetPropertyCSSValue(const nsAString & propertyName,
+                                            nsIDOMCSSValue **aResult NS_OUTPARAM)
+{
+  // ??? nsDOMCSSDeclaration returns null/NS_OK, but that seems wrong.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// DOMString removeProperty (in DOMString propertyName) raises (DOMException);
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::RemoveProperty(const nsAString & propertyName,
+                                       nsAString & aResult NS_OUTPARAM)
+{
+  nsCSSFontDesc descID = nsCSSProps::LookupFontDesc(propertyName);
+  NS_ASSERTION(descID >= eCSSFontDesc_UNKNOWN &&
+               descID < eCSSFontDesc_COUNT,
+               "LookupFontDesc returned value out of range");
+
+  if (descID == eCSSFontDesc_UNKNOWN) {
+    aResult.Truncate();
+  } else {
+    nsresult rv = GetPropertyValue(descID, aResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    (this->*nsCSSFontFaceStyleDecl::Fields[descID]).Reset();
+  }
+  return NS_OK;
+}
+
+// DOMString getPropertyPriority (in DOMString propertyName);
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::GetPropertyPriority(const nsAString & propertyName,
+                                            nsAString & aResult NS_OUTPARAM)
+{
+  // font descriptors do not have priorities at present
+  aResult.Truncate();
+  return NS_OK;
+}
+
+// void setProperty (in DOMString propertyName, in DOMString value,
+//                   in DOMString priority)  raises (DOMException);
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::SetProperty(const nsAString & propertyName,
+                                    const nsAString & value,
+                                    const nsAString & priority)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
+}
+
+// readonly attribute unsigned long length;
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::GetLength(PRUint32 *aLength)
+{
+  PRUint32 len = 0;
+  for (nsCSSFontDesc id = nsCSSFontDesc(eCSSFontDesc_UNKNOWN + 1);
+       id < eCSSFontDesc_COUNT;
+       id = nsCSSFontDesc(id + 1))
+    if ((this->*nsCSSFontFaceStyleDecl::Fields[id]).GetUnit() != eCSSUnit_Null)
+      len++;
+
+  *aLength = len;
+  return NS_OK;
+}
+
+// DOMString item (in unsigned long index);
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::Item(PRUint32 index, nsAString & aResult NS_OUTPARAM)
+ {
+  PRInt32 nset = -1;
+  for (nsCSSFontDesc id = nsCSSFontDesc(eCSSFontDesc_UNKNOWN + 1);
+       id < eCSSFontDesc_COUNT;
+       id = nsCSSFontDesc(id + 1)) {
+    if ((this->*nsCSSFontFaceStyleDecl::Fields[id]).GetUnit()
+        != eCSSUnit_Null) {
+      nset++;
+      if (nset == PRInt32(index)) {
+        aResult.AssignASCII(nsCSSProps::GetStringValue(id).get());
+        return NS_OK;
+      }
+    }
+  }
+  aResult.Truncate();
+  return NS_OK;
+}
+
+// readonly attribute nsIDOMCSSRule parentRule;
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  return ContainingRule()->GetDOMRule(aParentRule);
+}
+
+
+// -------------------------------------------
+// nsCSSFontFaceRule
+// 
+
+NS_IMETHODIMP
+nsCSSFontFaceRule::Clone(nsICSSRule*& aClone) const
+{
+  nsCSSFontFaceRule* clone = new nsCSSFontFaceRule(*this);
+  if (clone) {
+    return CallQueryInterface(clone, &aClone);
+  }
+  aClone = nsnull;
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMPL_ADDREF_INHERITED(nsCSSFontFaceRule, nsCSSRule)
+NS_IMPL_RELEASE_INHERITED(nsCSSFontFaceRule, nsCSSRule)
+
+// QueryInterface implementation for nsCSSFontFaceRule
+NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceRule)
+  NS_INTERFACE_MAP_ENTRY(nsICSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFaceRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSFontFaceRule)
+NS_INTERFACE_MAP_END
+
+IMPL_STYLE_RULE_INHERIT(nsCSSFontFaceRule, nsCSSRule)
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsCSSFontFaceRule::List(FILE* out, PRInt32 aIndent) const
+{
+  nsCString baseInd, descInd;
+  for (PRInt32 indent = aIndent; --indent >= 0; ) {
+    baseInd.AppendLiteral("  ");
+    descInd.AppendLiteral("  ");
+  }
+  descInd.AppendLiteral("  ");
+
+  nsString descStr;
+
+  fprintf(out, "%s@font-face {\n", baseInd.get());
+  for (nsCSSFontDesc id = nsCSSFontDesc(eCSSFontDesc_UNKNOWN + 1);
+       id < eCSSFontDesc_COUNT;
+       id = nsCSSFontDesc(id + 1))
+    if ((mDecl.*nsCSSFontFaceStyleDecl::Fields[id]).GetUnit()
+        != eCSSUnit_Null) {
+      if (NS_FAILED(mDecl.GetPropertyValue(id, descStr)))
+        descStr.AssignLiteral("#<serialization error>");
+      else if (descStr.Length() == 0)
+        descStr.AssignLiteral("#<serialization missing>");
+      fprintf(out, "%s%s: %s\n",
+              descInd.get(), nsCSSProps::GetStringValue(id).get(),
+              NS_ConvertUTF16toUTF8(descStr).get());
+    }
+  fprintf(out, "%s}\n", baseInd.get());
+  return NS_OK;
+}
+#endif
+
+NS_IMETHODIMP
+nsCSSFontFaceRule::GetType(PRInt32& aType) const
+{
+  aType = nsICSSRule::FONT_FACE_RULE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSFontFaceRule::GetType(PRUint16* aType)
+{
+  *aType = nsIDOMCSSRule::FONT_FACE_RULE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSFontFaceRule::GetCssText(nsAString& aCssText)
+{
+  nsAutoString propText;
+  mDecl.GetCssText(propText);
+
+  aCssText.AssignLiteral("@font-face {\n");
+  aCssText.Append(propText);
+  aCssText.Append('}');
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSFontFaceRule::SetCssText(const nsAString& aCssText)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
+}
+
+NS_IMETHODIMP
+nsCSSFontFaceRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+{
+  if (mSheet) {
+    return CallQueryInterface(mSheet, aSheet);
+  }
+  *aSheet = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSFontFaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  if (mParentRule) {
+    return mParentRule->GetDOMRule(aParentRule);
+  }
+  *aParentRule = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSFontFaceRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
+{
+  return CallQueryInterface(&mDecl, aStyle);
+}
+
+// Arguably these should forward to nsCSSFontFaceStyleDecl methods.
+void
+nsCSSFontFaceRule::SetDesc(nsCSSFontDesc aDescID, nsCSSValue const & aValue)
+{
+  NS_PRECONDITION(aDescID > eCSSFontDesc_UNKNOWN &&
+                  aDescID < eCSSFontDesc_COUNT,
+                  "aDescID out of range in nsCSSFontFaceRule::SetDesc");
+
+  mDecl.*nsCSSFontFaceStyleDecl::Fields[aDescID] = aValue;
+}
+
+void
+nsCSSFontFaceRule::GetDesc(nsCSSFontDesc aDescID, nsCSSValue & aValue)
+{
+  NS_PRECONDITION(aDescID > eCSSFontDesc_UNKNOWN &&
+                  aDescID < eCSSFontDesc_COUNT,
+                  "aDescID out of range in nsCSSFontFaceRule::GetDesc");
+
+  aValue = mDecl.*nsCSSFontFaceStyleDecl::Fields[aDescID];
 }

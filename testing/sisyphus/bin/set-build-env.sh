@@ -157,35 +157,35 @@ for step in step1; do # dummy loop for handling exits
             # you must cd to the desired directory as part of "command" since msys will set the 
             # directory to the home directory prior to executing the command.
 
-            if [[ -e "/c/mozilla-build" ]]; then
+            if [[ -e "/c/mozilla-build" && $branch != "1.8.0" ]]; then
                 export BUILDDIR=${BUILDDIR:-/c/work/mozilla/builds}
                 export buildbash="/c/mozilla-build/msys/bin/bash"
                 export bashlogin=--login # this is for msys' bash.
 
                 if echo $branch | egrep -q '^1\.8'; then
-                    export MOZ_TOOLS="/c/mozilla-build/moztools-180compat"
-                    source ${TEST_DIR}/bin/set-msvc6-env.sh
+                    export MOZ_TOOLS=${MOZ_TOOLS:-"/c/mozilla-build/moztools-180compat"}
+                    export SET_MSVC_ENV=${SET_MSVC_ENV:-${TEST_DIR}/bin/set-msvc6-env.sh}
                 else
-                    export MOZ_TOOLS="/c/mozilla-build/moztools"
-                    source ${TEST_DIR}/bin/set-msvc8-env.sh
+                    export MOZ_TOOLS=${MOZ_TOOLS:-"/c/mozilla-build/moztools"}
+                    export SET_MSVC_ENV=${SET_MSVC_ENV:-${TEST_DIR}/bin/set-msvc8-env.sh}
                 fi
 
-                echo moztools Location: $MOZ_TOOLS
             else
                 export BUILDDIR=${BUILDDIR:-/work/mozilla/builds}
                 export buildbash="/bin/bash"
                 export bashlogin=-l
 
                 if echo $branch | egrep -q '^1\.8'; then
-                    export MOZ_TOOLS="$BUILDDIR/moztools"
-                    source ${TEST_DIR}/bin/set-msvc6-env.sh
+                    export MOZ_TOOLS=${MOZ_TOOLS:-"$BUILDDIR/moztools"}
+                    export SET_MSVC_ENV=${SET_MSVC_ENV:-${TEST_DIR}/bin/set-msvc6-env.sh}
                 else
-                    export MOZ_TOOLS="$BUILDDIR/moztools-static"
-                    source ${TEST_DIR}/bin/set-msvc8-env.sh
+                    export MOZ_TOOLS=${MOZ_TOOLS:-"$BUILDDIR/moztools-static"}
+                    export SET_MSVC_ENV=${SET_MSVC_ENV:-${TEST_DIR}/bin/set-msvc8-env.sh}
                 fi
-
-                echo moztools Location: $MOZ_TOOLS
             fi
+
+            source $SET_MSVC_ENV
+            echo moztools Location: $MOZ_TOOLS
 
             # now convert TEST_DIR and BUILDDIR to cross compatible paths using
             # the common cygdrive prefix for cygwin and msys

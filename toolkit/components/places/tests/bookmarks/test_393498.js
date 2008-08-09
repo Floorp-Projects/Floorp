@@ -122,14 +122,15 @@ function run_test() {
   do_check_eq(bmsvc.getItemLastModified(bookmarkId), childNode.lastModified);
 
   // test live update of lastModified caused by other changes:
+  // We set lastModified 1ms in the past to workaround a timing bug on
+  // virtual machines, see bug 427142 for details.
+  var pastDate = Date.now() * 1000 - 1;
+  bmsvc.setItemLastModified(bookmarkId, pastDate);
   // set title (causing update of last modified)
   var oldLastModified = bmsvc.getItemLastModified(bookmarkId);
-  // This double call to setItemTitle is a temporary hack to workaround a
-  // timing bug on virtual machines. See bug 427142 for details.
-  bmsvc.setItemTitle(bookmarkId, "Google"); 
   bmsvc.setItemTitle(bookmarkId, "Google");
-  // test that lm is updated
-  do_check_neq(oldLastModified, childNode.lastModified);
+  // test that lastModified is updated
+  do_check_true(oldLastModified < childNode.lastModified);
   // test that node value matches db value
   do_check_eq(bmsvc.getItemLastModified(bookmarkId), childNode.lastModified);
 

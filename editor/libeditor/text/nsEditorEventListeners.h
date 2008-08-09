@@ -51,7 +51,7 @@
 
 #include "nsIEditor.h"
 #include "nsIPlaintextEditor.h"
-#include "nsICaret.h"
+#include "nsCaret.h"
 #include "nsIPresShell.h"
 #include "nsWeakPtr.h"
 #include "nsIWeakReferenceUtils.h"
@@ -148,8 +148,6 @@ public:
   NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent);
   NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent);
   NS_IMETHOD HandleQueryComposition(nsIDOMEvent* aCompositionEvent);
-  NS_IMETHOD HandleQueryReconversion(nsIDOMEvent* aReconvertionEvent);
-  NS_IMETHOD HandleQueryCaretRect(nsIDOMEvent* aQueryCaretRectEvent);
 /*END implementations of textevent handler interface*/
 
 protected:
@@ -236,8 +234,8 @@ protected:
   nsIEditor* mEditor;
   nsWeakPtr  mPresShell;
   
-  nsCOMPtr<nsICaret> mCaret;
-  PRBool             mCaretDrawn;
+  nsRefPtr<nsCaret> mCaret;
+  PRBool            mCaretDrawn;
 };
 
 /** editor Implementation of the FocusListener interface

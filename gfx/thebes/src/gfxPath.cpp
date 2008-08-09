@@ -39,13 +39,21 @@
 
 #include "cairo.h"
 
-gfxFlattenedPath::gfxFlattenedPath(cairo_path_t *aPath) : mPath(aPath)
+gfxPath::gfxPath(cairo_path_t* aPath) : mPath(aPath)
+{
+}
+
+gfxPath::~gfxPath()
+{
+    cairo_path_destroy(mPath);
+}
+
+gfxFlattenedPath::gfxFlattenedPath(cairo_path_t* aPath) : gfxPath(aPath)
 {
 }
 
 gfxFlattenedPath::~gfxFlattenedPath()
 {
-    cairo_path_destroy(mPath);
 }
 
 static gfxFloat

@@ -73,6 +73,7 @@
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
 #include "nsPIPluginHost.h"
+#include "nsGeolocation.h"
 #ifdef OJI
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
@@ -111,6 +112,7 @@
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMOfflineResourceList.h"
+#include "nsIDOMGeolocation.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -6048,24 +6050,26 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              PR_FALSE,          // aDialog
                              PR_TRUE,           // aContentModal
                              PR_TRUE,           // aCalledNoScript
-                             PR_FALSE,          // aDoJSFixups
+                             PR_TRUE,           // aDoJSFixups
                              nsnull, aArgs,     // args
                              GetPrincipal(),    // aCalleePrincipal
                              nsnull,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
-  if (NS_FAILED(rv) || !dlgWin)
-    return NS_OK;
 
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(dlgWin));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (dlgWin) {
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(dlgWin));
 
-  nsPIDOMWindow *inner = win->GetCurrentInnerWindow();
+    nsPIDOMWindow *inner = win->GetCurrentInnerWindow();
 
-  nsCOMPtr<nsIDOMModalContentWindow> dlgInner(do_QueryInterface(inner));
+    nsCOMPtr<nsIDOMModalContentWindow> dlgInner(do_QueryInterface(inner));
 
-  if (dlgInner) {
-    dlgInner->GetReturnValue(aRetVal);
+    if (dlgInner) {
+      dlgInner->GetReturnValue(aRetVal);
+    }
   }
-
+  
   return NS_OK;
 }
 
@@ -6648,6 +6652,15 @@ nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+nsGlobalWindow::GetContextForEventHandlers(nsIScriptContext** aContext)
+{
+  NS_IF_ADDREF(*aContext = GetContext());
+  // Bad, no context from script global object!
+  NS_ENSURE_STATE(*aContext);
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsGlobalWindow::nsPIDOMWindow
 //*****************************************************************************
@@ -6795,6 +6808,27 @@ nsGlobalWindow::Deactivate()
   FORWARD_TO_OUTER(Deactivate, (), NS_ERROR_NOT_INITIALIZED);
 
   return FireWidgetEvent(mDocShell, NS_DEACTIVATE);
+}
+
+void
+nsGlobalWindow::SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler)
+{
+  SetChromeEventHandlerInternal(aChromeEventHandler);
+  if (IsOuterWindow()) {
+    // update the chrome event handler on all our inner windows
+    for (nsGlobalWindow *inner = (nsGlobalWindow *)PR_LIST_HEAD(this);
+         inner != this;
+         inner = (nsGlobalWindow*)PR_NEXT_LINK(inner)) {
+      NS_ASSERTION(inner->mOuterWindow == this, "bad outer window pointer");
+      inner->SetChromeEventHandlerInternal(aChromeEventHandler);
+    }
+  } else if (mOuterWindow) {
+    // Need the cast to be able to call the protected method on a
+    // superclass. We could make the method public instead, but it's really
+    // better this way.
+    static_cast<nsGlobalWindow*>(mOuterWindow)->
+      SetChromeEventHandlerInternal(aChromeEventHandler);
+  }
 }
 
 nsIFocusController*
@@ -7281,8 +7315,6 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                   "Can't pass in arguments both ways");
   NS_PRECONDITION(!aCalledNoScript || (!argv && argc == 0),
                   "Can't pass JS args when called via the noscript methods");
-  NS_PRECONDITION(!aDoJSFixups || !aCalledNoScript,
-                  "JS fixups should not be done when called noscript");
   NS_PRECONDITION(!aJSCallerContext || !aCalledNoScript,
                   "Shouldn't have caller context when called noscript");
 
@@ -9008,6 +9040,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocator)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -9022,6 +9055,13 @@ nsNavigator::SetDocShell(nsIDocShell *aDocShell)
   mDocShell = aDocShell;
   if (mPlugins)
     mPlugins->SetDocShell(aDocShell);
+
+  // if there is a page transition, make sure delete the geolocation object
+  if (mGeolocator)
+  {
+    mGeolocator->Shutdown();
+    mGeolocator = nsnull;
+  }
 }
 
 //*****************************************************************************
@@ -9542,6 +9582,12 @@ nsNavigator::LoadingNewDocument()
   // arrays may have changed.  See bug 150087.
   mMimeTypes = nsnull;
   mPlugins = nsnull;
+
+  if (mGeolocator)
+  {
+    mGeolocator->Shutdown();
+    mGeolocator = nsnull;
+  }
 }
 
 nsresult
@@ -9659,6 +9705,23 @@ nsNavigator::MozIsLocallyAvailable(const nsAString &aURI,
     *aIsAvailable = PR_FALSE;
   }
 
+  return NS_OK;
+}
+
+//*****************************************************************************
+//    nsNavigator::nsIDOMNavigatorGeolocator
+//*****************************************************************************
+
+NS_IMETHODIMP nsNavigator::GetGeolocator(nsIDOMGeolocator **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  if (!mGeolocator) {
+    nsCOMPtr<nsIDOMWindow> contentDOMWindow(do_GetInterface(mDocShell));
+    mGeolocator = new nsGeolocator(contentDOMWindow);
+  }
+
+  NS_IF_ADDREF(*_retval = mGeolocator);
   return NS_OK;
 }
 

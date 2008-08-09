@@ -564,13 +564,29 @@ BrowserGlue.prototype = {
       this._dataSource = this._rdf.GetDataSource("rdf:local-store");
       this._dirty = false;
 
-      var currentSet = this._rdf.GetResource("currentset");
-
-      // get an nsIRDFResource for the nav-bar item
-      var navBar = this._rdf.GetResource("chrome://browser/content/browser.xul#nav-bar");
-      var target = this._getPersist(navBar, currentSet);
-      if (target && !/(?:^|,)unified-back-forward-button(?:$|,)/.test(target))
-        this._setPersist(navBar, currentSet, "unified-back-forward-button," + target);
+      let currentsetResource = this._rdf.GetResource("currentset");
+      let toolbars = ["nav-bar", "toolbar-menubar", "PersonalToolbar"];
+      for (let i = 0; i < toolbars.length; i++) {
+        let toolbar = this._rdf.GetResource("chrome://browser/content/browser.xul#" + toolbars[i]);
+        let currentset = this._getPersist(toolbar, currentsetResource);
+        if (!currentset) {
+          // toolbar isn't customized
+          if (i == 0)
+            // new button is in the defaultset, nothing to migrate
+            break;
+          continue;
+        }
+        if (/(?:^|,)unified-back-forward-button(?:$|,)/.test(currentset))
+          // new button is already there, nothing to migrate
+          break;
+        if (/(?:^|,)back-button(?:$|,)/.test(currentset)) {
+          let newset = currentset.replace(/(^|,)back-button($|,)/,
+                                          "$1unified-back-forward-button,back-button$2")
+          this._setPersist(toolbar, currentsetResource, newset);
+          // done migrating
+          break;
+        }
+      }
 
       // force the RDF to be saved
       if (this._dirty)

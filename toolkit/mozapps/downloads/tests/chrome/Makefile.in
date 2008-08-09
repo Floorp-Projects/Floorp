@@ -49,6 +49,7 @@ include $(topsrcdir)/config/rules.mk
 _CHROME_FILES = \
   test_basic_functionality.xul \
   test_cleanup_search.xul \
+  test_clear_button_disabled.xul \
   test_delete_key_removes.xul \
   test_esc_key_closes_clears.xul \
   test_multi_select.xul \
@@ -61,8 +62,13 @@ _CHROME_FILES = \
   test_select_all.xul \
   test_space_key_pauses_resumes.xul \
   test_ui_stays_open_on_alert_clickback.xul \
+  test_unkownContentType_dialog_layout.xul \
   test_bug_412360.xul \
   test_bug_429247.xul \
+  unknownContentType_dialog_layout_data.txt \
+  unknownContentType_dialog_layout_data.txt^headers^ \
+  unknownContentType_dialog_layout_data.pif \
+  unknownContentType_dialog_layout_data.pif^headers^ \
   utils.js \
   $(NULL)
 

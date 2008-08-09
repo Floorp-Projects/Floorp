@@ -1110,9 +1110,9 @@ public:
   static nsresult DropJSObjects(void* aScriptObjectHolder);
 
   /**
-   * Convert nsIContent::IME_STATUS_* to nsIKBStateControll::IME_STATUS_*
+   * Convert nsIContent::IME_STATUS_* to nsIWidget::IME_STATUS_*
    */
-  static PRUint32 GetKBStateControlStatusFromIMEStatus(PRUint32 aState);
+  static PRUint32 GetWidgetStatusFromIMEStatus(PRUint32 aState);
 
   /*
    * Notify when the first XUL menu is opened and when the all XUL menus are
@@ -1306,6 +1306,17 @@ public:
     return sRemovableScriptBlockerCount;
   }
 
+  /* Process viewport META data. This gives us information for the scale
+   * and zoom of a page on mobile devices. We stick the information in
+   * the document header and use it later on after rendering.
+   *
+   * See Bug #436083
+   */
+  static nsresult ProcessViewportInfo(nsIDocument *aDocument,
+                                      const nsAString &viewportInfo);
+
+  static nsresult GetContextForEventHandlers(nsINode* aNode,
+                                             nsIScriptContext** aContext);
 private:
 
   static PRBool InitializeEventTable();

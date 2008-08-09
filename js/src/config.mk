@@ -179,12 +179,18 @@ endif
 endif
 
 # Name of the binary code directories
-ifdef BUILD_IDG
-OBJDIR          = $(OS_CONFIG)$(OBJDIR_TAG).OBJD
+ifdef OBJROOT
+# prepend $(DEPTH) to the root unless it is an absolute path
+OBJDIR = $(if $(filter /%,$(OBJROOT)),$(OBJROOT),$(DEPTH)/$(OBJROOT))
 else
-OBJDIR          = $(OS_CONFIG)$(OBJDIR_TAG).OBJ
+ifeq ($(DEPTH),.)
+OBJDIR = $(OS_CONFIG)$(OBJDIR_TAG).$(if $(BUILD_IDG),OBJD,OBJ)
+else
+OBJDIR = $(DEPTH)/$(OS_CONFIG)$(OBJDIR_TAG).$(if $(BUILD_IDG),OBJD,OBJ)
 endif
-VPATH           = $(OBJDIR)
+endif
+
+VPATH = $(OBJDIR)
 
 LCJAR = js15lc30.jar
 

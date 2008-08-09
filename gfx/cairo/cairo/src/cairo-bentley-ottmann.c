@@ -508,7 +508,7 @@ det64_128 (cairo_int64_t a,
  * result is provided as a coordinate pair of 128-bit integers.
  *
  * Returns %CAIRO_BO_STATUS_INTERSECTION if there is an intersection or
- * CAIRO_BO_STATUS_PARALLEL if the two lines are exactly parallel.
+ * %CAIRO_BO_STATUS_PARALLEL if the two lines are exactly parallel.
  */
 static cairo_bo_status_t
 intersect_lines (cairo_bo_edge_t		*a,
@@ -1214,7 +1214,7 @@ _active_edges_to_traps (cairo_bo_edge_t		*head,
     int in_out = 0;
     cairo_bo_edge_t *edge;
 
-    for (edge = head; edge && edge->next; edge = edge->next) {
+    for (edge = head; edge; edge = edge->next) {
 	if (fill_rule == CAIRO_FILL_RULE_WINDING) {
 	    if (edge->reversed)
 		in_out++;
@@ -1415,9 +1415,9 @@ update_minmax(cairo_fixed_t *inout_min,
 }
 
 cairo_status_t
-_cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
-					   cairo_polygon_t	*polygon,
-					   cairo_fill_rule_t	 fill_rule)
+_cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
+					   const cairo_polygon_t *polygon,
+					   cairo_fill_rule_t	  fill_rule)
 {
     int intersections;
     cairo_status_t status;

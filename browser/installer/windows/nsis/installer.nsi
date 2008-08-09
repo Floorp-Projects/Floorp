@@ -48,6 +48,8 @@ SetDatablockOptimize on
 SetCompress off
 CRCCheck on
 
+RequestExecutionLevel user
+
 !addplugindir ./
 
 ; empty files - except for the comment line - for generating custom pages.
@@ -70,21 +72,11 @@ Var AddDesktopSC
 ; The following includes are provided by NSIS.
 !include FileFunc.nsh
 !include LogicLib.nsh
+!include MUI.nsh
 !include TextFunc.nsh
 !include WinMessages.nsh
+!include WinVer.nsh
 !include WordFunc.nsh
-!include MUI.nsh
-
-; WinVer.nsh was added in the same release that RequestExecutionLevel so check
-; if ___WINVER__NSH___ is defined to determine if RequestExecutionLevel is
-; available.
-!include /NONFATAL WinVer.nsh
-!ifdef ___WINVER__NSH___
-  RequestExecutionLevel user
-!else
-  !warning "Installer will be created without Vista compatibility.$\n            \
-            Upgrade your NSIS installation to at least version 2.22 to resolve."
-!endif
 
 !insertmacro GetOptions
 !insertmacro GetParameters
@@ -105,6 +97,7 @@ Var AddDesktopSC
 !include version.nsh
 
 VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
+VIAddVersionKey "OriginalFilename" "setup.exe"
 
 ; Must be inserted before other macros that use logging
 !insertmacro _LoggingCommon
@@ -356,6 +349,7 @@ Section "-Application" APP_IDX
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${RegCleanMain} "Software\Mozilla"
   ${RegCleanUninstall}
+  ${UpdateProtocolHandlers}
 
   ClearErrors
   WriteRegStr HKLM "Software\Mozilla\InstallerTest" "InstallerTest" "Test"
@@ -367,6 +361,7 @@ Section "-Application" APP_IDX
     StrCpy $TmpVal "HKLM" ; used primarily for logging
     ${RegCleanMain} "Software\Mozilla"
     ${RegCleanUninstall}
+    ${UpdateProtocolHandlers}
 
     ReadRegStr $0 HKLM "Software\mozilla.org\Mozilla" "CurrentVersion"
     ${If} "$0" != "${GREVersion}"
@@ -392,7 +387,6 @@ Section "-Application" APP_IDX
   ${WriteRegDWORD2} $TmpVal "$0" "Create Start Menu Shortcut" $AddStartMenuSC 0
 
   ${FixClassKeys}
-  ${UpdateProtocolHandlers}
 
   ; On install always add the FirefoxHTML and FirefoxURL keys.
   ; An empty string is used for the 5th param because FirefoxHTML is not a

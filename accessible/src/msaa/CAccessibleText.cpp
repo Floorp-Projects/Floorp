@@ -48,6 +48,7 @@
 #include "nsIAccessibleTypes.h"
 #include "nsIWinAccessNode.h"
 #include "nsAccessNodeWrap.h"
+#include "nsAccessibleWrap.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -108,32 +109,26 @@ __try {
 
   GET_NSIACCESSIBLETEXT
 
-  nsCOMPtr<nsIAccessible> accessible;
   PRInt32 startOffset = 0, endOffset = 0;
-  textAcc->GetAttributeRange(aOffset, &startOffset, &endOffset,
-                             getter_AddRefs(accessible));
-  if (!accessible)
-    return E_FAIL;
-
-  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(accessible));
-  if (!winAccessNode)
-    return E_FAIL;
-
-  void *instancePtr = 0;
-  winAccessNode->QueryNativeInterface(IID_IAccessible2, &instancePtr);
-  if (!instancePtr)
-    return E_FAIL;
-
-  IAccessible2 *pAccessible2 = static_cast<IAccessible2*>(instancePtr);
-  HRESULT hr = pAccessible2->get_attributes(aTextAttributes);
-  pAccessible2->Release();
+  nsCOMPtr<nsIPersistentProperties> attributes;
+  nsresult rv = textAcc->GetTextAttributes(PR_TRUE, aOffset,
+                                           &startOffset, &endOffset,
+                                           getter_AddRefs(attributes));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+  
+  HRESULT hr = nsAccessibleWrap::ConvertToIA2Attributes(attributes,
+                                                        aTextAttributes);
+  if (FAILED(hr))
+    return hr;
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
-  return hr;
+
+  return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-  return E_NOTIMPL;
+  return E_FAIL;
 }
 
 STDMETHODIMP

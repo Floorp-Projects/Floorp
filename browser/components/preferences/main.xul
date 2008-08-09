@@ -163,6 +163,7 @@
           <filefield id="downloadFolder" flex="1"
                      preference="browser.download.folderList"
                      preference-editable="true"
+                     aria-labelledby="saveTo"
                      onsyncfrompreference="return gMainPane.displayDownloadDirPref();"
                      onsynctopreference="return gMainPane.getFolderListPref()"/>
           <button id="chooseFolder" oncommand="gMainPane.chooseFolder();"

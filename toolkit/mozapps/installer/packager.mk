@@ -190,7 +190,7 @@ SIGN_NSS		= @echo signing nss libraries;
 NSS_DLL_SUFFIX	= $(DLL_SUFFIX)
 ifdef UNIVERSAL_BINARY
 NATIVE_ARCH	= $(shell uname -p | sed -e s/powerpc/ppc/)
-NATIVE_DIST	= $(DIST)/../../$(NATIVE_ARCH)/dist
+NATIVE_DIST	= $(DIST:$(DEPTH)/%=$(DEPTH)/../$(NATIVE_ARCH)/%)
 SIGN_CMD	= $(NATIVE_DIST)/bin/run-mozilla.sh $(NATIVE_DIST)/bin/shlibsign -v -i
 else
 ifeq ($(OS_ARCH),OS2)
