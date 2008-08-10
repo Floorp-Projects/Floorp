@@ -161,6 +161,12 @@
 #define JS_FRIEND_API(t)    JS_PUBLIC_API(t)
 #define JS_FRIEND_DATA(t)   JS_PUBLIC_DATA(t)
 
+#ifdef _MSC_VER
+#define JS_FASTCALL __fastcall
+#else
+#define JS_FASTCALL __attribute__((fastcall))
+#endif
+
 #ifndef JS_INLINE
 # if defined __cplusplus
 #  define JS_INLINE          inline

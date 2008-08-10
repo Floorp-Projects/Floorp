@@ -39,13 +39,13 @@
 #include <stdlib.h>
 #include "jstypes.h"
 
+#define FASTCALL JS_FASTCALL
+
 #ifdef _MSC_VER
 #define __msvc_only(x)  x
-#define FASTCALL __fastcall
 #include <windows.h>
 #else
 #define __msvc_only(x)
-#define FASTCALL __attribute__((fastcall))
 #endif
 
 #ifdef DEBUG

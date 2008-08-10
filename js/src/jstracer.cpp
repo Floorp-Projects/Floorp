@@ -413,14 +413,14 @@ public:
     {
         LInsp s0 = args[0];
         switch (fid) {
-          case F_doubleToUint32:
+          case F_DoubleToUint32:
             if (s0->isconstq())
                 return out->insImm(js_DoubleToECMAUint32(s0->constvalf()));
             if (s0->isop(LIR_i2f) || s0->isop(LIR_u2f)) {
                 return s0->oprnd1();
             }
             break;
-          case F_doubleToInt32:
+          case F_DoubleToInt32:
             if (s0->isconstq())
                 return out->insImm(js_DoubleToECMAInt32(s0->constvalf()));
             if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub) || s0->isop(LIR_fmul)) {
@@ -1860,7 +1860,7 @@ TraceRecorder::stack(int n, LIns* i)
 
 LIns* TraceRecorder::f2i(LIns* f)
 {
-    return lir->insCall(F_doubleToInt32, &f);
+    return lir->insCall(F_DoubleToInt32, &f);
 }
 
 bool
@@ -2080,7 +2080,7 @@ TraceRecorder::binary(LOpcode op)
     }
     if (leftNumber && rightNumber) {
         if (intop) {
-            a = lir->insCall(op == LIR_ush ? F_doubleToUint32 : F_doubleToInt32, &a);
+            a = lir->insCall(op == LIR_ush ? F_DoubleToUint32 : F_DoubleToInt32, &a);
             b = f2i(b);
         }
         a = lir->ins2(op, a, b);
@@ -2689,7 +2689,7 @@ TraceRecorder::record_JSOP_ADD()
     jsval& l = stackval(-2);
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
         LIns* args[] = { get(&r), get(&l), cx_ins };
-        LIns* concat = lir->insCall(F_ConcatStrings, args);
+        LIns* concat = lir->insCall(F_FastConcatStrings, args);
         guard(false, lir->ins_eq0(concat), OOM_EXIT);
         set(&l, concat);
         return true;
@@ -2773,7 +2773,7 @@ TraceRecorder::record_JSOP_NEW()
 
     if (guardInterpretedFunction(fun, get(&v))) {
         LIns* args[] = { get(&v), cx_ins };
-        LIns* tv_ins = lir->insCall(F_NewObject, args);
+        LIns* tv_ins = lir->insCall(F_FastNewObject, args);
         guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
         jsval& tv = stackval(0 - (1 + argc));
         set(&tv, tv_ins);
@@ -3713,7 +3713,7 @@ TraceRecorder::record_JSOP_ITER()
     jsval& v = stackval(-1);
     if (!JSVAL_IS_PRIMITIVE(v)) {
         LIns* args[] = { get(&v), cx_ins };
-        LIns* v_ins = lir->insCall(F_ValueToIterator, args);
+        LIns* v_ins = lir->insCall(F_ValueToEnumerator, args);
         guard(false, lir->ins_eq0(v_ins));
         set(&v, v_ins);
         return true;

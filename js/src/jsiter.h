@@ -72,7 +72,7 @@ JS_BEGIN_EXTERN_C
 extern JS_FRIEND_API(JSBool)
 js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp);
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool) JS_FASTCALL
 js_CloseIterator(JSContext *cx, jsval v);
 
 /*
