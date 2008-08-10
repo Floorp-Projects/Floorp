@@ -616,7 +616,7 @@ gfxFT2FontGroup::AddRange(gfxTextRun *aTextRun, gfxFT2Font *font, const PRUnicha
  */
 gfxFT2Font::gfxFT2Font(FontEntry *aFontEntry,
                      const gfxFontStyle *aFontStyle)
-    : gfxFont(aFontEntry->GetName(), aFontStyle),
+    : gfxFont(aFontEntry, aFontStyle),
     mScaledFont(nsnull),
     mHasSpaceGlyph(PR_FALSE),
     mSpaceGlyph(0),
@@ -775,7 +775,7 @@ gfxFT2Font::GetMetrics()
 nsString
 gfxFT2Font::GetUniqueName()
 {
-    return mName;
+    return GetName();
 }
 
 PRUint32
