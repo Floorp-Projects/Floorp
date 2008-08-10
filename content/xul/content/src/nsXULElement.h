@@ -625,8 +625,8 @@ public:
 
     nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
 
+    
     nsresult GetFrameLoader(nsIFrameLoader** aFrameLoader);
-    nsresult SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner);
 
     virtual void RecompileScriptEventListeners();
 
@@ -664,7 +664,7 @@ protected:
        nsXULSlots(PtrBits aFlags);
        virtual ~nsXULSlots();
 
-       nsRefPtr<nsFrameLoader> mFrameLoader;
+       nsCOMPtr<nsIFrameLoader> mFrameLoader;
     };
 
     virtual nsINode::nsSlots* CreateSlots();
