@@ -3001,13 +3001,6 @@ nsGenericHTMLFrameElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherOwner)
-{
-  // We don't support this yet
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult
 nsGenericHTMLFrameElement::LoadSrc()
 {
