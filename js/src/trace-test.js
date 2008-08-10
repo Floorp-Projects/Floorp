@@ -367,18 +367,22 @@ function strings()
   var a = [], b = -1;
   var s = "abcdefghij", s2 = "a";
   var f = "f";
-  var c = 0, d = 0;
+  var c = 0, d = 0, e = 0, g = 0;
   for (var i = 0; i < 10; i++) {
     a[i] = s.substring(i, i+1) + s[i] + String.fromCharCode(s2.charCodeAt(0) + i);
     if (s[i] == f)
       c++;
     if (s[i] != 'b')
       d++;
+    if ("B" > s2)
+      g++; // f already used
+    if (s2 < "b")
+      e++;
     b = s.length;
   }
-  return a.toString() + b + c + d;
+  return a.toString() + b + c + d + e + g;
 }
-strings.expected = "aaa,bbb,ccc,ddd,eee,fff,ggg,hhh,iii,jjj1019";
+strings.expected = "aaa,bbb,ccc,ddd,eee,fff,ggg,hhh,iii,jjj1019100";
 test(strings);
 
 function stringConvert()
@@ -421,33 +425,35 @@ function andTestHelper(a, b, n)
   return k;
 }
 
-(function () {
-  var opsies   = ["||", "&&"];
-  var falsies  = [null, undefined, false, NaN, 0, ""];
-  var truthies = [{}, true, 1, 42, 1/0, -1/0, "blah"];
-  var boolies  = [falsies, truthies];
+if (!testName || testName == "truthies") {
+  (function () {
+     var opsies   = ["||", "&&"];
+     var falsies  = [null, undefined, false, NaN, 0, ""];
+     var truthies = [{}, true, 1, 42, 1/0, -1/0, "blah"];
+     var boolies  = [falsies, truthies];
 
-  // The for each here should abort tracing, so that this test framework relies
-  // only on the interpreter while the orTestHelper and andTestHelper functions
-  // get trace-JITed.
-  for each (var op in opsies) {
-    for (var i in boolies) {
-      for (var j in boolies[i]) {
-        var x = uneval(boolies[i][j]);
-        for (var k in boolies) {
-          for (var l in boolies[k]) {
-            var y = uneval(boolies[k][l]);
-            var prefix = (op == "||") ? "or" : "and";
-            var f = new Function("return " + prefix + "TestHelper(" + x + "," + y + ",10)");
-            f.name = prefix + "Test(" + x + "," + y + ")";
-            f.expected = eval(x + op + y) ? 45 : 0;
-            test(f);
-          }
-        }
-      }
-    }
-  }
-})();
+     // The for each here should abort tracing, so that this test framework
+     // relies only on the interpreter while the orTestHelper and andTestHelper
+     //  functions get trace-JITed.
+     for each (var op in opsies) {
+       for (var i in boolies) {
+	 for (var j in boolies[i]) {
+           var x = uneval(boolies[i][j]);
+           for (var k in boolies) {
+             for (var l in boolies[k]) {
+               var y = uneval(boolies[k][l]);
+               var prefix = (op == "||") ? "or" : "and";
+               var f = new Function("return " + prefix + "TestHelper(" + x + "," + y + ",10)");
+               f.name = prefix + "Test(" + x + "," + y + ")";
+               f.expected = eval(x + op + y) ? 45 : 0;
+               test(f);
+             }
+           }
+	 }
+       }
+     }
+   })();
+}
 
 function nonEmptyStack1Helper(o, farble) {
     var a = [];
