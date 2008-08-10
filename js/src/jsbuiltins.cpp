@@ -420,6 +420,22 @@ builtin_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     return false;
 }
 
+JSString* FASTCALL
+builtin_TypeOfObject(JSContext* cx, JSObject* obj)
+{
+    JSType type = JS_TypeOfValue(cx, OBJECT_TO_JSVAL(obj));
+    return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
+}
+
+JSString* FASTCALL
+builtin_TypeOfBoolean(JSContext* cx, jsint unboxed)
+{
+    jsval boxed = BOOLEAN_TO_JSVAL(unboxed);
+    JS_ASSERT(JSVAL_IS_VOID(boxed) || JSVAL_IS_BOOLEAN(boxed));
+    JSType type = JS_TypeOfValue(cx, boxed);
+    return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q

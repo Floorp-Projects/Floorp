@@ -2809,7 +2809,24 @@ TraceRecorder::record_JSOP_DELELEM()
 bool
 TraceRecorder::record_JSOP_TYPEOF()
 {
-    return false;
+    jsval& r = stackval(-1);
+    LIns* type;
+    if (JSVAL_IS_STRING(r)) {
+        type = lir->insImmPtr((void*)cx->runtime->atomState.typeAtoms[JSTYPE_STRING]);
+    } else if (isNumber(r)) {
+        type = lir->insImmPtr((void*)cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER]);
+    } else {
+        LIns* args[] = { get(&r), cx_ins };
+        if (JSVAL_IS_BOOLEAN(r) || JSVAL_IS_VOID(r)) { // we specialize identically for these
+            // We pass the unboxed type here, since TypeOfBoolean knows how to handle it.
+            type = lir->insCall(F_TypeOfBoolean, args);
+        } else {
+            JS_ASSERT(JSVAL_IS_OBJECT(r));
+            type = lir->insCall(F_TypeOfObject, args);
+        }
+    }
+    set(&r, type);
+    return true;
 }
 
 bool
@@ -4561,7 +4578,7 @@ TraceRecorder::record_JSOP_CALLXMLNAME()
 bool
 TraceRecorder::record_JSOP_TYPEOFEXPR()
 {
-    return false;
+    return record_JSOP_TYPEOF();
 }
 
 bool
