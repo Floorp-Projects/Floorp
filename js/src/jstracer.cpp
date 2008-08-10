@@ -1992,7 +1992,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
             cond = result >= 0;
             break;
           default:
-            JS_ASSERT(0 && "unexpected comparison op for strings");
+            JS_NOT_REACHED("unexpected comparison op for strings");
             return false;
         }
     } else if (isNumber(l) && isNumber(r)) {
@@ -2817,8 +2817,10 @@ TraceRecorder::record_JSOP_TYPEOF()
         type = lir->insImmPtr((void*)cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER]);
     } else {
         LIns* args[] = { get(&r), cx_ins };
-        if (JSVAL_IS_BOOLEAN(r) || JSVAL_IS_VOID(r)) { // we specialize identically for these
-            // We pass the unboxed type here, since TypeOfBoolean knows how to handle it.
+        if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
+            // We specialize identically for boolean and undefined. We must not have a hole here.
+            // Pass the unboxed type here, since TypeOfBoolean knows how to handle it.
+            JS_ASSERT(JSVAL_TO_BOOLEAN(r) <= 2);
             type = lir->insCall(F_TypeOfBoolean, args);
         } else {
             JS_ASSERT(JSVAL_IS_OBJECT(r));
@@ -3255,7 +3257,7 @@ TraceRecorder::record_JSOP_CALL()
         } else if (argtype == 'R') {                                           \
             *argp = lir->insImmPtr((void*)cx->runtime);                        \
         } else {                                                               \
-            JS_ASSERT(0 && "unknown prefix arg type");                         \
+            JS_NOT_REACHED("unknown prefix arg type");                         \
         }                                                                      \
         argp--;
 
@@ -3269,7 +3271,7 @@ TraceRecorder::record_JSOP_CALL()
           case 0:
             break;
           default:
-            JS_ASSERT(0 && "illegal number of prefix args");
+            JS_NOT_REACHED("illegal number of prefix args");
         }
 
 #undef HANDLE_PREFIX
@@ -3283,7 +3285,7 @@ TraceRecorder::record_JSOP_CALL()
             if (argtype == 'i')                                                \
                 *argp = f2i(*argp);                                            \
         } else {                                                               \
-            JS_ASSERT(0 && "unknown arg type");                                \
+            JS_NOT_REACHED("unknown arg type");                                \
         }                                                                      \
         argp--;
 
@@ -3303,7 +3305,7 @@ TraceRecorder::record_JSOP_CALL()
           case 0:
             break;
           default:
-            JS_ASSERT(0 && "illegal number of args to traceable native");
+            JS_NOT_REACHED("illegal number of args to traceable native");
         }
 
 #undef HANDLE_ARG
