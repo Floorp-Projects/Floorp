@@ -96,8 +96,6 @@ public:
     return mChromeEventHandler;
   }
 
-  virtual void SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler) = 0;
-
   PRBool HasMutationListeners(PRUint32 aMutationEventType) const
   {
     const nsPIDOMWindow *win;
@@ -401,10 +399,6 @@ protected:
       mIsModalContentWindow(PR_FALSE), mInnerWindow(nsnull),
       mOuterWindow(aOuterWindow)
   {
-  }
-
-  void SetChromeEventHandlerInternal(nsPIDOMEventTarget* aChromeEventHandler) {
-    mChromeEventHandler = aChromeEventHandler;
   }
 
   // These two variables are special in that they're set to the same
