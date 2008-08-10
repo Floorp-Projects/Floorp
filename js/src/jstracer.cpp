@@ -2092,35 +2092,65 @@ TraceRecorder::binary(LOpcode op)
     return false;
 }
 
+JS_STATIC_ASSERT(offsetof(JSObjectOps, newObjectMap) == 0);
+
 bool
-TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins)
+TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, size_t op_offset)
 {
     ops_ins = addName(lir->insLoadi(map_ins, offsetof(JSObjectMap, ops)), "ops");
-    if (map->ops == &js_ObjectOps) {
-        guard(true, addName(lir->ins2(LIR_eq, ops_ins, lir->insImmPtr(&js_ObjectOps)),
-                            "guard(native-ops)"));
-        return true;
-    }
-    LIns* n = lir->insLoadi(ops_ins, offsetof(JSObjectOps, newObjectMap));
-    if (map->ops->newObjectMap == js_ObjectOps.newObjectMap) {
-        guard(true, addName(lir->ins2(LIR_eq, n, lir->insImmPtr((void*)js_ObjectOps.newObjectMap)),
+    LIns* n = lir->insLoadi(ops_ins, op_offset);
+
+#define OP(ops) (*(JSObjectOp*) ((char*)(ops) + op_offset))
+
+    if (OP(map->ops) == OP(&js_ObjectOps)) {
+        guard(true, addName(lir->ins2(LIR_eq, n, lir->insImmPtr((void*) OP(&js_ObjectOps))),
                             "guard(native-map)"));
         return true;
     }
+
+#undef OP
     ABORT_TRACE("non-native map");
 }
 
 bool
 TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, jsuword& pcval)
 {
+    // Mimic JSOP_CALLPROP's special case to skip up from a dense array to find
+    // Array.prootype methods.
+    JSObject* aobj = obj;
+    if (JSOp(*cx->fp->regs->pc) == JSOP_CALLPROP && OBJ_IS_DENSE_ARRAY(cx, obj)) {
+        aobj = OBJ_GET_PROTO(cx, obj);
+        obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+    }
+
     LIns* map_ins = lir->insLoadi(obj_ins, offsetof(JSObject, map));
     LIns* ops_ins;
-    if (!map_is_native(obj->map, map_ins, ops_ins))
+
+    // Interpreter calls to PROPERTY_CACHE_TEST guard on native object ops
+    // (newObjectMap == js_ObjectOps.newObjectMap) which is required to use
+    // native objects (those whose maps are scopes), or even more narrow
+    // conditions required because the cache miss case will call a particular
+    // object-op (js_GetProperty, js_SetProperty).
+    //
+    // We parameterize using offsetof and guard on match against the hook at
+    // the given offset in js_ObjectOps. TraceRecorder::record_JSOP_SETPROP
+    // guards the js_SetProperty case.
+    uint32 format = js_CodeSpec[*cx->fp->regs->pc].format;
+    uint32 mode = JOF_MODE(format);
+    size_t op_offset = 0;
+    if (mode == JOF_PROP || mode == JOF_VARPROP) {
+        JS_ASSERT(!(format & JOF_SET));
+        op_offset = offsetof(JSObjectOps, getProperty);
+    } else {
+        JS_ASSERT(mode == JOF_NAME);
+    }
+
+    if (!map_is_native(aobj->map, map_ins, ops_ins, op_offset))
         return false;
 
     JSAtom* atom;
     JSPropCacheEntry* entry;
-    PROPERTY_CACHE_TEST(cx, cx->fp->regs->pc, obj, obj2, entry, atom);
+    PROPERTY_CACHE_TEST(cx, cx->fp->regs->pc, aobj, obj2, entry, atom);
     if (!atom) {
         pcval = entry->vword;
         return true;
@@ -2188,9 +2218,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     JSScope* scope = OBJ_SCOPE(obj2);
 
     jsval v;
-    const JSCodeSpec *cs = &js_CodeSpec[*cx->fp->regs->pc];
 
-    if (cs->format & JOF_CALLOP) {
+    if (format & JOF_CALLOP) {
         if (SPROP_HAS_STUB_GETTER(sprop) && SPROP_HAS_VALID_SLOT(sprop, scope) &&
             VALUE_IS_FUNCTION(cx, (v = STOBJ_GET_SLOT(obj2, sprop->slot))) &&
             SCOPE_IS_BRANDED(scope)) {
@@ -2204,7 +2233,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         ABORT_TRACE("can't fast method value for call op");
     }
 
-    if ((((cs->format & JOF_SET) && SPROP_HAS_STUB_SETTER(sprop)) ||
+    if ((((format & JOF_SET) && SPROP_HAS_STUB_SETTER(sprop)) ||
          SPROP_HAS_STUB_GETTER(sprop)) &&
         SPROP_HAS_VALID_SLOT(sprop, scope)) {
         /* Stub accessor of appropriate form and valid slot: cache slot. */
@@ -2945,7 +2974,7 @@ TraceRecorder::record_JSOP_SETPROP()
 
     LIns* map_ins = lir->insLoadi(obj_ins, offsetof(JSObject, map));
     LIns* ops_ins;
-    if (!map_is_native(obj->map, map_ins, ops_ins))
+    if (!map_is_native(obj->map, map_ins, ops_ins, offsetof(JSObjectOps, setProperty)))
         return false;
 
     // The global object's shape is guarded at trace entry.
