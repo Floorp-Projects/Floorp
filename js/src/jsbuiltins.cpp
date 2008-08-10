@@ -60,7 +60,8 @@
 using namespace avmplus;
 using namespace nanojit;
 
-jsdouble FASTCALL builtin_dmod(jsdouble a, jsdouble b)
+jsdouble FASTCALL
+js_dmod(jsdouble a, jsdouble b)
 {
     if (b == 0.0) {
         jsdpun u;
@@ -83,7 +84,8 @@ jsdouble FASTCALL builtin_dmod(jsdouble a, jsdouble b)
    they either interact with the GC and depend on Spidermonkey's 32-bit
    integer representation. */
 
-jsval FASTCALL builtin_BoxDouble(JSContext* cx, jsdouble d)
+jsval FASTCALL
+js_BoxDouble(JSContext* cx, jsdouble d)
 {
     jsint i;
     if (JSDOUBLE_IS_INT(d, i))
@@ -96,7 +98,8 @@ jsval FASTCALL builtin_BoxDouble(JSContext* cx, jsdouble d)
     return v;
 }
 
-jsval FASTCALL builtin_BoxInt32(JSContext* cx, jsint i)
+jsval FASTCALL
+js_BoxInt32(JSContext* cx, jsint i)
 {
     if (JS_LIKELY(INT_FITS_IN_JSVAL(i)))
         return INT_TO_JSVAL(i);
@@ -109,46 +112,54 @@ jsval FASTCALL builtin_BoxInt32(JSContext* cx, jsint i)
     return v;
 } 
 
-jsdouble FASTCALL builtin_UnboxDouble(jsval v)
+jsdouble FASTCALL
+js_UnboxDouble(jsval v)
 {
     if (JS_LIKELY(JSVAL_IS_INT(v)))
         return (jsdouble)JSVAL_TO_INT(v);
     return *JSVAL_TO_DOUBLE(v);
 }
 
-jsint FASTCALL builtin_UnboxInt32(jsval v)
+jsint FASTCALL
+js_UnboxInt32(jsval v)
 {
     if (JS_LIKELY(JSVAL_IS_INT(v)))
         return JSVAL_TO_INT(v);
     return js_DoubleToECMAInt32(*JSVAL_TO_DOUBLE(v));
 }
 
-int32 FASTCALL builtin_doubleToInt32(jsdouble d)
+int32 FASTCALL
+js_DoubleToInt32(jsdouble d)
 {
     return js_DoubleToECMAInt32(d);
 }
 
-int32 FASTCALL builtin_doubleToUint32(jsdouble d)
+int32 FASTCALL
+js_DoubleToUint32(jsdouble d)
 {
     return js_DoubleToECMAUint32(d);
 }
 
-jsdouble FASTCALL builtin_Math_sin(jsdouble d)
+jsdouble FASTCALL
+js_Math_sin(jsdouble d)
 {
     return sin(d);
 }
 
-jsdouble FASTCALL builtin_Math_cos(jsdouble d)
+jsdouble FASTCALL
+js_Math_cos(jsdouble d)
 {
     return cos(d);
 }
 
-jsdouble FASTCALL builtin_Math_floor(jsdouble d)
+jsdouble FASTCALL
+js_Math_floor(jsdouble d)
 {
     return floor(d);
 }
 
-jsdouble FASTCALL builtin_Math_pow(jsdouble d, jsdouble p)
+jsdouble FASTCALL
+js_Math_pow(jsdouble d, jsdouble p)
 {
 #ifdef NOTYET
     /* XXX Need to get a NaN here without parameterizing on context all the time. */
@@ -160,12 +171,14 @@ jsdouble FASTCALL builtin_Math_pow(jsdouble d, jsdouble p)
     return pow(d, p);
 }
 
-jsdouble FASTCALL builtin_Math_sqrt(jsdouble d)
+jsdouble FASTCALL
+js_Math_sqrt(jsdouble d)
 {
     return sqrt(d);
 }
 
-bool FASTCALL builtin_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
+bool FASTCALL
+js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
 {
     JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
 
@@ -183,14 +196,14 @@ bool FASTCALL builtin_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i,
 }
 
 JSString* FASTCALL
-builtin_String_p_substring(JSContext* cx, JSString* str, jsint begin, jsint end)
+js_String_p_substring(JSContext* cx, JSString* str, jsint begin, jsint end)
 {
     JS_ASSERT(end >= begin);
     return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
 }
 
 JSString* FASTCALL
-builtin_String_p_substring_1(JSContext* cx, JSString* str, jsint begin)
+js_String_p_substring_1(JSContext* cx, JSString* str, jsint begin)
 {
     jsint end = JSSTRING_LENGTH(str);
     JS_ASSERT(end >= begin);
@@ -198,14 +211,13 @@ builtin_String_p_substring_1(JSContext* cx, JSString* str, jsint begin)
 }
 
 JSString* FASTCALL
-builtin_ConcatStrings(JSContext* cx, JSString* left, JSString* right)
+js_FastConcatStrings(JSContext* cx, JSString* left, JSString* right)
 {
-    /* XXX check for string freelist space */
-    return js_ConcatStrings(cx, left, right);
+    return js_ConcatStrings(cx, left, right, GCF_DONT_BLOCK);
 }
 
 JSString* FASTCALL
-builtin_String_getelem(JSContext* cx, JSString* str, jsint i)
+js_String_getelem(JSContext* cx, JSString* str, jsint i)
 {
     if ((size_t)i >= JSSTRING_LENGTH(str))
         return NULL;
@@ -214,7 +226,7 @@ builtin_String_getelem(JSContext* cx, JSString* str, jsint i)
 }
 
 JSString* FASTCALL
-builtin_String_fromCharCode(JSContext* cx, jsint i)
+js_String_fromCharCode(JSContext* cx, jsint i)
 {
     jschar c = (jschar)i;
     /* XXX check for string freelist space */
@@ -224,7 +236,7 @@ builtin_String_fromCharCode(JSContext* cx, jsint i)
 }
 
 jsint FASTCALL
-builtin_String_p_charCodeAt(JSString* str, jsint i)
+js_String_p_charCodeAt(JSString* str, jsint i)
 {
     if (i < 0 || (jsint)JSSTRING_LENGTH(str) <= i)
         return -1;
@@ -232,7 +244,7 @@ builtin_String_p_charCodeAt(JSString* str, jsint i)
 }
 
 jsdouble FASTCALL
-builtin_Math_random(JSRuntime* rt)
+js_Math_random(JSRuntime* rt)
 {
     JS_LOCK_RUNTIME(rt);
     js_random_init(rt);
@@ -242,28 +254,17 @@ builtin_Math_random(JSRuntime* rt)
 }
 
 JSString* FASTCALL
-builtin_String_p_concat_1int(JSContext* cx, JSString* str, jsint i)
+js_String_p_concat_1int(JSContext* cx, JSString* str, jsint i)
 {
+    // FIXME: should be able to use stack buffer and avoid istr...
     JSString* istr = js_NumberToString(cx, i);
     if (!istr)
         return NULL;
-    return js_ConcatStrings(cx, str, istr);
-}
-
-bool FASTCALL
-builtin_EqualStrings(JSString* str1, JSString* str2)
-{
-    return js_EqualStrings(str1, str2);
-}
-
-jsint FASTCALL
-builtin_CompareStrings(JSString* str1, JSString* str2)
-{
-    return js_CompareStrings(str1, str2);
+    return js_ConcatStrings(cx, str, istr, GCF_DONT_BLOCK);
 }
 
 jsdouble FASTCALL
-builtin_StringToNumber(JSContext* cx, JSString* str)
+js_StringToNumber(JSContext* cx, JSString* str)
 {
     const jschar* bp;
     const jschar* end;
@@ -281,7 +282,7 @@ builtin_StringToNumber(JSContext* cx, JSString* str)
 }
 
 jsint FASTCALL
-builtin_StringToInt32(JSContext* cx, JSString* str)
+js_StringToInt32(JSContext* cx, JSString* str)
 {
     const jschar* bp;
     const jschar* end;
@@ -295,7 +296,7 @@ builtin_StringToInt32(JSContext* cx, JSString* str)
 }
 
 jsval FASTCALL
-builtin_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
+js_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
 {
     jsval v;
     if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(STRING_TO_JSVAL(idstr)), &v))
@@ -304,27 +305,21 @@ builtin_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
 }
 
 bool FASTCALL
-builtin_Any_setelem(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
+js_Any_setelem(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
 {
     return OBJ_SET_PROPERTY(cx, obj, ATOM_TO_JSID(STRING_TO_JSVAL(idstr)), &v);
 }
 
 JSObject* FASTCALL
-builtin_ValueToIterator(JSContext* cx, jsval v)
+js_ValueToEnumerator(JSContext* cx, jsval v)
 {
     if (!js_ValueToIterator(cx, JSITER_ENUMERATE, &v))
         return NULL;
     return JSVAL_TO_OBJECT(v);
 }
 
-bool FASTCALL
-builtin_CloseIterator(JSContext* cx, jsval v)
-{
-    return js_CloseIterator(cx, v);
-}
-
 GuardRecord* FASTCALL
-builtin_CallTree(InterpState* state, Fragment* f)
+js_CallTree(InterpState* state, Fragment* f)
 {
     /* current we can't deal with inner trees that have globals so report an error */
     JS_ASSERT(!((TreeInfo*)f->vmprivate)->globalSlots.length());
@@ -334,7 +329,7 @@ builtin_CallTree(InterpState* state, Fragment* f)
 }
 
 JSObject* FASTCALL
-builtin_NewObject(JSContext* cx, JSObject* ctor)
+js_FastNewObject(JSContext* cx, JSObject* ctor)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(ctor));
 
@@ -367,7 +362,7 @@ builtin_NewObject(JSContext* cx, JSObject* ctor)
 }
 
 bool FASTCALL
-builtin_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
+js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
@@ -421,14 +416,14 @@ builtin_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 }
 
 JSString* FASTCALL
-builtin_TypeOfObject(JSContext* cx, JSObject* obj)
+js_TypeOfObject(JSContext* cx, JSObject* obj)
 {
     JSType type = JS_TypeOfValue(cx, OBJECT_TO_JSVAL(obj));
     return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
 }
 
 JSString* FASTCALL
-builtin_TypeOfBoolean(JSContext* cx, jsint unboxed)
+js_TypeOfBoolean(JSContext* cx, jsint unboxed)
 {
     jsval boxed = BOOLEAN_TO_JSVAL(unboxed);
     JS_ASSERT(JSVAL_IS_VOID(boxed) || JSVAL_IS_BOOLEAN(boxed));
@@ -447,13 +442,13 @@ builtin_TypeOfBoolean(JSContext* cx, jsint unboxed)
 #endif
 
 #define BUILTIN1(op, at0, atr, tr, t0, cse, fold) \
-    { (intptr_t)&builtin_##op, (at0 << 2) | atr, cse, fold NAME(op) },
+    { (intptr_t)&js_##op, (at0 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN2(op, at0, at1, atr, tr, t0, t1, cse, fold) \
-    { (intptr_t)&builtin_##op, (at0 << 4) | (at1 << 2) | atr, cse, fold NAME(op) },
+    { (intptr_t)&js_##op, (at0 << 4) | (at1 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN3(op, at0, at1, at2, atr, tr, t0, t1, t2, cse, fold) \
-    { (intptr_t)&builtin_##op, (at0 << 6) | (at1 << 4) | (at2 << 2) | atr, cse, fold NAME(op) },
+    { (intptr_t)&js_##op, (at0 << 6) | (at1 << 4) | (at2 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN4(op, at0, at1, at2, at3, atr, tr, t0, t1, t2, t3, cse, fold)    \
-    { (intptr_t)&builtin_##op, (at0 << 8) | (at1 << 6) | (at2 << 4) | (at3 << 2) | atr, cse, fold NAME(op) },
+    { (intptr_t)&js_##op, (at0 << 8) | (at1 << 6) | (at2 << 4) | (at3 << 2) | atr, cse, fold NAME(op) },
 
 struct CallInfo builtins[] = {
 #include "builtins.tbl"

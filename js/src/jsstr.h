@@ -48,6 +48,7 @@
  * string descriptor.  String descriptors are GC'ed, while their chars are
  * allocated from the malloc heap.
  */
+#include "jsstddef.h"
 #include <ctype.h>
 #include "jspubtd.h"
 #include "jsprvtd.h"
@@ -241,7 +242,8 @@ extern const jschar *
 js_GetStringChars(JSContext *cx, JSString *str);
 
 extern JSString *
-js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
+js_ConcatStrings(JSContext *cx, JSString *left, JSString *right,
+                 uintN gcflag __cplusplus_only( = 0));
 
 extern const jschar *
 js_UndependString(JSContext *cx, JSString *str);
@@ -443,7 +445,8 @@ extern const char js_encodeURIComponent_str[];
 
 /* GC-allocate a string descriptor for the given malloc-allocated chars. */
 extern JSString *
-js_NewString(JSContext *cx, jschar *chars, size_t length);
+js_NewString(JSContext *cx, jschar *chars, size_t length,
+             uintN gcflag __cplusplus_only( = 0));
 
 extern JSString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start,
@@ -502,18 +505,20 @@ js_ValueToSource(JSContext *cx, jsval v);
 extern uint32
 js_HashString(JSString *str);
 
+#ifdef __cplusplus
 /*
  * Test if strings are equal. The caller can call the function even if str1
  * or str2 are not GC-allocated things.
  */
-extern JSBool
+extern bool JS_FASTCALL
 js_EqualStrings(JSString *str1, JSString *str2);
+#endif
 
 /*
  * Return less than, equal to, or greater than zero depending on whether
  * str1 is less than, equal to, or greater than str2.
  */
-extern intN
+extern jsint JS_FASTCALL
 js_CompareStrings(JSString *str1, JSString *str2);
 
 /*
