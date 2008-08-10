@@ -3094,6 +3094,9 @@ JSBool
 js_str_charAt(JSContext* cx, uintN argc, jsval* vp);
 
 JSBool
+js_str_concat(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
 js_math_random(JSContext* cx, uintN argc, jsval* vp);
 
 JSBool
@@ -3207,6 +3210,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_str_charCodeAt,   F_String_p_charCodeAt,  "T",   "i",    FAIL_NEG, },
         { js_str_charAt,       F_String_getelem,       "TC",  "i",    FAIL_NULL, },
         { js_math_random,      F_Math_random,          "R",    "",    INFALLIBLE, },
+        { js_str_concat,       F_String_p_concat_1int, "TC",  "i",    FAIL_NULL, },
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {

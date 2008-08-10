@@ -241,6 +241,15 @@ builtin_Math_random(JSRuntime* rt)
     return z;
 }
 
+JSString* FASTCALL
+builtin_String_p_concat_1int(JSContext* cx, JSString* str, jsint i)
+{
+    JSString* istr = js_NumberToString(cx, i);
+    if (!istr)
+        return NULL;
+    return js_ConcatStrings(cx, str, istr);
+}
+
 bool FASTCALL
 builtin_EqualStrings(JSString* str1, JSString* str2)
 {
