@@ -143,6 +143,11 @@ jsdouble FASTCALL builtin_Math_cos(jsdouble d)
     return cos(d);
 }
 
+jsdouble FASTCALL builtin_Math_floor(jsdouble d)
+{
+    return floor(d);
+}
+
 jsdouble FASTCALL builtin_Math_pow(jsdouble d, jsdouble p)
 {
 #ifdef NOTYET
