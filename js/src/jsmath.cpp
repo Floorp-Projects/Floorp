@@ -283,8 +283,8 @@ math_exp(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_floor(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_floor(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -596,7 +596,7 @@ static JSFunctionSpec math_static_methods[] = {
     JS_FN("ceil",           math_ceil,          1, 0),
     JS_FN("cos",            js_math_cos,        1, 0),
     JS_FN("exp",            math_exp,           1, 0),
-    JS_FN("floor",          math_floor,         1, 0),
+    JS_FN("floor",          js_math_floor,      1, 0),
     JS_FN("log",            math_log,           1, 0),
     JS_FN("max",            math_max,           2, 0),
     JS_FN("min",            math_min,           2, 0),

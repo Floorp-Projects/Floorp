@@ -880,8 +880,8 @@ str_localeCompare(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-str_charAt(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_str_charAt(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval t;
     JSString *str;
@@ -2242,7 +2242,7 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("substring",         js_str_substring,      2,GENERIC_PRIMITIVE),
     JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
-    JS_FN("charAt",            str_charAt,            1,GENERIC_PRIMITIVE),
+    JS_FN("charAt",            js_str_charAt,         1,GENERIC_PRIMITIVE),
     JS_FN("charCodeAt",        js_str_charCodeAt,     1,GENERIC_PRIMITIVE),
     JS_FN("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE),
     JS_FN("lastIndexOf",       str_lastIndexOf,       1,GENERIC_PRIMITIVE),
