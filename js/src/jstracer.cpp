@@ -3589,7 +3589,14 @@ TraceRecorder::record_JSOP_CLOSURE()
 bool
 TraceRecorder::record_JSOP_OBJECT()
 {
-    return false;
+    JSStackFrame* fp = cx->fp;
+    JSScript* script = fp->script;
+    unsigned index = atoms - script->atomMap.vector + GET_INDEX(fp->regs->pc);
+
+    JSObject* obj;
+    JS_GET_SCRIPT_OBJECT(script, index, obj);
+    stack(0, lir->insImmPtr((void*) obj));
+    return true;
 }
 
 bool
