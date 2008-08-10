@@ -196,6 +196,16 @@ js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
 }
 
 JSString* FASTCALL
+js_Array_p_join(JSContext* cx, JSObject* obj, JSString *str)
+{
+    jsval v;
+    if (!js_array_join_sub(cx, obj, TO_STRING, str, &v))
+        return NULL;
+    JS_ASSERT(JSVAL_IS_STRING(v));
+    return JSVAL_TO_STRING(v);
+}
+
+JSString* FASTCALL
 js_String_p_substring(JSContext* cx, JSString* str, jsint begin, jsint end)
 {
     JS_ASSERT(end >= begin);
