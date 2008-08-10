@@ -124,7 +124,7 @@ js_GetStringChars(JSContext *cx, JSString *str)
 }
 
 JSString *
-js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
+js_ConcatStrings(JSContext *cx, JSString *left, JSString *right, uintN gcflag)
 {
     size_t rn, ln, lrdist, n;
     jschar *rs, *ls, *s;
@@ -164,7 +164,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
     js_strncpy(s + ln, rs, rn);
     n = ln + rn;
     s[n] = 0;
-    str = js_NewString(cx, s, n);
+    str = js_NewString(cx, s, n, gcflag);
     if (!str) {
         /* Out of memory: clean up any space we (re-)allocated. */
         if (!ldep) {
@@ -2502,7 +2502,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 }
 
 JSString *
-js_NewString(JSContext *cx, jschar *chars, size_t length)
+js_NewString(JSContext *cx, jschar *chars, size_t length, uintN gcflag)
 {
     JSString *str;
 
@@ -2511,7 +2511,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
         return NULL;
     }
 
-    str = (JSString *) js_NewGCThing(cx, GCX_STRING, sizeof(JSString));
+    str = (JSString *) js_NewGCThing(cx, gcflag | GCX_STRING, sizeof(JSString));
     if (!str)
         return NULL;
     JSFLATSTR_INIT(str, chars, length);
@@ -2805,7 +2805,7 @@ js_HashString(JSString *str)
 /*
  * str is not necessarily a GC thing here.
  */
-JSBool
+bool JS_FASTCALL
 js_EqualStrings(JSString *str1, JSString *str2)
 {
     size_t n;
@@ -2835,7 +2835,7 @@ js_EqualStrings(JSString *str1, JSString *str2)
     return JS_TRUE;
 }
 
-intN
+jsint JS_FASTCALL
 js_CompareStrings(JSString *str1, JSString *str2)
 {
     size_t l1, l2, n, i;
