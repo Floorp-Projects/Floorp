@@ -1190,10 +1190,12 @@ nsDocShell::SetChromeEventHandler(nsIDOMEventTarget* aChromeEventHandler)
     // Weak reference. Don't addref.
     mChromeEventHandler = piTarget;
 
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
-    if (win) {
-        win->SetChromeEventHandler(piTarget);
-    }
+    NS_ASSERTION(!mScriptGlobal,
+                 "SetChromeEventHandler() called after the script global "
+                 "object was created! This means that the script global "
+                 "object in this docshell won't get the right chrome event "
+                 "handler. You really don't want to see this assert, FIX "
+                 "YOUR CODE!");
 
     return NS_OK;
 }
