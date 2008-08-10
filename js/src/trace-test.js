@@ -505,30 +505,30 @@ function MyConstructor(i)
 }
 MyConstructor.prototype.toString = function() {return this.i + ""};
 
-function NewTest()
+function newTest()
 {
   var a = [];
   for (var i = 0; i < 10; i++)
     a[i] = new MyConstructor(i);
   return a.join("");
 }
-NewTest.expected = "0123456789";
-test(NewTest);
+newTest.expected = "0123456789";
+test(newTest);
 
-function ShapelessArgCalleeLoop(f, a)
+function shapelessArgCalleeLoop(f, a)
 {
   for (var i = 0; i < 10; i++)
     f(i, a);
 }
 
-function ShapelessVarCalleeLoop(f, a)
+function shapelessVarCalleeLoop(f, a)
 {
   var g = f;
   for (var i = 0; i < 10; i++)
     g(i, a);
 }
 
-function ShapelessLetCalleeLoop(f, a)
+function shapelessLetCalleeLoop(f, a)
 {
   for (var i = 0; i < 10; i++) {
     let g = f;
@@ -536,7 +536,7 @@ function ShapelessLetCalleeLoop(f, a)
   }
 }
 
-function ShapelessUnknownCalleeLoop(f, g, a)
+function shapelessUnknownCalleeLoop(f, g, a)
 {
   for (var i = 0; i < 10; i++) {
     (f || g)(i, a);
@@ -544,23 +544,23 @@ function ShapelessUnknownCalleeLoop(f, g, a)
   }
 }
 
-function ShapelessCalleeTest()
+function shapelessCalleeTest()
 {
   var a = [];
-  ShapelessArgCalleeLoop(function (i, a) a[i] = i, a);
-  ShapelessVarCalleeLoop(function (i, a) a[10 + i] = i, a);
-  ShapelessLetCalleeLoop(function (i, a) a[20 + i] = i, a);
-  ShapelessUnknownCalleeLoop(null, function (i, a) a[30 + i] = i, a);
+  shapelessArgCalleeLoop(function (i, a) a[i] = i, a);
+  shapelessVarCalleeLoop(function (i, a) a[10 + i] = i, a);
+  shapelessLetCalleeLoop(function (i, a) a[20 + i] = i, a);
+  shapelessUnknownCalleeLoop(null, function (i, a) a[30 + i] = i, a);
   try {
-    ShapelessUnknownCalleeLoop(null, {hack: 42}, a);
+    shapelessUnknownCalleeLoop(null, {hack: 42}, a);
   } catch (e) {
     if (e + "" != "TypeError: g is not a function")
-      print("ShapelessUnknownCalleeLoop: unexpected exception " + e);
+      print("shapelessUnknownCalleeLoop: unexpected exception " + e);
   }
   return a.join("");
 }
-ShapelessCalleeTest.expected = "0123456789012345678901234567890123456789";
-test(ShapelessCalleeTest);
+shapelessCalleeTest.expected = "0123456789012345678901234567890123456789";
+test(shapelessCalleeTest);
 
 function typeofTest()
 {
