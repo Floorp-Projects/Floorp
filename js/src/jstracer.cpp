@@ -2791,16 +2791,18 @@ TraceRecorder::record_JSOP_NEW()
     /*
      * Require that the callee be a function object, to avoid guarding on its
      * class here. We know if the callee and this were pushed by JSOP_CALLNAME
-     * or JSOP_CALLPROP that callee is a function since these hit the property
-     * cache and guard on the object (this) in which the callee was found.
+     * or JSOP_CALLPROP that callee is a *particular* function, since these hit
+     * the property cache and guard on the object (this) in which the callee
+     * was found. So it's sufficient to test here that the particular function
+     * is interpreted, not guard on that condition.
      *
-     * Other bytecode sequences that push [callee, this] must guard on callee
-     * class being "function".
+     * Bytecode sequences that push shapeless callees must guard on the callee
+     * class being Function and the function being interpreted.
      */
     JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
     JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v));
 
-    if (guardInterpretedFunction(fun, get(&v))) {
+    if (FUN_INTERPRETED(fun)) {
         LIns* args[] = { get(&v), cx_ins };
         LIns* tv_ins = lir->insCall(F_FastNewObject, args);
         guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
@@ -3223,16 +3225,18 @@ TraceRecorder::record_JSOP_CALL()
     /*
      * Require that the callee be a function object, to avoid guarding on its
      * class here. We know if the callee and this were pushed by JSOP_CALLNAME
-     * or JSOP_CALLPROP that callee is a function since these hit the property
-     * cache and guard on the object (this) in which the callee was found.
+     * or JSOP_CALLPROP that callee is a *particular* function, since these hit
+     * the property cache and guard on the object (this) in which the callee
+     * was found. So it's sufficient to test here that the particular function
+     * is interpreted, not guard on that condition.
      *
-     * Other bytecode sequences that push [callee, this] must guard on callee
-     * class being "function".
+     * Bytecode sequences that push shapeless callees must guard on the callee
+     * class being Function and the function being interpreted.
      */
     JS_ASSERT(VALUE_IS_FUNCTION(cx, fval));
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
 
-    if (guardInterpretedFunction(fun, get(&fval)))
+    if (FUN_INTERPRETED(fun))
         return interpretedFunctionCall(fval, fun, argc);
 
     // XXXbe need to guard this condition
