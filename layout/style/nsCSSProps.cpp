@@ -68,12 +68,25 @@ const char* const kCSSRawProperties[] = {
 
 static PRInt32 gTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gPropertyTable;
+static nsStaticCaseInsensitiveNameTable* gFontDescTable;
+
+// Keep in sync with enum nsCSSFontDesc in nsCSSProperty.h.
+static const char* const kCSSRawFontDescs[] = {
+  "font-family",
+  "font-style",
+  "font-weight",
+  "font-stretch",
+  "src",
+  "unicode-range"
+};
 
 void
 nsCSSProps::AddRefTable(void) 
 {
   if (0 == gTableRefCount++) {
     NS_ASSERTION(!gPropertyTable, "pre existing array!");
+    NS_ASSERTION(!gFontDescTable, "pre existing array!");
+
     gPropertyTable = new nsStaticCaseInsensitiveNameTable();
     if (gPropertyTable) {
 #ifdef DEBUG
@@ -83,12 +96,29 @@ nsCSSProps::AddRefTable(void)
         nsCAutoString temp1(kCSSRawProperties[index]);
         nsCAutoString temp2(kCSSRawProperties[index]);
         ToLowerCase(temp1);
-        NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
-        NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in table");
+        NS_ASSERTION(temp1.Equals(temp2), "upper case char in prop table");
+        NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in prop table");
       }
     }
 #endif      
-      gPropertyTable->Init(kCSSRawProperties, eCSSProperty_COUNT); 
+      gPropertyTable->Init(kCSSRawProperties, eCSSProperty_COUNT);
+    }
+
+    gFontDescTable = new nsStaticCaseInsensitiveNameTable();
+    if (gFontDescTable) {
+#ifdef DEBUG
+    {
+      // let's verify the table...
+      for (PRInt32 index = 0; index < eCSSFontDesc_COUNT; ++index) {
+        nsCAutoString temp1(kCSSRawFontDescs[index]);
+        nsCAutoString temp2(kCSSRawFontDescs[index]);
+        ToLowerCase(temp1);
+        NS_ASSERTION(temp1.Equals(temp2), "upper case char in desc table");
+        NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in desc table");
+      }
+    }
+#endif      
+      gFontDescTable->Init(kCSSRawFontDescs, eCSSFontDesc_COUNT); 
     }
   }
 }
@@ -100,6 +130,10 @@ nsCSSProps::ReleaseTable(void)
     if (gPropertyTable) {
       delete gPropertyTable;
       gPropertyTable = nsnull;
+    }
+    if (gFontDescTable) {
+      delete gFontDescTable;
+      gFontDescTable = nsnull;
     }
   }
 }
@@ -160,12 +194,38 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
   return res;
 }
 
+nsCSSFontDesc 
+nsCSSProps::LookupFontDesc(const nsACString& aFontDesc)
+{
+  NS_ASSERTION(gFontDescTable, "no lookup table, needs addref");
+  return nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
+}
+
+nsCSSFontDesc 
+nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
+{
+  NS_ASSERTION(gFontDescTable, "no lookup table, needs addref");
+  return nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
+}
+
 const nsAFlatCString& 
 nsCSSProps::GetStringValue(nsCSSProperty aProperty)
 {
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
   if (gPropertyTable) {
     return gPropertyTable->GetStringValue(PRInt32(aProperty));
+  } else {
+    static nsDependentCString sNullStr("");
+    return sNullStr;
+  }
+}
+
+const nsAFlatCString& 
+nsCSSProps::GetStringValue(nsCSSFontDesc aFontDescID)
+{
+  NS_ASSERTION(gFontDescTable, "no lookup table, needs addref");
+  if (gFontDescTable) {
+    return gFontDescTable->GetStringValue(PRInt32(aFontDescID));
   } else {
     static nsDependentCString sNullStr("");
     return sNullStr;
