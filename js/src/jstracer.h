@@ -257,7 +257,8 @@ class TraceRecorder {
     bool bbinary(nanojit::LOpcode op);
     void demote(jsval& v, jsdouble result);
 
-    bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins, nanojit::LIns*& ops_ins);
+    bool map_is_native(JSObjectMap* map, nanojit::LIns* map_ins, nanojit::LIns*& ops_ins,
+                       size_t op_offset = 0);
     bool test_property_cache(JSObject* obj, nanojit::LIns* obj_ins, JSObject*& obj2,
                              jsuword& pcval);
     bool test_property_cache_direct_slot(JSObject* obj, nanojit::LIns* obj_ins, uint32& slot);
