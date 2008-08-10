@@ -247,6 +247,12 @@ builtin_EqualStrings(JSString* str1, JSString* str2)
     return js_EqualStrings(str1, str2);
 }
 
+jsint FASTCALL
+builtin_CompareStrings(JSString* str1, JSString* str2)
+{
+    return js_CompareStrings(str1, str2);
+}
+
 jsdouble FASTCALL
 builtin_StringToNumber(JSContext* cx, JSString* str)
 {
