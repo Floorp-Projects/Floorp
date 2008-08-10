@@ -1967,8 +1967,8 @@ str_substr(JSContext *cx, uintN argc, jsval *vp)
 /*
  * Python-esque sequence operations.
  */
-static JSBool
-str_concat(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_str_concat(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str, *str2;
     jsval *argv;
@@ -2260,7 +2260,7 @@ static JSFunctionSpec string_methods[] = {
 #endif
 
     /* Python-esque sequence methods. */
-    JS_FN("concat",            str_concat,            1,GENERIC_PRIMITIVE),
+    JS_FN("concat",            js_str_concat,         1,GENERIC_PRIMITIVE),
     JS_FN("slice",             str_slice,             2,GENERIC_PRIMITIVE),
 
     /* HTML string methods. */
