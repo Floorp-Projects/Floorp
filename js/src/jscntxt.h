@@ -93,19 +93,25 @@ typedef struct JSGSNCache {
 #define JS_CLEAR_GSN_CACHE(cx)      GSN_CACHE_CLEAR(&JS_GSN_CACHE(cx))
 #define JS_METER_GSN_CACHE(cx,cnt)  GSN_CACHE_METER(&JS_GSN_CACHE(cx), cnt)
 
+#ifdef __cplusplus
 namespace nanojit {
     class Fragment;
     class Fragmento;
 }
 class TraceRecorder;
 
+# define CLS(T)  T*
+#else
+# define CLS(T)  void*
+#endif
+
 /* 
  * Fragment quick cache entry.
  */
-struct JSFragmentCacheEntry {
+typedef struct JSFragmentCacheEntry {
     jsbytecode*             pc;
-    nanojit::Fragment*      fragment;
-};
+    CLS(nanojit::Fragment)  fragment;
+} JSFragmentCacheEntry;
 
 #define JS_FRAGMENT_CACHE_LOG2  2
 #define JS_FRAGMENT_CACHE_SIZE  JS_BIT(JS_FRAGMENT_CACHE_LOG2)
@@ -116,11 +122,11 @@ struct JSFragmentCacheEntry {
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
  * frequencies for all JavaScript code loaded into that runtime.
  */
-struct JSTraceMonitor {
-    nanojit::Fragmento*     fragmento;
-    TraceRecorder*          recorder;
+typedef struct JSTraceMonitor {
+    CLS(nanojit::Fragmento) fragmento;
+    CLS(TraceRecorder)      recorder;
     JSFragmentCacheEntry    fcache[JS_FRAGMENT_CACHE_SIZE];
-};
+} JSTraceMonitor;
 
 #ifdef JS_THREADSAFE
 
