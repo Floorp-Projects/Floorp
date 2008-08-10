@@ -3246,19 +3246,21 @@ TraceRecorder::record_JSOP_CALL()
         const char  *prefix;
         const char  *argtypes;
         JSTNErrType  errtype;
+        JSClass     *tclasp;
     } knownNatives[] = {
-        { js_math_sin,         F_Math_sin,             "",    "d",    INFALLIBLE, },
-        { js_math_cos,         F_Math_cos,             "",    "d",    INFALLIBLE, },
-        { js_math_pow,         F_Math_pow,             "",   "dd",    INFALLIBLE, },
-        { js_math_sqrt,        F_Math_sqrt,            "",    "d",    INFALLIBLE, },
-        { js_math_floor,       F_Math_floor,           "",    "d",    INFALLIBLE, },
-        { js_str_substring,    F_String_p_substring,   "TC", "ii",    FAIL_NULL, },
-        { js_str_substring,    F_String_p_substring_1, "TC",  "i",    FAIL_NULL, },
-        { js_str_fromCharCode, F_String_fromCharCode,  "C",   "i",    FAIL_NULL, },
-        { js_str_charCodeAt,   F_String_p_charCodeAt,  "T",   "i",    FAIL_NEG, },
-        { js_str_charAt,       F_String_getelem,       "TC",  "i",    FAIL_NULL, },
-        { js_math_random,      F_Math_random,          "R",    "",    INFALLIBLE, },
-        { js_str_concat,       F_String_p_concat_1int, "TC",  "i",    FAIL_NULL, },
+        { js_math_sin,         F_Math_sin,             "",    "d",    INFALLIBLE, NULL },
+        { js_math_cos,         F_Math_cos,             "",    "d",    INFALLIBLE, NULL },
+        { js_math_pow,         F_Math_pow,             "",   "dd",    INFALLIBLE, NULL },
+        { js_math_sqrt,        F_Math_sqrt,            "",    "d",    INFALLIBLE, NULL },
+        { js_math_floor,       F_Math_floor,           "",    "d",    INFALLIBLE, NULL },
+        { js_str_substring,    F_String_p_substring,   "TC", "ii",    FAIL_NULL,  NULL },
+        { js_str_substring,    F_String_p_substring_1, "TC",  "i",    FAIL_NULL,  NULL },
+        { js_str_fromCharCode, F_String_fromCharCode,  "C",   "i",    FAIL_NULL,  NULL },
+        { js_str_charCodeAt,   F_String_p_charCodeAt,  "T",   "i",    FAIL_NEG,   NULL },
+        { js_str_charAt,       F_String_getelem,       "TC",  "i",    FAIL_NULL,  NULL },
+        { js_math_random,      F_Math_random,          "R",    "",    INFALLIBLE, NULL },
+        { js_str_concat,       F_String_p_concat_1int, "TC",  "i",    FAIL_NULL,  NULL },
+        { js_array_join,       F_Array_p_join,         "TC",  "s",    FAIL_NULL,  NULL },
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
@@ -3275,7 +3277,14 @@ TraceRecorder::record_JSOP_CALL()
         LIns** argp = &args[argc + prefixc - 1];
         char argtype;
 
-        LIns* thisval_ins = stack(0 - (argc + 1));
+        jsval& thisval = stackval(0 - (argc + 1));
+        LIns* thisval_ins = get(&thisval);
+        if (known->tclasp) {
+            if (JSVAL_IS_PRIMITIVE(thisval))
+                ABORT_TRACE("known native with class guard called on primitive this");
+            if (!guardClass(JSVAL_TO_OBJECT(thisval), thisval_ins, known->tclasp))
+                return false;
+        }
 
 #define HANDLE_PREFIX(i)                                                       \
         argtype = known->prefix[i];                                            \
@@ -3308,11 +3317,17 @@ TraceRecorder::record_JSOP_CALL()
 #define HANDLE_ARG(i)                                                          \
         argtype = known->argtypes[i];                                          \
         if (argtype == 'd' || argtype == 'i') {                                \
-            if (!isNumber(stackval(-(i + 1))))                                 \
+            jsval& arg = stackval(-(i + 1));                                   \
+            if (!isNumber(arg))                                                \
                 ABORT_TRACE("arg in position " #i " must be numeric");         \
-            *argp = get(&stackval(-(i + 1)));                                  \
+            *argp = get(&arg);                                                 \
             if (argtype == 'i')                                                \
                 *argp = f2i(*argp);                                            \
+        } else if (argtype == 's') {                                           \
+            jsval& arg = stackval(-(i + 1));                                   \
+            if (!JSVAL_IS_STRING(arg))                                         \
+                ABORT_TRACE("arg in position " #i " must be a string");        \
+            *argp = get(&arg);                                                 \
         } else {                                                               \
             JS_NOT_REACHED("unknown arg type");                                \
         }                                                                      \

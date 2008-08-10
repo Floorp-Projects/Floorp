@@ -123,6 +123,19 @@ extern JSBool
 js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 #endif
 
+extern JSBool
+js_array_join(JSContext *cx, uintN argc, jsval *vp);
+
+enum ArrayToStringOp {
+    TO_STRING,
+    TO_LOCALE_STRING,
+    TO_SOURCE
+};
+
+extern JSBool
+js_array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
+                  JSString *sep, jsval *rval);
+
 JS_END_EXTERN_C
 
 #endif /* jsarray_h___ */
