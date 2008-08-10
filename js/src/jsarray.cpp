@@ -1183,20 +1183,14 @@ out_bad:
     return JS_FALSE;
 }
 
-enum ArrayToStringOp {
-    TO_STRING,
-    TO_LOCALE_STRING,
-    TO_SOURCE
-};
-
 /*
  * When op is TO_STRING or TO_LOCALE_STRING sep indicates a separator to use
  * or "," when sep is NULL.
  * When op is TO_SOURCE sep must be NULL.
  */
-static JSBool
-array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
-               JSString *sep, jsval *rval)
+JSBool
+js_array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
+                  JSString *sep, jsval *rval)
 {
     JSBool ok, hole;
     jsuint length, index;
@@ -1414,7 +1408,7 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
         !JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2)) {
         return JS_FALSE;
     }
-    return array_join_sub(cx, obj, TO_SOURCE, NULL, vp);
+    return js_array_join_sub(cx, obj, TO_SOURCE, NULL, vp);
 }
 #endif
 
@@ -1428,7 +1422,7 @@ array_toString(JSContext *cx, uintN argc, jsval *vp)
         !JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2)) {
         return JS_FALSE;
     }
-    return array_join_sub(cx, obj, TO_STRING, NULL, vp);
+    return js_array_join_sub(cx, obj, TO_STRING, NULL, vp);
 }
 
 static JSBool
@@ -1446,7 +1440,7 @@ array_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
      *  Passing comma here as the separator. Need a way to get a
      *  locale-specific version.
      */
-    return array_join_sub(cx, obj, TO_LOCALE_STRING, NULL, vp);
+    return js_array_join_sub(cx, obj, TO_LOCALE_STRING, NULL, vp);
 }
 
 static JSBool
@@ -1505,8 +1499,8 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector,
 /*
  * Perl-inspired join, reverse, and sort.
  */
-static JSBool
-array_join(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_array_join(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     JSObject *obj;
@@ -1520,7 +1514,7 @@ array_join(JSContext *cx, uintN argc, jsval *vp)
         vp[2] = STRING_TO_JSVAL(str);
     }
     obj = JS_THIS_OBJECT(cx, vp);
-    return obj && array_join_sub(cx, obj, TO_STRING, str, vp);
+    return obj && js_array_join_sub(cx, obj, TO_STRING, str, vp);
 }
 
 static JSBool
@@ -2880,7 +2874,7 @@ static JSFunctionSpec array_methods[] = {
     JS_FN(js_toLocaleString_str,array_toLocaleString,0,0),
 
     /* Perl-ish methods. */
-    JS_FN("join",               array_join,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("join",               js_array_join,      1,JSFUN_GENERIC_NATIVE),
     JS_FN("reverse",            array_reverse,      0,JSFUN_GENERIC_NATIVE),
     JS_FN("sort",               array_sort,         1,JSFUN_GENERIC_NATIVE),
     JS_FN("push",               array_push,         1,JSFUN_GENERIC_NATIVE),
