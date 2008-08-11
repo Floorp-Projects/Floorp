@@ -894,17 +894,6 @@ if [ ! "$MOZ_NATIVE_LCMS" ] ; then
   "
 fi
 
-if [ "$SUNCTL" ] ; then
-  add_makefiles "
-    intl/ctl/Makefile
-    intl/ctl/public/Makefile
-    intl/ctl/src/Makefile
-    intl/ctl/src/pangoLite/Makefile
-    intl/ctl/src/thaiShaper/Makefile
-    intl/ctl/src/hindiShaper/Makefile
-  "
-fi
-
 if [ "$MOZ_UNIVERSALCHARDET" ] ; then
   add_makefiles "
     extensions/universalchardet/Makefile
