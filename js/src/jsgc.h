@@ -94,13 +94,6 @@ JS_STATIC_ASSERT(GCX_NTYPES <= GCX_LIMIT);
 #define GCF_LOCK        JS_BIT(GCF_LOCKSHIFT)   /* lock request bit in API */
 
 /*
- * Pseudo-flag, not stored but passed into js_NewGCThing, to prevent last-ditch
- * collection when up against runtime memory limits. This also suppresses calls
- * to JS_ReportOutOfMemory when failing due to runtime limits.
- */
-#define GCF_DONT_BLOCK  0x100
-
-/*
  * Get the type of the external string or -1 if the string was not created
  * with JS_NewExternalString.
  */
