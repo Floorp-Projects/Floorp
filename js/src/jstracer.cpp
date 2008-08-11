@@ -1290,11 +1290,6 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 #endif
 }
 
-static void
-addDependentTree(Fragment* master, Fragment* slave)
-{
-}
-
 /* Record a call to an inner tree. */
 void
 TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
@@ -1618,6 +1613,7 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
             js_AbortRecording(cx, oldpc, "Inner tree is trying to grow, abort outer recording");
             return js_AttemptToExtendTree(cx, lr, lr->from);
         default:
+            debug_only(printf("exit_type=%d\n", lr->exit->exitType);)
             js_AbortRecording(cx, oldpc, "Inner tree not suitable for calling");
             return false;
         }
