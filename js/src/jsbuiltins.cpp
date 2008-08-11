@@ -90,8 +90,7 @@ js_BoxDouble(JSContext* cx, jsdouble d)
     jsint i;
     if (JSDOUBLE_IS_INT(d, i))
         return INT_TO_JSVAL(i);
-    if (!cx->doubleFreeList) /* we must be certain the GC won't kick in */
-        return JSVAL_ERROR_COOKIE;
+    JS_ASSERT(cx->gcDontBlock);
     jsval v; /* not rooted but ok here because we know GC won't run */
     if (!js_NewDoubleInRootedValue(cx, d, &v))
         return JSVAL_ERROR_COOKIE;
@@ -103,8 +102,7 @@ js_BoxInt32(JSContext* cx, jsint i)
 {
     if (JS_LIKELY(INT_FITS_IN_JSVAL(i)))
         return INT_TO_JSVAL(i);
-    if (!cx->doubleFreeList) /* we must be certain the GC won't kick in */
-        return JSVAL_ERROR_COOKIE;
+    JS_ASSERT(cx->gcDontBlock);
     jsval v; /* not rooted but ok here because we know GC won't run */
     jsdouble d = (jsdouble)i;
     if (!js_NewDoubleInRootedValue(cx, d, &v))
@@ -209,6 +207,7 @@ JSString* FASTCALL
 js_String_p_substring(JSContext* cx, JSString* str, jsint begin, jsint end)
 {
     JS_ASSERT(end >= begin);
+    JS_ASSERT(cx->gcDontBlock);
     return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
 }
 
@@ -217,13 +216,8 @@ js_String_p_substring_1(JSContext* cx, JSString* str, jsint begin)
 {
     jsint end = JSSTRING_LENGTH(str);
     JS_ASSERT(end >= begin);
+    JS_ASSERT(cx->gcDontBlock);
     return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
-}
-
-JSString* FASTCALL
-js_FastConcatStrings(JSContext* cx, JSString* left, JSString* right)
-{
-    return js_ConcatStrings(cx, left, right, GCF_DONT_BLOCK);
 }
 
 JSString* FASTCALL
@@ -231,15 +225,14 @@ js_String_getelem(JSContext* cx, JSString* str, jsint i)
 {
     if ((size_t)i >= JSSTRING_LENGTH(str))
         return NULL;
-    /* XXX check for string freelist space */
     return js_GetUnitString(cx, str, (size_t)i);
 }
 
 JSString* FASTCALL
 js_String_fromCharCode(JSContext* cx, jsint i)
 {
+    JS_ASSERT(cx->gcDontBlock);
     jschar c = (jschar)i;
-    /* XXX check for string freelist space */
     if (c < UNIT_STRING_LIMIT)
         return js_GetUnitStringForChar(cx, c);
     return js_NewStringCopyN(cx, &c, 1);
@@ -270,7 +263,7 @@ js_String_p_concat_1int(JSContext* cx, JSString* str, jsint i)
     JSString* istr = js_NumberToString(cx, i);
     if (!istr)
         return NULL;
-    return js_ConcatStrings(cx, str, istr, GCF_DONT_BLOCK);
+    return js_ConcatStrings(cx, str, istr);
 }
 
 jsdouble FASTCALL
@@ -348,7 +341,8 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, ctor);
     JSClass* clasp = FUN_INTERPRETED(fun) ? &js_ObjectClass : fun->u.n.clasp;
 
-    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCF_DONT_BLOCK | GCX_OBJECT, sizeof(JSObject));
+    JS_ASSERT(cx->gcDontBlock);
+    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
     if (!obj)
         return NULL;
 
