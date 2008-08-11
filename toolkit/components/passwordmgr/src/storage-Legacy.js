@@ -513,6 +513,14 @@ LoginManagerStorage_legacy.prototype = {
         if (badCharacterPresent(aLogin, "\0"))
             throw "login values can't contain nulls";
 
+        // In theory these nulls should just be rolled up into the encrypted
+        // values, but nsISecretDecoderRing doesn't use nsStrings, so the
+        // nulls cause truncation. Check for them here just to avoid
+        // unexpected round-trip surprises.
+        if (aLogin.username.indexOf("\0") != -1 ||
+            aLogin.password.indexOf("\0") != -1)
+            throw "login values can't contain nulls";
+
         // Newlines are invalid for any field stored as plaintext.
         if (badCharacterPresent(aLogin, "\r") ||
             badCharacterPresent(aLogin, "\n"))
