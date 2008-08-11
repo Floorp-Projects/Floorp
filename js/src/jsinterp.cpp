@@ -4176,7 +4176,7 @@ js_Interpret(JSContext *cx)
                 if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
                     PROPERTY_CACHE_TEST(cx, regs.pc, aobj, obj2, entry, atom);
                     if (!atom) {
-                        ASSERT_VALID_PROPERTY_CACHE_HIT(0, aobj, obj2, entry);
+                        ASSERT_VALID_PROPERTY_CACHE_HIT(i, aobj, obj2, entry);
                         if (PCVAL_IS_OBJECT(entry->vword)) {
                             rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
                         } else if (PCVAL_IS_SLOT(entry->vword)) {
