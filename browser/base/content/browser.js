@@ -6719,6 +6719,13 @@ let DownloadMonitorPanel = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadProgressListener]),
 };
 
+function getNotificationBox(aWindow) {
+  var foundBrowser = gBrowser.getBrowserForDocument(aWindow.document);
+  if (foundBrowser)
+    return gBrowser.getNotificationBox(foundBrowser)
+  return null;
+};
+
 /* DEPRECATED */
 function getBrowser() gBrowser;
 function getNavToolbox() gNavToolbox;
