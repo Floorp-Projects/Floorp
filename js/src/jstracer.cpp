@@ -2811,10 +2811,8 @@ TraceRecorder::record_JSOP_NEW()
         return interpretedFunctionCall(v, fun, argc);
     }
 
-    if (fun->u.n.clasp) {
+    if (fun->u.n.clasp)
         ABORT_TRACE("NYI");
-        return true;
-    }
 
     ABORT_TRACE("can't trace unknown constructor");
 }
