@@ -3119,68 +3119,16 @@ TraceRecorder::record_JSOP_CALLNAME()
     return true;
 }
 
-JSBool
-js_math_sin(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_math_cos(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_math_pow(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_math_sqrt(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_str_substring(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_str_fromCharCode(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_str_charCodeAt(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_str_charAt(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_str_concat(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_math_random(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_math_floor(JSContext* cx, uintN argc, jsval* vp);
-
-bool
-TraceRecorder::guardInterpretedFunction(JSFunction* fun, LIns* fun_ins)
-{
-    if (FUN_INTERPRETED(fun)) {
-        guard(false,
-              lir->ins_eq0(lir->ins2(LIR_and,
-                                     lir->insLoadi(fun_ins, offsetof(JSFunction, flags) & ~3),
-                                     lir->insImm(
-#ifdef IS_LITTLE_ENDIAN
-                                                 JSFUN_INTERPRETED << 16
-#else
-                                                 JSFUN_INTERPRETED
-#endif
-                                     ))));
-        return true;
-    }
-    return false;
-}
-
 bool
 TraceRecorder::guardShapelessCallee(jsval& callee)
 {
-    if (JSVAL_IS_PRIMITIVE(callee))
-        return false;
+    if (!VALUE_IS_FUNCTION(cx, callee))
+        ABORT_TRACE("shapeless callee is not a function");
 
-    JSObject* callee_obj = JSVAL_TO_OBJECT(callee);
-    LIns* callee_ins = get(&callee);
-    return guardClass(callee_obj, callee_ins, &js_FunctionClass) &&
-           guardInterpretedFunction(GET_FUNCTION_PRIVATE(cx, callee_obj), callee_ins);
+    guard(true,
+          addName(lir->ins2(LIR_eq, get(&callee), lir->insImmPtr((void*) JSVAL_TO_OBJECT(callee))),
+                  "guard(shapeless callee)"));
+    return true;
 }
 
 bool
@@ -3215,6 +3163,39 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
     atoms = fun->u.i.script->atomMap.vector;
     return true;
 }
+
+JSBool
+js_math_sin(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_math_cos(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_math_pow(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_math_sqrt(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_str_substring(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_str_fromCharCode(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_str_charCodeAt(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_str_charAt(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_str_concat(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_math_random(JSContext* cx, uintN argc, jsval* vp);
+
+JSBool
+js_math_floor(JSContext* cx, uintN argc, jsval* vp);
 
 bool
 TraceRecorder::record_JSOP_CALL()
@@ -4761,10 +4742,10 @@ TraceRecorder::record_JSOP_CALLGVAR()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    jsval* vp = &STOBJ_GET_SLOT(cx->fp->scopeChain, slot);
-    stack(0, get(vp));
+    jsval& v = STOBJ_GET_SLOT(cx->fp->scopeChain, slot);
+    stack(0, get(&v));
     stack(1, lir->insImmPtr(NULL));
-    return record_JSOP_GETGVAR() && guardShapelessCallee(*vp);
+    return guardShapelessCallee(v);
 }
 
 bool
@@ -4783,6 +4764,13 @@ TraceRecorder::record_JSOP_CALLARG()
     stack(0, arg(slot));
     stack(1, lir->insImmPtr(NULL));
     return guardShapelessCallee(argval(slot));
+}
+
+bool
+TraceRecorder::record_JSOP_NULLTHIS()
+{
+    stack(0, lir->insImmPtr(NULL));
+    return guardShapelessCallee(stackval(-1));
 }
 
 bool
@@ -4847,7 +4835,6 @@ TraceRecorder::record_JSOP_HOLE()
 
 #define UNUSED(op) bool TraceRecorder::record_##op() { return false; }
 
-UNUSED(JSOP_UNUSED75)
 UNUSED(JSOP_UNUSED76)
 UNUSED(JSOP_UNUSED77)
 UNUSED(JSOP_UNUSED78)
