@@ -700,22 +700,6 @@ public:
    * include nsIDocument.
    */  
   NS_HIDDEN_(PRUint32) GetBidi() const;
-
-  /**
-   * Set the Bidi capabilities of the system
-   * @param aIsBidi == TRUE if the system has the capability of reordering Bidi text
-   */
-  void SetIsBidiSystem(PRBool aIsBidi)
-  {
-    NS_ASSERTION(!(aIsBidi & ~1), "Value must be true or false");
-    mIsBidiSystem = aIsBidi;
-  }
-
-  /**
-   * Get the Bidi capabilities of the system
-   * @return TRUE if the system has the capability of reordering Bidi text
-   */
-  PRBool IsBidiSystem() const { return mIsBidiSystem; }
 #endif // IBMBIDI
 
   /**
@@ -918,7 +902,6 @@ protected:
 
 #ifdef IBMBIDI
   unsigned              mIsVisual : 1;
-  unsigned              mIsBidiSystem : 1;
 
 #endif
 #ifdef DEBUG
