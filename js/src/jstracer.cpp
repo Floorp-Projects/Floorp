@@ -72,8 +72,11 @@
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
 #define HOTEXIT 0
 
-/* Max call depths or inlining */
+/* Max call depths for inlining. */
 #define MAX_CALLDEPTH 5
+
+/* Max number of type mismatchs before we trash the tree. */
+#define MAX_MISMATCH 5
 
 #ifdef DEBUG
 #define ABORT_TRACE(msg)   do { fprintf(stdout, "abort: %d: %s\n", __LINE__, msg); return false; } while(0)
@@ -1287,6 +1290,11 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 #endif
 }
 
+static void
+addDependentTree(Fragment* master, Fragment* slave)
+{
+}
+
 /* Record a call to an inner tree. */
 void
 TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
@@ -1305,6 +1313,8 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     /* Invoke the inner tree. */
     LIns* args[] = { lir->insImmPtr(inner), lirbuf->state }; /* reverse order */
     LIns* ret = lir->insCall(F_CallTree, args);
+    /* Make a note that we now depend on that tree. */
+    ((TreeInfo*)inner->vmprivate)->dependentTrees.addUnique(fragment);
     /* Guard that we come out of the inner tree along the same side exit we came out when
        we called the inner tree at recording time. */
     LIns* g = guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
@@ -1393,12 +1403,21 @@ js_TrashTree(JSContext* cx, Fragment* f)
 {
     AUDIT(treesTrashed);
     debug_only(printf("Trashing tree info.\n");)
+    Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
     if (ti) {
+        /* trash the code of all dependent trees */
+        unsigned length = ti->dependentTrees.length();
+        Fragment** data = ti->dependentTrees.data();
+        while (length-- > 0) {
+            debug_only(printf("Trashing dependent tree.\n");)
+            (*data++)->releaseCode(fragmento);
+        }
+        /* now we can kill the tree info object */
         delete ti;
         f->vmprivate = NULL;
     }
-    f->releaseCode(JS_TRACE_MONITOR(cx).fragmento);
+    f->releaseCode(fragmento);
 }
 
 static JSInlineFrame*
@@ -1585,13 +1604,23 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
         JS_ASSERT(f->vmprivate);
         /* call the inner tree */
         GuardRecord* lr = js_ExecuteTree(cx, f, inlineCallCount);
-        if (!lr || (lr->exit->exitType != LOOP_EXIT)) {
-            js_AbortRecording(cx, oldpc, "Inner tree not suitable for calling");
-            return false; /* tree didn't activate or not a loop exit, abort recording */
+        if (!lr) {
+            js_AbortRecording(cx, oldpc, "Couldn't call inner tree");
+            return false;
         }
-        /* emit a call to the inner tree and continue recording the outer tree trace */
-        r->emitTreeCall(f, lr);
-        return true;
+        switch (lr->exit->exitType) {
+        case LOOP_EXIT:
+            /* emit a call to the inner tree and continue recording the outer tree trace */
+            r->emitTreeCall(f, lr);
+            return true;
+        case BRANCH_EXIT:
+            /* abort recording the outer tree, extend the inner tree */
+            js_AbortRecording(cx, oldpc, "Inner tree is trying to grow, abort outer recording");
+            return js_AttemptToExtendTree(cx, lr, lr->from);
+        default:
+            js_AbortRecording(cx, oldpc, "Inner tree not suitable for calling");
+            return false;
+        }
     }
     /* not returning to our own loop header, not an inner loop we can call, abort trace */
     AUDIT(returnToDifferentLoopHeader);
@@ -1634,8 +1663,14 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
         !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch.\n");)
+        if (++ti->mismatchCount > MAX_MISMATCH) {
+            debug_only(printf("excessive mismatches, flushing cache.\n"));
+            js_TrashTree(cx, f);
+        }
         return NULL;
     }
+    ti->mismatchCount = 0;
+    
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double)];
 
     FrameInfo* callstack = (FrameInfo*) alloca(ti->maxCallDepth * sizeof(FrameInfo));
