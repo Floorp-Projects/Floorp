@@ -131,9 +131,8 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
 NS_IMETHODIMP
 nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACString& oResult)
 {
-  nsCOMPtr<nsIWin32Locale>	winLocale;
-  LCID						localeAsLCID;
-  char						acp_name[6];
+  nsCOMPtr<nsIWin32Locale>  winLocale;
+  LCID                      localeAsLCID;
 
   //
   // convert locale name to a code page (through the LCID)
@@ -147,11 +146,13 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
   rv = winLocale->GetPlatformLocale(localeName, &localeAsLCID);
   if (NS_FAILED(rv)) { return rv; }
 
-  if (GetLocaleInfo(localeAsLCID, LOCALE_IDEFAULTANSICODEPAGE, acp_name, sizeof(acp_name))==0) { 
+  PRUnichar acp_name[6];
+  if (GetLocaleInfoW(localeAsLCID, LOCALE_IDEFAULTANSICODEPAGE, acp_name,
+                     NS_ARRAY_LENGTH(acp_name))==0) {
     return NS_ERROR_FAILURE; 
   }
   nsAutoString acp_key(NS_LITERAL_STRING("acp."));
-  acp_key.AppendWithConversion(acp_name);
+  acp_key.Append(acp_name);
 
   return MapToCharset(acp_key, oResult);
 }
