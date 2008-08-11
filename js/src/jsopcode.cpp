@@ -2135,6 +2135,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 if ((cs->prec != 0 &&
                      cs->prec <= js_CodeSpec[NEXT_OP(pc)].prec) ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_NULL ||
+                    pc[JSOP_GROUP_LENGTH] == JSOP_NULLTHIS ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_DUP ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_IFEQ ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_IFNE) {
@@ -3872,7 +3873,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * arrange to advance over the call to this lambda.
                      */
                     pc += len;
-                    LOCAL_ASSERT(*pc == JSOP_NULL);
+                    LOCAL_ASSERT(*pc == JSOP_NULL || *pc == JSOP_NULLTHIS);
                     pc += JSOP_NULL_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);
                     LOCAL_ASSERT(GET_ARGC(pc) == 0);

@@ -372,7 +372,14 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
     for (; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
 
-    obj->map = js_HoldObjectMap(cx, proto->map);
+    if (clasp == &js_ArrayClass) {
+        JSObjectOps* ops = clasp->getObjectOps(cx, clasp);
+        obj->map = ops->newObjectMap(cx, 1, ops, clasp, obj);
+        if (!obj->map)
+            return NULL;
+    } else {
+        obj->map = js_HoldObjectMap(cx, proto->map);
+    }
     obj->dslots = NULL;
     return obj;
 }
