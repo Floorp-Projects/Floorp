@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<title>Canvas test: 2d.imageData.create.basic - bug 433004</title>
+<!-- Testing: createImageData() exists and returns something -->
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+MochiKit.DOM.addLoadEvent(function () {
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+var _thrown_outer = false;
+try {
+
+ok(ctx.createImageData(1, 1) !== null, "ctx.createImageData(1, 1) !== null");
+
+} catch (e) {
+    _thrown_outer = true;
+}
+todo(!_thrown_outer, 'should not throw exception');
+
+SimpleTest.finish();
+
+});
+</script>
+

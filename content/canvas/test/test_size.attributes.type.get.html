@@ -1,12 +1,12 @@
 <!DOCTYPE HTML>
 <title>Canvas test: size.attributes.type.get</title>
+<!-- Testing: width/height DOM/content attributes - string vs number types -->
 <script src="/MochiKit/MochiKit.js"></script>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <body>
 <canvas id="c" width="120" height="60"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
-var _deferred = false;
 
 SimpleTest.waitForExplicitFinish();
 MochiKit.DOM.addLoadEvent(function () {
@@ -19,7 +19,8 @@ ok(canvas.height === 60, "canvas.height === 60");
 ok(canvas.getAttribute('width') === '120', "canvas.getAttribute('width') === '120'");
 ok(canvas.getAttribute('height') === '60', "canvas.getAttribute('height') === '60'");
 
-if (!_deferred) SimpleTest.finish();
+SimpleTest.finish();
+
 });
 </script>
 
