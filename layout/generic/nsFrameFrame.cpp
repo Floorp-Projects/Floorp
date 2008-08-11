@@ -181,6 +181,8 @@ public:
 
   // nsIFrameFrame
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
+  NS_IMETHOD BeginSwapDocShells(nsIFrame* aOther);
+  virtual void EndSwapDocShells(nsIFrame* aOther);
 
   NS_IMETHOD  VerifyTree() const;
 
@@ -198,6 +200,10 @@ protected:
   virtual nscoord GetIntrinsicHeight();
 
   virtual PRIntn GetSkipSides() const;
+
+  // Hide or show our document viewer
+  void HideViewer();
+  void ShowViewer();
 
   /* Obtains the frame we should use for intrinsic size information if we are
    * an HTML <object>, <embed> or <applet> (a replaced element - not <iframe>)
@@ -303,18 +309,27 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
     view->CreateWidget(kCChildCID);
   }
 
-  if (!aPresContext->IsDynamic()) {
+  ShowViewer();
+  return NS_OK;
+}
+
+void
+nsSubDocumentFrame::ShowViewer()
+{
+  if (!PresContext()->IsDynamic()) {
     // We let the printing code take care of loading the document; just
     // create a widget for it to use
-    rv = CreateViewAndWidget(eContentTypeContent);
-    NS_ENSURE_SUCCESS(rv,rv);
+    nsresult rv = CreateViewAndWidget(eContentTypeContent);
+    if (NS_FAILED(rv)) {
+      return;
+    }
   } else {
-    rv = ShowDocShell();
-    NS_ENSURE_SUCCESS(rv,rv);
+    nsresult rv = ShowDocShell();
+    if (NS_FAILED(rv)) {
+      return;
+    }
     mDidCreateDoc = PR_TRUE;
   }
-
-  return NS_OK;
 }
 
 PRIntn
@@ -745,6 +760,14 @@ nsSubDocumentFrame::Destroy()
     mPostedReflowCallback = PR_FALSE;
   }
   
+  HideViewer();
+
+  nsLeafFrame::Destroy();
+}
+
+void
+nsSubDocumentFrame::HideViewer()
+{
   if (mFrameLoader && mDidCreateDoc) {
     // Get the content viewer through the docshell, but don't call
     // GetDocShell() since we don't want to create one if we don't
@@ -774,12 +797,10 @@ nsSubDocumentFrame::Destroy()
       // Hide the content viewer now that the frame is going away...
       baseWin->SetVisibility(PR_FALSE);
 
-      // Clear out the parentWidget, since it's about to die with us
+      // Clear out the parentWidget, since it might be about to die with us
       baseWin->SetParentWidget(nsnull);
     }
   }
-
-  nsLeafFrame::Destroy();
 }
 
 nsSize nsSubDocumentFrame::GetMargin()
@@ -822,6 +843,46 @@ nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
   }
 
   return mFrameLoader->GetDocShell(aDocShell);
+}
+
+NS_IMETHODIMP
+nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
+{
+  if (!aOther || aOther->GetType() != nsGkAtoms::subDocumentFrame) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  nsSubDocumentFrame* other = static_cast<nsSubDocumentFrame*>(aOther);
+  if (!mFrameLoader || !mDidCreateDoc || !other->mFrameLoader ||
+      !other->mDidCreateDoc) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  HideViewer();
+  other->HideViewer();
+
+  mFrameLoader.swap(other->mFrameLoader);
+  return NS_OK;
+}
+
+void
+nsSubDocumentFrame::EndSwapDocShells(nsIFrame* aOther)
+{
+  nsSubDocumentFrame* other = static_cast<nsSubDocumentFrame*>(aOther);
+  ShowViewer();
+  other->ShowViewer();
+
+  // Now make sure we reflow both frames, in case their contents
+  // determine their size.
+  PresContext()->PresShell()->
+    FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+  other->PresContext()->PresShell()->
+    FrameNeedsReflow(other, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
+
+  // And repaint them, for good measure, in case there's nothing
+  // interesting that happens during reflow.
+  InvalidateOverflowRect();
+  other->InvalidateOverflowRect();
 }
 
 inline PRInt32 ConvertOverflow(PRUint8 aOverflow)
@@ -935,6 +996,11 @@ nsSubDocumentFrame::ShowDocShell()
 nsresult
 nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
 {
+  if (mInnerView) {
+    // Nothing to do here
+    return NS_OK;
+  }
+  
   // create, init, set the parent of the view
   nsIView* outerView = GetView();
   NS_ASSERTION(outerView, "Must have an outer view already");
