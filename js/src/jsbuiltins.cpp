@@ -221,12 +221,6 @@ js_String_p_substring_1(JSContext* cx, JSString* str, jsint begin)
 }
 
 JSString* FASTCALL
-js_FastConcatStrings(JSContext* cx, JSString* left, JSString* right)
-{
-    return js_ConcatStrings(cx, left, right, GCF_DONT_BLOCK);
-}
-
-JSString* FASTCALL
 js_String_getelem(JSContext* cx, JSString* str, jsint i)
 {
     if ((size_t)i >= JSSTRING_LENGTH(str))
@@ -270,7 +264,7 @@ js_String_p_concat_1int(JSContext* cx, JSString* str, jsint i)
     JSString* istr = js_NumberToString(cx, i);
     if (!istr)
         return NULL;
-    return js_ConcatStrings(cx, str, istr, GCF_DONT_BLOCK);
+    return js_ConcatStrings(cx, str, istr);
 }
 
 jsdouble FASTCALL
