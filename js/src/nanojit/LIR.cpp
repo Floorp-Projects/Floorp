@@ -114,6 +114,7 @@ namespace nanojit
 		//buffer_count--;
 		//fprintf(stderr, "~LirBuffer %x start %x\n", (int)this, (int)_start);
 		clear();
+        delete names;
 		_frago = 0;
 	}
 	
@@ -1315,6 +1316,13 @@ namespace nanojit
         List<RetiredEntry*, LIST_GCObjects> retired;
 		int maxlive;
 		LiveTable(GC *gc) : live(gc), retired(gc), maxlive(0) {}
+        ~LiveTable()
+        {
+            for (size_t i = 0; i < retired.size(); i++) {
+                delete retired.get(i);
+            }
+
+        }
 		void add(LInsp i, LInsp use) {
             if (!i->isconst() && !i->isconstq() && !live.containsKey(i)) {
                 live.put(i,use);
@@ -1416,6 +1424,25 @@ namespace nanojit
 				printf("\n");
 		}
 	}
+
+    LabelMap::Entry::~Entry()
+    {
+        delete name;
+    }
+
+    LirNameMap::Entry::~Entry()
+    {
+        delete name;
+    }
+
+    LirNameMap::~LirNameMap()
+    {
+        Entry *e;
+
+        while ((e = names.removeLast()) != NULL) {
+            delete e;
+        }
+    }
 
 	void LirNameMap::addName(LInsp i, Stringp name) {
 		if (!names.containsKey(i)) { 
@@ -1787,6 +1814,12 @@ namespace nanojit
 			root->link(assm);
 			if (treeCompile) root->linkBranches(assm);
 		}
+
+#if defined(NJ_VERBOSE)
+        for (size_t i = 0; i < asmOutput.size(); i++) {
+            gc->Free(asmOutput.get(i));
+        }
+#endif
     }
 
 	#endif /* FEATURE_NANOJIT */
@@ -1795,6 +1828,15 @@ namespace nanojit
     LabelMap::LabelMap(AvmCore *core, LabelMap* parent)
         : parent(parent), names(core->gc), addrs(core->config.verbose_addrs), end(buf), core(core)
 	{}
+
+    LabelMap::~LabelMap()
+    {
+        Entry *e;
+        
+        while ((e = names.removeLast()) != NULL) {
+            delete e;
+        } 
+    }
 
     void LabelMap::add(const void *p, size_t size, size_t align, const char *name)
 	{

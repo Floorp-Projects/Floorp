@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99:
+ * vim: set ts=4 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -91,7 +91,7 @@ static struct {
 #define AUDIT(x) (stat.x++)
 #else
 #define AUDIT(x) ((void)0)
-#endif DEBUG
+#endif 
 
 #define INS_CONST(c) addName(lir->insImm(c), #c)
 
@@ -99,7 +99,8 @@ using namespace avmplus;
 using namespace nanojit;
 
 static GC gc = GC();
-static avmplus::AvmCore* core = new (&gc) avmplus::AvmCore();
+static avmplus::AvmCore s_core = avmplus::AvmCore();
+static avmplus::AvmCore* core = &s_core;
 
 /* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
 static bool nesting_enabled = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "nesting");
@@ -1284,6 +1285,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     sprintf(label, "%s:%u", cx->fp->script->filename,
             js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc));
     fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
+    free(label);
 #endif
 }
 
@@ -1362,6 +1364,16 @@ void
 nanojit::Assembler::asm_bailout(LIns *guard, Register state)
 {
     /* we adjust ip/sp/rp when exiting from the tree in the recovery code */
+}
+
+void
+nanojit::Fragment::onDestroy()
+{
+    if (root == this) {
+        delete mergeCounts;
+        delete lirbuf;
+    }
+    delete (TreeInfo *)vmprivate;
 }
 
 void
@@ -1495,7 +1507,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     JS_ASSERT(!f->vmprivate);
     
     /* setup the VM-private treeInfo structure for this fragment */
-    TreeInfo* ti = new TreeInfo(f); // TODO: deallocate when fragment dies
+    TreeInfo* ti = new (&gc) TreeInfo(f); // TODO: deallocate when fragment dies
     f->vmprivate = ti;
 
     /* we shouldn't have any interned globals for a new tree */
@@ -1768,7 +1780,7 @@ js_InitJIT(JSContext* cx)
 extern void
 js_DestroyJIT(JSContext* cx)
 {
-    // TODO: figure out how to properly free fragmento and a potentially pending trace recorder
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 #ifdef DEBUG
     printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
            "trees trashed(%llu), slot promoted(%llu), "
@@ -1779,6 +1791,8 @@ js_DestroyJIT(JSContext* cx)
            "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
 #endif
+    verbose_only(delete tm->fragmento->labels;)
+    delete tm->fragmento;
 }
 
 extern void
@@ -1792,7 +1806,6 @@ js_FlushJITCache(JSContext* cx)
         js_AbortRecording(cx, NULL, "flush cache");
     Fragmento* fragmento = tm->fragmento;
     if (fragmento) {
-        // TODO: deallocate vmprivate -> TreeInfo for root fragments
         fragmento->clearFrags();
 #ifdef DEBUG        
         JS_ASSERT(fragmento->labels);
@@ -3884,22 +3897,32 @@ TraceRecorder::record_JSOP_FORLOCAL()
     if (stateval == JSVAL_ZERO)
         goto done;
 
-    LIns* state_ins = lir->ins2(LIR_and, stateval_ins, lir->insImmPtr((void*) ~jsval(3)));
-    LIns* cursor_ins = lir->insLoadi(state_ins, offsetof(JSNativeEnumerator, cursor));
+    LIns* state_ins; 
+    LIns* cursor_ins; 
+
+    state_ins = lir->ins2(LIR_and, stateval_ins, lir->insImmPtr((void*) ~jsval(3)));
+    cursor_ins = lir->insLoadi(state_ins, offsetof(JSNativeEnumerator, cursor));
     guard(false, addName(lir->ins_eq0(cursor_ins), "guard(ne->cursor != 0)"));
 
-    JSNativeEnumerator* ne = (JSNativeEnumerator*) (stateval & ~jsval(3));
+    JSNativeEnumerator* ne;
+
+    ne = (JSNativeEnumerator*) (stateval & ~jsval(3));
     if (ne->cursor == 0)
         goto done;
 
     cursor_ins = lir->ins2i(LIR_sub, cursor_ins, 1);
     lir->insStorei(cursor_ins, state_ins, offsetof(JSNativeEnumerator, cursor));
 
-    LIns* ids_ins = lir->ins2i(LIR_add, state_ins, offsetof(JSNativeEnumerator, ids));
-    LIns* id_addr_ins = lir->ins2(LIR_add, ids_ins,
+    LIns* ids_ins; 
+    LIns* id_addr_ins;
+
+    ids_ins = lir->ins2i(LIR_add, state_ins, offsetof(JSNativeEnumerator, ids));
+    id_addr_ins = lir->ins2(LIR_add, ids_ins,
                                   lir->ins2i(LIR_lsh, cursor_ins, (sizeof(jsid) == 4) ? 2 : 3));
 
-    LIns* id_ins = lir->insLoadi(id_addr_ins, 0);
+    LIns* id_ins; 
+
+    id_ins = lir->insLoadi(id_addr_ins, 0);
     var(GET_SLOTNO(cx->fp->regs->pc), id_ins);
 
     // Stack an unboxed true to make JSOP_IFEQ loop.
