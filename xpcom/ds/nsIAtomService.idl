@@ -57,20 +57,20 @@
  * pointer identity.
  */
  
-[scriptable, uuid(8c0e6018-6a06-47f5-bfa1-2e051705c9de)]
+[scriptable, uuid(9c1f50b9-f9eb-42d4-a8cb-2c7600aeb241)]
 interface nsIAtomService : nsISupports {
 
   /**
    * Version of NS_NewAtom that doesn't require linking against the
    * XPCOM library.  See nsIAtom.idl.
    */
-  nsIAtom getAtom(in wstring value);
+  nsIAtom getAtom(in AString value);
 
   /**
    * Version of NS_NewPermanentAtom that doesn't require linking against
    * the XPCOM library.  See nsIAtom.idl.
    */
-  nsIAtom getPermanentAtom(in wstring value);
+  nsIAtom getPermanentAtom(in AString value);
 
   /**
    * Get an atom with a utf8 string.

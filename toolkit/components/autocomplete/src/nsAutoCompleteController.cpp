@@ -706,35 +706,17 @@ nsAutoCompleteController::GetRowCount(PRInt32 *aRowCount)
 NS_IMETHODIMP
 nsAutoCompleteController::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
 {
-  // XXX This is a hack because the tree doesn't seem to be painting the selected row
-  //     the normal way.  Please remove this ASAP.
-  PRInt32 currentIndex;
-  mSelection->GetCurrentIndex(&currentIndex);
-
-  /*
-  if (index == currentIndex) {
-    nsCOMPtr<nsIAtomService> atomSvc = do_GetService("@mozilla.org/atom-service;1");
-    nsCOMPtr<nsIAtom> atom;
-    atomSvc->GetAtom(NS_LITERAL_STRING("menuactive").get(), getter_AddRefs(atom));
-    properties->AppendElement(atom);
-  }
-  */
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAutoCompleteController::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupportsArray* properties)
 {
-  GetRowProperties(row, properties);
-
   if (row >= 0) {
     nsAutoString className;
     GetStyleAt(row, className);
     if (!className.IsEmpty()) {
-      nsCOMPtr<nsIAtomService> atomSvc = do_GetService("@mozilla.org/atom-service;1");
-      nsCOMPtr<nsIAtom> atom;
-      atomSvc->GetAtom(className.get(), getter_AddRefs(atom));
+      nsCOMPtr<nsIAtom> atom(do_GetAtom(className));
       properties->AppendElement(atom);
     }
   }
