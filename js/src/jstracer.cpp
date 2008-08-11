@@ -1651,7 +1651,10 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     uint64 start = rdtsc();
 #endif
 
+    JS_ASSERT(!cx->gcDontBlock);
+    cx->gcDontBlock = JS_TRUE;
     GuardRecord* lr = u.func(&state, NULL);
+    cx->gcDontBlock = JS_FALSE;
 
     for (int32 i = 0; i < lr->calldepth; i++)
         js_SynthesizeFrame(cx, callstack[i]);
@@ -2718,7 +2721,7 @@ TraceRecorder::record_JSOP_ADD()
     jsval& l = stackval(-2);
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
         LIns* args[] = { get(&r), get(&l), cx_ins };
-        LIns* concat = lir->insCall(F_FastConcatStrings, args);
+        LIns* concat = lir->insCall(F_ConcatStrings, args);
         guard(false, lir->ins_eq0(concat), OOM_EXIT);
         set(&l, concat);
         return true;

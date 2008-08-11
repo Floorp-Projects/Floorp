@@ -123,8 +123,8 @@ js_GetStringChars(JSContext *cx, JSString *str)
     return JSFLATSTR_CHARS(str);
 }
 
-JSString *
-js_ConcatStrings(JSContext *cx, JSString *left, JSString *right, uintN gcflag)
+JSString * JS_FASTCALL
+js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 {
     size_t rn, ln, lrdist, n;
     jschar *rs, *ls, *s;
@@ -164,7 +164,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right, uintN gcflag)
     js_strncpy(s + ln, rs, rn);
     n = ln + rn;
     s[n] = 0;
-    str = js_NewString(cx, s, n, gcflag);
+    str = js_NewString(cx, s, n);
     if (!str) {
         /* Out of memory: clean up any space we (re-)allocated. */
         if (!ldep) {
@@ -2502,7 +2502,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 }
 
 JSString *
-js_NewString(JSContext *cx, jschar *chars, size_t length, uintN gcflag)
+js_NewString(JSContext *cx, jschar *chars, size_t length)
 {
     JSString *str;
 
@@ -2511,7 +2511,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length, uintN gcflag)
         return NULL;
     }
 
-    str = (JSString *) js_NewGCThing(cx, gcflag | GCX_STRING, sizeof(JSString));
+    str = (JSString *) js_NewGCThing(cx, GCX_STRING, sizeof(JSString));
     if (!str)
         return NULL;
     JSFLATSTR_INIT(str, chars, length);
