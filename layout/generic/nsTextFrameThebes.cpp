@@ -5542,12 +5542,6 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   nsLineLayout& lineLayout = *aReflowState.mLineLayout;
 
-  if (aPresContext->BidiEnabled()) {
-    // SetIsBidiSystem should go away at some point since we're going to require
-    // it to be effectively always true
-    aPresContext->SetIsBidiSystem(PR_TRUE);
-  }
-
   if (aReflowState.mFlags.mBlinks) {
     if (0 == (mState & TEXT_BLINK_ON)) {
       mState |= TEXT_BLINK_ON;
@@ -6327,59 +6321,6 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 #endif
-
-void nsTextFrame::AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
-                                               PRInt32 textLength,
-                                               PRBool isRTLChars,
-                                               PRBool isOddLevel,
-                                               PRBool isBidiSystem)
-{
-  /* This adjustment is required whenever the text has been reversed by
-   * Mozilla before rendering.
-   *
-   * In theory this means any text whose Bidi embedding level has been
-   * set by the Unicode Bidi algorithm to an odd value, but this is
-   * only true in practice on a non-Bidi platform.
-   * 
-   * On a Bidi platform the situation is more complicated because the
-   * platform will automatically reverse right-to-left characters; so
-   * Mozilla reverses text whose natural directionality is the opposite
-   * of its embedding level: right-to-left characters whose Bidi
-   * embedding level is even (e.g. Visual Hebrew) or left-to-right and
-   * neutral characters whose Bidi embedding level is odd (e.g. English
-   * text with <bdo dir="rtl">).
-   *
-   * The following condition is accordingly an optimization of
-   *  if ( (!isBidiSystem && isOddLevel) ||
-   *       (isBidiSystem &&
-   *        ((isRTLChars && !isOddLevel) ||
-   *         (!isRTLChars && isOddLevel))))
-   */
-  if (isOddLevel ^ (isRTLChars && isBidiSystem)) {
-
-    PRInt32 swap  = sdptr->mStart;
-    sdptr->mStart = textLength - sdptr->mEnd;
-    sdptr->mEnd   = textLength - swap;
-
-    // temp fix for 75026 crasher until we fix the bidi code
-    // the above bidi code cause mStart < 0 in some case
-    // the problem is we have whitespace compression code in 
-    // nsTextTransformer which cause mEnd > textLength
-    NS_ASSERTION((sdptr->mStart >= 0) , "mStart >= 0");
-    if(sdptr->mStart < 0 )
-      sdptr->mStart = 0;
-
-    NS_ASSERTION((sdptr->mEnd >= 0) , "mEnd >= 0");
-    if(sdptr->mEnd < 0 )
-      sdptr->mEnd = 0;
-
-    NS_ASSERTION((sdptr->mStart <= sdptr->mEnd), "mStart <= mEnd");
-    if(sdptr->mStart > sdptr->mEnd)
-      sdptr->mEnd = sdptr->mStart;
-  }
-  
-  return;
-}
 
 void
 nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
