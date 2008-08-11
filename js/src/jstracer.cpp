@@ -2118,7 +2118,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // Mimic JSOP_CALLPROP's special case to skip up from a dense array to find
     // Array.prootype methods.
     JSObject* aobj = obj;
-    if (JSOp(*cx->fp->regs->pc) == JSOP_CALLPROP && OBJ_IS_DENSE_ARRAY(cx, obj)) {
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         aobj = OBJ_GET_PROTO(cx, obj);
         obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
     }
@@ -2761,7 +2761,7 @@ bool
 TraceRecorder::record_JSOP_NOT()
 {
     jsval& v = stackval(-1);
-    if (JSVAL_IS_BOOLEAN(v)) {
+    if (JSVAL_IS_BOOLEAN(v) || JSVAL_IS_OBJECT(v)) {
         set(&v, lir->ins_eq0(get(&v)));
         return true;
     }
@@ -3588,13 +3588,13 @@ TraceRecorder::record_JSOP_LOOKUPSWITCH()
 bool
 TraceRecorder::record_JSOP_STRICTEQ()
 {
-    return false;
+    return record_JSOP_EQ();
 }
 
 bool
 TraceRecorder::record_JSOP_STRICTNE()
 {
-    return false;
+    return record_JSOP_NE();
 }
 
 bool

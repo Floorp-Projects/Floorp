@@ -4169,12 +4169,14 @@ js_Interpret(JSContext *cx)
 
           do_getprop_with_obj:
             do {
+                JSObject *aobj;
                 JSPropCacheEntry *entry;
 
-                if (JS_LIKELY(obj->map->ops->getProperty == js_GetProperty)) {
-                    PROPERTY_CACHE_TEST(cx, regs.pc, obj, obj2, entry, atom);
+                aobj = OBJ_IS_DENSE_ARRAY(cx, obj) ? OBJ_GET_PROTO(cx, obj) : obj;
+                if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)) {
+                    PROPERTY_CACHE_TEST(cx, regs.pc, aobj, obj2, entry, atom);
                     if (!atom) {
-                        ASSERT_VALID_PROPERTY_CACHE_HIT(i, obj, obj2, entry);
+                        ASSERT_VALID_PROPERTY_CACHE_HIT(0, aobj, obj2, entry);
                         if (PCVAL_IS_OBJECT(entry->vword)) {
                             rval = PCVAL_OBJECT_TO_JSVAL(entry->vword);
                         } else if (PCVAL_IS_SLOT(entry->vword)) {
@@ -4198,7 +4200,7 @@ js_Interpret(JSContext *cx)
                 }
                 id = ATOM_TO_JSID(atom);
                 if (entry
-                    ? !js_GetPropertyHelper(cx, obj, id, &rval, &entry)
+                    ? !js_GetPropertyHelper(cx, aobj, id, &rval, &entry)
                     : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
                     goto error;
                 }
@@ -4305,7 +4307,7 @@ js_Interpret(JSContext *cx)
                         goto error;
                 } else
 #endif
-                if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
+                if (entry
                     ? !js_GetPropertyHelper(cx, aobj, id, &rval, &entry)
                     : !OBJ_GET_PROPERTY(cx, obj, id, &rval)) {
                     goto error;
