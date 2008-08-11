@@ -3043,7 +3043,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObjectWithGivenProto(cx, clasp, proto, parent, 0, 0);
+    return js_NewObjectWithGivenProto(cx, clasp, proto, parent, 0);
 }
 
 JS_PUBLIC_API(JSBool)
