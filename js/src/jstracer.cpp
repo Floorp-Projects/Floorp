@@ -942,7 +942,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 /* Emit load instructions onto the trace that read the initial stack state. */
 void
 TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
-                      const char *prefix, int index, JSStackFrame *fp)
+                      const char *prefix, uintN index, JSStackFrame *fp)
 {
     LIns* ins;
     if (t == JSVAL_INT) { /* demoted */
@@ -972,8 +972,8 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
         funName = fp->fun->atom ? js_AtomToPrintableString(cx, fp->fun->atom) : "<anonymous>";
     }
     if (!strcmp(prefix, "argv")) {
-        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index]);
-        if (atom) {
+        if (index < fp->fun->nargs) {
+            JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[index]);
             JS_snprintf(name, sizeof name, "$%s.%s", funName, js_AtomToPrintableString(cx, atom));
         } else {
             JS_snprintf(name, sizeof name, "$%s.<arg%d>", funName, index);
