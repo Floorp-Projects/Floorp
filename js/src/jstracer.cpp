@@ -1280,9 +1280,9 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     }
 	/* :TODO: windows support */
 #if defined DEBUG && !defined WIN32
-    char* label;
-    asprintf(&label, "%s:%u", cx->fp->script->filename,
-             js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc));
+    char* label = (char*)malloc(strlen(cx->fp->script->filename) + 64);
+    sprintf(label, "%s:%u", cx->fp->script->filename,
+            js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc));
     fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
 #endif
 }
