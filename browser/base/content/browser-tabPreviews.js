@@ -353,7 +353,7 @@ var ctrlTab = {
     this.addOffscreenBox(this.invertDirection);
     this.addOffscreenBox(!this.invertDirection);
 
-    // having lots of off-screen boxes reduce the scrolling speed, remove some
+    // having lots of off-screen boxes reduces the scrolling speed, remove some
     for (let i = this.offscreenStart; i > 1; i--)
       this.removeBox(this.container.firstChild);
     for (let i = this.offscreenEnd; i > 1; i--)
