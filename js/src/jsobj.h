@@ -440,10 +440,12 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent,
  *
  * objectSize is either the explicit size for the allocated object or 0
  * indicating to use the default size based on object's class.
+ *
+ * flags are or-ed into the flags parameter for js_NewGCThing.
  */
 extern JSObject *
 js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
-                           JSObject *parent, uintN objectSize);
+                           JSObject *parent, uintN objectSize, uintN flags);
 
 /*
  * Fast access to immutable standard objects (constructors and prototypes).
