@@ -386,6 +386,8 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
 bool FASTCALL
 js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
+    JSScopeProperty* sprop2 = NULL; // initialize early to make MSVC happy
+
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(SPROP_HAS_STUB_SETTER(sprop));
 
@@ -422,9 +424,9 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
         return true;
     }
 
-    JSScopeProperty* sprop2 = js_AddScopeProperty(cx, scope, sprop->id,
-                                                  sprop->getter, sprop->setter, SPROP_INVALID_SLOT,
-                                                  sprop->attrs, sprop->flags, sprop->shortid);
+    sprop2 = js_AddScopeProperty(cx, scope, sprop->id,
+                                 sprop->getter, sprop->setter, SPROP_INVALID_SLOT,
+                                 sprop->attrs, sprop->flags, sprop->shortid);
     if (sprop2 == sprop) {
         JS_UNLOCK_SCOPE(cx, scope);
         return true;
