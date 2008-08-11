@@ -346,8 +346,7 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(ctor));
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, ctor);
-    JS_ASSERT(!FUN_INTERPRETED(fun));
-    JSClass* clasp = fun->u.n.clasp;
+    JSClass* clasp = FUN_INTERPRETED(fun) ? &js_ObjectClass : fun->u.n.clasp;
 
     JSObject* obj = (JSObject*) js_NewGCThing(cx, GCF_DONT_BLOCK | GCX_OBJECT, sizeof(JSObject));
     if (!obj)
