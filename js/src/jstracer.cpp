@@ -2627,7 +2627,7 @@ TraceRecorder::record_JSOP_EQ()
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
         LIns* args[] = { get(&r), get(&l) };
         bool cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
-        LIns* x = lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args))); // pretty gross!
+        LIns* x = lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args)));
         /* The interpreter fuses comparisons and the following branch,
            so we have to do that here as well. */
         if (cx->fp->regs->pc[1] == JSOP_IFEQ || cx->fp->regs->pc[1] == JSOP_IFNE)
@@ -3565,7 +3565,24 @@ TraceRecorder::record_JSOP_TABLESWITCH()
 bool
 TraceRecorder::record_JSOP_LOOKUPSWITCH()
 {
-    return false;
+    jsval& v = stackval(-1);
+    if (isNumber(v)) {
+        jsdouble d = asNumber(v);
+        jsdpun u;
+        u.d = d;
+        guard(true, addName(lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)),
+                            "guard(lookupswitch numeric)"));
+    } else if (JSVAL_IS_STRING(v)) {
+        LIns* args[] = { get(&v), lir->insImmPtr((void*) JSVAL_TO_STRING(v)) };
+        guard(true, addName(lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args))),
+                            "guard(lookupswitch string)"));
+    } else if (JSVAL_IS_BOOLEAN(v)) {
+        guard(true, addName(lir->ins2(LIR_eq, get(&v), lir->insImm(JSVAL_TO_BOOLEAN(v))),
+                            "guard(lookupswitch boolean)"));
+    } else {
+        ABORT_TRACE("lookupswitch on object, null, or undefined");
+    }
+    return true;
 }
 
 bool
