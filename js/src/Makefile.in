@@ -222,7 +222,7 @@ CPPSRCS += \
 
 ifdef DEBUG
 EXPORTS += nanojit/TraceTreeDrawer.h
-CPPSRCS += nanojit/TraceTreeDrawer.cpp nanojit/Tests.cpp
+CPPSRCS += nanojit/TraceTreeDrawer.cpp
 endif
 
 DEFINES += -DFEATURE_NANOJIT -DJS_TRACER
