@@ -2668,8 +2668,9 @@ js_Interpret(JSContext *cx)
                          : normalJumpTable))
 # define ENABLE_TRACER(flag)                                                  \
     JS_BEGIN_MACRO                                                            \
-        JS_ASSERT((flag) == !!JS_TRACE_MONITOR(cx).recorder);                 \
-        jumpTable = (flag) ? recordingJumpTable : normalJumpTable;            \
+        bool flag_ = (flag);                                                  \
+        JS_ASSERT(flag_ == !!JS_TRACE_MONITOR(cx).recorder);                  \
+        jumpTable = flag_ ? recordingJumpTable : normalJumpTable;             \
     JS_END_MACRO
 #else
 # define LOAD_INTERRUPT_HANDLER(cx)                                           \
@@ -2678,8 +2679,9 @@ js_Interpret(JSContext *cx)
                           ? 0 : 255))
 # define ENABLE_TRACER(flag)                                                  \
     JS_BEGIN_MACRO                                                            \
-        JS_ASSERT((flag) == !!JS_TRACE_MONITOR(cx).recorder);                 \
-        switchMask = (flag) ? 0 : 255;                                        \
+        bool flag_ = (flag);                                                  \
+        JS_ASSERT(flag_ == !!JS_TRACE_MONITOR(cx).recorder);                  \
+        switchMask = flag_ ? 0 : 255;                                         \
     JS_END_MACRO
 #endif
 
