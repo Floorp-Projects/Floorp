@@ -177,7 +177,7 @@ var ctrlTab = {
     tabContainer.addEventListener("TabClose", this, false);
 
     gBrowser.mTabBox.handleCtrlTab = false;
-    window.addEventListener("keydown", this, true);
+    window.addEventListener("keypress", this, true);
   },
   uninit: function () {
     this.tabs = null;
@@ -188,7 +188,7 @@ var ctrlTab = {
     tabContainer.removeEventListener("TabClose", this, false);
 
     this.panel.removeEventListener("popuphiding", this, false);
-    window.removeEventListener("keydown", this, true);
+    window.removeEventListener("keypress", this, true);
   },
   addBox: function (aAtStart) {
     const SVGNS = "http://www.w3.org/2000/svg";
@@ -424,7 +424,7 @@ var ctrlTab = {
     this._deferOnTabSelect = [];
 
     window.addEventListener("keyup", this, true);
-    window.addEventListener("keypress", this, true);
+    window.addEventListener("keydown", this, true);
     this.panel.addEventListener("popuphiding", this, false);
     this.panel.hidden = false;
     this.panel.width = tabPreviews.width * this.visibleCount;
@@ -442,7 +442,7 @@ var ctrlTab = {
     this.selected = this.container.childNodes[1];
     this.arrangeBoxes();
   },
-  onKeyDown: function (event) {
+  onKeyPress: function (event) {
     var isOpen = this.isOpen;
     var propagate = !isOpen;
     switch (event.keyCode) {
@@ -462,6 +462,11 @@ var ctrlTab = {
         if (isOpen)
           this.panel.hidePopup();
         break;
+      default:
+        if (isOpen && event.charCode == this.closeCharCode) {
+          this.stopScroll();
+          gBrowser.removeTab(this.selected._tab);
+        }
     }
     if (!propagate) {
       event.stopPropagation();
@@ -479,7 +484,7 @@ var ctrlTab = {
   onPopupHiding: function () {
     this.stopScroll();
     window.removeEventListener("keyup", this, true);
-    window.removeEventListener("keypress", this, true);
+    window.removeEventListener("keydown", this, true);
     while (this.container.childNodes.length)
       this.removeBox(this.container.lastChild);
     this.selected = null;
@@ -533,23 +538,16 @@ var ctrlTab = {
         }
         this.detachTab(event.target);
         break;
-      case "keydown":
-        this.onKeyDown(event);
-        break;
       case "keypress":
-        // the panel is open; don't propagate any key events
-        event.stopPropagation();
-        event.preventDefault();
-        if (event.charCode == this.closeCharCode) {
-          this.stopScroll();
-          gBrowser.removeTab(this.selected._tab);
-        }
+        this.onKeyPress(event);
         break;
+      case "keydown":
       case "keyup":
         // the panel is open; don't propagate any key events
         event.stopPropagation();
         event.preventDefault();
-        this.onKeyUp(event);
+        if (event.type == "keyup")
+          this.onKeyUp(event);
         break;
       case "popuphiding":
         this.onPopupHiding();
