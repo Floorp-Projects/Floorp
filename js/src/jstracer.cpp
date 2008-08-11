@@ -2812,7 +2812,7 @@ TraceRecorder::record_JSOP_NEW()
     }
 
     if (fun->u.n.clasp)
-        ABORT_TRACE("NYI");
+        ABORT_TRACE("can't trace native constructor");
 
     ABORT_TRACE("can't trace unknown constructor");
 }
