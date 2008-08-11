@@ -177,7 +177,7 @@ var ctrlTab = {
     tabContainer.addEventListener("TabClose", this, false);
 
     gBrowser.mTabBox.handleCtrlTab = false;
-    window.addEventListener("keypress", this, true);
+    document.addEventListener("keypress", this, false);
   },
   uninit: function () {
     this.tabs = null;
@@ -188,7 +188,7 @@ var ctrlTab = {
     tabContainer.removeEventListener("TabClose", this, false);
 
     this.panel.removeEventListener("popuphiding", this, false);
-    window.removeEventListener("keypress", this, true);
+    document.removeEventListener("keypress", this, false);
   },
   addBox: function (aAtStart) {
     const SVGNS = "http://www.w3.org/2000/svg";
@@ -423,8 +423,8 @@ var ctrlTab = {
   open: function () {
     this._deferOnTabSelect = [];
 
-    window.addEventListener("keyup", this, true);
-    window.addEventListener("keydown", this, true);
+    document.addEventListener("keyup", this, false);
+    document.addEventListener("keydown", this, false);
     this.panel.addEventListener("popuphiding", this, false);
     this.panel.hidden = false;
     this.panel.width = tabPreviews.width * this.visibleCount;
@@ -483,8 +483,8 @@ var ctrlTab = {
   },
   onPopupHiding: function () {
     this.stopScroll();
-    window.removeEventListener("keyup", this, true);
-    window.removeEventListener("keydown", this, true);
+    document.removeEventListener("keyup", this, false);
+    document.removeEventListener("keydown", this, false);
     while (this.container.childNodes.length)
       this.removeBox(this.container.lastChild);
     this.selected = null;
