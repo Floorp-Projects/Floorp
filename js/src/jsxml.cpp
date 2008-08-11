@@ -8052,7 +8052,7 @@ js_GetAnyName(JSContext *cx, jsval *vp)
                 }
 
                 obj = js_NewObjectWithGivenProto(cx, &js_AnyNameClass, NULL,
-                                                 NULL, 0);
+                                                 NULL, 0, 0);
                 if (!obj || !JS_SetPrivate(cx, obj, qn)) {
                     cx->weakRoots.newborn[GCX_OBJECT] = NULL;
                     ok = JS_FALSE;
