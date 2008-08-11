@@ -100,6 +100,11 @@ public:
         _data[_len++] = a;
     }
     
+    void addUnique(T a) {
+        if (!contains(a))
+            add(a);
+    }
+    
     void setLength(unsigned len) {
         ensure(len + 1);
         _len = len;
@@ -180,6 +185,8 @@ public:
     SlotList                globalSlots;
     TypeMap                 stackTypeMap;
     TypeMap                 globalTypeMap;
+    unsigned                mismatchCount;
+    Queue<nanojit::Fragment*> dependentTrees;
     
     TreeInfo(nanojit::Fragment* _fragment) { fragment = _fragment; }
 };
