@@ -187,7 +187,9 @@ OPDEF(JSOP_STRICTNE,  73, "strictne",   NULL,         1,  2,  1,  10,  JOF_BYTE|
 /* Lexical closure constructor. */
 OPDEF(JSOP_CLOSURE,   74, "closure",    NULL,         3,  0,  0,  0,  JOF_OBJECT)
 
-OPDEF(JSOP_UNUSED75,  75, "unused75",   NULL,         1,  0,  0,  0,  JOF_BYTE)
+/* Variant of JSOP_NULL for default (global) |this| parameter pushing. */
+OPDEF(JSOP_NULLTHIS,  75, js_null_str,  js_null_str,  1,  0,  1, 19,  JOF_BYTE)
+
 OPDEF(JSOP_UNUSED76,  76, "unused76",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED77,  77, "unused77",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED78,  78, "unused78",   NULL,         1,  0,  0,  0,  JOF_BYTE)

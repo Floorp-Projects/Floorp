@@ -5868,9 +5868,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           default:
             /*
              * Push null as a placeholder for the global object, per ECMA-262
-             * 11.2.3 step 6.
+             * 11.2.3 step 6. We use JSOP_NULLTHIS to distinguish this opcode
+             * from JSOP_NULL (see jstracer.cpp for one use-case).
              */
-            if (!js_EmitTree(cx, cg, pn2) || js_Emit1(cx, cg, JSOP_NULL) < 0)
+            if (!js_EmitTree(cx, cg, pn2))
+                return JS_FALSE;
+            if (js_Emit1(cx, cg, JSOP_NULLTHIS) < 0)
                 return JS_FALSE;
         }
 

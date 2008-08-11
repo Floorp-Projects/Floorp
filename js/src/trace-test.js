@@ -515,51 +515,73 @@ function newTest()
 newTest.expected = "0123456789";
 test(newTest);
 
-function shapelessArgCalleeLoop(f, a)
-{
-  for (var i = 0; i < 10; i++)
-    f(i, a);
-}
-
-function shapelessVarCalleeLoop(f, a)
-{
-  var g = f;
-  for (var i = 0; i < 10; i++)
-    g(i, a);
-}
-
-function shapelessLetCalleeLoop(f, a)
+// The following functions use a delay line of length 2 to change the value
+// of the callee without exiting the traced loop. This is obviously tuned to
+// match the current HOTLOOP setting of 2.
+function shapelessArgCalleeLoop(f, g, h, a)
 {
   for (var i = 0; i < 10; i++) {
-    let g = f;
-    g(i, a);
+    f(i, a);
+    f = g;
+    g = h;
   }
 }
 
-function shapelessUnknownCalleeLoop(f, g, a)
+function shapelessVarCalleeLoop(f0, g, h, a)
+{
+  var f = f0;
+  for (var i = 0; i < 10; i++) {
+    f(i, a);
+    f = g;
+    g = h;
+  }
+}
+
+function shapelessLetCalleeLoop(f0, g, h, a)
 {
   for (var i = 0; i < 10; i++) {
-    (f || g)(i, a);
-    f = null;
+    let f = f0;
+    f(i, a);
+    f = g;
+    g = h;
+  }
+}
+
+function shapelessUnknownCalleeLoop(n, f, g, h, a)
+{
+  for (var i = 0; i < 10; i++) {
+    (n || f)(i, a);
+    f = g;
+    g = h;
   }
 }
 
 function shapelessCalleeTest()
 {
   var a = [];
-  shapelessArgCalleeLoop(function (i, a) a[i] = i, a);
-  shapelessVarCalleeLoop(function (i, a) a[10 + i] = i, a);
-  shapelessLetCalleeLoop(function (i, a) a[20 + i] = i, a);
-  shapelessUnknownCalleeLoop(null, function (i, a) a[30 + i] = i, a);
+
+  var helper = function (i, a) a[i] = i;
+  shapelessArgCalleeLoop(helper, helper, function (i, a) a[i] = -i, a);
+
+  helper = function (i, a) a[10 + i] = i;
+  shapelessVarCalleeLoop(helper, helper, function (i, a) a[10 + i] = -i, a);
+
+  helper = function (i, a) a[20 + i] = i;
+  shapelessLetCalleeLoop(helper, helper, function (i, a) a[20 + i] = -i, a);
+
+  helper = function (i, a) a[30 + i] = i;
+  shapelessUnknownCalleeLoop(null, helper, helper, function (i, a) a[30 + i] = -i, a);
+
   try {
-    shapelessUnknownCalleeLoop(null, {hack: 42}, a);
+    helper = {hack: 42};
+    shapelessUnknownCalleeLoop(null, helper, helper, helper, a);
   } catch (e) {
     if (e + "" != "TypeError: g is not a function")
       print("shapelessUnknownCalleeLoop: unexpected exception " + e);
   }
   return a.join("");
 }
-shapelessCalleeTest.expected = "0123456789012345678901234567890123456789";
+shapelessCalleeTest.expected = "01-2-3-4-5-6-7-8-901-2-3-4-5-6-7-8-9012345678901-2-3-4-5-6-7-8-9";
 test(shapelessCalleeTest);
 
 function typeofTest()
