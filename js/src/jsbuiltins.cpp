@@ -338,10 +338,16 @@ js_CallTree(InterpState* state, Fragment* f)
     return u.func(state, NULL);
 }
 
+JS_STATIC_ASSERT(JSSLOT_PRIVATE == JSSLOT_ARRAY_LENGTH);
+JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH + 1 == JSSLOT_ARRAY_COUNT);
+
 JSObject* FASTCALL
 js_FastNewObject(JSContext* cx, JSObject* ctor)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(ctor));
+    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, ctor);
+    JS_ASSERT(!FUN_INTERPRETED(fun));
+    JSClass* clasp = fun->u.n.clasp;
 
     JSObject* obj = (JSObject*) js_NewGCThing(cx, GCF_DONT_BLOCK | GCX_OBJECT, sizeof(JSObject));
     if (!obj)
@@ -362,8 +368,15 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
 
     obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     obj->fslots[JSSLOT_PARENT] = ctor->fslots[JSSLOT_PARENT];
-    obj->fslots[JSSLOT_CLASS] = PRIVATE_TO_JSVAL(&js_ObjectClass);
-    for (unsigned i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
+    obj->fslots[JSSLOT_CLASS] = PRIVATE_TO_JSVAL(clasp);
+
+    unsigned i = JSSLOT_PRIVATE;
+    if (clasp == &js_ArrayClass) {
+        obj->fslots[JSSLOT_ARRAY_LENGTH] = 0;
+        obj->fslots[JSSLOT_ARRAY_COUNT] = 0;
+        i += 2;
+    }
+    for (; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
 
     obj->map = js_HoldObjectMap(cx, proto->map);
