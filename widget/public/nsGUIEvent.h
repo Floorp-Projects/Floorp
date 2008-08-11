@@ -879,6 +879,8 @@ public:
     PRUint32 mOffset;
     nsString mString;
     nsRect mRect; // Finally, the coordinates is system coordinates.
+    // The return widget has the caret. This is set at all query events.
+    nsIWidget* mFocusedWidget;
   } mReply;
 };
 

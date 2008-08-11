@@ -5236,6 +5236,27 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     }
   }
 
+  // We need to initialize the TSMDocument *before* interpretKeyEvents when
+  // IME is enabled.
+  if (!isKeyEquiv && nsTSMManager::IsIMEEnabled()) {
+    // We need to get actual focused view. E.g., the view is in bookmark dialog
+    // that is <panel> element. Then, the key events are processed the parent
+    // window's view that has native focus.
+    nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT,
+                                    mGeckoChild);
+    textContent.InitForQueryTextContent(0, 0);
+    mGeckoChild->DispatchWindowEvent(textContent);
+    NSView<mozView>* focusedView = self;
+    if (textContent.mSucceeded && textContent.mReply.mFocusedWidget) {
+      NSView<mozView>* view =
+        static_cast<NSView<mozView>*>(textContent.mReply.mFocusedWidget->
+                                      GetNativeData(NS_NATIVE_WIDGET));
+      if (view)
+        focusedView = view;
+    }
+    nsTSMManager::InitTSMDocument(focusedView);
+  }
+
   // Let Cocoa interpret the key events, caching IsComposing first.
   // We don't do it if this came from performKeyEquivalent because
   // interpretKeyEvents isn't set up to handle those key combinations.
@@ -6074,12 +6095,52 @@ nsTSMManager::GetIMEOpenState()
 
 
 void
+nsTSMManager::InitTSMDocument(NSView<mozView>* aViewForCaret)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  sDocumentID = ::TSMGetActiveDocument();
+  if (!sDocumentID)
+    return;
+
+  // We need to set the focused window level to TSMDocument. Then, the popup
+  // windows of IME (E.g., a candidate list window) will be over the focused
+  // view. See http://developer.apple.com/technotes/tn2005/tn2128.html#TNTAG1
+  NSInteger TSMLevel, windowLevel;
+  UInt32 size = sizeof(TSMLevel);
+
+  OSStatus err =
+    ::TSMGetDocumentProperty(sDocumentID, kTSMDocumentWindowLevelPropertyTag,
+                             size, &size, &TSMLevel);
+  windowLevel = [[aViewForCaret window] level];
+
+  // Chinese IMEs on 10.5 don't work fine if the level is NSNormalWindowLevel,
+  // then, we need to increment the value.
+  if (windowLevel == NSNormalWindowLevel)
+    windowLevel++;
+
+  if (err == noErr && TSMLevel >= windowLevel)
+    return;
+  ::TSMSetDocumentProperty(sDocumentID, kTSMDocumentWindowLevelPropertyTag,
+                           sizeof(windowLevel), &windowLevel);
+
+  // ATOK (Japanese IME) updates the window level at activating,
+  // we need to notify the change with this hack.
+  ::DeactivateTSMDocument(sDocumentID);
+  ::ActivateTSMDocument(sDocumentID);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+void
 nsTSMManager::StartComposing(NSView<mozView>* aComposingView)
 {
   if (sComposingView && sComposingView != sComposingView)
     CommitIME();
   sComposingView = aComposingView;
-  sDocumentID = ::TSMGetActiveDocument();
+  NS_ASSERTION(::TSMGetActiveDocument() == sDocumentID,
+               "We didn't initialize the TSMDocument");
 }
 
 
@@ -6106,7 +6167,6 @@ nsTSMManager::EndComposing()
     [sComposingString release];
     sComposingString = nsnull;
   }
-  sDocumentID = nsnull;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
