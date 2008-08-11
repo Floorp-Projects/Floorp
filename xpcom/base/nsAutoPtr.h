@@ -42,7 +42,7 @@
 
   // Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
 #ifndef nsCOMPtr_h___
-  // For |already_AddRefed|, |nsDerivedSafe|, |NSCAP_Zero|,
+  // For |already_AddRefed|, |NSCAP_Zero|,
   // |NSCAP_DONT_PROVIDE_NONCONST_OPEQ|,
   // |NSCAP_FEATURE_INLINE_STARTASSIGNMENT|
 #include "nsCOMPtr.h"
@@ -1056,32 +1056,31 @@ class nsRefPtr
       T*
       get() const
           /*
-            Prefer the implicit conversion provided automatically by |operator nsDerivedSafe<T>*() const|.
-             Use |get()| to resolve ambiguity or to get a castable pointer.
-
-            Returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|.
+            Prefer the implicit conversion provided automatically by |operator T*() const|.
+            Use |get()| to resolve ambiguity or to get a castable pointer.
           */
         {
           return const_cast<T*>(mRawPtr);
         }
 
-      operator nsDerivedSafe<T>*() const
+      operator T*() const
           /*
-            ...makes an |nsRefPtr| act like its underlying raw pointer type (except against |AddRef()|, |Release()|,
-              and |delete|) whenever it is used in a context where a raw pointer is expected.  It is this operator
-              that makes an |nsRefPtr| substitutable for a raw pointer.
+            ...makes an |nsRefPtr| act like its underlying raw pointer type whenever it
+            is used in a context where a raw pointer is expected.  It is this operator
+            that makes an |nsRefPtr| substitutable for a raw pointer.
 
-            Prefer the implicit use of this operator to calling |get()|, except where necessary to resolve ambiguity.
+            Prefer the implicit use of this operator to calling |get()|, except where
+            necessary to resolve ambiguity.
           */
         {
-          return get_DerivedSafe();
+          return get();
         }
 
-      nsDerivedSafe<T>*
+      T*
       operator->() const
         {
           NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsRefPtr with operator->().");
-          return get_DerivedSafe();
+          return get();
         }
 
 #ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
@@ -1116,11 +1115,11 @@ class nsRefPtr
 #endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
     public:
-      nsDerivedSafe<T>&
+      T&
       operator*() const
         {
           NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL nsRefPtr with operator*().");
-          return *get_DerivedSafe();
+          return *get();
         }
 
       T**
@@ -1133,15 +1132,6 @@ class nsRefPtr
           return reinterpret_cast<T**>(&mRawPtr);
 #endif
         }
-
-    private:
-      nsDerivedSafe<T>*
-      get_DerivedSafe() const
-        {
-          return const_cast<nsDerivedSafe<T>*>
-                           (reinterpret_cast<const nsDerivedSafe<T>*>(mRawPtr));
-        }
-      
   };
 
 #ifdef CANT_RESOLVE_CPP_CONST_AMBIGUITY
