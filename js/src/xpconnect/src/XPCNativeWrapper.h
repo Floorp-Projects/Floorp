@@ -46,7 +46,8 @@ public:
   static PRBool AttachNewConstructorObject(XPCCallContext &ccx,
                                            JSObject *aGlobalObject);
 
-  static JSObject *GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper);
+  static JSObject *GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
+                                JSObject *callee);
 
   static PRBool IsNativeWrapperClass(JSClass *clazz)
   {
