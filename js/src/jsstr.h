@@ -48,7 +48,6 @@
  * string descriptor.  String descriptors are GC'ed, while their chars are
  * allocated from the malloc heap.
  */
-#include "jsstddef.h"
 #include <ctype.h>
 #include "jspubtd.h"
 #include "jsprvtd.h"
@@ -241,9 +240,8 @@ js_GetDependentStringChars(JSString *str);
 extern const jschar *
 js_GetStringChars(JSContext *cx, JSString *str);
 
-extern JSString *
-js_ConcatStrings(JSContext *cx, JSString *left, JSString *right,
-                 uintN gcflag __cplusplus_only( = 0));
+extern JSString * JS_FASTCALL
+js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
 
 extern const jschar *
 js_UndependString(JSContext *cx, JSString *str);
@@ -445,8 +443,7 @@ extern const char js_encodeURIComponent_str[];
 
 /* GC-allocate a string descriptor for the given malloc-allocated chars. */
 extern JSString *
-js_NewString(JSContext *cx, jschar *chars, size_t length,
-             uintN gcflag __cplusplus_only( = 0));
+js_NewString(JSContext *cx, jschar *chars, size_t length);
 
 extern JSString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start,

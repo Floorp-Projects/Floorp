@@ -2718,7 +2718,7 @@ TraceRecorder::record_JSOP_ADD()
     jsval& l = stackval(-2);
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
         LIns* args[] = { get(&r), get(&l), cx_ins };
-        LIns* concat = lir->insCall(F_FastConcatStrings, args);
+        LIns* concat = lir->insCall(F_ConcatStrings, args);
         guard(false, lir->ins_eq0(concat), OOM_EXIT);
         set(&l, concat);
         return true;
