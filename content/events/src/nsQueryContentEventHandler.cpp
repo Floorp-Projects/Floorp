@@ -101,6 +101,19 @@ nsQueryContentEventHandler::Init(nsQueryContentEvent* aEvent)
 
   aEvent->mReply.mContentsRoot = mRootContent.get();
 
+  nsRefPtr<nsCaret> caret;
+  rv = mPresShell->GetCaret(getter_AddRefs(caret));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(caret, "GetCaret succeeded, but the result is null");
+  PRBool isCollapsed;
+  nsRect r;
+  nsIView* view = nsnull;
+  rv = caret->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates,
+                                  mSelection, &r, &isCollapsed, &view);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+  aEvent->mReply.mFocusedWidget = view->GetWidget();
+
   return NS_OK;
 }
 
