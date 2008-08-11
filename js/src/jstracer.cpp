@@ -1651,7 +1651,10 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     uint64 start = rdtsc();
 #endif
 
+    JS_ASSERT(!cx->gcDontBlock);
+    cx->gcDontBlock = JS_TRUE;
     GuardRecord* lr = u.func(&state, NULL);
+    cx->gcDontBlock = JS_FALSE;
 
     for (int32 i = 0; i < lr->calldepth; i++)
         js_SynthesizeFrame(cx, callstack[i]);
