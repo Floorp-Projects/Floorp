@@ -4405,7 +4405,6 @@ NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
 NECKO_SMALL_BUFFERS=
-SUNCTL=
 JS_STATIC_BUILD=
 XPC_IDISPATCH_SUPPORT=
 
@@ -5226,14 +5225,6 @@ fi
 dnl bi-directional support always on
 IBMBIDI=1
 AC_DEFINE(IBMBIDI)
-
-dnl ========================================================
-dnl complex text support off by default
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(ctl,
-[  --enable-ctl            Enable Thai Complex Script support],
-    SUNCTL=1,
-    SUNCTL= )
 
 dnl ========================================================
 dnl view source support on by default
@@ -7863,22 +7854,6 @@ if test "$MOZ_LDAP_XPCOM"; then
     fi
 fi
 
-if test "$COMPILE_ENVIRONMENT"; then
-if test "$SUNCTL"; then
-    dnl older versions of glib do not seem to have gmodule which ctl needs
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $GLIB_CFLAGS"
-    AC_LANG_SAVE
-    AC_LANG_C
-    AC_TRY_COMPILE([#include <gmodule.h>],
-        [ int x = 1; x++; ],,
-        [AC_MSG_ERROR([Cannot build ctl without gmodule support in glib.])])
-    AC_LANG_RESTORE
-    CFLAGS=$_SAVE_CFLAGS
-    AC_DEFINE(SUNCTL)
-fi
-fi # COMPILE_ENVIRONMENT
-
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
@@ -7985,7 +7960,6 @@ AC_SUBST(BUILD_STATIC_LIBS)
 AC_SUBST(MOZ_ENABLE_LIBXUL)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
-AC_SUBST(SUNCTL)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_XPINSTALL)

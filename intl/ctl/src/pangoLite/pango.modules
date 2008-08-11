@@ -1,5 +1,0 @@
-# Pango Modules file
-# Automatically generated file, do not edit
-#
-libmozpango-thaix.so ThaiScriptEngineX PangoliteEngineShape PangoliteRenderX 3585-3675:*
-libmozpango-dvngx.so DvngScriptEngineX PangoliteEngineShape PangoliteRenderX 2305-2416:*
