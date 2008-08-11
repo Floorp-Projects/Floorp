@@ -2816,23 +2816,23 @@ js_EqualStrings(JSString *str1, JSString *str2)
 
     /* Fast case: pointer equality could be a quick win. */
     if (str1 == str2)
-        return JS_TRUE;
+        return true;
 
     n = JSSTRING_LENGTH(str1);
     if (n != JSSTRING_LENGTH(str2))
-        return JS_FALSE;
+        return false;
 
     if (n == 0)
-        return JS_TRUE;
+        return true;
 
     s1 = JSSTRING_CHARS(str1), s2 = JSSTRING_CHARS(str2);
     do {
         if (*s1 != *s2)
-            return JS_FALSE;
+            return false;
         ++s1, ++s2;
     } while (--n != 0);
 
-    return JS_TRUE;
+    return true;
 }
 
 jsint JS_FASTCALL
