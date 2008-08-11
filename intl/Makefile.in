@@ -44,10 +44,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= unicharutil uconv locale strres lwbrk build
 
-# Sun's Complex Text Layout support
-ifdef SUNCTL
-DIRS		+= ctl
-endif
-
 include $(topsrcdir)/config/rules.mk
 
