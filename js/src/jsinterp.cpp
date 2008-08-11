@@ -2663,16 +2663,22 @@ js_Interpret(JSContext *cx)
 # define LOAD_INTERRUPT_HANDLER(cx)                                           \
     ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
                          ? interruptJumpTable                                 \
+                         : JS_TRACE_MONITOR(cx).recorder                      \
+                         ? recordingJumpTable                                 \
                          : normalJumpTable))
 # define ENABLE_TRACER(flag)                                                  \
     JS_BEGIN_MACRO                                                            \
+        JS_ASSERT((flag) == !!JS_TRACE_MONITOR(cx).recorder);                 \
         jumpTable = (flag) ? recordingJumpTable : normalJumpTable;            \
     JS_END_MACRO
 #else
 # define LOAD_INTERRUPT_HANDLER(cx)                                           \
-    ((void) (switchMask = (cx)->debugHooks->interruptHandler ? 0 : 255))
+    ((void) (switchMask = ((cx)->debugHooks->interruptHandler ||              \
+                           JS_TRACE_MONITOR(cx).recorder)                     \
+                          ? 0 : 255))
 # define ENABLE_TRACER(flag)                                                  \
     JS_BEGIN_MACRO                                                            \
+        JS_ASSERT((flag) == !!JS_TRACE_MONITOR(cx).recorder);                 \
         switchMask = (flag) ? 0 : 255;                                        \
     JS_END_MACRO
 #endif
