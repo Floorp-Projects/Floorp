@@ -100,6 +100,11 @@ public:
         _data[_len++] = a;
     }
     
+    void addUnique(T a) {
+        if (!contains(a))
+            add(a);
+    }
+    
     void setLength(unsigned len) {
         ensure(len + 1);
         _len = len;
@@ -180,6 +185,8 @@ public:
     SlotList                globalSlots;
     TypeMap                 stackTypeMap;
     TypeMap                 globalTypeMap;
+    unsigned                mismatchCount;
+    Queue<nanojit::Fragment*> dependentTrees;
     
     TreeInfo(nanojit::Fragment* _fragment) { fragment = _fragment; }
 };
@@ -213,14 +220,13 @@ class TraceRecorder {
     ptrdiff_t nativeStackOffset(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
-                const char *prefix, int index, JSStackFrame *fp);
+                const char *prefix, uintN index, JSStackFrame *fp);
     void import(unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap);
     void trackNativeStackUse(unsigned slots);
 
     bool lazilyImportGlobalSlot(unsigned slot);
     
-    nanojit::LIns* guard(bool expected, nanojit::LIns* cond, 
-            nanojit::ExitType exitType = nanojit::DONT_GROW);
+    nanojit::LIns* guard(bool expected, nanojit::LIns* cond, nanojit::ExitType exitType);
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
     nanojit::LIns* get(jsval* p);
