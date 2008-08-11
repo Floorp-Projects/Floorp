@@ -2998,7 +2998,7 @@ TraceRecorder::record_JSOP_SETPROP()
         return false;
     if (!native_set(obj_ins, sprop, dslots_ins, boxed_ins))
         return false;
-    if (pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
+    if (*pc == JSOP_SETPROP && pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
         stack(-2, v_ins);
     return true;
 }
@@ -3090,7 +3090,10 @@ TraceRecorder::record_JSOP_SETELEM()
     LIns* args[] = { boxed_ins, idx_ins, obj_ins, cx_ins };
     LIns* res_ins = lir->insCall(F_Array_dense_setelem, args);
     guard(false, lir->ins_eq0(res_ins));
-    set(&l, v_ins);
+
+    jsbytecode* pc = cx->fp->regs->pc;
+    if (*pc == JSOP_SETELEM && pc[JSOP_SETELEM_LENGTH] != JSOP_POP)
+        set(&l, v_ins);
     return true;
 }
 
@@ -3673,25 +3676,34 @@ TraceRecorder::record_JSOP_UINT16()
 bool
 TraceRecorder::record_JSOP_NEWINIT()
 {
-    return false;
+    JSObject* ctor;
+    JSProtoKey key = JSProtoKey(GET_INT8(cx->fp->regs->pc));
+    if (!js_GetClassObject(cx, globalObj, key, &ctor))
+        return false;
+    LIns* args[] = { lir->insImmPtr((void*) ctor), cx_ins };
+    LIns* v_ins = lir->insCall(F_FastNewObject, args);
+    guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
+    stack(0, v_ins);
+    return true;
 }
 
 bool
 TraceRecorder::record_JSOP_ENDINIT()
 {
-    return false;
+    return true;
 }
 
 bool
 TraceRecorder::record_JSOP_INITPROP()
 {
-    return false;
+    // The common code avoids stacking the RHS if op is not JSOP_SETPROP.
+    return record_JSOP_SETPROP();
 }
 
 bool
 TraceRecorder::record_JSOP_INITELEM()
 {
-    return false;
+    return record_JSOP_SETELEM();
 }
 
 bool
