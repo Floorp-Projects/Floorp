@@ -79,7 +79,7 @@
 #include "jsstr.h"
 #include "prmjtime.h"
 
-#ifdef JS_TRACER
+#if !defined JS_THREADSAFE && defined JS_TRACER
 #include "jstracer.h"
 #endif
 
@@ -817,7 +817,7 @@ JS_DestroyRuntime(JSRuntime *rt)
 #endif
 
 #if !defined JS_THREADSAFE && defined JS_TRACER
-    js_DestroyJIT(&rt->traceMonitor);
+    js_FinishJIT(&rt->traceMonitor);
 #endif
 
     js_FreeRuntimeScriptState(rt);
