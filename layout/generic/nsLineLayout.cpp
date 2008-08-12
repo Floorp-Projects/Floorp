@@ -341,7 +341,7 @@ nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
   for (PerSpanData* psd = mCurrentSpan; psd; psd = psd->mParent) {
     psd->mRightEdge += deltaWidth;
     psd->mContainsFloat = PR_TRUE;
-    NS_ASSERTION(psd->mX <= psd->mRightEdge,
+    NS_ASSERTION(psd->mX - mTrimmableWidth <= psd->mRightEdge,
                  "We placed a float where there was no room!");
 #ifdef NOISY_REFLOW
     printf("  span %p: oldRightEdge=%d newRightEdge=%d\n",
@@ -873,7 +873,22 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
         nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(aFrame);
-        nscoord availableWidth = psd->mRightEdge - psd->mX;
+        // Add mTrimmableWidth to the available width since if the line ends
+        // here, the width of the inline content will be reduced by
+        // mTrimmableWidth.
+        nscoord availableWidth = psd->mRightEdge - (psd->mX - mTrimmableWidth);
+        if (psd->mNoWrap) {
+          // If we place floats after inline content where there's
+          // no break opportunity, we don't know how much additional
+          // width is required for the non-breaking content after the float,
+          // so we can't know whether the float plus that content will fit
+          // on the line. So for now, don't place floats after inline
+          // content where there's no break opportunity. This is incorrect
+          // but hopefully rare. Fixing it will require significant
+          // restructuring of line layout.
+          // We might as well allow zero-width floats to be placed, though.
+          availableWidth = 0;
+        }
         // XXXldb What is this test supposed to be?
         if (!NS_SUBTREE_DIRTY(aFrame)) {
           // incremental reflow of child
