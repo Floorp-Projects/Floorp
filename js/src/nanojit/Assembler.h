@@ -199,7 +199,7 @@ namespace nanojit
 
 			void		assemble(Fragment* frag, NInsList& loopJumps);
 			void		endAssembly(Fragment* frag, NInsList& loopJumps);
-			void		beginAssembly(RegAllocMap* map);
+			void		beginAssembly(Fragment *frag, RegAllocMap* map);
 			void		copyRegisters(RegAlloc* copyTo);
 			void		releaseRegisters();
             void        patch(GuardRecord *lr);
