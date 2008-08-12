@@ -1240,7 +1240,12 @@ namespace nanojit
 				case LIR_loop:
 				{
 					JMP_long_placeholder(); // jump to SOT	
-					verbose_only( if (_verbose && _outputCache) { _outputCache->removeLast(); outputf("         jmp   SOT"); } );
+#if defined(NJ_VERBOSE)
+                    if (_verbose && _outputCache) {
+                        delete _outputCache->removeLast();
+					    outputf("         jmp   SOT"); 
+                    }
+#endif
 					
 					loopJumps.add(_nIns);
 
