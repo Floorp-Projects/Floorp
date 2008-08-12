@@ -3737,15 +3737,21 @@ TraceRecorder::record_JSOP_LOOKUPSWITCH()
         jsdouble d = asNumber(v);
         jsdpun u;
         u.d = d;
-        guard(true, addName(lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)),
-                            "guard(lookupswitch numeric)"), BRANCH_EXIT);
+        guard(true,
+              addName(lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)),
+                      "guard(lookupswitch numeric)"),
+              BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
         LIns* args[] = { get(&v), lir->insImmPtr((void*) JSVAL_TO_STRING(v)) };
-        guard(true, addName(lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args))),
-                            "guard(lookupswitch string)"), BRANCH_EXIT);
+        guard(true,
+              addName(lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args))),
+                      "guard(lookupswitch string)"),
+              BRANCH_EXIT);
     } else if (JSVAL_IS_BOOLEAN(v)) {
-        guard(true, addName(lir->ins2(LIR_eq, get(&v), lir->insImm(JSVAL_TO_BOOLEAN(v))),
-                            "guard(lookupswitch boolean)"), BRANCH_EXIT);
+        guard(true,
+              addName(lir->ins2(LIR_eq, get(&v), lir->insImm(JSVAL_TO_BOOLEAN(v))),
+                      "guard(lookupswitch boolean)"),
+              BRANCH_EXIT);
     } else {
         ABORT_TRACE("lookupswitch on object, null, or undefined");
     }
