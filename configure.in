@@ -1582,21 +1582,6 @@ SEAMONKEY_VERSION=`cat $topsrcdir/suite/config/version.txt`
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
 
-PKG_CHECK_MODULES(LIBHILONMIME,libhildonmime,
-                  NS_HILDON=1,
-                  NS_HILDON=)
-if test $NS_HILDON; then
-   AC_DEFINE(NS_HILDON)
-fi
-
-PKG_CHECK_MODULES(LIBOSSO,libosso,
-                  NS_OSSO=1,
-                  NS_OSSO=)
-
-if test $NS_OSSO; then
-   AC_DEFINE(NS_OSSO)     
-fi
-
 dnl ========================================================
 dnl System overrides of the defaults for target
 dnl ========================================================
@@ -6064,6 +6049,7 @@ fi
 
 AC_SUBST(MOZ_NATIVE_SQLITE)
 
+dnl ========================================================
 dnl = Enable help viewer (off by default)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(help-viewer,
@@ -6129,6 +6115,27 @@ if test `echo "$target_os" | grep -c \^solaris 2>/dev/null` = 0 -o \
     JS_ULTRASPARC_OPTS=
 fi
 AC_SUBST(JS_ULTRASPARC_OPTS)
+
+dnl ========================================================
+dnl = Hildon and OSSO checks
+dnl ========================================================
+PKG_CHECK_MODULES(LIBHILONMIME,libhildonmime,
+                  NS_HILDON=1,
+                  NS_HILDON=)
+if test $NS_HILDON; then
+   AC_DEFINE(NS_HILDON)
+fi
+
+PKG_CHECK_MODULES(LIBOSSO,libosso,
+                  NS_OSSO=1,
+                  NS_OSSO=)
+
+if test $NS_OSSO; then
+    if test -z "$MOZ_ENABLE_DBUS"; then
+        AC_MSG_ERROR([DBus is required when building for OSSO])
+    fi
+    AC_DEFINE(NS_OSSO)     
+fi
 
 dnl ========================================================
 dnl =
