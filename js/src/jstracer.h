@@ -336,10 +336,10 @@ extern void
 js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason);
 
 extern void
-js_InitJIT(JSContext* cx);
+js_InitJIT(JSTraceMonitor *tm);
 
 extern void
-js_DestroyJIT(JSContext* cx);
+js_DestroyJIT(JSTraceMonitor *tm);
 
 extern void
 js_FlushJITCache(JSContext* cx);

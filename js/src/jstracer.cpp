@@ -1795,9 +1795,8 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
 }
 
 extern void
-js_InitJIT(JSContext* cx)
+js_InitJIT(JSTraceMonitor *tm)
 {
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (!tm->fragmento) {
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
@@ -1811,9 +1810,8 @@ js_InitJIT(JSContext* cx)
 }
 
 extern void
-js_DestroyJIT(JSContext* cx)
+js_DestroyJIT(JSTraceMonitor *tm)
 {
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 #ifdef DEBUG
     printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
            "trees trashed(%llu), slot promoted(%llu), "
