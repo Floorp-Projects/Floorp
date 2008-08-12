@@ -79,7 +79,7 @@ static PRBool IsDiscardable(PRUint8 ch, PRUint32* aFlags)
 PRUnichar*
 nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
                                 PRUnichar* aOutput,
-                                PRBool aCompressWhitespace,
+                                CompressionMode aCompression,
                                 PRPackedBool* aIncomingWhitespace,
                                 gfxSkipCharsBuilder* aSkipChars,
                                 PRUint32* aAnalysisFlags)
@@ -87,7 +87,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
   PRUint32 flags = 0;
   PRUnichar* outputStart = aOutput;
 
-  if (!aCompressWhitespace) {
+  if (aCompression == COMPRESS_NONE) {
     // Skip discardables.
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
@@ -113,7 +113,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
           (i + 1 >= aLength ||
            !IsSpaceCombiningSequenceTail(aText, aLength - (i + 1)))) {
         nowInWhitespace = PR_TRUE;
-      } else if (ch == '\n') {
+      } else if (ch == '\n' && aCompression == COMPRESS_WHITESPACE_NEWLINE) {
         if (i > 0 && IS_CJ_CHAR(aText[-1]) &&
             i + 1 < aLength && IS_CJ_CHAR(aText[1])) {
           // Discard newlines between CJK chars.
@@ -160,7 +160,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
 PRUint8*
 nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
                                 PRUint8* aOutput,
-                                PRBool aCompressWhitespace,
+                                CompressionMode aCompression,
                                 PRPackedBool* aIncomingWhitespace,
                                 gfxSkipCharsBuilder* aSkipChars,
                                 PRUint32* aAnalysisFlags)
@@ -168,7 +168,7 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
   PRUint32 flags = 0;
   PRUint8* outputStart = aOutput;
 
-  if (!aCompressWhitespace) {
+  if (aCompression == COMPRESS_NONE) {
     // Skip discardables.
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
@@ -189,7 +189,8 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       PRUint8 ch = *aText++;
-      PRBool nowInWhitespace = ch == ' ' || ch == '\t' || ch == '\n' || ch == '\f';
+      PRBool nowInWhitespace = ch == ' ' || ch == '\t' ||
+        (ch == '\n' && aCompression == COMPRESS_WHITESPACE_NEWLINE);
       if (!nowInWhitespace) {
         if (IsDiscardable(ch, &flags)) {
           aSkipChars->SkipChar();
