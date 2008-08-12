@@ -481,10 +481,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         JS_free(cx, lrs);
     }
 
-#ifdef JS_TRACER
-    js_DestroyJIT(cx);
-#endif
-
 #ifdef JS_THREADSAFE
     js_ClearContextThread(cx);
 #endif
