@@ -114,7 +114,7 @@ js_ThreadDestructorCB(void *ptr)
     JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
     GSN_CACHE_CLEAR(&thread->gsnCache);
 #if defined JS_TRACER
-    js_DestroyJIT(&thread->traceMonitor);
+    js_FinishJIT(&thread->traceMonitor);
 #endif
     free(thread);
 }
