@@ -726,7 +726,7 @@ js_NumberToCString(JSContext *cx, jsdouble d, char *buf, size_t bufSize)
     return numStr;
 }
 
-JSString *
+JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d)
 {
     char buf[DTOSTR_STANDARD_BUFFER_SIZE];
