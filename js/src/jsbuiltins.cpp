@@ -460,6 +460,26 @@ js_TypeOfBoolean(JSContext* cx, jsint unboxed)
     return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[type]);
 }
 
+jsint FASTCALL
+js_Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
+{
+    jsval v;
+    if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, ATOM_TO_JSID(str), &v))
+        return -1;
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+    return JSVAL_TO_BOOLEAN(v);
+}
+
+jsint FASTCALL
+js_Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
+{
+    jsval v;
+    if (!js_PropertyIsEnumerable(cx, obj, ATOM_TO_JSID(str), &v))
+        return -1;
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+    return JSVAL_TO_BOOLEAN(v);
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q

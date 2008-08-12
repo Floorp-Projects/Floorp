@@ -3287,6 +3287,10 @@ TraceRecorder::record_JSOP_CALL()
         { js_math_random,      F_Math_random,          "R",    "",    INFALLIBLE, NULL },
         { js_str_concat,       F_String_p_concat_1int, "TC",  "i",    FAIL_NULL,  NULL },
         { js_array_join,       F_Array_p_join,         "TC",  "s",    FAIL_NULL,  NULL },
+        { js_obj_hasOwnProperty, F_Object_p_hasOwnProperty,
+                                                       "TC",  "s",    FAIL_NEG,   NULL },
+        { js_obj_propertyIsEnumerable, F_Object_p_propertyIsEnumerable,
+                                                       "TC",  "s",    FAIL_NEG,   NULL },
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
