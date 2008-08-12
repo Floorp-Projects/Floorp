@@ -900,6 +900,9 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
     /* After this, control must flow through label out: to exit. */
     JS_PUSH_TEMP_ROOT(cx, 3, localroots, &tvr);
 
+#ifdef __GNUC__
+    message = filename = NULL;
+#endif
     ok = JS_GetProperty(cx, obj, js_message_str, &localroots[0]) &&
          (message = js_ValueToSource(cx, localroots[0]));
     if (!ok)
