@@ -19,7 +19,23 @@ function test() {
   ctrlTabTest([1]      , 1, 0);
 
   gBrowser.removeTab(gBrowser.tabContainer.lastChild);
+
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  var eventConsumed = true;
+  var detectKeyEvent = function (event) {
+    eventConsumed = event.getPreventDefault();
+  };
+  document.addEventListener("keypress", detectKeyEvent, false);
+  pressCtrlTab();
+  document.removeEventListener("keypress", detectKeyEvent, false);
+  ok(eventConsumed, "Ctrl+Tab consumed by the tabbed browser if one tab is open");
+  is(focusedWindow.location, document.commandDispatcher.focusedWindow.location,
+     "Ctrl+Tab doesn't change focus if one tab is open");
 }
+
+function pressCtrlTab() EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true });
+
+function releaseCtrl() EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" });
 
 function ctrlTabTest(tabsToSelect, tabTimes, expectedIndex) {
   tabsToSelect.forEach(function (index) {
@@ -33,7 +49,7 @@ function ctrlTabTest(tabsToSelect, tabTimes, expectedIndex) {
               normalized + " tabs back in most-recently-selected order";
 
   for (let i = 0; i < tabTimes; i++) {
-    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true });
+    pressCtrlTab();
 
     if (tabCount > 2)
      is(gBrowser.tabContainer.selectedIndex, indexStart,
@@ -47,7 +63,7 @@ function ctrlTabTest(tabsToSelect, tabTimes, expectedIndex) {
     is(ctrlTab.label.value, gBrowser.mTabs[expectedIndex].label,
        "Preview panel displays label of expected tab");
 
-    EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" });
+    releaseCtrl();
 
     ok(ctrlTab.panel.state == "hiding" || ctrlTab.panel.state == "closed",
        "Releasing Ctrl closes the preview panel");
