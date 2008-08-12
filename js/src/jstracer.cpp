@@ -2798,8 +2798,16 @@ TraceRecorder::record_JSOP_ADD()
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
-    if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
-        LIns* args[] = { get(&r), get(&l), cx_ins };
+    if (JSVAL_IS_STRING(l)) {
+        LIns* args[] = { NULL, get(&l), cx_ins };
+        if (JSVAL_IS_STRING(r)) {
+            args[0] = get(&r);
+        } else if (JSVAL_IS_NUMBER(r)) {
+            LIns* args2[] = { get(&r), cx_ins };
+            args[0] = lir->insCall(F_NumberToString, args2);
+        } else {
+            ABORT_TRACE("untraceable right operand to string-JSOP_ADD");
+        }
         LIns* concat = lir->insCall(F_ConcatStrings, args);
         guard(false, lir->ins_eq0(concat), OOM_EXIT);
         set(&l, concat);
