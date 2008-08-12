@@ -1014,7 +1014,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
      * to make it appear so).
      *
      * This code couples tightly to the attributes for the function_props[]
-     * initializers above, and to js_SetProperty and js_HasOwnPropertyHelper.
+     * initializers above, and to js_SetProperty and js_HasOwnProperty.
      *
      * It's important to allow delegating objects, even though they inherit
      * this getter (fun_getProperty), to override arguments, arity, caller,
