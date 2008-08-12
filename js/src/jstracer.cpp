@@ -2705,6 +2705,7 @@ TraceRecorder::record_JSOP_BITAND()
     return binary(LIR_and);
 }
 
+// See FIXME for JSOP_STRICTEQ before evolving JSOP_EQ to handle mixed types.
 bool
 TraceRecorder::record_JSOP_EQ()
 {
@@ -2746,6 +2747,7 @@ TraceRecorder::record_JSOP_EQ()
     return cmp(LIR_feq);
 }
 
+// See FIXME for JSOP_STRICTNE before evolving JSOP_NE to handle mixed types.
 bool
 TraceRecorder::record_JSOP_NE()
 {
@@ -3721,12 +3723,18 @@ TraceRecorder::record_JSOP_LOOKUPSWITCH()
 bool
 TraceRecorder::record_JSOP_STRICTEQ()
 {
+    // FIXME: JSOP_EQ currently compares only like operand types; if it evolves
+    // to handle conversions we must insist on like "types" here (care required
+    // for 0 == -1, e.g.).
     return record_JSOP_EQ();
 }
 
 bool
 TraceRecorder::record_JSOP_STRICTNE()
 {
+    // FIXME: JSOP_NE currently compares only like operand types; if it evolves
+    // to handle conversions we must insist on like "types" here (care required
+    // for 0 == -1, e.g.).
     return record_JSOP_NE();
 }
 
