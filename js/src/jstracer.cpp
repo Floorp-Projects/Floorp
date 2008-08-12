@@ -514,6 +514,12 @@ public:
         SET_VPNAME("stack");                                                  \
         vp = StackBase(fp); vpstop = fp->regs->sp;                            \
         while (vp < vpstop) { code; ++vp; INC_VPNUM(); }                      \
+        if (depth != 0) {                                                     \
+            SET_VPNAME("missing");                                            \
+            vp = fp->down->regs->sp;                                          \
+            vpstop = vp + (fp->fun->nargs - fp->argc);                        \
+            while (vp < vpstop) { code; ++vp; INC_VPNUM(); }                  \
+        }                                                                     \
     JS_END_MACRO
 
 /* Iterate over all slots in each pending frame. */
@@ -727,6 +733,11 @@ done:
         if (size_t(p - spbase) < size_t(fp->regs->sp - spbase))
             RETURN(offset + size_t(p - spbase) * sizeof(double));
         offset += size_t(fp->regs->sp - spbase) * sizeof(double);
+        if (fsp != fstack) {
+            if (size_t(p - fp->down->regs->sp) < size_t(fp->fun->nargs - fp->argc))
+                RETURN(offset + size_t(p - fp->down->regs->sp) * sizeof(double));
+            offset += size_t(fp->fun->nargs - fp->argc) * sizeof(double);
+        }
     }
 
     /*
@@ -2591,8 +2602,9 @@ TraceRecorder::record_EnterFrame()
         ABORT_TRACE("exceeded maximum call depth");
     JSStackFrame* fp = cx->fp;
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
-    unsigned n;
-    for (n = 0; n < fp->script->nfixed; ++n)
+    for (uintN n = fp->argc; n < fp->fun->nargs; ++n)
+        set(&fp->argv[n], void_ins, true);
+    for (uintN n = 0; n < fp->script->nfixed; ++n)
         set(&fp->slots[n], void_ins, true);
     return true;
 }
