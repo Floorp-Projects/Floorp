@@ -176,7 +176,7 @@ extern JSBool
 js_NewNumberInRootedValue(JSContext *cx, jsdouble d, jsval *vp);
 
 /* Convert a number to a GC'ed string. */
-extern JSString *
+extern JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d);
 
 /*
