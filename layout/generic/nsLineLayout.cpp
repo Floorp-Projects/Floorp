@@ -1265,19 +1265,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 
     // We will want to try backup.
     SetFlag(LL_NEEDBACKUP, PR_TRUE);
-
-    if (!aCanRollBackBeforeFrame) {
-      // Nowhere to roll back to, so make this fit
-      return PR_TRUE;
-    }
-    if (pfd->mSpan) {
-      // Allow spans to fit here. We don't want a span to fail to fit just
-      // because one of its children didn't fit; there may be a break opportunity
-      // we can roll back to inside the span.
-      return PR_TRUE;
-    }
-    // There is a break opportunity before the frame, so we can stop line
-    // reflow now.
+    return PR_TRUE;
   }
 
 #ifdef NOISY_CAN_PLACE_FRAME
