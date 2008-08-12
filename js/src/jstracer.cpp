@@ -2294,8 +2294,10 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             }
 
             LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
-            guard(true, addName(lir->ins2i(LIR_eq, shape_ins, PCVCAP_SHAPE(entry->vcap)),
-                  "guard(vcap_shape)"), MISMATCH_EXIT);
+            guard(true,
+                  addName(lir->ins2i(LIR_eq, shape_ins, PCVCAP_SHAPE(entry->vcap)),
+                          "guard(vcap_shape)"),
+                  MISMATCH_EXIT);
         }
     }
 
@@ -4030,7 +4032,30 @@ TraceRecorder::record_JSOP_ENDITER()
 bool
 TraceRecorder::record_JSOP_FORNAME()
 {
-    return false;
+    LIns* id_ins; 
+    if (!forInOp(id_ins))
+        return false;
+    if (!id_ins)
+        return true;
+
+    JSObject* obj = cx->fp->scopeChain;
+    if (obj != globalObj)
+        return false;
+
+    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+                                  offsetof(JSStackFrame, scopeChain));
+
+    uint32 slot;
+    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+        return false;
+    if (slot == SPROP_INVALID_SLOT)
+        ABORT_TRACE("JSOP_FORNAME can't find named property");
+
+    if (!lazilyImportGlobalSlot(slot))
+        ABORT_TRACE("lazy import of global slot failed");
+
+    set(&STOBJ_GET_SLOT(obj, slot), id_ins);
+    return true;
 }
 
 bool
