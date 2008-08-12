@@ -465,7 +465,7 @@ js_Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsval v;
     if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, ATOM_TO_JSID(str), &v))
-        return -1;
+        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
     return JSVAL_TO_BOOLEAN(v);
 }
