@@ -1469,8 +1469,8 @@ obj_unwatch(JSContext *cx, uintN argc, jsval *vp)
  */
 
 /* Proposed ECMA 15.2.4.5. */
-static JSBool
-obj_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_obj_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
 
@@ -1484,14 +1484,23 @@ js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
                         jsval *vp)
 {
     jsid id;
-    JSObject *obj, *obj2;
-    JSProperty *prop;
-    JSScopeProperty *sprop;
+    JSObject *obj;
 
     if (!JS_ValueToId(cx, argc != 0 ? vp[2] : JSVAL_VOID, &id))
         return JS_FALSE;
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !lookup(cx, obj, id, &obj2, &prop))
+    return obj && js_HasOwnProperty(cx, lookup, obj, id, vp);
+}
+
+JSBool
+js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
+                  jsval *vp)
+{
+    JSObject *obj2;
+    JSProperty *prop;
+    JSScopeProperty *sprop;
+
+    if (!lookup(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         *vp = JSVAL_FALSE;
@@ -1555,20 +1564,28 @@ obj_isPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
 }
 
 /* Proposed ECMA 15.2.4.7. */
-static JSBool
-obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
 {
     jsid id;
-    JSObject *obj, *pobj;
-    uintN attrs;
-    JSProperty *prop;
-    JSBool ok;
+    JSObject *obj;
 
     if (!JS_ValueToId(cx, argc != 0 ? vp[2] : JSVAL_VOID, &id))
         return JS_FALSE;
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
+    return obj && js_PropertyIsEnumerable(cx, obj, id, vp);
+}
+
+JSBool
+js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+    JSObject *pobj;
+    uintN attrs;
+    JSProperty *prop;
+    JSBool ok;
+
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
         return JS_FALSE;
 
     if (!prop) {
@@ -1761,23 +1778,23 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,             obj_toSource, 0,0),
+    JS_FN(js_toSource_str,             obj_toSource,                0,0),
 #endif
-    JS_FN(js_toString_str,             obj_toString,             0,0),
-    JS_FN(js_toLocaleString_str,       obj_toLocaleString,       0,0),
-    JS_FN(js_valueOf_str,              obj_valueOf,              0,0),
+    JS_FN(js_toString_str,             obj_toString,                0,0),
+    JS_FN(js_toLocaleString_str,       obj_toLocaleString,          0,0),
+    JS_FN(js_valueOf_str,              obj_valueOf,                 0,0),
 #if JS_HAS_OBJ_WATCHPOINT
-    JS_FN(js_watch_str,                obj_watch,                2,0),
-    JS_FN(js_unwatch_str,              obj_unwatch,              1,0),
+    JS_FN(js_watch_str,                obj_watch,                   2,0),
+    JS_FN(js_unwatch_str,              obj_unwatch,                 1,0),
 #endif
-    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,       1,0),
-    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,        1,0),
-    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,0),
+    JS_FN(js_hasOwnProperty_str,       js_obj_hasOwnProperty,       1,0),
+    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
+    JS_FN(js_propertyIsEnumerable_str, js_obj_propertyIsEnumerable, 1,0),
 #if JS_HAS_GETTER_SETTER
-    JS_FN(js_defineGetter_str,         obj_defineGetter,         2,0),
-    JS_FN(js_defineSetter_str,         obj_defineSetter,         2,0),
-    JS_FN(js_lookupGetter_str,         obj_lookupGetter,         1,0),
-    JS_FN(js_lookupSetter_str,         obj_lookupSetter,         1,0),
+    JS_FN(js_defineGetter_str,         obj_defineGetter,            2,0),
+    JS_FN(js_defineSetter_str,         obj_defineSetter,            2,0),
+    JS_FN(js_lookupGetter_str,         obj_lookupGetter,            1,0),
+    JS_FN(js_lookupSetter_str,         obj_lookupSetter,            1,0),
 #endif
     JS_FS_END
 };

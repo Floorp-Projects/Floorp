@@ -1931,7 +1931,8 @@ TraceRecorder::ifop()
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
               lir->ins_eq0(lir->ins2(LIR_and,
                                      lir->insLoadi(get(&v), offsetof(JSString, length)),
-                                     INS_CONST(JSSTRING_LENGTH_MASK))), BRANCH_EXIT);
+                                     INS_CONST(JSSTRING_LENGTH_MASK))),
+              BRANCH_EXIT);
     } else {
         JS_NOT_REACHED("ifop");
     }
@@ -2238,16 +2239,16 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     }
 
     if (obj != globalObj) {
-        if (PCVCAP_TAG(entry->vcap) > 1) {
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
-            ABORT_TRACE("can't (yet) trace multi-level property cache hit");
+        if (PCVCAP_TAG(entry->vcap) <= 1) {
+            LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+            guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
+                  MISMATCH_EXIT);
+        } else {
+            JS_ASSERT(entry->kpc == (jsbytecode*) atom);
+            JS_ASSERT(entry->kshape == jsuword(obj));
         }
 
-        LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
-        guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
-                MISMATCH_EXIT);
-
-        if (PCVCAP_TAG(entry->vcap) == 1) {
+        if (PCVCAP_TAG(entry->vcap) >= 1) {
             JS_ASSERT(OBJ_SCOPE(obj2)->shape == PCVCAP_SHAPE(entry->vcap));
 
             LIns* obj2_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
@@ -2258,7 +2259,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 return false;
             }
 
-            shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+            LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
             guard(true, addName(lir->ins2i(LIR_eq, shape_ins, PCVCAP_SHAPE(entry->vcap)),
                   "guard(vcap_shape)"), MISMATCH_EXIT);
         }
@@ -3300,6 +3301,10 @@ TraceRecorder::record_JSOP_CALL()
         { js_math_random,      F_Math_random,          "R",    "",    INFALLIBLE, NULL },
         { js_str_concat,       F_String_p_concat_1int, "TC",  "i",    FAIL_NULL,  NULL },
         { js_array_join,       F_Array_p_join,         "TC",  "s",    FAIL_NULL,  NULL },
+        { js_obj_hasOwnProperty, F_Object_p_hasOwnProperty,
+                                                       "TC",  "s",    FAIL_NEG,   NULL },
+        { js_obj_propertyIsEnumerable, F_Object_p_propertyIsEnumerable,
+                                                       "TC",  "s",    FAIL_NEG,   NULL },
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
