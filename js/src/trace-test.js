@@ -57,7 +57,8 @@ if (!testName || testName == "bitwiseGlobal") {
 function equalInt()
 {
   var i1 = 55;
-  var hits = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  var o1 = { }, o2 = { };
+  var hits = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
   for (var i = 0; i < 5000; i++) {
     if (i1 == 55) hits[0]++;
     if (i1 != 56) hits[1]++;
@@ -71,10 +72,12 @@ function equalInt()
     if (i1 > 90)  hits[9]++;
     if (i1 <= 40) hits[10]++;
     if (i1 >= 70) hits[11]++;
+    if (o1 == o2) hits[12]++;
+    if (o2 != null) hits[13]++;
   }
   return hits.toString();
 }
-equalInt.expected = "5000,5000,5000,5000,5000,5000,0,0,0,0,0,0,0,0,0,0,0,0,0";
+equalInt.expected = "5000,5000,5000,5000,5000,5000,0,0,0,0,0,0,0,5000";
 test(equalInt);
 
 var a;
