@@ -633,6 +633,21 @@ function joinTest()
 joinTest.expected = "a,0,1,2,3,4,5,6,7b,0,1,2,3,4,5,6,7c,0,1,2,3,4,5,6,7d,0,1,2,3,4,5,6,7e,0,1,2,3,4,5,6,7f,0,1,2,3,4,5,6,7g,0,1,2,3,4,5,6,7h,0,1,2,3,4,5,6,7";
 test(joinTest);
 
+function arity1(x) 
+{
+    return (x == undefined) ? 1 : 0;
+}
+
+function missingArgTest() {
+  var q;
+  for (var i = 0; i < 10; i++) {
+    q = arity1();
+  }
+  return q;
+}
+missingArgTest.expected = "1"
+test(missingArgTest);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
