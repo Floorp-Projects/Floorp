@@ -98,6 +98,8 @@
 
 static const int MIN_LINES_NEEDING_CURSOR = 20;
 
+#define DISABLE_FLOAT_BREAKING_IN_COLUMNS
+
 #ifdef DEBUG
 #include "nsPrintfCString.h"
 #include "nsBlockDebugFlags.h"
@@ -5649,8 +5651,19 @@ nsBlockFrame::ComputeFloatAvailableSpace(nsBlockReflowState& aState,
   // aState.mY is relative to the border-top, make it relative to the content-top
   nscoord contentYOffset = aState.mY - aState.BorderPadding().top;
   nscoord availHeight = NS_UNCONSTRAINEDSIZE == aState.mContentArea.height
-                        ? NS_UNCONSTRAINEDSIZE 
+                        ? NS_UNCONSTRAINEDSIZE
                         : PR_MAX(0, aState.mContentArea.height - contentYOffset);
+
+#ifdef DISABLE_FLOAT_BREAKING_IN_COLUMNS
+  if (availHeight != NS_UNCONSTRAINEDSIZE &&
+      nsLayoutUtils::GetClosestFrameOfType(this, nsGkAtoms::columnSetFrame)) {
+    // Tell the float it has unrestricted height, so it won't break.
+    // If the float doesn't actually fit in the column it will fail to be
+    // placed, and either move to the top of the next column or just
+    // overflow.
+    availHeight = NS_UNCONSTRAINEDSIZE;
+  }
+#endif
 
   return nsRect(aState.BorderPadding().left,
                 aState.BorderPadding().top,
