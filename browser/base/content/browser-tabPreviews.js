@@ -447,14 +447,14 @@ var ctrlTab = {
     var propagate = !isOpen;
     switch (event.keyCode) {
       case event.DOM_VK_TAB:
-        if (event.ctrlKey && !event.altKey && !event.metaKey && this.tabs.length > 1) {
+        if (event.ctrlKey && !event.altKey && !event.metaKey) {
           propagate = false;
           this.invertDirection = event.shiftKey;
           if (isOpen)
             this.scroll();
           else if (this.tabs.length == 2)
             gBrowser.selectedTab = this.tabs[1];
-          else
+          else if (this.tabs.length > 2)
             this.open();
         }
         break;
