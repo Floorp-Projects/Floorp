@@ -42,6 +42,8 @@
 #ifndef jstracer_h___
 #define jstracer_h___
 
+#if defined JS_TRACER
+
 #include "jsstddef.h"
 #include "jstypes.h"
 #include "jslock.h"
@@ -345,5 +347,7 @@ js_FinishJIT(JSTraceMonitor *tm);
 
 extern void
 js_FlushJITCache(JSContext* cx);
+
+#endif /* defined JS_TRACER */
 
 #endif /* jstracer_h___ */
