@@ -62,6 +62,9 @@ VISIBILITY_FLAGS =
 endif
 endif
 
+# LCMS is on the critical path, so force it O2 on all platforms
+MODULE_OPTIMIZE_FLAGS=-O2
+
 REQUIRES	= $(LCMS_REQUIRES) \
 		  $(NULL)
 
