@@ -1835,7 +1835,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
      */
     tc = &cg->treeContext;
     atom = pn->pn_atom;
-    if ((stmt = js_LexicalLookup(tc, atom, &slot))) {
+    stmt = js_LexicalLookup(tc, atom, &slot);
+    if (stmt) {
         if (stmt->type == STMT_WITH)
             return JS_TRUE;
 
