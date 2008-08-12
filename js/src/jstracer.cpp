@@ -2200,7 +2200,7 @@ bool
 TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, jsuword& pcval)
 {
     // Mimic JSOP_CALLPROP's special case to skip up from a dense array to find
-    // Array.prootype methods.
+    // Array.prototype methods.
     JSObject* aobj = obj;
     if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         aobj = OBJ_GET_PROTO(cx, obj);
@@ -3000,7 +3000,7 @@ TraceRecorder::record_JSOP_VOID()
 bool
 TraceRecorder::record_JSOP_INCNAME()
 {
-    return false;
+    return incName(1);
 }
 
 bool
@@ -3018,7 +3018,7 @@ TraceRecorder::record_JSOP_INCELEM()
 bool
 TraceRecorder::record_JSOP_DECNAME()
 {
-    return false;
+    return incName(-1);
 }
 
 bool
@@ -3034,9 +3034,37 @@ TraceRecorder::record_JSOP_DECELEM()
 }
 
 bool
+TraceRecorder::incName(jsint incr, bool pre)
+{
+    JSObject* obj = cx->fp->scopeChain;
+    if (obj != globalObj)
+        ABORT_TRACE("fp->scopeChain is not global object");
+
+    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+                                  offsetof(JSStackFrame, scopeChain));
+    /* Can't use getProp here, because we don't want unboxing. */
+    uint32 slot;
+    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+        return false;
+
+    if (slot == SPROP_INVALID_SLOT)
+        ABORT_TRACE("JSOP_NAMEINC can't find named property");
+
+    if (!lazilyImportGlobalSlot(slot))
+        ABORT_TRACE("lazy import of global slot failed");
+
+    jsval& v = STOBJ_GET_SLOT(obj, slot);
+    LIns* v_ins = get(&v);
+    if (!inc(v, v_ins, incr, pre))
+        return false;
+    set(&v, v_ins);
+    return true;
+}
+
+bool
 TraceRecorder::record_JSOP_NAMEINC()
 {
-    return false;
+    return incName(1, false);
 }
 
 bool
@@ -3055,7 +3083,7 @@ TraceRecorder::record_JSOP_ELEMINC()
 bool
 TraceRecorder::record_JSOP_NAMEDEC()
 {
-    return false;
+    return incName(-1, true);
 }
 
 bool

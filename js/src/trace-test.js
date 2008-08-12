@@ -323,6 +323,7 @@ function testif() {
 testif.expected = "0";
 test(testif);
 
+var globalinc = 0;
 function testincops(n) {
   var i = 0, o = {p:0}, a = [0];
   n = 100;
@@ -332,10 +333,10 @@ function testincops(n) {
   for (i = 0; i < n; ++i);
   while (--i >= 0);
 
-  for (o.p = 0; o.p < n; o.p++);
-  while (o.p-- > 0);
-  for (o.p = 0; o.p < n; ++o.p);
-  while (--o.p >= 0);
+  for (o.p = 0; o.p < n; o.p++) globalinc++;
+  while (o.p-- > 0) --globalinc;
+  for (o.p = 0; o.p < n; ++o.p) ++globalinc;
+  while (--o.p >= 0) globalinc--;
 
   ++i; // set to 0
   for (a[i] = 0; a[i] < n; a[i]++);
@@ -343,9 +344,9 @@ function testincops(n) {
   for (a[i] = 0; a[i] < n; ++a[i]);
   while (--a[i] >= 0);
 
-  return [++o.p, ++a[i]].toString();
+  return [++o.p, ++a[i], globalinc].toString();
 }
-testincops.expected = "0,0";
+testincops.expected = "0,0,0";
 test(testincops);
 
 function trees() {

@@ -253,6 +253,7 @@ class TraceRecorder {
     bool inc(jsval& v, nanojit::LIns*& v_ins, jsint incr, bool pre = true);
     bool incProp(jsint incr, bool pre = true);
     bool incElem(jsint incr, bool pre = true);
+    bool incName(jsint incr, bool pre = true);
     bool cmp(nanojit::LOpcode op, bool negate = false);
 
     bool unary(nanojit::LOpcode op);
