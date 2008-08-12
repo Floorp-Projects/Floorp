@@ -62,7 +62,7 @@ while (<NM_OUTPUT>)
     my($symbol) = $4;
 
     #Skip absolute addresses, there should be only a few
-    if ('A' eq $kind) {
+    if ('a' eq lc $kind) {
         if ('trampoline_size' ne $symbol) {
             warn "Encountered unknown absolutely addressed symbol '$symbol' in $module";
         }
