@@ -2188,7 +2188,8 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, si
 
     if (OP(map->ops) == OP(&js_ObjectOps)) {
         guard(true, addName(lir->ins2(LIR_eq, n, lir->insImmPtr((void*) OP(&js_ObjectOps))),
-                            "guard(native-map)"), MISMATCH_EXIT);
+                            "guard(native-map)"),
+              MISMATCH_EXIT);
         return true;
     }
 
@@ -2472,7 +2473,8 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
                                      lir->ins2i(LIR_eq,
                                                 lir->ins2(LIR_and, v_ins,
                                                           lir->insImmPtr((void*)JSVAL_TAGMASK)),
-                                                JSVAL_DOUBLE))), MISMATCH_EXIT);
+                                                JSVAL_DOUBLE))),
+              MISMATCH_EXIT);
         v_ins = lir->insCall(F_UnboxDouble, &v_ins);
         return true;
     }
@@ -2481,20 +2483,23 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
         guard(true,
               lir->ins2i(LIR_eq,
                          lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)JSVAL_TAGMASK)),
-                         JSVAL_BOOLEAN), MISMATCH_EXIT);
+                         JSVAL_BOOLEAN),
+              MISMATCH_EXIT);
          v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
          return true;
        case JSVAL_OBJECT:
         guard(true,
               lir->ins2i(LIR_eq,
                          lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)JSVAL_TAGMASK)),
-                         JSVAL_OBJECT), MISMATCH_EXIT);
+                         JSVAL_OBJECT),
+              MISMATCH_EXIT);
         return true;
       case JSVAL_STRING:
         guard(true,
               lir->ins2i(LIR_eq,
                         lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)JSVAL_TAGMASK)),
-                        JSVAL_STRING), MISMATCH_EXIT);
+                        JSVAL_STRING),
+              MISMATCH_EXIT);
         v_ins = lir->ins2(LIR_and, v_ins, lir->insImmPtr((void*)~JSVAL_TAGMASK));
         return true;
     }
@@ -2557,8 +2562,9 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
 
     // guard(index < capacity)
     guard(false, lir->ins_eq0(dslots_ins), MISMATCH_EXIT);
-    guard(true, lir->ins2(LIR_lt, idx_ins,
-                          lir->insLoadi(dslots_ins, 0 - sizeof(jsval))), MISMATCH_EXIT);
+    guard(true,
+          lir->ins2(LIR_lt, idx_ins, lir->insLoadi(dslots_ins, 0 - sizeof(jsval))),
+          MISMATCH_EXIT);
     return true;
 }
 
@@ -3288,7 +3294,8 @@ TraceRecorder::guardShapelessCallee(jsval& callee)
 
     guard(true,
           addName(lir->ins2(LIR_eq, get(&callee), lir->insImmPtr((void*) JSVAL_TO_OBJECT(callee))),
-                  "guard(shapeless callee)"), MISMATCH_EXIT);
+                  "guard(shapeless callee)"),
+          MISMATCH_EXIT);
     return true;
 }
 
@@ -3975,7 +3982,8 @@ TraceRecorder::forInProlog(JSObject*& iterobj, LIns*& iterobj_ins)
                                                            offsetof(JSObject, fslots) +
                                                            JSSLOT_ITER_FLAGS * sizeof(jsval)),
                                              INS_CONST(~JSITER_ENUMERATE))),
-                      "guard(iter flags is JSITER_ENUMERATE)"), MISMATCH_EXIT);
+                      "guard(iter flags is JSITER_ENUMERATE)"),
+              MISMATCH_EXIT);
 
         JSObject* obj = STOBJ_GET_PARENT(iterobj);
         LIns* obj_ins = stobj_get_fslot(iterobj_ins, JSSLOT_PARENT);
@@ -3986,8 +3994,10 @@ TraceRecorder::forInProlog(JSObject*& iterobj, LIns*& iterobj_ins)
 
         LIns* n = lir->insLoadi(ops_ins, offsetof(JSObjectOps, enumerate));
         if (obj->map->ops->enumerate == js_ObjectOps.enumerate) {
-            guard(true, addName(lir->ins2(LIR_eq, n, lir->insImmPtr((void*)js_ObjectOps.enumerate)),
-                                "guard(native-enumerate)"), MISMATCH_EXIT);
+            guard(true,
+                  addName(lir->ins2(LIR_eq, n, lir->insImmPtr((void*)js_ObjectOps.enumerate)),
+                          "guard(native-enumerate)"),
+                  MISMATCH_EXIT);
             return true;
         }
     }
@@ -4015,7 +4025,8 @@ TraceRecorder::forInLoop(LIns*& id_ins)
         goto done;
     guard(false,
           addName(lir->ins2(LIR_eq, stateval_ins, lir->insImmPtr((void*) JSVAL_ZERO)),
-                  "guard(non-empty iter state)"), MISMATCH_EXIT);
+                  "guard(non-empty iter state)"),
+          MISMATCH_EXIT);
     if (stateval == JSVAL_ZERO)
         goto done;
 
