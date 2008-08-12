@@ -40,7 +40,7 @@
 #include "nscore.h"
 #include "plstr.h"
 #include <stdio.h>
-
+#include "nsString.h"
 #include <windows.h>
 
 // mmsystem.h is needed to build with WIN32_LEAN_AND_MEAN
@@ -118,13 +118,12 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   if (data && dataLen > 0) {
     DWORD flags = SND_MEMORY | SND_NODEFAULT;
     // We try to make a copy so we can play it async.
-    mLastSound = (PRUint8 *) malloc(dataLen);
+    mLastSound = (PRUint8 *) malloc(512);
     if (mLastSound) {
       memcpy(mLastSound, data, dataLen);
       data = mLastSound;
       flags |= SND_ASYNC;
     }
-
     ::PlaySound(reinterpret_cast<const char*>(data), 0, flags);
   }
 
@@ -166,12 +165,10 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
   PurgeLastSound();
 
   if (aSoundAlias.EqualsLiteral("_moz_mailbeep")) {
-    ::PlaySound("MailBeep", nsnull, SND_ALIAS | SND_ASYNC);
+    ::PlaySoundW(L"MailBeep", nsnull, SND_ALIAS | SND_ASYNC);
   }
   else {
-    nsCAutoString nativeSoundAlias;
-    NS_CopyUnicodeToNative(aSoundAlias, nativeSoundAlias);
-    ::PlaySound(nativeSoundAlias.get(), nsnull, SND_ALIAS | SND_ASYNC);
+    ::PlaySoundW(PromiseFlatString(aSoundAlias).get(), nsnull, SND_ALIAS | SND_ASYNC);
   }
 
   return NS_OK;
