@@ -295,6 +295,7 @@ class TraceRecorder {
     bool guardShapelessCallee(jsval& callee);
     bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc);
     bool forInProlog(JSObject*& iterobj, nanojit::LIns*& iterobj_ins);
+    bool forInOp(nanojit::LIns*& id_ins);
 
 public:
     TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, 
