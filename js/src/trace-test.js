@@ -437,6 +437,17 @@ function orTestHelper(a, b, n)
   return k;
 }
 
+var orNaNTest1, orNaNTest2;
+
+orNaNTest1 = new Function("return orTestHelper(NaN, NaN, 10);");
+orNaNTest1.name = 'orNaNTest1';
+orNaNTest1.expected = '0';
+orNaNTest2 = new Function("return orTestHelper(NaN, 1, 10);");
+orNaNTest2.name = 'orNaNTest2';
+orNaNTest2.expected = '45';
+test(orNaNTest1);
+test(orNaNTest2);
+
 function andTestHelper(a, b, n)
 {
   var k = 0;
@@ -598,7 +609,7 @@ function shapelessCalleeTest()
     helper = {hack: 42};
     shapelessUnknownCalleeLoop(null, helper, helper, helper, a);
   } catch (e) {
-    if (e + "" != "TypeError: g is not a function")
+    if (e + "" != "TypeError: f is not a function")
       print("shapelessUnknownCalleeLoop: unexpected exception " + e);
   }
   return a.join("");
@@ -635,9 +646,8 @@ test(joinTest);
 
 function arity1(x) 
 {
-    return (x == undefined) ? 1 : 0;
+  return (x == undefined) ? 1 : 0;
 }
-
 function missingArgTest() {
   var q;
   for (var i = 0; i < 10; i++) {
