@@ -3377,7 +3377,7 @@ TraceRecorder::record_JSOP_CALL()
     if (FUN_SLOW_NATIVE(fun))
         ABORT_TRACE("slow native");
 
-    enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG };
+    enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID };
     static struct JSTraceableNative {
         JSFastNative native;
         int          builtin;
@@ -3400,7 +3400,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_str_concat,       F_String_p_concat_1int, "TC",  "i",    FAIL_NULL,  NULL },
         { js_array_join,       F_Array_p_join,         "TC",  "s",    FAIL_NULL,  NULL },
         { js_obj_hasOwnProperty, F_Object_p_hasOwnProperty,
-                                                       "TC",  "s",    FAIL_NEG,   NULL },
+                                                       "TC",  "s",    FAIL_VOID,  NULL },
         { js_obj_propertyIsEnumerable, F_Object_p_propertyIsEnumerable,
                                                        "TC",  "s",    FAIL_NEG,   NULL },
     };
@@ -3505,6 +3505,8 @@ TraceRecorder::record_JSOP_CALL()
             jsdpun u;
             u.d = 0.0;
             guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(u.u64)), OOM_EXIT);
+        } else if (known->errtype == FAIL_VOID) {
+            guard(false, lir->ins2i(LIR_eq, res_ins, 2), OOM_EXIT);
         }
         set(&fval, res_ins);
         return true;
