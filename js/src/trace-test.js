@@ -609,7 +609,7 @@ function shapelessCalleeTest()
     helper = {hack: 42};
     shapelessUnknownCalleeLoop(null, helper, helper, helper, a);
   } catch (e) {
-    if (e + "" != "TypeError: g is not a function")
+    if (e + "" != "TypeError: f is not a function")
       print("shapelessUnknownCalleeLoop: unexpected exception " + e);
   }
   return a.join("");
