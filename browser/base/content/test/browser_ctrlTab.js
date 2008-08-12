@@ -69,7 +69,7 @@ function test() {
        "Ctrl+Tab doesn't change focus if one tab is open");
   }
 
-  /* private utitily functions */
+  /* private utility functions */
 
   function pressCtrlTab(aShiftKey)
     EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true, shiftKey: !!aShiftKey });
