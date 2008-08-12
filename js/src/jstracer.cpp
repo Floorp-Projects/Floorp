@@ -1810,7 +1810,7 @@ js_InitJIT(JSTraceMonitor *tm)
 }
 
 extern void
-js_DestroyJIT(JSTraceMonitor *tm)
+js_FinishJIT(JSTraceMonitor *tm)
 {
 #ifdef DEBUG
     printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "

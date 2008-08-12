@@ -339,7 +339,7 @@ extern void
 js_InitJIT(JSTraceMonitor *tm);
 
 extern void
-js_DestroyJIT(JSTraceMonitor *tm);
+js_FinishJIT(JSTraceMonitor *tm);
 
 extern void
 js_FlushJITCache(JSContext* cx);
