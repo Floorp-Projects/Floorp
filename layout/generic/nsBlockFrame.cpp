@@ -4766,7 +4766,7 @@ ShouldPutNextSiblingOnNewLine(nsIFrame* aLastFrame)
     return PR_TRUE;
   if (type == nsGkAtoms::textFrame)
     return aLastFrame->HasTerminalNewline() &&
-           aLastFrame->GetStyleText()->WhiteSpaceIsSignificant();
+           aLastFrame->GetStyleText()->NewlineIsSignificant();
   if (type == nsGkAtoms::placeholderFrame)
     return IsContinuationPlaceholder(aLastFrame);
   return PR_FALSE;
