@@ -10,7 +10,7 @@
     <html:div style="width:100%; height:100%; background:lime;">
     </html:div>
   </foreignObject>
-  <filter id="f1">
+  <filter id="f1" x="0" y="0" width="100%" height="100%">
     <feOffset/>
   </filter>
 </svg>
