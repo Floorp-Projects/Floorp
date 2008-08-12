@@ -480,6 +480,14 @@ js_Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
     return JSVAL_TO_BOOLEAN(v);
 }
 
+jsdouble FASTCALL
+js_BooleanToNumber(JSContext* cx, jsint unboxed)
+{
+    if (unboxed == JSVAL_TO_BOOLEAN(JSVAL_VOID))
+        return *cx->runtime->jsNaN;
+    return unboxed;
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
