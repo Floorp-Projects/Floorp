@@ -5,9 +5,9 @@
 == pre-line-1.html pre-line-1-ref.html
 == pre-line-2.html pre-line-2-ref.html
 == pre-line-3.html pre-line-3-ref.html
-random == soft-hyphens-1a.html soft-hyphens-1-ref.html # bug 406299
-random == soft-hyphens-1b.html soft-hyphens-1-ref.html # bug 406299
-random == soft-hyphens-1c.html soft-hyphens-1-ref.html # bug 406299
+== soft-hyphens-1a.html soft-hyphens-1-ref.html
+== soft-hyphens-1b.html soft-hyphens-1-ref.html
+== soft-hyphens-1c.html soft-hyphens-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
