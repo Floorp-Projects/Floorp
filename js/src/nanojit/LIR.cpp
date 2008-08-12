@@ -114,7 +114,9 @@ namespace nanojit
 		//buffer_count--;
 		//fprintf(stderr, "~LirBuffer %x start %x\n", (int)this, (int)_start);
 		clear();
+#ifdef DEBUG		
         delete names;
+#endif        
 		_frago = 0;
 	}
 	
