@@ -2047,31 +2047,63 @@ TraceRecorder::cmp(LOpcode op, bool negate)
             JS_NOT_REACHED("unexpected comparison op for strings");
             return false;
         }
-    } else if (isNumber(l) && isNumber(r)) {
+    } else if (isNumber(l) || isNumber(r)) {
         // TODO: coerce non-numbers to numbers if it's not string-on-string above
-        x = lir->ins2(op, get(&l), get(&r));
+        LIns* l_ins = get(&l);
+        LIns* r_ins = get(&r);
+        jsdouble lnum;
+        jsdouble rnum;
+        LIns* args[] = { get(&l), cx_ins };
+        if (JSVAL_IS_STRING(l)) {
+            l_ins = lir->insCall(F_StringToNumber, args);
+        } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
+            /*
+             * What I really want here is for undefined to be type-specialized
+             * differently from real booleans.  Failing that, I want to be able
+             * to cmov on quads.  Failing that, I want to have small forward
+             * branched.  Failing that, I want to be able to ins_choose on quads
+             * without cmov.  Failing that, eat flaming builtin!
+             */
+            l_ins = lir->insCall(F_BooleanToNumber, args);
+        } else if (!isNumber(l)) {
+            ABORT_TRACE("unsupported LHS type for cmp vs number");
+        }
+        lnum = js_ValueToNumber(cx, &l);
+
+        args[0] = get(&r);
+        if (JSVAL_IS_STRING(r)) {
+            r_ins = lir->insCall(F_StringToNumber, args);
+        } else if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
+            // See above for the sob story.
+            r_ins = lir->insCall(F_BooleanToNumber, args);
+        } else if (!isNumber(r)) {
+            ABORT_TRACE("unsupported RHS type for cmp vs number");
+        }
+        rnum = js_ValueToNumber(cx, &r);
+
+        x = lir->ins2(op, l_ins, r_ins);
         if (negate)
             x = lir->ins_eq0(x);
         switch (op) {
           case LIR_flt:
-            cond = asNumber(l) < asNumber(r);
+            cond = lnum < rnum;
             break;
           case LIR_fgt:
-            cond = asNumber(l) > asNumber(r);
+            cond = lnum > rnum;
             break;
           case LIR_fle:
-            cond = asNumber(l) <= asNumber(r);
+            cond = lnum <= rnum;
             break;
           case LIR_fge:
-            cond = asNumber(l) >= asNumber(r);
+            cond = lnum >= rnum;
             break;
           default:
             JS_ASSERT(op == LIR_feq);
-            cond = (asNumber(l) == asNumber(r)) ^ negate;
+            cond = (lnum == rnum) ^ negate;
             break;
         }
     } else {
-        return false;
+        ABORT_TRACE("unsupported operand types for cmp");
     }
 
     /* The interpreter fuses comparisons and the following branch,

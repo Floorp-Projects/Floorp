@@ -56,9 +56,10 @@ if (!testName || testName == "bitwiseGlobal") {
 
 function equalInt()
 {
-  var i1 = 55;
+  var i1 = 55, one = 1, zero = 0, undef;
   var o1 = { }, o2 = { };
-  var hits = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  var s = "5";
+  var hits = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
   for (var i = 0; i < 5000; i++) {
     if (i1 == 55) hits[0]++;
     if (i1 != 56) hits[1]++;
@@ -74,10 +75,14 @@ function equalInt()
     if (i1 >= 70) hits[11]++;
     if (o1 == o2) hits[12]++;
     if (o2 != null) hits[13]++;
+    if (s < 10) hits[14]++;
+    if (true < zero) hits[15]++;
+    if (undef > one) hits[16]++;
+    if (undef < zero) hits[17]++;
   }
   return hits.toString();
 }
-equalInt.expected = "5000,5000,5000,5000,5000,5000,0,0,0,0,0,0,0,5000";
+equalInt.expected = "5000,5000,5000,5000,5000,5000,0,0,0,0,0,0,0,5000,5000,0,0,0";
 test(equalInt);
 
 var a;
@@ -410,7 +415,7 @@ function stringConvert()
     a[1] = 10 - s2;
     a[2] = 15 * s3;
     a[3] = s3 | 32;
-    // a[4] = s2 + 60;
+    a[4] = s2 + 60;
     // a[5] = 9 + s3;
     // a[6] = -s3;
     a[7] = s3 & "7";
@@ -418,7 +423,7 @@ function stringConvert()
   }
   return a.toString();
 }
-stringConvert.expected = "1,8.7,75,37,,,,5";
+stringConvert.expected = "1,8.7,75,37,1.360,,,5";
 test(stringConvert);
 
 function orTestHelper(a, b, n)
