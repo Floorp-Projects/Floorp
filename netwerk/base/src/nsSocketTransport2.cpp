@@ -1252,8 +1252,10 @@ nsSocketTransport::RecoverFromError()
     if (!tryAgain) {
         PRBool autodialEnabled;
         gSocketTransportService->GetAutodialEnabled(&autodialEnabled);
-        if (autodialEnabled)
-            tryAgain = nsNativeConnectionHelper::OnConnectionFailed(SocketHost().get());
+        if (autodialEnabled) {
+          tryAgain = nsNativeConnectionHelper::OnConnectionFailed(
+                       NS_ConvertUTF8toUTF16(SocketHost()).get());
+	    }
     }
 #endif
 
