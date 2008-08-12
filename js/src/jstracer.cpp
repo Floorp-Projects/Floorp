@@ -1917,7 +1917,8 @@ TraceRecorder::ifop()
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
               lir->ins_eq0(lir->ins2(LIR_and,
                                      lir->insLoadi(get(&v), offsetof(JSString, length)),
-                                     INS_CONST(JSSTRING_LENGTH_MASK))), BRANCH_EXIT);
+                                     INS_CONST(JSSTRING_LENGTH_MASK))),
+              BRANCH_EXIT);
     } else {
         JS_NOT_REACHED("ifop");
     }
@@ -2224,16 +2225,16 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     }
 
     if (obj != globalObj) {
-        if (PCVCAP_TAG(entry->vcap) > 1) {
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
-            ABORT_TRACE("can't (yet) trace multi-level property cache hit");
+        if (PCVCAP_TAG(entry->vcap) <= 1) {
+            LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+            guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
+                  MISMATCH_EXIT);
+        } else {
+            JS_ASSERT(entry->kpc == (jsbytecode*) atom);
+            JS_ASSERT(entry->kshape == jsuword(obj));
         }
 
-        LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
-        guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
-                MISMATCH_EXIT);
-
-        if (PCVCAP_TAG(entry->vcap) == 1) {
+        if (PCVCAP_TAG(entry->vcap) >= 1) {
             JS_ASSERT(OBJ_SCOPE(obj2)->shape == PCVCAP_SHAPE(entry->vcap));
 
             LIns* obj2_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
@@ -2244,7 +2245,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 return false;
             }
 
-            shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+            LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
             guard(true, addName(lir->ins2i(LIR_eq, shape_ins, PCVCAP_SHAPE(entry->vcap)),
                   "guard(vcap_shape)"), MISMATCH_EXIT);
         }
