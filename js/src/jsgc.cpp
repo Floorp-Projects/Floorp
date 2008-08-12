@@ -3226,7 +3226,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         memset(acx->thread->gcFreeLists, 0, sizeof acx->thread->gcFreeLists);
         GSN_CACHE_CLEAR(&acx->thread->gsnCache);
         js_FlushPropertyCache(acx);
+#ifdef JS_TRACER
         js_FlushJITCache(acx);
+#endif
     }
 #else
     /* The thread-unsafe case just has to clear the runtime's GSN cache. */
