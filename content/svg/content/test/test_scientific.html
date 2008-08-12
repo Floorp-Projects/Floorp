@@ -59,14 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=302971
 
 	// check units that begin with the letter e
 
-	var x_height = text.getBBox().height;
 	var font_size = doc.defaultView.getComputedStyle(rect, '').getPropertyValue("font-size");
-
-	rect.setAttribute("stroke-width", "4ex");
-	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), (x_height * 4) + "px", "ex Units");
-
-	rect.setAttribute("stroke-width", "5e1ex");
-	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), (x_height * 50) + "px", "Exponent with ex Units");
 
 	rect.setAttribute("stroke-width", "1em");
 	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), font_size, "em Units");
