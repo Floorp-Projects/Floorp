@@ -113,6 +113,9 @@ js_ThreadDestructorCB(void *ptr)
      */
     JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
     GSN_CACHE_CLEAR(&thread->gsnCache);
+#if defined JS_TRACER
+    js_DestroyJIT(&thread->traceMonitor);
+#endif
     free(thread);
 }
 
@@ -150,6 +153,7 @@ js_GetCurrentThread(JSRuntime *rt)
         thread->gcMallocBytes = 0;
 #ifdef JS_TRACER
         memset(&thread->traceMonitor, 0, sizeof(thread->traceMonitor));
+        js_InitJIT(&thread->traceMonitor);
 #endif
 
         /*
@@ -334,10 +338,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         return NULL;
     }
     
-#ifdef JS_TRACER
-    js_InitJIT(cx);
-#endif
-    
     return cx;
 }
 
@@ -480,10 +480,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         }
         JS_free(cx, lrs);
     }
-
-#ifdef JS_TRACER
-    js_DestroyJIT(cx);
-#endif
 
 #ifdef JS_THREADSAFE
     js_ClearContextThread(cx);

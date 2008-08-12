@@ -79,6 +79,10 @@
 #include "jsstr.h"
 #include "prmjtime.h"
 
+#ifdef JS_TRACER
+#include "jstracer.h"
+#endif
+
 #if JS_HAS_FILE_OBJECT
 #include "jsfile.h"
 #endif
@@ -780,6 +784,11 @@ JS_NewRuntime(uint32 maxbytes)
 #endif
     if (!js_InitPropertyTree(rt))
         goto bad;
+
+#if !defined JS_THREADSAFE && defined JS_TRACER
+    js_InitJIT(&rt->traceMonitor);
+#endif
+
     return rt;
 
 bad:
@@ -805,6 +814,10 @@ JS_DestroyRuntime(JSRuntime *rt)
 "JS API usage error: %u context%s left in runtime upon JS_DestroyRuntime.\n",
                 cxcount, (cxcount == 1) ? "" : "s");
     }
+#endif
+
+#if !defined JS_THREADSAFE && defined JS_TRACER
+    js_DestroyJIT(&rt->traceMonitor);
 #endif
 
     js_FreeRuntimeScriptState(rt);
