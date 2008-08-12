@@ -49,6 +49,8 @@ _TEST_FILES = \
 		dataTypes-helper.svg \
 		test_getSubStringLength.xhtml \
 		getSubStringLength-helper.svg \
+		test_scientific.html \
+		scientific-helper.svg \
 		test_text.html \
 		text-helper.svg \
 		$(NULL)
