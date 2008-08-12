@@ -3042,28 +3042,13 @@ TraceRecorder::record_JSOP_DECELEM()
 bool
 TraceRecorder::incName(jsint incr, bool pre)
 {
-    JSObject* obj = cx->fp->scopeChain;
-    if (obj != globalObj)
-        ABORT_TRACE("fp->scopeChain is not global object");
-
-    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
-                                  offsetof(JSStackFrame, scopeChain));
-    /* Can't use getProp here, because we don't want unboxing. */
-    uint32 slot;
-    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+    jsval* vp;
+    if (!name(vp))
         return false;
-
-    if (slot == SPROP_INVALID_SLOT)
-        ABORT_TRACE("JSOP_NAMEINC can't find named property");
-
-    if (!lazilyImportGlobalSlot(slot))
-        ABORT_TRACE("lazy import of global slot failed");
-
-    jsval& v = STOBJ_GET_SLOT(obj, slot);
-    LIns* v_ins = get(&v);
-    if (!inc(v, v_ins, incr, pre))
+    LIns* v_ins = get(vp);
+    if (!inc(*vp, v_ins, incr, pre))
         return false;
-    set(&v, v_ins);
+    set(vp, v_ins);
     return true;
 }
 
@@ -3530,6 +3515,30 @@ TraceRecorder::record_JSOP_CALL()
 }
 
 bool
+TraceRecorder::name(jsval*& vp)
+{
+    JSObject* obj = cx->fp->scopeChain;
+    if (obj != globalObj)
+        ABORT_TRACE("fp->scopeChain is not global object");
+
+    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+                                  offsetof(JSStackFrame, scopeChain));
+    /* Can't use getProp here, because we don't want unboxing. */
+    uint32 slot;
+    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+        return false;
+
+    if (slot == SPROP_INVALID_SLOT)
+        ABORT_TRACE("name op can't find named property");
+
+    if (!lazilyImportGlobalSlot(slot))
+        ABORT_TRACE("lazy import of global slot failed");
+
+    vp = &STOBJ_GET_SLOT(obj, slot);
+    return true;
+}
+
+bool
 TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
 {
     /*
@@ -3627,24 +3636,10 @@ TraceRecorder::getProp(jsval& v)
 bool
 TraceRecorder::record_JSOP_NAME()
 {
-    JSObject* obj = cx->fp->scopeChain;
-    if (obj != globalObj)
+    jsval* vp;
+    if (!name(vp))
         return false;
-
-    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
-                                  offsetof(JSStackFrame, scopeChain));
-
-    /* Can't use getProp here, because we don't want unboxing. */
-    uint32 slot;
-    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
-        return false;
-    if (slot == SPROP_INVALID_SLOT)
-        ABORT_TRACE("JSOP_NAME can't find named property");
-
-    if (!lazilyImportGlobalSlot(slot))
-        ABORT_TRACE("lazy import of global slot failed");
-
-    stack(0, get(&STOBJ_GET_SLOT(obj, slot)));
+    stack(0, get(vp));
     return true;
 }
 
@@ -4082,23 +4077,10 @@ TraceRecorder::record_JSOP_FORNAME()
     if (!id_ins)
         return true;
 
-    JSObject* obj = cx->fp->scopeChain;
-    if (obj != globalObj)
+    jsval* vp;
+    if (!name(vp))
         return false;
-
-    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
-                                  offsetof(JSStackFrame, scopeChain));
-
-    uint32 slot;
-    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
-        return false;
-    if (slot == SPROP_INVALID_SLOT)
-        ABORT_TRACE("JSOP_FORNAME can't find named property");
-
-    if (!lazilyImportGlobalSlot(slot))
-        ABORT_TRACE("lazy import of global slot failed");
-
-    set(&STOBJ_GET_SLOT(obj, slot), id_ins);
+    set(vp, id_ins);
     return true;
 }
 
@@ -4182,17 +4164,11 @@ TraceRecorder::record_JSOP_SETNAME()
     if (obj != cx->fp->scopeChain || obj != globalObj)
         return false;
 
-    LIns* obj_ins = get(&l);
-    uint32 slot;
-    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+    jsval* vp;
+    if (!name(vp))
         return false;
-    JS_ASSERT(slot != SPROP_INVALID_SLOT);
-
-    if (!lazilyImportGlobalSlot(slot))
-         ABORT_TRACE("lazy import of global slot failed");
-
     LIns* r_ins = get(&r);
-    set(&STOBJ_GET_SLOT(obj, slot), r_ins);
+    set(vp, r_ins);
 
     if (cx->fp->regs->pc[JSOP_SETNAME_LENGTH] != JSOP_POP)
         stack(-2, r_ins);
@@ -4872,19 +4848,13 @@ TraceRecorder::record_JSOP_GETXPROP()
         ABORT_TRACE("primitive-this for GETXPROP?");
 
     JSObject* obj = JSVAL_TO_OBJECT(l);
-    JS_ASSERT(obj == cx->fp->scopeChain);
-    LIns* obj_ins = get(&l);
-
-    /* Can't use get_prop here, because we don't want unboxing. */
-    uint32 slot;
-    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+    if (obj != cx->fp->scopeChain || obj != globalObj)
         return false;
-    JS_ASSERT(slot != SPROP_INVALID_SLOT);
 
-    if (!lazilyImportGlobalSlot(slot))
-        ABORT_TRACE("lazy import of global slot failed");
-
-    stack(-1, get(&STOBJ_GET_SLOT(obj, slot)));
+    jsval* vp;
+    if (!name(vp))
+        return false;
+    stack(-1, get(vp));
     return true;
 }
 
