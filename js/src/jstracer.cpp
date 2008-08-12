@@ -3965,6 +3965,60 @@ TraceRecorder::forInProlog(JSObject*& iterobj, LIns*& iterobj_ins)
 }
 
 bool
+TraceRecorder::forInOp(LIns*& id_ins)
+{
+    JSObject* iterobj;
+    LIns* iterobj_ins;
+    if (!forInProlog(iterobj, iterobj_ins))
+        return false;
+
+    jsval stateval = iterobj->fslots[JSSLOT_ITER_STATE];
+    LIns* stateval_ins = stobj_get_fslot(iterobj_ins, JSSLOT_ITER_STATE);
+
+    // If a guarded condition is false while recording, stack unboxed false
+    // and return so the immediately subsequent JSOP_IFEQ exits the loop.
+    int flag = 0;
+    id_ins = NULL;
+
+    guard(false, addName(lir->ins_eq0(stateval_ins), "guard(non-null iter state"), MISMATCH_EXIT);
+    if (stateval == JSVAL_NULL)
+        goto done;
+    guard(false,
+          addName(lir->ins2(LIR_eq, stateval_ins, lir->insImmPtr((void*) JSVAL_ZERO)),
+                  "guard(non-empty iter state)"), MISMATCH_EXIT);
+    if (stateval == JSVAL_ZERO)
+        goto done;
+
+    LIns* state_ins; 
+    LIns* cursor_ins;
+
+    state_ins = lir->ins2(LIR_and, stateval_ins, lir->insImmPtr((void*) ~jsval(3)));
+    cursor_ins = lir->insLoadi(state_ins, offsetof(JSNativeEnumerator, cursor));
+    guard(false, addName(lir->ins_eq0(cursor_ins), "guard(ne->cursor != 0)"), MISMATCH_EXIT);
+
+    JSNativeEnumerator* ne;
+
+    ne = (JSNativeEnumerator*) (stateval & ~jsval(3));
+    if (ne->cursor == 0)
+        goto done;
+
+    cursor_ins = lir->ins2i(LIR_sub, cursor_ins, 1);
+    lir->insStorei(cursor_ins, state_ins, offsetof(JSNativeEnumerator, cursor));
+
+    LIns* ids_ins = lir->ins2i(LIR_add, state_ins, offsetof(JSNativeEnumerator, ids));
+    LIns* id_addr_ins = lir->ins2(LIR_add, ids_ins,
+                                  lir->ins2i(LIR_lsh, cursor_ins, (sizeof(jsid) == 4) ? 2 : 3));
+
+
+    // Stack an unboxed true to make JSOP_IFEQ loop.
+    flag = 1;
+    id_ins = lir->insLoadi(id_addr_ins, 0);
+done:
+    stack(0, lir->insImm(flag));
+    return true;
+}
+
+bool
 TraceRecorder::record_JSOP_ENDITER()
 {
     LIns* args[] = { stack(-1), cx_ins };
@@ -3994,65 +4048,22 @@ TraceRecorder::record_JSOP_FORELEM()
 bool
 TraceRecorder::record_JSOP_FORARG()
 {
-    return false;
+    LIns* id_ins; 
+    if (!forInOp(id_ins))
+        return false;
+    if (id_ins)
+        arg(GET_ARGNO(cx->fp->regs->pc), id_ins);
+    return true;
 }
 
 bool
 TraceRecorder::record_JSOP_FORLOCAL()
 {
-    JSObject* iterobj;
-    LIns* iterobj_ins;
-    if (!forInProlog(iterobj, iterobj_ins))
-        return false;
-
-    jsval stateval = iterobj->fslots[JSSLOT_ITER_STATE];
-    LIns* stateval_ins = stobj_get_fslot(iterobj_ins, JSSLOT_ITER_STATE);
-
-    // If a guarded condition is false while recording, stack unboxed false
-    // and return so the immediately subsequent JSOP_IFEQ exits the loop.
-    int flag = 0;
-
-    guard(false, addName(lir->ins_eq0(stateval_ins), "guard(non-null iter state"), MISMATCH_EXIT);
-    if (stateval == JSVAL_NULL)
-        goto done;
-    guard(false,
-          addName(lir->ins2(LIR_eq, stateval_ins, lir->insImmPtr((void*) JSVAL_ZERO)),
-                  "guard(non-empty iter state)"), MISMATCH_EXIT);
-    if (stateval == JSVAL_ZERO)
-        goto done;
-
-    LIns* state_ins; 
-    LIns* cursor_ins;
-
-    state_ins = lir->ins2(LIR_and, stateval_ins, lir->insImmPtr((void*) ~jsval(3)));
-    cursor_ins = lir->insLoadi(state_ins, offsetof(JSNativeEnumerator, cursor));
-    guard(false, addName(lir->ins_eq0(cursor_ins), "guard(ne->cursor != 0)"), MISMATCH_EXIT);
-
-    JSNativeEnumerator* ne;
-
-    ne = (JSNativeEnumerator*) (stateval & ~jsval(3));
-    if (ne->cursor == 0)
-        goto done;
-
-    cursor_ins = lir->ins2i(LIR_sub, cursor_ins, 1);
-    lir->insStorei(cursor_ins, state_ins, offsetof(JSNativeEnumerator, cursor));
-
-    LIns* ids_ins; 
-    LIns* id_addr_ins;
-
-    ids_ins = lir->ins2i(LIR_add, state_ins, offsetof(JSNativeEnumerator, ids));
-    id_addr_ins = lir->ins2(LIR_add, ids_ins,
-                                  lir->ins2i(LIR_lsh, cursor_ins, (sizeof(jsid) == 4) ? 2 : 3));
-
     LIns* id_ins; 
-
-    id_ins = lir->insLoadi(id_addr_ins, 0);
-    var(GET_SLOTNO(cx->fp->regs->pc), id_ins);
-
-    // Stack an unboxed true to make JSOP_IFEQ loop.
-    flag = 1;
-done:
-    stack(0, lir->insImm(flag));
+    if (!forInOp(id_ins))
+        return false;
+    if (id_ins)
+        var(GET_SLOTNO(cx->fp->regs->pc), id_ins);
     return true;
 }
 
@@ -4092,9 +4103,7 @@ TraceRecorder::record_JSOP_SETNAME()
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
-
-    if (JSVAL_IS_PRIMITIVE(l))
-        return false;
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
 
     /*
      * Trace cases that are global code or in lightweight functions scoped by
