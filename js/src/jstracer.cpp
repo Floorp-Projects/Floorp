@@ -3995,7 +3995,7 @@ TraceRecorder::forInProlog(JSObject*& iterobj, LIns*& iterobj_ins)
 }
 
 bool
-TraceRecorder::forInOp(LIns*& id_ins)
+TraceRecorder::forInLoop(LIns*& id_ins)
 {
     JSObject* iterobj;
     LIns* iterobj_ins;
@@ -4019,6 +4019,7 @@ TraceRecorder::forInOp(LIns*& id_ins)
     if (stateval == JSVAL_ZERO)
         goto done;
 
+    // Don't initialize to avoid goto over init warnings/errors.
     LIns* state_ins; 
     LIns* cursor_ins;
 
@@ -4035,9 +4036,13 @@ TraceRecorder::forInOp(LIns*& id_ins)
     cursor_ins = lir->ins2i(LIR_sub, cursor_ins, 1);
     lir->insStorei(cursor_ins, state_ins, offsetof(JSNativeEnumerator, cursor));
 
-    LIns* ids_ins = lir->ins2i(LIR_add, state_ins, offsetof(JSNativeEnumerator, ids));
-    LIns* id_addr_ins = lir->ins2(LIR_add, ids_ins,
-                                  lir->ins2i(LIR_lsh, cursor_ins, (sizeof(jsid) == 4) ? 2 : 3));
+    // Don't initialize to avoid goto over init warnings/errors.
+    LIns* ids_ins;
+    LIns* id_addr_ins;
+
+    ids_ins = lir->ins2i(LIR_add, state_ins, offsetof(JSNativeEnumerator, ids));
+    id_addr_ins = lir->ins2(LIR_add, ids_ins,
+                            lir->ins2i(LIR_lsh, cursor_ins, (sizeof(jsid) == 4) ? 2 : 3));
 
 
     // Stack an unboxed true to make JSOP_IFEQ loop.
@@ -4061,7 +4066,7 @@ bool
 TraceRecorder::record_JSOP_FORNAME()
 {
     LIns* id_ins; 
-    if (!forInOp(id_ins))
+    if (!forInLoop(id_ins))
         return false;
     if (!id_ins)
         return true;
@@ -4102,7 +4107,7 @@ bool
 TraceRecorder::record_JSOP_FORARG()
 {
     LIns* id_ins; 
-    if (!forInOp(id_ins))
+    if (!forInLoop(id_ins))
         return false;
     if (id_ins)
         arg(GET_ARGNO(cx->fp->regs->pc), id_ins);
@@ -4113,7 +4118,7 @@ bool
 TraceRecorder::record_JSOP_FORLOCAL()
 {
     LIns* id_ins; 
-    if (!forInOp(id_ins))
+    if (!forInLoop(id_ins))
         return false;
     if (id_ins)
         var(GET_SLOTNO(cx->fp->regs->pc), id_ins);
