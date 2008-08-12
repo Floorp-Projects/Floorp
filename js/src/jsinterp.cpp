@@ -2660,6 +2660,7 @@ js_Interpret(JSContext *cx)
      * the compiler can keep it in a register when it is non-null.
      */
 #if JS_THREADED_INTERP
+#ifdef JS_TRACER
 # define LOAD_INTERRUPT_HANDLER(cx)                                           \
     ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
                          ? interruptJumpTable                                 \
@@ -2672,7 +2673,15 @@ js_Interpret(JSContext *cx)
         JS_ASSERT(flag_ == !!JS_TRACE_MONITOR(cx).recorder);                  \
         jumpTable = flag_ ? recordingJumpTable : normalJumpTable;             \
     JS_END_MACRO
-#else
+#else /* !JS_TRACER */
+# define LOAD_INTERRUPT_HANDLER(cx)                                           \
+    ((void) (jumpTable = (cx)->debugHooks->interruptHandler                   \
+                         ? interruptJumpTable                                 \
+                         : normalJumpTable))
+# define ENABLE_TRACER(flag) (void)0
+#endif /* !JS_TRACER */
+#else /* !JS_THREADED_INTERP */
+#ifdef JS_TRACER
 # define LOAD_INTERRUPT_HANDLER(cx)                                           \
     ((void) (switchMask = ((cx)->debugHooks->interruptHandler ||              \
                            JS_TRACE_MONITOR(cx).recorder)                     \
@@ -2683,7 +2692,13 @@ js_Interpret(JSContext *cx)
         JS_ASSERT(flag_ == !!JS_TRACE_MONITOR(cx).recorder);                  \
         switchMask = flag_ ? 0 : 255;                                         \
     JS_END_MACRO
-#endif
+#else /* !JS_TRACER */
+# define LOAD_INTERRUPT_HANDLER(cx)                                           \
+    ((void) (switchMask = ((cx)->debugHooks->interruptHandler                 \
+                           ? 0 : 255)))
+# define ENABLE_TRACER(flag) (void)0
+#endif /* !JS_TRACER */
+#endif /* !JS_THREADED_INTERP */
 
     LOAD_INTERRUPT_HANDLER(cx);
 
