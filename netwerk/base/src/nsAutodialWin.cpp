@@ -43,6 +43,7 @@
 
 #include <windows.h>
 #include <winsvc.h>
+#include "nsString.h"
 #include "nsAutodialWin.h"
 #include "prlog.h"
 
@@ -139,8 +140,8 @@ nsresult nsRASAutodial::Init()
     mNumRASConnectionEntries = NumRASEntries();
     
     // Get the name of the default entry.
-    nsresult result = GetDefaultEntryName(mDefaultEntryName, 
-                                           RAS_MaxEntryName + 1);
+    nsresult result = GetDefaultEntryName(mDefaultEntryName,
+                                          sizeof(mDefaultEntryName));
     
     return result;
 }
@@ -205,9 +206,9 @@ int nsRASAutodial::QueryAutodialBehavior()
     // If we get to here, then the service is not going to dial on error, so we
     // can dial ourselves if the control panel settings are set up that way.
     HKEY hKey = 0;
-    LONG result = ::RegOpenKeyEx(
+    LONG result = ::RegOpenKeyExW(
                     HKEY_CURRENT_USER, 
-                    "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", 
+                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", 
                     0, 
                     KEY_READ, 
                     &hKey);
@@ -223,7 +224,7 @@ int nsRASAutodial::QueryAutodialBehavior()
     DWORD onDemand = 0;
     DWORD paramSize = sizeof(DWORD);
 
-    result = ::RegQueryValueEx(hKey, "EnableAutodial", nsnull, &entryType, (LPBYTE)&autodial, &paramSize);
+    result = ::RegQueryValueExW(hKey, L"EnableAutodial", nsnull, &entryType, (LPBYTE)&autodial, &paramSize);
     if (result != ERROR_SUCCESS)
     {
         ::RegCloseKey(hKey);
@@ -231,7 +232,7 @@ int nsRASAutodial::QueryAutodialBehavior()
         return AUTODIAL_NEVER;
     }
 
-    result = ::RegQueryValueEx(hKey, "NoNetAutodial", nsnull, &entryType, (LPBYTE)&onDemand, &paramSize);
+    result = ::RegQueryValueExW(hKey, L"NoNetAutodial", nsnull, &entryType, (LPBYTE)&onDemand, &paramSize);
     if (result != ERROR_SUCCESS)
     {
         ::RegCloseKey(hKey);
@@ -321,7 +322,7 @@ static nsresult DoPPCConnection()
 // Return values:
 //  NS_OK: dialing was successful and caller should retry
 //  all other values indicate that the caller should not retry
-nsresult nsRASAutodial::DialDefault(const char* hostName)
+nsresult nsRASAutodial::DialDefault(const PRUnichar* hostName)
 {
 #ifndef WINCE
     mDontRetryUntil = 0;
@@ -462,15 +463,15 @@ PRBool nsRASAutodial::IsRASConnected()
 }
 
 // Get the first RAS dial entry name from the phonebook.
-nsresult nsRASAutodial::GetFirstEntryName(char* entryName, int bufferSize)
+nsresult nsRASAutodial::GetFirstEntryName(PRUnichar* entryName, int bufferSize)
 {
     // Need to load the DLL if not loaded yet.
     if (!LoadRASapi32DLL())
         return NS_ERROR_NULL_POINTER;
 
-    RASENTRYNAME rasEntryName;
-    rasEntryName.dwSize = sizeof(RASENTRYNAME);
-    DWORD cb = sizeof(RASENTRYNAME);
+    RASENTRYNAMEW rasEntryName;
+    rasEntryName.dwSize = sizeof(RASENTRYNAMEW);
+    DWORD cb = sizeof(RASENTRYNAMEW);
     DWORD cEntries = 0;
 
     DWORD result = 
@@ -479,9 +480,8 @@ nsresult nsRASAutodial::GetFirstEntryName(char* entryName, int bufferSize)
     // ERROR_BUFFER_TOO_SMALL is OK because we only need one struct.
     if (result == ERROR_SUCCESS || result == ERROR_BUFFER_TOO_SMALL)
     {
-#ifndef WINCE
-        strncpy(entryName, rasEntryName.szEntryName, bufferSize);
-#endif
+        wcsncpy(entryName, rasEntryName.szEntryName,
+                bufferSize / sizeof(*entryName));
         return NS_OK;
     }
 
@@ -495,9 +495,9 @@ int nsRASAutodial::NumRASEntries()
     if (!LoadRASapi32DLL())
         return 0;
 
-    RASENTRYNAME rasEntryName;
-    rasEntryName.dwSize = sizeof(RASENTRYNAME);
-    DWORD cb = sizeof(RASENTRYNAME);
+    RASENTRYNAMEW rasEntryName;
+    rasEntryName.dwSize = sizeof(RASENTRYNAMEW);
+    DWORD cb = sizeof(RASENTRYNAMEW);
     DWORD cEntries = 0;
 
 
@@ -514,7 +514,7 @@ int nsRASAutodial::NumRASEntries()
 }
 
 // Get the name of the default dial entry.
-nsresult nsRASAutodial::GetDefaultEntryName(char* entryName, int bufferSize)
+nsresult nsRASAutodial::GetDefaultEntryName(PRUnichar* entryName, int bufferSize)
 {
     // No RAS dialup entries. 
     if (mNumRASConnectionEntries <= 0)
@@ -535,8 +535,8 @@ nsresult nsRASAutodial::GetDefaultEntryName(char* entryName, int bufferSize)
     //              or HKLM/Software/Microsoft/RAS Autodial/Default/DefaultInternet.
     // For Windows 2K: HKCU/RemoteAccess/InternetProfile.
 
-    char* key = nsnull;
-    char* val = nsnull;
+    const PRUnichar* key = nsnull;
+    const PRUnichar* val = nsnull;
 
     HKEY hKey = 0;
     LONG result = 0;
@@ -545,10 +545,10 @@ nsresult nsRASAutodial::GetDefaultEntryName(char* entryName, int bufferSize)
     if ((mOSVerInfo.dwMajorVersion == 4) // Windows NT
      || ((mOSVerInfo.dwMajorVersion == 5) && (mOSVerInfo.dwMinorVersion == 0))) // Windows 2000
     {
-        key = "RemoteAccess";
-        val = "InternetProfile";
+        key = L"RemoteAccess";
+        val = L"InternetProfile";
 
-        result = ::RegOpenKeyEx(
+        result = ::RegOpenKeyExW(
                     HKEY_CURRENT_USER, 
                     key, 
                     0, 
@@ -562,12 +562,12 @@ nsresult nsRASAutodial::GetDefaultEntryName(char* entryName, int bufferSize)
     }
     else  // Windows XP
     {
-        key = "Software\\Microsoft\\RAS Autodial\\Default";
-        val = "DefaultInternet";
+        key = L"Software\\Microsoft\\RAS Autodial\\Default";
+        val = L"DefaultInternet";
 
         
         // Try HKCU first.
-        result = ::RegOpenKeyEx(
+        result = ::RegOpenKeyExW(
                     HKEY_CURRENT_USER, 
                     key, 
                     0, 
@@ -577,7 +577,7 @@ nsresult nsRASAutodial::GetDefaultEntryName(char* entryName, int bufferSize)
         if (result != ERROR_SUCCESS)
         {
             // If not present, try HKLM.
-            result = ::RegOpenKeyEx(
+            result = ::RegOpenKeyExW(
                         HKEY_LOCAL_MACHINE, 
                         key, 
                         0, 
@@ -595,7 +595,7 @@ nsresult nsRASAutodial::GetDefaultEntryName(char* entryName, int bufferSize)
     DWORD entryType = 0;
     DWORD buffSize = bufferSize;
 
-    result = ::RegQueryValueEx(hKey, 
+    result = ::RegQueryValueExW(hKey, 
                                 val, 
                                 nsnull, 
                                 &entryType, 
@@ -631,7 +631,7 @@ PRBool nsRASAutodial::IsAutodialServiceRunning()
     }
 
     SC_HANDLE hService = 
-      OpenService(hSCManager, "RasAuto", SERVICE_QUERY_STATUS);
+      OpenServiceW(hSCManager, L"RasAuto", SERVICE_QUERY_STATUS);
 
     if (hSCManager == nsnull)
     {
@@ -655,23 +655,23 @@ PRBool nsRASAutodial::IsAutodialServiceRunning()
 }
 
 // Add the specified address to the autodial directory.
-PRBool nsRASAutodial::AddAddressToAutodialDirectory(const char* hostName)
+PRBool nsRASAutodial::AddAddressToAutodialDirectory(const PRUnichar* hostName)
 {
     // Need to load the DLL if not loaded yet.
     if (!LoadRASapi32DLL())
         return PR_FALSE;
 
     // First see if there is already a db entry for this address. 
-    RASAUTODIALENTRY autodialEntry;
+    RASAUTODIALENTRYW autodialEntry;
     autodialEntry.dwSize = sizeof(RASAUTODIALENTRY);
     DWORD size = sizeof(RASAUTODIALENTRY);
     DWORD entries = 0;
 
     DWORD result = (*mpRasGetAutodialAddress)(hostName, 
-                                    nsnull, 
-                                    &autodialEntry, 
-                                    &size, 
-                                    &entries);
+                                              nsnull, 
+                                              &autodialEntry, 
+                                              &size, 
+                                              &entries);
 
     // If there is already at least 1 entry in db for this address, return.
     if (result != ERROR_FILE_NOT_FOUND)
@@ -683,13 +683,13 @@ PRBool nsRASAutodial::AddAddressToAutodialDirectory(const char* hostName)
     autodialEntry.dwSize = sizeof(RASAUTODIALENTRY);
     autodialEntry.dwFlags = 0;
     autodialEntry.dwDialingLocation = mAutodialServiceDialingLocation;
-    GetDefaultEntryName(autodialEntry.szEntry, RAS_MaxEntryName);
+    GetDefaultEntryName(autodialEntry.szEntry, sizeof(autodialEntry.szEntry));
 
     result = (*mpRasSetAutodialAddress)(hostName, 
-                                    0, 
-                                    &autodialEntry, 
-                                    sizeof(RASAUTODIALENTRY), 
-                                    1);
+                                        0, 
+                                        &autodialEntry, 
+                                        sizeof(RASAUTODIALENTRY), 
+                                        1);
 
     if (result != ERROR_SUCCESS)
     {
@@ -698,7 +698,7 @@ PRBool nsRASAutodial::AddAddressToAutodialDirectory(const char* hostName)
     }
 
     LOGD(("Autodial: Added address %s to RAS autodial db for entry %s.",
-     hostName, autodialEntry.szEntry));
+         hostName, NS_ConvertUTF16toUTF8(autodialEntry.szEntry).get()));
 
     return PR_TRUE;
 }
@@ -707,9 +707,9 @@ PRBool nsRASAutodial::AddAddressToAutodialDirectory(const char* hostName)
 int nsRASAutodial::GetCurrentLocation()
 {
     HKEY hKey = 0;
-    LONG result = ::RegOpenKeyEx(
+    LONG result = ::RegOpenKeyExW(
                     HKEY_LOCAL_MACHINE, 
-                    "Software\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Locations", 
+                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Locations", 
                     0, 
                     KEY_READ, 
                     &hKey);
@@ -724,7 +724,7 @@ int nsRASAutodial::GetCurrentLocation()
     DWORD location = 0;
     DWORD paramSize = sizeof(DWORD);
 
-    result = ::RegQueryValueEx(hKey, "CurrentID", nsnull, &entryType, (LPBYTE)&location, &paramSize);
+    result = ::RegQueryValueExW(hKey, L"CurrentID", nsnull, &entryType, (LPBYTE)&location, &paramSize);
     if (result != ERROR_SUCCESS)
     {
         ::RegCloseKey(hKey);
@@ -762,7 +762,7 @@ PRBool nsRASAutodial::LoadRASapi32DLL()
 {
     if (!mhRASapi32)
     {
-        mhRASapi32 = ::LoadLibrary("rasapi32.dll");
+        mhRASapi32 = ::LoadLibraryW(L"rasapi32.dll");
         if ((UINT)mhRASapi32 > 32)
         {
             // RasEnumConnections
@@ -811,16 +811,16 @@ PRBool nsRASAutodial::LoadRASdlgDLL()
 {
     if (!mhRASdlg)
     {
-        mhRASdlg = ::LoadLibrary("rasdlg.dll");
+        mhRASdlg = ::LoadLibraryW(L"rasdlg.dll");
         if ((UINT)mhRASdlg > 32)
         {
             // RasPhonebookDlg
             mpRasPhonebookDlg =
-             (tRASPHONEBOOKDLG)::GetProcAddress(mhRASdlg, "RasPhonebookDlgA");
+             (tRASPHONEBOOKDLG)::GetProcAddress(mhRASdlg, "RasPhonebookDlgW");
 
             // RasDialDlg
             mpRasDialDlg =
-             (tRASDIALDLG)::GetProcAddress(mhRASdlg, "RasDialDlgA");
+             (tRASDIALDLG)::GetProcAddress(mhRASdlg, "RasDialDlgW");
 
         }
     }

@@ -75,7 +75,7 @@ static void InitIPHelperLibrary(void)
     if (sIPHelper)
         return;
 
-    sIPHelper = LoadLibraryA("iphlpapi.dll");
+    sIPHelper = LoadLibraryW(L"iphlpapi.dll");
     if (!sIPHelper)
         return;
 
