@@ -1822,8 +1822,11 @@ js_FinishJIT(JSTraceMonitor *tm)
            "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
 #endif
-    verbose_only(delete tm->fragmento->labels;)
-    delete tm->fragmento;
+    if (tm->fragmento != NULL) {
+        verbose_only(delete tm->fragmento->labels;)
+        delete tm->fragmento;
+        tm->fragmento = NULL;
+    }
 }
 
 extern void
