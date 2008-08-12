@@ -369,7 +369,7 @@ function strings()
   var f = "f";
   var c = 0, d = 0, e = 0, g = 0;
   for (var i = 0; i < 10; i++) {
-    a[i] = (s.substring(i, i+1) + s[i] + String.fromCharCode(s2.charCodeAt(0) + i)).concat(i);
+    a[i] = (s.substring(i, i+1) + s[i] + String.fromCharCode(s2.charCodeAt(0) + i)).concat(i) + i;
     if (s[i] == f)
       c++;
     if (s[i] != 'b')
@@ -382,7 +382,7 @@ function strings()
   }
   return a.toString() + b + c + d + e + g;
 }
-strings.expected = "aaa0,bbb1,ccc2,ddd3,eee4,fff5,ggg6,hhh7,iii8,jjj91019100";
+strings.expected = "aaa00,bbb11,ccc22,ddd33,eee44,fff55,ggg66,hhh77,iii88,jjj991019100";
 test(strings);
 
 function stringConvert()
