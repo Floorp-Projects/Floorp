@@ -57,7 +57,11 @@ include config.mk
 ifndef NANOJIT_ARCH
 $(warning NANOJIT_ARCH not defined in config/$(OS_CONFIG).mk, JIT disabled)
 else
+ifdef DISABLE_JIT
+$(warning disabling JIT per build specification)
+else
 ENABLE_JIT=1
+endif
 endif
 
 ifdef ENABLE_JIT
