@@ -96,7 +96,8 @@ static struct {
 #define AUDIT(x) ((void)0)
 #endif 
 
-#define INS_CONST(c) addName(lir->insImm(c), #c)
+#define INS_CONST(c)    addName(lir->insImm(c), #c)
+#define INS_CONSTPTR(p) addName(lir->insImmPtr((void*) (p)), #p)
 
 using namespace avmplus;
 using namespace nanojit;
@@ -1930,7 +1931,7 @@ TraceRecorder::ifop()
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
               lir->ins_eq0(lir->ins2(LIR_and,
                                      lir->insLoadi(get(&v), offsetof(JSString, length)),
-                                     INS_CONST(JSSTRING_LENGTH_MASK))),
+                                     INS_CONSTPTR(JSSTRING_LENGTH_MASK))),
               BRANCH_EXIT);
     } else {
         JS_NOT_REACHED("ifop");
@@ -4895,12 +4896,26 @@ TraceRecorder::record_JSOP_LENGTH()
         LIns* str_ins = get(&l);
         LIns* len_ins = lir->insLoadi(str_ins, offsetof(JSString, length));
 
-        // We support only flat strings at present.
-        guard(true, addName(lir->ins_eq0(lir->ins2(LIR_and, len_ins,
-                                                   INS_CONST(JSSTRFLAG_DEPENDENT))),
-                            "guard(flat-string)"), MISMATCH_EXIT);
-        set(&l, lir->ins1(LIR_i2f,
-                          lir->ins2(LIR_and, len_ins, INS_CONST(JSSTRING_LENGTH_MASK))));
+        LIns* masked_len_ins = lir->ins2(LIR_and,
+                                         len_ins,
+                                         INS_CONSTPTR(JSSTRING_LENGTH_MASK));
+
+        LIns *choose_len_ins =
+            lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_and,
+                                                   len_ins,
+                                                   INS_CONSTPTR(JSSTRFLAG_DEPENDENT))),
+                            masked_len_ins,
+                            lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_and,
+                                                                   len_ins,
+                                                                   INS_CONSTPTR(JSSTRFLAG_PREFIX))),
+                                            lir->ins2(LIR_and,
+                                                      len_ins,
+                                                      INS_CONSTPTR(JSSTRDEP_LENGTH_MASK)),
+                                            masked_len_ins,
+                                            true),
+                            true);
+
+        set(&l, lir->ins1(LIR_i2f, choose_len_ins));
         return true;
     }
 
