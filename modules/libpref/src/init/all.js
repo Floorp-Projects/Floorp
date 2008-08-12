@@ -128,7 +128,7 @@ pref("browser.chrome.image_icons.max_size", 1024);
 
 pref("browser.triple_click_selects_paragraph", true);
 
-pref("gfx.color_management.enabled", false);
+pref("gfx.color_management.mode", 0);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
 

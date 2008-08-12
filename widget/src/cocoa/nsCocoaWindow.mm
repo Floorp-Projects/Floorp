@@ -1336,7 +1336,7 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActi
     // to match the system appearance lame, so probably we just shouldn't color 
     // correct chrome.
     cmsHTRANSFORM transform = NULL;
-    if (gfxPlatform::IsCMSEnabled() && (transform = gfxPlatform::GetCMSRGBATransform()))
+    if ((gfxPlatform::GetCMSMode() == eCMSMode_All) && (transform = gfxPlatform::GetCMSRGBATransform()))
       cmsDoTransform(transform, &aColor, &aColor, 1);
 
     [(ToolbarWindow*)mWindow setTitlebarColor:[NSColor colorWithDeviceRed:NS_GET_R(aColor)/255.0
