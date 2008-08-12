@@ -76,3 +76,4 @@ BUILTIN3(Object_p_hasOwnProperty,
                                 LO, LO, LO, LO, jsint,     JSContext*, JSObject*, JSString*, 1, 1)
 BUILTIN3(Object_p_propertyIsEnumerable,
                                 LO, LO, LO, LO, jsint,     JSContext*, JSObject*, JSString*, 1, 1)
+BUILTIN2(BooleanToNumber,       LO, LO, F,      jsdouble,  JSContext*, jsint, 1, 1)
