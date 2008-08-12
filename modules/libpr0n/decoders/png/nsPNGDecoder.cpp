@@ -245,7 +245,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
 
 #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
   /* Ignore unused chunks */
-  if (!gfxPlatform::IsCMSEnabled()) {
+  if (gfxPlatform::GetCMSMode() == eCMSMode_Off) {
     png_set_keep_unknown_chunks(mPNG, 1, color_chunks, 2);
   }
   png_set_keep_unknown_chunks(mPNG, 1, unused_chunks,
@@ -532,7 +532,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     png_set_strip_16(png_ptr);
 
   PRUint32 inType, intent, pIntent;
-  if (gfxPlatform::IsCMSEnabled()) {
+  if (gfxPlatform::GetCMSMode() != eCMSMode_Off) {
     intent = gfxPlatform::GetRenderingIntent();
     decoder->mInProfile = PNGGetColorProfile(png_ptr, info_ptr,
                                              color_type, &inType, &pIntent);
@@ -556,7 +556,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
                                              0);
   } else {
     png_set_gray_to_rgb(png_ptr);
-    if (gfxPlatform::IsCMSEnabled()) {
+    if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
       if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
         decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
       else
