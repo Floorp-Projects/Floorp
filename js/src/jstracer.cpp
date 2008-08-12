@@ -1518,7 +1518,8 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 #endif
     }
 
-    JS_ASSERT(!f->vmprivate);
+    if (f->vmprivate)
+        js_TrashTree(cx, f);
     
     /* setup the VM-private treeInfo structure for this fragment */
     TreeInfo* ti = new (&gc) TreeInfo(f); // TODO: deallocate when fragment dies
