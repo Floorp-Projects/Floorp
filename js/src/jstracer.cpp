@@ -1675,6 +1675,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
         debug_only(printf("type-map mismatch.\n");)
         if (++ti->mismatchCount > MAX_MISMATCH) {
             debug_only(printf("excessive mismatches, flushing cache.\n"));
+            f->blacklist();
             js_TrashTree(cx, f);
         }
         return NULL;
