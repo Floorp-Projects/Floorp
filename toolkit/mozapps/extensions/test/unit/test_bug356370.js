@@ -35,6 +35,37 @@
  *
  * ***** END LICENSE BLOCK *****
  */
+const URI_EXTENSION_UPDATE_DIALOG = "chrome://mozapps/content/extensions/update.xul";
+
+// Don't need the full interface, attempts to call other methods will just
+// throw which is just fine
+var WindowWatcher = {
+  openWindow: function(parent, url, name, features, arguments) {
+    // It is expected that the update dialog is shown during this test.
+    do_check_eq(url, URI_EXTENSION_UPDATE_DIALOG);
+  },
+
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsIWindowWatcher)
+     || iid.equals(Components.interfaces.nsISupports))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  }
+}
+
+var WindowWatcherFactory = {
+  createInstance: function createInstance(outer, iid) {
+    if (outer != null)
+      throw Components.results.NS_ERROR_NO_AGGREGATION;
+    return WindowWatcher.QueryInterface(iid);
+  }
+};
+var registrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
+                          "Fake Window Watcher",
+                          "@mozilla.org/embedcomp/window-watcher;1",
+                          WindowWatcherFactory);
 
 function write_cache_line(stream, location, id, mtime) {
   var line = location + "\t" + id + "\trel%" + id + "\t" + Math.floor(mtime / 1000) + "\t\r\n";
