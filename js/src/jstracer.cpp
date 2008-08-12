@@ -1034,8 +1034,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx->fp->script, slot))
         type = JSVAL_DOUBLE;
     treeInfo->globalTypeMap.add(type);
-    import(gp_ins, slot*sizeof(double), vp, treeInfo->globalTypeMap.data()[index],
-           "global", index, NULL);
+    import(gp_ins, slot*sizeof(double), vp, type, "global", index, NULL);
     return true;
 }
 
