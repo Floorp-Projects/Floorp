@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -3222,6 +3222,19 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 break;
             }
 
+            /*
+             * Some obvious assertions here, but they may help clarify the
+             * situation. This stmt is not yet a scope, so it must not be a
+             * catch block (which is a lexical scope by definition).
+             */
+            JS_ASSERT(!(stmt->flags & SIF_SCOPE));
+            JS_ASSERT(stmt != tc->topScopeStmt);
+            JS_ASSERT(stmt->type == STMT_BLOCK ||
+                      stmt->type == STMT_SWITCH ||
+                      stmt->type == STMT_TRY ||
+                      stmt->type == STMT_FINALLY);
+            JS_ASSERT(!stmt->downScope);
+
             /* Convert the block statement into a scope statement. */
             obj = js_NewBlockObject(cx);
             if (!obj)
@@ -3236,23 +3249,11 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
              * lacks the SIF_SCOPE flag, it must be a try, catch, or finally
              * block.
              */
-            JS_ASSERT(!(stmt->flags & SIF_SCOPE));
             stmt->flags |= SIF_SCOPE;
-            if (stmt != tc->topScopeStmt) {
-                JS_ASSERT(!stmt->downScope);
-                JS_ASSERT(stmt->type == STMT_BLOCK ||
-                          stmt->type == STMT_SWITCH ||
-                          stmt->type == STMT_TRY ||
-                          stmt->type == STMT_FINALLY);
-                stmt->downScope = tc->topScopeStmt;
-                tc->topScopeStmt = stmt;
-                JS_SCOPE_DEPTH_METERING(
-                    ++tc->scopeDepth > tc->maxScopeDepth &&
-                    tc->maxScopeDepth = tc->scopeDepth);
-            } else {
-                JS_ASSERT(stmt->type == STMT_CATCH);
-                JS_ASSERT(stmt->downScope);
-            }
+            stmt->downScope = tc->topScopeStmt;
+            tc->topScopeStmt = stmt;
+            JS_SCOPE_DEPTH_METERING(++tc->scopeDepth > tc->maxScopeDepth &&
+                                    (tc->maxScopeDepth = tc->scopeDepth));
 
             STOBJ_SET_PARENT(obj, tc->blockChain);
             tc->blockChain = obj;

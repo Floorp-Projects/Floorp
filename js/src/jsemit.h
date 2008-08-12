@@ -100,8 +100,8 @@ typedef enum JSStmtType {
  * unless they contain let declarations.
  *
  * We treat WITH as a static scope because it prevents lexical binding from
- * continuing further up the static scope chain. With the "reformed with"
- * proposal for JS2, we'll be able to model it statically, too.
+ * continuing further up the static scope chain. With the lost "reformed with"
+ * proposal for ES4, we would be able to model it statically, too.
  */
 #define STMT_TYPE_MAYBE_SCOPE(type)                                           \
     (type != STMT_WITH &&                                                     \
