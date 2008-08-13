@@ -47,7 +47,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(ef136142-9925-45f4-a3e4-6f0d275c6aa8)]
+[scriptable, uuid(ee6500aa-fd51-4b89-801f-d4fbf2663beb)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -126,6 +126,33 @@ interface nsIDOMWindowUtils : nsISupports {
                       in long aButton,
                       in long aClickCount,
                       in long aModifiers);
+
+  /** Synthesize a mouse scroll event for a window. The event types supported
+   *  are: 
+   *    DOMMouseScroll
+   *
+   * Events are sent in coordinates offset by aX and aY from the window.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * @param aType event type
+   * @param aX x offset
+   * @param aY y offset
+   * @param aButton button to synthesize
+   * @param aScrollFlags flag bits --- see nsMouseScrollFlags in nsGUIEvent.h
+   * @param aDelta the direction and amount to scroll (in lines or pixels,
+   * depending on whether kIsPixels is set in aScrollFlags)
+   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   */
+  void sendMouseScrollEvent(in AString aType,
+                            in long aX,
+                            in long aY,
+                            in long aButton,
+                            in long aScrollFlags,
+                            in long aDelta,
+                            in long aModifiers);
 
   /**
    * Synthesize a key event to the window. The event types supported are:

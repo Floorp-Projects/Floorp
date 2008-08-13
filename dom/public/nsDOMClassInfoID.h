@@ -83,6 +83,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_MutationEvent_id,
   eDOMClassInfo_UIEvent_id,
   eDOMClassInfo_MouseEvent_id,
+  eDOMClassInfo_MouseScrollEvent_id,
   eDOMClassInfo_KeyboardEvent_id,
   eDOMClassInfo_PopupBlockedEvent_id,
 
