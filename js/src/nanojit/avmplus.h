@@ -158,6 +158,7 @@ namespace nanojit
         Fragment *from;
         int32_t calldepth;
         uint32 numGlobalSlots;
+        uint32 numStackSlots;
         uint8 *typeMap;
         ExitType exitType;
 #if defined NJ_VERBOSE

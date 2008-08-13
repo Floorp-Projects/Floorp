@@ -1155,6 +1155,7 @@ TraceRecorder::snapshot(ExitType exitType)
     exit.from = fragment;
     exit.calldepth = callDepth;
     exit.numGlobalSlots = ngslots;
+    exit.numStackSlots = stackSlots;
     exit.exitType = exitType;
     exit.ip_adj = fp->regs->pc - (jsbytecode*)fragment->root->ip;
     exit.sp_adj = (stackSlots - treeInfo->entryNativeStackSlots) * sizeof(double);
@@ -1165,9 +1166,11 @@ TraceRecorder::snapshot(ExitType exitType)
        (integer or double) to figure out what the side exit show reflect in its typemap. */
     FORALL_SLOTS(cx, ngslots, treeInfo->globalSlots.data(), callDepth,
         LIns* i = get(vp);
-        *m++ = isNumber(*vp)
+        *m = isNumber(*vp)
                ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
                : JSVAL_TAG(*vp);
+        JS_ASSERT((*m != JSVAL_INT) || isInt32(*vp));
+        ++m;
     );
     return &exit;
 }
@@ -1323,12 +1326,13 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     LIns* ret = lir->insCall(F_CallTree, args);
     /* Make a note that we now depend on that tree. */
     ((TreeInfo*)inner->vmprivate)->dependentTrees.addUnique(fragment);
+    /* Read back all registers, in case the called tree changed any of them. */
+    SideExit* exit = lr->exit;
+    import(exit->numGlobalSlots, exit->typeMap, exit->typeMap + exit->numGlobalSlots);
     /* Guard that we come out of the inner tree along the same side exit we came out when
        we called the inner tree at recording time. */
-    LIns* g = guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
+    guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
     /* Re-read all values from the native frames since the inner tree might have changed them. */
-    SideExit* exit = g->exit();
-    import(exit->numGlobalSlots, exit->typeMap, exit->typeMap + exit->numGlobalSlots);
     /* Restore state->sp to its original value (we still have it in a register). */
     if (callDepth > 0)
         lir->insStorei(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp));
