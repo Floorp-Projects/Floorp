@@ -266,6 +266,55 @@ js_String_p_concat_1int(JSContext* cx, JSString* str, jsint i)
     return js_ConcatStrings(cx, str, istr);
 }
 
+JSObject* FASTCALL
+js_String_p_match(JSContext* cx, JSString* str, JSObject* regexp)
+{
+    jsval vp[4] = { JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
+    if (!js_str_match(cx, 1, vp))
+        return (JSObject*) JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    JS_ASSERT(JSVAL_IS_NULL(vp[0]) ||
+              (!JSVAL_IS_PRIMITIVE(vp[0]) && OBJ_IS_ARRAY(cx, JSVAL_TO_OBJECT(vp[0]))));
+    return JSVAL_TO_OBJECT(vp[0]);
+}
+
+JSString* FASTCALL
+js_String_p_replace_fun(JSContext* cx, JSString* str, JSObject* regexp, JSObject* lambda)
+{
+    jsval vp[4] = {
+        JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp), OBJECT_TO_JSVAL(lambda)
+    };
+    if (!js_StringReplaceHelper(cx, 2, lambda, NULL, vp))
+        return NULL;
+    JS_ASSERT(JSVAL_IS_STRING(vp[0]));
+    return JSVAL_TO_STRING(vp[0]);
+}
+
+JSString* FASTCALL
+js_String_p_replace_str(JSContext* cx, JSString* str, JSObject* regexp, JSString* repstr)
+{
+    jsval vp[4] = {
+        JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp), STRING_TO_JSVAL(repstr)
+    };
+    if (!js_StringReplaceHelper(cx, 2, NULL, repstr, vp))
+        return NULL;
+    JS_ASSERT(JSVAL_IS_STRING(vp[0]));
+    return JSVAL_TO_STRING(vp[0]);
+}
+
+JSString* FASTCALL
+js_String_p_replace_str3(JSContext* cx, JSString* str, JSString* patstr, JSString* repstr,
+                         JSString* flagstr)
+{
+    jsval vp[5] = {
+        JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(patstr), STRING_TO_JSVAL(repstr),
+        STRING_TO_JSVAL(flagstr)
+    };
+    if (!js_StringReplaceHelper(cx, 3, NULL, repstr, vp))
+        return NULL;
+    JS_ASSERT(JSVAL_IS_STRING(vp[0]));
+    return JSVAL_TO_STRING(vp[0]);
+}
+
 jsdouble FASTCALL
 js_StringToNumber(JSContext* cx, JSString* str)
 {
@@ -444,6 +493,16 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     return false;
 }
 
+jsval FASTCALL
+js_CallGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
+{
+    JS_ASSERT(!SPROP_HAS_STUB_GETTER(sprop));
+    jsval v;
+    if (!SPROP_GET(cx, sprop, obj, obj, &v))
+        return JSVAL_ERROR_COOKIE;
+    return v;
+}
+
 JSString* FASTCALL
 js_TypeOfObject(JSContext* cx, JSObject* obj)
 {
@@ -504,8 +563,10 @@ js_BooleanToNumber(JSContext* cx, jsint unboxed)
     { (intptr_t)&js_##op, (at0 << 4) | (at1 << 2) | atr, cse, fold NAME(op) },
 #define BUILTIN3(op, at0, at1, at2, atr, tr, t0, t1, t2, cse, fold) \
     { (intptr_t)&js_##op, (at0 << 6) | (at1 << 4) | (at2 << 2) | atr, cse, fold NAME(op) },
-#define BUILTIN4(op, at0, at1, at2, at3, atr, tr, t0, t1, t2, t3, cse, fold)    \
+#define BUILTIN4(op, at0, at1, at2, at3, atr, tr, t0, t1, t2, t3, cse, fold) \
     { (intptr_t)&js_##op, (at0 << 8) | (at1 << 6) | (at2 << 4) | (at3 << 2) | atr, cse, fold NAME(op) },
+#define BUILTIN5(op, at0, at1, at2, at3, at4, atr, tr, t0, t1, t2, t3, t4, cse, fold) \
+    { (intptr_t)&js_##op, (at0 << 10) | (at1 << 8) | (at2 << 6) | (at3 << 4) | (at4 << 2) | atr, cse, fold NAME(op) },
 
 struct CallInfo builtins[] = {
 #include "builtins.tbl"

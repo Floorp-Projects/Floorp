@@ -1167,7 +1167,7 @@ match_or_replace(JSContext *cx,
     NORMALIZE_THIS(cx, vp, str);
     data->str = str;
 
-    if (argc != 0 && JSVAL_IS_REGEXP(cx, vp[2])) {
+    if (argc != 0 && VALUE_IS_REGEXP(cx, vp[2])) {
         reobj = JSVAL_TO_OBJECT(vp[2]);
         re = (JSRegExp *) JS_GetPrivate(cx, reobj);
     } else {
@@ -1230,8 +1230,8 @@ match_or_replace(JSContext *cx,
             test = JS_TRUE;
         } else {
             /*
-             * MODE_MATCH implies str_match is being called from a script or a
-             * scripted function.  If the caller cares only about testing null
+             * MODE_MATCH implies js_str_match is being called from a script or
+             * a scripted function.  If the caller cares only about testing null
              * vs. non-null return value, optimize away the array object that
              * would normally be returned in *vp.
              */
@@ -1306,8 +1306,8 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
     return OBJ_SET_PROPERTY(cx, arrayobj, INT_TO_JSID(count), &v);
 }
 
-static JSBool
-str_match(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_str_match(JSContext *cx, uintN argc, jsval *vp)
 {
     JSTempValueRooter tvr;
     MatchData mdata;
@@ -1425,7 +1425,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
          * Save the regExpStatics from the current regexp, since they may be
          * clobbered by a RegExp usage in the lambda function.  Note that all
          * members of JSRegExpStatics are JSSubStrings, so not GC roots, save
-         * input, which is rooted otherwise via vp[1] in str_replace.
+         * input, which is rooted otherwise via vp[1] in js_str_replace.
          */
         JSRegExpStatics save = cx->regExpStatics;
         JSBool freeMoreParens = JS_FALSE;
@@ -1605,15 +1605,11 @@ replace_glob(JSContext *cx, jsint count, GlobData *data)
     return JS_TRUE;
 }
 
-static JSBool
-str_replace(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_str_replace(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *lambda;
-    JSString *repstr, *str;
-    ReplaceData rdata;
-    JSBool ok;
-    jschar *chars;
-    size_t leftlen, rightlen, length;
+    JSString *repstr;
 
     if (argc >= 2 && JS_TypeOfValue(cx, vp[3]) == JSTYPE_FUNCTION) {
         lambda = JSVAL_TO_OBJECT(vp[3]);
@@ -1624,6 +1620,19 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
         if (!repstr)
             return JS_FALSE;
     }
+
+    return js_StringReplaceHelper(cx, argc, lambda, repstr, vp);
+}
+
+JSBool
+js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
+                       JSString *repstr, jsval *vp)
+{
+    ReplaceData rdata;
+    JSBool ok;
+    size_t leftlen, rightlen, length;
+    jschar *chars;
+    JSString *str;
 
     /*
      * For ECMA Edition 3, the first argument is to be converted to a string
@@ -1838,7 +1847,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
         v = STRING_TO_JSVAL(str);
         ok = OBJ_SET_PROPERTY(cx, arrayobj, INT_TO_JSID(0), &v);
     } else {
-        if (JSVAL_IS_REGEXP(cx, vp[2])) {
+        if (VALUE_IS_REGEXP(cx, vp[2])) {
             re = (JSRegExp *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(vp[2]));
             sep = &tmp;
 
@@ -2251,9 +2260,9 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("localeCompare",     str_localeCompare,     1,GENERIC_PRIMITIVE),
 
     /* Perl-ish methods (search is actually Python-esque). */
-    JS_FN("match",             str_match,             1,GENERIC_PRIMITIVE),
+    JS_FN("match",             js_str_match,          1,GENERIC_PRIMITIVE),
     JS_FN("search",            str_search,            1,GENERIC_PRIMITIVE),
-    JS_FN("replace",           str_replace,           2,GENERIC_PRIMITIVE),
+    JS_FN("replace",           js_str_replace,        2,GENERIC_PRIMITIVE),
     JS_FN("split",             str_split,             2,GENERIC_PRIMITIVE),
 #if JS_HAS_PERL_SUBSTR
     JS_FN("substr",            str_substr,            2,GENERIC_PRIMITIVE),
