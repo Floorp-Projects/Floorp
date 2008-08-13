@@ -294,6 +294,7 @@ namespace avmplus
         void* gp;
         JSContext *cx;
         void* eos;
+        void* eor;
     };
 
     class String
