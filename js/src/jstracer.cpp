@@ -1777,6 +1777,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
            (rdtsc() - start));
 #endif
 
+    JS_ASSERT(lr->exit->exitType != NESTED_EXIT);
+    
     FlushNativeGlobalFrame(cx, e->numGlobalSlots, ti->globalSlots.data(), e->typeMap, global);
     FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack);
     JS_ASSERT(ti->globalSlots.length() >= e->numGlobalSlots);
@@ -1827,7 +1829,6 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 
     /* if this is a local branch in the same loop, grow the tree */
     GuardRecord* lr = js_ExecuteTree(cx, f, inlineCallCount);
-    JS_ASSERT(!(lr && (lr->exit->exitType == NESTED_EXIT)));
     if (lr && (lr->from->root == f) && (lr->exit->exitType == BRANCH_EXIT))
         return js_AttemptToExtendTree(cx, lr, f);
     /* if this exits the loop, resume interpretation */
@@ -2678,9 +2679,10 @@ bool
 TraceRecorder::record_LeaveFrame()
 {
 #ifdef DEBUG
-    printf("LeaveFrame (back to %s), callDept=%d\n", 
-           js_AtomToPrintableString(cx, cx->fp->fun->atom),
-           callDepth);
+    if (cx->fp->fun)
+        printf("LeaveFrame (back to %s), callDept=%d\n", 
+               js_AtomToPrintableString(cx, cx->fp->fun->atom),
+               callDepth);
 #endif    
     if (callDepth-- <= 0)
         return false;
