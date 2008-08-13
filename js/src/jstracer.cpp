@@ -4126,8 +4126,9 @@ TraceRecorder::forInLoop(LIns*& id_ins)
     jsval stateval = iterobj->fslots[JSSLOT_ITER_STATE];
     LIns* stateval_ins = stobj_get_fslot(iterobj_ins, JSSLOT_ITER_STATE);
 
-    // If a guarded condition is false while recording, stack unboxed false
-    // and return so the immediately subsequent JSOP_IFEQ exits the loop.
+    // If a guarded loop termination condition is false while recording, stack
+    // unboxed false and return so the immediately subsequent JSOP_IFEQ exits
+    // the loop.
     int flag = 0;
     id_ins = NULL;
 
@@ -4151,6 +4152,11 @@ TraceRecorder::forInLoop(LIns*& id_ins)
 
     JSNativeEnumerator* ne;
 
+    // Stack an unboxed true to make JSOP_IFEQ loop continue, even if ne is
+    // exhausted. Either we'll end up in the interpreter finding no enumerable
+    // prototype properties, or we will re-enter this trace having gone up the
+    // prototype chain one level.
+    flag = 1;
     ne = (JSNativeEnumerator*) (stateval & ~jsval(3));
     if (ne->cursor == 0)
         goto done;
@@ -4167,8 +4173,6 @@ TraceRecorder::forInLoop(LIns*& id_ins)
                             lir->ins2i(LIR_lsh, cursor_ins, (sizeof(jsid) == 4) ? 2 : 3));
 
 
-    // Stack an unboxed true to make JSOP_IFEQ loop.
-    flag = 1;
     id_ins = lir->insLoadi(id_addr_ins, 0);
 done:
     stack(0, lir->insImm(flag));
