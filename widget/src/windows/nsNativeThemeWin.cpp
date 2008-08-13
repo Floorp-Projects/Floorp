@@ -304,8 +304,6 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
-    case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
       return nsUXThemeData::GetTheme(eUXScrollbar);
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL:
@@ -607,27 +605,6 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
                                                 // the thumb, since the drag is not canceled
                                                 // when you move outside the thumb.
-          aState = TS_ACTIVE;
-        else if (eventState & NS_EVENT_STATE_HOVER)
-          aState = TS_HOVER;
-        else 
-          aState = TS_NORMAL;
-      }
-      return NS_OK;
-    }
-    case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
-    case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL: {
-      aPart = (aWidgetType == NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL) ?
-              SP_GRIPPERHOR : SP_GRIPPERVERT;
-      if (!aFrame)
-        aState = TS_NORMAL;
-      else if (IsDisabled(aFrame->GetParent()))
-        aState = TS_DISABLED;
-      else {
-        PRInt32 eventState = GetContentState(aFrame->GetParent(), aWidgetType);
-        if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
-                                                // the gripper, since the drag is not canceled
-                                                // when you move outside the gripper.
           aState = TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER)
           aState = TS_HOVER;
@@ -1175,6 +1152,24 @@ RENDER_AGAIN:
 
     widgetRect.bottom = widgetRect.top + TB_SEPARATOR_HEIGHT;
     nsUXThemeData::drawThemeEdge(theme, hdc, RP_BAND, 0, &widgetRect, EDGE_ETCHED, BF_TOP, NULL);
+  }
+  else if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL ||
+           aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL)
+  {
+    // Draw the decorative gripper for the scrollbar thumb button, if it fits
+
+    SIZE gripSize;
+    MARGINS thumbMgns;
+    int gripPart = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) ?
+                   SP_GRIPPERHOR : SP_GRIPPERVERT;
+
+    if (nsUXThemeData::getThemePartSize(theme, hdc, gripPart, state, NULL, TS_TRUE, &gripSize) == S_OK &&
+        nsUXThemeData::getThemeMargins(theme, hdc, part, state, TMT_CONTENTMARGINS, NULL, &thumbMgns) == S_OK &&
+        gripSize.cx + thumbMgns.cxLeftWidth + thumbMgns.cxRightWidth <= widgetRect.right - widgetRect.left &&
+        gripSize.cy + thumbMgns.cyTopHeight + thumbMgns.cyBottomHeight <= widgetRect.bottom - widgetRect.top)
+    {
+      nsUXThemeData::drawThemeBG(theme, hdc, gripPart, state, &widgetRect, &clipRect);
+    }
   }
 
   nativeDrawing.EndNativeDrawing();
