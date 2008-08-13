@@ -32,7 +32,7 @@
 
 /*
  * oggplay_file_reader.h
- * 
+ *
  * Shane Stephens <shane.stephens@annodex.net>
  * Michael Martin
  */
