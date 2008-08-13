@@ -1221,7 +1221,7 @@ nsCSSRendering::PaintBoxShadow(nsPresContext* aPresContext,
     blurRadius /= twipsPerPixel;
     shadowContext = blurringArea.Init(shadowRect, blurRadius, 1, renderContext);
     if (!shadowContext)
-      return;
+      continue;
 
     // Set the shadow color; if not specified, use the foreground color
     nscolor shadowColor;
