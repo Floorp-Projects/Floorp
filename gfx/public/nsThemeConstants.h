@@ -153,10 +153,6 @@
 #define NS_THEME_SCROLLBAR_THUMB_HORIZONTAL                88
 #define NS_THEME_SCROLLBAR_THUMB_VERTICAL                  89
 
-// The gripper that goes on the thumb
-#define NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL              90
-#define NS_THEME_SCROLLBAR_GRIPPER_VERTICAL                91
-
 // A textfield or text area
 #define NS_THEME_TEXTFIELD                                 95
 
