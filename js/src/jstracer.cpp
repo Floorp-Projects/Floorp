@@ -645,7 +645,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     eor_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, eor)), "eor");
 
     /* read into registers all values on the stack and all globals we know so far */
-    import(ngslots, callDepth, globalTypeMap, stackTypeMap); 
+    import(lirbuf->sp, ngslots, callDepth, globalTypeMap, stackTypeMap); 
 }
 
 TraceRecorder::~TraceRecorder()
@@ -1028,7 +1028,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
 }
 
 void
-TraceRecorder::import(unsigned ngslots, unsigned callDepth, 
+TraceRecorder::import(LIns* sp, unsigned ngslots, unsigned callDepth, 
                       uint8* globalTypeMap, uint8* stackTypeMap)
 {
     /* the first time we compile a tree this will be empty as we add entries lazily */
@@ -1041,7 +1041,7 @@ TraceRecorder::import(unsigned ngslots, unsigned callDepth,
     ptrdiff_t offset = -treeInfo->nativeStackBase;
     m = stackTypeMap;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        import(lirbuf->sp, offset, vp, *m, vpname, vpnum, fp);
+        import(sp, offset, vp, *m, vpname, vpnum, fp);
         m++; offset += sizeof(double);
     );
 }
@@ -1329,6 +1329,7 @@ void
 TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
+    LIns* inner_sp = lirbuf->sp;
     /* The inner tree expects to be called from the current scope. If the outer tree (this
        trace is currently inside a function inlining code (calldepth > 0), we have to advance
        the native stack pointer such that we match what the inner trace expects to see. We
@@ -1336,9 +1337,9 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     if (callDepth > 0) {
         /* Calculate the amount we have to lift the native stack pointer by to compensate for
            any outer frames that the inner tree doesn't expect but the outer tree has. */
-        unsigned sp_adj = nativeStackSlots(callDepth - 1, cx->fp->down) * sizeof(double);
+        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[-1]);
         /* Calculate the amount we have to lift the call stack by */
-        unsigned rp_adj = callDepth * sizeof(FrameInfo);
+        ptrdiff_t rp_adj = callDepth * sizeof(FrameInfo);
         /* Guard that we have enough stack space for the tree we are trying to call on top
            of the new value for sp. */
         LIns* sp_top = lir->ins2i(LIR_add, lirbuf->sp, sp_adj + 
@@ -1349,7 +1350,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
                 ti->maxCallDepth * sizeof(FrameInfo));
         guard(true, lir->ins2(LIR_lt, rp_top, eor_ins), OOM_EXIT);
         /* We have enough space, so adjust sp and rp to their new level. */
-        lir->insStorei(lir->ins2i(LIR_add, lirbuf->sp, sp_adj), 
+        lir->insStorei(inner_sp = lir->ins2i(LIR_add, lirbuf->sp, sp_adj), 
                 lirbuf->state, offsetof(InterpState, sp));
         lir->insStorei(lir->ins2i(LIR_add, lirbuf->rp, rp_adj),
                 lirbuf->state, offsetof(InterpState, rp));
@@ -1361,7 +1362,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     ti->dependentTrees.addUnique(fragment);
     /* Read back all registers, in case the called tree changed any of them. */
     SideExit* exit = lr->exit;
-    import(exit->numGlobalSlots, exit->calldepth, 
+    import(inner_sp, exit->numGlobalSlots, exit->calldepth, 
            exit->typeMap, exit->typeMap + exit->numGlobalSlots);
     /* Restore sp and rp to their original values (we still have them in a register). */
     if (callDepth > 0) {
@@ -2640,6 +2641,9 @@ TraceRecorder::clearFrameSlotsFromCache()
 bool
 TraceRecorder::record_EnterFrame()
 {
+#ifdef DEBUG
+    printf("EnterFrame %s\n", js_AtomToPrintableString(cx, cx->fp->fun->atom));
+#endif    
     if (++callDepth >= MAX_CALLDEPTH)
         ABORT_TRACE("exceeded maximum call depth");
     JSStackFrame* fp = cx->fp;
@@ -2663,6 +2667,9 @@ TraceRecorder::record_EnterFrame()
 bool
 TraceRecorder::record_LeaveFrame()
 {
+#ifdef DEBUG
+    printf("LeaveFrame (back to %s)\n", js_AtomToPrintableString(cx, cx->fp->fun->atom));
+#endif    
     if (callDepth-- <= 0)
         return false;
 
