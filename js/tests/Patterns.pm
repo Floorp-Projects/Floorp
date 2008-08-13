@@ -186,7 +186,11 @@ BEGIN
 
     @testruns = ();
 
-    open TESTRUNS, "<$test_dir/tests/mozilla.org/js/universe.data" or die "$?";
+    my $UNIVERSE = $ENV{TEST_UNIVERSE} || "$test_dir/tests/mozilla.org/js/universe.data";
+
+    dbg "UNIVERSE=$UNIVERSE";
+
+    open TESTRUNS, "<$UNIVERSE" or die "$?";
 
     while (<TESTRUNS>) {
 
