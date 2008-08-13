@@ -65,4 +65,8 @@ public:
   NS_IMETHOD GetWhich(PRUint32 *aWhich);
 };
 
+#define NS_FORWARD_TO_NSDOMMOUSEEVENT \
+  NS_FORWARD_NSIDOMMOUSEEVENT(nsDOMMouseEvent::) \
+  NS_FORWARD_TO_NSDOMUIEVENT
+
 #endif // nsDOMMouseEvent_h__
