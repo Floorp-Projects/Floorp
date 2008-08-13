@@ -608,9 +608,20 @@ js_GetStringBytes(JSContext *cx, JSString *str);
 extern void
 js_PurgeDeflatedStringCache(JSRuntime *rt, JSString *str);
 
-JSBool
+/* Export a few natives and a helper to other files in SpiderMonkey. */
+extern JSBool
 js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval);
+
+extern JSBool
+js_str_match(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_str_replace(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
+                       JSString *repstr, jsval *vp);
 
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at

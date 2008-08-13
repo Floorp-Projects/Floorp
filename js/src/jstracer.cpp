@@ -60,6 +60,7 @@
 #include "jsiter.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsregexp.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jstracer.h"
@@ -2369,21 +2370,19 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
         return true;
     }
 
-    /* Handle only gets and sets on the directly addressed object. */
-    if (obj2 != obj)
-        ABORT_TRACE("PC hit on prototype chain");
+    /* Insist if setting on obj being the directly addressed object. */
+    uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC));
+    if (setflags && obj2 != obj)
+        ABORT_TRACE("JOF_SET opcode hit prototype chain");
 
     /* Don't trace getter or setter calls, our caller wants a direct slot. */
     if (PCVAL_IS_SPROP(pcval)) {
         JSScopeProperty* sprop = PCVAL_TO_SPROP(pcval);
 
-        if (js_CodeSpec[*cx->fp->regs->pc].format & JOF_SET) {
-            if (!SPROP_HAS_STUB_SETTER(sprop))
-                ABORT_TRACE("non-stub setter");
-        } else {
-            if (!SPROP_HAS_STUB_GETTER(sprop))
-                ABORT_TRACE("non-stub getter");
-        }
+        if (setflags && !SPROP_HAS_STUB_SETTER(sprop))
+            ABORT_TRACE("non-stub setter");
+        if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop))
+            ABORT_TRACE("non-stub getter");
         if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)))
             ABORT_TRACE("no valid slot");
         slot = sprop->slot;
@@ -2462,7 +2461,7 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
     if (isNumber(v)) {
         LIns* args[] = { v_ins, cx_ins };
         v_ins = lir->insCall(F_BoxDouble, args);
-        guard(false, lir->ins2(LIR_eq, v_ins, lir->insImmPtr((void*)JSVAL_ERROR_COOKIE)),
+        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONSTPTR(JSVAL_ERROR_COOKIE)),
               OOM_EXIT);
         return true;
     }
@@ -3197,8 +3196,8 @@ TraceRecorder::record_JSOP_GETELEM()
 
         LIns* args[] = { get(&r), get(&l), cx_ins };
         LIns* v_ins = lir->insCall(F_Any_getelem, args);
-        guard(false, lir->ins2(LIR_eq, v_ins, lir->insImmPtr((void*)JSVAL_ERROR_COOKIE)),
-                MISMATCH_EXIT);
+        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONSTPTR(JSVAL_ERROR_COOKIE)),
+              MISMATCH_EXIT);
         if (!unbox_jsval(v, v_ins))
             ABORT_TRACE("JSOP_GETELEM");
         set(&l, v_ins);
@@ -3404,23 +3403,27 @@ TraceRecorder::record_JSOP_CALL()
         JSTNErrType  errtype;
         JSClass     *tclasp;
     } knownNatives[] = {
-        { js_math_sin,         F_Math_sin,             "",    "d",    INFALLIBLE, NULL },
-        { js_math_cos,         F_Math_cos,             "",    "d",    INFALLIBLE, NULL },
-        { js_math_pow,         F_Math_pow,             "",   "dd",    INFALLIBLE, NULL },
-        { js_math_sqrt,        F_Math_sqrt,            "",    "d",    INFALLIBLE, NULL },
-        { js_math_floor,       F_Math_floor,           "",    "d",    INFALLIBLE, NULL },
-        { js_str_substring,    F_String_p_substring,   "TC", "ii",    FAIL_NULL,  NULL },
-        { js_str_substring,    F_String_p_substring_1, "TC",  "i",    FAIL_NULL,  NULL },
-        { js_str_fromCharCode, F_String_fromCharCode,  "C",   "i",    FAIL_NULL,  NULL },
-        { js_str_charCodeAt,   F_String_p_charCodeAt,  "T",   "i",    FAIL_NEG,   NULL },
-        { js_str_charAt,       F_String_getelem,       "TC",  "i",    FAIL_NULL,  NULL },
-        { js_math_random,      F_Math_random,          "R",    "",    INFALLIBLE, NULL },
-        { js_str_concat,       F_String_p_concat_1int, "TC",  "i",    FAIL_NULL,  NULL },
-        { js_array_join,       F_Array_p_join,         "TC",  "s",    FAIL_NULL,  NULL },
-        { js_obj_hasOwnProperty, F_Object_p_hasOwnProperty,
-                                                       "TC",  "s",    FAIL_VOID,  NULL },
+        { js_math_sin,                 F_Math_sin,             "",    "d",    INFALLIBLE,  NULL },
+        { js_math_cos,                 F_Math_cos,             "",    "d",    INFALLIBLE,  NULL },
+        { js_math_pow,                 F_Math_pow,             "",   "dd",    INFALLIBLE,  NULL },
+        { js_math_sqrt,                F_Math_sqrt,            "",    "d",    INFALLIBLE,  NULL },
+        { js_math_floor,               F_Math_floor,           "",    "d",    INFALLIBLE,  NULL },
+        { js_str_substring,            F_String_p_substring,   "TC", "ii",    FAIL_NULL,   NULL },
+        { js_str_substring,            F_String_p_substring_1, "TC",  "i",    FAIL_NULL,   NULL },
+        { js_str_fromCharCode,         F_String_fromCharCode,  "C",   "i",    FAIL_NULL,   NULL },
+        { js_str_charCodeAt,           F_String_p_charCodeAt,  "T",   "i",    FAIL_NEG,    NULL },
+        { js_str_charAt,               F_String_getelem,       "TC",  "i",    FAIL_NULL,   NULL },
+        { js_str_match,                F_String_p_match,       "TC",  "r",    FAIL_VOID,   NULL },
+        { js_str_replace,              F_String_p_replace_str3,"TC","sss",    FAIL_NULL,   NULL },
+        { js_str_replace,              F_String_p_replace_str, "TC", "sr",    FAIL_NULL,   NULL },
+        { js_str_replace,              F_String_p_replace_fun, "TC", "fr",    FAIL_NULL,   NULL },
+        { js_math_random,              F_Math_random,          "R",    "",    INFALLIBLE,  NULL },
+        { js_str_concat,               F_String_p_concat_1int, "TC",  "i",    FAIL_NULL,   NULL },
+        { js_array_join,               F_Array_p_join,         "TC",  "s",    FAIL_NULL,   NULL },
+        { js_obj_hasOwnProperty,       F_Object_p_hasOwnProperty,
+                                                               "TC",  "s",    FAIL_VOID,   NULL },
         { js_obj_propertyIsEnumerable, F_Object_p_propertyIsEnumerable,
-                                                       "TC",  "s",    FAIL_NEG,   NULL },
+                                                               "TC",  "s",    FAIL_NEG,    NULL },
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
@@ -3430,7 +3433,7 @@ TraceRecorder::record_JSOP_CALL()
 
         uintN knownargc = strlen(known->argtypes);
         if (argc != knownargc)
-            continue; // might have another specialization for this argc
+            continue;
 
         intN prefixc = strlen(known->prefix);
         LIns* args[5];
@@ -3439,14 +3442,14 @@ TraceRecorder::record_JSOP_CALL()
 
         jsval& thisval = stackval(0 - (argc + 1));
         LIns* thisval_ins = get(&thisval);
-        if (known->tclasp) {
-            if (JSVAL_IS_PRIMITIVE(thisval))
-                ABORT_TRACE("known native with class guard called on primitive this");
-            if (!guardClass(JSVAL_TO_OBJECT(thisval), thisval_ins, known->tclasp))
-                return false;
+        if (known->tclasp &&
+            !JSVAL_IS_PRIMITIVE(thisval) &&
+            !guardClass(JSVAL_TO_OBJECT(thisval), thisval_ins, known->tclasp)) {
+            continue; /* might have another specialization for |this| */
         }
 
 #define HANDLE_PREFIX(i)                                                       \
+    JS_BEGIN_MACRO                                                             \
         argtype = known->prefix[i];                                            \
         if (argtype == 'C') {                                                  \
             *argp = cx_ins;                                                    \
@@ -3457,7 +3460,8 @@ TraceRecorder::record_JSOP_CALL()
         } else {                                                               \
             JS_NOT_REACHED("unknown prefix arg type");                         \
         }                                                                      \
-        argp--;
+        argp--;                                                                \
+    JS_END_MACRO
 
         switch (prefixc) {
           case 2:
@@ -3475,23 +3479,32 @@ TraceRecorder::record_JSOP_CALL()
 #undef HANDLE_PREFIX
 
 #define HANDLE_ARG(i)                                                          \
+    JS_BEGIN_MACRO                                                             \
+        jsval& arg = stackval(-(i + 1));                                       \
         argtype = known->argtypes[i];                                          \
         if (argtype == 'd' || argtype == 'i') {                                \
-            jsval& arg = stackval(-(i + 1));                                   \
             if (!isNumber(arg))                                                \
-                ABORT_TRACE("arg in position " #i " must be numeric");         \
+                continue; /* might have another specialization for arg */      \
             *argp = get(&arg);                                                 \
             if (argtype == 'i')                                                \
                 *argp = f2i(*argp);                                            \
         } else if (argtype == 's') {                                           \
-            jsval& arg = stackval(-(i + 1));                                   \
             if (!JSVAL_IS_STRING(arg))                                         \
-                ABORT_TRACE("arg in position " #i " must be a string");        \
+                continue; /* might have another specialization for arg */      \
+            *argp = get(&arg);                                                 \
+        } else if (argtype == 'r') {                                           \
+            if (!VALUE_IS_REGEXP(cx, arg))                                     \
+                continue; /* might have another specialization for arg */      \
+            *argp = get(&arg);                                                 \
+        } else if (argtype == 'f') {                                           \
+            if (!VALUE_IS_FUNCTION(cx, arg))                                   \
+                continue; /* might have another specialization for arg */      \
             *argp = get(&arg);                                                 \
         } else {                                                               \
-            JS_NOT_REACHED("unknown arg type");                                \
+            continue;     /* might have another specialization for arg */      \
         }                                                                      \
-        argp--;
+        argp--;                                                                \
+    JS_END_MACRO
 
         switch (strlen(known->argtypes)) {
           case 4:
@@ -3515,16 +3528,22 @@ TraceRecorder::record_JSOP_CALL()
 #undef HANDLE_ARG
 
         LIns* res_ins = lir->insCall(known->builtin, args);
-        if (known->errtype == FAIL_NULL) {
+        switch (known->errtype) {
+          case FAIL_NULL:
             guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
-        } else if (known->errtype == FAIL_NEG) {
+            break;
+          case FAIL_NEG:
+          {
             res_ins = lir->ins1(LIR_i2f, res_ins);
-
             jsdpun u;
             u.d = 0.0;
             guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(u.u64)), OOM_EXIT);
-        } else if (known->errtype == FAIL_VOID) {
+            break;
+          }
+          case FAIL_VOID:
             guard(false, lir->ins2i(LIR_eq, res_ins, 2), OOM_EXIT);
+            break;
+          default:;
         }
         set(&fval, res_ins);
         return true;
@@ -3543,7 +3562,8 @@ TraceRecorder::name(jsval*& vp)
 
     LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
-    /* Can't use getProp here, because we don't want unboxing. */
+
+    /* Can't use prop here, because we don't want unboxing from global slots. */
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
@@ -3569,16 +3589,59 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
         ABORT_TRACE("prop op aliases global");
     guard(false, lir->ins2(LIR_eq, obj_ins, lir->insImmPtr((void*)globalObj)), MISMATCH_EXIT);
 
-    if (!test_property_cache_direct_slot(obj, obj_ins, slot))
+    /*
+     * Property cache ensures that we are dealing with an existing property,
+     * and guards the shape for us.
+     */
+    JSObject* obj2;
+    jsuword pcval;
+    if (!test_property_cache(obj, obj_ins, obj2, pcval))
         return false;
 
     /* Check for non-existent property reference, which results in undefined. */
-    if (slot == SPROP_INVALID_SLOT) {
-        const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
-        JS_ASSERT(cs.ndefs == 1);
+    const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
+    if (PCVAL_IS_NULL(pcval)) {
         v_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        JS_ASSERT(cs.ndefs == 1);
         stack(-cs.nuses, v_ins);
         return true;
+    }
+
+    /* Insist if setting on obj being the directly addressed object. */
+    uint32 setflags = (cs.format & (JOF_SET | JOF_INCDEC));
+    if (setflags && obj2 != obj)
+        ABORT_TRACE("JOF_SET opcode hit prototype chain");
+
+    /* Don't trace getter or setter calls, our caller wants a direct slot. */
+    if (PCVAL_IS_SPROP(pcval)) {
+        JSScopeProperty* sprop = PCVAL_TO_SPROP(pcval);
+
+        if (setflags && !SPROP_HAS_STUB_SETTER(sprop))
+            ABORT_TRACE("non-stub setter");
+        if (setflags != JOF_SET && !SPROP_HAS_STUB_GETTER(sprop)) {
+            // FIXME 450335: generalize this away from regexp built-in getters.
+            if (setflags == 0 &&
+                sprop->getter == js_RegExpClass.getProperty &&
+                sprop->shortid < 0) {
+                LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
+                v_ins = lir->insCall(F_CallGetter, args);
+                if (!unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_FALSE,
+                                 v_ins)) {
+                    ABORT_TRACE("unboxing");
+                }
+                JS_ASSERT(cs.ndefs == 1);
+                stack(-cs.nuses, v_ins);
+                return true;
+            }
+            ABORT_TRACE("non-stub getter");
+        }
+        if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)))
+            ABORT_TRACE("no valid slot");
+        slot = sprop->slot;
+    } else {
+        if (!PCVAL_IS_SLOT(pcval))
+            ABORT_TRACE("PCE is not a slot");
+        slot = PCVAL_TO_SLOT(pcval);
     }
 
     LIns* dslots_ins = NULL;
