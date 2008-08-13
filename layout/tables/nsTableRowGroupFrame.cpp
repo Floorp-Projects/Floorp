@@ -1413,9 +1413,6 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
   for (nsIFrame* rowFrame = aFrameList; rowFrame;
        rowFrame = rowFrame->GetNextSibling()) {
     if (nsGkAtoms::tableRowFrame == rowFrame->GetType()) {
-      NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW ==
-                     rowFrame->GetStyleDisplay()->mDisplay,
-                   "wrong display type on rowframe");      
       rows.AppendElement(rowFrame);
     }
   }
@@ -1459,9 +1456,6 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
   for (nsIFrame* rowFrame = aFrameList; rowFrame;
        rowFrame = rowFrame->GetNextSibling()) {
     if (nsGkAtoms::tableRowFrame == rowFrame->GetType()) {
-      NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW ==
-                     rowFrame->GetStyleDisplay()->mDisplay,
-                   "wrong display type on rowframe");      
       rows.AppendElement(rowFrame);
       if (!gotFirstRow) {
         ((nsTableRowFrame*)rowFrame)->SetFirstInserted(PR_TRUE);
