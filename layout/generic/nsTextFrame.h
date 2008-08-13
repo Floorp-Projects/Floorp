@@ -373,9 +373,6 @@ protected:
   nscoord     mAscent;
   gfxTextRun* mTextRun;
 
-  // The caller of this method must call DestroySelectionDetails() on the
-  // return value, if that return value is not null.  Calling
-  // DestroySelectionDetails() on a null value is still OK, just not necessary.
   SelectionDetails* GetSelectionDetails();
   
   void UnionTextDecorationOverflow(nsPresContext* aPresContext,
