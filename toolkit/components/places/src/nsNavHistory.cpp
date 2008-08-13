@@ -23,7 +23,7 @@
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Seth Spitzer <sspitzer@mozilla.com>
  *   Asaf Romano <mano@mozilla.com>
- *   Marco Bonardo <mak77@bonardo.net>
+ *   Marco Bonardo <mak77@supereva.it>
  *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -4205,13 +4205,12 @@ nsNavHistory::AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
 nsresult
 nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
                             PRBool aToplevel, PRBool aIsRedirect,
-                            nsIURI* aReferrerURI, PRInt64* aVisitID,
+                            nsIURI* aReferrer, PRInt64* aVisitID,
                             PRInt64* aSessionID, PRInt64* aRedirectBookmark)
 {
   PRUint32 transitionType = 0;
   PRInt64 referringVisit = 0;
   PRTime visitTime = 0;
-  nsCOMPtr<nsIURI> fromVisitURI = aReferrerURI;
 
   nsCAutoString spec;
   nsresult rv = aURI->GetSpec(spec);
@@ -4238,7 +4237,7 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
     // in the correct order. Since the times are in microseconds, it should not
     // normally be possible to get two pages within one microsecond of each
     // other so the referrer won't appear before a previous page viewed.
-    rv = AddVisitChain(redirectURI, aTime - 1, aToplevel, PR_TRUE, aReferrerURI,
+    rv = AddVisitChain(redirectURI, aTime - 1, aToplevel, PR_TRUE, aReferrer,
                        &referringVisit, aSessionID, aRedirectBookmark);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4247,16 +4246,12 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
     if (!aToplevel) {
       transitionType = nsINavHistoryService::TRANSITION_EMBED;
     }
-
-    // We have been redirected, update the referrer so we can walk up
-    // the redirect chain. See bug 411966 for details.
-    fromVisitURI = redirectURI;
-  } else if (aReferrerURI) {
+  } else if (aReferrer) {
     // We do not want to add a new visit if the referring site is the same as
     // the new site.  This is the situation where a page refreshes itself to
     // give the user updated information.
     PRBool referrerIsSame;
-    if (NS_SUCCEEDED(aURI->Equals(aReferrerURI, &referrerIsSame)) && referrerIsSame)
+    if (NS_SUCCEEDED(aURI->Equals(aReferrer, &referrerIsSame)) && referrerIsSame)
       return NS_OK;
 
     // If there is a referrer, we know you came from somewhere, either manually
@@ -4286,7 +4281,7 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
 
     // Try to turn the referrer into a visit.
     // This also populates the session id.
-    if (!FindLastVisit(aReferrerURI, &referringVisit, aSessionID)) {
+    if (!FindLastVisit(aReferrer, &referringVisit, aSessionID)) {
       // we couldn't find a visit for the referrer, don't set it
       *aSessionID = GetNewSessionID();
     }
@@ -4313,7 +4308,7 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
   }
 
   // this call will create the visit and create/update the page entry
-  return AddVisit(aURI, visitTime, fromVisitURI, transitionType,
+  return AddVisit(aURI, visitTime, aReferrer, transitionType,
                   aIsRedirect, *aSessionID, aVisitID);
 }
 
