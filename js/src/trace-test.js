@@ -658,6 +658,34 @@ function missingArgTest() {
 missingArgTest.expected = "1"
 test(missingArgTest);
 
+JSON = function () {
+    return {
+        stringify: function stringify(value, whitelist) {
+            switch (typeof(value)) {
+              case "object":
+                return value.constructor.name;
+            }
+        }
+    };
+}();
+
+function missingArgTest2() {
+  var testPairs = [
+    ["{}", {}],
+    ["[]", []],
+    ['{"foo":"bar"}', {"foo":"bar"}],
+  ]
+  
+  var a = [];
+  for (var i=0; i < testPairs.length; i++) {
+    var s = JSON.stringify(testPairs[i][1])
+    a[i] = s;
+  }
+  return a.join(",");
+}
+missingArgTest2.expected = "Object,Array,Object";
+test(missingArgTest2);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
