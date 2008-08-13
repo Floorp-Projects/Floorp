@@ -70,6 +70,13 @@ PasswordEngine.prototype = {
     if (!this.__core)
       this.__core = new PasswordSyncCore(this._store);
     return this.__core;
+  },
+
+  __tracker: null,
+  get _tracker() {
+    if (!this.__tracker)
+      this.__tracker = new PasswordTracker();
+    return this.__tracker;
   }
 };
 
