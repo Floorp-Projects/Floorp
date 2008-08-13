@@ -535,6 +535,15 @@ namespace nanojit
 		return isop(LIR_quad);
 	}
 
+	bool LIns::isconstp() const
+	{
+    #ifdef AVMPLUS_64BIT
+	    return isconstq();
+	#else
+	    return isconst();
+    #endif
+	}
+
 	bool FASTCALL isCse(LOpcode op) {
 		op = LOpcode(op & ~LIR64);
 		return op >= LIR_feq && op <= LIR_uge;

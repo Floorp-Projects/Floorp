@@ -269,7 +269,7 @@ namespace nanojit
 			NanoAssert(isconst());
 			return isop(LIR_short) ? imm16() : imm32();
 		}
-
+		
 		inline uint64_t constvalq() const
 		{
 			NanoAssert(isconstq());
@@ -283,6 +283,15 @@ namespace nanojit
 			dst[1] = src[1];
 			return tmp;
 		#endif
+		}
+		
+		inline void* constvalp() const
+		{
+        #ifdef AVMPLUS_64BIT
+		    return (void*)constvalq();
+		#else
+		    return (void*)constval();
+        #endif      
 		}
 		
 		inline double constvalf() const
@@ -312,6 +321,7 @@ namespace nanojit
 		bool isconst() const;
 		bool isconstval(int32_t val) const;
 		bool isconstq() const;
+		bool isconstp() const;
         bool isTramp() {
             return isop(LIR_neartramp) || isop(LIR_tramp);
         }
