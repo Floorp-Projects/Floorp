@@ -645,7 +645,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     eor_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, eor)), "eor");
 
     /* read into registers all values on the stack and all globals we know so far */
-    import(lirbuf->sp, ngslots, callDepth, globalTypeMap, stackTypeMap); 
+    import(treeInfo, lirbuf->sp, ngslots, callDepth, globalTypeMap, stackTypeMap); 
 }
 
 TraceRecorder::~TraceRecorder()
@@ -1028,7 +1028,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
 }
 
 void
-TraceRecorder::import(LIns* sp, unsigned ngslots, unsigned callDepth, 
+TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned ngslots, unsigned callDepth, 
                       uint8* globalTypeMap, uint8* stackTypeMap)
 {
     /* the first time we compile a tree this will be empty as we add entries lazily */
@@ -1362,7 +1362,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     ti->dependentTrees.addUnique(fragment);
     /* Read back all registers, in case the called tree changed any of them. */
     SideExit* exit = lr->exit;
-    import(inner_sp, exit->numGlobalSlots, exit->calldepth, 
+    import(ti, inner_sp, exit->numGlobalSlots, exit->calldepth, 
            exit->typeMap, exit->typeMap + exit->numGlobalSlots);
     /* Restore sp and rp to their original values (we still have them in a register). */
     if (callDepth > 0) {
@@ -2649,11 +2649,13 @@ TraceRecorder::clearFrameSlotsFromCache()
 bool
 TraceRecorder::record_EnterFrame()
 {
-#ifdef DEBUG
-    printf("EnterFrame %s\n", js_AtomToPrintableString(cx, cx->fp->fun->atom));
-#endif    
     if (++callDepth >= MAX_CALLDEPTH)
         ABORT_TRACE("exceeded maximum call depth");
+#ifdef DEBUG
+    printf("EnterFrame %s, callDepth=%d\n", 
+           js_AtomToPrintableString(cx, cx->fp->fun->atom),
+           callDepth);
+#endif    
     JSStackFrame* fp = cx->fp;
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
 
@@ -2676,7 +2678,9 @@ bool
 TraceRecorder::record_LeaveFrame()
 {
 #ifdef DEBUG
-    printf("LeaveFrame (back to %s)\n", js_AtomToPrintableString(cx, cx->fp->fun->atom));
+    printf("LeaveFrame (back to %s), callDept=%d\n", 
+           js_AtomToPrintableString(cx, cx->fp->fun->atom),
+           callDepth);
 #endif    
     if (callDepth-- <= 0)
         return false;

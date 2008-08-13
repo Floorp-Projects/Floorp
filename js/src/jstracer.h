@@ -225,7 +225,7 @@ class TraceRecorder {
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
                 const char *prefix, uintN index, JSStackFrame *fp);
-    void import(nanojit::LIns* sp, unsigned ngslots, unsigned callDepth, 
+    void import(TreeInfo* treeInfo, nanojit::LIns* sp, unsigned ngslots, unsigned callDepth, 
                 uint8* globalTypeMap, uint8* stackTypeMap);
     void trackNativeStackUse(unsigned slots);
 
