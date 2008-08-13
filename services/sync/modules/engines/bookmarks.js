@@ -318,7 +318,7 @@ BookmarksSharingManager.prototype = {
 		  }
 		}
   },
-  
+
   updateAllIncomingShares: function BmkSharing_updateAllIncoming(onComplete) {
     this._updateAllIncomingShares.async(this, onComplete);
   },
@@ -1232,7 +1232,11 @@ BookmarksStore.prototype = {
         item.type = "microsummary";
         let micsum = this._ms.getMicrosummary(node.itemId);
         item.generatorURI = micsum.generator.uri.spec; // breaks local generators
-        item.staticTitle = this._ans.getItemAnnotation(node.itemId, "bookmarks/staticTitle");
+        item.staticTitle = "";
+        try {
+          item.staticTitle = this._ans.getItemAnnotation(node.itemId,
+                                                         "bookmarks/staticTitle");
+        } catch (e) {}
       } else if (node.type == node.RESULT_TYPE_QUERY) {
         item.type = "query";
         item.title = node.title;
