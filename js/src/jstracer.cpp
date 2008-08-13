@@ -1658,7 +1658,7 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
     }
     /* does this branch go to an inner loop? */
     Fragment* f = fragmento->getLoop(cx->fp->regs->pc);
-    if (nesting_enabled && f->code()) {
+    if (nesting_enabled && f->code() && !((TreeInfo*)f->vmprivate)->globalSlots.length()) {
         JS_ASSERT(f->vmprivate);
         /* call the inner tree */
         GuardRecord* lr = js_ExecuteTree(cx, f, inlineCallCount);
