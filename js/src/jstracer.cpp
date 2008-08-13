@@ -1918,7 +1918,7 @@ TraceRecorder::argval(unsigned n) const
 jsval&
 TraceRecorder::varval(unsigned n) const
 {
-    JS_ASSERT(n < cx->fp->script->nfixed);
+    JS_ASSERT(n < cx->fp->script->nslots);
     return cx->fp->slots[n];
 }
 
