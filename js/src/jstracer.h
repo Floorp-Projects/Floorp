@@ -215,6 +215,7 @@ class TraceRecorder {
     nanojit::LirWriter*     func_filter;
     nanojit::LIns*          cx_ins;
     nanojit::LIns*          gp_ins;
+    nanojit::LIns*          eos_ins;
     nanojit::LIns*          rval_ins;
     nanojit::SideExit       exit;
 
