@@ -837,7 +837,7 @@ namespace nanojit
 				}
 				else {
 					// need a way to EOT now, since this is trace end.
-					return out->insGuard(LIR_x, 0, x);
+					return out->insGuard(LIR_x, out->insImm(1), x);
 				}
 			}
 			else {
