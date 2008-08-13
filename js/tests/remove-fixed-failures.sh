@@ -66,13 +66,13 @@ cp $failures $failures.orig
 workfailures=`mktemp working-failures.XXXXX`
 workfixes=`mktemp working-fixes.XXXXX`
 
-trap "rm -f ${workfailures} ${workfailures}.temp ${workfixes};" EXIT
+trap "rm -f ${workfailures} ${workfailures}.temp ${workfixes}*;" EXIT
 
 # create working copy of the failures file
 cp $failures $workfailures
 cp $fixes $workfixes
 
-sed -i 's|:[^:]*\.log||' $workfixes;
+sed -i.bak 's|:[^:]*\.log||' $workfixes;
 
 grep -Fv -f $workfixes ${workfailures} > ${workfailures}.temp
 
