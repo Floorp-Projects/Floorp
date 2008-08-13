@@ -837,6 +837,9 @@ namespace nanojit
 				}
 				else {
 					// need a way to EOT now, since this is trace end.
+#ifdef JS_TRACER
+				    AvmAssert(0);
+#endif				    
 					return out->insGuard(LIR_x, out->insImm(1), x);
 				}
 			}
