@@ -277,8 +277,23 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   /* zero state out. */
   memset(&m_hw_state, 0, sizeof(osso_hw_state_t));
 
-  /* Initialize maemo application */
-  m_osso_context = osso_initialize(gAppData->name, 
+  /* Initialize maemo application
+     
+     The initalization name will be of the form "Vendor.Name".
+     If a Vendor isn't given, then we will just use "Name".
+     
+     Note that this value must match your X-Osso-Service name
+     defined in your desktop file.  If it doesn't, the OSSO
+     system will happily kill your process.
+  */
+  nsCAutoString applicationName;
+  if(gAppData->vendor) {
+      applicationName.Append(gAppData->vendor);
+      applicationName.Append(".");
+  }
+  applicationName.Append(gAppData->name);
+
+  m_osso_context = osso_initialize(applicationName.get(), 
                                    gAppData->version ? gAppData->version : "1.0",
                                    PR_TRUE,
                                    nsnull);
