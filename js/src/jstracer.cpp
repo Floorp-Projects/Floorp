@@ -79,6 +79,9 @@
 /* Max number of type mismatchs before we trash the tree. */
 #define MAX_MISMATCH 5
 
+/* Max native stack size. */
+#define MAX_NATIVE_STACK_SLOTS 1024
+
 #ifdef DEBUG
 #define ABORT_TRACE(msg)   do { fprintf(stdout, "abort: %d: %s\n", __LINE__, msg); return false; } while(0)
 #else
@@ -631,6 +634,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
     lirbuf->rp = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, rp)), "rp");
     cx_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, cx)), "cx");
     gp_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, gp)), "gp");
+    eos_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, eos)), "eos");
 
     /* read into registers all values on the stack and all globals we know so far */
     import(ngslots, globalTypeMap, stackTypeMap); 
@@ -1285,6 +1289,11 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
         debug_only(printf("Trace rejected: unstable loop variables.\n");)
         return;
     }
+    if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
+        debug_only(printf("Trace rejected: excess stack use.\n"));
+        fragment->blacklist();
+        return;
+    }
     SideExit *exit = snapshot(LOOP_EXIT);
     exit->target = fragment->root;
     if (fragment == fragment->root) {
@@ -1675,10 +1684,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     unsigned ngslots = ti->globalSlots.length();
     uint16* gslots = ti->globalSlots.data();
     unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
-    double* global = (double *)alloca((globalFrameSize+1) * sizeof(double));
+    double* global = (double*)alloca((globalFrameSize+1) * sizeof(double));
     debug_only(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
-    double* stack = (double *)alloca((ti->maxNativeStackSlots+1) * sizeof(double));
-    debug_only(*(uint64*)&stack[ti->maxNativeStackSlots] = 0xdeadbeefdeadbeefLL;)
+    double* stack = (double*)alloca(MAX_NATIVE_STACK_SLOTS * sizeof(double));
 #ifdef DEBUG
     printf("entering trace at %s:%u@%u, native stack slots: %u\n",
            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
@@ -1702,6 +1710,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     FrameInfo* callstack = (FrameInfo*) alloca(ti->maxCallDepth * sizeof(FrameInfo));
     InterpState state;
     state.sp = (void*)entry_sp;
+    state.eos = ((double*)state.sp) + MAX_NATIVE_STACK_SLOTS;
     state.rp = callstack;
     state.gp = global;
     state.cx = cx;
@@ -1741,7 +1750,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack);
     JS_ASSERT(ti->globalSlots.length() >= e->numGlobalSlots);
     JS_ASSERT(globalFrameSize == STOBJ_NSLOTS(globalObj));
-    JS_ASSERT(*(uint64*)&stack[ti->maxNativeStackSlots] == 0xdeadbeefdeadbeefLL);
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
 
     AUDIT(sideExitIntoInterpreter);
