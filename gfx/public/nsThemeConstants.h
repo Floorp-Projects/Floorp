@@ -238,3 +238,6 @@
 #define NS_THEME_WIN_COMMUNICATIONS_TOOLBOX                221
 #define NS_THEME_WIN_MEDIA_TOOLBOX                         222
 #define NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX               223
+
+// Vista glass
+#define NS_THEME_WIN_GLASS                                 230

@@ -24,6 +24,7 @@
  *   L. David Baron <dbaron@dbaron.org>
  *   Daniel Glazman <glazman@netscape.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ *   Rob Arnold <robarnold@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -789,6 +790,11 @@ InitSystemMetrics()
   rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowsDefaultTheme, metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(do_GetAtom("windows-default-theme"));
+  }
+
+  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_DWMCompositor, metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(do_GetAtom("windows-compositor"));
   }
 
   return PR_TRUE;

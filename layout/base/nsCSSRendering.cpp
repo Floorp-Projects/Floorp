@@ -1312,9 +1312,9 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
     if (!rootView->GetParent()) {
       PRBool widgetIsTransparent = PR_FALSE;
 
-      if (rootView->HasWidget()) {
-        rootView->GetWidget()->GetHasTransparentBackground(widgetIsTransparent);
-      }
+      if (rootView->HasWidget())
+        // We don't want to draw a bg for glass windows either
+        widgetIsTransparent = eTransparencyOpaque != rootView->GetWidget()->GetTransparencyMode();
       
       if (!widgetIsTransparent) {
         // Ensure that we always paint a color for the root (in case there's
