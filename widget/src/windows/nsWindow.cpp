@@ -6447,7 +6447,9 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   if (event.theReply.mCursorPosition.width || event.theReply.mCursorPosition.height)
   {
     nsRect cursorPosition;
-    ResolveIMECaretPos(this, event.theReply.mCursorPosition, cursorPosition);
+    ResolveIMECaretPos(event.theReply.mReferenceWidget,
+                       event.theReply.mCursorPosition,
+                       this, cursorPosition);
     CANDIDATEFORM candForm;
     candForm.dwIndex = 0;
     candForm.dwStyle = CFS_EXCLUDE;
@@ -6522,7 +6524,9 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
   if (event.theReply.mCursorPosition.width || event.theReply.mCursorPosition.height)
   {
     nsRect cursorPosition;
-    ResolveIMECaretPos(this, event.theReply.mCursorPosition, cursorPosition);
+    ResolveIMECaretPos(event.theReply.mReferenceWidget,
+                       event.theReply.mCursorPosition,
+                       this, cursorPosition);
     candForm.dwIndex = 0;
     candForm.dwStyle = CFS_CANDIDATEPOS;
     candForm.ptCurrentPos.x = cursorPosition.x + IME_X_OFFSET;
@@ -7136,7 +7140,7 @@ PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult)
   }
 
   nsRect screenRect;
-  ResolveIMECaretPos(nsnull, r, screenRect);
+  ResolveIMECaretPos(GetTopLevelWindow(), r, nsnull, screenRect);
   pCharPosition->pt.x = screenRect.x;
   pCharPosition->pt.y = screenRect.y;
 
@@ -7151,17 +7155,21 @@ PRBool nsWindow::OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult)
 
 //==========================================================================
 void
-nsWindow::ResolveIMECaretPos(nsWindow* aClient,
-                             nsRect&   aEventResult,
-                             nsRect&   aResult)
+nsWindow::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
+                             nsRect&    aCursorRect,
+                             nsIWidget* aNewOriginWidget,
+                             nsRect&    aOutRect)
 {
-  // RootView coordinates -> Screen coordinates
-  GetTopLevelWindow()->WidgetToScreen(aEventResult, aResult);
-  // if aClient is nsnull, returns screen coordinates
-  if (!aClient)
+  aOutRect = aCursorRect;
+
+  if (aReferenceWidget == aNewOriginWidget)
     return;
-  // screen coordinates -> client coordinates
-  aClient->ScreenToWidget(aResult, aResult);
+
+  if (aReferenceWidget)
+    aReferenceWidget->WidgetToScreen(aOutRect, aOutRect);
+
+  if (aNewOriginWidget)
+    aNewOriginWidget->ScreenToWidget(aOutRect, aOutRect);
 }
 
 //==========================================================================

@@ -327,9 +327,26 @@ protected:
   BOOL                    OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult);
 
   void                    GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnicode);
-  void                    ResolveIMECaretPos(nsWindow* aClient,
-                                             nsRect&   aEventResult,
-                                             nsRect&   aResult);
+
+  /**
+   *  ResolveIMECaretPos
+   *  Convert the caret rect of a composition event to another widget's
+   *  coordinate system.
+   *
+   *  @param aReferenceWidget The origin widget of aCursorRect.
+   *                          Typically, this is mReferenceWidget of the
+   *                          composing events. If the aCursorRect is in screen
+   *                          coordinates, set nsnull.
+   *  @param aCursorRect      The cursor rect.
+   *  @param aNewOriginWidget aOutRect will be in this widget's coordinates. If
+   *                          this is nsnull, aOutRect will be in screen
+   *                          coordinates.
+   *  @param aOutRect         The converted cursor rect.
+   */
+  void                    ResolveIMECaretPos(nsIWidget* aReferenceWidget,
+                                             nsRect&    aCursorRect,
+                                             nsIWidget* aNewOriginWidget,
+                                             nsRect&    aOutRect);
 
   virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
                             const nsTArray<nsAlternativeCharCode>* aAlternativeChars,
