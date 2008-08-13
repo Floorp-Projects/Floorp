@@ -2296,7 +2296,6 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     if (!prop) {
         // Propagate obj from js_FindPropertyHelper to record_JSOP_BINDNAME
         // via our obj2 out-parameter.
-        JS_ASSERT(aobj == obj);
         obj2 = obj;
         pcval = PCVAL_NULL;
         return true;
