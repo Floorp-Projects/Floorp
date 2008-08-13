@@ -141,11 +141,20 @@ js_InitRegExpStatics(JSContext *cx, JSRegExpStatics *res);
 extern void
 js_FreeRegExpStatics(JSContext *cx, JSRegExpStatics *res);
 
-#define JSVAL_IS_REGEXP(cx, v)                                                \
+#define VALUE_IS_REGEXP(cx, v)                                                \
     (JSVAL_IS_OBJECT(v) && JSVAL_TO_OBJECT(v) &&                              \
      OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_RegExpClass)
 
 extern JSClass js_RegExpClass;
+
+enum regexp_tinyid {
+    REGEXP_SOURCE       = -1,
+    REGEXP_GLOBAL       = -2,
+    REGEXP_IGNORE_CASE  = -3,
+    REGEXP_LAST_INDEX   = -4,
+    REGEXP_MULTILINE    = -5,
+    REGEXP_STICKY       = -6
+};
 
 extern JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj);
