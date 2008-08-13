@@ -2257,16 +2257,17 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     JSScopeProperty* sprop;
     jsid id = ATOM_TO_JSID(atom);
     if (JOF_OPMODE(*cx->fp->regs->pc) == JOF_NAME) {
+        JS_ASSERT(aobj == obj);
         if (js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry) < 0)
             ABORT_TRACE("failed to find name");
     } else {
-        int protoIndex = js_LookupPropertyWithFlags(cx, obj, id, 0, &obj2, &prop);
+        int protoIndex = js_LookupPropertyWithFlags(cx, aobj, id, 0, &obj2, &prop);
         if (protoIndex < 0)
             ABORT_TRACE("failed to lookup property");
 
         if (prop) {
             sprop = (JSScopeProperty*) prop;
-            js_FillPropertyCache(cx, obj, OBJ_SCOPE(obj)->shape, 0, protoIndex, obj2, sprop,
+            js_FillPropertyCache(cx, aobj, OBJ_SCOPE(aobj)->shape, 0, protoIndex, obj2, sprop,
                                  &entry);
         }
     }
@@ -2274,6 +2275,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     if (!prop) {
         // Propagate obj from js_FindPropertyHelper to record_JSOP_BINDNAME
         // via our obj2 out-parameter.
+        JS_ASSERT(aobj == obj);
         obj2 = obj;
         pcval = PCVAL_NULL;
         return true;
@@ -2284,33 +2286,33 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         ABORT_TRACE("failed to fill property cache");
     }
 
-    if (obj != globalObj) {
-        if (PCVCAP_TAG(entry->vcap) <= 1) {
+    if (PCVCAP_TAG(entry->vcap) <= 1) {
+        if (aobj != globalObj) {
             LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
             guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
                   MISMATCH_EXIT);
-        } else {
-            JS_ASSERT(entry->kpc == (jsbytecode*) atom);
-            JS_ASSERT(entry->kshape == jsuword(obj));
+        }
+    } else {
+        JS_ASSERT(entry->kpc == (jsbytecode*) atom);
+        JS_ASSERT(entry->kshape == jsuword(aobj));
+    }
+
+    if (PCVCAP_TAG(entry->vcap) >= 1) {
+        JS_ASSERT(OBJ_SCOPE(obj2)->shape == PCVCAP_SHAPE(entry->vcap));
+
+        LIns* obj2_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+        map_ins = lir->insLoadi(obj2_ins, offsetof(JSObject, map));
+        LIns* ops_ins;
+        if (!map_is_native(obj2->map, map_ins, ops_ins)) {
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            return false;
         }
 
-        if (PCVCAP_TAG(entry->vcap) >= 1) {
-            JS_ASSERT(OBJ_SCOPE(obj2)->shape == PCVCAP_SHAPE(entry->vcap));
-
-            LIns* obj2_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
-            map_ins = lir->insLoadi(obj2_ins, offsetof(JSObject, map));
-            LIns* ops_ins;
-            if (!map_is_native(obj2->map, map_ins, ops_ins)) {
-                OBJ_DROP_PROPERTY(cx, obj2, prop);
-                return false;
-            }
-
-            LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
-            guard(true,
-                  addName(lir->ins2i(LIR_eq, shape_ins, PCVCAP_SHAPE(entry->vcap)),
-                          "guard(vcap_shape)"),
-                  MISMATCH_EXIT);
-        }
+        LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+        guard(true,
+              addName(lir->ins2i(LIR_eq, shape_ins, PCVCAP_SHAPE(entry->vcap)),
+                      "guard(vcap_shape)"),
+              MISMATCH_EXIT);
     }
 
     sprop = (JSScopeProperty*) prop;
