@@ -1984,7 +1984,7 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
 
       nsIView *view = nsnull;
       result =
-        caretP->GetCaretCoordinates(nsCaret::eIMECoordinates,
+        caretP->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates,
                                     selection,
                                     &(aReply->mCursorPosition),
                                     &(aReply->mCursorIsCollapsed),
