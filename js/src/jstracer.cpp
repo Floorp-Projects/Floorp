@@ -1689,6 +1689,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
         AUDIT(globalShapeMismatchAtEntry);
         debug_only(printf("global shape mismatch, flushing tree.\n"));
         js_TrashTree(cx, f);
+        f->blacklist();
         return NULL;
     }
 
