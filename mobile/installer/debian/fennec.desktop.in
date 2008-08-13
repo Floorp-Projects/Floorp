@@ -1,5 +1,5 @@
 [Desktop Entry]
-Version=1.0
+Version=@MOZ_APP_VERSION@
 Encoding=UTF-8
 Name=Fennec
 Comment=Fennec mobile browser
