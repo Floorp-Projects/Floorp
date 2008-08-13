@@ -981,12 +981,10 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
            to see doubles on entry. The first op to use this slot will emit a
            f2i cast which will cancel out the i2f we insert here. */
         ins = lir->insLoadi(base, offset);
-        nativeFrameTracker.set(p, ins);
         ins = lir->ins1(LIR_i2f, ins);
     } else {
         JS_ASSERT(isNumber(*p) == (t == JSVAL_DOUBLE));
         ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, base, offset);
-        nativeFrameTracker.set(p, ins);
     }
     tracker.set(p, ins);
 #ifdef DEBUG
@@ -1093,10 +1091,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
         ? -treeInfo->nativeStackBase + nativeStackOffset(p)                   \
         : nativeGlobalOffset(p)));                                            \
 
-        if (x->isop(LIR_ld) || x->isop(LIR_ldq)) {
-            ASSERT_VALID_CACHE_HIT(x->oprnd1(), x->oprnd2()->constval());
-            lir->insStorei(i, x->oprnd1(), x->oprnd2()->constval());
-        } else if (x->isop(LIR_st) || x->isop(LIR_stq)) {
+        if (x->isop(LIR_st) || x->isop(LIR_stq)) {
             ASSERT_VALID_CACHE_HIT(x->oprnd2(), x->oprnd3()->constval());
             lir->insStorei(i, x->oprnd2(), x->oprnd3()->constval());
         } else {
