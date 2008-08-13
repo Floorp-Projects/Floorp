@@ -53,6 +53,8 @@ interface nsIFile;
  * primary interface for interacting with a database, including
  * creating prepared statements, executing SQL, and examining database
  * errors.
+ *
+ * @threadsafe
  */
 [scriptable, uuid(623f9ddb-434b-4d39-bc2d-1c617da241d0)]
 interface mozIStorageConnection : nsISupports {
@@ -206,7 +208,9 @@ interface mozIStorageConnection : nsISupports {
    */
 
   /**
-   * Create a new SQLite function
+   * Create a new SQL function.  If you use your connection on multiple threads,
+   * your function needs to be threadsafe, or it should only be called on one
+   * thread.
    *
    * @param aFunctionName  The name of function to create, as seen in SQL.
    * @param aNumArguments  The number of arguments the function takes. Pass
@@ -219,7 +223,9 @@ interface mozIStorageConnection : nsISupports {
                       in mozIStorageFunction aFunction);
 
   /**
-   * Create a new SQLite aggregate function
+   * Create a new SQL aggregate function.  If you use your connection on
+   * multiple threads, your function needs to be threadsafe, or it should only
+   * be called on one thread.
    *
    * @param aFunctionName  The name of aggregate function to create, as seen
    *                       in SQL.
@@ -232,7 +238,7 @@ interface mozIStorageConnection : nsISupports {
                                in long aNumArguments,
                                in mozIStorageAggregateFunction aFunction);
   /**
-   * Delete custom SQLite function (simple or aggregate one)
+   * Delete custom SQL function (simple or aggregate one).
    *
    * @param aFunctionName  The name of function to remove.
    */
@@ -240,7 +246,9 @@ interface mozIStorageConnection : nsISupports {
 
   /**
    * Sets a progress handler. Only one handler can be registered at a time.
-   * If you need more than one, you need to chain them yourself.
+   * If you need more than one, you need to chain them yourself.  This progress
+   * handler should be threadsafe if you use this connection object on more than
+   * one thread.
    *
    * @param aGranularity   The number of SQL virtual machine steps between
    *                       progress handler callbacks.
