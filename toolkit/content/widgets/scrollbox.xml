@@ -360,7 +360,18 @@
     </implementation>
 
     <handlers>
-      <handler event="DOMMouseScroll" action="this.scrollByIndex(event.detail); event.stopPropagation();"/>
+      <handler event="DOMMouseScroll"><![CDATA[
+        // prevent horizontal scrolling from scrolling a vertical scrollbox
+        if (event.axis == event.HORIZONTAL_AXIS &&
+            this.getAttribute("orient") != "horizontal")
+          return;
+        // We allow vertical scrolling to scroll a horizontal scrollbox
+        // because many users have a vertical scroll wheel but no
+        // horizontal support.
+
+        this.scrollByIndex(event.detail);
+        event.stopPropagation();
+      ]]></handler>
 
       <handler event="underflow"><![CDATA[
         // filter underflow events which were dispatched on nested scrollboxes
