@@ -518,11 +518,15 @@ public:
         SET_VPNAME("stack");                                                  \
         vp = StackBase(fp); vpstop = fp->regs->sp;                            \
         while (vp < vpstop) { code; ++vp; INC_VPNUM(); }                      \
-        if (depth != 0) {                                                     \
-            SET_VPNAME("missing");                                            \
-            vp = fp->down->regs->sp;                                          \
-            vpstop = vp + (fp->fun->nargs - fp->argc);                        \
-            while (vp < vpstop) { code; ++vp; INC_VPNUM(); }                  \
+        if (fsp < fspstop - 1) {                                              \
+            JSStackFrame* fp2 = fsp[1];                                       \
+            int missing = fp2->fun->nargs - fp2->argc;                        \
+            if (missing > 0) {                                                \
+                SET_VPNAME("missing");                                        \
+                vp = fp->regs->sp;                                            \
+                vpstop = vp + missing;                                        \
+                while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
+            }                                                                 \
         }                                                                     \
     JS_END_MACRO
 
@@ -545,7 +549,7 @@ public:
         for (;; fp = fp->down) { *fsp-- = fp; if (fp == entryFrame) break; }  \
         unsigned depth;                                                       \
         for (depth = 0, fsp = fstack; fsp < fspstop; ++fsp, ++depth) {        \
-            fp = (*fsp);                                                      \
+            fp = *fsp;                                                        \
             FORALL_FRAME_SLOTS(fp, depth, code);                              \
         }                                                                     \
     JS_END_MACRO
@@ -738,10 +742,14 @@ done:
         if (size_t(p - spbase) < size_t(fp->regs->sp - spbase))
             RETURN(offset + size_t(p - spbase) * sizeof(double));
         offset += size_t(fp->regs->sp - spbase) * sizeof(double);
-        if (fsp != fstack) {
-            if (size_t(p - fp->down->regs->sp) < size_t(fp->fun->nargs - fp->argc))
-                RETURN(offset + size_t(p - fp->down->regs->sp) * sizeof(double));
-            offset += size_t(fp->fun->nargs - fp->argc) * sizeof(double);
+        if (fsp < fspstop - 1) {
+            JSStackFrame* fp2 = fsp[1];
+            int missing = fp2->fun->nargs - fp2->argc;
+            if (missing > 0) {
+                if (size_t(p - fp->regs->sp) < size_t(missing))
+                    RETURN(offset + size_t(p - fp->regs->sp) * sizeof(double));
+                offset += size_t(missing) * sizeof(double);
+            }
         }
     }
 
@@ -2615,10 +2623,19 @@ TraceRecorder::record_EnterFrame()
         ABORT_TRACE("exceeded maximum call depth");
     JSStackFrame* fp = cx->fp;
     LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
-    for (uintN n = fp->argc; n < fp->fun->nargs; ++n)
-        set(&fp->argv[n], void_ins, true);
-    for (uintN n = 0; n < fp->script->nfixed; ++n)
-        set(&fp->slots[n], void_ins, true);
+
+    jsval* vp = &fp->argv[fp->argc];
+    jsval* vpstop = vp + (fp->fun->nargs - fp->argc);
+    while (vp < vpstop) {
+        if (vp >= fp->down->regs->sp)
+            nativeFrameTracker.set(vp, (LIns*)0);
+        set(vp++, void_ins, true);
+    }
+
+    vp = &fp->slots[0];
+    vpstop = vp + fp->script->nfixed;
+    while (vp < vpstop)
+        set(vp++, void_ins, true);
     return true;
 }
 
