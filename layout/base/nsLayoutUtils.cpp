@@ -70,6 +70,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"
+#include "nsThemeConstants.h"
 #include "nsPIDOMWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
@@ -2636,7 +2637,7 @@ static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
   }
 }
 
-/* static */ PRBool
+/* static */ PRBool 
 nsLayoutUtils::HasNonZeroSide(const nsStyleSides& aSides)
 {
   return NonZeroStyleCoord(aSides.GetTop()) ||
@@ -2645,28 +2646,30 @@ nsLayoutUtils::HasNonZeroSide(const nsStyleSides& aSides)
          NonZeroStyleCoord(aSides.GetLeft());
 }
 
-/* static */ PRBool
-nsLayoutUtils::FrameHasTransparency(nsIFrame* aFrame) {
+/* static */ nsTransparencyMode
+nsLayoutUtils::GetFrameTransparency(nsIFrame* aFrame) {
   if (aFrame->GetStyleContext()->GetStyleDisplay()->mOpacity < 1.0f)
-    return PR_TRUE;
+    return eTransparencyTransparent;
 
   if (HasNonZeroSide(aFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
-    return PR_TRUE;
+    return eTransparencyTransparent;
 
   if (aFrame->IsThemed())
-    return PR_FALSE;
+    return eTransparencyOpaque;
 
+  if (aFrame->GetStyleDisplay()->mAppearance == NS_THEME_WIN_GLASS)
+    return eTransparencyGlass;
   PRBool isCanvas;
   const nsStyleBackground* bg;
   if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg, &isCanvas))
-    return PR_TRUE;
+    return eTransparencyTransparent;
   if (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)
-    return PR_TRUE;
+    return eTransparencyTransparent;
   if (NS_GET_A(bg->mBackgroundColor) < 255)
-    return PR_TRUE;
+    return eTransparencyTransparent;
   if (bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER)
-    return PR_TRUE;
-  return PR_FALSE;
+    return eTransparencyTransparent;
+  return eTransparencyOpaque;
 }
 
 static PRBool

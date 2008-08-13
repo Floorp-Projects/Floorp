@@ -1749,7 +1749,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
 
     PRBool translucent;
-    GetHasTransparentBackground(translucent);
+    translucent = eTransparencyTransparent == GetTransparencyMode();
     nsIntRect boundsRect;
     GdkPixmap* bufferPixmap = nsnull;
     nsRefPtr<gfxASurface> bufferPixmapSurface;
@@ -3828,27 +3828,29 @@ nsWindow::EnsureGrabs(void)
         GrabKeyboard();
 }
 
-NS_IMETHODIMP
-nsWindow::SetHasTransparentBackground(PRBool aTransparent)
+void
+nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
         GtkWidget *topWidget = nsnull;
         GetToplevelWidget(&topWidget);
         if (!topWidget)
-            return NS_ERROR_FAILURE;
+            return;
 
         nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
         if (!topWindow)
-            return NS_ERROR_FAILURE;
+            return;
 
-        return topWindow->SetHasTransparentBackground(aTransparent);
+        topWindow->SetTransparencyMode(aMode);
+        return;
     }
+    PRBool isTransparent = aMode == eTransparencyTransparent;
 
-    if (mIsTransparent == aTransparent)
-        return NS_OK;
+    if (mIsTransparent == isTransparent)
+        return;
 
-    if (!aTransparent) {
+    if (!isTransparent) {
         if (mTransparencyBitmap) {
             delete[] mTransparencyBitmap;
             mTransparencyBitmap = nsnull;
@@ -3859,33 +3861,29 @@ nsWindow::SetHasTransparentBackground(PRBool aTransparent)
     } // else the new default alpha values are "all 1", so we don't
     // need to change anything yet
 
-    mIsTransparent = aTransparent;
-    return NS_OK;
+    mIsTransparent = isTransparent;
 }
 
-NS_IMETHODIMP
-nsWindow::GetHasTransparentBackground(PRBool& aTransparent)
+nsTransparencyMode
+nsWindow::GetTransparencyMode()
 {
     if (!mShell) {
         // Pass the request to the toplevel window
         GtkWidget *topWidget = nsnull;
         GetToplevelWidget(&topWidget);
         if (!topWidget) {
-            aTransparent = PR_FALSE;
-            return NS_ERROR_FAILURE;
+            return eTransparencyOpaque;
         }
 
         nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
         if (!topWindow) {
-            aTransparent = PR_FALSE;
-            return NS_ERROR_FAILURE;
+            return eTransparencyOpaque;
         }
 
-        return topWindow->GetHasTransparentBackground(aTransparent);
+        return topWindow->GetTransparencyMode();
     }
 
-    aTransparent = mIsTransparent;
-    return NS_OK;
+    return mIsTransparent ? eTransparencyTransparent : eTransparencyOpaque;
 }
 
 void

@@ -570,6 +570,7 @@ CSS_KEY(-moz-win-communications-toolbox, _moz_win_communications_toolbox)
 CSS_KEY(-moz-win-browsertabbar-toolbox, _moz_win_browsertabbar_toolbox)
 CSS_KEY(-moz-win-mediatext, _moz_win_mediatext)
 CSS_KEY(-moz-win-communicationstext, _moz_win_communicationstext)
+CSS_KEY(-moz-win-glass, _moz_win_glass)
 
 #ifdef MOZ_SVG
 //CSS_KEY(all, all)

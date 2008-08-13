@@ -210,14 +210,14 @@ public:
   gfxASurface             *GetThebesSurface();
 
 #ifdef MOZ_XUL
-  NS_IMETHOD              SetHasTransparentBackground(PRBool aTransparent);
-  NS_IMETHOD              GetHasTransparentBackground(PRBool& aTransparent);
+  virtual void            SetTransparencyMode(nsTransparencyMode aMode);
+  virtual nsTransparencyMode GetTransparencyMode();
 private:
-  nsresult                SetWindowTranslucencyInner(PRBool aTransparent);
-  PRBool                  GetWindowTranslucencyInner() { return mIsTransparent; }
+  void                    SetWindowTranslucencyInner(nsTransparencyMode aMode);
+  nsTransparencyMode      GetWindowTranslucencyInner() const { return mTransparencyMode; }
   void                    ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PRBool force = PR_FALSE);
   nsresult                UpdateTranslucentWindow();
-  nsresult                SetupTranslucentWindowMemoryBitmap(PRBool aTransparent);
+  void                    SetupTranslucentWindowMemoryBitmap(nsTransparencyMode aMode);
 public:
 #endif
 
@@ -417,9 +417,8 @@ protected:
   nsRefPtr<gfxWindowsSurface> mTransparentSurface;
 
   HDC           mMemoryDC;
-  PRPackedBool  mIsTransparent;
+  nsTransparencyMode mTransparencyMode;
 #endif
-  PRPackedBool  mHasAeroGlass;
   PRPackedBool  mIsTopWidgetWindow;
   PRPackedBool  mHas3DBorder;
   PRPackedBool  mIsShiftDown;

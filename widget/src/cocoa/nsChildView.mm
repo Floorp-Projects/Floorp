@@ -752,39 +752,39 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 
 #pragma mark -
 
-NS_IMETHODIMP nsChildView::GetHasTransparentBackground(PRBool& aTransparent)
+nsTransparencyMode nsChildView::GetTransparencyMode()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  aTransparent = ![mView isOpaque];
-  return NS_OK;
+  return [mView isOpaque] ? eTransparencyOpaque : eTransparencyTransparent;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+  return eTransparencyOpaque;
 }
 
 
 // This is called by nsContainerFrame on the root widget for all window types
-// except popup windows (when nsCocoaWindow::SetHasTransparentBackground is used instead).
-NS_IMETHODIMP nsChildView::SetHasTransparentBackground(PRBool aTransparent)
+// except popup windows (when nsCocoaWindow::SetTransparencyMode is used instead).
+void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  BOOL isTransparent = aMode == eTransparencyTransparent;
   BOOL currentTransparency = ![[mView nativeWindow] isOpaque];
-  if (aTransparent != currentTransparency) {
+  if (isTransparent != currentTransparency) {
     // Find out if this is a window we created by seeing if the delegate is WindowDelegate. If it is,
     // tell the nsCocoaWindow to set its background to transparent.
     id windowDelegate = [[mView nativeWindow] delegate];
     if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
       nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
       if (widget) {
-        widget->MakeBackgroundTransparent(aTransparent);
-        [(ChildView*)mView setTransparent:aTransparent];
+        widget->MakeBackgroundTransparent(aMode);
+        [(ChildView*)mView setTransparent:isTransparent];
       }
     }
   }
-  return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 

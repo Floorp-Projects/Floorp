@@ -46,12 +46,16 @@
 
 const char
 nsUXThemeData::kThemeLibraryName[] = "uxtheme.dll";
+const char
+nsUXThemeData::kDwmLibraryName[] = "dwmapi.dll";
 
 HANDLE
 nsUXThemeData::sThemes[eUXNumClasses];
 
 HMODULE
 nsUXThemeData::sThemeDLL = NULL;
+HMODULE
+nsUXThemeData::sDwmDLL = NULL;
 
 BOOL
 nsUXThemeData::sFlatMenus = FALSE;
@@ -59,6 +63,8 @@ PRPackedBool
 nsUXThemeData::sIsXPOrLater = PR_FALSE;
 PRPackedBool
 nsUXThemeData::sIsVistaOrLater = PR_FALSE;
+PRPackedBool
+nsUXThemeData::sHaveCompositor = PR_FALSE;
 
 nsUXThemeData::OpenThemeDataPtr nsUXThemeData::openTheme = NULL;
 nsUXThemeData::CloseThemeDataPtr nsUXThemeData::closeTheme = NULL;
@@ -71,12 +77,18 @@ nsUXThemeData::GetThemeColorPtr nsUXThemeData::getThemeColor = NULL;
 nsUXThemeData::GetThemeMarginsPtr nsUXThemeData::getThemeMargins = NULL;
 nsUXThemeData::IsAppThemedPtr nsUXThemeData::isAppThemed = NULL;
 nsUXThemeData::GetCurrentThemeNamePtr nsUXThemeData::getCurrentThemeName = NULL;
+nsUXThemeData::GetThemeSysColorPtr nsUXThemeData::getThemeSysColor = NULL;
+
+nsUXThemeData::DwmExtendFrameIntoClientAreaProc nsUXThemeData::dwmExtendFrameIntoClientAreaPtr = NULL;
+nsUXThemeData::DwmIsCompositionEnabledProc nsUXThemeData::dwmIsCompositionEnabledPtr = NULL;
 
 void
 nsUXThemeData::Teardown() {
   Invalidate();
   if(sThemeDLL)
     FreeLibrary(sThemeDLL);
+  if(sDwmDLL)
+    FreeLibrary(sDwmDLL);
 }
 
 void
@@ -97,6 +109,13 @@ nsUXThemeData::Initialize()
     getThemeMargins = (GetThemeMarginsPtr)GetProcAddress(sThemeDLL, "GetThemeMargins");
     isAppThemed = (IsAppThemedPtr)GetProcAddress(sThemeDLL, "IsAppThemed");
     getCurrentThemeName = (GetCurrentThemeNamePtr)GetProcAddress(sThemeDLL, "GetCurrentThemeName");
+    getThemeSysColor = (GetThemeSysColorPtr)GetProcAddress(sThemeDLL, "GetThemeSysColor");
+  }
+  sDwmDLL = ::LoadLibrary(kDwmLibraryName);
+  if(sDwmDLL) {
+    dwmExtendFrameIntoClientAreaPtr = (DwmExtendFrameIntoClientAreaProc)::GetProcAddress(sDwmDLL, "DwmExtendFrameIntoClientArea");
+    dwmIsCompositionEnabledPtr = (DwmIsCompositionEnabledProc)::GetProcAddress(sDwmDLL, "DwmIsCompositionEnabled");
+    CheckForCompositor();
   }
 
   PRInt32 version = ::GetWindowsVersion();

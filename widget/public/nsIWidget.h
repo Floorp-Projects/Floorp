@@ -94,10 +94,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 3d304df2-8e6b-4f09-8782-98bd649c7e96
+// AE42543F-BF61-4164-96BA-AF8F4EDCEEAD
 #define NS_IWIDGET_IID \
-{ 0x3d304df2, 0x8e6b, 0x4f09, \
-  { 0x87, 0x82, 0x98, 0xbd, 0x64, 0x9c, 0x7e, 0x96 } }
+{ 0xae42543f, 0xbf61, 0x4164, \
+  { 0x96, 0xba, 0xaf, 0x8f, 0x4e, 0xdc, 0xee, 0xad } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -228,6 +228,12 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
   eZPlacementBottom = 0,  // bottom of the window stack
   eZPlacementBelow,       // just below another widget
   eZPlacementTop          // top of the window stack
+};
+
+enum nsTransparencyMode {
+  eTransparencyOpaque = 0,  // Fully opaque
+  eTransparencyTransparent, // Parts of the window may be transparent
+  eTransparencyGlass        // Transparent parts of the window have Vista AeroGlass effect applied
 };
 
 /**
@@ -673,33 +679,29 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD GetWindowType(nsWindowType& aWindowType) = 0;
 
     /**
-     * Set the translucency of the top-level window containing this widget.
+     * Set the transparency mode of the top-level window containing this widget.
      * So, e.g., if you call this on the widget for an IFRAME, the top level
      * browser window containing the IFRAME actually gets set. Be careful.
      *
      * This can fail if the platform doesn't support
-     * transparency/translucency. By default widgets are not
+     * transparency/glass. By default widgets are not
      * transparent.  This will also fail if the toplevel window is not
      * a Mozilla window, e.g., if the widget is in an embedded
      * context.
      *
-     * After translucency has been enabled, the initial alpha channel
+     * After transparency/glass has been enabled, the initial alpha channel
      * value for all pixels is 1, i.e., opaque.
      * If the window is resized then the alpha channel values for
      * all pixels are reset to 1.
      * Pixel RGB color values are already premultiplied with alpha channel values.
-     * @param aTransparent true if the window may have translucent
-     *   or transparent pixels
      */
-    NS_IMETHOD SetHasTransparentBackground(PRBool aTransparent) = 0;
+    virtual void SetTransparencyMode(nsTransparencyMode aMode) = 0;
 
     /**
-     * Get the translucency of the top-level window that contains this
+     * Get the transparency mode of the top-level window that contains this
      * widget.
-     * @param aTransparent true if the window may have translucent or
-     *   transparent pixels
      */
-    NS_IMETHOD GetHasTransparentBackground(PRBool& aTransparent) = 0;
+    virtual nsTransparencyMode GetTransparencyMode() = 0;
 
     /** 
      * Hide window chrome (borders, buttons) for this widget.
