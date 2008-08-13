@@ -152,6 +152,8 @@
 #include "prprf.h"
 #include "prmem.h"
 
+#include "nsUXThemeData.h"
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* sWindowsLog = nsnull;
 #endif
@@ -646,7 +648,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mIsVisible          = PR_FALSE;
   mHas3DBorder        = PR_FALSE;
 #ifdef MOZ_XUL
-  mIsTransparent      = PR_FALSE;
+  mTransparencyMode   = eTransparencyOpaque;
   mTransparentSurface = nsnull;
   mMemoryDC           = NULL;
 #endif
@@ -1450,9 +1452,9 @@ NS_METHOD nsWindow::Destroy()
       ::DestroyIcon(icon);
 
 #ifdef MOZ_XUL
-    if (mIsTransparent)
+    if (eTransparencyTransparent == mTransparencyMode)
     {
-      SetupTranslucentWindowMemoryBitmap(PR_FALSE);
+      SetupTranslucentWindowMemoryBitmap(eTransparencyOpaque);
 
     }
 #endif
@@ -1985,7 +1987,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
 
 #ifdef MOZ_XUL
-  if (mIsTransparent)
+  if (eTransparencyTransparent == mTransparencyMode)
     ResizeTranslucentWindow(aWidth, aHeight);
 #endif
 
@@ -2035,7 +2037,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
   NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
 
 #ifdef MOZ_XUL
-  if (mIsTransparent)
+  if (eTransparencyTransparent == mTransparencyMode)
     ResizeTranslucentWindow(aWidth, aHeight);
 #endif
 
@@ -2765,7 +2767,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_GRAPHIC:
       // XXX:  This is sleezy!!  Remember to Release the DC after using it!
 #ifdef MOZ_XUL
-      return (void*)(mIsTransparent) ?
+      return (void*)(eTransparencyTransparent == mTransparencyMode) ?
         mMemoryDC : ::GetDC(mWnd);
 #else
       return (void*)::GetDC(mWnd);
@@ -2785,7 +2787,7 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
   {
     case NS_NATIVE_GRAPHIC:
 #ifdef MOZ_XUL
-      if (!mIsTransparent)
+      if (eTransparencyTransparent != mTransparencyMode)
         ::ReleaseDC(mWnd, (HDC)data);
 #else
       ::ReleaseDC(mWnd, (HDC)data);
@@ -4809,7 +4811,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
 
 #ifdef MOZ_XUL
-        if (mIsTransparent)
+        if (eTransparencyTransparent == mTransparencyMode)
           ResizeTranslucentWindow(newWidth, newHeight);
 #endif
 
@@ -5268,6 +5270,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
     }
     break;
+  case WM_DWMCOMPOSITIONCHANGED:
+    if (nsUXThemeData::CheckForCompositor() && mTransparencyMode == eTransparencyGlass) {
+      MARGINS margins = { -1, -1, -1, -1 };
+      nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(mWnd, &margins);
+    }
+    BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
+    DispatchStandardEvent(NS_THEMECHANGED);
+    break;
   }
 
   //*aRetValue = result;
@@ -5699,7 +5709,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
 #ifdef MOZ_XUL
-  if (!aDC && mIsTransparent)
+  if (!aDC && (eTransparencyTransparent == mTransparencyMode))
   {
     // For layered translucent windows all drawing should go to memory DC and no
     // WM_PAINT messages are normally generated. To support asynchronous painting
@@ -5733,7 +5743,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
   HRGN paintRgn = NULL;
 
 #ifdef MOZ_XUL
-  if (aDC || mIsTransparent) {
+  if (aDC || (eTransparencyTransparent == mTransparencyMode)) {
 #else
   if (aDC) {
 #endif
@@ -5783,7 +5793,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
 #ifdef MOZ_XUL
       nsRefPtr<gfxASurface> targetSurface;
-      if (mIsTransparent) {
+      if (eTransparencyTransparent == mTransparencyMode) {
         targetSurface = mTransparentSurface;
       } else {
         targetSurface = new gfxWindowsSurface(hDC);
@@ -5795,7 +5805,9 @@ PRBool nsWindow::OnPaint(HDC aDC)
       nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
 
 #ifdef MOZ_XUL
-      if (mIsTransparent) {
+      if (eTransparencyGlass == mTransparencyMode && nsUXThemeData::sHaveCompositor) {
+        thebesContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+      } else if (eTransparencyTransparent == mTransparencyMode) {
         // If we're rendering with translucency, we're going to be
         // rendering the whole window; make sure we clear it first
         thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -5825,7 +5837,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
       event.renderingContext = nsnull;
 
 #ifdef MOZ_XUL
-      if (mIsTransparent) {
+      if (eTransparencyTransparent == mTransparencyMode) {
         // Data from offscreen drawing surface was copied to memory bitmap of transparent
         // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
         // that displayed on the screen.
@@ -7979,67 +7991,64 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
   mMemoryDC = mTransparentSurface->GetDC();
 }
 
-NS_IMETHODIMP nsWindow::GetHasTransparentBackground(PRBool& aTransparent)
+nsTransparencyMode nsWindow::GetTransparencyMode()
 {
-  aTransparent = GetTopLevelWindow()->GetWindowTranslucencyInner();
-
-  return NS_OK;
+  return GetTopLevelWindow()->GetWindowTranslucencyInner();
 }
 
-NS_IMETHODIMP nsWindow::SetHasTransparentBackground(PRBool aTransparent)
+void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
 {
-  nsresult rv = GetTopLevelWindow()->SetWindowTranslucencyInner(aTransparent);
-
-  return rv;
+  GetTopLevelWindow()->SetWindowTranslucencyInner(aMode);
 }
 
-nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTransparent)
+void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
 {
-  if (aTransparent == mIsTransparent)
-    return NS_OK;
-  
+  if (aMode == mTransparencyMode)
+    return;
+
   HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
   nsWindow* topWindow = GetNSWindowPtr(hWnd);
 
   if (!topWindow)
   {
     NS_WARNING("Trying to use transparent chrome in an embedded context");
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   LONG style, exStyle;
 
-  if (aTransparent)
-  {
-    style = ::GetWindowLongW(hWnd, GWL_STYLE) &
-            ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
-    exStyle = ::GetWindowLongW(hWnd, GWL_EXSTYLE) &
-              ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+  style = topWindow->WindowStyle();
+  exStyle = topWindow->WindowExStyle();
 
-    exStyle |= WS_EX_LAYERED;
-  } else
-  {
-    style = topWindow->WindowStyle();
-    exStyle = topWindow->WindowExStyle();
+  switch(aMode) {
+    case eTransparencyTransparent:
+      exStyle |= WS_EX_LAYERED;
+    case eTransparencyOpaque:
+    case eTransparencyGlass:
+      topWindow->mTransparencyMode = aMode;
+      break;
   }
   ::SetWindowLongW(hWnd, GWL_STYLE, style);
   ::SetWindowLongW(hWnd, GWL_EXSTYLE, exStyle);
 
-  mIsTransparent = aTransparent;
+  mTransparencyMode = aMode;
 
-  return SetupTranslucentWindowMemoryBitmap(aTransparent);
+  SetupTranslucentWindowMemoryBitmap(aMode);
+  MARGINS margins = { 0, 0, 0, 0 };
+  if(eTransparencyGlass == aMode)
+    margins.cxLeftWidth = -1;
+  if(nsUXThemeData::sHaveCompositor)
+    nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(hWnd, &margins);
 }
 
-nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTransparent)
+void nsWindow::SetupTranslucentWindowMemoryBitmap(nsTransparencyMode aMode)
 {
-  if (aTransparent) {
+  if (eTransparencyTransparent == aMode) {
     ResizeTranslucentWindow(mBounds.width, mBounds.height, PR_TRUE);
   } else {
     mTransparentSurface = nsnull;
     mMemoryDC = NULL;
   }
-
-  return NS_OK;
 }
 
 nsresult nsWindow::UpdateTranslucentWindow()

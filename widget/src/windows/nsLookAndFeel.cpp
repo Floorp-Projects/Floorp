@@ -520,6 +520,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         }
         break;
 #ifndef WINCE
+    case eMetric_DWMCompositor:
+        aMetric = nsUXThemeData::sHaveCompositor;
+        break;
     case eMetric_AlertNotificationOrigin:
         aMetric = 0;
         if (gSHAppBarMessage)

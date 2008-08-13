@@ -366,8 +366,8 @@ public:
 
    void                ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
    void                ApplyTransparencyBitmap();
-   NS_IMETHOD          SetHasTransparentBackground(PRBool aTransparent);
-   NS_IMETHOD          GetHasTransparentBackground(PRBool& aTransparent);
+   virtual void        SetTransparencyMode(nsTransparencyMode aMode);
+   virtual nsTransparencyMode GetTransparencyMode();
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
                                                             PRUint8* aAlphas, PRInt32 aStride);
 
