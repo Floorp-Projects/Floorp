@@ -42,9 +42,8 @@
 #include "pldhash.h"
 #include "plarena.h"
 #include "nsString.h"
-#include "nsCOMPtr.h"
 
-#include "nsIUnicharInputStream.h"
+class nsIUnicharInputStream;
 
 
 class nsPersistentProperties : public nsIPersistentProperties
@@ -57,6 +56,12 @@ public:
   NS_DECL_NSIPROPERTIES
   NS_DECL_NSIPERSISTENTPROPERTIES
 
+
+  // nsPersistentProperties methods:
+  PRInt32 Read();
+  PRInt32 SkipLine(PRInt32 c);
+  PRInt32 SkipWhiteSpace(PRInt32 c);
+
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
@@ -64,14 +69,15 @@ private:
   ~nsPersistentProperties();
 
 protected:
-  nsCOMPtr<nsIUnicharInputStream> mIn;
-
+  nsIUnicharInputStream* mIn;
+  PRUint32 mBufferPos;
+  PRUint32 mBufferLength;
   nsIPersistentProperties* mSubclass;
   struct PLDHashTable mTable;
   PLArenaPool mArena;
 };
 
-class nsPropertyElement : public nsIPropertyElement
+class nsPropertyElement : public nsIPropertyElement 
 {
 public:
   nsPropertyElement()
