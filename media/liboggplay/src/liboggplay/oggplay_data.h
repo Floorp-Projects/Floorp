@@ -32,7 +32,7 @@
 
 /*
  * oggplay_data.h
- * 
+ *
  * Shane Stephens <shane.stephens@annodex.net>
  */
 #ifndef __OGGPLAY_DATA_H__
@@ -50,7 +50,7 @@ oggplay_data_handle_audio_data (OggPlayDecode *decode, void *data,
                                 int samples, int samplesize);
 
 void
-oggplay_data_handle_cmml_data(OggPlayDecode *decode, unsigned char *data, 
+oggplay_data_handle_cmml_data(OggPlayDecode *decode, unsigned char *data,
                                 int size);
 
 #ifdef HAVE_KATE

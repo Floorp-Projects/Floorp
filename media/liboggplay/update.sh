@@ -3,6 +3,7 @@
 # Copies the needed files from a directory containing the original
 # liboggplay source that we need for the Mozilla HTML5 media support.
 sed s/\#define\ __SSE2__\ 1//g $1/config.h >./src/liboggplay/config.h
+echo "#undef HAVE_GLUT"  >>./src/liboggplay/config.h
 cp $1/include/oggplay/oggplay_callback_info.h ./include/oggplay/oggplay_callback_info.h
 cp $1/include/oggplay/oggplay_query.h ./include/oggplay/oggplay_query.h
 cp $1/include/oggplay/oggplay_seek.h ./include/oggplay/oggplay_seek.h
