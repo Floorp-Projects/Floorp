@@ -14,7 +14,11 @@ Dependencies
 
 For the core library (liboggplay), you need
 
-  * libogg, libvorbis, libspeex -- from http://www.xiph.org/
+  * libogg, libvorbis, libtheora, optionally libspeex -- from http://www.xiph.org/
+
+    svn co http://svn.xiph.org/trunk/ogg/ ogg
+    svn co http://svn.xiph.org/trunk/vorbis/ vorbis
+    svn co http://svn.xiph.org/trunk/theora/ theora
 
   * liboggz and libfishsound -- from svn.annodex.net:
 
@@ -28,15 +32,15 @@ Optionally, for Kate stream support, you need
 See the README files associated with these libraries for installation
 instructions.
 
-To build src/tests/glut-player, you need:
+To build src/examples/glut-player, you need:
   * The core liboggplay dependencies (listed above)
   * GLUT -- see http://www.opengl.org/resources/libraries/
 
-To build src/tests/dump-all-streams, you need:
+To build src/examples/dump-all-streams, you need:
   * The core liboggplay dependencies (listed above)
   * libsndfile -- from http://www.mega-nerd.com/libsndfile/
 
-To build src/tests/dump-first-frame, you need:
+To build src/tools/oggplay-dump-first-frame, you need:
   * The core liboggplay dependencies (listed above)
   * Imlib2 -- from your distribution or from 
               http://sourceforge.net/project/showfiles.php?group_id=2&package_id=11130
