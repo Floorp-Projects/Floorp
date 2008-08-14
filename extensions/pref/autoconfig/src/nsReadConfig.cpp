@@ -284,9 +284,12 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRInt32 obsc
         jsFile->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
 #endif
     } else {
-        rv = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR,
+        rv = NS_GetSpecialDirectory(NS_GRE_DIR,
                                     getter_AddRefs(jsFile));
         if (NS_FAILED(rv)) 
+            return rv;
+        rv = jsFile->AppendNative(NS_LITERAL_CSTRING("defaults"));
+        if (NS_FAILED(rv))
             return rv;
         rv = jsFile->AppendNative(NS_LITERAL_CSTRING("autoconfig"));
         if (NS_FAILED(rv))
