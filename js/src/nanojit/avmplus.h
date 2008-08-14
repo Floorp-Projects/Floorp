@@ -289,12 +289,13 @@ namespace avmplus
 {
     struct InterpState
     {
-        void* sp;
-        void* rp;
-        void* gp;
-        JSContext *cx;
-        void* eos;
-        void* eor;
+        void* sp; /* native stack pointer, stack[0] is spbase[0] */
+        void* rp; /* call stack pointer */
+        void* gp; /* global frame pointer */
+        JSContext *cx; /* current VM context handle */
+        void* eos; /* first unusable word after the native stack */
+        void* eor; /* first unusable word after the call stack */
+        nanojit::GuardRecord* nestedExit; /* innermost nested guard for NESTED_EXIT exits */
     };
 
     class String
