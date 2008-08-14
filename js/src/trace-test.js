@@ -700,6 +700,20 @@ function deepForInLoop() {
 deepForInLoop.expected = "pqrst";
 test(deepForInLoop);
 
+function nestedExit(x) {
+    var q = 0;
+    for (var i = 0; i < 10; ++i)
+	if (x)
+	    ++q;
+}
+function nestedExitLoop() {
+    for (var j = 0; j < 10; ++j)
+	nestedExit(j < 7);
+    return "ok";
+}
+nestedExitLoop.expected = "ok";
+test(nestedExitLoop);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
