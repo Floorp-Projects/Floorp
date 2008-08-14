@@ -79,6 +79,7 @@ public:
 
   PRBool IsValid()
   {
+    NS_WARN_IF_FALSE(!!(mTarget), "Event target is not valid!");
     return !!(mTarget);
   }
 
