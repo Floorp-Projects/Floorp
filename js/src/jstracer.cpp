@@ -3568,6 +3568,10 @@ TraceRecorder::record_JSOP_CALL()
         LIns** argp = &args[argc + prefixc - 1];
         char argtype;
 
+#if defined _DEBUG
+        memset(args, 0xCD, sizeof(args));	
+#endif
+
         jsval& thisval = stackval(0 - (argc + 1));
         LIns* thisval_ins = get(&thisval);
         if (known->tclasp &&
@@ -3607,7 +3611,7 @@ TraceRecorder::record_JSOP_CALL()
 #undef HANDLE_PREFIX
 
 #define HANDLE_ARG(i)                                                          \
-    JS_BEGIN_MACRO                                                             \
+    {                                                                          \
         jsval& arg = stackval(-(i + 1));                                       \
         argtype = known->argtypes[i];                                          \
         if (argtype == 'd' || argtype == 'i') {                                \
@@ -3632,7 +3636,7 @@ TraceRecorder::record_JSOP_CALL()
             continue;     /* might have another specialization for arg */      \
         }                                                                      \
         argp--;                                                                \
-    JS_END_MACRO
+    }
 
         switch (strlen(known->argtypes)) {
           case 4:
@@ -3654,6 +3658,10 @@ TraceRecorder::record_JSOP_CALL()
         }
 
 #undef HANDLE_ARG
+
+#if defined _DEBUG
+        JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
+#endif
 
         LIns* res_ins = lir->insCall(known->builtin, args);
         switch (known->errtype) {
