@@ -1,3 +1,7 @@
+ Note For Mozilla Developers: Any change to lcms should be verified by running
+ gfx/thebes/test/gfxColorManagementTest to verify that behavior hasn't
+ changed. If it has changed intentionally, new checksums should be generated
+ and checked in at the same time as the fix.
 
  Read.me for release 1.17
  ========================
