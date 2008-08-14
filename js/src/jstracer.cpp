@@ -251,30 +251,6 @@ Oracle::isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) 
     return _dontDemote.get(hash);
 }
 
-/* Calculate the total number of native frame slots we need from this frame
-   all the way back to the entry frame, including the current stack usage. */
-static unsigned
-nativeStackSlots(unsigned callDepth, JSStackFrame* fp)
-{
-    unsigned slots = 0;
-    for (;;) {
-        unsigned operands = fp->regs->sp - StackBase(fp);
-        JS_ASSERT(operands <= fp->script->nslots - fp->script->nfixed);
-        slots += operands;
-        if (fp->callee)
-            slots += fp->script->nfixed;
-        if (callDepth-- == 0) {
-            if (fp->callee) {
-                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
-                slots += 1/*this*/ + nargs;
-            }
-            return slots;
-        }
-        fp = fp->down;
-    }
-    JS_NOT_REACHED("nativeStackSlots");
-}
-
 static LIns* demote(LirWriter *out, LInsp i)
 {
     if (i->isCall())
@@ -560,6 +536,42 @@ public:
         FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code);                  \
     JS_END_MACRO
 
+/* Calculate the total number of native frame slots we need from this frame
+   all the way back to the entry frame, including the current stack usage. */
+static unsigned
+nativeStackSlots(JSContext *cx, unsigned callDepth, JSStackFrame* fp)
+{
+    unsigned slots = 0;
+#if defined _DEBUG
+    unsigned int origCallDepth = callDepth;
+#endif
+    for (;;) {
+        unsigned operands = fp->regs->sp - StackBase(fp);
+        JS_ASSERT(operands <= fp->script->nslots - fp->script->nfixed);
+        slots += operands;
+        if (fp->callee)
+            slots += fp->script->nfixed;
+        if (callDepth-- == 0) {
+            if (fp->callee) {
+                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
+                slots += 1/*this*/ + nargs;
+            }
+#if defined _DEBUG
+            unsigned int m = 0;
+            FORALL_SLOTS_IN_PENDING_FRAMES(cx, origCallDepth, m++);
+            JS_ASSERT(m == slots);
+#endif
+            return slots;
+        }
+        JSStackFrame* fp2 = fp;
+        fp = fp->down;
+        int missing = fp2->fun->nargs - fp2->argc;
+        if (missing > 0)
+            slots += missing;
+    }
+    JS_NOT_REACHED("nativeStackSlots");
+}
+
 /* Capture the typemap for the selected slots of the global object. */
 void
 TypeMap::captureGlobalTypes(JSContext* cx, SlotList& slots)
@@ -581,7 +593,7 @@ TypeMap::captureGlobalTypes(JSContext* cx, SlotList& slots)
 void 
 TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
 {
-    setLength(nativeStackSlots(callDepth, cx->fp));
+    setLength(nativeStackSlots(cx, callDepth, cx->fp));
     uint8* map = data();
     uint8* m = map;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
@@ -1152,7 +1164,7 @@ TraceRecorder::snapshot(ExitType exitType)
     if (exitType == BRANCH_EXIT && js_IsLoopExit(cx, fp->script, fp->regs->pc))
         exitType = LOOP_EXIT;
     /* generate the entry map and stash it in the trace */
-    unsigned stackSlots = nativeStackSlots(callDepth, fp);
+    unsigned stackSlots = nativeStackSlots(cx, callDepth, fp);
     /* its sufficient to track the native stack use here since all stores above the
        stack watermark defined by guards are killed. */
     trackNativeStackUse(stackSlots + 1);
@@ -1332,7 +1344,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     if (callDepth > 0) {
         /* Calculate the amount we have to lift the native stack pointer by to compensate for
            any outer frames that the inner tree doesn't expect but the outer tree has. */
-        unsigned sp_adj = nativeStackSlots(callDepth - 1, cx->fp->down) * sizeof(double);
+        unsigned sp_adj = nativeStackSlots(cx, callDepth - 1, cx->fp->down) * sizeof(double);
         /* Guard that we have enough stack space for the tree we are trying to call on top
            of the new value for sp. */
         LIns* sp_top = lir->ins2i(LIR_add, lirbuf->sp, sp_adj + 
@@ -1569,7 +1581,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     
     /* determine the native frame layout at the entry point */
     unsigned entryNativeStackSlots = ti->stackTypeMap.length();
-    JS_ASSERT(entryNativeStackSlots == nativeStackSlots(0/*callDepth*/, cx->fp));
+    JS_ASSERT(entryNativeStackSlots == nativeStackSlots(cx, 0/*callDepth*/, cx->fp));
     ti->entryNativeStackSlots = entryNativeStackSlots;
     ti->nativeStackBase = (entryNativeStackSlots -
             (cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
@@ -1744,9 +1756,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     SideExit* e = lr->exit;
     JSStackFrame* fp = cx->fp;
     JS_ASSERT((e->sp_adj / sizeof(double)) + ti->entryNativeStackSlots >=
-              nativeStackSlots(lr->calldepth, fp));
+              nativeStackSlots(cx, lr->calldepth, fp));
     fp->regs->sp += (e->sp_adj / sizeof(double)) + ti->entryNativeStackSlots -
-                    nativeStackSlots(lr->calldepth, fp);
+                    nativeStackSlots(cx, lr->calldepth, fp);
     fp->regs->pc = (jsbytecode*)lr->from->root->ip + e->ip_adj;
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
