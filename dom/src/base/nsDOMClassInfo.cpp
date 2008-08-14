@@ -457,8 +457,9 @@
 #include "nsIDOMLoadStatusEvent.h"
 
 // Geolocation
-#include "nsIDOMGeolocation.h"
-#include "nsIDOMGeolocator.h"
+#include "nsIDOMGeoGeolocation.h"
+#include "nsIDOMGeoPosition.h"
+#include "nsIDOMGeoPositionError.h"
 
 #include "nsIDOMFileList.h"
 #include "nsIDOMFile.h"
@@ -1251,12 +1252,15 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MessageEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(Geolocation, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(GeoGeolocation, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
- 
-   NS_DEFINE_CLASSINFO_DATA(Geolocator, nsDOMGenericSH,
-                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
+  
+  NS_DEFINE_CLASSINFO_DATA(GeoPosition, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS) 
+  
+  NS_DEFINE_CLASSINFO_DATA(GeoPositionError, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceStyleDecl, nsCSSStyleDeclSH,
@@ -1954,7 +1958,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSNavigator)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocator)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorGeolocation)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMClientInformation)
   DOM_CLASSINFO_MAP_END
 
@@ -3453,12 +3457,16 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Geolocation, nsIDOMGeolocation)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeolocation)
+  DOM_CLASSINFO_MAP_BEGIN(GeoGeolocation, nsIDOMGeoGeolocation)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeoGeolocation)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(Geolocator, nsIDOMGeolocator)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeolocator)
+  DOM_CLASSINFO_MAP_BEGIN(GeoPosition, nsIDOMGeoPosition)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeoPosition)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(GeoPositionError, nsIDOMGeoPositionError)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeoPositionError)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)
@@ -3814,7 +3822,7 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
   // above) in order to make sure that prototype delegation works correctly.
   // Consider if a site sets HTMLElement.prototype.foopy = function () { ... }
   // Now, calling document.body.foopy() needs to ensure that looking up foopy
-  // on document.body's prototype will find the right function. This
+  // on document.body's prototype will find the right function. Thisb
   // LookupProperty accomplishes that.
   // XXX This shouldn't need to go through the JS engine. Instead, we should
   // be calling nsWindowSH::GlobalResolve directly.
