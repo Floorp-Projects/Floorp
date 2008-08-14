@@ -437,10 +437,12 @@ enum nsDOMClassInfoID {
 #if defined(MOZ_MEDIA)
   eDOMClassInfo_HTMLVideoElement_id,
   eDOMClassInfo_HTMLSourceElement_id,
-  eDOMClassInfo_ProgressEvent_id,
   eDOMClassInfo_HTMLMediaError_id,
   eDOMClassInfo_HTMLAudioElement_id,
 #endif
+  eDOMClassInfo_ProgressEvent_id,
+
+  eDOMClassInfo_XMLHttpRequestUpload_id,
 
   // DOM Traversal NodeIterator class
   eDOMClassInfo_NodeIterator_id,
