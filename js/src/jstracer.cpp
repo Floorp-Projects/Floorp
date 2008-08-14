@@ -510,10 +510,11 @@ public:
     JS_END_MACRO
 
 /* Iterate over all slots in each pending frame. */
-#define FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, currentFrame, code)     \
+#define FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code)                   \
     JS_BEGIN_MACRO                                                            \
         DEF_VPNAME;                                                           \
         unsigned n;                                                           \
+        JSStackFrame* currentFrame = cx->fp;                                  \
         JSStackFrame* entryFrame;                                             \
         JSStackFrame* fp = currentFrame;                                      \
         for (n = 0; n < callDepth; ++n) { fp = fp->down; }                    \
@@ -532,10 +533,10 @@ public:
         }                                                                     \
     JS_END_MACRO
 
-#define FORALL_SLOTS(cx, ngslots, gslots, callDepth, currentFrame, code)      \
+#define FORALL_SLOTS(cx, ngslots, gslots, callDepth, code)                    \
     JS_BEGIN_MACRO                                                            \
         FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, code);                       \
-        FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, currentFrame, code);    \
+        FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, code);                  \
     JS_END_MACRO
 
 /* Calculate the total number of native frame slots we need from this frame
@@ -560,7 +561,7 @@ nativeStackSlots(JSContext *cx, unsigned callDepth, JSStackFrame* fp)
             }
 #if defined _DEBUG
             unsigned int m = 0;
-            FORALL_SLOTS_IN_PENDING_FRAMES(cx, origCallDepth, cx->fp, m++);
+            FORALL_SLOTS_IN_PENDING_FRAMES(cx, origCallDepth, m++);
             JS_ASSERT(m == slots);
 #endif
             return slots;
@@ -598,7 +599,7 @@ TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
     setLength(nativeStackSlots(cx, callDepth, cx->fp));
     uint8* map = data();
     uint8* m = map;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, cx->fp,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         uint8 type = getCoercedType(*vp);
         if ((type == JSVAL_INT) && oracle.isStackSlotUndemotable(cx->fp->script,
                 cx->fp->regs->pc, unsigned(m - map)))
@@ -711,7 +712,7 @@ TraceRecorder::nativeStackOffset(jsval* p) const
 {
 #ifdef DEBUG
     size_t slow_offset = 0;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, cx->fp,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if (vp == p) goto done;
         slow_offset += sizeof(double)
     );
@@ -912,7 +913,7 @@ static bool
 BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 {
     debug_only(printf("stack: ");)
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, cx->fp,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         debug_only(printf("%s%u=", vpname, vpnum);)
         if (!ValueToNative(*vp, *mp, np))
             return false;
@@ -952,13 +953,12 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
 /* Box the given native stack frame into the virtual machine stack. This only fails due to a 
    hard error (out of memory for example). */
 static bool
-FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSStackFrame* currentFrame,
-                      uint8* mp, double* np)
+FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 {
     uint8* mp_base = mp;
     double* np_base = np;
     /* Root all string and object references first (we don't need to call the GC for this). */
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, currentFrame,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !NativeToValue(cx, *vp, *mp, np))
             return false;
         ++mp; ++np
@@ -974,7 +974,7 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, JSStackFrame* currentFr
        but everything is rooted now (all strings/objects and all doubles we already boxed). */
     mp = mp_base;
     np = np_base;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, currentFrame,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         debug_only(printf("%s%u=", vpname, vpnum);)
         if (!NativeToValue(cx, *vp, *mp, np))
             return false;
@@ -1052,7 +1052,7 @@ TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned ngslots, unsigned c
     );
     ptrdiff_t offset = -treeInfo->nativeStackBase;
     m = stackTypeMap;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, cx->fp,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         import(sp, offset, vp, *m, vpname, vpnum, fp);
         m++; offset += sizeof(double);
     );
@@ -1191,7 +1191,7 @@ TraceRecorder::snapshot(ExitType exitType)
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
-    FORALL_SLOTS(cx, ngslots, treeInfo->globalSlots.data(), callDepth, cx->fp,
+    FORALL_SLOTS(cx, ngslots, treeInfo->globalSlots.data(), callDepth,
         LIns* i = get(vp);
         *m = isNumber(*vp)
                ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
@@ -1279,7 +1279,7 @@ TraceRecorder::verifyTypeStability()
     );
     typemap = treeInfo->stackTypeMap.data();
     m = typemap;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth, cx->fp,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         bool demote = false;
         if (!checkType(*vp, *m, demote))
             return false;
@@ -1789,7 +1789,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
                    actually overwrite again if there is another nested guard following
                    or we restore the innermost guard. This is not very efficient but
                    nested exits are rare anyway. */
-                FlushNativeStackFrame(cx, calldepth, cx->fp, 
+                FlushNativeStackFrame(cx, calldepth, 
                                       lr->exit->typeMap + lr->exit->numGlobalSlots,
                                       stack);
                 callstack += calldepth;
@@ -1842,7 +1842,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
     
     /* write back native stack frame */
-    FlushNativeStackFrame(cx, e->calldepth, cx->fp, e->typeMap + e->numGlobalSlots, stack);
+    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack);
     
     AUDIT(sideExitIntoInterpreter);
 
