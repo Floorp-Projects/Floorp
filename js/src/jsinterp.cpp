@@ -1321,6 +1321,12 @@ have_fun:
         }
         frame.slots = sp - fun->u.i.nvars;
         ok = js_Interpret(cx);
+#ifdef JS_TRACER
+        if (JS_TRACE_MONITOR(cx).recorder) {
+            js_AbortRecording(cx, frame.down->regs->pc,
+                              "recording out of js_Invoke interpreter activation");
+        }
+#endif
     } else {
         /* fun might be onerror trying to report a syntax error in itself. */
         frame.scopeChain = NULL;
@@ -2505,14 +2511,20 @@ js_Interpret(JSContext *cx)
 
     METER_OP_INIT(op);      /* to nullify first METER_OP_PAIR */
 
-# define DO_OP()            JS_EXTENSION_(goto *jumpTable[op])
+# define DO_OP()            JS_BEGIN_MACRO                                    \
+                                JS_ASSERT(!JS_TRACE_MONITOR(cx).recorder ||   \
+                                          jumpTable == recordingJumpTable);   \
+                                JS_EXTENSION_(goto *jumpTable[op]);           \
+                            JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
                                 METER_OP_PAIR(op, regs.pc[n]);                \
                                 op = (JSOp) *(regs.pc += (n));                \
                                 DO_OP();                                      \
                             JS_END_MACRO
 
-# define BEGIN_CASE(OP)     L_##OP:
+# define BEGIN_CASE(OP)     L_##OP:                                           \
+                                JS_ASSERT(!JS_TRACE_MONITOR(cx).recorder ||   \
+                                          jumpTable == recordingJumpTable);
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \
