@@ -279,6 +279,7 @@ nsThreadPool::Shutdown()
     mon.NotifyAll();
 
     threads.AppendObjects(mThreads);
+    mThreads.Clear();
 
     // Swap in a null listener so that we release the listener at the end of
     // this method. The listener will be kept alive as long as the other threads
@@ -287,8 +288,7 @@ nsThreadPool::Shutdown()
   }
 
   // It's important that we shutdown the threads while outside the event queue
-  // monitor.  Otherwise, we could end up dead-locking.  The threads will take
-  // care of removing themselves from mThreads as they exit.
+  // monitor.  Otherwise, we could end up dead-locking.
 
   for (PRInt32 i = 0; i < threads.Count(); ++i)
     threads[i]->Shutdown();
