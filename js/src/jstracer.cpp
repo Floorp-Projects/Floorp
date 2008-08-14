@@ -950,8 +950,8 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
     return true;
 }
 
-/* Box the given native global frame into the global object. This only fails due to a hard error
-   (out of memory for example). */
+/* Box the given native stack frame into the virtual machine stack. This only fails due to a 
+   hard error (out of memory for example). */
 static bool
 FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 {
