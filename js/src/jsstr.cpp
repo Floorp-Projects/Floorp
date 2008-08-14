@@ -2329,6 +2329,7 @@ js_str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     if (argc == 1 &&
         (code = js_ValueToUint16(cx, &argv[0])) < UNIT_STRING_LIMIT) {
+        JS_free(cx, chars);
         str = js_GetUnitStringForChar(cx, code);
         if (!str)
             return JS_FALSE;
