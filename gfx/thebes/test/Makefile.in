@@ -51,6 +51,7 @@ REQUIRES = \
 	thebes \
 	cairo \
 	pref \
+	lcms \
 	unicharutil \
 	$(NULL)
 
@@ -60,6 +61,7 @@ CPPSRCS = \
 	gfxFontSelectionTest.cpp \
 	gfxTextRunPerfTest.cpp \
 	gfxWordCacheTest.cpp \
+	gfxColorManagementTest.cpp \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
