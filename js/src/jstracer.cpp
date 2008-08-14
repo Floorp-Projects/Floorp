@@ -2694,7 +2694,7 @@ TraceRecorder::record_LeaveFrame()
 {
 #ifdef DEBUG
     if (cx->fp->fun)
-        printf("LeaveFrame (back to %s), callDept=%d\n", 
+        printf("LeaveFrame (back to %s), callDepth=%d\n", 
                js_AtomToPrintableString(cx, cx->fp->fun->atom),
                callDepth);
 #endif    
@@ -2704,7 +2704,7 @@ TraceRecorder::record_LeaveFrame()
     // LeaveFrame gets called after the interpreter popped the frame and
     // stored rval, so cx->fp not cx->fp->down, and -1 not 0.
     atoms = cx->fp->script->atomMap.vector;
-    stack(-1, rval_ins);
+    set(&stackval(-1), rval_ins, true);
     return true;
 }
 
