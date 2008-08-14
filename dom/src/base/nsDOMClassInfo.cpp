@@ -5932,6 +5932,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // window's own context (not on some other window-caller's
   // context).
 
+  JSBool did_resolve = JS_FALSE;
   JSContext *my_cx;
 
   if (!my_context) {
@@ -5940,42 +5941,50 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     my_cx = (JSContext *)my_context->GetNativeContext();
   }
 
-  // Resolving a standard class won't do any evil, and it's possible
-  // for caps to get the answer wrong, so disable the security check
-  // for this case.
+  JSBool ok;
+  jsval exn;
+  {
+    JSAutoSuspendRequest asr(my_cx != cx ? cx : nsnull);
+    {
+      JSAutoRequest ar(my_cx);
 
-  JSBool did_resolve = JS_FALSE;
-  PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-  sDoSecurityCheckInAddProperty = PR_FALSE;
+      JSObject *realObj;
+      wrapper->GetJSObject(&realObj);
 
-  JSAutoRequest ar(my_cx);
+      // Resolving a standard class won't do any evil, and it's possible
+      // for caps to get the answer wrong, so disable the security check
+      // for this case.
+    
+      PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
+      sDoSecurityCheckInAddProperty = PR_FALSE;
 
-  JSObject *realObj;
-  wrapper->GetJSObject(&realObj);
+      // Don't resolve standard classes on XPCNativeWrapper etc, only
+      // resolve them if we're resolving on the real global object.
+      ok = obj == realObj ?
+           ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve) :
+           JS_TRUE;
 
-  // Don't resolve standard classes on XPCNativeWrapper etc, only
-  // resolve them if we're resolving on the real global object.
-  JSBool ok = obj == realObj ?
-              ::JS_ResolveStandardClass(my_cx, obj, id, &did_resolve) :
-              JS_TRUE;
+      sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
-  sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
+      if (!ok) {
+        // Trust the JS engine (or the script security manager) to set
+        // the exception in the JS engine.
+
+        if (!JS_GetPendingException(my_cx, &exn)) {
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        // Return NS_OK to avoid stomping over the exception that was passed
+        // down from the ResolveStandardClass call.
+        // Note that the order of the JS_ClearPendingException and
+        // JS_SetPendingException is important in the case that my_cx == cx.
+
+        JS_ClearPendingException(my_cx);
+      }
+    }
+  }
 
   if (!ok) {
-    // Trust the JS engine (or the script security manager) to set
-    // the exception in the JS engine.
-
-    jsval exn;
-    if (!JS_GetPendingException(my_cx, &exn)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    // Return NS_OK to avoid stomping over the exception that was passed
-    // down from the ResolveStandardClass call.
-    // Note that the order of the JS_ClearPendingException and
-    // JS_SetPendingException is important in the case that my_cx == cx.
-
-    JS_ClearPendingException(my_cx);
     JS_SetPendingException(cx, exn);
     *_retval = JS_FALSE;
     return NS_OK;
