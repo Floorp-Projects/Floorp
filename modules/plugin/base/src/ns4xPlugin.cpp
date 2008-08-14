@@ -2271,8 +2271,9 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     if (NS_SUCCEEDED(res)) {
       *(nsIServiceManager**)result = sm;
       return NPERR_NO_ERROR;
-    } else
+    } else {
       return NPERR_GENERIC_ERROR;
+    }
   }
 
   case NPNVDOMElement: {
@@ -2378,7 +2379,8 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   }
 #endif
 
-  default : return NPERR_GENERIC_ERROR;
+  default:
+    return NPERR_GENERIC_ERROR;
   }
 }
 
