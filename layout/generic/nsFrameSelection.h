@@ -63,6 +63,14 @@
 
 struct SelectionDetails
 {
+#ifdef NS_BUILD_REFCNT_LOGGING
+  SelectionDetails() {
+    MOZ_COUNT_CTOR(SelectionDetails);
+  }
+  ~SelectionDetails() {
+    MOZ_COUNT_DTOR(SelectionDetails);
+  }
+#endif
   PRInt32 mStart;
   PRInt32 mEnd;
   SelectionType mType;
