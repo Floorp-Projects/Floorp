@@ -1773,8 +1773,11 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     /* If we bail out on a nested exit, the compiled code returns the outermost nesting
        guard but what we are really interested in is the innermost guard that we hit
        instead of the guard we were expecting there. */
-    if (lr->exit->exitType == NESTED_EXIT)
+    if (lr->exit->exitType == NESTED_EXIT) {
+        debug_only(printf("nested side exit, using guard %p instead of %p\n",
+                          state.nestedExit, lr);)
         lr = state.nestedExit;
+    }
 
     /* sp_adj and ip_adj are relative to the tree we exit out of, not the tree we 
        entered into (which might be different in the presence of nested trees). */
@@ -1816,7 +1819,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
     
     /* write back native stack frame */
-    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack);
+    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, 
+                          stack + (((double*)state.sp) - ((double*)entry_sp)));
     
     AUDIT(sideExitIntoInterpreter);
 
