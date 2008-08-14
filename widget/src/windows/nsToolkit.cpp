@@ -265,7 +265,8 @@ nsToolkit::Startup(HMODULE hModule)
     typedef BOOL (*SetProcessDPIAwareFunc)(VOID);
 
     SetProcessDPIAwareFunc setDPIAware = (SetProcessDPIAwareFunc)
-      GetProcAddress(LoadLibraryW(L"user32.dll"), "SetProcessDPIAware");
+      GetProcAddress(LoadLibrary("user32.dll"),
+                     "SetProcessDPIAware");
 
     if (setDPIAware)
       setDPIAware();
@@ -299,8 +300,8 @@ void nsToolkit::CreateInternalWindow(PRThread *aThread)
     // create the internal window
     //
 
-    mDispatchWnd = ::CreateWindowW(L"nsToolkitClass",
-                                   L"NetscapeDispatchWnd",
+    mDispatchWnd = ::CreateWindow("nsToolkitClass",
+                                  "NetscapeDispatchWnd",
                                   WS_DISABLED,
                                   -50, -50,
                                   10, 10,
