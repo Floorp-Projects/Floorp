@@ -26,17 +26,22 @@ var currentEvents = null;
 var expectedResponseText = null;
 
 function logEvent(evt) {
-  while (currentEvents.length &&
-         currentEvents[0].optional &&
-         ((currentEvents[0].type != evt.type) ||
-          (!evt.target instanceof currentEvents[0].target))) {
-    currentEvents.shift();
+  var i = 0;
+  while ((currentEvents.length != i) &&
+         currentEvents[i].optional &&
+         ((currentEvents[i].type != evt.type) ||
+          (!evt.target instanceof currentEvents[i].target))) {
+    ++i;
   }
-  ok(currentEvents.length, "Extra or wrong event?");
-  is(evt.type, currentEvents[0].type, "Wrong event!")
-  ok(evt.target instanceof currentEvents[0].target, "Wrong event target [" + evt.type + "]!");
-  if (!currentEvents[0].optional) {
-    currentEvents.shift();
+  ok(i != currentEvents.length, "Extra or wrong event?");
+  is(evt.type, currentEvents[i].type, "Wrong event!")
+  ok(evt.target instanceof currentEvents[i].target, "Wrong event target [" + evt.type + "]!");
+  // If we handled non-optional event, remove all optional events before the 
+  // handled event and then the non-optional event from the list.
+  if (!currentEvents[i].optional) {
+    for (;i != -1; --i) {
+      currentEvents.shift();
+    }
   }
 }
 
@@ -316,11 +321,8 @@ var tests =
 ];
 
 function runTest() {
-  //var test = tests.shift();
-  //start(test);
-  tests = new Array();
-  todo(false, "Re-enable tests");
-  nextTest();
+  var test = tests.shift();
+  start(test);
 }
 
 function nextTest() {

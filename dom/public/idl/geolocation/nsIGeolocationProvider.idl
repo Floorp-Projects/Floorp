@@ -40,7 +40,7 @@
 
 interface nsIURI;
 interface nsIDOMWindow;
-interface nsIDOMGeolocation;
+interface nsIDOMGeoPosition;
 interface nsIGeolocationPrompt;
 
 /**
@@ -69,7 +69,7 @@ interface nsIGeolocationRequest : nsISupports {
 
 /**
  * Interface provides a way for the application to handle
- * the UI prompts associated with geolocation.
+ * the UI prompts associated with geo position.
  */
 [scriptable, function, uuid(2300C895-1BEE-4297-912C-A57082F3E936)]
 interface nsIGeolocationPrompt : nsISupports {
@@ -91,7 +91,7 @@ interface nsIGeolocationUpdate : nsISupports {
    * has been discovered.
    * This must be called on the main thread
    */
-  void update(in nsIDOMGeolocation location);
+  void update(in nsIDOMGeoPosition position);
 };
 
 
@@ -126,7 +126,7 @@ interface nsIGeolocationProvider : nsISupports {
    * currentLocation return the current location as seen by
    * the provider.  may be null.
    */
-  readonly attribute nsIDOMGeolocation currentLocation;
+  readonly attribute nsIDOMGeoPosition currentPosition;
   
   /**
    * shutdown
