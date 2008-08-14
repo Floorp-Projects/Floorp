@@ -1376,16 +1376,16 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     SideExit* exit = lr->exit;
     import(ti, inner_sp, exit->numGlobalSlots, exit->calldepth, 
            exit->typeMap, exit->typeMap + exit->numGlobalSlots);
-    /* Restore sp and rp to their original values (we still have them in a register). */
-    if (callDepth > 0) {
-        lir->insStorei(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp));
-        lir->insStorei(lirbuf->rp, lirbuf->state, offsetof(InterpState, rp));
-    }
     /* Store the guard pointer in case we exit on an unexpected guard */
     lir->insStorei(lir->insImmPtr(lr), lirbuf->state, offsetof(InterpState, nestedExit));
     /* Guard that we come out of the inner tree along the same side exit we came out when
        we called the inner tree at recording time. */
     guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
+    /* Restore sp and rp to their original values (we still have them in a register). */
+    if (callDepth > 0) {
+        lir->insStorei(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp));
+        lir->insStorei(lirbuf->rp, lirbuf->state, offsetof(InterpState, rp));
+    }
 }
 
 int
@@ -1749,7 +1749,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     ti->mismatchCount = 0;
 
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double)];
-    //FrameInfo* callstack = (FrameInfo*) alloca(ti->maxCallDepth * sizeof(FrameInfo));
     FrameInfo* callstack = (FrameInfo*) alloca(MAX_CALL_STACK_ENTRIES * sizeof(FrameInfo));
     
     InterpState state;
@@ -1777,13 +1776,17 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     if (lr->exit->exitType == NESTED_EXIT)
         lr = state.nestedExit;
 
-    /* As long we are not dealing with nested trees, the call stack should have exactly
-       as many entries as the side-exit predicts. When synthesizing frames however we
-       have to use the actual call stack depth instead of trusting the side exit since
-       its only the innermost side exit, which might not know about the outer call stack. */
-    JS_ASSERT((lr->exit->exitType == NESTED_EXIT) ||
-              ((((FrameInfo*)state.rp) - callstack) == lr->exit->calldepth));
-    for (int32 i = 0; i < (((FrameInfo*)state.rp) - callstack); ++i)
+    /* sp_adj and ip_adj are relative to the tree we exit out of, not the tree we 
+       entered into (which might be different in the presence of nested trees). */
+    ti = (TreeInfo*)lr->from->root->vmprivate;
+    
+    /* While executing a tree we don't update state->rp, but we do so when we call another
+       tree. So the total call stack height is the sum of the statically calculated 
+       calldepth in the side exit (relative to the tree entry), and the difference between
+       rp and the bottom of the call stack we setup for the call. */
+    int calldepth = (((FrameInfo*)state.rp) - callstack) + lr->exit->calldepth;
+
+    for (int32 i = 0; i < calldepth; ++i)
         js_SynthesizeFrame(cx, callstack[i]);
 
     /* Adjust sp and pc relative to the tree we exited from (not the tree we entered
@@ -1791,8 +1794,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
        already taken care of all frames in between. */
     SideExit* e = lr->exit;
     JSStackFrame* fp = cx->fp;
-    JS_ASSERT((e->sp_adj / sizeof(double)) + 
-              ((TreeInfo*)lr->from->root->vmprivate)->entryNativeStackSlots >=
+    JS_ASSERT((e->sp_adj / sizeof(double)) + ti->entryNativeStackSlots >=
               nativeStackSlots(cx, lr->calldepth, fp));
     fp->regs->sp += (e->sp_adj / sizeof(double)) + ti->entryNativeStackSlots -
                     nativeStackSlots(cx, lr->calldepth, fp);
@@ -1821,7 +1823,8 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     if (!lr) /* did the tree actually execute? */
         return NULL;
 
-    inlineCallCount += lr->exit->calldepth;
+    /* Adjust inlineCallCount by the total call depth at this point (call stack height). */
+    inlineCallCount += calldepth;
 
     return lr;
 }
