@@ -925,7 +925,7 @@ BuildNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
 
 /* Box the given native frame into a JS frame. This only fails due to a hard error
    (out of memory for example). */
-static bool
+static int
 FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
     uint8* mp_base = mp;
@@ -933,7 +933,7 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) &&
             !NativeToValue(cx, *vp, *mp, np + gslots[n])) {
-            return false;
+            return -1;
         }
         ++mp;
     );
@@ -943,27 +943,28 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
     mp = mp_base;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         if (!NativeToValue(cx, *vp, *mp, np + gslots[n]))
-            return false;
+            return -1;
         ++mp;
     );
     debug_only(printf("\n");)
-    return true;
+    return mp - mp_base;
 }
 
 /* Box the given native stack frame into the virtual machine stack. This only fails due to a 
    hard error (out of memory for example). */
-static bool
-FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
+static int
+FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np, jsval* stopAt)
 {
     uint8* mp_base = mp;
     double* np_base = np;
     /* Root all string and object references first (we don't need to call the GC for this). */
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        if (vp == stopAt) goto skip1;
         if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !NativeToValue(cx, *vp, *mp, np))
-            return false;
+            return -1;
         ++mp; ++np
     );
-
+skip1:
     // Restore thisp from the now-restored argv[-1] in each pending frame.
     unsigned n = callDepth;
     for (JSStackFrame* fp = cx->fp; n-- != 0; fp = fp->down)
@@ -975,13 +976,15 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np)
     mp = mp_base;
     np = np_base;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        if (vp == stopAt) goto skip2;
         debug_only(printf("%s%u=", vpname, vpnum);)
         if (!NativeToValue(cx, *vp, *mp, np))
-            return false;
+            return -1;
         ++mp; ++np
     );
+skip2:    
     debug_only(printf("\n");)
-    return true;
+    return mp - mp_base;
 }
 
 /* Emit load instructions onto the trace that read the initial stack state. */
@@ -1185,8 +1188,6 @@ TraceRecorder::snapshot(ExitType exitType)
     exit.ip_adj = fp->regs->pc - (jsbytecode*)fragment->root->ip;
     exit.sp_adj = (stackSlots - treeInfo->entryNativeStackSlots) * sizeof(double);
     exit.rp_adj = exit.calldepth * sizeof(FrameInfo);
-    if (exitType == NESTED_EXIT)
-        exit.this_adj = nativeStackOffset(&cx->fp->argv[-1]);
     uint8* m = exit.typeMap = (uint8 *)data->payload();
     /* Determine the type of a store by looking at the current type of the actual value the
        interpreter is using. For numbers we have to check what kind of store we used last
@@ -1785,16 +1786,14 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
                 /* We found a nesting guard that holds a frame, write it back. */
                 for (unsigned i = 0; i < calldepth; ++i) 
                     js_SynthesizeFrame(cx, callstack[i]);
-                /* FlushNativeStackFrame restores the current frame as well, which we
-                   actually overwrite again if there is another nested guard following
-                   or we restore the innermost guard. This is not very efficient but
-                   nested exits are rare anyway. */
-                FlushNativeStackFrame(cx, calldepth, 
-                                      lr->exit->typeMap + lr->exit->numGlobalSlots,
-                                      stack);
+                /* Restore the native stack excluding the current frame, which the next tree
+                   call guard or the innermost tree exit guard will restore. */
+                unsigned slots = FlushNativeStackFrame(cx, calldepth, 
+                        lr->exit->typeMap + lr->exit->numGlobalSlots,
+                        stack, &cx->fp->argv[-1]);
                 callstack += calldepth;
                 inlineCallCount += calldepth;
-                stack += (lr->exit->this_adj / sizeof(double));
+                stack += slots;
             }
             JS_ASSERT(lr->guard->oprnd1()->oprnd2()->isconstp());
             lr = (GuardRecord*)lr->guard->oprnd1()->oprnd2()->constvalp();
@@ -1842,7 +1841,9 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
     
     /* write back native stack frame */
-    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack);
+    debug_only(unsigned slots =)
+    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack, NULL);
+    JS_ASSERT(slots == e->numStackSlots);
     
     AUDIT(sideExitIntoInterpreter);
 

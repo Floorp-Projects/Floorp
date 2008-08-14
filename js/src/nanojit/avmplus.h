@@ -161,7 +161,6 @@ namespace nanojit
         uint32 numStackSlots;
         uint8 *typeMap;
         ExitType exitType;
-        uint32 this_adj;
 #if defined NJ_VERBOSE
 		uint32_t sid;
 #endif
