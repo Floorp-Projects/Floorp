@@ -44,7 +44,7 @@
 
 
 PRBool
-nsNativeConnectionHelper::OnConnectionFailed(const char* hostName)
+nsNativeConnectionHelper::OnConnectionFailed(const PRUnichar* hostName)
 {
     nsRASAutodial autodial;
 
