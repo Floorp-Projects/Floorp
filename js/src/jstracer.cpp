@@ -3502,7 +3502,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_obj_hasOwnProperty,       F_Object_p_hasOwnProperty,
                                                                "TC",  "s",    FAIL_VOID,   NULL },
         { js_obj_propertyIsEnumerable, F_Object_p_propertyIsEnumerable,
-                                                               "TC",  "s",    FAIL_NEG,    NULL },
+                                                               "TC",  "s",    FAIL_VOID,   NULL },
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
