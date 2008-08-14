@@ -2770,8 +2770,10 @@ function installSkin()
   // 1) Prompt the user for the location of the theme to install.
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   fp.init(window, getExtensionString("installThemePickerTitle"), nsIFilePicker.modeOpen);
-  fp.appendFilter(getExtensionString("themesFilter"), "*.jar");
-  fp.appendFilters(nsIFilePicker.filterAll);
+  try {
+    fp.appendFilter(getExtensionString("themesFilter"), "*.jar");
+    fp.appendFilters(nsIFilePicker.filterAll);
+  } catch (e) { }
 
   var ret = fp.show();
   if (ret == nsIFilePicker.returnOK)
@@ -2788,8 +2790,10 @@ function installExtension()
 {
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   fp.init(window, getExtensionString("installExtensionPickerTitle"), nsIFilePicker.modeOpen);
-  fp.appendFilter(getExtensionString("extensionFilter"), "*.xpi");
-  fp.appendFilters(nsIFilePicker.filterAll);
+  try {
+    fp.appendFilter(getExtensionString("extensionFilter"), "*.xpi");
+    fp.appendFilters(nsIFilePicker.filterAll);
+  } catch (e) { }
 
   var ret = fp.show();
   if (ret == nsIFilePicker.returnOK)
