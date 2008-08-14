@@ -601,6 +601,7 @@ components/websrvcs.xpt
 components/widget_mac.xpt
 components/xml-rpc.xpt
 components/xpcom_obsolete.xpt
+updater.app/Contents/MacOS/updater.ini
 init.d/README
 redo-prebinding.sh
 res/viewer.properties
