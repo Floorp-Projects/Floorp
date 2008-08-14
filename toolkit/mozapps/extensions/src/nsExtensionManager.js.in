@@ -166,6 +166,7 @@ var gApp  = null;
 var gPref = null;
 var gRDF  = null;
 var gOS   = null;
+var gEmSingleton          = null;
 var gBlocklist            = null;
 var gXPCOMABI             = null;
 var gOSTarget             = null;
@@ -5914,7 +5915,16 @@ ExtensionManager.prototype = {
   contractID: "@mozilla.org/extensions/manager;1",
   classID: Components.ID("{8A115FAA-7DCB-4e8f-979B-5F53472F51CF}"),
   _xpcom_categories: [{ category: "app-startup", service: true }],
-  _xpcom_factory: EmFactory,
+  _xpcom_factory: {
+    createInstance: function(outer, iid) {
+      if (outer != null)
+        throw Cr.NS_ERROR_NO_AGGREGATION;
+  
+      if (!gEmSingleton)
+        gEmSingleton = new ExtensionManager();
+      return gEmSingleton.QueryInterface(iid);
+    }
+  },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIExtensionManager,
                                          Ci.nsITimerCallback,
                                          Ci.nsIObserver,
@@ -8879,18 +8889,6 @@ UpdateItem.prototype = {
   contractID: "@mozilla.org/updates/item;1",
   classID: Components.ID("{F3294B1C-89F4-46F8-98A0-44E1EAE92518}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateItem])
-};
-
-var gEmSingleton = null;
-var EmFactory = {
-  createInstance: function(outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-
-    if (!gEmSingleton)
-      gEmSingleton = new ExtensionManager();
-    return gEmSingleton.QueryInterface(iid);
-  }
 };
 
 function DatasourceModule() {}
