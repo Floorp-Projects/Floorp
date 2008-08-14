@@ -1376,16 +1376,16 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     SideExit* exit = lr->exit;
     import(ti, inner_sp, exit->numGlobalSlots, exit->calldepth, 
            exit->typeMap, exit->typeMap + exit->numGlobalSlots);
-    /* Restore sp and rp to their original values (we still have them in a register). */
-    if (callDepth > 0) {
-        lir->insStorei(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp));
-        lir->insStorei(lirbuf->rp, lirbuf->state, offsetof(InterpState, rp));
-    }
     /* Store the guard pointer in case we exit on an unexpected guard */
     lir->insStorei(lir->insImmPtr(lr), lirbuf->state, offsetof(InterpState, nestedExit));
     /* Guard that we come out of the inner tree along the same side exit we came out when
        we called the inner tree at recording time. */
     guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
+    /* Restore sp and rp to their original values (we still have them in a register). */
+    if (callDepth > 0) {
+        lir->insStorei(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp));
+        lir->insStorei(lirbuf->rp, lirbuf->state, offsetof(InterpState, rp));
+    }
 }
 
 int
@@ -1749,7 +1749,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     ti->mismatchCount = 0;
 
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double)];
-    //FrameInfo* callstack = (FrameInfo*) alloca(ti->maxCallDepth * sizeof(FrameInfo));
     FrameInfo* callstack = (FrameInfo*) alloca(MAX_CALL_STACK_ENTRIES * sizeof(FrameInfo));
     
     InterpState state;
@@ -1771,9 +1770,28 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     GuardRecord* lr = u.func(&state, NULL);
     cx->gcDontBlock = JS_FALSE;
 
-    for (int32 i = 0; i < lr->calldepth; i++)
+    /* If we bail out on a nested exit, the compiled code returns the outermost nesting
+       guard but what we are really interested in is the innermost guard that we hit
+       instead of the guard we were expecting there. */
+    if (lr->exit->exitType == NESTED_EXIT)
+        lr = state.nestedExit;
+
+    /* sp_adj and ip_adj are relative to the tree we exit out of, not the tree we 
+       entered into (which might be different in the presence of nested trees). */
+    ti = (TreeInfo*)lr->from->root->vmprivate;
+    
+    /* While executing a tree we don't update state->rp, but we do so when we call another
+       tree. So the total call stack height is the sum of the statically calculated 
+       calldepth in the side exit (relative to the tree entry), and the difference between
+       rp and the bottom of the call stack we setup for the call. */
+    int calldepth = (((FrameInfo*)state.rp) - callstack) + lr->exit->calldepth;
+
+    for (int32 i = 0; i < calldepth; ++i)
         js_SynthesizeFrame(cx, callstack[i]);
 
+    /* Adjust sp and pc relative to the tree we exited from (not the tree we entered
+       into). These are our final values for sp and pc since js_SynthesizeFrame has
+       already taken care of all frames in between. */
     SideExit* e = lr->exit;
     JSStackFrame* fp = cx->fp;
     JS_ASSERT((e->sp_adj / sizeof(double)) + ti->entryNativeStackSlots >=
@@ -1783,28 +1801,30 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     fp->regs->pc = (jsbytecode*)lr->from->root->ip + e->ip_adj;
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
-    printf("leaving trace at %s:%u@%u, exitType=%d, sp=%p, ip=%p, cycles=%llu\n",
+    printf("leaving trace at %s:%u@%u, exitType=%d, sp=%d, ip=%p, cycles=%llu\n",
            fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
            fp->regs->pc - fp->script->code,
            lr->exit->exitType,
-           state.sp, lr->jmp,
+           fp->regs->sp - StackBase(fp), lr->jmp,
            (rdtsc() - start));
 #endif
 
-    JS_ASSERT(lr->exit->exitType != NESTED_EXIT);
-    
+    /* write back interned globals */
     FlushNativeGlobalFrame(cx, e->numGlobalSlots, ti->globalSlots.data(), e->typeMap, global);
-    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack);
     JS_ASSERT(ti->globalSlots.length() >= e->numGlobalSlots);
     JS_ASSERT(globalFrameSize == STOBJ_NSLOTS(globalObj));
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
-
+    
+    /* write back native stack frame */
+    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack);
+    
     AUDIT(sideExitIntoInterpreter);
 
     if (!lr) /* did the tree actually execute? */
         return NULL;
 
-    inlineCallCount += lr->exit->calldepth;
+    /* Adjust inlineCallCount by the total call depth at this point (call stack height). */
+    inlineCallCount += calldepth;
 
     return lr;
 }
