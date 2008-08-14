@@ -1570,6 +1570,14 @@ out2:
     }
 
 out:
+
+#ifdef JS_TRACER
+    if (JS_TRACE_MONITOR(cx).recorder) {
+        js_AbortRecording(cx, NULL,
+                          "recording out of js_Execute interpreter activation");
+    }
+#endif
+
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
         jsdtrace_execute_done(script);
