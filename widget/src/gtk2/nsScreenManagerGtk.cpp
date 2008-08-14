@@ -123,7 +123,13 @@ nsScreenManagerGtk :: ~nsScreenManagerGtk()
     mRootWindow = nsnull;
   }
 
-#ifdef MOZ_X11
+/* On Solaris, XineramaIsActive() registers a callback function close_display() 
+ * in X, which is to be called in XCloseDisplay().
+ *
+ * We can't unload libXinerama.so.1 here because this will make
+ * the address of close_display() registered in X to be invalid and
+ * it will crash when XCloseDisplay() is called later. */
+#if defined (MOZ_X11) && !defined (SOLARIS)
   if (mXineramalib && mXineramalib != SCREEN_MANAGER_LIBRARY_LOAD_FAILED) {
     PR_UnloadLibrary(mXineramalib);
   }
