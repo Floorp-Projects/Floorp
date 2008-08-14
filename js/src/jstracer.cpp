@@ -1771,12 +1771,28 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     GuardRecord* lr = u.func(&state, NULL);
     cx->gcDontBlock = JS_FALSE;
 
-    for (int32 i = 0; i < lr->calldepth; i++)
+    /* If we bail out on a nested exit, the compiled code returns the outermost nesting
+       guard but what we are really interested in is the innermost guard that we hit
+       instead of the guard we were expecting there. */
+    if (lr->exit->exitType == NESTED_EXIT)
+        lr = state.nestedExit;
+
+    /* As long we are not dealing with nested trees, the call stack should have exactly
+       as many entries as the side-exit predicts. When synthesizing frames however we
+       have to use the actual call stack depth instead of trusting the side exit since
+       its only the innermost side exit, which might not know about the outer call stack. */
+    JS_ASSERT((lr->exit->exitType == NESTED_EXIT) ||
+              ((((FrameInfo*)state.rp) - callstack) == lr->exit->calldepth));
+    for (int32 i = 0; i < (((FrameInfo*)state.rp) - callstack); ++i)
         js_SynthesizeFrame(cx, callstack[i]);
 
+    /* Adjust sp and pc relative to the tree we exited from (not the tree we entered
+       into). These are our final values for sp and pc since js_SynthesizeFrame has
+       already taken care of all frames in between. */
     SideExit* e = lr->exit;
     JSStackFrame* fp = cx->fp;
-    JS_ASSERT((e->sp_adj / sizeof(double)) + ti->entryNativeStackSlots >=
+    JS_ASSERT((e->sp_adj / sizeof(double)) + 
+              ((TreeInfo*)lr->from->root->vmprivate)->entryNativeStackSlots >=
               nativeStackSlots(cx, lr->calldepth, fp));
     fp->regs->sp += (e->sp_adj / sizeof(double)) + ti->entryNativeStackSlots -
                     nativeStackSlots(cx, lr->calldepth, fp);
@@ -1791,8 +1807,6 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
            (rdtsc() - start));
 #endif
 
-    JS_ASSERT(lr->exit->exitType != NESTED_EXIT);
-    
     /* write back interned globals */
     FlushNativeGlobalFrame(cx, e->numGlobalSlots, ti->globalSlots.data(), e->typeMap, global);
     JS_ASSERT(ti->globalSlots.length() >= e->numGlobalSlots);
