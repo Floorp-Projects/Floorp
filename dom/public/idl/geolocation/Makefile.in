@@ -46,12 +46,15 @@ MODULE         = dom
 XPIDL_MODULE   = dom_geolocation
 GRE_MODULE     = 1
 
-XPIDLSRCS = \
-			nsIDOMGeolocation.idl            \
-			nsIDOMGeolocationCallback.idl    \
-			nsIDOMGeolocator.idl             \
-			nsIDOMNavigatorGeolocator.idl    \
-			nsIGeolocationProvider.idl       \
+XPIDLSRCS =                                    \
+            nsIDOMGeoGeolocation.idl           \
+            nsIDOMGeoPosition.idl              \
+            nsIDOMGeoPositionCallback.idl      \
+            nsIDOMGeoPositionError.idl         \
+            nsIDOMGeoPositionErrorCallback.idl \
+            nsIDOMGeoPositionOptions.idl       \
+            nsIDOMNavigatorGeolocation.idl     \
+            nsIGeolocationProvider.idl         \
             $(NULL)
 
 include $(topsrcdir)/config/rules.mk

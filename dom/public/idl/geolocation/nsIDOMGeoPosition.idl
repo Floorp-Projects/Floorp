@@ -35,16 +35,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-
 #include "domstubs.idl"
-interface nsIDOMGeolocator;
 
-/**
- * Property that extends the navigator object.
- */
-[scriptable, uuid(1470B9BC-F17C-4419-85A4-E6C1742977A3)]
-interface nsIDOMNavigatorGeolocator : nsISupports
+[scriptable, uuid(F9C6A2C0-9D9B-48A2-B84B-12CC95283CD0)]
+interface nsIDOMGeoPosition : nsISupports
 {
-  readonly attribute nsIDOMGeolocator geolocator;
+  readonly attribute double latitude;
+  readonly attribute double longitude;
+  readonly attribute double altitude;
+  readonly attribute double accuracy;
+  readonly attribute double altitudeAccuracy;
+  readonly attribute double heading;
+  readonly attribute double velocity;
+  readonly attribute DOMTimeStamp timestamp;
 };
-
