@@ -686,10 +686,10 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
             parentWidget->IsVisible(parentVisible);            
         }
         PRBool cancel = PR_FALSE;
-        rv = windowCreator2->CreateChromeWindow2(parentVisible ? parentChrome : nsnull, chromeFlags,
-                                                 contextFlags, uriToLoad,
-                                                 &cancel,
-                                                 getter_AddRefs(newChrome));
+        rv = windowCreator2->CreateChromeWindow2(
+               parentVisible ? parentChrome.get() : nsnull,
+               chromeFlags, contextFlags, uriToLoad, &cancel,
+               getter_AddRefs(newChrome));
         if (NS_SUCCEEDED(rv) && cancel) {
           newChrome = 0; // just in case
           rv = NS_ERROR_ABORT;
