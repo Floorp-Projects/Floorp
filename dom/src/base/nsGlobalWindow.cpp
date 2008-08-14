@@ -112,7 +112,7 @@
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMOfflineResourceList.h"
-#include "nsIDOMGeolocation.h"
+#include "nsIDOMGeoGeolocation.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -9040,7 +9040,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocator)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -9057,10 +9057,10 @@ nsNavigator::SetDocShell(nsIDocShell *aDocShell)
     mPlugins->SetDocShell(aDocShell);
 
   // if there is a page transition, make sure delete the geolocation object
-  if (mGeolocator)
+  if (mGeolocation)
   {
-    mGeolocator->Shutdown();
-    mGeolocator = nsnull;
+    mGeolocation->Shutdown();
+    mGeolocation = nsnull;
   }
 }
 
@@ -9583,10 +9583,10 @@ nsNavigator::LoadingNewDocument()
   mMimeTypes = nsnull;
   mPlugins = nsnull;
 
-  if (mGeolocator)
+  if (mGeolocation)
   {
-    mGeolocator->Shutdown();
-    mGeolocator = nsnull;
+    mGeolocation->Shutdown();
+    mGeolocation = nsnull;
   }
 }
 
@@ -9709,19 +9709,19 @@ nsNavigator::MozIsLocallyAvailable(const nsAString &aURI,
 }
 
 //*****************************************************************************
-//    nsNavigator::nsIDOMNavigatorGeolocator
+//    nsNavigator::nsIDOMNavigatorGeolocation
 //*****************************************************************************
 
-NS_IMETHODIMP nsNavigator::GetGeolocator(nsIDOMGeolocator **_retval)
+NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  if (!mGeolocator) {
+  if (!mGeolocation) {
     nsCOMPtr<nsIDOMWindow> contentDOMWindow(do_GetInterface(mDocShell));
-    mGeolocator = new nsGeolocator(contentDOMWindow);
+    mGeolocation = new nsGeolocation(contentDOMWindow);
   }
 
-  NS_IF_ADDREF(*_retval = mGeolocator);
+  NS_IF_ADDREF(*_retval = mGeolocation);
   return NS_OK;
 }
 

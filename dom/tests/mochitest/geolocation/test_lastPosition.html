@@ -43,7 +43,7 @@ function handleDialog(doc) {
 
 
 
-ok(navigator.geolocator, "Ensure that the geolocation object is present");
+ok(navigator.geolocation, "Ensure that the geolocation object is present");
 
 //first we want to prevent this proprerty from loading.
 /*
@@ -54,7 +54,7 @@ dialog in FF.
   startCallbackTimer();
 */
 
-last = navigator.geolocator.lastPosition;
+last = navigator.geolocation.lastPosition;
 
 ok(last == null, "Check to ensure the lastPosition is null");
 
@@ -67,7 +67,7 @@ allow_dialog = 1;
 startCallbackTimer();
 */
 
-last = navigator.geolocator.lastPosition;
+last = navigator.geolocation.lastPosition;
 
 if (last != null) {
   check_geolocation(last);

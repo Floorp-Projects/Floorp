@@ -34,42 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGeolocationProvider.h"
-#include "nsIDOMGeoPosition.h"
-#include "nsCOMPtr.h"
 
-#include <glib.h>
-#include <errno.h>
-#include <gpsbt.h>
-#include <gpsmgr.h>
 
-extern "C" {
-  // need to extern these because of:
-  // https://bugs.maemo.org/show_bug.cgi?id=3226
-  #include <location/location-gps-device.h>
-  #include <location/location-gpsd-control.h>
-}
+#include "domstubs.idl"
+interface nsIDOMGeoGeolocation;
 
-class MaemoLocationProvider : public nsIGeolocationProvider
+/**
+ * Property that extends the navigator object.
+ */
+[scriptable, uuid(9F218D6A-42EC-4B8A-AEE9-E29CA96A4EAE)]
+interface nsIDOMNavigatorGeolocation : nsISupports
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGEOLOCATIONPROVIDER
-
-  MaemoLocationProvider();
-
-  void Update(nsIDOMGeoPosition* aPosition);
-
-private:
-  ~MaemoLocationProvider();
-
-  nsCOMPtr<nsIDOMGeoPosition> mLastPosition;
-
-  nsIGeolocationUpdate* mCallback; // weak reference by contract.
-
-
-  gpsbt_t mGPSBT;
-  LocationGPSDevice *mGPSDevice;
-  gulong mLocationCallbackHandle;
-  PRBool mHasSeenLocation;
+  readonly attribute nsIDOMGeoGeolocation geolocation;
 };
+
