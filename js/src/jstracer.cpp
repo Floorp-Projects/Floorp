@@ -3688,8 +3688,21 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
 
     /* Insist if setting on obj being the directly addressed object. */
     uint32 setflags = (cs.format & (JOF_SET | JOF_INCDEC));
-    if (setflags && obj2 != obj)
-        ABORT_TRACE("JOF_SET opcode hit prototype chain");
+    LIns* dslots_ins = NULL;
+    if (obj2 != obj) {
+        if (setflags)
+            ABORT_TRACE("JOF_SET opcode hit prototype chain");
+
+        /*
+         * We're getting a proto-property. Walk up the prototype chain emitting
+         * proto slot loads, updating obj as we go, leaving obj set to obj2 with
+         * obj_ins the last proto-load.
+         */
+        while (obj != obj2) {
+            obj_ins = stobj_get_slot(obj_ins, JSSLOT_PROTO, dslots_ins);
+            obj = STOBJ_GET_PROTO(obj);
+        }
+    }
 
     /* Don't trace getter or setter calls, our caller wants a direct slot. */
     if (PCVAL_IS_SPROP(pcval)) {
@@ -3723,7 +3736,6 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
         slot = PCVAL_TO_SLOT(pcval);
     }
 
-    LIns* dslots_ins = NULL;
     v_ins = stobj_get_slot(obj_ins, slot, dslots_ins);
     if (!unbox_jsval(STOBJ_GET_SLOT(obj, slot), v_ins))
         ABORT_TRACE("unboxing");
