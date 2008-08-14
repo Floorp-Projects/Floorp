@@ -60,8 +60,11 @@ include $(topsrcdir)/config/config.mk
 
 CPP_UNIT_TESTS	= \
 			TestCOM \
-			TestNTFSPermissions \
 			$(NULL)
+
+# TestNTFSPermissions is causing oranges because it's creating directories
+# multiple times, and then leaving them in a state where they can't be cleaned
+#			TestNTFSPermissions \
 
 include $(topsrcdir)/config/rules.mk
 
