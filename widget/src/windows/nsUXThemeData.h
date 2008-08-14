@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include <Windows.h>
+#include <windows.h>
 #include "nscore.h"
 
 #ifndef WM_DWMCOMPOSITIONCHANGED
