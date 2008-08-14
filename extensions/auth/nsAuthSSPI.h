@@ -45,6 +45,7 @@
 #include <windows.h>
 
 #define SECURITY_WIN32 1
+#include <ntsecapi.h>
 #include <security.h>
 #include <rpc.h>
 
