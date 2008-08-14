@@ -58,13 +58,8 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMMouseEvent.idl			\
 	nsIDOMMouseScrollEvent.idl      \
 	nsIDOMUIEvent.idl			\
-	$(NULL)
-
-ifdef MOZ_MEDIA
-SDK_XPIDLSRCS +=				\
 	nsIDOMProgressEvent.idl			\
 	$(NULL)
-endif
 
 XPIDLSRCS =					\
 	nsIDOMNSEvent.idl			\

@@ -68,6 +68,10 @@
 #include "nsHashKeys.h"
 #include "prclist.h"
 #include "prtime.h"
+#include "nsIEventListenerManager.h"
+#include "nsIDOMNSEvent.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsDOMProgressEvent.h"
 
 class nsILoadGroup;
 
@@ -87,39 +91,105 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mListener;
 };
 
-class nsXMLHttpRequest : public nsIXMLHttpRequest,
+class nsXHREventTarget : public nsIXMLHttpRequestEventTarget,
+                         public nsPIDOMEventTarget,
+                         public nsIDOMNSEventTarget
+{
+public:
+  nsXHREventTarget() : mLang(nsIProgrammingLanguage::JAVASCRIPT) {}
+  virtual ~nsXHREventTarget() {}
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXHREventTarget,
+                                           nsIXMLHttpRequestEventTarget)
+  NS_DECL_NSIDOMNSEVENTTARGET
+  NS_DECL_NSIXMLHTTPREQUESTEVENTTARGET
+  NS_DECL_NSIDOMEVENTTARGET
+  // nsPIDOMEventTarget
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
+                                    nsPresContext* aPresContext,
+                                    nsEventStatus* aEventStatus);
+  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
+                                      nsIEventListenerManager** aResult);
+  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                         const nsIID& aIID);
+  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                            const nsIID& aIID);
+  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
+  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext) = 0;
+
+  PRBool HasListenersFor(const nsAString& aType)
+  {
+    return mListenerManager && mListenerManager->HasListenersFor(aType);
+  }
+  nsresult RemoveAddEventListener(const nsAString& aType,
+                                  nsRefPtr<nsDOMEventListenerWrapper>& aCurrent,
+                                  nsIDOMEventListener* aNew);
+
+  nsresult GetInnerEventListener(nsRefPtr<nsDOMEventListenerWrapper>& aWrapper,
+                                 nsIDOMEventListener** aListener);
+protected:
+  nsRefPtr<nsDOMEventListenerWrapper> mOnLoadListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnLoadStartListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnProgressListener;
+  nsCOMPtr<nsIEventListenerManager> mListenerManager;
+  PRUint32 mLang;
+};
+
+class nsXMLHttpRequestUpload : public nsXHREventTarget,
+                               public nsIXMLHttpRequestUpload
+{
+public:
+  nsXMLHttpRequestUpload(nsPIDOMEventTarget* aOwner) : mOwner(aOwner) {}
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXMLHttpRequestUpload,
+                                           nsXHREventTarget)
+  NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::)
+  NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
+  NS_FORWARD_NSIDOMNSEVENTTARGET(nsXHREventTarget::)
+  NS_DECL_NSIXMLHTTPREQUESTUPLOAD
+  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext);
+protected:
+  nsCOMPtr<nsPIDOMEventTarget> mOwner;
+};
+
+class nsXMLHttpRequest : public nsXHREventTarget,
+                         public nsIXMLHttpRequest,
                          public nsIJSXMLHttpRequest,
                          public nsIDOMLoadListener,
-                         public nsIDOMEventTarget,
-                         public nsIDOMNSEventTarget,
-                         public nsPIDOMEventTarget,
                          public nsIStreamListener,
                          public nsIChannelEventSink,
                          public nsIProgressEventSink,
                          public nsIInterfaceRequestor,
                          public nsSupportsWeakReference,
-                         public nsIJSNativeInitializer
+                         public nsIJSNativeInitializer,
+                         public nsIXMLHttpRequestUploadGetter
 {
 public:
   nsXMLHttpRequest();
   virtual ~nsXMLHttpRequest();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIXMLHttpRequest
   NS_DECL_NSIXMLHTTPREQUEST
 
   // nsIJSXMLHttpRequest
-  NS_DECL_NSIJSXMLHTTPREQUEST
+  NS_IMETHOD GetOnuploadprogress(nsIDOMEventListener** aOnuploadprogress);
+  NS_IMETHOD SetOnuploadprogress(nsIDOMEventListener* aOnuploadprogress);
+  NS_IMETHOD GetOnreadystatechange(nsIDOMEventListener** aOnreadystatechange);
+  NS_IMETHOD SetOnreadystatechange(nsIDOMEventListener* aOnreadystatechange);
 
-  // nsIDOMEventTarget
-  NS_DECL_NSIDOMEVENTTARGET
-
-  // nsIDOMNSEventTarget
-  NS_DECL_NSIDOMNSEVENTTARGET
+  NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::)
 
   // nsIDOMEventListener
   NS_DECL_NSIDOMEVENTLISTENER
+
+  // nsIXMLHttpRequestUploadGetter
+  NS_DECL_NSIXMLHTTPREQUESTUPLOADGETTER
 
   // nsIDOMLoadListener
   NS_IMETHOD Load(nsIDOMEvent* aEvent);
@@ -147,26 +217,41 @@ public:
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
                        PRUint32 argc, jsval* argv);
 
-  // nsPIDOMEventTarget
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
-  virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus);
-  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
-                                      nsIEventListenerManager** aResult);
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID);
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                            const nsIID& aIID);
-  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
   virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext);
 
+
+  // This creates a trusted readystatechange event, which is not cancelable and
+  // doesn't bubble.
+  static nsresult CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent);
+  // For backwards compatibility aPosition should contain the headers for upload
+  // and aTotalSize is LL_MAXUINT when unknown. Both those values are
+  // used by nsXMLHttpProgressEvent. Normal progress event should not use
+  // headers in aLoaded and aTotal is 0 when unknown.
+  static void DispatchProgressEvent(nsPIDOMEventTarget* aTarget,
+                                    const nsAString& aType,
+                                    // Whether to use nsXMLHttpProgressEvent,
+                                    // which implements LS Progress Event.
+                                    PRBool aUseLSEventWrapper,
+                                    PRBool aLengthComputable,
+                                    // For Progress Events
+                                    PRUint64 aLoaded, PRUint64 aTotal,
+                                    // For LS Progress Events
+                                    PRUint64 aPosition, PRUint64 aTotalSize);
+  static void DispatchProgressEvent(nsPIDOMEventTarget* aTarget,
+                                    const nsAString& aType,
+                                    PRBool aLengthComputable,
+                                    PRUint64 aLoaded, PRUint64 aTotal)
+  {
+    DispatchProgressEvent(aTarget, aType, PR_FALSE,
+                          aLengthComputable, aLoaded, aTotal,
+                          aLoaded, aLengthComputable ? aTotal : LL_MAXUINT);
+  }
 
   // This is called by the factory constructor.
   nsresult Init();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXMLHttpRequest, nsIXMLHttpRequest)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXMLHttpRequest,
+                                           nsXHREventTarget)
 
 protected:
   nsresult DetectCharset(nsACString& aCharset);
@@ -183,11 +268,6 @@ protected:
   nsresult RequestCompleted();
   nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
   nsIURI *GetBaseURI();
-
-  // This creates a trusted event, which is not cancelable and doesn't
-  // bubble. Don't call this if we have no event listeners, since this may
-  // use our script context, which is not set in that case.
-  nsresult CreateEvent(const nsAString& aType, nsIDOMEvent** domevent);
 
   nsresult RemoveAddEventListener(const nsAString& aType,
                                   nsRefPtr<nsDOMEventListenerWrapper>& aCurrent,
@@ -229,14 +309,8 @@ protected:
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindow>    mOwner; // Inner window.
 
-  nsRefPtr<nsDOMEventListenerWrapper> mOnLoadListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnProgressListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnUploadProgressListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnReadystatechangeListener;
-  nsCOMPtr<nsIEventListenerManager> mListenerManager;
-
-  PRUint32 mLang;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
 
@@ -274,22 +348,72 @@ protected:
   // List of potentially dangerous headers explicitly set using
   // SetRequestHeader.
   nsTArray<nsCString> mExtraRequestHeaders;
+
+  nsRefPtr<nsXMLHttpRequestUpload> mUpload;
+  PRUint32 mUploadTransferred;
+  PRUint32 mUploadTotal;
+  PRPackedBool mUploadComplete;
+
+  PRPackedBool mErrorLoad;
 };
 
 // helper class to expose a progress DOM Event
 
-class nsXMLHttpProgressEvent : public nsIDOMLSProgressEvent
+class nsXMLHttpProgressEvent : public nsIDOMProgressEvent,
+                               public nsIDOMLSProgressEvent,
+                               public nsIDOMNSEvent,
+                               public nsIPrivateDOMEvent
 {
 public:
-  nsXMLHttpProgressEvent(nsIDOMEvent * aInner, PRUint64 aCurrentProgress, PRUint64 aMaxProgress);
+  nsXMLHttpProgressEvent(nsIDOMProgressEvent* aInner,
+                         PRUint64 aCurrentProgress,
+                         PRUint64 aMaxProgress);
   virtual ~nsXMLHttpProgressEvent();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMLSPROGRESSEVENT
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXMLHttpProgressEvent, nsIDOMNSEvent)
   NS_FORWARD_NSIDOMEVENT(mInner->)
+  NS_FORWARD_NSIDOMNSEVENT(mInner->)
+  NS_FORWARD_NSIDOMPROGRESSEVENT(mInner->)
+  NS_DECL_NSIDOMLSPROGRESSEVENT
+  // nsPrivateDOMEvent
+  NS_IMETHOD DuplicatePrivateData()
+  {
+    return mInner->DuplicatePrivateData();
+  }
+  NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget)
+  {
+    return mInner->SetTarget(aTarget);
+  }
+  NS_IMETHOD SetCurrentTarget(nsIDOMEventTarget* aTarget)
+  {
+    return mInner->SetCurrentTarget(aTarget);
+  }
+  NS_IMETHOD SetOriginalTarget(nsIDOMEventTarget* aTarget)
+  {
+    return mInner->SetOriginalTarget(aTarget);
+  }
+  NS_IMETHOD IsDispatchStopped(PRBool* aIsDispatchPrevented)
+  {
+    return mInner->IsDispatchStopped(aIsDispatchPrevented);
+  }
+  NS_IMETHOD GetInternalNSEvent(nsEvent** aNSEvent)
+  {
+    return mInner->GetInternalNSEvent(aNSEvent);
+  }
+  NS_IMETHOD HasOriginalTarget(PRBool* aResult)
+  {
+    return mInner->HasOriginalTarget(aResult);
+  }
+  NS_IMETHOD SetTrusted(PRBool aTrusted)
+  {
+    return mInner->SetTrusted(aTrusted);
+  }
 
 protected:
-  nsCOMPtr<nsIDOMEvent> mInner;
+  // Use nsDOMProgressEvent so that we can forward
+  // most of the method calls easily.
+  nsRefPtr<nsDOMProgressEvent> mInner;
   PRUint64 mCurProgress;
   PRUint64 mMaxProgress;
 };

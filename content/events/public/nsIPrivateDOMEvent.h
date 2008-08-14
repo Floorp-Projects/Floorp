@@ -106,8 +106,6 @@ nsresult
 NS_NewDOMCommandEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsCommandEvent* aEvent);
 nsresult
 NS_NewDOMMessageEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsEvent* aEvent);
-#ifdef MOZ_MEDIA
 nsresult
 NS_NewDOMProgressEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsEvent* aEvent);
-#endif // MOZ_MEDIA
 #endif // nsIPrivateDOMEvent_h__
