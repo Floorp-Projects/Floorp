@@ -531,8 +531,9 @@ js_TypeOfBoolean(JSContext* cx, jsint unboxed)
 jsint FASTCALL
 js_Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 {
+    jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
     jsval v;
-    if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, ATOM_TO_JSID(str), &v))
+    if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &v))
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
     return JSVAL_TO_BOOLEAN(v);
@@ -541,8 +542,9 @@ js_Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 jsint FASTCALL
 js_Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
 {
+    jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
     jsval v;
-    if (!js_PropertyIsEnumerable(cx, obj, ATOM_TO_JSID(str), &v))
+    if (!js_PropertyIsEnumerable(cx, obj, id, &v))
         return -1;
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
     return JSVAL_TO_BOOLEAN(v);
