@@ -1799,11 +1799,11 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
     fp->regs->pc = (jsbytecode*)lr->from->root->ip + e->ip_adj;
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
-    printf("leaving trace at %s:%u@%u, exitType=%d, sp=%p, ip=%p, cycles=%llu\n",
+    printf("leaving trace at %s:%u@%u, exitType=%d, sp=%d, ip=%p, cycles=%llu\n",
            fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
            fp->regs->pc - fp->script->code,
            lr->exit->exitType,
-           state.sp, lr->jmp,
+           fp->regs->sp - StackBase(fp), lr->jmp,
            (rdtsc() - start));
 #endif
 
