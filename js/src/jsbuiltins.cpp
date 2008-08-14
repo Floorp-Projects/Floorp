@@ -347,6 +347,34 @@ js_StringToInt32(JSContext* cx, JSString* str)
     return (jsint)d;
 }
 
+jsdouble FASTCALL
+js_ParseFloat(JSContext* cx, JSString* str)
+{
+    const jschar* bp;
+    const jschar* end;
+    const jschar* ep;
+    jsdouble d;
+
+    JSSTRING_CHARS_AND_END(str, bp, end);
+    if (!js_strtod(cx, bp, end, &ep, &d) || ep == bp)
+        return *cx->runtime->jsNaN;
+    return d;
+}
+
+jsdouble FASTCALL
+js_ParseInt(JSContext* cx, JSString* str)
+{
+    const jschar* bp;
+    const jschar* end;
+    const jschar* ep;
+    jsdouble d;
+
+    JSSTRING_CHARS_AND_END(str, bp, end);
+    if (!js_strtointeger(cx, bp, end, &ep, 0, &d) || ep == bp)
+        return *cx->runtime->jsNaN;
+    return d;
+}
+
 jsval FASTCALL
 js_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
 {
