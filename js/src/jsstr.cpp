@@ -2317,16 +2317,13 @@ JSBool
 js_str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval *argv;
-    jschar *chars;
     uintN i;
     uint16 code;
+    jschar *chars;
     JSString *str;
 
     argv = vp + 2;
     JS_ASSERT(argc < ARRAY_INIT_LIMIT);
-    chars = (jschar *) JS_malloc(cx, (argc + 1) * sizeof(jschar));
-    if (!chars)
-        return JS_FALSE;
     if (argc == 1 &&
         (code = js_ValueToUint16(cx, &argv[0])) < UNIT_STRING_LIMIT) {
         str = js_GetUnitStringForChar(cx, code);
@@ -2335,6 +2332,9 @@ js_str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
         *vp = STRING_TO_JSVAL(str);
         return JS_TRUE;
     }
+    chars = (jschar *) JS_malloc(cx, (argc + 1) * sizeof(jschar));
+    if (!chars)
+        return JS_FALSE;
     for (i = 0; i < argc; i++) {
         code = js_ValueToUint16(cx, &argv[i]);
         if (JSVAL_IS_NULL(argv[i])) {
