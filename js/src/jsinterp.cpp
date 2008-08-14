@@ -2511,9 +2511,17 @@ js_Interpret(JSContext *cx)
 
     METER_OP_INIT(op);      /* to nullify first METER_OP_PAIR */
 
-# define DO_OP()            JS_BEGIN_MACRO                                    \
+# ifdef JS_TRACER
+#  define CHECK_RECORDER()  JS_BEGIN_MACRO                                    \
                                 JS_ASSERT(!JS_TRACE_MONITOR(cx).recorder ||   \
                                           jumpTable == recordingJumpTable);   \
+                            JS_END_MACRO
+# else
+#  define CHECK_RECORDER()  ((void)0)
+# endif
+
+# define DO_OP()            JS_BEGIN_MACRO                                    \
+                                CHECK_RECORDER();                             \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
@@ -2523,8 +2531,7 @@ js_Interpret(JSContext *cx)
                             JS_END_MACRO
 
 # define BEGIN_CASE(OP)     L_##OP:                                           \
-                                JS_ASSERT(!JS_TRACE_MONITOR(cx).recorder ||   \
-                                          jumpTable == recordingJumpTable);
+                                CHECK_RECORDER();
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)                                    \
