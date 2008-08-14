@@ -35,20 +35,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-
 #include "domstubs.idl"
 
-interface nsIDOMGeolocation;
-interface nsIDOMGeolocationCallback;
+interface nsIDOMGeoPositionError;
 
-[scriptable, uuid(3C3B69FF-3AFA-4D4C-BA3A-F03940E74E14)]
-interface nsIDOMGeolocator : nsISupports
-{
-  readonly attribute nsIDOMGeolocation lastPosition;
-
-  void getCurrentPosition(in nsIDOMGeolocationCallback callback);
-
-  unsigned short watchPosition(in nsIDOMGeolocationCallback callback);
-
-  void clearWatch(in unsigned short watchId);
+[scriptable, function, uuid(7D9B09D9-4843-43EB-A7A7-67F7DDA6B3C4)]
+interface nsIDOMGeoPositionErrorCallback : nsISupports {
+  void handleEvent(in nsIDOMGeoPositionError position);
 };

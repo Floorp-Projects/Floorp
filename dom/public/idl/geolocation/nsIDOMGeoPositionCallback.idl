@@ -37,9 +37,9 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMGeolocation;
+interface nsIDOMGeoPosition;
 
-[scriptable, function, uuid(679C8833-5D8C-430D-A7A3-FF13FE082098)]
-interface nsIDOMGeolocationCallback : nsISupports {
-  void onRequest(in nsIDOMGeolocation position);
+[scriptable, function, uuid(527E8B53-6F29-4B6A-8D04-5C1666A4C4C1)]
+interface nsIDOMGeoPositionCallback : nsISupports {
+  void handleEvent(in nsIDOMGeoPosition position);
 };
