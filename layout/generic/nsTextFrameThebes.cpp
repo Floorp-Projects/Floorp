@@ -4080,6 +4080,22 @@ PRBool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
   return PR_TRUE;
 }
 
+static void
+AddHyphenToMetrics(nsTextFrame* aTextFrame, gfxTextRun* aBaseTextRun,
+                   gfxTextRun::Metrics* aMetrics, PRBool aTightBoundingBox,
+                   gfxContext* aContext)
+{
+  // Fix up metrics to include hyphen
+  gfxTextRunCache::AutoTextRun hyphenTextRun(
+    GetHyphenTextRun(aBaseTextRun, aContext, aTextFrame));
+  if (!hyphenTextRun.get())
+    return;
+
+  gfxTextRun::Metrics hyphenMetrics =
+    hyphenTextRun->MeasureText(0, hyphenTextRun->GetLength(), aTightBoundingBox, aContext, nsnull);
+  aMetrics->CombineWith(hyphenMetrics, aBaseTextRun->IsRightToLeft());
+}
+
 void
 nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
                             nsCSSShadowItem* aShadowDetails,
@@ -4087,28 +4103,22 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
                             const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
                             gfxContext* aCtx, const nscolor& aForegroundColor)
 {
-  nscoord xOffset = aShadowDetails->mXOffset.GetCoordValue();
-  nscoord yOffset = aShadowDetails->mYOffset.GetCoordValue();
+  gfxPoint shadowOffset(aShadowDetails->mXOffset.GetCoordValue(),
+                        aShadowDetails->mYOffset.GetCoordValue());
   nscoord blurRadius = PR_MAX(aShadowDetails->mRadius.GetCoordValue(), 0);
-
-  nsTextPaintStyle textPaintStyle(this);
-  gfxFloat advanceWidth;
 
   gfxTextRun::Metrics shadowMetrics =
     mTextRun->MeasureText(aOffset, aLength, PR_FALSE,
                           nsnull, aProvider);
+  if (GetStateBits() & TEXT_HYPHEN_BREAK) {
+    AddHyphenToMetrics(this, mTextRun, &shadowMetrics, PR_FALSE, aCtx);
+  }
 
   // This rect is the box which is equivalent to where the shadow will be painted.
-  // X and Y are significant because they can affect the rounding.
-  // The origin of mBoundingBox is the text baseline point, so we must translate it by
+  // The origin of mBoundingBox is the text baseline left, so we must translate it by
   // that much in order to make the origin the top-left corner of the text bounding box.
-  gfxRect shadowRect = shadowMetrics.mBoundingBox + aTextBaselinePt;
-  shadowRect.MoveBy(gfxPoint(xOffset, yOffset));
-
-  if (GetStateBits() & TEXT_HYPHEN_BREAK) {
-    // Add the width of the soft hyphen so it isn't cut off
-    shadowRect.size.width += aProvider->GetHyphenWidth();
-  }
+  gfxRect shadowRect = shadowMetrics.mBoundingBox +
+    gfxPoint(aFramePt.x, aTextBaselinePt.y) + shadowOffset;
 
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, blurRadius,
@@ -4130,16 +4140,18 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
   // Draw the text onto our alpha-only surface to capture the alpha values.
   // Remember that the box blur context has a device offset on it, so we don't need to
   // translate any coordinates to fit on the surface.
+  gfxFloat advanceWidth;
   DrawText(shadowContext,
-           aTextBaselinePt + gfxPoint(xOffset, yOffset),
+           aTextBaselinePt + shadowOffset,
            aOffset, aLength, &aDirtyRect, aProvider, advanceWidth,
            (GetStateBits() & TEXT_HYPHEN_BREAK) != 0);
 
   // This will only have an effect in quirks mode. Standards mode text-decoration shadow painting
   // is handled in nsHTMLContainerFrame.cpp, so you must remember to consider that if you change
   // any code behaviour here.
-  PaintTextDecorations(shadowContext, aDirtyRect, aFramePt + gfxPoint(xOffset, yOffset),
-                       aTextBaselinePt + gfxPoint(xOffset, yOffset),
+  nsTextPaintStyle textPaintStyle(this);
+  PaintTextDecorations(shadowContext, aDirtyRect, aFramePt + shadowOffset,
+                       aTextBaselinePt + shadowOffset,
                        textPaintStyle, *aProvider, shadowColor);
 
   contextBoxBlur.DoPaint();
@@ -5848,11 +5860,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   }
   if (usedHyphenation) {
     // Fix up metrics to include hyphen
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, ctx, this));
-    if (hyphenTextRun.get()) {
-      AddCharToMetrics(hyphenTextRun.get(),
-                       mTextRun, &textMetrics, needTightBoundingBox, ctx);
-    }
+    AddHyphenToMetrics(this, mTextRun, &textMetrics, needTightBoundingBox, ctx);
     AddStateBits(TEXT_HYPHEN_BREAK | TEXT_HAS_NONCOLLAPSED_CHARACTERS);
   }
 
