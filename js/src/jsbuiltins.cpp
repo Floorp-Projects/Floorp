@@ -267,10 +267,10 @@ js_String_p_concat_1int(JSContext* cx, JSString* str, jsint i)
 }
 
 JSObject* FASTCALL
-js_String_p_match(JSContext* cx, JSString* str, JSObject* regexp)
+js_String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp)
 {
-    jsval vp[4] = { JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
-    if (!js_str_match(cx, 1, vp))
+    jsval vp[3] = { JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
+    if (!js_StringMatchHelper(cx, 1, vp, pc))
         return (JSObject*) JSVAL_TO_BOOLEAN(JSVAL_VOID);
     JS_ASSERT(JSVAL_IS_NULL(vp[0]) ||
               (!JSVAL_IS_PRIMITIVE(vp[0]) && OBJ_IS_ARRAY(cx, JSVAL_TO_OBJECT(vp[0]))));
