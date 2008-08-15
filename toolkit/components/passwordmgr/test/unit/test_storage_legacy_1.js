@@ -389,13 +389,42 @@ LoginTest.initStorage(storage, INDIR, "signons-2d-10.txt");
 LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
 
 
+/* ========== 22 ========== */
+testnum++;
+testdesc = "Initialize with signons-06.txt (1 disabled, 1 login); test removeLogin";
+
+testuser1.init("http://dummyhost.mozilla.org", "", null,
+    "dummydude", "itsasecret", "put_user_here", "put_pw_here");
+testuser2.init("http://dummyhost.mozilla.org", "", null,
+    "dummydude2", "itsasecret2", "put_user2_here", "put_pw2_here");
+
+LoginTest.initStorage(storage, INDIR, "signons-06.txt", OUTDIR, "signons-06-2.txt");
+LoginTest.checkStorageData(storage, ["https://www.site.net"], [testuser1]);
+
+testdesc = "test removeLogin";
+storage.removeLogin(testuser1);
+LoginTest.checkStorageData(storage, ["https://www.site.net"], []);
+
+
+/* ========== 23 ========== */
+testnum++;
+testdesc = "Initialize with signons-06.txt (1 disabled, 1 login); test modifyLogin";
+
+LoginTest.initStorage(storage, INDIR, "signons-06.txt",  OUTDIR, "signons-06-3.txt");
+LoginTest.checkStorageData(storage, ["https://www.site.net"], [testuser1]);
+
+testdesc = "test modifyLogin";
+storage.modifyLogin(testuser1, testuser2);
+LoginTest.checkStorageData(storage, ["https://www.site.net"], [testuser2]);
+
+
 /*
  * ---------------------- Bug 427033 ----------------------
  * Check migration of logins stored with a JS formSubmitURL
  */
 
 
-/* ========== 22 ========== */
+/* ========== 24 ========== */
 testnum++;
 
 testdesc = "checking import of JS formSubmitURL entries"
