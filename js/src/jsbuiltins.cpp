@@ -379,9 +379,11 @@ jsval FASTCALL
 js_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
 {
     jsval v;
-    if (!JSSTRING_IS_FLAT(idstr) && !js_UndependString(cx, idstr))
+    jsid id;
+
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
         return JSVAL_ERROR_COOKIE;
-    if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(STRING_TO_JSVAL(idstr)), &v))
+    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
         return JSVAL_ERROR_COOKIE;
     return v;
 }
@@ -389,9 +391,10 @@ js_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
 bool FASTCALL
 js_Any_setelem(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
 {
-    if (!JSSTRING_IS_FLAT(idstr) && !js_UndependString(cx, idstr))
+    jsid id;
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
         return false;
-    return OBJ_SET_PROPERTY(cx, obj, ATOM_TO_JSID(STRING_TO_JSVAL(idstr)), &v);
+    return OBJ_SET_PROPERTY(cx, obj, id, &v);
 }
 
 JSObject* FASTCALL
