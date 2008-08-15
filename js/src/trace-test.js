@@ -758,6 +758,16 @@ function parsingNumbers() {
 parsingNumbers.expected = "ok";
 test(parsingNumbers);
 
+function matchInLoop() {
+    var k = "hi";
+    for (var i = 0; i < 10; i++) {
+        var result = k.match(/hi/) != null;
+    }
+    return result;
+}
+matchInLoop.expected = true;
+test(matchInLoop);
+
 function deep1(x) {
     if (x > 90) 
 	return 1;

@@ -3523,7 +3523,8 @@ js_math_floor(JSContext* cx, uintN argc, jsval* vp);
 bool
 TraceRecorder::record_JSOP_CALL()
 {
-    uintN argc = GET_ARGC(cx->fp->regs->pc);
+    jsbytecode *pc = cx->fp->regs->pc;
+    uintN argc = GET_ARGC(pc);
     jsval& fval = stackval(0 - (argc + 2));
 
     /*
@@ -3566,7 +3567,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_str_fromCharCode,         F_String_fromCharCode,  "C",   "i",    FAIL_NULL,   NULL },
         { js_str_charCodeAt,           F_String_p_charCodeAt,  "T",   "i",    FAIL_NEG,    NULL },
         { js_str_charAt,               F_String_getelem,       "TC",  "i",    FAIL_NULL,   NULL },
-        { js_str_match,                F_String_p_match,       "TC",  "r",    FAIL_VOID,   NULL },
+        { js_str_match,                F_String_p_match,       "PTC", "r",    FAIL_VOID,   NULL },
         { js_str_replace,              F_String_p_replace_str3,"TC","sss",    FAIL_NULL,   NULL },
         { js_str_replace,              F_String_p_replace_str, "TC", "sr",    FAIL_NULL,   NULL },
         { js_str_replace,              F_String_p_replace_fun, "TC", "fr",    FAIL_NULL,   NULL },
@@ -3596,7 +3597,7 @@ TraceRecorder::record_JSOP_CALL()
         char argtype;
 
 #if defined _DEBUG
-        memset(args, 0xCD, sizeof(args));	
+        memset(args, 0xCD, sizeof(args));
 #endif
 
         jsval& thisval = stackval(0 - (argc + 1));
@@ -3616,6 +3617,8 @@ TraceRecorder::record_JSOP_CALL()
             *argp = thisval_ins;                                               \
         } else if (argtype == 'R') {                                           \
             *argp = lir->insImmPtr((void*)cx->runtime);                        \
+        } else if (argtype == 'P') {                                           \
+            *argp = lir->insImmPtr(pc);                                        \
         } else {                                                               \
             JS_NOT_REACHED("unknown prefix arg type");                         \
         }                                                                      \
@@ -3623,6 +3626,9 @@ TraceRecorder::record_JSOP_CALL()
     JS_END_MACRO
 
         switch (prefixc) {
+          case 3:
+            HANDLE_PREFIX(2);
+            /* FALL THROUGH */
           case 2:
             HANDLE_PREFIX(1);
             /* FALL THROUGH */
