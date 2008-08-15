@@ -80,9 +80,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 EXPORTS += gfxQtPlatform.h gfxQPainterSurface.h
 EXPORTS += gfxXlibSurface.h gfxQtNativeRenderer.h
 EXPORTS += gfxQtFonts.h
-ifdef MOZ_ENABLE_GLITZ
-REQUIRES += glitzglx
-endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

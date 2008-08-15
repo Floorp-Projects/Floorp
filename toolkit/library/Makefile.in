@@ -88,13 +88,6 @@ SHARED_LIBRARY_LIBS += \
   $(DEPTH)/embedding/browser/gtk/src/$(LIB_PREFIX)gtkembedmoz.$(LIB_SUFFIX)
 DEFINES += -DMOZ_ENABLE_GTK2
 endif
-ifneq (,$(MOZ_ENABLE_QT))
-ifdef MOZ_ENABLE_LIBXUL
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/embedding/browser/qt/src/$(LIB_PREFIX)qgeckoembed.$(LIB_SUFFIX)
-DEFINES += -DMOZ_ENABLE_QT
-endif
-endif
 
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
