@@ -2172,8 +2172,8 @@ TraceRecorder::cmp(LOpcode op, bool negate)
             return false;
         }
     } else if (isNumber(l) || isNumber(r)) {
-        jsval temp_r = r;
-        jsval temp_l = l;
+        jsval tmp[2] = {l, r};
+        JSAutoTempValueRooter tvr(cx, 2, tmp);
 
         // TODO: coerce non-numbers to numbers if it's not string-on-string above
         LIns* l_ins = get(&l);
@@ -2195,7 +2195,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
         } else if (!isNumber(l)) {
             ABORT_TRACE("unsupported LHS type for cmp vs number");
         }
-        lnum = js_ValueToNumber(cx, &temp_l);
+        lnum = js_ValueToNumber(cx, &tmp[0]);
 
         args[0] = get(&r);
         if (JSVAL_IS_STRING(r)) {
@@ -2206,7 +2206,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
         } else if (!isNumber(r)) {
             ABORT_TRACE("unsupported RHS type for cmp vs number");
         }
-        rnum = js_ValueToNumber(cx, &temp_r);
+        rnum = js_ValueToNumber(cx, &tmp[1]);
 
         x = lir->ins2(op, l_ins, r_ins);
 
