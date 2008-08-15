@@ -65,7 +65,7 @@ pkix_pl_OcspCertID_Destroy(
 
         certID = (PKIX_PL_OcspCertID *)object;
 
-        if (!certID->certIDWasConsumed) {
+        if (certID->certID) {
                 CERT_DestroyOCSPCertID(certID->certID);
         }
 
@@ -157,8 +157,6 @@ PKIX_PL_OcspCertID_Create(
                     (PKIX_PL_Object **)&cid,
                     plContext),
                     PKIX_COULDNOTCREATEOBJECT);
-
-        cid->certIDWasConsumed = PR_FALSE;
 
         if (validity != NULL) {
                 PKIX_CHECK(pkix_pl_Date_GetPRTime(validity, &time, plContext),
@@ -269,9 +267,16 @@ PKIX_PL_OcspCertID_RememberOCSPProcessingFailure(
         PKIX_PL_OcspCertID *cid, 
         void *plContext)
 {
-        PKIX_ENTER(DATE, "PKIX_PL_OcspCertID_RememberOCSPProcessingFailure");
+        PRBool certIDWasConsumed = PR_FALSE;
 
-        cert_RememberOCSPProcessingFailure(cid->certID, &cid->certIDWasConsumed);
+        PKIX_ENTER(DATE, "PKIX_PL_OcspCertID_RememberOCSPProcessingFailure");
+        PKIX_NULLCHECK_TWO(cid, cid->certID);
+
+        cert_RememberOCSPProcessingFailure(cid->certID, &certIDWasConsumed);
+
+        if (certIDWasConsumed) {
+                cid->certID = NULL;
+        }
 
         PKIX_RETURN(OCSPCERTID);
 }

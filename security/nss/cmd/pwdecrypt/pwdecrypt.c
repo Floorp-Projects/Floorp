@@ -37,7 +37,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: pwdecrypt.c,v 1.4 2005/11/15 23:40:18 nelsonb%netscape.com Exp $
+ * $Id: pwdecrypt.c,v 1.5 2008/08/08 23:47:58 julien.pierre.boogz%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -59,10 +59,9 @@ synopsis (char *program_name)
     PRFileDesc *pr_stderr;
 
     pr_stderr = PR_STDERR;
-    PR_fprintf (pr_stderr, "Usage:");
     PR_fprintf (pr_stderr,
-	"\t%s [-i <input-file>] [-o <output-file>] [-d <dir>] [-l logfile]\n",
-		program_name);
+	"Usage:\t%s [-i <input-file>] [-o <output-file>] [-d <dir>]\n"
+        "      \t[-l logfile] [-p pwd] [-f pwfile]\n", program_name);
 }
 
 
@@ -105,6 +104,12 @@ long_usage (char *program_name)
     PR_fprintf (pr_stderr,
 		"  %-13s Log failed decrypt/decode attempts to \"log_file\"\n",
 		"-l log_file");
+    PR_fprintf (pr_stderr,
+		"  %-13s Token password\n",
+		"-p pwd");
+    PR_fprintf (pr_stderr,
+		"  %-13s Password file\n",
+		"-f pwfile");
 }
 
 /*
@@ -207,13 +212,14 @@ main (int argc, char **argv)
     PLOptStatus optstatus;
     SECItem	result;
     int		c;
+    secuPWData  pwdata = { PW_NONE, NULL };
 
     result.data = 0;
 
     program_name = PL_strrchr(argv[0], '/');
     program_name = program_name ? (program_name + 1) : argv[0];
 
-    optstate = PL_CreateOptState (argc, argv, "Hd:i:o:l:?");
+    optstate = PL_CreateOptState (argc, argv, "Hd:f:i:o:l:p:?");
     if (optstate == NULL) {
 	SECU_PrintError (program_name, "PL_CreateOptState failed");
 	return 1;
@@ -243,6 +249,16 @@ main (int argc, char **argv)
 
           case 'l':
             log_file = PL_strdup(optstate->value);
+            break;
+
+          case 'f':
+            pwdata.source = PW_FROMFILE;
+            pwdata.data = PL_strdup(optstate->value);
+            break;
+
+          case 'p':
+            pwdata.source = PW_PLAINTEXT;
+            pwdata.data = PL_strdup(optstate->value);
             break;
 
 	}
@@ -319,7 +335,7 @@ main (int argc, char **argv)
 	   }
 	   result.data = NULL;
 	   result.len  = 0;
-	   rv = PK11SDR_Decrypt(inText, &result, NULL);
+	   rv = PK11SDR_Decrypt(inText, &result, &pwdata);
 	   SECITEM_FreeItem(inText, PR_TRUE);
 	   if (rv != SECSuccess) {
 		if (logFile) {

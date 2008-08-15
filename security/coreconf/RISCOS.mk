@@ -35,65 +35,14 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH	= ../..
-# MODULE	= seccmd
+include $(CORE_DEPTH)/coreconf/UNIX.mk
 
-REQUIRES = nss nspr libdbm
+DLL_SUFFIX  = a
+MKSHLIB     = $(GCCSDK_INSTALL_CROSSBIN)/arm-unknown-riscos-ar cr
 
-DIRS = lib  \
- $(ZLIB_SRCDIR) \
- addbuiltin \
- atob  \
- bltest \
- btoa  \
- certcgi \
- certutil  \
- checkcert  \
- crlutil  \
- crmftest \
- dbtest \
- derdump  \
- digest  \
- fipstest  \
- makepqg  \
- ocspclnt  \
- oidcalc  \
- p7content  \
- p7env  \
- p7sign  \
- p7verify  \
- pk12util \
- pk11mode \
- pp  \
- rsaperf \
- sdrtest \
- selfserv  \
- signtool \
- signver \
- shlibsign \
- smimetools  \
- SSLsample \
- ssltap  \
- strsclnt \
- symkeyutil \
- tests \
- tstclnt  \
- vfychain \
- vfyserv \
- modutil \
- $(NULL)
+OS_RELEASE =
+OS_TARGET  = RISCOS
 
-TEMPORARILY_DONT_BUILD = \
- $(NULL)
-
-# rsaperf  \
-#
-#       needs to look at what needs to happen to make jar build in
-# the binary release environment.
-#
-# perror requires lib/strerror.c which requires the client code installed 
-# to build (requires allxpstr.h)
-#
-DONT_BULD = jar \
- perror \
-$(NULL)
+ifdef BUILD_OPT
+	OPTIMIZER = -O2 -mpoke-function-name
+endif

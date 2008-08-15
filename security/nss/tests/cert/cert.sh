@@ -100,36 +100,12 @@ cert_init()
   if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME" = "CYGWIN_NT" ]; then
 	ROOTCERTSFILE=`cygpath -m ${ROOTCERTSFILE}`
   fi
-
-
-  ################## Generate noise for our CA cert. ######################
-  # NOTE: these keys are only suitable for testing, as this whole thing 
-  # bypasses the entropy gathering. Don't use this method to generate 
-  # keys and certs for product use or deployment.
-  #
-  ps -efl > ${NOISE_FILE} 2>&1
-  ps aux >> ${NOISE_FILE} 2>&1
-  noise
-
 }
 
 cert_log() ######################    write the cert_status file
 {
     echo "$SCRIPTNAME $*"
     echo $* >>${CERT_LOG_FILE}
-}
-
-################################ noise ##################################
-# Generate noise for our certs
-#
-# NOTE: these keys are only suitable for testing, as this whole thing bypasses
-# the entropy gathering. Don't use this method to generate keys and certs for
-# product use or deployment.
-#########################################################################
-noise()
-{
-    #netstat >> ${NOISE_FILE} 2>&1
-    date >> ${NOISE_FILE} 2>&1
 }
 
 ################################ certu #################################
@@ -1096,79 +1072,91 @@ cert_eccurves()
 
   fi # if NSS_ENABLE_ECC=1
 }
-############################## cert_extensions ###############################
-# local shell function to test cert extensions generation.
+
+########################### cert_extensions_test #############################
+# local shell function to test cert extensions generation
 ##############################################################################
-
-checkRes()
+cert_extensions_test()
 {
-    res=$1
-    filterList=$2
-    
-    [ $res -ne 0 ] && return 1
+    COUNT=`expr ${COUNT} + 1`
+    CERTNAME=TestExt${COUNT}
+    CU_SUBJECT="CN=${CERTNAME}, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
 
-    for fl in `echo $filterList | tr \| ' '`; do
-        fl="`echo $fl | tr _ ' '`"
-        expStat=0
-        if [ X`echo "$fl" | cut -c 1` = 'X!' ]; then
-            expStat=1
-            fl=`echo $fl | tr -d '!'`
+    echo
+    echo certutil -d ${CERT_EXTENSIONS_DIR} -S -n ${CERTNAME} \
+        -t "u,u,u" -o /tmp/cert -s "${CU_SUBJECT}" -x -f ${R_PWFILE} \
+        -z "${R_NOISE_FILE}" -${OPT} \< ${TARG_FILE}
+    echo "certutil options:"
+    cat ${TARG_FILE}
+    ${BINDIR}/certutil -d ${CERT_EXTENSIONS_DIR} -S -n ${CERTNAME} \
+        -t "u,u,u" -o /tmp/cert -s "${CU_SUBJECT}" -x -f ${R_PWFILE} \
+        -z "${R_NOISE_FILE}" -${OPT} < ${TARG_FILE}
+    RET=$?
+    if [ "${RET}" -ne 0 ]; then
+        CERTFAILED=1
+        html_failed "${TESTNAME} (${COUNT}) - Create and Add Certificate" 
+        cert_log "ERROR: ${TESTNAME} - Create and Add Certificate failed" 
+        return 1
+    fi
+
+    echo certutil -d ${CERT_EXTENSIONS_DIR} -L -n ${CERTNAME} 
+    EXTLIST=`${BINDIR}/certutil -d ${CERT_EXTENSIONS_DIR} -L -n ${CERTNAME}`
+    RET=$?
+    echo "${EXTLIST}"
+    if [ "${RET}" -ne 0 ]; then
+        CERTFAILED=1
+        html_failed "${TESTNAME} (${COUNT}) - List Certificate" 
+        cert_log "ERROR: ${TESTNAME} - List Certificate failed" 
+        return 1
+    fi
+
+    for FL in `echo ${FILTERLIST} | tr \| ' '`; do
+        FL="`echo ${FL} | tr _ ' '`"
+        EXPSTAT=0
+        if [ X`echo "${FL}" | cut -c 1` = 'X!' ]; then
+            EXPSTAT=1
+            FL=`echo ${FL} | tr -d '!'`
         fi
-        ${BINDIR}/certutil -d ${CERT_EXTENSIONS_DIR} -L -n $CERTNAME | grep "$fl" >/dev/null 2>&1
-        [ $? -ne $expStat ] && return 1
+        echo "${EXTLIST}" | grep "${FL}" >/dev/null 2>&1
+        RET=$?
+        if [ "${RET}" -ne "${EXPSTAT}" ]; then
+            CERTFAILED=1
+            html_failed "${TESTNAME} (${COUNT}) - Looking for ${FL}" "returned ${RET}, expected is ${EXPSTAT}" 
+            cert_log "ERROR: ${TESTNAME} - Looking for ${FL} failed"
+            return 1
+        fi
     done
+
+    html_passed "${TESTNAME} (${COUNT})"
     return 0
 }
 
-
+############################## cert_extensions ###############################
+# local shell function to run cert extensions tests
+##############################################################################
 cert_extensions()
 {
-
     CERTNAME=TestExt
-    cert_create_cert ${CERT_EXTENSIONS_DIR} $CERTNAME 90 ${D_CERT_EXTENSTIONS}
+    cert_create_cert ${CERT_EXTENSIONS_DIR} ${CERTNAME} 90 ${D_CERT_EXTENSTIONS}
     TARG_FILE=${CERT_EXTENSIONS_DIR}/test.args
 
-    CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
-
-    count=0
-    while read arg opt filterList; do
-        if [ X"`echo $arg | cut -c 1`" = "X#" ]; then
+    COUNT=0
+    while read ARG OPT FILTERLIST; do
+        if [ X"`echo ${ARG} | cut -c 1`" = "X#" ]; then
             continue
         fi
-        if [ X"`echo $arg | cut -c 1`" = "X!" ]; then
-            testName="$filterList"
+        if [ X"`echo ${ARG} | cut -c 1`" = "X!" ]; then
+            TESTNAME="${FILTERLIST}"
             continue
         fi
-        if [ X"$arg" = "X=" ]; then
-            count=`expr $count + 1`
-            echo "#################################################"
-            CU_ACTION="Testing $testName"
-            ${BINDIR}/certutil -d ${CERT_EXTENSIONS_DIR} -D -n $CERTNAME
-            echo certutil -d ${CERT_EXTENSIONS_DIR} -S -n $CERTNAME \
-	        -t "u,u,u" -o /tmp/cert -s "${CU_SUBJECT}" -x -f ${R_PWFILE} \
-		-z "${R_NOISE_FILE}" -$opt < $TARG_FILE
-            ${BINDIR}/certutil -d ${CERT_EXTENSIONS_DIR} -S -n $CERTNAME -t "u,u,u" \
-	        -o /tmp/cert -s "${CU_SUBJECT}" -x -f ${R_PWFILE} \
-		-z "${R_NOISE_FILE}" -$opt < $TARG_FILE
-            ret=$?  
-            echo "certutil options:"
-            cat $TARG_FILE
-            checkRes $ret "$filterList"
-            RET=$?
-            if [ "$RET" -ne 0 ]; then
-                CERTFAILED=$RET
-                html_failed "${CU_ACTION} ($RET) " 
-                cert_log "ERROR: ${CU_ACTION} failed $RET"
-            else
-                html_passed "${CU_ACTION}"
-            fi
-            rm -f $TARG_FILE
+        if [ X"${ARG}" = "X=" ]; then
+            cert_extensions_test
+            rm -f ${TARG_FILE}
         else
-            echo $arg >> $TARG_FILE
+            echo ${ARG} >> ${TARG_FILE}
         fi
     done < ${QADIR}/cert/certext.txt
 }
-
 
 ############################## cert_crl_ssl ############################
 # local shell function to generate certs and crls for SSL tests
@@ -1397,7 +1385,7 @@ cert_test_password()
   CU_SUBJECT="CN=${CERTNAME}, E=password@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -S -n PasswordCert -c PasswordCA -t "u,u,u" -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -z "${R_NOISE_FILE}" 2>&1
   if [ "$RET" -eq 0 ]; then
-    cert_log "SUCCESS: PASSORD passed"
+    cert_log "SUCCESS: PASSWORD passed"
   fi
   CU_ACTION="Verify Certificate for ${CERTNAME} with new password"
   certu -V -n PasswordCert -u S -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" 2>&1

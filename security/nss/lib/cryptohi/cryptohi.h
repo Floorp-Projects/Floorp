@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: cryptohi.h,v 1.11 2006/03/15 21:42:21 rrelyea%redhat.com Exp $ */
+/* $Id: cryptohi.h,v 1.12 2008/06/14 14:20:00 wtc%google.com Exp $ */
 
 #ifndef _CRYPTOHI_H_
 #define _CRYPTOHI_H_
@@ -162,7 +162,7 @@ extern SECStatus SGN_Digest(SECKEYPrivateKey *privKey,
 ** 	"len" the amount of data to sign
 ** 	"pk" the private key to encrypt with
 */
-extern SECStatus SEC_DerSignData(PRArenaPool *arena, SECItem *result,
+extern SECStatus SEC_DerSignData(PLArenaPool *arena, SECItem *result,
 				unsigned char *buf, int len,
 				SECKEYPrivateKey *pk, SECOidTag algid);
 

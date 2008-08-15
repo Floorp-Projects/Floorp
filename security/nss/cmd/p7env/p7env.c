@@ -37,7 +37,7 @@
 /*
  * p7env -- A command to create a pkcs7 enveloped data.
  *
- * $Id: p7env.c,v 1.8 2007/01/26 01:15:43 nelson%bolyard.com Exp $
+ * $Id: p7env.c,v 1.9 2008/08/08 23:47:56 julien.pierre.boogz%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -241,7 +241,7 @@ main(int argc, char **argv)
     if (!inFile) inFile = stdin;
     if (!outFile) outFile = stdout;
 
-    /* Call the libsec initialization routines */
+    /* Call the NSS initialization routines */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
     rv = NSS_Init(SECU_ConfigDirectory(NULL));
     if (rv != SECSuccess) {

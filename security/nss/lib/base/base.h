@@ -38,7 +38,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.19 $ $Date: 2008/02/23 05:29:23 $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.20 $ $Date: 2008/05/10 01:03:14 $";
 #endif /* DEBUG */
 
 /*
@@ -570,6 +570,18 @@ nss_SetError
 
 NSS_EXTERN void
 nss_ClearErrorStack
+(
+  void
+);
+
+/*
+ * nss_DestroyErrorStack
+ *
+ * This routine frees the calling thread's error stack.
+ */
+
+NSS_EXTERN void
+nss_DestroyErrorStack
 (
   void
 );

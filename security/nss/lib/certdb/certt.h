@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.44 2008/03/27 21:56:24 alexei.volkov.bugs%sun.com Exp $
+ * $Id: certt.h,v 1.47 2008/06/20 16:57:03 nelson%bolyard.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -123,7 +123,7 @@ struct CERTRDNStr {
 ** An X.500 name object
 */
 struct CERTNameStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTRDN **rdns;
 };
 
@@ -131,7 +131,7 @@ struct CERTNameStr {
 ** An X.509 validity object
 */
 struct CERTValidityStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECItem notBefore;
     SECItem notAfter;
 };
@@ -158,7 +158,7 @@ struct CERTSignedDataStr {
 ** An X.509 subject-public-key-info object
 */
 struct CERTSubjectPublicKeyInfoStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECAlgorithmID algorithm;
     SECItem subjectPublicKey;
 };
@@ -206,7 +206,7 @@ struct CERTSubjectNodeStr {
 };
 
 struct CERTSubjectListStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     int ncerts;
     char *emailAddr;
     CERTSubjectNode *head;
@@ -224,7 +224,7 @@ struct CERTCertificateStr {
      * cert is decoded, destroyed, and at some times when it changes
      * state
      */
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 
     /* The following fields are static after the cert has been decoded */
     char *subjectName;
@@ -327,7 +327,7 @@ struct CERTCertificateStr {
 #define SEC_CERT_CLASS_EMAIL	4
 
 struct CERTDERCertsStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     int numcerts;
     SECItem *rawCerts;
 };
@@ -346,7 +346,7 @@ struct CERTAttributeStr {
 ** A PKCS#10 certificate-request object (the unsigned form)
 */
 struct CERTCertificateRequestStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECItem version;
     CERTName subject;
     CERTSubjectPublicKeyInfo subjectPublicKeyInfo;
@@ -361,7 +361,7 @@ struct CERTCertificateRequestStr {
 struct CERTCertificateListStr {
     SECItem *certs;
     int len;					/* number of certs */
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 };
 
 struct CERTCertListNodeStr {
@@ -372,7 +372,7 @@ struct CERTCertListNodeStr {
 
 struct CERTCertListStr {
     PRCList list;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 };
 
 #define CERT_LIST_HEAD(l) ((CERTCertListNode *)PR_LIST_HEAD(&l->list))
@@ -387,7 +387,7 @@ struct CERTCrlEntryStr {
 };
 
 struct CERTCrlStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECItem version;
     SECAlgorithmID signatureAlg;
     SECItem derName;
@@ -408,7 +408,7 @@ struct CERTCrlKeyStr {
 };
 
 struct CERTSignedCrlStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTCrl crl;
     void *reserved1;
     PRBool reserved2;
@@ -426,7 +426,7 @@ struct CERTSignedCrlStr {
 
 
 struct CERTCrlHeadNodeStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTCertDBHandle *dbhandle;
     CERTCrlNode *first;
     CERTCrlNode *last;
@@ -444,7 +444,7 @@ struct CERTCrlNodeStr {
  * Array of X.500 Distinguished Names
  */
 struct CERTDistNamesStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     int nnames;
     SECItem  *names;
     void *head; /* private */
@@ -551,7 +551,7 @@ typedef enum CERTCompareValidityStatusEnum
 #define SEC_CERT_NICKNAMES_CA		4
 
 struct CERTCertNicknamesStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     void *head;
     int numnicknames;
     char **nicknames;
@@ -677,7 +677,7 @@ struct CERTGeneralNameStr {
 };
 
 struct CERTGeneralNameListStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTGeneralName *name;
     int refCount;
     int len;
@@ -705,7 +705,7 @@ struct CERTNameConstraintsStr {
 struct CERTPrivKeyUsagePeriodStr {
     SECItem notBefore;
     SECItem notAfter;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
 };
 
 /* X.509 v3 Authority Key Identifier extension.  For the authority certificate
@@ -769,7 +769,7 @@ struct CERTVerifyLogNodeStr {
 
 
 struct CERTVerifyLogStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     unsigned int count;
     struct CERTVerifyLogNodeStr *head;
     struct CERTVerifyLogNodeStr *tail;
@@ -784,7 +784,7 @@ struct CERTOKDomainNameStr {
 
 typedef SECStatus (PR_CALLBACK *CERTStatusChecker) (CERTCertDBHandle *handle,
 						    CERTCertificate *cert,
-						    int64 time,
+						    PRTime time,
 						    void *pwArg);
 
 typedef SECStatus (PR_CALLBACK *CERTStatusDestroy) (CERTStatusConfig *handle);
@@ -833,7 +833,7 @@ typedef struct {
 } CERTPolicyInfo;
 
 typedef struct {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTPolicyInfo **policyInfos;
 } CERTCertificatePolicies;
 
@@ -843,14 +843,14 @@ typedef struct {
 } CERTNoticeReference;
 
 typedef struct {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTNoticeReference noticeReference;
     SECItem derNoticeReference;
     SECItem displayText;
 } CERTUserNotice;
 
 typedef struct {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECItem **oids;
 } CERTOidSequence;
 
@@ -863,7 +863,7 @@ typedef struct {
 } CERTPolicyMap;
 
 typedef struct {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     CERTPolicyMap **policyMaps;
 } CERTCertificatePolicyMappings;
 
@@ -939,10 +939,13 @@ typedef enum {
 				 * Set in value.pointer.revocation */
    cert_pi_certStores      = 10,/* Bitmask of Cert Store flags (see below)
 				 * Set in value.scalar.ui */
-   cert_pi_trustAnchors    = 11,/* specify the list of trusted roots to 
+   cert_pi_trustAnchors    = 11,/* Specify the list of trusted roots to 
 				 * validate against. If the list in NULL all
 				 * default trusted roots are used.
 				 * Specified in value.pointer.chain */
+   cert_pi_useAIACertFetch = 12, /* Enables cert fetching using AIA extension.
+				 * Default is off.
+                                     * Value is in value.scalar.b */
    cert_pi_max                  /* SPECIAL: signifies maximum allowed value,
 				 *  can increase in future releases */
 } CERTValParamInType;
@@ -1226,6 +1229,16 @@ typedef struct {
     CERTValParamOutType type;
     CERTValParamOutValue value;
 } CERTValOutParam;
+
+/*
+ * Levels of standards conformance strictness for CERT_NameToAsciiInvertible
+ */
+typedef enum CertStrictnessLevels {
+    CERT_N2A_READABLE   =  0, /* maximum human readability */
+    CERT_N2A_STRICT     = 10, /* strict RFC compliance    */
+    CERT_N2A_INVERTIBLE = 20  /* maximum invertibility,
+                                 all DirectoryStrings encoded in hex */
+} CertStrictnessLevel;
 
 /*
  * policy flag defines

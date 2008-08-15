@@ -79,7 +79,7 @@
 SEC_BEGIN_PROTOS
 
 /*
- * the following functions are going to be depricated in NSS 4.0 in
+ * the following functions are going to be deprecated in NSS 4.0 in
  * favor of the new stan functions.
  */
 
