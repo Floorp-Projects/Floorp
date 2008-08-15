@@ -58,7 +58,6 @@ class nsIURI;
 class nsIFormControlFrame;
 class nsIForm;
 class nsPresState;
-class nsIScrollableView;
 class nsILayoutHistoryState;
 class nsIEditor;
 struct nsRect;
@@ -145,16 +144,6 @@ public:
   nsresult GetOffsetParent(nsIDOMElement** aOffsetParent);
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
-  nsresult GetScrollTop(PRInt32* aScrollTop);
-  nsresult SetScrollTop(PRInt32 aScrollTop);
-  nsresult GetScrollLeft(PRInt32* aScrollLeft);
-  nsresult SetScrollLeft(PRInt32 aScrollLeft);
-  nsresult GetScrollHeight(PRInt32* aScrollHeight);
-  nsresult GetScrollWidth(PRInt32* aScrollWidth);
-  nsresult GetClientTop(PRInt32* aLength);
-  nsresult GetClientLeft(PRInt32* aLength);
-  nsresult GetClientHeight(PRInt32* aClientHeight);
-  nsresult GetClientWidth(PRInt32* aClientWidth);
   nsresult ScrollIntoView(PRBool aTop);
   // Declare Focus(), Blur(), GetTabIndex(), SetTabIndex(), GetSpellcheck() and
   // SetSpellcheck() such that classes that inherit interfaces with those 
@@ -167,32 +156,6 @@ public:
   NS_IMETHOD SetSpellcheck(PRBool aSpellcheck);
   nsresult GetContentEditable(nsAString &aContentEditable);
   nsresult SetContentEditable(const nsAString &aContentEditable);
-
-  /**
-   * Get the frame's offset information for offsetTop/Left/Width/Height.
-   * @note This method flushes pending notifications (Flush_Layout).
-   * @param aRect the offset information [OUT]
-   * @param aOffsetParent the parent the offset is relative to (offsetParent)
-   *        [OUT]
-   */
-  void GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent);
-  /**
-   * Get the element's styled frame (the primary frame or, for tables, the inner
-   * table frame) and closest scrollable view.
-   * @note This method flushes pending notifications (Flush_Layout).
-   * @param aScrollableView the scrollable view [OUT]
-   * @param aFrame (optional) the frame [OUT]
-   */
-  void GetScrollInfo(nsIScrollableView **aScrollableView,
-                     nsIFrame **aFrame = nsnull);
-
-  /**
-   * Get this element's client area dimensions in app units.
-   * The rect x, y, width, height are the clientLeft, clientTop, clientWidth,
-   * clientHeight values.
-   * @return the frame's client dimensions
-   */
-  nsRect GetClientAreaRect();
 
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -778,6 +741,15 @@ protected:
    * node.
    */
   virtual already_AddRefed<nsIEditor> GetAssociatedEditor();
+
+  /**
+   * Get the frame's offset information for offsetTop/Left/Width/Height.
+   * @note This method flushes pending notifications (Flush_Layout).
+   * @param aRect the offset information [OUT]
+   * @param aOffsetParent the parent the offset is relative to (offsetParent)
+   *        [OUT]
+   */
+  virtual void GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent);
 
   /**
    * Returns true if this is the current document's body element
