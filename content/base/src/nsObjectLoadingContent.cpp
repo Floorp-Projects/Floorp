@@ -1668,12 +1668,26 @@ nsObjectLoadingContent::TryInstantiate(const nsACString& aMIMEType,
     LOG(("OBJLC [%p]: No frame yet\n", this));
     return NS_OK; // Not a failure to have no frame
   }
-  nsIFrame* iframe;
-  CallQueryInterface(frame, &iframe);
-  if (iframe->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-    LOG(("OBJLC [%p]: Frame hasn't been reflown yet\n", this));
-    return NS_OK; // Not a failure to have no frame
+
+  nsCOMPtr<nsIPluginInstance> instance;
+  nsresult rv = frame->GetPluginInstance(*getter_AddRefs(instance));
+
+  if (!instance) {
+    // The frame has no plugin instance yet. If the frame hasn't been
+    // reflown yet, do nothing as once the reflow happens we'll end up
+    // instantiating the plugin with the correct size n' all (which
+    // isn't known until we've done the first reflow). But if the
+    // frame does have a plugin instance already, be sure to
+    // re-instantiate the plugin as its source or whatnot might have
+    // chanced since it was instantiated.
+    nsIFrame* iframe;
+    CallQueryInterface(frame, &iframe);
+    if (iframe->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+      LOG(("OBJLC [%p]: Frame hasn't been reflown yet\n", this));
+      return NS_OK; // Not a failure to have no frame
+    }
   }
+
   return Instantiate(frame, aMIMEType, aURI);
 }
 
