@@ -132,7 +132,7 @@ public:
   typedef HRESULT (WINAPI*GetCurrentThemeNamePtr)(LPWSTR pszThemeFileName, int dwMaxNameChars,
                                                   LPWSTR pszColorBuff, int cchMaxColorChars,
                                                   LPWSTR pszSizeBuff, int cchMaxSizeChars);
-  typedef COLORREF (WINAPI*GetThemeSysColorPtr)(HTHEME hTheme, int iColorID);
+  typedef COLORREF (WINAPI*GetThemeSysColorPtr)(HANDLE hTheme, int iColorID);
 
   static OpenThemeDataPtr openTheme;
   static CloseThemeDataPtr closeTheme;
