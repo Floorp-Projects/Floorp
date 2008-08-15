@@ -41,7 +41,7 @@
 
 interface nsIDOMNodeList;
 
-[scriptable, uuid(cea6f919-7fe6-4bdd-9db6-158d9283f8d3)]
+[scriptable, uuid(A1901819-5EB1-41FF-B0E3-E1EC61E1BF1E)]
 interface nsIDOMNSElement : nsISupports
 {
   /*
@@ -69,6 +69,7 @@ interface nsIDOMNSElement : nsISupports
    * an empty list.
    */
   nsIDOMClientRectList getClientRects();
+
   /**
    * Returns the union of all rectangles in the getClientRects() list. Empty
    * rectangles are ignored, except that if all rectangles are empty,
@@ -76,4 +77,53 @@ interface nsIDOMNSElement : nsISupports
    * rectangle in getClientRects().
    */
   nsIDOMClientRect getBoundingClientRect();
+
+  /**
+   * The vertical scroll position of the element, or 0 if the element is not
+   * scrollable. This property may be assigned a value to change the
+   * vertical scroll position.
+   */
+  attribute long             scrollTop;
+
+  /**
+   * The horizontal scroll position of the element, or 0 if the element is not
+   * scrollable. This property may be assigned a value to change the
+   * horizontal scroll position.
+   */
+  attribute long             scrollLeft;
+
+  /**
+   * The height of the scrollable area of the element. If the element is not
+   * scrollable, scrollHeight is equivalent to the offsetHeight.
+   */
+  readonly attribute long             scrollHeight;
+
+  /**
+   * The width of the scrollable area of the element. If the element is not
+   * scrollable, scrollWidth is equivalent to the offsetWidth.
+   */
+  readonly attribute long             scrollWidth;
+
+  /**
+   * The height in CSS pixels of the element's top border.
+   */
+  readonly attribute long             clientTop;
+
+  /**
+   * The width in CSS pixels of the element's left border and scrollbar
+   * if it is present on the left side.
+   */
+  readonly attribute long             clientLeft;
+
+  /**
+   * The width in CSS pixels of the element's padding box. If the element is
+   * scrollable, the scroll bars are included inside this height.
+   */
+  readonly attribute long             clientHeight;
+
+  /**
+   * The height in CSS pixels of the element's padding box. If the element is
+   * scrollable, the scroll bars are included inside this width.
+   */
+  readonly attribute long             clientWidth;
 };
