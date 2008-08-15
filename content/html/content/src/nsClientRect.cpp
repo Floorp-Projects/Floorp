@@ -82,6 +82,20 @@ nsClientRect::GetBottom(float* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsClientRect::GetWidth(float* aResult)
+{
+  *aResult = mWidth;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClientRect::GetHeight(float* aResult)
+{
+  *aResult = mHeight;
+  return NS_OK;
+}
+
 NS_INTERFACE_TABLE_HEAD(nsClientRectList)
   NS_INTERFACE_TABLE1(nsClientRectList, nsIDOMClientRectList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE
