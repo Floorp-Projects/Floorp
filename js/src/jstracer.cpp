@@ -114,7 +114,7 @@ static avmplus::AvmCore s_core = avmplus::AvmCore();
 static avmplus::AvmCore* core = &s_core;
 
 /* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
-static bool nesting_enabled = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "nesting");
+static bool nesting_enabled = true;
 
 /* The entire VM shares one oracle. Collisions and concurrent updates are tolerated and worst
    case cause performance regressions. */
