@@ -255,30 +255,12 @@ ifdef MOZ_XUL_APP
 ifneq (,$(MOZ_ENABLE_GTK2))
 tier_toolkit_dirs += embedding/browser/gtk
 endif
-ifdef MOZ_ENABLE_LIBXUL
-ifneq (,$(MOZ_ENABLE_QT))
-tier_toolkit_dirs += embedding/browser/qt
-endif
-endif
 endif
 endif
 
 ifdef MOZ_XUL_APP
 ifndef BUILD_STATIC_LIBS
 tier_toolkit_dirs += toolkit/library
-endif
-endif
-
-ifndef BUILD_STATIC_LIBS
-ifdef MOZ_XUL_APP
-ifndef MOZ_ENABLE_LIBXUL
-#ifneq (,$(MOZ_ENABLE_GTK2))
-#tier_toolkit_dirs += embedding/browser/gtk
-#endif
-ifneq (,$(MOZ_ENABLE_QT))
-tier_toolkit_dirs += embedding/browser/qt
-endif
-endif
 endif
 endif
 
