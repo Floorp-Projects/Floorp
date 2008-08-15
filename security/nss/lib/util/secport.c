@@ -41,7 +41,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.21 2008/02/16 04:38:09 julien.pierre.boogz%sun.com Exp $
+ * $Id: secport.c,v 1.22 2008/05/02 01:27:11 julien.pierre.boogz%sun.com Exp $
  */
 
 #include "seccomon.h"
@@ -178,6 +178,9 @@ PORT_Strdup(const char *str)
 void
 PORT_SetError(int value)
 {	
+#ifdef DEBUG_jp96085
+    PORT_Assert(value != SEC_ERROR_REUSED_ISSUER_AND_SERIAL);
+#endif
     PR_SetError(value, 0);
     return;
 }

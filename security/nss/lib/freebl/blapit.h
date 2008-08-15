@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapit.h,v 1.20 2007/02/28 19:47:37 rrelyea%redhat.com Exp $ */
+/* $Id: blapit.h,v 1.21 2008/06/14 14:20:07 wtc%google.com Exp $ */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_
@@ -205,7 +205,7 @@ typedef struct AESKeyWrapContextStr AESKeyWrapContext;
 
 /* member names from PKCS#1, section 7.1 */
 struct RSAPublicKeyStr {
-    PRArenaPool * arena;
+    PLArenaPool * arena;
     SECItem modulus;
     SECItem publicExponent;
 };
@@ -213,7 +213,7 @@ typedef struct RSAPublicKeyStr RSAPublicKey;
 
 /* member names from PKCS#1, section 7.2 */
 struct RSAPrivateKeyStr {
-    PRArenaPool * arena;
+    PLArenaPool * arena;
     SECItem version;
     SECItem modulus;
     SECItem publicExponent;
@@ -232,7 +232,7 @@ typedef struct RSAPrivateKeyStr RSAPrivateKey;
 */
 
 struct PQGParamsStr {
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     SECItem prime;    /* p */
     SECItem subPrime; /* q */
     SECItem base;     /* g */
@@ -241,7 +241,7 @@ struct PQGParamsStr {
 typedef struct PQGParamsStr PQGParams;
 
 struct PQGVerifyStr {
-    PRArenaPool * arena;	/* includes this struct, seed, & h. */
+    PLArenaPool * arena;	/* includes this struct, seed, & h. */
     unsigned int  counter;
     SECItem       seed;
     SECItem       h;
@@ -267,14 +267,14 @@ typedef struct DSAPrivateKeyStr DSAPrivateKey;
 */
 
 struct DHParamsStr {
-    PRArenaPool * arena;
+    PLArenaPool * arena;
     SECItem prime; /* p */
     SECItem base; /* g */
 };
 typedef struct DHParamsStr DHParams;
 
 struct DHPublicKeyStr {
-    PRArenaPool * arena;
+    PLArenaPool * arena;
     SECItem prime;
     SECItem base;
     SECItem publicValue;
@@ -282,7 +282,7 @@ struct DHPublicKeyStr {
 typedef struct DHPublicKeyStr DHPublicKey;
 
 struct DHPrivateKeyStr {
-    PRArenaPool * arena;
+    PLArenaPool * arena;
     SECItem prime;
     SECItem base;
     SECItem publicValue;
@@ -333,7 +333,7 @@ struct ECCurveStr {
 typedef struct ECCurveStr ECCurve;
 
 struct ECParamsStr {
-    PRArenaPool * arena;
+    PLArenaPool * arena;
     ECParamsType  type;
     ECFieldID     fieldID;
     ECCurve       curve; 

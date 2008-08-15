@@ -123,6 +123,8 @@ download_file() {
     echo "GET $filePath HTTP/1.0" > $req
     echo >> $req
 
+    echo ${BINDIR}/tstclnt -d $trgDir -S -h $host -p $IOPR_DOWNLOAD_PORT \
+        -w ${R_PWFILE} -o 
     ${BINDIR}/tstclnt -d $trgDir -S -h $host -p $IOPR_DOWNLOAD_PORT \
         -w ${R_PWFILE} -o < $req > $file
     ret=$?
@@ -287,11 +289,15 @@ download_install_certs() {
             certu -R -d "${sslServerDir}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}"\
                 -o $sslServerDir/req 2>&1
             tmpFiles="$tmpFiles $sslServerDir/req"
-            
-            
+
+            # NOTE:
+            # For possible time synchronization problems (bug 444308) we generate
+            # certificates valid also some time in past (-w -1)
+
             CU_ACTION="Sign ${CERTNAME}'s Request (ws: $host)"
-            certu -C -c "$caCertName" -m `date +"%s"` -v 60 -d "${caDir}" \
-                -i  ${sslServerDir}/req -o $caDir/${CERTNAME}.cert \
+            certu -C -c "$caCertName" -m `date +"%s"` -v 60 -w -1 \
+                -d "${caDir}" \
+                -i ${sslServerDir}/req -o $caDir/${CERTNAME}.cert \
                 -f "${R_PWFILE}" 2>&1
             
             importFile $sslServerDir $caDir/$CERTNAME.cert $CERTNAME ",,"

@@ -152,7 +152,7 @@ sftk_cdmf2des(unsigned char *cdmfkey, unsigned char *deskey)
     DES_DestroyContext(descx,PR_TRUE);
     if (rv != SECSuccess) return CKR_DEVICE_ERROR;
 
-    /* xor source with des, zero the parity bits and depricate the key*/
+    /* xor source with des, zero the parity bits and deprecate the key*/
     for (i=0; i < 8; i++) {
 	if (i & 1) {
 	    enc_src[i] = (enc_src[i] ^ enc_dest[i]) & 0xfe;

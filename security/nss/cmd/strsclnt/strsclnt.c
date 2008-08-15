@@ -166,17 +166,6 @@ PRIntervalTime maxInterval    = PR_INTERVAL_NO_TIMEOUT;
 
 char * progName;
 
-char * ownPasswd( PK11SlotInfo *slot, PRBool retry, void *arg)
-{
-        char *passwd = NULL;
-
-        if ( (!retry) && arg ) {
-                passwd = PL_strdup((char *)arg);
-        }
-
-        return passwd;
-}
-
 int	stopping;
 int	verbose;
 SECItem	bigBuf;
@@ -191,6 +180,7 @@ Usage(const char *progName)
     	"Usage: %s [-n nickname] [-p port] [-d dbdir] [-c connections]\n"
  	"          [-23BDNTovqs] [-f filename] [-N | -P percentage]\n"
 	"          [-w dbpasswd] [-C cipher(s)] [-t threads] hostname\n"
+        "          [-W pwfile]\n"
 	" where -v means verbose\n"
         "       -o flag is interpreted as follows:\n"
         "          1 -o   means override the result of server certificate validation.\n"
@@ -900,7 +890,7 @@ typedef struct {
     char* nickname;
     CERTCertificate* cert;
     SECKEYPrivateKey* key;
-    char* password;
+    void* wincx;
 } cert_and_key;
 
 PRBool FindCertAndKey(cert_and_key* Cert_And_Key)
@@ -910,9 +900,9 @@ PRBool FindCertAndKey(cert_and_key* Cert_And_Key)
     }
     Cert_And_Key->cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(),
                             Cert_And_Key->nickname, certUsageSSLClient,
-                            PR_FALSE, Cert_And_Key->password);
+                            PR_FALSE, Cert_And_Key->wincx);
     if (Cert_And_Key->cert) {
-        Cert_And_Key->key = PK11_FindKeyByAnyCert(Cert_And_Key->cert, Cert_And_Key->password);
+        Cert_And_Key->key = PK11_FindKeyByAnyCert(Cert_And_Key->cert, Cert_And_Key->wincx);
     }
     if (Cert_And_Key->cert && Cert_And_Key->key) {
         return PR_TRUE;
@@ -1029,7 +1019,7 @@ StressClient_GetClientAuthData(void * arg,
         SECStatus          rv         = SECFailure;
 
         if (Cert_And_Key) {
-            proto_win = Cert_And_Key->password;
+            proto_win = Cert_And_Key->wincx;
         }
 
         names = CERT_GetCertNicknames(CERT_GetDefaultCertDB(),
@@ -1329,7 +1319,6 @@ main(int argc, char **argv)
     char *               hostName    = NULL;
     char *               nickName    = NULL;
     char *               tmp         = NULL;
-    char *		 passwd      = NULL;
     int                  connections = 1;
     int                  exitVal;
     int                  tmpInt;
@@ -1338,6 +1327,7 @@ main(int argc, char **argv)
     PLOptState *         optstate;
     PLOptStatus          status;
     cert_and_key Cert_And_Key;
+    secuPWData  pwdata          = { PW_NONE, 0 };
 
     /* Call the NSPR initialization routines */
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
@@ -1348,7 +1338,7 @@ main(int argc, char **argv)
     progName = progName ? progName + 1 : tmp;
  
 
-    optstate = PL_CreateOptState(argc, argv, "23BC:DNP:TUc:d:f:in:op:qst:uvw:");
+    optstate = PL_CreateOptState(argc, argv, "23BC:DNP:TUW:c:d:f:in:op:qst:uvw:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 
@@ -1398,7 +1388,15 @@ main(int argc, char **argv)
 
 	case 'v': verbose++; break;
 
-	case 'w': passwd = PL_strdup(optstate->value); break;
+        case 'w':
+            pwdata.source = PW_PLAINTEXT;
+            pwdata.data = PL_strdup(optstate->value);
+            break;
+
+        case 'W':
+            pwdata.source = PW_FROMFILE;
+            pwdata.data = PL_strdup(optstate->value);
+            break;
 
 	case 0:   /* positional parameter */
 	    if (hostName) {
@@ -1428,12 +1426,7 @@ main(int argc, char **argv)
     if (fileName)
     	readBigFile(fileName);
 
-    /* set our password function */
-    if ( passwd ) {
-	PK11_SetPasswordFunc(ownPasswd);
-    } else {
-	PK11_SetPasswordFunc(SECU_GetModulePassword);
-    }
+    PK11_SetPasswordFunc(SECU_GetModulePassword);
 
     tmp = PR_GetEnv("NSS_DEBUG_TIMEOUT");
     if (tmp && tmp[0]) {
@@ -1443,7 +1436,7 @@ main(int argc, char **argv)
     	}
     }
 
-    /* Call the libsec initialization routines */
+    /* Call the NSS initialization routines */
     rv = NSS_Initialize(dir, "", "", SECMOD_DB, NSS_INIT_READONLY);
     if (rv != SECSuccess) {
     	fputs("NSS_Init failed.\n", stderr);
@@ -1452,7 +1445,7 @@ main(int argc, char **argv)
     ssl3stats = SSL_GetStatistics();
     Cert_And_Key.lock = PR_NewLock();
     Cert_And_Key.nickname = nickName;
-    Cert_And_Key.password = passwd;
+    Cert_And_Key.wincx = &pwdata;
     Cert_And_Key.cert = NULL;
     Cert_And_Key.key = NULL;
 
@@ -1483,8 +1476,8 @@ main(int argc, char **argv)
 
     PR_DestroyLock(Cert_And_Key.lock);
 
-    if (Cert_And_Key.password) {
-        PL_strfree(Cert_And_Key.password);
+    if (pwdata.data) {
+        PL_strfree(pwdata.data);
     }
     if (Cert_And_Key.nickname) {
         PL_strfree(Cert_And_Key.nickname);

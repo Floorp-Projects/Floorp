@@ -69,7 +69,7 @@ typedef struct PK11GenericObjectStr PK11GenericObject;
 typedef void (*PK11FreeDataFunc)(void *);
 
 struct SECMODModuleStr {
-    PRArenaPool	*arena;
+    PLArenaPool	*arena;
     PRBool	internal;	/* true of internally linked modules, false
 				 * for the loaded modules */
     PRBool	loaded;		/* Set to true if module has been loaded */
@@ -489,7 +489,7 @@ struct PK11MergeLogNodeStr {
 struct PK11MergeLogStr {
     PK11MergeLogNode *head;
     PK11MergeLogNode *tail;
-    PRArenaPool *arena;
+    PLArenaPool *arena;
     int version;
     unsigned long reserved1;
     unsigned long reserved2;

@@ -732,6 +732,64 @@ PKIX_ProcessingParams_SetTrustAnchors(
         void *plContext);
 
 /*
+ * FUNCTION: PKIX_ProcessingParams_GetUseAIAForCertFetching
+ * DESCRIPTION:
+ *
+ *  Retrieves a pointer to the Boolean. The boolean value represents
+ *  the switch value that is used to identify if url in cert AIA extension
+ *  may be used for cert fetching.
+ *  If the function succeeds, the pointer to the Boolean is guaranteed to be
+ *  non-NULL.
+ *
+ * PARAMETERS:
+ *  "params"
+ *      Address of ProcessingParams. Must be non-NULL.
+ *  "pUseAIA"
+ *      Address where object pointer will be stored. Must be non-NULL.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Conditionally Thread Safe
+ *      (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Params Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_ProcessingParams_GetUseAIAForCertFetching(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean *pUseAIA,  /* list of TrustAnchor */
+        void *plContext);
+/*
+ * FUNCTION: PKIX_ProcessingParams_SetTrustAnchors
+ * DESCRIPTION:
+ *
+ * Sets switch value that defines if url in cert AIA extension
+ * may be used for cert fetching.
+ * 
+ * PARAMETERS:
+ *  "params"
+ *      Address of ProcessingParams.
+ *  "useAIA"
+ *      Address of the trust anchors list object. Must be non-NULL.
+ *  "plContext"
+ *      Platform-specific context pointer.
+ * THREAD SAFETY:
+ *  Conditionally Thread Safe
+ *      (see Thread Safety Definitions in Programmer's Guide)
+ * RETURNS:
+ *  Returns NULL if the function succeeds.
+ *  Returns a Params Error if the function fails in a non-fatal way.
+ *  Returns a Fatal Error if the function fails in an unrecoverable way.
+ */
+PKIX_Error *
+PKIX_ProcessingParams_SetUseAIAForCertFetching(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean useAIA,  
+        void *plContext);
+
+/*
  * FUNCTION: PKIX_ProcessingParams_GetHintCerts
  * DESCRIPTION:
  *

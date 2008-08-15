@@ -3,7 +3,8 @@
  *              The goal of this program is to test every function
  *              entry point of the PKCS11 api at least once.
  *              To test in FIPS mode: pk11mode
- *              To test in NONFIPS mode: pk11mode nonFIPS
+ *              To test in NONFIPS mode: pk11mode -n
+ *              usage: pk11mode -h
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -5015,10 +5016,11 @@ PKM_TLSKeyAndMacDerive( CK_FUNCTION_LIST_PTR pFunctionList,
         (void) pFunctionList->C_DestroyObject(hSession, kmo.hClientMacSecret);
     if (kmo.hServerMacSecret != CK_INVALID_HANDLE)
         (void) pFunctionList->C_DestroyObject(hSession, kmo.hServerMacSecret);
-    if (kmo.hClientKey != CK_INVALID_HANDLE);
+    if (kmo.hClientKey != CK_INVALID_HANDLE)
         (void) pFunctionList->C_DestroyObject(hSession, kmo.hClientKey);
     if (kmo.hServerKey != CK_INVALID_HANDLE)
         (void) pFunctionList->C_DestroyObject(hSession, kmo.hServerKey);
+
     crv = pFunctionList->C_Logout(hSession);
     if (crv == CKR_OK) {
         PKM_LogIt("C_Logout succeeded\n");
@@ -5034,11 +5036,8 @@ PKM_TLSKeyAndMacDerive( CK_FUNCTION_LIST_PTR pFunctionList,
         return crv;
     }
 
-
     return (crv);
 }
-
-
 
 CK_RV PKM_DualFuncSign(CK_FUNCTION_LIST_PTR pFunctionList,
                        CK_SESSION_HANDLE hRwSession,
@@ -5317,8 +5316,8 @@ void PKM_Help()
     PR_fprintf(debug_out, "pk11mode test program usage:\n");
     PR_fprintf(debug_out, "\t-f <file>   Password File : echo pw > file \n");
     PR_fprintf(debug_out, "\t-n          Non Fips Mode \n");
-    PR_fprintf(debug_out, "\t-d <path>   Database path location)\n");
-    PR_fprintf(debug_out, "\t-p <prefix> DataBase prefix)\n");
+    PR_fprintf(debug_out, "\t-d <path>   Database path location\n");
+    PR_fprintf(debug_out, "\t-p <prefix> DataBase prefix\n");
     PR_fprintf(debug_out, "\t-h          this help message\n");
     exit(1);
 }

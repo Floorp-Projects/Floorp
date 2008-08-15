@@ -650,27 +650,29 @@ pkix_pl_InfoAccess_ParseTokens(
          */
         if (numFilters > 2) numFilters = 2;
 
-        PKIX_PL_NSSCALLRV
-                (INFOACCESS, *tokens, PORT_ArenaZAlloc,
-                (arena, (numFilters+1)*sizeof(void *)));
+        filterP = PORT_ArenaZNewArray(arena, void*, numFilters+1);
+        if (filterP == NULL) {
+            PKIX_ERROR(PKIX_PORTARENAALLOCFAILED);
+        }
 
         /* Second pass: parse to fill in components in token array */
-        filterP = *tokens;
+        *tokens = filterP;
         endPos = *startPos;
 
         while (numFilters) {
             if (*endPos == separator || *endPos == terminator) {
                     len = endPos - *startPos;
-                    PKIX_PL_NSSCALLRV(INFOACCESS, p, PORT_ArenaZAlloc,
-                            (arena, (len+1)));
+                    p = PORT_ArenaZAlloc(arena, len+1);
+                    if (p == NULL) {
+                        PKIX_ERROR(PKIX_PORTARENAALLOCFAILED);
+                    }
 
                     *filterP = p;
 
                     while (len) {
                             if (**startPos == '%') {
                             /* replace %20 by blank */
-                                PKIX_PL_NSSCALLRV(INFOACCESS, cmpResult,
-                                    strncmp, ((void *)*startPos, "%20", 3));
+                                cmpResult = strncmp(*startPos, "%20", 3);
                                 if (cmpResult == 0) {
                                     *p = ' ';
                                     *startPos += 3;
@@ -769,7 +771,6 @@ pkix_pl_InfoAccess_ParseLocation(
         LdapAttrMask attrBit = 0;
         LDAPNameComponent **setOfNameComponent = NULL;
         LDAPNameComponent *nameComponent = NULL;
-        void *v = NULL;
 
         PKIX_ENTER(INFOACCESS, "pkix_pl_InfoAccess_ParseLocation");
         PKIX_NULLCHECK_FOUR(generalName, arena, request, pDomainName);
@@ -821,10 +822,12 @@ pkix_pl_InfoAccess_ParseLocation(
         len = endPos - startPos;
         endPos++;
 
-        PKIX_PL_NSSCALLRV(INFOACCESS, domainName, PORT_ArenaZAlloc,
-                (arena, len + 1));
+        domainName = PORT_ArenaZAlloc(arena, len + 1);
+        if (!domainName) {
+            PKIX_ERROR(PKIX_PORTARENAALLOCFAILED);
+        }
 
-        PKIX_PL_NSSCALL(INFOACCESS, PORT_Memcpy, (domainName, startPos, len));
+        PORT_Memcpy(domainName, startPos, len);
 
         domainName[len] = '\0';
 
@@ -860,18 +863,16 @@ pkix_pl_InfoAccess_ParseLocation(
         avaArray[len - 1] = NULL;
 
         /* Get room for null-terminated array of (LdapNameComponent *) */
-        PKIX_PL_NSSCALLRV
-                (INFOACCESS, v, PORT_ArenaZAlloc,
-                (arena, len*sizeof(LDAPNameComponent *)));
-
-        setOfNameComponent = (LDAPNameComponent **)v;
+        setOfNameComponent = PORT_ArenaZNewArray(arena, LDAPNameComponent *, len);
+        if (setOfNameComponent == NULL) {
+            PKIX_ERROR(PKIX_PORTARENAALLOCFAILED);
+        }
 
         /* Get room for the remaining LdapNameComponents */
-        PKIX_PL_NSSCALLRV
-                (INFOACCESS, v, PORT_ArenaZNewArray,
-                (arena, LDAPNameComponent, --len));
-
-        nameComponent = (LDAPNameComponent *)v;
+        nameComponent = PORT_ArenaZNewArray(arena, LDAPNameComponent, --len);
+        if (nameComponent == NULL) {
+            PKIX_ERROR(PKIX_PORTARENAALLOCFAILED);
+        }
 
         /* Convert remaining AVAs to LDAPNameComponents */
         for (ncIndex = 0; ncIndex < len; ncIndex ++) {
