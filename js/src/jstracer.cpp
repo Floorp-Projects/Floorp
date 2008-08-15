@@ -482,9 +482,12 @@ public:
         jsval* vpstop;                                                        \
         if (fp->callee) {                                                     \
             if (depth == 0) {                                                 \
+                SET_VPNAME("callee");                                         \
+                vp = &fp->argv[-2];                                           \
+                { code; }                                                     \
                 SET_VPNAME("this");                                           \
                 vp = &fp->argv[-1];                                           \
-                code;                                                         \
+                { code; }                                                     \
                 SET_VPNAME("argv");                                           \
                 unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);            \
                 vp = &fp->argv[0]; vpstop = &fp->argv[nargs];                 \
@@ -557,7 +560,7 @@ nativeStackSlots(JSContext *cx, unsigned callDepth, JSStackFrame* fp)
         if (callDepth-- == 0) {
             if (fp->callee) {
                 unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
-                slots += 1/*this*/ + nargs;
+                slots += 2/*callee,this*/ + nargs;
             }
 #if defined _DEBUG
             unsigned int m = 0;
@@ -746,9 +749,9 @@ done:
         if (fp->callee) {
             if (fsp == fstack) {
                 unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
-                if (size_t(p - &fp->argv[-1]) < nargs + 1)
-                    RETURN(offset + size_t(p - &fp->argv[-1]) * sizeof(double));
-                offset += (nargs + 1) * sizeof(double);
+                if (size_t(p - &fp->argv[-2]) < 2/*callee,this*/ + nargs)
+                    RETURN(offset + size_t(p - &fp->argv[-2]) * sizeof(double));
+                offset += (2/*callee,this*/ + nargs) * sizeof(double);
             }
             if (size_t(p - &fp->slots[0]) < fp->script->nfixed)
                 RETURN(offset + size_t(p - &fp->slots[0]) * sizeof(double));
@@ -1357,6 +1360,8 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
         ptrdiff_t rp_adj = callDepth * sizeof(FrameInfo);
         /* Guard that we have enough stack space for the tree we are trying to call on top
            of the new value for sp. */
+        debug_only(printf("sp_adj=%d outer=%d inner=%d\n",
+                   sp_adj, treeInfo->nativeStackBase, ti->nativeStackBase));
         LIns* sp_top = lir->ins2i(LIR_add, lirbuf->sp, 
                 - treeInfo->nativeStackBase /* rebase sp to beginning of outer tree's stack */
                 + sp_adj /* adjust for stack in outer frame inner tree can't see */
@@ -1795,7 +1800,7 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
                    call guard or the innermost tree exit guard will restore. */
                 unsigned slots = FlushNativeStackFrame(cx, calldepth, 
                         lr->exit->typeMap + lr->exit->numGlobalSlots,
-                        stack, &cx->fp->argv[-1]);
+                        stack, &cx->fp->argv[-2]);
                 callstack += calldepth;
                 inlineCallCount += calldepth;
                 stack += slots;
@@ -2706,7 +2711,7 @@ TraceRecorder::clearFrameSlotsFromCache()
     jsval* vp;
     jsval* vpstop;
     if (fp->callee) {
-        vp = &fp->argv[-1];
+        vp = &fp->argv[-2];
         vpstop = &fp->argv[JS_MAX(fp->fun->nargs,fp->argc)];
         while (vp < vpstop)
             nativeFrameTracker.set(vp++, (LIns*)0);
