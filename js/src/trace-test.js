@@ -758,6 +758,19 @@ function parsingNumbers() {
 parsingNumbers.expected = "ok";
 test(parsingNumbers);
 
+function deep1(x) {
+    if (x > 90) 
+	return 1;
+    return 2;
+}
+function deep2() {
+    for (var i = 0; i < 100; ++i)
+	deep1(i);
+    return "ok";
+}
+deep2.expected = "ok";
+test(deep2)
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
