@@ -71,7 +71,7 @@ REQUIRES	= $(LCMS_REQUIRES) \
 CSRCS = cmscnvrt.c cmserr.c cmsgamma.c cmsgmt.c cmsintrp.c cmsio1.c \
 	cmslut.c cmsmatsh.c cmsmtrx.c cmspack.c cmspcs.c cmswtpnt.c \
 	cmsxform.c cmssamp.c cmscam97.c cmsnamed.c cmsps2.c cmscam02.c \
-	cmsvirt.c cmscgats.c cmsio0.c
+	cmsvirt.c cmscgats.c cmsio0.c cmsprecache.c
 
 LOCAL_INCLUDES += -I../include
 

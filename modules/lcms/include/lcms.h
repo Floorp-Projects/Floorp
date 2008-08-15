@@ -71,6 +71,19 @@
 // It is safer to leve it commented out
 // #define HONOR_BLACK_POINT_TAG    1
 
+// Define CMS_DEBUG before including lcms.h to turn on asserts
+#ifdef CMS_DEBUG
+#include <stdio.h>
+#define CMSASSERT(x) \
+{   if (!(x)) { \
+        fprintf(stderr, "CMS Assertion Failed: %s:%d\n", __FILE__, __LINE__);\
+        exit(-1); \
+    } \
+}
+#else
+#define CMSASSERT(x)
+#endif
+
 // ********** End of configuration toggles ******************************
 
 #define LCMS_VERSION        117
@@ -1452,7 +1465,7 @@ typedef struct {
 // Fixed point
 
 
-typedef icInt32Number Fixed32;       // Fixed 15.16 whith sign
+typedef icInt32Number Fixed32, *LPFixed32;    // Fixed 15.16 whith sign
 
 #define INT_TO_FIXED(x)         ((x)<<16)
 #define DOUBLE_TO_FIXED(x)      ((Fixed32) ((x)*65536.0+0.5))
@@ -1695,6 +1708,87 @@ void           cdecl cmsRescaleSampledCurve(LPSAMPLEDCURVE p, double Min, double
 
 LPSAMPLEDCURVE cdecl cmsJoinSampledCurves(LPSAMPLEDCURVE X, LPSAMPLEDCURVE Y, int nResultingPoints);
 
+
+// Precache
+
+/*
+ * Type specifier for precaches
+ * 
+ * Naming Convention: CMS_PRECACHE_{KIND}{IFORMAT}{OFORMAT}_DIRECTION
+ *
+ * Valid Kinds:
+ *   LI - Linear Interpolation
+ *
+ * Valid Formats:
+ *   8 - 8 bit integer
+ *   16 - 16 bit integer
+ *   W - 32 bit fixed point
+ *   F - 32 bit floating point
+ *
+ * Valid Directions:
+ *   FORWARD
+ *   REVERSE
+ */
+
+typedef enum {
+             CMS_PRECACHE_LI1616_REVERSE = 0,   
+             CMS_PRECACHE_LI16W_FORWARD = 1,
+             PRECACHE_TYPE_COUNT
+             } LCMSPRECACHETYPE;
+
+#define IS_LI_REVERSE(Type) ((Type == CMS_PRECACHE_LI1616_REVERSE))
+#define IS_LI_FORWARD(Type) ((Type == CMS_PRECACHE_LI16W_FORWARD))
+
+
+// Implementation structure for a 16 bit to 16 bit linear interpolations
+typedef struct _lcms_precache_li1616_impl {
+
+               // Tables containing the precomputed values
+               LPWORD Cache[3];
+
+               } LCMSPRECACHELI1616IMPL, FAR* LPLCMSPRECACHELI1616IMPL;
+
+// Implementation structure for 16 bit to fixed-point linear interpolations
+typedef struct _lcms_precache_li16w_impl {
+
+               // Tables containing the precomputed values
+               LPFixed32 Cache[3];
+
+               } LCMSPRECACHELI16WIMPL, FAR* LPLCMSPRECACHELI16WIMPL;
+
+// This is a struct containing data related to precached linear interpolations
+// on a profile.
+typedef struct _lcms_precache_struct {
+
+               // This structure is used by transforms to precompute otherwise expensive
+               // per-pixel-channel computations. Ideally, a profile would really always
+               // be around as long as any transform usings its information is around, but
+               // it's more trouble than it's worth to enforce that. Instead, we just use a
+               // simple reference counting scheme.
+               unsigned RefCount;
+
+               // Type of precache - determines the active union member below
+               LCMSPRECACHETYPE Type;
+
+               // Different types of precaches require different structures. We use a union
+               // to handle them with the same code when we can.
+               union {
+                     LCMSPRECACHELI1616IMPL LI1616_REVERSE;
+                     LCMSPRECACHELI16WIMPL  LI16W_FORWARD;
+                     } Impl;
+
+               } LCMSPRECACHE, FAR* LPLCMSPRECACHE;
+
+#define PRECACHE_ADDREF(p) {++p->RefCount;}
+#define PRECACHE_RELEASE(p) {if (--p->RefCount == 0) cmsPrecacheFree(p);}
+
+// Public Precache API
+LCMSAPI LCMSBOOL      LCMSEXPORT cmsPrecacheProfile(cmsHPROFILE hProfile, LCMSPRECACHETYPE Type);
+
+// Internal Precache API
+void    cdecl cmsPrecacheFree(LPLCMSPRECACHE Cache);
+
+
 // Shaper/Matrix handling
 
 #define MATSHAPER_HASMATRIX        0x0001        // Do-ops flags
@@ -1712,14 +1806,17 @@ typedef struct {
 
                L16PARAMS p16;       // Primary curve
                LPWORD L[3];
+               LPLCMSPRECACHE L_Precache;
                
                L16PARAMS p2_16;     // Secondary curve (used as input in smelted ones)
                LPWORD L2[3];
+               LPLCMSPRECACHE L2_Precache;
 
                } MATSHAPER, FAR* LPMATSHAPER;
 
 LPMATSHAPER cdecl cmsAllocMatShaper(LPMAT3 matrix, LPGAMMATABLE Shaper[], DWORD Behaviour);
-LPMATSHAPER cdecl cmsAllocMatShaper2(LPMAT3 matrix, LPGAMMATABLE In[], LPGAMMATABLE Out[], DWORD Behaviour);
+LPMATSHAPER cdecl cmsAllocMatShaper2(LPMAT3 matrix, LPGAMMATABLE In[], LPLCMSPRECACHE InPrecache,
+                                     LPGAMMATABLE Out[], LPLCMSPRECACHE OutPrecache, DWORD Behavior);
 
 void        cdecl cmsFreeMatShaper(LPMATSHAPER MatShaper);
 void        cdecl cmsEvalMatShaper(LPMATSHAPER MatShaper, WORD In[], WORD Out[]);
@@ -1752,6 +1849,7 @@ LPcmsNAMEDCOLORLIST  cdecl cmsAllocNamedColorList(int n);
 int                  cdecl cmsReadICCnamedColorList(cmsHTRANSFORM xform, cmsHPROFILE hProfile, icTagSignature sig);
 void                 cdecl cmsFreeNamedColorList(LPcmsNAMEDCOLORLIST List);
 LCMSBOOL             cdecl cmsAppendNamedColor(cmsHTRANSFORM xform, const char* Name, WORD PCS[3], WORD Colorant[MAXCHANNELS]);
+
 
 
 // I/O
@@ -1799,6 +1897,9 @@ typedef struct _lcms_iccprofile_struct {
                LCMSBOOL                SaveAs8Bits;
 
                struct tm               Created;
+
+               // Precache pointers
+               LPLCMSPRECACHE Precache[PRECACHE_TYPE_COUNT];
 
                // I/O handlers
 

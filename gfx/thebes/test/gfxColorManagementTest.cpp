@@ -298,6 +298,10 @@ RunTest(struct TestContext *ctx, struct TestParams *params,
     outProfile = cmsOpenProfileFromFile(filePath, "r");
     CHECK(outProfile != NULL, status, -1, "unable to open input profile!\n", done);
 
+    /* Precache. */
+    cmsPrecacheProfile(inProfile, CMS_PRECACHE_LI16W_FORWARD);
+    cmsPrecacheProfile(outProfile, CMS_PRECACHE_LI1616_REVERSE);
+
     /* Create the transform. */
     transform = cmsCreateTransform(inProfile, TYPE_RGB_8, 
                                    outProfile, TYPE_RGB_8, 
