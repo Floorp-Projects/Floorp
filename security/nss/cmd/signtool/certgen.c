@@ -94,7 +94,7 @@ GenerateCert(char *nickname, int keysize, char *token)
 	FatalError("Unable to open certificate database");
     }
 
-    if (PK11_FindCertFromNickname(nickname, NULL)) {
+    if (PK11_FindCertFromNickname(nickname, &pwdata)) {
 	PR_fprintf(errorFD,
 	    "ERROR: Certificate with nickname \"%s\" already exists in database. You\n"
 	    "must choose a different nickname.\n", nickname);
@@ -473,7 +473,7 @@ sign_cert(CERTCertificate *cert, SECKEYPrivateKey *privk)
     der2.data = NULL;
 
     dummy = SEC_ASN1EncodeItem
-        (cert->arena, &der2, cert, CERT_CertificateTemplate);
+        (cert->arena, &der2, cert, SEC_ASN1_GET(CERT_CertificateTemplate));
 
     if (rv != SECSuccess) {
 	PR_fprintf(errorFD, "%s: error encoding cert\n", PROGRAM_NAME);
@@ -514,22 +514,22 @@ install_cert(CERTCertDBHandle *db, SECItem *derCert, char *nickname)
     CERTCertificate * newcert;
     PK11SlotInfo * newSlot;
 
-    newcert = CERT_DecodeDERCertificate(derCert, PR_TRUE, NULL);
 
-    if (newcert == NULL) {
-	PR_fprintf(errorFD, "%s: can't create new certificate\n",
-	     PROGRAM_NAME);
-	errorCount++;
-	exit (ERRX);
-    }
-
-    newSlot = PK11_ImportCertForKey(newcert, nickname, NULL /*wincx*/);
+    newSlot = PK11_ImportDERCertForKey(derCert, nickname, &pwdata);
     if ( newSlot == NULL ) {
 	PR_fprintf(errorFD, "Unable to install certificate\n");
 	errorCount++;
 	exit(ERRX);
     }
+
+    newcert = PK11_FindCertFromDERCertItem(newSlot, derCert, &pwdata);
     PK11_FreeSlot(newSlot);
+    if (newcert == NULL) {
+	PR_fprintf(errorFD, "%s: can't find new certificate\n",
+	     PROGRAM_NAME);
+	errorCount++;
+	exit (ERRX);
+    }
 
     if (verbosity >= 0) {
 	PR_fprintf(outputFD, "certificate \"%s\" added to database\n",
@@ -558,7 +558,7 @@ SECKEYPrivateKey **privk, int keysize)
     }
     rsaParams.pe = 0x10001;
 
-    if (PK11_Authenticate( slot, PR_FALSE /*loadCerts*/, NULL /*wincx*/)
+    if (PK11_Authenticate( slot, PR_FALSE /*loadCerts*/, &pwdata)
          != SECSuccess) {
 	SECU_PrintError(progName, "failure authenticating to key database.\n");
 	exit(ERRX);
@@ -566,7 +566,7 @@ SECKEYPrivateKey **privk, int keysize)
 
     *privk = PK11_GenerateKeyPair (slot, CKM_RSA_PKCS_KEY_PAIR_GEN, &rsaParams,
          
-        pubk, PR_TRUE /*isPerm*/, PR_TRUE /*isSensitive*/, NULL /*wincx*/ );
+        pubk, PR_TRUE /*isPerm*/, PR_TRUE /*isSensitive*/, &pwdata);
 
     if (*privk != NULL && *pubk != NULL) {
 	if (verbosity >= 0) {

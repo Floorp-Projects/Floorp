@@ -42,7 +42,7 @@
 /*
  * secoid.h - public data structures and prototypes for ASN.1 OID functions
  *
- * $Id: secoid.h,v 1.9 2008/02/16 04:38:09 julien.pierre.boogz%sun.com Exp $
+ * $Id: secoid.h,v 1.10 2008/06/14 14:20:38 wtc%google.com Exp $
  */
 
 #include "plarena.h"
@@ -78,7 +78,7 @@ extern SECOidData *SECOID_FindOIDByMechanism(unsigned long mechanism);
 **	"tag" the tag number defining the algorithm 
 **	"params" if not NULL, the parameters to go with the algorithm
 */
-extern SECStatus SECOID_SetAlgorithmID(PRArenaPool *arena, SECAlgorithmID *aid,
+extern SECStatus SECOID_SetAlgorithmID(PLArenaPool *arena, SECAlgorithmID *aid,
 				   SECOidTag tag, SECItem *params);
 
 /*
@@ -87,7 +87,7 @@ extern SECStatus SECOID_SetAlgorithmID(PRArenaPool *arena, SECAlgorithmID *aid,
 ** before memory is allocated (use SECOID_DestroyAlgorithmID(dest, PR_FALSE)
 ** to do that).
 */
-extern SECStatus SECOID_CopyAlgorithmID(PRArenaPool *arena, SECAlgorithmID *dest,
+extern SECStatus SECOID_CopyAlgorithmID(PLArenaPool *arena, SECAlgorithmID *dest,
 				    SECAlgorithmID *src);
 
 /*

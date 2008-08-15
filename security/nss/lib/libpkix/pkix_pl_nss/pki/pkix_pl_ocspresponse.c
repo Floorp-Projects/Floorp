@@ -163,7 +163,6 @@ pkix_pl_OcspResponse_Destroy(
         if (ocspRsp->nssOCSPResponse != NULL) {
                 CERT_DestroyOCSPResponse(ocspRsp->nssOCSPResponse);
                 ocspRsp->nssOCSPResponse = NULL;
-                ocspRsp->signerCert = NULL;
         }
 
         if (ocspRsp->signerCert != NULL) {
@@ -722,7 +721,7 @@ pkix_pl_OcspResponse_CallCertVerify(
         void **pNBIOContext,
         void *plContext)
 {
-    SECStatus rv = SECSuccess;
+    SECStatus rv = SECFailure;
 
     PKIX_ENTER(OCSPRESPONSE, "pkix_pl_OcspResponse_CallCertVerify");
 
@@ -741,6 +740,7 @@ pkix_pl_OcspResponse_CallCertVerify(
                                   state, buildResult,
                                   NULL, lplContext),
             PKIX_CERTVERIFYKEYUSAGEFAILED);
+        rv = SECSuccess;
     } else {
         rv = CERT_VerifyCert(response->handle, response->signerCert, PKIX_TRUE,
                              certUsage, response->producedAt, NULL, NULL);
@@ -750,6 +750,9 @@ pkix_pl_OcspResponse_CallCertVerify(
     }
 
 cleanup:
+    if (rv != SECSuccess) {
+        PORT_SetError(SEC_ERROR_OCSP_INVALID_SIGNING_CERT);
+    }
 
     PKIX_RETURN(OCSPRESPONSE);
 }
@@ -914,18 +917,16 @@ pkix_pl_OcspResponse_VerifySignature(
             } else {
                 certUsage = certUsageStatusResponder;
             }
-            /* Set negative result before call. If fail to verify, will jump
-             * into cleanup with rv = SECFailure. Restore rv after the call. */
-            rv = SECFailure;
-            PKIX_CHECK(
+            PKIX_CHECK_ONLY_FATAL(
                 pkix_pl_OcspResponse_CallCertVerify(response, procParams,
                                                     certUsage, &state,
                                                     &buildResult, &nbio,
                                                     plContext),
                 PKIX_CERTVERIFYKEYUSAGEFAILED);
-
-            rv = SECSuccess;
-
+            if (pkixTempErrorReceived) {
+                rv = SECFailure;
+                goto cleanup;
+            }
             if (nbio != NULL) {
                 *pNBIOContext = nbio;
                 goto cleanup;
@@ -942,20 +943,25 @@ cleanup:
             *pPassed = PKIX_FALSE;
         }
         
-        if (signature->wasChecked) {
-            signature->status = rv;
-        }
-        
-        if (rv != SECSuccess) {
-            signature->failureReason = PORT_GetError();
-            if (response->signerCert != NULL) {
-                CERT_DestroyCertificate(response->signerCert);
-                response->signerCert = NULL;
+        if (signature) {
+            if (signature->wasChecked) {
+                signature->status = rv;
             }
-        } else {
-            /* Save signer's certificate in signature. */
-            signature->cert = CERT_DupCertificate(response->signerCert);
+            
+            if (rv != SECSuccess) {
+                signature->failureReason = PORT_GetError();
+                if (response->signerCert != NULL) {
+                    CERT_DestroyCertificate(response->signerCert);
+                    response->signerCert = NULL;
+                }
+            } else {
+                /* Save signer's certificate in signature. */
+                signature->cert = CERT_DupCertificate(response->signerCert);
+            }
         }
+
+	if (issuerCert)
+	    CERT_DestroyCertificate(issuerCert);
         
         PKIX_RETURN(OCSPRESPONSE);
 }
@@ -995,6 +1001,7 @@ pkix_pl_OcspResponse_GetStatusForCert(
 {
         SECStatus rv = SECFailure;
         SECStatus rvCache;
+        PRBool certIDWasConsumed = PR_FALSE;
 
         PKIX_ENTER(OCSPRESPONSE, "pkix_pl_OcspResponse_GetStatusForCert");
         PKIX_NULLCHECK_THREE(response, pPassed, pReturnCode);
@@ -1005,14 +1012,19 @@ pkix_pl_OcspResponse_GetStatusForCert(
          * set response->signerCert.
          */
         PKIX_NULLCHECK_TWO(response->signerCert, response->request);
+        PKIX_NULLCHECK_TWO(cid, cid->certID);
 
         rv = cert_ProcessOCSPResponse(response->handle,
                                       response->nssOCSPResponse,
                                       cid->certID,
                                       response->signerCert,
                                       PR_Now(),
-                                      &cid->certIDWasConsumed,
+                                      &certIDWasConsumed,
                                       &rvCache);
+        if (certIDWasConsumed) {
+                cid->certID = NULL;
+        }
+
 	if (rv == SECSuccess) {
                 *pPassed = PKIX_TRUE;
                 *pReturnCode = 0;

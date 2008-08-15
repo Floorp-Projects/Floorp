@@ -52,10 +52,6 @@ CSRCS = signtool.c		\
 
 PROGRAM =  signtool
 
-REQUIRES = dbm seccmd
-
-DEFINES += -DNSPR20
-
-USE_STATIC_LIBS = 1
+REQUIRES = seccmd
 
 EXTRA_LIBS = $(JAR_LIBS)
