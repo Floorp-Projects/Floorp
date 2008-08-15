@@ -2193,7 +2193,7 @@ function hideUpdateInfo()
 }
 
 function checkUpdatesAll() {
-  if (isOffline("offlineUpdateMsg"))
+  if (isOffline("offlineUpdateMsg2"))
     return;
 
   if (!isXPInstallEnabled())
@@ -2221,7 +2221,7 @@ function checkUpdatesAll() {
 }
 
 function installUpdatesAll() {
-  if (isOffline("offlineUpdateMsg"))
+  if (isOffline("offlineUpdateMsg2"))
     return;
 
   if (!isXPInstallEnabled())
@@ -2570,7 +2570,7 @@ var gExtensionsViewController = {
 
     cmd_checkUpdate: function (aSelectedItem)
     {
-      if (isOffline("offlineUpdateMsg"))
+      if (isOffline("offlineUpdateMsg2"))
         return;
 
       if (!isXPInstallEnabled())
@@ -2586,7 +2586,7 @@ var gExtensionsViewController = {
 
     cmd_installUpdate: function (aSelectedItem)
     {
-      if (isOffline("offlineUpdateMsg"))
+      if (isOffline("offlineUpdateMsg2"))
         return;
 
       if (!isXPInstallEnabled())
