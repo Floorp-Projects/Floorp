@@ -234,6 +234,7 @@ class TraceRecorder {
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
     nanojit::LIns* get(jsval* p);
+    nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset);
     void set(jsval* p, nanojit::LIns* l, bool initializing = false);
 
     bool checkType(jsval& v, uint8 type, bool& recompile);
