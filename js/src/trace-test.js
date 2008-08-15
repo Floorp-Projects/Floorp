@@ -758,6 +758,16 @@ function parsingNumbers() {
 parsingNumbers.expected = "ok";
 test(parsingNumbers);
 
+function matchInLoop() {
+    var k = "hi";
+    for (var i = 0; i < 10; i++) {
+        var result = k.match(/hi/) != null;
+    }
+    return result;
+}
+matchInLoop.expected = true;
+test(matchInLoop);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
