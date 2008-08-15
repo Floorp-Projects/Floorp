@@ -2,11 +2,11 @@
 <html>
 <head>
 <style>
-div::first-letter { font-size:200%; }
+body::first-letter { color:white; }
 </style>
 </head>
-<body style="white-space:pre-line;">
-<div>
-Hello</div>
+<!-- Check that a pre-line newline stops first-letter processing -->
+<body style="white-space:pre-line; color:black;">
+Hello
 </body>
 </html>
