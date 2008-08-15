@@ -1325,7 +1325,7 @@
               count -= this.mCounts[oldIndex];
               this.mCounts[oldIndex] += count;
               while (++oldIndex < this.mCounts.length)
-                row -= this.mCounts[i];
+                row -= this.mCounts[oldIndex];
             }
             this.mRowCount += count;
             
