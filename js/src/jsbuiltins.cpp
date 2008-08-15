@@ -267,10 +267,10 @@ js_String_p_concat_1int(JSContext* cx, JSString* str, jsint i)
 }
 
 JSObject* FASTCALL
-js_String_p_match(JSContext* cx, JSString* str, JSObject* regexp)
+js_String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp)
 {
-    jsval vp[4] = { JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
-    if (!js_str_match(cx, 1, vp))
+    jsval vp[3] = { JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
+    if (!js_StringMatchHelper(cx, 1, vp, pc))
         return (JSObject*) JSVAL_TO_BOOLEAN(JSVAL_VOID);
     JS_ASSERT(JSVAL_IS_NULL(vp[0]) ||
               (!JSVAL_IS_PRIMITIVE(vp[0]) && OBJ_IS_ARRAY(cx, JSVAL_TO_OBJECT(vp[0]))));
@@ -379,9 +379,11 @@ jsval FASTCALL
 js_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
 {
     jsval v;
-    if (!JSSTRING_IS_FLAT(idstr) && !js_UndependString(cx, idstr))
+    jsid id;
+
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
         return JSVAL_ERROR_COOKIE;
-    if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(STRING_TO_JSVAL(idstr)), &v))
+    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
         return JSVAL_ERROR_COOKIE;
     return v;
 }
@@ -389,9 +391,10 @@ js_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
 bool FASTCALL
 js_Any_setelem(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
 {
-    if (!JSSTRING_IS_FLAT(idstr) && !js_UndependString(cx, idstr))
+    jsid id;
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
         return false;
-    return OBJ_SET_PROPERTY(cx, obj, ATOM_TO_JSID(STRING_TO_JSVAL(idstr)), &v);
+    return OBJ_SET_PROPERTY(cx, obj, id, &v);
 }
 
 JSObject* FASTCALL
