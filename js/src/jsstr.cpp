@@ -1131,6 +1131,7 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
  * Perl-inspired string functions.
  */
 typedef struct GlobData {
+    jsbytecode  *pc;            /* in: program counter resulting in us matching */
     uintN       flags;          /* inout: mode and flag bits, see below */
     uintN       optarg;         /* in: index of optional flags argument */
     JSString    *str;           /* out: 'this' parameter object as string */
@@ -1234,20 +1235,14 @@ match_or_replace(JSContext *cx,
              * a scripted function.  If the caller cares only about testing null
              * vs. non-null return value, optimize away the array object that
              * would normally be returned in *vp.
+             *
+             * Assume a full array result is required, then prove otherwise.
              */
-            JSStackFrame *fp;
-
-            /* Skip Function.prototype.call and .apply frames. */
-            for (fp = cx->fp; fp && !fp->regs; fp = fp->down)
-                JS_ASSERT(!fp->script);
-
-            /* Assume a full array result is required, then prove otherwise. */
             test = JS_FALSE;
-            if (fp) {
-                JS_ASSERT(*fp->regs->pc == JSOP_CALL ||
-                          *fp->regs->pc == JSOP_NEW);
-                JS_ASSERT(js_CodeSpec[*fp->regs->pc].length == 3);
-                switch (fp->regs->pc[3]) {
+            if (data->pc) {
+                JS_ASSERT(*data->pc == JSOP_CALL || *data->pc == JSOP_NEW);
+                JS_ASSERT(js_CodeSpec[*data->pc].length == 3);
+                switch (data->pc[3]) {
                   case JSOP_POP:
                   case JSOP_IFEQ:
                   case JSOP_IFNE:
@@ -1307,13 +1302,14 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
 }
 
 JSBool
-js_str_match(JSContext *cx, uintN argc, jsval *vp)
+js_StringMatchHelper(JSContext *cx, uintN argc, jsval *vp, jsbytecode *pc)
 {
     JSTempValueRooter tvr;
     MatchData mdata;
     JSBool ok;
 
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
+    mdata.base.pc = pc;
     mdata.base.flags = MODE_MATCH;
     mdata.base.optarg = 1;
     mdata.arrayval = &tvr.u.value;
@@ -1322,6 +1318,16 @@ js_str_match(JSContext *cx, uintN argc, jsval *vp)
         *vp = *mdata.arrayval;
     JS_POP_TEMP_ROOT(cx, &tvr);
     return ok;
+}
+
+JSBool
+js_str_match(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSStackFrame *fp;
+
+    for (fp = cx->fp; fp && !fp->regs; fp = fp->down)
+        JS_ASSERT(!fp->script);
+    return js_StringMatchHelper(cx, argc, vp, fp ? fp->regs->pc : NULL);
 }
 
 static JSBool

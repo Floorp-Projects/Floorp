@@ -614,6 +614,9 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval);
 
 extern JSBool
+js_StringMatchHelper(JSContext *cx, uintN argc, jsval *vp, jsbytecode *pc);
+
+extern JSBool
 js_str_match(JSContext *cx, uintN argc, jsval *vp);
 
 extern JSBool
