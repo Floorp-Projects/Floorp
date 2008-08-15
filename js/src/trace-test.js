@@ -781,6 +781,16 @@ function deep2() {
 deep2.expected = "ok";
 test(deep2)
 
+var merge_type_maps_x = 0, merge_type_maps_y = 0;
+function merge_type_maps() {
+    for (merge_type_maps_x = 0; merge_type_maps_x < 50; ++merge_type_maps_x) 
+        if ((merge_type_maps_x & 1) == 1)
+	    ++merge_type_maps_y;
+    return [merge_type_maps_x,merge_type_maps_y].join(",");
+}
+merge_type_maps.expected = "50,25";
+test(merge_type_maps)
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
