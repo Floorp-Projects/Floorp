@@ -1321,12 +1321,6 @@ have_fun:
         }
         frame.slots = sp - fun->u.i.nvars;
         ok = js_Interpret(cx);
-#ifdef JS_TRACER
-        if (JS_TRACE_MONITOR(cx).recorder) {
-            js_AbortRecording(cx, frame.down->regs->pc,
-                              "recording out of js_Invoke interpreter activation");
-        }
-#endif
     } else {
         /* fun might be onerror trying to report a syntax error in itself. */
         frame.scopeChain = NULL;
@@ -1570,14 +1564,6 @@ out2:
     }
 
 out:
-
-#ifdef JS_TRACER
-    if (JS_TRACE_MONITOR(cx).recorder) {
-        js_AbortRecording(cx, NULL,
-                          "recording out of js_Execute interpreter activation");
-    }
-#endif
-
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
         jsdtrace_execute_done(script);
@@ -6978,6 +6964,10 @@ js_Interpret(JSContext *cx)
      */
     JS_ASSERT(inlineCallCount == 0);
     JS_ASSERT(fp->regs == &regs);
+#ifdef JS_TRACER
+    if (JS_TRACE_MONITOR(cx).recorder)
+        js_AbortRecording(cx, regs.pc, "recording out of js_Interpret");
+#endif
     if (JS_UNLIKELY(fp->flags & JSFRAME_YIELDING)) {
         JSGenerator *gen;
 
