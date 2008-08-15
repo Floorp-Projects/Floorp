@@ -471,10 +471,10 @@ var BrowserUI = {
         let mode = PANELMODE_NONE;
 
         // Open the sidebar controls if we get a right side overpan
-        if (aEvent.detail == 2 && this.mode == PANELMODE_NONE)
+        if (aEvent.detail == 2 && (this.mode == PANELMODE_NONE || this.mode == PANELMODE_URLVIEW))
           mode = PANELMODE_SIDEBAR;
         // Close the sidebar controls if we get a left side overpan
-        else if (aEvent.detail == 1 && this.mode == PANELMODE_NONE)
+        else if (aEvent.detail == 1 && (this.mode == PANELMODE_NONE || this.mode == PANELMODE_URLVIEW))
           mode = PANELMODE_TABLIST;
 
         this.show(mode);

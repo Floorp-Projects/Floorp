@@ -940,8 +940,14 @@
           },
 
           mouseup: function seh_mouseup(aEvent) {
+            var skipKinetic = false;
             if (aEvent.button == 0 && this.deckbrowser.dragData.dragging) {
-              this.deckbrowser.dragData.dragging = false;
+              if (this.deckbrowser._fireOverpan) {
+                this.deckbrowser._endPan();
+                skipKinetic = true;
+              } else {
+                this.deckbrowser.dragData.dragging = false;
+              }
             } else if (aEvent.originalTarget == this.deckbrowser._canvas) {
               // Mouseup on canvas that isn't releasing from a drag
               // cancel scrollStart timer
@@ -965,8 +971,9 @@
 
               this._lastMouseUp = aEvent;
             }
-            
-            this.deckbrowser._startKinetic();
+
+            if (!skipKinetic)
+              this.deckbrowser._startKinetic();
             for (var i = 0; i < this.deckbrowser.PAN_EVENTS_TO_TRACK; i++) {
               this.deckbrowser._panEventTracker[i] = null;
             }
