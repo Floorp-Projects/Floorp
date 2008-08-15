@@ -191,7 +191,7 @@ let Utils = {
     if ("Array" == thing.constructor.name) {
       ret = [];
       for (let i = 0; i < thing.length; i++)
-        ret.push(Utils.deepCopy(thing[i]), noSort);
+        ret.push(Utils.deepCopy(thing[i], noSort));
 
     } else {
       ret = {};
