@@ -559,6 +559,10 @@ gfxPlatform::GetCMSOutputProfile()
         if (!gCMSOutputProfile) {
             gCMSOutputProfile = GetCMSsRGBProfile();
         }
+
+        /* Precache the LUT16 Interpolations for the output profile. See 
+           bug 444661 for details. */
+        cmsPrecacheProfile(gCMSOutputProfile, CMS_PRECACHE_LI1616_REVERSE);
     }
 
     return gCMSOutputProfile;
@@ -567,8 +571,15 @@ gfxPlatform::GetCMSOutputProfile()
 cmsHPROFILE
 gfxPlatform::GetCMSsRGBProfile()
 {
-    if (!gCMSsRGBProfile)
+    if (!gCMSsRGBProfile) {
+
+        /* Create the profile using lcms. */
         gCMSsRGBProfile = cmsCreate_sRGBProfile();
+
+        /* Precache the Fixed-point Interpolations for sRGB as an input
+           profile. See bug 444661 for details. */
+        cmsPrecacheProfile(gCMSsRGBProfile, CMS_PRECACHE_LI16W_FORWARD);
+    }
     return gCMSsRGBProfile;
 }
 
