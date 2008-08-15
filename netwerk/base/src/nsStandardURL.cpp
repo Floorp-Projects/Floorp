@@ -114,13 +114,14 @@ EncodeString(nsIUnicodeEncoder *encoder, const nsAFlatString &str, nsACString &r
         goto end;
     }
     p[maxlen] = 0;
-    result = p;
+    result.Assign(p);
 
-    rv = encoder->Finish(p, &len);
+    len = sizeof(buf) - 1;
+    rv = encoder->Finish(buf, &len);
     if (NS_FAILED(rv))
         goto end;
-    p[len] = 0;
-    result += p;
+    buf[len] = 0;
+    result.Append(buf);
 
 end:
     encoder->Reset();
