@@ -179,7 +179,6 @@ public:
 class TreeInfo MMGC_SUBCLASS_DECL {
     nanojit::Fragment*      fragment;
 public:
-    unsigned                entryNativeStackSlots;
     unsigned                maxNativeStackSlots;
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
@@ -221,8 +220,8 @@ class TraceRecorder {
     nanojit::SideExit       exit;
 
     bool isGlobal(jsval* p) const;
-    ptrdiff_t nativeStackOffset(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
+    ptrdiff_t nativeStackOffset(jsval* p) const;
     void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, uint8& t, 
                 const char *prefix, uintN index, JSStackFrame *fp);
     void import(TreeInfo* treeInfo, nanojit::LIns* sp, unsigned ngslots, unsigned callDepth, 
