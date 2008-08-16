@@ -83,41 +83,6 @@
   padding: 5px;
 }
 
-/* Search Bar */
-#searchbar {
-  margin: 6px -4px 0px 2px;
-}
-
-.textbox-input-searchimage {
-  margin: 2px 0;
-  -moz-margin-end: 2px;
-  list-style-image: url("chrome://global/skin/icons/Search-glass.png");
-  cursor: default;
-}
-
-.textbox-input-searchimage[chromedir="rtl"] {
-  list-style-image: url("chrome://global/skin/icons/Search-glass-rtl.png");
-}
-
-.textbox-input-closebutton {
-  -moz-appearance: none;
-  margin: 1px 2px 1px 1px;
-  min-width: 0;
-  background-color: transparent;
-  border: none;
-  padding: 0 !important;
-  list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
-  width: 16px;
-  height: 16px;
-  cursor: default;
-}
-
-.textbox-input-closebutton > .button-box {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
 .small, .small[disabled="true"] {
   font-size: x-small;
   min-width: 0px;
@@ -130,14 +95,6 @@
 .small .button-box {
   padding: 0px;
   border: 0px;
-}
-
-#searchFilter {
-  padding: 0px;
-}
-
-#searchFilter .textbox-input-box {
-  padding: 2px 2px 3px 4px;
 }
 
 %ifdef PLACES_QUERY_BUILDER

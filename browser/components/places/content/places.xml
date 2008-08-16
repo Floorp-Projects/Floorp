@@ -11,62 +11,6 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <!-- XXXben - replace this upon checkin by allowing generic textboxes to show
-                arbitrary content before the html:input itself using a 
-                <children/> -->
-  <binding id="textbox-timed-arbitrary"
-           extends="chrome://global/content/bindings/textbox.xml#timed-textbox">
-    <resources>
-      <stylesheet src="chrome://browser/skin/places/places.css"/>
-    </resources>
-    <content>
-      <children/>
-      <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context">
-        <html:input class="textbox-input" flex="1" anonid="input"
-                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
-      </xul:hbox>
-      <xul:hbox>
-        <xul:button class="textbox-input-closebutton"/>
-        <xul:image class="textbox-input-searchimage"
-                   chromedir="&locale.dir;"/>
-      </xul:hbox>
-    </content>
-    <implementation>
-      <method name="reset">
-        <body><![CDATA[ 
-          this.removeAttribute("filtered");
-        ]]></body>
-      </method>
-      <method name="_resetInternal">
-        <body><![CDATA[ 
-          this.value = "";
-          this.reset();
-
-          var event = document.createEvent("Events");
-          event.initEvent("reset", true, true);
-
-          var cancel = !this.dispatchEvent(event);
-          var handler = this.getAttribute("onreset");
-          if (handler) {
-            var handlerFunction = new Function("event", handler);
-            handlerFunction(event);
-          }
-        ]]></body>
-      </method>
-    </implementation>
-    <handlers>
-      <handler event="click"><![CDATA[ 
-        if (event.originalTarget.className == "textbox-input-closebutton") {
-          this.inputField.focus();
-          this._resetInternal();
-        }
-      ]]></handler>
-      <handler event="keypress" keycode="VK_ESCAPE"><![CDATA[ 
-        this._resetInternal();
-      ]]></handler>
-    </handlers>
-  </binding>
-  
   <binding id="command-button" extends="chrome://global/content/bindings/button.xml#button">
     <implementation>
       <method name="updateActiveView">
