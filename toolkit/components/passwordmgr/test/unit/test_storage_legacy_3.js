@@ -485,22 +485,64 @@ tryAddUser(storage, nullUser, /login values can't contain nulls/);
 nullUser.passwordField = "passnull";
 
 
-// check username and password, which are OK with embedded nulls.
+// check username with null
 nullUser.username = "user\0name";
-nullUser.password = "pass\0word";
-tryAddUser(storage, nullUser, null);
+tryAddUser(storage, nullUser, /login values can't contain nulls/);
+nullUser.username = "username";
 
-LoginTest.checkStorageData(storage, [], [nullUser]);
+// check password with null
+nullUser.password = "pass\0word";
+tryAddUser(storage, nullUser, /login values can't contain nulls/);
+nullUser.password = "password";
+
+
+// Final sanity check, to make sure we didn't store anything unexpected.
+LoginTest.checkStorageData(storage, [], []);
 var numLines = LoginTest.countLinesInFile(OUTDIR, "output-394610-4.txt");
-do_check_eq(numLines, 10);
+do_check_eq(numLines, 2);
 
 testdesc = "[flush and reload for verification]"
 LoginTest.initStorage(storage, OUTDIR, "output-394610-4.txt");
-LoginTest.checkStorageData(storage, [], [nullUser]);
+LoginTest.checkStorageData(storage, [], []);
 
-nullUser.username = "username";
-nullUser.password = "password";
 
+/*
+ * ---------------------- Bug 449701 ----------------------
+ * Ensure changes to login objects given to / obtained from
+ * the storage module don't affect the internal storage.
+ */
+
+/* ========== 14 ========== */
+testnum++;
+testdesc = "ensure internal login objects not shared with callers."
+
+LoginTest.initStorage(storage, INDIR, "signons-empty.txt",
+                               OUTDIR, "output-394610-5.txt");
+LoginTest.checkStorageData(storage, [], []);
+
+// dummyuser1 == dummyuser2
+dummyuser1.init("http://dummyhost.mozilla.org", "", null,
+    "testuser1", "testpass1", "put_user_here", "put_pw_here");
+dummyuser2.init("http://dummyhost.mozilla.org", "", null,
+    "testuser1", "testpass1", "put_user_here", "put_pw_here");
+
+
+// Add a login, modify it, make sure orginal values are still stored.
+storage.addLogin(dummyuser1);
+LoginTest.checkStorageData(storage, [], [dummyuser2]);
+dummyuser1.usernameField = "ohnoes";
+LoginTest.checkStorageData(storage, [], [dummyuser2]);
+
+// Get a stored login, modify it, make sure the stored login wasn't changed.
+var logins = storage.getAllLogins({});
+do_check_eq(logins.length, 1);
+var obtainedLogin1 = logins[0];
+obtainedLogin1.usernameField = "ohnoes";
+
+logins = storage.getAllLogins({});
+var obtainedLogin2 = logins[0];
+
+do_check_neq(obtainedLogin1.usernameField, obtainedLogin2.usernameField);
 
 
 /* ========== end ========== */

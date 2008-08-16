@@ -205,7 +205,6 @@ CERT_CreateAVAFromRaw(PRArenaPool *pool, const SECItem * OID,
 {
     CERTAVA *ava;
     int rv;
-    unsigned maxLen;
 
     ava = PORT_ArenaZNew(pool, CERTAVA);
     if (ava) {

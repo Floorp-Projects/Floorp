@@ -54,6 +54,10 @@ interface nsIAutoCompleteStatus {
     // the failure in question
     //
     const long failureItems     = 3;    
+
+    // the following status values indicate that the async search hasn't ended
+    const long noMatchYet       = 4;
+    const long matchSoFar       = 5;
 };
 
 [scriptable, uuid(4BA0A181-097C-11d4-A449-CD1A8B47ED7C)]

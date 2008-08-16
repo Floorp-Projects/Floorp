@@ -163,7 +163,7 @@ Usage(char *progName)
             "[-t threads]\n[-n none [-k keylength] [ [-g] -x exponent] |\n"
             " -n token:nickname [-d certdir] [-w password] |\n"
             " -h token [-d certdir] [-w password] [-g] [-k keylength] "
-            "[-x exponent] ]\n",
+            "[-x exponent] [-f pwfile]\n",
 	    progName);
     fprintf(stderr, "%-20s Cert database directory (default is ~/.netscape)\n",
 	    "-d certdir");
@@ -325,7 +325,6 @@ main(int argc, char **argv)
     char *		  secDir 	= NULL;
     char *		  nickname 	= NULL;
     char *                slotname      = NULL;
-    char *                password      = NULL;
     long                  keybits     = 0;
     RSAOp                 fn;
     void *                rsaKey        = NULL;
@@ -365,7 +364,7 @@ main(int argc, char **argv)
 	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
-    optstate = PL_CreateOptState(argc, argv, "d:i:sen:p:t:h:k:w:gx:");
+    optstate = PL_CreateOptState(argc, argv, "d:ef:gh:i:k:n:p:st:w:x:");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	case '?':
@@ -408,10 +407,13 @@ main(int argc, char **argv)
 	    keybits = INT_ARG(optstate->value, DEFAULT_KEY_BITS);
 	    break;
 	case 'w':
-	    password = PORT_Strdup(optstate->value);
-	    pwData.data = password;
+	    pwData.data = PORT_Strdup(optstate->value);;
 	    pwData.source = PW_PLAINTEXT;
 	    break;
+        case 'f':
+            pwData.data = PORT_Strdup(optstate->value);
+            pwData.source = PW_FROMFILE;
+            break;
 	case 'x':
 	    /*  -x public exponent (for RSA keygen)  */
 	    publicExponent = INT_ARG(optstate->value, DEFAULT_EXPONENT);

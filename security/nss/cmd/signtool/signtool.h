@@ -52,7 +52,6 @@
 #include "secpkcs7.h"
 #include "pk11func.h"
 #include "secmod.h"
-#include "secmodi.h"
 #include "plhash.h"
 #include "nss.h"
 
@@ -142,5 +141,6 @@ extern PRFileDesc *outputFD, *errorFD;
 extern int verbosity;
 extern int errorCount;
 extern int warningCount;
+extern secuPWData pwdata;
 
 #endif /* SIGNTOOL_H */

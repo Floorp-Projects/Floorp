@@ -82,11 +82,6 @@ ifdef ACCESSIBILITY
 REQUIRES	+= accessibility
 endif
 
-# Sun's Complex Text Layout support
-ifdef SUNCTL
-REQUIRES	+= ctl
-endif
-
 EXPORTS		= \
 		nsFrameList.h \
 		nsHTMLParts.h \

@@ -263,6 +263,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData ( PRInt32 aWhichClipboard )
   IDataObject * dataObj;
   if ( NS_SUCCEEDED(CreateNativeDataObject(mTransferable, &dataObj, NULL)) ) { // this add refs dataObj
     ::OleSetClipboard(dataObj);
+    ::OleFlushClipboard();
     dataObj->Release();
   } else {
     // Clear the native clipboard

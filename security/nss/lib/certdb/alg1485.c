@@ -44,21 +44,22 @@
 #include "secitem.h"
 #include "secerr.h"
 
-struct NameToKind {
+typedef struct NameToKindStr {
     const char * name;
     unsigned int maxLen; /* max bytes in UTF8 encoded string value */
     SECOidTag    kind;
     int		 valueType;
-};
+} NameToKind;
 
 /* local type for directory string--could be printable_string or utf8 */
 #define SEC_ASN1_DS SEC_ASN1_HIGH_TAG_NUMBER
 
 /* Add new entries to this table, and maybe to function CERT_ParseRFC1485AVA */
-static const struct NameToKind name2kinds[] = {
+static const NameToKind name2kinds[] = {
 /* IANA registered type names
-   (See: http://www.iana.org/assignments/ldap-parameters) */
-    /* RFC 3280,4630 MUST SUPPORT */
+ * (See: http://www.iana.org/assignments/ldap-parameters) 
+ */
+/* RFC 3280, 4630 MUST SUPPORT */
     { "CN",             64, SEC_OID_AVA_COMMON_NAME,    SEC_ASN1_DS},
     { "ST",            128, SEC_OID_AVA_STATE_OR_PROVINCE,
 							SEC_ASN1_DS},
@@ -69,7 +70,8 @@ static const struct NameToKind name2kinds[] = {
     { "dnQualifier", 32767, SEC_OID_AVA_DN_QUALIFIER, SEC_ASN1_PRINTABLE_STRING},
     { "C",               2, SEC_OID_AVA_COUNTRY_NAME, SEC_ASN1_PRINTABLE_STRING},
     { "serialNumber",   64, SEC_OID_AVA_SERIAL_NUMBER,SEC_ASN1_PRINTABLE_STRING},
-    /* RFC 3280,4630 SHOULD SUPPORT */
+
+/* RFC 3280, 4630 SHOULD SUPPORT */
     { "L",             128, SEC_OID_AVA_LOCALITY,       SEC_ASN1_DS},
     { "title",          64, SEC_OID_AVA_TITLE,          SEC_ASN1_DS},
     { "SN",             64, SEC_OID_AVA_SURNAME,        SEC_ASN1_DS},
@@ -78,24 +80,34 @@ static const struct NameToKind name2kinds[] = {
     { "generationQualifier",
                         64, SEC_OID_AVA_GENERATION_QUALIFIER,
                                                         SEC_ASN1_DS},
-    /* RFC 3280,4630 MAY SUPPORT */
+/* RFC 3280, 4630 MAY SUPPORT */
     { "DC",            128, SEC_OID_AVA_DC,             SEC_ASN1_IA5_STRING},
-    /* values from draft-ietf-ldapbis-user-schema-05 (not in RFC 3280) */
+    { "MAIL",          256, SEC_OID_RFC1274_MAIL,       SEC_ASN1_IA5_STRING},
+    { "UID",           256, SEC_OID_RFC1274_UID,        SEC_ASN1_DS},
+
+/* ------------------ "strict" boundary ---------------------------------
+ * In strict mode, cert_NameToAscii does not encode any of the attributes
+ * below this line. The first SECOidTag below this line must be used to
+ * conditionally define the "endKind" in function AppendAVA() below.
+ * Most new attribute names should be added below this line.
+ * Maybe this line should be up higher?  Say, after the 3280 MUSTs and 
+ * before the 3280 SHOULDs?
+ */
+
+/* values from draft-ietf-ldapbis-user-schema-05 (not in RFC 3280) */
     { "postalAddress", 128, SEC_OID_AVA_POSTAL_ADDRESS, SEC_ASN1_DS},
     { "postalCode",     40, SEC_OID_AVA_POSTAL_CODE,    SEC_ASN1_DS},
     { "postOfficeBox",  40, SEC_OID_AVA_POST_OFFICE_BOX,SEC_ASN1_DS},
     { "houseIdentifier",64, SEC_OID_AVA_HOUSE_IDENTIFIER,SEC_ASN1_DS},
-    /* legacy keywords */
-    { "MAIL",          256, SEC_OID_RFC1274_MAIL,       SEC_ASN1_IA5_STRING},
-    { "UID",           256, SEC_OID_RFC1274_UID,        SEC_ASN1_DS},
-    
 /* end of IANA registered type names */
-    { "E",             128, SEC_OID_PKCS9_EMAIL_ADDRESS,SEC_ASN1_DS},
 
+/* legacy keywords */
+    { "E",             128, SEC_OID_PKCS9_EMAIL_ADDRESS,SEC_ASN1_DS},
 
 #if 0 /* removed.  Not yet in any IETF draft or RFC. */
     { "pseudonym",      64, SEC_OID_AVA_PSEUDONYM,      SEC_ASN1_DS},
 #endif
+
     { 0,           256, SEC_OID_UNKNOWN                      , 0},
 };
 
@@ -131,7 +143,7 @@ static const struct NameToKind name2kinds[] = {
 int
 cert_AVAOidTagToMaxLen(SECOidTag tag)
 {
-    const struct NameToKind *n2k = name2kinds;
+    const NameToKind *n2k = name2kinds;
 
     while (n2k->kind != tag && n2k->kind != SEC_OID_UNKNOWN) {
 	++n2k;
@@ -355,7 +367,7 @@ CERT_ParseRFC1485AVA(PRArenaPool *arena, char **pbp, char *endptr,
 		    PRBool singleAVA) 
 {
     CERTAVA *a;
-    const struct NameToKind *n2k;
+    const NameToKind *n2k;
     char *bp;
     int       vt = -1;
     int       valLen;
@@ -555,14 +567,13 @@ AppendStr(stringBuf *bufp, char *str)
     return SECSuccess;
 }
 
-SECStatus
-CERT_RFC1485_EscapeAndQuote(char *dst, int dstlen, char *src, int srclen)
+static int
+cert_RFC1485_GetRequiredLen(const char *src, int srclen, PRBool *pNeedsQuoting)
 {
     int i, reqLen=0;
-    char *d = dst;
     PRBool needsQuoting = PR_FALSE;
     char lastC = 0;
-    
+
     /* need to make an initial pass to determine if quoting is needed */
     for (i = 0; i < srclen; i++) {
 	char c = src[i];
@@ -583,17 +594,29 @@ CERT_RFC1485_EscapeAndQuote(char *dst, int dstlen, char *src, int srclen)
 	(OPTIONAL_SPACE(src[srclen-1]) || OPTIONAL_SPACE(src[0]))) {
 	needsQuoting = PR_TRUE;
     }
-    
-    if (needsQuoting) reqLen += 2;
+
+    if (needsQuoting) 
+    	reqLen += 2;
+    if (pNeedsQuoting)
+    	*pNeedsQuoting = needsQuoting;
+
+    return reqLen;
+}
+
+SECStatus
+CERT_RFC1485_EscapeAndQuote(char *dst, int dstlen, char *src, int srclen)
+{
+    int i, reqLen=0;
+    char *d = dst;
+    PRBool needsQuoting = PR_FALSE;
 
     /* space for terminal null */
-    reqLen++;
-    
+    reqLen = cert_RFC1485_GetRequiredLen(src, srclen, &needsQuoting) + 1;
     if (reqLen > dstlen) {
 	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 	return SECFailure;
     }
-    
+
     d = dst;
     if (needsQuoting) *d++ = C_DOUBLE_QUOTE;
     for (i = 0; i < srclen; i++) {
@@ -722,98 +745,199 @@ get_hex_string(SECItem *data)
     return rv;
 }
 
+/* For compliance with RFC 2253, RFC 3280 and RFC 4630, we choose to 
+ * use the NAME=STRING form, rather than the OID.N.N=#hexXXXX form, 
+ * when both of these conditions are met:
+ *  1) The attribute name OID (kind) has a known name string that is 
+ *     defined in one of those RFCs, or in RFCs that they cite, AND
+ *  2) The attribute's value encoding is RFC compliant for the kind
+ *     (e.g., the value's encoding tag is correct for the kind, and
+ *     the value's length is in the range allowed for the kind, and
+ *     the value's contents are appropriate for the encoding tag).
+ *  Otherwise, we use the OID.N.N=#hexXXXX form.
+ *
+ *  If the caller prefers maximum human readability to RFC compliance,
+ *  then 
+ *  - We print the kind in NAME= string form if we know the name
+ *    string for the attribute type OID, regardless of whether the 
+ *    value is correctly encoded or not. else we use the OID.N.N= form.
+ *  - We use the non-hex STRING form for the attribute value if the
+ *    value can be represented in such a form.  Otherwise, we use 
+ *    the hex string form.
+ *  This implies that, for maximum human readability, in addition to 
+ *  the two forms allowed by the RFC, we allow two other forms of output:
+ *  - the OID.N.N=STRING form, and 
+ *  - the NAME=#hexXXXX form
+ *  When the caller prefers maximum human readability, we do not allow
+ *  the value of any attribute to exceed the length allowed by the RFC.
+ *  If the attribute value exceeds the allowed length, we truncate it to 
+ *  the allowed length and append "...".
+ *  Also in this case, we arbitrarily impose a limit on the length of the 
+ *  entire AVA encoding, regardless of the form, of 384 bytes per AVA.
+ *  This limit includes the trailing NULL character.  If the encoded 
+ *  AVA length exceeds that limit, this function reports failure to encode
+ *  the AVA.
+ *
+ *  An ASCII representation of an AVA is said to be "invertible" if 
+ *  conversion back to DER reproduces the original DER encoding exactly.
+ *  The RFC 2253 rules do not ensure that all ASCII AVAs derived according
+ *  to its rules are invertible. That is because the RFCs allow some 
+ *  attribute values to be encoded in any of a number of encodings,
+ *  and the encoding type information is lost in the non-hex STRING form.
+ *  This is particularly true of attributes of type DirectoryString.
+ *  The encoding type information is always preserved in the hex string 
+ *  form, because the hex includes the entire DER encoding of the value.
+ *
+ *  So, when the caller perfers maximum invertibility, we apply the 
+ *  RFC compliance rules stated above, and add a third required 
+ *  condition on the use of the NAME=STRING form.  
+ *   3) The attribute's kind is not is allowed to be encoded in any of 
+ *      several different encodings, such as DirectoryStrings.
+ *
+ * The chief difference between CERT_N2A_STRICT and CERT_N2A_INVERTIBLE
+ * is that the latter forces DirectoryStrings to be hex encoded.
+ *
+ * As a simplification, we assume the value is correctly encoded for 
+ * its encoding type.  That is, we do not test that all the characters
+ * in a string encoded type are allowed by that type.  We assume it.
+ */
 static SECStatus
-AppendAVA(stringBuf *bufp, CERTAVA *ava)
+AppendAVA(stringBuf *bufp, CERTAVA *ava, CertStrictnessLevel strict)
 {
-    const struct NameToKind *n2k = name2kinds;
-    const char *tagName;
-    unsigned len, maxLen;
-    int tag;
-    SECStatus rv;
-    SECItem *avaValue = NULL;
-    char *unknownTag = NULL;
-    PRBool hexValue = PR_FALSE;
-    char tmpBuf[384];
+    const NameToKind *pn2k   = name2kinds;
+    SECItem     *avaValue    = NULL;
+    char        *unknownTag  = NULL;
+    char        *encodedAVA  = NULL;
+    PRBool       useHex      = PR_FALSE;  /* use =#hexXXXX form */
+    SECOidTag    endKind;
+    SECStatus    rv;
+    unsigned int len;
+    int          nameLen, valueLen;
+    NameToKind   n2k         = { NULL, 32767, SEC_OID_UNKNOWN, SEC_ASN1_DS };
+    char         tmpBuf[384];
 
+#define tagName  n2k.name    /* non-NULL means use NAME= form */
+#define maxBytes n2k.maxLen
+#define tag      n2k.kind
+#define vt       n2k.valueType
+
+    /* READABLE mode recognizes more names from the name2kinds table
+     * than do STRICT or INVERTIBLE modes.  This assignment chooses the
+     * point in the table where the attribute type name scanning stops.
+     */
+    endKind = (strict == CERT_N2A_READABLE) ? SEC_OID_UNKNOWN
+                                            : SEC_OID_AVA_POSTAL_ADDRESS;
     tag = CERT_GetAVATag(ava);
-    while (n2k->kind != tag && n2k->kind != SEC_OID_UNKNOWN) {
-        ++n2k;
+    while (pn2k->kind != tag && pn2k->kind != endKind) {
+        ++pn2k;
     }
-    if (n2k->kind != SEC_OID_UNKNOWN) {
-        tagName = n2k->name;
-    } else {
+
+    if (pn2k->kind != endKind ) {
+        n2k = *pn2k;
+    } else if (strict != CERT_N2A_READABLE) {
+        useHex = PR_TRUE;
+    }
+    /* For invertable form, force Directory Strings to use hex form. */
+    if (strict == CERT_N2A_INVERTIBLE && vt == SEC_ASN1_DS) {
+	tagName = NULL;      /* must use OID.N form */
+	useHex = PR_TRUE;    /* must use hex string */
+    }
+    if (!useHex) {
+	avaValue = CERT_DecodeAVAValue(&ava->value);
+	if (!avaValue) {
+	    useHex = PR_TRUE;
+	    if (strict != CERT_N2A_READABLE) {
+		tagName = NULL;  /* must use OID.N form */
+	    }
+	}
+    }
+    if (!tagName) {
 	/* handle unknown attribute types per RFC 2253 */
 	tagName = unknownTag = CERT_GetOidString(&ava->type);
-	if (!tagName)
+	if (!tagName) {
+	    if (avaValue)
+		SECITEM_FreeItem(avaValue, PR_TRUE);
 	    return SECFailure;
+	}
     }
-    maxLen = n2k->maxLen;
-
-#ifdef NSS_STRICT_RFC_2253_VALUES_ONLY
-    if (!unknownTag)
-#endif
-    avaValue = CERT_DecodeAVAValue(&ava->value);
-    if(!avaValue) {
-	/* the attribute value is not recognized, get the hex value */
+    if (useHex) {
 	avaValue = get_hex_string(&ava->value);
-	if(!avaValue) {
-	    if (unknownTag) PR_smprintf_free(unknownTag);
+	if (!avaValue) {
+	    if (unknownTag) 
+	    	PR_smprintf_free(unknownTag);
 	    return SECFailure;
 	}
-	hexValue = PR_TRUE;
     }
 
-    /* Check value length */
-    if (avaValue->len > maxLen + 3) {  /* must be room for "..." */
-	/* avaValue is a UTF8 string, freshly allocated and returned to us 
-	** by CERT_DecodeAVAValue or get_hex_string just above, so we can
-	** modify it here.  See if we're in the middle of a multi-byte
-	** UTF8 character.
-	*/
-	while (((avaValue->data[maxLen] & 0xc0) == 0x80) && maxLen > 0) {
-	   maxLen--;
+    if (strict == CERT_N2A_READABLE) {
+    	if (maxBytes > sizeof(tmpBuf) - 4)
+	    maxBytes = sizeof(tmpBuf) - 4;
+	/* Check value length.  Must be room for "..." */
+	if (avaValue->len > maxBytes + 3) {
+	    /* avaValue is a UTF8 string, freshly allocated and returned to us 
+	    ** by CERT_DecodeAVAValue or get_hex_string just above, so we can
+	    ** modify it here.  See if we're in the middle of a multi-byte
+	    ** UTF8 character.
+	    */
+	    len = maxBytes;
+	    while (((avaValue->data[len] & 0xc0) == 0x80) && len > 0) {
+	       len--;
+	    }
+	    /* add elipsis to signify truncation. */
+	    avaValue->data[len++] = '.'; 
+	    avaValue->data[len++] = '.';
+	    avaValue->data[len++] = '.';
+	    avaValue->data[len]   = 0;
+	    avaValue->len = len;
 	}
-	/* add elipsis to signify truncation. */
-	avaValue->data[maxLen++] = '.'; 
-	avaValue->data[maxLen++] = '.';
-	avaValue->data[maxLen++] = '.';
-	avaValue->data[maxLen]   = 0;
-	avaValue->len = maxLen;
     }
 
-    len = PORT_Strlen(tagName);
-    if (len+1 > sizeof(tmpBuf)) {
-	if (unknownTag) PR_smprintf_free(unknownTag);
-	SECITEM_FreeItem(avaValue, PR_TRUE);
+    nameLen  = strlen(tagName);
+    valueLen = (useHex ? avaValue->len : 
+            cert_RFC1485_GetRequiredLen(avaValue->data, avaValue->len, NULL));
+    len = nameLen + valueLen + 2; /* Add 2 for '=' and trailing NUL */
+
+    if (len <= sizeof(tmpBuf)) {
+    	encodedAVA = tmpBuf;
+    } else if (strict == CERT_N2A_READABLE) {
 	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+    } else {
+	encodedAVA = PORT_Alloc(len);
+    }
+    if (!encodedAVA) {
+	SECITEM_FreeItem(avaValue, PR_TRUE);
+	if (unknownTag) 
+	    PR_smprintf_free(unknownTag);
 	return SECFailure;
     }
-    PORT_Memcpy(tmpBuf, tagName, len);
-    if (unknownTag) PR_smprintf_free(unknownTag);
-    tmpBuf[len++] = '=';
+    memcpy(encodedAVA, tagName, nameLen);
+    if (unknownTag) 
+    	PR_smprintf_free(unknownTag);
+    encodedAVA[nameLen++] = '=';
     
     /* escape and quote as necessary - don't quote hex strings */
-    if (hexValue) {
-        /* appent avaValue to tmpBuf */
-	if (avaValue->len + len + 1 > sizeof tmpBuf) {
-	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	    rv = SECFailure;
-    	} else {
-	    PORT_Strncpy(tmpBuf+len, (char *)avaValue->data, avaValue->len + 1);
-	    rv = SECSuccess;
-	}
+    if (useHex) {
+	memcpy(encodedAVA + nameLen, (char *)avaValue->data, avaValue->len);
+	encodedAVA[nameLen + avaValue->len] = '\0';
+	rv = SECSuccess;
     } else 
-	rv = CERT_RFC1485_EscapeAndQuote(tmpBuf+len, sizeof(tmpBuf)-len, 
-		    		     (char *)avaValue->data, avaValue->len);
+	rv = CERT_RFC1485_EscapeAndQuote(encodedAVA + nameLen, len - nameLen, 
+		    		        (char *)avaValue->data, avaValue->len);
     SECITEM_FreeItem(avaValue, PR_TRUE);
-    if (rv) return SECFailure;
-    
-    rv = AppendStr(bufp, tmpBuf);
+    if (rv == SECSuccess)
+	rv = AppendStr(bufp, encodedAVA);
+    if (encodedAVA != tmpBuf)
+    	PORT_Free(encodedAVA);
     return rv;
 }
 
+#undef tagName
+#undef maxBytes
+#undef tag
+#undef vt
+
 char *
-CERT_NameToAscii(CERTName *name)
+CERT_NameToAsciiInvertible(CERTName *name, CertStrictnessLevel strict)
 {
     CERTRDN** rdns;
     CERTRDN** lastRdn;
@@ -854,7 +978,7 @@ CERT_NameToAscii(CERTName *name)
 	    }
 	    
 	    /* Add in tag type plus value into buf */
-	    rv = AppendAVA(&strBuf, ava);
+	    rv = AppendAVA(&strBuf, ava, strict);
 	    if (rv) goto loser;
 	    newRDN = PR_FALSE;
 	}
@@ -865,6 +989,12 @@ loser:
 	PORT_Free(strBuf.buffer);
     }
     return NULL;
+}
+
+char *
+CERT_NameToAscii(CERTName *name)
+{
+    return CERT_NameToAsciiInvertible(name, CERT_N2A_READABLE);
 }
 
 /*

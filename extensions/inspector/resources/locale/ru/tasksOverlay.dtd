@@ -1,6 +1,0 @@
-<!ENTITY inspectorTaskCmd.label "Инспектор DOM">
-<!ENTITY inspectorTaskCmd.commandkey "i">
-<!ENTITY inspectorTaskCmd.accesskey.ff "с">
-<!ENTITY inspectorTaskCmd.accesskey "И">
-<!ENTITY inspectPageTaskCmd.label "Исследовать страницу">
-<!ENTITY inspectPageTaskCmd.accesskey "И">

@@ -1100,7 +1100,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             nsIWidget *widget = mRootView->GetWidget();
             PRBool transparentWindow = PR_FALSE;
             if (widget)
-                widget->GetHasTransparentBackground(transparentWindow);
+                transparentWindow = widget->GetTransparencyMode() == eTransparencyTransparent;
 
             if (rootVM->mScrollCnt == 0 && !transparentWindow) {
               nsIViewObserver* observer = GetViewObserver();

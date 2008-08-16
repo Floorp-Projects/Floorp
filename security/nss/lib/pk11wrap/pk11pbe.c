@@ -62,6 +62,7 @@ struct SEC_PKCS5PBEParameterStr {
     SECItem         salt;           /* octet string */
     SECItem         iteration;      /* integer */
     SECItem         keyLength;	/* PKCS5v2 only */
+    SECAlgorithmID  *pPrfAlgId;	/* PKCS5v2 only */
     SECAlgorithmID  prfAlgId;	/* PKCS5v2 only */
 };
 
@@ -113,8 +114,8 @@ const SEC_ASN1Template SEC_PKCS5V2PBEParameterTemplate[] =
     { SEC_ASN1_INTEGER, offsetof(SEC_PKCS5PBEParameter, iteration) },
     { SEC_ASN1_INTEGER|SEC_ASN1_OPTIONAL, 
 		      offsetof(SEC_PKCS5PBEParameter, keyLength) },
-    { SEC_ASN1_INLINE | SEC_ASN1_XTRN | SEC_ASN1_OPTIONAL, 
-	offsetof(SEC_PKCS5PBEParameter, prfAlgId),
+    { SEC_ASN1_POINTER | SEC_ASN1_XTRN | SEC_ASN1_OPTIONAL, 
+	offsetof(SEC_PKCS5PBEParameter, pPrfAlgId),
 	SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
     { 0 }
 };
@@ -568,6 +569,7 @@ sec_pkcs5_create_pbe_parameter(SECOidTag algorithm,
 	    PORT_FreeArena(poolp, PR_FALSE);
 	    return NULL;
 	}
+	pbe_param->pPrfAlgId = &pbe_param->prfAlgId;
     }
 
     return pbe_param;
@@ -595,7 +597,7 @@ sec_pkcs5CreateAlgorithmID(SECOidTag algorithm,
     SECItem der_param;
     void *dummy;
     SECStatus rv = SECFailure;
-    SEC_PKCS5PBEParameter *pbe_param;
+    SEC_PKCS5PBEParameter *pbe_param = NULL;
     sec_pkcs5V2Parameter pbeV2_param;
 
     if(iteration <= 0) {
@@ -610,7 +612,6 @@ sec_pkcs5CreateAlgorithmID(SECOidTag algorithm,
     if (!SEC_PKCS5IsAlgorithmPBEAlgTag(algorithm) ||
     	 	sec_pkcs5_is_algorithm_v2_pkcs5_algorithm(algorithm)) {
 	/* use PKCS 5 v2 */
-	SECOidTag cipherAlgorithm;
 	SECItem *cipherParams;
 
 	/*
@@ -832,8 +833,9 @@ pbe_PK11AlgidToParam(SECAlgorithmID *algid,SECItem *mech)
 
 	/* set the prf */
 	prfAlgTag = SEC_OID_HMAC_SHA1;
- 	if (p5_param.prfAlgId.algorithm.data != 0) {
- 	    prfAlgTag = SECOID_GetAlgorithmTag(&p5_param.prfAlgId);
+ 	if (p5_param.pPrfAlgId &&
+ 	    p5_param.pPrfAlgId->algorithm.data != 0) {
+ 	    prfAlgTag = SECOID_GetAlgorithmTag(p5_param.pPrfAlgId);
 	}
 	if (prfAlgTag == SEC_OID_HMAC_SHA1) {
 	    pbeV2_params->prf = CKP_PKCS5_PBKD2_HMAC_SHA1;

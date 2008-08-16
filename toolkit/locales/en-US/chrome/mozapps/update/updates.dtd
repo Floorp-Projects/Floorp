@@ -10,8 +10,10 @@
 <!ENTITY  cancel.accesskey                "C">
 
 <!ENTITY  noupdatesfound.title            "No Updates Found">
-<!ENTITY  noupdatesfound.intro            "There are no new updates available. &brandShortName; may check 
-                                           periodically for new updates.">
+<!ENTITY  noupdatesautoenabled.intro      "There are no updates available. &brandShortName; will check
+                                           periodically for updates.">
+<!ENTITY  noupdatesautodisabled.intro     "There are no updates available. Please check again later or enable
+                                           &brandShortName;'s automatic update checking.">
 
 <!ENTITY  incompatibleChecking.label      "Checking if this update will cause problems with your extensions and/or themes…">
 <!ENTITY  clickHere.label                 "View more information about this update">

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.23 $ $Date: 2007/11/16 05:29:26 $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.24 $ $Date: 2008/08/09 01:26:04 $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -56,21 +56,23 @@ static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.23 $ $D
 
 #include "pk11func.h"
 #include "secmodti.h"
+#include "secerr.h"
 
 NSS_IMPLEMENT nssSession *
 nssSession_ImportNSS3Session(NSSArena *arenaOpt,
                              CK_SESSION_HANDLE session, 
                              PZLock *lock, PRBool rw)
 {
-    nssSession *rvSession;
-    rvSession = nss_ZNEW(arenaOpt, nssSession);
-    if (!rvSession) {
-        return NULL;
+    nssSession *rvSession = NULL;
+    if (session != CK_INVALID_SESSION) {
+	rvSession = nss_ZNEW(arenaOpt, nssSession);
+	if (rvSession) {
+	    rvSession->handle = session;
+	    rvSession->lock = lock;
+	    rvSession->ownLock = PR_FALSE;
+	    rvSession->isRW = rw;
+	}
     }
-    rvSession->handle = session;
-    rvSession->lock = lock;
-    rvSession->ownLock = PR_FALSE;
-    rvSession->isRW = rw;
     return rvSession;
 }
 
@@ -160,11 +162,17 @@ nssSlot_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     return rvSlot;
 }
 
-NSS_IMPLEMENT NSSToken *
+NSSToken *
 nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
 {
     NSSToken *rvToken;
     NSSArena *arena;
+
+    /* Don't create a token object for a disabled slot */
+    if (nss3slot->disabled) {
+	PORT_SetError(SEC_ERROR_NO_TOKEN);
+	return NULL;
+    }
     arena = nssArena_Create();
     if (!arena) {
 	return NULL;
@@ -176,6 +184,10 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     }
     rvToken->base.refCount = 1;
     rvToken->base.lock = PZ_NewLock(nssILockOther);
+    if (!rvToken->base.lock) {
+	nssArena_Destroy(arena);
+	return NULL;
+    }
     rvToken->base.arena = arena;
     rvToken->pk11slot = nss3slot;
     rvToken->epv = nss3slot->functionList;
@@ -183,26 +195,28 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
                                                        nss3slot->session,
                                                        nss3slot->sessionLock,
                                                        nss3slot->defRWSession);
-    /* The above test was used in 3.4, for this cache have it always on */
+    /* continue, even if rvToken->defaultSession is NULL */
     if (!PK11_IsInternal(nss3slot) && PK11_IsHW(nss3slot)) {
 	rvToken->cache = nssTokenObjectCache_Create(rvToken, 
 	                                            PR_TRUE, PR_TRUE, PR_TRUE);
-	if (!rvToken->cache) {
-	    nssArena_Destroy(arena);
-	    return (NSSToken *)NULL;
-	}
+	if (!rvToken->cache)
+	    goto loser;
     }
     rvToken->trustDomain = td;
     /* Grab the token name from the PKCS#11 fixed-length buffer */
     rvToken->base.name = nssUTF8_Duplicate(nss3slot->token_name,td->arena);
     rvToken->slot = nssSlot_CreateFromPK11SlotInfo(td, nss3slot);
     if (!rvToken->slot) {
-        nssArena_Destroy(arena);
-        return (NSSToken *)NULL;
+        goto loser;
     }
     rvToken->slot->token = rvToken;
-    rvToken->defaultSession->slot = rvToken->slot;
+    if (rvToken->defaultSession)
+	rvToken->defaultSession->slot = rvToken->slot;
     return rvToken;
+loser:
+    PZ_DestroyLock(rvToken->base.lock);
+    nssArena_Destroy(arena);
+    return NULL;
 }
 
 NSS_IMPLEMENT void
@@ -241,11 +255,12 @@ nssToken_Refresh(NSSToken *token)
 	return PR_SUCCESS;
     }
     nss3slot = token->pk11slot;
-    token->defaultSession = nssSession_ImportNSS3Session(token->slot->base.arena,
-                                                       nss3slot->session,
-                                                       nss3slot->sessionLock,
-                                                       nss3slot->defRWSession);
-    return PR_SUCCESS;
+    token->defaultSession = 
+    	nssSession_ImportNSS3Session(token->slot->base.arena,
+				     nss3slot->session,
+				     nss3slot->sessionLock,
+				     nss3slot->defRWSession);
+    return token->defaultSession ? PR_SUCCESS : PR_FAILURE;
 }
 
 NSS_IMPLEMENT PRStatus

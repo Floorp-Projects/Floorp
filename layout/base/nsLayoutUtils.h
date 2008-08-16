@@ -744,7 +744,7 @@ public:
    *   @param aFrame the frame of a <window>, <popup> or <menupopup> element.
    *   @return a value suitable for passing to SetWindowTranslucency
    */
-  static PRBool FrameHasTransparency(nsIFrame* aFrame);
+  static nsTransparencyMode GetFrameTransparency(nsIFrame* aFrame);
 
   /**
    * Get textrun construction flags determined by a given style; in particular

@@ -276,8 +276,8 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
                                           NULL, &pidl, 0, &sfgao))) {
         static const PRUnichar cmdVerb[] = L"open";
         SHELLEXECUTEINFOW sinfo;
-        memset(&sinfo, 0, sizeof(SHELLEXECUTEINFO));
-        sinfo.cbSize   = sizeof(SHELLEXECUTEINFO);
+        memset(&sinfo, 0, sizeof(sinfo));
+        sinfo.cbSize   = sizeof(sinfo);
         sinfo.fMask    = SEE_MASK_FLAG_DDEWAIT |
                          SEE_MASK_FLAG_NO_UI |
                          SEE_MASK_INVOKEIDLIST;
@@ -295,11 +295,9 @@ nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
       }
     } else {
       // Version of shell32.dll < 6.0
-      LONG r = (LONG) ::ShellExecuteW(NULL, L"open", 
-                                     NS_ConvertUTF8toUTF16(urlSpec).get(),
-                                     NULL, NULL, 
-                                     SW_SHOWNORMAL);
-      if (r < 32) 
+      int r = (int) ::ShellExecuteW(NULL, L"open", NS_ConvertUTF8toUTF16(urlSpec).get(),
+                                    NULL, NULL, SW_SHOWNORMAL);
+      if (r < 32)
         rv = NS_ERROR_FAILURE;
     }
     if (hDll) 

@@ -75,7 +75,7 @@
 /* --Private-Socket-Functions---------------------------------- */
 
 #ifdef PKIX_SOCKETTRACE
-static PKIX_Boolean socketTraceFlag = PKIX_TRUE;
+static PKIX_Boolean socketTraceFlag = PKIX_FALSE;
 
 /*
  * FUNCTION: pkix_pl_socket_timestamp
@@ -1606,7 +1606,6 @@ pkix_pl_Socket_CreateByHostAndPort(
         PRIntn hostenum;
         PRStatus prstatus = PR_FAILURE;
         char buf[PR_NETDB_BUF_SIZE];
-        char *localCopyName = NULL;
 
         PKIX_ENTER(SOCKET, "pkix_pl_Socket_CreateByHostAndPort");
         PKIX_NULLCHECK_THREE(hostname, pStatus, pSocket);

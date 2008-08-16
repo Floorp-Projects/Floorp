@@ -100,6 +100,13 @@ enum eFontPrefLang {
     eFontPrefLang_AllCount    = 32
 };
 
+enum eCMSMode {
+    eCMSMode_Off          = 0,     // No color management
+    eCMSMode_All          = 1,     // Color manage everything
+    eCMSMode_TaggedOnly   = 2,     // Color manage tagged Images Only
+    eCMSMode_AllCount     = 3
+};
+
 // when searching through pref langs, max number of pref langs
 const PRUint32 kMaxLenPrefLangList = 32;
 
@@ -214,7 +221,7 @@ public:
     /**
      * Are we going to try color management?
      */
-    static PRBool IsCMSEnabled();
+    static eCMSMode GetCMSMode();
 
     /**
      * Determines the rendering intent for color management.

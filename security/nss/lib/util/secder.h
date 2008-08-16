@@ -43,7 +43,7 @@
  * secder.h - public data structures and prototypes for the DER encoding and
  *	      decoding utilities library
  *
- * $Id: secder.h,v 1.11 2007/10/12 01:44:51 julien.pierre.boogz%sun.com Exp $
+ * $Id: secder.h,v 1.13 2008/06/18 01:04:23 wtc%google.com Exp $
  */
 
 #if defined(_WIN32_WCE)
@@ -68,7 +68,7 @@ SEC_BEGIN_PROTOS
 **	   stored data
 **	"src" is a pointer to the structure that will be encoded
 */
-extern SECStatus DER_Encode(PRArenaPool *arena, SECItem *dest, DERTemplate *t,
+extern SECStatus DER_Encode(PLArenaPool *arena, SECItem *dest, DERTemplate *t,
 			   void *src);
 
 extern SECStatus DER_Lengths(SECItem *item, int *header_len_p,
@@ -95,13 +95,13 @@ extern int DER_LengthLength(PRUint32 len);
 ** Store a der encoded *signed* integer (whose value is "src") into "dst".
 ** XXX This should really be enhanced to take a long.
 */
-extern SECStatus DER_SetInteger(PRArenaPool *arena, SECItem *dst, PRInt32 src);
+extern SECStatus DER_SetInteger(PLArenaPool *arena, SECItem *dst, PRInt32 src);
 
 /*
 ** Store a der encoded *unsigned* integer (whose value is "src") into "dst".
 ** XXX This should really be enhanced to take an unsigned long.
 */
-extern SECStatus DER_SetUInteger(PRArenaPool *arena, SECItem *dst, PRUint32 src);
+extern SECStatus DER_SetUInteger(PLArenaPool *arena, SECItem *dst, PRUint32 src);
 
 /*
 ** Decode a der encoded *signed* integer that is stored in "src".
@@ -118,31 +118,31 @@ extern long DER_GetInteger(SECItem *src);
 extern unsigned long DER_GetUInteger(SECItem *src);
 
 /*
-** Convert a "UNIX" time value to a der encoded time value.
+** Convert an NSPR time value to a der encoded time value.
 **	"result" is the der encoded time (memory is allocated)
-**	"time" is the "UNIX" time value (Since Jan 1st, 1970).
+**	"time" is the NSPR time value (Since Jan 1st, 1970).
 **      time must be on or after January 1, 1950, and
 **      before January 1, 2050
 ** The caller is responsible for freeing up the buffer which
 ** result->data points to upon a successful operation.
 */
-extern SECStatus DER_TimeToUTCTime(SECItem *result, int64 time);
-extern SECStatus DER_TimeToUTCTimeArena(PRArenaPool* arenaOpt,
-                                        SECItem *dst, int64 gmttime);
+extern SECStatus DER_TimeToUTCTime(SECItem *result, PRTime time);
+extern SECStatus DER_TimeToUTCTimeArena(PLArenaPool* arenaOpt,
+                                        SECItem *dst, PRTime gmttime);
 
 
 /*
 ** Convert an ascii encoded time value (according to DER rules) into
-** a UNIX time value.
-**	"result" the resulting "UNIX" time
+** an NSPR time value.
+**	"result" the resulting NSPR time
 **	"string" the der notation ascii value to decode
 */
-extern SECStatus DER_AsciiToTime(int64 *result, const char *string);
+extern SECStatus DER_AsciiToTime(PRTime *result, const char *string);
 
 /*
 ** Same as DER_AsciiToTime except takes an SECItem instead of a string
 */
-extern SECStatus DER_UTCTimeToTime(int64 *result, const SECItem *time);
+extern SECStatus DER_UTCTimeToTime(PRTime *result, const SECItem *time);
 
 /*
 ** Convert a DER encoded UTC time to an ascii time representation
@@ -164,33 +164,33 @@ extern char *DER_GeneralizedDayToAscii(SECItem *gentime);
 extern char *DER_TimeChoiceDayToAscii(SECItem *timechoice);
 
 /*
-** Convert a int64 time to a DER encoded Generalized time
+** Convert a PRTime time to a DER encoded Generalized time
 ** gmttime must be on or after January 1, year 1 and
 ** before January 1, 10000.
 */
-extern SECStatus DER_TimeToGeneralizedTime(SECItem *dst, int64 gmttime);
-extern SECStatus DER_TimeToGeneralizedTimeArena(PRArenaPool* arenaOpt,
-                                                SECItem *dst, int64 gmttime);
+extern SECStatus DER_TimeToGeneralizedTime(SECItem *dst, PRTime gmttime);
+extern SECStatus DER_TimeToGeneralizedTimeArena(PLArenaPool* arenaOpt,
+                                                SECItem *dst, PRTime gmttime);
 
 /*
-** Convert a DER encoded Generalized time value into a UNIX time value.
-**	"dst" the resulting "UNIX" time
+** Convert a DER encoded Generalized time value into an NSPR time value.
+**	"dst" the resulting NSPR time
 **	"string" the der notation ascii value to decode
 */
-extern SECStatus DER_GeneralizedTimeToTime(int64 *dst, const SECItem *time);
+extern SECStatus DER_GeneralizedTimeToTime(PRTime *dst, const SECItem *time);
 
 /*
-** Convert from a int64 UTC time value to a formatted ascii value. The
+** Convert from a PRTime UTC time value to a formatted ascii value. The
 ** caller is responsible for deallocating the returned buffer.
 */
-extern char *CERT_UTCTime2FormattedAscii (int64 utcTime, char *format);
+extern char *CERT_UTCTime2FormattedAscii (PRTime utcTime, char *format);
 #define CERT_GeneralizedTime2FormattedAscii CERT_UTCTime2FormattedAscii
 
 /*
-** Convert from a int64 Generalized time value to a formatted ascii value. The
+** Convert from a PRTime Generalized time value to a formatted ascii value. The
 ** caller is responsible for deallocating the returned buffer.
 */
-extern char *CERT_GenTime2FormattedAscii (int64 genTime, char *format);
+extern char *CERT_GenTime2FormattedAscii (PRTime genTime, char *format);
 
 /*
 ** decode a SECItem containing either a SEC_ASN1_GENERALIZED_TIME 
@@ -202,7 +202,7 @@ extern SECStatus DER_DecodeTimeChoice(PRTime* output, const SECItem* input);
 /* encode a PRTime to an ASN.1 DER SECItem containing either a
    SEC_ASN1_GENERALIZED_TIME or a SEC_ASN1_UTC_TIME */
 
-extern SECStatus DER_EncodeTimeChoice(PRArenaPool* arena, SECItem* output,
+extern SECStatus DER_EncodeTimeChoice(PLArenaPool* arena, SECItem* output,
                                        PRTime input);
 
 SEC_END_PROTOS

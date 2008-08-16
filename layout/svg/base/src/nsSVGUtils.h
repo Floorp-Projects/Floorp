@@ -44,6 +44,8 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsRect.h"
+#include "gfxContext.h"
+#include "nsIRenderingContext.h"
 
 class nsIDocument;
 class nsPresContext;
@@ -68,7 +70,6 @@ class nsAttrValue;
 class gfxContext;
 class gfxASurface;
 class gfxPattern;
-class nsIRenderingContext;
 class gfxImageSurface;
 struct gfxRect;
 struct gfxMatrix;
@@ -135,19 +136,25 @@ class nsSVGRenderState
 public:
   enum RenderMode { NORMAL, CLIP, CLIP_MASK };
 
+  /**
+   * Render SVG to a legacy rendering context
+   */
   nsSVGRenderState(nsIRenderingContext *aContext);
-  nsSVGRenderState(gfxContext *aContext);
+  /**
+   * Render SVG to a temporary surface
+   */
+  nsSVGRenderState(gfxASurface *aSurface);
 
-  nsIRenderingContext *GetRenderingContext() { return mRenderingContext; }
+  nsIRenderingContext *GetRenderingContext(nsIFrame *aFrame);
   gfxContext *GetGfxContext() { return mGfxContext; }
 
   void SetRenderMode(RenderMode aMode) { mRenderMode = aMode; }
   RenderMode GetRenderMode() { return mRenderMode; }
 
 private:
-  RenderMode           mRenderMode;
-  nsIRenderingContext *mRenderingContext;
-  gfxContext          *mGfxContext;
+  RenderMode                    mRenderMode;
+  nsCOMPtr<nsIRenderingContext> mRenderingContext;
+  nsRefPtr<gfxContext>          mGfxContext;
 };
 
 class nsAutoSVGRenderMode

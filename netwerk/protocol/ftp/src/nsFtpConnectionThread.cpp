@@ -66,6 +66,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIStringBundle.h"
 #include "nsAuthInformationHolder.h"
+#include "nsICharsetConverterManager.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -1612,6 +1613,12 @@ nsFtpState::Init(nsFtpChannel *channel)
         // now unescape it... %xx reduced inline to resulting character
         PRInt32 len = NS_UnescapeURL(fwdPtr);
         mPath.Assign(fwdPtr, len);
+        if (IsUTF8(mPath)) {
+    	    nsCAutoString originCharset;
+    	    rv = mChannel->URI()->GetOriginCharset(originCharset);
+    	    if (NS_SUCCEEDED(rv) && !originCharset.EqualsLiteral("UTF-8"))
+    	        ConvertUTF8PathToCharset(originCharset);
+        }
 
 #ifdef DEBUG
         if (mPath.FindCharInSet(CRLF) >= 0)
@@ -2134,4 +2141,59 @@ nsFtpState::CheckCache()
 
     nsresult rv = session->AsyncOpenCacheEntry(key, accessReq, this);
     return NS_SUCCEEDED(rv);
+}
+
+nsresult
+nsFtpState::ConvertUTF8PathToCharset(const nsACString &aCharset)
+{
+    nsresult rv;
+    NS_ASSERTION(IsUTF8(mPath), "mPath isn't UTF8 string!");
+    NS_ConvertUTF8toUTF16 ucsPath(mPath);
+    nsCAutoString result;
+
+    nsCOMPtr<nsICharsetConverterManager> charsetMgr(
+        do_GetService("@mozilla.org/charset-converter-manager;1", &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIUnicodeEncoder> encoder;
+    rv = charsetMgr->GetUnicodeEncoder(PromiseFlatCString(aCharset).get(),
+                                       getter_AddRefs(encoder));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt32 len = ucsPath.Length();
+    PRInt32 maxlen;
+
+    rv = encoder->GetMaxLength(ucsPath.get(), len, &maxlen);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    char buf[256], *p = buf;
+    if (PRUint32(maxlen) > sizeof(buf) - 1) {
+        p = (char *) malloc(maxlen + 1);
+        if (!p)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    rv = encoder->Convert(ucsPath.get(), &len, p, &maxlen);
+    if (NS_FAILED(rv))
+        goto end;
+    if (rv == NS_ERROR_UENC_NOMAPPING) {
+        NS_WARNING("unicode conversion failed");
+        rv = NS_ERROR_UNEXPECTED;
+        goto end;
+    }
+    p[maxlen] = 0;
+    result.Assign(p);
+
+    len = sizeof(buf) - 1;
+    rv = encoder->Finish(buf, &len);
+    if (NS_FAILED(rv))
+        goto end;
+    buf[len] = 0;
+    result.Append(buf);
+    mPath = result;
+
+end:
+    if (p != buf)
+        free(p);
+    return rv;
 }

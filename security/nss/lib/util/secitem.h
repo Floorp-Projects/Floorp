@@ -43,7 +43,7 @@
  * secitem.h - public data structures and prototypes for handling
  *	       SECItems
  *
- * $Id: secitem.h,v 1.7 2007/10/12 01:44:51 julien.pierre.boogz%sun.com Exp $
+ * $Id: secitem.h,v 1.8 2008/06/14 14:20:38 wtc%google.com Exp $
  */
 
 #include "plarena.h"
@@ -66,7 +66,7 @@ SEC_BEGIN_PROTOS
 ** XXX This probably should take a SECItemType, but since that is mostly
 ** unused and our improved APIs (aka Stan) are looming, I left it out.
 */
-extern SECItem *SECITEM_AllocItem(PRArenaPool *arena, SECItem *item,
+extern SECItem *SECITEM_AllocItem(PLArenaPool *arena, SECItem *item,
 				  unsigned int len);
 
 /*
@@ -77,7 +77,7 @@ extern SECItem *SECITEM_AllocItem(PRArenaPool *arena, SECItem *item,
 ** SECFailure is returned if it is not.  If the allocation succeeds,
 ** SECSuccess is returned.
 */
-extern SECStatus SECITEM_ReallocItem(PRArenaPool *arena, SECItem *item,
+extern SECStatus SECITEM_ReallocItem(PLArenaPool *arena, SECItem *item,
 				     unsigned int oldlen, unsigned int newlen);
 
 /*
@@ -93,7 +93,7 @@ extern PRBool SECITEM_ItemsAreEqual(const SECItem *a, const SECItem *b);
 /*
 ** Copy "from" to "to"
 */
-extern SECStatus SECITEM_CopyItem(PRArenaPool *arena, SECItem *to, 
+extern SECStatus SECITEM_CopyItem(PLArenaPool *arena, SECItem *to, 
                                   const SECItem *from);
 
 /*
@@ -106,7 +106,7 @@ extern SECItem *SECITEM_DupItem(const SECItem *from);
 ** data it points to are both allocated from the arena.  If arena is
 ** NULL, this function is equivalent to SECITEM_DupItem.
 */
-extern SECItem *SECITEM_ArenaDupItem(PRArenaPool *arena, const SECItem *from);
+extern SECItem *SECITEM_ArenaDupItem(PLArenaPool *arena, const SECItem *from);
 
 /*
 ** Free "zap". If freeit is PR_TRUE then "zap" itself is freed.
