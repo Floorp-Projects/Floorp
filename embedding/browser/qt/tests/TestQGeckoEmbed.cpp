@@ -6,6 +6,7 @@
 #include "jprof/jprof.h"
 #endif
 
+#include <limits.h>
 #include <qdir.h>
 
 int main(int argc, char **argv)
