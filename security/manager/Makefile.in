@@ -281,16 +281,8 @@ ifndef MOZ_NATIVE_NSS
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
 	$(MAKE) -C $(topsrcdir)/security/dbm $(DEFAULT_GMAKE_FLAGS) 
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
-ifdef ENABLE_TESTS
-	# Need certutil binary for mochitest certificates generation
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/certutil $(DEFAULT_GMAKE_FLAGS)
-	$(MAKE) -C $(topsrcdir)/security/nss/cmd/pk12util $(DEFAULT_GMAKE_FLAGS)
-endif
 ifndef SKIP_CHK
-ifndef ENABLE_TESTS # Just avoid secondary compile
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
-endif
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/shlibsign $(DEFAULT_GMAKE_FLAGS)
 endif
 	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
