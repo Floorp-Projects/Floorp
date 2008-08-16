@@ -1884,9 +1884,21 @@ js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
            (rdtsc() - start));
 #endif
 
+    /* If this trace is part of a tree, later branches might have added additional globals for
+       with we don't have any type information available in the side exit. We merge in this
+       information from the entry type-map. See also comment in the constructor of TraceRecorder
+       why this is always safe to do. */
+    unsigned exit_gslots = e->numGlobalSlots;
+    unsigned tree_gslots = ti->globalTypeMap.length();
+    JS_ASSERT(tree_gslots >= exit_gslots);
+    uint8* globalTypeMap = e->typeMap;
+    if (exit_gslots < tree_gslots)
+        mergeTypeMaps(&globalTypeMap, &exit_gslots, ti->globalTypeMap.data(), tree_gslots,
+                      (uint8*)alloca(sizeof(uint8) * tree_gslots));
+    JS_ASSERT(tree_gslots == ti->globalTypeMap.length());
+    
     /* write back interned globals */
-    FlushNativeGlobalFrame(cx, e->numGlobalSlots, ti->globalSlots.data(), e->typeMap, global);
-    JS_ASSERT(ti->globalSlots.length() >= e->numGlobalSlots);
+    FlushNativeGlobalFrame(cx, exit_gslots, ti->globalSlots.data(), globalTypeMap, global);
     JS_ASSERT(globalFrameSize == STOBJ_NSLOTS(globalObj));
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
     
