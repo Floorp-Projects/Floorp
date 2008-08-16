@@ -128,7 +128,17 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 // QT
 static const int WHEEL_DELTA = 120;
 static PRBool gGlobalsInitialized = PR_FALSE;
+
+static nsCOMPtr<nsIRollupListener> gRollupListener;
+static nsWeakPtr                   gRollupWindow;
+static PRBool                      gConsumeRollupEvent;
+
 //static nsWindow * get_window_for_qt_widget(QWidget *widget);
+
+static PRBool     check_for_rollup(double aMouseX, double aMouseY,
+                                   PRBool aIsWheel);
+static PRBool
+is_mouse_in_window (QWidget* aWindow, double aMouseX, double aMouseY);
 
 static PRBool
 isContextMenuKeyEvent(const QKeyEvent *qe)
@@ -276,6 +286,14 @@ nsWindow::Destroy(void)
 
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
     mIsDestroyed = PR_TRUE;
+
+    nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
+    if (static_cast<nsIWidget *>(this) == rollupWidget.get()) {
+        if (gRollupListener)
+            gRollupListener->Rollup(nsnull);
+        gRollupWindow = nsnull;
+        gRollupListener = nsnull;
+    }
 
     Show(PR_FALSE);
 
@@ -988,17 +1006,88 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
         return NS_OK;
 
     LOG(("CaptureRollupEvents %p\n", (void *)this));
-/*
+
     if (aDoCapture) {
-        GrabPointer();
-        GrabKeyboard();
+        gConsumeRollupEvent = aConsumeRollupEvent;
+        gRollupListener = aListener;
+        gRollupWindow = do_GetWeakReference(static_cast<nsIWidget*>(this));
     }
     else {
-        ReleaseGrabs();
+        gRollupListener = nsnull;
+        gRollupWindow = nsnull;
     }
-*/
 
     return NS_OK;
+}
+
+PRBool
+check_for_rollup(double aMouseX, double aMouseY,
+                 PRBool aIsWheel)
+{
+    PRBool retVal = PR_FALSE;
+    nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
+
+    if (rollupWidget && gRollupListener) {
+        QWidget *currentPopup =
+            (QWidget *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+
+        if (!is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
+            PRBool rollup = PR_TRUE;
+            if (aIsWheel) {
+                gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+                retVal = PR_TRUE;
+            }
+            // if we're dealing with menus, we probably have submenus and
+            // we don't want to rollup if the clickis in a parent menu of
+            // the current submenu
+            nsCOMPtr<nsIMenuRollup> menuRollup;
+            menuRollup = (do_QueryInterface(gRollupListener));
+            if (menuRollup) {
+                nsAutoTArray<nsIWidget*, 5> widgetChain;
+                menuRollup->GetSubmenuWidgetChain(&widgetChain);
+                for (PRUint32 i=0; i<widgetChain.Length(); ++i) {
+                    nsIWidget* widget =  widgetChain[i];
+                    QWidget* currWindow =
+                        (QWidget*) widget->GetNativeData(NS_NATIVE_WINDOW);
+                    if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
+                       rollup = PR_FALSE;
+                       break;
+                    }
+                } // foreach parent menu widget
+            } // if rollup listener knows about menus
+
+            // if we've determined that we should still rollup, do it.
+            if (rollup) {
+                gRollupListener->Rollup(nsnull);
+                retVal = PR_TRUE;
+            }
+        }
+    } else {
+        gRollupWindow = nsnull;
+        gRollupListener = nsnull;
+    }
+
+    return retVal;
+}
+
+/* static */
+PRBool
+is_mouse_in_window (QWidget* aWindow, double aMouseX, double aMouseY)
+{
+    int x = 0;
+    int y = 0;
+    int w, h;
+
+    x = aWindow->pos().x();
+    y = aWindow->pos().y();
+    w = aWindow->size().width();
+    h = aWindow->size().height();
+
+    if (aMouseX > x && aMouseX < x + w &&
+        aMouseY > y && aMouseY < y + h)
+        return PR_TRUE;
+
+    return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -1266,6 +1355,11 @@ nsWindow::InitButtonEvent(nsMouseEvent &event,
 nsEventStatus
 nsWindow::OnButtonPressEvent(QMouseEvent *aEvent)
 {
+    PRBool rolledUp = check_for_rollup(aEvent->globalX(),
+                                       aEvent->globalY(), PR_FALSE);
+    if (gConsumeRollupEvent && rolledUp)
+        return nsEventStatus_eIgnore;
+
     PRUint16      domButton;
     switch (aEvent->button()) {
     case Qt::MidButton:
@@ -2204,7 +2298,7 @@ nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
         windowName = "topLevelDialog";
         break;
     case eWindowType_popup:
-        flags |= Qt::Popup;
+        flags |= Qt::ToolTip;
         windowName = "topLevelPopup";
         break;
     case eWindowType_toplevel:
@@ -2394,7 +2488,9 @@ nsWindow::Show(PRBool aState)
     if (!mDrawingArea)
         return NS_OK;
 
-    mDrawingArea->setShown(aState);
+    mDrawingArea->setVisible(aState);
+    if (mWindowType == eWindowType_popup && aState)
+        Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_FALSE);
 
     return NS_OK;
 }
