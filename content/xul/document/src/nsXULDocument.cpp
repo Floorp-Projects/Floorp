@@ -441,8 +441,6 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     mMayStartLayout = PR_FALSE;
     mDocumentLoadGroup = do_GetWeakReference(aLoadGroup);
 
-    mDocumentTitle.SetIsVoid(PR_TRUE);
-
     mChannel = aChannel;
 
     mHaveInputEncoding = PR_TRUE;
@@ -3116,12 +3114,7 @@ nsXULDocument::DoneWalking()
         // happen.
         mDocumentLoaded = PR_TRUE;
 
-        nsAutoString title;
-        nsIContent* root = GetRootContent();
-        if (root) {
-            root->GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
-        }
-        SetTitle(title);
+        NotifyPossibleTitleChange(PR_FALSE);
 
         // Before starting layout, check whether we're a toplevel chrome
         // window.  If we are, set our chrome flags now, so that we don't have

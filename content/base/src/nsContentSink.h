@@ -270,7 +270,6 @@ protected:
   PRUint8 mDynamicLowerValue : 1;
   PRUint8 mParsing : 1;
   PRUint8 mDroppedTimer : 1;
-  PRUint8 mInTitle : 1;
   PRUint8 mChangeScrollPosWhenScrollingToRef : 1;
   // If true, we deferred starting layout until sheets load
   PRUint8 mDeferredLayoutStart : 1;
