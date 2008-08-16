@@ -26,6 +26,7 @@
  *   Pierre Phaneuf  <pp@ludusdesign.com>
  *   Pete Collins    <petejc@collab.net>
  *   James Ross      <silver@warwickcompsoc.co.uk>
+ *   Ryan Jones      <sciguyryan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -73,6 +74,7 @@
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsGenericElement.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIDOMEventGroup.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -113,8 +115,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
-
-#include "nsGkAtoms.h"
 
 // for radio group stuff
 #include "nsIDOMHTMLInputElement.h"
@@ -1450,7 +1450,6 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   }
 #endif
 
-  mDocumentTitle.SetIsVoid(PR_TRUE);
   mIdentifierMap.Clear();
 
   SetPrincipal(nsnull);
@@ -4297,20 +4296,167 @@ nsDocument::GetLocation(nsIDOMLocation **_retval)
   return w->GetLocation(_retval);
 }
 
+nsIContent*
+nsDocument::GetHtmlContent()
+{
+  nsIContent* rootContent = GetRootContent();
+  if (rootContent && rootContent->Tag() == nsGkAtoms::html &&
+      rootContent->IsNodeOfType(nsINode::eHTML))
+    return rootContent;
+  return nsnull;
+}
+
+nsIContent*
+nsDocument::GetHtmlChildContent(nsIAtom* aTag)
+{
+  nsIContent* html = GetHtmlContent();
+  if (!html)
+    return nsnull;
+
+  // Look for the element with aTag inside html. This needs to run
+  // forwards to find the first such element.
+  for (PRUint32 i = 0; i < html->GetChildCount(); ++i) {
+    nsIContent* result = html->GetChildAt(i);
+    if (result->Tag() == aTag && result->IsNodeOfType(nsINode::eHTML))
+      return result;
+  }
+  return nsnull;
+}
+
+nsIContent*
+nsDocument::GetTitleContent(PRUint32 aNodeType)
+{
+  // mMayHaveTitleElement will have been set to true if any HTML or SVG
+  // <title> element has been bound to this document. So if it's false,
+  // we know there is nothing to do here. This avoids us having to search
+  // the whole DOM if someone calls document.title on a large document
+  // without a title.
+  if (!mMayHaveTitleElement)
+    return nsnull;
+
+  nsRefPtr<nsContentList> list =
+    NS_GetContentList(this, nsGkAtoms::title, kNameSpaceID_Unknown);
+  if (!list)
+    return nsnull;
+
+  for (PRUint32 i = 0; ; ++i) {
+    // Avoid calling list->Length --- by calling Item one at a time,
+    // we can avoid scanning the whole document to build the list of all
+    // matches
+    nsIContent* elem = list->Item(i, PR_FALSE);
+    if (!elem)
+      return nsnull;
+    if (elem->IsNodeOfType(aNodeType))
+      return elem;
+  }
+}
+
+void
+nsDocument::GetTitleFromElement(PRUint32 aNodeType, nsAString& aTitle)
+{
+  nsIContent* title = GetTitleContent(aNodeType);
+  if (!title)
+    return;
+  nsContentUtils::GetNodeTextContent(title, PR_FALSE, aTitle);
+}
+
 NS_IMETHODIMP
 nsDocument::GetTitle(nsAString& aTitle)
 {
-  aTitle.Assign(mDocumentTitle);
-  // Make sure not to return null from this method even if
-  // mDocumentTitle is void.
-  aTitle.SetIsVoid(PR_FALSE);
+  aTitle.Truncate();
 
+  nsIContent *rootContent = GetRootContent();
+  if (!rootContent)
+    return NS_OK;
+
+  switch (rootContent->GetNameSpaceID()) {
+#ifdef MOZ_SVG
+    case kNameSpaceID_SVG:
+      if (rootContent->Tag() == nsGkAtoms::svg) {
+        GetTitleFromElement(nsINode::eSVG, aTitle);
+        return NS_OK;
+      }
+      break;
+#endif
+#ifdef MOZ_XUL
+    case kNameSpaceID_XUL:
+      rootContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle);
+      return NS_OK;
+#endif
+  }
+  
+  GetTitleFromElement(nsINode::eHTML, aTitle);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocument::SetTitle(const nsAString& aTitle)
 {
+  nsIContent *rootContent = GetRootContent();
+  if (!rootContent)
+    return NS_OK;
+
+  switch (rootContent->GetNameSpaceID()) {
+#ifdef MOZ_SVG
+    case kNameSpaceID_SVG:
+      return NS_OK; // SVG doesn't support setting a title
+#endif
+#ifdef MOZ_XUL
+    case kNameSpaceID_XUL:
+      return rootContent->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
+                                  aTitle, PR_TRUE);
+#endif
+  }
+
+  // Batch updates so that mutation events don't change "the title
+  // element" under us
+  mozAutoDocUpdate updateBatch(this, UPDATE_CONTENT_MODEL, PR_TRUE);
+
+  nsIContent* title = GetTitleContent(nsINode::eHTML);
+  if (!title) {
+    nsIContent *head = GetHeadContent();
+    if (!head)
+      return NS_OK;
+
+    {
+      nsCOMPtr<nsINodeInfo> titleInfo;
+      mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nsnull,
+              kNameSpaceID_None, getter_AddRefs(titleInfo));
+      if (!titleInfo)
+        return NS_OK;
+      title = NS_NewHTMLTitleElement(titleInfo);
+      if (!title)
+        return NS_OK;
+    }
+
+    head->AppendChildTo(title, PR_TRUE);
+  }
+
+  return nsContentUtils::SetNodeTextContent(title, aTitle, PR_FALSE);
+}
+
+void
+nsDocument::NotifyPossibleTitleChange(PRBool aBoundTitleElement)
+{
+  if (aBoundTitleElement) {
+    mMayHaveTitleElement = PR_TRUE;
+  }
+  if (mPendingTitleChangeEvent.IsPending())
+    return;
+
+  mPendingTitleChangeEvent = new nsRunnableMethod<nsDocument>(this,
+            &nsDocument::DoNotifyPossibleTitleChange);
+  NS_DispatchToCurrentThread(mPendingTitleChangeEvent.get());
+}
+
+void
+nsDocument::DoNotifyPossibleTitleChange()
+{
+  mPendingTitleChangeEvent.Forget();
+
+  nsAutoString title;
+  GetTitle(title);
+
   nsPresShellIterator iter(this);
   nsCOMPtr<nsIPresShell> shell;
   while ((shell = iter.GetNextShell())) {
@@ -4322,18 +4468,13 @@ nsDocument::SetTitle(const nsAString& aTitle)
     if (!docShellWin)
       continue;
 
-    nsresult rv = docShellWin->SetTitle(PromiseFlatString(aTitle).get());
-    NS_ENSURE_SUCCESS(rv, rv);
+    docShellWin->SetTitle(PromiseFlatString(title).get());
   }
-
-  mDocumentTitle.Assign(aTitle);
 
   // Fire a DOM event for the title change.
   nsContentUtils::DispatchTrustedEvent(this, static_cast<nsIDocument*>(this),
                                        NS_LITERAL_STRING("DOMTitleChanged"),
                                        PR_TRUE, PR_TRUE);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
