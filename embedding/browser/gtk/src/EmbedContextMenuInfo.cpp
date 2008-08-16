@@ -128,9 +128,9 @@ EmbedContextMenuInfo::SetFrameIndex()
     if (currentDoc == mCtxDocument) {
       mCtxFrameNum = i;
       mCtxDomWindow = currentWindow;
-      nsCOMPtr<nsIDOMNSDocument> doc = do_QueryInterface(currentDoc);
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(currentDoc);
       if (doc)
-        doc->GetTitle(mCtxDocTitle);
+        mCtxDocTitle = doc->GetDocumentTitle();
       return NS_OK;
     }
   }

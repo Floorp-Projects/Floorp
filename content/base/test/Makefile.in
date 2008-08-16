@@ -198,7 +198,6 @@ _TEST_FILES = 	test_bug5141.html \
 		test_NodeIterator_mutations_2.html \
 		test_bug28293.html \
 		file_bug28293.sjs \
-		test_title.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

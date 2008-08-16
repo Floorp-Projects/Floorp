@@ -92,7 +92,6 @@
 #include "nsIChannel.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsContentList.h"
-#include "nsGkAtoms.h"
 
 // Put these here so all document impls get them automatically
 #include "nsHTMLStyleSheet.h"
@@ -105,7 +104,6 @@
 #include "nsDOMAttributeMap.h"
 #include "nsPresShellIterator.h"
 #include "nsContentUtils.h"
-#include "nsThreadUtils.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -429,8 +427,6 @@ public:
                                      nsIContentSink* aContentSink = nsnull) = 0;
 
   virtual void StopDocumentLoad();
-
-  virtual void NotifyPossibleTitleChange(PRBool aBoundTitleElement);
 
   virtual void SetDocumentURI(nsIURI* aURI);
   
@@ -800,9 +796,6 @@ public:
   static nsresult GetElementsByClassNameHelper(nsINode* aRootNode,
                                                const nsAString& aClasses,
                                                nsIDOMNodeList** aReturn);
-
-  void DoNotifyPossibleTitleChange();
-
 protected:
 
   void RegisterNamedItems(nsIContent *aContent);
@@ -834,30 +827,6 @@ protected:
   // Call this before the document does something that will unbind all content.
   // That will stop us from resolving URIs for all links as they are removed.
   void DestroyLinkMap();
-
-  // Get the root <html> element, or return null if there isn't one (e.g.
-  // if the root isn't <html>)
-  nsIContent* GetHtmlContent();
-  // Returns the first child of GetHtmlContent which has the given tag,
-  // or nsnull if that doesn't exist.
-  nsIContent* GetHtmlChildContent(nsIAtom* aTag);
-  // Get the canonical <body> element, or return null if there isn't one (e.g.
-  // if the root isn't <html> or if the <body> isn't there)
-  nsIContent* GetBodyContent() {
-    return GetHtmlChildContent(nsGkAtoms::body);
-  }
-  // Get the canonical <head> element, or return null if there isn't one (e.g.
-  // if the root isn't <html> or if the <head> isn't there)
-  nsIContent* GetHeadContent() {
-    return GetHtmlChildContent(nsGkAtoms::head);
-  }
-  // Get the first <title> element with the given IsNodeOfType type, or
-  // return null if there isn't one
-  nsIContent* GetTitleContent(PRUint32 aNodeType);
-  // Find the first "title" element in the given IsNodeOfType type and
-  // append the concatenation of its text node children to aTitle. Do
-  // nothing if there is no such element.
-  void GetTitleFromElement(PRUint32 aNodeType, nsAString& aTitle);
 
   nsresult doCreateShell(nsPresContext* aContext,
                          nsIViewManager* aViewManager, nsStyleSet* aStyleSet,
@@ -971,9 +940,6 @@ protected:
   // XXXbz should this be reset if someone manually calls
   // SetContentType() on this document?
   PRPackedBool mIsRegularHTML:1;
-  // True if this document has ever had an HTML or SVG <title> element
-  // bound to it
-  PRPackedBool mMayHaveTitleElement:1;
 
   PRPackedBool mHasWarnedAboutBoxObjects:1;
 
@@ -1065,8 +1031,7 @@ private:
 
   nsTArray<nsRefPtr<nsFrameLoader> > mInitializableFrameLoaders;
   nsTArray<nsRefPtr<nsFrameLoader> > mFinalizableFrameLoaders;
-
-  nsRevocableEventPtr<nsRunnableMethod<nsDocument> > mPendingTitleChangeEvent;
 };
+
 
 #endif /* nsDocument_h___ */

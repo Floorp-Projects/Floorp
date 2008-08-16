@@ -247,19 +247,6 @@ nsMediaDocument::CreateSyntheticDocument()
   rv = AppendChildTo(root, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head, nsnull,
-                                     kNameSpaceID_None,
-                                     getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Create a <head> so our title has somewhere to live
-  nsRefPtr<nsGenericHTMLElement> head = NS_NewHTMLHeadElement(nodeInfo);
-  if (!head) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  root->AppendChildTo(head, PR_FALSE);
-
   rv = mNodeInfoManager->GetNodeInfo(nsGkAtoms::body, nsnull,
                                      kNameSpaceID_None,
                                      getter_AddRefs(nodeInfo));

@@ -176,6 +176,11 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
 
     NS_ASSERTION(mDocument, "Need document");
 
+    nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(mDocument);
+    if (nsDoc) {
+        nsDoc->SetTitle(EmptyString());
+    }
+
     // Reset and set up document
     URIUtils::ResetWithSource(mDocument, aSourceDocument);
 
