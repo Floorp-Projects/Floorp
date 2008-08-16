@@ -124,6 +124,15 @@ nsXREDirProvider::Initialize(nsIFile *aXULAppDir,
   mXULAppDir = aXULAppDir;
   mGREDir = aGREDir;
 
+  if (!mProfileDir) {
+    nsCOMPtr<nsIDirectoryServiceProvider> app(do_QueryInterface(mAppProvider));
+    if (app) {
+      PRBool per = PR_FALSE;
+      app->GetFile(NS_APP_USER_PROFILE_50_DIR, &per, getter_AddRefs(mProfileDir));
+      NS_ASSERTION(per, "NS_APP_USER_PROFILE_50_DIR no defined! This shouldn't happen!"); 
+    }
+  }
+
   return NS_OK;
 }
 
