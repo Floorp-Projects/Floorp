@@ -163,7 +163,10 @@
 
 #define TEXT_WHITESPACE_FLAGS      0x18000000
 // This bit is set while the frame is registered as a blinking frame.
-#define TEXT_BLINK_ON              0x80000000
+#define TEXT_BLINK_ON              0x20000000
+
+// nsTextFrame.h has
+// #define TEXT_HAS_NONCOLLAPSED_CHARACTERS 0x80000000
 
 /*
  * Some general notes
