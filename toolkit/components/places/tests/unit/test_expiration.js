@@ -91,7 +91,7 @@ var observer = {
   },
   onPageChanged: function(aURI, aWhat, aValue) {
   },
-  expiredURIs: [],
+  expiredURI: null,
   onPageExpired: function(aURI, aVisitTime, aWholeEntry) {
     this.expiredURI = aURI.spec;
   },
@@ -565,14 +565,15 @@ test 2: MAX-AGE DATE CRITERIA MET
 steps:
   - clear history
   - reset observer
-  - add a visit, 4 days old
+  - add a visit, 4 days old (expirable)
+  - add a visit, 1 day old (not expirable)
   - set browser.history_expire_days to 3
   - set browser.history_expire_days_min to 2
-  - set browser.history_expire_sites to 2
+  - set browser.history_expire_sites to 20
   - kick off incremental expiration
 
 confirmation:
-  - check onPageExpired, confirm nothing was expired
+  - check onPageExpired, confirm that the expirable uri was expired
   - query for the visit, confirm it's there
 */
 function startExpireDaysOnly() {
@@ -583,15 +584,17 @@ function startExpireDaysOnly() {
   dump("startExpireDaysOnly()\n");
 
   // add expirable visit
-  histsvc.addVisit(testURI, (Date.now() - (86400 * 2 * 1000)) * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(testURI, (Date.now() - (86400 * 4 * 1000)) * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_NEVER);
 
   // add un-expirable visit
-  histsvc.addVisit(uri("http://unexpirable.com"), (Date.now() - (86400 * 1000)) * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
+  var unexpirableURI = uri("http://unexpirable.com");
+  histsvc.addVisit(unexpirableURI, (Date.now() - (86400 * 1000)) * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
+  annosvc.setPageAnnotation(unexpirableURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_NEVER);
 
-  // set sites cap to 2
-  prefs.setIntPref("browser.history_expire_sites", 2);
-  // set date minimum to 2
+  // set sites cap to 20 (make sure it's not an expiration criteria)
+  prefs.setIntPref("browser.history_expire_sites", 20);
+  // set date minimum to 2 (also not an expiration criteria)
   prefs.setIntPref("browser.history_expire_days_min", 2);
   // set date maximum to 3
   prefs.setIntPref("browser.history_expire_days", 3);
@@ -606,10 +609,12 @@ function startExpireDaysOnly() {
 function checkExpireDaysOnly() {
   try {
     // test expired record
-    do_check_eq(observer.expiredURI, null);
-    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 1);
+    do_check_eq(observer.expiredURI, testURI.spec);
+    do_check_eq(annosvc.getPageAnnotationNames(testURI, {}).length, 0);
+
     // test unexpired record
-    do_check_neq(histsvc.getPageTitle(uri("http://unexpirable.com")), null);
+    do_check_neq(histsvc.getPageTitle(unexpirableURI), null);
+    do_check_eq(annosvc.getPageAnnotationNames(unexpirableURI, {}).length, 1);
   } catch(ex) {}
   dump("done expiration test 2\n");
   startExpireBoth();
