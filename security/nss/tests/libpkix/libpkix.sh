@@ -206,7 +206,7 @@ libpkix_setup_db()
   echo "Loading certs into DB at $DB_DIR"
   output=$TMP/libpkix_setup.tmp
   while read certName trusts; do
-      certutil -d $DB_DIR -A -n $certName -t $trusts -i $CERT_DIR/$certName.cert > $output 2>&1
+      certutil -d $DB_DIR -A -n $certName -t $trusts -i $CERT_DIR/$certName.cert -f "${R_PWFILE}" > $output 2>&1
       if [ $? -ne 0 ]; then
           echo "WARNING: unable to add a certificate($certName) into database"
           echo "certutil output:"
@@ -236,21 +236,21 @@ libpkix_leak_test()
     fi 
     while read status leafCert explPolicy others; do
         # continue with empty and commented lines. 
-        [ -z "$status" -o "$status" = "#" ] && continue
+        [ -z "$status" -o "`echo $status | cut -c 1`" = "#" ] && continue
 
         # can only run positive tests. Positive validation
         # status is the exit condition for the code in the library.
         [ $status -ne 0 ] && continue;
         extraOpt=""
         if [ "$explPolicy" -a "$explPolicy" != "undef" ]; then
-            extraOpt="-p -o $explPolicy"
+            extraOpt="-pp -o $explPolicy"
         fi
         cmd="vfychain -d $DB_DIR $extraOpt $CERT_DIR/$leafCert.cert"
         if [ -n "$MEMLEAK_DBG" ]; then
             cmd="$RUN_COMMAND_DBG $cmd"
         fi
         echo $cmd
-        $cmd > $tmpLogFile
+        $cmd > $tmpLogFile 2>&1
         if [ -z "$MEMLEAK_DBG" ]; then
             cat $tmpLogFile
             grep "Memory Leak:" $tmpLogFile

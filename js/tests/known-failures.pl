@@ -250,10 +250,23 @@ foreach $pattern (@patterns) {
     # look for known failure patterns that don't have matches in the 
     # the current failures selected by the user.
 
+    debug "searching for matches to $pattern\n";
+
     @results = grep m@^$pattern@, @failures;
 
+    if ($debug) {
+        my $failure;
+        foreach $failure (@failures) {
+            if ($failure =~ $pattern) {
+                debug "MATCH: $pattern - $failure\n";
+            }
+            else {
+                debug "NOMATCH: $pattern - $failure\n";
+            }
+        }
+    }
     if ($#results == -1) {
-        debug "fix: $pattern";
+        debug "fix: '$pattern'";
         push @fixes, ($pattern)
     }
 }

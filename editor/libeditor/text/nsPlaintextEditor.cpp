@@ -1737,7 +1737,7 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
   if (caretP)
   {
     nsIView *view = nsnull;
-    result = caretP->GetCaretCoordinates(nsCaret::eIMECoordinates,
+    result = caretP->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates,
                                          selection,
                                          &(aReply->mCursorPosition),
                                          &(aReply->mCursorIsCollapsed),

@@ -571,7 +571,7 @@ fails == 385823-2b.html 385823-2-ref.html
 == 386014-1c.html 386014-1-ref.html
 == 386065-1.html 386065-1-ref.html
 == 386065-2.html about:blank
-== 386147-1.html 386147-1-ref.html
+fails == 386147-1.html 386147-1-ref.html # bug 447460
 == 386310-1a.html 386310-1-ref.html
 fails == 386310-1b.html 386310-1-ref.html
 == 386310-1c.html 386310-1-ref.html
@@ -752,6 +752,7 @@ random == 403134-1.html 403134-1-ref.html # bug 405377
 != 409659-1b.html 409659-1-ref.html
 != 409659-1c.html 409659-1-ref.html
 == 409659-1d.html 409659-1-ref.html
+== 411059-1.html 411059-1-ref.html
 == 411334-1.xml 411334-1-ref.xml
 == 411585-1.html 411585-1-ref.html
 == 411585-2.html 411585-2-ref.html
@@ -836,6 +837,8 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 424434-1.html 424434-1-ref.html
 == 424631-1.html 424631-1-ref.html
 == 424710-1.html 424710-1-ref.html
+== 425247-1.html 425247-1-ref.html
+== 425247-2.html 425247-2-ref.html
 == 425972-1.html 425972-1-ref.html
 == 425972-2.html 425972-2-ref.html
 != 425972-1.html 425972-2.html
@@ -873,4 +876,7 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 != about:blank 438987-2-ref.html # check that backgrounds work at all 
 == 439004-1.html 439004-1-ref.html
 == 439910.html 439910-ref.html
+== 441259-1.html 441259-1-ref.html
+fails == 441259-2.html 441259-2-ref.html # bug 441400
 # == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
+== 449519-1.html 449519-1-ref.html

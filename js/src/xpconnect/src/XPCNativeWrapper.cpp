@@ -401,7 +401,8 @@ XPC_NW_RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
     // Just using GetNewOrUsed on the return value of
     // GetWrappedNativeOfJSObject will give the right thing -- the unique deep
     // implicit wrapper associated with wrappedNative.
-    JSObject* wrapperObj = XPCNativeWrapper::GetNewOrUsed(cx, wrappedNative);
+    JSObject* wrapperObj = XPCNativeWrapper::GetNewOrUsed(cx, wrappedNative,
+                                                          nsnull);
     if (!wrapperObj) {
       return JS_FALSE;
     }
@@ -776,7 +777,7 @@ MirrorWrappedNativeParent(JSContext *cx, XPCWrappedNative *wrapper,
     XPCWrappedNative *parent_wrapper =
       XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wn_parent);
 
-    *result = XPCNativeWrapper::GetNewOrUsed(cx, parent_wrapper);
+    *result = XPCNativeWrapper::GetNewOrUsed(cx, parent_wrapper, nsnull);
     if (!*result)
       return JS_FALSE;
   }
@@ -794,7 +795,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   // |obj| almost always has the wrong proto and parent so we have to create
   // our own object anyway.  Set |obj| to null so we don't use it by accident.
   obj = nsnull;
-  
+
   jsval native = argv[0];
 
   if (JSVAL_IS_PRIMITIVE(native)) {
@@ -821,7 +822,6 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
     }
   }
-
 
   XPCWrappedNative *wrappedNative;
 
@@ -1083,8 +1083,26 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
 
 // static
 JSObject *
-XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper)
+XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
+                               JSObject *callee)
 {
+  if (callee) {
+    nsCOMPtr<nsIPrincipal> prin;
+
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    nsresult rv = ssm->GetObjectPrincipal(cx, callee, getter_AddRefs(prin));
+    if (NS_SUCCEEDED(rv) && prin) {
+      PRBool isSystem;
+      rv = ssm->IsSystemPrincipal(prin, &isSystem);
+      if (NS_SUCCEEDED(rv) && !isSystem) {
+        jsval v = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
+        if (!XPCNativeWrapperCtor(cx, JSVAL_TO_OBJECT(v), 1, &v, &v))
+          return nsnull;
+        return JSVAL_TO_OBJECT(v);
+      }
+    }
+  }
+
   // Prevent wrapping a double-wrapped JS object in an
   // XPCNativeWrapper!
   nsCOMPtr<nsIXPConnectWrappedJS> xpcwrappedjs(do_QueryWrappedNative(wrapper));

@@ -2536,6 +2536,7 @@ nsFrameSelection::SetMouseDownState(PRBool aState)
     
   if (!mMouseDownState)
   {
+    mDragSelectingCells = PR_FALSE;
     PostReason(nsISelectionListener::MOUSEUP_REASON);
     NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL); //notify that reason is mouse up please.
   }

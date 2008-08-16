@@ -105,8 +105,11 @@ variable            description
 -t                  optional. By default the test will exclude tests 
                     which time out on this branch, test type, build type and 
                     operating system. -t will include tests which timeout.
--Z n                optional. Set gczeal to n. Currently, only valid for 
+-J jsoptions        optional. Set JavaScript options:
+                    -Z n Set gczeal to n. Currently, only valid for 
                     debug builds of Gecko 1.8.1.15, 1.9.0 and later.
+                    -z optional. use split objects in the shell.
+                    -j optional. use JIT in the shell. Only available on 1.9.1 and later
 -F                  optional. Just generate file lists without running any tests.
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
@@ -119,7 +122,7 @@ EOF
     exit 2
 }
 
-while getopts "p:b:s:T:x:N:d:X:I:Z:RctF" optname
+while getopts "p:b:s:T:x:N:d:X:I:J:RctF" optname
 do 
     case $optname in
         p) 
@@ -144,13 +147,30 @@ do
             timeouts=1;;
         F) 
             filesonly=1;;
-        Z)  
-            gczealshell="-Z $OPTARG"
-            gczealbrowser=";gczeal=$OPTARG"
+        J)
+            javascriptoptions=$OPTARG
             ;;
         d) datafiles=$OPTARG;;
     esac
 done
+
+if [[ -n "$javascriptoptions" ]]; then
+    unset OPTIND
+    while getopts "Z:jz" optname $javascriptoptions; do
+        case $optname in
+            Z)  
+                gczealshell="-Z $OPTARG"
+                gczealbrowser=";gczeal=$OPTARG"
+                ;;
+            z)
+                splitobjects="-z"
+                ;;
+            j)
+                jit="-j"
+                ;;
+        esac
+    done
+fi
 
 # include environment variables
 if [[ -n "$datafiles" ]]; then
@@ -163,7 +183,7 @@ if [[ -n "$gczeal" && "$buildtype" != "debug" ]]; then
     error "gczeal is supported for buildtype debug and not $buildtype"
 fi
 
-dumpvars product branch buildtype jsshellsourcepath profilename executablepath excludetests includetests crashes timeouts filesonly gczeal datafiles | sed "s|^|arguments: |"
+dumpvars product branch buildtype jsshellsourcepath profilename executablepath excludetests includetests crashes timeouts filesonly javascriptoptions datafiles | sed "s|^|arguments: |"
 
 pushd $TEST_JSDIR
 
@@ -191,6 +211,90 @@ case $product in
         ;;
 esac
 
+function shellfileversion()
+{
+    local jsfile=$1
+    local version
+
+    case $jsfile in
+        ecma/*)
+            version=150;;
+        ecma_2/*)
+            version=150;;
+        ecma_3/*)
+            version=150;;
+        ecma_3_1/*)
+            version=180;;
+        js1_1/*)
+            version=150;;
+        js1_2/*)
+            version=150;;
+        js1_3/*)
+            version=150;;
+        js1_4/*)
+            version=150;;
+        js1_5/*)
+            version=150;;
+        js1_6/*)
+            version=160;;
+        js1_7/*)
+            version=170;;
+        js1_8/*)
+            version=180;;
+        js1_8_1/*)
+            version=180;;
+        js1_9/*)
+            version=190;;
+        js2_0/*)
+            version=200;;
+        *)
+            version=150;;
+    esac
+    echo $version
+}
+
+function browserfileversion()
+{
+    local jsfile=$1
+    local version
+
+    case $jsfile in
+        ecma/*)
+            version=1.5;;
+        ecma_2/*)
+            version=1.5;;
+        ecma_3/*)
+            version=1.5;;
+        ecma_3_1/*)
+            version=1.8;;
+        js1_1/*)
+            version=1.1;;
+        js1_2/*)
+            version=1.5;;
+        js1_3/*)
+            version=1.5;;
+        js1_4/*)
+            version=1.5;;
+        js1_5/*)
+            version=1.5;;
+        js1_6/*)
+            version=1.6;;
+        js1_7/*)
+            version=1.7;;
+        js1_8/*)
+            version=1.8;;
+        js1_8_1/*)
+            version=1.8;;
+        js1_9/*)
+            version=1.9;;
+        js2_0/*)
+            version=2.0;;
+        *)
+            version=1.5;;
+    esac
+    echo $version
+}
+
 rm -f finished-$branch-$testtype-$buildtype
 
 if ! make failures.txt; then
@@ -215,7 +319,7 @@ if [[ -z "$includetests" ]]; then
             includetests="$includetests js1_7 js1_8"
             ;;
         1.9.1)
-            includetests="$includetests js1_7 js1_8"
+            includetests="$includetests js1_7 js1_8 ecma_3_1 js1_8_1"
             ;;
     esac
 fi
@@ -301,17 +405,7 @@ case $testtype in
 
             if ! grep -q $jsfile $excludetestsfile; then
 
-                result=`echo $jsfile | sed 's/.*js\([0-9]\)_\([0-9]\).*/\1.\2/'`
-
-                case $result in
-                    1.5) version="150";;
-                    1.6) version="160";;
-                    1.7) version="170";;
-                    1.8) version="180";;
-                    1.9) version="190";;
-                    2.0) version="200";;
-                    *) version="150";;
-                esac
+                version=`shellfileversion $jsfile`
                 
                 subsuitetestdir=`dirname $jsfile`
                 suitetestdir=`dirname $subsuitetestdir`
@@ -321,6 +415,8 @@ case $testtype in
                     $executable -v $version \
                     -S 524288 \
                     $gczealshell \
+                    $splitobjects \
+                    $jit \
                     -f ./shell.js \
                     -f $suitetestdir/shell.js \
                     -f $subsuitetestdir/shell.js \
@@ -331,11 +427,20 @@ case $testtype in
                     rc=$?
                 fi
                 if [[ $rc == 99 ]]; then
+                    # note that this loop is executing in a sub-process
+                    # error will terminate the sub-process but will transfer
+                    # control to the next statement following the loop which
+                    # in this case is the "End Run" output which incorrectly
+                    # labels the test run as completed.
                     error "User Interrupt"
                 fi
                 echo "JavaScriptTest: End Test $jsfile"
             fi
         done
+        rc=$?
+        if [[ $rc != 0 ]]; then
+            error ""
+        fi
         echo "JavaScriptTest: End Run"
         ;;
 
@@ -362,17 +467,7 @@ EOF
 
             if ! grep -q $jsfile $excludetestsfile; then
 
-                result=`echo $jsfile | sed 's/.*js\([0-9]\)_\([0-9]\).*/\1.\2/'`
-
-                case $result in
-                    1.5) version=";version=1.5";;
-                    1.6) version=";version=1.6";;
-                    1.7) version=";version=1.7";;
-                    1.8) version=";version=1.8";;
-                    1.9) version=";version=1.9";;
-                    2.0) version=";version=2.0";;
-                    *) version="";;
-                esac
+                version=";version=`browserfileversion $jsfile`"
                 
                 echo "http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version$gczealbrowser" >> $urllist
                 echo "<li><a href='http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version$gczealbrowser'>$jsfile</a></li>" >> $urlhtml

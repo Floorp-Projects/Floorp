@@ -50,7 +50,6 @@
 #include "nsIDOMSerializer.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIEventListenerManager.h"
 #include "nsGUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "prprf.h"
@@ -94,6 +93,8 @@
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
+#define ABORT_STR "abort"
+#define LOADSTART_STR "loadstart"
 #define PROGRESS_STR "progress"
 #define UPLOADPROGRESS_STR "uploadprogress"
 #define READYSTATE_STR "readystatechange"
@@ -132,6 +133,29 @@
 
 #define NS_BADCERTHANDLER_CONTRACTID \
   "@mozilla.org/content/xmlhttprequest-bad-cert-handler;1"
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventListenerWrapper)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventListenerWrapper)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+NS_INTERFACE_MAP_END_AGGREGATED(mListener)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventListenerWrapper)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMEventListenerWrapper)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEventListenerWrapper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListener)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEventListenerWrapper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMETHODIMP
+nsDOMEventListenerWrapper::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return mListener->HandleEvent(aEvent);
+}
 
 // This helper function adds the given load flags to the request's existing
 // load flags.
@@ -270,18 +294,325 @@ GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
 }
 
 /////////////////////////////////////////////
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXHREventTarget)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXHREventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnAbortListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadStartListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnProgressListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXHREventTarget)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnAbortListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadStartListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnProgressListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mListenerManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXHREventTarget)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLHttpRequestEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXHREventTarget,
+                                          nsIXMLHttpRequestEventTarget)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXHREventTarget,
+                                           nsIXMLHttpRequestEventTarget)
+
+NS_IMETHODIMP
+nsXHREventTarget::AddEventListener(const nsAString& aType,
+                                   nsIDOMEventListener* aListener,
+                                   PRBool aUseCapture)
+{
+  nsCOMPtr<nsIScriptContext> context;
+  GetContextForEventHandlers(getter_AddRefs(context));
+  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(context);
+  PRBool wantsUntrusted = doc && !nsContentUtils::IsChromeDoc(doc);
+  return AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::RemoveEventListener(const nsAString& aType,
+                                      nsIDOMEventListener* aListener,
+                                      PRBool aUseCapture)
+{
+  nsCOMPtr<nsIEventListenerManager> elm;
+  GetListenerManager(PR_FALSE, getter_AddRefs(elm));
+  if (elm) {
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+    elm->RemoveEventListenerByType(aListener, aType, flags, nsnull);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::AddEventListener(const nsAString& aType,
+                                   nsIDOMEventListener *aListener,
+                                   PRBool aUseCapture,
+                                   PRBool aWantsUntrusted)
+{
+  nsCOMPtr<nsIEventListenerManager> elm;
+  GetListenerManager(PR_TRUE, getter_AddRefs(elm));
+  NS_ENSURE_STATE(elm);
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  if (aWantsUntrusted) {
+    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+  }
+  return elm->AddEventListenerByType(aListener, aType, flags, nsnull);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::GetScriptTypeID(PRUint32 *aLang)
+{
+  *aLang = mLang;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::SetScriptTypeID(PRUint32 aLang)
+{
+  mLang = aLang;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::DispatchEvent(nsIDOMEvent* aEvent, PRBool* aRetVal)
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsresult rv =
+    nsEventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMEventTarget*>(this),
+                                        nsnull, aEvent, nsnull, &status);
+
+  *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
+  return rv;
+}
+
+nsresult
+nsXHREventTarget::RemoveAddEventListener(const nsAString& aType,
+                                         nsRefPtr<nsDOMEventListenerWrapper>& aCurrent,
+                                         nsIDOMEventListener* aNew)
+{
+  if (aCurrent) {
+    RemoveEventListener(aType, aCurrent, PR_FALSE);
+    aCurrent = nsnull;
+  }
+  if (aNew) {
+    aCurrent = new nsDOMEventListenerWrapper(aNew);
+    NS_ENSURE_TRUE(aCurrent, NS_ERROR_OUT_OF_MEMORY);
+    AddEventListener(aType, aCurrent, PR_FALSE);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsXHREventTarget::GetInnerEventListener(nsRefPtr<nsDOMEventListenerWrapper>& aWrapper,
+                                        nsIDOMEventListener** aListener)
+{
+  NS_ENSURE_ARG_POINTER(aListener);
+  if (aWrapper) {
+    NS_ADDREF(*aListener = aWrapper->GetInner());
+  } else {
+    *aListener = nsnull;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::GetOnload(nsIDOMEventListener** aOnLoad)
+{
+  return GetInnerEventListener(mOnLoadListener, aOnLoad);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::SetOnload(nsIDOMEventListener* aOnLoad)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(LOAD_STR),
+                                mOnLoadListener, aOnLoad);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::GetOnerror(nsIDOMEventListener** aOnerror)
+{
+  return GetInnerEventListener(mOnErrorListener, aOnerror);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::SetOnerror(nsIDOMEventListener* aOnerror)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(ERROR_STR),
+                                mOnErrorListener, aOnerror);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::GetOnabort(nsIDOMEventListener** aOnabort)
+{
+  return GetInnerEventListener(mOnAbortListener, aOnabort);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::SetOnabort(nsIDOMEventListener* aOnabort)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_STR),
+                                mOnAbortListener, aOnabort);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::GetOnloadstart(nsIDOMEventListener** aOnloadstart)
+{
+  return GetInnerEventListener(mOnLoadStartListener, aOnloadstart);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::SetOnloadstart(nsIDOMEventListener* aOnloadstart)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(LOADSTART_STR),
+                                mOnLoadStartListener, aOnloadstart);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::GetOnprogress(nsIDOMEventListener** aOnprogress)
+{
+  return GetInnerEventListener(mOnProgressListener, aOnprogress);
+}
+
+NS_IMETHODIMP
+nsXHREventTarget::SetOnprogress(nsIDOMEventListener* aOnprogress)
+{
+  return RemoveAddEventListener(NS_LITERAL_STRING(PROGRESS_STR),
+                                mOnProgressListener, aOnprogress);
+}
+
+nsresult
+nsXHREventTarget::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  aVisitor.mCanHandle = PR_TRUE;
+  aVisitor.mParentTarget = nsnull;
+  return NS_OK;
+}
+
+nsresult
+nsXHREventTarget::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  return NS_OK;
+}
+
+nsresult
+nsXHREventTarget::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
+                                   nsPresContext* aPresContext,
+                                   nsEventStatus* aEventStatus)
+{
+  return
+    nsEventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMEventTarget*>(this),
+                                        aEvent, aDOMEvent, aPresContext,
+                                        aEventStatus);
+}
+
+nsresult
+nsXHREventTarget::GetListenerManager(PRBool aCreateIfNotFound,
+                                     nsIEventListenerManager** aResult)
+{
+  if (!mListenerManager) {
+    if (!aCreateIfNotFound) {
+      *aResult = nsnull;
+      return NS_OK;
+    }
+    nsresult rv = NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
+    NS_ENSURE_SUCCESS(rv, rv);
+    mListenerManager->SetListenerTarget(static_cast<nsPIDOMEventTarget*>(this));
+  }
+
+  NS_ADDREF(*aResult = mListenerManager);
+  return NS_OK;
+}
+
+nsresult
+nsXHREventTarget::AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                        const nsIID& aIID)
+{
+  nsCOMPtr<nsIEventListenerManager> elm;
+  GetListenerManager(PR_TRUE, getter_AddRefs(elm));
+  if (elm) {
+    elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsXHREventTarget::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                           const nsIID& aIID)
+{
+  nsCOMPtr<nsIEventListenerManager> elm;
+  GetListenerManager(PR_FALSE, getter_AddRefs(elm));
+  if (elm) {
+    return elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsXHREventTarget::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
+{
+  nsCOMPtr<nsIEventListenerManager> elm;
+  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(elm));
+  if (elm) {
+    return elm->GetSystemEventGroupLM(aGroup);
+  }
+  return rv;
+}
+
+/////////////////////////////////////////////
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequestUpload)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLHttpRequestUpload)
+  NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestUpload)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpRequestUpload)
+NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
+
+NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
+NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
+
+nsresult
+nsXMLHttpRequestUpload::GetContextForEventHandlers(nsIScriptContext** aContext)
+{
+  return mOwner->GetContextForEventHandlers(aContext);
+}
+
+/////////////////////////////////////////////
 //
 //
 /////////////////////////////////////////////
 
 nsXMLHttpRequest::nsXMLHttpRequest()
-  : mState(XML_HTTP_REQUEST_UNINITIALIZED)
+  : mState(XML_HTTP_REQUEST_UNINITIALIZED), mUploadTransferred(0),
+    mUploadTotal(0), mUploadComplete(PR_TRUE), mErrorLoad(PR_FALSE)
 {
   nsLayoutStatics::AddRef();
 }
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
 {
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
+
   if (mState & (XML_HTTP_REQUEST_STOPPED |
                 XML_HTTP_REQUEST_SENT |
                 XML_HTTP_REQUEST_INTERACTIVE)) {
@@ -291,8 +622,6 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
   NS_ABORT_IF_FALSE(!(mState & XML_HTTP_REQUEST_SYNCLOOPING), "we rather crash than hang");
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
-  // Needed to free the listener arrays.
-  ClearEventListeners();
   nsLayoutStatics::Release();
 }
 
@@ -390,21 +719,13 @@ nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequest)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXMLHttpRequest)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
+                                                  nsXHREventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mReadRequest)
 
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mLoadEventListeners)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mErrorEventListeners)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mProgressEventListeners)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mUploadProgressEventListeners)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mReadystatechangeEventListeners)
-
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnProgressListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnUploadProgressListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnReadystatechangeListener)
 
@@ -414,24 +735,19 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXMLHttpRequest)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mProgressEventSink)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mUpload,
+                                                       nsIXMLHttpRequestUpload)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXMLHttpRequest)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
+                                                nsXHREventTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChannel)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mReadRequest)
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mLoadEventListeners)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mErrorEventListeners)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mProgressEventListeners)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mUploadProgressEventListeners)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mReadystatechangeEventListeners)
-
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnProgressListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnUploadProgressListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnReadystatechangeListener)
 
@@ -441,17 +757,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXMLHttpRequest)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mProgressEventSink)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mUpload)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
 // QueryInterface implementation for nsXMLHttpRequest
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpRequest)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLHttpRequest)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIJSXMLHttpRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestUploadGetter)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
@@ -460,178 +777,43 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpRequest)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 
+NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
+NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXMLHttpRequest, nsIXMLHttpRequest)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXMLHttpRequest, nsIXMLHttpRequest)
-
-
-/* void addEventListener (in string type, in nsIDOMEventListener
-   listener); */
-NS_IMETHODIMP
-nsXMLHttpRequest::AddEventListener(const nsAString& type,
-                                   nsIDOMEventListener *listener,
-                                   PRBool useCapture)
-{
-  NS_ENSURE_ARG(listener);
-
-  nsCOMArray<nsIDOMEventListener> *array;
-
-#define IMPL_ADD_LISTENER(_type, _member)    \
-  if (type.EqualsLiteral(_type)) {           \
-    array = &(_member);                      \
-  } else
-
-  IMPL_ADD_LISTENER(LOAD_STR, mLoadEventListeners)
-  IMPL_ADD_LISTENER(ERROR_STR, mErrorEventListeners)
-  IMPL_ADD_LISTENER(PROGRESS_STR, mProgressEventListeners)
-  IMPL_ADD_LISTENER(UPLOADPROGRESS_STR, mUploadProgressEventListeners)
-  IMPL_ADD_LISTENER(READYSTATE_STR, mReadystatechangeEventListeners)
-  {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  array->AppendObject(listener);
-
-#undef IMPL_ADD_LISTENER
-  
-  return NS_OK;
-}
-
-/* void removeEventListener (in string type, in nsIDOMEventListener
-   listener); */
-NS_IMETHODIMP
-nsXMLHttpRequest::RemoveEventListener(const nsAString & type,
-                                      nsIDOMEventListener *listener,
-                                      PRBool useCapture)
-{
-  NS_ENSURE_ARG(listener);
-
-  nsCOMArray<nsIDOMEventListener> *array;
-#define IMPL_REMOVE_LISTENER(_type, _member)  \
-  if (type.EqualsLiteral(_type)) {            \
-    array = &(_member);                       \
-  } else
-
-  IMPL_REMOVE_LISTENER(LOAD_STR, mLoadEventListeners)
-  IMPL_REMOVE_LISTENER(ERROR_STR, mErrorEventListeners)
-  IMPL_REMOVE_LISTENER(PROGRESS_STR, mProgressEventListeners)
-  IMPL_REMOVE_LISTENER(UPLOADPROGRESS_STR, mUploadProgressEventListeners)
-  IMPL_REMOVE_LISTENER(READYSTATE_STR, mReadystatechangeEventListeners)
-  {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // Allow a caller to remove O(N^2) behavior by removing end-to-start.
-  for (PRUint32 i = array->Count() - 1; i != PRUint32(-1); --i) {
-    if (array->ObjectAt(i) == listener) {
-      array->RemoveObjectAt(i);
-      break;
-    }
-  }
-
-  return NS_OK;
-}
-
-/* boolean dispatchEvent (in nsIDOMEvent evt); */
-NS_IMETHODIMP
-nsXMLHttpRequest::DispatchEvent(nsIDOMEvent *evt, PRBool *_retval)
-{
-  // Ignored
-
-  return NS_OK;
-}
-
-/* attribute nsIDOMEventListener onreadystatechange; */
 NS_IMETHODIMP
 nsXMLHttpRequest::GetOnreadystatechange(nsIDOMEventListener * *aOnreadystatechange)
 {
-  NS_ENSURE_ARG_POINTER(aOnreadystatechange);
-
-  NS_IF_ADDREF(*aOnreadystatechange = mOnReadystatechangeListener);
-
-  return NS_OK;
+  return
+    nsXHREventTarget::GetInnerEventListener(mOnReadystatechangeListener,
+                                            aOnreadystatechange);
 }
 
 NS_IMETHODIMP
 nsXMLHttpRequest::SetOnreadystatechange(nsIDOMEventListener * aOnreadystatechange)
 {
-  mOnReadystatechangeListener = aOnreadystatechange;
-  return NS_OK;
+  return
+    nsXHREventTarget::RemoveAddEventListener(NS_LITERAL_STRING(READYSTATE_STR),
+                                             mOnReadystatechangeListener,
+                                             aOnreadystatechange);
 }
 
-
-/* attribute nsIDOMEventListener onload; */
-NS_IMETHODIMP
-nsXMLHttpRequest::GetOnload(nsIDOMEventListener * *aOnLoad)
-{
-  NS_ENSURE_ARG_POINTER(aOnLoad);
-
-  NS_IF_ADDREF(*aOnLoad = mOnLoadListener);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLHttpRequest::SetOnload(nsIDOMEventListener * aOnLoad)
-{
-  mOnLoadListener = aOnLoad;
-  return NS_OK;
-}
-
-/* attribute nsIDOMEventListener onerror; */
-NS_IMETHODIMP
-nsXMLHttpRequest::GetOnerror(nsIDOMEventListener * *aOnerror)
-{
-  NS_ENSURE_ARG_POINTER(aOnerror);
-
-  NS_IF_ADDREF(*aOnerror = mOnErrorListener);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLHttpRequest::SetOnerror(nsIDOMEventListener * aOnerror)
-{
-  mOnErrorListener = aOnerror;
-  return NS_OK;
-}
-
-/* attribute nsIDOMEventListener onprogress; */
-NS_IMETHODIMP
-nsXMLHttpRequest::GetOnprogress(nsIDOMEventListener * *aOnprogress)
-{
-  NS_ENSURE_ARG_POINTER(aOnprogress);  
-
-  NS_IF_ADDREF(*aOnprogress = mOnProgressListener);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXMLHttpRequest::SetOnprogress(nsIDOMEventListener * aOnprogress)
-{
-  mOnProgressListener = aOnprogress;
-  return NS_OK;
-}
-
-/* attribute nsIDOMEventListener onuploadprogress; */
 NS_IMETHODIMP
 nsXMLHttpRequest::GetOnuploadprogress(nsIDOMEventListener * *aOnuploadprogress)
 {
-  NS_ENSURE_ARG_POINTER(aOnuploadprogress);  
-
-  NS_IF_ADDREF(*aOnuploadprogress = mOnUploadProgressListener);
-
-  return NS_OK;
+  return
+    nsXHREventTarget::GetInnerEventListener(mOnUploadProgressListener,
+                                            aOnuploadprogress);
 }
 
 NS_IMETHODIMP
 nsXMLHttpRequest::SetOnuploadprogress(nsIDOMEventListener * aOnuploadprogress)
 {
-  mOnUploadProgressListener = aOnuploadprogress;
-  return NS_OK;
+  return
+    nsXHREventTarget::RemoveAddEventListener(NS_LITERAL_STRING(UPLOADPROGRESS_STR),
+                                             mOnUploadProgressListener,
+                                             aOnuploadprogress);
 }
 
 /* readonly attribute nsIChannel channel; */
@@ -862,7 +1044,17 @@ nsXMLHttpRequest::Abort()
   if (!(mState & (XML_HTTP_REQUEST_UNINITIALIZED |
                   XML_HTTP_REQUEST_OPENED |
                   XML_HTTP_REQUEST_COMPLETED))) {
-    ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_TRUE, PR_TRUE);
+    ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_TRUE);
+  }
+
+  if (!(mState & XML_HTTP_REQUEST_SYNCLOOPING)) {
+    NS_NAMED_LITERAL_STRING(abortStr, ABORT_STR);
+    DispatchProgressEvent(this, abortStr, PR_FALSE, mResponseBody.Length(), 0);
+    if (mUpload && !mUploadComplete) {
+      mUploadComplete = PR_TRUE;
+      DispatchProgressEvent(mUpload, abortStr, PR_TRUE, mUploadTransferred,
+                            mUploadTotal);
+    }
   }
 
   // The ChangeState call above calls onreadystatechange handlers which
@@ -959,7 +1151,7 @@ nsXMLHttpRequest::GetBaseURI()
 }
 
 nsresult
-nsXMLHttpRequest::CreateEvent(const nsAString& aType, nsIDOMEvent** aDOMEvent)
+nsXMLHttpRequest::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
 {
   nsresult rv = nsEventDispatcher::CreateEvent(nsnull, nsnull,
                                                NS_LITERAL_STRING("Events"),
@@ -974,96 +1166,58 @@ nsXMLHttpRequest::CreateEvent(const nsAString& aType, nsIDOMEvent** aDOMEvent)
     return NS_ERROR_FAILURE;
   }
 
-  if (!aType.IsEmpty()) {
-    (*aDOMEvent)->InitEvent(aType, PR_FALSE, PR_FALSE);
-  }
-  
-  privevent->SetTarget(this);
-  privevent->SetCurrentTarget(this);
-  privevent->SetOriginalTarget(this);
+  (*aDOMEvent)->InitEvent(NS_LITERAL_STRING(READYSTATE_STR),
+                          PR_FALSE, PR_FALSE);
 
-  // We assume anyone who managed to call CreateEvent is trusted
+  // We assume anyone who managed to call CreateReadystatechangeEvent is trusted
   privevent->SetTrusted(PR_TRUE);
 
   return NS_OK;
 }
 
 void
-nsXMLHttpRequest::CopyEventListeners(nsCOMPtr<nsIDOMEventListener>& aListener,
-                                     const nsCOMArray<nsIDOMEventListener>& aListenerArray,
-                                     nsCOMArray<nsIDOMEventListener>& aCopy)
+nsXMLHttpRequest::DispatchProgressEvent(nsPIDOMEventTarget* aTarget,
+                                        const nsAString& aType,
+                                        PRBool aUseLSEventWrapper,
+                                        PRBool aLengthComputable,
+                                        PRUint64 aLoaded, PRUint64 aTotal,
+                                        PRUint64 aPosition, PRUint64 aTotalSize)
 {
-  NS_PRECONDITION(aCopy.Count() == 0, "aCopy should start off empty");
-  if (aListener)
-    aCopy.AppendObject(aListener);
-
-  aCopy.AppendObjects(aListenerArray);
-}
-
-void
-nsXMLHttpRequest::NotifyEventListeners(const nsCOMArray<nsIDOMEventListener>& aListeners,
-                                       nsIDOMEvent* aEvent)
-{
-  // XXXbz wouldn't it be easier to just have an actual nsEventListenerManager
-  // to work with or something?  I feel like we're duplicating code here...
-  if (!aEvent)
-    return;
-
-  nsCOMPtr<nsIJSContextStack> stack;
-  JSContext *cx = nsnull;
-
-  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+  if (aType.IsEmpty()) {
     return;
   }
 
-  if (mScriptContext) {
-    stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = nsEventDispatcher::CreateEvent(nsnull, nsnull,
+                                               NS_LITERAL_STRING("ProgressEvent"),
+                                               getter_AddRefs(event));
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
-    if (stack) {
-      cx = (JSContext *)mScriptContext->GetNativeContext();
+  nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(event));
+  if (!privevent) {
+    return;
+  }
+  privevent->SetTrusted(PR_TRUE);
 
-      if (cx) {
-        stack->Push(cx);
-      }
+  nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
+  if (!progress) {
+    return;
+  }
+
+  progress->InitProgressEvent(aType, PR_FALSE, PR_FALSE, aLengthComputable,
+                              aLoaded, (aTotal == LL_MAXUINT) ? 0 : aTotal);
+
+  if (aUseLSEventWrapper) {
+    nsCOMPtr<nsIDOMProgressEvent> xhrprogressEvent =
+      new nsXMLHttpProgressEvent(progress, aPosition, aTotalSize);
+    if (!xhrprogressEvent) {
+      return;
     }
+    event = xhrprogressEvent;
   }
-
-  PRInt32 count = aListeners.Count();
-  for (PRInt32 index = 0; index < count; ++index) {
-    nsIDOMEventListener* listener = aListeners[index];
-    
-    if (listener) {
-      listener->HandleEvent(aEvent);
-    }
-  }
-
-  if (cx) {
-    stack->Pop(&cx);
-  }
-}
-
-void
-nsXMLHttpRequest::ClearEventListeners()
-{
-  // This isn't *really* needed anymore now that we use a cycle
-  // collector, but we may as well keep it for safety (against leaks)
-  // and compatibility, and also for the code to clear the first
-  // listener arrays (called from the destructor).
-  // XXXbz per spec we shouldn't be doing this, actually.  And we
-  // don't need to clear the arrays from the destructor now that we're
-  // using nsCOMArray.
-
-  mLoadEventListeners.Clear();
-  mErrorEventListeners.Clear();
-  mProgressEventListeners.Clear();
-  mUploadProgressEventListeners.Clear();
-  mReadystatechangeEventListeners.Clear();
-
-  mOnLoadListener = nsnull;
-  mOnErrorListener = nsnull;
-  mOnProgressListener = nsnull;
-  mOnUploadProgressListener = nsnull;
-  mOnReadystatechangeListener = nsnull;
+  aTarget->DispatchDOMEvent(nsnull, event, nsnull, nsnull);
 }
 
 already_AddRefed<nsIHttpChannel>
@@ -1211,10 +1365,9 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   // a progress event handler we must load with nsIRequest::LOAD_NORMAL or
   // necko won't generate any progress notifications
   nsLoadFlags loadFlags;
-  if (mOnProgressListener ||
-      mOnUploadProgressListener ||
-      mProgressEventListeners.Count() != 0 ||
-      mUploadProgressEventListeners.Count() != 0) {
+  if (HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)) ||
+      HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
+      (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
     loadFlags = nsIRequest::LOAD_NORMAL;
   } else {
     loadFlags = nsIRequest::LOAD_BACKGROUND;
@@ -1476,6 +1629,13 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   nsresult status;
   request->GetStatus(&status);
+  mErrorLoad = mErrorLoad || NS_FAILED(status);
+
+  if (mUpload && !mUploadComplete && !mErrorLoad) {
+    mUploadComplete = PR_TRUE;
+    DispatchProgressEvent(mUpload, NS_LITERAL_STRING(LOAD_STR),
+                          PR_TRUE, mUploadTotal, mUploadTotal);
+  }
 
   PRBool parseBody = PR_TRUE;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
@@ -1634,17 +1794,6 @@ nsXMLHttpRequest::RequestCompleted()
     return NS_OK;
   }
 
-  // Grab hold of the event listeners we will need before we possibly clear
-  // them.
-  nsCOMArray<nsIDOMEventListener> loadEventListeners;
-  CopyEventListeners(mOnLoadListener, mLoadEventListeners, loadEventListeners);
-
-  // We need to create the event before nulling out mDocument
-  nsCOMPtr<nsIDOMEvent> domevent;
-  if (loadEventListeners.Count()) {
-    rv = CreateEvent(NS_LITERAL_STRING(LOAD_STR), getter_AddRefs(domevent));
-  }
-
   // We might have been sent non-XML data. If that was the case,
   // we should null out the document member. The idea in this
   // check here is that if there is no document element it is not
@@ -1657,12 +1806,19 @@ nsXMLHttpRequest::RequestCompleted()
     }
   }
 
-  // Clear listeners here unless we're multipart
-  ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_TRUE,
-              !!(mState & XML_HTTP_REQUEST_GOT_FINAL_STOP));
+  ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_TRUE);
 
-  if (NS_SUCCEEDED(rv) && domevent) {
-    NotifyEventListeners(loadEventListeners, domevent);
+  PRUint32 responseLength = mResponseBody.Length();
+  NS_NAMED_LITERAL_STRING(errorStr, ERROR_STR);
+  NS_NAMED_LITERAL_STRING(loadStr, LOAD_STR);
+  DispatchProgressEvent(this,
+                        mErrorLoad ? errorStr : loadStr,
+                        !mErrorLoad,
+                        responseLength,
+                        mErrorLoad ? 0 : responseLength);
+  if (mErrorLoad && mUpload && !mUploadComplete) {
+    DispatchProgressEvent(mUpload, errorStr, PR_TRUE,
+                          mUploadTransferred, mUploadTotal);
   }
 
   if (!(mState & XML_HTTP_REQUEST_GOT_FINAL_STOP)) {
@@ -1749,6 +1905,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     }
   }
 
+  mUploadTransferred = 0;
+  mUploadTotal = 0;
+  // By default we don't have any upload, so mark upload complete.
+  mUploadComplete = PR_TRUE;
+  mErrorLoad = PR_FALSE;
   if (aBody && httpChannel && !method.EqualsLiteral("GET")) {
     nsXPIDLString serial;
     nsCOMPtr<nsIInputStream> postDataStream;
@@ -1890,6 +2051,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         }
       }
 
+      mUploadComplete = PR_FALSE;
+      postDataStream->Available(&mUploadTotal);
       rv = uploadChannel->SetUploadStream(postDataStream, contentType, -1);
       // Reset the method to its original value
       if (httpChannel) {
@@ -1967,6 +2130,13 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
         rv = NS_ERROR_UNEXPECTED;
         break;
       }
+    }
+  } else {
+    DispatchProgressEvent(this, NS_LITERAL_STRING(LOADSTART_STR), PR_FALSE,
+                          0, 0);
+    if (mUpload && !mUploadComplete) {
+      DispatchProgressEvent(mUpload, NS_LITERAL_STRING(LOADSTART_STR), PR_TRUE,
+                            0, mUploadTotal);
     }
   }
 
@@ -2180,25 +2350,17 @@ nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 nsresult
 nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 {
-  nsCOMArray<nsIDOMEventListener> errorEventListeners;
-  CopyEventListeners(mOnErrorListener, mErrorEventListeners,
-                     errorEventListeners);
-
-  // We need to create the event before nulling out mDocument
-  nsCOMPtr<nsIDOMEvent> event = aEvent;
-  if (!event && errorEventListeners.Count()) {
-    CreateEvent(NS_LITERAL_STRING(ERROR_STR), getter_AddRefs(event));
-  }
-
   mDocument = nsnull;
   ChangeState(XML_HTTP_REQUEST_COMPLETED);
 
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
-  ClearEventListeners();
-  
-  if (event) {
-    NotifyEventListeners(errorEventListeners, event);
+  DispatchProgressEvent(this, NS_LITERAL_STRING(ERROR_STR), PR_FALSE,
+                        mResponseBody.Length(), 0);
+  if (mUpload && !mUploadComplete) {
+    mUploadComplete = PR_TRUE;
+    DispatchProgressEvent(mUpload, NS_LITERAL_STRING(ERROR_STR), PR_TRUE,
+                          mUploadTransferred, mUploadTotal);
   }
 
   nsJSContext::MaybeCC(PR_FALSE);
@@ -2206,8 +2368,7 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast,
-                              PRBool aClearEventListeners)
+nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
 {
   // If we are setting one of the mutually exclusive states,
   // unset those state bits first.
@@ -2217,29 +2378,14 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast,
   mState |= aState;
   nsresult rv = NS_OK;
 
-  // Grab private copies of the listeners we need
-  nsCOMArray<nsIDOMEventListener> readystatechangeEventListeners;
-
-  if (aBroadcast) {
-    CopyEventListeners(mOnReadystatechangeListener,
-                       mReadystatechangeEventListeners,
-                       readystatechangeEventListeners);
-  }
-
-  if (aClearEventListeners) {
-    ClearEventListeners();
-  }
-
   if ((mState & XML_HTTP_REQUEST_ASYNC) &&
       (aState & XML_HTTP_REQUEST_LOADSTATES) && // Broadcast load states only
-      aBroadcast &&
-      readystatechangeEventListeners.Count()) {
+      aBroadcast) {
     nsCOMPtr<nsIDOMEvent> event;
-    rv = CreateEvent(NS_LITERAL_STRING(READYSTATE_STR),
-                     getter_AddRefs(event));
+    rv = CreateReadystatechangeEvent(getter_AddRefs(event));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NotifyEventListeners(readystatechangeEventListeners, event);
+    DispatchDOMEvent(nsnull, event, nsnull, nsnull);
   }
 
   return rv;
@@ -2268,13 +2414,19 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
 
     rv = nsContentUtils::GetSecurityManager()->
       CheckSameOriginURI(oldURI, newURI, PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      mErrorLoad = PR_TRUE;
+      return rv;
+    }
   }
 
   if (mChannelEventSink) {
     rv =
       mChannelEventSink->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      mErrorLoad = PR_TRUE;
+      return rv;
+    }
   }
 
   mChannel = aNewChannel;
@@ -2291,30 +2443,33 @@ nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint
 {
   // We're uploading if our state is XML_HTTP_REQUEST_OPENED or
   // XML_HTTP_REQUEST_SENT
-  PRBool downloading =
-    !((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState);
-  nsCOMArray<nsIDOMEventListener> progressListeners;
-  if (downloading) {
-    CopyEventListeners(mOnProgressListener,
-                       mProgressEventListeners, progressListeners);
-  } else {
-    CopyEventListeners(mOnUploadProgressListener,
-                       mUploadProgressEventListeners, progressListeners);
+  PRBool upload = !!((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState);
+  PRUint64 loaded = aProgress;
+  PRUint64 total = aProgressMax;
+  // When uploading, OnProgress reports also headers in aProgress and aProgressMax.
+  // So, try to remove the headers, if possible.
+  PRBool lengthComputable = (aProgressMax != LL_MAXUINT);
+  if (upload) {
+   if (lengthComputable) {
+      PRUint32 headerSize = aProgressMax - mUploadTotal;
+      loaded -= headerSize;
+      total -= headerSize;
+    }
+    mUploadTransferred = loaded;
   }
-  
-  if (progressListeners.Count()) {
-    nsCOMPtr<nsIDOMEvent> event;
-    nsresult rv = CreateEvent(NS_LITERAL_STRING(PROGRESS_STR),
-                              getter_AddRefs(event));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsXMLHttpProgressEvent * progressEvent =
-      new nsXMLHttpProgressEvent(event, aProgress, aProgressMax); 
-    if (!progressEvent)
-      return NS_ERROR_OUT_OF_MEMORY;
 
-    event = progressEvent;
-    NotifyEventListeners(progressListeners, event);
+  if (!mErrorLoad) {
+    NS_NAMED_LITERAL_STRING(progress, PROGRESS_STR);
+    NS_NAMED_LITERAL_STRING(uploadprogress, UPLOADPROGRESS_STR);
+    DispatchProgressEvent(this, upload ? uploadprogress : progress, PR_TRUE,
+                          lengthComputable, loaded, lengthComputable ? total : 0,
+                          aProgress, aProgressMax);
+
+    if (upload && mUpload) {
+      NS_WARN_IF_FALSE(mUploadTotal == PRUint32(total), "Wrong upload total?");
+      DispatchProgressEvent(mUpload, progress,  PR_TRUE, lengthComputable, loaded,
+                            lengthComputable ? total : 0, aProgress, aProgressMax);
+    }
   }
 
   if (mProgressEventSink) {
@@ -2402,6 +2557,24 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
   return QueryInterface(aIID, aResult);
 }
 
+nsresult
+nsXMLHttpRequest::GetContextForEventHandlers(nsIScriptContext** aContext)
+{
+  NS_IF_ADDREF(*aContext = mScriptContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLHttpRequest::GetUpload(nsIXMLHttpRequestUpload** aUpload)
+{
+  *aUpload = nsnull;
+  if (!mUpload) {
+    mUpload = new nsXMLHttpRequestUpload(this);
+    NS_ENSURE_TRUE(mUpload, NS_ERROR_OUT_OF_MEMORY);
+  }
+  NS_ADDREF(*aUpload = mUpload);
+  return NS_OK;
+}
 
 NS_IMPL_ISUPPORTS1(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
 
@@ -2416,9 +2589,11 @@ nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 }
 
 // DOM event class to handle progress notifications
-nsXMLHttpProgressEvent::nsXMLHttpProgressEvent(nsIDOMEvent * aInner, PRUint64 aCurrentProgress, PRUint64 aMaxProgress)
+nsXMLHttpProgressEvent::nsXMLHttpProgressEvent(nsIDOMProgressEvent* aInner,
+                                               PRUint64 aCurrentProgress,
+                                               PRUint64 aMaxProgress)
 {
-  mInner = aInner; 
+  mInner = static_cast<nsDOMProgressEvent*>(aInner);
   mCurProgress = aCurrentProgress;
   mMaxProgress = aMaxProgress;
 }
@@ -2426,16 +2601,30 @@ nsXMLHttpProgressEvent::nsXMLHttpProgressEvent(nsIDOMEvent * aInner, PRUint64 aC
 nsXMLHttpProgressEvent::~nsXMLHttpProgressEvent()
 {}
 
-// QueryInterface implementation for nsXMLHttpRequest
-NS_INTERFACE_MAP_BEGIN(nsXMLHttpProgressEvent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLSProgressEvent)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpProgressEvent)
+
+// QueryInterface implementation for nsXMLHttpProgressEvent
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpProgressEvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMProgressEvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsIDOMProgressEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLSProgressEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpProgressEvent)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsXMLHttpProgressEvent)
-NS_IMPL_RELEASE(nsXMLHttpProgressEvent)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXMLHttpProgressEvent)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXMLHttpProgressEvent)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXMLHttpProgressEvent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mInner);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXMLHttpProgressEvent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mInner,
+                                                       nsIDOMProgressEvent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMETHODIMP nsXMLHttpProgressEvent::GetInput(nsIDOMLSInput * *aInput)
 {
@@ -2456,3 +2645,4 @@ NS_IMETHODIMP nsXMLHttpProgressEvent::GetTotalSize(PRUint32 *aTotalSize)
   LL_L2UI(*aTotalSize, mMaxProgress);
   return NS_OK;
 }
+

@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.25 2008/03/25 22:13:25 alexei.volkov.bugs%sun.com Exp $
+ * $Id: certi.h,v 1.26 2008/06/18 01:00:40 wtc%google.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -282,7 +282,7 @@ SECStatus
 cert_VerifyCertChainPkix(CERTCertificate *cert,
                          PRBool checkSig,
                          SECCertUsage     requiredUsage,
-                         PRUint64         time,
+                         PRTime           time,
                          void            *wincx,
                          CERTVerifyLog   *log,
                          PRBool          *sigError,

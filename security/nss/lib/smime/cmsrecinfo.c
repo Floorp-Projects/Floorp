@@ -37,7 +37,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.19 2006/07/19 00:36:38 nelson%bolyard.com Exp $
+ * $Id: cmsrecinfo.c,v 1.20 2008/06/06 01:16:18 wtc%google.com Exp $
  */
 
 #include "cmslocal.h"
@@ -465,7 +465,6 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey,
     CERTCertificate *cert;
     SECOidTag certalgtag;
     SECStatus rv = SECSuccess;
-    SECItem *params = NULL;
     NSSCMSRecipientEncryptedKey *rek;
     NSSCMSOriginatorIdentifierOrKey *oiok;
     CERTSubjectPublicKeyInfo *spki, *freeSpki = NULL;

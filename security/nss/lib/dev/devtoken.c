@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.43 $ $Date: 2008/02/05 03:22:38 $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.50 $ $Date: 2008/08/09 01:25:58 $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -70,6 +70,10 @@ nssToken_Destroy (
 	if (PR_AtomicDecrement(&tok->base.refCount) == 0) {
 	    PZ_DestroyLock(tok->base.lock);
 	    nssTokenObjectCache_Destroy(tok->cache);
+	    /* The token holds the first/last reference to the slot.
+	     * When the token is actually destroyed, that ref must go too.
+	     */
+	    (void)nssSlot_Destroy(tok->slot);
 	    return nssArena_Destroy(tok->base.arena);
 	}
     }
@@ -295,12 +299,19 @@ find_objects (
 {
     CK_RV ckrv = CKR_OK;
     CK_ULONG count;
-    CK_OBJECT_HANDLE *objectHandles;
+    CK_OBJECT_HANDLE *objectHandles = NULL;
     CK_OBJECT_HANDLE staticObjects[OBJECT_STACK_SIZE];
     PRUint32 arraySize, numHandles;
     void *epv = nssToken_GetCryptokiEPV(tok);
     nssCryptokiObject **objects;
     nssSession *session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+
+    /* Don't ask the module to use an invalid session handle. */
+    PORT_Assert(session->handle != CK_INVALID_SESSION);
+    if (session->handle == CK_INVALID_SESSION) {
+	ckrv = CKR_SESSION_HANDLE_INVALID;
+	goto loser;                
+    }
 
     /* the arena is only for the array of object handles */
     if (maximumOpt > 0) {
@@ -463,7 +474,7 @@ nssToken_ImportCertificate (
   nssSession *sessionOpt,
   NSSCertificateType certType,
   NSSItem *id,
-  NSSUTF8 *nickname,
+  const NSSUTF8 *nickname,
   NSSDER *encoding,
   NSSDER *issuer,
   NSSDER *subject,
@@ -578,23 +589,24 @@ nssToken_ImportCertificate (
     return rvObject;
 }
 
-/* traverse all certificates - this should only happen if the token
- * has been marked as "traversable"
+/* traverse all objects of the given class - this should only happen
+ * if the token has been marked as "traversable"
  */
 NSS_IMPLEMENT nssCryptokiObject **
-nssToken_FindCertificates (
+nssToken_FindObjects (
   NSSToken *token,
   nssSession *sessionOpt,
+  CK_OBJECT_CLASS objclass,
   nssTokenSearchType searchType,
   PRUint32 maximumOpt,
   PRStatus *statusOpt
 )
 {
     CK_ATTRIBUTE_PTR attr;
-    CK_ATTRIBUTE cert_template[2];
-    CK_ULONG ctsize;
+    CK_ATTRIBUTE obj_template[2];
+    CK_ULONG obj_size;
     nssCryptokiObject **objects;
-    NSS_CK_TEMPLATE_START(cert_template, attr, ctsize);
+    NSS_CK_TEMPLATE_START(obj_template, attr, obj_size);
     /* Set the search to token/session only if provided */
     if (searchType == nssTokenSearchType_SessionOnly) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
@@ -602,16 +614,16 @@ nssToken_FindCertificates (
                searchType == nssTokenSearchType_TokenForced) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
     }
-    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
-    NSS_CK_TEMPLATE_FINISH(cert_template, attr, ctsize);
+    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS, objclass);
+    NSS_CK_TEMPLATE_FINISH(obj_template, attr, obj_size);
 
     if (searchType == nssTokenSearchType_TokenForced) {
 	objects = find_objects(token, sessionOpt,
-	                       cert_template, ctsize,
+	                       obj_template, obj_size,
 	                       maximumOpt, statusOpt);
     } else {
 	objects = find_objects_by_template(token, sessionOpt,
-	                                   cert_template, ctsize,
+	                                   obj_template, obj_size,
 	                                   maximumOpt, statusOpt);
     }
     return objects;
@@ -1120,44 +1132,6 @@ nssToken_ImportTrust (
     return object;
 }
 
-NSS_IMPLEMENT nssCryptokiObject **
-nssToken_FindTrustObjects (
-  NSSToken *token,
-  nssSession *sessionOpt,
-  nssTokenSearchType searchType,
-  PRUint32 maximumOpt,
-  PRStatus *statusOpt
-)
-{
-    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
-    CK_ATTRIBUTE_PTR attr;
-    CK_ATTRIBUTE tobj_template[2];
-    CK_ULONG tobj_size;
-    nssCryptokiObject **objects;
-    nssSession *session = sessionOpt ? sessionOpt : token->defaultSession;
-
-    NSS_CK_TEMPLATE_START(tobj_template, attr, tobj_size);
-    if (searchType == nssTokenSearchType_SessionOnly) {
-	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly ||
-               searchType == nssTokenSearchType_TokenForced) {
-	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
-    }
-    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS, tobjc);
-    NSS_CK_TEMPLATE_FINISH(tobj_template, attr, tobj_size);
-
-    if (searchType == nssTokenSearchType_TokenForced) {
-	objects = find_objects(token, session,
-	                       tobj_template, tobj_size,
-	                       maximumOpt, statusOpt);
-    } else {
-	objects = find_objects_by_template(token, session,
-	                                   tobj_template, tobj_size,
-	                                   maximumOpt, statusOpt);
-    }
-    return objects;
-}
-
 NSS_IMPLEMENT nssCryptokiObject *
 nssToken_FindTrustForCertificate (
   NSSToken *token,
@@ -1237,44 +1211,6 @@ nssToken_ImportCRL (
 	                                 crl_tmpl, crlsize);
     }
     return object;
-}
-
-NSS_IMPLEMENT nssCryptokiObject **
-nssToken_FindCRLs (
-  NSSToken *token,
-  nssSession *sessionOpt,
-  nssTokenSearchType searchType,
-  PRUint32 maximumOpt,
-  PRStatus *statusOpt
-)
-{
-    CK_OBJECT_CLASS crlobjc = CKO_NETSCAPE_CRL;
-    CK_ATTRIBUTE_PTR attr;
-    CK_ATTRIBUTE crlobj_template[2];
-    CK_ULONG crlobj_size;
-    nssCryptokiObject **objects;
-    nssSession *session = sessionOpt ? sessionOpt : token->defaultSession;
-
-    NSS_CK_TEMPLATE_START(crlobj_template, attr, crlobj_size);
-    if (searchType == nssTokenSearchType_SessionOnly) {
-	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
-    } else if (searchType == nssTokenSearchType_TokenOnly ||
-               searchType == nssTokenSearchType_TokenForced) {
-	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
-    }
-    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS, crlobjc);
-    NSS_CK_TEMPLATE_FINISH(crlobj_template, attr, crlobj_size);
-
-    if (searchType == nssTokenSearchType_TokenForced) {
-	objects = find_objects(token, session,
-	                       crlobj_template, crlobj_size,
-	                       maximumOpt, statusOpt);
-    } else {
-	objects = find_objects_by_template(token, session,
-	                                   crlobj_template, crlobj_size,
-	                                   maximumOpt, statusOpt);
-    }
-    return objects;
 }
 
 NSS_IMPLEMENT nssCryptokiObject **

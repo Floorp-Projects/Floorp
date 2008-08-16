@@ -67,6 +67,7 @@ struct PKIX_ProcessingParamsStruct {
         PKIX_Boolean isCrlRevocationCheckingEnabled;
         PKIX_Boolean isCrlRevocationCheckingEnabledWithNISTPolicy;
         PKIX_ResourceLimits *resourceLimits;
+        PKIX_Boolean useAIAForCertFetching;
 };
 
 /* see source file for function documentation */

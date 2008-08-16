@@ -954,7 +954,7 @@ sftk_handlePrivateKeyObject(SFTKSession *session,SFTKObject *object,CK_KEY_TYPE 
     CK_BBOOL sign = CK_FALSE;
     CK_BBOOL recover = CK_TRUE;
     CK_BBOOL wrap = CK_TRUE;
-    CK_BBOOL derive = CK_FALSE;
+    CK_BBOOL derive = CK_TRUE;
     CK_BBOOL ckfalse = CK_FALSE;
     SECItem mod;
     CK_RV crv;
@@ -994,12 +994,14 @@ sftk_handlePrivateKeyObject(SFTKSession *session,SFTKObject *object,CK_KEY_TYPE 
 	if (crv != CKR_OK) return crv;
 
 	sign = CK_TRUE;
+	derive = CK_FALSE;
 	break;
     case CKK_DSA:
 	if ( !sftk_hasAttribute(object, CKA_SUBPRIME)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
 	sign = CK_TRUE;
+	derive = CK_FALSE;
 	/* fall through */
     case CKK_DH:
 	if ( !sftk_hasAttribute(object, CKA_PRIME)) {
@@ -1027,7 +1029,6 @@ sftk_handlePrivateKeyObject(SFTKSession *session,SFTKObject *object,CK_KEY_TYPE 
 	sign = CK_TRUE;
 	recover = CK_FALSE;
 	wrap = CK_FALSE;
-	derive = CK_TRUE;
 	break;
 #endif /* NSS_ENABLE_ECC */
     default:
@@ -1231,8 +1232,8 @@ sftk_handleKeyObject(SFTKSession *session, SFTKObject *object)
     if (crv != CKR_OK)  return crv; 
     crv = sftk_defaultAttribute(object,CKA_END_DATE,NULL,0);
     if (crv != CKR_OK)  return crv; 
-    crv = sftk_defaultAttribute(object,CKA_DERIVE,&cktrue,sizeof(CK_BBOOL));
-    if (crv != CKR_OK)  return crv; 
+    /* CKA_DERIVE is common to all keys, but it's default value is
+     * key dependent */
     crv = sftk_defaultAttribute(object,CKA_LOCAL,&ckfalse,sizeof(CK_BBOOL));
     if (crv != CKR_OK)  return crv; 
 

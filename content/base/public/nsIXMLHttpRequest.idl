@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIDOMEventTarget.idl"
 
 interface nsIChannel;
 interface nsIDOMDocument;
@@ -44,6 +44,21 @@ interface nsIPrincipal;
 interface nsIScriptContext;
 interface nsIVariant;
 interface nsPIDOMWindow;
+
+[scriptable, uuid(6ce0a193-b033-4c3d-b748-f851b09261f5)]
+interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
+  // event handler attributes
+  attribute nsIDOMEventListener onabort;
+  attribute nsIDOMEventListener onerror;
+  attribute nsIDOMEventListener onload;
+  attribute nsIDOMEventListener onloadstart;
+  attribute nsIDOMEventListener onprogress;
+};
+
+[scriptable, uuid(09ff3682-7759-4441-a765-f70e1a1fabcf)]
+interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
+  // for future use
+};
 
 /**
  * Mozilla's XMLHttpRequest is modelled after Microsoft's IXMLHttpRequest
@@ -81,10 +96,6 @@ interface nsPIDOMWindow;
  *   The 'onload', 'onerror', and 'onreadystatechange' attributes moved to
  *   nsIJSXMLHttpRequest, but if you're coding in C++ you should avoid using
  *   those.
- *
- * Though actually, if you use addEventListener from C++ weird things will
- * happen too, since the result will depend on what JS happens to be on the
- * stack when you do it....
  *
  * Conclusion: Do not use event listeners on XMLHttpRequest from C++, unless
  * you're aware of all the security implications.  And then think twice about
@@ -323,6 +334,14 @@ interface nsIXMLHttpRequest : nsISupports
   [noscript] void init(in nsIPrincipal principal,
                        in nsIScriptContext scriptContext,
                        in nsPIDOMWindow ownerWindow);
+};
+
+[scriptable, uuid(6e127bd2-b4c1-4a82-be0d-012bd24efb37)]
+interface nsIXMLHttpRequestUploadGetter : nsISupports {
+  /**
+   * Upload process can be tracked by adding event listener to |upload|.
+   */
+  readonly attribute nsIXMLHttpRequestUpload upload;
 };
 
 [scriptable, uuid(261676b4-d508-43bf-b099-74635a0ee2e9)]

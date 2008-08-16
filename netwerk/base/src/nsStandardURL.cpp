@@ -114,13 +114,14 @@ EncodeString(nsIUnicodeEncoder *encoder, const nsAFlatString &str, nsACString &r
         goto end;
     }
     p[maxlen] = 0;
-    result = p;
+    result.Assign(p);
 
-    rv = encoder->Finish(p, &len);
+    len = sizeof(buf) - 1;
+    rv = encoder->Finish(buf, &len);
     if (NS_FAILED(rv))
         goto end;
-    p[len] = 0;
-    result += p;
+    buf[len] = 0;
+    result.Append(buf);
 
 end:
     encoder->Reset();
@@ -1507,14 +1508,9 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
     NS_ENSURE_ARG_POINTER(unknownOther);
     NS_PRECONDITION(result, "null pointer");
 
-    nsRefPtr<nsStandardURL> otherPtr;
+    nsRefPtr<nsStandardURL> other;
     nsresult rv = unknownOther->QueryInterface(kThisImplCID,
-                                               getter_AddRefs(otherPtr));
-
-    // Hack around issue with MSVC++ not allowing the nsDerivedSafe to access
-    // the private members and not doing the implicit conversion to a raw
-    // pointer.
-    nsStandardURL* other = otherPtr;
+                                               getter_AddRefs(other));
     if (NS_FAILED(rv)) {
         *result = PR_FALSE;
         return NS_OK;
@@ -1572,7 +1568,7 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
         rv = other->EnsureFile();
         if (NS_FAILED(rv)) {
             LOG(("nsStandardURL::Equals [other=%p spec=%s] other failed to ensure file",
-                other, other->mSpec.get()));
+                 other.get(), other->mSpec.get()));
             return rv;
         }
         NS_ASSERTION(other->mFile, "EnsureFile() lied!");

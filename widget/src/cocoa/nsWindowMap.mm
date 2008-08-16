@@ -317,8 +317,6 @@
   } else if ([window isSheet]) {
     [TopLevelWindowData activateInWindow:window];
   }
-  
-  [[window contentView] setNeedsDisplay:YES];
 }
 
 - (void)windowResignedKey:(NSNotification*)inNotification
@@ -331,8 +329,6 @@
   } else if ([window isSheet]) {
     [TopLevelWindowData deactivateInWindow:window];
   }
-  
-  [[window contentView] setNeedsDisplay:YES];
 }
 
 // The appearance of a top-level window depends on its main state (not its key

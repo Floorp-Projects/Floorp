@@ -80,9 +80,8 @@ pkix_pl_X500Name_ToString_Helper(
         PKIX_NULLCHECK_TWO(name, pString);
         nssDN = &name->nssDN;
 
-        PKIX_X500NAME_DEBUG("\t\tCalling CERT_NameToAscii).\n");
         /* this should really be called CERT_NameToUTF8 */
-        utf8String = CERT_NameToAscii(nssDN);
+        utf8String = CERT_NameToAsciiInvertible(nssDN, CERT_N2A_INVERTIBLE);
         if (!utf8String){
                 PKIX_ERROR(PKIX_CERTNAMETOASCIIFAILED);
         }

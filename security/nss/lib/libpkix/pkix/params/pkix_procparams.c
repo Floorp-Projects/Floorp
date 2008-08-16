@@ -584,6 +584,8 @@ PKIX_ProcessingParams_Create(
 
         params->isCrlRevocationCheckingEnabledWithNISTPolicy = PKIX_TRUE;
 
+        params->useAIAForCertFetching = PKIX_FALSE;
+
         *pParams = params;
         params = NULL;
 
@@ -593,6 +595,42 @@ cleanup:
 
         PKIX_RETURN(PROCESSINGPARAMS);
 
+}
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_GetUseAIAForCertFetching
+ * (see comments in pkix_params.h)
+ */
+PKIX_Error *
+PKIX_ProcessingParams_GetUseAIAForCertFetching(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean *pUseAIA,  /* list of TrustAnchor */
+        void *plContext)
+{
+        PKIX_ENTER(PROCESSINGPARAMS, "PKIX_ProcessingParams_GetUseAIAForCertFetching");
+        PKIX_NULLCHECK_TWO(params, pUseAIA);
+
+        *pUseAIA = params->useAIAForCertFetching;
+
+        PKIX_RETURN(PROCESSINGPARAMS);
+}
+
+/*
+ * FUNCTION: PKIX_ProcessingParams_SetUseAIAForCertFetching
+ * (see comments in pkix_params.h)
+ */
+PKIX_Error *
+PKIX_ProcessingParams_SetUseAIAForCertFetching(
+        PKIX_ProcessingParams *params,
+        PKIX_Boolean useAIA,  
+        void *plContext)
+{
+        PKIX_ENTER(PROCESSINGPARAMS, "PKIX_ProcessingParams_SetUseAIAForCertFetching");
+        PKIX_NULLCHECK_ONE(params);
+
+        params->useAIAForCertFetching = useAIA;
+
+        PKIX_RETURN(PROCESSINGPARAMS);
 }
 
 /*
