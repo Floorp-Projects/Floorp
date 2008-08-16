@@ -76,18 +76,22 @@ LoginTest.deleteFile(OUTDIR, "signons.sqlite");
 testnum++;
 var testdesc = "Corrupt database and backup"
 
-var filename = "signons-c";
+var filename = "signons-c.sqlite";
 // copy corrupt db to output directory
 var corruptDB = do_get_file("toolkit/components/passwordmgr/test/unit/data/" +
                             "corruptDB.sqlite");
 
 corruptDB.copyTo(PROFDIR, filename)
 
-do_check_true(corruptDB.exists());
+// sanity check that the file copy worked
+var cfile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+cfile.initWithPath(OUTDIR);
+cfile.append(filename);
+do_check_true(cfile.exists());
 
 // will init mozStorage module with default filename.
 var storage = LoginTest.newMozStorage();
-LoginTest.initStorage(storage, null, null, OUTDIR, filename);
+LoginTest.initStorage(storage, null, null, OUTDIR, filename, null, true);
 try {
     storage.getAllLogins({});
 } catch (e) {
