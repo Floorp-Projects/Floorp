@@ -205,6 +205,7 @@ namespace nanojit
             DWB(Fragment*) anchor;
             DWB(Fragment*) root;
             DWB(Fragment*) parent;
+            DWB(Fragment*) first;
             DWB(Fragment*) peer;
 			DWB(BlockHist*) mergeCounts;
             DWB(LirBuffer*) lirbuf;
