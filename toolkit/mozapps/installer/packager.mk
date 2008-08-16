@@ -245,6 +245,8 @@ NO_PKG_FILES += \
 	res/throbber \
 	shlibsign* \
 	ssltunnel* \
+	certutil* \
+	pk12util* \
 	winEmbed.exe \
 	os2Embed.exe \
 	chrome/chrome.rdf \
