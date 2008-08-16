@@ -96,7 +96,7 @@ static struct {
     uint64 recorderStarted, recorderAborted, traceCompleted, sideExitIntoInterpreter,
     typeMapMismatchAtEntry, returnToDifferentLoopHeader, traceTriggered,
     globalShapeMismatchAtEntry, treesTrashed, slotPromoted,
-    unstableLoopVariable;
+    unstableLoopVariable, globalInInnerTree;
 } stat = { 0LL, };
 #define AUDIT(x) (stat.x++)
 #else
@@ -1102,6 +1102,13 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
 {
     if (slot != (uint16)slot) /* we use a table of 16-bit ints, bail out if that's not enough */
         return false;
+    /* Currently we can't handle inner trees with globals, so once we decided to call a tree
+       we don't allow it to pick up any globals along alternative paths. This will be removed
+       soon, but for now its necessary for correctness. */
+    if (treeInfo->dependentTrees.length()) {
+        AUDIT(globalInInnerTree);
+        return false;
+    }
     jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
     if (tracker.has(vp))
         return true; /* we already have it */
@@ -1998,9 +2005,10 @@ js_FinishJIT(JSTraceMonitor *tm)
 #ifdef DEBUG
     printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
            "trees trashed(%llu), slot promoted(%llu), "
-           "unstable loop variable(%llu)\n", stat.recorderStarted, stat.recorderAborted,
+           "unstable loop variable(%llu), global in inner tree rejected(%llu)\n", 
+           stat.recorderStarted, stat.recorderAborted,
            stat.traceCompleted, stat.returnToDifferentLoopHeader, stat.treesTrashed,
-           stat.slotPromoted, stat.unstableLoopVariable);
+           stat.slotPromoted, stat.unstableLoopVariable, stat.globalInInnerTree);
     printf("monitor: triggered(%llu), exits (%llu), type mismatch(%llu), "
            "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
