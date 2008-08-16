@@ -28,6 +28,7 @@
 void cdecl VEC3init(LPVEC3 r, double x, double y, double z);
 void cdecl VEC3initF(LPWVEC3 r, double x, double y, double z);
 void cdecl VEC3toFix(LPWVEC3 r, LPVEC3 v);
+void cdecl VEC3toFloat(LPFVEC3 r, LPVEC3 v);
 void cdecl VEC3scaleFix(LPWORD r, LPWVEC3 Scale);
 void cdecl VEC3swap(LPVEC3 a, LPVEC3 b);
 void cdecl VEC3divK(LPVEC3 r, LPVEC3 v, double d);
@@ -49,6 +50,7 @@ LCMSBOOL  cdecl MAT3solve(LPVEC3 x, LPMAT3 a, LPVEC3 b);
 double    cdecl MAT3det(LPMAT3 m);
 void      cdecl MAT3eval(LPVEC3 r, LPMAT3 a, LPVEC3 v);
 void      cdecl MAT3toFix(LPWMAT3 r, LPMAT3 v);
+void      cdecl MAT3toFloat(LPFMAT3 r, LPMAT3 v);
 void      cdecl MAT3evalW(LPWVEC3 r, LPWMAT3 a, LPWVEC3 v);
 void      cdecl MAT3perK(LPMAT3 r, LPMAT3 v, double d);
 void      cdecl MAT3scaleAndCut(LPWMAT3 r, LPMAT3 v, double d);
@@ -222,6 +224,17 @@ int FromFixedDomain(Fixed32 a)
     return a - ((a + 0x7fff) >> 16); 
 }
 
+
+Float ToFloatDomain(int a)      
+{ 
+    return ((float) a)/65536f; 
+}
+
+int FromFloatDomain(Float a)
+{
+    return (int) (a * 65536f); 
+}   
+
 #endif
 
 
@@ -253,6 +266,15 @@ void VEC3toFix(LPWVEC3 r, LPVEC3 v)
        r -> n[VX] = DOUBLE_TO_FIXED(v -> n[VX]);
        r -> n[VY] = DOUBLE_TO_FIXED(v -> n[VY]);
        r -> n[VZ] = DOUBLE_TO_FIXED(v -> n[VZ]);
+}
+
+// Convert to float
+
+void VEC3toFloat(LPFVEC3 r, LPVEC3 v)
+{
+       r -> n[VX] = DOUBLE_TO_FLOAT(v -> n[VX]);
+       r -> n[VY] = DOUBLE_TO_FLOAT(v -> n[VY]);
+       r -> n[VZ] = DOUBLE_TO_FLOAT(v -> n[VZ]);
 }
 
 // Convert from fixed point
@@ -342,6 +364,22 @@ LCMSBOOL VEC3equalF(LPVEC3 a, LPVEC3 b, double Tolerance)
 {
        int i;
        double c;
+
+       for (i=0; i < 3; i++)
+       {
+              c = a -> n[i];
+              if (!RangeCheck(c - Tolerance,
+                              c + Tolerance,
+                              b->n[i])) return FALSE;
+       }
+
+       return TRUE;
+}
+
+LCMSBOOL FVEC3equal(LPFVEC3 a, LPFVEC3 b, float Tolerance)
+{
+       int i;
+       float c;
 
        for (i=0; i < 3; i++)
        {
@@ -449,6 +487,23 @@ LCMSBOOL MAT3isIdentity(LPWMAT3 a, double Tolerance)
 
 }
 
+// Floating point version of the above. 
+
+LCMSBOOL FMAT3isIdentity(LPFMAT3 a, float Tolerance)
+{
+       int i;
+       MAT3 Idd;
+       FMAT3 Idf;
+
+       MAT3identity(&Idd);
+       MAT3toFloat(&Idf, &Idd);
+
+       for (i=0; i < 3; i++)
+              if (!FVEC3equal(&a -> v[i], &Idf.v[i], Tolerance)) return FALSE;
+
+       return TRUE;
+
+}
 // Multiply two matrices
 
 
@@ -553,6 +608,13 @@ double MAT3det(LPMAT3 m)
 
 
 void MAT3eval(LPVEC3 r, LPMAT3 a, LPVEC3 v)
+{
+    r->n[VX] = a->v[0].n[VX]*v->n[VX] + a->v[0].n[VY]*v->n[VY] + a->v[0].n[VZ]*v->n[VZ];
+    r->n[VY] = a->v[1].n[VX]*v->n[VX] + a->v[1].n[VY]*v->n[VY] + a->v[1].n[VZ]*v->n[VZ];
+    r->n[VZ] = a->v[2].n[VX]*v->n[VX] + a->v[2].n[VY]*v->n[VY] + a->v[2].n[VZ]*v->n[VZ];
+}
+
+void MAT3evalF(LPFVEC3 r, LPFMAT3 a, LPFVEC3 v)
 {
     r->n[VX] = a->v[0].n[VX]*v->n[VX] + a->v[0].n[VY]*v->n[VY] + a->v[0].n[VZ]*v->n[VZ];
     r->n[VY] = a->v[1].n[VX]*v->n[VX] + a->v[1].n[VY]*v->n[VY] + a->v[1].n[VZ]*v->n[VZ];
@@ -784,6 +846,13 @@ void MAT3toFix(LPWMAT3 r, LPMAT3 v)
        VEC3toFix(&r -> v[0], &v -> v[0]);
        VEC3toFix(&r -> v[1], &v -> v[1]);
        VEC3toFix(&r -> v[2], &v -> v[2]);
+}
+
+void MAT3toFloat(LPFMAT3 r, LPMAT3 v)
+{
+       VEC3toFloat(&r -> v[0], &v -> v[0]);
+       VEC3toFloat(&r -> v[1], &v -> v[1]);
+       VEC3toFloat(&r -> v[2], &v -> v[2]);
 }
 
 void MAT3fromFix(LPMAT3 r, LPWMAT3 v)
