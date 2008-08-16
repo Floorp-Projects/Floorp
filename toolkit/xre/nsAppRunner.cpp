@@ -2699,14 +2699,22 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   PR_SetEnv("MOZ_LAUNCHED_CHILD=");
 
   gRestartArgc = gArgc;
-  gRestartArgv = (char**) malloc(sizeof(char*) * (gArgc + 1));
+  gRestartArgv = (char**) malloc(sizeof(char*) * (gArgc + 1 + (override ? 2 : 0)));
   if (!gRestartArgv) return 1;
 
   int i;
   for (i = 0; i < gArgc; ++i) {
     gRestartArgv[i] = gArgv[i];
   }
-  gRestartArgv[gArgc] = nsnull;
+  
+  // Add the -override argument back (it is removed automatically be CheckArg) if there is one
+  if (override) {
+    gRestartArgv[gRestartArgc++] = const_cast<char*>("-override");
+    gRestartArgv[gRestartArgc++] = const_cast<char*>(override);
+  }
+
+  gRestartArgv[gRestartArgc] = nsnull;
+  
 
 #if defined(XP_OS2)
   PRBool StartOS2App(int aArgc, char **aArgv);
