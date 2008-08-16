@@ -1700,7 +1700,7 @@ js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
 }
 
 GuardRecord*
-js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount);
+js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount);
 
 bool
 js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlineCallCount)
@@ -1733,7 +1733,7 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
     if (nesting_enabled && f && f->code() && !((TreeInfo*)f->vmprivate)->globalSlots.length()) {
         JS_ASSERT(f->vmprivate);
         /* call the inner tree */
-        GuardRecord* lr = js_ExecuteTree(cx, f, inlineCallCount);
+        GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount);
         if (!lr) {
             js_AbortRecording(cx, oldpc, "Couldn't call inner tree");
             return false;
@@ -1764,8 +1764,10 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
 }
 
 GuardRecord*
-js_ExecuteTree(JSContext* cx, Fragment* f, uintN& inlineCallCount)
+js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
 {
+    Fragment* f = *treep;
+    
     AUDIT(traceTriggered);
 
     /* execute previously recorded trace */
@@ -1961,7 +1963,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
     JS_ASSERT(!tm->recorder);
 
     /* if this is a local branch in the same loop, grow the tree */
-    GuardRecord* lr = js_ExecuteTree(cx, f, inlineCallCount);
+    GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount);
     if (lr && (lr->from->root == f) && (lr->exit->exitType == BRANCH_EXIT))
         return js_AttemptToExtendTree(cx, lr, f);
     /* if this exits the loop, resume interpretation */
