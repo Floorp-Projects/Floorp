@@ -94,6 +94,7 @@ namespace nanojit
 			Page*		pageAlloc();
 			void		pageFree(Page* page);
 			
+			Fragment*   newLoop(const void* ip);
             Fragment*   getLoop(const void* ip);
 			void        clearFrags();	// clear all fragments from the cache
             Fragment*   getMerge(GuardRecord *lr, const void* ip);
@@ -204,6 +205,7 @@ namespace nanojit
             DWB(Fragment*) anchor;
             DWB(Fragment*) root;
             DWB(Fragment*) parent;
+            DWB(Fragment*) peer;
 			DWB(BlockHist*) mergeCounts;
             DWB(LirBuffer*) lirbuf;
 			LIns*			lastIns;
