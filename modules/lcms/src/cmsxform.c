@@ -522,6 +522,26 @@ void MatrixShaperXFORM(_LPcmsTRANSFORM p,
        }
 }
 
+static
+void MatrixShaperXFORMFloat(_LPcmsTRANSFORM p,
+                            LPVOID in,
+                            LPVOID out, unsigned int Size)
+{
+       register LPBYTE input, output;
+       register unsigned int i;
+
+
+       input  = (LPBYTE) in;
+       output = (LPBYTE) out;
+
+       for (i=0; i < Size; i++)
+       {
+       cmsEvalMatShaperFloat(p -> SmeltMatShaper, input, output);
+       input += 3;
+       output += 3;
+       }
+}
+
 
 // Using Named color input table
 
@@ -796,8 +816,14 @@ LCMSBOOL cmsBuildSmeltMatShaper(_LPcmsTRANSFORM p)
         MAT3per(&Transfer, &ToInv, &From); 
 
         // Check for the relevant precaches
-        InPrecache = ((LPLCMSICCPROFILE)p->InputProfile)->Precache[CMS_PRECACHE_LI16W_FORWARD];
-        OutPrecache = ((LPLCMSICCPROFILE)p->OutputProfile)->Precache[CMS_PRECACHE_LI1616_REVERSE];
+        if (p -> dwOriginalFlags & cmsFLAGS_FLOATSHAPER) {
+               InPrecache = ((LPLCMSICCPROFILE)p->InputProfile)->Precache[CMS_PRECACHE_LI16F_FORWARD];
+               OutPrecache = ((LPLCMSICCPROFILE)p->OutputProfile)->Precache[CMS_PRECACHE_LI168_REVERSE];
+        }
+        else {
+               InPrecache = ((LPLCMSICCPROFILE)p->InputProfile)->Precache[CMS_PRECACHE_LI16W_FORWARD];
+               OutPrecache = ((LPLCMSICCPROFILE)p->OutputProfile)->Precache[CMS_PRECACHE_LI1616_REVERSE];
+        }
     
         // If the input interpolations aren't already cached, read gamma curves
         if (InPrecache == NULL) {
@@ -829,7 +855,9 @@ LCMSBOOL cmsBuildSmeltMatShaper(_LPcmsTRANSFORM p)
 
         p -> SmeltMatShaper = cmsAllocMatShaper2(&Transfer, In, InPrecache,
                                                  InverseOut, OutPrecache,
-                                                 MATSHAPER_ALLSMELTED);
+                                                 MATSHAPER_ALLSMELTED |
+                                                 ((p -> dwOriginalFlags & cmsFLAGS_FLOATSHAPER)
+                                                  ? MATSHAPER_FLOATMAT : 0));
 
         // These don't free if the pointers were already NULL
         cmsFreeGammaTriple(In);
@@ -1269,7 +1297,7 @@ _LPcmsTRANSFORM PickTransformRoutine(_LPcmsTRANSFORM p,
                        !(p -> dwOriginalFlags & cmsFLAGS_BLACKPOINTCOMPENSATION)) {
 
                           // Yes... try to smelt matrix-shapers
-                          p -> xform = MatrixShaperXFORM;
+                          p -> xform = (p -> dwOriginalFlags & cmsFLAGS_FLOATSHAPER) ? MatrixShaperXFORMFloat : MatrixShaperXFORM;
                           p -> dwOriginalFlags |= cmsFLAGS_NOTPRECALC;
 
                           if (!cmsBuildSmeltMatShaper(p))
@@ -1379,7 +1407,6 @@ cmsHTRANSFORM LCMSEXPORT cmsCreateProofingTransform(cmsHPROFILE InputProfile,
        p -> dwOriginalFlags = dwFlags;
 
        p -> lInputV4Lab     = p ->lOutputV4Lab = FALSE;
-
 
        p -> FromInput = _cmsIdentifyInputFormat(p, InputFormat);
        p -> ToOutput  = _cmsIdentifyOutputFormat(p, OutputFormat);

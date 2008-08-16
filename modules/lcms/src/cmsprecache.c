@@ -139,6 +139,21 @@ LCMSBOOL LCMSEXPORT cmsPrecacheProfile(cmsHPROFILE hProfile,
                                           cmsLinearInterpLUT16((WORD)j, GTables[i]->GammaTable, &p16);
                      break;
 
+              case CMS_PRECACHE_LI168_REVERSE:
+
+                     // Allocate the precache tables
+                     cmsAllocPrecacheTables(Icc, Type, LI168_REVERSE, 3, sizeof(BYTE), (1 << 16));
+
+                     // Calculate the interpolation parameters
+                     cmsCalcL16Params(GTables[0]->nEntries, &p16);
+
+                     // Compute the cache
+                     for (i = 0; i < 3; ++i)
+                            for (j = 0; j < (1 << 16); ++j)
+                                   Icc->Precache[Type]->Impl.LI168_REVERSE.Cache[i][j] =
+                                          RGB_16_TO_8(cmsLinearInterpLUT16((WORD)j, GTables[i]->GammaTable, &p16));
+                     break;
+
               case CMS_PRECACHE_LI16W_FORWARD:
 
                      // Allocate the precache tables
@@ -154,7 +169,23 @@ LCMSBOOL LCMSEXPORT cmsPrecacheProfile(cmsHPROFILE hProfile,
                                           cmsLinearInterpFixed((WORD)j, GTables[i]->GammaTable, &p16);
                      break;
 
+              case CMS_PRECACHE_LI16F_FORWARD:
+
+                     // Allocate the precache tables
+                     cmsAllocPrecacheTables(Icc, Type, LI16F_FORWARD, 3, sizeof(FLOAT), 256);
+
+                     // Calculate the interpolation parameters
+                     cmsCalcL16Params(GTables[0]->nEntries, &p16);
+
+                     // Compute the cache
+                     for (i = 0; i < 3; ++i)
+                            for (j = 0; j < 256; ++j)
+                                   Icc->Precache[Type]->Impl.LI16F_FORWARD.Cache[i][j] =
+                                          ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(((BYTE)j)), GTables[i]->GammaTable, &p16));
+                     break;
+
               default:
+                     // TODO: change non-critical asserts to CMS warnings
                      CMSASSERT(0); // Not implemented
                      break;
        }
@@ -186,12 +217,23 @@ void cmsPrecacheFree(LPLCMSPRECACHE Cache) {
                       _cmsFree(Cache->Impl.LI1616_REVERSE.Cache[i]);
                      break;
 
+              case CMS_PRECACHE_LI168_REVERSE:
+                     for (i = 0; i < 3; ++i)
+                      _cmsFree(Cache->Impl.LI168_REVERSE.Cache[i]);
+                     break;
+
               case CMS_PRECACHE_LI16W_FORWARD:
                      for (i = 0; i < 3; ++i)
                       _cmsFree(Cache->Impl.LI16W_FORWARD.Cache[i]);
                      break;
 
+              case CMS_PRECACHE_LI16F_FORWARD:
+                     for (i = 0; i < 3; ++i)
+                      _cmsFree(Cache->Impl.LI16F_FORWARD.Cache[i]);
+                     break;
+
               default:
+                     // TODO: proper warning
                      CMSASSERT(0); // Bad Type
                      break;
        }

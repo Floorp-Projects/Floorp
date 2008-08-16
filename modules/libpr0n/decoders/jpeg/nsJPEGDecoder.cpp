@@ -418,7 +418,7 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
                                           gfxPlatform::GetCMSOutputProfile(),
                                           TYPE_RGB_8,
                                           intent,
-                                          0);
+                                          cmsFLAGS_FLOATSHAPER);
         }
       } else {
 #ifdef DEBUG_tor
