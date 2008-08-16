@@ -208,7 +208,7 @@ MOZ_ARG_ENABLE_BOOL(compile-environment,
     COMPILE_ENVIRONMENT= )
 
 MOZ_ARG_WITH_STRING(l10n-base,
-[  --with-l10nbase=DIR     path to l10n repositories],
+[  --with-l10n-base=DIR     path to l10n repositories],
     L10NBASEDIR=$withval)
 if test ! -z "$L10NBASEDIR"; then
     if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
