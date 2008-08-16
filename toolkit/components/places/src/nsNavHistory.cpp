@@ -585,7 +585,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
   // open the database
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBService->OpenDatabase(mDBFile, getter_AddRefs(mDBConn));
+  rv = mDBService->OpenUnsharedDatabase(mDBFile, getter_AddRefs(mDBConn));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     dbExists = PR_FALSE;
   
@@ -604,7 +604,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBFile->Append(DB_FILENAME);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBService->OpenDatabase(mDBFile, getter_AddRefs(mDBConn));
+    rv = mDBService->OpenUnsharedDatabase(mDBFile, getter_AddRefs(mDBConn));
   }
   NS_ENSURE_SUCCESS(rv, rv);
   
