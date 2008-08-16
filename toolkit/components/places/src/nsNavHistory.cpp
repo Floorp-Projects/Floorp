@@ -995,6 +995,17 @@ nsNavHistory::InitStatements()
     getter_AddRefs(mDBRecentVisitOfURL));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // mDBRecentVisitOfPlace
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT id "
+      "FROM moz_historyvisits "
+      "WHERE place_id = ?1 "
+      "AND visit_date = ?2 "
+      "AND session = ?3 "
+      "LIMIT 1"),
+    getter_AddRefs(mDBRecentVisitOfPlace));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // mDBInsertVisit
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "INSERT INTO moz_historyvisits "
@@ -1717,8 +1728,17 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
 
   // If the caller wants the page ID, go get it
   if (aPageID) {
-    rv = mDBConn->GetLastInsertRowID(aPageID);
+    mozStorageStatementScoper scoper(mDBGetURLPageInfo);
+
+    rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasResult = PR_FALSE;
+    rv = mDBGetURLPageInfo->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
+
+    *aPageID = mDBGetURLPageInfo->AsInt64(0);
   }
 
   return NS_OK;
@@ -1734,23 +1754,43 @@ nsNavHistory::InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
                                PRInt32 aTransitionType, PRInt64* visitID)
 {
   nsresult rv;
-  mozStorageStatementScoper scoper(mDBInsertVisit);
 
-  rv = mDBInsertVisit->BindInt64Parameter(0, aReferringVisit);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBInsertVisit->BindInt64Parameter(1, aPageID);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBInsertVisit->BindInt64Parameter(2, aTime);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBInsertVisit->BindInt32Parameter(3, aTransitionType);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBInsertVisit->BindInt64Parameter(4, aSessionID);
-  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    mozStorageStatementScoper scoper(mDBInsertVisit);
+  
+    rv = mDBInsertVisit->BindInt64Parameter(0, aReferringVisit);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBInsertVisit->BindInt64Parameter(1, aPageID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBInsertVisit->BindInt64Parameter(2, aTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBInsertVisit->BindInt32Parameter(3, aTransitionType);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBInsertVisit->BindInt64Parameter(4, aSessionID);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    rv = mDBInsertVisit->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-  rv = mDBInsertVisit->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    mozStorageStatementScoper scoper(mDBRecentVisitOfPlace);
 
-  return mDBConn->GetLastInsertRowID(visitID);
+    rv = mDBRecentVisitOfPlace->BindInt64Parameter(0, aPageID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBRecentVisitOfPlace->BindInt64Parameter(1, aTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBRecentVisitOfPlace->BindInt64Parameter(2, aSessionID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasResult;
+    rv = mDBRecentVisitOfPlace->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
+
+    *visitID = mDBRecentVisitOfPlace->AsInt64(0);
+  }
+  return NS_OK;
 }
 
 
