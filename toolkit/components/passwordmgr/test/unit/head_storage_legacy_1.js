@@ -44,7 +44,8 @@ const LoginTest = {
    *
    */
   initStorage : function (storage, aInputPathName,  aInputFileName,
-                          aOutputPathName, aOutputFileName, aExpectedError) {
+                          aOutputPathName, aOutputFileName, aExpectedError,
+                          preserveOutputFile) {
     var err = null;
 
     var inputFile = null;
@@ -61,6 +62,9 @@ const LoginTest = {
                          createInstance(Ci.nsILocalFile);
         outputFile.initWithPath(aOutputPathName);
         outputFile.append(aOutputFileName);
+
+        if (!preserveOutputFile && outputFile.exists())
+            outputFile.remove(false);
     }
 
     try {
