@@ -173,7 +173,14 @@ namespace nanojit
 
         while (!_frags->isEmpty()) {
             Fragment *f = _frags->removeLast();
-			f->releaseTreeMem(this);
+            Fragment *peer = f->peer;
+            while (peer) {
+                Fragment *next = peer->peer;
+                peer->releaseTreeMem(this);
+                delete peer;
+                peer = next;
+            }
+            f->releaseTreeMem(this);
             delete f;
 		}			
 
@@ -194,19 +201,22 @@ namespace nanojit
 		return _core;
 	}
 
+	Fragment* Fragmento::newLoop(const void* ip)
+	{
+        Fragment *f = newFrag(ip);
+        f->peer = _frags->get(ip);
+        _frags->put(ip, f);
+        f->anchor = f;
+        f->root = f;
+        f->kind = LoopTrace;
+        f->mergeCounts = new (_core->gc) BlockHist(_core->gc);
+        verbose_only( addLabel(f, "T", _frags->size()); )
+        return f;
+	}
+	
     Fragment* Fragmento::getLoop(const void* ip)
 	{
-		Fragment* f = _frags->get(ip);
-		if (!f) {
-			f = newFrag(ip);
-			_frags->put(ip, f);
-            f->anchor = f;
-            f->root = f;
-			f->kind = LoopTrace;
-			f->mergeCounts = new (_core->gc) BlockHist(_core->gc);
-            verbose_only( addLabel(f, "T", _frags->size()); )
-		}
-		return f;
+        return _frags->get(ip);
 	}
 
 #ifdef NJ_VERBOSE
@@ -385,22 +395,27 @@ namespace nanojit
         for (int32_t i=0; i<count; i++)
         {
             Fragment *f = _frags->at(i);
-			fragstats stat = { 0,0,0,0,0 };
-            dumpFragStats(f, 0, stat);
-            if (stat.lir) {
-				totalstat.lir += stat.lir;
-				totalstat.lirbytes += stat.lirbytes;
+            while (true) {
+                fragstats stat = { 0,0,0,0,0 };
+                dumpFragStats(f, 0, stat);
+                if (stat.lir) {
+                    totalstat.lir += stat.lir;
+                    totalstat.lirbytes += stat.lirbytes;
+                }
+                uint64_t bothDur = stat.traceDur + stat.interpDur;
+                if (bothDur) {
+                    totalstat.interpDur += stat.interpDur;
+                    totalstat.traceDur += stat.traceDur;
+                    totalstat.size += stat.size;
+                    totaldur += bothDur;
+                    while (durs.containsKey(bothDur)) bothDur++;
+                    DurData d(f, stat.traceDur, stat.interpDur, stat.size);
+                    durs.put(bothDur, d);
+                }
+                if (!f->peer)
+                    break;
+                f = f->peer;
             }
-			uint64_t bothDur = stat.traceDur + stat.interpDur;
-			if (bothDur) {
-				totalstat.interpDur += stat.interpDur;
-				totalstat.traceDur += stat.traceDur;
-				totalstat.size += stat.size;
-				totaldur += bothDur;
-				while (durs.containsKey(bothDur)) bothDur++;
-				DurData d(f, stat.traceDur, stat.interpDur, stat.size);
-				durs.put(bothDur, d);
-			}
         }
 		uint64_t totaltrace = totalstat.traceDur;
 		int totalsize = totalstat.size;
