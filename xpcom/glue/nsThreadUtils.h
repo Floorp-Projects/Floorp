@@ -245,8 +245,7 @@ protected:
 #define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 // An event that can be used to call a method on a class.  The class type must
-// support reference counting. This event supports Revoke for use
-// with nsRevocableEventPtr.
+// support reference counting.
 template <class T>
 class nsRunnableMethod : public nsRunnable
 {
@@ -259,19 +258,13 @@ public:
   }
 
   NS_IMETHOD Run() {
-    if (!mObj)
-      return NS_OK;
     (mObj->*mMethod)();
     return NS_OK;
-  }
-  
-  void Revoke() {
-    NS_IF_RELEASE(mObj);
   }
 
 private:
   virtual ~nsRunnableMethod() {
-    NS_IF_RELEASE(mObj);
+    NS_RELEASE(mObj);
   }
 
   T      *mObj;
@@ -371,8 +364,6 @@ public:
   PRBool IsPending() {
     return mEvent != nsnull;
   }
-  
-  T *get() { return mEvent; }
 
 private:
   // Not implemented
