@@ -351,7 +351,7 @@ private:
     void              *SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsCStringArray &aIconList);
     void               SetDefaultIcon(void);
-    void               InitButtonEvent(nsMouseEvent &aEvent, QMouseEvent *aEvent, int aClickCount = 1);
+    void               InitButtonEvent(nsMouseEvent &event, QMouseEvent *aEvent, int aClickCount = 1);
     PRBool             DispatchCommandEvent(nsIAtom* aCommand);
     QWidget           *createQWidget(QWidget *parent, nsWidgetInitData *aInitData);
 

@@ -40,6 +40,7 @@
 #include "cairoint.h"
 
 #include "cairo-qpainter.h"
+#include <memory>
 
 #include <QtGui/QPainter>
 #include <QtGui/QPaintEngine>
