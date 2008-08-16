@@ -11,6 +11,9 @@ function run_test() {
 
 try {
 
+// Disable test for now
+return;
+
 
 /* ========== 0 ========== */
 var testnum = 0;

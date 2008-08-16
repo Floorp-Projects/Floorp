@@ -65,6 +65,9 @@ function generateFactory(protocol, defaultPort)
 }
 
 function run_test() {
+// Disable test for now
+return;
+
 Cm.nsIComponentRegistrar.registerFactory(LDAPPH_CID, "LDAPProtocolFactory",
                                          BASE_CONTRACTID + "ldap",
                                          generateFactory("ldap", 389));
