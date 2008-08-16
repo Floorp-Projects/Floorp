@@ -13,10 +13,7 @@ function run_test() {
     var colName = param + "_version";
     var sql = "PRAGMA " + colName;
 
-    var file = Components.classes["@mozilla.org/file/directory_service;1"]
-                         .getService(Components.interfaces.nsIProperties)
-                         .get("TmpD", Components.interfaces.nsIFile);
-    file.append("bug-365166.sqlite");
+    var file = getTestDB();
     var storageService = Components.classes["@mozilla.org/storage/service;1"].
                          getService(Components.interfaces.mozIStorageService);
     var conn = storageService.openDatabase(file); 
