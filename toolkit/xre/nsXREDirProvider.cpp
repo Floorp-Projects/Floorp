@@ -982,9 +982,6 @@ nsXREDirProvider::GetProfileDir(nsIFile* *aResult)
 nsresult
 nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, PRBool aLocal)
 {
-  if (!gAppData)
-    return NS_ERROR_FAILURE;
-
   // Copied from nsAppFileLocationProvider (more or less)
   nsresult rv;
   nsCOMPtr<nsILocalFile> localDir;
@@ -1027,6 +1024,8 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, PRBool aLocal)
 #if 0 /* For OS/2 we want to always use MOZILLA_HOME */
   // we want an environment variable of the form
   // FIREFOX_HOME, etc
+  if (!gAppData)
+    return NS_ERROR_FAILURE;
   nsDependentCString envVar(nsDependentCString(gAppData->name));
   envVar.Append("_HOME");
   char *pHome = getenv(envVar.get());
