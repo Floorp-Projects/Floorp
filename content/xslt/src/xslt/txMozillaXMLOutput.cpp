@@ -86,6 +86,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsSubstring& aRootName,
     : mTreeDepth(0),
       mBadChildLevel(0),
       mTableState(NORMAL),
+      mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
       mCreatingNewDocument(PR_TRUE),
       mOpenedElementIsHTML(PR_FALSE),
@@ -111,6 +112,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
     : mTreeDepth(0),
       mBadChildLevel(0),
       mTableState(NORMAL),
+      mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
       mCreatingNewDocument(PR_FALSE),
       mOpenedElementIsHTML(PR_FALSE),
@@ -257,6 +259,14 @@ txMozillaXMLOutput::endDocument(nsresult aResult)
         }
         
         return rv;
+    }
+
+    // This should really be handled by nsIDocument::Reset
+    if (mCreatingNewDocument && !mHaveTitleElement) {
+        nsCOMPtr<nsIDOMNSDocument> domDoc = do_QueryInterface(mDocument);
+        if (domDoc) {
+            domDoc->SetTitle(EmptyString());
+        }
     }
 
     if (!mRefreshString.IsEmpty()) {
@@ -768,6 +778,22 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
                                  (NS_PTR_TO_INT32(mTableStateStack.pop()));
 
         return NS_OK;
+    }
+
+    // Set document title
+    else if (mCreatingNewDocument &&
+             atom == txHTMLAtoms::title && !mHaveTitleElement) {
+        // The first title wins
+        mHaveTitleElement = PR_TRUE;
+        nsCOMPtr<nsIDOMNSDocument> domDoc = do_QueryInterface(mDocument);
+
+        nsAutoString title;
+        nsContentUtils::GetNodeTextContent(aElement, PR_TRUE, title);
+
+        if (domDoc) {
+            title.CompressWhitespace();
+            domDoc->SetTitle(title);
+        }
     }
     else if (mCreatingNewDocument && atom == txHTMLAtoms::base &&
              !mHaveBaseElement) {
