@@ -106,14 +106,7 @@ var observer = {
 histsvc.addObserver(observer, false);
 
 // get direct db connection for date-based anno tests
-var dirService = Cc["@mozilla.org/file/directory_service;1"].
-                 getService(Ci.nsIProperties);
-var dbFile = dirService.get("ProfD", Ci.nsIFile);
-dbFile.append("places.sqlite");
-
-var dbService = Cc["@mozilla.org/storage/service;1"].
-                getService(Ci.mozIStorageService);
-var dbConnection = dbService.openDatabase(dbFile);
+var dbConnection = histsvc.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
 
 
 var testURI = uri("http://mozilla.com");
