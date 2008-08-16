@@ -185,6 +185,8 @@ extern PKIX_Boolean noErrorState;
 extern PKIX_Boolean errorGenerated;
 extern PKIX_Boolean runningLeakTest;
 extern PLHashTable *fnInvTable;
+extern PKIX_UInt32 testStartFnStackPosition;
+extern char *errorFnStackString;
 
 extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 
@@ -210,7 +212,6 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
                                                           funcName, &errorSetFlag, \
                                                           plContext); \
             if (pkixErrorResult) { \
-                 printf("Error in fn: %s\n", myFuncName); \
                  PR_LOG(pkixLog, 5, \
                     ("%s%*s<- %s(%d) - %s\n", (errorGenerated ? "*" : " "), \
                               stackPosition, " ", fnStackNameArr[stackPosition], \

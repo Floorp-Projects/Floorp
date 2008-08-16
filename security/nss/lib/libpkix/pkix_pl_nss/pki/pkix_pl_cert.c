@@ -1230,8 +1230,7 @@ pkix_pl_Cert_Destroy(
                 cert->nssSubjAltNames = NULL;
         }
 
-        PKIX_PL_NSSCALL(CERT, CERT_DestroyCertificate, (cert->nssCert));
-
+        CERT_DestroyCertificate(cert->nssCert);
         cert->nssCert = NULL;
 
 cleanup:
@@ -1530,11 +1529,16 @@ pkix_pl_Cert_CreateToList(
 {
         CERTCertificate *nssCert = NULL;
         PKIX_PL_Cert *cert = NULL;
+        CERTCertDBHandle *handle;
 
         PKIX_ENTER(CERT, "pkix_pl_Cert_CreateToList");
         PKIX_NULLCHECK_TWO(derCertItem, certList);
 
-        nssCert = CERT_DecodeDERCertificate(derCertItem, PR_TRUE, NULL);
+        handle  = CERT_GetDefaultCertDB();
+        nssCert = CERT_NewTempCertificate(handle, derCertItem,
+					  /* nickname */ NULL, 
+					  /* isPerm   */ PR_FALSE, 
+					  /* copyDer  */ PR_TRUE);
         if (!nssCert) {
             goto cleanup;
         }
@@ -1577,6 +1581,7 @@ PKIX_PL_Cert_Create(
         PKIX_UInt32 derLength;
         PKIX_Boolean copyDER;
         PKIX_PL_Cert *cert = NULL;
+        CERTCertDBHandle *handle;
 
         PKIX_ENTER(CERT, "PKIX_PL_Cert_Create");
         PKIX_NULLCHECK_TWO(pCert, byteArray);
@@ -1602,8 +1607,11 @@ PKIX_PL_Cert_Create(
          * is still using it
          */
         copyDER = PKIX_TRUE;
-        PKIX_CERT_DEBUG("\t\tCalling CERT_DecodeDERCertificate).\n");
-        nssCert = CERT_DecodeDERCertificate(derCertItem, copyDER, NULL);
+        handle  = CERT_GetDefaultCertDB();
+        nssCert = CERT_NewTempCertificate(handle, derCertItem,
+					  /* nickname */ NULL, 
+					  /* isPerm   */ PR_FALSE, 
+					  /* copyDer  */ PR_TRUE);
         if (!nssCert){
                 PKIX_ERROR(PKIX_CERTDECODEDERCERTIFICATEFAILED);
         }
@@ -1960,7 +1968,7 @@ PKIX_PL_Cert_GetAllSubjectNames(
         CERTGeneralName *nssTempSubjectName = NULL;
         PKIX_List *allSubjectNames = NULL;
         PKIX_PL_GeneralName *pkixSubjectName = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
 
         PKIX_ENTER(CERT, "PKIX_PL_Cert_GetAllSubjectNames");
         PKIX_NULLCHECK_THREE(cert, cert->nssCert, pAllSubjectNames);
@@ -2264,7 +2272,7 @@ PKIX_PL_Cert_GetAuthorityKeyIdentifier(
         PKIX_PL_ByteArray *authKeyId = NULL;
         CERTCertificate *nssCert = NULL;
         CERTAuthKeyID *authKeyIdExtension = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         SECItem retItem;
 
         PKIX_ENTER(CERT, "PKIX_PL_Cert_GetAuthorityKeyIdentifier");
@@ -3153,7 +3161,7 @@ PKIX_PL_Cert_CheckNameConstraints(
 {
         PKIX_Boolean checkPass = PKIX_TRUE;
         CERTGeneralName *nssSubjectNames = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
 
         PKIX_ENTER(CERT, "PKIX_PL_Cert_CheckNameConstraints");
         PKIX_NULLCHECK_ONE(cert);
@@ -3386,7 +3394,7 @@ PKIX_PL_Cert_GetAuthorityInfoAccess(
         PKIX_List *aiaList = NULL; /* of PKIX_PL_InfoAccess */
         SECItem *encodedAIA = NULL;
         CERTAuthInfoAccess **aia = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         SECStatus rv;
 
         PKIX_ENTER(CERT, "PKIX_PL_Cert_GetAuthorityInfoAccess");
@@ -3472,7 +3480,7 @@ PKIX_PL_Cert_GetSubjectInfoAccess(
         SECItem siaOID = OI(siaOIDString);
         SECItem *encodedSubjInfoAccess = NULL;
         CERTAuthInfoAccess **subjInfoAccess = NULL;
-        PRArenaPool *arena = NULL;
+        PLArenaPool *arena = NULL;
         SECStatus rv;
 
         PKIX_ENTER(CERT, "PKIX_PL_Cert_GetSubjectInfoAccess");

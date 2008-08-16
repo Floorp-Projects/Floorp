@@ -49,11 +49,9 @@ FORCE_STATIC_LIB= 1
 DEFINES += -DTHEORA_DISABLE_ENCODE
 
 ifeq ($(findstring 86,$(OS_TEST)), 86)
-DEFINES += -DOC_X86ASM
+ifneq ($(OS_ARCH),WINNT)
+DEFINES += -DOC_X86ASM -DUSE_ASM
 endif
-
-ifeq ($(OS_ARCH),Linux)
-DEFINES += -DUSE_ASM
 endif
 
 CSRCS		= \

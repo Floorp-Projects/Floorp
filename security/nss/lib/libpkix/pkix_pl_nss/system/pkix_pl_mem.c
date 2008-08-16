@@ -199,32 +199,3 @@ PKIX_PL_Free(
 
         PKIX_RETURN(MEM);
 }
-
-/*
- * FUNCTION: PKIX_PL_Memcpy (see comments in pkix_pl_system.h)
- */
-PKIX_Error *
-PKIX_PL_Memcpy(
-        void *source,
-        PKIX_UInt32 length,
-        void **pDest,
-        void *plContext)
-{
-        PKIX_PL_NssContext *nssContext = NULL;
-
-        PKIX_ENTER(MEM, "PKIX_PL_Memcpy");
-        PKIX_NULLCHECK_TWO(source, pDest);
-
-        nssContext = (PKIX_PL_NssContext *)plContext; 
-
-        if (nssContext != NULL && nssContext->arena != NULL) {
-                 PKIX_ERROR_ALLOC_ERROR();
-        }
-
-        PKIX_MEM_DEBUG("\tCalling PORT_Memcpy.\n");
-        (void) PORT_Memcpy(*pDest, source, length);
-
-cleanup:
-
-        PKIX_RETURN(MEM);
-}

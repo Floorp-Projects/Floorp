@@ -73,7 +73,7 @@ SECOidTag SEC_PKCS5GetPBEAlgorithm(SECOidTag algTag, int keyLen);
 int SEC_PKCS5GetKeyLength(SECAlgorithmID *algid);
 
 /**********************************************************************
- * Deprecated PBE fucntions.  Use the PBE functions in pk11func.h
+ * Deprecated PBE functions.  Use the PBE functions in pk11func.h
  * instead.
  **********************************************************************/
 

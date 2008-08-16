@@ -44,20 +44,27 @@ const LoginTest = {
    *
    */
   initStorage : function (storage, aInputPathName,  aInputFileName,
-                          aOutputPathName, aOutputFileName, aExpectedError) {
+                          aOutputPathName, aOutputFileName, aExpectedError,
+                          preserveOutputFile) {
     var err = null;
 
-    var inputFile  = Cc["@mozilla.org/file/local;1"]
-                            .createInstance(Ci.nsILocalFile);
-    inputFile.initWithPath(aInputPathName);
-    inputFile.append(aInputFileName);
+    var inputFile = null;
+    if (aInputFileName) {
+        var inputFile  = Cc["@mozilla.org/file/local;1"].
+                         createInstance(Ci.nsILocalFile);
+        inputFile.initWithPath(aInputPathName);
+        inputFile.append(aInputFileName);
+    }
 
     var outputFile = null;
     if (aOutputFileName) {
-        var outputFile = Cc["@mozilla.org/file/local;1"]
-                                .createInstance(Ci.nsILocalFile);
+        var outputFile = Cc["@mozilla.org/file/local;1"].
+                         createInstance(Ci.nsILocalFile);
         outputFile.initWithPath(aOutputPathName);
         outputFile.append(aOutputFileName);
+
+        if (!preserveOutputFile && outputFile.exists())
+            outputFile.remove(false);
     }
 
     try {
@@ -158,6 +165,23 @@ const LoginTest = {
         lineCount++;
 
     return lineCount;
+  },
+
+  newMozStorage : function () {
+    var storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].
+                  createInstance(Ci.nsILoginManagerStorage);
+    if (!storage)
+      throw "Couldn't create storage instance.";
+    return storage;
+  },
+
+  deleteFile : function (pathname, filename) {
+    var file = Cc["@mozilla.org/file/local;1"].
+    createInstance(Ci.nsILocalFile);
+    file.initWithPath(pathname);
+    file.append(filename);
+    if (file.exists())
+      file.remove(false);
   }
 
 };

@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.91 2008/03/15 02:15:34 alexei.volkov.bugs%sun.com Exp $
+ * $Id: certdb.c,v 1.92 2008/05/16 03:38:39 nelson%bolyard.com Exp $
  */
 
 #include "nssilock.h"
@@ -1489,7 +1489,7 @@ cert_VerifySubjectAltName(CERTCertificate *cert, const char *hn)
     unsigned int      hnLen;
     int               DNSextCount    = 0;
     int               IPextCount     = 0;
-    PRBool            isIPaddr;
+    PRBool            isIPaddr       = PR_FALSE;
     SECStatus         rv             = SECFailure;
     SECItem           subAltName;
     PRNetAddr         netAddr;
@@ -1503,17 +1503,17 @@ cert_VerifySubjectAltName(CERTCertificate *cert, const char *hn)
     rv = CERT_FindCertExtension(cert, SEC_OID_X509_SUBJECT_ALT_NAME, 
 				&subAltName);
     if (rv != SECSuccess) {
-	goto finish;
+	goto fail;
     }
     isIPaddr = (PR_SUCCESS == PR_StringToNetAddr(hn, &netAddr));
     rv = SECFailure;
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (!arena) 
-	goto finish;
+	goto fail;
 
     nameList = current = CERT_DecodeAltNameExtension(arena, &subAltName);
     if (!current)
-    	goto finish;
+    	goto fail;
 
     do {
 	switch (current->type) {
@@ -1527,7 +1527,7 @@ cert_VerifySubjectAltName(CERTCertificate *cert, const char *hn)
 		    cnBufLen = cnLen + 1;
 		    cn = (char *)PORT_ArenaAlloc(arena, cnBufLen);
 		    if (!cn)
-			goto finish;
+			goto fail;
 		}
 		PORT_Memcpy(cn, current->name.other.data, cnLen);
 		cn[cnLen] = 0;
@@ -1579,7 +1579,9 @@ cert_VerifySubjectAltName(CERTCertificate *cert, const char *hn)
 	current = CERT_GetNextGeneralName(current);
     } while (current != nameList);
 
-    if ((!isIPaddr && !DNSextCount) || (isIPaddr && !IPextCount)) {
+fail:
+
+    if (!(isIPaddr ? IPextCount : DNSextCount)) {
 	/* no relevant value in the extension was found. */
 	PORT_SetError(SEC_ERROR_EXTENSION_NOT_FOUND);
     } else {

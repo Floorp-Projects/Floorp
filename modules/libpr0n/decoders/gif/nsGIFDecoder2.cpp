@@ -673,7 +673,7 @@ nsGIFDecoder2::DoLzw(const PRUint8 *q)
 static void ConvertColormap(PRUint32 *aColormap, PRUint32 aColors)
 {
   // Apply CMS transformation if enabled and available
-  if (gfxPlatform::IsCMSEnabled()) {
+  if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
     cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
     if (transform)
       cmsDoTransform(transform, aColormap, aColormap, aColors);

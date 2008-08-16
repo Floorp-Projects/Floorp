@@ -80,7 +80,7 @@ extern int ssl3CipherSuites[];
 GlobalThreadMgr threadMGR;
 char *certNickname = NULL;
 char *hostName = NULL;
-char *password = NULL;
+secuPWData  pwdata          = { PW_NONE, 0 };
 unsigned short port = 0;
 PRBool dumpChain;
 
@@ -92,7 +92,7 @@ Usage(const char *progName)
     pr_stderr = PR_STDERR;
 
     PR_fprintf(pr_stderr, "Usage:\n"
-               "   %s  [-c ] [-o] [-p port] [-d dbdir] [-w password]\n"
+               "   %s  [-c ] [-o] [-p port] [-d dbdir] [-w password] [-f pwfile]\n"
                "   \t\t[-C cipher(s)]  [-l <url> -t <nickname> ] hostname",
                progName);
     PR_fprintf (pr_stderr, "\nWhere:\n");
@@ -111,6 +111,9 @@ Usage(const char *progName)
     PR_fprintf (pr_stderr,
                 "  %-13s key database password\n",
                 "-w password");
+    PR_fprintf (pr_stderr,
+                "  %-13s token password file\n",
+                "-f pwfile");
     PR_fprintf (pr_stderr,
                 "  %-13s communication cipher list\n",
                 "-C cipher(s)");
@@ -289,7 +292,7 @@ do_connects(void *a, int connection)
 		return SECFailure;
 	}
 
-	secStatus = SSL_SetPKCS11PinArg(sslSocket, password);
+	secStatus = SSL_SetPKCS11PinArg(sslSocket, &pwdata);
 	if (secStatus != SECSuccess) {
 		errWarn("SSL_SetPKCS11PinArg");
 		return secStatus;
@@ -436,7 +439,7 @@ main(int argc, char **argv)
 	progName = PORT_Strdup(argv[0]);
 
 	hostName = NULL;
-	optstate = PL_CreateOptState(argc, argv, "C:cd:l:n:p:ot:w:");
+	optstate = PL_CreateOptState(argc, argv, "C:cd:f:l:n:p:ot:w:");
 	while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 		switch(optstate->option) {
 		case 'C' : cipherString = PL_strdup(optstate->value); break;
@@ -446,7 +449,15 @@ main(int argc, char **argv)
 		case 'p' : port = PORT_Atoi(optstate->value);         break;
 		case 'o' : doOcspCheck = PR_TRUE;                     break;
 		case 't' : respCertName = PL_strdup(optstate->value); break;
-		case 'w' : password = PL_strdup(optstate->value);     break;
+                case 'w':
+                           pwdata.source = PW_PLAINTEXT;
+                           pwdata.data = PORT_Strdup(optstate->value);
+                           break;
+
+                case 'f':
+                           pwdata.source = PW_FROMFILE;
+                           pwdata.data = PORT_Strdup(optstate->value);
+                           break;
 		case '\0': hostName = PL_strdup(optstate->value);     break;
 		default  : Usage(progName);
 		}
@@ -467,8 +478,7 @@ main(int argc, char **argv)
 	    Usage(progName);
         }
     
-	/* Set our password function callback. */
-	PK11_SetPasswordFunc(myPasswd);
+	PK11_SetPasswordFunc(SECU_GetModulePassword);
 
 	/* Initialize the NSS libraries. */
 	if (certDir) {

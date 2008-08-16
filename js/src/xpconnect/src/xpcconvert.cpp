@@ -1120,6 +1120,7 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                 // printf("Wrapped native accessed across scope boundary\n");
 
                 JSScript* script = nsnull;
+                JSObject* callee = nsnull;
                 if(ccx.GetXPCContext()->CallerTypeIsJavaScript())
                 {
                     // Called from JS.  We're going to hand the resulting
@@ -1127,15 +1128,20 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                     // the stack.
                     JSContext* cx = ccx;
                     JSStackFrame* fp = cx->fp;
-                    while(!script && fp)
+                    while(fp)
                     {
                         script = fp->script;
+                        if(script)
+                        {
+                            callee = fp->callee;
+                            break;
+                        }
                         fp = fp->down;
                     }
                 }
                 else if(ccx.GetXPCContext()->CallerTypeIsNative())
                 {
-                    JSObject* callee = ccx.GetCallee();
+                    callee = ccx.GetCallee();
                     if(callee && JS_ObjectIsFunction(ccx, callee))
                     {
                         // Called from c++, and calling out to |callee|, which
@@ -1148,8 +1154,12 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                                      "object");
                         script = JS_GetFunctionScript(ccx, fun);
                     }
-                    // Else we don't know whom we're calling, so don't create
-                    // XPCNativeWrappers.
+                    else
+                    {
+                        // Else we don't know whom we're calling, so don't
+                        // create XPCNativeWrappers.
+                        callee = nsnull;
+                    }
                 }
                 // else don't create XPCNativeWrappers, since we have
                 // no idea what's calling what here.
@@ -1173,7 +1183,8 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
 #endif
 
                         JSObject *nativeWrapper =
-                            XPCNativeWrapper::GetNewOrUsed(ccx, wrapper);
+                            XPCNativeWrapper::GetNewOrUsed(ccx, wrapper,
+                                                           callee);
 
                         if (nativeWrapper)
                         {

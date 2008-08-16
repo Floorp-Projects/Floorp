@@ -1,7 +1,13 @@
+== justification-1.html justification-1-ref.html
+== justification-2a.html justification-2-ref.html
+== justification-2b.html justification-2-ref.html
 == long-1.html long-ref.html
-random == soft-hyphens-1a.html soft-hyphens-1-ref.html # bug 406299
-random == soft-hyphens-1b.html soft-hyphens-1-ref.html # bug 406299
-random == soft-hyphens-1c.html soft-hyphens-1-ref.html # bug 406299
+== pre-line-1.html pre-line-1-ref.html
+== pre-line-2.html pre-line-2-ref.html
+== pre-line-3.html pre-line-3-ref.html
+== soft-hyphens-1a.html soft-hyphens-1-ref.html
+== soft-hyphens-1b.html soft-hyphens-1-ref.html
+== soft-hyphens-1c.html soft-hyphens-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
 == white-space-2.html white-space-2-ref.html
@@ -15,4 +21,5 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == wordwrap-03.html wordwrap-03-ref.html #
 == zwnj-01.html zwnj-01-ref.html
 == zwnj-02.html zwnj-02-ref.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != zwnj-01.html zwnj-02-ref.html # Bad fonts on the tinderbox -- works locally
-random == 444656.html 444656-ref.html # bug 406299
+== 444656.html 444656-ref.html
+== 449555-1.html 449555-1-ref.html

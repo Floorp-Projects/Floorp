@@ -44,7 +44,7 @@ int main()
 {  
   int test_ok = true;
 
-  nsAutoString fmt(NS_LITERAL_STRING("%3$s %4$S %1$d %2$d")); 
+  nsAutoString fmt(NS_LITERAL_STRING("%3$s %4$S %1$d %2$d %2$d %3$s"));
   char utf8[] = "Hello"; 
   PRUnichar ucs2[]={'W', 'o', 'r', 'l', 'd', 0x4e00, 0xAc00, 0xFF45, 0x0103, 0x00}; 
   int d=3; 
@@ -59,7 +59,9 @@ int main()
   const PRUnichar expected[] = {0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20,
                                 0x57, 0x6F, 0x72, 0x6C, 0x64, 0x4E00,
                                 0xAC00, 0xFF45, 0x0103, 0x20, 0x33,
-                                0x20, 0x33, 0x33, 0x33};
+                                0x20, 0x33, 0x33, 0x33, 0x20, 0x33,
+                                0x33, 0x33, 0x20, 0x48, 0x65, 0x6C,
+                                0x6C, 0x6F};
   for(PRUint32 i=0;i<out.Length();i++) 
     if(uout[i] != expected[i]) 
       test_ok = false;

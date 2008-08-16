@@ -30,13 +30,13 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK ***** */    
+ * ***** END LICENSE BLOCK ***** */
 
 #ifndef _STD_SEMAPHORE_H
 #define _STD_SEMAPHORE_H
 #if defined(linux)
 #include <semaphore.h>
-#define SEM_CREATE(p,s) sem_init(&(p), 1, s) 
+#define SEM_CREATE(p,s) sem_init(&(p), 1, s)
 #define SEM_SIGNAL(p)   sem_post(&(p))
 #define SEM_WAIT(p)     sem_wait(&(p))
 #define SEM_CLOSE(p)    sem_destroy(&(p))
@@ -63,7 +63,7 @@ typedef MPSemaphoreID   semaphore;
 #if defined(XP_UX)
   sem_init(&(pointers->sem), 1, LIBOGGPLAY_BUFFER_SIZE);
 #elif defined(XP_WIN)
-  pointers->sem = CreateSemaphore(NULL, (long)LIBOGGPLAY_BUFFER_SIZE, 
+  pointers->sem = CreateSemaphore(NULL, (long)LIBOGGPLAY_BUFFER_SIZE,
     (long)LIBOGGPLAY_BUFFER_SIZE, NULL);
 #elif defined(XP_MACOSX)
   MPCreateSemaphore(LIBOGGPLAY_BUFFER_SIZE, LIBOGGPLAY_BUFFER_SIZE,

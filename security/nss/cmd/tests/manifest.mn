@@ -40,7 +40,10 @@ CORE_DEPTH = ../../..
 # MODULE public and private header  directories are implicitly REQUIRED.
 MODULE = nss
 
-CSRCS = remtest.c
+CSRCS = \
+	nonspr10.c \
+	remtest.c \
+	$(NULL)
 
 # The MODULE is always implicitly required.
 # Listing it here in REQUIRES makes it appear twice in the cc command line.
@@ -50,4 +53,4 @@ PROGRAMS = $(CSRCS:.c=)
 
 TARGETS = $(PROGRAMS)
 
-#NO_MD_RELEASE = 1
+NO_MD_RELEASE = 1

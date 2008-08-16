@@ -334,8 +334,9 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
 
     JOCTET  *profile;
     PRUint32 profileLength;
+    eCMSMode cmsMode = gfxPlatform::GetCMSMode();
 
-    if (gfxPlatform::IsCMSEnabled() &&
+    if ((cmsMode != eCMSMode_Off) &&
         read_icc_profile(&mInfo, &profile, &profileLength) &&
         (mInProfile = cmsOpenProfileFromMem(profile, profileLength)) != NULL) {
       free(profile);
@@ -547,7 +548,7 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
     }
 
     /* Force to use our YCbCr to Packed RGB converter when possible */
-    if (!mTransform && !gfxPlatform::IsCMSEnabled() &&
+    if (!mTransform && (gfxPlatform::GetCMSMode() == eCMSMode_Off) &&
         mInfo.jpeg_color_space == JCS_YCbCr && mInfo.out_color_space == JCS_RGB) {
       /* Special case for the most common case: transform from YCbCr direct into packed ARGB */
       mInfo.out_color_components = 4; /* Packed ARGB pixels are always 4 bytes...*/
@@ -749,7 +750,7 @@ nsJPEGDecoder::OutputScanlines()
           cmyk_convert_rgb((JSAMPROW)imageRow, mInfo.output_width);
           sampleRow += mInfo.output_width;
         }
-        if (gfxPlatform::IsCMSEnabled()) {
+        if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
           /* No embedded ICC profile - treat as sRGB */
           cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
           if (transform) {

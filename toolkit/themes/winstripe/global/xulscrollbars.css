@@ -81,14 +81,6 @@ thumb[orient="horizontal"] {
   min-width: 8px;
 }
 
-thumb > gripper {
-  -moz-appearance: scrollbargripper-vertical;
-}
-
-thumb[orient="horizontal"] > gripper {
-  -moz-appearance: scrollbargripper-horizontal;
-}
-
 /* ::::: scrollbar button ::::: */
 
 scrollbarbutton {
@@ -195,14 +187,6 @@ scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"][disabled="true"
   html|div thumb[orient="horizontal"] {
     -moz-appearance: scrollbarthumb-horizontal;
     min-width: 8px;
-  }
-
-  html|div thumb > gripper {
-    -moz-appearance: scrollbargripper-vertical;
-  }
-
-  html|div thumb[orient="horizontal"] > gripper {
-    -moz-appearance: scrollbargripper-horizontal;
   }
 
   /* ::::: scrollbar button ::::: */

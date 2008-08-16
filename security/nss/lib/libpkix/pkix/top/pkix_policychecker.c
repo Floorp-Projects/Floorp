@@ -895,11 +895,11 @@ pkix_PolicyChecker_MakeMutableCopy(
         }
 
         *pMutableCopy = newList;
-
+        newList = NULL;
+        
 cleanup:
-        if (PKIX_ERROR_RECEIVED) {
-                PKIX_DECREF(newList);
-        }
+        PKIX_DECREF(newList);
+        PKIX_DECREF(object);
 
         PKIX_RETURN(CERTCHAINCHECKER);
 }

@@ -40,7 +40,7 @@
  * encoding/creation side *and* the decoding/decryption side.  Anything
  * else should be static routines in the appropriate file.
  *
- * $Id: p7local.c,v 1.12 2008/02/03 06:08:48 nelson%bolyard.com Exp $
+ * $Id: p7local.c,v 1.13 2008/05/30 03:39:46 nelson%bolyard.com Exp $
  */
 
 #include "p7local.h"
@@ -585,7 +585,6 @@ sec_PKCS7Decrypt (sec_PKCS7CipherObject *obj, unsigned char *output,
      */
     if (final && (padsize != 0)) {
 	unsigned int padlen = *(output + ofraglen - 1);
-	PORT_Assert (padlen > 0 && padlen <= padsize);
 	if (padlen == 0 || padlen > padsize) {
 	    PORT_SetError (SEC_ERROR_BAD_DATA);
 	    return SECFailure;

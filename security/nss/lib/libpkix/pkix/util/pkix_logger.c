@@ -410,7 +410,6 @@ pkix_Logger_Equals(
         PKIX_Boolean cmpResult;
         PKIX_Logger *firstLogger = NULL;
         PKIX_Logger *secondLogger = NULL;
-        PKIX_UInt32 i = 0;
 
         PKIX_ENTER(LOGGER, "pkix_Logger_Equals");
         PKIX_NULLCHECK_THREE(first, second, pResult);

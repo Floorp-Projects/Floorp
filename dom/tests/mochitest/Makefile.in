@@ -49,6 +49,7 @@ DIRS	+= \
 	ajax \
 	bugs \
 	chrome \
+	general \
 	whatwg \
 	geolocation \
 	$(NULL)
