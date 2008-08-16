@@ -49,6 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsINavHistoryService.h"
+#include "nsPIPlacesDatabase.h"
 #ifdef MOZ_XUL
 #include "nsIAutoCompleteController.h"
 #include "nsIAutoCompleteInput.h"
@@ -126,6 +127,7 @@ class nsNavHistory : public nsSupportsWeakReference,
                      public nsIGlobalHistory3,
                      public nsIDownloadHistory,
                      public nsICharsetResolver
+                   , public nsPIPlacesDatabase
 #ifdef MOZ_XUL
                      , public nsIAutoCompleteSearch,
                      public nsIAutoCompleteSimpleResultListener
@@ -146,6 +148,7 @@ public:
   NS_DECL_NSIDOWNLOADHISTORY
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSPIPLACESDATABASE
 #ifdef MOZ_XUL
   NS_DECL_NSIAUTOCOMPLETESEARCH
   NS_DECL_NSIAUTOCOMPLETESIMPLERESULTLISTENER

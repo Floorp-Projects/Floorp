@@ -230,6 +230,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsICharsetResolver)
+  NS_INTERFACE_MAP_ENTRY(nsPIPlacesDatabase)
 #ifdef MOZ_XUL
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSimpleResultListener)
@@ -4609,6 +4610,15 @@ nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
   PRInt64 visitID;
   return AddVisit(aSource, aStartTime, aReferrer, TRANSITION_DOWNLOAD, PR_FALSE,
                   0, &visitID);
+}
+
+// nsPIPlacesDatabase **********************************************************
+
+NS_IMETHODIMP
+nsNavHistory::GetDBConnection(mozIStorageConnection **_DBConnection)
+{
+  NS_ADDREF(*_DBConnection = mDBConn);
+  return NS_OK;
 }
 
 // nsIObserver *****************************************************************
