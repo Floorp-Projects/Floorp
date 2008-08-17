@@ -43,10 +43,11 @@ const LoginTest = {
    * initStorage
    *
    */
-  initStorage : function (storage, aInputPathName,  aInputFileName,
-                          aOutputPathName, aOutputFileName, aExpectedError,
-                          preserveOutputFile) {
+  initStorage : function (aInputPathName,  aInputFileName,
+                          aOutputPathName, aOutputFileName, aExpectedError) {
     var err = null;
+
+    var newStorage = this.newStorage();
 
     var inputFile = null;
     if (aInputFileName) {
@@ -63,19 +64,58 @@ const LoginTest = {
         outputFile.initWithPath(aOutputPathName);
         outputFile.append(aOutputFileName);
 
-        if (!preserveOutputFile && outputFile.exists())
+        // Delete any existing output file. This is primarily for Windows,
+        // where we can't rely on having deleted files in the last test run.
+        if (outputFile.exists())
             outputFile.remove(false);
     }
 
     try {
-        storage.initWithFile(inputFile, outputFile);
+        newStorage.initWithFile(inputFile, outputFile);
     } catch (e) {
         err = e;
     }
 
     this.checkExpectedError(aExpectedError, err);
 
-    return;
+    return newStorage;
+  },
+
+
+  /*
+   * reloadStorage
+   *
+   * Reinitialize a storage module with the specified input.
+   */
+  reloadStorage : function (aInputPathName, aInputFileName) {
+    var err = null;
+    var newStorage = this.newStorage();
+
+    var inputFile = null;
+    if (aInputFileName) {
+        var inputFile  = Cc["@mozilla.org/file/local;1"].
+                         createInstance(Ci.nsILocalFile);
+        inputFile.initWithPath(aInputPathName);
+        inputFile.append(aInputFileName);
+    }
+
+    try {
+        // Different semantics for the modules...
+        // The legacy module uses initWF(input, output)
+        // The mozStorage uses initWF(import, DB)
+        if (STORAGE_TYPE == "legacy")
+            newStorage.initWithFile(inputFile, null);
+        else if (STORAGE_TYPE == "mozStorage")
+            newStorage.initWithFile(null, inputFile);
+        else
+            throw "Unknown STORAGE_TYPE";
+    } catch (e) {
+        err = e;
+    }
+
+    do_check_true(err == null);
+
+    return newStorage;
   },
 
 
@@ -167,8 +207,17 @@ const LoginTest = {
     return lineCount;
   },
 
-  newMozStorage : function () {
-    var storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].
+  newStorage : function () {
+    var ID;
+
+    if (STORAGE_TYPE == "legacy")
+        ID = "@mozilla.org/login-manager/storage/legacy;1"; 
+    else if (STORAGE_TYPE == "mozStorage")
+        ID = "@mozilla.org/login-manager/storage/mozStorage;1"; 
+    else
+        throw "Unknown STORAGE_TYPE";
+
+    var storage = Cc[ID].
                   createInstance(Ci.nsILoginManagerStorage);
     if (!storage)
       throw "Couldn't create storage instance.";
@@ -180,8 +229,13 @@ const LoginTest = {
     createInstance(Ci.nsILocalFile);
     file.initWithPath(pathname);
     file.append(filename);
-    if (file.exists())
-      file.remove(false);
+    // Suppress failures, this happens in the mozstorage tests on Windows
+    // because the module may still be holding onto the DB. (We don't
+    // have a way to explicitly shutdown/GC the module).
+    try {
+      if (file.exists())
+        file.remove(false);
+    } catch (e) {}
   }
 
 };

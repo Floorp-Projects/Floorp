@@ -7,6 +7,8 @@
  */
 
 
+const STORAGE_TYPE = "legacy";
+
 function run_test() {
 
 try {
@@ -60,7 +62,7 @@ if (exists) {
 }
 
 testdesc = "Initialize with no existing file";
-LoginTest.initStorage(storage, OUTDIR, filename, null, null, null);
+storage = LoginTest.initStorage(OUTDIR, filename);
 LoginTest.checkStorageData(storage, [], []);
 
 testdesc = "Add 1 disabled host only";
@@ -75,7 +77,7 @@ file.remove(false);
 testnum++;
 
 testdesc = "Initialize with existing file (valid, but empty)";
-LoginTest.initStorage(storage, INDIR, "signons-empty.txt",
+storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
                                OUTDIR, "output-01.txt");
 LoginTest.checkStorageData(storage, [], []);
 
@@ -94,7 +96,7 @@ LoginTest.checkStorageData(storage, [], []);
 testnum++;
 
 testdesc = "[clear data and reinitialize with signons-empty.txt]";
-LoginTest.initStorage(storage, INDIR, "signons-empty.txt",
+storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
                                OUTDIR, "output-02.txt");
 
 // Previous tests made sure we can write to an existing file, so now just
@@ -103,7 +105,7 @@ testdesc = "Add 1 login only";
 storage.addLogin(dummyuser1);
 
 testdesc = "[flush and reload for verification]";
-LoginTest.initStorage(storage, OUTDIR, "output-02.txt", null, null);
+storage = LoginTest.reloadStorage(OUTDIR, "output-02.txt");
 
 testdesc = "Verify output-02.txt";
 LoginTest.checkStorageData(storage, [], [dummyuser1]);
@@ -113,14 +115,14 @@ LoginTest.checkStorageData(storage, [], [dummyuser1]);
 testnum++;
 
 testdesc = "[clear data and reinitialize with signons-empty.txt]";
-LoginTest.initStorage(storage, INDIR, "signons-empty.txt",
+storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
                                OUTDIR, "output-03.txt");
 
 testdesc = "Add 1 disabled host only";
 storage.setLoginSavingEnabled("http://www.nsa.gov", false);
 
 testdesc = "[flush and reload for verification]";
-LoginTest.initStorage(storage, OUTDIR, "output-03.txt", null, null);
+storage = LoginTest.reloadStorage(OUTDIR, "output-03.txt");
 
 testdesc = "Verify output-03.txt";
 LoginTest.checkStorageData(storage, ["http://www.nsa.gov"], []);
@@ -130,7 +132,7 @@ LoginTest.checkStorageData(storage, ["http://www.nsa.gov"], []);
 testnum++;
 
 testdesc = "[clear data and reinitialize with signons-empty.txt]";
-LoginTest.initStorage(storage, INDIR, "signons-empty.txt",
+storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
                                OUTDIR, "output-04.txt");
 
 testdesc = "Add 1 disabled host and 1 login";
@@ -138,7 +140,7 @@ storage.setLoginSavingEnabled("http://www.nsa.gov", false);
 storage.addLogin(dummyuser1);
 
 testdesc = "[flush and reload for verification]";
-LoginTest.initStorage(storage, OUTDIR, "output-04.txt", null, null);
+storage = LoginTest.reloadStorage(OUTDIR, "output-04.txt");
 
 testdesc = "Verify output-04.txt";
 LoginTest.checkStorageData(storage, ["http://www.nsa.gov"], [dummyuser1]);
@@ -148,7 +150,7 @@ LoginTest.checkStorageData(storage, ["http://www.nsa.gov"], [dummyuser1]);
 testnum++;
 
 testdesc = "[clear data and reinitialize with signons-empty.txt]";
-LoginTest.initStorage(storage, INDIR, "signons-empty.txt",
+storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
                                OUTDIR, "output-03.txt");
 
 testdesc = "Add 2 logins (to different hosts)";
@@ -156,7 +158,7 @@ storage.addLogin(dummyuser1);
 storage.addLogin(dummyuser2);
 
 testdesc = "[flush and reload for verification]";
-LoginTest.initStorage(storage, OUTDIR, "output-03.txt", null, null);
+storage = LoginTest.reloadStorage(OUTDIR, "output-03.txt");
 
 testdesc = "Verify output-03.txt";
 LoginTest.checkStorageData(storage, [], [dummyuser2, dummyuser1]);
@@ -166,7 +168,7 @@ LoginTest.checkStorageData(storage, [], [dummyuser2, dummyuser1]);
 testnum++;
 
 testdesc = "[clear data and reinitialize with signons-empty.txt]";
-LoginTest.initStorage(storage, INDIR, "signons-empty.txt",
+storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
                                OUTDIR, "output-04.txt");
 
 testdesc = "Add 2 logins (to same host)";
@@ -174,7 +176,7 @@ storage.addLogin(dummyuser2);
 storage.addLogin(dummyuser3);
 
 testdesc = "[flush and reload for verification]";
-LoginTest.initStorage(storage, OUTDIR, "output-04.txt", null, null);
+storage = LoginTest.reloadStorage(OUTDIR, "output-04.txt");
 
 testdesc = "Verify output-04.txt";
 LoginTest.checkStorageData(storage, [], [dummyuser3, dummyuser2]);
@@ -184,7 +186,7 @@ LoginTest.checkStorageData(storage, [], [dummyuser3, dummyuser2]);
 testnum++;
 
 testdesc = "[clear data and reinitialize with signons-empty.txt]";
-LoginTest.initStorage(storage, INDIR, "signons-empty.txt",
+storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
                                OUTDIR, "output-05.txt");
 
 testdesc = "Add 3 logins (2 to same host)";
@@ -193,7 +195,7 @@ storage.addLogin(dummyuser1);
 storage.addLogin(dummyuser2);
 
 testdesc = "[flush and reload for verification]";
-LoginTest.initStorage(storage, OUTDIR, "output-05.txt", null, null);
+storage = LoginTest.reloadStorage(OUTDIR, "output-05.txt");
 
 testdesc = "Verify output-05.txt";
 LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
@@ -211,7 +213,7 @@ testnum++;
 
 testdesc = "[init with 1 login, 1 disabled host]";
 
-LoginTest.initStorage(storage, INDIR, "signons-06.txt",
+storage = LoginTest.initStorage(INDIR, "signons-06.txt",
                                OUTDIR, "output-06.txt");
 
 var oldfile1 = PROFDIR.clone();
