@@ -9746,13 +9746,12 @@ NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
 NS_IMETHODIMP
 nsNavigator::NewWorkerPool(nsIDOMWorkerPool** _retval)
 {
-  nsresult rv;
   nsCOMPtr<nsIDOMThreadService> threadService =
     nsDOMThreadService::GetOrInitService();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(threadService, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIDOMWorkerPool> newPool;
-  rv = threadService->CreatePool(getter_AddRefs(newPool));
+  nsresult rv = threadService->CreatePool(getter_AddRefs(newPool));
   NS_ENSURE_SUCCESS(rv, rv);
 
   newPool.forget(_retval);
