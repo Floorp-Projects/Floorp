@@ -218,7 +218,7 @@ const downloadListener = {
     if (!iid.equals(AUS_Ci.nsIRequestObserver) &&
         !iid.equals(AUS_Ci.nsIProgressEventSink) &&
         !iid.equals(AUS_Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw AUS_Cr.NS_ERROR_NO_INTERFACE;
     return this;
   }
 };

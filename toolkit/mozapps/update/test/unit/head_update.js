@@ -147,14 +147,14 @@ function createAppInfo(id, name, version, platformVersion)
           iid.equals(AUS_Ci.nsISupports))
         return this;
     
-      throw Components.results.NS_ERROR_NO_INTERFACE;
+      throw AUS_Cr.NS_ERROR_NO_INTERFACE;
     }
   };
   
   var XULAppInfoFactory = {
     createInstance: function (outer, iid) {
       if (outer != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw AUS_Cr.NS_ERROR_NO_AGGREGATION;
       return XULAppInfo.QueryInterface(iid);
     }
   };
