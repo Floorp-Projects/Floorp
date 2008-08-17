@@ -1710,7 +1710,7 @@ js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
     return false;
 }
 
-GuardRecord*
+static GuardRecord*
 js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount);
 
 bool
@@ -1742,7 +1742,6 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
     /* does this branch go to an inner loop? */
     Fragment* f = fragmento->getLoop(cx->fp->regs->pc);
     if (nesting_enabled && f && f->code() && !((TreeInfo*)f->vmprivate)->globalSlots.length()) {
-        JS_ASSERT(f->vmprivate);
         /* call the inner tree */
         GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount);
         if (!lr) {
@@ -1774,10 +1773,17 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
     return false; /* done recording */
 }
 
-GuardRecord*
+static inline GuardRecord*
 js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
 {
     Fragment* f = *treep;
+
+    /* if we don't have a compiled tree available for this location, bail out */
+    if (!f->code()) {
+        JS_ASSERT(!f->vmprivate);
+        return NULL;
+    }
+    JS_ASSERT(f->vmprivate);
     
     AUDIT(traceTriggered);
 
@@ -1970,19 +1976,24 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
         cacheEntry->fragment = f;
     }
 
-    /* if we have not compiled code for this entry point yet, consider doing so now. */
-    if (!f->code()) {
-        if (++f->hits() >= HOTLOOP)
+    /* If there is a chance that js_ExecuteTree will actually succeed, invoke it (either the
+       first fragment must contain some code, or at least it must have a peer fragment). */
+    GuardRecord* lr = NULL;
+    if (f->code() || f->peer)
+        lr = js_ExecuteTree(cx, &f, inlineCallCount);
+    if (!lr) {
+        JS_ASSERT(!tm->recorder);
+        /* If we don't have compiled code for this entry point (none recorded or we trashed it),
+           count the number of hits and trigger the recorder if appropriate. */
+        if (!f->code() && (++f->hits() >= HOTLOOP))
             return js_RecordTree(cx, tm, f);
         return false;
     }
-    JS_ASSERT(!tm->recorder);
-
-    /* if this is a local branch in the same loop, grow the tree */
-    GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount);
-    if (lr && (lr->from->root == f) && (lr->exit->exitType == BRANCH_EXIT))
+    /* We successfully executed a trace, see if we should grow the tree. */
+    if ((lr->from->root == f) && (lr->exit->exitType == BRANCH_EXIT))
         return js_AttemptToExtendTree(cx, lr, f);
-    /* if this exits the loop, resume interpretation */
+    /* No, this was either a loop exit or an unusual exit (i.e. out of memory/GC), so just
+       resume interpretation. */
     return false;
 }
 
