@@ -76,6 +76,12 @@ REQUIRES += glitzglx
 endif
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+EXPORTS += gfxQtPlatform.h gfxQPainterSurface.h
+EXPORTS += gfxXlibSurface.h gfxQtNativeRenderer.h
+EXPORTS += gfxQtFonts.h
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORTS	+=	gfxOS2Surface.h \
 		gfxOS2Platform.h \

@@ -60,6 +60,10 @@ ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS += system/osxproxy
 endif
 
+ifneq (,$(filter qt,$(MOZ_WIDGET_TOOLKIT)))
+DIRS += system/unixproxy
+endif
+
 ifdef MOZ_CRASHREPORTER
 DIRS += crashreporter
 endif
