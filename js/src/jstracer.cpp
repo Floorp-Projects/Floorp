@@ -634,16 +634,17 @@ mergeTypeMaps(uint8** partial, unsigned* plength, uint8* complete, unsigned clen
     *plength = clength;
 }
 
-TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
-        Fragment* _fragment, unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap)
+TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fragment, 
+        TreeInfo* ti, unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap)
 {
+    JS_ASSERT(!_fragment->vmprivate && ti);
+    
     this->cx = cx;
     this->globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     this->anchor = _anchor;
     this->fragment = _fragment;
     this->lirbuf = _fragment->lirbuf;
-    this->treeInfo = (TreeInfo*)_fragment->root->vmprivate;
-    JS_ASSERT(treeInfo);
+    this->treeInfo = ti;
     this->callDepth = _fragment->calldepth;
     JS_ASSERT(!_anchor || _anchor->calldepth == _fragment->calldepth);
     this->atoms = cx->fp->script->atomMap.vector;
@@ -697,6 +698,11 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor,
 
 TraceRecorder::~TraceRecorder()
 {
+    JS_ASSERT(treeInfo);
+    if (fragment->root == fragment && !fragment->root->code()) {
+        JS_ASSERT(!fragment->root->vmprivate);
+        delete treeInfo;
+    }
 #ifdef DEBUG
     delete verbose_filter;
 #endif
@@ -1381,6 +1387,10 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
         fragment->addLink(anchor);
         fragmento->assm()->patch(anchor);
     }
+    JS_ASSERT(fragment->code());
+    JS_ASSERT(!fragment->vmprivate);
+    if (fragment == fragment->root) 
+        fragment->vmprivate = treeInfo;
 	/* :TODO: windows support */
 #if defined DEBUG && !defined WIN32
     char* label = (char*)malloc(strlen(cx->fp->script->filename) + 64);
@@ -1517,11 +1527,11 @@ js_DeleteRecorder(JSContext* cx)
 }
 
 static bool
-js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f,
+js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, TreeInfo* ti,
         unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap)
 {
     /* start recording if no exception during construction */
-    JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f,
+    JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
             ngslots, globalTypeMap, stackTypeMap);
     if (cx->throwing) {
         js_AbortRecording(cx, NULL, "setting up recorder failed");
@@ -1535,22 +1545,23 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f,
 static void
 js_TrashTree(JSContext* cx, Fragment* f)
 {
+    JS_ASSERT((!f->code()) == (!f->vmprivate));
+    if (!f->code())
+        return;
     AUDIT(treesTrashed);
     debug_only(printf("Trashing tree info.\n");)
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
-    if (ti) {
-        /* trash the code of all dependent trees */
-        unsigned length = ti->dependentTrees.length();
-        Fragment** data = ti->dependentTrees.data();
-        while (length-- > 0) {
-            debug_only(printf("Trashing dependent tree.\n");)
-            (*data++)->releaseCode(fragmento);
-        }
-        /* now we can kill the tree info object */
-        delete ti;
-        f->vmprivate = NULL;
+    /* trash the code of all dependent trees */
+    unsigned length = ti->dependentTrees.length();
+    Fragment** data = ti->dependentTrees.data();
+    while (length-- > 0) {
+        debug_only(printf("Trashing dependent tree.\n");)
+        (*data++)->releaseCode(fragmento);
     }
+    /* now we can kill the tree info object */
+    delete ti;
+    f->vmprivate = NULL;
     f->releaseCode(fragmento);
 }
 
@@ -1645,12 +1656,10 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 #endif
     }
 
-    if (f->vmprivate)
-        js_TrashTree(cx, f);
+    JS_ASSERT(!f->code() && !f->vmprivate);
     
     /* setup the VM-private treeInfo structure for this fragment */
-    TreeInfo* ti = new (&gc) TreeInfo(f); // TODO: deallocate when fragment dies
-    f->vmprivate = ti;
+    TreeInfo* ti = new (&gc) TreeInfo(f);
 
     /* we shouldn't have any interned globals for a new tree */
     JS_ASSERT(!ti->globalSlots.length());
@@ -1667,14 +1676,14 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     ti->maxCallDepth = 0;
 
     /* recording primary trace */
-    return js_StartRecorder(cx, NULL, f, ti->globalSlots.length(),
-            ti->globalTypeMap.data(), ti->stackTypeMap.data());
+    return js_StartRecorder(cx, NULL, f, ti,
+            ti->globalSlots.length(), ti->globalTypeMap.data(), ti->stackTypeMap.data());
 }
 
 static bool
 js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
 {
-    JS_ASSERT(lr->from->root == f);
+    JS_ASSERT(lr->from->root == f && f->vmprivate);
 
     debug_only(printf("trying to attach another branch to the tree\n");)
 
@@ -1695,7 +1704,8 @@ js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
         unsigned ngslots = e->numGlobalSlots;
         uint8* globalTypeMap = e->typeMap;
         uint8* stackTypeMap = globalTypeMap + ngslots;
-        return js_StartRecorder(cx, lr, c, ngslots, globalTypeMap, stackTypeMap);
+        return js_StartRecorder(cx, lr, c, (TreeInfo*)f->vmprivate, 
+                                ngslots, globalTypeMap, stackTypeMap);
     }
     return false;
 }
@@ -1988,10 +1998,13 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
     }
     JS_ASSERT(JS_TRACE_MONITOR(cx).recorder != NULL);
     Fragment* f = JS_TRACE_MONITOR(cx).recorder->getFragment();
+    JS_ASSERT(!f->vmprivate);
     f->blacklist();
     js_DeleteRecorder(cx);
-    if (f->root == f)
+    if (f->root == f) {
+        /* we are recording a primary trace */
         js_TrashTree(cx, f);
+    }
 }
 
 extern void
