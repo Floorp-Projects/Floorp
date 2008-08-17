@@ -102,8 +102,9 @@ LPMATSHAPER cmsAllocMatShaper2(LPMAT3 Matrix, LPGAMMATABLE In[], LPLCMSPRECACHE 
 
        // Fill matrix part
        if (Behaviour & MATSHAPER_FLOATMAT) {
-              MAT3toFloat(&NewMatShaper -> Matrix.F, Matrix);
-              if (!FMAT3isIdentity(&NewMatShaper -> Matrix.F, 0.00001f))
+              FMAT3ASetup(&NewMatShaper->Matrix.FA);
+              MAT3toFloat(NewMatShaper -> Matrix.FA.F, Matrix);
+              if (!FMAT3isIdentity(NewMatShaper -> Matrix.FA.F, 0.00001f))
                             NewMatShaper -> dwFlags |= MATSHAPER_HASMATRIX;
        }
        else {
@@ -399,41 +400,42 @@ void OutputBehaviour(LPMATSHAPER MatShaper, WORD In[], WORD Out[])
 void cmsEvalMatShaperFloat(LPMATSHAPER MatShaper, BYTE In[], BYTE Out[])
 {
        WORD tmp[3];
-       FVEC3 InVect, OutVect;
+       FVEC3 OutVect;
+       LPFVEC3 FloatVals = &MatShaper -> Matrix.FA.F->v[3]; // Access our secret aligned temp buffer
 
        if (MatShaper -> dwFlags & MATSHAPER_HASINPSHAPER)
        {
               if (MatShaper->L2_Precache != NULL) 
               {
-              InVect.n[VX] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[0][In[0]];
-              InVect.n[VY] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[1][In[1]];
-              InVect.n[VZ] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[2][In[2]];
+              FloatVals->n[VX] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[0][In[0]];
+              FloatVals->n[VY] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[1][In[1]];
+              FloatVals->n[VZ] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[2][In[2]];
               }
               else
               {
-              InVect.n[VX] = ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(In[0]), MatShaper -> L2[0], &MatShaper -> p2_16));
-              InVect.n[VY] = ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(In[1]), MatShaper -> L2[1], &MatShaper -> p2_16));
-              InVect.n[VZ] = ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(In[2]), MatShaper -> L2[2], &MatShaper -> p2_16));
+              FloatVals->n[VX] = ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(In[0]), MatShaper -> L2[0], &MatShaper -> p2_16));
+              FloatVals->n[VY] = ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(In[1]), MatShaper -> L2[1], &MatShaper -> p2_16));
+              FloatVals->n[VZ] = ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(In[2]), MatShaper -> L2[2], &MatShaper -> p2_16));
               }
        }
        else
        {
-       InVect.n[VX] = ToFloatDomain(In[0]);
-       InVect.n[VY] = ToFloatDomain(In[1]);
-       InVect.n[VZ] = ToFloatDomain(In[2]);
+       FloatVals->n[VX] = ToFloatDomain(In[0]);
+       FloatVals->n[VY] = ToFloatDomain(In[1]);
+       FloatVals->n[VZ] = ToFloatDomain(In[2]);
        }
 
 
        if (MatShaper -> dwFlags & MATSHAPER_HASMATRIX)
        {       
                          
-       MAT3evalF(&OutVect, &MatShaper -> Matrix.F, &InVect);
+       MAT3evalF(&OutVect, MatShaper -> Matrix.FA.F, FloatVals);
        }
        else 
        {
-       OutVect.n[VX] = InVect.n[VX];
-       OutVect.n[VY] = InVect.n[VY];
-       OutVect.n[VZ] = InVect.n[VZ];
+       OutVect.n[VX] = FloatVals->n[VX];
+       OutVect.n[VY] = FloatVals->n[VY];
+       OutVect.n[VZ] = FloatVals->n[VZ];
        }
 
              
