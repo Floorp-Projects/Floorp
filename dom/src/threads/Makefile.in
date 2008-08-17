@@ -11,18 +11,20 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is worker threads.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+#   Mozilla Corporation
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Vladimir Vukicevic <vladimir@pobox.com> (Original Author)
+#   Ben Turner <bent.mozilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,38 +36,45 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH            = ../../..
+topsrcdir        = @top_srcdir@
+srcdir           = @srcdir@
+VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =						\
-	base					\
-	canvas					\
-	core					\
-	html					\
-	events					\
-	stylesheets				\
-	views					\
-	sidebar                                 \
-	css					\
-	traversal				\
-	range					\
-	xbl					\
-	xpath					\
-	ls					\
-	xul                                     \
-	storage                                 \
-	json                                    \
-	offline                                 \
-	geolocation                             \
-	threads
+MODULE           = dom
+LIBRARY_NAME     = domthreads_s
+LIBXUL_LIBRARY   = 1
+FORCE_STATIC_LIB = 1
 
-ifdef MOZ_SVG
-DIRS += svg
+REQUIRES = \
+  caps \
+  content \
+  js \
+  layout \
+  pref \
+  string \
+  widget \
+  xpcom \
+  xpconnect \
+  $(NULL)
+
+CPPSRCS = \
+  nsDOMThreadService.cpp \
+  nsDOMWorkerBase.cpp \
+  nsDOMWorkerPool.cpp \
+  nsDOMWorkerSecurityManager.cpp \
+  nsDOMWorkerThread.cpp \
+  nsDOMWorkerTimeout.cpp \
+  $(NULL)
+
+LOCAL_INCLUDES = \
+  -I$(topsrcdir)/dom/src/base \
+  $(NULL)
+
+ifdef MOZ_MOCHITEST
+DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk
-
