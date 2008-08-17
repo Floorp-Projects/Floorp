@@ -1524,9 +1524,17 @@ typedef struct {                // Float vector
         } FVEC3, FAR* LPFVEC3;
 
 typedef struct {                // Matrix (Float)
-        FVEC3 v[3];
+        FVEC3 v[4];             // We secretly pad to 4 vectors so that we have an extra 16-byte-aligned
+                                // 16 byte buffer to use later on
         } FMAT3, FAR* LPFMAT3;
 
+// Structure for giving us alignment with our FMAT3's
+typedef struct {
+        BYTE _Buffer[sizeof(FMAT3) + 16];
+        LPFMAT3 F;
+        } FMAT3A, FAR* LPFMAT3A;
+
+void      cdecl FMAT3ASetup(LPFMAT3A m);
 
 void      cdecl VEC3init(LPVEC3 r, double x, double y, double z);   // double version
 void      cdecl VEC3initF(LPWVEC3 r, double x, double y, double z); // Fix32 version
@@ -1853,7 +1861,7 @@ typedef struct {
 
                union {
                   WMAT3 W;
-                  FMAT3 F;
+                  FMAT3A FA; // This is not a matrix proper - use FA.F to access the matrix pointer
                } Matrix;
 
                L16PARAMS p16;       // Primary curve
