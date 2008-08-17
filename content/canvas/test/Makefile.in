@@ -789,10 +789,6 @@ _TEST_FILES_1 += \
 _TEST_FILES_3 += \
 	test_2d.gradient.radial.outside2.html \
 	test_2d.gradient.radial.outside3.html \
-	test_2d.gradient.radial.touch1.html \
-	test_2d.gradient.radial.touch2.html \
-	test_2d.gradient.radial.touch3.html \
-	test_2d.gradient.radial.equal.html \
 	test_2d.gradient.radial.cone.shape2.html \
 	test_2d.gradient.radial.cone.behind.html \
 	test_2d.gradient.radial.cone.beside.html \
@@ -803,6 +799,12 @@ _TEST_FILES_4 += test_2d.path.arc.shape.3.html
 
 _TEST_FILES_5 += test_2d.path.rect.selfintersect.html
 endif
+
+# These tests only pass on Mac OS X >= 10.5; see bug 450114
+# test_2d.gradient.radial.touch1.html \
+# test_2d.gradient.radial.touch2.html \
+# test_2d.gradient.radial.touch3.html \
+# test_2d.gradient.radial.equal.html \
 
 # This test is bogus according to the spec; see bug 407107
 # test_2d.path.rect.zero.6.html
