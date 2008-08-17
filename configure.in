@@ -5816,23 +5816,6 @@ if test -n "$MOZ_SVG"; then
   AC_DEFINE(MOZ_SVG)
 fi
 
-MOZ_SVG_FOREIGNOBJECT=1
-dnl ========================================================
-dnl SVG <foreignObject>
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(svg-foreignobject,
-   [  --disable-svg-foreignobject
-                        Disable SVG <foreignObject> support],
-   MOZ_SVG_FOREIGNOBJECT=,
-   MOZ_SVG_FOREIGNOBJECT=1 )
-if test "$MOZ_SVG_FOREIGNOBJECT"; then
-  if test "$MOZ_SVG"; then
-    AC_DEFINE(MOZ_SVG_FOREIGNOBJECT)
-  else
-    MOZ_SVG_FOREIGNOBEJCT=
-  fi
-fi
-
 dnl ========================================================
 dnl Installer
 dnl ========================================================
@@ -7958,7 +7941,6 @@ AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_NO_INSPECTOR_APIS)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_SVG)
-AC_SUBST(MOZ_SVG_FOREIGNOBJECT)
 AC_SUBST(MOZ_XSLT_STANDALONE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
