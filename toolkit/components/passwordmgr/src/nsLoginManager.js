@@ -97,7 +97,7 @@ LoginManager.prototype = {
     get _storage() {
         if (!this.__storage) {
 
-            var contractID = "@mozilla.org/login-manager/storage/legacy;1";
+            var contractID = "@mozilla.org/login-manager/storage/mozStorage;1";
             try {
                 var catMan = Cc["@mozilla.org/categorymanager;1"].
                              getService(Ci.nsICategoryManager);

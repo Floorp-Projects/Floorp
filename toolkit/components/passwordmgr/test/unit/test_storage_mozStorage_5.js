@@ -7,21 +7,13 @@
  *
  */
 
+const STORAGE_TYPE = "mozStorage";
+
 function run_test() {
 
 try {
 
-// Disable test for now
-return;
-
-
-/* ========== 0 ========== */
-var testnum = 0;
-var testdesc = "Initial connection to storage module"
-
-var storage = LoginTest.newMozStorage();
-if (!storage)
-throw "Couldn't create storage instance.";
+var storage, testnum = 0;
 
 
 /* ========== 1 ========== */
@@ -50,9 +42,9 @@ LoginTest.deleteFile(OUTDIR, "signons.sqlite");
 testnum++;
 var testdesc = "Initialization, reinitialization, & importing"
 
-var storage = LoginTest.newMozStorage();
+var storage;
 // signons-00.txt has bad header; use signons.sqlite
-LoginTest.initStorage(storage, INDIR, "signons-00.txt");
+storage = LoginTest.initStorage(INDIR, "signons-00.txt");
 try {
     storage.getAllLogins({});
 } catch (e) {
@@ -63,7 +55,7 @@ LoginTest.checkExpectedError(/Initialization failed/, error);
 // Since initWithFile will not replace the DB if not passed one, we can just
 // call LoginTest.initStorage with with signons-06.txt (1 disabled, 1 login).
 // storage is already defined, so this is acceptable use (a bit hacky though)
-LoginTest.initStorage(storage, INDIR, "signons-06.txt");
+storage = LoginTest.initStorage(INDIR, "signons-06.txt");
 LoginTest.checkStorageData(storage, ["https://www.site.net"], [testuser1]);
 
 LoginTest.deleteFile(OUTDIR, "signons.sqlite");
@@ -84,17 +76,19 @@ var filename = "signons-c.sqlite";
 var corruptDB = do_get_file("toolkit/components/passwordmgr/test/unit/data/" +
                             "corruptDB.sqlite");
 
-corruptDB.copyTo(PROFDIR, filename)
-
-// sanity check that the file copy worked
 var cfile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
 cfile.initWithPath(OUTDIR);
 cfile.append(filename);
+if (cfile.exists())
+    cfile.remove(false);
+
+corruptDB.copyTo(PROFDIR, filename)
+
+// sanity check that the file copy worked
 do_check_true(cfile.exists());
 
 // will init mozStorage module with default filename.
-var storage = LoginTest.newMozStorage();
-LoginTest.initStorage(storage, null, null, OUTDIR, filename, null, true);
+storage = LoginTest.reloadStorage(OUTDIR, filename);
 try {
     storage.getAllLogins({});
 } catch (e) {
