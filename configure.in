@@ -4692,7 +4692,8 @@ MOZ_ARG_HEADER(Toolkit Options)
                             Win32 - cairo-windows
                             WinCE - windows
                             Gtk2 with DirectFB - cairo-gtk2-dfb
-                            * - cairo-gtk2],
+                            * - cairo-gtk2
+                            * - cairo-qt],
     [ _DEFAULT_TOOLKIT=$enableval ],
     [ _DEFAULT_TOOLKIT=$_PLATFORM_DEFAULT_TOOLKIT])
 
@@ -4701,6 +4702,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-dfb" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-x11" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-mac" \
@@ -4759,6 +4761,20 @@ cairo-gtk2-dfb)
         AC_MSG_WARN([Disabling X when DirectFB is specified.])
         no_x=yes
     fi
+    ;;
+
+cairo-qt)
+    MOZ_WIDGET_TOOLKIT=qt
+    MOZ_GFX_TOOLKIT=cairo
+    MOZ_ENABLE_QT=1
+    MOZ_ENABLE_XREMOTE=1
+
+    AC_DEFINE(MOZ_X11)
+    MOZ_X11=1
+
+    TK_CFLAGS='$(MOZ_QT_CFLAGS)'
+    TK_LIBS='$(MOZ_QT_LIBS)'
+    AC_DEFINE(MOZ_WIDGET_QT)
     ;;
 
 cairo-beos)
@@ -4850,6 +4866,45 @@ AC_SUBST(MOZ_ENABLE_STARTUP_NOTIFICATION)
 AC_SUBST(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 AC_SUBST(MOZ_STARTUP_NOTIFICATION_LIBS)
 
+dnl ========================================================
+dnl = QT support
+dnl ========================================================
+if test "$MOZ_ENABLE_QT"
+then
+    PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtUiTools QtCore)
+    AC_SUBST(MOZ_QT_CFLAGS)
+    AC_SUBST(MOZ_QT_LIBS)
+
+    MOZ_ARG_WITH_STRING(qtdir,
+    [  --with-qtdir=\$dir       Specify Qt directory ],
+    [ QTDIR=$withval])
+
+    if test -z "$QTDIR"; then
+      QTDIR="/usr"
+    fi
+    QTINCDIR="/include/qt"
+    if test ! -d "$QTDIR$QTINCDIR"; then
+       QTINCDIR="/include/X11/qt"
+    fi
+    if test ! -d "$QTDIR$QTINCDIR"; then
+       QTINCDIR="/include"
+    fi
+
+    if test -x "$QTDIR/bin/moc-qt4"; then
+      HOST_MOC="$QTDIR/bin/moc-qt4"
+    else
+      if test -x "$QTDIR/bin/moc"; then
+        HOST_MOC="$QTDIR/bin/moc"
+      else
+        AC_CHECK_PROGS(HOST_MOC, moc, "")
+      fi
+    fi
+    if test -z "$HOST_MOC"; then
+      AC_MSG_ERROR([no acceptable moc preprocessor found])
+    fi
+    MOC=$HOST_MOC
+fi
+
 AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
@@ -4858,9 +4913,12 @@ AC_SUBST(MOZ_ENABLE_GTK2)
 AC_SUBST(MOZ_ENABLE_PHOTON)
 AC_SUBST(MOZ_ENABLE_COCOA)
 AC_SUBST(MOZ_ENABLE_GLITZ)
+AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
 AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LIBS)
+AC_SUBST(MOZ_QT_CFLAGS)
+AC_SUBST(MOZ_QT_LIBS)
 
 AC_SUBST(MOC)
 
@@ -7457,6 +7515,9 @@ if test "$MOZ_TREE_CAIRO"; then
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="$FT2_CFLAGS"
     fi
+    if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
+        QPAINTER_SURFACE_FEATURE="#define CAIRO_HAS_QPAINTER_SURFACE 1"
+    fi
     if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
         QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
@@ -7512,6 +7573,7 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(WIN32_FONT_FEATURE)
     AC_SUBST(QUARTZ_FONT_FEATURE)
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
+    AC_SUBST(QPAINTER_SURFACE_FEATURE)
 
     if test "$_WIN32_MSVC"; then
         MOZ_CAIRO_LIBS='$(DEPTH)/gfx/cairo/cairo/src/mozcairo.lib $(DEPTH)/gfx/cairo/libpixman/src/mozlibpixman.lib'
