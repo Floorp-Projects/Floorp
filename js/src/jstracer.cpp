@@ -1113,6 +1113,10 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     if (tracker.has(vp))
         return true; /* we already have it */
     unsigned index = treeInfo->globalSlots.length();
+    /* If this the first global we are adding, remember the shape of the global object. */
+    if (index == 0)
+        treeInfo->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+    /* Add the slot to the list of interned global slots. */
     treeInfo->globalSlots.add(slot);
     uint8 type = getCoercedType(*vp);
     if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx->fp->script, slot))
@@ -1662,9 +1666,6 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     ti->maxNativeStackSlots = entryNativeStackSlots;
     ti->maxCallDepth = 0;
 
-    /* create the list of global properties we want to intern */
-    ti->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
-
     /* recording primary trace */
     return js_StartRecorder(cx, NULL, f, ti->globalSlots.length(),
             ti->globalTypeMap.data(), ti->stackTypeMap.data());
@@ -1772,27 +1773,32 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
 
     /* execute previously recorded trace */
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
-    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
-    if (OBJ_SCOPE(globalObj)->shape != ti->globalShape) {
-        AUDIT(globalShapeMismatchAtEntry);
-        debug_only(printf("global shape mismatch, flushing tree.\n"));
-        js_TrashTree(cx, f);
-        f->blacklist();
-        return NULL;
-    }
 
-    unsigned ngslots = ti->globalSlots.length();
-    uint16* gslots = ti->globalSlots.data();
-    unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
-    double* global = (double*)alloca((globalFrameSize+1) * sizeof(double));
-    debug_only(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
-    double* stack = (double*)alloca(MAX_NATIVE_STACK_SLOTS * sizeof(double));
-    
 #ifdef DEBUG
     printf("entering trace at %s:%u@%u, native stack slots: %u\n",
            cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
            cx->fp->regs->pc - cx->fp->script->code, ti->maxNativeStackSlots);
 #endif
+
+    unsigned ngslots = ti->globalSlots.length();
+    uint16* gslots = ti->globalSlots.data();
+    JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
+    unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
+    double* global = (double*)alloca((globalFrameSize+1) * sizeof(double));
+    debug_only(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
+    double* stack = (double*)alloca(MAX_NATIVE_STACK_SLOTS * sizeof(double));
+
+    if (ngslots) {
+        /* If the global scope changed in the meantime, we have to re-record. */
+        if (OBJ_SCOPE(globalObj)->shape != ti->globalShape) {
+            AUDIT(globalShapeMismatchAtEntry);
+            debug_only(printf("global shape mismatch, flushing tree.\n"));
+            js_TrashTree(cx, f);
+            f->blacklist();
+            return NULL;
+        }
+    }
+
     if (!BuildNativeGlobalFrame(cx, ngslots, gslots, ti->globalTypeMap.data(), global) ||
         !BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
         AUDIT(typeMapMismatchAtEntry);
