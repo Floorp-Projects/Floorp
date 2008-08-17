@@ -675,23 +675,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     eos_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, eos)), "eos");
     eor_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, eor)), "eor");
 
-    /* If we get a partial list that doesn't have all the types (i.e. recording from a side
-       exit that was recorded but we added more global slots later), merge the missing types
-       from the entry type map. This is safe because at the loop edge we verify that we
-       have compatible types for all globals (entry type and loop edge type match). While
-       a different trace of the tree might have had a guard with a different type map for
-       these slots we just filled in here (the guard we continue from didn't know about them),
-       since we didn't take that particular guard the only way we could have ended up here
-       is if that other trace had at its end a compatible type distribution with the entry
-       map. Since thats exactly what we used to fill in the types our current side exit
-       didn't provide, this is always safe to do. */
-    unsigned length;
-    if (ngslots < (length = treeInfo->globalTypeMap.length())) 
-        mergeTypeMaps(&globalTypeMap, &ngslots, 
-                      treeInfo->globalTypeMap.data(), length,
-                      (uint8*)alloca(sizeof(uint8) * length));
-    JS_ASSERT(ngslots == treeInfo->globalTypeMap.length());
-    
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, ngslots, callDepth, globalTypeMap, stackTypeMap); 
 }
@@ -1087,6 +1070,23 @@ void
 TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned ngslots, unsigned callDepth, 
                       uint8* globalTypeMap, uint8* stackTypeMap)
 {
+    /* If we get a partial list that doesn't have all the types (i.e. recording from a side
+       exit that was recorded but we added more global slots later), merge the missing types
+       from the entry type map. This is safe because at the loop edge we verify that we
+       have compatible types for all globals (entry type and loop edge type match). While
+       a different trace of the tree might have had a guard with a different type map for
+       these slots we just filled in here (the guard we continue from didn't know about them),
+       since we didn't take that particular guard the only way we could have ended up here
+       is if that other trace had at its end a compatible type distribution with the entry
+       map. Since thats exactly what we used to fill in the types our current side exit
+       didn't provide, this is always safe to do. */
+    unsigned length;
+    if (ngslots < (length = treeInfo->globalTypeMap.length())) 
+        mergeTypeMaps(&globalTypeMap, &ngslots, 
+                      treeInfo->globalTypeMap.data(), length,
+                      (uint8*)alloca(sizeof(uint8) * length));
+    JS_ASSERT(ngslots == treeInfo->globalTypeMap.length());
+    
     /* the first time we compile a tree this will be empty as we add entries lazily */
     uint16* gslots = treeInfo->globalSlots.data();
     uint8* m = globalTypeMap;
