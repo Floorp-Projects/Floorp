@@ -82,6 +82,7 @@
 #include "nsLayoutStatics.h"
 #include "nsCycleCollector.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsDOMThreadService.h"
 
 // Interfaces Needed
 #include "nsIWidget.h"
@@ -113,6 +114,7 @@
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMGeoGeolocation.h"
+#include "nsIDOMThreads.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -861,6 +863,12 @@ void
 nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 {
   NS_ASSERTION(IsInnerWindow(), "Don't free inner objects on an outer window");
+
+  // Kill all of the workers for this window.
+  nsDOMThreadService* dts = nsDOMThreadService::get();
+  if (dts) {
+    dts->CancelWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
+  }
 
   ClearAllTimeouts();
 
@@ -8566,6 +8574,11 @@ nsGlobalWindow::SuspendTimeouts()
 {
   FORWARD_TO_INNER_VOID(SuspendTimeouts, ());
 
+  nsDOMThreadService* dts = nsDOMThreadService::get();
+  if (dts) {
+    dts->SuspendWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
+  }
+
   PRTime now = PR_Now();
   for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
     // Change mWhen to be the time remaining for this timer.    
@@ -8620,6 +8633,11 @@ nsresult
 nsGlobalWindow::ResumeTimeouts()
 {
   FORWARD_TO_INNER(ResumeTimeouts, (), NS_ERROR_NOT_INITIALIZED);
+
+  nsDOMThreadService* dts = nsDOMThreadService::get();
+  if (dts) {
+    dts->ResumeWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
+  }
 
   // Restore all of the timeouts, using the stored time remaining
   // (stored in timeout->mWhen).
@@ -9725,3 +9743,18 @@ NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNavigator::NewWorkerPool(nsIDOMWorkerPool** _retval)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDOMThreadService> threadService =
+    nsDOMThreadService::GetOrInitService();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMWorkerPool> newPool;
+  rv = threadService->CreatePool(getter_AddRefs(newPool));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  newPool.forget(_retval);
+  return NS_OK;
+}
