@@ -82,7 +82,8 @@ public:
         SurfaceTypeSVG,
         SurfaceTypeOS2,
         SurfaceTypeWin32Printing,
-        SurfaceTypeQuartzImage
+        SurfaceTypeQuartzImage,
+        SurfaceTypeQPainter
     } gfxSurfaceType;
 
     typedef enum {
@@ -138,6 +139,8 @@ public:
      * gfxContext::SetFlag for documentation.
      */
     virtual PRInt32 GetDefaultContextFlags() const { return 0; }
+
+    static gfxContentType ContentFromFormat(gfxImageFormat format);
 
 protected:
     gfxASurface() : mSurface(nsnull), mFloatingRefs(0), mSurfaceValid(PR_FALSE) { }
