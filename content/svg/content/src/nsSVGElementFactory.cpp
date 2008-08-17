@@ -64,10 +64,8 @@ nsresult
 NS_NewSVGGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-#ifdef MOZ_SVG_FOREIGNOBJECT
 nsresult
 NS_NewSVGForeignObjectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-#endif
 nsresult
 NS_NewSVGPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
