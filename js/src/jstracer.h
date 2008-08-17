@@ -189,7 +189,9 @@ public:
     unsigned                mismatchCount;
     Queue<nanojit::Fragment*> dependentTrees;
     
-    TreeInfo(nanojit::Fragment* _fragment) { fragment = _fragment; }
+    TreeInfo(nanojit::Fragment* _fragment) { 
+        fragment = _fragment; 
+    }
 };
 
 extern struct nanojit::CallInfo builtins[];
@@ -304,7 +306,7 @@ class TraceRecorder {
     bool forInLoop(jsval* vp);
 
 public:
-    TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, 
+    TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, TreeInfo*,
             unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap);
     ~TraceRecorder();
 
