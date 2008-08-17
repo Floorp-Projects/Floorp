@@ -11,6 +11,8 @@ const BASE_CONTRACTID = "@mozilla.org/network/protocol;1?name=";
 const LDAPPH_CID = Components.ID("{08eebb58-8d1a-4ab5-9fca-e35372697828}");
 const MAILBOXPH_CID = Components.ID("{edb1dea3-b226-405a-b93d-2a678a68a198}");
 
+const STORAGE_TYPE = "legacy";
+
 function genericProtocolHandler(scheme, defaultPort) {
     this.scheme = scheme;
     this.defaultPort = defaultPort;
@@ -112,15 +114,15 @@ dummyuser3.init("http://dummyhost.mozilla.org", "", null,
 testnum++;
 
 testdesc = "checking reading of mailnews-like old logins";
-LoginTest.initStorage(storage, INDIR, "signons-403790.txt",
-                      OUTDIR, "output-403790.txt");
+storage = LoginTest.initStorage(INDIR, "signons-403790.txt",
+                               OUTDIR, "output-403790.txt");
 LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2]);
 
 storage.addLogin(dummyuser3); // trigger a write
 LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
 
 testdesc = "[flush and reload for verification]";
-LoginTest.initStorage(storage, OUTDIR, "output-403790.txt");
+storage = LoginTest.reloadStorage(OUTDIR, "output-403790.txt");
 LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
 
 /* ========== end ========== */
