@@ -853,3 +853,7 @@ const gPopupBlockerObserver = {
     Browser.getNotificationBox().removeCurrentNotification();
   }
 };
+
+function getNotificationBox(aWindow) {
+  return Browser.getNotificationBox();
+};
