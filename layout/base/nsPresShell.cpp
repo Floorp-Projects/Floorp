@@ -4989,6 +4989,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
       builder.SetIgnoreScrollFrame(rootScrollFrame);
     }
 
+    builder.SetBackgroundOnly(PR_FALSE);
     builder.EnterPresShell(rootFrame, rect);
 
     nsresult rv = rootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);   
