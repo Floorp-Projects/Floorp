@@ -73,6 +73,11 @@ endif # gcc
 endif # 86
 endif # !x86_64
 
+ifeq ($(CPU_ARCH),x86_64)
+OS_CFLAGS += -DAVMPLUS_AMD64 -DAVMPLUS_LINUX
+NANOJIT_ARCH = i386
+endif
+
 ifeq ($(CPU_ARCH),arm)
 OS_CFLAGS += -DAVMPLUS_ARM -DAVMPLUS_LINUX
 NANOJIT_ARCH = Thumb
