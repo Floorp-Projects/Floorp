@@ -2280,8 +2280,6 @@ pref("print.print_paper_size", 0);
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 0); // twips
 
-pref("print.whileInPrintPreview", false);
-
 pref("font.allow_double_byte_special_chars", true);
 // font names
 
