@@ -68,7 +68,6 @@ public:
                   const nsAString *aValue);
 private:
   SetDocTitleTxn();
-  nsresult SetDocTitle(const nsAString& aTitle);
   nsresult SetDomTitle(const nsAString& aTitle);
 
 public:
