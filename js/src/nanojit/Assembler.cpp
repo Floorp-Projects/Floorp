@@ -931,7 +931,10 @@ namespace nanojit
 					NanoAssert(values->opcode() == LIR_2);
 					LIns* iftrue = values->oprnd1();
 					LIns* iffalse = values->oprnd2();
+					/* We can't nicely detect floats here. */
+#if !defined NANOJIT_64BIT
 					NanoAssert(!iftrue->isQuad() && !iffalse->isQuad());
+#endif
 					
 					const Register rr = prepResultReg(ins, GpRegs);
 
