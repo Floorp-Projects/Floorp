@@ -1479,9 +1479,9 @@ int
 nanojit::StackFilter::getTop(LInsp guard)
 {
     if (sp == frag->lirbuf->sp)
-        return guard->exit()->sp_adj + sizeof(double);
+        return guard->exit()->sp_adj;
     JS_ASSERT(sp == frag->lirbuf->rp);
-    return guard->exit()->rp_adj + sizeof(FrameInfo);
+    return guard->exit()->rp_adj;
 }
 
 #if defined NJ_VERBOSE
