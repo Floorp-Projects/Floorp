@@ -55,8 +55,8 @@
 #include "nspr.h"
 
 
-NS_IMPL_ISUPPORTS4(imgRequestProxy, imgIRequest, nsIRequest,
-                   nsISupportsPriority, nsISecurityInfoProvider)
+NS_IMPL_ISUPPORTS3(imgRequestProxy, imgIRequest, nsIRequest,
+                   nsISupportsPriority)
 
 imgRequestProxy::imgRequestProxy() :
   mOwner(nsnull),
@@ -380,17 +380,6 @@ NS_IMETHODIMP imgRequestProxy::AdjustPriority(PRInt32 priority)
 {
   NS_ENSURE_STATE(mOwner && !mCanceled);
   mOwner->AdjustPriority(this, priority);
-  return NS_OK;
-}
-
-/** nsISecurityInfoProvider methods **/
-
-NS_IMETHODIMP imgRequestProxy::GetSecurityInfo(nsISupports** retval)
-{
-  if (mOwner)
-    return mOwner->GetSecurityInfo(retval);
-
-  *retval = nsnull;
   return NS_OK;
 }
 

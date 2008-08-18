@@ -321,16 +321,6 @@ nsresult imgRequest::GetPrincipal(nsIPrincipal **aPrincipal)
   return NS_ERROR_FAILURE;
 }
 
-nsresult imgRequest::GetSecurityInfo(nsISupports **aSecurityInfo)
-{
-  LOG_FUNC(gImgLog, "imgRequest::GetSecurityInfo");
-
-  // Missing security info means this is not a security load
-  // i.e. it is not an error when security info is missing
-  NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
-  return NS_OK;
-}
-
 void imgRequest::RemoveFromCache()
 {
   LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
@@ -605,10 +595,6 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
      to onStartRequest. */
   mImageStatus = imgIRequest::STATUS_NONE;
   mState = onStartRequest;
-
-  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-  if (channel)
-    channel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
   /* set our loading flag to true */
   mLoading = PR_TRUE;

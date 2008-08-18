@@ -76,7 +76,6 @@ REQUIRES	= nspr \
 		  caps \
 		  pref \
 		  pipnss \
-		  imglib2 \
 		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
