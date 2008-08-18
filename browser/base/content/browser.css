@@ -30,7 +30,12 @@ toolbar[printpreview="true"] {
 #urlbar-throbber:not([busy="true"]),
 #urlbar-throbber[busy="true"] + #page-proxy-favicon {
   display: none;
-} 
+}
+
+#identity-box > hbox {
+  max-width: 22em;
+  min-width: 1px;
+}
 
 /* ::::: Unified Back-/Forward Button ::::: */
 #back-forward-dropmarker > image ,
