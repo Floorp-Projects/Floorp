@@ -599,7 +599,6 @@ MAKEFILES_xpfe="
   xpfe/components/autocomplete/src/Makefile
   xpfe/components/winhooks/Makefile
   xpfe/components/windowds/Makefile
-  xpfe/components/resetPref/Makefile
   xpfe/components/build/Makefile
   xpfe/components/xremote/Makefile
   xpfe/components/xremote/public/Makefile
