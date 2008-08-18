@@ -1912,12 +1912,8 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
     /* We already synthesized the frames around the innermost guard. Here we just deal
        with additional frames inside the tree we are bailing out from. */
     unsigned calldepth = lr->calldepth;
-    unsigned spbase = 0;
-    for (unsigned n = 0; n < calldepth; ++n) {
+    for (unsigned n = 0; n < calldepth; ++n) 
         js_SynthesizeFrame(cx, callstack[n]);
-        JSStackFrame* down = cx->fp->down;
-        spbase += (down->regs->sp - StackBase(down));
-    }
     
     /* Adjust sp and pc relative to the tree we exited from (not the tree we entered
        into). These are our final values for sp and pc since js_SynthesizeFrame has
@@ -1926,8 +1922,11 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
     JSStackFrame* fp = cx->fp;
     /* If we are not exiting from an inlined frame the state->sp is spbase, otherwise spbase
        is whatever slots frames around us consume. */
-    fp->regs->sp = StackBase(fp) + (e->sp_adj/sizeof(double) - spbase);
     fp->regs->pc = (jsbytecode*)lr->from->root->ip + e->ip_adj;
+    fp->regs->sp = StackBase(fp) + 
+        ((calldepth == 0) 
+         ? (e->sp_adj/sizeof(double))
+         : js_ReconstructStackDepth(cx, fp->script, fp->regs->pc));
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
     printf("leaving trace at %s:%u@%u, exitType=%d, sp=%d, ip=%p, cycles=%llu\n",
