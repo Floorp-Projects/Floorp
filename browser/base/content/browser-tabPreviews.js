@@ -225,6 +225,7 @@ var ctrlTab = {
 
     var box = document.createElementNS(SVGNS, "g");
     box.setAttribute("class", "ctrlTab-box");
+    box.setAttribute("onclick", "ctrlTab.pick(this);");
     box.appendChild(thumbnail_and_icon);
     box.appendChild(reflection);
 
@@ -392,6 +393,12 @@ var ctrlTab = {
     box.setAttribute("transform", "scale(" + scale + "," + scale + ") " +
                                   "translate("+ trans_x + "," + trans_y + ")");
   },
+  pick: function (aBox) {
+    this.stopScroll();
+    var selectedTab = (aBox || this.selected)._tab;
+    this.panel.hidePopup();
+    gBrowser.selectedTab = selectedTab;
+  },
   setStatusbarValue: function (aBox) {
     var value = "";
     if (aBox) {
@@ -473,14 +480,6 @@ var ctrlTab = {
       event.preventDefault();
     }
   },
-  onKeyUp: function (event) {
-    if (event.keyCode == event.DOM_VK_CONTROL) {
-      this.stopScroll();
-      let selectedTab = this.selected._tab;
-      this.panel.hidePopup();
-      gBrowser.selectedTab = selectedTab;
-    }
-  },
   onPopupHiding: function () {
     this.stopScroll();
     document.removeEventListener("keyup", this, false);
@@ -546,8 +545,8 @@ var ctrlTab = {
         // the panel is open; don't propagate any key events
         event.stopPropagation();
         event.preventDefault();
-        if (event.type == "keyup")
-          this.onKeyUp(event);
+        if (event.type == "keyup" && event.keyCode == event.DOM_VK_CONTROL)
+          this.pick();
         break;
       case "popuphiding":
         this.onPopupHiding();
