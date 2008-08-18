@@ -2049,11 +2049,13 @@ extern void
 js_InitJIT(JSTraceMonitor *tm)
 {
     if (!tm->fragmento) {
+        JS_ASSERT(!tm->slotList);
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         fragmento->assm()->setCallTable(builtins);
         fragmento->pageFree(fragmento->pageAlloc()); // FIXME: prime page cache
         tm->fragmento = fragmento;
+        tm->slotList = new SlotList();
     }
 #if !defined XP_WIN
     debug_only(memset(&stat, 0, sizeof(stat)));
@@ -2075,9 +2077,12 @@ js_FinishJIT(JSTraceMonitor *tm)
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
 #endif
     if (tm->fragmento != NULL) {
+        JS_ASSERT(tm->slotList);
         verbose_only(delete tm->fragmento->labels;)
         delete tm->fragmento;
         tm->fragmento = NULL;
+        delete tm->slotList;
+        tm->slotList = NULL;
     }
 }
 
