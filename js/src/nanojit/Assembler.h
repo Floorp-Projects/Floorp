@@ -313,6 +313,7 @@ namespace nanojit
 			void		asm_bailout(LInsp guard, Register state);
 			void		asm_call(LInsp);
             void        asm_arg(ArgSize, LInsp, Register);
+			Register	asm_binop_rhs_reg(LInsp ins);
 
 			// platform specific implementation (see NativeXXX.cpp file)
 			void		nInit(uint32_t flags);

@@ -409,6 +409,11 @@ namespace nanojit
 		NanoAssert(false);
 	}
 
+	Register Assembler::asm_binop_rhs_reg(LInsp ins)
+	{
+		return UnknownReg;
+	}
+
     /**
      * copy 64 bits: (rd+dd) <- (rs+ds)
      */
