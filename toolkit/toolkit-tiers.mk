@@ -268,10 +268,6 @@ ifdef MOZ_ENABLE_LIBXUL
 tier_toolkit_dirs += xpcom/stub
 endif
 
-ifneq (,$(MOZ_ENABLE_QT))
-tier_toolkit_dirs += embedding/browser/qt/tests
-endif
-
 ifdef NS_TRACE_MALLOC
 tier_toolkit_dirs += tools/trace-malloc
 endif
