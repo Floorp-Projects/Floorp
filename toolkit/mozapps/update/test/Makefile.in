@@ -48,4 +48,13 @@ XPCSHELL_TESTS = \
   unit \
   $(NULL)
 
+TESTROOT	= $(shell cd $(DEPTH) && pwd)/_tests/xpcshell-simple/$(MODULE)
+
+DEFINES += \
+	-DAB_CD=$(AB_CD) \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk
+
+libs:: unit/test_0040_general.js.in
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $^ > $(TESTROOT)/unit/test_0040_general.js
