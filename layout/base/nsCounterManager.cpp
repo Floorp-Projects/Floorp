@@ -42,6 +42,33 @@
 #include "nsBulletFrame.h" // legacy location for list style type to text code
 #include "nsContentUtils.h"
 
+PRBool
+nsCounterUseNode::InitTextFrame(nsGenConList* aList,
+        nsIFrame* aPseudoFrame, nsIFrame* aTextFrame)
+{
+  nsCounterNode::InitTextFrame(aList, aPseudoFrame, aTextFrame);
+
+  nsCounterList *counterList = static_cast<nsCounterList*>(aList);
+  counterList->Insert(this);
+  PRBool dirty = counterList->IsDirty();
+  if (!dirty) {
+    if (counterList->IsLast(this)) {
+      Calc(counterList);
+      nsAutoString contentString;
+      GetText(contentString);
+      aTextFrame->GetContent()->SetText(contentString, PR_FALSE);
+    } else {
+      // In all other cases (list already dirty or node not at the end),
+      // just start with an empty string for now and when we recalculate
+      // the list we'll change the value to the right one.
+      counterList->SetDirty();
+      return PR_TRUE;
+    }
+  }
+  
+  return PR_FALSE;
+}
+
 // assign the correct |mValueAfter| value to a node that has been inserted
 // Should be called immediately after calling |Insert|.
 void nsCounterUseNode::Calc(nsCounterList *aList)
@@ -114,14 +141,8 @@ nsCounterList::SetScope(nsCounterNode *aNode)
 
     // Get the content node for aNode's rendering object's *parent*,
     // since scope includes siblings, so we want a descendant check on
-    // parents.  If aNode is for a pseudo-element, then the parent
-    // rendering object is the frame's content; if aNode is for an
-    // element, then the parent rendering object is the frame's
-    // content's parent.
-    nsIContent *nodeContent = aNode->mPseudoFrame->GetContent();
-    if (!aNode->mPseudoFrame->GetStyleContext()->GetPseudoType()) {
-        nodeContent = nodeContent->GetParent();
-    }
+    // parents.
+    nsIContent *nodeContent = aNode->mPseudoFrame->GetContent()->GetParent();
 
     for (nsCounterNode *prev = Prev(aNode), *start;
          prev; prev = start->mScopePrev) {
@@ -134,10 +155,7 @@ nsCounterList::SetScope(nsCounterNode *aNode)
                   ? prev : prev->mScopeStart;
 
         // |startContent| is analogous to |nodeContent| (see above).
-        nsIContent *startContent = start->mPseudoFrame->GetContent();
-        if (!start->mPseudoFrame->GetStyleContext()->GetPseudoType()) {
-            startContent = startContent->GetParent();
-        }
+        nsIContent *startContent = start->mPseudoFrame->GetContent()->GetParent();
         NS_ASSERTION(nodeContent || !startContent,
                      "null check on startContent should be sufficient to "
                      "null check nodeContent as well, since if nodeContent "
