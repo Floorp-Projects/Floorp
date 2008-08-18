@@ -638,7 +638,7 @@ gfxPlatform::GetCMSRGBATransform()
 
         gCMSRGBATransform = cmsCreateTransform(inProfile, TYPE_RGBA_8,
                                                outProfile, TYPE_RGBA_8,
-                                               INTENT_PERCEPTUAL, 0);
+                                               INTENT_PERCEPTUAL, cmsFLAGS_FLOATSHAPER);
     }
 
     return gCMSRGBATransform;
