@@ -1422,8 +1422,8 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
     LIns* inner_sp = lirbuf->sp;
-    /* The inner tree expects to be called from the current scope. If the outer tree (this
-       trace is currently inside a function inlining code (calldepth > 0), we have to advance
+    /* The inner tree expects to be called from the current frame. If the outer tree (this
+       trace) is currently inside a function inlining code (calldepth > 0), we have to advance
        the native stack pointer such that we match what the inner trace expects to see. We
        move it back when we come out of the inner tree call. */
     if (callDepth > 0) {
