@@ -128,6 +128,7 @@ typedef struct JSTraceMonitor {
     CLS(nanojit::Fragmento) fragmento;
     CLS(TraceRecorder)      recorder;
     CLS(SlotList)           slotList;
+    uint32                  globalShape;
     JSFragmentCacheEntry    fcache[JS_FRAGMENT_CACHE_SIZE];
 } JSTraceMonitor;
 
