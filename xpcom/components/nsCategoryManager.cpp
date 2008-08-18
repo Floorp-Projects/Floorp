@@ -86,7 +86,7 @@ char* ArenaStrdup(const char* s, PLArenaPool* aArena);
 //
 class BaseStringEnumerator
   : public nsISimpleEnumerator,
-           nsIUTF8StringEnumerator
+    private nsIUTF8StringEnumerator
 {
 public:
   NS_DECL_ISUPPORTS
