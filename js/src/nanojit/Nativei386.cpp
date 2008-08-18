@@ -61,6 +61,7 @@ namespace nanojit
 			"rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi",
 			"r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15",
 			"xmm0","xmm1","xmm2","xmm3","xmm4","xmm5","xmm6","xmm7",
+            "xmm8","xmm9","xmm10","xmm11","xmm12","xmm13","xmm14","xmm15"
 #endif
 		};
 	#endif
@@ -455,15 +456,13 @@ namespace nanojit
                 }
 #endif
             }
-#if defined NANOJIT_AMD64
-			else if (i->opcode() == LIR_param)
-			{
-				LDQ(r, d, FP);
-            }
-#endif
             else
 		    {
+#if defined NANOJIT_AMD64
+                LDQ(r, d, FP);
+#else
 			    LD(r, d, FP);
+#endif
 		    }
 			verbose_only(if (_verbose) {
 				outputf("        restore %s", _thisfrag->lirbuf->names->formatRef(i));
@@ -510,15 +509,13 @@ namespace nanojit
                 }
 #endif
 			}
-#if defined NANOJIT_AMD64
-			else if (i->opcode() == LIR_param || i->isQuad())
-			{
-				STQ(FP, d, rr);
-			}
-#endif
 			else
 			{
+#if defined NANOJIT_AMD64
+				STQ(FP, d, rr);
+#else
 				ST(FP, d, rr);
+#endif
 			}
 			verbose_only(if (_verbose) {
 				outputf("        spill %s",_thisfrag->lirbuf->names->formatRef(i));
@@ -555,6 +552,18 @@ namespace nanojit
 		}
 		else
 		{
+            int d = disp(resv);
+            Register rb = findRegFor(base, GpRegs);
+
+            /* We need a temporary register we can move the desination into */
+            rr = registerAlloc(GpRegs);
+
+            STQ(FP, d, rr);
+            LDQ(rr, db, rb);
+
+            /* Mark as free */
+            _allocator.addFree(rr);
+
 			freeRsrcOf(ins, false);
 		}
 #elif defined NANOJIT_IA32
@@ -632,18 +641,34 @@ namespace nanojit
 		/* If this is not a float operation, we can use GpRegs instead.
 		 * We can do this in a few other cases but for now I'll keep it simple.
 		 */
-		if (value->isop(LIR_ldq) || value->isop(LIR_quad))
-		{
-			Register rv = findRegFor(value, GpRegs);
-			Register rb = findRegFor(base, GpRegs);
-			STQ(rb, dr, rv);
-		}
-		else
-		{
-			Register rv = findRegFor(value, XmmRegs);
-			Register rb = findRegFor(base, GpRegs);
-			SSE_STQ(dr, rb, rv);
-		}
+	    Register rb = findRegFor(base, GpRegs);
+        Reservation *rV = getresv(value);
+        
+        if (rV != NULL && rV->reg != UnknownReg) {
+            if (rmask(rV->reg) & GpRegs) {
+                STQ(rb, dr, rV->reg);
+            } else {
+                SSE_STQ(dr, rb, rV->reg);
+            }
+        } else {
+            Register rv;
+            
+            /* Try to catch some common patterns.
+             * Note: this is a necessity, since in between things like
+             * asm_fop() could see the reservation and try to use a non-SSE 
+             * register for adding.  Same for asm_qbinop in theory.  
+             * There should probably be asserts to catch more cases.
+             */
+            if (value->isop(LIR_u2f) 
+                || value->isop(LIR_i2f)
+                || value->opcode() == LIR_fcall) {
+                rv = findRegFor(value, XmmRegs);
+                SSE_STQ(dr, rb, rv);
+            } else {
+                rv = findRegFor(value, GpRegs);
+                STQ(rb, dr, rv);
+            }
+        }
 #endif
 	}
 
@@ -732,23 +757,24 @@ namespace nanojit
 
 		if (rR->reg != UnknownReg)
 		{
-			if (rmask(rR->reg) & GpRegs)
+            Register rr = rR->reg;
+		    freeRsrcOf(ins, false);
+			if (rmask(rr) & GpRegs)
 			{
-				LDQi(rR->reg, val);
+				LDQi(rr, val);
 			}
-			else if (rmask(rR->reg) & XmmRegs)
+			else if (rmask(rr) & XmmRegs)
 			{
 				if (ins->constvalf() == 0.0)
 				{
-					SSE_XORPDr(rR->reg, rR->reg);
+					SSE_XORPDr(rr, rr);
 				}
 				else
 				{
 					/* Get a short-lived register, not associated with instruction */
-					Register rd = rR->reg;
 					Register rs = registerAlloc(GpRegs);
-	
-					SSE_MOVD(rd, rs);
+
+					SSE_MOVD(rr, rs);
 					LDQi(rs, val);
 
 					_allocator.addFree(rs);
@@ -759,11 +785,10 @@ namespace nanojit
 		{
 			const int32_t* p = (const int32_t*) (ins-2);
 			int dr = disp(rR);
+		    freeRsrcOf(ins, false);
 			STi(FP, dr+4, p[1]);
 			STi(FP, dr, p[0]);
 		}
-
-		freeRsrcOf(ins, false);
 #endif
 	}
 	
@@ -1034,7 +1059,7 @@ namespace nanojit
 			{
 				underrunProtect(30);
 				uint8_t *base, *begin;
-				base = (uint8_t *)((intptr_t)_nIns & ~(NJ_PAGE_SIZE-1));
+				base = (uint8_t *)((intptr_t)_nIns & ~((intptr_t)NJ_PAGE_SIZE-1));
 				base += sizeof(PageHeader) + _pageData;
 				begin = base;
 				/* Make sure we align */
@@ -1206,6 +1231,67 @@ namespace nanojit
 		_negOnePtr = NULL;
 #endif
 	}
+
+	Register Assembler::asm_binop_rhs_reg(LInsp ins)
+	{
+		LOpcode op = ins->opcode();
+		LIns *rhs = ins->oprnd2();
+
+		if (op == LIR_lsh || op == LIR_rsh || op == LIR_ush) {
+#if defined NANOJIT_IA32 
+			return findSpecificRegFor(rhs, ECX);
+#elif defined NANOJIT_AMD64
+			return findSpecificRegFor(rhs, RCX);
+#endif
+		}
+
+		return UnknownReg;	
+	}
+
+#if defined NANOJIT_AMD64
+    void Assembler::asm_qbinop(LIns *ins)
+    {
+        LInsp lhs = ins->oprnd1();
+        LInsp rhs = ins->oprnd2();
+        LOpcode op = ins->opcode();
+
+        Register rr = prepResultReg(ins, GpRegs);
+        Reservation *rA = getresv(lhs);
+        Register ra;
+
+        if (rA == NULL || (ra = rA->reg) == UnknownReg) {
+            ra = findSpecificRegFor(lhs, rr);
+        }
+
+        if (rhs->isconst())
+        {
+            int c = rhs->constval();
+
+            if (op == LIR_qiadd)
+            {
+                ADDQi(rr, c);
+            } else if (op == LIR_qiand) {
+                ANDQi(rr, c);
+            } else if (op == LIR_qilsh) {
+                SHLQi(rr, c);
+            }
+        } else {
+            Register rv = findRegFor(rhs, GpRegs);
+            if (op == LIR_qiadd) {
+                ADDQ(rr, rv);
+            } else if (op == LIR_qiand) {
+                ANDQ(rr, rv); 
+            } else {
+                NanoAssert(rhs->isconst());
+                NanoAssert(false);
+            }
+        }
+
+        if (rr != ra) {
+            MR(rr, ra);
+        }
+    }
+#endif
 
 	void Assembler::nativePageSetup()
 	{
