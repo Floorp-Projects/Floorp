@@ -78,9 +78,7 @@
 #include "nsIPrompt.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsISecurityWarningDialogs.h"
-#include "nsISecurityInfoProvider.h"
 #include "nsIProxyObjectManager.h"
-#include "imgIRequest.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
@@ -271,24 +269,6 @@ nsSecureBrowserUIImpl::GetState(PRUint32* aState)
 {
   nsAutoMonitor lock(mMonitor);
   return MapInternalToExternalState(aState, mNotifiedSecurityState, mNotifiedToplevelIsEV);
-}
-
-// static
-already_AddRefed<nsISupports> 
-nsSecureBrowserUIImpl::ExtractSecurityInfo(nsIRequest* aRequest)
-{
-  nsISupports *retval = nsnull; 
-  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-  if (channel)
-    channel->GetSecurityInfo(&retval);
-  
-  if (!retval) {
-    nsCOMPtr<nsISecurityInfoProvider> provider(do_QueryInterface(aRequest));
-    if (provider)
-      provider->GetSecurityInfo(&retval);
-  }
-
-  return retval;
 }
 
 nsresult
@@ -758,11 +738,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   }
 #endif
 
-  nsCOMPtr<nsISupports> securityInfo(ExtractSecurityInfo(aRequest));
-
+  nsCOMPtr<nsISupports> securityInfo;
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+
   if (channel)
   {
+    channel->GetSecurityInfo(getter_AddRefs(securityInfo));
+
     nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
     if (uri)
@@ -807,7 +789,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 #endif
 
   PRBool isSubDocumentRelevant = PR_TRUE;
-  PRBool isImageRequest = PR_FALSE;
 
   // We are only interested in requests that load in the browser window...
   nsCOMPtr<nsIHttpChannel> httpRequest(do_QueryInterface(aRequest));
@@ -818,18 +799,9 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       if (!wyciwygRequest) {
         nsCOMPtr<nsIFTPChannel> ftpRequest(do_QueryInterface(aRequest));
         if (!ftpRequest) {
-          nsCOMPtr<imgIRequest> imgRequest(do_QueryInterface(aRequest));
-          if (!imgRequest) {
-            PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-                   ("SecureUI:%p: OnStateChange: not relevant for sub content\n", this));
-            isSubDocumentRelevant = PR_FALSE;
-          } else {
-            // Remember this is an image request. Because image loads doesn't
-            // support any TRANSFERRING notifications but only START and
-            // STOP we must simply predict there were a content transferred.
-            // See bug 432685 for details.
-            isImageRequest = PR_TRUE;
-          }
+          PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+                 ("SecureUI:%p: OnStateChange: not relevant for sub content\n", this));
+          isSubDocumentRelevant = PR_FALSE;
         }
       }
     }
@@ -979,20 +951,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       aProgressStateFlags & STATE_IS_REQUEST)
   {
-    if (isImageRequest) 
+    nsAutoMonitor lock(mMonitor);
+    PLDHashEntryHdr *entry = PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_LOOKUP);
+    if (PL_DHASH_ENTRY_IS_BUSY(entry))
     {
-      requestHasTransferedData = PR_TRUE;
-    }
-    else
-    {
-      nsAutoMonitor lock(mMonitor);
-      PLDHashEntryHdr *entry = PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_LOOKUP);
-      if (PL_DHASH_ENTRY_IS_BUSY(entry))
-      {
-        PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_REMOVE);
+      PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_REMOVE);
 
-        requestHasTransferedData = PR_TRUE;
-      }
+      requestHasTransferedData = PR_TRUE;
     }
   }
 
@@ -1485,7 +1450,10 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   nsCOMPtr<nsIDOMWindow> windowForProgress;
   aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
 
-  nsCOMPtr<nsISupports> securityInfo(ExtractSecurityInfo(aRequest));
+  nsCOMPtr<nsISupports> securityInfo;
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+  if (channel)
+    channel->GetSecurityInfo(getter_AddRefs(securityInfo));
 
   if (windowForProgress.get() == window.get()) {
     // For toplevel channels, update the security state right away.
