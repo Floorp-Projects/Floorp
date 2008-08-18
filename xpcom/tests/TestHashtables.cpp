@@ -216,7 +216,7 @@ nsCEnum(const nsACString& aKey, nsAutoPtr<TestUniChar>& aData, void* userArg) {
 }
 
 //
-// all this nsIFoo stuff was copied wholesale from TestCOMPTr.cpp
+// all this nsIFoo stuff was copied wholesale from TestCOMPtr.cpp
 //
 
 #define NS_IFOO_IID \
@@ -228,7 +228,6 @@ class IFoo : public nsISupports
     public:
       NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
-    public:
       IFoo();
 
       NS_IMETHOD_(nsrefcnt) AddRef();
