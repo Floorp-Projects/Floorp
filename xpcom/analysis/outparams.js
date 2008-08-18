@@ -34,6 +34,8 @@ let TRACE_PERF = 0;
 // Log analysis results in a special format
 let LOG_RESULTS = false;
 
+let WARN_ON_SET_NULL = false;
+
 // Filter functions to process per CLI
 let func_filter;
 if (this.arg == undefined || this.arg == '') {
@@ -604,9 +606,11 @@ OutparamCheck.prototype.checkSubstateFailure = function(ss) {
                 [ss.getBlame(v), "written here"]);
     } else if (val == av.WROTE_NULL) {
       this.logResult('fail', 'wrote_null', 'warning');
-      this.warn([this.findReturnStmt(ss), "NULL written to outparam '" + expr_display(v) + "' on NS_FAILED(return value)"],
-                [v, "outparam declared here"],
-                [ss.getBlame(v), "written here"]);
+      if (WARN_ON_SET_NULL) {
+        this.warn([this.findReturnStmt(ss), "NULL written to outparam '" + expr_display(v) + "' on NS_FAILED(return value)"],
+                  [v, "outparam declared here"],
+                  [ss.getBlame(v), "written here"]);
+      }
     } else {
       this.logResult('fail', '', 'ok');
     }
