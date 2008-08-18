@@ -678,7 +678,7 @@ namespace nanojit
 	{
 		releaseLirBuffer();
 		releaseCode(frago);
-
+			
 		// now do it for all branches 
 		Fragment* branch = branches;
 		while(branch)
