@@ -47,6 +47,8 @@
 
 #include <stdio.h>
 
+namespace TestHashtables {
+
 class TestUniChar // for nsClassHashtable
 {
 public:
@@ -395,6 +397,10 @@ nsIEnum2(nsISupports* aKey, PRUint32& aData, void* userArg) {
   printf("  enumerated \"%s\" = %u\n", str.get(), aData);
   return PL_DHASH_NEXT;
 }
+
+}
+
+using namespace TestHashtables;
 
 int
 main(void) {
