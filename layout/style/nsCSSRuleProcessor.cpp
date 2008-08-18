@@ -797,6 +797,11 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(do_GetAtom("windows-compositor"));
   }
 
+  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_WindowsClassic, metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(do_GetAtom("windows-classic"));
+  }
+ 
   return PR_TRUE;
 }
 
