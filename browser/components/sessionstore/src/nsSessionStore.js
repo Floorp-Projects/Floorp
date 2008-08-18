@@ -1414,6 +1414,14 @@ SessionStoreService.prototype = {
     if (!winData.tabs) {
       winData.tabs = [];
     }
+    // don't restore a single blank tab when we've had an external
+    // URL passed in for loading at startup (cf. bug 357419)
+    else if (root._firstTabs && !aOverwriteTabs && winData.tabs.length == 1) {
+      let tabEntries = winData.tabs[0].entries || [];
+      if (tabEntries.length == 0 ||
+          tabEntries.length == 1 && tabEntries[0].url == "about:blank")
+        winData.tabs = [];
+    }
     
     var tabbrowser = aWindow.getBrowser();
     var openTabCount = aOverwriteTabs ? tabbrowser.browsers.length : -1;
