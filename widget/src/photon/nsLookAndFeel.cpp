@@ -364,6 +364,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     aMetric = 3;
     break;
   case eMetric_DWMCompositor:
+  case eMetric_WindowsClassic:
   case eMetric_WindowsDefaultTheme:
     aMetric = 0;
     res = NS_ERROR_NOT_IMPLEMENTED;

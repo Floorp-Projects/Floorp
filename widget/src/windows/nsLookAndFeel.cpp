@@ -480,6 +480,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_TreeScrollLinesMax:
         aMetric = 3;
         break;
+    case eMetric_WindowsClassic:
+        aMetric = !nsUXThemeData::IsAppThemed();
+        break;
     case eMetric_WindowsDefaultTheme:
         aMetric = 0;
 #ifndef WINCE
