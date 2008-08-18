@@ -57,7 +57,6 @@ const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
-const PREF_GENERAL_USERAGENT_LOCALE       = "general.useragent.locale";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
 const PREF_UPDATE_NEVER_BRANCH            = "app.update.never.";
 const PREF_PARTNER_BRANCH                 = "app.partner.";
@@ -84,6 +83,7 @@ const FILE_UPDATES_DB     = "updates.xml";
 const FILE_UPDATE_ACTIVE  = "active-update.xml";
 const FILE_PERMS_TEST     = "update.test";
 const FILE_LAST_LOG       = "last-update.log";
+const FILE_UPDATER_INI    = "updater.ini";
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -122,6 +122,7 @@ const nsIIncrementalDownload  = Components.interfaces.nsIIncrementalDownload;
 const nsIFileInputStream      = Components.interfaces.nsIFileInputStream;
 const nsIFileOutputStream     = Components.interfaces.nsIFileOutputStream;
 const nsICryptoHash           = Components.interfaces.nsICryptoHash;
+const nsIINIParserFactory     = Components.interfaces.nsIINIParserFactory;
 
 const Node = Components.interfaces.nsIDOMNode;
 
@@ -129,6 +130,7 @@ var gApp        = null;
 var gPref       = null;
 var gABI        = null;
 var gOSVersion  = null;
+var gLocale     = null;
 var gConsole    = null;
 var gLogEnabled = { };
 
@@ -490,20 +492,19 @@ function getPref(func, preference, defaultValue) {
 }
 
 /**
- * Gets the current value of the locale.  It's possible for this preference to
- * be localized, so we have to do a little extra work here.  Similar code
- * exists in nsHttpHandler.cpp when building the UA string.
+ * Gets the locale specified by the 'Locale' key in the 'Installation' section
+ * of updater.ini.
  */
 function getLocale() {
-  try {
-      // Get the default branch
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-          .getService(Components.interfaces.nsIPrefService);
-      var defaultPrefs = prefs.getDefaultBranch(null);
-      return defaultPrefs.getCharPref(PREF_GENERAL_USERAGENT_LOCALE);
-  } catch (e) {}
+  if (gLocale)
+    return gLocale;
 
-  return gPref.getCharPref(PREF_GENERAL_USERAGENT_LOCALE);
+  var updaterIni = getFile(KEY_APPDIR, [FILE_UPDATER_INI]);
+  var iniParser = Components.classes["@mozilla.org/xpcom/ini-parser-factory;1"]
+                            .getService(nsIINIParserFactory).createINIParser(updaterIni);
+  gLocale = iniParser.getString("Installation", "Locale");
+  LOG("General", "Getting Locale from File: " + updaterIni.path + " Locale: " + gLocale);
+  return gLocale;
 }
 
 /**
@@ -1976,7 +1977,7 @@ Checker.prototype = {
     url = url.replace(/\+/g, "%2B");
 
     if (force)
-	url += "?force=1"
+      url += "?force=1"
 
     LOG("Checker", "update url: " + url);
     return url;
