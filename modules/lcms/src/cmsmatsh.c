@@ -103,9 +103,15 @@ LPMATSHAPER cmsAllocMatShaper2(LPMAT3 Matrix, LPGAMMATABLE In[], LPLCMSPRECACHE 
        // Fill matrix part
        if (Behaviour & MATSHAPER_FLOATMAT) {
               FMAT3ASetup(&NewMatShaper->Matrix.FA);
-              MAT3toFloat(NewMatShaper -> Matrix.FA.F, Matrix);
+              MAT3toFloatTranspose(NewMatShaper -> Matrix.FA.F, Matrix);
               if (!FMAT3isIdentity(NewMatShaper -> Matrix.FA.F, 0.00001f))
                             NewMatShaper -> dwFlags |= MATSHAPER_HASMATRIX;
+
+              // This needs to be calculated by the CPU or a very precise
+              // compiler. If it's too big (like 1.0), values are clamped
+              // to 65536 instead 65535, and we either have an overflow of
+              // the precache bounds or scary downcasting.
+              NewMatShaper -> clampMax = ((FLOAT) (65536 - 1)) / 65536.0f;
        }
        else {
               MAT3toFix(&NewMatShaper -> Matrix.W, Matrix);
@@ -397,76 +403,6 @@ void OutputBehaviour(LPMATSHAPER MatShaper, WORD In[], WORD Out[])
 
 }
 
-void cmsEvalMatShaperFloat(LPMATSHAPER MatShaper, BYTE In[], BYTE Out[])
-{
-       WORD tmp[3];
-       FVEC3 OutVect;
-       LPFVEC3 FloatVals = &MatShaper -> Matrix.FA.F->v[3]; // Access our secret aligned temp buffer
-
-       if (MatShaper -> dwFlags & MATSHAPER_HASINPSHAPER)
-       {
-              if (MatShaper->L2_Precache != NULL) 
-              {
-              FloatVals->n[VX] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[0][In[0]];
-              FloatVals->n[VY] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[1][In[1]];
-              FloatVals->n[VZ] = MatShaper->L2_Precache->Impl.LI16F_FORWARD.Cache[2][In[2]];
-              }
-              else
-              {
-              FloatVals->n[VX] = ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(In[0]), MatShaper -> L2[0], &MatShaper -> p2_16));
-              FloatVals->n[VY] = ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(In[1]), MatShaper -> L2[1], &MatShaper -> p2_16));
-              FloatVals->n[VZ] = ToFloatDomain(cmsLinearInterpLUT16(RGB_8_TO_16(In[2]), MatShaper -> L2[2], &MatShaper -> p2_16));
-              }
-       }
-       else
-       {
-       FloatVals->n[VX] = ToFloatDomain(In[0]);
-       FloatVals->n[VY] = ToFloatDomain(In[1]);
-       FloatVals->n[VZ] = ToFloatDomain(In[2]);
-       }
-
-
-       if (MatShaper -> dwFlags & MATSHAPER_HASMATRIX)
-       {       
-                         
-       MAT3evalF(&OutVect, MatShaper -> Matrix.FA.F, FloatVals);
-       }
-       else 
-       {
-       OutVect.n[VX] = FloatVals->n[VX];
-       OutVect.n[VY] = FloatVals->n[VY];
-       OutVect.n[VZ] = FloatVals->n[VZ];
-       }
-
-             
-       tmp[0] = _cmsClampWord(FromFloatDomain(OutVect.n[VX]));
-       tmp[1] = _cmsClampWord(FromFloatDomain(OutVect.n[VY]));
-       tmp[2] = _cmsClampWord(FromFloatDomain(OutVect.n[VZ]));
-
-       
-           
-       if (MatShaper -> dwFlags & MATSHAPER_HASSHAPER)
-       {
-              if (MatShaper->L_Precache != NULL) 
-              {
-              Out[0] = MatShaper->L_Precache->Impl.LI168_REVERSE.Cache[0][tmp[0]];
-              Out[1] = MatShaper->L_Precache->Impl.LI168_REVERSE.Cache[1][tmp[1]];
-              Out[2] = MatShaper->L_Precache->Impl.LI168_REVERSE.Cache[2][tmp[2]];
-              }
-              else 
-              {
-              Out[0] = RGB_16_TO_8(cmsLinearInterpLUT16(tmp[0], MatShaper -> L[0], &MatShaper -> p16));
-              Out[1] = RGB_16_TO_8(cmsLinearInterpLUT16(tmp[1], MatShaper -> L[1], &MatShaper -> p16));
-              Out[2] = RGB_16_TO_8(cmsLinearInterpLUT16(tmp[2], MatShaper -> L[2], &MatShaper -> p16));
-              }
-       }
-       else
-       {
-       Out[0] = RGB_16_TO_8(tmp[0]);
-       Out[1] = RGB_16_TO_8(tmp[1]);
-       Out[2] = RGB_16_TO_8(tmp[2]);
-       }
-}
 
 // Master on evaluating shapers, 3 different behaviours
 

@@ -1571,6 +1571,7 @@ void      cdecl MAT3eval(LPVEC3 r, LPMAT3 a, LPVEC3 v);
 void      cdecl MAT3evalF(LPFVEC3 r, LPFMAT3 a, LPFVEC3 v);
 void      cdecl MAT3toFix(LPWMAT3 r, LPMAT3 v);
 void      cdecl MAT3toFloat(LPFMAT3 r, LPMAT3 v);
+void      cdecl MAT3toFloatTranspose(LPFMAT3 r, LPMAT3 v);
 void      cdecl MAT3fromFix(LPMAT3 r, LPWMAT3 v);
 void      cdecl MAT3evalW(LPWVEC3 r, LPWMAT3 a, LPWVEC3 v);
 LCMSBOOL  cdecl MAT3isIdentity(LPWMAT3 a, double Tolerance);
@@ -1862,7 +1863,15 @@ typedef struct {
                union {
                   WMAT3 W;
                   FMAT3A FA; // This is not a matrix proper - use FA.F to access the matrix pointer
+                             // Moreover, we store the transpose of the matrix instead, so the first
+                             // vector corresponds to the first column instead of the first row.
                } Matrix;
+
+               FLOAT clampMax; // SSE2 doesn't have an efficient way to clamp using integers, so we have
+                               // to clamp in the float domain. Unfortunately, since we eventually want
+                               // our integer values clamped to 2^16 - 1, we need to clamp with a very
+                               // precise value in the float domain. We let the CPU take care of by calculating
+                               // it at transform creation time rather than trusting the compiler.
 
                L16PARAMS p16;       // Primary curve
                LPWORD L[3];
@@ -1880,7 +1889,6 @@ LPMATSHAPER cdecl cmsAllocMatShaper2(LPMAT3 matrix, LPGAMMATABLE In[], LPLCMSPRE
 
 void        cdecl cmsFreeMatShaper(LPMATSHAPER MatShaper);
 void        cdecl cmsEvalMatShaper(LPMATSHAPER MatShaper, WORD In[], WORD Out[]);
-void        cdecl cmsEvalMatShaperFloat(LPMATSHAPER MatShaper, BYTE In[], BYTE Out[]);
 
 LCMSBOOL    cdecl cmsReadICCMatrixRGB2XYZ(LPMAT3 r, cmsHPROFILE hProfile);
 
