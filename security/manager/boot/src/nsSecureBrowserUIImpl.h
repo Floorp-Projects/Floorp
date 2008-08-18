@@ -126,7 +126,6 @@ protected:
   PRInt32 mSubRequestsBrokenSecurity;
   PRInt32 mSubRequestsNoSecurity;
 
-  static already_AddRefed<nsISupports> ExtractSecurityInfo(nsIRequest* aRequest);
   static nsresult MapInternalToExternalState(PRUint32* aState, lockIconState lock, PRBool ev);
   nsresult UpdateSecurityState(nsIRequest* aRequest);
   void UpdateMyFlags(PRBool &showWarning, lockIconState &warnSecurityState);
