@@ -119,10 +119,39 @@ IsAncestorBinding(nsIDocument* aDocument,
       continue;
     }
     PRBool equal;
-    nsresult rv =
-      binding->PrototypeBinding()->BindingURI()->Equals(aChildBindingURI,
-                                                        &equal);
-    NS_ENSURE_SUCCESS(rv, PR_TRUE); // assume the worst
+    nsresult rv;
+    nsCOMPtr<nsIURL> childBindingURL = do_QueryInterface(aChildBindingURI);
+    nsCAutoString childRef;
+    if (childBindingURL &&
+        NS_SUCCEEDED(childBindingURL->GetRef(childRef)) &&
+        childRef.IsEmpty()) {
+      // If the child URL has no ref, we need to strip away the ref from the
+      // URI we're comparing it to, since the child URL will end up pointing
+      // to the first binding defined at it's URI, and that could be the same
+      // binding that's referred to more specifically by the already attached
+      // binding's URI via it's ref.
+
+      // This means we'll get false positives if someone refers to the first
+      // binding at a given URI without a ref and also binds a parent or child
+      // to a different binding at that URI *with* a ref, but that shouldn't
+      // ever be necessary so we don't need to support it.
+      nsCOMPtr<nsIURI> compareURI;
+      rv = binding->PrototypeBinding()->BindingURI()->Clone(getter_AddRefs(compareURI));
+      NS_ENSURE_SUCCESS(rv, PR_TRUE); // assume the worst
+
+      nsCOMPtr<nsIURL> compareURL = do_QueryInterface(compareURI, &rv);
+      NS_ENSURE_SUCCESS(rv, PR_TRUE); // assume the worst
+      
+      rv = compareURL->SetRef(EmptyCString());
+      NS_ENSURE_SUCCESS(rv, PR_TRUE); // assume the worst
+
+      rv = compareURL->Equals(aChildBindingURI, &equal);
+    } else {
+      rv = binding->PrototypeBinding()->BindingURI()->Equals(aChildBindingURI,
+                                                             &equal);
+      NS_ENSURE_SUCCESS(rv, PR_TRUE); // assume the worst
+    }
+
     if (equal) {
       ++bindingRecursion;
       if (bindingRecursion < NS_MAX_XBL_BINDING_RECURSION) {
