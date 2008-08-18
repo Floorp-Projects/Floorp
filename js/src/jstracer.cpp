@@ -1048,7 +1048,11 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
         ins = lir->ins1(LIR_i2f, ins);
     } else {
         JS_ASSERT(isNumber(*p) == (t == JSVAL_DOUBLE));
-        ins = lir->insLoad(t == JSVAL_DOUBLE ? LIR_ldq : LIR_ld, base, offset);
+		if (t == JSVAL_DOUBLE) {
+			ins = lir->insLoad(LIR_ldq, base, offset);
+		} else {
+	        ins = lir->insLoad(LIR_ldp, base, offset);
+		}
     }
     tracker.set(p, ins);
 #ifdef DEBUG
@@ -1442,22 +1446,22 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
            of the new value for sp. */
         debug_only(printf("sp_adj=%d outer=%d inner=%d\n",
                    sp_adj, treeInfo->nativeStackBase, ti->nativeStackBase));
-        LIns* sp_top = lir->ins2i(LIR_add, lirbuf->sp, 
+        LIns* sp_top = lir->ins2i(LIR_piadd, lirbuf->sp, 
                 - treeInfo->nativeStackBase /* rebase sp to beginning of outer tree's stack */
                 + sp_adj /* adjust for stack in outer frame inner tree can't see */
                 + ti->maxNativeStackSlots * sizeof(double)); /* plus the inner tree's stack */
         guard(true, lir->ins2(LIR_lt, sp_top, eos_ins), OOM_EXIT);
         /* Guard that we have enough call stack space. */
-        LIns* rp_top = lir->ins2i(LIR_add, lirbuf->rp, rp_adj + 
+        LIns* rp_top = lir->ins2i(LIR_piadd, lirbuf->rp, rp_adj + 
                 ti->maxCallDepth * sizeof(FrameInfo));
         guard(true, lir->ins2(LIR_lt, rp_top, eor_ins), OOM_EXIT);
         /* We have enough space, so adjust sp and rp to their new level. */
-        lir->insStorei(inner_sp = lir->ins2i(LIR_add, lirbuf->sp,
+        lir->insStorei(inner_sp = lir->ins2i(LIR_piadd, lirbuf->sp,
                 - treeInfo->nativeStackBase /* rebase sp to beginning of outer tree's stack */
                 + sp_adj /* adjust for stack in outer frame inner tree can't see */
                 + ti->nativeStackBase), /* plus the inner tree's stack base */ 
                 lirbuf->state, offsetof(InterpState, sp));
-        lir->insStorei(lir->ins2i(LIR_add, lirbuf->rp, rp_adj),
+        lir->insStorei(lir->ins2i(LIR_piadd, lirbuf->rp, rp_adj),
                 lirbuf->state, offsetof(InterpState, rp));
     }
     /* Invoke the inner tree. */
@@ -1578,7 +1582,13 @@ js_TrashTree(JSContext* cx, Fragment* f)
     Fragment** data = ti->dependentTrees.data();
     while (length-- > 0) {
         debug_only(printf("Trashing dependent tree.\n");)
-        (*data++)->releaseCode(fragmento);
+        Fragment* d = *data++;
+        JS_ASSERT((!d->code()) == (!d->vmprivate));
+        if (d->code()) {
+            delete (TreeInfo*)d->vmprivate;
+            d->vmprivate = NULL;
+            d->releaseCode(fragmento);
+        }
     }
     /* now we can kill the tree info object */
     delete ti;
@@ -1848,9 +1858,9 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch.\n");)
         if (++ti->mismatchCount > MAX_MISMATCH) {
-            debug_only(printf("excessive mismatches, flushing cache.\n"));
-            f->blacklist();
+            debug_only(printf("excessive mismatches, flushing tree.\n"));
             js_TrashTree(cx, f);
+            f->blacklist();
         }
         return NULL;
     }
@@ -2184,7 +2194,7 @@ TraceRecorder::ifop()
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
               lir->ins_eq0(lir->ins2(LIR_and,
                                      lir->insLoadi(get(&v), offsetof(JSString, length)),
-                                     INS_CONSTPTR(JSSTRING_LENGTH_MASK))),
+                                     INS_CONST(JSSTRING_LENGTH_MASK))),
               BRANCH_EXIT);
     } else {
         JS_NOT_REACHED("ifop");
@@ -2705,7 +2715,7 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_BOOLEAN:
-        v_ins = lir->ins2i(LIR_or, lir->ins2i(LIR_lsh, v_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
+        v_ins = lir->ins2i(LIR_or, lir->ins2i(LIR_pilsh, v_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
         return true;
       case JSVAL_OBJECT:
         return true;
@@ -2723,9 +2733,9 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
         // JSVAL_IS_NUMBER(v)
         guard(false,
               lir->ins_eq0(lir->ins2(LIR_or,
-                                     lir->ins2(LIR_and, v_ins, INS_CONSTPTR(JSVAL_INT)),
+                                     lir->ins2(LIR_piand, v_ins, INS_CONSTPTR(JSVAL_INT)),
                                      lir->ins2i(LIR_eq,
-                                                lir->ins2(LIR_and, v_ins,
+                                                lir->ins2(LIR_piand, v_ins,
                                                           INS_CONSTPTR(JSVAL_TAGMASK)),
                                                 JSVAL_DOUBLE))),
               MISMATCH_EXIT);
@@ -2736,7 +2746,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
       case JSVAL_BOOLEAN:
         guard(true,
               lir->ins2i(LIR_eq,
-                         lir->ins2(LIR_and, v_ins, INS_CONSTPTR(JSVAL_TAGMASK)),
+                         lir->ins2(LIR_piand, v_ins, INS_CONSTPTR(JSVAL_TAGMASK)),
                          JSVAL_BOOLEAN),
               MISMATCH_EXIT);
          v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
@@ -2744,17 +2754,17 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
        case JSVAL_OBJECT:
         guard(true,
               lir->ins2i(LIR_eq,
-                         lir->ins2(LIR_and, v_ins, INS_CONSTPTR(JSVAL_TAGMASK)),
+                         lir->ins2(LIR_piand, v_ins, INS_CONSTPTR(JSVAL_TAGMASK)),
                          JSVAL_OBJECT),
               MISMATCH_EXIT);
         return true;
       case JSVAL_STRING:
         guard(true,
               lir->ins2i(LIR_eq,
-                        lir->ins2(LIR_and, v_ins, INS_CONSTPTR(JSVAL_TAGMASK)),
+                        lir->ins2(LIR_piand, v_ins, INS_CONSTPTR(JSVAL_TAGMASK)),
                         JSVAL_STRING),
               MISMATCH_EXIT);
-        v_ins = lir->ins2(LIR_and, v_ins, INS_CONSTPTR(~JSVAL_TAGMASK));
+        v_ins = lir->ins2(LIR_piand, v_ins, INS_CONSTPTR(~JSVAL_TAGMASK));
         return true;
     }
     return false;
@@ -2783,7 +2793,7 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp)
         return false;
 
     LIns* class_ins = stobj_get_fslot(obj_ins, JSSLOT_CLASS);
-    class_ins = lir->ins2(LIR_and, class_ins, lir->insImmPtr((void*)~3));
+    class_ins = lir->ins2(LIR_piand, class_ins, lir->insImmPtr((void*)~3));
 
     char namebuf[32];
     JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
@@ -3983,8 +3993,8 @@ TraceRecorder::elem(jsval& l, jsval& r, jsval*& vp, LIns*& v_ins, LIns*& addr_in
         return false;
     vp = &obj->dslots[idx];
 
-    addr_ins = lir->ins2(LIR_add, dslots_ins,
-                         lir->ins2i(LIR_lsh, idx_ins, (sizeof(jsval) == 4) ? 2 : 3));
+    addr_ins = lir->ins2(LIR_piadd, dslots_ins,
+                         lir->ins2i(LIR_pilsh, idx_ins, (sizeof(jsval) == 4) ? 2 : 3));
 
     /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
     v_ins = lir->insLoad(LIR_ldp, addr_ins, 0);
@@ -5315,17 +5325,17 @@ TraceRecorder::record_JSOP_LENGTH()
 
         LIns* masked_len_ins = lir->ins2(LIR_and,
                                          len_ins,
-                                         INS_CONSTPTR(JSSTRING_LENGTH_MASK));
+                                         INS_CONST(JSSTRING_LENGTH_MASK));
 
         LIns *choose_len_ins =
-            lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_and,
+            lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
                                                    len_ins,
                                                    INS_CONSTPTR(JSSTRFLAG_DEPENDENT))),
                             masked_len_ins,
-                            lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_and,
+                            lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
                                                                    len_ins,
                                                                    INS_CONSTPTR(JSSTRFLAG_PREFIX))),
-                                            lir->ins2(LIR_and,
+                                            lir->ins2(LIR_piand,
                                                       len_ins,
                                                       INS_CONSTPTR(JSSTRDEP_LENGTH_MASK)),
                                             masked_len_ins,
