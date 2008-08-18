@@ -90,7 +90,6 @@ static PRInt32 FindSafeLength(nsRenderingContextImpl* aContext,
   if (aLength <= aMaxChunkLength)
     return aLength;
   
-  PRUint8 buffer[MAX_GFX_TEXT_BUF_SIZE + 1];
   PRInt32 len = aMaxChunkLength;
 
   // Ensure that we don't break inside a surrogate pair
