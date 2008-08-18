@@ -51,6 +51,8 @@
 #include "prinrval.h"
 #include "nsThreadUtils.h"
 
+namespace TestExpirationTracker {
+
 struct Object {
   Object() : mExpired(PR_FALSE) { Touch(); }
   void Touch() { mLastUsed = PR_IntervalNow(); mExpired = PR_FALSE; }
@@ -209,6 +211,10 @@ static const struct Test {
   DECL_TEST(test_random8),
   { nsnull, nsnull }
 };
+
+}
+
+using namespace TestExpirationTracker;
 
 int main(int argc, char **argv) {
   int count = 1;
