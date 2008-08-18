@@ -1572,7 +1572,13 @@ js_TrashTree(JSContext* cx, Fragment* f)
     Fragment** data = ti->dependentTrees.data();
     while (length-- > 0) {
         debug_only(printf("Trashing dependent tree.\n");)
-        (*data++)->releaseCode(fragmento);
+        Fragment* d = *data++;
+        JS_ASSERT((!d->code()) == (!d->vmprivate));
+        if (d->code()) {
+            delete (TreeInfo*)d->vmprivate;
+            d->vmprivate = NULL;
+            d->releaseCode(fragmento);
+        }
     }
     /* now we can kill the tree info object */
     delete ti;
@@ -1842,9 +1848,9 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch.\n");)
         if (++ti->mismatchCount > MAX_MISMATCH) {
-            debug_only(printf("excessive mismatches, flushing cache.\n"));
-            f->blacklist();
+            debug_only(printf("excessive mismatches, flushing tree.\n"));
             js_TrashTree(cx, f);
+            f->blacklist();
         }
         return NULL;
     }
