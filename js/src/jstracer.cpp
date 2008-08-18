@@ -177,13 +177,19 @@ Tracker::has(const void *v) const
     return get(v) != NULL;
 }
 
+#if defined NANOJIT_64BIT
+#define PAGEMASK	0x7ff
+#else
+#define PAGEMASK	0xfff
+#endif
+
 LIns*
 Tracker::get(const void* v) const
 {
     struct Tracker::Page* p = findPage(v);
     if (!p)
         return NULL;
-    return p->map[(jsuword(v) & 0xfff) >> 2];
+    return p->map[(jsuword(v) & PAGEMASK) >> 2];
 }
 
 void
@@ -192,7 +198,7 @@ Tracker::set(const void* v, LIns* i)
     struct Tracker::Page* p = findPage(v);
     if (!p)
         p = addPage(v);
-    p->map[(jsuword(v) & 0xfff) >> 2] = i;
+    p->map[(jsuword(v) & PAGEMASK) >> 2] = i;
 }
 
 static inline bool isNumber(jsval v)
@@ -240,7 +246,7 @@ Oracle::isGlobalSlotUndemotable(JSScript* script, unsigned slot) const
 void 
 Oracle::markStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot)
 {
-    uint32 hash = uint32(ip) + (slot << 5);
+    uint32 hash = uint32(intptr_t(ip)) + (slot << 5);
     hash %= ORACLE_SIZE;
     _dontDemote.set(&gc, hash);
 }
@@ -249,7 +255,7 @@ Oracle::markStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot
 bool 
 Oracle::isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) const
 {
-    uint32 hash = uint32(ip) + (slot << 5);
+    uint32 hash = uint32(intptr_t(ip)) + (slot << 5);
     hash %= ORACLE_SIZE;
     return _dontDemote.get(hash);
 }
@@ -683,12 +689,12 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
         lirbuf->state = addName(lir->insParam(0), "state");
         lirbuf->param1 = addName(lir->insParam(1), "param1");
     }
-    lirbuf->sp = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, sp)), "sp");
-    lirbuf->rp = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, rp)), "rp");
-    cx_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, cx)), "cx");
-    gp_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, gp)), "gp");
-    eos_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, eos)), "eos");
-    eor_ins = addName(lir->insLoadi(lirbuf->state, offsetof(InterpState, eor)), "eor");
+    lirbuf->sp = addName(lir->insLoad(LIR_ldp, lirbuf->state, (int)offsetof(InterpState, sp)), "sp");
+    lirbuf->rp = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, rp)), "rp");
+    cx_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, cx)), "cx");
+    gp_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, gp)), "gp");
+    eos_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eos)), "eos");
+    eor_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, eor)), "eor");
 
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, ngslots, callDepth, globalTypeMap, stackTypeMap); 
@@ -2430,8 +2436,8 @@ JS_STATIC_ASSERT(offsetof(JSObjectOps, newObjectMap) == 0);
 bool
 TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, size_t op_offset)
 {
-    ops_ins = addName(lir->insLoadi(map_ins, offsetof(JSObjectMap, ops)), "ops");
-    LIns* n = lir->insLoadi(ops_ins, op_offset);
+    ops_ins = addName(lir->insLoad(LIR_ldp, map_ins, offsetof(JSObjectMap, ops)), "ops");
+    LIns* n = lir->insLoad(LIR_ldp, ops_ins, op_offset);
 
 #define OP(ops) (*(JSObjectOp*) ((char*)(ops) + op_offset))
 
@@ -2457,7 +2463,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
     }
 
-    LIns* map_ins = lir->insLoadi(obj_ins, offsetof(JSObject, map));
+    LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
     LIns* ops_ins;
 
     // Interpreter calls to PROPERTY_CACHE_TEST guard on native object ops
@@ -2525,7 +2531,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 
     if (PCVCAP_TAG(entry->vcap) <= 1) {
         if (aobj != globalObj) {
-            LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+            LIns* shape_ins = addName(lir->insLoad(LIR_ldp, map_ins, offsetof(JSScope, shape)), "shape");
             guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
                   MISMATCH_EXIT);
         }
@@ -2538,14 +2544,14 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         JS_ASSERT(OBJ_SCOPE(obj2)->shape == PCVCAP_SHAPE(entry->vcap));
 
         LIns* obj2_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
-        map_ins = lir->insLoadi(obj2_ins, offsetof(JSObject, map));
+        map_ins = lir->insLoad(LIR_ldp, obj2_ins, (int)offsetof(JSObject, map));
         LIns* ops_ins;
         if (!map_is_native(obj2->map, map_ins, ops_ins)) {
             OBJ_DROP_PROPERTY(cx, obj2, prop);
             return false;
         }
 
-        LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+        LIns* shape_ins = addName(lir->insLoad(LIR_ldp, map_ins, offsetof(JSScope, shape)), "shape");
         guard(true,
               addName(lir->ins2i(LIR_eq, shape_ins, PCVCAP_SHAPE(entry->vcap)),
                       "guard(vcap_shape)"),
@@ -2635,7 +2641,7 @@ TraceRecorder::stobj_set_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins, L
                 "set_slot(fslots)");
     } else {
         if (!dslots_ins)
-            dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
+            dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
         addName(lir->insStorei(v_ins, dslots_ins,
                                (slot - JS_INITIAL_NSLOTS) * sizeof(jsval)),
                 "set_slot(dslots");
@@ -2646,7 +2652,7 @@ LIns*
 TraceRecorder::stobj_get_fslot(LIns* obj_ins, unsigned slot)
 {
     JS_ASSERT(slot < JS_INITIAL_NSLOTS);
-    return lir->insLoadi(obj_ins, offsetof(JSObject, fslots) + slot * sizeof(jsval));
+    return lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, fslots) + slot * sizeof(jsval));
 }
 
 LIns*
@@ -2656,8 +2662,8 @@ TraceRecorder::stobj_get_slot(LIns* obj_ins, unsigned slot, LIns*& dslots_ins)
         return stobj_get_fslot(obj_ins, slot);
 
     if (!dslots_ins)
-        dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
-    return lir->insLoadi(dslots_ins, (slot - JS_INITIAL_NSLOTS) * sizeof(jsval));
+        dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
+    return lir->insLoad(LIR_ldp, dslots_ins, (slot - JS_INITIAL_NSLOTS) * sizeof(jsval));
 }
 
 bool
@@ -2764,7 +2770,7 @@ TraceRecorder::getThis(LIns*& this_ins)
         guard(false, lir->ins_eq0(this_ins), MISMATCH_EXIT);
     } else { /* in global code */
         JS_ASSERT(!JSVAL_IS_NULL(cx->fp->argv[-1]));
-        this_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+        this_ins = lir->insLoad(LIR_ldp, lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
                 offsetof(JSStackFrame, thisp));
     }
     return true;
@@ -2811,7 +2817,7 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
     // guard(index < capacity)
     guard(false, lir->ins_eq0(dslots_ins), MISMATCH_EXIT);
     guard(true,
-          lir->ins2(LIR_lt, idx_ins, lir->insLoadi(dslots_ins, 0 - sizeof(jsval))),
+          lir->ins2(LIR_lt, idx_ins, lir->insLoad(LIR_ldp, dslots_ins, 0 - sizeof(jsval))),
           MISMATCH_EXIT);
     return true;
 }
@@ -3402,14 +3408,14 @@ TraceRecorder::record_JSOP_SETPROP()
     if (!PCVAL_IS_SPROP(entry->vword))
         ABORT_TRACE("hit non-sprop cache value");
 
-    LIns* map_ins = lir->insLoadi(obj_ins, offsetof(JSObject, map));
+    LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
     LIns* ops_ins;
     if (!map_is_native(obj->map, map_ins, ops_ins, offsetof(JSObjectOps, setProperty)))
         return false;
 
     // The global object's shape is guarded at trace entry.
     if (obj != globalObj) {
-        LIns* shape_ins = addName(lir->insLoadi(map_ins, offsetof(JSScope, shape)), "shape");
+        LIns* shape_ins = addName(lir->insLoad(LIR_ldp, map_ins, offsetof(JSScope, shape)), "shape");
         guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"), 
                 MISMATCH_EXIT);
     }
@@ -3536,7 +3542,7 @@ TraceRecorder::record_JSOP_CALLNAME()
     if (obj != globalObj)
         ABORT_TRACE("fp->scopeChain is not global object");
 
-    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+    LIns* obj_ins = lir->insLoad(LIR_ldp, lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
     JSObject* obj2;
     jsuword pcval;
@@ -3840,7 +3846,7 @@ TraceRecorder::name(jsval*& vp)
     if (obj != globalObj)
         ABORT_TRACE("fp->scopeChain is not global object");
 
-    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+    LIns* obj_ins = lir->insLoad(LIR_ldp, lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
 
     /* Can't use prop here, because we don't want unboxing from global slots. */
@@ -3972,7 +3978,7 @@ TraceRecorder::elem(jsval& l, jsval& r, jsval*& vp, LIns*& v_ins, LIns*& addr_in
        once we peel the loop type down to integer for this slot */
     guard(true, lir->ins2(LIR_feq, get(&r), lir->ins1(LIR_i2f, idx_ins)), MISMATCH_EXIT);
 
-    LIns* dslots_ins = lir->insLoadi(obj_ins, offsetof(JSObject, dslots));
+    LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
     if (!guardDenseArrayIndex(obj, idx, obj_ins, dslots_ins, idx_ins))
         return false;
     vp = &obj->dslots[idx];
@@ -3981,7 +3987,7 @@ TraceRecorder::elem(jsval& l, jsval& r, jsval*& vp, LIns*& v_ins, LIns*& addr_in
                          lir->ins2i(LIR_lsh, idx_ins, (sizeof(jsval) == 4) ? 2 : 3));
 
     /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
-    v_ins = lir->insLoad(LIR_ld, addr_ins, 0);
+    v_ins = lir->insLoad(LIR_ldp, addr_ins, 0);
     return unbox_jsval(*vp, v_ins);
 }
 
@@ -4418,7 +4424,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     if (obj != globalObj)
         ABORT_TRACE("JSOP_BINDNAME crosses global scopes");
 
-    LIns* obj_ins = lir->insLoadi(lir->insLoadi(cx_ins, offsetof(JSContext, fp)),
+    LIns* obj_ins = lir->insLoad(LIR_ldp, lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
     JSObject* obj2;
     jsuword pcval;
