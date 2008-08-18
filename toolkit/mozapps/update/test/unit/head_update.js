@@ -36,6 +36,9 @@
  * ***** END LICENSE BLOCK *****
  */
 
+const NS_APP_USER_PROFILE_50_DIR = "ProfD";
+const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
+
 // const Cc, Ci, and Cr are defined in netwerk/test/httpserver/httpd.js so we
 // need to define unique ones.
 const AUS_Cc = Components.classes;
@@ -87,6 +90,11 @@ function remove_dirs_and_files () {
 
   var file = dir.clone();
   file.append("active-update.xml");
+  if (file.exists())
+    file.remove(false);
+
+  file = dir.clone();
+  file.append("updates.xml");
   if (file.exists())
     file.remove(false);
 
@@ -163,5 +171,40 @@ function createAppInfo(id, name, version, platformVersion)
   registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
                             XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 }
+
+// Use a custom profile dir to keep the bin dir clean... not necessary but nice
+var gDirSvc = AUS_Cc["@mozilla.org/file/directory_service;1"].
+             getService(AUS_Ci.nsIProperties);
+var gTestRoot = gDirSvc.get("CurProcD", AUS_Ci.nsILocalFile);
+gTestRoot = gTestRoot.parent.parent;
+gTestRoot.append("_tests");
+gTestRoot.append("xpcshell-simple");
+gTestRoot.append("test_update");
+gTestRoot.normalize();
+
+// Create and register a profile directory.
+var gProfD = gTestRoot.clone();
+gProfD.append("profile");
+if (gProfD.exists())
+  gProfD.remove(true);
+gProfD.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+
+var dirProvider = {
+  getFile: function(prop, persistent) {
+    persistent.value = true;
+    if (prop == NS_APP_USER_PROFILE_50_DIR ||
+        prop == NS_APP_PROFILE_DIR_STARTUP)
+      return gProfD.clone();
+    return null;
+  },
+  QueryInterface: function(iid) {
+    if (iid.equals(AUS_Ci.nsIDirectoryServiceProvider) ||
+        iid.equals(AUS_Ci.nsISupports)) {
+      return this;
+    }
+    throw AUS_Cr.NS_ERROR_NO_INTERFACE;
+  }
+};
+gDirSvc.QueryInterface(AUS_Ci.nsIDirectoryService).registerProvider(dirProvider);
 
 remove_dirs_and_files();
