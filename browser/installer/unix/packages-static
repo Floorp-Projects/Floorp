@@ -209,6 +209,7 @@ bin/components/nsLoginInfo.js
 bin/components/nsLoginManager.js
 bin/components/nsLoginManagerPrompter.js
 bin/components/storage-Legacy.js
+bin/components/storage-mozStorage.js
 bin/components/jsconsole-clhandler.js
 bin/components/nsTryToClose.js
 bin/components/nsFilePicker.js
