@@ -192,7 +192,6 @@
 
 #include "nsPluginError.h"
 
-static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -6389,16 +6388,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     nsCOMPtr<nsIWidget> widget;
     NS_ENSURE_SUCCESS(GetMainWidget(getter_AddRefs(widget)), NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIDeviceContext> deviceContext;
-    if (widget) {
-        deviceContext = do_CreateInstance(kDeviceContextCID);
-        NS_ENSURE_TRUE(deviceContext, NS_ERROR_FAILURE);
-        deviceContext->Init(widget->GetNativeData(NS_NATIVE_WIDGET));
-    }
-
     nsRect bounds(x, y, cx, cy);
 
-    if (NS_FAILED(mContentViewer->Init(widget, deviceContext, bounds))) {
+    if (NS_FAILED(mContentViewer->Init(widget, bounds))) {
         mContentViewer = nsnull;
         NS_ERROR("ContentViewer Initialization failed");
         return NS_ERROR_FAILURE;
