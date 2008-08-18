@@ -1005,24 +1005,26 @@ RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
   PRInt32 result = 1;
   nsIContent* parent = mParentContent;
 
-  PRUint32 cur;
+  PRUint32 childCount = parent->GetChildCount();
+  nsIContent * const * curChildPtr = parent->GetChildArray();
   PRInt32 increment;
+  nsIContent * const * stopPtr;
   if (aIsFromEnd) {
-    cur = parent->GetChildCount() - 1;
+    stopPtr = curChildPtr - 1;
+    curChildPtr += childCount - 1;
     increment = -1;
   } else {
-    cur = 0;
     increment = 1;
+    stopPtr = curChildPtr + childCount;
   }
 
-  for (;;) {
-    nsIContent* child = parent->GetChildAt(cur);
-    if (!child) {
+  for ( ; ; curChildPtr += increment) {
+    if (curChildPtr == stopPtr) {
       // mContent is the root of an anonymous content subtree.
       result = 0; // special value to indicate that it is not at any index
       break;
     }
-    cur += increment;
+    nsIContent* child = *curChildPtr;
     if (child == mContent)
       break;
     if (child->IsNodeOfType(nsINode::eELEMENT) &&
@@ -1190,68 +1192,57 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
        pseudoClass && result; pseudoClass = pseudoClass->mNext) {
     PRInt32 stateToCheck = 0;
-    if ((nsCSSPseudoClasses::firstChild == pseudoClass->mAtom) ||
-        (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom) ) {
-      nsIContent *firstChild = nsnull;
+    if (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom) {
+      nsIContent *firstNode = nsnull;
       nsIContent *parent = data.mParentContent;
       if (parent) {
         if (setNodeFlags)
           parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
 
-        PRBool acceptNonWhitespace =
-          nsCSSPseudoClasses::firstNode == pseudoClass->mAtom;
         PRInt32 index = -1;
         do {
-          firstChild = parent->GetChildAt(++index);
-          // stop at first non-comment and non-whitespace node (and
-          // non-text node for firstChild)
-        } while (firstChild &&
-                 !IsSignificantChild(firstChild, acceptNonWhitespace, PR_FALSE));
+          firstNode = parent->GetChildAt(++index);
+          // stop at first non-comment and non-whitespace node
+        } while (firstNode &&
+                 !IsSignificantChild(firstNode, PR_TRUE, PR_FALSE));
       }
-      result = (data.mContent == firstChild);
+      result = (data.mContent == firstNode);
     }
-    else if ((nsCSSPseudoClasses::lastChild == pseudoClass->mAtom) ||
-             (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom)) {
-      nsIContent *lastChild = nsnull;
+    else if (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom) {
+      nsIContent *lastNode = nsnull;
       nsIContent *parent = data.mParentContent;
       if (parent) {
         if (setNodeFlags)
           parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
 
-        PRBool acceptNonWhitespace =
-          nsCSSPseudoClasses::lastNode == pseudoClass->mAtom;
         PRUint32 index = parent->GetChildCount();
         do {
-          lastChild = parent->GetChildAt(--index);
-          // stop at first non-comment and non-whitespace node (and
-          // non-text node for lastChild)
-        } while (lastChild &&
-                 !IsSignificantChild(lastChild, acceptNonWhitespace, PR_FALSE));
+          lastNode = parent->GetChildAt(--index);
+          // stop at first non-comment and non-whitespace node
+        } while (lastNode &&
+                 !IsSignificantChild(lastNode, PR_TRUE, PR_FALSE));
       }
-      result = (data.mContent == lastChild);
+      result = (data.mContent == lastNode);
     }
-    else if (nsCSSPseudoClasses::onlyChild == pseudoClass->mAtom) {
-      nsIContent *onlyChild = nsnull;
-      nsIContent *moreChild = nsnull;
+    else if (nsCSSPseudoClasses::firstChild == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::lastChild == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::onlyChild == pseudoClass->mAtom) {
       nsIContent *parent = data.mParentContent;
       if (parent) {
+        const PRBool checkFirst =
+          pseudoClass->mAtom != nsCSSPseudoClasses::lastChild;
+        const PRBool checkLast =
+          pseudoClass->mAtom != nsCSSPseudoClasses::firstChild;
         if (setNodeFlags)
           parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
 
-        PRInt32 index = -1;
-        do {
-          onlyChild = parent->GetChildAt(++index);
-          // stop at first non-comment, non-whitespace and non-text node
-        } while (onlyChild &&
-                 !IsSignificantChild(onlyChild, PR_FALSE, PR_FALSE));
-        if (data.mContent == onlyChild) {
-          // see if there's any more
-          do {
-            moreChild = parent->GetChildAt(++index);
-          } while (moreChild && !IsSignificantChild(moreChild, PR_FALSE, PR_FALSE));
-        }
+        result = (!checkFirst ||
+                  data.GetNthIndex(PR_FALSE, PR_FALSE, PR_TRUE) == 1) &&
+                 (!checkLast ||
+                  data.GetNthIndex(PR_FALSE, PR_TRUE, PR_TRUE) == 1);
+      } else {
+        result = PR_FALSE;
       }
-      result = (data.mContent == onlyChild && moreChild == nsnull);
     }
     else if (nsCSSPseudoClasses::nthChild == pseudoClass->mAtom ||
              nsCSSPseudoClasses::nthLastChild == pseudoClass->mAtom ||

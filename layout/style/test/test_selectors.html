@@ -377,6 +377,61 @@ function run() {
     test_selector_in_html(":nth-last-of-type(6)", seven_ps,
                           pset([2]), pset([1, 3, 4, 5, 6, 7]));
 
+    // Test [first|last|only]-[child|node|of-type]
+    var interesting_doc = "<!----> <div id='p1'> <!---->x<p id='s1'></p> <!----><p id='s2'></p> <!----></div> <!----><p id='p2'> <!----><span id='s3'></span> <!----><span id='s4'></span> <!---->x</p> <!----><div id='p3'> <!----><p id='s5'></p> <!----></div> <!---->";
+    function idset(ids) { // takes an array of ids
+        return function idset_filter(doc) {
+            var result = [];
+            for each (var id in ids)
+                result.push(doc.getElementById(id));
+            return result;
+        }
+    }
+    test_parseable(":first-child");
+    test_parseable(":last-child");
+    test_parseable(":only-child");
+    test_parseable(":-moz-first-node");
+    test_parseable(":-moz-last-node");
+    test_parseable(":first-of-type");
+    test_parseable(":last-of-type");
+    test_parseable(":only-of-type");
+    test_selector_in_html(":first-child", seven_ps,
+                          pset([1]), pset([2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":first-child", interesting_doc,
+                          idset(["p1", "s1", "s3", "s5"]),
+                          idset(["s2", "p2", "s4", "p3"]));
+    test_selector_in_html(":-moz-first-node", interesting_doc,
+                          idset(["p1", "s3", "s5"]),
+                          idset(["s1", "s2", "p2", "s4", "p3"]));
+    test_selector_in_html(":last-child", seven_ps,
+                          pset([7]), pset([1, 2, 3, 4, 5, 6]));
+    test_selector_in_html(":last-child", interesting_doc,
+                          idset(["s2", "s4", "p3", "s5"]),
+                          idset(["p1", "s1", "p2", "s3"]));
+    test_selector_in_html(":-moz-last-node", interesting_doc,
+                          idset(["s2", "p3", "s5"]),
+                          idset(["p1", "s1", "p2", "s3", "s4"]));
+    test_selector_in_html(":only-child", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":only-child", interesting_doc,
+                          idset(["s5"]),
+                          idset(["p1", "s1", "s2", "p2", "s3", "s4", "p3"]));
+    test_selector_in_html(":first-of-type", seven_ps,
+                          pset([1]), pset([2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":first-of-type", interesting_doc,
+                          idset(["p1", "s1", "p2", "s3", "s5"]),
+                          idset(["s2", "s4", "p3"]));
+    test_selector_in_html(":last-of-type", seven_ps,
+                          pset([7]), pset([1, 2, 3, 4, 5, 6]));
+    test_selector_in_html(":last-of-type", interesting_doc,
+                          idset(["s2", "p2", "s4", "p3", "s5"]),
+                          idset(["p1", "s1", "s3"]));
+    test_selector_in_html(":only-of-type", seven_ps,
+                          pset([]), pset([1, 2, 3, 4, 5, 6, 7]));
+    test_selector_in_html(":only-of-type", interesting_doc,
+                          idset(["p2", "s5"]),
+                          idset(["p1", "s1", "s2", "s3", "s4", "p3"]));
+
     // And a bunch of tests for the of-type aspect of :nth-of-type() and
     // :nth-last-of-type().  Note that the last div here contains two
     // children.
