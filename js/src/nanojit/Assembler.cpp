@@ -471,7 +471,7 @@ namespace nanojit
                 prefer = allow&SavedRegs;
 			Register s = resv->reg = registerAlloc(prefer);
 			_allocator.addActive(s, i);
-            if (rmask(r) & GpRegs) {
+            if ((rmask(r) & GpRegs) && (rmask(s) & GpRegs)) {
     			MR(r, s);
             } 
 			else
@@ -534,8 +534,6 @@ namespace nanojit
 		LInsp rhs = cond->oprnd2();
 		Reservation *rA, *rB;
 
-		NanoAssert((!lhs->isQuad() && !rhs->isQuad()) || (lhs->isQuad() && rhs->isQuad()));
-
 		// Not supported yet.
 #if !defined NANOJIT_64BIT
 		NanoAssert(!lhs->isQuad() && !rhs->isQuad());
@@ -547,24 +545,30 @@ namespace nanojit
 			int c = rhs->constval();
 			Register r = findRegFor(lhs, GpRegs);
 			if (c == 0 && cond->isop(LIR_eq)) {
-				if (rhs->isQuad()) {
+				if (rhs->isQuad() || lhs->isQuad()) {
 #if defined NANOJIT_64BIT
 					TESTQ(r, r);
 #endif
 				} else {
 					TEST(r,r);
 				}
-			// No 64-bit immediates so fall-back to below
-			} else if (!rhs->isQuad()) {
+#if defined NANOJIT_64BIT
+			} else if (rhs->isQuad() || lhs->isQuad()) {
+                findRegFor2(GpRegs, lhs, rA, rhs, rB);
+                Register ra = rA->reg;
+                Register rb = rB->reg;
+                CMPQ(ra,rb);
+#endif
+            } else {
 				CMPi(r, c);
-			}
+            }
 		}
 		else
 		{
 			findRegFor2(GpRegs, lhs, rA, rhs, rB);
 			Register ra = rA->reg;
 			Register rb = rB->reg;
-			if (rhs->isQuad()) {
+			if (rhs->isQuad() || lhs->isQuad()) {
 #if defined NANOJIT_64BIT
 				CMPQ(ra, rb);
 #endif
@@ -1006,6 +1010,16 @@ namespace nanojit
 					break;
 				}
 
+#if defined NANOJIT_64BIT
+                case LIR_qiadd:
+                case LIR_qiand:
+                case LIR_qilsh:
+                {
+                    asm_qbinop(ins);
+                    break;
+                }
+#endif
+
 				case LIR_add:
 				case LIR_sub:
 				case LIR_mul:
@@ -1023,12 +1037,9 @@ namespace nanojit
 					RegisterMask allow = GpRegs;
 					if (lhs != rhs && (op == LIR_mul || !rhs->isconst()))
 					{
-#ifdef NANOJIT_IA32
-						if (op == LIR_lsh || op == LIR_rsh || op == LIR_ush)
-							rb = findSpecificRegFor(rhs, ECX);
-						else
-#endif
+						if ((rb = asm_binop_rhs_reg(ins)) == UnknownReg) {
 							rb = findRegFor(rhs, allow);
+						}
 						allow &= ~rmask(rb);
 					}
 
@@ -1241,19 +1252,14 @@ namespace nanojit
 				case LIR_loop:
 				{
 					JMP_long_placeholder(); // jump to SOT	
-#if defined(NJ_VERBOSE)
-                    if (_verbose && _outputCache) {
-                        delete _outputCache->removeLast();
-					    outputf("         jmp   SOT"); 
-                    }
-#endif
+					verbose_only( if (_verbose && _outputCache) { _outputCache->removeLast(); outputf("         jmp   SOT"); } );
 					
 					loopJumps.add(_nIns);
 
                     #ifdef NJ_VERBOSE
                     // branching from this frag to ourself.
                     if (_frago->core()->config.show_stats)
-					#if defined NANOJIT_AMD64
+					#if defined NANOJIT_64BIT
                         LDQi(argRegs[1], intptr_t((Fragment*)_thisfrag));
 					#else
                         LDi(argRegs[1], int((Fragment*)_thisfrag));
