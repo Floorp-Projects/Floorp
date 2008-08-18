@@ -172,6 +172,7 @@ typedef Queue<uint16> SlotList;
 class TypeMap : public Queue<uint8> {
 public:
     void captureGlobalTypes(JSContext* cx, SlotList& slots);
+    void captureMissingGlobalTypes(JSContext* cx, SlotList& slots);
     void captureStackTypes(JSContext* cx, unsigned callDepth);
     bool matches(TypeMap& other);
 };

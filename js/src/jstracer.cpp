@@ -579,7 +579,7 @@ nativeStackSlots(JSContext *cx, unsigned callDepth)
     JS_NOT_REACHED("nativeStackSlots");
 }
 
-/* Capture the typemap for the selected slots of the global object. */
+/* Capture the type map for the selected slots of the global object. */
 void
 TypeMap::captureGlobalTypes(JSContext* cx, SlotList& slots)
 {
@@ -596,7 +596,22 @@ TypeMap::captureGlobalTypes(JSContext* cx, SlotList& slots)
     );
 }
 
-/* Capture the typemap for the currently pending stack frames. */
+/* Capture any missing types in the type map (in case more slots were added in the meantime.) */
+void
+TypeMap::captureMissingGlobalTypes(JSContext* cx, SlotList& slots)
+{
+    unsigned index;
+    while ((index = length()) < slots.length()) {
+        unsigned slot = slots.data()[index];
+        jsval* vp = &STOBJ_GET_SLOT(JS_GetGlobalForObject(cx, cx->fp->scopeChain), slot);
+        uint8 type = getCoercedType(*vp);
+        if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx->fp->script, slot))
+            type = JSVAL_DOUBLE;
+        add(type);
+    }
+}
+
+/* Capture the type map for the currently pending stack frames. */
 void 
 TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
 {
