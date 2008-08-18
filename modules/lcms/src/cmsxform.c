@@ -615,8 +615,13 @@ void MatrixShaperXFORMFloat(_LPcmsTRANSFORM p,
        register LPBYTE In, Out;
        register unsigned int i;
        LPMATSHAPER MatShaper;
+       unsigned Increment;
 
+       // We support a very limited number of configurations for the floatpath
+       CMSASSERT(p->InputFormat == p->OutputFormat);
+       CMSASSERT((p->InputFormat == TYPE_RGB_8) || (p->InputFormat == TYPE_RGBA_8));
 
+       Increment = (p->InputFormat == TYPE_RGB_8) ? 3 : 4;
        In  = (LPBYTE) in;
        Out = (LPBYTE) out;
        MatShaper = p -> SmeltMatShaper;
@@ -758,8 +763,8 @@ void MatrixShaperXFORMFloat(_LPcmsTRANSFORM p,
               Out[2] = RGB_16_TO_8((WORD)tmp[2]);
               }
 
-              In += 3;
-              Out += 3;
+              In += Increment;
+              Out += Increment;
        }
 }
 #endif
