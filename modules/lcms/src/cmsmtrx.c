@@ -51,6 +51,7 @@ double    cdecl MAT3det(LPMAT3 m);
 void      cdecl MAT3eval(LPVEC3 r, LPMAT3 a, LPVEC3 v);
 void      cdecl MAT3toFix(LPWMAT3 r, LPMAT3 v);
 void      cdecl MAT3toFloat(LPFMAT3 r, LPMAT3 v);
+void      cdecl MAT3toFloatTranspose(LPFMAT3 r, LPMAT3 v);
 void      cdecl MAT3evalW(LPWVEC3 r, LPWMAT3 a, LPWVEC3 v);
 void      cdecl MAT3perK(LPMAT3 r, LPMAT3 v, double d);
 void      cdecl MAT3scaleAndCut(LPWMAT3 r, LPMAT3 v, double d);
@@ -859,6 +860,20 @@ void MAT3toFloat(LPFMAT3 r, LPMAT3 v)
        VEC3toFloat(&r -> v[0], &v -> v[0]);
        VEC3toFloat(&r -> v[1], &v -> v[1]);
        VEC3toFloat(&r -> v[2], &v -> v[2]);
+}
+
+void MAT3toFloatTranspose(LPFMAT3 r, LPMAT3 v)
+{
+       unsigned i, j;
+
+       /* for each row of the source. */
+       for (i = 0; i < 3; ++i) 
+
+           /* For element in the row. */
+           for (j = 0; j < 3; ++j) 
+               
+               /* Col=>Row, Row=>Col. */
+               r -> v[j].n[i] = DOUBLE_TO_FLOAT(v -> v[i].n[j]);
 }
 
 void MAT3fromFix(LPMAT3 r, LPWMAT3 v)
