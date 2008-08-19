@@ -1967,7 +1967,8 @@ Checker.prototype = {
     url = url.replace(/%BUILD_ID%/g, gApp.appBuildID);
     url = url.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gABI);
     url = url.replace(/%OS_VERSION%/g, gOSVersion);
-    url = url.replace(/%LOCALE%/g, getLocale());
+    if (/%LOCALE%/.test(url))
+      url = url.replace(/%LOCALE%/g, getLocale());
     url = url.replace(/%CHANNEL%/g, getUpdateChannel());
     url = url.replace(/%PLATFORM_VERSION%/g, gApp.platformVersion);
     url = url.replace(/%DISTRIBUTION%/g,
