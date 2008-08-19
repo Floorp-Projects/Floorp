@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin/"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <tree maxwidth="318" minwidth="318" height="100">
+    <treecols>
+      <treecol width="131px" label="label"/>
+      <treecol width="81px" label="label"/>
+      <treecol width="80px" label="label"/>
+    </treecols>
+  </tree>
+</window>
