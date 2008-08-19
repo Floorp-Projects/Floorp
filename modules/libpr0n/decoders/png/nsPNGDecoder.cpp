@@ -524,8 +524,25 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     png_set_expand(png_ptr);
 
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-    png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, NULL);
-    png_set_expand(png_ptr);
+    int sample_max = (1 << bit_depth);
+    png_color_16p trans_values;
+    png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &trans_values);
+    /* libpng doesn't reject a tRNS chunk with out-of-range samples
+       so we check it here to avoid setting up a useless opacity
+       channel or producing unexpected transparent pixels when using
+       libpng-1.2.19 through 1.2.26 (bug #428045) */
+    if ((color_type == PNG_COLOR_TYPE_GRAY &&
+       (int)trans_values->gray > sample_max) ||
+       (color_type == PNG_COLOR_TYPE_RGB &&
+       ((int)trans_values->red > sample_max ||
+       (int)trans_values->green > sample_max ||
+       (int)trans_values->blue > sample_max)))
+       {
+         /* clear the tRNS valid flag and release tRNS memory */
+         png_free_data(png_ptr, info_ptr, PNG_FREE_TRNS, 0);
+       }
+    else
+       png_set_expand(png_ptr);
   }
 
   if (bit_depth == 16)
@@ -603,7 +620,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (channels == 2 || channels == 4) {
     /* check if alpha is coming from a tRNS chunk and is binary */
     if (num_trans) {
-      /* if it's not a indexed color image, tRNS means binary */
+      /* if it's not an indexed color image, tRNS means binary */
       if (color_type == PNG_COLOR_TYPE_PALETTE) {
         for (int i=0; i<num_trans; i++) {
           if ((trans[i] != 0) && (trans[i] != 255)) {
