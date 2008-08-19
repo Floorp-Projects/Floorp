@@ -83,12 +83,12 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
+  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect);
   virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM();
-  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
+  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
 
   // nsSVGContainerFrame methods:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
@@ -153,7 +153,7 @@ nsSVGInnerSVGFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
+nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
 {
   gfxContextAutoSaveRestore autoSR;
 
@@ -250,8 +250,8 @@ nsSVGInnerSVGFrame::GetOverrideCTM()
   return matrix;
 }
 
-NS_IMETHODIMP
-nsSVGInnerSVGFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
+NS_IMETHODIMP_(nsIFrame*)
+nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
   if (GetStyleDisplay()->IsScrollableOverflow()) {
     float clipX, clipY, clipWidth, clipHeight;
@@ -266,13 +266,13 @@ nsSVGInnerSVGFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 
     if (!nsSVGUtils::HitTestRect(clipTransform,
                                  clipX, clipY, clipWidth, clipHeight,
-                                 x, y)) {
-      *hit = nsnull;
-      return NS_OK;
+                                 PresContext()->AppUnitsToDevPixels(aPoint.x),
+                                 PresContext()->AppUnitsToDevPixels(aPoint.y))) {
+      return nsnull;
     }
   }
 
-  return nsSVGInnerSVGFrameBase::GetFrameForPointSVG(x, y, hit);
+  return nsSVGInnerSVGFrameBase::GetFrameForPoint(aPoint);
 }
 
 //----------------------------------------------------------------------
