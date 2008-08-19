@@ -216,6 +216,7 @@ class TraceRecorder {
     nanojit::LIns*          eos_ins;
     nanojit::LIns*          eor_ins;
     nanojit::LIns*          rval_ins;
+    nanojit::LIns*          inner_sp_ins;
     nanojit::SideExit       exit;
 
     bool isGlobal(jsval* p) const;
@@ -312,6 +313,7 @@ public:
     bool isLoopHeader(JSContext* cx) const;
     void closeLoop(nanojit::Fragmento* fragmento);
     void blacklist() { fragment->blacklist(); }
+    void emitTreeCallStackSetup(nanojit::Fragment* inner);
     void emitTreeCall(nanojit::Fragment* inner, nanojit::GuardRecord* lr);
     unsigned getCallDepth() const;
     
