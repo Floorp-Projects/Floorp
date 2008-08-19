@@ -99,13 +99,11 @@ static __inline__ unsigned long long rdtsc(void)
 }
 #elif defined(__x86_64__)
 
-typedef unsigned long long int unsigned long long;
-
-static __inline__ unsigned long long rdtsc(void)
+static __inline__ uint64_t rdtsc(void)
 {
   unsigned hi, lo;
   __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
-  return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+  return ( (uint64_t)lo)|( ((uint64_t)hi)<<32 );
 }
 
 #elif defined(__powerpc__)
@@ -460,8 +458,6 @@ namespace avmplus
         List(GC *_gc, uint32_t _capacity=kInitialCapacity) : data(NULL), len(0), capacity(0)
         {
             ensureCapacity(_capacity);
-            // this is only b/c of a lot API deficiency, probably would be good to support byte/short lists
-            AvmAssert(sizeof(T) >= sizeof(void*));
         }
         
         ~List()
