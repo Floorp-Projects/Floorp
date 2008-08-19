@@ -417,8 +417,6 @@ js_FastCallIteratorNext(JSContext* cx, JSObject* iterobj)
 GuardRecord* FASTCALL
 js_CallTree(InterpState* state, Fragment* f)
 {
-    /* current we can't deal with inner trees that have globals so report an error */
-    JS_ASSERT(!((TreeInfo*)f->vmprivate)->globalSlots.length());
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
     return u.func(state, NULL);
