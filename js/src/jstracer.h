@@ -172,9 +172,8 @@ typedef Queue<uint16> SlotList;
 class TypeMap : public Queue<uint8> {
 public:
     void captureGlobalTypes(JSContext* cx, SlotList& slots);
-    void captureMissingGlobalTypes(JSContext* cx, SlotList& slots);
     void captureStackTypes(JSContext* cx, unsigned callDepth);
-    bool matches(TypeMap& other);
+    bool matches(TypeMap& other) const;
 };
 
 class TreeInfo MMGC_SUBCLASS_DECL {
@@ -183,12 +182,8 @@ public:
     unsigned                maxNativeStackSlots;
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
-    uint32                  globalShape;
-    SlotList                globalSlots;
     TypeMap                 stackTypeMap;
-    TypeMap                 globalTypeMap;
     unsigned                mismatchCount;
-    Queue<nanojit::Fragment*> dependentTrees;
     
     TreeInfo(nanojit::Fragment* _fragment) { 
         fragment = _fragment; 
@@ -199,6 +194,7 @@ extern struct nanojit::CallInfo builtins[];
 
 class TraceRecorder {
     JSContext*              cx;
+    JSTraceMonitor*         traceMonitor;
     JSObject*               globalObj;
     Tracker                 tracker;
     Tracker                 nativeFrameTracker;
