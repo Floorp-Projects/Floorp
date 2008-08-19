@@ -235,19 +235,19 @@ nsSVGTextFrame::GetOverrideCTM()
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::PaintSVG(nsSVGRenderState* aContext, nsIntRect *aDirtyRect)
+nsSVGTextFrame::PaintSVG(nsSVGRenderState* aContext, nsRect *aDirtyRect)
 {
   UpdateGlyphPositioning(PR_TRUE);
   
   return nsSVGTextFrameBase::PaintSVG(aContext, aDirtyRect);
 }
 
-NS_IMETHODIMP_(nsIFrame*)
-nsSVGTextFrame::GetFrameForPoint(const nsPoint &aPoint)
+NS_IMETHODIMP
+nsSVGTextFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
   UpdateGlyphPositioning(PR_TRUE);
   
-  return nsSVGTextFrameBase::GetFrameForPoint(aPoint);
+  return nsSVGTextFrameBase::GetFrameForPointSVG(x, y, hit);
 }
 
 NS_IMETHODIMP

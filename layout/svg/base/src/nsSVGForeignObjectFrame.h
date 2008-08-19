@@ -105,8 +105,8 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect);
-  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
+  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(nsRect) GetCoveredRegion();
   NS_IMETHOD UpdateCoveredRegion();
   NS_IMETHOD InitialUpdate();
@@ -122,8 +122,8 @@ public:
 
   // foreignobject public methods
   /**
-   * @param aPt a point in the app unit coordinate system of the SVG outer frame
-   * Transforms the point to a point in this frame's app unit coordinate system
+   * @param aPt a point in the twips coordinate system of the SVG outer frame
+   * Transforms the point to a point in this frame's twips coordinate system
    */
   nsPoint TransformPointFromOuter(nsPoint aPt);
 
@@ -138,7 +138,7 @@ protected:
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
   void UpdateGraphic();
   already_AddRefed<nsIDOMSVGMatrix> GetTMIncludingOffset();
-  nsresult TransformPointFromOuterPx(const nsPoint &aIn, nsPoint* aOut);
+  nsresult TransformPointFromOuterPx(float aX, float aY, nsPoint* aOut);
   void FlushDirtyRegion();
 
   // If width or height is less than or equal to zero we must disable rendering

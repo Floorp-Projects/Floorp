@@ -247,7 +247,7 @@ nsSVGUtils::GetFontXHeight(nsIContent *aContent)
 void
 nsSVGUtils::UnPremultiplyImageDataAlpha(PRUint8 *data, 
                                         PRInt32 stride,
-                                        const nsIntRect &rect)
+                                        const nsRect &rect)
 {
   for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
@@ -273,7 +273,7 @@ nsSVGUtils::UnPremultiplyImageDataAlpha(PRUint8 *data,
 void
 nsSVGUtils::PremultiplyImageDataAlpha(PRUint8 *data, 
                                       PRInt32 stride,
-                                      const nsIntRect &rect)
+                                      const nsRect &rect)
 {
   for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
@@ -296,7 +296,7 @@ nsSVGUtils::PremultiplyImageDataAlpha(PRUint8 *data,
 void
 nsSVGUtils::ConvertImageDataToLinearRGB(PRUint8 *data, 
                                         PRInt32 stride,
-                                        const nsIntRect &rect)
+                                        const nsRect &rect)
 {
   for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
@@ -315,7 +315,7 @@ nsSVGUtils::ConvertImageDataToLinearRGB(PRUint8 *data,
 void
 nsSVGUtils::ConvertImageDataFromLinearRGB(PRUint8 *data, 
                                           PRInt32 stride,
-                                          const nsIntRect &rect)
+                                          const nsRect &rect)
 {
   for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
@@ -919,7 +919,7 @@ nsSVGUtils::RemoveObserver(nsISupports *aObserver, nsISupports *aTarget)
 
 void
 nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
-                                  nsIntRect *aDirtyRect,
+                                  nsRect *aDirtyRect,
                                   nsIFrame *aFrame)
 {
   nsISVGChildFrame *svgChildFrame;
@@ -940,13 +940,11 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
 
   /* Check if we need to draw anything */
   if (aDirtyRect && svgChildFrame->HasValidCoveredRect()) {
-    nsRect rect = *aDirtyRect;
-    rect.ScaleRoundOut(aFrame->PresContext()->AppUnitsPerDevPixel());
     if (effectProperties.mFilter) {
-      if (!rect.Intersects(FindFilterInvalidation(aFrame, aFrame->GetRect())))
+      if (!aDirtyRect->Intersects(FindFilterInvalidation(aFrame, aFrame->GetRect())))
         return;
     } else {
-      if (!rect.Intersects(aFrame->GetRect()))
+      if (!aDirtyRect->Intersects(aFrame->GetRect()))
         return;
     }
   }
@@ -1063,7 +1061,7 @@ nsSVGUtils::UpdateEffects(nsIFrame *aFrame)
 }
 
 PRBool
-nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
+nsSVGUtils::HitTestClip(nsIFrame *aFrame, float x, float y)
 {
   nsSVGEffects::EffectProperties props =
     nsSVGEffects::GetEffectProperties(aFrame);
@@ -1081,11 +1079,12 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
   CallQueryInterface(aFrame, &SVGFrame);
 
   nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM(aFrame);
-  return clipPathFrame->ClipHitTest(SVGFrame, matrix, aPoint);
+  return clipPathFrame->ClipHitTest(SVGFrame, matrix, x, y);
 }
 
-nsIFrame *
-nsSVGUtils::HitTestChildren(nsIFrame *aFrame, const nsPoint &aPoint)
+void
+nsSVGUtils::HitTestChildren(nsIFrame *aFrame, float x, float y,
+                            nsIFrame **aResult)
 {
   // XXX: The frame's children are linked in a singly-linked list in document
   // order. If we were to hit test the children in this order we would need to
@@ -1099,10 +1098,10 @@ nsSVGUtils::HitTestChildren(nsIFrame *aFrame, const nsPoint &aPoint)
   // Note: While the child list pointers are reversed, any method which walks
   // the list would only encounter a single child!
 
+  *aResult = nsnull;
+
   nsIFrame* current = nsnull;
   nsIFrame* next = aFrame->GetFirstChild(nsnull);
-
-  nsIFrame* result = nsnull;
 
   // reverse sibling pointers
   while (next) {
@@ -1117,9 +1116,9 @@ nsSVGUtils::HitTestChildren(nsIFrame *aFrame, const nsPoint &aPoint)
     nsISVGChildFrame* SVGFrame;
     CallQueryInterface(current, &SVGFrame);
     if (SVGFrame) {
-       result = SVGFrame->GetFrameForPoint(aPoint);
-       if (result)
-         break;
+      if (NS_SUCCEEDED(SVGFrame->GetFrameForPointSVG(x, y, aResult)) &&
+          *aResult)
+          break;
     }
     // restore current frame's sibling pointer
     nsIFrame* temp = current->GetNextSibling();
@@ -1136,10 +1135,8 @@ nsSVGUtils::HitTestChildren(nsIFrame *aFrame, const nsPoint &aPoint)
     current = temp;
   }
 
-  if (result && !HitTestClip(aFrame, aPoint))
-    result = nsnull;
-
-  return result;
+  if (*aResult && !HitTestClip(aFrame, x, y))
+    *aResult = nsnull;
 }
 
 nsRect
@@ -1162,21 +1159,22 @@ nsSVGUtils::GetCoveredRegion(const nsFrameList &aFrames)
 }
 
 nsRect
-nsSVGUtils::ToAppPixelRect(nsPresContext *aPresContext,
-                           double xmin, double ymin,
-                           double xmax, double ymax)
+nsSVGUtils::ToBoundingPixelRect(double xmin, double ymin,
+                                double xmax, double ymax)
 {
-  return ToAppPixelRect(aPresContext,
-                        gfxRect(xmin, ymin, xmax - xmin, ymax - ymin));
+  return nsRect(nscoord(floor(xmin)),
+                nscoord(floor(ymin)),
+                nscoord(ceil(xmax) - floor(xmin)),
+                nscoord(ceil(ymax) - floor(ymin)));
 }
 
 nsRect
-nsSVGUtils::ToAppPixelRect(nsPresContext *aPresContext, const gfxRect& rect)
+nsSVGUtils::ToBoundingPixelRect(const gfxRect& rect)
 {
-  return nsRect(aPresContext->DevPixelsToAppUnits(NSToIntFloor(rect.X())),
-                aPresContext->DevPixelsToAppUnits(NSToIntFloor(rect.Y())),
-                aPresContext->DevPixelsToAppUnits(NSToIntCeil(rect.XMost()) - NSToIntFloor(rect.X())),
-                aPresContext->DevPixelsToAppUnits(NSToIntCeil(rect.YMost()) - NSToIntFloor(rect.Y())));
+  return nsRect(nscoord(floor(rect.X())),
+                nscoord(floor(rect.Y())),
+                nscoord(ceil(rect.XMost()) - floor(rect.X())),
+                nscoord(ceil(rect.YMost()) - floor(rect.Y())));
 }
 
 gfxIntSize
