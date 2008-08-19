@@ -45,6 +45,7 @@
 #include "nsIDOMEventTarget.h" 
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIDOMDragEvent.h"
 #include "nsISelection.h"
 #include "nsCRT.h"
 #include "nsServiceManagerUtils.h"
@@ -162,10 +163,6 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsIDOMDocument> destdomdoc; 
   rv = GetDocument(getter_AddRefs(destdomdoc)); 
   if (NS_FAILED(rv)) return rv;
-
-  // transferable hooks
-  if (!nsEditorHookUtils::DoAllowDropHook(destdomdoc, aDropEvent, dragSession))
-    return NS_OK;
 
   // Get the nsITransferable interface for getting the data from the drop
   nsCOMPtr<nsITransferable> trans;
@@ -301,9 +298,6 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     if (NS_FAILED(rv)) return rv;
     if (!trans) return NS_OK; // NS_ERROR_FAILURE; Should we fail?
 
-    if (!nsEditorHookUtils::DoInsertionHook(destdomdoc, aDropEvent, trans))
-      return NS_OK;
-
     // Beware! This may flush notifications via synchronous
     // ScrollSelectionIntoView.
     rv = InsertTextFromTransferable(trans, newSelectionParent, newSelectionOffset, deleteSelection);
@@ -363,13 +357,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDr
     }
   }
 
-  if (NS_FAILED(res)) return res;
-  if (!*aCanDrag) return NS_OK;
-
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  GetDocument(getter_AddRefs(domdoc));
-  *aCanDrag = nsEditorHookUtils::DoAllowDragHook(domdoc, aDragEvent);
-  return NS_OK;
+  return res;
 }
 
 NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
@@ -399,8 +387,6 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
   // check our transferable hooks (if any)
   nsCOMPtr<nsIDOMDocument> domdoc;
   GetDocument(getter_AddRefs(domdoc));
-  if (!nsEditorHookUtils::DoDragHook(domdoc, aDragEvent, trans))
-    return NS_OK;
 
   /* invoke drag */
   nsCOMPtr<nsIDOMEventTarget> eventTarget;
@@ -417,9 +403,9 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
   // in some cases we'll want to cut rather than copy... hmmmmm...
   flags = nsIDragService::DRAGDROP_ACTION_COPY + nsIDragService::DRAGDROP_ACTION_MOVE;
 
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aDragEvent));
+  nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aDragEvent));
   rv = dragService->InvokeDragSessionWithSelection(selection, transferableArray,
-                                                   flags, mouseEvent);
+                                                   flags, dragEvent, nsnull);
   if (NS_FAILED(rv)) return rv;
 
   aDragEvent->StopPropagation();
