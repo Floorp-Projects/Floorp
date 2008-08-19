@@ -1,0 +1,27 @@
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" 
+     xmlns="http://www.w3.org/2000/svg"
+     onload="boom();">
+
+  <script type="text/javascript">
+  
+  function boom()
+  {
+    var a = document.getElementById("a");
+    var b = document.getElementById("b");
+    var d = document.getElementById("d");
+
+    d.appendChild(b);
+    a.appendChild(document.createTextNode("A"));
+  }
+
+  </script>
+
+  <g id="a"></g>
+
+  <use xlink:href="#a" id="b"/>
+
+  <use xlink:href="#d">
+    <g id="d"/>
+  </use>
+  
+</svg>

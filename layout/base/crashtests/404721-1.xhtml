@@ -1,0 +1,17 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function boom()
+{
+  var s = document.getElementById("s");
+  s.parentNode.removeChild(s);
+}
+</script>
+</head>
+
+<body onload="boom();">
+
+<div style="-moz-column-width: 23px;"><div style="padding: 5px;"><span id="s"><div style="float: left;"><div style="width: 100px; height: 100px;"></div></div></span></div></div>
+                        
+</body>
+</html>
