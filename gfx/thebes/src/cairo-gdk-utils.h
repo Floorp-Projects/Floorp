@@ -52,11 +52,11 @@ CAIRO_BEGIN_DECLS
  * is composited if you call the callback multiple times with the same closure,
  * display and visual during a single cairo_draw_with_gdk call.
  * 
- * @return True on success, False on non-recoverable error
+ * @return True when able to draw, False otherwise
  */
 typedef cairo_bool_t (* cairo_gdk_drawing_callback)
     (void *closure,
-     GdkDrawable * drawable,
+     cairo_surface_t *surface,
      short offset_x, short offset_y,
      GdkRectangle * clip_rects, unsigned int num_rects);
 
@@ -136,7 +136,6 @@ typedef enum {
  * a surface for it.
  */
 void cairo_draw_with_gdk (cairo_t *cr,
-                          GdkDrawable * drawable,
                           cairo_gdk_drawing_callback callback,
                           void * closure,
                           unsigned int width, unsigned int height,

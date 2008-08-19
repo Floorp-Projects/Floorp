@@ -20,6 +20,8 @@
  *
  * Contributor(s):
  *   rocallahan@novell.com
+ *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -204,6 +206,7 @@ _draw_with_xlib_direct (cairo_t *cr,
     Screen *screen;
     Visual *visual;
     cairo_bool_t have_rectangular_clip;
+    cairo_bool_t ret;
 
     target = cairo_get_group_target (cr);
     cairo_surface_get_device_offset (target, &device_offset_x, &device_offset_y);
@@ -301,11 +304,12 @@ _draw_with_xlib_direct (cairo_t *cr,
     /* we're good to go! */
     CAIRO_GDK_DRAWING_NOTE("TAKING FAST PATH\n");
     cairo_surface_flush (target);
-    callback (closure, GDK_DRAWABLE(gdk_xid_table_lookup(d)), 
-              offset_x, offset_y, rectangles,
-              needs_clip ? rect_count : 0);
-    cairo_surface_mark_dirty (target);
-    return True;
+    ret = callback (closure, target, offset_x, offset_y, rectangles,
+                    needs_clip ? rect_count : 0);
+    if (ret) {
+        cairo_surface_mark_dirty (target);
+    }
+    return ret;
 }
 
 static cairo_surface_t *
@@ -364,7 +368,6 @@ _draw_onto_temp_xlib_surface (cairo_surface_t *temp_xlib_surface,
                               void *closure,
                               double background_gray_value)
 {
-    Drawable d = cairo_xlib_surface_get_drawable (temp_xlib_surface);
     cairo_bool_t result;
 
     cairo_t *cr = cairo_create (temp_xlib_surface);
@@ -377,8 +380,7 @@ _draw_onto_temp_xlib_surface (cairo_surface_t *temp_xlib_surface,
     cairo_surface_flush (temp_xlib_surface);
     /* no clipping is needed because the callback can't draw outside the native
        surface anyway */
-    result = callback (closure, GDK_DRAWABLE(gdk_xid_table_lookup(d)),
-            0, 0, NULL, 0);
+    result = callback (closure, temp_xlib_surface, 0, 0, NULL, 0);
     cairo_surface_mark_dirty (temp_xlib_surface);
     return result;
 }
@@ -492,7 +494,6 @@ _compute_alpha_values (uint32_t *black_data,
 
 void 
 cairo_draw_with_gdk (cairo_t *cr,
-                     GdkDrawable * drawable,
                      cairo_gdk_drawing_callback callback,
                      void * closure,
                      unsigned int width, unsigned int height,
@@ -505,7 +506,7 @@ cairo_draw_with_gdk (cairo_t *cr,
     cairo_surface_t *white_image_surface;
     unsigned char *black_data;
     unsigned char *white_data;
-    Display *dpy = gdk_x11_drawable_get_xdisplay(drawable);
+    Display *dpy = gdk_x11_get_default_xdisplay();
   
     if (result) {
         result->surface = NULL;
@@ -522,7 +523,7 @@ cairo_draw_with_gdk (cairo_t *cr,
     if (_draw_with_xlib_direct (cr, dpy, callback, closure, width, height,
                                 capabilities))
         return;
-  
+
     temp_xlib_surface = _create_temp_xlib_surface (cr, dpy, width, height,
                                                    capabilities);
     if (temp_xlib_surface == NULL)

@@ -80,7 +80,6 @@ _convert_coord_to_unsigned_short (double coord, unsigned short *v)
 
 
 void cairo_draw_with_gdk (cairo_t *cr,
-                           GdkDrawable * drawable,
                            cairo_gdk_drawing_callback callback,
                            void * closure,
                            unsigned int width, unsigned int height,
@@ -101,7 +100,7 @@ void cairo_draw_with_gdk (cairo_t *cr,
     _convert_coord_to_short (matrix.y0 + device_offset_y, &offset_y);
 
     cairo_surface_flush (target);
-    callback (closure, drawable, offset_x, offset_y, NULL, 0);
+    callback (closure, target, offset_x, offset_y, NULL, 0);
     cairo_surface_mark_dirty (target);
 }
 

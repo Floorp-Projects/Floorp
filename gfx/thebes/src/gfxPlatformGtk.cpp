@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,6 +62,7 @@
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #include "gfxXlibSurface.h"
+#include "cairo-xlib.h"
 #endif /* MOZ_X11 */
 
 #ifdef MOZ_DFB
@@ -90,8 +92,6 @@
 PRInt32 gfxPlatformGtk::sDPI = -1;
 gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
 
-static cairo_user_data_key_t cairo_gdk_drawable_key;
-
 #ifndef MOZ_PANGO
 typedef nsDataHashtable<nsStringHashKey, nsRefPtr<FontFamily> > FontTable;
 static FontTable *gPlatformFonts = NULL;
@@ -99,12 +99,11 @@ static FontTable *gPlatformFontAliases = NULL;
 static FT_Library gPlatformFTLibrary = NULL;
 #endif
 
-
-static cairo_user_data_key_t cairo_gdk_pixmap_key;
-static void do_gdk_pixmap_unref (void *data)
+static cairo_user_data_key_t cairo_gdk_drawable_key;
+static void do_gdk_drawable_unref (void *data)
 {
-    GdkPixmap *pmap = (GdkPixmap*)data;
-    gdk_pixmap_unref (pmap);
+    GdkDrawable *d = (GdkDrawable*) data;
+    g_object_unref (d);
 }
 
 gfxPlatformGtk::gfxPlatformGtk()
@@ -212,17 +211,16 @@ gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
             if (newSurface && newSurface->CairoStatus() == 0) {
                 // set up the surface to auto-unref the gdk pixmap when
                 // the surface is released
-                newSurface->SetData(&cairo_gdk_pixmap_key,
-                                    pixmap,
-                                    do_gdk_pixmap_unref);
-            SetGdkDrawable(newSurface, GDK_DRAWABLE(pixmap));
+                SetGdkDrawable(newSurface, GDK_DRAWABLE(pixmap));
             } else {
                 // something went wrong with the surface creation.
                 // Ignore and let's fall back to image surfaces.
-                if (pixmap)
-                    gdk_pixmap_unref(pixmap);
                 newSurface = nsnull;
             }
+
+            // always unref; SetGdkDrawable takes its own ref
+            if (pixmap)
+                g_object_unref(pixmap);
         }
 
         if (!newSurface) {
@@ -722,11 +720,61 @@ gfxPlatformGtk::SetGdkDrawable(gfxASurface *target,
     if (target->CairoStatus())
         return;
 
+    gdk_drawable_ref(drawable);
+
     cairo_surface_set_user_data (target->CairoSurface(),
                                  &cairo_gdk_drawable_key,
                                  drawable,
-                                 NULL);
+                                 do_gdk_drawable_unref);
 }
+
+#ifdef MOZ_X11
+// Look for an existing Colormap that is known to be associated with visual.
+static GdkColormap *
+LookupGdkColormapForVisual(const Screen* screen, const Visual* visual)
+{
+    Display* dpy = DisplayOfScreen(screen);
+    GdkDisplay* gdkDpy = gdk_x11_lookup_xdisplay(dpy);
+    if (!gdkDpy)
+        return NULL;
+
+    // I wish there were a gdk_x11_display_lookup_screen.
+    gint screen_num = 0;
+    for (int s = 0; s < ScreenCount(dpy); ++s) {
+        if (ScreenOfDisplay(dpy, s) == screen) {
+            screen_num = s;
+            break;
+        }
+    }
+    GdkScreen* gdkScreen = gdk_display_get_screen(gdkDpy, screen_num);
+
+    // Common case: the display's default colormap
+    if (visual ==
+        GDK_VISUAL_XVISUAL(gdk_screen_get_system_visual(gdkScreen)))
+        return gdk_screen_get_system_colormap(gdkScreen);    
+
+    // widget/src/gtk2/mozcontainer.c uses gdk_rgb_get_colormap()
+    // which is inherited by child widgets, so this is the visual
+    // expected when drawing directly to widget surfaces or surfaces
+    // created using cairo_surface_create_similar with
+    // CAIRO_CONTENT_COLOR.
+    // gdk_screen_get_rgb_colormap is the generalization of
+    // gdk_rgb_get_colormap for any screen.
+    if (visual ==
+        GDK_VISUAL_XVISUAL(gdk_screen_get_rgb_visual(gdkScreen)))
+        return gdk_screen_get_rgb_colormap(gdkScreen);
+
+    // This is the visual expected on displays with the Composite
+    // extension enabled when the surface has been created using
+    // cairo_surface_create_similar with CAIRO_CONTENT_COLOR_ALPHA,
+    // as happens with non-unit opacity.
+    if (visual ==
+        GDK_VISUAL_XVISUAL(gdk_screen_get_rgba_visual(gdkScreen)))
+        return gdk_screen_get_rgba_colormap(gdkScreen);
+
+    return NULL;
+}
+#endif
 
 GdkDrawable *
 gfxPlatformGtk::GetGdkDrawable(gfxASurface *target)
@@ -734,6 +782,47 @@ gfxPlatformGtk::GetGdkDrawable(gfxASurface *target)
     if (target->CairoStatus())
         return nsnull;
 
-    return (GdkDrawable*) cairo_surface_get_user_data (target->CairoSurface(),
-                                                       &cairo_gdk_drawable_key);
+    GdkDrawable *result;
+
+    result = (GdkDrawable*) cairo_surface_get_user_data (target->CairoSurface(),
+                                                         &cairo_gdk_drawable_key);
+    if (result)
+        return result;
+
+#ifdef MOZ_X11
+    if (target->GetType() == gfxASurface::SurfaceTypeXlib) {
+        gfxXlibSurface *xs = (gfxXlibSurface*) target;
+
+        // try looking it up in gdk's table
+        result = (GdkDrawable*) gdk_xid_table_lookup(xs->XDrawable());
+        if (result) {
+            SetGdkDrawable(target, result);
+            return result;
+        }
+
+        // If all else fails, try doing a foreign_new
+        // but don't bother if we can't get a colormap.
+        // Without a colormap GDK won't know how to draw.
+        Screen *screen = cairo_xlib_surface_get_screen(xs->CairoSurface());
+        Visual *visual = cairo_xlib_surface_get_visual(xs->CairoSurface());
+        GdkColormap *cmap = LookupGdkColormapForVisual(screen, visual);
+        if (cmap == None)
+            return nsnull;
+
+        result = (GdkDrawable*) gdk_pixmap_foreign_new_for_display
+            (gdk_display_get_default(), xs->XDrawable());
+        if (result) {
+            gdk_drawable_set_colormap(result, cmap);
+
+            SetGdkDrawable(target, result);
+            // Release our ref.  The object is held by target.  Caller will
+            // only need to ref if it wants to keep the drawable longer than
+            // target.
+            g_object_unref(result);
+            return result;
+        }
+    }
+#endif
+
+    return nsnull;
 }
