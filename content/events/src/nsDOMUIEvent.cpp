@@ -122,11 +122,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMUIEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 nsPoint nsDOMUIEvent::GetScreenPoint() {
-  if (!mEvent ||
-      (mEvent->eventStructType != NS_MOUSE_EVENT &&
-       mEvent->eventStructType != NS_POPUP_EVENT &&
-       mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       !NS_IS_DRAG_EVENT(mEvent))) {
+  if (!mEvent || 
+       (mEvent->eventStructType != NS_MOUSE_EVENT &&
+        mEvent->eventStructType != NS_POPUP_EVENT &&
+        mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
+        mEvent->eventStructType != NS_DRAG_EVENT)) {
     return nsPoint(0, 0);
   }
 
@@ -147,7 +147,7 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
       (mEvent->eventStructType != NS_MOUSE_EVENT &&
        mEvent->eventStructType != NS_POPUP_EVENT &&
        mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       !NS_IS_DRAG_EVENT(mEvent)) ||
+       mEvent->eventStructType != NS_DRAG_EVENT) ||
       !mPresContext ||
       !((nsGUIEvent*)mEvent)->widget) {
     return mClientPoint;
