@@ -4668,7 +4668,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       break;
 
     case WM_ACTIVATE:
-      if (mEventCallback) {
+      // Check high-order word. If nonzero, this message is about the window
+      // being minimized and must be disregarded here.
+      if (mEventCallback && HIWORD(wParam) == 0) {
         PRInt32 fActive = LOWORD(wParam);
 
         if (WA_INACTIVE == fActive) {
@@ -4785,8 +4787,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         isMozWindowTakingFocus = PR_FALSE;
       }
       if (gJustGotDeactivate) {
+        gJustGotActivate = PR_FALSE;
         gJustGotDeactivate = PR_FALSE;
         result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
+      }
+      else if (gJustGotActivate) {
+        gJustGotActivate = PR_FALSE;
+        result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
       }
       result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
       break;
@@ -4886,25 +4893,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         InitEvent(event);
 
         result = DispatchWindowEvent(&event);
-
-        if (pl.showCmd == SW_SHOWMINIMIZED) {
-          // Deactivate
-          WCHAR className[kMaxClassNameLength];
-          ::GetClassNameW((HWND)wParam, className, kMaxClassNameLength);
-          if (wcscmp(className, kWClassNameUI) &&
-              wcscmp(className, kWClassNameContent) &&
-              wcscmp(className, kWClassNameContentFrame) &&
-              wcscmp(className, kWClassNameDialog) &&
-              wcscmp(className, kWClassNameGeneral)) {
-            isMozWindowTakingFocus = PR_FALSE;
-          }
-          gJustGotDeactivate = PR_FALSE;
-          result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
-        } else if (pl.showCmd == SW_SHOWNORMAL){
-          // Make sure we're active
-          result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-          result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-        }
       }
     }
     break;
