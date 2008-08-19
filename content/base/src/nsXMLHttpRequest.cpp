@@ -2560,6 +2560,8 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
 nsresult
 nsXMLHttpRequest::GetContextForEventHandlers(nsIScriptContext** aContext)
 {
+  nsresult rv = CheckInnerWindowCorrectness();
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_IF_ADDREF(*aContext = mScriptContext);
   return NS_OK;
 }
