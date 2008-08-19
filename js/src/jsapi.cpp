@@ -1768,6 +1768,7 @@ JS_GetScopeChain(JSContext *cx)
 {
     JSStackFrame *fp;
 
+    CHECK_REQUEST(cx);
     fp = cx->fp;
     if (!fp) {
         /*
@@ -4699,6 +4700,7 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     JSTempValueRooter tvr;
     JSObject *obj;
 
+    CHECK_REQUEST(cx);
     if (!script)
         return js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
 
