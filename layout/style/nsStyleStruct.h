@@ -1065,6 +1065,9 @@ struct nsStyleQuotes {
     aContext->FreeToShell(sizeof(nsStyleQuotes), this);
   }
 
+  void SetInitial();
+  void CopyFrom(const nsStyleQuotes& aSource);
+
   nsChangeHint CalcDifference(const nsStyleQuotes& aOther) const;
 #ifdef DEBUG
   static nsChangeHint MaxDifference();

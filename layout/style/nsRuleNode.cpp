@@ -4527,29 +4527,24 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
   COMPUTE_START_INHERITED(Quotes, (), quotes, parentQuotes,
                           Content, contentData)
 
-  // quotes: [string string]+, none, inherit
-  PRUint32 count;
-  nsAutoString  buffer;
+  // quotes: inherit, initial, none, [string string]+
   nsCSSValuePairList* ourQuotes = contentData.mQuotes;
   if (ourQuotes) {
-    nsAutoString  closeBuffer;
-    // FIXME Bug 389406: Implement eCSSUnit_Initial (correctly, unlike
-    // style structs), and remove the "initial" value from ua.css.
     if (eCSSUnit_Inherit == ourQuotes->mXValue.GetUnit()) {
       inherited = PR_TRUE;
-      count = parentQuotes->QuotesCount();
-      if (NS_SUCCEEDED(quotes->AllocateQuotes(count))) {
-        while (0 < count--) {
-          parentQuotes->GetQuotesAt(count, buffer, closeBuffer);
-          quotes->SetQuotesAt(count, buffer, closeBuffer);
-        }
-      }
+      quotes->CopyFrom(*parentQuotes);
+    }
+    else if (eCSSUnit_Initial == ourQuotes->mXValue.GetUnit()) {
+      quotes->SetInitial();
     }
     else if (eCSSUnit_None == ourQuotes->mXValue.GetUnit()) {
       quotes->AllocateQuotes(0);
     }
     else if (eCSSUnit_String == ourQuotes->mXValue.GetUnit()) {
-      count = 0;
+      nsAutoString  buffer;
+      nsAutoString  closeBuffer;
+      PRUint32 count = 0;
+
       while (ourQuotes) {
         count++;
         ourQuotes = ourQuotes->mNext;
