@@ -106,7 +106,7 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
     return NS_ERROR_ALREADY_INITIALIZED;
 
   // options: we only have one option so this is easy
-  int quality = 50;
+  int quality = 92;
   if (aOutputOptions.Length() > 0) {
     // have options string
     const nsString qualityPrefix(NS_LITERAL_STRING("quality="));
@@ -154,6 +154,13 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
 
   jpeg_set_defaults(&cinfo);
   jpeg_set_quality(&cinfo, quality, 1); // quality here is 0-100
+  if (quality >= 90) {
+    int i;
+    for (i=0; i < MAX_COMPONENTS; i++) {
+      cinfo.comp_info[i].h_samp_factor=1;
+      cinfo.comp_info[i].v_samp_factor=1;
+    }
+  }
 
   // set up the destination manager
   jpeg_destination_mgr destmgr;
