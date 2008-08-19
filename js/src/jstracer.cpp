@@ -1260,6 +1260,7 @@ TraceRecorder::snapshot(ExitType exitType)
         *m = isNumber(*vp)
                ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
                : JSVAL_TAG(*vp);
+               if (*m == JSVAL_INT && JSVAL_TAG(*vp) == 2)
         JS_ASSERT((*m != JSVAL_INT) || isInt32(*vp));
         ++m;
     );
@@ -1422,12 +1423,12 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 #endif
 }
 
-/* Record a call to an inner tree. */
+/* Emit code to adjust the stack to match the inner tree's stack expectations. */
 void
-TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
+TraceRecorder::emitTreeCallStackSetup(Fragment* inner)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
-    LIns* inner_sp = lirbuf->sp;
+    inner_sp_ins = lirbuf->sp;
     /* The inner tree expects to be called from the current frame. If the outer tree (this
        trace) is currently inside a function inlining code (calldepth > 0), we have to advance
        the native stack pointer such that we match what the inner trace expects to see. We
@@ -1452,7 +1453,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
                 ti->maxCallDepth * sizeof(FrameInfo));
         guard(true, lir->ins2(LIR_lt, rp_top, eor_ins), OOM_EXIT);
         /* We have enough space, so adjust sp and rp to their new level. */
-        lir->insStorei(inner_sp = lir->ins2i(LIR_piadd, lirbuf->sp,
+        lir->insStorei(inner_sp_ins = lir->ins2i(LIR_piadd, lirbuf->sp,
                 - treeInfo->nativeStackBase /* rebase sp to beginning of outer tree's stack */
                 + sp_adj /* adjust for stack in outer frame inner tree can't see */
                 + ti->nativeStackBase), /* plus the inner tree's stack base */
@@ -1460,12 +1461,19 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
         lir->insStorei(lir->ins2i(LIR_piadd, lirbuf->rp, rp_adj),
                 lirbuf->state, offsetof(InterpState, rp));
     }
+}
+
+/* Record a call to an inner tree. */
+void
+TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
+{
+    TreeInfo* ti = (TreeInfo*)inner->vmprivate;
     /* Invoke the inner tree. */
     LIns* args[] = { lir->insImmPtr(inner), lirbuf->state }; /* reverse order */
     LIns* ret = lir->insCall(F_CallTree, args);
     /* Read back all registers, in case the called tree changed any of them. */
     SideExit* exit = lr->exit;
-    import(ti, inner_sp, exit->numGlobalSlots, exit->calldepth,
+    import(ti, inner_sp_ins, exit->numGlobalSlots, exit->calldepth,
            exit->typeMap, exit->typeMap + exit->numGlobalSlots);
     /* Store the guard pointer in case we exit on an unexpected guard */
     lir->insStorei(lir->insImmPtr(lr), lirbuf->state, offsetof(InterpState, nestedExit));
@@ -1771,7 +1779,26 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
     /* does this branch go to an inner loop? */
     Fragment* f = fragmento->getLoop(cx->fp->regs->pc);
     if (nesting_enabled && f && f->code()) {
-        /* call the inner tree */
+        /* We have to emit the tree call stack setup code before we execute the tree, because
+           we sink demotions (i.e. i2f or quad(0)) into side exits and thus if we emit
+           a guard right now, it might see such a demotable instruction and flag it as an
+           integer result in the type map. However, if we decide to call the inner tree,
+           it invalidates many of these instruction reference, since the inner tree can
+           change the values of variables in the scope it was called from (hence the
+           import right after the tree call in emitTreeCall). Taking a snapshot after the
+           tree for code that we logically expect to execute in a state before the tree
+           call is not safe, because after the tree call we can get values on the
+           interpreter stack that might not be in the integer range any more (whereas this
+           was guaranteed prior to the call, for example because that value was a constant
+           integer). Thus, we first do the tree call stack setup (which emits a guard),
+           then do the actually tree call, and then finally emit the actual tree call
+           and stack de-construction code after the call. One additional slight complication
+           is that we won't know which peer fragment js_ExecuteTree chooses until it
+           actually returns to us, so emitTreeCallStackSetup actually always emits the
+           tree call stack setup code with the first fragment. This is safe, however, since
+           the stack layout of all peer fragments is always identical (it depends on the
+           program counter location, which is the same for all peer fragments.) */
+        r->emitTreeCallStackSetup(f);
         GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount);
         if (!lr) {
             js_AbortRecording(cx, oldpc, "Couldn't call inner tree");
