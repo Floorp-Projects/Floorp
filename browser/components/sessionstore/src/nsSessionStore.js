@@ -916,12 +916,11 @@ SessionStoreService.prototype = {
       delete tabData.disallow;
     
     if (this.xulAttributes.length > 0) {
-      var xulattr = Array.filter(aTab.attributes, function(aAttr) {
-        return this.xulAttributes.indexOf(aAttr.name) > -1;
-      }, this).map(function(aAttr) {
-        return aAttr.name + "=" + encodeURI(aAttr.value);
-      });
-      tabData.xultab = xulattr.join(" ");
+      tabData.attributes = {};
+      Array.forEach(aTab.attributes, function(aAttr) {
+        if (this.xulAttributes.indexOf(aAttr.name) > -1)
+          tabData.attributes[aAttr.name] = aAttr.value;
+      }, this);
     }
     
     if (aTab.__SS_extdata)
@@ -1580,12 +1579,15 @@ SessionStoreService.prototype = {
       return (_this.xulAttributes.indexOf(aAttr.name) > -1);
     }).forEach(tab.removeAttribute, tab);
     if (tabData.xultab) {
+      // restore attributes from the legacy Firefox 2.0/3.0 format
       tabData.xultab.split(" ").forEach(function(aAttr) {
         if (/^([^\s=]+)=(.*)/.test(aAttr)) {
           tab.setAttribute(RegExp.$1, decodeURI(RegExp.$2));
         }
       });
     }
+    for (let name in tabData.attributes)
+      tab.setAttribute(name, tabData.attributes[name]);
     
     // notify the tabbrowser that the tab chrome has been restored
     var event = aWindow.document.createEvent("Events");
