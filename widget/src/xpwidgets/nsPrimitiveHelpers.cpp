@@ -67,6 +67,7 @@
 // unicode conversion
 #  include "nsIPlatformCharset.h"
 #include "nsISaveAsCharset.h"
+#include "nsAutoPtr.h"
 
 
 //
@@ -88,7 +89,7 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     nsCOMPtr<nsISupportsCString> primitive =
         do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID);
     if ( primitive ) {
-      const char * start = (const char*)aDataBuff;
+      const char * start = reinterpret_cast<const char*>(aDataBuff);
       primitive->SetData(Substring(start, start + aDataLen));
       NS_ADDREF(*aPrimitive = primitive);
     }
@@ -97,9 +98,21 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     nsCOMPtr<nsISupportsString> primitive =
         do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
     if (primitive ) {
-      // recall that length takes length as characters, not bytes
-      const PRUnichar* start = (const PRUnichar*)aDataBuff;
-      primitive->SetData(Substring(start, start + (aDataLen / 2)));
+      if (aDataLen % 2) { 
+        nsAutoArrayPtr<char> buffer(new char[aDataLen + 1]);
+        if (!NS_LIKELY(buffer))
+          return;
+      
+        memcpy(buffer, aDataBuff, aDataLen);
+        buffer[aDataLen] = 0;
+        const PRUnichar* start = reinterpret_cast<const PRUnichar*>(buffer.get());
+        // recall that length takes length as characters, not bytes
+        primitive->SetData(Substring(start, start + (aDataLen + 1) / 2));
+      } else {
+        const PRUnichar* start = reinterpret_cast<const PRUnichar*>(aDataBuff);
+        // recall that length takes length as characters, not bytes
+        primitive->SetData(Substring(start, start + (aDataLen / 2)));
+      }
       NS_ADDREF(*aPrimitive = primitive);
     }  
   }
