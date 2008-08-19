@@ -647,8 +647,8 @@ nsStreamConverterService::AsyncConvertData(const char *aFromType,
             const char *lContractID = contractIDStr->get();
 
             // create the converter for this from/to pair
-            nsCOMPtr<nsIStreamConverter> converter(do_CreateInstance(lContractID, &rv));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "graph construction problem, built a contractid that wasn't registered");
+            nsCOMPtr<nsIStreamConverter> converter(do_CreateInstance(lContractID));
+            NS_ASSERTION(converter, "graph construction problem, built a contractid that wasn't registered");
 
             nsCAutoString fromStr, toStr;
             rv = ParseFromTo(lContractID, fromStr, toStr);
