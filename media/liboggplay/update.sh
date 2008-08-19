@@ -13,6 +13,7 @@ cp $1/win32/config_win32.h ./include/oggplay/config_win32.h
 cp $1/include/oggplay/oggplay.h ./include/oggplay/oggplay.h
 cp $1/include/oggplay/oggplay_reader.h ./include/oggplay/oggplay_reader.h
 cp $1/README ./README
+cp $1/COPYING ./COPYING
 cp $1/src/liboggplay/oggplay_buffer.c ./src/liboggplay/oggplay_buffer.c
 cp $1/src/liboggplay/oggplay_tcp_reader.h ./src/liboggplay/oggplay_tcp_reader.h
 cp $1/src/liboggplay/oggplay_callback_info.c ./src/liboggplay/oggplay_callback_info.c
