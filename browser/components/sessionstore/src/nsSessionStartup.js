@@ -161,10 +161,18 @@ SessionStartup.prototype = {
     switch (aTopic) {
     case "app-startup": 
       observerService.addObserver(this, "final-ui-startup", true);
+      observerService.addObserver(this, "quit-application", true);
       break;
     case "final-ui-startup": 
       observerService.removeObserver(this, "final-ui-startup");
+      observerService.removeObserver(this, "quit-application");
       this.init();
+      break;
+    case "quit-application":
+      // make sure that we don't init at this point, as that might
+      // unwantedly discard the session (cf. bug 409115)
+      observerService.removeObserver(this, "final-ui-startup");
+      observerService.removeObserver(this, "quit-application");
       break;
     case "domwindowopened":
       var window = aSubject;
