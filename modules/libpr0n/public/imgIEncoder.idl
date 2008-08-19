@@ -88,8 +88,9 @@ interface imgIEncoder : nsIInputStream
   // JPEG:
   // -----
   //
-  // quality=#  --  default: "50"
+  // quality=#  --  default: "92"
   //    Quality of compression, 0-100 (worst-best). 
+  //    Quality >= 90 prevents down-sampling of the color channels.
 
 
   // Possible values for input format (note that not all image formats
