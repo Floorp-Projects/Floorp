@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+﻿/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -117,6 +117,8 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
     mListener = aListener;
 
     mDateTime = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
 
     nsCOMPtr<nsIStringBundleService> sbs =
         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);

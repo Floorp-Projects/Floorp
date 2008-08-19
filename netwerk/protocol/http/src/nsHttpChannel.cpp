@@ -2404,13 +2404,13 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 
     // move the reference of the old location to the new one if the new
     // one has none.
-    nsCOMPtr<nsIURL> newURL = do_QueryInterface(newURI, &rv);
-    if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIURL> newURL = do_QueryInterface(newURI);
+    if (newURL) {
         nsCAutoString ref;
         rv = newURL->GetRef(ref);
         if (NS_SUCCEEDED(rv) && ref.IsEmpty()) {
-            nsCOMPtr<nsIURL> baseURL( do_QueryInterface(mURI, &rv) );
-            if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIURL> baseURL(do_QueryInterface(mURI));
+            if (baseURL) {
                 baseURL->GetRef(ref);
                 if (!ref.IsEmpty())
                     newURL->SetRef(ref);
