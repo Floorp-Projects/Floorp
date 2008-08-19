@@ -85,8 +85,8 @@ protected:
 
 public:
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect);
-  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
+  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
 
   // nsSVGPathGeometryFrame methods:
   virtual PRUint16 GetHittestMask();
@@ -224,7 +224,7 @@ nsSVGImageFrame::GetImageTransform()
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods:
 NS_IMETHODIMP
-nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
+nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
 {
   nsresult rv = NS_OK;
 
@@ -296,8 +296,8 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
   return rv;
 }
 
-NS_IMETHODIMP_(nsIFrame*)
-nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
+NS_IMETHODIMP
+nsSVGImageFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
   if (GetStyleDisplay()->IsScrollableOverflow() && mImageContainer) {
     PRInt32 nativeWidth, nativeHeight;
@@ -308,13 +308,13 @@ nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
 
     if (!nsSVGUtils::HitTestRect(fini,
                                  0, 0, nativeWidth, nativeHeight,
-                                 PresContext()->AppUnitsToDevPixels(aPoint.x),
-                                 PresContext()->AppUnitsToDevPixels(aPoint.y))) {
-      return nsnull;
+                                 x, y)) {
+      *hit = nsnull;
+      return NS_OK;
     }
   }
 
-  return nsSVGPathGeometryFrame::GetFrameForPoint(aPoint);
+  return nsSVGPathGeometryFrame::GetFrameForPointSVG(x, y, hit);
 }
 
 nsIAtom *
