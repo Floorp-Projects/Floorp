@@ -59,8 +59,6 @@
 
 #define ReadWord(W) (W)
 
-#ifndef NSPR_LOCK
-
 /* Implement NativeCompareAndSwap. */
 
 #if defined(_WIN32) && defined(_M_IX86)
@@ -202,6 +200,42 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 #error "JS_HAS_NATIVE_COMPARE_AND_SWAP should be 0 if your platform lacks a compare-and-swap instruction."
 
 #endif /* arch-tests */
+
+#if JS_HAS_NATIVE_COMPARE_AND_SWAP
+
+JSBool
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    return NativeCompareAndSwap(w, ov, nv);
+}
+
+#elif defined(NSPR_LOCK)
+
+# ifdef __GNUC__
+# warning "js_CompareAndSwap is implemented using NSSP lock"
+# endif
+
+JSBool
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    int result;
+    static PRLock *CompareAndSwapLock = JS_NEW_LOCK();
+
+    JS_ACQUIRE_LOCK(CompareAndSwapLock);
+    result = (*w == ov);
+    if (result)
+        *w = nv;
+    JS_RELEASE_LOCK(CompareAndSwapLock);
+    return result;
+}
+
+#else /* !defined(NSPR_LOCK) */
+
+#error "NSPR_LOCK should be on when the platform lacks native compare-and-swap."
+
+#endif
+
+#ifndef NSPR_LOCK
 
 struct JSFatLock {
     int         susp;
