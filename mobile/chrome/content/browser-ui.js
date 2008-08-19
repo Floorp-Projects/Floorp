@@ -135,6 +135,97 @@ var BrowserUI = {
     return items;
   },
 
+  _dragData :  { dragging : false, sY : 0, sTop : 0 },
+
+  _scrollToolbar : function(aEvent) {
+    if (this._dragData.dragging && Browser.content.scrollY == 0) {
+      let toolbar = document.getElementById("toolbar-main");
+      let browser = document.getElementById("browser");
+      let dy = this._dragData.sY - aEvent.screenY;
+
+      let newTop = null;
+      if (dy > 0 && toolbar.top > -toolbar.boxObject.height) {
+        // Scroll the toolbar up unless it is already scrolled up
+        newTop = this._dragData.sTop - dy;
+
+        // Clip the adjustment to just enough to hide the toolbar
+        if (newTop < -toolbar.boxObject.height)
+          newTop = -toolbar.boxObject.height;
+
+        // Reset the browser start point
+        Browser.content.dragData.sX = aEvent.screenX;
+        Browser.content.dragData.sY = aEvent.screenY;
+      }
+      else if (dy < 0 && toolbar.top < 0) {
+        // Scroll the toolbar down unless it is already down
+        newTop = this._dragData.sTop - dy;
+
+        // Clip the adjustment to just enough to fully show the toolbar
+        if (newTop > 0)
+          newTop = 0;
+      }
+
+      // Update the toolbar and browser tops. Stop the mousemove from
+      // getting to the deckbrowser.
+      if (newTop != null) {
+        toolbar.top = newTop;
+        browser.top = newTop + toolbar.boxObject.height;
+
+        aEvent.stopPropagation();
+      }
+    }
+    else {
+      // Reset our start point while the browser is doing its panning
+      this._dragData.sY = aEvent.screenY;
+    }
+  },
+
+  // This function will always show the toolbar
+  _showToolbar : function() {
+    var toolbar = document.getElementById("toolbar-main");
+    var browser = document.getElementById("browser");
+
+    if (toolbar.top == -toolbar.boxObject.height) {
+      // Float the toolbar over content
+      toolbar.top = 0;
+    }
+    else if (toolbar.top < 0) {
+      // Partially showing, so show it completely
+      toolbar.top = 0;
+      browser.top = toolbar.boxObject.height;
+    }
+  },
+
+  // This function will only hide the toolbar if it was floated
+  _hideToolbar : function() {
+    var toolbar = document.getElementById("toolbar-main");
+    var browser = document.getElementById("browser");
+
+    // If we are floating the toolbar, then hide it again
+    if (browser.top == 0) {
+      toolbar.top = -toolbar.boxObject.height;
+    }
+  },
+
+  _sizeControls : function (aEvent) {
+    var rect = document.getElementById("browser-container").getBoundingClientRect();
+    var containerW = rect.right - rect.left;
+    var containerH = rect.bottom - rect.top;
+
+    var browser = document.getElementById("browser");
+    browser.width = containerW;
+    browser.height = containerH;
+
+    var toolbar = document.getElementById("toolbar-main");
+    var sidebar = document.getElementById("browser-controls");
+    var tablist = document.getElementById("tab-list-container");
+    sidebar.left = toolbar.width = containerW;
+    sidebar.height = tablist.height = containerH;
+
+    var popup = document.getElementById("popup_autocomplete");
+    popup.height = containerH - toolbar.boxObject.height;
+  },
+
   init : function() {
     this._caption = document.getElementById("urlbar-caption");
     this._caption.addEventListener("click", this, false);
@@ -151,6 +242,12 @@ var BrowserUI = {
     getBrowser().addEventListener("DOMLinkAdded", this, true);
     Browser.content.addEventListener("overpan", this, false);
     Browser.content.addEventListener("pan", this, true);
+
+    Browser.content.addEventListener("mousedown", this, true);
+    Browser.content.addEventListener("mouseup", this, true);
+    Browser.content.addEventListener("mousemove", this, true);
+
+    window.addEventListener("resize", this, false);
   },
 
   update : function(aState) {
@@ -164,12 +261,15 @@ var BrowserUI = {
     if (aState == TOOLBARSTATE_LOADING) {
       this.show(PANELMODE_URLVIEW);
 
+      toolbar.top = 0;
       toolbar.setAttribute("mode", "loading");
       this._throbber.setAttribute("src", "chrome://browser/skin/images/throbber.gif");
       this._favicon.setAttribute("src", "");
       this._faviconAdded = false;
     }
     else if (aState == TOOLBARSTATE_LOADED) {
+      var browser = document.getElementById("browser");
+      browser.top = toolbar.boxObject.height;
       toolbar.setAttribute("mode", "view");
       this._throbber.setAttribute("src", "");
       if (this._faviconAdded == false) {
@@ -234,13 +334,6 @@ var BrowserUI = {
     getBrowser().loadURI(queryURI, null, null, false);
 
     this.show(PANELMODE_URLVIEW);
-  },
-
-  sizeAutocompletePopup : function () {
-    var rect = document.getElementById("browser-container").getBoundingClientRect();
-    var toolbar = document.getElementById("toolbar-main");
-    var popup = document.getElementById("popup_autocomplete");
-    popup.height = rect.bottom - rect.top - toolbar.boxObject.height;
   },
 
   openDefaultHistory : function () {
@@ -309,12 +402,13 @@ var BrowserUI = {
     var container = document.getElementById("browser-container");
 
     // Make sure the UI elements are sized correctly since the window size can change
-    sidebar.left = container.boxObject.width;
-    sidebar.height = tablist.height = container.boxObject.height;
+    //sidebar.left = toolbar.width = container.boxObject.width;
+    //sidebar.height = tablist.height = container.boxObject.height;
 
     if (aMode == PANELMODE_URLVIEW || aMode == PANELMODE_SIDEBAR ||
         aMode == PANELMODE_TABLIST || aMode == PANELMODE_FULL)
     {
+      this._showToolbar();
       toolbar.setAttribute("mode", "view");
       this._edit.hidden = true;
       this._edit.reallyClosePopup();
@@ -332,6 +426,7 @@ var BrowserUI = {
       tablist.left = tablistTo;
     }
     else if (aMode == PANELMODE_URLEDIT) {
+      this._showToolbar();
       toolbar.setAttribute("mode", "edit");
       this._caption.hidden = true;
       this._edit.hidden = false;
@@ -343,6 +438,7 @@ var BrowserUI = {
       tablist.left = -tablist.boxObject.width;
     }
     else if (aMode == PANELMODE_BOOKMARK) {
+      this._showToolbar();
       toolbar.setAttribute("mode", "view");
       this._edit.hidden = true;
       this._edit.reallyClosePopup();
@@ -356,6 +452,7 @@ var BrowserUI = {
       bookmark.width = container.boxObject.width;
     }
     else if (aMode == PANELMODE_BOOKMARKLIST) {
+      this._showToolbar();
       toolbar.setAttribute("mode", "view");
       this._edit.hidden = true;
       this._edit.reallyClosePopup();
@@ -370,6 +467,7 @@ var BrowserUI = {
       urllist.height = container.boxObject.height;
     }
     else if (aMode == PANELMODE_NONE) {
+      this._hideToolbar();
       sidebar.left = toolbar.boxObject.width;
       tablist.left = -tablist.boxObject.width;
 
@@ -480,6 +578,20 @@ var BrowserUI = {
         this.show(mode);
         break;
       }
+      case "mousedown":
+        this._dragData.dragging = true;
+        this._dragData.sY = aEvent.screenY;
+        this._dragData.sTop = document.getElementById("toolbar-main").top;
+        break;
+      case "mouseup":
+        this._dragData.dragging = false;
+        break;
+      case "mousemove":
+        this._scrollToolbar(aEvent);
+        break;
+      case "resize":
+        this._sizeControls(aEvent);
+        break;
     }
   },
 

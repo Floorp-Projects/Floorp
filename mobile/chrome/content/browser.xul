@@ -51,7 +51,6 @@
 <window id="main-window"
         width="800" height="480"
         onload="Browser.startup();"
-        onresize="BrowserUI.sizeAutocompletePopup();"
         windowtype="navigator:browser"
         title="&brandShortName;"
         titlemodifier="&brandShortName;"
@@ -176,46 +175,46 @@
     </panel>
   </popupset>
 
-  <toolbar id="toolbar-main">
-    <hbox id="urlbar-container" flex="1">
-      <box id="identity-box"
-           onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
-           onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-        <stack id="urlbar-image-stack">
-          <image id="urlbar-throbber" src=""/>
-          <image id="urlbar-favicon" src=""/>
-        </stack>
-      </box>
-      <description id="urlbar-caption" crop="end" flex="1"/>
-      <textbox id="urlbar-edit"
-               type="autocomplete"
-               autocompletesearch="history"
-               enablehistory="false"
-               maxrows="6"
-               completeselectedindex="true"
-               minresultsforpopup="0"
-               flex="1"
-               hidden="true"
-               autocompletepopup="popup_autocomplete"
-               ontextentered="BrowserUI.goToURI();"
-               clickSelectsAll="true"/>
-    </hbox>
-    <hbox id="urlbar-icons">
-      <toolbarbutton id="tool-reload" class="urlbar-icon-button" command="cmd_reload"/>
-      <toolbarbutton id="tool-stop" class="urlbar-icon-button" command="cmd_stop"/>
-      <toolbarbutton id="tool-go" class="urlbar-icon-button" command="cmd_go"/>
-    </hbox>
-  </toolbar>
-
   <stack id="browser-container" flex="1" style="overflow: hidden;">
-    <vbox id="browser">
+    <vbox id="browser" style="-moz-stack-sizing: ignore; width: 800px; height: 480px;" top="60">
       <notificationbox id="notifications" flex="1">
         <deckbrowser id="content" autocompletepopup="popup_autocomplete_content" flex="1"
                      onnewtab="CommandUpdater.doCommand('cmd_newTab');"/>
       </notificationbox>
     </vbox>
 
-    <vbox id="browser-controls" style="-moz-stack-sizing: ignore; width: 80px;" top="0" left="0">
+    <toolbar id="toolbar-main" style="-moz-stack-sizing: ignore; height: 60px" top="0" left="0">
+      <hbox id="urlbar-container" flex="1">
+        <box id="identity-box"
+             onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
+             onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
+          <stack id="urlbar-image-stack">
+            <image id="urlbar-throbber" src=""/>
+            <image id="urlbar-favicon" src=""/>
+          </stack>
+        </box>
+        <description id="urlbar-caption" crop="end" flex="1"/>
+        <textbox id="urlbar-edit"
+                 type="autocomplete"
+                 autocompletesearch="history"
+                 enablehistory="false"
+                 maxrows="6"
+                 completeselectedindex="true"
+                 minresultsforpopup="0"
+                 flex="1"
+                 hidden="true"
+                 autocompletepopup="popup_autocomplete"
+                 ontextentered="BrowserUI.goToURI();"
+                 clickSelectsAll="true"/>
+      </hbox>
+      <hbox id="urlbar-icons">
+        <toolbarbutton id="tool-reload" class="urlbar-icon-button" command="cmd_reload"/>
+        <toolbarbutton id="tool-stop" class="urlbar-icon-button" command="cmd_stop"/>
+        <toolbarbutton id="tool-go" class="urlbar-icon-button" command="cmd_go"/>
+      </hbox>
+    </toolbar>
+
+    <vbox id="browser-controls" style="-moz-stack-sizing: ignore; width: 80px;" top="60" left="0">
       <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
       <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
       <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
@@ -223,18 +222,18 @@
       <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions"/>
     </vbox>
 
-    <vbox id="tab-list-container" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <vbox id="tab-list-container" style="-moz-stack-sizing: ignore;" top="60" left="0">
       <richlistbox id="tab-list" onselect="BrowserUI.selectTab(this.selectedItem);"/>
       <button id="newtab-button" label="+" command="cmd_newTab"/>
     </vbox>
 
-    <vbox id="urllist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <vbox id="urllist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
       <hbox id="urllist-items-container" flex="1">
         <richlistbox id="urllist-items" flex="1"/>
       </hbox>
     </vbox>
 
-    <vbox id="bookmark-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
+    <vbox id="bookmark-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
       <vbox id="bookmark-form">
         <hbox align="start">
           <image id="bookmark-image" src="chrome://browser/skin/images/starred48.png"/>
