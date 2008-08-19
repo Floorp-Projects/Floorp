@@ -1326,9 +1326,11 @@ static void
 js_RecaptureGlobalTypes(JSContext* cx)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-
+    uint32 kshape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+    if (tm->globalShape != kshape)
+        tm->globalSlots->clear();
     /* Re-capture the global shape and the global type map. */
-    tm->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+    tm->globalShape = kshape;
     tm->globalTypeMap->setLength(0);
     tm->globalTypeMap->captureGlobalTypes(cx, *tm->globalSlots);
 }
@@ -1367,10 +1369,6 @@ TraceRecorder::verifyTypeStability()
         }
         ++m
     );
-    /*if (flush) {
-        js_FlushJITCache(cx);
-        js_RecaptureGlobalTypes(cx);
-    }*/
     if (recompile)
         js_TrashTree(cx, fragment);
     return !recompile;
