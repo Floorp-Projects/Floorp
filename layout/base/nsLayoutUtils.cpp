@@ -1260,6 +1260,9 @@ AddRectsForFrame(nsIFrame* aFrame, nsIFrame* aRelativeTo,
     nsRect r;
     nsIFrame* outer = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(aFrame, &r);
     if (outer) {
+      // r is in pixels relative to 'outer', get it into appunits
+      // relative to aRelativeTo
+      r.ScaleRoundOut(1.0/aFrame->PresContext()->AppUnitsPerDevPixel());
       aCallback->AddRect(r + outer->GetOffsetTo(aRelativeTo));
     } else
 #endif
