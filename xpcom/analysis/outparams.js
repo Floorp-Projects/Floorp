@@ -289,7 +289,9 @@ OutparamCheck.prototype.processAssign = function(isn, state) {
         state.assignValue(lhs, makeOutparamAV(rhs), isn);
         return;
     }
-    
+
+    // Cases of this switch that handle something should return from
+    // the function. Anything that does not return is picked up afteward.
     switch (TREE_CODE(rhs)) {
     case INTEGER_CST:
       if (this.outparams.has(lhs)) {
@@ -325,6 +327,20 @@ OutparamCheck.prototype.processAssign = function(isn, state) {
         this.processCall(lhs, rhs, isn, state);
       }
       return;
+
+    case INDIRECT_REF:
+      // If rhs is *outparam and pointer-typed, lhs is NULL iff rhs is
+      // WROTE_NULL. Required for testcase onull.cpp.
+      let v = rhs.operands()[0];
+      if (DECL_P(v) && this.outparams.has(v) && 
+          TREE_CODE(TREE_TYPE(v)) == POINTER_TYPE) {
+        state.update(function(ss) {
+          let val = ss.get(v) == av.WROTE_NULL ? av.ZERO : av.NONZERO;
+          ss.assignValue(lhs, val, isn);
+          return [ ss ];
+        });
+        return;
+      }
     }
 
     // Nothing special -- delegate
