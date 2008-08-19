@@ -1308,6 +1308,11 @@ SinkContext::AddText(const nsAString& aText)
       if (NS_FAILED(rv)) {
         return rv;
       }
+
+      // Go back to the top of the loop so we re-calculate amount and
+      // don't fall through to CopyNewlineNormalizedUnicodeTo with a
+      // zero-length amount (which invalidates mLastTextCharWasCR).
+      continue;
     }
 
     mTextLength +=
