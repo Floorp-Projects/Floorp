@@ -1034,6 +1034,11 @@ SessionStoreService.prototype = {
         else { // to maintain the correct frame order, insert a dummy entry 
           entry.children.push({ url: "about:blank" });
         }
+        // don't try to restore framesets containing wyciwyg URLs (cf. bug 424689 and bug 450595)
+        if (/^wyciwyg:\/\//.test(entry.children[i].url)) {
+          delete entry.children;
+          break;
+        }
       }
     }
     
