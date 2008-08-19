@@ -127,8 +127,8 @@
     <key id="key_downloads" key="J" command="cmd_downloads" modifiers="control"/>
 
     <!-- tabs -->
-    <key id="key_newTab" keycode="T" modifiers="accel" command="cmd_newTab"/>
-    <key id="key_closeTab" keycode="W" modifiers="accel" command="cmd_closeTab"/>
+    <key id="key_newTab" key="T" modifiers="accel" command="cmd_newTab"/>
+    <key id="key_closeTab" key="W" modifiers="accel" command="cmd_closeTab"/>
 
     <!-- find -->
     <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
