@@ -53,6 +53,7 @@
 #include "nsXPCOMCID.h"
 #include "nsServiceManagerUtils.h"
 
+#include "imgCache.h"
 #include "imgContainer.h"
 #include "imgLoader.h"
 #include "imgRequest.h"
@@ -98,6 +99,7 @@
 
 // objects that just require generic constructors
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(imgCache)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
@@ -201,9 +203,9 @@ static NS_METHOD ImageUnregisterProc(nsIComponentManager *aCompMgr,
 static const nsModuleComponentInfo components[] =
 {
   { "image cache",
-    NS_IMGLOADER_CID,
+    NS_IMGCACHE_CID,
     "@mozilla.org/image/cache;1",
-    imgLoaderConstructor, },
+    imgCacheConstructor, },
   { "image container",
     NS_IMGCONTAINER_CID,
     "@mozilla.org/image/container;1",
@@ -313,14 +315,14 @@ static const nsModuleComponentInfo components[] =
 PR_STATIC_CALLBACK(nsresult)
 imglib_Initialize(nsIModule* aSelf)
 {
-  imgLoader::InitCache();
+  imgCache::Init();
   return NS_OK;
 }
 
 PR_STATIC_CALLBACK(void)
 imglib_Shutdown(nsIModule* aSelf)
 {
-  imgLoader::Shutdown();
+  imgCache::Shutdown();
 }
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsImageLib2Module, components,
