@@ -203,25 +203,25 @@ public:
    */
   static void UnPremultiplyImageDataAlpha(PRUint8 *data, 
                                           PRInt32 stride, 
-                                          const nsIntRect &rect);
+                                          const nsRect &rect);
   /*
    * Converts image data from unpremultipled to premultiplied alpha
    */
   static void PremultiplyImageDataAlpha(PRUint8 *data, 
                                         PRInt32 stride, 
-                                        const nsIntRect &rect);
+                                        const nsRect &rect);
   /*
    * Converts image data from premultiplied sRGB to Linear RGB
    */
   static void ConvertImageDataToLinearRGB(PRUint8 *data, 
                                           PRInt32 stride, 
-                                          const nsIntRect &rect);
+                                          const nsRect &rect);
   /*
    * Converts image data from LinearRGB to premultiplied sRGB
    */
   static void ConvertImageDataFromLinearRGB(PRUint8 *data, 
                                             PRInt32 stride, 
-                                            const nsIntRect &rect);
+                                            const nsRect &rect);
 
   /*
    * Report a localized error message to the error console.
@@ -322,7 +322,7 @@ public:
 
   /**
    * Get the covered region for a frame. Return null if it's not an SVG frame.
-   * @param aRect gets a rectangle in app units
+   * @param aRect gets a rectangle in *pixels*
    * @return the outer SVG frame which aRect is relative to
    */
   static nsIFrame*
@@ -341,7 +341,7 @@ public:
    * redrawn, in frame offset pixel coordinates */
   static void
   PaintChildWithEffects(nsSVGRenderState *aContext,
-                        nsIntRect *aDirtyRect,
+                        nsRect *aDirtyRect,
                         nsIFrame *aFrame);
 
   /**
@@ -352,14 +352,16 @@ public:
   UpdateEffects(nsIFrame *aFrame);
 
   /* Hit testing - check if point hits the clipPath of indicated
-   * frame.  Returns true if no clipPath set. */
+   * frame.  (x,y) are specified in device pixels relative to the
+   * origin of the outer svg frame.  Returns true if no clipPath
+   * set. */
   static PRBool
-  HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint);
-  
-  /* Hit testing - check if point hits any children of frame. */
+  HitTestClip(nsIFrame *aFrame, float x, float y);
 
-  static nsIFrame *
-  HitTestChildren(nsIFrame *aFrame, const nsPoint &aPoint);
+  /* Hit testing - check if point hits any children of frame. */
+  
+  static void
+  HitTestChildren(nsIFrame *aFrame, float x, float y, nsIFrame **aResult);
 
   /* Add observation of an nsISVGValue to an nsISVGValueObserver */
   static void
@@ -388,13 +390,12 @@ public:
   GetCoveredRegion(const nsFrameList &aFrames);
 
   /*
-   * Convert a rect from device pixel units to app pixel units by inflation.
+   * Inflate a floating-point rect to a nsRect
    */
   static nsRect
-  ToAppPixelRect(nsPresContext *aPresContext,
-                 double xmin, double ymin, double xmax, double ymax);
+  ToBoundingPixelRect(double xmin, double ymin, double xmax, double ymax);
   static nsRect
-  ToAppPixelRect(nsPresContext *aPresContext, const gfxRect& rect);
+  ToBoundingPixelRect(const gfxRect& rect);
 
   /*
    * Convert a surface size to an integer for use by thebes

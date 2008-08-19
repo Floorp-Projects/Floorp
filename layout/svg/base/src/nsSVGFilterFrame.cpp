@@ -63,7 +63,7 @@ NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCont
 static nsIntRect
 MapDeviceRectToFilterSpace(const gfxMatrix& aMatrix,
                            const gfxIntSize& aFilterSize,
-                           const nsIntRect* aDeviceRect)
+                           const nsRect* aDeviceRect)
 {
   nsIntRect rect(0, 0, aFilterSize.width, aFilterSize.height);
   if (aDeviceRect) {
@@ -80,8 +80,8 @@ MapDeviceRectToFilterSpace(const gfxMatrix& aMatrix,
 
 nsresult
 nsSVGFilterFrame::CreateInstance(nsISVGChildFrame *aTarget,
-                                 const nsIntRect *aDirtyOutputRect,
-                                 const nsIntRect *aDirtyInputRect,
+                                 const nsRect *aDirtyOutputRect,
+                                 const nsRect *aDirtyInputRect,
                                  nsSVGFilterInstance **aInstance)
 {
   *aInstance = nsnull;
@@ -203,7 +203,7 @@ RestoreTargetState(nsISVGChildFrame *aTarget)
 nsresult
 nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
                               nsISVGChildFrame *aTarget,
-                              const nsIntRect *aDirtyRect)
+                              const nsRect *aDirtyRect)
 {
   nsAutoPtr<nsSVGFilterInstance> instance;
   nsresult rv = CreateInstance(aTarget, aDirtyRect, nsnull, getter_Transfers(instance));
@@ -238,13 +238,10 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget, const nsRect& aRect)
   nsISVGChildFrame *svg;
   CallQueryInterface(aTarget, &svg);
 
-  nscoord p2a = aTarget->PresContext()->AppUnitsPerDevPixel();
   nsRect result = aRect;
-  nsIntRect rect = aRect;
-  rect.ScaleRoundOut(1.0/p2a);
 
   nsAutoPtr<nsSVGFilterInstance> instance;
-  nsresult rv = CreateInstance(svg, nsnull, &rect, getter_Transfers(instance));
+  nsresult rv = CreateInstance(svg, nsnull, &aRect, getter_Transfers(instance));
   if (NS_SUCCEEDED(rv)) {
     if (!instance) {
       // The filter draws nothing, so nothing is dirty.
@@ -265,7 +262,6 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget, const nsRect& aRect)
         nsIntRect deviceRect;
         rv = nsSVGUtils::GfxRectToIntRect(r, &deviceRect);
         if (NS_SUCCEEDED(rv)) {
-          deviceRect.ScaleRoundOut(p2a);
           result = deviceRect;
         }
       }

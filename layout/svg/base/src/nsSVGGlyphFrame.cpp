@@ -297,7 +297,7 @@ nsSVGGlyphFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
+nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
@@ -362,15 +362,17 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsIFrame*)
-nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
+NS_IMETHODIMP
+nsSVGGlyphFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
 #ifdef DEBUG
   //printf("nsSVGGlyphFrame(%p)::GetFrameForPoint\n", this);
 #endif
+  // test for hit:
+  *hit = nsnull;
 
-  if (!mRect.Contains(aPoint))
-    return nsnull;
+  if (!mRect.Contains(nscoord(x), nscoord(y)))
+    return NS_OK;
 
   PRBool events = PR_FALSE;
   switch (GetStyleSVG()->mPointerEvents) {
@@ -403,10 +405,14 @@ nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
       break;
   }
 
-  if (events && ContainsPoint(aPoint))
-    return this;
+  if (!events)
+    return NS_OK;
 
-  return nsnull;
+  PRBool isHit = ContainsPoint(x, y);
+  if (isHit) 
+    *hit = this;
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(nsRect)
@@ -442,7 +448,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
     extent = gfxRect(0, 0, 0, 0);
   }
 
-  mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
+  mRect = nsSVGUtils::ToBoundingPixelRect(extent);
   return NS_OK;
 }
 
@@ -1143,7 +1149,7 @@ nsSVGGlyphFrame::NotifyGlyphMetricsChange()
 }
 
 PRBool
-nsSVGGlyphFrame::ContainsPoint(const nsPoint &aPoint)
+nsSVGGlyphFrame::ContainsPoint(float x, float y)
 {
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
   SetupGlobalTransform(tmpCtx);
@@ -1159,8 +1165,7 @@ nsSVGGlyphFrame::ContainsPoint(const nsPoint &aPoint)
   }
 
   tmpCtx->IdentityMatrix();
-  return tmpCtx->PointInFill(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
-                                      PresContext()->AppUnitsToGfxUnits(aPoint.y)));
+  return tmpCtx->PointInFill(gfxPoint(x, y));
 }
 
 PRBool
