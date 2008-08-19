@@ -457,7 +457,7 @@ jscpucfg$(HOST_BIN_SUFFIX):
 	echo no need to build jscpucfg $<
 else
 jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.cpp Makefile.in
-	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) $(OUTOPTION)$@ $<
+	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) $(HOST_OUTOPTION)$@ $<
 endif
 endif
 
