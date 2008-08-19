@@ -2055,13 +2055,14 @@ extern void
 js_InitJIT(JSTraceMonitor *tm)
 {
     if (!tm->fragmento) {
-        JS_ASSERT(!tm->slotList);
+        JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap);
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         fragmento->assm()->setCallTable(builtins);
         fragmento->pageFree(fragmento->pageAlloc()); // FIXME: prime page cache
         tm->fragmento = fragmento;
-        tm->slotList = new SlotList();
+        tm->globalSlots = new SlotList();
+        tm->globalTypeMap = new TypeMap();
     }
 #if !defined XP_WIN
     debug_only(memset(&stat, 0, sizeof(stat)));
@@ -2083,12 +2084,14 @@ js_FinishJIT(JSTraceMonitor *tm)
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
 #endif
     if (tm->fragmento != NULL) {
-        JS_ASSERT(tm->slotList);
+        JS_ASSERT(tm->globalSlots && tm->globalTypeMap);
         verbose_only(delete tm->fragmento->labels;)
         delete tm->fragmento;
         tm->fragmento = NULL;
-        delete tm->slotList;
-        tm->slotList = NULL;
+        delete tm->globalSlots;
+        tm->globalSlots = NULL;
+        delete tm->globalTypeMap;
+        tm->globalTypeMap = NULL;
     }
 }
 
