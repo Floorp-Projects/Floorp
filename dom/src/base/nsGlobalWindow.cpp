@@ -8737,37 +8737,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
 NS_IMPL_ADDREF_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)
 NS_IMPL_RELEASE_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)
 
-static void TitleConsoleWarning()
-{
-  nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
-  if (console)
-    console->LogStringMessage(NS_LITERAL_STRING("Deprecated property window.title used.  Please use document.title instead.").get());
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::GetTitle(nsAString& aTitle)
-{
-  NS_ERROR("nsIDOMChromeWindow::GetTitle is deprecated, use nsIDOMNSDocument instead");
-  TitleConsoleWarning();
-
-  nsresult rv;
-  nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(mDocument, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return nsdoc->GetTitle(aTitle);
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::SetTitle(const nsAString& aTitle)
-{
-  NS_ERROR("nsIDOMChromeWindow::SetTitle is deprecated, use nsIDOMNSDocument instead");
-  TitleConsoleWarning();
-
-  nsresult rv;
-  nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(mDocument, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return nsdoc->SetTitle(aTitle);
-}
-
 NS_IMETHODIMP
 nsGlobalChromeWindow::GetWindowState(PRUint16* aWindowState)
 {
