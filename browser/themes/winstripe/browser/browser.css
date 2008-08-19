@@ -2073,21 +2073,17 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-appearance: none;
   background: rgba(0, 0, 0, .8) url(KUI-background.png) repeat-x;
   color: white;
-  border: 3px solid #ccc;
-  -moz-border-top-colors: #ccc #ccc black;
-  -moz-border-right-colors: #ccc #ccc black;
-  -moz-border-bottom-colors: #ccc #ccc black;
-  -moz-border-left-colors: #ccc #ccc black;
+  border: 1px solid #ccc;
   -moz-border-radius: 10px;
-  margin-top: -3px;
-  margin-left: -3px;
+  margin-top: -1px;
+  margin-left: -1px;
 }
 
 /* ::::: Ctrl-Tab Panel ::::: */
 #ctrlTab-panel {
-  margin-top: -18px;
-  border-bottom-width: 5px;
-  -moz-border-bottom-colors: #ccc #ccc black black black;
+  margin-top: -20px;
+  border-bottom-width: 9px;
+  -moz-border-bottom-colors: #ccc black black black black black black black black;
 }
 
 #ctrlTab-label {
