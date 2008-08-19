@@ -63,6 +63,8 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIScriptSecurityManager.h"
 
+#include "nsICacheVisitor.h"
+
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "plstr.h" // PL_strcasestr(...)
@@ -92,7 +94,7 @@ imgRequest::~imgRequest()
 
 nsresult imgRequest::Init(nsIURI *aURI,
                           nsIRequest *aRequest,
-                          nsICacheEntryDescriptor *aCacheEntry,
+                          imgCacheEntry *aCacheEntry,
                           void *aCacheId,
                           void *aLoadId)
 {
@@ -326,7 +328,7 @@ void imgRequest::RemoveFromCache()
   LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
 
   if (mCacheEntry) {
-    mCacheEntry->Doom();
+    imgLoader::RemoveFromCache(mURI);
     mCacheEntry = nsnull;
   }
 }
@@ -513,13 +515,19 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request,
   mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE;
 
   if (mCacheEntry) {
-    PRUint32 cacheSize = 0;
-    mCacheEntry->GetDataSize(&cacheSize);
+    PRUint32 cacheSize = mCacheEntry->GetDataSize();
 
     PRUint32 imageSize = 0;
     frame->GetImageDataLength(&imageSize);
 
     mCacheEntry->SetDataSize(cacheSize + imageSize);
+
+#ifdef DEBUG_joe
+    nsCAutoString url;
+    mURI->GetSpec(url);
+
+    printf("CACHEPUT: %d %s %d\n", time(NULL), url.get(), cacheSize + imageSize);
+#endif
   }
 
   nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
@@ -633,7 +641,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
           entryDesc->GetExpirationTime(&expiration);
 
           /* set the expiration time on our entry */
-          mCacheEntry->SetExpirationTime(expiration);
+          mCacheEntry->SetExpiryTime(expiration);
         }
       }
     }
@@ -664,9 +672,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
         }
       }
 
-      if (bMustRevalidate) {
-        mCacheEntry->SetMetaDataElement("MustValidateIfExpired", "true");
-      }
+      mCacheEntry->SetMustValidateIfExpired(bMustRevalidate);
     }
   }
 
@@ -738,9 +744,6 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 
   return NS_OK;
 }
-
-
-
 
 /* prototype for this defined below */
 static NS_METHOD sniff_mimetype_callback(nsIInputStream* in, void* closure, const char* fromRawSegment,
