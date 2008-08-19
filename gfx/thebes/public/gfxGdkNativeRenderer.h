@@ -81,7 +81,7 @@ public:
         // visual passed in must be the default visual for dpy's default screen
         DRAW_SUPPORTS_NONDEFAULT_VISUAL = 0x10,
         // If set, then the Screen 'screen' in the callback can be different
-        // from the default Screen of the display passed to 'Draw' and can be
+        // from the default Screen of the default display and can be
         // on a different display.
         DRAW_SUPPORTS_ALTERNATE_SCREEN = 0x20
     };

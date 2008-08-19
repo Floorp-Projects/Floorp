@@ -1730,7 +1730,8 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     // do double-buffering and clipping here
     nsRefPtr<gfxContext> ctx = rc->ThebesContext();
 
-    gfxPlatformGtk::GetPlatform()->SetGdkDrawable(ctx->OriginalSurface(), GDK_DRAWABLE(mDrawingarea->inner_window));
+    gfxPlatformGtk::GetPlatform()->SetGdkDrawable(ctx->OriginalSurface(),
+                                                  GDK_DRAWABLE(mDrawingarea->inner_window));
 
     // clip to the update region
     ctx->Save();
@@ -1800,6 +1801,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                 gfxPlatformGtk::GetPlatform()->SetGdkDrawable(
                         static_cast<gfxASurface *>(bufferPixmapSurface), 
                         GDK_DRAWABLE(bufferPixmap));
+
                 bufferPixmapSurface->SetDeviceOffset(gfxPoint(-boundsRect.x, -boundsRect.y));
                 nsCOMPtr<nsIRenderingContext> newRC;
                 nsresult rv = GetDeviceContext()->
