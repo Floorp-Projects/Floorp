@@ -101,6 +101,7 @@ namespace nanojit {
 class TraceRecorder;
 extern "C++" template<typename T> class Queue;
 typedef Queue<uint16> SlotList;
+class TypeMap;
 
 # define CLS(T)  T*
 #else
@@ -127,8 +128,9 @@ typedef struct JSFragmentCacheEntry {
 typedef struct JSTraceMonitor {
     CLS(nanojit::Fragmento) fragmento;
     CLS(TraceRecorder)      recorder;
-    CLS(SlotList)           slotList;
     uint32                  globalShape;
+    CLS(SlotList)           globalSlots;
+    CLS(TypeMap)            globalTypeMap;
     JSFragmentCacheEntry    fcache[JS_FRAGMENT_CACHE_SIZE];
 } JSTraceMonitor;
 
