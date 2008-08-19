@@ -3991,6 +3991,8 @@ nsBrowserStatusHandler.prototype =
         // Update starring UI
         PlacesStarButton.updateState();
       }
+
+      FullZoom.onLocationChange(aLocationURI);
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);
 
@@ -4013,15 +4015,6 @@ nsBrowserStatusHandler.prototype =
     } 
     else
       this.asyncUpdateUI();
-
-    // Catch exceptions until bug 376222 gets fixed so we don't hork
-    // other progress listeners if this call throws an exception.
-    try {
-      FullZoom.onLocationChange(aLocationURI);
-    }
-    catch(ex) {
-      Components.utils.reportError(ex);
-    }
   },
   
   asyncUpdateUI : function () {
