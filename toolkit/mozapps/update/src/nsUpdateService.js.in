@@ -322,18 +322,18 @@ function closeSafeOutputStream(fos) {
  * @returns A human readable status text string
  */
 function getStatusTextFromCode(code, defaultCode) {
-  var sbs =
-      Components.classes["@mozilla.org/intl/stringbundle;1"].
-      getService(Components.interfaces.nsIStringBundleService);
-  var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
-  var reason = updateBundle.GetStringFromName("checker_error-" + defaultCode);
+  const updateBundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                 .getService(Components.interfaces.nsIStringBundleService)
+                                 .createBundle(URI_UPDATES_PROPERTIES);
+  var reason;
   try {
     reason = updateBundle.GetStringFromName("checker_error-" + code);
     LOG("General", "Transfer Error: " + reason + ", code: " + code);
   }
   catch (e) {
     // Use the default reason
-    LOG("General", "Transfer Error: " + reason + ", code: " + defaultCode);
+    reason = updateBundle.GetStringFromName("checker_error-" + defaultCode);
+    LOG("General", "Transfer Error: " + reason + ", default code: " + defaultCode);
   }
   return reason;
 }
@@ -2099,13 +2099,20 @@ Checker.prototype = {
     LOG("Checker", "onError: error during load");
 
     var request = event.target;
+
+    // Set a default value of |0|,
+    // then if |request.status| is defined (but) to this (useless) value,
+    // we will not use it.
+    var status = 0;
     try {
-      var status = request.status;
+      status = request.status;
     }
     catch (e) {
-      var req = request.channel.QueryInterface(Components.interfaces.nsIRequest);
-      status = req.status;
     }
+
+    if (status == 0)
+      status = request.channel.QueryInterface(Components.interfaces.nsIRequest)
+                              .status;
 
     // If we can't find an error string specific to this status code,
     // just use the 200 message from above, which means everything
@@ -2552,8 +2559,9 @@ Downloader.prototype = {
         // TODO: use more informative error code here
         status = Components.results.NS_ERROR_UNEXPECTED;
 
-        var message = getStatusTextFromCode("verification_failed",
-          "verification_failed");
+        // Yes, this code is a string.
+        const vfCode = "verification_failed";
+        var message = getStatusTextFromCode(vfCode, vfCode);
         this._update.statusText = message;
 
         if (this._update.isCompleteUpdate)
