@@ -44,7 +44,7 @@
 var tabPreviews = {
   aspectRatio: 0.6875, // 16:11
   init: function () {
-    this.width = Math.ceil(screen.availWidth / 7.5);
+    this.width = Math.ceil(screen.availWidth / 7);
     this.height = Math.round(this.width * this.aspectRatio);
 
     gBrowser.tabContainer.addEventListener("TabSelect", this, false);
@@ -137,7 +137,7 @@ var ctrlTab = {
   },
   get iconSize () {
     delete this.iconSize;
-    return this.iconSize = Math.round(tabPreviews.height / 4);
+    return this.iconSize = Math.max(16, Math.round(tabPreviews.height / 5));
   },
   get closeCharCode () {
     delete this.closeCharCode;
@@ -207,9 +207,8 @@ var ctrlTab = {
     icon.setAttribute("class", "ctrlTab-icon");
     icon.setAttribute("height", this.iconSize);
     icon.setAttribute("width", this.iconSize);
-    icon.setAttribute("transform", "skewY(10)");
-    icon.setAttribute("x", - this.iconSize / 3);
-    icon.setAttribute("y", tabPreviews.height * .9 - this.iconSize);
+    icon.setAttribute("x", - this.iconSize * .2);
+    icon.setAttribute("y", tabPreviews.height - this.iconSize * 1.2);
 
     var thumbnail_and_icon = document.createElementNS(SVGNS, "g");
     thumbnail_and_icon.appendChild(thumbnail);
