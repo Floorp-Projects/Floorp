@@ -118,6 +118,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug371576-5.html \
 		test_bug372086.html \
 		test_bug372964.html \
+		test_bug372964-2.html \
 		test_bug373181.xhtml \
 		test_bug375314.html \
 		test_bug378969.html \
