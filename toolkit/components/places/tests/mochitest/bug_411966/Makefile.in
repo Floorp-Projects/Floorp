@@ -12,7 +12,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is Bug 411966 test code.
 #
 # The Initial Developer of the Original Code is
 # Mozilla.org.
@@ -20,7 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#     Boris Zbarsky <bzbarsky@mit.edu>  (Original author)
+#   Marco Bonardo <mak77@bonardo.net> (Original Author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,41 +36,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir	= toolkit/components/places/tests
+relativesrcdir = toolkit/components/places/tests/bug_411966
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE		= test_places
-
-XPCSHELL_TESTS = \
-                 autocomplete \
-                 bookmarks \
-                 queries \
-                 unit \
-                 $(NULL)
-
-# Simple MochiTests
-MOCHI_TESTS = mochitest/test_bug_405924.html \
-							mochitest/test_bug_411966.html \
-							$(NULL)
-
-MOCHI_CONTENT = mochitest/prompt_common.js \
-								$(NULL)
-
-ifdef MOZ_MOCHITEST
-DIRS = \
-	chrome \
-	mochitest/bug_411966 \
-# These tests are disabled for the time being, see bug 416066
-#	browser \
-	$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
-libs:: $(MOCHI_TESTS) $(MOCHI_CONTENT)
+_HTTP_FILES	= \
+		redirect.js \
+		TypedPage.htm \
+		ClickedPage.htm \
+		ClickedPage.htm^headers^ \
+		TempRedirectPage.htm \
+		TempRedirectPage.htm^headers^ \
+		PermRedirectPage.htm \
+		$(NULL)
+
+libs:: $(_HTTP_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
