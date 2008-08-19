@@ -79,6 +79,10 @@
 #define CAIRO_INT_STATUS_SUCCESS ((cairo_int_status_t) CAIRO_STATUS_SUCCESS)
 #endif
 
+/* Qt::PenStyle optimization based on the assumption that dots are 1*w and dashes are 3*w. */
+#define DOT_LENGTH  1.0
+#define DASH_LENGTH 3.0
+
 typedef struct {
     cairo_surface_t base;
 
@@ -1062,6 +1066,28 @@ struct PatternToPenConverter {
 	mPen->setMiterLimit (style->miter_limit);
 
 	if (style->dash && style->num_dashes) {
+	    Qt::PenStyle pstyle = Qt::NoPen;
+
+	    if (style->num_dashes == 2) {
+		if ((style->dash[0] == style->line_width &&
+		     style->dash[1] == style->line_width && style->line_width <= 2.0) ||
+		    (style->dash[0] == 0.0 &&
+		     style->dash[1] == style->line_width * 2 && cap == Qt::RoundCap))
+		{
+		    pstyle = Qt::DotLine;
+		} else if (style->dash[0] == style->line_width * DASH_LENGTH &&
+			   style->dash[1] == style->line_width * DASH_LENGTH &&
+			   cap == Qt::FlatCap)
+		{
+		    pstyle = Qt::DashLine;
+		}
+	    }
+
+	    if (pstyle != Qt::NoPen) {
+		mPen->setStyle(pstyle);
+		return;
+	    }
+
 	    unsigned int odd_dash = style->num_dashes % 2;
 
 	    QVector<qreal> dashes (odd_dash ? style->num_dashes * 2 : style->num_dashes);
