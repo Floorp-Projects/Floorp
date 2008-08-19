@@ -205,7 +205,7 @@ nsSVGMarkerFrame::RegionMark(nsSVGPathGeometryFrame *aMarkedFrame,
   // has already been used in calculating the current mark region, and
   // the document has a marker reference loop.
   if (mInUse)
-    return nsRect(0,0,0,0);
+    return nsRect();
 
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 

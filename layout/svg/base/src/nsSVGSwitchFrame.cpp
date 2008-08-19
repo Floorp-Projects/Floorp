@@ -66,8 +66,8 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsSVGRenderState* aContext, nsIntRect *aDirtyRect);
-  NS_IMETHODIMP_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
+  NS_IMETHOD PaintSVG(nsSVGRenderState* aContext, nsRect *aDirtyRect);
+  NS_IMETHOD GetFrameForPointSVG(float aX, float aY, nsIFrame** aResult);  
   NS_IMETHODIMP_(nsRect) GetCoveredRegion();
   NS_IMETHOD UpdateCoveredRegion();
   NS_IMETHOD InitialUpdate();
@@ -100,7 +100,7 @@ nsSVGSwitchFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsSVGSwitchFrame::PaintSVG(nsSVGRenderState* aContext, nsIntRect *aDirtyRect)
+nsSVGSwitchFrame::PaintSVG(nsSVGRenderState* aContext, nsRect *aDirtyRect)
 {
   const nsStyleDisplay *display = mStyleContext->GetStyleDisplay();
   if (display->mOpacity == 0.0)
@@ -114,19 +114,21 @@ nsSVGSwitchFrame::PaintSVG(nsSVGRenderState* aContext, nsIntRect *aDirtyRect)
 }
 
 
-NS_IMETHODIMP_(nsIFrame*)
-nsSVGSwitchFrame::GetFrameForPoint(const nsPoint &aPoint)
+NS_IMETHODIMP
+nsSVGSwitchFrame::GetFrameForPointSVG(float aX, float aY, nsIFrame** aResult)
 {
+  *aResult = nsnull;
+
   nsIFrame *kid = GetActiveChildFrame();
   if (kid) {
     nsISVGChildFrame* svgFrame;
     CallQueryInterface(kid, &svgFrame);
     if (svgFrame) {
-      return svgFrame->GetFrameForPoint(aPoint);
+      svgFrame->GetFrameForPointSVG(aX, aY, aResult);
     }
   }
 
-  return nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(nsRect)

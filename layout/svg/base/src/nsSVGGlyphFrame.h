@@ -114,8 +114,8 @@ public:
 
   // nsISVGChildFrame interface:
   // These four always use the global transform, even if NS_STATE_NONDISPLAY_CHILD
-  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect);
-  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
+  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
+  NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD UpdateCoveredRegion();
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
 
@@ -207,7 +207,7 @@ protected:
                       gfxContext *aContext);
 
   void NotifyGlyphMetricsChange();
-  PRBool ContainsPoint(const nsPoint &aPoint);
+  PRBool ContainsPoint(float x, float y);
   PRBool GetGlobalTransform(gfxMatrix *aMatrix);
   void SetupGlobalTransform(gfxContext *aContext);
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,

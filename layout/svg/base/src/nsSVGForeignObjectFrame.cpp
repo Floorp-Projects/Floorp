@@ -185,13 +185,13 @@ nsSVGForeignObjectFrame::InvalidateInternal(const nsRect& aDamageRect,
 // nsISVGChildFrame methods
 
 /**
- * Gets the rectangular region in app units (rounded out device pixels)
- * that encloses the rectangle after it has been transformed by aMatrix.
- * Useful in UpdateCoveredRegion/FlushDirtyRegion.
+ * Gets the rectangular region in rounded out CSS pixels that encloses the
+ * rectangle after it has been transformed by aMatrix. Useful in
+ * UpdateCoveredRegion/FlushDirtyRegion.
  */
 static nsRect
 GetTransformedRegion(float aX, float aY, float aWidth, float aHeight,
-                     nsIDOMSVGMatrix* aMatrix, nsPresContext *aPresContext)
+                     nsIDOMSVGMatrix* aMatrix)
 {
   float x[4], y[4];
   x[0] = aX;
@@ -221,12 +221,12 @@ GetTransformedRegion(float aX, float aY, float aWidth, float aHeight,
       ymax = y[i];
   }
  
-  return nsSVGUtils::ToAppPixelRect(aPresContext, xmin, ymin, xmax, ymax);
+  return nsSVGUtils::ToBoundingPixelRect(xmin, ymin, xmax, ymax);
 }
 
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
-                                  nsIntRect *aDirtyRect)
+                                  nsRect *aDirtyRect)
 {
   if (IsDisabled())
     return NS_OK;
@@ -285,8 +285,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 }
 
 nsresult
-nsSVGForeignObjectFrame::TransformPointFromOuterPx(const nsPoint &aIn,
-                                                   nsPoint* aOut)
+nsSVGForeignObjectFrame::TransformPointFromOuterPx(float aX, float aY, nsPoint* aOut)
 {
   if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return NS_ERROR_FAILURE;
@@ -297,35 +296,41 @@ nsSVGForeignObjectFrame::TransformPointFromOuterPx(const nsPoint &aIn,
   if (NS_FAILED(rv))
     return rv;
 
-  float x = PresContext()->AppUnitsToDevPixels(aIn.x);
-  float y = PresContext()->AppUnitsToDevPixels(aIn.y);
-  nsSVGUtils::TransformPoint(inverse, &x, &y);
-  *aOut = nsPoint(PresContext()->DevPixelsToAppUnits(NSToIntRound(x)),
-                  PresContext()->DevPixelsToAppUnits(NSToIntRound(y)));
+  nsSVGUtils::TransformPoint(inverse, &aX, &aY);
+  PRInt32 appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+  *aOut = nsPoint(NSToCoordRound(aX * appUnitsPerDevPixel),
+                  NSToCoordRound(aY * appUnitsPerDevPixel));
   return NS_OK;
 }
  
-NS_IMETHODIMP_(nsIFrame*)
-nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
+NS_IMETHODIMP
+nsSVGForeignObjectFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
+  *hit = nsnull;
+
   if (IsDisabled())
     return NS_OK;
 
   nsIFrame* kid = GetFirstChild(nsnull);
   if (!kid) {
-    return nsnull;
+    return NS_OK;
   }
   nsPoint pt;
-  if (NS_FAILED(TransformPointFromOuterPx(aPoint, &pt)))
-    return nsnull;
-  return nsLayoutUtils::GetFrameForPoint(kid, pt);
+  nsresult rv = TransformPointFromOuterPx(x, y, &pt);
+  if (NS_FAILED(rv))
+    return rv;
+  *hit = nsLayoutUtils::GetFrameForPoint(kid, pt);
+  return NS_OK;
 }
 
 nsPoint
 nsSVGForeignObjectFrame::TransformPointFromOuter(nsPoint aPt)
 {
   nsPoint pt(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  TransformPointFromOuterPx(aPt, &pt);
+  float appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+  TransformPointFromOuterPx(aPt.x / appUnitsPerDevPixel,
+                            aPt.y / appUnitsPerDevPixel,
+                            &pt);
   return pt;
 }
 
@@ -355,7 +360,7 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
 
   // XXXjwatt: _this_ is where we should reflow _if_ mRect.width has changed!
   // we should not unconditionally reflow in AttributeChanged
-  mRect = GetTransformedRegion(x, y, w, h, ctm, PresContext());
+  mRect = GetTransformedRegion(x, y, w, h, ctm);
 
   nsSVGUtils::UpdateFilterRegion(this);
 
@@ -679,17 +684,18 @@ nsSVGForeignObjectFrame::FlushDirtyRegion()
     return;
 
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
-  nsIntRect r = mDirtyRegion.GetBounds();
+  nsRect r = mDirtyRegion.GetBounds();
   r.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
   float x = r.x, y = r.y, w = r.width, h = r.height;
-  nsRect rect = GetTransformedRegion(x, y, w, h, tm, PresContext());
+  r = GetTransformedRegion(x, y, w, h, tm);
 
   // XXX invalidate the entire covered region
   // See bug 418063
-  rect.UnionRect(rect, mRect);
+  r.UnionRect(r, mRect);
 
-  rect = nsSVGUtils::FindFilterInvalidation(this, rect);
-  outerSVGFrame->Invalidate(rect);
+  r = nsSVGUtils::FindFilterInvalidation(this, r);
+  outerSVGFrame->InvalidateRect(r);
 
   mDirtyRegion.SetEmpty();
 }
+
