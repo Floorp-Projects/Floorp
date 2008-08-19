@@ -63,8 +63,6 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gtk/gtkversion.h>
-#include <gdk/gdk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -448,8 +446,58 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
   return rv;
 }
 
-#define COLOR_16_TO_8_BIT(_c) ((_c) >> 8)
-#define COLOR_8_TO_16_BIT(_c) ((_c) << 8)
+// In: pointer to two characters CC
+// Out: parsed color number
+static PRUint8
+HexToNum(char ch)
+{
+  if ('0' <= ch && '9' >= ch)
+    return ch - '0';
+
+  if ('A' <= ch && 'F' >= ch)
+    return ch - 'A';
+
+  if ('a' <= ch && 'f' >= ch)
+    return ch - 'a';
+
+  return 0;
+}
+  
+
+// In: 3 or 6-character RRGGBB hex string
+// Out: component colors
+static PRBool
+HexToRGB(const nsCString& aColorSpec,
+         PRUint8 &aRed,
+         PRUint8 &aGreen,
+         PRUint8 &aBlue)
+{
+  const char *buf = aColorSpec.get();
+
+  if (aColorSpec.Length() == 6) {
+    aRed =    HexToNum(buf[0]) >> 4 |
+              HexToNum(buf[1]);
+    aGreen =  HexToNum(buf[2]) >> 4 |
+              HexToNum(buf[3]);
+    aBlue =   HexToNum(buf[4]) >> 4 |
+              HexToNum(buf[5]);
+    return PR_TRUE;
+  }
+
+  if (aColorSpec.Length() == 3) {
+    aRed = HexToNum(buf[0]);
+    aGreen = HexToNum(buf[1]);
+    aBlue = HexToNum(buf[2]);
+
+    aRed |= aRed >> 4;
+    aGreen |= aGreen >> 4;
+    aBlue |= aBlue >> 4;
+
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
 
 NS_IMETHODIMP
 nsGNOMEShellService::GetDesktopBackgroundColor(PRUint32 *aColor)
@@ -464,32 +512,21 @@ nsGNOMEShellService::GetDesktopBackgroundColor(PRUint32 *aColor)
     return NS_OK;
   }
 
-  GdkColor color;
-  gboolean success = gdk_color_parse(background.get(), &color);
+  // Chop off the leading '#' character
+  background.Cut(0, 1);
 
-  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
+  PRUint8 red, green, blue;
+  if (!HexToRGB(background, red, green, blue))
+      return NS_ERROR_FAILURE;
 
-  *aColor = COLOR_16_TO_8_BIT(color.red) << 16 |
-            COLOR_16_TO_8_BIT(color.green) << 8 |
-            COLOR_16_TO_8_BIT(color.blue);
+  // The result must be in RGB order with the high 8 bits zero.
+  *aColor = (red << 16 | green << 8  | blue);
   return NS_OK;
 }
 
 static void
-ColorToCString(PRUint32 aColor, nsCString& aResult)
+ColorToHex(PRUint32 aColor, nsCString& aResult)
 {
-#if GTK_CHECK_VERSION(2,12,0)
-  GdkColor color;
-  color.red = COLOR_8_TO_16_BIT(aColor >> 16);
-  color.green = COLOR_8_TO_16_BIT((aColor >> 8) & 0xff);
-  color.blue = COLOR_8_TO_16_BIT(aColor & 0xff);
-
-  gchar *colorString = gdk_color_to_string(&color);
-  aResult.Assign(colorString);
-  g_free(colorString);
-
-#else // GTK 2.12.0
-
   char *buf = aResult.BeginWriting(7);
   if (!buf)
     return;
@@ -499,7 +536,6 @@ ColorToCString(PRUint32 aColor, nsCString& aResult)
   PRUint8 blue = aColor & 0xff;
 
   PR_snprintf(buf, 8, "#%02x%02x%02x", red, green, blue);
-#endif // GTK 2.12.0
 }
 
 NS_IMETHODIMP
@@ -508,7 +544,7 @@ nsGNOMEShellService::SetDesktopBackgroundColor(PRUint32 aColor)
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
 
   nsCString colorString;
-  ColorToCString(aColor, colorString);
+  ColorToHex(aColor, colorString);
 
   gconf->SetString(NS_LITERAL_CSTRING(kDesktopColorKey), colorString);
 
