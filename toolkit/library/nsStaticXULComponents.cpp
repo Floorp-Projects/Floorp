@@ -135,11 +135,13 @@
 #define XREMOTE_MODULES
 #endif
 
-#ifdef MOZ_ENABLE_GTK2
 #ifdef MOZ_PREF_EXTENSIONS
-#define SYSTEMPREF_MODULES MODULE(nsSystemPrefModule)
+#ifdef MOZ_ENABLE_GTK2
+#define SYSTEMPREF_MODULES \
+    MODULE(nsSystemPrefModule) \
+    MODULE(nsAutoConfigModule)
 #else
-#define SYSTEMPREF_MODULES
+#define SYSTEMPREF_MODULES MODULE(nsAutoConfigModule)
 #endif
 #else
 #define SYSTEMPREF_MODULES
@@ -312,7 +314,6 @@
     JSDEBUGGER_MODULES                       \
     MODULE(BOOT)                             \
     MODULE(NSS)                              \
-    MODULE(nsAutoConfigModule)               \
     SYSTEMPREF_MODULES                       \
     SPELLCHECK_MODULE                        \
     XMLEXTRAS_MODULE                         \
