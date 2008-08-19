@@ -2547,7 +2547,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 
     if (PCVCAP_TAG(entry->vcap) <= 1) {
         if (aobj != globalObj) {
-            LIns* shape_ins = addName(lir->insLoad(LIR_ldp, map_ins, offsetof(JSScope, shape)), "shape");
+            LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
             guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
                   MISMATCH_EXIT);
         }
@@ -2567,7 +2567,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             return false;
         }
 
-        LIns* shape_ins = addName(lir->insLoad(LIR_ldp, map_ins, offsetof(JSScope, shape)), "shape");
+        LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
         guard(true,
               addName(lir->ins2i(LIR_eq, shape_ins, PCVCAP_SHAPE(entry->vcap)),
                       "guard(vcap_shape)"),
@@ -3431,7 +3431,7 @@ TraceRecorder::record_JSOP_SETPROP()
 
     // The global object's shape is guarded at trace entry.
     if (obj != globalObj) {
-        LIns* shape_ins = addName(lir->insLoad(LIR_ldp, map_ins, offsetof(JSScope, shape)), "shape");
+        LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
         guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"),
                 MISMATCH_EXIT);
     }
