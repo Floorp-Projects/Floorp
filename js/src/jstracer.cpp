@@ -1253,9 +1253,9 @@ TraceRecorder::snapshot(ExitType exitType)
     JSStackFrame* fp = cx->fp;
     if (exitType == BRANCH_EXIT && js_IsLoopExit(cx, fp->script, fp->regs->pc))
         exitType = LOOP_EXIT;
-    /* generate the entry map and stash it in the trace */
+    /* Generate the entry map and stash it in the trace. */
     unsigned stackSlots = nativeStackSlots(cx, callDepth);
-    /* its sufficient to track the native stack use here since all stores above the
+    /* It's sufficient to track the native stack use here since all stores above the
        stack watermark defined by guards are killed. */
     trackNativeStackUse(stackSlots + 1);
     /* reserve space for the type map */
@@ -1269,7 +1269,7 @@ TraceRecorder::snapshot(ExitType exitType)
     exit.numStackSlots = stackSlots;
     exit.exitType = exitType;
     exit.ip_adj = fp->regs->pc - (jsbytecode*)fragment->root->ip;
-    exit.sp_adj = (stackSlots*sizeof(double)) - treeInfo->nativeStackBase;
+    exit.sp_adj = (stackSlots * sizeof(double)) - treeInfo->nativeStackBase;
     exit.rp_adj = exit.calldepth * sizeof(FrameInfo);
     uint8* m = exit.typeMap = (uint8 *)data->payload();
     /* Determine the type of a store by looking at the current type of the actual value the
@@ -1446,7 +1446,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
         /* Guard that we have enough stack space for the tree we are trying to call on top
            of the new value for sp. */
         debug_only(printf("sp_adj=%d outer=%d inner=%d\n",
-                   sp_adj, treeInfo->nativeStackBase, ti->nativeStackBase));
+                          sp_adj, treeInfo->nativeStackBase, ti->nativeStackBase));
         LIns* sp_top = lir->ins2i(LIR_piadd, lirbuf->sp,
                 - treeInfo->nativeStackBase /* rebase sp to beginning of outer tree's stack */
                 + sp_adj /* adjust for stack in outer frame inner tree can't see */
@@ -1490,9 +1490,9 @@ int
 nanojit::StackFilter::getTop(LInsp guard)
 {
     if (sp == frag->lirbuf->sp)
-        return guard->exit()->sp_adj;
+        return guard->exit()->sp_adj + sizeof(double);
     JS_ASSERT(sp == frag->lirbuf->rp);
-    return guard->exit()->rp_adj;
+    return guard->exit()->rp_adj + sizeof(FrameInfo);
 }
 
 #if defined NJ_VERBOSE
@@ -1597,7 +1597,7 @@ js_TrashTree(JSContext* cx, Fragment* f)
     f->releaseCode(fragmento);
 }
 
-static JSInlineFrame*
+static unsigned
 js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(fi.callee));
@@ -1611,9 +1611,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 
     // Assert that we have a correct sp distance from cx->fp->slots in fi.
     JS_ASSERT(js_ReconstructStackDepth(cx, cx->fp->script, fi.callpc) ==
-              uintN(fi.s.spdist -
-                    ((fun->nargs > fi.s.argc) ? fun->nargs - fi.s.argc : 0) -
-                    cx->fp->script->nfixed));
+              uintN(fi.s.spdist - cx->fp->script->nfixed));
 
     uintN nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
     size_t nbytes = (nframeslots + script->nslots) * sizeof(jsval);
@@ -1627,7 +1625,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
         JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool, nbytes);
         if (!newsp) {
             js_ReportOutOfScriptQuota(cx);
-            return NULL;
+            return 0;
         }
     }
 
@@ -1671,7 +1669,13 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 
     cx->fp->regs = &newifp->callerRegs;
     cx->fp = &newifp->frame;
-    return newifp;
+
+    // FIXME: we must count stack slots from caller's operand stack up to (but not including)
+    // callee's, including missing arguments. Could we shift everything down to the caller's
+    // fp->slots (where vars start) and avoid some of the complexity?
+    return (fi.s.spdist - cx->fp->down->script->nfixed) +
+           ((fun->nargs > cx->fp->argc) ? fun->nargs - cx->fp->argc : 0) +
+           script->nfixed;
 }
 
 bool
@@ -1896,7 +1900,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
     if (lr->exit->exitType == NESTED_EXIT) {
         /* Unwind all frames held by nested outer trees (since the innermost tree's frame which
            we restore below doesn't contain such frames. */
-        while (lr->exit->exitType == NESTED_EXIT) {
+        do {
             debug_only(printf("processing tree call guard %p, calldepth=%d\n", lr, lr->calldepth);)
             unsigned calldepth = lr->calldepth;
             if (calldepth > 0) {
@@ -1914,10 +1918,12 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
             }
             JS_ASSERT(lr->guard->oprnd1()->oprnd2()->isconstp());
             lr = (GuardRecord*)lr->guard->oprnd1()->oprnd2()->constvalp();
-        }
+        } while (lr->exit->exitType == NESTED_EXIT);
+
         /* We restored the nested frames, now we just need to deal with the innermost guard. */
         lr = state.nestedExit;
     }
+
     /* At this point we have processed any outer frames around the innermost guard so
        rp and callstack should match. */
     JS_ASSERT(state.rp == callstack);
@@ -1929,21 +1935,22 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
     /* We already synthesized the frames around the innermost guard. Here we just deal
        with additional frames inside the tree we are bailing out from. */
     unsigned calldepth = lr->calldepth;
+    unsigned calldepth_slots = 0;
     for (unsigned n = 0; n < calldepth; ++n)
-        js_SynthesizeFrame(cx, callstack[n]);
+        calldepth_slots += js_SynthesizeFrame(cx, callstack[n]);
 
     /* Adjust sp and pc relative to the tree we exited from (not the tree we entered
        into). These are our final values for sp and pc since js_SynthesizeFrame has
        already taken care of all frames in between. */
     SideExit* e = lr->exit;
     JSStackFrame* fp = cx->fp;
+
     /* If we are not exiting from an inlined frame the state->sp is spbase, otherwise spbase
        is whatever slots frames around us consume. */
     fp->regs->pc = (jsbytecode*)lr->from->root->ip + e->ip_adj;
-    fp->regs->sp = StackBase(fp) +
-        ((calldepth == 0)
-         ? (e->sp_adj/sizeof(double))
-         : js_ReconstructStackDepth(cx, fp->script, fp->regs->pc));
+    fp->regs->sp = StackBase(fp) + (e->sp_adj / sizeof(double)) - calldepth_slots;
+    JS_ASSERT(fp->slots + fp->script->nfixed +
+              js_ReconstructStackDepth(cx, cx->fp->script, fp->regs->pc) == fp->regs->sp);
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
     printf("leaving trace at %s:%u@%u, exitType=%d, sp=%d, ip=%p, cycles=%llu\n",
@@ -3601,7 +3608,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
     FrameInfo fi = {
         JSVAL_TO_OBJECT(fval),
         fp->regs->pc,
-        fp->regs->sp + (fun->nargs - argc) - fp->slots,
+        fp->regs->sp - fp->slots,
         argc
     };
 
@@ -3677,7 +3684,6 @@ TraceRecorder::record_JSOP_CALL()
     if (FUN_INTERPRETED(fun))
         return interpretedFunctionCall(fval, fun, argc);
 
-    // XXXbe need to guard this condition
     if (FUN_SLOW_NATIVE(fun))
         ABORT_TRACE("slow native");
 
