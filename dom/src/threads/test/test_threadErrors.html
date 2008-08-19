@@ -68,7 +68,7 @@ Tests of DOM Worker Threads (Bug 437152)
   pool.errorListener = function(error, source) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-    dump("Worker[" + actualErrorCount + "]: " + source + "\n\nError: " + error + "\n\nArray: " + failedWorkers + "\n\n");
+    dump("Worker[" + actualErrorCount + "]: " + source + "\n\nThrownError: " + error + "\n\nArray: " + failedWorkers + "\n\n");
 
     if (failedWorkers.indexOf(source) != -1) {
       dump("Already seen worker: " + source + "\n");
