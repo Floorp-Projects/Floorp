@@ -1939,6 +1939,8 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
        is whatever slots frames around us consume. */
     fp->regs->pc = (jsbytecode*)lr->from->root->ip + e->ip_adj;
     fp->regs->sp = StackBase(fp) + (e->sp_adj / sizeof(double)) - calldepth_slots;
+    JS_ASSERT(fp->slots + fp->script->nfixed +
+              js_ReconstructStackDepth(cx, cx->fp->script, fp->regs->pc) == fp->regs->sp);
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
     printf("leaving trace at %s:%u@%u, exitType=%d, sp=%d, ip=%p, cycles=%llu\n",
