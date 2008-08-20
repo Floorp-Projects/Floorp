@@ -1994,6 +1994,14 @@ CheckDestructuring(JSContext *cx, BindData *data,
         return JS_FALSE;
     }
 
+#if JS_HAS_DESTRUCTURING_SHORTHAND
+    if (right->pn_extra & PNX_SHORTHAND) {
+        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), right,
+                                    JSREPORT_ERROR, JSMSG_BAD_OBJECT_INIT);
+        return JS_FALSE;
+    }
+#endif
+
     fpvd.table.ops = NULL;
     lhs = left->pn_head;
     if (lhs && lhs->pn_type == TOK_DEFSHARP) {
