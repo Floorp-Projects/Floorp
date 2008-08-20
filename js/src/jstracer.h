@@ -302,6 +302,10 @@ class TraceRecorder {
     bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc);
     bool forInLoop(jsval* vp);
 
+#ifdef DEBUG    
+    void printTypeMap(uint8* globalTypeMap, uint8* stackTypeMap);
+#endif
+    
 public:
     TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, TreeInfo*,
             unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap);
