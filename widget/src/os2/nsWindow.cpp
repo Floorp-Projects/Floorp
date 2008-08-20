@@ -527,7 +527,7 @@ PRBool nsWindow::DispatchCommandEvent(PRUint32 aEventCommand)
 
 PRBool nsWindow::DispatchDragDropEvent(PRUint32 aMsg)
 {
-  nsDragEvent event(PR_TRUE, aMsg, this);
+  nsMouseEvent event(PR_TRUE, aMsg, this, nsMouseEvent::eReal);
   InitEvent(event);
 
   event.isShift   = WinIsKeyDown(VK_SHIFT);
