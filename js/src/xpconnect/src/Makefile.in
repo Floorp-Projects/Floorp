@@ -67,6 +67,18 @@ REQUIRES	= xpcom \
 		  dom \
 		  $(NULL)
 
+# These modules are required because the auto-generated file
+# dom_quickstubs.cpp #includes header files from many places.
+REQUIRES	+= content \
+		   editor \
+		   layout \
+		   rdf \
+		   svg \
+		   xuldoc \
+		   xultmpl \
+		   $(NULL)
+
+
 CPPSRCS		= \
 		nsScriptError.cpp \
 		nsXPConnect.cpp \
@@ -99,6 +111,8 @@ CPPSRCS		= \
 		XPCSafeJSObjectWrapper.cpp \
 		XPCCrossOriginWrapper.cpp \
 		XPCWrapper.cpp \
+		xpcquickstubs.cpp \
+		dom_quickstubs.cpp \
 		$(NULL)
 ifdef XPC_IDISPATCH_SUPPORT
 CPPSRCS +=	XPCDispObject.cpp	\
@@ -168,3 +182,25 @@ endif
 endif
 endif
 
+nsXPConnect.$(OBJ_SUFFIX): dom_quickstubs.h
+
+dom_quickstubs.h dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
+                                     $(srcdir)/qsgen.py \
+                                     $(topsrcdir)/xpcom/idl-parser/header.py \
+                                     $(topsrcdir)/xpcom/idl-parser/xpidl.py
+	PYTHONPATH=$(topsrcdir)/xpcom/idl-parser \
+	  $(PYTHON) $(srcdir)/qsgen.py \
+	  --idlpath=$(DEPTH)/dist/idl \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser \
+	  --header-output dom_quickstubs.h \
+	  --stub-output dom_quickstubs.cpp \
+	  --makedepend-output dom_quickstubs.depends \
+	  $(srcdir)/dom_quickstubs.qsconf
+
+GARBAGE += \
+		dom_quickstubs.h \
+		dom_quickstubs.cpp \
+		dom_quickstubs.depends \
+		$(NULL)
+
+-include dom_quickstubs.depends
