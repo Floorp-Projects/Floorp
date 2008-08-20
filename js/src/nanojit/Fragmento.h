@@ -238,7 +238,7 @@ namespace nanojit
 #else
     inline int nbr(LInsp x)
     {
-        return int(x) & (NJ_PAGE_SIZE-1);
+        return (int)(intptr_t(x) & intptr_t(NJ_PAGE_SIZE-1));
     }
 #endif
 }
