@@ -8,4 +8,4 @@ separate browser_plugin directory. I only use the audio portion so
 only the audio part of the source is here. Run update.sh giving it the
 path to a checked out version of browser_plugin to update this code.
 
-This code is using svn revision r3605.
+This code is using svn revision r3605 and apply the patch from bug 449564.
