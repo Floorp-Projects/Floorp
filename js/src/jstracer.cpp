@@ -1433,7 +1433,7 @@ TraceRecorder::emitTreeCallStackSetup(Fragment* inner)
     if (callDepth > 0) {
         /* Calculate the amount we have to lift the native stack pointer by to compensate for
            any outer frames that the inner tree doesn't expect but the outer tree has. */
-        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[0]);
+        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[-1]) + sizeof(double);
         /* Calculate the amount we have to lift the call stack by */
         ptrdiff_t rp_adj = callDepth * sizeof(FrameInfo);
         /* Guard that we have enough stack space for the tree we are trying to call on top
@@ -5425,6 +5425,24 @@ TraceRecorder::record_JSOP_HOLE()
     stack(0, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_HOLE)));
     return true;
 }
+
+#ifdef DEBUG
+void 
+TraceRecorder::printTypeMap(uint8* globalTypeMap, uint8* stackTypeMap)
+{
+    uint8* m = globalTypeMap;
+    const char* types[] = { "object", "int", "double", "int", "string", "int", "boolean", "int" };
+    FORALL_GLOBAL_SLOTS(cx, traceMonitor->globalSlots->length(), traceMonitor->globalSlots->data(),
+        printf("%s%d type=%s value=%lx\n", vpname, vpnum, types[(unsigned)*m], *vp);
+        ++m;
+    );
+    m = stackTypeMap;
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        printf("%s%d type=%s value=%lx\n", vpname, vpnum, types[(unsigned)*m], *vp);
+        ++m;
+    );
+}
+#endif DEBUG
 
 #define UNUSED(op) bool TraceRecorder::record_##op() { return false; }
 
