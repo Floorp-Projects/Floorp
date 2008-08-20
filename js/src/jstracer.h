@@ -183,7 +183,6 @@ public:
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
     TypeMap                 stackTypeMap;
-    unsigned                mismatchCount;
     
     TreeInfo(nanojit::Fragment* _fragment) { 
         fragment = _fragment; 
