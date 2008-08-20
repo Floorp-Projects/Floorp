@@ -1227,6 +1227,41 @@ struct FrameInfo {
     };
 };
 
+/* Promote slots if necessary to match the called tree' type map and report error if thats
+   impossible. */
+bool
+TraceRecorder::adjustCallerTypes(Fragment* f)
+{
+    JSTraceMonitor* tm = traceMonitor;
+    uint8* m = tm->globalTypeMap->data();
+    uint16* gslots = traceMonitor->globalSlots->data();
+    unsigned ngslots = traceMonitor->globalSlots->length();
+    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots, 
+        LIns* i = get(vp);
+        bool isPromote = isPromoteInt(i);
+        if (isPromote && *m == JSVAL_DOUBLE) 
+            lir->insStorei(get(vp), gp_ins, nativeGlobalOffset(vp));
+        ++m;
+    );
+    m = ((TreeInfo*)f->vmprivate)->stackTypeMap.data();
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        LIns* i = get(vp);
+        bool isPromote = isPromoteInt(i);
+        if (isPromote && *m == JSVAL_DOUBLE) 
+            lir->insStorei(get(vp), lirbuf->sp, 
+                           -treeInfo->nativeStackBase + nativeStackOffset(vp));
+        ++m;
+    );
+    return true;
+}
+
+/* Find a peer fragment that we can call, considering our current type distribution. */
+bool TraceRecorder::selectCallablePeerFragment(Fragment** first)
+{
+    /* Until we have multiple trees per start point this is always the first fragment. */
+    return (*first)->code();
+}
+
 SideExit*
 TraceRecorder::snapshot(ExitType exitType)
 {
@@ -1422,7 +1457,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
 void
-TraceRecorder::emitTreeCallStackSetup(Fragment* inner)
+TraceRecorder::prepareTreeCall(Fragment* inner)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
     inner_sp_ins = lirbuf->sp;
@@ -1775,27 +1810,11 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
     }
     /* does this branch go to an inner loop? */
     Fragment* f = fragmento->getLoop(cx->fp->regs->pc);
-    if (nesting_enabled && f && f->code()) {
-        /* We have to emit the tree call stack setup code before we execute the tree, because
-           we sink demotions (i.e. i2f or quad(0)) into side exits and thus if we emit
-           a guard right now, it might see such a demotable instruction and flag it as an
-           integer result in the type map. However, if we decide to call the inner tree,
-           it invalidates many of these instruction reference, since the inner tree can
-           change the values of variables in the scope it was called from (hence the
-           import right after the tree call in emitTreeCall). Taking a snapshot after the
-           tree for code that we logically expect to execute in a state before the tree
-           call is not safe, because after the tree call we can get values on the
-           interpreter stack that might not be in the integer range any more (whereas this
-           was guaranteed prior to the call, for example because that value was a constant
-           integer). Thus, we first do the tree call stack setup (which emits a guard),
-           then do the actually tree call, and then finally emit the actual tree call
-           and stack de-construction code after the call. One additional slight complication
-           is that we won't know which peer fragment js_ExecuteTree chooses until it
-           actually returns to us, so emitTreeCallStackSetup actually always emits the
-           tree call stack setup code with the first fragment. This is safe, however, since
-           the stack layout of all peer fragments is always identical (it depends on the
-           program counter location, which is the same for all peer fragments.) */
-        r->emitTreeCallStackSetup(f);
+    if (nesting_enabled && 
+        f && /* must have a fragment at that location */
+        r->selectCallablePeerFragment(&f) && /* is there a potentially matching peer fragment? */
+        r->adjustCallerTypes(f)) { /* make sure we can make our arguments fit */
+        r->prepareTreeCall(f);
         GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount);
         if (!lr) {
             js_AbortRecording(cx, oldpc, "Couldn't call inner tree");
