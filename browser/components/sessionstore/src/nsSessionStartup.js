@@ -98,10 +98,6 @@ SessionStartup.prototype = {
     this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
                        getService(Ci.nsIPrefService).getBranch("browser.");
 
-    // if the service is disabled, do not init 
-    if (!this._prefBranch.getBoolPref("sessionstore.enabled"))
-      return;
-
     // get file references
     var dirService = Cc["@mozilla.org/file/directory_service;1"].
                      getService(Ci.nsIProperties);
