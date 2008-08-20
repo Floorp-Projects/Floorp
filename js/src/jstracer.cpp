@@ -2110,8 +2110,8 @@ js_InitJIT(JSTraceMonitor *tm)
         fragmento->assm()->setCallTable(builtins);
         fragmento->pageFree(fragmento->pageAlloc()); // FIXME: prime page cache
         tm->fragmento = fragmento;
-        tm->globalSlots = new SlotList();
-        tm->globalTypeMap = new TypeMap();
+        tm->globalSlots = new (&gc) SlotList();
+        tm->globalTypeMap = new (&gc) TypeMap();
     }
 #if !defined XP_WIN
     debug_only(memset(&stat, 0, sizeof(stat)));
