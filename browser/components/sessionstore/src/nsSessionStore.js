@@ -2072,9 +2072,15 @@ SessionStoreService.prototype = {
       return;
     }
     try {
-      var currentUrl = aWindow.getBrowser().currentURI.spec;
+      var currentURI = aWindow.getBrowser().currentURI.clone();
+      // if the current URI contains a username/password, remove it
+      try { 
+        currentURI.userPass = ""; 
+      } 
+      catch (ex) { } // ignore failures on about: URIs
+
       var cr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsICrashReporter);
-      cr.annotateCrashReport("URL", currentUrl);
+      cr.annotateCrashReport("URL", currentURI.spec);
     }
     catch (ex) {
       // don't make noise when crashreporter is built but not enabled
