@@ -268,6 +268,13 @@ Oracle::isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) 
     return _dontDemote.get(hash);
 }
 
+/* Clear the oracle. */
+void
+Oracle::clear()
+{
+    _dontDemote.reset();
+}
+
 static LIns* demote(LirWriter *out, LInsp i)
 {
     if (i->isCall())
