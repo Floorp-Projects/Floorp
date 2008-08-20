@@ -591,6 +591,12 @@ js_BooleanToNumber(JSContext* cx, jsint unboxed)
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
 
+#if defined AVMPLUS_64BIT
+#define P	ARGSIZE_Q
+#else
+#define P	ARGSIZE_LO
+#endif
+
 #ifdef DEBUG
 #define NAME(op) ,#op
 #else

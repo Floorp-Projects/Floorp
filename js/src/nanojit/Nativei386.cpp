@@ -382,11 +382,12 @@ namespace nanojit
 #endif
 		else if (op == LIR_param)
 			prefer &= rmask(Register(i->imm8()));
-        else if (op == LIR_callh || op == LIR_rsh && i->oprnd1()->opcode()==LIR_callh)
 #if defined NANOJIT_IA32
+        else if (op == LIR_callh || op == LIR_rsh && i->oprnd1()->opcode()==LIR_callh)
             prefer &= rmask(EDX);
-#elif defined NANOJIT_AMD64
-            prefer &= rmask(RDX);
+#else
+		else if (op == LIR_callh)
+			prefer &= rmask(RAX);
 #endif
 		else if (i->isCmp())
 			prefer &= AllowableFlagRegs;

@@ -884,6 +884,7 @@ namespace nanojit
 					asm_quad(ins);
 					break;
 				}
+#if !defined NANOJIT_64BIT
 				case LIR_callh:
 				{
 					// return result of quad-call in register
@@ -892,6 +893,7 @@ namespace nanojit
                     findRegFor(ins->oprnd1(), rmask(retRegs[0]));
 					break;
 				}
+#endif
 				case LIR_param:
 				{
 					Register w = Register(ins->imm8());
@@ -921,6 +923,7 @@ namespace nanojit
 					break;
 				}
 
+				case LIR_qcmov:
 				case LIR_cmov:
 				{
 					LIns* condval = ins->oprnd1();
@@ -931,31 +934,52 @@ namespace nanojit
 					NanoAssert(values->opcode() == LIR_2);
 					LIns* iftrue = values->oprnd1();
 					LIns* iffalse = values->oprnd2();
-					/* We can't nicely detect floats here. */
-#if !defined NANOJIT_64BIT
-					NanoAssert(!iftrue->isQuad() && !iffalse->isQuad());
-#endif
+
+					NanoAssert(op == LIR_qcmov || (!iftrue->isQuad() && !iffalse->isQuad()));
 					
 					const Register rr = prepResultReg(ins, GpRegs);
 
 					// this code assumes that neither LD nor MR nor MRcc set any of the condition flags.
 					// (This is true on Intel, is it true on all architectures?)
 					const Register iffalsereg = findRegFor(iffalse, GpRegs & ~rmask(rr));
-					switch (condval->opcode())
-					{
-						// note that these are all opposites...
-						case LIR_eq:	MRNE(rr, iffalsereg);	break;
-                        case LIR_ov:    MRNO(rr, iffalsereg);   break;
-                        case LIR_cs:    MRNC(rr, iffalsereg);   break;
-						case LIR_lt:	MRGE(rr, iffalsereg);	break;
-						case LIR_le:	MRG(rr, iffalsereg);	break;
-						case LIR_gt:	MRLE(rr, iffalsereg);	break;
-						case LIR_ge:	MRL(rr, iffalsereg);	break;
-						case LIR_ult:	MRAE(rr, iffalsereg);	break;
-						case LIR_ule:	MRA(rr, iffalsereg);	break;
-						case LIR_ugt:	MRBE(rr, iffalsereg);	break;
-						case LIR_uge:	MRB(rr, iffalsereg);	break;
-						debug_only( default: NanoAssert(0); break; )
+					if (op == LIR_cmov) {
+						switch (condval->opcode())
+						{
+							// note that these are all opposites...
+							case LIR_eq:	MRNE(rr, iffalsereg);	break;
+							case LIR_ov:    MRNO(rr, iffalsereg);   break;
+							case LIR_cs:    MRNC(rr, iffalsereg);   break;
+							case LIR_lt:	MRGE(rr, iffalsereg);	break;
+							case LIR_le:	MRG(rr, iffalsereg);	break;
+							case LIR_gt:	MRLE(rr, iffalsereg);	break;
+							case LIR_ge:	MRL(rr, iffalsereg);	break;
+							case LIR_ult:	MRAE(rr, iffalsereg);	break;
+							case LIR_ule:	MRA(rr, iffalsereg);	break;
+							case LIR_ugt:	MRBE(rr, iffalsereg);	break;
+							case LIR_uge:	MRB(rr, iffalsereg);	break;
+							debug_only( default: NanoAssert(0); break; )
+						}
+					} else if (op == LIR_qcmov) {
+#if !defined NANOJIT_64BIT
+						NanoAssert(0);
+#else
+						switch (condval->opcode())
+						{
+							// note that these are all opposites...
+							case LIR_eq:	MRQNE(rr, iffalsereg);	break;
+							case LIR_ov:    MRQNO(rr, iffalsereg);   break;
+							case LIR_cs:    MRQNC(rr, iffalsereg);   break;
+							case LIR_lt:	MRQGE(rr, iffalsereg);	break;
+							case LIR_le:	MRQG(rr, iffalsereg);	break;
+							case LIR_gt:	MRQLE(rr, iffalsereg);	break;
+							case LIR_ge:	MRQL(rr, iffalsereg);	break;
+							case LIR_ult:	MRQAE(rr, iffalsereg);	break;
+							case LIR_ule:	MRQA(rr, iffalsereg);	break;
+							case LIR_ugt:	MRQBE(rr, iffalsereg);	break;
+							case LIR_uge:	MRQB(rr, iffalsereg);	break;
+							debug_only( default: NanoAssert(0); break; )
+						}
+#endif
 					}
 					/*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
 					asm_cmp(condval);
@@ -1335,6 +1359,9 @@ namespace nanojit
 
 #ifndef NJ_SOFTFLOAT
 				case LIR_fcall:
+#endif
+#if defined NANOJIT_64BIT
+				case LIR_callh:
 #endif
 				case LIR_call:
 				{
