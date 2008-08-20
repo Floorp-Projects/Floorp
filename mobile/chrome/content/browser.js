@@ -65,18 +65,6 @@ function getBrowser() {
 var Browser = {
   _content : null,
 
-  _titleChanged : function(aEvent) {
-    var browser = this.content.browser;
-    if (!browser || aEvent.target != browser.contentDocument)
-      return;
-
-    var docElem = document.documentElement;
-    var title = "";
-    if (aEvent.target.title)
-      title = aEvent.target.title + docElem.getAttribute("titleseparator");
-    document.title = title + docElem.getAttribute("titlemodifier");
-  },
-
   startup : function() {
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
@@ -106,11 +94,11 @@ var Browser = {
     os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
     os.addObserver(gXPInstallObserver, "xpinstall-download-started", false);
 
+    BrowserUI.init();
+
+    this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
     this._content.tabList = document.getElementById("tab-list");
     this._content.newTab(true);
-    this._content.addEventListener("DOMTitleChanged", this, true);
-    this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
-    BrowserUI.init();
 
     SpatialNavigation.init(this.content);
 
@@ -210,14 +198,6 @@ var Browser = {
    */
   get currentBrowser() {
     return this._content.browser;
-  },
-
-  handleEvent: function (aEvent) {
-    switch (aEvent.type) {
-      case "DOMTitleChanged":
-        this._titleChanged(aEvent);
-        break;
-    }
   },
 
   supportsCommand : function(cmd) {
@@ -330,11 +310,11 @@ ProgressController.prototype = {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       if (aRequest && aWebProgress.DOMWindow == this._browser.contentWindow) {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-          BrowserUI.update(TOOLBARSTATE_LOADING);
+          BrowserUI.update(TOOLBARSTATE_LOADING, this._browser);
           this._tabbrowser.updateCanvasState();
         }
         else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-          BrowserUI.update(TOOLBARSTATE_LOADED);
+          BrowserUI.update(TOOLBARSTATE_LOADED, this._browser);
           this._tabbrowser.updateCanvasState();
         }
       }
