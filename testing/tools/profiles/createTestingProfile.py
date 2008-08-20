@@ -12,7 +12,6 @@ userPrefs = {
     'browser.chrome.favicons': 'false',
     'browser.chrome.site_icons': 'false',
     'browser.dom.window.dump.enabled': 'true',
-    'browser.sessionstore.enabled': 'false',
     'browser.sessionstore.resume_from_crash': 'false',
     'browser.shell.checkDefaultBrowser': 'false',
     'browser.tabs.warnOnClose': 'false',
@@ -66,7 +65,7 @@ def main(argv):
                                     "profileName=",
                                     "clobber"])
     except getopt.GetoptError:
-	usage()
+        usage()
         sys.exit(2)
 
     binary = ""
@@ -83,7 +82,7 @@ def main(argv):
         if o in ("-c","--clobber"):
             clobber=1
     if binary=="" or not os.path.exists(binary):
-	usage()
+        usage()
         sys.exit(2)
 
     profileLocation = runCreateProfile(binary,profileName)
@@ -104,4 +103,3 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
