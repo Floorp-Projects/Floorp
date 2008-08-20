@@ -2593,8 +2593,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 
     if (PCVCAP_TAG(entry->vcap) <= 1) {
         if (aobj != globalObj) {
-            LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
-                                      "shape");
+            LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
             guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
                   MISMATCH_EXIT);
         }
@@ -2943,7 +2942,7 @@ TraceRecorder::record_LeaveFrame()
                    callDepth);
         );
     if (callDepth-- <= 0)
-        ABORT_TRACE("returned out of a loop we started tracing");
+        return false;
 
     // LeaveFrame gets called after the interpreter popped the frame and
     // stored rval, so cx->fp not cx->fp->down, and -1 not 0.
@@ -3605,48 +3604,12 @@ bool
 TraceRecorder::record_JSOP_CALLNAME()
 {
     JSObject* obj = cx->fp->scopeChain;
-    JSObject* obj2;
-
-    if (obj != globalObj) {
-        JSAtom* atom = atoms[GET_INDEX(cx->fp->regs->pc)];
-        JSProperty* prop;
-        if (js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop) < 0 || !prop)
-            ABORT_TRACE("failed to find name in scope chain for JSOP_CALLNAME");
-
-        if (obj != globalObj) {
-            if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
-                JSStackFrame* cfp = (JSStackFrame*) JS_GetPrivate(cx, obj);
-                if (cfp) {
-                    uintN slot;
-                    jsval *vp;
-                    JSScopeProperty* sprop = (JSScopeProperty*) prop;
-
-                    if (sprop->getter == js_GetCallArg) {
-                        JS_ASSERT(slot < cfp->fun->nargs);
-                        vp = &cfp->argv[slot];
-                    } else {
-                        JS_ASSERT(sprop->getter == js_GetCallVar);
-                        JS_ASSERT(slot < cfp->script->nslots);
-                        vp = &cfp->slots[slot];
-                    }
-                    stack(0, get(vp));
-                    stack(1, lir->insImmPtr(NULL));
-                    OBJ_DROP_PROPERTY(cx, obj2, prop);
-                    return true;
-                }
-            }
-
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
-            ABORT_TRACE("fp->scopeChain is not global or active call object");
-        }
-
-        OBJ_DROP_PROPERTY(cx, obj2, prop);
-
-        obj = cx->fp->scopeChain;
-    }
+    if (obj != globalObj)
+        ABORT_TRACE("fp->scopeChain is not global object");
 
     LIns* obj_ins = lir->insLoad(LIR_ldp, lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
                                   offsetof(JSStackFrame, scopeChain));
+    JSObject* obj2;
     jsuword pcval;
     if (!test_property_cache(obj, obj_ins, obj2, pcval))
         return false;
