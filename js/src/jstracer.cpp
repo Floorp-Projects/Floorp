@@ -1389,11 +1389,12 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     if (!verifyTypeStability()) {
         AUDIT(unstableLoopVariable);
         debug_only(printf("Trace rejected: unstable loop variables.\n");)
+        fragment->first->blacklist();
         return;
     }
     if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
         debug_only(printf("Trace rejected: excessive stack use.\n"));
-        fragment->blacklist();
+        fragment->first->blacklist();
         return;
     }
     SideExit *exit = snapshot(LOOP_EXIT);
@@ -2070,13 +2071,8 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
         /* If we don't have compiled code for this entry point (none recorded),
            count the number of hits and trigger the recorder if appropriate. If we do have
            code for f, none of the peer fragments matched, so add a new one. */
-        if (f->code()) {
-            f = tm->fragmento->newLoop(f->ip);
-            return js_RecordTree(cx, tm, f);
-        } else {
-            if (++f->hits() >= HOTLOOP)
-                return js_RecordTree(cx, tm, f);
-        }
+        if (++f->hits() >= HOTLOOP)
+            return js_RecordTree(cx, tm, f->code() ? tm->fragmento->newLoop(f->ip) : f);
         return false;
     }
     /* We successfully executed a trace, see if we should grow the tree. */
@@ -2100,7 +2096,7 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
     JS_ASSERT(JS_TRACE_MONITOR(cx).recorder != NULL);
     Fragment* f = JS_TRACE_MONITOR(cx).recorder->getFragment();
     JS_ASSERT(!f->vmprivate);
-    f->blacklist();
+    f->first->blacklist();
     js_DeleteRecorder(cx);
     if (f->root == f) {
         /* we are recording a primary trace */
