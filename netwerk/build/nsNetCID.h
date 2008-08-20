@@ -465,18 +465,6 @@
     {0x8f, 0xbc, 0xbe, 0xe8, 0xf9, 0x22, 0xea, 0x67} \
 }
 
-// service implementing nsIApplicationCacheService.
-#define NS_APPLICATIONCACHESERVICE_CLASSNAME \
-    "nsApplicationCacheService"
-#define NS_APPLICATIONCACHESERVICE_CONTRACTID \
-    "@mozilla.org/network/application-cache-service;1"
-#define NS_APPLICATIONCACHESERVICE_CID               \
-{ /* 02bf7a2a-39d8-4a23-a50c-2cbb085ab7a5 */         \
-    0x02bf7a2a,                                      \
-    0x39d8,                                          \
-    0x4a23,                                          \
-    {0xa5, 0x0c, 0x2c, 0xbb, 0x08, 0x5a, 0xb7, 0xa5} \
-}
 
 /******************************************************************************
  * netwerk/protocol/http/ classes
