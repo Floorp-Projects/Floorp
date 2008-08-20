@@ -165,6 +165,7 @@ public:
     bool isGlobalSlotUndemotable(JSScript* script, unsigned slot) const;
     void markStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot);
     bool isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) const;
+    void clear();
 };
 
 typedef Queue<uint16> SlotList;
