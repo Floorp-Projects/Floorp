@@ -51,7 +51,6 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "nsThreadUtilsInternal.h"
-#include "dom_quickstubs.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsXPConnect,
                               nsIXPConnect,
@@ -2063,8 +2062,8 @@ nsXPConnect::ReleaseJSContext(JSContext * aJSContext, PRBool noGC)
         if(ccx)
         {
 #ifdef DEBUG_xpc_hacker
-            printf("!xpc - deferring destruction of JSContext @ %p\n", 
-                   (void *)aJSContext);
+            printf("!xpc - deferring destruction of JSContext @ %0x\n", 
+                   aJSContext);
 #endif
             ccx->SetDestroyJSContextInDestructor(JS_TRUE);
             JS_ClearNewbornRoots(aJSContext);
@@ -2326,19 +2325,6 @@ nsXPConnect::SetReportAllJSExceptions(PRBool newval)
 
     return NS_OK;
 }
-
-/* [noscript, notxpcom] PRBool defineDOMQuickStubs (in JSContextPtr cx, in JSObjectPtr proto, in PRUint32 flags, in PRUint32 interfaceCount, [array, size_is (interfaceCount)] in nsIIDPtr interfaceArray); */
-NS_IMETHODIMP_(PRBool)
-nsXPConnect::DefineDOMQuickStubs(JSContext * cx,
-                                 JSObject * proto,
-                                 PRUint32 flags,
-                                 PRUint32 interfaceCount,
-                                 const nsIID * *interfaceArray)
-{
-    return DOM_DefineQuickStubs(cx, proto, flags,
-                                interfaceCount, interfaceArray);
-}
-
 
 #ifdef DEBUG
 /* These are here to be callable from a debugger */

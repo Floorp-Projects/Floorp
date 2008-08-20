@@ -2721,7 +2721,6 @@ public:
                                            const nsID* iid,
                                            nsISupports* aOuter,
                                            nsresult* pErr);
-    static JSBool GetISupportsFromJSObject(JSObject* obj, nsISupports** iface);
 
     /**
      * Convert a native array into a jsval.
@@ -2828,14 +2827,13 @@ public:
     static JSBool SetVerbosity(JSBool state)
         {JSBool old = sVerbose; sVerbose = state; return old;}
 
-    static void BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz);
-    static JSBool CheckForPendingException(nsresult result, JSContext *cx);
-
 private:
     static void Verbosify(XPCCallContext& ccx,
                           char** psz, PRBool own);
 
+    static void BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz);
     static JSBool ThrowExceptionObject(JSContext* cx, nsIException* e);
+    static JSBool CheckForPendingException(nsresult result, XPCCallContext &ccx);
 
 private:
     static JSBool sVerbose;
@@ -3205,9 +3203,6 @@ public:
     static void ShutDown()
         {sMainJSThread = nsnull; sMainThreadData = nsnull;}
 
-    static PRBool IsMainThread(JSContext *cx)
-        { return cx->thread == sMainJSThread; }
-
 private:
     XPCPerThreadData();
     static XPCPerThreadData* GetDataImpl(JSContext *cx);
@@ -3237,6 +3232,8 @@ private:
     static PRLock*           gLock;
     static XPCPerThreadData* gThreads;
     static PRUintn           gTLSIndex;
+
+    friend class AutoJSSuspendNonMainThreadRequest;
 
     // Cached value of cx->thread on the main thread. 
     static void *sMainJSThread;
@@ -3576,7 +3573,7 @@ public:
 
 private:
     void SuspendRequest() {
-        if (mCX && XPCPerThreadData::IsMainThread(mCX))
+        if (mCX && mCX->thread != XPCPerThreadData::sMainJSThread)
             mDepth = JS_SuspendRequest(mCX);
         else
             mCX = nsnull;

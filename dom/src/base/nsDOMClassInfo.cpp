@@ -3823,8 +3823,7 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
   // be calling nsWindowSH::GlobalResolve directly.
   JSObject *global = ::JS_GetGlobalForObject(cx, obj);
   jsval val;
-  if (!::JS_LookupPropertyWithFlags(cx, global, mData->mName,
-                                    JSRESOLVE_CLASSNAME, &val)) {
+  if (!::JS_LookupProperty(cx, global, mData->mName, &val)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -4058,25 +4057,6 @@ nsDOMClassInfo::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
   NS_WARNING("nsDOMClassInfo::InnerObject Don't call me!");
 
   return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
-nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
-{
-  PRUint32 flags = (mData->mScriptableFlags & DONT_ENUM_STATIC_PROPS)
-                   ? 0
-                   : JSPROP_ENUMERATE;
-
-  PRUint32 count = 0;
-  while (mData->mInterfaces[count]) {
-    count++;
-  }
-
-  if (!sXPConnect->DefineDOMQuickStubs(cx, proto, flags,
-                                       count, mData->mInterfaces)) {
-    JS_ClearPendingException(cx);
-  }
-  return NS_OK;
 }
 
 // static
