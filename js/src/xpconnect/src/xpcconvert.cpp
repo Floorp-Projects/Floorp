@@ -147,9 +147,8 @@ XPCConvert::IsMethodReflectable(const XPTMethodDescriptor& info)
 
 /***************************************************************************/
 
-// static
-JSBool
-XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
+static JSBool
+GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
 {
     JSClass* jsclass = STOBJ_GET_CLASS(obj);
     NS_ASSERTION(jsclass, "obj has no class");

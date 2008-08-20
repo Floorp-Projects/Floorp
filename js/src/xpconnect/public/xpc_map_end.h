@@ -232,11 +232,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::InnerObject(nsIXPConnectWrappedNative *wrapper,
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
-#ifndef XPC_MAP_WANT_POST_CREATE_PROTOTYPE
-NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext *cx, JSObject *proto)
-    {return NS_OK;}
-#endif
-
 /**************************************************************/
 
 #undef XPC_MAP_CLASSNAME
@@ -316,10 +311,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext *cx, JSObject *pr
 
 #ifdef XPC_MAP_WANT_OUTER_OBJECT
 #undef XPC_MAP_WANT_OUTER_OBJECT
-#endif
-
-#ifdef XPC_MAP_WANT_POST_CREATE_PROTOTYPE
-#undef XPC_MAP_WANT_POST_CREATE_PROTOTYPE
 #endif
 
 #ifdef XPC_MAP_FLAGS
