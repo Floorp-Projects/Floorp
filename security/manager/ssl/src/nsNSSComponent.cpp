@@ -1957,7 +1957,6 @@ nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
 #define PROFILE_CHANGE_TEARDOWN_VETO_TOPIC "profile-change-teardown-veto"
 #define PROFILE_BEFORE_CHANGE_TOPIC "profile-before-change"
 #define PROFILE_AFTER_CHANGE_TOPIC "profile-after-change"
-#define SESSION_LOGOUT_TOPIC "session-logout"
 
 NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic, 
@@ -2043,12 +2042,6 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
         bec->DontForward();
       }
     }
-  }
-  else if ((nsCRT::strcmp(aTopic, SESSION_LOGOUT_TOPIC) == 0) && mNSSInitialized) {
-    nsNSSShutDownPreventionLock locker;
-    PK11_LogoutAll();
-    SSL_ClearSessionCache();
-    LogoutAuthenticatedPK11();
   }
   else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) { 
     nsNSSShutDownPreventionLock locker;
@@ -2185,7 +2178,6 @@ nsNSSComponent::RegisterObservers()
     observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC, PR_FALSE);
-    observerService->AddObserver(this, SESSION_LOGOUT_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC, PR_FALSE);
   }
