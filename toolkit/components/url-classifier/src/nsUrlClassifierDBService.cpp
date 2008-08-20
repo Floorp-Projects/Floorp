@@ -1931,7 +1931,7 @@ nsUrlClassifierDBServiceWorker::IsCanonicalizedIP(const nsACString& host)
   char c;
   if (PR_sscanf(PromiseFlatCString(host).get(), "%u.%u.%u.%u%c",
                 &i1, &i2, &i3, &i4, &c) == 4) {
-    return (i1 <= 0xFF && i1 <= 0xFF && i1 <= 0xFF && i1 <= 0xFF);
+    return (i1 <= 0xFF && i2 <= 0xFF && i3 <= 0xFF && i4 <= 0xFF);
   }
 
   return PR_FALSE;
