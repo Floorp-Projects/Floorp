@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
 	browser_367052.js \
+	browser_448741.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
