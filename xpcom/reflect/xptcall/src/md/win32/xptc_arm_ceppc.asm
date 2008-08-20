@@ -287,9 +287,8 @@ $FuncName PROC
 				  ; the result is in r0
 
 
-	ldr       r0, [sp]        ; Start unwinding the stack
+	str       r0, [sp]        ; Start unwinding the stack
 	str       r0, [sp, #0x20] 
-	ldr       r0, [sp, #0x20]
 
 ; 225  : }    
 
