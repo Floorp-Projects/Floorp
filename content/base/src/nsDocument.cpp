@@ -1143,6 +1143,7 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNodeSelector)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
     // nsNodeSH::PreCreate() depends on the identity pointer being the
     // same as nsINode (which nsIDocument inherits), so if you change
     // the below line, make sure nsNodeSH::PreCreate() still does the
@@ -1951,6 +1952,22 @@ void
 nsDocument::SetPrincipal(nsIPrincipal *aNewPrincipal)
 {
   mNodeInfoManager->SetDocumentPrincipal(aNewPrincipal);
+}
+
+NS_IMETHODIMP
+nsDocument::GetApplicationCache(nsIApplicationCache **aApplicationCache)
+{
+  NS_IF_ADDREF(*aApplicationCache = mApplicationCache);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetApplicationCache(nsIApplicationCache *aApplicationCache)
+{
+  mApplicationCache = aApplicationCache;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
