@@ -121,7 +121,7 @@ public:
     return !aOther.operator==(*this);
   }
 
-  PRUint32 index() {
+  PRUint32 position() {
     return mIndex;
   }
 
