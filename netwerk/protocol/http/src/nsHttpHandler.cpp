@@ -152,7 +152,8 @@ NewURI(const nsACString &aSpec,
 nsHttpHandler *gHttpHandler = nsnull;
 
 nsHttpHandler::nsHttpHandler()
-    : mHttpVersion(NS_HTTP_VERSION_1_1)
+    : mConnMgr(nsnull)
+    , mHttpVersion(NS_HTTP_VERSION_1_1)
     , mProxyHttpVersion(NS_HTTP_VERSION_1_1)
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mProxyCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
@@ -196,6 +197,7 @@ nsHttpHandler::~nsHttpHandler()
     // make sure the connection manager is shutdown
     if (mConnMgr) {
         mConnMgr->Shutdown();
+        NS_RELEASE(mConnMgr);
     }
 
     nsHttp::DestroyAtomTable();
@@ -280,10 +282,6 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "profile-change-net-teardown", PR_TRUE);
         mObserverService->AddObserver(this, "profile-change-net-restore", PR_TRUE);
         mObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
-        mObserverService->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC,
-                                      PR_TRUE);
-        mObserverService->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
-                                      PR_TRUE);
     }
  
     StartPruneDeadConnectionsTimer();
@@ -293,23 +291,23 @@ nsHttpHandler::Init()
 nsresult
 nsHttpHandler::InitConnectionMgr()
 {
+    nsresult rv;
+
     if (!mConnMgr) {
-        nsRefPtr<nsHttpConnectionMgr> mgr = new nsHttpConnectionMgr();
-        NS_ENSURE_TRUE(mgr, NS_ERROR_OUT_OF_MEMORY);
-
-        nsresult rv = mgr->Init(mMaxConnections,
-                                mMaxConnectionsPerServer,
-                                mMaxConnectionsPerServer,
-                                mMaxPersistentConnectionsPerServer,
-                                mMaxPersistentConnectionsPerProxy,
-                                mMaxRequestDelay,
-                                mMaxPipelinedRequests);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        mgr.swap(mConnMgr);
+        mConnMgr = new nsHttpConnectionMgr();
+        if (!mConnMgr)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(mConnMgr);
     }
 
-    return NS_OK;
+    rv = mConnMgr->Init(mMaxConnections,
+                        mMaxConnectionsPerServer,
+                        mMaxConnectionsPerServer,
+                        mMaxPersistentConnectionsPerServer,
+                        mMaxPersistentConnectionsPerProxy,
+                        mMaxRequestDelay,
+                        mMaxPipelinedRequests);
+    return rv;
 }
 
 void
@@ -1697,26 +1695,21 @@ nsHttpHandler::Observe(nsISupports *subject,
     else if (strcmp(topic, "profile-change-net-teardown")    == 0 ||
              strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)    == 0) {
 
+        // kill off the "prune dead connections" timer
+        StopPruneDeadConnectionsTimer();
+
         // clear cache of all authentication credentials.
         mAuthCache.ClearAll();
+
+        // ensure connection manager is shutdown
+        if (mConnMgr)
+            mConnMgr->Shutdown();
 
         // need to reset the session start time since cache validation may
         // depend on this value.
         mSessionStartTime = NowInSeconds();
     }
-    else if (strcmp(topic, NS_IOSERVICE_GOING_OFFLINE_TOPIC) == 0) {
-        // kill off the "prune dead connections" timer
-        StopPruneDeadConnectionsTimer();
-
-        // ensure connection manager is shutdown
-        if (mConnMgr) {
-            mConnMgr->Shutdown();
-            mConnMgr = nsnull;
-        }
-    }
-    else if (strcmp(topic, "profile-change-net-restore") == 0 ||
-             (strcmp(topic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC) == 0 &&
-              nsDependentString(data).EqualsLiteral(NS_IOSERVICE_ONLINE))) {
+    else if (strcmp(topic, "profile-change-net-restore") == 0) {
         // initialize connection manager
         InitConnectionMgr();
 
