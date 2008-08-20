@@ -643,48 +643,6 @@ nsTreeBodyFrame::GetPageLength(PRInt32 *_retval)
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::GetSelectionRegion(nsIScriptableRegion **aRegion)
-{
-  *aRegion = nsnull;
-
-  nsCOMPtr<nsITreeSelection> selection;
-  mView->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_TRUE(selection, NS_OK);
-
-  nsCOMPtr<nsIScriptableRegion> region = do_CreateInstance("@mozilla.org/gfx/region;1");
-  NS_ENSURE_TRUE(region, NS_ERROR_FAILURE);
-  region->Init();
-
-  nsRefPtr<nsPresContext> presContext = PresContext();
-  nsRect rect = mRect;
-  rect.ScaleRoundOut(1.0 / presContext->AppUnitsPerCSSPixel());
-
-  nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
-  nsPoint origin = GetOffsetTo(rootFrame);
-
-  // iterate through the visible rows and add the selected ones to the
-  // drag region
-  PRInt32 x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
-  PRInt32 y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
-  PRInt32 top = y;
-  PRInt32 end = GetLastVisibleRow();
-  PRInt32 rowHeight = nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
-  for (PRInt32 i = mTopRowIndex; i <= end; i++) {
-    PRBool isSelected;
-    selection->IsSelected(i, &isSelected);
-    if (isSelected)
-      region->UnionRect(x, y, rect.width, rowHeight);
-    y += rowHeight;
-  }
-
-  // clip to the tree boundary in case one row extends past it
-  region->IntersectRect(x, top, rect.width, rect.height);
-
-  NS_ADDREF(*aRegion = region);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsTreeBodyFrame::Invalidate()
 {
   if (mUpdateBatchNest)
@@ -2612,8 +2570,6 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
       mSlots->mDragSession->GetDragAction(&mSlots->mDragAction);
     else
       mSlots->mDragAction = 0;
-    mSlots->mDropRow = -1;
-    mSlots->mDropOrient = -1;
   }
   else if (aEvent->message == NS_DRAGDROP_OVER) {
     // The mouse is hovering over this tree. If we determine things are
@@ -2738,9 +2694,6 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
     }
 
     mView->Drop(mSlots->mDropRow, mSlots->mDropOrient);
-    mSlots->mDropRow = -1;
-    mSlots->mDropOrient = -1;
-    *aEventStatus = nsEventStatus_eConsumeNoDefault; // already handled the drop
   }
   else if (aEvent->message == NS_DRAGDROP_EXIT) {
     // this event was meant for another frame, so ignore it
@@ -2755,11 +2708,11 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
     }
     else
       mSlots->mDropAllowed = PR_FALSE;
+    mSlots->mDropRow = -1;
+    mSlots->mDropOrient = -1;
     mSlots->mDragSession = nsnull;
     mSlots->mScrollLines = 0;
-    // If a drop is occuring, the exit event will fire just before the drop
-    // event, so don't reset mDropRow or mDropOrient as these fields are used
-    // by the drop event.
+
     if (mSlots->mTimer) {
       mSlots->mTimer->Cancel();
       mSlots->mTimer = nsnull;

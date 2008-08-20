@@ -1242,7 +1242,7 @@ void nsWidget::ProcessDrag( PhEvent_t *event, PRUint32 aEventType, PhPoint_t *po
 
 void nsWidget::DispatchDragDropEvent( PhEvent_t *phevent, PRUint32 aEventType, PhPoint_t *pos ) {
   nsEventStatus status;
-  nsDragEvent event(PR_TRUE, 0, nsnull);
+  nsMouseEvent event(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
 
   InitEvent( event, aEventType );
 
