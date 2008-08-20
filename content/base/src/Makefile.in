@@ -59,7 +59,6 @@ REQUIRES	= xpcom \
 		  js \
 		  webshell \
 		  necko \
-		  nkcache \
 		  mimetype \
 		  exthandler \
 		  chardet \
