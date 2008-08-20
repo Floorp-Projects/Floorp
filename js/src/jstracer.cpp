@@ -116,6 +116,7 @@ static avmplus::AvmCore* core = &s_core;
 
 /* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
 static bool nesting_enabled = true;
+static bool oracle_enabled = true;
 
 #ifdef DEBUG
 static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
@@ -247,7 +248,7 @@ Oracle::markGlobalSlotUndemotable(JSScript* script, unsigned slot)
 bool
 Oracle::isGlobalSlotUndemotable(JSScript* script, unsigned slot) const
 {
-    return _dontDemote.get(slot % ORACLE_SIZE);
+    return !oracle_enabled || _dontDemote.get(slot % ORACLE_SIZE);
 }
 
 /* Tell the oracle that a certain slot at a certain bytecode location should not be demoted. */
@@ -265,7 +266,7 @@ Oracle::isStackSlotUndemotable(JSScript* script, jsbytecode* ip, unsigned slot) 
 {
     uint32 hash = uint32(intptr_t(ip)) + (slot << 5);
     hash %= ORACLE_SIZE;
-    return _dontDemote.get(hash);
+    return !oracle_enabled || _dontDemote.get(hash);
 }
 
 /* Clear the oracle. */
