@@ -779,7 +779,7 @@ function deep2() {
     return "ok";
 }
 deep2.expected = "ok";
-test(deep2)
+test(deep2);
 
 var merge_type_maps_x = 0, merge_type_maps_y = 0;
 function merge_type_maps() {
