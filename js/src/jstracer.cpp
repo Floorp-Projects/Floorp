@@ -2150,6 +2150,12 @@ js_FinishJIT(JSTraceMonitor *tm)
 }
 
 extern void
+js_FlushJITOracle(JSContext* cx)
+{
+    oracle.clear();
+}
+
+extern void
 js_FlushJITCache(JSContext* cx)
 {
     debug_only_v(printf("Flushing cache.\n"););
