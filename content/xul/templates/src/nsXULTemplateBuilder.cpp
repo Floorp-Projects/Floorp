@@ -1111,8 +1111,10 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument* aDocument,
             Rebuild();
 
         // Check for a change to the 'datasources' attribute. If so, setup
-        // mDB by parsing the vew value and rebuild.
+        // mDB by parsing the new value and rebuild.
         else if (aAttribute == nsGkAtoms::datasources) {
+            Uninit(PR_FALSE);  // Reset results
+            
             PRBool shouldDelay;
             LoadDataSources(aDocument, &shouldDelay);
             if (!shouldDelay)
