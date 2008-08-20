@@ -1937,7 +1937,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		{
 			NS_ASSERTION(info->nArgs == 4, "Wrong number of arguments to CallMethod");
 
-			nsDragEvent event(PR_TRUE, (int32)  info->args[0], this);
+			nsMouseEvent event(PR_TRUE, (int32)  info->args[0], this, nsMouseEvent::eReal);
 			nsPoint point(((int32 *)info->args)[1], ((int32 *)info->args)[2]);
 			InitEvent (event, &point);
 			uint32 mod = (uint32) info->args[3];
