@@ -218,6 +218,7 @@ _have_cleartype_quality (void)
 static BYTE
 _get_system_quality (void)
 {
+#ifndef WINCE
     BOOL font_smoothing;
     UINT smoothing_type;
 
@@ -242,6 +243,9 @@ _get_system_quality (void)
     } else {
 	return DEFAULT_QUALITY;
     }
+#else
+    return DEFAULT_QUALITY;
+#endif
 }
 
 /* If face_hfont is non-%NULL then font_matrix must be a simple scale by some
