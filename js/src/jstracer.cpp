@@ -1143,11 +1143,11 @@ LIns*
 TraceRecorder::writeBack(LIns* i, LIns* base, ptrdiff_t offset)
 {
     /* Sink all type casts targeting the stack into the side exit by simply storing the original
-        (uncasted) value. Each guard generates the side exit map based on the types of the
-        last stores to every stack location, so its safe to not perform them on-trace. */
-     if (isPromoteInt(i))
-         i = ::demote(lir, i);
-     return lir->insStorei(i, base, offset);
+       (uncasted) value. Each guard generates the side exit map based on the types of the
+       last stores to every stack location, so its safe to not perform them on-trace. */
+    if (isPromoteInt(i)) 
+        i = ::demote(lir, i);
+    return lir->insStorei(i, base, offset);
 }
 
 /* Update the tracker, then issue a write back store. */
@@ -1260,7 +1260,6 @@ TraceRecorder::snapshot(ExitType exitType)
         *m = isNumber(*vp)
                ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
                : JSVAL_TAG(*vp);
-               if (*m == JSVAL_INT && JSVAL_TAG(*vp) == 2)
         JS_ASSERT((*m != JSVAL_INT) || isInt32(*vp));
         ++m;
     );
@@ -1459,6 +1458,8 @@ TraceRecorder::emitTreeCallStackSetup(Fragment* inner)
         lir->insStorei(lir->ins2i(LIR_piadd, lirbuf->rp, rp_adj),
                 lirbuf->state, offsetof(InterpState, rp));
     }
+    /* We are about to execute the tree, so capture its type state before we do so. */
+    snapshot(SNAPSHOT_ONLY);
 }
 
 /* Record a call to an inner tree. */
@@ -1466,6 +1467,24 @@ void
 TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
 {
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
+    JSTraceMonitor* tm = traceMonitor;
+    JS_ASSERT(exit.exitType == SNAPSHOT_ONLY);
+    /* We took a dummy snapshot of the pre-call state. Make sure that ints are promoted if
+       the calling tree expects a double in that slot. */
+    uint8* m = exit.typeMap;
+    uint8* z = tm->globalTypeMap->data(); 
+    FORALL_GLOBAL_SLOTS(cx, exit.numGlobalSlots, tm->globalSlots->data(),
+        if (*m == JSVAL_INT && *z == JSVAL_DOUBLE)
+            lir->insStorei(get(vp), gp_ins, nativeGlobalOffset(vp));
+        ++m; ++z;
+    );
+    m = exit.typeMap + exit.numGlobalSlots;
+    z = ti->stackTypeMap.data();
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+        if (*m == JSVAL_INT && *z == JSVAL_DOUBLE)
+            lir->insStorei(get(vp), lirbuf->sp, -treeInfo->nativeStackBase + nativeStackOffset(vp));
+        ++m; ++z;
+    );
     /* Invoke the inner tree. */
     LIns* args[] = { lir->insImmPtr(inner), lirbuf->state }; /* reverse order */
     LIns* ret = lir->insCall(F_CallTree, args);
@@ -1797,7 +1816,9 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
            the stack layout of all peer fragments is always identical (it depends on the
            program counter location, which is the same for all peer fragments.) */
         r->emitTreeCallStackSetup(f);
+        debug_only(printf("first fragment: %p\n", f)); 
         GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount);
+        debug_only(printf("actual fragment: %p\n", f)); 
         if (!lr) {
             js_AbortRecording(cx, oldpc, "Couldn't call inner tree");
             return false;
@@ -1831,25 +1852,8 @@ static inline GuardRecord*
 js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
 {
     Fragment* f = *treep;
-
-    /* if we don't have a compiled tree available for this location, bail out */
-    if (!f->code()) {
-        JS_ASSERT(!f->vmprivate);
-        return NULL;
-    }
-    JS_ASSERT(f->vmprivate);
-
-    AUDIT(traceTriggered);
-
-    /* execute previously recorded trace */
-    TreeInfo* ti = (TreeInfo*)f->vmprivate;
-
-#ifdef DEBUG
-    printf("entering trace at %s:%u@%u, native stack slots: %u\n",
-           cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
-           cx->fp->regs->pc - cx->fp->script->code, ti->maxNativeStackSlots);
-#endif
-
+    JS_ASSERT(f->code() && f->vmprivate);
+    
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     unsigned ngslots = tm->globalSlots->length();
     uint16* gslots = tm->globalSlots->data();
@@ -1874,18 +1878,35 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
         return NULL;
     }
 
-    if (!BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack)) {
+    TreeInfo* ti = NULL;
+    for ( ; f != NULL; f = f->peer) {
+        /* If we don't have a compiled tree available for this location, check the next tree. */
+        if (!f->code()) {
+            JS_ASSERT(!f->vmprivate);
+            continue;
+        }
+        JS_ASSERT(f->vmprivate);
+
+        AUDIT(traceTriggered);
+
+        /* execute previously recorded trace */
+        ti = (TreeInfo*)f->vmprivate;
+
+#ifdef DEBUG
+        printf("entering trace at %s:%u@%u, native stack slots: %u\n",
+               cx->fp->script->filename, js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+               cx->fp->regs->pc - cx->fp->script->code, ti->maxNativeStackSlots);
+#endif
+
+        if (BuildNativeStackFrame(cx, 0/*callDepth*/, ti->stackTypeMap.data(), stack))
+            break;
+        
         AUDIT(typeMapMismatchAtEntry);
         debug_only(printf("type-map mismatch.\n");)
-        if (++ti->mismatchCount > MAX_MISMATCH) {
-            debug_only(printf("excessive mismatches, flushing tree.\n"));
-            js_TrashTree(cx, f);
-            f->blacklist();
-        }
-        return NULL;
     }
-
-    ti->mismatchCount = 0;
+    if (!f) 
+        return NULL;
+    *treep = f;
 
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double)];
     FrameInfo* callstack = (FrameInfo*) alloca(MAX_CALL_STACK_ENTRIES * sizeof(FrameInfo));
@@ -2039,14 +2060,20 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
     /* If there is a chance that js_ExecuteTree will actually succeed, invoke it (either the
        first fragment must contain some code, or at least it must have a peer fragment). */
     GuardRecord* lr = NULL;
-    if (f->code() || f->peer)
+    if (f->code())
         lr = js_ExecuteTree(cx, &f, inlineCallCount);
     if (!lr) {
         JS_ASSERT(!tm->recorder);
-        /* If we don't have compiled code for this entry point (none recorded or we trashed it),
-           count the number of hits and trigger the recorder if appropriate. */
-        if (!f->code() && (++f->hits() >= HOTLOOP))
+        /* If we don't have compiled code for this entry point (none recorded),
+           count the number of hits and trigger the recorder if appropriate. If we do have
+           code for f, none of the peer fragments matched, so add a new one. */
+        if (f->code()) {
+            f = tm->fragmento->newLoop(f->ip);
             return js_RecordTree(cx, tm, f);
+        } else {
+            if (++f->hits() >= HOTLOOP)
+                return js_RecordTree(cx, tm, f);
+        }
         return false;
     }
     /* We successfully executed a trace, see if we should grow the tree. */
