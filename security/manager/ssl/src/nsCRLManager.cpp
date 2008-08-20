@@ -285,7 +285,7 @@ done:
       
       pref->SetIntPref(updateErrCntPrefStr.get(),0);
       
-      if(toBeRescheduled == PR_TRUE){
+      if (toBeRescheduled) {
         nsAutoString hashKey(crlKey);
         nssComponent->RemoveCrlFromList(hashKey);
         nssComponent->DefineNextTimer();
