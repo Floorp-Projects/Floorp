@@ -982,7 +982,7 @@ typedef enum JSErrNum {
     JSErr_Limit
 } JSErrNum;
 
-extern const JSErrorFormatString *
+extern JS_FRIEND_API(const JSErrorFormatString *)
 js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 
 #ifdef va_start

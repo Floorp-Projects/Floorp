@@ -44,13 +44,6 @@
 #include "nsRect.h"
 #include "nsEvent.h"
 #include "nsStringGlue.h"
-
-// nsIDOMEvent contains a long enum which includes a member called ERROR,
-// which conflicts with something that Windows defines somewhere.
-// So, undefine it:
-#ifdef WIN32
-#undef ERROR
-#endif
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
