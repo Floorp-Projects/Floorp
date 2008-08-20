@@ -1345,16 +1345,24 @@ TraceRecorder::checkType(jsval& v, uint8 t, bool& unstable)
             unstable = true;
             return true; /* keep checking types, but request re-compilation */
         }
-        /* looks good, slot is an int32, the last instruction should be i2f */
+        /* Looks good, slot is an int32, the last instruction should be i2f. */
         JS_ASSERT(i->isop(LIR_i2f));
-        /* we got the final LIR_i2f as we expected. Overwrite the value in that
+        /* We got the final LIR_i2f as we expected. Overwrite the value in that
            slot with the argument of i2f since we want the integer store to flow along
            the loop edge, not the casted value. */
         set(&v, i->oprnd1());
         return true;
     }
-    if (t == JSVAL_DOUBLE)
-        return isNumber(v);
+    if (t == JSVAL_DOUBLE) {
+        if (!isNumber(v))
+            return false; /* not a number? type mismatch */
+        LIns* i = get(&v);
+        /* We sink i2f conversions into the side exit, but at the loop edge we have to make
+           sure we promote back to double if at loop entry we want a double. */
+        if (isPromoteInt(i)) 
+            set(&v, lir->ins1(LIR_i2f, i));
+        return true;
+    }
     /* for non-number types we expect a precise match of the type */
 #ifdef DEBUG
     if (JSVAL_TAG(v) != t) {
