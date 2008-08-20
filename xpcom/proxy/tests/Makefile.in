@@ -49,16 +49,7 @@ REQUIRES	= xpcom
 CPPSRCS		= proxytests.cpp \
 		proxy-create-threadsafety.cpp \
 		$(NULL)
-
-CPP_UNIT_TESTS += \
-  proxytests.cpp \
-  proxy-create-threadsafety.cpp \
-  $(NULL)
-
-XPIDLSRCS  = \
-  nsITestProxy.idl \
-  nsITestProxyOrig.idl \
-  $(NULL)
+XPIDLSRCS	= nsITestProxy.idl
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX)) 
 
