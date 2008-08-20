@@ -144,7 +144,8 @@ namespace nanojit
 	    NESTED_EXIT,
 	    MISMATCH_EXIT,
 	    OOM_EXIT,
-	    OVERFLOW_EXIT
+	    OVERFLOW_EXIT,
+	    SNAPSHOT_ONLY
 	};
 	
 	struct SideExit
