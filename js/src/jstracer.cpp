@@ -1036,11 +1036,11 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, uint8& t,
         ins = lir->ins1(LIR_i2f, ins);
     } else {
         JS_ASSERT(isNumber(*p) == (t == JSVAL_DOUBLE));
-		if (t == JSVAL_DOUBLE) {
-			ins = lir->insLoad(LIR_ldq, base, offset);
-		} else {
-	        ins = lir->insLoad(LIR_ldp, base, offset);
-		}
+        if (t == JSVAL_DOUBLE) {
+            ins = lir->insLoad(LIR_ldq, base, offset);
+        } else {
+            ins = lir->insLoad(LIR_ldp, base, offset);
+        }
     }
     tracker.set(p, ins);
 #ifdef DEBUG
@@ -2223,9 +2223,11 @@ TraceRecorder::ifop()
         guard((d == 0 || JSDOUBLE_IS_NaN(d)), lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)), BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
-              lir->ins_eq0(lir->ins2(LIR_and,
-                                     lir->insLoadi(get(&v), offsetof(JSString, length)),
-                                     INS_CONST(JSSTRING_LENGTH_MASK))),
+              lir->ins_eq0(lir->ins2(LIR_piand,
+                                     lir->insLoad(LIR_ldp, 
+                                                  get(&v), 
+                                                  (int)offsetof(JSString, length)),
+                                     INS_CONSTPTR(JSSTRING_LENGTH_MASK))),
               BRANCH_EXIT);
     } else {
         JS_NOT_REACHED("ifop");
@@ -2446,7 +2448,6 @@ TraceRecorder::binary(LOpcode op)
     if ((op >= LIR_sub && op <= LIR_ush) ||  // sub, mul, (callh), or, xor, (not,) lsh, rsh, ush
         (op >= LIR_fsub && op <= LIR_fdiv)) { // fsub, fmul, fdiv
         LIns* args[] = { NULL, cx_ins };
-        JS_ASSERT(op != LIR_callh);
         if (JSVAL_IS_STRING(l)) {
             args[0] = a;
             a = lir->insCall(F_StringToNumber, args);
@@ -5351,11 +5352,11 @@ TraceRecorder::record_JSOP_LENGTH()
         if (!JSVAL_IS_STRING(l))
             ABORT_TRACE("non-string primitives unsupported");
         LIns* str_ins = get(&l);
-        LIns* len_ins = lir->insLoadi(str_ins, offsetof(JSString, length));
+        LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, length));
 
-        LIns* masked_len_ins = lir->ins2(LIR_and,
+        LIns* masked_len_ins = lir->ins2(LIR_qiand,
                                          len_ins,
-                                         INS_CONST(JSSTRING_LENGTH_MASK));
+                                         INS_CONSTPTR(JSSTRING_LENGTH_MASK));
 
         LIns *choose_len_ins =
             lir->ins_choose(lir->ins_eq0(lir->ins2(LIR_piand,
