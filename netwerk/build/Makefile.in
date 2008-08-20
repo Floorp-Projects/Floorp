@@ -113,6 +113,11 @@ SHARED_LIBRARY_LIBS += \
 LOCAL_INCLUDES	+= -I$(srcdir)/../cookie/src
 endif
 
+ifdef MOZ_STORAGE
+REQUIRES += storage
+DEFINES += -DNECKO_OFFLINE_CACHE
+endif
+
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
