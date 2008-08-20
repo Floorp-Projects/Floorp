@@ -78,12 +78,6 @@ STATIC_EXTRA_LIBS	+= \
 		$(NULL)
 endif
 
-ifdef MOZ_LDAP_XPCOM
-STATIC_EXTRA_LIBS	+= \
-		$(LDAP_LIBS) \
-		$(NULL)
-endif
-
 STATIC_EXTRA_LIBS	+= $(MOZ_CAIRO_LIBS)
 
 ifdef MOZ_ENABLE_GTK2
