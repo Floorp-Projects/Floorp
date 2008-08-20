@@ -64,6 +64,7 @@
 #ifndef WINABLEAPI
 #include <winable.h>
 #endif
+#undef ERROR /// Otherwise we can't include nsIDOMNSEvent.h if we include this
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
 #endif

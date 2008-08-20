@@ -63,7 +63,7 @@ XPCThrower::Throw(nsresult rv, JSContext* cx)
  */
 // static
 JSBool
-XPCThrower::CheckForPendingException(nsresult result, JSContext *cx)
+XPCThrower::CheckForPendingException(nsresult result, XPCCallContext &ccx)
 {
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
     if(!xpc)
@@ -79,8 +79,8 @@ XPCThrower::CheckForPendingException(nsresult result, JSContext *cx)
     if(NS_FAILED(e->GetResult(&e_result)) || e_result != result)
         return JS_FALSE;
 
-    if(!ThrowExceptionObject(cx, e))
-        JS_ReportOutOfMemory(cx);
+    if(!ThrowExceptionObject(ccx, e))
+        JS_ReportOutOfMemory(ccx);
     return JS_TRUE;
 }
 
