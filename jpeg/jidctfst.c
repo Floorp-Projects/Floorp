@@ -171,6 +171,13 @@ jpeg_idct_ifast_orig (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JSAMPARRAY output_buf, JDIMENSION output_col);
 #endif
 
+#ifdef HAVE_SSE2_INTRINSICS
+GLOBAL(void)
+jpeg_idct_ifast_sse2 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
+                 JCOEFPTR coef_block,
+                 JSAMPARRAY output_buf, JDIMENSION output_col);
+#endif /* HAVE_SSE2_INTRINSICS */
+
 GLOBAL(void)
 jpeg_idct_ifast(j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR coef_block,
@@ -1646,5 +1653,459 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	}
 }
 #endif
+
+#ifdef HAVE_SSE2_INTRINSICS
+#include "xmmintrin.h"
+#include "emmintrin.h"
+
+/* These values are taken from the decimal shifted left 14. When multiplying */
+/* by these constants, we have to shift left the other multiplier so that we */
+/* we can use pmulhw which will descale us by the 16 bits.                   */
+
+SSE2_ALIGN unsigned short SSE2_1_414213562[8] =
+  {23170, 23170, 23170, 23170, 23170, 23170, 23170, 23170};
+SSE2_ALIGN unsigned short SSE2_1_847759065[8] =
+  {30274, 30274, 30274, 30274, 30274, 30274, 30274, 30274};
+SSE2_ALIGN unsigned short SSE2_1_082392200[8] =
+  {17734, 17734, 17734, 17734, 17734, 17734, 17734, 17734};
+SSE2_ALIGN unsigned short SSE2_NEG_0_765366865[8] =
+  {52996, 52996, 52996, 52996, 52996, 52996, 52996, 52996};
+
+/* This following is to compensate for range_limit and is shifted five to */
+/* the left as that's what we're scaled for at the time.                  */
+
+SSE2_ALIGN unsigned short SSE2_ADD_128[8] =
+  {4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096};
+
+/*---------------------------------------------------------------------------*/
+
+inline GLOBAL(void)
+     jpeg_idct_ifast_sse2 (j_decompress_ptr cinfo, jpeg_component_info * compptr,
+                           JCOEFPTR coef_block,
+                           JSAMPARRAY output_buf, JDIMENSION output_col)
+{
+  __m128i row0, row1, row2, row3, row4, row5, row6, row7;
+  __m128i tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+  __m128i tmp10, tmp11, tmp12, tmp13, z10, z11, z12, z13;
+  __m128i xps0, xps1, xps2, xps3, rowa;
+  __m128i * quantptr;
+  __m128i * coefptr;
+  JSAMPROW outptr0, outptr1, outptr2, outptr3, outptr4, outptr5, outptr6, outptr7;
+
+  /* ====================================================================== */
+  /* Load registers from the coefficient block                              */
+  /* ====================================================================== */
+
+  quantptr = (__m128i *) compptr->dct_table;
+  coefptr  = (__m128i *) coef_block;
+
+  row0 = *(coefptr+0);
+  row1 = *(coefptr+1);
+  row2 = *(coefptr+2);
+  row3 = *(coefptr+3);
+  row4 = *(coefptr+4);
+  row5 = *(coefptr+5);
+  row6 = *(coefptr+6);
+  row7 = *(coefptr+7);
+  row0 = _mm_mullo_epi16(row0, *(quantptr+0));
+  row1 = _mm_mullo_epi16(row1, *(quantptr+1));
+  row2 = _mm_mullo_epi16(row2, *(quantptr+2));
+  row3 = _mm_mullo_epi16(row3, *(quantptr+3));
+  row4 = _mm_mullo_epi16(row4, *(quantptr+4));
+  row5 = _mm_mullo_epi16(row5, *(quantptr+5));
+  row6 = _mm_mullo_epi16(row6, *(quantptr+6));
+  row7 = _mm_mullo_epi16(row7, *(quantptr+7));
+
+  /* ====================================================================== */
+  /* Inverse Discrete Cosine Transform Column Processing                    */
+  /* ====================================================================== */
+
+  /* Even part */
+
+  /*  tmp10 = ((DCTELEM) wsptr[0] + (DCTELEM) wsptr[4]); */
+  /*  tmp11 = ((DCTELEM) wsptr[0] - (DCTELEM) wsptr[4]); */
+
+  tmp10 = _mm_add_epi16(row0, row4);
+  tmp11 = _mm_sub_epi16(row0, row4);
+
+  /*  tmp13 = ((DCTELEM) wsptr[2] + (DCTELEM) wsptr[6]); */
+  /*  tmp12 = MULTIPLY((DCTELEM) wsptr[2] - (DCTELEM) wsptr[6], FIX_1_414213562) */
+  /*        - tmp13; */
+
+  tmp13 = _mm_add_epi16(row2, row6);
+  tmp12 = _mm_mulhi_epi16(_mm_slli_epi16(_mm_sub_epi16(row2, row6), 2),
+                          *((__m128i *) SSE2_1_414213562));
+  tmp12 = _mm_sub_epi16(tmp12, tmp13);
+
+  /*  tmp0 = tmp10 + tmp13; */
+  /*  tmp3 = tmp10 - tmp13; */
+  /*  tmp1 = tmp11 + tmp12; */
+  /*  tmp2 = tmp11 - tmp12; */
+
+  tmp0 = _mm_add_epi16(tmp10, tmp13);
+  tmp3 = _mm_sub_epi16(tmp10, tmp13);
+  tmp1 = _mm_add_epi16(tmp11, tmp12);
+  tmp2 = _mm_sub_epi16(tmp11, tmp12);
+
+  /* Odd part */
+
+  /*  z13 = (DCTELEM) wsptr[5] + (DCTELEM) wsptr[3]; */
+  /*  z10 = (DCTELEM) wsptr[5] - (DCTELEM) wsptr[3]; */
+  /*  z11 = (DCTELEM) wsptr[1] + (DCTELEM) wsptr[7]; */
+  /*  z12 = (DCTELEM) wsptr[1] - (DCTELEM) wsptr[7]; */
+
+  z13 = _mm_add_epi16(row5, row3);
+  z10 = _mm_sub_epi16(row5, row3);
+  z11 = _mm_add_epi16(row1, row7);
+  z12 = _mm_sub_epi16(row1, row7);
+
+  /* phase 5 */
+
+  /*  tmp7 = z11 + z13; */
+  /*  tmp11 = MULTIPLY(z11 - z13, FIX_1_414213562); */
+
+  tmp7 = _mm_add_epi16(z11, z13);
+  tmp11 = _mm_mulhi_epi16(_mm_slli_epi16(_mm_sub_epi16(z11, z13), 2),
+                          *((__m128i *) SSE2_1_414213562));
+
+  /*  z5 = MULTIPLY(z10 + z12, FIX_1_847759065); */
+  /*  tmp10 = MULTIPLY(z12, FIX_1_082392200) - z5; */
+  /*  tmp12 = MULTIPLY(z10, - FIX_2_613125930) + z5; */
+
+  /* This is really a mess as the negative 2.61 doesn't work well */
+  /* as we're working with 16-bit integers. So we're going to apply */
+  /* a little algebra to get: */
+
+  /*  tmp10 = z12 * (FIX_1_082392200 - FIX_1_847759065) - z10*FIX_1_847759065 */
+  /*  tmp12 = z10 * (FIX_1_847759065 - FIX_2_613125930) + z12*FIX_1_847759065 */
+
+  /* or */
+
+  /*  tmp10 = z12 * FIX_NEG_0_765366865 - z10 * FIX_1_847759065 */
+  /*  tmp12 = z10 * FIX_NEG_0_765366865 + z12 * FIX_1_847759065 */
+
+  z10 = _mm_slli_epi16(z10, 2);
+  z12 = _mm_slli_epi16(z12, 2);
+
+  tmp10 = _mm_sub_epi16(_mm_mulhi_epi16(z12, *((__m128i *)SSE2_NEG_0_765366865)),
+                        _mm_mulhi_epi16(z10, *((__m128i *)SSE2_1_847759065)));
+  tmp12 = _mm_add_epi16(_mm_mulhi_epi16(z10, *((__m128i *)SSE2_NEG_0_765366865)),
+                        _mm_mulhi_epi16(z12, *((__m128i *)SSE2_1_847759065)));
+
+  /* phase 2 */
+
+  /*  tmp6 = tmp12 - tmp7; */
+  /*  tmp5 = tmp11 - tmp6; */
+  /*  tmp4 = tmp10 + tmp5; */
+
+  tmp6 = _mm_sub_epi16(tmp12, tmp7);
+  tmp5 = _mm_sub_epi16(tmp11, tmp6);
+  tmp4 = _mm_add_epi16(tmp10, tmp5);
+
+  /*  outptr[0] = range_limit[IDESCALE(tmp0 + tmp7, PASS1_BITS+3)  */
+  /*                        & RANGE_MASK]; */
+  /*  outptr[7] = range_limit[IDESCALE(tmp0 - tmp7, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+
+  row0 = _mm_add_epi16(tmp0, tmp7);
+  row7 = _mm_sub_epi16(tmp0, tmp7);
+
+  /*  outptr[1] = range_limit[IDESCALE(tmp1 + tmp6, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+  /*  outptr[6] = range_limit[IDESCALE(tmp1 - tmp6, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+
+  row1 = _mm_add_epi16(tmp1, tmp6);
+  row6 = _mm_sub_epi16(tmp1, tmp6);
+
+  /*  outptr[2] = range_limit[IDESCALE(tmp2 + tmp5, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+  /*  outptr[5] = range_limit[IDESCALE(tmp2 - tmp5, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+
+  row2 = _mm_add_epi16(tmp2, tmp5);
+  row5 = _mm_sub_epi16(tmp2, tmp5);
+
+  /*  outptr[4] = range_limit[IDESCALE(tmp3 + tmp4, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+  /*  outptr[3] = range_limit[IDESCALE(tmp3 - tmp4, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+
+  row4 = _mm_add_epi16(tmp3, tmp4);
+  row3 = _mm_sub_epi16(tmp3, tmp4);
+
+  /* ====================================================================== */
+  /* Transpose Matrix (Word)                                                */
+  /* ====================================================================== */
+
+  /* Save off the low quadwords from the even rows */
+
+  xps0 = _mm_move_epi64(row0);
+  xps1 = _mm_move_epi64(row2);
+  xps2 = _mm_move_epi64(row4);
+  xps3 = _mm_move_epi64(row6);
+
+  /* Interleave the high quadwords */
+
+  row0 = _mm_unpackhi_epi16(row0, row1);    /* 04 14 05 15 06 16 07 17 */
+  row2 = _mm_unpackhi_epi16(row2, row3);    /* 24 34 25 35 26 36 27 37 */
+  row4 = _mm_unpackhi_epi16(row4, row5);    /* 44 54 45 55 46 56 47 57 */
+  row6 = _mm_unpackhi_epi16(row6, row7);    /* 64 74 65 75 66 76 67 77 */ 
+
+  rowa = row0;
+  row0 = _mm_unpacklo_epi32(row0, row2);    /* 04 14 24 34 05 15 25 35 */
+  rowa = _mm_unpackhi_epi32(rowa, row2);    /* 06 16 26 36 07 17 27 37 */
+
+  row2 = row4;
+  row4 = _mm_unpacklo_epi32(row4, row6);    /* 44 54 64 74 45 55 65 75 */
+  row2 = _mm_unpackhi_epi32(row2, row6);    /* 46 56 66 76 47 57 67 77 */
+
+  row6 = row0;
+  row0 = _mm_unpacklo_epi64(row0, row4);    /* 04 14 24 34 44 54 64 74 */
+  row6 = _mm_unpackhi_epi64(row6, row4);    /* 05 15 25 35 45 55 65 75 */
+
+  row4 = rowa;
+  rowa = _mm_unpacklo_epi64(rowa, row2);    /* 06 16 26 36 46 56 66 76 */
+  row4 = _mm_unpackhi_epi64(row4, row2);    /* 07 17 27 37 47 57 67 77 */
+
+  /* row0, row6, rowa, row4 now contain *4, *5, *6, *7 */
+
+  /* Interleave the low quadwords */
+
+  xps0 = _mm_unpacklo_epi16(xps0, row1);    /* 00 10 01 11 02 12 03 13 */
+  xps1 = _mm_unpacklo_epi16(xps1, row3);    /* 20 30 21 31 22 32 23 33 */
+  xps2 = _mm_unpacklo_epi16(xps2, row5);    /* 40 50 41 51 42 52 43 43 */
+  xps3 = _mm_unpacklo_epi16(xps3, row7);    /* 60 70 61 71 62 72 63 73 */
+
+  row2 = xps0;
+  xps0 = _mm_unpacklo_epi32(xps0, xps1);    /* 00 10 20 30 01 11 21 31 */
+  row2 = _mm_unpackhi_epi32(row2, xps1);    /* 02 12 22 32 03 13 23 33 */
+
+  xps1 = xps2;
+  xps2 = _mm_unpacklo_epi32(xps2, xps3);    /* 40 50 60 70 41 51 61 71 */
+  xps1 = _mm_unpackhi_epi32(xps1, xps3);    /* 42 52 62 72 43 53 63 73 */
+
+  xps3 = xps0;
+  xps0 = _mm_unpacklo_epi64(xps0, xps2);    /* 00 10 20 30 40 50 60 70 */
+  xps3 = _mm_unpackhi_epi64(xps3, xps2);    /* 01 11 21 31 41 51 61 71 */
+
+  xps2 = row2;
+  row2 = _mm_unpacklo_epi64(row2, xps1);    /* 02 12 22 32 42 52 62 72 */
+  xps2 = _mm_unpackhi_epi64(xps2, xps1);    /* 03 13 23 33 43 53 63 73 */
+
+  /* xps0, xps3, row2, xps2 now contain *0, *1, *2, *3 */
+
+  /* Restructure back to row0 to row7. */
+
+  row7 = row4;
+  row5 = row6;
+  row6 = rowa;
+  row4 = row0;
+  row0 = xps0;
+  row1 = xps3;
+  row3 = xps2;
+
+  /* ====================================================================== */
+  /* Inverse Discrete Cosine Transform Row Processing                       */
+  /* ====================================================================== */
+
+  /* Even part */
+
+  /*  tmp10 = ((DCTELEM) wsptr[0] + (DCTELEM) wsptr[4]); */
+  /*  tmp11 = ((DCTELEM) wsptr[0] - (DCTELEM) wsptr[4]); */
+
+  tmp10 = _mm_add_epi16(row0, row4);
+  tmp11 = _mm_sub_epi16(row0, row4);
+
+  /*  tmp13 = ((DCTELEM) wsptr[2] + (DCTELEM) wsptr[6]); */
+  /*  tmp12 = MULTIPLY((DCTELEM) wsptr[2] - (DCTELEM) wsptr[6], FIX_1_414213562) */
+  /*        - tmp13; */
+
+  tmp13 = _mm_add_epi16(row2, row6);
+  tmp12 = _mm_mulhi_epi16(_mm_slli_epi16(_mm_sub_epi16(row2, row6), 2),
+                          *((__m128i *) SSE2_1_414213562));
+  tmp12 = _mm_sub_epi16(tmp12, tmp13);
+
+  /*  tmp0 = tmp10 + tmp13; */
+  /*  tmp3 = tmp10 - tmp13; */
+  /*  tmp1 = tmp11 + tmp12; */
+  /*  tmp2 = tmp11 - tmp12; */
+
+  tmp0 = _mm_add_epi16(tmp10, tmp13);
+  tmp3 = _mm_sub_epi16(tmp10, tmp13);
+  tmp1 = _mm_add_epi16(tmp11, tmp12);
+  tmp2 = _mm_sub_epi16(tmp11, tmp12);
+
+  /* Odd part */
+
+  /*  z13 = (DCTELEM) wsptr[5] + (DCTELEM) wsptr[3]; */
+  /*  z10 = (DCTELEM) wsptr[5] - (DCTELEM) wsptr[3]; */
+  /*  z11 = (DCTELEM) wsptr[1] + (DCTELEM) wsptr[7]; */
+  /*  z12 = (DCTELEM) wsptr[1] - (DCTELEM) wsptr[7]; */
+
+  z13 = _mm_add_epi16(row5, row3);
+  z10 = _mm_sub_epi16(row5, row3);
+  z11 = _mm_add_epi16(row1, row7);
+  z12 = _mm_sub_epi16(row1, row7);
+
+  /* phase 5 */
+
+  /*  tmp7 = z11 + z13; */
+  /*  tmp11 = MULTIPLY(z11 - z13, FIX_1_414213562); */
+
+  tmp7 = _mm_add_epi16(z11, z13);
+  tmp11 = _mm_mulhi_epi16(_mm_slli_epi16(_mm_sub_epi16(z11, z13), 2),
+                          *((__m128i *) SSE2_1_414213562));
+
+  /*  z5 = MULTIPLY(z10 + z12, FIX_1_847759065); */
+  /*  tmp10 = MULTIPLY(z12, FIX_1_082392200) - z5; */
+  /*  tmp12 = MULTIPLY(z10, - FIX_2_613125930) + z5; */
+
+  /* This is really a mess as the negative 2.61 doesn't work well */
+  /* as we're working with 16-bit integers. So we're going to apply */
+  /* a little algebra to get: */
+
+  /*  tmp10 = z12 * (FIX_1_082392200 - FIX_1_847759065) - z10*FIX_1_847759065 */
+  /*  tmp12 = z10 * (FIX_1_847759065 - FIX_2_613125930) + z12*FIX_1_847759065 */
+
+  /* or */
+
+  /*  tmp10 = z12 * FIX_NEG_0_765366865 - z10 * FIX_1_847759065 */
+  /*  tmp12 = z10 * FIX_NEG_0_765366865 + z12 * FIX_1_847759065 */
+
+  z10 = _mm_slli_epi16(z10, 2);
+  z12 = _mm_slli_epi16(z12, 2);
+
+  tmp10 = _mm_sub_epi16(_mm_mulhi_epi16(z12, *((__m128i *)SSE2_NEG_0_765366865)),
+                        _mm_mulhi_epi16(z10, *((__m128i *)SSE2_1_847759065)));
+  tmp12 = _mm_add_epi16(_mm_mulhi_epi16(z10, *((__m128i *)SSE2_NEG_0_765366865)),
+                        _mm_mulhi_epi16(z12, *((__m128i *)SSE2_1_847759065)));
+
+  /* phase 2 */
+
+  /*  tmp6 = tmp12 - tmp7; */
+  /*  tmp5 = tmp11 - tmp6; */
+  /*  tmp4 = tmp10 + tmp5; */
+
+  tmp6 = _mm_sub_epi16(tmp12, tmp7);
+  tmp5 = _mm_sub_epi16(tmp11, tmp6);
+  tmp4 = _mm_add_epi16(tmp10, tmp5);
+
+  /*  outptr[0] = range_limit[IDESCALE(tmp0 + tmp7, PASS1_BITS+3)  */
+  /*                        & RANGE_MASK]; */
+  /*  outptr[7] = range_limit[IDESCALE(tmp0 - tmp7, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+
+  row0 = _mm_add_epi16(tmp0, tmp7);
+  row7 = _mm_sub_epi16(tmp0, tmp7);
+
+  /*  outptr[1] = range_limit[IDESCALE(tmp1 + tmp6, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+  /*  outptr[6] = range_limit[IDESCALE(tmp1 - tmp6, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+
+  row1 = _mm_add_epi16(tmp1, tmp6);
+  row6 = _mm_sub_epi16(tmp1, tmp6);
+
+  /*  outptr[2] = range_limit[IDESCALE(tmp2 + tmp5, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+  /*  outptr[5] = range_limit[IDESCALE(tmp2 - tmp5, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+
+  row2 = _mm_add_epi16(tmp2, tmp5);
+  row5 = _mm_sub_epi16(tmp2, tmp5);
+
+  /*  outptr[4] = range_limit[IDESCALE(tmp3 + tmp4, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+  /*  outptr[3] = range_limit[IDESCALE(tmp3 - tmp4, PASS1_BITS+3) */
+  /*                        & RANGE_MASK]; */
+
+  row4 = _mm_add_epi16(tmp3, tmp4);
+  row3 = _mm_sub_epi16(tmp3, tmp4);
+
+  /* ====================================================================== */
+  /* Transpose Matrix (Byte)                                                */
+  /* ====================================================================== */
+
+  /* Shift right after adding half to descale */
+
+  row0 = _mm_add_epi16(row0, *((__m128i *) SSE2_ADD_128));
+  row1 = _mm_add_epi16(row1, *((__m128i *) SSE2_ADD_128));
+  row2 = _mm_add_epi16(row2, *((__m128i *) SSE2_ADD_128));
+  row3 = _mm_add_epi16(row3, *((__m128i *) SSE2_ADD_128));
+  row4 = _mm_add_epi16(row4, *((__m128i *) SSE2_ADD_128));
+  row5 = _mm_add_epi16(row5, *((__m128i *) SSE2_ADD_128));
+  row6 = _mm_add_epi16(row6, *((__m128i *) SSE2_ADD_128));
+  row7 = _mm_add_epi16(row7, *((__m128i *) SSE2_ADD_128));
+
+  row0 = _mm_srai_epi16(row0, 5);
+  row1 = _mm_srai_epi16(row1, 5);
+  row2 = _mm_srai_epi16(row2, 5);
+  row3 = _mm_srai_epi16(row3, 5);
+  row4 = _mm_srai_epi16(row4, 5);
+  row5 = _mm_srai_epi16(row5, 5);
+  row6 = _mm_srai_epi16(row6, 5);
+  row7 = _mm_srai_epi16(row7, 5);
+
+  /* Range Limit and convert Words to Bytes */
+
+  row0 = _mm_packus_epi16(row0, row4);
+  row1 = _mm_packus_epi16(row1, row5);
+  row2 = _mm_packus_epi16(row2, row6);
+  row3 = _mm_packus_epi16(row3, row7);
+
+  /* Transpose from rows back to columns */
+
+  row4 = _mm_unpackhi_epi8(row0, row1);   /* 40 50 41 51 42 52 43 43 ... */
+  row5 = _mm_unpackhi_epi8(row2, row3);   /* 60 70 61 71 62 72 63 73 ... */
+  row0 = _mm_unpacklo_epi8(row0, row1);   /* 00 10 01 11 02 12 03 13 ... */
+  row2 = _mm_unpacklo_epi8(row2, row3);   /* 20 30 21 31 22 32 23 33 ... */
+
+  row6 = _mm_unpackhi_epi16(row0, row2);  /* 04 14 24 34 05 15 25 35 ... */
+  row7 = _mm_unpackhi_epi16(row4, row5);  /* 44 54 64 74 45 55 65 75 ... */
+  row0 = _mm_unpacklo_epi16(row0, row2);  /* 00 10 20 30 01 11 21 31 ... */
+  row4 = _mm_unpacklo_epi16(row4, row5);  /* 40 50 60 70 41 51 61 71 ... */
+
+  row1 = _mm_unpackhi_epi32(row0, row4);  /* 02 12 22 32 42 52 62 72 ... */
+  row2 = _mm_unpackhi_epi32(row6, row7);  /* 06 16 26 36 46 56 66 76 ... */
+  row0 = _mm_unpacklo_epi32(row0, row4);  /* 00 10 20 30 40 50 60 70 ... */
+  row6 = _mm_unpacklo_epi32(row6, row7);  /* 04 14 24 34 55 54 64 74 ... */
+
+  /* Rearrange for readability */
+
+  row3 = row2;
+  row2 = row6;
+
+  /* ====================================================================== */
+  /* Final output                                                           */
+  /* ====================================================================== */
+
+  outptr0 = output_buf[0] + output_col;
+  outptr1 = output_buf[1] + output_col;
+  outptr2 = output_buf[2] + output_col;
+  outptr3 = output_buf[3] + output_col;
+  outptr4 = output_buf[4] + output_col;
+  outptr5 = output_buf[5] + output_col;
+  outptr6 = output_buf[6] + output_col;
+  outptr7 = output_buf[7] + output_col;
+
+  /* We can't use the faster FP instructions to write out the high quad */
+  /* so do a rotate right and write them out as the low quad            */
+
+  row4 = _mm_srli_si128(row0, 8);
+  row5 = _mm_srli_si128(row1, 8);
+  row6 = _mm_srli_si128(row2, 8);
+  row7 = _mm_srli_si128(row3, 8);
+
+  _mm_storel_epi64((__m128i *) outptr0, row0);
+  _mm_storel_epi64((__m128i *) outptr2, row1);
+  _mm_storel_epi64((__m128i *) outptr4, row2);
+  _mm_storel_epi64((__m128i *) outptr6, row3);
+  _mm_storel_epi64((__m128i *) outptr1, row4);
+  _mm_storel_epi64((__m128i *) outptr3, row5);
+  _mm_storel_epi64((__m128i *) outptr5, row6);
+  _mm_storel_epi64((__m128i *) outptr7, row7);
+}
+#endif /* HAVE_SSE2_INTRINSICS */
 
 #endif /* DCT_IFAST_SUPPORTED */

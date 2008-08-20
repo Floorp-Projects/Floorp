@@ -45,11 +45,11 @@ typedef struct {
    * In multi-pass modes, this array points to the current MCU's blocks
    * within the virtual arrays; it is used only by the input side.
    */
-  JBLOCKROW MCU_buffer[D_MAX_BLOCKS_IN_MCU];
+  SSE2_ALIGN JBLOCKROW MCU_buffer[D_MAX_BLOCKS_IN_MCU];
 
 #ifdef D_MULTISCAN_FILES_SUPPORTED
   /* In multi-pass modes, we need a virtual block array for each component. */
-  jvirt_barray_ptr whole_image[MAX_COMPONENTS];
+  SSE2_ALIGN jvirt_barray_ptr whole_image[MAX_COMPONENTS];
 #endif
 
 #ifdef BLOCK_SMOOTHING_SUPPORTED
@@ -471,7 +471,7 @@ decompress_smooth_data (j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
   jpeg_component_info *compptr;
   inverse_DCT_method_ptr inverse_DCT;
   boolean first_row, last_row;
-  JBLOCK workspace;
+  SSE2_ALIGN JBLOCK workspace;
   int *coef_bits;
   JQUANT_TBL *quanttbl;
   INT32 Q00,Q01,Q02,Q10,Q11,Q20, num;
@@ -723,9 +723,21 @@ jinit_d_coef_controller (j_decompress_ptr cinfo, boolean need_full_buffer)
     JBLOCKROW buffer;
     int i;
 
+#ifdef HAVE_SSE2_INTRINSICS
+    /* Align on 16-byte boundaries for the SSE2 code. */
+    /* This won't work for 64-bit systems so conditional code it. */
+
+    PRUptrdiff buffer_shift;
+
+    buffer_shift = (PRUptrdiff)
+      (*cinfo->mem->alloc_large) ((j_common_ptr) cinfo, JPOOL_IMAGE,
+                                  D_MAX_BLOCKS_IN_MCU * SIZEOF(JBLOCK) + 15);
+    buffer = (JBLOCKROW) ((buffer_shift + 15) & ~15);
+#else
     buffer = (JBLOCKROW)
       (*cinfo->mem->alloc_large) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				  D_MAX_BLOCKS_IN_MCU * SIZEOF(JBLOCK));
+#endif /* HAVE_SSE2_INTRINSICS */
     for (i = 0; i < D_MAX_BLOCKS_IN_MCU; i++) {
       coef->MCU_buffer[i] = buffer + i;
     }
