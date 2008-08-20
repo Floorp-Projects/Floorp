@@ -183,6 +183,7 @@ public:
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
     TypeMap                 stackTypeMap;
+    unsigned                mismatchCount;
     
     TreeInfo(nanojit::Fragment* _fragment) { 
         fragment = _fragment; 
@@ -302,10 +303,6 @@ class TraceRecorder {
     bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc);
     bool forInLoop(jsval* vp);
 
-#ifdef DEBUG    
-    void printTypeMaps(unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap);
-#endif
-    
 public:
     TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, TreeInfo*,
             unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap);
