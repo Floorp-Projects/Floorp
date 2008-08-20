@@ -1,0 +1,9 @@
+David Beazley's PLY (Python Lex-Yacc)
+http://www.dabeaz.com/ply/
+
+Licensed under the GPL (v2.1 or later).
+
+This directory contains just the code and license from PLY version 2.5;
+the full distribution (see the URL) also contains examples, tests,
+documentation, and a longer README.
+
