@@ -1574,9 +1574,6 @@ MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 
 dnl Get version of various core apps from the version files.
 FIREFOX_VERSION=`cat $topsrcdir/browser/config/version.txt`
-THUNDERBIRD_VERSION=`cat $topsrcdir/mail/config/version.txt`
-SUNBIRD_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
-SEAMONKEY_VERSION=`cat $topsrcdir/suite/config/version.txt`
 
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
@@ -4318,7 +4315,6 @@ BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
 MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
-MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
 MOZ_EXTENSIONS_ALL=" wallet p3p venkman inspector irc typeaheadfind gnomevfs sroaming datetime finger cview layout-debug tasks sql xforms schema-validation reporter"
@@ -4329,10 +4325,8 @@ MOZ_IPCD=
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_JSLOADER=1
-MOZ_LDAP_XPCOM=
 MOZ_LIBART_CFLAGS=
 MOZ_LIBART_LIBS=
-MOZ_MAIL_NEWS=
 MOZ_MATHML=1
 MOZ_MOCHITEST=1
 MOZ_MORK=1
@@ -4415,11 +4409,8 @@ esac
 MOZ_ARG_ENABLE_STRING(application,
 [  --enable-application=APP
                           Options include:
-                            suite
                             browser (Firefox)
-                            mail (Thunderbird)
                             composer
-                            calendar (Sunbird)
                             xulrunner
                             camino
                             content/xslt (Standalone Transformiix XSLT)
@@ -4467,8 +4458,6 @@ basic)
   MOZ_IMG_ENCODERS=
   MOZ_INSTALLER=
   MOZ_JSDEBUGGER=
-  MOZ_LDAP_XPCOM=
-  MOZ_MAIL_NEWS=
   MOZ_MATHML=
   MOZ_AUTH_EXTENSION=
   MOZ_NO_ACTIVEX_SUPPORT=1
@@ -4515,8 +4504,6 @@ minimal)
   MOZ_IMG_ENCODERS=
   MOZ_INSTALLER=
   MOZ_JSDEBUGGER=
-  MOZ_LDAP_XPCOM=
-  MOZ_MAIL_NEWS=
   MOZ_MATHML=
   MOZ_AUTH_EXTENSION=
   MOZ_NO_ACTIVEX_SUPPORT=1
@@ -4615,24 +4602,12 @@ esac
 # that haven't made a confvars.sh yet. Don't add new stuff here, use
 # MOZ_BUILD_APP.
 case "$MOZ_BUILD_APP" in
-suite)
-  AC_DEFINE(MOZ_SUITE)
-  ;;
-
 browser)
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
-mail)
-  AC_DEFINE(MOZ_THUNDERBIRD)
-  ;;
-
 composer)
   AC_DEFINE(MOZ_STANDALONE_COMPOSER)
-  ;;
-
-calendar)
-  AC_DEFINE(MOZ_SUNBIRD)
   ;;
 
 xulrunner)
@@ -4657,11 +4632,8 @@ esac
 
 AC_SUBST(MOZ_BUILD_APP)
 AC_SUBST(MOZ_XUL_APP)
-AC_SUBST(MOZ_SUITE)
 AC_SUBST(MOZ_PHOENIX)
-AC_SUBST(MOZ_THUNDERBIRD)
 AC_SUBST(MOZ_STANDALONE_COMPOSER)
-AC_SUBST(MOZ_SUNBIRD)
 AC_SUBST(MOZ_XULRUNNER)
 
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
@@ -4941,43 +4913,6 @@ MOZ_ARG_ENABLE_STRING(ui-locale,
     MOZ_UI_LOCALE=$enableval )
 AC_SUBST(MOZ_UI_LOCALE)
 
-dnl =========================================================
-dnl = Calendar client
-dnl =========================================================
-MOZ_ARG_ENABLE_BOOL(calendar,,
-    MOZ_OLD_CALENDAR=1,
-    MOZ_OLD_CALENDAR= )
-
-if test "$MOZ_OLD_CALENDAR"; then
-    AC_MSG_WARN([Building with the calendar extension is no longer supported.])
-    if test "$MOZ_THUNDERBIRD"; then
-        AC_MSG_WARN([Since you're trying to build mail, you could try adding])
-        AC_MSG_WARN(['--enable-extensions=default,lightning' to your mozconfig])
-        AC_MSG_WARN([and building WITH A FRESH TREE.])
-    fi
-    AC_MSG_WARN([For more information, please visit:])
-    AC_MSG_ERROR([http://www.mozilla.org/projects/calendar/])
-fi
-
-AC_SUBST(MOZ_CALENDAR)
-
-dnl =========================================================
-dnl = Mail & News
-dnl =========================================================
-MOZ_ARG_DISABLE_BOOL(mailnews,
-[  --disable-mailnews      Disable building of mail & news components],
-    MOZ_MAIL_NEWS=,
-    MOZ_MAIL_NEWS=1 )
-AC_SUBST(MOZ_MAIL_NEWS)
-
-dnl =========================================================
-dnl = LDAP
-dnl =========================================================
-MOZ_ARG_DISABLE_BOOL(ldap,
-[  --disable-ldap          Disable LDAP support],
-    MOZ_LDAP_XPCOM=,
-    MOZ_LDAP_XPCOM=1)
-
 dnl ========================================================
 dnl = Trademarked Branding 
 dnl ========================================================
@@ -4993,17 +4928,8 @@ browser)
     MOZ_APP_DISPLAYNAME=Firefox
     ;;
 
-calendar)
-    MOZ_BRANDING_DIRECTORY=other-licenses/branding/sunbird
-    MOZ_APP_DISPLAYNAME=Sunbird
-    ;;
-
-mail)
-    MOZ_BRANDING_DIRECTORY=other-licenses/branding/thunderbird
-    ;;
-
 *)]
-    AC_MSG_ERROR([Official branding is only available for Firefox Sunbird and Thunderbird.])
+    AC_MSG_ERROR([Official branding is only available for Firefox.])
 esac
 )
 
@@ -5772,15 +5698,6 @@ done],
 dnl Remove dupes
 MOZ_IMG_DECODERS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_IMG_DECODERS}`
 MOZ_IMG_ENCODERS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_IMG_ENCODERS}`
-
-dnl ========================================================
-dnl experimental ldap features
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(ldap-experimental,
-[  --enable-ldap-experimental
-                          Enable LDAP experimental features],
-    MOZ_LDAP_XPCOM_EXPERIMENTAL=1,
-    MOZ_LDAP_XPCOM_EXPERIMENTAL=)
 
 dnl ========================================================
 dnl MathML on by default
@@ -7271,21 +7188,6 @@ fi
 
 fi
 
-dnl Disable static mail in debug builds, but not with libxul sdk.
-if test -n "$MOZ_DEBUG" -a -z "$LIBXUL_SDK"; then
-   MOZ_STATIC_MAIL_BUILD=
-fi
-MOZ_ARG_ENABLE_BOOL(static-mail,
-[  --enable-static-mail Enable static mail build support],
-    MOZ_STATIC_MAIL_BUILD=1,
-    MOZ_STATIC_MAIL_BUILD= )
-
-if test "$MOZ_STATIC_MAIL_BUILD"; then
-    AC_DEFINE(MOZ_STATIC_MAIL_BUILD)
-fi
-
-AC_SUBST(MOZ_STATIC_MAIL_BUILD)
-
 dnl ========================================================
 dnl =
 dnl = Standalone module options
@@ -7890,21 +7792,6 @@ if test "$MOZ_DEBUG" || test "$NS_TRACE_MALLOC"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 fi
 
-if test "$MOZ_LDAP_XPCOM"; then
-    LDAP_CFLAGS='-I${DIST}/public/ldap'
-    if test "$OS_ARCH" = "WINNT"; then
-        if test -n "$GNU_CC"; then
-            LDAP_LIBS='-L$(DIST)/lib -lnsldap32v60 -lnsldappr32v60 -lnsldif32v60'
-        else
-            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)nsldappr32v60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)nsldif32v60.${IMPORT_LIB_SUFFIX}'
-        fi
-    elif test "$OS_ARCH" = "OS2"; then
-            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)ldap60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)prldap60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)ldif60.${IMPORT_LIB_SUFFIX}'
-    else
-        LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap60 -lprldap60 -lldif60'
-    fi
-fi
-
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
@@ -7979,10 +7866,6 @@ AC_SUBST(MOZ_INSURE_DIRS)
 AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
 AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(MOZ_INSURIFYING)
-AC_SUBST(MOZ_LDAP_XPCOM)
-AC_SUBST(MOZ_LDAP_XPCOM_EXPERIMENTAL)
-AC_SUBST(LDAP_CFLAGS)
-AC_SUBST(LDAP_LIBS)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)
 AC_SUBST(MOZ_PLACES_BOOKMARKS)
@@ -8051,9 +7934,6 @@ AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
 AC_SUBST(MOZ_APP_VERSION)
 AC_SUBST(FIREFOX_VERSION)
-AC_SUBST(THUNDERBIRD_VERSION)
-AC_SUBST(SUNBIRD_VERSION)
-AC_SUBST(SEAMONKEY_VERSION)
 
 AC_SUBST(MOZ_PKG_SPECIAL)
 
@@ -8453,7 +8333,7 @@ unset MAKEFILES
 unset CONFIG_FILES
 
 if test "$COMPILE_ENVIRONMENT"; then
-if test -z "$MOZ_NATIVE_NSPR" || test "$MOZ_LDAP_XPCOM"; then
+if test -z "$MOZ_NATIVE_NSPR"; then
     ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla"
     if test -z "$MOZ_DEBUG"; then
         ac_configure_args="$ac_configure_args --disable-debug"
@@ -8488,36 +8368,5 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     rm -f config/autoconf.mk.bak
 fi
 
-# if we're building the LDAP XPCOM component, we need to build 
-# the c-sdk first.  
-#
-if test "$MOZ_LDAP_XPCOM"; then
-
-    # these subdirs may not yet have been created in the build tree.
-    # don't use the "-p" switch to mkdir, since not all platforms have it
-    #
-    if test ! -d "directory"; then
-        mkdir "directory"
-    fi
-    if test ! -d "directory/c-sdk"; then
-        mkdir "directory/c-sdk"    
-    fi
-    if test ! -d "directory/c-sdk/ldap"; then
-        mkdir "directory/c-sdk/ldap"    
-    fi
-
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-dist-prefix=$MOZ_BUILD_ROOT/dist --without-nss --with-mozilla"
-    if test -z "$MOZ_DEBUG"; then
-        ac_configure_args="$ac_configure_args --disable-debug"
-    fi
-    if test "$MOZ_OPTIMIZE" = "1"; then
-        ac_configure_args="$ac_configure_args --enable-optimize"
-    fi
-    if test -n "$HAVE_64BIT_OS"; then
-        ac_configure_args="$ac_configure_args --enable-64bit"
-    fi
-    AC_OUTPUT_SUBDIRS(directory/c-sdk)
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS"
-fi
 fi # COMPILE_ENVIRONMENT
 

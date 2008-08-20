@@ -926,25 +926,6 @@ if test -n "$MOZ_PSM"; then
   "
 fi
 
-if test -n "$MOZ_CALENDAR"; then
-  add_makefiles "
-    calendar/Makefile
-    calendar/resources/Makefile
-    calendar/libical/Makefile
-    calendar/libical/src/Makefile
-    calendar/libical/src/libical/Makefile
-    calendar/libical/src/libicalss/Makefile
-    calendar/base/Makefile
-    calendar/base/public/Makefile
-    calendar/base/src/Makefile
-    calendar/base/build/Makefile
-    calendar/providers/Makefile
-    calendar/providers/memory/Makefile
-    calendar/providers/storage/Makefile
-    calendar/providers/composite/Makefile
-  "
-fi
-
 if test -n "$MOZ_IPCD"; then
   add_makefiles "
     ipc/ipcd/Makefile
