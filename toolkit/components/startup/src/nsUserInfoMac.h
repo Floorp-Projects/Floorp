@@ -39,18 +39,33 @@
 #define __nsUserInfoMac_h
 
 #include "nsIUserInfo.h"
-#include "nsReadableUtils.h"
+
+
+#include <InternetConfig.h>
 
 class nsUserInfo: public nsIUserInfo
+
 {
 public:
-  nsUserInfo();
-  virtual ~nsUserInfo() {}
+              nsUserInfo(void);
+  virtual     ~nsUserInfo();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUSERINFO
+
   
-  nsresult GetPrimaryEmailAddress(nsCString &aEmailAddress);  
+protected:
+
+  nsresult    EnsureInitted();
+
+  static OSType      GetAppCreatorCode();
+  static PRUnichar*  PStringToNewUCS2(ConstStr255Param str);
+  
+protected:
+
+  ICInstance    mInstance;
+  PRBool        mInitted;
+  
 };
 
 #endif /* __nsUserInfo_h */
