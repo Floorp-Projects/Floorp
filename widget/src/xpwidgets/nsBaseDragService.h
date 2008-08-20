@@ -45,7 +45,6 @@
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 #include "nsIRenderingContext.h"
-#include "nsIDOMDataTransfer.h"
 
 #include "gfxImageSurface.h"
 
@@ -132,7 +131,6 @@ protected:
   nsCOMPtr<nsIDOMNode> mSourceNode;
   nsCOMPtr<nsIDOMDocument> mSourceDocument;       // the document at the drag source. will be null
                                                   //  if it came from outside the app.
-  nsCOMPtr<nsIDOMDataTransfer> mDataTransfer;
 
   // used to determine the image to appear on the cursor while dragging
   nsCOMPtr<nsIDOMNode> mImage;

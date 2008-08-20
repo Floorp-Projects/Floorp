@@ -51,9 +51,8 @@ native nsSize (nsSize);
 
 interface nsIDOMDocument;
 interface nsIDOMNode;
-interface nsIDOMDataTransfer;
 
-[scriptable, uuid(15860D52-FE2C-4DDD-AC50-9C23E24916C4)]
+[scriptable, uuid(CBA22C53-FCCE-11d2-96D4-0060B0FB9956)]
 interface nsIDragSession : nsISupports
 {
   /**
@@ -90,11 +89,6 @@ interface nsIDragSession : nsISupports
     * drag originated outside the application.
     */
   readonly attribute nsIDOMNode sourceNode;
-
-  /**
-   * The data transfer object for the current drag.
-   */
-  attribute nsIDOMDataTransfer dataTransfer;
 
   /**
     * Get data from a Drag&Drop. Can be called while the drag is in process

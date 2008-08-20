@@ -37,9 +37,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-// non-strings need some non-zero value used for their data length
-const kNonStringDataLength = 4;
-
 /** 
  *  nsTransferable - a wrapper for nsITransferable that simplifies
  *                   javascript clipboard and drag&drop. for use in
@@ -270,15 +267,17 @@ function FlavourData(aData, aLength, aFlavour)
 FlavourData.prototype = {
   get data ()
   {
-    if (this.flavour &&
-        this.flavour.dataIIDKey != "nsISupportsString")
+    if (this.flavour && 
+        this.flavour.dataIIDKey != "nsISupportsString" )
       return this.supports.QueryInterface(Components.interfaces[this.flavour.dataIIDKey]); 
-
-    var supports = this.supports;
-    if (supports instanceof Components.interfaces.nsISupportsString)
-      return supports.data.substring(0, this.contentLength/2);
+    else {
+      var unicode = this.supports.QueryInterface(Components.interfaces.nsISupportsString);
+      if (unicode) 
+        return unicode.data.substring(0, this.contentLength/2);
      
-    return supports;
+      return this.supports;
+    }
+    return "";
   }
 }
 
@@ -299,7 +298,7 @@ var transferUtils = {
       case "text/unicode":
         return aData.replace(/^\s+|\s+$/g, "");
       case "text/x-moz-url":
-        return ((aData instanceof Components.interfaces.nsISupportsString) ? aData.toString() : aData).split("\n")[0];
+        return aData.toString().split("\n")[0];
       case "application/x-moz-file":
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
@@ -382,33 +381,63 @@ var nsDragAndDrop = {
 
       if (!transferData.data) return;
       transferData = transferData.data;
+      
+      var transArray = Components.classes["@mozilla.org/supports-array;1"]
+                                 .createInstance(Components.interfaces.nsISupportsArray);
 
-      var dt = aEvent.dataTransfer;
-      var count = 0;
-      do {
-        var tds = transferData._XferID == "TransferData" 
-                                         ? transferData 
-                                         : transferData.dataList[count]
-        for (var i = 0; i < tds.dataList.length; ++i) 
-        {
-          var currData = tds.dataList[i];
-          var currFlavour = currData.flavour.contentType;
-          var value = currData.supports;
-          if (value instanceof Components.interfaces.nsISupportsString)
-            value = value.toString();
-          dt.mozSetDataAt(currFlavour, value, count);
+      var region = null;
+      if (aEvent.originalTarget.localName == "treechildren") {
+        // let's build the drag region
+        var tree = aEvent.originalTarget.parentNode;
+        try {
+          region = Components.classes["@mozilla.org/gfx/region;1"].createInstance(Components.interfaces.nsIScriptableRegion);
+          region.init();
+          var obo = tree.treeBoxObject;
+          var bo = obo.treeBody.boxObject;
+          var sel= obo.view.selection;
+
+          var rowX = bo.x;
+          var rowY = bo.y;
+          var rowHeight = obo.rowHeight;
+          var rowWidth = bo.width;
+
+          //add a rectangle for each visible selected row
+          for (var i = obo.getFirstVisibleRow(); i <= obo.getLastVisibleRow(); i ++)
+          {
+            if (sel.isSelected(i))
+              region.unionRect(rowX, rowY, rowWidth, rowHeight);
+            rowY = rowY + rowHeight;
+          }
+      
+          //and finally, clip the result to be sure we don't spill over...
+          region.intersectRect(bo.x, bo.y, bo.width, bo.height);
+        } catch(ex) {
+          dump("Error while building selection region: " + ex + "\n");
+          region = null;
         }
-
-        count++;
       }
+
+      var count = 0;
+      do 
+        {
+          var trans = nsTransferable.set(transferData._XferID == "TransferData" 
+                                         ? transferData 
+                                         : transferData.dataList[count++]);
+          transArray.AppendElement(trans.QueryInterface(Components.interfaces.nsISupports));
+        }
       while (transferData._XferID == "TransferDataSet" && 
              count < transferData.dataList.length);
-
-      dt.effectAllowed = "all";
-      // a drag targeted at a tree should instead use the treechildren so that
-      // the current selection is used as the drag feedback
-      dt.addElement(aEvent.originalTarget.localName == "treechildren" ?
-                    aEvent.originalTarget : aEvent.target);
+      
+      try {
+        this.mDragService.invokeDragSessionWithImage(aEvent.target, transArray,
+                                                     region, dragAction.action,
+                                                     null, 0, 0, aEvent);
+      }
+      catch(ex) {
+        // this could be because the user pressed escape to
+        // cancel the drag. even if it's not, there's not much
+        // we can do, so be silent.
+      }
       aEvent.stopPropagation();
     },
 
@@ -438,7 +467,6 @@ var nsDragAndDrop = {
                                            flavourSet.flavourTable[flavour], 
                                            this.mDragSession);
               aEvent.stopPropagation();
-              aEvent.preventDefault();
               break;
             }
         }
@@ -463,37 +491,14 @@ var nsDragAndDrop = {
         return;
       if (!this.checkCanDrop(aEvent, aDragDropObserver))
         return;  
-
-      var flavourSet = aDragDropObserver.getSupportedFlavours();
-
-      var dt = aEvent.dataTransfer;
-      var dataArray = [];
-      var count = dt.mozItemCount;
-      for (var i = 0; i < count; ++i) {
-        var types = dt.mozTypesAt(i);
-        for (var j = 0; j < types.length; ++j) {
-          var type = types[j];
-          // dataTransfer uses text/plain but older code used text/unicode, so
-          // switch this for compatibility
-          if (type == "text/plain")
-            type = "text/unicode";
-          if (type in flavourSet.flavourTable) {
-            var data = dt.mozGetDataAt(type, i);
-            if (data) {
-              var length = (typeof data == "string") ? data.length : kNonStringDataLength;
-              dataArray[i] = FlavourToXfer(data, length, flavourSet.flavourTable[type]);
-              break;
-            }
-          }
-        }
+      if (this.mDragSession.canDrop) {
+        var flavourSet = aDragDropObserver.getSupportedFlavours();
+        var transferData = nsTransferable.get(flavourSet, this.getDragData, true);
+        // hand over to the client to respond to dropped data
+        var multiple = "canHandleMultipleItems" in aDragDropObserver && aDragDropObserver.canHandleMultipleItems;
+        var dropData = multiple ? transferData : transferData.first.first;
+        aDragDropObserver.onDrop(aEvent, dropData, this.mDragSession);
       }
-
-      var transferData = new TransferDataSet(dataArray)
-
-      // hand over to the client to respond to dropped data
-      var multiple = "canHandleMultipleItems" in aDragDropObserver && aDragDropObserver.canHandleMultipleItems;
-      var dropData = multiple ? transferData : transferData.first.first;
-      aDragDropObserver.onDrop(aEvent, dropData, this.mDragSession);
       aEvent.stopPropagation();
     },
 
@@ -534,6 +539,31 @@ var nsDragAndDrop = {
       if ("onDragEnter" in aDragDropObserver)
         aDragDropObserver.onDragEnter(aEvent, this.mDragSession);
     },  
+    
+  /** 
+   * nsISupportsArray getDragData (Object aFlavourList)
+   *
+   * Creates a nsISupportsArray of all droppable items for the given
+   * set of supported flavours.
+   * 
+   * @param FlavourSet aFlavourSet
+   *        formatted flavour list.
+   **/  
+  getDragData: function (aFlavourSet)
+    {
+      var supportsArray = Components.classes["@mozilla.org/supports-array;1"]
+                                    .createInstance(Components.interfaces.nsISupportsArray);
+
+      for (var i = 0; i < nsDragAndDrop.mDragSession.numDropItems; ++i)
+        {
+          var trans = nsTransferable.createTransferable();
+          for (var j = 0; j < aFlavourSet.flavours.length; ++j)
+            trans.addDataFlavor(aFlavourSet.flavours[j].contentType);
+          nsDragAndDrop.mDragSession.getData(trans, i);
+          supportsArray.AppendElement(trans);
+        }
+      return supportsArray;
+    },
 
   /** 
    * Boolean checkCanDrop (DOMEvent aEvent, Object aDragDropObserver) ;

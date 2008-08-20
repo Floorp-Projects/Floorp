@@ -54,7 +54,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIDOMDataTransfer.h"
 #include "nsWeakPtr.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
@@ -107,7 +106,6 @@ class nsHashKey;
 #ifdef MOZ_MEDIA
 #define NS_MEDIA_EVENT                    34
 #endif // MOZ_MEDIA
-#define NS_DRAG_EVENT                     35
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -250,19 +248,17 @@ class nsHashKey;
 #define NS_FOCUS_CONTENT                (NS_FOCUS_EVENT_START)
 #define NS_BLUR_CONTENT                 (NS_FOCUS_EVENT_START + 1)
 
+
 #define NS_DRAGDROP_EVENT_START         1400
 #define NS_DRAGDROP_ENTER               (NS_DRAGDROP_EVENT_START)
 #define NS_DRAGDROP_OVER                (NS_DRAGDROP_EVENT_START + 1)
 #define NS_DRAGDROP_EXIT                (NS_DRAGDROP_EVENT_START + 2)
-#define NS_DRAGDROP_DRAGDROP            (NS_DRAGDROP_EVENT_START + 3)
+#define NS_DRAGDROP_DROP                (NS_DRAGDROP_EVENT_START + 3)
 #define NS_DRAGDROP_GESTURE             (NS_DRAGDROP_EVENT_START + 4)
 #define NS_DRAGDROP_DRAG                (NS_DRAGDROP_EVENT_START + 5)
 #define NS_DRAGDROP_END                 (NS_DRAGDROP_EVENT_START + 6)
-#define NS_DRAGDROP_START               (NS_DRAGDROP_EVENT_START + 7)
-#define NS_DRAGDROP_DROP                (NS_DRAGDROP_EVENT_START + 8)
 #define NS_DRAGDROP_OVER_SYNTH          (NS_DRAGDROP_EVENT_START + 1)
 #define NS_DRAGDROP_EXIT_SYNTH          (NS_DRAGDROP_EVENT_START + 2)
-#define NS_DRAGDROP_LEAVE_SYNTH         (NS_DRAGDROP_EVENT_START + 9)
 
 // Events for popups
 #define NS_XUL_EVENT_START            1500
@@ -682,20 +678,6 @@ public:
   enum contextType { eNormal, eContextMenuKey };
   enum exitType    { eChild, eTopLevel };
 
-protected:
-  nsMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w,
-               PRUint8 structType, reasonType aReason)
-    : nsMouseEvent_base(isTrusted, msg, w, structType),
-      acceptActivation(PR_FALSE), reason(aReason), context(eNormal),
-      exit(eChild), clickCount(0)
-  {
-    if (msg == NS_MOUSE_MOVE) {
-      flags |= NS_EVENT_FLAG_CANT_CANCEL;
-    }
-  }
-
-public:
-
   nsMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w,
                reasonType aReason, contextType aContext = eNormal)
     : nsMouseEvent_base(isTrusted, msg, w, NS_MOUSE_EVENT),
@@ -726,26 +708,6 @@ public:
 
   /// The number of mouse clicks
   PRUint32     clickCount;
-};
-
-/**
- * Drag event
- */
-
-class nsDragEvent : public nsMouseEvent
-{
-public:
-  nsDragEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
-    : nsMouseEvent(isTrusted, msg, w, NS_DRAG_EVENT, eReal)
-  {
-    if (msg == NS_DRAGDROP_EXIT_SYNTH ||
-        msg == NS_DRAGDROP_LEAVE_SYNTH ||
-        msg == NS_DRAGDROP_END) {
-      flags |= NS_EVENT_FLAG_CANT_CANCEL;
-    }
-  }
-
-  nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
 };
 
 /**
@@ -1097,13 +1059,10 @@ enum nsDragDropEventStatus {
        (((evnt)->message == NS_DRAGDROP_ENTER) || \
         ((evnt)->message == NS_DRAGDROP_OVER) || \
         ((evnt)->message == NS_DRAGDROP_EXIT) || \
-        ((evnt)->message == NS_DRAGDROP_DRAGDROP) || \
-        ((evnt)->message == NS_DRAGDROP_GESTURE) || \
-        ((evnt)->message == NS_DRAGDROP_DRAG) || \
-        ((evnt)->message == NS_DRAGDROP_END) || \
-        ((evnt)->message == NS_DRAGDROP_START) || \
         ((evnt)->message == NS_DRAGDROP_DROP) || \
-        ((evnt)->message == NS_DRAGDROP_LEAVE_SYNTH))
+        ((evnt)->message == NS_DRAGDROP_GESTURE) || \
+        ((evnt)->message == NS_DRAGDROP_OVER_SYNTH) || \
+        ((evnt)->message == NS_DRAGDROP_EXIT_SYNTH))
 
 #define NS_IS_KEY_EVENT(evnt) \
        (((evnt)->message == NS_KEY_DOWN) ||  \
