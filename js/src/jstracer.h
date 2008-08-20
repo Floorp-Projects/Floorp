@@ -303,7 +303,7 @@ class TraceRecorder {
     bool forInLoop(jsval* vp);
 
 #ifdef DEBUG    
-    void printTypeMap(uint8* globalTypeMap, uint8* stackTypeMap);
+    void printTypeMaps(unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap);
 #endif
     
 public:

@@ -686,6 +686,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
 
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, ngslots, callDepth, globalTypeMap, stackTypeMap);
+
+    debug_only(printTypeMaps(ngslots, globalTypeMap, stackTypeMap);)
 }
 
 TraceRecorder::~TraceRecorder()
@@ -1778,7 +1780,8 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
         return false; /* we stay away from shared global objects */
     }
 #endif
-    Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    Fragmento* fragmento = tm->fragmento;
     if (r->isLoopHeader(cx)) { /* did we hit the start point? */
         if (fragmento->assm()->error()) {
             /* error during recording, blacklist the fragment we were recording */
@@ -1818,9 +1821,10 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
         r->emitTreeCallStackSetup(f);
         debug_only(printf("first fragment: %p\n", f)); 
         GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount);
-        debug_only(printf("actual fragment: %p\n", f)); 
+        debug_only(printf("actual fragment: %p, lr=%p\n", f, lr)); 
         if (!lr) {
-            js_AbortRecording(cx, oldpc, "Couldn't call inner tree");
+            js_AbortRecording(cx, oldpc, "Couldn't call inner tree, trying to record one.");
+            //return js_RecordTree(cx, tm, fragmento->newLoop(f->ip));
             return false;
         }
         switch (lr->exit->exitType) {
@@ -5428,11 +5432,11 @@ TraceRecorder::record_JSOP_HOLE()
 
 #ifdef DEBUG
 void 
-TraceRecorder::printTypeMap(uint8* globalTypeMap, uint8* stackTypeMap)
+TraceRecorder::printTypeMaps(unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap)
 {
     uint8* m = globalTypeMap;
     const char* types[] = { "object", "int", "double", "int", "string", "int", "boolean", "int" };
-    FORALL_GLOBAL_SLOTS(cx, traceMonitor->globalSlots->length(), traceMonitor->globalSlots->data(),
+    FORALL_GLOBAL_SLOTS(cx, ngslots, traceMonitor->globalSlots->data(),
         printf("%s%d type=%s value=%lx\n", vpname, vpnum, types[(unsigned)*m], *vp);
         ++m;
     );
