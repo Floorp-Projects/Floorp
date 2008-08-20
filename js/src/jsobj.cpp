@@ -1229,8 +1229,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* From here on, control must exit through label out with ok set. */
-    js_DisablePropertyCache(cx);
-
     if (!scopeobj) {
 #if JS_HAS_EVAL_THIS_SCOPE
         /* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
@@ -1341,7 +1339,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (ok)
         ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 
-    JS_DestroyScript(cx, script);
+    script->u.nextToGC = JS_SCRIPTS_TO_GC(cx);
+    JS_SCRIPTS_TO_GC(cx) = script;
 
 out:
 #if JS_HAS_EVAL_THIS_SCOPE
@@ -1354,8 +1353,6 @@ out:
     if (setCallerVarObj)
         caller->varobj = callerVarObj;
 #endif
-
-    js_EnablePropertyCache(cx);
     return ok;
 }
 
