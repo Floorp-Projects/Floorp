@@ -355,6 +355,9 @@ js_FinishJIT(JSTraceMonitor *tm);
 extern void
 js_FlushJITCache(JSContext* cx);
 
+extern void
+js_FlushJITOracle(JSContext* cx);
+
 #endif /* defined JS_TRACER */
 
 #endif /* jstracer_h___ */
