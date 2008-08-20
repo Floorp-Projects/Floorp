@@ -1251,7 +1251,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
         ++m;
     );
     m = ((TreeInfo*)f->vmprivate)->stackTypeMap.data();
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0,
         LIns* i = get(vp);
         bool isPromote = isPromoteInt(i);
         if (isPromote && *m == JSVAL_DOUBLE) 
