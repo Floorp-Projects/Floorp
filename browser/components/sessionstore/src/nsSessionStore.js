@@ -1897,7 +1897,19 @@ SessionStoreService.prototype = {
     this._dirty = aUpdateAll;
     var oState = this._getCurrentState();
     oState.session = { state: ((this._loadState == STATE_RUNNING) ? STATE_RUNNING_STR : STATE_STOPPED_STR) };
-    this._writeFile(this._sessionFile, oState.toSource());
+    
+    var stateString = Cc["@mozilla.org/supports-string;1"].
+                        createInstance(Ci.nsISupportsString);
+    stateString.data = oState.toSource();
+    
+    var observerService = Cc["@mozilla.org/observer-service;1"].
+                          getService(Ci.nsIObserverService);
+    observerService.notifyObservers(stateString, "sessionstore-state-write", "");
+    
+    // don't touch the file if an observer has deleted all state data
+    if (stateString.data)
+      this._writeFile(this._sessionFile, stateString.data);
+    
     this._lastSaveTime = Date.now();
   },
 
