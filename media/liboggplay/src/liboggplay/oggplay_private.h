@@ -32,7 +32,7 @@
 
 /*
  * oggplay_private.h
- * 
+ *
  * Shane Stephens <shane.stephens@annodex.net>
  * Michael Martin
  */
@@ -123,14 +123,14 @@ struct _OggPlayCallbackInfo {
  * data_list, end_of_data_list: Contain decoded data packets for this track.
  *                              These packets are time-ordered, and have a
  *                              known presentation time
- *                              
+ *
  * untimed_data_list:           Contains decoded data packets for this track.
- *                              These packets are reverse time-ordered, and 
+ *                              These packets are reverse time-ordered, and
  *                              have not got a known presentation time.  This
- *                              list gets constructed when a new Ogg file is 
+ *                              list gets constructed when a new Ogg file is
  *                              first being read, and gets torn down as soon as
  *                              the first packet with a granulepos is processed
- *                              
+ *
  * granuleperiod                The period between adjacent samples in this
  *                              track
  */
@@ -215,7 +215,7 @@ struct _OggPlay {
   void                    * callback_user_ptr;
   ogg_int64_t               target;
   int                       active_tracks;
-  volatile OggPlayBuffer  * buffer;  
+  volatile OggPlayBuffer  * buffer;
   ogg_int64_t               presentation_time;
   OggPlaySeekTrash        * trash;
   int                       shutdown;
@@ -231,7 +231,7 @@ oggplay_take_out_trash(OggPlay *me, OggPlaySeekTrash *trash);
 
 typedef struct {
   void (*init)(void *user_data);
-  int (*callback)(OGGZ * oggz, ogg_packet * op, long serialno, 
+  int (*callback)(OGGZ * oggz, ogg_packet * op, long serialno,
                                                           void * user_data);
   void (*shutdown)(void *user_data);
   int size;
@@ -247,7 +247,7 @@ static inline void _free(void *x) {
   free(x);
 }
 
-static inline void *_malloc(int s) { 
+static inline void *_malloc(int s) {
   void *x;
   printf("%d ", s);
   x = malloc(s);

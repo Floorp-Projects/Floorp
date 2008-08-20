@@ -39,9 +39,6 @@
 #endif
  */
 
-// From nsMouseScrollEvent::kIsHorizontal
-const MOUSE_SCROLL_IS_HORIZONTAL = 1 << 2;
-
 // One of the possible values for the mousewheel.* preferences.
 // From nsEventStateManager.cpp.
 const MOUSE_SCROLL_ZOOM = 3;
@@ -148,7 +145,7 @@ var FullZoom = {
     // Construct the "mousewheel action" pref key corresponding to this event.
     // Based on nsEventStateManager::GetBasePrefKeyForMouseWheel.
     var pref = "mousewheel";
-    if (event.scrollFlags & MOUSE_SCROLL_IS_HORIZONTAL)
+    if (event.axis == event.HORIZONTAL_AXIS)
       pref += ".horizscroll";
 
     if (event.shiftKey)

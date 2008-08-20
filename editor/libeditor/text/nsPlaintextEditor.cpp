@@ -1737,7 +1737,7 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
   if (caretP)
   {
     nsIView *view = nsnull;
-    result = caretP->GetCaretCoordinates(nsCaret::eIMECoordinates,
+    result = caretP->GetCaretCoordinates(nsCaret::eRenderingViewCoordinates,
                                          selection,
                                          &(aReply->mCursorPosition),
                                          &(aReply->mCursorIsCollapsed),
@@ -1748,40 +1748,6 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
   }
 
   return result;
-}
-
-NS_IMETHODIMP 
-nsPlaintextEditor::GetReconversionString(nsReconversionEventReply* aReply)
-{
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
-  if (!selection) return NS_ERROR_FAILURE;
-
-  // XXX get the first range in the selection.  Since it is
-  // unclear what to do if reconversion happens with a 
-  // multirange selection, we will ignore any additional ranges.
-  
-  nsCOMPtr<nsIDOMRange> range;
-  res = selection->GetRangeAt(0, getter_AddRefs(range));
-  if (NS_FAILED(res)) return res;
-  if (!range) return NS_ERROR_FAILURE;
-  
-  nsAutoString textValue;
-  res = range->ToString(textValue);
-  if (NS_FAILED(res))
-    return res;
-  
-  aReply->mReconversionString = (PRUnichar*) nsMemory::Clone(textValue.get(),
-                                                                (textValue.Length() + 1) * sizeof(PRUnichar));
-  if (!aReply->mReconversionString)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  if (textValue.IsEmpty())
-    return NS_OK;
-
-  // delete the selection
-  return DeleteSelection(eNone);
 }
 
 #ifdef XP_MAC

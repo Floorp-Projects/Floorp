@@ -883,6 +883,21 @@ LoginManagerPrompter.prototype = {
      * a notification box available.
      */
     _getNotifyBox : function () {
+        var notifyBox = null;
+
+        // Given a content DOM window, returns the chrome window it's in.
+        function getChromeWindow(aWindow) {
+            var chromeWin = aWindow 
+                                .QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIWebNavigation)
+                                .QueryInterface(Ci.nsIDocShellTreeItem)
+                                .rootTreeItem
+                                .QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindow)
+                                .QueryInterface(Ci.nsIDOMChromeWindow);
+            return chromeWin;
+        }
+
         try {
             // Get topmost window, in case we're in a frame.
             var notifyWindow = this._window.top
@@ -891,15 +906,11 @@ LoginManagerPrompter.prototype = {
             // upon submission of credentials. We want to put the notification
             // bar in the opener window if this seems to be happening.
             if (notifyWindow.opener) {
+                var chromeDoc = getChromeWindow(notifyWindow)
+                                    .document.documentElement;
                 var webnav = notifyWindow
                                     .QueryInterface(Ci.nsIInterfaceRequestor)
                                     .getInterface(Ci.nsIWebNavigation);
-                var chromeWin = webnav
-                                    .QueryInterface(Ci.nsIDocShellTreeItem)
-                                    .rootTreeItem
-                                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIDOMWindow);
-                var chromeDoc = chromeWin.document.documentElement;
 
                 // Check to see if the current window was opened with chrome
                 // disabled, and if so use the opener window. But if the window
@@ -913,31 +924,21 @@ LoginManagerPrompter.prototype = {
             }
 
 
-            // Find the <browser> which contains notifyWindow, by looking
-            // through all the open windows and all the <browsers> in each.
-            var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-                     getService(Ci.nsIWindowMediator);
-            var enumerator = wm.getEnumerator("navigator:browser");
-            var tabbrowser = null;
-            var foundBrowser = null;
+            // Get the chrome window for the content window we're using.
+            // .wrappedJSObject needed here -- see bug 422974 comment 5.
+            var chromeWin = getChromeWindow(notifyWindow).wrappedJSObject;
 
-            while (!foundBrowser && enumerator.hasMoreElements()) {
-                var win = enumerator.getNext();
-                tabbrowser = win.getBrowser(); 
-                foundBrowser = tabbrowser.getBrowserForDocument(
-                                                  notifyWindow.document);
-            }
-
-            // Return the notificationBox associated with the browser.
-            if (foundBrowser)
-                return tabbrowser.getNotificationBox(foundBrowser)
+            if (chromeWin.getNotificationBox)
+                notifyBox = chromeWin.getNotificationBox(notifyWindow);
+            else
+                this.log("getNotificationBox() not available on window");
 
         } catch (e) {
             // If any errors happen, just assume no notification box.
             this.log("No notification box available: " + e)
         }
 
-        return null;
+        return notifyBox;
     },
 
 

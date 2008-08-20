@@ -480,17 +480,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * this is public to support automatic conversion of tuple to string
          * base type, which helps avoid converting to nsTAString.
          */
-      nsTSubstring_CharT(const substring_tuple_type& tuple)
-#ifdef MOZ_V1_STRING_ABI
-        : abstract_string_type(nsnull, 0, F_NONE)
-#else
-        : mData(nsnull),
-          mLength(0),
-          mFlags(F_NONE)
-#endif
-        {
-          Assign(tuple);
-        }
+      NS_COM nsTSubstring_CharT(const substring_tuple_type& tuple);
 
         /**
          * allows for direct initialization of a nsTSubstring object. 
@@ -519,35 +509,15 @@ class nsTSubstring_CharT : public nsTAString_CharT
 #endif
 
         // default initialization 
-      nsTSubstring_CharT()
-#ifdef MOZ_V1_STRING_ABI
-        : abstract_string_type(
-              const_cast<char_type*>(char_traits::sEmptyBuffer), 0, F_TERMINATED) {}
-#else
-        : mData(const_cast<char_type*>(char_traits::sEmptyBuffer)),
-          mLength(0),
-          mFlags(F_TERMINATED) {}
-#endif
+      NS_COM nsTSubstring_CharT();
 
         // version of constructor that leaves mData and mLength uninitialized
       explicit
-      nsTSubstring_CharT( PRUint32 flags )
-#ifdef MOZ_V1_STRING_ABI
-        : abstract_string_type(flags) {}
-#else
-        : mFlags(flags) {}
-#endif
+      NS_COM nsTSubstring_CharT( PRUint32 flags );
 
         // copy-constructor, constructs as dependent on given object
         // (NOTE: this is for internal use only)
-      nsTSubstring_CharT( const self_type& str )
-#ifdef MOZ_V1_STRING_ABI
-        : abstract_string_type(str.mData, str.mLength, str.mFlags & (F_TERMINATED | F_VOIDED)) {}
-#else
-        : mData(str.mData),
-          mLength(str.mLength),
-          mFlags(str.mFlags & (F_TERMINATED | F_VOIDED)) {}
-#endif
+      NS_COM nsTSubstring_CharT( const self_type& str );
 
         /**
          * this function releases mData and does not change the value of

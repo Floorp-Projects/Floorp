@@ -64,10 +64,8 @@ nsresult
 NS_NewSVGGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-#ifdef MOZ_SVG_FOREIGNOBJECT
 nsresult
 NS_NewSVGForeignObjectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-#endif
 nsresult
 NS_NewSVGPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
@@ -194,10 +192,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGSVGElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::g)
     return NS_NewSVGGElement(aResult, aNodeInfo);
-#ifdef MOZ_SVG_FOREIGNOBJECT
   if (name == nsGkAtoms::foreignObject)
     return NS_NewSVGForeignObjectElement(aResult, aNodeInfo);
-#endif
   if (name == nsGkAtoms::path)
     return NS_NewSVGPathElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::text)

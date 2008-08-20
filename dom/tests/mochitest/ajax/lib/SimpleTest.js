@@ -5,7 +5,7 @@
  *
  * Test.Simple doesn't work on IE < 6.
  * TODO:
- *  * Support the Test.Simple API used by MochiKit, to be able to test MochiKit 
+ *  * Support the Test.Simple API used by MochiKit, to be able to test MochiKit
  * itself against IE 5.5
  *
 **/
@@ -36,7 +36,7 @@ SimpleTest._stopOnLoad = true;
 SimpleTest.ok = function (condition, name, diag) {
     var test = {'result': !!condition, 'name': name, 'diag': diag || ""};
     if (SimpleTest._logEnabled)
-        SimpleTest._logResult(test, "PASS", "FAIL");
+        SimpleTest._logResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
     SimpleTest._tests.push(test);
 };
 
@@ -58,26 +58,45 @@ SimpleTest.isnot = function (a, b, name) {
 SimpleTest.todo = function(condition, name, diag) {
   var test = {'result': !!condition, 'name': name, 'diag': diag || "", todo: true};
   if (SimpleTest._logEnabled)
-      SimpleTest._logResult(test, "TODO WORKED?", "TODO");
+      SimpleTest._logResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");
   SimpleTest._tests.push(test);
-}
+};
 
 SimpleTest._logResult = function(test, passString, failString) {
   var msg = test.result ? passString : failString;
+  msg += " | ";
+  if (parentRunner.currentTestURL)
+    msg += parentRunner.currentTestURL;
   msg += " | " + test.name;
+  var diag = "";
+  if (test.diag)
+    diag = " - " + test.diag;
   if (test.result) {
       if (test.todo)
-          parentRunner.logger.error(msg)
+          parentRunner.logger.error(msg + diag);
       else
           parentRunner.logger.log(msg);
   } else {
-      msg += " | " + test.diag;
       if (test.todo)
-          parentRunner.logger.log(msg)
+          parentRunner.logger.log(msg);
       else
-          parentRunner.logger.error(msg);
+          parentRunner.logger.error(msg + diag);
   }
-}
+};
+
+/**
+ * Copies of is and isnot with the call to ok replaced by a call to todo.
+**/
+
+SimpleTest.todo_is = function (a, b, name) {
+    var repr = MochiKit.Base.repr;
+    SimpleTest.todo(a == b, name, "got " + repr(a) + ", expected " + repr(b));
+};
+
+SimpleTest.todo_isnot = function (a, b, name) {
+    var repr = MochiKit.Base.repr;
+    SimpleTest.todo(a != b, name, "Didn't expect " + repr(a) + ", but got it.");
+};
 
 
 /**
@@ -93,8 +112,8 @@ SimpleTest.report = function () {
             var cls, msg;
             if (test.todo && !test.result) {
                 todo++;
-                cls = "test_todo"
-                msg = "todo - " + test.name;   
+                cls = "test_todo";
+                msg = "todo - " + test.name + " " + test.diag;
             } else if (test.result &&!test.todo) {
                 passed++;
                 cls = "test_ok";
@@ -132,9 +151,11 @@ SimpleTest.toggle = function(el) {
 /**
  * Toggle visibility for divs with a specific class.
 **/
-SimpleTest.toggleByClass = function (cls) {
+SimpleTest.toggleByClass = function (cls, evt) {
     var elems = getElementsByTagAndClassName('div', cls);
     MochiKit.Base.map(SimpleTest.toggle, elems);
+    if (evt)
+        evt.preventDefault();
 };
 
 /**
@@ -146,7 +167,12 @@ SimpleTest.showReport = function() {
     var toggleFailed = A({'href': '#'}, "Toggle failed tests");
     togglePassed.onclick = partial(SimpleTest.toggleByClass, 'test_ok');
     toggleFailed.onclick = partial(SimpleTest.toggleByClass, 'test_not_ok');
-    var body = document.getElementsByTagName("body")[0];
+    var body = document.body;  // Handles HTML documents
+    if (!body) {
+	// Do the XML thing
+	body = document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml",
+					       "body")[0]
+    }
     var firstChild = body.childNodes[0];
     var addNode;
     if (firstChild) {
@@ -176,7 +202,7 @@ SimpleTest.waitForExplicitFinish = function () {
 };
 
 /**
- * Talks to the TestRunner if being ran on a iframe and the parent has a 
+ * Talks to the TestRunner if being ran on a iframe and the parent has a
  * TestRunner object.
 **/
 SimpleTest.talkToRunner = function () {
@@ -186,7 +212,7 @@ SimpleTest.talkToRunner = function () {
 };
 
 /**
- * Finishes the tests. This is automatically called, except when 
+ * Finishes the tests. This is automatically called, except when
  * SimpleTest.waitForExplicitFinish() has been invoked.
 **/
 SimpleTest.finish = function () {
@@ -354,7 +380,7 @@ SimpleTest._formatStack = function (stack) {
 
     out += vars[0] + ' = ' + vals[0] + SimpleTest.LF;
     out += vars[1] + ' = ' + vals[1] + SimpleTest.LF;
-    
+
     return '    ' + out;
 };
 
@@ -402,6 +428,8 @@ var ok = SimpleTest.ok;
 var is = SimpleTest.is;
 var isnot = SimpleTest.isnot;
 var todo = SimpleTest.todo;
+var todo_is = SimpleTest.todo_is;
+var todo_isnot = SimpleTest.todo_isnot;
 var isDeeply = SimpleTest.isDeeply;
 var oldOnError = window.onerror;
 window.onerror = function (ev) {

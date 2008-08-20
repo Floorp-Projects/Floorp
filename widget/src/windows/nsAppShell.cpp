@@ -142,6 +142,7 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
         ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
       gotMessage = PR_TRUE;
       if (msg.message == WM_QUIT) {
+        ::PostQuitMessage(msg.wParam);
         Exit();
       } else {
         ::TranslateMessage(&msg);

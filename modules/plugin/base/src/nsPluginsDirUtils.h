@@ -98,7 +98,7 @@ ParsePluginMimeDescription(const char *mdesc, nsPluginInfo &info)
     // fill out info structure
     if (mimeTypeVariantCount) {
         info.fVariantCount         = mimeTypeVariantCount;
-        // we can do these 3 mallocs at ones, later on code cleanup
+        // we can do these 3 mallocs at once, later on code cleanup
         info.fMimeTypeArray        = (char **)PR_Malloc(mimeTypeVariantCount * sizeof(char *));
         info.fMimeDescriptionArray = (char **)PR_Malloc(mimeTypeVariantCount * sizeof(char *));
         info.fExtensionArray       = (char **)PR_Malloc(mimeTypeVariantCount * sizeof(char *));

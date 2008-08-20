@@ -168,29 +168,20 @@ var gEngineManagerDialog = {
       var eduplicate = false;
 
       if (alias.value != "") {
-        var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                            getService(Ci.nsIBrowserSearchService);
-        var engine = searchService.getEngineByAlias(alias.value);
+        try {
+          let bmserv = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                       getService(Ci.nsINavBookmarksService);
+          if (bmserv.getURIForKeyword(alias.value))
+            bduplicate = true;
+        } catch(ex) {}
 
-        if (engine) {
-          if (engine.name != selectedEngine.name)
+        // Check for duplicates in changes we haven't committed yet
+        let engines = gEngineView._engineStore.engines;
+        for each (let engine in engines) {
+          if (engine.alias == alias.value && 
+              engine.name != selectedEngine.name) {
             eduplicate = true;
-        } else {
-          try {
-            var bmserv = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                         getService(Ci.nsINavBookmarksService);
-            if (bmserv.getURIForKeyword(alias.value))
-              bduplicate = true;
-          } catch(ex) {}
-
-          // Check for duplicates in changes we haven't committed yet
-          var engines = gEngineView._engineStore.engines;
-          for each (var engine in engines) {
-            if (engine.alias == alias.value && 
-                engine.name != selectedEngine.name) {
-              eduplicate = true;
-              break;
-            }
+            break;
           }
         }
       }

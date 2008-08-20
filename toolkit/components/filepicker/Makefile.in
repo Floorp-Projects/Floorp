@@ -43,5 +43,11 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_XUL
+ifeq (,$(filter qt beos os2 mac photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+DIRS = public src
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 

@@ -162,6 +162,16 @@ nsThreadPool::Run()
   PRBool wasIdle = PR_FALSE;
   PRIntervalTime idleSince;
 
+  nsCOMPtr<nsIThreadPoolListener> listener;
+  {
+    nsAutoMonitor mon(mEvents.Monitor());
+    listener = mListener;
+  }
+
+  if (listener) {
+    listener->OnThreadCreated();
+  }
+
   do {
     nsCOMPtr<nsIRunnable> event;
     {
@@ -210,8 +220,13 @@ nsThreadPool::Run()
     }
   } while (!exitThread);
 
-  if (shutdownThreadOnExit)
+  if (listener) {
+    listener->OnThreadShuttingDown();
+  }
+
+  if (shutdownThreadOnExit) {
     ShutdownThread(current);
+  }
 
   LOG(("THRD-P(%p) leave\n", this));
   return NS_OK;
@@ -257,17 +272,23 @@ NS_IMETHODIMP
 nsThreadPool::Shutdown()
 {
   nsCOMArray<nsIThread> threads;
+  nsCOMPtr<nsIThreadPoolListener> listener;
   {
     nsAutoMonitor mon(mEvents.Monitor());
     mShutdown = PR_TRUE;
     mon.NotifyAll();
 
     threads.AppendObjects(mThreads);
+    mThreads.Clear();
+
+    // Swap in a null listener so that we release the listener at the end of
+    // this method. The listener will be kept alive as long as the other threads
+    // that were created when it was set.
+    mListener.swap(listener);
   }
 
   // It's important that we shutdown the threads while outside the event queue
-  // monitor.  Otherwise, we could end up dead-locking.  The threads will take
-  // care of removing themselves from mThreads as they exit.
+  // monitor.  Otherwise, we could end up dead-locking.
 
   for (PRInt32 i = 0; i < threads.Count(); ++i)
     threads[i]->Shutdown();
@@ -324,5 +345,24 @@ nsThreadPool::SetIdleThreadTimeout(PRUint32 value)
   nsAutoMonitor mon(mEvents.Monitor());
   mIdleThreadTimeout = value;
   mon.NotifyAll();  // wake up threads so they observe this change
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThreadPool::GetListener(nsIThreadPoolListener** aListener)
+{
+  nsAutoMonitor mon(mEvents.Monitor());
+  NS_IF_ADDREF(*aListener = mListener);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThreadPool::SetListener(nsIThreadPoolListener* aListener)
+{
+  nsCOMPtr<nsIThreadPoolListener> swappedListener(aListener);
+  {
+    nsAutoMonitor mon(mEvents.Monitor());
+    mListener.swap(swappedListener);
+  }
   return NS_OK;
 }

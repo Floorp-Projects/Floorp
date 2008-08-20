@@ -45,18 +45,18 @@
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
-#include <gdk/gdkx.h>
 
+#ifdef MOZ_PANGO
 #include <pango/pango.h>
-#include <pango/pangox.h>
 #include <pango/pango-fontmap.h>
+#endif
 
 #include <fontconfig/fontconfig.h>
 #include "nsSystemFontsGTK2.h"
 #include "gfxPlatformGtk.h"
 
 // Glue to avoid build/runtime dependencies on Pango > 1.6
-#ifndef THEBES_USE_PANGO_CAIRO
+#if defined(MOZ_PANGO) && !defined(THEBES_USE_PANGO_CAIRO)
 static gboolean
 (* PTR_pango_font_description_get_size_is_absolute)(PangoFontDescription*)
     = nsnull;
@@ -101,11 +101,13 @@ static inline void ShutdownPangoLib()
 {
 }
 
+#ifdef MOZ_PANGO
 static inline gboolean
 MOZ_pango_font_description_get_size_is_absolute(PangoFontDescription *desc)
 {
     pango_font_description_get_size_is_absolute(desc);
 }
+#endif
 #endif
 
 nsSystemFontsGTK2::nsSystemFontsGTK2()
@@ -190,6 +192,7 @@ nsresult
 nsSystemFontsGTK2::GetSystemFontInfo(GtkWidget *aWidget, nsString *aFontName,
                                      gfxFontStyle *aFontStyle) const
 {
+#ifdef MOZ_PANGO
     GtkSettings *settings = gtk_widget_get_settings(aWidget);
 
     aFontStyle->style       = FONT_STYLE_NORMAL;
@@ -224,6 +227,18 @@ nsSystemFontsGTK2::GetSystemFontInfo(GtkWidget *aWidget, nsString *aFontName,
     aFontStyle->size = size;
   
     pango_font_description_free(desc);
+
+#else
+    /* FIXME: DFB FT2 Hardcoding the system font info for now.. */
+    aFontStyle->style       = FONT_STYLE_NORMAL;
+    aFontStyle->systemFont = PR_TRUE;
+
+    NS_NAMED_LITERAL_STRING(fontname, "\"Sans\"");
+    *aFontName = fontname;
+    aFontStyle->weight = 400;
+    aFontStyle->size = 40/3;
+
+#endif
 
     return NS_OK;
 }

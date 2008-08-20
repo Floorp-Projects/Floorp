@@ -154,7 +154,7 @@
       <menuitem id="viewAllTagsMode"/>
       <menuitem id="viewSourceMode"/>
       <menuitem id="viewPreviewMode"/>
-      <menuseparator  id="viewSep1"/>
+      <menuseparator id="viewSep2"/>
       <menu id = "composerCharsetMenu" />
     </menupopup>
     </menu>

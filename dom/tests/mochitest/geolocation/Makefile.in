@@ -49,7 +49,7 @@ _TEST_FILES	= \
 		test_manyWindows.html \
 		prompt_common.js       \
 		geolocation_common.js  \
-		geolocator.html \
+		geolocation.html \
 		$(NULL)
 
 

@@ -1037,42 +1037,39 @@ ToNewUTF8String(const nsAString& aSource)
 void
 CompressWhitespace(nsAString& aString)
 {
-  aString.Trim(" \n\t\r");
-
   PRUnichar *start;
   PRUint32 len = NS_StringGetMutableData(aString, PR_UINT32_MAX, &start);
   PRUnichar *end = start + len;
+  PRUnichar *from = start, *to = start;
 
-  for (PRUnichar *cur = start; cur < end; ++cur) {
-    if (!NS_IsAsciiWhitespace(*cur))
-      continue;
+  // Skip any leading whitespace
+  while (from < end && NS_IsAsciiWhitespace(*from))
+    from++;
 
-    *cur = ' ';
+  while (from < end) {
+    PRUnichar theChar = *from++;
 
-    PRUnichar *wend;
-    for (wend = cur + 1; wend < end && NS_IsAsciiWhitespace(*wend); ++wend) {
-      // nothing to do but loop
+    if (NS_IsAsciiWhitespace(theChar)) {
+      // We found a whitespace char, so skip over any more 
+      while (from < end && NS_IsAsciiWhitespace(*from))
+        from++;  
+
+      // Turn all whitespace into spaces
+      theChar = ' ';
     }
 
-    if (wend == cur + 1)
-      continue;
-
-    PRUint32 wlen = wend - cur - 1;
-
-    // fix "end"
-    end -= wlen;
-
-    // move everything forwards a bit
-    for (PRUnichar *m = cur + 1; m < end; ++m) {
-      *m = *(m + wlen);
-    }
+    *to++ = theChar;
   }
 
-  // re-terminate
-  *end = '\0';
+  // Drop any trailing space
+  if (to > start && to[-1] == ' ')
+    to--;
 
-  // Set the new length.
-  aString.SetLength(end - start);
+  // Re-terminate the string
+  *to = '\0';
+
+  // Set the new length
+  aString.SetLength(to - start);
 }
 
 PRUint32

@@ -131,54 +131,9 @@
   border: 0px;
 }
 
-/* Search Bar */
-#searchbar {
-  margin: 6px -4px 0px 2px;
-}
-
 #infoPaneBox {
   border-top: 1px solid ThreeDShadow;
   padding: 5px;
-}
-
-.textbox-input-searchimage {
-  margin: 2px 0;
-  -moz-margin-end: 2px;
-  list-style-image: url("chrome://global/skin/icons/Search-glass.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-  cursor: default;
-}
-
-.textbox-input-searchimage[chromedir="rtl"] {
-  list-style-image: url("chrome://global/skin/icons/Search-glass-rtl.png");
-}
-
-.textbox-input-closebutton {
-  -moz-appearance: none;
-  margin: 1px 2px 1px 1px;
-  min-width: 0;
-  background-color: transparent;
-  border: none;
-  padding: 0 !important;
-  list-style-image: url("chrome://global/skin/icons/Search-close.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-  width: 14px;
-  height: 14px;
-  cursor: default;
-}
-
-.textbox-input-closebutton > .button-box {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.textbox-input-closebutton:hover {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-.textbox-input-closebutton:hover:active {
-  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .small, .small[disabled="true"] {
@@ -193,15 +148,6 @@
 .small .button-box {
   padding: 0px;
   border: 0px;
-}
-
-#searchFilter {
-  padding: 0px;
-  margin: 0px;
-}
-
-#searchFilter .textbox-input-box {
-  padding: 2px 2px 3px 4px;
 }
 
 %ifdef PLACES_QUERY_BUILDER

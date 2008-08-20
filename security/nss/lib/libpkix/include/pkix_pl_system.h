@@ -275,35 +275,6 @@ PKIX_PL_Free(
         void *ptr,
         void *plContext);
 
-/*
- * FUNCTION: PKIX_PL_Memcpy
- * DESCRIPTION:
- *
- *  Copies the block of "length" bytes pointed to by "source" to the block
- *  pointed to by "pDest".
- *
- * PARAMETERS:
- *  "source"
- *      Source of the bytes. Must be non-NULL.
- *  "length"
- *      Number of bytes to copy.
- *  "pDest"
- *      Address where copied bytes will be stored. Must be non-NULL.
- *  "plContext"
- *      Platform-specific context pointer.
- * THREAD SAFETY:
- *  Thread safety depends on underlying thread safety of platform used by PL.
- * RETURNS:
- *  Returns NULL if the function succeeds.
- *  Returns a Fatal Error if the function fails in an unrecoverable way.
- */
-PKIX_Error *
-PKIX_PL_Memcpy(
-        void *source,
-        PKIX_UInt32 length,
-        void **pDest,
-        void *plContext);
-
 /* Callback Types
  *
  * The next few typedefs define function pointer types for the standard

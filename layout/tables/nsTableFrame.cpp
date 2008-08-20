@@ -1996,7 +1996,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
     // Fulfill the promise InvalidateFrame makes.
     Invalidate(aDesiredSize.mOverflowArea);
   } else {
-    CheckInvalidateSizeChange(aPresContext, aDesiredSize, aReflowState);
+    CheckInvalidateSizeChange(aDesiredSize);
   }
 
   FinishAndStoreOverflow(&aDesiredSize);
@@ -6851,11 +6851,19 @@ nsTableFrame::InvalidateFrame(nsIFrame* aFrame,
     // coordinates relative to the old position.  So invalidate via
     // aFrame's parent, and reposition that overflow rect to the right
     // place.
+    // XXXbz this doesn't handle outlines, does it?
     aFrame->Invalidate(overflowRect);
     parent->Invalidate(aOrigOverflowRect + aOrigRect.TopLeft());
   } else {
+    nsHTMLReflowMetrics desiredSize;
+    nsRect rect = aFrame->GetRect();
+    desiredSize.width = rect.width;
+    desiredSize.height = rect.height;
+    desiredSize.mOverflowArea = overflowRect;
+    aFrame->CheckInvalidateSizeChange(aOrigRect, aOrigOverflowRect,
+                                      desiredSize);
     aFrame->InvalidateRectDifference(aOrigOverflowRect, overflowRect);
-    parent->InvalidateRectDifference(aOrigRect, aFrame->GetRect());
+    parent->InvalidateRectDifference(aOrigRect, rect);
   }    
 }
 

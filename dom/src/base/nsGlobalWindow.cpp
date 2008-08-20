@@ -82,6 +82,7 @@
 #include "nsLayoutStatics.h"
 #include "nsCycleCollector.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsDOMThreadService.h"
 
 // Interfaces Needed
 #include "nsIWidget.h"
@@ -112,7 +113,8 @@
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMOfflineResourceList.h"
-#include "nsIDOMGeolocation.h"
+#include "nsIDOMGeoGeolocation.h"
+#include "nsIDOMThreads.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -861,6 +863,12 @@ void
 nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 {
   NS_ASSERTION(IsInnerWindow(), "Don't free inner objects on an outer window");
+
+  // Kill all of the workers for this window.
+  nsDOMThreadService* dts = nsDOMThreadService::get();
+  if (dts) {
+    dts->CancelWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
+  }
 
   ClearAllTimeouts();
 
@@ -8566,6 +8574,11 @@ nsGlobalWindow::SuspendTimeouts()
 {
   FORWARD_TO_INNER_VOID(SuspendTimeouts, ());
 
+  nsDOMThreadService* dts = nsDOMThreadService::get();
+  if (dts) {
+    dts->SuspendWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
+  }
+
   PRTime now = PR_Now();
   for (nsTimeout *t = FirstTimeout(); IsTimeout(t); t = t->Next()) {
     // Change mWhen to be the time remaining for this timer.    
@@ -8620,6 +8633,11 @@ nsresult
 nsGlobalWindow::ResumeTimeouts()
 {
   FORWARD_TO_INNER(ResumeTimeouts, (), NS_ERROR_NOT_INITIALIZED);
+
+  nsDOMThreadService* dts = nsDOMThreadService::get();
+  if (dts) {
+    dts->ResumeWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
+  }
 
   // Restore all of the timeouts, using the stored time remaining
   // (stored in timeout->mWhen).
@@ -8718,37 +8736,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
 
 NS_IMPL_ADDREF_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)
 NS_IMPL_RELEASE_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)
-
-static void TitleConsoleWarning()
-{
-  nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
-  if (console)
-    console->LogStringMessage(NS_LITERAL_STRING("Deprecated property window.title used.  Please use document.title instead.").get());
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::GetTitle(nsAString& aTitle)
-{
-  NS_ERROR("nsIDOMChromeWindow::GetTitle is deprecated, use nsIDOMNSDocument instead");
-  TitleConsoleWarning();
-
-  nsresult rv;
-  nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(mDocument, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return nsdoc->GetTitle(aTitle);
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::SetTitle(const nsAString& aTitle)
-{
-  NS_ERROR("nsIDOMChromeWindow::SetTitle is deprecated, use nsIDOMNSDocument instead");
-  TitleConsoleWarning();
-
-  nsresult rv;
-  nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(mDocument, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return nsdoc->SetTitle(aTitle);
-}
 
 NS_IMETHODIMP
 nsGlobalChromeWindow::GetWindowState(PRUint16* aWindowState)
@@ -9040,7 +9027,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSNavigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClientInformation)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocator)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -9057,10 +9044,10 @@ nsNavigator::SetDocShell(nsIDocShell *aDocShell)
     mPlugins->SetDocShell(aDocShell);
 
   // if there is a page transition, make sure delete the geolocation object
-  if (mGeolocator)
+  if (mGeolocation)
   {
-    mGeolocator->Shutdown();
-    mGeolocator = nsnull;
+    mGeolocation->Shutdown();
+    mGeolocation = nsnull;
   }
 }
 
@@ -9583,10 +9570,10 @@ nsNavigator::LoadingNewDocument()
   mMimeTypes = nsnull;
   mPlugins = nsnull;
 
-  if (mGeolocator)
+  if (mGeolocation)
   {
-    mGeolocator->Shutdown();
-    mGeolocator = nsnull;
+    mGeolocation->Shutdown();
+    mGeolocation = nsnull;
   }
 }
 
@@ -9709,19 +9696,33 @@ nsNavigator::MozIsLocallyAvailable(const nsAString &aURI,
 }
 
 //*****************************************************************************
-//    nsNavigator::nsIDOMNavigatorGeolocator
+//    nsNavigator::nsIDOMNavigatorGeolocation
 //*****************************************************************************
 
-NS_IMETHODIMP nsNavigator::GetGeolocator(nsIDOMGeolocator **_retval)
+NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  if (!mGeolocator) {
+  if (!mGeolocation) {
     nsCOMPtr<nsIDOMWindow> contentDOMWindow(do_GetInterface(mDocShell));
-    mGeolocator = new nsGeolocator(contentDOMWindow);
+    mGeolocation = new nsGeolocation(contentDOMWindow);
   }
 
-  NS_IF_ADDREF(*_retval = mGeolocator);
+  NS_IF_ADDREF(*_retval = mGeolocation);
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNavigator::NewWorkerPool(nsIDOMWorkerPool** _retval)
+{
+  nsCOMPtr<nsIDOMThreadService> threadService =
+    nsDOMThreadService::GetOrInitService();
+  NS_ENSURE_TRUE(threadService, NS_ERROR_OUT_OF_MEMORY);
+
+  nsCOMPtr<nsIDOMWorkerPool> newPool;
+  nsresult rv = threadService->CreatePool(getter_AddRefs(newPool));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  newPool.forget(_retval);
+  return NS_OK;
+}

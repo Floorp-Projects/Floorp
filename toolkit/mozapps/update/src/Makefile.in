@@ -59,8 +59,3 @@ include $(topsrcdir)/config/rules.mk
 
 nsUpdateService.js: nsUpdateService.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@ 
-
-ifdef ENABLE_TESTS
-check:: nsUpdateService.js
-	$(CYGWIN_WRAPPER) $(RUN_TEST_PROGRAM) $(DIST)/bin/xpcshell$(BIN_SUFFIX) -f nsUpdateService.js $(srcdir)/testnsUpdateService.js
-endif

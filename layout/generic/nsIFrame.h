@@ -2136,6 +2136,17 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
    */
   nsPeekOffsetStruct GetExtremeCaretPosition(PRBool aStart);
 
+  /**
+   * Same thing as nsFrame::CheckInvalidateSizeChange, but more flexible.  The
+   * implementation of this method must not depend on the mRect or
+   * GetOverflowRect() of the frame!  Note that it's safe to assume in this
+   * method that the frame origin didn't change.  If it did, whoever moved the
+   * frame will invalidate as needed anyway.
+   */
+  void CheckInvalidateSizeChange(const nsRect& aOldRect,
+                                 const nsRect& aOldOverflowRect,
+                                 nsHTMLReflowMetrics& aNewDesiredSize);
+
 protected:
   // Members
   nsRect           mRect;

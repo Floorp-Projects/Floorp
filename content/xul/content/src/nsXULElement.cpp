@@ -1154,9 +1154,14 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
             aValue) {
             HideWindowChrome(aValue && NS_LITERAL_STRING("true").Equals(*aValue));
         }
+        
+        nsIDocument *document = GetCurrentDoc();
+        if (aName == nsGkAtoms::title &&
+            document && document->GetRootContent() == this) {
+            document->NotifyPossibleTitleChange(PR_FALSE);
+        }
 
         // (in)activetitlebarcolor is settable on any root node (windows, dialogs, etc)
-        nsIDocument *document = GetCurrentDoc();
         if ((aName == nsGkAtoms::activetitlebarcolor ||
              aName == nsGkAtoms::inactivetitlebarcolor) &&
             document && document->GetRootContent() == this) {

@@ -55,7 +55,6 @@
 SECStatus
 SEC_StringToOID(PLArenaPool *pool, SECItem *to, const char *from, PRUint32 len)
 {
-    PRUint32 result_len = 0;
     PRUint32 decimal_numbers = 0;
     PRUint32 result_bytes = 0;
     SECStatus rv;

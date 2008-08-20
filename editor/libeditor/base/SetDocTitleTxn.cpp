@@ -66,36 +66,19 @@ NS_IMETHODIMP SetDocTitleTxn::Init(nsIHTMLEditor *aEditor,
 
 NS_IMETHODIMP SetDocTitleTxn::DoTransaction(void)
 {
-  nsresult res = SetDomTitle(mValue);
-  if (NS_FAILED(res)) return res;
-
-  return SetDocTitle(mValue);
+  return SetDomTitle(mValue);
 }
 
 NS_IMETHODIMP SetDocTitleTxn::UndoTransaction(void)
 {
-  return SetDocTitle(mUndoValue);
+  // No extra work required; the DOM changes alone are enough
+  return NS_OK;
 }
 
 NS_IMETHODIMP SetDocTitleTxn::RedoTransaction(void)
 {
-  return SetDocTitle(mValue);
-}
-
-nsresult SetDocTitleTxn::SetDocTitle(const nsAString& aTitle)
-{
-  NS_ASSERTION(mEditor, "bad state");
-  if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  nsresult rv = editor->GetDocument(getter_AddRefs(domDoc));
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIDOMHTMLDocument> HTMLDoc = do_QueryInterface(domDoc);
-  if (!HTMLDoc) return NS_ERROR_FAILURE;
-
-  return HTMLDoc->SetTitle(aTitle);
+  // No extra work required; the DOM changes alone are enough
+  return NS_OK;
 }
 
 nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)

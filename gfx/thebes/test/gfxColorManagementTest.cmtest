@@ -1,0 +1,21 @@
+# Color Management Test Directive File
+#
+# Format:
+# InputProfileFilename OutputProfileFilename <CRC32 For Each Intent>
+#
+sRGB_IEC61966-2-1_noBPC.icc DELL2407WFP-2B283C91.icc 3d68eb2 3371242e
+sRGB_IEC61966-2-1_noBPC.icc G22LWk-2489A79.icc de8c5443 d56a9e64
+sRGB_IEC61966-2-1_noBPC.icc MBP20080419-1.icc 4eab8dbf 5297944c
+sRGB_IEC61966-2-1_noBPC.icc PhLCD17a.icm a703324f 8b92f57e
+sRGB_IEC61966-2-1_noBPC.icc identity.icc 4c90101e ad73cf0c
+sRGB_IEC61966-2-1_noBPC.icc murphy.icc b6d926ed 30c4bdfa
+sRGB_v4_ICC_preference.icc DELL2407WFP-2B283C91.icc 426d8cc3 c77d12ac
+sRGB_v4_ICC_preference.icc G22LWk-2489A79.icc 55006650 384b6fc2
+sRGB_v4_ICC_preference.icc MBP20080419-1.icc f297fdbe eae8670f
+sRGB_v4_ICC_preference.icc PhLCD17a.icm bab9e368 1bbb1b84
+sRGB_v4_ICC_preference.icc identity.icc fd0d9f54 7d1366b8
+sRGB_v4_ICC_preference.icc murphy.icc 96f8808 26a59d30
+sRGB_IEC61966-2-1_noBPC.icc sRGB_v4_ICC_preference.icc 18873ed 6fbaf5db
+sRGB_v4_ICC_preference.icc sRGB_IEC61966-2-1_noBPC.icc 1fb81a8b 931afa97
+DELL2407WFP-2B283C91.icc G22LWk-2489A79.icc fd1ad5d6 3013a7d5
+MBP20080419-1.icc PhLCD17a.icm f7596c76 108012b2

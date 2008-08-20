@@ -206,12 +206,16 @@ NS_IMETHODIMP nsDeflateConverter::OnStopRequest(nsIRequest *aRequest,
 nsresult nsDeflateConverter::PushAvailableData(nsIRequest *aRequest,
                                                nsISupports *aContext)
 {
+    PRUint32 bytesToWrite = sizeof(mWriteBuffer) - mZstream.avail_out;
+    // We don't need to do anything if there isn't any data
+    if (bytesToWrite == 0)
+        return NS_OK;
+
     nsresult rv;
     nsCOMPtr<nsIStringInputStream> stream =
              do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 bytesToWrite = ZIP_BUFLEN - mZstream.avail_out;
     stream->ShareData((char*)mWriteBuffer, bytesToWrite);
     rv = mListener->OnDataAvailable(aRequest, mContext, stream, mOffset,
                                     bytesToWrite);

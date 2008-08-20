@@ -32,7 +32,7 @@
 
 /*
  * oggplay_tcp_reader.c
- * 
+ *
  * Shane Stephens <shane.stephens@annodex.net>
  * Michael Martin
  */
@@ -74,7 +74,7 @@ typedef int SOCKET;
 #define START_TIMEOUT(ref) \
   (ref) = oggplay_sys_time_in_ms()
 
-#ifdef WIN32 
+#ifdef WIN32
 #define CHECK_ERROR(error) \
   (WSAGetLastError() == WSA##error)
 #else
@@ -113,14 +113,14 @@ SOCKET
 oggplay_create_socket() {
   SOCKET sock;
 
-#ifdef WIN32	
+#ifdef WIN32
   WORD                  wVersionRequested;
   WSADATA               wsaData;
-#ifdef HAVE_WINSOCK2        
+#ifdef HAVE_WINSOCK2
   wVersionRequested = MAKEWORD(2,2);
 #else
   wVersionRequested = MAKEWORD(1,1);
-#endif    
+#endif
   if (WSAStartup(wVersionRequested, &wsaData) == -1) {
     printf("Socket open error\n");
     return INVALID_SOCKET;
@@ -145,7 +145,7 @@ oggplay_create_socket() {
 }
 
 /*
- * this function guarantees it will return malloced versions of host and 
+ * this function guarantees it will return malloced versions of host and
  * path
  */
 void
@@ -183,7 +183,7 @@ oggplay_hostname_and_path(char *location, char *proxy, int proxy_port,
     return;
   }
 
-  /* 
+  /*
    * if there's a slash and it's before colon, there's no port.  Hence, after
    * this code, the only time that there's a port is when colon is non-NULL
    */
@@ -229,16 +229,16 @@ oggplay_connect_to_host(SOCKET socket, struct sockaddr *addr) {
 #ifdef WIN32
           /* see http://msdn2.microsoft.com/en-us/library/ms737625.aspx */
         || CHECK_ERROR(EWOULDBLOCK) || CHECK_ERROR(EINVAL)
-#endif      
+#endif
     ) {
       RETURN_ON_TIMEOUT_OR_CONTINUE(time_ref);
-    } 
-    else if CHECK_ERROR(EISCONN) 
+    }
+    else if CHECK_ERROR(EISCONN)
     {
       break;
     }
     printf("Could not connect to host; error code is %d\n", errno);
-    return CHECK_ERROR(ETIMEDOUT) ? E_OGGPLAY_TIMEOUT : 
+    return CHECK_ERROR(ETIMEDOUT) ? E_OGGPLAY_TIMEOUT :
                                               E_OGGPLAY_SOCKET_ERROR;
   }
 
@@ -318,7 +318,7 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
 
   free(host);
   free(path);
-  
+
   if (he == NULL) {
     printf("Host not found\n");
     return E_OGGPLAY_BAD_INPUT;
@@ -350,9 +350,9 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
     oggplay_set_socket_blocking_state(me->socket, 1);
     pos = http_request_header;
     len = strlen(http_request_header);
-#ifdef WIN32  
+#ifdef WIN32
     nbytes = send(me->socket, pos, len, 0);
-#else  
+#else
     nbytes = write(me->socket, pos, len);
 #endif
     assert(nbytes == len);
@@ -364,7 +364,7 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
 
   /*
    * Strip out the HTTP response by finding the first Ogg packet.
-   */    
+   */
   if (me->state == OTRS_SENT_HEADER) {
     int offset;
     int found_http_response = 0;
@@ -380,10 +380,10 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
 
       remaining = TCP_READER_MAX_IN_MEMORY - me->amount_in_memory - 1;
 #ifdef WIN32
-      nbytes = recv(me->socket, (char*)(me->buffer + me->amount_in_memory), 
+      nbytes = recv(me->socket, (char*)(me->buffer + me->amount_in_memory),
               remaining, 0);
 #else
-      nbytes = read(me->socket, (char*)(me->buffer + me->amount_in_memory), 
+      nbytes = read(me->socket, (char*)(me->buffer + me->amount_in_memory),
               remaining);
 #endif
       if (nbytes < 0) {
@@ -403,14 +403,14 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
         continue;
       }
 
-      if 
+      if
       (
         (!found_http_response)
         &&
-        strncmp((char *)me->buffer, "HTTP/1.1 200 OK", 15) != 0 
+        strncmp((char *)me->buffer, "HTTP/1.1 200 OK", 15) != 0
         &&
         strncmp((char *)me->buffer, "HTTP/1.0 200 OK", 15) != 0
-      ) 
+      )
       {
         return E_OGGPLAY_BAD_INPUT;
       } else {
@@ -428,11 +428,11 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
       }
     }
 
-    offset = pos - (char *)(me->buffer); 
+    offset = pos - (char *)(me->buffer);
     memmove(me->buffer, pos, me->amount_in_memory - offset);
     me->amount_in_memory -= offset;
-    me->backing_store = tmpfile();    
-    fwrite(me->buffer, 1, me->amount_in_memory, me->backing_store);    
+    me->backing_store = tmpfile();
+    fwrite(me->buffer, 1, me->amount_in_memory, me->backing_store);
     me->current_position = 0;
     me->stored_offset = me->amount_in_memory;
     me->amount_in_memory = 0;
@@ -440,7 +440,7 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
   }
 
 
-    
+
   /*
    * Read in enough data to fill the buffer.
    */
@@ -453,7 +453,7 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
     START_TIMEOUT(time_ref);
     while (remaining > 0) {
 #ifdef WIN32
-      nbytes = recv(me->socket, (char*)(me->buffer + me->amount_in_memory), 
+      nbytes = recv(me->socket, (char*)(me->buffer + me->amount_in_memory),
               remaining, 0);
 #else
       nbytes = read(me->socket, me->buffer + me->amount_in_memory, remaining);
@@ -475,8 +475,8 @@ oggplay_tcp_reader_initialise(OggPlayReader * opr, int block) {
       }
       me->amount_in_memory += nbytes;
       remaining -= nbytes;
-    }    
-    fwrite(me->buffer, 1, me->amount_in_memory, me->backing_store);    
+    }
+    fwrite(me->buffer, 1, me->amount_in_memory, me->backing_store);
     me->stored_offset += me->amount_in_memory;
     me->amount_in_memory = 0;
     me->state = OTRS_INIT_COMPLETE;
@@ -521,16 +521,16 @@ oggplay_tcp_reader_destroy(OggPlayReader * opr) {
 
 OggPlayErrorCode
 grab_some_data(OggPlayTCPReader *me, int block) {
-  
+
   int remaining;
   int r;
-  
+
   if (me->socket == INVALID_SOCKET) return E_OGGPLAY_OK;
 
   /*
    * see if we can grab some more data
    * if we're not blocking, make sure there's some available data
-   */    
+   */
   if (!block) {
     struct timeval tv;
     fd_set reads;
@@ -540,16 +540,16 @@ grab_some_data(OggPlayTCPReader *me, int block) {
     tv.tv_usec = 0;
     FD_ZERO(&reads);
     FD_ZERO(&empty);
-    FD_SET(me->socket, &reads);    
-    if (select(me->socket + 1, &reads, &empty, &empty, &tv) == 0) {      
+    FD_SET(me->socket, &reads);
+    if (select(me->socket + 1, &reads, &empty, &empty, &tv) == 0) {
       return E_OGGPLAY_OK;
-    }    
+    }
   }
 
   remaining = me->buffer_size;
-#ifdef WIN32  
-  r = recv(me->socket, (char*)(me->buffer + me->amount_in_memory), 
-                  remaining, 0);  
+#ifdef WIN32
+  r = recv(me->socket, (char*)(me->buffer + me->amount_in_memory),
+                  remaining, 0);
 #else
   r = read(me->socket, me->buffer + me->amount_in_memory, remaining);
 #endif
@@ -566,10 +566,10 @@ grab_some_data(OggPlayTCPReader *me, int block) {
 #endif
     me->socket = INVALID_SOCKET;
   }
-  
+
   fwrite(me->buffer, 1, r, me->backing_store);
   me->stored_offset += r;
-  
+
   return E_OGGPLAY_OK;
 }
 
@@ -681,7 +681,7 @@ oggplay_tcp_reader_new(char *location, char *proxy, int proxy_port) {
   me->functions.io_read = &oggplay_tcp_reader_io_read;
   me->functions.io_seek = &oggplay_tcp_reader_io_seek;
   me->functions.io_tell = &oggplay_tcp_reader_io_tell;
-  
+
   return (OggPlayReader *)me;
 }
 

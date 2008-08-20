@@ -95,6 +95,12 @@ PKIX_Error *
 pkix_VerifyNode_RegisterSelf(
         void *plContext);
 
+PKIX_Error *
+pkix_VerifyNode_FindError(
+        PKIX_VerifyNode *node,
+        PKIX_Error **error,
+        void *plContext);
+
 #ifdef __cplusplus
 }
 #endif

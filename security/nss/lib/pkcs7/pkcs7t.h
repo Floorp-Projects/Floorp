@@ -37,7 +37,7 @@
 /*
  * Header for pkcs7 types.
  *
- * $Id: pkcs7t.h,v 1.5 2004/04/25 15:03:13 gerv%gerv.net Exp $
+ * $Id: pkcs7t.h,v 1.6 2008/06/14 14:20:24 wtc%google.com Exp $
  */
 
 #ifndef _PKCS7T_H_
@@ -108,7 +108,7 @@ typedef struct SEC_PKCS7SMIMEKEAParametersStr SEC_PKCS7SMIMEKEAParameters;
 typedef struct SEC_PKCS7AttributeStr SEC_PKCS7Attribute;
 
 struct SEC_PKCS7ContentInfoStr {
-    PRArenaPool *poolp;			/* local; not part of encoding */
+    PLArenaPool *poolp;			/* local; not part of encoding */
     PRBool created;			/* local; not part of encoding */
     int refCount;			/* local; not part of encoding */
     SECOidData *contentTypeTag;		/* local; not part of encoding */

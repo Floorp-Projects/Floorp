@@ -38,13 +38,15 @@
 <!DOCTYPE overlay [
 <!ENTITY % reportphishDTD SYSTEM "chrome://browser/locale/safebrowsing/report-phishing.dtd">
 %reportphishDTD;
+<!ENTITY % safebrowsingDTD SYSTEM "chrome://browser/locale/safebrowsing/phishing-afterload-warning-message.dtd">
+%safebrowsingDTD;
 ]>
 
 <overlay id="reportPhishingMenuOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <broadcasterset id="mainBroadcasterSet">
     <broadcaster id="reportPhishingBroadcaster" disabled="true"/>
-    <!--<broadcaster id="reportPhishingErrorBroadcaster" disabled="true"/>-->
+    <broadcaster id="reportPhishingErrorBroadcaster" disabled="true"/>
   </broadcasterset>
   <menupopup id="menu_HelpPopup">
     <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
@@ -54,13 +56,12 @@
               observes="reportPhishingBroadcaster"
               oncommand="openUILink(safebrowsing.getReportURL('Phish'), event);"
               onclick="checkForMiddleClick(this, event);"/>
-    <!-- XXX Bug 415846
     <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
               label="&safeb.palm.notforgery.label2;"
               accesskey="&reportPhishSiteMenu.accesskey;"
               insertbefore="updateSeparator"
               observes="reportPhishingErrorBroadcaster"
               oncommand="openUILinkIn(safebrowsing.getReportURL('Error'), 'tab');"
-              onclick="checkForMiddleClick(this, event);"/>-->
+              onclick="checkForMiddleClick(this, event);"/>
   </menupopup>
 </overlay>

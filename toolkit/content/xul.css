@@ -21,13 +21,13 @@
 }
 
 /* hide the content and destroy the frame */
-*[hidden="true"] {
+[hidden="true"] {
   display: none;
 }
 
 /* hide the content, but don't destroy the frames */
-*[collapsed="true"], 
-*[moz-collapsed="true"] {
+[collapsed="true"], 
+[moz-collapsed="true"] {
   visibility: collapse;
 }
 
@@ -43,8 +43,7 @@ window[chromehidden~="status"] .chromeclass-status,
 window[chromehidden~="extrachrome"] .chromeclass-extrachrome,
 window[chromehidden~="location"] .chromeclass-location,
 window[chromehidden~="location"][chromehidden~="toolbar"] .chromeclass-toolbar,
-window[chromehidden~="toolbar"] .chromeclass-toolbar-additional
-{
+window[chromehidden~="toolbar"] .chromeclass-toolbar-additional {
   display: none;
 }
 
@@ -53,8 +52,7 @@ window[chromehidden~="toolbar"] .chromeclass-toolbar-additional
    :: or URI elements
    ::::: */
 
-.uri-element
-{
+.uri-element {
   direction: ltr !important;
 }
 
@@ -360,40 +358,6 @@ window[sizemode="maximized"] statusbarpanel.statusbar-resizerpanel {
 }
 %endif
 
-/********** floating popups **********/
-
-/*
-titlebar {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#titlebar");  
-}  
-
-resizer[resizerdirection="right"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#ew-resizer");
-}  
-
-resizer[resizerdirection="bottom"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#ns-resizer");
-}  
-
-resizer[resizerdirection="bottomright"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#diag-resizer");  
-}  
-
-floatingwindow {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#floater-normal");
-  -moz-box-orient: vertical;
-  display: none;
-  z-index: 2147483647; 
-}
-
-floatingwindow[docked="left"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#floater-dock-left");
-}
-
-button.popupClose {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#close-button") !important;
-}  
-*/
 /******** grid **********/
 
 grid {
@@ -640,11 +604,11 @@ progressmeter {
 /********** basic rule for anonymous content that needs to pass box properties through
  ********** to an insertion point parent that holds the real kids **************/
 
- .box-inherit {
-   -moz-box-orient: inherit;
-   -moz-box-pack: inherit;
-   -moz-box-align: inherit;
-   -moz-box-direction: inherit;
+.box-inherit {
+  -moz-box-orient: inherit;
+  -moz-box-pack: inherit;
+  -moz-box-align: inherit;
+  -moz-box-direction: inherit;
 }
 
 /********** label **********/
@@ -949,8 +913,7 @@ autorepeatbutton {
 
 /********** statusbar **********/
 
-statusbar 
-{
+statusbar {
   -moz-binding: url("chrome://global/content/bindings/general.xml#statusbar");
 %ifdef XP_MACOSX
   padding-right: 14px;
@@ -1081,8 +1044,7 @@ radio[pane] {
   -moz-box-align: center;
 }
 
-prefwindow[chromehidden~="toolbar"] .chromeclass-toolbar
-{
+prefwindow[chromehidden~="toolbar"] .chromeclass-toolbar {
   display: none;
 }
 

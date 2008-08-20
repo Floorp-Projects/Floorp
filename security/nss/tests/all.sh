@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -161,14 +161,27 @@ fi
 
 # upgrade cert dbs to shared db + run tests there
 if [ -z "$NSS_TEST_DISABLE_UPGRADE_DB" ] ; then
+	TABLE_ARGS="bgcolor=pink"
+	html_head "Testing with upgraded library"
+	html "</TABLE><BR>"
+	
+	OLDHOSTDIR="${HOSTDIR}"
+	HOSTDIR="${HOSTDIR}/upgradedb"
+	mkdir -p "${HOSTDIR}"
+	init_directories
+	
+	if [ -r "${OLDHOSTDIR}/cert.log" ]; then
+		DIRS="alicedir bobdir CA cert_extensions client clientCA dave eccurves eve ext_client ext_server fips SDR server serverCA tools/copydir cert.log"
+		for i in $DIRS
+		do
+			cp -r ${OLDHOSTDIR}/${i} ${HOSTDIR} #2> /dev/null
+		done
+	fi
+	
 	# upgrade certs dbs to shared db 
 	TESTS="dbupgrade"
 	TEST_MODE=UPGRADE_DB
 	run_tests
-	
-	TABLE_ARGS="bgcolor=pink"
-	html_head "Testing with upgraded library"
-	html "</TABLE><BR>"
 	
 	NSS_DEFAULT_DB_TYPE="sql"
 	export NSS_DEFAULT_DB_TYPE

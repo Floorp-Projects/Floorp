@@ -11,6 +11,7 @@ test("animate(Hash, Object, Function)", function() {
 	});
 });
 
+/* Commented out because of bug 450190 
 test("animate option (queue === false)", function () {
 	expect(1);
 	stop();
@@ -33,6 +34,7 @@ test("animate option (queue === false)", function () {
 		start();
 	});
 });
+*/
 
 test("queue() defaults to 'fx' type", function () {
 	expect(2);

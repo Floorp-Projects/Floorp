@@ -636,10 +636,9 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
     // This float will be placed after the line is done (it is a
     // below-current-line float).
     mBelowCurrentLineFloats.Append(fc);
-    if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE ||
-        aPlaceholder->GetNextInFlow()) {
+    if (aPlaceholder->GetNextInFlow()) {
       // If the float might not be complete, mark it incomplete now to
-      // prevent the placeholders being torn down. We will destroy any
+      // prevent its next-in-flow placeholders being torn down. We will destroy any
       // placeholders later if PlaceBelowCurrentLineFloats finds the
       // float is complete.
       // Note that we could have unconstrained height and yet have

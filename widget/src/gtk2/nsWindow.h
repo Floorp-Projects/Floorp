@@ -56,7 +56,13 @@
 
 #include <gtk/gtk.h>
 
+#ifdef MOZ_DFB
+#include <gdk/gdkdirectfb.h>
+#endif /* MOZ_DFB */
+
+#ifdef MOZ_X11
 #include <gdk/gdkx.h>
+#endif /* MOZ_X11 */
 #include <gtk/gtkwindow.h>
 
 #ifdef ACCESSIBILITY
@@ -256,12 +262,16 @@ public:
     };
 
     void               SetPluginType(PluginType aPluginType);
+#ifdef MOZ_X11
     void               SetNonXEmbedPluginFocus(void);
     void               LoseNonXEmbedPluginFocus(void);
+#endif /* MOZ_X11 */
 
     void               ThemeChanged(void);
 
+#ifdef MOZ_X11
     Window             mOldFocusWindow;
+#endif /* MOZ_X11 */
 
     static guint32     mLastButtonPressTime;
     static guint32     mLastButtonReleaseTime;
@@ -356,8 +366,8 @@ public:
 
    void                ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
    void                ApplyTransparencyBitmap();
-   NS_IMETHOD          SetHasTransparentBackground(PRBool aTransparent);
-   NS_IMETHOD          GetHasTransparentBackground(PRBool& aTransparent);
+   virtual void        SetTransparencyMode(nsTransparencyMode aMode);
+   virtual nsTransparencyMode GetTransparencyMode();
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
                                                             PRUint8* aAlphas, PRInt32 aStride);
 
@@ -401,6 +411,14 @@ private:
     PRInt32             mTransparencyBitmapHeight;
 
     nsRefPtr<gfxASurface> mThebesSurface;
+
+#ifdef MOZ_DFB
+    int                    mDFBCursorX;
+    int                    mDFBCursorY;
+    PRUint32               mDFBCursorCount;
+    IDirectFB             *mDFB;
+    IDirectFBDisplayLayer *mDFBLayer;
+#endif
 
 #ifdef ACCESSIBILITY
     nsCOMPtr<nsIAccessible> mRootAccessible;

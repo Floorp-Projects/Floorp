@@ -114,13 +114,14 @@ EncodeString(nsIUnicodeEncoder *encoder, const nsAFlatString &str, nsACString &r
         goto end;
     }
     p[maxlen] = 0;
-    result = p;
+    result.Assign(p);
 
-    rv = encoder->Finish(p, &len);
+    len = sizeof(buf) - 1;
+    rv = encoder->Finish(buf, &len);
     if (NS_FAILED(rv))
         goto end;
-    p[len] = 0;
-    result += p;
+    buf[len] = 0;
+    result.Append(buf);
 
 end:
     encoder->Reset();
@@ -621,7 +622,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 }
 
 PRBool
-nsStandardURL::SegmentIs(const URLSegment &seg, const char *val)
+nsStandardURL::SegmentIs(const URLSegment &seg, const char *val, PRBool ignoreCase)
 {
     // one or both may be null
     if (!val || mSpec.IsEmpty())
@@ -630,12 +631,16 @@ nsStandardURL::SegmentIs(const URLSegment &seg, const char *val)
         return PR_FALSE;
     // if the first |seg.mLen| chars of |val| match, then |val| must
     // also be null terminated at |seg.mLen|.
-    return !strncmp(mSpec.get() + seg.mPos, val, seg.mLen)
-        && (val[seg.mLen] == '\0');
+    if (ignoreCase)
+        return !PL_strncasecmp(mSpec.get() + seg.mPos, val, seg.mLen)
+            && (val[seg.mLen] == '\0');
+    else
+        return !strncmp(mSpec.get() + seg.mPos, val, seg.mLen)
+            && (val[seg.mLen] == '\0');
 }
 
 PRBool
-nsStandardURL::SegmentIs(const char* spec, const URLSegment &seg, const char *val)
+nsStandardURL::SegmentIs(const char* spec, const URLSegment &seg, const char *val, PRBool ignoreCase)
 {
     // one or both may be null
     if (!val || !spec)
@@ -644,18 +649,25 @@ nsStandardURL::SegmentIs(const char* spec, const URLSegment &seg, const char *va
         return PR_FALSE;
     // if the first |seg.mLen| chars of |val| match, then |val| must
     // also be null terminated at |seg.mLen|.
-    return !strncmp(spec + seg.mPos, val, seg.mLen)
-        && (val[seg.mLen] == '\0');
+    if (ignoreCase)
+        return !PL_strncasecmp(spec + seg.mPos, val, seg.mLen)
+            && (val[seg.mLen] == '\0');
+    else
+        return !strncmp(spec + seg.mPos, val, seg.mLen)
+            && (val[seg.mLen] == '\0');
 }
 
 PRBool
-nsStandardURL::SegmentIs(const URLSegment &seg1, const char *val, const URLSegment &seg2)
+nsStandardURL::SegmentIs(const URLSegment &seg1, const char *val, const URLSegment &seg2, PRBool ignoreCase)
 {
     if (seg1.mLen != seg2.mLen)
         return PR_FALSE;
     if (seg1.mLen == -1 || (!val && mSpec.IsEmpty()))
         return PR_TRUE; // both are empty
-    return !strncmp(mSpec.get() + seg1.mPos, val + seg2.mPos, seg1.mLen); 
+    if (ignoreCase)
+        return !PL_strncasecmp(mSpec.get() + seg1.mPos, val + seg2.mPos, seg1.mLen); 
+    else
+        return !strncmp(mSpec.get() + seg1.mPos, val + seg2.mPos, seg1.mLen); 
 }
 
 PRInt32
@@ -1507,14 +1519,9 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
     NS_ENSURE_ARG_POINTER(unknownOther);
     NS_PRECONDITION(result, "null pointer");
 
-    nsRefPtr<nsStandardURL> otherPtr;
+    nsRefPtr<nsStandardURL> other;
     nsresult rv = unknownOther->QueryInterface(kThisImplCID,
-                                               getter_AddRefs(otherPtr));
-
-    // Hack around issue with MSVC++ not allowing the nsDerivedSafe to access
-    // the private members and not doing the implicit conversion to a raw
-    // pointer.
-    nsStandardURL* other = otherPtr;
+                                               getter_AddRefs(other));
     if (NS_FAILED(rv)) {
         *result = PR_FALSE;
         return NS_OK;
@@ -1572,7 +1579,7 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
         rv = other->EnsureFile();
         if (NS_FAILED(rv)) {
             LOG(("nsStandardURL::Equals [other=%p spec=%s] other failed to ensure file",
-                other, other->mSpec.get()));
+                 other.get(), other->mSpec.get()));
             return rv;
         }
         NS_ASSERTION(other->mFile, "EnsureFile() lied!");
@@ -1696,7 +1703,7 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
     if (scheme.mLen >= 0) {
         // add some flags to coalesceFlag if it is an ftp-url
         // need this later on when coalescing the resulting URL
-        if (SegmentIs(relpath, scheme, "ftp")) {
+        if (SegmentIs(relpath, scheme, "ftp", PR_TRUE)) {
             coalesceFlag = (netCoalesceFlags) (coalesceFlag 
                                         | NET_COALESCE_ALLOW_RELATIVE_ROOT
                                         | NET_COALESCE_DOUBLE_SLASH_IS_ROOT);
@@ -1704,7 +1711,7 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
         }
         // this URL appears to be absolute
         // but try to find out more
-        if (SegmentIs(mScheme,relpath,scheme)) {
+        if (SegmentIs(mScheme, relpath, scheme, PR_TRUE)) {
             // mScheme and Scheme are the same 
             // but this can still be relative
             if (nsCRT::strncmp(relpath + scheme.mPos + scheme.mLen,
