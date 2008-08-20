@@ -46,7 +46,7 @@ class nsISO2022KRToUnicode : public nsBasicDecoderSupport
 public:
   nsISO2022KRToUnicode()
   { 
-    mState = mState_ASCII;
+    mState = mState_Init;
     mLastLegalState = mState_ASCII;
     mData = 0;
     mEUCKRDecoder = nsnull;
@@ -70,7 +70,7 @@ public:
 
   NS_IMETHOD Reset()
   {
-    mState = mState_ASCII;
+    mState = mState_Init;
     mLastLegalState = mState_ASCII;
     mRunLength = 0;
     return NS_OK;
@@ -78,6 +78,7 @@ public:
 
 private:
   enum {
+    mState_Init,
     mState_ASCII,
     mState_ESC,
     mState_ESC_24,
