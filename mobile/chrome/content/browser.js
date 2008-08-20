@@ -102,6 +102,10 @@ var Browser = {
       return new ProgressController(content, browser);
     };
 
+    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
+    os.addObserver(gXPInstallObserver, "xpinstall-download-started", false);
+
     this._content.tabList = document.getElementById("tab-list");
     this._content.newTab(true);
     this._content.addEventListener("DOMTitleChanged", this, true);
@@ -220,7 +224,6 @@ var Browser = {
     var isSupported = false;
     switch (cmd) {
       case "cmd_fullscreen":
-      case "cmd_addons":
       case "cmd_downloads":
         isSupported = true;
         break;
@@ -242,31 +245,6 @@ var Browser = {
       case "cmd_fullscreen":
         window.fullScreen = !window.fullScreen;
         break;
-      case "cmd_addons":
-      {
-        const EMTYPE = "Extension:Manager";
-
-        var aOpenMode = "extensions";
-        var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-        var needToOpen = true;
-        var windowType = EMTYPE + "-" + aOpenMode;
-        var windows = wm.getEnumerator(windowType);
-        while (windows.hasMoreElements()) {
-          var theEM = windows.getNext().QueryInterface(Ci.nsIDOMWindowInternal);
-          if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
-            theEM.focus();
-            needToOpen = false;
-            break;
-          }
-        }
-
-        if (needToOpen) {
-          const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
-          const EMFEATURES = "chrome,dialog=no,resizable=yes";
-          window.openDialog(EMURL, "", EMFEATURES);
-        }
-        break;
-      }
       case "cmd_downloads":
         Cc["@mozilla.org/download-manager-ui;1"].getService(Ci.nsIDownloadManagerUI).show(window);
         break;
@@ -302,7 +280,7 @@ var Browser = {
     else
       findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
   },
-  
+
   translatePhoneNumbers: function() {
     let doc = getBrowser().contentDocument;
     let textnodes = doc.evaluate("//text()",
@@ -854,6 +832,68 @@ const gPopupBlockerObserver = {
   }
 };
 
+const gXPInstallObserver = {
+  observe: function (aSubject, aTopic, aData)
+  {
+    var brandBundle = document.getElementById("bundle_brand");
+    var browserBundle = document.getElementById("bundle_browser");
+    switch (aTopic) {
+      case "xpinstall-install-blocked":
+        var installInfo = aSubject.QueryInterface(Components.interfaces.nsIXPIInstallInfo);
+        var host = installInfo.originatingURI.host;
+        var brandShortName = brandBundle.getString("brandShortName");
+        var notificationName, messageString, buttons;
+        if (!gPrefService.getBoolPref("xpinstall.enabled")) {
+          notificationName = "xpinstall-disabled"
+          if (gPrefService.prefIsLocked("xpinstall.enabled")) {
+            messageString = browserBundle.getString("xpinstallDisabledMessageLocked");
+            buttons = [];
+          }
+          else {
+            messageString = browserBundle.getFormattedString("xpinstallDisabledMessage",
+                                                             [brandShortName, host]);
+            buttons = [{
+              label: browserBundle.getString("xpinstallDisabledButton"),
+              accessKey: browserBundle.getString("xpinstallDisabledButton.accesskey"),
+              popup: null,
+              callback: function editPrefs() {
+                gPrefService.setBoolPref("xpinstall.enabled", true);
+                return false;
+              }
+            }];
+          }
+        }
+        else {
+          notificationName = "xpinstall"
+          messageString = browserBundle.getFormattedString("xpinstallPromptWarning",
+                                                           [brandShortName, host]);
+
+          buttons = [{
+            label: browserBundle.getString("xpinstallPromptAllowButton"),
+            accessKey: browserBundle.getString("xpinstallPromptAllowButton.accesskey"),
+            popup: null,
+            callback: function() {
+              // Force the addon manager panel to appear
+              CommandUpdater.doCommand("cmd_addons");
+
+              var mgr = Cc["@mozilla.org/xpinstall/install-manager;1"].createInstance(Ci.nsIXPInstallManager);
+              mgr.initManagerWithInstallInfo(installInfo);
+              return false;
+            }
+          }];
+        }
+
+        var nBox = Browser.getNotificationBox();
+        if (!nBox.getNotificationWithValue(notificationName)) {
+          const priority = nBox.PRIORITY_WARNING_MEDIUM;
+          const iconURL = "chrome://mozapps/skin/update/update.png";
+          nBox.appendNotification(messageString, notificationName, iconURL, priority, buttons);
+        }
+        break;
+    }
+  }
+};
+
 function getNotificationBox(aWindow) {
   return Browser.getNotificationBox();
-};
+}

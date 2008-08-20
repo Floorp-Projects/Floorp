@@ -89,6 +89,7 @@
     <command id="cmd_fullscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_addons" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_downloads" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_actions" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- scrolling -->
     <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -265,6 +266,10 @@
           <button label="&bookmarkDone.label;" oncommand="BookmarkHelper.save()"/>
         </hbox>
       </vbox>
+    </vbox>
+
+    <vbox id="addons-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
+      <iframe id="addons-items-container" flex="1" src=""/>
     </vbox>
   </stack>
 

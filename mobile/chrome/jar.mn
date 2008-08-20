@@ -15,10 +15,12 @@ browser.jar:
 % locale branding @AB_CD@ %branding/
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
   branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
+% style chrome://mozapps/content/extensions/extensions.xul chrome://browser/skin/extensions.css
 
 classic.jar:
 % skin browser classic/1.0 %
   browser.css                          (skin/browser.css)
+  extensions.css                       (skin/extensions.css)
   images/close.png                     (skin/images/close.png)
   images/close-small.png               (skin/images/close-small.png)
   images/default-favicon.png           (skin/images/default-favicon.png)
