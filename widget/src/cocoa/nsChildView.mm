@@ -1163,7 +1163,7 @@ static const PRInt32 resizeIndicatorHeight = 15;
 PRBool nsChildView::ShowsResizeIndicator(nsIntRect* aResizerRect)
 {
   NSView *topLevelView = mView, *superView = nil;
-  while (superView = [topLevelView superview])
+  while ((superView = [topLevelView superview]))
     topLevelView = superView;
 
   if (![[topLevelView window] showsResizeIndicator])
