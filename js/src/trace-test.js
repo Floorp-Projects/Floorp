@@ -779,7 +779,7 @@ function deep2() {
     return "ok";
 }
 deep2.expected = "ok";
-test(deep2)
+test(deep2);
 
 var merge_type_maps_x = 0, merge_type_maps_y = 0;
 function merge_type_maps() {
@@ -789,7 +789,18 @@ function merge_type_maps() {
     return [merge_type_maps_x,merge_type_maps_y].join(",");
 }
 merge_type_maps.expected = "50,25";
-test(merge_type_maps)
+test(merge_type_maps);
+
+function unstable() {
+    function f(i) {
+	for (var n = 0; n < 100; n += i)
+	    ;
+	return n;
+    }
+    return [f(1), f(.5)].join(",");
+}
+unstable.expected = "100,100";
+test(unstable);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
