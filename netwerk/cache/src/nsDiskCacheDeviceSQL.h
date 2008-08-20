@@ -184,8 +184,6 @@ private:
                                                   nsIWeakReference *weakRef,
                                                   void *ctx);
 
-  static PRBool GetStrictFileOriginPolicy();
-
   PRBool   Initialized() { return mDB != nsnull; }
 
   nsresult InitActiveCaches();
