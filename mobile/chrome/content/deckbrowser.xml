@@ -512,8 +512,8 @@
 
           // scale to the element's width
           var elRect = this._getPagePosition(aElement);
-          this._zoomLevel = Math.max((this.browser.boxObject.width) / (elRect.width + (2 * margin)),
-                                     2);
+          var zoomLevel = this.browser.boxObject.width / (elRect.width + (2 * margin));
+          this._zoomLevel = Math.min(zoomLevel, 10);
 
           // pan to the element
           this._panTo(Math.max(elRect.x - margin, 0),
