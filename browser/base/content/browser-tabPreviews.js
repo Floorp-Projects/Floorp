@@ -287,7 +287,7 @@ var ctrlTab = {
           let boxes = this.container.childNodes;
           for (let i = boxes.length - 1; i >= 0; i--) {
             if (boxes[i]._tab == aTab && boxes[i] == this.selected) {
-              this.label[aAttrName == "label" ? "textContent" : aAttrName] =
+              this.label[aAttrName == "label" ? "value" : aAttrName] =
                 aTab.getAttribute(aAttrName);
               break;
             }
@@ -306,8 +306,8 @@ var ctrlTab = {
     this.stopScroll();
     let (next = this.invertDirection ? this.selected.previousSibling : this.selected.nextSibling) {
       this.setStatusbarValue(next);
-      this.label.textContent = next._tab.label;
-      //this.label.crop = next._tab.crop;
+      this.label.value = next._tab.label;
+      this.label.crop = next._tab.crop;
     }
 
     const FRAME_LENGTH = 40;
@@ -380,8 +380,8 @@ var ctrlTab = {
     if (selected) {
       box.setAttribute("selected", "true");
       this.setStatusbarValue(box);
-      this.label.textContent = box._tab.label;
-      //this.label.crop = box._tab.crop;
+      this.label.value = box._tab.label;
+      this.label.crop = box._tab.crop;
     } else {
       box.removeAttribute("selected");
     }
@@ -488,7 +488,7 @@ var ctrlTab = {
     this.selected = null;
     this.invertDirection = false;
     this._uniqid = 0;
-    this.label.textContent = "";
+    this.label.value = "";
     this.setStatusbarValue();
     this.container.removeAttribute("transform");
     this.svgRoot.forceRedraw();
