@@ -248,7 +248,7 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint3
   PRInt32 nsigners;
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (NSS_CMSMessage_IsSigned(m_cmsMsg) == PR_FALSE) {
+  if (!NSS_CMSMessage_IsSigned(m_cmsMsg)) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - not signed\n"));
     return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
   } 
