@@ -5377,7 +5377,7 @@ TraceRecorder::record_JSOP_LENGTH()
         LIns* str_ins = get(&l);
         LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, length));
 
-        LIns* masked_len_ins = lir->ins2(LIR_qiand,
+        LIns* masked_len_ins = lir->ins2(LIR_piand,
                                          len_ins,
                                          INS_CONSTPTR(JSSTRING_LENGTH_MASK));
 
