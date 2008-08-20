@@ -73,7 +73,6 @@
 #include "nsIOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
-#include "nsIApplicationCacheService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMLoadStatus.h"
 #include "nsICookieService.h"
@@ -97,10 +96,6 @@
 #include "nsPresShellIterator.h"
 #include "nsPIDOMWindow.h"
 #include "mozAutoDocUpdate.h"
-#include "nsIWebNavigation.h"
-#include "nsIDocumentLoader.h"
-#include "nsICachingChannel.h"
-#include "nsICacheEntryDescriptor.h"
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 
@@ -852,304 +847,79 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
   }
 }
 
-nsresult
-nsContentSink::GetChannelCacheKey(nsIChannel* aChannel, nsACString& aCacheKey)
-{
-  aCacheKey.Truncate();
-
-  nsresult rv;
-  nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(aChannel, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISupports> token;
-  rv = cachingChannel->GetCacheToken(getter_AddRefs(token));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsICacheEntryDescriptor> descriptor = do_QueryInterface(token, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = descriptor->GetKey(aCacheKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-nsContentSink::SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
-                                 nsIURI *aManifestURI,
-                                 PRBool aIsTopDocument,
-                                 PRBool aFetchedWithHTTPGetOrEquiv,
-                                 CacheSelectionAction *aAction)
-{
-  *aAction = CACHE_SELECTION_NONE;
-
-  nsCOMPtr<nsIApplicationCacheContainer> applicationCacheDocument =
-    do_QueryInterface(mDocument);
-  NS_ASSERTION(applicationCacheDocument,
-               "mDocument must implement nsIApplicationCacheContainer.");
-
-  nsresult rv;
-
-  // We might decide on a new application cache...
-  nsCOMPtr<nsIApplicationCache> applicationCache = aLoadApplicationCache;
-
-  if (applicationCache) {
-    nsCAutoString groupID;
-    rv = applicationCache->GetGroupID(groupID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> groupURI;
-    rv = NS_NewURI(getter_AddRefs(groupURI), groupID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool equal = PR_FALSE;
-    rv = groupURI->Equals(aManifestURI, &equal);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!equal) {
-      // This is a foreign entry, mark it as such.  If this is a
-      // toplevel load, force a reload to avoid loading the foreign
-      // entry.  The next attempt will not choose this cache entry
-      // (because it has been marked foreign).
-
-      nsCAutoString cachekey;
-      rv = GetChannelCacheKey(mDocument->GetChannel(), cachekey);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = applicationCache->MarkEntry(cachekey,
-                                       nsIApplicationCache::ITEM_FOREIGN);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (aIsTopDocument) {
-        *aAction = CACHE_SELECTION_RELOAD;
-      }
-
-      return NS_OK;
-    }
-
-    if (aIsTopDocument) {
-      // This is a top level document and the http manifest attribute
-      // URI is equal to the manifest URI of the cache the document
-      // was loaded from - associate the document with that cache and
-      // invoke the cache update process.
-      rv = applicationCacheDocument->SetApplicationCache(applicationCache);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      *aAction = CACHE_SELECTION_UPDATE;
-    }
-  }
-  else {
-    // The document was not loaded from an application cache
-    // Here we know the manifest has the same origin as the
-    // document. There is call to CheckMayLoad() on it above.
-
-    if (!aFetchedWithHTTPGetOrEquiv) {
-      // The document was not loaded using HTTP GET or equivalent
-      // method. The spec says to run the cache selection algorithm w/o
-      // the manifest specified but we can just do return NS_OK here.
-
-      return NS_OK;
-    }
-
-    // If there is an existing application cache for this manifest,
-    // associate it with the document.
-    nsCAutoString manifestURISpec;
-    rv = aManifestURI->GetAsciiSpec(manifestURISpec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIApplicationCacheService> appCacheService =
-      do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID);
-    if (!appCacheService) {
-      // No application cache service, nothing to do here.
-      return NS_OK;
-    }
-
-    rv = appCacheService->GetActiveCache(manifestURISpec,
-                                         getter_AddRefs(applicationCache));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (applicationCache) {
-      rv = applicationCacheDocument->SetApplicationCache(applicationCache);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-      // XXX bug 443023: if there is already a scheduled update or
-      // update in progress we have to add this document as
-      // an implicit entry.
-    }
-
-    // Always do an update in this case
-    *aAction = CACHE_SELECTION_UPDATE;
-  }
-
-  if (applicationCache) {
-    // We are now associated with an application cache.  This item
-    // should be marked as an implicit entry.
-    nsCAutoString cachekey;
-    rv = GetChannelCacheKey(mDocument->GetChannel(), cachekey);
-    if (NS_SUCCEEDED(rv)) {
-      rv = applicationCache->MarkEntry(cachekey,
-                                       nsIApplicationCache::ITEM_IMPLICIT);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsContentSink::SelectDocAppCacheNoManifest(nsIApplicationCache *aLoadApplicationCache,
-                                           PRBool aIsTopDocument,
-                                           nsIURI **aManifestURI,
-                                           CacheSelectionAction *aAction)
-{
-  *aManifestURI = nsnull;
-  *aAction = CACHE_SELECTION_NONE;
-
-  if (!aIsTopDocument || !aLoadApplicationCache) {
-    return NS_OK;
-  }
-
-  nsresult rv;
-
-  // The document was loaded from an application cache, use that
-  // application cache as the document's application cache.
-  nsCOMPtr<nsIApplicationCacheContainer> applicationCacheDocument =
-    do_QueryInterface(mDocument);
-  NS_ASSERTION(applicationCacheDocument,
-               "mDocument must implement nsIApplicationCacheContainer.");
-
-  rv = applicationCacheDocument->SetApplicationCache(aLoadApplicationCache);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Return the uri and invoke the update process for the selected
-  // application cache.
-  nsCAutoString groupID;
-  rv = aLoadApplicationCache->GetGroupID(groupID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = NS_NewURI(aManifestURI, groupID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aAction = CACHE_SELECTION_UPDATE;
-
-  return NS_OK;
-}
-
 void
 nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
 {
-  // Only check the manifest for root document nodes.
-  if (aElement != mDocument->GetRootContent()) {
-    return;
-  }
-
-  nsresult rv;
-
   // Check for a manifest= attribute.
   nsAutoString manifestSpec;
   aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::manifest, manifestSpec);
 
-  // Grab the application cache the document was loaded from, if any.
-  nsCOMPtr<nsIApplicationCache> applicationCache;
-
-  nsCOMPtr<nsIApplicationCacheContainer> applicationCacheChannel =
-    do_QueryInterface(mDocument->GetChannel());
-  if (applicationCacheChannel) {
-    rv = applicationCacheChannel->GetApplicationCache(
-      getter_AddRefs(applicationCache));
-    if (NS_FAILED(rv)) {
-      return;
-    }
-  }
-
-  if (manifestSpec.IsEmpty() && !applicationCache) {
-    // Not loaded from an application cache, and no manifest
-    // attribute.  Nothing to do here.
+  if (manifestSpec.IsEmpty() ||
+      manifestSpec.FindChar('#') != kNotFound) {
     return;
   }
 
-  // The manifest attribute is handled differently if the document is
-  // not toplevel.
-  nsCOMPtr<nsIDOMWindow> window = mDocument->GetWindow();
-  if (!window)
+  // We only care about manifests in toplevel windows.
+  nsCOMPtr<nsPIDOMWindow> pwindow =
+    do_QueryInterface(mDocument->GetScriptGlobalObject());
+  if (!pwindow) {
     return;
+  }
+
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(pwindow->GetOuterWindow());
+  if (!window) {
+    return;
+  }
+
   nsCOMPtr<nsIDOMWindow> parent;
   window->GetParent(getter_AddRefs(parent));
-  PRBool isTop = (parent == window);
-
-  CacheSelectionAction action = CACHE_SELECTION_NONE;
-  nsCOMPtr<nsIURI> manifestURI;
-
-  if (manifestSpec.IsEmpty()) {
-    rv = SelectDocAppCacheNoManifest(applicationCache,
-                                     isTop,
-                                     getter_AddRefs(manifestURI),
-                                     &action);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-  }
-  else {
-    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(manifestURI),
-                                              manifestSpec, mDocument,
-                                              mDocumentURI);
-    if (!manifestURI) {
-      return;
-    }
-
-    // Documents must list a manifest from the same origin
-    rv = mDocument->NodePrincipal()->CheckMayLoad(manifestURI, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
-    // Only continue if the document has permission to use offline APIs.
-    if (!nsContentUtils::OfflineAppAllowed(mDocument->NodePrincipal())) {
-      return;
-    }
-
-    PRBool fetchedWithHTTPGetOrEquiv = PR_FALSE;
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mDocument->GetChannel()));
-    if (httpChannel) {
-      nsCAutoString method;
-      rv = httpChannel->GetRequestMethod(method);
-      if (NS_SUCCEEDED(rv))
-        fetchedWithHTTPGetOrEquiv = method.Equals("GET");
-    }
-
-    rv = SelectDocAppCache(applicationCache, manifestURI, isTop,
-                           fetchedWithHTTPGetOrEquiv, &action);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-  }
-
-  switch (action)
-  {
-  case CACHE_SELECTION_NONE:
+  if (parent.get() != window.get()) {
     return;
-  case CACHE_SELECTION_UPDATE: {
-    nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
-      do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+  }
 
-    if (updateService) {
-      nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(mDocument);
-      updateService->ScheduleOnDocumentStop(manifestURI, mDocumentURI, domdoc);
-    }
-    break;
+  // Only update if the document has permission to use offline APIs.
+  if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
+    return;
   }
-  case CACHE_SELECTION_RELOAD: {
-    // This situation occurs only for toplevel documents, see bottom
-    // of SelectDocAppCache method.
-    NS_ASSERTION(isTop, "Should only reload toplevel documents!");
-    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mDocShell);
 
-    webNav->Stop(nsIWebNavigation::STOP_ALL);
-    webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
-    break;
+  // XXX: at this point in the spec there is an algorithm for
+  // confirming whether the cache that was selected at load time was
+  // the proper application cache for this document.  This will
+  // be implemented in a separate patch;  For now just assume that we
+  // chose an acceptable application cache.
+
+  nsCOMPtr<nsIApplicationCacheContainer> channelContainer =
+    do_QueryInterface(mDocument->GetChannel());
+
+  nsCOMPtr<nsIApplicationCacheContainer> docContainer =
+    do_QueryInterface(mDocument);
+
+  if (channelContainer && docContainer) {
+    nsCOMPtr<nsIApplicationCache> appCache;
+    channelContainer->GetApplicationCache(getter_AddRefs(appCache));
+    docContainer->SetApplicationCache(appCache);
   }
+
+  nsCOMPtr<nsIURI> manifestURI;
+  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(manifestURI),
+                                            manifestSpec, mDocument,
+                                            mDocumentURI);
+  if (!manifestURI) {
+    return;
   }
+
+  // Documents must list a manifest from the same origin
+  nsresult rv = mDocument->NodePrincipal()->CheckMayLoad(manifestURI, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  // Start the update
+  nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
+    do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+  updateService->ScheduleOnDocumentStop(manifestURI, mDocumentURI, domdoc);
 }
 
 void

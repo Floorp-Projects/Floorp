@@ -339,11 +339,7 @@ nsDOMOfflineResourceList::Add(const nsAString& aURI)
     do_CreateInstance(NS_OFFLINECACHEUPDATE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString clientID;
-  rv = appCache->GetClientID(clientID);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = update->InitPartial(mManifestURI, clientID, mDocumentURI);
+  rv = update->Init(PR_TRUE, mManifestURI, mDocumentURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = update->AddDynamicURI(requestedURI);
