@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.7 $ $Date: 2005/08/25 20:08:26 $";
+static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.8 $ $Date: 2008/06/06 01:15:32 $";
 #endif /* DEBUG */
 
 /*
@@ -110,15 +110,6 @@ nssCKFWMutex_verifyPointer
 }
 
 #endif /* DEBUG */
-
-static CK_RV
-mutex_noop
-(
-  CK_VOID_PTR pMutex
-)
-{
-  return CKR_OK;
-}
 
 /*
  * nssCKFWMutex_Create

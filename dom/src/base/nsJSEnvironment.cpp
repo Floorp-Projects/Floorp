@@ -1084,7 +1084,8 @@ static const char js_relimit_option_str[]= JS_OPTIONS_DOT_STR "relimit";
 #ifdef JS_GC_ZEAL
 static const char js_zeal_option_str[]   = JS_OPTIONS_DOT_STR "gczeal";
 #endif
-static const char js_content_jit_str[]   = JS_OPTIONS_DOT_STR "content_jit";
+static const char js_jit_content_str[]   = JS_OPTIONS_DOT_STR "jit.content";
+static const char js_jit_chrome_str[]    = JS_OPTIONS_DOT_STR "jit.chrome";
 
 int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
@@ -1100,14 +1101,16 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions &= ~JSOPTION_STRICT;
 
   nsIScriptGlobalObject *global = context->GetGlobalObject();
+  // XXX should we check for sysprin instead of a chrome window, to make
+  // XXX components be covered by the chrome pref instead of the content one?
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
-  if (!chromeWindow) {
-    PRBool contentJIT = nsContentUtils::GetBoolPref(js_content_jit_str);
-    if (contentJIT)
-      newDefaultJSOptions |= JSOPTION_JIT;
-    else
-      newDefaultJSOptions &= ~JSOPTION_JIT;
-  }
+  PRBool useJIT = nsContentUtils::GetBoolPref(chromeWindow ?
+                                              js_jit_chrome_str :
+                                              js_jit_content_str);
+  if (useJIT)
+    newDefaultJSOptions |= JSOPTION_JIT;
+  else
+    newDefaultJSOptions &= ~JSOPTION_JIT;
 
 #ifdef DEBUG
   // In debug builds, warnings are always enabled in chrome context

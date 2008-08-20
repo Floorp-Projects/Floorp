@@ -291,8 +291,6 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_scrollbartrack_vertical,      NS_THEME_SCROLLBAR_TRACK_VERTICAL,
   eCSSKeyword_scrollbarthumb_horizontal,    NS_THEME_SCROLLBAR_THUMB_HORIZONTAL,
   eCSSKeyword_scrollbarthumb_vertical,      NS_THEME_SCROLLBAR_THUMB_VERTICAL,
-  eCSSKeyword_scrollbargripper_horizontal,  NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL,
-  eCSSKeyword_scrollbargripper_vertical,    NS_THEME_SCROLLBAR_GRIPPER_VERTICAL,
   eCSSKeyword_textfield,              NS_THEME_TEXTFIELD,
   eCSSKeyword_textfield_multiline,    NS_THEME_TEXTFIELD_MULTILINE,
   eCSSKeyword_caret,                  NS_THEME_TEXTFIELD_CARET,
@@ -329,6 +327,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword__moz_win_media_toolbox, NS_THEME_WIN_MEDIA_TOOLBOX,
   eCSSKeyword__moz_win_communications_toolbox, NS_THEME_WIN_COMMUNICATIONS_TOOLBOX,
   eCSSKeyword__moz_win_browsertabbar_toolbox,  NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX,
+  eCSSKeyword__moz_win_glass,         NS_THEME_WIN_GLASS,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1041,6 +1040,7 @@ const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
   eCSSKeyword_nowrap, NS_STYLE_WHITESPACE_NOWRAP,
   eCSSKeyword_pre_wrap, NS_STYLE_WHITESPACE_PRE_WRAP,
   eCSSKeyword__moz_pre_wrap, NS_STYLE_WHITESPACE_PRE_WRAP,
+  eCSSKeyword_pre_line, NS_STYLE_WHITESPACE_PRE_LINE,
   eCSSKeyword_UNKNOWN,-1
 };
 

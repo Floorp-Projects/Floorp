@@ -83,6 +83,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsXMLHttpRequest.h"
 #include "nsIFocusEventSuppressor.h"
+#include "nsDOMThreadService.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -335,6 +336,8 @@ nsLayoutStatics::Shutdown()
   nsHTMLEditor::Shutdown();
   nsTextServicesDocument::Shutdown();
 #endif
+
+  nsDOMThreadService::Shutdown();
 
   NS_ShutdownFocusSuppressor();
 

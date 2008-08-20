@@ -60,7 +60,15 @@ while (<NM_OUTPUT>)
     my($addr)   = $2;
     my($kind)   = $3;
     my($symbol) = $4;
-  
+
+    #Skip absolute addresses, there should be only a few
+    if ('a' eq lc $kind) {
+        if ('trampoline_size' ne $symbol) {
+            warn "Encountered unknown absolutely addressed symbol '$symbol' in $module";
+        }
+        next;
+    }
+
     # we expect the input to have been piped through c++filt to
     # demangle symbols. For some reason, it doesn't always demangle
     # all of them, so push still-mangled symbols back through c++filt again.

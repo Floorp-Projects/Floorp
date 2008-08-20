@@ -1434,7 +1434,8 @@ var gCSSProperties = {
 		domProp: "quotes",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ '"\\201C" "\\201D" "\\2018" "\\2019"' ],
+		initial_values: [ '"\u201C" "\u201D" "\u2018" "\u2019"',
+		                  '"\\201C" "\\201D" "\\2018" "\\2019"' ],
 		other_values: [ "none", "'\"' '\"'" ],
 		invalid_values: []
 	},
@@ -1633,7 +1634,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
-		other_values: [ "pre", "nowrap", "pre-wrap" ],
+		other_values: [ "pre", "nowrap", "pre-wrap", "pre-line" ],
 		invalid_values: []
 	},
 	"widows": {

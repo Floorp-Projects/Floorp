@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads (Bug 437152)
+-->
+<head>
+  <title>Test for DOM Worker Threads (Bug 437152)</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=437152">DOM Worker Threads Bug 437152</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+              getService(Components.interfaces.nsIPrefBranch);
+  prefs.setIntPref("javascript.options.gczeal", 2);
+
+  var workerScript =
+    "function messageListener(message, source) { " +
+    "  switch (message) { " +
+    "    case 'no-op': " +
+    "      break; " +
+    "    case 'start': " +
+    "      /* do a ton of stuff! */ " +
+    "      for (var i = 0; i < 1000; i++) { } " +
+    "      /* pass message to source */ " +
+    "      source.postMessage('started'); " +
+    "      break; " +
+    "    case 'stop': " +
+    "      /* do some more stuff! */ " +
+    "      for (var i = 0; i < 1000; i++) { } " +
+    "      /* pass message to self */ " +
+    "      threadContext.thisThread.postMessage('no-op'); " +
+    "      /* pass message to pool */ " +
+    "      postMessageToPool('stopped'); " +
+    "      break; " +
+    "    default: " +
+    "      throw 'Bad message: ' + message; " +
+    "  } " +
+    "} " +
+    "";
+
+  var pool = navigator.newWorkerPool();
+  ok(pool, "Couldn't get worker pool");
+
+  pool.messageListener = function(message, source) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    switch (message) {
+      case "no-op":
+        break;
+      case "started":
+        // pass message to self
+        pool.postMessage("no-op");
+        // pass message to source
+        source.postMessage("stop");
+        break;
+      case "stopped":
+        // pass message to worker
+        worker.postMessage("no-op");
+        prefs.setIntPref("javascript.options.gczeal", 0);
+        SimpleTest.finish();
+        break;
+      default:
+        ok(false, "Unexpected message");
+        prefs.setIntPref("javascript.options.gczeal", 0);
+        SimpleTest.finish();
+    }
+  };
+
+  pool.errorListener = function(error, source) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    ok(false, "Worker had an error");
+    prefs.setIntPref("javascript.options.gczeal", 0);
+    SimpleTest.finish();
+  };
+
+  var worker = pool.createWorker(workerScript);
+  ok(worker, "Couldn't make worker");
+
+  pool.postMessage("no-op");
+  worker.postMessage("start");
+
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+

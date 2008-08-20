@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.11 $ $Date: 2008/02/23 06:18:27 $";
+static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.12 $ $Date: 2008/05/13 01:22:35 $";
 #endif /* DEBUG */
 
 /*
@@ -529,6 +529,7 @@ nssArena_Destroy
   
 #ifdef DEBUG
   if( PR_SUCCESS != arena_remove_pointer(arena) ) {
+    PR_Unlock(arena->lock);
     return PR_FAILURE;
   }
 #endif /* DEBUG */
@@ -981,12 +982,12 @@ nss_ZFreeIf
     }
 #endif /* NSSDEBUG */
 
-    PR_Lock(h->arena->lock);
     if( (PRLock *)NULL == h->arena->lock ) {
       /* Just got destroyed.. so this pointer is invalid */
       nss_SetError(NSS_ERROR_INVALID_POINTER);
       return PR_FAILURE;
     }
+    PR_Lock(h->arena->lock);
 
     (void)nsslibc_memset(pointer, 0, h->size);
 
@@ -1084,12 +1085,12 @@ nss_ZRealloc
     }
 #endif /* NSSDEBUG */
 
-    PR_Lock(h->arena->lock);
     if( (PRLock *)NULL == h->arena->lock ) {
       /* Just got destroyed.. so this pointer is invalid */
       nss_SetError(NSS_ERROR_INVALID_POINTER);
       return (void *)NULL;
     }
+    PR_Lock(h->arena->lock);
 
 #ifdef ARENA_THREADMARK
     if( (PRThread *)NULL != h->arena->marking_thread ) {

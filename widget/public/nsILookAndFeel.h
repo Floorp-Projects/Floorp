@@ -236,6 +236,23 @@ public:
     eMetric_WindowsDefaultTheme,
 
     /*
+     * A Boolean value to determine whether the DWM compositor is being used
+     *
+     * This metric is not used on non-Windows platforms. These platforms
+     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
+     */
+    eMetric_DWMCompositor,
+
+    /*
+     * A Boolean value to determine whether Windows is themed (Classic vs.
+     * uxtheme)
+     *
+     * This is Windows-specific and is not implemented on other platforms
+     * (will return the default of NS_ERROR_FAILURE).
+     */
+    eMetric_WindowsClassic,
+
+    /*
      * eMetric_AlertNotificationOrigin indicates from which corner of the
      * screen alerts slide in, and from which direction (horizontal/vertical).
      * 0, the default, represents bottom right, sliding vertically.

@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Test for titles</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+  </style>
+</head>
+
+<body onload="runTests()">
+
+<p id="display"></p>
+<div style="display:none;">
+  <iframe id="html1" src="data:text/html,<html><head><title id='t'>Test</title></head></html>"></iframe>
+  <iframe id="html2" src="data:text/html,<html><head><title id='t'>Test</title><title>Foo</title></head></html>"></iframe>
+  <iframe id="html3" src="data:text/html,<html></html>"></iframe>
+  <iframe id="xhtml1" src="data:text/xml,<html xmlns='http://www.w3.org/1999/xhtml'><body><title id='t'>Test</title></body></html>"></iframe>
+  <iframe id="xhtml2" src="data:text/xml,<title xmlns='http://www.w3.org/1999/xhtml'>Test</title>"></iframe>
+  <iframe id="xhtml3" src="data:text/xml,<title xmlns='http://www.w3.org/1999/xhtml'>Te<div>bogus</div>st</title>"></iframe>
+  <iframe id="xhtml4" src="data:text/xml,<html xmlns='http://www.w3.org/1999/xhtml'/>"></iframe>
+  <iframe id="xhtml5" src="data:text/xml,<html xmlns='http://www.w3.org/1999/xhtml'><head/></html>"></iframe>
+  <iframe id="xhtml6" src="data:text/xml,<html xmlns='http://www.w3.org/1999/xhtml'><head><style/></head></html>"></iframe>
+  <iframe id="xul1" src="data:application/vnd.mozilla.xul+xml,<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' title='Test'/>"></iframe>
+  <iframe id="xul2" src="data:application/vnd.mozilla.xul+xml,<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' title='Test'/>"></iframe>
+  <iframe id="svg1" src="data:text/xml,<svg xmlns='http://www.w3.org/2000/svg'><title id='t'>Test</title></svg>"></iframe>
+  <iframe id="svg2" src="data:text/xml,<svg xmlns='http://www.w3.org/2000/svg'><title id='t'>Test</title></svg>"></iframe>
+</div>
+
+<pre id="test">
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function testStatics() {
+  function testStatic(id, expect, description) {
+    is(document.getElementById(id).contentDocument.title, expect, description);
+  }
+
+  testStatic("html1", "Test", "HTML <title>");
+  testStatic("html2", "Test", "choose the first HTML <title>");
+  testStatic("html3", "", "No title");
+  testStatic("xhtml1", "Test", "XHTML <title> in body");
+  testStatic("xhtml2", "Test", "XHTML <title> as root element");
+  testStatic("xhtml3", "Test", "XHTML <title> containing an element");
+  testStatic("xul1", "Test", "XUL <window> title attribute");
+  testStatic("svg1", "Test", "SVG <title>");
+}
+
+function testDynamics() {
+  var inProgress = {};
+  function testDynamic(id, expect, description, op, checkDOM) {
+    inProgress[description] = true;
+    var frame = document.getElementById(id);
+    var done = false;
+
+    function listener() {
+      inProgress[description] = false;
+      is(frame.contentDocument.title, expect, "'title': " + description);
+      if (typeof(checkDOM) != undefined) {
+        checkDOM(frame.contentDocument, "DOM: " + description);
+      }
+    }
+    frame.contentDocument.addEventListener("DOMTitleChanged", listener, false);
+
+    op(frame.contentDocument);
+  }
+
+  testDynamic("html1", "Hello", "Setting HTML <title> text contents", function(doc){
+      var t = doc.getElementById("t"); t.textContent = "Hello";
+    });
+  testDynamic("html2", "Foo", "Removing HTML <title>", function(doc){
+      var t = doc.getElementById("t"); t.parentNode.removeChild(t);
+    });
+  testDynamic("html3", "Hello", "Appending HTML <title> element to root element", function(doc){
+      var t = doc.createElement("title"); t.textContent = "Hello"; doc.documentElement.appendChild(t);
+    });
+  testDynamic("xhtml3", "Hello", "Setting 'title' clears existing <title> contents", function(doc){
+      doc.title = "Hello";
+    }, function(doc, desc) {
+      is(doc.documentElement.firstChild.data, "Hello", desc);
+      is(doc.documentElement.firstChild.nextSibling, null, desc);
+    });
+  // This one does nothing and won't fire an event
+  document.getElementById("xhtml4").contentDocument.title = "Hello";
+  is(document.getElementById("xhtml4").contentDocument.title, "", "Setting 'title' does nothing with no <head>");
+  testDynamic("xhtml5", "Hello", "Setting 'title' works with a <head>", function(doc){
+      doc.title = "Hello";
+    }, function(doc, desc) {
+      var head = doc.documentElement.firstChild;
+      var title = head.firstChild;
+      is(title.tagName.toLowerCase(), "title", desc);
+      is(title.firstChild.data, "Hello", desc);
+      is(title.firstChild.nextSibling, null, desc);
+      is(title.nextSibling, null, desc);
+    });
+  testDynamic("xhtml6", "Hello", "Setting 'title' appends to <head>", function(doc){
+      doc.title = "Hello";
+    }, function(doc, desc) {
+      var head = doc.documentElement.firstChild;
+      is(head.firstChild.tagName.toLowerCase(), "style", desc);
+      var title = head.firstChild.nextSibling;
+      is(title.tagName.toLowerCase(), "title", desc);
+      is(title.firstChild.data, "Hello", desc);
+      is(title.firstChild.nextSibling, null, desc);
+      is(title.nextSibling, null, desc);
+    });
+
+  testDynamic("xul1", "Hello", "Setting XUL <window> title attribute", function(doc){
+      doc.documentElement.setAttribute("title", "Hello");
+    });
+  testDynamic("xul2", "Hello", "Setting 'title' in XUL", function(doc){
+      doc.title = "Hello";
+    }, function(doc, desc) {
+      is(doc.documentElement.getAttribute("title"), "Hello", desc);
+      is(doc.documentElement.firstChild, null, desc);
+    });
+
+  testDynamic("svg1", "Hello", "Setting SVG <title> text contents", function(doc){
+      var t = doc.getElementById("t"); t.textContent = "Hello";
+    });
+  testDynamic("svg2", "", "Removing SVG <title>", function(doc){
+      var t = doc.getElementById("t"); t.parentNode.removeChild(t);
+    });
+
+  function end() {
+    for (description in inProgress) {
+      ok(!inProgress[description], description + ": DOMTitleChange not fired");
+    }
+    SimpleTest.finish();
+  }
+  setTimeout(end, 500);
+}
+
+function acid() {
+      var doctype = document.implementation.createDocumentType("html", "-//W3C//DTD XHTML 1.0 Strict//EN", "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd");
+      is(doctype.ownerDocument, null, "doctype's ownerDocument was wrong after creation");
+      var doc = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", doctype);
+      doc.documentElement.appendChild(doc.createElementNS("http://www.w3.org/1999/xhtml", "head"));
+      doc.documentElement.appendChild(doc.createElementNS("http://www.w3.org/1999/xhtml", "body"));
+      var t = doc.createElementNS("http://www.w3.org/1999/xhtml", "title");
+      doc.documentElement.firstChild.appendChild(t);
+      // ok we have a conforming XHTML1 doc in |doc| now.
+      is(doctype.ownerDocument, doc, "doctype's ownerDocument didn't change when it was assigned to another document");
+      is(doc.title, "", "document had unexpected title");
+      t.textContent = "Sparrow";
+      is(doc.title, "Sparrow", "document.title did not update dynamically");
+      doc.body.appendChild(doc.createElementNS("http://www.w3.org/1999/xhtml", "form"));
+      is(doc.forms.length, 1, "document.forms not updated after inserting a form");
+}
+
+function runTests() {
+  testStatics();
+  // acid();
+  testDynamics();
+}
+
+</script>
+</pre>
+</body>
+</html>

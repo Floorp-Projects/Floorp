@@ -32,7 +32,7 @@
 
 /*
  * oggplay_query.c
- * 
+ *
  * Shane Stephens <shane.stephens@annodex.net>
  */
 
@@ -40,7 +40,7 @@
 
 int
 oggplay_get_num_tracks (OggPlay * me) {
-  
+
   if (me == NULL) {
     return E_OGGPLAY_BAD_OGGPLAY;
   }
@@ -54,12 +54,12 @@ oggplay_get_num_tracks (OggPlay * me) {
   }
 
   return me->num_tracks;
-  
+
 }
 
 OggzStreamContent
 oggplay_get_track_type (OggPlay * me, int track_num) {
- 
+
   if (me == NULL) {
     return (OggzStreamContent)E_OGGPLAY_BAD_OGGPLAY;
   }
@@ -75,13 +75,13 @@ oggplay_get_track_type (OggPlay * me, int track_num) {
   if (track_num < 0 || track_num >= me->num_tracks) {
     return (OggzStreamContent)E_OGGPLAY_BAD_TRACK;
   }
-  
+
   return (OggzStreamContent)me->decode_data[track_num]->content_type;
 }
 
 const char *
 oggplay_get_track_typename (OggPlay * me, int track_num) {
- 
+
   if (me == NULL) {
     return NULL;
   }
@@ -97,7 +97,7 @@ oggplay_get_track_typename (OggPlay * me, int track_num) {
   if (track_num < 0 || track_num >= me->num_tracks) {
     return NULL;
   }
-  
+
   return me->decode_data[track_num]->content_type_name;
 }
 
@@ -105,7 +105,7 @@ OggPlayErrorCode
 oggplay_set_track_active(OggPlay *me, int track_num) {
 
   ogg_int64_t p;
-  
+
   if (me == NULL) {
     return E_OGGPLAY_BAD_OGGPLAY;
   }
@@ -130,34 +130,30 @@ oggplay_set_track_active(OggPlay *me, int track_num) {
   if (me->decode_data[track_num]->content_type == OGGZ_CONTENT_SKELETON) {
     return E_OGGPLAY_TRACK_IS_SKELETON;
   }
- 
+
   if ((p = me->decode_data[track_num]->final_granulepos) != -1) {
     if (p * me->decode_data[track_num]->granuleperiod > me->target) {
       return E_OGGPLAY_TRACK_IS_OVER;
     }
   }
-  
+
   if (me->decode_data[track_num]->active == 0) {
     me->decode_data[track_num]->active = 1;
 
     /*
      * CMML tracks aren't counted when deciding whether we've read enough data
-     * from the stream.  This is because CMML data is not continuous, and 
+     * from the stream.  This is because CMML data is not continuous, and
      * determining that we've read enough data from each other stream is enough
      * to determing that we've read any CMML data that is available.
      * This also applies to Kate streams.
      */
-    if (me->decode_data[track_num]->content_type != OGGZ_CONTENT_CMML 
-#ifdef HAVE_KATE
-        && me->decode_data[track_num]->content_type != OGGZ_CONTENT_KATE
-#endif
-       ) {
+    if (me->decode_data[track_num]->content_type != OGGZ_CONTENT_CMML && me->decode_data[track_num]->content_type != OGGZ_CONTENT_KATE) {
       me->active_tracks ++;
     }
   }
 
   return E_OGGPLAY_OK;
-  
+
 }
 
 OggPlayErrorCode
@@ -182,18 +178,14 @@ oggplay_set_track_inactive(OggPlay *me, int track_num) {
   if (me->decode_data[track_num]->content_type == OGGZ_CONTENT_SKELETON) {
     return E_OGGPLAY_TRACK_IS_SKELETON;
   }
-  
+
   if (me->decode_data[track_num]->active == 1) {
     me->decode_data[track_num]->active = 0;
 
     /*
      * see above comment in oggplay_set_track_active
      */
-    if (me->decode_data[track_num]->content_type != OGGZ_CONTENT_CMML 
-#ifdef HAVE_KATE
-         && me->decode_data[track_num]->content_type != OGGZ_CONTENT_KATE
-#endif
-       ) {
+    if (me->decode_data[track_num]->content_type != OGGZ_CONTENT_CMML && me->decode_data[track_num]->content_type != OGGZ_CONTENT_KATE) {
       me->active_tracks --;
     }
   }

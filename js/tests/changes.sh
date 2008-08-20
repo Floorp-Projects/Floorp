@@ -46,6 +46,8 @@
 # This script is useful in cases where log files from different machines, branches
 # and builds are being investigated.
 
+export LC_ALL=C
+
 if cat /dev/null | sed -r 'q' > /dev/null 2>&1; then
    SED="sed -r"
 elif cat /dev/null | sed -E 'q' > /dev/null 2>&1; then

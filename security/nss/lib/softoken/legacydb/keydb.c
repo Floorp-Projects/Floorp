@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.9 2007/12/03 20:26:44 kaie%kuix.de Exp $ */
+/* $Id: keydb.c,v 1.10 2008/06/06 01:16:25 wtc%google.com Exp $ */
 
 #include "lowkeyi.h"
 #include "secasn1.h"
@@ -1382,6 +1382,7 @@ nsslowkey_GetPWCheckEntry(NSSLOWKEYDBHandle *handle,NSSLOWKEYPasswordEntry *entr
 	goto loser;
     }
     algorithm = SECOID_FindOIDTag(&oid);
+    entryData.type = siBuffer;
     entryData.len = dbkey->derPK.len - (oid.len+1);
     entryData.data = &dbkey->derPK.data[oid.len+1];
 

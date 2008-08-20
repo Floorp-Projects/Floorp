@@ -85,10 +85,10 @@ extracted from the test framework there and put into Mochitest.
 	doc.body.appendChild(p);
   }
   var count = 0;
-  var check = function (c, e, knownfail) {
+  var check = function (c, e) {
 	count += 1;
 	var p = doc.getElementById(c);
-	(knownfail ? todo_is : is)(doc.defaultView.getComputedStyle(p, '').textTransform, e ? 'uppercase' : 'none', "case " + c + " failed (index " + count + ")");
+	is(doc.defaultView.getComputedStyle(p, '').textTransform, e ? 'uppercase' : 'none', "case " + c + " failed (index " + count + ")");
   }
   check('a', true); // 1
   check('b', false);
@@ -127,12 +127,10 @@ extracted from the test framework there and put into Mochitest.
   check('y4', false);
   document.getElementById("selectors").removeAttribute("style");
   // here the viewport is 0x0 again
-  // known failure on Windows is bug 448132
-  check('y1', false, (navigator.platform.indexOf("Win") == 0)); // 33
+  check('y1', false); // 33
   check('y2', false);
   check('y3', false);
-  // known failure on Windows is bug 448132
-  check('y4', true, (navigator.platform.indexOf("Win") == 0));
+  check('y4', true);
 
 </script>
 </pre>

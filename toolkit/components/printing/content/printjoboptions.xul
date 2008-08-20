@@ -52,7 +52,9 @@
   screenX="24" screenY="24">
 
   <script type="application/javascript" src="chrome://global/content/printjoboptions.js"/>
-  <script type="application/javascript" src="chrome://global/content/strres.js"/>
+
+  <stringbundle id="printBundle" src="chrome://global/locale/printPageSetup.properties"/>
+
   <grid>
     <columns>
       <column/>

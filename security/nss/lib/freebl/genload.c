@@ -153,7 +153,7 @@ loader_LoadLibrary(const char *nameToLoad)
      * But we can just get the address of this function !
      */
     fullPath = PR_GetLibraryFilePathname(NameOfThisSharedLib,
-                                         &loader_LoadLibrary);
+                                         (PRFuncPtr)&loader_LoadLibrary);
 
     if (fullPath) {
         lib = loader_LoadLibInReferenceDir(fullPath, nameToLoad);

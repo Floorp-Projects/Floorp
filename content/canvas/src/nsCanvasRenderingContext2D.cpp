@@ -108,6 +108,10 @@
 
 #include "nsBidiPresUtils.h"
 
+#ifdef MOZ_MEDIA
+#include "nsHTMLVideoElement.h"
+#endif
+
 #ifndef M_PI
 #define M_PI		3.14159265358979323846
 #define M_PI_2		1.57079632679489661923
@@ -2754,83 +2758,107 @@ nsCanvasRenderingContext2D::ThebesSurfaceFromElement(nsIDOMElement *imgElt,
 {
     nsresult rv;
 
-    nsCOMPtr<imgIContainer> imgContainer;
+    nsCOMPtr<nsINode> node = do_QueryInterface(imgElt);
 
-    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgElt);
-    if (imageLoader) {
-        nsCOMPtr<imgIRequest> imgRequest;
-        rv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                                     getter_AddRefs(imgRequest));
+    /* If it's a Canvas, grab its internal surface as necessary */
+    nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(imgElt);
+    if (node && canvas) {
+        PRUint32 w, h;
+        rv = canvas->GetSize(&w, &h);
         NS_ENSURE_SUCCESS(rv, rv);
-        if (!imgRequest)
-            // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+
+        nsRefPtr<gfxASurface> sourceSurface;
+
+        if (!forceCopy && canvas->CountContexts() == 1) {
+            nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
+            rv = srcCanvas->GetThebesSurface(getter_AddRefs(sourceSurface));
+            // force a copy if we couldn't get the surface, or if it's
+            // the same as what we have
+            if (sourceSurface == mSurface || NS_FAILED(rv))
+                sourceSurface = nsnull;
+        }
+
+        if (sourceSurface == nsnull) {
+            nsRefPtr<gfxASurface> surf =
+                gfxPlatform::GetPlatform()->CreateOffscreenSurface
+                (gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+            nsRefPtr<gfxContext> ctx = new gfxContext(surf);
+            rv = canvas->RenderContexts(ctx);
+            if (NS_FAILED(rv))
+                return rv;
+            sourceSurface = surf;
+        }
+
+        *aSurface = sourceSurface.forget().get();
+        *widthOut = w;
+        *heightOut = h;
+
+        NS_ADDREF(*prinOut = node->NodePrincipal());
+        *forceWriteOnlyOut = canvas->IsWriteOnly();
+
+        return NS_OK;
+    }
+
+#ifdef MOZ_MEDIA
+    /* Maybe it's <video>? */
+    nsCOMPtr<nsIDOMHTMLVideoElement> ve = do_QueryInterface(imgElt);
+    if (node && ve) {
+        nsHTMLVideoElement *video = static_cast<nsHTMLVideoElement*>(ve.get());
+        PRUint32 videoWidth, videoHeight;
+        rv = video->GetVideoWidth(&videoWidth);
+        rv |= video->GetVideoHeight(&videoHeight);
+        if (NS_FAILED(rv))
             return NS_ERROR_NOT_AVAILABLE;
 
-        PRUint32 status;
-        imgRequest->GetImageStatus(&status);
-        if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0)
-            return NS_ERROR_NOT_AVAILABLE;
+        nsRefPtr<gfxASurface> surf =
+            gfxPlatform::GetPlatform()->CreateOffscreenSurface
+                (gfxIntSize(videoWidth, videoHeight), gfxASurface::ImageFormatARGB32);
+        nsRefPtr<gfxContext> ctx = new gfxContext(surf);
 
-        nsCOMPtr<nsIURI> uri;
-        rv = imgRequest->GetImagePrincipal(prinOut);
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_TRUE(*prinOut, NS_ERROR_DOM_SECURITY_ERR);
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
+        video->Paint(ctx, gfxRect(0, 0, videoWidth, videoHeight));
+
+        *aSurface = surf.forget().get();
+        *widthOut = videoWidth;
+        *heightOut = videoHeight;
+
+        NS_ADDREF(*prinOut = node->NodePrincipal());
         *forceWriteOnlyOut = PR_FALSE;
 
-        rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
-        NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-        // maybe a canvas
-        nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(imgElt);
-        nsCOMPtr<nsINode> node = do_QueryInterface(imgElt);
-        if (canvas && node) {
-            PRUint32 w, h;
-            rv = canvas->GetSize(&w, &h);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsRefPtr<gfxASurface> sourceSurface;
-
-            if (!forceCopy && canvas->CountContexts() == 1) {
-                nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
-                rv = srcCanvas->GetThebesSurface(getter_AddRefs(sourceSurface));
-                // force a copy if we couldn't get the surface, or if it's
-                // the same as what we have
-                if (sourceSurface == mSurface || NS_FAILED(rv))
-                    sourceSurface = nsnull;
-            }
-
-            if (sourceSurface == nsnull) {
-                nsRefPtr<gfxASurface> surf =
-                    gfxPlatform::GetPlatform()->CreateOffscreenSurface
-                    (gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
-                nsRefPtr<gfxContext> ctx = new gfxContext(surf);
-
-                // we have to clear first, since some platform surfaces (X11, I'm
-                // looking at you) don't follow the cleared-surface convention.
-                ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
-                ctx->Paint();
-                ctx->SetOperator(gfxContext::OPERATOR_OVER);
-
-                rv = canvas->RenderContexts(ctx);
-                if (NS_FAILED(rv))
-                    return rv;
-                sourceSurface = surf;
-            }
-
-            *aSurface = sourceSurface.forget().get();
-            *widthOut = w;
-            *heightOut = h;
-
-            NS_ADDREF(*prinOut = node->NodePrincipal());
-            *forceWriteOnlyOut = canvas->IsWriteOnly();
-
-            return NS_OK;
-        } else {
-            NS_WARNING("No way to get surface from non-canvas, non-imageloader");
-            return NS_ERROR_NOT_AVAILABLE;
-        }
+        return NS_OK;
     }
+#endif
+
+    /* Finally, check if it's a normal image */
+    nsCOMPtr<imgIContainer> imgContainer;
+    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgElt);
+
+    if (!imageLoader)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsCOMPtr<imgIRequest> imgRequest;
+    rv = imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                                 getter_AddRefs(imgRequest));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!imgRequest)
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    PRUint32 status;
+    imgRequest->GetImageStatus(&status);
+    if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsCOMPtr<nsIURI> uri;
+    rv = imgRequest->GetImagePrincipal(prinOut);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(*prinOut, NS_ERROR_DOM_SECURITY_ERR);
+
+    *forceWriteOnlyOut = PR_FALSE;
+
+    rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!imgContainer)
         return NS_ERROR_NOT_AVAILABLE;

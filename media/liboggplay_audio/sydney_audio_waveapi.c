@@ -130,10 +130,6 @@ int getSAErrorCode(int waveErrorCode);
 void CALLBACK waveOutProc(HWAVEOUT hWaveOut, UINT uMsg, 
     DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);
 
-/** Main callback function */
-typedef int (*sa_event_callback_t)(sa_stream_t *s, sa_event_t event);
-
-
 /** Normal way to open a PCM device */
 int sa_stream_create_pcm(sa_stream_t **s, 
                          const char *client_name, 

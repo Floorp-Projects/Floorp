@@ -229,13 +229,6 @@ protected:
 
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 
-  // Get the root <html> element, or return null if there isn't one (e.g.
-  // if the root isn't <html>)
-  nsIContent* GetHtmlContent();
-  // Get the canonical <body> element, or return null if there isn't one (e.g.
-  // if the root isn't <html> or if the <body> isn't there)
-  nsIContent* GetBodyContent();
-
   void GetDomainURI(nsIURI **uri);
 
   nsresult WriteCommon(const nsAString& aText,

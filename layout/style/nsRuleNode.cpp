@@ -3307,50 +3307,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
   }
 
-  // CSS2 specified fixups:
-  if (generatedContent) {
-    // According to CSS2 section 12.1, :before and :after
-    // pseudo-elements must not be positioned or floated (CSS2 12.1) and
-    // must be limited to certain display types (depending on the
-    // display type of the element to which they are attached).
-    // XXX These restrictions are no longer present in CSS2.1.  We
-    // should ensure that we support removing them before doing so,
-    // though.
-    // XXXbz For example, the calls to WipeContainingBlock in the
-    // frame constructor will need to be changedif we allow
-    // block-level generated content inside inlines.
-
-    if (display->mPosition != NS_STYLE_POSITION_STATIC)
-      display->mPosition = NS_STYLE_POSITION_STATIC;
-    if (display->mFloats != NS_STYLE_FLOAT_NONE)
-      display->mFloats = NS_STYLE_FLOAT_NONE;
-
-    PRUint8 displayValue = display->mDisplay;
-    if (displayValue != NS_STYLE_DISPLAY_NONE &&
-        displayValue != NS_STYLE_DISPLAY_INLINE &&
-        displayValue != NS_STYLE_DISPLAY_INLINE_BLOCK) {
-      inherited = PR_TRUE;
-      if (parentDisplay->IsBlockOutside() ||
-          parentDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK ||
-          parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL ||
-          parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION) {
-        // If the subject of the selector is a block-level element,
-        // allowed values are 'none', 'inline', 'block', and 'marker'.
-        // If the value of the 'display' has any other value, the
-        // pseudo-element will behave as if the value were 'block'.
-        if (displayValue != NS_STYLE_DISPLAY_BLOCK &&
-            displayValue != NS_STYLE_DISPLAY_MARKER)
-          display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
-      } else {
-        // If the subject of the selector is an inline-level element,
-        // allowed values are 'none' and 'inline'. If the value of the
-        // 'display' has any other value, the pseudo-element will behave
-        // as if the value were 'inline'.
-        display->mDisplay = NS_STYLE_DISPLAY_INLINE;
-      }
-    }
-  }
-  else if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
+  if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
     // CSS2 9.7 specifies display type corrections dealing with 'float'
     // and 'position'.  Since generated content can't be floated or
     // positioned, we can deal with it here.
@@ -4570,29 +4527,24 @@ nsRuleNode::ComputeQuotesData(void* aStartStruct,
   COMPUTE_START_INHERITED(Quotes, (), quotes, parentQuotes,
                           Content, contentData)
 
-  // quotes: [string string]+, none, inherit
-  PRUint32 count;
-  nsAutoString  buffer;
+  // quotes: inherit, initial, none, [string string]+
   nsCSSValuePairList* ourQuotes = contentData.mQuotes;
   if (ourQuotes) {
-    nsAutoString  closeBuffer;
-    // FIXME Bug 389406: Implement eCSSUnit_Initial (correctly, unlike
-    // style structs), and remove the "initial" value from ua.css.
     if (eCSSUnit_Inherit == ourQuotes->mXValue.GetUnit()) {
       inherited = PR_TRUE;
-      count = parentQuotes->QuotesCount();
-      if (NS_SUCCEEDED(quotes->AllocateQuotes(count))) {
-        while (0 < count--) {
-          parentQuotes->GetQuotesAt(count, buffer, closeBuffer);
-          quotes->SetQuotesAt(count, buffer, closeBuffer);
-        }
-      }
+      quotes->CopyFrom(*parentQuotes);
+    }
+    else if (eCSSUnit_Initial == ourQuotes->mXValue.GetUnit()) {
+      quotes->SetInitial();
     }
     else if (eCSSUnit_None == ourQuotes->mXValue.GetUnit()) {
       quotes->AllocateQuotes(0);
     }
     else if (eCSSUnit_String == ourQuotes->mXValue.GetUnit()) {
-      count = 0;
+      nsAutoString  buffer;
+      nsAutoString  closeBuffer;
+      PRUint32 count = 0;
+
       while (ourQuotes) {
         count++;
         ourQuotes = ourQuotes->mNext;

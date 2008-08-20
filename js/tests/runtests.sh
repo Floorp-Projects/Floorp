@@ -104,8 +104,11 @@ variable            description
 -t                  optional. By default the test will exclude tests 
                     which time out on this branch, test type, build type and 
                     operating system. -t will include tests which timeout.
--Z n                optional. Set gczeal to n. Currently, only valid for 
+-J jsoptions        optional. Set JavaScript options:
+                    -Z n Set gczeal to n. Currently, only valid for 
                     debug builds of Gecko 1.8.1.15, 1.9.0 and later.
+                    -z optional. use split objects in the shell.
+                    -j optional. use JIT in the shell. Only available on 1.9.1 and later
 
 if an argument contains more than one value, it must be quoted.
 EOF
@@ -114,7 +117,7 @@ EOF
 
 verbose=0
 
-while getopts "p:b:T:B:e:X:I:Z:vSct" optname;
+while getopts "p:b:T:B:e:X:I:J:vSct" optname;
 do
     case $optname in
         p) products=$OPTARG;;
@@ -128,11 +131,13 @@ do
         S) summary=1;;
         X) excludetests=$OPTARG;;
         I) includetests=$OPTARG;;
-        Z) gczeal="-Z $OPTARG";;
+        J) javascriptoptions=$OPTARG;;
         c) crashes=1;;
         t) timeouts=1;;
     esac
 done
+
+ # javascriptoptions will be passed by environment to test.sh
 
 if [[ -z "$products" || -z "$branches" || -z "$buildtypes" ]]; then
     usage
@@ -167,7 +172,7 @@ branchesextra=`combo.sh -d - "$branches" "$extra"`
 
 # can't test tester.sh's exit code to see if there was
 # an error since we are piping it and can't count on pipefail
-tester.sh -t "$TEST_JSDIR/test.sh $gczeal" $verboseflag "$products" "$branchesextra" "$buildtypes" 2>&1 | tee -a $testlogfilelist
+tester.sh -t "$TEST_JSDIR/test.sh" $verboseflag "$products" "$branchesextra" "$buildtypes" 2>&1 | tee -a $testlogfilelist
 testlogfiles="`grep '^log:' $testlogfilelist|sed 's|^log: ||'`"
 
 fatalerrors=`grep 'FATAL ERROR' $testlogfiles | cat`

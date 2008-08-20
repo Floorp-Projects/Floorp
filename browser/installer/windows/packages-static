@@ -154,7 +154,9 @@ bin\components\necko_http.xpt
 bin\components\necko_res.xpt
 bin\components\necko_socket.xpt
 bin\components\necko_viewsource.xpt
+#ifdef MOZ_OJI
 bin\components\oji.xpt
+#endif
 bin\components\loginmgr.xpt
 bin\components\places.xpt
 bin\components\plugin.xpt
@@ -224,6 +226,7 @@ bin\components\nsLoginInfo.js
 bin\components\nsLoginManager.js
 bin\components\nsLoginManagerPrompter.js
 bin\components\storage-Legacy.js
+bin\components\storage-mozStorage.js
 bin\components\pluginGlue.js
 bin\components\extensions.xpt
 bin\components\update.xpt

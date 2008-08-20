@@ -145,12 +145,6 @@ public:
   NS_IMETHOD GetDeviceContext(nsIDeviceContext *& aDeviceContext) = 0;
 
   /**
-   * Returns in aResult any rendering hints that the context has.
-   * See below for the hints bits. Always returns NS_OK.
-   */
-  NS_IMETHOD GetHints(PRUint32& aResult) = 0;
-
-  /**
    * Save a graphical state onto a stack.
    */
   NS_IMETHOD PushState(void) = 0;
@@ -608,28 +602,6 @@ public:
                       const nsIntRect * aSubimageRect) = 0;
 
   /**
-   * Get cluster details for a chunk of text.
-   *
-   * This will fill in the aClusterStarts array with information about
-   * what characters are the start of clusters for display.  The
-   * information is just a bitfield that is set to 1 if the character
-   * is the start of a cluster.  aClusterStarts must already be
-   * allocated to at least aLength items in length.  Array index zero
-   * being set to one indicates that the first character is the
-   * beginning of a cluster.
-   *
-   * @param aText Text on which to get details.
-   * @param aLength Length of the text.
-   * @param aClusterStarts Array of ints that will be populated
-   *        with information about which characters are the starts
-   *        of clusters.
-   *
-   */
-  NS_IMETHOD GetClusterInfo(const PRUnichar *aText,
-                            PRUint32 aLength,
-                            PRUint8 *aClusterStarts) = 0;
-
-  /**
    * Find the closest cursor position for a given x coordinate.
    *
    * This will find the closest byte index for a given x coordinate.
@@ -708,64 +680,6 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIRenderingContext, NS_IRENDERING_CONTEXT_IID)
-
-// Bit values for GetHints
-
-/**
- * This bit, when set, indicates that the underlying rendering system
- * prefers 8 bit text rendering over PRUnichar text rendering. When this
- * bit is <b>not</b> set the opposite is true: the system prefers PRUnichar
- * rendering, not 8 bit rendering.
- */
-#define NS_RENDERING_HINT_FAST_8BIT_TEXT   0x1
-
-/**
- * This bit, when set, indicates that the rendering is being done
- * remotely.
- */
-#define NS_RENDERING_HINT_REMOTE_RENDERING 0x2
-
-/**
- * This bit, when set, indicates that the system provides support for
- * the reordering of bidirectional text
- */
-#define NS_RENDERING_HINT_BIDI_REORDERING 0x4
-
-/**
- * This bit, when set, indicates that the system provides support for
- * Arabic shaping
- */
-#define NS_RENDERING_HINT_ARABIC_SHAPING 0x8
-
-/**
- * This bit, when set, indicates that gfx supports GetTextDimensions()
- */
-#define NS_RENDERING_HINT_FAST_MEASURE 0x10
-
-/**
- * This bit, when set, indicates that the gfx supports describing
- * cluster information in a string
- */
-#define NS_RENDERING_HINT_TEXT_CLUSTERS 0x20
-
-/**
- * This bit, when set, indicates that gfx performs glyph reordering of complex
- * text after applying character or word spacing, and so expects to be passed
- * text in logical order. When this bit is not set, gfx must be passed text in
- * visual order if characters and word spacing are to be applied.
- */
-#define NS_RENDERING_HINT_REORDER_SPACED_TEXT 0x40
-
-/**
- * This bit, when set, indicates that gfx is using the new gfxTextRun API
- * underneath.
- * In particular, only single-direction text runs should be passed to
- * string methods, and the direction set by SetTextRunRTL will be honoured
- * for all characters in the string.
- * XXX TEMPORARY This will go away when all gfx implementations implement
- * gfxTextRun properly.
- */
-#define NS_RENDERING_HINT_NEW_TEXT_RUNS 0x80
 
 //flags for copy CopyOffScreenBits
 

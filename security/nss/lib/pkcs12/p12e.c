@@ -1351,6 +1351,10 @@ SEC_PKCS12AddKeyForCert(SEC_PKCS12ExportContext *p12ctxt, SEC_PKCS12SafeInfo *sa
 						  &uniPwitem, cert, 1, 
 						  p12ctxt->wincx);
 	PK11_FreeSlot(slot);
+	if(!epki) {
+	    PORT_SetError(SEC_ERROR_PKCS12_UNABLE_TO_EXPORT_KEY);
+	    goto loser;
+	}   
 	
 	keyItem = PORT_ArenaZAlloc(p12ctxt->arena, 
 				  sizeof(SECKEYEncryptedPrivateKeyInfo));
@@ -1358,10 +1362,6 @@ SEC_PKCS12AddKeyForCert(SEC_PKCS12ExportContext *p12ctxt, SEC_PKCS12SafeInfo *sa
 	    PORT_SetError(SEC_ERROR_NO_MEMORY);
 	    goto loser;
 	}
-	if(!epki) {
-	    PORT_SetError(SEC_ERROR_PKCS12_UNABLE_TO_EXPORT_KEY);
-	    return SECFailure;
-	}   
 	rv = SECKEY_CopyEncryptedPrivateKeyInfo(p12ctxt->arena, 
 					(SECKEYEncryptedPrivateKeyInfo *)keyItem,
 					epki);

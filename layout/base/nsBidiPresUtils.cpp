@@ -1174,9 +1174,7 @@ nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
                                    PRUnichar*       aText,
                                    PRInt32&         aTextLength,
                                    nsCharType       aCharType,
-                                   PRBool           aIsOddLevel,
-                                   PRBool           aIsBidiSystem,
-                                   PRBool           aIsNewTextRunSystem)
+                                   PRBool           aIsOddLevel)
 {
   NS_ASSERTION(aIsOddLevel == 0 || aIsOddLevel == 1, "aIsOddLevel should be 0 or 1");
   nsresult rv = NS_OK;
@@ -1222,48 +1220,6 @@ nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
       break;
   }
 
-  PRBool doReverse = PR_FALSE;
-  PRBool doShape = PR_FALSE;
-
-  if (!aIsNewTextRunSystem) {
-    if (aIsBidiSystem) {
-      if ( (CHARTYPE_IS_RTL(aCharType)) ^ (aIsOddLevel) )
-        doReverse = PR_TRUE;
-    }
-    else {
-      if (aIsOddLevel)
-        doReverse = PR_TRUE;
-      if (eCharType_RightToLeftArabic == aCharType) 
-        doShape = PR_TRUE;
-    }
-  }
-
-  if (doReverse || doShape) {
-    PRInt32    newLen;
-
-    if (mBuffer.Length() < aTextLength) {
-      if (!EnsureStringLength(mBuffer, aTextLength))
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    PRUnichar* buffer = mBuffer.BeginWriting();
-
-    if (doReverse) {
-      rv = mBidiEngine->WriteReverse(aText, aTextLength, buffer,
-                                     NSBIDI_DO_MIRRORING, &newLen);
-      if (NS_SUCCEEDED(rv) ) {
-        aTextLength = newLen;
-        memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
-      }
-    }
-    if (doShape) {
-      rv = ArabicShaping(aText, aTextLength, buffer, (PRUint32 *)&newLen,
-                         PR_FALSE, PR_FALSE);
-      if (NS_SUCCEEDED(rv) ) {
-        aTextLength = newLen;
-        memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
-      }
-    }
-  }
   StripBidiControlCharacters(aText, aTextLength);
   return rv;
 }
@@ -1416,7 +1372,6 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
   PRUint8 charType;
   PRUint8 prevType = eCharType_LeftToRight;
   nsBidiLevel level;
-  PRBool isBidiSystem = PR_TRUE;
       
   for(int nPosResolve=0; nPosResolve < aPosResolveCount; ++nPosResolve)
   {
@@ -1468,8 +1423,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
       if (runVisualText.Length() < subRunLength)
         return NS_ERROR_OUT_OF_MEMORY;
       FormatUnicodeText(aPresContext, runVisualText.BeginWriting(), subRunLength,
-                        (nsCharType)charType, level & 1,
-                        isBidiSystem, PR_TRUE);
+                        (nsCharType)charType, level & 1);
 
       aprocessor.SetText(runVisualText.get(), subRunLength, nsBidiDirection(level & 1));
       width = aprocessor.GetWidth();
@@ -1621,49 +1575,4 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const PRUnichar*       
   return ProcessText(aText, aLength, aBaseDirection, aPresContext, processor,
                      aMode, aPosResolve, aPosResolveCount, aWidth);
 }
-
-nsresult
-nsBidiPresUtils::ReorderUnicodeText(PRUnichar*       aText,
-                                    PRInt32&         aTextLength,
-                                    nsCharType       aCharType,
-                                    PRBool           aIsOddLevel,
-                                    PRBool           aIsBidiSystem,
-                                    PRBool           aIsNewTextRunSystem)
-{
-  NS_ASSERTION(aIsOddLevel == 0 || aIsOddLevel == 1, "aIsOddLevel should be 0 or 1");
-  nsresult rv = NS_OK;
-  PRBool doReverse = PR_FALSE;
-
-  if (!aIsNewTextRunSystem) {
-    if (aIsBidiSystem) {
-      if ( (CHARTYPE_IS_RTL(aCharType)) ^ (aIsOddLevel) )
-        doReverse = PR_TRUE;
-    }
-    else {
-      if (aIsOddLevel)
-        doReverse = PR_TRUE;
-    }
-  }
-
-  if (doReverse) {
-    PRInt32    newLen;
-
-    if (mBuffer.Length() < aTextLength) {
-      if (!EnsureStringLength(mBuffer, aTextLength))
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    PRUnichar* buffer = mBuffer.BeginWriting();
-
-    if (doReverse) {
-      rv = mBidiEngine->WriteReverse(aText, aTextLength, buffer,
-                                     NSBIDI_DO_MIRRORING, &newLen);
-      if (NS_SUCCEEDED(rv) ) {
-        aTextLength = newLen;
-        memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
-      }
-    }
-  }
-  return rv;
-}
-
 #endif // IBMBIDI

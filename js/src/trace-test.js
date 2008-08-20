@@ -789,18 +789,19 @@ function merge_type_maps() {
     return [merge_type_maps_x,merge_type_maps_y].join(",");
 }
 merge_type_maps.expected = "50,25";
-test(merge_type_maps);
+test(merge_type_maps)
 
-function unstable() {
+function inner_double_outer_int() {
     function f(i) {
-	for (var n = 0; n < 100; n += i)
-	    ;
+	for (var m = 0; m < 20; ++m)
+	    for (var n = 0; n < 100; n += i)
+		;
 	return n;
     }
-    return [f(1), f(.5)].join(",");
+    return f(.5);
 }
-unstable.expected = "100,100";
-test(unstable);
+inner_double_outer_int.expected = "100";
+test(inner_double_outer_int);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));

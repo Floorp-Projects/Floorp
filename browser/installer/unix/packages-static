@@ -148,7 +148,9 @@ bin/components/necko_socket.xpt
 bin/components/necko_strconv.xpt
 bin/components/necko_viewsource.xpt
 bin/components/necko.xpt
+#ifdef MOZ_OJI
 bin/components/oji.xpt
+#endif
 bin/components/loginmgr.xpt
 bin/components/places.xpt
 bin/components/plugin.xpt
@@ -207,6 +209,7 @@ bin/components/nsLoginInfo.js
 bin/components/nsLoginManager.js
 bin/components/nsLoginManagerPrompter.js
 bin/components/storage-Legacy.js
+bin/components/storage-mozStorage.js
 bin/components/jsconsole-clhandler.js
 bin/components/nsTryToClose.js
 bin/components/nsFilePicker.js

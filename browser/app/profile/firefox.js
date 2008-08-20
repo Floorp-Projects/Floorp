@@ -337,7 +337,6 @@ pref("browser.tabs.closeButtons", 1);
 pref("browser.tabs.selectOwnerOnClose", true);
 
 pref("browser.ctrlTab.mostRecentlyUsed", true);
-pref("browser.ctrlTab.previewsCount", 3);
 pref("browser.ctrlTab.smoothScroll", true);
 
 // Default bookmark sorting
@@ -681,7 +680,6 @@ pref("browser.EULA.version", 3);
 pref("browser.EULA.override", true);
 #endif
 
-pref("browser.sessionstore.enabled", true);
 pref("browser.sessionstore.resume_from_crash", true);
 pref("browser.sessionstore.resume_session_once", false);
 

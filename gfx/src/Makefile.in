@@ -65,10 +65,6 @@ ifdef MOZ_ENABLE_POSTSCRIPT
 DIRS        += psshared
 endif
 
-ifdef MOZ_ENABLE_PHOTON
-DIRS        += photon
-endif
-
 CPPSRCS = \
         nsColor.cpp \
         nsColorNames.cpp \

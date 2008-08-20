@@ -331,9 +331,9 @@ nsNSSComponent::~nsNSSComponent()
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::dtor\n"));
 
-  if(mUpdateTimerInitialized == PR_TRUE){
+  if (mUpdateTimerInitialized) {
     PR_Lock(mCrlTimerLock);
-    if(crlDownloadTimerOn == PR_TRUE){
+    if (crlDownloadTimerOn) {
       mTimer->Cancel();
     }
     crlDownloadTimerOn = PR_FALSE;
@@ -1131,14 +1131,14 @@ nsresult nsNSSComponent::getParamsForNextCrlToDownload(nsAutoString *url, PRTime
   }
 
   for(PRUint32 i=0;i<noOfCrls;i++) {
-    PRBool autoUpdateEnabled;
-    nsAutoString tempCrlKey;
-  
     //First check if update pref is enabled for this crl
+    PRBool autoUpdateEnabled = PR_FALSE;
     rv = pref->GetBoolPref(*(allCrlsToBeUpdated+i), &autoUpdateEnabled);
-    if( (NS_FAILED(rv)) || (autoUpdateEnabled==PR_FALSE) ){
+    if (NS_FAILED(rv) || !autoUpdateEnabled) {
       continue;
     }
+
+    nsAutoString tempCrlKey;
 
     //Now, generate the crl key. Same key would be used as hashkey as well
     nsCAutoString enabledPrefCString(*(allCrlsToBeUpdated+i));
@@ -1249,7 +1249,7 @@ nsNSSComponent::DefineNextTimer()
   //Lock the lock
   PR_Lock(mCrlTimerLock);
 
-  if(crlDownloadTimerOn == PR_TRUE){
+  if (crlDownloadTimerOn) {
     mTimer->Cancel();
   }
 
@@ -1290,7 +1290,7 @@ nsNSSComponent::StopCRLUpdateTimer()
 {
   
   //If it is at all running. 
-  if(mUpdateTimerInitialized == PR_TRUE){
+  if (mUpdateTimerInitialized) {
     if(crlsScheduledForDownload != nsnull){
       crlsScheduledForDownload->Reset();
       delete crlsScheduledForDownload;
@@ -1298,7 +1298,7 @@ nsNSSComponent::StopCRLUpdateTimer()
     }
 
     PR_Lock(mCrlTimerLock);
-    if(crlDownloadTimerOn == PR_TRUE){
+    if (crlDownloadTimerOn) {
       mTimer->Cancel();
     }
     crlDownloadTimerOn = PR_FALSE;
@@ -1317,7 +1317,7 @@ nsNSSComponent::InitializeCRLUpdateTimer()
   nsresult rv;
     
   //First check if this is already initialized. Then we stop it.
-  if(mUpdateTimerInitialized == PR_FALSE){
+  if (!mUpdateTimerInitialized) {
     mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if(NS_FAILED(rv)){
       return rv;
@@ -1867,7 +1867,7 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
   //-- Verify signature
   PRBool rv = SEC_PKCS7VerifyDetachedSignature(p7_info, certUsageObjectSigner,
                                                &digest, HASH_AlgSHA1, PR_FALSE);
-  if (rv != PR_TRUE) {
+  if (!rv) {
     *aErrorCode = PR_GetError();
   }
 
@@ -1957,7 +1957,6 @@ nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
 #define PROFILE_CHANGE_TEARDOWN_VETO_TOPIC "profile-change-teardown-veto"
 #define PROFILE_BEFORE_CHANGE_TOPIC "profile-before-change"
 #define PROFILE_AFTER_CHANGE_TOPIC "profile-after-change"
-#define SESSION_LOGOUT_TOPIC "session-logout"
 
 NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic, 
@@ -2043,12 +2042,6 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
         bec->DontForward();
       }
     }
-  }
-  else if ((nsCRT::strcmp(aTopic, SESSION_LOGOUT_TOPIC) == 0) && mNSSInitialized) {
-    nsNSSShutDownPreventionLock locker;
-    PK11_LogoutAll();
-    SSL_ClearSessionCache();
-    LogoutAuthenticatedPK11();
   }
   else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) { 
     nsNSSShutDownPreventionLock locker;
@@ -2185,7 +2178,6 @@ nsNSSComponent::RegisterObservers()
     observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_VETO_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC, PR_FALSE);
-    observerService->AddObserver(this, SESSION_LOGOUT_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC, PR_FALSE);
   }
@@ -2988,7 +2980,7 @@ PSMContentDownloader::handleContentDownloadError(nsresult errCode)
     //XXXXXXXXXXXXXXXXXX
     nssComponent->GetPIPNSSBundleString("CrlImportFailureNetworkProblem", tmpMessage);
       
-    if(mDoSilentDownload == PR_TRUE){
+    if (mDoSilentDownload) {
       //This is the case for automatic download. Update failure history
       nsCAutoString updateErrCntPrefStr(CRL_AUTOUPDATE_ERRCNT_PREF);
       nsCAutoString updateErrDetailPrefStr(CRL_AUTOUPDATE_ERRDETAIL_PREF);
