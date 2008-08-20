@@ -461,10 +461,31 @@ struct JSRuntime {
     JSAtomState         atomState;
 
     /*
+     * Cache of reusable JSNativeEnumerators mapped by shape identifiers (as
+     * stored in scope->shape). This cache is nulled by the GC and protected
+     * by gcLock.
+     */
+#define NATIVE_ENUM_CACHE_LOG2  8
+#define NATIVE_ENUM_CACHE_MASK  JS_BITMASK(NATIVE_ENUM_CACHE_LOG2)
+#define NATIVE_ENUM_CACHE_SIZE  JS_BIT(NATIVE_ENUM_CACHE_LOG2)
+
+#define NATIVE_ENUM_CACHE_HASH(shape)                                         \
+    ((((shape) >> NATIVE_ENUM_CACHE_LOG2) ^ (shape)) & NATIVE_ENUM_CACHE_MASK)
+
+    jsuword             nativeEnumCache[NATIVE_ENUM_CACHE_SIZE];
+
+   /*
      * Various metering fields are defined at the end of JSRuntime. In this
      * way there is no need to recompile all the code that refers to other
      * fields of JSRuntime after enabling the corresponding metering macro.
      */
+#ifdef JS_DUMP_ENUM_CACHE_STATS
+    int32               nativeEnumProbes;
+    int32               nativeEnumMisses;
+# define ENUM_CACHE_METER(name)     JS_ATOMIC_INCREMENT(&cx->runtime->name)
+#else
+# define ENUM_CACHE_METER(name)     ((void) 0)
+#endif
 
 #ifdef JS_DUMP_LOOP_STATS
     /* Loop statistics, to trigger trace recording and compiling. */

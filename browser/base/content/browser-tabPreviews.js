@@ -44,7 +44,7 @@
 var tabPreviews = {
   aspectRatio: 0.6875, // 16:11
   init: function () {
-    this.width = Math.ceil(screen.availWidth / 7.5);
+    this.width = Math.ceil(screen.availWidth / 7);
     this.height = Math.round(this.width * this.aspectRatio);
 
     gBrowser.tabContainer.addEventListener("TabSelect", this, false);
@@ -104,7 +104,8 @@ var tabPreviews = {
  * Ctrl-Tab panel
  */
 var ctrlTab = {
-  tabs: [],
+  tabs: null,
+  visibleCount: 3,
   _uniqid: 0,
   get panel () {
     delete this.panel;
@@ -136,18 +137,17 @@ var ctrlTab = {
   },
   get iconSize () {
     delete this.iconSize;
-    return this.iconSize = Math.round(tabPreviews.height / 4);
+    return this.iconSize = Math.max(16, Math.round(tabPreviews.height / 5));
+  },
+  get closeCharCode () {
+    delete this.closeCharCode;
+    return this.closeCharCode = document.getElementById("key_close")
+                                        .getAttribute("key")
+                                        .toLowerCase().charCodeAt(0);
   },
   get smoothScroll () {
     delete this.smoothScroll;
     return this.smoothScroll = gPrefService.getBoolPref("browser.ctrlTab.smoothScroll");
-  },
-  get previewsCount () {
-    delete this.previewsCount;
-    return this.previewsCount = Math.max(gPrefService.getIntPref("browser.ctrlTab.previewsCount"), 3);
-  },
-  get visibleCount () {
-    return Math.min(this.previewsCount, this.tabs.length);
   },
   get offscreenStart () {
     return Array.indexOf(this.container.childNodes, this.selected) - 1;
@@ -158,9 +158,16 @@ var ctrlTab = {
   get offsetX () {
     return - tabPreviews.width * (this.rtl ? this.offscreenEnd : this.offscreenStart);
   },
+  get isOpen () {
+    return this.panel.state == "open" || this.panel.state == "showing";
+  },
   init: function () {
+    if (this.tabs)
+      return;
+
     var tabContainer = gBrowser.tabContainer;
 
+    this.tabs = [];
     Array.forEach(tabContainer.childNodes, function (tab) {
       this.attachTab(tab, tab == gBrowser.selectedTab);
     }, this);
@@ -170,16 +177,18 @@ var ctrlTab = {
     tabContainer.addEventListener("TabClose", this, false);
 
     gBrowser.mTabBox.handleCtrlTab = false;
-    window.addEventListener("keydown", this, true);
+    document.addEventListener("keypress", this, false);
   },
   uninit: function () {
+    this.tabs = null;
+
     var tabContainer = gBrowser.tabContainer;
     tabContainer.removeEventListener("TabOpen", this, false);
     tabContainer.removeEventListener("TabSelect", this, false);
     tabContainer.removeEventListener("TabClose", this, false);
 
     this.panel.removeEventListener("popuphiding", this, false);
-    window.removeEventListener("keydown", this, true);
+    document.removeEventListener("keypress", this, false);
   },
   addBox: function (aAtStart) {
     const SVGNS = "http://www.w3.org/2000/svg";
@@ -198,9 +207,8 @@ var ctrlTab = {
     icon.setAttribute("class", "ctrlTab-icon");
     icon.setAttribute("height", this.iconSize);
     icon.setAttribute("width", this.iconSize);
-    icon.setAttribute("transform", "skewY(10)");
-    icon.setAttribute("x", - this.iconSize / 3);
-    icon.setAttribute("y", tabPreviews.height * .9 - this.iconSize);
+    icon.setAttribute("x", - this.iconSize * .2);
+    icon.setAttribute("y", tabPreviews.height - this.iconSize * 1.2);
 
     var thumbnail_and_icon = document.createElementNS(SVGNS, "g");
     thumbnail_and_icon.appendChild(thumbnail);
@@ -216,6 +224,7 @@ var ctrlTab = {
 
     var box = document.createElementNS(SVGNS, "g");
     box.setAttribute("class", "ctrlTab-box");
+    box.setAttribute("onclick", "ctrlTab.pick(this);");
     box.appendChild(thumbnail_and_icon);
     box.appendChild(reflection);
 
@@ -289,13 +298,12 @@ var ctrlTab = {
   },
   scroll: function () {
     if (!this.smoothScroll) {
-      this._move = true;
-      this.stopScroll();
+      this.advanceSelected();
+      this.arrangeBoxes();
       return;
     }
 
     this.stopScroll();
-    this._move = true;
     let (next = this.invertDirection ? this.selected.previousSibling : this.selected.nextSibling) {
       this.setStatusbarValue(next);
       this.label.value = next._tab.label;
@@ -326,33 +334,26 @@ var ctrlTab = {
     if (this._scrollTimer) {
       clearInterval(this._scrollTimer);
       this._scrollTimer = 0;
+      this.advanceSelected();
+      this.arrangeBoxes();
     }
-    if (this._move)
-      this.updateSelected();
   },
-  updateSelected: function (aClosing) {
-    var index = 1;
-    if (this._move) {
-      this._move = false;
-      index += this.invertDirection ? -1 : 1;
-    }
-    if (this.selected) {
-      index += this.offscreenStart + this.tabs.length;
-      index %= this.tabs.length;
-      if (index < 2)
-        index += this.tabs.length;
-      if (index > this.container.childNodes.length - this.visibleCount + 1)
-        index -= this.tabs.length;
-    }
+  advanceSelected: function () {
+    // regardless of visibleCount, the new highlighted tab will be
+    // the first or third-visible tab, depending on whether Shift is pressed
+    var index = ((this.invertDirection ? 0 : 2) + this.offscreenStart + this.tabs.length)
+                % this.tabs.length;
+    if (index < 2)
+      index += this.tabs.length;
+    if (index > this.container.childNodes.length - this.visibleCount + 1)
+      index -= this.tabs.length;
     this.selected = this.container.childNodes[index];
-
-    if (aClosing)
-      return;
-
+  },
+  arrangeBoxes: function () {
     this.addOffscreenBox(this.invertDirection);
     this.addOffscreenBox(!this.invertDirection);
 
-    // having lots of off-screen boxes reduce the scrolling speed, remove some
+    // having lots of off-screen boxes reduces the scrolling speed, remove some
     for (let i = this.offscreenStart; i > 1; i--)
       this.removeBox(this.container.firstChild);
     for (let i = this.offscreenEnd; i > 1; i--)
@@ -391,6 +392,12 @@ var ctrlTab = {
     box.setAttribute("transform", "scale(" + scale + "," + scale + ") " +
                                   "translate("+ trans_x + "," + trans_y + ")");
   },
+  pick: function (aBox) {
+    this.stopScroll();
+    var selectedTab = (aBox || this.selected)._tab;
+    this.panel.hidePopup();
+    gBrowser.selectedTab = selectedTab;
+  },
   setStatusbarValue: function (aBox) {
     var value = "";
     if (aBox) {
@@ -420,8 +427,10 @@ var ctrlTab = {
       this.tabs.splice(i, 1);
   },
   open: function () {
-    window.addEventListener("keyup", this, true);
-    window.addEventListener("keypress", this, true);
+    this._deferOnTabSelect = [];
+
+    document.addEventListener("keyup", this, false);
+    document.addEventListener("keydown", this, false);
     this.panel.addEventListener("popuphiding", this, false);
     this.panel.hidden = false;
     this.panel.width = tabPreviews.width * this.visibleCount;
@@ -429,24 +438,29 @@ var ctrlTab = {
                                  screen.availTop + (screen.availHeight - this.svgRoot.getAttribute("height")) / 2,
                                  false);
 
+    // display $visibleCount tabs, starting with the first or
+    // the second to the last tab, depending on whether Shift is pressed
     for (let index = this.invertDirection ? this.tabs.length - 2 : 0,
              i = this.visibleCount; i > 0; i--)
       this.addPreview(this.addBox(), this.tabs[index++ % this.tabs.length]);
-    this.updateSelected();
+
+    // regardless of visibleCount, highlight the second-visible tab
+    this.selected = this.container.childNodes[1];
+    this.arrangeBoxes();
   },
-  onKeyDown: function (event) {
-    var isOpen = this.panel.state == "open" || this.panel.state == "showing";
+  onKeyPress: function (event) {
+    var isOpen = this.isOpen;
     var propagate = !isOpen;
     switch (event.keyCode) {
       case event.DOM_VK_TAB:
-        if (event.ctrlKey && !event.altKey && !event.metaKey && this.tabs.length > 1) {
+        if (event.ctrlKey && !event.altKey && !event.metaKey) {
           propagate = false;
           this.invertDirection = event.shiftKey;
           if (isOpen)
             this.scroll();
           else if (this.tabs.length == 2)
             gBrowser.selectedTab = this.tabs[1];
-          else
+          else if (this.tabs.length > 2)
             this.open();
         }
         break;
@@ -454,35 +468,39 @@ var ctrlTab = {
         if (isOpen)
           this.panel.hidePopup();
         break;
+      default:
+        if (isOpen && event.charCode == this.closeCharCode) {
+          this.stopScroll();
+          gBrowser.removeTab(this.selected._tab);
+        }
     }
     if (!propagate) {
       event.stopPropagation();
       event.preventDefault();
     }
   },
-  onKeyUp: function (event) {
-    if (event.keyCode == event.DOM_VK_CONTROL) {
-      if (this._move)
-        this.updateSelected(true);
-      let selectedTab = this.selected._tab;
-      this.panel.hidePopup();
-      gBrowser.selectedTab = selectedTab;
-    }
-  },
   onPopupHiding: function () {
     this.stopScroll();
-    window.removeEventListener("keyup", this, true);
-    window.removeEventListener("keypress", this, true);
+    document.removeEventListener("keyup", this, false);
+    document.removeEventListener("keydown", this, false);
     while (this.container.childNodes.length)
       this.removeBox(this.container.lastChild);
     this.selected = null;
     this.invertDirection = false;
-    this._move = false;
     this._uniqid = 0;
     this.label.value = "";
     this.setStatusbarValue();
     this.container.removeAttribute("transform");
     this.svgRoot.forceRedraw();
+
+    this._deferOnTabSelect.forEach(this.onTabSelect, this);
+    this._deferOnTabSelect = null;
+  },
+  onTabSelect: function (aTab) {
+    if (aTab.parentNode) {
+      this.detachTab(aTab);
+      this.attachTab(aTab, true);
+    }
   },
   handleEvent: function (event) {
     switch (event.type) {
@@ -490,25 +508,44 @@ var ctrlTab = {
         this.tabAttrModified(event.target, event.attrName);
         break;
       case "TabSelect":
-        this.detachTab(event.target);
-        this.attachTab(event.target, true);
+        if (this.isOpen)
+          // don't change the tab order while the panel is open
+          this._deferOnTabSelect.push(event.target);
+        else
+          this.onTabSelect(event.target);
         break;
       case "TabOpen":
         this.attachTab(event.target);
         break;
       case "TabClose":
+        if (this.isOpen) {
+          if (this.tabs.length == 2) {
+            // we have two tabs, one is being closed, so the panel isn't needed anymore
+            this.panel.hidePopup();
+          } else {
+            if (event.target == this.selected._tab)
+              this.advanceSelected();
+            this.detachTab(event.target);
+            Array.slice(this.container.childNodes).forEach(function (box) {
+              if (box._tab == event.target) {
+                this.removeBox(box);
+                this.arrangeBoxes();
+              }
+            }, this);
+          }
+        }
         this.detachTab(event.target);
         break;
-      case "keydown":
-        this.onKeyDown(event);
-        break;
-      case "keyup":
       case "keypress":
+        this.onKeyPress(event);
+        break;
+      case "keydown":
+      case "keyup":
         // the panel is open; don't propagate any key events
         event.stopPropagation();
         event.preventDefault();
-      case "keyup":
-        this.onKeyUp(event);
+        if (event.type == "keyup" && event.keyCode == event.DOM_VK_CONTROL)
+          this.pick();
         break;
       case "popuphiding":
         this.onPopupHiding();

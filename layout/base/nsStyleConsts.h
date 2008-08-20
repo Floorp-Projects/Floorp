@@ -601,6 +601,7 @@
 #define NS_STYLE_WHITESPACE_PRE                 1
 #define NS_STYLE_WHITESPACE_NOWRAP              2
 #define NS_STYLE_WHITESPACE_PRE_WRAP            3
+#define NS_STYLE_WHITESPACE_PRE_LINE            4
 
 // See nsStyleText
 #define NS_STYLE_WORDWRAP_NORMAL                0

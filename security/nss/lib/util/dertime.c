@@ -43,10 +43,6 @@
 #define HIDIGIT(v) (((v) / 10) + '0')
 #define LODIGIT(v) (((v) % 10) + '0')
 
-#define C_SINGLE_QUOTE '\047'
-
-#define DIGITHI(dig) (((dig) - '0') * 10)
-#define DIGITLO(dig) ((dig) - '0')
 #define ISDIGIT(dig) (((dig) >= '0') && ((dig) <= '9'))
 #define CAPTURE(var,p,label)				  \
 {							  \
@@ -54,26 +50,6 @@
     (var) = ((p)[0] - '0') * 10 + ((p)[1] - '0');	  \
     p += 2; \
 }
-
-#define SECMIN  60L            /* seconds in a minute        */
-#define SECHOUR (60L*SECMIN)   /* seconds in an hour         */
-#define SECDAY  (24L*SECHOUR)  /* seconds in a day           */
-#define SECYEAR (365L*SECDAY)  /* seconds in a non-leap year */
-
-static long monthToDayInYear[12] = {
-    0,
-    31,
-    31+28,
-    31+28+31,
-    31+28+31+30,
-    31+28+31+30+31,
-    31+28+31+30+31+30,
-    31+28+31+30+31+30+31,
-    31+28+31+30+31+30+31+31,
-    31+28+31+30+31+30+31+31+30,
-    31+28+31+30+31+30+31+31+30+31,
-    31+28+31+30+31+30+31+31+30+31+30,
-};
 
 static const PRTime January1st1     = (PRTime) LL_INIT(0xff234001U, 0x00d44000U);
 static const PRTime January1st1950  = (PRTime) LL_INIT(0xfffdc1f8U, 0x793da000U);

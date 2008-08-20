@@ -32,7 +32,7 @@
 
 /*
  * oggplay_enums.h
- * 
+ *
  * Shane Stephens <shane.stephens@annodex.net>
  */
 
@@ -46,7 +46,7 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
   OggPlayDataHeader  ** end_of_list_p;
   int                   i;
   int                   eof;
-  
+
   if (me == NULL) {
     return E_OGGPLAY_BAD_OGGPLAY;
   }
@@ -61,10 +61,10 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
   }
 
   if (me->reader->seek != NULL) {
-    if 
+    if
     (
-      me->reader->seek(me->reader, me->oggz, milliseconds) 
-      == 
+      me->reader->seek(me->reader, me->oggz, milliseconds)
+      ==
       E_OGGPLAY_CANT_SEEK
     )
     {
@@ -77,11 +77,11 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
   }
 
   /*
-   * first, create a trash object to store the context that we want to 
-   * delete but can't until the presentation thread is no longer using it - 
+   * first, create a trash object to store the context that we want to
+   * delete but can't until the presentation thread is no longer using it -
    * this will occur as soon as the thread calls oggplay_buffer_release_next
    */
-  
+
   trash = malloc(sizeof(OggPlaySeekTrash));
 
   /*
@@ -94,13 +94,13 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
    * will start using this buffer instead.
    */
   me->buffer = oggplay_buffer_new_buffer(me->buffer->buffer_size);
-  
+
   /*
    * strip all of the data packets out of the streams and put them into the
    * trash.  We can free the untimed packets immediately - they are USELESS
    * SCUM OF THE EARTH (and also unreferenced by the buffer).
    */
-  end_of_list_p = &trash->old_data; 
+  end_of_list_p = &trash->old_data;
   for (i = 0; i < me->num_tracks; i++) {
     OggPlayDecode *track = me->decode_data[i];
     if (track->data_list != NULL) {
@@ -117,7 +117,7 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
   /*
    * set the presentation time
    */
-  me->presentation_time = milliseconds; 
+  me->presentation_time = milliseconds;
   me->target = me->callback_period - 1;
   me->pt_update_valid = 1;
 
@@ -127,11 +127,11 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
   while (*p != NULL) {
     p = &((*p)->next);
   }
-  
+
   *p = trash;
 
   return E_OGGPLAY_OK;
-  
+
 }
 
 void

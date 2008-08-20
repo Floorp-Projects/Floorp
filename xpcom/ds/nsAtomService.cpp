@@ -46,7 +46,7 @@ nsAtomService::nsAtomService()
 }
 
 nsresult
-nsAtomService::GetAtom(const PRUnichar *aString, nsIAtom ** aResult)
+nsAtomService::GetAtom(const nsAString& aString, nsIAtom ** aResult)
 {
   *aResult = NS_NewAtom(aString);
 
@@ -57,7 +57,7 @@ nsAtomService::GetAtom(const PRUnichar *aString, nsIAtom ** aResult)
 }
 
 nsresult
-nsAtomService::GetPermanentAtom(const PRUnichar *aString, nsIAtom ** aResult)
+nsAtomService::GetPermanentAtom(const nsAString& aString, nsIAtom ** aResult)
 {
   *aResult = NS_NewPermanentAtom(aString);
 

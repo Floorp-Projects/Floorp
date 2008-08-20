@@ -54,7 +54,7 @@ typedef int (PR_CALLBACK * PKCS12WriteFunction)(void *arg,
                                                 unsigned int *lenWritten);
 typedef int (PR_CALLBACK * PKCS12CloseFunction)(void *arg);
 typedef SECStatus (PR_CALLBACK * PKCS12UnicodeConvertFunction)(
-                                 PRArenaPool *arena,
+                                 PLArenaPool *arena,
                                  SECItem *dest, SECItem *src,
                                  PRBool toUnicode,
                                  PRBool swapBytes);

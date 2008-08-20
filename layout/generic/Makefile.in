@@ -82,11 +82,6 @@ ifdef ACCESSIBILITY
 REQUIRES	+= accessibility
 endif
 
-# Sun's Complex Text Layout support
-ifdef SUNCTL
-REQUIRES	+= ctl
-endif
-
 EXPORTS		= \
 		nsFrameList.h \
 		nsHTMLParts.h \
@@ -199,6 +194,10 @@ LOCAL_INCLUDES += \
 
 ifdef MOZ_ENABLE_GTK2
 CXXFLAGS += $(MOZ_GTK2_CFLAGS)
+endif
+
+ifdef MOZ_ENABLE_QT
+CXXFLAGS += $(MOZ_QT_CFLAGS)
 endif
 
 libs::

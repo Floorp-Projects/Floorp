@@ -92,29 +92,35 @@ public:
     return aLength > 0 && aChars[0] == 0x200D; // ZWJ
   }
 
+  enum CompressionMode {
+    COMPRESS_NONE,
+    COMPRESS_WHITESPACE,
+    COMPRESS_WHITESPACE_NEWLINE
+  };
+
   /**
    * Create a text run from a run of Unicode text. The text may have whitespace
    * compressed. A preformatted tab is sent to the text run as a single space.
    * (Tab spacing must be performed by textframe later.) Certain other
    * characters are discarded.
    * 
-   * @param aCompressWhitespace runs of consecutive whitespace (spaces not
-   * followed by a diacritical mark, tabs, and newlines) are compressed to a
-   * single space character.
+   * @param aCompressWhitespace control what is compressed to a
+   * single space character: no compression, compress spaces (not followed
+   * by combining mark) and tabs, and compress those plus newlines.
    * @param aIncomingWhitespace a flag indicating whether there was whitespace
    * preceding this text. We set it to indicate if there's whitespace
    * preceding the end of this text.
    */
   static PRUnichar* TransformText(const PRUnichar* aText, PRUint32 aLength,
                                   PRUnichar* aOutput,
-                                  PRBool aCompressWhitespace,
+                                  CompressionMode aCompression,
                                   PRPackedBool* aIncomingWhitespace,
                                   gfxSkipCharsBuilder* aSkipChars,
                                   PRUint32* aAnalysisFlags);
 
   static PRUint8* TransformText(const PRUint8* aText, PRUint32 aLength,
                                 PRUint8* aOutput,
-                                PRBool aCompressWhitespace,
+                                CompressionMode aCompression,
                                 PRPackedBool* aIncomingWhitespace,
                                 gfxSkipCharsBuilder* aSkipChars,
                                 PRUint32* aAnalysisFlags);

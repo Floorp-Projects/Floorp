@@ -788,12 +788,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       isInputEvent = PR_TRUE;
       break;
     }
-    case NS_RECONVERSION_EVENT:
-    {
-      newEvent = new nsReconversionEvent(PR_FALSE, msg, nsnull);
-      isInputEvent = PR_TRUE;
-      break;
-    }
     case NS_MOUSE_SCROLL_EVENT:
     {
       nsMouseScrollEvent* mouseScrollEvent =
@@ -883,12 +877,6 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
     {
       newEvent = new nsUIEvent(PR_FALSE, msg,
                                static_cast<nsUIEvent*>(mEvent)->detail);
-      break;
-    }
-    case NS_QUERYCARETRECT_EVENT:
-    {
-      newEvent = new nsQueryCaretRectEvent(PR_FALSE, msg, nsnull);
-      isInputEvent = PR_TRUE;
       break;
     }
     case NS_PAGETRANSITION_EVENT:

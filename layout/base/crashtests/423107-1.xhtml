@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<script type="text/javascript" >
+
+function boom()
+{
+  var a = document.getElementById("a");
+  document.body.removeChild(a);
+  document.body.offsetHeight;
+  document.body.appendChild(a);
+}
+
+</script>
+</head>
+
+<body style="-moz-column-count: 3;" onload="boom();">1<div style="height: 1em;"></div><div id="a">2<select style="float: right;"></select></div></body>
+
+</html>

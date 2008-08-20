@@ -51,7 +51,6 @@ class nsIScriptGlobalObjectOwner;
 class nsIArray;
 class nsScriptErrorEvent;
 class nsIScriptGlobalObject;
-enum nsEventStatus;
 struct JSObject; // until we finally remove GetGlobalJSObject...
 
 // Some helpers for working with integer "script type IDs", and specifically

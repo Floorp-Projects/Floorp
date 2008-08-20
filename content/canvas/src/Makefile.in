@@ -90,6 +90,8 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../layout/xul/base/src \
 		-I$(srcdir)/../../../layout/style \
 		-I$(srcdir)/../../../layout/generic \
+		-I$(srcdir)/../../base/src \
+		-I$(srcdir)/../../html/content/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

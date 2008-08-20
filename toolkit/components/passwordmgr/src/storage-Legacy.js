@@ -84,6 +84,14 @@ LoginManagerStorage_legacy.prototype = {
         return this.__profileDir;
     },
 
+    __nsLoginInfo: null,  // Constructor for nsILoginInfo implementation
+    get _nsLoginInfo() {
+        if (!this.__nsLoginInfo)
+            this.__nsLoginInfo = new Components.Constructor(
+                "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
+        return this.__nsLoginInfo;
+    },
+
     _prefBranch : null,  // Preferences service
 
     _signonsFile : null,  // nsIFile for "signons3.txt" (or whatever pref is)
@@ -197,18 +205,15 @@ LoginManagerStorage_legacy.prototype = {
         // Throws if there are bogus values.
         this._checkLoginValues(login);
 
-        // We rely on using login.wrappedJSObject. addLogin is the
-        // only entry point where we might get a nsLoginInfo object
-        // that wasn't created by us (and so might not be a JS
-        // implementation being wrapped)
-        if (!login.wrappedJSObject) {
-            var clone = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                        createInstance(Ci.nsILoginInfo);
-            clone.init(login.hostname, login.formSubmitURL, login.httpRealm,
-                       login.username,      login.password,
-                       login.usernameField, login.passwordField);
-            login = clone;
-        }
+        // Clone the input. This ensures changes made by the caller to the
+        // login (after calling addLogin) do no change the login we have.
+        // Also, we rely on using login.wrappedJSObject, but can't rely on the
+        // thing provided by the caller to support that.
+        var clone = new this._nsLoginInfo();
+        clone.init(login.hostname, login.formSubmitURL, login.httpRealm,
+                   login.username,      login.password,
+                   login.usernameField, login.passwordField);
+        login = clone;
 
         var key = login.hostname;
 
@@ -513,6 +518,14 @@ LoginManagerStorage_legacy.prototype = {
         if (badCharacterPresent(aLogin, "\0"))
             throw "login values can't contain nulls";
 
+        // In theory these nulls should just be rolled up into the encrypted
+        // values, but nsISecretDecoderRing doesn't use nsStrings, so the
+        // nulls cause truncation. Check for them here just to avoid
+        // unexpected round-trip surprises.
+        if (aLogin.username.indexOf("\0") != -1 ||
+            aLogin.password.indexOf("\0") != -1)
+            throw "login values can't contain nulls";
+
         // Newlines are invalid for any field stored as plaintext.
         if (badCharacterPresent(aLogin, "\r") ||
             badCharacterPresent(aLogin, "\n"))
@@ -655,8 +668,7 @@ LoginManagerStorage_legacy.prototype = {
 
                 aLogin.hostname = "http://" + host + ":" + port;
 
-                var extraLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                                 createInstance(Ci.nsILoginInfo);
+                var extraLogin = new this._nsLoginInfo();
                 extraLogin.init("https://" + host + ":" + port,
                                 null, aLogin.httpRealm,
                                 aLogin.username, aLogin.password, "", "");
@@ -836,8 +848,6 @@ LoginManagerStorage_legacy.prototype = {
                         FILLER : 8 };
         var parseState = STATE.HEADER;
 
-        var nsLoginInfo = new Components.Constructor(
-                "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
         var processEntry = false;
 
         do {
@@ -907,7 +917,7 @@ LoginManagerStorage_legacy.prototype = {
                         break;
                     }
 
-                    var entry = new nsLoginInfo();
+                    var entry = new this._nsLoginInfo();
                     entry.hostname  = hostname;
                     entry.httpRealm = httpRealm;
 
@@ -1157,57 +1167,58 @@ LoginManagerStorage_legacy.prototype = {
         var result = [], userCanceled = false;
 
         for each (var login in logins) {
-            var username, password;
+            var decryptedUsername, decryptedPassword;
 
-            [username, userCanceled] =
+            [decryptedUsername, userCanceled] =
                 this._decrypt(login.wrappedJSObject.encryptedUsername);
 
             if (userCanceled)
                 break;
 
-            [password, userCanceled] =
+            [decryptedPassword, userCanceled] =
                 this._decrypt(login.wrappedJSObject.encryptedPassword);
 
             // Probably can't hit this case, but for completeness...
             if (userCanceled)
                 break;
 
-            // If decryption failed (corrupt entry?) skip it.
-            // Note that we allow password-only logins, so username con be "".
-            if (username == null || !password)
+            // If decryption failed (corrupt entry?) skip it. Note that we
+            // allow password-only logins, so decryptedUsername can be "".
+            if (decryptedUsername == null || !decryptedPassword)
                 continue;
 
-            // We could set the decrypted values on a copy of the object, to
-            // try to prevent the decrypted values from sitting around in
-            // memory if they're not needed. But thanks to GC that's happening
-            // anyway, so meh.
-            login.username = username;
-            login.password = password;
+            // Return copies to the caller. Prevents callers from modifying
+            // our internal stoage, and helps avoid keeping decrypted data in
+            // memory (although this is fuzzy, because of GC issues).
+            var clone = new this._nsLoginInfo();
+            clone.init(login.hostname, login.formSubmitURL, login.httpRealm,
+                       decryptedUsername, decryptedPassword,
+                       login.usernameField, login.passwordField);
 
-            // Old mime64-obscured entries need to be reencrypted in the new
-            // format.
+            // Old mime64-obscured entries should be opportunistically
+            // reencrypted in the new format.
+            var recrypted;
             if (login.wrappedJSObject.encryptedUsername &&
                 login.wrappedJSObject.encryptedUsername.charAt(0) == '~') {
-                  [username, userCanceled] = this._encrypt(login.username);
+                  [recrypted, userCanceled] = this._encrypt(decryptedUsername);
 
                   if (userCanceled)
                     break;
 
-                  login.wrappedJSObject.encryptedUsername = username;
+                  login.wrappedJSObject.encryptedUsername = recrypted;
             }
 
             if (login.wrappedJSObject.encryptedPassword &&
                 login.wrappedJSObject.encryptedPassword.charAt(0) == '~') {
-
-                  [password, userCanceled] = this._encrypt(login.password);
+                  [recrypted, userCanceled] = this._encrypt(decryptedPassword);
 
                   if (userCanceled)
                     break;
 
-                  login.wrappedJSObject.encryptedPassword = password;
+                  login.wrappedJSObject.encryptedPassword = recrypted;
             }
 
-            result.push(login);
+            result.push(clone);
         }
 
         return [result, userCanceled];

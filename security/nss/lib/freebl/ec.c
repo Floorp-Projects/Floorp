@@ -354,6 +354,7 @@ EC_NewKeyFromSeed(ECParams *ecParams, ECPrivateKey **privKey,
     return rv;
 }
 
+#ifdef NSS_ENABLE_ECC
 /* Generate a random private key using the algorithm A.4.1 of ANSI X9.62,
  * modified a la FIPS 186-2 Change Notice 1 to eliminate the bias in the
  * random number generator.
@@ -409,6 +410,7 @@ cleanup:
     }
     return privKeyBytes;
 }
+#endif /* NSS_ENABLE_ECC */
 
 /* Generates a new EC key pair. The private key is a random value and
  * the public key is the result of performing a scalar point multiplication

@@ -147,6 +147,11 @@ public:
    */
   PRBool IsBackgroundOnly() { return mIsBackgroundOnly; }
   /**
+   * Set to PR_TRUE if painting should be suppressed during page load.
+   * Set to PR_FALSE if painting should not be suppressed.
+   */
+  void SetBackgroundOnly(PRBool aIsBackgroundOnly) { mIsBackgroundOnly = aIsBackgroundOnly; }
+  /**
    * @return PR_TRUE if the currently active BuildDisplayList call is being
    * applied to a frame at the root of a pseudo stacking context. A pseudo
    * stacking context is either a real stacking context or basically what

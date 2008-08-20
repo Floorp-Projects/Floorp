@@ -38,6 +38,22 @@
 
 #include "nsIEventTarget.idl"
 
+[scriptable, uuid(ef194cab-3f86-4b61-b132-e5e96a79e5d1)]
+interface nsIThreadPoolListener : nsISupports
+{
+  /**
+   * Called when a new thread is created by the thread pool. The notification
+   * happens on the newly-created thread.
+   */
+  void onThreadCreated();
+
+  /**
+   * Called when a thread is about to be destroyed by the thread pool. The
+   * notification happens on the thread that is about to be destroyed.
+   */
+  void onThreadShuttingDown();
+};
+
 /**
  * An interface to a thread pool.  A thread pool creates a limited number of
  * anonymous (unnamed) worker threads.  An event dispatched to the thread pool
@@ -70,4 +86,21 @@ interface nsIThreadPool : nsIEventTarget
    * destroyed.
    */
   attribute unsigned long idleThreadTimeout;
+
+  /**
+   * An optional listener that will be notified when a thread is created or
+   * destroyed in the course of the thread pool's operation.
+   *
+   * A listener will only receive notifications about threads created after the
+   * listener is set so it is recommended that the consumer set the listener
+   * before dispatching the first event. A listener that receives an
+   * onThreadCreated() notification is guaranteed to always receive the
+   * corresponding onThreadShuttingDown() notification.
+   *
+   * The thread pool takes ownership of the listener and releases it when the
+   * shutdown() method is called. Threads created after the listener is set will
+   * also take ownership of the listener so that the listener will be kept alive
+   * long enough to receive the guaranteed onThreadShuttingDown() notification.
+   */
+  attribute nsIThreadPoolListener listener;
 };

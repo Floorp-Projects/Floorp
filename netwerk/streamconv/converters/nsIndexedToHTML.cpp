@@ -117,6 +117,8 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
     mListener = aListener;
 
     mDateTime = do_CreateInstance(NS_DATETIMEFORMAT_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
 
     nsCOMPtr<nsIStringBundleService> sbs =
         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);

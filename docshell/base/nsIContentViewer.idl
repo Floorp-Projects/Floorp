@@ -7,20 +7,17 @@ interface nsIPrintSettings;
 
 %{ C++
 class nsIWidget;
-class nsIDeviceContext;
 struct nsRect;
 %}
 
 [ptr] native nsIWidgetPtr(nsIWidget);
-[ptr] native nsIDeviceContextPtr(nsIDeviceContext);
 [ref] native nsRectRef(nsRect);
 
-[scriptable, uuid(89653afe-182f-401f-9f3c-8858d91387cd)]
+[scriptable, uuid(05b290ac-d880-4900-bb1f-2211b5f8accc)]
 interface nsIContentViewer : nsISupports
 {
 
   [noscript] void init(in nsIWidgetPtr aParentWidget,
-                       in nsIDeviceContextPtr aDeviceContext,
                        [const] in nsRectRef aBounds);
 
   attribute nsISupports container;

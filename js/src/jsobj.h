@@ -623,22 +623,6 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
 extern JSBool
 js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
-/*
- * Private type used to enumerate properties of a native JS object. It is not
- * allocated when there are no enumerable properties in the object. Instead for
- * empty enumerators js_Enumerate uses JSVAL_ZERO as the enumeration state.
- *
- * Shared between jsobj.cpp and jstracer.cpp.
- */
-struct JSNativeEnumerator {
-    uint32              cursor;         /* index into ids array, runs from
-                                           length down to 0 */
-    uint32              length;         /* length of ids array */
-    JSNativeEnumerator  *next;          /* double-linked list support */
-    JSNativeEnumerator  **prevp;
-    jsid                ids[1];         /* enumeration id array */
-};
-
 extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp);

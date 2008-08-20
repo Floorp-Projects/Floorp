@@ -71,6 +71,18 @@
 // It is safer to leve it commented out
 // #define HONOR_BLACK_POINT_TAG    1
 
+#ifdef CMS_DEBUG
+#include <stdio.h>
+#define CMSASSERT(x) \
+{   if (!(x)) { \
+        fprintf(stderr, "CMS Assertion Failed: %s:%d\n", __FILE__, __LINE__);\
+        exit(-1); \
+    } \
+}
+#else
+#define CMSASSERT(x)
+#endif
+
 // ********** End of configuration toggles ******************************
 
 #define LCMS_VERSION        117
@@ -111,6 +123,8 @@
 #   endif
 #endif
 
+// This isn't defined on either windows or non-windows, but it fits stylistically
+typedef float FLOAT, *LPFLOAT;
 
 // Here comes the Non-Windows settings
 
@@ -1069,6 +1083,8 @@ LCMSAPI void          LCMSEXPORT cmsSetProfileID(cmsHPROFILE hProfile, LPBYTE Pr
 
 #define cmsFLAGS_NOTCACHE                 0x0040    // Inhibit 1-pixel cache
 
+#define cmsFLAGS_FLOATSHAPER                0x0080    // Use floats if a smelted matrix shaper is selected
+
 #define cmsFLAGS_NOTPRECALC               0x0100    
 #define cmsFLAGS_NULLTRANSFORM            0x0200    // Don't transform anyway
 #define cmsFLAGS_HIGHRESPRECALC           0x0400    // Use more memory to give better accurancy
@@ -1452,10 +1468,11 @@ typedef struct {
 // Fixed point
 
 
-typedef icInt32Number Fixed32;       // Fixed 15.16 whith sign
+typedef icInt32Number Fixed32, *LPFixed32;    // Fixed 15.16 whith sign
 
 #define INT_TO_FIXED(x)         ((x)<<16)
 #define DOUBLE_TO_FIXED(x)      ((Fixed32) ((x)*65536.0+0.5))
+#define DOUBLE_TO_FLOAT(x)      ((float)x)
 #define FIXED_TO_INT(x)         ((x)>>16)
 #define FIXED_REST_TO_INT(x)    ((x)& 0xFFFFU)
 #define FIXED_TO_DOUBLE(x)      (((double)x)/65536.0)
@@ -1471,10 +1488,14 @@ Fixed32 cdecl FixedSquare(Fixed32 a);
 LCMS_INLINE Fixed32 ToFixedDomain(int a)        { return a + ((a + 0x7fff) / 0xffff); }
 LCMS_INLINE int     FromFixedDomain(Fixed32 a)  { return a - ((a + 0x7fff) >> 16); }   
 
+LCMS_INLINE FLOAT   ToFloatDomain(int a)      { return ((FLOAT) a)/65536.0f; }
+LCMS_INLINE int     FromFloatDomain(FLOAT a)  { return (int) (a * 65536.0f + 0.5f); }   
 #else
 
 Fixed32 cdecl ToFixedDomain(int a);              // (a * 65536.0 / 65535.0)
 int     cdecl FromFixedDomain(Fixed32 a);        // (a * 65535.0 + .5)
+FLOAT   cdecl ToFloatDomain(int a);
+int     cdecl FromFloatDomain(Float a);
 
 #endif
 
@@ -1498,7 +1519,22 @@ typedef struct {                // Matrix (Fixed 15.16)
         WVEC3 v[3];
         } WMAT3, FAR* LPWMAT3;
 
+typedef struct {                // Float vector
+        FLOAT n[4];             // We secretly pad to 4 floats so that we get 16-byte alignment
+        } FVEC3, FAR* LPFVEC3;
 
+typedef struct {                // Matrix (Float)
+        FVEC3 v[4];             // We secretly pad to 4 vectors so that we have an extra 16-byte-aligned
+                                // 16 byte buffer to use later on
+        } FMAT3, FAR* LPFMAT3;
+
+// Structure for giving us alignment with our FMAT3's
+typedef struct {
+        BYTE _Buffer[sizeof(FMAT3) + 16];
+        LPFMAT3 F;
+        } FMAT3A, FAR* LPFMAT3A;
+
+void      cdecl FMAT3ASetup(LPFMAT3A m);
 
 void      cdecl VEC3init(LPVEC3 r, double x, double y, double z);   // double version
 void      cdecl VEC3initF(LPWVEC3 r, double x, double y, double z); // Fix32 version
@@ -1511,7 +1547,14 @@ void      cdecl VEC3perK(LPVEC3 r, LPVEC3 v, double d);
 void      cdecl VEC3minus(LPVEC3 r, LPVEC3 a, LPVEC3 b);
 void      cdecl VEC3perComp(LPVEC3 r, LPVEC3 a, LPVEC3 b);
 LCMSBOOL  cdecl VEC3equal(LPWVEC3 a, LPWVEC3 b, double Tolerance);
+
+/* This is an ugly name conflict. Unfortunately, VEC3equalF was
+ * already in the API for doubles, so we can't change that without
+ * breaking things. we go with the next best approach and name ours
+ * based on the FVEC3 structure. */
 LCMSBOOL  cdecl VEC3equalF(LPVEC3 a, LPVEC3 b, double Tolerance);
+LCMSBOOL  cdecl FVEC3equal(LPFVEC3 a, LPFVEC3 b, float Tolerance);
+
 void      cdecl VEC3scaleAndCut(LPWVEC3 r, LPVEC3 v, double d);
 void      cdecl VEC3cross(LPVEC3 r, LPVEC3 u, LPVEC3 v);
 void      cdecl VEC3saturate(LPVEC3 v);
@@ -1525,10 +1568,14 @@ int       cdecl MAT3inverse(LPMAT3 a, LPMAT3 b);
 LCMSBOOL  cdecl MAT3solve(LPVEC3 x, LPMAT3 a, LPVEC3 b);
 double    cdecl MAT3det(LPMAT3 m);
 void      cdecl MAT3eval(LPVEC3 r, LPMAT3 a, LPVEC3 v);
+void      cdecl MAT3evalF(LPFVEC3 r, LPFMAT3 a, LPFVEC3 v);
 void      cdecl MAT3toFix(LPWMAT3 r, LPMAT3 v);
+void      cdecl MAT3toFloat(LPFMAT3 r, LPMAT3 v);
+void      cdecl MAT3toFloatTranspose(LPFMAT3 r, LPMAT3 v);
 void      cdecl MAT3fromFix(LPMAT3 r, LPWMAT3 v);
 void      cdecl MAT3evalW(LPWVEC3 r, LPWMAT3 a, LPWVEC3 v);
 LCMSBOOL  cdecl MAT3isIdentity(LPWMAT3 a, double Tolerance);
+LCMSBOOL  cdecl FMAT3isIdentity(LPFMAT3 a, float Tolerance);
 void      cdecl MAT3scaleAndCut(LPWMAT3 r, LPMAT3 v, double d);
 
 // Is a table linear?
@@ -1580,6 +1627,7 @@ void    cdecl cmsCalcCLUT16ParamsEx(int nSamples, int InputChan, int OutputChan,
                                             LCMSBOOL lUseTetrahedral, LPL16PARAMS p);
 
 WORD    cdecl cmsLinearInterpLUT16(WORD Value, WORD LutTable[], LPL16PARAMS p);
+FLOAT cdecl cmsLinearInterpFloat(WORD Value1, WORD LutTable[], LPL16PARAMS p);
 Fixed32 cdecl cmsLinearInterpFixed(WORD Value1, WORD LutTable[], LPL16PARAMS p);
 WORD    cdecl cmsReverseLinearInterpLUT16(WORD Value, WORD LutTable[], LPL16PARAMS p);
 
@@ -1695,6 +1743,109 @@ void           cdecl cmsRescaleSampledCurve(LPSAMPLEDCURVE p, double Min, double
 
 LPSAMPLEDCURVE cdecl cmsJoinSampledCurves(LPSAMPLEDCURVE X, LPSAMPLEDCURVE Y, int nResultingPoints);
 
+
+// Precache
+
+/*
+ * Type specifier for precaches
+ * 
+ * Naming Convention: CMS_PRECACHE_{KIND}{IFORMAT}{OFORMAT}_DIRECTION
+ *
+ * Valid Kinds:
+ *   LI - Linear Interpolation
+ *
+ * Valid Formats:
+ *   8 - 8 bit integer
+ *   16 - 16 bit integer
+ *   W - 32 bit fixed point
+ *   F - 32 bit floating point
+ *
+ * Valid Directions:
+ *   FORWARD
+ *   REVERSE
+ */
+
+typedef enum {
+             CMS_PRECACHE_LI1616_REVERSE = 0,   
+             CMS_PRECACHE_LI168_REVERSE = 1,
+             CMS_PRECACHE_LI16W_FORWARD = 2,
+             CMS_PRECACHE_LI16F_FORWARD = 3,
+             PRECACHE_TYPE_COUNT
+             } LCMSPRECACHETYPE;
+
+#define IS_LI_REVERSE(Type) ((Type == CMS_PRECACHE_LI1616_REVERSE) || \
+                             (Type == CMS_PRECACHE_LI168_REVERSE))
+#define IS_LI_FORWARD(Type) ((Type == CMS_PRECACHE_LI16W_FORWARD) || \
+                             (Type == CMS_PRECACHE_LI16F_FORWARD))
+
+
+// Implementation structure for a 16 bit to 16 bit linear interpolations
+typedef struct _lcms_precache_li1616_impl {
+
+               // Tables containing the precomputed values
+               LPWORD Cache[3];
+
+               } LCMSPRECACHELI1616IMPL, FAR* LPLCMSPRECACHELI1616IMPL;
+
+// Implementation structure for 16-bit to 8 bit linear interpolations
+typedef struct _lcms_precache_li168_impl {
+
+               // Tables containing the precomputed values
+               LPBYTE Cache[3];
+
+               } LCMSPRECACHELI168IMPL, FAR* LPLCMSPRECACHELI168IMPL;
+
+// Implementation structure for 16 bit to fixed-point linear interpolations
+typedef struct _lcms_precache_li16w_impl {
+
+               // Tables containing the precomputed values
+               LPFixed32 Cache[3];
+
+               } LCMSPRECACHELI16WIMPL, FAR* LPLCMSPRECACHELI16WIMPL;
+
+// Implementation structure for 16 bit to floating-point linear interpolations
+typedef struct _lcms_precache_li16f_impl {
+
+               // Tables containing the precomputed values
+               LPFLOAT Cache[3];
+
+               } LCMSPRECACHELI16FIMPL, FAR* LPLCMSPRECACHELI16FIMPL;
+
+// This is a struct containing data related to precached linear interpolations
+// on a profile.
+typedef struct _lcms_precache_struct {
+
+               // This structure is used by transforms to precompute otherwise expensive
+               // per-pixel-channel computations. Ideally, a profile would really always
+               // be around as long as any transform usings its information is around, but
+               // it's more trouble than it's worth to enforce that. Instead, we just use a
+               // simple reference counting scheme.
+               unsigned RefCount;
+
+               // Type of precache - determines the active union member below
+               LCMSPRECACHETYPE Type;
+
+               // Different types of precaches require different structures. We use a union
+               // to handle them with the same code when we can.
+               union {
+                     LCMSPRECACHELI1616IMPL LI1616_REVERSE;
+                     LCMSPRECACHELI168IMPL  LI168_REVERSE;
+                     LCMSPRECACHELI16WIMPL  LI16W_FORWARD;
+                     LCMSPRECACHELI16FIMPL  LI16F_FORWARD;
+                     } Impl;
+
+               } LCMSPRECACHE, FAR* LPLCMSPRECACHE;
+
+#define PRECACHE_ADDREF(p) {++p->RefCount;}
+#define PRECACHE_RELEASE(p) {if (--p->RefCount == 0) cmsPrecacheFree(p);}
+
+// Public Precache API
+LCMSAPI LCMSBOOL      LCMSEXPORT cmsPrecacheProfile(cmsHPROFILE hProfile, LCMSPRECACHETYPE Type);
+
+// Internal Precache API
+void    cdecl cmsPrecacheFree(LPLCMSPRECACHE Cache);
+
+
 // Shaper/Matrix handling
 
 #define MATSHAPER_HASMATRIX        0x0001        // Do-ops flags
@@ -1702,24 +1853,39 @@ LPSAMPLEDCURVE cdecl cmsJoinSampledCurves(LPSAMPLEDCURVE X, LPSAMPLEDCURVE Y, in
 #define MATSHAPER_INPUT            0x0004        // Behaviour
 #define MATSHAPER_OUTPUT           0x0008
 #define MATSHAPER_HASINPSHAPER     0x0010
+#define MATSHAPER_FLOATMAT         0x0020        // use the FMAT instead of WMAT
 #define MATSHAPER_ALLSMELTED       (MATSHAPER_INPUT|MATSHAPER_OUTPUT)
 
 
 typedef struct {
                DWORD dwFlags;
 
-               WMAT3 Matrix;
+               union {
+                  WMAT3 W;
+                  FMAT3A FA; // This is not a matrix proper - use FA.F to access the matrix pointer
+                             // Moreover, we store the transpose of the matrix instead, so the first
+                             // vector corresponds to the first column instead of the first row.
+               } Matrix;
+
+               FLOAT clampMax; // SSE2 doesn't have an efficient way to clamp using integers, so we have
+                               // to clamp in the float domain. Unfortunately, since we eventually want
+                               // our integer values clamped to 2^16 - 1, we need to clamp with a very
+                               // precise value in the float domain. We let the CPU take care of by calculating
+                               // it at transform creation time rather than trusting the compiler.
 
                L16PARAMS p16;       // Primary curve
                LPWORD L[3];
+               LPLCMSPRECACHE L_Precache;
                
                L16PARAMS p2_16;     // Secondary curve (used as input in smelted ones)
                LPWORD L2[3];
+               LPLCMSPRECACHE L2_Precache;
 
                } MATSHAPER, FAR* LPMATSHAPER;
 
 LPMATSHAPER cdecl cmsAllocMatShaper(LPMAT3 matrix, LPGAMMATABLE Shaper[], DWORD Behaviour);
-LPMATSHAPER cdecl cmsAllocMatShaper2(LPMAT3 matrix, LPGAMMATABLE In[], LPGAMMATABLE Out[], DWORD Behaviour);
+LPMATSHAPER cdecl cmsAllocMatShaper2(LPMAT3 matrix, LPGAMMATABLE In[], LPLCMSPRECACHE InPrecache,
+                                     LPGAMMATABLE Out[], LPLCMSPRECACHE OutPrecache, DWORD Behavior);
 
 void        cdecl cmsFreeMatShaper(LPMATSHAPER MatShaper);
 void        cdecl cmsEvalMatShaper(LPMATSHAPER MatShaper, WORD In[], WORD Out[]);
@@ -1752,6 +1918,7 @@ LPcmsNAMEDCOLORLIST  cdecl cmsAllocNamedColorList(int n);
 int                  cdecl cmsReadICCnamedColorList(cmsHTRANSFORM xform, cmsHPROFILE hProfile, icTagSignature sig);
 void                 cdecl cmsFreeNamedColorList(LPcmsNAMEDCOLORLIST List);
 LCMSBOOL             cdecl cmsAppendNamedColor(cmsHTRANSFORM xform, const char* Name, WORD PCS[3], WORD Colorant[MAXCHANNELS]);
+
 
 
 // I/O
@@ -1799,6 +1966,9 @@ typedef struct _lcms_iccprofile_struct {
                LCMSBOOL                SaveAs8Bits;
 
                struct tm               Created;
+
+               // Precache pointers
+               LPLCMSPRECACHE Precache[PRECACHE_TYPE_COUNT];
 
                // I/O handlers
 
@@ -1870,7 +2040,6 @@ typedef void   (* _cmsCNVRT)(WORD In[], WORD Out[]);
 typedef LPBYTE (* _cmsFIXFN)(register struct _cmstransform_struct *info,
                              register WORD ToUnroll[],
                              register LPBYTE Buffer);
-
 
 
 // Transformation
@@ -2033,6 +2202,8 @@ LPGAMMATABLE _cmsBuildKToneCurve(cmsHTRANSFORM hCMYK2CMYK, int nPoints);
 
 #define RGB_8_TO_16(rgb) (WORD) ((((WORD) (rgb)) << 8)|(rgb)) 
 #define RGB_16_TO_8(rgb) (BYTE) ((((rgb) * 65281 + 8388608) >> 24) & 0xFF)
+
+#define RGB_8_TO_FLOAT(rgb) (((FLOAT) rgb)/255.0f)
 
 
 #endif  // LCMS_APIONLY

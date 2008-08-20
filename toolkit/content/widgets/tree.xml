@@ -633,6 +633,8 @@
         <![CDATA[
           if (this._editingColumn)
             return;
+          if (event.axis == event.HORIZONTAL_AXIS)
+            return;
 
           var rows = event.detail;
           if (rows == NSUIEvent.SCROLL_PAGE_UP)
@@ -1060,25 +1062,24 @@
       <![CDATA[
         if (this.parentNode.disabled)
           return;
-        var b = this.parentNode.treeBoxObject;
-        var row = b.view.selection.currentIndex;
-         if (row == -1)
-           return;
-  
-          var col = {};
-          var obj = {};
-          b.getCellAt(event.clientX, event.clientY, {}, col, obj);
-  
-          if (this.parentNode.editable)
-            this.parentNode.startEditing(row, col.value);
- 
-          if (!b.view.isContainer(row))
-            return;
- 
+        var tbo = this.parentNode.treeBoxObject;
+        var row = tbo.view.selection.currentIndex;
+        if (row == -1)
+          return;
 
-         // Cyclers and twisties respond to single clicks, not double clicks
-         if (col.value && !col.value.cycler && obj.value != "twisty")
-           this.parentNode.changeOpenState(row);
+        var col = {};
+        var obj = {};
+        tbo.getCellAt(event.clientX, event.clientY, {}, col, obj);
+
+        if (this.parentNode.editable && obj.value != "twisty")
+          this.parentNode.startEditing(row, col.value);
+
+        if (this.parentNode._editingColumn || !tbo.view.isContainer(row))
+          return;
+
+        // Cyclers and twisties respond to single clicks, not double clicks
+        if (col.value != -1 && !col.value.cycler && obj.value != "twisty")
+          this.parentNode.changeOpenState(row);
       ]]>
       </handler>
       

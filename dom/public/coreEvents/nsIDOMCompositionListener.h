@@ -44,10 +44,10 @@
 /*
  * Key pressed / released / typed listener interface.
  */
-// {F14B6491-E95B-11d2-9E85-0060089FE59B}
+// {93A5A335-AA51-4d32-977D-3680B7722AD5}
 #define NS_IDOMCOMPOSITIONLISTENER_IID	\
-{ 0xf14b6491, 0xe95b, 0x11d2, \
-{ 0x9e, 0x85, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b } }
+{ 0x93a5a335, 0xaa51, 0x4d32, \
+{ 0x97, 0x7d, 0x36, 0x80, 0xb7, 0x72, 0x2a, 0xd5 } }
 
 
 class nsIDOMCompositionListener : public nsIDOMEventListener {
@@ -59,8 +59,6 @@ public:
   NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent) = 0;
   NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent) = 0;
   NS_IMETHOD HandleQueryComposition(nsIDOMEvent* aCompositionEvent) = 0;
-  NS_IMETHOD HandleQueryReconversion(nsIDOMEvent* aCompositionEvent) = 0;
-  NS_IMETHOD HandleQueryCaretRect(nsIDOMEvent* aCompositionEvent) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMCompositionListener,

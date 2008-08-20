@@ -124,6 +124,15 @@ nsXREDirProvider::Initialize(nsIFile *aXULAppDir,
   mXULAppDir = aXULAppDir;
   mGREDir = aGREDir;
 
+  if (!mProfileDir) {
+    nsCOMPtr<nsIDirectoryServiceProvider> app(do_QueryInterface(mAppProvider));
+    if (app) {
+      PRBool per = PR_FALSE;
+      app->GetFile(NS_APP_USER_PROFILE_50_DIR, &per, getter_AddRefs(mProfileDir));
+      NS_ASSERTION(per, "NS_APP_USER_PROFILE_50_DIR no defined! This shouldn't happen!"); 
+    }
+  }
+
   return NS_OK;
 }
 
@@ -982,9 +991,6 @@ nsXREDirProvider::GetProfileDir(nsIFile* *aResult)
 nsresult
 nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, PRBool aLocal)
 {
-  if (!gAppData)
-    return NS_ERROR_FAILURE;
-
   // Copied from nsAppFileLocationProvider (more or less)
   nsresult rv;
   nsCOMPtr<nsILocalFile> localDir;
@@ -1027,6 +1033,8 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, PRBool aLocal)
 #if 0 /* For OS/2 we want to always use MOZILLA_HOME */
   // we want an environment variable of the form
   // FIREFOX_HOME, etc
+  if (!gAppData)
+    return NS_ERROR_FAILURE;
   nsDependentCString envVar(nsDependentCString(gAppData->name));
   envVar.Append("_HOME");
   char *pHome = getenv(envVar.get());

@@ -299,11 +299,11 @@ var popupTests = [
   testname: "open context popup at screen",
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   test: function(testname, step) {
-    gMenuPopup.openPopupAtScreen(gScreenX + 8, gScreenY + 16, false);
+    gMenuPopup.openPopupAtScreen(gScreenX + 8, gScreenY + 16, true);
   },
   result: function(testname, step) {
     var rect = gMenuPopup.getBoundingClientRect();
-    ok(rect.left == 8 && rect.top == 16 && rect.right && rect.bottom, testname);
+    ok(rect.left == 10 && rect.top == 18 && rect.right && rect.bottom, testname);
   }
 },
 {
@@ -454,7 +454,6 @@ var popupTests = [
   }
 },
 {
-  end: true,
   testname: "hidePopup hides entire chain",
   events: [ "popuphiding submenupopup", "popuphidden submenupopup",
             "popuphiding thepopup", "popuphidden thepopup",

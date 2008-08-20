@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -205,10 +205,10 @@ SeqDatabase()
 
 	ReportStatus("SEQuencing through database...");
 
-	/* seq throught the whole database */
+	/* seq through the whole database */
     if(!(status = (*database->seq)(database, &key, &data, R_FIRST)))
 	  {
-        while(!(status = (database->seq) (database, &key, &data, R_NEXT)));
+        while(!(status = (database->seq) (database, &key, &data, R_NEXT)))
 			; /* null body */
 	  }
 

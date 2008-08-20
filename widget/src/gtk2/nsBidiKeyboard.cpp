@@ -53,8 +53,15 @@ NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard()
 {
+#if defined(MOZ_X11)
     if (!gtklib)
         gtklib = PR_LoadLibrary("libgtk-x11-2.0.so.0");
+#elif defined(MOZ_DFB)
+    if (!gtklib)
+        gtklib = PR_LoadLibrary("libgtk-directfb-2.0.so.0");
+#else
+    return;
+#endif
 
     if (gtklib && !GdkKeymapHaveBidiLayouts)
             GdkKeymapHaveBidiLayouts = (GdkKeymapHaveBidiLayoutsType) PR_FindFunctionSymbol(gtklib, "gdk_keymap_have_bidi_layouts");

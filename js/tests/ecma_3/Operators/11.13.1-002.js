@@ -49,9 +49,9 @@ printBugNumber(BUGNUMBER);
 printStatus (summary);
 
 var re = /x/g;
-var y = re.lastIndex = "7"
+var y = re.lastIndex = "7";
  
-  expect = "string";
+expect = "string";
 actual = typeof y;
 
 reportCompare(expect, actual, summary);

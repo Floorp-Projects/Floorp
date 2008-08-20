@@ -2336,7 +2336,7 @@ split_innerObject(JSContext *cx, JSObject *obj)
 static JSExtendedClass split_global_class = {
     {"split_global",
     JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE |
-    JSCLASS_IS_EXTENDED,
+    JSCLASS_GLOBAL_FLAGS | JSCLASS_IS_EXTENDED,
     split_addProperty, split_delProperty,
     split_getProperty, split_setProperty,
     (JSEnumerateOp)split_enumerate,

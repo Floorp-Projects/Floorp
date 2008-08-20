@@ -329,6 +329,8 @@ pkix_pl_LdapCertStore_BuildCrlList(
                                 PKIX_CRLCREATETOLISTFAILED);
                             derCrlItem = *attrVal++;
                         }
+                        /* Clean up after PKIX_CHECK_ONLY_FATAL */
+                        pkixTempErrorReceived = PKIX_FALSE;
                     }
                     sreAttr = *sreAttrArray++;
                 }

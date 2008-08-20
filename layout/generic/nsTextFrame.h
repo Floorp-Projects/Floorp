@@ -61,7 +61,7 @@ class PropertyProvider;
 
 // This state bit is set on frames that have some non-collapsed characters after
 // reflow
-#define TEXT_HAS_NONCOLLAPSED_CHARACTERS 0x02000000
+#define TEXT_HAS_NONCOLLAPSED_CHARACTERS 0x80000000
 
 class nsTextFrame : public nsFrame {
 public:
@@ -378,12 +378,6 @@ protected:
   // DestroySelectionDetails() on a null value is still OK, just not necessary.
   SelectionDetails* GetSelectionDetails();
   
-  void AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
-                                    PRInt32 textLength,
-                                    PRBool isRTLChars,
-                                    PRBool isOddLevel,
-                                    PRBool isBidiSystem);
-
   void UnionTextDecorationOverflow(nsPresContext* aPresContext,
                                    PropertyProvider& aProvider,
                                    nsRect* aOverflowRect);

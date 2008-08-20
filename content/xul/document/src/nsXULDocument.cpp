@@ -369,6 +369,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
         tmp->mPendingOverlayLoadNotifications.EnumerateRead(TraverseObservers, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTooltipNode)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_ADDREF_INHERITED(nsXULDocument, nsXMLDocument)
 NS_IMPL_RELEASE_INHERITED(nsXULDocument, nsXMLDocument)
 
@@ -436,8 +440,6 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     mStillWalking = PR_TRUE;
     mMayStartLayout = PR_FALSE;
     mDocumentLoadGroup = do_GetWeakReference(aLoadGroup);
-
-    mDocumentTitle.SetIsVoid(PR_TRUE);
 
     mChannel = aChannel;
 
@@ -3112,12 +3114,7 @@ nsXULDocument::DoneWalking()
         // happen.
         mDocumentLoaded = PR_TRUE;
 
-        nsAutoString title;
-        nsIContent* root = GetRootContent();
-        if (root) {
-            root->GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
-        }
-        SetTitle(title);
+        NotifyPossibleTitleChange(PR_FALSE);
 
         // Before starting layout, check whether we're a toplevel chrome
         // window.  If we are, set our chrome flags now, so that we don't have

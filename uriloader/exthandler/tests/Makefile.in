@@ -58,10 +58,6 @@ SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
 
-DEFINES +=	\
-		-D__DESTDIR__=\"$(MOZ_BUILD_ROOT)\" \
-		$(NULL)
-
 LIBS +=		\
 		$(NSPR_LIBS) \
 		$(NULL)

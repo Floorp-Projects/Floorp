@@ -91,7 +91,7 @@ test.com
 10
 n
 n
-= 4 Name:_CRL_Distribution_Points|X520_Title|"asdfsdf"|Reasons:|DNS_name:_"test.com"
+= 4 Name:_CRL_Distribution_Points|asdfsdf|Reasons:|DNS_name:_"test.com"
 # ################################################################
 ! TEST_9 Certificate Type Extension
 0

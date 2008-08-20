@@ -342,6 +342,22 @@ struct JSWeakRoots {
 JS_STATIC_ASSERT(JSVAL_NULL == 0);
 #define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
 
+/*
+ * Increase runtime->gcBytes by sz bytes to account for an allocation outside
+ * the GC that will be freed only after the GC is run. The function may run
+ * the last ditch GC to ensure that gcBytes does not exceed gcMaxBytes. It will
+ * fail if the latter is not possible.
+ *
+ * This function requires that runtime->gcLock is held on entry. On successful
+ * return the lock is still held and on failure it will be released with
+ * the error reported.
+ */
+extern JSBool
+js_AddAsGCBytes(JSContext *cx, size_t sz);
+
+extern void
+js_RemoveAsGCBytes(JSRuntime* rt, size_t sz);
+
 #ifdef DEBUG_notme
 #define JS_GCMETER 1
 #endif

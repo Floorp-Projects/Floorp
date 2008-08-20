@@ -193,21 +193,7 @@ public:
                              PRUnichar*      aText,
                              PRInt32&        aTextLength,
                              nsCharType      aCharType,
-                             PRBool          aIsOddLevel,
-                             PRBool          aIsBidiSystem,
-                             PRBool          aIsNewTextRunSystem);
-
-  /**
-   * Reorder Unicode text, taking into account bidi capabilities of the
-   * platform. The reordering includes symmetric swapping and removing
-   * control characters.
-   */
-  nsresult ReorderUnicodeText(PRUnichar*      aText,
-                              PRInt32&        aTextLength,
-                              nsCharType      aCharType,
-                              PRBool          aIsOddLevel,
-                              PRBool          aIsBidiSystem,
-                              PRBool          aIsNewTextRunSystem);
+                             PRBool          aIsOddLevel);
 
   /**
    * Return our nsBidi object (bidi reordering engine)

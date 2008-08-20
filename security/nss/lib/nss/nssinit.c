@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.94 2008/03/26 18:49:04 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: nssinit.c,v 1.96 2008/05/17 03:44:41 wtc%google.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -898,6 +898,14 @@ NSS_Shutdown(void)
 	shutdownRV = SECFailure;
     }
     pk11sdr_Shutdown();
+    /*
+     * A thread's error stack is automatically destroyed when the thread
+     * terminates, except for the primordial thread, whose error stack is
+     * destroyed by PR_Cleanup.  Since NSS is usually shut down by the
+     * primordial thread and many NSS-based apps don't call PR_Cleanup,
+     * we destroy the calling thread's error stack here.
+     */
+    nss_DestroyErrorStack();
     nssArena_Shutdown();
     if (status == PR_FAILURE) {
 	if (NSS_GetError() == NSS_ERROR_BUSY) {

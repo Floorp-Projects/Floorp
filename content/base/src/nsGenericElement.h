@@ -78,6 +78,9 @@ class nsINodeInfo;
 class nsIControllers;
 class nsIDOMNSFeatureFactory;
 class nsIEventListenerManager;
+class nsIScrollableView;
+class nsContentList;
+struct nsRect;
 
 typedef unsigned long PtrBits;
 
@@ -386,6 +389,9 @@ private:
   static PRUint32 sMutationCount;
 };
 
+// Forward declare to allow being a friend
+class nsNSElementTearoff;
+
 /**
  * A generic base class for DOM elements, implementing many nsIContent,
  * nsIDOMNode and nsIDOMElement methods.
@@ -395,6 +401,10 @@ class nsGenericElement : public nsIContent
 public:
   nsGenericElement(nsINodeInfo *aNodeInfo);
   virtual ~nsGenericElement();
+
+  friend class nsNSElementTearoff;
+
+  friend class nsNSElementTearoff;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -946,6 +956,17 @@ protected:
    */
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
+  /**
+   * Retrieve the rectangle for the offsetX properties, which
+   * are coordinates relative to the returned aOffsetParent.
+   *
+   * @param aRect offset rectangle
+   * @param aOffsetParent offset parent
+   */
+  virtual void GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent);
+
+  nsIFrame* GetStyledFrame();
+
 public:
   // Because of a bug in MS C++ compiler nsDOMSlots must be declared public,
   // otherwise nsXULElement::nsXULSlots doesn't compile.
@@ -992,6 +1013,11 @@ public:
      * Weak reference to this node
      */
     nsNodeWeakReference* mWeakReference;
+
+    /**
+     * An object implementing the .children property for this element.
+     */
+    nsRefPtr<nsContentList> mChildrenList;
   };
 
 protected:
@@ -1126,7 +1152,27 @@ public:
   }
   
 private:
+  nsContentList* GetChildrenList();
+
   nsRefPtr<nsGenericElement> mContent;
+
+  /**
+   * Get this element's client area rect in app units.
+   * @return the frame's client area
+   */
+  nsRect GetClientAreaRect();
+
+private:
+
+  /**
+   * Get the element's styled frame (the primary frame or, for tables, the inner
+   * table frame) and closest scrollable view.
+   * @note This method flushes pending notifications (Flush_Layout).
+   * @param aScrollableView the scrollable view [OUT]
+   * @param aFrame (optional) the frame [OUT]
+   */
+  void GetScrollInfo(nsIScrollableView **aScrollableView,
+                     nsIFrame **aFrame = nsnull);
 };
 
 #endif /* nsGenericElement_h___ */

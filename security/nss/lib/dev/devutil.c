@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.29 $ $Date: 2007/11/16 05:29:25 $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.31 $ $Date: 2008/05/18 01:51:45 $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -516,60 +516,6 @@ create_cert (
     return create_object(object, certAttr, numCertAttr, status);
 }
 
-static PRStatus
-get_token_certs_for_cache (
-  nssTokenObjectCache *cache
-)
-{
-    PRStatus status;
-    nssCryptokiObject **objects;
-    PRBool *doIt = &cache->doObjectType[cachedCerts];
-    PRUint32 i, numObjects;
-
-    if (!search_for_objects(cache) || 
-         cache->searchedObjectType[cachedCerts] || 
-        !cache->doObjectType[cachedCerts]) 
-    {
-	/* Either there was a state change that prevents a search
-	 * (token logged out), or the search was already done,
-	 * or certs are not being cached.
-	 */
-	return PR_SUCCESS;
-    }
-    objects = nssToken_FindCertificates(cache->token, NULL,
-                                        nssTokenSearchType_TokenForced,
-				        MAX_LOCAL_CACHE_OBJECTS, &status);
-    if (status != PR_SUCCESS) {
-	return status;
-    }
-    cache->objects[cachedCerts] = create_object_array(objects,
-                                                      doIt,
-                                                      &numObjects,
-                                                      &status);
-    if (status != PR_SUCCESS) {
-	return status;
-    }
-    for (i=0; i<numObjects; i++) {
-	cache->objects[cachedCerts][i] = create_cert(objects[i], &status);
-	if (status != PR_SUCCESS) {
-	    break;
-	}
-    }
-    if (status == PR_SUCCESS) {
-	nss_ZFreeIf(objects);
-    } else {
-	PRUint32 j;
-	for (j=0; j<i; j++) {
-	    /* sigh */
-	    nssToken_AddRef(cache->objects[cachedCerts][j]->object->token);
-	    nssArena_Destroy(cache->objects[cachedCerts][j]->arena);
-	}
-	nssCryptokiObjectArray_Destroy(objects);
-    }
-    cache->searchedObjectType[cachedCerts] = PR_TRUE;
-    return status;
-}
-
 static nssCryptokiObjectAndAttributes *
 create_trust (
   nssCryptokiObject *object,
@@ -593,60 +539,6 @@ create_trust (
     return create_object(object, trustAttr, numTrustAttr, status);
 }
 
-static PRStatus
-get_token_trust_for_cache (
-  nssTokenObjectCache *cache
-)
-{
-    PRStatus status;
-    nssCryptokiObject **objects;
-    PRBool *doIt = &cache->doObjectType[cachedTrust];
-    PRUint32 i, numObjects;
-
-    if (!search_for_objects(cache) || 
-         cache->searchedObjectType[cachedTrust] || 
-        !cache->doObjectType[cachedTrust]) 
-    {
-	/* Either there was a state change that prevents a search
-	 * (token logged out), or the search was already done,
-	 * or trust is not being cached.
-	 */
-	return PR_SUCCESS;
-    }
-    objects = nssToken_FindTrustObjects(cache->token, NULL,
-                                        nssTokenSearchType_TokenForced,
-				        MAX_LOCAL_CACHE_OBJECTS, &status);
-    if (status != PR_SUCCESS) {
-	return status;
-    }
-    cache->objects[cachedTrust] = create_object_array(objects,
-                                                      doIt,
-                                                      &numObjects,
-                                                      &status);
-    if (status != PR_SUCCESS) {
-	return status;
-    }
-    for (i=0; i<numObjects; i++) {
-	cache->objects[cachedTrust][i] = create_trust(objects[i], &status);
-	if (status != PR_SUCCESS) {
-	    break;
-	}
-    }
-    if (status == PR_SUCCESS) {
-	nss_ZFreeIf(objects);
-    } else {
-	PRUint32 j;
-	for (j=0; j<i; j++) {
-	    /* sigh */
-	    nssToken_AddRef(cache->objects[cachedTrust][j]->object->token);
-	    nssArena_Destroy(cache->objects[cachedTrust][j]->arena);
-	}
-	nssCryptokiObjectArray_Destroy(objects);
-    }
-    cache->searchedObjectType[cachedTrust] = PR_TRUE;
-    return status;
-}
-
 static nssCryptokiObjectAndAttributes *
 create_crl (
   nssCryptokiObject *object,
@@ -666,33 +558,55 @@ create_crl (
     return create_object(object, crlAttr, numCRLAttr, status);
 }
 
+/* Dispatch to the create function for the object type */
+static nssCryptokiObjectAndAttributes *
+create_object_of_type (
+  nssCryptokiObject *object,
+  PRUint32 objectType,
+  PRStatus *status
+)
+{
+    if (objectType == cachedCerts) {
+	return create_cert(object, status);
+    }
+    if (objectType == cachedTrust) {
+	return create_trust(object, status);
+    }
+    if (objectType == cachedCRLs) {
+	return create_crl(object, status);
+    }
+    return (nssCryptokiObjectAndAttributes *)NULL;
+}
+
 static PRStatus
-get_token_crls_for_cache (
-  nssTokenObjectCache *cache
+get_token_objects_for_cache (
+  nssTokenObjectCache *cache,
+  PRUint32 objectType,
+  CK_OBJECT_CLASS objclass
 )
 {
     PRStatus status;
     nssCryptokiObject **objects;
-    PRBool *doIt = &cache->doObjectType[cachedCRLs];
+    PRBool *doIt = &cache->doObjectType[objectType];
     PRUint32 i, numObjects;
 
     if (!search_for_objects(cache) || 
-         cache->searchedObjectType[cachedCRLs] || 
-        !cache->doObjectType[cachedCRLs]) 
+         cache->searchedObjectType[objectType] || 
+        !cache->doObjectType[objectType]) 
     {
 	/* Either there was a state change that prevents a search
 	 * (token logged out), or the search was already done,
-	 * or CRLs are not being cached.
+	 * or objects of this type are not being cached.
 	 */
 	return PR_SUCCESS;
     }
-    objects = nssToken_FindCRLs(cache->token, NULL,
-                                nssTokenSearchType_TokenForced,
-				MAX_LOCAL_CACHE_OBJECTS, &status);
+    objects = nssToken_FindObjects(cache->token, NULL, objclass,
+                                   nssTokenSearchType_TokenForced,
+                                   MAX_LOCAL_CACHE_OBJECTS, &status);
     if (status != PR_SUCCESS) {
 	return status;
     }
-    cache->objects[cachedCRLs] = create_object_array(objects,
+    cache->objects[objectType] = create_object_array(objects,
                                                      doIt,
                                                      &numObjects,
                                                      &status);
@@ -700,7 +614,9 @@ get_token_crls_for_cache (
 	return status;
     }
     for (i=0; i<numObjects; i++) {
-	cache->objects[cachedCRLs][i] = create_crl(objects[i], &status);
+	cache->objects[objectType][i] = create_object_of_type(objects[i],
+	                                                      objectType,
+	                                                      &status);
 	if (status != PR_SUCCESS) {
 	    break;
 	}
@@ -711,12 +627,14 @@ get_token_crls_for_cache (
 	PRUint32 j;
 	for (j=0; j<i; j++) {
 	    /* sigh */
-	    nssToken_AddRef(cache->objects[cachedCRLs][j]->object->token);
-	    nssArena_Destroy(cache->objects[cachedCRLs][j]->arena);
+	    nssToken_AddRef(cache->objects[objectType][j]->object->token);
+	    nssArena_Destroy(cache->objects[objectType][j]->arena);
 	}
+	nss_ZFreeIf(cache->objects[objectType]);
+	cache->objects[objectType] = NULL;
 	nssCryptokiObjectArray_Destroy(objects);
     }
-    cache->searchedObjectType[cachedCRLs] = PR_TRUE;
+    cache->searchedObjectType[objectType] = PR_TRUE;
     return status;
 }
 
@@ -838,45 +756,25 @@ nssTokenObjectCache_FindObjectsByTemplate (
 {
     PRStatus status = PR_FAILURE;
     nssCryptokiObject **rvObjects = NULL;
+    PRUint32 objectType;
     if (!token_is_present(cache)) {
 	status = PR_SUCCESS;
 	goto finish;
     }
-    PZ_Lock(cache->lock);
     switch (objclass) {
-    case CKO_CERTIFICATE:
-	if (cache->doObjectType[cachedCerts]) {
-	    status = get_token_certs_for_cache(cache);
-	    if (status != PR_SUCCESS) {
-		goto unlock;
-	    }
-	    rvObjects = find_objects_in_array(cache->objects[cachedCerts], 
-	                                      otemplate, otlen, maximumOpt);
-	}
-	break;
-    case CKO_NETSCAPE_TRUST:
-	if (cache->doObjectType[cachedTrust]) {
-	    status = get_token_trust_for_cache(cache);
-	    if (status != PR_SUCCESS) {
-		goto unlock;
-	    }
-	    rvObjects = find_objects_in_array(cache->objects[cachedTrust], 
-	                                      otemplate, otlen, maximumOpt);
-	}
-	break;
-    case CKO_NETSCAPE_CRL:
-	if (cache->doObjectType[cachedCRLs]) {
-	    status = get_token_crls_for_cache(cache);
-	    if (status != PR_SUCCESS) {
-		goto unlock;
-	    }
-	    rvObjects = find_objects_in_array(cache->objects[cachedCRLs], 
-	                                      otemplate, otlen, maximumOpt);
-	}
-	break;
-    default: break;
+    case CKO_CERTIFICATE:    objectType = cachedCerts; break;
+    case CKO_NETSCAPE_TRUST: objectType = cachedTrust; break;
+    case CKO_NETSCAPE_CRL:   objectType = cachedCRLs;  break;
+    default: goto finish;
     }
-unlock:
+    PZ_Lock(cache->lock);
+    if (cache->doObjectType[objectType]) {
+	status = get_token_objects_for_cache(cache, objectType, objclass);
+	if (status == PR_SUCCESS) {
+	    rvObjects = find_objects_in_array(cache->objects[objectType], 
+	                                      otemplate, otlen, maximumOpt);
+	}
+    }
     PZ_Unlock(cache->lock);
 finish:
     if (statusOpt) {
@@ -1055,13 +953,8 @@ nssTokenObjectCache_ImportObject (
     }
     if (*otype) {
 	nssCryptokiObject *copyObject = nssCryptokiObject_Clone(object);
-	if (objectType == cachedCerts) {
-	    (*otype)[count] = create_cert(copyObject, &status);
-	} else if (objectType == cachedTrust) {
-	    (*otype)[count] = create_trust(copyObject, &status);
-	} else if (objectType == cachedCRLs) {
-	    (*otype)[count] = create_crl(copyObject, &status);
-	}
+	(*otype)[count] = create_object_of_type(copyObject, objectType,
+	                                        &status);
     } else {
 	status = PR_FAILURE;
     }
