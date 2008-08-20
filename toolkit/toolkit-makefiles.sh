@@ -96,7 +96,6 @@ MAKEFILES_gfx="
   gfx/idl/Makefile
   gfx/public/Makefile
   gfx/src/Makefile
-  gfx/src/beos/Makefile
   gfx/src/psshared/Makefile
   gfx/src/photon/Makefile
   gfx/src/thebes/Makefile
