@@ -107,29 +107,21 @@ typedef short JCOEF;
 
 /* Defines for MMX/SSE2 support. */
 
-/* HAVE_SSE2_INTEL_MNEMONICS means Win32 and MSVC. HAVE_SSE2_INTRINSICS */
-/* means that the platform supports SSE2 or higher so that we don't     */
-/* have to check runtime CPU capabilities.                              */
-
 #if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
-#define HAVE_MMX_INTEL_MNEMONICS
+#define HAVE_MMX_INTEL_MNEMONICS 
+
+/* SSE2 code appears broken for some cpus (bug 247437) */
 #define HAVE_SSE2_INTEL_MNEMONICS
+#define HAVE_SSE2_INTRINSICS
 #endif
 
-#if defined(__GNUC__) && defined(__i386__) && defined(XP_MACOSX)
+#if defined(__GNUC__) && defined(__i386__)
+#if defined(XP_MACOSX)
 #define HAVE_SSE2_INTRINSICS
-#endif /* GNUC && i386 && XP_MACOSX */
+#endif /* ! XP_MACOSX */
+#endif /* ! GNUC && i386 */
 
 /* Add support for other platforms here */
-
-/* SSE* alignment support - only use on platforms that support declspec and __attribute__ */
-/* We're only aligning Mac OSX structures right now */
-
-#ifdef HAVE_SSE2_INTRINSICS
-#define SSE2_ALIGN __attribute__ ((aligned (16)))
-#else
-#define SSE2_ALIGN
-#endif
 
 
 /* Compressed datastreams are represented as arrays of JOCTET.
@@ -328,7 +320,7 @@ typedef unsigned char boolean;
 /* Capability options common to encoder and decoder: */
 
 #define DCT_ISLOW_SUPPORTED	/* slow but accurate integer algorithm */
-#define DCT_IFAST_SUPPORTED     /* faster, less accurate integer method */
+#undef  DCT_IFAST_SUPPORTED	/* faster, less accurate integer method */
 #undef  DCT_FLOAT_SUPPORTED	/* floating-point: accurate, fast on fast HW */
 
 /* Encoder capability options: */

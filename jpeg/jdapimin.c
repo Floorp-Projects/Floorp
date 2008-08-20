@@ -67,10 +67,14 @@ int MMXAvailable;
 static int mmxsupport();
 #endif
 
-#ifdef HAVE_SSE2_INTEL_MNEMONICS
+#ifdef HAVE_SSE2_INTRINSICS
 int SSE2Available = 0;
+#ifdef HAVE_SSE2_INTEL_MNEMONICS
 static int sse2support();
+#else
+static int sse2supportGCC();
 #endif /* HAVE_SSE2_INTEL_MNEMONICS */
+#endif /* HAVE_SSE2_INTRINSICS */
 
 
 /*
@@ -88,17 +92,27 @@ jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
 
   if(!cpuidDetected)
   {
-        MMXAvailable = mmxsupport();
+	MMXAvailable = mmxsupport();
 
 #ifdef HAVE_SSE2_INTEL_MNEMONICS
 	/* only do the sse2 support check if mmx is supported (so
 	   we know the processor supports cpuid) */
 	if (MMXAvailable)
 	    SSE2Available = sse2support();
-#endif /* HAVE_SSE2_INTEL_MNEMONICS */
+#endif
 
 	cpuidDetected = 1;
   }
+#else
+#ifdef HAVE_SSE2_INTRINSICS
+  static int cpuidDetected = 0;
+
+  if(!cpuidDetected) {
+    SSE2Available = sse2supportGCC();
+    cpuidDetected = 1;
+  }
+
+#endif /* HAVE_SSE2_INTRINSICS */
 #endif /* HAVE_MMX_INTEL_MNEMONICS */
 
   /* For debugging purposes, zero the whole master structure.
@@ -479,7 +493,7 @@ static int mmxsupport()
   else
     return 0;
 }
-#endif /* HAVE_MMX_INTEL_MNEMONICS */
+#endif
 
 #ifdef HAVE_SSE2_INTEL_MNEMONICS
 static int sse2support()
@@ -492,5 +506,25 @@ static int sse2support()
   else
     return 2;
 }
+#else
+#ifdef HAVE_SSE2_INTRINSICS
+static int sse2supportGCC()
+{
+
+  /* Mac Intel started with Core Duo chips which have SSE2 Support */
+
+#if defined(__GNUC__) && defined(__i386__)
+#if defined(XP_MACOSX)
+  return 1;
+#endif /* XP_MACOSX */
+#endif /* GNUC && i386 */
+
+  /* Add checking for SSE2 support for other platforms here */
+
+  /* We don't have SSE2 intrinsics support */
+
+  return 2;
+}
+#endif /* HAVE_SSE2_INTRINSICS */
 #endif /* HAVE_SSE2_INTEL_MNEMONICS */
 

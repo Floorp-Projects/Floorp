@@ -49,32 +49,6 @@
 #undef OS2EMX_PLAIN_CHAR
 #endif
 
-/*
- * SSE2 Support Defines
- *
- * GFX_SSE2_POSSIBLE is defined if SSE2 support may be available.
- * On Mac/OSX Intel, SSE2 is always available. On Windows, SSE2
- * support is possible if the chip supports it so GFX_SSE2_POSSIBLE
- * is defined for Windows.
- *
- * GFX_SSE2_AVAILABLE indicates whether runtime SSE2 support is
- * available. On Mac/OSX Intel, it is defined to 1 (TRUE). On Windows
- * __sse2_available indicates whether support is available or not.
-*/
-
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
-#define GFX_SSE2_POSSIBLE
-#define GFX_SSE2_AVAILABLE __sse2_available
-#define GFX_SSE2_ALIGN __declspec(align(16))
-extern "C" int __sse2_available;
-#endif
-
-#if defined(__GNUC__) && defined(__i386__) && defined(XP_MACOSX)
-#define GFX_SSE2_POSSIBLE
-#define GFX_SSE2_AVAILABLE 1
-#define GFX_SSE2_ALIGN __attribute__ ((aligned (16)))
-#endif
-
 typedef void* cmsHPROFILE;
 typedef void* cmsHTRANSFORM;
 
