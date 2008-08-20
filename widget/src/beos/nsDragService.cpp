@@ -51,15 +51,6 @@
 #include "nsWidgetsCID.h"
 #include "nsCRT.h"
 
-// if we want to do Image-dragging, also need to change Makefile.in
-// to add
-// 		-I$(topsrcdir)/gfx/src/beos \
-// in INCLUDES
-// and bug 294234 to be done.
-// #include "nsIImage.h"
-// #include "nsIImageBeOS.h"
-//#include <Bitmap.h>
-
 #include <AppDefs.h>
 #include <TypeConstants.h>
 #include <DataIO.h>
