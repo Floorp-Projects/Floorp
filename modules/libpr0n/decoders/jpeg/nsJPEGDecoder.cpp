@@ -56,10 +56,6 @@
 
 #include "gfxPlatform.h"
 
-#if defined(GFX_SSE2_POSSIBLE)
-#include "emmintrin.h"
-#endif /* GFX_SSE2_POSSIBLE */
-
 extern "C" {
 #include "iccjpeg.h"
 
@@ -538,11 +534,7 @@ nsresult nsJPEGDecoder::ProcessData(const char *data, PRUint32 count, PRUint32 *
     /* FIXME -- Should reset dct_method and dither mode
      * for final pass of progressive JPEG
      */
-#if defined(__GNUC__) && defined(__i386__) && defined(XP_MACOSX)
-    mInfo.dct_method =  JDCT_IFAST;
-#else
     mInfo.dct_method =  JDCT_ISLOW;
-#endif /* __GNUC__ & __i386__ & XP_MACOSX */
     mInfo.dither_mode = JDITHER_FS;
     mInfo.do_fancy_upsampling = TRUE;
     mInfo.enable_2pass_quant = FALSE;
@@ -1268,16 +1260,6 @@ const int Cb_g_tab[(MAXJSAMPLE+1) * sizeof(int)] ={
 #define RIGHT_SHIFT(x,shft)	((x) >> (shft))
 #endif
 
-/* Constants for SSE2 support */
-
-#ifdef GFX_SSE2_POSSIBLE
-GFX_SSE2_ALIGN const short color_constants_1[8] = {128, 128, 128, 128, 128, 128, 128, 128};
-GFX_SSE2_ALIGN const short color_constants_2[8] = {359, 359, 359, 359, 359, 359, 359, 359};
-GFX_SSE2_ALIGN const short color_constants_3[8] = {88, 88, 88, 88, 88, 88, 88, 88};
-GFX_SSE2_ALIGN const short color_constants_4[8] = {183, 183, 183, 183, 183, 183, 183, 183};
-GFX_SSE2_ALIGN const short color_constants_5[8] = {454, 454, 454, 454, 454, 454, 454, 454};
-GFX_SSE2_ALIGN const short color_constants_6[8] = {11382, 11382, 11382, 11382, 11382, 11382, 11382, 11382};
-#endif /* GFX_SSE2_POSSIBLE */
 
 METHODDEF(void)
 ycc_rgb_convert_argb (j_decompress_ptr cinfo,
@@ -1287,141 +1269,30 @@ ycc_rgb_convert_argb (j_decompress_ptr cinfo,
   JDIMENSION num_cols = cinfo->output_width;
   JSAMPLE * range_limit = cinfo->sample_range_limit;
 
-/* Locals for SSE2 support */
-
-#ifdef GFX_SSE2_POSSIBLE
-  JSAMPROW inptr0, inptr1, inptr2, outptr;
-  JDIMENSION col;
-  __m128i row_Y, row_cb, row_cr, zeroes, ones;
-  __m128i tmp0, tmp1, tmp2, tmp3, tmp4, tmp5;
-  __m128i row_B, row_G, row_R;
-#endif /* GFX_SSE2_POSSIBLE */
-
   SHIFT_TEMPS
 
-#ifdef GFX_SSE2_POSSIBLE
-  if (GFX_SSE2_AVAILABLE == 1) {
-
-    /* Load registers with constants if we're going to do at least one quad */
-    
-    if (num_cols >= 8) {
-      zeroes = _mm_setzero_si128();
-      ones = _mm_cmpeq_epi8(zeroes, zeroes);
-    }
-    
-    while (--num_rows >= 0) {
-      inptr0 = input_buf[0][input_row];
-      inptr1 = input_buf[1][input_row];
-      inptr2 = input_buf[2][input_row];
-      input_row++;
-      outptr = *output_buf++;
-      
-      /* YCbCr -> RGB using scaled multiplication */
-      
-      for (col = 0; col + 8 <= num_cols; col += 8) {
-        
-        /* Read a row of each color component */
-
-        row_Y  = _mm_loadl_epi64((__m128i *) (inptr0 + col));
-        row_cb = _mm_loadl_epi64((__m128i *) inptr1);
-        row_cr = _mm_loadl_epi64((__m128i *) inptr2);
-        
-        /* Convert bytes to words */
-        
-        row_Y  = _mm_unpacklo_epi8(row_Y, zeroes);
-        row_cb = _mm_unpacklo_epi8(row_cb, zeroes);
-        row_cr = _mm_unpacklo_epi8(row_cr, zeroes);
-
-        /* Compute B and R */
-
-        tmp0 = _mm_sub_epi16(row_cb, *((__m128i *) color_constants_1));    /* cb - 128 */
-        tmp1 = _mm_sub_epi16(row_cr, *((__m128i *) color_constants_1));    /* cr - 128 */
-        tmp2 = _mm_slli_epi16(tmp0, 8);                                    /* (cb - 128) << 8 */
-        tmp3 = _mm_slli_epi16(tmp1, 8);                                    /* (cr - 128) << 8 */
-        tmp2 = _mm_mulhi_epi16(tmp2, *((__m128i *) color_constants_5));    /* (454 * ((cb - 128) << 8)) >> 16 */
-        tmp3 = _mm_mulhi_epi16(tmp3, *((__m128i *) color_constants_2));    /* (359 * ((cr - 128) << 8)) >> 16 */
-        row_B = _mm_add_epi16(tmp2, row_Y);                                /* B = y + (454 * ((cb - 128) << 8)) >> 16 */
-        row_R = _mm_add_epi16(tmp3, row_Y);                                /* R = y + (359 * ((cr - 128) << 8)) >> 16 */
-
-        /* Compute G */
-
-        tmp4 = _mm_mullo_epi16(row_cb, *((__m128i *) color_constants_3));    /* 88 * cb */
-        tmp5 = _mm_mullo_epi16(tmp1, *((__m128i *) color_constants_4));      /* 183 * (cr - 128) */
-        tmp4 = _mm_sub_epi16(tmp4, *((__m128i *) color_constants_6));        /* 88 * cb - (34806 - 128*256) */
-        tmp4 = _mm_add_epi16(tmp4, tmp5);                                    /* (88 * cb) + 183 * (cr - 128) - (34806 - 128*256) */
-        tmp4 = _mm_srai_epi16(tmp4, 8);                                      /* Shift the above right by 8 to divide by 256 */
-        row_G = _mm_sub_epi16(row_Y, tmp4);                                  /* G */
-
-        /* Pack word to byte with unsigned saturation which range limits too */
-
-        row_R = _mm_packus_epi16(row_R, zeroes);
-        row_G = _mm_packus_epi16(row_G, zeroes);
-        row_B = _mm_packus_epi16(row_B, zeroes);
-
-        /* Pack horizontally */
-
-        tmp0 = _mm_unpacklo_epi8(row_B, row_G);          /* ABAB ABAB ABAB ABAB        */
-        tmp1 = _mm_unpacklo_epi8(row_R, ones);           /* GRGR GRGR GRGR GRGR        */
-        tmp2 = _mm_unpacklo_epi16(tmp0, tmp1);           /* ARGB ARGB ARGB ARGB (low)  */
-        tmp3 = _mm_unpackhi_epi16(tmp0, tmp1);           /* ARGB ARGB ARGB ARGB (high) */
-
-        /* Write out 32 bytes of ARGB */
-        
-        _mm_storel_epi64((__m128i *) outptr, tmp2);
-        _mm_storel_epi64((__m128i *) (outptr + 8), _mm_srli_si128(tmp2, 8));
-        _mm_storel_epi64((__m128i *) (outptr + 16), tmp3);
-        _mm_storel_epi64((__m128i *) (outptr + 24), _mm_srli_si128(tmp3, 8));
-        
-        /* Slide the pointers */
-        
-        /* inptr0 += 8; */
-        inptr1 += 8;
-        inptr2 += 8;
-        outptr += 32;
-      }
-
-      /* Process remainder using scalar code */
-      for (; col < num_cols; col++) {
-        int y  = GETJSAMPLE(inptr0[col]);
-        int cb = GETJSAMPLE(inptr1[0]);
-        int cr = GETJSAMPLE(inptr2[0]);
-        inptr1++;
-        inptr2++;
-        JSAMPLE * range_limit_y = range_limit + y;
-        /* Range-limiting is essential due to noise introduced by DCT losses. */
-        *((PRUint32 *) outptr) = 0xFF000000 |
-                                 ( range_limit_y[Cr_r_tab[cr]] << 16 ) |
-                                 ( range_limit_y[((int) RIGHT_SHIFT(Cb_g_tab[cb] + Cr_g_tab[cr], SCALEBITS))] << 8 ) |
-                                 ( range_limit_y[Cb_b_tab[cb]] );
-        outptr += 4;
-      }
-    }
-
-  } else 
-#endif /* GFX_SSE2_POSSIBLE */
-
   /* This is used if we don't have SSE2 */
-  {
-    while (--num_rows >= 0) {
-      JSAMPROW inptr0 = input_buf[0][input_row];
-      JSAMPROW inptr1 = input_buf[1][input_row];
-      JSAMPROW inptr2 = input_buf[2][input_row];
-      input_row++;
-      PRUint32 *outptr = (PRUint32 *) *output_buf++;
-      for (JDIMENSION col = 0; col < num_cols; col++) {
-        int y  = GETJSAMPLE(inptr0[col]);
-        int cb = GETJSAMPLE(inptr1[col]);
-        int cr = GETJSAMPLE(inptr2[col]);
-        JSAMPLE * range_limit_y = range_limit + y;
-        /* Range-limiting is essential due to noise introduced by DCT losses. */
-        outptr[col] = 0xFF000000 |
-          ( range_limit_y[Cr_r_tab[cr]] << 16 ) |
-          ( range_limit_y[((int) RIGHT_SHIFT(Cb_g_tab[cb] + Cr_g_tab[cr], SCALEBITS))] << 8 ) |
-          ( range_limit_y[Cb_b_tab[cb]] );
-      }
+
+  while (--num_rows >= 0) {
+    JSAMPROW inptr0 = input_buf[0][input_row];
+    JSAMPROW inptr1 = input_buf[1][input_row];
+    JSAMPROW inptr2 = input_buf[2][input_row];
+    input_row++;
+    PRUint32 *outptr = (PRUint32 *) *output_buf++;
+    for (JDIMENSION col = 0; col < num_cols; col++) {
+      int y  = GETJSAMPLE(inptr0[col]);
+      int cb = GETJSAMPLE(inptr1[col]);
+      int cr = GETJSAMPLE(inptr2[col]);
+      JSAMPLE * range_limit_y = range_limit + y;
+      /* Range-limiting is essential due to noise introduced by DCT losses. */
+      outptr[col] = 0xFF000000 |
+                    ( range_limit_y[Cr_r_tab[cr]] << 16 ) |
+                    ( range_limit_y[((int) RIGHT_SHIFT(Cb_g_tab[cb] + Cr_g_tab[cr], SCALEBITS))] << 8 ) |
+                    ( range_limit_y[Cb_b_tab[cb]] );
     }
   }
 }
+
 
 /**************** Inverted CMYK -> RGB conversion **************/
 /*
