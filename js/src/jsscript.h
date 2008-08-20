@@ -107,7 +107,10 @@ struct JSScript {
     uintN           lineno;     /* base line number of script */
     uintN           nslots;     /* vars plus maximum stack depth */
     JSPrincipals    *principals;/* principals for this script */
-    JSObject        *object;    /* optional Script-class object wrapper */
+    union {
+        JSObject    *object;    /* optional Script-class object wrapper */
+        JSScript    *nextToGC;  /* next to GC in rt->scriptsToGC list */
+    } u;
 #ifdef CHECK_SCRIPT_OWNER
     JSThread        *owner;     /* for thread-safe life-cycle assertions */
 #endif
