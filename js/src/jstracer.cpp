@@ -1143,11 +1143,11 @@ LIns*
 TraceRecorder::writeBack(LIns* i, LIns* base, ptrdiff_t offset)
 {
     /* Sink all type casts targeting the stack into the side exit by simply storing the original
-        (uncasted) value. Each guard generates the side exit map based on the types of the
-        last stores to every stack location, so its safe to not perform them on-trace. */
-     if (isPromoteInt(i))
-         i = ::demote(lir, i);
-     return lir->insStorei(i, base, offset);
+       (uncasted) value. Each guard generates the side exit map based on the types of the
+       last stores to every stack location, so its safe to not perform them on-trace. */
+    if (isPromoteInt(i))
+        i = ::demote(lir, i);
+    return lir->insStorei(i, base, offset);
 }
 
 /* Update the tracker, then issue a write back store. */
@@ -1260,7 +1260,6 @@ TraceRecorder::snapshot(ExitType exitType)
         *m = isNumber(*vp)
                ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
                : JSVAL_TAG(*vp);
-               if (*m == JSVAL_INT && JSVAL_TAG(*vp) == 2)
         JS_ASSERT((*m != JSVAL_INT) || isInt32(*vp));
         ++m;
     );
@@ -1434,7 +1433,7 @@ TraceRecorder::emitTreeCallStackSetup(Fragment* inner)
     if (callDepth > 0) {
         /* Calculate the amount we have to lift the native stack pointer by to compensate for
            any outer frames that the inner tree doesn't expect but the outer tree has. */
-        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[0]);
+        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[-1]) + sizeof(double);
         /* Calculate the amount we have to lift the call stack by */
         ptrdiff_t rp_adj = callDepth * sizeof(FrameInfo);
         /* Guard that we have enough stack space for the tree we are trying to call on top
