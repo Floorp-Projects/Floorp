@@ -110,8 +110,8 @@ private:
   nsCOMPtr<nsIWeakReference> mWindow;
   nsCOMPtr<nsIOfflineCacheSession> mCacheSession;
   nsCOMPtr<nsIOfflineCacheUpdate> mCacheUpdate;
-  nsCAutoString mAsciiHost;
-  nsCAutoString mDynamicOwnerSpec;
+  nsCString mAsciiHost;
+  nsCString mDynamicOwnerSpec;
 
   nsCOMArray<nsIDOMEventListener> mCheckingListeners;
   nsCOMArray<nsIDOMEventListener> mErrorListeners;
