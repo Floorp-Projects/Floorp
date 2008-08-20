@@ -449,9 +449,6 @@ alloc_barray (j_common_ptr cinfo, int pool_id,
   JBLOCKROW workspace;
   JDIMENSION rowsperchunk, currow, i;
   long ltemp;
-#ifdef HAVE_SSE2_INTRINSICS
-  PRUptrdiff workspace_raw;
-#endif
 
   /* Calculate max # of rows allowed in one allocation chunk */
   ltemp = (MAX_ALLOC_CHUNK-SIZEOF(large_pool_hdr)) /
@@ -472,16 +469,9 @@ alloc_barray (j_common_ptr cinfo, int pool_id,
   currow = 0;
   while (currow < numrows) {
     rowsperchunk = MIN(rowsperchunk, numrows - currow);
-#ifdef HAVE_SSE2_INTRINSICS
-    workspace_raw = (JBLOCKROW) alloc_large(cinfo, pool_id,
-        (size_t) ((size_t) rowsperchunk * (size_t) blocksperrow
-                  * SIZEOF(JBLOCK) + 15));
-    workspace = (JBLOCKROW) ((workspace_raw + 15) & ~15);
-#else
     workspace = (JBLOCKROW) alloc_large(cinfo, pool_id,
 	(size_t) ((size_t) rowsperchunk * (size_t) blocksperrow
 		  * SIZEOF(JBLOCK)));
-#endif /* HAVE_SSE2_INTRINSICS */
     for (i = rowsperchunk; i > 0; i--) {
       result[currow++] = workspace;
       workspace += blocksperrow;
