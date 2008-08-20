@@ -3752,12 +3752,18 @@ nsIFrame::GetOverflowRect() const
 }
   
 void
-nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
-                                   nsHTMLReflowMetrics& aDesiredSize,
-                                   const nsHTMLReflowState& aReflowState)
+nsFrame::CheckInvalidateSizeChange(nsHTMLReflowMetrics& aNewDesiredSize)
 {
-  if (aDesiredSize.width == mRect.width
-      && aDesiredSize.height == mRect.height)
+  nsIFrame::CheckInvalidateSizeChange(mRect, GetOverflowRect(), aNewDesiredSize);
+}
+
+void
+nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
+                                   const nsRect& aOldOverflowRect,
+                                   nsHTMLReflowMetrics& aNewDesiredSize)
+{
+  if (aNewDesiredSize.width == aOldRect.width &&
+      aNewDesiredSize.height == aOldRect.height)
     return;
 
   // Below, we invalidate the old frame area (or, in the case of
@@ -3773,9 +3779,9 @@ nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
   // Invalidate the entire old frame+outline if the frame has an outline
   PRBool anyOutline;
   nsRect r = ComputeOutlineRect(this, &anyOutline,
-                                aDesiredSize.mOverflowArea);
+                                aNewDesiredSize.mOverflowArea);
   if (anyOutline) {
-    r.UnionRect(GetOverflowRect(), r);
+    r.UnionRect(aOldOverflowRect, r);
     Invalidate(r);
     return;
   }
@@ -3785,7 +3791,7 @@ nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
   const nsStyleBorder* border = GetStyleBorder();
   NS_FOR_CSS_SIDES(side) {
     if (border->GetActualBorderWidth(side) != 0) {
-      Invalidate(nsRect(0, 0, mRect.width, mRect.height));
+      Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
       return;
     }
   }
@@ -3795,7 +3801,7 @@ nsFrame::CheckInvalidateSizeChange(nsPresContext* aPresContext,
   const nsStyleBackground* background = GetStyleBackground();
   if (background->mBackgroundFlags &
       (NS_STYLE_BG_X_POSITION_PERCENT | NS_STYLE_BG_Y_POSITION_PERCENT)) {
-    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
+    Invalidate(nsRect(0, 0, aOldRect.width, aOldRect.height));
     return;
   }
 }
