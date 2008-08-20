@@ -56,10 +56,6 @@ interface nsIDOMNode;
  *
  * * "Tabbrowser tabs" are all the child nodes of a browser window's
  * |getBrowser().tabContainer| such as e.g. |getBrowser().selectedTab|.
- *
- * Note: This API will break in all sorts of way if the preference
- *       browser.sessionstore.enabled is set to false (once bug ...
- *       is fixed, the service won't be available at all).
  */
 
 [scriptable, uuid(58d17e12-a80f-11dc-8314-0800200c9a66)]
