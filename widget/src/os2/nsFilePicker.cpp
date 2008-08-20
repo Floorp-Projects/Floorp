@@ -514,19 +514,19 @@ void nsFilePicker::InitNative(nsIWidget *aParent,
 //-------------------------------------------------------------------------
 void nsFilePicker::GetFileSystemCharset(nsCString & fileSystemCharset)
 {
-  static nsCString charset;
+  static nsCAutoString aCharset;
+  nsresult rv;
 
-  if (charset.IsEmpty()) {
-    nsresult rv;
+  if (aCharset.Length() < 1) {
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
-      rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charset);
+	  if (NS_SUCCEEDED(rv)) 
+		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
-    if (NS_FAILED(rv))
-      charset.AssignLiteral("IBM850");
+	  if (NS_FAILED(rv)) 
+		  aCharset.AssignLiteral("IBM850");
   }
-  fileSystemCharset = charset;
+  fileSystemCharset = aCharset;
 }
 
 //-------------------------------------------------------------------------
