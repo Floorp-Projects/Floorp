@@ -59,8 +59,14 @@ interface nsIPrefetchService : nsISupports
                      in boolean aExplicit);
 
     /**
-     * @status DEPRECATED This method is no longer used, and will throw
-     * NS_ERROR_NOT_IMPLEMENTED.
+     * Enqueue a request to prefetch the specified URI, making sure it's in the
+     * offline cache.
+     *
+     * @param aURI the URI of the document to prefetch
+     * @param aReferrerURI the URI of the referring page
+     * @param aSource the DOM node (such as a <link> tag) that requested this
+     *        fetch, or null if the prefetch was not requested by a DOM node.
+     * @param aExplicit the link element has an explicit offline link type
      */
     void prefetchURIForOfflineUse(in nsIURI aURI,
                                   in nsIURI aReferrerURI,
@@ -71,12 +77,9 @@ interface nsIPrefetchService : nsISupports
      * Enumerate the items in the prefetch queue.  Each element in the
      * enumeration is an nsIDOMLoadStatus.
      *
-     * @param aIncludeNormalItems include normal prefetch items in the
-     *        list.  This parameter is deprecated and must be TRUE,
-     *        or NS_ERROR_INT_IMPLEMENTED will be thrown.
+     * @param aIncludeNormalItems include normal prefetch items in the list.
      * @param aIncludeOfflineItems include items being fetched for offline
-     *        use.  This parameter is deprecated and must be FALSE,
-     *        or NS_ERROR_NOT_IMPLEMENTED will be thrown.
+     *        use.
      */
     nsISimpleEnumerator enumerateQueue(in boolean aIncludeNormalItems,
                                        in boolean aIncludeOfflineItems);
