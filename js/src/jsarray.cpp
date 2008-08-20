@@ -3017,3 +3017,193 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 #endif
+
+JSBool
+js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                        JSUint8 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    jsint vi;
+
+    JSUint8 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v) || (vi = JSVAL_TO_INT(v)) < 0)
+            return JS_FALSE;
+
+        *dp++ = (JSUint8) vi;
+    }
+
+    return JS_TRUE;
+}
+
+JSBool
+js_ArrayToJSUint16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                         JSUint16 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    jsint vi;
+
+    JSUint16 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v) || (vi = JSVAL_TO_INT(v)) < 0)
+            return JS_FALSE;
+
+        *dp++ = (JSUint16) vi;
+    }
+
+    return JS_TRUE;
+}
+
+JSBool
+js_ArrayToJSUint32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                         JSUint32 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    jsint vi;
+
+    JSUint32 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v) || (vi = JSVAL_TO_INT(v)) < 0)
+            return JS_FALSE;
+
+        *dp++ = (JSUint32) vi;
+    }
+
+    return JS_TRUE;
+}
+
+JSBool
+js_ArrayToJSInt8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                       JSInt8 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    JSInt8 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v))
+            return JS_FALSE;
+
+        *dp++ = (JSInt8) JSVAL_TO_INT(v);
+    }
+
+    return JS_TRUE;
+}
+
+JSBool
+js_ArrayToJSInt16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                        JSInt16 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    JSInt16 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v))
+            return JS_FALSE;
+
+        *dp++ = (JSInt16) JSVAL_TO_INT(v);
+    }
+
+    return JS_TRUE;
+}
+
+JSBool
+js_ArrayToJSInt32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                        JSInt32 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    JSInt32 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v))
+            return JS_FALSE;
+
+        *dp++ = (JSInt32) JSVAL_TO_INT(v);
+    }
+
+    return JS_TRUE;
+}
+
+JSBool
+js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                         jsdouble *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    jsdouble *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (JSVAL_IS_INT(v))
+            *dp++ = (jsdouble) JSVAL_TO_INT(v);
+        else if (JSVAL_IS_DOUBLE(v))
+            *dp++ = *(JSVAL_TO_DOUBLE(v));
+        else
+            return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}
