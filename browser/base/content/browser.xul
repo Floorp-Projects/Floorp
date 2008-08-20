@@ -62,7 +62,6 @@
 
 <window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:svg="http://www.w3.org/2000/svg"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
@@ -236,9 +235,7 @@
     </tooltip>
 
     <panel id="ctrlTab-panel" class="KUI-panel" hidden="true">
-      <html:div id="ctrlTab-label-parent">
-        <html:span id="ctrlTab-label" height="100%"></html:span>
-      </html:div>
+      <label id="ctrlTab-label" flex="1"/>
       <svg:svg id="ctrlTab-svgRoot">
         <svg:defs>
           <svg:linearGradient id="ctrlTab-fadeGradient" x1="1" y1="1" x2="1" y2="0">
