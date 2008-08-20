@@ -670,6 +670,13 @@ namespace nanojit
 		*(--_nIns) = AMD64_REX(0,dr,sr);	\
 	}
 
+#define AMD64_CMOVQ(op, dr, sr)				\
+	underrunProtect(4);						\
+	*(--_nIns) = AMD64_MODRM_REG(dr, sr);	\
+	*(--_nIns) = op & 0xFF;					\
+	*(--_nIns) = op >> 8;					\
+	*(--_nIns) = AMD64_REX(1,dr,sr);	    
+
 
 #define MREQ(dr,sr)	do { AMD64_CMOV(0x0f44,dr,sr); asm_output2("cmove %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRNE(dr,sr)	do { AMD64_CMOV(0x0f45,dr,sr); asm_output2("cmovne %s,%s", gpn(dr),gpn(sr)); } while(0)
@@ -684,6 +691,18 @@ namespace nanojit
 #define MRNC(dr,sr)	do { AMD64_CMOV(0x0f43,dr,sr); asm_output2("cmovnc %s,%s", gpn(dr),gpn(sr)); } while(0)
 #define MRNO(dr,sr)	do { AMD64_CMOV(0x0f41,dr,sr); asm_output2("cmovno %s,%s", gpn(dr),gpn(sr)); } while(0)
 
+#define MRQEQ(dr,sr) do { AMD64_CMOVQ(0x0f44,dr,sr); asm_output2("cmove %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQNE(dr,sr) do { AMD64_CMOVQ(0x0f45,dr,sr); asm_output2("cmovne %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQL(dr,sr)  do { AMD64_CMOVQ(0x0f4C,dr,sr); asm_output2("cmovl %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQLE(dr,sr) do { AMD64_CMOVQ(0x0f4E,dr,sr); asm_output2("cmovle %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQG(dr,sr)  do { AMD64_CMOVQ(0x0f4F,dr,sr); asm_output2("cmovg %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQGE(dr,sr) do { AMD64_CMOVQ(0x0f4D,dr,sr); asm_output2("cmovge %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQB(dr,sr)  do { AMD64_CMOVQ(0x0f42,dr,sr); asm_output2("cmovb %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQBE(dr,sr) do { AMD64_CMOVQ(0x0f46,dr,sr); asm_output2("cmovbe %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQA(dr,sr)  do { AMD64_CMOVQ(0x0f47,dr,sr); asm_output2("cmova %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQAE(dr,sr) do { AMD64_CMOVQ(0x0f43,dr,sr); asm_output2("cmovae %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQNC(dr,sr) do { AMD64_CMOVQ(0x0f43,dr,sr); asm_output2("cmovnc %s,%s", gpn(dr),gpn(sr)); } while(0)
+#define MRQNO(dr,sr) do { AMD64_CMOVQ(0x0f41,dr,sr); asm_output2("cmovno %s,%s", gpn(dr),gpn(sr)); } while(0)
 
 #define AMD64_LD(reg,disp,base,q) 								\
 	underrunProtect(7);											\

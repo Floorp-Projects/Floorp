@@ -75,7 +75,7 @@ namespace nanojit
 	/* 64-69 */ "LIR64","65","66","67","68","69",
 	/* 70-79 */ "70","71","72","73","74","stq","ldq","77","stqi","79",
 	/* 80-89 */ "80","81","fcall","83","84","85","86","87","qiand","qiadd",
-	/* 90-99 */ "90","91","92","93","94","95","96","quad","98","99",
+	/* 90-99 */ "90","91","92","93","qcmov","95","96","quad","98","99",
 	/* 100-109 */ "fneg","fadd","fsub","fmul","fdiv","qjoin","i2f","u2f","108","qilsh",
 	/* 110-119 */ "110","111","112","113","114","115","116","117","118","119",
 	/* 120-127 */ "120","121","122","123","124","125","126","127"
@@ -450,6 +450,9 @@ namespace nanojit
 					i--;
 					break;
 
+#if defined NANOJIT_64BIT
+            	case LIR_callh:
+#endif
 				case LIR_call:
 				case LIR_fcall:
 					i -= argwords(i->argc())+1;
@@ -498,10 +501,15 @@ namespace nanojit
     bool LIns::isCond() const {
         return nanojit::isCond(u.code);
     }
+	
+	bool LIns::isQuad() const {
+		return ((u.code & LIR64) != 0 || u.code == LIR_callh);
+	}
     
 	bool LIns::isCall() const
 	{
-		return (u.code&~LIR64) == LIR_call;
+		return ((u.code&~LIR64) == LIR_call
+				|| (u.code == LIR_callh));
 	}
 
 	bool LIns::isGuard() const
@@ -625,7 +633,7 @@ namespace nanojit
             int c = i->constval();
             return isS16(c);
         }
-        if (i->isop(LIR_cmov)) {
+        if (i->isop(LIR_cmov) || i->isop(LIR_qcmov)) {
             LInsp vals = i->oprnd2();
             return insIsS16(vals->oprnd1()) && insIsS16(vals->oprnd2());
         }
@@ -662,7 +670,7 @@ namespace nanojit
 	LIns* ExprFilter::ins2(LOpcode v, LIns* oprnd1, LIns* oprnd2)
 	{
 		NanoAssert(oprnd1 && oprnd2);
-		if (v == LIR_cmov) {
+		if (v == LIR_cmov || v == LIR_qcmov) {
 			if (oprnd2->oprnd1() == oprnd2->oprnd2()) {
 				// c ? a : a => a
 				return oprnd2->oprnd1();
@@ -750,7 +758,7 @@ namespace nanojit
 				oprnd1 = t;
 				v = LOpcode(v^1);
 			}
-			else if (v == LIR_cmov) {
+			else if (v == LIR_cmov || v == LIR_qcmov) {
 				// const ? x : y => return x or y depending on const
 				return oprnd1->constval() ? oprnd2->oprnd1() : oprnd2->oprnd2();
 			}
@@ -780,7 +788,7 @@ namespace nanojit
 				}
 			}
 			else if (v == LIR_ult) {
-				if (oprnd1->isop(LIR_cmov)) {
+				if (oprnd1->isop(LIR_cmov) || oprnd1->isop(LIR_qcmov)) {
 					LInsp a = oprnd1->oprnd2()->oprnd1();
 					LInsp b = oprnd1->oprnd2()->oprnd2();
 					if (a->isconst() && b->isconst()) {
@@ -893,7 +901,7 @@ namespace nanojit
 
 		if (hasConditionalMove)
 		{
-			return ins2(LIR_cmov, cond, ins2(LIR_2, iftrue, iffalse));
+			return ins2(iftrue->isQuad() ? LIR_qcmov : LIR_cmov, cond, ins2(LIR_2, iftrue, iffalse));
 		}
 
 		// @todo -- it might be better to use a short conditional branch rather than
@@ -944,7 +952,11 @@ namespace nanojit
 		LIns *l = _buf->next() + words;
 		for (uint32_t i=0; i < argc; i++)
 			offs[i] = (uint8_t) l->reference(args[i]);
+#if defined NANOJIT_64BIT
+		l->initOpcode(op);
+#else
 		l->initOpcode(op==LIR_callh ? LIR_call : op);
+#endif
         l->c.imm8a = fid;
         l->c.imm8b = argc;
 		_buf->commit(words+1);	
@@ -1072,6 +1084,9 @@ namespace nanojit
 				return hashimmq(i->constvalq());
 			case LIR_call:
 			case LIR_fcall:
+#if defined NANOJIT_64BIT
+			case LIR_callh:
+#endif
 			{
 				LInsp args[10];
 				int32_t argc = i->argc();
@@ -1110,6 +1125,9 @@ namespace nanojit
 			}
 			case LIR_call:
 			case LIR_fcall:
+#if defined NANOJIT_64BIT
+			case LIR_callh:
+#endif
 			{
 				if (a->fid() != b->fid()) return false;
 				uint32_t argc=a->argc();
@@ -1397,7 +1415,7 @@ namespace nanojit
 					live.add(i->oprnd2(),i); // base
 					live.add(i->oprnd1(),i); // val
 				}
-                else if (i->isop(LIR_cmov)) {
+                else if (i->isop(LIR_cmov) || i->isop(LIR_qcmov)) {
                     live.add(i->oprnd1(),i);
                     live.add(i->oprnd2()->oprnd1(),i);
                     live.add(i->oprnd2()->oprnd2(),i);
@@ -1546,6 +1564,9 @@ namespace nanojit
 				sprintf(s, "%s", lirNames[op]);
 				break;
 
+#if defined NANOJIT_64BIT
+			case LIR_callh:
+#endif
 			case LIR_fcall:
 			case LIR_call: {
 				sprintf(s, "%s ( ", _functions[i->fid()]._name);
@@ -1562,7 +1583,6 @@ namespace nanojit
                 sprintf(s, "%s %s", lirNames[op], gpn(i->imm8()));
 				break;
 
-            case LIR_callh:
 			case LIR_neg:
 			case LIR_fneg:
 			case LIR_i2f:
@@ -1617,6 +1637,7 @@ namespace nanojit
 					formatRef(i->oprnd2()));
 				break;
 
+			case LIR_qcmov:
 			case LIR_cmov:
                 sprintf(s, "%s ? %s : %s", 
 					formatRef(i->oprnd1()), 

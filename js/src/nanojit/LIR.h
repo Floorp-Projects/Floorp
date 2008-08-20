@@ -129,6 +129,7 @@ namespace nanojit
 		LIR_fsub	= LIR_sub  | LIR64,
 		LIR_fmul	= LIR_mul  | LIR64,
 		LIR_fdiv	= 40        | LIR64,
+		LIR_qcmov	= LIR_cmov | LIR64,
 
 		LIR_qjoin	= 41 | LIR64,
 		LIR_i2f		= 42 | LIR64,
@@ -140,11 +141,13 @@ namespace nanojit
     #define LIR_piadd   LIR_qiadd
     #define LIR_piand   LIR_qiand
     #define LIR_pilsh   LIR_qilsh
+	#define LIR_pcmov	LIR_qcmov
 	#else
 	#define LIR_ldp     LIR_ld
     #define LIR_piadd   LIR_add
     #define LIR_piand   LIR_and
     #define LIR_pilsh   LIR_lsh
+	#define LIR_pcmov	LIR_cmov
 	#endif
 
 	inline uint32_t argwords(uint32_t argc) {
@@ -316,7 +319,7 @@ namespace nanojit
 
 		bool isCse(const CallInfo *functions) const;
 		bool isop(LOpcode o) const { return u.code == o; }
-		bool isQuad() const { return (u.code & LIR64) != 0; }
+		bool isQuad() const;
 		bool isCond() const;
 		bool isCmp() const;
 		bool isCall() const;
