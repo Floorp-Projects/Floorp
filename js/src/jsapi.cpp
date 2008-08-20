@@ -4722,11 +4722,13 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     if (!script)
         return js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
 
+    JS_ASSERT(!script->u.object);
+
     JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
     obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
     if (obj) {
         JS_SetPrivate(cx, obj, script);
-        script->object = obj;
+        script->u.object = obj;
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;
 #endif
@@ -4738,7 +4740,7 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSObject *)
 JS_GetScriptObject(JSScript *script)
 {
-    return script->object;
+    return script->u.object;
 }
 
 JS_PUBLIC_API(void)
