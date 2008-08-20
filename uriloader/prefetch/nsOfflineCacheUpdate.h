@@ -52,7 +52,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIApplicationCache.h"
+#include "nsIOfflineCacheSession.h"
+#include "nsIPrefetchService.h"
 #include "nsIRequestObserver.h"
 #include "nsIRunnable.h"
 #include "nsIStreamListener.h"
@@ -86,17 +87,12 @@ public:
     nsOfflineCacheUpdateItem(nsOfflineCacheUpdate *aUpdate,
                              nsIURI *aURI,
                              nsIURI *aReferrerURI,
-                             nsIApplicationCache *aPreviousApplicationCache,
-                             const nsACString &aClientID,
-                             PRUint32 aType);
+                             const nsACString &aClientID);
     virtual ~nsOfflineCacheUpdateItem();
 
     nsCOMPtr<nsIURI>           mURI;
     nsCOMPtr<nsIURI>           mReferrerURI;
-    nsCOMPtr<nsIApplicationCache> mPreviousApplicationCache;
     nsCString                  mClientID;
-    nsCString                  mCacheKey;
-    PRUint32                   mItemType;
 
     nsresult OpenChannel();
     nsresult Cancel();
@@ -120,7 +116,6 @@ public:
     nsOfflineManifestItem(nsOfflineCacheUpdate *aUpdate,
                           nsIURI *aURI,
                           nsIURI *aReferrerURI,
-                          nsIApplicationCache *aPreviousApplicationCache,
                           const nsACString &aClientID);
     virtual ~nsOfflineManifestItem();
 
@@ -182,22 +177,19 @@ public:
     nsOfflineCacheUpdate();
     ~nsOfflineCacheUpdate();
 
-    static nsresult GetCacheKey(nsIURI *aURI, nsACString &aKey);
-
     nsresult Init();
 
     nsresult Begin();
     nsresult Cancel();
 
     void LoadCompleted();
-
 private:
     nsresult HandleManifest(PRBool *aDoUpdate);
-    nsresult AddURI(nsIURI *aURI, PRUint32 aItemType);
+    nsresult AddURI(nsIURI *aURI, const nsACString &aOwnerSpec);
 
     nsresult ProcessNextURI();
 
-    nsresult AddExistingItems(PRUint32 aType);
+    nsresult AddOwnedItems(const nsACString &aOwnerURI);
 
     nsresult GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
     nsresult NotifyError();
@@ -222,12 +214,14 @@ private:
     PRBool mSucceeded;
     nsCString mUpdateDomain;
     nsCOMPtr<nsIURI> mManifestURI;
+    nsCString mManifestOwnerSpec;
+    nsCString mDynamicOwnerSpec;
 
     nsCOMPtr<nsIURI> mDocumentURI;
 
     nsCString mClientID;
-    nsCOMPtr<nsIApplicationCache> mApplicationCache;
-    nsCOMPtr<nsIApplicationCache> mPreviousApplicationCache;
+    nsCOMPtr<nsIOfflineCacheSession> mCacheSession;
+    nsCOMPtr<nsIOfflineCacheSession> mMainCacheSession;
 
     nsCOMPtr<nsIObserverService> mObserverService;
 
