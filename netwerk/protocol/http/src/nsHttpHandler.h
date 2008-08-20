@@ -229,7 +229,7 @@ private:
     nsHttpAuthCache mAuthCache;
 
     // the connection manager
-    nsRefPtr<nsHttpConnectionMgr> mConnMgr;
+    nsHttpConnectionMgr *mConnMgr;
 
     //
     // prefs
