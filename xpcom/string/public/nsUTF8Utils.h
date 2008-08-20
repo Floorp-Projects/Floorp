@@ -576,9 +576,9 @@ class ConvertUTF16toUTF8
                     // Treat broken characters as the Unicode
                     // replacement character 0xFFFD (0xEFBFBD in
                     // UTF-8)
-                    *out++ = 0xEF;
-                    *out++ = 0xBF;
-                    *out++ = 0xBD;
+                    *out++ = '\xEF';
+                    *out++ = '\xBF';
+                    *out++ = '\xBD';
 
                     NS_WARNING("String ending in half a surrogate pair!");
 
@@ -603,9 +603,9 @@ class ConvertUTF16toUTF8
                     // Treat broken characters as the Unicode
                     // replacement character 0xFFFD (0xEFBFBD in
                     // UTF-8)
-                    *out++ = 0xEF;
-                    *out++ = 0xBF;
-                    *out++ = 0xBD;
+                    *out++ = '\xEF';
+                    *out++ = '\xBF';
+                    *out++ = '\xBD';
 
                     // The pointer to the next character points to the second
                     // 16-bit value, not beyond it, as per Unicode 5.0.0
@@ -623,9 +623,9 @@ class ConvertUTF16toUTF8
               {
                 // Treat broken characters as the Unicode replacement
                 // character 0xFFFD (0xEFBFBD in UTF-8)
-                *out++ = 0xEF;
-                *out++ = 0xBF;
-                *out++ = 0xBD;
+                *out++ = '\xEF';
+                *out++ = '\xBF';
+                *out++ = '\xBD';
 
                 // DC00- DFFF - Low Surrogate
                 NS_WARNING("got a low Surrogate but no high surrogate");

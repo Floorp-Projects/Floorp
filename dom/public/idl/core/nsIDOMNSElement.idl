@@ -41,7 +41,7 @@
 
 interface nsIDOMNodeList;
 
-[scriptable, uuid(cea6f919-7fe6-4bdd-9db6-158d9283f8d3)]
+[scriptable, uuid(f0aef489-18c5-4de6-99d5-58b3758b098c)]
 interface nsIDOMNSElement : nsISupports
 {
   /*
@@ -69,6 +69,7 @@ interface nsIDOMNSElement : nsISupports
    * an empty list.
    */
   nsIDOMClientRectList getClientRects();
+
   /**
    * Returns the union of all rectangles in the getClientRects() list. Empty
    * rectangles are ignored, except that if all rectangles are empty,
@@ -76,4 +77,76 @@ interface nsIDOMNSElement : nsISupports
    * rectangle in getClientRects().
    */
   nsIDOMClientRect getBoundingClientRect();
+
+  /**
+   * The vertical scroll position of the element, or 0 if the element is not
+   * scrollable. This property may be assigned a value to change the
+   * vertical scroll position.
+   */
+  attribute long             scrollTop;
+
+  /**
+   * The horizontal scroll position of the element, or 0 if the element is not
+   * scrollable. This property may be assigned a value to change the
+   * horizontal scroll position.
+   */
+  attribute long             scrollLeft;
+
+  /**
+   * The height of the scrollable area of the element. If the element is not
+   * scrollable, scrollHeight is equivalent to the offsetHeight.
+   */
+  readonly attribute long             scrollHeight;
+
+  /**
+   * The width of the scrollable area of the element. If the element is not
+   * scrollable, scrollWidth is equivalent to the offsetWidth.
+   */
+  readonly attribute long             scrollWidth;
+
+  /**
+   * The height in CSS pixels of the element's top border.
+   */
+  readonly attribute long             clientTop;
+
+  /**
+   * The width in CSS pixels of the element's left border and scrollbar
+   * if it is present on the left side.
+   */
+  readonly attribute long             clientLeft;
+
+  /**
+   * The width in CSS pixels of the element's padding box. If the element is
+   * scrollable, the scroll bars are included inside this height.
+   */
+  readonly attribute long             clientHeight;
+
+  /**
+   * The height in CSS pixels of the element's padding box. If the element is
+   * scrollable, the scroll bars are included inside this width.
+   */
+  readonly attribute long             clientWidth;
+
+  /**
+   * Similar as the attributes on nsIDOMNode, but navigates just elements
+   * rather than all nodes.
+   *
+   * Defined by the ElementTraversal spec.
+   */
+  readonly attribute nsIDOMElement firstElementChild;
+  readonly attribute nsIDOMElement lastElementChild;
+  readonly attribute nsIDOMElement previousElementSibling;
+  readonly attribute nsIDOMElement nextElementSibling;
+
+  /**
+   * Returns the number of child nodes that are nsIDOMElements.
+   *
+   * Defined by the ElementTraversal spec.
+   */
+  readonly attribute unsigned long childElementCount;
+  
+  /**
+   * Returns a live nsIDOMNodeList of the current child elements.
+   */
+  readonly attribute nsIDOMNodeList children;
 };

@@ -247,6 +247,49 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SendMouseScrollEvent(const nsAString& aType,
+                                       PRInt32 aX,
+                                       PRInt32 aY,
+                                       PRInt32 aButton,
+                                       PRInt32 aScrollFlags,
+                                       PRInt32 aDelta,
+                                       PRInt32 aModifiers)
+{
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
+      || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  // get the widget to send the event to
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_NULL_POINTER;
+
+  PRInt32 msg;
+  if (aType.EqualsLiteral("DOMMouseScroll"))
+    msg = NS_MOUSE_SCROLL;
+  else
+    return NS_ERROR_UNEXPECTED;
+
+  nsMouseScrollEvent event(PR_TRUE, msg, widget);
+  event.isShift = (aModifiers & nsIDOMNSEvent::SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+  event.isControl = (aModifiers & nsIDOMNSEvent::CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+  event.isAlt = (aModifiers & nsIDOMNSEvent::ALT_MASK) ? PR_TRUE : PR_FALSE;
+  event.isMeta = (aModifiers & nsIDOMNSEvent::META_MASK) ? PR_TRUE : PR_FALSE;
+  event.button = aButton;
+  event.widget = widget;
+  event.delta = aDelta;
+  event.scrollFlags = aScrollFlags;
+
+  event.time = PR_IntervalNow();
+  event.refPoint.x = aX;
+  event.refPoint.y = aY;
+
+  nsEventStatus status;
+  return widget->DispatchEvent(&event, status);
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SendKeyEvent(const nsAString& aType,
                                PRInt32 aKeyCode,
                                PRInt32 aCharCode,

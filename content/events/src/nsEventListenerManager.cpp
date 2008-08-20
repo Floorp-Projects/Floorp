@@ -225,11 +225,7 @@ static const EventDispatchData sCompositionEvents[] = {
   { NS_COMPOSITION_END,
     HANDLER(&nsIDOMCompositionListener::HandleEndComposition)    },
   { NS_COMPOSITION_QUERY,
-    HANDLER(&nsIDOMCompositionListener::HandleQueryComposition)  },
-  { NS_RECONVERSION_QUERY,
-    HANDLER(&nsIDOMCompositionListener::HandleQueryReconversion) },
-  { NS_QUERYCARETRECT,
-    HANDLER(&nsIDOMCompositionListener::HandleQueryCaretRect)    }
+    HANDLER(&nsIDOMCompositionListener::HandleQueryComposition)  }
 };
 
 static const EventDispatchData sTextEvents[] = {

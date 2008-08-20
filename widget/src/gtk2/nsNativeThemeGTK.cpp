@@ -62,16 +62,15 @@
 #include "nsWidgetAtoms.h"
 
 #include <gdk/gdkprivate.h>
-#include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 
 #include "gfxContext.h"
 #include "gfxPlatformGtk.h"
-#include "gfxXlibNativeRenderer.h"
+#include "gfxGdkNativeRenderer.h"
 
 NS_IMPL_ISUPPORTS2(nsNativeThemeGTK, nsITheme, nsIObserver)
 
-static int gLastXError;
+static int gLastGdkError;
 
 static inline bool IsCheckboxWidgetType(PRUint8 aWidgetType)
 {
@@ -616,22 +615,15 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   return PR_TRUE;
 }
 
-static int
-NativeThemeErrorHandler(Display* dpy, XErrorEvent* error) {
-  gLastXError = error->error_code;
-  return 0;
-}
-
-class ThemeRenderer : public gfxXlibNativeRenderer {
+class ThemeRenderer : public gfxGdkNativeRenderer {
 public:
   ThemeRenderer(GtkWidgetState aState, GtkThemeWidgetType aGTKWidgetType,
                 gint aFlags, GtkTextDirection aDirection,
                 const GdkRectangle& aGDKRect, const GdkRectangle& aGDKClip)
     : mState(aState), mGTKWidgetType(aGTKWidgetType), mFlags(aFlags),
       mDirection(aDirection), mGDKRect(aGDKRect), mGDKClip(aGDKClip) {}
-  nsresult NativeDraw(Screen* screen, Drawable drawable, Visual* visual,
-                      Colormap colormap, short offsetX, short offsetY,
-                      XRectangle* clipRects, PRUint32 numClipRects);
+  nsresult NativeDraw(GdkDrawable * drawable, short offsetX, short offsetY,
+                      GdkRectangle * clipRects, PRUint32 numClipRects);
 private:
   GtkWidgetState mState;
   GtkThemeWidgetType mGTKWidgetType;
@@ -643,9 +635,8 @@ private:
 };
 
 nsresult
-ThemeRenderer::NativeDraw(Screen* screen, Drawable drawable, Visual* visual,
-                          Colormap colormap, short offsetX, short offsetY,
-                          XRectangle* clipRects, PRUint32 numClipRects)
+ThemeRenderer::NativeDraw(GdkDrawable * drawable, short offsetX, 
+        short offsetY, GdkRectangle * clipRects, PRUint32 numClipRects)
 {
   GdkRectangle gdk_rect = mGDKRect;
   gdk_rect.x += offsetX;
@@ -655,38 +646,10 @@ ThemeRenderer::NativeDraw(Screen* screen, Drawable drawable, Visual* visual,
   gdk_clip.x += offsetX;
   gdk_clip.y += offsetY;
   
-  GdkDisplay* gdkDpy = gdk_x11_lookup_xdisplay(DisplayOfScreen(screen));
-  if (!gdkDpy)
-    return NS_ERROR_FAILURE;
-
-  GdkPixmap* gdkPixmap = gdk_pixmap_lookup_for_display(gdkDpy, drawable);
-  if (gdkPixmap) {
-    g_object_ref(G_OBJECT(gdkPixmap));
-  } else {
-    // XXX gtk+-2.10 has gdk_pixmap_foreign_new_for_screen which would not
-    // use XGetGeometry.
-    gdkPixmap = gdk_pixmap_foreign_new_for_display(gdkDpy, drawable);
-    if (!gdkPixmap)
-      return NS_ERROR_FAILURE;
-
-    // We requested that gfxXlibNativeRenderer give us the default screen
-    GdkScreen* gdkScreen = gdk_display_get_default_screen(gdkDpy);
-    NS_ASSERTION(screen == GDK_SCREEN_XSCREEN(gdkScreen),
-                 "'screen' should be the default Screen");
-    // GDK requires a GdkColormap to be set on the GdkPixmap.
-    GdkVisual* gdkVisual =
-      gdk_x11_screen_lookup_visual(gdkScreen, visual->visualid);
-    GdkColormap* gdkColormap =
-      gdk_x11_colormap_foreign_new(gdkVisual, colormap);
-    gdk_drawable_set_colormap(gdkPixmap, gdkColormap);
-    g_object_unref(G_OBJECT(gdkColormap));
-  }
-
   NS_ASSERTION(numClipRects == 0, "We don't support clipping!!!");
-  moz_gtk_widget_paint(mGTKWidgetType, gdkPixmap, &gdk_rect, &gdk_clip, &mState,
-                       mFlags, mDirection);
+  moz_gtk_widget_paint(mGTKWidgetType, drawable, &gdk_rect, &gdk_clip,
+                       &mState, mFlags, mDirection);
 
-  g_object_unref(G_OBJECT(gdkPixmap));
   return NS_OK;
 }
 
@@ -804,8 +767,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   // Some themes (e.g. Clearlooks) just don't clip properly to any
   // clip rect we provide, so we cannot advertise support for clipping within
   // the widget bounds.
-  PRUint32 rendererFlags = gfxXlibNativeRenderer::DRAW_SUPPORTS_OFFSET;
-   
+  PRUint32 rendererFlags = gfxGdkNativeRenderer::DRAW_SUPPORTS_OFFSET;
+
   // translate everything so (0,0) is the top left of the drawingRect
   gfxContextAutoSaveRestore autoSR(ctx);
   if (snapXY) {
@@ -818,25 +781,22 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                "Trying to render an unsafe widget!");
 
   PRBool safeState = IsWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
-  XErrorHandler oldHandler = nsnull;
   if (!safeState) {
-    gLastXError = 0;
-    oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
+    gLastGdkError = 0;
+    gdk_error_trap_push ();
   }
 
-  renderer.Draw(gdk_x11_get_default_xdisplay(), ctx,
-                drawingRect.width, drawingRect.height,
-                rendererFlags, nsnull);
+  renderer.Draw(ctx, drawingRect.width, drawingRect.height, rendererFlags, nsnull);
 
   if (!safeState) {
     gdk_flush();
-    XSetErrorHandler(oldHandler);
+    gLastGdkError = gdk_error_trap_pop ();
 
-    if (gLastXError) {
+    if (gLastGdkError) {
 #ifdef DEBUG
       printf("GTK theme failed for widget type %d, error was %d, state was "
              "[active=%d,focused=%d,inHover=%d,disabled=%d]\n",
-             aWidgetType, gLastXError, state.active, state.focused,
+             aWidgetType, gLastGdkError, state.active, state.focused,
              state.inHover, state.disabled);
 #endif
       NS_WARNING("GTK theme failed; disabling unsafe widget");
@@ -1305,8 +1265,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
   case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    // case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:  (n/a for gtk)
-    // case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:  (n/a for gtk)
   case NS_THEME_TEXTFIELD:
   case NS_THEME_TEXTFIELD_MULTILINE:
   case NS_THEME_TEXTFIELD_CARET:

@@ -75,6 +75,8 @@ PKIX_UInt32 stackPosition;
 PKIX_UInt32 *fnStackInvCountArr;
 char **fnStackNameArr;
 PLHashTable *fnInvTable;
+PKIX_UInt32 testStartFnStackPosition;
+char *errorFnStackString;
 #endif /* PKIX_OBJECT_LEAK_TEST */
 
 /* --Private-Functions-------------------------------------------- */
@@ -1472,16 +1474,15 @@ cleanup:
 
 #ifdef PKIX_OBJECT_LEAK_TEST
 
-/* TEST_START_FN and TEST_START_FN_STACK_POS define at what state
+/* TEST_START_FN and testStartFnStackPosition define at what state
  * of the stack the object leak testing should begin. The condition
  * in pkix_CheckForGeneratedError works the following way: do leak
- * testing if at position TEST_START_FN_STACK_POS in stack array
+ * testing if at position testStartFnStackPosition in stack array
  * (fnStackNameArr) we have called function TEST_START_FN.
  * Note, that stack array get filled only when executing libpkix
  * functions.
  * */
 #define TEST_START_FN "PKIX_BuildChain"
-#define TEST_START_FN_STACK_POS 2
 
 PKIX_Error*
 pkix_CheckForGeneratedError(PKIX_StdVars * stdVars, 
@@ -1491,10 +1492,12 @@ pkix_CheckForGeneratedError(PKIX_StdVars * stdVars,
                             void * plContext)
 {
     PKIX_Error *genErr = NULL;
+    PKIX_UInt32 pos = 0;
+    PKIX_UInt32 strLen = 0;
 
     if (fnName) { 
-        if (fnStackNameArr[TEST_START_FN_STACK_POS] == NULL ||
-          strcmp(fnStackNameArr[TEST_START_FN_STACK_POS], TEST_START_FN)
+        if (fnStackNameArr[testStartFnStackPosition] == NULL ||
+            strcmp(fnStackNameArr[testStartFnStackPosition], TEST_START_FN)
             ) {
             /* return with out error if not with in boundary */
             return NULL;
@@ -1530,6 +1533,15 @@ pkix_CheckForGeneratedError(PKIX_StdVars * stdVars,
     noErrorState = PKIX_TRUE;
     genErr = PKIX_DoThrow(stdVars, errClass, PKIX_MEMLEAKGENERATEDERROR,
                           errClass, plContext);
+    while(fnStackNameArr[pos]) {
+        strLen += PORT_Strlen(fnStackNameArr[pos++]) + 1;
+    }
+    pos = 0;
+    errorFnStackString = PORT_ZAlloc(strLen);
+    while(fnStackNameArr[pos]) {
+        strcat(errorFnStackString, "/");
+        strcat(errorFnStackString, fnStackNameArr[pos++]);
+    }
     noErrorState = PKIX_FALSE;
     
     return genErr;

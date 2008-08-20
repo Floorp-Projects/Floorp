@@ -45,6 +45,8 @@
   {0x9e70a320, 0xbe02, 0x11d1,    \
     {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
+namespace TestArray {
+
 static const PRBool kExitOnError = PR_TRUE;
 
 class IFoo : public nsISupports {
@@ -136,6 +138,10 @@ void FillArray(nsISupportsArray* aArray, PRInt32 aCount)
     aArray->AppendElement(foo);
   }
 }
+
+}
+
+using namespace TestArray;
 
 int main(int argc, char *argv[])
 {

@@ -9,6 +9,8 @@
  */
 
 
+const STORAGE_TYPE = "legacy";
+
 function cloneLogin(src, dst) {
     dst.hostname      = src.hostname;
     dst.formSubmitURL = src.formSubmitURL;
@@ -41,6 +43,8 @@ if (!pwmgr)
 
 // Start with a clean slate
 pwmgr.removeAllLogins();
+var hosts = pwmgr.getAllDisabledHosts({});
+hosts.forEach(function(h) pwmgr.setLoginSavingEnabled(h, true));
 
 
 /* ========== 1 ========== */

@@ -154,6 +154,13 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
 
   jpeg_set_defaults(&cinfo);
   jpeg_set_quality(&cinfo, quality, 1); // quality here is 0-100
+  if (quality >= 90) {
+    int i;
+    for (i=0; i < MAX_COMPONENTS; i++) {
+      cinfo.comp_info[i].h_samp_factor=1;
+      cinfo.comp_info[i].v_samp_factor=1;
+    }
+  }
 
   // set up the destination manager
   jpeg_destination_mgr destmgr;

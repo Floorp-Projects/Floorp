@@ -724,10 +724,10 @@ ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
           switch (rv)
           {
               case SECSuccess:
-                  protAuthRetVal = PK11_PW_AUTHENTICATED;
+                  protAuthRetVal = ToNewCString(nsDependentCString(PK11_PW_AUTHENTICATED));
                   break;
               case SECWouldBlock:
-                  protAuthRetVal = PK11_PW_RETRY;
+                  protAuthRetVal = ToNewCString(nsDependentCString(PK11_PW_RETRY));
                   break;
               default:
                   protAuthRetVal = nsnull;

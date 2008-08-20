@@ -287,7 +287,7 @@ nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleInSelection(aBuilder))
     return NS_OK;
 
-  PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
+  PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext() || IsScrolled();
   nsDisplayTableItem* item = nsnull;
   if (isRoot) {
     // This background is created regardless of whether this frame is
@@ -1392,7 +1392,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
   if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    CheckInvalidateSizeChange(aPresContext, aDesiredSize, aReflowState);
+    CheckInvalidateSizeChange(aDesiredSize);
   }
   
   FinishAndStoreOverflow(&aDesiredSize);

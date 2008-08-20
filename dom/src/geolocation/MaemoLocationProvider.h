@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIGeolocationProvider.h"
-#include "nsIDOMGeolocation.h"
+#include "nsIDOMGeoPosition.h"
 #include "nsCOMPtr.h"
 
 #include <glib.h>
@@ -58,12 +58,12 @@ public:
 
   MaemoLocationProvider();
 
-  void Update(nsIDOMGeolocation* aLocation);
+  void Update(nsIDOMGeoPosition* aPosition);
 
 private:
   ~MaemoLocationProvider();
 
-  nsCOMPtr<nsIDOMGeolocation> mLastLocation;
+  nsCOMPtr<nsIDOMGeoPosition> mLastPosition;
 
   nsIGeolocationUpdate* mCallback; // weak reference by contract.
 

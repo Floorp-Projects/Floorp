@@ -1,0 +1,344 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=435425
+-->
+<head>
+  <title>Test for Bug 435425</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=435425">Mozilla Bug 435425</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 435425 **/
+
+var xhr = null;
+var upload = null;
+var currentEvents = null;
+var expectedResponseText = null;
+
+function logEvent(evt) {
+  var i = 0;
+  while ((currentEvents.length != i) &&
+         currentEvents[i].optional &&
+         ((currentEvents[i].type != evt.type) ||
+          (!evt.target instanceof currentEvents[i].target))) {
+    ++i;
+  }
+  ok(i != currentEvents.length, "Extra or wrong event?");
+  is(evt.type, currentEvents[i].type, "Wrong event!")
+  ok(evt.target instanceof currentEvents[i].target, "Wrong event target [" + evt.type + "]!");
+  // If we handled non-optional event, remove all optional events before the 
+  // handled event and then the non-optional event from the list.
+  if (!currentEvents[i].optional) {
+    for (;i != -1; --i) {
+      currentEvents.shift();
+    }
+  }
+}
+
+function stop(evt) {
+  logEvent(evt);
+  nextTest();
+}
+
+function openXHR(xhr, method, url, privileged) {
+  try {
+    if (privileged) {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    }
+  } catch (ex) {
+    ok(false, ex);
+  }
+  xhr.open(method, url);
+}
+
+function start(obj) {
+  xhr = new XMLHttpRequest();
+  upload = xhr.upload;
+  currentEvents = obj.expectedEvents;
+  expectedResponseText = obj.withUpload;
+  xhr.onload =
+    function(evt) {
+      if (expectedResponseText) {
+        is(evt.target.responseText, expectedResponseText, "Wrong responseText");
+      }
+      stop(evt);
+    }
+  xhr.onerror =
+    function(evt) {
+      stop(evt);
+    }
+  xhr.onabort =
+    function(evt) {
+      stop(evt);
+    }
+
+  xhr.onloadstart =
+    function (evt) {
+      logEvent(evt);
+    }
+  xhr.onprogress =
+    function (evt) {
+      logEvent(evt);
+    }
+  xhr.onuploadprogress =
+    function (evt) {
+      logEvent(evt);
+    }
+
+  if ("upload" in xhr) {
+    xhr.upload.onloadstart =
+      function (evt) {
+        logEvent(evt);
+      }
+    xhr.upload.onprogress =
+      function (evt) {
+        logEvent(evt);
+      }
+    xhr.upload.onload =
+      function (evt) {
+        logEvent(evt);
+      }
+    xhr.upload.onerror =
+      function (evt) {
+        logEvent(evt);
+      }
+    xhr.upload.onabort =
+      function (evt) {
+        logEvent(evt);
+      }
+  }
+
+  try {
+    var url;
+    var privileged = false;
+    if (obj.testRedirectError) {
+      url = "bug435425_redirect.sjs";
+    } else if (obj.testNetworkError) {
+      url = "http://nosuchdomain.localhost";
+      privileged = true;
+    } else {
+      url = "bug435425.sjs";
+      if (obj.withUpload) {
+        url += "?" + obj.withUpload;
+      }
+    }
+    openXHR(xhr, obj.method, url, privileged);
+    xhr.send(obj.withUpload);
+    if (obj.testAbort) {
+      xhr.abort();
+    }
+  } catch (ex) {
+    ok(false, ex);
+  }
+}
+
+var none = null;
+var small = "";
+var mid = "";
+var large = "";
+
+
+for (var smallLength = 0; smallLength < (0x00000000 + 2); ++smallLength) {
+  small += "A";
+}
+
+for (var midLength = 0; midLength < (0x00000FFF + 2); ++midLength) {
+  mid += "A";
+}
+
+for (var largeLength = 0; largeLength < (0x0000FFFF + 2); ++largeLength) {
+  large += "A";
+}
+
+const XHR = Components.interfaces.nsIXMLHttpRequest;
+const UPLOAD = Components.interfaces.nsIXMLHttpRequestUpload;
+
+var tests = 
+  [
+    { method: "GET", withUpload: none, testAbort: false, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "progress", optional: true},
+                       {target: XHR, type: "load", optional: false}]},
+    { method: "GET", withUpload: none, testAbort: true, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "abort", optional: false}]},
+    { method: "GET", withUpload: none, testAbort: false, testRedirectError: true, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "error", optional: false}]},
+    { method: "GET", withUpload: none, testAbort: false, testRedirectError: false, testNetworkError: true,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "error", optional: false}]},
+
+    { method: "GET", withUpload: small, testAbort: false, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "progress", optional: true},
+                       {target: XHR, type: "load", optional: false}]},
+    { method: "GET", withUpload: small, testAbort: true, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "abort", optional: false}]},
+    { method: "GET", withUpload: small, testAbort: false, testRedirectError: true, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "error", optional: false}]},
+    { method: "GET", withUpload: small, testAbort: false, testRedirectError: false, testNetworkError: true,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "error", optional: false}]},
+
+    { method: "GET", withUpload: mid, testAbort: false, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "progress", optional: true},
+                       {target: XHR, type: "load", optional: false}]},
+    { method: "GET", withUpload: mid, testAbort: true, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "abort", optional: false}]},
+    { method: "GET", withUpload: mid, testAbort: false, testRedirectError: true, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "error", optional: false}]},
+    { method: "GET", withUpload: mid, testAbort: false, testRedirectError: false, testNetworkError: true,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "error", optional: false}]},
+
+    { method: "GET", withUpload: large, testAbort: false, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "progress", optional: true},
+                       {target: XHR, type: "load", optional: false}]},
+    { method: "GET", withUpload: large, testAbort: true, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "abort", optional: false}]},
+    { method: "GET", withUpload: large, testAbort: false, testRedirectError: true, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "error", optional: false}]},
+    { method: "GET", withUpload: large, testAbort: false, testRedirectError: false, testNetworkError: true,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "error", optional: false}]},
+
+    { method: "POST", withUpload: none, testAbort: false, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "progress", optional: true},
+                       {target: XHR, type: "load", optional: false}]},
+    { method: "POST", withUpload: none, testAbort: true, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "abort", optional: false}]},
+    { method: "POST", withUpload: none, testAbort: false, testRedirectError: true, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "error", optional: false}]},
+    { method: "POST", withUpload: none, testAbort: false, testRedirectError: false, testNetworkError: true,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: XHR, type: "error", optional: false}]},
+
+    { method: "POST", withUpload: small, testAbort: false, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "uploadprogress", optional: true},
+                       {target: UPLOAD, type: "progress", optional: true},
+                       {target: UPLOAD, type: "load", optional: false},
+                       {target: XHR, type: "progress", optional: true},
+                       {target: XHR, type: "load", optional: false}]},
+    { method: "POST", withUpload: small, testAbort: true, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "abort", optional: false},
+                       {target: UPLOAD, type: "abort", optional: false}]},
+    { method: "POST", withUpload: small, testAbort: false, testRedirectError: true, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "uploadprogress", optional: true},
+                       {target: UPLOAD, type: "progress", optional: true},
+                       {target: XHR, type: "error", optional: false},
+                       {target: UPLOAD, type: "error", optional: false}]},
+    { method: "POST", withUpload: small, testAbort: false, testRedirectError: false, testNetworkError: true,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "uploadprogress", optional: true},
+                       {target: UPLOAD, type: "progress", optional: true},
+                       {target: XHR, type: "error", optional: false},
+                       {target: UPLOAD, type: "error", optional: false}]},
+
+    { method: "POST", withUpload: mid, testAbort: false, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "uploadprogress", optional: true},
+                       {target: UPLOAD, type: "progress", optional: true},
+                       {target: UPLOAD, type: "load", optional: false},
+                       {target: XHR, type: "progress", optional: true},
+                       {target: XHR, type: "load", optional: false}]},
+    { method: "POST", withUpload: mid, testAbort: true, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "abort", optional: false},
+                       {target: UPLOAD, type: "abort", optional: false}]},
+    { method: "POST", withUpload: mid, testAbort: false, testRedirectError: true, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "uploadprogress", optional: true},
+                       {target: UPLOAD, type: "progress", optional: true},
+                       {target: XHR, type: "error", optional: false},
+                       {target: UPLOAD, type: "error", optional: false}]},
+    { method: "POST", withUpload: mid, testAbort: false, testRedirectError: false, testNetworkError: true,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "uploadprogress", optional: true},
+                       {target: UPLOAD, type: "progress", optional: true},
+                       {target: XHR, type: "error", optional: false},
+                       {target: UPLOAD, type: "error", optional: false}]},
+
+    { method: "POST", withUpload: large, testAbort: false, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "uploadprogress", optional: true},
+                       {target: UPLOAD, type: "progress", optional: true},
+                       {target: UPLOAD, type: "load", optional: false},
+                       {target: XHR, type: "progress", optional: true},
+                       {target: XHR, type: "load", optional: false}]},
+    { method: "POST", withUpload: large, testAbort: true, testRedirectError: false, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "abort", optional: false},
+                       {target: UPLOAD, type: "abort", optional: false}]},
+    { method: "POST", withUpload: large, testAbort: false, testRedirectError: true, testNetworkError: false,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "uploadprogress", optional: true},
+                       {target: UPLOAD, type: "progress", optional: true},
+                       {target: XHR, type: "error", optional: false},
+                       {target: UPLOAD, type: "error", optional: false}]},
+    { method: "POST", withUpload: large, testAbort: false, testRedirectError: false, testNetworkError: true,
+      expectedEvents: [{target: XHR, type: "loadstart", optional: false},
+                       {target: UPLOAD, type: "loadstart", optional: false},
+                       {target: XHR, type: "uploadprogress", optional: true},
+                       {target: UPLOAD, type: "progress", optional: true},
+                       {target: XHR, type: "error", optional: false},
+                       {target: UPLOAD, type: "error", optional: false}]},
+];
+
+function runTest() {
+  var test = tests.shift();
+  start(test);
+}
+
+function nextTest() {
+  if (tests.length > 1) {
+    setTimeout("runTest()", 0);
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+ok("upload" in (new XMLHttpRequest()), "XMLHttpRequest.upload isn't supported!");
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -75,6 +75,7 @@ CPPSRCS		= \
 		nsDOMKeyboardEvent.cpp \
 		nsDOMTextEvent.cpp \
 		nsDOMMouseEvent.cpp \
+		nsDOMMouseScrollEvent.cpp \
 		nsDOMMutationEvent.cpp \
 		nsDOMPopupBlockedEvent.cpp \
 		nsDOMBeforeUnloadEvent.cpp \
@@ -90,13 +91,8 @@ CPPSRCS		= \
 		nsEventDispatcher.cpp \
 		nsIMEStateManager.cpp \
 		nsQueryContentEventHandler.cpp \
-		$(NULL)
-
-ifdef MOZ_MEDIA
-CPPSRCS		+= \
 		nsDOMProgressEvent.cpp \
 		$(NULL)
-endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

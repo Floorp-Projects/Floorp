@@ -41,6 +41,7 @@
 #define _MOZSTORAGECONNECTION_H_
 
 #include "nsCOMPtr.h"
+#include "nsAutoLock.h"
 
 #include "nsString.h"
 #include "nsInterfaceHashtable.h"
@@ -91,10 +92,14 @@ protected:
 
     sqlite3 *mDBConn;
     nsCOMPtr<nsIFile> mDatabaseFile;
+
+    PRLock *mTransactionMutex;
     PRBool mTransactionInProgress;
 
+    PRLock *mFunctionsMutex;
     nsInterfaceHashtable<nsCStringHashKey, nsISupports> mFunctions;
 
+    PRLock *mProgressHandlerMutex;
     nsCOMPtr<mozIStorageProgressHandler> mProgressHandler;
 
     // This isn't accessed but is used to make sure that the connections do

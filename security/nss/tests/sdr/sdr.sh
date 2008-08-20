@@ -70,9 +70,11 @@ sdr_init()
   #temporary files
   VALUE1=$HOSTDIR/tests.v1.$$
   VALUE2=$HOSTDIR/tests.v2.$$
+  VALUE3=$HOSTDIR/tests.v3.$$
 
   T1="Test1"
   T2="The quick brown fox jumped over the lazy dog"
+  T3="1234567"
 
   SDRDIR=${HOSTDIR}/SDR
   D_SDR="SDR.$version"
@@ -94,25 +96,35 @@ sdr_init()
 ########################################################################
 sdr_main()
 {
-  echo "$SCRIPTNAME: Creating an SDR key/Encrypt"
-  echo "sdrtest -d ${PROFILE} -o ${VALUE1} -t Test1"
-  ${BINDIR}/sdrtest -d ${PROFILE} -o ${VALUE1} -t Test1
-  html_msg $? 0 "Creating SDR Key"
+  echo "$SCRIPTNAME: Creating an SDR key/SDR Encrypt - Value 1"
+  echo "sdrtest -d ${PROFILE} -o ${VALUE1} -t \"${T1}\""
+  ${BINDIR}/sdrtest -d ${PROFILE} -o ${VALUE1} -t "${T1}"
+  html_msg $? 0 "Creating SDR Key/Encrypt - Value 1"
 
-  echo "$SCRIPTNAME: SDR Encrypt - Second Value"
-  echo "sdrtest -d ${PROFILE} -o ${VALUE2} -t '${T2}'"
+  echo "$SCRIPTNAME: SDR Encrypt - Value 2"
+  echo "sdrtest -d ${PROFILE} -o ${VALUE2} -t \"${T2}\""
   ${BINDIR}/sdrtest -d ${PROFILE} -o ${VALUE2} -t "${T2}"
   html_msg $? 0 "Encrypt - Value 2"
 
-  echo "$SCRIPTNAME: Decrypt - Value 1"
-  echo "sdrtest -d ${PROFILE} -i ${VALUE1} -t Test1"
-  ${BINDIR}/sdrtest -d ${PROFILE} -i ${VALUE1} -t Test1
+  echo "$SCRIPTNAME: SDR Encrypt - Value 3"
+  echo "sdrtest -d ${PROFILE} -o ${VALUE3} -t \"${T3}\""
+  ${BINDIR}/sdrtest -d ${PROFILE} -o ${VALUE3} -t "${T3}"
+  html_msg $? 0 "Encrypt - Value 3"
+
+  echo "$SCRIPTNAME: SDR Decrypt - Value 1"
+  echo "sdrtest -d ${PROFILE} -i ${VALUE1} -t \"${T1}\""
+  ${BINDIR}/sdrtest -d ${PROFILE} -i ${VALUE1} -t "${T1}"
   html_msg $? 0 "Decrypt - Value 1"
 
-  echo "$SCRIPTNAME: Decrypt - Value 2"
-  echo "sdrtest -d ${PROFILE} -i ${VALUE2} -t ${T2}"
+  echo "$SCRIPTNAME: SDR Decrypt - Value 2"
+  echo "sdrtest -d ${PROFILE} -i ${VALUE2} -t \"${T2}\""
   ${BINDIR}/sdrtest -d ${PROFILE} -i ${VALUE2} -t "${T2}"
   html_msg $? 0 "Decrypt - Value 2"
+
+  echo "$SCRIPTNAME: SDR Decrypt - Value 3"
+  echo "sdrtest -d ${PROFILE} -i ${VALUE3} -t \"${T3}\""
+  ${BINDIR}/sdrtest -d ${PROFILE} -i ${VALUE3} -t "${T3}"
+  html_msg $? 0 "Decrypt - Value 3"
 }
 
 ############################## sdr_cleanup #############################

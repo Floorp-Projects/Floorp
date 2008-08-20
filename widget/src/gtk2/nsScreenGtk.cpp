@@ -38,9 +38,12 @@
 
 #include "nsScreenGtk.h"
 
+#include <gdk/gdk.h>
+#ifdef MOZ_X11
 #include <gdk/gdkx.h>
-#include <gtk/gtk.h>
 #include <X11/Xatom.h>
+#endif
+#include <gtk/gtk.h>
 
 nsScreenGtk :: nsScreenGtk (  )
   : mScreenNum(0),
@@ -113,6 +116,7 @@ nsScreenGtk :: Init (GdkWindow *aRootWindow)
   // versions of GDK predating the GdkScreen object.  See bug 256646.
   mAvailRect = mRect = nsRect(0, 0, gdk_screen_width(), gdk_screen_height());
 
+#ifdef MOZ_X11
   // We need to account for the taskbar, etc in the available rect.
   // See http://freedesktop.org/Standards/wm-spec/index.html#id2767771
 
@@ -176,8 +180,10 @@ nsScreenGtk :: Init (GdkWindow *aRootWindow)
     }
   }
   g_free (workareas);
+#endif
 }
 
+#ifdef MOZ_X11
 void
 nsScreenGtk :: Init (XineramaScreenInfo *aScreenInfo)
 {
@@ -188,3 +194,4 @@ nsScreenGtk :: Init (XineramaScreenInfo *aScreenInfo)
 
   mAvailRect = mRect = xineRect;
 }
+#endif

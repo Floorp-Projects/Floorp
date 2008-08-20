@@ -411,11 +411,10 @@ NS_IMETHODIMP nsDocAccessible::GetURL(nsAString& aURL)
 
 NS_IMETHODIMP nsDocAccessible::GetTitle(nsAString& aTitle)
 {
-  if (mDocument) {
-    aTitle = mDocument->GetDocumentTitle();
-    return NS_OK;
+  nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(mDocument));
+  if (domnsDocument) {
+    return domnsDocument->GetTitle(aTitle);
   }
-
   return NS_ERROR_FAILURE;
 }
 
@@ -1597,16 +1596,25 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
 
     if (eventType == nsIAccessibleEvent::EVENT_DOM_CREATE || 
         eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+
       nsCOMPtr<nsIAccessible> containerAccessible;
+      if (accessible)
+        accessible->GetParent(getter_AddRefs(containerAccessible));
+
+      if (!containerAccessible) {
+        GetAccessibleInParentChain(domNode, PR_TRUE,
+                                   getter_AddRefs(containerAccessible));
+        if (!containerAccessible)
+          containerAccessible = this;
+      }
+
       if (eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
-        if (accessible) {
-          // For asynch show, delayed invalidatation of parent's children
-          accessible->GetParent(getter_AddRefs(containerAccessible));
-          nsCOMPtr<nsPIAccessible> privateContainerAccessible =
-            do_QueryInterface(containerAccessible);
-          if (privateContainerAccessible)
-            privateContainerAccessible->InvalidateChildren();
-        }
+        // For asynch show, delayed invalidatation of parent's children
+        nsCOMPtr<nsPIAccessible> privateContainerAccessible =
+          do_QueryInterface(containerAccessible);
+        if (privateContainerAccessible)
+          privateContainerAccessible->InvalidateChildren();
+
         // Some show events in the subtree may have been removed to 
         // avoid firing redundant events. But, we still need to make sure any
         // accessibles parenting those shown nodes lose their child references.
@@ -1619,13 +1627,6 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
       // wait to fire this here, instead of in InvalidateCacheSubtree(), where we wouldn't be able to calculate
       // the offset, length and text for the text change.
       if (domNode && domNode != mDOMNode) {
-        if (!containerAccessible) {
-          GetAccessibleInParentChain(domNode, PR_TRUE,
-                                     getter_AddRefs(containerAccessible));
-          if (!containerAccessible)
-            containerAccessible = this;
-        }
-
         nsCOMPtr<nsIAccessibleTextChangeEvent> textChangeEvent =
           CreateTextChangeEventForNode(containerAccessible, domNode, accessible, PR_TRUE, PR_TRUE);
         if (textChangeEvent) {

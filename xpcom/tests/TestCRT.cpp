@@ -40,6 +40,8 @@
 #include "plstr.h"
 #include <stdlib.h>
 
+namespace TestCRT {
+
 // The return from strcmp etc is only defined to be postive, zero or
 // negative. The magnitude of a non-zero return is irrelevant.
 PRIntn sign(PRIntn val) {
@@ -100,6 +102,10 @@ static Test tests[] = {
   { "bar", "fo", 3 },
 };
 #define NUM_TESTS int((sizeof(tests) / sizeof(tests[0])))
+
+}
+
+using namespace TestCRT;
 
 int main()
 {

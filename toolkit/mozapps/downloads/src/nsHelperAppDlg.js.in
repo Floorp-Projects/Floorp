@@ -443,8 +443,13 @@ nsUnknownContentTypeDialog.prototype = {
         this.dialogElement("normalBox").collapsed = true;
         // show basic choice 
         this.dialogElement("basicBox").collapsed = false;
-        // change button labels
-        this.mDialog.document.documentElement.getButton("accept").label = this.dialogElement("strings").getString("unknownAccept.label");
+        // change button labels and icons; use "save" icon for the accept
+        // button since it's the only action possible
+        let acceptButton = this.mDialog.document.documentElement
+                               .getButton("accept");
+        acceptButton.label = this.dialogElement("strings")
+                                 .getString("unknownAccept.label");
+        acceptButton.setAttribute("icon", "save");
         this.mDialog.document.documentElement.getButton("cancel").label = this.dialogElement("strings").getString("unknownCancel.label");
         // hide other handler
         this.dialogElement("openHandler").collapsed = true;

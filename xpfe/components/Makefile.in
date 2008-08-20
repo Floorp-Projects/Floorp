@@ -68,7 +68,6 @@ endif
 
 DIRS = \
         find \
-        filepicker \
         $(NULL)
 
 ifdef MOZ_RDF
@@ -81,7 +80,6 @@ endif
 ifdef MOZ_HAVE_BROWSER
 DIRS += \
         directory \
-        resetPref \
         $(NULL)
 
 ifndef MOZ_PHOENIX

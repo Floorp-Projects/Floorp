@@ -679,14 +679,12 @@
               menuItems[i].disabled = disabled;
 
             // Session store
-            if (gPrefService.getBoolPref("browser.sessionstore.enabled")) {
-              this.mUndoCloseTabMenuItem.hidden =
-                Cc["@mozilla.org/browser/sessionstore;1"].
-                getService(Ci.nsISessionStore).
-                getClosedTabCount(window) == 0;
-            }
-            else
-              this.mUndoCloseTabMenuItem.hidden = true;
+            // XXXzeniko should't we just disable this item as we disable
+            // the tabbrowser-multiple items above - for consistency?
+            this.mUndoCloseTabMenuItem.hidden =
+              Cc["@mozilla.org/browser/sessionstore;1"].
+              getService(Ci.nsISessionStore).
+              getClosedTabCount(window) == 0;
           ]]>
         </body>
       </method>

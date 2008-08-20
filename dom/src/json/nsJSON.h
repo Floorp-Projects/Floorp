@@ -55,7 +55,7 @@ class nsIURI;
 #define JSON_MAX_DEPTH  2048
 #define JSON_PARSER_BUFSIZE 1024
 
-class nsJSONWriter
+class NS_STACK_CLASS nsJSONWriter
 {
 public:
   nsJSONWriter();

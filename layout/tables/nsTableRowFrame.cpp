@@ -345,7 +345,7 @@ nsTableRowFrame::DidResize()
   desiredSize.width = mRect.width;
   desiredSize.height = mRect.height;
   desiredSize.mOverflowArea = nsRect(0, 0, desiredSize.width,
-                                      desiredSize.height);
+                                     desiredSize.height);
 
   while (childFrame) {
     if (IS_TABLE_CELL(childFrame->GetType())) {
@@ -1064,7 +1064,7 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
   if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    CheckInvalidateSizeChange(aPresContext, aDesiredSize, aReflowState);
+    CheckInvalidateSizeChange(aDesiredSize);
   }
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

@@ -53,12 +53,13 @@ MaemoLocationProvider::~MaemoLocationProvider()
 void location_changed (LocationGPSDevice *device, gpointer userdata)
 {
   MaemoLocationProvider* provider = (MaemoLocationProvider*) userdata;
-  nsRefPtr<nsGeolocation> somewhere = new nsGeolocation(device->fix->latitude,
+  nsRefPtr<nsGeoPosition> somewhere = new nsGeoPosition(device->fix->latitude,
                                                         device->fix->longitude,
                                                         device->fix->altitude,
                                                         device->fix->eph,
                                                         device->fix->epv,
-                                                        device->fix->time);
+                                                        0,0,
+							device->fix->time);
   provider->Update(somewhere);
 }
 
@@ -90,10 +91,10 @@ NS_IMETHODIMP MaemoLocationProvider::Watch(nsIGeolocationUpdate *callback)
   return NS_OK;
 }
 
-/* readonly attribute nsIDOMGeolocation currentLocation; */
-NS_IMETHODIMP MaemoLocationProvider::GetCurrentLocation(nsIDOMGeolocation * *aCurrentLocation)
+/* readonly attribute nsIDOMGeoPosition currentPosition; */
+NS_IMETHODIMP MaemoLocationProvider::GetCurrentPosition(nsIDOMGeoPosition * *aCurrentPosition)
 {
-  NS_IF_ADDREF(*aCurrentLocation = mLastLocation);
+  NS_IF_ADDREF(*aCurrentPosition = mLastPosition);
   return NS_OK;
 }
 
@@ -110,10 +111,10 @@ NS_IMETHODIMP MaemoLocationProvider::Shutdown()
   return NS_OK;
 }
 
-void MaemoLocationProvider::Update(nsIDOMGeolocation* aLocation)
+void MaemoLocationProvider::Update(nsIDOMGeoPosition* aPosition)
 {
   mHasSeenLocation = PR_TRUE;
-  mLastLocation = aLocation;
+  mLastPosition = aPosition;
   if (mCallback)
-    mCallback->Update(aLocation);
+    mCallback->Update(aPosition);
 }

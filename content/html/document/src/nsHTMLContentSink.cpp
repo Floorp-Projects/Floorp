@@ -218,7 +218,6 @@ public:
 #endif
 
 protected:
-  nsresult UpdateDocumentTitle();
   // If aCheckIfPresent is true, will only set an attribute in cases
   // when it's not already set.
   nsresult AddAttributes(const nsIParserNode& aNode, nsIContent* aContent,
@@ -245,7 +244,6 @@ protected:
   nsRefPtr<nsGenericHTMLElement> mFrameset;
   nsGenericHTMLElement* mHead;
 
-  nsString mTitleString;
   nsRefPtr<nsGenericHTMLElement> mCurrentForm;
 
   nsAutoVoidArray mContextStack;
@@ -384,6 +382,9 @@ public:
   PRUnichar* mText;
   PRInt32 mTextLength;
   PRInt32 mTextSize;
+
+private:
+  PRBool mLastTextCharWasCR;
 };
 
 //----------------------------------------------------------------------
@@ -627,7 +628,8 @@ SinkContext::SinkContext(HTMLContentSink* aSink)
     mStackPos(0),
     mText(nsnull),
     mTextLength(0),
-    mTextSize(0)
+    mTextSize(0),
+    mLastTextCharWasCR(PR_FALSE)
 {
   MOZ_COUNT_CTOR(SinkContext);
 }
@@ -878,13 +880,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       }
       break;
 
-    case eHTMLTag_title:
-      if (mSink->mDocument->GetDocumentTitle().IsVoid()) {
-        // The first title wins.
-        mSink->mInTitle = PR_TRUE;
-      }
-      break;
-
     case eHTMLTag_button:
       content->DoneCreatingElement();
       break;
@@ -1010,6 +1005,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
   case eHTMLTag_textarea:
   case eHTMLTag_object:
   case eHTMLTag_applet:
+  case eHTMLTag_title:
     content->DoneAddingChildren(HaveNotifiedForCurrentContent());
     break;
 
@@ -1020,13 +1016,6 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
 
   case eHTMLTag_style:
     result = mSink->ProcessSTYLEEndTag(content);
-    break;
-
-  case eHTMLTag_title:
-    if (mSink->mInTitle) {
-      mSink->UpdateDocumentTitle();
-      mSink->mInTitle = PR_FALSE;
-    }
     break;
 
   default:
@@ -1294,11 +1283,6 @@ SinkContext::AddText(const nsAString& aText)
     return NS_OK;
   }
   
-  if (mSink->mInTitle) {
-    // Hang onto the title text specially.
-    mSink->mTitleString.Append(aText);
-  }
-
   // Create buffer when we first need it
   if (mTextSize == 0) {
     mText = new PRUnichar[4096];
@@ -1310,7 +1294,6 @@ SinkContext::AddText(const nsAString& aText)
 
   // Copy data from string into our buffer; flush buffer when it fills up
   PRInt32 offset = 0;
-  PRBool  isLastCharCR = PR_FALSE;
 
   while (addLen != 0) {
     PRInt32 amount = mTextSize - mTextLength;
@@ -1325,12 +1308,18 @@ SinkContext::AddText(const nsAString& aText)
       if (NS_FAILED(rv)) {
         return rv;
       }
+
+      // Go back to the top of the loop so we re-calculate amount and
+      // don't fall through to CopyNewlineNormalizedUnicodeTo with a
+      // zero-length amount (which invalidates mLastTextCharWasCR).
+      continue;
     }
 
     mTextLength +=
       nsContentUtils::CopyNewlineNormalizedUnicodeTo(aText, offset,
                                                      &mText[mTextLength],
-                                                     amount, isLastCharCR);
+                                                     amount,
+                                                     mLastTextCharWasCR);
     offset += amount;
     addLen -= amount;
   }
@@ -1522,6 +1511,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
   if (aReleaseLast) {
     mLastTextNodeSize = 0;
     mLastTextNode = nsnull;
+    mLastTextCharWasCR = PR_FALSE;
   }
 
 #ifdef DEBUG
@@ -2427,33 +2417,6 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   MOZ_TIMER_STOP(mWatch);
 
   return rv;
-}
-
-nsresult 
-HTMLContentSink::UpdateDocumentTitle()
-{
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::UpdateDocumentTitle()\n"));
-  MOZ_TIMER_START(mWatch);
-  NS_ASSERTION(mCurrentContext == mHeadContext, "title not in head");
-
-  if (!mDocument->GetDocumentTitle().IsVoid()) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::UpdateDocumentTitle()\n"));
-    MOZ_TIMER_STOP(mWatch);
-    return NS_OK;
-  }
-
-  // Use mTitleString.
-  mTitleString.CompressWhitespace(PR_TRUE, PR_TRUE);
-
-  nsCOMPtr<nsIDOMNSDocument> domDoc(do_QueryInterface(mDocument));
-  domDoc->SetTitle(mTitleString);
-
-  mTitleString.Truncate();
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::UpdateDocumentTitle()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
-  return NS_OK;
 }
 
 /**

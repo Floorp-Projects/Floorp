@@ -15,6 +15,7 @@
 #367384
 **/PR_LoadLibraryWithFlags/**
 **/pr_LoadLibraryByPathname/**
+**/PR_LoadLibrary/**
 
 #393181
 ocspclnt/main/CERT_SetOCSPDefaultResponder/**

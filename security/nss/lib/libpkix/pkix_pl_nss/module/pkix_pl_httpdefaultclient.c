@@ -178,9 +178,7 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
                 PKIX_MALLOCFAILED);
 
         /* copy header data before we corrupt it (by storing NULLs) */
-        PKIX_CHECK(PKIX_PL_Memcpy
-                (client->rcvBuf, headerLength, (void **)&copy, plContext),
-                PKIX_MEMCPYFAILED);
+        PORT_Memcpy(copy, client->rcvBuf, headerLength);
 
 	/* Store the NULL terminator */
 	copy[headerLength] = '\0';
@@ -342,12 +340,8 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
 
         /* copy any remaining bytes in current buffer into new buffer */
         if (client->currentBytesAvailable > 0) {
-                PKIX_CHECK(PKIX_PL_Memcpy
-                        (&(client->rcvBuf[headerLength]),
-                        client->currentBytesAvailable,
-                        (void **)&body,
-                        plContext),
-                        PKIX_MEMCPYFAILED);
+                PORT_Memcpy(body, &(client->rcvBuf[headerLength]),
+                                     client->currentBytesAvailable);
         }
 
         PKIX_CHECK(PKIX_PL_Free(client->rcvBuf, plContext),
@@ -1372,7 +1366,6 @@ pkix_pl_HttpDefaultClient_TrySendAndReceive(
         PKIX_UInt32 postLen = 0;
         PRPollDesc *pollDesc = NULL;
         char *sendbuf = NULL;
-        void *appendDest = NULL;
 
         PKIX_ENTER
                 (HTTPDEFAULTCLIENT,
@@ -1441,21 +1434,12 @@ pkix_pl_HttpDefaultClient_TrySendAndReceive(
                                 PKIX_MALLOCFAILED);
 
                         /* copy header into postBuffer */
-                        PKIX_CHECK(PKIX_PL_Memcpy
-                                (sendbuf,
-                                postLen,
-                                (void **)&(client->POSTBuf),
-                                plContext),
-                                PKIX_MEMCPYFAILED);
+                        PORT_Memcpy(client->POSTBuf, sendbuf, postLen);
 
                         /* append data after header */
-                        appendDest = (void *)&(client->POSTBuf[postLen]);
-                        PKIX_CHECK(PKIX_PL_Memcpy
-                                ((void *)(client->send_http_data),
-                                 client->send_http_data_len,
-                                 (void **)&appendDest,
-                                plContext),
-                                PKIX_MEMCPYFAILED);
+                        PORT_Memcpy(&client->POSTBuf[postLen],
+                                    client->send_http_data,
+                                    client->send_http_data_len);
 
                         /* PR_smprintf_free original header buffer */
                         PKIX_PL_NSSCALL

@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+    https://bugzilla.mozilla.org/show_bug.cgi?id=411966
+  -->
+  <head>
+    <title>Test for Bug 411966</title>
+    <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="bug_411966/redirect.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=411966">
+      Mozilla Bug 411966</a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+      <iframe id="iframe"></iframe>
+    </div>
+    <pre id="test">
+      <script class="testbody" type="text/javascript">
+
+      /** Test for Bug 411966 **/
+      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+      ghist.addURI(typedURI, false, true, null);
+      bhist.markPageAsTyped(typedURI);
+
+      var clickedLinkChannel = ios.newChannelFromURI(clickedLinkURI);
+      clickedLinkChannel.QueryInterface(Ci.nsIHttpChannel).referrer = typedURI;
+      var listener = new StreamListener(clickedLinkChannel, checkDB);
+      clickedLinkChannel.notificationCallbacks = listener;
+      clickedLinkChannel.asyncOpen(listener, null);
+
+      SimpleTest.waitForExplicitFinish();
+
+     </script>
+   </pre>
+ </body>
+</html>

@@ -216,7 +216,7 @@
             <xul:hbox flex="1" class="blocklistedBox attention" align="center">
               <xul:label value="&blocklisted.label;" crop="end"/>
               <xul:label anonid="blocklistMoreInfo" class="text-link" value="&moreInfo.label;"
-                         onclick="openURL(this.getAttribute('moreInfoURL'));"/>
+                         onclick="if (event.button == 0) { openURL(this.getAttribute('moreInfoURL')); }" />
             </xul:hbox>
           </xul:vbox>
           <xul:hbox anonid="selectedButtons" flex="1" class="selectedButtons">
@@ -507,7 +507,7 @@
               <xul:hbox pack="start">
                 <xul:label class="addonLearnMore text-link" xbl:inherits="homepageURL"
                            value="&searchResultHomepage.value;"
-                           onclick="openURL(this.getAttribute('homepageURL'));"/>
+                           onclick="if (event.button == 0) { openURL(this.getAttribute('homepageURL')); }"/>
               </xul:hbox>
               <xul:spacer flex="1"/>
               <xul:hbox anonid="selectedButtons" class="selectedButtons">
@@ -615,7 +615,7 @@
   <binding id="status-footer-recommended">
     <content align="end">
       <xul:label class="text-link" xbl:inherits="recommendedURL=link" value="&recommendedResults.label;"
-                 onclick="openURL(this.getAttribute('recommendedURL'));"/>
+                 onclick="if (event.button == 0) { openURL(this.getAttribute('recommendedURL')); }" />
     </content>
   </binding>
 
@@ -623,7 +623,7 @@
     <content align="stretch">
       <xul:hbox align="center">
         <xul:label class="text-link" xbl:inherits="searchURL=link" anonid="searchLink"
-                   onclick="openURL(this.getAttribute('searchURL'));"/>
+                   onclick="if (event.button == 0) { openURL(this.getAttribute('searchURL')); }"/>
         <xul:spacer flex="1"/>
         <xul:button command="cmd_resetSearch" label="&resetSearch.label;"/>
       </xul:hbox>

@@ -49,10 +49,8 @@ struct nsQuoteNode : public nsGenConNode {
   // Quote depth before this quote, which is always non-negative.
   PRInt32 mDepthBefore;
 
-
-  nsQuoteNode(nsStyleContentType& aType, nsIFrame* aPseudoFrame,
-              PRUint32 aContentIndex)
-    : nsGenConNode(aPseudoFrame, aContentIndex)
+  nsQuoteNode(nsStyleContentType& aType, PRUint32 aContentIndex)
+    : nsGenConNode(aContentIndex)
     , mType(aType)
     , mDepthBefore(0)
   {
@@ -63,6 +61,9 @@ struct nsQuoteNode : public nsGenConNode {
                  "incorrect type");
     NS_ASSERTION(aContentIndex >= 0, "out of range");
   }
+
+  virtual PRBool InitTextFrame(nsGenConList* aList, 
+          nsIFrame* aPseudoFrame, nsIFrame* aTextFrame);
 
   // is this 'open-quote' or 'no-open-quote'?
   PRBool IsOpenQuote() {
@@ -79,11 +80,6 @@ struct nsQuoteNode : public nsGenConNode {
   PRBool IsRealQuote() {
     return mType == eStyleContentType_OpenQuote ||
            mType == eStyleContentType_CloseQuote;
-  }
-
-  // is this 'no-open-quote' or 'no-close-quote'?
-  PRBool IsHiddenQuote() {
-    return !IsRealQuote();
   }
 
   // Depth of the quote for *this* node.  Either non-negative or -1.

@@ -172,120 +172,13 @@ CERT_ConvertAndDecodeCertificate(char *certstr)
     return cert;
 }
 
-#define NS_CERT_HEADER "-----BEGIN CERTIFICATE-----"
-#define NS_CERT_TRAILER "-----END CERTIFICATE-----"
+static const char NS_CERT_HEADER[]  = "-----BEGIN CERTIFICATE-----";
+static const char NS_CERT_TRAILER[] = "-----END CERTIFICATE-----";
+#define NS_CERT_HEADER_LEN  ((sizeof NS_CERT_HEADER) - 1)
+#define NS_CERT_TRAILER_LEN ((sizeof NS_CERT_TRAILER) - 1)
 
-#define CERTIFICATE_TYPE_STRING "certificate"
+static const char CERTIFICATE_TYPE_STRING[] = "certificate";
 #define CERTIFICATE_TYPE_LEN (sizeof(CERTIFICATE_TYPE_STRING)-1)
-
-CERTPackageType
-CERT_CertPackageType(SECItem *package, SECItem *certitem)
-{
-    unsigned char *cp;
-    unsigned int seqLen, seqLenLen;
-    SECItem oiditem;
-    SECOidData *oiddata;
-    CERTPackageType type = certPackageNone;
-    
-    cp = package->data;
-
-    /* is a DER encoded certificate of some type? */
-    if ( ( *cp  & 0x1f ) == SEC_ASN1_SEQUENCE ) {
-	cp++;
-	
-	if ( *cp & 0x80) {
-	    /* Multibyte length */
-	    seqLenLen = cp[0] & 0x7f;
-	    
-	    switch (seqLenLen) {
-	      case 4:
-		seqLen = ((unsigned long)cp[1]<<24) |
-		    ((unsigned long)cp[2]<<16) | (cp[3]<<8) | cp[4];
-		break;
-	      case 3:
-		seqLen = ((unsigned long)cp[1]<<16) | (cp[2]<<8) | cp[3];
-		break;
-	      case 2:
-		seqLen = (cp[1]<<8) | cp[2];
-		break;
-	      case 1:
-		seqLen = cp[1];
-		break;
-	      default:
-		/* indefinite length */
-		seqLen = 0;
-	    }
-	    cp += ( seqLenLen + 1 );
-
-	} else {
-	    seqLenLen = 0;
-	    seqLen = *cp;
-	    cp++;
-	}
-
-	/* check entire length if definite length */
-	if ( seqLen || seqLenLen ) {
-	    if ( package->len != ( seqLen + seqLenLen + 2 ) ) {
-		/* not a DER package */
-		return(type);
-	    }
-	}
-	
-	/* check the type string */
-	/* netscape wrapped DER cert */
-	if ( ( cp[0] == SEC_ASN1_OCTET_STRING ) &&
-	    ( cp[1] == CERTIFICATE_TYPE_LEN ) &&
-	    ( PORT_Strcmp((char *)&cp[2], CERTIFICATE_TYPE_STRING) ) ) {
-	    
-	    cp += ( CERTIFICATE_TYPE_LEN + 2 );
-
-	    /* it had better be a certificate by now!! */
-	    if ( certitem ) {
-		certitem->data = cp;
-		certitem->len = package->len -
-		    ( cp - (unsigned char *)package->data );
-	    }
-	    type = certPackageNSCertWrap;
-	    
-	} else if ( cp[0] == SEC_ASN1_OBJECT_ID ) {
-	    /* XXX - assume DER encoding of OID len!! */
-	    oiditem.len = cp[1];
-	    oiditem.data = (unsigned char *)&cp[2];
-	    oiddata = SECOID_FindOID(&oiditem);
-	    if ( oiddata == NULL ) {
-		/* failure */
-		return(type);
-	    }
-
-	    if ( certitem ) {
-		certitem->data = package->data;
-		certitem->len = package->len;
-	    }
-	    
-	    switch ( oiddata->offset ) {
-	      case SEC_OID_PKCS7_SIGNED_DATA:
-		type = certPackagePKCS7;
-		break;
-	      case SEC_OID_NS_TYPE_CERT_SEQUENCE:
-		type = certPackageNSCertSeq;
-		break;
-	      default:
-		break;
-	    }
-	    
-	} else {
-	    /* it had better be a certificate by now!! */
-	    if ( certitem ) {
-		certitem->data = package->data;
-		certitem->len = package->len;
-	    }
-	    
-	    type = certPackageCert;
-	}
-    }
-
-    return(type);
-}
 
 /*
  * read an old style ascii or binary certificate chain
@@ -436,10 +329,11 @@ notder:
     cl = certlen;
 
     /* find the beginning marker */
-    while ( cl > sizeof(NS_CERT_HEADER) ) {
+    while ( cl > NS_CERT_HEADER_LEN ) {
 	if ( !PORT_Strncasecmp((char *)cp, NS_CERT_HEADER,
-			     sizeof(NS_CERT_HEADER)-1) ) {
-	    cp = cp + sizeof(NS_CERT_HEADER);
+			        NS_CERT_HEADER_LEN) ) {
+	    cl -= NS_CERT_HEADER_LEN;
+	    cp += NS_CERT_HEADER_LEN;
 	    certbegin = cp;
 	    break;
 	}
@@ -459,9 +353,9 @@ notder:
 
     if ( certbegin ) {
 	/* find the ending marker */
-	while ( cl > sizeof(NS_CERT_TRAILER) ) {
+	while ( cl > NS_CERT_TRAILER_LEN ) {
 	    if ( !PORT_Strncasecmp((char *)cp, NS_CERT_TRAILER,
-				 sizeof(NS_CERT_TRAILER)-1) ) {
+				   NS_CERT_TRAILER_LEN) ) {
 		certend = (unsigned char *)cp;
 		break;
 	    }

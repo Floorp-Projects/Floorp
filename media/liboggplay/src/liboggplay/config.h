@@ -8,7 +8,7 @@
 #define HAVE_FISHSOUND 
 
 /* Define if we have GLUT. */
-/* #undef HAVE_GLUT */
+#define HAVE_GLUT 
 
 /* Define if have Imlib2 */
 /* #undef HAVE_IMLIB2 */
@@ -85,3 +85,4 @@
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
+#undef HAVE_GLUT

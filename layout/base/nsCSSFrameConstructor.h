@@ -67,6 +67,7 @@ class nsIDOMHTMLSelectElement;
 class nsPresContext;
 class nsStyleChangeList;
 class nsIFrame;
+struct nsGenConInitializer;
 
 struct nsFindFrameHint
 {
@@ -329,21 +330,34 @@ private:
                                   nsCOMArray<nsIContent>& aGeneratedContent,
                                   nsIContent** aNewContent,
                                   nsIFrame** aNewFrame);
-  
-  nsresult CreateGeneratedFrameFor(nsIFrame*             aParentFrame,
-                                   nsIContent*           aContent,
-                                   nsStyleContext*       aStyleContext,
-                                   const nsStyleContent* aStyleContent,
-                                   PRUint32              aContentIndex,
-                                   nsCOMArray<nsIContent>& aGeneratedContent,
-                                   nsIFrame**            aFrame);
 
-  PRBool CreateGeneratedContentFrame(nsFrameConstructorState& aState,
-                                     nsIFrame*                aFrame,
-                                     nsIContent*              aContent,
-                                     nsStyleContext*          aStyleContext,
-                                     nsIAtom*                 aPseudoElement,
-                                     nsIFrame**               aResult);
+  /**
+   * Create a text node containing the given string. If aText is non-null
+   * then we also set aText to the returned node.
+   */
+  already_AddRefed<nsIContent> CreateGenConTextNode(const nsString& aString,  
+                                                    nsCOMPtr<nsIDOMCharacterData>* aText,
+                                                    nsGenConInitializer* aInitializer);
+
+  /**
+   * Create a content node for the given generated content style.
+   * The caller takes care of making it SetNativeAnonymous, binding it
+   * to the document, and creating frames for it.
+   * @param aParentContent is the node that has the before/after style
+   * @param aStyleContext is the 'before' or 'after' pseudo-element
+   * style context
+   * @param aContentIndex is the index of the content item to create
+   */
+  already_AddRefed<nsIContent> CreateGeneratedContent(nsIContent*     aParentContent,
+                                                      nsStyleContext* aStyleContext,
+                                                      PRUint32        aContentIndex);
+
+  void CreateGeneratedContentFrame(nsFrameConstructorState& aState,
+                                   nsIFrame*                aFrame,
+                                   nsIContent*              aContent,
+                                   nsStyleContext*          aStyleContext,
+                                   nsIAtom*                 aPseudoElement,
+                                   nsFrameItems&            aFrameItems);
 
   // This method can change aFrameList: it can chop off the end and
   // put it in a special sibling of aParentFrame.  It can also change
