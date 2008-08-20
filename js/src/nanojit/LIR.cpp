@@ -832,7 +832,7 @@ namespace nanojit
 
 		LInsp i;
 		if (v == LIR_qjoin && oprnd1->isop(LIR_qlo) && oprnd2->isop(LIR_qhi) 
-			&& (i = oprnd1->oprnd1()) == oprnd1->oprnd1()) {
+			&& (i = oprnd1->oprnd1()) == oprnd2->oprnd1()) {
 			// qjoin(qlo(x),qhi(x)) == x
 			return i;
 		}
