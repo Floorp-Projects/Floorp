@@ -5152,12 +5152,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     }
     break;
   case WM_DWMCOMPOSITIONCHANGED:
+    BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
+    DispatchStandardEvent(NS_THEMECHANGED);
     if (nsUXThemeData::CheckForCompositor() && mTransparencyMode == eTransparencyGlass) {
       MARGINS margins = { -1, -1, -1, -1 };
       nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(mWnd, &margins);
     }
-    BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
-    DispatchStandardEvent(NS_THEMECHANGED);
+    Invalidate(PR_FALSE);
     break;
   }
 
@@ -5364,7 +5365,11 @@ DWORD nsWindow::WindowStyle()
       break;
 
     case eWindowType_popup:
-      style = WS_OVERLAPPED | WS_POPUP;
+      if (mTransparencyMode == eTransparencyGlass) {
+        style = WS_OVERLAPPED | WS_CAPTION;
+      } else {
+        style = WS_OVERLAPPED | WS_POPUP;
+      }
       break;
 
     default:
@@ -7868,10 +7873,7 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
     return;
   }
 
-  LONG style, exStyle;
-
-  style = topWindow->WindowStyle();
-  exStyle = topWindow->WindowExStyle();
+  LONG style = 0, exStyle = 0;
 
   switch(aMode) {
     case eTransparencyTransparent:
@@ -7881,6 +7883,10 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
       topWindow->mTransparencyMode = aMode;
       break;
   }
+
+  style |= topWindow->WindowStyle();
+  exStyle |= topWindow->WindowExStyle();
+
   ::SetWindowLongW(hWnd, GWL_STYLE, style);
   ::SetWindowLongW(hWnd, GWL_EXSTYLE, exStyle);
 
