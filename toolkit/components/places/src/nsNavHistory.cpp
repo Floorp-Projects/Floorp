@@ -218,8 +218,8 @@
 // character-set annotation
 #define CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
 
-NS_IMPL_ADDREF(nsNavHistory)
-NS_IMPL_RELEASE(nsNavHistory)
+NS_IMPL_THREADSAFE_ADDREF(nsNavHistory)
+NS_IMPL_THREADSAFE_RELEASE(nsNavHistory)
 
 NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryService)
