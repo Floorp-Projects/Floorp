@@ -2799,7 +2799,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         } else {
             named = OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom),
                                         OBJECT_TO_JSVAL(proto),
-                                        NULL, NULL,
+                                        JS_PropertyStub, JS_PropertyStub,
                                         (clasp->flags & JSCLASS_IS_ANONYMOUS)
                                         ? JSPROP_READONLY | JSPROP_PERMANENT
                                         : 0,
@@ -2811,7 +2811,8 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         ctor = proto;
     } else {
         /* Define the constructor function in obj's scope. */
-        fun = js_DefineFunction(cx, obj, atom, constructor, nargs, 0);
+        fun = js_DefineFunction(cx, obj, atom, constructor, nargs,
+                                JSFUN_STUB_GSOPS);
         named = (fun != NULL);
         if (!fun)
             goto bad;
