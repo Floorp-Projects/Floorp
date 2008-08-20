@@ -531,14 +531,8 @@
         <body><![CDATA[
           var cdoc = this.browser.contentDocument;
 
-          // Need to adjust for the toolbar height, etc.
-          var browserTop = this.browser.getBoundingClientRect().top;
-
-          // Scroll the browser so that elementFromPoint works properly
-          var [pageOffsetX, pageOffsetY] = this._scrollAndGetOffset();
-
-          var element =  cdoc.elementFromPoint((aX / this._zoomLevel) + pageOffsetX,
-                                               (aY / this._zoomLevel) + pageOffsetY - browserTop);
+          var [x, y] = this._clientToContentCoords(aX, aY);
+          var element =  cdoc.elementFromPoint(x, y);
 
           // Reset scroll state
           this.browser.contentWindow.scrollTo(0, 0);
@@ -562,22 +556,6 @@
         ]]></body>
       </method>
 
-      <method name="_scrollAndGetOffset">
-        <parameter name="aX"/>
-        <parameter name="aY"/>
-        <body><![CDATA[
-          var cwin = this.browser.contentWindow;
-          cwin.scrollTo(this.dragData.pageX, this.dragData.pageY);
-
-          // Might not have been able to scroll all the way if we're zoomed in,
-          // the caller might need to account for that difference.
-          var pageOffsetX = this.dragData.pageX - cwin.scrollX;
-          var pageOffsetY = this.dragData.pageY - cwin.scrollY;
-
-          return [pageOffsetX, pageOffsetY];
-        ]]></body>
-      </method>
-
       <method name="_redispatchMouseEvent">
         <parameter name="aEvent"/>
         <parameter name="aType"/>
@@ -587,26 +565,48 @@
             return;
           }
 
-          // Scroll the browser so that the event is targeted properly
-          var [pageOffsetX, pageOffsetY] = this._scrollAndGetOffset();
-
-          // Need to adjust for the toolbar height, etc.
-          var browserTop = this.browser.getBoundingClientRect().top;
-          var clickOffsetX = aEvent.clientX / this._zoomLevel;
-          var clickOffsetY = (aEvent.clientY - browserTop) / this._zoomLevel;
+          var [x, y] = this._clientToContentCoords(aEvent.clientX, aEvent.clientY);
 
           var cwin = this.browser.contentWindow;
           var cwu = cwin.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                         .getInterface(Components.interfaces.nsIDOMWindowUtils);
           cwu.sendMouseEvent(aType || aEvent.type,
-                             pageOffsetX + clickOffsetX,
-                             pageOffsetY + clickOffsetY,
+                             x, y,
                              aEvent.button || 0,
                              aEvent.detail || 1,
                              0);
 
           // Reset scroll state
           cwin.scrollTo(0, 0);
+        ]]></body>
+      </method>
+
+      <!-- Given a set of client coordinates (relative to the app window),
+           scrolls the content window as close to the clicked on content item
+           as possible, and returns the remaining offsets into the content
+           window if the object isn't at 0, 0. Callers should be sure to reset
+           scroll state after calling this method.
+      -->
+      <method name="_clientToContentCoords">
+        <parameter name="aClientX"/>
+        <parameter name="aClientY"/>
+        <body><![CDATA[
+          // Need to adjust for the toolbar height, etc.
+          var browserTop = this.browser.getBoundingClientRect().top;
+
+          var clickOffsetX = (aClientX / this._zoomLevel) + this.dragData.pageX;
+          var clickOffsetY = ((aClientY - browserTop) / this._zoomLevel) + this.dragData.pageY;
+
+          // Scroll the browser so that the event is targeted properly
+          var cwin = this.browser.contentWindow;
+          cwin.scrollTo(clickOffsetX, clickOffsetY);
+
+          // Might not have been able to scroll all the way if we're zoomed in,
+          // so we need to account for that difference.
+          var pageOffsetX = clickOffsetX - cwin.scrollX;
+          var pageOffsetY = clickOffsetY - cwin.scrollY;
+
+          return [pageOffsetX, pageOffsetY];
         ]]></body>
       </method>
 
@@ -1047,8 +1047,20 @@
               this.deckbrowser._zoomed = false;
             } else {
               var element = this.deckbrowser.elementFromPoint(aEvent.clientX, aEvent.clientY);
-              if (!element)
-                return; //XXX when does this happen?
+              if (!element) {
+                Components.utils.reportError("elementFromPoint returned null\n");
+                return;
+              }
+
+              // Find the nearest non-inline ancestor
+              while (element.parentNode) {
+                var display = window.getComputedStyle(element, "").getPropertyValue("display");
+                var zoomable = /table/.test(display) || /block/.test(display);
+                if (zoomable)
+                  break;
+
+                element = element.parentNode;
+              }
 
               // Remember pageX/pageY
               [dragData.oldPageX, dragData.oldPageY] = [dragData.pageX, dragData.pageY];
