@@ -996,7 +996,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
   
-  CheckInvalidateSizeChange(PresContext(), aDesiredSize, aReflowState);
+  CheckInvalidateSizeChange(aDesiredSize);
 
   FinishAndStoreOverflow(&aDesiredSize);
   aDesiredSize.mCarriedOutBottomMargin = carriedOutBottomMargin;
