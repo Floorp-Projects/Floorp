@@ -19,7 +19,7 @@
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jdct.h"		/* Private declarations for DCT subsystem */
-#ifdef HAVE_SSE2_INTRINSICS
+#ifdef HAVE_SSE2_INTEL_MNEMONICS
 extern int SSE2Available;
 #endif
 
@@ -80,6 +80,7 @@ typedef union {
 #endif
 #endif
 
+#ifdef HAVE_SSE2_INTEL_MNEMONICS
 GLOBAL(void)
 jpeg_idct_islow_sse2 (
 	j_decompress_ptr cinfo, 
@@ -87,7 +88,16 @@ jpeg_idct_islow_sse2 (
 	JCOEFPTR coef_block,
 	JSAMPARRAY output_buf, 
 	JDIMENSION output_col);
+#endif /* HAVE_SSE2_INTEL_MNEMONICS */
 
+#ifdef HAVE_SSE2_INTRINSICS
+jpeg_idct_ifast_sse2 (
+        j_decompress_ptr cinfo, 
+        jpeg_component_info * compptr,
+        JCOEFPTR coef_block,
+        JSAMPARRAY output_buf, 
+        JDIMENSION output_col);
+#endif /* HAVE_SSE2_INTRINSICS */
 
 /*
  * Prepare for an output pass.
@@ -147,21 +157,13 @@ start_pass (j_decompress_ptr cinfo)
 #endif
 #ifdef DCT_IFAST_SUPPORTED
       case JDCT_IFAST:
-#ifdef HAVE_SSE2_INTEL_MNEMONICS
-		if (SSE2Available==1) 
-		{
-			method_ptr = jpeg_idct_islow_sse2;
-			method = JDCT_ISLOW;
-		}
-		else
-		{
-			method_ptr = jpeg_idct_ifast;
-			method = JDCT_IFAST;
-		}
+#ifdef HAVE_SSE2_INTRINSICS
+        method_ptr = jpeg_idct_ifast_sse2;
+        method = JDCT_IFAST;
 #else
-		method_ptr = jpeg_idct_ifast;
-		method = JDCT_IFAST;
-#endif /* HAVE_SSE2_INTEL_MNEMONICS */
+        method_ptr = jpeg_idct_ifast;
+        method = JDCT_IFAST;
+#endif /* HAVE_SSE2_INTRINSICS */
 	break;
 
 #endif
@@ -297,9 +299,21 @@ jinit_inverse_dct (j_decompress_ptr cinfo)
   for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;
        ci++, compptr++) {
     /* Allocate and pre-zero a multiplier table for each component */
+#ifdef HAVE_SSE2_INTRINSICS
+
+    /* Align dct_table on 16 bytes for SSE2 IDCT IFAST optimization */
+
+    PRUptrdiff buffer_pointer;
+
+    buffer_pointer = (PRUptrdiff)
+      (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
+                                  SIZEOF(multiplier_table) + 15);
+    compptr->dct_table = (void *) ((buffer_pointer + 15) & ~15);
+#else
     compptr->dct_table =
       (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				  SIZEOF(multiplier_table));
+#endif /* HAVE_SSE2_INTRINSICS */
     MEMZERO(compptr->dct_table, SIZEOF(multiplier_table));
     /* Mark multiplier table not yet set up for any method */
     idct->cur_method[ci] = -1;
