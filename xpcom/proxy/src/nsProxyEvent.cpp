@@ -180,6 +180,8 @@ nsProxyObjectCallInfo::Run()
                                mParameterCount,
                                mParameterList);
 
+    PROXY_LOG(("PROXY(%p): Run Returns [%d]\n", this, mResult));
+
     if (IsSync()) {
         PostCompleted();
     }
