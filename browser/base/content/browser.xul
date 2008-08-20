@@ -235,7 +235,7 @@
       <label crop="center" flex="1"/>
     </tooltip>
 
-    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true">
+    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" noautofocus="true">
       <html:div id="ctrlTab-label-parent">
         <html:span id="ctrlTab-label" height="100%"></html:span>
       </html:div>
