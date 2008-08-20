@@ -167,9 +167,9 @@ private:
 
     nsresult BuildNormalizedSpec(const char *spec);
 
-    PRBool   SegmentIs(const URLSegment &s1, const char *val);
-    PRBool   SegmentIs(const char* spec, const URLSegment &s1, const char *val);
-    PRBool   SegmentIs(const URLSegment &s1, const char *val, const URLSegment &s2);
+    PRBool   SegmentIs(const URLSegment &s1, const char *val, PRBool ignoreCase = PR_FALSE);
+    PRBool   SegmentIs(const char* spec, const URLSegment &s1, const char *val, PRBool ignoreCase = PR_FALSE);
+    PRBool   SegmentIs(const URLSegment &s1, const char *val, const URLSegment &s2, PRBool ignoreCase = PR_FALSE);
 
     PRInt32  ReplaceSegment(PRUint32 pos, PRUint32 len, const char *val, PRUint32 valLen);
     PRInt32  ReplaceSegment(PRUint32 pos, PRUint32 len, const nsACString &val);

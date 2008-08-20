@@ -341,10 +341,10 @@ nsSeamonkeyProfileMigrator::FillProfileDataFromSeamonkeyRegistry()
 #define F(a) nsSeamonkeyProfileMigrator::a
 
 #define MAKEPREFTRANSFORM(pref, newpref, getmethod, setmethod) \
-  { pref, newpref, F(Get##getmethod), F(Set##setmethod), PR_FALSE, -1 }
+  { pref, newpref, F(Get##getmethod), F(Set##setmethod), PR_FALSE, { -1 } }
 
 #define MAKESAMETYPEPREFTRANSFORM(pref, method) \
-  { pref, 0, F(Get##method), F(Set##method), PR_FALSE, -1 }
+  { pref, 0, F(Get##method), F(Set##method), PR_FALSE, { -1 } }
 
 
 static 
@@ -707,7 +707,6 @@ nsSeamonkeyProfileMigrator::CopyPasswords(PRBool aReplace)
 
     importer->InitWithFile(signonsFile, nsnull);
 
-    nsresult rv;
     PRUint32 count;
     nsILoginInfo **logins;
 

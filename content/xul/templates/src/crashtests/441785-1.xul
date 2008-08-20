@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="reftest-wait">
+   <tree flex="20" id="t" ref="urn:data:row" datasources="" seltype="single" >
+     <treecols> 
+      <treecol flex="1" id="id" label="id" sort="rdf:http://dummy/rdf#id" />
+      <splitter class="tree-splitter"/>
+      <treecol flex="1" id="title" label="title" sort="rdf:http://dummy/rdf#title" sortActive="true" sortDirection="ascending" /><splitter class="tree-splitter"/>
+     </treecols>
+     <template>
+       <treechildren>
+         <treeitem uri="rdf:*" seltype="single">
+           <treerow >
+             <treecell label="rdf:http://dummy/rdf#id"/>
+             <treecell label="rdf:http://dummy/rdf#title"/>
+           </treerow>
+         </treeitem>
+       </treechildren>
+     </template>
+   </tree>
+
+<script type="application/x-javascript">
+<![CDATA[
+
+var tree = document.getElementById('t');
+
+function runTest() {
+  tree.setAttribute('datasources', '441785-1.rdf');
+  tree.setAttribute('datasources', '441785-2.rdf');
+  
+  setTimeout('continueTest()', 1000);
+}
+
+function continueTest() {
+  if (tree.view && tree.view.rowCount > 1) {
+    //netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    try {
+      window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+              .getInterface(Components.interfaces.nsIDOMWindowUtils)
+              .garbageCollect();
+    } 
+    catch (e) { }
+    // Hit the bug, crash 
+    // (not exactly the same kind of crash as 441785, but from the same cause)
+    tree.parentNode.removeChild(tree);
+  }
+  document.documentElement.className = "";
+}
+
+window.addEventListener("load", runTest, false);
+
+]]>
+</script>
+</window>

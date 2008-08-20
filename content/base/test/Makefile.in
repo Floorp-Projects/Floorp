@@ -117,6 +117,8 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug371576-4.html \
 		test_bug371576-5.html \
 		test_bug372086.html \
+		test_bug372964.html \
+		test_bug372964-2.html \
 		test_bug373181.xhtml \
 		test_bug375314.html \
 		test_bug378969.html \
@@ -183,6 +185,9 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug428847-2.xhtml \
 		test_bug425201.html \
 		test_bug431833.html \
+		test_bug435425.html \
+		bug435425.sjs \
+		bug435425_redirect.sjs \
 		test_bug438519.html \
 		test_bug444722.html \
 		test_text_replaceWholeText.html \
@@ -194,6 +199,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_NodeIterator_mutations_2.html \
 		test_bug28293.html \
 		file_bug28293.sjs \
+		test_title.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

@@ -266,14 +266,6 @@ typedef struct tagGLYPHSET {
 #define MA_ACTIVATE 1
 #endif
 
-#ifndef WM_ACTIVATEAPP
-#define WM_ACTIVATEAPP WM_ACTIVATE
-#endif
-
-#ifndef WM_MOUSEACTIVATE
-#define WM_MOUSEACTIVATE WM_ACTIVATE
-#endif
-
 typedef struct WINDOWPLACEMENT
 {
   UINT  length;

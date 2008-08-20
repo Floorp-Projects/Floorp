@@ -51,6 +51,11 @@
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
 
+#if defined(MOZ_WIDGET_QT)
+#include <qwidget.h>
+#include <qapplication.h>
+#endif
+
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"
 #include "MacApplicationDelegate.h"
@@ -269,7 +274,9 @@ static char **gRestartArgv;
 
 #if defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
+#ifdef MOZ_X11
 #include <gdk/gdkx.h>
+#endif /* MOZ_X11 */
 #include "nsGTKToolkit.h"
 #endif
 
@@ -2386,6 +2393,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
   // gdk_display_manager_set_default_display (gdk_display_manager_get(), NULL)
   // was also broken.
   if (gtk_check_version(2,10,0) != NULL) {
+#ifdef MOZ_X11
     // Version check failed - broken gdk_display_close.
     //
     // Let the gdk structures leak but at least close the Display,
@@ -2393,6 +2401,9 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     Display* dpy = GDK_DISPLAY_XDISPLAY(display);
     if (!theme_is_qt)
       XCloseDisplay(dpy);
+#else
+    gdk_display_close(display);
+#endif /* MOZ_X11 */
   }
   else {
     if (!theme_is_qt)
@@ -2693,14 +2704,22 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   PR_SetEnv("MOZ_LAUNCHED_CHILD=");
 
   gRestartArgc = gArgc;
-  gRestartArgv = (char**) malloc(sizeof(char*) * (gArgc + 1));
+  gRestartArgv = (char**) malloc(sizeof(char*) * (gArgc + 1 + (override ? 2 : 0)));
   if (!gRestartArgv) return 1;
 
   int i;
   for (i = 0; i < gArgc; ++i) {
     gRestartArgv[i] = gArgv[i];
   }
-  gRestartArgv[gArgc] = nsnull;
+  
+  // Add the -override argument back (it is removed automatically be CheckArg) if there is one
+  if (override) {
+    gRestartArgv[gRestartArgc++] = const_cast<char*>("-override");
+    gRestartArgv[gRestartArgc++] = const_cast<char*>(override);
+  }
+
+  gRestartArgv[gRestartArgc] = nsnull;
+  
 
 #if defined(XP_OS2)
   PRBool StartOS2App(int aArgc, char **aArgv);
@@ -2784,6 +2803,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
 #endif
 
+#if defined(MOZ_WIDGET_QT)
+    QApplication app(gArgc, gArgv);
+#endif
 #if defined(MOZ_WIDGET_GTK2)
 #ifdef MOZ_MEMORY
     // Disable the slice allocator, since jemalloc already uses similar layout
@@ -2807,22 +2829,50 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (!gtk_parse_args(&gArgc, &gArgv))
       return 1;
 
-    GdkDisplay* display = nsnull;
-    {
-      // display_name is owned by gdk.
-      const char *display_name = gdk_get_display_arg_name();
+    // display_name is owned by gdk.
+    const char *display_name = gdk_get_display_arg_name();
+    if (display_name) {
+      SaveWordToEnv("DISPLAY", nsDependentCString(display_name));
+    } else {
+      display_name = PR_GetEnv("DISPLAY");
       if (!display_name) {
-        display_name = PR_GetEnv("DISPLAY");
-        if (!display_name) {
-          PR_fprintf(PR_STDERR, "Error: no display specified\n");
-          return 1;
-        }
-      }
-      display = gdk_display_open(display_name);
-      if (!display) {
-        PR_fprintf(PR_STDERR, "Error: cannot open display: %s\n", display_name);
+        PR_fprintf(PR_STDERR, "Error: no display specified\n");
         return 1;
       }
+    }
+#endif /* MOZ_WIDGET_GTK2 */
+
+#ifdef MOZ_ENABLE_XREMOTE
+    // handle -remote now that xpcom is fired up
+
+    const char* xremotearg;
+    ar = CheckArg("remote", PR_TRUE, &xremotearg);
+    if (ar == ARG_BAD) {
+      PR_fprintf(PR_STDERR, "Error: -remote requires an argument\n");
+      return 1;
+    }
+    const char* desktopStartupIDPtr =
+      desktopStartupID.IsEmpty() ? nsnull : desktopStartupID.get();
+    if (ar) {
+      return HandleRemoteArgument(xremotearg, desktopStartupIDPtr);
+    }
+
+    if (!PR_GetEnv("MOZ_NO_REMOTE")) {
+      // Try to remote the entire command line. If this fails, start up normally.
+      RemoteResult rr = RemoteCommandLine(desktopStartupIDPtr);
+      if (rr == REMOTE_FOUND)
+        return 0;
+      else if (rr == REMOTE_ARG_BAD)
+        return 1;
+    }
+#endif
+
+#if defined(MOZ_WIDGET_GTK2)
+    GdkDisplay* display = nsnull;
+    display = gdk_display_open(display_name);
+    if (!display) {
+      PR_fprintf(PR_STDERR, "Error: cannot open display: %s\n", display_name);
+      return 1;
     }
     gdk_display_manager_set_default_display (gdk_display_manager_get(),
                                              display);
@@ -2859,31 +2909,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (NS_FAILED(rv) || !canRun) {
       return 1;
     }
-
-#ifdef MOZ_ENABLE_XREMOTE
-    // handle -remote now that xpcom is fired up
-
-    const char* xremotearg;
-    ar = CheckArg("remote", PR_TRUE, &xremotearg);
-    if (ar == ARG_BAD) {
-      PR_fprintf(PR_STDERR, "Error: -remote requires an argument\n");
-      return 1;
-    }
-    const char* desktopStartupIDPtr =
-      desktopStartupID.IsEmpty() ? nsnull : desktopStartupID.get();
-    if (ar) {
-      return HandleRemoteArgument(xremotearg, desktopStartupIDPtr);
-    }
-
-    if (!PR_GetEnv("MOZ_NO_REMOTE")) {
-      // Try to remote the entire command line. If this fails, start up normally.
-      RemoteResult rr = RemoteCommandLine(desktopStartupIDPtr);
-      if (rr == REMOTE_FOUND)
-        return 0;
-      else if (rr == REMOTE_ARG_BAD)
-        return 1;
-    }
-#endif
 
 #if defined(MOZ_UPDATER)
   // Check for and process any available updates

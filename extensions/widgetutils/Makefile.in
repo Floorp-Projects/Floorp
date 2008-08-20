@@ -1,0 +1,33 @@
+
+DEPTH=../..
+topsrcdir=@top_srcdir@
+srcdir=@srcdir@
+VPATH=@srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE	= widgetutils
+XPI_NAME = widgetutils
+
+ifdef MOZ_XUL_APP
+INSTALL_EXTENSION_ID = widgetutils@extensions.mozilla.org
+DIST_FILES = install.rdf
+NO_JAR_AUTO_REG        = 1
+USE_EXTENSION_MANIFEST = 1
+XPI_PKGNAME            = widgetutils-$(MOZ_APP_VERSION)
+
+XULAPP_DEFINES = \
+	-DFIREFOX_VERSION=$(FIREFOX_VERSION) \
+	-DTHUNDERBIRD_VERSION=$(THUNDERBIRD_VERSION) \
+	-DEXTENSION_VERSION=$(MOZILLA_VERSION) \
+	$(NULL)
+
+ifdef TARGET_XPCOM_ABI
+XULAPP_DEFINES += -DEM_ABI=$(OS_TARGET)_$(TARGET_XPCOM_ABI)
+endif
+endif
+
+DIRS    = src
+#DIRS   += public
+
+include $(topsrcdir)/config/rules.mk

@@ -66,7 +66,6 @@ STACK_PASS_TESTCASES = \
 OUTPARAMS_WARNING_TESTCASES = \
   e1.cpp \
   e2.cpp \
-  e3.cpp \
   e4.cpp \
   e5.cpp \
   e6.cpp \
@@ -96,6 +95,8 @@ OUTPARAMS_PASS_TESTCASES = \
   o14.cpp \
   o15.cpp \
   o16.cpp \
+  onull.cpp \
+  onull2.cpp \
   $(NULL)
 
 STATIC_FAILURE_TESTCASES = \

@@ -245,7 +245,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
 
 #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
   /* Ignore unused chunks */
-  if (!gfxPlatform::IsCMSEnabled()) {
+  if (gfxPlatform::GetCMSMode() == eCMSMode_Off) {
     png_set_keep_unknown_chunks(mPNG, 1, color_chunks, 2);
   }
   png_set_keep_unknown_chunks(mPNG, 1, unused_chunks,
@@ -524,15 +524,32 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     png_set_expand(png_ptr);
 
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-    png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, NULL);
-    png_set_expand(png_ptr);
+    int sample_max = (1 << bit_depth);
+    png_color_16p trans_values;
+    png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &trans_values);
+    /* libpng doesn't reject a tRNS chunk with out-of-range samples
+       so we check it here to avoid setting up a useless opacity
+       channel or producing unexpected transparent pixels when using
+       libpng-1.2.19 through 1.2.26 (bug #428045) */
+    if ((color_type == PNG_COLOR_TYPE_GRAY &&
+       (int)trans_values->gray > sample_max) ||
+       (color_type == PNG_COLOR_TYPE_RGB &&
+       ((int)trans_values->red > sample_max ||
+       (int)trans_values->green > sample_max ||
+       (int)trans_values->blue > sample_max)))
+       {
+         /* clear the tRNS valid flag and release tRNS memory */
+         png_free_data(png_ptr, info_ptr, PNG_FREE_TRNS, 0);
+       }
+    else
+       png_set_expand(png_ptr);
   }
 
   if (bit_depth == 16)
     png_set_strip_16(png_ptr);
 
   PRUint32 inType, intent, pIntent;
-  if (gfxPlatform::IsCMSEnabled()) {
+  if (gfxPlatform::GetCMSMode() != eCMSMode_Off) {
     intent = gfxPlatform::GetRenderingIntent();
     decoder->mInProfile = PNGGetColorProfile(png_ptr, info_ptr,
                                              color_type, &inType, &pIntent);
@@ -542,21 +559,27 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   }
   if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
     PRUint32 outType;
+    PRUint32 dwFlags = 0;
 
     if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
       outType = TYPE_RGBA_8;
     else
       outType = TYPE_RGB_8;
 
+    /* Determine if we can use the optimized floating point path. */
+    if ((inType == outType) && 
+        ((inType == TYPE_RGB_8) || (inType == TYPE_RGBA_8)))
+      dwFlags |= cmsFLAGS_FLOATSHAPER;
+
     decoder->mTransform = cmsCreateTransform(decoder->mInProfile,
                                              inType,
                                              gfxPlatform::GetCMSOutputProfile(),
                                              outType,
                                              intent,
-                                             0);
+                                             dwFlags);
   } else {
     png_set_gray_to_rgb(png_ptr);
-    if (gfxPlatform::IsCMSEnabled()) {
+    if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
       if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
         decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
       else
@@ -597,7 +620,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (channels == 2 || channels == 4) {
     /* check if alpha is coming from a tRNS chunk and is binary */
     if (num_trans) {
-      /* if it's not a indexed color image, tRNS means binary */
+      /* if it's not an indexed color image, tRNS means binary */
       if (color_type == PNG_COLOR_TYPE_PALETTE) {
         for (int i=0; i<num_trans; i++) {
           if ((trans[i] != 0) && (trans[i] != 255)) {

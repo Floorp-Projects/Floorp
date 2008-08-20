@@ -543,24 +543,9 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     }
   }
 
-  if (aNodeInfo->Equals(nsGkAtoms::title, kNameSpaceID_XHTML)) {
-    if (mDocument && mDocument->GetDocumentTitle().IsVoid()) {
-      mInTitle = PR_TRUE; // The first title wins
-    }
-  }
-#ifdef MOZ_SVG
-  else if (aNodeInfo->Equals(nsGkAtoms::title, kNameSpaceID_SVG)) {
-    nsIContent* parent = GetCurrentContent();
-    if (mDocument && mDocument->GetDocumentTitle().IsVoid() &&
-        parent && parent == mDocElement &&
-        parent->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
-      mInTitle = PR_TRUE; // The first title wins
-    }
-  }
-#endif // MOZ_SVG
-  else if (aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML) ||
-           aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_XHTML) ||
-           aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
+  if (aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML) ||
+      aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_XHTML) ||
+      aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
     if (ssle) {
       ssle->InitStyleLinkElement(PR_FALSE);
@@ -598,6 +583,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
 #ifdef MOZ_XTF
       || nodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin
 #endif
+      || nodeInfo->NameAtom() == nsGkAtoms::title
       ) {
     aContent->DoneAddingChildren(HaveNotifiedForCurrentContent());
   }
@@ -643,19 +629,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
     return rv;
   }
   
-  if ((nodeInfo->Equals(nsGkAtoms::title, kNameSpaceID_XHTML)
-#ifdef MOZ_SVG
-       || nodeInfo->Equals(nsGkAtoms::title, kNameSpaceID_SVG)
-#endif // MOZ_SVG
-      ) && mInTitle) {
-    NS_ASSERTION(mDocument, "How did mInTitle get to be true if mDocument is null?");
-    // The first title wins
-    nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
-    mTitleText.CompressWhitespace();
-    dom_doc->SetTitle(mTitleText);
-    mInTitle = PR_FALSE;
-  }
-  else if (nodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
+  if (nodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
            !mHasProcessedBase) {
     // The first base wins
     rv = ProcessBASETag(aContent);
@@ -1214,10 +1188,6 @@ nsXMLContentSink::HandleCDataSection(const PRUnichar *aData,
 
   FlushText();
   
-  if (mInTitle) {
-    mTitleText.Append(aData, aLength);
-  }
-  
   nsCOMPtr<nsIContent> cdata;
   nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(cdata), mNodeInfoManager);
   if (cdata) {
@@ -1557,11 +1527,6 @@ nsresult
 nsXMLContentSink::AddText(const PRUnichar* aText, 
                           PRInt32 aLength)
 {
-
-  if (mInTitle) {
-    mTitleText.Append(aText,aLength);
-  }
-
   // Create buffer when we first need it
   if (0 == mTextSize) {
     mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * NS_ACCUMULATION_BUFFER_SIZE);

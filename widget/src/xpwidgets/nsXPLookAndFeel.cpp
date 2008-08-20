@@ -594,7 +594,7 @@ nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   }
 
   if (NS_SUCCEEDED(NativeGetColor(aID, aColor))) {
-    if (gfxPlatform::IsCMSEnabled() && !IsSpecialColor(aID, aColor)) {
+    if ((gfxPlatform::GetCMSMode() == eCMSMode_All) && !IsSpecialColor(aID, aColor)) {
       cmsHTRANSFORM transform = gfxPlatform::GetCMSInverseRGBTransform();
       if (transform) {
         PRUint8 color[3];

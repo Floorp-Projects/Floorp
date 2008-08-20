@@ -79,10 +79,17 @@
     <progressmeter id="checkingProgress" mode="undetermined"/>
   </wizardpage>
   
-  <wizardpage id="noupdatesfound" pageid="noupdatesfound"
+  <wizardpage id="noupdatesautoenabled" pageid="noupdatesautoenabled"
               label="&noupdatesfound.title;" object="gNoUpdatesPage"
               onpageshow="gNoUpdatesPage.onPageShow();">
-    <label>&noupdatesfound.intro;</label>
+    <label>&noupdatesautoenabled.intro;</label>
+  </wizardpage>
+  
+  <!-- if auto updates are disabled, show the following page instead -->
+  <wizardpage id="noupdatesautodisabled" pageid="noupdatesautodisabled"
+              label="&noupdatesfound.title;" object="gNoUpdatesPage"
+              onpageshow="gNoUpdatesPage.onPageShow();">
+    <label>&noupdatesautodisabled.intro;</label>
   </wizardpage>
   
   <!-- next is "downloading" by default, but could change to "license"

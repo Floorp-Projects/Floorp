@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.36 $ $Date: 2007/11/16 05:29:25 $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.37 $ $Date: 2008/05/29 17:24:15 $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -556,7 +556,7 @@ NSS_IMPLEMENT PRStatus
 nssCryptokiPrivateKey_SetCertificate (
   nssCryptokiObject *keyObject,
   nssSession *sessionOpt,
-  NSSUTF8 *nickname,
+  const NSSUTF8 *nickname,
   NSSItem *id,
   NSSDER *subject
 )

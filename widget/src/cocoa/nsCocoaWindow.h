@@ -247,8 +247,8 @@ public:
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);
-    NS_IMETHOD GetHasTransparentBackground(PRBool& aTransparent);
-    NS_IMETHOD SetHasTransparentBackground(PRBool aTransparent);
+    virtual nsTransparencyMode GetTransparencyMode();
+    virtual void SetTransparencyMode(nsTransparencyMode aMode);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
 
     virtual gfxASurface* GetThebesSurface();

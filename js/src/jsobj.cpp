@@ -4183,6 +4183,45 @@ out:
 }
 
 /*
+ * Private type used to enumerate properties of a native JS object. It is
+ * allocated as necessary from JSENUMERATE_INIT and is freed when running the
+ * GC. The structure is not allocated when there are no enumerable properties
+ * in the object. Instead for the empty enumerator the code uses JSVAL_ZERO as
+ * the enumeration state.
+ *
+ * JSRuntime.nativeEnumCache caches the enumerators using scope's shape to
+ * avoid repeated scanning of scopes for enumerable properties. The cache
+ * entry is either JSNativeEnumerator* or, for the empty enumerator, the shape
+ * value itself. The latter is stored as (shape << 1) | 1 to ensure that it is
+ * always different from JSNativeEnumerator* values.
+ */
+struct JSNativeEnumerator {
+    /*
+     * The index into the ids array. It runs from the length down to 1 when
+     * the enumerator is running. It is 0 when the enumerator is finished and
+     * can be reused on a cache hit. Its type is jsword, not uint32, for
+     * compatibility with js_CompareAndSwap.
+     */
+    jsword                  cursor;
+
+    uint32                  length;     /* length of ids array */
+    uint32                  shape;      /* "shape" number -- see jsscope.h */
+    JSNativeEnumerator      *next;      /* list linking */
+    jsid                    ids[1];     /* enumeration id array */
+};
+
+/* The tagging of shape values requires one bit. */
+JS_STATIC_ASSERT((jsuword) SHAPE_OVERFLOW_BIT <=
+                 ((jsuword) 1 << (JS_BITS_PER_WORD - 1)));
+
+static inline size_t
+NativeEnumeratorSize(uint32 length)
+{
+    JS_ASSERT(length != 0);
+    return offsetof(JSNativeEnumerator, ids) + (size_t) length * sizeof(jsid);
+}
+
+/*
  * This function is used to enumerate the properties of native JSObjects
  * and those host objects that do not define a JSNewEnumerateOp-style iterator
  * function.
@@ -4194,10 +4233,13 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     JSClass *clasp;
     JSEnumerateOp enumerate;
     JSNativeEnumerator *ne;
-    uint32 length;
+    uint32 length, shape;
+    size_t allocated;
     JSScope *scope;
+    jsuword *cachep, oldcache;
     JSScopeProperty *sprop;
     jsid *ids;
+    jsword newcursor;
 
     clasp = OBJ_GET_CLASS(cx, obj);
     enumerate = clasp->enumerate;
@@ -4217,10 +4259,13 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
          * during the iteration.
          *
          * Use a do-while(0) loop to avoid too many nested ifs. If ne is null
-         * after the loop, it indicates an empty enumerator.
+         * after the loop, it indicates an empty enumerator. If allocated is
+         * not zero after the loop, we add the newly allocated ne to the cache
+         * and runtime->nativeEnumerators list.
          */
         ne = NULL;
         length = 0;
+        allocated = (size_t) 0;
         JS_LOCK_OBJ(cx, obj);
         scope = OBJ_SCOPE(obj);
         do {
@@ -4229,10 +4274,48 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              * enumerate its properties. Otherwise they will be enumerated
              * a second time when the prototype object is enumerated.
              */
-            if (scope->object != obj)
+            if (scope->object != obj) {
+#ifdef __GNUC__
+                cachep = NULL;  /* suppress bogus gcc warnings */
+#endif
                 break;
+            }
+
+            ENUM_CACHE_METER(nativeEnumProbes);
+            shape = scope->shape;
+            JS_ASSERT(shape < SHAPE_OVERFLOW_BIT);
+            cachep = &cx->runtime->
+                     nativeEnumCache[NATIVE_ENUM_CACHE_HASH(shape)];
+            oldcache = *cachep;
+            if (oldcache & (jsuword) 1) {
+                if ((uint32) (oldcache >> 1) == shape) {
+                    /* scope has a shape with no enumerable properties. */
+                    break;
+                }
+            } else if (oldcache != (jsuword) 0) {
+                /*
+                 * We can safely read ne->shape without taking the GC lock as
+                 * ne is deleted only when running the GC and ne->shape is
+                 * read-only after initialization.
+                 */
+                ne = (JSNativeEnumerator *) *cachep;
+                JS_ASSERT(ne->length >= 1);
+                if (ne->shape == shape) {
+                    /*
+                     * Check that ne is not running with another enumerator
+                     * and, if so, reuse and mark it as running from now.
+                     */
+                    length = ne->length;
+                    if (js_CompareAndSwap(&ne->cursor, 0, length))
+                        break;
+                    length = 0;
+                }
+                ne = NULL;
+            }
+            ENUM_CACHE_METER(nativeEnumMisses);
 
             /* Count all enumerable properties in object's scope. */
+            JS_ASSERT(length == 0);
             for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
                 if ((sprop->attrs & JSPROP_ENUMERATE) &&
                     !(sprop->flags & SPROP_IS_ALIAS) &&
@@ -4241,18 +4324,21 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                     length++;
                 }
             }
-            if (length == 0)
+            if (length == 0) {
+                /* cache the scope without enumerable properties. */
+                *cachep = ((jsuword) shape << 1) | (jsuword) 1;
                 break;
+            }
 
-            ne = (JSNativeEnumerator *)
-                 JS_malloc(cx, offsetof(JSNativeEnumerator, ids) +
-                           length * sizeof(jsid));
+            allocated = NativeEnumeratorSize(length);
+            ne = (JSNativeEnumerator *) JS_malloc(cx, allocated);
             if (!ne) {
                 JS_UNLOCK_SCOPE(cx, scope);
                 return JS_FALSE;
             }
             ne->cursor = length;
             ne->length = length;
+            ne->shape = shape;
             ids = ne->ids;
             for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
                 if ((sprop->attrs & JSPROP_ENUMERATE) &&
@@ -4267,45 +4353,58 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         } while (0);
         JS_UNLOCK_SCOPE(cx, scope);
 
-        if (idp)
-            *idp = INT_TO_JSVAL(length);
         if (!ne) {
             JS_ASSERT(length == 0);
+            JS_ASSERT(allocated == 0);
             *statep = JSVAL_ZERO;
         } else {
             JS_ASSERT(length != 0);
-            JS_LOCK_GC(cx->runtime);
-            ne->next = cx->runtime->nativeEnumerators;
-            if (ne->next)
-                ne->next->prevp = &ne->next;
-            ne->prevp = &cx->runtime->nativeEnumerators;
-            *ne->prevp = ne;
-            JS_UNLOCK_GC(cx->runtime);
+            JS_ASSERT(ne->cursor == length);
+            if (allocated != 0) {
+                JS_LOCK_GC(cx->runtime);
+                if (!js_AddAsGCBytes(cx, allocated)) {
+                    /* js_AddAsGCBytes releases the GC lock on failures. */
+                    JS_free(cx, ne);
+                    return JS_FALSE;
+                }
+                ne->next = cx->runtime->nativeEnumerators;
+                cx->runtime->nativeEnumerators = ne;
+                JS_ASSERT(((jsuword) ne & (jsuword) 1) == (jsuword) 0);
+                *cachep = (jsuword) ne;
+                JS_UNLOCK_GC(cx->runtime);
+            }
             *statep = PRIVATE_TO_JSVAL(ne);
         }
+        if (idp)
+            *idp = INT_TO_JSVAL(length);
         break;
 
       case JSENUMERATE_NEXT:
       case JSENUMERATE_DESTROY:
-        if (*statep != JSVAL_ZERO) {
-            ne = (JSNativeEnumerator *) JSVAL_TO_PRIVATE(*statep);
-            JS_ASSERT(ne->length >= 1);
-            if (ne->cursor != 0 && enum_op == JSENUMERATE_NEXT) {
-                *idp = ne->ids[--ne->cursor];
-                break;
-            }
-            JS_LOCK_GC(cx->runtime);
-            JS_ASSERT(cx->runtime->nativeEnumerators);
-            JS_ASSERT(*ne->prevp == ne);
-            if (ne->next) {
-                JS_ASSERT(ne->next->prevp == &ne->next);
-                ne->next->prevp = ne->prevp;
-            }
-            *ne->prevp = ne->next;
-            JS_UNLOCK_GC(cx->runtime);
-            JS_free(cx, ne);
+        if (*statep == JSVAL_ZERO) {
+            *statep = JSVAL_NULL;
+            break;
         }
-        *statep = JSVAL_NULL;
+        ne = (JSNativeEnumerator *) JSVAL_TO_PRIVATE(*statep);
+        JS_ASSERT(ne->length >= 1);
+        JS_ASSERT(ne->cursor >= 1);
+
+        /*
+         * We must not access ne->cursor when we set it to zero as it means
+         * that ne is free and another thread can grab it from the cache. So
+         * we set the state to JSVAL_ZERO in the NEXT case to avoid touching
+         * ne->length again in the DESTROY case.
+         */
+        if (enum_op == JSENUMERATE_NEXT) {
+            newcursor = ne->cursor - 1;
+            *idp = ne->ids[newcursor];
+            ne->cursor = newcursor;
+            if (newcursor == 0)
+                *statep = JSVAL_ZERO;
+        } else {
+            /* The enumerator has not iterated over all ids. */
+            ne->cursor = 0;
+        }
         break;
     }
     return JS_TRUE;
@@ -4314,15 +4413,41 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 void
 js_TraceNativeEnumerators(JSTracer *trc)
 {
-    JSNativeEnumerator *ne;
+    JSRuntime *rt;
+    JSNativeEnumerator **nep, *ne;
     jsid *cursor, *end;
 
-    for (ne = trc->context->runtime->nativeEnumerators; ne; ne = ne->next) {
-        JS_ASSERT(ne->length >= 1);
-        JS_ASSERT(*ne->prevp == ne);
-        end = ne->ids + ne->length;
-        for (cursor = ne->ids; cursor != end; ++cursor)
-            TRACE_ID(trc, *cursor);
+    /*
+     * Purge native enumerators cached by shape id, which we are about to
+     * re-number completely when tracing is done for the GC.
+     */
+    rt = trc->context->runtime;
+    if (IS_GC_MARKING_TRACER(trc)) {
+        memset(&rt->nativeEnumCache, 0, sizeof rt->nativeEnumCache);
+#ifdef JS_DUMP_ENUM_CACHE_STATS
+        printf("nativeEnumCache hit rate %g%%\n",
+               100.0 * (rt->nativeEnumProbes - rt->nativeEnumMisses) /
+               rt->nativeEnumProbes);
+#endif
+    }
+
+    nep = &rt->nativeEnumerators;
+    while ((ne = *nep) != NULL) {
+        JS_ASSERT(ne->length != 0);
+        if (ne->cursor != 0) {
+            /* Trace ids of the running enumerator. */
+            cursor = ne->ids;
+            end = cursor + ne->length;
+            do {
+                TRACE_ID(trc, *cursor);
+            } while (++cursor != end);
+        } else if (IS_GC_MARKING_TRACER(trc)) {
+            js_RemoveAsGCBytes(rt, NativeEnumeratorSize(ne->length));
+            *nep = ne->next;
+            JS_free(trc->context, ne);
+            continue;
+        }
+        nep = &ne->next;
     }
 }
 

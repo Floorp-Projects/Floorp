@@ -165,7 +165,5 @@ PKIX_PL_MonitorLock_Exit(
         PKIX_MONITORLOCK_DEBUG("\tCalling PR_ExitMonitor)\n");
         PR_ExitMonitor(monitorLock->lock);
 
-cleanup:
-
         PKIX_RETURN_NO_LOGGER(MONITORLOCK);
 }

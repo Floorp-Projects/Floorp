@@ -128,7 +128,7 @@ pref("browser.chrome.image_icons.max_size", 1024);
 
 pref("browser.triple_click_selects_paragraph", true);
 
-pref("gfx.color_management.enabled", false);
+pref("gfx.color_management.mode", 0);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
 
@@ -2280,8 +2280,6 @@ pref("print.print_paper_size", 0);
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 0); // twips
 
-pref("print.whileInPrintPreview", false);
-
 pref("font.allow_double_byte_special_chars", true);
 // font names
 
@@ -2611,7 +2609,7 @@ pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 pref("signon.SignonFileName",               "signons.txt"); // obsolete 
 pref("signon.SignonFileName2",              "signons2.txt"); // obsolete
-pref("signon.SignonFileName3",              "signons3.txt");
+pref("signon.SignonFileName3",              "signons3.txt"); // obsolete
 pref("signon.autofillForms",                true); 
 pref("signon.debug",                        false); // logs to Error Console
 

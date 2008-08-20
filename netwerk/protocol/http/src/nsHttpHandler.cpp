@@ -1074,8 +1074,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             else {
                 // verify that this socket type is actually valid
                 nsCOMPtr<nsISocketProviderService> sps(
-                        do_GetService(kSocketProviderServiceCID, &rv));
-                if (NS_SUCCEEDED(rv)) {
+                        do_GetService(kSocketProviderServiceCID));
+                if (sps) {
                     nsCOMPtr<nsISocketProvider> sp;
                     rv = sps->GetSocketProvider(sval, getter_AddRefs(sp));
                     if (NS_SUCCEEDED(rv)) {
@@ -1142,8 +1142,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         // UI thread, and so do all the methods in nsHttpChannel.cpp
         // (mIDNConverter is used by nsHttpChannel)
         if (enableIDN && !mIDNConverter) {
-            mIDNConverter = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "idnSDK not installed");
+            mIDNConverter = do_GetService(NS_IDNSERVICE_CONTRACTID);
+            NS_ASSERTION(mIDNConverter, "idnSDK not installed");
         }
         else if (!enableIDN && mIDNConverter)
             mIDNConverter = nsnull;

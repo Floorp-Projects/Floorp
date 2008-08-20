@@ -201,6 +201,31 @@ int testRFind() {
   return ret;
 }
 
+int testCompressWhitespace() {
+  PRInt32 ret = 0;
+
+  // CompressWhitespace utility function
+  nsString s;
+
+  s.AssignLiteral("     ");
+  CompressWhitespace(s);
+  ret += CHECK(s.EqualsLiteral(""));
+
+  s.AssignLiteral("  no more  leading spaces");
+  CompressWhitespace(s);
+  ret += CHECK(s.EqualsLiteral("no more leading spaces"));
+
+  s.AssignLiteral("no    more trailing spaces ");
+  CompressWhitespace(s);
+  ret += CHECK(s.EqualsLiteral("no more trailing spaces"));
+
+  s.AssignLiteral("   hello one    2         three    45        ");
+  CompressWhitespace(s);
+  ret += CHECK(s.EqualsLiteral("hello one 2 three 45"));
+
+  return ret;
+}
+
 int main() {
   int rv = 0;
   rv += testEmpty();
@@ -209,6 +234,7 @@ int main() {
   rv += testFind();
   rv += testVoid();
   rv += testRFind();
+  rv += testCompressWhitespace();
   if (0 == rv) {
     fprintf(stderr, "PASS: StringAPI tests\n");
   }

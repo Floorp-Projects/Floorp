@@ -143,13 +143,17 @@
 // This bit is set on frames that trimmed trailing whitespace characters when
 // calculating their width during reflow.
 #define TEXT_TRIMMED_TRAILING_WHITESPACE 0x01000000
+// This bit is set on frames that have justification enabled. We record
+// this in a state bit because we don't always have the containing block
+// easily available to check text-align on.
+#define TEXT_JUSTIFICATION_ENABLED       0x02000000
 // Set this bit if the textframe has overflow area for IME/spellcheck underline.
 #define TEXT_SELECTION_UNDERLINE_OVERFLOWED 0x04000000
 
 #define TEXT_REFLOW_FLAGS    \
   (TEXT_FIRST_LETTER|TEXT_START_OF_LINE|TEXT_END_OF_LINE|TEXT_HYPHEN_BREAK| \
-   TEXT_TRIMMED_TRAILING_WHITESPACE|TEXT_HAS_NONCOLLAPSED_CHARACTERS| \
-   TEXT_SELECTION_UNDERLINE_OVERFLOWED)
+   TEXT_TRIMMED_TRAILING_WHITESPACE|TEXT_JUSTIFICATION_ENABLED| \
+   TEXT_HAS_NONCOLLAPSED_CHARACTERS|TEXT_SELECTION_UNDERLINE_OVERFLOWED)
 
 // Cache bits for IsEmpty().
 // Set this bit if the textframe is known to be only collapsible whitespace.
@@ -158,9 +162,11 @@
 #define TEXT_ISNOT_ONLY_WHITESPACE 0x10000000
 
 #define TEXT_WHITESPACE_FLAGS      0x18000000
-
 // This bit is set while the frame is registered as a blinking frame.
-#define TEXT_BLINK_ON              0x80000000
+#define TEXT_BLINK_ON              0x20000000
+
+// nsTextFrame.h has
+// #define TEXT_HAS_NONCOLLAPSED_CHARACTERS 0x80000000
 
 /*
  * Some general notes
@@ -474,47 +480,49 @@ static PRBool IsSpaceCombiningSequenceTail(const nsTextFragment* aFrag, PRUint32
 }
 
 // Check whether aPos is a space for CSS 'word-spacing' purposes
-static PRBool IsCSSWordSpacingSpace(const nsTextFragment* aFrag, PRUint32 aPos)
+static PRBool IsCSSWordSpacingSpace(const nsTextFragment* aFrag,
+                                    PRUint32 aPos)
 {
   NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
+
   PRUnichar ch = aFrag->CharAt(aPos);
   if (ch == ' ' || ch == CH_CJKSP)
     return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
-  return ch == '\t' || ch == '\n' || ch == '\f';
+  return ch == '\t' || ch == '\f' || ch == '\n';
 }
 
-// Check whether the string aChars/aLength starts with a space that's
-// trimmable according to CSS 'white-space'.
+// Check whether the string aChars/aLength starts with space that's
+// trimmable according to CSS 'white-space:normal/nowrap'. 
 static PRBool IsTrimmableSpace(const PRUnichar* aChars, PRUint32 aLength)
 {
   NS_ASSERTION(aLength > 0, "No text for IsSpace!");
+
   PRUnichar ch = *aChars;
   if (ch == ' ')
     return !nsTextFrameUtils::IsSpaceCombiningSequenceTail(aChars + 1, aLength - 1);
-  return ch == '\t' || ch == '\n' || ch == '\f';
+  return ch == '\t' || ch == '\f' || ch == '\n';
 }
 
-// Check whether the character aCh is trimmable according to CSS 'white-space'
+// Check whether the character aCh is trimmable according to CSS
+// 'white-space:normal/nowrap'
 static PRBool IsTrimmableSpace(char aCh)
 {
-  return aCh == ' ' || aCh == '\t' || aCh == '\n' || aCh == '\f';
+  return aCh == ' ' || aCh == '\t' || aCh == '\f' || aCh == '\n';
 }
 
-static PRBool IsTrimmableSpace(const nsTextFragment* aFrag, PRUint32 aPos)
+static PRBool IsTrimmableSpace(const nsTextFragment* aFrag, PRUint32 aPos,
+                               const nsStyleText* aStyleText)
 {
   NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
-  PRUnichar ch = aFrag->CharAt(aPos);
-  if (ch == ' ')
-    return !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
-  return ch == '\t' || ch == '\n' || ch == '\f';
-}
 
-static PRBool IsTrimmableSpace(const nsTextFragment* aFrag,
-                               const nsStyleText* aText, PRUint32 aPos)
-{
-  if (aText->WhiteSpaceIsSignificant())
-    return PR_FALSE;
-  return IsTrimmableSpace(aFrag, aPos);
+  switch (aFrag->CharAt(aPos)) {
+  case ' ': return !aStyleText->WhiteSpaceIsSignificant() &&
+                   !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
+  case '\n': return !aStyleText->NewlineIsSignificant();
+  case '\t':
+  case '\f': return !aStyleText->WhiteSpaceIsSignificant();
+  default: return PR_FALSE;
+  }
 }
 
 static PRBool IsSelectionSpace(const nsTextFragment* aFrag, PRUint32 aPos)
@@ -526,13 +534,15 @@ static PRBool IsSelectionSpace(const nsTextFragment* aFrag, PRUint32 aPos)
   return ch == '\t' || ch == '\n' || ch == '\f';
 }
 
-// Count the amount of trimmable whitespace in a text fragment. The first
+// Count the amount of trimmable whitespace (as per CSS
+// 'white-space:normal/nowrap') in a text fragment. The first
 // character is at offset aStartOffset; the maximum number of characters
 // to check is aLength. aDirection is -1 or 1 depending on whether we should
 // progress backwards or forwards.
 static PRUint32
-GetTrimmableWhitespaceCount(const nsTextFragment* aFrag, PRInt32 aStartOffset,
-                            PRInt32 aLength, PRInt32 aDirection)
+GetTrimmableWhitespaceCount(const nsTextFragment* aFrag,
+                            PRInt32 aStartOffset, PRInt32 aLength,
+                            PRInt32 aDirection)
 {
   PRInt32 count = 0;
   if (aFrag->Is2b()) {
@@ -553,6 +563,22 @@ GetTrimmableWhitespaceCount(const nsTextFragment* aFrag, PRInt32 aStartOffset,
     }
   }
   return count;
+}
+
+static PRBool
+IsAllWhitespace(const nsTextFragment* aFrag, PRBool aAllowNewline)
+{
+  if (aFrag->Is2b())
+    return PR_FALSE;
+  PRInt32 len = aFrag->GetLength();
+  const char* str = aFrag->Get1b();
+  for (PRInt32 i = 0; i < len; ++i) {
+    char ch = str[i];
+    if (ch == ' ' || ch == '\t' || (ch == '\n' && aAllowNewline))
+      continue;
+    return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 /**
@@ -1167,7 +1193,7 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   // even if it has newlines in it, so typically we won't see trailing newlines
   // until after reflow has broken up the frame into one (or more) frames per
   // line. That's OK though.
-  if (textStyle1->WhiteSpaceIsSignificant() && HasTerminalNewline(aFrame1))
+  if (textStyle1->NewlineIsSignificant() && HasTerminalNewline(aFrame1))
     return PR_FALSE;
 
   if (aFrame1->GetContent() == aFrame2->GetContent() &&
@@ -1386,6 +1412,21 @@ GetFirstFontMetrics(gfxFontGroup* aFontGroup)
   return font->GetMetrics();
 }
 
+PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_NORMAL == 0);
+PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_PRE == 1);
+PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_NOWRAP == 2);
+PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_PRE_WRAP == 3);
+PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_PRE_LINE == 4);
+
+static const nsTextFrameUtils::CompressionMode CSSWhitespaceToCompressionMode[] =
+{
+  nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE, // normal
+  nsTextFrameUtils::COMPRESS_NONE,               // pre
+  nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE, // nowrap
+  nsTextFrameUtils::COMPRESS_NONE,               // pre-wrap
+  nsTextFrameUtils::COMPRESS_WHITESPACE          // pre-line
+};
+
 gfxTextRun*
 BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 {
@@ -1425,6 +1466,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 
   PRUint32 nextBreakIndex = 0;
   nsTextFrame* nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
+  PRBool enabledJustification = mLineContainer &&
+    mLineContainer->GetStyleText()->mTextAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY;
 
   PRUint32 i;
   const nsStyleText* textStyle = nsnull;
@@ -1442,8 +1485,9 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     }
     textFlags |= GetSpacingFlags(textStyle->mLetterSpacing);
     textFlags |= GetSpacingFlags(textStyle->mWordSpacing);
-    PRBool compressWhitespace = !textStyle->WhiteSpaceIsSignificant();
-    if (NS_STYLE_TEXT_ALIGN_JUSTIFY == textStyle->mTextAlign && compressWhitespace) {
+    nsTextFrameUtils::CompressionMode compression =
+      CSSWhitespaceToCompressionMode[textStyle->mWhiteSpace];
+    if (enabledJustification && !textStyle->WhiteSpaceIsSignificant()) {
       textFlags |= gfxTextRunFactory::TEXT_ENABLE_SPACING;
     }
     fontStyle = f->GetStyleFont();
@@ -1476,7 +1520,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       PRUnichar* bufStart = static_cast<PRUnichar*>(aTextBuffer);
       PRUnichar* bufEnd = nsTextFrameUtils::TransformText(
           frag->Get2b() + contentStart, contentLength, bufStart,
-          compressWhitespace, &mTrimNextRunLeadingWhitespace, &builder, &analysisFlags);
+          compression, &mTrimNextRunLeadingWhitespace, &builder, &analysisFlags);
       aTextBuffer = bufEnd;
     } else {
       if (mDoubleByteText) {
@@ -1490,7 +1534,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         PRUint8* bufStart = tempBuf.Elements();
         PRUint8* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
-            bufStart, compressWhitespace, &mTrimNextRunLeadingWhitespace,
+            bufStart, compression, &mTrimNextRunLeadingWhitespace,
             &builder, &analysisFlags);
         aTextBuffer = ExpandBuffer(static_cast<PRUnichar*>(aTextBuffer),
                                    tempBuf.Elements(), end - tempBuf.Elements());
@@ -1499,14 +1543,9 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         PRUint8* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const PRUint8*>(frag->Get1b()) + contentStart, contentLength,
             bufStart,
-            compressWhitespace, &mTrimNextRunLeadingWhitespace, &builder, &analysisFlags);
+            compression, &mTrimNextRunLeadingWhitespace, &builder, &analysisFlags);
         aTextBuffer = end;
       }
-    }
-    // In CSS 2.1, we do not compress a space that is preceded by a non-compressible
-    // space.
-    if (!compressWhitespace) {
-      mTrimNextRunLeadingWhitespace = PR_FALSE;
     }
     textFlags |= analysisFlags;
 
@@ -1689,7 +1728,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 }
 
 static PRBool
-HasCompressedLeadingWhitespace(nsTextFrame* aFrame, PRInt32 aContentEndOffset,
+HasCompressedLeadingWhitespace(nsTextFrame* aFrame, const nsStyleText* aStyleText,
+                               PRInt32 aContentEndOffset,
                                const gfxSkipCharsIterator& aIterator)
 {
   if (!aIterator.IsOriginalCharSkipped())
@@ -1699,7 +1739,7 @@ HasCompressedLeadingWhitespace(nsTextFrame* aFrame, PRInt32 aContentEndOffset,
   PRInt32 frameContentOffset = aFrame->GetContentOffset();
   const nsTextFragment* frag = aFrame->GetContent()->GetText();
   while (frameContentOffset < aContentEndOffset && iter.IsOriginalCharSkipped()) {
-    if (IsTrimmableSpace(frag, frameContentOffset))
+    if (IsTrimmableSpace(frag, frameContentOffset, aStyleText))
       return PR_TRUE;
     ++frameContentOffset;
     iter.AdvanceOriginal(1);
@@ -1753,7 +1793,8 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
       flags |= nsLineBreaker::BREAK_NEED_CAPITALIZATION;
     }
 
-    if (HasCompressedLeadingWhitespace(startFrame, mappedFlow->GetContentEnd(), iter)) {
+    if (HasCompressedLeadingWhitespace(startFrame, textStyle,
+                                       mappedFlow->GetContentEnd(), iter)) {
       mLineBreaker.AppendInvisibleWhitespace(flags);
     }
 
@@ -1880,14 +1921,14 @@ nsTextFrame::EnsureTextRun(gfxContext* aReferenceContext, nsIFrame* aLineContain
 }
 
 static PRUint32
-GetEndOfTrimmedText(const nsTextFragment* aFrag,
+GetEndOfTrimmedText(const nsTextFragment* aFrag, const nsStyleText* aStyleText,
                     PRUint32 aStart, PRUint32 aEnd,
                     gfxSkipCharsIterator* aIterator)
 {
   aIterator->SetSkippedOffset(aEnd);
   while (aIterator->GetSkippedOffset() > aStart) {
     aIterator->AdvanceSkipped(-1);
-    if (!IsTrimmableSpace(aFrag, aIterator->GetOriginalOffset()))
+    if (!IsTrimmableSpace(aFrag, aIterator->GetOriginalOffset(), aStyleText))
       return aIterator->GetSkippedOffset() + 1;
   }
   return aStart;
@@ -1898,23 +1939,35 @@ nsTextFrame::GetTrimmedOffsets(const nsTextFragment* aFrag,
                                PRBool aTrimAfter)
 {
   NS_ASSERTION(mTextRun, "Need textrun here");
+  // This should not be used during reflow. We need our TEXT_REFLOW_FLAGS
+  // to be set correctly.
+  NS_ASSERTION(!(GetStateBits() & NS_FRAME_FIRST_REFLOW),
+               "Can only call this on frames that have been reflowed");
+  NS_ASSERTION(!(GetStateBits() & NS_FRAME_IN_REFLOW),
+               "Can only call this on frames that are not being reflowed");
 
   TrimmedOffsets offsets = { GetContentOffset(), GetContentLength() };
   const nsStyleText* textStyle = GetStyleText();
+  // Note that pre-line newlines should still allow us to trim spaces
+  // for display
   if (textStyle->WhiteSpaceIsSignificant())
     return offsets;
 
   if (GetStateBits() & TEXT_START_OF_LINE) {
     PRInt32 whitespaceCount =
-      GetTrimmableWhitespaceCount(aFrag, offsets.mStart, offsets.mLength, 1);
+      GetTrimmableWhitespaceCount(aFrag,
+                                  offsets.mStart, offsets.mLength, 1);
     offsets.mStart += whitespaceCount;
     offsets.mLength -= whitespaceCount;
   }
 
   if (aTrimAfter && (GetStateBits() & TEXT_END_OF_LINE)) {
+    // This treats a trailing 'pre-line' newline as trimmable. That's fine,
+    // it's actually what we want since we want whitespace before it to
+    // be trimmed.
     PRInt32 whitespaceCount =
-      GetTrimmableWhitespaceCount(aFrag, offsets.GetEnd() - 1,
-                                  offsets.mLength, -1);
+      GetTrimmableWhitespaceCount(aFrag,
+                                  offsets.GetEnd() - 1, offsets.mLength, -1);
     offsets.mLength -= whitespaceCount;
   }
   return offsets;
@@ -2313,6 +2366,33 @@ static void TabWidthDestructor(void* aObject, nsIAtom* aProp, void* aValue,
   delete static_cast<nsTArray<gfxFloat>*>(aValue);
 }
 
+static gfxFloat
+ComputeTabWidthAppUnits(nsIFrame* aLineContainer, gfxTextRun* aTextRun)
+{
+  // Round the space width when converting to appunits the same way
+  // textruns do
+  gfxFloat spaceWidthAppUnits =
+    NS_roundf(GetFirstFontMetrics(
+                GetFontGroupForFrame(aLineContainer)).spaceWidth *
+              aTextRun->GetAppUnitsPerDevUnit());
+  return 8*spaceWidthAppUnits;
+}
+
+// aX and the result are in whole appunits.
+static gfxFloat
+AdvanceToNextTab(gfxFloat aX, nsIFrame* aLineContainer,
+                 gfxTextRun* aTextRun, gfxFloat* aCachedTabWidth)
+{
+  if (*aCachedTabWidth < 0) {
+    *aCachedTabWidth = ComputeTabWidthAppUnits(aLineContainer, aTextRun);
+  }
+
+  // Advance aX to the next multiple of *aCachedTabWidth. We must advance
+  // by at least 1 appunit.
+  // XXX should we make this 1 CSS pixel?
+  return NS_ceil((aX + 1)/(*aCachedTabWidth))*(*aCachedTabWidth);
+}
+
 gfxFloat*
 PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
 {
@@ -2326,12 +2406,8 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
       }
     } else {
       if (!mLineContainer) {
-        // Intrinsic width computation, no way to compute real tab widths
-        // (and we wouldn't want to use it if we could, because it depends
-        // on layout). Don't wipe out existing tab widths that might still
-        // be useful for painting. Just return null which uses zero for
-        // all tab widths.
-        NS_WARNING("Preformatted tabs encountered in intrinsic width situation");
+        // Intrinsic width computation does its own tab processing. We
+        // just don't do anything here.
         return nsnull;
       }
 
@@ -2357,13 +2433,7 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
     if (!mTabWidths->AppendElements(aStart + aLength - tabsEnd))
       return nsnull;
     
-    // Round the space width when converting to appunits the same way
-    // textruns do
-    gfxFloat spaceWidthAppUnits =
-      NS_roundf(GetFirstFontMetrics(
-                  GetFontGroupForFrame(mLineContainer)).spaceWidth *
-                mTextRun->GetAppUnitsPerDevUnit());
-    gfxFloat tabWidth = 8*spaceWidthAppUnits;
+    gfxFloat tabWidth = -1;
     for (PRUint32 i = tabsEnd; i < aStart + aLength; ++i) {
       Spacing spacing;
       GetSpacingInternal(i, 1, &spacing, PR_TRUE);
@@ -2381,11 +2451,8 @@ PropertyProvider::GetTabWidths(PRUint32 aStart, PRUint32 aLength)
             mTextRun->GetAdvanceWidth(i, clusterEnd - i, nsnull);
         }
       } else {
-        // Advance mOffsetFromBlockOriginForTabs to the next multiple of
-        // tabWidth. We must advance by at least 1 appunit.
-        // XXX should we make this 1 CSS pixel?
-        double nextTab =
-          NS_ceil((mOffsetFromBlockOriginForTabs + 1)/tabWidth)*tabWidth;
+        double nextTab = AdvanceToNextTab(mOffsetFromBlockOriginForTabs,
+                mLineContainer, mTextRun, &tabWidth);
         (*mTabWidths)[i - startOffset] = nextTab - mOffsetFromBlockOriginForTabs;
         mOffsetFromBlockOriginForTabs = nextTab;
       }
@@ -2507,8 +2574,7 @@ PropertyProvider::SetupJustificationSpacing()
 {
   NS_PRECONDITION(mLength != PR_INT32_MAX, "Can't call this with undefined length");
 
-  if (NS_STYLE_TEXT_ALIGN_JUSTIFY != mTextStyle->mTextAlign ||
-      mTextStyle->WhiteSpaceIsSignificant())
+  if (!(mFrame->GetStateBits() & TEXT_JUSTIFICATION_ENABLED))
     return;
 
   gfxSkipCharsIterator start(mStart), end(mStart);
@@ -2925,7 +2991,7 @@ nsTextPaintStyle::InitCommonColors()
 
 static nsIFrame* GetNonGeneratedAncestor(nsIFrame* f) {
   while (f->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
-    f = f->GetParent();
+    f = nsLayoutUtils::GetParentOrPlaceholderFor(f->PresContext()->FrameManager(), f);
   }
   return f;
 }
@@ -4017,6 +4083,22 @@ PRBool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
   return PR_TRUE;
 }
 
+static void
+AddHyphenToMetrics(nsTextFrame* aTextFrame, gfxTextRun* aBaseTextRun,
+                   gfxTextRun::Metrics* aMetrics, PRBool aTightBoundingBox,
+                   gfxContext* aContext)
+{
+  // Fix up metrics to include hyphen
+  gfxTextRunCache::AutoTextRun hyphenTextRun(
+    GetHyphenTextRun(aBaseTextRun, aContext, aTextFrame));
+  if (!hyphenTextRun.get())
+    return;
+
+  gfxTextRun::Metrics hyphenMetrics =
+    hyphenTextRun->MeasureText(0, hyphenTextRun->GetLength(), aTightBoundingBox, aContext, nsnull);
+  aMetrics->CombineWith(hyphenMetrics, aBaseTextRun->IsRightToLeft());
+}
+
 void
 nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
                             nsCSSShadowItem* aShadowDetails,
@@ -4024,28 +4106,22 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
                             const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
                             gfxContext* aCtx, const nscolor& aForegroundColor)
 {
-  nscoord xOffset = aShadowDetails->mXOffset.GetCoordValue();
-  nscoord yOffset = aShadowDetails->mYOffset.GetCoordValue();
+  gfxPoint shadowOffset(aShadowDetails->mXOffset.GetCoordValue(),
+                        aShadowDetails->mYOffset.GetCoordValue());
   nscoord blurRadius = PR_MAX(aShadowDetails->mRadius.GetCoordValue(), 0);
-
-  nsTextPaintStyle textPaintStyle(this);
-  gfxFloat advanceWidth;
 
   gfxTextRun::Metrics shadowMetrics =
     mTextRun->MeasureText(aOffset, aLength, PR_FALSE,
                           nsnull, aProvider);
+  if (GetStateBits() & TEXT_HYPHEN_BREAK) {
+    AddHyphenToMetrics(this, mTextRun, &shadowMetrics, PR_FALSE, aCtx);
+  }
 
   // This rect is the box which is equivalent to where the shadow will be painted.
-  // X and Y are significant because they can affect the rounding.
-  // The origin of mBoundingBox is the text baseline point, so we must translate it by
+  // The origin of mBoundingBox is the text baseline left, so we must translate it by
   // that much in order to make the origin the top-left corner of the text bounding box.
-  gfxRect shadowRect = shadowMetrics.mBoundingBox + aTextBaselinePt;
-  shadowRect.MoveBy(gfxPoint(xOffset, yOffset));
-
-  if (GetStateBits() & TEXT_HYPHEN_BREAK) {
-    // Add the width of the soft hyphen so it isn't cut off
-    shadowRect.size.width += aProvider->GetHyphenWidth();
-  }
+  gfxRect shadowRect = shadowMetrics.mBoundingBox +
+    gfxPoint(aFramePt.x, aTextBaselinePt.y) + shadowOffset;
 
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, blurRadius,
@@ -4067,16 +4143,18 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
   // Draw the text onto our alpha-only surface to capture the alpha values.
   // Remember that the box blur context has a device offset on it, so we don't need to
   // translate any coordinates to fit on the surface.
+  gfxFloat advanceWidth;
   DrawText(shadowContext,
-           aTextBaselinePt + gfxPoint(xOffset, yOffset),
+           aTextBaselinePt + shadowOffset,
            aOffset, aLength, &aDirtyRect, aProvider, advanceWidth,
            (GetStateBits() & TEXT_HYPHEN_BREAK) != 0);
 
   // This will only have an effect in quirks mode. Standards mode text-decoration shadow painting
   // is handled in nsHTMLContainerFrame.cpp, so you must remember to consider that if you change
   // any code behaviour here.
-  PaintTextDecorations(shadowContext, aDirtyRect, aFramePt + gfxPoint(xOffset, yOffset),
-                       aTextBaselinePt + gfxPoint(xOffset, yOffset),
+  nsTextPaintStyle textPaintStyle(this);
+  PaintTextDecorations(shadowContext, aDirtyRect, aFramePt + shadowOffset,
+                       aTextBaselinePt + shadowOffset,
                        textPaintStyle, *aProvider, shadowColor);
 
   contextBoxBlur.DoPaint();
@@ -4810,7 +4888,7 @@ IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter, gfxTextRun* aTextRu
   PRUint32 index = aIter.GetSkippedOffset();
   if (!aTextRun->IsClusterStart(index))
     return PR_FALSE;
-  return !(aFrame->GetStyleText()->WhiteSpaceIsSignificant() &&
+  return !(aFrame->GetStyleText()->NewlineIsSignificant() &&
            aTextRun->GetChar(index) == '\n');
 }
 
@@ -5150,13 +5228,13 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
 static PRUint32
 FindStartAfterSkippingWhitespace(PropertyProvider* aProvider,
                                  nsIFrame::InlineIntrinsicWidthData* aData,
-                                 PRBool aCollapseWhitespace,
+                                 const nsStyleText* aTextStyle,
                                  gfxSkipCharsIterator* aIterator,
                                  PRUint32 aFlowEndInTextRun)
 {
-  if (aData->skipWhitespace && aCollapseWhitespace) {
+  if (aData->skipWhitespace) {
     while (aIterator->GetSkippedOffset() < aFlowEndInTextRun &&
-           IsTrimmableSpace(aProvider->GetFragment(), aIterator->GetOriginalOffset())) {
+           IsTrimmableSpace(aProvider->GetFragment(), aIterator->GetOriginalOffset(), aTextStyle)) {
       aIterator->AdvanceOriginal(1);
     }
   }
@@ -5185,26 +5263,32 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
 
   // Pass null for the line container. This will disable tab spacing, but that's
   // OK since we can't really handle tabs for intrinsic sizing anyway.
+  const nsStyleText* textStyle = GetStyleText();
   const nsTextFragment* frag = mContent->GetText();
-  PropertyProvider provider(mTextRun, GetStyleText(), frag, this,
+  PropertyProvider provider(mTextRun, textStyle, frag, this,
                             iter, PR_INT32_MAX, nsnull, 0);
 
-  PRBool collapseWhitespace = !provider.GetStyleText()->WhiteSpaceIsSignificant();
+  PRBool collapseWhitespace = !textStyle->WhiteSpaceIsSignificant();
+  PRBool preformatNewlines = textStyle->NewlineIsSignificant();
+  PRBool preformatTabs = textStyle->WhiteSpaceIsSignificant();
+  gfxFloat tabWidth = -1;
   PRUint32 start =
-    FindStartAfterSkippingWhitespace(&provider, aData, collapseWhitespace,
-                                     &iter, flowEndInTextRun);
+    FindStartAfterSkippingWhitespace(&provider, aData, textStyle, &iter, flowEndInTextRun);
   if (start >= flowEndInTextRun)
     return;
 
   // XXX Should we consider hyphenation here?
   for (PRUint32 i = start, wordStart = start; i <= flowEndInTextRun; ++i) {
     PRBool preformattedNewline = PR_FALSE;
+    PRBool preformattedTab = PR_FALSE;
     if (i < flowEndInTextRun) {
       // XXXldb Shouldn't we be including the newline as part of the
       // segment that it ends rather than part of the segment that it
       // starts?
-      preformattedNewline = !collapseWhitespace && mTextRun->GetChar(i) == '\n';
-      if (!mTextRun->CanBreakLineBefore(i) && !preformattedNewline) {
+      preformattedNewline = preformatNewlines && mTextRun->GetChar(i) == '\n';
+      preformattedTab = preformatTabs && mTextRun->GetChar(i) == '\t';
+      if (!mTextRun->CanBreakLineBefore(i) && !preformattedNewline &&
+          !preformattedTab) {
         // we can't break here (and it's not the end of the flow)
         continue;
       }
@@ -5217,7 +5301,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
       aData->atStartOfLine = PR_FALSE;
 
       if (collapseWhitespace) {
-        PRUint32 trimStart = GetEndOfTrimmedText(frag, wordStart, i, &iter);
+        PRUint32 trimStart = GetEndOfTrimmedText(frag, textStyle, wordStart, i, &iter);
         if (trimStart == start) {
           // This is *all* trimmable whitespace, so whatever trailingWhitespace
           // we saw previously is still trailing...
@@ -5232,7 +5316,16 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
       }
     }
 
-    if (i < flowEndInTextRun ||
+    if (preformattedTab) {
+      PropertyProvider::Spacing spacing;
+      provider.GetSpacing(i, 1, &spacing);
+      aData->currentLine += nscoord(spacing.mBefore);
+      gfxFloat afterTab =
+        AdvanceToNextTab(aData->currentLine, FindLineContainer(this),
+                         mTextRun, &tabWidth);
+      aData->currentLine = nscoord(afterTab + spacing.mAfter);
+      wordStart = i + 1;
+    } else if (i < flowEndInTextRun ||
         (i == mTextRun->GetLength() &&
          (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK))) {
       if (preformattedNewline) {
@@ -5246,8 +5339,9 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
 
   // Check if we have collapsible whitespace at the end
   aData->skipWhitespace =
-    IsTrimmableSpace(provider.GetFragment(), provider.GetStyleText(),
-                     iter.ConvertSkippedToOriginal(flowEndInTextRun - 1));
+    IsTrimmableSpace(provider.GetFragment(),
+                     iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
+                     textStyle);
 }
 
 // XXX Need to do something here to avoid incremental reflow bugs due to
@@ -5287,56 +5381,82 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
 
   // Pass null for the line container. This will disable tab spacing, but that's
   // OK since we can't really handle tabs for intrinsic sizing anyway.
-  PropertyProvider provider(mTextRun, GetStyleText(), mContent->GetText(), this,
+  
+  const nsStyleText* textStyle = GetStyleText();
+  const nsTextFragment* frag = mContent->GetText();
+  PropertyProvider provider(mTextRun, textStyle, frag, this,
                             iter, PR_INT32_MAX, nsnull, 0);
 
-  PRBool collapseWhitespace = !provider.GetStyleText()->WhiteSpaceIsSignificant();
+  PRBool collapseWhitespace = !textStyle->WhiteSpaceIsSignificant();
+  PRBool preformatNewlines = textStyle->NewlineIsSignificant();
+  PRBool preformatTabs = textStyle->WhiteSpaceIsSignificant();
+  gfxFloat tabWidth = -1;
   PRUint32 start =
-    FindStartAfterSkippingWhitespace(&provider, aData, collapseWhitespace,
-                                     &iter, flowEndInTextRun);
+    FindStartAfterSkippingWhitespace(&provider, aData, textStyle, &iter, flowEndInTextRun);
   if (start >= flowEndInTextRun)
     return;
 
-  if (collapseWhitespace) {
-    // \n line breaks are not honoured, so everything would like to go
-    // onto one line, so just measure it
-    nscoord width =
-      NSToCoordCeil(mTextRun->GetAdvanceWidth(start, flowEndInTextRun - start, &provider));
-    aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, width);
-
-    PRUint32 trimStart = GetEndOfTrimmedText(provider.GetFragment(), start,
-                                             flowEndInTextRun, &iter);
-    if (trimStart == start) {
-      // This is *all* trimmable whitespace, so whatever trailingWhitespace
-      // we saw previously is still trailing...
-      aData->trailingWhitespace += width;
-    } else {
-      // Some non-whitespace so the old trailingWhitespace is no longer trailing
-      aData->trailingWhitespace =
-        NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, flowEndInTextRun - trimStart, &provider));
-    }
-  } else {
-    // We respect line breaks, so measure off each line (or part of line).
-    aData->trailingWhitespace = 0;
-    PRUint32 i;
-    PRUint32 startRun = start;
-    for (i = start; i <= flowEndInTextRun; ++i) {
-      if (i < flowEndInTextRun && mTextRun->GetChar(i) != '\n')
+  // XXX Should we consider hyphenation here?
+  // If newlines and tabs aren't preformatted, nothing to do inside
+  // the loop so make i skip to the end
+  PRUint32 loopStart = (preformatNewlines || preformatTabs) ? start : flowEndInTextRun;
+  for (PRUint32 i = loopStart, lineStart = start; i <= flowEndInTextRun; ++i) {
+    PRBool preformattedNewline = PR_FALSE;
+    PRBool preformattedTab = PR_FALSE;
+    if (i < flowEndInTextRun) {
+      // XXXldb Shouldn't we be including the newline as part of the
+      // segment that it ends rather than part of the segment that it
+      // starts?
+      NS_ASSERTION(preformatNewlines, "We can't be here unless newlines are hard breaks");
+      preformattedNewline = preformatNewlines && mTextRun->GetChar(i) == '\n';
+      preformattedTab = preformatTabs && mTextRun->GetChar(i) == '\t';
+      if (!preformattedNewline && !preformattedTab) {
+        // we needn't break here (and it's not the end of the flow)
         continue;
-        
-      aData->currentLine +=
-        NSToCoordCeil(mTextRun->GetAdvanceWidth(startRun, i - startRun, &provider));
-      if (i < flowEndInTextRun) {
-        aData->ForceBreak(aRenderingContext);
-        startRun = i;
       }
+    }
+
+    if (i > lineStart) {
+      nscoord width =
+        NSToCoordCeil(mTextRun->GetAdvanceWidth(lineStart, i - lineStart, &provider));
+      aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, width);
+
+      if (collapseWhitespace) {
+        PRUint32 trimStart = GetEndOfTrimmedText(frag, textStyle, lineStart, i, &iter);
+        if (trimStart == start) {
+          // This is *all* trimmable whitespace, so whatever trailingWhitespace
+          // we saw previously is still trailing...
+          aData->trailingWhitespace += width;
+        } else {
+          // Some non-whitespace so the old trailingWhitespace is no longer trailing
+          aData->trailingWhitespace =
+            NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
+        }
+      } else {
+        aData->trailingWhitespace = 0;
+      }
+    }
+
+    if (preformattedTab) {
+      PropertyProvider::Spacing spacing;
+      provider.GetSpacing(i, 1, &spacing);
+      aData->currentLine += nscoord(spacing.mBefore);
+      gfxFloat afterTab =
+        AdvanceToNextTab(aData->currentLine, FindLineContainer(this),
+                         mTextRun, &tabWidth);
+      aData->currentLine = nscoord(afterTab + spacing.mAfter);
+      lineStart = i + 1;
+    } else if (preformattedNewline) {
+      aData->ForceBreak(aRenderingContext);
+      lineStart = i;
     }
   }
 
   // Check if we have collapsible whitespace at the end
   aData->skipWhitespace =
-    IsTrimmableSpace(provider.GetFragment(), provider.GetStyleText(),
-                     iter.ConvertSkippedToOriginal(flowEndInTextRun - 1));
+    IsTrimmableSpace(provider.GetFragment(),
+                     iter.ConvertSkippedToOriginal(flowEndInTextRun - 1),
+                     textStyle);
 }
 
 // XXX Need to do something here to avoid incremental reflow bugs due to
@@ -5414,28 +5534,10 @@ AddCharToMetrics(gfxTextRun* aCharTextRun, gfxTextRun* aBaseTextRun,
                  gfxTextRun::Metrics* aMetrics, PRBool aTightBoundingBox,
                  gfxContext* aContext)
 {
-  gfxRect charRect;
-  // assume char does not overflow font metrics!!!
-  gfxFloat width = aCharTextRun->GetAdvanceWidth(0, aCharTextRun->GetLength(), nsnull);
-  if (aTightBoundingBox) {
-    gfxTextRun::Metrics charMetrics =
-        aCharTextRun->MeasureText(0, aCharTextRun->GetLength(), PR_TRUE, aContext, nsnull);
-    charRect = charMetrics.mBoundingBox;
-  } else {
-    charRect = gfxRect(0, -aMetrics->mAscent, width,
-                       aMetrics->mAscent + aMetrics->mDescent);
-  }
-  if (aBaseTextRun->IsRightToLeft()) {
-    // Char comes before text, so the bounding box is moved to the
-    // right by aWidth
-    aMetrics->mBoundingBox.MoveBy(gfxPoint(width, 0));
-  } else {
-    // char is moved to the right by mAdvanceWidth
-    charRect.MoveBy(gfxPoint(width, 0));
-  }
-  aMetrics->mBoundingBox = aMetrics->mBoundingBox.Union(charRect);
+  gfxTextRun::Metrics charMetrics =
+    aCharTextRun->MeasureText(0, aCharTextRun->GetLength(), aTightBoundingBox, aContext, nsnull);
 
-  aMetrics->mAdvanceWidth += width;
+  aMetrics->CombineWith(charMetrics, aBaseTextRun->IsRightToLeft());
 }
 
 static PRBool
@@ -5542,12 +5644,6 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   nsLineLayout& lineLayout = *aReflowState.mLineLayout;
 
-  if (aPresContext->BidiEnabled()) {
-    // SetIsBidiSystem should go away at some point since we're going to require
-    // it to be effectively always true
-    aPresContext->SetIsBidiSystem(PR_TRUE);
-  }
-
   if (aReflowState.mFlags.mBlinks) {
     if (0 == (mState & TEXT_BLINK_ON)) {
       mState |= TEXT_BLINK_ON;
@@ -5581,18 +5677,20 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   // Restrict preformatted text to the nearest newline
   PRInt32 newLineOffset = -1; // this will be -1 or a content offset
-  if (textStyle->WhiteSpaceIsSignificant()) {
+  if (textStyle->NewlineIsSignificant()) {
     newLineOffset = FindChar(frag, offset, length, '\n');
     if (newLineOffset >= 0) {
       length = newLineOffset + 1 - offset;
     }
-  } else {
-    if (atStartOfLine) {
-      // Skip leading whitespace
-      PRInt32 whitespaceCount = GetTrimmableWhitespaceCount(frag, offset, length, 1);
-      offset += whitespaceCount;
-      length -= whitespaceCount;
-    }
+  }
+  if (atStartOfLine && !textStyle->WhiteSpaceIsSignificant()) {
+    // Skip leading whitespace. Make sure we don't skip a 'pre-line'
+    // newline if there is one.
+    PRInt32 skipLength = newLineOffset >= 0 ? length - 1 : length;
+    PRInt32 whitespaceCount =
+      GetTrimmableWhitespaceCount(frag, offset, skipLength, 1);
+    offset += whitespaceCount;
+    length -= whitespaceCount;
   }
 
   PRBool completedFirstLetter = PR_FALSE;
@@ -5611,7 +5709,20 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
         EnsureTextRun(ctx, lineContainer, lineLayout.GetLine(), &flowEndInTextRun);
 
       if (mTextRun) {
-        completedFirstLetter = FindFirstLetterRange(frag, mTextRun, offset, iter, &length);
+        PRInt32 firstLetterLength = length;
+        completedFirstLetter =
+          FindFirstLetterRange(frag, mTextRun, offset, iter, &firstLetterLength);
+        if (newLineOffset >= 0) {
+          // Don't allow a preformatted newline to be part of a first-letter.
+          firstLetterLength = PR_MIN(firstLetterLength, length - 1);
+          if (length == 1) {
+            // There is no text to be consumed by the first-letter before the
+            // preformatted newline. Note that the first letter is therefore
+            // complete (FindFirstLetterRange will have returned false).
+            completedFirstLetter = PR_TRUE;
+          }
+        }
+        length = firstLetterLength;
         if (length) {
           AddStateBits(TEXT_FIRST_LETTER);
         }
@@ -5745,18 +5856,15 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     end.SetOriginalOffset(offset + charsFit);
     // If we were forced to fit, and the break position is after a soft hyphen,
     // note that this is a hyphenation break.
-    if (forceBreak >= 0 && HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
+    if ((forceBreak >= 0 || forceBreakAfter) &&
+        HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
       usedHyphenation = PR_TRUE;
     }
   }
   if (usedHyphenation) {
     // Fix up metrics to include hyphen
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, ctx, this));
-    if (hyphenTextRun.get()) {
-      AddCharToMetrics(hyphenTextRun.get(),
-                       mTextRun, &textMetrics, needTightBoundingBox, ctx);
-    }
-    AddStateBits(TEXT_HYPHEN_BREAK);
+    AddHyphenToMetrics(this, mTextRun, &textMetrics, needTightBoundingBox, ctx);
+    AddStateBits(TEXT_HYPHEN_BREAK | TEXT_HAS_NONCOLLAPSED_CHARACTERS);
   }
 
   gfxFloat trimmableWidth = 0;
@@ -5812,7 +5920,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // Disallow negative widths
   aMetrics.width = NSToCoordCeil(PR_MAX(0, textMetrics.mAdvanceWidth));
 
-  if (transformedCharsFit == 0) {
+  if (transformedCharsFit == 0 && !usedHyphenation) {
     aMetrics.ascent = 0;
     aMetrics.height = 0;
   } else if (needTightBoundingBox) {
@@ -5907,9 +6015,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // Compute space and letter counts for justification, if required
-  if (NS_STYLE_TEXT_ALIGN_JUSTIFY == textStyle->mTextAlign &&
-      !textStyle->WhiteSpaceIsSignificant()) {
-    // This will include a space for trailing whitespace, if any is present.
+  if (!textStyle->WhiteSpaceIsSignificant() &&
+      lineContainer->GetStyleText()->mTextAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY) {
+    AddStateBits(TEXT_JUSTIFICATION_ENABLED);    // This will include a space for trailing whitespace, if any is present.
     // This is corrected for in nsLineLayout::TrimWhiteSpaceIn.
     PRInt32 numJustifiableCharacters =
       provider.ComputeJustifiableCharacters(offset, charsFit);
@@ -5988,20 +6096,8 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIRenderingContext* aRC)
     }
   }
 
-  if (trimmed.GetEnd() == GetContentEnd() &&
-      HasSoftHyphenBefore(frag, mTextRun, trimmed.mStart, trimmedEndIter)) {
-    // This is a soft hyphen break.
-    // Fix up metrics to include hyphen
-    result.mChanged = PR_TRUE;
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, ctx, this));
-    if (hyphenTextRun.get()) {
-      delta = -hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull);
-    }
-    AddStateBits(TEXT_HYPHEN_BREAK);
-  }
-
   if (!result.mLastCharIsJustifiable &&
-      NS_STYLE_TEXT_ALIGN_JUSTIFY == textStyle->mTextAlign) {
+      (GetStateBits() & TEXT_JUSTIFICATION_ENABLED)) {
     // Check if any character in the last cluster is justifiable
     PropertyProvider provider(mTextRun, textStyle, frag, this, start, contentLength,
                               nsnull, 0);
@@ -6043,8 +6139,8 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIRenderingContext* aRC)
   // Maybe if we passed a maxTextLength? But that only happens at direction
   // changes (so we wouldn't kern across the boundary) or for first-letter
   // (which always fits because it starts the line!).
-  NS_WARN_IF_FALSE(result.mDeltaWidth >= 0 || (GetStateBits() & TEXT_HYPHEN_BREAK),
-                   "Negative deltawidth in a non-hyphen case, something odd is happening");
+  NS_WARN_IF_FALSE(result.mDeltaWidth >= 0,
+                   "Negative deltawidth, something odd is happening");
 
 #ifdef NOISY_TRIM
   ListTag(stdout);
@@ -6080,8 +6176,8 @@ nsTextFrame::RecomputeOverflowRect()
 static PRUnichar TransformChar(const nsStyleText* aStyle, gfxTextRun* aTextRun,
                                PRUint32 aSkippedOffset, PRUnichar aChar)
 {
-  if (aChar == '\n' || aChar == '\r') {
-    return aStyle->WhiteSpaceIsSignificant() ? aChar : ' ';
+  if (aChar == '\n') {
+    return aStyle->NewlineIsSignificant() ? aChar : ' ';
   }
   switch (aStyle->mTextTransform) {
   case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
@@ -6221,7 +6317,9 @@ nsTextFrame::IsEmpty()
                "Invalid state");
   
   // XXXldb Should this check compatibility mode as well???
-  if (GetStyleText()->WhiteSpaceIsSignificant()) {
+  const nsStyleText* textStyle = GetStyleText();
+  if (textStyle->WhiteSpaceIsSignificant()) {
+    // XXX shouldn't we return true if the length is zero?
     return PR_FALSE;
   }
 
@@ -6233,7 +6331,8 @@ nsTextFrame::IsEmpty()
     return PR_TRUE;
   }
   
-  PRBool isEmpty = mContent->TextIsOnlyWhitespace();
+  PRBool isEmpty = IsAllWhitespace(mContent->GetText(),
+          textStyle->mWhiteSpace != NS_STYLE_WHITESPACE_PRE_LINE);
   mState |= (isEmpty ? TEXT_IS_ONLY_WHITESPACE : TEXT_ISNOT_ONLY_WHITESPACE);
   return isEmpty;
 }
@@ -6327,59 +6426,6 @@ nsTextFrame::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 #endif
-
-void nsTextFrame::AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
-                                               PRInt32 textLength,
-                                               PRBool isRTLChars,
-                                               PRBool isOddLevel,
-                                               PRBool isBidiSystem)
-{
-  /* This adjustment is required whenever the text has been reversed by
-   * Mozilla before rendering.
-   *
-   * In theory this means any text whose Bidi embedding level has been
-   * set by the Unicode Bidi algorithm to an odd value, but this is
-   * only true in practice on a non-Bidi platform.
-   * 
-   * On a Bidi platform the situation is more complicated because the
-   * platform will automatically reverse right-to-left characters; so
-   * Mozilla reverses text whose natural directionality is the opposite
-   * of its embedding level: right-to-left characters whose Bidi
-   * embedding level is even (e.g. Visual Hebrew) or left-to-right and
-   * neutral characters whose Bidi embedding level is odd (e.g. English
-   * text with <bdo dir="rtl">).
-   *
-   * The following condition is accordingly an optimization of
-   *  if ( (!isBidiSystem && isOddLevel) ||
-   *       (isBidiSystem &&
-   *        ((isRTLChars && !isOddLevel) ||
-   *         (!isRTLChars && isOddLevel))))
-   */
-  if (isOddLevel ^ (isRTLChars && isBidiSystem)) {
-
-    PRInt32 swap  = sdptr->mStart;
-    sdptr->mStart = textLength - sdptr->mEnd;
-    sdptr->mEnd   = textLength - swap;
-
-    // temp fix for 75026 crasher until we fix the bidi code
-    // the above bidi code cause mStart < 0 in some case
-    // the problem is we have whitespace compression code in 
-    // nsTextTransformer which cause mEnd > textLength
-    NS_ASSERTION((sdptr->mStart >= 0) , "mStart >= 0");
-    if(sdptr->mStart < 0 )
-      sdptr->mStart = 0;
-
-    NS_ASSERTION((sdptr->mEnd >= 0) , "mEnd >= 0");
-    if(sdptr->mEnd < 0 )
-      sdptr->mEnd = 0;
-
-    NS_ASSERTION((sdptr->mStart <= sdptr->mEnd), "mStart <= mEnd");
-    if(sdptr->mStart > sdptr->mEnd)
-      sdptr->mEnd = sdptr->mStart;
-  }
-  
-  return;
-}
 
 void
 nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)

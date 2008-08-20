@@ -120,9 +120,6 @@ protected:
   PRBool	mFixed;
 
   friend class TransactionFactory;
-
-  friend class nsDerivedSafe<IMETextTxn>; // work around for a compiler bug
-
 };
 
 #endif

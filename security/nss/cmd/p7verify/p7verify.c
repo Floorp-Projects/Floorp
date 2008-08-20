@@ -37,7 +37,7 @@
 /*
  * p7verify -- A command to do a verification of a *detached* pkcs7 signature.
  *
- * $Id: p7verify.c,v 1.9 2004/04/25 15:02:49 gerv%gerv.net Exp $
+ * $Id: p7verify.c,v 1.10 2008/08/08 23:47:57 julien.pierre.boogz%sun.com Exp $
  */
 
 #include "nspr.h"
@@ -286,7 +286,7 @@ main(int argc, char **argv)
     if (!signatureFile) Usage (progName);
     if (!outFile) outFile = stdout;
 
-    /* Call the libsec initialization routines */
+    /* Call the NSS initialization routines */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
     rv = NSS_Init(SECU_ConfigDirectory(NULL));
     if (rv != SECSuccess) {

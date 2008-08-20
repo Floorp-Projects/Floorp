@@ -267,7 +267,7 @@ create_pk7 (char *dir, char *keyName, int *keyType)
 
     /* find cert */
     /*cert = CERT_FindCertByNicknameOrEmailAddr(db, keyName);*/
-    cert = PK11_FindCertFromNickname(keyName, NULL /*wincx*/);
+    cert = PK11_FindCertFromNickname(keyName, &pwdata);
 
     if (cert == NULL) {
 	SECU_PrintError ( PROGRAM_NAME,
@@ -325,22 +325,11 @@ create_pk7 (char *dir, char *keyName, int *keyType)
 static int	
 jar_find_key_type (CERTCertificate *cert)
 {
-    PK11SlotInfo * slot = NULL;
     SECKEYPrivateKey * privk = NULL;
     KeyType keyType;
 
     /* determine its type */
-    PK11_FindObjectForCert (cert, /*wincx*/ NULL, &slot);
-
-    if (slot == NULL) {
-	PR_fprintf(errorFD, "warning - can't find slot for this cert\n");
-	warningCount++;
-	return 0;
-    }
-
-    privk = PK11_FindPrivateKeyFromCert (slot, cert, /*wincx*/ NULL);
-    PK11_FreeSlot (slot);
-
+    privk = PK11_FindKeyByAnyCert (cert, &pwdata);
     if (privk == NULL) {
 	PR_fprintf(errorFD, "warning - can't find private key for this cert\n");
 	warningCount++;
@@ -695,14 +684,7 @@ SignFile (FILE *outFile, FILE *inFile, CERTCertificate *cert)
 	}
     }
 
-    if (password) {
-	rv = SEC_PKCS7Encode(cinfo, SignOut, outFile, NULL, 
-	    (SECKEYGetPasswordKey) password_hardcode, NULL);
-    } else {
-	rv = SEC_PKCS7Encode(cinfo, SignOut, outFile, NULL, NULL,
-	     			NULL);
-    }
-
+    rv = SEC_PKCS7Encode(cinfo, SignOut, outFile, NULL, NULL, &pwdata);
 
     SEC_PKCS7DestroyContentInfo (cinfo);
 
@@ -844,11 +826,7 @@ calculate_MD5_range (FILE *fp, long r1, long r2, JAR_Digest *dig)
     int	num;
     int	range;
     unsigned char	*buf;
-
-    MD5Context * md5 = 0;
-    SHA1Context * sha1 = 0;
-
-    unsigned int	sha1_length, md5_length;
+    SECStatus rv;
 
     range = r2 - r1;
 
@@ -866,27 +844,16 @@ calculate_MD5_range (FILE *fp, long r1, long r2, JAR_Digest *dig)
 	exit (ERRX);
     }
 
-    md5 = MD5_NewContext();
-    sha1 = SHA1_NewContext();
-
-    if (md5 == NULL || sha1 == NULL) {
+    rv = PK11_HashBuf(SEC_OID_MD5, dig->md5, buf, range);
+    if (rv == SECSuccess) {
+	rv =PK11_HashBuf(SEC_OID_SHA1, dig->sha1, buf, range);
+    }
+    if (rv != SECSuccess) {
 	PR_fprintf(errorFD, "%s: can't generate digest context\n",
 	     PROGRAM_NAME);
 	errorCount++;
 	exit (ERRX);
     }
-
-    MD5_Begin (md5);
-    SHA1_Begin (sha1);
-
-    MD5_Update (md5, buf, range);
-    SHA1_Update (sha1, buf, range);
-
-    MD5_End (md5, dig->md5, &md5_length, MD5_LENGTH);
-    SHA1_End (sha1, dig->sha1, &sha1_length, SHA1_LENGTH);
-
-    MD5_DestroyContext (md5, PR_TRUE);
-    SHA1_DestroyContext (sha1, PR_TRUE);
 
     PORT_Free (buf);
 

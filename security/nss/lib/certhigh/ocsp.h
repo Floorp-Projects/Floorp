@@ -37,7 +37,7 @@
 /*
  * Interface to the OCSP implementation.
  *
- * $Id: ocsp.h,v 1.11 2007/05/25 07:28:32 alexei.volkov.bugs%sun.com Exp $
+ * $Id: ocsp.h,v 1.13 2008/06/14 14:19:53 wtc%google.com Exp $
  */
 
 #ifndef _OCSP_H_
@@ -98,6 +98,12 @@ CERT_OCSPCacheSettings(PRInt32 maxCacheEntries,
  */
 extern SECStatus
 CERT_SetOCSPFailureMode(SEC_OcspFailureMode ocspFailureMode);
+
+/*
+ * Configure the maximum time NSS will wait for an OCSP response.
+ */
+extern SECStatus
+CERT_SetOCSPTimeout(PRUint32 seconds);
 
 /*
  * Removes all items currently stored in the OCSP cache.
@@ -221,7 +227,7 @@ CERT_DisableOCSPDefaultResponder(CERTCertDBHandle *handle);
  *     must be handled by the caller (and thus by having multiple calls
  *     to this routine), who knows about where the request(s) are being
  *     sent and whether there are any trusted responders in place.
- *   int64 time
+ *   PRTime time
  *     Indicates the time for which the certificate status is to be 
  *     determined -- this may be used in the search for the cert's issuer
  *     but has no effect on the request itself.
@@ -240,7 +246,7 @@ CERT_DisableOCSPDefaultResponder(CERTCertDBHandle *handle);
  *   Other errors are low-level problems (no memory, bad database, etc.).
  */
 extern CERTOCSPRequest *
-CERT_CreateOCSPRequest(CERTCertList *certList, int64 time, 
+CERT_CreateOCSPRequest(CERTCertList *certList, PRTime time, 
 		       PRBool addServiceLocator,
 		       CERTCertificate *signerCert);
 
@@ -269,7 +275,7 @@ CERT_AddOCSPAcceptableResponses(CERTOCSPRequest *request,
  *   DER encodes an OCSP Request, possibly adding a signature as well.
  *   XXX Signing is not yet supported, however; see comments in code.
  * INPUTS: 
- *   PRArenaPool *arena
+ *   PLArenaPool *arena
  *     The return value is allocated from here.
  *     If a NULL is passed in, allocation is done from the heap instead.
  *   CERTOCSPRequest *request
@@ -283,7 +289,7 @@ CERT_AddOCSPAcceptableResponses(CERTOCSPRequest *request,
  *   (e.g. no memory).
  */
 extern SECItem *
-CERT_EncodeOCSPRequest(PRArenaPool *arena, CERTOCSPRequest *request, 
+CERT_EncodeOCSPRequest(PLArenaPool *arena, CERTOCSPRequest *request, 
 		       void *pwArg);
 
 /*
@@ -345,7 +351,7 @@ CERT_DestroyOCSPResponse(CERTOCSPResponse *response);
  *   Creates and sends a request to an OCSP responder, then reads and
  *   returns the (encoded) response.
  * INPUTS:
- *   PRArenaPool *arena
+ *   PLArenaPool *arena
  *     Pointer to arena from which return value will be allocated.
  *     If NULL, result will be allocated from the heap (and thus should
  *     be freed via SECITEM_FreeItem).
@@ -359,7 +365,7 @@ CERT_DestroyOCSPResponse(CERTOCSPResponse *response);
  *     sent and whether there are any trusted responders in place.
  *   char *location
  *     The location of the OCSP responder (a URL).
- *   int64 time
+ *   PRTime time
  *     Indicates the time for which the certificate status is to be 
  *     determined -- this may be used in the search for the cert's issuer
  *     but has no other bearing on the operation.
@@ -387,8 +393,8 @@ CERT_DestroyOCSPResponse(CERTOCSPResponse *response);
  *   Other errors are low-level problems (no memory, bad database, etc.).
  */
 extern SECItem *
-CERT_GetEncodedOCSPResponse(PRArenaPool *arena, CERTCertList *certList,
-			    char *location, int64 time,
+CERT_GetEncodedOCSPResponse(PLArenaPool *arena, CERTCertList *certList,
+			    char *location, PRTime time,
 			    PRBool addServiceLocator,
 			    CERTCertificate *signerCert, void *pwArg,
 			    CERTOCSPRequest **pRequest);
@@ -488,7 +494,7 @@ CERT_ParseURL(const char *url, char **pHostname, PRUint16 *pPort, char **pPath);
  *   XXX in the long term also need a boolean parameter that specifies
  *	whether to check the cert chain, as well; for now we check only
  *	the leaf (the specified certificate)
- *   int64 time
+ *   PRTime time
  *     time for which status is to be determined
  *   void *pwArg
  *     argument for password prompting, if needed
@@ -525,7 +531,7 @@ CERT_ParseURL(const char *url, char **pHostname, PRUint16 *pPort, char **pPath);
  */    
 extern SECStatus 
 CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
-		     int64 time, void *pwArg);
+		     PRTime time, void *pwArg);
 /*
  * FUNCTION: CERT_GetOCSPStatusForCertID
  *  Returns the OCSP status contained in the passed in paramter response
@@ -540,7 +546,7 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
  *  CERTCertificate *signerCert
  *    the certificate that was used to sign the OCSP response.
  *    must be obtained via a call to CERT_VerifyOCSPResponseSignature.
- *  int64 time
+ *  PRTime time
  *    The time at which we're checking the status for.
  *  RETURN:
  *    Return values are the same as those for CERT_CheckOCSPStatus
@@ -550,7 +556,7 @@ CERT_GetOCSPStatusForCertID(CERTCertDBHandle *handle,
 			    CERTOCSPResponse *response,
 			    CERTOCSPCertID   *certID,
 			    CERTCertificate  *signerCert,
-                            int64             time);
+                            PRTime            time);
 
 /*
  * FUNCTION CERT_GetOCSPResponseStatus
@@ -578,7 +584,7 @@ CERT_GetOCSPResponseStatus(CERTOCSPResponse *response);
  * INPUTS:
  *  CERTCertificate *cert
  *    The certificate for which to create the certID for.
- *  int64 time
+ *  PRTime time
  *    The time at which the id is requested for.  This is used
  *    to determine the appropriate issuer for the cert since
  *    the issuing CA may be an older expired certificate.
@@ -588,7 +594,7 @@ CERT_GetOCSPResponseStatus(CERTOCSPResponse *response);
  *    certID is no longer necessary.
  */
 extern CERTOCSPCertID*
-CERT_CreateOCSPCertID(CERTCertificate *cert, int64 time);
+CERT_CreateOCSPCertID(CERTCertificate *cert, PRTime time);
 
 /*
  * FUNCTION: CERT_DestroyOCSPCertID

@@ -1,12 +1,12 @@
 <!DOCTYPE HTML>
 <title>Canvas test: type.prototype</title>
+<!-- Testing: window.HTMLCanvasElement has prototype, which is { ReadOnly, DontDelete }. prototype has getContext, which is not -->
 <script src="/MochiKit/MochiKit.js"></script>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <body>
 <canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
-var _deferred = false;
 
 SimpleTest.waitForExplicitFinish();
 MochiKit.DOM.addLoadEvent(function () {
@@ -25,7 +25,8 @@ ok(window.HTMLCanvasElement.prototype.getContext === 1, "window.HTMLCanvasElemen
 delete window.HTMLCanvasElement.prototype.getContext;
 todo(window.HTMLCanvasElement.prototype.getContext === undefined, "window.HTMLCanvasElement.prototype.getContext === undefined");
 
-if (!_deferred) SimpleTest.finish();
+SimpleTest.finish();
+
 });
 </script>
 

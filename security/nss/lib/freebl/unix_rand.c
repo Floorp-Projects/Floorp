@@ -185,7 +185,8 @@ static SECStatus RNG_kstat(PRUint32* fed)
 #endif
 
 #if defined(SCO) || defined(UNIXWARE) || defined(BSDI) || defined(FREEBSD) \
-    || defined(NETBSD) || defined(NTO) || defined(DARWIN) || defined(OPENBSD)
+    || defined(NETBSD) || defined(DARWIN) || defined(OPENBSD) \
+    || defined(NTO) || defined(__riscos__)
 #include <sys/times.h>
 
 #define getdtablesize() sysconf(_SC_OPEN_MAX)

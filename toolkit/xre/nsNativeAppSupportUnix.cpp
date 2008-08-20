@@ -277,8 +277,23 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   /* zero state out. */
   memset(&m_hw_state, 0, sizeof(osso_hw_state_t));
 
-  /* Initialize maemo application */
-  m_osso_context = osso_initialize(gAppData->name, 
+  /* Initialize maemo application
+     
+     The initalization name will be of the form "Vendor.Name".
+     If a Vendor isn't given, then we will just use "Name".
+     
+     Note that this value must match your X-Osso-Service name
+     defined in your desktop file.  If it doesn't, the OSSO
+     system will happily kill your process.
+  */
+  nsCAutoString applicationName;
+  if(gAppData->vendor) {
+      applicationName.Append(gAppData->vendor);
+      applicationName.Append(".");
+  }
+  applicationName.Append(gAppData->name);
+
+  m_osso_context = osso_initialize(applicationName.get(), 
                                    gAppData->version ? gAppData->version : "1.0",
                                    PR_TRUE,
                                    nsnull);
@@ -296,6 +311,8 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
 #endif
 
   *aRetVal = PR_TRUE;
+
+#ifdef MOZ_X11
 
   PRLibrary *gnomeuiLib = PR_LoadLibrary("libgnomeui-2.so.0");
   if (!gnomeuiLib)
@@ -316,6 +333,8 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
     return NS_OK;
   }
 
+#endif /* MOZ_X11 */
+
 #ifdef ACCESSIBILITY
   // We will load gail, atk-bridge by ourself later
   // We can't run atk-bridge init here, because gail get the control
@@ -325,7 +344,9 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   setenv(accEnv, "0", 1);
 #endif
 
+#ifdef MOZ_X11
   gnome_program_init("Gecko", "1.0", libgnomeui_module_info_get(), gArgc, gArgv, NULL);
+#endif /* MOZ_X11 */
 
 #ifdef ACCESSIBILITY
   if (accOldValue) { 
@@ -339,6 +360,7 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   // gnome_program_init causes atexit handlers to be registered. Strange
   // crashes will occur if these libraries are unloaded.
 
+#ifdef MOZ_X11
   gnome_client_request_interaction = (_gnome_client_request_interaction_fn)
     PR_FindFunctionSymbol(gnomeuiLib, "gnome_client_request_interaction");
   gnome_interaction_key_return = (_gnome_interaction_key_return_fn)
@@ -352,6 +374,7 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   GnomeClient *client = gnome_master_client();
   g_signal_connect(client, "save-yourself", G_CALLBACK(save_yourself_cb), NULL);
   g_signal_connect(client, "die", G_CALLBACK(die_cb), NULL);
+#endif /* MOZ_X11 */
 
   return NS_OK;
 }

@@ -23,7 +23,7 @@
  *   Dietrich Ayala <dietrich@mozilla.com>
  *   Seth Spitzer <sspitzer@mozilla.com>
  *   Asaf Romano <mano@mozilla.com>
- *   Marco Bonardo <mak77@supereva.it>
+ *   Marco Bonardo <mak77@bonardo.net>
  *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -218,8 +218,8 @@
 // character-set annotation
 #define CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
 
-NS_IMPL_ADDREF(nsNavHistory)
-NS_IMPL_RELEASE(nsNavHistory)
+NS_IMPL_THREADSAFE_ADDREF(nsNavHistory)
+NS_IMPL_THREADSAFE_RELEASE(nsNavHistory)
 
 NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryService)
@@ -230,6 +230,7 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsICharsetResolver)
+  NS_INTERFACE_MAP_ENTRY(nsPIPlacesDatabase)
 #ifdef MOZ_XUL
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSimpleResultListener)
@@ -584,7 +585,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
   // open the database
   mDBService = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBService->OpenDatabase(mDBFile, getter_AddRefs(mDBConn));
+  rv = mDBService->OpenUnsharedDatabase(mDBFile, getter_AddRefs(mDBConn));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     dbExists = PR_FALSE;
   
@@ -603,7 +604,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBFile->Append(DB_FILENAME);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBService->OpenDatabase(mDBFile, getter_AddRefs(mDBConn));
+    rv = mDBService->OpenUnsharedDatabase(mDBFile, getter_AddRefs(mDBConn));
   }
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -992,6 +993,17 @@ nsNavHistory::InitStatements()
       "ORDER BY v.visit_date DESC "
       "LIMIT 1"),
     getter_AddRefs(mDBRecentVisitOfURL));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBRecentVisitOfPlace
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT id "
+      "FROM moz_historyvisits "
+      "WHERE place_id = ?1 "
+      "AND visit_date = ?2 "
+      "AND session = ?3 "
+      "LIMIT 1"),
+    getter_AddRefs(mDBRecentVisitOfPlace));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBInsertVisit
@@ -1716,8 +1728,17 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
 
   // If the caller wants the page ID, go get it
   if (aPageID) {
-    rv = mDBConn->GetLastInsertRowID(aPageID);
+    mozStorageStatementScoper scoper(mDBGetURLPageInfo);
+
+    rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasResult = PR_FALSE;
+    rv = mDBGetURLPageInfo->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
+
+    *aPageID = mDBGetURLPageInfo->AsInt64(0);
   }
 
   return NS_OK;
@@ -1733,23 +1754,43 @@ nsNavHistory::InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
                                PRInt32 aTransitionType, PRInt64* visitID)
 {
   nsresult rv;
-  mozStorageStatementScoper scoper(mDBInsertVisit);
 
-  rv = mDBInsertVisit->BindInt64Parameter(0, aReferringVisit);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBInsertVisit->BindInt64Parameter(1, aPageID);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBInsertVisit->BindInt64Parameter(2, aTime);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBInsertVisit->BindInt32Parameter(3, aTransitionType);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBInsertVisit->BindInt64Parameter(4, aSessionID);
-  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    mozStorageStatementScoper scoper(mDBInsertVisit);
+  
+    rv = mDBInsertVisit->BindInt64Parameter(0, aReferringVisit);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBInsertVisit->BindInt64Parameter(1, aPageID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBInsertVisit->BindInt64Parameter(2, aTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBInsertVisit->BindInt32Parameter(3, aTransitionType);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBInsertVisit->BindInt64Parameter(4, aSessionID);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    rv = mDBInsertVisit->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-  rv = mDBInsertVisit->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    mozStorageStatementScoper scoper(mDBRecentVisitOfPlace);
 
-  return mDBConn->GetLastInsertRowID(visitID);
+    rv = mDBRecentVisitOfPlace->BindInt64Parameter(0, aPageID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBRecentVisitOfPlace->BindInt64Parameter(1, aTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBRecentVisitOfPlace->BindInt64Parameter(2, aSessionID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasResult;
+    rv = mDBRecentVisitOfPlace->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
+
+    *visitID = mDBRecentVisitOfPlace->AsInt64(0);
+  }
+  return NS_OK;
 }
 
 
@@ -4205,12 +4246,13 @@ nsNavHistory::AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
 nsresult
 nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
                             PRBool aToplevel, PRBool aIsRedirect,
-                            nsIURI* aReferrer, PRInt64* aVisitID,
+                            nsIURI* aReferrerURI, PRInt64* aVisitID,
                             PRInt64* aSessionID, PRInt64* aRedirectBookmark)
 {
   PRUint32 transitionType = 0;
   PRInt64 referringVisit = 0;
   PRTime visitTime = 0;
+  nsCOMPtr<nsIURI> fromVisitURI = aReferrerURI;
 
   nsCAutoString spec;
   nsresult rv = aURI->GetSpec(spec);
@@ -4237,7 +4279,7 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
     // in the correct order. Since the times are in microseconds, it should not
     // normally be possible to get two pages within one microsecond of each
     // other so the referrer won't appear before a previous page viewed.
-    rv = AddVisitChain(redirectURI, aTime - 1, aToplevel, PR_TRUE, aReferrer,
+    rv = AddVisitChain(redirectURI, aTime - 1, aToplevel, PR_TRUE, aReferrerURI,
                        &referringVisit, aSessionID, aRedirectBookmark);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4246,12 +4288,16 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
     if (!aToplevel) {
       transitionType = nsINavHistoryService::TRANSITION_EMBED;
     }
-  } else if (aReferrer) {
+
+    // We have been redirected, update the referrer so we can walk up
+    // the redirect chain. See bug 411966 for details.
+    fromVisitURI = redirectURI;
+  } else if (aReferrerURI) {
     // We do not want to add a new visit if the referring site is the same as
     // the new site.  This is the situation where a page refreshes itself to
     // give the user updated information.
     PRBool referrerIsSame;
-    if (NS_SUCCEEDED(aURI->Equals(aReferrer, &referrerIsSame)) && referrerIsSame)
+    if (NS_SUCCEEDED(aURI->Equals(aReferrerURI, &referrerIsSame)) && referrerIsSame)
       return NS_OK;
 
     // If there is a referrer, we know you came from somewhere, either manually
@@ -4281,7 +4327,7 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
 
     // Try to turn the referrer into a visit.
     // This also populates the session id.
-    if (!FindLastVisit(aReferrer, &referringVisit, aSessionID)) {
+    if (!FindLastVisit(aReferrerURI, &referringVisit, aSessionID)) {
       // we couldn't find a visit for the referrer, don't set it
       *aSessionID = GetNewSessionID();
     }
@@ -4308,7 +4354,7 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
   }
 
   // this call will create the visit and create/update the page entry
-  return AddVisit(aURI, visitTime, aReferrer, transitionType,
+  return AddVisit(aURI, visitTime, fromVisitURI, transitionType,
                   aIsRedirect, *aSessionID, aVisitID);
 }
 
@@ -4609,6 +4655,15 @@ nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
   PRInt64 visitID;
   return AddVisit(aSource, aStartTime, aReferrer, TRANSITION_DOWNLOAD, PR_FALSE,
                   0, &visitID);
+}
+
+// nsPIPlacesDatabase **********************************************************
+
+NS_IMETHODIMP
+nsNavHistory::GetDBConnection(mozIStorageConnection **_DBConnection)
+{
+  NS_ADDREF(*_DBConnection = mDBConn);
+  return NS_OK;
 }
 
 // nsIObserver *****************************************************************

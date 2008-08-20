@@ -62,6 +62,7 @@
 
 #include <direct.h>
 #include <windows.h>
+#include <aclapi.h>
 
 #include "shellapi.h"
 #include "shlguid.h"
@@ -1447,6 +1448,19 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
 
     if (!copyOK)  // CopyFile and MoveFileEx return zero at failure.
         rv = ConvertWinError(GetLastError());
+
+    if(move) //Set security permissions to inherit from parent.
+    {
+        ACL empty_acl;
+        if (InitializeAcl(&empty_acl, (DWORD) sizeof(ACL), ACL_REVISION))
+        {
+        ::SetNamedSecurityInfoW((LPWSTR)destPath.get(), SE_FILE_OBJECT, 
+                                DACL_SECURITY_INFORMATION |
+                                UNPROTECTED_DACL_SECURITY_INFORMATION, 
+                                NULL, NULL, &empty_acl, NULL);
+        }
+    }
+
 
     return rv;
 }

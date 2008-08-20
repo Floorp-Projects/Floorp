@@ -188,7 +188,7 @@
                  oncommand="retrieveRepositoryAddons(this.value);"/>
         <spacer flex="1"/>
         <label id="browseAddons" class="text-link" value="&browseAddons.label;"
-               onclick="openURL(this.getAttribute('homepageURL'));"/>
+               onclick="if (event.button == 0) { openURL(this.getAttribute('homepageURL')); }"/>
       </hbox>
       
       <hbox flex="1">
@@ -259,7 +259,7 @@
               command="cmd_checkUpdatesAll"/>
       <spacer flex="1"/>
       <label id="getMore" class="text-link"
-             onclick="openURL(this.getAttribute('getMoreURL'));"
+             onclick="if (event.button == 0) { openURL(this.getAttribute('getMoreURL')); }"
              valuethemes="&getThemes.label;"
              valueplugins="&getPlugins.label;"
              valueextensions="&getExtensions.label;"/>

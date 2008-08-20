@@ -234,7 +234,7 @@
       <label crop="center" flex="1"/>
     </tooltip>
 
-    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true">
+    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" noautofocus="true">
       <label id="ctrlTab-label" flex="1"/>
       <svg:svg id="ctrlTab-svgRoot">
         <svg:defs>
@@ -378,7 +378,7 @@
                        ondraggesture="PageProxyDragGesture(event);"
                        onerror="this.removeAttribute('src');"/>
               </stack>
-              <label id="identity-icon-label"/>
+              <label id="identity-icon-label" crop="center" flex="1"/>
             </hbox>
           </box>
           <hbox id="urlbar-icons">

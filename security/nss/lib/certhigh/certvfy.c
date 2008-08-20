@@ -895,7 +895,6 @@ CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
     PRBool isca;
     PRBool validCAOverride = PR_FALSE;
     SECStatus rv;
-    SECComparison rvCompare;
     SECStatus rvFinal = SECSuccess;
     int flags;
     unsigned int caCertType;

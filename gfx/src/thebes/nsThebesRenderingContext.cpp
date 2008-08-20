@@ -195,19 +195,6 @@ nsThebesRenderingContext::SetTranslation(nscoord aX, nscoord aY)
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::GetHints(PRUint32& aResult)
-{
-    aResult = 0;
-
-    aResult |= (NS_RENDERING_HINT_BIDI_REORDERING |
-                NS_RENDERING_HINT_ARABIC_SHAPING |
-                NS_RENDERING_HINT_REORDER_SPACED_TEXT |
-                NS_RENDERING_HINT_NEW_TEXT_RUNS);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsThebesRenderingContext::PushState()
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PushState\n", this));
@@ -974,7 +961,7 @@ nsThebesRenderingContext::GetTextDimensionsInternal(const PRUnichar* aString,
   return GetWidth(aString, aLength, aDimensions.width, aFontID);
 }
 
-#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS) || defined(XP_MACOSX)
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS) || defined(XP_MACOSX) || defined (MOZ_DFB)
 NS_IMETHODIMP
 nsThebesRenderingContext::GetTextDimensionsInternal(const char*       aString,
                                                     PRInt32           aLength,
@@ -1048,14 +1035,6 @@ nsThebesRenderingContext::DrawStringInternal(const PRUnichar *aString, PRUint32 
 
     return mFontMetrics->DrawString(aString, aLength, aX, aY, aFontID,
                                     aSpacing, this);
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::GetClusterInfo(const PRUnichar *aText,
-                                         PRUint32 aLength,
-                                         PRUint8 *aClusterStarts)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 PRInt32
