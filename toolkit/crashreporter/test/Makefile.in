@@ -95,6 +95,7 @@ LIBS += \
 endif
 
 ifeq ($(OS_ARCH),SunOS)
+OS_LIBS += -lelf
 LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/solaris/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \

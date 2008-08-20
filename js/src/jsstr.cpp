@@ -1016,7 +1016,7 @@ str_indexOf(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
 
         str2 = ArgToRootedString(cx, argc, vp, 0);
-        if (!str)
+        if (!str2)
             return JS_FALSE;
     }
 
@@ -1083,7 +1083,7 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
     textlen = (jsint) JSSTRING_LENGTH(str);
 
     str2 = ArgToRootedString(cx, argc, vp, 0);
-    if (!str)
+    if (!str2)
         return JS_FALSE;
     pat = JSSTRING_CHARS(str2);
     patlen = (jsint) JSSTRING_LENGTH(str2);

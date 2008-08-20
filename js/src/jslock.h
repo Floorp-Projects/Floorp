@@ -291,6 +291,21 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 #define SET_TITLE_INFO(title,f,l)   ((void)0)
 #endif
 
+#ifdef JS_THREADSAFE
+
+extern JSBool
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv);
+
+#else
+
+static inline JSBool
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+    return (*w == ov) ? *w = nv, JS_TRUE : JS_FALSE;
+}
+
+#endif
+
 JS_END_EXTERN_C
 
 #endif /* jslock_h___ */

@@ -358,15 +358,12 @@ WORD cmsLinearInterpLUT16(WORD Value, WORD LutTable[], LPL16PARAMS p)
        return (WORD) floor(y+.5);
 }
 
-#endif
-
 
 //
-//  Linear interpolation (Fixed-point optimized, but C source)
+//  Linear interpolation (Fixed-point optimized, but C source).
 //
 
-
-#ifdef USE_C
+#else
 
 WORD cmsLinearInterpLUT16(WORD Value1, WORD LutTable[], LPL16PARAMS p)
 {
@@ -395,12 +392,12 @@ WORD cmsLinearInterpLUT16(WORD Value1, WORD LutTable[], LPL16PARAMS p)
 
        if (dif >= 0)
        {
-       a1 = ToFixedDomain(dif * rest);
+       a1 = ToFixedDomain(((unsigned)dif) * rest);
        a1 += 0x8000;
        }
        else
        {
-              a1 = ToFixedDomain((- dif) * rest);
+              a1 = ToFixedDomain(((unsigned)dif) * rest);
               a1 -= 0x8000;
               a1 = -a1;
        }
@@ -409,79 +406,6 @@ WORD cmsLinearInterpLUT16(WORD Value1, WORD LutTable[], LPL16PARAMS p)
 
        return y;
 }
-
-#endif
-
-// Linear interpolation (asm by hand optimized)
-
-#ifdef USE_ASSEMBLER
-
-#ifdef _MSC_VER
-#pragma warning(disable : 4033)
-#pragma warning(disable : 4035)
-#endif
-
-WORD cmsLinearInterpLUT16(WORD Value, WORD LutTable[], LPL16PARAMS p)
-{
-       int xDomain = p -> Domain;
-
-
-       if (Value == 0xffff) return LutTable[p -> Domain];
-       else
-       ASM {
-              xor       eax, eax
-              mov       ax, word ptr ss:Value
-              mov       edx, ss:xDomain
-              mul       edx                         //  val3 = p -> Domain * Value;
-              shld      edx, eax, 16                // Convert it to fixed 15.16
-              shl       eax, 16                     // * 65536 / 65535
-              mov       ebx, 0x0000ffff
-              div       ebx
-              mov       ecx, eax
-              sar       ecx, 16                        // ecx = cell0
-              mov       edx, eax                       // rest = (val2 & 0xFFFFU)
-              and       edx, 0x0000ffff                // edx = rest
-              mov       ebx, ss:LutTable
-              lea       eax, dword ptr [ebx+2*ecx]     // Ptr to LUT
-              xor       ebx, ebx
-              mov        bx, word  ptr [eax]           // EBX = y0
-              movzx     eax, word  ptr [eax+2]         // EAX = y1
-              sub       eax, ebx                       // EAX = y1-y0
-              js        IsNegative
-              mul       edx                            // EAX = EAX * rest
-              shld      edx, eax, 16                   // Pass it to fixed
-              sal       eax, 16                        // * 65536 / 65535
-              mov       ecx, 0x0000ffff
-              div       ecx
-              add       eax, 0x8000                    // Rounding
-              sar       eax, 16
-              add       eax, ebx                       // Done!
-              }
-
-              RET((WORD) _EAX);
-
-       IsNegative:
-
-              ASM {
-              neg       eax
-              mul       edx                            // EAX = EAX * rest
-              shld      edx, eax, 16                   // Pass it to fixed
-              sal       eax, 16                        // * 65536 / 65535
-              mov       ecx, 0x0000ffff
-              div       ecx
-              sub       eax, 0x8000
-              neg       eax
-              sar       eax, 16
-              add       eax, ebx                       // Done!
-              }
-
-              RET((WORD) _EAX);
-}
-
-#ifdef _MSC_VER
-#pragma warning(default : 4033)
-#pragma warning(default : 4035)
-#endif
 
 #endif
 

@@ -90,24 +90,10 @@ static PRInt32 FindSafeLength(nsRenderingContextImpl* aContext,
   if (aLength <= aMaxChunkLength)
     return aLength;
   
-  PRUint8 buffer[MAX_GFX_TEXT_BUF_SIZE + 1];
-  // Fill in the cluster hint information, if it's available.
-  PRUint32 clusterHint;
-  aContext->GetHints(clusterHint);
-  clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
-
   PRInt32 len = aMaxChunkLength;
 
-  if (clusterHint) {
-    nsresult rv =
-      aContext->GetClusterInfo(aString, aMaxChunkLength + 1, buffer);
-    if (NS_FAILED(rv))
-      return len;
-  }
-
-  // Ensure that we don't break inside a cluster or inside a surrogate pair
-  while (len > 0 &&
-         (NS_IS_LOW_SURROGATE(aString[len]) || (clusterHint && !buffer[len]))) {
+  // Ensure that we don't break inside a surrogate pair
+  while (len > 0 && NS_IS_LOW_SURROGATE(aString[len])) {
     len--;
   }
   if (len == 0) {

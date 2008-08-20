@@ -37,7 +37,7 @@
 /*
  * Interface to the PKCS7 implementation.
  *
- * $Id: secpkcs7.h,v 1.5 2004/04/25 15:03:13 gerv%gerv.net Exp $
+ * $Id: secpkcs7.h,v 1.6 2008/06/14 14:20:25 wtc%google.com Exp $
  */
 
 #ifndef _SECPKCS7_H_
@@ -489,7 +489,7 @@ extern SECStatus SEC_PKCS7Encode (SEC_PKCS7ContentInfo *cinfo,
  *
  * "pwfnarg" is an opaque argument to the above callback.
  */
-extern SECItem *SEC_PKCS7EncodeItem (PRArenaPool *pool,
+extern SECItem *SEC_PKCS7EncodeItem (PLArenaPool *pool,
 				     SECItem *dest,
 				     SEC_PKCS7ContentInfo *cinfo,
 				     PK11SymKey *bulkkey,
@@ -580,7 +580,7 @@ SEC_PKCS7GetEncryptionAlgorithm(SEC_PKCS7ContentInfo *cinfo);
  * indicates a success.
  */
 extern SECStatus 
-SEC_PKCS7EncryptContents(PRArenaPool *poolp,
+SEC_PKCS7EncryptContents(PLArenaPool *poolp,
 			 SEC_PKCS7ContentInfo *cinfo, 
 			 SECItem *key,
 			 void *wincx); 
@@ -600,7 +600,7 @@ SEC_PKCS7EncryptContents(PRArenaPool *poolp,
  * indicates a success.
  */
 extern SECStatus 
-SEC_PKCS7DecryptContents(PRArenaPool *poolp,
+SEC_PKCS7DecryptContents(PLArenaPool *poolp,
 			 SEC_PKCS7ContentInfo *cinfo, 
 			 SECItem *key,
 			 void *wincx); 

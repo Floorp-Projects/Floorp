@@ -194,8 +194,6 @@ protected:
 
   XMLContentSinkState mState;
 
-  nsString mTitleText; 
-  
   PRInt32 mTextLength;
   PRInt32 mTextSize;
   

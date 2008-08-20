@@ -52,7 +52,6 @@ extern "C" {
 
 struct PKIX_PL_OcspCertIDStruct {
         CERTOCSPCertID *certID;
-        PRBool certIDWasConsumed;
 };
 
 /* see source file for function documentation */

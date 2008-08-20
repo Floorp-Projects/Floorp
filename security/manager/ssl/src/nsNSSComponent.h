@@ -123,7 +123,7 @@ protected:
   PRInt32 mBufferSize;
   PRUint32 mType;
   PRBool mDoSilentDownload;
-  nsAutoString mCrlAutoDownloadKey;
+  nsString mCrlAutoDownloadKey;
   nsCOMPtr<nsIURI> mURI;
   nsresult handleContentDownloadError(nsresult errCode);
 };

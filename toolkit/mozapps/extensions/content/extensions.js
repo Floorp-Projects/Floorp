@@ -694,13 +694,9 @@ function displaySearchResults(addons, count, isRecommended) {
                      gRDF.GetLiteral("header-recommended"),
                      true);
 
-    // Case insensitive sort
+    // Locale sensitive sort
     function compare(a, b) {
-      if (a.name.toLowerCase() < b.name.toLowerCase())
-        return -1;
-      if (a.name.toLowerCase() > b.name.toLowerCase())
-        return 1;
-      return 0;
+      return String.localeCompare(a.name, b.name);
     }
     addons.sort(compare);
   }
@@ -899,13 +895,9 @@ function rebuildPluginsDS()
 
   cleanDataSource(gPluginsDS, rootctr);
 
-  // Case insensitive sort
+  // Locale sensitive sort
   function compare(a, b) {
-    if (a.name.toLowerCase() < b.name.toLowerCase())
-      return -1;
-    if (a.name.toLowerCase() > b.name.toLowerCase())
-      return 1;
-    return 0;
+    return String.localeCompare(a.name, b.name);
   }
   plugins.sort(compare);
 
@@ -2193,7 +2185,7 @@ function hideUpdateInfo()
 }
 
 function checkUpdatesAll() {
-  if (isOffline("offlineUpdateMsg"))
+  if (isOffline("offlineUpdateMsg2"))
     return;
 
   if (!isXPInstallEnabled())
@@ -2221,7 +2213,7 @@ function checkUpdatesAll() {
 }
 
 function installUpdatesAll() {
-  if (isOffline("offlineUpdateMsg"))
+  if (isOffline("offlineUpdateMsg2"))
     return;
 
   if (!isXPInstallEnabled())
@@ -2570,7 +2562,7 @@ var gExtensionsViewController = {
 
     cmd_checkUpdate: function (aSelectedItem)
     {
-      if (isOffline("offlineUpdateMsg"))
+      if (isOffline("offlineUpdateMsg2"))
         return;
 
       if (!isXPInstallEnabled())
@@ -2586,7 +2578,7 @@ var gExtensionsViewController = {
 
     cmd_installUpdate: function (aSelectedItem)
     {
-      if (isOffline("offlineUpdateMsg"))
+      if (isOffline("offlineUpdateMsg2"))
         return;
 
       if (!isXPInstallEnabled())
@@ -2770,8 +2762,10 @@ function installSkin()
   // 1) Prompt the user for the location of the theme to install.
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   fp.init(window, getExtensionString("installThemePickerTitle"), nsIFilePicker.modeOpen);
-  fp.appendFilter(getExtensionString("themesFilter"), "*.jar");
-  fp.appendFilters(nsIFilePicker.filterAll);
+  try {
+    fp.appendFilter(getExtensionString("themesFilter"), "*.jar");
+    fp.appendFilters(nsIFilePicker.filterAll);
+  } catch (e) { }
 
   var ret = fp.show();
   if (ret == nsIFilePicker.returnOK)
@@ -2788,8 +2782,10 @@ function installExtension()
 {
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
   fp.init(window, getExtensionString("installExtensionPickerTitle"), nsIFilePicker.modeOpen);
-  fp.appendFilter(getExtensionString("extensionFilter"), "*.xpi");
-  fp.appendFilters(nsIFilePicker.filterAll);
+  try {
+    fp.appendFilter(getExtensionString("extensionFilter"), "*.xpi");
+    fp.appendFilters(nsIFilePicker.filterAll);
+  } catch (e) { }
 
   var ret = fp.show();
   if (ret == nsIFilePicker.returnOK)

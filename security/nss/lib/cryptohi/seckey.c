@@ -453,7 +453,7 @@ done:
 static SECStatus
 seckey_UpdateCertPQGChain(CERTCertificate * subjectCert, int count)
 {
-    SECStatus rv, rvCompare;
+    SECStatus rv;
     SECOidData *oid=NULL;
     int tag;
     CERTSubjectPublicKeyInfo * subjectSpki=NULL;

@@ -57,7 +57,6 @@ const Cu = Components.utils;
 const STATE_STOPPED = 0;
 const STATE_RUNNING = 1;
 const STATE_QUITTING = -1;
-const STATE_DISABLED = -2;
 
 const STATE_STOPPED_STR = "stopped";
 const STATE_RUNNING_STR = "running";
@@ -159,9 +158,6 @@ SessionStoreService.prototype = {
    * Initialize the component
    */
   init: function sss_init(aWindow) {
-    if (this._loadState == STATE_DISABLED)
-      return;
-
     if (!aWindow || this._loadState == STATE_RUNNING) {
       // make sure that all browser windows which try to initialize
       // SessionStore are really tracked by it
@@ -176,15 +172,6 @@ SessionStoreService.prototype = {
 
     var observerService = Cc["@mozilla.org/observer-service;1"].
                           getService(Ci.nsIObserverService);
-
-    // if the service is disabled, do not init 
-    if (!this._prefBranch.getBoolPref("sessionstore.enabled")) {
-      // Notify observers that the sessionstore has done everything it is going to.
-      observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
-      // Mark as disabled so we don't even try to initialise again.
-      this._loadState = STATE_DISABLED;
-      return;
-    }
 
     OBSERVING.forEach(function(aTopic) {
       observerService.addObserver(this, aTopic, true);
@@ -916,12 +903,11 @@ SessionStoreService.prototype = {
       delete tabData.disallow;
     
     if (this.xulAttributes.length > 0) {
-      var xulattr = Array.filter(aTab.attributes, function(aAttr) {
-        return this.xulAttributes.indexOf(aAttr.name) > -1;
-      }, this).map(function(aAttr) {
-        return aAttr.name + "=" + encodeURI(aAttr.value);
-      });
-      tabData.xultab = xulattr.join(" ");
+      tabData.attributes = {};
+      Array.forEach(aTab.attributes, function(aAttr) {
+        if (this.xulAttributes.indexOf(aAttr.name) > -1)
+          tabData.attributes[aAttr.name] = aAttr.value;
+      }, this);
     }
     
     if (aTab.__SS_extdata)
@@ -1033,6 +1019,11 @@ SessionStoreService.prototype = {
         }
         else { // to maintain the correct frame order, insert a dummy entry 
           entry.children.push({ url: "about:blank" });
+        }
+        // don't try to restore framesets containing wyciwyg URLs (cf. bug 424689 and bug 450595)
+        if (/^wyciwyg:\/\//.test(entry.children[i].url)) {
+          delete entry.children;
+          break;
         }
       }
     }
@@ -1414,6 +1405,14 @@ SessionStoreService.prototype = {
     if (!winData.tabs) {
       winData.tabs = [];
     }
+    // don't restore a single blank tab when we've had an external
+    // URL passed in for loading at startup (cf. bug 357419)
+    else if (root._firstTabs && !aOverwriteTabs && winData.tabs.length == 1) {
+      let tabEntries = winData.tabs[0].entries || [];
+      if (tabEntries.length == 0 ||
+          tabEntries.length == 1 && tabEntries[0].url == "about:blank")
+        winData.tabs = [];
+    }
     
     var tabbrowser = aWindow.getBrowser();
     var openTabCount = aOverwriteTabs ? tabbrowser.browsers.length : -1;
@@ -1567,12 +1566,15 @@ SessionStoreService.prototype = {
       return (_this.xulAttributes.indexOf(aAttr.name) > -1);
     }).forEach(tab.removeAttribute, tab);
     if (tabData.xultab) {
+      // restore attributes from the legacy Firefox 2.0/3.0 format
       tabData.xultab.split(" ").forEach(function(aAttr) {
         if (/^([^\s=]+)=(.*)/.test(aAttr)) {
           tab.setAttribute(RegExp.$1, decodeURI(RegExp.$2));
         }
       });
     }
+    for (let name in tabData.attributes)
+      tab.setAttribute(name, tabData.attributes[name]);
     
     // notify the tabbrowser that the tab chrome has been restored
     var event = aWindow.document.createEvent("Events");
@@ -1890,7 +1892,19 @@ SessionStoreService.prototype = {
     this._dirty = aUpdateAll;
     var oState = this._getCurrentState();
     oState.session = { state: ((this._loadState == STATE_RUNNING) ? STATE_RUNNING_STR : STATE_STOPPED_STR) };
-    this._writeFile(this._sessionFile, oState.toSource());
+    
+    var stateString = Cc["@mozilla.org/supports-string;1"].
+                        createInstance(Ci.nsISupportsString);
+    stateString.data = oState.toSource();
+    
+    var observerService = Cc["@mozilla.org/observer-service;1"].
+                          getService(Ci.nsIObserverService);
+    observerService.notifyObservers(stateString, "sessionstore-state-write", "");
+    
+    // don't touch the file if an observer has deleted all state data
+    if (stateString.data)
+      this._writeFile(this._sessionFile, stateString.data);
+    
     this._lastSaveTime = Date.now();
   },
 
@@ -2070,9 +2084,15 @@ SessionStoreService.prototype = {
       return;
     }
     try {
-      var currentUrl = aWindow.getBrowser().currentURI.spec;
+      var currentURI = aWindow.getBrowser().currentURI.clone();
+      // if the current URI contains a username/password, remove it
+      try { 
+        currentURI.userPass = ""; 
+      } 
+      catch (ex) { } // ignore failures on about: URIs
+
       var cr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsICrashReporter);
-      cr.annotateCrashReport("URL", currentUrl);
+      cr.annotateCrashReport("URL", currentURI.spec);
     }
     catch (ex) {
       // don't make noise when crashreporter is built but not enabled

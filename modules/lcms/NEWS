@@ -1,3 +1,11 @@
+ New in Mozilla patchset
+ =======================
+ -A precaching framework has been added, currently with support for precaching
+ linear interpolations of various formats
+ -inline assembly for linear interpolation has been removed on the grounds
+ that it is actually much slower than generated code as a result of 'div'
+ instructions
+ 
 
  New in ver 1.17
  ===============

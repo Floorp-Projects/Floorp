@@ -38,11 +38,13 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(f8583bbc-c6de-4646-b39f-df7e766442e9)]
+[scriptable, uuid(B2F824C4-D9D3-499B-8D3B-45C8245497C6)]
 interface nsIDOMClientRect : nsISupports
 {
   readonly attribute float left;
   readonly attribute float top;
   readonly attribute float right;
   readonly attribute float bottom;
+  readonly attribute float width;
+  readonly attribute float height;
 };

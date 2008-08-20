@@ -97,8 +97,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xc45a4a53, 0x0485, 0x43d5, \
-  { 0x85, 0x95, 0x9f, 0x0b, 0xf4, 0x0d, 0xe9, 0x34 } }
+    { 0x5f0203a8, 0xd926, 0x4adf, \
+      { 0xba, 0x96, 0xe6, 0xc3, 0xe6, 0xbb, 0x1b, 0xe5 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -167,14 +167,13 @@ public:
   virtual void StopDocumentLoad() = 0;
 
   /**
-   * Return the title of the document.  This will return a void string
-   * if there is no title for this document).
+   * Signal that the document title may have changed
+   * (see nsDocument::GetTitle).
+   * @param aBoundTitleElement true if an HTML or SVG <title> element
+   * has just been bound to the document.
    */
-  const nsString& GetDocumentTitle() const
-  {
-    return mDocumentTitle;
-  }
-
+  virtual void NotifyPossibleTitleChange(PRBool aBoundTitleElement) = 0;
+  
   /**
    * Return the URI for the document. May return null.
    */
@@ -1011,7 +1010,6 @@ protected:
   friend class mozAutoSubtreeModified;
   friend class nsPresShellIterator;
 
-  nsString mDocumentTitle;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mDocumentBaseURI;
 

@@ -1332,9 +1332,9 @@ public:
                              mAttr.Elements(), &mNumGlyphs);
 
             if (rv == E_OUTOFMEMORY) {
+                mMaxGlyphs *= 2;
                 mGlyphs.SetLength(mMaxGlyphs);
                 mAttr.SetLength(mMaxGlyphs);
-                mMaxGlyphs *= 2;
                 continue;
             }
 

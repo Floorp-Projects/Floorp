@@ -1534,6 +1534,7 @@ nsStyleQuotes::nsStyleQuotes(void)
   : mQuotesCount(0),
     mQuotes(nsnull)
 {
+  SetInitial();
 }
 
 nsStyleQuotes::~nsStyleQuotes(void)
@@ -1544,6 +1545,32 @@ nsStyleQuotes::~nsStyleQuotes(void)
 nsStyleQuotes::nsStyleQuotes(const nsStyleQuotes& aSource)
   : mQuotesCount(0),
     mQuotes(nsnull)
+{
+  CopyFrom(aSource);
+}
+
+void
+nsStyleQuotes::SetInitial()
+{
+  // The initial value for quotes is the en-US typographic convention:
+  // outermost are LEFT and RIGHT DOUBLE QUOTATION MARK, alternating
+  // with LEFT and RIGHT SINGLE QUOTATION MARK.
+  static const PRUnichar initialQuotes[8] = {
+    0x201C, 0, 0x201D, 0, 0x2018, 0, 0x2019, 0
+  };
+  
+  if (NS_SUCCEEDED(AllocateQuotes(2))) {
+    SetQuotesAt(0,
+                nsDependentString(&initialQuotes[0], 1),
+                nsDependentString(&initialQuotes[2], 1));
+    SetQuotesAt(1,
+                nsDependentString(&initialQuotes[4], 1),
+                nsDependentString(&initialQuotes[6], 1));
+  }
+}
+
+void
+nsStyleQuotes::CopyFrom(const nsStyleQuotes& aSource)
 {
   if (NS_SUCCEEDED(AllocateQuotes(aSource.QuotesCount()))) {
     PRUint32 count = (mQuotesCount * 2);

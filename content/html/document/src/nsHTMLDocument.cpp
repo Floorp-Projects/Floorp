@@ -1977,13 +1977,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     EditingStateChanged();
   }
 
-  // Zap the old title -- otherwise it would hang around until document.close()
-  // (which might never come) if the new document doesn't explicitly set one.
-  // Void the title to make sure that we actually respect any titles set by the
-  // new document.
-  SetTitle(EmptyString());
-  mDocumentTitle.SetIsVoid(PR_TRUE);
-
   // Store the security info of the caller now that we're done
   // resetting the document.
   mSecurityInfo = securityInfo;
@@ -2934,34 +2927,6 @@ nsHTMLDocument::PrePopulateIdentifierMap()
 nsHTMLDocument::GetBodyContentExternal()
 {
   return GetBodyContent();
-}
-
-nsIContent*
-nsHTMLDocument::GetHtmlContent()
-{
-  nsIContent* rootContent = GetRootContent();
-  if (rootContent && rootContent->Tag() == nsGkAtoms::html &&
-      rootContent->IsNodeOfType(nsINode::eHTML))
-    return rootContent;
-  return nsnull;
-}
-
-nsIContent*
-nsHTMLDocument::GetBodyContent()
-{
-  nsIContent* html = GetHtmlContent();
-  if (!html)
-    return nsnull;
-
-  // Look for body inside html. This needs to run forwards to find
-  // the first body element.
-  for (PRUint32 i = 0; i < html->GetChildCount(); ++i) {
-    nsIContent* body = html->GetChildAt(i);
-    if (body->Tag() == nsGkAtoms::body &&
-        body->IsNodeOfType(nsINode::eHTML))
-      return body;
-  }
-  return nsnull;
 }
 
 // forms related stuff

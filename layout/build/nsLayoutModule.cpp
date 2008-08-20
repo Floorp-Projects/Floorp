@@ -790,7 +790,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBaseDOMException)
 #define NS_GEOLOCATION_SERVICE_CID \
   { 0x404d02a, 0x1CA, 0xAAAB, { 0x47, 0x62, 0x94, 0x4b, 0x1b, 0xf2, 0xf7, 0xb5 } }
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsGeolocatorService, nsGeolocatorService::GetGeolocationService)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsGeolocationService, nsGeolocationService::GetGeolocationService)
 
 // The list of components we register
 static const nsModuleComponentInfo gComponents[] = {
@@ -1378,7 +1378,7 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Geolocation Service",
       NS_GEOLOCATION_SERVICE_CID,
       "@mozilla.org/geolocation/service;1",
-      nsGeolocatorServiceConstructor },
+      nsGeolocationServiceConstructor },
 
 
 };

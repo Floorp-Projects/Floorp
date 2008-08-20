@@ -1430,7 +1430,19 @@ nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :
   mGfxContext = aContext->ThebesContext();
 }
 
-nsSVGRenderState::nsSVGRenderState(gfxContext *aContext) :
-  mRenderMode(NORMAL), mRenderingContext(nsnull), mGfxContext(aContext)
+nsSVGRenderState::nsSVGRenderState(gfxASurface *aSurface) :
+  mRenderMode(NORMAL)
 {
+  mGfxContext = new gfxContext(aSurface);
+}
+
+nsIRenderingContext*
+nsSVGRenderState::GetRenderingContext(nsIFrame *aFrame)
+{
+  if (!mRenderingContext) {
+    nsIDeviceContext* devCtx = aFrame->PresContext()->DeviceContext();
+    devCtx->CreateRenderingContextInstance(*getter_AddRefs(mRenderingContext));
+    mRenderingContext->Init(devCtx, mGfxContext);
+  }
+  return mRenderingContext;
 }

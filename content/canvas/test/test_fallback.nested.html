@@ -1,12 +1,12 @@
 <!DOCTYPE HTML>
 <title>Canvas test: fallback.nested</title>
+<!-- Testing: Fallback content containing another canvas (mostly testing parsers) -->
 <script src="/MochiKit/MochiKit.js"></script>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <body>
 <canvas id="c" width="100" height="50"><canvas><p class="fallback">FAIL (fallback content)</p></canvas><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
-var _deferred = false;
 
 SimpleTest.waitForExplicitFinish();
 MochiKit.DOM.addLoadEvent(function () {
@@ -16,7 +16,8 @@ var ctx = canvas.getContext('2d');
 
 ok(canvas.childNodes.length == 2, "canvas.childNodes.length == 2");
 
-if (!_deferred) SimpleTest.finish();
+SimpleTest.finish();
+
 });
 </script>
 

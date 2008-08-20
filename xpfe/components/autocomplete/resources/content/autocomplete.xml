@@ -291,6 +291,7 @@
       <field name="ignoreInputEvent">false</field>
       <field name="oninit">null</field>
       <field name="mDefaultMatchFilled">false</field>
+      <field name="mFirstReturn">true</field>
 
       <field name="mAutoCompleteSession"><![CDATA[
         var session = function(aSession) { this.session = aSession };
@@ -341,9 +342,13 @@
             else if (aResult.searchResult == aResult.RESULT_IGNORED)
               status = nsIAutoCompleteStatus.ignored;
             else if (aResult.searchResult == aResult.RESULT_NOMATCH)
-              status = nsIAutoCompleteStatus.nomatch;
+              status = nsIAutoCompleteStatus.noMatch;
             else if (aResult.searchResult == aResult.RESULT_SUCCESS)
               status = nsIAutoCompleteStatus.matchFound;
+            else if (aResult.searchResult == aResult.RESULT_NOMATCH_ONGOING)
+              status = nsIAutoCompleteStatus.noMatchYet;
+            else if (aResult.searchResult == aResult.RESULT_SUCCESS_ONGOING)
+              status = nsIAutoCompleteStatus.matchSoFar;
             this.param.processResults(this.sessionName, {
               searchString: aResult.searchString,
               items: this,
@@ -591,6 +596,7 @@
           var str = this.currentSearchString;
 
           this.isSearching = true;
+          this.mFirstReturn = true;
           this.mSessionReturns = this.sessionCount;
           this.mFailureCount = 0;
           this.mFailureItems = 0;
@@ -634,9 +640,9 @@
           if (this.disableAutoComplete)
             return;
 
-          --this.mSessionReturns;
-
-          var firstReturn = this.mSessionReturns == (this.sessionCount-1) - this.mFailureCount;
+          if (aStatus != Components.interfaces.nsIAutoCompleteStatus.noMatchYet &&
+              aStatus != Components.interfaces.nsIAutoCompleteStatus.matchSoFar)
+            --this.mSessionReturns;
 
           this.mLastStatus[aSessionName] = aStatus;
 
@@ -644,37 +650,40 @@
           if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failed ||
               aStatus == Components.interfaces.nsIAutoCompleteStatus.ignored || 
               aStatus == Components.interfaces.nsIAutoCompleteStatus.noMatch ||
+              aStatus == Components.interfaces.nsIAutoCompleteStatus.noMatchYet ||
               aResults == null ||
               aResults.items.Count() == 0 ||
               aResults.searchString != this.currentSearchString)
           {
             this.mLastResults[aSessionName] = null;
-            if (firstReturn)
+            if (this.mFirstReturn)
               this.clearResultElements(false);
+            this.mFirstReturn = false;
             this.searchFailed();
             return;
           }
           if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failureItems)
             ++this.mFailureItems;
           
-          if (firstReturn) {
+          if (this.mFirstReturn) {
             if (this.view.mTree)
               this.view.mTree.beginUpdateBatch();
             this.clearResultElements(false); // clear results, but don't repaint yet
           }
-          this.mLastResults[aSessionName] = aResults;
-
-          this.autoFillInput(aSessionName, aResults, false);
 
           // always call openResultPopup...we may not have opened it
           // if a previous search session didn't return enough search results.
           // it's smart and doesn't try to open itself multiple times...
           // be sure to add our result elements before calling openResultPopuup as we need
           // to know the total # of results found so far.
-          this.addResultElements(aSessionName, aResults);      
-          if (firstReturn && this.view.mTree)
+          this.addResultElements(aResults, this.mLastResults[aSessionName]);
+          this.mLastResults[aSessionName] = aResults;
+
+          this.autoFillInput(aSessionName, aResults, false);
+          if (this.mFirstReturn && this.view.mTree)
             this.view.mTree.endUpdateBatch();
           this.openResultPopup();
+          this.mFirstReturn = false;
          
           // if this is the last session to return... 
           if (this.mSessionReturns == 0) 
@@ -1175,11 +1184,11 @@
 
       <!--  -->
       <method name="addResultElements">
-        <parameter name="aSessionName"/>
         <parameter name="aResults"/>
+        <parameter name="aOldResults"/>
         <body><![CDATA[
           if (this.focused && this.showPopup) {
-            this.view.addResults(aResults);
+            this.view.replaceResults(aResults, aOldResults);
             this.resultsPopup.adjustHeight();
           }
         ]]></body>
@@ -1288,6 +1297,7 @@
           mTree: null,
           mSelection: null,
           mResults: [],
+          mCounts: [],
           mRowCount: 0,
           
           clearResults: function()
@@ -1302,14 +1312,25 @@
             }
           },
           
-          addResults: function(aResults)
+          replaceResults: function(aResults, aOldResults)
           {
-            this.mResults.push(aResults);
-            var oldCount = this.mRowCount;
-            this.mRowCount += aResults.items.Count();
+            var count = aResults.items.Count();
+            var row = this.mRowCount;
+            var oldIndex = this.mResults.indexOf(aOldResults);
+            if (oldIndex == -1) {
+              this.mResults.push(aResults);
+              this.mCounts.push(count);
+            } else {
+              this.mResults[oldIndex] = aResults;
+              count -= this.mCounts[oldIndex];
+              this.mCounts[oldIndex] += count;
+              while (++oldIndex < this.mCounts.length)
+                row -= this.mCounts[oldIndex];
+            }
+            this.mRowCount += count;
             
             if (this.mTree)
-              this.mTree.rowCountChanged(oldCount, this.mRowCount - oldCount);
+              this.mTree.rowCountChanged(row, count);
           },
           
           createAtom: function(aVal)

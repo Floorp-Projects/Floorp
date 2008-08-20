@@ -1,12 +1,12 @@
 <!DOCTYPE HTML>
 <title>Canvas test: 2d.path.isPointInPath.winding</title>
+<!-- Testing: isPointInPath() uses the non-zero winding number rule -->
 <script src="/MochiKit/MochiKit.js"></script>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
 <body>
 <canvas id="c" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
-var _deferred = false;
 
 SimpleTest.waitForExplicitFinish();
 MochiKit.DOM.addLoadEvent(function () {
@@ -14,6 +14,7 @@ MochiKit.DOM.addLoadEvent(function () {
 var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');
 
+// Create a square ring, using opposite windings to make a hole in the centre
 ctx.moveTo(0, 0);
 ctx.lineTo(50, 0);
 ctx.lineTo(50, 50);
@@ -24,6 +25,7 @@ ctx.lineTo(10, 40);
 ctx.lineTo(40, 40);
 ctx.lineTo(40, 10);
 ctx.lineTo(10, 10);
+
 ok(ctx.isPointInPath(5, 5) === true, "ctx.isPointInPath(5, 5) === true");
 ok(ctx.isPointInPath(25, 5) === true, "ctx.isPointInPath(25, 5) === true");
 ok(ctx.isPointInPath(45, 5) === true, "ctx.isPointInPath(45, 5) === true");
@@ -34,7 +36,8 @@ ok(ctx.isPointInPath(5, 45) === true, "ctx.isPointInPath(5, 45) === true");
 ok(ctx.isPointInPath(25, 45) === true, "ctx.isPointInPath(25, 45) === true");
 ok(ctx.isPointInPath(45, 45) === true, "ctx.isPointInPath(45, 45) === true");
 
-if (!_deferred) SimpleTest.finish();
+SimpleTest.finish();
+
 });
 </script>
 

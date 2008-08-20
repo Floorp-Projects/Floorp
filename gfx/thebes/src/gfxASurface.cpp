@@ -55,6 +55,14 @@
 #include "gfxQuartzImageSurface.h"
 #endif
 
+#ifdef CAIRO_HAS_DIRECTFB_SURFACE
+#include "gfxDirectFBSurface.h"
+#endif
+
+#ifdef CAIRO_HAS_QPAINTER_SURFACE
+#include "gfxQPainterSurface.h"
+#endif
+
 #include <stdio.h>
 #include <limits.h>
 
@@ -161,6 +169,16 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
     }
     else if (stype == CAIRO_SURFACE_TYPE_QUARTZ_IMAGE) {
         result = new gfxQuartzImageSurface(csurf);
+    }
+#endif
+#ifdef CAIRO_HAS_DIRECTFB_SURFACE
+    else if (stype == CAIRO_SURFACE_TYPE_DIRECTFB) {
+        result = new gfxDirectFBSurface(csurf);
+    }
+#endif
+#ifdef CAIRO_HAS_QPAINTER_SURFACE
+    else if (stype == CAIRO_SURFACE_TYPE_QPAINTER) {
+        result = new gfxQPainterSurface(csurf);
     }
 #endif
     else {
@@ -344,4 +362,22 @@ nsresult
 gfxASurface::EndPage()
 {
     return NS_OK;
+}
+
+gfxASurface::gfxContentType
+gfxASurface::ContentFromFormat(gfxImageFormat format)
+{
+    switch (format) {
+        case ImageFormatARGB32:
+            return CONTENT_COLOR_ALPHA;
+        case ImageFormatRGB24:
+            return CONTENT_COLOR;
+        case ImageFormatA8:
+        case ImageFormatA1:
+            return CONTENT_ALPHA;
+
+        case ImageFormatUnknown:
+        default:
+            return CONTENT_COLOR;
+    }
 }

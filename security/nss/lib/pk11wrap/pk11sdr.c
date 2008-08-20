@@ -136,6 +136,10 @@ unpadBlock(SECItem *data, int blockSize, SECItem *result)
 
   PORT_Memcpy(result->data, data->data, result->len);
 
+  if (padLength < 2) {
+    return SECWouldBlock;
+  }
+
 loser:
   return rv;
 }
@@ -310,8 +314,8 @@ PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx)
   CK_MECHANISM_TYPE type;
   SDRResult sdrResult;
   SECItem *params = 0;
+  SECItem possibleResult = { 0, NULL, 0 };
   PLArenaPool *arena = 0;
-
 
   arena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
   if (!arena) { rv = SECFailure; goto loser; }
@@ -341,6 +345,17 @@ PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx)
 	rv = pk11Decrypt(slot, arena, type, key, params, 
 			&sdrResult.data, result);
   }
+
+  /*
+   * if the pad value was too small (1 or 2), then it's statistically
+   * 'likely' that (1 in 256) that we may not have the correct key.
+   * Check the other keys for a better match. If we find none, use
+   * this result.
+   */
+  if (rv == SECWouldBlock) {
+	possibleResult = *result;
+  }
+
   /*
    * handle the case where your key indicies may have been broken
    */
@@ -355,6 +370,18 @@ PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx)
 			     &sdrResult.data, result);
 	    if (rv == SECSuccess) {
 		break;
+	    } 
+	    /* found a close match. If it's our first remember it */
+	    if (rv == SECWouldBlock) {
+		if (possibleResult.data) {
+		    /* this is unlikely but possible. If we hit this condition,
+		     * we have no way of knowing which possibility to prefer.
+		     * in this case we just match the key the application
+		     * thought was the right one */
+		    SECITEM_ZfreeItem(result, PR_FALSE);
+		} else {
+		    possibleResult = *result;
+		}
 	    }
 	}
 
@@ -365,14 +392,19 @@ PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx)
 	}
   }
 
-
+  /* we didn't find a better key, use the one with a small pad value */
+  if ((rv != SECSuccess) && (possibleResult.data)) {
+	*result = possibleResult;
+	possibleResult.data = NULL;
+	rv = SECSuccess;
+  }
 
 loser:
-  /* SECITEM_ZfreeItem(&paddedResult, PR_FALSE); */
   if (arena) PORT_FreeArena(arena, PR_TRUE);
   if (key) PK11_FreeSymKey(key);
   if (params) SECITEM_ZfreeItem(params, PR_TRUE);
   if (slot) PK11_FreeSlot(slot);
+  if (possibleResult.data) SECITEM_ZfreeItem(&possibleResult, PR_FALSE);
 
   return rv;
 }

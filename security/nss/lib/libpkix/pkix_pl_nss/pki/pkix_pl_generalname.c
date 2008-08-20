@@ -189,7 +189,6 @@ pkix_pl_DirectoryName_Create(
         CERTName *dirName = NULL;
         PKIX_PL_String *pkixDNString = NULL;
         char *utf8String = NULL;
-        PKIX_UInt32 utf8Length;
 
         PKIX_ENTER(GENERALNAME, "pkix_pl_DirectoryName_Create");
         PKIX_NULLCHECK_TWO(nssAltName, pX500Name);

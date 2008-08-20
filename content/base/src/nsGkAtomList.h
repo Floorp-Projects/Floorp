@@ -63,6 +63,9 @@
 
 GK_ATOM(_empty, "")
 GK_ATOM(mozdirty, "_moz_dirty")
+GK_ATOM(mozgeneratedcontentbefore, "_moz_generated_content_before")
+GK_ATOM(mozgeneratedcontentafter, "_moz_generated_content_after")
+GK_ATOM(mozgeneratedcontentimage, "_moz_generated_content_image")
 GK_ATOM(_moz_target, "_moz_target")
 GK_ATOM(menuactive, "_moz-menuactive")
 GK_ATOM(_poundDefault, "#default")
@@ -377,7 +380,6 @@ GK_ATOM(functionAvailable, "function-available")
 GK_ATOM(generateId, "generate-id")
 GK_ATOM(getter, "getter")
 GK_ATOM(grid, "grid")
-GK_ATOM(gripper, "gripper")
 GK_ATOM(grippy, "grippy")
 GK_ATOM(group, "group")
 GK_ATOM(groupingSeparator, "grouping-separator")
@@ -1084,9 +1086,7 @@ GK_ATOM(font_size_adjust, "font-size-adjust")
 GK_ATOM(font_stretch, "font-stretch")
 GK_ATOM(font_style, "font-style")
 GK_ATOM(font_variant, "font-variant")
-#ifdef MOZ_SVG_FOREIGNOBJECT
 GK_ATOM(foreignObject, "foreignObject")
-#endif
 GK_ATOM(fractalNoise, "fractalNoise")
 GK_ATOM(fx, "fx")
 GK_ATOM(fy, "fy")
@@ -1523,9 +1523,7 @@ GK_ATOM(svgAFrame, "SVGAFrame")
 GK_ATOM(svgClipPathFrame, "SVGClipPathFrame")
 GK_ATOM(svgDefsFrame, "SVGDefsFrame")
 GK_ATOM(svgFilterFrame, "SVGFilterFrame")
-#ifdef MOZ_SVG_FOREIGNOBJECT
 GK_ATOM(svgForeignObjectFrame, "SVGForeignObjectFrame")
-#endif
 GK_ATOM(svgGenericContainerFrame, "SVGGenericContainerFrame")
 GK_ATOM(svgGFrame, "SVGGFrame")
 GK_ATOM(svgGlyphFrame, "SVGGlyphFrame")
@@ -1619,6 +1617,9 @@ GK_ATOM(tableBCProperty, "TableBCProperty")                // table border colla
 GK_ATOM(usedMarginProperty, "UsedMarginProperty") // nsMargin*
 GK_ATOM(usedPaddingProperty, "UsedPaddingProperty") // nsMargin*
 GK_ATOM(viewProperty, "ViewProperty")                      
+
+// Content property names
+GK_ATOM(genConInitializerProperty, "QuoteNodeProperty")
 
 // Languages for lang-specific transforms
 GK_ATOM(Japanese, "ja")

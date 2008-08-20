@@ -42,17 +42,13 @@
 %{C++
 class nsIPrivateTextRangeList;
 struct nsTextEventReply;
-struct nsReconversionEventReply;
-struct nsQueryCaretRectEventReply;
 %}
 
 [ptr] native nsIPrivateTextRangeListPtr(nsIPrivateTextRangeList);
 [ptr] native nsTextEventReplyPtr(nsTextEventReply);
-[ptr] native nsReconversionEventReplyPtr(nsReconversionEventReply);
-[ptr] native nsQueryCaretRectEventReplyPtr(nsQueryCaretRectEventReply);
 
 
-[scriptable, uuid(ce1c0424-c3c0-44b0-97d6-df12deb19d45)]
+[scriptable, uuid(57032dcb-e8c7-4eb6-8ec6-a0f8e300809d)]
 
 interface nsIEditorIMESupport : nsISupports
 {
@@ -88,30 +84,6 @@ interface nsIEditorIMESupport : nsISupports
    */
 
   void forceCompositionEnd();
-
-  /**
-   * getReconversionString()  Get the reconvertion string
-   */
-
-  [noscript] void getReconversionString(in nsReconversionEventReplyPtr aReply);
-
-  /**
-   * Notify for IME when the editor got focus.
-   */
-
-  void notifyIMEOnFocus();
-
-  /**
-   * Notify for IME when the editor lost focus.
-   */
-
-  void notifyIMEOnBlur();
-
-  /**
-   * getQueryCaretRect()  Get the query caret rect
-   */
-
-  [noscript] void getQueryCaretRect(in nsQueryCaretRectEventReplyPtr aReply);
 
   /**
    * Get preferred IME status of current widget.

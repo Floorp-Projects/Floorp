@@ -46,12 +46,14 @@
 #include "nsIDOMCharacterData.h"
 #include "nsCSSPseudoElements.h"
 
+class nsGenConList;
+
 struct nsGenConNode : public PRCList {
   // The wrapper frame for all of the pseudo-element's content.  This
   // frame generally has useful style data and has the
   // NS_FRAME_GENERATED_CONTENT bit set (so we use it to track removal),
   // but does not necessarily for |nsCounterChangeNode|s.
-  nsIFrame* const mPseudoFrame;
+  nsIFrame* mPseudoFrame;
 
   // Index within the list of things specified by the 'content' property,
   // which is needed to do 'content: open-quote open-quote' correctly,
@@ -62,28 +64,52 @@ struct nsGenConNode : public PRCList {
   // counter nodes for increments and resets (rather than uses)
   nsCOMPtr<nsIDOMCharacterData> mText;
 
-  nsGenConNode(nsIFrame* aPseudoFrame, PRInt32 aContentIndex)
-    : mPseudoFrame(aPseudoFrame)
+  nsGenConNode(PRInt32 aContentIndex)
+    : mPseudoFrame(nsnull)
     , mContentIndex(aContentIndex)
   {
-    NS_ASSERTION(aContentIndex <
-                   PRInt32(aPseudoFrame->GetStyleContent()->ContentCount()),
-                 "index out of range");
-    // We allow negative values of mContentIndex for 'counter-reset' and
-    // 'counter-increment'.
+  }
 
-    NS_ASSERTION(aContentIndex < 0 ||
-                 aPseudoFrame->GetStyleContext()->GetPseudoType() ==
-                   nsCSSPseudoElements::before ||
-                 aPseudoFrame->GetStyleContext()->GetPseudoType() ==
-                   nsCSSPseudoElements::after,
-                 "not :before/:after generated content and not counter change");
-    NS_ASSERTION(aContentIndex < 0 ||
-                 aPseudoFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT,
-                 "not generated content and not counter change");
+  /**
+   * Finish initializing the generated content node once we know the
+   * relevant text frame. This must be called just after
+   * the textframe has been initialized. This need not be called at all
+   * for nodes that don't generate text. This will generally set the
+   * mPseudoFrame, insert the node into aList, and set aTextFrame up
+   * with the correct text.
+   * @param aList the list the node belongs to
+   * @param aPseudoFrame the :before or :after frame
+   * @param aTextFrame the textframe where the node contents will render
+   * @return true iff this marked the list dirty
+   */
+  virtual PRBool InitTextFrame(nsGenConList* aList, nsIFrame* aPseudoFrame,
+                               nsIFrame* aTextFrame)
+  {
+    mPseudoFrame = aPseudoFrame;
+    CheckFrameAssertions();
+    return PR_FALSE;
   }
 
   virtual ~nsGenConNode() {} // XXX Avoid, perhaps?
+
+protected:
+  void CheckFrameAssertions() {
+    NS_ASSERTION(mContentIndex <
+                   PRInt32(mPseudoFrame->GetStyleContent()->ContentCount()),
+                 "index out of range");
+      // We allow negative values of mContentIndex for 'counter-reset' and
+      // 'counter-increment'.
+
+    NS_ASSERTION(mContentIndex < 0 ||
+                 mPseudoFrame->GetStyleContext()->GetPseudoType() ==
+                   nsCSSPseudoElements::before ||
+                 mPseudoFrame->GetStyleContext()->GetPseudoType() ==
+                   nsCSSPseudoElements::after,
+                 "not :before/:after generated content and not counter change");
+    NS_ASSERTION(mContentIndex < 0 ||
+                 mPseudoFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT,
+                 "not generated content and not counter change");
+  }
 };
 
 class nsGenConList {

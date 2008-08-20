@@ -44,6 +44,7 @@
 #include "nsIRunnable.h"
 #include "nsEventQueue.h"
 #include "nsCOMArray.h"
+#include "nsCOMPtr.h"
 
 class nsThreadPool : public nsIThreadPool, public nsIRunnable
 {
@@ -67,6 +68,7 @@ private:
   PRUint32              mIdleThreadLimit;
   PRUint32              mIdleThreadTimeout;
   PRUint32              mIdleCount;
+  nsCOMPtr<nsIThreadPoolListener> mListener;
   PRBool                mShutdown;
 };
 

@@ -386,9 +386,10 @@
 
       <spacer flex="1"/>
 
-      <textbox id="searchFilter" style="width: 23em;" timeout="500" clickSelectsAll="true"
+      <textbox id="searchFilter"
+               clickSelectsAll="true"
+               type="search"
                oncommand="PlacesSearchBox.search(this.value);"
-               onreset="PlacesOrganizer.onPlaceSelected(false);"
                collection="bookmarks">
       </textbox>
     </toolbar>

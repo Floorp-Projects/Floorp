@@ -77,6 +77,10 @@ CPPSRCS		= \
 
 EXTRA_DSO_LIBS	= gkgfx thebes
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+CPPSRCS += nsSystemFontsQt.cpp
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS		+= nsSystemFontsGTK2.cpp
 
