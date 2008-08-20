@@ -780,15 +780,21 @@ NS_IMETHODIMP
 nsCookieService::RemoveAll()
 {
   RemoveAllFromMemory();
-  NotifyChanged(nsnull, NS_LITERAL_STRING("cleared").get());
 
   // clear the cookie file
   if (mDBConn) {
     nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_cookies"));
-    if (NS_FAILED(rv))
-      NS_WARNING("db delete failed");
+    if (NS_FAILED(rv)) {
+      // Database must be corrupted, so remove it completely.
+      nsCOMPtr<nsIFile> dbFile;
+      mDBConn->GetDatabaseFile(getter_AddRefs(dbFile));
+      mDBConn->Close();
+      dbFile->Remove(PR_FALSE);
+      InitDB();
+    }
   }
 
+  NotifyChanged(nsnull, NS_LITERAL_STRING("cleared").get());
   return NS_OK;
 }
 
