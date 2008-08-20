@@ -104,21 +104,40 @@ pref("layout.spellcheckDefault", 1);
 
 /* extension manager and xpinstall */
 pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
-pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?type=themes");
-pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?type=extensions");
-pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes");
-pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
+pref("xpinstall.dialog.progress.skin", "chrome://browser/content/browser.xul");
+pref("xpinstall.dialog.progress.chrome", "chrome://browser/content/browser.xul");
+pref("xpinstall.dialog.progress.type.skin", "navigator:browser");
+pref("xpinstall.dialog.progress.type.chrome", "navigator:browser");
 pref("extensions.update.enabled", true);
 pref("extensions.update.interval", 86400);
 pref("extensions.dss.enabled", false);
 pref("extensions.dss.switchPending", false);
 pref("extensions.ignoreMTimeChanges", false);
 pref("extensions.logging.enabled", false);
+pref("extensions.hideInstallButton", true);
 
 /* these point at AMO */
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+
+/* preferences for the Get Add-ons pane */
+pref("extensions.getAddons.showPane", true);
+pref("extensions.getAddons.browseAddons", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%");
+pref("extensions.getAddons.maxResults", 5);
+pref("extensions.getAddons.recommended.browseURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/recommended");
+pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/list/featured/all/10/%OS%/%VERSION%");
+pref("extensions.getAddons.search.browseURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/search?q=%TERMS%");
+pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/search/%TERMS%/all/10/%OS%/%VERSION%");
+
+/* blocklist preferences */
+pref("extensions.blocklist.enabled", true);
+pref("extensions.blocklist.interval", 86400);
+pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/2/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/");
+pref("extensions.blocklist.detailsURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/blocklist/");
+
+/* dictionary download preference */
+pref("browser.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/dictionaries/");
 
 /* make clicking on links stand out a bit */
 pref("browser.display.use_focus_colors", true);
@@ -146,7 +165,7 @@ pref("browser.search.defaultenginename",      "chrome://browser/locale/region.pr
 // disable logging for the search service by default
 pref("browser.search.log", false);
 
-// Ordering of Search Engines in the Engine list. 
+// Ordering of Search Engines in the Engine list.
 pref("browser.search.order.1",                "chrome://browser/locale/region.properties");
 pref("browser.search.order.2",                "chrome://browser/locale/region.properties");
 

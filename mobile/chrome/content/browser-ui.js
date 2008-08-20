@@ -44,9 +44,10 @@ const PANELMODE_URLVIEW           = 1;
 const PANELMODE_URLEDIT           = 2;
 const PANELMODE_BOOKMARK          = 3;
 const PANELMODE_BOOKMARKLIST      = 4;
-const PANELMODE_SIDEBAR           = 5;
-const PANELMODE_TABLIST           = 6;
-const PANELMODE_FULL              = 7;
+const PANELMODE_ADDONS            = 5;
+const PANELMODE_SIDEBAR           = 6;
+const PANELMODE_TABLIST           = 7;
+const PANELMODE_FULL              = 8;
 
 var BrowserUI = {
   _panel : null,
@@ -399,11 +400,8 @@ var BrowserUI = {
     var urllist = document.getElementById("urllist-container");
     var sidebar = document.getElementById("browser-controls");
     var tablist = document.getElementById("tab-list-container");
+    var addons = document.getElementById("addons-container");
     var container = document.getElementById("browser-container");
-
-    // Make sure the UI elements are sized correctly since the window size can change
-    //sidebar.left = toolbar.width = container.boxObject.width;
-    //sidebar.height = tablist.height = container.boxObject.height;
 
     if (aMode == PANELMODE_URLVIEW || aMode == PANELMODE_SIDEBAR ||
         aMode == PANELMODE_TABLIST || aMode == PANELMODE_FULL)
@@ -415,6 +413,7 @@ var BrowserUI = {
       this._caption.hidden = false;
       bookmark.hidden = true;
       urllist.hidden = true;
+      addons.hidden = true;
 
       let sidebarTo = toolbar.boxObject.width;
       let tablistTo = -tablist.boxObject.width;
@@ -434,6 +433,7 @@ var BrowserUI = {
 
       bookmark.hidden = true;
       urllist.hidden = true;
+      addons.hidden = true;
       sidebar.left = toolbar.boxObject.width;
       tablist.left = -tablist.boxObject.width;
     }
@@ -449,6 +449,7 @@ var BrowserUI = {
       tablist.left = -tablist.boxObject.width;
 
       bookmark.hidden = false;
+      addons.hidden = true;
       bookmark.width = container.boxObject.width;
     }
     else if (aMode == PANELMODE_BOOKMARKLIST) {
@@ -459,12 +460,32 @@ var BrowserUI = {
       this._caption.hidden = false;
 
       bookmark.hidden = true;
+      addons.hidden = true;
       sidebar.left = toolbar.boxObject.width;
       tablist.left = -tablist.boxObject.width;
 
       urllist.hidden = false;
       urllist.width = container.boxObject.width;
       urllist.height = container.boxObject.height;
+    }
+    else if (aMode == PANELMODE_ADDONS) {
+      this._showToolbar();
+      toolbar.setAttribute("mode", "view");
+      this._edit.hidden = true;
+      this._edit.reallyClosePopup();
+      this._caption.hidden = false;
+
+      bookmark.hidden = true;
+      sidebar.left = toolbar.boxObject.width;
+      tablist.left = -tablist.boxObject.width;
+
+      var iframe = document.getElementById("addons-items-container");
+      if (iframe.getAttribute("src") == "")
+        iframe.setAttribute("src", "chrome://mozapps/content/extensions/extensions.xul");
+
+      addons.hidden = false;
+      addons.width = container.boxObject.width;
+      addons.height = container.boxObject.height - toolbar.boxObject.height;
     }
     else if (aMode == PANELMODE_NONE) {
       this._hideToolbar();
@@ -474,6 +495,7 @@ var BrowserUI = {
       this._edit.reallyClosePopup();
       urllist.hidden = true;
       bookmark.hidden = true;
+      addons.hidden = true;
     }
   },
 
@@ -609,6 +631,8 @@ var BrowserUI = {
       case "cmd_menu":
       case "cmd_newTab":
       case "cmd_closeTab":
+      case "cmd_addons":
+      case "cmd_actions":
         isSupported = true;
         break;
       default:
@@ -673,7 +697,8 @@ var BrowserUI = {
         this.showBookmarks();
         break;
       case "cmd_menu":
-        if (this.mode == PANELMODE_FULL)
+        // XXX Remove PANELMODE_ADDON when design changes
+        if (this.mode == PANELMODE_FULL || this.mode == PANELMODE_ADDONS)
           this.show(PANELMODE_NONE);
         else
           this.show(PANELMODE_FULL);
@@ -683,6 +708,11 @@ var BrowserUI = {
         break;
       case "cmd_closeTab":
         Browser.content.removeTab(Browser.content.browser);
+        break;
+      case "cmd_addons":
+      case "cmd_actions":
+        this.show(PANELMODE_ADDONS);
+        break;
     }
   }
 };
