@@ -1361,19 +1361,6 @@ TraceRecorder::checkType(jsval& v, uint8 t, bool& unstable)
 static void
 js_TrashTree(JSContext* cx, Fragment* f);
 
-static void
-js_RecaptureGlobalTypes(JSContext* cx)
-{
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    uint32 kshape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
-    if (tm->globalShape != kshape)
-        tm->globalSlots->clear();
-    /* Re-capture the global shape and the global type map. */
-    tm->globalShape = kshape;
-    tm->globalTypeMap->setLength(0);
-    tm->globalTypeMap->captureGlobalTypes(cx, *tm->globalSlots);
-}
-
 /* Make sure that the current values in the given stack frame and all stack frames
    up and including entryFrame are type-compatible with the entry map. */
 bool
@@ -1705,12 +1692,16 @@ bool
 js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 {
     /* Make sure the global type map didn't change on us. */
+    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != tm->globalShape) {
+        js_FlushJITCache(cx);
+        debug_only(printf("Global shape mismatch in RecordTree, flushing cache.\n");)
+        return false;
+    }
     TypeMap current;
     current.captureGlobalTypes(cx, *tm->globalSlots);
-    if ((OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != tm->globalShape) ||
-        !current.matches(*tm->globalTypeMap)) {
+    if (!current.matches(*tm->globalTypeMap)) {
         js_FlushJITCache(cx);
-        js_RecaptureGlobalTypes(cx);
+        debug_only(printf("Global type map mismatch in RecordTree, flushing cache.\n");)
         return false;
     }
     
@@ -1890,7 +1881,6 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
         const void* ip = f->ip;
         js_FlushJITCache(cx);
         *treep = tm->fragmento->newLoop(ip);
-        js_RecaptureGlobalTypes(cx);
         return NULL;
     }
 
@@ -2161,6 +2151,11 @@ js_FlushJITCache(JSContext* cx)
 #endif
     }
     memset(&tm->fcache, 0, sizeof(tm->fcache));
+    if (cx->fp) {
+        tm->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+        tm->globalSlots->clear();
+        tm->globalTypeMap->clear();
+    }
 }
 
 jsval&
