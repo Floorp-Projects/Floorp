@@ -111,7 +111,7 @@
 
           var self = this;
           this._updateTimeout = setTimeout(function () {
-            if (!self.dragData.dragging)
+            if (!self.dragData.dragging && !self.dragData.kineticId)
               self._browserToCanvas();
           }, 100);
         ]]></body>
