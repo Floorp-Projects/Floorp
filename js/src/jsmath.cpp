@@ -614,10 +614,14 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
 {
     JSObject *Math;
 
-    Math = JS_DefineObject(cx, obj, js_Math_str, &js_MathClass, NULL,
-                           JSPROP_READONLY | JSPROP_PERMANENT);
+    Math = JS_NewObject(cx, &js_MathClass, NULL, obj);
     if (!Math)
         return NULL;
+    if (!JS_DefineProperty(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
+                           JS_PropertyStub, JS_PropertyStub,
+                           JSPROP_READONLY | JSPROP_PERMANENT))
+        return NULL;
+
     if (!JS_DefineFunctions(cx, Math, math_static_methods))
         return NULL;
     if (!JS_DefineConstDoubles(cx, Math, math_constants))
