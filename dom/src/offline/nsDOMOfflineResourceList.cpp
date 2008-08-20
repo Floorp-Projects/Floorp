@@ -73,7 +73,7 @@ static const char kMaxEntriesPref[] =  "offline.max_site_resources";
 #define DEFAULT_MAX_ENTRIES 100
 #define MAX_URI_LENGTH 2048
 
-static nsCAutoString gCachedAsciiHost;
+static nsCString gCachedAsciiHost;
 static char **gCachedKeys = nsnull;
 static PRUint32 gCachedKeysCount = 0;
 
@@ -190,7 +190,7 @@ nsDOMOfflineResourceList::Init()
   rv = mManifestURI->GetAsciiSpec(mDynamicOwnerSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mDynamicOwnerSpec.Append("#dynamic");
+  mDynamicOwnerSpec.AppendLiteral("#dynamic");
 
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(mDocumentURI);
   if (!innerURI)
@@ -1007,8 +1007,5 @@ nsDOMOfflineResourceList::ClearCachedKeys()
     gCachedKeysCount = 0;
   }
 
-  gCachedAsciiHost = "";
+  gCachedAsciiHost = EmptyCString();
 }
-
-
-
