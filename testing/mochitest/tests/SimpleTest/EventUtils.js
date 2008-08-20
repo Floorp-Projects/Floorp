@@ -208,9 +208,8 @@ function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
     var clickCount = aEvent.clickCount || 1;
     var modifiers = _parseModifiers(aEvent);
 
-    var rect = aTarget.getBoundingClientRect();
-    var left = rect.left;
-    var top = rect.top;
+    var left = aTarget.boxObject.x;
+    var top = aTarget.boxObject.y;
 
     if (aEvent.type) {
       utils.sendMouseEvent(aEvent.type, left + aOffsetX, top + aOffsetY, button, clickCount, modifiers);

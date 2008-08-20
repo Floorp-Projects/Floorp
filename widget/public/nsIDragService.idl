@@ -44,18 +44,16 @@
 
 
 interface nsIDOMNode;
-interface nsIDOMDragEvent;
-interface nsIDOMDataTransfer;
+interface nsIDOMMouseEvent;
 interface nsISelection;
 
-[scriptable, uuid(82B58ADA-F490-4C3D-B737-1057C4F1D052)]
+[scriptable, uuid(034c44a4-604b-44a2-9205-676d5135f359)]
 interface nsIDragService : nsISupports
 {
   const long DRAGDROP_ACTION_NONE = 0;
   const long DRAGDROP_ACTION_COPY = 1;
   const long DRAGDROP_ACTION_MOVE = 2;
   const long DRAGDROP_ACTION_LINK = 4;
-  const long DRAGDROP_ACTION_UNINITIALIZED = 64;
 
   /**
     * Starts a modal drag session with an array of transaferables 
@@ -100,8 +98,7 @@ interface nsIDragService : nsISupports
                                   in nsIDOMNode aImage,
                                   in long aImageX,
                                   in long aImageY,
-                                  in nsIDOMDragEvent aDragEvent,
-                                  in nsIDOMDataTransfer aDataTransfer);
+                                  in nsIDOMMouseEvent aDragEvent);
 
   /**
    * Start a modal drag session using the selection as the drag image.
@@ -111,8 +108,7 @@ interface nsIDragService : nsISupports
   void invokeDragSessionWithSelection(in nsISelection aSelection,
                                       in nsISupportsArray aTransferableArray,
                                       in unsigned long aActionType,
-                                      in nsIDOMDragEvent aDragEvent,
-                                      in nsIDOMDataTransfer aDataTransfer);
+                                      in nsIDOMMouseEvent aDragEvent);
 
   /**
     * Returns the current Drag Session  
