@@ -154,7 +154,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsAttrValue.h"
 #include "nsReferencedElement.h"
 #include "nsIUGenCategory.h"
-#include "nsIDragService.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -418,16 +417,13 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::oncommand,                     { NS_XUL_COMMAND, EventNameType_XUL }},
     { &nsGkAtoms::onbroadcast,                   { NS_XUL_BROADCAST, EventNameType_XUL }},
     { &nsGkAtoms::oncommandupdate,               { NS_XUL_COMMAND_UPDATE, EventNameType_XUL }},
-    { &nsGkAtoms::ondragenter,                   { NS_DRAGDROP_ENTER, EventNameType_HTMLXUL }},
-    { &nsGkAtoms::ondragover,                    { NS_DRAGDROP_OVER_SYNTH, EventNameType_HTMLXUL }},
+    { &nsGkAtoms::ondragenter,                   { NS_DRAGDROP_ENTER, EventNameType_XUL }},
+    { &nsGkAtoms::ondragover,                    { NS_DRAGDROP_OVER_SYNTH, EventNameType_XUL }},
     { &nsGkAtoms::ondragexit,                    { NS_DRAGDROP_EXIT_SYNTH, EventNameType_XUL }},
-    { &nsGkAtoms::ondragdrop,                    { NS_DRAGDROP_DRAGDROP, EventNameType_XUL }},
+    { &nsGkAtoms::ondragdrop,                    { NS_DRAGDROP_DROP, EventNameType_XUL }},
     { &nsGkAtoms::ondraggesture,                 { NS_DRAGDROP_GESTURE, EventNameType_XUL }},
-    { &nsGkAtoms::ondrag,                        { NS_DRAGDROP_DRAG, EventNameType_HTMLXUL }},
-    { &nsGkAtoms::ondragend,                     { NS_DRAGDROP_END, EventNameType_HTMLXUL }},
-    { &nsGkAtoms::ondragstart,                   { NS_DRAGDROP_START, EventNameType_HTMLXUL }},
-    { &nsGkAtoms::ondragleave,                   { NS_DRAGDROP_LEAVE_SYNTH, EventNameType_HTMLXUL }},
-    { &nsGkAtoms::ondrop,                        { NS_DRAGDROP_DROP, EventNameType_HTMLXUL }},
+    { &nsGkAtoms::ondrag,                        { NS_DRAGDROP_DRAG, EventNameType_XUL }},
+    { &nsGkAtoms::ondragend,                     { NS_DRAGDROP_END, EventNameType_XUL }},
     { &nsGkAtoms::onoverflow,                    { NS_SCROLLPORT_OVERFLOW, EventNameType_XUL }},
     { &nsGkAtoms::onunderflow,                   { NS_SCROLLPORT_UNDERFLOW, EventNameType_XUL }}
 #ifdef MOZ_SVG
@@ -4309,18 +4305,6 @@ nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
       pm->HidePopupsInDocShell(docShellToHide);
   }
 #endif
-}
-
-/* static */
-already_AddRefed<nsIDragSession>
-nsContentUtils::GetDragSession()
-{
-  nsIDragSession* dragSession = nsnull;
-  nsCOMPtr<nsIDragService> dragService =
-    do_GetService("@mozilla.org/widget/dragservice;1");
-  if (dragService)
-    dragService->GetCurrentSession(&dragSession);
-  return dragSession;
 }
 
 /* static */
