@@ -70,9 +70,9 @@ DEFINES += -DFEATURE_NANOJIT
 INCLUDES += -Inanojit
 endif
 
-ifndef BUILD_OPT
-DEFINES += -Ivprof
-endif
+#ifndef BUILD_OPT
+#DEFINES += -Ivprof
+#endif
 
 ifdef NARCISSUS
 DEFINES += -DNARCISSUS
@@ -226,9 +226,9 @@ JS_HFILES +=			\
 endif
 
 ifndef BUILD_OPT
-JS_HFILES +=            \
-        vprof/vprof.h   \
-        $(NULL)
+#JS_HFILES +=            \
+#        vprof/vprof.h   \
+#        $(NULL)
 endif
 
 API_HFILES =		\
@@ -319,9 +319,9 @@ endif
 endif
 
 ifndef BUILD_OPT
-JS_CPPFILES +=                 \
-        vprof/vprof.cpp        \
-        $(NULL)
+#JS_CPPFILES +=                 \
+#        vprof/vprof.cpp        \
+#        $(NULL)
 endif
 
 ifdef JS_LIVECONNECT
