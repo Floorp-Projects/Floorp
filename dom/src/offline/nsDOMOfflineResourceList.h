@@ -41,9 +41,7 @@
 
 #include "nscore.h"
 #include "nsIDOMOfflineResourceList.h"
-#include "nsIApplicationCache.h"
-#include "nsIApplicationCacheContainer.h"
-#include "nsIApplicationCacheService.h"
+#include "nsIOfflineCacheSession.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsTArray.h"
 #include "nsString.h"
@@ -99,9 +97,6 @@ private:
   nsresult UpdateAdded(nsIOfflineCacheUpdate *aUpdate);
   nsresult UpdateCompleted(nsIOfflineCacheUpdate *aUpdate);
 
-  already_AddRefed<nsIApplicationCacheContainer> GetDocumentAppCacheContainer();
-  already_AddRefed<nsIApplicationCache> GetDocumentAppCache();
-
   nsresult GetCacheKey(const nsAString &aURI, nsCString &aKey);
   nsresult GetCacheKey(nsIURI *aURI, nsCString &aKey);
 
@@ -110,15 +105,13 @@ private:
 
   PRBool mInitialized;
   PRBool mToplevel;
-
   nsCOMPtr<nsIURI> mManifestURI;
-  // AsciiSpec of mManifestURI
-  nsCString mManifestSpec;
-
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIWeakReference> mWindow;
-  nsCOMPtr<nsIApplicationCacheService> mApplicationCacheService;
+  nsCOMPtr<nsIOfflineCacheSession> mCacheSession;
   nsCOMPtr<nsIOfflineCacheUpdate> mCacheUpdate;
+  nsCAutoString mAsciiHost;
+  nsCAutoString mDynamicOwnerSpec;
 
   nsCOMArray<nsIDOMEventListener> mCheckingListeners;
   nsCOMArray<nsIDOMEventListener> mErrorListeners;
