@@ -2086,16 +2086,12 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-border-bottom-colors: #ccc black black black black black black black black;
 }
 
-html|*#ctrlTab-label-parent {
-  text-align: center;
-  overflow: hidden;
-  margin-top: 6px;
-  margin-bottom: 10px;
-}
-
-html|*#ctrlTab-label {
+#ctrlTab-label {
   font-weight: bold;
   font-size: 14px;
+  text-align: center;
+  margin-top: 6px;
+  margin-bottom: 10px;
 }
 
 svg|*.ctrlTab-thumbnailborder {
