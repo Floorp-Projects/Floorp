@@ -49,6 +49,8 @@ const PANELMODE_SIDEBAR           = 6;
 const PANELMODE_TABLIST           = 7;
 const PANELMODE_FULL              = 8;
 
+const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
+
 var BrowserUI = {
   _panel : null,
   _caption : null,
@@ -58,11 +60,18 @@ var BrowserUI = {
   _favicon : null,
   _faviconAdded : false,
 
-  _titleChanged : function(aEvent) {
-    if (aEvent.target != getBrowser().contentDocument)
+  _titleChanged : function(aDocument) {
+    var browser = Browser.currentBrowser;
+    if (browser && aDocument != browser.contentDocument)
       return;
 
-    this._caption.value = aEvent.target.title;
+    this._caption.value = aDocument.title;
+
+    var docElem = document.documentElement;
+    var title = "";
+    if (aDocument.title)
+      title = aDocument.title + docElem.getAttribute("titleseparator");
+    document.title = title + docElem.getAttribute("titlemodifier");
   },
 
   _linkAdded : function(aEvent) {
@@ -78,16 +87,27 @@ var BrowserUI = {
     }
   },
 
+  _tabSelect : function(aEvent) {
+    var browser = Browser.currentBrowser;
+    this.setURI();
+    this._titleChanged(browser.contentDocument);
+    this._favicon.setAttribute("src", browser.mIconURL || kDefaultFavIconURL);
+    this.show(PANELMODE_NONE);
+  },
+
   _setIcon : function(aURI) {
     var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     var faviconURI = ios.newURI(aURI, null, null);
-    if (faviconURI.schemeIs("javascript"))
-      return;
 
     var fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
-    if (fis.isFailedFavicon(faviconURI))
-      faviconURI = ios.newURI("chrome://browser/skin/images/default-favicon.png", null, null);
-    fis.setAndLoadFaviconForPage(getBrowser().currentURI, faviconURI, true);
+    if (faviconURI.schemeIs("javascript") ||
+        fis.isFailedFavicon(faviconURI))
+      faviconURI = ios.newURI(kDefaultFavIconURL, null, null);
+
+    var browser = getBrowser();
+    browser.mIconURL = faviconURI.spec;
+
+    fis.setAndLoadFaviconForPage(browser.currentURI, faviconURI, true);
     this._favicon.setAttribute("src", faviconURI.spec);
     this._faviconAdded = true;
   },
@@ -239,10 +259,12 @@ var BrowserUI = {
     this._favicon.addEventListener("error", this, false);
     this._autocompleteNavbuttons = document.getElementById("autocomplete_navbuttons");
 
-    getBrowser().addEventListener("DOMTitleChanged", this, true);
-    getBrowser().addEventListener("DOMLinkAdded", this, true);
+    Browser.content.addEventListener("DOMTitleChanged", this, true);
+    Browser.content.addEventListener("DOMLinkAdded", this, true);
     Browser.content.addEventListener("overpan", this, false);
     Browser.content.addEventListener("pan", this, true);
+
+    document.getElementById("tab-list").addEventListener("TabSelect", this, true);
 
     Browser.content.addEventListener("mousedown", this, true);
     Browser.content.addEventListener("mouseup", this, true);
@@ -251,7 +273,7 @@ var BrowserUI = {
     window.addEventListener("resize", this, false);
   },
 
-  update : function(aState) {
+  update : function(aState, aBrowser) {
     if (aState == TOOLBARSTATE_INDETERMINATE) {
       this._faviconAdded = false;
       aState = TOOLBARSTATE_LOADED;
@@ -261,6 +283,7 @@ var BrowserUI = {
     var toolbar = document.getElementById("toolbar-main");
     if (aState == TOOLBARSTATE_LOADING) {
       this.show(PANELMODE_URLVIEW);
+      Browser.content.setLoading(aBrowser);
 
       toolbar.top = 0;
       toolbar.setAttribute("mode", "loading");
@@ -269,12 +292,13 @@ var BrowserUI = {
       this._faviconAdded = false;
     }
     else if (aState == TOOLBARSTATE_LOADED) {
-      var browser = document.getElementById("browser");
-      browser.top = toolbar.boxObject.height;
+      var container = document.getElementById("browser");
+      container.top = toolbar.boxObject.height;
+
       toolbar.setAttribute("mode", "view");
       this._throbber.setAttribute("src", "");
       if (this._faviconAdded == false) {
-        var faviconURI = getBrowser().currentURI.prePath + "/favicon.ico";
+        var faviconURI = aBrowser.currentURI.prePath + "/favicon.ico";
         this._setIcon(faviconURI);
       }
     }
@@ -553,17 +577,19 @@ var BrowserUI = {
 
   selectTab : function(aTab) {
     Browser.content.selectTab(aTab);
-    this.show(PANELMODE_NONE);
   },
 
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       // Browser events
       case "DOMTitleChanged":
-        this._titleChanged(aEvent);
+        this._titleChanged(aEvent.target);
         break;
       case "DOMLinkAdded":
         this._linkAdded(aEvent);
+        break;
+      case "TabSelect":
+        this._tabSelect(aEvent);
         break;
       // URL textbox events
       case "click":

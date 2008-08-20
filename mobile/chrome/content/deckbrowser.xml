@@ -51,25 +51,26 @@
         this._panEventTrackerIndex = 0;
        ]]></constructor>
 
-      <field name="dragData">
-        ({
-          dragging: false,
-          dragX: 0,
-          dragY: 0,
-          sX: 0,
-          sY: 0,
-          pageX: 0,
-          pageY: 0,
-          oldPageX: 0,
-          oldPageY: 0,
-          velocityX: 0,
-          velocityY: 0,
-          originalX: 0,
-          originalY: 0,
-          destinationX: 0,
-          destinationY: 0
-        })
-      </field>
+      <property name="dragData" readonly="true">
+        <getter>
+          <![CDATA[
+            if (!this.currentTab.dragData) {
+              this.currentTab.dragData = {
+                dragging: false,
+                dragX: 0,
+                dragY: 0,
+                sX: 0,
+                sY: 0,
+                pageX: 0,
+                pageY: 0,
+                oldPageX: 0,
+                oldPageY: 0
+              }
+            }
+            return this.currentTab.dragData;
+          ]]>
+        </getter>
+      </property>
 
       <field name="_stack">
         document.getAnonymousElementByAttribute(this, "anonid", "cstack");
@@ -174,6 +175,15 @@
         </body>
       </method>
 
+      <method name="setLoading">
+        <parameter name="browser"/>
+        <body><![CDATA[
+          var tab = this.getTabForDisplay(browser.parentNode);
+          if (tab)
+            tab.dragData = null;
+        ]]></body>
+      </method>
+
       <method name="updateBrowser">
         <parameter name="browser"/>
         <parameter name="done"/>
@@ -224,6 +234,10 @@
 
           browser.setAttribute("type", "content-primary");
           this.displayList.selectedPanel = display;
+
+          var event = document.createEvent("Events");
+          event.initEvent("TabSelect", true, false);
+          tab.dispatchEvent(event);
         ]]></body>
       </method>
 
@@ -231,7 +245,16 @@
         <parameter name="makeFront"/>
         <body><![CDATA[
           var browser = this.createBrowser(makeFront, null, null);
-          return browser ? this.getTabForDisplay(browser.parentNode) : null;
+          if (!browser)
+            return null;
+
+          var tab = this.getTabForDisplay(browser.parentNode);
+
+          var evt = document.createEvent("Events");
+          evt.initEvent("TabOpen", true, false);
+          tab.dispatchEvent(evt);
+
+          return tab;
         ]]></body>
       </method>
 
@@ -245,6 +268,10 @@
           if (display)
             display.removeChild(display);
           tab.parentNode.removeChild(tab);
+
+          var evt = document.createEvent("Events");
+          evt.initEvent("TabClose", true, false);
+          tab.dispatchEvent(evt);
         ]]></body>
       </method>
 
@@ -794,7 +821,7 @@
                    self.dragData.velocityY * dt * (Math.sqrt(Math.abs(self.dragData.destinationY - self.dragData.dragY)) /
                                                Math.sqrt(Math.abs(self.dragData.destinationY - self.dragData.originalY)));
           let nextX = self.dragData.dragX - dx;
-          let nextY = self.dragData.dragY - dy;          
+          let nextY = self.dragData.dragY - dy;
 
           if((self.dragData.originalX > nextX &&
               nextX > self.dragData.destinationX) ||
@@ -805,17 +832,17 @@
             self.dragData.dragX = self.dragData.destinationX;
           if((self.dragData.originalY > nextY &&
               nextY > self.dragData.destinationY) ||
-             (self.dragData.originalY <  nextY && 
+             (self.dragData.originalY <  nextY &&
               nextY < self.dragData.destinationY))
             self.dragData.dragY = nextY;
           else
             self.dragData.dragY = self.dragData.destinationY;
-  
+
           self._updateCanvasPosition();
-          
+
           let actualDx = startX - self.dragData.dragX;
           let actualDy = startY - self.dragData.dragY
-          if ((actualDx / (self.dragData.destinationX - self.dragData.originalX)  < 0 &&  actualDy / (self.dragData.destinationY - self.dragData.originalY) < 0) || ( Math.abs(actualDx) < 4 && Math.abs(actualDy) < 4)) {    
+          if ((actualDx / (self.dragData.destinationX - self.dragData.originalX)  < 0 &&  actualDy / (self.dragData.destinationY - self.dragData.originalY) < 0) || ( Math.abs(actualDx) < 4 && Math.abs(actualDy) < 4)) {
             self._endKinetic();
           }
         ]]></body>
@@ -1008,14 +1035,14 @@
             let now = Date.now();
             if (this.deckbrowser.dragData.dragging) {
               this.deckbrowser._panEventTrackerIndex = (this.deckbrowser._panEventTrackerIndex + 1) % this.deckbrowser.PAN_EVENTS_TO_TRACK;
-            
+
               var pt = new Object();
               pt.x = aEvent.screenX;
               pt.y = aEvent.screenY;
               pt.t = now;
 
               this.deckbrowser._panEventTracker[this.deckbrowser._panEventTrackerIndex] = pt;
-              
+
             }
             this.deckbrowser._moveCanvas(dx, dy);
 
