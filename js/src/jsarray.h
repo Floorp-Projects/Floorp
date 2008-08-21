@@ -163,31 +163,31 @@ js_array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
  * integer -or- a double (JSVAL_IS_NUMBER).
  */
 
-JS_EXTERN_API(JSBool)
+JS_FRIEND_API(JSBool)
 js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                         JSUint8 *dest);
 
-JS_EXTERN_API(JSBool)
+JS_FRIEND_API(JSBool)
 js_ArrayToJSUint16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                          JSUint16 *dest);
 
-JS_EXTERN_API(JSBool)
+JS_FRIEND_API(JSBool)
 js_ArrayToJSUint32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                          JSUint32 *dest);
 
-JS_EXTERN_API(JSBool)
+JS_FRIEND_API(JSBool)
 js_ArrayToJSInt8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                        JSInt8 *dest);
 
-JS_EXTERN_API(JSBool)
+JS_FRIEND_API(JSBool)
 js_ArrayToJSInt16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                         JSInt16 *dest);
 
-JS_EXTERN_API(JSBool)
+JS_FRIEND_API(JSBool)
 js_ArrayToJSInt32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                         JSInt32 *dest);
 
-JS_EXTERN_API(JSBool)
+JS_FRIEND_API(JSBool)
 js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                          jsdouble *dest);
 
