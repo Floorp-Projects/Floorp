@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -566,7 +566,7 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     void *sbrk(ptrdiff_t), *before = sbrk(0);
 #endif
 
-    JS_ASSERT(!(tcflags & ~TCF_COMPILE_N_GO));
+    JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL)));
 
     if (!js_InitParseContext(cx, &pc, principals, chars, length, file,
                              filename, lineno)) {
@@ -625,9 +625,9 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     }
 
     /*
-     * Global variables and regexps shares the index space with locals. Due
-     * to incremental code generation we need to patch the bytecode to adjust
-     * the local references to skip the globals.
+     * Global variables and regexps shares the index space with locals. Due to
+     * incremental code generation we need to patch the bytecode to adjust the
+     * local references to skip the globals.
      */
     scriptGlobals = cg.treeContext.ngvars + cg.regexpList.length;
     if (scriptGlobals != 0) {
@@ -643,7 +643,7 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             JS_ASSERT(code < end);
             op = (JSOp) *code;
             cs = &js_CodeSpec[op];
-            len = cs->length > 0
+            len = (cs->length > 0)
                   ? (uintN) cs->length
                   : js_GetVariableBytecodeLength(code);
             if (JOF_TYPE(cs->format) == JOF_LOCAL ||
@@ -1239,7 +1239,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     /* Initialize early for possible flags mutation via DestructuringExpr. */
     TREE_CONTEXT_INIT(&funtc, tc->parseContext);
-    funtc.flags |= TCF_IN_FUNCTION;
+    funtc.flags |= TCF_IN_FUNCTION | (tc->flags & TCF_COMPILE_N_GO);
     funtc.fun = fun;
 
     /* Now parse formal argument list and compute fun->nargs. */
@@ -1446,7 +1446,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_funpob = funpob;
     pn->pn_op = op;
     pn->pn_body = body;
-    pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS);
+    pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS | TCF_COMPILE_N_GO);
     TREE_CONTEXT_FINISH(cx, &funtc);
     return result;
 }
@@ -3222,6 +3222,19 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 break;
             }
 
+            /*
+             * Some obvious assertions here, but they may help clarify the
+             * situation. This stmt is not yet a scope, so it must not be a
+             * catch block (which is a lexical scope by definition).
+             */
+            JS_ASSERT(!(stmt->flags & SIF_SCOPE));
+            JS_ASSERT(stmt != tc->topScopeStmt);
+            JS_ASSERT(stmt->type == STMT_BLOCK ||
+                      stmt->type == STMT_SWITCH ||
+                      stmt->type == STMT_TRY ||
+                      stmt->type == STMT_FINALLY);
+            JS_ASSERT(!stmt->downScope);
+
             /* Convert the block statement into a scope statement. */
             obj = js_NewBlockObject(cx);
             if (!obj)
@@ -3236,23 +3249,11 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
              * lacks the SIF_SCOPE flag, it must be a try, catch, or finally
              * block.
              */
-            JS_ASSERT(!(stmt->flags & SIF_SCOPE));
             stmt->flags |= SIF_SCOPE;
-            if (stmt != tc->topScopeStmt) {
-                JS_ASSERT(!stmt->downScope);
-                JS_ASSERT(stmt->type == STMT_BLOCK ||
-                          stmt->type == STMT_SWITCH ||
-                          stmt->type == STMT_TRY ||
-                          stmt->type == STMT_FINALLY);
-                stmt->downScope = tc->topScopeStmt;
-                tc->topScopeStmt = stmt;
-                JS_SCOPE_DEPTH_METERING(
-                    ++tc->scopeDepth > tc->maxScopeDepth &&
-                    tc->maxScopeDepth = tc->scopeDepth);
-            } else {
-                JS_ASSERT(stmt->type == STMT_CATCH);
-                JS_ASSERT(stmt->downScope);
-            }
+            stmt->downScope = tc->topScopeStmt;
+            tc->topScopeStmt = stmt;
+            JS_SCOPE_DEPTH_METERING(++tc->scopeDepth > tc->maxScopeDepth &&
+                                    (tc->maxScopeDepth = tc->scopeDepth));
 
             STOBJ_SET_PARENT(obj, tc->blockChain);
             tc->blockChain = obj;

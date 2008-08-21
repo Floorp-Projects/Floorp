@@ -93,6 +93,47 @@ typedef struct JSGSNCache {
 #define JS_CLEAR_GSN_CACHE(cx)      GSN_CACHE_CLEAR(&JS_GSN_CACHE(cx))
 #define JS_METER_GSN_CACHE(cx,cnt)  GSN_CACHE_METER(&JS_GSN_CACHE(cx), cnt)
 
+#ifdef __cplusplus
+namespace nanojit {
+    class Fragment;
+    class Fragmento;
+}
+class TraceRecorder;
+extern "C++" template<typename T> class Queue;
+typedef Queue<uint16> SlotList;
+class TypeMap;
+
+# define CLS(T)  T*
+#else
+# define CLS(T)  void*
+#endif
+
+/* 
+ * Fragment quick cache entry.
+ */
+typedef struct JSFragmentCacheEntry {
+    jsbytecode*             pc;
+    CLS(nanojit::Fragment)  fragment;
+} JSFragmentCacheEntry;
+
+#define JS_FRAGMENT_CACHE_LOG2  2
+#define JS_FRAGMENT_CACHE_SIZE  JS_BIT(JS_FRAGMENT_CACHE_LOG2)
+#define JS_FRAGMENT_CACHE_MASK  JS_BITMASK(JS_FRAGMENT_CACHE_LOG2)
+
+/*
+ * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
+ * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
+ * frequencies for all JavaScript code loaded into that runtime.
+ */
+typedef struct JSTraceMonitor {
+    CLS(nanojit::Fragmento) fragmento;
+    CLS(TraceRecorder)      recorder;
+    uint32                  globalShape;
+    CLS(SlotList)           globalSlots;
+    CLS(TypeMap)            globalTypeMap;
+    JSFragmentCacheEntry    fcache[JS_FRAGMENT_CACHE_SIZE];
+} JSTraceMonitor;
+
 #ifdef JS_THREADSAFE
 
 /*
@@ -126,10 +167,18 @@ struct JSThread {
 
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
+
+    /* Trace-tree JIT recorder/interpreter state. */
+    JSTraceMonitor      traceMonitor;
+
+    /* Lock-free list of scripts created by eval to garbage-collect. */
+    JSScript            *scriptsToGC;
 };
 
 #define JS_GSN_CACHE(cx)        ((cx)->thread->gsnCache)
 #define JS_PROPERTY_CACHE(cx)   ((cx)->thread->propertyCache)
+#define JS_TRACE_MONITOR(cx)    ((cx)->thread->traceMonitor)
+#define JS_SCRIPTS_TO_GC(cx)    ((cx)->thread->scriptsToGC)
 
 extern void JS_DLL_CALLBACK
 js_ThreadDestructorCB(void *ptr);
@@ -391,8 +440,16 @@ struct JSRuntime {
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
 
+    /* Trace-tree JIT recorder/interpreter state. */
+    JSTraceMonitor      traceMonitor;
+
+    /* Lock-free list of scripts created by eval to garbage-collect. */
+    JSScript            *scriptsToGC;
+
 #define JS_GSN_CACHE(cx)        ((cx)->runtime->gsnCache)
 #define JS_PROPERTY_CACHE(cx)   ((cx)->runtime->propertyCache)
+#define JS_TRACE_MONITOR(cx)    ((cx)->runtime->traceMonitor)
+#define JS_SCRIPTS_TO_GC(cx)    ((cx)->runtime->scriptsToGC)
 #endif
 
     /*
@@ -437,6 +494,11 @@ struct JSRuntime {
 # define ENUM_CACHE_METER(name)     JS_ATOMIC_INCREMENT(&cx->runtime->name)
 #else
 # define ENUM_CACHE_METER(name)     ((void) 0)
+#endif
+
+#ifdef JS_DUMP_LOOP_STATS
+    /* Loop statistics, to trigger trace recording and compiling. */
+    JSBasicStats        loopStats;
 #endif
 
 #if defined DEBUG || defined JS_DUMP_PROPTREE_STATS
@@ -679,10 +741,23 @@ struct JSContext {
      * property values associated with this context's global object.
      */
     uint8               xmlSettingFlags;
-    uint8               padding;
 #else
-    uint16              padding;
+    uint8               padding;
 #endif
+
+    /*
+     * Flag to prevent last-ditch garbage collection when up against runtime
+     * memory limits. This also suppresses calls to JS_ReportOutOfMemory when
+     * failing due to runtime limits.
+     */
+    JSPackedBool        gcDontBlock;
+
+    /*
+     * Classic Algol "display" static link optimization.
+     */
+#define JS_DISPLAY_SIZE 16
+
+    JSStackFrame        *display[JS_DISPLAY_SIZE];
 
     /* Runtime version control identifier. */
     uint16              version;

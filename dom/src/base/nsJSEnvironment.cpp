@@ -407,7 +407,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 
     static PRInt32 errorDepth; // Recursion prevention
     ++errorDepth;
-    
+
     if (presContext && errorDepth < 2) {
       // Dispatch() must be synchronous for the recursion block
       // (errorDepth) to work.
@@ -619,7 +619,7 @@ LocaleToUnicode(JSContext *cx, char *src, jsval *rval)
 
   if (!gDecoder) {
     // use app default locale
-    nsCOMPtr<nsILocaleService> localeService = 
+    nsCOMPtr<nsILocaleService> localeService =
       do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsILocale> appLocale;
@@ -929,9 +929,9 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   if (debugPossible) {
     PRBool jsds_IsOn = PR_FALSE;
     const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
-    nsCOMPtr<jsdIExecutionHook> jsdHook;  
+    nsCOMPtr<jsdIExecutionHook> jsdHook;
     nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
-  
+
     // Check if there's a user for the debugger service that's 'on' for us
     if (NS_SUCCEEDED(rv)) {
       jsds->GetDebuggerHook(getter_AddRefs(jsdHook));
@@ -959,7 +959,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   stringService->CreateBundle(kDOMStringBundleURL, getter_AddRefs(bundle));
   if (!bundle)
     return JS_TRUE;
-  
+
   nsXPIDLString title, msg, stopButton, waitButton, debugButton, neverShowDlg;
 
   rv = bundle->GetStringFromName(NS_LITERAL_STRING("KillScriptTitle").get(),
@@ -1084,6 +1084,8 @@ static const char js_relimit_option_str[]= JS_OPTIONS_DOT_STR "relimit";
 #ifdef JS_GC_ZEAL
 static const char js_zeal_option_str[]   = JS_OPTIONS_DOT_STR "gczeal";
 #endif
+static const char js_jit_content_str[]   = JS_OPTIONS_DOT_STR "jit.content";
+static const char js_jit_chrome_str[]    = JS_OPTIONS_DOT_STR "jit.chrome";
 
 int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
@@ -1098,13 +1100,23 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   else
     newDefaultJSOptions &= ~JSOPTION_STRICT;
 
+  nsIScriptGlobalObject *global = context->GetGlobalObject();
+  // XXX should we check for sysprin instead of a chrome window, to make
+  // XXX components be covered by the chrome pref instead of the content one?
+  nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
+  PRBool useJIT = nsContentUtils::GetBoolPref(chromeWindow ?
+                                              js_jit_chrome_str :
+                                              js_jit_content_str);
+  if (useJIT)
+    newDefaultJSOptions |= JSOPTION_JIT;
+  else
+    newDefaultJSOptions &= ~JSOPTION_JIT;
+
 #ifdef DEBUG
   // In debug builds, warnings are always enabled in chrome context
   // Note this callback is also called from context's InitClasses thus we don't
   // need to enable this directly from InitContext
   if ((newDefaultJSOptions & JSOPTION_STRICT) == 0) {
-    nsIScriptGlobalObject *global = context->GetGlobalObject();
-    nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
     if (chromeWindow)
       newDefaultJSOptions |= JSOPTION_STRICT;
   }
@@ -1506,10 +1518,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // The result of evaluation, used only if there were no errors.  This need
   // not be a GC root currently, provided we run the GC only from the
   // operation callback or from ScriptEvaluated.
-  //
-  // TODO: use JS_Begin/EndRequest to keep the GC from racing with JS
-  // execution on any thread.
-  jsval val;
+  jsval val = JSVAL_VOID;
+  jsval* vp = aRetValue ? &val : NULL;
 
   nsJSContext::TerminationFuncHolder holder(this);
 
@@ -1527,7 +1537,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                                               aScript.Length(),
                                               aURL,
                                               aLineNo,
-                                              &val);
+                                              vp);
 
     if (!ok) {
       // Tell XPConnect about any pending exceptions. This is needed
@@ -1541,7 +1551,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // Whew!  Finally done with these manually ref-counted things.
   JSPRINCIPALS_DROP(mContext, jsprin);
 
-  // If all went well, convert val to a string (XXXbe unless undefined?).
+  // If all went well, convert val to a string if one is wanted.
   if (ok) {
     JSAutoRequest ar(mContext);
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
@@ -1953,7 +1963,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
       stack->Pop(nsnull);
       return rv;
     }
-  
+
     AutoFreeJSStack stackGuard(mContext, mark); // ensure always freed.
 
     jsval funval = OBJECT_TO_JSVAL(aHandler);
@@ -2016,7 +2026,7 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject *funobj = (JSObject*) aHandler;
-  
+
   JSAutoRequest ar(mContext);
 
   NS_ASSERTION(JS_TypeOfValue(mContext, OBJECT_TO_JSVAL(funobj)) == JSTYPE_FUNCTION,
@@ -2071,10 +2081,10 @@ nsJSContext::GetBoundEventHandler(nsISupports* aTarget, void *aScope,
     const char *charName = AtomToEventHandlerName(aName);
 
     jsval funval;
-    if (!JS_LookupProperty(mContext, obj, 
+    if (!JS_LookupProperty(mContext, obj,
                            charName, &funval))
         return NS_ERROR_FAILURE;
-    
+
     if (JS_TypeOfValue(mContext, funval) != JSTYPE_FUNCTION) {
         NS_WARNING("Event handler object not a function");
         aHandler.drop();
@@ -2212,7 +2222,7 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
     // Now that we've cleaned up, handle the case when rv is a failure
     // code, which could happen for all sorts of reasons above.
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     return aResult.set(result);
 }
 
@@ -2369,7 +2379,7 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
   if (!global) {
     nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(aGlobalObject));
     PRUint32 flags = 0;
-    
+
     if (chromeWindow) {
       // Flag this window's global object and objects under it as "system",
       // for optional automated XPCNativeWrapper construction when chrome JS
@@ -2536,7 +2546,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
       }
       nsCOMPtr<nsIVariant> variant(do_QueryInterface(arg));
       if (variant != nsnull) {
-        rv = xpc->VariantToJS(mContext, (JSObject *)aScope, variant, 
+        rv = xpc->VariantToJS(mContext, (JSObject *)aScope, variant,
                               thisval);
       } else {
         // And finally, support the nsISupportsPrimitives supplied
@@ -2608,7 +2618,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
 
       p->GetData(data);
 
-      
+
       JSString *str = ::JS_NewStringCopyN(cx, data.get(), data.Length());
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2805,7 +2815,7 @@ nsJSContext::FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder)
   JSObject *globalObj;
   aHolder->GetJSObject(&globalObj);
   NS_ASSERTION(globalObj, "Must have global by now!");
-      
+
   const char* arg = "arg";
   NS_NAMED_LITERAL_STRING(body, "return new XPCNativeWrapper(arg);");
 
@@ -2825,7 +2835,7 @@ nsJSContext::FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder)
 
   jsval globalVal = OBJECT_TO_JSVAL(globalObj);
   jsval wrapper;
-      
+
   JSBool ok = ::JS_CallFunction(mContext, globalObj, fun,
                                 1, &globalVal, &wrapper);
   if (!ok) {
@@ -3172,7 +3182,7 @@ nsJSContext::InitClasses(void *aGlobalObj)
 #endif
 
   JSOptionChangedCallback(js_options_dot_str, this);
-    
+
   return rv;
 }
 
@@ -3262,7 +3272,7 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
     // might cause new termination funcs to be added!
     nsJSContext::TerminationFuncClosure* start = mTerminations;
     mTerminations = nsnull;
-    
+
     for (nsJSContext::TerminationFuncClosure* cur = start;
          cur;
          cur = cur->mNext) {

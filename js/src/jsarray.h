@@ -123,6 +123,74 @@ extern JSBool
 js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 #endif
 
+extern JSBool
+js_array_join(JSContext *cx, uintN argc, jsval *vp);
+
+enum ArrayToStringOp {
+    TO_STRING,
+    TO_LOCALE_STRING,
+    TO_SOURCE
+};
+
+extern JSBool
+js_array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
+                  JSString *sep, jsval *rval);
+
+/*
+ * Fast dense-array-to-buffer conversions.
+ *
+ * If the array is a dense array, fill [offset..offset+count] values
+ * into destination, assuming that types are consistent.  Return
+ * JS_TRUE if successful, otherwise JS_FALSE -- note that the
+ * destination buffer may be modified even if JS_FALSE is returned
+ * (e.g. due to finding an inappropriate type later on in the array).
+ * If JS_FALSE is returned, no error conditions or exceptions are set
+ * on the context.
+ *
+ * For ArrayToJSUint8, ArrayToJSUint16, and ArrayToJSUint32, each element
+ * in the array a) must be an integer; b) must be >= 0.  Integers
+ * are clamped to fit in the destination size.  Only JSVAL_IS_INT values
+ * are considered to be valid, so for JSUint32, the maximum value that
+ * can be fast-converted is less than the full unsigned 32-bit range.
+ *
+ * For ArrayToJSInt8, ArrayToJSInt16, ArrayToJSInt32, each element in
+ * the array must be an integer.  Integers are clamped to fit in the
+ * destination size.  Only JSVAL_IS_INT values are considered to be
+ * valid, so for JSInt32, the maximum value that can be
+ * fast-converted is less than the full signed 32-bit range.
+ * 
+ * For ArrayToJSDouble, each element in the array must be an
+ * integer -or- a double (JSVAL_IS_NUMBER).
+ */
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                        JSUint8 *dest);
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSUint16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                         JSUint16 *dest);
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSUint32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                         JSUint32 *dest);
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSInt8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                       JSInt8 *dest);
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSInt16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                        JSInt16 *dest);
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSInt32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                        JSInt32 *dest);
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                         jsdouble *dest);
+
 JS_END_EXTERN_C
 
 #endif /* jsarray_h___ */

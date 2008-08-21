@@ -87,6 +87,20 @@ ifndef JS_STATIC_BUILD
 FORCE_SHARED_LIB = 1
 endif
 
+ifeq (86,$(findstring 86,$(OS_TEST)))
+DEFINES += -DAVMPLUS_IA32
+NANOJIT_ARCH = i386
+ENABLE_JIT = 1
+endif
+
+ifeq ($(OS_ARCH),Linux)
+DEFINES += -DAVMPLUS_LINUX -DLINUX
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+DEFINES += -DAVMPLUS_WIN32
+endif
+
 CPPSRCS		= \
 		jsapi.cpp \
 		jsarena.cpp \
@@ -174,11 +188,45 @@ EXPORTS		= \
 		jsscript.h \
 		jsstddef.h \
 		jsstr.h \
+		jstracer.h \
 		jstypes.h \
 		jsutil.h \
 		jsxdrapi.h \
 		jsxml.h \
 		$(NULL)
+
+ifdef ENABLE_JIT
+EXPORTS += \
+		nanojit/Assembler.h     \
+		nanojit/LIR.h		\
+		nanojit/avmplus.h	\
+		nanojit/vm_fops.h	\
+		nanojit/Fragmento.h	\
+		nanojit/Native.h	\
+		nanojit/Native$(NANOJIT_ARCH).h \
+		nanojit/RegAlloc.h	\
+		nanojit/nanojit.h	\
+		builtins.tbl \
+		$(NULL)
+
+CPPSRCS += \
+		jstracer.cpp \
+		nanojit/Assembler.cpp  \
+		nanojit/Fragmento.cpp  \
+		nanojit/LIR.cpp        \
+		nanojit/RegAlloc.cpp   \
+		nanojit/avmplus.cpp    \
+		nanojit/Native$(NANOJIT_ARCH).cpp \
+		jsbuiltins.cpp         \
+		$(NULL)
+
+ifdef DEBUG
+EXPORTS += nanojit/TraceTreeDrawer.h
+CPPSRCS += nanojit/TraceTreeDrawer.cpp
+endif
+
+DEFINES += -DFEATURE_NANOJIT -DJS_TRACER
+endif
 
 ifdef HAVE_DTRACE
 EXPORTS 	+= \
@@ -248,6 +296,9 @@ GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
 
 USE_HOST_CXX = 1
 
+HOST_SIMPLE_PROGRAMS += host_jsoplengen$(HOST_BIN_SUFFIX)
+GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
+
 ifdef HAVE_DTRACE
 ifneq ($(OS_ARCH),Darwin)
 DTRACE_PROBE_OBJ = $(LIBRARY_NAME)-dtrace.$(OBJ_SUFFIX)
@@ -256,6 +307,10 @@ MOZILLA_DTRACE_SRC = $(srcdir)/javascript-trace.d
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+# our build system doesn't handle subdir srcs very gracefully today
+export::
+	mkdir -p nanojit
 
 DEFINES		+= -DEXPORT_JS_API 
 

@@ -58,6 +58,12 @@ JS_BEGIN_EXTERN_C
 #define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
 
 /*
+ * Native iterator object slots, shared between jsiter.cpp and jstracer.cpp.
+ */
+#define JSSLOT_ITER_STATE       (JSSLOT_PRIVATE)
+#define JSSLOT_ITER_FLAGS       (JSSLOT_PRIVATE + 1)
+
+/*
  * Convert the value stored in *vp to its iteration object. The flags should
  * contain JSITER_ENUMERATE if js_ValueToIterator is called when enumerating
  * for-in semantics are required, and when the caller can guarantee that the
@@ -66,7 +72,7 @@ JS_BEGIN_EXTERN_C
 extern JS_FRIEND_API(JSBool)
 js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp);
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool) JS_FASTCALL
 js_CloseIterator(JSContext *cx, jsval v);
 
 /*
