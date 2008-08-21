@@ -2902,8 +2902,8 @@ static JSFunctionSpec array_methods[] = {
     JS_FS_END
 };
 
-static JSBool
-Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+JSBool
+js_Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsuint length;
     jsval *vector;
@@ -2945,7 +2945,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     js_SlowArrayObjectOps.enumerate = slowarray_enumerate;
     js_SlowArrayObjectOps.call = NULL;
 
-    proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, Array, 1,
+    proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
                          array_props, array_methods, NULL, NULL);
 
     /* Initialize the Array prototype object so it gets a length property. */
