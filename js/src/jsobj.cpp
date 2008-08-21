@@ -1342,6 +1342,9 @@ js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     script->u.nextToGC = JS_SCRIPTS_TO_GC(cx);
     JS_SCRIPTS_TO_GC(cx) = script;
+#ifdef CHECK_SCRIPT_OWNER
+    script->owner = NULL;
+#endif
 
 out:
 #if JS_HAS_EVAL_THIS_SCOPE
@@ -4358,7 +4361,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             *statep = JSVAL_ZERO;
         } else {
             JS_ASSERT(length != 0);
-            JS_ASSERT(ne->cursor == length);
+            JS_ASSERT(ne->cursor == (jsword) length);
             if (allocated != 0) {
                 JS_LOCK_GC(cx->runtime);
                 if (!js_AddAsGCBytes(cx, allocated)) {
