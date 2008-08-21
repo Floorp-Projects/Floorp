@@ -3018,7 +3018,7 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 #endif
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                         JSUint8 *dest)
 {
@@ -3046,7 +3046,7 @@ js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint coun
     return JS_TRUE;
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_ArrayToJSUint16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                          JSUint16 *dest)
 {
@@ -3074,7 +3074,7 @@ js_ArrayToJSUint16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint cou
     return JS_TRUE;
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_ArrayToJSUint32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                          JSUint32 *dest)
 {
@@ -3102,7 +3102,7 @@ js_ArrayToJSUint32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint cou
     return JS_TRUE;
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_ArrayToJSInt8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                        JSInt8 *dest)
 {
@@ -3128,7 +3128,7 @@ js_ArrayToJSInt8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count
     return JS_TRUE;
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_ArrayToJSInt16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                         JSInt16 *dest)
 {
@@ -3154,7 +3154,7 @@ js_ArrayToJSInt16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint coun
     return JS_TRUE;
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_ArrayToJSInt32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                         JSInt32 *dest)
 {
@@ -3180,7 +3180,7 @@ js_ArrayToJSInt32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint coun
     return JS_TRUE;
 }
 
-JSBool
+JS_FRIEND_API(JSBool)
 js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                          jsdouble *dest)
 {
