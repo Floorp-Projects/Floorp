@@ -598,18 +598,6 @@ js_ObjectToString(JSContext* cx, JSObject* obj)
     return JSVAL_TO_STRING(v);
 }
 
-jsval FASTCALL
-js_FastEval(JSContext* cx, JSObject* eval, JSObject* obj, JSString *str)
-{
-    // FIXME: want a truly fast, frame-free js_EvalHelper in jsobj.cpp
-    jsval fval = OBJECT_TO_JSVAL(eval);
-    jsval arg = STRING_TO_JSVAL(str);
-    jsval rval;
-    if (!js_InternalCall(cx, obj, fval, 1, &arg, &rval))
-        return JSVAL_ERROR_COOKIE;
-    return rval;
-}
-
 JSObject* FASTCALL
 js_Array_1int(JSContext* cx, JSObject* ctor, jsint i)
 {
