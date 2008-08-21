@@ -1221,8 +1221,16 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
         pc++;
         /* FALL THROUGH */
 
+      case JSOP_IFEQ:
+      case JSOP_IFEQX:
       case JSOP_IFNE:
       case JSOP_IFNEX:
+        /*
+         * Forward jumps are usually intra-branch, but for-in loops jump to the trailing enditer to
+         * clean up, so check for that case here.
+         */
+        if (pc[GET_JUMP_OFFSET(pc)] == JSOP_ENDITER)
+            return true;
         return GET_JUMP_OFFSET(pc) < 0;
 
       default:;
