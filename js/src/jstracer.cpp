@@ -1726,9 +1726,11 @@ bool
 js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 {
     /* Make sure the global type map didn't change on us. */
-    if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape != tm->globalShape) {
+    uint32 globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+    if (tm->globalShape != globalShape) {
+        debug_only(printf("Global shape mismatch (%u vs. %u) in RecordTree, flushing cache.\n",
+                          globalShape, tm->globalShape);)
         js_FlushJITCache(cx);
-        debug_only(printf("Global shape mismatch in RecordTree, flushing cache.\n");)
         return false;
     }
     TypeMap current;
@@ -1916,10 +1918,11 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
        the global type map must remain applicable at all times (we expect absolute type 
        stability for globals). */
     if (ngslots &&
-        ((OBJ_SCOPE(globalObj)->shape != tm->globalShape) || 
+        (OBJ_SCOPE(globalObj)->shape != tm->globalShape || 
          !BuildNativeGlobalFrame(cx, ngslots, gslots, tm->globalTypeMap->data(), global))) {
         AUDIT(globalShapeMismatchAtEntry);
-        debug_only_v(printf("global shape mismatch, flushing cache.\n"));
+        debug_only_v(printf("Global shape mismatch (%u vs. %u), flushing cache.\n",
+                            OBJ_SCOPE(globalObj)->shape, tm->globalShape);)
         const void* ip = f->ip;
         js_FlushJITCache(cx);
         *treep = tm->fragmento->newLoop(ip);
