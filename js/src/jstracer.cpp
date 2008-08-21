@@ -1525,14 +1525,14 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
            exit->typeMap, exit->typeMap + exit->numGlobalSlots);
     /* Store the guard pointer in case we exit on an unexpected guard */
     lir->insStorei(ret, lirbuf->state, offsetof(InterpState, nestedExit));
-    /* Guard that we come out of the inner tree along the same side exit we came out when
-       we called the inner tree at recording time. */
-    guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
     /* Restore sp and rp to their original values (we still have them in a register). */
     if (callDepth > 0) {
         lir->insStorei(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp));
         lir->insStorei(lirbuf->rp, lirbuf->state, offsetof(InterpState, rp));
     }
+    /* Guard that we come out of the inner tree along the same side exit we came out when
+       we called the inner tree at recording time. */
+    guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
 }
 
 int
@@ -1972,10 +1972,6 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
         /* We restored the nested frames, now we just need to deal with the innermost guard. */
         lr = state.nestedExit;
     }
-
-    /* At this point we have processed any outer frames around the innermost guard so
-       rp and callstack should match. */
-    JS_ASSERT(state.rp == callstack);
 
     /* sp_adj and ip_adj are relative to the tree we exit out of, not the tree we
        entered into (which might be different in the presence of nested trees). */
