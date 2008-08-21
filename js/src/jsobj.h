@@ -388,8 +388,21 @@ extern void
 js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map);
 
 extern JSBool
+js_obj_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
 js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
                         jsval *vp);
+
+extern JSBool
+js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
+                  jsval *vp);
+
+extern JSBool
+js_obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JSObject *
 js_InitBlockClass(JSContext *cx, JSObject* obj);
@@ -684,7 +697,7 @@ extern JSBool
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
 
 /*
- * obj must be locked.
+ * Precondition: obj must be locked.
  */
 extern JSBool
 js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
@@ -705,6 +718,10 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj);
 extern const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop);
+
+extern JSBool
+js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+
 JS_END_EXTERN_C
 
 #endif /* jsobj_h___ */

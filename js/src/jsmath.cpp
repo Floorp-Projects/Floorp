@@ -239,8 +239,8 @@ math_ceil(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_cos(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_cos(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -283,8 +283,8 @@ math_exp(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_floor(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_floor(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -377,8 +377,8 @@ math_min(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_pow(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_pow(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, y, z;
 
@@ -423,8 +423,8 @@ random_setSeed(JSRuntime *rt, int64 seed)
     JSLL_AND(rt->rngSeed, tmp, rt->rngMask);
 }
 
-static void
-random_init(JSRuntime *rt)
+void
+js_random_init(JSRuntime *rt)
 {
     int64 tmp, tmp2;
 
@@ -469,8 +469,8 @@ random_next(JSRuntime *rt, int bits)
     return retval;
 }
 
-static jsdouble
-random_nextDouble(JSRuntime *rt)
+jsdouble
+js_random_nextDouble(JSRuntime *rt)
 {
     int64 tmp, tmp2;
     jsdouble d;
@@ -482,16 +482,16 @@ random_nextDouble(JSRuntime *rt)
     return d / rt->rngDscale;
 }
 
-static JSBool
-math_random(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_random(JSContext *cx, uintN argc, jsval *vp)
 {
     JSRuntime *rt;
     jsdouble z;
 
     rt = cx->runtime;
     JS_LOCK_RUNTIME(rt);
-    random_init(rt);
-    z = random_nextDouble(rt);
+    js_random_init(rt);
+    z = js_random_nextDouble(rt);
     JS_UNLOCK_RUNTIME(rt);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
@@ -527,8 +527,8 @@ math_round(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_sin(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_sin(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -543,8 +543,8 @@ math_sin(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_sqrt(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_sqrt(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -594,17 +594,17 @@ static JSFunctionSpec math_static_methods[] = {
     JS_FN("atan",           math_atan,          1, 0),
     JS_FN("atan2",          math_atan2,         2, 0),
     JS_FN("ceil",           math_ceil,          1, 0),
-    JS_FN("cos",            math_cos,           1, 0),
+    JS_FN("cos",            js_math_cos,        1, 0),
     JS_FN("exp",            math_exp,           1, 0),
-    JS_FN("floor",          math_floor,         1, 0),
+    JS_FN("floor",          js_math_floor,      1, 0),
     JS_FN("log",            math_log,           1, 0),
     JS_FN("max",            math_max,           2, 0),
     JS_FN("min",            math_min,           2, 0),
-    JS_FN("pow",            math_pow,           2, 0),
-    JS_FN("random",         math_random,        0, 0),
+    JS_FN("pow",            js_math_pow,        2, 0),
+    JS_FN("random",         js_math_random,     0, 0),
     JS_FN("round",          math_round,         1, 0),
-    JS_FN("sin",            math_sin,           1, 0),
-    JS_FN("sqrt",           math_sqrt,          1, 0),
+    JS_FN("sin",            js_math_sin,        1, 0),
+    JS_FN("sqrt",           js_math_sqrt,       1, 0),
     JS_FN("tan",            math_tan,           1, 0),
     JS_FS_END
 };
@@ -614,10 +614,14 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
 {
     JSObject *Math;
 
-    Math = JS_DefineObject(cx, obj, js_Math_str, &js_MathClass, NULL,
-                           JSPROP_READONLY | JSPROP_PERMANENT);
+    Math = JS_NewObject(cx, &js_MathClass, NULL, obj);
     if (!Math)
         return NULL;
+    if (!JS_DefineProperty(cx, obj, js_Math_str, OBJECT_TO_JSVAL(Math),
+                           JS_PropertyStub, JS_PropertyStub,
+                           JSPROP_READONLY | JSPROP_PERMANENT))
+        return NULL;
+
     if (!JS_DefineFunctions(cx, Math, math_static_methods))
         return NULL;
     if (!JS_DefineConstDoubles(cx, Math, math_constants))

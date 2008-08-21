@@ -54,12 +54,32 @@ include config.mk
 
 #NS_USE_NATIVE = 1
 
+ifndef NANOJIT_ARCH
+$(warning NANOJIT_ARCH not defined in config/$(OS_CONFIG).mk, JIT disabled)
+else
+ifdef DISABLE_JIT
+$(warning disabling JIT per build specification)
+else
+ENABLE_JIT=1
+endif
+endif
+
+ifdef ENABLE_JIT
+DEFINES += -DJS_TRACER
+DEFINES += -DFEATURE_NANOJIT
+INCLUDES += -Inanojit
+endif
+
+#ifndef BUILD_OPT
+#DEFINES += -Ivprof
+#endif
+
 ifdef NARCISSUS
 DEFINES += -DNARCISSUS
 endif
 
 # Look in OBJDIR to find jsautocfg.h and jsautokw.h
-INCLUDES   += -I$(OBJDIR)
+INCLUDES   += -I. -I$(OBJDIR)
 
 ifdef JS_THREADSAFE
 DEFINES += -DJS_THREADSAFE
@@ -79,12 +99,14 @@ ifdef JS_HAS_FILE_OBJECT
 DEFINES += -DJS_HAS_FILE_OBJECT
 endif
 
+
 #
 # XCFLAGS may be set in the environment or on the gmake command line
 #
 #CFLAGS += -DDEBUG -DDEBUG_brendan -DJS_ARENAMETER -DJS_HASHMETER -DJS_DUMP_PROPTREE_STATS -DJS_DUMP_SCOPE_METERS -DJS_SCOPE_DEPTH_METER -DJS_BASIC_STATS
 CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 INTERP_CFLAGS   += $(INTERP_OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(INTERP_XCFLAGS)
+BUILTINS_CFLAGS += $(BUILTINS_OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(BUILTINS_XCFLAGS)
 
 LDFLAGS		= $(XLDFLAGS)
 LDFLAGS += $(OS_LDFLAGS)
@@ -187,6 +209,28 @@ JS_HFILES =		\
 	jsxml.h		\
 	$(NULL)
 
+ifdef ENABLE_JIT
+JS_HFILES +=			\
+	jstracer.h		\
+	nanojit/Assembler.h     \
+	nanojit/LIR.h		\
+	nanojit/Native$(NANOJIT_ARCH).h	\
+	nanojit/avmplus.h	\
+	nanojit/vm_fops.h	\
+	nanojit/Fragmento.h	\
+	nanojit/Native.h	\
+	nanojit/RegAlloc.h	\
+	nanojit/nanojit.h	\
+	nanojit/TraceTreeDrawer.h \
+	$(NULL)
+endif
+
+ifndef BUILD_OPT
+#JS_HFILES +=            \
+#        vprof/vprof.h   \
+#        $(NULL)
+endif
+
 API_HFILES =		\
 	jsapi.h		\
 	jsdbgapi.h	\
@@ -206,6 +250,10 @@ OTHER_HFILES =		\
 	jsshell.msg	\
 	jskeyword.tbl	\
 	$(NULL)
+
+ifdef ENABLE_JIT
+OTHER_HFILES += builtins.tbl
+endif
 
 ifndef PREBUILT_CPUCFG
 OTHER_HFILES += $(OBJDIR)/jsautocfg.h
@@ -252,6 +300,29 @@ JS_CPPFILES =		\
 	jsxml.cpp	\
 	prmjtime.cpp	\
 	$(NULL)
+
+ifdef ENABLE_JIT
+JS_CPPFILES +=		       \
+	jsbuiltins.cpp         \
+	jstracer.cpp	       \
+	nanojit/Assembler.cpp  \
+	nanojit/Fragmento.cpp  \
+	nanojit/LIR.cpp        \
+	nanojit/Native$(NANOJIT_ARCH).cpp \
+	nanojit/RegAlloc.cpp   \
+	nanojit/avmplus.cpp    \
+	$(NULL)
+
+ifdef DEBUG
+JS_CPPFILES += nanojit/TraceTreeDrawer.cpp
+endif
+endif
+
+ifndef BUILD_OPT
+#JS_CPPFILES +=                 \
+#        vprof/vprof.cpp        \
+#        $(NULL)
+endif
 
 ifdef JS_LIVECONNECT
 DIRS      += liveconnect
@@ -355,13 +426,16 @@ endif
 DEPENDENCIES    = $(CPPFILES:%.cpp=$(OBJDIR)/%.d)
 
 #
-# Hardwire dependencies for jsinvoke.c
+# Hardwire dependencies for some files 
 #
 ifdef USE_MSVC
-$(OBJDIR)/jsinvoke.obj : jsinterp.h jsinterp.cpp
+OBJ=obj
 else
-$(OBJDIR)/jsinvoke.o : jsinterp.h jsinterp.cpp
+OBJ=o
 endif
+
+$(OBJDIR)/jsinvoke.$(OBJ): jsinterp.h jsinterp.cpp
+$(OBJDIR)/jsinvoke.obj : jsinterp.h jsinterp.cpp
 
 -include $(DEPENDENCIES)
 

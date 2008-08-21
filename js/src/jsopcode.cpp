@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set sw=4 ts=8 et tw=78:
+ * vim: set sw=4 ts=8 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -324,10 +324,6 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         i = (jsint)GET_UINT16(pc);
         goto print_int;
 
-      case JOF_2BYTE:
-        fprintf(fp, " %u", (uintN)pc[1]);
-        break;
-
       case JOF_TABLESWITCH:
       case JOF_TABLESWITCHX:
       {
@@ -411,6 +407,10 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_UINT24:
         JS_ASSERT(op == JSOP_UINT24 || op == JSOP_NEWARRAY);
         i = (jsint)GET_UINT24(pc);
+        goto print_int;
+
+      case JOF_UINT8:
+        i = pc[1];
         goto print_int;
 
       case JOF_INT8:
@@ -1181,7 +1181,7 @@ GetArgOrVarAtom(JSPrinter *jp, uintN slot)
     JSAtom *name;
 
     LOCAL_ASSERT_RV(jp->fun, NULL);
-    LOCAL_ASSERT_RV(slot < JS_GET_LOCAL_NAME_COUNT(jp->fun), NULL);
+    LOCAL_ASSERT_RV(slot < (uintN) JS_GET_LOCAL_NAME_COUNT(jp->fun), NULL);
     name = JS_LOCAL_NAME_TO_ATOM(jp->localNames[slot]);
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -2135,6 +2135,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 if ((cs->prec != 0 &&
                      cs->prec <= js_CodeSpec[NEXT_OP(pc)].prec) ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_NULL ||
+                    pc[JSOP_GROUP_LENGTH] == JSOP_NULLTHIS ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_DUP ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_IFEQ ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_IFNE) {
@@ -2691,6 +2692,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     todo = SprintCString(&ss->sprinter, rval);
                 break;
               }
+
+              case JSOP_CALLUPVAR:
+              case JSOP_GETUPVAR:
+                i = JS_UPVAR_LOCAL_NAME_START(jp->fun) + GET_UINT16(pc);
+                atom = GetArgOrVarAtom(jp, i);
+                goto do_name;
 
               case JSOP_CALLLOCAL:
               case JSOP_GETLOCAL:
@@ -3872,7 +3879,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * arrange to advance over the call to this lambda.
                      */
                     pc += len;
-                    LOCAL_ASSERT(*pc == JSOP_NULL);
+                    LOCAL_ASSERT(*pc == JSOP_NULL || *pc == JSOP_NULLTHIS);
                     pc += JSOP_NULL_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);
                     LOCAL_ASSERT(GET_ARGC(pc) == 0);
@@ -5098,12 +5105,18 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     return name;
 }
 
+uintN
+js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc)
+{
+    return ReconstructPCStack(cx, script, pc, NULL);
+}
+
 static intN
-ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
+ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
                    jsbytecode **pcstack)
 {
     intN pcdepth, nuses, ndefs;
-    jsbytecode *begin;
+    jsbytecode *pc;
     JSOp op;
     const JSCodeSpec *cs;
     ptrdiff_t oplen;
@@ -5119,10 +5132,9 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
      * FIXME: Code to compute oplen copied from js_Disassemble1 and reduced.
      * FIXME: Optimize to use last empty-stack sequence point.
      */
-    LOCAL_ASSERT(script->main <= pc && pc < script->code + script->length);
+    LOCAL_ASSERT(script->main <= target && target < script->code + script->length);
     pcdepth = 0;
-    begin = pc;
-    for (pc = script->main; pc < begin; pc += oplen) {
+    for (pc = script->main; pc < target; pc += oplen) {
         op = (JSOp) *pc;
         if (op == JSOP_TRAP)
             op = JS_GetTrapOpcode(cx, script, pc);
@@ -5146,8 +5158,8 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
         }
 
         /*
-         * A (C ? T : E) expression requires skipping either T (if begin is in
-         * E) or both T and E (if begin is after the whole expression) before
+         * A (C ? T : E) expression requires skipping either T (if target is in
+         * E) or both T and E (if target is after the whole expression) before
          * adjusting pcdepth based on the JSOP_IFEQ or JSOP_IFEQX at pc that
          * tests condition C.  We know that the stack depth can't change from
          * what it was with C on top of stack.
@@ -5157,20 +5169,21 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
             ptrdiff_t jmpoff, jmplen;
 
             jmpoff = js_GetSrcNoteOffset(sn, 0);
-            if (pc + jmpoff < begin) {
+            if (pc + jmpoff < target) {
                 pc += jmpoff;
                 op = (JSOp) *pc;
                 JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
                 cs = &js_CodeSpec[op];
                 oplen = cs->length;
+                JS_ASSERT(oplen > 0);
                 jmplen = GetJumpOffset(pc, pc);
-                if (pc + jmplen < begin) {
+                if (pc + jmplen < target) {
                     oplen = (uintN) jmplen;
                     continue;
                 }
 
                 /*
-                 * Ok, begin lies in E.  Manually pop C off the model stack,
+                 * Ok, target lies in E. Manually pop C off the model stack,
                  * since we have moved beyond the IFEQ now.
                  */
                 --pcdepth;
@@ -5219,8 +5232,10 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
          */
         switch (op) {
           default:
-            for (i = 0; i != ndefs; ++i)
-                pcstack[pcdepth + i] = pc;
+            if (pcstack) {
+                for (i = 0; i != ndefs; ++i)
+                    pcstack[pcdepth + i] = pc;
+            }
             break;
 
           case JSOP_CASE:
@@ -5231,13 +5246,16 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
 
           case JSOP_DUP:
             JS_ASSERT(ndefs == 2);
-            pcstack[pcdepth + 1] = pcstack[pcdepth];
+            if (pcstack)
+                pcstack[pcdepth + 1] = pcstack[pcdepth];
             break;
 
           case JSOP_DUP2:
             JS_ASSERT(ndefs == 4);
-            pcstack[pcdepth + 2] = pcstack[pcdepth];
-            pcstack[pcdepth + 3] = pcstack[pcdepth + 1];
+            if (pcstack) {
+                pcstack[pcdepth + 2] = pcstack[pcdepth];
+                pcstack[pcdepth + 3] = pcstack[pcdepth + 1];
+            }
             break;
 
           case JSOP_LEAVEBLOCKEXPR:
@@ -5250,17 +5268,18 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
              */
             JS_ASSERT(ndefs == 0);
             LOCAL_ASSERT(pcdepth >= 1);
-            LOCAL_ASSERT(nuses == 0 ||
+            LOCAL_ASSERT(nuses == 0 || !pcstack ||
                          *pcstack[pcdepth - 1] == JSOP_ENTERBLOCK ||
                          (*pcstack[pcdepth - 1] == JSOP_TRAP &&
                           JS_GetTrapOpcode(cx, script, pcstack[pcdepth - 1])
                           == JSOP_ENTERBLOCK));
-            pcstack[pcdepth - 1] = pc;
+            if (pcstack)
+                pcstack[pcdepth - 1] = pc;
             break;
         }
         pcdepth += ndefs;
     }
-    LOCAL_ASSERT(pc == begin);
+    LOCAL_ASSERT(pc == target);
     return pcdepth;
 
 #undef LOCAL_ASSERT
