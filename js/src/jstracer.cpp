@@ -1524,7 +1524,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     import(ti, inner_sp_ins, exit->numGlobalSlots, exit->calldepth,
            exit->typeMap, exit->typeMap + exit->numGlobalSlots);
     /* Store the guard pointer in case we exit on an unexpected guard */
-    lir->insStorei(lir->insImmPtr(lr), lirbuf->state, offsetof(InterpState, nestedExit));
+    lir->insStorei(ret, lirbuf->state, offsetof(InterpState, nestedExit));
     /* Guard that we come out of the inner tree along the same side exit we came out when
        we called the inner tree at recording time. */
     guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
