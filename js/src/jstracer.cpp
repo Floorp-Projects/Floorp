@@ -4039,27 +4039,8 @@ TraceRecorder::record_JSOP_CALL()
      * from benchmarks. FIXME: we need a post-eval recording hook to know which
      * type tag to unbox from.
      */
-    if (FUN_SLOW_NATIVE(fun)) {
-        if (fun->u.n.native == js_obj_eval) {
-            if (JSVAL_IS_PRIMITIVE(tval))
-                ABORT_TRACE("eval with primitive |this|");
-
-            jsval& arg = stackval(0 - argc);
-            if (!JSVAL_IS_STRING(arg)) {
-                set(&fval, get(&arg));
-                return true;
-            }
-
-            LIns* args[] = { get(&arg), this_ins, get(&fval), cx_ins };
-            LIns* res_ins = lir->insCall(F_FastEval, args);
-            if (!unbox_jsval(JSVAL_STRING, res_ins))
-                ABORT_TRACE("unboxing non-string eval result");
-            set(&fval, res_ins);
-            return true;
-        }
-
+    if (FUN_SLOW_NATIVE(fun)) 
         ABORT_TRACE("slow native");
-    }
 
     static JSTraceableNative knownNatives[] = {
         { js_math_sin,                 F_Math_sin,             "",    "d",    INFALLIBLE,  NULL },
