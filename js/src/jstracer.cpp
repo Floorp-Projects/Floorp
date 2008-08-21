@@ -3400,13 +3400,27 @@ TraceRecorder::record_JSOP_NEG()
     return unary(LIR_fneg);
 }
 
+enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID };
+struct JSTraceableNative {
+    JSFastNative native;
+    int          builtin;
+    const char  *prefix;
+    const char  *argtypes;
+    JSTNErrType  errtype;
+    JSClass     *tclasp;
+};
+
+JSBool
+js_Array(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
+
 bool
 TraceRecorder::record_JSOP_NEW()
 {
+    jsbytecode *pc = cx->fp->regs->pc;
     /* Get immediate argc and find the constructor function. */
     unsigned argc = GET_ARGC(cx->fp->regs->pc);
-    jsval& v = stackval(0 - (2 + argc));
-    JS_ASSERT(&v >= StackBase(cx->fp));
+    jsval& fval = stackval(0 - (2 + argc));
+    JS_ASSERT(&fval >= StackBase(cx->fp));
 
     /*
      * Require that the callee be a function object, to avoid guarding on its
@@ -3419,16 +3433,158 @@ TraceRecorder::record_JSOP_NEW()
      * Bytecode sequences that push shapeless callees must guard on the callee
      * class being Function and the function being interpreted.
      */
-    JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v));
+    JS_ASSERT(VALUE_IS_FUNCTION(cx, fval));
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
 
     if (FUN_INTERPRETED(fun)) {
-        LIns* args[] = { get(&v), cx_ins };
+        LIns* args[] = { get(&fval), cx_ins };
         LIns* tv_ins = lir->insCall(F_FastNewObject, args);
         guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
         jsval& tv = stackval(0 - (1 + argc));
         set(&tv, tv_ins);
-        return interpretedFunctionCall(v, fun, argc);
+        return interpretedFunctionCall(fval, fun, argc);
+    }
+
+    static JSTraceableNative knownNatives[] = {
+        { (JSFastNative)js_Array, F_Array_1int, "fC", "i", FAIL_NULL, NULL },
+    };
+
+    for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
+        JSTraceableNative* known = &knownNatives[i];
+        if ((JSFastNative)fun->u.n.native != known->native)
+            continue;
+
+        uintN knownargc = strlen(known->argtypes);
+        if (argc != knownargc)
+            continue;
+
+        intN prefixc = strlen(known->prefix);
+        LIns* args[5];
+        LIns** argp = &args[argc + prefixc - 1];
+        char argtype;
+
+#if defined _DEBUG
+        memset(args, 0xCD, sizeof(args));
+#endif
+
+        jsval& thisval = stackval(0 - (argc + 1));
+        LIns* thisval_ins = get(&thisval);
+        if (known->tclasp &&
+            !JSVAL_IS_PRIMITIVE(thisval) &&
+            !guardClass(JSVAL_TO_OBJECT(thisval), thisval_ins, known->tclasp)) {
+            continue; /* might have another specialization for |this| */
+        }
+
+#define HANDLE_PREFIX(i)                                                       \
+    JS_BEGIN_MACRO                                                             \
+        argtype = known->prefix[i];                                            \
+        if (argtype == 'C') {                                                  \
+            *argp = cx_ins;                                                    \
+        } else if (argtype == 'T') {                                           \
+            *argp = thisval_ins;                                               \
+        } else if (argtype == 'R') {                                           \
+            *argp = lir->insImmPtr((void*)cx->runtime);                        \
+        } else if (argtype == 'P') {                                           \
+            *argp = lir->insImmPtr(pc);                                        \
+        } else if (argtype == 'f') {                                           \
+            *argp = lir->insImmPtr((void*)JSVAL_TO_OBJECT(fval));              \
+        } else {                                                               \
+            JS_NOT_REACHED("unknown prefix arg type");                         \
+        }                                                                      \
+        argp--;                                                                \
+    JS_END_MACRO
+
+        switch (prefixc) {
+          case 3:
+            HANDLE_PREFIX(2);
+            /* FALL THROUGH */
+          case 2:
+            HANDLE_PREFIX(1);
+            /* FALL THROUGH */
+          case 1:
+            HANDLE_PREFIX(0);
+            /* FALL THROUGH */
+          case 0:
+            break;
+          default:
+            JS_NOT_REACHED("illegal number of prefix args");
+        }
+
+#undef HANDLE_PREFIX
+
+#define HANDLE_ARG(i)                                                          \
+    {                                                                          \
+        jsval& arg = stackval(-(i + 1));                                       \
+        argtype = known->argtypes[i];                                          \
+        if (argtype == 'd' || argtype == 'i') {                                \
+            if (!isNumber(arg))                                                \
+                continue; /* might have another specialization for arg */      \
+            *argp = get(&arg);                                                 \
+            if (argtype == 'i')                                                \
+                *argp = f2i(*argp);                                            \
+        } else if (argtype == 's') {                                           \
+            if (!JSVAL_IS_STRING(arg))                                         \
+                continue; /* might have another specialization for arg */      \
+            *argp = get(&arg);                                                 \
+        } else if (argtype == 'r') {                                           \
+            if (!VALUE_IS_REGEXP(cx, arg))                                     \
+                continue; /* might have another specialization for arg */      \
+            *argp = get(&arg);                                                 \
+        } else if (argtype == 'f') {                                           \
+            if (!VALUE_IS_FUNCTION(cx, arg))                                   \
+                continue; /* might have another specialization for arg */      \
+            *argp = get(&arg);                                                 \
+        } else {                                                               \
+            continue;     /* might have another specialization for arg */      \
+        }                                                                      \
+        argp--;                                                                \
+    }
+
+        switch (strlen(known->argtypes)) {
+          case 4:
+            HANDLE_ARG(3);
+            /* FALL THROUGH */
+          case 3:
+            HANDLE_ARG(2);
+            /* FALL THROUGH */
+          case 2:
+            HANDLE_ARG(1);
+            /* FALL THROUGH */
+          case 1:
+            HANDLE_ARG(0);
+            /* FALL THROUGH */
+          case 0:
+            break;
+          default:
+            JS_NOT_REACHED("illegal number of args to traceable native");
+        }
+
+#undef HANDLE_ARG
+
+#if defined _DEBUG
+        JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
+#endif
+
+        LIns* res_ins = lir->insCall(known->builtin, args);
+        switch (known->errtype) {
+          case FAIL_NULL:
+            guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
+            break;
+          case FAIL_NEG:
+          {
+            res_ins = lir->ins1(LIR_i2f, res_ins);
+            jsdpun u;
+            u.d = 0.0;
+            guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(u.u64)), OOM_EXIT);
+            break;
+          }
+          case FAIL_VOID:
+            guard(false, lir->ins2i(LIR_eq, res_ins, 2), OOM_EXIT);
+            break;
+          default:;
+        }
+        set(&fval, res_ins);
+        return true;
     }
 
     if (fun->u.n.clasp)
@@ -3901,15 +4057,7 @@ TraceRecorder::record_JSOP_CALL()
         ABORT_TRACE("slow native");
     }
 
-    enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID };
-    static struct JSTraceableNative {
-        JSFastNative native;
-        int          builtin;
-        const char  *prefix;
-        const char  *argtypes;
-        JSTNErrType  errtype;
-        JSClass     *tclasp;
-    } knownNatives[] = {
+    static JSTraceableNative knownNatives[] = {
         { js_math_sin,                 F_Math_sin,             "",    "d",    INFALLIBLE,  NULL },
         { js_math_cos,                 F_Math_cos,             "",    "d",    INFALLIBLE,  NULL },
         { js_math_pow,                 F_Math_pow,             "",   "dd",    INFALLIBLE,  NULL },

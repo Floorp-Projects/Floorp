@@ -769,7 +769,7 @@ matchInLoop.expected = true;
 test(matchInLoop);
 
 function deep1(x) {
-    if (x > 90) 
+    if (x > 90)
 	return 1;
     return 2;
 }
@@ -783,7 +783,7 @@ test(deep2);
 
 var merge_type_maps_x = 0, merge_type_maps_y = 0;
 function merge_type_maps() {
-    for (merge_type_maps_x = 0; merge_type_maps_x < 50; ++merge_type_maps_x) 
+    for (merge_type_maps_x = 0; merge_type_maps_x < 50; ++merge_type_maps_x)
         if ((merge_type_maps_x & 1) == 1)
 	    ++merge_type_maps_y;
     return [merge_type_maps_x,merge_type_maps_y].join(",");
@@ -802,6 +802,17 @@ function inner_double_outer_int() {
 }
 inner_double_outer_int.expected = "100";
 test(inner_double_outer_int);
+
+function newArrayTest()
+{
+  var a = [];
+  for (var i = 0; i < 10; i++)
+    a[i] = new Array();
+  return a.map(function(x) x.length).toString();
+}
+newArrayTest.expected="0,0,0,0,0,0,0,0,0,0";
+test(newArrayTest);
+
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
