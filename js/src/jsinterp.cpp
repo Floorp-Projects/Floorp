@@ -2507,8 +2507,8 @@ js_Interpret(JSContext *cx)
 
 # ifdef JS_TRACER
 #  define CHECK_RECORDER()  JS_BEGIN_MACRO                                    \
-                                JS_ASSERT(!JS_TRACE_MONITOR(cx).recorder ||   \
-                                          jumpTable == recordingJumpTable);   \
+                                JS_ASSERT(!JS_TRACE_MONITOR(cx).recorder ^    \
+                                          (jumpTable == recordingJumpTable)); \
                             JS_END_MACRO
 # else
 #  define CHECK_RECORDER()  ((void)0)
@@ -4935,9 +4935,9 @@ js_Interpret(JSContext *cx)
                             jsdtrace_function_return(cx, fp, fun);
                     }
 #endif
+                    regs.sp = vp + 1;
                     if (!ok)
                         goto error;
-                    regs.sp = vp + 1;
                     goto end_call;
                 }
             }
