@@ -303,6 +303,17 @@ js_String_p_replace_str3(JSContext* cx, JSString* str, JSString* patstr, JSStrin
     return JSVAL_TO_STRING(vp[0]);
 }
 
+JSString* FASTCALL
+js_String_p_split(JSContext* cx, JSString* str, JSString* sepstr)
+{
+    // FIXME: optimize by calling into a lower level exported from jsstr.cpp.
+    jsval vp[3] = { JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(sepstr) };
+    if (!js_str_split(cx, 2, vp))
+        return NULL;
+    JS_ASSERT(JSVAL_IS_STRING(vp[0]));
+    return JSVAL_TO_STRING(vp[0]);
+}
+
 jsdouble FASTCALL
 js_StringToNumber(JSContext* cx, JSString* str)
 {

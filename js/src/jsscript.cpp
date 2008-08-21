@@ -1409,7 +1409,7 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
 
     if (nupvars != 0) {
         JS_SCRIPT_UPVARS(script)->length = nupvars;
-        JS_SCRIPT_UPVARS(script)->vector = (uint *)cursor;
+        JS_SCRIPT_UPVARS(script)->vector = (uint32 *)cursor;
         vectorSize = nupvars * sizeof(JS_SCRIPT_UPVARS(script)->vector[0]);
         memset(cursor, 0, vectorSize);
         cursor += vectorSize;
