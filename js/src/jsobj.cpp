@@ -1164,8 +1164,8 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
     return caller->script->filename;
 }
 
-static JSBool
-obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+JSBool
+js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *caller;
     JSBool indirectCall;
@@ -1229,8 +1229,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* From here on, control must exit through label out with ok set. */
-    js_DisablePropertyCache(cx);
-
     if (!scopeobj) {
 #if JS_HAS_EVAL_THIS_SCOPE
         /* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
@@ -1325,6 +1323,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ok = JS_FALSE;
         goto out;
     }
+    script->staticDepth = caller->script->staticDepth + 1;
 
     if (argc < 2) {
         /* Execute using caller's new scope object (might be a Call object). */
@@ -1341,7 +1340,11 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (ok)
         ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 
-    JS_DestroyScript(cx, script);
+    script->u.nextToGC = JS_SCRIPTS_TO_GC(cx);
+    JS_SCRIPTS_TO_GC(cx) = script;
+#ifdef CHECK_SCRIPT_OWNER
+    script->owner = NULL;
+#endif
 
 out:
 #if JS_HAS_EVAL_THIS_SCOPE
@@ -1354,8 +1357,6 @@ out:
     if (setCallerVarObj)
         caller->varobj = callerVarObj;
 #endif
-
-    js_EnablePropertyCache(cx);
     return ok;
 }
 
@@ -1469,8 +1470,8 @@ obj_unwatch(JSContext *cx, uintN argc, jsval *vp)
  */
 
 /* Proposed ECMA 15.2.4.5. */
-static JSBool
-obj_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_obj_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
 
@@ -1484,14 +1485,23 @@ js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
                         jsval *vp)
 {
     jsid id;
-    JSObject *obj, *obj2;
-    JSProperty *prop;
-    JSScopeProperty *sprop;
+    JSObject *obj;
 
     if (!JS_ValueToId(cx, argc != 0 ? vp[2] : JSVAL_VOID, &id))
         return JS_FALSE;
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !lookup(cx, obj, id, &obj2, &prop))
+    return obj && js_HasOwnProperty(cx, lookup, obj, id, vp);
+}
+
+JSBool
+js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
+                  jsval *vp)
+{
+    JSObject *obj2;
+    JSProperty *prop;
+    JSScopeProperty *sprop;
+
+    if (!lookup(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         *vp = JSVAL_FALSE;
@@ -1555,20 +1565,28 @@ obj_isPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
 }
 
 /* Proposed ECMA 15.2.4.7. */
-static JSBool
-obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
 {
     jsid id;
-    JSObject *obj, *pobj;
-    uintN attrs;
-    JSProperty *prop;
-    JSBool ok;
+    JSObject *obj;
 
     if (!JS_ValueToId(cx, argc != 0 ? vp[2] : JSVAL_VOID, &id))
         return JS_FALSE;
 
     obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj || !OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
+    return obj && js_PropertyIsEnumerable(cx, obj, id, vp);
+}
+
+JSBool
+js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+    JSObject *pobj;
+    uintN attrs;
+    JSProperty *prop;
+    JSBool ok;
+
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
         return JS_FALSE;
 
     if (!prop) {
@@ -1761,23 +1779,23 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,             obj_toSource, 0,0),
+    JS_FN(js_toSource_str,             obj_toSource,                0,0),
 #endif
-    JS_FN(js_toString_str,             obj_toString,             0,0),
-    JS_FN(js_toLocaleString_str,       obj_toLocaleString,       0,0),
-    JS_FN(js_valueOf_str,              obj_valueOf,              0,0),
+    JS_FN(js_toString_str,             obj_toString,                0,0),
+    JS_FN(js_toLocaleString_str,       obj_toLocaleString,          0,0),
+    JS_FN(js_valueOf_str,              obj_valueOf,                 0,0),
 #if JS_HAS_OBJ_WATCHPOINT
-    JS_FN(js_watch_str,                obj_watch,                2,0),
-    JS_FN(js_unwatch_str,              obj_unwatch,              1,0),
+    JS_FN(js_watch_str,                obj_watch,                   2,0),
+    JS_FN(js_unwatch_str,              obj_unwatch,                 1,0),
 #endif
-    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,       1,0),
-    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,        1,0),
-    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,0),
+    JS_FN(js_hasOwnProperty_str,       js_obj_hasOwnProperty,       1,0),
+    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
+    JS_FN(js_propertyIsEnumerable_str, js_obj_propertyIsEnumerable, 1,0),
 #if JS_HAS_GETTER_SETTER
-    JS_FN(js_defineGetter_str,         obj_defineGetter,         2,0),
-    JS_FN(js_defineSetter_str,         obj_defineSetter,         2,0),
-    JS_FN(js_lookupGetter_str,         obj_lookupGetter,         1,0),
-    JS_FN(js_lookupSetter_str,         obj_lookupSetter,         1,0),
+    JS_FN(js_defineGetter_str,         obj_defineGetter,            2,0),
+    JS_FN(js_defineSetter_str,         obj_defineSetter,            2,0),
+    JS_FN(js_lookupGetter_str,         obj_lookupGetter,            1,0),
+    JS_FN(js_lookupSetter_str,         obj_lookupSetter,            1,0),
 #endif
     JS_FS_END
 };
@@ -2268,7 +2286,7 @@ js_InitEval(JSContext *cx, JSObject *obj)
 {
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
     if (!js_DefineFunction(cx, obj, cx->runtime->atomState.evalAtom,
-                           obj_eval, 1, 0)) {
+                           js_obj_eval, 1, 0)) {
         return NULL;
     }
 
@@ -2996,6 +3014,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
         scope = OBJ_SCOPE(obj);
         sprop = SCOPE_GET_PROPERTY(scope, id);
         if (sprop) {
+            PCMETER(JS_PROPERTY_CACHE(cx).pcpurges++);
             SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_TRUE;
@@ -4342,7 +4361,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             *statep = JSVAL_ZERO;
         } else {
             JS_ASSERT(length != 0);
-            JS_ASSERT(ne->cursor == length);
+            JS_ASSERT(ne->cursor == (jsword) length);
             if (allocated != 0) {
                 JS_LOCK_GC(cx->runtime);
                 if (!js_AddAsGCBytes(cx, allocated)) {

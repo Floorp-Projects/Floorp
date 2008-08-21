@@ -76,7 +76,7 @@ typedef enum JSOp {
 #define JOF_TABLESWITCHX  10      /* extended (32-bit offset) table switch */
 #define JOF_LOOKUPSWITCHX 11      /* extended (32-bit offset) lookup switch */
 #define JOF_UINT24        12      /* extended unsigned 24-bit literal (index) */
-#define JOF_2BYTE         13      /* 2-byte opcode, e.g., upper 8 bits of 24-bit
+#define JOF_UINT8         13      /* uint8 immediate, e.g. top 8 bits of 24-bit
                                      atom index */
 #define JOF_INT32         14      /* int32 immediate operand */
 #define JOF_OBJECT        15      /* unsigned 16-bit object pool index */
@@ -384,6 +384,13 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 
 #define JSDVG_IGNORE_STACK      0
 #define JSDVG_SEARCH_STACK      1
+
+/*
+ * Given bytecode address pc in script's main program code, return the operand
+ * stack depth just before (JSOp) *pc executes.
+ */
+extern uintN
+js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc);
 
 JS_END_EXTERN_C
 

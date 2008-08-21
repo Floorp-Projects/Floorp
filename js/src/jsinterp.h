@@ -88,6 +88,8 @@ struct JSStackFrame {
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
     JSObject        *xmlNamespace;  /* null or default xml namespace in E4X */
     JSObject        *blockChain;    /* active compile-time block scopes */
+    JSStackFrame    *displaySave;   /* previous value of display entry for
+                                       script->staticDepth */
 #ifdef DEBUG
     jsrefcount      pcDisabledSave; /* for balanced property cache control */
 #endif
@@ -148,8 +150,13 @@ typedef struct JSInlineFrame {
 #define PROPERTY_CACHE_SIZE     JS_BIT(PROPERTY_CACHE_LOG2)
 #define PROPERTY_CACHE_MASK     JS_BITMASK(PROPERTY_CACHE_LOG2)
 
+/*
+ * Add kshape rather than xor it to avoid collisions between nearby bytecode
+ * that are evolving an object by setting successive properties, incrementing
+ * the object's scope->shape on each set.
+ */
 #define PROPERTY_CACHE_HASH(pc,kshape)                                        \
-    ((((jsuword)(pc) >> PROPERTY_CACHE_LOG2) ^ (jsuword)(pc) ^ (kshape)) &    \
+    (((((jsuword)(pc) >> PROPERTY_CACHE_LOG2) ^ (jsuword)(pc)) + (kshape)) &  \
      PROPERTY_CACHE_MASK)
 
 #define PROPERTY_CACHE_HASH_PC(pc,kshape)                                     \
@@ -230,6 +237,7 @@ typedef struct JSPropertyCache {
     uint32              vcmisses;       /* value capability misses */
     uint32              misses;         /* cache misses */
     uint32              flushes;        /* cache flushes */
+    uint32              pcpurges;       /* shadowing purges on proto chain */
 # define PCMETER(x)     x
 #else
 # define PCMETER(x)     ((void)0)

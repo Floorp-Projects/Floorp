@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=79 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -49,8 +49,8 @@
 JS_BEGIN_EXTERN_C
 
 /*
- * Type of try note associated with each catch or finally block or with for-in
- * loop.
+ * Type of try note associated with each catch or finally block, and also with
+ * for-in loops.
  */
 typedef enum JSTryNoteKind {
     JSTN_CATCH,
@@ -72,13 +72,22 @@ struct JSTryNote {
 
 typedef struct JSTryNoteArray {
     JSTryNote       *vector;    /* array of indexed try notes */
-    uint32          length;     /* count of indexded try notes */
+    uint32          length;     /* count of indexed try notes */
 } JSTryNoteArray;
 
 typedef struct JSObjectArray {
     JSObject        **vector;   /* array of indexed objects */
-    uint32          length;     /* count of indexded objects */
+    uint32          length;     /* count of indexed objects */
 } JSObjectArray;
+
+typedef struct JSUpvarArray {
+    uint32          *vector;    /* array of indexed upvar cookies */
+    uint32          length;     /* count of indexed upvar cookies */
+} JSUpvarArray;
+
+#define MAKE_UPVAR_COOKIE(skip,slot)    ((skip) << 16 | (slot))
+#define UPVAR_FRAME_SKIP(cookie)        ((uint32)(cookie) >> 16)
+#define UPVAR_FRAME_SLOT(cookie)        ((uint16)(cookie))
 
 #define JS_OBJECT_ARRAY_SIZE(length)                                          \
     (offsetof(JSObjectArray, vector) + sizeof(JSObject *) * (length))
@@ -96,21 +105,31 @@ struct JSScript {
     uint8           objectsOffset;  /* offset to the array of nested function,
                                        block, scope, xml and one-time regexps
                                        objects or 0 if none */
+    uint8           upvarsOffset;   /* offset of the array of display ("up")
+                                       closure vars or 0 if none */
     uint8           regexpsOffset;  /* offset to the array of to-be-cloned
                                        regexps or 0 if none. */
     uint8           trynotesOffset; /* offset to the array of try notes or
                                        0 if none */
+    uint8           flags;      /* see below */
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */
     JSAtomMap       atomMap;    /* maps immediate index to literal struct */
     const char      *filename;  /* source filename or null */
-    uintN           lineno;     /* base line number of script */
-    uintN           nslots;     /* vars plus maximum stack depth */
+    uint32          lineno;     /* base line number of script */
+    uint16          nslots;     /* vars plus maximum stack depth */
+    uint16          staticDepth;/* static depth for display maintenance */
     JSPrincipals    *principals;/* principals for this script */
-    JSObject        *object;    /* optional Script-class object wrapper */
+    union {
+        JSObject    *object;    /* optional Script-class object wrapper */
+        JSScript    *nextToGC;  /* next to GC in rt->scriptsToGC list */
+    } u;
 #ifdef CHECK_SCRIPT_OWNER
     JSThread        *owner;     /* for thread-safe life-cycle assertions */
 #endif
 };
+
+#define JSSF_NO_SCRIPT_RVAL     0x01    /* no need for result value of last
+                                           expression statement */
 
 static JS_INLINE uintN
 StackDepth(JSScript *script)
@@ -124,6 +143,10 @@ StackDepth(JSScript *script)
 #define JS_SCRIPT_OBJECTS(script)                                             \
     (JS_ASSERT((script)->objectsOffset != 0),                                 \
      (JSObjectArray *)((uint8 *)(script) + (script)->objectsOffset))
+
+#define JS_SCRIPT_UPVARS(script)                                              \
+    (JS_ASSERT((script)->upvarsOffset != 0),                                  \
+     (JSUpvarArray *)((uint8 *)(script) + (script)->upvarsOffset))
 
 #define JS_SCRIPT_REGEXPS(script)                                             \
     (JS_ASSERT((script)->regexpsOffset != 0),                                 \
@@ -234,7 +257,8 @@ js_SweepScriptFilenames(JSRuntime *rt);
  */
 extern JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
-             uint32 nobjects, uint32 nregexps, uint32 ntrynotes);
+             uint32 nobjects, uint32 nupvars, uint32 nregexps,
+             uint32 ntrynotes);
 
 extern JSScript *
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg);
