@@ -658,7 +658,8 @@ mergeTypeMaps(uint8** partial, unsigned* plength, uint8* complete, unsigned clen
 }
 
 TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fragment,
-        TreeInfo* ti, unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap)
+        TreeInfo* ti, unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap,
+        GuardRecord* innermostNestedGuard)
 {
     JS_ASSERT(!_fragment->vmprivate && ti);
 
@@ -701,6 +702,14 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
 
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, ngslots, callDepth, globalTypeMap, stackTypeMap);
+
+    /* If we are attached to a tree call guard, make sure the guard the inner tree exited from
+       is what we expect it to be. */
+    if (_anchor && _anchor->exit->exitType == NESTED_EXIT) {
+        LIns* nested_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, 
+                                                offsetof(InterpState, nestedExit)), "nestedExit");
+        guard(true, lir->ins2(LIR_eq, nested_ins, lir->insImmPtr(innermostNestedGuard)), NESTED_EXIT);
+    }
 }
 
 TraceRecorder::~TraceRecorder()
@@ -1603,11 +1612,12 @@ js_DeleteRecorder(JSContext* cx)
 
 static bool
 js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, TreeInfo* ti,
-        unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap)
+        unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap, 
+        GuardRecord* expectedInnerExit)
 {
     /* start recording if no exception during construction */
     JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
-            ngslots, globalTypeMap, stackTypeMap);
+            ngslots, globalTypeMap, stackTypeMap, expectedInnerExit);
     if (cx->throwing) {
         js_AbortRecording(cx, NULL, "setting up recorder failed");
         return false;
@@ -1766,13 +1776,13 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     /* recording primary trace */
     return js_StartRecorder(cx, NULL, f, ti,
                             tm->globalSlots->length(), tm->globalTypeMap->data(), 
-                            ti->stackTypeMap.data());
+                            ti->stackTypeMap.data(), NULL);
 }
 
 static bool
-js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
+js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f, GuardRecord* expectedInnerExit)
 {
-    JS_ASSERT(lr->from->root == f && f->vmprivate);
+    JS_ASSERT(f->root == f && f->vmprivate);
 
     debug_only_v(printf("trying to attach another branch to the tree\n");)
 
@@ -1794,13 +1804,14 @@ js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, Fragment* f)
         uint8* globalTypeMap = e->typeMap;
         uint8* stackTypeMap = globalTypeMap + ngslots;
         return js_StartRecorder(cx, lr, c, (TreeInfo*)f->vmprivate,
-                                ngslots, globalTypeMap, stackTypeMap);
+                                ngslots, globalTypeMap, stackTypeMap, expectedInnerExit);
     }
     return false;
 }
 
 static GuardRecord*
-js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount);
+js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount, 
+               GuardRecord** innermostNestedGuardp);
 
 bool
 js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlineCallCount)
@@ -1833,20 +1844,26 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
         r->selectCallablePeerFragment(&f) && /* is there a potentially matching peer fragment? */
         r->adjustCallerTypes(f)) { /* make sure we can make our arguments fit */
         r->prepareTreeCall(f);
-        GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount);
+        GuardRecord* innermostNestedGuard = NULL;
+        GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount, &innermostNestedGuard);
         if (!lr) {
             js_AbortRecording(cx, oldpc, "Couldn't call inner tree");
             return false;
         }
         switch (lr->exit->exitType) {
         case LOOP_EXIT:
+            /* If the inner tree exited on an unknown loop exit, grow the tree around it. */
+            if (innermostNestedGuard) {
+                js_AbortRecording(cx, oldpc, "Inner tree took different side exit, abort recording");
+                return js_AttemptToExtendTree(cx, innermostNestedGuard, innermostNestedGuard->from->root, lr);
+            }
             /* emit a call to the inner tree and continue recording the outer tree trace */
             r->emitTreeCall(f, lr);
             return true;
         case BRANCH_EXIT:
             /* abort recording the outer tree, extend the inner tree */
             js_AbortRecording(cx, oldpc, "Inner tree is trying to grow, abort outer recording");
-            return js_AttemptToExtendTree(cx, lr, lr->from);
+            return js_AttemptToExtendTree(cx, lr, lr->from->root, NULL);
         default:
             debug_only_v(printf("exit_type=%d\n", lr->exit->exitType);)
             js_AbortRecording(cx, oldpc, "Inner tree not suitable for calling");
@@ -1864,7 +1881,8 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
 }
 
 static inline GuardRecord*
-js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
+js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount, 
+               GuardRecord** innermostNestedGuardp)
 {
     Fragment* f = *treep;
 
@@ -1950,6 +1968,8 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount)
         /* Unwind all frames held by nested outer trees (since the innermost tree's frame which
            we restore below doesn't contain such frames. */
         do {
+            if (innermostNestedGuardp)
+                *innermostNestedGuardp = lr;
             debug_only_v(printf("processing tree call guard %p, calldepth=%d\n", lr, lr->calldepth);)
             unsigned calldepth = lr->calldepth;
             if (calldepth > 0) {
@@ -2071,8 +2091,9 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
     /* If there is a chance that js_ExecuteTree will actually succeed, invoke it (either the
        first fragment must contain some code, or at least it must have a peer fragment). */
     GuardRecord* lr = NULL;
+    GuardRecord* innermostNestedGuard = NULL;
     if (f->code() || f->peer)
-        lr = js_ExecuteTree(cx, &f, inlineCallCount);
+        lr = js_ExecuteTree(cx, &f, inlineCallCount, &innermostNestedGuard);
     if (!lr) {
         JS_ASSERT(!tm->recorder);
         /* If we don't have compiled code for this entry point (none recorded or we trashed it),
@@ -2081,12 +2102,21 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
             return js_RecordTree(cx, tm, f);
         return false;
     }
-    /* We successfully executed a trace, see if we should grow the tree. */
-    if ((lr->from->root == f) && (lr->exit->exitType == BRANCH_EXIT))
-        return js_AttemptToExtendTree(cx, lr, f);
-    /* No, this was either a loop exit or an unusual exit (i.e. out of memory/GC), so just
-       resume interpretation. */
-    return false;
+    /* If we exit on a branch, or on a tree call guard, try to grow the inner tree (in case
+       of a branch exit), or the tree nested around the tree we exited from (in case of the
+       tree call guard). */
+    SideExit* exit = lr->exit;
+    switch (exit->exitType) {
+    case BRANCH_EXIT:
+        return js_AttemptToExtendTree(cx, lr, lr->from->root, NULL);
+    case LOOP_EXIT:
+        if (innermostNestedGuard)
+            return js_AttemptToExtendTree(cx, innermostNestedGuard, innermostNestedGuard->from->root, lr);
+        return false;
+    default:        
+        /* No, this was an unusual exit (i.e. out of memory/GC), so just resume interpretation. */
+        return false;
+    }
 }
 
 void
