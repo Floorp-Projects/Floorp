@@ -143,6 +143,8 @@ typedef union jsdpun {
 #define JSDOUBLE_COMPARE(LVAL, OP, RVAL, IFNAN) ((LVAL) OP (RVAL))
 #endif
 
+extern jsdouble js_NaN;
+
 /* Initialize number constants and runtime state for the first context. */
 extern JSBool
 js_InitRuntimeNumberState(JSContext *cx);

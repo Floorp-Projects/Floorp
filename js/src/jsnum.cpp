@@ -557,7 +557,7 @@ static JSConstDoubleSpec number_constants[] = {
     {0,0,0,{0,0,0}}
 };
 
-static jsdouble NaN;
+jsdouble js_NaN;
 
 #if (defined XP_WIN || defined XP_OS2) &&                                     \
     !defined WINCE &&                                                         \
@@ -592,8 +592,8 @@ js_InitRuntimeNumberState(JSContext *cx)
 
     u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
     u.s.lo = 0xffffffff;
-    number_constants[NC_NaN].dval = NaN = u.d;
-    rt->jsNaN = js_NewWeaklyRootedDouble(cx, NaN);
+    number_constants[NC_NaN].dval = js_NaN = u.d;
+    rt->jsNaN = js_NewWeaklyRootedDouble(cx, js_NaN);
     if (!rt->jsNaN)
         return JS_FALSE;
 
