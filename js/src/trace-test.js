@@ -813,6 +813,27 @@ function newArrayTest()
 newArrayTest.expected="0,0,0,0,0,0,0,0,0,0";
 test(newArrayTest);
 
+function stringSplitTest()
+{
+  var s = "a,b"
+  var a = null;
+  for (var i = 0; i < 10; ++i)
+    a = s.split(",");
+  return a.join();
+}
+stringSplitTest.expected="a,b";
+test(stringSplitTest);
+
+function stringSplitIntoArrayTest()
+{
+  var s = "a,b"
+  var a = [];
+  for (var i = 0; i < 10; ++i)
+    a[i] = s.split(",");
+  return a.join();
+}
+stringSplitIntoArrayTest.expected="a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b";
+test(stringSplitIntoArrayTest);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
