@@ -2211,6 +2211,74 @@ TraceRecorder::stackval(int n) const
 }
 
 LIns*
+TraceRecorder::scopeChain() const
+{
+    return lir->insLoad(LIR_ldp,
+                        lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
+                        offsetof(JSStackFrame, scopeChain));
+}
+
+static inline bool
+FrameInRange(JSStackFrame* fp, JSStackFrame *target, unsigned callDepth)
+{
+    while (fp != target) {
+        if (callDepth-- == 0)
+            return false;
+        if (!(fp = fp->down))
+            return false;
+    }
+    return true;
+}
+
+bool
+TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
+{
+    JS_ASSERT(obj != globalObj);
+
+    JSAtom* atom = atoms[GET_INDEX(cx->fp->regs->pc)];
+    JSObject* obj2;
+    JSProperty* prop;
+    if (js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop) < 0 || !prop)
+        ABORT_TRACE("failed to find name in non-global scope chain");
+
+    if (obj == globalObj) {
+        JSScopeProperty* sprop = (JSScopeProperty*) prop;
+        if (obj2 != obj || !SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj))) {
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            ABORT_TRACE("prototype or slotless globalObj property");
+        }
+
+        if (!lazilyImportGlobalSlot(sprop->slot))
+             ABORT_TRACE("lazy import of global slot failed");
+        vp = &STOBJ_GET_SLOT(obj, sprop->slot);
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
+        return true;
+    }
+
+    if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
+        JSStackFrame* cfp = (JSStackFrame*) JS_GetPrivate(cx, obj);
+        if (cfp && FrameInRange(cx->fp, cfp, callDepth)) {
+            JSScopeProperty* sprop = (JSScopeProperty*) prop;
+            uintN slot = sprop->shortid;
+
+            if (sprop->getter == js_GetCallArg) {
+                JS_ASSERT(slot < cfp->fun->nargs);
+                vp = &cfp->argv[slot];
+            } else {
+                JS_ASSERT(sprop->getter == js_GetCallVar);
+                JS_ASSERT(slot < cfp->script->nslots);
+                vp = &cfp->slots[slot];
+            }
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+            return true;
+        }
+    }
+
+    OBJ_DROP_PROPERTY(cx, obj2, prop);
+    ABORT_TRACE("fp->scopeChain is not global or active call object");
+}
+
+LIns*
 TraceRecorder::arg(unsigned n)
 {
     return get(&argval(n));
@@ -2618,7 +2686,8 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 
     if (PCVCAP_TAG(entry->vcap) <= 1) {
         if (aobj != globalObj) {
-            LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
+            LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
+                                      "shape");
             guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
                   MISMATCH_EXIT);
         }
@@ -2857,8 +2926,7 @@ TraceRecorder::getThis(LIns*& this_ins)
         guard(false, lir->ins_eq0(this_ins), MISMATCH_EXIT);
     } else { /* in global code */
         JS_ASSERT(!JSVAL_IS_NULL(cx->fp->argv[-1]));
-        this_ins = lir->insLoad(LIR_ldp, lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
-                offsetof(JSStackFrame, thisp));
+        this_ins = scopeChain();
     }
     return true;
 }
@@ -2967,7 +3035,7 @@ TraceRecorder::record_LeaveFrame()
                    callDepth);
         );
     if (callDepth-- <= 0)
-        return false;
+        ABORT_TRACE("returned out of a loop we started tracing");
 
     // LeaveFrame gets called after the interpreter popped the frame and
     // stored rval, so cx->fp not cx->fp->down, and -1 not 0.
@@ -3629,11 +3697,16 @@ bool
 TraceRecorder::record_JSOP_CALLNAME()
 {
     JSObject* obj = cx->fp->scopeChain;
-    if (obj != globalObj)
-        ABORT_TRACE("fp->scopeChain is not global object");
+    if (obj != globalObj) {
+        jsval* vp;
+        if (!activeCallOrGlobalSlot(obj, vp))
+            return false;
+        stack(0, get(vp));
+        stack(1, lir->insImmPtr(NULL));
+        return true;
+    }
 
-    LIns* obj_ins = lir->insLoad(LIR_ldp, lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
-                                  offsetof(JSStackFrame, scopeChain));
+    LIns* obj_ins = scopeChain();
     JSObject* obj2;
     jsuword pcval;
     if (!test_property_cache(obj, obj_ins, obj2, pcval))
@@ -3756,8 +3829,33 @@ TraceRecorder::record_JSOP_CALL()
     if (FUN_INTERPRETED(fun))
         return interpretedFunctionCall(fval, fun, argc);
 
-    if (FUN_SLOW_NATIVE(fun))
+    /*
+     * Handle dear old eval here, it's a slow native but a special one, judging
+     * from benchmarks. FIXME: we need a post-eval recording hook to know which
+     * type tag to unbox from.
+     */
+    if (FUN_SLOW_NATIVE(fun)) {
+        if (fun->u.n.native == js_obj_eval) {
+            jsval& thisv = stackval(0 - (argc + 1));
+            if (JSVAL_IS_PRIMITIVE(thisv))
+                ABORT_TRACE("eval with primitive |this|");
+
+            jsval& arg = stackval(0 - argc);
+            if (!JSVAL_IS_STRING(arg)) {
+                set(&fval, get(&arg));
+                return true;
+            }
+
+            LIns* args[] = { get(&arg), get(&thisv), get(&fval), cx_ins };
+            LIns* res_ins = lir->insCall(F_FastEval, args);
+            if (!unbox_jsval(JSVAL_STRING, res_ins))
+                ABORT_TRACE("unboxing non-string eval result");
+            set(&fval, res_ins);
+            return true;
+        }
+
         ABORT_TRACE("slow native");
+    }
 
     enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID };
     static struct JSTraceableNative {
@@ -3938,12 +4036,10 @@ TraceRecorder::name(jsval*& vp)
 {
     JSObject* obj = cx->fp->scopeChain;
     if (obj != globalObj)
-        ABORT_TRACE("fp->scopeChain is not global object");
-
-    LIns* obj_ins = lir->insLoad(LIR_ldp, lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
-                                  offsetof(JSStackFrame, scopeChain));
+        return activeCallOrGlobalSlot(obj, vp);
 
     /* Can't use prop here, because we don't want unboxing from global slots. */
+    LIns* obj_ins = scopeChain();
     uint32 slot;
     if (!test_property_cache_direct_slot(obj, obj_ins, slot))
         return false;
@@ -4018,7 +4114,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
                 sprop->shortid < 0) {
                 LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
                 v_ins = lir->insCall(F_CallGetter, args);
-                if (!unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_FALSE,
+                if (!unbox_jsval((sprop->shortid == REGEXP_SOURCE) ? JSVAL_STRING : JSVAL_BOOLEAN,
                                  v_ins)) {
                     ABORT_TRACE("unboxing");
                 }
@@ -4518,8 +4614,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     if (obj != globalObj)
         ABORT_TRACE("JSOP_BINDNAME crosses global scopes");
 
-    LIns* obj_ins = lir->insLoad(LIR_ldp, lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp)),
-                                  offsetof(JSStackFrame, scopeChain));
+    LIns* obj_ins = scopeChain();
     JSObject* obj2;
     jsuword pcval;
     if (!test_property_cache(obj, obj_ins, obj2, pcval))
