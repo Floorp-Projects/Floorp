@@ -611,6 +611,16 @@ js_FastEval(JSContext* cx, JSObject* eval, JSObject* obj, JSString *str)
     return rval;
 }
 
+JSObject* FASTCALL
+js_Array_1int(JSContext* cx, JSObject* ctor, jsint i)
+{
+    JS_ASSERT(cx->gcDontBlock);
+    JSObject* obj = js_FastNewObject(cx, ctor);
+    if (obj)
+        obj->fslots[JSSLOT_ARRAY_LENGTH] = i;
+    return obj;
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
