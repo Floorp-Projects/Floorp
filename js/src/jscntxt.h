@@ -752,6 +752,13 @@ struct JSContext {
      */
     JSPackedBool        gcDontBlock;
 
+    /*
+     * Classic Algol "display" static link optimization.
+     */
+#define JS_DISPLAY_SIZE 16
+
+    JSStackFrame        *display[JS_DISPLAY_SIZE];
+
     /* Runtime version control identifier. */
     uint16              version;
 

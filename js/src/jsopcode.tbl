@@ -413,7 +413,12 @@ OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_CALLPROP,      184,"callprop",   NULL,     3,  1,  2, 18,  JOF_ATOM|JOF_PROP|JOF_CALLOP)
 OPDEF(JSOP_GETFUNNS,      185,"getfunns",   NULL,     1,  0,  1, 19,  JOF_BYTE)
-OPDEF(JSOP_UNUSED186,     186,"unused186",  NULL,     1,  0,  0,  0,  JOF_BYTE)
+
+/*
+ * Get a display (free) variable from the closure's reserved slots.
+ */
+OPDEF(JSOP_GETUPVAR,      186,"getupvar",   NULL,     3,  0,  1, 19,  JOF_UINT16|JOF_NAME)
+
 OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
 
 /*
@@ -480,7 +485,10 @@ OPDEF(JSOP_GENERATOR,     210,"generator",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_YIELD,         211,"yield",       NULL,    1,  1,  1,  1,  JOF_BYTE)
 OPDEF(JSOP_ARRAYPUSH,     212,"arraypush",   NULL,    3,  1,  0,  3,  JOF_LOCAL)
 
-OPDEF(JSOP_UNUSED213,     213,"unused213",   NULL,    1,  0,  0,  0,  JOF_BYTE)
+/*
+ * In the forthcoming great opcode reorg, this should go next to JSOP_GETUPVAR.
+ */
+OPDEF(JSOP_CALLUPVAR,     213, "callupvar",  NULL,    3,  0,  2, 19,  JOF_UINT16|JOF_NAME|JOF_CALLOP)
 
 /*
  * Variant of JSOP_ENUMELEM for destructuring const (const [a, b] = ...).

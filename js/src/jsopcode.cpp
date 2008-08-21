@@ -1181,7 +1181,7 @@ GetArgOrVarAtom(JSPrinter *jp, uintN slot)
     JSAtom *name;
 
     LOCAL_ASSERT_RV(jp->fun, NULL);
-    LOCAL_ASSERT_RV(slot < JS_GET_LOCAL_NAME_COUNT(jp->fun), NULL);
+    LOCAL_ASSERT_RV(slot < (uintN) JS_GET_LOCAL_NAME_COUNT(jp->fun), NULL);
     name = JS_LOCAL_NAME_TO_ATOM(jp->localNames[slot]);
 #if !JS_HAS_DESTRUCTURING
     LOCAL_ASSERT_RV(name, NULL);
@@ -2692,6 +2692,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     todo = SprintCString(&ss->sprinter, rval);
                 break;
               }
+
+              case JSOP_CALLUPVAR:
+              case JSOP_GETUPVAR:
+                i = JS_UPVAR_LOCAL_NAME_START(jp->fun) + GET_UINT16(pc);
+                atom = GetArgOrVarAtom(jp, i);
+                goto do_name;
 
               case JSOP_CALLLOCAL:
               case JSOP_GETLOCAL:

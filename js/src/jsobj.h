@@ -697,7 +697,7 @@ extern JSBool
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
 
 /*
- * obj must be locked.
+ * Precondition: obj must be locked.
  */
 extern JSBool
 js_ReallocSlots(JSContext *cx, JSObject *obj, uint32 nslots,
