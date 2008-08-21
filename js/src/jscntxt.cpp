@@ -155,6 +155,7 @@ js_GetCurrentThread(JSRuntime *rt)
         memset(&thread->traceMonitor, 0, sizeof(thread->traceMonitor));
         js_InitJIT(&thread->traceMonitor);
 #endif
+        thread->scriptsToGC = NULL;
 
         /*
          * js_SetContextThread initializes the remaining fields as necessary.
