@@ -245,6 +245,9 @@ class TraceRecorder {
     jsval& varval(unsigned n) const;
     jsval& stackval(int n) const;
 
+    nanojit::LIns* scopeChain() const;
+    bool activeCallOrGlobalSlot(JSObject* obj, jsval*& vp);
+
     nanojit::LIns* arg(unsigned n);
     void arg(unsigned n, nanojit::LIns* i);
     nanojit::LIns* var(unsigned n);

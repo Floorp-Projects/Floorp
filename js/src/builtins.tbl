@@ -85,4 +85,5 @@ BUILTIN3(Object_p_hasOwnProperty,
 BUILTIN3(Object_p_propertyIsEnumerable,
                                 LO, LO, LO, LO, jsint,     JSContext*, JSObject*, JSString*, 1, 1)
 BUILTIN2(BooleanToNumber,       LO, LO, F,      jsdouble,  JSContext*, jsint, 1, 1)
-BUILTIN2(ObjectToString,        LO,     LO, P, JSString*, JSContext*, JSObject*, 1, 1)
+BUILTIN2(ObjectToString,        LO,     LO, P,  JSString*, JSContext*, JSObject*, 1, 1)
+BUILTIN4(FastEval,              LO, LO, LO, LO, P,  jsval, JSContext*, JSObject*, JSObject*, JSString*, 1, 1)
