@@ -578,7 +578,7 @@ nativeStackSlots(JSContext *cx, unsigned callDepth)
 #endif
     for (;;) {
         unsigned operands = fp->regs->sp - StackBase(fp);
-        JS_ASSERT(operands <= fp->script->nslots - fp->script->nfixed);
+        JS_ASSERT(operands <= unsigned(fp->script->nslots - fp->script->nfixed));
         slots += operands;
         if (fp->callee)
             slots += fp->script->nfixed;
