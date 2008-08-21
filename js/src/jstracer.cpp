@@ -71,7 +71,7 @@
 #define HOTLOOP 2
 
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
-#define HOTEXIT 0
+#define HOTEXIT 1
 
 /* Max call depths for inlining. */
 #define MAX_CALLDEPTH 5
