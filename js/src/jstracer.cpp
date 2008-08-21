@@ -3105,6 +3105,7 @@ TraceRecorder::record_JSOP_RETURN()
     if (cx->fp->flags & JSFRAME_CONSTRUCTING) {
         // guard JSVAL_IS_PRIMITIVE(rval)
     }
+    debug_only_v(printf("returning from %s\n", js_AtomToPrintableString(cx, cx->fp->fun->atom)););
     rval_ins = get(&rval);
     clearFrameSlotsFromCache();
     return true;
