@@ -293,7 +293,7 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (oldscript)
         js_DestroyScript(cx, oldscript);
 
-    script->object = obj;
+    script->u.object = obj;
     js_CallNewScriptHook(cx, script, NULL);
 
 out:
@@ -804,7 +804,7 @@ script_thaw(JSContext *cx, uintN argc, jsval *vp)
     if (oldscript)
         js_DestroyScript(cx, oldscript);
 
-    script->object = obj;
+    script->u.object = obj;
     js_CallNewScriptHook(cx, script, NULL);
 
 out:
@@ -1609,9 +1609,9 @@ js_TraceScript(JSTracer *trc, JSScript *script)
         } while (i != 0);
     }
 
-    if (script->object) {
+    if (script->u.object) {
         JS_SET_TRACING_NAME(trc, "object");
-        JS_CallTracer(trc, script->object, JSTRACE_OBJECT);
+        JS_CallTracer(trc, script->u.object, JSTRACE_OBJECT);
     }
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)

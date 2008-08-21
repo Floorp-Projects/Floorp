@@ -125,7 +125,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
     JS_ASSERT(!cx->runtime->gcRunning);
     cache = &JS_PROPERTY_CACHE(cx);
     pc = cx->fp->regs->pc;
-    if (cache->disabled) {
+    if (cache->disabled || (cx->fp->flags & JSFRAME_EVAL)) {
         PCMETER(cache->disfills++);
         *entryp = NULL;
         return;

@@ -168,13 +168,17 @@ struct JSThread {
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
 
-    /* Trace-tree recorder/interpreter state. */
+    /* Trace-tree JIT recorder/interpreter state. */
     JSTraceMonitor      traceMonitor;
+
+    /* Lock-free list of scripts created by eval to garbage-collect. */
+    JSScript            *scriptsToGC;
 };
 
 #define JS_GSN_CACHE(cx)        ((cx)->thread->gsnCache)
 #define JS_PROPERTY_CACHE(cx)   ((cx)->thread->propertyCache)
 #define JS_TRACE_MONITOR(cx)    ((cx)->thread->traceMonitor)
+#define JS_SCRIPTS_TO_GC(cx)    ((cx)->thread->scriptsToGC)
 
 extern void JS_DLL_CALLBACK
 js_ThreadDestructorCB(void *ptr);
@@ -436,11 +440,16 @@ struct JSRuntime {
     /* Property cache for faster call/get/set invocation. */
     JSPropertyCache     propertyCache;
 
+    /* Trace-tree JIT recorder/interpreter state. */
     JSTraceMonitor      traceMonitor;
+
+    /* Lock-free list of scripts created by eval to garbage-collect. */
+    JSScript            *scriptsToGC;
 
 #define JS_GSN_CACHE(cx)        ((cx)->runtime->gsnCache)
 #define JS_PROPERTY_CACHE(cx)   ((cx)->runtime->propertyCache)
 #define JS_TRACE_MONITOR(cx)    ((cx)->runtime->traceMonitor)
+#define JS_SCRIPTS_TO_GC(cx)    ((cx)->runtime->scriptsToGC)
 #endif
 
     /*
