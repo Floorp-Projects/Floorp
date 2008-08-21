@@ -1851,8 +1851,7 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
     if (r->isLoopHeader(cx)) { /* did we hit the start point? */
         if (fragmento->assm()->error()) {
-            /* error during recording, blacklist the fragment we were recording */
-            r->blacklist();
+            js_AbortRecording(cx, oldpc, "Error during recording");
             /* if we ran out of memory, flush the cache */
             if (fragmento->assm()->error() == OutOMem)
                 js_FlushJITCache(cx);
@@ -2100,6 +2099,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
             return true;
         /* recording was aborted, treat like a regular loop edge hit */
     }
+    JS_ASSERT(!tm->recorder);
 
     /* check if our quick cache has an entry for this ip, otherwise ask fragmento. */
     jsbytecode* pc = cx->fp->regs->pc;
