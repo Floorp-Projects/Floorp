@@ -2281,6 +2281,10 @@ FrameInRange(JSStackFrame* fp, JSStackFrame *target, unsigned callDepth)
 bool
 TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
 {
+#if 1
+    vp = 0;
+    ABORT_TRACE("can't yet trace with active call object");
+#else
     JS_ASSERT(obj != globalObj);
 
     JSAtom* atom = atoms[GET_INDEX(cx->fp->regs->pc)];
@@ -2324,6 +2328,7 @@ TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
 
     OBJ_DROP_PROPERTY(cx, obj2, prop);
     ABORT_TRACE("fp->scopeChain is not global or active call object");
+#endif /* !NOTYET */
 }
 
 LIns*
