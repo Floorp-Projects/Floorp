@@ -78,8 +78,6 @@
 #define SRCNOTE_SIZE(n)         ((n) * sizeof(jssrcnote))
 #define TRYNOTE_SIZE(n)         ((n) * sizeof(JSTryNote))
 
-#define CG_TS(cg) TS((cg)->treeContext.parseContext)
-
 static JSBool
 NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
            uintN stackDepth, size_t start, size_t end);
@@ -100,6 +98,7 @@ js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg, JSParseContext *pc,
     ATOM_LIST_INIT(&cg->atomList);
     cg->prolog.noteMask = cg->main.noteMask = SRCNOTE_CHUNK - 1;
     ATOM_LIST_INIT(&cg->constList);
+    ATOM_LIST_INIT(&cg->upvarList);
 }
 
 JS_FRIEND_API(void)
@@ -108,8 +107,13 @@ js_FinishCodeGenerator(JSContext *cx, JSCodeGenerator *cg)
     TREE_CONTEXT_FINISH(cx, &cg->treeContext);
     JS_ARENA_RELEASE(cg->codePool, cg->codeMark);
     JS_ARENA_RELEASE(cg->notePool, cg->noteMark);
-    if (cg->spanDeps) /* non-null only after OOM */
+
+    /* NB: non-null only after OOM. */
+    if (cg->spanDeps)
         JS_free(cx, cg->spanDeps);
+
+    if (cg->upvarMap.vector)
+        JS_free(cx, cg->upvarMap.vector);
 }
 
 static ptrdiff_t
@@ -1494,7 +1498,7 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
         ale = js_IndexAtom(cx, atom, &cg->constList);
         if (!ale)
             return JS_FALSE;
-        ale->entry.value = (void *)v;
+        ALE_SET_VALUE(ale, v);
     }
     return JS_TRUE;
 }
@@ -1872,8 +1876,52 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     if (tc->flags & TCF_FUN_CLOSURE_VS_VAR)
         return JS_TRUE;
 
-    if (!(tc->flags & TCF_IN_FUNCTION) &&
-        !((cx->fp->flags & JSFRAME_SPECIAL) && cx->fp->fun)) {
+    if (!(tc->flags & TCF_IN_FUNCTION)) {
+        if ((cx->fp->flags & JSFRAME_SPECIAL) && cx->fp->fun) {
+            localKind = js_LookupLocal(cx, cx->fp->fun, atom, &index);
+            if (localKind != JSLOCAL_NONE) {
+                if (PN_OP(pn) == JSOP_NAME) {
+                    ATOM_LIST_SEARCH(ale, &cg->upvarList, atom);
+                    if (!ale) {
+                        uint32 cookie, length, *vector;
+
+                        ale = js_IndexAtom(cx, atom, &cg->upvarList);
+                        if (!ale)
+                            return JS_FALSE;
+                        JS_ASSERT(ALE_INDEX(ale) == cg->upvarList.count - 1);
+
+                        length = cg->upvarMap.length;
+                        JS_ASSERT(ALE_INDEX(ale) <= length);
+                        if (ALE_INDEX(ale) == length) {
+                            length = 2 * JS_MAX(2, length);
+                            vector = (uint32 *)
+                                     JS_realloc(cx, cg->upvarMap.vector,
+                                                length * sizeof *vector);
+                            if (!vector)
+                                return JS_FALSE;
+                            cg->upvarMap.vector = vector;
+                            cg->upvarMap.length = length;
+                        }
+
+                        if (localKind != JSLOCAL_ARG)
+                            index += cx->fp->fun->nargs;
+                        if (index >= JS_BIT(16)) {
+                            cg->treeContext.flags |= TCF_FUN_USES_NONLOCALS;
+                            return JS_TRUE;
+                        }
+
+                        cookie = MAKE_UPVAR_COOKIE(1, index);
+                        cg->upvarMap.vector[ALE_INDEX(ale)] = cookie;
+                    }
+
+                    pn->pn_op = JSOP_GETUPVAR;
+                    pn->pn_slot = ALE_INDEX(ale);
+                    return JS_TRUE;
+                }
+            }
+            goto out;
+        }
+
         /*
          * We are compiling a script or eval, and eval is not inside a function
          * activation.
@@ -1936,7 +1984,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case JSOP_NAMEDEC:  op = JSOP_GVARDEC; break;
           case JSOP_FORNAME:  /* NB: no change */ break;
           case JSOP_DELNAME:  /* NB: no change */ break;
-          default: JS_ASSERT(0);
+          default: JS_NOT_REACHED("gvar");
         }
         pn->pn_const = constOp;
         if (op != pn->pn_op) {
@@ -1965,7 +2013,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                   case JSOP_NAMEDEC:  op = JSOP_ARGDEC; break;
                   case JSOP_FORNAME:  op = JSOP_FORARG; break;
                   case JSOP_DELNAME:  op = JSOP_FALSE; break;
-                  default: JS_ASSERT(0);
+                  default: JS_NOT_REACHED("arg");
                 }
                 pn->pn_const = JS_FALSE;
             } else {
@@ -1981,7 +2029,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                   case JSOP_NAMEDEC:  op = JSOP_LOCALDEC; break;
                   case JSOP_FORNAME:  op = JSOP_FORLOCAL; break;
                   case JSOP_DELNAME:  op = JSOP_FALSE; break;
-                  default: JS_ASSERT(0);
+                  default: JS_NOT_REACHED("local");
                 }
                 pn->pn_const = (localKind == JSLOCAL_CONST);
             }
@@ -1992,6 +2040,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         tc->flags |= TCF_FUN_USES_NONLOCALS;
     }
 
+out:
     /*
      * Here we either compiling a function body or an eval script inside a
      * function and couldn't optimize pn, so it's not a global or local slot
@@ -2220,6 +2269,9 @@ EmitNameOp(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             break;
           case JSOP_GETLOCAL:
             op = JSOP_CALLLOCAL;
+            break;
+          case JSOP_GETUPVAR:
+            op = JSOP_CALLUPVAR;
             break;
           default:
             JS_ASSERT(op == JSOP_ARGUMENTS);
@@ -3935,6 +3987,16 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             break;
         }
 
+        /*
+         * Limit static nesting depth to fit in 16 bits. See cg2->staticDepth
+         * assignment below.
+         */
+        if (cg->staticDepth == JS_BITMASK(16)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_DEEP,
+                                 js_function_str);
+            return JS_FALSE;
+        }
+
         /* Generate code for the function's body. */
         cg2mark = JS_ARENA_MARK(cg->codePool);
         JS_ARENA_ALLOCATE_TYPE(cg2, JSCodeGenerator, cg->codePool);
@@ -3947,6 +4009,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                              pn->pn_pos.begin.lineno);
         cg2->treeContext.flags = (uint16) (pn->pn_flags | TCF_IN_FUNCTION);
         cg2->treeContext.fun = fun;
+        cg2->staticDepth = cg->staticDepth + 1;
         cg2->parent = cg;
 
         /* We metered the max scope depth when parsed the function. */ 
@@ -3963,6 +4026,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 cg->treeContext.flags |= TCF_FUN_HEAVYWEIGHT;
             }
         }
+
         js_FinishCodeGenerator(cx, cg2);
         JS_ARENA_RELEASE(cg->codePool, cg2mark);
         cg2 = NULL;
@@ -6860,10 +6924,10 @@ js_FinishTakingTryNotes(JSCodeGenerator *cg, JSTryNoteArray *array)
  * If the code being compiled is function code, allocate a reserved slot in
  * the cloned function object that shares its precompiled script with other
  * cloned function objects and with the compiler-created clone-parent. There
- * are script->nregexps such reserved slots in each function object cloned
- * from fun->object. NB: during compilation, funobj slots must never be
- * allocated, because js_AllocSlot could hand out one of the slots that should
- * be given to a regexp clone.
+ * are nregexps = JS_SCRIPT_REGEXPS(script)->length such reserved slots in each
+ * function object cloned from fun->object. NB: during compilation, a funobj
+ * slots element must never be allocated, because js_AllocSlot could hand out
+ * one of the slots that should be given to a regexp clone.
  *
  * If the code being compiled is global code, the cloned regexp are stored in
  * fp->vars slot after cg->treeContext.ngvars and to protect regexp slots from

@@ -1476,6 +1476,7 @@ static uint32
 fun_reserveSlots(JSContext *cx, JSObject *obj)
 {
     JSFunction *fun;
+    uint32 nslots;
 
     /*
      * We use JS_GetPrivate and not GET_FUNCTION_PRIVATE because during
@@ -1483,10 +1484,14 @@ fun_reserveSlots(JSContext *cx, JSObject *obj)
      * private slot of the function object is set.
      */
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
-    return (fun && FUN_INTERPRETED(fun) &&
-            fun->u.i.script && fun->u.i.script->regexpsOffset != 0)
-           ? JS_SCRIPT_REGEXPS(fun->u.i.script)->length
-           : 0;
+    nslots = 0;
+    if (fun && FUN_INTERPRETED(fun) && fun->u.i.script) {
+        if (fun->u.i.script->upvarsOffset != 0)
+            nslots = JS_SCRIPT_UPVARS(fun->u.i.script)->length;
+        if (fun->u.i.script->regexpsOffset != 0)
+            nslots += JS_SCRIPT_REGEXPS(fun->u.i.script)->length;
+    }
+    return nslots;
 }
 
 /*
@@ -2028,7 +2033,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
     fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL);
     if (!fun)
         goto bad;
-    fun->u.i.script = js_NewScript(cx, 1, 0, 0, 0, 0, 0);
+    fun->u.i.script = js_NewScript(cx, 1, 0, 0, 0, 0, 0, 0);
     if (!fun->u.i.script)
         goto bad;
     fun->u.i.script->code[0] = JSOP_STOP;
@@ -2084,7 +2089,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
         fun->u.i.nvars = 0;
-        fun->u.i.spare = 0;
+        fun->u.i.nupvars = 0;
         fun->u.i.script = NULL;
 #ifdef DEBUG
         fun->u.i.names.taggedAtom = 0;
@@ -2366,6 +2371,8 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
     taggedAtom = (jsuword) atom;
     if (kind == JSLOCAL_ARG) {
         indexp = &fun->nargs;
+    } else if (kind == JSLOCAL_UPVAR) {
+        indexp = &fun->u.i.nupvars;
     } else {
         indexp = &fun->u.i.nvars;
         if (kind == JSLOCAL_CONST)
@@ -2461,7 +2468,7 @@ js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind)
 JSLocalKind
 js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
 {
-    uintN n, i;
+    uintN n, i, upvar_base;
     jsuword *array;
     JSLocalNameHashEntry *entry;
 
@@ -2474,6 +2481,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
 
         /* Search from the tail to pick up the last duplicated name. */
         i = n;
+        upvar_base = JS_UPVAR_LOCAL_NAME_START(fun);
         do {
             --i;
             if (atom == JS_LOCAL_NAME_TO_ATOM(array[i])) {
@@ -2481,6 +2489,11 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp)
                     if (indexp)
                         *indexp = i;
                     return JSLOCAL_ARG;
+                }
+                if (i >= upvar_base) {
+                    if (indexp)
+                        *indexp = i - upvar_base;
+                    return JSLOCAL_UPVAR;
                 }
                 if (indexp)
                     *indexp = i - fun->nargs;
@@ -2666,7 +2679,7 @@ js_FreezeLocalNames(JSContext *cx, JSFunction *fun)
 
     JS_ASSERT(FUN_INTERPRETED(fun));
     JS_ASSERT(!fun->u.i.script);
-    n = fun->nargs + fun->u.i.nvars;
+    n = fun->nargs + fun->u.i.nvars + fun->u.i.nupvars;
     if (2 <= n && n < MAX_ARRAY_LOCALS) {
         /* Shrink over-allocated array ignoring realloc failures. */
         array = (jsuword *) JS_realloc(cx, fun->u.i.names.array,
