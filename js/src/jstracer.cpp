@@ -905,6 +905,10 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
         return true;
       default:
         JS_ASSERT(type == JSVAL_OBJECT);
+        if (v == JSVAL_VOID) {
+            *(JSObject**)slot = NULL;
+            return true;
+        }
         if (tag != JSVAL_OBJECT) {
             debug_only_v(printf("object != tag%u ", tag);)
             return false;
