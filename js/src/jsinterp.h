@@ -88,6 +88,8 @@ struct JSStackFrame {
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
     JSObject        *xmlNamespace;  /* null or default xml namespace in E4X */
     JSObject        *blockChain;    /* active compile-time block scopes */
+    JSStackFrame    *displaySave;   /* previous value of display entry for
+                                       script->staticDepth */
 #ifdef DEBUG
     jsrefcount      pcDisabledSave; /* for balanced property cache control */
 #endif
@@ -235,6 +237,7 @@ typedef struct JSPropertyCache {
     uint32              vcmisses;       /* value capability misses */
     uint32              misses;         /* cache misses */
     uint32              flushes;        /* cache flushes */
+    uint32              pcpurges;       /* shadowing purges on proto chain */
 # define PCMETER(x)     x
 #else
 # define PCMETER(x)     ((void)0)

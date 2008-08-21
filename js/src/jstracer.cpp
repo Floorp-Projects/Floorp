@@ -1726,6 +1726,11 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.regs->pc = script->code;
     newifp->frame.regs->sp = newsp + script->nfixed;
     newifp->frame.slots = newsp;
+    if (script->staticDepth < JS_DISPLAY_SIZE) {
+        JSStackFrame **disp = &cx->display[script->staticDepth];
+        newifp->frame.displaySave = *disp;
+        *disp = &newifp->frame;
+    }
 #ifdef DEBUG
     newifp->frame.pcDisabledSave = 0;
 #endif
@@ -3927,6 +3932,18 @@ TraceRecorder::record_JSOP_CALLNAME()
 }
 
 bool
+TraceRecorder::record_JSOP_GETUPVAR()
+{
+    ABORT_TRACE("GETUPVAR");
+}
+
+bool
+TraceRecorder::record_JSOP_CALLUPVAR()
+{
+    ABORT_TRACE("CALLUPVAR");
+}
+
+bool
 TraceRecorder::guardShapelessCallee(jsval& callee)
 {
     if (!VALUE_IS_FUNCTION(cx, callee))
@@ -5042,11 +5059,7 @@ TraceRecorder::record_JSOP_DEFLOCALFUN()
     JSScript* script = cx->fp->script;
     LOAD_FUNCTION(SLOTNO_LEN); // needs script, regs, fun
 
-    JSObject* obj = FUN_OBJECT(fun);
-    if (OBJ_GET_PARENT(cx, obj) != cx->fp->scopeChain)
-        ABORT_TRACE("can't trace with activation object on scopeChain");
-
-    var(GET_SLOTNO(regs.pc), lir->insImmPtr(obj));
+    var(GET_SLOTNO(regs.pc), INS_CONSTPTR(FUN_OBJECT(fun)));
     return true;
 }
 
@@ -5749,7 +5762,6 @@ UNUSED(JSOP_UNUSED76)
 UNUSED(JSOP_UNUSED77)
 UNUSED(JSOP_UNUSED78)
 UNUSED(JSOP_UNUSED79)
-UNUSED(JSOP_UNUSED186)
 UNUSED(JSOP_UNUSED201)
 UNUSED(JSOP_UNUSED202)
 UNUSED(JSOP_UNUSED203)
@@ -5757,6 +5769,5 @@ UNUSED(JSOP_UNUSED204)
 UNUSED(JSOP_UNUSED205)
 UNUSED(JSOP_UNUSED206)
 UNUSED(JSOP_UNUSED207)
-UNUSED(JSOP_UNUSED213)
 UNUSED(JSOP_UNUSED219)
 UNUSED(JSOP_UNUSED226)

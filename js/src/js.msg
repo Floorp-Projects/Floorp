@@ -104,7 +104,7 @@ MSG_DEF(JSMSG_BAD_ITERATOR,            21, 3, JSEXN_TYPEERR, "{0} has invalid {1
 MSG_DEF(JSMSG_NOT_FUNCTION,            22, 1, JSEXN_TYPEERR, "{0} is not a function")
 MSG_DEF(JSMSG_NOT_CONSTRUCTOR,         23, 1, JSEXN_TYPEERR, "{0} is not a constructor")
 MSG_DEF(JSMSG_SCRIPT_STACK_QUOTA,      24, 0, JSEXN_INTERNALERR, "script stack space quota is exhausted")
-MSG_DEF(JSMSG_UNUSED25,                25, 0, JSEXN_NONE, "unused25")
+MSG_DEF(JSMSG_TOO_DEEP,                25, 1, JSEXN_INTERNALERR, "{0} nested too deeply")
 MSG_DEF(JSMSG_OVER_RECURSED,           26, 0, JSEXN_INTERNALERR, "too much recursion")
 MSG_DEF(JSMSG_IN_NOT_OBJECT,           27, 1, JSEXN_TYPEERR, "invalid 'in' operand {0}")
 MSG_DEF(JSMSG_BAD_NEW_RESULT,          28, 1, JSEXN_TYPEERR, "invalid new expression result {0}")

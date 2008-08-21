@@ -1323,6 +1323,7 @@ js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ok = JS_FALSE;
         goto out;
     }
+    script->staticDepth = caller->script->staticDepth + 1;
 
     if (argc < 2) {
         /* Execute using caller's new scope object (might be a Call object). */
@@ -3010,6 +3011,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
         scope = OBJ_SCOPE(obj);
         sprop = SCOPE_GET_PROPERTY(scope, id);
         if (sprop) {
+            PCMETER(JS_PROPERTY_CACHE(cx).pcpurges++);
             SCOPE_MAKE_UNIQUE_SHAPE(cx, scope);
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_TRUE;

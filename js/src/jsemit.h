@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -357,8 +357,13 @@ struct JSCodeGenerator {
     JSEmittedObjectList regexpList; /* list of emitted so far regexp
                                        that will be cloned during execution */
 
+    uintN           staticDepth;    /* static frame chain depth */
+    JSAtomList      upvarList;      /* map of atoms to upvar indexes */
+    JSUpvarArray    upvarMap;       /* indexed upvar pairs (JS_realloc'ed) */
     JSCodeGenerator *parent;        /* enclosing function or global context */
 };
+
+#define CG_TS(cg)               TS((cg)->treeContext.parseContext)
 
 #define CG_BASE(cg)             ((cg)->current->base)
 #define CG_LIMIT(cg)            ((cg)->current->limit)
