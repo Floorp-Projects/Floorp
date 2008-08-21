@@ -4075,7 +4075,6 @@ TraceRecorder::record_JSOP_CALL()
         { js_str_match,                F_String_p_match,       "PTC", "r",    FAIL_VOID,   NULL },
         { js_str_replace,              F_String_p_replace_str3,"TC","sss",    FAIL_NULL,   NULL },
         { js_str_replace,              F_String_p_replace_str, "TC", "sr",    FAIL_NULL,   NULL },
-        { js_str_replace,              F_String_p_replace_fun, "TC", "fr",    FAIL_NULL,   NULL },
         { js_math_random,              F_Math_random,          "R",    "",    INFALLIBLE,  NULL },
         { js_str_concat,               F_String_p_concat_1int, "TC",  "i",    FAIL_NULL,   NULL },
         { js_array_join,               F_Array_p_join,         "TC",  "s",    FAIL_NULL,   NULL },

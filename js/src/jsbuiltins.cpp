@@ -278,18 +278,6 @@ js_String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp
 }
 
 JSString* FASTCALL
-js_String_p_replace_fun(JSContext* cx, JSString* str, JSObject* regexp, JSObject* lambda)
-{
-    jsval vp[4] = {
-        JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp), OBJECT_TO_JSVAL(lambda)
-    };
-    if (!js_StringReplaceHelper(cx, 2, lambda, NULL, vp))
-        return NULL;
-    JS_ASSERT(JSVAL_IS_STRING(vp[0]));
-    return JSVAL_TO_STRING(vp[0]);
-}
-
-JSString* FASTCALL
 js_String_p_replace_str(JSContext* cx, JSString* str, JSObject* regexp, JSString* repstr)
 {
     jsval vp[4] = {
