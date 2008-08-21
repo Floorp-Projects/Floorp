@@ -719,6 +719,9 @@ extern const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop);
 
+extern JSBool
+js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+
 JS_END_EXTERN_C
 
 #endif /* jsobj_h___ */

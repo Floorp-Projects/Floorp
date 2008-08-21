@@ -3004,6 +3004,18 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
     STOBJ_SET_SLOT(obj, slot, OBJECT_TO_JSVAL(pobj));
 }
 
+static void
+DestroyScriptsToGC(JSContext *cx, JSScript **listp)
+{
+    JSScript *script;
+
+    while ((script = *listp) != NULL) {
+        *listp = script->u.nextToGC;
+        script->u.nextToGC = NULL;
+        js_DestroyScript(cx, script);
+    }
+}
+
 /*
  * The gckind flag bit GC_LOCK_HELD indicates a call from js_NewGCThing with
  * rt->gcLock already held, so the lock should be kept on return.
@@ -3238,6 +3250,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     js_FlushJITOracle(cx);
 #endif
 
+    /* Destroy eval'ed scripts. */
+    DestroyScriptsToGC(cx, &JS_SCRIPTS_TO_GC(cx));
+
 #ifdef JS_THREADSAFE
     /*
      * Set all thread local freelists to NULL. We may visit a thread's
@@ -3261,6 +3276,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 #ifdef JS_TRACER
         js_FlushJITCache(acx);
 #endif
+        DestroyScriptsToGC(cx, &acx->thread->scriptsToGC);
     }
 #else
     /* The thread-unsafe case just has to clear the runtime's GSN cache. */
