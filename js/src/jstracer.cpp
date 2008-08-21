@@ -461,6 +461,8 @@ public:
                 LIns* args2[] = { s0->oprnd1(), args[1] };
                 return out->insCall(F_BoxInt32, args2);
             }
+            if (s0->isCall() && s0->fid() == F_UnboxDouble) 
+                return callArgN(s0, 0);
             break;
         }
         return out->insCall(fid, args);
