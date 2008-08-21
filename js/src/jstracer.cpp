@@ -1476,7 +1476,7 @@ TraceRecorder::prepareTreeCall(Fragment* inner)
     if (callDepth > 0) {
         /* Calculate the amount we have to lift the native stack pointer by to compensate for
            any outer frames that the inner tree doesn't expect but the outer tree has. */
-        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[-1]) + sizeof(double);
+        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp->argv[-2]);
         /* Calculate the amount we have to lift the call stack by */
         ptrdiff_t rp_adj = callDepth * sizeof(FrameInfo);
         /* Guard that we have enough stack space for the tree we are trying to call on top
@@ -3725,7 +3725,12 @@ TraceRecorder::record_JSOP_CALL()
     jsbytecode *pc = cx->fp->regs->pc;
     uintN argc = GET_ARGC(pc);
     jsval& fval = stackval(0 - (argc + 2));
+    jsval& tval = stackval(0 - (argc + 1));
 
+    LIns* this_ins = get(&tval);
+    if (this_ins->isconstp() && !this_ins->constvalp() && !guardShapelessCallee(fval))
+        return false;
+    
     /*
      * Require that the callee be a function object, to avoid guarding on its
      * class here. We know if the callee and this were pushed by JSOP_CALLNAME
@@ -5338,7 +5343,7 @@ TraceRecorder::record_JSOP_CALLGVAR()
     jsval& v = STOBJ_GET_SLOT(cx->fp->scopeChain, slot);
     stack(0, get(&v));
     stack(1, lir->insImmPtr(NULL));
-    return guardShapelessCallee(v);
+    return true;
 }
 
 bool
@@ -5347,7 +5352,7 @@ TraceRecorder::record_JSOP_CALLLOCAL()
     uintN slot = GET_SLOTNO(cx->fp->regs->pc);
     stack(0, var(slot));
     stack(1, lir->insImmPtr(NULL));
-    return guardShapelessCallee(varval(slot));
+    return true;
 }
 
 bool
@@ -5356,14 +5361,14 @@ TraceRecorder::record_JSOP_CALLARG()
     uintN slot = GET_ARGNO(cx->fp->regs->pc);
     stack(0, arg(slot));
     stack(1, lir->insImmPtr(NULL));
-    return guardShapelessCallee(argval(slot));
+    return true;
 }
 
 bool
 TraceRecorder::record_JSOP_NULLTHIS()
 {
     stack(0, lir->insImmPtr(NULL));
-    return guardShapelessCallee(stackval(-1));
+    return true;
 }
 
 bool
