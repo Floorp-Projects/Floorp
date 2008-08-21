@@ -118,7 +118,7 @@ namespace nanojit
 	static const RegisterMask FpRegs = XmmRegs;
 	static const RegisterMask ScratchRegs = TempRegs | XmmRegs;
 
-	static const RegisterMask AllowableFlagRegs = GpRegs;
+	static const RegisterMask AllowableFlagRegs = 1<<RAX |1<<RCX | 1<<RDX | 1<<RBX;
 
     #if defined WIN64
     typedef __int64 nj_printf_ld;
