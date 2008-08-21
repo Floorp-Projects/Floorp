@@ -1718,10 +1718,10 @@ out:
 }
 
 /*
- * Subroutine used by str_split to find the next split point in str, starting
- * at offset *ip and looking either for the separator substring given by sep,
- * or for the next re match.  In the re case, return the matched separator in
- * *sep, and the possibly updated offset in *ip.
+ * Subroutine used by js_str_split to find the next split point in str, starting
+ * at offset *ip and looking either for the separator substring given by sep, or
+ * for the next re match.  In the re case, return the matched separator in *sep,
+ * and the possibly updated offset in *ip.
  *
  * Return -2 on error, -1 on end of string, >= 0 for a valid index of the next
  * separator occurrence if found, or str->length if no separator is found.
@@ -1743,7 +1743,7 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
      *
      * and the resulting array converts back to the string "ab," for symmetry.
      * However, we ape Perl and do this only if there is a sufficiently large
-     * limit argument (see str_split).
+     * limit argument (see js_str_split).
      */
     i = *ip;
     length = JSSTRING_LENGTH(str);
@@ -1829,8 +1829,8 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
     return k;
 }
 
-static JSBool
-str_split(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_str_split(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str, *sub;
     JSObject *arrayobj;
@@ -2269,7 +2269,7 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("match",             js_str_match,          1,GENERIC_PRIMITIVE),
     JS_FN("search",            str_search,            1,GENERIC_PRIMITIVE),
     JS_FN("replace",           js_str_replace,        2,GENERIC_PRIMITIVE),
-    JS_FN("split",             str_split,             2,GENERIC_PRIMITIVE),
+    JS_FN("split",             js_str_split,          2,GENERIC_PRIMITIVE),
 #if JS_HAS_PERL_SUBSTR
     JS_FN("substr",            str_substr,            2,GENERIC_PRIMITIVE),
 #endif
