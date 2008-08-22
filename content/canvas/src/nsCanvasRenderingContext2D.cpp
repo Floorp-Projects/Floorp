@@ -3147,7 +3147,8 @@ nsCanvasRenderingContext2D::GetImageData()
 }
 
 extern "C" {
-extern JSBool
+#include "jstypes.h"
+JS_FRIEND_API(JSBool)
 js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
                         JSUint8 *dest);
 }
