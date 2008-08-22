@@ -22,7 +22,7 @@ Tests of DOM Worker Threads (Bug 437152)
 
   var prefs = Components.classes["@mozilla.org/preferences-service;1"].
               getService(Components.interfaces.nsIPrefBranch);
-  prefs.setIntPref("javascript.options.gczeal", 2);
+  //prefs.setIntPref("javascript.options.gczeal", 2);
 
   var workerScript =
     "var gTimeoutId; " +
