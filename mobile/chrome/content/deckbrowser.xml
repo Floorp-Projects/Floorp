@@ -411,8 +411,8 @@
             }
           }
 
-          state._scrollX = window.scrollX;
-          state._scrollY = window.scrollY;
+          state._scrollX = browser.contentWindow.scrollX;
+          state._scrollY = browser.contentWindow.scrollY;
 
           display.state = state;
         ]]></body>
