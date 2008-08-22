@@ -307,7 +307,7 @@ JSObject* FASTCALL
 js_String_p_split(JSContext* cx, JSString* str, JSString* sepstr)
 {
     // FIXME: optimize by calling into a lower level exported from jsstr.cpp.
-    jsval vp[3] = { JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(sepstr) };
+    jsval vp[4] = { JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(sepstr), JSVAL_VOID };
     if (!js_str_split(cx, 2, vp))
         return NULL;
     JS_ASSERT(JSVAL_IS_OBJECT(vp[0]));
