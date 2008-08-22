@@ -99,7 +99,7 @@ namespace nanojit {
     class Fragmento;
 }
 class TraceRecorder;
-extern "C++" template<typename T> class Queue;
+extern "C++" { template<typename T> class Queue; }
 typedef Queue<uint16> SlotList;
 class TypeMap;
 
