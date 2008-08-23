@@ -5751,30 +5751,7 @@ js_Interpret(JSContext *cx)
                                              ? JS_EXTENSION (JSPropertyOp) obj
                                              : JS_PropertyStub,
                                              attrs,
-                                             &prop);
-
-                    /*
-                     * Try to optimize a property we either just created, or
-                     * found directly in the global object, that is permanent,
-                     * has a slot, and has stub getter and setter, into a
-                     * "fast global" accessed by the JSOP_*GVAR opcodes.
-                     */
-                    if (ok && index < script->nfixed) {
-                        JS_ASSERT(OBJ_IS_NATIVE(obj));
-                        sprop = (JSScopeProperty *) prop;
-                        if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)) &&
-                            SPROP_HAS_STUB_GETTER(sprop) &&
-                            SPROP_HAS_STUB_SETTER(sprop)) {
-                            /*
-                             * Fast globals use fp->slots to map the global
-                             * name's atom index to the permanent fp->varobj
-                             * slot number, tagged as a jsval. The atom index
-                             * for the global's name literal is identical to
-                             * its fp->slots index.
-                             */
-                            fp->slots[index] = INT_TO_JSVAL(sprop->slot);
-                        }
-                    }
+                                             NULL);
                 }
             }
 
