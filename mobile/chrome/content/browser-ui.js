@@ -166,6 +166,10 @@ var BrowserUI = {
 
       let newTop = null;
       if (dy > 0 && toolbar.top > -toolbar.boxObject.height) {
+        // Revert the chrome to a "safe" mode
+        if (this.mode != PANELMODE_URLVIEW)
+          this.show(PANELMODE_URLVIEW);
+
         // Scroll the toolbar up unless it is already scrolled up
         newTop = this._dragData.sTop - dy;
 
