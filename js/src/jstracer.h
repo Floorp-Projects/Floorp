@@ -180,6 +180,7 @@ public:
 class TreeInfo MMGC_SUBCLASS_DECL {
     nanojit::Fragment*      fragment;
 public:
+    JSScript*               script;
     unsigned                maxNativeStackSlots;
     ptrdiff_t               nativeStackBase;
     unsigned                maxCallDepth;
