@@ -202,6 +202,7 @@ class TraceRecorder {
     Tracker                 nativeFrameTracker;
     char*                   entryTypeMap;
     unsigned                callDepth;
+    unsigned                loopEdgeCount;
     JSAtom**                atoms;
     nanojit::GuardRecord*   anchor;
     nanojit::Fragment*      fragment;
@@ -324,6 +325,7 @@ public:
     void prepareTreeCall(nanojit::Fragment* inner);
     void emitTreeCall(nanojit::Fragment* inner, nanojit::GuardRecord* lr);
     unsigned getCallDepth() const;
+    bool trackLoopEdges();
     
     bool record_EnterFrame();
     bool record_LeaveFrame();
