@@ -117,6 +117,7 @@ static avmplus::AvmCore* core = &s_core;
 /* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
 static bool nesting_enabled = true;
 static bool oracle_enabled = true;
+static bool did_we_check_sse2 = false;
 
 #ifdef DEBUG
 static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
@@ -2181,15 +2182,49 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
     }
 }
 
+#if defined NANOJIT_IA32
+static bool
+js_CheckForSSE2()
+{
+    int features = 0;
+#if defined _MSC_VER
+    __asm
+    {
+        pushad
+        mov eax, 1
+        cpuid
+        mov features, edx
+        popad
+    }
+#elif defined __GNUC__
+    asm("pusha\n"
+        "mov $0x01, %%eax\n"
+        "cpuid\n"
+        "mov %%edx, %0\n"
+        "popa\n"
+        : "=m" (features)
+        : /* We have no inputs */
+        : /* We don't clobber anything */
+       );
+#endif
+    return (features & (1<<26)) != 0;
+}
+#endif
+
 extern void
 js_InitJIT(JSTraceMonitor *tm)
 {
+#if defined NANOJIT_IA32
+    if (!did_we_check_sse2) {
+        avmplus::AvmCore::sse2_available = js_CheckForSSE2();
+        did_we_check_sse2 = true;
+    }
+#endif
     if (!tm->fragmento) {
         JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap);
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         fragmento->assm()->setCallTable(builtins);
-        fragmento->pageFree(fragmento->pageAlloc()); // FIXME: prime page cache
         tm->fragmento = fragmento;
         tm->globalSlots = new (&gc) SlotList();
         tm->globalTypeMap = new (&gc) TypeMap();

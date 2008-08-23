@@ -39,3 +39,5 @@ static GC _gc;
 GC* AvmCore::gc = &_gc;
 GCHeap GC::heap;
 String* AvmCore::k_str[] = { (String*)"" };
+bool AvmCore::sse2_available = false;
+
