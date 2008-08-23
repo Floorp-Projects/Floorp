@@ -835,6 +835,19 @@ function stringSplitIntoArrayTest()
 stringSplitIntoArrayTest.expected="a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b";
 test(stringSplitIntoArrayTest);
 
+function innerLoopIntOuterDouble() {
+    var n = 10000, i=0, j=0, count=0, limit=0;
+    for (i = 1; i <= n; ++i) {
+	limit = i * 1;
+	for (j = 0; j < limit; ++j) {
+	    ++count;
+	}
+    }
+    return "" + count;
+}
+innerLoopIntOuterDouble.expected="50005000";
+test(innerLoopIntOuterDouble);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
