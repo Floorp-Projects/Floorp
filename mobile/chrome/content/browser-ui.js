@@ -92,6 +92,20 @@ var BrowserUI = {
     this.setURI();
     this._titleChanged(browser.contentDocument);
     this._favicon.setAttribute("src", browser.mIconURL || kDefaultFavIconURL);
+
+    let toolbar = document.getElementById("toolbar-main");
+    let browserBox = document.getElementById("browser");
+    if (Browser.content.currentTab.chromeTop) {
+      // Browser box was panned, so let's reset it
+      browserBox.top = Browser.content.currentTab.chromeTop;
+      toolbar.top = browserBox.top - toolbar.boxObject.height;
+    }
+    else {
+      // Must be initial conditions
+      toolbar.top = 0;
+      browserBox.top = toolbar.boxObject.height;
+    }
+
     this.show(PANELMODE_NONE);
   },
 
@@ -195,6 +209,9 @@ var BrowserUI = {
       if (newTop != null) {
         toolbar.top = newTop;
         browser.top = newTop + toolbar.boxObject.height;
+
+        // Cache the current top so we can use it when switching tabs
+        Browser.content.currentTab.chromeTop = browser.top;
 
         aEvent.stopPropagation();
       }
