@@ -79,6 +79,9 @@
 /* Max number of type mismatchs before we trash the tree. */
 #define MAX_MISMATCH 5
 
+/* Max number of loop edges to follow. */
+#define MAX_OUTERLINE 3
+
 /* Max native stack size. */
 #define MAX_NATIVE_STACK_SLOTS 1024
 
@@ -674,6 +677,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     this->lirbuf = _fragment->lirbuf;
     this->treeInfo = ti;
     this->callDepth = _fragment->calldepth;
+    this->loopEdgeCount = 0;
     JS_ASSERT(!_anchor || _anchor->calldepth == _fragment->calldepth);
     this->atoms = cx->fp->script->atomMap.vector;
 
@@ -746,6 +750,14 @@ unsigned
 TraceRecorder::getCallDepth() const
 {
     return callDepth;
+}
+
+
+/* Determine whether we should outerline along a loop edge. */
+bool
+TraceRecorder::trackLoopEdges()
+{
+    return loopEdgeCount++ < MAX_OUTERLINE;
 }
 
 /* Determine the offset in the native global frame for a jsval we track */
@@ -1910,6 +1922,9 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
             return false;
         }
     }
+    /* try to unroll the inner loop a bit, maybe it connects back to our loop header eventually */
+    if (r->trackLoopEdges())
+        return true;
     /* not returning to our own loop header, not an inner loop we can call, abort trace */
     AUDIT(returnToDifferentLoopHeader);
     debug_only_v(printf("loop edge %d -> %d, header %d\n",

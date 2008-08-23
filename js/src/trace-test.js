@@ -848,6 +848,19 @@ function innerLoopIntOuterDouble() {
 innerLoopIntOuterDouble.expected="50005000";
 test(innerLoopIntOuterDouble);
 
+function outerline(){
+    var i=0;
+    var j=0;
+
+    for (i = 3; i<= 100000; i+=2)
+	for (j = 3; j < 1000; j+=2)
+	    if ((i & 1) == 1)
+		break;
+    return "ok";
+}
+outerline.expected="ok";
+test(outerline);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
