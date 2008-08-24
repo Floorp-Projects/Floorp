@@ -79,6 +79,27 @@ function startAUS() {
 }
 
 /**
+ * Toggles network offline.
+ *
+ * Be sure to toggle back to online before the test finishes to prevent the
+ * following from being printed to the test's log file.
+ * WARNING: NS_ENSURE_TRUE(thread) failed: file c:/moz/mozilla-central/mozilla/netwerk/base/src/nsSocketTransportService2.cpp, line 115
+ * WARNING: unable to post SHUTDOWN message
+ */
+function toggleOffline(aOffline) {
+  const ioService = AUS_Cc["@mozilla.org/network/io-service;1"]
+                      .getService(AUS_Ci.nsIIOService);
+
+  try {
+    ioService.manageOfflineStatus = !aOffline;
+  }
+  catch (e) {
+  }
+  if (ioService.offline != aOffline)
+    ioService.offline = aOffline;
+}
+
+/**
  * Removes the updates directory and the active-update.xml file if they exist.
  * This prevents some tests from failing due to files being left behind when
  * the tests are interrupted.
