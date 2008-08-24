@@ -972,6 +972,13 @@ nsAutoCompleteController::StartSearch()
   mSearchStatus = nsIAutoCompleteController::STATUS_SEARCHING;
   mDefaultIndexCompleted = PR_FALSE;
 
+  // Cache the current results so that we can pass these through to all the
+  // searches without loosing them
+  nsresult rv;
+  nsCOMPtr<nsISupportsArray> resultCache;
+  rv = mResults->Clone(getter_AddRefs(resultCache));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRUint32 count;
   mSearches->Count(&count);
   mSearchesOngoing = count;
@@ -985,7 +992,7 @@ nsAutoCompleteController::StartSearch()
     nsCOMPtr<nsIAutoCompleteSearch> search;
     mSearches->GetElementAt(i, getter_AddRefs(search));
     nsCOMPtr<nsIAutoCompleteResult> result;
-    mResults->GetElementAt(i, getter_AddRefs(result));
+    resultCache->GetElementAt(i, getter_AddRefs(result));
 
     if (result) {
       PRUint16 searchResult;
@@ -996,7 +1003,7 @@ nsAutoCompleteController::StartSearch()
     }
 
     nsAutoString searchParam;
-    nsresult rv = input->GetSearchParam(searchParam);
+    rv = input->GetSearchParam(searchParam);
     if (NS_FAILED(rv))
         return rv;
 
