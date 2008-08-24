@@ -606,19 +606,6 @@ MAKEFILES_xpfe="
   xpfe/appshell/src/Makefile
   xpfe/appshell/public/Makefile
   xpfe/bootstrap/appleevents/Makefile
-  xpfe/global/Makefile
-  xpfe/global/buildconfig.html
-  xpfe/global/resources/Makefile
-  xpfe/global/resources/content/Makefile
-  xpfe/global/resources/content/os2/Makefile
-  xpfe/global/resources/content/unix/Makefile
-  xpfe/global/resources/locale/Makefile
-  xpfe/global/resources/locale/en-US/Makefile
-  xpfe/global/resources/locale/en-US/mac/Makefile
-  xpfe/global/resources/locale/en-US/os2/Makefile
-  xpfe/global/resources/locale/en-US/unix/Makefile
-  xpfe/global/resources/locale/en-US/win/Makefile
-  xpfe/communicator/Makefile
   extensions/spellcheck/Makefile
   extensions/spellcheck/hunspell/Makefile
   extensions/spellcheck/idl/Makefile

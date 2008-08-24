@@ -780,8 +780,6 @@ nsTextBoxFrame::UpdateAccessTitle()
      * you need to maintain same logic in following methods. See bug 324159.
      * toolkit/content/commonDialog.js (setLabelForNode)
      * toolkit/content/widgets/text.xml (formatAccessKey)
-     * xpfe/global/resources/content/commonDialog.js (setLabelForNode)
-     * xpfe/global/resources/content/bindings/text.xml (formatAccessKey)
      */
     PRInt32 menuAccessKey;
     nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
