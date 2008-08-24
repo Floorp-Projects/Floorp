@@ -169,6 +169,13 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
         // Create the document
         rv = NS_NewXMLDocument(getter_AddRefs(mDocument));
         NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsIDocument> source = do_QueryInterface(aSourceDocument);
+        NS_ENSURE_STATE(source);
+        PRBool hasHadScriptObject = PR_FALSE;
+        nsIScriptGlobalObject* sgo =
+          source->GetScriptHandlingObject(hasHadScriptObject);
+        NS_ENSURE_STATE(sgo || !hasHadScriptObject);
+        mDocument->SetScriptHandlingObject(sgo);
     }
     else {
         mDocument = do_QueryInterface(aResultDocument);
