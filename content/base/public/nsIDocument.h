@@ -570,7 +570,7 @@ public:
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) = 0;
 
   /**
-   * Sets event handling object to null and marks that document has had one.
+   * Sets script handling object to null and marks that document has had one.
    */
   virtual void ClearScriptHandlingObject() = 0;
 
