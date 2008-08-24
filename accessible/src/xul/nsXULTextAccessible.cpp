@@ -56,8 +56,11 @@ nsHyperTextAccessibleWrap(aDomNode, aShell)
 }
 
 /* wstring getName (); */
-NS_IMETHODIMP nsXULTextAccessible::GetName(nsAString& aName)
+NS_IMETHODIMP
+nsXULTextAccessible::GetName(nsAString& aName)
 { 
+  aName.Truncate();
+
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!content) {
     return NS_ERROR_FAILURE;  // Node shut down
@@ -117,8 +120,11 @@ nsLeafAccessible(aDomNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsXULTooltipAccessible::GetName(nsAString& aName)
+NS_IMETHODIMP
+nsXULTooltipAccessible::GetName(nsAString& aName)
 {
+  aName.Truncate();
+
   return GetXULName(aName, PR_TRUE);
 }
 
