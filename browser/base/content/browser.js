@@ -1082,7 +1082,9 @@ function delayedStartup()
   gBrowser.addEventListener("command", BrowserOnCommand, false);
 
   tabPreviews.init();
-  if (gPrefService.getBoolPref("browser.ctrlTab.mostRecentlyUsed"))
+  if ((!gPrefService.prefHasUserValue("browser.ctrlTab.disallowForScreenReaders") ||
+       !gPrefService.getBoolPref("browser.ctrlTab.disallowForScreenReaders")) &&
+       gPrefService.getBoolPref("browser.ctrlTab.mostRecentlyUsed"))
     ctrlTab.init();
 
   // Delayed initialization of the livemarks update timer.
