@@ -89,11 +89,9 @@ endif
 TOPSRCDIR = $(CWD)
 endif
 
-ifeq (Darwin,$(shell uname -s))
-AUTOCONF ?= autoconf213
-else
-AUTOCONF ?= $(shell which autoconf-2.13 autoconf2.13 autoconf213 | head -1)
-endif
+# try to find autoconf 2.13 - discard errors from 'which'
+# MacOS X 10.4 sends "no autoconf*" errors to stdout, discard those via grep
+AUTOCONF ?= $(shell which autoconf-2.13 autoconf2.13 autoconf213 2>/dev/null | grep -v '^no autoconf' | head -1)
 
 MKDIR := mkdir
 SH := /bin/sh
