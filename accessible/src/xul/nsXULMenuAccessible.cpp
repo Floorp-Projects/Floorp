@@ -389,13 +389,16 @@ nsXULMenuitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP
+nsXULMenuitemAccessible::GetName(nsAString& aName)
 {
+  aName.Truncate();
+
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (!element) {
     return NS_ERROR_FAILURE;
   }
-  element->GetAttribute(NS_LITERAL_STRING("label"), _retval); 
+  element->GetAttribute(NS_LITERAL_STRING("label"), aName); 
 
   return NS_OK;
 }
@@ -578,9 +581,11 @@ nsXULMenuSeparatorAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP
+nsXULMenuSeparatorAccessible::GetName(nsAString& aName)
 {
-  _retval.Truncate();
+  aName.Truncate();
+
   return NS_OK;
 }
 
@@ -752,9 +757,10 @@ nsXULMenubarAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 }
 
 
-NS_IMETHODIMP nsXULMenubarAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP
+nsXULMenubarAccessible::GetName(nsAString& aName)
 {
-  _retval.AssignLiteral("Application");
+  aName.AssignLiteral("Application");
 
   return NS_OK;
 }
