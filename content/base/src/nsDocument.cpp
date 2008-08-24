@@ -3025,6 +3025,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   mScriptGlobalObject = aScriptGlobalObject;
 
   if (aScriptGlobalObject) {
+    mScriptObject = nsnull;
     mHasHadScriptHandlingObject = PR_TRUE;
     // Go back to using the docshell for the layout history state
     mLayoutHistoryState = nsnull;
