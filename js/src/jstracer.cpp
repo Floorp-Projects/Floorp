@@ -2379,15 +2379,17 @@ TraceRecorder::activeCallOrGlobalSlot(JSObject* obj, jsval*& vp)
             JSScopeProperty* sprop = (JSScopeProperty*) prop;
             uintN slot = sprop->shortid;
 
+            vp = NULL;
             if (sprop->getter == js_GetCallArg) {
                 JS_ASSERT(slot < cfp->fun->nargs);
                 vp = &cfp->argv[slot];
-            } else {
-                JS_ASSERT(sprop->getter == js_GetCallVar);
+            } else if (sprop->getter == js_GetCallVar) {
                 JS_ASSERT(slot < cfp->script->nslots);
                 vp = &cfp->slots[slot];
             }
             OBJ_DROP_PROPERTY(cx, obj2, prop);
+            if (!vp)
+                ABORT_TRACE("dynamic property of Call object");
             return true;
         }
     }
