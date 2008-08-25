@@ -134,20 +134,22 @@ function __doEventDispatch(aTarget, aCharCode, aKeyCode, aHasShift) {
                      aKeyCode, 0);
   var accepted = $(aTarget).dispatchEvent(event);
 
-  // Cancelling keydown cancels keypress too
-  if (accepted) {
-    event = document.createEvent("KeyEvents");
-    if (aCharCode) {
-      event.initKeyEvent("keypress", true, true, document.defaultView,
-                         false, false, aHasShift, false,
-                         0, aCharCode);
-    } else {
-      event.initKeyEvent("keypress", true, true, document.defaultView,
-                         false, false, aHasShift, false,
-                         aKeyCode, 0);
-    }
-    accepted = $(aTarget).dispatchEvent(event);
+  // Preventing the default keydown action also prevents the default
+  // keypress action.
+  event = document.createEvent("KeyEvents");
+  if (aCharCode) {
+    event.initKeyEvent("keypress", true, true, document.defaultView,
+                       false, false, aHasShift, false,
+                       0, aCharCode);
+  } else {
+    event.initKeyEvent("keypress", true, true, document.defaultView,
+                       false, false, aHasShift, false,
+                       aKeyCode, 0);
   }
+  if (!accepted) {
+    event.preventDefault();
+  }
+  accepted = $(aTarget).dispatchEvent(event);
 
   // Always send keyup
   var event = document.createEvent("KeyEvents");
@@ -311,8 +313,10 @@ function synthesizeKey(aKey, aEvent, aWindow)
       utils.sendKeyEvent(aEvent.type, keyCode, charCode, modifiers);
     }
     else {
-      utils.sendKeyEvent("keydown", keyCode, charCode, modifiers);
-      utils.sendKeyEvent("keypress", keyCode, charCode, modifiers);
+      var keyDownDefaultHappened =
+          utils.sendKeyEvent("keydown", keyCode, charCode, modifiers);
+      utils.sendKeyEvent("keypress", keyCode, charCode, modifiers,
+                         !keyDownDefaultHappened);
       utils.sendKeyEvent("keyup", keyCode, charCode, modifiers);
     }
   }
