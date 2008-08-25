@@ -1103,7 +1103,6 @@ LaunchWinPostProcess(const WCHAR *appExe)
   };
 
   WinLaunchChild(exefullpath, argc, argv, 0);
-  free(argv);
 }
 #endif
 
