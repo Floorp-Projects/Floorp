@@ -875,6 +875,29 @@ function forVarInWith() {
 forVarInWith.expected = "pqrst";
 test(forVarInWith);
 
+function addAccumulations(f) {
+  var a = f();
+  var b = f();
+  return a() + b();
+}
+
+function loopingAccumulator() {
+  var x = 0;
+  return function () {
+    for (var i = 0; i < 10; ++i) {
+      ++x;
+    }
+    return x;
+  }
+}
+
+function testLoopingAccumulator() {
+	var x = addAccumulations(loopingAccumulator);
+	return x;
+}
+testLoopingAccumulator.expected = 20;
+test(testLoopingAccumulator);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
