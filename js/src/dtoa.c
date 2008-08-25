@@ -1,4 +1,3 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 /****************************************************************
  *
  * The author of this software is David M. Gay.
@@ -142,6 +141,11 @@
  *	floating-point numbers and flushes underflows to zero rather
  *	than implementing gradual underflow, then you must also #define
  *	Sudden_Underflow.
+ * #define YES_ALIAS to permit aliasing certain double values with
+ *	arrays of ULongs.  This leads to slightly better code with
+ *	some compilers and was always used prior to 19990916, but it
+ *	is not strictly legal and can cause trouble with aggressively
+ *	optimizing compilers (e.g., gcc 2.95.1 under -O2).
  * #define USE_LOCALE to use the current locale's decimal_point value.
  * #define SET_INEXACT if IEEE arithmetic is being used and extra
  *	computation should be done to set the inexact flag when the
@@ -273,13 +277,24 @@ Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
 
 typedef union { double d; ULong L[2]; } U;
 
-#define dval(x) ((x).d)
+#ifdef YES_ALIAS
+#define dval(x) x
 #ifdef IEEE_8087
-#define word0(x) ((x).L[1])
-#define word1(x) ((x).L[0])
+#define word0(x) ((ULong *)&x)[1]
+#define word1(x) ((ULong *)&x)[0]
 #else
-#define word0(x) ((x).L[0])
-#define word1(x) ((x).L[1])
+#define word0(x) ((ULong *)&x)[0]
+#define word1(x) ((ULong *)&x)[1]
+#endif
+#else
+#ifdef IEEE_8087
+#define word0(x) ((U*)&x)->L[1]
+#define word1(x) ((U*)&x)->L[0]
+#else
+#define word0(x) ((U*)&x)->L[0]
+#define word1(x) ((U*)&x)->L[1]
+#endif
+#define dval(x) ((U*)&x)->d
 #endif
 
 /* The following definition of Storeinc is appropriate for MIPS processors.
@@ -1088,13 +1103,13 @@ diff
  static double
 ulp
 #ifdef KR_headers
-	(x) U x;
+	(x) double x;
 #else
-	(U x)
+	(double x)
 #endif
 {
 	register Long L;
-	U a;
+	double a;
 
 	L = (word0(x) & Exp_mask) - (P-1)*Exp_msk1;
 #ifndef Avoid_Underflow
@@ -1137,7 +1152,7 @@ b2d
 {
 	ULong *xa, *xa0, w, y, z;
 	int k;
-	U d;
+	double d;
 #ifdef VAX
 	ULong d0, d1;
 #else
@@ -1200,9 +1215,9 @@ b2d
  static Bigint *
 d2b
 #ifdef KR_headers
-	(d, e, bits) U d; int *e, *bits;
+	(d, e, bits) double d; int *e, *bits;
 #else
-	(U d, int *e, int *bits)
+	(double d, int *e, int *bits)
 #endif
 {
 	Bigint *b;
@@ -1343,7 +1358,7 @@ ratio
 	(Bigint *a, Bigint *b)
 #endif
 {
-	U da, db;
+	double da, db;
 	int k, ka, kb;
 
 	dval(da) = b2d(a, &ka);
@@ -1448,9 +1463,9 @@ match
  static void
 hexnan
 #ifdef KR_headers
-	(rvp, sp) U *rvp; CONST char **sp;
+	(rvp, sp) double *rvp; CONST char **sp;
 #else
-	(U *rvp, CONST char **sp)
+	(double *rvp, CONST char **sp)
 #endif
 {
 	ULong c, x[2];
@@ -1530,8 +1545,7 @@ _strtod
 	int bb2, bb5, bbe, bd2, bd5, bbbits, bs2, c, dsign,
 		 e, e1, esign, i, j, k, nd, nd0, nf, nz, nz0, sign;
 	CONST char *s, *s0, *s1;
-	double aadj, adj;
-	U aadj1, rv, rv0;
+	double aadj, aadj1, adj, rv, rv0;
 	Long L;
 	ULong y, z;
 	Bigint *bb, *bb1, *bd, *bd0, *bs, *delta;
@@ -1546,7 +1560,7 @@ _strtod
 #endif
 
 #ifdef __GNUC__
-	delta = bb = bd = bs = 0;
+    delta = bb = bd = bs = 0;
 #endif
 
 	sign = nz0 = nz = 0;
@@ -1948,7 +1962,7 @@ _strtod
 	for(;;) {
 		bd = Balloc(bd0->k);
 		Bcopy(bd, bd0);
-		bb = d2b(rv, &bbe, &bbbits);	/* rv = bb * 2^bbe */
+		bb = d2b(dval(rv), &bbe, &bbbits);	/* rv = bb * 2^bbe */
 		bs = i2b(1);
 
 		if (e >= 0) {
@@ -2065,13 +2079,13 @@ _strtod
 					if ((word0(rv) & Exp_mask) <=
 							P*Exp_msk1) {
 						word0(rv) += P*Exp_msk1;
-						dval(rv) += adj*ulp(rv);
+						dval(rv) += adj*ulp(dval(rv));
 						word0(rv) -= P*Exp_msk1;
 						}
 					else
 #endif /*Sudden_Underflow*/
 #endif /*Avoid_Underflow*/
-					dval(rv) += adj*ulp(rv);
+					dval(rv) += adj*ulp(dval(rv));
 					}
 				break;
 				}
@@ -2094,7 +2108,7 @@ _strtod
 #ifdef Sudden_Underflow
 			if ((word0(rv) & Exp_mask) <= P*Exp_msk1) {
 				word0(rv) += P*Exp_msk1;
-				adj *= ulp(rv);
+				adj *= ulp(dval(rv));
 				if (dsign)
 					dval(rv) += adj;
 				else
@@ -2104,7 +2118,7 @@ _strtod
 				}
 #endif /*Sudden_Underflow*/
 #endif /*Avoid_Underflow*/
-			adj *= ulp(rv);
+			adj *= ulp(dval(rv));
 			if (dsign)
 				dval(rv) += adj;
 			else
@@ -2213,10 +2227,10 @@ _strtod
 				break;
 #endif
 			if (dsign)
-				dval(rv) += ulp(rv);
+				dval(rv) += ulp(dval(rv));
 #ifndef ROUND_BIASED
 			else {
-				dval(rv) -= ulp(rv);
+				dval(rv) -= ulp(dval(rv));
 #ifndef Sudden_Underflow
 				if (!dval(rv))
 					goto undfl;
@@ -2230,14 +2244,14 @@ _strtod
 			}
 		if ((aadj = ratio(delta, bs)) <= 2.) {
 			if (dsign)
-				aadj = dval(aadj1) = 1.;
+				aadj = aadj1 = 1.;
 			else if (word1(rv) || word0(rv) & Bndry_mask) {
 #ifndef Sudden_Underflow
 				if (word1(rv) == Tiny1 && !word0(rv))
 					goto undfl;
 #endif
 				aadj = 1.;
-				dval(aadj1) = -1.;
+				aadj1 = -1.;
 				}
 			else {
 				/* special case -- power of FLT_RADIX to be */
@@ -2247,24 +2261,24 @@ _strtod
 					aadj = 1./FLT_RADIX;
 				else
 					aadj *= 0.5;
-				dval(aadj1) = -aadj;
+				aadj1 = -aadj;
 				}
 			}
 		else {
 			aadj *= 0.5;
-			dval(aadj1) = dsign ? aadj : -aadj;
+			aadj1 = dsign ? aadj : -aadj;
 #ifdef Check_FLT_ROUNDS
 			switch(Rounding) {
 				case 2: /* towards +infinity */
-					dval(aadj1) -= 0.5;
+					aadj1 -= 0.5;
 					break;
 				case 0: /* towards 0 */
 				case 3: /* towards -infinity */
-					dval(aadj1) += 0.5;
+					aadj1 += 0.5;
 				}
 #else
 			if (Flt_Rounds == 0)
-				dval(aadj1) += 0.5;
+				aadj1 += 0.5;
 #endif /*Check_FLT_ROUNDS*/
 			}
 		y = word0(rv) & Exp_mask;
@@ -2274,7 +2288,7 @@ _strtod
 		if (y == Exp_msk1*(DBL_MAX_EXP+Bias-1)) {
 			dval(rv0) = dval(rv);
 			word0(rv) -= P*Exp_msk1;
-			adj = dval(aadj1) * ulp(rv);
+			adj = aadj1 * ulp(dval(rv));
 			dval(rv) += adj;
 			if ((word0(rv) & Exp_mask) >=
 					Exp_msk1*(DBL_MAX_EXP+Bias-P)) {
@@ -2294,18 +2308,18 @@ _strtod
 					if ((z = (ULong) aadj) <= 0)
 						z = 1;
 					aadj = z;
-					dval(aadj1) = dsign ? aadj : -aadj;
+					aadj1 = dsign ? aadj : -aadj;
 					}
 				word0(aadj1) += (2*P+1)*Exp_msk1 - y;
 				}
-			adj = dval(aadj1) * ulp(rv);
+			adj = aadj1 * ulp(dval(rv));
 			dval(rv) += adj;
 #else
 #ifdef Sudden_Underflow
 			if ((word0(rv) & Exp_mask) <= P*Exp_msk1) {
 				dval(rv0) = dval(rv);
 				word0(rv) += P*Exp_msk1;
-				adj = dval(aadj1) * ulp(rv);
+				adj = aadj1 * ulp(dval(rv));
 				dval(rv) += adj;
 #ifdef IBM
 				if ((word0(rv) & Exp_mask) <  P*Exp_msk1)
@@ -2324,7 +2338,7 @@ _strtod
 					word0(rv) -= P*Exp_msk1;
 				}
 			else {
-				adj = dval(aadj1) * ulp(rv);
+				adj = aadj1 * ulp(dval(rv));
 				dval(rv) += adj;
 				}
 #else /*Sudden_Underflow*/
@@ -2336,11 +2350,11 @@ _strtod
 			 * example: 1.2e-307 .
 			 */
 			if (y <= (P-1)*Exp_msk1 && aadj > 1.) {
-				dval(aadj1) = (double)(int)(aadj + 0.5);
+				aadj1 = (double)(int)(aadj + 0.5);
 				if (!dsign)
-					dval(aadj1) = -dval(aadj1);
+					aadj1 = -aadj1;
 				}
-			adj = dval(aadj1) * ulp(rv);
+			adj = aadj1 * ulp(dval(rv));
 			dval(rv) += adj;
 #endif /*Sudden_Underflow*/
 #endif /*Avoid_Underflow*/
@@ -2632,9 +2646,9 @@ freedtoa(char *s)
 dtoa
 #ifdef KR_headers
 	(d, mode, ndigits, decpt, sign, rve)
-	U d; int mode, ndigits, *decpt, *sign; char **rve;
+	double d; int mode, ndigits, *decpt, *sign; char **rve;
 #else
-	(U d, int mode, int ndigits, int *decpt, int *sign, char **rve)
+	(double d, int mode, int ndigits, int *decpt, int *sign, char **rve)
 #endif
 {
  /*	Arguments ndigits, decpt, sign are similar to those
@@ -2680,8 +2694,7 @@ dtoa
 	ULong x;
 #endif
 	Bigint *b, *b1, *delta, *mlo, *mhi, *S;
-	U d2, eps;
-	double ds;
+	double d2, ds, eps;
 	char *s, *s0;
 #ifdef Honor_FLT_ROUNDS
 	int rounding;
@@ -2691,8 +2704,8 @@ dtoa
 #endif
 
 #ifdef __GNUC__
-	ilim = ilim1 = 0;
-	mlo = NULL;
+    ilim = ilim1 = 0;
+    mlo = NULL;
 #endif
 
 #ifndef MULTIPLE_THREADS
@@ -2748,7 +2761,7 @@ dtoa
 		}
 #endif
 
-	b = d2b(d, &be, &bbits);
+	b = d2b(dval(d), &be, &bbits);
 #ifdef Sudden_Underflow
 	i = (int)(word0(d) >> Exp_shift1 & (Exp_mask>>Exp_shift1));
 #else
