@@ -59,7 +59,6 @@ REQUIRES       = xpcom         \
 		 nkcache       \
 		 pref          \
 		 prefetch      \
-		 docshell      \
 		 widget        \
 		 xpconnect     \
 		 $(NULL)

@@ -86,7 +86,11 @@ interface nsICacheService : nsISupports
     void evictEntries(in nsCacheStoragePolicy  storagePolicy);
 
     /**
-     * This method is deprecated and will throw NS_ERROR_NOT_IMPLEMENTED.
+     * Return a unique, temporary cache client ID.
+     *
+     * This is used by the offline cache.  The offline cache lets clients
+     * accumulate entries in a temporary client and merge them in as a group
+     * using nsIOfflineCacheSession.mergeTemporaryClient().
      */
     ACString createTemporaryClientID(in nsCacheStoragePolicy storagePolicy);
 };
