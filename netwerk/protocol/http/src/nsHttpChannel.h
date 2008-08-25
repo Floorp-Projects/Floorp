@@ -80,6 +80,7 @@
 #include "nsIProtocolProxyCallback.h"
 #include "nsICancelable.h"
 #include "nsIProxiedChannel.h"
+#include "nsITraceableChannel.h"
 
 class nsHttpResponseHead;
 class nsAHttpConnection;
@@ -103,6 +104,7 @@ class nsHttpChannel : public nsHashPropertyBag
                     , public nsISupportsPriority
                     , public nsIProtocolProxyCallback
                     , public nsIProxiedChannel
+                    , public nsITraceableChannel
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -121,6 +123,7 @@ public:
     NS_DECL_NSISUPPORTSPRIORITY
     NS_DECL_NSIPROTOCOLPROXYCALLBACK
     NS_DECL_NSIPROXIEDCHANNEL
+    NS_DECL_NSITRACEABLECHANNEL
 
     nsHttpChannel();
     virtual ~nsHttpChannel();
@@ -306,6 +309,7 @@ private:
     PRUint32                          mResuming                 : 1;
     PRUint32                          mInitedCacheEntry         : 1;
     PRUint32                          mCacheForOfflineUse       : 1;
+    PRUint32                          mTracingEnabled           : 1;
 
     class nsContentEncodings : public nsIUTF8StringEnumerator
     {
