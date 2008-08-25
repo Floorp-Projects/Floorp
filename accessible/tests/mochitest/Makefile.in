@@ -78,6 +78,7 @@ _TEST_FILES =\
 		testTextboxes.js \
 		test_bug428479.html \
 		test_bug429285.html \
+		test_bug434464.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
