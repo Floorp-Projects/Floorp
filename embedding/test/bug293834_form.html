@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Nested iframe for bug 293834</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    </head>
+    <body>
+    <form>
+        not prefilled: <input id="a-text"  type="text"></input><br>
+        prefilled: <input id="a-prefilled-text"  type="text" value="prefill "></input><br>
+
+        <input name="a-radio" id="radioa" value="radio-a" type="radio">Should be saved checked</input><br>
+        <input name="a-radio" value="radio-c" type="radio" checked="true">Initially checked</input><br>
+        <select id="aselect">
+            <option value="target">Should be saved selected</option>
+            <option value="default" selected="selected">Default Selected</option>
+        </select><br>
+        not prefilled: <textarea id="a-textbox"></textarea><br>
+        prefilled: <textarea id="a-prefilled-textbox">prefill </textarea><br>
+        <input id="a-checkbox" type="checkbox">Should be saved checked</input><br>
+        <input id="a-prefilled-checkbox" type="checkbox" checked="true">Initiallly checked</input><br>
+    </form>
+    </body>
+</html>
+
