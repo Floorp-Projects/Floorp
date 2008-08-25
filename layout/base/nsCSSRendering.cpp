@@ -1866,6 +1866,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // ... but pixel-snapped, so that it comes out correctly relative to
   // all the other pixel-snapped things
   nsRect tileRect(anchor, nsSize(tileWidth, tileHeight));
+  // Whether we take the single-image path or the tile path should not
+  // depend on the dirty rect. So decide now which path to take. We
+  // can take the single image path if the anchored image tile
+  // contains the total background area.
+  PRBool useSingleImagePath =
+    tileRect.Contains(bgClipArea - borderAreaOriginSnapped);
+
   if (repeat & NS_STYLE_BG_REPEAT_X) {
     // When tiling in the x direction, adjust the starting position of the
     // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
@@ -1906,7 +1913,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     nsRect destRect; // The rectangle we would draw ignoring dirty-rect
     destRect.IntersectRect(absTileRect, bgClipArea);
     nsRect subimageRect = destRect - borderAreaOriginSnapped - tileRect.TopLeft();
-    if (sourceRect.XMost() <= tileWidth && sourceRect.YMost() <= tileHeight) {
+    if (useSingleImagePath) {
+      NS_ASSERTION(sourceRect.XMost() <= tileWidth && sourceRect.YMost() <= tileHeight,
+                   "We shouldn't need to tile here");
       // The entire drawRect is contained inside a single tile; just
       // draw the corresponding part of the image once.
       nsLayoutUtils::DrawImage(&aRenderingContext, image,
