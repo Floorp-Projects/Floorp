@@ -775,6 +775,7 @@ Print(JSContext *cx, uintN argc, jsval *vp)
     fputc('\n', gOutFile);
     fflush(gOutFile);
 
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
 
