@@ -571,8 +571,9 @@ nsDragService::EndDragSession(PRBool aDoneDrag)
     mNativeDragEvent = nil;
   }
 
+  nsresult rv = nsBaseDragService::EndDragSession(aDoneDrag);
   mDataItems = nsnull;
-  return nsBaseDragService::EndDragSession(aDoneDrag);
+  return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

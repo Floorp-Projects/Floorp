@@ -101,6 +101,7 @@ struct JSRuntime;
 class nsICaseConversion;
 class nsIUGenCategory;
 class nsIWidget;
+class nsIDragSession;
 class nsPIDOMWindow;
 #ifdef MOZ_XTF
 class nsIXTFService;
@@ -1217,6 +1218,11 @@ public:
    * displayed in child frames.
    */
   static void HidePopupsInDocument(nsIDocument* aDocument);
+
+  /**
+   * Retrieve the current drag session, or null if no drag is currently occuring
+   */
+  static already_AddRefed<nsIDragSession> GetDragSession();
 
   /**
    * Return true if aURI is a local file URI (i.e. file://).

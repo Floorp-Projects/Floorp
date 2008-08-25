@@ -570,13 +570,6 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
   }
 
   PRBool canDrop = CanDrop(aDragEvent);
-  if (canDrop)
-  {
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    mEditor->GetDocument(getter_AddRefs(domdoc));
-    canDrop = nsEditorHookUtils::DoAllowDropHook(domdoc, aDragEvent, dragSession);
-  }
-
   dragSession->SetCanDrop(canDrop);
 
   // We need to consume the event to prevent the browser's
