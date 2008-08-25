@@ -2646,6 +2646,32 @@ TraceRecorder::cmp(LOpcode op, bool negate)
             cond = (lnum == rnum) ^ negate;
             break;
         }
+    } else if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r))  {
+        x = lir->ins2(op, lir->ins1(LIR_i2f, get(&l)), lir->ins1(LIR_i2f, get(&r)));
+        if (negate)
+            x = lir->ins_eq0(x);
+
+        // The well-known values of JSVAL_TRUE and JSVAL_FALSE make this very easy.
+        // In particular: JSVAL_TO_BOOLEAN(0) < JSVAL_TO_BOOLEAN(1) so all of these comparisons do
+        // the right thing.
+        switch (op) {
+          case LIR_flt:
+            cond = l < r;
+            break;
+          case LIR_fgt:
+            cond = l > r;
+            break;
+          case LIR_fle:
+            cond = l <= r;
+            break;
+          case LIR_fge:
+            cond = l >= r;
+            break;
+          default:
+            JS_ASSERT(op == LIR_feq);
+            cond = (l == r) ^ negate;
+            break;
+        }
     } else {
         ABORT_TRACE("unsupported operand types for cmp");
     }
