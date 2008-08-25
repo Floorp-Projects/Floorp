@@ -188,6 +188,10 @@ var gImageHash = { };
 var gStrings = { };
 var gBundle;
 
+const DRAGSERVICE_CONTRACTID    = "@mozilla.org/widget/dragservice;1";
+const TRANSFERABLE_CONTRACTID   = "@mozilla.org/widget/transferable;1";
+const ARRAY_CONTRACTID          = "@mozilla.org/supports-array;1";
+const STRING_CONTRACTID         = "@mozilla.org/supports-string;1";
 const PERMISSION_CONTRACTID     = "@mozilla.org/permissionmanager;1";
 const PREFERENCES_CONTRACTID    = "@mozilla.org/preferences-service;1";
 const ATOM_CONTRACTID           = "@mozilla.org/atom-service;1";
@@ -659,16 +663,32 @@ function onBeginLinkDrag(event,urlField,descField)
   if (row == -1)
     return;
 
+  // Getting drag-system needed services
+  var dragService = Components.classes[DRAGSERVICE_CONTRACTID].getService()
+                              .QueryInterface(Components.interfaces.nsIDragService);
+  var transArray = Components.classes[ARRAY_CONTRACTID]
+                             .createInstance(Components.interfaces.nsISupportsArray);
+  if (!transArray)
+    return;
+
+  var trans = Components.classes[TRANSFERABLE_CONTRACTID]
+                        .createInstance(Components.interfaces.nsITransferable);
+  if (!trans)
+    return;
+
   // Adding URL flavor
+  trans.addDataFlavor("text/x-moz-url");
   var col = tree.columns[urlField];
   var url = tree.view.getCellText(row, col);
   col = tree.columns[descField];
   var desc = tree.view.getCellText(row, col);
+  var stringURL = Components.classes[STRING_CONTRACTID]
+                            .createInstance(Components.interfaces.nsISupportsString);
+  stringURL.data = url + "\n" + desc;
+  trans.setTransferData("text/x-moz-url", stringURL, stringURL.data.length * 2 );
+  transArray.AppendElement(trans.QueryInterface(Components.interfaces.nsISupports));
 
-  var dt = event.dataTransfer;
-  dt.setData("text/x-moz-url", url + "\n" + desc);
-  dt.setData("text/url-list", url);
-  dt.setData("text/plain", url);
+  dragService.invokeDragSession(event.target, transArray, null, dragService.DRAGDROP_ACTION_NONE);
 }
 
 //******** Image Stuff

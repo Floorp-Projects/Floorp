@@ -5753,14 +5753,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
       // We make the assumption that the dragOver handlers have correctly set
       // the |canDrop| property of the Drag Session.
       PRBool canDrop = PR_FALSE;
-      if (!NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) || !canDrop) {
-        nsCOMPtr<nsIDOMNode> sourceNode;
-        dragSession->GetSourceNode(getter_AddRefs(sourceNode));
-        if (!sourceNode) {
-          mDragService->EndDragSession(PR_FALSE);
-        }
+      if (!NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) || !canDrop)
         return NO;
-      }
     }
     
     unsigned int modifierFlags = [[NSApp currentEvent] modifierFlags];
@@ -5776,7 +5770,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   }
 
   // set up gecko event
-  nsDragEvent geckoEvent(PR_TRUE, aMessage, nsnull);
+  nsMouseEvent geckoEvent(PR_TRUE, aMessage, nsnull, nsMouseEvent::eReal);
   [self convertGenericCocoaEvent:nil toGeckoEvent:&geckoEvent];
 
   // Use our own coordinates in the gecko event.
@@ -5790,8 +5784,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   if (!mGeckoChild)
     return YES;
 
-  if ((aMessage == NS_DRAGDROP_EXIT || aMessage == NS_DRAGDROP_DROP) &&
-      dragSession) {
+  if (aMessage == NS_DRAGDROP_EXIT && dragSession) {
     nsCOMPtr<nsIDOMNode> sourceNode;
     dragSession->GetSourceNode(getter_AddRefs(sourceNode));
     if (!sourceNode) {
