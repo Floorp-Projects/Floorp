@@ -55,11 +55,10 @@
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMDragEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsPresContext.h"
-#include "nsIDOMDataTransfer.h"
 #include "nsIEventStateManager.h"
 #include "nsICanvasElement.h"
 #include "nsIImage.h"
@@ -196,21 +195,6 @@ nsBaseDragService::IsDataFlavorSupported(const char *aDataFlavor,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsBaseDragService::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
-{
-  *aDataTransfer = mDataTransfer;
-  NS_IF_ADDREF(*aDataTransfer);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBaseDragService::SetDataTransfer(nsIDOMDataTransfer* aDataTransfer)
-{
-  mDataTransfer = aDataTransfer;
-  return NS_OK;
-}
-
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
@@ -255,14 +239,11 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
                                               PRUint32 aActionType,
                                               nsIDOMNode* aImage,
                                               PRInt32 aImageX, PRInt32 aImageY,
-                                              nsIDOMDragEvent* aDragEvent,
-                                              nsIDOMDataTransfer* aDataTransfer)
+                                              nsIDOMMouseEvent* aDragEvent)
 {
   NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(aDataTransfer, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
-  mDataTransfer = aDataTransfer;
   mSelection = nsnull;
   mHasImage = PR_TRUE;
   mImage = aImage;
@@ -279,14 +260,12 @@ NS_IMETHODIMP
 nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
                                                   nsISupportsArray* aTransferableArray,
                                                   PRUint32 aActionType,
-                                                  nsIDOMDragEvent* aDragEvent,
-                                                  nsIDOMDataTransfer* aDataTransfer)
+                                                  nsIDOMMouseEvent* aDragEvent)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
-  mDataTransfer = aDataTransfer;
   mSelection = aSelection;
   mHasImage = PR_TRUE;
   mImage = nsnull;
@@ -297,8 +276,6 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   aDragEvent->GetScreenY(&mScreenY);
 
   // just get the focused node from the selection
-  // XXXndeakin this should actually be the deepest node that contains both
-  // endpoints of the selection
   nsCOMPtr<nsIDOMNode> node;
   aSelection->GetFocusNode(getter_AddRefs(node));
 
@@ -352,7 +329,6 @@ nsBaseDragService::EndDragSession(PRBool aDoneDrag)
   mSourceDocument = nsnull;
   mSourceNode = nsnull;
   mSelection = nsnull;
-  mDataTransfer = nsnull;
   mHasImage = PR_FALSE;
   mImage = nsnull;
   mImageX = 0;
@@ -372,7 +348,7 @@ nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
       nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
       if (presShell) {
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsDragEvent event(PR_TRUE, aMsg, nsnull);
+        nsMouseEvent event(PR_TRUE, aMsg, nsnull, nsMouseEvent::eReal);
 
         nsCOMPtr<nsIContent> content = do_QueryInterface(mSourceNode);
         return presShell->HandleDOMEventWithTarget(content, &event, &status);

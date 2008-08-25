@@ -46,9 +46,8 @@ interface nsITreeView;
 interface nsITreeSelection;
 interface nsITreeColumn;
 interface nsITreeColumns;
-interface nsIScriptableRegion;
 
-[scriptable, uuid(64BA5199-C4F4-4498-BBDC-F8E4C369086C)]
+[scriptable, uuid(a264f607-9d90-469e-b770-1ae7284fde05)]
 interface nsITreeBoxObject : nsISupports
 {
   /**
@@ -87,11 +86,6 @@ interface nsITreeBoxObject : nsISupports
    * Get the pixel position of the horizontal scrollbar. 
    */
   readonly attribute long horizontalPosition;
-
-  /**
-   * Return the region for the visible parts of the selection, in device pixels.
-   */
-  readonly attribute nsIScriptableRegion selectionRegion;
 
   /**
    * Get the index of the first visible row.
