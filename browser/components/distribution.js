@@ -238,8 +238,16 @@ DistributionCustomizer.prototype = {
       return;
 
     let bmProcessed = false;
-    let bmProcessedPref = "distribution." +
-      this._ini.getString("Global", "id") + ".bookmarksProcessed";
+    let bmProcessedPref;
+
+    try {
+        bmProcessedPref = this._ini.getString("Global",
+                                              "bookmarks.initialized.pref");
+    } catch (e) {
+      bmProcessedPref = "distribution." +
+        this._ini.getString("Global", "id") + ".bookmarksProcessed";
+    }
+
     try {
       bmProcessed = this._prefs.getBoolPref(bmProcessedPref);
     } catch (e) {}
