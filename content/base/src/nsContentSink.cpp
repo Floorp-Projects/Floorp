@@ -1419,6 +1419,10 @@ nsContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 void
 nsContentSink::DidBuildModelImpl(void)
 {
+  if (!mDocument->HaveFiredDOMTitleChange()) {
+    mDocument->NotifyPossibleTitleChange(PR_FALSE);
+  }
+
   // Cancel a timer if we had one out there
   if (mNotificationTimer) {
     SINK_TRACE(gContentSinkLogModuleInfo, SINK_TRACE_REFLOW,
