@@ -4664,7 +4664,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             ale = NULL;
             while (!STMT_IS_LOOP(stmt) && stmt->type != STMT_SWITCH)
                 stmt = stmt->down;
-            noteType = SRC_NULL;
+            noteType = SRC_BREAK;
         }
 
         if (EmitGoto(cx, cg, stmt, &stmt->breaks, ale, noteType) < 0)

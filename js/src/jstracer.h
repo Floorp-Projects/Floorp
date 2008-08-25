@@ -318,7 +318,9 @@ public:
     nanojit::SideExit* snapshot(nanojit::ExitType exitType);
     nanojit::Fragment* getFragment() const { return fragment; }
     bool isLoopHeader(JSContext* cx) const;
+    void compile(nanojit::Fragmento* fragmento);
     void closeLoop(nanojit::Fragmento* fragmento);
+    void endLoop(nanojit::Fragmento* fragmento);
     void blacklist() { fragment->blacklist(); }
     bool adjustCallerTypes(nanojit::Fragment* f);
     bool selectCallablePeerFragment(nanojit::Fragment** first);
