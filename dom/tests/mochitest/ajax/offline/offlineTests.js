@@ -51,14 +51,9 @@ fetch: function(callback)
   var url = this.urls.shift();
   var self = this;
 
-  var cacheService = Cc["@mozilla.org/network/cache-service;1"]
-                     .getService(Ci.nsICacheService);
-  var cacheSession = cacheService.createSession("HTTP-offline",
-                                                Ci.nsICache.STORE_OFFLINE,
-                                                true);
+  var cacheSession = OfflineTest.getActiveSession();
   cacheSession.asyncOpenCacheEntry(url, Ci.nsICache.ACCESS_READ, this);
 }
-
 };
 
 var OfflineTest = {
@@ -167,29 +162,13 @@ isnot: function(a, b, name)
 
 clear: function()
 {
-  // Clear the ownership list
-  var cacheService = Cc["@mozilla.org/network/cache-service;1"]
-                     .getService(Ci.nsICacheService);
-  var cacheSession = cacheService.createSession("HTTP-offline",
-                                                Ci.nsICache.STORE_OFFLINE,
-                                                true)
-                     .QueryInterface(Ci.nsIOfflineCacheSession);
-
-  // Get the asciiHost from the page URL
-  var locationURI = Cc["@mozilla.org/network/standard-url;1"]
-                     .createInstance(Ci.nsIURI);
-  locationURI.spec = window.location.href;
-  var asciiHost = locationURI.asciiHost;
-
-  // Clear manifest-owned urls
-  cacheSession.setOwnedKeys(asciiHost,
-                            this.getManifestUrl() + "#manifest", 0, []);
-
-  // Clear dynamically-owned urls
-  cacheSession.setOwnedKeys(asciiHost,
-                            this.getManifestUrl() + "#dynamic", 0, []);
-
-  cacheSession.evictUnownedEntries();
+  // XXX: maybe we should just wipe out the entire disk cache.
+  var appCacheService = Cc["@mozilla.org/network/application-cache-service;1"]
+                        .getService(Ci.nsIApplicationCacheService);
+  var applicationCache = this.getActiveCache();
+  if (applicationCache) {
+    applicationCache.discard();
+  }
 },
 
 failEvent: function(e)
@@ -203,11 +182,7 @@ waitForAdd: function(url, onFinished) {
   // Check every half second for ten seconds.
   var numChecks = 20;
   var waitFunc = function() {
-    var cacheService = Cc["@mozilla.org/network/cache-service;1"]
-    .getService(Ci.nsICacheService);
-    var cacheSession = cacheService.createSession("HTTP-offline",
-                                                  Ci.nsICache.STORE_OFFLINE,
-                                                  true);
+    var cacheSession = OfflineTest.getActiveSession();
     var entry;
     try {
       var entry = cacheSession.openCacheEntry(url, Ci.nsICache.ACCESS_READ, true);
@@ -236,6 +211,27 @@ getManifestUrl: function()
   return window.top.document.documentElement.getAttribute("manifest");
 },
 
+getActiveCache: function()
+{
+  // Note that this is the current active cache in the cache stack, not the
+  // one associated with this window.
+  var serv = Cc["@mozilla.org/network/application-cache-service;1"]
+             .getService(Ci.nsIApplicationCacheService);
+  return serv.getActiveCache(this.getManifestUrl());
+},
+
+getActiveSession: function()
+{
+  var cache = this.getActiveCache();
+  if (!cache) return null;
+
+  var cacheService = Cc["@mozilla.org/network/cache-service;1"]
+                     .getService(Ci.nsICacheService);
+  return cacheService.createSession(cache.clientID,
+                                    Ci.nsICache.STORE_OFFLINE,
+                                    true);
+},
+
 priv: function(func)
 {
   var self = this;
@@ -247,11 +243,16 @@ priv: function(func)
 
 checkCache: function(url, expectEntry)
 {
-  var cacheService = Cc["@mozilla.org/network/cache-service;1"]
-  .getService(Ci.nsICacheService);
-  var cacheSession = cacheService.createSession("HTTP-offline",
-                                                Ci.nsICache.STORE_OFFLINE,
-                                                true);
+  var cacheSession = this.getActiveSession();
+  if (!cacheSession) {
+    if (expectEntry) {
+      this.ok(false, url + " should exist in the offline cache");
+    } else {
+      this.ok(true, url + " should not exist in the offline cache");
+    }
+    return;
+  }
+
   try {
     var entry = cacheSession.openCacheEntry(url, Ci.nsICache.ACCESS_READ, false);
     if (expectEntry) {
@@ -267,7 +268,7 @@ checkCache: function(url, expectEntry)
       } else {
         this.ok(true, url + " should not exist in the offline cache");
       }
-    } else if (e.result == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
+    } else if (e.result == NS_ERROR_CACHE_KEY_WAIT_FOR_VALIDATION) {
       // There was a cache key that we couldn't access yet, that's good enough.
       if (expectEntry) {
         this.ok(true, url + " should exist in the offline cache");
