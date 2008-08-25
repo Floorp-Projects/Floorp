@@ -115,7 +115,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
  * load its items one by one, sending itemCompleted() to any registered
  * observers.
  */
-[scriptable, uuid(4b206247-82ee-46cf-a8b7-f7284e753bc2)]
+[scriptable, uuid(7dc06ede-1098-4384-b95e-65525ab254c9)]
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Fetch the status of the running update.  This will return a value
@@ -128,12 +128,6 @@ interface nsIOfflineCacheUpdate : nsISupports {
    * FALSE if the complete cache update process is happening.
    */
   readonly attribute boolean partial;
-
-  /**
-   * TRUE if this is an upgrade attempt, FALSE if it is a new cache
-   * attempt.
-   */
-  readonly attribute boolean isUpgrade;
 
   /**
    * The domain being updated, and the domain that will own any URIs added
