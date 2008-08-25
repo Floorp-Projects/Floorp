@@ -2070,7 +2070,7 @@ Checker.prototype = {
     }
     catch (e) {
     }
-      LOG("Checker", "status: " + status);
+
     if (status == 0)
       status = request.channel.QueryInterface(Components.interfaces.nsIRequest)
                               .status;
