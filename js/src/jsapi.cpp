@@ -1361,12 +1361,10 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
            js_InitDateClass(cx, obj);
 }
 
-#define CLASP(name)                 (&js_##name##Class)
-#define EXT_CLASP(name)             (&js_##name##Class.base)
+#define CLASP(name)                 ((JSClass *)&js_##name##Class)
 #define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
 #define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
-#define EAGER_ATOM_AND_EXT_CLASP(name) EAGER_CLASS_ATOM(name), EXT_CLASP(name)
 #define LAZY_ATOM(name)             ATOM_OFFSET(lazy.name), js_##name##_str
 
 typedef struct JSStdName {
@@ -1417,8 +1415,8 @@ static JSStdName standard_class_atoms[] = {
 #endif
 #if JS_HAS_XML_SUPPORT
     {js_InitXMLClass,                   EAGER_ATOM_AND_CLASP(XML)},
-    {js_InitNamespaceClass,             EAGER_ATOM_AND_EXT_CLASP(Namespace)},
-    {js_InitQNameClass,                 EAGER_ATOM_AND_EXT_CLASP(QName)},
+    {js_InitNamespaceClass,             EAGER_ATOM_AND_CLASP(Namespace)},
+    {js_InitQNameClass,                 EAGER_ATOM_AND_CLASP(QName)},
 #endif
 #if JS_HAS_FILE_OBJECT
     {js_InitFileClass,                  EAGER_ATOM_AND_CLASP(File)},
