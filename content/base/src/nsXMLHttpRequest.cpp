@@ -1064,6 +1064,8 @@ nsXMLHttpRequest::Abort()
     ChangeState(XML_HTTP_REQUEST_UNINITIALIZED, PR_FALSE);  // IE seems to do it
   }
 
+  mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
+
   return NS_OK;
 }
 
@@ -2341,8 +2343,6 @@ nsresult
 nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 {
   Abort();
-
-  mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
   return NS_OK;
 }
