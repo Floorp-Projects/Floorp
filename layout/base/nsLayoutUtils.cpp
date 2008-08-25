@@ -1079,10 +1079,9 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
           AccumulateItemInRegion(aRegion, aRect + aDelta, r, exclude, item);
           // we may have bitblitted an area that was painted by a non-moving
           // element. This bitblitted data is invalid and was copied to
-          // "r + aDelta". The area to exclude was also copied and is now
-          // at "exclude + aDelta".
+          // "r + aDelta".
           AccumulateItemInRegion(aRegion, aRect + aDelta, r + aDelta,
-                                 exclude + aDelta, item);
+                                 exclude, item);
         }
       }
     }
