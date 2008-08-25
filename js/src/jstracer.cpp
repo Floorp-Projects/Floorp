@@ -517,8 +517,7 @@ public:
                 vp = &fp->argv[-1];                                           \
                 { code; }                                                     \
                 SET_VPNAME("argv");                                           \
-                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);            \
-                vp = &fp->argv[0]; vpstop = &fp->argv[nargs];                 \
+                vp = &fp->argv[0]; vpstop = &fp->argv[fp->fun->nargs];        \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
             }                                                                 \
             SET_VPNAME("vars");                                               \
@@ -572,8 +571,8 @@ public:
 
 /* Calculate the total number of native frame slots we need from this frame
    all the way back to the entry frame, including the current stack usage. */
-static unsigned
-nativeStackSlots(JSContext *cx, unsigned callDepth)
+unsigned
+js_NativeStackSlots(JSContext *cx, unsigned callDepth)
 {
     JSStackFrame* fp = cx->fp;
     unsigned slots = 0;
@@ -588,8 +587,7 @@ nativeStackSlots(JSContext *cx, unsigned callDepth)
             slots += fp->script->nfixed;
         if (callDepth-- == 0) {
             if (fp->callee) {
-                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
-                slots += 2/*callee,this*/ + nargs;
+                slots += 2/*callee,this*/ + fp->fun->nargs;
             }
 #if defined _DEBUG
             unsigned int m = 0;
@@ -604,7 +602,7 @@ nativeStackSlots(JSContext *cx, unsigned callDepth)
         if (missing > 0)
             slots += missing;
     }
-    JS_NOT_REACHED("nativeStackSlots");
+    JS_NOT_REACHED("js_NativeStackSlots");
 }
 
 /* Capture the type map for the selected slots of the global object. */
@@ -628,7 +626,7 @@ TypeMap::captureGlobalTypes(JSContext* cx, SlotList& slots)
 void
 TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
 {
-    setLength(nativeStackSlots(cx, callDepth));
+    setLength(js_NativeStackSlots(cx, callDepth));
     uint8* map = data();
     uint8* m = map;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
@@ -817,10 +815,9 @@ done:
         fp = *fsp;
         if (fp->callee) {
             if (fsp == fstack) {
-                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
-                if (size_t(p - &fp->argv[-2]) < 2/*callee,this*/ + nargs)
+                if (size_t(p - &fp->argv[-2]) < 2/*callee,this*/ + fp->fun->nargs)
                     RETURN(offset + size_t(p - &fp->argv[-2]) * sizeof(double));
-                offset += (2/*callee,this*/ + nargs) * sizeof(double);
+                offset += (2/*callee,this*/ + fp->fun->nargs) * sizeof(double);
             }
             if (size_t(p - &fp->slots[0]) < fp->script->nfixed)
                 RETURN(offset + size_t(p - &fp->slots[0]) * sizeof(double));
@@ -1352,7 +1349,7 @@ TraceRecorder::snapshot(ExitType exitType)
     if (exitType == BRANCH_EXIT && js_IsLoopExit(cx, fp->script, fp->regs->pc))
         exitType = LOOP_EXIT;
     /* Generate the entry map and stash it in the trace. */
-    unsigned stackSlots = nativeStackSlots(cx, callDepth);
+    unsigned stackSlots = js_NativeStackSlots(cx, callDepth);
     /* It's sufficient to track the native stack use here since all stores above the
        stack watermark defined by guards are killed. */
     trackNativeStackUse(stackSlots + 1);
@@ -1486,6 +1483,34 @@ TraceRecorder::isLoopHeader(JSContext* cx) const
     return cx->fp->regs->pc == fragment->root->ip;
 }
 
+/* Compile the current fragment. */
+void
+TraceRecorder::compile(Fragmento* fragmento)
+{
+    if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
+        debug_only_v(printf("Trace rejected: excessive stack use.\n"));
+        fragment->blacklist();
+        return;
+    }
+    ::compile(fragmento->assm(), fragment);
+    if (anchor) {
+        fragment->addLink(anchor);
+        fragmento->assm()->patch(anchor);
+    }
+    JS_ASSERT(fragment->code());
+    JS_ASSERT(!fragment->vmprivate);
+    if (fragment == fragment->root)
+        fragment->vmprivate = treeInfo;
+    /* :TODO: windows support */
+#if defined DEBUG && !defined WIN32
+    char* label = (char*)malloc(strlen(cx->fp->script->filename) + 64);
+    sprintf(label, "%s:%u", cx->fp->script->filename,
+            js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc));
+    fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
+    free(label);
+#endif
+}
+
 /* Complete and compile a trace and link it to the existing tree if appropriate. */
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
@@ -1495,11 +1520,6 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
         debug_only_v(printf("Trace rejected: unstable loop variables.\n");)
         return;
     }
-    if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
-        debug_only_v(printf("Trace rejected: excessive stack use.\n"));
-        fragment->blacklist();
-        return;
-    }
     SideExit *exit = snapshot(LOOP_EXIT);
     exit->target = fragment->root;
     if (fragment == fragment->root) {
@@ -1507,23 +1527,16 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     } else {
         fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exit);
     }
-    compile(fragmento->assm(), fragment);
-    if (anchor) {
-        fragment->addLink(anchor);
-        fragmento->assm()->patch(anchor);
-    }
-    JS_ASSERT(fragment->code());
-    JS_ASSERT(!fragment->vmprivate);
-    if (fragment == fragment->root)
-        fragment->vmprivate = treeInfo;
-	/* :TODO: windows support */
-#if defined DEBUG && !defined WIN32
-    char* label = (char*)malloc(strlen(cx->fp->script->filename) + 64);
-    sprintf(label, "%s:%u", cx->fp->script->filename,
-            js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc));
-    fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
-    free(label);
-#endif
+    compile(fragmento);
+}
+
+/* Emit an always-exit guard and compile the tree (used for break statements. */
+void
+TraceRecorder::endLoop(Fragmento* fragmento)
+{
+    SideExit *exit = snapshot(LOOP_EXIT);
+    fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exit);
+    compile(fragmento);
 }
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
@@ -1820,7 +1833,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 
     /* determine the native frame layout at the entry point */
     unsigned entryNativeStackSlots = ti->stackTypeMap.length();
-    JS_ASSERT(entryNativeStackSlots == nativeStackSlots(cx, 0/*callDepth*/));
+    JS_ASSERT(entryNativeStackSlots == js_NativeStackSlots(cx, 0/*callDepth*/));
     ti->nativeStackBase = (entryNativeStackSlots -
             (cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
     ti->maxNativeStackSlots = entryNativeStackSlots;
@@ -3109,7 +3122,7 @@ TraceRecorder::clearFrameSlotsFromCache()
     jsval* vpstop;
     if (fp->callee) {
         vp = &fp->argv[-2];
-        vpstop = &fp->argv[JS_MAX(fp->fun->nargs,fp->argc)];
+        vpstop = &fp->argv[fp->fun->nargs];
         while (vp < vpstop)
             nativeFrameTracker.set(vp++, (LIns*)0);
     }
