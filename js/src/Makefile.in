@@ -40,7 +40,6 @@
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -103,6 +102,8 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 DEFINES += -DAVMPLUS_WIN32
 endif
+
+VPATH		= $(srcdir)
 
 CPPSRCS		= \
 		jsapi.cpp \
@@ -199,33 +200,35 @@ EXPORTS		= \
 		$(NULL)
 
 ifdef ENABLE_JIT
+VPATH		+= $(srcdir)/nanojit
+
 EXPORTS += \
-		nanojit/Assembler.h     \
-		nanojit/LIR.h		\
-		nanojit/avmplus.h	\
-		nanojit/vm_fops.h	\
-		nanojit/Fragmento.h	\
-		nanojit/Native.h	\
-		nanojit/Native$(NANOJIT_ARCH).h \
-		nanojit/RegAlloc.h	\
-		nanojit/nanojit.h	\
+		Assembler.h     \
+		LIR.h		\
+		avmplus.h	\
+		vm_fops.h	\
+		Fragmento.h	\
+		Native.h	\
+		Native$(NANOJIT_ARCH).h \
+		RegAlloc.h	\
+		nanojit.h	\
 		builtins.tbl \
 		$(NULL)
 
 CPPSRCS += \
 		jstracer.cpp \
-		nanojit/Assembler.cpp  \
-		nanojit/Fragmento.cpp  \
-		nanojit/LIR.cpp        \
-		nanojit/RegAlloc.cpp   \
-		nanojit/avmplus.cpp    \
-		nanojit/Native$(NANOJIT_ARCH).cpp \
+		Assembler.cpp  \
+		Fragmento.cpp  \
+		LIR.cpp        \
+		RegAlloc.cpp   \
+		avmplus.cpp    \
+		Native$(NANOJIT_ARCH).cpp \
 		jsbuiltins.cpp         \
 		$(NULL)
 
 ifdef DEBUG
-EXPORTS += nanojit/TraceTreeDrawer.h
-CPPSRCS += nanojit/TraceTreeDrawer.cpp
+EXPORTS += TraceTreeDrawer.h
+CPPSRCS += TraceTreeDrawer.cpp
 endif
 
 DEFINES += -DFEATURE_NANOJIT -DJS_TRACER
