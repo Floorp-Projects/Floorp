@@ -60,6 +60,7 @@ class nsIDocShellTreeNode;
 class nsIDocShellTreeItem;
 class nsIFocusController;
 class imgIContainer;
+class nsDOMDataTransfer;
 
 // mac uses click-hold context menus, a holdover from 4.x
 #ifdef XP_MACOSX
@@ -318,6 +319,38 @@ protected:
                                   nsIFrame* inDownFrame ) ;
   void StopTrackingDragGesture ( ) ;
   void GenerateDragGesture ( nsPresContext* aPresContext, nsMouseEvent *aEvent ) ;
+
+  /**
+   * Determine which node the drag should be targeted at.
+   * This is either the node clicked when there is a selection, or, for HTML,
+   * the element with a draggable property set to true.
+   *
+   * aSelectionTarget - target to check for selection
+   * aDataTransfer - data transfer object that will contain the data to drag
+   * aIsSelection - [out] set to true if a selection is being dragged
+   * aTargetNode - [out] the draggable node, or null if there isn't one
+   */
+  void DetermineDragTarget(nsPresContext* aPresContext,
+                           nsIContent* aSelectionTarget,
+                           nsDOMDataTransfer* aDataTransfer,
+                           PRBool* aIsSelection,
+                           nsIContent** aTargetNode);
+
+  /*
+   * Perform the default handling for the dragstart/draggesture event and set up a
+   * drag for aDataTransfer if it contains any data.
+   *
+   * aDragEvent - the dragstart/draggesture event
+   * aDataTransfer - the data transfer that holds the data to be dragged
+   * aDragTarget - the target of the drag
+   * aIsSelection - true if a selection is being dragged
+   */
+  void DoDefaultDragStart(nsPresContext* aPresContext,
+                          nsDragEvent* aDragEvent,
+                          nsDOMDataTransfer* aDataTransfer,
+                          nsIContent* aDragTarget,
+                          PRBool aIsSelection);
+
   PRBool IsTrackingDragGesture ( ) const { return mGestureDownContent != nsnull; }
   /**
    * Set the fields of aEvent to reflect the mouse position and modifier keys
