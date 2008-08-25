@@ -1627,8 +1627,8 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
         lirNames[i->opcode()],
         i->oprnd1()->isCond() ? formatRef(i->oprnd1()) : "",
         labels->format((void *)ip),
-        x->sp_adj,
-        x->rp_adj
+        (long int)x->sp_adj,
+        (long int)x->rp_adj
         );
 }
 #endif
@@ -4050,8 +4050,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
     FrameInfo fi = {
         JSVAL_TO_OBJECT(fval),
         fp->regs->pc,
-        fp->regs->sp - fp->slots,
-        argc
+        { { fp->regs->sp - fp->slots, argc } }
     };
 
     unsigned callDepth = getCallDepth();
@@ -4102,6 +4101,9 @@ js_math_random(JSContext* cx, uintN argc, jsval* vp);
 JSBool
 js_math_floor(JSContext* cx, uintN argc, jsval* vp);
 
+JSBool
+js_math_ceil(JSContext* cx, uintN argc, jsval* vp);
+
 bool
 TraceRecorder::record_JSOP_CALL()
 {
@@ -4146,6 +4148,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_math_pow,                 F_Math_pow,             "",   "dd",    INFALLIBLE,  NULL },
         { js_math_sqrt,                F_Math_sqrt,            "",    "d",    INFALLIBLE,  NULL },
         { js_math_floor,               F_Math_floor,           "",    "d",    INFALLIBLE,  NULL },
+        { js_math_ceil,                F_Math_ceil,            "",    "d",    INFALLIBLE,  NULL },
         { js_math_random,              F_Math_random,          "R",    "",    INFALLIBLE,  NULL },
         { js_num_parseInt,             F_ParseInt,             "C",   "s",    INFALLIBLE,  NULL },
         { js_num_parseFloat,           F_ParseFloat,           "C",   "s",    INFALLIBLE,  NULL },
