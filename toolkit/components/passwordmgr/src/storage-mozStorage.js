@@ -70,6 +70,16 @@ LoginManagerStorage_mozStorage.prototype = {
         return this.__decoderRing;
     },
 
+    __utfConverter : null, // UCS2 <--> UTF8 string conversion
+    get _utfConverter() {
+        if (!this.__utfConverter) {
+            this.__utfConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                                  createInstance(Ci.nsIScriptableUnicodeConverter);
+            this.__utfConverter.charset = "UTF-8";
+        }
+        return this.__utfConverter;
+    },
+
     __profileDir: null,  // nsIFile for the user's profile dir
     get _profileDir() {
         if (!this.__profileDir)
@@ -850,11 +860,8 @@ LoginManagerStorage_mozStorage.prototype = {
         let cipherText = null, userCanceled = false;
 
         try {
-            let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                            createInstance(Ci.nsIScriptableUnicodeConverter);
-            converter.charset = "UTF-8";
-            let plainOctet = converter.ConvertFromUnicode(plainText);
-            plainOctet += converter.Finish();
+            let plainOctet = this._utfConverter.ConvertFromUnicode(plainText);
+            plainOctet += this._utfConverter.Finish();
             cipherText = this._decoderRing.encryptString(plainOctet);
         } catch (e) {
             this.log("Failed to encrypt string. (" + e.name + ")");
@@ -887,10 +894,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
         try {
             let plainOctet = this._decoderRing.decryptString(cipherText);
-            let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                              .createInstance(Ci.nsIScriptableUnicodeConverter);
-            converter.charset = "UTF-8";
-            plainText = converter.ConvertToUnicode(plainOctet);
+            plainText = this._utfConverter.ConvertToUnicode(plainOctet);
         } catch (e) {
             this.log("Failed to decrypt string: " + cipherText +
                 " (" + e.name + ")");
