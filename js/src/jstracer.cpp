@@ -1483,6 +1483,34 @@ TraceRecorder::isLoopHeader(JSContext* cx) const
     return cx->fp->regs->pc == fragment->root->ip;
 }
 
+/* Compile the current fragment. */
+void
+TraceRecorder::compile(Fragmento* fragmento)
+{
+    if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
+        debug_only_v(printf("Trace rejected: excessive stack use.\n"));
+        fragment->blacklist();
+        return;
+    }
+    ::compile(fragmento->assm(), fragment);
+    if (anchor) {
+        fragment->addLink(anchor);
+        fragmento->assm()->patch(anchor);
+    }
+    JS_ASSERT(fragment->code());
+    JS_ASSERT(!fragment->vmprivate);
+    if (fragment == fragment->root)
+        fragment->vmprivate = treeInfo;
+    /* :TODO: windows support */
+#if defined DEBUG && !defined WIN32
+    char* label = (char*)malloc(strlen(cx->fp->script->filename) + 64);
+    sprintf(label, "%s:%u", cx->fp->script->filename,
+            js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc));
+    fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
+    free(label);
+#endif
+}
+
 /* Complete and compile a trace and link it to the existing tree if appropriate. */
 void
 TraceRecorder::closeLoop(Fragmento* fragmento)
@@ -1492,11 +1520,6 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
         debug_only_v(printf("Trace rejected: unstable loop variables.\n");)
         return;
     }
-    if (treeInfo->maxNativeStackSlots >= MAX_NATIVE_STACK_SLOTS) {
-        debug_only_v(printf("Trace rejected: excessive stack use.\n"));
-        fragment->blacklist();
-        return;
-    }
     SideExit *exit = snapshot(LOOP_EXIT);
     exit->target = fragment->root;
     if (fragment == fragment->root) {
@@ -1504,23 +1527,16 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     } else {
         fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exit);
     }
-    compile(fragmento->assm(), fragment);
-    if (anchor) {
-        fragment->addLink(anchor);
-        fragmento->assm()->patch(anchor);
-    }
-    JS_ASSERT(fragment->code());
-    JS_ASSERT(!fragment->vmprivate);
-    if (fragment == fragment->root)
-        fragment->vmprivate = treeInfo;
-	/* :TODO: windows support */
-#if defined DEBUG && !defined WIN32
-    char* label = (char*)malloc(strlen(cx->fp->script->filename) + 64);
-    sprintf(label, "%s:%u", cx->fp->script->filename,
-            js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc));
-    fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
-    free(label);
-#endif
+    compile(fragmento);
+}
+
+/* Emit an always-exit guard and compile the tree (used for break statements. */
+void
+TraceRecorder::endLoop(Fragmento* fragmento)
+{
+    SideExit *exit = snapshot(LOOP_EXIT);
+    fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exit);
+    compile(fragmento);
 }
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
