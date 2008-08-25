@@ -563,6 +563,7 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body);
 typedef enum JSSrcNoteType {
     SRC_NULL        = 0,        /* terminates a note vector */
     SRC_IF          = 1,        /* JSOP_IFEQ bytecode is from an if-then */
+    SRC_BREAK       = 1,        /* JSOP_GOTO is a break */
     SRC_INITPROP    = 1,        /* disjoint meaning applied to JSOP_INITELEM or
                                    to an index label in a regular (structuring)
                                    or a destructuring object initialiser */
