@@ -2920,8 +2920,7 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
 
     dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
 
-    nsMouseEvent event(PR_TRUE, NS_DRAGDROP_OVER, innerMostWidget,
-                       nsMouseEvent::eReal);
+    nsDragEvent event(PR_TRUE, NS_DRAGDROP_OVER, innerMostWidget);
 
     InitDragEvent(event);
 
@@ -3029,8 +3028,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     // re-validate the drag target and then we do the drop.  The events
     // look the same except for the type.
 
-    nsMouseEvent event(PR_TRUE, NS_DRAGDROP_OVER, innerMostWidget,
-                       nsMouseEvent::eReal);
+    nsDragEvent event(PR_TRUE, NS_DRAGDROP_OVER, innerMostWidget);
 
     InitDragEvent(event);
 
@@ -3101,7 +3099,7 @@ nsWindow::OnDragLeave(void)
 {
     LOG(("nsWindow::OnDragLeave(%p)\n", this));
 
-    nsMouseEvent event(PR_TRUE, NS_DRAGDROP_EXIT, this, nsMouseEvent::eReal);
+    nsDragEvent event(PR_TRUE, NS_DRAGDROP_EXIT, this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -3141,7 +3139,7 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
         dragService->StartDragSession();
     }
 
-    nsMouseEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this, nsMouseEvent::eReal);
+    nsDragEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this);
 
     event.refPoint.x = aX;
     event.refPoint.y = aY;
@@ -5128,7 +5126,7 @@ theme_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
 // These are all of our drag and drop operations
 
 void
-nsWindow::InitDragEvent(nsMouseEvent &aEvent)
+nsWindow::InitDragEvent(nsDragEvent &aEvent)
 {
     // set the keyboard modifiers
     gint x, y;
@@ -5145,7 +5143,7 @@ nsWindow::InitDragEvent(nsMouseEvent &aEvent)
 // and what the source is offering.
 
 void
-nsWindow::UpdateDragStatus(nsMouseEvent   &aEvent,
+nsWindow::UpdateDragStatus(nsDragEvent   &aEvent,
                            GdkDragContext *aDragContext,
                            nsIDragService *aDragService)
 {
