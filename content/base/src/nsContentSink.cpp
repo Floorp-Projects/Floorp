@@ -71,8 +71,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsNetCID.h"
 #include "nsIOfflineCacheUpdate.h"
-#include "nsIApplicationCache.h"
-#include "nsIApplicationCacheContainer.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMLoadStatus.h"
 #include "nsICookieService.h"
@@ -881,24 +879,6 @@ nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
   // Only update if the document has permission to use offline APIs.
   if (!nsContentUtils::OfflineAppAllowed(mDocumentURI)) {
     return;
-  }
-
-  // XXX: at this point in the spec there is an algorithm for
-  // confirming whether the cache that was selected at load time was
-  // the proper application cache for this document.  This will
-  // be implemented in a separate patch;  For now just assume that we
-  // chose an acceptable application cache.
-
-  nsCOMPtr<nsIApplicationCacheContainer> channelContainer =
-    do_QueryInterface(mDocument->GetChannel());
-
-  nsCOMPtr<nsIApplicationCacheContainer> docContainer =
-    do_QueryInterface(mDocument);
-
-  if (channelContainer && docContainer) {
-    nsCOMPtr<nsIApplicationCache> appCache;
-    channelContainer->GetApplicationCache(getter_AddRefs(appCache));
-    docContainer->SetApplicationCache(appCache);
   }
 
   nsCOMPtr<nsIURI> manifestURI;

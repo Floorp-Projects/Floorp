@@ -61,9 +61,6 @@ SDK_XPIDLSRCS   = \
 		$(NULL)
 
 XPIDLSRCS	= \
-		nsIApplicationCache.idl \
-		nsIApplicationCacheContainer.idl \
-		nsIApplicationCacheService.idl \
 		nsIAuthInformation.idl \
 		nsIAuthPrompt.idl \
 		nsIAuthPrompt2.idl \
