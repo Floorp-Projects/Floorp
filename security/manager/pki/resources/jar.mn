@@ -16,6 +16,8 @@ pippki.jar:
 #ifndef MOZ_PHOENIX
     content/pippki/PageInfoOverlay.xul       (content/PageInfoOverlay.xul)
 #endif
+    content/pippki/certerror.js              (content/certerror.js)
+*   content/pippki/certerror.xul             (content/certerror.xul)
     content/pippki/downloadcert.js           (content/downloadcert.js)
     content/pippki/downloadcert.xul          (content/downloadcert.xul)
     content/pippki/cacertexists.xul          (content/cacertexists.xul)
