@@ -903,6 +903,14 @@ public:
   nsCompatibility GetCompatibilityMode() const {
     return mCompatMode;
   }
+  
+  /**
+   * Check whether we've ever fired a DOMTitleChanged event for this
+   * document.
+   */
+  PRBool HaveFiredDOMTitleChange() const {
+    return mHaveFiredTitleChange;
+  }
 
   /**
    * See GetXBLChildNodesFor on nsBindingManager
@@ -1065,6 +1073,9 @@ protected:
   // If true, whoever is creating the document has gotten it to the
   // point where it's safe to start layout on it.
   PRPackedBool mMayStartLayout;
+  
+  // True iff we've ever fired a DOMTitleChanged event for this document
+  PRPackedBool mHaveFiredTitleChange;
 
   // The bidi options for this document.  What this bitfield means is
   // defined in nsBidiUtils.h

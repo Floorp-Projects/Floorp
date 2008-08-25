@@ -4463,6 +4463,7 @@ void
 nsDocument::DoNotifyPossibleTitleChange()
 {
   mPendingTitleChangeEvent.Forget();
+  mHaveFiredTitleChange = PR_TRUE;
 
   nsAutoString title;
   GetTitle(title);
