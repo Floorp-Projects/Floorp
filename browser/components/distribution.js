@@ -76,6 +76,14 @@ DistributionCustomizer.prototype = {
     return this.__annoSvc;
   },
 
+  __livemarkSvc: null,
+  get _livemarkSvc() {
+    if (!this.__livemarkSvc)
+      this.__livemarkSvc = Cc["@mozilla.org/browser/livemark-service;2"].
+                   getService(Ci.nsILivemarkService);
+    return this.__livemarkSvc;
+  },
+
   __dirSvc: null,
   get _dirSvc() {
     if (!this.__dirSvc)
@@ -177,6 +185,18 @@ DistributionCustomizer.prototype = {
         if (iid < defaultItemId)
           index = prependIndex++;
         this._bmSvc.insertSeparator(parentId, index);
+        break;
+
+      case "livemark":
+        if (iid < defaultItemId)
+          index = prependIndex++;
+
+        newId = this._livemarkSvc.
+          createLivemark(parentId,
+                         items[iid]["title"],
+                         this._makeURI(items[iid]["siteLink"]),
+                         this._makeURI(items[iid]["feedLink"]),
+                         index);
         break;
 
       case "bookmark":
