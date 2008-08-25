@@ -8172,6 +8172,8 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
       }
 
       *vp = INT_TO_JSVAL(length);
+
+      return JS_TRUE;
     } else if (id != sTags_id) {
       // For all other strings, look for an element by id or name.
 
@@ -8185,7 +8187,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
         return JS_FALSE;
       }
     }
-  } else if (JSVAL_TO_INT(id) >= 0) {
+  } else if (JSVAL_IS_INT(id) && JSVAL_TO_INT(id) >= 0) {
     // Map document.all[n] (where n is a number) to the n:th item in
     // the document.all node list.
 
