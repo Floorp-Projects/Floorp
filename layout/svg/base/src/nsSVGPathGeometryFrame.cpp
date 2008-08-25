@@ -288,7 +288,7 @@ nsSVGPathGeometryFrame::GetType() const
 
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::PaintSVG(nsSVGRenderState *aContext,
-                                 nsRect *aDirtyRect)
+                                 nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
@@ -329,11 +329,9 @@ nsSVGPathGeometryFrame::PaintSVG(nsSVGRenderState *aContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
+NS_IMETHODIMP_(nsIFrame*)
+nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
-  *hit = nsnull;
-
   PRUint16 fillRule, mask;
   // check if we're a clipPath - cheaper than IsClipChild(), and we shouldn't
   // get in here for other nondisplay children
@@ -344,8 +342,8 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   } else {
     mask = GetHittestMask();
     if (!mask || (!(mask & HITTEST_MASK_FORCE_TEST) &&
-                  !mRect.Contains(nscoord(x), nscoord(y))))
-      return NS_OK;
+                  !mRect.Contains(aPoint)))
+      return nsnull;
     fillRule = GetStyleSVG()->mFillRule;
   }
 
@@ -354,7 +352,9 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   gfxContext context(nsSVGUtils::GetThebesComputationalSurface());
 
   GeneratePath(&context);
-  gfxPoint devicePoint = context.DeviceToUser(gfxPoint(x, y));
+  gfxPoint userSpacePoint =
+    context.DeviceToUser(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
+                                  PresContext()->AppUnitsToGfxUnits(aPoint.y)));
 
   if (fillRule == NS_STYLE_FILL_RULE_EVENODD)
     context.SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
@@ -362,16 +362,16 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
     context.SetFillRule(gfxContext::FILL_RULE_WINDING);
 
   if (mask & HITTEST_MASK_FILL)
-    isHit = context.PointInFill(devicePoint);
+    isHit = context.PointInFill(userSpacePoint);
   if (!isHit && (mask & HITTEST_MASK_STROKE)) {
     SetupCairoStrokeHitGeometry(&context);
-    isHit = context.PointInStroke(devicePoint);
+    isHit = context.PointInStroke(userSpacePoint);
   }
 
-  if (isHit && nsSVGUtils::HitTestClip(this, x, y))
-    *hit = this;
+  if (isHit && nsSVGUtils::HitTestClip(this, aPoint))
+    return this;
 
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP_(nsRect)
@@ -436,13 +436,13 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
     extent = context.GetUserStrokeExtent();
     if (!IsDegeneratePath(extent)) {
       extent = context.UserToDevice(extent);
-      mRect = nsSVGUtils::ToBoundingPixelRect(extent);
+      mRect = nsSVGUtils::ToAppPixelRect(PresContext(),extent);
     }
   } else {
     context.IdentityMatrix();
     extent = context.GetUserPathExtent();
     if (!IsDegeneratePath(extent)) {
-      mRect = nsSVGUtils::ToBoundingPixelRect(extent);
+      mRect = nsSVGUtils::ToAppPixelRect(PresContext(),extent);
     }
   }
 
