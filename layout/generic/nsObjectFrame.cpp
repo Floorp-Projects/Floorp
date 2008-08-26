@@ -327,9 +327,7 @@ public:
 
 #endif /* OJI */
 
- /** nsIDOMMouseListener interfaces 
-  * @see nsIDOMMouseListener
-  */
+  // nsIDOMMouseListener interfaces 
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
@@ -337,7 +335,6 @@ public:
   NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);     
-  /* END interfaces from nsIDOMMouseListener*/
 
   // nsIDOMMouseMotionListener interfaces
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
@@ -347,12 +344,11 @@ public:
   NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
-  // end nsIDOMKeyListener interfaces
 
   // nsIDOMFocuListener interfaces
   NS_IMETHOD Focus(nsIDOMEvent * aFocusEvent);
   NS_IMETHOD Blur(nsIDOMEvent * aFocusEvent);
-  
+
   // nsIDOMDragListener interfaces
   NS_IMETHOD DragEnter(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD DragOver(nsIDOMEvent* aMouseEvent);
@@ -367,7 +363,7 @@ public:
 
   void PrepareToStop(PRBool aDelayedStop);
 
-  //nsIEventListener interface
+  // nsIEventListener interface
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
   
 #ifdef XP_WIN
@@ -3459,7 +3455,7 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
   return NS_OK;
 }    
 
-/*=============== nsIMouseMotionListener ======================*/
+/*=============== nsIDOMMouseMotionListener ======================*/
 
 nsresult
 nsPluginInstanceOwner::MouseMove(nsIDOMEvent* aMouseEvent)

@@ -57,7 +57,6 @@ public:
   
  /**
   * Processes all events. 
-  * If a mouse listener is registered this method will not process mouse events. 
   * @param anEvent the event to process. See nsGUIEvent.h for event types.
   */
 
