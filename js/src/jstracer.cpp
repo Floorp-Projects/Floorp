@@ -1867,31 +1867,31 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 }
 
 static bool
-js_AttemptToExtendTree(JSContext* cx, GuardRecord* lr, GuardRecord* expectedInnerExit)
+js_AttemptToExtendTree(JSContext* cx, GuardRecord* anchor, GuardRecord* expectedInnerExit)
 {
-    Fragment* f = lr->from->root;
+    Fragment* f = anchor->from->root;
     JS_ASSERT(f->vmprivate);
 
     debug_only_v(printf("trying to attach another branch to the tree\n");)
 
     Fragment* c;
-    if (!(c = lr->target)) {
-        c = JS_TRACE_MONITOR(cx).fragmento->createBranch(lr, lr->exit);
-        c->spawnedFrom = lr->guard;
+    if (!(c = anchor->target)) {
+        c = JS_TRACE_MONITOR(cx).fragmento->createBranch(anchor, anchor->exit);
+        c->spawnedFrom = anchor->guard;
         c->parent = f;
-        lr->exit->target = c;
-        lr->target = c;
+        anchor->exit->target = c;
+        anchor->target = c;
         c->root = f;
     }
 
     if (++c->hits() >= HOTEXIT) {
         /* start tracing secondary trace from this point */
         c->lirbuf = f->lirbuf;
-        SideExit* e = lr->exit;
+        SideExit* e = anchor->exit;
         unsigned ngslots = e->numGlobalSlots;
         uint8* globalTypeMap = e->typeMap;
         uint8* stackTypeMap = globalTypeMap + ngslots;
-        return js_StartRecorder(cx, lr, c, (TreeInfo*)f->vmprivate,
+        return js_StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate,
                                 ngslots, globalTypeMap, stackTypeMap, expectedInnerExit);
     }
     return false;
