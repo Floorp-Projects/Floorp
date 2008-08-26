@@ -391,12 +391,18 @@ namespace nanojit
             return l;
         }
         else {
-            ensureRoom(2);
+            #if defined NANOJIT_64BIT
+            const unsigned int extra = 1;
+            #else
+            const unsigned int extra = 0;
+            #endif
+
+            ensureRoom(2 + extra);
             // write the pointer and instruction
-            l = _buf->next()+1;
-            *((LInsp*)(l-1)) = target;
+            l = _buf->next()+1+extra;
+            *((LInsp*)(l-1-extra)) = target;
             l->initOpcode(op);
-            _buf->commit(2);
+            _buf->commit(2+extra);
 		    return l;
         }
 	}
@@ -469,6 +475,15 @@ namespace nanojit
 					break;
 
                 case LIR_tramp:
+#if defined NANOJIT_64BIT
+                    NanoAssert(samepage(i, i-3));
+                    i -= 3;
+#else
+                    NanoAssert(samepage(i, i-2));
+                    i -= 2;
+#endif
+                    break;
+
 				case LIR_int:
 					NanoAssert(samepage(i, i-2));
 					i -= 2;
@@ -919,6 +934,8 @@ namespace nanojit
     LIns* LirBufWriter::insCall(uint32_t fid, LInsp args[])
 	{
 		static const LOpcode k_callmap[] = { LIR_call, LIR_fcall, LIR_call, LIR_callh };
+
+        NanoAssert(fid < CI_Max);
 
 		const CallInfo& ci = _functions[fid];
 		uint32_t argt = ci._argtypes;
