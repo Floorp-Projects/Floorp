@@ -398,7 +398,7 @@ nsRange::ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aResult)
     *aResult = cmp;
   }
   else if (nsContentUtils::ComparePoints(mEndParent, mEndOffset,
-                                         parent, aOffset) == -1) {
+                                         parent, aOffset) <= 0) {
     *aResult = 1;
   }
   else {
