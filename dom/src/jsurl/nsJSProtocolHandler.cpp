@@ -595,15 +595,14 @@ NS_IMETHODIMP
 nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
     NS_ENSURE_ARG(aListener);
-printf("AsyncOpen\n");
+
     // First make sure that we have a usable inner window; we'll want to make
     // sure that we execute against that inner and no other.
     nsIScriptGlobalObject* global = GetGlobalObject(this);
     if (!global) {
-      printf("no global object!\n");
         return NS_ERROR_NOT_AVAILABLE;
     }
-printf("got global object\n");
+
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(global));
     NS_ASSERTION(win, "Our global is not a window??");
 
