@@ -80,7 +80,7 @@
 #define MAX_MISMATCH 5
 
 /* Max number of loop edges to follow. */
-#define MAX_OUTERLINE 3
+#define MAX_OUTERLINE 0
 
 /* Max native stack size. */
 #define MAX_NATIVE_STACK_SLOTS 1024
@@ -1282,6 +1282,16 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
     return false;
 }
 
+/* Determine whether a bytecode location (pc) is a break statement. */
+bool
+js_isBreak(JSContext* cx, JSScript* script, jsbytecode* pc)
+{
+    jssrcnote* sn;
+    return (((*pc == JSOP_GOTO) || (*pc == JSOP_GOTOX)) && 
+            ((sn = js_GetSrcNote(cx->fp->script, pc)) != NULL) &&
+            SN_TYPE(sn) == SRC_BREAK);
+}
+
 struct FrameInfo {
     JSObject*       callee;     // callee function object
     jsbytecode*     callpc;     // pc of JSOP_CALL in caller script
@@ -1366,7 +1376,16 @@ TraceRecorder::snapshot(ExitType exitType)
     exit.numGlobalSlots = ngslots;
     exit.numStackSlots = stackSlots;
     exit.exitType = exitType;
-    exit.ip_adj = fp->regs->pc - (jsbytecode*)fragment->root->ip;
+    /* If we take a snapshot on a goto, advance to the target address. This avoids inner
+       trees returning on a break goto, which the outer recorder then would confuse with
+       a break in the outer tree. */
+    jsbytecode* pc = fp->regs->pc;
+    JS_ASSERT(!(((*pc == JSOP_GOTO) || (*pc == JSOP_GOTOX)) && (exitType != LOOP_EXIT)));
+    if (*pc == JSOP_GOTO) 
+        pc += GET_JUMP_OFFSET(pc);
+    else if (*pc == JSOP_GOTOX)
+        pc += GET_JUMPX_OFFSET(pc);
+    exit.ip_adj = pc - (jsbytecode*)fragment->root->ip;
     exit.sp_adj = (stackSlots * sizeof(double)) - treeInfo->nativeStackBase;
     exit.rp_adj = exit.calldepth * sizeof(FrameInfo);
     uint8* m = exit.typeMap = (uint8 *)data->payload();
@@ -2022,6 +2041,9 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     state.eor = callstack + MAX_CALL_STACK_ENTRIES;
     state.gp = global;
     state.cx = cx;
+#ifdef DEBUG
+    state.nestedExit = NULL;
+#endif    
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 
@@ -2092,9 +2114,10 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
     if (verbose_debug) {
-        printf("leaving trace at %s:%u@%u, exitType=%d, sp=%d, ip=%p, cycles=%llu\n",
+        printf("leaving trace at %s:%u@%u, lr=%p, nested=%p, exitType=%d, sp=%d, ip=%p, cycles=%llu\n",
                fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
                fp->regs->pc - fp->script->code,
+               lr, state.nestedExit,
                lr->exit->exitType,
                fp->regs->sp - StackBase(fp), lr->jmp,
                (rdtsc() - start));
@@ -2187,7 +2210,7 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
         if (innermostNestedGuard)
             return js_AttemptToExtendTree(cx, innermostNestedGuard, innermostNestedGuard->from->root, lr);
         return false;
-    default:        
+    default:
         /* No, this was an unusual exit (i.e. out of memory/GC), so just resume interpretation. */
         return false;
     }
@@ -2196,22 +2219,28 @@ js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 void
 js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
 {
-    AUDIT(recorderAborted);
-    if (cx->fp) {
-        debug_only_v(if (!abortpc) abortpc = cx->fp->regs->pc;
-                     printf("Abort recording (line %d, pc %d): %s.\n",
-                            js_PCToLineNumber(cx, cx->fp->script, abortpc),
-                            abortpc - cx->fp->script->code, reason);)
-    }
-    JS_ASSERT(JS_TRACE_MONITOR(cx).recorder != NULL);
-    Fragment* f = JS_TRACE_MONITOR(cx).recorder->getFragment();
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    JS_ASSERT(tm->recorder != NULL);
+    Fragment* f = tm->recorder->getFragment();
     JS_ASSERT(!f->vmprivate);
-    f->blacklist();
-    js_DeleteRecorder(cx);
-    if (f->root == f) {
-        /* we are recording a primary trace */
-        js_TrashTree(cx, f);
+    if (js_isBreak(cx, cx->fp->script, cx->fp->regs->pc)) {
+        /* If we stopped on a break statement, end the loop here with a LIR_x guard. */
+        tm->recorder->endLoop(tm->fragmento);
+    } else {
+        /* Abort the trace and blacklist its starting point. */
+        AUDIT(recorderAborted);
+        if (cx->fp) {
+            debug_only_v(if (!abortpc) abortpc = cx->fp->regs->pc;
+                         printf("Abort recording (line %d, pc %d): %s.\n",
+                                js_PCToLineNumber(cx, cx->fp->script, abortpc),
+                                abortpc - cx->fp->script->code, reason);)
+        }
+        f->blacklist();
     }
+    js_DeleteRecorder(cx);
+    /* If this is the primary trace and we didn't succeed compiling, trash the TreeInfo object. */
+    if (!f->code() && (f->root == f)) 
+        js_TrashTree(cx, f);
 }
 
 #if defined NANOJIT_IA32
@@ -3224,7 +3253,8 @@ TraceRecorder::record_JSOP_RETURN()
 bool
 TraceRecorder::record_JSOP_GOTO()
 {
-    return true;
+    /* Full disclaimer: don't try to read the offset, this code is shared with JSOP_GOTOX. */
+    return (!js_isBreak(cx, cx->fp->script, cx->fp->regs->pc));
 }
 
 bool
@@ -5131,7 +5161,8 @@ TraceRecorder::record_JSOP_DEFLOCALFUN()
 bool
 TraceRecorder::record_JSOP_GOTOX()
 {
-    return false;
+    /* Full disclaimer: this only works as long record_JSOP_GOTO doesn't try to read the offset. */
+    return record_JSOP_GOTO();
 }
 
 bool
