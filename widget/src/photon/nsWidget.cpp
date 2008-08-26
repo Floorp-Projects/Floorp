@@ -721,39 +721,15 @@ void nsWidget::InitMouseEvent(PhPointerEvent_t *aPhButtonEvent,
 PRBool nsWidget::DispatchMouseEvent( nsMouseEvent& aEvent ) {
 
   PRBool result = PR_FALSE;
-  if (nsnull == mEventCallback && nsnull == mMouseListener) return result;
 
   // call the event callback
   if (nsnull != mEventCallback) {
     result = DispatchWindowEvent(&aEvent);
     return result;
-  	}
+  }
 
-  if (nsnull != mMouseListener) {
-
-    switch (aEvent.message) {
-      case NS_MOUSE_BUTTON_DOWN:
-        result = ConvertStatus(mMouseListener->MousePressed(aEvent));
-        break;
-
-      case NS_MOUSE_BUTTON_UP:
-        result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
-        result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
-        break;
-
-    	case NS_DRAGDROP_DROP:
-    	  break;
-
-			case NS_MOUSE_MOVE:
-    	  	break;
-
-    	default:
-    	  break;
-
-    	} // switch
-  	}
   return result;
-	}
+}
 
 struct nsKeyConverter {
   PRUint32       vkCode; // Platform independent key code
