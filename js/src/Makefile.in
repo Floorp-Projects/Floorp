@@ -377,7 +377,7 @@ endif
 
 # BeOS and HP-UX do not require the extra linking of "-lm"
 ifeq (,$(filter BeOS HP-UX WINNT WINCE OpenVMS,$(OS_ARCH)))
-LDFLAGS		+= -lm
+EXTRA_LIBS	+= -lm
 endif
 
 # Prevent floating point errors caused by VC++ optimizations
@@ -390,7 +390,7 @@ endif
 endif # WINNT
 
 ifeq ($(OS_ARCH),FreeBSD)
-LDFLAGS		+= -pthread
+EXTRA_LIBS	+= -pthread
 endif
 ifeq ($(OS_ARCH),IRIX)
 ifdef USE_N32
@@ -398,10 +398,10 @@ DASH_R		+= -n32
 endif
 endif
 ifeq ($(OS_ARCH),Linux)
-LDFLAGS		+= -ldl
+EXTRA_LIBS	+= -ldl
 endif
 ifeq ($(OS_ARCH),OSF1)
-LDFLAGS		+= -lc_r
+EXTRA_LIBS	+= -lc_r
 endif
 ifeq ($(OS_ARCH),SunOS)
 ifeq ($(TARGET_CPU),sparc)
@@ -418,9 +418,9 @@ endif # JS_ULTRASPARC_OPTS
 
 endif
 ifeq ($(OS_RELEASE),4.1)
-LDFLAGS		+= -ldl -lnsl
+EXTRA_LIBS	+= -ldl -lnsl
 else
-LDFLAGS		+= -lposix4 -ldl -lnsl -lsocket
+EXTRA_LIBS	+= -lposix4 -ldl -lnsl -lsocket
 endif
 endif
 
