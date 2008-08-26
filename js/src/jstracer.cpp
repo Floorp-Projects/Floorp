@@ -1605,6 +1605,7 @@ TraceRecorder::prepareTreeCall(Fragment* inner)
 void
 TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
 {
+    JS_ASSERT(lr->exit->exitType == LOOP_EXIT && !lr->calldepth);
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
     /* Invoke the inner tree. */
     LIns* args[] = { lir->insImmPtr(inner), lirbuf->state }; /* reverse order */
@@ -2114,9 +2115,11 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
     if (verbose_debug) {
-        printf("leaving trace at %s:%u@%u, lr=%p, nested=%p, exitType=%d, sp=%d, ip=%p, cycles=%llu\n",
+        printf("leaving trace at %s:%u@%u, op=%s, lr=%p, nested=%p, exitType=%d, sp=%d, ip=%p, "
+               "cycles=%llu\n",
                fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
                fp->regs->pc - fp->script->code,
+               js_CodeName[*fp->regs->pc],
                lr, state.nestedExit,
                lr->exit->exitType,
                fp->regs->sp - StackBase(fp), lr->jmp,
