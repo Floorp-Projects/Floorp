@@ -835,6 +835,20 @@ function stringSplitIntoArrayTest()
 stringSplitIntoArrayTest.expected="a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b";
 test(stringSplitIntoArrayTest);
 
+function forVarInWith() {
+    function foo() ({notk:42});
+    function bar() ({p:1, q:2, r:3, s:4, t:5});
+    var o = foo();
+    var a = [];
+    with (o) {
+        for (var k in bar())
+            a[a.length] = k;
+    }
+    return a.join("");
+}
+forVarInWith.expected = "pqrst";
+test(forVarInWith);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
