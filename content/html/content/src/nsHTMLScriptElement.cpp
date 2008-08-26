@@ -372,6 +372,7 @@ nsHTMLScriptElement::nsHTMLScriptElement(nsINodeInfo *aNodeInfo,
                                          PRBool aFromParser)
   : nsGenericHTMLElement(aNodeInfo)
 {
+  printf("New script element\n");
   mDoneAddingChildren = !aFromParser;
   AddMutationObserver(this);
 }
@@ -510,6 +511,7 @@ nsHTMLScriptElement::GetScriptURI()
   GetSrc(src);
   if (!src.IsEmpty())
     NS_NewURI(&uri, src);
+  printf("spec: %s\n", NS_ConvertUTF16toUTF8(src).get());
   return uri;
 }
 
