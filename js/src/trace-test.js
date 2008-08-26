@@ -835,6 +835,20 @@ function stringSplitIntoArrayTest()
 stringSplitIntoArrayTest.expected="a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b";
 test(stringSplitIntoArrayTest);
 
+function forVarInWith() {
+    function foo() ({notk:42});
+    function bar() ({p:1, q:2, r:3, s:4, t:5});
+    var o = foo();
+    var a = [];
+    with (o) {
+        for (var k in bar())
+            a[a.length] = k;
+    }
+    return a.join("");
+}
+forVarInWith.expected = "pqrst";
+test(forVarInWith);
+
 function innerLoopIntOuterDouble() {
     var n = 10000, i=0, j=0, count=0, limit=0;
     for (i = 1; i <= n; ++i) {
@@ -860,20 +874,6 @@ function outerline(){
 }
 outerline.expected="ok";
 test(outerline);
-
-function forVarInWith() {
-    function foo() ({notk:42});
-    function bar() ({p:1, q:2, r:3, s:4, t:5});
-    var o = foo();
-    var a = [];
-    with (o) {
-        for (var k in bar())
-            a[a.length] = k;
-    }
-    return a.join("");
-}
-forVarInWith.expected = "pqrst";
-test(forVarInWith);
 
 function addAccumulations(f) {
   var a = f();
