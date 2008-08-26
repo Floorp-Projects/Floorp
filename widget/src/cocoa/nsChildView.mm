@@ -1825,39 +1825,6 @@ PRBool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
 }
 
 
-// Deal with all sort of mouse event
-PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
-{
-  PRBool result = PR_FALSE;
-
-  // call the event callback 
-  if (mEventCallback)
-    return DispatchWindowEvent(aEvent);
-
-  if (mMouseListener) {
-    nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-    switch (aEvent.message) {
-      case NS_MOUSE_MOVE:
-        result = ConvertStatus(mMouseListener->MouseMoved(aEvent));
-        break;
-
-      case NS_MOUSE_BUTTON_DOWN:
-        result = ConvertStatus(mMouseListener->MousePressed(aEvent));
-        break;
-
-      case NS_MOUSE_BUTTON_UP: {
-        result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
-        if (mMouseListener)
-          result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
-        break;
-      }
-    } // switch
-  }
-
-  return result;
-}
-
-
 #pragma mark -
 
 
@@ -3117,7 +3084,7 @@ NSEvent* gLastDragEvent = nil;
   macEvent.modifiers = ::GetCurrentEventKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   // XXX maybe call markedTextSelectionChanged:client: here?
 
@@ -3153,7 +3120,7 @@ NSEvent* gLastDragEvent = nil;
   macEvent.modifiers = ::GetCurrentEventKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3319,7 +3286,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   macEvent.modifiers = ::GetCurrentEventKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3356,7 +3323,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   macEvent.modifiers = btnState | ::GetCurrentEventKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   // Note, sending the above event might have destroyed our widget since we didn't retain.
   // Fine so long as we don't access any local variables from here on.
@@ -3397,7 +3364,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   macEvent.modifiers = controlKey;  // fake a context menu click
   geckoEvent.nativeMsg = &macEvent;
 
-  PRBool handled = mGeckoChild->DispatchMouseEvent(geckoEvent);
+  PRBool handled = mGeckoChild->DispatchWindowEvent(geckoEvent);
   if (!mGeckoChild)
     return;
 
@@ -3433,7 +3400,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   geckoEvent.nativeMsg = &macEvent;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3453,7 +3420,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   // send event into Gecko by going directly to the
   // the widget.
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
 
@@ -3477,7 +3444,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   geckoEvent.button = nsMouseEvent::eMiddleButton;
   geckoEvent.clickCount = [theEvent clickCount];
 
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3492,7 +3459,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
 
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
 
@@ -3507,7 +3474,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   // send event into Gecko by going directly to the
   // the widget.
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
 
@@ -3647,7 +3614,7 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   nsMouseEvent geckoEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
   if (!mGeckoChild)
     return nil;
 

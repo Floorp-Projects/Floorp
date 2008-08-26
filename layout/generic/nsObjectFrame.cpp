@@ -3491,7 +3491,7 @@ nsPluginInstanceOwner::MouseMove(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
-/*=============== nsIMouseListener ======================*/
+/*=============== nsIDOMMouseListener ======================*/
 
 nsresult
 nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
