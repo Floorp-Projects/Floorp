@@ -510,9 +510,7 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
 
     if (unlocked)
         JS_LOCK_GC(rt);
-    if (!cx)
-        cx = (JSContext *)&rt->contextList;
-    cx = (JSContext *)cx->links.next;
+    cx = (JSContext *) (cx ? cx->links.next : rt->contextList.next);
     if (&cx->links == &rt->contextList)
         cx = NULL;
     *iterp = cx;
