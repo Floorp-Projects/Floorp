@@ -243,7 +243,11 @@ namespace nanojit
 		inline uint8_t	imm8()	 const	{ return c.imm8a; }
 		inline int16_t	imm16()	 const	{ return i.imm16; }
 		inline LIns*	ref()	 const	{ 
+#if defined NANOJIT_64BIT
+            return (t.code & 1) ? (LIns*)this+t.imm24 : *(LIns**)(this-2);
+#else
             return (t.code & 1) ? (LIns*)this+t.imm24 : *(LIns**)(this-1);
+#endif
         }
 		inline int32_t	imm32()	 const	{ return *(int32_t*)(this-1); }
 		inline uint8_t	resv()	 const  { return g.resv; }

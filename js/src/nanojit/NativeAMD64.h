@@ -183,7 +183,7 @@ namespace nanojit
 				_pageData = 0;									\
 				_dblNegPtr = NULL;								\
 				_negOnePtr = NULL;								\
-				int d = tt-_nIns; 								\
+				intptr_t d = tt-_nIns; 							\
 				JMP_long_nochk_offset(d);						\
 			}													\
             overrideProtect = _nIns;                            \
@@ -894,11 +894,12 @@ namespace nanojit
 		
 #define JMP_long_placeholder()	do {\
 	underrunProtect(5);				\
-	JMP_long_nochk_offset(0xffffffff); } while(0)
+	JMP_long_nochk_offset(-1); } while(0)
 	
 // this should only be used when you can guarantee there is enough room on the page
 #define JMP_long_nochk_offset(o) do {\
 		verbose_only( NIns* next = _nIns; (void)next; ) \
+        NanoAssert(o <= INT_MAX && o >= INT_MIN);       \
  		IMM32((o)); \
  		*(--_nIns) = JMPc; \
 		asm_output1("jmp %lX",(ptrdiff_t)(next+(o))); } while(0)
@@ -1116,9 +1117,9 @@ namespace nanojit
 	} while (0)
 
 #define CALL(c)	do { 									\
+  underrunProtect(5);									\
   intptr_t offset = (c->_address) - ((intptr_t)_nIns);	\
   if (offset <= INT_MAX && offset >= INT_MIN) {			\
-    underrunProtect(5);									\
     IMM32( (uint32_t)offset );							\
     *(--_nIns) = 0xE8;									\
   } else {												\

@@ -285,7 +285,7 @@ namespace nanojit
         uint32_t fid = ins->fid();
         const CallInfo* call = callInfoFor(fid);
 		int n = 0;
-
+        
 		CALL(call);
 
         ArgSize sizes[10];
@@ -1218,6 +1218,7 @@ namespace nanojit
 		NIns* was = (NIns*)( (intptr_t)*(int32_t*)(at+1)+(intptr_t)(at+5) );
 		_nIns = at +5; // +5 is size of JMP
 		intptr_t tt = (intptr_t)target - (intptr_t)_nIns;
+        NanoAssert(tt <= INT_MAX && tt >= INT_MIN);
 		IMM32(tt);
 		*(--_nIns) = JMPc;
 		_nIns = save;
