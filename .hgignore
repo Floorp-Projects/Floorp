@@ -26,5 +26,3 @@
 _DBG\.OBJ/
 _OPT\.OBJ/
 
-# my objdirs
-^ff-opt
