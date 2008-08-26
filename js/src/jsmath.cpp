@@ -223,8 +223,8 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-static JSBool
-math_ceil(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_math_ceil(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -593,7 +593,7 @@ static JSFunctionSpec math_static_methods[] = {
     JS_FN("asin",           math_asin,          1, 0),
     JS_FN("atan",           math_atan,          1, 0),
     JS_FN("atan2",          math_atan2,         2, 0),
-    JS_FN("ceil",           math_ceil,          1, 0),
+    JS_FN("ceil",           js_math_ceil,       1, 0),
     JS_FN("cos",            js_math_cos,        1, 0),
     JS_FN("exp",            math_exp,           1, 0),
     JS_FN("floor",          js_math_floor,      1, 0),

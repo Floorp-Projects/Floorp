@@ -517,8 +517,7 @@ public:
                 vp = &fp->argv[-1];                                           \
                 { code; }                                                     \
                 SET_VPNAME("argv");                                           \
-                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);            \
-                vp = &fp->argv[0]; vpstop = &fp->argv[nargs];                 \
+                vp = &fp->argv[0]; vpstop = &fp->argv[fp->fun->nargs];        \
                 while (vp < vpstop) { code; ++vp; INC_VPNUM(); }              \
             }                                                                 \
             SET_VPNAME("vars");                                               \
@@ -572,8 +571,8 @@ public:
 
 /* Calculate the total number of native frame slots we need from this frame
    all the way back to the entry frame, including the current stack usage. */
-static unsigned
-nativeStackSlots(JSContext *cx, unsigned callDepth)
+unsigned
+js_NativeStackSlots(JSContext *cx, unsigned callDepth)
 {
     JSStackFrame* fp = cx->fp;
     unsigned slots = 0;
@@ -588,8 +587,7 @@ nativeStackSlots(JSContext *cx, unsigned callDepth)
             slots += fp->script->nfixed;
         if (callDepth-- == 0) {
             if (fp->callee) {
-                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
-                slots += 2/*callee,this*/ + nargs;
+                slots += 2/*callee,this*/ + fp->fun->nargs;
             }
 #if defined _DEBUG
             unsigned int m = 0;
@@ -604,7 +602,7 @@ nativeStackSlots(JSContext *cx, unsigned callDepth)
         if (missing > 0)
             slots += missing;
     }
-    JS_NOT_REACHED("nativeStackSlots");
+    JS_NOT_REACHED("js_NativeStackSlots");
 }
 
 /* Capture the type map for the selected slots of the global object. */
@@ -628,7 +626,7 @@ TypeMap::captureGlobalTypes(JSContext* cx, SlotList& slots)
 void
 TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
 {
-    setLength(nativeStackSlots(cx, callDepth));
+    setLength(js_NativeStackSlots(cx, callDepth));
     uint8* map = data();
     uint8* m = map;
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
@@ -817,10 +815,9 @@ done:
         fp = *fsp;
         if (fp->callee) {
             if (fsp == fstack) {
-                unsigned nargs = JS_MAX(fp->fun->nargs, fp->argc);
-                if (size_t(p - &fp->argv[-2]) < 2/*callee,this*/ + nargs)
+                if (size_t(p - &fp->argv[-2]) < 2/*callee,this*/ + fp->fun->nargs)
                     RETURN(offset + size_t(p - &fp->argv[-2]) * sizeof(double));
-                offset += (2/*callee,this*/ + nargs) * sizeof(double);
+                offset += (2/*callee,this*/ + fp->fun->nargs) * sizeof(double);
             }
             if (size_t(p - &fp->slots[0]) < fp->script->nfixed)
                 RETURN(offset + size_t(p - &fp->slots[0]) * sizeof(double));
@@ -1362,7 +1359,7 @@ TraceRecorder::snapshot(ExitType exitType)
     if (exitType == BRANCH_EXIT && js_IsLoopExit(cx, fp->script, fp->regs->pc))
         exitType = LOOP_EXIT;
     /* Generate the entry map and stash it in the trace. */
-    unsigned stackSlots = nativeStackSlots(cx, callDepth);
+    unsigned stackSlots = js_NativeStackSlots(cx, callDepth);
     /* It's sufficient to track the native stack use here since all stores above the
        stack watermark defined by guards are killed. */
     trackNativeStackUse(stackSlots + 1);
@@ -1650,8 +1647,8 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
         lirNames[i->opcode()],
         i->oprnd1()->isCond() ? formatRef(i->oprnd1()) : "",
         labels->format((void *)ip),
-        x->sp_adj,
-        x->rp_adj
+        (long int)x->sp_adj,
+        (long int)x->rp_adj
         );
 }
 #endif
@@ -1856,7 +1853,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 
     /* determine the native frame layout at the entry point */
     unsigned entryNativeStackSlots = ti->stackTypeMap.length();
-    JS_ASSERT(entryNativeStackSlots == nativeStackSlots(cx, 0/*callDepth*/));
+    JS_ASSERT(entryNativeStackSlots == js_NativeStackSlots(cx, 0/*callDepth*/));
     ti->nativeStackBase = (entryNativeStackSlots -
             (cx->fp->regs->sp - StackBase(cx->fp))) * sizeof(double);
     ti->maxNativeStackSlots = entryNativeStackSlots;
@@ -2681,6 +2678,32 @@ TraceRecorder::cmp(LOpcode op, bool negate)
             cond = (lnum == rnum) ^ negate;
             break;
         }
+    } else if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r))  {
+        x = lir->ins2(op, lir->ins1(LIR_i2f, get(&l)), lir->ins1(LIR_i2f, get(&r)));
+        if (negate)
+            x = lir->ins_eq0(x);
+
+        // The well-known values of JSVAL_TRUE and JSVAL_FALSE make this very easy.
+        // In particular: JSVAL_TO_BOOLEAN(0) < JSVAL_TO_BOOLEAN(1) so all of these comparisons do
+        // the right thing.
+        switch (op) {
+          case LIR_flt:
+            cond = l < r;
+            break;
+          case LIR_fgt:
+            cond = l > r;
+            break;
+          case LIR_fle:
+            cond = l <= r;
+            break;
+          case LIR_fge:
+            cond = l >= r;
+            break;
+          default:
+            JS_ASSERT(op == LIR_feq);
+            cond = (l == r) ^ negate;
+            break;
+        }
     } else {
         ABORT_TRACE("unsupported operand types for cmp");
     }
@@ -3157,7 +3180,7 @@ TraceRecorder::clearFrameSlotsFromCache()
     jsval* vpstop;
     if (fp->callee) {
         vp = &fp->argv[-2];
-        vpstop = &fp->argv[JS_MAX(fp->fun->nargs,fp->argc)];
+        vpstop = &fp->argv[fp->fun->nargs];
         while (vp < vpstop)
             nativeFrameTracker.set(vp++, (LIns*)0);
     }
@@ -4086,8 +4109,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
     FrameInfo fi = {
         JSVAL_TO_OBJECT(fval),
         fp->regs->pc,
-        fp->regs->sp - fp->slots,
-        argc
+        { { fp->regs->sp - fp->slots, argc } }
     };
 
     unsigned callDepth = getCallDepth();
@@ -4138,6 +4160,9 @@ js_math_random(JSContext* cx, uintN argc, jsval* vp);
 JSBool
 js_math_floor(JSContext* cx, uintN argc, jsval* vp);
 
+JSBool
+js_math_ceil(JSContext* cx, uintN argc, jsval* vp);
+
 bool
 TraceRecorder::record_JSOP_CALL()
 {
@@ -4182,6 +4207,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_math_pow,                 F_Math_pow,             "",   "dd",    INFALLIBLE,  NULL },
         { js_math_sqrt,                F_Math_sqrt,            "",    "d",    INFALLIBLE,  NULL },
         { js_math_floor,               F_Math_floor,           "",    "d",    INFALLIBLE,  NULL },
+        { js_math_ceil,                F_Math_ceil,            "",    "d",    INFALLIBLE,  NULL },
         { js_math_random,              F_Math_random,          "R",    "",    INFALLIBLE,  NULL },
         { js_num_parseInt,             F_ParseInt,             "C",   "s",    INFALLIBLE,  NULL },
         { js_num_parseFloat,           F_ParseFloat,           "C",   "s",    INFALLIBLE,  NULL },
