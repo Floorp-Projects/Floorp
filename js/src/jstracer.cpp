@@ -1371,7 +1371,9 @@ TraceRecorder::snapshot(ExitType exitType)
     exit.calldepth = callDepth;
     exit.numGlobalSlots = ngslots;
     exit.numStackSlots = stackSlots;
-    exit.numStackSlotsBelowCurrentFrame = nativeStackOffset(&cx->fp->argv[-2])/sizeof(double);
+    exit.numStackSlotsBelowCurrentFrame = cx->fp->callee
+        ? nativeStackOffset(&cx->fp->argv[-2])/sizeof(double)
+        : 0;
     exit.exitType = exitType;
     /* If we take a snapshot on a goto, advance to the target address. This avoids inner
        trees returning on a break goto, which the outer recorder then would confuse with
