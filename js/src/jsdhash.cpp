@@ -67,19 +67,27 @@
  */
 #ifdef DEBUG
 
+#define JSDHASH_ONELINE_ASSERT JS_ASSERT
 #define RECURSION_LEVEL(table_) (*(uint32*)(table_->entryStore + \
                                             JS_DHASH_TABLE_SIZE(table_) * \
                                             table_->entrySize))
 
 #define ENTRY_STORE_EXTRA                   sizeof(uint32)
-#define INCREMENT_RECURSION_LEVEL(table_)   (++RECURSION_LEVEL(table_))
-#define DECREMENT_RECURSION_LEVEL(table_)   (--RECURSION_LEVEL(table_))
+#define INCREMENT_RECURSION_LEVEL(table_)   \
+    JS_BEGIN_MACRO                          \
+      ++RECURSION_LEVEL(table_);            \
+    JS_END_MACRO
+#define DECREMENT_RECURSION_LEVEL(table_)                  \
+    JS_BEGIN_MACRO                                         \
+      JSDHASH_ONELINE_ASSERT(RECURSION_LEVEL(table_) > 0); \
+      --RECURSION_LEVEL(table_);                           \
+    JS_END_MACRO
 
 #else
 
 #define ENTRY_STORE_EXTRA 0
-#define INCREMENT_RECURSION_LEVEL(table_)   ((void)1)
-#define DECREMENT_RECURSION_LEVEL(table_)   ((void)0)
+#define INCREMENT_RECURSION_LEVEL(table_)   JS_BEGIN_MACRO JS_END_MACRO
+#define DECREMENT_RECURSION_LEVEL(table_)   JS_BEGIN_MACRO JS_END_MACRO
 
 #endif /* defined(DEBUG) */
 
