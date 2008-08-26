@@ -128,7 +128,7 @@ protected:
 
   static nsresult MapInternalToExternalState(PRUint32* aState, lockIconState lock, PRBool ev);
   nsresult UpdateSecurityState(nsIRequest* aRequest);
-  void UpdateMyFlags(PRBool &showWarning, lockIconState &warnSecurityState);
+  PRBool UpdateMyFlags(PRBool &showWarning, lockIconState &warnSecurityState);
   nsresult TellTheWorld(PRBool showWarning, 
                         lockIconState warnSecurityState, 
                         nsIRequest* aRequest);
