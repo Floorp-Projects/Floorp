@@ -814,7 +814,7 @@ done:
         fp = *fsp;
         if (fp->callee) {
             if (fsp == fstack) {
-                if (size_t(p - &fp->argv[-2]) < 2/*callee,this*/ + fp->fun->nargs)
+                if (size_t(p - &fp->argv[-2]) < size_t(2/*callee,this*/ + fp->fun->nargs))
                     RETURN(offset + size_t(p - &fp->argv[-2]) * sizeof(double));
                 offset += (2/*callee,this*/ + fp->fun->nargs) * sizeof(double);
             }
