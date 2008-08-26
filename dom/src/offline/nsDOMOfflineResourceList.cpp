@@ -73,10 +73,6 @@ static const char kMaxEntriesPref[] =  "offline.max_site_resources";
 #define DEFAULT_MAX_ENTRIES 100
 #define MAX_URI_LENGTH 2048
 
-static nsCAutoString gCachedAsciiHost;
-static char **gCachedKeys = nsnull;
-static PRUint32 gCachedKeysCount = 0;
-
 //
 // nsDOMOfflineResourceList
 //
@@ -162,12 +158,15 @@ nsDOMOfflineResourceList::nsDOMOfflineResourceList(PRBool aToplevel,
   , mToplevel(aToplevel)
   , mManifestURI(aManifestURI)
   , mDocumentURI(aDocumentURI)
+  , mCachedKeys(nsnull)
+  , mCachedKeysCount(0)
 {
   mWindow = do_GetWeakReference(aWindow);
 }
 
 nsDOMOfflineResourceList::~nsDOMOfflineResourceList()
 {
+  ClearCachedKeys();
 }
 
 nsresult
@@ -286,7 +285,7 @@ nsDOMOfflineResourceList::GetLength(PRUint32 *aLength)
   rv = CacheKeys();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aLength = gCachedKeysCount;
+  *aLength = mCachedKeysCount;
   return NS_OK;
 }
 
@@ -301,10 +300,10 @@ nsDOMOfflineResourceList::Item(PRUint32 aIndex, nsAString& aURI)
   rv = CacheKeys();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aIndex >= gCachedKeysCount)
+  if (aIndex >= mCachedKeysCount)
     return NS_ERROR_NOT_AVAILABLE;
 
-  CopyUTF8toUTF16(gCachedKeys[aIndex], aURI);
+  CopyUTF8toUTF16(mCachedKeys[aIndex], aURI);
 
   return NS_OK;
 }
@@ -984,30 +983,21 @@ nsDOMOfflineResourceList::GetCacheKey(nsIURI *aURI, nsCString &aKey)
 nsresult
 nsDOMOfflineResourceList::CacheKeys()
 {
-  if (gCachedKeys && mAsciiHost == gCachedAsciiHost)
+  if (mCachedKeys)
     return NS_OK;
 
-  ClearCachedKeys();
-
-  nsresult rv = mCacheSession->GetOwnedKeys(mAsciiHost, mDynamicOwnerSpec,
-                                            &gCachedKeysCount, &gCachedKeys);
-
-  if (NS_SUCCEEDED(rv))
-    gCachedAsciiHost = mAsciiHost;
-
-  return rv;
+  return mCacheSession->GetOwnedKeys(mAsciiHost, mDynamicOwnerSpec,
+                                     &mCachedKeysCount, &mCachedKeys);
 }
 
 void
 nsDOMOfflineResourceList::ClearCachedKeys()
 {
-  if (gCachedKeys) {
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(gCachedKeysCount, gCachedKeys);
-    gCachedKeys = nsnull;
-    gCachedKeysCount = 0;
+  if (mCachedKeys) {
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mCachedKeysCount, mCachedKeys);
+    mCachedKeys = nsnull;
+    mCachedKeysCount = 0;
   }
-
-  gCachedAsciiHost = "";
 }
 
 
