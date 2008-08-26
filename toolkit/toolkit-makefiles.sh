@@ -590,18 +590,12 @@ MAKEFILES_xpfe="
   xpfe/components/related/Makefile
   xpfe/components/related/src/Makefile
   xpfe/components/related/public/Makefile
-  xpfe/components/startup/Makefile
-  xpfe/components/startup/public/Makefile
-  xpfe/components/startup/src/Makefile
   xpfe/components/autocomplete/Makefile
   xpfe/components/autocomplete/public/Makefile
   xpfe/components/autocomplete/src/Makefile
   xpfe/components/winhooks/Makefile
   xpfe/components/windowds/Makefile
   xpfe/components/build/Makefile
-  xpfe/components/xremote/Makefile
-  xpfe/components/xremote/public/Makefile
-  xpfe/components/xremote/src/Makefile
   xpfe/appshell/Makefile
   xpfe/appshell/src/Makefile
   xpfe/appshell/public/Makefile

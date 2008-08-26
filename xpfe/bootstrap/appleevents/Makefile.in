@@ -96,14 +96,10 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/.. \
 	$(NULL)
 
-ifdef MOZ_XUL_APP
 LOCAL_INCLUDES += \
 	-I$(topsrcdir)/toolkit/xre \
 	-I$(topsrcdir)/toolkit/components/startup/src \
 	$(NULL)
-else
-LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/components/startup/src
-endif
 
 include $(topsrcdir)/config/rules.mk
 
