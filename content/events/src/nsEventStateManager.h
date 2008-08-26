@@ -257,7 +257,7 @@ protected:
    *        that recursively called us in it's Up phase. The initial caller
    *        passes |nsnull| here. This is to avoid an infinite loop.
    * @param aAccessKeyState Normal, Down or Up processing phase (see enums
-   *        above). The initial event reciever uses 'normal', then 'down' when
+   *        above). The initial event receiver uses 'normal', then 'down' when
    *        processing children and Up when recursively calling its ancestor.
    * @param aModifierMask modifier mask for the key event
    */
