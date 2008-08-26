@@ -146,11 +146,8 @@ function openUILink( url, e, ignoreButton, ignoreAlt, allowKeywordFixup, postDat
  */
 function whereToOpenLink( e, ignoreButton, ignoreAlt )
 {
-  // This method must treat a null event like a left click without modifier keys (i.e.
-  // e = { shiftKey:false, ctrlKey:false, metaKey:false, altKey:false, button:0 })
-  // for compatibility purposes.
   if (!e)
-    return "current";
+    e = { shiftKey:false, ctrlKey:false, metaKey:false, altKey:false, button:0 };
 
   var shift = e.shiftKey;
   var ctrl =  e.ctrlKey;
