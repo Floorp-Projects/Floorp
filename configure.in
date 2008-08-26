@@ -4630,6 +4630,10 @@ standalone)
 
 esac
 
+if test -z "$MOZ_XUL_APP"; then
+	AC_MSG_ERROR([builds with unsetting MOZ_XUL_APP in confvars.sh are not supported.])
+fi
+
 AC_SUBST(MOZ_BUILD_APP)
 AC_SUBST(MOZ_XUL_APP)
 AC_SUBST(MOZ_PHOENIX)
