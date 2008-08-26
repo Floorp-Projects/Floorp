@@ -1187,15 +1187,20 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
   lockIconState warnSecurityState = lis_no_security;
   PRBool showWarning = PR_FALSE;
 
-  UpdateMyFlags(showWarning, warnSecurityState);
+  PRBool mustTellTheWorld = UpdateMyFlags(showWarning, warnSecurityState);
+  if (!mustTellTheWorld)
+    return NS_OK;
+
   return TellTheWorld(showWarning, warnSecurityState, aRequest);
 }
 
 // must not fail, by definition, only trivial assignments
 // or string operations are allowed
-void nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &warnSecurityState)
+// returns true if our overall state has changed and we must send out notifications
+PRBool nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &warnSecurityState)
 {
   nsAutoMonitor lock(mMonitor);
+  PRBool mustTellTheWorld = PR_FALSE;
 
   lockIconState newSecurityState;
 
@@ -1255,8 +1260,8 @@ void nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &wa
 
   if (mNotifiedSecurityState != newSecurityState)
   {
-    // must show alert
-    
+    mustTellTheWorld = PR_TRUE;
+
     // we'll treat "broken" exactly like "insecure",
     // i.e. we do not show alerts when switching between broken and insecure
 
@@ -1327,7 +1332,12 @@ void nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &wa
     }
   }
 
-  mNotifiedToplevelIsEV = mNewToplevelIsEV;
+  if (mNotifiedToplevelIsEV != mNewToplevelIsEV) {
+    mustTellTheWorld = PR_TRUE;
+    mNotifiedToplevelIsEV = mNewToplevelIsEV;
+  }
+
+  return mustTellTheWorld;
 }
 
 nsresult nsSecureBrowserUIImpl::TellTheWorld(PRBool showWarning, 
