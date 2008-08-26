@@ -586,9 +586,8 @@ js_NativeStackSlots(JSContext *cx, unsigned callDepth)
         if (fp->callee)
             slots += fp->script->nfixed;
         if (callDepth-- == 0) {
-            if (fp->callee) {
+            if (fp->callee)
                 slots += 2/*callee,this*/ + fp->fun->nargs;
-            }
 #if defined _DEBUG
             unsigned int m = 0;
             FORALL_SLOTS_IN_PENDING_FRAMES(cx, origCallDepth, m++);
@@ -2049,10 +2048,10 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     uint64 start = rdtsc();
 #endif
 
-    JS_ASSERT(!cx->gcDontBlock);
-    cx->gcDontBlock = JS_TRUE;
+    JS_ASSERT(!cx->runningJittedCode);
+    cx->runningJittedCode = JS_TRUE;
     GuardRecord* lr = u.func(&state, NULL);
-    cx->gcDontBlock = JS_FALSE;
+    cx->runningJittedCode = JS_FALSE;
 
     /* If we bail out on a nested exit, the compiled code returns the outermost nesting
        guard but what we are really interested in is the innermost guard that we hit
@@ -2063,7 +2062,8 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
         do {
             if (innermostNestedGuardp)
                 *innermostNestedGuardp = lr;
-            debug_only_v(printf("processing tree call guard %p, calldepth=%d\n", lr, lr->calldepth);)
+            debug_only_v(printf("processing tree call guard %p, calldepth=%d\n",
+                                lr, lr->calldepth);)
             unsigned calldepth = lr->calldepth;
             if (calldepth > 0) {
                 /* We found a nesting guard that holds a frame, write it back. */
