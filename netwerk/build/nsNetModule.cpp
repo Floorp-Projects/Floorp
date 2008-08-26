@@ -56,6 +56,7 @@
 #include "nsMIMEInputStream.h"
 #include "nsSOCKSSocketProvider.h"
 #include "nsCacheService.h"
+#include "nsDiskCacheDeviceSQL.h"
 #include "nsMimeTypes.h"
 #include "nsNetStrings.h"
 
@@ -187,7 +188,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeAboutProtocolHandler)
 #include "nsAboutCacheEntry.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
 #endif
-  
+
+#ifdef NECKO_OFFLINE_CACHE
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsOfflineCacheDevice, nsOfflineCacheDevice::GetInstance)
+#endif
+
 #ifdef NECKO_PROTOCOL_file
 // file
 #include "nsFileProtocolHandler.h"
@@ -1044,6 +1049,14 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
        NS_CACHESERVICE_CONTRACTID,
        nsCacheService::Create
     },
+
+#ifdef NECKO_OFFLINE_CACHE
+    {  NS_APPLICATIONCACHESERVICE_CLASSNAME,
+       NS_APPLICATIONCACHESERVICE_CID,
+       NS_APPLICATIONCACHESERVICE_CONTRACTID,
+       nsOfflineCacheDeviceConstructor
+    },
+#endif
 
 #ifdef NECKO_COOKIES
     { NS_COOKIEMANAGER_CLASSNAME,

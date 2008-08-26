@@ -93,6 +93,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsContentList.h"
 #include "nsGkAtoms.h"
+#include "nsIApplicationCache.h"
+#include "nsIApplicationCacheContainer.h"
 
 // Put these here so all document impls get them automatically
 #include "nsHTMLStyleSheet.h"
@@ -408,6 +410,7 @@ class nsDocument : public nsIDocument,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer,
                    public nsIDOMNodeSelector,
+                   public nsIApplicationCacheContainer,
                    public nsStubMutationObserver
 {
 public:
@@ -758,6 +761,9 @@ public:
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
 
+  // nsIApplicationCacheContainer
+  NS_DECL_NSIAPPLICATIONCACHECONTAINER
+
   virtual nsresult Init();
   
   virtual nsresult AddXMLEventsContent(nsIContent * aXMLEventsElement);
@@ -1026,6 +1032,10 @@ protected:
 
   // Our update nesting level
   PRUint32 mUpdateNestLevel;
+
+  // The application cache that this document is associated with, if
+  // any.  This can change during the lifetime of the document.
+  nsCOMPtr<nsIApplicationCache> mApplicationCache;
 
 private:
   friend class nsUnblockOnloadEvent;
