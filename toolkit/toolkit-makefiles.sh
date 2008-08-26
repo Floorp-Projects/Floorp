@@ -458,13 +458,6 @@ MAKEFILES_chrome="
   chrome/Makefile
   chrome/public/Makefile
   chrome/src/Makefile
-  embedding/minimo/chromelite/Makefile
-  rdf/chrome/Makefile
-  rdf/chrome/public/Makefile
-  rdf/chrome/build/Makefile
-  rdf/chrome/src/Makefile
-  rdf/chrome/tools/Makefile
-  rdf/chrome/tools/chromereg/Makefile
 "
 
 MAKEFILES_view="
