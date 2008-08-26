@@ -113,6 +113,10 @@ private:
   nsCAutoString mAsciiHost;
   nsCAutoString mDynamicOwnerSpec;
 
+  // The set of dynamic keys for this application cache object.
+  char **mCachedKeys;
+  PRUint32 mCachedKeysCount;
+
   nsCOMArray<nsIDOMEventListener> mCheckingListeners;
   nsCOMArray<nsIDOMEventListener> mErrorListeners;
   nsCOMArray<nsIDOMEventListener> mNoUpdateListeners;
