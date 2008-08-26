@@ -399,11 +399,19 @@ nsFormFillController::GetTextValue(nsAString & aTextValue)
 NS_IMETHODIMP
 nsFormFillController::SetTextValue(const nsAString & aTextValue)
 {
+  nsAutoString value(aTextValue);
   nsCOMPtr<nsIDOMNSEditableElement> editable = do_QueryInterface(mFocusedInput);
   if (editable) {
-    mSuppressOnInput = PR_TRUE;
-    editable->SetUserInput(aTextValue);
-    mSuppressOnInput = PR_FALSE;
+    // Don't fill in more than maxLength
+    PRInt32 maxLength;
+    if (NS_SUCCEEDED(mFocusedInput->GetMaxLength(&maxLength)) && maxLength) {
+      nsAutoString trimmedValue;
+      value.Left(trimmedValue, maxLength);
+
+      mSuppressOnInput = PR_TRUE;
+      editable->SetUserInput(trimmedValue);
+      mSuppressOnInput = PR_FALSE;
+    }
   }
   return NS_OK;
 }
