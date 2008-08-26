@@ -86,7 +86,7 @@ FindTrap(JSRuntime *rt, JSScript *script, jsbytecode *pc)
     JSTrap *trap;
 
     for (trap = (JSTrap *)rt->trapList.next;
-         trap != (JSTrap *)&rt->trapList;
+         &trap->links != &rt->trapList;
          trap = (JSTrap *)trap->links.next) {
         if (trap->script == script && trap->pc == pc)
             return trap;
@@ -105,7 +105,8 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
     rt = cx->runtime;
     DBG_LOCK(rt);
     for (trap = (JSTrap *)rt->trapList.next;
-         trap != (JSTrap *)&rt->trapList;
+         &trap->links !=
+                &rt->trapList;
          trap = (JSTrap *)trap->links.next) {
         if (trap->script == script &&
             (size_t)(trap->pc - script->code) < script->length) {
@@ -240,7 +241,7 @@ JS_ClearScriptTraps(JSContext *cx, JSScript *script)
     rt = cx->runtime;
     DBG_LOCK(rt);
     for (trap = (JSTrap *)rt->trapList.next;
-         trap != (JSTrap *)&rt->trapList;
+         &trap->links != &rt->trapList;
          trap = next) {
         next = (JSTrap *)trap->links.next;
         if (trap->script == script) {
@@ -264,7 +265,7 @@ JS_ClearAllTraps(JSContext *cx)
     rt = cx->runtime;
     DBG_LOCK(rt);
     for (trap = (JSTrap *)rt->trapList.next;
-         trap != (JSTrap *)&rt->trapList;
+         &trap->links != &rt->trapList;
          trap = next) {
         next = (JSTrap *)trap->links.next;
         sample = rt->debuggerMutations;
@@ -430,7 +431,7 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
     rt = trc->context->runtime;
 
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-         wp != (JSWatchPoint *)&rt->watchPointList;
+         &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
         if (wp->object == obj) {
             TRACE_SCOPE_PROPERTY(trc, wp->sprop);
@@ -454,7 +455,7 @@ js_SweepWatchPoints(JSContext *cx)
     rt = cx->runtime;
     DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-         wp != (JSWatchPoint *)&rt->watchPointList;
+         &wp->links != &rt->watchPointList;
          wp = next) {
         next = (JSWatchPoint *)wp->links.next;
         if (js_IsAboutToBeFinalized(cx, wp->object)) {
@@ -481,7 +482,7 @@ FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id)
     JSWatchPoint *wp;
 
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-         wp != (JSWatchPoint *)&rt->watchPointList;
+         &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
         if (wp->object == scope->object && wp->sprop->id == id)
             return wp;
@@ -517,7 +518,7 @@ js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
     if (scope)
         DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-         wp != (JSWatchPoint *)&rt->watchPointList;
+         &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
         if ((!scope || wp->object == scope->object) && wp->sprop == sprop) {
             setter = wp->setter;
@@ -542,7 +543,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     rt = cx->runtime;
     DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-         wp != (JSWatchPoint *)&rt->watchPointList;
+         &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
         sprop = wp->sprop;
         if (wp->object == obj && SPROP_USERID(sprop) == id &&
@@ -860,7 +861,7 @@ JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsval id,
     rt = cx->runtime;
     DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-         wp != (JSWatchPoint *)&rt->watchPointList;
+         &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
         if (wp->object == obj && SPROP_USERID(wp->sprop) == id) {
             if (handlerp)
@@ -888,7 +889,7 @@ JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
     rt = cx->runtime;
     DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-         wp != (JSWatchPoint *)&rt->watchPointList;
+         &wp->links != &rt->watchPointList;
          wp = next) {
         next = (JSWatchPoint *)wp->links.next;
         if (wp->object == obj) {
@@ -914,7 +915,7 @@ JS_ClearAllWatchPoints(JSContext *cx)
     rt = cx->runtime;
     DBG_LOCK(rt);
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
-         wp != (JSWatchPoint *)&rt->watchPointList;
+         &wp->links != &rt->watchPointList;
          wp = next) {
         next = (JSWatchPoint *)wp->links.next;
         sample = rt->debuggerMutations;
