@@ -1,0 +1,143 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is nsIApplicationCache.idl.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Dave Camp <dcamp@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * Application caches store resources for offline use.  Each
+ * application cache has a unique client ID for use with
+ * nsICacheService::openSession() to access the cache's entries.
+ *
+ * Each entry in the application cache can be marked with a set of
+ * types, as discussed in the WHAT-WG offline applications
+ * specification.
+ *
+ * All application caches with the same group ID belong to a cache
+ * group.  Each group has one "active" cache that will service future
+ * loads.  Inactive caches will be removed from the cache when they are
+ * no longer referenced.
+ */
+[scriptable, uuid(a9cfbeef-8f8d-49c3-b899-303390383ae9)]
+interface nsIApplicationCache : nsISupports
+{
+    /**
+     * Entries in an application cache can be marked as one or more of
+     * the following types.
+     */
+
+    /* This item is the application manifest. */
+    const unsigned long ITEM_MANIFEST =      1 << 0;
+
+    /* This item was explicitly listed in the application manifest. */
+    const unsigned long ITEM_EXPLICIT =      1 << 1;
+
+    /* This item was navigated in a toplevel browsing context, and
+     * named this cache's group as its manifest. */
+    const unsigned long ITEM_IMPLICIT =      1 << 2;
+
+    /* This item was added by the dynamic scripting API */
+    const unsigned long ITEM_DYNAMIC =       1 << 3;
+
+    /* This item was listed in the application manifest, but named a
+     * different cache group as its manifest. */
+    const unsigned long ITEM_FOREIGN = 1 << 4;
+
+    /* This item was listed as a fallback entry. */
+    const unsigned long ITEM_FALLBACK = 1 << 5;
+
+    /* This item matched an opportunistic cache namespace and was
+     * cached accordingly. */
+    const unsigned long ITEM_OPPORTUNISTIC = 1 << 6;
+
+    /**
+     * The group ID for this cache group.  This is the URI of the
+     * manifest file.
+     **/
+    readonly attribute ACString groupID;
+
+    /**
+     * The client ID for this application cache.  Clients can open a
+     * session with nsICacheService::createSession() using this client
+     * ID and a storage policy of STORE_OFFLINE to access this cache.
+     */
+    readonly attribute ACString clientID;
+
+    /**
+     * TRUE if the cache is the active cache for this group.
+     */
+    readonly attribute boolean active;
+
+    /**
+     * Makes this cache the active application cache for this group.
+     * Future loads associated with this group will come from this
+     * cache.  Other caches from this cache group will be deactivated.
+     */
+    void activate();
+
+    /**
+     * Discard this application cache.  Removes all cached resources
+     * for this cache.  If this is the active application cache for the
+     * group, the group will be removed.
+     */
+    void discard();
+
+    /**
+     * Adds item types to a given entry.
+     */
+    void markEntry(in ACString key, in unsigned long typeBits);
+
+    /**
+     * Removes types from a given entry.  If the resulting entry has
+     * no types left, the entry is removed.
+     */
+    void unmarkEntry(in ACString key, in unsigned long typeBits);
+
+    /**
+     * Gets the types for a given entry.
+     */
+    unsigned long getTypes(in ACString key);
+
+    /**
+     * Returns any entries in the application cache whose type matches
+     * one or more of the bits in typeBits.
+     */
+    void gatherEntries(in PRUint32 typeBits,
+                       out unsigned long count,
+                       [array, size_is(count)] out string keys);
+};

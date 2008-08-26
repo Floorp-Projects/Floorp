@@ -66,8 +66,11 @@
 #include "nsIInputStream.h"
 #include "nsIProgressEventSink.h"
 #include "nsICachingChannel.h"
+#include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
+#include "nsIApplicationCache.h"
+#include "nsIApplicationCacheContainer.h"
 #include "nsIEncodedChannel.h"
 #include "nsITransport.h"
 #include "nsIUploadChannel.h"
@@ -105,6 +108,7 @@ class nsHttpChannel : public nsHashPropertyBag
                     , public nsIProtocolProxyCallback
                     , public nsIProxiedChannel
                     , public nsITraceableChannel
+                    , public nsIApplicationCacheContainer
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -124,6 +128,7 @@ public:
     NS_DECL_NSIPROTOCOLPROXYCALLBACK
     NS_DECL_NSIPROXIEDCHANNEL
     NS_DECL_NSITRACEABLECHANNEL
+    NS_DECL_NSIAPPLICATIONCACHECONTAINER
 
     nsHttpChannel();
     virtual ~nsHttpChannel();
@@ -265,6 +270,8 @@ private:
     nsCOMPtr<nsICacheEntryDescriptor> mOfflineCacheEntry;
     nsCacheAccessMode                 mOfflineCacheAccess;
     nsCString                         mOfflineCacheClientID;
+
+    nsCOMPtr<nsIApplicationCache>     mApplicationCache;
 
     // auth specific data
     nsISupports                      *mProxyAuthContinuationState;
