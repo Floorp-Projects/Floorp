@@ -1372,6 +1372,7 @@ TraceRecorder::snapshot(ExitType exitType)
     exit.calldepth = callDepth;
     exit.numGlobalSlots = ngslots;
     exit.numStackSlots = stackSlots;
+    exit.numStackSlotsBelowCurrentFrame = nativeStackOffset(&cx->fp->argv[-2])/sizeof(double);
     exit.exitType = exitType;
     /* If we take a snapshot on a goto, advance to the target address. This avoids inner
        trees returning on a break goto, which the outer recorder then would confuse with
@@ -1867,7 +1868,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 }
 
 static bool
-js_AttemptToExtendTree(JSContext* cx, GuardRecord* anchor, GuardRecord* expectedInnerExit)
+js_AttemptToExtendTree(JSContext* cx, GuardRecord* anchor, GuardRecord* exitedFrom)
 {
     Fragment* f = anchor->from->root;
     JS_ASSERT(f->vmprivate);
@@ -1887,12 +1888,32 @@ js_AttemptToExtendTree(JSContext* cx, GuardRecord* anchor, GuardRecord* expected
     if (++c->hits() >= HOTEXIT) {
         /* start tracing secondary trace from this point */
         c->lirbuf = f->lirbuf;
-        SideExit* e = anchor->exit;
-        unsigned ngslots = e->numGlobalSlots;
-        uint8* globalTypeMap = e->typeMap;
-        uint8* stackTypeMap = globalTypeMap + ngslots;
+        unsigned ngslots;
+        uint8* globalTypeMap;
+        uint8* stackTypeMap;
+        TypeMap fullMap;
+        if (exitedFrom == NULL) {
+            /* If we are coming straight from a simple side exit, just use that exit's type map
+               as starting point. */
+            SideExit* e = anchor->exit;
+            ngslots = e->numGlobalSlots;
+            globalTypeMap = e->typeMap;
+            stackTypeMap = globalTypeMap + ngslots;
+        } else {
+            /* If we side-exited on a loop exit and continue on a nesting guard, the nesting
+               guard (anchor) has the type information for everything below the current scope, 
+               and the actual guard we exited from has the types for everything in the current
+               scope (and whatever it inlined). We have to merge those maps here. */
+            SideExit* e1 = anchor->exit;
+            SideExit* e2 = exitedFrom->exit;
+            fullMap.add(e1->typeMap + e1->numGlobalSlots, e1->numStackSlotsBelowCurrentFrame);
+            fullMap.add(e2->typeMap + e2->numGlobalSlots, e2->numStackSlots);
+            ngslots = e2->numGlobalSlots;
+            globalTypeMap = e2->typeMap;
+            stackTypeMap = fullMap.data();
+        } 
         return js_StartRecorder(cx, anchor, c, (TreeInfo*)f->vmprivate,
-                                ngslots, globalTypeMap, stackTypeMap, expectedInnerExit);
+                                ngslots, globalTypeMap, stackTypeMap, exitedFrom);
     }
     return false;
 }

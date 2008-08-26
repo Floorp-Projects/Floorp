@@ -157,6 +157,7 @@ namespace nanojit
         int32_t calldepth;
         uint32 numGlobalSlots;
         uint32 numStackSlots;
+        uint32 numStackSlotsBelowCurrentFrame;
         uint8 *typeMap;
         ExitType exitType;
 #if defined NJ_VERBOSE

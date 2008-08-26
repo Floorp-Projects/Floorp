@@ -97,9 +97,16 @@ public:
     }
     
     void add(T a) {
-        JS_ASSERT(_len <= _max);
         ensure(_len + 1);
+        JS_ASSERT(_len <= _max);
         _data[_len++] = a;
+    }
+    
+    void add(T* chunk, unsigned size) {
+        ensure(_len + size);
+        JS_ASSERT(_len <= _max);
+        memcpy(&_data[_len], chunk, size * sizeof(T));
+        _len += size;
     }
     
     void addUnique(T a) {
