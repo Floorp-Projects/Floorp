@@ -339,7 +339,7 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);     
   /* END interfaces from nsIDOMMouseListener*/
 
-  // nsIDOMMouseListener intefaces
+  // nsIDOMMouseMotionListener interfaces
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
