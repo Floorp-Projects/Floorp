@@ -174,6 +174,12 @@ endif
 RCFLAGS += -DXULRUNNER_ICO=\"$(DIST)/branding/xulrunner.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
 endif
 
+ifdef MOZ_MEMORY
+ifneq ($(OS_ARCH),WINNT)
+LIBS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/jemalloc)
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DXULRUNNER_ICO=\"$(DIST)/branding/xulrunner.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
