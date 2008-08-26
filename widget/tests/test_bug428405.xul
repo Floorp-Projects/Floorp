@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window id="window1" title="Test Bug 428405"
+  onload="setGlobals(); loadFirstTab();"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <tabbox id="tabbox" flex="100%">
+    <tabs>
+      <tab label="Tab 1"/>
+      <tab label="Tab 2"/>
+    </tabs>
+    <tabpanels flex="100%">
+      <browser onload="configureFirstTab();" id="tab1browser" flex="100%"/>
+      <browser onload="configureSecondTab();" id="tab2browser" flex="100%"/>
+    </tabpanels>
+  </tabbox>
+
+  <script type="application/javascript"><![CDATA[
+
+    SimpleTest.waitForExplicitFinish();
+
+    var gUtils;
+
+    var gCmdOptYReceived = false;
+
+    // Look for a cmd-opt-y event.
+    function onKeyPress(aEvent) {
+      gCmdOptYReceived = false;
+      if (String.fromCharCode(aEvent.charCode) != 'y')
+        return;
+      if (aEvent.ctrlKey || aEvent.shiftKey || !aEvent.metaKey || !aEvent.altKey)
+        return;
+      gCmdOptYReceived = true;
+    }
+
+    function setGlobals() {
+      gUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                      getInterface(Components.interfaces.nsIDOMWindowUtils);
+      var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
+                          getService(Components.interfaces.nsIWindowMediator);
+      gChromeWindow = wm.getMostRecentWindow("navigator:browser");
+      // For some reason, a global <key> element's oncommand handler only gets
+      // invoked if the focus is outside both of the <browser> elements
+      // (tab1browser and tab2browser).  So, to make sure we can see a
+      // cmd-opt-y event in window1 (if one is available), regardless of where
+      // the focus is in this window, we need to add a "keypress" event
+      // listener to gChromeWindow, and then check (in onKeyPress()) to see if
+      // it's a cmd-opt-y event.
+      gChromeWindow.addEventListener("keypress", onKeyPress, false);
+    }
+
+    // 1) Start loading first tab.
+    // 6) Start reloading first tab.
+    function loadFirstTab() {
+      var browser = document.getElementById("tab1browser");
+      browser.loadURI("data:text/html;charset=utf-8,<body><h2>First Tab</h2><p><input type='submit' value='Button' id='button1'/></body>", null, null);
+    }
+
+    function configureFirstTab() {
+      try {
+        var button = document.getElementById("tab1browser").contentDocument.getElementById("button1");
+        button.addEventListener("click", onFirstTabButtonClicked, false);
+        button.focus();
+        if (document.getElementById("tabbox").selectedIndex == 0) {
+          // 2) When first tab has finished loading (while first tab is
+          //    focused), hit Return to trigger the action of first tab's
+          //    button.
+          synthesizeNativeReturnKey();
+        } else {
+          // 7) When first tab has finished reloading (while second tab is
+          //    focused), start loading second tab.
+          loadSecondTab();
+        }
+      } catch(e) {
+      }
+    }
+
+    // 8) Start loading second tab.
+    function loadSecondTab() {
+      var browser = document.getElementById("tab2browser");
+      browser.loadURI("data:text/html;charset=utf-8,<body><h2>Second Tab</h2><p><input type='submit' value='Button' id='button1'/></body>", null, null);
+    }
+
+    function configureSecondTab() {
+      try {
+        var button = document.getElementById("tab2browser").contentDocument.getElementById("button1");
+        button.addEventListener("click", onSecondTabButtonClicked, false);
+        button.focus();
+        if (document.getElementById("tabbox").selectedIndex == 1) {
+          // 9) When second tab has finished loading (while second tab is
+          //    focused), hit Return to trigger action of second tab's
+          //    button.
+          synthesizeNativeReturnKey();
+        }
+      } catch(e) {
+      }
+    }
+
+    // 3) First tab's button clicked.
+    function onFirstTabButtonClicked() {
+      switchToSecondTabAndReloadFirst();
+    }
+
+    // 10) Second tab's button clicked.
+    function onSecondTabButtonClicked() {
+      switchToFirstTab();
+    }
+
+    function switchToSecondTabAndReloadFirst() {
+      // 4) Switch to second tab.
+      document.getElementById("tabbox").selectedIndex = 1;
+      // 5) Start reloading first tab (while second tab is focused).
+      loadFirstTab();
+    }
+
+    function switchToFirstTab() {
+      // 11) Switch back to first tab.
+      document.getElementById("tabbox").selectedIndex = 0;
+      finishTest();
+    }
+
+    function finishTest() {
+      // 12) Back in first tab, try cmd-y.
+      gCmdOptYReceived = false;
+      synthesizeNativeCmdOptY();
+
+      // 13) Check result.
+      is(gCmdOptYReceived, true);
+
+      SimpleTest.finish();
+    }
+
+    // synthesizeNativeReturnKey() and synthesizeNativeCmdOptY() are needed
+    // because their synthesizeKey() counterparts don't work properly -- the
+    // latter make this test succeed when it should fail.
+
+    // The 'aNativeKeyCode', 'aCharacters' and 'aUnmodifiedCharacters'
+    // parameters used below (in synthesizeNativeReturnKey() and
+    // synthesizeNativeCmdOptY()) were confirmed accurate using the
+    // DebugEventsPlugin v1.01 from bmo bug 441880.
+
+    function synthesizeNativeReturnKey() {
+      gUtils.sendNativeKeyEvent(0, 36, 0, "\u000a", "\u000a");
+    }
+
+    function synthesizeNativeCmdOptY() {
+      gUtils.sendNativeKeyEvent(0, 16, 0x5000, "y", "y");
+    }
+
+  ]]></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+
+</window>
