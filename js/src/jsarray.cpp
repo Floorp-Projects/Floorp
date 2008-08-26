@@ -2220,6 +2220,17 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj2;
     JSTempValueRooter tvr;
 
+    /*
+     * Create a new array value to return.  Our ECMA v2 proposal specs
+     * that splice always returns an array value, even when given no
+     * arguments.  We think this is best because it eliminates the need
+     * for callers to do an extra test to handle the empty splice case.
+     */
+    obj2 = js_NewArrayObject(cx, 0, NULL);
+    if (!obj2)
+        return JS_FALSE;
+    *vp = OBJECT_TO_JSVAL(obj2);
+
     /* Nothing to do if no args.  Otherwise get length. */
     if (argc == 0)
         return JS_TRUE;
@@ -2263,17 +2274,6 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         argc--;
         argv++;
     }
-
-    /*
-     * Create a new array value to return.  Our ECMA v2 proposal specs
-     * that splice always returns an array value, even when given no
-     * arguments.  We think this is best because it eliminates the need
-     * for callers to do an extra test to handle the empty splice case.
-     */
-    obj2 = js_NewArrayObject(cx, 0, NULL);
-    if (!obj2)
-        return JS_FALSE;
-    *vp = OBJECT_TO_JSVAL(obj2);
 
     /* After this, control must flow through label out: to exit. */
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
