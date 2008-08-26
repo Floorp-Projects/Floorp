@@ -809,11 +809,11 @@ void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
 
 nsTransparencyMode nsCocoaWindow::GetTransparencyMode()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   return [mWindow isOpaque] ? eTransparencyOpaque : eTransparencyTransparent;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(eTransparencyOpaque);
 }
 
 
@@ -839,17 +839,6 @@ void nsCocoaWindow::SetTransparencyMode(nsTransparencyMode aMode)
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-
-NS_METHOD nsCocoaWindow::AddMouseListener(nsIMouseListener * aListener)
-{
-  nsBaseWidget::AddMouseListener(aListener);
-
-  if (mPopupContentView)
-    mPopupContentView->AddMouseListener(aListener);
-
-  return NS_OK;
 }
 
 

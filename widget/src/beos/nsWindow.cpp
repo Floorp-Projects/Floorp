@@ -2630,7 +2630,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
                                     PRUint16 aButton)
 {
 	PRBool result = PR_FALSE;
-	if (nsnull != mEventCallback || nsnull != mMouseListener)
+	if (nsnull != mEventCallback)
 	{
 		nsMouseEvent event(PR_TRUE, aEventType, this, nsMouseEvent::eReal);
 		InitEvent (event, &aPoint);
@@ -2642,31 +2642,9 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 		event.button = aButton;
 
 		// call the event callback
-		if (nsnull != mEventCallback)
-		{
-			result = DispatchWindowEvent(&event);
-			NS_RELEASE(event.widget);
-			return result;
-		}
-		else
-		{
-			switch(aEventType)
-			{
-			case NS_MOUSE_MOVE :
-				result = ConvertStatus(mMouseListener->MouseMoved(event));
-				break;
-
-			case NS_MOUSE_BUTTON_DOWN :
-				result = ConvertStatus(mMouseListener->MousePressed(event));
-				break;
-
-			case NS_MOUSE_BUTTON_UP :
-				result = ConvertStatus(mMouseListener->MouseReleased(event)) && ConvertStatus(mMouseListener->MouseClicked(event));
-				break;
-			}
-			NS_RELEASE(event.widget);
-			return result;
-		}
+    result = DispatchWindowEvent(&event);
+    NS_RELEASE(event.widget);
+    return result;
 	}
 
 	return PR_FALSE;
