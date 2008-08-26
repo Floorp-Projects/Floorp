@@ -2565,7 +2565,10 @@ js_Interpret(JSContext *cx)
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)
 # define END_EMPTY_CASES    goto advance_pc_by_one;
 
-#endif
+#endif /* !JS_THREADED_INTERP */
+
+    /* We had better not be entering the interpreter from JIT-compiled code. */
+    JS_ASSERT(!cx->runningJittedCode);
 
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
