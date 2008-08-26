@@ -1,8 +1,7 @@
 function run_test() { 
   // this is a hack to skip the rest of the code on non-Mac platforms, 
   // since #ifdef is not available to xpcshell tests...
-  var thisFile = do_get_file("xpcom/tests/unit/test_mac_bundle.js");
-  if (!thisFile instanceof Components.interfaces.nsILocalFileMac)
+  if (!("nsILocalFileMac" in Components.interfaces))
     return;
   
   // OK, here's the real part of the test:
