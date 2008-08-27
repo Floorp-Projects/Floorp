@@ -1248,7 +1248,7 @@ TraceRecorder::get(jsval* p)
 
 /* Determine whether a bytecode location (pc) terminates a loop or is a path within the loop. */
 static bool
-js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
+js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* header, jsbytecode* pc)
 {
     switch (*pc) {
       case JSOP_LT:
@@ -1271,7 +1271,7 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* pc)
          */
         if (pc[GET_JUMP_OFFSET(pc)] == JSOP_ENDITER)
             return true;
-        return GET_JUMP_OFFSET(pc) < 0;
+        return pc + GET_JUMP_OFFSET(pc) == header;
 
       default:;
     }
@@ -1355,7 +1355,8 @@ SideExit*
 TraceRecorder::snapshot(ExitType exitType)
 {
     JSStackFrame* fp = cx->fp;
-    if (exitType == BRANCH_EXIT && js_IsLoopExit(cx, fp->script, fp->regs->pc))
+    if (exitType == BRANCH_EXIT && 
+        js_IsLoopExit(cx, fp->script, (jsbytecode*)fragment->root->ip, fp->regs->pc))
         exitType = LOOP_EXIT;
     /* Generate the entry map and stash it in the trace. */
     unsigned stackSlots = js_NativeStackSlots(cx, callDepth);
