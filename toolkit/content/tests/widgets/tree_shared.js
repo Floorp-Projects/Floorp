@@ -1127,7 +1127,7 @@ function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumbe
   // avoid the extra hit test space given to the splitter
   var columnWidth = down.boxObject.width;
   var splitterHitWidth = columnWidth / 2;
-  synthesizeMouse(down, splitterHitWidth, 0, { type: "mousedown"});
+  synthesizeMouse(down, splitterHitWidth, 3, { type: "mousedown"});
 
   var offsetX = 0;
   if (aAfter) {
@@ -1137,17 +1137,17 @@ function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumbe
   if (aMouseUpColumnNumber > aMouseDownColumnNumber) {
     for (var i = aMouseDownColumnNumber; i <= aMouseUpColumnNumber; i++) {
       var move = columns[i].element;
-      synthesizeMouse(move, offsetX, 0, { type: "mousemove"});
+      synthesizeMouse(move, offsetX, 3, { type: "mousemove"});
     }
   }
   else {
     for (var i = aMouseDownColumnNumber; i >= aMouseUpColumnNumber; i--) {
       var move = columns[i].element;
-      synthesizeMouse(move, offsetX, 0, { type: "mousemove"});
+      synthesizeMouse(move, offsetX, 3, { type: "mousemove"});
     }
   }
 
-  synthesizeMouse(up, offsetX, 0, { type: "mouseup"});
+  synthesizeMouse(up, offsetX, 3, { type: "mouseup"});
 }
 
 function arrayMove(aArray, aFrom, aTo, aAfter)

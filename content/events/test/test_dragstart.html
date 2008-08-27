@@ -16,6 +16,7 @@ SimpleTest.waitForExplicitFinish();
 
 var gDragInfo;
 var gDataTransfer = null;
+var gExtraDragTests = 0;
 
 function runTests()
 {
@@ -24,7 +25,13 @@ function runTests()
   window.getSelection().selectAllChildren(draggable);
   synthesizeMouse(draggable, 6, 6, { type: "mousedown" });
   synthesizeMouse(draggable, 14, 14, { type: "mousemove" });
+  // drags are asynchronous on Linux, so this extra event is needed to make
+  // sure the drag gets processed
+  synthesizeMouse(draggable, 15, 15, { type: "mousemove" });
+}
 
+function afterDragTests()
+{
   // the dragstart should have occured due to moving the mouse. gDataTransfer
   // caches the dataTransfer that was used, however it should now be empty and
   // be read only.
@@ -44,6 +51,17 @@ function runTests()
   expectError(function() gDataTransfer.addElement(draggable),
               "NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR", "addElement when read only");
 
+  var evt = document.createEvent("dragevent");
+  ok(evt instanceof DragEvent, "synthetic dragevent class")
+  ok(evt instanceof MouseEvent, "synthetic event inherits from MouseEvent")
+  evt.initDragEvent("dragstart", true, true, window, 1, null);
+  $("synthetic").dispatchEvent(evt);
+
+  var evt = document.createEvent("dragevents");
+  ok(evt instanceof DragEvent, "synthetic dragevents class")
+  evt.initDragEvent("dragover", true, true, window, 0, null);
+  $("synthetic2").dispatchEvent(evt);
+
   // next, dragging links and images
   sendMouseEventsForDrag("link");
   sendMouseEventsForDrag("image");
@@ -56,38 +74,22 @@ function runTests()
 //  sendMouseEventsForDrag("input");
 
   // next, check if the draggable attribute can be used to adjust the drag target
+  gDragInfo = { target: $("dragtrue"), testid: "draggable true node" };
   sendMouseEventsForDrag("dragtrue");
-  ok(gDragInfo.itemCount == 0 && gDragInfo.types.length == 0 && gDragInfo.target == $("dragtrue"), "draggable true node");
+  gDragInfo = { target: $("dragtrue"), testid: "draggable true child" };
   sendMouseEventsForDrag("spantrue");
-  ok(gDragInfo.itemCount == 0 && gDragInfo.types.length == 0 && gDragInfo.target == $("dragtrue"), "draggable true child");
+  gDragInfo = { target: $("dragfalse").firstChild, testid: "draggable false node" };
   sendMouseEventsForDrag("dragfalse");
-  ok(gDragInfo.itemCount == 0 && gDragInfo.types.length == 0 && gDragInfo.target == $("dragfalse").firstChild,
-     "draggable false node");
+  gDragInfo = { target: $("spanfalse").firstChild, testid: "draggable false child" };
   sendMouseEventsForDrag("spanfalse");
-  ok(gDragInfo.itemCount == 0 && gDragInfo.types.length == 0 && gDragInfo.target == $("spanfalse").firstChild,
-     "draggable false child");
-
-  var evt = document.createEvent("dragevent");
-  ok(evt instanceof DragEvent, "synthetic dragevent class")
-  ok(evt instanceof MouseEvent, "synthetic event inherits from MouseEvent")
-  evt.initDragEvent("dragstart", true, true, window, 1, null);
-  $("synthetic").dispatchEvent(evt);
-
-  var evt = document.createEvent("dragevents");
-  ok(evt instanceof DragEvent, "synthetic dragevents class")
-  evt.initDragEvent("dragover", true, true, window, 0, null);
-  $("synthetic2").dispatchEvent(evt);
-
-  SimpleTest.finish();
 }
 
 function sendMouseEventsForDrag(nodeid)
 {
-  gDragInfo = null;
-
   var draggable = $(nodeid);
   synthesizeMouse(draggable, 3, 3, { type: "mousedown" });
   synthesizeMouse(draggable, 10, 10, { type: "mousemove" });
+  synthesizeMouse(draggable, 12, 12, { type: "mousemove" });
 }
 
 function doDragStartSelection(event)
@@ -122,6 +124,7 @@ function doDragStartSelection(event)
   dt.clearData("text/_moz_htmlcontext");
 
   test_DataTransfer(dt);
+  setTimeout(afterDragTests, 0);
 }
 
 function test_DataTransfer(dt)
@@ -383,6 +386,8 @@ function doDragStartLink(event)
   is(dt.getData("text/plain"), "http://www.mozilla.org/", "link text/plain");
 
   event.preventDefault();
+
+  gExtraDragTests++;
 }
 
 function doDragStartImage(event)
@@ -398,6 +403,8 @@ function doDragStartImage(event)
   is(dt.getData("text/plain"), dataurl, "image text/plain");
 
   event.preventDefault();
+
+  gExtraDragTests++;
 }
 
 function doDragStartInput(event)
@@ -443,7 +450,11 @@ return;
 function onDragStartDraggable(event)
 {
   var dt = event.dataTransfer;
-  gDragInfo = { itemCount: dt.mozItemCount, types: dt.types, target: event.originalTarget };
+  ok(dt.mozItemCount == 0 && dt.types.length == 0 && event.originalTarget == gDragInfo.target, gDragInfo.testid);
+
+  gExtraDragTests++;
+  if (gExtraDragTests == 6)
+    SimpleTest.finish();
 }
 
 function checkOneDataItem(dt, expectedtypes, expecteddata, index, testid)
