@@ -950,9 +950,11 @@ namespace nanojit
 
 #define JMPc 0xe9
 		
-#define JMP_long_placeholder()	do {\
-	underrunProtect(5);				\
-	JMP_long_nochk_offset(-1); } while(0)
+#define JMP_long_placeholder()	do {                    \
+	underrunProtect(14);				                \
+    IMM64(-1);                                          \
+    JMPm_nochk(0);                                      \
+    } while (0)
 	
 // this should only be used when you can guarantee there is enough room on the page
 #define JMP_long_nochk_offset(o) do {\
