@@ -44,7 +44,7 @@ class nsGUIEvent;
 
 /**
  * Event listener interface.
- * Alternative to a callback for recieving events.
+ * Alternative to a callback for receiving events.
  */
 
 // {c83f6b80-d7ce-11d2-8360-c4c894c4917c}
@@ -57,7 +57,6 @@ public:
   
  /**
   * Processes all events. 
-  * If a mouse listener is registered this method will not process mouse events. 
   * @param anEvent the event to process. See nsGUIEvent.h for event types.
   */
 

@@ -50,10 +50,6 @@ ifndef MOZ_SUNBIRD
 DIRS += browser
 endif
 
-ifndef MOZ_XUL_APP
-DIRS += global communicator
-endif
-
 # Because of our great use of encapsulation, there are
 # some header file in xpfe/components that are required
 # by layout and the dom.  This MOZ_XPFE_COMPONENTS, if 

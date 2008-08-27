@@ -50,7 +50,6 @@
 
 #include "nsIWidget.h"
 
-#include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 #include "nsString.h"
 

@@ -355,9 +355,6 @@ nsTableCellFrame::PaintCellBackground(nsIRenderingContext& aRenderingContext,
 {
   if (!GetStyleVisibility()->IsVisible())
     return;
-  if (GetContentEmpty() &&
-      NS_STYLE_TABLE_EMPTY_CELLS_HIDE == GetStyleTableBorder()->mEmptyCells)
-    return;
 
   PaintBackground(aRenderingContext, aDirtyRect, aPt);
 }
@@ -413,13 +410,15 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
 
   DO_GLOBAL_REFLOW_COUNT_DSP("nsTableCellFrame");
-
-  PRInt32 emptyCellStyle = GetContentEmpty() ? GetStyleTableBorder()->mEmptyCells
-      : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  
+  PRInt32 emptyCellStyle = GetContentEmpty() && !tableFrame->IsBorderCollapse() ?
+                              GetStyleTableBorder()->mEmptyCells
+                              : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
   // take account of 'empty-cells'
   if (GetStyleVisibility()->IsVisible() &&
       (NS_STYLE_TABLE_EMPTY_CELLS_HIDE != emptyCellStyle)) {
-    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    
 
     PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
     if (!isRoot) {

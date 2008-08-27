@@ -294,6 +294,15 @@ NS_IMETHODIMP nsTreeBoxObject::GetPageLength(PRInt32 *aPageLength)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTreeBoxObject::GetSelectionRegion(nsIScriptableRegion **aRegion)
+{
+ *aRegion = nsnull;
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->GetSelectionRegion(aRegion);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsTreeBoxObject::EnsureRowIsVisible(PRInt32 aRow)
 {

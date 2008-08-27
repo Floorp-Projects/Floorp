@@ -2061,9 +2061,26 @@ Checker.prototype = {
   },
 
   /**
+   * Returns the status code for the XMLHttpRequest
+   */
+  _getChannelStatus: function(request) {
+    var status = 0;
+    try {
+      status = request.status;
+    }
+    catch (e) {
+    }
+
+    if (status == 0)
+      status = request.channel.QueryInterface(Components.interfaces.nsIRequest)
+                              .status;
+    return status;
+  },
+
+  /**
    * The XMLHttpRequest succeeded and the document was loaded.
    * @param   event
-   *          The nsIDOMLSEvent for the load
+   *          The nsIDOMEvent for the load
    */
   onLoad: function(event) {
     LOG("Checker", "onLoad: request completed downloading document");
@@ -2083,9 +2100,12 @@ Checker.prototype = {
       LOG("Checker", "There was a problem with the update service URL specified, " +
           "either the XML file was malformed or it does not exist at the location " +
           "specified. Exception: " + e);
+      var request = event.target;
+      var status = this._getChannelStatus(request);
+      LOG("Checker", "onLoad: request.status = " + status);
       var update = new Update(null);
-      update.statusText = getStatusTextFromCode(404, 404);
-      this._callback.onError(event.target, update);
+      update.statusText = getStatusTextFromCode(status, 404);
+      this._callback.onError(request, update);
     }
 
     this._request = null;
@@ -2094,26 +2114,14 @@ Checker.prototype = {
   /**
    * There was an error of some kind during the XMLHttpRequest
    * @param   event
-   *          The nsIDOMLSEvent for the load
+   *          The nsIDOMEvent for the load
    */
   onError: function(event) {
     LOG("Checker", "onError: error during load");
 
     var request = event.target;
-
-    // Set a default value of |0|,
-    // then if |request.status| is defined (but) to this (useless) value,
-    // we will not use it.
-    var status = 0;
-    try {
-      status = request.status;
-    }
-    catch (e) {
-    }
-
-    if (status == 0)
-      status = request.channel.QueryInterface(Components.interfaces.nsIRequest)
-                              .status;
+    var status = this._getChannelStatus(request);
+    LOG("Checker", "onError: request.status = " + status);
 
     // If we can't find an error string specific to this status code,
     // just use the 200 message from above, which means everything

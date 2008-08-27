@@ -856,6 +856,22 @@ nsGenericHTMLElement::SetSpellcheck(PRBool aSpellcheck)
   return SetAttrHelper(nsGkAtoms::spellcheck, NS_LITERAL_STRING("false"));
 }
 
+NS_IMETHODIMP
+nsGenericHTMLElement::GetDraggable(PRBool* aDraggable)
+{
+  *aDraggable = AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
+                             nsGkAtoms::_true, eIgnoreCase);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::SetDraggable(PRBool aDraggable)
+{
+  return SetAttrHelper(nsGkAtoms::draggable,
+                       aDraggable ? NS_LITERAL_STRING("true") :
+                                    NS_LITERAL_STRING("false"));
+}
+
 PRBool
 nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
 {

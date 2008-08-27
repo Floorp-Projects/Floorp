@@ -5937,7 +5937,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
 {
   PRBool result = PR_FALSE;
 
-  if (nsnull == mEventCallback && nsnull == mMouseListener) {
+  if (!mEventCallback) {
     return result;
   }
 
@@ -6145,31 +6145,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
     return result;
   }
 
-  if (nsnull != mMouseListener) {
-    switch (aEventType) {
-      case NS_MOUSE_MOVE:
-      {
-        result = ConvertStatus(mMouseListener->MouseMoved(event));
-        nsRect rect;
-        GetBounds(rect);
-        if (rect.Contains(event.refPoint)) {
-          if (gCurrentWindow == NULL || gCurrentWindow != this) {
-            gCurrentWindow = this;
-          }
-        }
-      }
-      break;
-
-      case NS_MOUSE_BUTTON_DOWN:
-        result = ConvertStatus(mMouseListener->MousePressed(event));
-        break;
-
-      case NS_MOUSE_BUTTON_UP:
-        result = ConvertStatus(mMouseListener->MouseReleased(event));
-        result = ConvertStatus(mMouseListener->MouseClicked(event));
-        break;
-    } // switch
-  }
   return result;
 }
 
@@ -6282,7 +6257,7 @@ PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARA
 {
   PRBool result = PR_FALSE;
 
-  if (nsnull == mEventCallback && nsnull == mMouseListener) {
+  if (nsnull == mEventCallback) {
     return result;
   }
 

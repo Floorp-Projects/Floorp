@@ -138,9 +138,9 @@ nsSVGFilterProperty::DoUpdate()
 {
   nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
   if (outerSVGFrame) {
-    outerSVGFrame->InvalidateRect(mFilterRect);
+    outerSVGFrame->Invalidate(mFilterRect);
     UpdateRect();
-    outerSVGFrame->InvalidateRect(mFilterRect);
+    outerSVGFrame->Invalidate(mFilterRect);
   }
 }
 

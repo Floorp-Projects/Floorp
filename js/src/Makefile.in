@@ -40,7 +40,6 @@
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -103,6 +102,8 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 DEFINES += -DAVMPLUS_WIN32
 endif
+
+VPATH		= $(srcdir)
 
 CPPSRCS		= \
 		jsapi.cpp \
@@ -199,33 +200,35 @@ EXPORTS		= \
 		$(NULL)
 
 ifdef ENABLE_JIT
+VPATH		+= $(srcdir)/nanojit
+
 EXPORTS += \
-		nanojit/Assembler.h     \
-		nanojit/LIR.h		\
-		nanojit/avmplus.h	\
-		nanojit/vm_fops.h	\
-		nanojit/Fragmento.h	\
-		nanojit/Native.h	\
-		nanojit/Native$(NANOJIT_ARCH).h \
-		nanojit/RegAlloc.h	\
-		nanojit/nanojit.h	\
+		Assembler.h     \
+		LIR.h		\
+		avmplus.h	\
+		vm_fops.h	\
+		Fragmento.h	\
+		Native.h	\
+		Native$(NANOJIT_ARCH).h \
+		RegAlloc.h	\
+		nanojit.h	\
 		builtins.tbl \
 		$(NULL)
 
 CPPSRCS += \
 		jstracer.cpp \
-		nanojit/Assembler.cpp  \
-		nanojit/Fragmento.cpp  \
-		nanojit/LIR.cpp        \
-		nanojit/RegAlloc.cpp   \
-		nanojit/avmplus.cpp    \
-		nanojit/Native$(NANOJIT_ARCH).cpp \
+		Assembler.cpp  \
+		Fragmento.cpp  \
+		LIR.cpp        \
+		RegAlloc.cpp   \
+		avmplus.cpp    \
+		Native$(NANOJIT_ARCH).cpp \
 		jsbuiltins.cpp         \
 		$(NULL)
 
 ifdef DEBUG
-EXPORTS += nanojit/TraceTreeDrawer.h
-CPPSRCS += nanojit/TraceTreeDrawer.cpp
+EXPORTS += TraceTreeDrawer.h
+CPPSRCS += TraceTreeDrawer.cpp
 endif
 
 DEFINES += -DFEATURE_NANOJIT -DJS_TRACER
@@ -372,11 +375,9 @@ EXTRA_DSO_LDOPTS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
 
-LDFLAGS		+= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
-
 # BeOS and HP-UX do not require the extra linking of "-lm"
 ifeq (,$(filter BeOS HP-UX WINNT WINCE OpenVMS,$(OS_ARCH)))
-LDFLAGS		+= -lm
+EXTRA_LIBS	+= -lm
 endif
 
 # Prevent floating point errors caused by VC++ optimizations
@@ -389,7 +390,7 @@ endif
 endif # WINNT
 
 ifeq ($(OS_ARCH),FreeBSD)
-LDFLAGS		+= -pthread
+EXTRA_LIBS	+= -pthread
 endif
 ifeq ($(OS_ARCH),IRIX)
 ifdef USE_N32
@@ -397,10 +398,10 @@ DASH_R		+= -n32
 endif
 endif
 ifeq ($(OS_ARCH),Linux)
-LDFLAGS		+= -ldl
+EXTRA_LIBS	+= -ldl
 endif
 ifeq ($(OS_ARCH),OSF1)
-LDFLAGS		+= -lc_r
+EXTRA_LIBS	+= -lc_r
 endif
 ifeq ($(OS_ARCH),SunOS)
 ifeq ($(TARGET_CPU),sparc)
@@ -417,9 +418,9 @@ endif # JS_ULTRASPARC_OPTS
 
 endif
 ifeq ($(OS_RELEASE),4.1)
-LDFLAGS		+= -ldl -lnsl
+EXTRA_LIBS	+= -ldl -lnsl
 else
-LDFLAGS		+= -lposix4 -ldl -lnsl -lsocket
+EXTRA_LIBS	+= -lposix4 -ldl -lnsl -lsocket
 endif
 endif
 

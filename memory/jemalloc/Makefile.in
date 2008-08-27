@@ -99,7 +99,12 @@ LIBRARY_NAME	= jemalloc
 
 # Build jemalloc as a shared lib.  This is mandatory for Darwin, since a library
 # init function is used on that platform.
+ifeq ($(OS_ARCH),Darwin)
 FORCE_SHARED_LIB= 1
+else
+DIST_INSTALL = 1
+FORCE_STATIC_LIB= 1
+endif
 
 CSRCS		= \
 		jemalloc.c \

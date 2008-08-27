@@ -924,19 +924,11 @@ nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
   return yGroupOffset;
 }
 
-// Move a child that was skipped during an incremental reflow.
-// This function is not used for paginated mode so we don't need to deal
-// with continuing frames, and it's only called if aKidFrame has no
-// cells that span into it and no cells that span across it. That way
-// we don't have to deal with rowspans
-// XXX Is it still true that it's not used for paginated mode?
+// Move a child that was skipped during a reflow.
 void
 nsTableRowGroupFrame::SlideChild(nsRowGroupReflowState& aReflowState,
                                  nsIFrame*              aKidFrame)
 {
-  NS_PRECONDITION(NS_UNCONSTRAINEDSIZE == aReflowState.reflowState.availableHeight,
-                  "we're not in galley mode");
-
   // Move the frame if we need to
   nsPoint oldPosition = aKidFrame->GetPosition();
   nsPoint newPosition = oldPosition;

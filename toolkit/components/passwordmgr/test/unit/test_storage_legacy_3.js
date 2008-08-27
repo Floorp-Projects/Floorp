@@ -519,7 +519,7 @@ testnum++;
 testdesc = "ensure internal login objects not shared with callers."
 
 storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
-                               OUTDIR, "output-394610-5.txt");
+                               OUTDIR, "output-449701.txt");
 LoginTest.checkStorageData(storage, [], []);
 
 // dummyuser1 == dummyuser2
@@ -545,6 +545,45 @@ logins = storage.getAllLogins({});
 var obtainedLogin2 = logins[0];
 
 do_check_neq(obtainedLogin1.usernameField, obtainedLogin2.usernameField);
+
+
+/*
+ * ---------------------- Bug 451155 ----------------------
+ * Ensure that we don't mangle strings when then contain
+ * UCS2 characters above U+00FF.
+ */
+
+/* ========== 15 ========== */
+testnum++;
+testdesc = "ensure UCS2 strings don't get mangled."
+
+storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
+                               OUTDIR, "output-451155.txt");
+LoginTest.checkStorageData(storage, [], []);
+
+var testString = String.fromCharCode(355, 277, 349, 357, 533, 537, 101, 345, 185);
+
+var utfHost = "http://" + testString + ".org";
+var utfUser1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+var utfUser2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+
+utfUser1.init("http://" + testString + ".org",
+    "http://" + testString + ".org", null,
+    testString, testString, testString, testString);
+utfUser2.init("http://realm.check.net", null, "realm " + testString + " test",
+    "user", "pass", "", "");
+
+storage.addLogin(utfUser1);
+storage.addLogin(utfUser2);
+storage.setLoginSavingEnabled(utfHost, false);
+
+LoginTest.checkStorageData(storage, [utfHost], [utfUser1, utfUser2]);
+
+testdesc = "[flush and reload for verification]"
+storage = LoginTest.reloadStorage(OUTDIR, "output-451155.txt");
+LoginTest.checkStorageData(storage, [utfHost], [utfUser1, utfUser2]);
 
 
 /* ========== end ========== */

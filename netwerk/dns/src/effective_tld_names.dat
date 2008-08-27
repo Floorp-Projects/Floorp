@@ -21,6 +21,8 @@
 // Contributor(s):
 //   Ruben Arakelyan <ruben@wackomenace.co.uk>
 //   Gervase Markham <gerv@gerv.net>
+//   Pamela Greene <pamg.bugs@gmail.com>
+//   David Triendl <david@triendl.name>
 //   The kind representatives of many TLD registries
 // 
 // Alternatively, the contents of this file may be used under the terms of
@@ -194,8 +196,14 @@ org.an
 edu.an
 
 // ao : http://en.wikipedia.org/wiki/.ao
-// list of 2nd level TLDs ?
+// http://www.dns.ao/REGISTR.DOC
 ao
+ed.ao
+gv.ao
+og.ao
+co.ao
+pb.ao
+it.ao
 
 // aq : http://en.wikipedia.org/wiki/.aq
 aq
@@ -213,6 +221,7 @@ aq
 !uba.ar
 
 // arpa : http://en.wikipedia.org/wiki/.arpa
+// Confirmed by registry <iana-questions@icann.org> 2008-06-18
 e164.arpa
 in-addr.arpa
 ip6.arpa
@@ -221,6 +230,9 @@ urn.arpa
 
 // as : http://en.wikipedia.org/wiki/.as
 as
+
+// asia: http://en.wikipedia.org/wiki/.asia
+asia
 
 // at : http://en.wikipedia.org/wiki/.at
 // Confirmed by registry <it@nic.at> 2008-06-17
@@ -307,17 +319,61 @@ ac.be
 
 // bf : http://en.wikipedia.org/wiki/.bf
 bf
+gov.bf
 
 // bg : http://en.wikipedia.org/wiki/.bg
+// https://www.register.bg/user/static/rules/en/index.html
 bg
+a.bg
+b.bg
+c.bg
+d.bg
+e.bg
+f.bg
+g.bg
+h.bg
+i.bg
+j.bg
+k.bg
+l.bg
+m.bg
+n.bg
+o.bg
+p.bg
+q.bg
+r.bg
+s.bg
+t.bg
+u.bg
+v.bg
+w.bg
+x.bg
+y.bg
+z.bg
+0.bg
+1.bg
+2.bg
+3.bg
+4.bg
+5.bg
+6.bg
+7.bg
+8.bg
+9.bg	 	 	
 
 // bh : http://en.wikipedia.org/wiki/.bh
-// list of 2nd level tlds ?
+// list of other 2nd level tlds ?
 bh
+com.bh
 
 // bi : http://en.wikipedia.org/wiki/.bi
-// list of 2nd level tlds ?
+// http://whois.nic.bi/
 bi
+co.bi
+com.bi
+edu.bi
+or.bi
+org.bi
 
 // biz : http://en.wikipedia.org/wiki/.biz
 biz
@@ -351,6 +407,7 @@ tv.bo
 
 // br : http://en.wikipedia.org/wiki/.br
 // http://registro.br/info/dpn.html
+// Confirmed by registry <fneves@registro.br> 2008-06-24
 br
 adm.br
 adv.br
@@ -362,6 +419,7 @@ ato.br
 bio.br
 blog.br
 bmd.br
+can.br
 cim.br
 cng.br
 cnt.br
@@ -430,16 +488,31 @@ gov.bs
 // Submitted by registry <jarle@uninett.no> 2006-06-16
 
 // bw : http://en.wikipedia.org/wiki/.bw
-// list of 2nd level tlds ?
+// http://www.gobin.info/domainname/bw.doc
+// list of other 2nd level tlds ?
 bw
+co.bw
+org.bw
 
 // by : http://en.wikipedia.org/wiki/.by
-// list of 2nd level tlds ?
+// http://tld.by/rules_2006_en.html
+// list of other 2nd level tlds ?
 by
+gov.by
+mil.by
+// Official information does not indicate that com.by is a reserved
+// second-level domain, but it's being used as one (see www.google.com.by and
+// www.yahoo.com.by, for example), so we list it here for safety's sake.
+com.by
 
 // bz : http://en.wikipedia.org/wiki/.bz
-// list of 2nd level tlds ?
+// http://www.belizenic.bz/
 bz
+com.bz
+net.bz
+org.bz
+edu.bz
+gov.bz
 
 // ca : http://en.wikipedia.org/wiki/.ca
 ca
@@ -466,7 +539,9 @@ cat
 cc
 
 // cd : http://en.wikipedia.org/wiki/.cd
+// see also: https://www.nic.cd/domain/insertDomain_2.jsp?act=1
 cd
+gov.cd
 
 // cf : http://en.wikipedia.org/wiki/.cf
 cf
@@ -478,17 +553,35 @@ cg
 ch
 
 // ci : http://en.wikipedia.org/wiki/.ci
-// list of 2nd level tlds ?
+// http://www.nic.ci/index.php?page=charte
 ci
+org.ci
+or.ci
+com.ci
+co.ci
+edu.ci
+ed.ci
+ac.ci
+net.ci
+go.ci
+asso.ci
+aéroport.ci
+int.ci
+presse.ci
+md.ci
+gouv.ci
 
 // ck : http://en.wikipedia.org/wiki/.ck
 *.ck
 
 // cl : http://en.wikipedia.org/wiki/.cl
 cl
+gov.cl
+gob.cl
 
 // cm : http://en.wikipedia.org/wiki/.cm
 cm
+gov.cm
 
 // cn : http://en.wikipedia.org/wiki/.cn
 // Submitted by registry <tanyaling@cnnic.cn> 2008-06-11
@@ -599,7 +692,9 @@ inf.cu
 cv
 
 // cx : http://en.wikipedia.org/wiki/.cx
+// list of other 2nd level tlds ?
 cx
+gov.cx
 
 // cy : http://en.wikipedia.org/wiki/.cy
 *.cy
@@ -608,6 +703,8 @@ cx
 cz
 
 // de : http://en.wikipedia.org/wiki/.de
+// Confirmed by registry <ops@denic.de> (with technical
+// reservations) 2008-07-01
 de
 
 // dj : http://en.wikipedia.org/wiki/.dj
@@ -638,11 +735,13 @@ pol.dz
 art.dz
 
 // ec : http://www.nic.ec/reg/paso1.asp
+// Submitted by registry <vabboud@nic.ec> 2008-07-04
 ec
 com.ec
 info.ec
 net.ec
 fin.ec
+k12.ec
 med.ec
 pro.ec
 org.ec
@@ -816,7 +915,11 @@ gs
 gw
 
 // gy : http://en.wikipedia.org/wiki/.gy
+// http://registry.gy/
 gy
+co.gy
+com.gy
+net.gy
 
 // hk : https://www.hkdnr.hk
 // Submitted by registry <hk.tech@hkirc.hk> 2008-06-11
@@ -956,12 +1059,14 @@ mil.in
 info
 
 // int : http://en.wikipedia.org/wiki/.int
+// Confirmed by registry <iana-questions@icann.org> 2008-06-18
 int
 eu.int
 
 // io : http://www.nic.io/rules.html
-// list of 2nd level tlds ?
+// list of other 2nd level tlds ?
 io
+com.io
 
 // iq : http://en.wikipedia.org/wiki/.iq
 // no registrar website found, but google shows .gov.iq and .edu.iq websites
@@ -1414,10 +1519,35 @@ info.ki
 com.ki
 
 // km : http://en.wikipedia.org/wiki/.km
+// http://www.domaine.km/documents/charte.doc
 km
+org.km
+nom.km
+gov.km
+prd.km
+tm.km
+edu.km
+mil.km
+ass.km
+com.km
+// These are only mentioned as proposed suggestions at domaine.km, but
+// http://en.wikipedia.org/wiki/.km says they're available for registration:
+coop.km
+asso.km
+presse.km
+medecin.km
+notaires.km
+pharmaciens.km
+veterinaire.km
+gouv.km
 
 // kn : http://en.wikipedia.org/wiki/.kn
+// http://www.dot.kn/domainRules.html
 kn
+net.kn
+org.kn
+edu.kn
+gov.kn
 
 // kr : http://domain.nida.or.kr/eng/structure.jsp
 kr
@@ -1567,12 +1697,14 @@ org.ly
 id.ly
 
 // ma : http://en.wikipedia.org/wiki/.ma
-// list of 2nd level tlds ?
+// http://www.anrt.ma/fr/admin/download/upload/file_fr782.pdf
 ma
 co.ma
 net.ma
 gov.ma
 org.ma
+ac.ma
+press.ma
 
 // mc : http://www.nic.mc/
 mc
@@ -1581,6 +1713,17 @@ asso.mc
 
 // md : http://en.wikipedia.org/wiki/.md
 md
+
+// me : http://en.wikipedia.org/wiki/.me
+me
+co.me
+net.me
+org.me
+edu.me
+ac.me
+gov.me
+its.me
+priv.me
 
 // mg : http://www.nic.mg/tarif.htm
 mg
@@ -1600,13 +1743,15 @@ mh
 mil
 
 // mk : http://en.wikipedia.org/wiki/.mk
-// list of 2nd level tlds ?
+// see also: http://dns.marnet.net.mk/postapka.php
 mk
 com.mk
-gov.mk
 org.mk
 net.mk
 edu.mk
+gov.mk
+inf.mk
+name.mk
 
 // ml : http://www.gobin.info/domainname/ml-template.doc
 *.ml
@@ -1640,6 +1785,7 @@ mq
 
 // mr : http://en.wikipedia.org/wiki/.mr
 mr
+gov.mr
 
 // ms : http://en.wikipedia.org/wiki/.ms
 ms
@@ -1648,12 +1794,566 @@ ms
 *.mt
 
 // mu : http://en.wikipedia.org/wiki/.mu
-// list of 2nd level tlds ?
 mu
+com.mu
+net.mu
+org.mu
+gov.mu
+ac.mu
+co.mu
+or.mu
 
 // museum : http://about.museum/naming/
-// there are 2nd-level TLD's, but there's no list
+// http://index.museum/
 museum
+academy.museum
+agriculture.museum
+air.museum
+airguard.museum
+alabama.museum
+alaska.museum
+amber.museum
+ambulance.museum
+american.museum
+americana.museum
+americanantiques.museum
+americanart.museum
+amsterdam.museum
+and.museum
+annefrank.museum
+anthro.museum
+anthropology.museum
+antiques.museum
+aquarium.museum
+arboretum.museum
+archaeological.museum
+archaeology.museum
+architecture.museum
+art.museum
+artanddesign.museum
+artcenter.museum
+artdeco.museum
+arteducation.museum
+artgallery.museum
+arts.museum
+artsandcrafts.museum
+asmatart.museum
+assassination.museum
+assisi.museum
+association.museum
+astronomy.museum
+atlanta.museum
+austin.museum
+australia.museum
+automotive.museum
+aviation.museum
+axis.museum
+badajoz.museum
+baghdad.museum
+bahn.museum
+bale.museum
+baltimore.museum
+barcelona.museum
+baseball.museum
+basel.museum
+baths.museum
+bauern.museum
+beauxarts.museum
+beeldengeluid.museum
+bellevue.museum
+bergbau.museum
+berkeley.museum
+berlin.museum
+bern.museum
+bible.museum
+bilbao.museum
+bill.museum
+birdart.museum
+birthplace.museum
+bonn.museum
+boston.museum
+botanical.museum
+botanicalgarden.museum
+botanicgarden.museum
+botany.museum
+brandywinevalley.museum
+brasil.museum
+bristol.museum
+british.museum
+britishcolumbia.museum
+broadcast.museum
+brunel.museum
+brussel.museum
+brussels.museum
+bruxelles.museum
+building.museum
+burghof.museum
+bus.museum
+bushey.museum
+cadaques.museum
+california.museum
+cambridge.museum
+can.museum
+canada.museum
+capebreton.museum
+carrier.museum
+cartoonart.museum
+casadelamoneda.museum
+castle.museum
+castres.museum
+celtic.museum
+center.museum
+chattanooga.museum
+cheltenham.museum
+chesapeakebay.museum
+chicago.museum
+children.museum
+childrens.museum
+childrensgarden.museum
+chiropractic.museum
+chocolate.museum
+christiansburg.museum
+cincinnati.museum
+cinema.museum
+circus.museum
+civilisation.museum
+civilization.museum
+civilwar.museum
+clinton.museum
+clock.museum
+coal.museum
+coastaldefence.museum
+cody.museum
+coldwar.museum
+collection.museum
+colonialwilliamsburg.museum
+coloradoplateau.museum
+columbia.museum
+columbus.museum
+communication.museum
+communications.museum
+community.museum
+computer.museum
+computerhistory.museum
+comunicações.museum
+contemporary.museum
+contemporaryart.museum
+convent.museum
+copenhagen.museum
+corporation.museum
+correios-e-telecomunicações.museum
+corvette.museum
+costume.museum
+countryestate.museum
+county.museum
+crafts.museum
+cranbrook.museum
+creation.museum
+cultural.museum
+culturalcenter.museum
+culture.museum
+cyber.museum
+cymru.museum
+dali.museum
+dallas.museum
+database.museum
+ddr.museum
+decorativearts.museum
+delaware.museum
+delmenhorst.museum
+denmark.museum
+depot.museum
+design.museum
+detroit.museum
+dinosaur.museum
+discovery.museum
+dolls.museum
+donostia.museum
+durham.museum
+eastafrica.museum
+eastcoast.museum
+education.museum
+educational.museum
+egyptian.museum
+eisenbahn.museum
+elburg.museum
+elvendrell.museum
+embroidery.museum
+encyclopedic.museum
+england.museum
+entomology.museum
+environment.museum
+environmentalconservation.museum
+epilepsy.museum
+essex.museum
+estate.museum
+ethnology.museum
+exeter.museum
+exhibition.museum
+family.museum
+farm.museum
+farmequipment.museum
+farmers.museum
+farmstead.museum
+field.museum
+figueres.museum
+filatelia.museum
+film.museum
+fineart.museum
+finearts.museum
+finland.museum
+flanders.museum
+florida.museum
+force.museum
+fortmissoula.museum
+fortworth.museum
+foundation.museum
+francaise.museum
+frankfurt.museum
+franziskaner.museum
+freemasonry.museum
+freiburg.museum
+fribourg.museum
+frog.museum
+fundacio.museum
+furniture.museum
+gallery.museum
+garden.museum
+gateway.museum
+geelvinck.museum
+gemological.museum
+geology.museum
+georgia.museum
+giessen.museum
+glas.museum
+glass.museum
+gorge.museum
+grandrapids.museum
+graz.museum
+guernsey.museum
+halloffame.museum
+hamburg.museum
+handson.museum
+harvestcelebration.museum
+hawaii.museum
+health.museum
+heimatunduhren.museum
+hellas.museum
+helsinki.museum
+hembygdsforbund.museum
+heritage.museum
+histoire.museum
+historical.museum
+historicalsociety.museum
+historichouses.museum
+historisch.museum
+historisches.museum
+history.museum
+historyofscience.museum
+horology.museum
+house.museum
+humanities.museum
+illustration.museum
+imageandsound.museum
+indian.museum
+indiana.museum
+indianapolis.museum
+indianmarket.museum
+intelligence.museum
+interactive.museum
+iraq.museum
+iron.museum
+isleofman.museum
+jamison.museum
+jefferson.museum
+jerusalem.museum
+jewelry.museum
+jewish.museum
+jewishart.museum
+jfk.museum
+journalism.museum
+judaica.museum
+judygarland.museum
+juedisches.museum
+juif.museum
+karate.museum
+karikatur.museum
+kids.museum
+koebenhavn.museum
+koeln.museum
+kunst.museum
+kunstsammlung.museum
+kunstunddesign.museum
+labor.museum
+labour.museum
+lajolla.museum
+lancashire.museum
+landes.museum
+lans.museum
+läns.museum
+larsson.museum
+lewismiller.museum
+lincoln.museum
+linz.museum
+living.museum
+livinghistory.museum
+localhistory.museum
+london.museum
+losangeles.museum
+louvre.museum
+loyalist.museum
+lucerne.museum
+luxembourg.museum
+luzern.museum
+mad.museum
+madrid.museum
+mallorca.museum
+manchester.museum
+mansion.museum
+mansions.museum
+manx.museum
+marburg.museum
+maritime.museum
+maritimo.museum
+maryland.museum
+marylhurst.museum
+media.museum
+medical.museum
+medizinhistorisches.museum
+meeres.museum
+memorial.museum
+mesaverde.museum
+michigan.museum
+midatlantic.museum
+military.museum
+mill.museum
+miners.museum
+mining.museum
+minnesota.museum
+missile.museum
+missoula.museum
+modern.museum
+moma.museum
+money.museum
+monmouth.museum
+monticello.museum
+montreal.museum
+moscow.museum
+motorcycle.museum
+muenchen.museum
+muenster.museum
+mulhouse.museum
+muncie.museum
+museet.museum
+museumcenter.museum
+museumvereniging.museum
+music.museum
+national.museum
+nationalfirearms.museum
+nationalheritage.museum
+nativeamerican.museum
+naturalhistory.museum
+naturalhistorymuseum.museum
+naturalsciences.museum
+nature.museum
+naturhistorisches.museum
+natuurwetenschappen.museum
+naumburg.museum
+naval.museum
+nebraska.museum
+neues.museum
+newhampshire.museum
+newjersey.museum
+newmexico.museum
+newport.museum
+newspaper.museum
+newyork.museum
+niepce.museum
+norfolk.museum
+north.museum
+nrw.museum
+nuernberg.museum
+nuremberg.museum
+nyc.museum
+nyny.museum
+oceanographic.museum
+oceanographique.museum
+omaha.museum
+online.museum
+ontario.museum
+openair.museum
+oregon.museum
+oregontrail.museum
+otago.museum
+oxford.museum
+pacific.museum
+paderborn.museum
+palace.museum
+paleo.museum
+palmsprings.museum
+panama.museum
+paris.museum
+pasadena.museum
+pharmacy.museum
+philadelphia.museum
+philadelphiaarea.museum
+philately.museum
+phoenix.museum
+photography.museum
+pilots.museum
+pittsburgh.museum
+planetarium.museum
+plantation.museum
+plants.museum
+plaza.museum
+portal.museum
+portland.museum
+portlligat.museum
+posts-and-telecommunications.museum
+preservation.museum
+presidio.museum
+press.museum
+project.museum
+public.museum
+pubol.museum
+quebec.museum
+railroad.museum
+railway.museum
+research.museum
+resistance.museum
+riodejaneiro.museum
+rochester.museum
+rockart.museum
+roma.museum
+russia.museum
+saintlouis.museum
+salem.museum
+salvadordali.museum
+salzburg.museum
+sandiego.museum
+sanfrancisco.museum
+santabarbara.museum
+santacruz.museum
+santafe.museum
+saskatchewan.museum
+satx.museum
+savannahga.museum
+schlesisches.museum
+schoenbrunn.museum
+schokoladen.museum
+school.museum
+schweiz.museum
+science.museum
+scienceandhistory.museum
+scienceandindustry.museum
+sciencecenter.museum
+sciencecenters.museum
+science-fiction.museum
+sciencehistory.museum
+sciences.museum
+sciencesnaturelles.museum
+scotland.museum
+seaport.museum
+settlement.museum
+settlers.museum
+shell.museum
+sherbrooke.museum
+sibenik.museum
+silk.museum
+ski.museum
+skole.museum
+society.museum
+sologne.museum
+soundandvision.museum
+southcarolina.museum
+southwest.museum
+space.museum
+spy.museum
+square.museum
+stadt.museum
+stalbans.museum
+starnberg.museum
+state.museum
+stateofdelaware.museum
+station.museum
+steam.museum
+steiermark.museum
+stjohn.museum
+stockholm.museum
+stpetersburg.museum
+stuttgart.museum
+suisse.museum
+surgeonshall.museum
+surrey.museum
+svizzera.museum
+sweden.museum
+sydney.museum
+tank.museum
+tcm.museum
+technology.museum
+telekommunikation.museum
+television.museum
+texas.museum
+textile.museum
+theater.museum
+time.museum
+timekeeping.museum
+topology.museum
+torino.museum
+touch.museum
+town.museum
+transport.museum
+tree.museum
+trolley.museum
+trust.museum
+trustee.museum
+uhren.museum
+ulm.museum
+undersea.museum
+university.museum
+usa.museum
+usantiques.museum
+usarts.museum
+uscountryestate.museum
+usculture.museum
+usdecorativearts.museum
+usgarden.museum
+ushistory.museum
+ushuaia.museum
+uslivinghistory.museum
+utah.museum
+uvic.museum
+valley.museum
+vantaa.museum
+versailles.museum
+viking.museum
+village.museum
+virginia.museum
+virtual.museum
+virtuel.museum
+vlaanderen.museum
+volkenkunde.museum
+wales.museum
+wallonie.museum
+war.museum
+washingtondc.museum
+watchandclock.museum
+watch-and-clock.museum
+western.museum
+westfalen.museum
+whaling.museum
+wildlife.museum
+williamsburg.museum
+windmill.museum
+workshop.museum
+york.museum
+yorkshire.museum
+yosemite.museum
+youth.museum
+zoological.museum
+zoology.museum
+ירושלים.museum
+иком.museum
 
 // mv : http://en.wikipedia.org/wiki/.mv
 *.mv
@@ -1672,9 +2372,7 @@ net.mw
 org.mw
 
 // mx : http://www.nic.mx/
-// 2008-06-23 - Wikipedia says second level registrations are prohibited,
-// but several exist. So, for safety, switched from "*.mx" to the below
-// ruleset until the situation is more clear.
+// Submitted by registry <farias@nic.mx> 2008-06-19
 mx
 com.mx
 org.mx
@@ -1689,8 +2387,25 @@ net.mx
 *.mz
 
 // na : http://www.na-nic.com.na/
-// list of 2nd level tlds ?
+// http://www.info.na/domain/
 na
+info.na
+pro.na
+name.na
+school.na
+or.na
+dr.na
+us.na
+mx.na
+ca.na
+in.na
+cc.na
+tv.na
+ws.na
+mobi.na
+co.na
+com.na
+org.na
 
 // name : has 2nd-level tlds, but there's no list of them
 name
@@ -2538,7 +3253,33 @@ org
 ae.org
 
 // pa : http://www.nic.pa/
+// List with redundant entries as submitted by registry <edna.samudio@utp.ac.pa> 2008-06-18
+//*.pa
+//!nic.pa
+//!pannet.pa
+//!presidencia.pa
+//!milpolleras.pa
+//!sume911.pa
+//!root-ca.pa
+//ac.pa
+//gob.pa
+//com.pa
+//org.pa
+//sld.pa
+//edu.pa
+//net.pa
+//ing.pa
+//abo.pa
+//med.pa
+//nom.pa
+// As discussed in bug #447815 on bugzilla.mozilla.org, the list has been truncated.
 *.pa
+!nic.pa
+!pannet.pa
+!presidencia.pa
+!milpolleras.pa
+!sume911.pa
+!root-ca.pa
 
 // pe : http://www.nic.pe/normas-proced-i.htm
 *.pe
@@ -2806,7 +3547,7 @@ med.pro
 eng.pro
 
 // ps : http://en.wikipedia.org/wiki/.ps
-// list of 2nd level tlds ?
+// http://www.nic.ps/registration/policy.html#reg
 ps
 edu.ps
 gov.ps
@@ -2856,14 +3597,150 @@ firm.ro
 store.ro
 www.ro
 
+// rs : http://en.wikipedia.org/wiki/.rs
+rs
+co.rs
+org.rs
+edu.rs
+ac.rs
+gov.rs
+in.rs
+
 // ru : http://en.wikipedia.org/wiki/.ru
 ru
+ac.ru
 com.ru
 net.ru
 org.ru
 pp.ru
 int.ru
-// there should be geo-names like msk.ru, but I didn't find a list
+// Geographic domains (http://www.ripn.net:8082/nic/dns/geo_list.html)
+adygeya.ru
+altai.ru
+amur.ru
+arkhangelsk.ru
+astrakhan.ru
+bashkiria.ru
+belgorod.ru
+bir.ru
+bryansk.ru
+buryatia.ru
+cbg.ru
+chel.ru
+chelyabinsk.ru
+chita.ru
+chukotka.ru
+chuvashia.ru
+dagestan.ru
+dudinka.ru
+e-burg.ru
+grozny.ru
+irkutsk.ru
+ivanovo.ru
+izhevsk.ru
+jar.ru
+joshkar-ola.ru
+kalmykia.ru
+kaluga.ru
+kamchatka.ru
+karelia.ru
+kazan.ru
+kchr.ru
+kemerovo.ru
+khabarovsk.ru
+khakassia.ru
+khv.ru
+kirov.ru
+koenig.ru
+komi.ru
+kostroma.ru
+krasnoyarsk.ru
+kuban.ru
+kurgan.ru
+kursk.ru
+lipetsk.ru
+magadan.ru
+mari-el.ru
+marine.ru
+mari.ru
+mordovia.ru
+mosreg.ru
+msk.ru
+murmansk.ru
+nalchik.ru
+nnov.ru
+novosibirsk.ru
+nov.ru
+nsk.ru
+omsk.ru
+orenburg.ru
+oryol.ru
+palana.ru
+penza.ru
+perm.ru
+pskov.ru
+ptz.ru
+rnd.ru
+ryazan.ru
+sakhalin.ru
+samara.ru
+saratov.ru
+simbirsk.ru
+smolensk.ru
+spb.ru
+stavropol.ru
+stv.ru
+surgut.ru
+tambov.ru
+tatarstan.ru
+tom.ru
+tomsk.ru
+tsaritsyn.ru
+tsk.ru
+tula.ru
+tuva.ru
+tver.ru
+tyumen.ru
+udm.ru
+udmurtia.ru
+ulan-ude.ru
+vladikavkaz.ru
+vladimir.ru
+vladivostok.ru
+volgograd.ru
+vologda.ru
+voronezh.ru
+vrn.ru
+vyatka.ru
+yakutia.ru
+yamal.ru
+yaroslavl.ru
+yekaterinburg.ru
+yuzhno-sakhalinsk.ru
+// Geographic domains registered before the adoption of the rules on the
+// second level domain registration
+amursk.ru
+baikal.ru
+cmw.ru
+fareast.ru
+jamal.ru
+kms.ru
+k-uralsk.ru
+kustanai.ru
+kuzbass.ru
+magnitka.ru
+mytis.ru
+nakhodka.ru
+nkz.ru
+norilsk.ru
+oskol.ru
+pyatigorsk.ru
+rubtsovsk.ru
+snz.ru
+syzran.ru
+tagil.ru
+vdonsk.ru
+zgrad.ru
 
 // rw : http://www.nic.rw/cgi-bin/policy.pl
 rw
@@ -2878,6 +3755,17 @@ mil.rw
 gouv.rw
 
 // sa : http://www.saudinic.net.sa/page.php?page=1&lang=1
+// List with redundant entries as submitted by registry <sa-tld-tech-contact@nic.net.sa> 2008-06-23
+//*.sa
+//com.sa
+//net.sa
+//org.sa
+//gov.sa
+//med.sa
+//pub.sa
+//edu.sa
+//sch.sa
+// As discussed in bug #447815 on bugzilla.mozilla.org, the list has been truncated.
 *.sa
 
 // sb : http://www.sbnic.net.sb/
@@ -2909,35 +3797,47 @@ gov.sd
 info.sd
 
 // se : http://en.wikipedia.org/wiki/.se
-se
-org.se
-pp.se
-tm.se
-parti.se
-press.se
-mil.se
-// se geographical names
-ab.se
+// Submitted by registry <Patrik.Wallstrom@iis.se> 2008-06-24
+a.se
+ac.se
+b.se
+bd.se
+brand.se
 c.se
 d.se
 e.se
 f.se
+fh.se
+fhsk.se
+fhv.se
 g.se
 h.se
 i.se
 k.se
+komforb.se
+kommunalforbund.se
+komvux.se
+l.se
+lanbib.se
 m.se
 n.se
+naturbruksgymn.se
 o.se
+org.se
+p.se
+parti.se
+pp.se
+press.se
+r.se
 s.se
+sshn.se
 t.se
+tm.se
 u.se
 w.se
 x.se
 y.se
 z.se
-ac.se
-bd.se
 
 // sg : http://www.nic.net.sg/sub_policies_agreement/2ld.html
 sg
@@ -2959,6 +3859,7 @@ si
 // Submitted by registry <jarle@uninett.no> 2008-06-16
 
 // sk : http://en.wikipedia.org/wiki/.sk
+// list of 2nd level domains ?
 sk
 
 // sl : http://www.nic.sl
@@ -2974,7 +3875,6 @@ org.sl
 sm
 
 // sn : http://en.wikipedia.org/wiki/.sn
-// list of 2nd level domains ?
 sn
 
 // sr : http://en.wikipedia.org/wiki/.sr
@@ -2993,8 +3893,11 @@ su
 *.sy
 
 // sz : http://en.wikipedia.org/wiki/.sz
-// list of 2nd level domains ?
+// http://www.sispa.org.sz/
 sz
+co.sz
+ac.sz
+org.sz
 
 // tc : http://en.wikipedia.org/wiki/.tc
 tc
@@ -3006,7 +3909,8 @@ td
 tf
 
 // tg : http://en.wikipedia.org/wiki/.tg
-// list of 2nd level domains ?
+// http://www.nic.tg/nictg/index.php implies no reserved 2nd-level domains,
+// although this contradicts wikipedia.
 tg
 
 // th : http://en.wikipedia.org/wiki/.th
@@ -3040,16 +3944,36 @@ mil.tj
 tk
 
 // tl : http://en.wikipedia.org/wiki/.tl
-// list of 2nd level tlds ?
 tl
+gov.tl
 
 // tm : http://www.nic.tm/rules.html
 // list of 2nd level tlds ?
 tm
 
 // tn : http://en.wikipedia.org/wiki/.tn
-// list of 2nd level tlds ?
+// http://whois.ati.tn/
 tn
+com.tn
+ens.tn
+fin.tn
+gov.tn
+ind.tn
+intl.tn
+nat.tn
+net.tn
+org.tn
+info.tn
+perso.tn
+tourism.tn
+edunet.tn
+rnrt.tn
+rns.tn
+rnu.tn
+mincom.tn
+agrinet.tn
+defense.tn
+turen.tn
 
 // to : http://en.wikipedia.org/wiki/.to
 // Submitted by registry <egullich@colo.to> 2008-06-17
@@ -3088,8 +4012,12 @@ gov.tt
 edu.tt
 
 // tv : http://en.wikipedia.org/wiki/.tv
-// list of 2nd level tlds ?
+// list of other 2nd level tlds ?
 tv
+com.tv
+net.tv
+org.tv
+gov.tv
 
 // tw : http://en.wikipedia.org/wiki/.tw
 tw
@@ -3321,7 +4249,13 @@ health.vn
 vu
 
 // ws : http://en.wikipedia.org/wiki/.ws
+// http://samoanic.ws/index.dhtml
 ws
+com.ws
+net.ws
+org.ws
+gov.ws
+edu.ws
 
 // ye : http://www.y.net.ye/services/domain_name.htm
 *.ye
