@@ -3874,10 +3874,16 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
 nsIWidget*
 nsContentUtils::GetTopLevelWidget(nsIWidget* aWidget)
 {
-  if (!aWidget)
+  if (!aWidget) {
     return nsnull;
+  }
 
-  return aWidget->GetTopLevelWidget();
+  nsIWidget* currWidget = aWidget;
+  nsIWidget* parentWidget;
+  while ((parentWidget = currWidget->GetParent()) != nsnull) {
+    currWidget = parentWidget;
+  }
+  return currWidget;
 }
 
 /* static */

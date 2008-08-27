@@ -877,6 +877,14 @@ nsChildView::GetParent(void)
   return mParentWidget;
 }
 
+nsIWidget*
+nsChildView::GetTopLevelWidget()
+{
+  nsIWidget* current = this;
+  for (nsIWidget* parent = GetParent(); parent ; parent = parent->GetParent())
+    current = parent;
+  return current;
+}
 
 NS_IMETHODIMP nsChildView::ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                             PRBool *aForWindow)
@@ -2713,15 +2721,6 @@ NSEvent* gLastDragEvent = nil;
 }
 
 
-static BOOL IsPaintingSuppressed(nsIWidget* aWidget)
-{
-  nsIWidget* topLevelWidget = aWidget->GetTopLevelWidget();
-  NSWindow* win = (NSWindow*)topLevelWidget->GetNativeData(NS_NATIVE_WINDOW);
-  return ([win isKindOfClass:[ToolbarWindow class]] &&
-          [(ToolbarWindow*)win isPaintingSuppressed]);
-}
-
-
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
@@ -2729,8 +2728,7 @@ static BOOL IsPaintingSuppressed(nsIWidget* aWidget)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   PRBool isVisible;
-  if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) ||
-      !isVisible || IsPaintingSuppressed(mGeckoChild))
+  if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) || !isVisible)
     return;
 
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];

@@ -40,7 +40,6 @@
 #include "nsObjCExceptions.h"
 #include "nsIInternetConfigService.h"
 #include "nsIServiceManager.h"
-#include "nsNativeThemeColors.h"
 
 #import <Carbon/Carbon.h>
 
@@ -285,12 +284,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_dragtargetzone:
       //default to lavender if not available
       res = GetMacBrushColor(kThemeBrushDragHilite, aColor, NS_RGB(0x63,0x63,0xCE));
-      break;
-    case eColor__moz_mac_chrome_active:
-    case eColor__moz_mac_chrome_inactive: {
-      int grey = NativeGreyColorAsInt(headerEndGrey, (aID == eColor__moz_mac_chrome_active));
-      aColor = NS_RGB(grey, grey, grey);
-    }
       break;
     case eColor__moz_mac_focusring:
       //default to lavender if not available
