@@ -983,6 +983,17 @@ function testDoubleToStr() {
 testDoubleToStr.expected = 5.5*200;
 test(testDoubleToStr);
 
+function testDecayingInnerLoop() {
+    var i, j, k = 10;
+    for (i = 0; i < 5000; ++i) {
+	for (j = 0; j < k; ++j);
+	--k;
+    }
+    return i;
+}
+testDecayingInnerLoop.expected = 5000;
+test(testDecayingInnerLoop);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
