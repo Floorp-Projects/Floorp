@@ -1147,8 +1147,10 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
 {
     uint32 flags;
 
+    JS_ASSERT(principals || !cx->runtime->findObjectPrincipals);
     flags = JS_GetScriptFilenameFlags(caller->script);
     if ((flags & JSFILENAME_PROTECTED) &&
+        principals &&
         strcmp(principals->codebase, "[System Principal]")) {
         *linenop = 0;
         return principals->codebase;
