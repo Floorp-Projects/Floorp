@@ -2696,6 +2696,25 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_CALLUPVAR:
               case JSOP_GETUPVAR:
                 i = JS_UPVAR_LOCAL_NAME_START(jp->fun) + GET_UINT16(pc);
+                if (i >= JS_GET_LOCAL_NAME_COUNT(jp->fun)) {
+                    JSUpvarArray *uva;
+
+                    /*
+                     * We must be in an eval called from jp->fun, where
+                     * jp->script is the eval-compiled script.
+                     */
+                    JS_ASSERT(cx->fp->flags & JSFRAME_EVAL);
+                    JS_ASSERT(cx->fp->script == jp->script);
+                    JS_ASSERT(cx->fp->down->fun == jp->fun);
+                    JS_ASSERT(FUN_INTERPRETED(jp->fun));
+                    JS_ASSERT(jp->script != jp->fun->u.i.script);
+                    JS_ASSERT(jp->script->upvarsOffset != 0);
+
+                    uva = JS_SCRIPT_UPVARS(jp->script);
+                    i = GET_UINT16(pc);
+                    JS_ASSERT(UPVAR_FRAME_SKIP(uva->vector[i]) == 1);
+                    i = UPVAR_FRAME_SLOT(uva->vector[i]);
+                }
                 atom = GetArgOrVarAtom(jp, i);
                 goto do_name;
 
