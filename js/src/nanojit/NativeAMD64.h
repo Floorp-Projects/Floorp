@@ -141,9 +141,17 @@ namespace nanojit
 
 	#define DECLARE_PLATFORM_REGALLOC()
 
+    #if !defined WIN64
+    #define DECLARE_PLATFORM_ASSEMBLER_START() \
+        const static Register argRegs[6], retRegs[2];
+    #else
+    #define DECLARE_PLATFORM_ASSEMBLER_START() \
+        const static Register argRegs[4], retRegs[2];
+    #endif
+
 	#if !defined WIN64
 	#define DECLARE_PLATFORM_ASSEMBLER()	\
-        const static Register argRegs[6], retRegs[2]; \
+        DECLARE_PLATFORM_ASSEMBLER_START()  \
         bool sse2;							\
 		bool has_cmov; 						\
 		bool pad[1];						\
@@ -155,19 +163,6 @@ namespace nanojit
 		NIns *_dblNegPtr;					\
 		NIns *_negOnePtr;					\
         NIns *overrideProtect;              
-	#else
-	#define DECLARE_PLATFORM_ASSEMBLER()	\
-        const static Register argRegs[4], retRegs[2]; \
-        bool sse2;							\
-		bool has_cmov; 						\
-		bool pad[1];						\
-		void nativePageReset();				\
-		void nativePageSetup();				\
-        void asm_farg(LInsp);				\
-        void asm_qbinop(LInsp);             \
-		int32_t _pageData;					\
-		NIns *_dblNegPtr;					\
-		NIns *_negOnePtr;					
 	#endif
 		
 	#define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
@@ -184,7 +179,16 @@ namespace nanojit
 				_dblNegPtr = NULL;								\
 				_negOnePtr = NULL;								\
 				intptr_t d = tt-_nIns; 							\
-				JMP_long_nochk_offset(d);						\
+                if (d <= INT_MAX && d >= INT_MIN) {             \
+				    JMP_long_nochk_offset(d);					\
+                } else {                                        \
+                    /* Insert a 64-bit jump... */               \
+                    _nIns -= 8;                                 \
+                    *(intptr_t *)_nIns = intptr_t(tt);          \
+                    IMM32(0);                                   \
+                    *(_nIns--) = 0x25;                          \
+                    *(_nIns--) = 0xFF;                          \
+                }                                               \
 			}													\
             overrideProtect = _nIns;                            \
 		}
@@ -904,6 +908,14 @@ namespace nanojit
  		*(--_nIns) = JMPc; \
 		asm_output1("jmp %lX",(ptrdiff_t)(next+(o))); } while(0)
 
+#if 0
+#define JMPr(r) do {                    \
+    underrunProtect(2);                 \
+    *(--_nIns) = AMD64_MODRM_REG(4, r); \
+    *(--_nIns) = 0xFF;                  \
+    } while (0)
+#endif
+
 #define JE(t)	JCC(0x04, t, "je")
 #define JNE(t)	JCC(0x05, t, "jne")
 #define JP(t)	JCC(0x0A, t, "jp")
@@ -1123,7 +1135,6 @@ namespace nanojit
     IMM32( (uint32_t)offset );							\
     *(--_nIns) = 0xE8;									\
   } else {												\
-    underrunProtect(2);									\
    	*(--_nIns) = 0xD0;									\
     *(--_nIns) = 0xFF;									\
     LDQi(RAX, c->_address);								\
