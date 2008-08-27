@@ -16,12 +16,12 @@
 
 <box tooltiptext="Box Tooltip">
   <button id="withtext" label="Tooltip Text" tooltiptext="Button Tooltip"
-          style="-moz-appearance: none;"/>
-  <button id="without" label="No Tooltip" style="-moz-appearance: none;"/>
+          style="-moz-appearance: none; padding: 0;"/>
+  <button id="without" label="No Tooltip" style="-moz-appearance: none; padding: 0;"/>
   <!-- remove the native theme and borders to avoid some platform
        specific sizing differences -->
   <button id="withtooltip" label="Tooltip Element" tooltip="thetooltip"
-          class="plain" style="-moz-appearance: none;"/>
+          class="plain" style="-moz-appearance: none; padding: 0;"/>
 </box>
 
 <script class="testbody" type="application/javascript">
@@ -44,9 +44,9 @@ function checkCoords(event)
 
   var rect = gButton.getBoundingClientRect();
   var popupstyle = window.getComputedStyle(gButton, "");
-  is(event.clientX, Math.round(rect.left) + parseInt(popupstyle.borderLeftWidth) + mod,
+  is(event.clientX, Math.floor(rect.left) + mod,
      "step " + (gTestIndex + 1) + " clientX");
-  is(event.clientY, Math.round(rect.top) + parseInt(popupstyle.borderTopWidth) + mod,
+  is(event.clientY, Math.floor(rect.top) + mod,
      "step " + (gTestIndex + 1) + " clientY");
   ok(event.screenX > 0, "step " + (gTestIndex + 1) + " screenX");
   ok(event.screenY > 0, "step " + (gTestIndex + 1) + " screenY");
@@ -97,10 +97,10 @@ var popupTests = [
     var rect = document.getElementById("thetooltip").getBoundingClientRect();
     var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
 
-    is(Math.round(rect.left), Math.round(buttonrect.left) +
+    is(Math.floor(rect.left), Math.floor(buttonrect.left) +
        parseInt(popupstyle.marginLeft) + 6,
        testname + " top position of tooltip");
-    is(Math.round(rect.top), Math.round(buttonrect.top) +
+    is(Math.floor(rect.top), Math.floor(buttonrect.top) +
        parseInt(popupstyle.marginTop) + 6,
        testname + " top position of tooltip");
 
@@ -139,10 +139,10 @@ var popupTests = [
     var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
     var buttonstyle = window.getComputedStyle(document.getElementById("withtooltip"), "");
 
-    is(Math.round(rect.left), Math.round(buttonrect.left) +
+    is(Math.floor(rect.left), Math.floor(buttonrect.left) +
        parseInt(popupstyle.marginLeft) + 4,
        testname + " top position of tooltip");
-    is(Math.round(rect.top), Math.round(buttonrect.top) +
+    is(Math.floor(rect.top), Math.floor(buttonrect.top) +
        parseInt(popupstyle.marginTop) + 4,
        testname + " top position of tooltip");
 
@@ -182,10 +182,10 @@ var popupTests = [
     var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
     var buttonstyle = window.getComputedStyle(document.getElementById("withtooltip"), "");
 
-    is(Math.round(rect.left), Math.round(buttonrect.left) +
+    is(Math.floor(rect.left), Math.floor(buttonrect.left) +
        parseInt(popupstyle.marginLeft) + 6,
        testname + " top position of tooltip");
-    is(Math.round(rect.top), Math.round(buttonrect.top) +
+    is(Math.floor(rect.top), Math.floor(buttonrect.top) +
        parseInt(popupstyle.marginTop) + 6,
        testname + " top position of tooltip");
 
