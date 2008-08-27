@@ -80,7 +80,7 @@
 #define MAX_MISMATCH 5
 
 /* Max number of loop edges to follow. */
-#define MAX_OUTERLINE 0
+#define MAX_OUTERLINE 1
 
 /* Max native stack size. */
 #define MAX_NATIVE_STACK_SLOTS 1024
