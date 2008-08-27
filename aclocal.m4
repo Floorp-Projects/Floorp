@@ -13,7 +13,10 @@ builtin(include, build/autoconf/libart.m4)dnl
 builtin(include, build/autoconf/pkg.m4)dnl
 builtin(include, build/autoconf/freetype2.m4)dnl
 builtin(include, build/autoconf/codeset.m4)dnl
-dnl
-define(MOZ_TOPSRCDIR,.)dnl MOZ_TOPSRCDIR is used in altoptions.m4
 builtin(include, build/autoconf/altoptions.m4)dnl
 
+# Read the user's .mozconfig script.  We can't do this in
+# configure.in: autoconf puts the argument parsing code above anything
+# expanded from configure.in, and we need to get the configure options
+# from .mozconfig in place before that argument parsing code.
+MOZ_READ_MOZCONFIG(.)
