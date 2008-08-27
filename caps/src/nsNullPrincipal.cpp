@@ -43,6 +43,7 @@
  */
 
 #include "nsNullPrincipal.h"
+#include "nsNullPrincipalURI.h"
 #include "nsMemory.h"
 #include "nsIUUIDGenerator.h"
 #include "nsID.h"
@@ -51,8 +52,6 @@
 #include "nsNetCID.h"
 #include "nsDOMError.h"
 #include "nsScriptSecurityManager.h"
-
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
 NS_IMPL_QUERY_INTERFACE2_CI(nsNullPrincipal,
                             nsIPrincipal,
@@ -119,22 +118,14 @@ nsNullPrincipal::Init()
 
   str.Append(NS_NULLPRINCIPAL_PREFIX);
   str.Append(chars);
-  
+
   if (str.Length() != prefixLen + suffixLen) {
     NS_WARNING("Out of memory allocating null-principal URI");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Use CID so we're sure we get the impl we want.  Note that creating the URI
-  // directly is ok because we have our own private URI scheme.  In effect,
-  // we're being a protocol handler.
-  mURI = do_CreateInstance(kSimpleURICID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mURI->SetSpec(str);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_TryToSetImmutable(mURI);
+  mURI = new nsNullPrincipalURI(str);
+  NS_ENSURE_TRUE(mURI, NS_ERROR_OUT_OF_MEMORY);
 
   return mJSPrincipals.Init(this, str);
 }
