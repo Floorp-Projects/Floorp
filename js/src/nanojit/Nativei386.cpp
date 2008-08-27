@@ -173,8 +173,17 @@ namespace nanojit
 		{
 			// target doesn't exit yet.  emit jump to epilog, and set up to patch later.
 			lr = placeGuardRecord(guard);
+#if defined NANOJIT_AMD64
+            /* 8 bytes for address, 4 for imm32, 2 for jmp */
+            underrunProtect(14);
+            _nIns -= 8;
+            *(intptr_t *)_nIns = intptr_t(_epilogue);
+            lr->jmp = _nIns;
+            JMPm_nochk(0);
+#else
             JMP_long(_epilogue);
 			lr->jmp = _nIns;
+#endif
 #if 0			
 			// @todo optimization ; is it worth it? It means we can remove the loop over outbound in Fragment.link() 
 			// for trees we need the patch entry on the incoming fragment so we can unhook it later if needed
@@ -1214,16 +1223,19 @@ namespace nanojit
 	
 	NIns* Assembler::asm_adjustBranch(NIns* at, NIns* target)
 	{
+        NIns* was;
+#if defined NANOJIT_AMD64
+		was = (NIns*)( *(intptr_t*)(at) );
+        *(intptr_t *)(at) = intptr_t(target);
+#else
 		NIns* save = _nIns;
-		NIns* was = (NIns*)( (intptr_t)*(int32_t*)(at+1)+(intptr_t)(at+5) );
+		was = (NIns*)( (intptr_t)*(int32_t*)(at+1)+(intptr_t)(at+5) );
 		_nIns = at +5; // +5 is size of JMP
 		intptr_t tt = (intptr_t)target - (intptr_t)_nIns;
-#if defined NANOJIT_AMD64
-        NanoAssert(tt <= INT_MAX && tt >= INT_MIN);
-#endif
 		IMM32(tt);
 		*(--_nIns) = JMPc;
-		_nIns = save;
+        _nIns = save;
+#endif
 		return was;
 	}
 	
@@ -1281,6 +1293,8 @@ namespace nanojit
                 ANDQi(rr, c);
             } else if (op == LIR_qilsh) {
                 SHLQi(rr, c);
+            } else if (op == LIR_qior) {
+                ORQi(rr, c);
             }
         } else {
             Register rv;
@@ -1295,6 +1309,8 @@ namespace nanojit
                 ADDQ(rr, rv);
             } else if (op == LIR_qiand) {
                 ANDQ(rr, rv); 
+            } else if (op == LIR_qior) {
+                ORQ(rr, rv);
             } else {
                 NanoAssert(rhs->isconst());
                 NanoAssert(false);

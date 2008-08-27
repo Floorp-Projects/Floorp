@@ -80,7 +80,7 @@ namespace nanojit
 	/* 70-79 */ "70","71","72","73","74","stq","ldq","77","stqi","79",
 	/* 80-89 */ "80","81","fcall","83","84","85","86","87","qiand","qiadd",
 	/* 90-99 */ "90","91","92","93","qcmov","95","96","quad","98","99",
-	/* 100-109 */ "fneg","fadd","fsub","fmul","fdiv","qjoin","i2f","u2f","108","qilsh",
+	/* 100-109 */ "fneg","fadd","fsub","fmul","fdiv","qjoin","i2f","u2f","qior","qilsh",
 	/* 110-119 */ "110","111","112","113","114","115","116","117","118","119",
 	/* 120-127 */ "120","121","122","123","124","125","126","127"
 	};
@@ -1656,6 +1656,7 @@ namespace nanojit
             case LIR_qiadd:
             case LIR_qiand:
             case LIR_qilsh:
+            case LIR_qior:
 				sprintf(s, "%s %s, %s", lirNames[op],
 					formatRef(i->oprnd1()), 
 					formatRef(i->oprnd2()));

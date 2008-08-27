@@ -3063,12 +3063,12 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_BOOLEAN:
-        v_ins = lir->ins2i(LIR_or, lir->ins2i(LIR_pilsh, v_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
+        v_ins = lir->ins2i(LIR_pior, lir->ins2i(LIR_pilsh, v_ins, JSVAL_TAGBITS), JSVAL_BOOLEAN);
         return true;
       case JSVAL_OBJECT:
         return true;
       case JSVAL_STRING:
-        v_ins = lir->ins2(LIR_or, v_ins, INS_CONST(JSVAL_STRING));
+        v_ins = lir->ins2(LIR_pior, v_ins, INS_CONST(JSVAL_STRING));
         return true;
     }
     return false;
@@ -3080,7 +3080,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
     if (isNumber(v)) {
         // JSVAL_IS_NUMBER(v)
         guard(false,
-              lir->ins_eq0(lir->ins2(LIR_or,
+              lir->ins_eq0(lir->ins2(LIR_pior,
                                      lir->ins2(LIR_piand, v_ins, INS_CONSTPTR(JSVAL_INT)),
                                      lir->ins2i(LIR_eq,
                                                 lir->ins2(LIR_piand, v_ins,
@@ -3112,7 +3112,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
                         lir->ins2(LIR_piand, v_ins, INS_CONSTPTR(JSVAL_TAGMASK)),
                         JSVAL_STRING),
               MISMATCH_EXIT);
-        v_ins = lir->ins2(LIR_piand, v_ins, INS_CONSTPTR(~JSVAL_TAGMASK));
+        v_ins = lir->ins2(LIR_piand, v_ins, INS_CONST(~JSVAL_TAGMASK));
         return true;
     }
     return false;
@@ -3140,7 +3140,7 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp)
         return false;
 
     LIns* class_ins = stobj_get_fslot(obj_ins, JSSLOT_CLASS);
-    class_ins = lir->ins2(LIR_piand, class_ins, lir->insImmPtr((void*)~3));
+    class_ins = lir->ins2(LIR_piand, class_ins, lir->insImm(~3));
 
     char namebuf[32];
     JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
