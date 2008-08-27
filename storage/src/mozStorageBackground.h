@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2
+ * vim: sw=2 ts=2 sts=2 expandtab
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,7 +16,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation. 
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
@@ -47,10 +47,7 @@ class nsIEventTarget;
 class nsIObserver;
 
 /**
- * This class managed the connections used in the background for
- * asynchronous operations.  There is a one-to-one mapping of calling thread
- * connections to background ones.  Additionally, it manages the background
- * thread pool used for asynchronous database calls.
+ * Provides an event target to dispatch background events to for storage.
  *
  * @note This class is threadsafe.
  */
