@@ -4103,6 +4103,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_math_random,              F_Math_random,          "R",    "",    INFALLIBLE,  NULL },
         { js_num_parseInt,             F_ParseInt,             "C",   "s",    INFALLIBLE,  NULL },
         { js_num_parseFloat,           F_ParseFloat,           "C",   "s",    INFALLIBLE,  NULL },
+        { js_num_toString,             F_NumberToString,       "TC",   "",    FAIL_NULL,   NULL },
         { js_obj_hasOwnProperty,       F_Object_p_hasOwnProperty,
                                                                "TC",  "s",    FAIL_VOID,   NULL },
         { js_obj_propertyIsEnumerable, F_Object_p_propertyIsEnumerable,
@@ -4258,6 +4259,9 @@ TraceRecorder::record_JSOP_CALL()
     /* Didn't find it. */
     ABORT_TRACE("unknown native");
 }
+
+JSBool
+js_num_toString(JSContext *cx, uintN argc, jsval *vp);
 
 bool
 TraceRecorder::name(jsval*& vp)
