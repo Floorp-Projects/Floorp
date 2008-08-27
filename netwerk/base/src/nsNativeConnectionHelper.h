@@ -50,7 +50,7 @@ public:
      *
      * Return PR_TRUE if the connection should be re-attempted.
      */
-    static PRBool OnConnectionFailed(const char* hostName);
+    static PRBool OnConnectionFailed(const PRUnichar* hostName);
 
     /**
      * IsAutoDialEnabled

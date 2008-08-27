@@ -5051,8 +5051,10 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                               ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
                               : TCF_COMPILE_N_GO,
                               chars, length, NULL, filename, lineno);
-    if (!script)
+    if (!script) {
+        LAST_FRAME_CHECKS(cx, script);
         return JS_FALSE;
+    }
     ok = js_Execute(cx, obj, script, NULL, 0, rval);
     LAST_FRAME_CHECKS(cx, ok);
     JS_DestroyScript(cx, script);
