@@ -118,6 +118,41 @@ typedef struct _nsCocoaWindowList {
 - (void)sendToplevelDeactivateEvents;
 @end
 
+// These are the start and end greys for the unified titlebar and toolbar gradient.
+static const float sLeopardHeaderStartGrey = 197/255.0f;
+static const float sLeopardHeaderEndGrey = 150/255.0f;
+static const float sLeopardHeaderBackgroundStartGrey = 233/255.0f;
+static const float sLeopardHeaderBackgroundEndGrey = 207/255.0f;
+
+// This is the grey for the border at the bottom of the titlebar / toolbar.
+static const float sLeopardTitlebarBorderGrey = 64/255.0f;
+static const float sLeopardTitlebarBackgroundBorderGrey = 135/255.0f;
+
+struct UnifiedGradientInfo {
+  float titlebarHeight;
+  float toolbarHeight;
+  BOOL windowIsMain;
+  BOOL drawTitlebar; // NO for toolbar, YES for titlebar
+};
+
+// Callback used by the default titlebar and toolbar shading.
+// *aIn == 0 at the top of the titlebar/toolbar, *aIn == 1 at the bottom
+static void unifiedShading(void* aInfo, const float* aIn, float* aOut)
+{
+  UnifiedGradientInfo* info = (UnifiedGradientInfo*)aInfo;
+  // The gradient percentage at the bottom of the titlebar / top of the toolbar
+  float start = info->titlebarHeight / (info->titlebarHeight + info->toolbarHeight - 1);
+  const float startGrey = info->windowIsMain ? sLeopardHeaderStartGrey : sLeopardHeaderBackgroundStartGrey;
+  const float endGrey = info->windowIsMain ? sLeopardHeaderEndGrey : sLeopardHeaderBackgroundEndGrey;
+  // *aIn is the gradient percentage of the titlebar or toolbar gradient,
+  // a is the gradient percentage of the whole unified gradient.
+  float a = info->drawTitlebar ? *aIn * start : start + *aIn * (1 - start);
+  float result = (1.0f - a) * startGrey + a * endGrey;
+  aOut[0] = result;
+  aOut[1] = result;
+  aOut[2] = result;
+  aOut[3] = 1.0f;
+}
 
 // NSColor subclass that allows us to draw separate colors both in the titlebar 
 // and for background of the window.
@@ -127,7 +162,6 @@ typedef struct _nsCocoaWindowList {
   NSColor *mInactiveTitlebarColor;
   NSColor *mBackgroundColor;
   NSWindow *mWindow; // [WEAK] (we are owned by the window)
-  float mTitlebarHeight;
 }
 
 - (id)initWithActiveTitlebarColor:(NSColor*)aActiveTitlebarColor
@@ -144,17 +178,20 @@ typedef struct _nsCocoaWindowList {
 - (NSColor*)backgroundColor;
 
 - (NSWindow*)window;
-- (float)titlebarHeight;
 @end
 
 // NSWindow subclass for handling windows with toolbars.
 @interface ToolbarWindow : NSWindow
 {
   TitlebarAndBackgroundColor *mColor;
+  float mUnifiedToolbarHeight;
+  BOOL mSuppressPainting;
 }
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
-- (NSColor*)activeTitlebarColor;
-- (NSColor*)inactiveTitlebarColor;
+- (void)setUnifiedToolbarHeight:(float)aToolbarHeight;
+- (float)unifiedToolbarHeight;
+- (float)titlebarHeight;
+- (BOOL)isPaintingSuppressed;
 // This method is also available on NSWindows (via a category), and is the 
 // preferred way to check the background color of a window.
 - (NSColor*)windowBackgroundColor;
