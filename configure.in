@@ -5779,6 +5779,11 @@ fi
 AC_MSG_RESULT([$TAR])
 AC_SUBST(TAR)
 
+AC_MSG_CHECKING([for wget])
+AC_CHECK_PROGS(WGET, wget, "")
+AC_MSG_RESULT([$WGET])
+AC_SUBST(WGET)
+
 dnl ========================================================
 dnl Updater
 dnl ========================================================
