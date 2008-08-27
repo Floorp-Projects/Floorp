@@ -150,7 +150,7 @@ namespace nanojit
     #define LIR_piand   LIR_and
     #define LIR_pilsh   LIR_lsh
 	#define LIR_pcmov	LIR_cmov
-    #define LIR_pior    LIR_ior
+    #define LIR_pior    LIR_or
 	#endif
 
 	inline uint32_t argwords(uint32_t argc) {
