@@ -4187,6 +4187,9 @@ js_math_floor(JSContext* cx, uintN argc, jsval* vp);
 JSBool
 js_math_ceil(JSContext* cx, uintN argc, jsval* vp);
 
+JSBool
+js_num_toString(JSContext *cx, uintN argc, jsval *vp);
+
 bool
 TraceRecorder::record_JSOP_CALL()
 {
@@ -4235,6 +4238,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_math_random,              F_Math_random,          "R",    "",    INFALLIBLE,  NULL },
         { js_num_parseInt,             F_ParseInt,             "C",   "s",    INFALLIBLE,  NULL },
         { js_num_parseFloat,           F_ParseFloat,           "C",   "s",    INFALLIBLE,  NULL },
+        { js_num_toString,             F_NumberToString,       "TC",   "",    FAIL_NULL,   NULL },
         { js_obj_hasOwnProperty,       F_Object_p_hasOwnProperty,
                                                                "TC",  "s",    FAIL_VOID,   NULL },
         { js_obj_propertyIsEnumerable, F_Object_p_propertyIsEnumerable,
