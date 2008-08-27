@@ -14,17 +14,16 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ilya Konstantinov (mozilla-code@future.shiny.co.il)
+ *   Neil Deakin <enndeakin@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,37 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDOMMouseEvent_h__
-#define nsDOMMouseEvent_h__
+#include "domstubs.idl"
+#include "nsIDOMMouseEvent.idl"
 
-#include "nsIDOMMouseEvent.h"
-#include "nsDOMUIEvent.h"
+interface nsIDOMAbstractView;
+interface nsIDOMDataTransfer;
 
-class nsIContent;
-class nsIScrollableView;
-class nsEvent;
-
-class nsDOMMouseEvent : public nsIDOMMouseEvent,
-                        public nsDOMUIEvent
+[scriptable, uuid(18FEEFD7-A461-4865-BCF1-4DC8A2F30584)]
+interface nsIDOMDragEvent : nsIDOMMouseEvent
 {
-public:
-  nsDOMMouseEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);
-  virtual ~nsDOMMouseEvent();
+  readonly attribute nsIDOMDataTransfer dataTransfer;
 
-  NS_DECL_ISUPPORTS_INHERITED
+  void initDragEvent(in DOMString typeArg,
+                     in boolean canBubbleArg,
+                     in boolean cancelableArg,
+                     in nsIDOMAbstractView aView,
+                     in PRInt32 aDetail,
+                     in nsIDOMDataTransfer aDataTransfer);
 
-  // nsIDOMMouseEvent Interface
-  NS_DECL_NSIDOMMOUSEEVENT
-  
-  // Forward to base class
-  NS_FORWARD_TO_NSDOMUIEVENT
-
-  // Specific implementation for a mouse event.
-  NS_IMETHOD GetWhich(PRUint32 *aWhich);
+  void initDragEventNS(in DOMString namespaceURIArg,
+                       in DOMString typeArg,
+                       in boolean canBubbleArg,
+                       in boolean cancelableArg,
+                       in nsIDOMAbstractView aView,
+                       in PRInt32 aDetail,
+                       in nsIDOMDataTransfer aDataTransfer);
 };
-
-#define NS_FORWARD_TO_NSDOMMOUSEEVENT         \
-  NS_FORWARD_NSIDOMMOUSEEVENT(nsDOMMouseEvent::) \
-  NS_FORWARD_TO_NSDOMUIEVENT
-
-#endif // nsDOMMouseEvent_h__
