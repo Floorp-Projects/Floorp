@@ -81,7 +81,6 @@ public:
   NS_IMETHOD              Destroy();
   NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
-  virtual nsIWidget*      GetTopLevelWidget(PRInt32* aLevelsUp = NULL);
   virtual nsIWidget*      GetSheetWindowParent(void);
   virtual void            AddChild(nsIWidget* aChild);
   virtual void            RemoveChild(nsIWidget* aChild);

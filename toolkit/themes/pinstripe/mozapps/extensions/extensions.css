@@ -1,3 +1,13 @@
+#extensionsManager {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
+}
+
+#extensionsManager:not([active="true"]) > #topStackBar > #viewGroup {
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
+  background-color: #cfcfcf;
+  border-bottom: 1px solid rgba(0,0,0,0.35);
+}
+
 #extensionsManager:not([active="true"]) > #topStackBar > #viewGroup > .radiogroupWrapper {
   opacity: 0.7;
 }
@@ -350,7 +360,10 @@ vbox[typeName="status"][type="header-recommended"] {
 
 /* View buttons */
 .viewSelector {
-  -moz-appearance: -moz-mac-unified-toolbar;
+  background-color: #969696;
+  border-bottom: 1px solid #404040;
+  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
+  background-repeat: repeat-x;
   padding: 4px 0 8px;
   margin: 0;
   -moz-box-pack: center;
