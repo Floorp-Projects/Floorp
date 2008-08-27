@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 sts=2 expandtab
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,19 +13,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is thebes gfx
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is the
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
- *   Stuart Parmenter <pavlov@pavlov.net>
+ *   Shawn Wilsher <me@shawnwilsher.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,26 +37,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NS_SYSTEMFONTSWIN_H_
-#define _NS_SYSTEMFONTSWIN_H_
+/**
+ * This wraps nsSimpleURI so that all calls to it are done on the main thread.
+ */
 
-#include "gfxFont.h"
-#include "nsIDeviceContext.h"
+#ifndef __nsNullPrincipalURI_h__
+#define __nsNullPrincipalURI_h__
 
-class nsSystemFontsWin
+#include "nsIURI.h"
+#include "nsAutoPtr.h"
+#include "nsString.h"
+
+// {51fcd543-3b52-41f7-b91b-6b54102236e6}
+#define NS_NULLPRINCIPALURI_IMPLEMENTATION_CID \
+  {0x51fcd543, 0x3b52, 0x41f7, \
+    {0xb9, 0x1b, 0x6b, 0x54, 0x10, 0x22, 0x36, 0xe6} }
+
+class nsNullPrincipalURI : public nsIURI
 {
 public:
-    nsSystemFontsWin();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURI
 
-    nsresult GetSystemFont(nsSystemFontID anID, nsString *aFontName,
-                           gfxFontStyle *aFontStyle) const;
+  nsNullPrincipalURI(const nsCString &aSpec);
+
 private:
-    nsresult CopyLogFontToNSFont(HDC* aHDC, const LOGFONTW* ptrLogFont,
-                                 nsString *aFontName, gfxFontStyle *aFontStyle) const;
-    nsresult GetSysFontInfo(HDC aHDC, nsSystemFontID anID,
-                            nsString *aFontName,
-                            gfxFontStyle *aFontStyle) const;
+  nsCString mScheme;
+  nsCString mPath;
 };
 
-#endif /* _NS_SYSTEMFONTSWIN_H_ */
-
+#endif // __nsNullPrincipalURI_h__
