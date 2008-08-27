@@ -372,11 +372,22 @@ namespace nanojit
 
 	void Assembler::nPatchBranch(NIns* branch, NIns* location)
 	{
-		uint32_t offset = location - branch;
+#if defined NANOJIT_IA32
+		intptr_t offset = intptr_t(location) - intptr_t(branch);
 		if (branch[0] == JMPc)
 			*(uint32_t*)&branch[1] = offset - 5;
 		else
 			*(uint32_t*)&branch[2] = offset - 6;
+#else
+        if (branch[0] == 0xFF && branch[1] == 0x25) {
+            NIns *mem;
+
+            mem = &branch[6] + *(int32_t *)&branch[2];
+            *(intptr_t *)mem = intptr_t(location);
+        } else {
+            NanoAssert(0);
+        }
+#endif
 	}
 
 	RegisterMask Assembler::hint(LIns* i, RegisterMask allow)
