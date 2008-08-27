@@ -133,7 +133,8 @@ namespace nanojit
 
 		LIR_qjoin	= 41 | LIR64,
 		LIR_i2f		= 42 | LIR64,
-		LIR_u2f		= 43 | LIR64
+		LIR_u2f		= 43 | LIR64,
+        LIR_qior    = 44 | LIR64
 	};
 
 	#if defined NANOJIT_64BIT
@@ -142,12 +143,14 @@ namespace nanojit
     #define LIR_piand   LIR_qiand
     #define LIR_pilsh   LIR_qilsh
 	#define LIR_pcmov	LIR_qcmov
+    #define LIR_pior    LIR_qior
 	#else
 	#define LIR_ldp     LIR_ld
     #define LIR_piadd   LIR_add
     #define LIR_piand   LIR_and
     #define LIR_pilsh   LIR_lsh
 	#define LIR_pcmov	LIR_cmov
+    #define LIR_pior    LIR_ior
 	#endif
 
 	inline uint32_t argwords(uint32_t argc) {
