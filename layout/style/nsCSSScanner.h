@@ -107,7 +107,7 @@ struct nsCSSToken {
   nsCSSTokenType  mType;
   PRPackedBool    mIntegerValid; // for number and dimension
   PRPackedBool    mHasSign; // for number, percentage, and dimension
-  nsAutoString    mIdent;
+  nsAutoString    mIdent NS_OKONHEAP;
   float           mNumber;
   PRInt32         mInteger;
   PRUnichar       mSymbol;
