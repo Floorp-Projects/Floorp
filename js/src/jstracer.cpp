@@ -2916,7 +2916,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                   MISMATCH_EXIT);
         }
     } else {
-        JS_ASSERT(entry->kpc == (jsbytecode*) atom);
+        JS_ASSERT(entry->kpc == (jsbytecode*) atoms[GET_INDEX(cx->fp->regs->pc)]);
         JS_ASSERT(entry->kshape == jsuword(aobj));
         if (aobj != globalObj) {
             guard(true, addName(lir->ins2i(LIR_eq, obj_ins, entry->kshape), "guard(kobj)"),
