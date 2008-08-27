@@ -479,7 +479,7 @@
           // Force a sync redraw
           window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                 .getInterface(Components.interfaces.nsIDOMWindowUtils)
-                .redraw();
+                .processUpdates();
         ]]></body>
       </method>
 
