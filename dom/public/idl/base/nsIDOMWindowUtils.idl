@@ -233,4 +233,10 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges in non-debug builds. Available to all callers in debug builds.
    */
   void garbageCollect();
+
+  /**
+   * Force processing of any queued paints
+   */
+
+  void processUpdates();
 };
