@@ -14,17 +14,16 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ilya Konstantinov (mozilla-code@future.shiny.co.il)
+ *   Neil Deakin <enndeakin@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,37 +35,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDOMMouseEvent_h__
-#define nsDOMMouseEvent_h__
+#ifndef nsDOMDragEvent_h__
+#define nsDOMDragEvent_h__
 
-#include "nsIDOMMouseEvent.h"
-#include "nsDOMUIEvent.h"
+#include "nsIDOMDragEvent.h"
+#include "nsDOMMouseEvent.h"
+#include "nsIDOMDataTransfer.h"
 
 class nsIContent;
-class nsIScrollableView;
 class nsEvent;
 
-class nsDOMMouseEvent : public nsIDOMMouseEvent,
-                        public nsDOMUIEvent
+class nsDOMDragEvent : public nsIDOMDragEvent,
+                       public nsDOMMouseEvent
 {
 public:
-  nsDOMMouseEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);
-  virtual ~nsDOMMouseEvent();
+  nsDOMDragEvent(nsPresContext* aPresContext, nsInputEvent* aEvent);
+  virtual ~nsDOMDragEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMMouseEvent Interface
-  NS_DECL_NSIDOMMOUSEEVENT
+  NS_DECL_NSIDOMDRAGEVENT
   
-  // Forward to base class
-  NS_FORWARD_TO_NSDOMUIEVENT
+  NS_FORWARD_TO_NSDOMMOUSEEVENT
 
-  // Specific implementation for a mouse event.
-  NS_IMETHOD GetWhich(PRUint32 *aWhich);
+  // filters the action to fit within the effects allowed and returns it.
+  static PRUint32 FilterDropEffect(PRUint32 aAction, PRUint32 aEffectAllowed);
 };
 
-#define NS_FORWARD_TO_NSDOMMOUSEEVENT         \
-  NS_FORWARD_NSIDOMMOUSEEVENT(nsDOMMouseEvent::) \
-  NS_FORWARD_TO_NSDOMUIEVENT
+nsresult NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,
+                            nsPresContext* aPresContext,
+                            nsDragEvent* aEvent);
 
-#endif // nsDOMMouseEvent_h__
+#endif // nsDOMDragEvent_h__

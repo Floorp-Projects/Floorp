@@ -64,7 +64,7 @@ static const char* const sEventNames[] = {
   "compositionstart", "compositionend", "popupshowing", "popupshown",
   "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture",
-  "drag", "dragend", "resize",
+  "drag", "dragend", "dragstart", "dragleave", "drop", "resize",
   "scroll", "overflow", "underflow", "overflowchanged",
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
@@ -172,6 +172,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
       case NS_MOUSE_SCROLL_EVENT:
         static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nsnull;
         break;
+      case NS_DRAG_EVENT:
+        static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer = nsnull;
+        break;
       case NS_XUL_COMMAND_EVENT:
         static_cast<nsXULCommandEvent*>(tmp->mEvent)->sourceEvent = nsnull;
         break;
@@ -197,6 +200,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
       case NS_MOUSE_SCROLL_EVENT:
         cb.NoteXPCOMChild(
           static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget);
+        break;
+      case NS_DRAG_EVENT:
+        cb.NoteXPCOMChild(
+          static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer);
         break;
       case NS_XUL_COMMAND_EVENT:
         cb.NoteXPCOMChild(
@@ -468,6 +475,27 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
   } else if (mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
     if (atom == nsGkAtoms::onDOMMouseScroll)
       mEvent->message = NS_MOUSE_SCROLL;
+  } else if (mEvent->eventStructType == NS_DRAG_EVENT) {
+    if (atom == nsGkAtoms::ondragstart)
+      mEvent->message = NS_DRAGDROP_START;
+    else if (atom == nsGkAtoms::ondraggesture)
+      mEvent->message = NS_DRAGDROP_GESTURE;
+    else if (atom == nsGkAtoms::ondragenter)
+      mEvent->message = NS_DRAGDROP_ENTER;
+    else if (atom == nsGkAtoms::ondragover)
+      mEvent->message = NS_DRAGDROP_OVER_SYNTH;
+    else if (atom == nsGkAtoms::ondragleave)
+      mEvent->message = NS_DRAGDROP_LEAVE_SYNTH;
+    else if (atom == nsGkAtoms::ondragexit)
+      mEvent->message = NS_DRAGDROP_EXIT;
+    else if (atom == nsGkAtoms::ondrag)
+      mEvent->message = NS_DRAGDROP_DRAG;
+    else if (atom == nsGkAtoms::ondrop)
+      mEvent->message = NS_DRAGDROP_DROP;
+    else if (atom == nsGkAtoms::ondragdrop)
+      mEvent->message = NS_DRAGDROP_DRAGDROP;
+    else if (atom == nsGkAtoms::ondragend)
+      mEvent->message = NS_DRAGDROP_END;
   } else if (mEvent->eventStructType == NS_KEY_EVENT) {
     if (atom == nsGkAtoms::onkeydown)
       mEvent->message = NS_KEY_DOWN;
@@ -758,6 +786,21 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       mouseEvent->relatedTarget = oldMouseEvent->relatedTarget;
       mouseEvent->button = oldMouseEvent->button;
       newEvent = mouseEvent;
+      break;
+    }
+    case NS_DRAG_EVENT:
+    {
+      nsDragEvent* oldDragEvent = static_cast<nsDragEvent*>(mEvent);
+      nsDragEvent* dragEvent =
+        new nsDragEvent(PR_FALSE, msg, nsnull);
+      NS_ENSURE_TRUE(dragEvent, NS_ERROR_OUT_OF_MEMORY);
+      isInputEvent = PR_TRUE;
+      dragEvent->dataTransfer = oldDragEvent->dataTransfer;
+      dragEvent->clickCount = oldDragEvent->clickCount;
+      dragEvent->acceptActivation = oldDragEvent->acceptActivation;
+      dragEvent->relatedTarget = oldDragEvent->relatedTarget;
+      dragEvent->button = oldDragEvent->button;
+      newEvent = dragEvent;
       break;
     }
     case NS_MENU_EVENT:
@@ -1298,7 +1341,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_dragover];
   case NS_DRAGDROP_EXIT_SYNTH:
     return sEventNames[eDOMEvents_dragexit];
-  case NS_DRAGDROP_DROP:
+  case NS_DRAGDROP_DRAGDROP:
     return sEventNames[eDOMEvents_dragdrop];
   case NS_DRAGDROP_GESTURE:
     return sEventNames[eDOMEvents_draggesture];
@@ -1306,6 +1349,12 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_drag];
   case NS_DRAGDROP_END:
     return sEventNames[eDOMEvents_dragend];
+  case NS_DRAGDROP_START:
+    return sEventNames[eDOMEvents_dragstart];
+  case NS_DRAGDROP_LEAVE_SYNTH:
+    return sEventNames[eDOMEvents_dragleave];
+  case NS_DRAGDROP_DROP:
+    return sEventNames[eDOMEvents_drop];
   case NS_SCROLLPORT_OVERFLOW:
     return sEventNames[eDOMEvents_overflow];
   case NS_SCROLLPORT_UNDERFLOW:
