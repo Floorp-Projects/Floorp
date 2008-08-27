@@ -93,10 +93,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 0e64821f-00a2-4adc-ac3b-3439d61f4491
+// AE42543F-BF61-4164-96BA-AF8F4EDCEEAD
 #define NS_IWIDGET_IID \
-{ 0x0e64821f, 0x00a2, 0x4adc, \
-  { 0xac, 0x3b, 0x34, 0x39, 0xd6, 0x1f, 0x44, 0x91 } }
+{ 0xae42543f, 0xbf61, 0x4164, \
+  { 0x96, 0xba, 0xaf, 0x8f, 0x4e, 0xdc, 0xee, 0xad } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
@@ -382,15 +382,6 @@ class nsIWidget : public nsISupports {
      *
      */
     virtual nsIWidget* GetParent(void) = 0;
-
-    /**
-     * Return the top level Widget of this Widget
-     *
-     * @param     aLevelsUp   returns the number of GetParent() calls that
-     *                        were necessary to get to the top level widget
-     * @return the top level widget
-     */
-    virtual nsIWidget* GetTopLevelWidget(PRInt32* aLevelsUp = NULL) = 0;
 
     /**
      * Return the top (non-sheet) parent of this Widget if it's a sheet,
