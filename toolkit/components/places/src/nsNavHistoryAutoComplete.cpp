@@ -224,6 +224,15 @@ FindAnywhere(const nsAString &aToken, const nsAString &aTarget)
   return CaseInsensitiveFindInReadable(aToken, aTarget);
 }
 
+/**
+ * A local wrapper to case insensitive StringBeginsWith
+ */
+inline PRBool
+FindBeginning(const nsAString &aToken, const nsAString &aTarget)
+{
+  return StringBeginsWith(aTarget, aToken, nsCaseInsensitiveStringComparator());
+}
+
 // nsNavHistory::InitAutoComplete
 nsresult
 nsNavHistory::InitAutoComplete()
@@ -805,8 +814,20 @@ nsNavHistory::AutoCompleteProcessSearch(mozIStorageStatement* aQuery,
     !StartsWithJS(mCurrentSearchString);
 
   // Determine what type of search to try matching tokens against targets
-  PRBool (*tokenMatchesTarget)(const nsAString &, const nsAString &) =
-    mCurrentMatchType != MATCH_ANYWHERE ? FindOnBoundary : FindAnywhere;
+  PRBool (*tokenMatchesTarget)(const nsAString &, const nsAString &);
+  switch (mCurrentMatchType) {
+    case MATCH_ANYWHERE:
+      tokenMatchesTarget = FindAnywhere;
+      break;
+    case MATCH_BEGINNING:
+      tokenMatchesTarget = FindBeginning;
+      break;
+    case MATCH_BOUNDARY_ANYWHERE:
+    case MATCH_BOUNDARY:
+    default:
+      tokenMatchesTarget = FindOnBoundary;
+      break;
+  }
 
   PRBool hasMore = PR_FALSE;
   // Determine the result of the search

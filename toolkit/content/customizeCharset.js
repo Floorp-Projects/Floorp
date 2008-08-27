@@ -203,12 +203,9 @@ function AddAvailableCharset()
 function RemoveActiveCharset()
 {
   var listbox = document.getElementById('active_charsets');
-  var nextNode = null;
-  var numSelected = listbox.selectedItems.length;
-  var deleted_all = false;
-
   var numSelectedItems = listbox.selectedItems.length;
-  for (count = 0; count < numSelectedItems; count ++) {
+
+  for (var count = 0; count < numSelectedItems; count ++) {
     listbox.removeChild(listbox.selectedItems[0]);
   }
 

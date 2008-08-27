@@ -61,7 +61,6 @@ class   nsGUIEvent;
 struct  nsColorMap;
 class   imgIContainer;
 class   gfxASurface;
-class   nsIMouseListener;
 class   nsIContent;
 
 /**
@@ -755,15 +754,6 @@ class nsIWidget : public nsISupports {
      */
 
      NS_IMETHOD Update() = 0;
-
-    /**
-     * Adds a mouse listener to this widget
-     * Any existing mouse listener is replaced
-     *
-     * @param aListener mouse listener to add to this widget.
-     */
-
-    NS_IMETHOD AddMouseListener(nsIMouseListener * aListener) = 0;
 
     /**
      * Adds an event listener to this widget

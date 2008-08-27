@@ -165,7 +165,7 @@ nsSVGDisplayContainerFrame::RemoveFrame(nsIAtom* aListName,
 
 NS_IMETHODIMP
 nsSVGDisplayContainerFrame::PaintSVG(nsSVGRenderState* aContext,
-                                     nsRect *aDirtyRect)
+                                     nsIntRect *aDirtyRect)
 {
   const nsStyleDisplay *display = mStyleContext->GetStyleDisplay();
   if (display->mOpacity == 0.0)
@@ -179,12 +179,10 @@ nsSVGDisplayContainerFrame::PaintSVG(nsSVGRenderState* aContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGDisplayContainerFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
+NS_IMETHODIMP_(nsIFrame*)
+nsSVGDisplayContainerFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
-  nsSVGUtils::HitTestChildren(this, x, y, hit);
-  
-  return NS_OK;
+  return nsSVGUtils::HitTestChildren(this, aPoint);
 }
 
 NS_IMETHODIMP_(nsRect)

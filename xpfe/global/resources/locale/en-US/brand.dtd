@@ -1,2 +1,0 @@
-<!ENTITY % realBrandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%realBrandDTD;

@@ -321,27 +321,32 @@ xptiInterfaceInfoManager::BuildFileList(nsISupportsArray* aSearchPath,
     if(NS_FAILED(aSearchPath->Count(&pathCount)))
         return PR_FALSE;
 
-    for(PRUint32 i = 0; i < pathCount; i++)
+    nsCOMPtr<nsILocalFile> dir;
+    nsCOMPtr<nsISimpleEnumerator> entries;
+    nsCOMPtr<nsISupports> sup;
+    nsCOMPtr<nsILocalFile> file;
+
+    // Iterate the paths backwards to avoid the
+    // insertions that would occurr if we preserved
+    // the order of the list.
+    for(PRUint32 i = pathCount; i; i--)
     {
-        nsCOMPtr<nsILocalFile> dir;
-        rv = xptiCloneElementAsLocalFile(aSearchPath, i, getter_AddRefs(dir));
+        rv = xptiCloneElementAsLocalFile(aSearchPath, (i - 1), getter_AddRefs(dir));
         if(NS_FAILED(rv) || !dir)
             return PR_FALSE;
 
-        nsCOMPtr<nsISimpleEnumerator> entries;
         rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
         if(NS_FAILED(rv) || !entries)
             continue;
 
-        PRUint32 count = 0;
         PRBool hasMore;
         while(NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore)
         {
-            nsCOMPtr<nsISupports> sup;
             entries->GetNext(getter_AddRefs(sup));
             if(!sup)
                 return PR_FALSE;
-            nsCOMPtr<nsILocalFile> file = do_QueryInterface(sup);
+
+            file = do_QueryInterface(sup);
             if(!file)
                 return PR_FALSE;
 
@@ -360,13 +365,12 @@ xptiInterfaceInfoManager::BuildFileList(nsISupportsArray* aSearchPath,
 
             LOG_AUTOREG(("found file: %s\n", name.get()));
 
-            if(!fileList->InsertElementAt(file, count))
+            if(!fileList->AppendElement(file))
                 return PR_FALSE;
-            ++count;
         }
     }
 
-    NS_ADDREF(*aFileList = fileList); 
+    fileList.swap(*aFileList);
     return PR_TRUE;
 }
 

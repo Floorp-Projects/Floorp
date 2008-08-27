@@ -195,7 +195,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
     return !failed;
 }
 
-#else
+#elif JS_HAS_NATIVE_COMPARE_AND_SWAP
 
 #error "JS_HAS_NATIVE_COMPARE_AND_SWAP should be 0 if your platform lacks a compare-and-swap instruction."
 
