@@ -898,6 +898,91 @@ function testLoopingAccumulator() {
 testLoopingAccumulator.expected = 20;
 test(testLoopingAccumulator);
 
+function testBranchingLoop() {
+  var x = 0;
+  for (var i=0; i < 100; ++i) {
+    if (i == 51) {
+      x += 10;
+    }
+    x++;
+  }
+  return x;
+}
+testBranchingLoop.expected = 110;
+test(testBranchingLoop);
+
+function testBranchingUnstableLoop() {
+  var x = 0;
+  for (var i=0; i < 100; ++i) {
+    if (i == 51) {
+      x += 10.1;
+    }
+    x++;
+  }
+  return x;
+}
+testBranchingUnstableLoop.expected = 110.1;
+test(testBranchingUnstableLoop);
+
+function testBranchingUnstableLoopCounter() {
+  var x = 0;
+  for (var i=0; i < 100; ++i) {
+    if (i == 51) {
+      i += 1.1;
+    }
+    x++;    
+  }
+  return x;
+}
+testBranchingUnstableLoopCounter.expected = 99;
+test(testBranchingUnstableLoopCounter);
+
+
+function testBranchingUnstableObject() {
+  var x = {s: "a"};
+  var t = "";
+  for (var i=0; i < 100; ++i) {
+      if (i == 51)
+      {
+        x.s = 5;
+      }
+      t += x.s;
+  }
+  return t.length;
+}
+testBranchingUnstableObject.expected = 100;
+test(testBranchingUnstableObject);
+
+function testArrayDensityChange() {
+  var x = [];
+  var count = 0;
+  for (var i=0; i < 100; ++i) {
+    x[i] = "asdf";
+  }
+  for (var i=0; i < x.length; ++i) {
+      if (i == 51)
+      {
+        x[199] = "asdf";
+      }
+      if (x[i])
+        count += x[i].length;
+  }
+  return count;
+}
+testArrayDensityChange.expected = 404;
+test(testArrayDensityChange);
+
+function testDoubleToStr() {
+    var x = 0.0;
+    var y = 5.5;
+    for (var i = 0; i < 200; i++) {
+       x += parseFloat(y.toString());
+    }
+    return x;
+}
+testDoubleToStr.expected = 5.5*200;
+test(testDoubleToStr);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
