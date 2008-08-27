@@ -73,6 +73,7 @@ CPPSRCS		= \
 		nsPrincipal.cpp \
 		nsSystemPrincipal.cpp \
 		nsNullPrincipal.cpp \
+		nsNullPrincipalURI.cpp \
 		nsJSPrincipals.cpp \
 		nsScriptSecurityManager.cpp \
 		nsSecurityManagerFactory.cpp \
