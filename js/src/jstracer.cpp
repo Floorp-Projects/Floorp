@@ -3575,11 +3575,16 @@ js_Array(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
 bool
 TraceRecorder::record_JSOP_NEW()
 {
-    jsbytecode *pc = cx->fp->regs->pc;
     /* Get immediate argc and find the constructor function. */
-    unsigned argc = GET_ARGC(cx->fp->regs->pc);
+    jsbytecode *pc = cx->fp->regs->pc;
+    unsigned argc = GET_ARGC(pc);
     jsval& fval = stackval(0 - (2 + argc));
     JS_ASSERT(&fval >= StackBase(cx->fp));
+
+    jsval& tval = stackval(0 - (argc + 1));
+    LIns* this_ins = get(&tval);
+    if (this_ins->isconstp() && !this_ins->constvalp() && !guardShapelessCallee(fval))
+        return false;
 
     /*
      * Require that the callee be a function object, to avoid guarding on its
@@ -4183,8 +4188,9 @@ TraceRecorder::record_JSOP_CALL()
     jsbytecode *pc = cx->fp->regs->pc;
     uintN argc = GET_ARGC(pc);
     jsval& fval = stackval(0 - (argc + 2));
-    jsval& tval = stackval(0 - (argc + 1));
+    JS_ASSERT(&fval >= StackBase(cx->fp));
 
+    jsval& tval = stackval(0 - (argc + 1));
     LIns* this_ins = get(&tval);
     if (this_ins->isconstp() && !this_ins->constvalp() && !guardShapelessCallee(fval))
         return false;
