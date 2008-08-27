@@ -527,7 +527,7 @@ PRBool nsWindow::DispatchCommandEvent(PRUint32 aEventCommand)
 
 PRBool nsWindow::DispatchDragDropEvent(PRUint32 aMsg)
 {
-  nsMouseEvent event(PR_TRUE, aMsg, this, nsMouseEvent::eReal);
+  nsDragEvent event(PR_TRUE, aMsg, this);
   InitEvent(event);
 
   event.isShift   = WinIsKeyDown(VK_SHIFT);
@@ -3214,7 +3214,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
 {
   PRBool result = PR_FALSE;
 
-  if (nsnull == mEventCallback && nsnull == mMouseListener) {
+  if (nsnull == mEventCallback) {
     return result;
   }
 
@@ -3336,33 +3336,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
   if (nsnull != mEventCallback) {
     return DispatchWindowEvent(&event);
   }
-
-  if (nsnull != mMouseListener) {
-    switch (aEventType) {
-      case NS_MOUSE_MOVE: {
-        result = ConvertStatus(mMouseListener->MouseMoved(event));
-        nsRect rect;
-        GetBounds(rect);
-        if (rect.Contains(event.refPoint.x, event.refPoint.y)) {
-          if (gCurrentWindow == NULL || gCurrentWindow != this) {
-            gCurrentWindow = this;
-          }
-        }
-      } break;
-
-      case NS_MOUSE_BUTTON_DOWN:
-        result = ConvertStatus(mMouseListener->MousePressed(event));
-        break;
-
-      case NS_MOUSE_BUTTON_UP:
-        result = ConvertStatus(mMouseListener->MouseReleased(event));
-        break;
-
-      case NS_MOUSE_CLICK:
-        result = ConvertStatus(mMouseListener->MouseClicked(event));
-        break;
-    } // switch
-  } 
 
   return result;
 }

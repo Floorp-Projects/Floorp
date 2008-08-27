@@ -51,6 +51,11 @@ panel {
   -moz-appearance: menupopup;
 }
 
+menupopup > menu > menupopup,
+popup > menu > menupopup {
+  margin-top: -4px;
+}
+
 /* ::::: popup internal box ::::: */
 
 .popup-internal-box {

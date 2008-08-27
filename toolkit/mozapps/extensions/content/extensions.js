@@ -1161,7 +1161,7 @@ function Startup()
            !document.getElementById(viewGroup.getAttribute("last-selected") + "-view").hidden)
     showView(viewGroup.getAttribute("last-selected"));
   else
-    showView("search");
+    showView(gShowGetAddonsPane ? "search" : "extensions");
 
   if (gExtensionsView.selectedItem)
     gExtensionsView.scrollBoxObject.scrollToElement(gExtensionsView.selectedItem);

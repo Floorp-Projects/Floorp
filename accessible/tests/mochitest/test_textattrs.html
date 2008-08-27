@@ -67,7 +67,7 @@
         return;
       }
 
-      var errorMsg = " for " + aID + "at offset " + aOffset;
+      var errorMsg = " for " + aID + " at offset " + aOffset;
       is(startOffset.value, aStartOffset,
          "Wrong start offset" + errorMsg);
       is(endOffset.value, aEndOffset,
@@ -98,10 +98,10 @@
 
         if (!(prop.key in aExpectedAttrs))
           ok(false,
-             "Unexpected attribute '" + prop.key + "'" + aErrorMsg);
+             "Unexpected attribute '" + prop.key + "' " + aErrorMsg);
         else
           is(prop.value, aExpectedAttrs[prop.key],
-             "Attribute '" + prop.key + "' has wrong value" + aErrorMsg);
+             "Attribute '" + prop.key + " 'has wrong value" + aErrorMsg);
       }
 
       for (var name in aExpectedAttrs) {
@@ -113,7 +113,7 @@
 
         if (!value)
           ok(false,
-             "There is no expected attribute '" + name + "'" + aErrorMsg);
+             "There is no expected attribute '" + name + "' " + aErrorMsg);
       }
     }
 
@@ -176,6 +176,7 @@
 
           testTextAttrs(ID, 0, attrs, 0, 11, defAttrs);
           testTextAttrs(ID, 11, misspelledAttrs, 11, 17, defAttrs);
+          testTextAttrs(ID, 17, attrs, 17, 18, defAttrs);
           testTextAttrs(ID, 18, misspelledAttrs, 18, 22, defAttrs);
 
           is(gA11yEventObserver.mTextAttrChangedEventCounter, 2,

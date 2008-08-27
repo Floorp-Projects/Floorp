@@ -226,9 +226,9 @@ static void OssoHardwareCallback(osso_hw_state_t *state, gpointer data)
       appService->Quit(nsIAppStartup::eForceQuit);
     return;
   }
-    
+
   if (state->memory_low_ind) {
-    if (ourState->memory_low_ind) {
+      if (! ourState->memory_low_ind) {
       nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
       if (os)
         os->NotifyObservers(nsnull, "memory-pressure", NS_LITERAL_STRING("low-memory").get());

@@ -2230,35 +2230,15 @@ NS_IMETHODIMP nsLocalFile::IsPackage(PRBool *_retval)
   NS_ENSURE_ARG(_retval);
   *_retval = PR_FALSE;
   
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
-  if (NS_FAILED(rv))
-    return rv;
-
-  FSCatalogInfo catalogInfo;
-  OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNodeFlags + kFSCatInfoFinderInfo,
-                                 &catalogInfo, nsnull, nsnull, nsnull);
-  if (err != noErr)
-    return MacErrorMapper(err);
-  if ((catalogInfo.nodeFlags & kFSNodeIsDirectoryMask) != 0) {
-    FileInfo *fInfoPtr = (FileInfo *)(catalogInfo.finderInfo);
-    if ((fInfoPtr->finderFlags & kHasBundle) != 0) {
-      *_retval = PR_TRUE;
-    }
-    else {
-     // Folders ending with ".app" are also considered to
-     // be packages, even if the top-level folder doesn't have bundle set
-      nsCAutoString name;
-      if (NS_SUCCEEDED(rv = GetNativeLeafName(name))) {
-        const char *extPtr = strrchr(name.get(), '.');
-        if (extPtr) {
-          if ((nsCRT::strcasecmp(extPtr, ".app") == 0))
-            *_retval = PR_TRUE;
-        }
-      }
-    }
+  CFURLRef urlRef;
+  if (NS_SUCCEEDED(GetCFURL(&urlRef)) && urlRef) {
+    *_retval = [[NSWorkspace sharedWorkspace] isFilePackageAtPath:[(NSURL *)urlRef path]];
+    ::CFRelease(urlRef);
+    
+    return NS_OK;
   }
-  return NS_OK;
+  
+  return NS_ERROR_FAILURE;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

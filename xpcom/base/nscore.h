@@ -490,9 +490,11 @@ typedef PRUint32 nsrefcnt;
  */
 #ifdef NS_STATIC_CHECKING
 #define NS_STACK_CLASS __attribute__((user("NS_stack")))
+#define NS_OKONHEAP    __attribute__((user("NS_okonheap")))
 #define NS_FINAL_CLASS __attribute__((user("NS_final")))
 #else
 #define NS_STACK_CLASS
+#define NS_OKONHEAP
 #define NS_FINAL_CLASS
 #endif
 

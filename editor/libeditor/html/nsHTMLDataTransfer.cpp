@@ -1497,8 +1497,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   // transferable hooks here
   nsCOMPtr<nsIDOMDocument> domdoc;
   GetDocument(getter_AddRefs(domdoc));
-  if (!nsEditorHookUtils::DoAllowDropHook(domdoc, aDropEvent, dragSession))
-    return NS_OK;
 
   // find out if we have our internal html flavor on the clipboard.  We don't want to mess
   // around with cfhtml if we do.

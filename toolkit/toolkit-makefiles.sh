@@ -458,13 +458,6 @@ MAKEFILES_chrome="
   chrome/Makefile
   chrome/public/Makefile
   chrome/src/Makefile
-  embedding/minimo/chromelite/Makefile
-  rdf/chrome/Makefile
-  rdf/chrome/public/Makefile
-  rdf/chrome/build/Makefile
-  rdf/chrome/src/Makefile
-  rdf/chrome/tools/Makefile
-  rdf/chrome/tools/chromereg/Makefile
 "
 
 MAKEFILES_view="
@@ -590,35 +583,16 @@ MAKEFILES_xpfe="
   xpfe/components/related/Makefile
   xpfe/components/related/src/Makefile
   xpfe/components/related/public/Makefile
-  xpfe/components/startup/Makefile
-  xpfe/components/startup/public/Makefile
-  xpfe/components/startup/src/Makefile
   xpfe/components/autocomplete/Makefile
   xpfe/components/autocomplete/public/Makefile
   xpfe/components/autocomplete/src/Makefile
   xpfe/components/winhooks/Makefile
   xpfe/components/windowds/Makefile
   xpfe/components/build/Makefile
-  xpfe/components/xremote/Makefile
-  xpfe/components/xremote/public/Makefile
-  xpfe/components/xremote/src/Makefile
   xpfe/appshell/Makefile
   xpfe/appshell/src/Makefile
   xpfe/appshell/public/Makefile
   xpfe/bootstrap/appleevents/Makefile
-  xpfe/global/Makefile
-  xpfe/global/buildconfig.html
-  xpfe/global/resources/Makefile
-  xpfe/global/resources/content/Makefile
-  xpfe/global/resources/content/os2/Makefile
-  xpfe/global/resources/content/unix/Makefile
-  xpfe/global/resources/locale/Makefile
-  xpfe/global/resources/locale/en-US/Makefile
-  xpfe/global/resources/locale/en-US/mac/Makefile
-  xpfe/global/resources/locale/en-US/os2/Makefile
-  xpfe/global/resources/locale/en-US/unix/Makefile
-  xpfe/global/resources/locale/en-US/win/Makefile
-  xpfe/communicator/Makefile
   extensions/spellcheck/Makefile
   extensions/spellcheck/hunspell/Makefile
   extensions/spellcheck/idl/Makefile

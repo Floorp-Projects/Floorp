@@ -76,6 +76,7 @@ function testDynamics() {
   testDynamic("html3", "Hello", "Appending HTML <title> element to root element", function(doc){
       var t = doc.createElement("title"); t.textContent = "Hello"; doc.documentElement.appendChild(t);
     });
+
   testDynamic("xhtml3", "Hello", "Setting 'title' clears existing <title> contents", function(doc){
       doc.title = "Hello";
     }, function(doc, desc) {
@@ -133,26 +134,8 @@ function testDynamics() {
   setTimeout(end, 500);
 }
 
-function acid() {
-      var doctype = document.implementation.createDocumentType("html", "-//W3C//DTD XHTML 1.0 Strict//EN", "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd");
-      is(doctype.ownerDocument, null, "doctype's ownerDocument was wrong after creation");
-      var doc = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", doctype);
-      doc.documentElement.appendChild(doc.createElementNS("http://www.w3.org/1999/xhtml", "head"));
-      doc.documentElement.appendChild(doc.createElementNS("http://www.w3.org/1999/xhtml", "body"));
-      var t = doc.createElementNS("http://www.w3.org/1999/xhtml", "title");
-      doc.documentElement.firstChild.appendChild(t);
-      // ok we have a conforming XHTML1 doc in |doc| now.
-      is(doctype.ownerDocument, doc, "doctype's ownerDocument didn't change when it was assigned to another document");
-      is(doc.title, "", "document had unexpected title");
-      t.textContent = "Sparrow";
-      is(doc.title, "Sparrow", "document.title did not update dynamically");
-      doc.body.appendChild(doc.createElementNS("http://www.w3.org/1999/xhtml", "form"));
-      is(doc.forms.length, 1, "document.forms not updated after inserting a form");
-}
-
 function runTests() {
   testStatics();
-  // acid();
   testDynamics();
 }
 
