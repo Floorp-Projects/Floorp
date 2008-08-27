@@ -175,9 +175,11 @@ namespace nanojit
 			{													\
 				NIns *tt = _nIns; 								\
 				_nIns = pageAlloc(_inExit);	    				\
-				_pageData = 0;									\
-				_dblNegPtr = NULL;								\
-				_negOnePtr = NULL;								\
+                if (!_inExit) {                                 \
+				    _pageData = 0;								\
+				    _dblNegPtr = NULL;							\
+				    _negOnePtr = NULL;							\
+                }                                               \
 				intptr_t d = tt-_nIns; 							\
                 if (d <= INT_MAX && d >= INT_MIN) {             \
 				    JMP_long_nochk_offset(d);					\
@@ -185,9 +187,7 @@ namespace nanojit
                     /* Insert a 64-bit jump... */               \
                     _nIns -= 8;                                 \
                     *(intptr_t *)_nIns = intptr_t(tt);          \
-                    IMM32(0);                                   \
-                    *(_nIns--) = 0x25;                          \
-                    *(_nIns--) = 0xFF;                          \
+                    JMPm_nochk(0);                              \
                 }                                               \
 			}													\
             overrideProtect = _nIns;                            \
@@ -458,6 +458,12 @@ namespace nanojit
 	} while(0)
 
 
+#define ORQ(l,r) do { 											\
+	AMD64_PRIMQ(AMD64_OR_REG_RM, l, r);							\
+	asm_output2("or %s,%s",gpn(l),gpn(r)); 						\
+	} while(0)
+
+
 #define SHRi(r,i) do { 											\
 	if (i == 1) {												\
 		underrunProtect(3);										\
@@ -486,6 +492,11 @@ namespace nanojit
 	asm_output2("and %s,%d",gpn(r),i);							\
 	} while(0)
 
+
+#define ORQi(r,i) do { 										    \
+	AMD64_ALU(AMD64_OR_RAX, r, i, 1);							\
+	asm_output2("or %s,%d",gpn(r),i);							\
+	} while(0)
 
 #define XORi(r,i) do { 											\
 	AMD64_ALU(AMD64_XOR_RAX, r, i, 0);							\
@@ -852,23 +863,59 @@ namespace nanojit
 	asm_output1("pop %s",gpn(r)); 							\
 	} while(0)
 
-#define JCC(o,t,n) do { \
-	underrunProtect(6);	\
-	intptr_t tt = (intptr_t)t - (intptr_t)_nIns;	\
-	if (isS8(tt)) { \
-		verbose_only( NIns* next = _nIns; (void)next; ) \
-		_nIns -= 2; \
-		_nIns[0] = (uint8_t) ( 0x70 | (o) ); \
-		_nIns[1] = (uint8_t) (tt); \
-		asm_output2("%s %lX",(n),(ptrdiff_t)(next+tt)); \
-	} else { \
-		verbose_only( NIns* next = _nIns; ) \
-		IMM32(tt); \
-		_nIns -= 2; \
-		_nIns[0] = 0x0f; \
-		_nIns[1] = (uint8_t) ( 0x80 | (o) ); \
-		asm_output2("%s %lX",(n),(ptrdiff_t)(next+tt)); \
-	} } while(0)
+#define JCC(o,t,n) do {                                     \
+	underrunProtect(6);	                                    \
+	intptr_t tt = (intptr_t)t - (intptr_t)_nIns;	        \
+	if (isS8(tt)) {                                         \
+		verbose_only( NIns* next = _nIns; (void)next; )     \
+		_nIns -= 2;                                         \
+		_nIns[0] = (uint8_t) ( 0x70 | (o) );                \
+		_nIns[1] = (uint8_t) (tt);                          \
+		asm_output2("%s %lX",(n),(ptrdiff_t)(next+tt));     \
+	} else if (tt <= INT_MAX && tt >= INT_MIN) {            \
+		verbose_only( NIns* next = _nIns; )                 \
+		IMM32(tt);                                          \
+		_nIns -= 2;                                         \
+		_nIns[0] = 0x0f;                                    \
+		_nIns[1] = (uint8_t) ( 0x80 | (o) );                \
+		asm_output2("%s %lX",(n),(ptrdiff_t)(next+tt));     \
+	} else {                                                \
+        underrunProtect(20);                                \
+        NanoAssert(!_inExit);                               \
+        /* We could now be in range, but assume we're not. */ \
+        /* Note we generate the thunk forwards, and the */  \
+        /* jcc to the thunk backwards. */                   \
+        uint8_t* base;                                      \
+        intptr_t offs;                                      \
+		base = (uint8_t *)((uintptr_t)_nIns & ~((uintptr_t)NJ_PAGE_SIZE-1)); \
+		base += sizeof(PageHeader) + _pageData;			    \
+        _pageData += 14;                                    \
+        *(base++) = 0xFF;                                   \
+        *(base++) = 0x25;                                   \
+        *(int *)base = 0;                                   \
+        base += 4;                                          \
+        *(intptr_t *)base = intptr_t(t);                    \
+        offs = intptr_t(base-6) - intptr_t(_nIns);          \
+        NanoAssert(offs >= INT_MIN && offs <= INT_MAX);     \
+        if (isS8(offs)) {                                   \
+            _nIns -= 2;                                     \
+            _nIns[0] = uint8_t( 0x70 | (o) );               \
+            _nIns[1] = uint8_t( (offs) );                   \
+        } else {                                            \
+            IMM32(offs);                                    \
+            _nIns -= 2;                                     \
+            _nIns[0] = 0x0f;                                \
+            _nIns[1] = uint8_t( 0x80 | (o) );               \
+        }                                                   \
+        asm_output3("%s %d(rip) #%lX",n,offs,intptr_t(t));  \
+    }                                                       \
+    } while(0)
+
+#define JMPm_nochk(rip) do {                \
+    IMM32(rip);                             \
+    *(--_nIns) = 0x25;                      \
+    *(--_nIns) = 0xFF;                      \
+    } while (0)
 
 #define JMP_long(t) do { \
 	underrunProtect(5);	\
@@ -876,17 +923,24 @@ namespace nanojit
 	JMP_long_nochk_offset(tt);	\
 	} while(0)
 
-#define JMP(t)		do { 	\
-   	underrunProtect(5);	\
-	intptr_t tt = (intptr_t)t - (intptr_t)_nIns;	\
-	if (isS8(tt)) { \
+#define JMP(t)		do { 	                            \
+   	underrunProtect(5);	                                \
+	intptr_t tt = (intptr_t)t - (intptr_t)_nIns;	    \
+	if (isS8(tt)) {                                     \
 		verbose_only( NIns* next = _nIns; (void)next; ) \
-		_nIns -= 2; \
-		_nIns[0] = 0xeb; \
-		_nIns[1] = (uint8_t) ( (tt)&0xff ); \
-		asm_output1("jmp %lX",(ptrdiff_t)(next+tt)); \
-	} else { \
-		JMP_long_nochk_offset(tt);	\
+		_nIns -= 2;                                     \
+		_nIns[0] = 0xeb;                                \
+		_nIns[1] = (uint8_t) ( (tt)&0xff );             \
+		asm_output1("jmp %lX",(ptrdiff_t)(next+tt));    \
+	} else {                                            \
+        if (tt >= INT_MIN && tt <= INT_MAX) {           \
+    		JMP_long_nochk_offset(tt);	                \
+        } else {                                        \
+            underrunProtect(14);                        \
+            _nIns -= 8;                                 \
+            *(intptr_t *)_nIns = intptr_t(t);           \
+            JMPm_nochk(0);                              \
+        }                                               \
 	} } while(0)
 
 #define JMP_long_nochk(t)		do { 	\
@@ -908,13 +962,11 @@ namespace nanojit
  		*(--_nIns) = JMPc; \
 		asm_output1("jmp %lX",(ptrdiff_t)(next+(o))); } while(0)
 
-#if 0
 #define JMPr(r) do {                    \
     underrunProtect(2);                 \
     *(--_nIns) = AMD64_MODRM_REG(4, r); \
     *(--_nIns) = 0xFF;                  \
     } while (0)
-#endif
 
 #define JE(t)	JCC(0x04, t, "je")
 #define JNE(t)	JCC(0x05, t, "jne")
