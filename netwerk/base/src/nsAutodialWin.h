@@ -52,21 +52,21 @@ typedef struct tagRASAUTODIALENTRYA {
     DWORD dwSize;
     DWORD dwFlags;
     DWORD dwDialingLocation;
-    CHAR szEntry[RAS_MaxEntryName + 1];
-} RASAUTODIALENTRYA, *LPRASAUTODIALENTRYA;
-typedef RASAUTODIALENTRYA RASAUTODIALENTRY, *LPRASAUTODIALENTRY;
+    PRUnichar szEntry[RAS_MaxEntryName + 1];
+} RASAUTODIALENTRYW, *LPRASAUTODIALENTRYW;
+typedef RASAUTODIALENTRYW RASAUTODIALENTRY, *LPRASAUTODIALENTRY;
 
 #define RASADP_LoginSessionDisable              1
 
 #endif  // WINVER
 
 // Loading the RAS DLL dynamically. 
-typedef DWORD (WINAPI* tRASPHONEBOOKDLG)(LPTSTR,LPTSTR,LPRASPBDLG);
-typedef DWORD (WINAPI* tRASDIALDLG)(LPTSTR,LPTSTR,LPTSTR,LPRASDIALDLG);
+typedef DWORD (WINAPI* tRASPHONEBOOKDLG)(LPWSTR,LPWSTR,LPRASPBDLG);
+typedef DWORD (WINAPI* tRASDIALDLG)(LPWSTR,LPWSTR,LPWSTR,LPRASDIALDLG);
 typedef DWORD (WINAPI* tRASENUMCONNECTIONS)(LPRASCONN,LPDWORD,LPDWORD);
-typedef DWORD (WINAPI* tRASENUMENTRIES)(LPTSTR,LPTSTR,LPRASENTRYNAME,LPDWORD,LPDWORD);
-typedef DWORD (WINAPI* tRASSETAUTODIALADDRESS)(LPCTSTR,DWORD,LPRASAUTODIALENTRY,DWORD,DWORD);
-typedef DWORD (WINAPI* tRASGETAUTODIALADDRESS)(LPCTSTR,LPDWORD,LPRASAUTODIALENTRY,LPDWORD,LPDWORD);
+typedef DWORD (WINAPI* tRASENUMENTRIES)(LPWSTR,LPWSTR,LPRASENTRYNAMEW,LPDWORD,LPDWORD);
+typedef DWORD (WINAPI* tRASSETAUTODIALADDRESS)(LPCWSTR,DWORD,LPRASAUTODIALENTRYW,DWORD,DWORD);
+typedef DWORD (WINAPI* tRASGETAUTODIALADDRESS)(LPCWSTR,LPDWORD,LPRASAUTODIALENTRYW,LPDWORD,LPDWORD);
 typedef DWORD (WINAPI* tRASGETAUTODIALENABLE)(DWORD,LPBOOL);
 typedef DWORD (WINAPI* tRASGETAUTODIALPARAM)(DWORD,LPVOID,LPDWORD);
 // For Windows NT 4, 2000, and XP, we sometimes want to open the RAS dialup 
@@ -107,10 +107,10 @@ private:
     int NumRASEntries();
 
     // Get the name of the default connection from the OS.
-    nsresult GetDefaultEntryName(char* entryName, int bufferSize);
+    nsresult GetDefaultEntryName(PRUnichar* entryName, int bufferSize);
 
     // Get the name of the first RAS dial entry from the OS.
-    nsresult GetFirstEntryName(char* entryName, int bufferSize);
+    nsresult GetFirstEntryName(PRUnichar* entryName, int bufferSize);
 
     // Check to see if RAS already has a dialup connection going.
     PRBool IsRASConnected();
@@ -119,7 +119,7 @@ private:
     int QueryAutodialBehavior();
 
     // Add the specified address to the autodial directory.
-    PRBool AddAddressToAutodialDirectory(const char* hostName);
+    PRBool AddAddressToAutodialDirectory(const PRUnichar* hostName);
 
     // Get the  current TAPI dialing location.
     int GetCurrentLocation();
@@ -145,7 +145,7 @@ private:
     int mNumRASConnectionEntries;
 
     // Default connection entry name.
-    char mDefaultEntryName[RAS_MaxEntryName + 1];  
+    PRUnichar mDefaultEntryName[RAS_MaxEntryName + 1];  
 
     // Don't try to dial again within a few seconds of when user pressed cancel.
     static PRIntervalTime mDontRetryUntil;
@@ -184,7 +184,7 @@ public:
     nsresult Init();
 
     // Dial the default RAS dialup connection.
-    nsresult DialDefault(const char* hostName);
+    nsresult DialDefault(const PRUnichar* hostName);
 
     // Should we try to dial on network error?
     PRBool ShouldDialOnNetworkError();
