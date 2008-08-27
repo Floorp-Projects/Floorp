@@ -576,6 +576,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_MOUSE_SCROLL_EVENT:
       return NS_NewDOMMouseScrollEvent(aDOMEvent, aPresContext,
                                  static_cast<nsInputEvent*>(aEvent));
+    case NS_DRAG_EVENT:
+      return NS_NewDOMDragEvent(aDOMEvent, aPresContext,
+                                 static_cast<nsDragEvent*>(aEvent));
     case NS_POPUPBLOCKED_EVENT:
       return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext,
                                         static_cast<nsPopupBlockedEvent*>
@@ -622,6 +625,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMMouseEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("mousescrollevents"))
     return NS_NewDOMMouseScrollEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("dragevent") ||
+      aEventType.LowerCaseEqualsLiteral("dragevents"))
+    return NS_NewDOMDragEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("keyboardevent") ||
       aEventType.LowerCaseEqualsLiteral("keyevents"))
     return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext, nsnull);
