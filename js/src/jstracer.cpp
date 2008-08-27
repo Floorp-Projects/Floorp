@@ -4056,6 +4056,9 @@ js_math_random(JSContext* cx, uintN argc, jsval* vp);
 JSBool
 js_math_floor(JSContext* cx, uintN argc, jsval* vp);
 
+JSBool
+js_num_toString(JSContext *cx, uintN argc, jsval *vp);
+
 bool
 TraceRecorder::record_JSOP_CALL()
 {
