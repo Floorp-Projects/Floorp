@@ -3576,7 +3576,8 @@ bool
 TraceRecorder::record_JSOP_NEW()
 {
     /* Get immediate argc and find the constructor function. */
-    unsigned argc = GET_ARGC(cx->fp->regs->pc);
+    jsbytecode *pc = cx->fp->regs->pc;
+    unsigned argc = GET_ARGC(pc);
     jsval& fval = stackval(0 - (2 + argc));
     JS_ASSERT(&fval >= StackBase(cx->fp));
 
