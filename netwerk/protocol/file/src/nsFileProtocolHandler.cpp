@@ -129,7 +129,7 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
                 // escaped. Hence, do not do escaping of our own.
                 result = urlLink->GetURL(&lpTemp);
                 if (SUCCEEDED(result) && lpTemp) {
-                    rv = NS_NewURI(aURI, lpTemp);
+                    rv = NS_NewURI(aURI, nsDependentString(lpTemp));
                     // free the string that GetURL alloc'd
                     CoTaskMemFree(lpTemp);
                 }
