@@ -274,8 +274,8 @@ js_IntToCString(jsint i, char *buf, size_t bufSize)
     return cp;
 }
 
-static JSBool
-num_toString(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_num_toString(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval v;
     jsdouble d;
@@ -332,7 +332,7 @@ num_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
      * Create the string, move back to bytes to make string twiddling
      * a bit easier and so we can insert platform charset seperators.
      */
-    if (!num_toString(cx, 0, vp))
+    if (!js_num_toString(cx, 0, vp))
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_STRING(*vp));
     numStr = JSVAL_TO_STRING(*vp);
@@ -515,7 +515,7 @@ static JSBool
 num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 {
     if (argc == 0 || JSVAL_IS_VOID(vp[2]))
-        return num_toString(cx, 0, vp);
+        return js_num_toString(cx, 0, vp);
     return num_to(cx, DTOSTR_STANDARD, DTOSTR_PRECISION, 1, MAX_PRECISION, 0,
                   argc, vp);
 }
@@ -524,7 +524,7 @@ static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       num_toSource,       0,JSFUN_THISP_NUMBER),
 #endif
-    JS_FN(js_toString_str,       num_toString,       1,JSFUN_THISP_NUMBER),
+    JS_FN(js_toString_str,       js_num_toString,    1,JSFUN_THISP_NUMBER),
     JS_FN(js_toLocaleString_str, num_toLocaleString, 0,JSFUN_THISP_NUMBER),
     JS_FN(js_valueOf_str,        num_valueOf,        0,JSFUN_THISP_NUMBER),
     JS_FN("toFixed",             num_toFixed,        1,JSFUN_THISP_NUMBER),
