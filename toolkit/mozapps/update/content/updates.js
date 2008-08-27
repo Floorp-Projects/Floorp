@@ -862,6 +862,12 @@ var gLicensePage = {
    * When the user changes the state of the accept / decline radio group
    */
   onAcceptDeclineRadio: function() {
+    // Return early if this page hasn't been loaded (bug 405257). This event is
+    // fired during the construction of the wizard before gUpdates has received
+    // its onload event (bug 452389).
+    if (!this._licenseContent)
+      return;
+
     var selectedIndex = document.getElementById("acceptDeclineLicense")
                                 .selectedIndex;
     // 0 == Accept, 1 == Decline
