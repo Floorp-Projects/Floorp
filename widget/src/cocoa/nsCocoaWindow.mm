@@ -1951,9 +1951,7 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
     // Draw the one pixel border at the bottom of the titlebar.
     if ([window unifiedToolbarHeight] == 0) {
-      float borderGrey = isMain ? sLeopardTitlebarBorderGrey :
-                                  sLeopardTitlebarBackgroundBorderGrey;
-      [[NSColor colorWithDeviceWhite:borderGrey alpha:1.0f] set];
+      [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
       NSRectFill(NSMakeRect(0.0f, titlebarOrigin, sPatternWidth, 1.0f));
     }
   } else {
