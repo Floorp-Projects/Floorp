@@ -972,6 +972,17 @@ function testArrayDensityChange() {
 testArrayDensityChange.expected = 404;
 test(testArrayDensityChange);
 
+function testDoubleToStr() {
+    var x = 0.0;
+    var y = 5.5;
+    for (var i = 0; i < 200; i++) {
+       x += parseFloat(y.toString());
+    }
+    return x;
+}
+testDoubleToStr.expected = 5.5*200;
+test(testDoubleToStr);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
