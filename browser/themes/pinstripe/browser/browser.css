@@ -47,10 +47,6 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 @namespace svg url("http://www.w3.org/2000/svg");
 
-#main-window {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
-}
-
 #main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
   border-top: 1px solid rgba(0,0,0,0.65);
   -moz-appearance: none;
@@ -58,16 +54,6 @@
 }
 
 /* ----- INACTIVE WINDOW ----- */
-
-#main-window:not([active="true"]) > #navigator-toolbox > toolbar {
-  border-top-color: rgba(255,255,255,0.45);
-  border-bottom-color: rgba(0,0,0,0.35);
-  background-color: #cfcfcf;
-}
-
-#main-window:not([active="true"]) > #navigator-toolbox > #nav-bar {
-  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
-}
 
 #main-window:not([active="true"]) > #navigator-toolbox > #PersonalToolbar {
   background-image: url("chrome://browser/skin/bookmark_toolbar_background-inactive.png");
@@ -1603,12 +1589,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #nav-bar {
-  background-color: #9e9e9e;
-  border-top: none;
-  border-bottom: 1px solid rgba(0,0,0,0.35);
-  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
-  background-repeat: repeat-x;
-  background-position: top right;
   padding: 0 4px;
 }
 
