@@ -1068,8 +1068,8 @@ nsDOMOfflineResourceList::CacheKeys()
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsresult rv = appCache->GatherEntries(nsIApplicationCache::ITEM_DYNAMIC,
-                                        &mCachedKeysCount, &mCachedKeys);
+  return appCache->GatherEntries(nsIApplicationCache::ITEM_DYNAMIC,
+                                 &mCachedKeysCount, &mCachedKeys);
 }
 
 void
