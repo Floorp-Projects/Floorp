@@ -319,3 +319,23 @@ ifdef MOZ_CRASHREPORTER
 libs:: $(addprefix $(LOCALE_SRCDIR)/,crashreporter/crashreporter-override.ini)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
+
+# This variable is to allow the wget-en-US target to know which ftp server to download from
+ifndef EN_US_BINARY_URL 
+EN_US_BINARY_URL = $(error You must set EN_US_BINARY_URL)
+endif
+
+# This make target allows us to wget the latest en-US binary from a specified website
+# The make installers-% target needs the en-US binary in dist/
+# and for the windows repackages we need the .installer.exe in dist/sea
+wget-en-US:
+ifndef WGET
+	$(error Wget not installed)
+endif
+	@$(WGET) -nv --output-document $(_ABS_DIST)/$(PACKAGE) $(EN_US_BINARY_URL)/$(PACKAGE)
+	@echo "Downloaded $(EN_US_BINARY_URL)/$(PACKAGE) to $(_ABS_DIST)/$(PACKAGE)"
+ifeq ($(OS_ARCH), WINNT)
+	$(NSINSTALL) -D $(_ABS_DIST)/install/sea
+	@$(WGET) -nv --output-document $(_ABS_DIST)/install/sea/$(PKG_BASENAME).installer.exe $(EN_US_BINARY_URL)/$(PKG_BASENAME).installer.exe
+	@echo "Downloaded $(EN_US_BINARY_URL)/$(PKG_BASENAME).installer.exe to $(_ABS_DIST)/install/sea/$(PKG_BASENAME)"
+endif
