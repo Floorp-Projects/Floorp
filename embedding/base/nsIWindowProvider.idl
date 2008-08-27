@@ -58,7 +58,7 @@ interface nsIURI;
  * or the provider does not provide a window, the window watcher will proceed
  * to actually open a new window.
  */
-[uuid(5119ac7f-81dd-4061-96a7-71f2cf5efee4)]
+[scriptable, uuid(5119ac7f-81dd-4061-96a7-71f2cf5efee4)]
 interface nsIWindowProvider : nsISupports
 {
   /**
