@@ -2538,8 +2538,8 @@ js_CheckForSSE2()
         "mov %%edx, %0\n"
         "popa\n"
         : "=m" (features)
-        : /* We have no inputs */
-        : /* We don't clobber anything */
+        /* We have no inputs */
+        /* We don't clobber anything */
        );
 #endif
     return (features & (1<<26)) != 0;
