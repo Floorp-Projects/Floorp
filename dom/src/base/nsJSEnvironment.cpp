@@ -108,9 +108,6 @@
 #ifdef MOZ_JSDEBUGGER
 #include "jsdIDebuggerService.h"
 #endif
-
-#include "nsIStringBundle.h"
-
 #ifdef MOZ_LOGGING
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
 #define FORCE_PR_LOG 1
@@ -204,9 +201,6 @@ JSRuntime *nsJSRuntime::sRuntime;
 
 static const char kJSRuntimeServiceContractID[] =
   "@mozilla.org/js/xpc/RuntimeService;1";
-
-static const char kDOMStringBundleURL[] =
-  "chrome://global/locale/dom/dom.properties";
 
 static JSGCCallback gOldJSGCCallback;
 
@@ -858,9 +852,29 @@ MaybeGC(JSContext *cx)
   }
 }
 
+static already_AddRefed<nsIPrompt>
+GetPromptFromContext(nsJSContext* ctx)
+{
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(ctx->GetGlobalObject()));
+  NS_ENSURE_TRUE(win, nsnull);
+
+  nsIDocShell *docShell = win->GetDocShell();
+  NS_ENSURE_TRUE(docShell, nsnull);
+
+  nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(docShell));
+  NS_ENSURE_TRUE(ireq, nsnull);
+
+  // Get the nsIPrompt interface from the docshell
+  nsIPrompt* prompt;
+  ireq->GetInterface(NS_GET_IID(nsIPrompt), (void**)&prompt);
+  return prompt;
+}
+
 JSBool JS_DLL_CALLBACK
 nsJSContext::DOMOperationCallback(JSContext *cx)
 {
+  nsresult rv;
+
   // Get the native context
   nsJSContext *ctx = static_cast<nsJSContext *>(::JS_GetContextPrivate(cx));
 
@@ -879,6 +893,44 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 
   // Now restore the callback time and count, in case they got reset.
   ctx->mOperationCallbackTime = callbackTime;
+
+  // Check to see if we are running OOM
+  nsCOMPtr<nsIMemory> mem;
+  NS_GetMemoryManager(getter_AddRefs(mem));
+  if (!mem)
+    return JS_FALSE;
+
+  PRBool lowMemory;
+  mem->IsLowMemory(&lowMemory);
+  if (lowMemory) {
+    // try to clean up:
+    nsJSContext::CC();
+
+    // if that didn't work, warn the user
+    mem->IsLowMemory(&lowMemory);
+    if (lowMemory) {
+      nsCOMPtr<nsIPrompt> prompt = GetPromptFromContext(ctx);
+      
+      nsXPIDLString title, msg;
+      rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                              "LowMemoryTitle",
+                                              title);
+
+      rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                               "LowMemoryMessage",
+                                               msg);
+
+      //GetStringFromName can return NS_OK and still give NULL string
+      if (NS_FAILED(rv) || !title || !msg) {
+        NS_ERROR("Failed to get localized strings.");
+        return JS_FALSE;
+      }
+
+      prompt->Alert(title, msg);
+      return JS_FALSE;
+    }
+  }
+
 
   PRTime now = PR_Now();
 
@@ -904,21 +956,8 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   // If we get here we're most likely executing an infinite loop in JS,
   // we'll tell the user about this and we'll give the user the option
   // of stopping the execution of the script.
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(ctx->GetGlobalObject()));
-  NS_ENSURE_TRUE(win, JS_TRUE);
-
-  nsIDocShell *docShell = win->GetDocShell();
-  NS_ENSURE_TRUE(docShell, JS_TRUE);
-
-  nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(docShell));
-  NS_ENSURE_TRUE(ireq, JS_TRUE);
-
-  // Get the nsIPrompt interface from the docshell
-  nsCOMPtr<nsIPrompt> prompt;
-  ireq->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
+  nsCOMPtr<nsIPrompt> prompt = GetPromptFromContext(ctx);
   NS_ENSURE_TRUE(prompt, JS_TRUE);
-
-  nsresult rv;
 
   // Check if we should offer the option to debug
   JSStackFrame* fp = ::JS_GetScriptedCaller(cx, NULL);
@@ -950,37 +989,38 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
 #endif
 
   // Get localizable strings
-  nsCOMPtr<nsIStringBundleService>
-    stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
-  if (!stringService)
-    return JS_TRUE;
-
-  nsCOMPtr<nsIStringBundle> bundle;
-  stringService->CreateBundle(kDOMStringBundleURL, getter_AddRefs(bundle));
-  if (!bundle)
-    return JS_TRUE;
-
   nsXPIDLString title, msg, stopButton, waitButton, debugButton, neverShowDlg;
 
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("KillScriptTitle").get(),
-                                  getter_Copies(title));
-  rv |= bundle->GetStringFromName(NS_LITERAL_STRING("StopScriptButton").get(),
-                                  getter_Copies(stopButton));
-  rv |= bundle->GetStringFromName(NS_LITERAL_STRING("WaitForScriptButton").get(),
-                                  getter_Copies(waitButton));
-  rv |= bundle->GetStringFromName(NS_LITERAL_STRING("DontAskAgain").get(),
-                                  getter_Copies(neverShowDlg));
+  rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                          "KillScriptTitle",
+                                          title);
+
+  rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                           "StopScriptButton",
+                                           stopButton);
+
+  rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                           "WaitForScriptButton",
+                                           waitButton);
+
+  rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                           "DontAskAgain",
+                                           neverShowDlg);
 
 
   if (debugPossible) {
-    rv |= bundle->GetStringFromName(NS_LITERAL_STRING("DebugScriptButton").get(),
-                                    getter_Copies(debugButton));
-    rv |= bundle->GetStringFromName(NS_LITERAL_STRING("KillScriptWithDebugMessage").get(),
-                                   getter_Copies(msg));
+    rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             "DebugScriptButton",
+                                             debugButton);
+
+    rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             "KillScriptWithDebugMessage",
+                                             msg);
   }
   else {
-    rv |= bundle->GetStringFromName(NS_LITERAL_STRING("KillScriptMessage").get(),
-                                   getter_Copies(msg));
+    rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             "KillScriptMessage",
+                                             msg);
   }
 
   //GetStringFromName can return NS_OK and still give NULL string
@@ -998,9 +1038,10 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
       nsXPIDLString scriptLocation;
       NS_ConvertUTF8toUTF16 filenameUTF16(filename);
       const PRUnichar *formatParams[] = { filenameUTF16.get() };
-      rv = bundle->FormatStringFromName(NS_LITERAL_STRING("KillScriptLocation").get(),
-                                        formatParams, 1,
-                                        getter_Copies(scriptLocation));
+      rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                 "KillScriptLocation",
+                                                 formatParams, 1,
+                                                 scriptLocation);
 
       if (NS_SUCCEEDED(rv) && scriptLocation) {
         msg.AppendLiteral("\n\n");
