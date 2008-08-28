@@ -2599,6 +2599,9 @@ TraceRecorder::incProp(jsint incr, bool pre)
     if (!prop(obj, obj_ins, slot, v_ins))
         return false;
 
+    if (slot == SPROP_INVALID_SLOT)
+        ABORT_TRACE("incProp on invalid slot");
+
     jsval& v = STOBJ_GET_SLOT(obj, slot);
     if (!inc(v, v_ins, incr, pre))
         return false;
@@ -2667,7 +2670,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
         LIns* r_ins = get(&r);
         jsdouble lnum;
         jsdouble rnum;
-        LIns* args[] = { get(&l), cx_ins };
+        LIns* args[] = { l_ins, cx_ins };
         if (JSVAL_IS_STRING(l)) {
             l_ins = lir->insCall(F_StringToNumber, args);
         } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
@@ -3292,11 +3295,16 @@ bool
 TraceRecorder::record_JSOP_RETURN()
 {
     jsval& rval = stackval(-1);
+    JSStackFrame *fp = cx->fp;
     if (cx->fp->flags & JSFRAME_CONSTRUCTING) {
-        // guard JSVAL_IS_PRIMITIVE(rval)
+        if (JSVAL_IS_PRIMITIVE(rval)) {
+            JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
+            rval_ins = get(&fp->argv[-1]);
+        }
+    } else {
+        rval_ins = get(&rval);
     }
     debug_only_v(printf("returning from %s\n", js_AtomToPrintableString(cx, cx->fp->fun->atom)););
-    rval_ins = get(&rval);
     clearFrameSlotsFromCache();
     return true;
 }
@@ -3795,9 +3803,9 @@ TraceRecorder::record_JSOP_TYPEOF()
     jsval& r = stackval(-1);
     LIns* type;
     if (JSVAL_IS_STRING(r)) {
-        type = lir->insImmPtr((void*)cx->runtime->atomState.typeAtoms[JSTYPE_STRING]);
+        type = INS_CONSTPTR(ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_STRING]));
     } else if (isNumber(r)) {
-        type = lir->insImmPtr((void*)cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER]);
+        type = INS_CONSTPTR(ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_NUMBER]));
     } else {
         LIns* args[] = { get(&r), cx_ins };
         if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
@@ -3817,7 +3825,7 @@ TraceRecorder::record_JSOP_TYPEOF()
 bool
 TraceRecorder::record_JSOP_VOID()
 {
-    stack(0, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
+    stack(-1, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
     return true;
 }
 
@@ -4451,6 +4459,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
         v_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
         JS_ASSERT(cs.ndefs == 1);
         stack(-cs.nuses, v_ins);
+        slot = SPROP_INVALID_SLOT;
         return true;
     }
 
