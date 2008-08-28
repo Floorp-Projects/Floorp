@@ -566,7 +566,7 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     void *sbrk(ptrdiff_t), *before = sbrk(0);
 #endif
 
-    JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL | TCF_STATIC_DEPTH_MASK)));
+    JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL)));
 
     if (!js_InitParseContext(cx, &pc, principals, chars, length, file,
                              filename, lineno)) {
@@ -591,8 +591,7 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
                          pc.tokenStream.lineno);
 
     /* From this point the control must flow via the label out. */
-    cg.treeContext.flags |= (uint16) tcflags;
-    cg.staticDepth = TCF_GET_STATIC_DEPTH(tcflags);
+    cg.treeContext.flags |= tcflags;
 
     /*
      * Inline Statements() to emit as we go to save space.
