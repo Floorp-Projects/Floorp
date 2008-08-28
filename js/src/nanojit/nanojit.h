@@ -79,7 +79,7 @@ namespace nanojit
 			#define DebugBreak() AvmAssert(0)
 		#endif
 
-		#define _NanoAssertMsg(a,m)		do { if ((a)==0) { AvmDebugLog(("%s", m)); DebugBreak(); } } while (0)
+		#define _NanoAssertMsg(a,m)		do { if ((a)==0) { AvmDebugLog(("%s\n", m)); DebugBreak(); } } while (0)
 		#define NanoAssertMsg(x,y)				do { _NanoAssertMsg((x), (y)); } while (0) /* no semi */
 		#define _NanoAssertMsgf(a,m)		do { if ((a)==0) { AvmDebugLog(m); DebugBreak(); } } while (0)
 		#define NanoAssertMsgf(x,y)				do { _NanoAssertMsgf((x), y); } while (0) /* no semi */
