@@ -678,7 +678,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     JS_ASSERT(!_anchor || _anchor->calldepth == _fragment->calldepth);
     this->atoms = cx->fp->script->atomMap.vector;
     this->trashTree = false;
-    this->lastLoopEdge = NULL;
+    this->whichTreeToTrash = _fragment->root;
     
     debug_only_v(printf("recording starting from %s:%u@%u\n", cx->fp->script->filename,
                         js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
@@ -725,7 +725,7 @@ TraceRecorder::~TraceRecorder()
         delete treeInfo;
     }
     if (trashTree)
-        js_TrashTree(cx, fragment->root);
+        js_TrashTree(cx, whichTreeToTrash);
 #ifdef DEBUG
     delete verbose_filter;
 #endif
@@ -752,16 +752,11 @@ TraceRecorder::getCallDepth() const
     return callDepth;
 }
 
-
 /* Determine whether we should unroll a loop (only do so at most once for every loop). */
 bool
 TraceRecorder::trackLoopEdges()
 {
-    jsbytecode* pc = cx->fp->regs->pc;
-    if (pc == lastLoopEdge)
-        return false;
-    lastLoopEdge = pc;
-    return true;
+    return loopEdgeCount++ < 1;
 }
 
 /* Determine the offset in the native global frame for a jsval we track */
@@ -1344,8 +1339,10 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
         ++m;
     );
     JS_ASSERT(f == f->root);
-    if (!ok)
+    if (!ok) {
         trashTree = true;
+        whichTreeToTrash = f;
+    }
     return ok;
 }
 
@@ -1888,7 +1885,7 @@ js_AttemptToExtendTree(JSContext* cx, GuardRecord* anchor, GuardRecord* exitedFr
 {
     Fragment* f = anchor->from->root;
     JS_ASSERT(f->vmprivate);
-
+    
     debug_only_v(printf("trying to attach another branch to the tree\n");)
 
     Fragment* c;
@@ -2004,7 +2001,7 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
             cx->fp->regs->pc - cx->fp->script->code,
             (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
     js_AbortRecording(cx, oldpc, "Loop edge does not return to header");
-    return false; /* done recording */
+    return false;
 }
 
 static inline GuardRecord*
@@ -2152,12 +2149,12 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
     if (verbose_debug) {
-        printf("leaving trace at %s:%u@%u, op=%s, lr=%p, nested=%p, exitType=%d, sp=%d, ip=%p, "
+        printf("leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%d, sp=%d, ip=%p, "
                "cycles=%llu\n",
                fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
                fp->regs->pc - fp->script->code,
                js_CodeName[*fp->regs->pc],
-               lr, state.nestedExit,
+               lr,
                lr->exit->exitType,
                fp->regs->sp - StackBase(fp), lr->jmp,
                (rdtsc() - start));
