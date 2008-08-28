@@ -949,7 +949,7 @@ RuleProcessorData::~RuleProcessorData()
 const nsString* RuleProcessorData::GetLang()
 {
   if (!mLanguage) {
-    mLanguage = new nsAutoString();
+    mLanguage = new nsString();
     if (!mLanguage)
       return nsnull;
     for (nsIContent* content = mContent; content;
@@ -957,15 +957,15 @@ const nsString* RuleProcessorData::GetLang()
       if (content->GetAttrCount() > 0) {
         // xml:lang has precedence over lang on HTML elements (see
         // XHTML1 section C.7).
-        nsAutoString value;
         PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
-                                          value);
+                                          *mLanguage);
         if (!hasAttr && content->IsNodeOfType(nsINode::eHTML)) {
           hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
-                                     value);
+                                     *mLanguage);
         }
+        NS_ASSERTION(hasAttr || mLanguage->IsEmpty(),
+                     "GetAttr that returns false should not make string non-empty");
         if (hasAttr) {
-          *mLanguage = value;
           break;
         }
       }
