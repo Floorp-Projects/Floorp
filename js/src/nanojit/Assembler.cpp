@@ -1041,6 +1041,7 @@ namespace nanojit
                 case LIR_qiadd:
                 case LIR_qiand:
                 case LIR_qilsh:
+                case LIR_qior:
                 {
                     asm_qbinop(ins);
                     break;
