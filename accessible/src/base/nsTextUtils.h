@@ -58,7 +58,7 @@ public:
    * Return true if the text attribute for the given element equals with
    * predefined attribute.
    */
-  virtual PRBool equal(nsIDOMElement *aElm) = 0;
+  virtual PRBool Equal(nsIDOMElement *aElm) = 0;
 };
 
 /**
@@ -71,7 +71,7 @@ public:
   nsLangTextAttr(nsAString& aLang, nsIContent *aRootContent) :
     mLang(aLang), mRootContent(aRootContent) { }
 
-  virtual PRBool equal(nsIDOMElement *aElm);
+  virtual PRBool Equal(nsIDOMElement *aElm);
 
 private:
   nsString mLang;
@@ -89,18 +89,18 @@ public:
                 nsIDOMElement *aRootElm);
 
   // nsTextAttr
-  virtual PRBool equal(nsIDOMElement *aElm);
+  virtual PRBool Equal(nsIDOMElement *aElm);
 
   // nsCSSTextAttr
   /**
    * Interates through attributes.
    */
-  PRBool iterate();
+  PRBool Iterate();
 
   /**
    * Get name and value of attribute.
    */
-  PRBool get(nsACString& aName, nsAString& aValue);
+  PRBool Get(nsACString& aName, nsAString& aValue);
 
 private:
   PRInt32 mIndex;
@@ -120,13 +120,13 @@ public:
   nsBackgroundTextAttr(nsIFrame *aFrame, nsIFrame *aRootFrame);
   
   // nsTextAttr
-  virtual PRBool equal(nsIDOMElement *aElm);
+  virtual PRBool Equal(nsIDOMElement *aElm);
 
   /**
    * Returns true and background color value if "background-color" text
    * attribute should be exposed.
    */
-  virtual PRBool get(nsAString& aValue);
+  virtual PRBool Get(nsAString& aValue);
 
 private:
   /**
@@ -140,7 +140,7 @@ private:
    * @param aFrame      [in] the given frame to calculate background-color
    * @return            background color
    */
-  nscolor getColor(nsIFrame *aFrame);
+  nscolor GetColor(nsIFrame *aFrame);
 
   nsIFrame *mFrame;
   nsIFrame *mRootFrame;

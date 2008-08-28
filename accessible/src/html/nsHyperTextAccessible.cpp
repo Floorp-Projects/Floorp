@@ -1204,10 +1204,10 @@ nsHyperTextAccessible::GetDefaultTextAttributes(nsIPersistentProperties **aAttri
   nsCOMPtr<nsIDOMElement> element = nsAccUtils::GetDOMElementFor(mDOMNode);
 
   nsCSSTextAttr textAttr(PR_TRUE, element, nsnull);
-  while (textAttr.iterate()) {
+  while (textAttr.Iterate()) {
     nsCAutoString name;
     nsAutoString value, oldValue;
-    if (textAttr.get(name, value))
+    if (textAttr.Get(name, value))
       attributes->SetStringProperty(name, value, oldValue);
   }
 
@@ -1216,7 +1216,7 @@ nsHyperTextAccessible::GetDefaultTextAttributes(nsIPersistentProperties **aAttri
     nsBackgroundTextAttr backgroundTextAttr(sourceFrame, nsnull);
 
     nsAutoString value;
-    if (backgroundTextAttr.get(value)) {
+    if (backgroundTextAttr.Get(value)) {
       nsAccUtils::SetAccAttr(attributes,
                              nsAccessibilityAtoms::backgroundColor, value);
     }
@@ -2324,10 +2324,10 @@ nsHyperTextAccessible::GetCSSTextAttributes(PRBool aIncludeDefAttrs,
   nsCOMPtr<nsIDOMElement> rootElm(nsAccUtils::GetDOMElementFor(mDOMNode));
 
   nsCSSTextAttr textAttr(aIncludeDefAttrs, sourceElm, rootElm);
-  while (textAttr.iterate()) {
+  while (textAttr.Iterate()) {
     nsCAutoString name;
     nsAutoString value, oldValue;
-    if (aAttributes && textAttr.get(name, value))
+    if (aAttributes && textAttr.Get(name, value))
       aAttributes->SetStringProperty(name, value, oldValue);
 
     nsresult rv = GetRangeForTextAttr(aSourceNode, &textAttr,
@@ -2344,7 +2344,7 @@ nsHyperTextAccessible::GetCSSTextAttributes(PRBool aIncludeDefAttrs,
 
     nsBackgroundTextAttr backgroundTextAttr(sourceFrame, rootFrame);
     nsAutoString value;
-    if (backgroundTextAttr.get(value)) {
+    if (backgroundTextAttr.Get(value)) {
       nsAccUtils::SetAccAttr(aAttributes,
                              nsAccessibilityAtoms::backgroundColor, value);
     }
@@ -2383,7 +2383,7 @@ nsHyperTextAccessible::GetRangeForTextAttr(nsIDOMNode *aNode,
     nsCOMPtr<nsIDOMElement> currElm(nsAccUtils::GetDOMElementFor(currNode));
     NS_ENSURE_STATE(currElm);
 
-    if (currNode != aNode && !aComparer->equal(currElm)) {
+    if (currNode != aNode && !aComparer->Equal(currElm)) {
       PRInt32 startHTOffset = 0;
       nsCOMPtr<nsIAccessible> startAcc;
       nsresult rv = DOMPointToHypertextOffset(tmpNode, -1, &startHTOffset,
@@ -2419,7 +2419,7 @@ nsHyperTextAccessible::GetRangeForTextAttr(nsIDOMNode *aNode,
 
     // Stop new end offset searching if the given text attribute changes its
     // value.
-    if (!aComparer->equal(currElm)) {
+    if (!aComparer->Equal(currElm)) {
       PRInt32 endHTOffset = 0;
       nsresult rv = DOMPointToHypertextOffset(currNode, -1, &endHTOffset);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2465,7 +2465,7 @@ nsHyperTextAccessible::FindEndOffsetInSubtree(nsIDOMNode *aCurrNode,
 
   // If the given text attribute (pointed by nsTextAttr object) changes its
   // value on the traversed element then fit the end of range.
-  if (!aComparer->equal(currElm)) {
+  if (!aComparer->Equal(currElm)) {
     PRInt32 endHTOffset = 0;
     nsresult rv = DOMPointToHypertextOffset(aCurrNode, -1, &endHTOffset);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2516,7 +2516,7 @@ nsHyperTextAccessible::FindStartOffsetInSubtree(nsIDOMNode *aCurrNode,
 
   // If the given text attribute (pointed by nsTextAttr object) changes its
   // value on the traversed element then fit the start of range.
-  if (!aComparer->equal(currElm)) {
+  if (!aComparer->Equal(currElm)) {
     PRInt32 startHTOffset = 0;
     nsCOMPtr<nsIAccessible> startAcc;
     nsresult rv = DOMPointToHypertextOffset(aPrevNode, -1, &startHTOffset,
