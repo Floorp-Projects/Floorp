@@ -2602,6 +2602,9 @@ TraceRecorder::incProp(jsint incr, bool pre)
     if (!prop(obj, obj_ins, slot, v_ins))
         return false;
 
+    if (slot == SPROP_INVALID_SLOT)
+        ABORT_TRACE("incProp on invalid slot");
+
     jsval& v = STOBJ_GET_SLOT(obj, slot);
     if (!inc(v, v_ins, incr, pre))
         return false;
@@ -4459,6 +4462,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
         v_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
         JS_ASSERT(cs.ndefs == 1);
         stack(-cs.nuses, v_ins);
+        slot = SPROP_INVALID_SLOT;
         return true;
     }
 
