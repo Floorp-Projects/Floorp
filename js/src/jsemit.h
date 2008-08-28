@@ -209,14 +209,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                  TCF_FUN_USES_NONLOCALS |                     \
                                  TCF_FUN_CLOSURE_VS_VAR)
 
-/*
- * Flags field, not stored in JSTreeContext.flags, for passing staticDepth
- * into js_CompileScript.
- */
-#define TCF_STATIC_DEPTH_MASK   0xffff0000
-#define TCF_GET_STATIC_DEPTH(f) ((uint32)(f) >> 16)
-#define TCF_PUT_STATIC_DEPTH(d) ((uint16)(d) << 16)
-
 #ifdef JS_SCOPE_DEPTH_METER
 # define JS_SCOPE_DEPTH_METERING(code) ((void) (code))
 #else
