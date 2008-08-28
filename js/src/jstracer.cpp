@@ -79,9 +79,6 @@
 /* Max number of type mismatchs before we trash the tree. */
 #define MAX_MISMATCH 5
 
-/* Max number of loop edges to follow. */
-#define MAX_OUTERLINE 1
-
 /* Max native stack size. */
 #define MAX_NATIVE_STACK_SLOTS 1024
 
@@ -681,6 +678,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     JS_ASSERT(!_anchor || _anchor->calldepth == _fragment->calldepth);
     this->atoms = cx->fp->script->atomMap.vector;
     this->trashTree = false;
+    this->lastLoopEdge = NULL;
     
     debug_only_v(printf("recording starting from %s:%u@%u\n", cx->fp->script->filename,
                         js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
@@ -755,11 +753,15 @@ TraceRecorder::getCallDepth() const
 }
 
 
-/* Determine whether we should outerline along a loop edge. */
+/* Determine whether we should unroll a loop (only do so at most once for every loop). */
 bool
 TraceRecorder::trackLoopEdges()
 {
-    return loopEdgeCount++ < MAX_OUTERLINE;
+    jsbytecode* pc = cx->fp->regs->pc;
+    if (pc == lastLoopEdge)
+        return false;
+    lastLoopEdge = pc;
+    return true;
 }
 
 /* Determine the offset in the native global frame for a jsval we track */

@@ -230,6 +230,7 @@ class TraceRecorder {
     nanojit::LIns*          inner_sp_ins;
     nanojit::SideExit       exit;
     bool                    trashTree;
+    jsbytecode*             lastLoopEdge;
     
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
