@@ -39,6 +39,7 @@
 #include "nsTextUtils.h"
 
 #include "nsAccessNode.h"
+#include "nsAccessibilityUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsLangTextAttr
@@ -80,7 +81,6 @@ const char* const kCopyValue = nsnull;
 
 static nsCSSTextAttrMapItem gCSSTextAttrsMap[] = {
   // CSS name            CSS value        Attribute name              Attribute name
-  { "background-color",  kAnyValue,       kCopyName,                  kCopyValue },
   { "color",             kAnyValue,       kCopyName,                  kCopyValue },
   { "font-family",       kAnyValue,       kCopyName,                  kCopyValue },
   { "font-size",         kAnyValue,       kCopyName,                  kCopyValue },
@@ -179,3 +179,65 @@ nsCSSTextAttr::get(nsACString& aName, nsAString& aValue)
   return PR_TRUE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsBackgroundTextAttr
+
+nsBackgroundTextAttr::nsBackgroundTextAttr(nsIFrame *aFrame,
+                                           nsIFrame *aRootFrame) :
+  mFrame(aFrame), mRootFrame(aRootFrame)
+{
+}
+
+PRBool
+nsBackgroundTextAttr::equal(nsIDOMElement *aElm)
+{
+  nsIFrame *frame = nsAccUtils::GetFrameFor(aElm);
+  if (!frame)
+    return PR_FALSE;
+
+  return getColor(mFrame) == getColor(frame);    
+}
+
+PRBool
+nsBackgroundTextAttr::get(nsAString& aValue)
+{
+  // Do not expose "background-color" text attribute if its value is matched
+  // with the default value.
+  nscolor color = getColor(mFrame);
+  if (mRootFrame && color == getColor(mRootFrame))
+    return PR_FALSE;
+
+  // Combine the string like rgb(R, G, B) from nscolor.
+  nsAutoString value;
+  value.AppendLiteral("rgb(");
+  value.AppendInt(NS_GET_R(color));
+  value.AppendLiteral(", ");
+  value.AppendInt(NS_GET_G(color));
+  value.AppendLiteral(", ");
+  value.AppendInt(NS_GET_B(color));
+  value.Append(')');
+
+  aValue = value;
+  return PR_TRUE;
+}
+
+nscolor
+nsBackgroundTextAttr::getColor(nsIFrame *aFrame)
+{
+  const nsStyleBackground *styleBackground = aFrame->GetStyleBackground();
+
+  if (!styleBackground->IsTransparent())
+    return styleBackground->mBackgroundColor;
+
+  nsIFrame *parentFrame = aFrame->GetParent();
+  if (!parentFrame)
+    return styleBackground->mBackgroundColor;
+
+  // Each frame of parents chain for the initially passed 'aFrame' has
+  // transparent background color. So background color isn't changed from
+  // 'mRootFrame' to initially passed 'aFrame'.
+  if (parentFrame == mRootFrame)
+    return getColor(mRootFrame);
+
+  return getColor(parentFrame);
+}
