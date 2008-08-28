@@ -425,7 +425,10 @@ js_CallTree(InterpState* state, Fragment* f)
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
     JS_ASSERT(u.code);
-    return u.func(state, NULL);
+    GuardRecord* lr = u.func(state, NULL);
+    if (lr->exit->exitType == NESTED_EXIT)
+        lr = state->nestedExit;
+    return lr;
 }
 
 JS_STATIC_ASSERT(JSSLOT_PRIVATE == JSSLOT_ARRAY_LENGTH);
