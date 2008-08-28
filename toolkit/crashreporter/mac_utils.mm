@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +40,7 @@
 
 #include "mac_utils.h"
 #include "nsObjCExceptions.h"
+#include "nsXPCOM.h"
 
 bool PassToOSCrashReporter()
 {
@@ -52,4 +54,36 @@ bool PassToOSCrashReporter()
   return osCrashReporter == YES;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+}
+
+void GetObjCExceptionInfo(void* inException, nsACString& outString)
+{
+  NSException* e = (NSException*)inException;
+
+  NSString* name = [e name];
+  NSString* reason = [e reason];
+  unsigned int nameLength = [name length];
+  unsigned int reasonLength = [reason length];
+
+  unichar* nameBuffer = (unichar*)NS_Alloc(sizeof(unichar) * (nameLength + 1));
+  if (!nameBuffer)
+    return;
+  unichar* reasonBuffer = (unichar*)NS_Alloc(sizeof(unichar) * (reasonLength + 1));
+  if (!reasonBuffer) {
+    NS_Free(nameBuffer);
+    return;
+  }
+
+  [name getCharacters:nameBuffer];
+  [reason getCharacters:reasonBuffer];
+  nameBuffer[nameLength] = '\0';
+  reasonBuffer[reasonLength] = '\0';
+
+  outString.AssignLiteral("\nObj-C Exception data:\n");
+  AppendUTF16toUTF8(nameBuffer, outString);
+  outString.AppendLiteral(": ");
+  AppendUTF16toUTF8(reasonBuffer, outString);
+
+  NS_Free(nameBuffer);
+  NS_Free(reasonBuffer);
 }
