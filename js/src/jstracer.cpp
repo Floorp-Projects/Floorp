@@ -3820,7 +3820,7 @@ TraceRecorder::record_JSOP_TYPEOF()
 bool
 TraceRecorder::record_JSOP_VOID()
 {
-    stack(0, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
+    stack(-1, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
     return true;
 }
 
