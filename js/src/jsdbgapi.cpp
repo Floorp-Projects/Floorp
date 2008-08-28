@@ -1267,9 +1267,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
     flags = fp->flags;
     fp->flags |= JSFRAME_DEBUGGER | JSFRAME_EVAL;
     script = js_CompileScript(cx, scobj, JS_StackFramePrincipals(cx, fp),
-                              TCF_COMPILE_N_GO |
-                              TCF_PUT_STATIC_DEPTH(fp->script->staticDepth + 1),
-                              chars, length, NULL,
+                              TCF_COMPILE_N_GO, chars, length, NULL,
                               filename, lineno);
     fp->flags = flags;
     if (!script)
