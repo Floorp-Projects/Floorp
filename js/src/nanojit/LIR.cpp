@@ -920,7 +920,7 @@ namespace nanojit
 
 		if (hasConditionalMove)
 		{
-			return ins2(iftrue->isQuad() ? LIR_qcmov : LIR_cmov, cond, ins2(LIR_2, iftrue, iffalse));
+			return ins2((iftrue->isQuad() || iffalse->isQuad()) ? LIR_qcmov : LIR_cmov, cond, ins2(LIR_2, iftrue, iffalse));
 		}
 
 		// @todo -- it might be better to use a short conditional branch rather than
