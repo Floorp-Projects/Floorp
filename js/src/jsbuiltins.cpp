@@ -537,6 +537,22 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     return false;
 }
 
+bool FASTCALL
+js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
+{
+    jsid id;
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
+        return JSVAL_ERROR_COOKIE;
+
+    JSObject* obj2;
+    JSProperty* prop;
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    if (prop)
+        OBJ_DROP_PROPERTY(cx, obj2, prop);
+    return prop != NULL;
+}
+
 jsval FASTCALL
 js_CallGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {

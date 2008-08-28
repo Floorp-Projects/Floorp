@@ -77,6 +77,7 @@ BUILTIN2(CloseIterator,         LO,     LO, LO, bool,      JSContext*, jsval, 0,
 BUILTIN2(CallTree,              LO, LO, P,      nanojit::GuardRecord*, avmplus::InterpState*, nanojit::Fragment*, 0, 0)
 BUILTIN2(FastNewObject,         LO,     LO, P,  JSObject*, JSContext*, JSObject*, 0, 0)
 BUILTIN3(AddProperty,           LO, LO, LO, LO, bool,      JSContext*, JSObject*, JSScopeProperty*, 0, 0)
+BUILTIN3(HasNamedProperty,      LO, LO, LO, LO, bool,      JSContext*, JSObject*, JSString*, 0, 0)
 BUILTIN3(CallGetter,            LO, LO, LO, P,  jsval,     JSContext*, JSObject*, JSScopeProperty*, 0, 0)
 BUILTIN2(TypeOfObject,          LO,     LO, P,  JSString*, JSContext*, JSObject*, 1, 1)
 BUILTIN2(TypeOfBoolean,         LO,     LO, P,  JSString*, JSContext*, jsint, 1, 1)
