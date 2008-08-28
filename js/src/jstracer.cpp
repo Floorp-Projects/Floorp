@@ -2538,7 +2538,9 @@ TraceRecorder::ifop()
         jsdouble d = asNumber(v);
         jsdpun u;
         u.d = 0;
-        guard((d == 0 || JSDOUBLE_IS_NaN(d)), lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)), BRANCH_EXIT);
+        guard(d == 0 || JSDOUBLE_IS_NaN(d),
+              lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)),
+              BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
               lir->ins_eq0(lir->ins2(LIR_piand,
@@ -3932,7 +3934,7 @@ TraceRecorder::record_JSOP_SETPROP()
     JSObject* obj = JSVAL_TO_OBJECT(l);
 
     if (obj->map->ops->setProperty != js_SetProperty)
-        ABORT_TRACE("non-native setProperty");
+        ABORT_TRACE("non-native JSObjectOps::setProperty");
 
     LIns* obj_ins = get(&l);
 
@@ -5032,7 +5034,82 @@ TraceRecorder::record_JSOP_THROW()
 bool
 TraceRecorder::record_JSOP_IN()
 {
-    return false;
+    jsval& rval = stackval(-1);
+    if (JSVAL_IS_PRIMITIVE(rval))
+        ABORT_TRACE("JSOP_IN on non-object right operand");
+
+    jsval& lval = stackval(-2);
+    if (!JSVAL_IS_PRIMITIVE(lval))
+        ABORT_TRACE("JSOP_IN on E4X QName left operand");
+
+    jsid id;
+    if (JSVAL_IS_INT(lval)) {
+        id = INT_JSVAL_TO_JSID(lval);
+    } else {
+        if (!js_ValueToStringId(cx, lval, &id))
+            ABORT_TRACE("OOM under js_ValueToStringId in JSOP_IN");
+        lval = ID_TO_VALUE(id);
+    }
+
+    // Expect what we see at trace recording time (hit or miss) to be the same
+    // when executing the trace. Use a builtin helper for named properties, as
+    // forInLoop does. First, handle indexes in dense arrays as a special case.
+    JSObject* obj = JSVAL_TO_OBJECT(rval);
+    LIns* obj_ins = get(&rval);
+
+    bool cond;
+    LIns* x;
+    do {
+        if (guardDenseArray(obj, obj_ins)) {
+            if (JSVAL_IS_INT(lval)) {
+                jsint idx = JSVAL_TO_INT(lval);
+                LIns* idx_ins = f2i(get(&lval));
+                LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
+                if (!guardDenseArrayIndex(obj, idx, obj_ins, dslots_ins, idx_ins))
+                    ABORT_TRACE("dense array index out of bounds");
+
+                cond = obj->dslots[idx] != JSVAL_HOLE;
+                x = lir->ins_eq0(lir->ins2(LIR_eq,
+                                           lir->insLoad(LIR_ldp, dslots_ins, idx * sizeof(jsval)),
+                                           INS_CONST(JSVAL_HOLE)));
+                break;
+            }
+
+            // Not an index id, but a dense array -- go up to the proto. */
+            obj = STOBJ_GET_PROTO(obj);
+            obj_ins = stobj_get_fslot(obj_ins, JSSLOT_PROTO);
+        } else {
+            if (JSVAL_IS_INT(id))
+                ABORT_TRACE("INT in OBJ where OBJ is not a dense array");
+        }
+
+        JSObject* obj2;
+        JSProperty* prop;
+        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+            ABORT_TRACE("OBJ_LOOKUP_PROPERTY failed in JSOP_IN");
+
+        cond = prop != NULL;
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
+
+        LIns* args[] = { get(&lval), obj_ins, cx_ins };
+        x = lir->insCall(F_HasNamedProperty, args);
+        guard(false, lir->ins2i(LIR_eq, x, 2), OOM_EXIT);
+        x = lir->ins2i(LIR_eq, x, 1);
+    } while (0);
+
+    /* The interpreter fuses comparisons and the following branch,
+       so we have to do that here as well. */
+    if (cx->fp->regs->pc[1] == JSOP_IFEQ || cx->fp->regs->pc[1] == JSOP_IFNE)
+        guard(cond, x, BRANCH_EXIT);
+
+    /* We update the stack after the guard. This is safe since
+       the guard bails out at the comparison and the interpreter
+       will this re-execute the comparison. This way the
+       value of the condition doesn't have to be calculated and
+       saved on the stack in most cases. */
+    set(&lval, x);
+    return true;
 }
 
 bool
