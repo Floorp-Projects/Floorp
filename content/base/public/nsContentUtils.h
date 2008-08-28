@@ -1251,6 +1251,11 @@ public:
   static PRBool OfflineAppAllowed(nsIURI *aURI);
 
   /**
+   * Check whether an application should be allowed to use offline APIs.
+   */
+  static PRBool OfflineAppAllowed(nsIPrincipal *aPrincipal);
+
+  /**
    * Increases the count of blockers preventing scripts from running.
    * NOTE: You might want to use nsAutoScriptBlocker rather than calling
    * this directly
