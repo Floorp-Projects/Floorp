@@ -849,6 +849,32 @@ function forVarInWith() {
 forVarInWith.expected = "pqrst";
 test(forVarInWith);
 
+function inObjectTest() {
+    var o = {p: 1, q: 2, r: 3, s: 4, t: 5};
+    var r = 0;
+    for (var i in o) {
+        if (!(i in o))
+            break;
+        if ((i + i) in o)
+            break;
+        ++r;
+    }
+    return r;
+}
+inObjectTest.expected = 5;
+test(inObjectTest);
+
+function inArrayTest() {
+    var a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    for (var i = 0; i < a.length; i++) {
+        if (!(i in a))
+            break;
+    }
+    return i;
+}
+inArrayTest.expected = 10;
+test(inArrayTest);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
