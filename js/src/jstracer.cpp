@@ -3293,11 +3293,14 @@ bool
 TraceRecorder::record_JSOP_RETURN()
 {
     jsval& rval = stackval(-1);
+    JSStackFrame *fp = cx->fp;
     if (cx->fp->flags & JSFRAME_CONSTRUCTING) {
-        // guard JSVAL_IS_PRIMITIVE(rval)
+        JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
+        rval_ins = get(&fp->argv[-1]);
+    } else {
+        rval_ins = get(&rval);
     }
     debug_only_v(printf("returning from %s\n", js_AtomToPrintableString(cx, cx->fp->fun->atom)););
-    rval_ins = get(&rval);
     clearFrameSlotsFromCache();
     return true;
 }
