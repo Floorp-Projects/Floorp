@@ -1,0 +1,36 @@
+#! /bin/sh
+# postinst script for fennec
+#
+# see: dh_installdeb(1)
+
+set -e
+
+case "$1" in
+    configure)
+
+        # for fennec icons
+	gtk-update-icon-cache -f /usr/share/icons/hicolor
+		
+        # select where to install fennec menu
+        if [ "$2" == "" ]; then
+
+            if [ ! -f /targets/links/scratchbox.config ]; then
+                maemo-select-menu-location fennec.desktop tana_fi_web
+            fi
+
+            if [ -x /usr/bin/update-desktop-database ]; then
+                update-desktop-database /usr/share/applications
+            fi
+        fi
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

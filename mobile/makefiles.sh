@@ -49,4 +49,5 @@ mobile/installer/debian/fennec.links
 mobile/installer/debian/fennec.service
 mobile/installer/debian/files
 mobile/installer/debian/icon_base64
-mobile/installer/debian/menu"
+mobile/installer/debian/menu
+mobile/installer/debian/fennec.postinst"
