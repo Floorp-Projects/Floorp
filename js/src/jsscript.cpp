@@ -263,7 +263,7 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      * and compile-time scope.
      */
     fp->flags |= JSFRAME_SCRIPT_OBJECT;
-    tcflags = caller ? TCF_PUT_STATIC_DEPTH(caller->staticDepth + 1) : 0;
+    tcflags = 0;
     script = js_CompileScript(cx, scopeobj, principals, tcflags,
                               JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
                               NULL, file, line);
