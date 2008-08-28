@@ -2345,7 +2345,7 @@ js_FinishJIT(JSTraceMonitor *tm)
            stat.recorderStarted, stat.recorderAborted,
            stat.traceCompleted, stat.returnToDifferentLoopHeader, stat.treesTrashed,
            stat.slotPromoted, stat.unstableLoopVariable);
-    printf("monitor: triggered(%llu), exits (%llu), type mismatch(%llu), "
+    printf("monitor: triggered(%llu), exits(%llu), type mismatch(%llu), "
            "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
 #endif
