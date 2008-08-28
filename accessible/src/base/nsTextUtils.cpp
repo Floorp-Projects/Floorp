@@ -45,7 +45,7 @@
 // nsLangTextAttr
 
 PRBool
-nsLangTextAttr::equal(nsIDOMElement *aElm)
+nsLangTextAttr::Equal(nsIDOMElement *aElm)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElm));
   if (!content)
@@ -106,7 +106,7 @@ nsCSSTextAttr::nsCSSTextAttr(PRBool aIncludeDefAttrValue, nsIDOMElement *aElm,
 }
 
 PRBool
-nsCSSTextAttr::equal(nsIDOMElement *aElm)
+nsCSSTextAttr::Equal(nsIDOMElement *aElm)
 {
   if (!aElm || !mStyleDecl)
     return PR_FALSE;
@@ -130,13 +130,13 @@ nsCSSTextAttr::equal(nsIDOMElement *aElm)
 }
 
 PRBool
-nsCSSTextAttr::iterate()
+nsCSSTextAttr::Iterate()
 {
   return ++mIndex < static_cast<PRInt32>(NS_ARRAY_LENGTH(gCSSTextAttrsMap));
 }
 
 PRBool
-nsCSSTextAttr::get(nsACString& aName, nsAString& aValue)
+nsCSSTextAttr::Get(nsACString& aName, nsAString& aValue)
 {
   if (!mStyleDecl)
     return PR_FALSE;
@@ -189,22 +189,22 @@ nsBackgroundTextAttr::nsBackgroundTextAttr(nsIFrame *aFrame,
 }
 
 PRBool
-nsBackgroundTextAttr::equal(nsIDOMElement *aElm)
+nsBackgroundTextAttr::Equal(nsIDOMElement *aElm)
 {
   nsIFrame *frame = nsAccUtils::GetFrameFor(aElm);
   if (!frame)
     return PR_FALSE;
 
-  return getColor(mFrame) == getColor(frame);    
+  return GetColor(mFrame) == GetColor(frame);    
 }
 
 PRBool
-nsBackgroundTextAttr::get(nsAString& aValue)
+nsBackgroundTextAttr::Get(nsAString& aValue)
 {
   // Do not expose "background-color" text attribute if its value is matched
   // with the default value.
-  nscolor color = getColor(mFrame);
-  if (mRootFrame && color == getColor(mRootFrame))
+  nscolor color = GetColor(mFrame);
+  if (mRootFrame && color == GetColor(mRootFrame))
     return PR_FALSE;
 
   // Combine the string like rgb(R, G, B) from nscolor.
@@ -222,7 +222,7 @@ nsBackgroundTextAttr::get(nsAString& aValue)
 }
 
 nscolor
-nsBackgroundTextAttr::getColor(nsIFrame *aFrame)
+nsBackgroundTextAttr::GetColor(nsIFrame *aFrame)
 {
   const nsStyleBackground *styleBackground = aFrame->GetStyleBackground();
 
@@ -237,7 +237,7 @@ nsBackgroundTextAttr::getColor(nsIFrame *aFrame)
   // transparent background color. So background color isn't changed from
   // 'mRootFrame' to initially passed 'aFrame'.
   if (parentFrame == mRootFrame)
-    return getColor(mRootFrame);
+    return GetColor(mRootFrame);
 
-  return getColor(parentFrame);
+  return GetColor(parentFrame);
 }
