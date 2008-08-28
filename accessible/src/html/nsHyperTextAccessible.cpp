@@ -1186,6 +1186,18 @@ nsHyperTextAccessible::GetDefaultTextAttributes(nsIPersistentProperties **aAttri
     if (textAttr.get(name, value))
       attributes->SetStringProperty(name, value, oldValue);
   }
+
+  nsIFrame *sourceFrame = nsAccUtils::GetFrameFor(element);
+  if (sourceFrame) {
+    nsBackgroundTextAttr backgroundTextAttr(sourceFrame, nsnull);
+
+    nsAutoString value;
+    if (backgroundTextAttr.get(value)) {
+      nsAccUtils::SetAccAttr(attributes,
+                             nsAccessibilityAtoms::backgroundColor, value);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -2297,6 +2309,25 @@ nsHyperTextAccessible::GetCSSTextAttributes(PRBool aIncludeDefAttrs,
     nsresult rv = GetRangeForTextAttr(aSourceNode, &textAttr,
                                       aStartHTOffset, aEndHTOffset);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsIFrame *sourceFrame = nsAccUtils::GetFrameFor(sourceElm);
+  if (sourceFrame) {
+    nsIFrame *rootFrame = nsnull;
+
+    if (!aIncludeDefAttrs)
+      rootFrame = nsAccUtils::GetFrameFor(rootElm);
+
+    nsBackgroundTextAttr backgroundTextAttr(sourceFrame, rootFrame);
+    nsAutoString value;
+    if (backgroundTextAttr.get(value)) {
+      nsAccUtils::SetAccAttr(aAttributes,
+                             nsAccessibilityAtoms::backgroundColor, value);
+    }
+
+    nsresult rv = GetRangeForTextAttr(aSourceNode, &backgroundTextAttr,
+                                      aStartHTOffset, aEndHTOffset);
+    return rv;
   }
 
   return NS_OK;
