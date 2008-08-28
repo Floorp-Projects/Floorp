@@ -811,6 +811,16 @@ nsContentUtils::OfflineAppAllowed(nsIURI *aURI)
   return NS_OfflineAppAllowed(aURI, sPrefBranch);
 }
 
+/* static */
+PRBool
+nsContentUtils::OfflineAppAllowed(nsIPrincipal *aPrincipal)
+{
+  nsCOMPtr<nsIURI> codebaseURI;
+  aPrincipal->GetURI(getter_AddRefs(codebaseURI));
+
+  return OfflineAppAllowed(codebaseURI);
+}
+
 // static
 void
 nsContentUtils::Shutdown()
