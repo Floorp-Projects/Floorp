@@ -666,7 +666,7 @@ namespace nanojit
 		verbose_only( verbose_outputf("--------------------------------------- exit block (LIR_xt|LIR_xf)") );
 
 #ifdef NANOJIT_IA32
-		NanoAssertMsgf(_fpuStkDepth == _sv_fpuStkDepth, ("LIR_xtf, _fpuStkDepth=%d, expect %d\n",_fpuStkDepth, _sv_fpuStkDepth));
+		NanoAssertMsgf(_fpuStkDepth == _sv_fpuStkDepth, "LIR_xtf, _fpuStkDepth=%d, expect %d\n",_fpuStkDepth, _sv_fpuStkDepth);
 		debug_only( _fpuStkDepth = _sv_fpuStkDepth; _sv_fpuStkDepth = 9999; )
 #endif
 
@@ -769,7 +769,7 @@ namespace nanojit
 			// check for resource leaks 
 			debug_only( 
 				for(uint32_t i=_activation.lowwatermark;i<_activation.highwatermark; i++) {
-					NanoAssertMsgf(_activation.entry[i] == 0, ("frame entry %d wasn't freed\n",-4*i)); 
+					NanoAssertMsgf(_activation.entry[i] == 0, "frame entry %d wasn't freed\n",-4*i);
 				}
 			)
 
