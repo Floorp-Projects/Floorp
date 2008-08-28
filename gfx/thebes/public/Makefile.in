@@ -79,7 +79,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 EXPORTS += gfxQtPlatform.h gfxQPainterSurface.h
 EXPORTS += gfxXlibSurface.h gfxQtNativeRenderer.h
-EXPORTS += gfxQtFonts.h
+EXPORTS += gfxFT2Fonts.h
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
