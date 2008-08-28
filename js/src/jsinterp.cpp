@@ -3127,6 +3127,23 @@ js_Interpret(JSContext *cx)
         }                                                                     \
     JS_END_MACRO
 
+#define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
+    JS_BEGIN_MACRO                                                            \
+        uintN diff_;                                                          \
+        JS_ASSERT(js_CodeSpec[op].length == 1);                               \
+        diff_ = (uintN) regs.pc[1] - (uintN) JSOP_IFEQ;                       \
+        if (diff_ <= 1) {                                                     \
+            regs.sp -= spdec;                                                 \
+            if (cond == (diff_ != 0)) {                                       \
+                ++regs.pc;                                                    \
+                len = GET_JUMP_OFFSET(regs.pc);                               \
+                BRANCH(len);                                                  \
+            }                                                                 \
+            len = 1 + JSOP_IFEQ_LENGTH;                                       \
+            DO_NEXT_OP(len);                                                  \
+        }                                                                     \
+    JS_END_MACRO
+
           BEGIN_CASE(JSOP_IN)
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval)) {
@@ -3137,10 +3154,12 @@ js_Interpret(JSContext *cx)
             FETCH_ELEMENT_ID(obj, -2, id);
             if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
                 goto error;
-            regs.sp--;
-            STORE_OPND(-1, BOOLEAN_TO_JSVAL(prop != NULL));
+            cond = prop != NULL;
             if (prop)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
+            TRY_BRANCH_AFTER_COND(cond, 2);
+            regs.sp--;
+            STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));
           END_CASE(JSOP_IN)
 
           BEGIN_CASE(JSOP_ITER)
@@ -3483,23 +3502,6 @@ js_Interpret(JSContext *cx)
           BEGIN_CASE(JSOP_BITAND)
             BITWISE_OP(&);
           END_CASE(JSOP_BITAND)
-
-#define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
-    JS_BEGIN_MACRO                                                            \
-        uintN diff_;                                                          \
-        JS_ASSERT(js_CodeSpec[op].length == 1);                               \
-        diff_ = (uintN) regs.pc[1] - (uintN) JSOP_IFEQ;                       \
-        if (diff_ <= 1) {                                                     \
-            regs.sp -= spdec;                                                 \
-            if (cond == (diff_ != 0)) {                                       \
-                ++regs.pc;                                                    \
-                len = GET_JUMP_OFFSET(regs.pc);                               \
-                BRANCH(len);                                                  \
-            }                                                                 \
-            len = 1 + JSOP_IFEQ_LENGTH;                                       \
-            DO_NEXT_OP(len);                                                  \
-        }                                                                     \
-    JS_END_MACRO
 
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
