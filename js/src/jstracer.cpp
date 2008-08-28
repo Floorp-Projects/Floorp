@@ -660,6 +660,9 @@ mergeTypeMaps(uint8** partial, unsigned* plength, uint8* complete, unsigned clen
     *plength = clength;
 }
 
+static void
+js_TrashTree(JSContext* cx, Fragment* f);
+
 TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fragment,
         TreeInfo* ti, unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap,
         GuardRecord* innermostNestedGuard)
@@ -677,7 +680,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     this->loopEdgeCount = 0;
     JS_ASSERT(!_anchor || _anchor->calldepth == _fragment->calldepth);
     this->atoms = cx->fp->script->atomMap.vector;
-
+    this->trashTree = false;
     
     debug_only_v(printf("recording starting from %s:%u@%u\n", cx->fp->script->filename,
                         js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
@@ -723,6 +726,8 @@ TraceRecorder::~TraceRecorder()
         JS_ASSERT(!fragment->root->vmprivate);
         delete treeInfo;
     }
+    if (trashTree)
+        js_TrashTree(cx, fragment->root);
 #ifdef DEBUG
     delete verbose_filter;
 #endif
@@ -1300,9 +1305,6 @@ struct FrameInfo {
     };
 };
 
-static void
-js_TrashTree(JSContext* cx, Fragment* f);
-
 /* Promote slots if necessary to match the called tree' type map and report error if thats
    impossible. */
 bool
@@ -1339,8 +1341,9 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
         }
         ++m;
     );
+    JS_ASSERT(f == f->root);
     if (!ok)
-        js_TrashTree(cx, f);
+        trashTree = true;
     return ok;
 }
 
@@ -1493,8 +1496,8 @@ TraceRecorder::verifyTypeStability()
         }
         ++m
     );
-    if (recompile)
-        js_TrashTree(cx, fragment);
+    if (recompile) 
+        trashTree = true;
     return !recompile;
 }
 
@@ -1624,6 +1627,8 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     /* Guard that we come out of the inner tree along the same side exit we came out when
        we called the inner tree at recording time. */
     guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
+    /* Register us as a dependent tree of the inner tree. */
+    ((TreeInfo*)inner->vmprivate)->dependentTrees.addUnique(fragment->root);
 }
 
 int
@@ -1713,14 +1718,21 @@ static void
 js_TrashTree(JSContext* cx, Fragment* f)
 {
     JS_ASSERT((!f->code()) == (!f->vmprivate));
+    JS_ASSERT(f == f->root);
     if (!f->code())
         return;
     AUDIT(treesTrashed);
     debug_only_v(printf("Trashing tree info.\n");)
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
-    delete (TreeInfo*)f->vmprivate;
+    TreeInfo* ti = (TreeInfo*)f->vmprivate;
     f->vmprivate = NULL;
     f->releaseCode(fragmento);
+    Fragment** data = ti->dependentTrees.data();
+    unsigned length = ti->dependentTrees.length();
+    for (unsigned n = 0; n < length; ++n)
+        js_TrashTree(cx, data[n]);
+    delete ti;
+    JS_ASSERT(!f->code() && !f->vmprivate);
 }
 
 static unsigned
@@ -2106,9 +2118,10 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
             JS_ASSERT(lr->guard->oprnd1()->oprnd2()->isconstp());
             lr = (GuardRecord*)lr->guard->oprnd1()->oprnd2()->constvalp();
         } while (lr->exit->exitType == NESTED_EXIT);
-
+        
         /* We restored the nested frames, now we just need to deal with the innermost guard. */
         lr = state.nestedExit;
+        JS_ASSERT(lr);
     }
 
     /* sp_adj and ip_adj are relative to the tree we exit out of, not the tree we
