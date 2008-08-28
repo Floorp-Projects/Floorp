@@ -38,10 +38,15 @@
 #ifndef toolkit_breakpad_mac_utils_h__
 #define toolkit_breakpad_mac_utils_h__
 
+#include "nsStringGlue.h"
+
 /*
  * Look up a setting in our user defaults indicating
  * that the user wants to see the OS crash reporting dialog.
  */
 bool PassToOSCrashReporter();
+
+// Given an Objective-C NSException object, put exception info into a string.
+void GetObjCExceptionInfo(void* inException, nsACString& outString);
 
 #endif /* toolkit_breakpad_mac_utils_h__ */
