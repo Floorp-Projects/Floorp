@@ -230,7 +230,8 @@ class TraceRecorder {
     nanojit::SideExit       exit;
     bool                    trashTree;
     nanojit::Fragment*      whichTreeToTrash;
-    Queue<jsbytecode*>      loopEdgeList;
+    Queue<jsbytecode*>      inlinedLoopEdges;
+    Queue<jsbytecode*>      cfgMerges;
     
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
@@ -323,6 +324,8 @@ class TraceRecorder {
     bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc);
     bool forInLoop(jsval* vp);
 
+    void trackCfgMerges(jsbytecode* pc);
+    void fuseIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
 public:
     TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, TreeInfo*,
             unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap, 
@@ -357,13 +360,11 @@ public:
 #define RECORD(x)                                                             \
     JS_BEGIN_MACRO                                                            \
         TraceRecorder* r = JS_TRACE_MONITOR(cx).recorder;                     \
+        if (!js_MonitorRecording(cx)) {                                       \
+            ENABLE_TRACER(0);                                                 \
+        } else                                                                \
         if (!r->record_##x()) {                                               \
             js_AbortRecording(cx, NULL, #x);                                  \
-            ENABLE_TRACER(0);                                                 \
-        }                                                                     \
-        jsbytecode* pc = cx->fp->regs->pc;                                    \
-        if (((*pc == JSOP_GOTO) || (*pc == JSOP_GOTOX)) &&                    \
-            !js_MonitorGoto(cx)) {                                            \
             ENABLE_TRACER(0);                                                 \
         }                                                                     \
     JS_END_MACRO
@@ -372,7 +373,7 @@ extern bool
 js_MonitorLoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount);
 
 extern bool
-js_MonitorGoto(JSContext* cx);
+js_MonitorRecording(JSContext* cx);
 
 extern void
 js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason);
