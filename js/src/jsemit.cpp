@@ -1878,6 +1878,9 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
     if (!(tc->flags & TCF_IN_FUNCTION)) {
         if ((cx->fp->flags & JSFRAME_SPECIAL) && cx->fp->fun) {
+            if (cg->staticDepth > JS_DISPLAY_SIZE)
+                goto out;
+
             localKind = js_LookupLocal(cx, cx->fp->fun, atom, &index);
             if (localKind != JSLOCAL_NONE) {
                 if (PN_OP(pn) == JSOP_NAME) {
