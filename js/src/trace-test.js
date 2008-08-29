@@ -1051,6 +1051,30 @@ function testContinueWithLabel() {
 testContinueWithLabel.expected = 20;
 test(testContinueWithLabel);
 
+function testDivision() {
+    var a = 32768;
+    var b;
+    while (b !== 1) {
+	b = a / 2;
+	a = b;
+    }
+    return a;
+}
+testDivision.expected = 1;
+test(testDivision);
+
+function testDivisionFloat() {
+    var a = 32768.0;
+    var b;
+    while (b !== 1) {
+	b = a / 2.0;
+	a = b;
+    }
+    return a === 1.0;
+}
+testDivisionFloat.expected = true;
+test(testDivisionFloat);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
