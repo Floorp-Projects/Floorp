@@ -756,7 +756,7 @@ TraceRecorder::getCallDepth() const
 bool
 TraceRecorder::trackLoopEdges()
 {
-    return loopEdgeCount++ < 1;
+    return loopEdgeCount++ < 3;
 }
 
 /* Determine the offset in the native global frame for a jsval we track */
@@ -1944,17 +1944,26 @@ js_RecordBranch(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlin
         return false; /* we stay away from shared global objects */
     }
 #endif
-    /* Silently ignore downward branches during recording. */
+    Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
+    /* If we hit a break, end the loop and generate an always taken loop exit guard. For other
+       downward gotos (like if/else) continue recording. */
+    if (js_isBreak(cx, cx->fp->script, cx->fp->regs->pc)) {
+        AUDIT(traceCompleted);
+        r->endLoop(fragmento);
+        js_DeleteRecorder(cx);
+        return false; /* done recording */
+    }
+    /* Silently ignore other downward branches during recording (i.e. if/else branches). */
     if (cx->fp->regs->pc > oldpc)
         return true;
-    Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
-    if (r->isLoopHeader(cx)) { /* did we hit the start point? */
+    /* If we hit our own loop header, close the loop and compile the trace. */
+    if (r->isLoopHeader(cx)) { 
         if (fragmento->assm()->error()) {
             js_AbortRecording(cx, oldpc, "Error during recording");
-            /* if we ran out of memory, flush the cache */
+            /* If we ran out of memory, flush the code cache and abort. */
             if (fragmento->assm()->error() == OutOMem)
                 js_FlushJITCache(cx);
-            return false; /* we are done recording */
+            return false; /* done recording */
         }
         AUDIT(traceCompleted);
         r->closeLoop(fragmento);
@@ -1971,7 +1980,9 @@ js_RecordBranch(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlin
         GuardRecord* innermostNestedGuard = NULL;
         GuardRecord* lr = js_ExecuteTree(cx, &f, inlineCallCount, &innermostNestedGuard);
         if (!lr) {
-            js_AbortRecording(cx, oldpc, "Couldn't call inner tree");
+            /* js_ExecuteTree might have flushed the cache and aborted us already. */
+            if (JS_TRACE_MONITOR(cx).recorder)
+                js_AbortRecording(cx, oldpc, "Couldn't call inner tree");
             return false;
         }
         switch (lr->exit->exitType) {
@@ -2267,20 +2278,15 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
     JS_ASSERT(tm->recorder != NULL);
     Fragment* f = tm->recorder->getFragment();
     JS_ASSERT(!f->vmprivate);
-    if (js_isBreak(cx, cx->fp->script, cx->fp->regs->pc)) {
-        /* If we stopped on a break statement, end the loop here with a LIR_x guard. */
-        tm->recorder->endLoop(tm->fragmento);
-    } else {
-        /* Abort the trace and blacklist its starting point. */
-        AUDIT(recorderAborted);
-        if (cx->fp) {
-            debug_only_v(if (!abortpc) abortpc = cx->fp->regs->pc;
-                         printf("Abort recording (line %d, pc %d): %s.\n",
-                                js_PCToLineNumber(cx, cx->fp->script, abortpc),
-                                abortpc - cx->fp->script->code, reason);)
-        }
-        f->blacklist();
+    /* Abort the trace and blacklist its starting point. */
+    AUDIT(recorderAborted);
+    if (cx->fp) {
+        debug_only_v(if (!abortpc) abortpc = cx->fp->regs->pc;
+                     printf("Abort recording (line %d, pc %d): %s.\n",
+                            js_PCToLineNumber(cx, cx->fp->script, abortpc),
+                            abortpc - cx->fp->script->code, reason);)
     }
+    f->blacklist();
     js_DeleteRecorder(cx);
     /* If this is the primary trace and we didn't succeed compiling, trash the TreeInfo object. */
     if (!f->code() && (f->root == f)) 
@@ -3319,8 +3325,7 @@ TraceRecorder::record_JSOP_RETURN()
 bool
 TraceRecorder::record_JSOP_GOTO()
 {
-    /* Full disclaimer: don't try to read the offset, this code is shared with JSOP_GOTOX. */
-    return (!js_isBreak(cx, cx->fp->script, cx->fp->regs->pc));
+    return true;
 }
 
 bool
@@ -5317,8 +5322,7 @@ TraceRecorder::record_JSOP_DEFLOCALFUN()
 bool
 TraceRecorder::record_JSOP_GOTOX()
 {
-    /* Full disclaimer: this only works as long record_JSOP_GOTO doesn't try to read the offset. */
-    return record_JSOP_GOTO();
+    return true;
 }
 
 bool
