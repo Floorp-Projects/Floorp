@@ -48,12 +48,13 @@ FORCE_USE_PIC = 1
 
 CMSRCS = \
   GrowlApplicationBridge.m \
-  GrowlPathUtil.m \
-  NSURLAdditions.m \
+  GrowlPathUtilities.m \
   $(NULL)
 
 CSRCS = \
   CFGrowlAdditions.c \
+  CFMutableDictionaryAdditions.c \
+  CFURLAdditions.c \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
