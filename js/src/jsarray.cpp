@@ -1183,20 +1183,14 @@ out_bad:
     return JS_FALSE;
 }
 
-enum ArrayToStringOp {
-    TO_STRING,
-    TO_LOCALE_STRING,
-    TO_SOURCE
-};
-
 /*
  * When op is TO_STRING or TO_LOCALE_STRING sep indicates a separator to use
  * or "," when sep is NULL.
  * When op is TO_SOURCE sep must be NULL.
  */
-static JSBool
-array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
-               JSString *sep, jsval *rval)
+JSBool
+js_array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
+                  JSString *sep, jsval *rval)
 {
     JSBool ok, hole;
     jsuint length, index;
@@ -1414,7 +1408,7 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
         !JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2)) {
         return JS_FALSE;
     }
-    return array_join_sub(cx, obj, TO_SOURCE, NULL, vp);
+    return js_array_join_sub(cx, obj, TO_SOURCE, NULL, vp);
 }
 #endif
 
@@ -1428,7 +1422,7 @@ array_toString(JSContext *cx, uintN argc, jsval *vp)
         !JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2)) {
         return JS_FALSE;
     }
-    return array_join_sub(cx, obj, TO_STRING, NULL, vp);
+    return js_array_join_sub(cx, obj, TO_STRING, NULL, vp);
 }
 
 static JSBool
@@ -1446,7 +1440,7 @@ array_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
      *  Passing comma here as the separator. Need a way to get a
      *  locale-specific version.
      */
-    return array_join_sub(cx, obj, TO_LOCALE_STRING, NULL, vp);
+    return js_array_join_sub(cx, obj, TO_LOCALE_STRING, NULL, vp);
 }
 
 static JSBool
@@ -1505,8 +1499,8 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector,
 /*
  * Perl-inspired join, reverse, and sort.
  */
-static JSBool
-array_join(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_array_join(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     JSObject *obj;
@@ -1520,7 +1514,7 @@ array_join(JSContext *cx, uintN argc, jsval *vp)
         vp[2] = STRING_TO_JSVAL(str);
     }
     obj = JS_THIS_OBJECT(cx, vp);
-    return obj && array_join_sub(cx, obj, TO_STRING, str, vp);
+    return obj && js_array_join_sub(cx, obj, TO_STRING, str, vp);
 }
 
 static JSBool
@@ -2226,6 +2220,17 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj2;
     JSTempValueRooter tvr;
 
+    /*
+     * Create a new array value to return.  Our ECMA v2 proposal specs
+     * that splice always returns an array value, even when given no
+     * arguments.  We think this is best because it eliminates the need
+     * for callers to do an extra test to handle the empty splice case.
+     */
+    obj2 = js_NewArrayObject(cx, 0, NULL);
+    if (!obj2)
+        return JS_FALSE;
+    *vp = OBJECT_TO_JSVAL(obj2);
+
     /* Nothing to do if no args.  Otherwise get length. */
     if (argc == 0)
         return JS_TRUE;
@@ -2269,17 +2274,6 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         argc--;
         argv++;
     }
-
-    /*
-     * Create a new array value to return.  Our ECMA v2 proposal specs
-     * that splice always returns an array value, even when given no
-     * arguments.  We think this is best because it eliminates the need
-     * for callers to do an extra test to handle the empty splice case.
-     */
-    obj2 = js_NewArrayObject(cx, 0, NULL);
-    if (!obj2)
-        return JS_FALSE;
-    *vp = OBJECT_TO_JSVAL(obj2);
 
     /* After this, control must flow through label out: to exit. */
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
@@ -2880,7 +2874,7 @@ static JSFunctionSpec array_methods[] = {
     JS_FN(js_toLocaleString_str,array_toLocaleString,0,0),
 
     /* Perl-ish methods. */
-    JS_FN("join",               array_join,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("join",               js_array_join,      1,JSFUN_GENERIC_NATIVE),
     JS_FN("reverse",            array_reverse,      0,JSFUN_GENERIC_NATIVE),
     JS_FN("sort",               array_sort,         1,JSFUN_GENERIC_NATIVE),
     JS_FN("push",               array_push,         1,JSFUN_GENERIC_NATIVE),
@@ -2908,8 +2902,8 @@ static JSFunctionSpec array_methods[] = {
     JS_FS_END
 };
 
-static JSBool
-Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+JSBool
+js_Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsuint length;
     jsval *vector;
@@ -2951,7 +2945,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     js_SlowArrayObjectOps.enumerate = slowarray_enumerate;
     js_SlowArrayObjectOps.call = NULL;
 
-    proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, Array, 1,
+    proto = JS_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
                          array_props, array_methods, NULL, NULL);
 
     /* Initialize the Array prototype object so it gets a length property. */
@@ -3023,3 +3017,193 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 #endif
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                        JSUint8 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    jsint vi;
+
+    JSUint8 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v) || (vi = JSVAL_TO_INT(v)) < 0)
+            return JS_FALSE;
+
+        *dp++ = (JSUint8) vi;
+    }
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSUint16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                         JSUint16 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    jsint vi;
+
+    JSUint16 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v) || (vi = JSVAL_TO_INT(v)) < 0)
+            return JS_FALSE;
+
+        *dp++ = (JSUint16) vi;
+    }
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSUint32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                         JSUint32 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    jsint vi;
+
+    JSUint32 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v) || (vi = JSVAL_TO_INT(v)) < 0)
+            return JS_FALSE;
+
+        *dp++ = (JSUint32) vi;
+    }
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSInt8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                       JSInt8 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    JSInt8 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v))
+            return JS_FALSE;
+
+        *dp++ = (JSInt8) JSVAL_TO_INT(v);
+    }
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSInt16Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                        JSInt16 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    JSInt16 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v))
+            return JS_FALSE;
+
+        *dp++ = (JSInt16) JSVAL_TO_INT(v);
+    }
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSInt32Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                        JSInt32 *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    JSInt32 *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (!JSVAL_IS_INT(v))
+            return JS_FALSE;
+
+        *dp++ = (JSInt32) JSVAL_TO_INT(v);
+    }
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_ArrayToJSDoubleBuffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                         jsdouble *dest)
+{
+    uint32 length;
+
+    if (!obj || !OBJ_IS_DENSE_ARRAY(cx, obj))
+        return JS_FALSE;
+
+    length = obj->fslots[JSSLOT_ARRAY_LENGTH];
+    if (length < offset + count)
+        return JS_FALSE;
+
+    jsval v;
+    jsdouble *dp = dest;
+    for (uintN i = offset; i < offset+count; i++) {
+        v = obj->dslots[i];
+        if (JSVAL_IS_INT(v))
+            *dp++ = (jsdouble) JSVAL_TO_INT(v);
+        else if (JSVAL_IS_DOUBLE(v))
+            *dp++ = *(JSVAL_TO_DOUBLE(v));
+        else
+            return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}

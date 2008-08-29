@@ -57,7 +57,6 @@
 #include <string.h>
 
 #include "jsj_private.h"        /* LiveConnect internals */
-#include "jscntxt.h"            /* for error reporting */
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 JavaClass_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)

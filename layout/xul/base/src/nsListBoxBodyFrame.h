@@ -49,6 +49,7 @@
 #include "nsPresContext.h"
 #include "nsBoxLayoutState.h"
 #include "nsThreadUtils.h"
+#include "nsPIBoxObject.h"
 
 class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
@@ -138,6 +139,12 @@ public:
 
   void PostReflowCallback();
 
+  PRBool SetBoxObject(nsPIBoxObject* aBoxObject)
+  {
+    NS_ENSURE_TRUE(!mBoxObject, PR_FALSE);
+    mBoxObject = aBoxObject;
+    return PR_TRUE;
+  }
 protected:
   class nsPositionChangedEvent;
   friend class nsPositionChangedEvent;
@@ -198,6 +205,8 @@ protected:
   nsTArray< nsRefPtr<nsPositionChangedEvent> > mPendingPositionChangeEvents;
 
   PRPackedBool mReflowCallbackPosted;
+
+  nsCOMPtr<nsPIBoxObject> mBoxObject;
 }; 
 
 #endif // nsListBoxBodyFrame_h

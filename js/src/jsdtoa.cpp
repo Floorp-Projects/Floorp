@@ -139,8 +139,9 @@ JS_strtod(const char *s00, char **se, int *err)
 }
 
 JS_FRIEND_API(char *)
-JS_dtostr(char *buffer, size_t bufferSize, JSDToStrMode mode, int precision, double d)
+JS_dtostr(char *buffer, size_t bufferSize, JSDToStrMode mode, int precision, double dinput)
 {
+    U d;
     int decPt;        /* Offset of decimal point from first digit */
     int sign;         /* Nonzero if the sign bit was set in d */
     int nDigits;      /* Number of significand digits returned by js_dtoa */
@@ -155,10 +156,11 @@ JS_dtostr(char *buffer, size_t bufferSize, JSDToStrMode mode, int precision, dou
      * Change mode here rather than below because the buffer may not be large
      * enough to hold a large integer.
      */
-    if (mode == DTOSTR_FIXED && (d >= 1e21 || d <= -1e21))
+    if (mode == DTOSTR_FIXED && (dinput >= 1e21 || dinput <= -1e21))
         mode = DTOSTR_STANDARD;
 
     LOCK_DTOA();
+    dval(d) = dinput;
     numBegin = dtoa(d, dtoaModes[mode], precision, &decPt, &sign, &numEnd);
     if (!numBegin) {
         UNLOCK_DTOA();
@@ -352,28 +354,30 @@ static uint32 quorem2(Bigint *b, int32 k)
 #define BASEDIGIT(digit) ((char)(((digit) >= 10) ? 'a' - 10 + (digit) : '0' + (digit)))
 
 JS_FRIEND_API(char *)
-JS_dtobasestr(int base, double d)
+JS_dtobasestr(int base, double dinput)
 {
+    U d;
     char *buffer;        /* The output string */
     char *p;             /* Pointer to current position in the buffer */
     char *pInt;          /* Pointer to the beginning of the integer part of the string */
     char *q;
     uint32 digit;
-    double di;           /* d truncated to an integer */
-    double df;           /* The fractional part of d */
+    U di;                /* d truncated to an integer */
+    U df;                /* The fractional part of d */
 
     JS_ASSERT(base >= 2 && base <= 36);
 
+    dval(d) = dinput;
     buffer = (char*) malloc(DTOBASESTR_BUFFER_SIZE);
     if (buffer) {
         p = buffer;
-        if (d < 0.0
+        if (dval(d) < 0.0
 #if defined(XP_WIN) || defined(XP_OS2)
             && !((word0(d) & Exp_mask) == Exp_mask && ((word0(d) & Frac_mask) || word1(d))) /* Visual C++ doesn't know how to compare against NaN */
 #endif
            ) {
             *p++ = '-';
-            d = -d;
+            dval(d) = -dval(d);
         }
 
         /* Check for Infinity and NaN */
@@ -385,9 +389,9 @@ JS_dtobasestr(int base, double d)
         LOCK_DTOA();
         /* Output the integer part of d with the digits in reverse order. */
         pInt = p;
-        di = fd_floor(d);
-        if (di <= 4294967295.0) {
-            uint32 n = (uint32)di;
+        dval(di) = fd_floor(dval(d));
+        if (dval(di) <= 4294967295.0) {
+            uint32 n = (uint32)dval(di);
             if (n)
                 do {
                     uint32 m = n / base;
@@ -426,8 +430,8 @@ JS_dtobasestr(int base, double d)
             *q-- = ch;
         }
 
-        df = d - di;
-        if (df != 0.0) {
+        dval(df) = dval(d) - dval(di);
+        if (dval(df) != 0.0) {
             /* We have a fraction. */
             int e, bbits;
             int32 s2, done;

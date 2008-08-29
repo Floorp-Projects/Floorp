@@ -522,6 +522,46 @@ nullUser.password = "password";
 LoginTest.deleteFile(OUTDIR, "output-394610-4.sqlite");
 
 
+/*
+ * ---------------------- Bug 451155 ----------------------
+ * Ensure that we don't mangle strings when then contain
+ * UCS2 characters above U+00FF.
+ */
+
+/* ========== 14 ========== */
+testnum++;
+testdesc = "ensure UCS2 strings don't get mangled."
+
+storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
+                               OUTDIR, "output-451155.sqlite");
+LoginTest.checkStorageData(storage, [], []);
+
+var testString = String.fromCharCode(355, 277, 349, 357, 533, 537, 101, 345, 185);
+
+var utfHost = "http://" + testString + ".org";
+var utfUser1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+var utfUser2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+
+utfUser1.init("http://" + testString + ".org",
+    "http://" + testString + ".org", null,
+    testString, testString, testString, testString);
+utfUser2.init("http://realm.check.net", null, "realm " + testString + " test",
+    "user", "pass", "", "");
+
+storage.addLogin(utfUser1);
+storage.addLogin(utfUser2);
+storage.setLoginSavingEnabled(utfHost, false);
+
+LoginTest.checkStorageData(storage, [utfHost], [utfUser1, utfUser2]);
+
+testdesc = "[flush and reload for verification]"
+storage = LoginTest.reloadStorage(OUTDIR, "output-451155.sqlite");
+LoginTest.checkStorageData(storage, [utfHost], [utfUser1, utfUser2]);
+
+
+
 /* ========== end ========== */
 } catch (e) {
     throw ("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);

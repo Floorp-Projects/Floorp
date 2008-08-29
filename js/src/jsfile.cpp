@@ -1905,7 +1905,7 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSFILE_CHECK_NATIVE("list");
 
     if (argc==1) {
-        if (JSVAL_IS_REGEXP(cx, argv[0])) {
+        if (VALUE_IS_REGEXP(cx, argv[0])) {
             re = JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
         }else
         if (VALUE_IS_FUNCTION(cx, argv[0])) {

@@ -196,7 +196,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
   PRUint8 *data   = image->Data();
   PRInt32  stride = image->Stride();
 
-  nsRect rect(0, 0, surfaceSize.width, surfaceSize.height);
+  nsIntRect rect(0, 0, surfaceSize.width, surfaceSize.height);
   nsSVGUtils::UnPremultiplyImageDataAlpha(data, stride, rect);
   nsSVGUtils::ConvertImageDataToLinearRGB(data, stride, rect);
 

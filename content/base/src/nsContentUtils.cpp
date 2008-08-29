@@ -154,6 +154,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsAttrValue.h"
 #include "nsReferencedElement.h"
 #include "nsIUGenCategory.h"
+#include "nsIDragService.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -417,13 +418,16 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::oncommand,                     { NS_XUL_COMMAND, EventNameType_XUL }},
     { &nsGkAtoms::onbroadcast,                   { NS_XUL_BROADCAST, EventNameType_XUL }},
     { &nsGkAtoms::oncommandupdate,               { NS_XUL_COMMAND_UPDATE, EventNameType_XUL }},
-    { &nsGkAtoms::ondragenter,                   { NS_DRAGDROP_ENTER, EventNameType_XUL }},
-    { &nsGkAtoms::ondragover,                    { NS_DRAGDROP_OVER_SYNTH, EventNameType_XUL }},
+    { &nsGkAtoms::ondragenter,                   { NS_DRAGDROP_ENTER, EventNameType_HTMLXUL }},
+    { &nsGkAtoms::ondragover,                    { NS_DRAGDROP_OVER_SYNTH, EventNameType_HTMLXUL }},
     { &nsGkAtoms::ondragexit,                    { NS_DRAGDROP_EXIT_SYNTH, EventNameType_XUL }},
-    { &nsGkAtoms::ondragdrop,                    { NS_DRAGDROP_DROP, EventNameType_XUL }},
+    { &nsGkAtoms::ondragdrop,                    { NS_DRAGDROP_DRAGDROP, EventNameType_XUL }},
     { &nsGkAtoms::ondraggesture,                 { NS_DRAGDROP_GESTURE, EventNameType_XUL }},
-    { &nsGkAtoms::ondrag,                        { NS_DRAGDROP_DRAG, EventNameType_XUL }},
-    { &nsGkAtoms::ondragend,                     { NS_DRAGDROP_END, EventNameType_XUL }},
+    { &nsGkAtoms::ondrag,                        { NS_DRAGDROP_DRAG, EventNameType_HTMLXUL }},
+    { &nsGkAtoms::ondragend,                     { NS_DRAGDROP_END, EventNameType_HTMLXUL }},
+    { &nsGkAtoms::ondragstart,                   { NS_DRAGDROP_START, EventNameType_HTMLXUL }},
+    { &nsGkAtoms::ondragleave,                   { NS_DRAGDROP_LEAVE_SYNTH, EventNameType_HTMLXUL }},
+    { &nsGkAtoms::ondrop,                        { NS_DRAGDROP_DROP, EventNameType_HTMLXUL }},
     { &nsGkAtoms::onoverflow,                    { NS_SCROLLPORT_OVERFLOW, EventNameType_XUL }},
     { &nsGkAtoms::onunderflow,                   { NS_SCROLLPORT_UNDERFLOW, EventNameType_XUL }}
 #ifdef MOZ_SVG
@@ -804,41 +808,17 @@ nsContentUtils::GetOfflineAppManifest(nsIDOMWindow *aWindow, nsIURI **aURI)
 PRBool
 nsContentUtils::OfflineAppAllowed(nsIURI *aURI)
 {
-  nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
-  if (!innerURI)
-    return PR_FALSE;
+  return NS_OfflineAppAllowed(aURI, sPrefBranch);
+}
 
-  // only http and https applications can use offline APIs.
-  PRBool match;
-  nsresult rv = innerURI->SchemeIs("http", &match);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+/* static */
+PRBool
+nsContentUtils::OfflineAppAllowed(nsIPrincipal *aPrincipal)
+{
+  nsCOMPtr<nsIURI> codebaseURI;
+  aPrincipal->GetURI(getter_AddRefs(codebaseURI));
 
-  if (!match) {
-    rv = innerURI->SchemeIs("https", &match);
-    NS_ENSURE_SUCCESS(rv, PR_FALSE);
-    if (!match) {
-      return PR_FALSE;
-    }
-  }
-
-  nsCOMPtr<nsIPermissionManager> permissionManager =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  if (!permissionManager) {
-    return PR_FALSE;
-  }
-
-  PRUint32 perm;
-  permissionManager->TestExactPermission(innerURI, "offline-app", &perm);
-
-  if (perm == nsIPermissionManager::UNKNOWN_ACTION) {
-    return GetBoolPref("offline-apps.allow_by_default");
-  }
-
-  if (perm == nsIPermissionManager::DENY_ACTION) {
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
+  return OfflineAppAllowed(codebaseURI);
 }
 
 // static
@@ -4305,6 +4285,18 @@ nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
       pm->HidePopupsInDocShell(docShellToHide);
   }
 #endif
+}
+
+/* static */
+already_AddRefed<nsIDragSession>
+nsContentUtils::GetDragSession()
+{
+  nsIDragSession* dragSession = nsnull;
+  nsCOMPtr<nsIDragService> dragService =
+    do_GetService("@mozilla.org/widget/dragservice;1");
+  if (dragService)
+    dragService->GetCurrentSession(&dragSession);
+  return dragSession;
 }
 
 /* static */

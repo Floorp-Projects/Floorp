@@ -240,7 +240,7 @@ js_GetDependentStringChars(JSString *str);
 extern const jschar *
 js_GetStringChars(JSContext *cx, JSString *str);
 
-extern JSString *
+extern JSString * JS_FASTCALL
 js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
 
 extern const jschar *
@@ -411,6 +411,13 @@ js_InitDeflatedStringCache(JSRuntime *rt);
 extern JSString *
 js_GetUnitString(JSContext *cx, JSString *str, size_t index);
 
+/*
+ * Get the independent string containing only the character code c, which must
+ * be less than UNIT_STRING_LIMIT.
+ */
+extern JSString *
+js_GetUnitStringForChar(JSContext *cx, jschar c);
+
 extern void
 js_FinishUnitStrings(JSRuntime *rt);
 
@@ -495,18 +502,20 @@ js_ValueToSource(JSContext *cx, jsval v);
 extern uint32
 js_HashString(JSString *str);
 
+#ifdef __cplusplus
 /*
  * Test if strings are equal. The caller can call the function even if str1
  * or str2 are not GC-allocated things.
  */
-extern JSBool
+extern bool JS_FASTCALL
 js_EqualStrings(JSString *str1, JSString *str2);
+#endif
 
 /*
  * Return less than, equal to, or greater than zero depending on whether
  * str1 is less than, equal to, or greater than str2.
  */
-extern intN
+extern jsint JS_FASTCALL
 js_CompareStrings(JSString *str1, JSString *str2);
 
 /*
@@ -599,9 +608,26 @@ js_GetStringBytes(JSContext *cx, JSString *str);
 extern void
 js_PurgeDeflatedStringCache(JSRuntime *rt, JSString *str);
 
-JSBool
+/* Export a few natives and a helper to other files in SpiderMonkey. */
+extern JSBool
 js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval);
+
+extern JSBool
+js_StringMatchHelper(JSContext *cx, uintN argc, jsval *vp, jsbytecode *pc);
+
+extern JSBool
+js_str_match(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_str_replace(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
+                       JSString *repstr, jsval *vp);
+
+extern JSBool
+js_str_split(JSContext *cx, uintN argc, jsval *vp);
 
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at

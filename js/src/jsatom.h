@@ -98,6 +98,7 @@ struct JSAtomListElement {
 #define ALE_SET_ATOM(ale,atom)  ((ale)->entry.key = (const void *)(atom))
 #define ALE_SET_INDEX(ale,index)((ale)->entry.value = JS_UINT32_TO_PTR(index))
 #define ALE_SET_JSOP(ale,op)    ((ale)->entry.value = JS_UINT32_TO_PTR(op))
+#define ALE_SET_VALUE(ale, v)   ((ale)->entry.value = (void *)(v))
 
 struct JSAtomList {
     JSHashEntry         *list;          /* literals indexed for mapping */

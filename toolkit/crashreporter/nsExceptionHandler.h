@@ -62,6 +62,9 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
 #ifdef XP_WIN32
   nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo);
 #endif
+#ifdef XP_MACOSX
+  nsresult AppendObjCExceptionInfoToAppNotes(void *inException);
+#endif
 }
 
 #endif /* nsExceptionHandler_h__ */

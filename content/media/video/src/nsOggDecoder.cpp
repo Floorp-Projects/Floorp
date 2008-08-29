@@ -506,6 +506,7 @@ void nsOggDecoder::Stop()
   }
   if (mPresentationThread) {
     if (!mFirstFrameLoaded) {
+      nsAutoLock lock(mFirstFrameLock);
       mFirstFrameLoaded = PR_TRUE;
       PR_NotifyAllCondVar(mFirstFrameCondVar);
     }

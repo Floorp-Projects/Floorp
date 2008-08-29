@@ -275,8 +275,11 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
+NS_IMETHODIMP
+nsHTMLButtonAccessible::GetName(nsAString& aName)
 {
+  aName.Truncate();
+
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!content) {
     return NS_ERROR_FAILURE; // Node shut down
@@ -398,8 +401,11 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetName(nsAString& aName)
+NS_IMETHODIMP
+nsHTMLTextFieldAccessible::GetName(nsAString& aName)
 {
+  aName.Truncate();
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
   if (!content) {
     return NS_ERROR_FAILURE;
@@ -606,12 +612,14 @@ nsIContent* nsHTMLGroupboxAccessible::GetLegend()
   return nsnull;
 }
 
-NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& aName)
+NS_IMETHODIMP
+nsHTMLGroupboxAccessible::GetName(nsAString& aName)
 {
+  aName.Truncate();
+
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;
   }
-  aName.Truncate();
   if (mRoleMapEntry) {
     nsAccessible::GetName(aName);
     if (!aName.IsEmpty()) {

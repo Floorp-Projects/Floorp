@@ -297,7 +297,7 @@ nsSVGGlyphFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
+nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
@@ -362,17 +362,15 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGGlyphFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
+NS_IMETHODIMP_(nsIFrame*)
+nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
 #ifdef DEBUG
   //printf("nsSVGGlyphFrame(%p)::GetFrameForPoint\n", this);
 #endif
-  // test for hit:
-  *hit = nsnull;
 
-  if (!mRect.Contains(nscoord(x), nscoord(y)))
-    return NS_OK;
+  if (!mRect.Contains(aPoint))
+    return nsnull;
 
   PRBool events = PR_FALSE;
   switch (GetStyleSVG()->mPointerEvents) {
@@ -405,14 +403,10 @@ nsSVGGlyphFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
       break;
   }
 
-  if (!events)
-    return NS_OK;
+  if (events && ContainsPoint(aPoint))
+    return this;
 
-  PRBool isHit = ContainsPoint(x, y);
-  if (isHit) 
-    *hit = this;
-  
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP_(nsRect)
@@ -448,7 +442,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
     extent = gfxRect(0, 0, 0, 0);
   }
 
-  mRect = nsSVGUtils::ToBoundingPixelRect(extent);
+  mRect = nsSVGUtils::ToAppPixelRect(PresContext(), extent);
   return NS_OK;
 }
 
@@ -1149,7 +1143,7 @@ nsSVGGlyphFrame::NotifyGlyphMetricsChange()
 }
 
 PRBool
-nsSVGGlyphFrame::ContainsPoint(float x, float y)
+nsSVGGlyphFrame::ContainsPoint(const nsPoint &aPoint)
 {
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
   SetupGlobalTransform(tmpCtx);
@@ -1165,7 +1159,8 @@ nsSVGGlyphFrame::ContainsPoint(float x, float y)
   }
 
   tmpCtx->IdentityMatrix();
-  return tmpCtx->PointInFill(gfxPoint(x, y));
+  return tmpCtx->PointInFill(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
+                                      PresContext()->AppUnitsToGfxUnits(aPoint.y)));
 }
 
 PRBool

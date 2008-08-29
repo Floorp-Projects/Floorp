@@ -758,9 +758,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     JSContext *cx = mCycleCollectionContext->GetJSContext();
 
     uint32 traceKind = js_GetGCThingTraceKind(p);
-    NS_ASSERTION(traceKind != JSTRACE_NAMESPACE &&
-                 traceKind != JSTRACE_QNAME,
-                 "Somebody holds one of these objects directly?");
 
     CCNodeType type;
 
@@ -888,19 +885,16 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     }
     else
     {
-        static const char trace_types[JSTRACE_LIMIT][10] = {
+        static const char trace_types[JSTRACE_LIMIT][7] = {
             "Object",
             "Double",
             "String",
-            "Namespace",
-            "Qname",
             "Xml"
         };
         JS_snprintf(name, sizeof(name), "JS %s", trace_types[traceKind]);
     }
 
-    if(traceKind == JSTRACE_OBJECT || traceKind == JSTRACE_NAMESPACE ||
-       traceKind == JSTRACE_QNAME || traceKind == JSTRACE_XML) {
+    if(traceKind == JSTRACE_OBJECT) {
         JSObject *global = static_cast<JSObject*>(p), *parent;
         while((parent = JS_GetParent(cx, global)))
             global = parent;
@@ -2172,7 +2166,6 @@ nsXPConnect::DebugDumpJSStack(PRBool showArgs,
                               PRBool showLocals,
                               PRBool showThisProps)
 {
-#ifdef DEBUG
     JSContext* cx;
     nsresult rv;
     nsCOMPtr<nsIThreadJSContextStack> stack = 
@@ -2185,7 +2178,7 @@ nsXPConnect::DebugDumpJSStack(PRBool showArgs,
         printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
         xpc_DumpJSStack(cx, showArgs, showLocals, showThisProps);
-#endif
+
     return NS_OK;
 }
 
@@ -2193,7 +2186,6 @@ nsXPConnect::DebugDumpJSStack(PRBool showArgs,
 NS_IMETHODIMP
 nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSourceText)
 {
-#ifdef DEBUG
     JSContext* cx;
     nsresult rv;
     nsCOMPtr<nsIThreadJSContextStack> stack = 
@@ -2206,7 +2198,7 @@ nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSou
         printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
         xpc_DumpEvalInJSStackFrame(cx, aFrameNumber, aSourceText);
-#endif
+
     return NS_OK;
 }
 
@@ -2326,10 +2318,9 @@ nsXPConnect::SetReportAllJSExceptions(PRBool newval)
     return NS_OK;
 }
 
-#ifdef DEBUG
 /* These are here to be callable from a debugger */
 JS_BEGIN_EXTERN_C
-void DumpJSStack()
+JS_EXPORT_API(void) DumpJSStack()
 {
     nsresult rv;
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
@@ -2339,7 +2330,7 @@ void DumpJSStack()
         printf("failed to get XPConnect service!\n");
 }
 
-void DumpJSEval(PRUint32 frameno, const char* text)
+JS_EXPORT_API(void) DumpJSEval(PRUint32 frameno, const char* text)
 {
     nsresult rv;
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
@@ -2349,12 +2340,12 @@ void DumpJSEval(PRUint32 frameno, const char* text)
         printf("failed to get XPConnect service!\n");
 }
 
-void DumpJSObject(JSObject* obj)
+JS_EXPORT_API(void) DumpJSObject(JSObject* obj)
 {
     xpc_DumpJSObject(obj);
 }
 
-void DumpJSValue(jsval val)
+JS_EXPORT_API(void) DumpJSValue(jsval val)
 {
     printf("Dumping 0x%lx. Value tag is %lu.\n", val, JSVAL_TAG(val));
     if(JSVAL_IS_NULL(val)) {
@@ -2390,4 +2381,4 @@ void DumpJSValue(jsval val)
     }
 }
 JS_END_EXTERN_C
-#endif
+

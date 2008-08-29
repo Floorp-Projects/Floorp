@@ -114,7 +114,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
 CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
-CPPSRCS += gfxQtFonts.cpp
+CPPSRCS +=	gfxFT2Fonts.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 #CSRCS = cairo-xlib-utils.c

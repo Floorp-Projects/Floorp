@@ -105,7 +105,7 @@ nsURLFormatterService.prototype = {
     }
 
     if (!PS.prefHasUserValue(aPref) &&
-        /^chrome:\/\/.+\/locale\/.+\.properties$/.test(format)) {
+        /^(data:text\/plain,.+=.+|chrome:\/\/.+\/locale\/.+\.properties)$/.test(format)) {
       // This looks as if it might be a localised preference
       try {
         format = PS.getComplexValue(aPref, Ci.nsIPrefLocalizedString).data;

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 sts=4
+ * vim: sw=4 ts=4 sts=4 expandtab
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -87,7 +87,11 @@ protected:
  ** mozStorageStatement
  **/
 
-NS_IMPL_ISUPPORTS2(mozStorageStatement, mozIStorageStatement, mozIStorageValueArray)
+NS_IMPL_THREADSAFE_ISUPPORTS2(
+    mozStorageStatement
+,   mozIStorageStatement
+,   mozIStorageValueArray
+)
 
 mozStorageStatement::mozStorageStatement()
     : mDBConnection (nsnull), mDBStatement(nsnull), mColumnNames(nsnull), mExecuting(PR_FALSE)

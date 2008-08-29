@@ -190,7 +190,7 @@ NowCalibrate()
         } else {
             calibration.freq = (long double) liFreq.QuadPart;
         }
-    } 
+    }
     if (calibration.freq > 0.0) {
         JSInt64 calibrationDelta = 0;
 
@@ -293,7 +293,7 @@ def PRMJ_Now():
 
           // Only recalibrate if someone didn't already
           if cachedOffset == calibration.offset:
-            // Have all waiting threads immediately wait 
+            // Have all waiting threads immediately wait
             set data mutex spin count = 0
             PRMJ_NowCalibrate()
             calibrated = 1
@@ -464,7 +464,7 @@ PRMJ_Now(void)
                        we don't disable it entirely. */
                     returnedTime = (JSInt64)lowresTime;
                     needsCalibration = JS_FALSE;
-                } else { 
+                } else {
                     /* It is possible that when we recalibrate, we will return a
                        value less than what we have returned before; this is
                        unavoidable. We cannot tell the different between a
@@ -561,9 +561,9 @@ PRMJ_DSTOffset(JSInt64 local_time)
 #ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
 JS_STATIC_DLL_CALLBACK(void)
 PRMJ_InvalidParameterHandler(const wchar_t *expression,
-                             const wchar_t *function, 
-                             const wchar_t *file, 
-                             unsigned int   line, 
+                             const wchar_t *function,
+                             const wchar_t *file,
+                             unsigned int   line,
                              uintptr_t      pReserved)
 {
     /* empty */
@@ -605,7 +605,7 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     a.tm_mon = prtm->tm_mon;
     a.tm_wday = prtm->tm_wday;
 
-    /* 
+    /*
      * Years before 1900 and after 9999 cause strftime() to abort on Windows.
      * To avoid that we replace it with FAKE_YEAR_BASE + year % 100 and then
      * replace matching substrings in the strftime() result with the real year.

@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2
+ * vim: sw=2 ts=2 sts=2 expandtab
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,7 +16,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation. 
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
@@ -37,16 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAutoLock.h"
-#include "nsIFile.h"
 #include "nsIThreadPool.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsServiceManagerUtils.h"
 
 #include "mozStorageCID.h"
-#include "mozIStorageService.h"
-#include "mozStorageConnection.h"
 #include "mozStorageBackground.h"
 
 namespace {

@@ -143,6 +143,9 @@
 #include "nsINestedURI.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsINSSErrorsService.h"
+#include "nsIApplicationCache.h"
+#include "nsIApplicationCacheContainer.h"
+#include "nsIPermissionManager.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -457,6 +460,22 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
              NS_SUCCEEDED(EnsureContentViewer())) {
         mContentViewer->GetDOMDocument((nsIDOMDocument **) aSink);
         return *aSink ? NS_OK : NS_NOINTERFACE;
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIApplicationCacheContainer)) &&
+             NS_SUCCEEDED(EnsureContentViewer())) {
+        *aSink = nsnull;
+
+        // Return the toplevel document as an
+        // nsIApplicationCacheContainer.
+
+        nsCOMPtr<nsIDocShellTreeItem> rootItem;
+        GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
+        nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(rootItem);
+        NS_ASSERTION(domDoc, "Should have a document.");
+        if (!domDoc)
+            return NS_ERROR_NO_INTERFACE;
+
+        return domDoc->QueryInterface(aIID, aSink);
     }
     else if (aIID.Equals(NS_GET_IID(nsIPrompt)) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
@@ -7275,6 +7294,15 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     if (aFirstParty) {
         // tag first party URL loads
         loadFlags |= nsIChannel::LOAD_INITIAL_DOCUMENT_URI;
+
+        // Toplevel document loads in domains with the offline-app
+        // permission should check for an associated application
+        // cache.
+        nsCOMPtr<nsIDocShellTreeItem> root;
+        GetSameTypeRootTreeItem(getter_AddRefs(root));
+        if (root == this && NS_OfflineAppAllowed(aURI)) {
+            loadFlags |= nsICachingChannel::LOAD_CHECK_OFFLINE_CACHE;
+        }
     }
 
     if (mLoadType == LOAD_ERROR_PAGE) {
@@ -7448,7 +7476,17 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     nsCOMPtr<nsIPrincipal> ownerPrincipal(do_QueryInterface(aOwner));
     if (URIIsLocalFile(aURI) && ownerPrincipal &&
         NS_SUCCEEDED(ownerPrincipal->CheckMayLoad(aURI, PR_FALSE))) {
-        channel->SetOwner(aOwner);
+        // One more check here.  CheckMayLoad will always return true for the
+        // system principal, but we do NOT want to inherit in that case.
+        PRBool isSystem;
+        nsCOMPtr<nsIScriptSecurityManager> secMan =
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+        if (secMan &&
+            NS_SUCCEEDED(secMan->IsSystemPrincipal(ownerPrincipal,
+                                                   &isSystem)) &&
+            !isSystem) {
+            channel->SetOwner(aOwner);
+        }
     }
 
     nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(channel);

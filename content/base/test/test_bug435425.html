@@ -35,7 +35,8 @@ function logEvent(evt) {
   }
   ok(i != currentEvents.length, "Extra or wrong event?");
   is(evt.type, currentEvents[i].type, "Wrong event!")
-  ok(evt.target instanceof currentEvents[i].target, "Wrong event target [" + evt.type + "]!");
+  ok(evt.target instanceof currentEvents[i].target,
+     "Wrong event target [" + evt.target + "," + evt.type + "]!");
   // If we handled non-optional event, remove all optional events before the 
   // handled event and then the non-optional event from the list.
   if (!currentEvents[i].optional) {

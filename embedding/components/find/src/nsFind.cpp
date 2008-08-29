@@ -73,7 +73,7 @@ static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
-#define CH_SHY ((char) 173)
+#define CH_SHY ((PRUnichar) 0xAD)
 
 // -----------------------------------------------------------------------
 // nsFindContentIterator is a special iterator that also goes through
