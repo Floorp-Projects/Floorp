@@ -1644,10 +1644,10 @@ TraceRecorder::trackCfgMerges(jsbytecode* pc)
 void
 TraceRecorder::fuseIf(jsbytecode* pc, bool cond, LIns* x)
 {
-    if (*pc == JSOP_IFEQ || *pc == JSOP_IFEQX) {
+    if (*pc == JSOP_IFEQ) {
         guard(cond, x, BRANCH_EXIT);
         trackCfgMerges(pc); 
-    } else if (*pc == JSOP_IFNE || *pc == JSOP_IFNEX) {
+    } else if (*pc == JSOP_IFNE) {
         guard(cond, x, BRANCH_EXIT);
     }
 }
