@@ -179,12 +179,6 @@ mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
     }
 #endif
 
-    // doing a sqlite3_prepare sets up the execution engine
-    // for that statement; doing a create_function after that
-    // results in badness, because there's a selected statement.
-    // use this hack to clear it out -- this may be a bug.
-    sqlite3_exec (db, "", 0, 0, 0);
-
     return NS_OK;
 }
 
