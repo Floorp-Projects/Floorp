@@ -1172,15 +1172,16 @@ DumpHelp()
 #endif
 #ifdef XP_UNIX
   printf("\t--g-fatal-warnings\t\tMake all warnings fatal\n"
-         "\nMozilla options\n");
+         "\n%s options\n", gAppData->name);
 #endif
 
   printf("\t-h or -help\t\tPrint this message.\n"
          "\t-v or -version\t\tPrint %s version.\n"
          "\t-P <profile>\t\tStart with <profile>.\n"
+         "\t-migration\t\tStart with migration wizard.\n"
          "\t-ProfileManager\t\tStart with ProfileManager.\n"
          "\t-no-remote\t\tOpen new instance, not a new window in running instance.\n"
-         "\t-UILocale <locale>\t\tStart with <locale> resources as UI Locale.\n"
+         "\t-UILocale <locale>\tStart with <locale> resources as UI Locale.\n"
          "\t-safe-mode\t\tDisables extensions and themes for this session.\n", gAppData->name);
 
 #if defined(XP_WIN) || defined(XP_OS2)
