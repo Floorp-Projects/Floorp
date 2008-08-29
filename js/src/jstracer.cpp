@@ -97,7 +97,7 @@ static struct {
         recorderStarted, recorderAborted, traceCompleted, sideExitIntoInterpreter,
         typeMapMismatchAtEntry, returnToDifferentLoopHeader, traceTriggered,
         globalShapeMismatchAtEntry, treesTrashed, slotPromoted,
-        unstableLoopVariable;
+        unstableLoopVariable, breakLoopExits;
 } stat = { 0LL, };
 #define AUDIT(x) (stat.x++)
 #else
@@ -1526,6 +1526,7 @@ TraceRecorder::compile(Fragmento* fragmento)
     fragmento->labels->add(fragment, sizeof(Fragment), 0, label);
     free(label);
 #endif
+    AUDIT(traceCompleted);
 }
 
 /* Complete and compile a trace and link it to the existing tree if appropriate. */
@@ -1976,7 +1977,6 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inl
                 js_FlushJITCache(cx);
             return false; /* done recording */
         }
-        AUDIT(traceCompleted);
         r->closeLoop(fragmento);
         js_DeleteRecorder(cx);
         return false; /* done recording */
@@ -2287,7 +2287,7 @@ js_MonitorRecording(JSContext* cx)
     if ((*pc == JSOP_GOTO) || (*pc == JSOP_GOTOX)) {
         jssrcnote* sn = js_GetSrcNote(cx->fp->script, pc);
         if ((sn != NULL) && (SN_TYPE(sn) == SRC_BREAK)) {
-            AUDIT(traceCompleted);
+            AUDIT(breakLoopExits);
             JS_TRACE_MONITOR(cx).recorder->endLoop(JS_TRACE_MONITOR(cx).fragmento);
             js_DeleteRecorder(cx);
             return false; /* done recording */
@@ -2376,11 +2376,11 @@ js_FinishJIT(JSTraceMonitor *tm)
 {
 #ifdef DEBUG
     printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
-           "trees trashed(%llu), slot promoted(%llu), "
-           "unstable loop variable(%llu)\n",
+           "trees trashed(%llu), slot promoted(%llu), unstable loop variable(%llu), "
+           "breaks: (%llu)\n",
            stat.recorderStarted, stat.recorderAborted,
            stat.traceCompleted, stat.returnToDifferentLoopHeader, stat.treesTrashed,
-           stat.slotPromoted, stat.unstableLoopVariable);
+           stat.slotPromoted, stat.unstableLoopVariable, stat.breakLoopExits);
     printf("monitor: triggered(%llu), exits(%llu), type mismatch(%llu), "
            "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
            stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
