@@ -2592,6 +2592,35 @@ TraceRecorder::ifop()
 }
 
 bool
+TraceRecorder::switchop()
+{
+    jsval& v = stackval(-1);
+    if (isNumber(v)) {
+        jsdouble d = asNumber(v);
+        jsdpun u;
+        u.d = d;
+        guard(true,
+              addName(lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)),
+                      "guard(switch on numeric)"),
+              BRANCH_EXIT);
+    } else if (JSVAL_IS_STRING(v)) {
+        LIns* args[] = { get(&v), INS_CONSTPTR(JSVAL_TO_STRING(v)) };
+        guard(true,
+              addName(lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args))),
+                      "guard(switch on string)"),
+              BRANCH_EXIT);
+    } else if (JSVAL_IS_BOOLEAN(v)) {
+        guard(true,
+              addName(lir->ins2(LIR_eq, get(&v), lir->insImm(JSVAL_TO_BOOLEAN(v))),
+                      "guard(switch on boolean)"),
+              BRANCH_EXIT);
+    } else {
+        ABORT_TRACE("switch on object, null, or undefined");
+    }
+    return true;
+}
+
+bool
 TraceRecorder::inc(jsval& v, jsint incr, bool pre)
 {
     LIns* v_ins = get(&v);
@@ -2672,13 +2701,15 @@ TraceRecorder::incElem(jsint incr, bool pre)
 }
 
 bool
-TraceRecorder::cmp(LOpcode op, bool negate)
+TraceRecorder::cmp(LOpcode op, int flags)
 {
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     LIns* x;
+    bool negate = !!(flags & CMP_NEGATE);
     bool cond;
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
+        JS_ASSERT(!negate);
         LIns* args[] = { get(&r), get(&l) };
         x = lir->ins1(LIR_i2f, lir->insCall(F_CompareStrings, args));
         x = lir->ins2i(op, x, 0);
@@ -2727,6 +2758,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
         lnum = js_ValueToNumber(cx, &tmp[0]);
 
         args[0] = get(&r);
+        args[1] = cx_ins;
         if (JSVAL_IS_STRING(r)) {
             r_ins = lir->insCall(F_StringToNumber, args);
         } else if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
@@ -2759,7 +2791,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
             cond = (lnum == rnum) ^ negate;
             break;
         }
-    } else if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r))  {
+    } else if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r)) {
         x = lir->ins2(op, lir->ins1(LIR_i2f, get(&l)), lir->ins1(LIR_i2f, get(&r)));
         if (negate)
             x = lir->ins_eq0(x);
@@ -2791,7 +2823,8 @@ TraceRecorder::cmp(LOpcode op, bool negate)
 
     /* The interpreter fuses comparisons and the following branch,
        so we have to do that here as well. */
-    fuseIf(cx->fp->regs->pc + 1, cond, x);
+    if (flags & CMP_TRY_BRANCH_AFTER_COND) 
+        fuseIf(cx->fp->regs->pc + 1, cond, x);
 
     /* We update the stack after the guard. This is safe since
        the guard bails out at the comparison and the interpreter
@@ -2800,6 +2833,61 @@ TraceRecorder::cmp(LOpcode op, bool negate)
        saved on the stack in most cases. */
     set(&l, x);
     return true;
+}
+
+// FIXME: we currently compare only like operand types; if for JSOP_EQ and
+// JSOP_NE we ever evolve to handle conversions then we must insist on like
+// "types" here (care required for 0 == -1, e.g.).
+bool
+TraceRecorder::equal(int flags)
+{
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+    bool negate = !!(flags & CMP_NEGATE);
+    if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
+        LIns* args[] = { get(&r), get(&l) };
+        bool cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r)) ^ negate;
+        LIns* x = lir->ins_eq0(lir->insCall(F_EqualStrings, args));
+        if (!negate)
+            x = lir->ins_eq0(x);
+
+        /* The interpreter fuses comparisons and the following branch,
+           so we have to do that here as well. */
+        if (CMP_TRY_BRANCH_AFTER_COND) {
+            if (cx->fp->regs->pc[1] == JSOP_IFEQ || cx->fp->regs->pc[1] == JSOP_IFNE)
+                guard(cond, x, BRANCH_EXIT);
+        }
+
+        /* We update the stack after the guard. This is safe since
+           the guard bails out at the comparison and the interpreter
+           will therefore re-execute the comparison. This way the
+           value of the condition doesn't have to be calculated and
+           saved on the stack in most cases. */
+        set(&l, x);
+        return true;
+    }
+    if (JSVAL_IS_OBJECT(l) && JSVAL_IS_OBJECT(r)) {
+        bool cond = (l == r) ^ negate;
+        LIns* x = lir->ins2(LIR_eq, get(&l), get(&r));
+        if (negate)
+            x = lir->ins_eq0(x);
+
+        /* The interpreter fuses comparisons and the following branch,
+           so we have to do that here as well. */
+        if (CMP_TRY_BRANCH_AFTER_COND) {
+            if (cx->fp->regs->pc[1] == JSOP_IFEQ || cx->fp->regs->pc[1] == JSOP_IFNE)
+                guard(cond, x, BRANCH_EXIT);
+        }
+
+        /* We update the stack after the guard. This is safe since
+           the guard bails out at the comparison and the interpreter
+           will therefore re-execute the comparison. This way the
+           value of the condition doesn't have to be calculated and
+           saved on the stack in most cases. */
+        set(&l, x);
+        return true;
+    }
+    return cmp(LIR_feq, flags);
 }
 
 bool
@@ -2831,21 +2919,24 @@ TraceRecorder::binary(LOpcode op)
     bool leftNumber = isNumber(l), rightNumber = isNumber(r);
     if ((op >= LIR_sub && op <= LIR_ush) ||  // sub, mul, (callh), or, xor, (not,) lsh, rsh, ush
         (op >= LIR_fsub && op <= LIR_fdiv)) { // fsub, fmul, fdiv
-        LIns* args[] = { NULL, cx_ins };
+        LIns* args[2];
         if (JSVAL_IS_STRING(l)) {
             args[0] = a;
+            args[1] = cx_ins;
             a = lir->insCall(F_StringToNumber, args);
             leftNumber = true;
         }
         if (JSVAL_IS_STRING(r)) {
             args[0] = b;
+            args[1] = cx_ins;
             b = lir->insCall(F_StringToNumber, args);
             rightNumber = true;
         }
     }
     if (leftNumber && rightNumber) {
         if (intop) {
-            a = lir->insCall(op == LIR_ush ? F_DoubleToUint32 : F_DoubleToInt32, &a);
+            LIns *args[] = { a };
+            a = lir->insCall(op == LIR_ush ? F_DoubleToUint32 : F_DoubleToInt32, args);
             b = f2i(b);
         }
         a = lir->ins2(op, a, b);
@@ -2972,7 +3063,9 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         }
     } else {
 #ifdef DEBUG
-        ptrdiff_t pcoff = (mode == JOF_VARPROP) ? SLOTNO_LEN : 0;
+        JSOp op = JSOp(*cx->fp->regs->pc);
+        ptrdiff_t pcoff = (op == JSOP_GETARGPROP) ? ARGNO_LEN :
+                          (op == JSOP_GETLOCALPROP) ? SLOTNO_LEN : 0;
         jsatomid index = js_GetIndexFromBytecode(cx, cx->fp->script, cx->fp->regs->pc, pcoff);
         JS_ASSERT(entry->kpc == (jsbytecode*) atoms[index]);
         JS_ASSERT(entry->kshape == jsuword(aobj));
@@ -3103,7 +3196,7 @@ TraceRecorder::native_get(LIns* obj_ins, LIns* pobj_ins, JSScopeProperty* sprop,
     if (sprop->slot != SPROP_INVALID_SLOT)
         v_ins = stobj_get_slot(pobj_ins, sprop->slot, dslots_ins);
     else
-        v_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        v_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
     return true;
 }
 
@@ -3146,7 +3239,8 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
                                                           INS_CONST(JSVAL_TAGMASK)),
                                                 JSVAL_DOUBLE))),
               MISMATCH_EXIT);
-        v_ins = lir->insCall(F_UnboxDouble, &v_ins);
+        LIns* args[] = { v_ins };
+        v_ins = lir->insCall(F_UnboxDouble, args);
         return true;
     }
     switch (JSVAL_TAG(v)) {
@@ -3269,7 +3363,7 @@ TraceRecorder::record_EnterFrame()
                         js_AtomToPrintableString(cx, cx->fp->fun->atom),
                         callDepth););
     JSStackFrame* fp = cx->fp;
-    LIns* void_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+    LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
 
     jsval* vp = &fp->argv[fp->argc];
     jsval* vpstop = vp + (fp->fun->nargs - fp->argc);
@@ -3313,7 +3407,7 @@ bool TraceRecorder::record_JSOP_INTERRUPT()
 bool
 TraceRecorder::record_JSOP_PUSH()
 {
-    stack(0, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
+    stack(0, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
     return true;
 }
 
@@ -3415,108 +3509,40 @@ TraceRecorder::record_JSOP_BITAND()
     return binary(LIR_and);
 }
 
-// See FIXME for JSOP_STRICTEQ before evolving JSOP_EQ to handle mixed types.
 bool
 TraceRecorder::record_JSOP_EQ()
 {
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
-        LIns* args[] = { get(&r), get(&l) };
-        bool cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
-        LIns* x = lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args)));
-        /* The interpreter fuses comparisons and the following branch,
-           so we have to do that here as well. */
-        fuseIf(cx->fp->regs->pc + 1, cond, x);
-
-        /* We update the stack after the guard. This is safe since
-           the guard bails out at the comparison and the interpreter
-           will therefore re-execute the comparison. This way the
-           value of the condition doesn't have to be calculated and
-           saved on the stack in most cases. */
-        set(&l, x);
-        return true;
-    }
-    if (JSVAL_IS_OBJECT(l) && JSVAL_IS_OBJECT(r)) {
-        bool cond = (l == r);
-        LIns* x = lir->ins2(LIR_eq, get(&l), get(&r));
-        /* The interpreter fuses comparisons and the following branch,
-           so we have to do that here as well. */
-        fuseIf(cx->fp->regs->pc + 1, cond, x);
-
-        /* We update the stack after the guard. This is safe since
-           the guard bails out at the comparison and the interpreter
-           will therefore re-execute the comparison. This way the
-           value of the condition doesn't have to be calculated and
-           saved on the stack in most cases. */
-        set(&l, x);
-        return true;
-    }
-    return cmp(LIR_feq);
+    return equal(CMP_TRY_BRANCH_AFTER_COND);
 }
 
-// See FIXME for JSOP_STRICTNE before evolving JSOP_NE to handle mixed types.
 bool
 TraceRecorder::record_JSOP_NE()
 {
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
-        LIns* args[] = { get(&r), get(&l) };
-        bool cond = !js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
-        LIns* x = lir->ins_eq0(lir->insCall(F_EqualStrings, args));
-        /* The interpreter fuses comparisons and the following branch,
-           so we have to do that here as well. */
-        fuseIf(cx->fp->regs->pc + 1, cond, x);
-
-        /* We update the stack after the guard. This is safe since
-           the guard bails out at the comparison and the interpreter
-           will therefore re-execute the comparison. This way the
-           value of the condition doesn't have to be calculated and
-           saved on the stack in most cases. */
-        set(&l, x);
-        return true;
-    }
-    if (JSVAL_IS_OBJECT(l) && JSVAL_IS_OBJECT(r)) {
-        bool cond = (l != r);
-        LIns* x = lir->ins_eq0(lir->ins2(LIR_eq, get(&l), get(&r)));
-        /* The interpreter fuses comparisons and the following branch,
-           so we have to do that here as well. */
-        fuseIf(cx->fp->regs->pc + 1, cond, x);
-
-        /* We update the stack after the guard. This is safe since
-           the guard bails out at the comparison and the interpreter
-           will therefore re-execute the comparison. This way the
-           value of the condition doesn't have to be calculated and
-           saved on the stack in most cases. */
-        set(&l, x);
-        return true;
-    }
-    return cmp(LIR_feq, true);
+    return equal(CMP_NEGATE | CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
 TraceRecorder::record_JSOP_LT()
 {
-    return cmp(LIR_flt);
+    return cmp(LIR_flt, CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
 TraceRecorder::record_JSOP_LE()
 {
-    return cmp(LIR_fle);
+    return cmp(LIR_fle, CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
 TraceRecorder::record_JSOP_GT()
 {
-    return cmp(LIR_fgt);
+    return cmp(LIR_fgt, CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
 TraceRecorder::record_JSOP_GE()
 {
-    return cmp(LIR_fge);
+    return cmp(LIR_fge, CMP_TRY_BRANCH_AFTER_COND);
 }
 
 bool
@@ -3863,7 +3889,7 @@ TraceRecorder::record_JSOP_TYPEOF()
 bool
 TraceRecorder::record_JSOP_VOID()
 {
-    stack(-1, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
+    stack(-1, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID)));
     return true;
 }
 
@@ -4030,6 +4056,12 @@ TraceRecorder::record_JSOP_GETELEM()
     jsval& l = stackval(-2);
 
     if (JSVAL_IS_STRING(l) && JSVAL_IS_INT(r)) {
+        int i;
+
+        i = JSVAL_TO_INT(r);
+        if ((size_t)i >= JSSTRING_LENGTH(JSVAL_TO_STRING(l)))
+            ABORT_TRACE("Invalid string index in JSOP_GETELEM");
+
         LIns* args[] = { f2i(get(&r)), get(&l), cx_ins };
         LIns* unitstr_ins = lir->insCall(F_String_getelem, args);
         guard(false, lir->ins_eq0(unitstr_ins), MISMATCH_EXIT);
@@ -4196,7 +4228,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
                    callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callee));
     lir->insStorei(lir->insImmPtr(fi.callpc), lirbuf->rp,
                    callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callpc));
-    lir->insStorei(lir->insImm(fi.word), lirbuf->rp,
+    lir->insStorei(INS_CONST(fi.word), lirbuf->rp,
                    callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, word));
 
     atoms = fun->u.i.script->atomMap.vector;
@@ -4494,7 +4526,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
     /* Check for non-existent property reference, which results in undefined. */
     const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
     if (PCVAL_IS_NULL(pcval)) {
-        v_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        v_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
         JS_ASSERT(cs.ndefs == 1);
         stack(-cs.nuses, v_ins);
         slot = SPROP_INVALID_SLOT;
@@ -4715,54 +4747,25 @@ TraceRecorder::record_JSOP_AND()
 bool
 TraceRecorder::record_JSOP_TABLESWITCH()
 {
-    return false;
+    return switchop();
 }
 
 bool
 TraceRecorder::record_JSOP_LOOKUPSWITCH()
 {
-    jsval& v = stackval(-1);
-    if (isNumber(v)) {
-        jsdouble d = asNumber(v);
-        jsdpun u;
-        u.d = d;
-        guard(true,
-              addName(lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)),
-                      "guard(lookupswitch numeric)"),
-              BRANCH_EXIT);
-    } else if (JSVAL_IS_STRING(v)) {
-        LIns* args[] = { get(&v), INS_CONSTPTR(JSVAL_TO_STRING(v)) };
-        guard(true,
-              addName(lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args))),
-                      "guard(lookupswitch string)"),
-              BRANCH_EXIT);
-    } else if (JSVAL_IS_BOOLEAN(v)) {
-        guard(true,
-              addName(lir->ins2(LIR_eq, get(&v), lir->insImm(JSVAL_TO_BOOLEAN(v))),
-                      "guard(lookupswitch boolean)"),
-              BRANCH_EXIT);
-    } else {
-        ABORT_TRACE("lookupswitch on object, null, or undefined");
-    }
-    return true;
+    return switchop();
 }
 
 bool
 TraceRecorder::record_JSOP_STRICTEQ()
 {
-    // FIXME: JSOP_EQ currently compares only like operand types; if it evolves
-    // to handle conversions we must insist on like "types" here (care required
-    // for 0 == -1, e.g.).
-    return record_JSOP_EQ();
+    return equal();
 }
 
 bool
 TraceRecorder::record_JSOP_STRICTNE()
 {
-    // FIXME: JSOP_NE currently compares only like operand types; if it evolves
-    // to handle conversions we must insist on like "types" here (care required
-    // for 0 == -1, e.g.).
-    return record_JSOP_NE();
+    return equal(CMP_NEGATE);
 }
 
 bool
@@ -5090,10 +5093,13 @@ TraceRecorder::record_JSOP_IN()
         ABORT_TRACE("JSOP_IN on E4X QName left operand");
 
     jsid id;
-    if (JSVAL_IS_INT(lval))
+    if (JSVAL_IS_INT(lval)) {
         id = INT_JSVAL_TO_JSID(lval);
-    else if (!JSVAL_IS_STRING(lval))
-        ABORT_TRACE("non-string left operand to JSOP_IN");
+    } else {
+        if (!JSVAL_IS_STRING(lval))
+            ABORT_TRACE("non-string left operand to JSOP_IN");
+        id = ATOM_TO_JSID(lval);
+    }
 
     // Expect what we see at trace recording time (hit or miss) to be the same
     // when executing the trace. Use a builtin helper for named properties, as
@@ -5200,13 +5206,13 @@ TraceRecorder::record_JSOP_CONDSWITCH()
 bool
 TraceRecorder::record_JSOP_CASE()
 {
-    return false;
+    return equal() && ifop();
 }
 
 bool
 TraceRecorder::record_JSOP_DEFAULT()
 {
-    return false;
+    return true;
 }
 
 bool
@@ -5383,25 +5389,25 @@ TraceRecorder::record_JSOP_GOSUBX()
 bool
 TraceRecorder::record_JSOP_CASEX()
 {
-    return record_JSOP_CASE();
+    return equal() && ifop();
 }
 
 bool
 TraceRecorder::record_JSOP_DEFAULTX()
 {
-    return record_JSOP_DEFAULT();
+    return true;
 }
 
 bool
 TraceRecorder::record_JSOP_TABLESWITCHX()
 {
-    return record_JSOP_TABLESWITCH();
+    return switchop();
 }
 
 bool
 TraceRecorder::record_JSOP_LOOKUPSWITCHX()
 {
-    return record_JSOP_LOOKUPSWITCH();
+    return switchop();
 }
 
 bool
@@ -5799,7 +5805,7 @@ TraceRecorder::record_JSOP_STOP()
         JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
         rval_ins = get(&fp->argv[-1]);
     } else {
-        rval_ins = lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_VOID));
+        rval_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
     }
     clearFrameSlotsFromCache();
     return true;
@@ -6033,7 +6039,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
 bool
 TraceRecorder::record_JSOP_HOLE()
 {
-    stack(0, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_HOLE)));
+    stack(0, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_HOLE)));
     return true;
 }
 
