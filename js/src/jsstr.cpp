@@ -1239,8 +1239,7 @@ match_or_replace(JSContext *cx,
              * Assume a full array result is required, then prove otherwise.
              */
             test = JS_FALSE;
-            if (data->pc) {
-                JS_ASSERT(*data->pc == JSOP_CALL || *data->pc == JSOP_NEW);
+            if (data->pc && (*data->pc == JSOP_CALL || *data->pc == JSOP_NEW)) {
                 JS_ASSERT(js_CodeSpec[*data->pc].length == 3);
                 switch (data->pc[3]) {
                   case JSOP_POP:
