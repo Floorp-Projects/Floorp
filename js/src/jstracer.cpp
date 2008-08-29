@@ -235,7 +235,7 @@ static inline bool isInt32(jsval v)
 
 static inline uint8 getCoercedType(jsval v)
 {
-    return isInt32(v) ? JSVAL_INT : JSVAL_TAG(v);
+    return isInt32(v) ? JSVAL_INT : (uint8) JSVAL_TAG(v);
 }
 
 /* Tell the oracle that a certain global variable should not be demoted. */
@@ -1714,6 +1714,10 @@ nanojit::Fragment::onDestroy()
 void
 js_DeleteRecorder(JSContext* cx)
 {
+    /* Aborting and completing a trace end up here. */
+    JS_ASSERT(cx->executingTrace);
+    cx->executingTrace = false;
+
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     delete tm->recorder;
     tm->recorder = NULL;
@@ -1724,9 +1728,19 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, TreeInfo* ti,
         unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap, 
         GuardRecord* expectedInnerExit)
 {
+    /*
+     * Emulate on-trace semantics and avoid rooting headaches while recording,
+     * by suppressing last-ditch GC attempts while recording a trace. This does
+     * means that trace recording must not nest or the following assertion will
+     * botch.
+     */
+    JS_ASSERT(!cx->executingTrace);
+    cx->executingTrace = true;
+
     /* start recording if no exception during construction */
     JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
-            ngslots, globalTypeMap, stackTypeMap, expectedInnerExit);
+                                                            ngslots, globalTypeMap, stackTypeMap,
+                                                            expectedInnerExit);
     if (cx->throwing) {
         js_AbortRecording(cx, NULL, "setting up recorder failed");
         return false;
@@ -2000,7 +2014,8 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inl
         case LOOP_EXIT:
             /* If the inner tree exited on an unknown loop exit, grow the tree around it. */
             if (innermostNestedGuard) {
-                js_AbortRecording(cx, oldpc, "Inner tree took different side exit, abort recording");
+                js_AbortRecording(cx, oldpc,
+                                  "Inner tree took different side exit, abort recording");
                 return js_AttemptToExtendTree(cx, innermostNestedGuard, lr);
             }
             /* emit a call to the inner tree and continue recording the outer tree trace */
@@ -2109,14 +2124,22 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     uint64 start = rdtsc();
 #endif
 
-    JS_ASSERT(!cx->runningJittedCode);
-    cx->runningJittedCode = JS_TRUE;
+    /*
+     * We may be called from js_MonitorLoopEdge while not recording, or while
+     * recording. Rather than over-generalize by using a counter instead of a
+     * flag, we simply sample and update cx->executingTrace if necessary.
+     */
+    bool executingTrace = cx->executingTrace;
+    if (!executingTrace)
+        cx->executingTrace = true;
     GuardRecord* lr = u.func(&state, NULL);
-    cx->runningJittedCode = JS_FALSE;
+    if (!executingTrace)
+        cx->executingTrace = false;
 
     /* If we bail out on a nested exit, the compiled code returns the outermost nesting
        guard but what we are really interested in is the innermost guard that we hit
        instead of the guard we were expecting there. */
+    int slots;
     if (lr->exit->exitType == NESTED_EXIT) {
         /* Unwind all frames held by nested outer trees (since the innermost tree's frame which
            we restore below doesn't contain such frames. */
@@ -2132,9 +2155,11 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
                     js_SynthesizeFrame(cx, callstack[i]);
                 /* Restore the native stack excluding the current frame, which the next tree
                    call guard or the innermost tree exit guard will restore. */
-                unsigned slots = FlushNativeStackFrame(cx, calldepth,
-                        lr->exit->typeMap + lr->exit->numGlobalSlots,
-                        stack, &cx->fp->argv[-2]);
+                slots = FlushNativeStackFrame(cx, calldepth,
+                                              lr->exit->typeMap + lr->exit->numGlobalSlots,
+                                              stack, &cx->fp->argv[-2]);
+                if (slots < 0)
+                    return NULL;
                 callstack += calldepth;
                 inlineCallCount += calldepth;
                 stack += slots;
@@ -2200,13 +2225,16 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     JS_ASSERT(exit_gslots == tm->globalTypeMap->length());
 
     /* write back interned globals */
-    FlushNativeGlobalFrame(cx, exit_gslots, gslots, globalTypeMap, global);
+    slots = FlushNativeGlobalFrame(cx, exit_gslots, gslots, globalTypeMap, global);
+    if (slots < 0)
+        return NULL;
     JS_ASSERT(globalFrameSize == STOBJ_NSLOTS(globalObj));
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
 
     /* write back native stack frame */
-    debug_only(unsigned slots =)
-    FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack, NULL);
+    slots = FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack, NULL);
+    if (slots < 0)
+        return NULL;
     JS_ASSERT(slots == e->numStackSlots);
 
     AUDIT(sideExitIntoInterpreter);
