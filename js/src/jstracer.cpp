@@ -4930,6 +4930,8 @@ TraceRecorder::record_JSOP_ITER()
 bool
 TraceRecorder::forInLoop(jsval* vp)
 {
+    if (!JSVAL_IS_STRING(*vp))
+        ABORT_TRACE("for-in loop variable changed type from string");
     jsval& iterobj_val = stackval(-1);
     if (!JSVAL_IS_PRIMITIVE(iterobj_val)) {
         LIns* args[] = { get(&iterobj_val), cx_ins };
