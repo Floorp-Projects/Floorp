@@ -674,7 +674,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     this->lirbuf = _fragment->lirbuf;
     this->treeInfo = ti;
     this->callDepth = _fragment->calldepth;
-    this->loopEdgeCount = 0;
     JS_ASSERT(!_anchor || _anchor->calldepth == _fragment->calldepth);
     this->atoms = cx->fp->script->atomMap.vector;
     this->trashTree = false;
@@ -756,7 +755,11 @@ TraceRecorder::getCallDepth() const
 bool
 TraceRecorder::trackLoopEdges()
 {
-    return loopEdgeCount++ < 1;
+    jsbytecode* pc = cx->fp->regs->pc;
+    if (loopEdgeList.contains(pc))
+        return false;
+    loopEdgeList.add(pc);
+    return true;
 }
 
 /* Determine the offset in the native global frame for a jsval we track */
@@ -1995,7 +1998,7 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inl
         }
     }
     /* try to unroll the inner loop a bit, maybe it connects back to our loop header eventually */
-    if (r->trackLoopEdges())
+    if ((!f || !f->code()) && r->trackLoopEdges())
         return true;
     /* not returning to our own loop header, not an inner loop we can call, abort trace */
     AUDIT(returnToDifferentLoopHeader);
