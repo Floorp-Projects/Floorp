@@ -295,7 +295,7 @@ static bool isPromoteInt(LIns* i)
 {
     jsdouble d;
     return i->isop(LIR_i2f) || i->isconst() ||
-        (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsint)d));
+        (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsint)d) && !JSDOUBLE_IS_NEGZERO(d));
 }
 
 static bool isPromoteUint(LIns* i)
