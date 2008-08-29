@@ -3038,7 +3038,9 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         }
     } else {
 #ifdef DEBUG
-        ptrdiff_t pcoff = (mode == JOF_VARPROP) ? SLOTNO_LEN : 0;
+        JSOp op = JSOp(*cx->fp->regs->pc);
+        ptrdiff_t pcoff = (op == JSOP_GETARGPROP) ? ARGNO_LEN :
+                          (op == JSOP_GETLOCALPROP) ? SLOTNO_LEN : 0;
         jsatomid index = js_GetIndexFromBytecode(cx, cx->fp->script, cx->fp->regs->pc, pcoff);
         JS_ASSERT(entry->kpc == (jsbytecode*) atoms[index]);
         JS_ASSERT(entry->kshape == jsuword(aobj));
@@ -5058,10 +5060,13 @@ TraceRecorder::record_JSOP_IN()
         ABORT_TRACE("JSOP_IN on E4X QName left operand");
 
     jsid id;
-    if (JSVAL_IS_INT(lval))
+    if (JSVAL_IS_INT(lval)) {
         id = INT_JSVAL_TO_JSID(lval);
-    else if (!JSVAL_IS_STRING(lval))
-        ABORT_TRACE("non-string left operand to JSOP_IN");
+    } else {
+        if (!JSVAL_IS_STRING(lval))
+            ABORT_TRACE("non-string left operand to JSOP_IN");
+        id = ATOM_TO_JSID(lval);
+    }
 
     // Expect what we see at trace recording time (hit or miss) to be the same
     // when executing the trace. Use a builtin helper for named properties, as
