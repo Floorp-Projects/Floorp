@@ -1020,6 +1020,37 @@ function testDecayingInnerLoop() {
 testDecayingInnerLoop.expected = 5000;
 test(testDecayingInnerLoop);
 
+function testContinue() {
+    var i;
+    var total = 0;
+    for (i = 0; i < 20; ++i) {
+	if (i == 11)
+	    continue;
+	total++;
+    }
+    return total;
+}
+testContinue.expected = 19;
+test(testContinue);
+
+function testContinueWithLabel() {
+    var i = 0;
+    var j = 20;
+    checkiandj :
+    while (i<10) {
+	i+=1;
+	checkj :
+	while (j>10) {
+	    j-=1;
+	    if ((j%2)==0)
+		continue checkj;
+	}   
+    }
+    return i + j;
+}
+testContinueWithLabel.expected = 20;
+test(testContinueWithLabel);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
