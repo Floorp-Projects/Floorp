@@ -5006,7 +5006,8 @@ TraceRecorder::record_JSOP_BINDNAME()
     jsuword pcval;
     if (!test_property_cache(obj, obj_ins, obj2, pcval))
         return false;
-    JS_ASSERT(obj2 == obj);
+    if (obj2 != obj)
+        ABORT_TRACE("JSOP_BINDNAME found a non-direct property on the global object");
 
     stack(0, obj_ins);
     return true;

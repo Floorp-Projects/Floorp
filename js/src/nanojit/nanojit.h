@@ -75,21 +75,30 @@ namespace nanojit
 
 	#if defined(_DEBUG)
 		
-		#ifndef WIN32
-			#define DebugBreak() AvmAssert(0)
+		// The NANO_DIE macro matches the JS_Assert function in jsutil.cpp.
+		#if defined(WIN32)
+		#define NANO_DIE do { DebugBreak(); exit(3); } while(0)
+		#elif defined(XP_OS2) || (defined(__GNUC__) && defined(__i386))
+		#define NANO_DIE do { asm("int $3"); abort(); } while(0)
+        #else
+		#define NANO_DIE do { abort(); } while(0)
 		#endif
+		
+		#define __NanoAssertMsgf(a, file_, line_, f, ...)  \
+			if (!(a)) { \
+				fprintf(stderr, "Assertion failed: " f "%s (%s:%d)\n", __VA_ARGS__, #a, file_, line_); \
+				NANO_DIE; \
+			}
+			
+		#define _NanoAssertMsgf(a, file_, line_, f, ...)   __NanoAssertMsgf(a, file_, line_, f, __VA_ARGS__)
 
-		#define _NanoAssertMsg(a,m)		do { if ((a)==0) { AvmDebugLog(("%s\n", m)); DebugBreak(); } } while (0)
-		#define NanoAssertMsg(x,y)				do { _NanoAssertMsg((x), (y)); } while (0) /* no semi */
-		#define _NanoAssertMsgf(a,m)		do { if ((a)==0) { AvmDebugLog(m); DebugBreak(); } } while (0)
-		#define NanoAssertMsgf(x,y)				do { _NanoAssertMsgf((x), y); } while (0) /* no semi */
-		#define NanoAssert(x)					_NanoAssert((x), __LINE__,__FILE__)
-		#define _NanoAssert(x, line_, file_)	__NanoAssert((x), line_, file_)
-		#define __NanoAssert(x, line_, file_)	do { NanoAssertMsg((x), "Assertion failed: \"" #x "\" (" #file_ ":" #line_ ")"); } while (0) /* no semi */
+		#define NanoAssertMsgf(a,f,...)   do { __NanoAssertMsgf(a, __FILE__, __LINE__, f ": ", __VA_ARGS__); } while (0)
+		#define NanoAssertMsg(a,m)        do { __NanoAssertMsgf(a, __FILE__, __LINE__, "\"%s\": ", m); } while (0)
+		#define NanoAssert(a)             do { __NanoAssertMsgf(a, __FILE__, __LINE__, "%s", ""); } while (0)
 	#else
-		#define NanoAssertMsgf(x,y)	do { } while (0) /* no semi */
-		#define NanoAssertMsg(x,y)	do { } while (0) /* no semi */
-		#define NanoAssert(x)		do { } while (0) /* no semi */
+		#define NanoAssertMsgf(x,y)       do { } while (0) /* no semi */
+		#define NanoAssertMsg(x,y)        do { } while (0) /* no semi */
+		#define NanoAssert(x)             do { } while (0) /* no semi */
 	#endif
 
 	/**
