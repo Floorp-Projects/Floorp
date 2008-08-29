@@ -113,25 +113,15 @@ mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
     sqlite3 *db = aDBConnection->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
-    int nRetries = 0;
     int srv;
-    while (nRetries < 2) {
-        srv = sqlite3_prepare_v2(db, nsPromiseFlatCString(aSQLStatement).get(),
-                                 aSQLStatement.Length(), &mDBStatement, NULL);
-        if ((srv == SQLITE_SCHEMA && nRetries != 0) ||
-            (srv != SQLITE_SCHEMA && srv != SQLITE_OK))
-        {
+    srv = sqlite3_prepare_v2(db, nsPromiseFlatCString(aSQLStatement).get(),
+                             aSQLStatement.Length(), &mDBStatement, NULL);
+    if (srv != SQLITE_OK) {
 #ifdef PR_LOGGING
-            PR_LOG(gStorageLog, PR_LOG_ERROR, ("Sqlite statement prepare error: %d '%s'", srv, sqlite3_errmsg(db)));
-            PR_LOG(gStorageLog, PR_LOG_ERROR, ("Statement was: '%s'", nsPromiseFlatCString(aSQLStatement).get()));
+        PR_LOG(gStorageLog, PR_LOG_ERROR, ("Sqlite statement prepare error: %d '%s'", srv, sqlite3_errmsg(db)));
+        PR_LOG(gStorageLog, PR_LOG_ERROR, ("Statement was: '%s'", nsPromiseFlatCString(aSQLStatement).get()));
 #endif
-            return NS_ERROR_FAILURE;
-        }
-
-        if (srv == SQLITE_OK)
-            break;
-
-        nRetries++;
+        return NS_ERROR_FAILURE;
     }
 
     mDBConnection = aDBConnection;
