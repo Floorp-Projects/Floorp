@@ -2284,14 +2284,6 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case JSTRACE_NAMESPACE:
-        js_TraceXMLNamespace(trc, (JSXMLNamespace *)thing);
-        break;
-
-      case JSTRACE_QNAME:
-        js_TraceXMLQName(trc, (JSXMLQName *)thing);
-        break;
-
       case JSTRACE_XML:
         js_TraceXML(trc, (JSXML *)thing);
         break;
@@ -2760,8 +2752,6 @@ TraceWeakRoots(JSTracer *trc, JSWeakRoots *wr)
         "newborn object",
         "newborn double",
         "newborn string",
-        "newborn namespace",
-        "newborn qname",
         "newborn xml"
     };
 #endif
@@ -3400,13 +3390,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                             /* Do nothing. */
                             break;
 #if JS_HAS_XML_SUPPORT
-                          case GCX_NAMESPACE:
-                            js_FinalizeXMLNamespace(cx,
-                                                    (JSXMLNamespace *) thing);
-                            break;
-                          case GCX_QNAME:
-                            js_FinalizeXMLQName(cx, (JSXMLQName *) thing);
-                            break;
                           case GCX_XML:
                             js_FinalizeXML(cx, (JSXML *) thing);
                             break;
