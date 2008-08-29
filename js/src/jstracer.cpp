@@ -2735,6 +2735,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
         lnum = js_ValueToNumber(cx, &tmp[0]);
 
         args[0] = get(&r);
+        args[1] = cx_ins;
         if (JSVAL_IS_STRING(r)) {
             r_ins = lir->insCall(F_StringToNumber, args);
         } else if (JSVAL_TAG(r) == JSVAL_BOOLEAN) {
@@ -2897,21 +2898,24 @@ TraceRecorder::binary(LOpcode op)
     bool leftNumber = isNumber(l), rightNumber = isNumber(r);
     if ((op >= LIR_sub && op <= LIR_ush) ||  // sub, mul, (callh), or, xor, (not,) lsh, rsh, ush
         (op >= LIR_fsub && op <= LIR_fdiv)) { // fsub, fmul, fdiv
-        LIns* args[] = { NULL, cx_ins };
+        LIns* args[2];
         if (JSVAL_IS_STRING(l)) {
             args[0] = a;
+            args[1] = cx_ins;
             a = lir->insCall(F_StringToNumber, args);
             leftNumber = true;
         }
         if (JSVAL_IS_STRING(r)) {
             args[0] = b;
+            args[1] = cx_ins;
             b = lir->insCall(F_StringToNumber, args);
             rightNumber = true;
         }
     }
     if (leftNumber && rightNumber) {
         if (intop) {
-            a = lir->insCall(op == LIR_ush ? F_DoubleToUint32 : F_DoubleToInt32, &a);
+            LIns *args[] = { a };
+            a = lir->insCall(op == LIR_ush ? F_DoubleToUint32 : F_DoubleToInt32, args);
             b = f2i(b);
         }
         a = lir->ins2(op, a, b);
@@ -3214,7 +3218,8 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
                                                           INS_CONST(JSVAL_TAGMASK)),
                                                 JSVAL_DOUBLE))),
               MISMATCH_EXIT);
-        v_ins = lir->insCall(F_UnboxDouble, &v_ins);
+        LIns* args[] = { v_ins };
+        v_ins = lir->insCall(F_UnboxDouble, args);
         return true;
     }
     switch (JSVAL_TAG(v)) {
