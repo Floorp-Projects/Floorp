@@ -758,9 +758,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     JSContext *cx = mCycleCollectionContext->GetJSContext();
 
     uint32 traceKind = js_GetGCThingTraceKind(p);
-    NS_ASSERTION(traceKind != JSTRACE_NAMESPACE &&
-                 traceKind != JSTRACE_QNAME,
-                 "Somebody holds one of these objects directly?");
 
     CCNodeType type;
 
@@ -888,19 +885,16 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     }
     else
     {
-        static const char trace_types[JSTRACE_LIMIT][10] = {
+        static const char trace_types[JSTRACE_LIMIT][7] = {
             "Object",
             "Double",
             "String",
-            "Namespace",
-            "Qname",
             "Xml"
         };
         JS_snprintf(name, sizeof(name), "JS %s", trace_types[traceKind]);
     }
 
-    if(traceKind == JSTRACE_OBJECT || traceKind == JSTRACE_NAMESPACE ||
-       traceKind == JSTRACE_QNAME || traceKind == JSTRACE_XML) {
+    if(traceKind == JSTRACE_OBJECT) {
         JSObject *global = static_cast<JSObject*>(p), *parent;
         while((parent = JS_GetParent(cx, global)))
             global = parent;
