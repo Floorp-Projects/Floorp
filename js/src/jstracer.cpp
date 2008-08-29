@@ -5068,13 +5068,10 @@ TraceRecorder::record_JSOP_IN()
         ABORT_TRACE("JSOP_IN on E4X QName left operand");
 
     jsid id;
-    if (JSVAL_IS_INT(lval)) {
+    if (JSVAL_IS_INT(lval))
         id = INT_JSVAL_TO_JSID(lval);
-    } else {
-        if (!js_ValueToStringId(cx, lval, &id))
-            ABORT_TRACE("OOM under js_ValueToStringId in JSOP_IN");
-        lval = ID_TO_VALUE(id);
-    }
+    else if (!JSVAL_IS_STRING(lval))
+        ABORT_TRACE("non-string left operand to JSOP_IN");
 
     // Expect what we see at trace recording time (hit or miss) to be the same
     // when executing the trace. Use a builtin helper for named properties, as
