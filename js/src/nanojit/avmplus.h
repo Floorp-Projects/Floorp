@@ -57,6 +57,10 @@
 #include <stdarg.h>
 #endif
 
+#ifdef _DEBUG
+void NanoAssertFail();
+#endif
+
 #define AvmAssert(x) assert(x)
 #define AvmAssertMsg(x, y) 
 #define AvmDebugLog(x) printf x
