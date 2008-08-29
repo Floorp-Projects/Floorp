@@ -5098,7 +5098,8 @@ TraceRecorder::record_JSOP_IN()
     } else {
         if (!JSVAL_IS_STRING(lval))
             ABORT_TRACE("non-string left operand to JSOP_IN");
-        id = ATOM_TO_JSID(lval);
+        if (!js_ValueToStringId(cx, lval, &id))
+            return false;
     }
 
     // Expect what we see at trace recording time (hit or miss) to be the same
