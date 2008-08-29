@@ -56,6 +56,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsXULAppAPI.h"
+#include "nsCategoryManagerUtils.h"
 
 #include "nsINIParser.h"
 #include "nsDependentString.h"
@@ -802,6 +803,11 @@ nsXREDirProvider::DoStartup()
     static const PRUnichar kStartup[] = {'s','t','a','r','t','u','p','\0'};
     obsSvc->NotifyObservers(nsnull, "profile-do-change", kStartup);
     obsSvc->NotifyObservers(nsnull, "profile-after-change", kStartup);
+
+    // Any component that has registered for the profile-after-change category
+    // should also be created at this time.
+    (void)NS_CreateServicesFromCategory("profile-after-change", nsnull,
+                                        "profile-after-change");
   }
   return NS_OK;
 }
