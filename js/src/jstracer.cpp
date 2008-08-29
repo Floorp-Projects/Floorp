@@ -756,7 +756,7 @@ TraceRecorder::getCallDepth() const
 bool
 TraceRecorder::trackLoopEdges()
 {
-    return loopEdgeCount++ < 3;
+    return loopEdgeCount++ < 1;
 }
 
 /* Determine the offset in the native global frame for a jsval we track */
@@ -1936,7 +1936,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
                GuardRecord** innermostNestedGuardp);
 
 bool
-js_RecordBranch(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlineCallCount)
+js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
     if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->title.ownercx != cx) {
@@ -1945,17 +1945,6 @@ js_RecordBranch(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlin
     }
 #endif
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
-    /* If we hit a break, end the loop and generate an always taken loop exit guard. For other
-       downward gotos (like if/else) continue recording. */
-    if (js_isBreak(cx, cx->fp->script, cx->fp->regs->pc)) {
-        AUDIT(traceCompleted);
-        r->endLoop(fragmento);
-        js_DeleteRecorder(cx);
-        return false; /* done recording */
-    }
-    /* Silently ignore other downward branches during recording (i.e. if/else branches). */
-    if (cx->fp->regs->pc > oldpc)
-        return true;
     /* If we hit our own loop header, close the loop and compile the trace. */
     if (r->isLoopHeader(cx)) { 
         if (fragmento->assm()->error()) {
@@ -2210,24 +2199,20 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
 }
 
 bool
-js_MonitorBranch(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
+js_MonitorLoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* Is the recorder currently active? */
     if (tm->recorder) {
-        if (js_RecordBranch(cx, tm->recorder, oldpc, inlineCallCount))
+        if (js_RecordLoopEdge(cx, tm->recorder, oldpc, inlineCallCount))
             return true;
         /* recording was aborted, treat like a regular loop edge hit */
     }
     JS_ASSERT(!tm->recorder);
 
-    /* If the recorder is not active, and this is not a backwards branch, just ignore it. */
-    jsbytecode* pc = cx->fp->regs->pc;
-    if (pc > oldpc)
-        return false;
-    
     /* check if our quick cache has an entry for this ip, otherwise ask fragmento. */
+    jsbytecode* pc = cx->fp->regs->pc;
     Fragment* f;
     JSFragmentCacheEntry* cacheEntry = &tm->fcache[jsuword(pc) & JS_FRAGMENT_CACHE_MASK];
     if (cacheEntry->pc == pc) {
@@ -2269,6 +2254,21 @@ js_MonitorBranch(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
         /* No, this was an unusual exit (i.e. out of memory/GC), so just resume interpretation. */
         return false;
     }
+}
+
+bool
+js_MonitorGoto(JSContext* cx)
+{
+    /* If we hit a break, end the loop and generate an always taken loop exit guard. For other
+       downward gotos (like if/else) continue recording. */
+    if (js_isBreak(cx, cx->fp->script, cx->fp->regs->pc)) {
+        AUDIT(traceCompleted);
+        JS_TRACE_MONITOR(cx).recorder->endLoop(JS_TRACE_MONITOR(cx).fragmento);
+        js_DeleteRecorder(cx);
+        return false; /* done recording */
+    }
+    /* If its not a break, continue recording and follow the trace. */
+    return true;
 }
 
 void
