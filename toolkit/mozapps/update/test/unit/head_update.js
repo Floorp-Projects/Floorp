@@ -49,6 +49,8 @@ var gAUS           = null;
 var gUpdateChecker = null;
 var gPrefs         = null;
 var gTestserver    = null;
+var gXHR           = null;
+var gXHRCallback   = null;
 
 /* Initializes the most commonly used global vars used by tests */
 function startAUS() {
@@ -77,6 +79,102 @@ function startAUS() {
   os.notifyObservers(null, "profile-after-change", null);
 */
 }
+
+/**
+ * Toggles network offline.
+ *
+ * Be sure to toggle back to online before the test finishes to prevent the
+ * following from being printed to the test's log file.
+ * WARNING: NS_ENSURE_TRUE(thread) failed: file c:/moz/mozilla-central/mozilla/netwerk/base/src/nsSocketTransportService2.cpp, line 115
+ * WARNING: unable to post SHUTDOWN message
+ */
+function toggleOffline(aOffline) {
+  const ioService = AUS_Cc["@mozilla.org/network/io-service;1"]
+                      .getService(AUS_Ci.nsIIOService);
+
+  try {
+    ioService.manageOfflineStatus = !aOffline;
+  }
+  catch (e) {
+  }
+  if (ioService.offline != aOffline)
+    ioService.offline = aOffline;
+}
+
+/**
+ * Sets up the bare bones XMLHttpRequest implementation below. 
+ *
+ * @param   callback
+ *          The callback function that will call the nsIDomEventListener's
+ *          handleEvent method.
+ *
+ *          Example of the callback function
+ *
+ *            function callHandleEvent() {
+ *              gXHR.status = gExpectedStatus;
+ *              var e = { target: gXHR };
+ *              gXHR.onload.handleEvent(e);
+ *            }
+ */
+function overrideXHR(callback) {
+  gXHRCallback = callback;
+  gXHR = new xhr();
+  var registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
+  registrar.registerFactory(gXHR.classID, gXHR.classDescription,
+                            gXHR.contractID, gXHR);
+}
+
+/**
+ * Bare bones XMLHttpRequest implementation for testing onprogress, onerror,
+ * and onload nsIDomEventListener handleEvent.
+ */
+function xhr() {
+}
+xhr.prototype = {
+  overrideMimeType: function(mimetype) { },
+  setRequestHeader: function(header, value) { },
+  status: null,
+  channel: { set notificationCallbacks(val) { } },
+  _url: null,
+  _method: null,
+  open: function (method, url) { gXHR._method = method; gXHR._url = url; },
+  send: function(body) {
+    do_timeout(0, "gXHRCallback()"); // Use a timeout so the XHR completes
+  },
+  _onprogress: null,
+  set onprogress(val) { gXHR._onprogress = val; },
+  get onprogress() { return gXHR._onprogress; },
+  _onerror: null,
+  set onerror(val) { gXHR._onerror = val; },
+  get onerror() { return gXHR._onerror; },
+  _onload: null,
+  set onload(val) { gXHR._onload = val; },
+  get onload() { return gXHR._onload; },
+  flags: AUS_Ci.nsIClassInfo.SINGLETON,
+  implementationLanguage: AUS_Ci.nsIProgrammingLanguage.JAVASCRIPT,
+  getHelperForLanguage: function(language) null,
+  getInterfaces: function(count) {
+    var interfaces = [AUS_Ci.nsIXMLHttpRequest, AUS_Ci.nsIJSXMLHttpRequest];
+    count.value = interfaces.length;
+    return interfaces;
+  },
+  classDescription: "XMLHttpRequest",
+  contractID: "@mozilla.org/xmlextras/xmlhttprequest;1",
+  classID: Components.ID("{c9b37f43-4278-4304-a5e0-600991ab08cb}"),
+  createInstance: function (outer, aIID) {
+    if (outer != null)
+      throw AUS_Cr.NS_ERROR_NO_AGGREGATION;
+    return gXHR.QueryInterface(aIID);
+  },
+  QueryInterface: function(aIID) {
+    if (aIID.equals(AUS_Ci.nsIXMLHttpRequest) ||
+        aIID.equals(AUS_Ci.nsIJSXMLHttpRequest) ||
+        aIID.equals(AUS_Ci.nsIClassInfo) ||
+        aIID.equals(AUS_Ci.nsISupports))
+      return gXHR;
+    throw AUS_Cr.NS_ERROR_NO_INTERFACE;
+  }
+};
 
 /**
  * Removes the updates directory and the active-update.xml file if they exist.

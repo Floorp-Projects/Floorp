@@ -188,7 +188,6 @@ _g_skip_files = [
     "gfx/cairo/cairo/COPYING-MPL-1.1",
     
     # Files containing global licensing information
-    "xpfe/global/resources/content/license.html",
     "toolkit/content/license.html",
     
     # Ben Bucksch - files are tri-licensed with an extra clause.

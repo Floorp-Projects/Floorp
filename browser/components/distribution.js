@@ -76,6 +76,14 @@ DistributionCustomizer.prototype = {
     return this.__annoSvc;
   },
 
+  __livemarkSvc: null,
+  get _livemarkSvc() {
+    if (!this.__livemarkSvc)
+      this.__livemarkSvc = Cc["@mozilla.org/browser/livemark-service;2"].
+                   getService(Ci.nsILivemarkService);
+    return this.__livemarkSvc;
+  },
+
   __dirSvc: null,
   get _dirSvc() {
     if (!this.__dirSvc)
@@ -179,6 +187,18 @@ DistributionCustomizer.prototype = {
         this._bmSvc.insertSeparator(parentId, index);
         break;
 
+      case "livemark":
+        if (iid < defaultItemId)
+          index = prependIndex++;
+
+        newId = this._livemarkSvc.
+          createLivemark(parentId,
+                         items[iid]["title"],
+                         this._makeURI(items[iid]["siteLink"]),
+                         this._makeURI(items[iid]["feedLink"]),
+                         index);
+        break;
+
       case "bookmark":
       default:
         if (iid < defaultItemId)
@@ -218,8 +238,16 @@ DistributionCustomizer.prototype = {
       return;
 
     let bmProcessed = false;
-    let bmProcessedPref = "distribution." +
-      this._ini.getString("Global", "id") + ".bookmarksProcessed";
+    let bmProcessedPref;
+
+    try {
+        bmProcessedPref = this._ini.getString("Global",
+                                              "bookmarks.initialized.pref");
+    } catch (e) {
+      bmProcessedPref = "distribution." +
+        this._ini.getString("Global", "id") + ".bookmarksProcessed";
+    }
+
     try {
       bmProcessed = this._prefs.getBoolPref(bmProcessedPref);
     } catch (e) {}

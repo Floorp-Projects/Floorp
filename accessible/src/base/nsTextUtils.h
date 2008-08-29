@@ -43,6 +43,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 
 #include "nsIContent.h"
+#include "nsIFrame.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -57,7 +58,7 @@ public:
    * Return true if the text attribute for the given element equals with
    * predefined attribute.
    */
-  virtual PRBool equal(nsIDOMElement *aElm) = 0;
+  virtual PRBool Equal(nsIDOMElement *aElm) = 0;
 };
 
 /**
@@ -70,7 +71,7 @@ public:
   nsLangTextAttr(nsAString& aLang, nsIContent *aRootContent) :
     mLang(aLang), mRootContent(aRootContent) { }
 
-  virtual PRBool equal(nsIDOMElement *aElm);
+  virtual PRBool Equal(nsIDOMElement *aElm);
 
 private:
   nsString mLang;
@@ -88,18 +89,18 @@ public:
                 nsIDOMElement *aRootElm);
 
   // nsTextAttr
-  virtual PRBool equal(nsIDOMElement *aElm);
+  virtual PRBool Equal(nsIDOMElement *aElm);
 
   // nsCSSTextAttr
   /**
    * Interates through attributes.
    */
-  PRBool iterate();
+  PRBool Iterate();
 
   /**
    * Get name and value of attribute.
    */
-  PRBool get(nsACString& aName, nsAString& aValue);
+  PRBool Get(nsACString& aName, nsAString& aValue);
 
 private:
   PRInt32 mIndex;
@@ -107,6 +108,42 @@ private:
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> mStyleDecl;
   nsCOMPtr<nsIDOMCSSStyleDeclaration> mDefStyleDecl;
+};
+
+/**
+ * Class is used for the work with "background-color" text attribute. It is
+ * used in nsHyperTextAccessible.
+ */
+class nsBackgroundTextAttr : public nsTextAttr
+{
+public:
+  nsBackgroundTextAttr(nsIFrame *aFrame, nsIFrame *aRootFrame);
+  
+  // nsTextAttr
+  virtual PRBool Equal(nsIDOMElement *aElm);
+
+  /**
+   * Returns true and background color value if "background-color" text
+   * attribute should be exposed.
+   */
+  virtual PRBool Get(nsAString& aValue);
+
+private:
+  /**
+   * Return background color for the given frame.
+   *
+   * @note  If background color for the given frame is transparent then walk
+   *        trhough the frame parents chain until we'll got either a frame with
+   *        not transparent background color or the given root frame. In the
+   *        last case return background color for the root frame.
+   *
+   * @param aFrame      [in] the given frame to calculate background-color
+   * @return            background color
+   */
+  nscolor GetColor(nsIFrame *aFrame);
+
+  nsIFrame *mFrame;
+  nsIFrame *mRootFrame;
 };
 
 #endif

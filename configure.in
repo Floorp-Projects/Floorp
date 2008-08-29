@@ -1374,6 +1374,24 @@ if test "$GNU_CXX"; then
 
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/mozilla-config.h'
     _USE_CPP_INCLUDE_FLAG=1
+
+    AC_CACHE_CHECK(whether the compiler supports -Wno-invalid-offsetof,
+                   ac_has_wno_invalid_offsetof,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            CXXFLAGS="$CXXFLAGS ${_COMPILER_PREFIX}-Wno-invalid-offsetof"
+            AC_TRY_COMPILE([],
+                           [return(0);],
+                           ac_has_wno_invalid_offsetof="yes",
+                           ac_has_wno_invalid_offsetof="no")
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_LANG_RESTORE
+        ])
+    if test "$ac_has_wno_invalid_offsetof" = "yes"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-invalid-offsetof"
+    fi
 else
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_MOZILLA_CONFIG_H_ $(ACDEFINES)'
 fi
@@ -1458,7 +1476,6 @@ AC_MSG_RESULT("$ac_cv_static_assertion_macros_work")
 if test "$ac_cv_static_assertion_macros_work" = "no"; then
     AC_MSG_ERROR([Compiler cannot compile macros used in autoconf tests.])
 fi
-
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
@@ -4630,6 +4647,10 @@ standalone)
 
 esac
 
+if test -z "$MOZ_XUL_APP"; then
+	AC_MSG_ERROR([builds with unsetting MOZ_XUL_APP in confvars.sh are not supported.])
+fi
+
 AC_SUBST(MOZ_BUILD_APP)
 AC_SUBST(MOZ_XUL_APP)
 AC_SUBST(MOZ_PHOENIX)
@@ -4776,7 +4797,7 @@ cairo-mac|cairo-cocoa)
     AC_DEFINE(XP_MACOSX)
     AC_DEFINE(TARGET_CARBON)
     AC_DEFINE(TARGET_API_MAC_CARBON)
-    TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit'
+    TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook'
     TK_CFLAGS="-I${MACOS_SDK_DIR}/Developer/Headers/FlatCarbon"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
@@ -5774,6 +5795,11 @@ if test -z "$TAR"; then
 fi
 AC_MSG_RESULT([$TAR])
 AC_SUBST(TAR)
+
+AC_MSG_CHECKING([for wget])
+AC_CHECK_PROGS(WGET, wget, "")
+AC_MSG_RESULT([$WGET])
+AC_SUBST(WGET)
 
 dnl ========================================================
 dnl Updater

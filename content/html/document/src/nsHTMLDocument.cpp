@@ -3158,12 +3158,19 @@ DocAllResultMatch(nsIContent* aContent, PRInt32 aNamespaceID, nsIAtom* aAtom,
   }
 
   nsIAtom* tag = elm->Tag();
-  if (tag != nsGkAtoms::img    &&
-      tag != nsGkAtoms::form   &&
+  if (tag != nsGkAtoms::a &&
       tag != nsGkAtoms::applet &&
-      tag != nsGkAtoms::embed  &&
+      tag != nsGkAtoms::button &&
+      tag != nsGkAtoms::embed &&
+      tag != nsGkAtoms::form &&
+      tag != nsGkAtoms::iframe &&
+      tag != nsGkAtoms::img &&
+      tag != nsGkAtoms::input &&
+      tag != nsGkAtoms::map &&
+      tag != nsGkAtoms::meta &&
       tag != nsGkAtoms::object &&
-      tag != nsGkAtoms::input) {
+      tag != nsGkAtoms::select &&
+      tag != nsGkAtoms::textarea) {
     return PR_FALSE;
   }
 

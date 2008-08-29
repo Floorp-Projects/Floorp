@@ -626,7 +626,8 @@ nsPoint
 nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aFrame)
 {
   if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT && 
-                  aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT))
+                  aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
+                  aEvent->eventStructType != NS_DRAG_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
   const nsGUIEvent* GUIEvent = static_cast<const nsGUIEvent*>(aEvent);
@@ -669,7 +670,8 @@ nsLayoutUtils::GetEventCoordinatesForNearestView(nsEvent* aEvent,
                                                  nsIView** aView)
 {
   if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT && 
-                  aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT))
+                  aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
+                  aEvent->eventStructType != NS_DRAG_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
   nsGUIEvent* GUIEvent = static_cast<nsGUIEvent*>(aEvent);
@@ -1079,10 +1081,9 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
           AccumulateItemInRegion(aRegion, aRect + aDelta, r, exclude, item);
           // we may have bitblitted an area that was painted by a non-moving
           // element. This bitblitted data is invalid and was copied to
-          // "r + aDelta". The area to exclude was also copied and is now
-          // at "exclude + aDelta".
+          // "r + aDelta".
           AccumulateItemInRegion(aRegion, aRect + aDelta, r + aDelta,
-                                 exclude + aDelta, item);
+                                 exclude, item);
         }
       }
     }
@@ -1260,9 +1261,6 @@ AddRectsForFrame(nsIFrame* aFrame, nsIFrame* aRelativeTo,
     nsRect r;
     nsIFrame* outer = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(aFrame, &r);
     if (outer) {
-      // r is in pixels relative to 'outer', get it into appunits
-      // relative to aRelativeTo
-      r.ScaleRoundOut(1.0/aFrame->PresContext()->AppUnitsPerDevPixel());
       aCallback->AddRect(r + outer->GetOffsetTo(aRelativeTo));
     } else
 #endif

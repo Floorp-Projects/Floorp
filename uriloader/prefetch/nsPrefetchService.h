@@ -56,7 +56,6 @@
 class nsPrefetchService;
 class nsPrefetchListener;
 class nsPrefetchNode;
-class nsIOfflineCacheSession;
 
 //-----------------------------------------------------------------------------
 // nsPrefetchService
@@ -90,25 +89,19 @@ private:
     nsresult Prefetch(nsIURI *aURI,
                       nsIURI *aReferrerURI,
                       nsIDOMNode *aSource,
-                      PRBool aExplicit,
-                      PRBool aOffline);
+                      PRBool aExplicit);
 
     void     AddProgressListener();
     void     RemoveProgressListener();
     nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI,
-                        nsIDOMNode *aSource, PRBool aOffline,
-                        nsPrefetchNode **node);
+                        nsIDOMNode *aSource, nsPrefetchNode **node);
     nsresult EnqueueNode(nsPrefetchNode *node);
     nsresult DequeueNode(nsPrefetchNode **node);
-    void     EmptyQueue(PRBool includeOffline);
-    nsresult SaveOfflineList(nsIURI *aDocumentUri,
-                             nsIDOMDocument *aDoc);
-    nsresult GetOfflineCacheSession(nsIOfflineCacheSession **aSession);
+    void     EmptyQueue();
 
     void     StartPrefetching();
     void     StopPrefetching();
 
-    nsCOMPtr<nsIOfflineCacheSession>  mOfflineCacheSession;
     nsPrefetchNode                   *mQueueHead;
     nsPrefetchNode                   *mQueueTail;
     nsRefPtr<nsPrefetchNode>          mCurrentNode;
@@ -116,8 +109,6 @@ private:
     // true if pending document loads have ever reached zero.
     PRInt32                           mHaveProcessed;
     PRBool                            mDisabled;
-    PRBool                            mFetchedOffline;
-
 };
 
 //-----------------------------------------------------------------------------
@@ -140,8 +131,7 @@ public:
     nsPrefetchNode(nsPrefetchService *aPrefetchService,
                    nsIURI *aURI,
                    nsIURI *aReferrerURI,
-                   nsIDOMNode *aSource,
-                   PRBool aOffline);
+                   nsIDOMNode *aSource);
 
     ~nsPrefetchNode() {}
 
@@ -152,7 +142,6 @@ public:
     nsCOMPtr<nsIURI>            mURI;
     nsCOMPtr<nsIURI>            mReferrerURI;
     nsCOMPtr<nsIWeakReference>  mSource;
-    PRBool                      mOffline;
 
 private:
     nsRefPtr<nsPrefetchService> mService;

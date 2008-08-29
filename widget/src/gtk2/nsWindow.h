@@ -382,6 +382,7 @@ public:
 
 private:
     void               GetToplevelWidget(GtkWidget **aWidget);
+    GtkWidget         *GetMozContainerWidget();
     void               GetContainerWindow(nsWindow  **aWindow);
     void               SetUrgencyHint(GtkWidget *top_window, PRBool state);
     void              *SetupPluginPort(void);
@@ -442,8 +443,8 @@ private:
     // all of our DND stuff
     // this is the last window that had a drag event happen on it.
     static nsWindow    *mLastDragMotionWindow;
-    void   InitDragEvent         (nsMouseEvent &aEvent);
-    void   UpdateDragStatus      (nsMouseEvent &aEvent,
+    void   InitDragEvent         (nsDragEvent &aEvent);
+    void   UpdateDragStatus      (nsDragEvent &aEvent,
                                   GdkDragContext *aDragContext,
                                   nsIDragService *aDragService);
 

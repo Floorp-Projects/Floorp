@@ -64,25 +64,26 @@ typedef union JSLocalNames {
 } JSLocalNames;
 
 struct JSFunction {
-    JSObject        object;     /* GC'ed object header */
-    uint16          nargs;      /* maximum number of specified arguments,
-                                   reflected as f.length/f.arity */
-    uint16          flags;      /* bound method and other flags, see jsapi.h */
+    JSObject        object;       /* GC'ed object header */
+    uint16          nargs;        /* maximum number of specified arguments,
+                                     reflected as f.length/f.arity */
+    uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
     union {
         struct {
-            uint16      extra;  /* number of arg slots for local GC roots */
-            uint16      spare;  /* reserved for future use */
-            JSNative    native; /* native method pointer or null */
-            JSClass     *clasp; /* if non-null, constructor for this class */
+            uint16      extra;    /* number of arg slots for local GC roots */
+            uint16      spare;    /* reserved for future use */
+            JSNative    native;   /* native method pointer or null */
+            JSClass     *clasp;   /* if non-null, constructor for this class */
         } n;
         struct {
-            uint16      nvars;  /* number of local variables */
-            uint16      spare;  /* reserved for future use */
-            JSScript    *script;/* interpreted bytecode descriptor or null */
-            JSLocalNames names; /* argument and variable names */
+            uint16      nvars;    /* number of local variables */
+            uint16      nupvars;  /* number of upvars (computable from script
+                                     but here for faster access) */
+            JSScript    *script;  /* interpreted bytecode descriptor or null */
+            JSLocalNames names;   /* argument and variable names */
         } i;
     } u;
-    JSAtom          *atom;      /* name for diagnostics and decompiling */
+    JSAtom          *atom;        /* name for diagnostics and decompiling */
 };
 
 #define JSFUN_EXPR_CLOSURE   0x4000 /* expression closure: function(x)x*x */
@@ -205,10 +206,13 @@ typedef enum JSLocalKind {
     JSLOCAL_NONE,
     JSLOCAL_ARG,
     JSLOCAL_VAR,
-    JSLOCAL_CONST
+    JSLOCAL_CONST,
+    JSLOCAL_UPVAR
 } JSLocalKind;
 
-#define JS_GET_LOCAL_NAME_COUNT(fun)    ((fun)->nargs + (fun)->u.i.nvars)
+#define JS_UPVAR_LOCAL_NAME_START(fun)  ((fun)->nargs + (fun)->u.i.nvars)
+#define JS_GET_LOCAL_NAME_COUNT(fun)    (JS_UPVAR_LOCAL_NAME_START(fun) +     \
+                                         (fun)->u.i.nupvars)
 
 extern JSBool
 js_AddLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, JSLocalKind kind);
@@ -225,16 +229,20 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp);
 /*
  * Functions to work with local names as an array of words.
  *
- * js_GetLocalNameArray returns the array or null when it cannot be allocated
- * The function must be called only when JS_GET_LOCAL_NAME_COUNT(fun) is not
- * zero. The function use the supplied pool to allocate the array.
+ * js_GetLocalNameArray returns the array, or null if we are out of memory.
+ * This function must not be called when JS_GET_LOCAL_NAME_COUNT(fun) is zero.
  *
- * The elements of the array with index below fun->nargs correspond to the
- * names of function arguments and of function variables otherwise. Use
- * JS_LOCAL_NAME_TO_ATOM to convert array's element into an atom. It can be
- * null when the element is an argument corresponding to a destructuring
- * pattern. For a variable use JS_LOCAL_NAME_IS_CONST to check if it
- * corresponds to the const declaration.
+ * The supplied pool is used to allocate the returned array, so the caller is
+ * obligated to mark and release to free it.
+ *
+ * The elements of the array with index less than fun->nargs correspond to the
+ * names of function formal parameters. An index >= fun->nargs addresses a var
+ * binding. Use JS_LOCAL_NAME_TO_ATOM to convert array's element to an atom
+ * pointer. This pointer can be null when the element is for a formal parameter
+ * corresponding to a destructuring pattern.
+ *
+ * If nameWord does not name a formal parameter, use JS_LOCAL_NAME_IS_CONST to
+ * check if nameWord corresponds to the const declaration.
  */
 extern jsuword *
 js_GetLocalNameArray(JSContext *cx, JSFunction *fun, struct JSArenaPool *pool);

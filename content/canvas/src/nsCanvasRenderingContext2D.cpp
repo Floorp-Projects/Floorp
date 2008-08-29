@@ -3146,6 +3146,13 @@ nsCanvasRenderingContext2D::GetImageData()
     return NS_OK;
 }
 
+extern "C" {
+#include "jstypes.h"
+JS_FRIEND_API(JSBool)
+js_ArrayToJSUint8Buffer(JSContext *cx, JSObject *obj, jsuint offset, jsuint count,
+                        JSUint8 *dest);
+}
+
 // void putImageData (in ImageData d, in float x, in float y);
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::PutImageData()
@@ -3216,49 +3223,75 @@ nsCanvasRenderingContext2D::PutImageData()
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint8 *imgPtr = imageBuffer.get();
-    jsval vr, vg, vb, va;
-    PRUint8 ir, ig, ib, ia;
-    for (int32 j = 0; j < h; j++) {
-        for (int32 i = 0; i < w; i++) {
-            if (!JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 0, &vr) ||
-                !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 1, &vg) ||
-                !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 2, &vb) ||
-                !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 3, &va))
-                return NS_ERROR_DOM_SYNTAX_ERR;
 
-            if (JSVAL_IS_INT(vr))         ir = (PRUint8) JSVAL_TO_INT(vr);
-            else if (JSVAL_IS_DOUBLE(vr)) ir = (PRUint8) (*JSVAL_TO_DOUBLE(vr));
-            else return NS_ERROR_DOM_SYNTAX_ERR;
+    JSBool ok = js_ArrayToJSUint8Buffer(ctx, dataArray, 0, w*h*4, imageBuffer);
 
+    // no fast path? go slow.
+    if (!ok) {
+        jsval vr, vg, vb, va;
+        PRUint8 ir, ig, ib, ia;
+        for (int32 j = 0; j < h; j++) {
+            for (int32 i = 0; i < w; i++) {
+                if (!JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 0, &vr) ||
+                    !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 1, &vg) ||
+                    !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 2, &vb) ||
+                    !JS_GetElement(ctx, dataArray, (j*w*4) + i*4 + 3, &va))
+                    return NS_ERROR_DOM_SYNTAX_ERR;
 
-            if (JSVAL_IS_INT(vg))         ig = (PRUint8) JSVAL_TO_INT(vg);
-            else if (JSVAL_IS_DOUBLE(vg)) ig = (PRUint8) (*JSVAL_TO_DOUBLE(vg));
-            else return NS_ERROR_DOM_SYNTAX_ERR;
+                if (JSVAL_IS_INT(vr))         ir = (PRUint8) JSVAL_TO_INT(vr);
+                else if (JSVAL_IS_DOUBLE(vr)) ir = (PRUint8) (*JSVAL_TO_DOUBLE(vr));
+                else return NS_ERROR_DOM_SYNTAX_ERR;
 
-            if (JSVAL_IS_INT(vb))         ib = (PRUint8) JSVAL_TO_INT(vb);
-            else if (JSVAL_IS_DOUBLE(vb)) ib = (PRUint8) (*JSVAL_TO_DOUBLE(vb));
-            else return NS_ERROR_DOM_SYNTAX_ERR;
+                if (JSVAL_IS_INT(vg))         ig = (PRUint8) JSVAL_TO_INT(vg);
+                else if (JSVAL_IS_DOUBLE(vg)) ig = (PRUint8) (*JSVAL_TO_DOUBLE(vg));
+                else return NS_ERROR_DOM_SYNTAX_ERR;
 
-            if (JSVAL_IS_INT(va))         ia = (PRUint8) JSVAL_TO_INT(va);
-            else if (JSVAL_IS_DOUBLE(va)) ia = (PRUint8) (*JSVAL_TO_DOUBLE(va));
-            else return NS_ERROR_DOM_SYNTAX_ERR;
+                if (JSVAL_IS_INT(vb))         ib = (PRUint8) JSVAL_TO_INT(vb);
+                else if (JSVAL_IS_DOUBLE(vb)) ib = (PRUint8) (*JSVAL_TO_DOUBLE(vb));
+                else return NS_ERROR_DOM_SYNTAX_ERR;
 
-            // Convert to premultiplied color (losslessly if the input came from getImageData)
-            ir = (ir*ia + 254) / 255;
-            ig = (ig*ia + 254) / 255;
-            ib = (ib*ia + 254) / 255;
+                if (JSVAL_IS_INT(va))         ia = (PRUint8) JSVAL_TO_INT(va);
+                else if (JSVAL_IS_DOUBLE(va)) ia = (PRUint8) (*JSVAL_TO_DOUBLE(va));
+                else return NS_ERROR_DOM_SYNTAX_ERR;
+
+                // Convert to premultiplied color (losslessly if the input came from getImageData)
+                ir = (ir*ia + 254) / 255;
+                ig = (ig*ia + 254) / 255;
+                ib = (ib*ia + 254) / 255;
 
 #ifdef IS_LITTLE_ENDIAN
-            *imgPtr++ = ib;
-            *imgPtr++ = ig;
-            *imgPtr++ = ir;
-            *imgPtr++ = ia;
+                *imgPtr++ = ib;
+                *imgPtr++ = ig;
+                *imgPtr++ = ir;
+                *imgPtr++ = ia;
 #else
-            *imgPtr++ = ia;
-            *imgPtr++ = ir;
-            *imgPtr++ = ig;
-            *imgPtr++ = ib;
+                *imgPtr++ = ia;
+                *imgPtr++ = ir;
+                *imgPtr++ = ig;
+                *imgPtr++ = ib;
 #endif
+            }
+        }
+    } else {
+        /* Walk through and premultiply and swap rgba */
+        /* XXX SSE me */
+        PRUint8 ir, ig, ib, ia;
+        PRUint8 *ptr = imgPtr;
+        for (int32 i = 0; i < w*h; i++) {
+#ifdef IS_LITTLE_ENDIAN
+            ir = ptr[0];
+            ig = ptr[1];
+            ib = ptr[2];
+            ia = ptr[3];
+            ptr[0] = (ib*ia + 254) / 255;
+            ptr[1] = (ig*ia + 254) / 255;
+            ptr[2] = (ir*ia + 254) / 255;
+#else
+            ptr[0] = (ptr[0]*ptr[3] + 254) / 255;
+            ptr[1] = (ptr[1]*ptr[3] + 254) / 255;
+            ptr[2] = (ptr[2]*ptr[3] + 254) / 255;
+#endif
+            ptr += 4;
         }
     }
 

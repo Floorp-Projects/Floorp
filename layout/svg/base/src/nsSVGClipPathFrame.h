@@ -59,7 +59,7 @@ public:
 
   PRBool ClipHitTest(nsISVGChildFrame* aParent,
                      nsIDOMSVGMatrix *aMatrix,
-                     float aX, float aY);
+                     const nsPoint &aPoint);
 
   // Check if this clipPath is made up of more than one geometry object.
   // If so, the clipping API in cairo isn't enough and we need to use

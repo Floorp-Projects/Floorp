@@ -18,6 +18,7 @@ dist/bin/components/@SHARED_LIBRARY@
 !xpt dist/bin/components/dom_core.xpt
 !xpt dist/bin/components/dom_css.xpt
 !xpt dist/bin/components/dom_events.xpt
+!xpt dist/bin/components/dom_geolocation.xpt
 !xpt dist/bin/components/dom_html.xpt
 !xpt dist/bin/components/dom_offline.xpt
 !xpt dist/bin/components/dom_range.xpt

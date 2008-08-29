@@ -1543,7 +1543,7 @@
               if ("owner" in aTab && aTab.owner &&
                   this.mPrefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
                 for (var i = 0; i < length; ++i) {
-                  tab = this.mTabContainer.childNodes[i];
+                  var tab = this.mTabContainer.childNodes[i];
                   if (tab == aTab.owner) {
                     newIndex = i;
                     break;

@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=79:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -100,8 +100,8 @@ typedef enum JSStmtType {
  * unless they contain let declarations.
  *
  * We treat WITH as a static scope because it prevents lexical binding from
- * continuing further up the static scope chain. With the "reformed with"
- * proposal for JS2, we'll be able to model it statically, too.
+ * continuing further up the static scope chain. With the lost "reformed with"
+ * proposal for ES4, we would be able to model it statically, too.
  */
 #define STMT_TYPE_MAYBE_SCOPE(type)                                           \
     (type != STMT_WITH &&                                                     \
@@ -193,6 +193,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_COMPILE_N_GO      0x800 /* compiler-and-go mode of script, can
                                        optimize name references based on scope
                                        chain */
+#define TCF_NO_SCRIPT_RVAL   0x1000 /* API caller does not want result value
+                                       from global script */
 
 /*
  * Flags to propagate out of the blocks.
@@ -206,6 +208,14 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                  TCF_FUN_HEAVYWEIGHT    |                     \
                                  TCF_FUN_USES_NONLOCALS |                     \
                                  TCF_FUN_CLOSURE_VS_VAR)
+
+/*
+ * Flags field, not stored in JSTreeContext.flags, for passing staticDepth
+ * into js_CompileScript.
+ */
+#define TCF_STATIC_DEPTH_MASK   0xffff0000
+#define TCF_GET_STATIC_DEPTH(f) ((uint32)(f) >> 16)
+#define TCF_PUT_STATIC_DEPTH(d) ((uint16)(d) << 16)
 
 #ifdef JS_SCOPE_DEPTH_METER
 # define JS_SCOPE_DEPTH_METERING(code) ((void) (code))
@@ -329,8 +339,8 @@ struct JSCodeGenerator {
         uintN       currentLine;    /* line number for tree-based srcnote gen */
     } prolog, main, *current;
 
-    uintN           firstLine;      /* first line, for js_NewScriptFromCG */
     JSAtomList      atomList;       /* literals indexed for mapping */
+    uintN           firstLine;      /* first line, for js_NewScriptFromCG */
 
     intN            stackDepth;     /* current stack depth in script frame */
     uintN           maxStackDepth;  /* maximum stack depth so far */
@@ -355,8 +365,13 @@ struct JSCodeGenerator {
     JSEmittedObjectList regexpList; /* list of emitted so far regexp
                                        that will be cloned during execution */
 
+    uintN           staticDepth;    /* static frame chain depth */
+    JSAtomList      upvarList;      /* map of atoms to upvar indexes */
+    JSUpvarArray    upvarMap;       /* indexed upvar pairs (JS_realloc'ed) */
     JSCodeGenerator *parent;        /* enclosing function or global context */
 };
+
+#define CG_TS(cg)               TS((cg)->treeContext.parseContext)
 
 #define CG_BASE(cg)             ((cg)->current->base)
 #define CG_LIMIT(cg)            ((cg)->current->limit)

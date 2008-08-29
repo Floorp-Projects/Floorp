@@ -98,8 +98,8 @@ num_isFinite(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     jsdouble d;
@@ -123,8 +123,8 @@ num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
 }
 
 /* See ECMA 15.1.2.2. */
-static JSBool
-num_parseInt(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_num_parseInt(JSContext *cx, uintN argc, jsval *vp)
 {
     jsint radix;
     JSString *str;
@@ -175,8 +175,8 @@ const char js_parseInt_str[]   = "parseInt";
 static JSFunctionSpec number_functions[] = {
     JS_FN(js_isNaN_str,         num_isNaN,              1,0),
     JS_FN(js_isFinite_str,      num_isFinite,           1,0),
-    JS_FN(js_parseFloat_str,    num_parseFloat,         1,0),
-    JS_FN(js_parseInt_str,      num_parseInt,           2,0),
+    JS_FN(js_parseFloat_str,    js_num_parseFloat,      1,0),
+    JS_FN(js_parseInt_str,      js_num_parseInt,        2,0),
     JS_FS_END
 };
 
@@ -274,8 +274,8 @@ js_IntToCString(jsint i, char *buf, size_t bufSize)
     return cp;
 }
 
-static JSBool
-num_toString(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_num_toString(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval v;
     jsdouble d;
@@ -332,7 +332,7 @@ num_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
      * Create the string, move back to bytes to make string twiddling
      * a bit easier and so we can insert platform charset seperators.
      */
-    if (!num_toString(cx, 0, vp))
+    if (!js_num_toString(cx, 0, vp))
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_STRING(*vp));
     numStr = JSVAL_TO_STRING(*vp);
@@ -515,7 +515,7 @@ static JSBool
 num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 {
     if (argc == 0 || JSVAL_IS_VOID(vp[2]))
-        return num_toString(cx, 0, vp);
+        return js_num_toString(cx, 0, vp);
     return num_to(cx, DTOSTR_STANDARD, DTOSTR_PRECISION, 1, MAX_PRECISION, 0,
                   argc, vp);
 }
@@ -524,7 +524,7 @@ static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       num_toSource,       0,JSFUN_THISP_NUMBER),
 #endif
-    JS_FN(js_toString_str,       num_toString,       1,JSFUN_THISP_NUMBER),
+    JS_FN(js_toString_str,       js_num_toString,    1,JSFUN_THISP_NUMBER),
     JS_FN(js_toLocaleString_str, num_toLocaleString, 0,JSFUN_THISP_NUMBER),
     JS_FN(js_valueOf_str,        num_valueOf,        0,JSFUN_THISP_NUMBER),
     JS_FN("toFixed",             num_toFixed,        1,JSFUN_THISP_NUMBER),
@@ -557,7 +557,7 @@ static JSConstDoubleSpec number_constants[] = {
     {0,0,0,{0,0,0}}
 };
 
-static jsdouble NaN;
+jsdouble js_NaN;
 
 #if (defined XP_WIN || defined XP_OS2) &&                                     \
     !defined WINCE &&                                                         \
@@ -592,8 +592,8 @@ js_InitRuntimeNumberState(JSContext *cx)
 
     u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
     u.s.lo = 0xffffffff;
-    number_constants[NC_NaN].dval = NaN = u.d;
-    rt->jsNaN = js_NewWeaklyRootedDouble(cx, NaN);
+    number_constants[NC_NaN].dval = js_NaN = u.d;
+    rt->jsNaN = js_NewWeaklyRootedDouble(cx, js_NaN);
     if (!rt->jsNaN)
         return JS_FALSE;
 
@@ -726,7 +726,7 @@ js_NumberToCString(JSContext *cx, jsdouble d, char *buf, size_t bufSize)
     return numStr;
 }
 
-JSString *
+JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d)
 {
     char buf[DTOSTR_STANDARD_BUFFER_SIZE];

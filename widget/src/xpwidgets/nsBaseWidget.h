@@ -39,7 +39,6 @@
 
 #include "nsRect.h"
 #include "nsIWidget.h"
-#include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 #include "nsIToolkit.h"
 #include "nsIAppShell.h"
@@ -117,7 +116,6 @@ public:
                             PRBool *aForWindow);
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType);
   NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
-  NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
   NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
   NS_IMETHOD              SetBounds(const nsRect &aRect);
   NS_IMETHOD              GetBounds(nsRect &aRect);
@@ -178,7 +176,6 @@ protected:
   EVENT_CALLBACK    mEventCallback;
   nsIDeviceContext  *mContext;
   nsIToolkit        *mToolkit;
-  nsIMouseListener  *mMouseListener;
   nsIEventListener  *mEventListener;
   nscolor           mBackground;
   nscolor           mForeground;

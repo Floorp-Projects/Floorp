@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -566,7 +566,7 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     void *sbrk(ptrdiff_t), *before = sbrk(0);
 #endif
 
-    JS_ASSERT(!(tcflags & ~TCF_COMPILE_N_GO));
+    JS_ASSERT(!(tcflags & ~(TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL | TCF_STATIC_DEPTH_MASK)));
 
     if (!js_InitParseContext(cx, &pc, principals, chars, length, file,
                              filename, lineno)) {
@@ -591,7 +591,8 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
                          pc.tokenStream.lineno);
 
     /* From this point the control must flow via the label out. */
-    cg.treeContext.flags |= tcflags;
+    cg.treeContext.flags |= (uint16) tcflags;
+    cg.staticDepth = TCF_GET_STATIC_DEPTH(tcflags);
 
     /*
      * Inline Statements() to emit as we go to save space.
@@ -625,9 +626,9 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     }
 
     /*
-     * Global variables and regexps shares the index space with locals. Due
-     * to incremental code generation we need to patch the bytecode to adjust
-     * the local references to skip the globals.
+     * Global variables and regexps shares the index space with locals. Due to
+     * incremental code generation we need to patch the bytecode to adjust the
+     * local references to skip the globals.
      */
     scriptGlobals = cg.treeContext.ngvars + cg.regexpList.length;
     if (scriptGlobals != 0) {
@@ -643,7 +644,7 @@ js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
             JS_ASSERT(code < end);
             op = (JSOp) *code;
             cs = &js_CodeSpec[op];
-            len = cs->length > 0
+            len = (cs->length > 0)
                   ? (uintN) cs->length
                   : js_GetVariableBytecodeLength(code);
             if (JOF_TYPE(cs->format) == JOF_LOCAL ||
@@ -1239,7 +1240,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     /* Initialize early for possible flags mutation via DestructuringExpr. */
     TREE_CONTEXT_INIT(&funtc, tc->parseContext);
-    funtc.flags |= TCF_IN_FUNCTION;
+    funtc.flags |= TCF_IN_FUNCTION | (tc->flags & TCF_COMPILE_N_GO);
     funtc.fun = fun;
 
     /* Now parse formal argument list and compute fun->nargs. */
@@ -1446,7 +1447,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_funpob = funpob;
     pn->pn_op = op;
     pn->pn_body = body;
-    pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS);
+    pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS | TCF_COMPILE_N_GO);
     TREE_CONTEXT_FINISH(cx, &funtc);
     return result;
 }
@@ -1993,6 +1994,14 @@ CheckDestructuring(JSContext *cx, BindData *data,
                                     JSREPORT_ERROR, JSMSG_ARRAY_COMP_LEFTSIDE);
         return JS_FALSE;
     }
+
+#if JS_HAS_DESTRUCTURING_SHORTHAND
+    if (right && (right->pn_extra & PNX_SHORTHAND)) {
+        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), right,
+                                    JSREPORT_ERROR, JSMSG_BAD_OBJECT_INIT);
+        return JS_FALSE;
+    }
+#endif
 
     fpvd.table.ops = NULL;
     lhs = left->pn_head;
@@ -3222,6 +3231,19 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 break;
             }
 
+            /*
+             * Some obvious assertions here, but they may help clarify the
+             * situation. This stmt is not yet a scope, so it must not be a
+             * catch block (which is a lexical scope by definition).
+             */
+            JS_ASSERT(!(stmt->flags & SIF_SCOPE));
+            JS_ASSERT(stmt != tc->topScopeStmt);
+            JS_ASSERT(stmt->type == STMT_BLOCK ||
+                      stmt->type == STMT_SWITCH ||
+                      stmt->type == STMT_TRY ||
+                      stmt->type == STMT_FINALLY);
+            JS_ASSERT(!stmt->downScope);
+
             /* Convert the block statement into a scope statement. */
             obj = js_NewBlockObject(cx);
             if (!obj)
@@ -3236,23 +3258,11 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
              * lacks the SIF_SCOPE flag, it must be a try, catch, or finally
              * block.
              */
-            JS_ASSERT(!(stmt->flags & SIF_SCOPE));
             stmt->flags |= SIF_SCOPE;
-            if (stmt != tc->topScopeStmt) {
-                JS_ASSERT(!stmt->downScope);
-                JS_ASSERT(stmt->type == STMT_BLOCK ||
-                          stmt->type == STMT_SWITCH ||
-                          stmt->type == STMT_TRY ||
-                          stmt->type == STMT_FINALLY);
-                stmt->downScope = tc->topScopeStmt;
-                tc->topScopeStmt = stmt;
-                JS_SCOPE_DEPTH_METERING(
-                    ++tc->scopeDepth > tc->maxScopeDepth &&
-                    tc->maxScopeDepth = tc->scopeDepth);
-            } else {
-                JS_ASSERT(stmt->type == STMT_CATCH);
-                JS_ASSERT(stmt->downScope);
-            }
+            stmt->downScope = tc->topScopeStmt;
+            tc->topScopeStmt = stmt;
+            JS_SCOPE_DEPTH_METERING(++tc->scopeDepth > tc->maxScopeDepth &&
+                                    (tc->maxScopeDepth = tc->scopeDepth));
 
             STOBJ_SET_PARENT(obj, tc->blockChain);
             tc->blockChain = obj;
@@ -4497,18 +4507,32 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn2->pn_pos.begin = pn->pn_pos.begin;
             pn2->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
 
-            /* Optimize o['p'] to o.p by rewriting pn2. */
-            if (pn3->pn_type == TOK_STRING) {
-                pn2->pn_type = TOK_DOT;
-                pn2->pn_op = JSOP_GETPROP;
-                pn2->pn_arity = PN_NAME;
-                pn2->pn_expr = pn;
-                pn2->pn_atom = pn3->pn_atom;
-            } else {
+            /*
+             * Optimize o['p'] to o.p by rewriting pn2, but avoid rewriting
+             * o['0'] to use JSOP_GETPROP, to keep fast indexing disjoint in
+             * the interpreter from fast property access. However, if the
+             * bracketed string is a uint32, we rewrite pn3 to be a number
+             * instead of a string.
+             */
+            do {
+                if (pn3->pn_type == TOK_STRING) {
+                    jsuint index;
+
+                    if (!js_IdIsIndex(ATOM_TO_JSID(pn3->pn_atom), &index)) {
+                        pn2->pn_type = TOK_DOT;
+                        pn2->pn_op = JSOP_GETPROP;
+                        pn2->pn_arity = PN_NAME;
+                        pn2->pn_expr = pn;
+                        pn2->pn_atom = pn3->pn_atom;
+                        break;
+                    }
+                    pn3->pn_type = TOK_NUMBER;
+                    pn3->pn_dval = index;
+                }
                 pn2->pn_op = JSOP_GETELEM;
                 pn2->pn_left = pn;
                 pn2->pn_right = pn3;
-            }
+            } while (0);
         } else if (allowCallSyntax && tt == TOK_LP) {
             pn2 = NewParseNode(cx, ts, PN_LIST, tc);
             if (!pn2)

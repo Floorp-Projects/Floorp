@@ -1885,6 +1885,10 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
     case 2:
       mAutoCompleteMatchBehavior = MATCH_BOUNDARY;
       break;
+    case 3:
+      mAutoCompleteMatchBehavior = MATCH_BEGINNING;
+      break;
+    case 1:
     default:
       mAutoCompleteMatchBehavior = MATCH_BOUNDARY_ANYWHERE;
       break;
