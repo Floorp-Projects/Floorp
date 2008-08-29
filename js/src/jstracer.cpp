@@ -2540,7 +2540,7 @@ TraceRecorder::ifop()
     jsval& v = stackval(-1);
     if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
         guard(JSVAL_TO_BOOLEAN(v) != 1,
-              lir->ins_eq0(lir->ins2(LIR_eq, get(&v), lir->insImm(1))),
+              lir->ins_eq0(lir->ins2i(LIR_eq, get(&v), 1)),
               BRANCH_EXIT);
     } else if (JSVAL_IS_OBJECT(v)) {
         guard(JSVAL_IS_NULL(v), lir->ins_eq0(get(&v)), BRANCH_EXIT);
@@ -2770,7 +2770,7 @@ TraceRecorder::cmp(LOpcode op, bool negate)
 
     /* We update the stack after the guard. This is safe since
        the guard bails out at the comparison and the interpreter
-       will this re-execute the comparison. This way the
+       will therefore re-execute the comparison. This way the
        value of the condition doesn't have to be calculated and
        saved on the stack in most cases. */
     set(&l, x);
@@ -2946,8 +2946,12 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                   MISMATCH_EXIT);
         }
     } else {
-        JS_ASSERT(entry->kpc == (jsbytecode*) atoms[GET_INDEX(cx->fp->regs->pc)]);
+#ifdef DEBUG
+        ptrdiff_t pcoff = (mode == JOF_VARPROP) ? SLOTNO_LEN : 0;
+        jsatomid index = js_GetIndexFromBytecode(cx, cx->fp->script, cx->fp->regs->pc, pcoff);
+        JS_ASSERT(entry->kpc == (jsbytecode*) atoms[index]);
         JS_ASSERT(entry->kshape == jsuword(aobj));
+#endif
         if (aobj != globalObj) {
             guard(true, addName(lir->ins2i(LIR_eq, obj_ins, entry->kshape), "guard(kobj)"),
                   MISMATCH_EXIT);
@@ -3087,7 +3091,7 @@ TraceRecorder::box_jsval(jsval v, LIns*& v_ins)
     if (isNumber(v)) {
         LIns* args[] = { v_ins, cx_ins };
         v_ins = lir->insCall(F_BoxDouble, args);
-        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONSTPTR(JSVAL_ERROR_COOKIE)),
+        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)),
               OOM_EXIT);
         return true;
     }
@@ -3402,7 +3406,7 @@ TraceRecorder::record_JSOP_EQ()
 
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
-           will this re-execute the comparison. This way the
+           will therefore re-execute the comparison. This way the
            value of the condition doesn't have to be calculated and
            saved on the stack in most cases. */
         set(&l, x);
@@ -3418,7 +3422,7 @@ TraceRecorder::record_JSOP_EQ()
 
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
-           will this re-execute the comparison. This way the
+           will therefore re-execute the comparison. This way the
            value of the condition doesn't have to be calculated and
            saved on the stack in most cases. */
         set(&l, x);
@@ -3444,7 +3448,7 @@ TraceRecorder::record_JSOP_NE()
 
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
-           will this re-execute the comparison. This way the
+           will therefore re-execute the comparison. This way the
            value of the condition doesn't have to be calculated and
            saved on the stack in most cases. */
         set(&l, x);
@@ -3460,7 +3464,7 @@ TraceRecorder::record_JSOP_NE()
 
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
-           will this re-execute the comparison. This way the
+           will therefore re-execute the comparison. This way the
            value of the condition doesn't have to be calculated and
            saved on the stack in most cases. */
         set(&l, x);
@@ -3777,7 +3781,7 @@ TraceRecorder::record_JSOP_NEW()
             break;
           }
           case FAIL_VOID:
-            guard(false, lir->ins2i(LIR_eq, res_ins, 2), OOM_EXIT);
+            guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
             break;
           default:;
         }
@@ -4023,7 +4027,7 @@ TraceRecorder::record_JSOP_GETELEM()
 
         LIns* args[] = { get(&r), get(&l), cx_ins };
         LIns* v_ins = lir->insCall(F_Any_getelem, args);
-        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONSTPTR(JSVAL_ERROR_COOKIE)),
+        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)),
               MISMATCH_EXIT);
         if (!unbox_jsval(v, v_ins))
             ABORT_TRACE("JSOP_GETELEM");
@@ -4410,7 +4414,7 @@ TraceRecorder::record_JSOP_CALL()
             break;
           }
           case FAIL_VOID:
-            guard(false, lir->ins2i(LIR_eq, res_ins, 2), OOM_EXIT);
+            guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
             break;
           default:;
         }
@@ -4930,9 +4934,9 @@ TraceRecorder::forInLoop(jsval* vp)
     if (!JSVAL_IS_PRIMITIVE(iterobj_val)) {
         LIns* args[] = { get(&iterobj_val), cx_ins };
         LIns* v_ins = lir->insCall(F_FastCallIteratorNext, args);
-        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONSTPTR(JSVAL_ERROR_COOKIE)), OOM_EXIT);
+        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), OOM_EXIT);
 
-        LIns* flag_ins = lir->ins_eq0(lir->ins2(LIR_eq, v_ins, INS_CONSTPTR(JSVAL_HOLE)));
+        LIns* flag_ins = lir->ins_eq0(lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_HOLE)));
         LIns* iter_ins = get(vp);
         if (!box_jsval(JSVAL_STRING, iter_ins))
             return false;
@@ -5113,7 +5117,7 @@ TraceRecorder::record_JSOP_IN()
 
         LIns* args[] = { get(&lval), obj_ins, cx_ins };
         x = lir->insCall(F_HasNamedProperty, args);
-        guard(false, lir->ins2i(LIR_eq, x, 2), OOM_EXIT);
+        guard(false, lir->ins2i(LIR_eq, x, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
         x = lir->ins2i(LIR_eq, x, 1);
     } while (0);
 
@@ -5124,7 +5128,7 @@ TraceRecorder::record_JSOP_IN()
 
     /* We update the stack after the guard. This is safe since
        the guard bails out at the comparison and the interpreter
-       will this re-execute the comparison. This way the
+       will therefore re-execute the comparison. This way the
        value of the condition doesn't have to be calculated and
        saved on the stack in most cases. */
     set(&lval, x);
