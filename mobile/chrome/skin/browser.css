@@ -161,18 +161,18 @@ toolbarbutton.browser-control-button {
   -moz-image-region: rect(0px 36px 36px 0px);
 }
 
-#toolbar-main[mode="loading"] > #urlbar-icons > #tool-go,
-#toolbar-main[mode="loading"] > #urlbar-icons > #tool-reload {
+#toolbar-main[mode="loading"] > #urlbar-container > #urlbar-icons > #tool-go,
+#toolbar-main[mode="loading"] > #urlbar-container > #urlbar-icons > #tool-reload {
   visibility: collapse;
 }
 
-#toolbar-main[mode="view"] > #urlbar-icons > #tool-go,
-#toolbar-main[mode="view"] > #urlbar-icons > #tool-stop {
+#toolbar-main[mode="view"] > #urlbar-container > #urlbar-icons > #tool-go,
+#toolbar-main[mode="view"] > #urlbar-container > #urlbar-icons > #tool-stop {
   visibility: collapse;
 }
 
-#toolbar-main[mode="edit"] > #urlbar-icons > #tool-reload,
-#toolbar-main[mode="edit"] > #urlbar-icons > #tool-stop {
+#toolbar-main[mode="edit"] > #urlbar-container > #urlbar-icons > #tool-reload,
+#toolbar-main[mode="edit"] > #urlbar-container > #urlbar-icons > #tool-stop {
   visibility: collapse;
 }
 
