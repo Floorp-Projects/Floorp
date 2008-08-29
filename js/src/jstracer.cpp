@@ -1936,7 +1936,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
                GuardRecord** innermostNestedGuardp);
 
 bool
-js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlineCallCount)
+js_RecordBranch(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
     if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->title.ownercx != cx) {
@@ -1944,6 +1944,9 @@ js_ContinueRecording(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& 
         return false; /* we stay away from shared global objects */
     }
 #endif
+    /* Silently ignore downward branches during recording. */
+    if (cx->fp->regs->pc > oldpc)
+        return true;
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
     if (r->isLoopHeader(cx)) { /* did we hit the start point? */
         if (fragmento->assm()->error()) {
@@ -2196,20 +2199,24 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
 }
 
 bool
-js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
+js_MonitorBranch(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
-    /* is the recorder currently active? */
+    /* Is the recorder currently active? */
     if (tm->recorder) {
-        if (js_ContinueRecording(cx, tm->recorder, oldpc, inlineCallCount))
+        if (js_RecordBranch(cx, tm->recorder, oldpc, inlineCallCount))
             return true;
         /* recording was aborted, treat like a regular loop edge hit */
     }
     JS_ASSERT(!tm->recorder);
 
-    /* check if our quick cache has an entry for this ip, otherwise ask fragmento. */
+    /* If the recorder is not active, and this is not a backwards branch, just ignore it. */
     jsbytecode* pc = cx->fp->regs->pc;
+    if (pc > oldpc)
+        return false;
+    
+    /* check if our quick cache has an entry for this ip, otherwise ask fragmento. */
     Fragment* f;
     JSFragmentCacheEntry* cacheEntry = &tm->fcache[jsuword(pc) & JS_FRAGMENT_CACHE_MASK];
     if (cacheEntry->pc == pc) {

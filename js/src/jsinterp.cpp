@@ -2614,7 +2614,7 @@ js_Interpret(JSContext *cx)
 #define MONITOR_BRANCH(oldpc)                                                 \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
-            ENABLE_TRACER(js_LoopEdge(cx, oldpc, inlineCallCount));           \
+            ENABLE_TRACER(js_MonitorBranch(cx, oldpc, inlineCallCount));      \
             fp = cx->fp;                                                      \
             script = fp->script;                                              \
             atoms = script->atomMap.vector;                                   \
@@ -2644,10 +2644,9 @@ js_Interpret(JSContext *cx)
 #define BRANCH(n)                                                             \
     JS_BEGIN_MACRO                                                            \
         regs.pc += n;                                                         \
-        if (n <= 0) {                                                         \
-            MONITOR_BRANCH(regs.pc - n);                                      \
+        if (n <= 0)                                                           \
             CHECK_BRANCH();                                                   \
-        }                                                                     \
+        MONITOR_BRANCH(regs.pc - n);                                          \
         op = (JSOp) *regs.pc;                                                 \
         DO_OP();                                                              \
     JS_END_MACRO
