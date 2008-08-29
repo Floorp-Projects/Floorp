@@ -2568,7 +2568,7 @@ js_Interpret(JSContext *cx)
 #endif /* !JS_THREADED_INTERP */
 
     /* We had better not be entering the interpreter from JIT-compiled code. */
-    JS_ASSERT(!cx->runningJittedCode);
+    JS_ASSERT(!cx->executingTrace);
 
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
