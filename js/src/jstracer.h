@@ -361,7 +361,7 @@ public:
     JS_END_MACRO
 
 extern bool
-js_LoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount);
+js_MonitorBranch(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount);
 
 extern void
 js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason);
