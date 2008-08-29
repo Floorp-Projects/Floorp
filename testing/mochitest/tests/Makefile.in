@@ -72,6 +72,7 @@ _TEST_FILES = test_MochiKit-Async.html \
 		FakeJSAN.js \
 		standalone.js \
 		test_MochiKit-Async.json \
+		test_sanity.html \
 		$(NULL)
 
 # Copy the MochiKit tests into subdirectory, so the top level is all dirs

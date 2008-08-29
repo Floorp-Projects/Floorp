@@ -187,7 +187,9 @@ OPDEF(JSOP_STRICTNE,  73, "strictne",   NULL,         1,  2,  1,  10,  JOF_BYTE|
 /* Lexical closure constructor. */
 OPDEF(JSOP_CLOSURE,   74, "closure",    NULL,         3,  0,  0,  0,  JOF_OBJECT)
 
-OPDEF(JSOP_UNUSED75,  75, "unused75",   NULL,         1,  0,  0,  0,  JOF_BYTE)
+/* Variant of JSOP_NULL for default (global) |this| parameter pushing. */
+OPDEF(JSOP_NULLTHIS,  75, js_null_str,  js_null_str,  1,  0,  1, 19,  JOF_BYTE)
+
 OPDEF(JSOP_UNUSED76,  76, "unused76",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED77,  77, "unused77",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED78,  78, "unused78",   NULL,         1,  0,  0,  0,  JOF_BYTE)
@@ -237,7 +239,7 @@ OPDEF(JSOP_LOCALDEC,  102,"localdec",   NULL,         3,  0,  1, 15,  JOF_LOCAL|
  * Initialize for-in iterator using the JSITER_* flag bits in this op's uint8
  * immediate operand. See also JSOP_ENDITER.
  */
-OPDEF(JSOP_ITER,      103,"iter",       NULL,         2,  1,  1,  0,  JOF_2BYTE)
+OPDEF(JSOP_ITER,      103,"iter",       NULL,         2,  1,  1,  0,  JOF_UINT8)
 
 /* ECMA-compliant for/in ops. */
 OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_FOR)
@@ -411,7 +413,12 @@ OPDEF(JSOP_XMLCOMMENT,    182,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLPI,         183,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_CALLPROP,      184,"callprop",   NULL,     3,  1,  2, 18,  JOF_ATOM|JOF_PROP|JOF_CALLOP)
 OPDEF(JSOP_GETFUNNS,      185,"getfunns",   NULL,     1,  0,  1, 19,  JOF_BYTE)
-OPDEF(JSOP_UNUSED186,     186,"unused186",  NULL,     1,  0,  0,  0,  JOF_BYTE)
+
+/*
+ * Get a display (free) variable from the closure's reserved slots.
+ */
+OPDEF(JSOP_GETUPVAR,      186,"getupvar",   NULL,     3,  0,  1, 19,  JOF_UINT16|JOF_NAME)
+
 OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
 
 /*
@@ -425,7 +432,7 @@ OPDEF(JSOP_UINT24,        188,"uint24",     NULL,     4,  0,  1, 16,  JOF_UINT24
  * JSOP_INDEXBASE and JSOP_RESETBASE to provide the upper bits of the index.
  * See jsemit.c, EmitIndexOp.
  */
-OPDEF(JSOP_INDEXBASE,     189,"atombase",   NULL,     2,  0,  0,  0,  JOF_2BYTE|JOF_INDEXBASE)
+OPDEF(JSOP_INDEXBASE,     189,"atombase",   NULL,     2,  0,  0,  0,  JOF_UINT8|JOF_INDEXBASE)
 OPDEF(JSOP_RESETBASE,     190,"resetbase",  NULL,     1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_RESETBASE0,    191,"resetbase0", NULL,     1,  0,  0,  0,  JOF_BYTE)
 
@@ -478,7 +485,10 @@ OPDEF(JSOP_GENERATOR,     210,"generator",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_YIELD,         211,"yield",       NULL,    1,  1,  1,  1,  JOF_BYTE)
 OPDEF(JSOP_ARRAYPUSH,     212,"arraypush",   NULL,    3,  1,  0,  3,  JOF_LOCAL)
 
-OPDEF(JSOP_UNUSED213,     213,"unused213",   NULL,    1,  0,  0,  0,  JOF_BYTE)
+/*
+ * In the forthcoming great opcode reorg, this should go next to JSOP_GETUPVAR.
+ */
+OPDEF(JSOP_CALLUPVAR,     213, "callupvar",  NULL,    3,  0,  2, 19,  JOF_UINT16|JOF_NAME|JOF_CALLOP)
 
 /*
  * Variant of JSOP_ENUMELEM for destructuring const (const [a, b] = ...).

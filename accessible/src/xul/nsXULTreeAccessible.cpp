@@ -783,8 +783,11 @@ NS_IMETHODIMP nsXULTreeitemAccessible::Shutdown()
   return nsLeafAccessible::Shutdown();
 }
 
-NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& aName)
+NS_IMETHODIMP
+nsXULTreeitemAccessible::GetName(nsAString& aName)
 {
+  aName.Truncate();
+
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 

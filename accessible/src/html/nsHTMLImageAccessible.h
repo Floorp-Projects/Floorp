@@ -55,15 +55,14 @@ class nsHTMLImageAccessible : public nsLinkableAccessible,
   NS_DECL_ISUPPORTS_INHERITED
 
 public:
-  //action0 may exist depends on whether an onclick is associated with it
-  enum { eAction_ShowLongDescription = 1 };
-
   nsHTMLImageAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
   // nsIAccessibleHyperLink
@@ -95,6 +94,25 @@ protected:
   // share area elements but we need to have separate area accessibles for
   // each image accessible.
   nsAccessNodeHashtable *mAccessNodeCache;
+
+private:
+  /**
+   * Determine if this image accessible has a longdesc attribute.
+   *
+   * @returns  true if the longdesc attribute is present.
+   */
+  PRBool HasLongDesc();
+  
+  /**
+   * Used by GetActionName and DoAction to ensure the index for opening the
+   * longdesc URL is valid.
+   * It is always assumed that the highest possible index opens the longdesc.
+   *
+   * @param aIndex  The 0-based index to be tested.
+   *
+   * @returns  true if index is valid for longdesc action.
+   */
+  PRBool IsValidLongDescIndex(PRUint8 aIndex);
 };
 
 #endif

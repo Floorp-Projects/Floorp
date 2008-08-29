@@ -14,15 +14,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is Mozilla SpiderMonkey JavaScript 1.8 code, released
+ * March 4, 2008.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
- * the Initial Developer. All Rights Reserved.
+ *   Igor Bukanov <igor@mir2.org>
  *
  * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),

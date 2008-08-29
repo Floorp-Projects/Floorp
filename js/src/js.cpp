@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=78:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -234,6 +234,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
     int lineno;
     int startline;
     FILE *file;
+    uint32 oldopts;
 
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
@@ -266,10 +267,14 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             }
         }
         ungetc(ch, file);
+
+        oldopts = JS_GetOptions(cx);
+        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
         script = JS_CompileFileHandle(cx, obj, filename, file);
+        JS_SetOptions(cx, oldopts);
         if (script) {
             if (!compileOnly)
-                (void)JS_ExecuteScript(cx, obj, script, &result);
+                (void)JS_ExecuteScript(cx, obj, script, NULL);
             JS_DestroyScript(cx, script);
         }
 
@@ -347,6 +352,7 @@ static struct {
     {"xml",             JSOPTION_XML},
     {"relimit",         JSOPTION_RELIMIT},
     {"anonfunfix",      JSOPTION_ANONFUNFIX},
+    {"jit",             JSOPTION_JIT},
     {NULL,              0}
 };
 
@@ -454,6 +460,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             JS_ToggleOptions(cx, JSOPTION_XML);
             break;
 
+        case 'j':
+            JS_ToggleOptions(cx, JSOPTION_JIT);
+            break;
+            
         case 'o':
             if (++i == argc)
                 return usage();
@@ -632,7 +642,6 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     const char *filename;
     JSScript *script;
     JSBool ok;
-    jsval result;
     uint32 oldopts;
 
     for (i = 0; i < argc; i++) {
@@ -643,17 +652,17 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         filename = JS_GetStringBytes(str);
         errno = 0;
         oldopts = JS_GetOptions(cx);
-        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
+        JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
         script = JS_CompileFile(cx, obj, filename);
+        JS_SetOptions(cx, oldopts);
         if (!script) {
             ok = JS_FALSE;
         } else {
             ok = !compileOnly
-                 ? JS_ExecuteScript(cx, obj, script, &result)
+                 ? JS_ExecuteScript(cx, obj, script, NULL)
                  : JS_TRUE;
             JS_DestroyScript(cx, script);
         }
-        JS_SetOptions(cx, oldopts);
         if (!ok)
             return JS_FALSE;
     }
@@ -744,12 +753,14 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+Print(JSContext *cx, uintN argc, jsval *vp)
 {
+    jsval *argv;
     uintN i;
     JSString *str;
     char *bytes;
 
+    argv = JS_ARGV(cx, vp);
     for (i = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
@@ -860,7 +871,7 @@ GCZeal(JSContext *cx, uintN argc, jsval *vp)
 
     if (!JS_ValueToECMAUint32(cx, argc == 0 ? JSVAL_VOID : vp[2], &zeal))
         return JS_FALSE;
-    JS_SetGCZeal(cx, zeal);
+    JS_SetGCZeal(cx, (uint8)zeal);
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -943,8 +954,6 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
         { "double",     JSTRACE_DOUBLE      },
         { "string",     JSTRACE_STRING      },
 #if JS_HAS_XML_SUPPORT
-        { "namespace",  JSTRACE_NAMESPACE   },
-        { "qname",      JSTRACE_QNAME       },
         { "xml",        JSTRACE_XML         },
 #endif
     };
@@ -1409,6 +1418,42 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         TryNotes(cx, script);
     }
     return JS_TRUE;
+}
+
+static JSBool
+DisassFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    const char *filename;
+    JSScript *script;
+    JSBool ok;
+    uint32 oldopts;
+    
+    if (!argc)
+        return JS_TRUE;
+
+    str = JS_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
+
+    filename = JS_GetStringBytes(str);
+    oldopts = JS_GetOptions(cx);
+    JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
+    script = JS_CompileFile(cx, obj, filename);
+    JS_SetOptions(cx, oldopts);
+    if (!script)
+        return JS_FALSE;
+
+    obj = JS_NewScriptObject(cx, script);
+    if (!obj)
+        return JS_FALSE;
+    
+    *rval = OBJECT_TO_JSVAL(obj); /* I like to root it, root it. */
+    ok = Disassemble(cx, obj, 1, rval, rval); /* gross, but works! */
+    *rval = JSVAL_VOID;
+
+    return ok;
 }
 
 static JSBool
@@ -2756,7 +2801,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("options",        Options,        0,0,0),
     JS_FS("load",           Load,           1,0,0),
     JS_FN("readline",       ReadLine,       0,0),
-    JS_FS("print",          Print,          0,0,0),
+    JS_FN("print",          Print,          0,0),
     JS_FS("help",           Help,           0,0,0),
     JS_FS("quit",           Quit,           0,0,0),
     JS_FN("gc",             GC,             0,0),
@@ -2775,6 +2820,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("throwError",     ThrowError,     0,0,0),
 #ifdef DEBUG
     JS_FS("dis",            Disassemble,    1,0,0),
+    JS_FS("disfile",        DisassFile,     1,0,0),
     JS_FS("dissrc",         DisassWithSrc,  1,0,0),
     JS_FN("dumpHeap",       DumpHeap,       0,0),
     JS_FS("notes",          Notes,          1,0,0),
@@ -2854,6 +2900,7 @@ static const char *const shell_help_messages[] = {
 "throwError()             Throw an error from JS_ReportError",
 #ifdef DEBUG
 "dis([fun])               Disassemble functions into bytecodes",
+"disfile('foo.js')        Disassemble script file into bytecodes",
 "dissrc([fun])            Disassemble functions with source lines",
 "dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])\n"
 "  Interface to JS_DumpHeap with output sent to file",

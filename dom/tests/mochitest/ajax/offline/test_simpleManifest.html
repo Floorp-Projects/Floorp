@@ -36,26 +36,6 @@ function addFinished()
   OfflineTest.finish();
 }
 
-function secondUpdate()
-{
-  OfflineTest.ok(gGotChecking, "Should get a checking event");
-  OfflineTest.ok(gGotDownloading, "Should get a downloading event");
-
-  // The document that requested the manifest should be in the cache
-  OfflineTest.checkCache(window.location.href, true);
-
-  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/SimpleTest.js", true);
-  OfflineTest.checkCache("http://localhost:8888/MochiKit/packed.js", true);
-  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", true);
-
-  // Now add a file using the applicationCache API
-  applicationCache.add("http://localhost:8888/tests/SimpleTest/EventUtils.js");
-
-  // Wait for the add() to be downloaded
-  OfflineTest.waitForAdd("http://localhost:8888/tests/SimpleTest/EventUtils.js",
-                         OfflineTest.priv(addFinished));
-}
-
 function manifestUpdated()
 {
   OfflineTest.ok(gGotChecking, "Should get a checking event");
@@ -76,25 +56,17 @@ function manifestUpdated()
   OfflineTest.checkCache("https://localhost:8888/MochiKit/packed.js", false);
   OfflineTest.checkCache("bad:/uri/invalid", false);
 
-  // Remove items from the cache.
-  OfflineTest.clear();
+  applicationCache.swapCache();
 
-  // Make sure OfflineTest.clear() properly removed the items
+  // XXX: make sure that the previous version went away after the swapCache().
 
-  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/SimpleTest.js", false);
-  OfflineTest.checkCache("http://localhost:8888/MochiKit/packed.js", false);
-  OfflineTest.checkCache("http://localhost:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false);
-  OfflineTest.checkCache("http://localhost:8888/tests/SimpleTest/EventUtils.js",
-                         false);
+  // Now add a file using the applicationCache API
+  applicationCache.add("http://localhost:8888/tests/SimpleTest/EventUtils.js");
 
-  // Now make sure applicationCache.update() does what we expect.
-  applicationCache.oncached = OfflineTest.priv(secondUpdate);
-
-  gGotChecking = false;
-  gGotDownloading = false;
-  applicationCache.update();
+  // Wait for the add() to be downloaded
+  OfflineTest.waitForAdd("http://localhost:8888/tests/SimpleTest/EventUtils.js",
+                         OfflineTest.priv(addFinished));
 }
-
 
 if (OfflineTest.setup()) {
   OfflineTest.ok(applicationCache instanceof EventTarget,

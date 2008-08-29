@@ -170,6 +170,7 @@ ACCESSIBILITY_ATOM(href, "href") // XUL, XLink
 ACCESSIBILITY_ATOM(increment, "increment") // XUL
 ACCESSIBILITY_ATOM(lang, "lang")
 ACCESSIBILITY_ATOM(linkedPanel, "linkedpanel") // XUL
+ACCESSIBILITY_ATOM(longDesc, "longdesc")
 ACCESSIBILITY_ATOM(maxpos, "maxpos") // XUL
 ACCESSIBILITY_ATOM(minpos, "minpos") // XUL
 ACCESSIBILITY_ATOM(multiline, "multiline") // XUL
@@ -187,6 +188,7 @@ ACCESSIBILITY_ATOM(type, "type")
 ACCESSIBILITY_ATOM(value, "value")
 
   // Alphabetical list of text attributes (AT API)
+ACCESSIBILITY_ATOM(backgroundColor, "background-color")
 ACCESSIBILITY_ATOM(invalid, "invalid")
 ACCESSIBILITY_ATOM(language, "language")
 

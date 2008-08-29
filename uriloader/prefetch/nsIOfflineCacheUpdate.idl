@@ -115,7 +115,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
  * load its items one by one, sending itemCompleted() to any registered
  * observers.
  */
-[scriptable, uuid(7dc06ede-1098-4384-b95e-65525ab254c9)]
+[scriptable, uuid(877261bb-b952-4d27-847e-859bdd47c0ec)]
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Fetch the status of the running update.  This will return a value
@@ -128,6 +128,12 @@ interface nsIOfflineCacheUpdate : nsISupports {
    * FALSE if the complete cache update process is happening.
    */
   readonly attribute boolean partial;
+
+  /**
+   * TRUE if this is an upgrade attempt, FALSE if it is a new cache
+   * attempt.
+   */
+  readonly attribute boolean isUpgrade;
 
   /**
    * The domain being updated, and the domain that will own any URIs added
@@ -148,21 +154,30 @@ interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Initialize the update.
    *
-   * @param aPartialUpdate
-   *        TRUE if the update should just update the URIs given to it,
-   *        FALSE if all URLs for the owner domain should be added.
    * @param aManifestURI
-   *        The manifest URI to be checked, or for partial updates the
-   *        manifest that should own resources that are added.
+   *        The manifest URI to be checked.
    * @param aDocumentURI
    *        The page that is requesting the update.
    */
-  void init(in boolean aPartialUpdate,
-            in nsIURI aManifestURI,
-            in nsIURI aDocumentURI);
+  void init(in nsIURI aManifestURI, in nsIURI aDocumentURI);
 
   /**
-   * Add a URI to the offline cache as part of the update.
+   * Initialize the update for partial processing. 
+   *
+   * @param aManifestURI
+   *        The manifest URI of the related cache.
+   * @param aClientID
+   *        Client  ID of the cache to store resource to. This ClientID
+   *        must be ID of cache in the cache group identified by
+   *        the manifest URI passed in the first parameter.
+   * @param aDocumentURI
+   *        The page that is requesting the update. May be null 
+   *        when this information is unknown.
+   */
+  void initPartial(in nsIURI aManifestURI, in ACString aClientID, in nsIURI aDocumentURI);
+
+  /**
+   * Add a dynamic URI to the offline cache as part of the update.
    *
    * @param aURI
    *        The URI to add.

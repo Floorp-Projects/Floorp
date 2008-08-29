@@ -156,9 +156,9 @@ UNMAKE_PACKAGE	= \
   }; \
   unset NEXT_ROOT; \
   export PAGER=true; \
-  echo Y | hdiutil attach -readonly -mountroot /tmp -private -noautoopen $(UNPACKAGE) > hdi.output; \
+  expect $(_ABS_MOZSRCDIR)/build/package/mac_osx/installdmg.ex $(UNPACKAGE) > hdi.output; \
   DEV_NAME=`perl -n -e 'if($$_=~/(\/dev\/disk[^ ]*)/) {print $$1."\n";exit;}'< hdi.output`; \
-  MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$$_,2);if($$_[1]=~/(\/.*)/) {print $$1."\n";exit;}'< hdi.output` || cleanup 1; \
+  MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$$_,2);if($$_[1]=~/(\/.[^\r]*)/) {print $$1;exit;}'< hdi.output` || cleanup 1; \
   rsync -a "$${MOUNTPOINT}/$(_APPNAME)" $(MOZ_PKG_APPNAME) || cleanup 1; \
   test -n "$(MOZ_PKG_MAC_DSSTORE)" && \
     { rsync -a "$${MOUNTPOINT}/.DS_Store" "$(MOZ_PKG_MAC_DSSTORE)" || cleanup 1; }; \

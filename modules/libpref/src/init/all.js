@@ -128,6 +128,8 @@ pref("browser.chrome.image_icons.max_size", 1024);
 
 pref("browser.triple_click_selects_paragraph", true);
 
+// 0 = Off, 1 = Full, 2 = Tagged Images Only. 
+// See eCMSMode in gfx/thebes/public/gfxPlatform.h
 pref("gfx.color_management.mode", 0);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
@@ -498,6 +500,8 @@ pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
 pref("javascript.options.relimit",          false);
+pref("javascript.options.jit.content",      false);
+pref("javascript.options.jit.chrome",       false);
 
 // advanced prefs
 pref("security.enable_java",                true);

@@ -47,6 +47,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
+#include "nsListBoxBodyFrame.h"
 
 class nsListBoxObject : public nsPIListBoxObject, public nsBoxObject
 {
@@ -223,7 +224,12 @@ nsListBoxObject::GetListBoxBody(PRBool aFlush)
      return nsnull;
 
   // It's a frame. Refcounts are irrelevant.
-  CallQueryInterface(yeahBaby, &mListBoxBody);
+  nsIListBoxObject* listBoxBody = nsnull;
+  CallQueryInterface(yeahBaby, &listBoxBody);
+  NS_ENSURE_TRUE(listBoxBody &&
+                 static_cast<nsListBoxBodyFrame*>(listBoxBody)->SetBoxObject(this),
+                 nsnull);
+  mListBoxBody = listBoxBody;
   return mListBoxBody;
 }
 

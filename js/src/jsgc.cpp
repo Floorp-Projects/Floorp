@@ -50,14 +50,16 @@
  */
 #include "jsstddef.h"
 #include <stdlib.h>     /* for free */
+#include <math.h>
 #include <string.h>     /* for memset used when DEBUG */
 #include "jstypes.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jshash.h" /* Added by JSIFY */
-#include "jsapi.h"
-#include "jsatom.h"
 #include "jsbit.h"
 #include "jsclist.h"
+#include "jsprf.h"
+#include "jsapi.h"
+#include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsdbgapi.h"
@@ -73,6 +75,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jstracer.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -1746,7 +1749,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 
     arenaList = &rt->gcArenaList[flindex];
     for (;;) {
-        if (doGC) {
+        if (doGC && !cx->gcDontBlock) {
             /*
              * Keep rt->gcLock across the call into js_GC so we don't starve
              * and lose to racing threads who deplete the heap just after
@@ -1806,7 +1809,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         } else {
             a = NewGCArena(rt);
             if (!a) {
-                if (doGC)
+                if (doGC || cx->gcDontBlock)
                     goto fail;
                 doGC = JS_TRUE;
                 continue;
@@ -1909,7 +1912,8 @@ fail:
         JS_UNLOCK_GC(rt);
 #endif
     METER(astats->fail++);
-    JS_ReportOutOfMemory(cx);
+    if (!cx->gcDontBlock)
+        JS_ReportOutOfMemory(cx);
     return NULL;
 }
 
@@ -2280,14 +2284,6 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case JSTRACE_NAMESPACE:
-        js_TraceXMLNamespace(trc, (JSXMLNamespace *)thing);
-        break;
-
-      case JSTRACE_QNAME:
-        js_TraceXMLQName(trc, (JSXMLQName *)thing);
-        break;
-
       case JSTRACE_XML:
         js_TraceXML(trc, (JSXML *)thing);
         break;
@@ -2734,6 +2730,7 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         }
         TRACE_JSVALS(trc, 2 + nslots - skip, fp->argv - 2 + skip, "operand");
     }
+
     JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
     if (fp->scopeChain)
         JS_CALL_OBJECT_TRACER(trc, fp->scopeChain, "scope chain");
@@ -2755,8 +2752,6 @@ TraceWeakRoots(JSTracer *trc, JSWeakRoots *wr)
         "newborn object",
         "newborn double",
         "newborn string",
-        "newborn namespace",
-        "newborn qname",
         "newborn xml"
     };
 #endif
@@ -2889,6 +2884,11 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 }
 
 void
+js_TraceTraceMonitor(JSTracer *trc, JSTraceMonitor *tm)
+{
+}
+
+void
 js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
 {
     JSRuntime *rt = trc->context->runtime;
@@ -2907,6 +2907,17 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
 
     if (rt->gcExtraRootsTraceOp)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
+
+#ifdef JS_THREADSAFE
+    /* Trace the loop table(s) which can contain pointers to code objects. */
+   while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
+       if (!acx->thread)
+           continue;
+       js_TraceTraceMonitor(trc, &acx->thread->traceMonitor);
+   }
+#else
+   js_TraceTraceMonitor(trc, &rt->traceMonitor);
+#endif
 }
 
 static void
@@ -2981,6 +2992,18 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
 
     /* Finally, do the deed. */
     STOBJ_SET_SLOT(obj, slot, OBJECT_TO_JSVAL(pobj));
+}
+
+static void
+DestroyScriptsToGC(JSContext *cx, JSScript **listp)
+{
+    JSScript *script;
+
+    while ((script = *listp) != NULL) {
+        *listp = script->u.nextToGC;
+        script->u.nextToGC = NULL;
+        js_DestroyScript(cx, script);
+    }
 }
 
 /*
@@ -3210,8 +3233,15 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
   }
 #endif
 
-    /* Clear property cache weak references. */
+    /* Clear property and JIT caches (only for cx->thread if JS_THREADSAFE). */
     js_FlushPropertyCache(cx);
+#ifdef JS_TRACER
+    js_FlushJITCache(cx);
+    js_FlushJITOracle(cx);
+#endif
+
+    /* Destroy eval'ed scripts. */
+    DestroyScriptsToGC(cx, &JS_SCRIPTS_TO_GC(cx));
 
 #ifdef JS_THREADSAFE
     /*
@@ -3233,6 +3263,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         memset(acx->thread->gcFreeLists, 0, sizeof acx->thread->gcFreeLists);
         GSN_CACHE_CLEAR(&acx->thread->gsnCache);
         js_FlushPropertyCache(acx);
+#ifdef JS_TRACER
+        js_FlushJITCache(acx);
+#endif
+        DestroyScriptsToGC(cx, &acx->thread->scriptsToGC);
     }
 #else
     /* The thread-unsafe case just has to clear the runtime's GSN cache. */
@@ -3356,13 +3390,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                             /* Do nothing. */
                             break;
 #if JS_HAS_XML_SUPPORT
-                          case GCX_NAMESPACE:
-                            js_FinalizeXMLNamespace(cx,
-                                                    (JSXMLNamespace *) thing);
-                            break;
-                          case GCX_QNAME:
-                            js_FinalizeXMLQName(cx, (JSXMLQName *) thing);
-                            break;
                           case GCX_XML:
                             js_FinalizeXML(cx, (JSXML *) thing);
                             break;
@@ -3490,6 +3517,17 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     }
   }
 #endif /* JS_SCOPE_DEPTH_METER */
+
+#ifdef JS_DUMP_LOOP_STATS
+  { static FILE *lsfp;
+    if (!lsfp)
+        lsfp = fopen("/tmp/loopstats", "w");
+    if (lsfp) {
+        JS_DumpBasicStats(&rt->loopStats, "loops", lsfp);
+        fflush(lsfp);
+    }
+  }
+#endif /* JS_DUMP_LOOP_STATS */
 
     JS_LOCK_GC(rt);
 

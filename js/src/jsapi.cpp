@@ -79,6 +79,10 @@
 #include "jsstr.h"
 #include "prmjtime.h"
 
+#if !defined JS_THREADSAFE && defined JS_TRACER
+#include "jstracer.h"
+#endif
+
 #if JS_HAS_FILE_OBJECT
 #include "jsfile.h"
 #endif
@@ -780,6 +784,11 @@ JS_NewRuntime(uint32 maxbytes)
 #endif
     if (!js_InitPropertyTree(rt))
         goto bad;
+
+#if !defined JS_THREADSAFE && defined JS_TRACER
+    js_InitJIT(&rt->traceMonitor);
+#endif
+
     return rt;
 
 bad:
@@ -805,6 +814,10 @@ JS_DestroyRuntime(JSRuntime *rt)
 "JS API usage error: %u context%s left in runtime upon JS_DestroyRuntime.\n",
                 cxcount, (cxcount == 1) ? "" : "s");
     }
+#endif
+
+#if !defined JS_THREADSAFE && defined JS_TRACER
+    js_FinishJIT(&rt->traceMonitor);
 #endif
 
     js_FreeRuntimeScriptState(rt);
@@ -1348,10 +1361,12 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
            js_InitDateClass(cx, obj);
 }
 
-#define CLASP(name)                 ((JSClass *)&js_##name##Class)
+#define CLASP(name)                 (&js_##name##Class)
+#define EXT_CLASP(name)             (&js_##name##Class.base)
 #define EAGER_ATOM(name)            ATOM_OFFSET(name), NULL
 #define EAGER_CLASS_ATOM(name)      CLASS_ATOM_OFFSET(name), NULL
 #define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
+#define EAGER_ATOM_AND_EXT_CLASP(name) EAGER_CLASS_ATOM(name), EXT_CLASP(name)
 #define LAZY_ATOM(name)             ATOM_OFFSET(lazy.name), js_##name##_str
 
 typedef struct JSStdName {
@@ -1402,8 +1417,8 @@ static JSStdName standard_class_atoms[] = {
 #endif
 #if JS_HAS_XML_SUPPORT
     {js_InitXMLClass,                   EAGER_ATOM_AND_CLASP(XML)},
-    {js_InitNamespaceClass,             EAGER_ATOM_AND_CLASP(Namespace)},
-    {js_InitQNameClass,                 EAGER_ATOM_AND_CLASP(QName)},
+    {js_InitNamespaceClass,             EAGER_ATOM_AND_EXT_CLASP(Namespace)},
+    {js_InitQNameClass,                 EAGER_ATOM_AND_EXT_CLASP(QName)},
 #endif
 #if JS_HAS_FILE_OBJECT
     {js_InitFileClass,                  EAGER_ATOM_AND_CLASP(File)},
@@ -2082,14 +2097,6 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case JSTRACE_NAMESPACE:
-        name = "namespace";
-        break;
-
-      case JSTRACE_QNAME:
-        name = "qname";
-        break;
-
       case JSTRACE_XML:
         name = "xml";
         break;
@@ -2151,48 +2158,6 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
             break;
 
 #if JS_HAS_XML_SUPPORT
-          case JSTRACE_NAMESPACE:
-          {
-            JSXMLNamespace *ns = (JSXMLNamespace *)thing;
-
-            if (ns->prefix) {
-                n = js_PutEscapedString(buf, bufsize, ns->prefix, 0);
-                buf += n;
-                bufsize -= n;
-            }
-            if (bufsize > 2) {
-                *buf++ = ':';
-                bufsize--;
-                js_PutEscapedString(buf, bufsize, ns->uri, 0);
-            }
-            break;
-          }
-
-          case JSTRACE_QNAME:
-          {
-            JSXMLQName *qn = (JSXMLQName *)thing;
-
-            if (qn->prefix) {
-                n = js_PutEscapedString(buf, bufsize, qn->prefix, 0);
-                buf += n;
-                bufsize -= n;
-            }
-            if (bufsize > 2) {
-                *buf++ = '(';
-                bufsize--;
-                n = js_PutEscapedString(buf, bufsize, qn->uri, 0);
-                buf += n;
-                bufsize -= n;
-                if (bufsize > 3) {
-                    *buf++ = ')';
-                    *buf++ = ':';
-                    bufsize -= 2;
-                    js_PutEscapedString(buf, bufsize, qn->localName, 0);
-                }
-            }
-            break;
-          }
-
           case JSTRACE_XML:
           {
             extern const char *js_xml_class_str[];
@@ -2786,7 +2751,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         } else {
             named = OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom),
                                         OBJECT_TO_JSVAL(proto),
-                                        NULL, NULL,
+                                        JS_PropertyStub, JS_PropertyStub,
                                         (clasp->flags & JSCLASS_IS_ANONYMOUS)
                                         ? JSPROP_READONLY | JSPROP_PERMANENT
                                         : 0,
@@ -2798,7 +2763,8 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         ctor = proto;
     } else {
         /* Define the constructor function in obj's scope. */
-        fun = js_DefineFunction(cx, obj, atom, constructor, nargs, 0);
+        fun = js_DefineFunction(cx, obj, atom, constructor, nargs,
+                                JSFUN_STUB_GSOPS);
         named = (fun != NULL);
         if (!fun)
             goto bad;
@@ -4586,6 +4552,10 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj,
         }                                                                     \
     JS_END_MACRO
 
+#define JS_OPTIONS_TO_TCFLAGS(cx)                                             \
+    ((((cx)->options & JSOPTION_COMPILE_N_GO) ? TCF_COMPILE_N_GO : 0) |       \
+     (((cx)->options & JSOPTION_NO_SCRIPT_RVAL) ? TCF_NO_SCRIPT_RVAL : 0))
+
 JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 JSPrincipals *principals,
@@ -4596,7 +4566,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    tcflags = JS_HAS_COMPILE_N_GO_OPTION(cx) ? TCF_COMPILE_N_GO : 0;
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
     script = js_CompileScript(cx, obj, principals, tcflags,
                               chars, length, NULL, filename, lineno);
     LAST_FRAME_CHECKS(cx, script);
@@ -4662,7 +4632,7 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
         }
     }
 
-    tcflags = JS_HAS_COMPILE_N_GO_OPTION(cx) ? TCF_COMPILE_N_GO : 0;
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
     script = js_CompileScript(cx, obj, NULL, tcflags,
                               NULL, 0, fp, filename, 1);
     if (fp != stdin)
@@ -4687,7 +4657,7 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    tcflags = JS_HAS_COMPILE_N_GO_OPTION(cx) ? TCF_COMPILE_N_GO : 0;
+    tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
     script = js_CompileScript(cx, obj, principals, tcflags,
                               NULL, 0, file, filename, 1);
     LAST_FRAME_CHECKS(cx, script);
@@ -4704,11 +4674,13 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     if (!script)
         return js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
 
+    JS_ASSERT(!script->u.object);
+
     JS_PUSH_TEMP_ROOT_SCRIPT(cx, script, &tvr);
     obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL, 0);
     if (obj) {
         JS_SetPrivate(cx, obj, script);
-        script->object = obj;
+        script->u.object = obj;
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;
 #endif
@@ -4720,7 +4692,7 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSObject *)
 JS_GetScriptObject(JSScript *script)
 {
-    return script->object;
+    return script->u.object;
 }
 
 JS_PUBLIC_API(void)
@@ -5024,10 +4996,15 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    script = js_CompileScript(cx, obj, principals, TCF_COMPILE_N_GO,
+    script = js_CompileScript(cx, obj, principals,
+                              !rval
+                              ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
+                              : TCF_COMPILE_N_GO,
                               chars, length, NULL, filename, lineno);
-    if (!script)
+    if (!script) {
+        LAST_FRAME_CHECKS(cx, script);
         return JS_FALSE;
+    }
     ok = js_Execute(cx, obj, script, NULL, 0, rval);
     LAST_FRAME_CHECKS(cx, ok);
     JS_DestroyScript(cx, script);

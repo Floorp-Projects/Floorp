@@ -308,6 +308,11 @@ public:
     GetDocShellTreeItemFor(nsIDOMNode *aNode);
 
   /**
+   * Retrun frame for the given DOM element.
+   */
+  static nsIFrame* GetFrameFor(nsIDOMElement *aElm);
+
+  /**
    * Get the ID for an element, in some types of XML this may not be the ID attribute
    * @param aContent  Node to get the ID for
    * @param aID       Where to put ID string

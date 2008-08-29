@@ -511,22 +511,12 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
 nsIFrame*
 nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint)
 {
-  // XXX This algorithm is really bad. Because we only have a
-  // singly-linked list we have to test each and every SVG element for
-  // a hit. What we really want is a double-linked list.
-
-  float x = PresContext()->AppUnitsToDevPixels(aPoint.x);
-  float y = PresContext()->AppUnitsToDevPixels(aPoint.y);
-
   nsRect thisRect(nsPoint(0,0), GetSize());
   if (!thisRect.Contains(aPoint)) {
     return nsnull;
   }
 
-  nsIFrame* hit;
-  nsSVGUtils::HitTestChildren(this, x, y, &hit);
-
-  return hit;
+  return nsSVGUtils::HitTestChildren(this, aPoint);
 }
 
 //----------------------------------------------------------------------
@@ -644,7 +634,7 @@ nsSVGOuterSVGFrame::InvalidateCoveredRegion(nsIFrame *aFrame)
     return;
 
   nsRect rect = nsSVGUtils::FindFilterInvalidation(aFrame, svgFrame->GetCoveredRegion());
-  InvalidateRect(rect);
+  Invalidate(rect);
 }
 
 PRBool
@@ -656,23 +646,14 @@ nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
     return PR_FALSE;
 
   nsRect oldRegion = svgFrame->GetCoveredRegion();
-  InvalidateRect(nsSVGUtils::FindFilterInvalidation(aFrame, oldRegion));
+  Invalidate(nsSVGUtils::FindFilterInvalidation(aFrame, oldRegion));
   svgFrame->UpdateCoveredRegion();
   nsRect newRegion = svgFrame->GetCoveredRegion();
   if (oldRegion == newRegion)
     return PR_FALSE;
 
-  InvalidateRect(nsSVGUtils::FindFilterInvalidation(aFrame, newRegion));
+  Invalidate(nsSVGUtils::FindFilterInvalidation(aFrame, newRegion));
   return PR_TRUE;
-}
-
-void
-nsSVGOuterSVGFrame::InvalidateRect(nsRect aRect)
-{
-  if (!aRect.IsEmpty()) {
-    aRect.ScaleRoundOut(PresContext()->AppUnitsPerDevPixel());
-    Invalidate(aRect);
-  }
 }
 
 PRBool

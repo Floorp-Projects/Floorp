@@ -858,6 +858,16 @@ nsXULAppInfo::WriteMinidumpForException(void* aExceptionInfo)
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
+
+NS_IMETHODIMP
+nsXULAppInfo::AppendObjCExceptionInfoToAppNotes(void* aException)
+{
+#ifdef XP_MACOSX
+  return CrashReporter::AppendObjCExceptionInfoToAppNotes(aException);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
 #endif
 
 static const nsXULAppInfo kAppInfo;
@@ -1165,9 +1175,7 @@ DumpHelp()
          "\nMozilla options\n");
 #endif
 
-  printf("\t-height <value>\t\tSet height of startup window to <value>.\n"
-         "\t-h or -help\t\tPrint this message.\n"
-         "\t-width <value>\t\tSet width of startup window to <value>.\n"
+  printf("\t-h or -help\t\tPrint this message.\n"
          "\t-v or -version\t\tPrint %s version.\n"
          "\t-P <profile>\t\tStart with <profile>.\n"
          "\t-ProfileManager\t\tStart with ProfileManager.\n"

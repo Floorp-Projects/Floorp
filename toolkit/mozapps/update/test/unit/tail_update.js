@@ -36,6 +36,15 @@
  * ***** END LICENSE BLOCK *****
  */
 
+if (gXHR) {
+  gXHRCallback = null;
+  // null out the event handlers to prevent a mFreeCount leak of 1
+  gXHR.onerror = null;
+  gXHR.onload = null;
+  gXHR.onprogress = null;
+  gXHR = null;
+}
+
 gUpdateChecker = null;
 gAUS = null;
 gPrefs = null;

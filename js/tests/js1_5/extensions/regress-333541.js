@@ -110,6 +110,9 @@ try
     "    x = (1)['#'];\n" +
     "}";
   actual = "" + b;
+  // fudge the actual to match a['1'] ~ a[1].
+  // see https://bugzilla.mozilla.org/show_bug.cgi?id=452369
+  actual = actual.replace(/\(1\)\[1\];/, "(1)['1'];");
   compareSource(expect, actual, summary + ': 5');
 }
 catch(ex)

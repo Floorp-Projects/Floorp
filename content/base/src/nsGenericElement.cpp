@@ -2791,9 +2791,11 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
   PRBool isAnonForEvents = aContent->IsRootOfNativeAnonymousSubtree();
   if ((aVisitor.mEvent->message == NS_MOUSE_ENTER_SYNTH ||
        aVisitor.mEvent->message == NS_MOUSE_EXIT_SYNTH) &&
-      // This is an optimization - try to stop event propagation when
-      // event has just possibly been retargeted.
-      static_cast<nsISupports*>(aContent) == aVisitor.mEvent->target) {
+      // Check if we should stop event propagation when event has just been
+      // dispatched or when we're about to propagate from
+      // native anonymous subtree.
+      ((static_cast<nsISupports*>(aContent) == aVisitor.mEvent->originalTarget &&
+        !aContent->IsInNativeAnonymousSubtree()) || isAnonForEvents)) {
      nsCOMPtr<nsIContent> relatedTarget =
        do_QueryInterface(static_cast<nsMouseEvent*>
                                     (aVisitor.mEvent)->relatedTarget);
@@ -2823,19 +2825,37 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
               anonOwnerRelated = FindNativeAnonymousSubtreeOwner(anonOwnerRelated);
             }
             if (anonOwner == anonOwnerRelated) {
-              nsCOMPtr<nsIContent> target =
+#ifdef DEBUG_smaug
+              nsCOMPtr<nsIContent> originalTarget =
                 do_QueryInterface(aVisitor.mEvent->originalTarget);
-              // Because XBL and native anon content both do event re-targeting,
-              // static_cast<nsISupports*>(aContent) == aVisitor.mEvent->target
-              // optimization may not always work. So be paranoid and make
-              // sure we never stop event propagation when we shouldn't!
-              if (relatedTarget->FindFirstNonNativeAnonymous() ==
-                  target->FindFirstNonNativeAnonymous()) {
-                aVisitor.mParentTarget = nsnull;
-                // Event should not propagate to non-anon content.
-                aVisitor.mCanHandle = isAnonForEvents;
-                return NS_OK;
+              nsAutoString ot, ct, rt;
+              if (originalTarget) {
+                originalTarget->Tag()->ToString(ot);
               }
+              aContent->Tag()->ToString(ct);
+              relatedTarget->Tag()->ToString(rt);
+              printf("Stopping %s propagation:"
+                     "\n\toriginalTarget=%s \n\tcurrentTarget=%s %s"
+                     "\n\trelatedTarget=%s %s \n%s",
+                     (aVisitor.mEvent->message == NS_MOUSE_ENTER_SYNTH)
+                       ? "mouseover" : "mouseout",
+                     NS_ConvertUTF16toUTF8(ot).get(),
+                     NS_ConvertUTF16toUTF8(ct).get(),
+                     isAnonForEvents
+                       ? "(is native anonymous)"
+                       : (aContent->IsInNativeAnonymousSubtree()
+                           ? "(is in native anonymous subtree)" : ""),
+                     NS_ConvertUTF16toUTF8(rt).get(),
+                     relatedTarget->IsInNativeAnonymousSubtree()
+                       ? "(is in native anonymous subtree)" : "",
+                     (originalTarget && relatedTarget->FindFirstNonNativeAnonymous() ==
+                       originalTarget->FindFirstNonNativeAnonymous())
+                       ? "" : "Wrong event propagation!?!\n");
+#endif
+              aVisitor.mParentTarget = nsnull;
+              // Event should not propagate to non-anon content.
+              aVisitor.mCanHandle = isAnonForEvents;
+              return NS_OK;
             }
           }
         }
@@ -4131,9 +4151,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGenericElement)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGenericElement, nsIContent)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsGenericElement, 
-							nsIContent,
-							nsNodeUtils::LastRelease(this))
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsGenericElement,
+                                                        nsIContent,
+                                                        nsNodeUtils::LastRelease(this))
 
 nsresult
 nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)

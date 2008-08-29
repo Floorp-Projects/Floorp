@@ -210,9 +210,46 @@ void nsHTMLImageAccessible::CacheChildren()
   mAccChildCount = childCount;
 }
 
-NS_IMETHODIMP nsHTMLImageAccessible::DoAction(PRUint8 index)
+NS_IMETHODIMP
+nsHTMLImageAccessible::GetNumActions(PRUint8 *aNumActions)
 {
-  if (index == eAction_ShowLongDescription) {
+  NS_ENSURE_ARG_POINTER(aNumActions);
+  *aNumActions = 0;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsresult rv= nsLinkableAccessible::GetNumActions(aNumActions);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (HasLongDesc())
+    (*aNumActions)++;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLImageAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+{
+  aName.Truncate();
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  if (IsValidLongDescIndex(aIndex)) {
+    aName.AssignLiteral("showlongdesc"); 
+    return NS_OK;
+  }
+  return nsLinkableAccessible::GetActionName(aIndex, aName);
+}
+
+NS_IMETHODIMP
+nsHTMLImageAccessible::DoAction(PRUint8 aIndex)
+{
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  if (IsValidLongDescIndex(aIndex)) {
     //get the long description uri and open in a new window
     nsCOMPtr<nsIDOMHTMLImageElement> element(do_QueryInterface(mDOMNode));
     NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
@@ -230,7 +267,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::DoAction(PRUint8 index)
     return win->Open(longDesc, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
                      getter_AddRefs(tmp));
   }
-  return nsLinkableAccessible::DoAction(index);
+  return nsLinkableAccessible::DoAction(aIndex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -404,4 +441,30 @@ nsHTMLImageAccessible::GetAreaAccessible(nsIDOMHTMLCollection *aAreaCollection,
   CallQueryInterface(accessNode, &accessible);
 
   return accessible;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Private methods
+
+PRBool
+nsHTMLImageAccessible::HasLongDesc()
+{
+  if (IsDefunct())
+    return PR_FALSE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  return (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::longDesc));
+}
+
+PRBool
+nsHTMLImageAccessible::IsValidLongDescIndex(PRUint8 aIndex)
+{
+  if (!HasLongDesc())
+    return PR_FALSE;
+
+  PRUint8 numActions = 0;
+  nsresult rv = nsLinkableAccessible::GetNumActions(&numActions);  
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  return (aIndex == numActions);
 }

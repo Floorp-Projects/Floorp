@@ -23,6 +23,9 @@ function isStack(c)
       if (member.isFunction)
         continue;
 
+      if (hasAttribute(member, 'NS_okonheap'))
+        continue;
+      
       let type = member.type;
       while (true) {
         if (type === undefined)
