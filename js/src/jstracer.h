@@ -210,7 +210,6 @@ class TraceRecorder {
     Tracker                 nativeFrameTracker;
     char*                   entryTypeMap;
     unsigned                callDepth;
-    unsigned                loopEdgeCount;
     JSAtom**                atoms;
     nanojit::GuardRecord*   anchor;
     nanojit::Fragment*      fragment;
@@ -231,7 +230,7 @@ class TraceRecorder {
     nanojit::SideExit       exit;
     bool                    trashTree;
     nanojit::Fragment*      whichTreeToTrash;
-    jsbytecode*             lastLoopEdge;
+    Queue<jsbytecode*>      loopEdgeList;
     
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
