@@ -96,9 +96,9 @@ namespace nanojit
 		#define NanoAssertMsg(a,m)        do { __NanoAssertMsgf(a, __FILE__, __LINE__, "\"%s\": ", m); } while (0)
 		#define NanoAssert(a)             do { __NanoAssertMsgf(a, __FILE__, __LINE__, "%s", ""); } while (0)
 	#else
-		#define NanoAssertMsgf(x,y)       do { } while (0) /* no semi */
-		#define NanoAssertMsg(x,y)        do { } while (0) /* no semi */
-		#define NanoAssert(x)             do { } while (0) /* no semi */
+		#define NanoAssertMsgf(a,f,...)   do { } while (0) /* no semi */
+		#define NanoAssertMsg(a,m)        do { } while (0) /* no semi */
+		#define NanoAssert(a)             do { } while (0) /* no semi */
 	#endif
 
 	/**
