@@ -4029,6 +4029,12 @@ TraceRecorder::record_JSOP_GETELEM()
     jsval& l = stackval(-2);
 
     if (JSVAL_IS_STRING(l) && JSVAL_IS_INT(r)) {
+        int i;
+
+        i = JSVAL_TO_INT(r);
+        if ((size_t)i >= JSSTRING_LENGTH(JSVAL_TO_STRING(l)))
+            ABORT_TRACE("Invalid string index in JSOP_GETELEM");
+
         LIns* args[] = { f2i(get(&r)), get(&l), cx_ins };
         LIns* unitstr_ins = lir->insCall(F_String_getelem, args);
         guard(false, lir->ins_eq0(unitstr_ins), MISMATCH_EXIT);
