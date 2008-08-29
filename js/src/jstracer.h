@@ -358,10 +358,18 @@ public:
             js_AbortRecording(cx, NULL, #x);                                  \
             ENABLE_TRACER(0);                                                 \
         }                                                                     \
+        jsbytecode* pc = cx->fp->regs->pc;                                    \
+        if (((*pc == JSOP_GOTO) || (*pc == JSOP_GOTOX)) &&                    \
+            !js_MonitorGoto(cx)) {                                            \
+            ENABLE_TRACER(0);                                                 \
+        }                                                                     \
     JS_END_MACRO
 
 extern bool
-js_MonitorBranch(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount);
+js_MonitorLoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount);
+
+extern bool
+js_MonitorGoto(JSContext* cx);
 
 extern void
 js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason);
