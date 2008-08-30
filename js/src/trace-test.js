@@ -1096,6 +1096,20 @@ function testReplace2() {
 testReplace2.expected = "He l l o";
 test(testReplace2);
 
+function testBitwise() {
+    var x = 10000;
+    var y = 123456;
+    var z = 987234;
+    for (var i = 0; i < 50; i++) {
+        x = x ^ y;
+        y = y | z;
+        z = ~x;
+    }
+    return x + y + z;
+}
+testBitwise.expected = -1298;
+test(testBitwise);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
