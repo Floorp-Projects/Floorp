@@ -296,6 +296,18 @@ js_String_p_replace_str(JSContext* cx, JSString* str, JSObject* regexp, JSString
 }
 
 JSString* FASTCALL
+js_String_p_replace_str2(JSContext* cx, JSString* str, JSString* patstr, JSString* repstr)
+{
+    jsval vp[4] = {
+        JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(patstr), STRING_TO_JSVAL(repstr)
+    };
+    if (!js_StringReplaceHelper(cx, 2, NULL, repstr, vp))
+        return NULL;
+    JS_ASSERT(JSVAL_IS_STRING(vp[0]));
+    return JSVAL_TO_STRING(vp[0]);
+}
+
+JSString* FASTCALL
 js_String_p_replace_str3(JSContext* cx, JSString* str, JSString* patstr, JSString* repstr,
                          JSString* flagstr)
 {
