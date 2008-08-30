@@ -1980,11 +1980,15 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
   }
 
   // Logic which is common to blocks and tables
+  // The computed margins need not be zero because the 'auto' could come from
+  // overconstraint or from HTML alignment so values need to be accumulated
+
   if (isAutoLeftMargin) {
     if (isAutoRightMargin) {
-      // Both margins are 'auto' so their computed values are equal
-      mComputedMargin.left = availMarginSpace / 2;
-      mComputedMargin.right = availMarginSpace - mComputedMargin.left;
+      // Both margins are 'auto' so the computed addition should be equal
+      nscoord forLeft = availMarginSpace / 2;
+      mComputedMargin.left  += forLeft;
+      mComputedMargin.right += availMarginSpace - forLeft;
     } else {
       mComputedMargin.left += availMarginSpace;
     }
