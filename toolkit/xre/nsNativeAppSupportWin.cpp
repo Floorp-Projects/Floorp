@@ -625,34 +625,6 @@ struct MessageWindow {
             nsCOMPtr<nsIDOMWindowInternal> win;
             GetMostRecentWindow( 0, getter_AddRefs( win ) );
             return win ? (long)hwndForDOMWindow( win ) : 0;
-        } else if ( msg == WM_QUERYENDSESSION ) {
-            if (!nsNativeAppSupportWin::mCanHandleRequests)
-                return FALSE;
-
-            nsCOMPtr<nsIObserverService> obsServ =
-                do_GetService("@mozilla.org/observer-service;1");
-            nsCOMPtr<nsISupportsPRBool> cancelQuit =
-                do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
-            cancelQuit->SetData(PR_FALSE);
-            obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
-
-            PRBool abortQuit;
-            cancelQuit->GetData(&abortQuit);
-            return !abortQuit;
-        } else if ( msg == WM_ENDSESSION ) {
-            if (!nsNativeAppSupportWin::mCanHandleRequests)
-                return FALSE;
-
-            if (wp == FALSE)
-                return TRUE;
-
-            nsCOMPtr<nsIAppStartup> appService =
-                do_GetService("@mozilla.org/toolkit/app-startup;1");
-
-            if (appService)
-                appService->Quit(nsIAppStartup::eForceQuit);
-
-            return TRUE;
         }
         return DefWindowProc( msgWindow, msg, wp, lp );
     }

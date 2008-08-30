@@ -80,6 +80,7 @@
 #include <process.h>
 #include "nsUnicharUtils.h"
 #include "prlog.h"
+#include "nsISupportsPrimitives.h"
 
 #ifdef WINCE
 #include "aygshell.h"
@@ -297,7 +298,7 @@ long       nsWindow::sIMECursorPosition        = 0;
 
 RECT*      nsWindow::sIMECompCharPos           = nsnull;
 
-PRBool nsWindow::sIsInEndSession = PR_FALSE;
+TriStateBool nsWindow::sCanQuit = TRI_UNKNOWN;
 
 BOOL nsWindow::sIsRegistered       = FALSE;
 BOOL nsWindow::sIsPopupClassRegistered = FALSE;
@@ -1181,9 +1182,6 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 //
 LRESULT CALLBACK nsWindow::DefaultWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  if (msg == WM_ENDSESSION && wParam == TRUE)
-    nsWindow::sIsInEndSession = PR_TRUE;
-
   //XXX nsWindow::DefaultWindowProc still ever required?
   return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
@@ -1459,11 +1457,7 @@ NS_METHOD nsWindow::Destroy()
     }
 #endif
 
-    // bug 333907: During WM_*ENDSESSION, closing all windows
-    // will cause immediate termination of the process. This
-    // avoids closing windows during WM_ENDSESSION for a cleaner exit.
-    if (!sIsInEndSession)
-      VERIFY(::DestroyWindow(mWnd));
+    VERIFY(::DestroyWindow(mWnd));
 
     mWnd = NULL;
     //our windows can be subclassed by
@@ -1661,8 +1655,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
       }
     } else {
       if (mWindowType != eWindowType_dialog) {
-        if (!sIsInEndSession)
-          ::ShowWindow(mWnd, SW_HIDE);
+        ::ShowWindow(mWnd, SW_HIDE);
       } else {
         ::SetWindowPos(mWnd, 0, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE |
                        SWP_NOZORDER | SWP_NOACTIVATE);
@@ -4144,6 +4137,51 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     }
     break;
 
+    // WM_QUERYENDSESSION must be handled by all windows.
+    // Otherwise Windows thinks the window can just be killed at will.
+    case WM_QUERYENDSESSION:
+      if (sCanQuit == TRI_UNKNOWN)
+      {
+        // Ask if it's ok to quit, and store the answer until we
+        // get WM_ENDSESSION signaling the round is complete.
+        nsCOMPtr<nsIObserverService> obsServ =
+          do_GetService("@mozilla.org/observer-service;1");
+        nsCOMPtr<nsISupportsPRBool> cancelQuit =
+          do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
+        cancelQuit->SetData(PR_FALSE);
+        obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
+
+        PRBool abortQuit;
+        cancelQuit->GetData(&abortQuit);
+        sCanQuit = abortQuit ? TRI_FALSE : TRI_TRUE;
+      }
+      *aRetValue = sCanQuit ? TRUE : FALSE;
+      result = PR_TRUE;
+      break;
+
+    case WM_ENDSESSION:
+      if (wParam == TRUE && sCanQuit == TRI_TRUE)
+      {
+        // Let's fake a shutdown sequence without actually closing windows etc.
+        // to avoid Windows killing us in the middle. A proper shutdown would
+        // require having a chance to pump some messages. Unfortunately
+        // Windows won't let us do that. Bug 212316.
+        nsCOMPtr<nsIObserverService> obsServ =
+          do_GetService("@mozilla.org/observer-service;1");
+        NS_NAMED_LITERAL_STRING(context, "shutdown-persist");
+        obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
+        obsServ->NotifyObservers(nsnull, "quit-application-forced", nsnull);
+        obsServ->NotifyObservers(nsnull, "quit-application", nsnull);
+        obsServ->NotifyObservers(nsnull, "profile-change-net-teardown", context.get());
+        obsServ->NotifyObservers(nsnull, "profile-change-teardown", context.get());
+        obsServ->NotifyObservers(nsnull, "profile-before-change", context.get());
+        // Then a controlled but very quick exit.
+        _exit(0);
+      }
+      sCanQuit = TRI_UNKNOWN;
+      result = PR_TRUE;
+      break;
+    
 #ifndef WINCE
     case WM_DISPLAYCHANGE:
       DispatchStandardEvent(NS_DISPLAYCHANGED);
