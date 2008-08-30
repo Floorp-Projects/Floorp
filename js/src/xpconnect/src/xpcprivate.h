@@ -959,8 +959,6 @@ public:
     NS_IMETHOD GetArgc(PRUint32 *aResult);
     NS_IMETHOD GetArgvPtr(jsval **aResult);
     NS_IMETHOD GetRetValPtr(jsval **aResult);
-    NS_IMETHOD GetExceptionWasThrown(PRBool *aResult);
-    NS_IMETHOD SetExceptionWasThrown(PRBool aValue);
     NS_IMETHOD GetReturnValueWasSet(PRBool *aResult);
     NS_IMETHOD SetReturnValueWasSet(PRBool aValue);
     NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo **aResult);
@@ -1014,7 +1012,6 @@ public:
     inline uintN                        GetArgc() const ;
     inline jsval*                       GetArgv() const ;
     inline jsval*                       GetRetVal() const ;
-    inline JSBool                       GetExceptionWasThrown() const ;
     inline JSBool                       GetReturnValueWasSet() const ;
 
     inline PRUint16                     GetMethodIndex() const ;
@@ -1120,7 +1117,6 @@ private:
     jsval*                          mArgv;
     jsval*                          mRetVal;
 
-    JSBool                          mExceptionWasThrown;
     JSBool                          mReturnValueWasSet;
 #ifdef XPC_IDISPATCH_SUPPORT
     void*                           mIDispatchMember;

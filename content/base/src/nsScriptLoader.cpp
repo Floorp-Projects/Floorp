@@ -606,15 +606,8 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   context->SetProcessingScriptTag(oldProcessingScriptTag);
 
   if (stid == nsIProgrammingLanguage::JAVASCRIPT) {
-    nsAXPCNativeCallContext *ncc = nsnull;
-    nsContentUtils::XPConnect()->
-      GetCurrentNativeCallContext(&ncc);
-
-    if (ncc) {
-      NS_ASSERTION(!::JS_IsExceptionPending(cx),
-                   "JS_ReportPendingException wasn't called");
-      ncc->SetExceptionWasThrown(PR_FALSE);
-    }
+    NS_ASSERTION(!::JS_IsExceptionPending(cx),
+                 "JS_ReportPendingException wasn't called");
     ::JS_EndRequest(cx);
   }
   return rv;

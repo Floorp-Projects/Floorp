@@ -73,10 +73,8 @@ nsresult xpcJSWeakReference::Init()
     if (JSVAL_IS_NULL(argv[0])) return NS_ERROR_FAILURE;
     
     JSObject *obj;
-    if (!JS_ValueToObject(cx, argv[0], &obj)) {
-        cc->SetExceptionWasThrown(JS_TRUE);
+    if (!JS_ValueToObject(cx, argv[0], &obj))
         return NS_ERROR_FAILURE;
-    }
     
     XPCCallContext ccx(NATIVE_CALLER, cx);
     

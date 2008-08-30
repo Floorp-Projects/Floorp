@@ -828,14 +828,6 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         }
 
         SetPendingException(cx, errorMsg.get());
-
-        if (sXPConnect)
-        {
-            nsAXPCNativeCallContext *xpcCallContext = nsnull;
-            sXPConnect->GetCurrentNativeCallContext(&xpcCallContext);
-            if (xpcCallContext)
-                xpcCallContext->SetExceptionWasThrown(PR_TRUE);
-        }
     }
 
     return rv;
@@ -1465,14 +1457,6 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
     if (cx)
     {
         SetPendingException(cx, message.get());
-        // Tell XPConnect that an exception was thrown, if appropriate
-        if (sXPConnect)
-        {
-            nsAXPCNativeCallContext* xpcCallContext = nsnull;
-            sXPConnect->GetCurrentNativeCallContext(&xpcCallContext);
-             if (xpcCallContext)
-                xpcCallContext->SetExceptionWasThrown(PR_TRUE);
-        }
     }
     else // Print directly to the console
     {
