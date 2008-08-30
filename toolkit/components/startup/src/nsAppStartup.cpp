@@ -115,6 +115,7 @@ nsAppStartup::Init()
     (do_GetService("@mozilla.org/observer-service;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  os->AddObserver(this, "quit-application-forced", PR_TRUE);
   os->AddObserver(this, "profile-change-teardown", PR_TRUE);
   os->AddObserver(this, "xul-window-registered", PR_TRUE);
   os->AddObserver(this, "xul-window-destroyed", PR_TRUE);
@@ -201,14 +202,6 @@ nsAppStartup::Quit(PRUint32 aMode)
   if (mShuttingDown)
     return NS_OK;
 
-  /* eForceQuit doesn't actually work; it can cause a subtle crash if
-     there are windows open which have unload handlers which open
-     new windows. Use eAttemptQuit for now. */
-  if (ferocity == eForceQuit) {
-    NS_WARNING("attempted to force quit");
-    // it will be treated the same as eAttemptQuit, below
-  }
-
   // If we're considering quitting, we will only do so if:
   if (ferocity == eConsiderQuit) {
     if (mConsiderQuitStopper == 0) {
@@ -243,10 +236,6 @@ nsAppStartup::Quit(PRUint32 aMode)
       mRestart = (aMode & eRestart) != 0;
 
   nsCOMPtr<nsIObserverService> obsService;
-  /* Currently ferocity can never have the value of eForceQuit here.
-     That's temporary (in an unscheduled kind of way) and logically
-     this code is part of the eForceQuit case, so I'm checking against
-     that value anyway. Reviewers made me add this comment. */
   if (ferocity == eAttemptQuit || ferocity == eForceQuit) {
 
     obsService = do_GetService("@mozilla.org/observer-service;1");
@@ -488,10 +477,15 @@ nsAppStartup::Observe(nsISupports *aSubject,
                       const char *aTopic, const PRUnichar *aData)
 {
   NS_ASSERTION(mAppShell, "appshell service notified before appshell built");
-  if (!strcmp(aTopic, "profile-change-teardown")) {
-    EnterLastWindowClosingSurvivalArea();
-    CloseAllWindows();
-    ExitLastWindowClosingSurvivalArea();
+  if (!strcmp(aTopic, "quit-application-forced")) {
+    mShuttingDown = PR_TRUE;
+  }
+  else if (!strcmp(aTopic, "profile-change-teardown")) {
+    if (!mShuttingDown) {
+      EnterLastWindowClosingSurvivalArea();
+      CloseAllWindows();
+      ExitLastWindowClosingSurvivalArea();
+    }
   } else if (!strcmp(aTopic, "xul-window-registered")) {
     EnterLastWindowClosingSurvivalArea();
     AttemptingQuit(PR_FALSE);
