@@ -107,6 +107,13 @@ const LPCSTR kClassNameContentFrame   = "MozillaContentFrameWindowClass";
 const LPCSTR kClassNameGeneral        = "MozillaWindowClass";
 const LPCSTR kClassNameDialog         = "MozillaDialogClass";
 
+typedef enum
+{
+    TRI_UNKNOWN = -1,
+    TRI_FALSE = 0,
+    TRI_TRUE = 1
+} TriStateBool;
+
 /**
  * Native WIN32 window wrapper.
  */
@@ -415,7 +422,7 @@ protected:
   // For describing composing frame
   static RECT*      sIMECompCharPos;
 
-  static PRBool     sIsInEndSession;
+  static TriStateBool sCanQuit;
 
   nsSize        mLastSize;
   static        nsWindow* gCurrentWindow;
