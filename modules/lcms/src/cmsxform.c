@@ -651,9 +651,9 @@ void MatrixShaperXFORMFloat(_LPcmsTRANSFORM p,
               }
               else
               {
-              FloatVals->n[VX] = ToFloatDomain(In[0]);
-              FloatVals->n[VY] = ToFloatDomain(In[1]);
-              FloatVals->n[VZ] = ToFloatDomain(In[2]);
+              FloatVals->n[VX] = ToFloatDomain(RGB_8_TO_16(In[0]));
+              FloatVals->n[VY] = ToFloatDomain(RGB_8_TO_16(In[1]));
+              FloatVals->n[VZ] = ToFloatDomain(RGB_8_TO_16(In[2]));
               }
 
               if (MatShaper -> dwFlags & MATSHAPER_HASMATRIX)
