@@ -205,8 +205,6 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
   if (argc < 1) {
     ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
                      *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-
-    ncc->SetExceptionWasThrown(PR_TRUE);
     return NS_ERROR_DOM_TYPE_ERR;
   }
 
@@ -214,8 +212,6 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
     ::JS_ReportError(cx,
                      "Second argument to %s must be a millisecond interval",
                      aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-
-    ncc->SetExceptionWasThrown(PR_TRUE);
     return NS_ERROR_DOM_TYPE_ERR;
   }
 
@@ -243,7 +239,6 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
                      *aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
 
     // Return an error that nsGlobalWindow can recognize and turn into NS_OK.
-    ncc->SetExceptionWasThrown(PR_TRUE);
     return NS_ERROR_DOM_TYPE_ERR;
   }
 
