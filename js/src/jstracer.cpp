@@ -1864,7 +1864,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     /* Make sure the global type map didn't change on us. */
     uint32 globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
     if (tm->globalShape != globalShape) {
-        debug_only(printf("Global shape mismatch (%u vs. %u) in RecordTree, flushing cache.\n",
+        debug_only_v(printf("Global shape mismatch (%u vs. %u) in RecordTree, flushing cache.\n",
                           globalShape, tm->globalShape);)
         js_FlushJITCache(cx);
         return false;
@@ -1873,7 +1873,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     current.captureGlobalTypes(cx, *tm->globalSlots);
     if (!current.matches(*tm->globalTypeMap)) {
         js_FlushJITCache(cx);
-        debug_only(printf("Global type map mismatch in RecordTree, flushing cache.\n");)
+        debug_only_v(printf("Global type map mismatch in RecordTree, flushing cache.\n");)
         return false;
     }
     
