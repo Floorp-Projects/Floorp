@@ -746,12 +746,12 @@ struct JSContext {
 #endif
 
     /*
-     * Flag set when running JIT-compiled code. This prevents both interpreter
-     * activation and last-ditch garbage collection when up against runtime
-     * memory limits. This also suppresses calls to JS_ReportOutOfMemory when
-     * failing due to runtime limits.
+     * Flag set when running (or recording) JIT-compiled code. This prevents
+     * both interpreter activation and last-ditch garbage collection when up
+     * against our runtime's memory limits. This flag also suppresses calls to
+     * JS_ReportOutOfMemory when failing due to runtime limits.
      */
-    JSPackedBool        runningJittedCode;
+    JSPackedBool        executingTrace;
 
     /*
      * Classic Algol "display" static link optimization.
