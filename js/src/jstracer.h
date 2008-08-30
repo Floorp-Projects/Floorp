@@ -229,10 +229,11 @@ class TraceRecorder {
     nanojit::LIns*          inner_sp_ins;
     nanojit::SideExit       exit;
     bool                    trashTree;
+    bool                    deepAborted;
     nanojit::Fragment*      whichTreeToTrash;
     Queue<jsbytecode*>      inlinedLoopEdges;
     Queue<jsbytecode*>      cfgMerges;
-    
+
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     ptrdiff_t nativeStackOffset(jsval* p) const;
@@ -243,7 +244,7 @@ class TraceRecorder {
     void trackNativeStackUse(unsigned slots);
 
     bool lazilyImportGlobalSlot(unsigned slot);
-    
+
     nanojit::LIns* guard(bool expected, nanojit::LIns* cond, nanojit::ExitType exitType);
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
@@ -348,6 +349,9 @@ public:
     
     bool record_EnterFrame();
     bool record_LeaveFrame();
+
+    void deepAbort() { deepAborted = true; }
+    bool wasDeepAborted() { return deepAborted; }
 
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     bool record_##op();
