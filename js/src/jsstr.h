@@ -249,6 +249,12 @@ js_UndependString(JSContext *cx, JSString *str);
 extern JSBool
 js_MakeStringImmutable(JSContext *cx, JSString *str);
 
+extern JSString* JS_FASTCALL
+js_toLowerCase(JSContext *cx, JSString *str);
+
+extern JSString* JS_FASTCALL
+js_toUpperCase(JSContext *cx, JSString *str);
+
 typedef struct JSCharBuffer {
     size_t          length;
     jschar          *chars;
@@ -628,6 +634,12 @@ js_StringReplaceHelper(JSContext *cx, uintN argc, JSObject *lambda,
 
 extern JSBool
 js_str_split(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_str_toLowerCase(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_str_toUpperCase(JSContext *cx, uintN argc, jsval *vp);
 
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at

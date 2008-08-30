@@ -1075,6 +1075,27 @@ function testDivisionFloat() {
 testDivisionFloat.expected = true;
 test(testDivisionFloat);
 
+function testToUpperToLower() {
+    var s = "Hello", s1, s2;
+    for (i = 0; i < 100; ++i) {
+	s1 = s.toLowerCase();
+	s2 = s.toUpperCase();
+    }
+    return s1 + s2;
+}
+testToUpperToLower.expected = "helloHELLO";
+test(testToUpperToLower);
+
+function testReplace2() {
+    var s = "H e l l o", s1;
+    for (i = 0; i < 100; ++i) {
+	s1 = s.replace(" ", "");
+    }
+    return s1;
+}
+testReplace2.expected = "He l l o";
+test(testReplace2);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));

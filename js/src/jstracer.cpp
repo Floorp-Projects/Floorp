@@ -4334,10 +4334,13 @@ TraceRecorder::record_JSOP_CALL()
         { js_str_fromCharCode,         F_String_fromCharCode,  "C",   "i",    FAIL_NULL,   NULL },
         { js_str_match,                F_String_p_match,       "PTC", "r",    FAIL_VOID,   NULL },
         { js_str_replace,              F_String_p_replace_str, "TC", "sr",    FAIL_NULL,   NULL },
+        { js_str_replace,              F_String_p_replace_str2,"TC", "ss",    FAIL_NULL,   NULL },
         { js_str_replace,              F_String_p_replace_str3,"TC","sss",    FAIL_NULL,   NULL },
         { js_str_split,                F_String_p_split,       "TC",  "s",    FAIL_NULL,   NULL },
         { js_str_substring,            F_String_p_substring,   "TC", "ii",    FAIL_NULL,   NULL },
         { js_str_substring,            F_String_p_substring_1, "TC",  "i",    FAIL_NULL,   NULL },
+        { js_str_toLowerCase,          F_toLowerCase,          "TC",   "",    FAIL_NULL,   NULL },
+        { js_str_toUpperCase,          F_toUpperCase,          "TC",   "",    FAIL_NULL,   NULL },
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
