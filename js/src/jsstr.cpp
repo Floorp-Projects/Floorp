@@ -779,26 +779,36 @@ js_str_substring(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-str_toLowerCase(JSContext *cx, uintN argc, jsval *vp)
+JSString* JS_FASTCALL
+js_toLowerCase(JSContext *cx, JSString *str)
 {
-    JSString *str;
     size_t i, n;
     jschar *s, *news;
 
-    NORMALIZE_THIS(cx, vp, str);
     JSSTRING_CHARS_AND_LENGTH(str, s, n);
     news = (jschar *) JS_malloc(cx, (n + 1) * sizeof(jschar));
     if (!news)
-        return JS_FALSE;
+        return NULL;
     for (i = 0; i < n; i++)
         news[i] = JS_TOLOWER(s[i]);
     news[n] = 0;
     str = js_NewString(cx, news, n);
     if (!str) {
         JS_free(cx, news);
-        return JS_FALSE;
+        return NULL;
     }
+    return str;
+}
+
+JSBool
+js_str_toLowerCase(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSString *str;
+
+    NORMALIZE_THIS(cx, vp, str);
+    str = js_toLowerCase(cx, str);
+    if (!str)
+        return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -816,29 +826,39 @@ str_toLocaleLowerCase(JSContext *cx, uintN argc, jsval *vp)
         NORMALIZE_THIS(cx, vp, str);
         return cx->localeCallbacks->localeToLowerCase(cx, str, vp);
     }
-    return str_toLowerCase(cx, 0, vp);
+    return js_str_toLowerCase(cx, 0, vp);
 }
 
-static JSBool
-str_toUpperCase(JSContext *cx, uintN argc, jsval *vp)
+JSString* JS_FASTCALL
+js_toUpperCase(JSContext *cx, JSString *str)
 {
-    JSString *str;
     size_t i, n;
     jschar *s, *news;
 
-    NORMALIZE_THIS(cx, vp, str);
     JSSTRING_CHARS_AND_LENGTH(str, s, n);
     news = (jschar *) JS_malloc(cx, (n + 1) * sizeof(jschar));
     if (!news)
-        return JS_FALSE;
+        return NULL;
     for (i = 0; i < n; i++)
         news[i] = JS_TOUPPER(s[i]);
     news[n] = 0;
     str = js_NewString(cx, news, n);
     if (!str) {
         JS_free(cx, news);
-        return JS_FALSE;
+        return NULL;
     }
+    return str;
+}
+
+JSBool
+js_str_toUpperCase(JSContext *cx, uintN argc, jsval *vp)
+{
+    JSString *str;
+
+    NORMALIZE_THIS(cx, vp, str);
+    str = js_toUpperCase(cx, str);
+    if (!str)
+        return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -856,7 +876,7 @@ str_toLocaleUpperCase(JSContext *cx, uintN argc, jsval *vp)
         NORMALIZE_THIS(cx, vp, str);
         return cx->localeCallbacks->localeToUpperCase(cx, str, vp);
     }
-    return str_toUpperCase(cx, 0, vp);
+    return js_str_toUpperCase(cx, 0, vp);
 }
 
 static JSBool
@@ -2255,8 +2275,8 @@ static JSFunctionSpec string_methods[] = {
     JS_FN(js_toString_str,     str_toString,          0,JSFUN_THISP_STRING),
     JS_FN(js_valueOf_str,      str_toString,          0,JSFUN_THISP_STRING),
     JS_FN("substring",         js_str_substring,      2,GENERIC_PRIMITIVE),
-    JS_FN("toLowerCase",       str_toLowerCase,       0,GENERIC_PRIMITIVE),
-    JS_FN("toUpperCase",       str_toUpperCase,       0,GENERIC_PRIMITIVE),
+    JS_FN("toLowerCase",       js_str_toLowerCase,    0,GENERIC_PRIMITIVE),
+    JS_FN("toUpperCase",       js_str_toUpperCase,    0,GENERIC_PRIMITIVE),
     JS_FN("charAt",            js_str_charAt,         1,GENERIC_PRIMITIVE),
     JS_FN("charCodeAt",        js_str_charCodeAt,     1,GENERIC_PRIMITIVE),
     JS_FN("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE),
