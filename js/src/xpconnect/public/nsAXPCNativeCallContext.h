@@ -65,14 +65,6 @@ public:
     NS_IMETHOD GetRetValPtr(jsval **aResult) = 0;
 
     /**
-    * Set this if JS_SetPendingException has been called. Return NS_OK or
-    * else this will be ignored and the native method's nsresult will be
-    * converted into an exception and thrown into JS as is the normal case.
-    */
-    NS_IMETHOD GetExceptionWasThrown(PRBool *aResult) = 0;
-    NS_IMETHOD SetExceptionWasThrown(PRBool aValue) = 0;
-
-    /**
      * Set this to indicate that the callee has directly set the return value
      * (using RetValPtr and the JSAPI). If set then xpconnect will not attempt
      * to overwrite it with the converted retval from the C++ callee.

@@ -2533,7 +2533,6 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
   if (!aCaOption.EqualsLiteral("auto") &&
       !aCaOption.EqualsLiteral("ask")) {
     JS_ReportError(cx, "%s%s\n", JS_ERROR, "caOption argument must be ask or auto");
-    ncc->SetExceptionWasThrown(PR_TRUE);
 
     aResult.Append(internalError);
 

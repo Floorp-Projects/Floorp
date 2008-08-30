@@ -1402,14 +1402,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                             aURL,
                                             aLineNo,
                                             &val);
-
-    if (!ok) {
-        // Tell XPConnect about any pending exceptions. This is needed
-        // to avoid dropping JS exceptions in case we got here through
-        // nested calls through XPConnect.
-
-        nsContentUtils::NotifyXPCIfExceptionPending(mContext);
-    }
   }
 
   // Whew!  Finally done with these manually ref-counted things.
@@ -1479,12 +1471,6 @@ JSValueToAString(JSContext *cx, jsval val, nsAString *result,
 
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    // Tell XPConnect about any pending exceptions. This is needed to
-    // avoid dropping JS exceptions in case we got here through nested
-    // calls through XPConnect.
-
-    nsContentUtils::NotifyXPCIfExceptionPending(cx);
   }
 
   return NS_OK;
@@ -1742,12 +1728,6 @@ nsJSContext::ExecuteScript(void *aScriptObject,
     if (aRetValue) {
       aRetValue->Truncate();
     }
-
-    // Tell XPConnect about any pending exceptions. This is needed to
-    // avoid dropping JS exceptions in case we got here through nested
-    // calls through XPConnect.
-
-    nsContentUtils::NotifyXPCIfExceptionPending(mContext);
   }
 
   // Pop here, after JS_ValueToString and any other possible evaluation.

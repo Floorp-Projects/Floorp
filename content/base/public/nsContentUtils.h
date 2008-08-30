@@ -806,11 +806,6 @@ public:
   static PRBool IsChromeDoc(nsIDocument *aDocument);
 
   /**
-   * Notify XPConnect if an exception is pending on aCx.
-   */
-  static void NotifyXPCIfExceptionPending(JSContext *aCx);
-
-  /**
    * Release *aSupportsPtr when the shutdown notification is received
    */
   static nsresult ReleasePtrOnShutdown(nsISupports** aSupportsPtr) {

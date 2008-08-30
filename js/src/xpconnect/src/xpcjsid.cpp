@@ -802,8 +802,8 @@ nsJSCID::CreateInstance(nsISupports **_retval)
                         nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
     if(sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID())))
     {
-        // the security manager vetoed. It should have set an exception.
-        ccxp->SetExceptionWasThrown(JS_TRUE);
+        NS_ASSERTION(JS_IsExceptionPending(cx),
+                     "security manager vetoed CreateInstance without setting exception");
         return NS_OK;
     }
 
@@ -875,8 +875,8 @@ nsJSCID::GetService(nsISupports **_retval)
                         nsIXPCSecurityManager::HOOK_GET_SERVICE);
     if(sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID())))
     {
-        // the security manager vetoed. It should have set an exception.
-        ccxp->SetExceptionWasThrown(JS_TRUE);
+        NS_ASSERTION(JS_IsExceptionPending(cx),
+                     "security manager vetoed GetService without setting exception");
         return NS_OK;
     }
 
