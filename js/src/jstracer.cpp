@@ -2235,7 +2235,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     slots = FlushNativeStackFrame(cx, e->calldepth, e->typeMap + e->numGlobalSlots, stack, NULL);
     if (slots < 0)
         return NULL;
-    JS_ASSERT(slots == e->numStackSlots);
+    JS_ASSERT(unsigned(slots) == e->numStackSlots);
 
     AUDIT(sideExitIntoInterpreter);
 
