@@ -4427,20 +4427,13 @@ MOZ_ARG_ENABLE_STRING(application,
 [  --enable-application=APP
                           Options include:
                             browser (Firefox)
-                            composer
                             xulrunner
-                            camino
                             content/xslt (Standalone Transformiix XSLT)
                             netwerk (Standalone Necko)
                             tools/update-packaging (AUS-related packaging tools)
                             standalone (use this for standalone
                               xpcom/xpconnect or to manually drive a build)],
 [ MOZ_BUILD_APP=$enableval ] )
-
-if test "$MOZ_BUILD_APP" = "macbrowser"; then
-    AC_MSG_WARN([--enable-application=macbrowser is deprecated. Use --enable-application=camino.])
-    MOZ_BUILD_APP=camino
-fi
 
 MOZ_EMBEDDING_PROFILE=default
 MOZ_ARG_WITH_STRING(embedding-profile,
@@ -4623,16 +4616,8 @@ browser)
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
-composer)
-  AC_DEFINE(MOZ_STANDALONE_COMPOSER)
-  ;;
-
 xulrunner)
   AC_DEFINE(MOZ_XULRUNNER)
-  ;;
-
-camino) 
-  AC_DEFINE(MOZ_MACBROWSER)
   ;;
 
 content/xslt)
@@ -4654,7 +4639,6 @@ fi
 AC_SUBST(MOZ_BUILD_APP)
 AC_SUBST(MOZ_XUL_APP)
 AC_SUBST(MOZ_PHOENIX)
-AC_SUBST(MOZ_STANDALONE_COMPOSER)
 AC_SUBST(MOZ_XULRUNNER)
 
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
