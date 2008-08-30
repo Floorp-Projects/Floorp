@@ -677,8 +677,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     JS_ASSERT(!_anchor || _anchor->calldepth == _fragment->calldepth);
     this->atoms = cx->fp->script->atomMap.vector;
     this->trashTree = false;
+    this->deepAborted = false;
     this->whichTreeToTrash = _fragment->root;
-    
+
     debug_only_v(printf("recording starting from %s:%u@%u\n", cx->fp->script->filename,
                         js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
                         cx->fp->regs->pc - cx->fp->script->code););
@@ -2309,6 +2310,12 @@ js_MonitorLoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 bool
 js_MonitorRecording(JSContext* cx)
 {
+    TraceRecorder *tr = JS_TRACE_MONITOR(cx).recorder;
+    if (tr->wasDeepAborted()) {
+        js_AbortRecording(cx, NULL, "deep abort requested");
+        return false;
+    }
+
     jsbytecode* pc = cx->fp->regs->pc;
     /* If we hit a break, end the loop and generate an always taken loop exit guard. For other
        downward gotos (like if/else) continue recording. */
@@ -2316,7 +2323,7 @@ js_MonitorRecording(JSContext* cx)
         jssrcnote* sn = js_GetSrcNote(cx->fp->script, pc);
         if ((sn != NULL) && (SN_TYPE(sn) == SRC_BREAK)) {
             AUDIT(breakLoopExits);
-            JS_TRACE_MONITOR(cx).recorder->endLoop(JS_TRACE_MONITOR(cx).fragmento);
+            tr->endLoop(JS_TRACE_MONITOR(cx).fragmento);
             js_DeleteRecorder(cx);
             return false; /* done recording */
         }
