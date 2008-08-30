@@ -1110,6 +1110,64 @@ function testBitwise() {
 testBitwise.expected = -1298;
 test(testBitwise);
 
+function testSwitch() {
+    var x = 0;
+    var ret = 0;
+    for (var i = 0; i < 100; ++i) {
+        switch (x) {
+            case 0:
+                ret += 1;
+                break;
+            case 1:
+                ret += 2;
+                break;
+            case 2:
+                ret += 3;
+                break;
+            case 3:
+                ret += 4;
+                break;
+            default:
+                x = 0;
+        }
+        x++;
+    }
+    return ret;
+}
+testSwitch.expected = 226;
+test(testSwitch);
+
+function testSwitchString() {
+    var x = "asdf";
+    var ret = 0;
+    for (var i = 0; i < 100; ++i) {
+        switch (x) {
+        case "asdf":
+            x = "asd";
+            ret += 1;
+            break;
+        case "asd":
+            x = "as";
+            ret += 2;
+            break;
+        case "as":
+            x = "a";
+            ret += 3;
+            break;
+        case "a":
+            x = "foo";
+            ret += 4;
+            break;
+        default:
+            x = "asdf";
+        }
+    }
+    return ret;
+}
+testSwitchString.expected = 200;
+test(testSwitchString);
+
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
