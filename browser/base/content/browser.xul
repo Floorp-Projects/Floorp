@@ -323,7 +323,8 @@
 
       <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&reloadCmd.label;"
-                     command="Browser:Reload"
+                     command="Browser:ReloadOrDuplicate"
+                     onclick="checkForMiddleClick(this, event);"
                      tooltiptext="&reloadButton.tooltip;"/>
 
       <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"

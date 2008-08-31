@@ -123,7 +123,8 @@
       <menuitem id="context-reload"
                 label="&reloadCmd.label;"
                 accesskey="&reloadCmd.accesskey;"
-                command="Browser:Reload"/>
+                command="Browser:ReloadOrDuplicate"
+                onclick="checkForMiddleClick(this, event);"/>
       <menuitem id="context-stop"
                 label="&stopCmd.label;"
                 accesskey="&stopCmd.accesskey;"

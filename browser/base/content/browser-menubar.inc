@@ -186,7 +186,9 @@
 #else
                           key="key_stop"/>
 #endif
-                <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" command="Browser:Reload" key="key_reload"/>
+                <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" key="key_reload"
+                          command="Browser:ReloadOrDuplicate"
+                          onclick="checkForMiddleClick(this, event);"/>
                 <menuseparator/>
                 <menu id="viewFullZoomMenu" label="&fullZoom.label;" accesskey="&fullZoom.accesskey;" onpopupshowing="FullZoom.updateMenu();">
                   <menupopup>
