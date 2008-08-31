@@ -188,7 +188,9 @@ class UserError(Exception):
 def findIDL(includePath, irregularFilenames, interfaceName):
     filename = irregularFilenames.get(interfaceName, interfaceName) + '.idl'
     for d in includePath:
-        path = os.path.join(d, filename)
+        # Not os.path.join: we need a forward slash even on Windows because
+        # this filename ends up in makedepend output.
+        path = d + '/' + filename
         if os.path.exists(path):
             return path
     raise UserError("No IDL file found for interface %s "
