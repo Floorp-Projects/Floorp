@@ -258,8 +258,7 @@ function openUILinkIn( url, where, allowThirdPartyFixup, postData, referrerUrl )
 
 // Used as an onclick handler for UI elements with link-like behavior.
 // e.g. onclick="checkForMiddleClick(this, event);"
-function checkForMiddleClick(node, event)
-{
+function checkForMiddleClick(node, event) {
   // We should be using the disabled property here instead of the attribute,
   // but some elements that this function is used with don't support it (e.g.
   // menuitem).
@@ -267,12 +266,14 @@ function checkForMiddleClick(node, event)
     return; // Do nothing
 
   if (event.button == 1) {
-    /* Execute the node's oncommand.
+    /* Execute the node's oncommand or command.
      *
      * XXX: we should use node.oncommand(event) once bug 246720 is fixed.
      */
-    var fn = new Function("event", node.getAttribute("oncommand"));
-    fn.call(node, event);
+    var target = node.hasAttribute("oncommand") ? node :
+                 node.ownerDocument.getElementById(node.getAttribute("command"));
+    var fn = new Function("event", target.getAttribute("oncommand"));
+    fn.call(target, event);
 
     // If the middle-click was on part of a menu, close the menu.
     // (Menus close automatically with left-click but not with middle-click.)

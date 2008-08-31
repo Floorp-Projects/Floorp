@@ -370,13 +370,13 @@ menuitem[command="Browser:Stop"][disabled],
 
 #placesContext_reload,
 #placesContext_reloadMicrosummary,
-menuitem[command="Browser:Reload"],
+menuitem[command="Browser:ReloadOrDuplicate"],
 #context-reload,
 #context-reloadframe {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }
 
-menuitem[command="Browser:Reload"][disabled],
+menuitem[command="Browser:ReloadOrDuplicate"][disabled],
 #context-reload[disabled] {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu&state=disabled");
 }
