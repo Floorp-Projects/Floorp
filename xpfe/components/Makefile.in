@@ -52,10 +52,6 @@ DIRS += \
         $(NULL)
 endif
 
-ifneq (,$(MOZ_THUNDERBIRD)$(MOZ_SUITE)$(MOZ_SUNBIRD))
-DIRS += autocomplete
-endif
-
 # build should be last
 DIRS += \
         directory \
