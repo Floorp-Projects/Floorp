@@ -3791,7 +3791,7 @@ TraceRecorder::record_JSOP_NEW()
         } else if (argtype == 'T') {                                           \
             *argp = this_ins;                                                  \
         } else if (argtype == 'f') {                                           \
-            *argp = get(&fval);                                                \
+            *argp = INS_CONSTPTR(JSVAL_TO_OBJECT(fval));                       \
         } else if (argtype == 'p') {                                           \
             JSObject* ctor = JSVAL_TO_OBJECT(fval);                            \
             jsval pval;                                                        \
