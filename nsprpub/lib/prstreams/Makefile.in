@@ -93,9 +93,7 @@ ifeq ($(OS_ARCH), WINNT)
         OS_LIBS = user32.lib
 else
     ifeq ($(OS_ARCH),OS2)
-      ifneq ($(MOZ_OS2_TOOLS),VACPP)
-         OS_LIBS = -lstdcpp
-      endif
+        OS_LIBS = -lstdcpp
     else
     ifeq ($(OS_ARCH), AIX)
       ifeq ($(OS_RELEASE), 4.1)
@@ -183,11 +181,7 @@ $(OBJDIR)/plvrsion.$(OBJ_SUFFIX): plvrsion.c $(TINC)
 ifeq ($(OS_ARCH), WINNT)
 	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) $<
 else
-ifeq ($(MOZ_OS2_TOOLS), VACPP)
-	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) $<
-else
 	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) $<
-endif
 endif
 #
 # Version information generation (end)

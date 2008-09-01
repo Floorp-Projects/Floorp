@@ -700,11 +700,7 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
 
 	LOCK_DNS();
 
-#ifdef XP_OS2_VACPP
-	h = GETHOSTBYNAME((char *)name);
-#else
 	h = GETHOSTBYNAME(name);
-#endif
     
 	if (NULL == h)
 	{
@@ -933,11 +929,7 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
     }
 #else /* _PR_INET6 */
     LOCK_DNS();
-#ifdef XP_OS2_VACPP
-    h = GETHOSTBYNAME((char *)name);
-#else
     h = GETHOSTBYNAME(name);
-#endif
 #endif /* _PR_INET6 */
     
 	if (NULL == h)
@@ -1101,11 +1093,7 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
     }
 #else	/* _PR_HAVE_GETIPNODEBYADDR */
     LOCK_DNS();
-#ifdef XP_OS2_VACPP
-	h = GETHOSTBYADDR((char *)addr, addrlen, af);
-#else
 	h = GETHOSTBYADDR(addr, addrlen, af);
-#endif
 #endif /* _PR_HAVE_GETIPNODEBYADDR */
 	if (NULL == h)
 	{
@@ -1185,11 +1173,7 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 
 static struct protoent *getprotobyname_r(const char* name)
 {
-#ifdef XP_OS2_VACPP
-	return getprotobyname((char *)name);
-#else
 	return getprotobyname(name);
-#endif
 } /* getprotobyname_r */
 
 static struct protoent *getprotobynumber_r(PRInt32 number)
@@ -1380,7 +1364,7 @@ PRUintn _PR_NetAddrSize(const PRNetAddr* addr)
 #else
         addrsize = sizeof(addr->ipv6);
 #endif
-#if defined(XP_UNIX) || defined(XP_OS2_EMX)
+#if defined(XP_UNIX) || defined(XP_OS2)
     else if (AF_UNIX == addr->raw.family)
         addrsize = sizeof(addr->local);
 #endif
@@ -2223,11 +2207,7 @@ static PRStatus pr_StringToNetAddrFB(const char *string, PRNetAddr *addr)
     memset(&addr->ipv6.ip, 0, sizeof(addr->ipv6.ip));
 
     addr->inet.family = AF_INET;
-#ifdef XP_OS2_VACPP
-    addr->inet.ip = inet_addr((char *)string);
-#else
     addr->inet.ip = inet_addr(string);
-#endif
     if ((PRUint32) -1 == addr->inet.ip)
     {
         /*

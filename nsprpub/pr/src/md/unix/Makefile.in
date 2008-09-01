@@ -69,7 +69,7 @@ TARGETS = $(OBJS)
 
 ifeq ($(OS_ARCH),SunOS)
 	ifneq ($(OS_RELEASE),4.1.3_U1)
-		ifeq ($(OS_TEST),sun4u)
+		ifeq ($(CPU_ARCH),sparc)
 		ifdef USE_64
 			ULTRASPARC_ASFILES = os_SunOS_sparcv9.s
 			ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.$(OBJ_SUFFIX)))
@@ -97,7 +97,7 @@ export:: $(TARGETS)
 
 ifeq ($(OS_ARCH),SunOS)
 ifneq ($(OS_RELEASE),4.1.3_U1)
-ifeq ($(OS_TEST),sun4u)
+ifeq ($(CPU_ARCH),sparc)
 
 ifdef USE_64
 $(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)

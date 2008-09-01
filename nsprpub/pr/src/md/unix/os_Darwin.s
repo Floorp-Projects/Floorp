@@ -1,4 +1,5 @@
-# 
+# -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -16,7 +17,7 @@
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998-2000
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,25 +36,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# This makefile appends to the variable OBJS the platform-dependent
-# object modules that will be part of the nspr20 library.
-
-CSRCS = \
-	os2io.c      \
-	os2sock.c    \
-	os2thred.c   \
-	os2cv.c      \
-	os2gc.c      \
-	os2misc.c    \
-	os2inrval.c  \
-	os2sem.c     \
-	os2_errors.c \
-	os2poll.c    \
-	os2rng.c     \
-	$(NULL)
-
-ASFILES = os2emx.s os2vaclegacy.s
-
-OBJS += $(addprefix md/os2/$(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)))  \
-	$(addprefix md/os2/$(OBJDIR)/,$(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX)))
-
+#ifdef __i386__
+#include "os_Darwin_x86.s"
+#elif defined(__x86_64__)
+#include "os_Darwin_x86_64.s"
+#elif defined(__ppc__)
+#include "os_Darwin_ppc.s"
+#endif

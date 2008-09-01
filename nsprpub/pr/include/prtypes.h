@@ -177,20 +177,26 @@
 #define PR_CALLBACK_DECL
 #define PR_STATIC_CALLBACK(__x) static __x
 
-#elif defined(XP_OS2_VACPP) 
+#elif defined(SYMBIAN)
 
-#define PR_EXPORT(__type) extern __type
-#define PR_EXPORT_DATA(__type) extern __type
-#define PR_IMPORT(__type) extern __type
-#define PR_IMPORT_DATA(__type) extern __type
+#define PR_EXPORT(__type) extern __declspec(dllexport) __type
+#define PR_EXPORT_DATA(__type) extern __declspec(dllexport) __type
+#ifdef __WINS__
+#define PR_IMPORT(__type) extern __declspec(dllexport) __type
+#define PR_IMPORT_DATA(__type) extern __declspec(dllexport) __type
+#else
+#define PR_IMPORT(__type) extern __declspec(dllimport) __type
+#define PR_IMPORT_DATA(__type) extern __declspec(dllimport) __type
+#endif
 
 #define PR_EXTERN(__type) extern __type
 #define PR_IMPLEMENT(__type) __type
 #define PR_EXTERN_DATA(__type) extern __type
 #define PR_IMPLEMENT_DATA(__type) __type
-#define PR_CALLBACK _Optlink
+
+#define PR_CALLBACK
 #define PR_CALLBACK_DECL
-#define PR_STATIC_CALLBACK(__x) static __x PR_CALLBACK
+#define PR_STATIC_CALLBACK(__x) static __x
 
 #else /* Unix */
 

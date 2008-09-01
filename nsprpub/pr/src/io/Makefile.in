@@ -85,13 +85,5 @@ DEFINES	+= -D_NSPR_BUILD_
 
 include $(topsrcdir)/config/rules.mk
 
-# An OS/2 Optimization bug causes PR_snprintf() to produce wrong result.
-# This suppresses optimization for this single compilation unit.
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-$(OBJDIR)/prprf.obj: prprf.c
-	@$(MAKE_OBJDIR)
-	$(CC) -Fo$@ -c $(filter-out /O+, $(CFLAGS)) $<
-endif
-
 export:: $(TARGETS)
 
