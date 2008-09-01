@@ -1260,6 +1260,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest,
   PRBool showWarning = PR_FALSE;
   nsresult rv = NS_OK;
 
+  // both parameters are both input and outout
   PRBool flagsChanged = UpdateMyFlags(showWarning, warnSecurityState);
 
   if (flagsChanged || withNewLocation || withUpdateStatus || withUpdateTooltip)
