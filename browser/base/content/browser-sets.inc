@@ -98,7 +98,13 @@
              disabled="true"/>
     <command id="Browser:Home"    oncommand="BrowserHome();"/>
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
+    <command id="Browser:BackOrBackDuplicate" oncommand="BrowserBack(event);" disabled="true">
+      <observes element="Browser:Back" attribute="disabled"/>
+    </command>
     <command id="Browser:Forward" oncommand="BrowserForward();" disabled="true"/>
+    <command id="Browser:ForwardOrForwardDuplicate" oncommand="BrowserForward(event);" disabled="true">
+      <observes element="Browser:Forward" attribute="disabled"/>
+    </command>
     <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
     <command id="Browser:Reload"  oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload()" disabled="true"/>
     <command id="Browser:ReloadOrDuplicate" oncommand="BrowserReloadOrDuplicate(event)" disabled="true">

@@ -362,10 +362,8 @@
                           key="goBackKb"
 #endif
                           chromedir="&locale.dir;"
-                          oncommand="BrowserBack(event, true)"
-                          onclick="checkForMiddleClick(this, event);">
-                  <observes element="Browser:Back" attribute="disabled" />
-                </menuitem>
+                          command="Browser:BackOrBackDuplicate"
+                          onclick="checkForMiddleClick(this, event);"/>
                 <menuitem id="historyMenuForward"
                           label="&forwardCmd.label;"
 #ifdef XP_MACOSX
@@ -374,11 +372,8 @@
                           key="goForwardKb"
 #endif
                           chromedir="&locale.dir;"
-                          oncommand="BrowserForward(event, true)"
-                          onclick="checkForMiddleClick(this, event);">
-                  <observes element="Browser:Forward" attribute="disabled" />
-                </menuitem>
-
+                          command="Browser:ForwardOrForwardDuplicate"
+                          onclick="checkForMiddleClick(this, event);"/>
                 <menuitem id="historyMenuHome"
                           label="&historyHomeCmd.label;"
                           oncommand="BrowserGoHome(event);"

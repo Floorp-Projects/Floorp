@@ -114,12 +114,14 @@
                 label="&backCmd.label;"
                 accesskey="&backCmd.accesskey;"
                 chromedir="&locale.dir;"
-                command="Browser:Back"/>
+                command="Browser:BackOrBackDuplicate"
+                onclick="checkForMiddleClick(this, event);"/>
       <menuitem id="context-forward"
                 label="&forwardCmd.label;"
                 accesskey="&forwardCmd.accesskey;"
                 chromedir="&locale.dir;"
-                command="Browser:Forward"/>
+                command="Browser:ForwardOrForwardDuplicate"
+                onclick="checkForMiddleClick(this, event);"/>
       <menuitem id="context-reload"
                 label="&reloadCmd.label;"
                 accesskey="&reloadCmd.accesskey;"
