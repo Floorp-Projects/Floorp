@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,37 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-	.text
+#include "primpl.h"
 
-/*
- * sol_getsp()
- *
- * Return the current sp (for debugging)
- */
-	.global sol_getsp
-sol_getsp:
-	retl
-   	mov     %sp, %o0
+void _MD_EarlyInit(void)
+{
+}
 
-
-/*
- * sol_curthread()
- *
- * Return a unique identifier for the currently active thread.
- */
-	.global sol_curthread
-sol_curthread:
-    retl
-    mov %g7, %o0
-                  
-
-	.global __MD_FlushRegisterWindows
-	.global _MD_FlushRegisterWindows
-
-__MD_FlushRegisterWindows:
-_MD_FlushRegisterWindows:
-
-	ta	3
-	ret
-	restore
-
+PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
+{
+    *np = 0;
+    return NULL;
+}

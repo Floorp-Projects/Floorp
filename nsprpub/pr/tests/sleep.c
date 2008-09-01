@@ -52,11 +52,6 @@
 #define GTOD(_a) gettimeofday((_a), NULL)
 #endif
 
-#if defined (XP_OS2_VACPP)
-#define INCL_DOSPROCESS
-#include <os2.h>
-#endif
-
 static PRIntn rv = 0;
 
 static void Other(void *unused)

@@ -878,7 +878,6 @@ void _MD_os2_map_shutdown_error(PRInt32 err)
 	}
 }
 
-#ifndef XP_OS2_VACPP
 void _MD_os2_map_socketpair_error(PRInt32 err)
 {
   switch (err) {
@@ -902,7 +901,6 @@ void _MD_os2_map_socketpair_error(PRInt32 err)
       return;
   }
 }
-#endif
 
 void _MD_os2_map_getsockname_error(PRInt32 err)
 {

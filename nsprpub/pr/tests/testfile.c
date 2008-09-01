@@ -52,10 +52,8 @@
 #if defined(XP_OS2)
 #define INCL_DOSFILEMGR
 #include <os2.h>
-#ifdef XP_OS2_EMX
 #include <getopt.h>
 #include <errno.h>
-#endif /* XP_OS2_EMX */
 #endif /* XP_OS2 */
 
 static int _debug_on = 0;
@@ -953,12 +951,12 @@ int main(int argc, char **argv)
 #ifdef WIN32
 	PRUint32 len;
 #endif
-#if defined(XP_UNIX) || defined(XP_OS2_EMX)
+#if defined(XP_UNIX) || defined(XP_OS2)
         int opt;
         extern char *optarg;
 	extern int optind;
 #endif
-#if defined(XP_UNIX) || defined(XP_OS2_EMX)
+#if defined(XP_UNIX) || defined(XP_OS2)
         while ((opt = getopt(argc, argv, "d")) != EOF) {
                 switch(opt) {
                         case 'd':

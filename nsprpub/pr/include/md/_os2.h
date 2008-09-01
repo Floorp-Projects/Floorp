@@ -53,34 +53,6 @@
 
 #include <errno.h>
 
-#ifdef XP_OS2_VACPP
-/* TODO RAMSEMs need to be written for GCC/EMX */
-#define USE_RAMSEM
-#endif
-
-#ifdef USE_RAMSEM
-#pragma pack(4)
-
-#pragma pack(2)
-typedef struct _RAMSEM
-{
-   ULONG   ulTIDPID;
-   ULONG   hevSem;
-   ULONG   cLocks;
-   USHORT  cWaiting;
-   USHORT  cPosts;
-} RAMSEM, *PRAMSEM;
-
-typedef struct _CRITICAL_SECTION
-{
-    ULONG ulReserved[4]; /* Same size as RAMSEM */
-} CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
-#pragma pack(4)
-
-APIRET _Optlink SemRequest486(PRAMSEM, ULONG);
-APIRET _Optlink SemReleasex86(PRAMSEM, ULONG);
-#endif
-
 /*
  * Internal configuration macros
  */
@@ -187,11 +159,7 @@ struct _MDNotified {
 };
 
 struct _MDLock {
-#ifdef USE_RAMSEM
-    CRITICAL_SECTION mutex;            /* this is recursive on NT */
-#else
-    HMTX mutex;                        /* this is recursive on NT */
-#endif
+    HMTX mutex;                        /* this is recursive on OS/2 */
 
     /*
      * When notifying cvars, there is no point in actually
@@ -252,10 +220,6 @@ extern PRInt32 _MD_CloseFile(PRInt32 osfd);
 /* --- Socket IO stuff --- */
 
 /* The ones that don't map directly may need to be re-visited... */
-#ifdef XP_OS2_VACPP
-#define EPIPE                     EBADF
-#define EIO                       ECONNREFUSED
-#endif
 #define _MD_EACCES                EACCES
 #define _MD_EADDRINUSE            EADDRINUSE
 #define _MD_EADDRNOTAVAIL         EADDRNOTAVAIL
@@ -292,11 +256,7 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_CLOSE_SOCKET              _MD_CloseSocket
 #define _MD_SENDTO                    (_PR_MD_SENDTO)
 #define _MD_RECVFROM                  (_PR_MD_RECVFROM)
-#ifdef XP_OS2_VACPP
-#define _MD_SOCKETPAIR(s, type, proto, sv) -1
-#else
 #define _MD_SOCKETPAIR                (_PR_MD_SOCKETPAIR)
-#endif
 #define _MD_GETSOCKNAME               (_PR_MD_GETSOCKNAME)
 #define _MD_GETPEERNAME               (_PR_MD_GETPEERNAME)
 #define _MD_GETSOCKOPT                (_PR_MD_GETSOCKOPT)
@@ -376,26 +336,11 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _PR_LOCK                      _MD_LOCK
 #define _PR_UNLOCK					  _MD_UNLOCK
 
-#ifdef USE_RAMSEM
-#define _MD_NEW_LOCK                  (_PR_MD_NEW_LOCK)
-#define _MD_FREE_LOCK(lock)           (DosCloseEventSem(((PRAMSEM)(&((lock)->mutex)))->hevSem))
-#define _MD_LOCK(lock)                (SemRequest486(&((lock)->mutex), -1))
-#define _MD_TEST_AND_LOCK(lock)       (SemRequest486(&((lock)->mutex), -1),0)
-#define _MD_UNLOCK(lock)              \
-    PR_BEGIN_MACRO \
-    if (0 != (lock)->notified.length) { \
-        md_UnlockAndPostNotifies((lock), NULL, NULL); \
-    } else { \
-        SemReleasex86( &(lock)->mutex, 0 ); \
-    } \
-    PR_END_MACRO
-#else
 #define _MD_NEW_LOCK                  (_PR_MD_NEW_LOCK)
 #define _MD_FREE_LOCK(lock)           (DosCloseMutexSem((lock)->mutex))
 #define _MD_LOCK(lock)                (DosRequestMutexSem((lock)->mutex, SEM_INDEFINITE_WAIT))
 #define _MD_TEST_AND_LOCK(lock)       (DosRequestMutexSem((lock)->mutex, SEM_INDEFINITE_WAIT),0)
 #define _MD_UNLOCK                    (_PR_MD_UNLOCK)
-#endif
 
 /* --- lock and cv waiting --- */
 #define _MD_WAIT                      (_PR_MD_WAIT)

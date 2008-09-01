@@ -3653,7 +3653,10 @@ PRInt32 IsFileLocal(HANDLE hFile)
    _MD_LOCK(&cachedVolumeLock);
    while(dwIndex <= dwLastCachedDrive)
       if (dwCachedVolumeSerialNumbers[dwIndex++] == Info.dwVolumeSerialNumber)
+      {
+         _MD_UNLOCK(&cachedVolumeLock);
          return _PR_LOCAL_FILE;
+      }
    _MD_UNLOCK(&cachedVolumeLock);
 
    // volume serial number not found in the cache.  Check removable files.

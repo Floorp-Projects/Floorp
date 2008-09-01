@@ -64,6 +64,7 @@ static PLArenaStats *arena_stats_list;
 
 static PRLock    *arenaLock;
 static PRCallOnceType once;
+static const PRCallOnceType pristineCallOnce;
 
 /*
 ** InitializeArenas() -- Initialize arena operations.
@@ -371,6 +372,7 @@ PR_IMPLEMENT(void) PL_ArenaFinish(void)
         PR_DestroyLock(arenaLock);
         arenaLock = NULL;
     }
+    once = pristineCallOnce;
 }
 
 #ifdef PL_ARENAMETER

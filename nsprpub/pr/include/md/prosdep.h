@@ -141,6 +141,9 @@ PR_BEGIN_EXTERN_C
 #elif defined(RISCOS)
 #include "md/_riscos.h"
 
+#elif defined(SYMBIAN)
+#include "md/_symbian.h"
+
 #else
 #error unknown Unix flavor
 
