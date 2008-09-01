@@ -82,6 +82,11 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj);
     (JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj)),                                   \
      (obj)->dslots ? (uint32)(obj)->dslots[-1] : 0)
 
+#define ARRAY_SET_DENSE_LENGTH(obj, max)                                       \
+    (JS_ASSERT((obj)->dslots), (obj)->dslots[-1] = (jsval)(max))
+
+#define ARRAY_GROWBY 8
+
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 

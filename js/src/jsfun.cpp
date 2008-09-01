@@ -1640,8 +1640,8 @@ fun_call(JSContext *cx, uintN argc, jsval *vp)
     return ok;
 }
 
-static JSBool
-fun_apply(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj, *aobj;
     jsval fval, *invokevp, *sp;
@@ -1781,7 +1781,7 @@ static JSFunctionSpec function_methods[] = {
     JS_FN(js_toSource_str,   fun_toSource,   0,0),
 #endif
     JS_FN(js_toString_str,   fun_toString,   0,0),
-    JS_FN("apply",           fun_apply,      2,0),
+    JS_FN("apply",           js_fun_apply,   2,0),
     JS_FN(call_str,          fun_call,       1,0),
 #ifdef NARCISSUS
     JS_FN("__applyConstructor__", fun_applyConstructor, 0,1,0),

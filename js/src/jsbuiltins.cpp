@@ -447,11 +447,41 @@ JS_STATIC_ASSERT(JSSLOT_PRIVATE == JSSLOT_ARRAY_LENGTH);
 JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH + 1 == JSSLOT_ARRAY_COUNT);
 
 JSObject* FASTCALL
+js_FastNewArray(JSContext* cx, JSObject* proto)
+{
+    JS_ASSERT(OBJ_IS_ARRAY(cx, proto));
+
+    JS_ASSERT(cx->executingTrace);
+    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    if (!obj)
+        return NULL;
+
+    obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
+    obj->fslots[JSSLOT_PARENT] = proto->fslots[JSSLOT_PARENT];
+
+    JSClass* clasp = &js_ArrayClass;
+    obj->fslots[JSSLOT_CLASS] = PRIVATE_TO_JSVAL(clasp);
+
+    obj->fslots[JSSLOT_ARRAY_LENGTH] = 0;
+    obj->fslots[JSSLOT_ARRAY_COUNT] = 0;
+    for (unsigned i = JSSLOT_ARRAY_COUNT + 1; i != JS_INITIAL_NSLOTS; ++i)
+        obj->fslots[i] = JSVAL_VOID;
+
+    JSObjectOps* ops = clasp->getObjectOps(cx, clasp);
+    obj->map = ops->newObjectMap(cx, 1, ops, clasp, obj);
+    if (!obj->map)
+        return NULL;
+    obj->dslots = NULL;
+    return obj;
+}
+
+JSObject* FASTCALL
 js_FastNewObject(JSContext* cx, JSObject* ctor)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(ctor));
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, ctor);
     JSClass* clasp = FUN_INTERPRETED(fun) ? &js_ObjectClass : fun->u.n.clasp;
+    JS_ASSERT(clasp != &js_ArrayClass);
 
     JS_ASSERT(cx->executingTrace);
     JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
@@ -474,24 +504,10 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
     obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     obj->fslots[JSSLOT_PARENT] = ctor->fslots[JSSLOT_PARENT];
     obj->fslots[JSSLOT_CLASS] = PRIVATE_TO_JSVAL(clasp);
-
-    unsigned i = JSSLOT_PRIVATE;
-    if (clasp == &js_ArrayClass) {
-        obj->fslots[JSSLOT_ARRAY_LENGTH] = 0;
-        obj->fslots[JSSLOT_ARRAY_COUNT] = 0;
-        i += 2;
-    }
-    for (; i != JS_INITIAL_NSLOTS; ++i)
+    for (unsigned i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
 
-    if (clasp == &js_ArrayClass) {
-        JSObjectOps* ops = clasp->getObjectOps(cx, clasp);
-        obj->map = ops->newObjectMap(cx, 1, ops, clasp, obj);
-        if (!obj->map)
-            return NULL;
-    } else {
-        obj->map = js_HoldObjectMap(cx, proto->map);
-    }
+    obj->map = js_HoldObjectMap(cx, proto->map);
     obj->dslots = NULL;
     return obj;
 }
@@ -637,13 +653,57 @@ js_ObjectToString(JSContext* cx, JSObject* obj)
 }
 
 JSObject* FASTCALL
-js_Array_1int(JSContext* cx, JSObject* ctor, jsint i)
+js_Array_1int(JSContext* cx, JSObject* proto, jsint i)
 {
     JS_ASSERT(cx->executingTrace);
-    JSObject* obj = js_FastNewObject(cx, ctor);
+    JSObject* obj = js_FastNewArray(cx, proto);
     if (obj)
         obj->fslots[JSSLOT_ARRAY_LENGTH] = i;
     return obj;
+}
+
+#define ARRAY_CTOR_GUTS(exact_len, newslots_code)                             \
+    JS_ASSERT(cx->executingTrace);                                            \
+    JSObject* obj = js_FastNewArray(cx, proto);                               \
+    if (obj) {                                                                \
+        uint32 len = ARRAY_GROWBY;                                            \
+        jsval* newslots = (jsval*) JS_malloc(cx, sizeof (jsval) * (len + 1)); \
+        if (newslots) {                                                       \
+            obj->dslots = newslots + 1;                                       \
+            ARRAY_SET_DENSE_LENGTH(obj, len);                                 \
+            {newslots_code}                                                   \
+            while (++newslots < obj->dslots + len)                            \
+                *newslots = JSVAL_HOLE;                                       \
+            obj->fslots[JSSLOT_ARRAY_LENGTH] = (exact_len);                   \
+            return obj;                                                       \
+        }                                                                     \
+    }                                                                         \
+    return NULL;
+
+JSObject* FASTCALL
+js_Array_1str(JSContext* cx, JSObject* proto, JSString *str)
+{
+    ARRAY_CTOR_GUTS(1, *++newslots = STRING_TO_JSVAL(str);)
+}
+
+JSObject* FASTCALL
+js_Array_2obj(JSContext* cx, JSObject* proto, JSObject *obj1, JSObject* obj2)
+{
+    ARRAY_CTOR_GUTS(2,
+        *++newslots = OBJECT_TO_JSVAL(obj1);
+        *++newslots = OBJECT_TO_JSVAL(obj2);)
+}
+
+JSObject* FASTCALL
+js_Array_3num(JSContext* cx, JSObject* proto, jsdouble n1, jsdouble n2, jsdouble n3)
+{
+    ARRAY_CTOR_GUTS(3,
+        if (!js_NewDoubleInRootedValue(cx, n1, ++newslots))
+            return NULL;
+        if (!js_NewDoubleInRootedValue(cx, n2, ++newslots))
+            return NULL;
+        if (!js_NewDoubleInRootedValue(cx, n3, ++newslots))
+            return NULL;)
 }
 
 #define LO ARGSIZE_LO
