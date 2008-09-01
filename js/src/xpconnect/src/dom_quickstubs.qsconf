@@ -355,7 +355,10 @@ members = [
     'nsIDOMHTMLOptionElement.index',
     'nsIDOMHTMLOptionElement.selected',
     'nsIDOMHTMLOptionElement.form',
-    'nsIDOMHTMLOptionElement.text',
+    # Commented out because it's not writable while
+    # nsIDOMNSHTMLOptionElement.text is, which causes bustage when
+    # someone tries to assign .text.
+    #'nsIDOMHTMLOptionElement.text',
     'nsIDOMHTMLOptionElement.defaultSelected',
     'nsIDOMHTMLOptionElement.value',
     'nsIDOMHTMLOptionElement.label',
