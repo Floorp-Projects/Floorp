@@ -106,7 +106,7 @@
 /* ..... selected state ..... */
 
 .console-row[selected="true"] {
-    background-image: url("chrome://mozapps/skin/shared/itemSelected.png");
+    background-image: url("chrome://global/skin/console/itemSelected.png");
 }
 
 .console-row-code[selected="true"],
