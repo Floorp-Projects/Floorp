@@ -4950,7 +4950,8 @@ TraceRecorder::record_JSOP_ENDINIT()
     JSObject* obj = JSVAL_TO_OBJECT(v);
     if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
         // Until we get JSOP_NEWARRAY working, we do our optimizing here...
-        if (obj->fslots[JSSLOT_ARRAY_LENGTH] == 1 && JSVAL_IS_STRING(obj->dslots[0])) {
+        if (obj->fslots[JSSLOT_ARRAY_LENGTH] == 1 &&
+            obj->dslots && JSVAL_IS_STRING(obj->dslots[0])) {
             LIns* v_ins = get(&v);
             JS_ASSERT(v_ins->isCall() && v_ins->fid() == F_FastNewArray);
             LIns* args[] = { stack(1), callArgN(v_ins, 1), cx_ins };
