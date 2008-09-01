@@ -1,11 +1,12 @@
+# -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # 
 # ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# Version: MPL 1.1#GPL 2.0#LGPL 2.1
 #
 # The contents of this file are subject to the Mozilla Public License Version
 # 1.1 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
+# http:##www.mozilla.org#MPL#
 #
 # Software distributed under the License is distributed on an "AS IS" basis,
 # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
@@ -16,7 +17,7 @@
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998-2000
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,25 +36,60 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# This makefile appends to the variable OBJS the platform-dependent
-# object modules that will be part of the nspr20 library.
+# PRInt32 __PR_Darwin_x86_64_AtomicIncrement(PRInt32 *val)
+#
+# Atomically increment the integer pointed to by 'val' and return
+# the result of the increment.
+#
+    .text
+    .globl __PR_Darwin_x86_64_AtomicIncrement
+    .align 4
+__PR_Darwin_x86_64_AtomicIncrement:
+    movl $1, %eax
+    lock
+    xaddl %eax, (%rdi)
+    incl %eax
+    ret
 
-CSRCS = \
-	os2io.c      \
-	os2sock.c    \
-	os2thred.c   \
-	os2cv.c      \
-	os2gc.c      \
-	os2misc.c    \
-	os2inrval.c  \
-	os2sem.c     \
-	os2_errors.c \
-	os2poll.c    \
-	os2rng.c     \
-	$(NULL)
+# PRInt32 __PR_Darwin_x86_64_AtomicDecrement(PRInt32 *val)
+#
+# Atomically decrement the integer pointed to by 'val' and return
+# the result of the decrement.
+#
+    .text
+    .globl __PR_Darwin_x86_64_AtomicDecrement
+    .align 4
+__PR_Darwin_x86_64_AtomicDecrement:
+    movl $-1, %eax
+    lock
+    xaddl %eax, (%rdi)
+    decl %eax
+    ret
 
-ASFILES = os2emx.s os2vaclegacy.s
+# PRInt32 __PR_Darwin_x86_64_AtomicSet(PRInt32 *val, PRInt32 newval)
+#
+# Atomically set the integer pointed to by 'val' to the new
+# value 'newval' and return the old value.
+#
+    .text
+    .globl __PR_Darwin_x86_64_AtomicSet
+    .align 4
+__PR_Darwin_x86_64_AtomicSet:
+    movl %esi, %eax
+    xchgl %eax, (%rdi)
+    ret
 
-OBJS += $(addprefix md/os2/$(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)))  \
-	$(addprefix md/os2/$(OBJDIR)/,$(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX)))
-
+# PRInt32 __PR_Darwin_x86_64_AtomicAdd(PRInt32 *ptr, PRInt32 val)
+#
+# Atomically add 'val' to the integer pointed to by 'ptr'
+# and return the result of the addition.
+#
+    .text
+    .globl __PR_Darwin_x86_64_AtomicAdd
+    .align 4
+__PR_Darwin_x86_64_AtomicAdd:
+    movl %esi, %eax
+    lock
+    xaddl %eax, (%rdi)
+    addl %esi, %eax
+    ret

@@ -1160,11 +1160,6 @@ PR_IMPLEMENT(PRUint32) PR_snprintf(char *out, PRUint32 outlen, const char *fmt, 
     va_list ap;
     PRUint32 rv;
 
-    PR_ASSERT((PRInt32)outlen > 0);
-    if ((PRInt32)outlen <= 0) {
-	return 0;
-    }
-
     va_start(ap, fmt);
     rv = PR_vsnprintf(out, outlen, fmt, ap);
     va_end(ap);

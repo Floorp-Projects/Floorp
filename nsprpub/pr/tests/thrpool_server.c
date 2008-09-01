@@ -58,7 +58,7 @@
 #endif
 
 /* for getcwd */
-#if defined(XP_UNIX) || defined (XP_OS2_EMX) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS)
 #include <unistd.h>
 #elif defined(XP_PC)
 #include <direct.h>

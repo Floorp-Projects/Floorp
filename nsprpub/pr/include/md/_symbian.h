@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,81 +35,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "prbit.h"
-#include "prsystem.h"
+#ifndef nspr_symbian_defs_h___
+#define nspr_symbian_defs_h___
 
-#ifdef XP_UNIX
-#include <unistd.h>
-#endif
-#ifdef SUNOS4
-#include "md/sunos4.h"
-#endif
-#ifdef _WIN32
-#include <windows.h>
-#endif 
-#ifdef XP_BEOS
-#include <OS.h>
-#endif
-
-PRInt32 _pr_pageShift;
-PRInt32 _pr_pageSize;
+#include "prthread.h"
 
 /*
-** Get system page size
-*/
-static void GetPageSize(void)
-{
-	PRInt32 pageSize;
+ * Internal configuration macros
+ */
 
-    /* Get page size */
-#ifdef XP_UNIX
-#if defined SUNOS4 || defined BSDI || defined AIX \
-        || defined LINUX || defined __GNU__ || defined __GLIBC__ \
-        || defined FREEBSD || defined NETBSD || defined OPENBSD \
-        || defined DARWIN || defined NEXTSTEP || defined SYMBIAN
-    _pr_pageSize = getpagesize();
-#elif defined(HPUX)
-    /* I have no idea. Don't get me started. --Rob */
-    _pr_pageSize = sysconf(_SC_PAGE_SIZE);
+#define _PR_SI_SYSNAME  "SYMBIAN"
+#ifdef __arm__
+#define _PR_SI_ARCHITECTURE "arm"
 #else
-    _pr_pageSize = sysconf(_SC_PAGESIZE);
+#error "Unknown CPU architecture"
 #endif
-#endif /* XP_UNIX */
+#define PR_DLL_SUFFIX		".dll"
 
-#ifdef XP_MAC
-    _pr_pageSize = 4096;
-#endif /* XP_MAC */
+#undef	HAVE_STACK_GROWING_UP
 
-#ifdef XP_BEOS
-    _pr_pageSize = B_PAGE_SIZE;
+#ifdef DYNAMIC_LIBRARY
+#define HAVE_DLL
+#define USE_DLFCN
 #endif
 
-#ifdef XP_PC
-#ifdef _WIN32
-    SYSTEM_INFO info;
-    GetSystemInfo(&info);
-    _pr_pageSize = info.dwPageSize;
-#else
-    _pr_pageSize = 4096;
+#define _PR_STAT_HAS_ONLY_ST_ATIME
+#define _PR_NO_LARGE_FILES
+#define _PR_HAVE_SYSV_SEMAPHORES
+#define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
+
+#ifndef _PR_PTHREADS
+#error "Classic NSPR is not implemented"
 #endif
-#endif /* XP_PC */
 
-	pageSize = _pr_pageSize;
-	PR_CEILING_LOG2(_pr_pageShift, pageSize);
-}
+extern void _MD_EarlyInit(void);
+extern PRIntervalTime _PR_UNIX_GetInterval(void);
+extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 
-PR_IMPLEMENT(PRInt32) PR_GetPageShift(void)
-{
-    if (!_pr_pageSize) {
-	GetPageSize();
-    }
-    return _pr_pageShift;
-}
+#define _MD_EARLY_INIT                  _MD_EarlyInit
+#define _MD_FINAL_INIT                  _PR_UnixInit
+#define _MD_GET_INTERVAL                _PR_UNIX_GetInterval
+#define _MD_INTERVAL_PER_SEC            _PR_UNIX_TicksPerSecond
 
-PR_IMPLEMENT(PRInt32) PR_GetPageSize(void)
-{
-    if (!_pr_pageSize) {
-	GetPageSize();
-    }
-    return _pr_pageSize;
-}
+/* For writev() */
+#include <sys/uio.h>
+
+#endif /* nspr_symbian_defs_h___ */

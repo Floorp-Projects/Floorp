@@ -99,14 +99,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
-  ifeq ($(MOZ_OS2_TOOLS),VACPP)
-    LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO /S:32768
-    LIBPR = $(dist_libdir)/nspr$(MOD_MAJOR_VERSION).lib
-    LIBPLC = $(dist_libdir)/plc$(MOD_MAJOR_VERSION).lib
-    LIBPLDS= $(dist_libdir)/plds$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)	
-  else
-    LDOPTS += -Zomf -Zlinker /PM:VIO
-  endif
+LDOPTS += -Zomf -Zlinker /PM:VIO
 endif
 
 ifneq ($(OS_ARCH), WINNT)
@@ -159,18 +152,11 @@ LDOPTS += -R $(PWD)/$(dist_libdir)
 endif
 endif
 
-# SunOS 5.4 and 5.5 need to link with -lthread or -lpthread,
-# even though we already linked with these system libraries
-# when we built libnspr.so.
-ifeq ($(OS_RELEASE), 5.4)
-EXTRA_LIBS = -lthread
-endif
-
+# SunOS 5.5 needs to link with -lpthread, even though we already
+# linked with this system library when we built libnspr.so.
 ifeq ($(OS_RELEASE), 5.5)
 ifdef USE_PTHREADS
 EXTRA_LIBS = -lpthread
-else
-EXTRA_LIBS = -lthread
 endif
 endif
 endif # SunOS

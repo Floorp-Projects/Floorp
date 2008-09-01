@@ -39,9 +39,7 @@
  * This file implements _PR_MD_PR_POLL for OS/2.
  */
 
-#ifdef XP_OS2_EMX
- #include <sys/time.h> /* For timeval. */
-#endif
+#include <sys/time.h> /* For timeval. */
 
 #include "primpl.h"
 
