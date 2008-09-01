@@ -3065,11 +3065,11 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     // only protects innerMostWidget from being deleted, it does NOT protect
     // against nsView::~nsView() calling Destroy() on it, bug 378670.
     if (!innerMostWidget->mIsDestroyed) {
-        event.message = NS_DRAGDROP_DROP;
-        event.widget = innerMostWidget;
+        nsDragEvent event(PR_TRUE, NS_DRAGDROP_DROP, innerMostWidget);
         event.refPoint.x = retx;
         event.refPoint.y = rety;
 
+        nsEventStatus status = nsEventStatus_eIgnore;
         innerMostWidget->DispatchEvent(&event, status);
     }
 
