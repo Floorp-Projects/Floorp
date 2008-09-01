@@ -502,7 +502,8 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
 }
 
 nsresult
-nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsISupports *info)
+nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsISupports *info,
+                                                      PRBool withNewLocation)
 {
   /* I explicitly ignore the camelCase variable naming style here,
      I want to make it clear these are temp variables that relate to the 
@@ -566,7 +567,8 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsIS
     mCurrentToplevelSecurityInfo = info;
   }
 
-  return UpdateSecurityState(aRequest);
+  return UpdateSecurityState(aRequest, withNewLocation, 
+                             updateStatus, updateTooltip);
 }
 
 void
@@ -1193,7 +1195,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       // Data has been transferred for the single toplevel
       // request. Evaluate the security state.
 
-      return EvaluateAndUpdateSecurityState(aRequest, securityInfo);
+      return EvaluateAndUpdateSecurityState(aRequest, securityInfo, PR_FALSE);
     }
     
     return NS_OK;
@@ -1231,7 +1233,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       }
 
       if (temp_NewToplevelSecurityStateKnown)
-        return UpdateSecurityState(aRequest);
+        return UpdateSecurityState(aRequest, PR_FALSE, PR_FALSE, PR_FALSE);
     }
 
     return NS_OK;
@@ -1249,20 +1251,30 @@ void nsSecureBrowserUIImpl::ObtainEventSink(nsIChannel *channel,
     NS_QueryNotificationCallbacks(channel, sink);
 }
 
-nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
+nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest, 
+                                                    PRBool withNewLocation, 
+                                                    PRBool withUpdateStatus, 
+                                                    PRBool withUpdateTooltip)
 {
   lockIconState warnSecurityState = lis_no_security;
   PRBool showWarning = PR_FALSE;
+  nsresult rv = NS_OK;
 
-  UpdateMyFlags(showWarning, warnSecurityState);
-  return TellTheWorld(showWarning, warnSecurityState, aRequest);
+  PRBool flagsChanged = UpdateMyFlags(showWarning, warnSecurityState);
+
+  if (flagsChanged || withNewLocation || withUpdateStatus || withUpdateTooltip)
+    rv = TellTheWorld(showWarning, warnSecurityState, aRequest);
+
+  return rv;
 }
 
 // must not fail, by definition, only trivial assignments
 // or string operations are allowed
-void nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &warnSecurityState)
+// returns true if our overall state has changed and we must send out notifications
+PRBool nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &warnSecurityState)
 {
   nsAutoMonitor lock(mMonitor);
+  PRBool mustTellTheWorld = PR_FALSE;
 
   lockIconState newSecurityState;
 
@@ -1322,8 +1334,8 @@ void nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &wa
 
   if (mNotifiedSecurityState != newSecurityState)
   {
-    // must show alert
-    
+    mustTellTheWorld = PR_TRUE;
+
     // we'll treat "broken" exactly like "insecure",
     // i.e. we do not show alerts when switching between broken and insecure
 
@@ -1394,7 +1406,12 @@ void nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &wa
     }
   }
 
-  mNotifiedToplevelIsEV = mNewToplevelIsEV;
+  if (mNotifiedToplevelIsEV != mNewToplevelIsEV) {
+    mustTellTheWorld = PR_TRUE;
+    mNotifiedToplevelIsEV = mNewToplevelIsEV;
+  }
+
+  return mustTellTheWorld;
 }
 
 nsresult nsSecureBrowserUIImpl::TellTheWorld(PRBool showWarning, 
@@ -1521,7 +1538,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 
   if (windowForProgress.get() == window.get()) {
     // For toplevel channels, update the security state right away.
-    return EvaluateAndUpdateSecurityState(aRequest, securityInfo);
+    return EvaluateAndUpdateSecurityState(aRequest, securityInfo, PR_TRUE);
   }
 
   // For channels in subdocuments we only update our subrequest state members.
@@ -1545,7 +1562,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   }
 
   if (temp_NewToplevelSecurityStateKnown)
-    return UpdateSecurityState(aRequest);
+    return UpdateSecurityState(aRequest, PR_TRUE, PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }
