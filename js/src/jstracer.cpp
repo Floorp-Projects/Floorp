@@ -280,7 +280,7 @@ Oracle::clear()
 static LIns* demote(LirWriter *out, LInsp i)
 {
     if (i->isCall())
-        return callArgN(i,0);
+        return callArgN(i, 0);
     if (i->isop(LIR_i2f) || i->isop(LIR_u2f))
         return i->oprnd1();
     if (i->isconst())
@@ -713,7 +713,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     if (_anchor && _anchor->exit->exitType == NESTED_EXIT) {
         LIns* nested_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, 
                                                 offsetof(InterpState, nestedExit)), "nestedExit");
-        guard(true, lir->ins2(LIR_eq, nested_ins, lir->insImmPtr(innermostNestedGuard)), NESTED_EXIT);
+        guard(true, lir->ins2(LIR_eq, nested_ins, INS_CONSTPTR(innermostNestedGuard)), NESTED_EXIT);
     }
 }
 
@@ -1180,7 +1180,7 @@ TraceRecorder::import(TreeInfo* treeInfo, LIns* sp, unsigned ngslots, unsigned c
 bool
 TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
 {
-    if (slot != (uint16)slot) /* we use a table of 16-bit ints, bail out if that's not enough */
+    if (slot != uint16(slot)) /* we use a table of 16-bit ints, bail out if that's not enough */
         return false;
     jsval* vp = &STOBJ_GET_SLOT(globalObj, slot);
     if (tracker.has(vp))
@@ -1605,7 +1605,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     JS_ASSERT(lr->exit->exitType == LOOP_EXIT && !lr->calldepth);
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
     /* Invoke the inner tree. */
-    LIns* args[] = { lir->insImmPtr(inner), lirbuf->state }; /* reverse order */
+    LIns* args[] = { INS_CONSTPTR(inner), lirbuf->state }; /* reverse order */
     LIns* ret = lir->insCall(F_CallTree, args);
     /* Read back all registers, in case the called tree changed any of them. */
     SideExit* exit = lr->exit;
@@ -1620,7 +1620,7 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     }
     /* Guard that we come out of the inner tree along the same side exit we came out when
        we called the inner tree at recording time. */
-    guard(true, lir->ins2(LIR_eq, ret, lir->insImmPtr(lr)), NESTED_EXIT);
+    guard(true, lir->ins2(LIR_eq, ret, INS_CONSTPTR(lr)), NESTED_EXIT);
     /* Register us as a dependent tree of the inner tree. */
     ((TreeInfo*)inner->vmprivate)->dependentTrees.addUnique(fragment->root);
 }
@@ -3005,7 +3005,7 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, si
 #define OP(ops) (*(JSObjectOp*) ((char*)(ops) + op_offset))
 
     if (OP(map->ops) == OP(&js_ObjectOps)) {
-        guard(true, addName(lir->ins2(LIR_eq, n, lir->insImmPtr((void*) OP(&js_ObjectOps))),
+        guard(true, addName(lir->ins2(LIR_eq, n, INS_CONSTPTR(OP(&js_ObjectOps))),
                             "guard(native-map)"),
               MISMATCH_EXIT);
         return true;
@@ -3078,9 +3078,23 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 
         if (!prop) {
             // Propagate obj from js_FindPropertyHelper to record_JSOP_BINDNAME
-            // via our obj2 out-parameter.
+            // via our obj2 out-parameter. If we are recording JSOP_SETNAME and
+            // the global it's assigning does not yet exist, create it.
             obj2 = obj;
-            pcval = PCVAL_NULL;
+            if (JSOp(*cx->fp->regs->pc) == JSOP_SETNAME) {
+                jsval v = JSVAL_VOID;
+                if (!js_SetPropertyHelper(cx, obj, id, &v, &entry))
+                    return false;
+                if (!entry || !PCVAL_IS_SPROP(entry->vword))
+                    ABORT_TRACE("can't create cacheable global for JSOP_SETNAME");
+                JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
+                if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)))
+                    ABORT_TRACE("can't create slot-ful global for JSOP_SETNAME");
+                pcval = SLOT_TO_PCVAL(sprop->slot);
+            } else {
+                // Use PCVAL_NULL to return "no such property" to our caller.
+                pcval = PCVAL_NULL;
+            }
             return true;
         }
 
@@ -3343,8 +3357,8 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp)
 
     char namebuf[32];
     JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
-    guard(true, addName(lir->ins2(LIR_eq, class_ins, lir->insImmPtr(clasp)), namebuf),
-            MISMATCH_EXIT);
+    guard(true, addName(lir->ins2(LIR_eq, class_ins, INS_CONSTPTR(clasp)), namebuf),
+          MISMATCH_EXIT);
     return true;
 }
 
@@ -3698,11 +3712,13 @@ struct JSTraceableNative {
     const char  *prefix;
     const char  *argtypes;
     JSTNErrType  errtype;
-    JSClass     *tclasp;
 };
 
 JSBool
 js_Array(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
+
+JSBool
+js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 bool
 TraceRecorder::record_JSOP_NEW()
@@ -3742,7 +3758,11 @@ TraceRecorder::record_JSOP_NEW()
     }
 
     static JSTraceableNative knownNatives[] = {
-        { (JSFastNative)js_Array, F_Array_1int, "fC", "i", FAIL_NULL, NULL },
+        { (JSFastNative)js_Array,  F_FastNewArray,  "pC", "",    FAIL_NULL },
+        { (JSFastNative)js_Array,  F_Array_1int,    "pC", "i",   FAIL_NULL },
+        { (JSFastNative)js_Array,  F_Array_2obj,    "pC", "oo",  FAIL_NULL },
+        { (JSFastNative)js_Array,  F_Array_3num,    "pC", "ddd", FAIL_NULL },
+        { (JSFastNative)js_Object, F_FastNewObject, "fC", "",    FAIL_NULL },
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
@@ -3763,27 +3783,27 @@ TraceRecorder::record_JSOP_NEW()
         memset(args, 0xCD, sizeof(args));
 #endif
 
-        jsval& thisval = stackval(0 - (argc + 1));
-        LIns* thisval_ins = get(&thisval);
-        if (known->tclasp &&
-            !JSVAL_IS_PRIMITIVE(thisval) &&
-            !guardClass(JSVAL_TO_OBJECT(thisval), thisval_ins, known->tclasp)) {
-            continue; /* might have another specialization for |this| */
-        }
-
 #define HANDLE_PREFIX(i)                                                       \
     JS_BEGIN_MACRO                                                             \
         argtype = known->prefix[i];                                            \
         if (argtype == 'C') {                                                  \
             *argp = cx_ins;                                                    \
         } else if (argtype == 'T') {                                           \
-            *argp = thisval_ins;                                               \
-        } else if (argtype == 'R') {                                           \
-            *argp = lir->insImmPtr((void*)cx->runtime);                        \
-        } else if (argtype == 'P') {                                           \
-            *argp = lir->insImmPtr(pc);                                        \
+            *argp = this_ins;                                                  \
         } else if (argtype == 'f') {                                           \
-            *argp = lir->insImmPtr((void*)JSVAL_TO_OBJECT(fval));              \
+            *argp = get(&fval);                                                \
+        } else if (argtype == 'p') {                                           \
+            JSObject* ctor = JSVAL_TO_OBJECT(fval);                            \
+            jsval pval;                                                        \
+            if (!OBJ_GET_PROPERTY(cx, ctor,                                    \
+                                  ATOM_TO_JSID(cx->runtime->atomState          \
+                                               .classPrototypeAtom),           \
+                                  &pval)) {                                    \
+                ABORT_TRACE("error getting prototype from constructor");       \
+            }                                                                  \
+            if (!JSVAL_IS_OBJECT(pval))                                        \
+                ABORT_TRACE("got primitive prototype from constructor");       \
+            *argp = INS_CONSTPTR(JSVAL_TO_OBJECT(pval));                       \
         } else {                                                               \
             JS_NOT_REACHED("unknown prefix arg type");                         \
         }                                                                      \
@@ -3818,16 +3838,8 @@ TraceRecorder::record_JSOP_NEW()
             *argp = get(&arg);                                                 \
             if (argtype == 'i')                                                \
                 *argp = f2i(*argp);                                            \
-        } else if (argtype == 's') {                                           \
-            if (!JSVAL_IS_STRING(arg))                                         \
-                continue; /* might have another specialization for arg */      \
-            *argp = get(&arg);                                                 \
-        } else if (argtype == 'r') {                                           \
-            if (!VALUE_IS_REGEXP(cx, arg))                                     \
-                continue; /* might have another specialization for arg */      \
-            *argp = get(&arg);                                                 \
-        } else if (argtype == 'f') {                                           \
-            if (!VALUE_IS_FUNCTION(cx, arg))                                   \
+        } else if (argtype == 'o') {                                           \
+            if (!JSVAL_IS_OBJECT(arg))                                         \
                 continue; /* might have another specialization for arg */      \
             *argp = get(&arg);                                                 \
         } else {                                                               \
@@ -3836,7 +3848,7 @@ TraceRecorder::record_JSOP_NEW()
         argp--;                                                                \
     }
 
-        switch (strlen(known->argtypes)) {
+        switch (knownargc) {
           case 4:
             HANDLE_ARG(3);
             /* FALL THROUGH */
@@ -4078,7 +4090,7 @@ TraceRecorder::record_JSOP_SETPROP()
     JSScope* scope = OBJ_SCOPE(obj);
     JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
     if (scope->object != obj || !SCOPE_HAS_PROPERTY(scope, sprop)) {
-        LIns* args[] = { lir->insImmPtr(sprop), obj_ins, cx_ins };
+        LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(F_AddProperty, args);
         guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);
     }
@@ -4205,7 +4217,7 @@ TraceRecorder::record_JSOP_CALLNAME()
         if (!activeCallOrGlobalSlot(obj, vp))
             return false;
         stack(0, get(vp));
-        stack(1, lir->insImmPtr(NULL));
+        stack(1, INS_CONSTPTR(NULL));
         return true;
     }
 
@@ -4219,7 +4231,7 @@ TraceRecorder::record_JSOP_CALLNAME()
         ABORT_TRACE("callee is not an object");
     JS_ASSERT(HAS_FUNCTION_CLASS(PCVAL_TO_OBJECT(pcval)));
 
-    stack(0, lir->insImmPtr(PCVAL_TO_OBJECT(pcval)));
+    stack(0, INS_CONSTPTR(PCVAL_TO_OBJECT(pcval)));
     stack(1, obj_ins);
     return true;
 }
@@ -4270,9 +4282,9 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
     if (callDepth >= treeInfo->maxCallDepth)
         treeInfo->maxCallDepth = callDepth + 1;
 
-    lir->insStorei(lir->insImmPtr(fi.callee), lirbuf->rp,
+    lir->insStorei(INS_CONSTPTR(fi.callee), lirbuf->rp,
                    callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callee));
-    lir->insStorei(lir->insImmPtr(fi.callpc), lirbuf->rp,
+    lir->insStorei(INS_CONSTPTR(fi.callpc), lirbuf->rp,
                    callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, callpc));
     lir->insStorei(INS_CONST(fi.word), lirbuf->rp,
                    callDepth * sizeof(FrameInfo) + offsetof(FrameInfo, word));
@@ -4281,44 +4293,22 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
     return true;
 }
 
-JSBool
-js_math_sin(JSContext* cx, uintN argc, jsval* vp);
+#define KNOWN_NATIVE_DECL(name) JSBool name(JSContext* cx, uintN argc, jsval* vp);
 
-JSBool
-js_math_cos(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_math_pow(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_math_sqrt(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_str_substring(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_str_fromCharCode(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_str_charCodeAt(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_str_charAt(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_str_concat(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_math_random(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_math_floor(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_math_ceil(JSContext* cx, uintN argc, jsval* vp);
-
-JSBool
-js_num_toString(JSContext *cx, uintN argc, jsval *vp);
+KNOWN_NATIVE_DECL(js_fun_apply)
+KNOWN_NATIVE_DECL(js_math_ceil)
+KNOWN_NATIVE_DECL(js_math_cos)
+KNOWN_NATIVE_DECL(js_math_floor)
+KNOWN_NATIVE_DECL(js_math_pow)
+KNOWN_NATIVE_DECL(js_math_random)
+KNOWN_NATIVE_DECL(js_math_sin)
+KNOWN_NATIVE_DECL(js_math_sqrt)
+KNOWN_NATIVE_DECL(js_num_toString)
+KNOWN_NATIVE_DECL(js_str_charAt)
+KNOWN_NATIVE_DECL(js_str_charCodeAt)
+KNOWN_NATIVE_DECL(js_str_concat)
+KNOWN_NATIVE_DECL(js_str_fromCharCode)
+KNOWN_NATIVE_DECL(js_str_substring)
 
 bool
 TraceRecorder::record_JSOP_CALL()
@@ -4332,7 +4322,7 @@ TraceRecorder::record_JSOP_CALL()
     LIns* this_ins = get(&tval);
     if (this_ins->isconstp() && !this_ins->constvalp() && !guardShapelessCallee(fval))
         return false;
-    
+
     /*
      * Require that the callee be a function object, to avoid guarding on its
      * class here. We know if the callee and this were pushed by JSOP_CALLNAME
@@ -4350,48 +4340,93 @@ TraceRecorder::record_JSOP_CALL()
     if (FUN_INTERPRETED(fun))
         return interpretedFunctionCall(fval, fun, argc);
 
-    /*
-     * Handle dear old eval here, it's a slow native but a special one, judging
-     * from benchmarks. FIXME: we need a post-eval recording hook to know which
-     * type tag to unbox from.
-     */
-    if (FUN_SLOW_NATIVE(fun)) 
+    if (FUN_SLOW_NATIVE(fun))
         ABORT_TRACE("slow native");
 
     static JSTraceableNative knownNatives[] = {
-        { js_array_join,               F_Array_p_join,         "TC",  "s",    FAIL_NULL,   NULL },
-        { js_math_sin,                 F_Math_sin,             "",    "d",    INFALLIBLE,  NULL },
-        { js_math_cos,                 F_Math_cos,             "",    "d",    INFALLIBLE,  NULL },
-        { js_math_pow,                 F_Math_pow,             "",   "dd",    INFALLIBLE,  NULL },
-        { js_math_sqrt,                F_Math_sqrt,            "",    "d",    INFALLIBLE,  NULL },
-        { js_math_floor,               F_Math_floor,           "",    "d",    INFALLIBLE,  NULL },
-        { js_math_ceil,                F_Math_ceil,            "",    "d",    INFALLIBLE,  NULL },
-        { js_math_random,              F_Math_random,          "R",    "",    INFALLIBLE,  NULL },
-        { js_num_parseInt,             F_ParseInt,             "C",   "s",    INFALLIBLE,  NULL },
-        { js_num_parseFloat,           F_ParseFloat,           "C",   "s",    INFALLIBLE,  NULL },
-        { js_num_toString,             F_NumberToString,       "TC",   "",    FAIL_NULL,   NULL },
+        { js_array_join,               F_Array_p_join,         "TC",  "s",    FAIL_NULL },
+        { js_math_sin,                 F_Math_sin,             "",    "d",    INFALLIBLE },
+        { js_math_cos,                 F_Math_cos,             "",    "d",    INFALLIBLE },
+        { js_math_pow,                 F_Math_pow,             "",    "dd",   INFALLIBLE },
+        { js_math_sqrt,                F_Math_sqrt,            "",    "d",    INFALLIBLE },
+        { js_math_floor,               F_Math_floor,           "",    "d",    INFALLIBLE },
+        { js_math_ceil,                F_Math_ceil,            "",    "d",    INFALLIBLE },
+        { js_math_random,              F_Math_random,          "R",    "",    INFALLIBLE },
+        { js_num_parseInt,             F_ParseInt,             "C",   "s",    INFALLIBLE },
+        { js_num_parseFloat,           F_ParseFloat,           "C",   "s",    INFALLIBLE },
+        { js_num_toString,             F_NumberToString,       "TC",   "",    FAIL_NULL },
         { js_obj_hasOwnProperty,       F_Object_p_hasOwnProperty,
-                                                               "TC",  "s",    FAIL_VOID,   NULL },
+                                                               "TC",  "s",    FAIL_VOID },
         { js_obj_propertyIsEnumerable, F_Object_p_propertyIsEnumerable,
-                                                               "TC",  "s",    FAIL_VOID,   NULL },
-        { js_str_charAt,               F_String_getelem,       "TC",  "i",    FAIL_NULL,   NULL },
-        { js_str_charCodeAt,           F_String_p_charCodeAt,  "T",   "i",    FAIL_NEG,    NULL },
-        { js_str_concat,               F_String_p_concat_1int, "TC",  "i",    FAIL_NULL,   NULL },
-        { js_str_fromCharCode,         F_String_fromCharCode,  "C",   "i",    FAIL_NULL,   NULL },
-        { js_str_match,                F_String_p_match,       "PTC", "r",    FAIL_VOID,   NULL },
-        { js_str_replace,              F_String_p_replace_str, "TC", "sr",    FAIL_NULL,   NULL },
-        { js_str_replace,              F_String_p_replace_str2,"TC", "ss",    FAIL_NULL,   NULL },
-        { js_str_replace,              F_String_p_replace_str3,"TC","sss",    FAIL_NULL,   NULL },
-        { js_str_split,                F_String_p_split,       "TC",  "s",    FAIL_NULL,   NULL },
-        { js_str_substring,            F_String_p_substring,   "TC", "ii",    FAIL_NULL,   NULL },
-        { js_str_substring,            F_String_p_substring_1, "TC",  "i",    FAIL_NULL,   NULL },
-        { js_str_toLowerCase,          F_toLowerCase,          "TC",   "",    FAIL_NULL,   NULL },
-        { js_str_toUpperCase,          F_toUpperCase,          "TC",   "",    FAIL_NULL,   NULL },
+                                                               "TC",  "s",    FAIL_VOID },
+        { js_str_charAt,               F_String_getelem,       "TC",  "i",    FAIL_NULL },
+        { js_str_charCodeAt,           F_String_p_charCodeAt,  "T",   "i",    FAIL_NEG },
+        { js_str_concat,               F_String_p_concat_1int, "TC",  "i",    FAIL_NULL },
+        { js_str_fromCharCode,         F_String_fromCharCode,  "C",   "i",    FAIL_NULL },
+        { js_str_match,                F_String_p_match,       "PTC", "r",    FAIL_VOID },
+        { js_str_replace,              F_String_p_replace_str, "TC",  "sr",   FAIL_NULL },
+        { js_str_replace,              F_String_p_replace_str2,"TC",  "ss",   FAIL_NULL },
+        { js_str_replace,              F_String_p_replace_str3,"TC",  "sss",  FAIL_NULL },
+        { js_str_split,                F_String_p_split,       "TC",  "s",    FAIL_NULL },
+        { js_str_substring,            F_String_p_substring,   "TC",  "ii",   FAIL_NULL },
+        { js_str_substring,            F_String_p_substring_1, "TC",  "i",    FAIL_NULL },
+        { js_str_toLowerCase,          F_toLowerCase,          "TC",   "",    FAIL_NULL },
+        { js_str_toUpperCase,          F_toUpperCase,          "TC",   "",    FAIL_NULL },
     };
 
-    for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
+    uintN i = 0;
+    LIns* arg1_ins = NULL;
+    jsval arg1 = JSVAL_VOID;
+
+    if ((JSFastNative)fun->u.n.native == js_fun_apply) {
+        if (argc != 2)
+            ABORT_TRACE("can't trace Function.prototype.apply with other than 2 args");
+
+        jsval& oval = stackval(-2);
+        if (JSVAL_IS_PRIMITIVE(oval))
+            ABORT_TRACE("can't trace Function.prototype.apply with primitive 1st arg");
+
+        jsval& aval = stackval(-1);
+        if (JSVAL_IS_PRIMITIVE(aval))
+            ABORT_TRACE("can't trace Function.prototype.apply with primitive 2nd arg");
+
+        LIns* aval_ins = get(&aval);
+        if (!aval_ins->isCall() || aval_ins->fid() != F_Array_1str)
+            ABORT_TRACE("can't yet trace Function.prototype.apply on other than [str] 2nd arg");
+
+        JSObject* aobj = JSVAL_TO_OBJECT(aval);
+        JS_ASSERT(OBJ_IS_ARRAY(cx, aobj));
+        JS_ASSERT(aobj->fslots[JSSLOT_ARRAY_LENGTH] == 1);
+        JS_ASSERT(JSVAL_IS_STRING(aobj->dslots[0]));
+
+        if (!guardShapelessCallee(tval))
+            return false;
+        JSObject* tfunobj = JSVAL_TO_OBJECT(tval);
+        JSFunction* tfun = GET_FUNCTION_PRIVATE(cx, tfunobj);
+        if (FUN_INTERPRETED(tfun))
+            ABORT_TRACE("can't yet trace Function.prototype.apply for scripted functions");
+
+        JSTraceableNative* known;
+        for (;;) {
+            known = &knownNatives[i];
+            if (known->native == (JSFastNative)tfun->u.n.native)
+                break;
+            if (++i == JS_ARRAY_LENGTH(knownNatives))
+                ABORT_TRACE("unknown native being Function.prototype.apply'ed");
+        }
+        if (strlen(known->argtypes) != 1)
+            ABORT_TRACE("known native being Function.prototype.apply'ed with wrong argc");
+
+        this_ins = get(&oval);
+        arg1_ins = callArgN(aval_ins, 1);
+        arg1 = aobj->dslots[0];
+        fun = tfun;
+        argc = 1;
+    }
+
+    for (; i < JS_ARRAY_LENGTH(knownNatives); i++) {
         JSTraceableNative* known = &knownNatives[i];
-        if ((JSFastNative)fun->u.n.native != known->native)
+        if (known->native != (JSFastNative)fun->u.n.native)
             continue;
 
         uintN knownargc = strlen(known->argtypes);
@@ -4407,25 +4442,17 @@ TraceRecorder::record_JSOP_CALL()
         memset(args, 0xCD, sizeof(args));
 #endif
 
-        jsval& thisval = stackval(0 - (argc + 1));
-        LIns* thisval_ins = get(&thisval);
-        if (known->tclasp &&
-            !JSVAL_IS_PRIMITIVE(thisval) &&
-            !guardClass(JSVAL_TO_OBJECT(thisval), thisval_ins, known->tclasp)) {
-            continue; /* might have another specialization for |this| */
-        }
-
 #define HANDLE_PREFIX(i)                                                       \
     JS_BEGIN_MACRO                                                             \
         argtype = known->prefix[i];                                            \
         if (argtype == 'C') {                                                  \
             *argp = cx_ins;                                                    \
         } else if (argtype == 'T') {                                           \
-            *argp = thisval_ins;                                               \
+            *argp = this_ins;                                                  \
         } else if (argtype == 'R') {                                           \
-            *argp = lir->insImmPtr((void*)cx->runtime);                        \
+            *argp = INS_CONSTPTR(cx->runtime);                                 \
         } else if (argtype == 'P') {                                           \
-            *argp = lir->insImmPtr(pc);                                        \
+            *argp = INS_CONSTPTR(pc);                                          \
         } else {                                                               \
             JS_NOT_REACHED("unknown prefix arg type");                         \
         }                                                                      \
@@ -4450,35 +4477,36 @@ TraceRecorder::record_JSOP_CALL()
 
 #undef HANDLE_PREFIX
 
+/*
+ * NB: do not use JS_BEGIN_MACRO/JS_END_MACRO or the do-while(0) loop they hide,
+ * because of the embedded continues below.
+ */
 #define HANDLE_ARG(i)                                                          \
     {                                                                          \
-        jsval& arg = stackval(-(i + 1));                                       \
+        jsval& arg = (i == 0 && arg1_ins) ? arg1 : stackval(-(i + 1));         \
+        *argp = (i == 0 && arg1_ins) ? arg1_ins : get(&arg);                   \
         argtype = known->argtypes[i];                                          \
         if (argtype == 'd' || argtype == 'i') {                                \
             if (!isNumber(arg))                                                \
                 continue; /* might have another specialization for arg */      \
-            *argp = get(&arg);                                                 \
             if (argtype == 'i')                                                \
                 *argp = f2i(*argp);                                            \
         } else if (argtype == 's') {                                           \
             if (!JSVAL_IS_STRING(arg))                                         \
                 continue; /* might have another specialization for arg */      \
-            *argp = get(&arg);                                                 \
         } else if (argtype == 'r') {                                           \
             if (!VALUE_IS_REGEXP(cx, arg))                                     \
                 continue; /* might have another specialization for arg */      \
-            *argp = get(&arg);                                                 \
         } else if (argtype == 'f') {                                           \
             if (!VALUE_IS_FUNCTION(cx, arg))                                   \
                 continue; /* might have another specialization for arg */      \
-            *argp = get(&arg);                                                 \
         } else {                                                               \
             continue;     /* might have another specialization for arg */      \
         }                                                                      \
         argp--;                                                                \
     }
 
-        switch (strlen(known->argtypes)) {
+        switch (knownargc) {
           case 4:
             HANDLE_ARG(3);
             /* FALL THROUGH */
@@ -4561,7 +4589,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
      */
     if (obj == globalObj)
         ABORT_TRACE("prop op aliases global");
-    guard(false, lir->ins2(LIR_eq, obj_ins, lir->insImmPtr((void*)globalObj)), MISMATCH_EXIT);
+    guard(false, lir->ins2(LIR_eq, obj_ins, INS_CONSTPTR(globalObj)), MISMATCH_EXIT);
 
     /*
      * Property cache ensures that we are dealing with an existing property,
@@ -4653,7 +4681,7 @@ TraceRecorder::elem(jsval& l, jsval& r, jsval*& vp, LIns*& v_ins, LIns*& addr_in
     if (obj == globalObj)
         ABORT_TRACE("elem op aliases global");
     LIns* obj_ins = get(&l);
-    guard(false, lir->ins2(LIR_eq, obj_ins, lir->insImmPtr((void*)globalObj)), MISMATCH_EXIT);
+    guard(false, lir->ins2(LIR_eq, obj_ins, INS_CONSTPTR(globalObj)), MISMATCH_EXIT);
 
     /* make sure the object is actually a dense array */
     if (!guardDenseArray(obj, obj_ins))
@@ -4728,7 +4756,7 @@ TraceRecorder::record_JSOP_STRING()
 {
     JSAtom* atom = atoms[GET_INDEX(cx->fp->regs->pc)];
     JS_ASSERT(ATOM_IS_STRING(atom));
-    stack(0, lir->insImmPtr((void*)ATOM_TO_STRING(atom)));
+    stack(0, INS_CONSTPTR(ATOM_TO_STRING(atom)));
     return true;
 }
 
@@ -4753,7 +4781,7 @@ TraceRecorder::record_JSOP_ONE()
 bool
 TraceRecorder::record_JSOP_NULL()
 {
-    stack(0, lir->insImmPtr(NULL));
+    stack(0, INS_CONSTPTR(NULL));
     return true;
 }
 
@@ -4832,7 +4860,7 @@ TraceRecorder::record_JSOP_OBJECT()
 
     JSObject* obj;
     JS_GET_SCRIPT_OBJECT(script, index, obj);
-    stack(0, lir->insImmPtr((void*) obj));
+    stack(0, INS_CONSTPTR(obj));
     return true;
 }
 
@@ -4895,12 +4923,20 @@ TraceRecorder::record_JSOP_UINT16()
 bool
 TraceRecorder::record_JSOP_NEWINIT()
 {
-    JSObject* ctor;
     JSProtoKey key = JSProtoKey(GET_INT8(cx->fp->regs->pc));
-    if (!js_GetClassObject(cx, globalObj, key, &ctor))
-        return false;
-    LIns* args[] = { lir->insImmPtr((void*) ctor), cx_ins };
-    LIns* v_ins = lir->insCall(F_FastNewObject, args);
+    JSObject* obj;
+    uint32 fid;
+    if (key == JSProto_Array) {
+        if (!js_GetClassPrototype(cx, globalObj, INT_TO_JSID(key), &obj))
+            return false;
+        fid = F_FastNewArray;
+    } else {
+        if (!js_GetClassObject(cx, globalObj, key, &obj))
+            return false;
+        fid = F_FastNewObject;
+    }
+    LIns* args[] = { INS_CONSTPTR(obj), cx_ins };
+    LIns* v_ins = lir->insCall(fid, args);
     guard(false, lir->ins_eq0(v_ins), OOM_EXIT);
     stack(0, v_ins);
     return true;
@@ -4909,6 +4945,19 @@ TraceRecorder::record_JSOP_NEWINIT()
 bool
 TraceRecorder::record_JSOP_ENDINIT()
 {
+    jsval& v = stackval(-1);
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+    JSObject* obj = JSVAL_TO_OBJECT(v);
+    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+        // Until we get JSOP_NEWARRAY working, we do our optimizing here...
+        if (obj->fslots[JSSLOT_ARRAY_LENGTH] == 1 && JSVAL_IS_STRING(obj->dslots[0])) {
+            LIns* v_ins = get(&v);
+            JS_ASSERT(v_ins->isCall() && v_ins->fid() == F_FastNewArray);
+            LIns* args[] = { stack(1), callArgN(v_ins, 1), cx_ins };
+            v_ins = lir->insCall(F_Array_1str, args);
+            set(&v, v_ins);
+        }
+    }
     return true;
 }
 
@@ -5329,7 +5378,7 @@ TraceRecorder::record_JSOP_ANONFUNOBJ()
     if (OBJ_GET_PARENT(cx, obj) != cx->fp->scopeChain)
         ABORT_TRACE("can't trace with activation object on scopeChain");
 
-    stack(0, lir->insImmPtr(obj));
+    stack(0, INS_CONSTPTR(obj));
     return true;
 }
 
@@ -5779,7 +5828,7 @@ TraceRecorder::record_JSOP_CALLPROP()
         if (!js_GetClassPrototype(cx, NULL, INT_TO_JSID(i), &obj))
             ABORT_TRACE("GetClassPrototype failed!");
 
-        obj_ins = lir->insImmPtr((void*)obj);
+        obj_ins = INS_CONSTPTR(obj);
         debug_only(obj_ins = addName(obj_ins, protoname);)
         stack(0, get(&l)); // use primitive as |this|
     }
@@ -5793,7 +5842,7 @@ TraceRecorder::record_JSOP_CALLPROP()
         ABORT_TRACE("callee is not an object");
     JS_ASSERT(HAS_FUNCTION_CLASS(PCVAL_TO_OBJECT(pcval)));
 
-    stack(-1, lir->insImmPtr(PCVAL_TO_OBJECT(pcval)));
+    stack(-1, INS_CONSTPTR(PCVAL_TO_OBJECT(pcval)));
     return true;
 }
 
@@ -5990,7 +6039,7 @@ TraceRecorder::record_JSOP_CALLGVAR()
 
     jsval& v = STOBJ_GET_SLOT(cx->fp->scopeChain, slot);
     stack(0, get(&v));
-    stack(1, lir->insImmPtr(NULL));
+    stack(1, INS_CONSTPTR(NULL));
     return true;
 }
 
@@ -5999,7 +6048,7 @@ TraceRecorder::record_JSOP_CALLLOCAL()
 {
     uintN slot = GET_SLOTNO(cx->fp->regs->pc);
     stack(0, var(slot));
-    stack(1, lir->insImmPtr(NULL));
+    stack(1, INS_CONSTPTR(NULL));
     return true;
 }
 
@@ -6008,14 +6057,14 @@ TraceRecorder::record_JSOP_CALLARG()
 {
     uintN slot = GET_ARGNO(cx->fp->regs->pc);
     stack(0, arg(slot));
-    stack(1, lir->insImmPtr(NULL));
+    stack(1, INS_CONSTPTR(NULL));
     return true;
 }
 
 bool
 TraceRecorder::record_JSOP_NULLTHIS()
 {
-    stack(0, lir->insImmPtr(NULL));
+    stack(0, INS_CONSTPTR(NULL));
     return true;
 }
 

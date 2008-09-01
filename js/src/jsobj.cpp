@@ -1808,8 +1808,8 @@ static JSFunctionSpec object_static_methods[] = {
     JS_FS_END
 };
 
-static JSBool
-Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+JSBool
+js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     if (argc == 0) {
         /* Trigger logic below to construct a blank object. */
@@ -2299,7 +2299,7 @@ js_InitEval(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
-    return JS_InitClass(cx, obj, NULL, &js_ObjectClass, Object, 1,
+    return JS_InitClass(cx, obj, NULL, &js_ObjectClass, js_Object, 1,
                         object_props, object_methods, NULL,
                         object_static_methods);
 }
