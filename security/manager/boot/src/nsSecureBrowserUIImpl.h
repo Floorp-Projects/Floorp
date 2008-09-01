@@ -61,6 +61,7 @@
 #include "nsIAssociatedContentSecurity.h"
 #include "pldhash.h"
 #include "prmon.h"
+#include "nsINetUtil.h"
 
 class nsITransportSecurityInfo;
 class nsISecurityWarningDialogs;
@@ -98,6 +99,7 @@ protected:
   PRInt32 mOnStateLocationChangeReentranceDetection;
   
   nsWeakPtr mWindow;
+  nsCOMPtr<nsINetUtil> mIOService;
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIURI> mCurrentURI;
   nsCOMPtr<nsISecurityEventSink> mToplevelEventSink;

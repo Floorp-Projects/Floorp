@@ -83,6 +83,7 @@
 #include "imgIRequest.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "nsCRT.h"
 #include "nsAutoLock.h"
 
@@ -705,11 +706,24 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   nsCOMPtr<nsIDOMWindow> window;
   PRBool isViewSource;
 
+  nsCOMPtr<nsINetUtil> ioService;
+
   {
     nsAutoMonitor lock(mMonitor);
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
     isViewSource = mIsViewSource;
+    ioService = mIOService;
+  }
+
+  if (!ioService)
+  {
+    ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+    if (ioService)
+    {
+      nsAutoMonitor lock(mMonitor);
+      mIOService = ioService;
+    }
   }
 
   const PRBool isToplevelProgress = (windowForProgress.get() == window.get());
@@ -760,10 +774,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
   nsCOMPtr<nsISupports> securityInfo(ExtractSecurityInfo(aRequest));
 
+  nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (channel)
   {
-    nsCOMPtr<nsIURI> uri;
     channel->GetURI(getter_AddRefs(uri));
     if (uri)
     {
@@ -810,28 +824,43 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   PRBool isImageRequest = PR_FALSE;
 
   // We are only interested in requests that load in the browser window...
-  nsCOMPtr<nsIHttpChannel> httpRequest(do_QueryInterface(aRequest));
-  if (!httpRequest) {
-    nsCOMPtr<imgIRequest> imgRequest(do_QueryInterface(aRequest));
-    if (!imgRequest) {
+  nsCOMPtr<imgIRequest> imgRequest(do_QueryInterface(aRequest));
+  if (imgRequest) {
+    // Remember this is an image request. Because image loads doesn't
+    // support any TRANSFERRING notifications but only START and
+    // STOP we must simply predict there were a content transferred.
+    // See bug 432685 for details.
+    isImageRequest = PR_TRUE;
+
+    // for image requests, we get the URI from here
+    imgRequest->GetURI(getter_AddRefs(uri));
+  } else { // is not imgRequest
+    nsCOMPtr<nsIHttpChannel> httpRequest(do_QueryInterface(aRequest));
+    if (!httpRequest) {
       nsCOMPtr<nsIFileChannel> fileRequest(do_QueryInterface(aRequest));
       if (!fileRequest) {
         nsCOMPtr<nsIWyciwygChannel> wyciwygRequest(do_QueryInterface(aRequest));
         if (!wyciwygRequest) {
           nsCOMPtr<nsIFTPChannel> ftpRequest(do_QueryInterface(aRequest));
           if (!ftpRequest) {
-              PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-                     ("SecureUI:%p: OnStateChange: not relevant for sub content\n", this));
-              isSubDocumentRelevant = PR_FALSE;
+            PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+                   ("SecureUI:%p: OnStateChange: not relevant for sub content\n", this));
+            isSubDocumentRelevant = PR_FALSE;
           }
         }
       }
-    } else { // !imgRequest
-        // Remember this is an image request. Because image loads doesn't
-        // support any TRANSFERRING notifications but only START and
-        // STOP we must simply predict there were a content transferred.
-        // See bug 432685 for details.
-        isImageRequest = PR_TRUE;
+    }
+  }
+
+  // ignore all resource:// URIs
+  if (uri && ioService) {
+    PRBool hasFlag;
+    nsresult rv = 
+      ioService->URIChainHasFlags(uri, 
+                                  nsIProtocolHandler::URI_IS_UI_RESOURCE, 
+                                  &hasFlag);
+    if (NS_SUCCEEDED(rv) && hasFlag) {
+      isSubDocumentRelevant = PR_FALSE;
     }
   }
 
