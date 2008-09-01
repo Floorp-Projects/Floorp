@@ -2207,13 +2207,14 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
       return;
   }
 
-  // check which drag effect should initially be used
-  PRUint32 effectAllowed;
-  aDataTransfer->GetEffectAllowedInt(&effectAllowed);
-
-  PRInt32 action = 0;
-  if (effectAllowed != nsIDragService::DRAGDROP_ACTION_UNINITIALIZED)
-    action = effectAllowed;
+  // check which drag effect should initially be used. If the effect was not
+  // set, just use all actions, otherwise Windows won't allow a drop.
+  PRUint32 action;
+  aDataTransfer->GetEffectAllowedInt(&action);
+  if (action == nsIDragService::DRAGDROP_ACTION_UNINITIALIZED)
+    action = nsIDragService::DRAGDROP_ACTION_COPY |
+             nsIDragService::DRAGDROP_ACTION_MOVE |
+             nsIDragService::DRAGDROP_ACTION_LINK;
 
   // get any custom drag image that was set
   PRInt32 imageX, imageY;
