@@ -887,9 +887,9 @@ PlacesTreeView.prototype = {
 
     if (!properties) {
       properties = new Array();
+      var itemId = node.itemId;
       var nodeType = node.type;
       if (PlacesUtils.containerTypes.indexOf(nodeType) != -1) {
-        var itemId = node.itemId;
         if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
           properties.push(this._getAtomFor("query"));
           if (PlacesUtils.nodeIsTagQuery(node))
@@ -909,7 +909,9 @@ PlacesTreeView.prototype = {
         if (itemId != -1) {
           var oqAnno;
           try {
-            oqAnno = PlacesUtils.annotations.getItemAnnotation(itemId, ORGANIZER_QUERY_ANNO);
+            oqAnno = PlacesUtils.annotations
+                                .getItemAnnotation(itemId,
+                                                   ORGANIZER_QUERY_ANNO);
             properties.push(this._getAtomFor("OrganizerQuery_" + oqAnno));
           }
           catch (ex) { /* not a special query */ }
