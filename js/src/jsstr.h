@@ -508,14 +508,12 @@ js_ValueToSource(JSContext *cx, jsval v);
 extern uint32
 js_HashString(JSString *str);
 
-#ifdef __cplusplus
 /*
  * Test if strings are equal. The caller can call the function even if str1
  * or str2 are not GC-allocated things.
  */
-extern bool JS_FASTCALL
+extern JSBool JS_FASTCALL
 js_EqualStrings(JSString *str1, JSString *str2);
-#endif
 
 /*
  * Return less than, equal to, or greater than zero depending on whether

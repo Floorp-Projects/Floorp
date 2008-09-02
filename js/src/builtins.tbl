@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * NB: bool FASTCALL is not compatible with Nanojit's calling convention usage.
+ * Do not use bool FASTCALL, use JSBool only!
+ */
+
 BUILTIN2(BoxDouble,             LO, F,  P,      jsval,     JSContext*, jsdouble, 1, 1)
 BUILTIN2(BoxInt32,              LO, LO, P,      jsval,     JSContext*, jsint, 1, 1)
 BUILTIN1(UnboxDouble,           LO,     F,      jsdouble,  jsval, 1, 1)
