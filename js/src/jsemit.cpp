@@ -158,7 +158,7 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
     JSOp op;
     const JSCodeSpec *cs;
     uintN depth;
-    intN nuses;
+    intN nuses, ndefs;
 
     pc = CG_CODE(cg, target);
     op = (JSOp) *pc;
@@ -170,24 +170,8 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
             cg->maxStackDepth = depth;
     }
     nuses = cs->nuses;
-    if (nuses < 0) {
-        switch (op) {
-          case JSOP_POPN:
-            nuses = GET_UINT16(pc);
-            break;
-          case JSOP_NEW:
-          case JSOP_CALL:
-          case JSOP_SETCALL:
-          case JSOP_EVAL:
-            nuses = 2 + GET_ARGC(pc);   /* stack: fun, this, [argc arguments] */
-            break;
-          case JSOP_NEWARRAY:
-            nuses = GET_UINT24(pc);
-            break;
-          default:
-            JS_ASSERT(0);
-        }
-    }
+    if (nuses < 0)
+        nuses = js_GetVariableStackUseLength(op, pc);
     cg->stackDepth -= nuses;
     JS_ASSERT(cg->stackDepth >= 0);
     if (cg->stackDepth < 0) {
@@ -202,7 +186,21 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
                                      ts->filename ? ts->filename : "stdin",
                                      numBuf);
     }
-    cg->stackDepth += cs->ndefs;
+    ndefs = cs->ndefs;
+    if (ndefs < 0) {
+        JSObject *blockObj;
+
+        /* We just executed IndexParsedObject */
+        JS_ASSERT(op == JSOP_ENTERBLOCK);
+        JS_ASSERT(nuses == 0);
+        blockObj = cg->objectList.lastPob->object;
+        JS_ASSERT(STOBJ_GET_CLASS(blockObj) == &js_BlockClass);
+        JS_ASSERT(JSVAL_IS_VOID(blockObj->fslots[JSSLOT_BLOCK_DEPTH]));
+
+        OBJ_SET_BLOCK_DEPTH(cx, blockObj, cg->stackDepth);
+        ndefs = OBJ_BLOCK_COUNT(cx, blockObj);
+    }
+    cg->stackDepth += ndefs;
     if ((uintN)cg->stackDepth > cg->maxStackDepth)
         cg->maxStackDepth = cg->stackDepth;
 }
@@ -1510,7 +1508,6 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp)
     JSObject *obj;
     JSScope *scope;
     JSScopeProperty *sprop;
-    jsval v;
 
     for (stmt = tc->topScopeStmt; stmt; stmt = stmt->downScope) {
         if (stmt->type == STMT_WITH)
@@ -1528,13 +1525,9 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp)
             JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
 
             if (slotp) {
-                /*
-                 * Use LOCKED_OBJ_GET_SLOT since we know obj is single-
-                 * threaded and owned by this compiler activation.
-                 */
-                v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_BLOCK_DEPTH);
-                JS_ASSERT(JSVAL_IS_INT(v) && JSVAL_TO_INT(v) >= 0);
-                *slotp = JSVAL_TO_INT(v) + sprop->shortid;
+                JS_ASSERT(JSVAL_IS_INT(obj->fslots[JSSLOT_BLOCK_DEPTH]));
+                *slotp = JSVAL_TO_INT(obj->fslots[JSSLOT_BLOCK_DEPTH]) +
+                         sprop->shortid;
             }
             return stmt;
         }
@@ -2600,12 +2593,10 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     jsval v;
     JSAtom *atom;
     JSAtomListElement *ale;
-    JSParsedObjectBox *pob;
     intN noteIndex;
     size_t switchSize, tableSize;
     jsbytecode *pc, *savepc;
 #if JS_HAS_BLOCK_SCOPE
-    JSObject *obj;
     jsint count;
 #endif
 
@@ -2624,10 +2615,6 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     pn2 = pn->pn_right;
 #if JS_HAS_BLOCK_SCOPE
     if (pn2->pn_type == TOK_LEXICALSCOPE) {
-        pob = pn2->pn_pob;
-        obj = pob->object;
-        OBJ_SET_BLOCK_DEPTH(cx, obj, cg->stackDepth);
-
         /*
          * Push the body's block scope before discriminant code-gen for proper
          * static block scope linkage in case the discriminant contains a let
@@ -2635,16 +2622,12 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * the stack so that case-dispatch bytecodes can find the discriminant
          * on top of stack.
          */
-        js_PushBlockScope(&cg->treeContext, stmtInfo, obj, -1);
+        count = OBJ_BLOCK_COUNT(cx, pn2->pn_pob->object);
+        js_PushBlockScope(&cg->treeContext, stmtInfo, pn2->pn_pob->object, -1);
         stmtInfo->type = STMT_SWITCH;
 
-        count = OBJ_BLOCK_COUNT(cx, obj);
-        cg->stackDepth += count;
-        if ((uintN)cg->stackDepth > cg->maxStackDepth)
-            cg->maxStackDepth = cg->stackDepth;
-
         /* Emit JSOP_ENTERBLOCK before code to evaluate the discriminant. */
-        if (!EmitObjectOp(cx, pob, JSOP_ENTERBLOCK, cg))
+        if (!EmitObjectOp(cx, pn2->pn_pob, JSOP_ENTERBLOCK, cg))
             return JS_FALSE;
 
         /*
@@ -2658,7 +2641,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     }
 #ifdef __GNUC__
     else {
-        count = -1;
+        count = 0;
     }
 #endif
 #endif
@@ -3141,10 +3124,8 @@ out:
         ok = js_PopStatementCG(cx, cg);
 
 #if JS_HAS_BLOCK_SCOPE
-        if (ok && pn->pn_right->pn_type == TOK_LEXICALSCOPE) {
+        if (ok && pn->pn_right->pn_type == TOK_LEXICALSCOPE)
             EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, count);
-            cg->stackDepth -= count;
-        }
 #endif
     }
     return ok;
@@ -4733,6 +4714,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         tryStart = CG_OFFSET(cg);
         if (!js_EmitTree(cx, cg, pn->pn_kid1))
             return JS_FALSE;
+        JS_ASSERT(depth == cg->stackDepth);
 
         /* GOSUB to finally, if present. */
         if (pn->pn_kid3) {
@@ -4741,9 +4723,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             jmp = EmitBackPatchOp(cx, cg, JSOP_BACKPATCH, &GOSUBS(stmtInfo));
             if (jmp < 0)
                 return JS_FALSE;
-
-            /* JSOP_RETSUB pops the return pc-index, balancing the stack. */
-            cg->stackDepth = depth;
         }
 
         /* Emit (hidden) jump over catch and/or finally. */
@@ -4793,10 +4772,11 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, guardJump);
 
                     /*
-                     * Account for the pushed exception object that we still
-                     * have after the jumping from the previous guard.
+                     * Account for JSOP_ENTERBLOCK (whose block object count
+                     * is saved below) and pushed exception object that we
+                     * still have after the jumping from the previous guard.
                      */
-                    cg->stackDepth = depth + 1;
+                    cg->stackDepth = depth + count + 1;
 
                     /*
                      * Move exception back to cx->exception to prepare for
@@ -4808,15 +4788,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                         js_Emit1(cx, cg, JSOP_THROWING) < 0) {
                         return JS_FALSE;
                     }
-
-                    /*
-                     * Emit an unbalanced [leaveblock] for the previous catch,
-                     * whose block object count is saved below.
-                     */
                     if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
                         return JS_FALSE;
-                    JS_ASSERT(count >= 0);
                     EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, count);
+                    JS_ASSERT(cg->stackDepth == depth);
                 }
 
                 /*
@@ -4905,23 +4880,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
             finallyStart = CG_OFFSET(cg);
 
-            /*
-             * The stack depth at the begining of finally must match the try
-             * depth plus 2 slots. The interpreter uses these two slots to
-             * either push (true, exception) pair when it transfers control
-             * flow to the finally after capturing an exception, or to push
-             * (false, pc-index) when it calls finally from [gosub]. The first
-             * element of the pair indicates for [retsub] that it should
-             * either rethrow the pending exception or transfer the control
-             * back to the caller of finally.
-             */
-            JS_ASSERT(cg->stackDepth == depth);
-            JS_ASSERT((uintN)depth <= cg->maxStackDepth);
-            cg->stackDepth += 2;
-            if ((uintN)cg->stackDepth > cg->maxStackDepth)
-                cg->maxStackDepth = cg->stackDepth;
-
-            /* Now indicate that we're emitting a subroutine body. */
+            /* Indicate that we're emitting a subroutine body. */
             stmtInfo.type = STMT_SUBROUTINE;
             if (!UpdateLineNumberNotes(cx, cg, pn->pn_kid3))
                 return JS_FALSE;
@@ -4930,10 +4889,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 js_Emit1(cx, cg, JSOP_RETSUB) < 0) {
                 return JS_FALSE;
             }
-
-            /* Restore stack depth budget to its balanced state. */
-            JS_ASSERT(cg->stackDepth == depth + 2);
-            cg->stackDepth = depth;
+            JS_ASSERT(cg->stackDepth == depth);
         }
         if (!js_PopStatementCG(cx, cg))
             return JS_FALSE;
@@ -5954,17 +5910,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
       case TOK_LEXICALSCOPE:
       {
-        JSObject *obj;
-        jsint count;
+        JSParsedObjectBox *pob;
+        uintN count;
 
-        obj = pn->pn_pob->object;
-        js_PushBlockScope(&cg->treeContext, &stmtInfo, obj, CG_OFFSET(cg));
-
-        OBJ_SET_BLOCK_DEPTH(cx, obj, cg->stackDepth);
-        count = OBJ_BLOCK_COUNT(cx, obj);
-        cg->stackDepth += count;
-        if ((uintN)cg->stackDepth > cg->maxStackDepth)
-            cg->maxStackDepth = cg->stackDepth;
+        pob = pn->pn_pob;
+        js_PushBlockScope(&cg->treeContext, &stmtInfo, pob->object,
+                          CG_OFFSET(cg));
 
         /*
          * If this lexical scope is not for a catch block, let block or let
@@ -5992,7 +5943,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         JS_ASSERT(CG_OFFSET(cg) == top);
-        if (!EmitObjectOp(cx, pn->pn_pob, JSOP_ENTERBLOCK, cg))
+        if (!EmitObjectOp(cx, pob, JSOP_ENTERBLOCK, cg))
             return JS_FALSE;
 
         if (!js_EmitTree(cx, cg, pn->pn_expr))
@@ -6011,8 +5962,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /* Emit the JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR opcode. */
+        count = OBJ_BLOCK_COUNT(cx, pob->object);
         EMIT_UINT16_IMM_OP(op, count);
-        cg->stackDepth -= count;
 
         ok = js_PopStatementCG(cx, cg);
         break;
