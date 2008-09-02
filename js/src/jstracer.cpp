@@ -2442,12 +2442,16 @@ js_FinishJIT(JSTraceMonitor *tm)
 extern void
 js_FlushJITOracle(JSContext* cx)
 {
+    if (!TRACING_ENABLED(cx))
+        return;
     oracle.clear();
 }
 
 extern void
 js_FlushJITCache(JSContext* cx)
 {
+    if (!TRACING_ENABLED(cx))
+        return;
     debug_only_v(printf("Flushing cache.\n"););
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->recorder)
