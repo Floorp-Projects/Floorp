@@ -4180,7 +4180,7 @@ nsBrowserStatusHandler.prototype =
       // e.g. about:blank. The _state for these pages means we won't need these
       // properties anyways, though.
     }
-    getIdentityHandler().checkIdentity(this._state, locationObj);
+    gIdentityHandler.checkIdentity(this._state, locationObj);
   },
 
   // simulate all change notifications after switching tabs
@@ -6252,26 +6252,9 @@ BookmarkAllTabsHandler.prototype = {
 };
 
 /**
- * Utility class to handle manipulations of the identity indicators in the UI
+ * Utility object to handle manipulations of the identity indicators in the UI
  */
-function IdentityHandler() {
-  this._stringBundle = document.getElementById("bundle_browser");
-  this._staticStrings = {};
-  this._staticStrings[this.IDENTITY_MODE_DOMAIN_VERIFIED] = {
-    encryption_label: this._stringBundle.getString("identity.encrypted")  
-  };
-  this._staticStrings[this.IDENTITY_MODE_IDENTIFIED] = {
-    encryption_label: this._stringBundle.getString("identity.encrypted")
-  };
-  this._staticStrings[this.IDENTITY_MODE_UNKNOWN] = {
-    encryption_label: this._stringBundle.getString("identity.unencrypted")  
-  };
-
-  this._cacheElements();
-}
-
-IdentityHandler.prototype = {
-
+var gIdentityHandler = {
   // Mode strings used to control CSS display
   IDENTITY_MODE_IDENTIFIED       : "verifiedIdentity", // High-quality identity information
   IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
@@ -6281,18 +6264,76 @@ IdentityHandler.prototype = {
   _lastStatus : null,
   _lastLocation : null,
 
+  // smart getters
+  get _stringBundle () {
+    delete this._stringBundle;
+    return this._stringBundle = document.getElementById("bundle_browser");
+  },
+  get _staticStrings () {
+    delete this._staticStrings;
+    this._staticStrings = {};
+    this._staticStrings[this.IDENTITY_MODE_DOMAIN_VERIFIED] = {
+      encryption_label: this._stringBundle.getString("identity.encrypted")
+    };
+    this._staticStrings[this.IDENTITY_MODE_IDENTIFIED] = {
+      encryption_label: this._stringBundle.getString("identity.encrypted")
+    };
+    this._staticStrings[this.IDENTITY_MODE_UNKNOWN] = {
+      encryption_label: this._stringBundle.getString("identity.unencrypted")
+    };
+    return this._staticStrings;
+  },
+  get _identityPopup () {
+    delete this._identityPopup;
+    return this._identityPopup = document.getElementById("identity-popup");
+  },
+  get _identityBox () {
+    delete this._identityBox;
+    return this._identityBox = document.getElementById("identity-box");
+  },
+  get _identityPopupContentBox () {
+    delete this._identityPopupContentBox;
+    return this._identityPopupContentBox =
+      document.getElementById("identity-popup-content-box");
+  },
+  get _identityPopupContentHost () {
+    delete this._identityPopupContentHost;
+    return this._identityPopupContentHost =
+      document.getElementById("identity-popup-content-host");
+  },
+  get _identityPopupContentOwner () {
+    delete this._identityPopupContentOwner;
+    return this._identityPopupContentOwner =
+      document.getElementById("identity-popup-content-owner");
+  },
+  get _identityPopupContentSupp () {
+    delete this._identityPopupContentSupp;
+    return this._identityPopupContentSupp =
+      document.getElementById("identity-popup-content-supplemental");
+  },
+  get _identityPopupContentVerif () {
+    delete this._identityPopupContentVerif;
+    return this._identityPopupContentVerif =
+      document.getElementById("identity-popup-content-verifier");
+  },
+  get _identityPopupEncLabel () {
+    delete this._identityPopupEncLabel;
+    return this._identityPopupEncLabel =
+      document.getElementById("identity-popup-encryption-label");
+  },
+  get _identityIconLabel () {
+    delete this._identityIconLabel;
+    return this._identityIconLabel = document.getElementById("identity-icon-label");
+  },
+
   /**
-   * Build out a cache of the elements that we need frequently.
+   * Rebuild cache of the elements that may or may not exist depending
+   * on whether there's a location bar.
    */
   _cacheElements : function() {
-    this._identityPopup = document.getElementById("identity-popup");
+    delete this._identityBox;
+    delete this._identityIconLabel;
     this._identityBox = document.getElementById("identity-box");
-    this._identityPopupContentBox = document.getElementById("identity-popup-content-box");
-    this._identityPopupContentHost = document.getElementById("identity-popup-content-host");
-    this._identityPopupContentOwner = document.getElementById("identity-popup-content-owner");
-    this._identityPopupContentSupp = document.getElementById("identity-popup-content-supplemental");
-    this._identityPopupContentVerif = document.getElementById("identity-popup-content-verifier");
-    this._identityPopupEncLabel = document.getElementById("identity-popup-encryption-label");
     this._identityIconLabel = document.getElementById("identity-icon-label");
   },
 
@@ -6566,18 +6607,6 @@ IdentityHandler.prototype = {
     this._identityPopup.openPopup(this._identityBox, position);
   }
 };
-
-var gIdentityHandler; 
-
-/**
- * Returns the singleton instance of the identity handler class.  Should always be
- * used instead of referencing the global variable directly or creating new instances
- */
-function getIdentityHandler() {
-  if (!gIdentityHandler)
-    gIdentityHandler = new IdentityHandler();
-  return gIdentityHandler;    
-}
 
 let DownloadMonitorPanel = {
   //////////////////////////////////////////////////////////////////////////////
