@@ -76,6 +76,15 @@
 
 #define CONTENT_SNIFFING_SERVICES "content-sniffing-services"
 
+// If favicon is bigger than this size we will try to optimize it into a
+// 16x16 png. An uncompressed 16x16 RGBA image is 1024 bytes, and almost all
+// sensible 16x16 icons are under 1024 bytes.
+#define OPTIMIZED_FAVICON_SIZE 1024
+
+// Favicons bigger than this size should not be saved to the db to avoid
+// bloating it with large image blobs.
+// This still allows us to accept a favicon even if we cannot optimize it.
+#define MAX_FAVICON_SIZE 10240
 
 class FaviconLoadListener : public nsIStreamListener,
                             public nsIInterfaceRequestor,
@@ -592,14 +601,18 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const PRUint8* aData,
 
   // If the page provided a large image for the favicon (eg, a highres image
   // or a multiresolution .ico file), we don't want to store more data than
-  // needed. An uncompressed 16x16 RGBA image is 1024 bytes, and almost all
-  // sensible 16x16 icons are under 1024 bytes.
-  if (aDataLen > 1024) {
+  // needed.
+  if (aDataLen > OPTIMIZED_FAVICON_SIZE) {
     rv = OptimizeFaviconImage(aData, aDataLen, aMimeType, newData, newMimeType);
     if (NS_SUCCEEDED(rv) && newData.Length() < aDataLen) {
       data = reinterpret_cast<PRUint8*>(const_cast<char*>(newData.get())),
       dataLen = newData.Length();
       mimeType = &newMimeType;
+    }
+    else if (aDataLen > MAX_FAVICON_SIZE) {
+      // We cannot optimize this favicon size and we are over the maximum size
+      // allowed, so we will not save data to the db to avoid bloating it.
+      return NS_ERROR_FAILURE;
     }
   }
 
@@ -1087,10 +1100,11 @@ FaviconLoadListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
                       (PRInt64)(24 * 60 * 60) * (PRInt64)PR_USEC_PER_SEC;
 
   // save the favicon data
-  rv = mFaviconService->SetFaviconData(mFaviconURI,
+  // This could fail if the favicon is bigger than defined limit, in such a
+  // case data will not be saved to the db but we will still continue.
+  (void) mFaviconService->SetFaviconData(mFaviconURI,
                reinterpret_cast<PRUint8*>(const_cast<char*>(mData.get())),
                mData.Length(), mimeType, expiration);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // set the favicon for the page
   PRBool hasData;

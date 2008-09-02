@@ -223,8 +223,8 @@
             <spacer flex="1"/>
             <button id="identity-popup-more-info-button"
                     label="&identity.moreInfoLinkText;"
-                    onblur="getIdentityHandler().hideIdentityPopup();"
-                    oncommand="getIdentityHandler().handleMoreInfoClick(event);"/>
+                    onblur="gIdentityHandler.hideIdentityPopup();"
+                    oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
           </hbox>
         </vbox>
       </hbox>
@@ -288,28 +288,24 @@
     <toolbarpalette id="BrowserToolbarPalette">
 
       <toolbaritem id="unified-back-forward-button" class="chromeclass-toolbar-additional"
-                   context="backForwardMenu"
-                   onbroadcast="document.getElementById('back-forward-dropmarker').disabled =
-                                  document.getElementById('Browser:Back').hasAttribute('disabled') &amp;&amp;
-                                  document.getElementById('Browser:Forward').hasAttribute('disabled');">
+                   context="backForwardMenu">
         <toolbarbutton id="back-button" class="toolbarbutton-1"
                        chromedir="&locale.dir;"
                        label="&backCmd.label;"
-                       oncommand="BrowserBack(event)"
+                       command="Browser:BackOrBackDuplicate"
                        onclick="checkForMiddleClick(this, event);"
-                       tooltiptext="&backButton.tooltip;">
-          <observes element="Browser:Back" attribute="disabled"/>
-        </toolbarbutton>
+                       tooltiptext="&backButton.tooltip;"/>
         <toolbarbutton id="forward-button" class="toolbarbutton-1"
                        chromedir="&locale.dir;"
                        label="&forwardCmd.label;"
-                       oncommand="BrowserForward(event)"
+                       command="Browser:ForwardOrForwardDuplicate"
                        onclick="checkForMiddleClick(this, event);"
-                       tooltiptext="&forwardButton.tooltip;">
-          <observes element="Browser:Forward" attribute="disabled"/>
-        </toolbarbutton>
+                       tooltiptext="&forwardButton.tooltip;"/>
         <toolbarbutton id="back-forward-dropmarker" type="menu" chromedir="&locale.dir;"
-                       disabled="true" tooltiptext="&backForwardMenu.tooltip;">
+                       disabled="true" tooltiptext="&backForwardMenu.tooltip;"
+                       onbroadcast="if (this.disabled) this.disabled =
+                                      document.getElementById('Browser:Back').hasAttribute('disabled') &amp;&amp;
+                                      document.getElementById('Browser:Forward').hasAttribute('disabled');">
           <!-- bug 415444: event.stopPropagation is here for the cloned version of
                this menupopup -->
           <menupopup context=""
@@ -318,12 +314,15 @@
                      onpopupshowing="return FillHistoryMenu(event.target);"
                      oncommand="gotoHistoryIndex(event); event.stopPropagation();"
                      onclick="checkForMiddleClick(this, event);"/>
+          <observes element="Browser:Back" attribute="disabled"/>
+          <observes element="Browser:Forward" attribute="disabled"/>
         </toolbarbutton>
       </toolbaritem>
 
       <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&reloadCmd.label;"
-                     command="Browser:Reload"
+                     command="Browser:ReloadOrDuplicate"
+                     onclick="checkForMiddleClick(this, event);"
                      tooltiptext="&reloadButton.tooltip;"/>
 
       <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -367,8 +366,8 @@
                has focus, otherwise pressing F6 focuses it instead of the location bar -->
           <box id="identity-box" role="button"
                chromedir="&locale.dir;"
-               onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
-               onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
+               onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
+               onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
             <hbox align="center">
               <stack id="page-proxy-stack"
                      onclick="PageProxyClickHandler(event);">

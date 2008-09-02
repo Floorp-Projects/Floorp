@@ -123,6 +123,7 @@ private:
   void Cancel(nsresult aStatus);
   nsresult GetURI(nsIURI **aURI);
   nsresult GetPrincipal(nsIPrincipal **aPrincipal);
+  nsresult GetSecurityInfo(nsISupports **aSecurityInfo);
   void RemoveFromCache();
   inline const char *GetMimeType() const {
     return mContentType.get();
@@ -157,6 +158,7 @@ private:
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIDecoder> mDecoder;
   nsCOMPtr<nsIProperties> mProperties;
+  nsCOMPtr<nsISupports> mSecurityInfo;
 
   nsTObserverArray<imgRequestProxy*> mObservers;
 

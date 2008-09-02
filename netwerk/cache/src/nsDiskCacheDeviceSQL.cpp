@@ -44,6 +44,8 @@
 #include "nsNetUtil.h"
 #include "nsAutoPtr.h"
 #include "nsEscape.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsCRT.h"
@@ -690,6 +692,20 @@ nsOfflineCacheDevice::nsOfflineCacheDevice()
 nsOfflineCacheDevice::~nsOfflineCacheDevice()
 {
   Shutdown();
+}
+
+/* static */
+PRBool
+nsOfflineCacheDevice::GetStrictFileOriginPolicy()
+{
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+    PRBool retval;
+    if (prefs && NS_SUCCEEDED(prefs->GetBoolPref("security.fileuri.strict_origin_policy", &retval)))
+        return retval;
+
+    // As default value use true (be more strict)
+    return PR_TRUE;
 }
 
 PRUint32
@@ -1745,13 +1761,40 @@ nsOfflineCacheDevice::ChooseApplicationCache(const nsACString &key,
   rv = statement->ExecuteStep(&hasRows);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIURI> keyURI;
+  rv = NS_NewURI(getter_AddRefs(keyURI), key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   while (hasRows) {
-    nsCString clientID;
-    rv = statement->GetUTF8String(0, clientID);
+    PRInt32 itemType;
+    rv = statement->GetInt32(1, &itemType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mActiveCaches.Contains(clientID))
-      return GetApplicationCache(clientID, out);
+    if (!(itemType & nsIApplicationCache::ITEM_FOREIGN)) {
+      nsCAutoString clientID;
+      rv = statement->GetUTF8String(0, clientID);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (mActiveCaches.Contains(clientID)) {
+        nsCAutoString groupID;
+        rv = GetGroupForCache(clientID, groupID);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIURI> groupURI;
+        rv = NS_NewURI(getter_AddRefs(groupURI), groupID);
+        if (NS_SUCCEEDED(rv)) {
+          // When we are choosing an initial cache to load the top
+          // level document from, the URL of that document must have
+          // the same origin as the manifest, according to the spec.
+          // The following check is here because explicit, fallback
+          // and dynamic entries might have origin different from the
+          // manifest origin. XXX: dynamic shouldn't?
+          if (NS_SecurityCompareURIs(keyURI, groupURI,
+                                     GetStrictFileOriginPolicy()))
+            return GetApplicationCache(clientID, out);
+        }
+      }
+    }
 
     rv = statement->ExecuteStep(&hasRows);
     NS_ENSURE_SUCCESS(rv, rv);

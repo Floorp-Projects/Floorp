@@ -6296,6 +6296,7 @@ js_Interpret(JSContext *cx)
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_RETSUB)
+            /* Pop [exception or hole, retsub pc-index]. */
             rval = POP();
             lval = POP();
             JS_ASSERT(JSVAL_IS_BOOLEAN(lval));

@@ -197,6 +197,28 @@ js_GetVariableBytecodeLength(jsbytecode *pc)
     }
 }
 
+uintN
+js_GetVariableStackUseLength(JSOp op, jsbytecode *pc)
+{
+    JS_ASSERT(*pc == op || *pc == JSOP_TRAP);
+    JS_ASSERT(js_CodeSpec[op].nuses == -1);
+    switch (op) {
+      case JSOP_POPN:
+        return GET_UINT16(pc);
+      case JSOP_LEAVEBLOCK:
+        return GET_UINT16(pc);
+      case JSOP_LEAVEBLOCKEXPR:
+        return GET_UINT16(pc) + 1;
+      case JSOP_NEWARRAY:
+        return GET_UINT24(pc);
+      default:
+        /* stack: fun, this, [argc arguments] */
+        JS_ASSERT(op == JSOP_NEW || op == JSOP_CALL ||
+                  op == JSOP_EVAL || op == JSOP_SETCALL);
+        return 2 + GET_ARGC(pc);
+    }
+}
+
 #ifdef DEBUG
 
 JS_FRIEND_API(JSBool)
@@ -1169,11 +1191,14 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
     return JS_TRUE;
 }
 
-#define LOCAL_ASSERT_RV(expr, rv)                                             \
+#define LOCAL_ASSERT_CUSTOM(expr, BAD_EXIT)                                   \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(expr);                                                      \
-        if (!(expr)) return (rv);                                             \
+        if (!(expr)) { BAD_EXIT; }                                            \
     JS_END_MACRO
+
+#define LOCAL_ASSERT_RV(expr, rv)                                             \
+    LOCAL_ASSERT_CUSTOM(expr, return (rv))
 
 static JSAtom *
 GetArgOrVarAtom(JSPrinter *jp, uintN slot)
@@ -2520,11 +2545,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 }
 
                 /* From here on, control must flow through enterblock_out. */
+#define LOCAL_ASSERT_OUT(expr) LOCAL_ASSERT_CUSTOM(expr, ok = JS_FALSE; \
+                                                   goto enterblock_out)
                 for (sprop = OBJ_SCOPE(obj)->lastProp; sprop;
                      sprop = sprop->parent) {
                     if (!(sprop->flags & SPROP_HAS_SHORTID))
                         continue;
-                    LOCAL_ASSERT(sprop->shortid < argc);
+                    LOCAL_ASSERT_OUT(sprop->shortid < argc);
                     atomv[sprop->shortid] = JSID_TO_ATOM(sprop->id);
                 }
                 ok = JS_TRUE;
@@ -2560,7 +2587,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
                     pc2 = pc;
                     pc += oplen;
-                    LOCAL_ASSERT(*pc == JSOP_EXCEPTION);
+                    LOCAL_ASSERT_OUT(*pc == JSOP_EXCEPTION);
                     pc += JSOP_EXCEPTION_LENGTH;
                     todo = Sprint(&ss->sprinter, exception_cookie);
                     if (todo < 0 || !PushOff(ss, todo, JSOP_EXCEPTION)) {
@@ -2576,7 +2603,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                              * It is emitted only when the catch head contains
                              * an exception guard.
                              */
-                            LOCAL_ASSERT(js_GetSrcNoteOffset(sn, 0) != 0);
+                            LOCAL_ASSERT_OUT(js_GetSrcNoteOffset(sn, 0) != 0);
                             pc += JSOP_DUP_LENGTH;
                             todo = Sprint(&ss->sprinter, exception_cookie);
                             if (todo < 0 ||
@@ -2594,13 +2621,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             ok = JS_FALSE;
                             goto enterblock_out;
                         }
-                        LOCAL_ASSERT(*pc == JSOP_POP);
+                        LOCAL_ASSERT_OUT(*pc == JSOP_POP);
                         pc += JSOP_POP_LENGTH;
                         lval = PopStr(ss, JSOP_NOP);
                         js_puts(jp, lval);
                     } else {
 #endif
-                        LOCAL_ASSERT(*pc == JSOP_SETLOCALPOP);
+                        LOCAL_ASSERT_OUT(*pc == JSOP_SETLOCALPOP);
                         i = GET_SLOTNO(pc) - jp->script->nfixed;
                         pc += JSOP_SETLOCALPOP_LENGTH;
                         atom = atomv[i - OBJ_BLOCK_DEPTH(cx, obj)];
@@ -2618,19 +2645,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * guarded catch head) off the stack now.
                      */
                     rval = PopStr(ss, JSOP_NOP);
-                    LOCAL_ASSERT(strcmp(rval, exception_cookie) == 0);
+                    LOCAL_ASSERT_OUT(strcmp(rval, exception_cookie) == 0);
 
                     len = js_GetSrcNoteOffset(sn, 0);
                     if (len) {
                         len -= PTRDIFF(pc, pc2, jsbytecode);
-                        LOCAL_ASSERT(len > 0);
+                        LOCAL_ASSERT_OUT(len > 0);
                         js_printf(jp, " if ");
                         ok = Decompile(ss, pc, len, JSOP_NOP) != NULL;
                         if (!ok)
                             goto enterblock_out;
                         js_printf(jp, "%s", POP_STR());
                         pc += len;
-                        LOCAL_ASSERT(*pc == JSOP_IFEQ || *pc == JSOP_IFEQX);
+                        LOCAL_ASSERT_OUT(*pc == JSOP_IFEQ || *pc == JSOP_IFEQX);
                         pc += js_CodeSpec[*pc].length;
                     }
 
@@ -2644,6 +2671,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
                 todo = -2;
 
+#undef LOCAL_ASSERT_OUT
               enterblock_out:
                 if (atomv != smallv)
                     JS_free(cx, atomv);
@@ -5162,20 +5190,6 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
         if (oplen < 0)
             oplen = js_GetVariableBytecodeLength(pc);
 
-        if (op == JSOP_POPN) {
-            pcdepth -= GET_UINT16(pc);
-            LOCAL_ASSERT(pcdepth >= 0);
-            continue;
-        }
-
-        if (op == JSOP_NEWARRAY) {
-            pcdepth -= GET_UINT24(pc) - 1;
-            LOCAL_ASSERT(pcdepth > 0);
-            if (pcstack)
-                pcstack[pcdepth - 1] = pc;
-            continue;
-        }
-
         /*
          * A (C ? T : E) expression requires skipping either T (if target is in
          * E) or both T and E (if target is after the whole expression) before
@@ -5214,34 +5228,21 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
             continue;
 
         nuses = cs->nuses;
-        if (nuses < 0) {
-            /* Call opcode pushes [callee, this, argv...]. */
-            nuses = 2 + GET_ARGC(pc);
-        } else if (op == JSOP_RETSUB) {
-            /* Pop [exception or hole, retsub pc-index]. */
-            JS_ASSERT(nuses == 0);
-            nuses = 2;
-        } else if (op == JSOP_LEAVEBLOCK || op == JSOP_LEAVEBLOCKEXPR) {
-            JS_ASSERT(nuses == 0);
-            nuses = GET_UINT16(pc);
-        }
-        pcdepth -= nuses;
-        LOCAL_ASSERT(pcdepth >= 0);
+        if (nuses < 0)
+            nuses = js_GetVariableStackUseLength(op, pc);
 
         ndefs = cs->ndefs;
-        if (op == JSOP_FINALLY) {
-            /* Push [exception or hole, retsub pc-index]. */
-            JS_ASSERT(ndefs == 0);
-            ndefs = 2;
-        } else if (op == JSOP_ENTERBLOCK) {
+        if (ndefs < 0) {
             JSObject *obj;
 
-            JS_ASSERT(ndefs == 0);
+            JS_ASSERT(op == JSOP_ENTERBLOCK);
             GET_OBJECT_FROM_BYTECODE(script, pc, 0, obj);
             JS_ASSERT(OBJ_BLOCK_DEPTH(cx, obj) == pcdepth);
             ndefs = OBJ_BLOCK_COUNT(cx, obj);
         }
 
+        pcdepth -= nuses;
+        LOCAL_ASSERT(pcdepth >= 0);
         LOCAL_ASSERT((uintN)(pcdepth + ndefs) <= StackDepth(script));
 
         /*
@@ -5275,25 +5276,6 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
                 pcstack[pcdepth + 2] = pcstack[pcdepth];
                 pcstack[pcdepth + 3] = pcstack[pcdepth + 1];
             }
-            break;
-
-          case JSOP_LEAVEBLOCKEXPR:
-            /*
-             * The decompiler wants to see [leaveblockexpr] on pcstack, not
-             * [enterblock] or the pc that ended a simulated let expression
-             * when [enterblock] defines zero locals as in:
-             *
-             *   let ([] = []) expr
-             */
-            JS_ASSERT(ndefs == 0);
-            LOCAL_ASSERT(pcdepth >= 1);
-            LOCAL_ASSERT(nuses == 0 || !pcstack ||
-                         *pcstack[pcdepth - 1] == JSOP_ENTERBLOCK ||
-                         (*pcstack[pcdepth - 1] == JSOP_TRAP &&
-                          JS_GetTrapOpcode(cx, script, pcstack[pcdepth - 1])
-                          == JSOP_ENTERBLOCK));
-            if (pcstack)
-                pcstack[pcdepth - 1] = pc;
             break;
         }
         pcdepth += ndefs;

@@ -1729,6 +1729,28 @@
         </body>
       </method>
 
+      <method name="selectTabAtIndex">
+        <parameter name="aIndex"/>
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          // count backwards for aIndex < 0
+          if (aIndex < 0)
+            aIndex += this.mTabs.length;
+
+          if (aIndex >= 0 &&
+              aIndex < this.mTabs.length &&
+              aIndex != this.tabContainer.selectedIndex)
+            this.selectedTab = this.mTabs[aIndex];
+
+          if (aEvent) {
+            aEvent.preventDefault();
+            aEvent.stopPropagation();
+          }
+        ]]>
+        </body>
+      </method>
+
       <property name="tabContainer" readonly="true">
         <getter>
           return this.mTabContainer;
@@ -1755,15 +1777,8 @@
       <property name="browsers" readonly="true">
        <getter>
           <![CDATA[
-            if (!this._browsers) {
-              var browsers = [];
-              var i;
-              browsers.item = function(i) {return this[i];}
-              for (i = 0; i < this.mTabContainer.childNodes.length; i++)
-                browsers.push(this.mTabContainer.childNodes[i].linkedBrowser);
-              this._browsers = browsers;
-            }
-            return this._browsers;
+            return this._browsers ||
+                   (this._browsers = Array.map(this.mTabs, function (tab) tab.linkedBrowser));
           ]]>
         </getter>
       </property>

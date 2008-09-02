@@ -43,7 +43,7 @@
  *                    future releases.
  */
 
-[scriptable, uuid(189c9392-157c-445f-84db-900eb46d4839)]
+[scriptable, uuid(D9A0F5B2-A7DF-4AEB-9775-21B9E01B4C59)]
 interface nsICrashReporter : nsISupports
 {
   /**
@@ -79,5 +79,11 @@ interface nsICrashReporter : nsISupports
     * SEH (structured exception handling) exists on Windows only.
     * @param aExceptionInfo  EXCEPTION_INFO* provided by Window's SEH
     */
-  [noscript] void WriteMinidumpForException(in voidPtr aExceptionInfo);
+  [noscript] void writeMinidumpForException(in voidPtr aExceptionInfo);
+  
+  /**
+    * Append note containing an Obj-C exception's info.
+    * @param aException  NSException object to append note for
+    */
+  [noscript] void appendObjCExceptionInfoToAppNotes(in voidPtr aException);
 };

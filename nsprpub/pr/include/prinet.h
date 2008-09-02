@@ -38,12 +38,12 @@
 /*
  * File:		prinet.h
  * Description:
- *     Header file used to find the system header files for socket support.
+ *     Header file used to find the system header files for socket support[1].
  *     This file serves the following purposes:
  *     - A cross-platform, "get-everything" socket header file.  On
  *       Unix, socket support is scattered in several header files,
  *       while Windows and Mac have a "get-everything" socket header
- *       file.
+ *       file[2].
  *     - NSPR needs the following macro definitions and function
  *       prototype declarations from these header files:
  *           AF_INET
@@ -52,8 +52,14 @@
  *       NSPR does not define its own versions of these macros and
  *       functions.  It simply uses the native versions, which have
  *       the same names on all supported platforms.
- *     This file is intended to be included by nspr20 public header
+ *     This file is intended to be included by NSPR public header
  *     files, such as prio.h.  One should not include this file directly.
+ *
+ * Notes:
+ *     1. This file should have been an internal header.  Please do not
+ *        depend on it to pull in the system header files you need.
+ *     2. WARNING: This file is no longer cross-platform as it is a no-op
+ *        for WIN32!  See the comment in the WIN32 section for details.
  */
 
 #ifndef prinet_h__
@@ -103,7 +109,14 @@ struct sockaddr_dl;
 
 #elif defined(WIN32)
 
-/* Do not include any system header files. */
+/*
+ * Do not include any system header files.
+ *
+ * Originally we were including <windows.h>.  It slowed down the
+ * compilation of files that included NSPR headers, so we removed
+ * the <windows.h> inclusion at customer's request, which created
+ * an unfortunate inconsistency with other platforms.
+ */
 
 #elif defined(WIN16)
 

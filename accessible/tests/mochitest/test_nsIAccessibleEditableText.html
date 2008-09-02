@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=452161
+-->
+<head>
+  <title>nsIAccessibleEditableText chrome tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessibleEditableText.js"></script>
+
+  <script type="application/javascript">
+    var gParagraphAcc;
+
+    function testEditable(aID)
+    {
+      var et = new nsEditableText(aID);
+
+      //////////////////////////////////////////////////////////////////////////
+      // insertText
+      et.insertText("hello", 0, "hello");
+      et.insertText("ma ", 0, "ma hello");
+      et.insertText("ma", 2, "mama hello");
+      et.insertText(" hello", 10, "mama hello hello");
+
+      // XXX: bug 452584
+
+      //////////////////////////////////////////////////////////////////////////
+      // setTextContents
+//      et.setTextContents("hello", "hello");
+//      et.setTextContents("olleh", "olleh");
+//      et.setTextContents("", "");
+
+      //////////////////////////////////////////////////////////////////////////
+      // deleteText
+//      et.deleteText(0, 5, "hello hello");
+//      et.deleteText(5, 6, "hellohello");
+//      et.deleteText(5, 10, "hello");
+//      et.deleteText(0, 5, "");
+
+      //////////////////////////////////////////////////////////////////////////
+      // copyNPasteText
+//      et.copyNPasteText(0, 0, 0, "");
+//      et.insertText("hello", 0, "hello");
+//      et.copyNPasteText(0, 1, 0, "hhello");
+//      et.copyNPasteText(5, 6, 6, "hhelloo");
+//      et.copyNPasteText(3, 4, 1, "hehelloo");
+
+      //////////////////////////////////////////////////////////////////////////
+//      // cutNPasteText
+//      et.cutNPasteText(0, 1, 1, "ehhelloo");
+//      et.cutNPasteText(1, 2, 0, "hehelloo");
+//      et.cutNPasteText(7, 8, 8, "hehelloo");
+    }
+
+    function doTest()
+    {
+      testEditable("input");
+      // testEditable("div"); XXX: bug 452599
+
+      var frame = document.getElementById("frame");
+      frame.contentDocument.designMode = "on";
+      testEditable(frame.contentDocument);
+      
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="nsIAccessibleEditableText chrome tests"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=452161">Mozilla Bug 452161</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="input"/>
+
+  <div id="div" contentEditable="true"/>
+
+  <iframe id="frame"/>
+</body>
+</html>

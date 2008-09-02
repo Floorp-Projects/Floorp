@@ -3,7 +3,7 @@
 //  Growl
 //
 //  Created by Evan Schoenberg on Wed Jun 16 2004.
-//  Copyright 2004-2005 The Growl Project. All rights reserved.
+//  Copyright 2004-2006 The Growl Project. All rights reserved.
 //
 
 #import "GrowlApplicationBridge.h"
@@ -11,16 +11,37 @@
 #import "GrowlInstallationPrompt.h"
 #import "GrowlVersionUtilities.h"
 #endif
-#import "NSURLAdditions.h"
-#import "CFGrowlAdditions.h"
+#include "CFGrowlAdditions.h"
+#include "CFURLAdditions.h"
+#include "CFMutableDictionaryAdditions.h"
 #import "GrowlDefinesInternal.h"
-#import "GrowlPathUtil.h"
+#import "GrowlPathUtilities.h"
 #import "GrowlPathway.h"
 
 #import <ApplicationServices/ApplicationServices.h>
 
-#define PREFERENCE_PANES_SUBFOLDER_OF_LIBRARY			@"PreferencePanes"
-#define PREFERENCE_PANE_EXTENSION						@"prefPane"
+
+/*!
+ * The 10.3+ exception handling can only work if -fobjc-exceptions is enabled
+ */
+#if 0
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_3
+	# define TRY		@try {
+	# define ENDTRY		}
+	# define CATCH		@catch(NSException *localException) {
+	# define ENDCATCH	}
+	#else
+	# define TRY		NS_DURING
+	# define ENDTRY
+	# define CATCH		NS_HANDLER
+	# define ENDCATCH	NS_ENDHANDLER
+	#endif
+#else
+	# define TRY		NS_DURING
+	# define ENDTRY
+	# define CATCH		NS_HANDLER
+	# define ENDCATCH	NS_ENDHANDLER
+#endif
 
 @interface GrowlApplicationBridge (PRIVATE)
 /*!
@@ -66,13 +87,19 @@
  */
 + (NSData *) _applicationIconDataForGrowlSearchingRegistrationDictionary:(NSDictionary *)regDict;
 
+/*! @method growlProxy
+ *  @abstract Obtain (creating a connection if needed) a proxy to the Growl Helper Application
+ */
++ (NSProxy<GrowlNotificationProtocol> *) growlProxy;
 @end
 
+static NSDictionary *cachedRegistrationDictionary = nil;
 static NSString	*appName = nil;
 static NSData	*appIconData = nil;
 
 static id		delegate = nil;
 static BOOL		growlLaunched = NO;
+static NSProxy<GrowlNotificationProtocol> *growlProxy = nil;
 
 #ifdef GROWL_WITH_INSTALLER
 static NSMutableArray	*queuedGrowlNotifications = nil;
@@ -92,20 +119,27 @@ static BOOL		registerWhenGrowlIsReady = NO;
 + (void) setGrowlDelegate:(NSObject<GrowlApplicationBridgeDelegate> *)inDelegate {
 	NSDistributedNotificationCenter *NSDNC = [NSDistributedNotificationCenter defaultCenter];
 
-	[delegate autorelease];
-	delegate = [inDelegate retain];
+	if (inDelegate != delegate) {
+		[delegate release];
+		delegate = [inDelegate retain];
+	}
 
-	NSDictionary *regDict = [self bestRegistrationDictionary];
+	[cachedRegistrationDictionary release];
+	cachedRegistrationDictionary = [[self bestRegistrationDictionary] retain];
 
 	//Cache the appName from the delegate or the process name
 	[appName autorelease];
-	appName = [[self _applicationNameForGrowlSearchingRegistrationDictionary:regDict] retain];
-	if (!appName)
+	appName = [[self _applicationNameForGrowlSearchingRegistrationDictionary:cachedRegistrationDictionary] retain];
+	if (!appName) {
 		NSLog(@"%@", @"GrowlApplicationBridge: Cannot register because the application name was not supplied and could not be determined");
+		return;
+	}
 
-	//Cache the appIconData from the delegate if it responds to the applicationIconDataForGrowl selector, or the application if not
+	/* Cache the appIconData from the delegate if it responds to the
+	 * applicationIconDataForGrowl selector, or the application if not
+	 */
 	[appIconData autorelease];
-	appIconData = [[self _applicationIconDataForGrowlSearchingRegistrationDictionary:regDict] retain];
+	appIconData = [[self _applicationIconDataForGrowlSearchingRegistrationDictionary:cachedRegistrationDictionary] retain];
 
 	//Add the observer for GROWL_IS_READY which will be triggered later if all goes well
 	[NSDNC addObserver:self
@@ -113,35 +147,36 @@ static BOOL		registerWhenGrowlIsReady = NO;
 				  name:GROWL_IS_READY
 				object:nil];
 
-	//Watch for notification clicks if our delegate responds to the growlNotificationWasClicked: selector
-	//Notifications will come in on a unique notification name based on our app name and GROWL_NOTIFICATION_CLICKED
+	/* Watch for notification clicks if our delegate responds to the
+	 * growlNotificationWasClicked: selector. Notifications will come in on a
+	 * unique notification name based on our app name, pid and
+	 * GROWL_NOTIFICATION_CLICKED.
+	 */
 	int pid = [[NSProcessInfo processInfo] processIdentifier];
 	NSString *growlNotificationClickedName = [[NSString alloc] initWithFormat:@"%@-%d-%@",
 		appName, pid, GROWL_NOTIFICATION_CLICKED];
-	if ([delegate respondsToSelector:@selector(growlNotificationWasClicked:)]) {
+	if ([delegate respondsToSelector:@selector(growlNotificationWasClicked:)])
 		[NSDNC addObserver:self
-				  selector:@selector(_growlNotificationWasClicked:)
+				  selector:@selector(growlNotificationWasClicked:)
 					  name:growlNotificationClickedName
 					object:nil];
-	} else {
+	else
 		[NSDNC removeObserver:self
 						 name:growlNotificationClickedName
 					   object:nil];
-	}
 	[growlNotificationClickedName release];
 
 	NSString *growlNotificationTimedOutName = [[NSString alloc] initWithFormat:@"%@-%d-%@",
 		appName, pid, GROWL_NOTIFICATION_TIMED_OUT];
-	if ([delegate respondsToSelector:@selector(growlNotificationTimedOut:)]) {
+	if ([delegate respondsToSelector:@selector(growlNotificationTimedOut:)])
 		[NSDNC addObserver:self
-				  selector:@selector(_growlNotificationTimedOut:)
+				  selector:@selector(growlNotificationTimedOut:)
 					  name:growlNotificationTimedOutName
 					object:nil];
-	} else {
+	else
 		[NSDNC removeObserver:self
 						 name:growlNotificationTimedOutName
 					   object:nil];
-	}
 	[growlNotificationTimedOutName release];
 
 #ifdef GROWL_WITH_INSTALLER
@@ -149,7 +184,7 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	userChoseNotToInstallGrowl = [[NSUserDefaults standardUserDefaults] boolForKey:@"Growl Installation:Do Not Prompt Again"];
 #endif
 
-	growlLaunched = [self _launchGrowlIfInstalledWithRegistrationDictionary:regDict];
+	growlLaunched = [self _launchGrowlIfInstalledWithRegistrationDictionary:cachedRegistrationDictionary];
 }
 
 + (NSObject<GrowlApplicationBridgeDelegate> *) growlDelegate {
@@ -176,10 +211,10 @@ static BOOL		registerWhenGrowlIsReady = NO;
 								 identifier:nil];
 }
 
-/*Send a notification to Growl for display.
- *title, description, and notifName are required.
- *All other id parameters may be nil to accept defaults.
- *priority is 0 by default; isSticky is NO by default.
+/* Send a notification to Growl for display.
+ * title, description, and notifName are required.
+ * All other id parameters may be nil to accept defaults.
+ * priority is 0 by default; isSticky is NO by default.
  */
 + (void) notifyWithTitle:(NSString *)title
 			 description:(NSString *)description
@@ -193,75 +228,61 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	NSParameterAssert(notifName);	//Notification name is required.
 	NSParameterAssert(title || description);	//At least one of title or description is required.
 
-	NSDictionary *regDict = [self bestRegistrationDictionary];
-	if (!appName)
-		appName = [[self _applicationNameForGrowlSearchingRegistrationDictionary:regDict] retain];
-	if (!appIconData)
-		appIconData = [[self _applicationIconDataForGrowlSearchingRegistrationDictionary:regDict] retain];
-	NSNumber *pid = [[NSNumber alloc] initWithInt:[[NSProcessInfo processInfo] processIdentifier]];
-
 	// Build our noteDict from all passed parameters
 	NSMutableDictionary *noteDict = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
-		appName,	 GROWL_APP_NAME,
-		pid,         GROWL_APP_PID,
 		notifName,	 GROWL_NOTIFICATION_NAME,
-		appIconData, GROWL_NOTIFICATION_APP_ICON,
 		nil];
 
-	[pid release];
-
-	if (title)			[noteDict setObject:title        forKey:GROWL_NOTIFICATION_TITLE];
-	if (description)	[noteDict setObject:description  forKey:GROWL_NOTIFICATION_DESCRIPTION];
-	if (iconData)		[noteDict setObject:iconData     forKey:GROWL_NOTIFICATION_ICON];
-	if (clickContext)	[noteDict setObject:clickContext forKey:GROWL_NOTIFICATION_CLICK_CONTEXT];
-	if (priority) {
-		NSNumber *value = [[NSNumber alloc] initWithInt:priority];
-		[noteDict setObject:value forKey:GROWL_NOTIFICATION_PRIORITY];
-		[value release];
-	}
-	if (isSticky) {
-		NSNumber *value = [[NSNumber alloc] initWithBool:isSticky];
-		[noteDict setObject:value forKey:GROWL_NOTIFICATION_STICKY];
-		[value release];
-	}
-	if (identifier)		[noteDict setObject:identifier   forKey:GROWL_NOTIFICATION_IDENTIFIER];
+	if (title)			setObjectForKey(noteDict, GROWL_NOTIFICATION_TITLE, title);
+	if (description)	setObjectForKey(noteDict, GROWL_NOTIFICATION_DESCRIPTION, description);
+	if (iconData)		setObjectForKey(noteDict, GROWL_NOTIFICATION_ICON, iconData);
+	if (clickContext)	setObjectForKey(noteDict, GROWL_NOTIFICATION_CLICK_CONTEXT, clickContext);
+	if (priority)		setIntegerForKey(noteDict, GROWL_NOTIFICATION_PRIORITY, priority);
+	if (isSticky)		setBooleanForKey(noteDict, GROWL_NOTIFICATION_STICKY, isSticky);
+	if (identifier)		setObjectForKey(noteDict, GROWL_NOTIFICATION_IDENTIFIER, identifier);
 
 	[self notifyWithDictionary:noteDict];
 	[noteDict release];
 }
 
 + (void) notifyWithDictionary:(NSDictionary *)userInfo {
-	//clean up things that need to be cleaned up.
-	NSMutableDictionary *mUserInfo = [userInfo mutableCopy];
-
-	Class NSImageClass = [NSImage class];
-	//notification icon.
-	NSImage *icon = [mUserInfo objectForKey:GROWL_NOTIFICATION_ICON];
-	if (icon && [icon isKindOfClass:NSImageClass])
-		[mUserInfo setObject:[icon TIFFRepresentation] forKey:GROWL_NOTIFICATION_ICON];
-	//per-notification application icon.
-	icon = [mUserInfo objectForKey:GROWL_NOTIFICATION_APP_ICON];
-	if (icon && [icon isKindOfClass:NSImageClass])
-		[mUserInfo setObject:[icon TIFFRepresentation] forKey:GROWL_NOTIFICATION_APP_ICON];
-
-	userInfo = [mUserInfo autorelease];
-
 	//post it.
-	if (growlLaunched) {
-		NSConnection *connection = [NSConnection connectionWithRegisteredName:@"GrowlApplicationBridgePathway" host:nil];
-		if (connection) {
+	if (growlLaunched) {		
+		NSProxy<GrowlNotificationProtocol> *currentGrowlProxy = [self growlProxy];
+
+		//Make sure we have everything that we need (that we can retrieve from the registration dictionary).
+		userInfo = [self notificationDictionaryByFillingInDictionary:userInfo];
+
+		if (currentGrowlProxy) {
 			//Post to Growl via GrowlApplicationBridgePathway
-			NS_DURING
-				NSDistantObject *theProxy = [connection rootProxy];
-				[theProxy setProtocolForProxy:@protocol(GrowlNotificationProtocol)];
-				id<GrowlNotificationProtocol> growlProxy = (id)theProxy;
-				[growlProxy postNotificationWithDictionary:userInfo];
-			NS_HANDLER
+			TRY
+				[currentGrowlProxy postNotificationWithDictionary:userInfo];
+			ENDTRY
+			CATCH
 				NSLog(@"GrowlApplicationBridge: exception while sending notification: %@", localException);
-			NS_ENDHANDLER
+			ENDCATCH
 		} else {
-			//Post to Growl via NSDistributedNotificationCenter
 			//NSLog(@"GrowlApplicationBridge: could not find local GrowlApplicationBridgePathway, falling back to NSDistributedNotificationCenter");
+
+			//DNC needs a plist. this means we must pass data, not an NSImage.
+			Class     NSImageClass = [NSImage class];
+			NSImage          *icon = [userInfo objectForKey:GROWL_NOTIFICATION_ICON];
+			NSImage       *appIcon = [userInfo objectForKey:GROWL_NOTIFICATION_APP_ICON];
+			BOOL       iconIsImage =    icon &&    [icon isKindOfClass:NSImageClass];
+			BOOL    appIconIsImage = appIcon && [appIcon isKindOfClass:NSImageClass];
+			if (iconIsImage || appIconIsImage) {
+				NSMutableDictionary *mUserInfo = [userInfo mutableCopy];
+				//notification icon.
+				if (iconIsImage)
+					[mUserInfo setObject:[icon TIFFRepresentation] forKey:GROWL_NOTIFICATION_ICON];
+				//per-notification application icon.
+				if (appIconIsImage)
+					[mUserInfo setObject:[appIcon TIFFRepresentation] forKey:GROWL_NOTIFICATION_APP_ICON];
+
+				userInfo = [mUserInfo autorelease];
+			}
+
+			//Post to Growl via NSDistributedNotificationCenter
 			[[NSDistributedNotificationCenter defaultCenter] postNotificationName:GROWL_NOTIFICATION
 																		   object:nil
 																		 userInfo:userInfo
@@ -273,12 +294,8 @@ static BOOL		registerWhenGrowlIsReady = NO;
 		 *	it, store this notification for posting
 		 */
 		if (!userChoseNotToInstallGrowl) {
-			//in case the dictionary is mutable, make a copy.
-			userInfo = [userInfo copy];
-
-			if (!queuedGrowlNotifications) {
+			if (!queuedGrowlNotifications)
 				queuedGrowlNotifications = [[NSMutableArray alloc] init];
-			}
 			[queuedGrowlNotifications addObject:userInfo];
 
 			//if we have not already asked the user to install Growl, do it now
@@ -286,7 +303,6 @@ static BOOL		registerWhenGrowlIsReady = NO;
 				[GrowlInstallationPrompt showInstallationPrompt];
 				promptedToInstallGrowl = YES;
 			}
-			[userInfo release];
 		}
 #endif
 	}
@@ -295,7 +311,7 @@ static BOOL		registerWhenGrowlIsReady = NO;
 #pragma mark -
 
 + (BOOL) isGrowlInstalled {
-	return ([GrowlPathUtil growlPrefPaneBundle] != nil);
+	return ([GrowlPathUtilities growlPrefPaneBundle] != nil);
 }
 
 + (BOOL) isGrowlRunning {
@@ -303,17 +319,28 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	ProcessSerialNumber PSN = { kNoProcess, kNoProcess };
 
 	while (GetNextProcess(&PSN) == noErr) {
-		NSDictionary *infoDict = (NSDictionary *)ProcessInformationCopyDictionary(&PSN, kProcessDictionaryIncludeAllInformationMask);
+		CFDictionaryRef infoDict = ProcessInformationCopyDictionary(&PSN, kProcessDictionaryIncludeAllInformationMask);
+		CFStringRef bundleId = CFDictionaryGetValue(infoDict, kCFBundleIdentifierKey);
 
-		if ([[infoDict objectForKey:(NSString *)kCFBundleIdentifierKey] isEqualToString:@"com.Growl.GrowlHelperApp"]) {
+		if (bundleId && CFStringCompare(bundleId, CFSTR("com.Growl.GrowlHelperApp"), 0) == kCFCompareEqualTo) {
 			growlIsRunning = YES;
-			[infoDict release];
+			CFRelease(infoDict);
 			break;
 		}
-		[infoDict release];
+		CFRelease(infoDict);
 	}
 
 	return growlIsRunning;
+}
+
++ (void) displayInstallationPromptIfNeeded {
+#ifdef GROWL_WITH_INSTALLER
+    //if we have not already asked the user to install Growl, do it now
+    if (!promptedToInstallGrowl) {
+        [GrowlInstallationPrompt showInstallationPrompt];
+        promptedToInstallGrowl = YES;
+    }
+#endif
 }
 
 #pragma mark -
@@ -323,6 +350,10 @@ static BOOL		registerWhenGrowlIsReady = NO;
 		regDict = [self registrationDictionaryByFillingInDictionary:regDict];
 	else
 		regDict = [self bestRegistrationDictionary];
+
+	[cachedRegistrationDictionary release];
+	cachedRegistrationDictionary = [regDict retain];
+
 	return [self _launchGrowlIfInstalledWithRegistrationDictionary:regDict];
 }
 
@@ -365,16 +396,13 @@ static BOOL		registerWhenGrowlIsReady = NO;
 
 + (NSDictionary *) bestRegistrationDictionary {
 	NSDictionary *registrationDictionary = [self registrationDictionaryFromDelegate];
-	if (!registrationDictionary)
-		registrationDictionary = [self registrationDictionaryFromBundle:nil];
-
 	if (!registrationDictionary) {
-		NSLog(@"GrowlApplicationBridge: The Growl delegate did not supply a registration dictionary, and the app bundle at %@ does not have one. Please tell this application's developer.", [[NSBundle mainBundle] bundlePath]);
+		registrationDictionary = [self registrationDictionaryFromBundle:nil];
+		if (!registrationDictionary)
+			NSLog(@"GrowlApplicationBridge: The Growl delegate did not supply a registration dictionary, and the app bundle at %@ does not have one. Please tell this application's developer.", [[NSBundle mainBundle] bundlePath]);
 	}
 
-	registrationDictionary = [self registrationDictionaryByFillingInDictionary:registrationDictionary];
-
-	return registrationDictionary;
+	return [self registrationDictionaryByFillingInDictionary:registrationDictionary];
 }
 
 #pragma mark -
@@ -400,16 +428,10 @@ static BOOL		registerWhenGrowlIsReady = NO;
 
 	if ((!keys) || [keys containsObject:GROWL_APP_ICON]) {
 		if (![mRegDict objectForKey:GROWL_APP_ICON]) {
-			if (!appIconData) {
-				appIconData = [self _applicationIconDataForGrowlSearchingRegistrationDictionary:regDict];
-				if(appIconData && [appIconData isKindOfClass:[NSImage class]])
-					appIconData = [(NSImage *)appIconData TIFFRepresentation];
-				appIconData = [appIconData retain];
-			}
-			if (appIconData) {
-				[mRegDict setObject:appIconData
-							 forKey:GROWL_APP_ICON];
-			}
+			if (!appIconData)
+				appIconData = [[self _applicationIconDataForGrowlSearchingRegistrationDictionary:regDict] retain];
+			if (appIconData)
+				[mRegDict setObject:appIconData forKey:GROWL_APP_ICON];
 		}
 	}
 
@@ -417,11 +439,11 @@ static BOOL		registerWhenGrowlIsReady = NO;
 		if (![mRegDict objectForKey:GROWL_APP_LOCATION]) {
 			NSURL *myURL = copyCurrentProcessURL();
 			if (myURL) {
-				NSDictionary *file_data = [myURL dockDescription];
+				NSDictionary *file_data = createDockDescriptionWithURL(myURL);
 				if (file_data) {
 					NSDictionary *location = [[NSDictionary alloc] initWithObjectsAndKeys:file_data, @"file-data", nil];
-					[mRegDict setObject:location
-					             forKey:GROWL_APP_LOCATION];
+					[file_data release];
+					[mRegDict setObject:location forKey:GROWL_APP_LOCATION];
 					[location release];
 				} else {
 					[mRegDict removeObjectForKey:GROWL_APP_LOCATION];
@@ -434,16 +456,60 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	if ((!keys) || [keys containsObject:GROWL_NOTIFICATIONS_DEFAULT]) {
 		if (![mRegDict objectForKey:GROWL_NOTIFICATIONS_DEFAULT]) {
 			NSArray *all = [mRegDict objectForKey:GROWL_NOTIFICATIONS_ALL];
-			if (all) {
-				[mRegDict setObject:all
-							 forKey:GROWL_NOTIFICATIONS_DEFAULT];
-			}
+			if (all)
+				[mRegDict setObject:all forKey:GROWL_NOTIFICATIONS_DEFAULT];
 		}
 	}
 
-	NSDictionary *result = [NSDictionary dictionaryWithDictionary:mRegDict];
-	[mRegDict release];
-	return result;
+	if ((!keys) || [keys containsObject:GROWL_APP_ID])
+		if (![mRegDict objectForKey:GROWL_APP_ID])
+			[mRegDict setObject:(NSString *)CFBundleGetIdentifier(CFBundleGetMainBundle()) forKey:GROWL_APP_ID];
+
+	return [mRegDict autorelease];
+}
+
++ (NSDictionary *) notificationDictionaryByFillingInDictionary:(NSDictionary *)notifDict {
+	NSMutableDictionary *mNotifDict = [notifDict mutableCopy];
+
+	if (![mNotifDict objectForKey:GROWL_APP_NAME]) {
+		if (!appName)
+			appName = [[self _applicationNameForGrowlSearchingRegistrationDictionary:cachedRegistrationDictionary] retain];
+
+		if (appName) {
+			[mNotifDict setObject:appName
+			               forKey:GROWL_APP_NAME];
+		}
+	}
+
+	if (![mNotifDict objectForKey:GROWL_APP_ICON]) {
+		if (!appIconData)
+			appIconData = [[self _applicationIconDataForGrowlSearchingRegistrationDictionary:cachedRegistrationDictionary] retain];
+
+		if (appIconData) {
+			[mNotifDict setObject:appIconData
+			               forKey:GROWL_APP_ICON];
+		}
+	}
+
+	//Only include the PID when there's a click context. We do this because NSDNC imposes a 15-MiB limit on the serialized notification, and we wouldn't want to overrun it because of a 4-byte PID.
+	if ([mNotifDict objectForKey:GROWL_NOTIFICATION_CLICK_CONTEXT] && ![mNotifDict objectForKey:GROWL_APP_PID]) {
+		NSNumber *pidNum = [[NSNumber alloc] initWithInt:[[NSProcessInfo processInfo] processIdentifier]];
+
+		[mNotifDict setObject:pidNum
+		               forKey:GROWL_APP_PID];
+
+		[pidNum release];
+	}
+
+	return [mNotifDict autorelease];
+}
+
++ (NSDictionary *) frameworkInfoDictionary {
+#ifdef GROWL_WITH_INSTALLER
+	return (NSDictionary *)CFBundleGetInfoDictionary(CFBundleGetBundleWithIdentifier(CFSTR("com.growl.growlwithinstallerframework")));
+#else
+	return (NSDictionary *)CFBundleGetInfoDictionary(CFBundleGetBundleWithIdentifier(CFSTR("com.growl.growlframework")));
+#endif
 }
 
 #pragma mark -
@@ -455,22 +521,30 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	if (delegate && [delegate respondsToSelector:@selector(applicationNameForGrowl)])
 		applicationNameForGrowl = [delegate applicationNameForGrowl];
 
-	if (!applicationNameForGrowl)
+	if (!applicationNameForGrowl) {
 		applicationNameForGrowl = [regDict objectForKey:GROWL_APP_NAME];
 
-	if (!applicationNameForGrowl)
-		applicationNameForGrowl = [[NSProcessInfo processInfo] processName];
+		if (!applicationNameForGrowl)
+			applicationNameForGrowl = [[NSProcessInfo processInfo] processName];
+	}
 
 	return applicationNameForGrowl;
 }
 + (NSData *) _applicationIconDataForGrowlSearchingRegistrationDictionary:(NSDictionary *)regDict {
 	NSData *iconData = nil;
 
-	if (delegate && [delegate respondsToSelector:@selector(applicationIconDataForGrowl)])
-		iconData = [delegate applicationIconDataForGrowl];
+	if (delegate) {
+		if ([delegate respondsToSelector:@selector(applicationIconForGrowl)])
+			iconData = (NSData *)[delegate applicationIconForGrowl];
+		else if ([delegate respondsToSelector:@selector(applicationIconDataForGrowl)])
+			iconData = [delegate applicationIconDataForGrowl];
+	}
 
 	if (!iconData)
 		iconData = [regDict objectForKey:GROWL_APP_ICON];
+
+	if (iconData && [iconData isKindOfClass:[NSImage class]])
+		iconData = [(NSImage *)iconData TIFFRepresentation];
 
 	if (!iconData) {
 		NSURL *URL = copyCurrentProcessURL();
@@ -485,19 +559,65 @@ static BOOL		registerWhenGrowlIsReady = NO;
  *	called manually, and the calling observer should only be registered if the
  *	delegate responds to growlNotificationWasClicked:.
  */
-+ (void) _growlNotificationWasClicked:(NSNotification *)notification {
-	[delegate performSelector:@selector(growlNotificationWasClicked:)
-				   withObject:[[notification userInfo] objectForKey:GROWL_KEY_CLICKED_CONTEXT]];
++ (void) growlNotificationWasClicked:(NSNotification *)notification {
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	[delegate growlNotificationWasClicked:
+		[[notification userInfo] objectForKey:GROWL_KEY_CLICKED_CONTEXT]];
+	[pool release];
 }
-+ (void) _growlNotificationTimedOut:(NSNotification *)notification {
-	[delegate performSelector:@selector(growlNotificationTimedOut:)
-				   withObject:[[notification userInfo] objectForKey:GROWL_KEY_CLICKED_CONTEXT]];
++ (void) growlNotificationTimedOut:(NSNotification *)notification {
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	[delegate growlNotificationTimedOut:
+		[[notification userInfo] objectForKey:GROWL_KEY_CLICKED_CONTEXT]];
+	[pool release];
 }
 
 #pragma mark -
 
+//When a connection dies, release our reference to its proxy
++ (void) connectionDidDie:(NSNotification *)notification {
+	[[NSNotificationCenter defaultCenter] removeObserver:self
+													name:NSConnectionDidDieNotification
+												  object:[notification object]];
+	[growlProxy release]; growlProxy = nil;
+}
+
++ (NSProxy<GrowlNotificationProtocol> *) growlProxy {
+	if (!growlProxy) {
+		NSConnection *connection = [NSConnection connectionWithRegisteredName:@"GrowlApplicationBridgePathway" host:nil];
+		if (connection) {
+			[[NSNotificationCenter defaultCenter] addObserver:self
+													 selector:@selector(connectionDidDie:)
+														 name:NSConnectionDidDieNotification
+													   object:connection];
+			
+			TRY
+			{
+				NSDistantObject *theProxy = [connection rootProxy];
+				if ([theProxy respondsToSelector:@selector(registerApplicationWithDictionary:)]) {
+					[theProxy setProtocolForProxy:@protocol(GrowlNotificationProtocol)];
+					growlProxy = [(NSProxy<GrowlNotificationProtocol> *)theProxy retain];
+				} else {
+					NSLog(@"Received a fake GrowlApplicationBridgePathway object. Some other application is interfering with Growl, or something went horribly wrong. Please file a bug report.");
+					growlProxy = nil;
+				}
+			}
+			ENDTRY
+				CATCH
+			{
+				NSLog(@"GrowlApplicationBridge: exception while sending notification: %@", localException);
+				growlProxy = nil;
+			}
+			ENDCATCH
+		}
+	}
+	
+	return growlProxy;
+}
+
 + (void) _growlIsReady:(NSNotification *)notification {
 #pragma unused(notification)
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
 	//Growl has now launched; we may get here with (growlLaunched == NO) when the user first installs
 	growlLaunched = YES;
@@ -508,13 +628,13 @@ static BOOL		registerWhenGrowlIsReady = NO;
 
 	//Post a notification locally
 	[[NSNotificationCenter defaultCenter] postNotificationName:GROWL_IS_READY
-														object:nil];
+														object:nil
+													  userInfo:nil];
 
 	//Stop observing for GROWL_IS_READY
-	NSDistributedNotificationCenter *distCenter = [NSDistributedNotificationCenter defaultCenter];
-	[distCenter removeObserver:self
-						  name:GROWL_IS_READY
-						object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self
+															   name:GROWL_IS_READY
+															 object:nil];
 
 	//register (fixes #102: this is necessary if we got here by Growl having just been installed)
 	if (registerWhenGrowlIsReady) {
@@ -527,30 +647,31 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	NSEnumerator *enumerator = [queuedGrowlNotifications objectEnumerator];
 	NSDictionary *noteDict;
 
-	while ((noteDict = [enumerator nextObject])) {
-		NSConnection *connection = [NSConnection connectionWithRegisteredName:@"GrowlApplicationBridgePathway" host:nil];
-		if (connection) {
+	//Configure the growl proxy if it isn't currently configured
+	NSProxy<GrowlNotificationProtocol> *currentGrowlProxy = [self growlProxy];
+	
+	while ((noteDict = [enumerator nextObject])) {		
+		if (currentGrowlProxy) {
 			//Post to Growl via GrowlApplicationBridgePathway
 			NS_DURING
-				NSDistantObject *theProxy = [connection rootProxy];
-				[theProxy setProtocolForProxy:@protocol(GrowlNotificationProtocol)];
-				id<GrowlNotificationProtocol> growlProxy = (id)theProxy;
-				[growlProxy postNotificationWithDictionary:noteDict];
+				[currentGrowlProxy postNotificationWithDictionary:noteDict];
 			NS_HANDLER
 				NSLog(@"GrowlApplicationBridge: exception while sending notification: %@", localException);
 			NS_ENDHANDLER
 		} else {
 			//Post to Growl via NSDistributedNotificationCenter
-			//NSLog(@"GrowlApplicationBridge: could not find local GrowlApplicationBridgePathway, falling back to NSDistributedNotificationCenter");
-			[distCenter postNotificationName:GROWL_NOTIFICATION
-									  object:nil
-									userInfo:noteDict
-						  deliverImmediately:NO];
+			NSLog(@"GrowlApplicationBridge: could not find local GrowlApplicationBridgePathway, falling back to NSDistributedNotificationCenter");
+			[[NSDistributedNotificationCenter defaultCenter] postNotificationName:GROWL_NOTIFICATION
+																		   object:NULL
+																		 userInfo:noteDict
+															   deliverImmediately:FALSE];
 		}
 	}
 
 	[queuedGrowlNotifications release]; queuedGrowlNotifications = nil;
 #endif
+	
+	[pool release];
 }
 
 #ifdef GROWL_WITH_INSTALLER
@@ -572,10 +693,14 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	NSString *packagedVersion, *installedVersion;
 	BOOL upgradeIsAvailable;
 
-	ourGrowlPrefPaneInfoPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"GrowlPrefPaneInfo"
-																								  ofType:@"plist"];
+	ourGrowlPrefPaneInfoPath = [[NSBundle bundleWithIdentifier:@"com.growl.growlwithinstallerframework"] pathForResource:@"GrowlPrefPaneInfo"
+																												  ofType:@"plist"];
 
-	NSDictionary *infoDict = [[NSDictionary alloc] initWithContentsOfFile:ourGrowlPrefPaneInfoPath];
+	NSObject *infoPropertyList = createPropertyListFromURL([NSURL fileURLWithPath:ourGrowlPrefPaneInfoPath],
+														   kCFPropertyListImmutable,
+														   /* outFormat */ NULL, /* outErrorString */ NULL);
+	NSDictionary *infoDict = ([infoPropertyList isKindOfClass:[NSDictionary class]] ? (NSDictionary *)infoPropertyList : nil);
+
 	packagedVersion = [infoDict objectForKey:(NSString *)kCFBundleVersionKey];
 
 	infoDictionary = [growlPrefPaneBundle infoDictionary];
@@ -603,7 +728,7 @@ static BOOL		registerWhenGrowlIsReady = NO;
 	NSBundle		*growlPrefPaneBundle;
 	BOOL			success = NO;
 
-	growlPrefPaneBundle = [GrowlPathUtil growlPrefPaneBundle];
+	growlPrefPaneBundle = [GrowlPathUtilities growlPrefPaneBundle];
 
 	if (growlPrefPaneBundle) {
 		NSString *growlHelperAppPath = [growlPrefPaneBundle pathForResource:@"GrowlHelperApp"
@@ -629,16 +754,18 @@ static BOOL		registerWhenGrowlIsReady = NO;
 					NSString *regDictPath;
 
 					//Obtain a truly unique file name
-					regDictFileName = [[[[self _applicationNameForGrowlSearchingRegistrationDictionary:regDict] stringByAppendingString:@"-"] stringByAppendingString:[[NSProcessInfo processInfo] globallyUniqueString]] stringByAppendingPathExtension:GROWL_REG_DICT_EXTENSION];
-					if ([regDictFileName length] > NAME_MAX) {
+					CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+					CFStringRef uuidString = CFUUIDCreateString(kCFAllocatorDefault, uuid);
+					CFRelease(uuid);
+					regDictFileName = [[NSString stringWithFormat:@"%@-%u-%@", [self _applicationNameForGrowlSearchingRegistrationDictionary:regDict], getpid(), (NSString *)uuidString] stringByAppendingPathExtension:GROWL_REG_DICT_EXTENSION];
+					CFRelease(uuidString);
+					if ([regDictFileName length] > NAME_MAX)
 						regDictFileName = [[regDictFileName substringToIndex:(NAME_MAX - [GROWL_REG_DICT_EXTENSION length])] stringByAppendingPathExtension:GROWL_REG_DICT_EXTENSION];
-					}
 
 					//make sure it's within pathname length constraints
 					regDictPath = [NSTemporaryDirectory() stringByAppendingPathComponent:regDictFileName];
-					if ([regDictPath length] > PATH_MAX) {
+					if ([regDictPath length] > PATH_MAX)
 						regDictPath = [[regDictPath substringToIndex:(PATH_MAX - [GROWL_REG_DICT_EXTENSION length])] stringByAppendingPathExtension:GROWL_REG_DICT_EXTENSION];
-					}
 
 					//Write the registration dictionary out to the temporary directory
 					NSData *plistData;
@@ -647,7 +774,8 @@ static BOOL		registerWhenGrowlIsReady = NO;
 																		   format:NSPropertyListBinaryFormat_v1_0
 																 errorDescription:&error];
 					if (plistData) {
-						success = [plistData writeToFile:regDictPath atomically:NO];
+						if (![plistData writeToFile:regDictPath atomically:NO])
+							NSLog(@"GrowlApplicationBridge: Error writing registration dictionary at %@", regDictPath);
 					} else {
 						NSLog(@"GrowlApplicationBridge: Error writing registration dictionary at %@: %@", regDictPath, error);
 						NSLog(@"GrowlApplicationBridge: Registration dictionary follows\n%@", regDict);
@@ -655,9 +783,8 @@ static BOOL		registerWhenGrowlIsReady = NO;
 					}
 
 					regStatus = FSPathMakeRef((UInt8 *)[regDictPath fileSystemRepresentation], &regItemRef, NULL);
-					if (regStatus == noErr) {
+					if (regStatus == noErr)
 						passRegDict = YES;
-					}
 				}
 
 				spec.appRef = &appRef;

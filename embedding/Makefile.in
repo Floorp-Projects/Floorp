@@ -48,10 +48,6 @@ PACKAGE_FILE = embed.pkg
 
 DIRS = base components browser
 
-ifndef MOZ_XUL_APP
-DIRS += lite
-endif
-
 ifdef ENABLE_TESTS
 XPCSHELL_TESTS = tests/unit
 endif

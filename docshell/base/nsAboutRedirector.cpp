@@ -73,11 +73,7 @@ static RedirEntry kRedirMap[] = {
 #ifdef MOZ_CRASHREPORTER
     { "crashes", "chrome://global/content/crashes.xhtml", 0 },
 #endif
-#ifdef MOZ_XUL_APP
     { "logo", "chrome://branding/content/about.png",
-#else
-    { "logo", "chrome://global/content/logo.gif",
-#endif
       nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT},
     { "buildconfig", "chrome://global/content/buildconfig.html",
       nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT },

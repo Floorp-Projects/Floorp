@@ -93,13 +93,13 @@ nsresult
 nsAppShell::Init()
 {
   if (!sMsgId)
-    sMsgId = RegisterWindowMessage("nsAppShell:EventID");
+    sMsgId = RegisterWindowMessageW(L"nsAppShell:EventID");
 
-  WNDCLASS wc;
+  WNDCLASSW wc;
   HINSTANCE module = GetModuleHandle(NULL);
 
-  const char *const kWindowClass = "nsAppShell:EventWindowClass";
-  if (!GetClassInfo(module, kWindowClass, &wc)) {
+  const PRUnichar *const kWindowClass = L"nsAppShell:EventWindowClass";
+  if (!GetClassInfoW(module, kWindowClass, &wc)) {
     wc.style         = 0;
     wc.lpfnWndProc   = EventWindowProc;
     wc.cbClsExtra    = 0;
@@ -108,12 +108,12 @@ nsAppShell::Init()
     wc.hIcon         = NULL;
     wc.hCursor       = NULL;
     wc.hbrBackground = (HBRUSH) NULL;
-    wc.lpszMenuName  = (LPCSTR) NULL;
+    wc.lpszMenuName  = (LPCWSTR) NULL;
     wc.lpszClassName = kWindowClass;
-    RegisterClass(&wc);
+    RegisterClassW(&wc);
   }
 
-  mEventWnd = CreateWindow(kWindowClass, "nsAppShell:EventWindow",
+  mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow",
                            0, 0, 0, 10, 10, NULL, NULL, module, NULL);
   NS_ENSURE_STATE(mEventWnd);
 

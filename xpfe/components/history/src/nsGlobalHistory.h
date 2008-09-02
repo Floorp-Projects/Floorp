@@ -59,7 +59,6 @@
 #include "nsAString.h"
 #include "nsString.h"
 #include "nsITimer.h"
-#include "nsIAutoCompleteSession.h"
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteResult.h"
 #include "nsHashSets.h"

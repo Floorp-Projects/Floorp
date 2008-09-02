@@ -70,7 +70,8 @@
 #include <netinet/in_systm.h>  /* n_short, n_long, n_time */
 #endif
 
-#if defined(XP_UNIX) || defined(OS2) || (defined(XP_BEOS) && defined(BONE_VERSION))
+#if (defined(XP_UNIX) && !defined(SYMBIAN)) \
+    || defined(OS2) || (defined(XP_BEOS) && defined(BONE_VERSION))
 #include <netinet/tcp.h>  /* TCP_NODELAY, TCP_MAXSEG */
 #endif
 

@@ -332,13 +332,8 @@ int main(int argc, char **argv)
 
 #elif defined(OS2)
 
-# ifdef __EMX__
     threadID = (TID) _beginthread((void *)threadStartFunc, NULL,
             32768, NULL); 
-# else
-    threadID = (TID) _beginthread((void(* _Optlink)(void*))threadStartFunc, NULL,
-            32768, NULL); 
-# endif
     if (threadID == -1) {
         fprintf(stderr, "thread creation failed: error code %d\n", errno);
         failed_already=1;

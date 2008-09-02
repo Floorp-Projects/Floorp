@@ -186,7 +186,9 @@
 #else
                           key="key_stop"/>
 #endif
-                <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" command="Browser:Reload" key="key_reload"/>
+                <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" key="key_reload"
+                          command="Browser:ReloadOrDuplicate"
+                          onclick="checkForMiddleClick(this, event);"/>
                 <menuseparator/>
                 <menu id="viewFullZoomMenu" label="&fullZoom.label;" accesskey="&fullZoom.accesskey;" onpopupshowing="FullZoom.updateMenu();">
                   <menupopup>
@@ -360,10 +362,8 @@
                           key="goBackKb"
 #endif
                           chromedir="&locale.dir;"
-                          oncommand="BrowserBack(event, true)"
-                          onclick="checkForMiddleClick(this, event);">
-                  <observes element="Browser:Back" attribute="disabled" />
-                </menuitem>
+                          command="Browser:BackOrBackDuplicate"
+                          onclick="checkForMiddleClick(this, event);"/>
                 <menuitem id="historyMenuForward"
                           label="&forwardCmd.label;"
 #ifdef XP_MACOSX
@@ -372,11 +372,8 @@
                           key="goForwardKb"
 #endif
                           chromedir="&locale.dir;"
-                          oncommand="BrowserForward(event, true)"
-                          onclick="checkForMiddleClick(this, event);">
-                  <observes element="Browser:Forward" attribute="disabled" />
-                </menuitem>
-
+                          command="Browser:ForwardOrForwardDuplicate"
+                          onclick="checkForMiddleClick(this, event);"/>
                 <menuitem id="historyMenuHome"
                           label="&historyHomeCmd.label;"
                           oncommand="BrowserGoHome(event);"

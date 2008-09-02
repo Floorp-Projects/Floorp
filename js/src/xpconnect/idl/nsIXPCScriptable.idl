@@ -55,7 +55,7 @@
  * to *_retval unless they want to return PR_FALSE.
  */
 
-[uuid(1455f6fe-6de9-4b62-a2b3-d1aee82dd829)]
+[uuid(5d309b93-e9b4-4374-bcd5-44245c83408f)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -174,4 +174,8 @@ interface nsIXPCScriptable : nsISupports
 
     JSObjectPtr innerObject(in nsIXPConnectWrappedNative wrapper,
                             in JSContextPtr cx, in JSObjectPtr obj);
+
+    // This method is called if the WANT_POSTCREATE bit is set in
+    // scriptableFlags.
+    void postCreatePrototype(in JSContextPtr cx, in JSObjectPtr proto);
 };

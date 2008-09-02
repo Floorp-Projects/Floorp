@@ -246,6 +246,9 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         idx = SYSCLR_MENUHILITE;
       }
       break;
+    case eColor__moz_nativehyperlinktext:
+      aColor = NS_RGB( 0, 0, 255);
+      return res;
     default:
       idx = SYSCLR_WINDOW;
       break;

@@ -571,7 +571,7 @@ static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
      * We have to manually check (WIN16 only) for negative value of
      * clock and return NULL.
      *
-     * With negative values of clock, emx returns the struct tm for
+     * With negative values of clock, OS/2 returns the struct tm for
      * clock plus ULONG_MAX. So we also have to check for the invalid
      * structs returned for timezones west of Greenwich when clock == 0.
      */
@@ -582,7 +582,7 @@ static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
     tmPtr = localtime(clock);
 #endif
 
-#if defined(WIN16) || defined(XP_OS2_EMX)
+#if defined(WIN16) || defined(XP_OS2)
     if ( (PRInt32) *clock < 0 ||
          ( (PRInt32) *clock == 0 && tmPtr->tm_year != 70))
         result = NULL;
@@ -1714,7 +1714,7 @@ PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
 
 #if defined(SUNOS4) || (__GLIBC__ >= 2) || defined(XP_BEOS) \
         || defined(NETBSD) || defined(OPENBSD) || defined(FREEBSD) \
-        || defined(DARWIN)
+        || defined(DARWIN) || defined(SYMBIAN)
     a.tm_zone = NULL;
     a.tm_gmtoff = tm->tm_params.tp_gmt_offset + tm->tm_params.tp_dst_offset;
 #endif

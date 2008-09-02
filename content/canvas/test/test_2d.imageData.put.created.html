@@ -26,9 +26,6 @@ MochiKit.DOM.addLoadEvent(function () {
 var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');
 
-var _thrown_outer = false;
-try {
-
 var imgdata = ctx.createImageData(100, 50);
 for (var i = 0; i < imgdata.data.length; i += 4) {
     imgdata.data[i] = 0;
@@ -40,11 +37,6 @@ ctx.fillStyle = '#f00';
 ctx.fillRect(0, 0, 100, 50)
 ctx.putImageData(imgdata, 0, 0);
 isPixel(ctx, 50,25, 0,255,0,255, "50,25", "0,255,0,255", 2);
-
-} catch (e) {
-    _thrown_outer = true;
-}
-todo(!_thrown_outer, 'should not throw exception');
 
 SimpleTest.finish();
 

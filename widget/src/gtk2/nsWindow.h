@@ -382,6 +382,7 @@ public:
 
 private:
     void               GetToplevelWidget(GtkWidget **aWidget);
+    GtkWidget         *GetMozContainerWidget();
     void               GetContainerWindow(nsWindow  **aWindow);
     void               SetUrgencyHint(GtkWidget *top_window, PRBool state);
     void              *SetupPluginPort(void);

@@ -280,10 +280,10 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 #ifndef WINCE
     }
     catch(...) {
-      MessageBox(ofn.hwndOwner,
-                 0,
-                 "The filepicker was unexpectedly closed by Windows.",
-                 MB_ICONERROR);
+      MessageBoxW(ofn.hwndOwner,
+                  0,
+                  L"The filepicker was unexpectedly closed by Windows.",
+                  MB_ICONERROR);
       result = PR_FALSE;
     }
 #endif
