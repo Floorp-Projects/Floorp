@@ -35,27 +35,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../../../..
+DEPTH		= ../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= npSDKscriptable
-LIBRARY_NAME	= npSDKscriptable
+LIBRARY_NAME	= npSDKbasic
 
 REQUIRES        = idl \
                   xpcom \
                   nspr \
                   $(NULL)
 
-CPPSRCS         = plugin.cpp \
-		  nsScriptablePeer.cpp
+CPPSRCS         = plugin.cpp
 
-XPIDLSRCS 	= nsIScriptablePluginSample.idl 
-
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libplugingate_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/libplugingate_s.$(LIB_SUFFIX) \
 
 include $(topsrcdir)/config/rules.mk
 
@@ -68,16 +65,14 @@ INSTALL = true
 
 ifeq ($(OS_ARCH), UNIX)
 # This needs to get defined for npapi.h on unix platforms.
-DEFINES		+= -DXP_UNIX
+DEFINES         += -DXP_UNIX
 endif
 
-LOCAL_INCLUDES	+= -I$(srcdir)/$(XPIDL_GEN_DIR) -I$(srcdir)/../../include -I$(srcdir)/../../../include
+LOCAL_INCLUDES	+= -I$(srcdir)/../../include -I$(srcdir)/../../../include
 
 install-plugin:	$(SHARED_LIBRARY)
-	$(INSTALL_PLUGIN) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/plugins
 ifdef SHARED_LIBRARY
 	$(INSTALL_PLUGIN) $(SHARED_LIBRARY) $(DIST)/bin/plugins
 endif
 
 libs:: install-plugin
-
