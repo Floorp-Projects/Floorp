@@ -48,11 +48,8 @@
 
 #define FASTCALL JS_FASTCALL
 
-#ifdef _MSC_VER
-#define __msvc_only(x)  x
+#ifdef WIN32
 #include <windows.h>
-#else
-#define __msvc_only(x)
 #endif
 
 #ifdef DEBUG
