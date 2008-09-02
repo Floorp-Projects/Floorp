@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -14,12 +15,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
+#   IBM Corp.
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,62 +36,53 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-MODULE      = plugin
-
-ifdef MOZ_DEBUG
-BUILDSTYLE	= Development
-else
-BUILDSTYLE	= Deployment
-endif
-
-PROJECT=DefaultPlugin.xcodeproj
-PROJECT_ARG=-project $(PROJECT)
-PBBUILD_ARG=$(PBBUILD_SETTINGS)
-
-TARGET		= "Default Plugin"
+MODULE		= plugin
+LIBRARY_NAME	= npnulos2
+RESFILE		= npnulos2.res
 
 PACKAGE_FILE = npnul.pkg
 
-unexport CC CXX
+REQUIRES	= java \
+		  xpcom \
+		  pref \
+		  $(NULL)
 
-# for objdir builds, copy the project, and symlink the sources
-ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
-ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-export::
-	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/$(PROJECT) .
-	ln -fs $(srcdir)/English.lproj
-	ln -fs $(srcdir)/DefaultPluginPrefix.h
-	ln -fs $(srcdir)/NullPlugin.cpp
-	ln -fs $(srcdir)/npmac.cpp
-	ln -fs $(srcdir)/Info-*.plist .
-	ln -fs $(srcdir)/NullPlugin.rsrc
+CPPSRCS		= \
+		maindll.cpp \
+		plugin.cpp \
+		dbg.cpp \
+		dialogs.cpp \
+		npshell.cpp \
+		npos2.cpp \
+		utils.cpp \
+		$(NULL)
 
-GARBAGE_DIRS += $(PROJECT)
-GARBAGE += \
-	English.lproj \
-	DefaultPluginPrefix.h \
-	NullPlugin.cpp \
-	npmac.cpp \
-	Info-*.plist \
-	NullPlugin.rsrc \
-	$(NULL)
+# plugins should always be shared, even in the "static" build
+FORCE_SHARED_LIB = 1
+
+NO_DIST_INSTALL	= 1
+NO_INSTALL = 1
+
+include $(topsrcdir)/config/rules.mk
+
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
+		$(NULL)
+
+install-plugin: $(SHARED_LIBRARY)
+ifdef SHARED_LIBRARY
+	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins
 endif
 
-GARBAGE_DIRS += build
+libs:: install-plugin
 
-libs install:: install-plugin
-
-install-plugin: build-plugin
-	$(INSTALL) "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin" $(DIST)/bin/plugins
-
-build-plugin:
-	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
-	echo -n NSPLMOSS > "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin/Contents/PkgInfo"
+install:: $(SHARED_LIBRARY)
+ifdef SHARED_LIBRARY
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/plugins
+endif
