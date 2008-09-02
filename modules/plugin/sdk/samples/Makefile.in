@@ -42,7 +42,7 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = common simple
+DIRS = common
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS += basic/windows scriptable/windows winless/windows
