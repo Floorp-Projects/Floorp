@@ -2354,12 +2354,6 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
         js_TrashTree(cx, f);
 }
 
-void
-js_DeepAbort(JSContext* cx)
-{
-    JS_TRACE_MONITOR(cx).recorder->deepAbort();
-}
-
 #if defined NANOJIT_IA32
 static bool
 js_CheckForSSE2()
