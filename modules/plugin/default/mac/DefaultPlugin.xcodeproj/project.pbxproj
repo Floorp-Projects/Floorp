@@ -32,7 +32,7 @@
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		08EA7FFBFE8413EDC02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		0F64AF2C0433C8A200A96652 /* DefaultPluginPrefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultPluginPrefix.h; sourceTree = "<group>"; };
-		4D1684AC0830226300080847 /* Info-DefaultPlugin.plist */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "Info-DefaultPlugin.plist"; sourceTree = "<group>"; };
+		4D1684AC0830226300080847 /* Info-DefaultPlugin.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-DefaultPlugin.plist"; sourceTree = "<group>"; };
 		4D1684AD0830226300080847 /* Default Plugin.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Default Plugin.plugin"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A7D3AB036E359F01A96660 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		F5E0C34D036A12DF01A96660 /* NullPlugin.rsrc */ = {isa = PBXFileReference; lastKnownFileType = archive.rsrc; path = NullPlugin.rsrc; sourceTree = SOURCE_ROOT; };
@@ -214,22 +214,21 @@
 					"USE_SYSTEM_CONSOLE=1",
 				);
 				HEADER_SEARCH_PATHS = (
-					../../../../../dist/sdk/xpcom/include,
-					../../../../../dist/include/caps,
-					../../../../../dist/include/java,
-					../../../../../dist/include/js,
-					../../../../../dist/include/nspr,
-					../../../../../dist/include/nspr/obsolete,
-					../../../../../dist/include/oji,
-					../../../../../dist/include/plugin,
-					../../../../../dist/include/xpcom,
-					../../../../../dist/include/xpconnect,
-					../../../../../dist/include,
+					../../../../dist/sdk/xpcom/include,
+					../../../../dist/include/caps,
+					../../../../dist/include/java,
+					../../../../dist/include/js,
+					../../../../dist/include/nspr,
+					../../../../dist/include/nspr/obsolete,
+					../../../../dist/include/oji,
+					../../../../dist/include/plugin,
+					../../../../dist/include/xpcom,
+					../../../../dist/include/xpconnect,
+					../../../../dist/include,
 					/Developer/Headers/FlatCarbon,
 				);
 				INFOPLIST_FILE = "Info-DefaultPlugin.plist";
 				LIBRARY_SEARCH_PATHS = /usr/lib;
-				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
