@@ -394,6 +394,9 @@ js_FlushJITCache(JSContext* cx);
 extern void
 js_FlushJITOracle(JSContext* cx);
 
+extern void
+js_DeepAbort(JSContext* cx);
+
 #endif /* defined JS_TRACER */
 
 #endif /* jstracer_h___ */
