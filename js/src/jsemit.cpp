@@ -1568,7 +1568,8 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
      */
     *vp = JSVAL_HOLE;
     do {
-        if (cg->treeContext.flags & (TCF_IN_FUNCTION | TCF_COMPILE_N_GO)) {
+        if ((cg->treeContext.flags & TCF_IN_FUNCTION) ||
+            cx->fp->varobj == cx->fp->scopeChain) {
             /* XXX this will need revising when 'let const' is added. */
             stmt = js_LexicalLookup(&cg->treeContext, atom, NULL);
             if (stmt)
@@ -1589,13 +1590,12 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * nor can prop be deleted.
              */
             if (cg->treeContext.flags & TCF_IN_FUNCTION) {
-                if (js_LookupLocal(cx, cg->treeContext.u.fun, atom, NULL) !=
+                if (js_LookupLocal(cx, cg->treeContext.fun, atom, NULL) !=
                     JSLOCAL_NONE) {
                     break;
                 }
-            } else {
-                JS_ASSERT(cg->treeContext.flags & TCF_COMPILE_N_GO);
-                obj = cg->treeContext.u.scopeChain;
+            } else if (cg->treeContext.flags & TCF_COMPILE_N_GO) {
+                obj = cx->fp->varobj;
                 ok = OBJ_LOOKUP_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &pobj,
                                          &prop);
                 if (!ok)
@@ -1773,7 +1773,7 @@ AdjustBlockSlot(JSContext *cx, JSCodeGenerator *cg, jsint slot)
 {
     JS_ASSERT((jsuint) slot < cg->maxStackDepth);
     if (cg->treeContext.flags & TCF_IN_FUNCTION) {
-        slot += cg->treeContext.u.fun->u.i.nvars;
+        slot += cg->treeContext.fun->u.i.nvars;
         if ((uintN) slot >= SLOTNO_LIMIT) {
             js_ReportCompileErrorNumber(cx, CG_TS(cg), NULL,
                                         JSREPORT_ERROR,
@@ -1810,6 +1810,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JSStmtInfo *stmt;
     jsint slot;
     JSOp op;
+    JSStackFrame *fp;
     JSLocalKind localKind;
     uintN index;
     JSAtomListElement *ale;
@@ -1869,64 +1870,79 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         return JS_TRUE;
 
     if (!(tc->flags & TCF_IN_FUNCTION)) {
-        JSStackFrame *caller;
+        if ((cx->fp->flags & JSFRAME_SPECIAL) && cx->fp->fun) {
+            if (cg->staticDepth > JS_DISPLAY_SIZE)
+                goto out;
 
-        caller = tc->parseContext->callerFrame;
-        if (caller) {
-            JS_ASSERT(tc->flags & TCF_COMPILE_N_GO);
-            JS_ASSERT(caller->script);
-            if (!caller->fun || caller->varobj != tc->u.scopeChain)
-                return JS_TRUE;
+            localKind = js_LookupLocal(cx, cx->fp->fun, atom, &index);
+            if (localKind != JSLOCAL_NONE) {
+                if (PN_OP(pn) == JSOP_NAME) {
+                    ATOM_LIST_SEARCH(ale, &cg->upvarList, atom);
+                    if (!ale) {
+                        uint32 cookie, length, *vector;
 
-            /*
-             * We are compiling eval or debug script inside a function frame
-             * and the scope chain matches function's variable object.
-             * Optimize access to function's arguments and variable and the
-             * arguments object.
-             */
-            if (PN_OP(pn) != JSOP_NAME || cg->staticDepth > JS_DISPLAY_SIZE)
-                goto arguments_check;
-            localKind = js_LookupLocal(cx, caller->fun, atom, &index);
-            if (localKind == JSLOCAL_NONE)
-                goto arguments_check;
+                        ale = js_IndexAtom(cx, atom, &cg->upvarList);
+                        if (!ale)
+                            return JS_FALSE;
+                        JS_ASSERT(ALE_INDEX(ale) == cg->upvarList.count - 1);
 
-            ATOM_LIST_SEARCH(ale, &cg->upvarList, atom);
-            if (!ale) {
-                uint32 cookie, length, *vector;
+                        length = cg->upvarMap.length;
+                        JS_ASSERT(ALE_INDEX(ale) <= length);
+                        if (ALE_INDEX(ale) == length) {
+                            length = 2 * JS_MAX(2, length);
+                            vector = (uint32 *)
+                                     JS_realloc(cx, cg->upvarMap.vector,
+                                                length * sizeof *vector);
+                            if (!vector)
+                                return JS_FALSE;
+                            cg->upvarMap.vector = vector;
+                            cg->upvarMap.length = length;
+                        }
 
-                ale = js_IndexAtom(cx, atom, &cg->upvarList);
-                if (!ale)
-                    return JS_FALSE;
-                JS_ASSERT(ALE_INDEX(ale) == cg->upvarList.count - 1);
+                        if (localKind != JSLOCAL_ARG)
+                            index += cx->fp->fun->nargs;
+                        if (index >= JS_BIT(16)) {
+                            cg->treeContext.flags |= TCF_FUN_USES_NONLOCALS;
+                            return JS_TRUE;
+                        }
 
-                length = cg->upvarMap.length;
-                JS_ASSERT(ALE_INDEX(ale) <= length);
-                if (ALE_INDEX(ale) == length) {
-                    length = 2 * JS_MAX(2, length);
-                    vector = (uint32 *)
-                             JS_realloc(cx, cg->upvarMap.vector,
-                                        length * sizeof *vector);
-                    if (!vector)
-                        return JS_FALSE;
-                    cg->upvarMap.vector = vector;
-                    cg->upvarMap.length = length;
-                }
+                        cookie = MAKE_UPVAR_COOKIE(1, index);
+                        cg->upvarMap.vector[ALE_INDEX(ale)] = cookie;
+                    }
 
-                if (localKind != JSLOCAL_ARG)
-                    index += caller->fun->nargs;
-                if (index >= JS_BIT(16)) {
-                    cg->treeContext.flags |= TCF_FUN_USES_NONLOCALS;
+                    pn->pn_op = JSOP_GETUPVAR;
+                    pn->pn_slot = ALE_INDEX(ale);
                     return JS_TRUE;
                 }
-
-                cookie = MAKE_UPVAR_COOKIE(1, index);
-                cg->upvarMap.vector[ALE_INDEX(ale)] = cookie;
             }
-
-            pn->pn_op = JSOP_GETUPVAR;
-            pn->pn_slot = ALE_INDEX(ale);
-            return JS_TRUE;
+            goto out;
         }
+
+        /*
+         * We are compiling a script or eval, and eval is not inside a function
+         * activation.
+         */
+        fp = cx->fp;
+        if (fp->scopeChain != fp->varobj)
+            return JS_TRUE;
+
+        /*
+         * A Script object can be used to split an eval into a compile step
+         * done at construction time, and an execute step done separately,
+         * possibly in a different scope altogether.  We therefore cannot do
+         * any name-to-slot optimizations, but must lookup names at runtime.
+         * Note that script_exec ensures that its caller's frame has a Call
+         * object, so arg and var name lookups will succeed.
+         */
+        if (fp->flags & JSFRAME_SCRIPT_OBJECT)
+            return JS_TRUE;
+
+        /*
+         * We cannot optimize the name access when compiling with an eval or
+         * debugger frame.
+         */
+        if (fp->flags & JSFRAME_SPECIAL)
+            return JS_TRUE;
 
         /*
          * We are optimizing global variables and there may be no pre-existing
@@ -1980,7 +1996,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * to stack slot. Look for an argument or variable in the function and
          * rewrite pn_op and update pn accordingly.
          */
-        localKind = js_LookupLocal(cx, tc->u.fun, atom, &index);
+        localKind = js_LookupLocal(cx, tc->fun, atom, &index);
         if (localKind != JSLOCAL_NONE) {
             op = PN_OP(pn);
             if (localKind == JSLOCAL_ARG) {
@@ -2020,17 +2036,17 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         tc->flags |= TCF_FUN_USES_NONLOCALS;
     }
 
-  arguments_check:
+out:
     /*
-     * Here we either compiling a function body or an eval or debug script
-     * inside a function and couldn't optimize pn, so it's not a global or
-     * local slot name. We are also outside of any with blocks. Check if we
-     * can optimize the predefined arguments variable.
+     * Here we either compiling a function body or an eval script inside a
+     * function and couldn't optimize pn, so it's not a global or local slot
+     * name.
+     *
+     * Now we must check for the predefined arguments variable.  It may be
+     * overridden by assignment, in which case the function is heavyweight
+     * and the interpreter will look up 'arguments' in the function's call
+     * object.
      */
-    JS_ASSERT((tc->flags & TCF_IN_FUNCTION) ||
-              (tc->parseContext->callerFrame &&
-               tc->parseContext->callerFrame->fun &&
-               tc->parseContext->callerFrame->varobj == tc->u.scopeChain));
     if (pn->pn_op == JSOP_NAME &&
         atom == cx->runtime->atomState.argumentsAtom) {
         pn->pn_op = JSOP_ARGUMENTS;
@@ -3147,6 +3163,11 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
         CG_SWITCH_TO_MAIN(cg);
     }
 
+    if (!(cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT) &&
+        (cg->treeContext.flags & TCF_COMPILE_N_GO)) {
+        STOBJ_SET_PARENT(FUN_OBJECT(cg->treeContext.fun), cx->fp->scopeChain);
+    }
+
     return js_EmitTree(cx, cg, body) &&
            js_Emit1(cx, cg, JSOP_STOP) >= 0 &&
            js_NewScriptFromCG(cx, cg);
@@ -3971,7 +3992,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                              cg->codePool, cg->notePool,
                              pn->pn_pos.begin.lineno);
         cg2->treeContext.flags = (uint16) (pn->pn_flags | TCF_IN_FUNCTION);
-        cg2->treeContext.u.fun = fun;
+        cg2->treeContext.fun = fun;
         cg2->staticDepth = cg->staticDepth + 1;
         cg2->parent = cg;
 
@@ -4026,9 +4047,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * instantiating top-level functions in the non-eval case.
              */
             JS_ASSERT(!cg->treeContext.topStmt);
-            op = (cg->treeContext.parseContext->callerFrame)
-                 ? JSOP_CLOSURE
-                 : JSOP_DEFFUN;
+            op = (cx->fp->flags & JSFRAME_EVAL) ? JSOP_CLOSURE : JSOP_DEFFUN;
             EMIT_INDEX_OP(op, index);
             CG_SWITCH_TO_MAIN(cg);
 
@@ -4039,7 +4058,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #ifdef DEBUG
             JSLocalKind localKind =
 #endif
-                js_LookupLocal(cx, cg->treeContext.u.fun, fun->atom, &slot);
+                js_LookupLocal(cx, cg->treeContext.fun, fun->atom, &slot);
             JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
             JS_ASSERT(pn->pn_index == (uint32) -1);
             pn->pn_index = index;
