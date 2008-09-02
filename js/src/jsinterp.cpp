@@ -7051,7 +7051,7 @@ js_Interpret(JSContext *cx)
 
     if (tr) {
         JS_TRACE_MONITOR(cx).recorder = tr;
-        tr->deepAbort();
+        js_DeepAbort(cx);
     }
     return ok;
 
