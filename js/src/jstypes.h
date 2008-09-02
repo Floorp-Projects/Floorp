@@ -161,16 +161,14 @@
 #define JS_FRIEND_API(t)    JS_PUBLIC_API(t)
 #define JS_FRIEND_DATA(t)   JS_PUBLIC_DATA(t)
 
-/*
 #if defined(_MSC_VER) && defined(_M_IX86)
 #define JS_FASTCALL __fastcall
 #elif defined(__GNUC__) && defined(__i386__)
 #define JS_FASTCALL __attribute__((fastcall))
 #else
-*/
 #define JS_FASTCALL
 #define JS_NO_FASTCALL
-//#endif
+#endif
 
 #ifndef JS_INLINE
 # if defined __cplusplus
