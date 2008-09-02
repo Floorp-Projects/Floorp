@@ -152,8 +152,8 @@ endif
 endif
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-CMSRCS = MacLaunchHelper.m
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS += MacLaunchHelper.mm
 CPPSRCS += nsCommandLineServiceMac.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/bootstrap/appleevents
 OS_CXXFLAGS += -fexceptions

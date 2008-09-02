@@ -52,14 +52,12 @@ JS_BEGIN_EXTERN_C
 
 JS_STATIC_ASSERT(JSTRACE_STRING == 2);
 
-#define JSTRACE_NAMESPACE   3
-#define JSTRACE_QNAME       4
-#define JSTRACE_XML         5
+#define JSTRACE_XML         3
 
 /*
  * One past the maximum trace kind.
  */
-#define JSTRACE_LIMIT       6
+#define JSTRACE_LIMIT       4
 
 /*
  * We use the trace kinds as the types for all GC things except external
@@ -68,8 +66,6 @@ JS_STATIC_ASSERT(JSTRACE_STRING == 2);
 #define GCX_OBJECT              JSTRACE_OBJECT      /* JSObject */
 #define GCX_DOUBLE              JSTRACE_DOUBLE      /* jsdouble */
 #define GCX_STRING              JSTRACE_STRING      /* JSString */
-#define GCX_NAMESPACE           JSTRACE_NAMESPACE   /* JSXMLNamespace */
-#define GCX_QNAME               JSTRACE_QNAME       /* JSXMLQName */
 #define GCX_XML                 JSTRACE_XML         /* JSXML */
 #define GCX_EXTERNAL_STRING     JSTRACE_LIMIT       /* JSString with external
                                                        chars */
@@ -231,7 +227,7 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
 #define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
 
 #if JS_HAS_XML_SUPPORT
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_XML)
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) < JSTRACE_LIMIT)
 #else
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_STRING)
 #endif
@@ -240,7 +236,7 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
  * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_STRING is the last non-xml
  * trace kind when JS_HAS_XML_SUPPORT is false.
  */
-JS_STATIC_ASSERT(JSTRACE_STRING + 1 == JSTRACE_NAMESPACE);
+JS_STATIC_ASSERT(JSTRACE_STRING + 1 == JSTRACE_XML);
 
 /*
  * Trace jsval when JSVAL_IS_OBJECT(v) can be an arbitrary GC thing casted as

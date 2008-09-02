@@ -4,9 +4,12 @@
     <title>Bug 263683 Layout Reftest</title>
     <script type="text/javascript">
 
-      var userSet = false;
-      var userValue = null;
-      var prefName = "ui.textHighlightBackground";
+      var userSetBG = false;
+      var userValueBG = null;
+      var prefNameBG = "ui.textHighlightBackground";
+      var userSetFG = false;
+      var userValueFG = null;
+      var prefNameFG = "ui.textHighlightForeground";
 
       function onLoad() {
         // Request security privileges
@@ -17,13 +20,17 @@
                               .getService(Components.interfaces.nsIPrefBranch);
 
         // Check to see if this pref has a user-set value. If so, store it
-        userSet = prefs.prefHasUserValue(prefName);
+        userSetFG = prefs.prefHasUserValue(prefNameFG);
+        userSetBG = prefs.prefHasUserValue(prefNameBG);
 
-        if (userSet)
-          userValue = prefs.getCharPref(prefName);
+        if (userSetFG)
+          userValueFG = prefs.getCharPref(prefNameFG);
+        if (userSetBG)
+          userValueBG = prefs.getCharPref(prefNameBG);
 
         // Set pref to test colour used in reference file
-        prefs.setCharPref(prefName, "#f0e020");
+        prefs.setCharPref(prefNameBG, "#f0e020");
+        prefs.setCharPref(prefNameFG, "#000000");
 
         var textToSelect = document.getElementById("selecttext");
 
@@ -54,12 +61,15 @@
         var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);
  
-        prefs.clearUserPref(prefName);
+        prefs.clearUserPref(prefNameFG);
+        prefs.clearUserPref(prefNameBG);
 
-        if (!userSet)
-          return;
-  
-        prefs.setCharPref(prefName, userValue);
+        if (userSetFG)
+          prefs.setCharPref(prefNameFG, userValueFG);
+
+        if (userSetBG)
+          prefs.setCharPref(prefNameBG, userValueBG);
+ 
       }
 
     </script>

@@ -39,7 +39,7 @@
 #include "domstubs.idl"
 
 %{C++
-#ifdef WINCE
+#ifdef ERROR
 #undef ERROR
 #endif
 %}

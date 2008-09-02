@@ -118,7 +118,7 @@ nsLinkableAccessible::TakeFocus()
   if (actionAcc)
     return actionAcc->TakeFocus();
 
-  return NS_OK;
+  return nsHyperTextAccessibleWrap::TakeFocus();
 }
 
 NS_IMETHODIMP

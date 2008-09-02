@@ -133,6 +133,9 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   doc->SetPrincipal(aPrincipal);
   doc->SetBaseURI(aBaseURI);
 
+  // XMLDocuments get to be UTF-8 by default, unlike the legacy HTML mess
+  doc->SetDocumentCharacterSet(NS_LITERAL_CSTRING("UTF-8"));
+  
   if (aDoctype) {
     nsCOMPtr<nsIDOMNode> tmpNode;
     rv = doc->AppendChild(aDoctype, getter_AddRefs(tmpNode));

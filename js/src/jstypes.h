@@ -163,7 +163,8 @@
 
 #if defined(_MSC_VER) && defined(_M_IX86)
 #define JS_FASTCALL __fastcall
-#elif defined(__GNUC__) && defined(__i386__)
+#elif defined(__GNUC__) && defined(__i386__) &&                         \
+  ((__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))
 #define JS_FASTCALL __attribute__((fastcall))
 #else
 #define JS_FASTCALL

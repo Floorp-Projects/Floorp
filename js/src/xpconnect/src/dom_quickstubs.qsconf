@@ -1,0 +1,548 @@
+# -*- Mode: Python -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+#   Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2008
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Jason Orendorff <jorendorff@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+name = 'DOM'
+
+# A quick warning:
+#
+# Attributes or methods that call GetCurrentNativeCallContext must not be
+# quick-stubbed, because quick stubs don't generate a native call context.
+# qsgen.py has no way of knowing which attributes and methods do this, as it
+# looks at interfaces, not implementations.  The symptoms, if you quick-stub
+# one of those, can be really weird, because GetCurrentNativeCallContext
+# doesn't crash--it may in fact return a plausible wrong answer.
+
+members = [ 
+    # dom/public/idl/base
+    #
+    # Note that many implementations of interfaces in this directory
+    # use GetCurrentNativeCallContext, notably:
+    #   - nsIDOMCrypto.{generateCRMFRequest,signText}
+    #   - nsIDOMLocation.reload
+    #   - nsIDOMNSHistory.go
+    #   - nsIDOMJSNavigator.preference
+    #   - nsIDOMJSPluginArray.refresh
+    #   - nsIDOMWindowInternal.postMessage
+    #   - nsIDOMJSWindow.{prompt,setTimeout,setInterval,open,openDialog}
+    #
+    # (And nsIDOMModalContentWindow.returnValue is an attribute of type
+    # nsIVariant, which qsgen.py can't handle.)
+    #
+    'nsIDOMWindow.name',
+    'nsIDOMWindow.parent',
+    'nsIDOMWindow.top',
+    'nsIDOMWindow.document',
+    'nsIDOMWindow.getSelection',
+    'nsIDOMWindowCollection.item',
+    'nsIDOMWindowCollection.length',
+    'nsIDOMLocation.hostname',
+    'nsIDOMLocation.href',
+    'nsIDOMScreen.top',
+    'nsIDOMScreen.height',
+    'nsIDOMScreen.width',
+    'nsIDOMScreen.left',
+    'nsIDOMClientRect.top',
+    'nsIDOMClientRect.right',
+    'nsIDOMClientRect.bottom',
+    'nsIDOMClientRect.left',
+    'nsIDOMClientRectList.item',
+    'nsIDOMClientRectList.length',
+
+    # dom/public/idl/canvas
+    #
+    # nsIDOMCanvasRenderingContext2D
+    # NOTE: attributes strokeStyle and fillStyle are nsIVariant
+    # NOTE: drawImage(), getImageData(), and putImageData() use
+    #       GetCurrentNativeCallContext
+    'nsIDOMCanvasRenderingContext2D.canvas',
+    'nsIDOMCanvasRenderingContext2D.save',
+    'nsIDOMCanvasRenderingContext2D.restore',
+    'nsIDOMCanvasRenderingContext2D.scale',
+    'nsIDOMCanvasRenderingContext2D.rotate',
+    'nsIDOMCanvasRenderingContext2D.translate',
+    'nsIDOMCanvasRenderingContext2D.transform',
+    'nsIDOMCanvasRenderingContext2D.setTransform',
+    'nsIDOMCanvasRenderingContext2D.globalAlpha',
+    'nsIDOMCanvasRenderingContext2D.globalCompositeOperation',
+    'nsIDOMCanvasRenderingContext2D.lineWidth',
+    'nsIDOMCanvasRenderingContext2D.lineCap',
+    'nsIDOMCanvasRenderingContext2D.lineJoin',
+    'nsIDOMCanvasRenderingContext2D.miterLimit',
+    'nsIDOMCanvasRenderingContext2D.clearRect',
+    'nsIDOMCanvasRenderingContext2D.fillRect',
+    'nsIDOMCanvasRenderingContext2D.strokeRect',
+    'nsIDOMCanvasRenderingContext2D.beginPath',
+    'nsIDOMCanvasRenderingContext2D.closePath',
+    'nsIDOMCanvasRenderingContext2D.moveTo',
+    'nsIDOMCanvasRenderingContext2D.lineTo',
+    'nsIDOMCanvasRenderingContext2D.quadraticCurveTo',
+    'nsIDOMCanvasRenderingContext2D.bezierCurveTo',
+    'nsIDOMCanvasRenderingContext2D.arcTo',
+    'nsIDOMCanvasRenderingContext2D.arc',
+    'nsIDOMCanvasRenderingContext2D.rect',
+    'nsIDOMCanvasRenderingContext2D.fill',
+    'nsIDOMCanvasRenderingContext2D.stroke',
+    'nsIDOMCanvasRenderingContext2D.clip',
+    'nsIDOMCanvasRenderingContext2D.font',
+    'nsIDOMCanvasRenderingContext2D.textAlign',
+    'nsIDOMCanvasRenderingContext2D.textBaseline',
+    'nsIDOMCanvasRenderingContext2D.fillText',
+    'nsIDOMCanvasRenderingContext2D.strokeText',
+    'nsIDOMCanvasRenderingContext2D.measureText',
+    'nsIDOMCanvasRenderingContext2D.isPointInPath',
+    'nsIDOMTextMetrics.width',
+
+    # dom/public/idl/core
+    'nsIDOMCharacterData.data',
+    'nsIDOMCharacterData.length',
+    'nsIDOMDocument.documentElement',
+    'nsIDOMDocument.implementation',
+    'nsIDOMDocument.getElementsByTagName',
+    'nsIDOMDocument.doctype',
+    'nsIDOMDocument.getElementsByTagNameNS',
+    'nsIDOMDocument.getElementById',
+    'nsIDOMDocument.createDocumentFragment',
+    'nsIDOMDocument.createElement',
+    'nsIDOMDocument.importNode',
+    'nsIDOMDocument.createTextNode',
+    'nsIDOMElement.removeAttributeNS',
+    'nsIDOMElement.removeAttribute',
+    'nsIDOMElement.getAttribute',
+    'nsIDOMElement.getElementsByTagName',
+    'nsIDOMElement.setAttribute',
+    'nsIDOMElement.getElementsByTagNameNS',
+    'nsIDOMElement.hasAttributeNS',
+    'nsIDOMElement.tagName',
+    'nsIDOMElement.setAttributeNS',
+    'nsIDOMElement.hasAttribute',
+    'nsIDOMElement.getAttributeNS',
+    'nsIDOMNamedNodeMap.item',
+    'nsIDOMNamedNodeMap.length',
+    'nsIDOMNode.appendChild',
+    'nsIDOMNode.nextSibling',
+    'nsIDOMNode.cloneNode',
+    'nsIDOMNode.firstChild',
+    'nsIDOMNode.prefix',
+    'nsIDOMNode.nodeValue',
+    'nsIDOMNode.childNodes',
+    'nsIDOMNode.normalize',
+    'nsIDOMNode.nodeName',
+    'nsIDOMNode.namespaceURI',
+    'nsIDOMNode.hasChildNodes',
+    'nsIDOMNode.previousSibling',
+    'nsIDOMNode.nodeType',
+    'nsIDOMNode.insertBefore',
+    'nsIDOMNode.replaceChild',
+    'nsIDOMNode.localName',
+    'nsIDOMNode.lastChild',
+    'nsIDOMNode.ownerDocument',
+    'nsIDOMNode.parentNode',
+    'nsIDOMNode.removeChild',
+    'nsIDOMNode.hasAttributes',
+    'nsIDOMNode.attributes',
+    'nsIDOMNodeList.item',
+    'nsIDOMNodeList.length',
+    'nsIDOMText.splitText',
+    'nsIDOM3Document.documentURI',
+    'nsIDOM3Document.adoptNode',
+    'nsIDOM3Document.renameNode',
+    'nsIDOM3Node.compareDocumentPosition',
+    'nsIDOM3Node.getUserData',
+    'nsIDOM3Node.baseURI',
+    'nsIDOM3Node.textContent',
+    'nsIDOM3Node.isSameNode',
+    'nsIDOM3Node.lookupNamespaceURI',
+    'nsIDOM3Node.setUserData',
+    'nsIDOM3Node.lookupPrefix',
+    'nsIDOM3Node.isDefaultNamespace',
+    'nsIDOM3Node.isEqualNode',
+    'nsIDOM3Text.isElementContentWhitespace',
+    'nsIDOM3Text.replaceWholeText',
+    'nsIDOM3Text.wholeText',
+    'nsIDOMDOMStringList.item',
+    'nsIDOMDOMStringList.length',
+    'nsIDOMDOMStringList.contains',
+    'nsIDOMNameList.getName',
+    'nsIDOMNameList.contains',
+    'nsIDOMNameList.containsNS',
+    'nsIDOMNameList.length',
+    'nsIDOMNameList.getNamespaceURI',
+    'nsIDOMNSDocument.getElementsByClassName',
+    'nsIDOMNSDocument.title',
+    'nsIDOMNSDocument.hasFocus',
+    'nsIDOMNSDocument.location',
+    'nsIDOMNSDocument.elementFromPoint',
+    'nsIDOMNSDocument.activeElement',
+    'nsIDOMNSDocument.getBoxObjectFor',
+    'nsIDOMXMLDocument.evaluateXPointer',
+    'nsIDOMXMLDocument.evaluateFIXptr',
+    'nsIDOMNSEditableElement.editor',
+    'nsIDOMNSEditableElement.setUserInput',
+    'nsIDOMNSElement.getClientRects',
+    'nsIDOMNSElement.getBoundingClientRect',
+    'nsIDOMNSElement.getElementsByClassName',
+    'nsIDOMNSElement.scrollWidth',
+    'nsIDOMNSElement.clientLeft',
+    'nsIDOMNSElement.clientHeight',
+    'nsIDOMNSElement.clientWidth',
+    'nsIDOMNSElement.clientTop',
+
+    # dom/public/idl/css
+    'nsIDOMElementCSSInlineStyle.style',
+    'nsIDOMCSS2Properties.background',
+    'nsIDOMCSS2Properties.height',
+    'nsIDOMCSS2Properties.textAlign',
+    'nsIDOMCSS2Properties.right',
+    'nsIDOMCSS2Properties.bottom',
+    'nsIDOMCSS2Properties.fontSize',
+    'nsIDOMCSS2Properties.backgroundColor',
+    'nsIDOMCSS2Properties.letterSpacing',
+    'nsIDOMCSS2Properties.verticalAlign',
+    'nsIDOMCSS2Properties.color',
+    'nsIDOMCSS2Properties.top',
+    'nsIDOMCSS2Properties.width',
+    'nsIDOMCSS2Properties.display',
+    'nsIDOMCSS2Properties.zIndex',
+    'nsIDOMCSS2Properties.position',
+    'nsIDOMCSS2Properties.left',
+    'nsIDOMCSS2Properties.visibility',
+    'nsIDOMNSCSS2Properties.opacity',
+    'nsIDOMRect.top',
+    'nsIDOMRect.right',
+    'nsIDOMRect.left',
+    'nsIDOMRect.bottom',
+    'nsIDOMViewCSS.getComputedStyle',
+
+    # dom/public/idl/events
+    'nsIDOMEvent.target',
+    'nsIDOMEvent.preventDefault',
+    'nsIDOMEvent.cancelable',
+    'nsIDOMEvent.currentTarget',
+    'nsIDOMEvent.timeStamp',
+    'nsIDOMEvent.bubbles',
+    'nsIDOMEvent.type',
+    'nsIDOMEvent.initEvent',
+    'nsIDOMEvent.stopPropagation',
+    'nsIDOMEvent.eventPhase',
+    'nsIDOMEventTarget.dispatchEvent',
+    'nsIDOMEventTarget.removeEventListener',
+    'nsIDOMEventTarget.addEventListener',
+    'nsIDOMEventListener.handleEvent',
+    'nsIDOMCustomEvent.setCurrentTarget',
+    'nsIDOMCustomEvent.setEventPhase',
+    'nsIDOMDocumentEvent.createEvent',
+    'nsIDOMMouseEvent.clientX',
+    'nsIDOMMouseEvent.clientY',
+    'nsIDOMMouseEvent.relatedTarget',
+    'nsIDOMMouseEvent.shiftKey',
+    'nsIDOMMouseEvent.button',
+    'nsIDOMMouseEvent.altKey',
+    'nsIDOMMouseEvent.metaKey',
+    'nsIDOMMouseEvent.ctrlKey',
+    'nsIDOMMouseEvent.screenY',
+    'nsIDOMMouseEvent.screenX',
+    'nsIDOMNSEvent.originalTarget',
+    'nsIDOMNSEvent.preventCapture',
+    'nsIDOMKeyEvent.ctrlKey',
+    'nsIDOMKeyEvent.shiftKey',
+    'nsIDOMKeyEvent.keyCode',
+    'nsIDOMKeyEvent.metaKey',
+    'nsIDOMKeyEvent.charCode',
+    'nsIDOMKeyEvent.altKey',
+    'nsIDOMMutationEvent.attrName',
+    'nsIDOMMutationEvent.relatedNode',
+    'nsIDOMMutationEvent.attrChange',
+    'nsIDOMMutationEvent.newValue',
+    'nsIDOMMutationEvent.prevValue',
+    'nsIDOMNSUIEvent.getPreventDefault',
+    'nsIDOMNSUIEvent.which',
+    'nsIDOMNSUIEvent.rangeParent',
+    'nsIDOMNSUIEvent.rangeOffset',
+    'nsIDOMNSUIEvent.pageX',
+    'nsIDOMNSUIEvent.pageY',
+    'nsIDOMNSUIEvent.isChar',
+
+    # dom/public/idl/geolocation - None.
+
+    # dom/public/idl/html
+    'nsIDOMHTMLAnchorElement.href',
+    'nsIDOMHTMLAnchorElement.rel',
+    'nsIDOMHTMLAnchorElement.target',
+    'nsIDOMHTMLBaseElement.href',
+    'nsIDOMHTMLBaseElement.target',
+    'nsIDOMHTMLButtonElement.name',
+    'nsIDOMHTMLButtonElement.form',
+    'nsIDOMHTMLButtonElement.value',
+    'nsIDOMHTMLButtonElement.disabled',
+    'nsIDOMHTMLCollection.item',
+    'nsIDOMHTMLCollection.length',
+    'nsIDOMHTMLDocument.body',
+    'nsIDOMHTMLDocument.getElementsByName',
+    'nsIDOMHTMLDocument.anchors',
+    'nsIDOMHTMLDocument.links',
+    'nsIDOMHTMLDocument.title',
+    'nsIDOMHTMLDocument.URL',
+    'nsIDOMHTMLDocument.referrer',
+    'nsIDOMHTMLDocument.forms',
+    'nsIDOMHTMLDocument.cookie',
+    'nsIDOMHTMLDocument.images',
+    'nsIDOMHTMLDocument.close',
+    'nsIDOMHTMLElement.className',
+    'nsIDOMHTMLElement.id',
+    'nsIDOMHTMLElement.title',
+    'nsIDOMHTMLFormElement.elements',
+    'nsIDOMHTMLFormElement.name',
+    'nsIDOMHTMLFormElement.submit',
+    'nsIDOMHTMLFormElement.length',
+    'nsIDOMHTMLFormElement.target',
+    'nsIDOMHTMLFormElement.action',
+    'nsIDOMHTMLFrameElement.src',
+    'nsIDOMHTMLFrameElement.contentDocument',
+    'nsIDOMHTMLFrameElement.name',
+    'nsIDOMHTMLFrameSetElement.rows',
+    'nsIDOMHTMLFrameSetElement.cols',
+    'nsIDOMHTMLIFrameElement.src',
+    'nsIDOMHTMLIFrameElement.contentDocument',
+    'nsIDOMHTMLImageElement.src',
+    'nsIDOMHTMLImageElement.name',
+    'nsIDOMHTMLImageElement.height',
+    'nsIDOMHTMLImageElement.width',
+    'nsIDOMHTMLInputElement.defaultChecked',
+    'nsIDOMHTMLInputElement.disabled',
+    'nsIDOMHTMLInputElement.select',
+    'nsIDOMHTMLInputElement.checked',
+    'nsIDOMHTMLInputElement.type',
+    'nsIDOMHTMLInputElement.form',
+    'nsIDOMHTMLInputElement.src',
+    'nsIDOMHTMLInputElement.name',
+    'nsIDOMHTMLInputElement.value',
+    'nsIDOMHTMLLinkElement.disabled',
+    'nsIDOMHTMLOptionElement.index',
+    'nsIDOMHTMLOptionElement.selected',
+    'nsIDOMHTMLOptionElement.form',
+    # Commented out because it's not writable while
+    # nsIDOMNSHTMLOptionElement.text is, which causes bustage when
+    # someone tries to assign .text.
+    #'nsIDOMHTMLOptionElement.text',
+    'nsIDOMHTMLOptionElement.defaultSelected',
+    'nsIDOMHTMLOptionElement.value',
+    'nsIDOMHTMLOptionElement.label',
+    'nsIDOMHTMLOptionElement.disabled',
+    'nsIDOMHTMLOptionsCollection.item',
+    'nsIDOMHTMLOptionsCollection.length',
+    'nsIDOMHTMLSelectElement.name',
+    'nsIDOMHTMLSelectElement.form',
+    'nsIDOMHTMLSelectElement.add',
+    'nsIDOMHTMLSelectElement.value',
+    'nsIDOMHTMLSelectElement.disabled',
+    'nsIDOMHTMLSelectElement.length',
+    'nsIDOMHTMLSelectElement.remove',
+    'nsIDOMHTMLSelectElement.selectedIndex',
+    'nsIDOMHTMLSelectElement.type',
+    'nsIDOMHTMLSelectElement.options',
+    'nsIDOMHTMLSelectElement.size',
+    'nsIDOMHTMLStyleElement.disabled',
+    'nsIDOMHTMLTableCellElement.colSpan',
+    'nsIDOMHTMLTableCellElement.headers',
+    'nsIDOMHTMLTableCellElement.cellIndex',
+    'nsIDOMHTMLTableCellElement.rowSpan',
+    'nsIDOMHTMLTableCellElement.abbr',
+    'nsIDOMHTMLTableCellElement.scope',
+    'nsIDOMHTMLTableCellElement.noWrap',
+    'nsIDOMHTMLTableCellElement.width',
+    'nsIDOMHTMLTableColElement.span',
+    'nsIDOMHTMLTableColElement.width',
+    'nsIDOMHTMLTableElement.rows',
+    'nsIDOMHTMLTableElement.deleteRow',
+    'nsIDOMHTMLTableElement.summary',
+    'nsIDOMHTMLTableElement.insertRow',
+    'nsIDOMHTMLTableRowElement.sectionRowIndex',
+    'nsIDOMHTMLTableRowElement.rowIndex',
+    'nsIDOMHTMLTableRowElement.cells',
+    'nsIDOMHTMLTableRowElement.deleteCell',
+    'nsIDOMHTMLTableRowElement.insertCell',
+    'nsIDOMHTMLTableSectionElement.rows',
+    'nsIDOMHTMLTableSectionElement.insertRow',
+    'nsIDOMHTMLTableSectionElement.deleteRow',
+    'nsIDOMHTMLTextAreaElement.rows',
+    'nsIDOMHTMLTextAreaElement.name',
+    'nsIDOMHTMLTextAreaElement.form',
+    'nsIDOMHTMLTextAreaElement.defaultValue',
+    'nsIDOMHTMLTextAreaElement.cols',
+    'nsIDOMHTMLTextAreaElement.value',
+    'nsIDOMHTMLTextAreaElement.type',
+    'nsIDOMHTMLTextAreaElement.select',
+    'nsIDOMHTMLTitleElement.text',
+    'nsIDOMHTMLCanvasElement.width',
+    'nsIDOMHTMLCanvasElement.height',
+    'nsIDOMHTMLCanvasElement.getContext',
+    # 'nsIDOMHTMLCanvasElement.toDataURL',  # uses GetCurrentNativeCallContext
+    'nsIDOMNSHTMLAnchorElement.text',
+    'nsIDOMNSHTMLDocument.width',
+    'nsIDOMNSHTMLDocument.height',
+    'nsIDOMNSHTMLDocument.domain',
+    'nsIDOMNSHTMLDocument.getSelection',
+    'nsIDOMNSHTMLDocument.designMode',
+    #'nsIDOMNSHTMLDocument.write',  # uses GetCurrentNativeCallContext
+    #'nsIDOMNSHTMLDocument.writeln',  # uses GetCurrentNativeCallContext
+    'nsIDOMNSHTMLElement.contentEditable',
+    'nsIDOMNSHTMLElement.offsetParent',
+    'nsIDOMNSHTMLElement.innerHTML',
+    'nsIDOMNSHTMLElement.offsetLeft',
+    'nsIDOMNSHTMLElement.offsetTop',
+    'nsIDOMNSHTMLElement.offsetHeight',
+    'nsIDOMNSHTMLElement.offsetWidth',
+    'nsIDOMNSHTMLFrameElement.contentWindow',
+    'nsIDOMNSHTMLImageElement.complete',
+    'nsIDOMNSHTMLInputElement.files',
+    'nsIDOMNSHTMLInputElement.textLength',
+    'nsIDOMNSHTMLInputElement.selectionStart',
+    'nsIDOMNSHTMLInputElement.selectionEnd',
+    'nsIDOMNSHTMLInputElement.setSelectionRange',
+    'nsIDOMNSHTMLOptionCollection.selectedIndex',
+    'nsIDOMNSHTMLOptionElement.text',
+    'nsIDOMNSHTMLSelectElement.item',
+    'nsIDOMNSHTMLTextAreaElement.setSelectionRange',
+    'nsIDOMNSHTMLTextAreaElement.selectionStart',
+    'nsIDOMNSHTMLTextAreaElement.selectionEnd',
+    'nsIDOMNSHTMLTextAreaElement.textLength',
+
+    # dom/public/idl/json - None.
+    # All 4 methods of nsIJSON call GetCurrentNativeCallContext.
+
+    # dom/public/idl/offline - None.
+
+    # dom/public/idl/range
+    'nsIDOMRange.collapsed',
+
+    # dom/public/idl/sidebar - None.
+
+    # dom/public/idl/storage
+    'nsIDOMToString.toString',
+    'nsIDOMStorage.setItem',
+    'nsIDOMStorage.length',
+    'nsIDOMStorage.getItem',
+    'nsIDOMStorage.key',
+    'nsIDOMStorage.removeItem',
+    'nsIDOMStorageItem.value',
+    'nsIDOMStorageWindow.sessionStorage',
+    'nsIDOMStorageWindow.globalStorage',
+
+    # dom/public/idl/stylesheets - None.
+
+    # dom/public/idl/traversal
+    'nsIDOMDocumentTraversal.createNodeIterator',
+    'nsIDOMNodeIterator.nextNode',
+
+    # dom/public/idl/views
+    'nsIDOMDocumentView.defaultView',
+    
+    # dom/public/idl/xbl - None.
+
+    # dom/public/idl/xpath
+    'nsIDOMXPathEvaluator.evaluate',
+    'nsIDOMXPathEvaluator.createExpression',
+    'nsIDOMXPathEvaluator.createNSResolver',
+    'nsIDOMXPathExpression.evaluate',
+    'nsIDOMXPathNSResolver.lookupNamespaceURI',
+    'nsIDOMXPathResult.snapshotItem',
+    'nsIDOMXPathResult.iterateNext',
+    'nsIDOMXPathResult.snapshotLength',
+    'nsIDOMXPathResult.resultType',
+    'nsIDOMXPathResult.numberValue',
+    'nsIDOMXPathResult.stringValue',
+    'nsIDOMXPathResult.booleanValue',
+    'nsIDOMXPathResult.singleNodeValue',
+    'nsIDOMNSXPathExpression.evaluateWithContext',
+
+    # dom/public/idl/xul - None.
+    ]
+
+# Most interfaces can be found by searching the includePath; to find
+# nsIDOMEvent, for example, just look for nsIDOMEvent.idl.  But IDL filenames
+# for very long interface names are slightly abbreviated, and many interfaces
+# don't have their own files, just for extra wackiness.  So qsgen.py needs
+# a little help.
+#
+irregularFilenames = {
+    # abbreviations
+    'nsIDOMNSHTMLOptionCollection': 'nsIDOMNSHTMLOptionCollectn',
+    'nsIDOMHTMLTableSectionElement': 'nsIDOMHTMLTableSectionElem',
+    'nsIDOMHTMLTableCaptionElement': 'nsIDOMHTMLTableCaptionElem',
+    'nsIDOMSVGAnimatedEnumeration': 'nsIDOMSVGAnimatedEnum',
+    'nsIDOMSVGAnimatedPreserveAspectRatio': 'nsIDOMSVGAnimPresAspRatio',
+    'nsIDOMSVGAnimatedTransformList': 'nsIDOMSVGAnimTransformList',
+    'nsIDOMSVGForeignObjectElement': 'nsIDOMSVGForeignObjectElem',
+    'nsIDOMSVGPreserveAspectRatio': 'nsIDOMSVGPresAspectRatio',
+    'nsIDOMSVGTextPositioningElement': 'nsIDOMSVGTextPositionElem',
+    'nsIDOMXULLabeledControlElement': 'nsIDOMXULLabeledControlEl',
+    'nsIDOMXULSelectControlElement': 'nsIDOMXULSelectCntrlEl',
+    'nsIDOMXULSelectControlItemElement': 'nsIDOMXULSelectCntrlItemEl',
+    'nsIDOMXULMultiSelectControlElement': 'nsIDOMXULMultSelectCntrlEl',
+
+    # stowaways
+    'nsIXPointerResult': 'nsIXPointer',
+    'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
+    'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
+    'nsIDOMTextMetrics': 'nsIDOMCanvasRenderingContext2D',
+    'nsIGeolocationUpdate': 'nsIGeolocationProvider',
+    'nsIDOMNSCSS2Properties': 'nsIDOMCSS2Properties',
+    'nsIDOMSVGPathSegArcRel': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegMovetoAbs': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegLinetoAbs': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegArcAbs': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegMovetoRel': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegCurvetoCubicRel': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegLinetoRel': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegLinetoVerticalAbs': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegCurvetoQuadraticRel': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegLinetoVerticalRel': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegLinetoHorizontalAbs': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegCurvetoQuadraticAbs': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegCurvetoCubicSmoothRel': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegClosePath': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegLinetoHorizontalRel': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegCurvetoCubicSmoothAbs': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegCurvetoQuadraticSmoothRel': 'nsIDOMSVGPathSeg',
+    'nsIDOMSVGPathSegCurvetoCubicAbs': 'nsIDOMSVGPathSeg',
+
+    # mistakes
+    'nsIDOMXULTextBoxElement': 'nsIDOMXULTextboxElement',
+    'nsIDOMDOMConstructor': 'nsIDOMConstructor'
+    }

@@ -2097,14 +2097,6 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case JSTRACE_NAMESPACE:
-        name = "namespace";
-        break;
-
-      case JSTRACE_QNAME:
-        name = "qname";
-        break;
-
       case JSTRACE_XML:
         name = "xml";
         break;
@@ -2166,48 +2158,6 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
             break;
 
 #if JS_HAS_XML_SUPPORT
-          case JSTRACE_NAMESPACE:
-          {
-            JSXMLNamespace *ns = (JSXMLNamespace *)thing;
-
-            if (ns->prefix) {
-                n = js_PutEscapedString(buf, bufsize, ns->prefix, 0);
-                buf += n;
-                bufsize -= n;
-            }
-            if (bufsize > 2) {
-                *buf++ = ':';
-                bufsize--;
-                js_PutEscapedString(buf, bufsize, ns->uri, 0);
-            }
-            break;
-          }
-
-          case JSTRACE_QNAME:
-          {
-            JSXMLQName *qn = (JSXMLQName *)thing;
-
-            if (qn->prefix) {
-                n = js_PutEscapedString(buf, bufsize, qn->prefix, 0);
-                buf += n;
-                bufsize -= n;
-            }
-            if (bufsize > 2) {
-                *buf++ = '(';
-                bufsize--;
-                n = js_PutEscapedString(buf, bufsize, qn->uri, 0);
-                buf += n;
-                bufsize -= n;
-                if (bufsize > 3) {
-                    *buf++ = ')';
-                    *buf++ = ':';
-                    bufsize -= 2;
-                    js_PutEscapedString(buf, bufsize, qn->localName, 0);
-                }
-            }
-            break;
-          }
-
           case JSTRACE_XML:
           {
             extern const char *js_xml_class_str[];
@@ -4353,6 +4303,7 @@ JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
     return OBJ_GET_CLASS(cx, obj) == &js_FunctionClass;
 }
 
+JS_BEGIN_EXTERN_C
 JS_STATIC_DLL_CALLBACK(JSBool)
 js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -4463,6 +4414,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
 
     return fs->call(cx, JSVAL_TO_OBJECT(argv[-1]), argc, argv, rval);
 }
+JS_END_EXTERN_C
 
 JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)

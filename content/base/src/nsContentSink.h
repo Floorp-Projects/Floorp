@@ -76,6 +76,7 @@ class nsIContent;
 class nsIViewManager;
 class nsNodeInfoManager;
 class nsScriptLoader;
+class nsIApplicationCache;
 
 #ifdef NS_DEBUG
 
@@ -150,6 +151,25 @@ protected:
   nsContentSink();
   virtual ~nsContentSink();
 
+  enum CacheSelectionAction {
+    // There is no offline cache manifest specified by the document,
+    // or the document was loaded from a cache other than the one it
+    // specifies via its manifest attribute and IS NOT a top-level
+    // document, or an error occurred during the cache selection
+    // algorithm.
+    CACHE_SELECTION_NONE = 0,
+
+    // The offline cache manifest must be updated.
+    CACHE_SELECTION_UPDATE = 1,
+
+    // The document was loaded from a cache other than the one it
+    // specifies via its manifest attribute and IS a top-level
+    // document.  In this case, the document is marked as foreign in
+    // the cache it was loaded from and must be reloaded from the
+    // correct cache (the one it specifies).
+    CACHE_SELECTION_RELOAD = 2
+  };
+
   nsresult Init(nsIDocument* aDoc, nsIURI* aURI,
                 nsISupports* aContainer, nsIChannel* aChannel);
 
@@ -171,6 +191,60 @@ protected:
 
   void PrefetchHref(const nsAString &aHref, nsIContent *aSource,
                     PRBool aExplicit);
+
+  // Gets the cache key (used to identify items in a cache) of the channel.
+  nsresult GetChannelCacheKey(nsIChannel* aChannel, nsACString& aCacheKey);
+
+  // There is an offline cache manifest attribute specified and the
+  // document is allowed to use the offline cache.  Process the cache
+  // selection algorithm for this document and the manifest. Result is
+  // an action that must be taken on the manifest, see
+  // CacheSelectionAction enum above.
+  //
+  // @param aLoadApplicationCache
+  //        The application cache from which the load originated, if
+  //        any.
+  // @param aManifestURI
+  //        The manifest URI listed in the document.
+  // @param aIsTopDocument
+  //        TRUE if this is a toplevel document.
+  // @param aFetchedWithHTTPGetOrEquiv
+  //        TRUE if this was fetched using the HTTP GET method.
+  // @param aAction
+  //        Out parameter, returns the action that should be performed
+  //        by the calling function.
+  nsresult SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
+                             nsIURI *aManifestURI,
+                             PRBool aIsTopDocument,
+                             PRBool aFetchedWithHTTPGetOrEquiv,
+                             CacheSelectionAction *aAction);
+
+  // There is no offline cache manifest attribute specified.  Process
+  // the cache selection algorithm w/o the manifest. Result is an
+  // action that must be taken, see CacheSelectionAction enum
+  // above. In case the offline cache manifest has to be updated the
+  // manifest URI is returned in aManifestURI.
+  //
+  // @param aLoadApplicationCache
+  //        The application cache from which the load originated, if
+  //        any.
+  // @param aIsTopDocument
+  //        TRUE if this is a toplevel document.
+  // @param aManifestURI
+  //        Out parameter, returns the manifest URI of the cache that
+  //        was selected.
+  // @param aAction
+  //        Out parameter, returns the action that should be performed
+  //        by the calling function.
+  nsresult SelectDocAppCacheNoManifest(nsIApplicationCache *aLoadApplicationCache,
+                                       PRBool aIsTopDocument,
+                                       nsIURI **aManifestURI,
+                                       CacheSelectionAction *aAction);
+
+  // Searches for the offline cache manifest attribute and calls one
+  // of the above defined methods to select the document's application
+  // cache, let it be associated with the document and eventually
+  // schedule the cache update process.
   void ProcessOfflineManifest(nsIContent *aElement);
 
   // Tries to scroll to the URI's named anchor. Once we've successfully

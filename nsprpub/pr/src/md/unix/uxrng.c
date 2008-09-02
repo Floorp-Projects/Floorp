@@ -139,7 +139,8 @@ GetHighResClock(void *buf, size_t maxbytes)
 }
 
 #elif (defined(LINUX) || defined(FREEBSD) || defined(__FreeBSD_kernel__) \
-    || defined(NETBSD) || defined(__NetBSD_kernel__) || defined(OPENBSD))
+    || defined(NETBSD) || defined(__NetBSD_kernel__) || defined(OPENBSD) \
+    || defined(SYMBIAN))
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

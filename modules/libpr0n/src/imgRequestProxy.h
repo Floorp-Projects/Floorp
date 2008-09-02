@@ -39,6 +39,7 @@
 
 #include "imgIRequest.h"
 #include "imgIDecoderObserver.h"
+#include "nsISecurityInfoProvider.h"
 
 #include "imgIContainer.h"
 #include "imgIDecoder.h"
@@ -59,13 +60,14 @@
     {0x8f, 0x65, 0x9c, 0x46, 0x2e, 0xe2, 0xbc, 0x95} \
 }
 
-class imgRequestProxy : public imgIRequest, public nsISupportsPriority
+class imgRequestProxy : public imgIRequest, public nsISupportsPriority, public nsISecurityInfoProvider
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIREQUEST
   NS_DECL_NSIREQUEST
   NS_DECL_NSISUPPORTSPRIORITY
+  NS_DECL_NSISECURITYINFOPROVIDER
 
   imgRequestProxy();
   virtual ~imgRequestProxy();

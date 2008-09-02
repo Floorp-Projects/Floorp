@@ -23,6 +23,7 @@
 # Contributor(s):
 #   Robert Strong <robert.bugzilla@gmail.com>
 #   Michael Wu <flamingice@sourmilk.net>
+#   Dave Townsend <dtownsend@oxymoronical.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -405,29 +406,8 @@ Blocklist.prototype = {
       return false;
 
     for (var i = 0; i < blItem.length; ++i) {
-      if (gVersionChecker.compare(version, blItem[i].minVersion) < 0  ||
-          gVersionChecker.compare(version, blItem[i].maxVersion) > 0)
-        continue;
-
-      var blTargetApp = blItem[i].targetApps[gApp.ID];
-      if (blTargetApp) {
-        for (var x = 0; x < blTargetApp.length; ++x) {
-          if (gVersionChecker.compare(appVersion, blTargetApp[x].minVersion) < 0 ||
-              gVersionChecker.compare(appVersion, blTargetApp[x].maxVersion) > 0)
-            continue;
-          return true;
-        }
-      }
-
-      blTargetApp = blItem[i].targetApps[TOOLKIT_ID];
-      if (!blTargetApp)
-        return false;
-      for (x = 0; x < blTargetApp.length; ++x) {
-        if (gVersionChecker.compare(toolkitVersion, blTargetApp[x].minVersion) < 0 ||
-            gVersionChecker.compare(toolkitVersion, blTargetApp[x].maxVersion) > 0)
-          continue;
+      if (blItem[i].includesItem(version, appVersion, toolkitVersion))
         return true;
-      }
     }
     return false;
   },
@@ -630,7 +610,7 @@ Blocklist.prototype = {
 
       var childNodes = doc.documentElement.childNodes;
       this._addonEntries = this._processItemNodes(childNodes, "em",
-                                            this._handleEmItemNode);
+                                                  this._handleEmItemNode);
       this._pluginEntries = this._processItemNodes(childNodes, "plugin",
                                                    this._handlePluginItemNode);
     }
@@ -694,40 +674,52 @@ Blocklist.prototype = {
       return;
 
     var matchNodes = blocklistElement.childNodes;
-    var matchList;
+    var blockEntry = {
+      matches: {},
+      versions: []
+    };
     for (var x = 0; x < matchNodes.length; ++x) {
       var matchElement = matchNodes.item(x);
-      if (!(matchElement instanceof Ci.nsIDOMElement) ||
-          matchElement.localName != "match")
+      if (!(matchElement instanceof Ci.nsIDOMElement))
         continue;
-
-      var name = matchElement.getAttribute("name");
-      var exp = matchElement.getAttribute("exp");
-      if (!matchList)
-        matchList = { };
-      matchList[name] = new RegExp(exp, "m");
+      if (matchElement.localName == "match") {
+        var name = matchElement.getAttribute("name");
+        var exp = matchElement.getAttribute("exp");
+        blockEntry.matches[name] = new RegExp(exp, "m");
+      }
+      if (matchElement.localName == "versionRange")
+        blockEntry.versions.push(new BlocklistItemData(matchElement));
     }
-    if (matchList)
-      result.push(matchList);
+    result.push(blockEntry);
   },
 
-  _checkPlugin: function(plugin) {
-    for each (var matchList in this._pluginEntries) {
+  _isPluginBlocklisted: function(plugin, appVersion, toolkitVersion) {
+    for each (var blockEntry in this._pluginEntries) {
       var matchFailed = false;
-      for (var name in matchList) {
-        if (typeof(plugin[name]) != "string" ||
-            !matchList[name].test(plugin[name])) {
+      for (var name in blockEntry.matches) {
+        if (!(name in plugin) ||
+            typeof(plugin[name]) != "string" ||
+            !blockEntry.matches[name].test(plugin[name])) {
           matchFailed = true;
           break;
         }
       }
 
-      if (!matchFailed) {
-        plugin.blocklisted = true;
-        return;
+      if (matchFailed)
+        continue;
+
+      // No version ranges means match any versions
+      if (blockEntry.versions.length == 0)
+        return true;
+
+      for (var i = 0; i < blockEntry.versions.length; i++) {
+        if (blockEntry.versions[i].includesItem(plugin.version, appVersion,
+                                                toolkitVersion))
+          return true;
       }
     }
-    plugin.blocklisted = false;
+
+    return false;
   },
 
   _checkPluginsList: function() {
@@ -735,7 +727,11 @@ Blocklist.prototype = {
       this._loadBlocklist();
     var phs = Cc["@mozilla.org/plugin/host;1"].
               getService(Ci.nsIPluginHost);
-    phs.getPluginTags({ }).forEach(this._checkPlugin, this);
+    var plugins = phs.getPluginTags({});
+    for (var i = 0; i < plugins.length; i++)
+      plugins[i].blocklisted = this._isPluginBlocklisted(plugins[i],
+                                                         gApp.version,
+                                                         gApp.platformVersion);
   },
 
   classDescription: "Blocklist Service",
@@ -772,25 +768,97 @@ function BlocklistItemData(versionRangeElement) {
       this.targetApps[appID] = this.getBlocklistAppVersions(targetAppElement);
     }
   }
-  // Default to all versions of the extension and the current application when
-  // versionRange is not defined.
+  // Default to all versions of the current application when no targetApplication
+  // elements were found
   if (!found)
     this.targetApps[gApp.ID] = this.getBlocklistAppVersions(null);
 }
 
 BlocklistItemData.prototype = {
-/**
- * Retrieves a version range (e.g. minVersion and maxVersion) for a
- * blocklist item's targetApplication element.
- * @param   targetAppElement
- *          A targetApplication blocklist element.
- * @returns An array of JS objects with the following properties:
- *          "minVersion"  The minimum version in a version range (default = 0).
- *          "maxVersion"  The maximum version in a version range (default = *).
- */
+  /**
+   * Tests if a version of an item is included in the version range and target
+   * application information represented by this BlocklistItemData using the
+   * provided application and toolkit versions.
+   * @param   version
+   *          The version of the item being tested.
+   * @param   appVersion
+   *          The application version to test with.
+   * @param   toolkitVersion
+   *          The toolkit version to test with.
+   * @returns True if the version range covers the item version and application
+   *          or toolkit version.
+   */
+  includesItem: function(version, appVersion, toolkitVersion) {
+    // Some platforms have no version for plugins, these don't match if there
+    // was a min/maxVersion provided
+    if (!version && (this.minVersion || this.maxVersion))
+      return false;
+
+    // Check if the item version matches
+    if (!this.matchesRange(version, this.minVersion, this.maxVersion))
+      return false;
+
+    // Check if the application version matches
+    if (this.matchesTargetRange(gApp.ID, appVersion))
+      return true;
+
+    // Check if the toolkit version matches
+    return this.matchesTargetRange(TOOLKIT_ID, toolkitVersion);
+  },
+
+  /**
+   * Checks if a version is higher than or equal to the minVersion (if provided)
+   * and lower than or equal to the maxVersion (if provided).
+   * @param   version
+   *          The version to test.
+   * @param   minVersion
+   *          The minimum version. If null it is assumed that version is always
+   *          larger.
+   * @param   maxVersion
+   *          The maximum version. If null it is assumed that version is always
+   *          smaller.
+   */
+  matchesRange: function(version, minVersion, maxVersion) {
+    if (minVersion && gVersionChecker.compare(version, minVersion) < 0)
+      return false;
+    if (maxVersion && gVersionChecker.compare(version, maxVersion) > 0)
+      return false;
+    return true;
+  },
+
+  /**
+   * Tests if there is a matching range for the given target application id and
+   * version.
+   * @param   appID
+   *          The application ID to test for, may be for an application or toolkit
+   * @param   appVersion
+   *          The version of the application to test for.
+   * @returns True if this version range covers the application version given.
+   */
+  matchesTargetRange: function(appID, appVersion) {
+    var blTargetApp = this.targetApps[appID];
+    if (!blTargetApp)
+      return false;
+
+    for (var x = 0; x < blTargetApp.length; ++x) {
+      if (this.matchesRange(appVersion, blTargetApp[x].minVersion, blTargetApp[x].maxVersion))
+        return true;
+    }
+
+    return false;
+  },
+
+  /**
+   * Retrieves a version range (e.g. minVersion and maxVersion) for a
+   * blocklist item's targetApplication element.
+   * @param   targetAppElement
+   *          A targetApplication blocklist element.
+   * @returns An array of JS objects with the following properties:
+   *          "minVersion"  The minimum version in a version range (default = null).
+   *          "maxVersion"  The maximum version in a version range (default = null).
+   */
   getBlocklistAppVersions: function(targetAppElement) {
     var appVersions = [ ];
-    var found = false;
 
     if (targetAppElement) {
       for (var i = 0; i < targetAppElement.childNodes.length; ++i) {
@@ -798,28 +866,28 @@ BlocklistItemData.prototype = {
         if (!(versionRangeElement instanceof Ci.nsIDOMElement) ||
             versionRangeElement.localName != "versionRange")
           continue;
-        found = true;
         appVersions.push(this.getBlocklistVersionRange(versionRangeElement));
       }
     }
-    // return minVersion = 0 and maxVersion = * if not available
-    if (!found)
-      return [ this.getBlocklistVersionRange(null) ];
+    // return minVersion = null and maxVersion = null if no specific versionRange
+    // elements were found
+    if (appVersions.length == 0)
+      appVersions.push(this.getBlocklistVersionRange(null));
     return appVersions;
   },
 
-/**
- * Retrieves a version range (e.g. minVersion and maxVersion) for a blocklist
- * versionRange element.
- * @param   versionRangeElement
- *          The versionRange blocklist element.
- * @returns A JS object with the following properties:
- *          "minVersion"  The minimum version in a version range (default = 0).
- *          "maxVersion"  The maximum version in a version range (default = *).
- */
+  /**
+   * Retrieves a version range (e.g. minVersion and maxVersion) for a blocklist
+   * versionRange element.
+   * @param   versionRangeElement
+   *          The versionRange blocklist element.
+   * @returns A JS object with the following properties:
+   *          "minVersion"  The minimum version in a version range (default = null).
+   *          "maxVersion"  The maximum version in a version range (default = null).
+   */
   getBlocklistVersionRange: function(versionRangeElement) {
-    var minVersion = "0";
-    var maxVersion = "*";
+    var minVersion = null;
+    var maxVersion = null;
     if (!versionRangeElement)
       return { minVersion: minVersion, maxVersion: maxVersion };
 

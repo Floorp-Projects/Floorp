@@ -258,7 +258,7 @@ XPCCallContext::SetArgsAndResultPtr(uintN argc,
     mArgv   = argv;
     mRetVal = rval;
 
-    mExceptionWasThrown = mReturnValueWasSet = JS_FALSE;
+    mReturnValueWasSet = JS_FALSE;
     mState = HAVE_ARGS;
 }
 
@@ -510,20 +510,6 @@ NS_IMETHODIMP
 XPCCallContext::GetRetValPtr(jsval * *aRetValPtr)
 {
     *aRetValPtr = mRetVal;
-    return NS_OK;
-}
-
-/* attribute PRBool ExceptionWasThrown; */
-NS_IMETHODIMP
-XPCCallContext::GetExceptionWasThrown(PRBool *aExceptionWasThrown)
-{
-    *aExceptionWasThrown = mExceptionWasThrown;
-    return NS_OK;
-}
-NS_IMETHODIMP
-XPCCallContext::SetExceptionWasThrown(PRBool aExceptionWasThrown)
-{
-    mExceptionWasThrown = aExceptionWasThrown;
     return NS_OK;
 }
 

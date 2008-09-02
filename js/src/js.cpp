@@ -955,8 +955,6 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
         { "double",     JSTRACE_DOUBLE      },
         { "string",     JSTRACE_STRING      },
 #if JS_HAS_XML_SUPPORT
-        { "namespace",  JSTRACE_NAMESPACE   },
-        { "qname",      JSTRACE_QNAME       },
         { "xml",        JSTRACE_XML         },
 #endif
     };

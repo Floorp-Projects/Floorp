@@ -130,6 +130,11 @@ interface nsIFaviconService : nsISupports
    * notifications is very intensive. Those pages will keep the old icon
    * until they have been refreshed by other means.
    *
+   * This function tries to optimize the favicon size, if it is bigger
+   * than defined limit we will try to convert it to a 16x16 png image. If the
+   * conversion fails and favicon is bigger than our max accepted favicon size
+   * we will fail and the favicon won't be saved.
+   *
    * @param aFaviconURI
    *        URI of the favicon whose data is being set.
    * @param aData
@@ -142,6 +147,8 @@ interface nsIFaviconService : nsISupports
    * @param aExpiration
    *        Time in microseconds since the epoch when this favicon expires.
    *        Until this time, we won't try to load it again.
+   * @throws NS_ERROR_FAILURE
+   *         Thrown if the favicon is overbloated and won't be saved to the db.
    */
   void setFaviconData(in nsIURI aFaviconURI,
                       [const,array,size_is(aDataLen)] in octet aData,
@@ -151,6 +158,11 @@ interface nsIFaviconService : nsISupports
   /**
    * Stores the data of a given favicon. The data is provided by a string
    * containing a data URL.
+   *
+   * This function tries to optimize the favicon size, if it is bigger
+   * than defined limit we will try to convert it to a 16x16 png image. If the
+   * conversion fails and favicon is bigger than our max accepted favicon size
+   * we will fail and the favicon won't be saved.
    *
    * @see setFaviconData
    *
@@ -162,6 +174,8 @@ interface nsIFaviconService : nsISupports
    * @param aExpiration
    *        Time in microseconds since the epoch when this favicon expires.
    *        Until this time, we won't try to load it again.
+   * @throws NS_ERROR_FAILURE
+   *         Thrown if the favicon is overbloated and won't be saved to the db.
    */
   void setFaviconDataFromDataURL(in nsIURI aFaviconURI, in AString aDataURL,
                                  in PRTime aExpiration);

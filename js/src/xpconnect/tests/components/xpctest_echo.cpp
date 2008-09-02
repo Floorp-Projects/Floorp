@@ -517,8 +517,6 @@ xpctestEcho::ThrowArg(void)
         return NS_ERROR_FAILURE;
 
     JS_SetPendingException(cx, argv[0]);
-    cc->SetExceptionWasThrown(JS_TRUE);
-        
     return NS_OK;
 }
 

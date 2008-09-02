@@ -133,6 +133,20 @@ XPCWrappedNativeProto::Init(
 
     JSBool ok = mJSProtoObject && JS_SetPrivate(ccx, mJSProtoObject, this);
 
+    if(ok && scriptableCreateInfo)
+    {
+        nsIXPCScriptable *callback = scriptableCreateInfo->GetCallback();
+        if(callback)
+        {
+            nsresult rv = callback->PostCreatePrototype(ccx, mJSProtoObject);
+            if(NS_FAILED(rv))
+            {
+                XPCThrower::Throw(rv, ccx);
+                return JS_FALSE;
+            }
+        }
+    }
+
     DEBUG_ReportShadowedMembers(mSet, nsnull, this);
 
     return ok;

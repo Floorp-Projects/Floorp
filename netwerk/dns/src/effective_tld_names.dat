@@ -53,15 +53,15 @@ ad
 nom.ad
 
 // ae : http://en.wikipedia.org/wiki/.ae
+// see also: "Domain Name Eligibility Policy" at http://www.aeda.ae/eng/aepolicy.php
 ae
+co.ae
 net.ae
-gov.ae
-ac.ae
-sch.ae
 org.ae
+sch.ae
+ac.ae
+gov.ae
 mil.ae
-pro.ae
-name.ae
 
 // aero : see http://www.information.aero/index.php?id=66
 aero
@@ -179,6 +179,7 @@ net.ai
 org.ai
 
 // al : http://www.inima.al/Domains.html
+al
 gov.al
 edu.al
 org.al
@@ -230,6 +231,7 @@ urn.arpa
 
 // as : http://en.wikipedia.org/wiki/.as
 as
+gov.as
 
 // asia: http://en.wikipedia.org/wiki/.asia
 asia
@@ -531,6 +533,9 @@ pe.ca
 qc.ca
 sk.ca
 yk.ca
+// gc.ca: http://en.wikipedia.org/wiki/.gc.ca
+// see also: http://registry.gc.ca/en/SubdomainFAQ
+gc.ca
 
 // cat : http://en.wikipedia.org/wiki/.cat
 cat
@@ -719,6 +724,8 @@ dm
 com.dm
 net.dm
 org.dm
+edu.dm
+gov.dm
 
 // do : http://en.wikipedia.org/wiki/.do
 *.do
@@ -752,12 +759,18 @@ mil.ec
 // edu : http://en.wikipedia.org/wiki/.edu
 edu
 
-// ee : http://www3.eenet.ee/ee/application.html
+// ee : http://www.eenet.ee/EENet/dom_reeglid.html#lisa_B
 ee
+edu.ee
+gov.ee
+riik.ee
+lib.ee
+med.ee
 com.ee
+pri.ee
+aip.ee
 org.ee
 fie.ee
-pri.ee
 
 // eg : http://en.wikipedia.org/wiki/.eg
 *.eg
@@ -781,6 +794,12 @@ eu
 
 // fi : http://en.wikipedia.org/wiki/.fi
 fi
+// aland.fi : http://en.wikipedia.org/wiki/.ax
+// This domain is being phased out in favor of .ax. As there are still many
+// domains under aland.fi, we still keep it on the list until aland.fi is
+// completely removed.
+// TODO: Check for updates (expected to be phased out around Q1/2009)
+aland.fi
 
 // fj : http://en.wikipedia.org/wiki/.fj
 *.fj
@@ -795,7 +814,6 @@ fm
 fo
 
 // fr : http://www.afnic.fr/
-fr
 // domaines descriptifs : http://www.afnic.fr/obtenir/chartes/nommage-fr/annexe-descriptifs
 fr
 com.fr
@@ -845,7 +863,7 @@ pvt.ge
 // gf : http://en.wikipedia.org/wiki/.gf
 gf
 
-// gg : http://www.channelisles.net/tandc.shtml
+// gg : http://www.channelisles.net/applic/avextn.shtml
 gg
 co.gg
 org.gg
@@ -883,12 +901,14 @@ net.gn
 // gov : http://en.wikipedia.org/wiki/.gov
 gov
 
-// gp : http://www.nic.gp/index_en.php?url=charte_en.php
+// gp : http://www.nic.gp/index.php?lang=en
 gp
 com.gp
 net.gp
+mobi.gp
 edu.gp
 org.gp
+asso.gp
 
 // gq : http://en.wikipedia.org/wiki/.gq
 gq
@@ -1025,6 +1045,7 @@ video.hu
 
 // ie : http://en.wikipedia.org/wiki/.ie
 ie
+gov.ie
 
 // il : http://en.wikipedia.org/wiki/.il
 *.il
@@ -1041,6 +1062,9 @@ nic.im
 ac.im
 
 // in : http://en.wikipedia.org/wiki/.in
+// see also: http://www.inregistry.in/policies/
+// Please note, that nic.in is not an offical eTLD, but used by most
+// government institutions.
 in
 co.in
 firm.in
@@ -1334,7 +1358,7 @@ vi.it
 viterbo.it
 vt.it
 
-// je : http://www.channelisles.net/tandc.shtml
+// je : http://www.channelisles.net/applic/avextn.shtml
 je
 co.je
 org.je
@@ -1549,7 +1573,8 @@ org.kn
 edu.kn
 gov.kn
 
-// kr : http://domain.nida.or.kr/eng/structure.jsp
+// kr : http://en.wikipedia.org/wiki/.kr
+// see also: http://domain.nida.or.kr/eng/registration.jsp
 kr
 ac.kr
 co.kr
@@ -1565,7 +1590,6 @@ pe.kr
 re.kr
 sc.kr
 // kr geographical names
-// http://en.wikipedia.org/wiki/.kr
 busan.kr
 chungbuk.kr
 chungnam.kr
@@ -1627,8 +1651,11 @@ net.lb
 org.lb
 
 // lc : http://en.wikipedia.org/wiki/.lc
+// see also: http://www.nic.lc/rules.htm
 lc
 com.lc
+net.lc
+co.lc
 org.lc
 edu.lc
 gov.lc
@@ -1668,6 +1695,8 @@ org.ls
 
 // lt : http://en.wikipedia.org/wiki/.lt
 lt
+// gov.lt : http://www.gov.lt/index_en.php
+gov.lt
 
 // lu : http://www.dns.lu/en/
 lu
@@ -2468,13 +2497,13 @@ fylkesbibl.no
 folkebibl.no
 museum.no
 idrett.no
+priv.no
 // Non-Norid generic domains : http://www.norid.no/regelverk/vedlegg-d.en.html
 mil.no
 stat.no
 dep.no
 kommune.no
 herad.no
-priv.no
 // no geographical names : http://www.norid.no/regelverk/vedlegg-b.en.html
 // counties
 aa.no
@@ -3882,6 +3911,17 @@ sr
 
 // st : http://www.nic.st/html/policyrules/
 st
+gov.st
+saotome.st
+principe.st
+consulado.st
+org.st
+edu.st
+net.st
+com.st
+store.st
+mil.st
+co.st
 
 // su : http://en.wikipedia.org/wiki/.su
 su
@@ -4067,11 +4107,13 @@ ivano-frankivsk.ua
 kh.ua
 kharkov.ua
 kherson.ua
+khmelnitskiy.ua
 kiev.ua
 kirovograd.ua
 km.ua
 kr.ua
 ks.ua
+kv.ua
 lg.ua
 lugansk.ua
 lutsk.ua
@@ -4092,7 +4134,6 @@ vinnica.ua
 vn.ua
 zaporizhzhe.ua
 zp.ua
-uz.ua
 uzhgorod.ua
 zhitomir.ua
 zt.ua

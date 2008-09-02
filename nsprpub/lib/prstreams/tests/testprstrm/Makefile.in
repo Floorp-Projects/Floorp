@@ -91,13 +91,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
-  ifeq ($(MOZ_OS2_TOOLS),VACPP)
-    LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO /S:32768
-    LIBPR = $(dist_libdir)/nspr$(MOD_MAJOR_VERSION).lib
-    LIBPRSTRMS = $(dist_libdir)/prstrms$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)
-  else
-    LDOPTS += -Zomf -Zlinker /PM:VIO -lstdcpp
-  endif
+LDOPTS += -Zomf -Zlinker /PM:VIO -lstdcpp
 endif
 
 ifneq ($(OS_ARCH), WINNT)
@@ -135,13 +129,10 @@ ifdef NS_USE_GCC
 LDOPTS += -Xlinker -R -Xlinker $(PWD)/$(dist_libdir)
 else
 LDOPTS += -R $(PWD)/$(dist_libdir)
-# CC on SunOS 5.4 and 5.5.x need to link with -lthread or -lpthread
-# (or use the -mt switch) even though we already linked with these
-# system libraries when we built libnspr.so.
+# CC on SunOS 5.5.x needs to link with -lpthread even though we already
+# linked with this system library when we built libnspr.so.
 ifdef USE_PTHREADS
 EXTRA_LIBS = -lpthread
-else
-EXTRA_LIBS = -lthread
 endif # USE_PTHREADS
 endif # NS_USE_GCC
 endif # 4.1.3_U1

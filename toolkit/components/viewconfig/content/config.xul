@@ -56,6 +56,13 @@
 <stringbundle id="configBundle" src="chrome://global/locale/config.properties"/>
 
 <popup id="configContext" onpopupshowing="if (event.target == this) updateContextMenu();">
+  <menuitem id="toggleSelected" default="true"
+            label="&toggle.label;" accesskey="&toggle.accesskey;"
+            oncommand="ModifySelected();"/>
+  <menuitem id="modifySelected" default="true"
+            label="&modify.label;" accesskey="&modify.accesskey;"
+            oncommand="ModifySelected();"/>
+  <menuseparator/>
   <menuitem id="copyPref" label="&copyPref.label;" accesskey="&copyPref.accesskey;" oncommand="copyPref();"/>
   <menuitem id="copyName" label="&copyName.label;" accesskey="&copyName.accesskey;" oncommand="copyName();"/>
   <menuitem id="copyValue" label="&copyValue.label;" accesskey="&copyValue.accesskey;" oncommand="copyValue();"/>
@@ -66,8 +73,6 @@
       <menuitem label="&boolean.label;" accesskey="&boolean.accesskey;" oncommand="NewPref(nsIPrefBranch.PREF_BOOL);"/>
     </menupopup>
   </menu>
-  <menuitem id="toggleSelected" label="&toggle.label;" accesskey="&toggle.accesskey;" oncommand="ModifySelected();"/>
-  <menuitem id="modifySelected" label="&modify.label;" accesskey="&modify.accesskey;" oncommand="ModifySelected();"/>
   <menuitem id="resetSelected" label="&reset.label;" accesskey="&reset.accesskey;" oncommand="ResetSelected();"/>
 </popup>
 

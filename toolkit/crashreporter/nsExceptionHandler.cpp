@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -882,6 +883,16 @@ nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo)
     return NS_ERROR_NOT_INITIALIZED;
 
   return gExceptionHandler->WriteMinidumpForException(aExceptionInfo) ? NS_OK : NS_ERROR_FAILURE;
+}
+#endif
+
+#ifdef XP_MACOSX
+nsresult AppendObjCExceptionInfoToAppNotes(void *inException)
+{
+  nsCAutoString excString;
+  GetObjCExceptionInfo(inException, excString);
+  AppendAppNotesToCrashReport(excString);
+  return NS_OK;
 }
 #endif
 

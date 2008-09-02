@@ -478,12 +478,15 @@ msFromTime(jsdouble t)
  * We use the first reseved slot to store UTC time, and the second for caching
  * the local time. The initial value of the cache entry is NaN.
  */
-#define UTC_TIME_SLOT           0
-#define LOCAL_TIME_SLOT         1
+const uint32 JSSLOT_UTC_TIME    = JSSLOT_PRIVATE;
+const uint32 JSSLOT_LOCAL_TIME  = JSSLOT_PRIVATE + 1;
+
+const uint32 DATE_RESERVED_SLOTS = 2;
 
 JSClass js_DateClass = {
     js_Date_str,
-    JSCLASS_HAS_RESERVED_SLOTS(2) |  JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
+    JSCLASS_HAS_RESERVED_SLOTS(DATE_RESERVED_SLOTS) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -930,14 +933,9 @@ date_now(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 GetUTCTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
 {
-    jsval v;
-
     if (!JS_InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
         return JS_FALSE;
-    if (!JS_GetReservedSlot(cx, obj, UTC_TIME_SLOT, &v))
-        return JS_FALSE;
-
-    *dp = *JSVAL_TO_DOUBLE(v);
+    *dp = *JSVAL_TO_DOUBLE(obj->fslots[JSSLOT_UTC_TIME]);
     return JS_TRUE;
 }
 
@@ -952,14 +950,12 @@ SetUTCTimePtr(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
 {
     if (vp && !JS_InstanceOf(cx, obj, &js_DateClass, vp + 2))
         return JS_FALSE;
+    JS_ASSERT_IF(!vp, STOBJ_GET_CLASS(obj) == &js_DateClass);
 
     /* Invalidate local time cache. */
-    if (!JS_SetReservedSlot(cx, obj, LOCAL_TIME_SLOT,
-                            DOUBLE_TO_JSVAL(cx->runtime->jsNaN))) {
-        return JS_FALSE;
-    }
-
-    return JS_SetReservedSlot(cx, obj, UTC_TIME_SLOT, DOUBLE_TO_JSVAL(dp));
+    obj->fslots[JSSLOT_LOCAL_TIME] = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+    obj->fslots[JSSLOT_UTC_TIME] = DOUBLE_TO_JSVAL(dp);
+    return JS_TRUE;
 }
 
 /*
@@ -985,8 +981,9 @@ GetAndCacheLocalTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
     jsdouble result;
     jsdouble *cached;
 
-    if (!obj || !JS_GetReservedSlot(cx, obj, LOCAL_TIME_SLOT, &v))
+    if (!obj || !JS_InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
         return JS_FALSE;
+    v = obj->fslots[JSSLOT_LOCAL_TIME];
 
     result = *JSVAL_TO_DOUBLE(v);
 
@@ -1002,10 +999,7 @@ GetAndCacheLocalTime(JSContext *cx, JSObject *obj, jsval *vp, jsdouble *dp)
         if (!cached)
             return JS_FALSE;
 
-        if (!JS_SetReservedSlot(cx, obj, LOCAL_TIME_SLOT,
-                                DOUBLE_TO_JSVAL(cached))) {
-            return JS_FALSE;
-        }
+        obj->fslots[JSSLOT_LOCAL_TIME] = DOUBLE_TO_JSVAL(cached);
     }
 
     *dp = result;
@@ -2036,10 +2030,8 @@ date_constructor(JSContext *cx, JSObject* obj)
     if (!date)
         return NULL;
 
-    JS_SetReservedSlot(cx, obj, UTC_TIME_SLOT,
-                       DOUBLE_TO_JSVAL(date));
-    JS_SetReservedSlot(cx, obj, LOCAL_TIME_SLOT,
-                       DOUBLE_TO_JSVAL(cx->runtime->jsNaN));
+    obj->fslots[JSSLOT_UTC_TIME] = DOUBLE_TO_JSVAL(date);
+    obj->fslots[JSSLOT_LOCAL_TIME] = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
     return date;
 }
 

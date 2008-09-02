@@ -75,16 +75,12 @@
  * Intel x86 has atomic instructions.
  *
  * Sparc v8 does not have instructions to efficiently implement
- * atomic increment/decrement operations.  In the local threads
- * only and pthreads versions, we use the default atomic routine
- * implementation in pratom.c.  The obsolete global threads only
- * version uses a global mutex_t to implement the atomic routines
- * in solaris.c, which is actually equivalent to the default
- * implementation.
+ * atomic increment/decrement operations.  We use the default
+ * atomic routine implementation in pratom.c.
  *
  * 64-bit Solaris requires sparc v9, which has atomic instructions.
  */
-#if defined(i386) || defined(_PR_GLOBAL_THREADS_ONLY) || defined(IS_64)
+#if defined(i386) || defined(IS_64)
 #define _PR_HAVE_ATOMIC_OPS
 #endif
 
@@ -140,7 +136,7 @@ struct _md_sockaddr_in6 {
     PRUint32 __sin6_src_id;
 };
 #endif
-#if defined(_PR_GLOBAL_THREADS_ONLY) || defined(_PR_PTHREADS)
+#if defined(_PR_PTHREADS)
 #define _PR_HAVE_GETHOST_R
 #define _PR_HAVE_GETHOST_R_POINTER
 #endif
@@ -177,281 +173,10 @@ NSPR_API(void)		_MD_EarlyInit(void);
 #define _MD_EARLY_INIT		_MD_EarlyInit
 #define _MD_FINAL_INIT		_PR_UnixInit
 
-#elif defined(_PR_GLOBAL_THREADS_ONLY)
-
-#include "prthread.h"
-
-#include <ucontext.h>
+#else /* _PR_PTHREADS */
 
 /*
-** Iinitialization Related definitions
-*/
-
-NSPR_API(void)		_MD_EarlyInit(void);
-
-#define _MD_EARLY_INIT		_MD_EarlyInit
-#define _MD_FINAL_INIT		_PR_UnixInit
-
-#define _MD_GET_SP(threadp)	threadp->md.sp
-
-/*
-** Clean-up the thread machine dependent data structure
-*/
-#define	_MD_INIT_THREAD				_MD_InitializeThread
-#define	_MD_INIT_ATTACHED_THREAD	_MD_InitializeThread
-
-NSPR_API(PRStatus) _MD_CreateThread(PRThread *thread, 
-					void (*start)(void *), 
-					PRThreadPriority priority,
-					PRThreadScope scope, 
-					PRThreadState state, 
-					PRUint32 stackSize);
-#define _MD_CREATE_THREAD _MD_CreateThread
-
-#define	_PR_CONTEXT_TYPE	ucontext_t
-
-#define CONTEXT(_thread) (&(_thread)->md.context)
-
-#include <thread.h>
-#include <sys/lwp.h>
-#include <synch.h>
-
-extern struct PRLock *_pr_schedLock;
-
-/*
-** Thread Local Storage 
-*/
-
-#define THREAD_KEY_T thread_key_t
-
-extern struct PRThread *_pr_attached_thread_tls();
-extern struct PRThread *_pr_current_thread_tls();
-extern struct _PRCPU *_pr_current_cpu_tls();
-extern struct PRThread *_pr_last_thread_tls();
-
-extern THREAD_KEY_T threadid_key;
-extern THREAD_KEY_T cpuid_key;
-extern THREAD_KEY_T last_thread_key;
-
-#define _MD_GET_ATTACHED_THREAD() _pr_attached_thread_tls()
-#define _MD_CURRENT_THREAD() _pr_current_thread_tls()
-#define _MD_CURRENT_CPU() _pr_current_cpu_tls()
-#define _MD_LAST_THREAD() _pr_last_thread_tls()
-	
-#define _MD_SET_CURRENT_THREAD(newval) 			\
-	PR_BEGIN_MACRO					\
-	thr_setspecific(threadid_key, (void *)newval);	\
-	PR_END_MACRO
-
-#define _MD_SET_CURRENT_CPU(newval) 			\
-	PR_BEGIN_MACRO					\
-	thr_setspecific(cpuid_key, (void *)newval);	\
-	PR_END_MACRO
-
-#define _MD_SET_LAST_THREAD(newval)	 			\
-	PR_BEGIN_MACRO						\
-	thr_setspecific(last_thread_key, (void *)newval);	\
-	PR_END_MACRO
-	
-#define	_MD_CLEAN_THREAD(_thread)	_MD_cleanup_thread(_thread)
-extern void _MD_exit_thread(PRThread *thread);
-#define _MD_EXIT_THREAD(thread)		_MD_exit_thread(thread)
-
-#define	_MD_SUSPEND_THREAD(thread)	_MD_Suspend(thread)
-#define	_MD_RESUME_THREAD(thread)	thr_continue((thread)->md.handle)
-
-/* XXXX Needs to be defined - Prashant */
-#define _MD_SUSPEND_CPU(cpu)
-#define _MD_RESUME_CPU(cpu)
-
-extern void _MD_Begin_SuspendAll(void);
-extern void _MD_End_SuspendAll(void);
-extern void _MD_End_ResumeAll(void);
-#define _MD_BEGIN_SUSPEND_ALL()		_MD_Begin_SuspendAll()
-#define _MD_BEGIN_RESUME_ALL()		
-#define	_MD_END_SUSPEND_ALL()		_MD_End_SuspendAll()
-#define	_MD_END_RESUME_ALL()		_MD_End_ResumeAll()
-
-#define _MD_INIT_LOCKS()
-#define _MD_NEW_LOCK(md_lockp) (mutex_init(&((md_lockp)->lock),USYNC_THREAD,NULL) ? PR_FAILURE : PR_SUCCESS)
-#define _MD_FREE_LOCK(md_lockp) mutex_destroy(&((md_lockp)->lock))
-#define _MD_UNLOCK(md_lockp) mutex_unlock(&((md_lockp)->lock))
-#define _MD_TEST_AND_LOCK(md_lockp) mutex_trylock(&((md_lockp)->lock))
-struct _MDLock;
-NSPR_API(void) _MD_lock(struct _MDLock *md_lock);
-#undef PROFILE_LOCKS
-#ifndef PROFILE_LOCKS
-#define _MD_LOCK(md_lockp) _MD_lock(md_lockp)
-#else
-#define _MD_LOCK(md_lockp)                 \
-    PR_BEGIN_MACRO \
-    int rv = _MD_TEST_AND_LOCK(md_lockp); \
-    if (rv == 0) { \
-        (md_lockp)->hitcount++; \
-    } else { \
-        (md_lockp)->misscount++; \
-        _MD_lock(md_lockp); \
-    } \
-    PR_END_MACRO
-#endif
-
-#define _PR_LOCK_HEAP() if (_pr_heapLock) _MD_LOCK(&_pr_heapLock->md)
-#define _PR_UNLOCK_HEAP() if (_pr_heapLock) _MD_UNLOCK(&_pr_heapLock->md)
-
-#define _MD_ATTACH_THREAD(threadp)
-
-
-#define THR_KEYCREATE thr_keycreate
-#define THR_SELF thr_self
-#define _MD_NEW_CV(condp) cond_init(&((condp)->cv), USYNC_THREAD, 0)
-#define COND_WAIT(condp, mutexp) cond_wait(condp, mutexp)
-#define COND_TIMEDWAIT(condp, mutexp, tspec) \
-                                     cond_timedwait(condp, mutexp, tspec)
-#define _MD_NOTIFY_CV(condp, lockp) cond_signal(&((condp)->cv))
-#define _MD_NOTIFYALL_CV(condp,unused) cond_broadcast(&((condp)->cv))	
-#define _MD_FREE_CV(condp) cond_destroy(&((condp)->cv))
-#define _MD_YIELD() thr_yield()
-#include <time.h>
-/* 
- * Because clock_gettime() on Solaris/x86 2.4 always generates a
- * segmentation fault, we use an emulated version _pr_solx86_clock_gettime(),
- * which is implemented using gettimeofday().
- */
-#if defined(i386) && defined(SOLARIS2_4)
-extern int _pr_solx86_clock_gettime(clockid_t clock_id, struct timespec *tp);
-#define GETTIME(tt) _pr_solx86_clock_gettime(CLOCK_REALTIME, (tt))
-#else
-#define GETTIME(tt) clock_gettime(CLOCK_REALTIME, (tt))
-#endif  /* i386 && SOLARIS2_4 */
-
-#define MUTEX_T mutex_t
-#define COND_T cond_t
-
-#define _MD_NEW_SEM(md_semp,_val)  sema_init(&((md_semp)->sem),_val,USYNC_THREAD,NULL)
-#define _MD_DESTROY_SEM(md_semp) sema_destroy(&((md_semp)->sem))
-#define _MD_WAIT_SEM(md_semp) sema_wait(&((md_semp)->sem))
-#define _MD_POST_SEM(md_semp) sema_post(&((md_semp)->sem))
-
-#define _MD_SAVE_ERRNO(_thread)
-#define _MD_RESTORE_ERRNO(_thread)
-#define _MD_INIT_RUNNING_CPU(cpu) _MD_unix_init_running_cpu(cpu)
-
-extern struct _MDLock _pr_ioq_lock;
-#define _MD_IOQ_LOCK()		_MD_LOCK(&_pr_ioq_lock)
-#define _MD_IOQ_UNLOCK()	_MD_UNLOCK(&_pr_ioq_lock)
-
-extern PRStatus _MD_wait(struct PRThread *, PRIntervalTime timeout);
-#define _MD_WAIT _MD_wait
-
-extern PRStatus _MD_WakeupWaiter(struct PRThread *);
-#define _MD_WAKEUP_WAITER _MD_WakeupWaiter
-
-NSPR_API(void) _MD_InitIO(void);
-#define _MD_INIT_IO _MD_InitIO
-
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status) \
-    PR_BEGIN_MACRO \
-    *status = PR_TRUE; \
-    PR_END_MACRO
-#define _MD_SWITCH_CONTEXT(_thread)
-#define _MD_RESTORE_CONTEXT(_newThread)
-
-struct _MDLock {
-    MUTEX_T lock;
-#ifdef PROFILE_LOCKS
-    PRInt32 hitcount;
-    PRInt32 misscount;
-#endif
-};
-
-struct _MDCVar {
-    COND_T cv;
-};
-
-struct _MDSemaphore {
-    sema_t sem;
-};
-
-struct _MDThread {
-    _PR_CONTEXT_TYPE context;
-    thread_t handle;
-    lwpid_t lwpid;
-    uint_t sp;		/* stack pointer */
-    uint_t threadID;	/* ptr to solaris-internal thread id structures */
-    struct _MDSemaphore waiter_sem;
-};
-
-struct _MDThreadStack {
-    PRInt8 notused;
-};
-
-struct _MDSegment {
-    PRInt8 notused;
-};
-
-/*
- * md-specific cpu structure field, common to all Unix platforms
- */
-#define _PR_MD_MAX_OSFD FD_SETSIZE
-
-struct _MDCPU_Unix {
-    PRCList ioQ;
-    PRUint32 ioq_timeout;
-    PRInt32 ioq_max_osfd;
-    PRInt32 ioq_osfd_cnt;
-#ifndef _PR_USE_POLL
-    fd_set fd_read_set, fd_write_set, fd_exception_set;
-    PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
-				fd_exception_cnt[_PR_MD_MAX_OSFD];
-#else
-	struct pollfd *ioq_pollfds;
-	int ioq_pollfds_size;
-#endif	/* _PR_USE_POLL */
-};
-
-#define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
-#define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
-#define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
-#define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
-#define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
-#define _PR_FD_WRITE_CNT(_cpu)		((_cpu)->md.md_unix.fd_write_cnt)
-#define _PR_FD_EXCEPTION_SET(_cpu)	((_cpu)->md.md_unix.fd_exception_set)
-#define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
-#define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
-#define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
-#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
-#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
-#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
-
-#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
-
-
-struct _MDCPU {
-	struct _MDCPU_Unix md_unix;
-};
-
-/* The following defines the unwrapped versions of select() and poll(). */
-extern int _select(int nfds, fd_set *readfds, fd_set *writefds,
-	fd_set *exceptfds, struct timeval *timeout);
-#define _MD_SELECT	_select
-
-#include <poll.h>
-#define _MD_POLL _poll
-extern int _poll(struct pollfd *fds, unsigned long nfds, int timeout);
-
-PR_BEGIN_EXTERN_C
-
-/*
-** Missing function prototypes
-*/
-extern int gethostname (char *name, int namelen);
-
-PR_END_EXTERN_C
-
-#else /* _PR_GLOBAL_THREADS_ONLY */
-
-/*
- * LOCAL_THREADS_ONLY implementation on Solaris
+ * _PR_LOCAL_THREADS_ONLY implementation on Solaris
  */
 
 #include "prthread.h"
@@ -462,7 +187,7 @@ PR_END_EXTERN_C
 #include <synch.h>
 
 /*
-** Iinitialization Related definitions
+** Initialization Related definitions
 */
 
 NSPR_API(void)				_MD_EarlyInit(void);
@@ -798,7 +523,7 @@ extern int gethostname (char *name, int namelen);
 
 PR_END_EXTERN_C
 
-#endif /* _PR_GLOBAL_THREADS_ONLY */
+#endif /* _PR_PTHREADS */
 
 extern void _MD_solaris_map_sendfile_error(int err);
 

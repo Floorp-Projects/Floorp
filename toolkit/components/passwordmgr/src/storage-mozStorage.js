@@ -334,7 +334,7 @@ LoginManagerStorage_mozStorage.prototype = {
         this._checkInitializationState();
 
         let [logins, ids] =
-            this._searchLogins(login.hostname, login.formSubmitURL, login.httpRealm, false);
+            this._queryLogins(login.hostname, login.formSubmitURL, login.httpRealm);
         let idToDelete;
 
         // The specified login isn't encrypted, so we need to ensure
@@ -412,7 +412,7 @@ LoginManagerStorage_mozStorage.prototype = {
         this._checkInitializationState();
 
         let userCanceled;
-        let [logins, ids] = this._queryLogins([], {}, false);
+        let [logins, ids] = this._queryLogins("", "", "");
 
         // decrypt entries for caller.
         [logins, userCanceled] = this._decryptLogins(logins);
@@ -530,7 +530,8 @@ LoginManagerStorage_mozStorage.prototype = {
         this._checkInitializationState();
 
         let userCanceled;
-        let [logins, ids] = this._searchLogins(hostname, formSubmitURL, httpRealm, false);
+        let [logins, ids] =
+            this._queryLogins(hostname, formSubmitURL, httpRealm);
 
         // Decrypt entries found for the caller.
         [logins, userCanceled] = this._decryptLogins(logins);
@@ -554,60 +555,46 @@ LoginManagerStorage_mozStorage.prototype = {
     countLogins : function (hostname, formSubmitURL, httpRealm) {
         this._checkInitializationState();
 
-        // _searchLogins is returning just ids here
-        let [logins, ids] = this._searchLogins(hostname, formSubmitURL, httpRealm, true);
-        this.log("_countLogins: counted logins: " + ids.length);
-        return ids.length;
-    },
-
-
-    /*
-     * _searchLogins
-     *
-     * Returns array of [logins, ids]. If countOnly is true, call to
-     * _queryLogins will not instantiate logins
-     */
-    _searchLogins : function (hostname, formSubmitURL, httpRealm, countOnly) {
-        let conditions = [];
-        let params = {};
         // Do checks for null and empty strings, adjust conditions and params
-        if (hostname == null) {
-            conditions.push("hostname isnull");
-        } else if (hostname != '') {
-            conditions.push("hostname = :hostname");
-            params["hostname"] = hostname;
-        }
-        if (formSubmitURL == null) {
-            conditions.push("formSubmitURL isnull");
-        } else if (formSubmitURL != '') {
-            conditions.push("formSubmitURL = :formSubmitURL OR formSubmitURL = ''");
-            params["formSubmitURL"] = formSubmitURL;
-        }
-        if (httpRealm == null) {
-            conditions.push("httpRealm isnull");
-        } else if (httpRealm != '') {
-            conditions.push("httpRealm = :httpRealm");
-            params["httpRealm"] = httpRealm;
+        let [conditions, params] =
+            this._buildConditionsAndParams(hostname, formSubmitURL, httpRealm);
+
+        let query = "SELECT COUNT(1) AS numLogins FROM moz_logins";
+        if (conditions.length) {
+            conditions = conditions.map(function(c) "(" + c + ")");
+            query += " WHERE " + conditions.join(" AND ");
         }
 
-        return this._queryLogins(conditions, params, countOnly);
+        let stmt, numLogins;
+        try {
+            stmt = this._dbCreateStatement(query, params);
+            stmt.step();
+            numLogins = stmt.row.numLogins;
+        } catch (e) {
+            this.log("_countLogins failed: " + e.name + " : " + e.message);
+        } finally {
+            stmt.reset();
+        }
+
+        this.log("_countLogins: counted logins: " + numLogins);
+        return numLogins;
     },
 
 
     /*
      * _queryLogins
      *
-     * Returns [logins, ids] for logins that match the conditions and params,
-     * where logins is an array of encrypted nsLoginInfo and ids is an array of
-     * associated ids in the database. Conditions are joined with AND. If
-     * countOnly is true, we will not instantiate the login objects, so the
-     * logins array returned will be empty. This saves memory and processing
-     * time when we don't need the logins.
+     * Returns [logins, ids] for logins that match the arguments, where logins
+     * is an array of encrypted nsLoginInfo and ids is an array of associated
+     * ids in the database.
      */
-    _queryLogins : function (conditions, params, countOnly) {
+    _queryLogins : function (hostname, formSubmitURL, httpRealm) {
         let logins = [], ids = [];
 
         let query = "SELECT * FROM moz_logins";
+        let [conditions, params] =
+            this._buildConditionsAndParams(hostname, formSubmitURL, httpRealm);
+
         if (conditions.length) {
             conditions = conditions.map(function(c) "(" + c + ")");
             query += " WHERE " + conditions.join(" AND ");
@@ -618,9 +605,6 @@ LoginManagerStorage_mozStorage.prototype = {
             stmt = this._dbCreateStatement(query, params);
             // We can't execute as usual here, since we're iterating over rows
             while (stmt.step()) {
-                ids.push(stmt.row.id);
-                if (countOnly)
-                    continue;
                 // Create the new nsLoginInfo object, push to array
                 let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
                             createInstance(Ci.nsILoginInfo);
@@ -629,6 +613,7 @@ LoginManagerStorage_mozStorage.prototype = {
                            stmt.row.encryptedPassword, stmt.row.usernameField,
                            stmt.row.passwordField);
                 logins.push(login);
+                ids.push(stmt.row.id);
             }
         } catch (e) {
             this.log("_queryLogins failed: " + e.name + " : " + e.message);
@@ -669,6 +654,41 @@ LoginManagerStorage_mozStorage.prototype = {
         }
 
         return disabledHosts;
+    },
+
+
+    /*
+     * _buildConditionsAndParams
+     *
+     * Adjusts the WHERE conditions and parameters for statements prior to the
+     * statement being created. This fixes the cases where nulls are involved
+     * and the empty string is supposed to be a wildcard match
+     */
+    _buildConditionsAndParams : function (hostname, formSubmitURL, httpRealm) {
+        let conditions = [], params = {};
+
+        if (hostname == null) {
+            conditions.push("hostname isnull");
+        } else if (hostname != '') {
+            conditions.push("hostname = :hostname");
+            params["hostname"] = hostname;
+        }
+
+        if (formSubmitURL == null) {
+            conditions.push("formSubmitURL isnull");
+        } else if (formSubmitURL != '') {
+            conditions.push("formSubmitURL = :formSubmitURL OR formSubmitURL = ''");
+            params["formSubmitURL"] = formSubmitURL;
+        }
+
+        if (httpRealm == null) {
+            conditions.push("httpRealm isnull");
+        } else if (httpRealm != '') {
+            conditions.push("httpRealm = :httpRealm");
+            params["httpRealm"] = httpRealm;
+        }
+
+        return [conditions, params];
     },
 
 

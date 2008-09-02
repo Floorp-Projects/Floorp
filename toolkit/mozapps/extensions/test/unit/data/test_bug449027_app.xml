@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
+  <emItems>
+    <!-- All extensions are version 5 and tests run against appVersion 3 -->
+
+    <!-- Test 1 not listed, should never get blocked -->
+    <!-- Always blocked -->
+    <emItem id="test_bug449027_2@tests.mozilla.org"/>
+    <!-- Always blocked -->
+    <emItem id="test_bug449027_3@tests.mozilla.org">
+      <versionRange/>
+    </emItem>
+    <!-- Not blocked since neither version range matches -->
+    <emItem id="test_bug449027_4@tests.mozilla.org">
+      <versionRange minVersion="6"/>
+      <versionRange maxVersion="4"/>
+    </emItem>
+    <!-- Invalid version range, should not block -->
+    <emItem id="test_bug449027_5@tests.mozilla.org">
+      <versionRange minVersion="6" maxVersion="4"/>
+    </emItem>
+    <!-- Should block all of these -->
+    <emItem id="test_bug449027_6@tests.mozilla.org">
+      <versionRange minVersion="7" maxVersion="8"/>
+      <versionRange minVersion="5" maxVersion="6"/>
+      <versionRange maxVersion="4"/>
+    </emItem>
+    <emItem id="test_bug449027_7@tests.mozilla.org">
+      <versionRange maxVersion="4"/>
+      <versionRange minVersion="4" maxVersion="5"/>
+      <versionRange minVersion="6" maxVersion="7"/>
+    </emItem>
+    <emItem id="test_bug449027_8@tests.mozilla.org">
+      <versionRange minVersion="2" maxVersion="2"/>
+      <versionRange minVersion="4" maxVersion="6"/>
+      <versionRange minVersion="7" maxVersion="8"/>
+    </emItem>
+    <emItem id="test_bug449027_9@tests.mozilla.org">
+      <versionRange minVersion="4"/>
+    </emItem>
+    <emItem id="test_bug449027_10@tests.mozilla.org">
+      <versionRange minVersion="5"/>
+    </emItem>
+    <emItem id="test_bug449027_11@tests.mozilla.org">
+      <versionRange maxVersion="6"/>
+    </emItem>
+    <emItem id="test_bug449027_12@tests.mozilla.org">
+      <versionRange maxVersion="5"/>
+    </emItem>
+
+    <!-- This should block all versions for any application -->
+    <emItem id="test_bug449027_13@tests.mozilla.org">
+      <versionRange>
+        <targetApplication/>
+      </versionRange>
+    </emItem>
+    <!-- Shouldn't block -->
+    <emItem id="test_bug449027_14@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="foo@bar.com"/>
+      </versionRange>
+    </emItem>
+    <!-- Should block for any version of the app -->
+    <emItem id="test_bug449027_15@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org"/>
+      </versionRange>
+    </emItem>
+    <!-- Should still block -->
+    <emItem id="test_bug449027_16@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <!-- Not blocked since neither version range matches -->
+    <emItem id="test_bug449027_17@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="4"/>
+          <versionRange maxVersion="2"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <!-- Invalid version range, should not block -->
+    <emItem id="test_bug449027_18@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="6" maxVersion="4"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <!-- Should block all of these -->
+    <emItem id="test_bug449027_19@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="foo@bar.com"/>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="5" maxVersion="6"/>
+          <versionRange minVersion="3" maxVersion="4"/>
+          <versionRange maxVersion="2"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <emItem id="test_bug449027_20@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange maxVersion="2"/>
+          <versionRange minVersion="2" maxVersion="3"/>
+          <versionRange minVersion="4" maxVersion="5"/>
+        </targetApplication>
+        <targetApplication id="foo@bar.com"/>
+      </versionRange>
+    </emItem>
+    <emItem id="test_bug449027_21@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="1" maxVersion="1"/>
+          <versionRange minVersion="2" maxVersion="4"/>
+          <versionRange minVersion="5" maxVersion="6"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <emItem id="test_bug449027_22@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="foo@bar.com"/>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="3"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <emItem id="test_bug449027_23@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="2"/>
+        </targetApplication>
+        <targetApplication id="foo@bar.com"/>
+      </versionRange>
+    </emItem>
+    <emItem id="test_bug449027_24@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange maxVersion="3"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <emItem id="test_bug449027_25@tests.mozilla.org">
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange maxVersion="4"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+  </emItems>
+  <pluginItems>
+    <!-- All plugins are version 5 and tests run against appVersion 3 -->
+
+    <!-- Test 1 not listed, should never get blocked -->
+    <!-- Always blocked -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_2$"/>
+    </pluginItem>
+    <!-- Always blocked -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_3$"/>
+      <versionRange/>
+    </pluginItem>
+    <!-- Not blocked since neither version range matches -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_4$"/>
+      <versionRange minVersion="6"/>
+      <versionRange maxVersion="4"/>
+    </pluginItem>
+    <!-- Invalid version range, should not block -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_5$"/>
+      <versionRange minVersion="6" maxVersion="4"/>
+    </pluginItem>
+    <!-- Should block all of these -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_6$"/>
+      <versionRange minVersion="7" maxVersion="8"/>
+      <versionRange minVersion="5" maxVersion="6"/>
+      <versionRange maxVersion="4"/>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_7$"/>
+      <versionRange maxVersion="4"/>
+      <versionRange minVersion="4" maxVersion="5"/>
+      <versionRange minVersion="6" maxVersion="7"/>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_8$"/>
+      <versionRange minVersion="2" maxVersion="2"/>
+      <versionRange minVersion="4" maxVersion="6"/>
+      <versionRange minVersion="7" maxVersion="8"/>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_9$"/>
+      <versionRange minVersion="4"/>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_10$"/>
+      <versionRange minVersion="5"/>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_11$"/>
+      <versionRange maxVersion="6"/>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_12$"/>
+      <versionRange maxVersion="5"/>
+    </pluginItem>
+
+    <!-- This should block all versions for any application -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_13$"/>
+      <versionRange>
+        <targetApplication/>
+      </versionRange>
+    </pluginItem>
+    <!-- Shouldn't block -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_14$"/>
+      <versionRange>
+        <targetApplication id="foo@bar.com"/>
+      </versionRange>
+    </pluginItem>
+    <!-- Should block for any version of the app -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_15$"/>
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org"/>
+      </versionRange>
+    </pluginItem>
+    <!-- Should still block -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_16$"/>
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange/>
+        </targetApplication>
+      </versionRange>
+    </pluginItem>
+    <!-- Not blocked since neither version range matches -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_17$"/>
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="4"/>
+          <versionRange maxVersion="2"/>
+        </targetApplication>
+      </versionRange>
+    </pluginItem>
+    <!-- Invalid version range, should not block -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_18$"/>
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="6" maxVersion="4"/>
+        </targetApplication>
+      </versionRange>
+    </pluginItem>
+    <!-- Should block all of these -->
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_19$"/>
+      <versionRange>
+        <targetApplication id="foo@bar.com"/>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="5" maxVersion="6"/>
+          <versionRange minVersion="3" maxVersion="4"/>
+          <versionRange maxVersion="2"/>
+        </targetApplication>
+      </versionRange>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_20$"/>
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange maxVersion="2"/>
+          <versionRange minVersion="2" maxVersion="3"/>
+          <versionRange minVersion="4" maxVersion="5"/>
+        </targetApplication>
+        <targetApplication id="foo@bar.com"/>
+      </versionRange>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_21$"/>
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="1" maxVersion="1"/>
+          <versionRange minVersion="2" maxVersion="4"/>
+          <versionRange minVersion="5" maxVersion="6"/>
+        </targetApplication>
+      </versionRange>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_22$"/>
+      <versionRange>
+        <targetApplication id="foo@bar.com"/>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="3"/>
+        </targetApplication>
+      </versionRange>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_23$"/>
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="2"/>
+        </targetApplication>
+        <targetApplication id="foo@bar.com"/>
+      </versionRange>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_24$"/>
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange maxVersion="3"/>
+        </targetApplication>
+      </versionRange>
+    </pluginItem>
+    <pluginItem>
+      <match name="name" exp="^test_bug449027_25$"/>
+      <versionRange>
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange maxVersion="4"/>
+        </targetApplication>
+      </versionRange>
+    </pluginItem>
+  </pluginItems>
+</blocklist>

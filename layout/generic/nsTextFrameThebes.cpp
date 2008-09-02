@@ -2914,7 +2914,7 @@ nsTextPaintStyle::GetHighlightColors(nscolor* aForeColor,
   nscolor foreColor, backColor;
   look->GetColor(nsILookAndFeel::eColor_TextHighlightBackground,
                  backColor);
-  look->GetColor(nsILookAndFeel::eColor_TextSelectForeground,
+  look->GetColor(nsILookAndFeel::eColor_TextHighlightForeground,
                  foreColor);
   EnsureSufficientContrast(&foreColor, &backColor);
   *aForeColor = foreColor;

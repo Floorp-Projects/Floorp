@@ -1313,9 +1313,10 @@ BookmarkContentSink::SetFaviconForURI(nsIURI* aPageURI, nsIURI* aIconURI,
     serialNumber++;
   }
 
-  // save in service
-  rv = faviconService->SetFaviconDataFromDataURL(faviconURI, aData, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // save the favicon data
+  // This could fail if the favicon is bigger than defined limit, in such a
+  // case data will not be saved to the db but we will still continue.
+  (void) faviconService->SetFaviconDataFromDataURL(faviconURI, aData, 0);
 
   rv = faviconService->SetFaviconUrlForPage(aPageURI, faviconURI);
   NS_ENSURE_SUCCESS(rv, rv);

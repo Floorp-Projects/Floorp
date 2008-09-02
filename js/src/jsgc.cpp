@@ -851,6 +851,8 @@ DestroyGCChunk(jsuword chunk)
     if (js_gcUseMmap) {
 # if defined(XP_WIN)
         VirtualFree((void *) chunk, 0, MEM_RELEASE);
+# elif defined(SOLARIS)
+        munmap((char *) chunk, js_gcArenasPerChunk << GC_ARENA_SHIFT);
 # else
         munmap((void *) chunk, js_gcArenasPerChunk << GC_ARENA_SHIFT);
 # endif
@@ -1564,6 +1566,7 @@ js_named_root_dumper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
     return JS_DHASH_NEXT;
 }
 
+JS_BEGIN_EXTERN_C
 void
 js_DumpNamedRoots(JSRuntime *rt,
                   void (*dump)(const char *name, void *rp, void *data),
@@ -1575,6 +1578,7 @@ js_DumpNamedRoots(JSRuntime *rt,
     args.data = data;
     JS_DHashTableEnumerate(&rt->gcRootsHash, js_named_root_dumper, &args);
 }
+JS_END_EXTERN_C
 
 #endif /* DEBUG */
 
@@ -2284,14 +2288,6 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case JSTRACE_NAMESPACE:
-        js_TraceXMLNamespace(trc, (JSXMLNamespace *)thing);
-        break;
-
-      case JSTRACE_QNAME:
-        js_TraceXMLQName(trc, (JSXMLQName *)thing);
-        break;
-
       case JSTRACE_XML:
         js_TraceXML(trc, (JSXML *)thing);
         break;
@@ -2760,8 +2756,6 @@ TraceWeakRoots(JSTracer *trc, JSWeakRoots *wr)
         "newborn object",
         "newborn double",
         "newborn string",
-        "newborn namespace",
-        "newborn qname",
         "newborn xml"
     };
 #endif
@@ -3400,13 +3394,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                             /* Do nothing. */
                             break;
 #if JS_HAS_XML_SUPPORT
-                          case GCX_NAMESPACE:
-                            js_FinalizeXMLNamespace(cx,
-                                                    (JSXMLNamespace *) thing);
-                            break;
-                          case GCX_QNAME:
-                            js_FinalizeXMLQName(cx, (JSXMLQName *) thing);
-                            break;
                           case GCX_XML:
                             js_FinalizeXML(cx, (JSXML *) thing);
                             break;

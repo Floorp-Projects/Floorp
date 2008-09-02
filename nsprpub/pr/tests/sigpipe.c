@@ -49,7 +49,7 @@
 
 int main(void)
 {
-    /* This test applies to Unix and OS/2 (emx build). */
+    /* This test applies to Unix and OS/2. */
     return 0;
 }
 
@@ -64,12 +64,7 @@ int main(void)
 #endif
 
 #include <stdio.h>
-#ifdef XP_OS2_VACPP
-#define EPIPE EBADF  /* IBM's write() doesn't return EPIPE */
-#include <io.h>
-#else
 #include <unistd.h>
-#endif
 #include <errno.h>
 
 static void Test(void *arg)

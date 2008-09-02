@@ -544,13 +544,31 @@ nsDOMDataTransfer::ConvertFromVariant(nsIVariant* aVariant,
   aVariant->GetDataType(&type);
   if (type == nsIDataType::VTYPE_INTERFACE ||
       type == nsIDataType::VTYPE_INTERFACE_IS) {
-    if (NS_FAILED(aVariant->GetAsISupports(aSupports)))
-      return PR_FALSE;
+    nsCOMPtr<nsISupports> data;
+    if (NS_FAILED(aVariant->GetAsISupports(getter_AddRefs(data))))
+       return PR_FALSE;
+ 
+    nsCOMPtr<nsIFlavorDataProvider> fdp = do_QueryInterface(data);
+    if (fdp) {
+      // for flavour data providers, use kFlavorHasDataProvider (which has the
+      // value 0) as the length.
+      NS_ADDREF(*aSupports = fdp);
+      *aLength = nsITransferable::kFlavorHasDataProvider;
+    }
+    else {
+      // wrap the item in an nsISupportsInterfacePointer
+      nsCOMPtr<nsISupportsInterfacePointer> ptrSupports =
+        do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
+      if (!ptrSupports)
+        return PR_FALSE;
 
-    // for flavour data providers, use kFlavorHasDataProvider (which has the
-    // value 0) as the length.
-    nsCOMPtr<nsIFlavorDataProvider> fdp = do_QueryInterface(*aSupports);
-    *aLength = fdp ? sizeof(nsISupports) : nsITransferable::kFlavorHasDataProvider;
+      ptrSupports->SetData(data);
+      NS_ADDREF(*aSupports = ptrSupports);
+
+      *aLength = sizeof(nsISupportsInterfacePointer *);
+    }
+
+    return PR_TRUE;
   }
 
   PRUnichar* chrs;

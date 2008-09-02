@@ -125,8 +125,6 @@ typedef struct JSStackHeader        JSStackHeader;
 typedef struct JSStringBuffer       JSStringBuffer;
 typedef struct JSSubString          JSSubString;
 typedef struct JSXML                JSXML;
-typedef struct JSXMLNamespace       JSXMLNamespace;
-typedef struct JSXMLQName           JSXMLQName;
 typedef struct JSXMLArray           JSXMLArray;
 typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 
@@ -239,8 +237,6 @@ typedef union JSTempValueUnion {
     JSObject            *object;
     JSString            *string;
     JSXML               *xml;
-    JSXMLQName          *qname;
-    JSXMLNamespace      *nspace;
     JSTempValueTrace    trace;
     JSScopeProperty     *sprop;
     JSWeakRoots         *weakRoots;
