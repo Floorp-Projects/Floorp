@@ -4397,11 +4397,7 @@ nsBrowserAccess.prototype =
 
   isTabContentWindow : function(aWindow)
   {
-    var browsers = gBrowser.browsers;
-    for (var ctr = 0; ctr < browsers.length; ctr++)
-      if (browsers.item(ctr).contentWindow == aWindow)
-        return true;
-    return false;
+    return gBrowser.browsers.some(function (browser) browser.contentWindow == aWindow);
   }
 }
 
