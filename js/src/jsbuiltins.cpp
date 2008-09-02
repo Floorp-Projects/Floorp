@@ -434,10 +434,18 @@ js_FastCallIteratorNext(JSContext* cx, JSObject* iterobj)
 GuardRecord* FASTCALL
 js_CallTree(InterpState* state, Fragment* f)
 {
+    GuardRecord* lr;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
+
     u.code = f->code();
     JS_ASSERT(u.code);
-    GuardRecord* lr = u.func(state, NULL);
+
+#if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
+    SIMULATE_FASTCALL(lr, state, NULL, u.func);
+#else
+    lr = u.func(state, NULL);
+#endif
+
     if (lr->exit->exitType == NESTED_EXIT)
         lr = state->nestedExit;
     return lr;
