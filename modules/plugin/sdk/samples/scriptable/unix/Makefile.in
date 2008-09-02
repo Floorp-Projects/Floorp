@@ -1,4 +1,3 @@
-#!nmake
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -36,25 +35,49 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../../..
-topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+DEPTH		= ../../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = samples
+MODULE		= npSDKscriptable
+LIBRARY_NAME	= npSDKscriptable
 
-# uncomment NSDISTMODE to make a copy, instead of symlink, all needed files from $(DIST) 
-# NSDISTMODE = copy
+REQUIRES        = idl \
+                  xpcom \
+                  nspr \
+                  $(NULL)
+
+CPPSRCS         = plugin.cpp \
+		  nsScriptablePeer.cpp
+
+XPIDLSRCS 	= nsIScriptablePluginSample.idl 
+
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libplugingate_s.$(LIB_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINNT)
-PROG_SUFFIX = .exe
-else
-PROG_SUFFIX =
+DEFINES += -DMOZILLA_STRICT_API
+
+EXTRA_DSO_LDOPTS +=  $(XLDFLAGS) -rdynamic  -lXi -lXext -lX11 -lm -lXt
+
+INSTALL_PLUGIN	= $(CONFIG_TOOLS)/nsinstall -R 
+INSTALL = true
+
+ifeq ($(OS_ARCH), UNIX)
+# This needs to get defined for npapi.h on unix platforms.
+DEFINES		+= -DXP_UNIX
 endif
 
-clobber::
-	$(RM) -r bin idl include
+LOCAL_INCLUDES	+= -I$(srcdir)/$(XPIDL_GEN_DIR) -I$(srcdir)/../../include -I$(srcdir)/../../../include
+
+install-plugin:	$(SHARED_LIBRARY)
+	$(INSTALL_PLUGIN) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/plugins
+ifdef SHARED_LIBRARY
+	$(INSTALL_PLUGIN) $(SHARED_LIBRARY) $(DIST)/bin/plugins
+endif
+
+libs:: install-plugin
+

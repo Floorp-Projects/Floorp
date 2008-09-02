@@ -35,27 +35,32 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../../../../../..
+DEPTH = ../../../../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = npbasic
-LIBRARY_NAME = npbasic
+XPIDL_MODULE = npscriptable
+LIBRARY_NAME = npscriptable
 
 NO_DIST_INSTALL = 1
 
 REQUIRES = plugin \
+           xpcom \
            $(NULL)
 
-CPPSRCS = plugin.cpp
+CPPSRCS = plugin.cpp \
+          nsScriptablePeer.cpp \
+          $(NULL)
+
+XPIDLSRCS = nsIScriptablePluginSample.idl
 
 SHARED_LIBRARY_LIBS = ../../common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX)
 
-DEFFILE = $(win_srcdir)/basic.def
-RESFILE = basic.res
+DEFFILE = $(win_srcdir)/npscriptable.def
+RESFILE = npscriptable.res
 
 ifdef GNU_CC
 OS_LIBS	+= -lgdi32
@@ -65,6 +70,7 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DMOZILLA_STRICT_API
 
-LOCAL_INCLUDES = -I$(srcdir)/../../include \
+LOCAL_INCLUDES = -I./$(XPIDL_GEN_DIR) \
+                 -I$(srcdir)/../../include \
                  -I$(srcdir)/../../../include \
                  $(NULL)

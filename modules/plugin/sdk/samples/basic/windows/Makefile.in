@@ -35,27 +35,36 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = plugingate_s
+XPIDL_MODULE = npbasic
+LIBRARY_NAME = npbasic
 
 NO_DIST_INSTALL = 1
 
 REQUIRES = plugin \
            $(NULL)
 
-CPPSRCS = npn_gate.cpp \
-          npp_gate.cpp \
-          np_entry.cpp \
-          $(NULL)
+CPPSRCS = plugin.cpp
 
-FORCE_STATIC_LIB = 1
+SHARED_LIBRARY_LIBS = ../../common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX)
+
+DEFFILE = $(win_srcdir)/basic.def
+RESFILE = basic.res
+
+ifdef GNU_CC
+OS_LIBS	+= -lgdi32
+endif
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES	= -I$(srcdir)/../include -I$(srcdir)/../../include
+DEFINES += -DMOZILLA_STRICT_API
+
+LOCAL_INCLUDES = -I$(srcdir)/../../include \
+                 -I$(srcdir)/../../../include \
+                 $(NULL)
