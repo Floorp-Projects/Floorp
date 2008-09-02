@@ -432,8 +432,6 @@ struct JSParseContext {
     JSTokenStream       tokenStream;
     void                *tempPoolMark;  /* initial JSContext.tempPool mark */
     JSPrincipals        *principals;    /* principals associated with source */
-    JSStackFrame        *callerFrame;   /* scripted caller frame for eval and
-                                           debug scripts */
     JSParseNode         *nodeList;      /* list of recyclable parse-node
                                            structs */
     JSParsedObjectBox   *traceListHead; /* list of parsed object for GC
@@ -453,9 +451,8 @@ extern JSParseNode *
 js_ParseScript(JSContext *cx, JSObject *chain, JSParseContext *pc);
 
 extern JSScript *
-js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
-                 JSPrincipals *principals, uint32 tcflags,
-                 const jschar *chars, size_t length,
+js_CompileScript(JSContext *cx, JSObject *obj, JSPrincipals *principals,
+                 uint32 tcflags, const jschar *chars, size_t length,
                  FILE *file, const char *filename, uintN lineno);
 
 extern JSBool
@@ -482,7 +479,6 @@ js_ParseXMLText(JSContext *cx, JSObject *chain, JSParseContext *pc,
  */
 extern JSBool
 js_InitParseContext(JSContext *cx, JSParseContext *pc, JSPrincipals *principals,
-                    JSStackFrame *callerFrame,
                     const jschar *base, size_t length, FILE *fp,
                     const char *filename, uintN lineno);
 

@@ -171,14 +171,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                        XXX combine with blockChain? */
     JSAtomList      decls;          /* function, const, and var declarations */
     JSParseContext  *parseContext;
-
-    union {
-
-        JSFunction  *fun;           /* function to store argument and variable
+    JSFunction      *fun;           /* function to store argument and variable
                                        names when flags & TCF_IN_FUNCTION */
-        JSObject    *scopeChain;    /* scope chain object for the script */
-    } u;
-
 #ifdef JS_SCOPE_DEPTH_METER
     uint16          scopeDepth;     /* current lexical scope chain depth */
     uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
@@ -201,6 +195,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                        chain */
 #define TCF_NO_SCRIPT_RVAL   0x1000 /* API caller does not want result value
                                        from global script */
+
 /*
  * Flags to propagate out of the blocks.
  */
@@ -235,7 +230,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
      ATOM_LIST_INIT(&(tc)->decls),                                            \
      (tc)->blockNode = NULL,                                                  \
      (tc)->parseContext = (pc),                                               \
-     (tc)->u.scopeChain = NULL,                                               \
+     (tc)->fun = NULL,                                                        \
      JS_SCOPE_DEPTH_METERING((tc)->scopeDepth = (tc)->maxScopeDepth = 0))
 
 /*
