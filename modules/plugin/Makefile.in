@@ -80,7 +80,7 @@ endif
 
 ifdef ENABLE_TESTS
 ifneq (,$(filter WINNT Darwin Linux,$(OS_ARCH)))
-TOOL_DIRS += tools/sdk
+TOOL_DIRS += sdk
 endif
 endif
 

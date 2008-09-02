@@ -1,3 +1,4 @@
+#!nmake
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -35,44 +36,25 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= npSDKbasic
+DIRS = samples
 
-REQUIRES        = idl \
-                  xpcom \
-                  nspr \
-                  $(NULL)
-
-CPPSRCS         = plugin.cpp
-
-SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libplugingate_s.$(LIB_SUFFIX) \
+# uncomment NSDISTMODE to make a copy, instead of symlink, all needed files from $(DIST) 
+# NSDISTMODE = copy
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DMOZILLA_STRICT_API
-
-EXTRA_DSO_LDOPTS +=  $(XLDFLAGS) -rdynamic  -lXi -lXext -lX11 -lm -lXt
-
-INSTALL_PLUGIN	= $(CONFIG_TOOLS)/nsinstall -R 
-INSTALL = true
-
-ifeq ($(OS_ARCH), UNIX)
-# This needs to get defined for npapi.h on unix platforms.
-DEFINES         += -DXP_UNIX
+ifeq ($(OS_ARCH),WINNT)
+PROG_SUFFIX = .exe
+else
+PROG_SUFFIX =
 endif
 
-LOCAL_INCLUDES	+= -I$(srcdir)/../../include -I$(srcdir)/../../../include
-
-install-plugin:	$(SHARED_LIBRARY)
-ifdef SHARED_LIBRARY
-	$(INSTALL_PLUGIN) $(SHARED_LIBRARY) $(DIST)/bin/plugins
-endif
-
-libs:: install-plugin
+clobber::
+	$(RM) -r bin idl include

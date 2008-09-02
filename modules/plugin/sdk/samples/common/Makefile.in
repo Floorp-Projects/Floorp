@@ -35,44 +35,27 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../../../../..
-topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = npsimple
-LIBRARY_NAME = npsimple
-REQUIRES = xpcom \
-           plugin \
-           $(NULL)
+LIBRARY_NAME = plugingate_s
 
 NO_DIST_INSTALL = 1
-NO_INSTALL = 1
 
-CPPSRCS = nsScriptablePeer.cpp \
-          plugin.cpp \
+REQUIRES = plugin \
+           $(NULL)
+
+CPPSRCS = npn_gate.cpp \
+          npp_gate.cpp \
+          np_entry.cpp \
           $(NULL)
 
-XPIDLSRCS = nsISimplePlugin.idl
-
-SHARED_LIBRARY_LIBS = ../common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX)
-
-ifeq ($(OS_ARCH),WINNT)
-DEFFILE = $(win_srcdir)/npsimple.def
-RESFILE = npsimple.res
-endif
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DMOZILLA_STRICT_API
-
-ifeq ($(OS_ARCH),Linux)
-EXTRA_DSO_LDOPTS +=  $(XLDFLAGS) -rdynamic  -lXi -lXext -lX11 -lm -lXt
-endif
-
-LOCAL_INCLUDES = -I./$(XPIDL_GEN_DIR) \
-                 -I$(srcdir)/../include \
-                 -I$(srcdir)/../../include \
-                 $(NULL)
+LOCAL_INCLUDES	= -I$(srcdir)/../include -I$(srcdir)/../../include
