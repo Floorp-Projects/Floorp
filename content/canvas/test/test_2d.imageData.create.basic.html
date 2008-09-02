@@ -14,15 +14,7 @@ MochiKit.DOM.addLoadEvent(function () {
 var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');
 
-var _thrown_outer = false;
-try {
-
 ok(ctx.createImageData(1, 1) !== null, "ctx.createImageData(1, 1) !== null");
-
-} catch (e) {
-    _thrown_outer = true;
-}
-todo(!_thrown_outer, 'should not throw exception');
 
 SimpleTest.finish();
 

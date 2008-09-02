@@ -15,17 +15,11 @@ var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');
 
 var _thrown_outer = false;
-try {
 
 var imgdata1 = ctx.createImageData(10.01, 10.99);
 var imgdata2 = ctx.getImageData(0, 0, 10.01, 10.99);
 ok(imgdata1.width == imgdata2.width, "imgdata1.width == imgdata2.width");
 ok(imgdata1.height == imgdata2.height, "imgdata1.height == imgdata2.height");
-
-} catch (e) {
-    _thrown_outer = true;
-}
-todo(!_thrown_outer, 'should not throw exception');
 
 SimpleTest.finish();
 
