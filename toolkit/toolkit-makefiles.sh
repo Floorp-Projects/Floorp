@@ -343,7 +343,7 @@ MAKEFILES_plugin="
   modules/plugin/base/public/Makefile
   modules/plugin/samples/simple/Makefile
   modules/plugin/samples/SanePlugin/Makefile
-  modules/plugin/samples/default/unix/Makefile
+  modules/plugin/default/unix/Makefile
   modules/plugin/tools/sdk/Makefile
   modules/plugin/tools/sdk/samples/Makefile
   modules/plugin/tools/sdk/samples/common/Makefile
