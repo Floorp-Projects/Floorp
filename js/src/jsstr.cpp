@@ -2839,7 +2839,7 @@ js_HashString(JSString *str)
 /*
  * str is not necessarily a GC thing here.
  */
-bool JS_FASTCALL
+JSBool JS_FASTCALL
 js_EqualStrings(JSString *str1, JSString *str2)
 {
     size_t n;
@@ -2850,23 +2850,23 @@ js_EqualStrings(JSString *str1, JSString *str2)
 
     /* Fast case: pointer equality could be a quick win. */
     if (str1 == str2)
-        return true;
+        return JS_TRUE;
 
     n = JSSTRING_LENGTH(str1);
     if (n != JSSTRING_LENGTH(str2))
-        return false;
+        return JS_FALSE;
 
     if (n == 0)
-        return true;
+        return JS_TRUE;
 
     s1 = JSSTRING_CHARS(str1), s2 = JSSTRING_CHARS(str2);
     do {
         if (*s1 != *s2)
-            return false;
+            return JS_FALSE;
         ++s1, ++s2;
     } while (--n != 0);
 
-    return true;
+    return JS_TRUE;
 }
 
 jsint JS_FASTCALL

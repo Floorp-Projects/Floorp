@@ -60,6 +60,11 @@
 using namespace avmplus;
 using namespace nanojit;
 
+/*
+ * NB: bool FASTCALL is not compatible with Nanojit's calling convention usage.
+ * Do not use bool FASTCALL, use JSBool only!
+ */
+
 jsdouble FASTCALL
 js_dmod(jsdouble a, jsdouble b)
 {
@@ -181,7 +186,7 @@ js_Math_sqrt(jsdouble d)
     return sqrt(d);
 }
 
-bool FASTCALL
+JSBool FASTCALL
 js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
 {
     JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
@@ -194,9 +199,9 @@ js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
             obj->fslots[JSSLOT_ARRAY_COUNT]++;
         }
         obj->dslots[i] = v;
-        return true;
+        return JS_TRUE;
     }
-    return OBJ_SET_PROPERTY(cx, obj, INT_TO_JSID(i), &v) ? true : false;
+    return OBJ_SET_PROPERTY(cx, obj, INT_TO_JSID(i), &v);
 }
 
 JSString* FASTCALL
@@ -405,12 +410,12 @@ js_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
     return v;
 }
 
-bool FASTCALL
+JSBool FASTCALL
 js_Any_setelem(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
 {
     jsid id;
     if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
-        return false;
+        return JS_FALSE;
     return OBJ_SET_PROPERTY(cx, obj, id, &v);
 }
 
@@ -520,7 +525,7 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
     return obj;
 }
 
-bool FASTCALL
+JSBool FASTCALL
 js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
     JSScopeProperty* sprop2 = NULL; // initialize early to make MSVC happy
@@ -536,7 +541,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
         scope = js_GetMutableScope(cx, obj);
         if (!scope) {
             JS_UNLOCK_OBJ(cx, obj);
-            return false;
+            return JS_FALSE;
         }
     }
 
@@ -547,7 +552,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
         } else {
             if (!js_AllocSlot(cx, obj, &slot)) {
                 JS_UNLOCK_SCOPE(cx, scope);
-                return false;
+                return JS_FALSE;
             }
 
             if (slot != sprop->slot)
@@ -558,7 +563,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
         ++scope->entryCount;
         scope->lastProp = sprop;
         JS_UNLOCK_SCOPE(cx, scope);
-        return true;
+        return JS_TRUE;
     }
 
     sprop2 = js_AddScopeProperty(cx, scope, sprop->id,
@@ -566,22 +571,22 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
                                  sprop->attrs, sprop->flags, sprop->shortid);
     if (sprop2 == sprop) {
         JS_UNLOCK_SCOPE(cx, scope);
-        return true;
+        return JS_TRUE;
     }
     slot = sprop2->slot;
 
   slot_changed:
     js_FreeSlot(cx, obj, slot);
     JS_UNLOCK_SCOPE(cx, scope);
-    return false;
+    return JS_FALSE;
 }
 
-bool FASTCALL
+JSBool FASTCALL
 js_HasNamedProperty(JSContext* cx, JSObject* obj, JSString* idstr)
 {
     jsid id;
     if (!js_ValueToStringId(cx, STRING_TO_JSVAL(idstr), &id))
-        return JSVAL_ERROR_COOKIE;
+        return JS_FALSE;
 
     JSObject* obj2;
     JSProperty* prop;
