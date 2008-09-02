@@ -59,7 +59,7 @@
  * image        C string containing "image" for pretty-printer, null if ugly
  * length       Number of bytes including any immediate operands
  * nuses        Number of stack slots consumed by bytecode, -1 if variadic
- * ndefs        Number of stack slots produced by bytecode
+ * ndefs        Number of stack slots produced by bytecode, -1 if variadic
  * prec         Operator precedence, zero if not an operator
  * format       Bytecode plus immediate operand encoding format
  *
@@ -263,7 +263,7 @@ OPDEF(JSOP_DEBUGGER,  113,"debugger",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* gosub/retsub for finally handling */
 OPDEF(JSOP_GOSUB,     114,"gosub",      NULL,         3,  0,  0,  0,  JOF_JUMP)
-OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  2,  0,  0,  JOF_BYTE)
 
 /* More exception handling ops. */
 OPDEF(JSOP_EXCEPTION, 116,"exception",  NULL,         1,  0,  1,  0,  JOF_BYTE)
@@ -327,11 +327,11 @@ OPDEF(JSOP_GROUP,       131, "group",       NULL,     1,  0,  0, 19,  JOF_BYTE)
 OPDEF(JSOP_SETCALL,     132, "setcall",     NULL,     3, -1,  2, 18,  JOF_UINT16|JOF_SET)
 
 /*
- * Exception handling no-ops, for more economical byte-coding than SRC_TRYFIN
- * srcnote-annotated JSOP_NOPs.
+ * Exception handling no-op, for more economical byte-coding than SRC_TRYFIN
+ * srcnote-annotated JSOP_NOPs and to simply stack balance handling.
  */
 OPDEF(JSOP_TRY,         133,"try",        NULL,       1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_FINALLY,     134,"finally",    NULL,       1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_FINALLY,     134,"finally",    NULL,       1,  0,  2,  0,  JOF_BYTE)
 
 /*
  * Generic nop for the decompiler.
@@ -466,15 +466,15 @@ OPDEF(JSOP_TYPEOFEXPR,    198,"typeofexpr",  NULL,    1,  1,  1, 15,  JOF_BYTE|J
 /*
  * Block-local scope support.
  */
-OPDEF(JSOP_ENTERBLOCK,    199,"enterblock",  NULL,    3,  0,  0,  0,  JOF_OBJECT)
-OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    3,  0,  0,  0,  JOF_UINT16)
+OPDEF(JSOP_ENTERBLOCK,    199,"enterblock",  NULL,    3,  0, -1,  0,  JOF_OBJECT)
+OPDEF(JSOP_LEAVEBLOCK,    200,"leaveblock",  NULL,    3, -1,  0,  0,  JOF_UINT16)
 OPDEF(JSOP_UNUSED201,     201,"unused201",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED202,     202,"unused202",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED203,     203,"unused203",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED204,     204,"unused204",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED205,     205,"unused205",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED206,     206,"unused206",   NULL,    1,  0,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED207,     207,"unused207",   NULL,    1,  0,  0, 0,   JOF_BYTE)
+OPDEF(JSOP_UNUSED207,     207,"unused207",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Iterator, generator, and array comprehension support.
@@ -499,7 +499,7 @@ OPDEF(JSOP_ENUMCONSTELEM, 214,"enumconstelem",NULL,   1,  3,  0,  3,  JOF_BYTE|J
  * Variant of JSOP_LEAVEBLOCK has a result on the stack above the locals,
  * which must be moved down when the block pops.
  */
-OPDEF(JSOP_LEAVEBLOCKEXPR,215,"leaveblockexpr",NULL,  3,  0,  0,  1,  JOF_UINT16)
+OPDEF(JSOP_LEAVEBLOCKEXPR,215,"leaveblockexpr",NULL,  3, -1,  1,  1,  JOF_UINT16)
 
 /*
  * Optimize common JSOP_{THIS,GET{ARG,LOCAL}} -> JSOP_GETPROP cliches.

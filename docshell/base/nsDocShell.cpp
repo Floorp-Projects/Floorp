@@ -7476,7 +7476,17 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     nsCOMPtr<nsIPrincipal> ownerPrincipal(do_QueryInterface(aOwner));
     if (URIIsLocalFile(aURI) && ownerPrincipal &&
         NS_SUCCEEDED(ownerPrincipal->CheckMayLoad(aURI, PR_FALSE))) {
-        channel->SetOwner(aOwner);
+        // One more check here.  CheckMayLoad will always return true for the
+        // system principal, but we do NOT want to inherit in that case.
+        PRBool isSystem;
+        nsCOMPtr<nsIScriptSecurityManager> secMan =
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+        if (secMan &&
+            NS_SUCCEEDED(secMan->IsSystemPrincipal(ownerPrincipal,
+                                                   &isSystem)) &&
+            !isSystem) {
+            channel->SetOwner(aOwner);
+        }
     }
 
     nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(channel);

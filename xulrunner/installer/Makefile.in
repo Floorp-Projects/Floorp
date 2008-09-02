@@ -142,7 +142,7 @@ DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID) -DMOZ_D
 
 
 ifeq ($(OS_TARGET),Linux)
-debian/changelog: $(srcdir)/debian/changelog.in 
+debian/changelog: $(srcdir)/debian/changelog.in  $(LIBXUL_DIST)/bin/platform.ini
 	mkdir -p debian
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
         $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@

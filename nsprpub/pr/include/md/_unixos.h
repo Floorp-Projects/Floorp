@@ -68,6 +68,8 @@
  *
  * In The Single UNIX(R) Specification, Version 2,
  * the header file for select() is <sys/time.h>.
+ * In Version 3, the header file for select() is
+ * changed to <sys/select.h>.
  *
  * fd_set is defined in <sys/types.h>.  Usually
  * <sys/time.h> includes <sys/types.h>, but on some
@@ -76,7 +78,7 @@
  */
 #include <sys/time.h>
 #include <sys/types.h>
-#if defined(AIX)  /* Only pre-4.2 AIX needs it, but for simplicity... */
+#if defined(AIX) || defined(SYMBIAN)
 #include <sys/select.h>
 #endif
 

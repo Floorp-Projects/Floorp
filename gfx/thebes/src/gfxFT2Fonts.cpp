@@ -34,7 +34,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#if defined(MOZ_WIDGET_GTK2)
 #include "gfxPlatformGtk.h"
+#define gfxToolkitPlatform gfxPlatformGtk
+#elif defined(MOZ_WIDGET_QT)
+#include "gfxQtPlatform.h"
+#include <qfontinfo.h>
+#define gfxToolkitPlatform gfxQtPlatform
+#endif
 #include "gfxTypes.h"
 #include "gfxFT2Fonts.h"
 #include <locale.h>
@@ -47,12 +54,7 @@
  */
 
 FontEntry::FontEntry(const FontEntry& aFontEntry) :
-    mFaceName(aFontEntry.mFaceName),
-    mUnicodeFont(aFontEntry.mUnicodeFont),
-    mSymbolFont(aFontEntry.mSymbolFont),
-    mItalic(aFontEntry.mItalic),
-    mWeight(aFontEntry.mWeight),
-    mCharacterMap(aFontEntry.mCharacterMap)
+    gfxFontEntry(aFontEntry)
 {
     if (aFontEntry.mFontFace)
         mFontFace = cairo_font_face_reference(aFontEntry.mFontFace);
@@ -75,6 +77,12 @@ FTFontDestroyFunc(void *data)
     FT_Done_Face(face);
 }
 
+FontEntry*
+gfxFT2Font::GetFontEntry()
+{
+    return static_cast<FontEntry*> (mFontEntry.get());
+}
+
 cairo_font_face_t *
 FontEntry::CairoFontFace()
 {
@@ -82,7 +90,7 @@ FontEntry::CairoFontFace()
 
     if (!mFontFace) {
         FT_Face face;
-        FT_New_Face(gfxPlatformGtk::GetPlatform()->GetFTLibrary(), mFilename.get(), mFTFontIndex, &face);
+        FT_New_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(), mFilename.get(), mFTFontIndex, &face);
         mFontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
         cairo_font_face_set_user_data(mFontFace, &key, face, FTFontDestroyFunc);
     }
@@ -191,7 +199,7 @@ GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
 {
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aName, aStyle);
     if (!font) {
-        FontEntry *fe = gfxPlatformGtk::GetPlatform()->FindFontEntry(aName, *aStyle);
+        FontEntry *fe = gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle);
         if (!fe) {
             printf("Failed to find font entry for %s\n", NS_ConvertUTF16toUTF8(aName).get());
             return nsnull;
@@ -220,12 +228,12 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
 
     if (familyArray.Count() == 0) {
         nsAutoString prefFamilies;
-        gfxPlatformGtk::GetPlatform()->GetPrefFonts(aStyle->langGroup.get(), prefFamilies, nsnull);
+        gfxToolkitPlatform::GetPlatform()->GetPrefFonts(aStyle->langGroup.get(), prefFamilies, nsnull);
         if (!prefFamilies.IsEmpty()) {
             ForEachFont(prefFamilies, aStyle->langGroup, FontCallback, &familyArray);
         }
     }
-#if 0 /* FIXME DFB */
+#if defined(MOZ_WIDGET_QT) /* FIXME DFB */
     if (familyArray.Count() == 0) {
         printf("failde to find a font. sadface\n");
         // We want to get rid of this entirely at some point, but first we need real lists of fonts.
@@ -621,9 +629,10 @@ gfxFT2Font::gfxFT2Font(FontEntry *aFontEntry,
     mHasSpaceGlyph(PR_FALSE),
     mSpaceGlyph(0),
     mHasMetrics(PR_FALSE),
-    mAdjustedSize(0),
-    mFontEntry(aFontEntry)
+    mAdjustedSize(0)
 {
+    mFontEntry = aFontEntry;
+    NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
 }
 
 gfxFT2Font::~gfxFT2Font()
@@ -803,7 +812,7 @@ gfxFT2Font::CairoFontFace()
     // XXX we need to handle fake bold here (or by having a sepaerate font entry)
     if (mStyle.weight >= 600 && mFontEntry->mWeight < 600)
         printf("** We want fake weight\n");
-    return mFontEntry->CairoFontFace();
+    return GetFontEntry()->CairoFontFace();
 }
 
 cairo_scaled_font_t *

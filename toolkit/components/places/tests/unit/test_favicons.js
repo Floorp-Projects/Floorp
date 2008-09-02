@@ -67,14 +67,15 @@ function readFileData(aFile) {
  */
 function setAndGetFaviconData(aFilename, aData, aMimeType) {
   var iconURI = uri("http://places.test/" + aFilename);
-
-  iconsvc.setFaviconData(iconURI,
-                         aData, aData.length, aMimeType,
-                         Number.MAX_VALUE);
-
+  try {
+    iconsvc.setFaviconData(iconURI,
+                           aData, aData.length, aMimeType,
+                           Number.MAX_VALUE);
+  } catch (ex) {}
   var dataURL = iconsvc.getFaviconDataAsDataURL(iconURI);
-  iconsvc.setFaviconDataFromDataURL(iconURI, dataURL, Number.MAX_VALUE);
-
+  try {
+    iconsvc.setFaviconDataFromDataURL(iconURI, dataURL, Number.MAX_VALUE);
+  } catch (ex) {}
   var mimeTypeOutparam = {};
 
   var outData = iconsvc.getFaviconData(iconURI,
@@ -365,21 +366,27 @@ histsvc.addVisit(page3URI, Date.now() * 1000, null,
                  histsvc.TRANSITION_TYPED, false, 0);
 
 // set first page icon
+try {
+  iconsvc.setFaviconData(icon1URI, icon1Data, icon1Data.length,
+                         icon1MimeType, Number.MAX_VALUE);
+} catch (ex) {}
 iconsvc.setFaviconUrlForPage(page1URI, icon1URI);
-iconsvc.setFaviconData(icon1URI, icon1Data, icon1Data.length,
-                       icon1MimeType, Number.MAX_VALUE);
 var savedIcon1URI = iconsvc.getFaviconForPage(page1URI);
 
 // set second page icon
+try {
+  iconsvc.setFaviconData(icon2URI, icon2Data, icon2Data.length,
+                         icon2MimeType, Number.MAX_VALUE);
+} catch (ex) {}
 iconsvc.setFaviconUrlForPage(page2URI, icon2URI);
-iconsvc.setFaviconData(icon2URI, icon2Data, icon2Data.length,
-                       icon2MimeType, Number.MAX_VALUE);
 var savedIcon2URI = iconsvc.getFaviconForPage(page2URI);
 
 // set third page icon as the same as first page one
+try {
+  iconsvc.setFaviconData(icon1URI, icon1Data, icon1Data.length,
+                         icon1MimeType, Number.MAX_VALUE);
+} catch (ex) {}
 iconsvc.setFaviconUrlForPage(page3URI, icon1URI);
-iconsvc.setFaviconData(icon1URI, icon1Data, icon1Data.length,
-                       icon1MimeType, Number.MAX_VALUE);
 var savedIcon3URI = iconsvc.getFaviconForPage(page3URI);
 
 // check first page icon

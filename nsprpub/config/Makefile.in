@@ -102,16 +102,8 @@ ifeq ($(OS_ARCH), HP-UX)
     endif
 endif
 
-ifeq ($(MOZ_OS2_TOOLS),EMX)
+ifeq ($(OS_ARCH), OS2)
 XCFLAGS = $(OS_CFLAGS)
-ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
-XLDOPTS = -Zlinker /PM:VIO
-endif
-endif
-
-ifeq ($(MOZ_OS2_TOOLS),PGCC)
-XCFLAGS = $(OS_CFLAGS)
-XLDOPTS = -Zlinker /PM:VIO
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -149,11 +141,7 @@ endif
 
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(LD) $(EXEFLAGS) $<
-else
 	$(CC) $(XCFLAGS) $< $(LDFLAGS) $(XLDOPTS) $(OUTOPTION)$@
-endif
 
 install:: nspr.m4
 	$(NSINSTALL) -D $(DESTDIR)$(datadir)/aclocal

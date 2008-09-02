@@ -343,7 +343,7 @@ MAKEFILES_plugin="
   modules/plugin/base/public/Makefile
   modules/plugin/samples/simple/Makefile
   modules/plugin/samples/SanePlugin/Makefile
-  modules/plugin/samples/default/unix/Makefile
+  modules/plugin/default/unix/Makefile
   modules/plugin/tools/sdk/Makefile
   modules/plugin/tools/sdk/samples/Makefile
   modules/plugin/tools/sdk/samples/common/Makefile
@@ -400,7 +400,6 @@ MAKEFILES_netwerk="
   netwerk/streamconv/test/Makefile
   netwerk/test/Makefile
   netwerk/testserver/Makefile
-  netwerk/resources/Makefile
   netwerk/locales/Makefile
   netwerk/system/Makefile
   netwerk/system/win32/Makefile
@@ -608,7 +607,6 @@ MAKEFILES_embedding="
   embedding/browser/activex/src/control/Makefile
   embedding/browser/activex/src/control_kicker/Makefile
   embedding/browser/build/Makefile
-  embedding/browser/chrome/Makefile
   embedding/browser/webBrowser/Makefile
   embedding/browser/gtk/Makefile
   embedding/browser/gtk/src/Makefile
@@ -890,7 +888,6 @@ if test -n "$MOZ_PSM"; then
     security/manager/boot/public/Makefile
     security/manager/ssl/Makefile
     security/manager/ssl/src/Makefile
-    security/manager/ssl/resources/Makefile
     security/manager/ssl/public/Makefile
     security/manager/pki/Makefile
     security/manager/pki/resources/Makefile

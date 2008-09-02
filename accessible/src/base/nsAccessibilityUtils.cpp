@@ -801,6 +801,20 @@ nsAccUtils::GetDocShellTreeItemFor(nsIDOMNode *aNode)
   return docShellTreeItem;
 }
 
+nsIFrame*
+nsAccUtils::GetFrameFor(nsIDOMElement *aElm)
+{
+  nsCOMPtr<nsIPresShell> shell = nsAccessNode::GetPresShellFor(aElm);
+  if (!shell)
+    return nsnull;
+  
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aElm));
+  if (!content)
+    return nsnull;
+  
+  return shell->GetPrimaryFrameFor(content);
+}
+
 PRBool
 nsAccUtils::GetID(nsIContent *aContent, nsAString& aID)
 {

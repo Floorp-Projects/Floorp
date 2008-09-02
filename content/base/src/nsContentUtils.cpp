@@ -811,6 +811,16 @@ nsContentUtils::OfflineAppAllowed(nsIURI *aURI)
   return NS_OfflineAppAllowed(aURI, sPrefBranch);
 }
 
+/* static */
+PRBool
+nsContentUtils::OfflineAppAllowed(nsIPrincipal *aPrincipal)
+{
+  nsCOMPtr<nsIURI> codebaseURI;
+  aPrincipal->GetURI(getter_AddRefs(codebaseURI));
+
+  return OfflineAppAllowed(codebaseURI);
+}
+
 // static
 void
 nsContentUtils::Shutdown()
@@ -2853,27 +2863,6 @@ nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
   sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
 
   return aDocument->NodePrincipal() == systemPrincipal;
-}
-
-void
-nsContentUtils::NotifyXPCIfExceptionPending(JSContext* aCx)
-{
-  if (!::JS_IsExceptionPending(aCx)) {
-    return;
-  }
-
-  nsAXPCNativeCallContext *nccx = nsnull;
-  XPConnect()->GetCurrentNativeCallContext(&nccx);
-  if (nccx) {
-    // Check to make sure that the JSContext that nccx will mess with is the
-    // same as the JSContext we've set an exception on.  If they're not the
-    // same, don't mess with nccx.
-    JSContext* cx;
-    nccx->GetJSContext(&cx);
-    if (cx == aCx) {
-      nccx->SetExceptionWasThrown(PR_TRUE);
-    }
-  }
 }
 
 // static

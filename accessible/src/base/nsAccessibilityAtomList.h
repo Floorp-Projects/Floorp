@@ -188,6 +188,7 @@ ACCESSIBILITY_ATOM(type, "type")
 ACCESSIBILITY_ATOM(value, "value")
 
   // Alphabetical list of text attributes (AT API)
+ACCESSIBILITY_ATOM(backgroundColor, "background-color")
 ACCESSIBILITY_ATOM(invalid, "invalid")
 ACCESSIBILITY_ATOM(language, "language")
 

@@ -280,13 +280,6 @@ XPCCallContext::GetRetVal() const
 }
 
 inline JSBool
-XPCCallContext::GetExceptionWasThrown() const
-{
-    CHECK_STATE(READY_TO_CALL);
-    return mExceptionWasThrown;
-}
-
-inline JSBool
 XPCCallContext::GetReturnValueWasSet() const
 {
     CHECK_STATE(READY_TO_CALL);

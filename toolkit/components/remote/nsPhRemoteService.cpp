@@ -28,12 +28,8 @@
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
 
-#ifdef MOZ_XUL_APP
 #include "nsICommandLineRunner.h"
 #include "nsXULAppAPI.h"
-#else
-#include "nsISuiteRemoteService.h"
-#endif
 
 #include <Pt.h>
 

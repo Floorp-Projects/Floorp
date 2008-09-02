@@ -140,8 +140,7 @@ nsNullPrincipalURI::SetPassword(const nsACString &aPassword)
 NS_IMETHODIMP
 nsNullPrincipalURI::GetPath(nsACString &_path)
 {
-  // We want to give a full copy of the string and not share a string buffer
-  _path = nsDependentCString(mPath);
+  _path = mPath;
   return NS_OK;
 }
 
@@ -173,8 +172,7 @@ nsNullPrincipalURI::SetPort(PRInt32 aPort)
 NS_IMETHODIMP
 nsNullPrincipalURI::GetScheme(nsACString &_scheme)
 {
-  // We want to give a full copy of the string and not share a string buffer
-  _scheme = nsDependentCString(mScheme);
+  _scheme = mScheme;
   return NS_OK;
 }
 
@@ -239,8 +237,7 @@ nsNullPrincipalURI::Equals(nsIURI *aOther, PRBool *_equals)
   nsresult rv = aOther->QueryInterface(kNullPrincipalURIImplementationCID,
                                        (void **)&otherURI);
   if (NS_SUCCEEDED(rv)) {
-    *_equals = (0 == strcmp(mScheme.get(), otherURI->mScheme.get()) &&
-                0 == strcmp(mPath.get(), otherURI->mPath.get()));
+    *_equals = (mScheme == otherURI->mScheme && mPath == otherURI->mPath);
     NS_RELEASE(otherURI);
   }
   return NS_OK;

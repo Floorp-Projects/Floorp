@@ -99,7 +99,7 @@ namespace nanojit {
     class Fragmento;
 }
 class TraceRecorder;
-extern "C++" template<typename T> class Queue;
+extern "C++" { template<typename T> class Queue; }
 typedef Queue<uint16> SlotList;
 class TypeMap;
 
@@ -699,12 +699,6 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(void *));
 #define JS_PUSH_TEMP_ROOT_STRING(cx,str,tvr)                                  \
     JS_PUSH_TEMP_ROOT_COMMON(cx, str, tvr, JSTVU_SINGLE, string)
 
-#define JS_PUSH_TEMP_ROOT_QNAME(cx,qn,tvr)                                    \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, qn, tvr, JSTVU_SINGLE, qname)
-
-#define JS_PUSH_TEMP_ROOT_NAMESPACE(cx,ns,tvr)                                \
-    JS_PUSH_TEMP_ROOT_COMMON(cx, ns, tvr, JSTVU_SINGLE, nspace)
-
 #define JS_PUSH_TEMP_ROOT_XML(cx,xml_,tvr)                                    \
     JS_PUSH_TEMP_ROOT_COMMON(cx, xml_, tvr, JSTVU_SINGLE, xml)
 
@@ -1058,7 +1052,7 @@ typedef enum JSErrNum {
     JSErr_Limit
 } JSErrNum;
 
-extern const JSErrorFormatString *
+extern JS_FRIEND_API(const JSErrorFormatString *)
 js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 
 #ifdef va_start

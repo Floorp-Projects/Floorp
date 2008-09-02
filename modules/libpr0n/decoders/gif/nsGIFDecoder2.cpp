@@ -174,7 +174,7 @@ NS_IMETHODIMP nsGIFDecoder2::Close()
 /* void flush (); */
 NS_IMETHODIMP nsGIFDecoder2::Flush()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 //******************************************************************************

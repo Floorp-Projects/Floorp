@@ -51,42 +51,6 @@
  
 #include "primpl.h"
 
-#ifdef USE_RAMSEM
-ULONG _Far16 _Pascal Dos16GetInfoSeg(PSEL pselGlobal, PSEL pselLocal);
-
-#ifdef XP_OS2_EMX
-typedef unsigned short BOOL16;
-#endif
-
-typedef struct _LINFOSEG
-{
-    USHORT  pidCurrent;
-    USHORT  pidParent;
-    USHORT  prtyCurrent;
-    USHORT  tidCurrent;
-    USHORT  sgCurrent;
-    UCHAR   rfProcStatus;
-    UCHAR   dummy1;
-    BOOL16  fForeground;
-    UCHAR   typProcess;
-    UCHAR   dummy2;
-    SEL     selEnvironment;
-    USHORT  offCmdLine;
-    USHORT  cbDataSegment;
-    USHORT  cbStack;
-    USHORT  cbHeap;
-    USHORT  hmod;
-    SEL     selDS;
-    SEL     selPack;
-    SEL     selPackShr;
-    SEL     selPackPck;
-    ULONG   ulReserved;
-} LINFOSEG;
-typedef LINFOSEG FAR *PLINFOSEG;
-
-PLINFOSEG plisCurrent = NULL;
-#endif
-
 /*
  * AddThreadToCVWaitQueueInternal --
  *
@@ -202,11 +166,7 @@ md_UnlockAndPostNotifies(
     }
 
     /* Release the lock before notifying */
-#ifdef USE_RAMSEM
-      SemReleasex86(&lock->mutex, 0);
-#else
-      DosReleaseMutexSem(lock->mutex);
-#endif
+    DosReleaseMutexSem(lock->mutex);
 
     notified = &post;  /* this is where we start */
     do {
@@ -313,11 +273,7 @@ _PR_MD_WAIT_CV(_MDCVar *cv, _MDLock *lock, PRIntervalTime timeout )
         md_UnlockAndPostNotifies(lock, thred, cv);
     } else {
         AddThreadToCVWaitQueueInternal(thred, cv);
-#ifdef USE_RAMSEM
-        SemReleasex86( &lock->mutex, 0 );
-#else
         DosReleaseMutexSem(lock->mutex); 
-#endif
     }
 
     /* Wait for notification or timeout; don't really care which */
@@ -326,11 +282,7 @@ _PR_MD_WAIT_CV(_MDCVar *cv, _MDLock *lock, PRIntervalTime timeout )
         DosResetEventSem(thred->md.blocked_sema, &count);
     }
 
-#ifdef USE_RAMSEM
-    SemRequest486(&(lock->mutex), -1);
-#else
     DosRequestMutexSem((lock->mutex), SEM_INDEFINITE_WAIT);
-#endif
 
     PR_ASSERT(rv == NO_ERROR || rv == ERROR_TIMEOUT);
 
@@ -387,41 +339,10 @@ _PR_MD_NOTIFY_CV(_MDCVar *cv, _MDLock *lock)
 PRStatus
 _PR_MD_NEW_LOCK(_MDLock *lock)
 {
-#ifdef USE_RAMSEM
-    // It's better if this API traps when pCriticalSect is not a valid
-    // pointer, because we can't return an error code and if we just return
-    // the API caller will have nasty bugs that are hard to find.
-   
-    PRAMSEM pramsem = (PRAMSEM)(&(lock->mutex));
-    /* First time, set up addresses of processor specific functions
-     */
-    if (plisCurrent == NULL)
-    {
-        SEL selGlobal = 0, selLocal = 0;
-   
-        /* Convert 16 bit global information segment to 32 bit address
-         * by performing CRMA on the 16 bit address: "shift" operation
-         * to convert sel to flat, "and" operation to mask the address
-         * to 32-bit
-         */
-        Dos16GetInfoSeg(&selGlobal, &selLocal);
-        plisCurrent = (PLINFOSEG)(((ULONG)selLocal << 13) &
-                      (ULONG)0x1fff0000);
-   
-    }
-   
-    memset(pramsem, 0, sizeof(pramsem));
-    DosCreateEventSem(0, &pramsem->hevSem, DC_SEM_SHARED, 0);
-   
-    lock->notified.length=0;
-    lock->notified.link=NULL;
-    return PR_SUCCESS;
-#else
     DosCreateMutexSem(0, &(lock->mutex), 0, 0);
     (lock)->notified.length=0;
     (lock)->notified.link=NULL;
     return PR_SUCCESS;
-#endif
 }
 
 void

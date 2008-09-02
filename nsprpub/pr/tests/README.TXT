@@ -67,7 +67,7 @@ depend.c
 	Obsoltet. Tests early spec for library dependency.
 
 dlltest.c
-	Tests dynamic library fucntions. Used with dll/my.c
+	Tests dynamic library functions. Used with dll/my.c
 
 dtoa.c
 	Tests conversions of double to string.

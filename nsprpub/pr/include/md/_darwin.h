@@ -50,6 +50,8 @@
 #define _PR_SI_SYSNAME  "DARWIN"
 #ifdef __i386__
 #define _PR_SI_ARCHITECTURE "x86"
+#elif defined(__x86_64__)
+#define _PR_SI_ARCHITECTURE "x86-64"
 #elif defined(__ppc__)
 #define _PR_SI_ARCHITECTURE "ppc"
 #endif
@@ -62,7 +64,11 @@
 
 #undef  HAVE_STACK_GROWING_UP
 #define HAVE_DLL
+#ifdef __x86_64__
+#define USE_DLFCN
+#else
 #define USE_MACH_DYLD
+#endif
 #define _PR_HAVE_SOCKADDR_LEN  
 #define _PR_STAT_HAS_ST_ATIMESPEC
 #define _PR_HAVE_LARGE_OFF_T
@@ -102,7 +108,7 @@
 #define IPV6_V6ONLY 27
 #endif
 
-#if defined(__ppc__)
+#ifdef __ppc__
 #define _PR_HAVE_ATOMIC_OPS
 #define _MD_INIT_ATOMIC()
 extern PRInt32 _PR_DarwinPPC_AtomicIncrement(PRInt32 *val);
@@ -113,7 +119,9 @@ extern PRInt32 _PR_DarwinPPC_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _MD_ATOMIC_SET(val, newval) _PR_DarwinPPC_AtomicSet(val, newval)
 extern PRInt32 _PR_DarwinPPC_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 #define _MD_ATOMIC_ADD(ptr, val)    _PR_DarwinPPC_AtomicAdd(ptr, val)
-#elif defined(__i386__)
+#endif /* __ppc__ */
+
+#ifdef __i386__
 #define _PR_HAVE_ATOMIC_OPS
 #define _MD_INIT_ATOMIC()
 extern PRInt32 _PR_Darwin_x86_AtomicIncrement(PRInt32 *val);
@@ -125,6 +133,19 @@ extern PRInt32 _PR_Darwin_x86_AtomicSet(PRInt32 *val, PRInt32 newval);
 extern PRInt32 _PR_Darwin_x86_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 #define _MD_ATOMIC_ADD(ptr, val)    _PR_Darwin_x86_AtomicAdd(ptr, val)
 #endif /* __i386__ */
+
+#ifdef __x86_64__
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+extern PRInt32 _PR_Darwin_x86_64_AtomicIncrement(PRInt32 *val);
+#define _MD_ATOMIC_INCREMENT(val)   _PR_Darwin_x86_64_AtomicIncrement(val)
+extern PRInt32 _PR_Darwin_x86_64_AtomicDecrement(PRInt32 *val);
+#define _MD_ATOMIC_DECREMENT(val)   _PR_Darwin_x86_64_AtomicDecrement(val)
+extern PRInt32 _PR_Darwin_x86_64_AtomicSet(PRInt32 *val, PRInt32 newval);
+#define _MD_ATOMIC_SET(val, newval) _PR_Darwin_x86_64_AtomicSet(val, newval)
+extern PRInt32 _PR_Darwin_x86_64_AtomicAdd(PRInt32 *ptr, PRInt32 val);
+#define _MD_ATOMIC_ADD(ptr, val)    _PR_Darwin_x86_64_AtomicAdd(ptr, val)
+#endif /* __x86_64__ */
 
 #define USE_SETJMP
 

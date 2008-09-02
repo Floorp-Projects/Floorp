@@ -47,7 +47,7 @@
 PRBool IsValidNetAddr(const PRNetAddr *addr)
 {
     if ((addr != NULL)
-#if defined(XP_UNIX) || defined(XP_OS2_EMX)
+#if defined(XP_UNIX) || defined(XP_OS2)
 	    && (addr->raw.family != PR_AF_LOCAL)
 #endif
 	    && (addr->raw.family != PR_AF_INET6)
@@ -64,7 +64,7 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
      * is not uniform, so we don't check it.
      */
     if ((addr != NULL)
-#if defined(XP_UNIX) || defined(XP_OS2_EMX)
+#if defined(XP_UNIX) || defined(XP_OS2)
             && (addr->raw.family != AF_UNIX)
 #endif
             && (PR_NETADDR_SIZE(addr) != addr_len)) {
@@ -1293,7 +1293,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 	if (!_pr_initialized) _PR_ImplicitInitialization();
 	if (PR_AF_INET != domain
 			&& PR_AF_INET6 != domain
-#if defined(XP_UNIX) || defined(XP_OS2_EMX)
+#if defined(XP_UNIX) || defined(XP_OS2)
 			&& PR_AF_LOCAL != domain
 #endif
 			) {

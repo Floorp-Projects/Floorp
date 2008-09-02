@@ -2806,7 +2806,6 @@ TimerManager.prototype = {
   }
 };
 
-#ifdef MOZ_XUL_APP
 /**
  * UpdatePrompt
  * An object which can prompt the user with information about updates, request
@@ -3084,7 +3083,6 @@ UpdatePrompt.prototype = {
     return this;
   }
 };
-#endif
 
 var gModule = {
   registerSelf: function(componentManager, fileSpec, location, type) {
@@ -3127,13 +3125,11 @@ var gModule = {
                className  : "Update Checker",
                factory    : makeFactory(Checker)
              },
-#ifdef MOZ_XUL_APP
     prompt:  { CID        : Components.ID("{27ABA825-35B5-4018-9FDD-F99250A0E722}"),
                contractID : "@mozilla.org/updates/update-prompt;1",
                className  : "Update Prompt",
                factory    : makeFactory(UpdatePrompt)
              },
-#endif
     timers:  { CID        : Components.ID("{B322A5C0-A419-484E-96BA-D7182163899F}"),
                contractID : "@mozilla.org/updates/timer-manager;1",
                className  : "Timer Manager",
@@ -3177,16 +3173,12 @@ function NSGetModule(compMgr, fileSpec) {
  *          the specified update, false otherwise.
  */
 function isCompatible(update) {
-#ifdef MOZ_XUL_APP
   var em =
       Components.classes["@mozilla.org/extensions/manager;1"].
       getService(nsIExtensionManager);
   var items = em.getIncompatibleItemList("", update.extensionVersion,
     update.platformVersion, nsIUpdateItem.TYPE_ANY, false, { });
   return items.length == 0;
-#else
-  return true;
-#endif
 }
 
 /**
@@ -3205,7 +3197,6 @@ function showPromptIfNoIncompatibilities(update) {
     prompter.showUpdateAvailable(update);
   }
 
-#ifdef MOZ_XUL_APP
   /**
    * Determines if an addon is compatible with a particular update.
    * @param   addon
@@ -3314,6 +3305,5 @@ function showPromptIfNoIncompatibilities(update) {
     em.update([], 0, mode, listener);
   }
   else
-#endif
     showPrompt(update);
 }

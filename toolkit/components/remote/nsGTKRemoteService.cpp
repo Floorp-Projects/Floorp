@@ -70,12 +70,8 @@
 #include "nsGTKToolkit.h"
 #endif
 
-#ifdef MOZ_XUL_APP
 #include "nsICommandLineRunner.h"
 #include "nsXULAppAPI.h"
-#else
-#include "nsISuiteRemoteService.h"
-#endif
 
 #define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
 #define MOZILLA_LOCK_PROP      "_MOZILLA_LOCK"
@@ -94,11 +90,7 @@
 #define TO_LITTLE_ENDIAN32(x) (x)
 #endif
 
-#ifdef MOZ_XUL_APP
 const unsigned char kRemoteVersion[] = "5.1";
-#else
-const unsigned char kRemoteVersion[] = "5.0";
-#endif
 
 NS_IMPL_ISUPPORTS2(nsGTKRemoteService,
                    nsIRemoteService,
@@ -273,32 +265,6 @@ nsGTKRemoteService::EnsureAtoms(void)
   sMozProgramAtom     = XAtoms[i++];
   sMozCommandLineAtom = XAtoms[i++];
 }
-
-#ifndef MOZ_XUL_APP
-const char*
-nsGTKRemoteService::HandleCommand(char* aCommand, nsIDOMWindow* aWindow, PRUint32 aTimestamp)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsISuiteRemoteService> remote
-    (do_GetService("@mozilla.org/browser/xremoteservice;2"));
-  if (!remote)
-    return "509 internal error";
-
-  rv = remote->ParseCommand(aCommand, aWindow);
-  if (NS_SUCCEEDED(rv))
-    return "200 executed command";
-
-  if (NS_ERROR_INVALID_ARG == rv)
-    return "500 command not parseable";
-
-  if (NS_ERROR_NOT_IMPLEMENTED == rv)
-    return "501 unrecognized command";
-
-  return "509 internal error";
-}
-
-#else //MOZ_XUL_APP
 
 // Set desktop startup ID to the passed ID, if there is one, so that any created
 // windows get created with the right window manager metadata, and any windows
@@ -483,7 +449,6 @@ nsGTKRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
 
   return "200 executed command";
 }
-#endif // MOZ_XUL_APP
 
 void
 nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget,
@@ -584,7 +549,6 @@ nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
     return TRUE;
   }
 
-#ifdef MOZ_XUL_APP
   if (pevent->state == GDK_PROPERTY_NEW_VALUE &&
       CMP_GATOM_XATOM(pevent->atom, sMozCommandLineAtom)) {
 
@@ -628,7 +592,6 @@ nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
     XFree(data);
     return TRUE;
   }
-#endif //MOZ_XUL_APP
 
   if (pevent->state == GDK_PROPERTY_NEW_VALUE && 
       CMP_GATOM_XATOM(pevent->atom, sMozResponseAtom)) {

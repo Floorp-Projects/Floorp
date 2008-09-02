@@ -3,24 +3,27 @@
 //  Growl
 //
 //  Created by Mac-arena the Bored Zo on Wed Jun 18 2004.
-//  Copyright 2005 The Growl Project.
+//  Copyright 2005-2006 The Growl Project.
 //
+// This file is under the BSD License, refer to License.txt for details
 
-#ifdef __OBJC__
-#	define DATA_TYPE NSData *
-#	define DICTIONARY_TYPE NSDictionary *
-#	define STRING_TYPE NSString *
-#	define ARRAY_TYPE NSArray *
-#	define URL_TYPE NSURL *
-#	define PLIST_TYPE NSObject *
-#else
-#	define DATA_TYPE CFDataRef
-#	define DICTIONARY_TYPE CFDictionaryRef
-#	define STRING_TYPE CFStringRef
-#	define ARRAY_TYPE CFArrayRef
-#	define URL_TYPE CFURLRef
-#	define PLIST_TYPE CFPropertyListRef
-#endif
+#ifndef HAVE_CFGROWLADDITIONS_H
+#define HAVE_CFGROWLADDITIONS_H
+
+#include "CFGrowlDefines.h"
+
+//see GrowlApplicationBridge-Carbon.c for rationale of using NSLog.
+extern void NSLog(STRING_TYPE format, ...);
+
+char *createFileSystemRepresentationOfString(STRING_TYPE str);
+STRING_TYPE createStringWithDate(DATE_TYPE date);
+
+STRING_TYPE createStringWithContentsOfFile(STRING_TYPE filename, CFStringEncoding encoding);
+
+//you can leave out any of these three components. to leave out the character, pass 0xffff.
+STRING_TYPE createStringWithStringAndCharacterAndString(STRING_TYPE str0, UniChar ch, STRING_TYPE str1);
+
+char *copyCString(STRING_TYPE str, CFStringEncoding encoding);
 
 STRING_TYPE copyCurrentProcessName(void);
 URL_TYPE    copyCurrentProcessURL(void);
@@ -32,7 +35,8 @@ STRING_TYPE copyTemporaryFolderPath(void);
 STRING_TYPE createStringWithAddressData(DATA_TYPE aAddressData);
 STRING_TYPE createHostNameForAddressData(DATA_TYPE aAddressData);
 
-DICTIONARY_TYPE createDockDescriptionForURL(URL_TYPE url);
+DATA_TYPE readFile(const char *filename);
+URL_TYPE  copyURLForApplication(STRING_TYPE appName);
 
 /*	@function	copyIconDataForPath
  *	@param	path	The POSIX path to the file or folder whose icon you want.
@@ -78,3 +82,5 @@ URL_TYPE createURLByCopyingFileFromURLToDirectoryURL(URL_TYPE file, URL_TYPE des
  *	@result	The property list. You are responsible for releasing this object.
  */
 PLIST_TYPE createPropertyListFromURL(URL_TYPE file, u_int32_t mutability, CFPropertyListFormat *outFormat, STRING_TYPE *outErrorString);
+
+#endif

@@ -3465,13 +3465,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
     rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
                            PR_FALSE, rval);
 
-    if (NS_SUCCEEDED(rv)) {
-        if (JS_IsExceptionPending(cx)) {
-            cc->SetExceptionWasThrown(PR_TRUE);
-        } else {
-            cc->SetReturnValueWasSet(PR_TRUE);
-        }
-    }
+    if (NS_SUCCEEDED(rv) && !JS_IsExceptionPending(cx))
+        cc->SetReturnValueWasSet(PR_TRUE);
 
     return rv;
 #endif /* XPCONNECT_STANDALONE */

@@ -39,12 +39,13 @@
 #include "nsTextUtils.h"
 
 #include "nsAccessNode.h"
+#include "nsAccessibilityUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsLangTextAttr
 
 PRBool
-nsLangTextAttr::equal(nsIDOMElement *aElm)
+nsLangTextAttr::Equal(nsIDOMElement *aElm)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElm));
   if (!content)
@@ -80,7 +81,6 @@ const char* const kCopyValue = nsnull;
 
 static nsCSSTextAttrMapItem gCSSTextAttrsMap[] = {
   // CSS name            CSS value        Attribute name              Attribute name
-  { "background-color",  kAnyValue,       kCopyName,                  kCopyValue },
   { "color",             kAnyValue,       kCopyName,                  kCopyValue },
   { "font-family",       kAnyValue,       kCopyName,                  kCopyValue },
   { "font-size",         kAnyValue,       kCopyName,                  kCopyValue },
@@ -106,7 +106,7 @@ nsCSSTextAttr::nsCSSTextAttr(PRBool aIncludeDefAttrValue, nsIDOMElement *aElm,
 }
 
 PRBool
-nsCSSTextAttr::equal(nsIDOMElement *aElm)
+nsCSSTextAttr::Equal(nsIDOMElement *aElm)
 {
   if (!aElm || !mStyleDecl)
     return PR_FALSE;
@@ -130,13 +130,13 @@ nsCSSTextAttr::equal(nsIDOMElement *aElm)
 }
 
 PRBool
-nsCSSTextAttr::iterate()
+nsCSSTextAttr::Iterate()
 {
   return ++mIndex < static_cast<PRInt32>(NS_ARRAY_LENGTH(gCSSTextAttrsMap));
 }
 
 PRBool
-nsCSSTextAttr::get(nsACString& aName, nsAString& aValue)
+nsCSSTextAttr::Get(nsACString& aName, nsAString& aValue)
 {
   if (!mStyleDecl)
     return PR_FALSE;
@@ -179,3 +179,65 @@ nsCSSTextAttr::get(nsACString& aName, nsAString& aValue)
   return PR_TRUE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsBackgroundTextAttr
+
+nsBackgroundTextAttr::nsBackgroundTextAttr(nsIFrame *aFrame,
+                                           nsIFrame *aRootFrame) :
+  mFrame(aFrame), mRootFrame(aRootFrame)
+{
+}
+
+PRBool
+nsBackgroundTextAttr::Equal(nsIDOMElement *aElm)
+{
+  nsIFrame *frame = nsAccUtils::GetFrameFor(aElm);
+  if (!frame)
+    return PR_FALSE;
+
+  return GetColor(mFrame) == GetColor(frame);    
+}
+
+PRBool
+nsBackgroundTextAttr::Get(nsAString& aValue)
+{
+  // Do not expose "background-color" text attribute if its value is matched
+  // with the default value.
+  nscolor color = GetColor(mFrame);
+  if (mRootFrame && color == GetColor(mRootFrame))
+    return PR_FALSE;
+
+  // Combine the string like rgb(R, G, B) from nscolor.
+  nsAutoString value;
+  value.AppendLiteral("rgb(");
+  value.AppendInt(NS_GET_R(color));
+  value.AppendLiteral(", ");
+  value.AppendInt(NS_GET_G(color));
+  value.AppendLiteral(", ");
+  value.AppendInt(NS_GET_B(color));
+  value.Append(')');
+
+  aValue = value;
+  return PR_TRUE;
+}
+
+nscolor
+nsBackgroundTextAttr::GetColor(nsIFrame *aFrame)
+{
+  const nsStyleBackground *styleBackground = aFrame->GetStyleBackground();
+
+  if (!styleBackground->IsTransparent())
+    return styleBackground->mBackgroundColor;
+
+  nsIFrame *parentFrame = aFrame->GetParent();
+  if (!parentFrame)
+    return styleBackground->mBackgroundColor;
+
+  // Each frame of parents chain for the initially passed 'aFrame' has
+  // transparent background color. So background color isn't changed from
+  // 'mRootFrame' to initially passed 'aFrame'.
+  if (parentFrame == mRootFrame)
+    return GetColor(mRootFrame);
+
+  return GetColor(parentFrame);
+}

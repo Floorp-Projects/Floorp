@@ -3,7 +3,7 @@
 //  Growl
 //
 //  Created by Ingmar Stein on 15.11.04.
-//  Copyright 2004-2005 The Growl Project. All rights reserved.
+//  Copyright 2004-2006 The Growl Project. All rights reserved.
 //
 // This file is under the BSD License, refer to License.txt for details
 
@@ -15,10 +15,9 @@
 - (bycopy NSString *) growlVersion;
 @end
 
+@class GrowlApplicationController;
+
 @interface GrowlPathway : NSObject <GrowlNotificationProtocol> {
 }
-
-- (void) registerApplicationWithDictionary:(NSDictionary *)dict;
-- (void) postNotificationWithDictionary:(NSDictionary *)dict;
 
 @end

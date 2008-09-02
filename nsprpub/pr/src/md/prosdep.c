@@ -66,7 +66,7 @@ static void GetPageSize(void)
 #if defined SUNOS4 || defined BSDI || defined AIX \
         || defined LINUX || defined __GNU__ || defined __GLIBC__ \
         || defined FREEBSD || defined NETBSD || defined OPENBSD \
-        || defined DARWIN || defined NEXTSTEP
+        || defined DARWIN || defined NEXTSTEP || defined SYMBIAN
     _pr_pageSize = getpagesize();
 #elif defined(HPUX)
     /* I have no idea. Don't get me started. --Rob */

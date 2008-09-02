@@ -372,6 +372,25 @@ NS_IMETHODIMP nsPNGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRU
   return rv;
 }
 
+// Sets up gamma pre-correction in libpng before our callback gets called. 
+// We need to do this if we don't end up with a CMS profile.
+static void
+PNGDoGammaCorrection(png_structp png_ptr, png_infop info_ptr)
+{
+  double aGamma;
+
+  if (png_get_gAMA(png_ptr, info_ptr, &aGamma)) {
+    if ((aGamma <= 0.0) || (aGamma > 21474.83)) {
+      aGamma = 0.45455;
+      png_set_gAMA(png_ptr, info_ptr, aGamma);
+    }
+    png_set_gamma(png_ptr, 2.2, aGamma);
+  }
+  else
+    png_set_gamma(png_ptr, 2.2, 0.45455);
+
+}
+
 // Adapted from http://www.littlecms.com/pngchrm.c example code
 static cmsHPROFILE
 PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
@@ -380,7 +399,6 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
   cmsHPROFILE profile = nsnull;
   *intent = INTENT_PERCEPTUAL; // Our default
 
-#ifndef PNG_NO_READ_iCCP
   // First try to see if iCCP chunk is present
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_iCCP)) {
     png_uint_32 profileLen;
@@ -392,10 +410,6 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
 
     profile = cmsOpenProfileFromMem(profileData, profileLen);
     PRUint32 profileSpace = cmsGetColorSpace(profile);
-
-#ifdef DEBUG_tor
-    fprintf(stderr, "PNG profileSpace: 0x%08X\n", profileSpace);
-#endif
 
     PRBool mismatch = PR_FALSE;
     if (color_type & PNG_COLOR_MASK_COLOR) {
@@ -415,9 +429,7 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
       *intent = cmsTakeRenderingIntent(profile);
     }
   }
-#endif
 
-#ifndef PNG_NO_READ_sRGB
   // Check sRGB chunk
   if (!profile && png_get_valid(png_ptr, info_ptr, PNG_INFO_sRGB)) {
     profile = cmsCreate_sRGBProfile();
@@ -431,29 +443,21 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
       *intent = map[fileIntent];
     }
   }
-#endif
 
   // Check gAMA/cHRM chunks
-  if (!profile && png_get_valid(png_ptr, info_ptr, PNG_INFO_gAMA)) {
-    cmsCIExyY whitePoint = {0.3127, 0.3290, 1.0};         // D65
-    cmsCIExyYTRIPLE primaries = {
-      {0.6400, 0.3300, 1.0},
-      {0.3000, 0.6000, 1.0},
-      {0.1500, 0.0600, 1.0}
-    };
+  if (!profile && 
+       png_get_valid(png_ptr, info_ptr, PNG_INFO_gAMA) &&
+       png_get_valid(png_ptr, info_ptr, PNG_INFO_cHRM)) {
+    cmsCIExyYTRIPLE primaries;
+    cmsCIExyY whitePoint;
 
-#ifndef PNG_NO_READ_cHRM
-    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_cHRM)) {
-      png_get_cHRM(png_ptr, info_ptr,
-                   &whitePoint.x, &whitePoint.y,
-                   &primaries.Red.x,   &primaries.Red.y,
-                   &primaries.Green.x, &primaries.Green.y,
-                   &primaries.Blue.x,  &primaries.Blue.y);
-
-      whitePoint.Y =
-        primaries.Red.Y = primaries.Green.Y = primaries.Blue.Y = 1.0;
-    }
-#endif
+    png_get_cHRM(png_ptr, info_ptr,
+                 &whitePoint.x, &whitePoint.y,
+                 &primaries.Red.x,   &primaries.Red.y,
+                 &primaries.Green.x, &primaries.Green.y,
+                 &primaries.Blue.x,  &primaries.Blue.y);
+    whitePoint.Y =
+      primaries.Red.Y = primaries.Green.Y = primaries.Blue.Y = 1.0;
 
     double gammaOfFile;
     LPGAMMATABLE gammaTable[3];
@@ -500,7 +504,6 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   png_uint_32 width, height;
   int bit_depth, color_type, interlace_type, compression_type, filter_type;
   unsigned int channels;
-  double aGamma;
 
   png_bytep trans = NULL;
   int num_trans = 0;
@@ -579,25 +582,14 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
                                              dwFlags);
   } else {
     png_set_gray_to_rgb(png_ptr);
+    PNGDoGammaCorrection(png_ptr, info_ptr);
+
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
       if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
         decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
       else
         decoder->mTransform = gfxPlatform::GetCMSRGBTransform();
     }
-  }
-
-  if (!decoder->mTransform) {
-    png_set_gray_to_rgb(png_ptr);
-    if (png_get_gAMA(png_ptr, info_ptr, &aGamma)) {
-      if ((aGamma <= 0.0) || (aGamma > 21474.83)) {
-        aGamma = 0.45455;
-        png_set_gAMA(png_ptr, info_ptr, aGamma);
-      }
-      png_set_gamma(png_ptr, 2.2, aGamma);
-    }
-    else
-      png_set_gamma(png_ptr, 2.2, 0.45455);
   }
 
   /* let libpng expand interlaced images */
