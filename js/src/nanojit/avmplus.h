@@ -48,6 +48,19 @@
 
 #define FASTCALL JS_FASTCALL
 
+#if defined(JS_NO_FASTCALL)
+#define NJ_NO_FASTCALL
+#if defined(AVMPLUS_IA32)
+#define SIMULATE_FASTCALL(lr, state_ptr, frag_ptr, func_addr)   \
+    asm volatile(                                               \
+        "call *%%esi"                                           \
+        : "=a" (lr)                                             \
+        : "c" (state_ptr), "d" (frag_ptr), "S" (func_addr)      \
+        : "memory", "cc"                                        \
+    );
+#endif /* defined(AVMPLUS_IA32) */
+#endif /* defined(JS_NO_FASTCALL) */
+
 #ifdef WIN32
 #include <windows.h>
 #endif

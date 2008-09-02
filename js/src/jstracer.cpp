@@ -2133,7 +2133,14 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     bool executingTrace = cx->executingTrace;
     if (!executingTrace)
         cx->executingTrace = true;
-    GuardRecord* lr = u.func(&state, NULL);
+    GuardRecord* lr;
+    
+#if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
+    SIMULATE_FASTCALL(lr, &state, NULL, u.func);
+#else
+    lr = u.func(&state, NULL);
+#endif
+
     if (!executingTrace)
         cx->executingTrace = false;
 
