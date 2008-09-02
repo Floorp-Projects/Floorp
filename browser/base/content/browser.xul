@@ -223,8 +223,8 @@
             <spacer flex="1"/>
             <button id="identity-popup-more-info-button"
                     label="&identity.moreInfoLinkText;"
-                    onblur="getIdentityHandler().hideIdentityPopup();"
-                    oncommand="getIdentityHandler().handleMoreInfoClick(event);"/>
+                    onblur="gIdentityHandler.hideIdentityPopup();"
+                    oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
           </hbox>
         </vbox>
       </hbox>
@@ -366,8 +366,8 @@
                has focus, otherwise pressing F6 focuses it instead of the location bar -->
           <box id="identity-box" role="button"
                chromedir="&locale.dir;"
-               onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
-               onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
+               onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
+               onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);">
             <hbox align="center">
               <stack id="page-proxy-stack"
                      onclick="PageProxyClickHandler(event);">
