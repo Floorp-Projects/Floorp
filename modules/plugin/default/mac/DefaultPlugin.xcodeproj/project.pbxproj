@@ -258,17 +258,17 @@
 					"USE_SYSTEM_CONSOLE=1",
 				);
 				HEADER_SEARCH_PATHS = (
-					../../../../../dist/sdk/xpcom/include,
-					../../../../../dist/include/caps,
-					../../../../../dist/include/java,
-					../../../../../dist/include/js,
-					../../../../../dist/include/nspr,
-					../../../../../dist/include/nspr/obsolete,
-					../../../../../dist/include/oji,
-					../../../../../dist/include/plugin,
-					../../../../../dist/include/xpcom,
-					../../../../../dist/include/xpconnect,
-					../../../../../dist/include,
+					../../../../dist/sdk/xpcom/include,
+					../../../../dist/include/caps,
+					../../../../dist/include/java,
+					../../../../dist/include/js,
+					../../../../dist/include/nspr,
+					../../../../dist/include/nspr/obsolete,
+					../../../../dist/include/oji,
+					../../../../dist/include/plugin,
+					../../../../dist/include/xpcom,
+					../../../../dist/include/xpconnect,
+					../../../../dist/include,
 					/Developer/Headers/FlatCarbon,
 				);
 				INFOPLIST_FILE = "Info-DefaultPlugin.plist";
