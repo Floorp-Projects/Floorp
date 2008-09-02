@@ -3334,3 +3334,81 @@ nsCanvasRenderingContext2D::GetThebesSurface(gfxASurface **surface)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::CreateImageData()
+{
+    if (!mValid || !mCanvasElement)
+        return NS_ERROR_FAILURE;
+
+    nsAXPCNativeCallContext *ncc = nsnull;
+    nsresult rv = nsContentUtils::XPConnect()->
+        GetCurrentNativeCallContext(&ncc);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!ncc)
+        return NS_ERROR_FAILURE;
+
+    JSContext *ctx = nsnull;
+
+    rv = ncc->GetJSContext(&ctx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 argc;
+    jsval *argv = nsnull;
+
+    ncc->GetArgc(&argc);
+    ncc->GetArgvPtr(&argv);
+
+    JSAutoRequest ar(ctx);
+
+    int32 w, h;
+    if (!JS_ConvertArguments (ctx, argc, argv, "jj", &w, &h))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
+    if (w <= 0 || h <= 0)
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+    // check for overflow when calculating len
+    PRUint32 len0 = w * h;
+    if (len0 / w != h)
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    PRUint32 len = len0 * 4;
+    if (len / 4 != len0)
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+    nsAutoArrayPtr<jsval> jsvector(new (std::nothrow) jsval[w * h * 4]);
+    if (!jsvector)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    jsval *dest = jsvector.get();
+    for (PRUint32 i = 0; i < len; i++)
+        *dest++ = JSVAL_ZERO;
+
+    JSObject *dataArray = JS_NewArrayObject(ctx, w*h*4, jsvector.get());
+    if (!dataArray)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsAutoGCRoot arrayGCRoot(&dataArray, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JSObject *result = JS_NewObject(ctx, NULL, NULL, NULL);
+    if (!result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsAutoGCRoot resultGCRoot(&result, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!JS_DefineProperty(ctx, result, "width", INT_TO_JSVAL(w), NULL, NULL, 0) ||
+        !JS_DefineProperty(ctx, result, "height", INT_TO_JSVAL(h), NULL, NULL, 0) ||
+        !JS_DefineProperty(ctx, result, "data", OBJECT_TO_JSVAL(dataArray), NULL, NULL, 0))
+        return NS_ERROR_FAILURE;
+
+    jsval *retvalPtr;
+    ncc->GetRetValPtr(&retvalPtr);
+    *retvalPtr = OBJECT_TO_JSVAL(result);
+    ncc->SetReturnValueWasSet(PR_TRUE);
+
+    return NS_OK;
+
+}
+

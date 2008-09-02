@@ -14,9 +14,6 @@ MochiKit.DOM.addLoadEvent(function () {
 var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');
 
-var _thrown_outer = false;
-try {
-
 var imgdata = ctx.createImageData(10, 20);
 ok(imgdata.data.length == imgdata.width*imgdata.height*4, "imgdata.data.length == imgdata.width*imgdata.height*4");
 ok(imgdata.width < imgdata.height, "imgdata.width < imgdata.height");
@@ -26,11 +23,6 @@ for (var i = 0; i < imgdata.data.length; ++i)
     if (imgdata.data[i] !== 0)
         isTransparentBlack = false;
 ok(isTransparentBlack, "isTransparentBlack");
-
-} catch (e) {
-    _thrown_outer = true;
-}
-todo(!_thrown_outer, 'should not throw exception');
 
 SimpleTest.finish();
 
