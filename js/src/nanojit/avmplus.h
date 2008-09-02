@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined AVMPLUS_LINUX || defined DARWIN
+#if defined(AVMPLUS_LINUX) || defined(DARWIN) || defined(__FreeBSD__)
 #include <unistd.h>
 #include <sys/mman.h>
 #endif
