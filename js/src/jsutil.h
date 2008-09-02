@@ -73,8 +73,19 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
  * The macro can be used only in places where an "extern" declaration is
  * allowed.
  */
+
+/*
+ * Sun Studio C++ compiler has a bug
+ * "sizeof expression not accepted as size of array parameter"
+ * The bug number is 6688515. It is not public yet.
+ * Turn off this assert for Sun Studio until this bug is fixed.
+ */
+#ifdef __SUNPRO_CC
+#define JS_STATIC_ASSERT(condition)
+#else
 #define JS_STATIC_ASSERT(condition)                                           \
     extern void js_static_assert(int arg[(condition) ? 1 : -1])
+#endif
 
 /*
  * Abort the process in a non-graceful manner. This will cause a core file,
