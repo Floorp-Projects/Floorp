@@ -1777,15 +1777,8 @@
       <property name="browsers" readonly="true">
        <getter>
           <![CDATA[
-            if (!this._browsers) {
-              var browsers = [];
-              var i;
-              browsers.item = function(i) {return this[i];}
-              for (i = 0; i < this.mTabContainer.childNodes.length; i++)
-                browsers.push(this.mTabContainer.childNodes[i].linkedBrowser);
-              this._browsers = browsers;
-            }
-            return this._browsers;
+            return this._browsers ||
+                   (this._browsers = Array.map(this.mTabs, function (tab) tab.linkedBrowser));
           ]]>
         </getter>
       </property>
