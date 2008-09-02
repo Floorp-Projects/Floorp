@@ -1191,11 +1191,14 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
     return JS_TRUE;
 }
 
-#define LOCAL_ASSERT_RV(expr, rv)                                             \
+#define LOCAL_ASSERT_CUSTOM(expr, BAD_EXIT)                                   \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(expr);                                                      \
-        if (!(expr)) return (rv);                                             \
+        if (!(expr)) { BAD_EXIT; }                                            \
     JS_END_MACRO
+
+#define LOCAL_ASSERT_RV(expr, rv)                                             \
+    LOCAL_ASSERT_CUSTOM(expr, return (rv))
 
 static JSAtom *
 GetArgOrVarAtom(JSPrinter *jp, uintN slot)
@@ -2542,11 +2545,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 }
 
                 /* From here on, control must flow through enterblock_out. */
+#define LOCAL_ASSERT_OUT(expr) LOCAL_ASSERT_CUSTOM(expr, ok = JS_FALSE; \
+                                                   goto enterblock_out)
                 for (sprop = OBJ_SCOPE(obj)->lastProp; sprop;
                      sprop = sprop->parent) {
                     if (!(sprop->flags & SPROP_HAS_SHORTID))
                         continue;
-                    LOCAL_ASSERT(sprop->shortid < argc);
+                    LOCAL_ASSERT_OUT(sprop->shortid < argc);
                     atomv[sprop->shortid] = JSID_TO_ATOM(sprop->id);
                 }
                 ok = JS_TRUE;
@@ -2582,7 +2587,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
                     pc2 = pc;
                     pc += oplen;
-                    LOCAL_ASSERT(*pc == JSOP_EXCEPTION);
+                    LOCAL_ASSERT_OUT(*pc == JSOP_EXCEPTION);
                     pc += JSOP_EXCEPTION_LENGTH;
                     todo = Sprint(&ss->sprinter, exception_cookie);
                     if (todo < 0 || !PushOff(ss, todo, JSOP_EXCEPTION)) {
@@ -2598,7 +2603,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                              * It is emitted only when the catch head contains
                              * an exception guard.
                              */
-                            LOCAL_ASSERT(js_GetSrcNoteOffset(sn, 0) != 0);
+                            LOCAL_ASSERT_OUT(js_GetSrcNoteOffset(sn, 0) != 0);
                             pc += JSOP_DUP_LENGTH;
                             todo = Sprint(&ss->sprinter, exception_cookie);
                             if (todo < 0 ||
@@ -2616,13 +2621,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             ok = JS_FALSE;
                             goto enterblock_out;
                         }
-                        LOCAL_ASSERT(*pc == JSOP_POP);
+                        LOCAL_ASSERT_OUT(*pc == JSOP_POP);
                         pc += JSOP_POP_LENGTH;
                         lval = PopStr(ss, JSOP_NOP);
                         js_puts(jp, lval);
                     } else {
 #endif
-                        LOCAL_ASSERT(*pc == JSOP_SETLOCALPOP);
+                        LOCAL_ASSERT_OUT(*pc == JSOP_SETLOCALPOP);
                         i = GET_SLOTNO(pc) - jp->script->nfixed;
                         pc += JSOP_SETLOCALPOP_LENGTH;
                         atom = atomv[i - OBJ_BLOCK_DEPTH(cx, obj)];
@@ -2640,19 +2645,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * guarded catch head) off the stack now.
                      */
                     rval = PopStr(ss, JSOP_NOP);
-                    LOCAL_ASSERT(strcmp(rval, exception_cookie) == 0);
+                    LOCAL_ASSERT_OUT(strcmp(rval, exception_cookie) == 0);
 
                     len = js_GetSrcNoteOffset(sn, 0);
                     if (len) {
                         len -= PTRDIFF(pc, pc2, jsbytecode);
-                        LOCAL_ASSERT(len > 0);
+                        LOCAL_ASSERT_OUT(len > 0);
                         js_printf(jp, " if ");
                         ok = Decompile(ss, pc, len, JSOP_NOP) != NULL;
                         if (!ok)
                             goto enterblock_out;
                         js_printf(jp, "%s", POP_STR());
                         pc += len;
-                        LOCAL_ASSERT(*pc == JSOP_IFEQ || *pc == JSOP_IFEQX);
+                        LOCAL_ASSERT_OUT(*pc == JSOP_IFEQ || *pc == JSOP_IFEQX);
                         pc += js_CodeSpec[*pc].length;
                     }
 
@@ -2666,6 +2671,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
                 todo = -2;
 
+#undef LOCAL_ASSERT_OUT
               enterblock_out:
                 if (atomv != smallv)
                     JS_free(cx, atomv);
