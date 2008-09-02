@@ -396,9 +396,9 @@ OutparamCheck.prototype.processTest = function(lhs, call, val, blame, state) {
 // The big one: outparam semantics of function calls.
 OutparamCheck.prototype.processCall = function(dest, expr, blame, state) {
   let args = call_args(expr);
-  let callable = callable_arg_function_decl(TREE_OPERAND(expr, 1));
+  let callable = callable_arg_function_decl(CALL_EXPR_FN(expr));
   let psem = this.func_param_semantics(callable);
-    
+
   if (TRACE_CALL_SEM) {
     print("param semantics:" + psem);
   }
