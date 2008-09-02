@@ -86,7 +86,7 @@ interface nsILoginInfo : nsISupports {
      * The |name| attribute for the username input field.
      *
      * For logins obtained from a HTTP or FTP protocol authentication,
-     * this field is NULL.
+     * this field is an empty string.
      */
     attribute AString usernameField;
 
@@ -99,7 +99,7 @@ interface nsILoginInfo : nsISupports {
      * The |name| attribute for the password input field.
      *
      * For logins obtained from a HTTP or FTP protocol authentication,
-     * this field is NULL.
+     * this field is an empty string.
      */
     attribute AString passwordField;
 
