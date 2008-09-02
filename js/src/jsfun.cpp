@@ -791,7 +791,7 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
             }
         }
         return JS_TRUE;
-    }
+  }
 
     JS_ASSERT((int16) JSVAL_TO_INT(id) == JSVAL_TO_INT(id));
     i = (uint16) JSVAL_TO_INT(id);
