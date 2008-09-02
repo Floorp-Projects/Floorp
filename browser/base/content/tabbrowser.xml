@@ -1729,6 +1729,28 @@
         </body>
       </method>
 
+      <method name="selectTabAtIndex">
+        <parameter name="aIndex"/>
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          // count backwards for aIndex < 0
+          if (aIndex < 0)
+            aIndex += this.mTabs.length;
+
+          if (aIndex > 0 &&
+              aIndex < this.mTabs.length &&
+              aIndex != this.tabContainer.selectedIndex)
+            this.selectedTab = this.mTabs[aIndex];
+
+          if (aEvent) {
+            aEvent.preventDefault();
+            aEvent.stopPropagation();
+          }
+        ]]>
+        </body>
+      </method>
+
       <property name="tabContainer" readonly="true">
         <getter>
           return this.mTabContainer;
