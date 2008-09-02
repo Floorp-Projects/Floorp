@@ -1311,23 +1311,6 @@ SanitizeListener.prototype =
   }
 }
 
-function BrowserNumberTabSelection(event, index)
-{
-  // [Ctrl]+[9] always selects the last tab
-  if (index == 8)
-    index = gBrowser.tabContainer.childNodes.length - 1;
-  else if (index >= gBrowser.tabContainer.childNodes.length)
-    return;
-
-  var oldTab = gBrowser.selectedTab;
-  var newTab = gBrowser.tabContainer.childNodes[index];
-  if (newTab != oldTab)
-    gBrowser.selectedTab = newTab;
-
-  event.preventDefault();
-  event.stopPropagation();
-}
-
 function gotoHistoryIndex(aEvent)
 {
   var index = aEvent.target.getAttribute("index");
