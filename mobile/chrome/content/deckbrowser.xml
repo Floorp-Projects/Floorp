@@ -925,7 +925,7 @@
           deckbrowser: this,
 
           handleEvent: function seh_handleEvent(aEvent) {
-            if (!aEvent.type in this) {
+            if (!(aEvent.type in this)) {
               Components.reportError("MouseController called with unknown event type " + aEvent.type + "\n");
               return;
             }
