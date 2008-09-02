@@ -21,6 +21,8 @@
  *
  * Contributor(s):
  *   Adobe AS3 Team
+ *   Mozilla TraceMonkey Team
+ *   Asko Tontti <atontti@cc.hut.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -72,6 +74,8 @@ namespace nanojit
 
 	Fragmento::~Fragmento()
 	{
+        AllocEntry *entry;
+
 		clearFrags();
         _frags->clear();		
 		while( _allocList.size() > 0 )
@@ -80,7 +84,9 @@ namespace nanojit
 #ifdef MEMORY_INFO
 			ChangeSizeExplicit("NanoJitMem", -1, _gcHeap->Size(_allocList.last()));
 #endif
-			_gcHeap->Free( _allocList.removeLast() );	
+            entry = _allocList.removeLast();
+			_gcHeap->Free( entry->page, entry->allocSize );
+            delete entry;
 		}
         delete _frags;
         delete _assm;
@@ -136,6 +142,8 @@ namespace nanojit
 		Page* memory = 0;
 		if (_stats.pages < _max_pages)
 		{
+            AllocEntry *entry;
+
             // make sure we don't grow beyond _max_pages
             if (_stats.pages + count > _max_pages)
                 count = _max_pages - _stats.pages;
@@ -155,7 +163,10 @@ namespace nanojit
 			NanoAssert((int*)memory == pageTop(memory));
 			//fprintf(stderr,"head alloc of %d at %x of %d pages using nj page size of %d\n", gcpages, (intptr_t)memory, (intptr_t)_gcHeap->kNativePageSize, NJ_PAGE_SIZE);
 
-            _allocList.add(memory);
+            entry = new (_core->gc) AllocEntry;
+            entry->page = memory;
+            entry->allocSize = gcpages;
+            _allocList.add(entry);
 
 			Page* page = memory;
 			_pageList = page;

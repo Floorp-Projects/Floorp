@@ -17,6 +17,7 @@
  * 
  * Contributor(s): Adobe AS3 Team
  *                 Andreas Gal <gal@mozilla.com>
+ *                 Asko Tontti <atontti@cc.hut.fi>
  * 
  * Alternatively, the contents of this file may be used under the terms of either the GNU 
  * General Public License Version 2 or later (the "GPL"), or the GNU Lesser General Public 
@@ -37,6 +38,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#if defined AVMPLUS_LINUX || defined DARWIN
+#include <unistd.h>
+#include <sys/mman.h>
+#endif
+
 #include "jstypes.h"
 
 #define FASTCALL JS_FASTCALL
@@ -219,25 +226,44 @@ public:
 
     GCHeap()
     {
+#if defined _SC_PAGE_SIZE
+        kNativePageSize = sysconf(_SC_PAGE_SIZE);
+#else
         kNativePageSize = 4096; // @todo: what is this?
+#endif
     }
     
     inline void*
     Alloc(uint32_t pages) 
     {
 #ifdef XP_WIN
-	return VirtualAlloc(NULL, pages * kNativePageSize,
-			    MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+        return VirtualAlloc(NULL, 
+                            pages * kNativePageSize,
+                            MEM_COMMIT | MEM_RESERVE, 
+                            PAGE_EXECUTE_READWRITE);
+#elif defined AVMPLUS_LINUX || defined DARWIN
+        /**
+         * Don't use normal heap with mprotect+PROT_EXEC for executable code.
+         * SELinux and friends don't allow this.
+         */
+        return mmap(NULL, 
+                    pages * kNativePageSize,
+                    PROT_READ | PROT_WRITE | PROT_EXEC,
+                    MAP_PRIVATE | MAP_ANON,
+                    -1,
+                    0);
 #else
-        return valloc(pages * kNativePageSize);
+        return valloc(pages * kNativePageSize); 
 #endif
     }
     
     inline void
-    Free(void* p)
+    Free(void* p, uint32_t pages)
     {
 #ifdef XP_WIN
-	VirtualFree(p, 0, MEM_RELEASE);
+        VirtualFree(p, 0, MEM_RELEASE);
+#elif defined AVMPLUS_LINUX || defined DARWIN
+        munmap(p, pages * kNativePageSize); 
 #else
         free(p);
 #endif
