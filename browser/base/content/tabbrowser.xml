@@ -1738,7 +1738,7 @@
           if (aIndex < 0)
             aIndex += this.mTabs.length;
 
-          if (aIndex > 0 &&
+          if (aIndex >= 0 &&
               aIndex < this.mTabs.length &&
               aIndex != this.tabContainer.selectedIndex)
             this.selectedTab = this.mTabs[aIndex];
