@@ -9,7 +9,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE	= widgetutils
 XPI_NAME = widgetutils
 
-ifdef MOZ_XUL_APP
 INSTALL_EXTENSION_ID = widgetutils@extensions.mozilla.org
 DIST_FILES = install.rdf
 NO_JAR_AUTO_REG        = 1
@@ -24,7 +23,6 @@ XULAPP_DEFINES = \
 
 ifdef TARGET_XPCOM_ABI
 XULAPP_DEFINES += -DEM_ABI=$(OS_TARGET)_$(TARGET_XPCOM_ABI)
-endif
 endif
 
 DIRS    = src
