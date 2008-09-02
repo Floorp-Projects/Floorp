@@ -4303,6 +4303,7 @@ JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
     return OBJ_GET_CLASS(cx, obj) == &js_FunctionClass;
 }
 
+JS_BEGIN_EXTERN_C
 JS_STATIC_DLL_CALLBACK(JSBool)
 js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -4413,6 +4414,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
 
     return fs->call(cx, JSVAL_TO_OBJECT(argv[-1]), argc, argv, rval);
 }
+JS_END_EXTERN_C
 
 JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
