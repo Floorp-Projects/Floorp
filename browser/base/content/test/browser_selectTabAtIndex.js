@@ -3,7 +3,7 @@ function test() {
     gBrowser.addTab();
 
   var isLinux = navigator.platform.indexOf("Linux") == 0;
-  for (let i = 1; i <= 9; i++) {
+  for (let i = 9; i >= 1; i--) {
     EventUtils.synthesizeKey(i.toString(), { altKey: isLinux, accelKey: !isLinux });
 
     is(gBrowser.tabContainer.selectedIndex, (i == 9 ? gBrowser.mTabs.length : i) - 1,
