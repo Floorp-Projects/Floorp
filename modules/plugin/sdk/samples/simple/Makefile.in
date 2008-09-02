@@ -35,44 +35,50 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../../../..
-topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPIDL_MODULE = npsimple
-LIBRARY_NAME = npsimple
-REQUIRES = xpcom \
-           plugin \
-           $(NULL)
+MODULE		= npsimple
+LIBRARY_NAME	= npsimple
+IS_COMPONENT	= 1
+MODULE_NAME	= SimplePlugin
 
-NO_DIST_INSTALL = 1
+# Ack! we should not be using the internal API or linking against
+# MOZ_COMPONENT_LIBS!
+MOZILLA_INTERNAL_API = 1
+
+REQUIRES	= xpcom \
+		  string \
+		  plugin \
+		  widget \
+		  $(NULL)
+
+# Make sure that it builds but don't install it
+NO_DIST_INSTALL	= 1
 NO_INSTALL = 1
 
-CPPSRCS = nsScriptablePeer.cpp \
-          plugin.cpp \
-          $(NULL)
+XPIDLSRCS	= nsISimplePluginInstance.idl
 
-XPIDLSRCS = nsISimplePlugin.idl
+CPPSRCS		= npsimple.cpp
 
-SHARED_LIBRARY_LIBS = ../common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES	= -I$(srcdir)/.. -I$(srcdir)/../../public -I$(XPIDL_GEN_DIR)
 
-ifeq ($(OS_ARCH),WINNT)
-DEFFILE = $(win_srcdir)/npsimple.def
-RESFILE = npsimple.res
-endif
+EXTRA_DSO_LDOPTS += \
+	-L$(DIST)/lib \
+	-lgtksuperwin \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DMOZILLA_STRICT_API
+CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
-ifeq ($(OS_ARCH),Linux)
-EXTRA_DSO_LDOPTS +=  $(XLDFLAGS) -rdynamic  -lXi -lXext -lX11 -lm -lXt
-endif
+libs::
+	$(INSTALL) $(srcdir)/test.html $(DIST)/bin/res/samples
 
-LOCAL_INCLUDES = -I./$(XPIDL_GEN_DIR) \
-                 -I$(srcdir)/../include \
-                 -I$(srcdir)/../../include \
-                 $(NULL)
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.html $(DESTDIR)$(mozappdir)/res/samples
