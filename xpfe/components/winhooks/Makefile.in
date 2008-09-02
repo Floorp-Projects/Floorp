@@ -72,9 +72,7 @@ REQUIRES	= \
 
 FORCE_STATIC_LIB = 1
 
-ifdef MOZ_XUL_APP
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
-endif
 
 include $(topsrcdir)/config/rules.mk
 

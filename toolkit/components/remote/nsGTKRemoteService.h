@@ -83,10 +83,8 @@ private:
   static const char* HandleCommand(char* aCommand, nsIDOMWindow* aWindow,
                                    PRUint32 aTimestamp);
 
-#ifdef MOZ_XUL_APP
   static const char* HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
                                        PRUint32 aTimestamp);
-#endif
 
   static gboolean HandlePropertyChange(GtkWidget *widget,
                                        GdkEventProperty *event,

@@ -66,12 +66,8 @@
 //#include "nsGTKToolkit.h"
 #endif
 
-#ifdef MOZ_XUL_APP
 #include "nsICommandLineRunner.h"
 #include "nsXULAppAPI.h"
-#else
-#include "nsISuiteRemoteService.h"
-#endif
 
 #define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
 #define MOZILLA_LOCK_PROP      "_MOZILLA_LOCK"
@@ -90,11 +86,7 @@
 #define TO_LITTLE_ENDIAN32(x) (x)
 #endif
 
-#ifdef MOZ_XUL_APP
 const unsigned char kRemoteVersion[] = "5.1";
-#else
-const unsigned char kRemoteVersion[] = "5.0";
-#endif
 
 NS_IMPL_ISUPPORTS2(nsQtRemoteService,
                    nsIRemoteService,
