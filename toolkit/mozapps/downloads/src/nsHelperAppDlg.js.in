@@ -704,7 +704,13 @@ nsUnknownContentTypeDialog.prototype = {
           this.chosenApp.executable.path) {
         otherHandler.setAttribute("path",
                                   this.getPath(this.chosenApp.executable));
+
+#if XP_MACOSX
+        this.chosenApp.executable.QueryInterface(Components.interfaces.nsILocalFileMac);
+        otherHandler.label = this.chosenApp.executable.bundleDisplayName;
+#else
         otherHandler.label = this.chosenApp.executable.leafName;
+#endif
         otherHandler.hidden = false;
       }
 
@@ -1064,7 +1070,13 @@ nsUnknownContentTypeDialog.prototype = {
         var otherHandler = this.dialogElement("otherHandler");
         otherHandler.removeAttribute("hidden");
         otherHandler.setAttribute("path", this.getPath(this.chosenApp.executable));
+#ifdef XP_MACOSX
+        this.chosenApp.executable
+            .QueryInterface(Components.interfaces.nsILocalFileMac);
+        otherHandler.label = this.chosenApp.executable.bundleDisplayName;
+#else
         otherHandler.label = this.chosenApp.executable.leafName;
+#endif
         this.dialogElement("openHandler").selectedIndex = 1;
         this.dialogElement("openHandler").setAttribute("lastSelectedItemID", "otherHandler");
         
