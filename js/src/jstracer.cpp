@@ -1263,21 +1263,38 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* header, jsbytecode* p
       case JSOP_GE:
       case JSOP_NE:
       case JSOP_EQ:
+        /* These ops try to dispatch a JSOP_IFEQ or JSOP_IFNE that follows. */
         JS_ASSERT(js_CodeSpec[*pc].length == 1);
         pc++;
-        /* FALL THROUGH */
+        break;
 
+      default:
+        for (;;) {
+            if (*pc == JSOP_AND || *pc == JSOP_OR)
+                pc += GET_JUMP_OFFSET(pc);
+            else if (*pc == JSOP_ANDX || *pc == JSOP_ORX)
+                pc += GET_JUMPX_OFFSET(pc);
+            else
+                break;
+        }
+    }
+
+    switch (*pc) {
       case JSOP_IFEQ:
-      case JSOP_IFEQX:
       case JSOP_IFNE:
-      case JSOP_IFNEX:
         /*
-         * Forward jumps are usually intra-branch, but for-in loops jump to the trailing enditer to
-         * clean up, so check for that case here.
+         * Forward jumps are usually intra-branch, but for-in loops jump to the
+         * trailing enditer to clean up, so check for that case here.
          */
         if (pc[GET_JUMP_OFFSET(pc)] == JSOP_ENDITER)
             return true;
         return pc + GET_JUMP_OFFSET(pc) == header;
+
+      case JSOP_IFEQX:
+      case JSOP_IFNEX:
+        if (pc[GET_JUMPX_OFFSET(pc)] == JSOP_ENDITER)
+            return true;
+        return pc + GET_JUMPX_OFFSET(pc) == header;
 
       default:;
     }
@@ -2203,7 +2220,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     fp->regs->pc = (jsbytecode*)lr->from->root->ip + e->ip_adj;
     fp->regs->sp = StackBase(fp) + (e->sp_adj / sizeof(double)) - calldepth_slots;
     JS_ASSERT(fp->slots + fp->script->nfixed +
-              js_ReconstructStackDepth(cx, cx->fp->script, fp->regs->pc) == fp->regs->sp);
+              js_ReconstructStackDepth(cx, fp->script, fp->regs->pc) == fp->regs->sp);
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
     if (verbose_debug) {
