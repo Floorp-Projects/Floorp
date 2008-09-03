@@ -17,6 +17,8 @@ include('unstable/getopt.js');
 sys.include_path[0] = options.topsrcdir + "/xpcom/analysis";
 sys.include_path.push(options.topsrcdir);
 
+include('string-format.js');
+
 let modules = [];
 
 function LoadModules(modulelist)
