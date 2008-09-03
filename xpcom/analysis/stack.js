@@ -8,16 +8,45 @@ function process_type(c)
     isStack(c);
 }
 
+/**
+ * A BlameChain records a chain of one or more location/message pairs. It
+ * can be used to issue a complex error message such as:
+ * location: error: Allocated class Foo on the heap
+ * locationofFoo:   class Foo inherits from class Bar
+ * locationofBar:   in class Bar
+ * locationofBarMem:   Member Bar::mFoo
+ * locationofBaz:   class Baz is annotated NS_STACK
+ */
+function BlameChain(loc, message, prev)
+{
+  this.loc = loc;
+  this.message = message;
+  this.prev = prev;
+}
+BlameChain.prototype.toString = function()
+{
+  let loc = this.loc;
+  if (loc === undefined)
+    loc = "<unknown location>";
+  
+  let str = '%s:   %s'.format(loc.toString(), this.message);
+  if (this.prev)
+    str += "\n%s".format(this.prev);
+  return str;
+};
+
 function isStack(c)
 {
   function calculate()
   {
     if (hasAttribute(c, 'NS_stack'))
-      return true;
+      return new BlameChain(c.loc, '%s %s is annotated NS_STACK_CLASS'.format(c.kind, c.name));
 
-    for each (let base in c.bases)
-      if (isStack(base.type))
-        return true;
+    for each (let base in c.bases) {
+      let r = isStack(base.type);
+      if (r != null)
+        return new BlameChain(c.loc, '%s %s is a base of %s %s'.format(base.type.kind, base.type.name, c.kind, c.name), r);
+    }
 
     for each (let member in c.members) {
       if (member.isFunction)
@@ -57,10 +86,12 @@ function isStack(c)
       if (!type.kind || (type.kind != 'class' && type.kind != 'struct'))
         continue;
 
-      if (isStack(type))
-        return true;
+      let r = isStack(type);
+      if (r != null)
+        return new BlameChain(c.loc, 'In class %s'.format(c.name),
+                                 new BlameChain(member.loc, 'Member %s'.format(member.name), r));
     }
-    return false;
+    return null;
   }
 
   if (c.isIncomplete)
@@ -155,8 +186,9 @@ function process_tree(fndecl)
       }
       destType = destType.type;
 
-      if (isStack(destType))
-        error("constructed object of type '" + destType.name + "' not on the stack.", getLocation(stmt));
+      let r = isStack(destType);
+      if (r != null)
+        error('constructed object of type %s on the heap\n%s'.format(destType.name, r), getLocation(stmt));
     }
 
     if (TREE_CODE(t) != STATEMENT_LIST)
