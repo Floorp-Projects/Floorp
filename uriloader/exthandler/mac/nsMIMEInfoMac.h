@@ -58,6 +58,8 @@ class nsMIMEInfoMac : public nsMIMEInfoImpl {
 #endif
     static NS_HIDDEN_(nsresult) OpenApplicationWithURI(nsIFile *aApplication, 
                                                        const nsCString& aURI);
+                                                       
+    NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription);
     
 };
 
