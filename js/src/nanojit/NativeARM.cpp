@@ -63,8 +63,8 @@ namespace nanojit
 
 	void Assembler::nInit(AvmCore*)
 	{
-		// Thumb mode does not have conditional move, alas
-		has_cmov = false;
+		// all ARMs have conditional move
+		has_cmov = true;
 	}
 
 	NIns* Assembler::genPrologue(RegisterMask needSaving)
@@ -79,8 +79,8 @@ namespace nanojit
 		uint32_t savingCount = 0;
 
 		uint32_t savingMask = 0;
-		savingCount = 5; // R4-R7, LR
-		savingMask = 0xF0;
+		savingCount = 9; //R4-R10,R11,LR
+		savingMask = SavedRegs | rmask(FRAME_PTR);
 		(void)needSaving;
 
 		// so for alignment purposes we've pushed  return addr, fp, and savingCount registers
@@ -90,24 +90,10 @@ namespace nanojit
 
 		// Make room on stack for what we are doing
 		if (amt)
-		{
-			// largest value is 508 (7-bits << 2)
-			if (amt>508)
-			{
-				int size = 508;
-				while (size>0)
-				{
-					SUBi(SP, size);
-					amt -= size;
-					size = amt;
-					if (size>508)
-						size=508;
-				}
-			}
-			else
-				SUBi(SP, amt); 
-
+		{ 
+			SUBi(SP, amt); 
 		}
+
 		verbose_only( verbose_outputf("         %p:",_nIns); )
         verbose_only( verbose_output("         patch entry"); )
         NIns *patchEntry = _nIns;
@@ -132,7 +118,9 @@ namespace nanojit
 			// target doesn't exit yet.  emit jump to epilog, and set up to patch later.
 			lr = placeGuardRecord(guard);
 
-			BL(_epilogue);
+			// we need to know that there's an extra immediate value available
+			// for us; always force a far jump here.
+			BL_far(_epilogue);
 
 			lr->jmp = _nIns;
 		}
@@ -155,17 +143,10 @@ namespace nanojit
 
 	NIns* Assembler::genEpilogue(RegisterMask restore)
 	{
-		(void)restore;
-		if (false) {
-			// interworking
-			BX(R3); // return
-			POPr(R3); // POP LR into R3
-			POP_mask(0xF0); // {R4-R7}
-		} else {
-			// return to Thumb caller
-			POP_mask(0xF0|rmask(PC));
-		}
+		BX(LR); // return
 		MR(R0,R2); // return LinkRecord*
+		RegisterMask savingMask = restore | rmask(FRAME_PTR) | rmask(LR);
+		POP_mask(savingMask); // regs
 		return _nIns;
 	}
 	
@@ -224,12 +205,30 @@ namespace nanojit
 			
 	Register Assembler::nRegisterAllocFromSet(int set)
 	{
+		// Note: The clz instruction only works on armv5 and up.
+#ifndef UNDER_CE
+#ifdef __ARMCC__
+		register int i;
+		__asm { clz i,set }
+		Register r = Register(31-i);
+		_allocator.free &= ~rmask(r);
+		return r;
+#else
 		// need to implement faster way
 		int i=0;
 		while (!(set & rmask((Register)i)))
 			i ++;
 		_allocator.free &= ~rmask((Register)i);
 		return (Register) i;
+#endif
+#else
+		Register r;
+		r = (Register)_CountLeadingZeros(set);
+		r = (Register)(31-r);
+		_allocator.free &= ~rmask(r);
+		return r;
+#endif
+
 	}
 
 	void Assembler::nRegisterResetAll(RegAlloc& a)
@@ -254,9 +253,16 @@ namespace nanojit
 
 		//printf("---patching branch at 0x%08x to location 0x%08x (%d-0x%08x)\n", branch, target, offset, offset);
 
-		NanoAssert(-(1<<21) <= offset && offset < (1<<21)); 
-		*branch++ = (NIns)(0xF000 | (offset>>12)&0x7FF);
-		*branch =   (NIns)(0xF800 | (offset>>1)&0x7FF);
+		// We have 2 words to work with here -- if offset is in range of a 24-bit
+		// relative jump, emit that; otherwise, we do a pc-relative load into pc.
+		if (-(1<<24) <= offset & offset < (1<<24)) {
+			// ARM goodness, using unconditional B
+			*branch = (NIns)( COND_AL | (0xA<<24) | ((offset >>2) & 0xFFFFFF) );
+		} else {
+			// LDR pc,[pc]
+			*branch++ = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | ( 0x004 ) );
+			*branch = (NIns)target;
+		}
 	}
 
 	RegisterMask Assembler::hint(LIns* i, RegisterMask allow /* = ~0 */)
@@ -419,9 +425,7 @@ namespace nanojit
 
 	void Assembler::nativePageReset()
 	{
-			_nPool = 0;
 			_nSlot = 0;
-			_nExitPool = 0;
 			_nExitSlot = 0;
 	}
 
@@ -431,22 +435,17 @@ namespace nanojit
 		if (!_nExitIns)  _nExitIns = pageAlloc(true);
 		//fprintf(stderr, "assemble onto %x exits into %x\n", (int)_nIns, (int)_nExitIns);
 	
-		if (!_nPool) {
-			_nSlot = _nPool = (int*)_nIns;
+		if (!_nSlot)
+		{
+			// This needs to be done or the samepage macro gets confused; pageAlloc
+			// gives us a pointer to just past the end of the page.
+			_nIns--;
+			_nExitIns--;
 
-			// Make original pool at end of page. Currently
-			// we are pointing off the end of the original page,
-			// so back up 1+NJ_CPOOL_SIZE
-			_nPool = (int*)((int)_nIns - (sizeof(int32_t)*NJ_CPOOL_SIZE));
-            
-			// _nSlot points at last slot in pool (fill upwards)
-			_nSlot = _nPool + (NJ_CPOOL_SIZE-1);
-
-			// Move _nIns to the top of the pool
-			_nIns = (NIns*)_nPool;
-
-			// no branch needed since this follows the epilogue
-        }
+			// constpool starts at top of page and goes down,
+			// code starts at bottom of page and moves up
+			_nSlot = pageDataStart(_nIns); //(int*)(&((Page*)pageTop(_nIns))->lir[0]);
+		}
 	}
 
 	void Assembler::flushCache(NIns* n1, NIns* n2) {
@@ -466,374 +465,109 @@ namespace nanojit
 
 	NIns* Assembler::asm_adjustBranch(NIns* at, NIns* target)
 	{
-		NIns* save = _nIns;
-		NIns* was =  (NIns*) (((((*(at+2))&0x7ff)<<12) | (((*(at+1))&0x7ff)<<1)) + (at-2+2));
+		// This always got emitted as a BL_far sequence; at points
+		// to the first of 4 instructions.  Ensure that we're where
+		// we think we were..
+		NanoAssert(at[1] == (NIns)( COND_AL | OP_IMM | (1<<23) | (PC<<16) | (LR<<12) | (4) ));
+		NanoAssert(at[2] == (NIns)( COND_AL | (0x9<<21) | (0xFFF<<8) | (1<<4) | (IP) ));
 
-		_nIns = at + 2;
-		BL(target);
+		NIns* was = (NIns*) at[3];
 
-		flushCache(_nIns, _nIns+2);
+		at[3] = (NIns)target;
+
+		flushCache(at, at+4);
 
 #ifdef AVMPLUS_PORTING_API
-		// XXX save.._nIns+2? really?
-		NanoJIT_PortAPI_FlushInstructionCache(save, _nIns+2);
+		NanoJIT_PortAPI_FlushInstructionCache(at, at+4);
 #endif
-		
-		_nIns = save;
 
 		return was;
 	}
 
-	void Assembler::STi(Register b, int32_t d, int32_t v)
-	{
-		ST(b, d, Scratch);
-		LDi(Scratch, v);
-	}
-
-	bool isB11(NIns *target, NIns *cur)
-	{
-		NIns *br_base = (cur-1)+2;
-		int br_off = int(target) - int(br_base);
-		return (-(1<<11) <= br_off && br_off < (1<<11));
-	}
-
 	void Assembler::underrunProtect(int bytes)
 	{
-		// perhaps bytes + sizeof(PageHeader)/sizeof(NIns) + 4 ?
-		intptr_t u = bytes + 4;
-		if (!samepage(_nIns-u, _nIns-1)) {
+		intptr_t u = bytes + sizeof(PageHeader)/sizeof(NIns) + 8;
+		if ( (samepage(_nIns,_nSlot) && (((intptr_t)_nIns-u) <= intptr_t(_nSlot+1))) ||
+			 (!samepage((intptr_t)_nIns-u,_nIns)) )
+		{
 			NIns* target = _nIns;
+
 			_nIns = pageAlloc(_inExit);
-			// might be able to do a B instead of BL (save an instruction)
-			if (isB11(target, _nIns))
-			{
-				NIns *br_base = (_nIns-1)+2;
-				int br_off = int(target) - int(br_base);
-				*(--_nIns) = (NIns)(0xE000 | ((br_off>>1)&0x7FF));
-			}
-			else
-			{
-				int offset = int(target)-int(_nIns-2+2);
-				*(--_nIns) = (NIns)(0xF800 | ((offset>>1)&0x7FF) );
-				*(--_nIns) = (NIns)(0xF000 | ((offset>>12)&0x7FF) );
-			}
+
+			// XXX _nIns at this point points to one past the end of
+			// the page, intended to be written into using *(--_nIns).
+			// However, (guess) something seems to be storing the value
+			// of _nIns as is, and then later generating a jump to a bogus
+			// address.  So pre-decrement to ensure that it's always
+			// valid; we end up skipping using the last instruction this
+			// way.
+			_nIns--;
+
+			// Update slot, either to _nIns (if decremented above), or
+			// _nIns-1 once the above bug is fixed/found.
+			_nSlot = pageDataStart(_nIns);
+
+			// If samepage() is used on _nIns and _nSlot, it'll fail, since _nIns
+			// points to one past the end of the page right now.  Assume that 
+			// JMP_nochk won't ever try to write to _nSlot, and so won't ever
+			// check samepage().  See B_cond_chk macro.
+			JMP_nochk(target);
+		} else if (!_nSlot) {
+			// make sure that there's always a slot pointer
+			_nSlot = pageDataStart(_nIns);
 		}
 	}
 
-	bool isB22(NIns *target, NIns *cur)
-	{
-		int offset = int(target)-int(cur-2+2);
-		return (-(1<<22) <= offset && offset < (1<<22));
+	void Assembler::BL_far(NIns* addr) {
+		// we have to stick an immediate into the stream and make lr
+		// point to the right spot before branching
+		underrunProtect(16);
+
+		// the address
+		*(--_nIns) = (NIns)((addr));
+		// bx ip             // branch to the address we loaded earlier
+		*(--_nIns) = (NIns)( COND_AL | (0x9<<21) | (0xFFF<<8) | (1<<4) | (IP) );
+		// add lr, [pc + #4] // set lr to be past the address that we wrote
+		*(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | (PC<<16) | (LR<<12) | (4) );
+		// ldr ip, [pc + #4] // load the address into ip, reading it from [pc+4]
+		*(--_nIns) = (NIns)( COND_AL | (0x59<<20) | (PC<<16) | (IP<<12) | (4));
+		asm_output1("bl %p (32-bit)", addr);
 	}
 
-	void Assembler::BL(NIns* target)
-	{
-		underrunProtect(4);
-		NanoAssert(isB22(target,_nIns));
-		int offset = int(target)-int(_nIns-2+2);
-		*(--_nIns) = (NIns)(0xF800 | ((offset>>1)&0x7FF) );
-		*(--_nIns) = (NIns)(0xF000 | ((offset>>12)&0x7FF) );
-		asm_output2("bl %X offset=%d",(int)target, offset);
-	}
-
-
-	void Assembler::B(NIns *target)
-	{
-		underrunProtect(2);
-		NanoAssert(isB11(target,_nIns));
-		NIns *br_base = (_nIns-1)+2;
-		int br_off = int(target) - int(br_base);
-		NanoAssert(-(1<<11) <= br_off && br_off < (1<<11));
-		*(--_nIns) = (NIns)(0xE000 | ((br_off>>1)&0x7FF));
-		asm_output2("b %X offset=%d", (int)target, br_off);
-	}
-
-	void Assembler::JMP(NIns *target)
-	{
-		underrunProtect(4);
-		if (isB11(target,_nIns))
-			B(target);
-		else
-			BL(target);
-	}
-
-	void Assembler::PUSH_mask(RegisterMask mask)
-	{
-		NanoAssert((mask&(0xff|rmask(LR)))==mask);
-		underrunProtect(2);
-		if (mask & rmask(LR)) {
-			mask &= ~rmask(LR);
-			mask |= rmask(R8);
-		}
-		*(--_nIns) = (NIns)(0xB400 | mask);
-		asm_output1("push {%x}", mask);
-	}
-
-	void Assembler::POPr(Register r)
-	{
-		underrunProtect(2);
-		NanoAssert(((unsigned)r)<8 || r == PC);
-		if (r == PC)
-			r = R8;
-		*(--_nIns) = (NIns)(0xBC00 | (1<<(r)));
-		asm_output1("pop {%s}",gpn(r));
-	}
-
-	void Assembler::POP_mask(RegisterMask mask)
-	{
-		NanoAssert((mask&(0xff|rmask(PC)))==mask);
-		underrunProtect(2);
-		if (mask & rmask(PC)) {
-			mask &= ~rmask(PC);
-			mask |= rmask(R8);
-		}
-		*(--_nIns) = (NIns)(0xBC00 | mask);
-		asm_output1("pop {%x}", mask);
-	}
-
-	void Assembler::MOVi(Register r, int32_t v)
-	{
-		NanoAssert(isU8(v));
-		underrunProtect(2);
-		*(--_nIns) = (NIns)(0x2000 | r<<8 | v);
-		asm_output2("mov %s,#%d",gpn(r),v);
-	}
-
-	void Assembler::LDi(Register r, int32_t v)
-	{
-		if (isU8(v)) {
-			MOVi(r,v);
-		} else if (isU8(-v)) {
-			NEG(r);
-			MOVi(r,-v);
+	void Assembler::BL(NIns* addr) {
+		intptr_t offs = PC_OFFSET_FROM(addr,(intptr_t)_nIns-4);
+		if (JMP_S24_OFFSET_OK(offs)) {
+			// we can do this with a single BL call
+			underrunProtect(4);
+			*(--_nIns) = (NIns)( COND_AL | (0xB<<24) | (((offs)>>2) & 0xFFFFFF) ); \
+			asm_output1("bl %p", addr);
 		} else {
-			underrunProtect(2);
-			LD32_nochk(r, v);
-		}
-	}
-
-	void Assembler::B_cond(int c, NIns *target)
-	{
-		#ifdef NJ_VERBOSE
-		static const char *ccname[] = { "eq","ne","hs","lo","mi","pl","vs","vc","hi","ls","ge","lt","gt","le","al","nv" };
-		#endif
-
-		underrunProtect(6);
-		int tt = int(target) - int(_nIns-1+2);
-		if (tt < (1<<8) && tt >= -(1<<8))	{
-			*(--_nIns) = (NIns)(0xD000 | ((c)<<8) | (tt>>1)&0xFF );
-			asm_output3("b%s %X offset=%d", ccname[c], target, tt);
-		} else {
-			NIns *skip = _nIns;
-			BL(target);
-			c ^= 1;
-			*(--_nIns) = (NIns)(0xD000 | c<<8 | 1 );
-			asm_output2("b%s %X", ccname[c], skip);
-		}
-	}
-
-	void Assembler::STR_sp(int32_t offset, Register reg)
-	{
-		NanoAssert((offset&3)==0);// require natural alignment
-		int32_t off = offset>>2;
-		NanoAssert(isU8(off));
-		underrunProtect(2);
-		*(--_nIns) = (NIns)(0x9000 | ((reg)<<8) | off );
-		asm_output3("str %s, %d(%s)", gpn(reg), offset, gpn(SP));
-	}
-
-	void Assembler::STR_index(Register base, Register off, Register reg)
-	{
-		underrunProtect(2);
-		*(--_nIns) = (NIns)(0x5000 | (off<<6) | (base<<3) | (reg));
-		asm_output3("str %s,(%s+%s)",gpn(reg),gpn(base),gpn(off));
-	}
-
-	void Assembler::STR_m(Register base, int32_t offset, Register reg)
-	{
-		NanoAssert(offset >= 0 && offset < 128 && (offset&3)==0);
-		underrunProtect(2);
-		int32_t off = offset>>2;
-		*(--_nIns) = (NIns)(0x6000 | off<<6 | base<<3 | reg);
-		asm_output3("str %s,%d(%s)", gpn(reg), offset, gpn(base)); 
-	}
-
-	void Assembler::LDMIA(Register base, RegisterMask regs)
-	{
-		underrunProtect(2);
-		NanoAssert((regs&rmask(base))==0 && isU8(regs));
-		*(--_nIns) = (NIns)(0xC800 | base<<8 | regs);
-		asm_output2("ldmia %s!,{%x}", gpn(base), regs);
-	}
-
-	void Assembler::STMIA(Register base, RegisterMask regs)
-	{
-		underrunProtect(2);
-		NanoAssert((regs&rmask(base))==0 && isU8(regs));
-		*(--_nIns) = (NIns)(0xC000 | base<<8 | regs);
-		asm_output2("stmia %s!,{%x}", gpn(base), regs);
-	}
-
-	void Assembler::ST(Register base, int32_t offset, Register reg)
-	{
-		NanoAssert((offset&3)==0);// require natural alignment
-		int off = offset>>2;
-		if (base==SP) {
-			STR_sp(offset, reg);
-		} else if ((offset)<0) {										
-			STR_index(base, Scratch, reg);
-			NEG(Scratch);
-			if (offset < -255) {
-				NanoAssert(offset >= -1020);
-				SHLi(Scratch, 2);
-				MOVi(Scratch, -off);
-			}
-			else {
-				MOVi(Scratch, -offset);
-			}
-		} else {
-			underrunProtect(6);
-			if (off<32) {
-				STR_m(base, offset, reg);
-			}
-			else {
-				STR_index(base, Scratch, reg);
-				if (offset > 255) {
-					SHLi(Scratch, 2);
-					MOVi(Scratch, off);
-				}
-				else {
-					MOVi(Scratch, offset);
-				}
-			}
-		}
-	}
-
-	void Assembler::ADDi8(Register r, int32_t i)
-	{
-		underrunProtect(2);
-		NanoAssert(isU8(i));
-		*(--_nIns) = (NIns)(0x3000 | r<<8 | i);
-		asm_output2("add %s,#%d", gpn(r), i);
-	}
-
-	void Assembler::ADDi(Register r, int32_t i)
-	{
-		if (i < 0 && i != 0x80000000) {
-			SUBi(r, -i);
-		}
-		else if (r == SP) {
-			NanoAssert((i&3)==0 && i >= 0 && i < (1<<9));
-			underrunProtect(2);
-			*(--_nIns) = (NIns)(0xB000 | i>>2);
-			asm_output2("add %s,#%d", gpn(SP), i);
-		}
-		else if (isU8(i)) {
-			ADDi8(r,i);
-		}
-		else if (i >= 0 && i <= (255+255)) {
-			ADDi8(r,i-255);
-			ADDi8(r,255);
-		}
-		else {
-			ADD(r, Scratch);
-			LDi(Scratch, i);
-		}
-	}
-
-	void Assembler::SUBi8(Register r, int32_t i)
-	{
-		underrunProtect(2);
-		NanoAssert(isU8(i));
-		*(--_nIns) = (NIns)(0x3800 | r<<8 | i);
-		asm_output2("sub %s,#%d", gpn(r), i);
-	}
-
-	void Assembler::SUBi(Register r, int32_t i)
-	{
-		if (i < 0 && i != 0x80000000) {
-			ADDi(r, -i);
-		}
-		else if (r == SP) {
-			NanoAssert((i&3)==0 && i >= 0 && i < (1<<9));
-			underrunProtect(2);
-			*(--_nIns) = (NIns)(0xB080 | i>>2);
-			asm_output2("sub %s,#%d", gpn(SP), i);
-		}
-		else if (isU8(i)) {
-			SUBi8(r,i);
-		}
-		else if (i >= 0 && i <= (255+255)) {
-			SUBi8(r,i-255);
-			SUBi8(r,255);
-		}
-		else {
-			SUB(r, Scratch);
-			LDi(Scratch, i);
+			BL_far(addr);
 		}
 	}
 
 	void Assembler::CALL(const CallInfo *ci)
 	{
         intptr_t addr = ci->_address;
-		if (isB22((NIns*)addr, _nIns)) {
-			int offset = int(addr)-int(_nIns-2+2);
-			*(--_nIns) = (NIns)(0xF800 | ((offset>>1)&0x7FF) );
-			*(--_nIns) = (NIns)(0xF000 | ((offset>>12)&0x7FF) );
-			asm_output2("call %08X:%s", addr, ci->_name);
-		}
-		else
-		{
-			underrunProtect(2*(10));
-		
-			if ( (((int(_nIns))&0xFFFF)%4) != 0)
-				 *(--_nIns) = (NIns)0;
-
-			*(--_nIns) = (NIns)(0xF800 | (((-14)&0xFFF)>>1) );
-			*(--_nIns) = (NIns)(0xF000 | (((-14)>>12)&0x7FF) );
-
-			*(--_nIns) = (NIns)(0x4600 | (1<<7) | (Scratch<<3) | (IP&7));
-			*(--_nIns) = (NIns)0;
-			*(--_nIns) = (short)((addr) >> 16);
-			*(--_nIns) = (short)((addr) & 0xFFFF);
-			*(--_nIns) = (NIns)(0x4700 | (IP<<3));
-			*(--_nIns) = (NIns)(0xE000 | (4>>1));
-			*(--_nIns) = (NIns)(0x4800 | (Scratch<<8) | (1));
-			asm_output2("call %08X:%s", addr, ci->_name);
-		}
+		BL((NIns*)addr);
+		asm_output1("   (call %s)", ci->_name);
 	}
 
 	void Assembler::LD32_nochk(Register r, int32_t imm)
 	{
-		// Can we reach the current slot/pool?
-		int offset = (int)(_nSlot) - (int)(_nIns);
-		if ((offset>=NJ_MAX_CPOOL_OFFSET || offset<0) ||
-			(_nSlot < _nPool))
-		{
-			// cant reach, or no room
-			// need a new pool
-			
-			// Make sure we have space for a pool and the LDR
-			underrunProtect(sizeof(int32_t)*NJ_CPOOL_SIZE+1);
+		// We can always reach the const pool, since it's on the same page (<4096)
+		underrunProtect(8);
 
-			NIns* skip = _nIns;
+		*(++_nSlot) = (int)imm;
 
-			_nPool = (int*)(((int)_nIns - (sizeof(int32_t)*NJ_CPOOL_SIZE)) &~3);
-			_nSlot = _nPool + (NJ_CPOOL_SIZE-1);
-			_nIns = (NIns*)_nPool;
+		//fprintf (stderr, "wrote slot(2) %p with %08x, jmp @ %p\n", _nSlot, (intptr_t)imm, _nIns-1);
 
-			// jump over the pool
-			B(skip);
-			//*(--_nIns) = (NIns)( COND_AL | (0x5<<25) | (NJ_CPOOL_SIZE-1) );
-		}
+		int offset = PC_OFFSET_FROM(_nSlot,(intptr_t)(_nIns)-4);
 
-		*(_nSlot--) = (int)imm;
+		NanoAssert(JMP_S24_OFFSET_OK(offset) && (offset < 0));
 
-		NIns *data = (NIns*)(_nSlot+1);;
-
-		int data_off = int(data) - (int(_nIns+1)&~3);
-		*(--_nIns) = (NIns)(0x4800 | r<<8 | data_off>>2);
-		asm_output3("ldr %s,%d(PC) [%X]",gpn(r),data_off,(int)data);
+		*(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | ((r)<<12) | ((-offset) & 0xFFFFFF) );
+		asm_output2("ld %s,%d",gpn(r),imm);
 	}
     #endif /* FEATURE_NANOJIT */
 }
