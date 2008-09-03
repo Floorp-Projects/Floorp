@@ -79,7 +79,7 @@
 #include "jsstr.h"
 #include "prmjtime.h"
 
-#if !defined JS_THREADSAFE && defined JS_TRACER
+#ifdef JS_TRACER
 #include "jstracer.h"
 #endif
 

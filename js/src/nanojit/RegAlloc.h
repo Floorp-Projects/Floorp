@@ -68,7 +68,9 @@ namespace nanojit
 			debug_only( uint32_t	count; )
 			debug_only( RegisterMask managed; )    // bitfield of 0..NJ_MAX_REGISTERS denoting which are under our management                     
 
-			LIns*	active[NJ_MAX_REGISTERS];  // active[r] = OP that defines r
+			// RegisterMask is a 32-bit value, so we can never have more than 32 active.
+			// hardcode 32 here in case we have non-contiguous register numbers
+			LIns*	active[32];  // active[r] = OP that defines r
 			RegisterMask	free;
 			RegisterMask	used;
 

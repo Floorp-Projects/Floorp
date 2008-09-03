@@ -44,6 +44,7 @@
 
 #if defined(AVMPLUS_LINUX) && defined(AVMPLUS_ARM)
 #include <asm/unistd.h>
+extern "C" void __clear_cache(char *BEG, char *END);
 #endif
 
 namespace nanojit
@@ -178,6 +179,8 @@ namespace nanojit
 		// nothing free, steal one 
 		// LSRA says pick the one with the furthest use
 		LIns* vic = findVictim(regs,allow,prefer);
+		NanoAssert(vic != NULL);
+
 	    Reservation* resv = getresv(vic);
 
 		// restore vic
@@ -446,25 +449,37 @@ namespace nanojit
 		Reservation* resv = getresv(i);
 		Register r;
 
+		// if we have an existing reservation and it has a non-unknown
+		// register allocated, and that register is in our allowed mask,
+		// return it.
         if (resv && (r=resv->reg) != UnknownReg && (rmask(r) & allow)) {
 			return r;
         }
 
+		// figure out what registers are preferred for this instruction
 		RegisterMask prefer = hint(i, allow);
+
+		// if we didn't have a reservation, allocate one now
 		if (!resv) 	
 			resv = reserveAlloc(i);
 
+		// if the reservation doesn't have a register assigned to it...
         if ((r=resv->reg) == UnknownReg)
 		{
+			// .. if the cost is 2 and the allowed mask includes
+			// the saved regs, then prefer just those.
             if (resv->cost == 2 && (allow&SavedRegs))
                 prefer = allow&SavedRegs;
+			// grab one.
 			r = resv->reg = registerAlloc(prefer);
 			_allocator.addActive(r, i);
 			return r;
 		}
 		else 
 		{
-			// r not allowed
+			// the already-allocated register isn't in the allowed mask;
+			// we need to grab a new one and then copy over the old
+			// contents to the new.
 			resv->reg = UnknownReg;
 			_allocator.retire(r);
             if (resv->cost == 2 && (allow&SavedRegs))
@@ -788,38 +803,32 @@ namespace nanojit
 		internalReset();  // clear the reservation tables and regalloc
 		NanoAssert(_branchStateMap->isEmpty());
 		_branchStateMap = 0;
-		
-		#if defined(UNDER_CE)
+
+#ifdef AVMPLUS_ARM
 		// If we've modified the code, we need to flush so we don't end up trying 
 		// to execute junk
+# if defined(UNDER_CE)
 		FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
-		#elif defined(AVMPLUS_LINUX) && defined(AVMPLUS_ARM)
-			// N A S T Y - obviously have to fix this
-		// determine our page range
+# elif defined(AVMPLUS_LINUX)
+		for (int i = 0; i < 2; i++) {
+			Page *p = (i == 0) ? _nativePages : _nativeExitPages;
 
-		Page *page=0, *first=0, *last=0;
-		for (int i=2;i!=0;i--) {
-			page = first = last = (i==2 ? _nativePages : _nativeExitPages);
-			while (page)
-			{
-				if (page<first)
-					first = page;
-				if (page>last)
-					last = page;
-				page = page->next;
+			Page *first = p;
+			while (p) {
+				if (!p->next || p->next != p+1) {
+					__clear_cache((char*)first, (char*)(p+1));
+					first = p->next;
+				}
+				p = p->next;
 			}
-	
-			register unsigned long _beg __asm("a1") = (unsigned long)(first);
-			register unsigned long _end __asm("a2") = (unsigned long)(last+NJ_PAGE_SIZE);
-			register unsigned long _flg __asm("a3") = 0;
-			register unsigned long _swi __asm("r7") = 0xF0002;
-			__asm __volatile ("swi 0 	@ sys_cacheflush" : "=r" (_beg) : "0" (_beg), "r" (_end), "r" (_flg), "r" (_swi));
 		}
-		#endif
-	#ifdef AVMPLUS_PORTING_API
+# endif
+#endif
+
+# ifdef AVMPLUS_PORTING_API
 		NanoJIT_PortAPI_FlushInstructionCache(_nIns, _endJit1Addr);
 		NanoJIT_PortAPI_FlushInstructionCache(_nExitIns, _endJit2Addr);
-	#endif
+# endif
 	}
 	
 	void Assembler::copyRegisters(RegAlloc* copyTo)
@@ -861,7 +870,7 @@ namespace nanojit
 			switch(op)
 			{
 				default:
-					NanoAssertMsg(false, "unsupported LIR instruction");
+					NanoAssertMsgf(false, "unsupported LIR instruction: %d (~0x40: %d)\n", op, op&~LIR64);
 					break;
 					
 				case LIR_short:
@@ -1063,7 +1072,20 @@ namespace nanojit
 
 					Register rb = UnknownReg;
 					RegisterMask allow = GpRegs;
-					if (lhs != rhs && (op == LIR_mul || !rhs->isconst()))
+					bool forceReg = (op == LIR_mul || !rhs->isconst());
+
+#ifdef NANOJIT_ARM
+					// Arm can't do an immediate op with immediates
+					// outside of +/-255 (for AND) r outside of
+					// 0..255 for others.
+					if (!forceReg)
+					{
+						if (rhs->isconst() && !isU8(rhs->constval()))
+							forceReg = true;
+					}
+#endif
+
+					if (lhs != rhs && forceReg)
 					{
 						if ((rb = asm_binop_rhs_reg(ins)) == UnknownReg) {
 							rb = findRegFor(rhs, allow);
@@ -1079,7 +1101,7 @@ namespace nanojit
 						ra = findSpecificRegFor(lhs, rr);
 					// else, rA already has a register assigned.
 
-					if (!rhs->isconst() || op == LIR_mul)
+					if (forceReg)
 					{
 						if (lhs == rhs)
 							rb = ra;
@@ -1204,13 +1226,20 @@ namespace nanojit
 					LIns* cond = ins->oprnd1();
 					LOpcode condop = cond->opcode();
 					NanoAssert(cond->isCond());
-#ifndef NJ_SOFTFLOAT
+#if !defined(NJ_SOFTFLOAT)
                     if (condop >= LIR_feq && condop <= LIR_fge)
 					{
+#if defined(NJ_ARM_VFP)
+						if (op == LIR_xf)
+							JNE(exit);
+						else
+							JE(exit);
+#else
 						if (op == LIR_xf)
 							JP(exit);
 						else
 							JNP(exit);
+#endif
 						asm_fcmp(cond);
                         break;
 					}
@@ -1309,9 +1338,13 @@ namespace nanojit
 				{
 					// only want certain regs 
 					Register r = prepResultReg(ins, AllowableFlagRegs);
+#ifdef NJ_ARM_VFP
+					SETE(r);
+#else
 					// SETcc only sets low 8 bits, so extend 
 					MOVZX8(r,r);
 					SETNP(r);
+#endif
 					asm_fcmp(ins);
 					break;
 				}
@@ -1433,8 +1466,13 @@ namespace nanojit
 
 	uint32_t Assembler::arFree(uint32_t idx)
 	{
+		// nothing to free
+		if (idx == 0)
+			return 0;
+
 		if (idx > 0 && _activation.entry[idx] == _activation.entry[idx+stack_direction(1)])
 			_activation.entry[idx+stack_direction(1)] = 0;  // clear 2 slots for doubles 
+
 		_activation.entry[idx] = 0;
 		return 0;
 	}

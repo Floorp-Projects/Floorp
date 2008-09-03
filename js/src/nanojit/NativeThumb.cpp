@@ -63,13 +63,8 @@ namespace nanojit
 
 	void Assembler::nInit(AvmCore*)
 	{
-	#ifdef NJ_THUMB_JIT
 		// Thumb mode does not have conditional move, alas
 		has_cmov = false;
-	#else
-		// all ARMs have conditional move
-		has_cmov = true;
-	#endif
 	}
 
 	NIns* Assembler::genPrologue(RegisterMask needSaving)
@@ -84,15 +79,9 @@ namespace nanojit
 		uint32_t savingCount = 0;
 
 		uint32_t savingMask = 0;
-		#if defined(NJ_THUMB_JIT)
 		savingCount = 5; // R4-R7, LR
 		savingMask = 0xF0;
 		(void)needSaving;
-		#else
-		savingCount = 9; //R4-R10,R11,LR
-		savingMask = SavedRegs | rmask(FRAME_PTR);
-		(void)needSaving;
-		#endif
 
 		// so for alignment purposes we've pushed  return addr, fp, and savingCount registers
 		uint32_t stackPushed = 4 * (2+savingCount);
@@ -101,7 +90,6 @@ namespace nanojit
 
 		// Make room on stack for what we are doing
 		if (amt)
-#ifdef NJ_THUMB_JIT
 		{
 			// largest value is 508 (7-bits << 2)
 			if (amt>508)
@@ -120,11 +108,6 @@ namespace nanojit
 				SUBi(SP, amt); 
 
 		}
-#else
-		{ 
-			SUBi(SP, amt); 
-		}
-#endif
 		verbose_only( verbose_outputf("         %p:",_nIns); )
         verbose_only( verbose_output("         patch entry"); )
         NIns *patchEntry = _nIns;
@@ -148,7 +131,8 @@ namespace nanojit
 		{
 			// target doesn't exit yet.  emit jump to epilog, and set up to patch later.
 			lr = placeGuardRecord(guard);
-            BL(_epilogue);
+
+			BL(_epilogue);
 
 			lr->jmp = _nIns;
 		}
@@ -171,7 +155,6 @@ namespace nanojit
 
 	NIns* Assembler::genEpilogue(RegisterMask restore)
 	{
-#ifdef NJ_THUMB_JIT
 		(void)restore;
 		if (false) {
 			// interworking
@@ -184,18 +167,30 @@ namespace nanojit
 		}
 		MR(R0,R2); // return LinkRecord*
 		return _nIns;
-#else
-		BX(LR); // return
-		MR(R0,R2); // return LinkRecord*
-		RegisterMask savingMask = restore | rmask(FRAME_PTR) | rmask(LR);
-		POP_mask(savingMask); // regs
-		return _nIns;
-#endif
 	}
 	
 	void Assembler::asm_call(LInsp ins)
 	{
         const CallInfo* call = callInfoFor(ins->fid());
+		uint32_t atypes = call->_argtypes;
+		uint32_t roffset = 0;
+
+		// we need to detect if we have arg0 as LO followed by arg1 as F;
+		// in that case, we need to skip using r1 -- the F needs to be
+		// loaded in r2/r3, at least according to the ARM EABI and gcc 4.2's
+		// generated code.
+		bool arg0IsInt32FollowedByFloat = false;
+		while ((atypes & 3) != ARGSIZE_NONE) {
+			if (((atypes >> 4) & 3) == ARGSIZE_LO &&
+				((atypes >> 2) & 3) == ARGSIZE_F &&
+				((atypes >> 6) & 3) == ARGSIZE_NONE)
+			{
+				arg0IsInt32FollowedByFloat = true;
+				break;
+			}
+			atypes >>= 2;
+		}
+
 		CALL(call);
         ArgSize sizes[10];
         uint32_t argc = call->get_sizes(sizes);
@@ -205,8 +200,11 @@ namespace nanojit
             ArgSize sz = sizes[j];
             NanoAssert(sz == ARGSIZE_LO || sz == ARGSIZE_Q);
     		// pre-assign registers R0-R3 for arguments (if they fit)
-            Register r = i < 4 ? argRegs[i] : UnknownReg;
+            Register r = (i+roffset) < 4 ? argRegs[i+roffset] : UnknownReg;
             asm_arg(sz, ins->arg(j), r);
+
+			if (i == 0 && arg0IsInt32FollowedByFloat)
+				roffset = 1;
 		}
 	}
 	
@@ -226,40 +224,12 @@ namespace nanojit
 			
 	Register Assembler::nRegisterAllocFromSet(int set)
 	{
-#ifdef NJ_THUMB_JIT
 		// need to implement faster way
 		int i=0;
 		while (!(set & rmask((Register)i)))
 			i ++;
 		_allocator.free &= ~rmask((Register)i);
 		return (Register) i;
-
-#else
-		// Note: The clz instruction only works on armv5 and up.
-#ifndef UNDER_CE
-#ifdef __ARMCC__
-		register int i;
-		__asm { clz i,set }
-		Register r = Register(31-i);
-		_allocator.free &= ~rmask(r);
-		return r;
-#else
-		// need to implement faster way
-		int i=0;
-		while (!(set & rmask((Register)i)))
-			i ++;
-		_allocator.free &= ~rmask((Register)i);
-		return (Register) i;
-#endif
-#else
-		Register r;
-		r = (Register)_CountLeadingZeros(set);
-		r = (Register)(31-r);
-		_allocator.free &= ~rmask(r);
-		return r;
-#endif
-#endif
-
 	}
 
 	void Assembler::nRegisterResetAll(RegAlloc& a)
@@ -277,20 +247,16 @@ namespace nanojit
 
 		// This is ALWAYS going to be a long branch (using the BL instruction)
 		// Which is really 2 instructions, so we need to modify both
+		// XXX -- this is B, not BL, at least on non-Thumb..
 
 		// branch+2 because PC is always 2 instructions ahead on ARM/Thumb
 		int32_t offset = int(target) - int(branch+2);
 
-//printf("---patching branch at %X to location %X (%d)\n", branch, target, offset);
+		//printf("---patching branch at 0x%08x to location 0x%08x (%d-0x%08x)\n", branch, target, offset, offset);
 
-#ifdef NJ_THUMB_JIT
 		NanoAssert(-(1<<21) <= offset && offset < (1<<21)); 
 		*branch++ = (NIns)(0xF000 | (offset>>12)&0x7FF);
 		*branch =   (NIns)(0xF800 | (offset>>1)&0x7FF);
-#else
-		// ARM goodness, using unconditional B
-		*branch = (NIns)( COND_AL | (0xA<<24) | ((offset >>2)& 0xFFFFFF) );
-#endif
 	}
 
 	RegisterMask Assembler::hint(LIns* i, RegisterMask allow /* = ~0 */)
@@ -451,48 +417,12 @@ namespace nanojit
 		}
 	}
 
-	NIns* Assembler::asm_adjustBranch(NIns* at, NIns* target)
-	{
-		NIns* save = _nIns;
-#ifdef NJ_THUMB_JIT
-		NIns* was =  (NIns*) (((((*(at+2))&0x7ff)<<12) | (((*(at+1))&0x7ff)<<1)) + (at-2+2));
-		_nIns = at + 2;
-#else
-		NIns* was = (NIns*) (((*at&0xFFFFFF)<<2));
-	    _nIns = at + 1;
-#endif
-		BL(target);
-	#ifdef AVMPLUS_PORTING_API
-		NanoJIT_PortAPI_FlushInstructionCache(save, _nIns);
-	#endif
-                  
-		#if defined(UNDER_CE)
- 		// we changed the code, so we need to do this (sadly)
- 			FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
-		#elif defined(AVMPLUS_LINUX)
-			// Just need to clear this one page (not even the whole page really)
-			//Page *page = (Page*)pageTop(_nIns);
-			register unsigned long _beg __asm("a1") = (unsigned long)(_nIns);
-			register unsigned long _end __asm("a2") = (unsigned long)(_nIns+2);
-			register unsigned long _flg __asm("a3") = 0;
-			register unsigned long _swi __asm("r7") = 0xF0002;
-			__asm __volatile ("swi 0 	@ sys_cacheflush" : "=r" (_beg) : "0" (_beg), "r" (_end), "r" (_flg), "r" (_swi));
-		#endif
-		_nIns = save;
-		return was;
-	}
-
 	void Assembler::nativePageReset()
 	{
-		#ifdef NJ_THUMB_JIT
 			_nPool = 0;
 			_nSlot = 0;
 			_nExitPool = 0;
 			_nExitSlot = 0;
-		#else
-			_nSlot = 0;
-			_nExitSlot = 0;
-		#endif
 	}
 
 	void Assembler::nativePageSetup()
@@ -501,7 +431,6 @@ namespace nanojit
 		if (!_nExitIns)  _nExitIns = pageAlloc(true);
 		//fprintf(stderr, "assemble onto %x exits into %x\n", (int)_nIns, (int)_nExitIns);
 	
-		#ifdef NJ_THUMB_JIT
 		if (!_nPool) {
 			_nSlot = _nPool = (int*)_nIns;
 
@@ -518,23 +447,42 @@ namespace nanojit
 
 			// no branch needed since this follows the epilogue
         }
-		#else
-		if (!_nSlot)
-		{
-			// This needs to be done or the samepage macro gets confused
-			_nIns--;
-			_nExitIns--;
-
-			// constpool starts at top of page and goes down,
-			// code starts at bottom of page and moves up
-			_nSlot = (int*)(pageTop(_nIns)+1);
-
-		}
-		#endif
 	}
 
+	void Assembler::flushCache(NIns* n1, NIns* n2) {
+#if defined(UNDER_CE)
+ 		// we changed the code, so we need to do this (sadly)
+		FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
+#elif defined(AVMPLUS_LINUX)
+		// Just need to clear this one page (not even the whole page really)
+		//Page *page = (Page*)pageTop(_nIns);
+		register unsigned long _beg __asm("a1") = (unsigned long)(n1);
+		register unsigned long _end __asm("a2") = (unsigned long)(n2);
+		register unsigned long _flg __asm("a3") = 0;
+		register unsigned long _swi __asm("r7") = 0xF0002;
+		__asm __volatile ("swi 0 	@ sys_cacheflush" : "=r" (_beg) : "0" (_beg), "r" (_end), "r" (_flg), "r" (_swi));
+#endif
+	}
 
-#ifdef NJ_THUMB_JIT
+	NIns* Assembler::asm_adjustBranch(NIns* at, NIns* target)
+	{
+		NIns* save = _nIns;
+		NIns* was =  (NIns*) (((((*(at+2))&0x7ff)<<12) | (((*(at+1))&0x7ff)<<1)) + (at-2+2));
+
+		_nIns = at + 2;
+		BL(target);
+
+		flushCache(_nIns, _nIns+2);
+
+#ifdef AVMPLUS_PORTING_API
+		// XXX save.._nIns+2? really?
+		NanoJIT_PortAPI_FlushInstructionCache(save, _nIns+2);
+#endif
+		
+		_nIns = save;
+
+		return was;
+	}
 
 	void Assembler::STi(Register b, int32_t d, int32_t v)
 	{
@@ -551,6 +499,7 @@ namespace nanojit
 
 	void Assembler::underrunProtect(int bytes)
 	{
+		// perhaps bytes + sizeof(PageHeader)/sizeof(NIns) + 4 ?
 		intptr_t u = bytes + 4;
 		if (!samepage(_nIns-u, _nIns-1)) {
 			NIns* target = _nIns;
@@ -854,55 +803,8 @@ namespace nanojit
 		}
 	}
 
-#else // ARM_JIT
-		void Assembler::underrunProtect(int bytes)
-		{
-			intptr_t u = (bytes) + 4;
-			if ( (samepage(_nIns,_nSlot) && (((intptr_t)_nIns-u) <= intptr_t(_nSlot+1))) ||
-				 (!samepage((intptr_t)_nIns-u,_nIns)) )
-			{
-				NIns* target = _nIns;
-				_nIns = pageAlloc(_inExit);
-				JMP_nochk(target);
-				_nSlot = pageTop(_nIns);
-			}
-		}		
-
-	bool isB24(NIns *target, NIns *cur)
-	{
-		int offset = int(target)-int(cur-2+2);
-		return (-(1<<24) <= offset && offset < (1<<24));
-	}
-
-	void Assembler::CALL(const CallInfo *ci)
-	{
-        intptr_t addr = ci->_address;
-		if (isB24((NIns*)addr, _nIns))
-		{
-			// we can do this with a single BL call
-			underrunProtect(4);
-
-			BL(addr);
-			asm_output2("call %08X:%s", addr, ci->_name);
-		}
-		else
-		{
-			underrunProtect(16);
-			*(--_nIns) = (NIns)((addr));
-			*(--_nIns) = (NIns)( COND_AL | (0x9<<21) | (0xFFF<<8) | (1<<4) | (IP) );
-			*(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<23) | (PC<<16) | (LR<<12) | (4) );
-			*(--_nIns) = (NIns)( COND_AL | (0x59<<20) | (PC<<16) | (IP<<12) | (4));
-			asm_output2("call %08X:%s", addr, ci->_name);
-		}
-	}
-
-#endif // NJ_THUMB_JIT
-
-	
 	void Assembler::LD32_nochk(Register r, int32_t imm)
 	{
-	#ifdef NJ_THUMB_JIT
-
 		// Can we reach the current slot/pool?
 		int offset = (int)(_nSlot) - (int)(_nIns);
 		if ((offset>=NJ_MAX_CPOOL_OFFSET || offset<0) ||
@@ -932,38 +834,6 @@ namespace nanojit
 		int data_off = int(data) - (int(_nIns+1)&~3);
 		*(--_nIns) = (NIns)(0x4800 | r<<8 | data_off>>2);
 		asm_output3("ldr %s,%d(PC) [%X]",gpn(r),data_off,(int)data);
-
-
-	#else
-
-		// We can always reach the const pool, since it's on the same page (<4096)
-
-		if (!_nSlot)
-			_nSlot = pageTop(_nIns);
-
-		if ( (_nSlot+1) >= (_nIns-1) )
-		{
-			// This would overrun the code, so we need a new page
-			// and a jump to that page
-					
-			NIns* target = _nIns;
-			_nIns = pageAlloc(_inExit);
-			JMP_nochk(target);
-
-			// reset the slot
-			_nSlot = pageTop(_nIns);
-		}
-
-		*(++_nSlot) = (int)imm;
-
-		int offset = (int)(_nSlot) - (int)(_nIns+1);
-
-		*(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | ((r)<<12) | -(offset));
-		asm_output2("ld %s,%d",gpn(r),imm);
-
-
-	#endif
-
 	}
     #endif /* FEATURE_NANOJIT */
 }

@@ -80,7 +80,7 @@ endif
 
 ifeq ($(CPU_ARCH),arm)
 OS_CFLAGS += -DAVMPLUS_ARM -DAVMPLUS_LINUX
-NANOJIT_ARCH = Thumb
+NANOJIT_ARCH = ARM
 endif
 
 GFX_ARCH = x
