@@ -77,6 +77,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 99850-1d.html 99850-1-ref.html
 == 105030-1.html 105030-1-ref.html
 == 109735-1.html 109735-1-ref.html
+== 116882-1.html 116882-1-ref.html
 == 120834-1a.html 120834-1-ref.html
 == 120834-2a.html 120834-2-ref.html
 == 120834-2b.html 120834-2-ref.html
