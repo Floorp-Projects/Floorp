@@ -35,11 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-////////////////////////////////////////////////////////////
-//
 // Implementation of plugin entry points (NPP_*)
-//
+
 #include "pluginbase.h"
 
 // here the plugin creates a plugin instance object which 
@@ -47,10 +44,8 @@
 // will do all the necessary job
 NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved)
 {   
-  if(instance == NULL)
+  if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
-
-  NPError rv = NPERR_NO_ERROR;
 
   // create a new plugin instance object
   // initialization will be done when the associated window is ready
@@ -65,28 +60,26 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, ch
   ds.saved    = saved;
 
   nsPluginInstanceBase * plugin = NS_NewPluginInstance(&ds);
-  if(plugin == NULL)
+  if (!plugin)
     return NPERR_OUT_OF_MEMORY_ERROR;
 
   // associate the plugin instance object with NPP instance
   instance->pdata = (void *)plugin;
-  return rv;
+  return NPERR_NO_ERROR;
 }
 
 // here is the place to clean up and destroy the nsPluginInstance object
 NPError NPP_Destroy (NPP instance, NPSavedData** save)
 {
-  if(instance == NULL)
+  if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  NPError rv = NPERR_NO_ERROR;
-
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin != NULL) {
+  if (plugin) {
     plugin->shut();
     NS_DestroyPluginInstance(plugin);
   }
-  return rv;
+  return NPERR_NO_ERROR;
 }
 
 // during this call we know when the plugin window is ready or
@@ -94,101 +87,95 @@ NPError NPP_Destroy (NPP instance, NPSavedData** save)
 // initialization and shutdown
 NPError NPP_SetWindow (NPP instance, NPWindow* pNPWindow)
 {    
-  if(instance == NULL)
+  if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  NPError rv = NPERR_NO_ERROR;
-
-  if(pNPWindow == NULL)
+  if (!pNPWindow)
     return NPERR_GENERIC_ERROR;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
 
-  if(plugin == NULL) 
+  if (!plugin) 
     return NPERR_GENERIC_ERROR;
 
   // window just created
-  if(!plugin->isInitialized() && (pNPWindow->window != NULL)) { 
-    if(!plugin->init(pNPWindow)) {
+  if (!plugin->isInitialized() && pNPWindow->window) { 
+    if (!plugin->init(pNPWindow)) {
       NS_DestroyPluginInstance(plugin);
       return NPERR_MODULE_LOAD_FAILED_ERROR;
     }
   }
 
   // window goes away
-  if((pNPWindow->window == NULL) && plugin->isInitialized())
+  if (!pNPWindow->window && plugin->isInitialized())
     return plugin->SetWindow(pNPWindow);
 
   // window resized?
-  if(plugin->isInitialized() && (pNPWindow->window != NULL))
+  if (plugin->isInitialized() && pNPWindow->window)
     return plugin->SetWindow(pNPWindow);
 
   // this should not happen, nothing to do
-  if((pNPWindow->window == NULL) && !plugin->isInitialized())
+  if (!pNPWindow->window && !plugin->isInitialized())
     return plugin->SetWindow(pNPWindow);
 
-  return rv;
+  return NPERR_NO_ERROR;
 }
 
 NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype)
 {
-  if(instance == NULL)
+  if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin == NULL) 
+  if (!plugin) 
     return NPERR_GENERIC_ERROR;
 
-  NPError rv = plugin->NewStream(type, stream, seekable, stype);
-  return rv;
+  return plugin->NewStream(type, stream, seekable, stype);
 }
 
 int32 NPP_WriteReady (NPP instance, NPStream *stream)
 {
-  if(instance == NULL)
+  if (!instance)
     return 0x0fffffff;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin == NULL) 
+  if (!plugin) 
     return 0x0fffffff;
 
-  int32 rv = plugin->WriteReady(stream);
-  return rv;
+  return plugin->WriteReady(stream);
 }
 
 int32 NPP_Write (NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
 {   
-  if(instance == NULL)
+  if (!instance)
     return len;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin == NULL) 
+  if (!plugin) 
     return len;
 
-  int32 rv = plugin->Write(stream, offset, len, buffer);
-  return rv;
+  return plugin->Write(stream, offset, len, buffer);
 }
 
 NPError NPP_DestroyStream (NPP instance, NPStream *stream, NPError reason)
 {
-  if(instance == NULL)
+  if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin == NULL) 
+  if (!plugin) 
     return NPERR_GENERIC_ERROR;
 
-  NPError rv = plugin->DestroyStream(stream, reason);
-  return rv;
+  return plugin->DestroyStream(stream, reason);
 }
 
 void NPP_StreamAsFile (NPP instance, NPStream* stream, const char* fname)
 {
-  if(instance == NULL)
+  if (!instance)
     return;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin == NULL) 
+  if (!plugin) 
     return;
 
   plugin->StreamAsFile(stream, fname);
@@ -196,11 +183,11 @@ void NPP_StreamAsFile (NPP instance, NPStream* stream, const char* fname)
 
 void NPP_Print (NPP instance, NPPrint* printInfo)
 {
-  if(instance == NULL)
+  if (!instance)
     return;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin == NULL) 
+  if (!plugin) 
     return;
 
   plugin->Print(printInfo);
@@ -208,11 +195,11 @@ void NPP_Print (NPP instance, NPPrint* printInfo)
 
 void NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 {
-  if(instance == NULL)
+  if (!instance)
     return;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin == NULL) 
+  if (!plugin) 
     return;
 
   plugin->URLNotify(url, reason, notifyData);
@@ -220,127 +207,36 @@ void NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyD
 
 NPError	NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 {
-  if(instance == NULL)
+  if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin == NULL) 
+  if (!plugin) 
     return NPERR_GENERIC_ERROR;
 
-  NPError rv = plugin->GetValue(variable, value);
-  return rv;
+  return plugin->GetValue(variable, value);
 }
 
 NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value)
 {
-  if(instance == NULL)
+  if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin == NULL) 
+  if (!plugin) 
     return NPERR_GENERIC_ERROR;
 
-  NPError rv = plugin->SetValue(variable, value);
-  return rv;
+  return plugin->SetValue(variable, value);
 }
 
 int16	NPP_HandleEvent(NPP instance, void* event)
 {
-  if(instance == NULL)
+  if (!instance)
     return 0;
 
   nsPluginInstanceBase * plugin = (nsPluginInstanceBase *)instance->pdata;
-  if(plugin == NULL) 
+  if (!plugin) 
     return 0;
 
-  uint16 rv = plugin->HandleEvent(event);
-  return rv;
+  return plugin->HandleEvent(event);
 }
-
-/**************************************************/
-/*                                                */
-/*                     Mac                        */
-/*                                                */
-/**************************************************/
-
-// Mac needs these wrappers, see npplat.h for more info
-
-#ifdef XP_MAC
-
-NPError	Private_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved)
-{
-  NPError rv = NPP_New(pluginType, instance, mode, argc, argn, argv, saved);
-  return rv;	
-}
-
-NPError Private_Destroy(NPP instance, NPSavedData** save)
-{
-  NPError rv = NPP_Destroy(instance, save);
-  return rv;
-}
-
-NPError Private_SetWindow(NPP instance, NPWindow* window)
-{
-  NPError rv = NPP_SetWindow(instance, window);
-  return rv;
-}
-
-NPError Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype)
-{
-  NPError rv = NPP_NewStream(instance, type, stream, seekable, stype);
-  return rv;
-}
-
-int32 Private_WriteReady(NPP instance, NPStream* stream)
-{
-  int32 rv = NPP_WriteReady(instance, stream);
-  return rv;
-}
-
-int32 Private_Write(NPP instance, NPStream* stream, int32 offset, int32 len, void* buffer)
-{
-  int32 rv = NPP_Write(instance, stream, offset, len, buffer);
-  return rv;
-}
-
-void Private_StreamAsFile(NPP instance, NPStream* stream, const char* fname)
-{
-  NPP_StreamAsFile(instance, stream, fname);
-}
-
-
-NPError Private_DestroyStream(NPP instance, NPStream* stream, NPError reason)
-{
-  NPError rv = NPP_DestroyStream(instance, stream, reason);
-  return rv;
-}
-
-int16 Private_HandleEvent(NPP instance, void* event)
-{
-  int16 rv = NPP_HandleEvent(instance, event);
-  return rv;
-}
-
-void Private_Print(NPP instance, NPPrint* platformPrint)
-{
-  NPP_Print(instance, platformPrint);
-}
-
-void Private_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
-{
-  NPP_URLNotify(instance, url, reason, notifyData);
-}
-
-NPError Private_GetValue(NPP instance, NPPVariable variable, void *result)
-{
-  NPError rv = NPP_GetValue(instance, variable, result);
-  return rv;
-}
-
-NPError Private_SetValue(NPP instance, NPNVariable variable, void *value)
-{
-  NPError rv = NPP_SetValue(instance, variable, value);
-  return rv;
-}
-
-#endif //XP_MAC
