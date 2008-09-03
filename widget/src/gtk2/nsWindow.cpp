@@ -3815,25 +3815,15 @@ nsWindow::NativeShow (PRBool  aAction)
 nsSize
 nsWindow::GetSafeWindowSize(nsSize aSize)
 {
-    GdkScreen* screen = NULL;
-    if (mContainer) {
-        screen = gdk_drawable_get_screen(GTK_WIDGET(mContainer)->window);
-    }
-    else if (mDrawingarea) {
-        screen = gdk_drawable_get_screen(mDrawingarea->inner_window);
-    }
-
-    if (!screen)
-        return aSize;
-
     nsSize result = aSize;
-    if (aSize.width > 2 * gdk_screen_get_width(screen)) {
+    const PRInt32 kInt16Max = 32767;
+    if (result.width > kInt16Max) {
         NS_WARNING("Clamping huge window width");
-        result.width = 2 * gdk_screen_get_width(screen);
+        result.width = kInt16Max;
     }
-    if (aSize.height > 2 * gdk_screen_get_height(screen)) {
+    if (result.height > kInt16Max) {
         NS_WARNING("Clamping huge window height");
-        result.height = 2 * gdk_screen_get_height(screen);
+        result.height = kInt16Max;
     }
     return result;
 }
