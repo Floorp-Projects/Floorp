@@ -95,7 +95,7 @@ js_BoxDouble(JSContext* cx, jsdouble d)
     jsint i;
     if (JSDOUBLE_IS_INT(d, i))
         return INT_TO_JSVAL(i);
-    JS_ASSERT(cx->executingTrace);
+    JS_ASSERT(JS_ON_TRACE(cx));
     jsval v; /* not rooted but ok here because we know GC won't run */
     if (!js_NewDoubleInRootedValue(cx, d, &v))
         return JSVAL_ERROR_COOKIE;
@@ -107,7 +107,7 @@ js_BoxInt32(JSContext* cx, jsint i)
 {
     if (JS_LIKELY(INT_FITS_IN_JSVAL(i)))
         return INT_TO_JSVAL(i);
-    JS_ASSERT(cx->executingTrace);
+    JS_ASSERT(JS_ON_TRACE(cx));
     jsval v; /* not rooted but ok here because we know GC won't run */
     jsdouble d = (jsdouble)i;
     if (!js_NewDoubleInRootedValue(cx, d, &v))
@@ -218,7 +218,7 @@ JSString* FASTCALL
 js_String_p_substring(JSContext* cx, JSString* str, jsint begin, jsint end)
 {
     JS_ASSERT(end >= begin);
-    JS_ASSERT(cx->executingTrace);
+    JS_ASSERT(JS_ON_TRACE(cx));
     return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
 }
 
@@ -227,7 +227,7 @@ js_String_p_substring_1(JSContext* cx, JSString* str, jsint begin)
 {
     jsint end = JSSTRING_LENGTH(str);
     JS_ASSERT(end >= begin);
-    JS_ASSERT(cx->executingTrace);
+    JS_ASSERT(JS_ON_TRACE(cx));
     return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
 }
 
@@ -242,7 +242,7 @@ js_String_getelem(JSContext* cx, JSString* str, jsint i)
 JSString* FASTCALL
 js_String_fromCharCode(JSContext* cx, jsint i)
 {
-    JS_ASSERT(cx->executingTrace);
+    JS_ASSERT(JS_ON_TRACE(cx));
     jschar c = (jschar)i;
     if (c < UNIT_STRING_LIMIT)
         return js_GetUnitStringForChar(cx, c);
@@ -464,7 +464,7 @@ js_FastNewArray(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(OBJ_IS_ARRAY(cx, proto));
 
-    JS_ASSERT(cx->executingTrace);
+    JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
     if (!obj)
         return NULL;
@@ -496,7 +496,7 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
     JSClass* clasp = FUN_INTERPRETED(fun) ? &js_ObjectClass : fun->u.n.clasp;
     JS_ASSERT(clasp != &js_ArrayClass);
 
-    JS_ASSERT(cx->executingTrace);
+    JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
     if (!obj)
         return NULL;
@@ -668,7 +668,7 @@ js_ObjectToString(JSContext* cx, JSObject* obj)
 JSObject* FASTCALL
 js_Array_1int(JSContext* cx, JSObject* proto, jsint i)
 {
-    JS_ASSERT(cx->executingTrace);
+    JS_ASSERT(JS_ON_TRACE(cx));
     JSObject* obj = js_FastNewArray(cx, proto);
     if (obj)
         obj->fslots[JSSLOT_ARRAY_LENGTH] = i;
@@ -676,7 +676,7 @@ js_Array_1int(JSContext* cx, JSObject* proto, jsint i)
 }
 
 #define ARRAY_CTOR_GUTS(exact_len, newslots_code)                             \
-    JS_ASSERT(cx->executingTrace);                                            \
+    JS_ASSERT(JS_ON_TRACE(cx));                                               \
     JSObject* obj = js_FastNewArray(cx, proto);                               \
     if (obj) {                                                                \
         uint32 len = ARRAY_GROWBY;                                            \

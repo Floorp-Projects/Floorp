@@ -126,6 +126,13 @@ typedef struct JSFragmentCacheEntry {
  * frequencies for all JavaScript code loaded into that runtime.
  */
 typedef struct JSTraceMonitor {
+    /*
+     * Flag set when running (or recording) JIT-compiled code. This prevents
+     * both interpreter activation and last-ditch garbage collection when up
+     * against our runtime's memory limits. This flag also suppresses calls to
+     * JS_ReportOutOfMemory when failing due to runtime limits.
+     */
+    JSBool                  onTrace;
     CLS(nanojit::Fragmento) fragmento;
     CLS(TraceRecorder)      recorder;
     uint32                  globalShape;
@@ -133,6 +140,12 @@ typedef struct JSTraceMonitor {
     CLS(TypeMap)            globalTypeMap;
     JSFragmentCacheEntry    fcache[JS_FRAGMENT_CACHE_SIZE];
 } JSTraceMonitor;
+
+#ifdef JS_TRACER
+# define JS_ON_TRACE(cx)   (JS_TRACE_MONITOR(cx).onTrace)
+#else
+# define JS_ON_TRACE(cx)   JS_FALSE
+#endif
 
 #ifdef JS_THREADSAFE
 
@@ -735,17 +748,10 @@ struct JSContext {
      * property values associated with this context's global object.
      */
     uint8               xmlSettingFlags;
-#else
     uint8               padding;
+#else
+    uint16              padding;
 #endif
-
-    /*
-     * Flag set when running (or recording) JIT-compiled code. This prevents
-     * both interpreter activation and last-ditch garbage collection when up
-     * against our runtime's memory limits. This flag also suppresses calls to
-     * JS_ReportOutOfMemory when failing due to runtime limits.
-     */
-    JSPackedBool        executingTrace;
 
     /*
      * Classic Algol "display" static link optimization.
