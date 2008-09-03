@@ -149,11 +149,14 @@ namespace nanojit
 	#define DECLARE_PLATFORM_ASSEMBLER()\
 		const static Register argRegs[4], retRegs[2];\
 		void LD32_nochk(Register r, int32_t imm);\
+		void BL(NIns*);\
+		void BL_far(NIns*);\
 		void CALL(const CallInfo*);\
 		void underrunProtect(int bytes);\
 		bool has_cmov;\
 		void nativePageReset();\
 		void nativePageSetup();\
+		void flushCache(NIns*,NIns*);\
 		int* _nSlot;\
 		int* _nExitSlot;
 
@@ -232,6 +235,7 @@ ShiftOperator;
 		*(--_nIns) = (NIns)( COND_AL | OP_IMM | ((_r)<<16) | ((_r)<<12) | ((_imm)&0xFF) );\
 		asm_output2("and %s,%d",gpn(_r),(_imm));}\
 	else if ((_imm)<0 && (_imm)>-256) {\
+		underrunProtect(8);\
 		*(--_nIns) = (NIns)( COND_AL | ((_r)<<16) | ((_r)<<12) | (Scratch) );\
 		asm_output2("and %s,%s",gpn(_r),gpn(Scratch));\
 		*(--_nIns) = (NIns)( COND_AL | (0x3E<<20) | ((Scratch)<<12) | (((_imm)^0xFFFFFFFF)&0xFF) );\
@@ -532,6 +536,7 @@ ShiftOperator;
 //#define INT3()  underrunProtect(1); *(--_nIns) = 0xcc;  asm_output("int3")
 //#define RET() INT3()
 
+#define BKPT_nochk() do { *(--_nIns) = (NIns)( (0xE<<24) | (0x12<<20) | (0x7<<4) ); } while (0);
 
 // this is pushing a reg
 #define PUSHr(_r)  do {\
@@ -564,49 +569,66 @@ ShiftOperator;
 	*(--_nIns) = (NIns)( COND_AL | (0x8B<<20) | (SP<<16) | (_mask) );\
 	asm_output1("pop %x", (_mask));} while (0)
 
-// takes an offset (right?)
-#define JMP_long_nochk_offset(_off) do {\
-	*(--_nIns) = (NIns)( COND_AL | (0xA<<24) | (((_off)>>2) & 0xFFFFFF) );	\
-	asm_output1("jmp_l_n 0x%08x",(_off));} while (0)
+#define PC_OFFSET_FROM(target,frompc) ((intptr_t)(target) - ((intptr_t)(frompc) + 8))
+#define JMP_S24_OFFSET_OK(offs) ((-(1<<24)) <= (offs) && (offs) < (1<<24))
 
-// take an address, not an offset
-#define JMP(t)	do {\
-	underrunProtect(4);\
-	intptr_t tt = (intptr_t)(t) - ((intptr_t)_nIns + 4);\
-	*(--_nIns) = (NIns)( COND_AL | (0xA<<24) | (((tt)>>2) & 0xFFFFFF) );	\
-	asm_output1("JMP 0x%08x\n",(unsigned int)(t)); } while (0)
+// (XXX This ought to be a function instead of a macro)
+//
+// Branch to target address _t with condition _c, doing underrun
+// checks (_chk == 1) or skipping them (_chk == 0).
+//
+// If the jump fits in a relative jump (+/-32MB), emit that.
+// If the jump is unconditional, emit the dest address inline in
+// the instruction stream and load it into pc.
+// If the jump has a condition, but noone's mucked with _nIns and our _nSlot
+// pointer is valid, stick the constant in the slot and emit a conditional
+// load into pc.
+// Otherwise, emit the conditional load into pc from a nearby constant,
+// and emit a jump to jump over it it in case the condition fails.
+//
+// NB: JMP_nochk depends on this not calling samepage() when _c == AL
+#define B_cond_chk(_c,_t,_chk) do {										\
+		int32 offs = PC_OFFSET_FROM(_t,(intptr_t)(_nIns)-4);			\
+		if (JMP_S24_OFFSET_OK(offs)) {									\
+			if(_chk) underrunProtect(4);								\
+			*(--_nIns) = (NIns)( ((_c)<<28) | (0xA<<24) | (((offs)>>2) & 0xFFFFFF) ); \
+		} else if (_c == AL) {											\
+			if(_chk) underrunProtect(8);								\
+			*(--_nIns) = (NIns)(_t);									\
+			*(--_nIns) = (NIns)( COND_AL | (0x51<<20) | (PC<<16) | (PC<<12) | 0x4 ); \
+		} else if (samepage(_nIns,_nSlot)) {							\
+			if(_chk) underrunProtect(8);								\
+			*(++_nSlot) = (NIns)(_t);									\
+			offs = PC_OFFSET_FROM(_nSlot,(intptr_t)(_nIns)-4);			\
+			NanoAssert(offs < 0);										\
+			*(--_nIns) = (NIns)( ((_c)<<28) | (0x51<<20) | (PC<<16) | (PC<<12) | ((-offs) & 0xFFFFFF) ); \
+		} else {														\
+			if(_chk) underrunProtect(24);								\
+			*(--_nIns) = (NIns)(_t);									\
+			*(--_nIns) = (NIns)( COND_AL | (0xA<<24) | ((-4)>>2) & 0xFFFFFF ); \
+			*(--_nIns) = (NIns)( ((_c)<<28) | (0x51<<20) | (PC<<16) | (PC<<12) | 0x0 ); \
+		}																\
+		asm_output2("%s %p\n", _c == AL ? "jmp" : "b(cnd)", (void*)(_t)); \
+	} while(0)
 
-#define JMP_nochk(t)	do {\
-	intptr_t tt = (intptr_t)(t) - ((intptr_t)_nIns + 4);\
-	*(--_nIns) = (NIns)( COND_AL | (0xA<<24) | (((tt)>>2) & 0xFFFFFF) );	\
-	asm_output1("JMP 0x%08x\n",(unsigned int)(t)); } while (0)
+#define B_cond(_c,_t) \
+	B_cond_chk(_c,_t,1)
 
-#define JMP_long_placeholder()	do {JMP_long(0xffffffff); } while(0)
+// NB: don't use COND_AL here, we shift the condition into place!
+#define JMP(_t) \
+	B_cond_chk(AL,_t,1)
 
-#define JMP_long(_t)	do {\
-	underrunProtect(4);\
-	*(--_nIns) = (NIns)( COND_AL | (0xA<<24) | (((_t)>>2) & 0xFFFFFF) );	\
-	asm_output1("JMP_long 0x%08x\n", (unsigned int)(_t) ); } while (0)
+#define JMP_nochk(_t) \
+	B_cond_chk(AL,_t,0)
 
-#define BL(_t)	do {\
-	underrunProtect(4);\
-	intptr_t _tt = (intptr_t)(_t) - ((intptr_t)_nIns + 4);\
-	*(--_nIns) = (NIns)( COND_AL | (0xB<<24) | (((_tt)>>2) & 0xFFFFFF) );	\
-	asm_output2("BL 0x%08x offset=%d",(intptr_t)(_nIns) + (_tt),(_tt)) } while (0)
-
-
-#define JMP_long_nochk(_t)	do {\
-	intptr_t tt = (intptr_t)(_t) - ((intptr_t)_nIns + 4);\
-	*(--_nIns) = (NIns)( COND_AL | (0xA<<24) | (((tt)>>2) & 0xFFFFFF) );	\
-	asm_output1("JMP_l_n 0x%08x\n", (unsigned int)(_t)) } while (0)
-
-
-#define B_cond(_c,_t)\
-	underrunProtect(4);\
-	intptr_t tt = (intptr_t)(_t) - ((intptr_t)_nIns + 4);\
-	*(--_nIns) = (NIns)( ((_c)<<28) | (0xA<<24) | ((tt >>2)& 0xFFFFFF) );	\
-	asm_output2("b(cond) 0x%08x (%tX)",(unsigned int)(_t), tt);
-
+// emit a placeholder that will be filled in later by nPatchBranch;
+// emit two breakpoint instructions in case something goes wrong with
+// the patching.
+#define JMP_long_placeholder()	do {							\
+		underrunProtect(8);										\
+		BKPT_nochk();											\
+		BKPT_nochk();											\
+	} while(0)
 
 #define JA(t)	do {B_cond(HI,t); asm_output1("ja 0x%08x",(unsigned int)t); } while(0)
 #define JNA(t)	do {B_cond(LS,t); asm_output1("jna 0x%08x",(unsigned int)t); } while(0)
