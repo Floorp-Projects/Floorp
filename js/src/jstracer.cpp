@@ -119,7 +119,7 @@ static bool nesting_enabled = true;
 static bool oracle_enabled = true;
 static bool did_we_check_sse2 = false;
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(INCLUDE_VERBOSE_OUTPUT)
 static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
 #define debug_only_v(x) if (verbose_debug) { x; }
 #else
@@ -282,7 +282,7 @@ static bool isi2f(LInsp i)
     if (i->isop(LIR_i2f))
         return true;
 
-#ifdef NANOJIT_ARM
+#if defined(NANOJIT_ARM) && defined(NJ_SOFTFLOAT)
     if (i->isop(LIR_qjoin) &&
         i->oprnd1()->isop(LIR_call) &&
         i->oprnd2()->isop(LIR_callh))
@@ -300,7 +300,7 @@ static bool isu2f(LInsp i)
     if (i->isop(LIR_u2f))
         return true;
 
-#ifdef NANOJIT_ARM
+#if defined(NANOJIT_ARM) && defined(NJ_SOFTFLOAT)
     if (i->isop(LIR_qjoin) &&
         i->oprnd1()->isop(LIR_call) &&
         i->oprnd2()->isop(LIR_callh))
@@ -315,7 +315,7 @@ static bool isu2f(LInsp i)
 
 static LInsp iu2fArg(LInsp i)
 {
-#ifdef NANOJIT_ARM
+#if defined(NANOJIT_ARM) && defined(NJ_SOFTFLOAT)
     if (i->isop(LIR_qjoin))
         return i->oprnd1()->arg(0);
 #endif
@@ -371,7 +371,7 @@ static bool overflowSafe(LIns* i)
             ((c->constval() > 0)));
 }
 
-#ifdef NANOJIT_ARM
+#if defined(NJ_SOFTFLOAT)
 
 class SoftFloatFilter: public LirWriter
 {
@@ -428,19 +428,6 @@ public:
             return out->ins2(LIR_eq, bv, out->insImm(1));
         }
 
-        // not really a softfloat filter, but needed on ARM --
-        // arm doesn't mask shifts to 31 like x86 does
-        if (v == LIR_lsh ||
-            v == LIR_rsh ||
-            v == LIR_ush)
-        {
-            if (s1->isconst())
-                s1->setimm16(s1->constval() & 31);
-            else
-                s1 = out->ins2(LIR_and, s1, out->insImm(31));
-            return out->ins2(v, s0, s1);
-        }
-
         return out->ins2(v, s0, s1);
     }
 
@@ -455,7 +442,7 @@ public:
     }
 };
 
-#endif
+#endif // NJ_SOFTFLOAT
 
 class FuncFilter: public LirWriter
 {
@@ -550,6 +537,20 @@ public:
                 return out->ins2(LIR_add, x, y);
             }
         }
+#ifdef NANOJIT_ARM
+        else if (v == LIR_lsh ||
+                 v == LIR_rsh ||
+                 v == LIR_ush)
+        {
+            // needed on ARM -- arm doesn't mask shifts to 31 like x86 does
+            if (s1->isconst())
+                s1->setimm16(s1->constval() & 31);
+            else
+                s1 = out->ins2(LIR_and, s1, out->insImm(31));
+            return out->ins2(v, s0, s1);
+        }
+#endif
+
         return out->ins2(v, s0, s1);
     }
 
@@ -604,7 +605,7 @@ public:
 
 /* In debug mode vpname contains a textual description of the type of the
    slot during the forall iteration over al slots. */
-#ifdef DEBUG
+#if defined(DEBUG) || defined(INCLUDE_VERBOSE_OUTPUT)
 #define DEF_VPNAME          const char* vpname; unsigned vpnum
 #define SET_VPNAME(name)    do { vpname = name; vpnum = 0; } while(0)
 #define INC_VPNUM()         do { ++vpnum; } while(0)
@@ -821,7 +822,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     if (verbose_debug)
         lir = verbose_filter = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);
 #endif
-#ifdef NANOJIT_ARM
+#ifdef NJ_SOFTFLOAT
     lir = float_filter = new (&gc) SoftFloatFilter(lir);
 #endif
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
@@ -867,7 +868,7 @@ TraceRecorder::~TraceRecorder()
     delete cse_filter;
     delete expr_filter;
     delete func_filter;
-#ifdef NANOJIT_ARM
+#ifdef NJ_SOFTFLOAT
     delete float_filter;
 #endif
     delete lir_buf_writer;
@@ -2277,8 +2278,10 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 
-#if defined(DEBUG) && defined(NANOJIT_IA32)
+#ifdef DEBUG
+#if defined(NANOJIT_IA32)
     uint64 start = rdtsc();
+#endif
 #endif
 
     /*
@@ -2362,18 +2365,17 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
               js_ReconstructStackDepth(cx, fp->script, fp->regs->pc) == fp->regs->sp);
 
 #if defined(DEBUG) && defined(NANOJIT_IA32)
-    if (verbose_debug) {
-        printf("leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%d, sp=%d, ip=%p, "
-               "cycles=%llu\n",
-               fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
-               fp->regs->pc - fp->script->code,
-               js_CodeName[*fp->regs->pc],
-               lr,
-               lr->exit->exitType,
-               fp->regs->sp - StackBase(fp), lr->jmp,
-               (rdtsc() - start));
-    }
+    uint64 cycles = rdtsc() - start;
+#else
+    uint64 cycles = 0;
 #endif
+
+    debug_only_v(printf("leaving trace at %s:%u@%u, exitType=%d, sp=%d, ip=%p, cycles=%llu\n",
+                        fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
+                        fp->regs->pc - fp->script->code,
+                        lr->exit->exitType,
+                        fp->regs->sp - StackBase(fp), lr->jmp,
+                        cycles));
 
     /* If this trace is part of a tree, later branches might have added additional globals for
        with we don't have any type information available in the side exit. We merge in this
