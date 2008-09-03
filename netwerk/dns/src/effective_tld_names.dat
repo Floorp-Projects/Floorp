@@ -3310,8 +3310,15 @@ ae.org
 !sume911.pa
 !root-ca.pa
 
-// pe : http://www.nic.pe/normas-proced-i.htm
-*.pe
+// pe : https://www.nic.pe/InformeFinalComision.pdf
+pe
+edu.pe
+gob.pe
+nom.pe
+mil.pe
+org.pe
+com.pe
+net.pe
 
 // pf : http://www.gobin.info/domainname/formulaire-pf.pdf
 pf
