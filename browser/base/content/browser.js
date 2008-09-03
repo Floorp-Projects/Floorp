@@ -74,9 +74,7 @@ var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
 var gProxyFavIcon = null;
-var gIsLoadingBlank = false;
 var gLastValidURLStr = "";
-var gMustLoadSidebar = false;
 var gProgressCollapseTimer = null;
 var appCore = null;
 var gSidebarCommand = "";
@@ -670,8 +668,7 @@ const gXPInstallObserver = {
   }
 };
 
-function BrowserStartup()
-{
+function BrowserStartup() {
   var uriToLoad = null;
 
   // window.arguments[0]: URI to load (string), or an nsISupportsArray of
@@ -683,7 +680,8 @@ function BrowserStartup()
   if ("arguments" in window && window.arguments[0])
     uriToLoad = window.arguments[0];
 
-  gIsLoadingBlank = uriToLoad == "about:blank";
+  var isLoadingBlank = uriToLoad == "about:blank";
+  var mustLoadSidebar = false;
 
   prepareForStartup();
 
@@ -691,12 +689,12 @@ function BrowserStartup()
   appCore.startPageCycler();
 #else
 # only load url passed in when we're not page cycling
-  if (uriToLoad && !gIsLoadingBlank) {
-    if (uriToLoad instanceof Components.interfaces.nsISupportsArray) {
-      var count = uriToLoad.Count();
-      var specs = [];
-      for (var i = 0; i < count; i++) {
-        var urisstring = uriToLoad.GetElementAt(i).QueryInterface(Components.interfaces.nsISupportsString);
+  if (uriToLoad && !isLoadingBlank) {
+    if (uriToLoad instanceof Ci.nsISupportsArray) {
+      let count = uriToLoad.Count();
+      let specs = [];
+      for (let i = 0; i < count; i++) {
+        let urisstring = uriToLoad.GetElementAt(i).QueryInterface(Ci.nsISupportsString);
         specs.push(urisstring.data);
       }
 
@@ -717,47 +715,44 @@ function BrowserStartup()
   }
 #endif
 
-  var sidebarSplitter;
   if (window.opener && !window.opener.closed) {
-    var openerFindBar = window.opener.gFindBar;
+    let openerFindBar = window.opener.gFindBar;
     if (openerFindBar && !openerFindBar.hidden &&
         openerFindBar.findMode == gFindBar.FIND_NORMAL)
       gFindBar.open();
 
-    var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
+    let openerSidebarBox = window.opener.document.getElementById("sidebar-box");
     // If the opener had a sidebar, open the same sidebar in our window.
     // The opener can be the hidden window too, if we're coming from the state
     // where no windows are open, and the hidden window has no sidebar box.
     if (openerSidebarBox && !openerSidebarBox.hidden) {
-      var sidebarBox = document.getElementById("sidebar-box");
-      var sidebarTitle = document.getElementById("sidebar-title");
+      let sidebarBox = document.getElementById("sidebar-box");
+      let sidebarTitle = document.getElementById("sidebar-title");
       sidebarTitle.setAttribute("value", window.opener.document.getElementById("sidebar-title").getAttribute("value"));
       sidebarBox.setAttribute("width", openerSidebarBox.boxObject.width);
-      var sidebarCmd = openerSidebarBox.getAttribute("sidebarcommand");
+      let sidebarCmd = openerSidebarBox.getAttribute("sidebarcommand");
       sidebarBox.setAttribute("sidebarcommand", sidebarCmd);
       // Note: we're setting 'src' on sidebarBox, which is a <vbox>, not on the
       // <browser id="sidebar">. This lets us delay the actual load until
       // delayedStartup().
       sidebarBox.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
-      gMustLoadSidebar = true;
+      mustLoadSidebar = true;
 
       sidebarBox.hidden = false;
-      sidebarSplitter = document.getElementById("sidebar-splitter");
-      sidebarSplitter.hidden = false;
+      document.getElementById("sidebar-splitter").hidden = false;
       document.getElementById(sidebarCmd).setAttribute("checked", "true");
     }
   }
   else {
-    var box = document.getElementById("sidebar-box");
+    let box = document.getElementById("sidebar-box");
     if (box.hasAttribute("sidebarcommand")) {
-      var commandID = box.getAttribute("sidebarcommand");
+      let commandID = box.getAttribute("sidebarcommand");
       if (commandID) {
-        var command = document.getElementById(commandID);
+        let command = document.getElementById(commandID);
         if (command) {
-          gMustLoadSidebar = true;
+          mustLoadSidebar = true;
           box.hidden = false;
-          sidebarSplitter = document.getElementById("sidebar-splitter");
-          sidebarSplitter.hidden = false;
+          document.getElementById("sidebar-splitter").hidden = false;
           command.setAttribute("checked", "true");
         }
         else {
@@ -772,12 +767,14 @@ function BrowserStartup()
 
   // Certain kinds of automigration rely on this notification to complete their
   // tasks BEFORE the browser window is shown.
-  var obs = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  obs.notifyObservers(null, "browser-window-before-show", "");
+  Cc["@mozilla.org/observer-service;1"]
+    .getService(Ci.nsIObserverService)
+    .notifyObservers(null, "browser-window-before-show", "");
 
   // Set a sane starting width/height for all resolutions on new profiles.
   if (!document.documentElement.hasAttribute("width")) {
-    var defaultWidth = 994, defaultHeight;
+    let defaultWidth = 994;
+    let defaultHeight;
     if (screen.availHeight <= 600) {
       document.documentElement.setAttribute("sizemode", "maximized");
       defaultWidth = 610;
@@ -800,16 +797,14 @@ function BrowserStartup()
   }
 
   if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
-
     gURLBar.setAttribute("readonly", "true");
     gURLBar.setAttribute("enablehistory", "false");
   }
 
-  setTimeout(delayedStartup, 0);
+  setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
 }
 
-function HandleAppCommandEvent(evt)
-{
+function HandleAppCommandEvent(evt) {
   evt.stopPropagation();
   switch (evt.command) {
   case "Back":
@@ -838,8 +833,7 @@ function HandleAppCommandEvent(evt)
   }
 }
 
-function prepareForStartup()
-{
+function prepareForStartup() {
   gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
   // Note: we need to listen to untrusted events, because the pluginfinder XBL
   // binding can't fire trusted ones (runs with page privileges).
@@ -916,9 +910,8 @@ function prepareForStartup()
   gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
 }
 
-function delayedStartup()
-{
-  var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+function delayedStartup(isLoadingBlank, mustLoadSidebar) {
+  var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
   os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
   os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
 
@@ -930,9 +923,9 @@ function delayedStartup()
   // Ensure login manager is up and running.
   Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
-  if (gMustLoadSidebar) {
-    var sidebar = document.getElementById("sidebar");
-    var sidebarBox = document.getElementById("sidebar-box");
+  if (mustLoadSidebar) {
+    let sidebar = document.getElementById("sidebar");
+    let sidebarBox = document.getElementById("sidebar-box");
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
 
@@ -948,7 +941,7 @@ function delayedStartup()
   // initiated by a web page script
   window.addEventListener("fullscreen", onFullScreen, true);
 
-  if (gIsLoadingBlank && gURLBar && isElementVisible(gURLBar))
+  if (isLoadingBlank && gURLBar && isElementVisible(gURLBar))
     focusElement(gURLBar);
   else
     focusElement(content);
