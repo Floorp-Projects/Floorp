@@ -282,7 +282,7 @@ static bool isi2f(LInsp i)
     if (i->isop(LIR_i2f))
         return true;
 
-#if defined(NANOJIT_ARM) && defined(NJ_SOFTFLOAT)
+#if defined(NJ_SOFTFLOAT)
     if (i->isop(LIR_qjoin) &&
         i->oprnd1()->isop(LIR_call) &&
         i->oprnd2()->isop(LIR_callh))
@@ -300,7 +300,7 @@ static bool isu2f(LInsp i)
     if (i->isop(LIR_u2f))
         return true;
 
-#if defined(NANOJIT_ARM) && defined(NJ_SOFTFLOAT)
+#if defined(NJ_SOFTFLOAT)
     if (i->isop(LIR_qjoin) &&
         i->oprnd1()->isop(LIR_call) &&
         i->oprnd2()->isop(LIR_callh))
@@ -315,7 +315,7 @@ static bool isu2f(LInsp i)
 
 static LInsp iu2fArg(LInsp i)
 {
-#if defined(NANOJIT_ARM) && defined(NJ_SOFTFLOAT)
+#if defined(NJ_SOFTFLOAT)
     if (i->isop(LIR_qjoin))
         return i->oprnd1()->arg(0);
 #endif
@@ -2370,9 +2370,12 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     uint64 cycles = 0;
 #endif
 
-    debug_only_v(printf("leaving trace at %s:%u@%u, exitType=%d, sp=%d, ip=%p, cycles=%llu\n",
+    debug_only_v(printf("leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%d, sp=%d, ip=%p, "
+                        "cycles=%llu\n",
                         fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
                         fp->regs->pc - fp->script->code,
+                        js_CodeName[*fp->regs->pc],
+                        lr,
                         lr->exit->exitType,
                         fp->regs->sp - StackBase(fp), lr->jmp,
                         cycles));
