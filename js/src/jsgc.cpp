@@ -1753,7 +1753,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 
     arenaList = &rt->gcArenaList[flindex];
     for (;;) {
-        if (doGC && !cx->executingTrace) {
+        if (doGC && !JS_ON_TRACE(cx)) {
             /*
              * Keep rt->gcLock across the call into js_GC so we don't starve
              * and lose to racing threads who deplete the heap just after
@@ -1813,7 +1813,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         } else {
             a = NewGCArena(rt);
             if (!a) {
-                if (doGC || cx->executingTrace)
+                if (doGC || JS_ON_TRACE(cx))
                     goto fail;
                 doGC = JS_TRUE;
                 continue;
@@ -1916,7 +1916,7 @@ fail:
         JS_UNLOCK_GC(rt);
 #endif
     METER(astats->fail++);
-    if (!cx->executingTrace)
+    if (!JS_ON_TRACE(cx))
         JS_ReportOutOfMemory(cx);
     return NULL;
 }
