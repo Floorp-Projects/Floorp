@@ -55,7 +55,6 @@ public:
 
     NS_DECL_NSIMEMORY
 
-    static NS_HIDDEN_(nsresult) InitFlusher();
     static NS_METHOD Create(nsISupports* outer,
                             const nsIID& aIID, void **aResult);
 
