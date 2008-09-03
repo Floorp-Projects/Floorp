@@ -872,6 +872,9 @@ JS_ShutDown(void)
     js_CleanupLocks();
 #endif
     PRMJ_NowShutdown();
+#ifdef JS_TRACER
+    js_ShutDownJIT();
+#endif    
 }
 
 JS_PUBLIC_API(void *)
