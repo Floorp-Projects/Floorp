@@ -1,4 +1,4 @@
-03-05-2002
+NPThread Plugin
 
 This sample is an attempt to write a wrapper plugin which would run the
 real plugin in a separate thread. The current code is just a first prototype

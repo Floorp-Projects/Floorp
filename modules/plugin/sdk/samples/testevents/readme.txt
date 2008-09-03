@@ -1,5 +1,3 @@
-README for the plugin event sample.
-
 INTENT:
 -------
 The intent of this plugin is to demonstrate how to implement a
@@ -46,4 +44,4 @@ PROBLEMS:
 
 MAC NOTES:
 ----------
-No Mac support at all.
+No Mac support.
