@@ -376,8 +376,6 @@ namespace nanojit
 		return l;
     }
 	
-#define isS24(x) (((int32_t(x)<<8)>>8) == (x))
-
 	LInsp LirBufWriter::insFar(LOpcode op, LInsp target)
 	{
         NanoAssert(op == LIR_skip || op == LIR_tramp);
