@@ -719,6 +719,79 @@ js_Array_3num(JSContext* cx, JSObject* proto, jsdouble n1, jsdouble n2, jsdouble
             return NULL;)
 }
 
+/* soft float */
+
+jsdouble FASTCALL
+js_fneg(jsdouble x)
+{
+    return -x;
+}
+
+jsdouble FASTCALL
+js_i2f(jsint i)
+{
+    return i;
+}
+
+jsdouble FASTCALL
+js_u2f(jsuint u)
+{
+    return u;
+}
+
+jsint FASTCALL
+js_fcmpeq(jsdouble x, jsdouble y)
+{
+    return x==y;
+}
+
+jsint FASTCALL
+js_fcmplt(jsdouble x, jsdouble y)
+{
+    return x < y;
+}
+
+jsint FASTCALL
+js_fcmple(jsdouble x, jsdouble y)
+{
+    return x <= y;
+}
+
+jsint FASTCALL
+js_fcmpgt(jsdouble x, jsdouble y)
+{
+    return x > y;
+}
+
+jsint FASTCALL
+js_fcmpge(jsdouble x, jsdouble y)
+{
+    return x >= y;
+}
+
+jsdouble FASTCALL
+js_fmul(jsdouble x, jsdouble y)
+{
+    return x * y;
+}
+jsdouble FASTCALL
+js_fadd(jsdouble x, jsdouble y)
+{
+    return x + y;
+}
+
+jsdouble FASTCALL
+js_fdiv(jsdouble x, jsdouble y)
+{
+    return x / y;
+}
+
+jsdouble FASTCALL
+js_fsub(jsdouble x, jsdouble y)
+{
+    return x - y;
+}
+
 #define LO ARGSIZE_LO
 #define F  ARGSIZE_F
 #define Q  ARGSIZE_Q
