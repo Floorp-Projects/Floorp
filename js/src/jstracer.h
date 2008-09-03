@@ -194,6 +194,7 @@ public:
     TypeMap                 stackTypeMap;
     unsigned                mismatchCount;
     Queue<nanojit::Fragment*> dependentTrees;
+    unsigned                branchCount;
 
     TreeInfo(nanojit::Fragment* _fragment) { 
         fragment = _fragment;
