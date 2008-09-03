@@ -1889,7 +1889,7 @@ GetInterfaceTypeFromParam(XPCCallContext& ccx,
 /***************************************************************************/
 
 // static
-JSBool
+NS_SUPPRESS_STACK_CHECK JSBool
 XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                              CallMode mode /*= CALL_METHOD */)
 {
