@@ -2153,7 +2153,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   PRUint8 selectStyle;
   IsSelectable(&selectable, &selectStyle);
   // XXX Do we really need to exclude non-selectable content here?
-  // GetContentAndOffsetsFromPoint can handle it just fine, although some
+  // GetContentOffsetsFromPoint can handle it just fine, although some
   // other stuff might not like it.
   if (!selectable)
     return NS_OK;
@@ -3451,22 +3451,25 @@ nsPoint nsIFrame::GetOffsetTo(const nsIFrame* aOther) const
 {
   NS_PRECONDITION(aOther,
                   "Must have frame for destination coordinate system!");
-  // Note that if we hit a view while walking up the frame tree we need to stop
-  // and switch to traversing the view tree so that we will deal with scroll
-  // views properly.
   nsPoint offset(0, 0);
   const nsIFrame* f;
-  for (f = this; !f->HasView() && f != aOther; f = f->GetParent()) {
+  for (f = this; f != aOther && f;
+       f = nsLayoutUtils::GetCrossDocParentFrame(f, &offset)) {
     offset += f->GetPosition();
   }
-  
+
   if (f != aOther) {
-    // We found a view.  Switch to the view tree
-    nsPoint toViewOffset(0, 0);
-    nsIView* otherView = aOther->GetClosestView(&toViewOffset);
-    offset += f->GetView()->GetOffsetTo(otherView) - toViewOffset;
+    // Looks like aOther wasn't an ancestor of |this|.  So now we have
+    // the root-document-relative position of |this| in |offset|.  Convert back
+    // to the coordinates of aOther
+    nsPoint negativeOffset(0,0);
+    while (aOther) {
+      offset -= aOther->GetPosition();
+      aOther = nsLayoutUtils::GetCrossDocParentFrame(aOther, &negativeOffset);
+    }
+    offset -= negativeOffset;
   }
-  
+
   return offset;
 }
 
@@ -3531,88 +3534,6 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint&  aOffset,
   if (frame)
     *aView = frame->GetView();
   return NS_OK;
-}
-
-// The (x,y) value of the frame's upper left corner is always
-// relative to its parentFrame's upper left corner, unless
-// its parentFrame has a view associated with it, in which case, it
-// will be relative to the upper left corner of the view returned
-// by a call to parentFrame->GetView().
-//
-// This means that while drilling down the frame hierarchy, from
-// parent to child frame, we sometimes need to take into account
-// crossing these view boundaries, because the coordinate system
-// changes from parent frame coordinate system, to the associated
-// view's coordinate system.
-//
-// GetOriginToViewOffset() is a utility method that returns the
-// offset necessary to map a point, relative to the frame's upper
-// left corner, into the coordinate system of the view associated
-// with the frame.
-//
-// If there is no view associated with the frame, or the view is
-// not a descendant of the frame's parent view (ex: scrolling popup menu),
-// the offset returned will be (0,0).
-
-NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsPoint&        aOffset,
-                                             nsIView**       aView) const
-{
-  nsresult rv = NS_OK;
-
-  aOffset.MoveTo(0,0);
-
-  if (aView)
-    *aView = nsnull;
-
-  if (HasView()) {
-    nsIView *view = GetView();
-    nsIView *parentView = nsnull;
-    nsPoint offsetToParentView;
-    rv = GetOffsetFromView(offsetToParentView, &parentView);
-
-    if (NS_SUCCEEDED(rv)) {
-      nsPoint viewOffsetFromParent(0,0);
-      nsIView *pview = view;
-
-      nsIViewManager* vVM = view->GetViewManager();
-
-      while (pview && pview != parentView) {
-        viewOffsetFromParent += pview->GetPosition();
-
-        nsIView *tmpView = pview->GetParent();
-        if (tmpView && vVM != tmpView->GetViewManager()) {
-          // Don't cross ViewManager boundaries!
-          // XXXbz why not?
-          break;
-        }
-        pview = tmpView;
-      }
-
-#ifdef DEBUG_KIN
-      if (pview != parentView) {
-        // XXX: At this point, pview is probably null since it traversed
-        //      all the way up view's parent hierarchy and did not run across
-        //      parentView. In the future, instead of just returning an offset
-        //      of (0,0) for this case, we may want offsetToParentView to
-        //      include the offset from the parentView to the top of the
-        //      view hierarchy which would make both offsetToParentView and
-        //      viewOffsetFromParent, offsets to the global coordinate space.
-        //      We'd have to investigate any perf impact this would have before
-        //      checking in such a change, so for now we just return (0,0).
-        //      -- kin    
-        NS_WARNING("view is not a descendant of parentView!");
-      }
-#endif // DEBUG
-
-      if (pview == parentView)
-        aOffset = offsetToParentView - viewOffsetFromParent;
-
-      if (aView)
-        *aView = view;
-    }
-  }
-
-  return rv;
 }
 
 /* virtual */ PRBool
