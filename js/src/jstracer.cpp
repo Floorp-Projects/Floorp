@@ -2399,7 +2399,7 @@ js_InitJIT(JSTraceMonitor *tm)
         did_we_check_sse2 = true;
     }
 #endif
-    if (!oracle) // TODO: currently oracle does not get deallocated on shutdown
+    if (!oracle)
         oracle = new (&gc) Oracle();
     if (!tm->fragmento) {
         JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap);
