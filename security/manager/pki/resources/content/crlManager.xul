@@ -40,7 +40,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 
 <!DOCTYPE dialog [
-    <!ENTITY % prefValDTD SYSTEM "chrome://pippki/locale/pref-validation.dtd">
+    <!ENTITY % prefValDTD SYSTEM "chrome://pippki/locale/validation.dtd">
     %prefValDTD;
     <!ENTITY % prefCertMgrDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
     %prefCertMgrDTD;
