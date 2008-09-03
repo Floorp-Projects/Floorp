@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -277,12 +277,59 @@ Oracle::clear()
     _dontDemote.reset();
 }
 
+static bool isi2f(LInsp i)
+{
+    if (i->isop(LIR_i2f))
+        return true;
+
+#ifdef NANOJIT_ARM
+    if (i->isop(LIR_qjoin) &&
+        i->oprnd1()->isop(LIR_call) &&
+        i->oprnd2()->isop(LIR_callh))
+    {
+        if (i->oprnd1()->imm8() == F_i2f)
+            return true;
+    }
+#endif
+
+    return false;
+}
+
+static bool isu2f(LInsp i)
+{
+    if (i->isop(LIR_u2f))
+        return true;
+
+#ifdef NANOJIT_ARM
+    if (i->isop(LIR_qjoin) &&
+        i->oprnd1()->isop(LIR_call) &&
+        i->oprnd2()->isop(LIR_callh))
+    {
+        if (i->oprnd1()->imm8() == F_u2f)
+            return true;
+    }
+#endif
+
+    return false;
+}
+
+static LInsp iu2fArg(LInsp i)
+{
+#ifdef NANOJIT_ARM
+    if (i->isop(LIR_qjoin))
+        return i->oprnd1()->arg(0);
+#endif
+
+    return i->oprnd1();
+}
+
+
 static LIns* demote(LirWriter *out, LInsp i)
 {
     if (i->isCall())
         return callArgN(i, 0);
-    if (i->isop(LIR_i2f) || i->isop(LIR_u2f))
-        return i->oprnd1();
+    if (isi2f(i) || isu2f(i))
+        return iu2fArg(i);
     if (i->isconst())
         return i;
     AvmAssert(i->isconstq());
@@ -294,14 +341,14 @@ static LIns* demote(LirWriter *out, LInsp i)
 static bool isPromoteInt(LIns* i)
 {
     jsdouble d;
-    return i->isop(LIR_i2f) || i->isconst() ||
+    return isi2f(i) || i->isconst() ||
         (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsint)d) && !JSDOUBLE_IS_NEGZERO(d));
 }
 
 static bool isPromoteUint(LIns* i)
 {
     jsdouble d;
-    return i->isop(LIR_u2f) || i->isconst() ||
+    return isu2f(i) || i->isconst() ||
         (i->isconstq() && ((d = i->constvalf()) == (jsdouble)(jsuint)d));
 }
 
@@ -323,6 +370,92 @@ static bool overflowSafe(LIns* i)
            (i->isop(LIR_rsh) && ((c = i->oprnd2())->isconst()) &&
             ((c->constval() > 0)));
 }
+
+#ifdef NANOJIT_ARM
+
+class SoftFloatFilter: public LirWriter
+{
+public:
+    SoftFloatFilter(LirWriter* out):
+        LirWriter(out)
+    {
+    }
+
+    LInsp quadCall(uint32_t fid, LInsp args[]) {
+        LInsp qlo, qhi;
+
+        qlo = out->insCall(fid, args);
+        qhi = out->ins1(LIR_callh, qlo);
+        return out->qjoin(qlo, qhi);
+    }
+
+    LInsp ins1(LOpcode v, LInsp s0)
+    {
+        if (v == LIR_fneg)
+            return quadCall(F_fneg, &s0);
+
+        if (v == LIR_i2f)
+            return quadCall(F_i2f, &s0);
+
+        if (v == LIR_u2f)
+            return quadCall(F_u2f, &s0);
+
+        return out->ins1(v, s0);
+    }
+
+    LInsp ins2(LOpcode v, LInsp s0, LInsp s1)
+    {
+        LInsp args[2];
+        LInsp bv;
+
+        // change the numeric value and order of these LIR opcodes and die
+        if (LIR_fadd <= v && v <= LIR_fdiv) {
+            static uint32_t fmap[] = { F_fadd, F_fsub, F_fmul, F_fdiv };
+
+            args[0] = s1;
+            args[1] = s0;
+
+            return quadCall(fmap[v - LIR_fadd], args);
+        }
+
+        if (LIR_feq <= v && v <= LIR_fge) {
+            static uint32_t fmap[] = { F_fcmpeq, F_fcmplt, F_fcmpgt, F_fcmple, F_fcmpge };
+
+            args[0] = s1;
+            args[1] = s0;
+
+            bv = out->insCall(fmap[v - LIR_feq], args);
+            return out->ins2(LIR_eq, bv, out->insImm(1));
+        }
+
+        // not really a softfloat filter, but needed on ARM --
+        // arm doesn't mask shifts to 31 like x86 does
+        if (v == LIR_lsh ||
+            v == LIR_rsh ||
+            v == LIR_ush)
+        {
+            if (s1->isconst())
+                s1->setimm16(s1->constval() & 31);
+            else
+                s1 = out->ins2(LIR_and, s1, out->insImm(31));
+            return out->ins2(v, s0, s1);
+        }
+
+        return out->ins2(v, s0, s1);
+    }
+
+    LInsp insCall(uint32_t fid, LInsp args[])
+    {
+        // if the return type is ARGSIZE_F, we have
+        // to do a quadCall ( qjoin(call,callh) )
+        if ((builtins[fid]._argtypes & 3) == ARGSIZE_F)
+            return quadCall(fid, args);
+
+        return out->insCall(fid, args);
+    }
+};
+
+#endif
 
 class FuncFilter: public LirWriter
 {
@@ -427,9 +560,8 @@ public:
           case F_DoubleToUint32:
             if (s0->isconstq())
                 return out->insImm(js_DoubleToECMAUint32(s0->constvalf()));
-            if (s0->isop(LIR_i2f) || s0->isop(LIR_u2f)) {
-                return s0->oprnd1();
-            }
+            if (isi2f(s0) || isu2f(s0))
+                return iu2fArg(s0);
             break;
           case F_DoubleToInt32:
             if (s0->isconstq())
@@ -442,9 +574,9 @@ public:
                     return out->ins2(op, demote(out, lhs), demote(out, rhs));
                 }
             }
-            if (s0->isop(LIR_i2f) || s0->isop(LIR_u2f)) {
-                return s0->oprnd1();
-            }
+            if (isi2f(s0) || isu2f(s0))
+                return iu2fArg(s0);
+            // XXX ARM -- check for qjoin(call(F_UnboxDouble),call(F_UnboxDouble))
             if (s0->isCall() && s0->fid() == F_UnboxDouble) {
                 LIns* args2[] = { callArgN(s0, 0) };
                 return out->insCall(F_UnboxInt32, args2);
@@ -689,6 +821,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     if (verbose_debug)
         lir = verbose_filter = new (&gc) VerboseWriter(&gc, lir, lirbuf->names);
 #endif
+#ifdef NANOJIT_ARM
+    lir = float_filter = new (&gc) SoftFloatFilter(lir);
+#endif
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
     lir = expr_filter = new (&gc) ExprFilter(lir);
     lir = func_filter = new (&gc) FuncFilter(lir, *this);
@@ -732,6 +867,9 @@ TraceRecorder::~TraceRecorder()
     delete cse_filter;
     delete expr_filter;
     delete func_filter;
+#ifdef NANOJIT_ARM
+    delete float_filter;
+#endif
     delete lir_buf_writer;
 }
 
@@ -1435,7 +1573,7 @@ TraceRecorder::checkType(jsval& v, uint8 t, bool& unstable)
         if (!isNumber(v))
             return false; /* not a number? type mismatch */
         LIns* i = get(&v);
-        if (!i->isop(LIR_i2f)) {
+        if (!isi2f(i)) {
             debug_only_v(printf("int slot is !isInt32, slot #%d, triggering re-compilation\n",
                                 !isGlobal(&v)
                                 ? nativeStackOffset(&v)
@@ -1445,11 +1583,11 @@ TraceRecorder::checkType(jsval& v, uint8 t, bool& unstable)
             return true; /* keep checking types, but request re-compilation */
         }
         /* Looks good, slot is an int32, the last instruction should be i2f. */
-        JS_ASSERT(isInt32(v) && i->isop(LIR_i2f));
+        JS_ASSERT(isInt32(v) && (i->isop(LIR_i2f) || i->isop(LIR_qjoin)));
         /* We got the final LIR_i2f as we expected. Overwrite the value in that
            slot with the argument of i2f since we want the integer store to flow along
            the loop edge, not the casted value. */
-        set(&v, i->oprnd1());
+        set(&v, iu2fArg(i));
         return true;
     }
     if (t == JSVAL_DOUBLE) {
@@ -2080,10 +2218,11 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     /* execute previously recorded trace */
     TreeInfo* ti = (TreeInfo*)f->vmprivate;
 
-    debug_only_v(printf("entering trace at %s:%u@%u, native stack slots: %u\n",
+    debug_only_v(printf("entering trace at %s:%u@%u, native stack slots: %u code: %p\n",
                         cx->fp->script->filename,
                         js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
-                        cx->fp->regs->pc - cx->fp->script->code, ti->maxNativeStackSlots););
+                        cx->fp->regs->pc - cx->fp->script->code, ti->maxNativeStackSlots,
+                        f->code()););
 
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     unsigned ngslots = tm->globalSlots->length();

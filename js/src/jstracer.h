@@ -221,6 +221,9 @@ class TraceRecorder {
     nanojit::LirWriter*     cse_filter;
     nanojit::LirWriter*     expr_filter;
     nanojit::LirWriter*     func_filter;
+#ifdef NANOJIT_ARM
+    nanojit::LirWriter*     float_filter;
+#endif
     nanojit::LIns*          cx_ins;
     nanojit::LIns*          gp_ins;
     nanojit::LIns*          eos_ins;
