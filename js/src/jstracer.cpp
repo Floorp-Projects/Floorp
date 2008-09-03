@@ -128,7 +128,7 @@ static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"
 
 /* The entire VM shares one oracle. Collisions and concurrent updates are tolerated and worst
    case cause performance regressions. */
-static Oracle oracle;
+static Oracle* oracle;
 
 Tracker::Tracker()
 {
@@ -612,7 +612,7 @@ TypeMap::captureGlobalTypes(JSContext* cx, SlotList& slots)
     uint8* m = map;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         uint8 type = getCoercedType(*vp);
-        if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx->fp->script, gslots[n]))
+        if ((type == JSVAL_INT) && oracle->isGlobalSlotUndemotable(cx->fp->script, gslots[n]))
             type = JSVAL_DOUBLE;
         *m++ = type;
     );
@@ -628,7 +628,7 @@ TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
         uint8 type = getCoercedType(*vp);
         if ((type == JSVAL_INT) &&
-            oracle.isStackSlotUndemotable(cx->fp->script, cx->fp->regs->pc, unsigned(m - map))) {
+            oracle->isStackSlotUndemotable(cx->fp->script, cx->fp->regs->pc, unsigned(m - map))) {
             type = JSVAL_DOUBLE;
         }
         *m++ = type;
@@ -1192,7 +1192,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     /* Add the slot to the list of interned global slots. */
     traceMonitor->globalSlots->add(slot);
     uint8 type = getCoercedType(*vp);
-    if ((type == JSVAL_INT) && oracle.isGlobalSlotUndemotable(cx->fp->script, slot))
+    if ((type == JSVAL_INT) && oracle->isGlobalSlotUndemotable(cx->fp->script, slot))
         type = JSVAL_DOUBLE;
     traceMonitor->globalTypeMap->add(type);
     import(gp_ins, slot*sizeof(double), vp, type, "global", index, NULL);
@@ -1314,7 +1314,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
         if (isPromote && *m == JSVAL_DOUBLE) 
             lir->insStorei(get(vp), gp_ins, nativeGlobalOffset(vp));
         else if (!isPromote && *m == JSVAL_INT) {
-            oracle.markGlobalSlotUndemotable(script, nativeGlobalOffset(vp)/sizeof(double));
+            oracle->markGlobalSlotUndemotable(script, nativeGlobalOffset(vp)/sizeof(double));
             ok = false;
         }
         ++m;
@@ -1327,7 +1327,7 @@ TraceRecorder::adjustCallerTypes(Fragment* f)
             lir->insStorei(get(vp), lirbuf->sp, 
                            -treeInfo->nativeStackBase + nativeStackOffset(vp));
         else if (!isPromote && *m == JSVAL_INT) {
-            oracle.markStackSlotUndemotable(script, (jsbytecode*)f->ip, unsigned(m - map));
+            oracle->markStackSlotUndemotable(script, (jsbytecode*)f->ip, unsigned(m - map));
             ok = false;
         }
         ++m;
@@ -1471,7 +1471,7 @@ TraceRecorder::verifyTypeStability()
         if (!checkType(*vp, *m, demote))
             return false;
         if (demote) {
-            oracle.markGlobalSlotUndemotable(cx->fp->script, gslots[n]);
+            oracle->markGlobalSlotUndemotable(cx->fp->script, gslots[n]);
             recompile = true;
         }
         ++m
@@ -1483,7 +1483,7 @@ TraceRecorder::verifyTypeStability()
         if (!checkType(*vp, *m, demote))
             return false;
         if (demote) {
-            oracle.markStackSlotUndemotable(cx->fp->script, (jsbytecode*)fragment->ip,
+            oracle->markStackSlotUndemotable(cx->fp->script, (jsbytecode*)fragment->ip,
                     unsigned(m - typemap));
             recompile = true;
         }
@@ -2399,6 +2399,8 @@ js_InitJIT(JSTraceMonitor *tm)
         did_we_check_sse2 = true;
     }
 #endif
+    if (!oracle) // TODO: currently oracle does not get deallocated on shutdown
+        oracle = new (&gc) Oracle();
     if (!tm->fragmento) {
         JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap);
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
@@ -2444,7 +2446,8 @@ js_FlushJITOracle(JSContext* cx)
 {
     if (!TRACING_ENABLED(cx))
         return;
-    oracle.clear();
+    if (oracle)
+        oracle->clear();
 }
 
 extern void
@@ -2470,6 +2473,15 @@ js_FlushJITCache(JSContext* cx)
         tm->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
         tm->globalSlots->clear();
         tm->globalTypeMap->clear();
+    }
+}
+
+extern void
+js_ShutDownJIT()
+{
+    if (oracle) {
+        delete oracle;
+        oracle = NULL;
     }
 }
 
