@@ -113,12 +113,8 @@ mozStorageStatement::Initialize(mozStorageConnection *aDBConnection,
     sqlite3 *db = aDBConnection->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
-    int srv;
-    // We pass Length() + 1 to sqlite because it checks if the sql string it is
-    // given contains '\0' at the specified length.  If it does contain '\0', it
-    // will not copy the string.
-    srv = sqlite3_prepare_v2(db, PromiseFlatCString(aSQLStatement).get(),
-                             aSQLStatement.Length() + 1, &mDBStatement, NULL);
+    int srv = sqlite3_prepare_v2(db, PromiseFlatCString(aSQLStatement).get(),
+                                 -1, &mDBStatement, NULL);
     if (srv != SQLITE_OK) {
 #ifdef PR_LOGGING
         PR_LOG(gStorageLog, PR_LOG_ERROR, ("Sqlite statement prepare error: %d '%s'", srv, sqlite3_errmsg(db)));
