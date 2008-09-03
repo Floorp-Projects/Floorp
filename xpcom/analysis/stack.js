@@ -175,6 +175,9 @@ function process_tree(fndecl)
     if (opnew != null)
       warning("operator new not followed by an assignment", getLocation());
   }
+
+  if (hasAttribute(dehydra_convert(fndecl), 'NS_suppress_stackcheck'))
+    return;
   
   let tmap = new Map();
   walk_tree(DECL_SAVED_TREE(fndecl), findconstructors, tmap);
