@@ -151,6 +151,7 @@ namespace nanojit
 #define isU8(i)  ( int32_t(i) == uint8_t(i) )
 #define isS16(i) ( int32_t(i) == int16_t(i) )
 #define isU16(i) ( int32_t(i) == uint16_t(i) )
+#define isS24(i) ( ((int32_t(i)<<8)>>8) == (i) )
 
 #define alignTo(x,s)		((((uintptr_t)(x)))&~(((uintptr_t)s)-1))
 #define alignUp(x,s)		((((uintptr_t)(x))+(((uintptr_t)s)-1))&~(((uintptr_t)s)-1))
