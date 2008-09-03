@@ -1535,7 +1535,6 @@ TraceRecorder::snapshot(ExitType exitType)
        trees returning on a break goto, which the outer recorder then would confuse with
        a break in the outer tree. */
     jsbytecode* pc = fp->regs->pc;
-    JS_ASSERT(!(((*pc == JSOP_GOTO) || (*pc == JSOP_GOTOX)) && (exitType != LOOP_EXIT)));
     if (*pc == JSOP_GOTO) 
         pc += GET_JUMP_OFFSET(pc);
     else if (*pc == JSOP_GOTOX)
