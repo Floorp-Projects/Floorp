@@ -120,7 +120,9 @@ static avmplus::AvmCore* core = &s_core;
 /* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
 static bool nesting_enabled = true;
 static bool oracle_enabled = true;
+#if defined(NANOJIT_IA32)
 static bool did_we_check_sse2 = false;
+#endif
 
 #if defined(DEBUG) || defined(INCLUDE_VERBOSE_OUTPUT)
 static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
@@ -2274,7 +2276,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     u.code = f->code();
 
 #ifdef DEBUG
-#if defined(NANOJIT_IA32)
+#if defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__))
     uint64 start = rdtsc();
 #endif
 #endif
@@ -2359,10 +2361,10 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     JS_ASSERT(fp->slots + fp->script->nfixed +
               js_ReconstructStackDepth(cx, fp->script, fp->regs->pc) == fp->regs->sp);
 
-#if defined(DEBUG) && defined(NANOJIT_IA32)
+#if defined(DEBUG) && (defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__)))
     uint64 cycles = rdtsc() - start;
-#else
-    debug_only_v(uint64 cycles = 0;)
+#elif defined(DEBUG)
+    uint64 cycles = 0;
 #endif
 
     debug_only_v(printf("leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%d, sp=%d, ip=%p, "
@@ -3566,7 +3568,7 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
     // guard(index < capacity)
     guard(false, lir->ins_eq0(dslots_ins), MISMATCH_EXIT);
     guard(true,
-          lir->ins2(LIR_lt, idx_ins, lir->insLoad(LIR_ldp, dslots_ins, 0 - sizeof(jsval))),
+          lir->ins2(LIR_lt, idx_ins, lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval))),
           MISMATCH_EXIT);
     return true;
 }
