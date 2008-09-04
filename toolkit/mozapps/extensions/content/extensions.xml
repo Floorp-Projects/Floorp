@@ -417,7 +417,7 @@
       </property>
 
       <constructor>
-        if (!this.hasAttribute("thumbnailURL")) {
+        if (!this.hasAttribute("thumbnailURL") || this._imageBlocked(this)) {
           this._hideImage();
           return;
         }
@@ -439,6 +439,21 @@
       </constructor>
 
       <field name="_maxSize">125</field>
+
+      <method name="_imageBlocked">
+        <parameter name="container"/>
+        <body>
+          var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService)
+                              .newURI(container.getAttribute("thumbnailURL"),
+                                      container.ownerDocument.characterSet, null);
+          var contentPolicy = Components.classes["@mozilla.org/layout/content-policy;1"]
+                                        .getService(Components.interfaces.nsIContentPolicy);
+          return contentPolicy.shouldLoad(contentPolicy.TYPE_IMAGE,
+                                          uri, container.ownerDocument.documentURIObject,
+                                          container, null, null) != contentPolicy.ACCEPT;
+        </body>
+      </method>
 
       <method name="_displayImage">
         <body>

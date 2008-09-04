@@ -40,8 +40,7 @@
 #ifndef nsWindowUtils_h_
 #define nsWindowUtils_h_
 
-#include <Quickdraw.h>
-#include <MacWindows.h>
+#include <Carbon/Carbon.h>
 
 #include "nsAEDefs.h"
 

@@ -1210,14 +1210,17 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId, PRInt64 aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 id;
-  {
+  if (aItemId == -1) {
     mozStorageStatementScoper scoper(mDBGetLastBookmarkID);
-    
+
     PRBool hasResult;
     rv = mDBGetLastBookmarkID->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
     id = mDBGetLastBookmarkID->AsInt64(0);
+  }
+  else {
+    id = aItemId;
   }
 
   rv = SetItemDateInternal(mDBSetItemLastModified, aParent, PR_Now());

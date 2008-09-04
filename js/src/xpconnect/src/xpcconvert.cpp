@@ -165,52 +165,6 @@ XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
 
 /***************************************************************************/
 
-/*
-* Support for 64 bit conversions where 'long long' not supported.
-* (from John Fairhurst <mjf35@cam.ac.uk>)
-*/
-
-#ifdef HAVE_LONG_LONG
-
-#define JAM_DOUBLE(cx,v,d) (d = JS_NewDouble(cx, (jsdouble)v) , \
-                            d ? DOUBLE_TO_JSVAL(d) : JSVAL_ZERO)
-// Win32 can't handle uint64 to double conversion
-#define JAM_DOUBLE_U64(cx,v,d) JAM_DOUBLE(cx,((int64)v),d)
-
-#else
-
-inline jsval
-JAM_DOUBLE(JSContext *cx, const int64 &v, jsdouble *dbl)
-{
-    jsdouble d;
-    LL_L2D(d, v);
-    dbl = JS_NewDouble(cx, d);
-    if(!dbl)
-        return JSVAL_ZERO;
-    return DOUBLE_TO_JSVAL(dbl);
-}
-
-inline jsval
-JAM_DOUBLE(JSContext *cx, double v, jsdouble *dbl)
-{
-    dbl = JS_NewDouble(cx, (jsdouble)v);
-    if(!dbl)
-        return JSVAL_ZERO;
-    return DOUBLE_TO_JSVAL(dbl);
-}
-
-// if !HAVE_LONG_LONG, then uint64 is a typedef of int64
-#define JAM_DOUBLE_U64(cx,v,d) JAM_DOUBLE(cx,v,d)
-
-#endif
-
-#define FIT_32(cx,i,d) (INT_FITS_IN_JSVAL(i) ? \
-                        INT_TO_JSVAL(i) : JAM_DOUBLE(cx,i,d))
-
-// XXX will this break backwards compatability???
-#define FIT_U32(cx,i,d) ((i) <= JSVAL_INT_MAX ? \
-                         INT_TO_JSVAL(i) : JAM_DOUBLE(cx,i,d))
-
 JS_STATIC_DLL_CALLBACK(void)
 FinalizeXPCOMUCString(JSContext *cx, JSString *str)
 {
@@ -245,6 +199,41 @@ XPCConvert::RemoveXPCOMUCStringFinalizer()
     sXPCOMUCStringFinalizerIndex = -1;
 }
 
+
+#define FIT_32(cx,i,d)      (INT_FITS_IN_JSVAL(i) \
+                             ? *d = INT_TO_JSVAL(i), JS_TRUE    \
+                             : JS_NewDoubleValue(cx, i, d))
+
+#define FIT_U32(cx,i,d)     ((i) <= JSVAL_INT_MAX \
+                             ? *d = INT_TO_JSVAL(i), JS_TRUE    \
+                             : JS_NewDoubleValue(cx, i, d))
+
+/*
+ * Support for 64 bit conversions where 'long long' not supported.
+ * (from John Fairhurst <mjf35@cam.ac.uk>)
+ */
+
+#ifdef HAVE_LONG_LONG
+
+#define INT64_TO_DOUBLE(i)      ((jsdouble) (i))
+// Win32 can't handle uint64 to double conversion
+#define UINT64_TO_DOUBLE(u)     ((jsdouble) (int64) (u))
+
+#else
+
+inline jsdouble
+INT64_TO_DOUBLE(const int64 &v)
+{
+    jsdouble d;
+    LL_L2D(d, v);
+    return d;
+}
+
+// if !HAVE_LONG_LONG, then uint64 is a typedef of int64
+#define UINT64_TO_DOUBLE INT64_TO_DOUBLE
+
+#endif
+
 // static
 JSBool
 XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
@@ -256,8 +245,6 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
 
     JSContext* cx = ccx.GetJSContext();
 
-    jsdouble* dbl = nsnull;
-
     if(pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
@@ -265,14 +252,16 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
     {
     case nsXPTType::T_I8    : *d = INT_TO_JSVAL((int32)*((int8*)s));     break;
     case nsXPTType::T_I16   : *d = INT_TO_JSVAL((int32)*((int16*)s));    break;
-    case nsXPTType::T_I32   : *d = FIT_32(cx,*((int32*)s),dbl);          break;
-    case nsXPTType::T_I64   : *d = JAM_DOUBLE(cx,*((int64*)s),dbl);      break;
+    case nsXPTType::T_I32   : return FIT_32(cx,*((int32*)s),d);
+    case nsXPTType::T_I64   :
+        return JS_NewNumberValue(cx, INT64_TO_DOUBLE(*((int64*)s)), d);
     case nsXPTType::T_U8    : *d = INT_TO_JSVAL((int32)*((uint8*)s));    break;
     case nsXPTType::T_U16   : *d = INT_TO_JSVAL((int32)*((uint16*)s));   break;
-    case nsXPTType::T_U32   : *d = FIT_U32(cx,*((uint32*)s),dbl);        break;
-    case nsXPTType::T_U64   : *d = JAM_DOUBLE_U64(cx,*((uint64*)s),dbl); break;
-    case nsXPTType::T_FLOAT : *d = JAM_DOUBLE(cx,*((float*)s),dbl);      break;
-    case nsXPTType::T_DOUBLE: *d = JAM_DOUBLE(cx,*((double*)s),dbl);     break;
+    case nsXPTType::T_U32   : return FIT_U32(cx,*((uint32*)s),d);
+    case nsXPTType::T_U64   :
+        return JS_NewNumberValue(cx, UINT64_TO_DOUBLE(*((uint64*)s)), d);
+    case nsXPTType::T_FLOAT : return JS_NewNumberValue(cx, *((float*)s), d);
+    case nsXPTType::T_DOUBLE: return JS_NewNumberValue(cx, *((double*)s), d);
     case nsXPTType::T_BOOL  : *d = *((PRBool*)s)?JSVAL_TRUE:JSVAL_FALSE; break;
     case nsXPTType::T_CHAR  :
         {

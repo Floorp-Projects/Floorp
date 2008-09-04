@@ -309,7 +309,9 @@ nsDOMUIEvent::SetCancelBubble(PRBool aCancelBubble)
 nsPoint nsDOMUIEvent::GetLayerPoint() {
   if (!mEvent ||
       (mEvent->eventStructType != NS_MOUSE_EVENT &&
-       mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT) ||
+       mEvent->eventStructType != NS_POPUP_EVENT &&
+       mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
+       mEvent->eventStructType != NS_DRAG_EVENT) ||
       !mPresContext ||
       mEventIsInternal) {
     return mLayerPoint;
