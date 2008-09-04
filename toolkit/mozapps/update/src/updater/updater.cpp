@@ -1222,7 +1222,7 @@ int NS_main(int argc, NS_tchar **argv)
   if (argc > 4) {
     NS_tchar updateLockFilePath[MAXPATHLEN];
     NS_tsnprintf(updateLockFilePath, MAXPATHLEN,
-                 NS_T("%s/update_in_progress.lock"), argv[3]);
+                 NS_T("%s.update_in_progress.lock"), argv[4]);
 
     // The update_in_progress.lock file should only exist during an update. In
     // case it exists attempt to remove it and exit if that fails to prevent
