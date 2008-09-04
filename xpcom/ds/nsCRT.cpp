@@ -306,6 +306,14 @@ PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* start, PRUint32 length)
               code_length = 3;
 
               NS_WARNING("High surrogate not followed by low surrogate");
+
+              // The pointer to the next character points to the second 16-bit
+              // value, not beyond it, as per Unicode 5.0.0 Chapter 3 C10, only
+              // the first code unit of an illegal sequence must be treated as
+              // an illegally terminated code unit sequence (also Chapter 3
+              // D91, "isolated [not paired and ill-formed] UTF-16 code units
+              // in the range D800..DFFF are ill-formed").
+              --s;
             }
 
           W1 = 0;
