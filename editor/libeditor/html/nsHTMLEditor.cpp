@@ -4270,32 +4270,6 @@ nsHTMLEditor::SelectAll()
 #pragma mark -
 #endif
 
-
-NS_IMETHODIMP nsHTMLEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject)
-{
-  nsresult result = NS_ERROR_FAILURE;  // we return an error unless we get the index
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-
-  if ((nsnull!=aNode))
-  { // get the content interface
-    nsCOMPtr<nsIContent> nodeAsContent( do_QueryInterface(aNode) );
-    if (nodeAsContent)
-    { // get the frame from the content interface
-      //Note: frames are not ref counted, so don't use an nsCOMPtr
-      *aLayoutObject = nsnull;
-      result = ps->GetLayoutObjectFor(nodeAsContent, aLayoutObject);
-    }
-  }
-  else {
-    result = NS_ERROR_NULL_POINTER;
-  }
-
-  return result;
-}
-
-
 // this will NOT find aAttribute unless aAttribute has a non-null value
 // so singleton attributes like <Table border> will not be matched!
 void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
