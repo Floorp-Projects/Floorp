@@ -302,9 +302,6 @@ GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
 
 USE_HOST_CXX = 1
 
-HOST_SIMPLE_PROGRAMS += host_jsoplengen$(HOST_BIN_SUFFIX)
-GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
-
 ifdef HAVE_DTRACE
 ifneq ($(OS_ARCH),Darwin)
 DTRACE_PROBE_OBJ = $(LIBRARY_NAME)-dtrace.$(OBJ_SUFFIX)
