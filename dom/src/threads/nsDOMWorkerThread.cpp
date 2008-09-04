@@ -563,7 +563,9 @@ nsDOMWorkerThread::CompileGlobalObject(JSContext* aCx)
                               JSPROP_ENUMERATE);
   NS_ENSURE_TRUE(success, PR_FALSE);
 
-  JSScript* script = JS_CompileUCScript(aCx, global, mSource.BeginReading(),
+  JSScript* script = JS_CompileUCScript(aCx, global,
+                                        reinterpret_cast<const jschar*>
+                                            (mSource.BeginReading()),
                                         mSource.Length(), nsnull, 1);
   NS_ENSURE_TRUE(script, PR_FALSE);
 
