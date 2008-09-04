@@ -17,6 +17,8 @@ include('unstable/getopt.js');
 sys.include_path[0] = options.topsrcdir + "/xpcom/analysis";
 sys.include_path.push(options.topsrcdir);
 
+include('string-format.js');
+
 let modules = [];
 
 function LoadModules(modulelist)
@@ -70,11 +72,18 @@ function process_tree(fndecl)
       module.process_tree(fndecl);
 }
 
-function process_var(decl)
+function process_decl(decl)
 {
   for each (let module in modules)
     if (module.hasOwnProperty('process_var'))
-      module.process_var(decl);
+      module.process_decl(decl);
+}
+
+function process_cp_pre_genericize(fndecl)
+{
+  for each (let module in modules)
+    if (module.hasOwnProperty('process_cp_pre_genericize'))
+      module.process_cp_pre_genericize(fndecl);
 }
 
 function input_end()

@@ -3057,7 +3057,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     /* Emit code for each case's statements, copying pn_offset up to pn3. */
     for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
         if (switchOp == JSOP_CONDSWITCH && pn3->pn_type != TOK_DEFAULT)
-            CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, pn3->pn_offset);
+            CHECK_AND_SET_JUMP_OFFSET_AT_CUSTOM(cx, cg, pn3->pn_offset, goto bad);
         pn4 = pn3->pn_right;
         ok = js_EmitTree(cx, cg, pn4);
         if (!ok)
