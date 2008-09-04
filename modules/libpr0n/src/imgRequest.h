@@ -46,6 +46,7 @@
 #include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
 
+#include "nsICacheEntryDescriptor.h"
 #include "nsIContentSniffer.h"
 #include "nsIRequest.h"
 #include "nsIProperties.h"
@@ -62,7 +63,6 @@
 class imgCacheValidator;
 
 class imgRequestProxy;
-class imgCacheEntry;
 
 enum {
   onStartRequest   = PR_BIT(0),
@@ -86,7 +86,7 @@ public:
 
   nsresult Init(nsIURI *aURI,
                 nsIRequest *aRequest,
-                imgCacheEntry *aCacheEntry,
+                nsICacheEntryDescriptor *aCacheEntry,
                 void *aCacheId,
                 void *aLoadId);
 
@@ -109,10 +109,10 @@ public:
   nsresult GetNetworkStatus();
 
 private:
-  friend class imgCacheEntry;
   friend class imgRequestProxy;
   friend class imgLoader;
   friend class imgCacheValidator;
+  friend class imgCache;
 
   inline void SetLoadId(void *aLoadId) {
     mLoadId = aLoadId;
@@ -170,7 +170,7 @@ private:
   PRUint32 mState;
   nsCString mContentType;
 
-  nsRefPtr<imgCacheEntry> mCacheEntry; /* we hold on to this to this so long as we have observers */
+  nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry; /* we hold on to this to this so long as we have observers */
 
   void *mCacheId;
 
