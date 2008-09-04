@@ -37,95 +37,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "imgILoader.h"
-#include "nsIContentSniffer.h"
+#include "imgICache.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
-#ifdef LOADER_THREADSAFE
-#include "prlock.h"
-#endif
+#include "prtypes.h"
 
 class imgRequest;
-class imgRequestProxy;
-class imgIRequest;
-class imgIDecoderObserver;
-class nsILoadGroup;
+class nsIURI;
+class nsICacheEntryDescriptor;
 
-#define NS_IMGLOADER_CID \
-{ /* 9f6a0d2e-1dd1-11b2-a5b8-951f13c846f7 */         \
-     0x9f6a0d2e,                                     \
+#define NS_IMGCACHE_CID \
+{ /* fb4fd28a-1dd1-11b2-8391-e14242c59a41 */         \
+     0xfb4fd28a,                                     \
      0x1dd1,                                         \
      0x11b2,                                         \
-    {0xa5, 0xb8, 0x95, 0x1f, 0x13, 0xc8, 0x46, 0xf7} \
+    {0x83, 0x91, 0xe1, 0x42, 0x42, 0xc5, 0x9a, 0x41} \
 }
 
-class imgLoader : public imgILoader, public nsIContentSniffer
+class imgCache : public imgICache, 
+                 public nsIObserver,
+                 public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGILOADER
-  NS_DECL_NSICONTENTSNIFFER
+  NS_DECL_IMGICACHE
+  NS_DECL_NSIOBSERVER
 
-  imgLoader();
-  virtual ~imgLoader();
+  imgCache();
+  virtual ~imgCache();
 
-  static nsresult GetMimeTypeFromContent(const char* aContents, PRUint32 aLength, nsACString& aContentType);
+  static nsresult Init();
 
-private:
-  nsresult CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
-                                    imgIDecoderObserver *aObserver,
-                                    nsLoadFlags aLoadFlags, imgIRequest *aRequestProxy,
-                                    imgIRequest **_retval);
-};
-
-
-
-/**
- * proxy stream listener class used to handle multipart/x-mixed-replace
- */
-
-#include "nsCOMPtr.h"
-#include "nsIStreamListener.h"
-
-class ProxyListener : public nsIStreamListener
-{
-public:
-  ProxyListener(nsIStreamListener *dest);
-  virtual ~ProxyListener();
+  static void Shutdown(); // for use by the factory
 
   /* additional members */
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSIREQUESTOBSERVER
+  static PRBool Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry);
+  static PRBool Get(nsIURI *aKey, PRBool *aHasExpired, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry);
+  static PRBool Remove(nsIURI *aKey);
 
-private:
-  nsCOMPtr<nsIStreamListener> mDestListener;
+  static nsresult ClearChromeImageCache();
+  static nsresult ClearImageCache();
 };
 
-
-/**
- * validate checker
- */
-
-#include "nsCOMArray.h"
-
-class imgCacheValidator : public nsIStreamListener
-{
-public:
-  imgCacheValidator(imgRequest *request, void *aContext);
-  virtual ~imgCacheValidator();
-
-  void AddProxy(imgRequestProxy *aProxy);
-
-  /* additional members */
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSIREQUESTOBSERVER
-
-private:
-  nsCOMPtr<nsIStreamListener> mDestListener;
-
-  imgRequest *mRequest;
-  nsCOMArray<imgIRequest> mProxies;
-
-  void *mContext;
-};
