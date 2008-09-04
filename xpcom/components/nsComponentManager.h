@@ -67,6 +67,7 @@
 
 struct nsFactoryEntry;
 class nsIServiceManager;
+struct PRThread;
 
 #define NS_COMPONENTMANAGER_CID                      \
 { /* 91775d60-d5dc-11d2-92fb-00e09805570f */         \
@@ -260,12 +261,17 @@ public:
 
     PLArenaPool   mArena;
 
-#ifdef XPCOM_CHECK_PENDING_CIDS
-    nsresult AddPendingCID(const nsCID &aClass);
-    void RemovePendingCID(const nsCID &aClass);
+    struct PendingServiceInfo {
+      const nsCID* cid;
+      PRThread* thread;
+    };
 
-    nsVoidArray         mPendingCIDs;
-#endif
+    inline PendingServiceInfo* AddPendingService(const nsCID& aServiceCID,
+                                                 PRThread* aThread);
+    inline void RemovePendingService(const nsCID& aServiceCID);
+    inline PRThread* GetPendingServiceThread(const nsCID& aServiceCID) const;
+
+    nsTArray<PendingServiceInfo> mPendingServices;
 
 private:
     ~nsComponentManagerImpl();
