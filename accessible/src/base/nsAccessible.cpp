@@ -1843,8 +1843,14 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
     return NS_ERROR_FAILURE;   // Node shut down
   }
 
-  // Check for DHTML accessibility labelledby relationship property
+  // Check for aria-label property
   nsAutoString label;
+  if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label, label)) {
+    aLabel = label;
+    return NS_OK;
+  }
+
+  // Check for aria-labelledby relationship property
   nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_labelledby, label);
   if (NS_SUCCEEDED(rv)) {
     aLabel = label;
@@ -1894,8 +1900,14 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ASSERTION(content, "No nsIContent for DOM node");
 
-  // First check for label override via accessibility labelledby relationship
+  // First check for label override via aria-label property
   nsAutoString label;
+  if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label, label)) {
+    aLabel = label;
+    return NS_OK;
+  }
+
+  // Second check for label override via aria-labelledby relationship
   nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_labelledby, label);
   if (NS_SUCCEEDED(rv)) {
     aLabel = label;
