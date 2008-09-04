@@ -2050,7 +2050,7 @@ nsScriptSecurityManager::GetScriptPrincipal(JSContext *cx,
     JSPrincipals *jsp = JS_GetScriptPrincipals(cx, script);
     if (!jsp) {
         *rv = NS_ERROR_FAILURE;
-        // Script didn't have principals -- shouldn't happen.
+        NS_ERROR("Script compiled without principals!");
         return nsnull;
     }
     nsJSPrincipals *nsJSPrin = static_cast<nsJSPrincipals *>(jsp);
