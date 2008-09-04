@@ -1002,6 +1002,14 @@ LoginManager.prototype = {
         if (passwordField == null)
             return [false, foundLogins];
 
+        // If the fields are disabled or read-only, there's nothing to do.
+        if (passwordField.disabled || passwordField.readOnly ||
+            usernameField && (usernameField.disabled ||
+                              usernameField.readOnly)) {
+            this.log("not filling form, login fields disabled");
+            return [false, foundLogins];
+        }
+
         // If there's only a password field and it has a value, there's
         // nothing for us to do. (Don't clobber the existing value)
         if (!usernameField && passwordField.value)
