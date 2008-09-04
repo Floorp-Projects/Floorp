@@ -37,13 +37,110 @@
 #import "mozGrowlDelegate.h"
 
 #include "nsIObserver.h"
-#include "nsStringAPI.h"
-#include "nscore.h"
+#include "nsIXPConnect.h"
+#include "nsIXULAppInfo.h"
+#include "nsIStringBundle.h"
+#include "nsIJSContextStack.h"
+#include "nsIDOMWindow.h"
+
+#include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsObjCExceptions.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIXULAppInfo.h"
-#include "nsIStringBundle.h"
+#include "nsWeakReference.h"
+
+/**
+ * Returns the DOM window that owns the given observer in the case that the
+ * observer is implemented in JS and was created in a DOM window's scope.
+ *
+ * We need this so that we can properly clean up in cases where the window gets
+ * closed before the growl timeout/click notifications have fired. Otherwise we
+ * leak those windows.
+ */
+static already_AddRefed<nsIDOMWindow>
+GetWindowOfObserver(nsIObserver* aObserver)
+{
+  nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(aObserver));
+  if (!wrappedJS) {
+    // We can't do anything with objects that aren't implemented in JS...
+    return nsnull;
+  }
+
+  JSObject* obj;
+  nsresult rv = wrappedJS->GetJSObject(&obj);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsCOMPtr<nsIThreadJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  JSContext* cx;
+  rv = stack->GetSafeJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  JSAutoRequest ar(cx);
+
+  JSObject* global = JS_GetGlobalForObject(cx, obj);
+  NS_ENSURE_TRUE(global, nsnull);
+
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
+  NS_ENSURE_TRUE(xpc, nsnull);
+
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  rv = xpc->GetWrappedNativeOfJSObject(cx, global, getter_AddRefs(wrapper));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryWrappedNative(wrapper);
+  NS_ENSURE_TRUE(window, nsnull);
+
+  return window.forget();
+}
+
+@interface ObserverPair : NSObject
+{
+@public
+  nsIObserver *observer;
+  nsIDOMWindow *window;
+}
+
+- (id) initWithObserver:(nsIObserver *)aObserver window:(nsIDOMWindow *)aWindow;
+- (void) dealloc;
+
+@end
+
+@implementation ObserverPair
+
+- (id) initWithObserver:(nsIObserver *)aObserver window:(nsIDOMWindow *)aWindow
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  if ((self = [super init])) {
+    NS_ADDREF(observer = aObserver);
+    NS_IF_ADDREF(window = aWindow);
+    return self;
+  }
+
+  // Safeguard against calling NS_RELEASE on uninitialized memory.
+  observer = nsnull;
+  window = nsnull;
+
+  return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (void) dealloc
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NS_IF_RELEASE(observer);
+  NS_IF_RELEASE(window);
+  [super dealloc];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+@end
 
 @implementation mozGrowlDelegate
 
@@ -163,15 +260,18 @@
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (PRUint32) addObserver:(nsIObserver*)aObserver
+- (PRUint32) addObserver:(nsIObserver *)aObserver
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NS_ADDREF(aObserver);  // We now own a reference to this!
+  nsCOMPtr<nsIDOMWindow> parentWindow = GetWindowOfObserver(aObserver);
 
-  mKey++;
-  [mDict setObject: [NSValue valueWithPointer: aObserver]
-            forKey: [NSNumber numberWithUnsignedInt: mKey]];
+  ObserverPair* pair = [[ObserverPair alloc] initWithObserver: aObserver
+                                                       window: parentWindow];
+  [pair autorelease];
+
+  [mDict setObject: pair
+            forKey: [NSNumber numberWithUnsignedInt: ++mKey]];
   return mKey;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
@@ -219,9 +319,10 @@
   NS_ASSERTION([clickContext valueForKey: COOKIE_KEY] != nil,
                "COOKIE_KEY not found!");
 
-  nsIObserver* observer = static_cast<nsIObserver*>
-                                     ([[mDict objectForKey: [clickContext valueForKey: OBSERVER_KEY]]
-      pointerValue]);
+  ObserverPair* pair =
+    [mDict objectForKey: [clickContext valueForKey: OBSERVER_KEY]];
+  nsCOMPtr<nsIObserver> observer = pair ? pair->observer : nsnull;
+
   [mDict removeObjectForKey: [clickContext valueForKey: OBSERVER_KEY]];
   NSString* cookie = [[clickContext valueForKey: COOKIE_KEY] objectAtIndex: 0];
 
@@ -231,8 +332,6 @@
     [cookie getCharacters:tmp.BeginWriting()];
 
     observer->Observe(nsnull, "alertfinished", tmp.get());
-
-    NS_RELEASE(observer);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -247,9 +346,10 @@
   NS_ASSERTION([clickContext valueForKey: COOKIE_KEY] != nil,
                "COOKIE_KEY not found!");
 
-  nsIObserver* observer = static_cast<nsIObserver*>
-                                     ([[mDict objectForKey: [clickContext valueForKey: OBSERVER_KEY]]
-      pointerValue]);
+  ObserverPair* pair =
+    [mDict objectForKey: [clickContext valueForKey: OBSERVER_KEY]];
+  nsCOMPtr<nsIObserver> observer = pair ? pair->observer : nsnull;
+
   [mDict removeObjectForKey: [clickContext valueForKey: OBSERVER_KEY]];
   NSString* cookie = [[clickContext valueForKey: COOKIE_KEY] objectAtIndex: 0];
 
@@ -260,9 +360,37 @@
 
     observer->Observe(nsnull, "alertclickcallback", tmp.get());
     observer->Observe(nsnull, "alertfinished", tmp.get());
-
-    NS_RELEASE(observer);
   }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void) forgetObserversForWindow:(nsIDOMWindow*)window
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  NS_ASSERTION(window, "No window!");
+
+  NSMutableArray *keysToRemove = [NSMutableArray array];
+
+  NSEnumerator *keyEnumerator = [[mDict allKeys] objectEnumerator];
+  NSNumber *key;
+  while ((key = [keyEnumerator nextObject])) {
+    ObserverPair *pair = [mDict objectForKey:key];
+    if (pair && pair->window == window)
+      [keysToRemove addObject:key];
+  }
+
+  [mDict removeObjectsForKeys:keysToRemove];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void) forgetObservers
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  [mDict removeAllObjects];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

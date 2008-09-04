@@ -51,6 +51,11 @@ REQUIRES = \
   string \
   necko \
   intl \
+  js \
+  xpconnect \
+  dom \
+  content \
+  widget \
   $(NULL)
 
 CMMSRCS = \
@@ -81,6 +86,7 @@ EXTRA_DSO_LDOPTS += \
   -framework Carbon \
   $(XPCOM_GLUE_LDOPTS) \
   $(NSPR_LIBS) \
+  $(MOZ_JS_LIBS) \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

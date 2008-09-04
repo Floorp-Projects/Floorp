@@ -35,7 +35,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "GrowlApplicationBridge.h"
-#include "nsIObserver.h"
+
+#include "nscore.h"
+#include "nsStringGlue.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -44,6 +46,9 @@
 
 #define OBSERVER_KEY      @"ALERT_OBSERVER"
 #define COOKIE_KEY        @"ALERT_COOKIE"
+
+class nsIObserver;
+class nsIDOMWindow;
 
 @interface mozGrowlDelegate : NSObject <GrowlApplicationBridgeDelegate>
 {
@@ -117,5 +122,17 @@
  * @param clickContext The object passed back from growl.
  */
 - (void) growlNotificationWasClicked:(id)clickContext;
+
+/**
+ * Called when a window was closed and the observers are no longer valid.
+ *
+ * @param window The window that was closed.
+ */
+- (void) forgetObserversForWindow:(nsIDOMWindow*)window;
+
+/**
+ * Called when all observers should be released.
+ */
+- (void) forgetObservers;
 
 @end
