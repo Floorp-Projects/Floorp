@@ -456,22 +456,6 @@ public:
     {
     }
 
-    LInsp ins1(LOpcode v, LInsp s0)
-    {
-        switch (v) {
-          case LIR_fneg:
-              if (isPromoteInt(s0)) {
-                  LIns* result = out->ins1(LIR_neg, demote(out, s0));
-                  out->insGuard(LIR_xt, out->ins1(LIR_ov, result),
-                                recorder.snapshot(OVERFLOW_EXIT));
-                  return out->ins1(LIR_i2f, result);
-              }
-              break;
-          default:;
-        }
-        return out->ins1(v, s0);
-    }
-
     LInsp ins2(LOpcode v, LInsp s0, LInsp s1)
     {
         if (s0 == s1 && v == LIR_feq) {
@@ -3897,7 +3881,29 @@ TraceRecorder::record_JSOP_BITNOT()
 bool
 TraceRecorder::record_JSOP_NEG()
 {
-    return unary(LIR_fneg);
+    jsval& v = stackval(-1);
+    if (isNumber(v)) {
+        LIns* a = get(&v);
+
+        /* If we're a promoted integer, we have to watch out for 0s since -0 is a double.
+           Only follow this path if we're not an integer that's 0 and we're not a double 
+           that's zero.
+         */
+        if (isPromoteInt(a) &&
+            (!JSVAL_IS_INT(v) || JSVAL_TO_INT(v) != 0) &&
+            (!JSVAL_IS_DOUBLE(v) || !JSDOUBLE_IS_NEGZERO(*JSVAL_TO_DOUBLE(v))))  {
+            a = lir->ins1(LIR_neg, ::demote(lir, a));
+            lir->insGuard(LIR_xt, lir->ins1(LIR_ov, a), snapshot(OVERFLOW_EXIT));
+            lir->insGuard(LIR_xt, lir->ins2(LIR_eq, a, lir->insImm(0)), snapshot(OVERFLOW_EXIT));
+            a = lir->ins1(LIR_i2f, a);
+        } else {
+            a = lir->ins1(LIR_fneg, a);
+        }
+
+        set(&v, a);
+        return true;
+    }
+    return false;
 }
 
 enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID };

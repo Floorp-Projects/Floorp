@@ -1167,6 +1167,23 @@ function testSwitchString() {
 testSwitchString.expected = 200;
 test(testSwitchString);
 
+function testNegZero1Helper(z) {
+    for (let j = 0; j < 5; ++j) { z = -z; }
+    return Math.atan2(0, -0) == Math.atan2(0, z);
+}
+
+var testNegZero1 = function() { return testNegZero1Helper(0); }
+testNegZero1.expected = true;
+testNegZero1.name = 'testNegZero1';
+testNegZero1Helper(1);
+test(testNegZero1);
+
+/* No test case, just make sure this doesn't assert. */
+function testNegZero2() {
+    var z = 0;
+    for (let j = 0; j < 5; ++j) { ({p: (-z)}); }
+}
+testNegZero2();
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
