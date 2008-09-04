@@ -1185,6 +1185,22 @@ function testNegZero2() {
 }
 testNegZero2();
 
+function testConstSwitch() {
+    var x;
+    for (var j=0;j<5;++j) { switch(1.1) { case NaN: case 2: } x = 2; }
+    return x;
+}
+testConstSwitch.expected = 2;
+test(testConstSwitch);
+
+function testConstIf() {
+    var x;
+    for (var j=0;j<5;++j) { if (1.1 || 5) { } x = 2;}
+    return x;
+}
+testConstIf.expected = 2;
+test(testConstIf);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
