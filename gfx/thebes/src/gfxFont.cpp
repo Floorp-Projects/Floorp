@@ -284,7 +284,8 @@ gfxFont::~gfxFont()
  * A helper function in case we need to do any rounding or other
  * processing here.
  */
-#define ToDeviceUnits(aAppUnits, aDevUnitsPerAppUnit)   (double(aAppUnits)*double(aDevUnitsPerAppUnit))
+#define ToDeviceUnits(aAppUnits, aDevUnitsPerAppUnit) \
+    (double(aAppUnits)*double(aDevUnitsPerAppUnit))
 
 struct GlyphBuffer {
 #define GLYPH_BUFFER_SIZE (2048/sizeof(cairo_glyph_t))
@@ -298,14 +299,24 @@ struct GlyphBuffer {
         return &mGlyphBuffer[mNumGlyphs++];
     }
 
-    void Flush(cairo_t *cr, PRBool drawToPath, PRBool finish = PR_FALSE) {
-        if (!finish && mNumGlyphs != GLYPH_BUFFER_SIZE)
+    void Flush(cairo_t *aCR, PRBool aDrawToPath, PRBool aReverse,
+               PRBool aFinish = PR_FALSE) {
+        // Ensure there's enough room for at least two glyphs in the
+        // buffer (because we may allocate two glyphs between flushes)
+        if (!aFinish && mNumGlyphs + 2 <= GLYPH_BUFFER_SIZE)
             return;
 
-        if (drawToPath)
-            cairo_glyph_path(cr, mGlyphBuffer, mNumGlyphs);
+        if (aReverse) {
+            for (PRUint32 i = 0; i < mNumGlyphs/2; ++i) {
+                cairo_glyph_t tmp = mGlyphBuffer[i];
+                mGlyphBuffer[i] = mGlyphBuffer[mNumGlyphs - 1 - i];
+                mGlyphBuffer[mNumGlyphs - 1 - i] = tmp;
+            }
+        }
+        if (aDrawToPath)
+            cairo_glyph_path(aCR, mGlyphBuffer, mNumGlyphs);
         else
-            cairo_show_glyphs(cr, mGlyphBuffer, mNumGlyphs);
+            cairo_show_glyphs(aCR, mGlyphBuffer, mNumGlyphs);
 
         mNumGlyphs = 0;
     }
@@ -325,7 +336,9 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     const double devUnitsPerAppUnit = 1.0/double(appUnitsPerDevUnit);
     PRBool isRTL = aTextRun->IsRightToLeft();
     double direction = aTextRun->GetDirection();
-    double synBoldDevUnitOffset = direction * (double) mSyntheticBoldOffset;  // double-strike in direction of run
+    // double-strike in direction of run
+    double synBoldDevUnitOffsetAppUnits =
+      direction * (double) mSyntheticBoldOffset * appUnitsPerDevUnit;
     PRUint32 i;
     // Current position in appunits
     double x = aPt->x;
@@ -353,25 +366,29 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
             // Multiplying by the reciprocal may introduce tiny error here,
             // but we assume cairo is going to round coordinates at some stage
             // and this is faster
-            glyph->x = ToDeviceUnits(x, devUnitsPerAppUnit);
-            glyph->y = ToDeviceUnits(y, devUnitsPerAppUnit);
+            double glyphX;
             if (isRTL) {
-                glyph->x -= ToDeviceUnits(advance, devUnitsPerAppUnit);
                 x -= advance;
+                glyphX = x;
             } else {
+                glyphX = x;
                 x += advance;
             }
+            glyph->x = ToDeviceUnits(glyphX, devUnitsPerAppUnit);
+            glyph->y = ToDeviceUnits(y, devUnitsPerAppUnit);
             
             // synthetic bolding by drawing with a one-pixel offset
             if (mSyntheticBoldOffset) {
                 cairo_glyph_t *doubleglyph;
                 doubleglyph = glyphs.AppendGlyph();
                 doubleglyph->index = glyph->index;
-                doubleglyph->x = glyph->x + synBoldDevUnitOffset;
+                doubleglyph->x =
+                  ToDeviceUnits(glyphX + synBoldDevUnitOffsetAppUnits,
+                                devUnitsPerAppUnit);
                 doubleglyph->y = glyph->y;
             }
             
-            glyphs.Flush(cr, aDrawToPath);
+            glyphs.Flush(cr, aDrawToPath, isRTL);
         } else {
             PRUint32 j;
             PRUint32 glyphCount = glyphData->GetGlyphCount();
@@ -380,12 +397,13 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                 double advance = details->mAdvance;
                 if (glyphData->IsMissing()) {
                     if (!aDrawToPath) {
-                        gfxPoint pt(ToDeviceUnits(x, devUnitsPerAppUnit),
+                        double glyphX = x;
+                        if (isRTL) {
+                            glyphX -= advance;
+                        }
+                        gfxPoint pt(ToDeviceUnits(glyphX, devUnitsPerAppUnit),
                                     ToDeviceUnits(y, devUnitsPerAppUnit));
                         gfxFloat advanceDevUnits = ToDeviceUnits(advance, devUnitsPerAppUnit);
-                        if (isRTL) {
-                            pt.x -= advanceDevUnits;
-                        }
                         gfxFloat height = GetMetrics().maxAscent;
                         gfxRect glyphRect(pt.x, pt.y - height, advanceDevUnits, height);
                         gfxFontMissingGlyphs::DrawMissingGlyph(aContext, glyphRect, details->mGlyphID);
@@ -393,22 +411,25 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                 } else {
                     glyph = glyphs.AppendGlyph();
                     glyph->index = details->mGlyphID;
-                    glyph->x = ToDeviceUnits(x + details->mXOffset, devUnitsPerAppUnit);
-                    glyph->y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
+                    double glyphX = x + details->mXOffset;
                     if (isRTL) {
-                        glyph->x -= ToDeviceUnits(advance, devUnitsPerAppUnit);
+                        glyphX -= advance;
                     }
+                    glyph->x = ToDeviceUnits(glyphX, devUnitsPerAppUnit);
+                    glyph->y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
 
                     // synthetic bolding by drawing with a one-pixel offset
                     if (mSyntheticBoldOffset) {
                         cairo_glyph_t *doubleglyph;
                         doubleglyph = glyphs.AppendGlyph();
                         doubleglyph->index = glyph->index;
-                        doubleglyph->x = glyph->x + synBoldDevUnitOffset;
+                        doubleglyph->x =
+                            ToDeviceUnits(glyphX + synBoldDevUnitOffsetAppUnits,
+                                          devUnitsPerAppUnit);
                         doubleglyph->y = glyph->y;
                     }
 
-                    glyphs.Flush(cr, aDrawToPath);
+                    glyphs.Flush(cr, aDrawToPath, isRTL);
                 }
                 x += direction*advance;
             }
@@ -433,7 +454,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     }
 
     // draw any remaining glyphs
-    glyphs.Flush(cr, aDrawToPath, PR_TRUE);
+    glyphs.Flush(cr, aDrawToPath, isRTL, PR_TRUE);
 
     *aPt = gfxPoint(x, y);
 }
