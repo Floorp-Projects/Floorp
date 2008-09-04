@@ -814,8 +814,6 @@ public:
   virtual NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent) const;
   virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const;
 
-  NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
-                                nsISupports** aResult) const;
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
@@ -4901,24 +4899,6 @@ PresShell::GetRealPrimaryFrameFor(nsIContent* aContent) const
   if (!primaryFrame)
     return nsnull;
   return nsPlaceholderFrame::GetRealFrameFor(primaryFrame);
-}
-
-NS_IMETHODIMP
-PresShell::GetLayoutObjectFor(nsIContent*   aContent,
-                              nsISupports** aResult) const 
-{
-  nsresult result = NS_ERROR_NULL_POINTER;
-  if ((nsnull!=aResult) && (nsnull!=aContent))
-  {
-    *aResult = nsnull;
-    nsIFrame *primaryFrame = GetPrimaryFrameFor(aContent);
-    if (primaryFrame)
-    {
-      result = primaryFrame->QueryInterface(NS_GET_IID(nsISupports),
-                                            (void**)aResult);
-    }
-  }
-  return result;
 }
 
 NS_IMETHODIMP
