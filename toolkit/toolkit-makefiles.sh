@@ -101,7 +101,6 @@ MAKEFILES_gfx="
   gfx/public/Makefile
   gfx/src/Makefile
   gfx/src/psshared/Makefile
-  gfx/src/photon/Makefile
   gfx/src/thebes/Makefile
   gfx/tests/Makefile
 "
