@@ -556,9 +556,7 @@ LivemarkLoadListener.prototype = {
       if (!href)
         continue;
 
-      let title = entry.title ? entry.title.plainText() : entry.updated;
-      if (!title)
-        continue;
+      let title = entry.title ? entry.title.plainText() : "";
 
       try {
         secMan.checkLoadURIWithPrincipal(feedPrincipal, href, SEC_FLAGS);
