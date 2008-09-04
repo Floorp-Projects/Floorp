@@ -885,6 +885,9 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
   nsPresContext* presContext = PresContext();
   nsIFrame* rootFrame = presContext->PresShell()->FrameManager()->GetRootFrame();
+  NS_ASSERTION(rootFrame->GetView() && GetView() &&
+               rootFrame->GetView() == GetView()->GetParent(),
+               "rootFrame's view is not our view's parent???");
 
   // if the frame is not specified, use the anchor node passed to ShowPopup. If
   // that wasn't specified either, use the root frame. Note that mAnchorContent
@@ -1237,11 +1240,9 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   presContext->GetViewManager()->MoveViewTo(GetView(), xpos, ypos); 
 
   // Now that we've positioned the view, sync up the frame's origin.
-  nsPoint frameOrigin = GetPosition();
-  nsPoint offsetToView;
-  GetOriginToViewOffset(offsetToView, nsnull);
-  frameOrigin -= offsetToView;
-  nsBoxFrame::SetPosition(frameOrigin);
+  // Note that (xpos,ypos) is the position relative to rootFrame.
+  nsBoxFrame::SetPosition(nsPoint(xpos, ypos) -
+                          GetParent()->GetOffsetTo(rootFrame));
 
   if (sizedToPopup) {
     nsBoxLayoutState state(PresContext());

@@ -99,6 +99,15 @@ function doDragStartSelection(event)
   is(event.bubbles, true, "dragstart event bubbles");
   is(event.cancelable, true, "dragstart event cancelable");
 
+  is(event.clientX, 14, "dragstart clientX");
+  is(event.clientY, 14, "dragstart clientY");
+  ok(event.screenX > 0, "dragstart screenX");
+  ok(event.screenY > 0, "dragstart screenY");
+  is(event.layerX, 14, "dragstart layerX");
+  is(event.layerY, 14, "dragstart layerY");
+  is(event.pageX, 14, "dragstart pageX");
+  is(event.pageY, 14, "dragstart pageY");
+
   var dt = event.dataTransfer;
   ok(dt instanceof DataTransfer, "dataTransfer is DataTransfer");
   gDataTransfer = dt;
