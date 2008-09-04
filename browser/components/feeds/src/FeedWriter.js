@@ -1296,14 +1296,14 @@ FeedWriter.prototype = {
     else {
       switch (selectedItem.id) {
         case "selectedAppMenuItem":
-          prefs.setCharPref(getPrefReaderForType(feedType), "client");
           prefs.setComplexValue(getPrefAppForType(feedType), Ci.nsILocalFile, 
                                 this._selectedApp);
+          prefs.setCharPref(getPrefReaderForType(feedType), "client");
           break;
         case "defaultHandlerMenuItem":
-          prefs.setCharPref(getPrefReaderForType(feedType), "client");
           prefs.setComplexValue(getPrefAppForType(feedType), Ci.nsILocalFile, 
                                 this._defaultSystemReader);
+          prefs.setCharPref(getPrefReaderForType(feedType), "client");
           break;
         case "liveBookmarksMenuItem":
           defaultHandler = "bookmarks";
