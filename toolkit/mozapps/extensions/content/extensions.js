@@ -1706,8 +1706,10 @@ var gUpdateContextMenus = ["menuitem_homepage", "menuitem_about", "menuseparator
                            "menuitem_installUpdate", "menuitem_includeUpdate"];
 // For Firefox don't display context menuitems that can open a browser window.
 var gUpdateContextMenusNoBrowser = ["menuitem_installUpdate", "menuitem_includeUpdate"];
-var gInstallContextMenus = ["menuitem_homepage", "menuitem_about"];
-var gSearchContextMenus = ["menuitem_learnMore", "menuitem_installSearchResult"];
+var gInstallContextMenus = ["menuitem_homepage", "menuitem_about", "menuseparator_1",
+                            "menuitem_cancelUpgrade", "menuitem_cancelInstall"];
+var gSearchContextMenus = ["menuitem_learnMore", "menuitem_installSearchResult",
+                           "menuseparator_1", "menuitem_cancelInstall"];
 
 function buildContextMenu(aEvent)
 {
@@ -1743,29 +1745,43 @@ function buildContextMenu(aEvent)
     popup.appendChild(clonedMenu);
   }
 
-  // All views support about
-  var menuitem_about = document.getElementById("menuitem_about_clone");
-  var name = selectedItem ? selectedItem.getAttribute("name") : "";
-  menuitem_about.setAttribute("label", getExtensionString("aboutAddon", [name]));
+  // All views (but search and plugins) support about
+  if (gView != "search" && gView != "plugins") {
+    var menuitem_about = document.getElementById("menuitem_about_clone");
+    var name = selectedItem ? selectedItem.getAttribute("name") : "";
+    menuitem_about.setAttribute("label", getExtensionString("aboutAddon", [name]));
+  }
+
+  // Make sure all commands are up to date
+  gExtensionsViewController.onCommandUpdate();
+
+  // Some flags needed later
+  var canCancelInstall = gExtensionsViewController.isCommandEnabled("cmd_cancelInstall");
+  var canCancelUpgrade = gExtensionsViewController.isCommandEnabled("cmd_cancelUpgrade");
+  var canReallyEnable = gExtensionsViewController.isCommandEnabled("cmd_reallyEnable");
+  var canCancelUninstall = gExtensionsViewController.isCommandEnabled("cmd_cancelUninstall");
 
   /* When an update or install is pending allow canceling the update or install
      and don't allow uninstall. When an uninstall is pending allow canceling the
      uninstall.*/
-  if (gView != "updates" && gView != "installs") {
-    var canEnable = gExtensionsViewController.isCommandEnabled("cmd_cancelUninstall");
-    document.getElementById("menuitem_cancelUninstall_clone").hidden = !canEnable;
-    var canCancelInstall = gExtensionsViewController.isCommandEnabled("cmd_cancelInstall");
+  if (gView != "updates") {
     document.getElementById("menuitem_cancelInstall_clone").hidden = !canCancelInstall;
-    var canCancelUpgrade = gExtensionsViewController.isCommandEnabled("cmd_cancelUpgrade");
-    document.getElementById("menuitem_cancelUpgrade_clone").hidden = !canCancelUpgrade;
-    document.getElementById("menuitem_uninstall_clone").hidden = canEnable || canCancelInstall || canCancelUpgrade;
+
+    if (gView != "installs" && gView != "search") {
+      document.getElementById("menuitem_cancelUninstall_clone").hidden = !canCancelUninstall;
+      document.getElementById("menuitem_uninstall_clone").hidden = canCancelUninstall ||
+                                                                   canCancelInstall ||
+                                                                   canCancelUpgrade;
+    }
+
+    if (gView != "search")
+      document.getElementById("menuitem_cancelUpgrade_clone").hidden = !canCancelUpgrade;
   }
 
   switch (gView) {
   case "extensions":
-    canEnable = gExtensionsViewController.isCommandEnabled("cmd_reallyEnable");
-    document.getElementById("menuitem_enable_clone").hidden = !canEnable;
-    document.getElementById("menuitem_disable_clone").hidden = canEnable;
+    document.getElementById("menuitem_enable_clone").hidden = !canReallyEnable;
+    document.getElementById("menuitem_disable_clone").hidden = canReallyEnable;
     document.getElementById("menuitem_useTheme_clone").hidden = true;
     break;
   case "themes":
@@ -1785,9 +1801,8 @@ function buildContextMenu(aEvent)
     document.getElementById("menuitem_uninstall_clone").hidden = true;
     document.getElementById("menuitem_checkUpdate_clone").hidden = true;
   case "locales":
-    canEnable = gExtensionsViewController.isCommandEnabled("cmd_reallyEnable");
-    document.getElementById("menuitem_enable_clone").hidden = !canEnable;
-    document.getElementById("menuitem_disable_clone").hidden = canEnable;
+    document.getElementById("menuitem_enable_clone").hidden = !canReallyEnable;
+    document.getElementById("menuitem_disable_clone").hidden = canReallyEnable;
     document.getElementById("menuitem_useTheme_clone").hidden = true;
     document.getElementById("menuitem_options_clone").hidden = true;
     break;
@@ -1797,6 +1812,14 @@ function buildContextMenu(aEvent)
     menuitem_includeUpdate.setAttribute("checked", includeUpdate.checked ? "true" : "false");
     break;
   case "installs":
+    // Hides the separator if nothing is below it
+    document.getElementById("menuseparator_1_clone").hidden = !canCancelInstall && !canCancelUpgrade;
+    break;
+  case "search":
+    var canInstall = gExtensionsViewController.isCommandEnabled("cmd_installSearchResult");
+    document.getElementById("menuitem_installSearchResult_clone").hidden = !canInstall;
+    // Hides the separator if nothing is below it
+    document.getElementById("menuseparator_1_clone").hidden = !canCancelInstall;
     break;
   }
 
@@ -2127,9 +2150,21 @@ function updateOptionalViews() {
       }
     }
   }
+
   document.getElementById("locales-view").hidden = !showLocales;
   document.getElementById("updates-view").hidden = !showUpdates;
   document.getElementById("installs-view").hidden = !showInstalls;
+
+  // fall back to the previously selected view or "search" since "installs" became hidden
+  if (!showInstalls && gView == "installs") {
+    var viewGroup = document.getElementById("viewGroup");
+    var lastSelectedView = "search";
+
+    if (viewGroup.hasAttribute("last-selected"))
+      lastSelectedView = viewGroup.getAttribute("last-selected");
+
+    showView(lastSelectedView);
+  }
 }
 
 function updateGlobalCommands() {
@@ -2349,7 +2384,8 @@ var gExtensionsViewController = {
     }
     switch (aCommand) {
     case "cmd_installSearchResult":
-      return true;
+      return selectedItem.getAttribute("action") == "" ||
+             selectedItem.getAttribute("action") == "failed";
     case "cmd_useTheme":
       return selectedItem.type == nsIUpdateItem.TYPE_THEME &&
              !selectedItem.isDisabled &&
@@ -2377,7 +2413,8 @@ var gExtensionsViewController = {
     case "cmd_cancelUninstall":
       return selectedItem.opType == OP_NEEDS_UNINSTALL;
     case "cmd_cancelInstall":
-      return selectedItem.opType == OP_NEEDS_INSTALL;
+      return selectedItem.getAttribute("action") == "installed" &&
+             gView == "search" || selectedItem.opType == OP_NEEDS_INSTALL;
     case "cmd_cancelUpgrade":
       return selectedItem.opType == OP_NEEDS_UPGRADE;
     case "cmd_checkUpdate":
@@ -2666,8 +2703,14 @@ var gExtensionsViewController = {
     {
       var name = aSelectedItem.getAttribute("name");
       var result = false;
+      var opType = aSelectedItem.opType;
+
+      // A search result with an action "installed" is equivalent to a pending install
+      if (aSelectedItem.getAttribute("action") == "installed" && gView == "search")
+        opType = OP_NEEDS_INSTALL;
+
       // Confirm cancelling the operation
-      switch (aSelectedItem.opType)
+      switch (opType)
       {
         case OP_NEEDS_INSTALL:
           result = confirmOperation(name, "cancelInstallTitle", "cancelInstallQueryMessage",
@@ -2683,7 +2726,7 @@ var gExtensionsViewController = {
       if (!result)
         return;
 
-      var id = getIDFromResourceURI(aSelectedItem.id);
+      var id = aSelectedItem.getAttribute("addonID");
       gExtensionManager.cancelInstallItem(id);
       if (gSearchDS) {
         // Check for a search result for this entry
