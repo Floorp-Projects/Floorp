@@ -708,6 +708,8 @@ namespace nanojit
              */
             if (value->isop(LIR_u2f) 
                 || value->isop(LIR_i2f)
+                || (value->opcode() >= LIR_fneg && value->opcode() <= LIR_fmul)
+                || value->opcode() == LIR_fdiv
                 || value->opcode() == LIR_fcall) {
                 rv = findRegFor(value, XmmRegs);
                 SSE_STQ(dr, rb, rv);
