@@ -1628,6 +1628,7 @@ nsAccessibilityService::HasUniversalAriaProperty(nsIContent *aContent,
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_grab) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_haspopup) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_invalid) ||
+         aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_live) ||
          aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_owns) ||
