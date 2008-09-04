@@ -3687,11 +3687,9 @@ TraceRecorder::record_JSOP_RETURN()
 {
     jsval& rval = stackval(-1);
     JSStackFrame *fp = cx->fp;
-    if (cx->fp->flags & JSFRAME_CONSTRUCTING) {
-        if (JSVAL_IS_PRIMITIVE(rval)) {
-            JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
-            rval_ins = get(&fp->argv[-1]);
-        }
+    if ((cx->fp->flags & JSFRAME_CONSTRUCTING) && JSVAL_IS_PRIMITIVE(rval)) {
+        JS_ASSERT(OBJECT_TO_JSVAL(fp->thisp) == fp->argv[-1]);
+        rval_ins = get(&fp->argv[-1]);
     } else {
         rval_ins = get(&rval);
     }
