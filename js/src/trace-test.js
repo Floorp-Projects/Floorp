@@ -1178,7 +1178,7 @@ testNegZero1.name = 'testNegZero1';
 testNegZero1Helper(1);
 test(testNegZero1);
 
-/* No test case, just make sure this doesn't assert. */
+// No test case, just make sure this doesn't assert. 
 function testNegZero2() {
     var z = 0;
     for (let j = 0; j < 5; ++j) { ({p: (-z)}); }

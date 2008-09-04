@@ -878,8 +878,15 @@ namespace nanojit
 			Register ra;
 
 			// if this is last use of lhs in reg, we can re-use result reg
-			if (rA == 0 || (ra = rA->reg) == UnknownReg)
+			if (rA == 0 || (ra = rA->reg) == UnknownReg) {
 				ra = findSpecificRegFor(lhs, rr);
+			} else if ((rmask(ra) & XmmRegs) == 0) {
+				/* We need this case on AMD64, because it's possible that 
+				 * an earlier instruction has done a quadword load and reserved a 
+				 * GPR.  If so, ask for a new register.
+				 */
+				ra = findRegFor(lhs, XmmRegs);
+			}
 			// else, rA already has a register assigned.
 
 			static const AVMPLUS_ALIGN16(uint32_t) negateMask[] = {0,0x80000000,0,0};
@@ -975,8 +982,15 @@ namespace nanojit
 			Register ra;
 
 			// if this is last use of lhs in reg, we can re-use result reg
-			if (rA == 0 || (ra = rA->reg) == UnknownReg)
+			if (rA == 0 || (ra = rA->reg) == UnknownReg) {
 				ra = findSpecificRegFor(lhs, rr);
+			} else if ((rmask(ra) & XmmRegs) == 0) {
+				/* We need this case on AMD64, because it's possible that 
+				 * an earlier instruction has done a quadword load and reserved a 
+				 * GPR.  If so, ask for a new register.
+				 */
+				ra = findRegFor(lhs, XmmRegs);
+			}
 			// else, rA already has a register assigned.
 
 			if (lhs == rhs)
