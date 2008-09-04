@@ -224,7 +224,19 @@ nsXFormsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 NS_IMETHODIMP
 nsXFormsAccessible::GetName(nsAString& aName)
 {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;   // Node shut down
+  }
+
+  // Check for ARIA label property
   nsAutoString name;
+  if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label, name)) {
+    aName = name;
+    return NS_OK;
+  }
+
+  // Check for ARIA labelledby relationship property
   nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_labelledby, name);
   if (NS_SUCCEEDED(rv) && !name.IsEmpty()) {
     aName = name;
