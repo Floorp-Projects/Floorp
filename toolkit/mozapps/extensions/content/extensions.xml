@@ -815,19 +815,29 @@
 
   <binding id="install" extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
     <content>
-      <xul:hbox flex="1">
-        <xul:vbox>
-          <xul:stack class="addonIcon-stack">
-            <xul:vbox pack="start" align="start">
-              <xul:image class="addonIcon" xbl:inherits="src=iconURL"/>
-            </xul:vbox>
-          </xul:stack>
-        </xul:vbox>
-        <xul:vbox flex="1">
-          <xul:hbox class="addon-name-version" xbl:inherits="name, version=newVersion"/>
-          <xul:hbox class="addon-install-status" xbl:inherits="state"/>
-        </xul:vbox>
-      </xul:hbox>
+      <xul:vbox flex="1">
+        <xul:hbox flex="1">
+          <xul:vbox>
+            <xul:stack class="addonIcon-stack">
+              <xul:vbox pack="start" align="start">
+                <xul:image class="addonIcon" xbl:inherits="src=iconURL"/>
+              </xul:vbox>
+            </xul:stack>
+          </xul:vbox>
+          <xul:vbox flex="1">
+            <xul:hbox class="addon-name-version" xbl:inherits="name, version=newVersion"/>
+            <xul:hbox class="addon-install-status" xbl:inherits="state"/>
+          </xul:vbox>
+        </xul:hbox>
+        <xul:hbox flex="1" pack="end">
+          <xul:button class="upgradeShow cancelUpgradeButton" label="&cancelUpgrade.label;"
+                  accesskey="&cancelUpgrade.accesskey;" tooltiptext="&cmd.cancelUpgrade.tooltip;"
+                  command="cmd_cancelUpgrade"/>
+          <xul:button class="installShow cancelInstallButton" label="&cancelInstall.label;"
+                  accesskey="&cancelInstall.accesskey;" tooltiptext="&cmd.cancelInstall.tooltip;"
+                  command="cmd_cancelInstall"/>
+        </xul:hbox>
+      </xul:vbox>
     </content>
   </binding>
 
