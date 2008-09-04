@@ -272,16 +272,6 @@ nsXULDocument::~nsXULDocument()
         if (mDocumentURI)
             nsXULPrototypeCache::GetInstance()->RemoveFromFastLoadSet(mDocumentURI);
     }
-
-    // The destructor of nsDocument will delete references to style
-    // sheets, but we don't want that if we're a popup document, so
-    // then we'll clear the stylesheets array here to prevent that
-    // from happening.
-    if (mIsPopup) {
-        mStyleSheets.Clear();
-        mStyleAttrStyleSheet = nsnull;
-        mAttrStyleSheet = nsnull;
-    }
 }
 
 nsresult
