@@ -62,6 +62,7 @@
 #include "nsNavHistory.h"
 #include "nsNetUtil.h"
 #include "nsEscape.h"
+#include "nsThreadUtils.h"
 
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
@@ -484,6 +485,7 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   // not reusing results, see bug #412730 for details
 
   NS_ENSURE_ARG_POINTER(aListener);
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
   // Lazily init nsITextToSubURI service
   if (!mTextURIService)
@@ -627,6 +629,8 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
 NS_IMETHODIMP
 nsNavHistory::StopSearch()
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   if (mAutoCompleteTimer)
     mAutoCompleteTimer->Cancel();
 
@@ -987,6 +991,8 @@ NS_IMETHODIMP
 nsNavHistory::OnValueRemoved(nsIAutoCompleteSimpleResult* aResult,
                              const nsAString& aValue, PRBool aRemoveFromDb)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   if (!aRemoveFromDb)
     return NS_OK;
 
