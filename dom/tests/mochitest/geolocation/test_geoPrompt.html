@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for geolocation prompt </title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function testPrompt() {
+  removePrompt();
+  SimpleTest.finish();
+}
+
+/** Test for Bug  **/
+
+SimpleTest.waitForExplicitFinish();
+
+DELAYED_PROMPT = 1;
+
+attachPrompt();
+
+ok(navigator.geolocation, "Ensure that the geolocation object is present");
+
+promptOption = ACCEPT;
+
+// try get current
+navigator.geolocation.getCurrentPosition(success_callback, null, null);
+
+// try watch position
+navigator.geolocation.watchPosition(success_callback, null, null);
+
+// wait for position change
+setTimeout(testPrompt, timeout);
+
+</script>
+</pre>
+</body>
+</html>
+
