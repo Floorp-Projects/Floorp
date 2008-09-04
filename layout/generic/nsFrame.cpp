@@ -1913,9 +1913,10 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
         // If the user clicked inside a selection, then just
         // return without doing anything. We will handle placing
         // the caret later on when the mouse is released. We ignore
-        // the spellcheck selection.
+        // the spellcheck and find selections.
         //
         if (curDetail->mType != nsISelectionController::SELECTION_SPELLCHECK &&
+            curDetail->mType != nsISelectionController::SELECTION_FIND &&
             curDetail->mStart <= offsets.StartOffset() &&
             offsets.EndOffset() <= curDetail->mEnd)
         {
