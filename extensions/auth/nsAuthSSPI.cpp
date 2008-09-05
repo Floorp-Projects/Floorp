@@ -70,10 +70,10 @@
 
 //-----------------------------------------------------------------------------
 
-static const char *const pTypeName [] = {
-    "Kerberos",
-    "Negotiate",
-    "NTLM"
+static const PRUnichar *const pTypeName [] = {
+    L"Kerberos",
+    L"Negotiate",
+    L"NTLM"
 };
 
 #ifdef DEBUG
@@ -269,14 +269,14 @@ nsAuthSSPI::Init(const char *serviceName,
     TimeStamp useBefore;
 
     rc = (sspi->AcquireCredentialsHandleW)(NULL,
-                                          package,
-                                          SECPKG_CRED_OUTBOUND,
-                                          NULL,
-                                          NULL,
-                                          NULL,
-                                          NULL,
-                                          &mCred,
-                                          &useBefore);
+                                           package,
+                                           SECPKG_CRED_OUTBOUND,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &mCred,
+                                           &useBefore);
     if (rc != SEC_E_OK)
         return NS_ERROR_UNEXPECTED;
 
@@ -336,24 +336,26 @@ nsAuthSSPI::GetNextToken(const void *inToken,
     if (!ob.pvBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
     memset(ob.pvBuffer, 0, ob.cbBuffer);
+
+    NS_ConvertUTF8toUTF16 wSN(mServiceName);
     SEC_WCHAR *sn;
     if (mPackage == PACKAGE_TYPE_NTLM)
         sn = NULL;
     else
-        sn = (SEC_WCHAR *) mServiceName.get();
+        sn = (SEC_WCHAR *) wSN.get();
 
     rc = (sspi->InitializeSecurityContextW)(&mCred,
-                                           ctxIn,
-                                           sn,
-                                           ctxReq,
-                                           0,
-                                           SECURITY_NATIVE_DREP,
-                                           inToken ? &ibd : NULL,
-                                           0,
-                                           &mCtxt,
-                                           &obd,
-                                           &ctxAttr,
-                                           &ignored);
+                                            ctxIn,
+                                            sn,
+                                            ctxReq,
+                                            0,
+                                            SECURITY_NATIVE_DREP,
+                                            inToken ? &ibd : NULL,
+                                            0,
+                                            &mCtxt,
+                                            &obd,
+                                            &ctxAttr,
+                                            &ignored);
     if (rc == SEC_I_CONTINUE_NEEDED || rc == SEC_E_OK) {
         if (!ob.cbBuffer) {
             nsMemory::Free(ob.pvBuffer);
