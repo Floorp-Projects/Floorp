@@ -181,7 +181,11 @@ namespace nanojit
         struct sti_type
         {
 			LOpcode			code:8;
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+			signed int      disp:8;     // Sun Studio requires explicitly declaring signed int bit-field
+#else
 			int32_t	    	disp:8;
+#endif
 			uint32_t		oprnd_1:8;  // 256 ins window and since they only point backwards this is sufficient.
 			uint32_t		oprnd_2:8;  
         };
@@ -199,7 +203,11 @@ namespace nanojit
         struct t_type
         {
             LOpcode         code:8;
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+            signed int      imm24:24;
+#else
             int32_t         imm24:24;
+#endif
         };
 
 		// imm16 form
@@ -207,7 +215,11 @@ namespace nanojit
 		{
 			LOpcode			code:8;
 			uint32_t		resv:8;  // cobberred during assembly
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+			signed int		imm16:16;
+#else
 			int32_t			imm16:16;
+#endif
 		};
 
 		// overlay used during code generation ( note that last byte is reserved for allocation )
