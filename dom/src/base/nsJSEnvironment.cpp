@@ -3768,7 +3768,11 @@ nsJSRuntime::Init()
     return NS_OK;
   }
 
-  nsresult rv = CallGetService(kJSRuntimeServiceContractID, &sRuntimeService);
+  nsresult rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+                               &sSecurityManager);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CallGetService(kJSRuntimeServiceContractID, &sRuntimeService);
   // get the JSRuntime from the runtime svc, if possible
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3784,12 +3788,10 @@ nsJSRuntime::Init()
   // Save the old GC callback to chain to it, for GC-observing generality.
   gOldJSGCCallback = ::JS_SetGCCallbackRT(sRuntime, DOMGCCallback);
 
-  // No chaining to a pre-existing callback here, we own this problem space.
-#ifdef NS_DEBUG
-  JSObjectPrincipalsFinder oldfop =
-#endif
-    ::JS_SetObjectPrincipalsFinder(sRuntime, ObjectPrincipalFinder);
-  NS_ASSERTION(!oldfop, " fighting over the findObjectPrincipals callback!");
+  JSSecurityCallbacks *callbacks = JS_GetRuntimeSecurityCallbacks(sRuntime);
+  NS_ASSERTION(callbacks, "SecMan should have set security callbacks!");
+
+  callbacks->findObjectPrincipals = ObjectPrincipalFinder;
 
   // Set these global xpconnect options...
   nsContentUtils::RegisterPrefCallback("dom.max_script_run_time",
@@ -3822,9 +3824,7 @@ nsJSRuntime::Init()
   NS_ENSURE_TRUE(ccMemPressureObserver, NS_ERROR_OUT_OF_MEMORY);
   obs->AddObserver(ccMemPressureObserver, "memory-pressure", PR_FALSE);
 
-  rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecurityManager);
-
-  sIsInitialized = NS_SUCCEEDED(rv);
+  sIsInitialized = PR_TRUE;
 
   return rv;
 }
@@ -3868,12 +3868,12 @@ void nsJSRuntime::ShutDown()
     // alive, release the JS runtime service and the security manager.
 
     if (sRuntimeService && sSecurityManager) {
-      // No chaining to a pre-existing callback here, we own this problem space.
-#ifdef NS_DEBUG
-      JSObjectPrincipalsFinder oldfop =
-#endif
-        ::JS_SetObjectPrincipalsFinder(sRuntime, nsnull);
-      NS_ASSERTION(oldfop == ObjectPrincipalFinder, " fighting over the findObjectPrincipals callback!");
+      JSSecurityCallbacks *callbacks = JS_GetRuntimeSecurityCallbacks(sRuntime);
+      if (callbacks) {
+        NS_ASSERTION(callbacks->findObjectPrincipals == ObjectPrincipalFinder,
+                     "Fighting over the findObjectPrincipals callback!");
+        callbacks->findObjectPrincipals = NULL;
+      }
     }
     NS_IF_RELEASE(sRuntimeService);
     NS_IF_RELEASE(sSecurityManager);
