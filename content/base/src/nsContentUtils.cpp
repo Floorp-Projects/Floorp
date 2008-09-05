@@ -212,6 +212,8 @@ PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
 nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
 JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
 
+PRUint32 nsMutationGuard::sMutationCount = 0;
+
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
 static PLDHashTable sEventListenerManagersHash;
