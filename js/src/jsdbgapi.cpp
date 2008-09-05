@@ -1007,12 +1007,13 @@ JS_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSPrincipals *)
 JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
 {
-    if (fp->fun) {
-        JSRuntime *rt = cx->runtime;
+    JSSecurityCallbacks *callbacks;
 
-        if (rt->findObjectPrincipals) {
+    if (fp->fun) {
+        callbacks = JS_GetSecurityCallbacks(cx);
+        if (callbacks && callbacks->findObjectPrincipals) {
             if (FUN_OBJECT(fp->fun) != fp->callee)
-                return rt->findObjectPrincipals(cx, fp->callee);
+                return callbacks->findObjectPrincipals(cx, fp->callee);
             /* FALL THROUGH */
         }
     }
@@ -1024,12 +1025,12 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSPrincipals *)
 JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
 {
-    JSRuntime *rt;
     JSPrincipals *principals, *callerPrincipals;
+    JSSecurityCallbacks *callbacks;
 
-    rt = cx->runtime;
-    if (rt->findObjectPrincipals) {
-        principals = rt->findObjectPrincipals(cx, fp->callee);
+    callbacks = JS_GetSecurityCallbacks(cx);
+    if (callbacks && callbacks->findObjectPrincipals) {
+        principals = callbacks->findObjectPrincipals(cx, fp->callee);
     } else {
         principals = NULL;
     }

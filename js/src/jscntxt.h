@@ -391,16 +391,10 @@ struct JSRuntime {
     uint32              debuggerMutations;
 
     /*
-     * Check property accessibility for objects of arbitrary class.  Used at
-     * present to check f.caller accessibility for any function object f.
+     * Security callbacks set on the runtime are used by each context unless
+     * an override is set on the context.
      */
-    JSCheckAccessOp     checkObjectAccess;
-
-    /* Security principals serialization support. */
-    JSPrincipalsTranscoder principalsTranscoder;
-
-    /* Optional hook to find principals for an object in this runtime. */
-    JSObjectPrincipalsFinder findObjectPrincipals;
+    JSSecurityCallbacks *securityCallbacks;
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
@@ -887,6 +881,9 @@ struct JSContext {
 
     /* Debug hooks associated with the current context. */
     JSDebugHooks        *debugHooks;
+
+    /* Security callbacks that override any defined on the runtime. */
+    JSSecurityCallbacks *securityCallbacks;
 };
 
 #ifdef JS_THREADSAFE
