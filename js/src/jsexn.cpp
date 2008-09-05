@@ -248,6 +248,7 @@ static JSBool
 InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
                JSString *filename, uintN lineno, JSErrorReport *report)
 {
+    JSSecurityCallbacks *callbacks;
     JSCheckAccessOp checkAccess;
     JSErrorReporter older;
     JSExceptionState *state;
@@ -268,7 +269,10 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
      * so we can suppress any checkAccess failures.  Such failures should stop
      * the backtrace procedure, not result in a failure of this constructor.
      */
-    checkAccess = cx->runtime->checkObjectAccess;
+    callbacks = JS_GetSecurityCallbacks(cx);
+    checkAccess = callbacks
+                  ? callbacks->checkObjectAccess
+                  : NULL;
     older = JS_SetErrorReporter(cx, NULL);
     state = JS_SaveExceptionState(cx);
 

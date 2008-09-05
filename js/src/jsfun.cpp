@@ -966,6 +966,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     jsint slot;
     JSFunction *fun;
     JSStackFrame *fp;
+    JSSecurityCallbacks *callbacks;
 
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
@@ -1040,10 +1041,13 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             *vp = OBJECT_TO_JSVAL(fp->down->callee);
         else
             *vp = JSVAL_NULL;
-        if (!JSVAL_IS_PRIMITIVE(*vp) && cx->runtime->checkObjectAccess) {
-            id = ATOM_KEY(cx->runtime->atomState.callerAtom);
-            if (!cx->runtime->checkObjectAccess(cx, obj, id, JSACC_READ, vp))
-                return JS_FALSE;
+        if (!JSVAL_IS_PRIMITIVE(*vp)) {
+            callbacks = JS_GetSecurityCallbacks(cx);
+            if (callbacks && callbacks->checkObjectAccess) {
+                id = ATOM_KEY(cx->runtime->atomState.callerAtom);
+                if (!callbacks->checkObjectAccess(cx, obj, id, JSACC_READ, vp))
+                    return JS_FALSE;
+            }
         }
         break;
 

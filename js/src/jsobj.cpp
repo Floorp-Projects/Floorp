@@ -1083,13 +1083,13 @@ JSBool
 js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
                          JSPrincipals *principals, JSAtom *caller)
 {
-    JSRuntime *rt;
+    JSSecurityCallbacks *callbacks;
     JSPrincipals *scopePrincipals;
     const char *callerstr;
 
-    rt = cx->runtime;
-    if (rt->findObjectPrincipals) {
-        scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
+    callbacks = JS_GetSecurityCallbacks(cx);
+    if (callbacks && callbacks->findObjectPrincipals) {
+        scopePrincipals = callbacks->findObjectPrincipals(cx, scopeobj);
         if (!principals || !scopePrincipals ||
             !principals->subsume(principals, scopePrincipals)) {
             callerstr = js_AtomToPrintableString(cx, caller);
@@ -1146,8 +1146,11 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop)
 {
     uint32 flags;
+#ifdef DEBUG
+    JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
+#endif
 
-    JS_ASSERT(principals || !cx->runtime->findObjectPrincipals);
+    JS_ASSERT(principals || !(callbacks  && callbacks->findObjectPrincipals));
     flags = JS_GetScriptFilenameFlags(caller->script);
     if ((flags & JSFILENAME_PROTECTED) &&
         principals &&
@@ -1370,7 +1373,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
                   void *closure)
 {
     JSObject *callable;
-    JSRuntime *rt;
+    JSSecurityCallbacks *callbacks;
     JSStackFrame *caller;
     JSPrincipals *subject, *watcher;
     JSResolvingKey key;
@@ -1381,8 +1384,8 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
 
     callable = (JSObject *) closure;
 
-    rt = cx->runtime;
-    if (rt->findObjectPrincipals) {
+    callbacks = JS_GetSecurityCallbacks(cx);
+    if (callbacks && callbacks->findObjectPrincipals) {
         /* Skip over any obj_watch_* frames between us and the real subject. */
         caller = JS_GetScriptedCaller(cx, cx->fp);
         if (caller) {
@@ -1390,7 +1393,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
              * Only call the watch handler if the watcher is allowed to watch
              * the currently executing script.
              */
-            watcher = rt->findObjectPrincipals(cx, callable);
+            watcher = callbacks->findObjectPrincipals(cx, callable);
             subject = JS_StackFramePrincipals(cx, caller);
 
             if (watcher && subject && !watcher->subsume(watcher, subject)) {
@@ -4465,6 +4468,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     JSProperty *prop;
     JSClass *clasp;
     JSScopeProperty *sprop;
+    JSSecurityCallbacks *callbacks;
     JSCheckAccessOp check;
 
     writing = (mode & JSACC_WRITE) != 0;
@@ -4532,8 +4536,10 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
      */
     clasp = OBJ_GET_CLASS(cx, pobj);
     check = clasp->checkAccess;
-    if (!check)
-        check = cx->runtime->checkObjectAccess;
+    if (!check) {
+        callbacks = JS_GetSecurityCallbacks(cx);
+        check = callbacks ? callbacks->checkObjectAccess : NULL;
+    }
     return !check || check(cx, pobj, ID_TO_VALUE(id), mode, vp);
 }
 
