@@ -274,7 +274,7 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOv
 
     flags |= stateFlags;
 
-    if ((flags & NS_FRAME_NO_MOVE_FRAME) == NS_FRAME_NO_MOVE_FRAME)
+    if (flags & NS_FRAME_NO_MOVE_FRAME)
       SetSize(nsSize(aRect.width, aRect.height));
     else
       SetRect(aRect);
