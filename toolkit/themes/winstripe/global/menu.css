@@ -75,7 +75,7 @@ menuitem.spell-suggestion {
 .menu-text,
 .menu-iconic-text {
   margin: 0px !important;
-  padding: 0px;
+  padding: 1px 0px;
   color: inherit;
 }
 
@@ -104,10 +104,8 @@ menuitem.spell-suggestion {
   -moz-margin-end: 1.35em !important;
 }
 
-.menu-iconic-left,
-.menu-right {
-  min-width:  1.45em;
-  min-height: 1.21em;
+.menu-iconic-left {
+  min-width: 1.45em;
 }
 
 .menu-iconic-icon {
@@ -118,13 +116,7 @@ menuitem.spell-suggestion {
 menu.menu-iconic > .menu-iconic-left,
 menuitem.menuitem-iconic > .menu-iconic-left {
   -moz-appearance: menuimage;
-}
-
-menu.menu-iconic > .menu-iconic-left > .menu-iconic-icon,
-menuitem.menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
-  /* reduce icon-text crowding */
-  -moz-margin-start: -1px;
-  -moz-margin-end: 1px;
+  padding-top: 2px;
 }
 
 /* ..... menu arrow box ..... */
@@ -133,6 +125,8 @@ menuitem.menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
   -moz-appearance: menuarrow;
   -moz-margin-end: -2px;
   list-style-image: none;
+  min-width: 1.28em;
+  padding-top: 1px;
 }
 
 /* ::::: menu/menuitems in menubar ::::: */
@@ -198,6 +192,15 @@ menulist > menupopup > menuitem > .menu-iconic-left,
 .menulist-menupopup > menu > .menu-iconic-left,
 menulist > menupopup > menu > .menu-iconic-left {
   display: none;
+  padding-top: 0px;
+}
+
+.menulist-menupopup > menuitem > label,
+menulist > menupopup > menuitem > label,
+.menulist-menupopup > menu > label,
+menulist > menupopup > menu > label {
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 menulist > menupopup > menuitem[_moz-menuactive="true"] {
@@ -223,6 +226,7 @@ menuitem[checked="true"] {
 menuitem[type="checkbox"] > .menu-iconic-left,
 menuitem[checked="true"] > .menu-iconic-left {
   -moz-appearance: menucheckbox;
+  padding-top: 0px;
 }
 
 menuitem[type="radio"] {
@@ -230,6 +234,7 @@ menuitem[type="radio"] {
 }
 menuitem[type="radio"] > .menu-iconic-left {
   -moz-appearance: menuradio;
+  padding-top: 0px;
 }
 
 menuitem[type="checkbox"] > .menu-iconic-left > .menu-iconic-icon,
