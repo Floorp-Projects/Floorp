@@ -281,7 +281,7 @@ pref("print.print_edge_bottom", 0);
 pref("extensions.spellcheck.inline.max-misspellings", 500);
 
 // Prefs used by libeditor. Prefs specific to seamonkey composer
-// belong in mozilla/editor/ui/composer.js
+// belong in comm-central/editor/ui/composer.js
 
 pref("editor.use_custom_colors", false);
 pref("editor.htmlWrapColumn", 72);

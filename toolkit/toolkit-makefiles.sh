@@ -84,6 +84,10 @@ MAKEFILES_editor="
   editor/txtsvc/Makefile
   editor/txtsvc/public/Makefile
   editor/txtsvc/src/Makefile
+  editor/composer/Makefile
+  editor/composer/public/Makefile
+  editor/composer/src/Makefile
+  editor/composer/test/Makefile
 "
 
 MAKEFILES_expat="
@@ -814,14 +818,6 @@ add_makefiles "
 #
 # Conditional makefiles
 #
-
-if [ "$MOZ_COMPOSER" ]; then
-  add_makefiles "
-    editor/composer/Makefile
-    editor/ui/Makefile
-    editor/ui/locales/Makefile
-  "
-fi
 
 if [ "$MOZ_ZIPWRITER" ]; then
   add_makefiles "

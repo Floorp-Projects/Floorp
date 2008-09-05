@@ -42,6 +42,22 @@
 #include "nsILocalFileMac.h"
 #include "nsIURI.h"
 
+// We override this to make sure app bundles display their pretty name (without .app suffix)
+NS_IMETHODIMP nsLocalHandlerAppMac::GetName(nsAString& aName)
+{
+  if (mExecutable) {
+    nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(mExecutable);
+    if (macFile) {
+      PRBool isPackage;
+      (void)macFile->IsPackage(&isPackage);
+      if (isPackage)
+        return macFile->GetBundleDisplayName(aName);
+    }
+  }
+
+  return nsLocalHandlerApp::GetName(aName);
+}
+
 /** 
  * mostly copy/pasted from nsMacShellService.cpp (which is in browser/,
  * so we can't depend on it here).  This code probably really wants to live

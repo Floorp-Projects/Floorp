@@ -2796,14 +2796,16 @@ TraceRecorder::ifop()
         jsdpun u;
         u.d = 0;
         LIns* v_ins = get(&v);
+
         // Only insert the guard if the condition is not constant, since in 
         // that case at runtime we would always take the same path as the
         // interpreter is taking right now and hence there is no need for
         // a guard.        
-        if (!v_ins->isconst() && !v_ins->isconstq())
+        if (!v_ins->isconst() && !v_ins->isconstq()) {
             guard(d == 0 || JSDOUBLE_IS_NaN(d),
                   lir->ins2(LIR_feq, v_ins, lir->insImmq(u.u64)),
                   BRANCH_EXIT);
+        }
     } else if (JSVAL_IS_STRING(v)) {
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
               lir->ins_eq0(lir->ins2(LIR_piand,
@@ -3978,8 +3980,7 @@ TraceRecorder::record_JSOP_NEW()
         LIns* args[] = { get(&fval), cx_ins };
         LIns* tv_ins = lir->insCall(F_FastNewObject, args);
         guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
-        jsval& tv = stackval(0 - (1 + argc));
-        set(&tv, tv_ins);
+        set(&tval, tv_ins);
         return interpretedFunctionCall(fval, fun, argc);
     }
 
