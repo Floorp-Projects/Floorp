@@ -264,7 +264,8 @@ nsLayoutUtils::IsGeneratedContentFor(nsIContent* aContent,
 
 // static
 nsIFrame*
-nsLayoutUtils::GetCrossDocParentFrame(nsIFrame* aFrame)
+nsLayoutUtils::GetCrossDocParentFrame(const nsIFrame* aFrame,
+                                      nsPoint* aExtraOffset)
 {
   nsIFrame* p = aFrame->GetParent();
   if (p)
@@ -276,6 +277,9 @@ nsLayoutUtils::GetCrossDocParentFrame(nsIFrame* aFrame)
   v = v->GetParent(); // anonymous inner view
   if (!v)
     return nsnull;
+  if (aExtraOffset) {
+    *aExtraOffset += v->GetPosition();
+  }
   v = v->GetParent(); // subdocumentframe's view
   if (!v)
     return nsnull;

@@ -128,7 +128,7 @@ BUILTINS_OPTIMIZER = -O2 -GL
 LDFLAGS    += -LTCG
 else
 OPTIMIZER  = -Os -fno-exceptions -fno-rtti -fstrict-aliasing -Wall -Wstrict-aliasing=2
-BUILTINS_OPTIMIZER = -O9 -fstrict-aliasing
+BUILTINS_OPTIMIZER = -O9 -fstrict-aliasing -fno-exceptions -fno-rtti
 INTERP_OPTIMIZER = -O3 -fstrict-aliasing -fno-exceptions -fno-rtti
 endif
 DEFINES    += -UDEBUG -DNDEBUG -UDEBUG_$(USER)

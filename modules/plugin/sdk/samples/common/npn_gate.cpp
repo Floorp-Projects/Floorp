@@ -35,11 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-////////////////////////////////////////////////////////////
-//
 // Implementation of Netscape entry points (NPN_*)
-//
+
 #include "npplat.h"
 
 extern NPNetscapeFuncs NPNFuncs;
@@ -57,7 +54,7 @@ NPError NPN_GetURLNotify(NPP instance, const char *url, const char *target, void
 	int navMinorVers = NPNFuncs.version & 0xFF;
   NPError rv = NPERR_NO_ERROR;
 
-  if( navMinorVers >= NPVERS_HAS_NOTIFICATION )
+  if (navMinorVers >= NPVERS_HAS_NOTIFICATION)
 		rv = CallNPN_GetURLNotifyProc(NPNFuncs.geturlnotify, instance, url, target, notifyData);
 	else
 		rv = NPERR_INCOMPATIBLE_VERSION_ERROR;
@@ -67,8 +64,7 @@ NPError NPN_GetURLNotify(NPP instance, const char *url, const char *target, void
 
 NPError NPN_GetURL(NPP instance, const char *url, const char *target)
 {
-  NPError rv = CallNPN_GetURLProc(NPNFuncs.geturl, instance, url, target);
-  return rv;
+  return CallNPN_GetURLProc(NPNFuncs.geturl, instance, url, target);
 }
 
 NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uint32 len, const char* buf, NPBool file, void* notifyData)
@@ -76,7 +72,7 @@ NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uin
 	int navMinorVers = NPNFuncs.version & 0xFF;
   NPError rv = NPERR_NO_ERROR;
 
-	if( navMinorVers >= NPVERS_HAS_NOTIFICATION )
+	if (navMinorVers >= NPVERS_HAS_NOTIFICATION)
 		rv = CallNPN_PostURLNotifyProc(NPNFuncs.posturlnotify, instance, url, window, len, buf, file, notifyData);
 	else
 		rv = NPERR_INCOMPATIBLE_VERSION_ERROR;
@@ -86,14 +82,12 @@ NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uin
 
 NPError NPN_PostURL(NPP instance, const char* url, const char* window, uint32 len, const char* buf, NPBool file)
 {
-  NPError rv = CallNPN_PostURLProc(NPNFuncs.posturl, instance, url, window, len, buf, file);
-  return rv;
+  return CallNPN_PostURLProc(NPNFuncs.posturl, instance, url, window, len, buf, file);
 } 
 
 NPError NPN_RequestRead(NPStream* stream, NPByteRange* rangeList)
 {
-  NPError rv = CallNPN_RequestReadProc(NPNFuncs.requestread, stream, rangeList);
-  return rv;
+  return CallNPN_RequestReadProc(NPNFuncs.requestread, stream, rangeList);
 }
 
 NPError NPN_NewStream(NPP instance, NPMIMEType type, const char* target, NPStream** stream)
@@ -102,7 +96,7 @@ NPError NPN_NewStream(NPP instance, NPMIMEType type, const char* target, NPStrea
 
   NPError rv = NPERR_NO_ERROR;
 
-	if( navMinorVersion >= NPVERS_HAS_STREAMOUTPUT )
+	if (navMinorVersion >= NPVERS_HAS_STREAMOUTPUT)
 		rv = CallNPN_NewStreamProc(NPNFuncs.newstream, instance, type, target, stream);
 	else
 		rv = NPERR_INCOMPATIBLE_VERSION_ERROR;
@@ -115,7 +109,7 @@ int32 NPN_Write(NPP instance, NPStream *stream, int32 len, void *buffer)
 	int navMinorVersion = NPNFuncs.version & 0xFF;
   int32 rv = 0;
 
-  if( navMinorVersion >= NPVERS_HAS_STREAMOUTPUT )
+  if (navMinorVersion >= NPVERS_HAS_STREAMOUTPUT)
 		rv = CallNPN_WriteProc(NPNFuncs.write, instance, stream, len, buffer);
 	else
 		rv = -1;
@@ -128,7 +122,7 @@ NPError NPN_DestroyStream(NPP instance, NPStream* stream, NPError reason)
 	int navMinorVersion = NPNFuncs.version & 0xFF;
   NPError rv = NPERR_NO_ERROR;
 
-  if( navMinorVersion >= NPVERS_HAS_STREAMOUTPUT )
+  if (navMinorVersion >= NPVERS_HAS_STREAMOUTPUT)
 		rv = CallNPN_DestroyStreamProc(NPNFuncs.destroystream, instance, stream, reason);
 	else
 		rv = NPERR_INCOMPATIBLE_VERSION_ERROR;
@@ -143,16 +137,12 @@ void NPN_Status(NPP instance, const char *message)
 
 const char* NPN_UserAgent(NPP instance)
 {
-  const char * rv = NULL;
-  rv = CallNPN_UserAgentProc(NPNFuncs.uagent, instance);
-  return rv;
+  return CallNPN_UserAgentProc(NPNFuncs.uagent, instance);
 }
 
 void* NPN_MemAlloc(uint32 size)
 {
-  void * rv = NULL;
-  rv = CallNPN_MemAllocProc(NPNFuncs.memalloc, size);
-  return rv;
+  return CallNPN_MemAllocProc(NPNFuncs.memalloc, size);
 }
 
 void NPN_MemFree(void* ptr)
@@ -162,8 +152,7 @@ void NPN_MemFree(void* ptr)
 
 uint32 NPN_MemFlush(uint32 size)
 {
-  uint32 rv = CallNPN_MemFlushProc(NPNFuncs.memflush, size);
-  return rv;
+  return CallNPN_MemFlushProc(NPNFuncs.memflush, size);
 }
 
 void NPN_ReloadPlugins(NPBool reloadPages)
@@ -173,14 +162,12 @@ void NPN_ReloadPlugins(NPBool reloadPages)
 
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void *value)
 {
-  NPError rv = CallNPN_GetValueProc(NPNFuncs.getvalue, instance, variable, value);
-  return rv;
+  return CallNPN_GetValueProc(NPNFuncs.getvalue, instance, variable, value);
 }
 
 NPError NPN_SetValue(NPP instance, NPPVariable variable, void *value)
 {
-  NPError rv = CallNPN_SetValueProc(NPNFuncs.setvalue, instance, variable, value);
-  return rv;
+  return CallNPN_SetValueProc(NPNFuncs.setvalue, instance, variable, value);
 }
 
 void NPN_InvalidateRect(NPP instance, NPRect *invalidRect)
