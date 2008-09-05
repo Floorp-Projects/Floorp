@@ -908,49 +908,6 @@ nsNavHistoryExpire::ExpireAnnotationsParanoid(mozIStorageConnection* aConnection
       NS_LITERAL_CSTRING("))"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX REMOVE ME LATE AFTER FINAL
-  // Move current charset item annos to page annos.
-  // There was a period in which EXPIRE_NEVER annos were undeletable
-  // so we moved charset annos from pageAnnos to itemAnnos.
-  // Since this has been fixed in RC1, we can use pageAnnos for charset
-  // so we must revert old itemAnnos to pageAnnos.
-  // see bug 317472 for details.
-  nsCAutoString charsetAnno("URIProperties/characterSet");
-  // In the migration query we use NULL as the id, since we don't know the
-  // new id where the annotation will be inserted
-  // The GROUP BY is needed because we have a unique index on annos tables
-  // INSERT OR REPLACE is needed to overwrite existing values and not fail
-  nsCOMPtr<mozIStorageStatement> migrateCharsetStatement;
-  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "INSERT OR REPLACE INTO moz_annos "
-        "SELECT null, b.fk, t.anno_attribute_id, t.mime_type, t.content, "
-          "t.flags, t.expiration, t.type, t.dateAdded, t.lastModified "
-        "FROM moz_items_annos t "
-          "JOIN moz_anno_attributes n ON t.anno_attribute_id = n.id "
-          "JOIN moz_bookmarks b ON b.id = t.item_id "
-        "WHERE n.name = ?1 "
-        "GROUP BY b.fk, t.anno_attribute_id"),
-      getter_AddRefs(migrateCharsetStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = migrateCharsetStatement->BindUTF8StringParameter(0, charsetAnno);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = migrateCharsetStatement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // delete old charset item annos
-  nsCOMPtr<mozIStorageStatement> deleteCharsetStatement;
-  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM moz_items_annos WHERE id IN "
-      "(SELECT t.id FROM moz_items_annos t "
-        "JOIN moz_anno_attributes n ON t.anno_attribute_id = n.id "
-        "WHERE n.name = ?1)"),
-    getter_AddRefs(deleteCharsetStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = deleteCharsetStatement->BindUTF8StringParameter(0, charsetAnno);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = deleteCharsetStatement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // delete item annos w/o a corresponding item id
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DELETE FROM moz_items_annos WHERE id IN "
