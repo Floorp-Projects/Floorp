@@ -56,7 +56,7 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -775,7 +775,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
         /*
          * We simplify the source code at the price of minor dead code bloat in
-         * the ECMA version (for testing only, see jsconfig.h).  The null
+         * the ECMA version (for testing only, see jsversion.h).  The null
          * default values in gsop[j] suffice to disable non-ECMA getter and
          * setter code.
          */

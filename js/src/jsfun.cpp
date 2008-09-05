@@ -50,7 +50,7 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"

@@ -60,7 +60,7 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsemit.h"
 #include "jsexn.h"
 #include "jsnum.h"
