@@ -698,10 +698,10 @@ protected:
   void AddSearchToken(nsAutoString &aToken);
   void ProcessTokensForSpecialSearch();
 
+#ifdef MOZ_XUL
   nsresult AutoCompleteFeedback(PRInt32 aIndex,
                                 nsIAutoCompleteController *aController);
 
-#ifdef MOZ_XUL
   nsCOMPtr<nsIAutoCompleteObserver> mCurrentListener;
   nsCOMPtr<nsIAutoCompleteSimpleResult> mCurrentResult;
 #endif

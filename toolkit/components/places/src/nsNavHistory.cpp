@@ -4789,6 +4789,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     observerService->RemoveObserver(this, gXpcomShutdown);
     observerService->RemoveObserver(this, gQuitApplicationMessage);
   } else if (nsCRT::strcmp(aTopic, gAutoCompleteFeedback) == 0) {
+#ifdef MOZ_XUL
     nsCOMPtr<nsIAutoCompleteInput> input = do_QueryInterface(aSubject);
     if (!input)
       return NS_OK;
@@ -4819,6 +4820,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
     rv = AutoCompleteFeedback(selectedIndex, controller);
     NS_ENSURE_SUCCESS(rv, rv);
+#endif
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
     PRInt32 oldDaysMin = mExpireDaysMin;
     PRInt32 oldDaysMax = mExpireDaysMax;
