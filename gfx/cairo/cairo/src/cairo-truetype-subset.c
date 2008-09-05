@@ -43,6 +43,8 @@
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 
+#if CAIRO_HAS_FONT_SUBSET
+
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-truetype-subset-private.h"
 
@@ -1224,8 +1226,7 @@ _cairo_truetype_reverse_cmap (cairo_scaled_font_t *scaled_font,
     range_offset = &(delta[num_segments]);
     glyph_array = &(range_offset[num_segments]);
 
-    /* search for glyph in segments
-     * with rangeOffset=0 */
+    /* search for glyph in segments with rangeOffset=0 */
     for (i = 0; i < num_segments; i++) {
 	c = index - be16_to_cpu (delta[i]);
 	if (range_offset[i] == 0 &&
@@ -1245,12 +1246,13 @@ _cairo_truetype_reverse_cmap (cairo_scaled_font_t *scaled_font,
 	    uint16_t g_id_be = cpu_to_be16 (index);
 	    int j;
 
-	    for (j = 0; j < range_size; j++) {
-		if (glyph_ids[j] == g_id_be) {
-		    *ucs4 = be16_to_cpu (start_code[i]) + j;
-		    goto found;
+	    if (range_size > 0)
+		for (j = 0; j < range_size; j++) {
+		    if (glyph_ids[j] == g_id_be) {
+			*ucs4 = be16_to_cpu (start_code[i]) + j;
+			goto found;
+		    }
 		}
-	    }
 	}
     }
 
@@ -1293,7 +1295,7 @@ _cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
     cmap = (tt_cmap_t *) buf;
     num_tables = be16_to_cpu (cmap->num_tables);
     size = 4 + num_tables*sizeof(tt_cmap_index_t);
-    cmap = malloc (size);
+    cmap = _cairo_malloc_ab_plus_c (num_tables, sizeof (tt_cmap_index_t), 4);
     if (cmap == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -1322,3 +1324,5 @@ cleanup:
 
     return status;
 }
+
+#endif /* CAIRO_HAS_FONT_SUBSET */

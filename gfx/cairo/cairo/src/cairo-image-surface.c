@@ -259,7 +259,7 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
     status = _pixman_format_from_masks (masks, &pixman_format);
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	fprintf (stderr,
-		 "Error: Cairo " PACKAGE_VERSION " does not yet support the requested image format:\n"
+		 "Error: Cairo %s does not yet support the requested image format:\n"
 		 "\tDepth: %d\n"
 		 "\tAlpha mask: 0x%08lx\n"
 		 "\tRed   mask: 0x%08lx\n"
@@ -267,6 +267,7 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 		 "\tBlue  mask: 0x%08lx\n"
 		 "Please file an enhancement request (quoting the above) at:\n"
 		 PACKAGE_BUGREPORT "\n",
+		 cairo_version_string (),
 		 masks->bpp, masks->alpha_mask,
 		 masks->red_mask, masks->green_mask, masks->blue_mask);
 
@@ -792,8 +793,9 @@ _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-_cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t filter)
+static cairo_status_t
+_cairo_image_surface_set_filter (cairo_image_surface_t *surface,
+				 cairo_filter_t filter)
 {
     pixman_filter_t pixman_filter;
 
@@ -823,7 +825,14 @@ _cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t 
 	pixman_filter = PIXMAN_FILTER_BEST;
     }
 
-    pixman_image_set_filter (surface->pixman_image, pixman_filter, NULL, 0);
+    if (! pixman_image_set_filter (surface->pixman_image,
+				   pixman_filter,
+				   NULL, 0))
+    {
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -851,7 +860,9 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
 	break;
     }
 
-    _cairo_image_surface_set_filter (surface, attributes->filter);
+    status = _cairo_image_surface_set_filter (surface, attributes->filter);
+    if (status)
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1058,8 +1069,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     pixman_trapezoid_t		 stack_traps[CAIRO_STACK_ARRAY_LENGTH (pixman_trapezoid_t)];
     pixman_trapezoid_t		*pixman_traps = stack_traps;
     int				 mask_stride;
-    int				 mask_bpp;
-    int				 ret, i;
+    int				 i;
 
     if (height == 0 || width == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1123,18 +1133,14 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     switch (antialias) {
     case CAIRO_ANTIALIAS_NONE:
 	format = PIXMAN_a1;
-	ret = 1;
 	mask_stride = ((width + 31) / 8) & ~0x03;
-	mask_bpp = 1;
 	break;
     case CAIRO_ANTIALIAS_GRAY:
     case CAIRO_ANTIALIAS_SUBPIXEL:
     case CAIRO_ANTIALIAS_DEFAULT:
     default:
 	format = PIXMAN_a8;
-	ret = 1;
 	mask_stride = (width + 3) & ~3;
-	mask_bpp = 8;
 	break;
     }
 

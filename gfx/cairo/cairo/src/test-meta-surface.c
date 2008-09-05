@@ -260,7 +260,7 @@ _test_meta_surface_has_show_text_glyphs (void *abstract_surface)
 {
     test_meta_surface_t *surface = abstract_surface;
 
-    return _cairo_surface_has_show_text_glyphs (surface->meta);
+    return cairo_surface_has_show_text_glyphs (surface->meta);
 }
 
 static cairo_int_status_t

@@ -23,6 +23,7 @@
 #define CAIRO_FREELIST_H
 
 #include "cairo-types-private.h"
+#include "cairo-compiler-private.h"
 
 /* Opaque implementation types. */
 typedef struct _cairo_freelist cairo_freelist_t;
