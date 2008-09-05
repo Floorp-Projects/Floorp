@@ -76,6 +76,8 @@ struct nsLookAndFeelFloatPref
 
 #define COLOR_CACHE_SIZE   (CACHE_BLOCK(nsILookAndFeel::eColor_LAST_COLOR) + 1)
 #define IS_COLOR_CACHED(x) (CACHE_BIT(x) & nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)])
+#define CLEAR_COLOR_CACHE(x) nsXPLookAndFeel::sCachedColors[(x)] =0; \
+              nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)] &= ~(CACHE_BIT(x));
 #define CACHE_COLOR(x, y)  nsXPLookAndFeel::sCachedColors[(x)] = y; \
               nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)] |= CACHE_BIT(x);
 
