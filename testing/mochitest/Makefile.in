@@ -133,5 +133,8 @@ GARBAGE += runtests.py automation.py
 libs:: $(_SERV_FILES)
 	$(INSTALL) $^ $(_DEST_DIR)
 
+#XXX: need to fix bug 447642
+ifdef ENABLE_TESTS
 libs::
 	$(PYTHON) $(DEPTH)/_profile/pgo/genpgocert.py --gen-server
+endif
