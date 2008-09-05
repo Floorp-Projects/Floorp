@@ -6087,6 +6087,12 @@ TraceRecorder::record_JSOP_CALLPROP()
         ABORT_TRACE("callee is not an object");
     JS_ASSERT(HAS_FUNCTION_CLASS(PCVAL_TO_OBJECT(pcval)));
 
+    if (JSVAL_IS_PRIMITIVE(l)) {
+        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, PCVAL_TO_OBJECT(pcval));
+        if (!PRIMITIVE_THIS_TEST(fun, l))
+            ABORT_TRACE("callee does not accept primitive |this|");
+    }
+
     stack(-1, INS_CONSTPTR(PCVAL_TO_OBJECT(pcval)));
     return true;
 }
