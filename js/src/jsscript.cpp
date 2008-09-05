@@ -428,6 +428,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     uint32 encodeable;
     JSBool filenameWasSaved;
     jssrcnote *notes, *sn;
+    JSSecurityCallbacks *callbacks;
 
     cx = xdr->cx;
     script = *scriptp;
@@ -547,25 +548,26 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         goto error;
     }
 
+    callbacks = JS_GetSecurityCallbacks(cx);
     if (xdr->mode == JSXDR_ENCODE) {
         principals = script->principals;
-        encodeable = (cx->runtime->principalsTranscoder != NULL);
+        encodeable = callbacks && callbacks->principalsTranscoder;
         if (!JS_XDRUint32(xdr, &encodeable))
             goto error;
         if (encodeable &&
-            !cx->runtime->principalsTranscoder(xdr, &principals)) {
+            !callbacks->principalsTranscoder(xdr, &principals)) {
             goto error;
         }
     } else {
         if (!JS_XDRUint32(xdr, &encodeable))
             goto error;
         if (encodeable) {
-            if (!cx->runtime->principalsTranscoder) {
+            if (!(callbacks && callbacks->principalsTranscoder)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_CANT_DECODE_PRINCIPALS);
                 goto error;
             }
-            if (!cx->runtime->principalsTranscoder(xdr, &principals))
+            if (!callbacks->principalsTranscoder(xdr, &principals))
                 goto error;
             script->principals = principals;
         }

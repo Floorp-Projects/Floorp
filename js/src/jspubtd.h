@@ -153,6 +153,7 @@ typedef struct JSString          JSString;
 typedef struct JSXDRState        JSXDRState;
 typedef struct JSExceptionState  JSExceptionState;
 typedef struct JSLocaleCallbacks JSLocaleCallbacks;
+typedef struct JSSecurityCallbacks JSSecurityCallbacks;
 
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 

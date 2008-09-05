@@ -4136,16 +4136,6 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     return OBJ_CHECK_ACCESS(cx, obj, id, mode, vp, attrsp);
 }
 
-JS_PUBLIC_API(JSCheckAccessOp)
-JS_SetCheckObjectAccessCallback(JSRuntime *rt, JSCheckAccessOp acb)
-{
-    JSCheckAccessOp oldacb;
-
-    oldacb = rt->checkObjectAccess;
-    rt->checkObjectAccess = acb;
-    return oldacb;
-}
-
 static JSBool
 ReservedSlotIndexOK(JSContext *cx, JSObject *obj, JSClass *clasp,
                     uint32 index, uint32 limit)
@@ -4209,24 +4199,38 @@ JS_DropPrincipals(JSContext *cx, JSPrincipals *principals)
 }
 #endif
 
-JS_PUBLIC_API(JSPrincipalsTranscoder)
-JS_SetPrincipalsTranscoder(JSRuntime *rt, JSPrincipalsTranscoder px)
+JS_PUBLIC_API(JSSecurityCallbacks *)
+JS_SetRuntimeSecurityCallbacks(JSRuntime *rt, JSSecurityCallbacks *callbacks)
 {
-    JSPrincipalsTranscoder oldpx;
+    JSSecurityCallbacks *oldcallbacks;
 
-    oldpx = rt->principalsTranscoder;
-    rt->principalsTranscoder = px;
-    return oldpx;
+    oldcallbacks = rt->securityCallbacks;
+    rt->securityCallbacks = callbacks;
+    return oldcallbacks;
 }
 
-JS_PUBLIC_API(JSObjectPrincipalsFinder)
-JS_SetObjectPrincipalsFinder(JSRuntime *rt, JSObjectPrincipalsFinder fop)
+JS_PUBLIC_API(JSSecurityCallbacks *)
+JS_GetRuntimeSecurityCallbacks(JSRuntime *rt)
 {
-    JSObjectPrincipalsFinder oldfop;
+  return rt->securityCallbacks;
+}
 
-    oldfop = rt->findObjectPrincipals;
-    rt->findObjectPrincipals = fop;
-    return oldfop;
+JS_PUBLIC_API(JSSecurityCallbacks *)
+JS_SetContextSecurityCallbacks(JSContext *cx, JSSecurityCallbacks *callbacks)
+{
+    JSSecurityCallbacks *oldcallbacks;
+
+    oldcallbacks = cx->securityCallbacks;
+    cx->securityCallbacks = callbacks;
+    return oldcallbacks;
+}
+
+JS_PUBLIC_API(JSSecurityCallbacks *)
+JS_GetSecurityCallbacks(JSContext *cx)
+{
+  return cx->securityCallbacks
+         ? cx->securityCallbacks
+         : cx->runtime->securityCallbacks;
 }
 
 JS_PUBLIC_API(JSFunction *)
