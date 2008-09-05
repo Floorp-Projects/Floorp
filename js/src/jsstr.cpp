@@ -60,7 +60,7 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jslock.h"

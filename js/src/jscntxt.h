@@ -47,7 +47,7 @@
 #include "jsclist.h"
 #include "jslong.h"
 #include "jsatom.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdhash.h"
 #include "jsgc.h"
 #include "jsinterp.h"

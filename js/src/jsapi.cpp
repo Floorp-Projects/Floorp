@@ -57,7 +57,7 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdate.h"
 #include "jsdtoa.h"
 #include "jsemit.h"
