@@ -199,9 +199,9 @@
                      ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
                      ondblclick="onViewDoubleClick(event);"/>
   
-        <splitter id="themeSplitter" hidden="true" collapse="after" persist="state"/>
+        <splitter id="themeSplitter" hidden="true" collapse="none" persist="state"/>
   
-        <vbox id="themePreviewArea" hidden="true" width="220" persist="width">
+        <vbox id="themePreviewArea" hidden="true" width="220" flex="1" persist="width">
           <deck id="previewImageDeck" flex="1">
             <vbox id="noThemeSelected" pack="center" align="center">
               <label class="previewText">&previewNoThemeSelected.label;</label>

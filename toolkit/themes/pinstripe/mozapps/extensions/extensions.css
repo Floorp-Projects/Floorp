@@ -17,6 +17,10 @@
   min-width:1px;
 }
 
+#extensionsView {
+  min-width: 245px;
+}
+
 #resizerBox {
   margin-top: -12px;
   visibility: hidden;
@@ -114,6 +118,15 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
   -moz-border-left-colors: #383E48 #57606F;
   width: 4px;
   background-image: none;
+}
+
+#themePreviewArea {
+  min-width: 65px;
+  overflow: auto;
+}
+
+#previewImageDeck {
+  min-width: 220px;
 }
 
 #themePreviewArea,
