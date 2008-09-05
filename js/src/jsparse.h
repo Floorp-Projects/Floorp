@@ -43,7 +43,7 @@
 /*
  * JS parser definitions.
  */
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsscan.h"

@@ -55,7 +55,7 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdtoa.h"
 #include "jsgc.h"
 #include "jsinterp.h"

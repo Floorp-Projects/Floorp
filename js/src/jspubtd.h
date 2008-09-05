@@ -57,7 +57,7 @@ typedef jsword    jsid;
 typedef int32     jsrefcount;   /* PRInt32 if JS_THREADSAFE, see jslock.h */
 
 /*
- * Run-time version enumeration.  See jsconfig.h for compile-time counterparts
+ * Run-time version enumeration.  See jsversion.h for compile-time counterparts
  * to these values that may be selected by the JS_VERSION macro, and tested by
  * #if expressions.
  */

@@ -44,7 +44,7 @@
  */
 #include <stddef.h>
 #include <stdio.h>
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsopcode.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
