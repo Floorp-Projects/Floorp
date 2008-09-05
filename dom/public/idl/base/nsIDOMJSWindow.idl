@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(c8188620-1dd1-11b2-bc88-df8440498add)]
+[scriptable, uuid(8fcfcc79-054f-437b-965d-807d9b602d0f)]
 interface nsIDOMJSWindow : nsISupports
 {
   void                      dump(in DOMString str);
@@ -77,12 +77,6 @@ interface nsIDOMJSWindow : nsISupports
   void                      disableExternalCapture();
 
   /**
-   * The prompt method takes up to four arguments, the arguments are
-   * message, initial prompt value, title and a save password flag
-   */
-  DOMString                 prompt();
-
-  /**
    * These are the scriptable versions of nsIDOMWindowInternal::open() and
    * nsIDOMWindowInternal::openDialog() that take 3 optional arguments.  Unlike
    * the nsIDOMWindowInternal methods, these methods assume that they are
@@ -104,16 +98,4 @@ interface nsIDOMJSWindow : nsISupports
    * This property is "replaceable" in JavaScript.
    */
   readonly attribute nsIDOMWindow             frames;
-
-  /* Scriptable version of find(). See nsIDOMWindowInternal for the
-   * non-scriptable version. It takes 7 optional arguments:
-   * @param searchString: the search string
-   * @param caseSensitive: is the search case sensitive?
-   * @param backwards: should we search backwards?
-   * @param wrapAround: should wrap the search?
-   * @param wholeWord: should we search only for whole words?
-   * @param searchInFrames: should we search in all frames?
-   * @param showDialog: should we show the Find Dialog?
-   */  
-  boolean                   find();                
 };

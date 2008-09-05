@@ -104,14 +104,12 @@
 #include "nsIDOMPlugin.h"
 #include "nsIDOMMimeTypeArray.h"
 #include "nsIDOMMimeType.h"
-#include "nsIDOMNSLocation.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMJSWindow.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMHistory.h"
-#include "nsIDOMNSHistory.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMConstructor.h"
@@ -1958,7 +1956,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Location, nsIDOMLocation)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLocation)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSLocation)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
@@ -1974,7 +1971,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(PluginArray, nsIDOMPluginArray)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPluginArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSPluginArray)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MimeType, nsIDOMMimeType)
@@ -1991,7 +1987,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHistory)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
