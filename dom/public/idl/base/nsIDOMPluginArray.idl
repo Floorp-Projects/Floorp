@@ -47,12 +47,5 @@ interface nsIDOMPluginArray : nsISupports
   nsIDOMPlugin              item(in unsigned long index);
   nsIDOMPlugin              namedItem(in DOMString name);
 
-  [noscript] void           refresh(in boolean reloadDocuments);
-};
-
-
-[scriptable, uuid(ee753352-1dd1-11b2-b18d-b0b7320a28c3)]
-interface nsIDOMJSPluginArray : nsISupports
-{
-  void                      refresh();
+  void                      refresh([optional] in boolean reloadDocuments);
 };
