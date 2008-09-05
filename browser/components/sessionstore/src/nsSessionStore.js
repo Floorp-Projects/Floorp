@@ -234,6 +234,12 @@ SessionStoreService.prototype = {
     if (!this._resume_from_crash)
       this._clearDisk();
     
+    // at this point, we've as good as resumed the session, so we can
+    // clear the resume_session_once flag, if it's set
+    if (this._loadState != STATE_QUITTING &&
+        this._prefBranch.getBoolPref("sessionstore.resume_session_once"))
+      this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
+    
     // As this is called at delayedStartup, restoration must be initiated here
     this.onLoad(aWindow);
   },
