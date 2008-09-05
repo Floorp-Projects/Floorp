@@ -3225,17 +3225,21 @@ nsresult nsScriptSecurityManager::Init()
     rv = runtimeService->GetRuntime(&sRuntime);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    static JSSecurityCallbacks securityCallbacks = {
+      CheckObjectAccess,
+      NULL,
+      NULL
+    };
+
 #ifdef DEBUG
-    JSCheckAccessOp oldCallback =
+    JSSecurityCallbacks *oldcallbacks =
 #endif
-        JS_SetCheckObjectAccessCallback(sRuntime, CheckObjectAccess);
+    JS_SetRuntimeSecurityCallbacks(sRuntime, &securityCallbacks);
+    NS_ASSERTION(!oldcallbacks, "Someone else set security callbacks!");
 
     sXPConnect->GetXPCWrappedNativeJSClassInfo(&sXPCWrappedNativeJSClass,
                                                &sXPCWrappedNativeGetObjOps1,
                                                &sXPCWrappedNativeGetObjOps2);
-
-    // For now, assert that no callback was set previously
-    NS_ASSERTION(!oldCallback, "Someone already set a JS CheckObjectAccess callback");
     return NS_OK;
 }
 
@@ -3256,11 +3260,7 @@ void
 nsScriptSecurityManager::Shutdown()
 {
     if (sRuntime) {
-#ifdef DEBUG
-        JSCheckAccessOp oldCallback =
-#endif
-            JS_SetCheckObjectAccessCallback(sRuntime, nsnull);
-        NS_ASSERTION(oldCallback == CheckObjectAccess, "Oops, we just clobbered someone else, oh well.");
+        JS_SetRuntimeSecurityCallbacks(sRuntime, NULL);
         sRuntime = nsnull;
     }
     sEnabledID = JSVAL_VOID;
