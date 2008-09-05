@@ -1178,12 +1178,28 @@ testNegZero1.name = 'testNegZero1';
 testNegZero1Helper(1);
 test(testNegZero1);
 
-/* No test case, just make sure this doesn't assert. */
+// No test case, just make sure this doesn't assert. 
 function testNegZero2() {
     var z = 0;
     for (let j = 0; j < 5; ++j) { ({p: (-z)}); }
 }
 testNegZero2();
+
+function testConstSwitch() {
+    var x;
+    for (var j=0;j<5;++j) { switch(1.1) { case NaN: case 2: } x = 2; }
+    return x;
+}
+testConstSwitch.expected = 2;
+test(testConstSwitch);
+
+function testConstIf() {
+    var x;
+    for (var j=0;j<5;++j) { if (1.1 || 5) { } x = 2;}
+    return x;
+}
+testConstIf.expected = 2;
+test(testConstIf);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));

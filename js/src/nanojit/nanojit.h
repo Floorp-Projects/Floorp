@@ -73,7 +73,11 @@ namespace nanojit
 	typedef avmplus::List<LIns*,avmplus::LIST_NonGCObjects>	InsList;
 	typedef avmplus::List<char*, avmplus::LIST_GCObjects> StringList;
 
-	#if defined(_DEBUG)
+	#if defined(_MSC_VER) && _MSC_VER < 1400
+		static void NanoAssertMsgf(bool a,const char *f,...) {}
+		static void NanoAssertMsg(bool a,const char *m) {}
+		static void NanoAssert(bool a) {}
+	#elif defined(_DEBUG)
 		
 		#define __NanoAssertMsgf(a, file_, line_, f, ...)  \
 			if (!(a)) { \

@@ -1544,12 +1544,16 @@ namespace nanojit
 		}
 		else {
 			if (ref->isCall()) {
+#if !defined NANOJIT_64BIT
 				if (ref->isop(LIR_callh)) {
 					// we've presumably seen the other half already
 					ref = ref->oprnd1();
 				} else {
+#endif
 					copyName(ref, _functions[ref->fid()]._name, funccounts.add(ref->fid()));
+#if !defined NANOJIT_64BIT
 				}
+#endif
 			} else {
                 NanoAssert(ref->opcode() < sizeof(lirNames) / sizeof(lirNames[0]));
 				copyName(ref, lirNames[ref->opcode()], lircounts.add(ref->opcode()));
