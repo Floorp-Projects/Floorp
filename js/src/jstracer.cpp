@@ -3060,8 +3060,11 @@ TraceRecorder::cmp(LOpcode op, int flags)
 
         /* The interpreter fuses comparisons and the following branch,
            so we have to do that here as well. */
-        if (flags & CMP_TRY_BRANCH_AFTER_COND) 
+        if (flags & CMP_TRY_BRANCH_AFTER_COND) {
             fuseIf(cx->fp->regs->pc + 1, cond, x);
+        }
+    } else if (flags & CMP_CASE) {
+        return true;
     }
 
     /* We update the stack after the guard. This is safe since
@@ -3102,8 +3105,11 @@ TraceRecorder::equal(int flags)
 
             /* The interpreter fuses comparisons and the following branch,
                so we have to do that here as well. */
-            if (flags & CMP_TRY_BRANCH_AFTER_COND)
+            if (flags & CMP_TRY_BRANCH_AFTER_COND) {
                 fuseIf(cx->fp->regs->pc + 1, cond, x);
+            }
+        } else if (flags & CMP_CASE) {
+            return true;
         }
 
         /* We update the stack after the guard. This is safe since
@@ -3129,8 +3135,11 @@ TraceRecorder::equal(int flags)
 
             /* The interpreter fuses comparisons and the following branch,
                so we have to do that here as well. */
-            if (flags & CMP_TRY_BRANCH_AFTER_COND)
+            if (flags & CMP_TRY_BRANCH_AFTER_COND) {
                 fuseIf(cx->fp->regs->pc + 1, cond, x);
+            }
+        } else if (flags & CMP_CASE) {
+            return true;
         }
 
         /* We update the stack after the guard. This is safe since
