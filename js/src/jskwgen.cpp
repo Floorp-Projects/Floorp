@@ -46,7 +46,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-#include "jsconfig.h"
+#include "jsversion.h"
 
 const char * const keyword_list[] = {
 #define JS_KEYWORD(keyword, type, op, version) #keyword,

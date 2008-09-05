@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jsconfig.h"
+#include "jsversion.h"
 
 #if JS_HAS_SCRIPT_OBJECT
 # define SCRIPT_INIT                    js_InitScriptClass

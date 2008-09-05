@@ -51,7 +51,7 @@
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsexn.h"
 #include "jsfun.h"
