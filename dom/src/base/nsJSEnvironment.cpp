@@ -909,6 +909,11 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
     // if that didn't work, warn the user
     mem->IsLowMemory(&lowMemory);
     if (lowMemory) {
+
+      PRBool preventDialog = nsContentUtils::GetBoolPref("dom.prevent_oom_dialog", PR_FALSE);
+      if (preventDialog)
+        return JS_FALSE;
+
       nsCOMPtr<nsIPrompt> prompt = GetPromptFromContext(ctx);
       
       nsXPIDLString title, msg;
