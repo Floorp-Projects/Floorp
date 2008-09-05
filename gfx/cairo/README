@@ -7,8 +7,8 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (1.7.4-136-g5ea2555)
-  pixman (pixman-0.11.8-17-gf9d3f37)
+  cairo (1.6.4-350-g1a9809b)
+  pixman (pixman-0.11.8-7-gdb3fb5e)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
 

@@ -239,21 +239,22 @@ _cairo_cache_lookup (cairo_cache_t	  *cache,
  *
  * Remove a random entry from the cache.
  *
- * Return value: %TRUE if an entry was successfully removed.
- * %FALSE if there are no entries that can be removed.
+ * Return value: %CAIRO_STATUS_SUCCESS if an entry was successfully
+ * removed. %CAIRO_INT_STATUS_CACHE_EMPTY if there are no entries that
+ * can be removed.
  **/
-static cairo_bool_t
+static cairo_int_status_t
 _cairo_cache_remove_random (cairo_cache_t *cache)
 {
     cairo_cache_entry_t *entry;
 
     entry = _cairo_hash_table_random_entry (cache->hash_table, NULL);
     if (entry == NULL)
-	return FALSE;
+	return CAIRO_INT_STATUS_CACHE_EMPTY;
 
     _cairo_cache_remove (cache, entry);
 
-    return TRUE;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /**
@@ -268,14 +269,20 @@ _cairo_cache_remove_random (cairo_cache_t *cache)
  **/
 static void
 _cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
-				    unsigned long  additional)
+				   unsigned long  additional)
 {
+    cairo_int_status_t status;
+
     if (cache->freeze_count)
 	return;
 
     while (cache->size + additional > cache->max_size) {
-	if (! _cairo_cache_remove_random (cache))
-	    return;
+	status = _cairo_cache_remove_random (cache);
+	if (status) {
+	    if (status == CAIRO_INT_STATUS_CACHE_EMPTY)
+		return;
+	    ASSERT_NOT_REACHED;
+	}
     }
 }
 

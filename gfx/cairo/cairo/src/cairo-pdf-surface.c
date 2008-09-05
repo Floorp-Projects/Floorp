@@ -2868,7 +2868,7 @@ _cairo_pdf_surface_emit_unicode_for_glyph (cairo_pdf_surface_t	*surface,
 
     if (utf8 && *utf8) {
 	status = _cairo_utf8_to_utf16 (utf8, -1, &utf16, &utf16_len);
-	if (status)
+	if (status && status != CAIRO_STATUS_INVALID_STRING)
 	    return status;
     }
 
@@ -3444,7 +3444,7 @@ static cairo_status_t
 _cairo_pdf_emit_imagemask (cairo_image_surface_t *image,
 			     cairo_output_stream_t *stream)
 {
-    uint8_t *byte, output_byte;
+    unsigned char *byte, output_byte;
     int row, col, num_cols;
 
     /* The only image type supported by Type 3 fonts are 1-bit image
@@ -3487,6 +3487,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_pdf_resource_t *glyphs, encoding, char_procs, subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
+    cairo_matrix_t matrix;
     double *widths;
     unsigned int i;
     cairo_box_t font_bbox = {{0,0},{0,0}};
@@ -3521,9 +3522,6 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 						 NULL,
 						 surface->compress_content,
 						 NULL);
-	if (status)
-	    break;
-
 	glyphs[i] = surface->pdf_stream.self;
 	if (i == 0) {
 	    status = _cairo_type3_glyph_surface_emit_notdef_glyph (type3_surface,
@@ -3537,9 +3535,6 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 							    &bbox,
 							    &widths[i]);
 	}
-	if (status)
-	    break;
-
 	status = _cairo_pdf_surface_close_stream (surface);
 	if (status)
 	    break;
@@ -3615,6 +3610,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     }
 
     _cairo_pdf_surface_update_object (surface, subset_resource);
+    matrix = font_subset->scaled_font->scale_inverse;
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\n"
 				 "<< /Type /Font\n"
@@ -4787,8 +4783,8 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 	group->source_res = pattern_res;
 
 	if (utf8_len) {
-	    group->utf8 = malloc (utf8_len);
-	    if (group->utf8 == NULL) {
+	    group->utf8 = malloc(utf8_len);
+	    if (group->utf8) {
 		_cairo_pdf_smask_group_destroy (group);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
@@ -4808,7 +4804,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 
 	if (num_clusters) {
 	    group->clusters = _cairo_malloc_ab (num_clusters, sizeof (cairo_text_cluster_t));
-	    if (group->clusters == NULL) {
+	    if (group->clusters) {
 		_cairo_pdf_smask_group_destroy (group);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
