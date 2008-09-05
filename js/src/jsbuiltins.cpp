@@ -167,14 +167,13 @@ js_Math_ceil(jsdouble d)
     return ceil(d);
 }
 
+extern jsdouble js_NaN;
+
 jsdouble FASTCALL
 js_Math_pow(jsdouble d, jsdouble p)
 {
-#ifdef NOTYET
-    /* XXX Need to get a NaN here without parameterizing on context all the time. */
     if (!JSDOUBLE_IS_FINITE(p) && (d == 1.0 || d == -1.0))
-        return NaN;
-#endif
+        return js_NaN;
     if (p == 0)
         return 1.0;
     return pow(d, p);
@@ -350,7 +349,7 @@ js_StringToNumber(JSContext* cx, JSString* str)
          js_SkipWhiteSpace(ep, end) != end) &&
         (!js_strtointeger(cx, bp, end, &ep, 0, &d) ||
          js_SkipWhiteSpace(ep, end) != end)) {
-        return *cx->runtime->jsNaN;
+        return js_NaN;
     }
     return d;
 }
@@ -379,7 +378,7 @@ js_ParseFloat(JSContext* cx, JSString* str)
 
     JSSTRING_CHARS_AND_END(str, bp, end);
     if (!js_strtod(cx, bp, end, &ep, &d) || ep == bp)
-        return *cx->runtime->jsNaN;
+        return js_NaN;
     return d;
 }
 
@@ -393,7 +392,7 @@ js_ParseInt(JSContext* cx, JSString* str)
 
     JSSTRING_CHARS_AND_END(str, bp, end);
     if (!js_strtointeger(cx, bp, end, &ep, 0, &d) || ep == bp)
-        return *cx->runtime->jsNaN;
+        return js_NaN;
     return d;
 }
 
@@ -649,7 +648,7 @@ jsdouble FASTCALL
 js_BooleanToNumber(JSContext* cx, jsint unboxed)
 {
     if (unboxed == JSVAL_TO_BOOLEAN(JSVAL_VOID))
-        return *cx->runtime->jsNaN;
+        return js_NaN;
     return unboxed;
 }
 
