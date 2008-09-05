@@ -1786,14 +1786,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         PRBool termFuncSet = PR_FALSE;
 
         if (oldDoc == aDocument) {
-          nsCOMPtr<nsIJSContextStack> stack =
-            do_GetService(sJSStackContractID);
-
-          JSContext *cx = nsnull;
-
-          if (stack) {
-            stack->Peek(&cx);
-          }
+          JSContext *cx = nsContentUtils::GetCurrentJSContext();
 
           nsIScriptContext *callerScx;
           if (cx && (callerScx = GetScriptContextFromJSContext(cx))) {
@@ -3700,15 +3693,7 @@ nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
 static already_AddRefed<nsIDocShellTreeItem>
 GetCallerDocShellTreeItem()
 {
-  nsCOMPtr<nsIJSContextStack> stack =
-    do_GetService(sJSStackContractID);
-
-  JSContext *cx = nsnull;
-
-  if (stack) {
-    stack->Peek(&cx);
-  }
-
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
   nsIDocShellTreeItem *callerItem = nsnull;
 
   if (cx) {
@@ -4961,16 +4946,13 @@ nsGlobalWindow::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
 
   nsIURI *baseURL = 0;
 
-  nsCOMPtr<nsIJSContextStack> stack = do_GetService(sJSStackContractID);
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
   nsCOMPtr<nsIDOMWindow> contextWindow;
-  if (stack) {
-    JSContext *cx = nsnull;
-    stack->Peek(&cx);
-    if (cx) {
-      nsIScriptContext *currentCX = nsJSUtils::GetDynamicScriptContext(cx);
-      if (currentCX) {
-        contextWindow = do_QueryInterface(currentCX->GetGlobalObject());
-      }
+
+  if (cx) {
+    nsIScriptContext *currentCX = nsJSUtils::GetDynamicScriptContext(cx);
+    if (currentCX) {
+      contextWindow = do_QueryInterface(currentCX->GetGlobalObject());
     }
   }
   if (!contextWindow)
@@ -5157,16 +5139,10 @@ nsGlobalWindow::GetFrames(nsIDOMWindow** aFrames)
 nsGlobalWindow*
 nsGlobalWindow::CallerInnerWindow()
 {
-  nsAXPCNativeCallContext *ncc;
-  nsresult rv = nsContentUtils::XPConnect()->GetCurrentNativeCallContext(&ncc);
-  if (NS_FAILED(rv) || !ncc) {
-    NS_ASSERTION(ncc, "Please don't call this method from C++!");
-    return nsnull;
-  }
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+  if (!cx) {
+    NS_ERROR("Please don't call this method from C++!");
 
-  JSContext *cx = nsnull;
-  if (NS_FAILED(ncc->GetJSContext(&cx))) {
-    NS_WARNING("couldn't get JS context from native context");
     return nsnull;
   }
 

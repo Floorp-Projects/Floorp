@@ -1446,17 +1446,8 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
             nsCOMPtr<nsIXPConnectJSObjectHolder> holder =
                 do_QueryInterface(supports);
             if (holder) {
-                nsCOMPtr<nsIXPConnect> xpc =
-                    do_GetService(nsIXPConnect::GetCID(), &rv);
-                NS_ENSURE_SUCCESS(rv, rv);
-                
-                nsAXPCNativeCallContext *cc = nsnull;
-                rv = xpc->GetCurrentNativeCallContext(&cc);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                JSContext* cx;
-                rv = cc->GetJSContext(&cx);
-                NS_ENSURE_SUCCESS(rv, rv);
+                JSContext* cx = nsContentUtils::GetCurrentJSContext();
+                NS_ENSURE_TRUE(cx, NS_ERROR_NOT_AVAILABLE);
 
                 JSObject *jsobj;
                 rv = holder->GetJSObject(&jsobj);
