@@ -2268,6 +2268,66 @@ AddCharacterRangeToCharSet(RECharSet *cs, uintN c1, uintN c2)
     }
 }
 
+struct CharacterRange {
+    jschar start;
+    jschar end;
+};
+
+/*
+ * The following characters are taken from the ECMA-262 standard, section 7.2
+ * and 7.3, and the Unicode 3 standard, Table 6-1.
+ */
+static const CharacterRange WhiteSpaceRanges[] = {
+    /* TAB, LF, VT, FF, CR */
+    { 0x0009, 0x000D },
+    /* SPACE */
+    { 0x0020, 0x0020 },
+    /* NO-BREAK SPACE */
+    { 0x00A0, 0x00A0 },
+    /*
+     * EN QUAD, EM QUAD, EN SPACE, EM SPACE, THREE-PER-EM SPACE, FOUR-PER-EM
+     * SPACE, SIX-PER-EM SPACE, FIGURE SPACE, PUNCTUATION SPACE, THIN SPACE,
+     * HAIR SPACE, ZERO WIDTH SPACE
+     */
+    { 0x2000, 0x200B },
+    /* LS, PS */
+    { 0x2028, 0x2029 },
+    /* NARROW NO-BREAK SPACE */
+    { 0x202F, 0x202F },
+    /* IDEOGRAPHIC SPACE */
+    { 0x3000, 0x3000 }
+};
+
+/* ECMA-262 standard, section 15.10.2.6. */
+static const CharacterRange WordRanges[] = {
+    { jschar('0'), jschar('9') },
+    { jschar('A'), jschar('Z') },
+    { jschar('_'), jschar('_') },
+    { jschar('a'), jschar('z') }
+};
+
+static void
+AddCharacterRanges(RECharSet *charSet,
+                   const CharacterRange *range,
+                   const CharacterRange *end)
+{
+    for (; range < end; ++range)
+        AddCharacterRangeToCharSet(charSet, range->start, range->end);
+}
+
+static void
+AddInvertedCharacterRanges(RECharSet *charSet,
+                           const CharacterRange *range,
+                           const CharacterRange *end)
+{
+    uint16 previous = 0;
+    for (; range < end; ++range) {
+        AddCharacterRangeToCharSet(charSet, previous, range->start - 1);
+        previous = range->end + 1;
+    }
+    AddCharacterRangeToCharSet(charSet, previous, charSet->length);
+}
+    
 /* Compile the source of the class into a RECharSet */
 static JSBool
 ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
@@ -2411,24 +2471,20 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
                                            (jschar)charSet->length);
                 continue;
               case 's':
-                for (i = (intN)charSet->length; i >= 0; i--)
-                    if (JS_ISSPACE(i))
-                        AddCharacterToCharSet(charSet, (jschar)i);
+                AddCharacterRanges(charSet, WhiteSpaceRanges,
+                                   WhiteSpaceRanges + JS_ARRAY_LENGTH(WhiteSpaceRanges));
                 continue;
               case 'S':
-                for (i = (intN)charSet->length; i >= 0; i--)
-                    if (!JS_ISSPACE(i))
-                        AddCharacterToCharSet(charSet, (jschar)i);
+                AddInvertedCharacterRanges(charSet, WhiteSpaceRanges,
+                                           WhiteSpaceRanges + JS_ARRAY_LENGTH(WhiteSpaceRanges));
                 continue;
               case 'w':
-                for (i = (intN)charSet->length; i >= 0; i--)
-                    if (JS_ISWORD(i))
-                        AddCharacterToCharSet(charSet, (jschar)i);
+                AddCharacterRanges(charSet, WordRanges,
+                                   WordRanges + JS_ARRAY_LENGTH(WordRanges));
                 continue;
               case 'W':
-                for (i = (intN)charSet->length; i >= 0; i--)
-                    if (!JS_ISWORD(i))
-                        AddCharacterToCharSet(charSet, (jschar)i);
+                AddInvertedCharacterRanges(charSet, WordRanges,
+                                           WordRanges + JS_ARRAY_LENGTH(WordRanges));
                 continue;
               default:
                 thisCh = c;
