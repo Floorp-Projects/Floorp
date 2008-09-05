@@ -326,6 +326,11 @@ nsXPLookAndFeel::ColorPrefChanged (unsigned int index, const char *prefName)
                prefName, thecolor);
 #endif
       }
+    } else if (colorStr.IsEmpty()) {
+      // Reset to the default color, by clearing the cache
+      // to force lookup when the color is next used
+      PRInt32 id = NS_PTR_TO_INT32(index);
+      CLEAR_COLOR_CACHE(id);
     }
   }
 }
