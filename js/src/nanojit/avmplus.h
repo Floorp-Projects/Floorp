@@ -464,6 +464,10 @@ namespace avmplus
         static inline String* newString(const char* cstr) {
             return (String*)strdup(cstr);
         }
+
+        static inline void freeString(String* str) {
+            return free((char*)str);
+        }
     };
 
     class OSDep
