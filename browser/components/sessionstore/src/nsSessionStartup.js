@@ -135,10 +135,6 @@ SessionStartup.prototype = {
         this._iniString = null; // reset the state string
     }
 
-    if (this._prefBranch.getBoolPref("sessionstore.resume_session_once")) {
-      this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
-    }
-    
     if (this._sessionType != Ci.nsISessionStartup.NO_SESSION) {
       // wait for the first browser window to open
       var observerService = Cc["@mozilla.org/observer-service;1"].
@@ -165,8 +161,7 @@ SessionStartup.prototype = {
       this.init();
       break;
     case "quit-application":
-      // make sure that we don't init at this point, as that might
-      // unwantedly discard the session (cf. bug 409115)
+      // no reason for initializing at this point (cf. bug 409115)
       observerService.removeObserver(this, "final-ui-startup");
       observerService.removeObserver(this, "quit-application");
       break;
