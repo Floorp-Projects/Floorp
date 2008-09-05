@@ -764,7 +764,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   // and its view if requested
   aKidFrame->WillReflow(aPresContext);
 
-  if (NS_FRAME_NO_MOVE_FRAME == (aFlags & NS_FRAME_NO_MOVE_FRAME)) {
+  if (0 == (aFlags & NS_FRAME_NO_MOVE_FRAME)) {
     if ((aFlags & NS_FRAME_INVALIDATE_ON_MOVE) &&
         !(aKidFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
         aKidFrame->GetPosition() != nsPoint(aX, aY)) {

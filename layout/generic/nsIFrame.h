@@ -104,10 +104,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface
-// 98a0c040-09cf-408b-b55f-321b4f8d9d67
-#define NS_IFRAME_IID \
-    { 0x98a0c040, 0x09cf, 0x408b, \
-      { 0xb5, 0x5f, 0x32, 0x1b, 0x4f, 0x8d, 0x9d, 0x67 } }
+// 04a7dee5-3435-47dc-bd42-a36c0f66a42c
+  #define NS_IFRAME_IID \
+{ 0x04a7dee5, 0x3435, 0x47dc, \
+  { 0xbd, 0x42, 0xa3, 0x6c, 0x0f, 0x66, 0xa4, 0x2c } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1528,6 +1528,17 @@ public:
    */
   NS_IMETHOD  GetOffsetFromView(nsPoint&  aOffset,
                                 nsIView** aView) const = 0;
+
+  /**
+   * Returns the offset from this frame's upper left corner to the upper
+   * left corner of the view returned by a call to GetView(). aOffset
+   * will contain the offset to the view or (0,0) if the frame has no
+   * view. aView will contain a pointer to the view returned by GetView().
+   * aView is optional, that is, you may pass null if you are not interested
+   * in getting a pointer to the view.
+   */
+  NS_IMETHOD  GetOriginToViewOffset(nsPoint&        aOffset,
+                                    nsIView**       aView) const = 0;
 
   /**
    * Returns true if and only if all views, from |GetClosestView| up to

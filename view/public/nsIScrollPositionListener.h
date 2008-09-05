@@ -47,11 +47,9 @@
 class nsIScrollableView;
 
 // IID for the nsIScrollPositionListener interface
-// {98a0c040-09cf-408b-b55f-321b4f8d9d67}
-
+// {f8dfc500-6ad1-11d3-8360-a3f373ff79fc}
 #define NS_ISCROLLPOSITIONLISTENER_IID \
-    { 0x98a0c040, 0x09cf, 0x408b, \
-      { 0xb5, 0x5f, 0x32, 0x1b, 0x4f, 0x8d, 0x9d, 0x67 } }
+{ 0xf8dfc500, 0x6ad1, 0x11d3, { 0x83, 0x60, 0xa3, 0xf3, 0x73, 0xff, 0x79, 0xfc } }
 
 /**
  * Provides a way for a client of an nsIScrollableView to learn about scroll position
@@ -62,7 +60,6 @@ public:
 	NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCROLLPOSITIONLISTENER_IID)
 
 	NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY) = 0;
-	virtual void ViewPositionDidChange(nsIScrollableView* aScrollable) = 0;
 	NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY) = 0;
 };
 
