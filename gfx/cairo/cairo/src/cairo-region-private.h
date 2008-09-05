@@ -40,7 +40,6 @@
 #include <pixman.h>
 
 #include "cairo-compiler-private.h"
-#include "cairo-types-private.h"
 
 /* #cairo_region_t is defined in cairoint.h */
 

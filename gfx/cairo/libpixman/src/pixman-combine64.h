@@ -61,31 +61,19 @@
   x_c = (x_c * a) / 255 + y
 */
 #define FbByteMulAdd(x, a, y) do {                                      \
-        /* multiply and divide: trunc((i + 128)*257/65536) */           \
         uint64_t t = ((x & RB_MASK) * a) + RB_ONE_HALF;                  \
         t = (t + ((t >> COMPONENT_SIZE) & RB_MASK)) >> COMPONENT_SIZE;  \
         t &= RB_MASK;                                                   \
-                                                                        \
-        /* add */                                                       \
         t += y & RB_MASK;                                               \
-                                                                        \
-        /* saturate */                                                  \
         t |= RB_MASK_PLUS_ONE - ((t >> COMPONENT_SIZE) & RB_MASK);      \
         t &= RB_MASK;                                                   \
                                                                         \
-        /* multiply and divide */                                       \
         x = (((x >> COMPONENT_SIZE) & RB_MASK) * a) + RB_ONE_HALF;      \
         x = (x + ((x >> COMPONENT_SIZE) & RB_MASK)) >> COMPONENT_SIZE;  \
         x &= RB_MASK;                                                   \
-                                                                        \
-        /* add */                                                       \
         x += (y >> COMPONENT_SIZE) & RB_MASK;                           \
-                                                                        \
-        /* saturate */                                                  \
         x |= RB_MASK_PLUS_ONE - ((x >> COMPONENT_SIZE) & RB_MASK);      \
         x &= RB_MASK;                                                   \
-                                                                        \
-        /* recombine */                                                 \
         x <<= COMPONENT_SIZE;                                           \
         x += t;                                                         \
     } while (0)

@@ -38,19 +38,13 @@
  * http://partners.adobe.com/public/developer/en/font/T1_SPEC.PDF
  */
 
-
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
-
-#if CAIRO_HAS_FONT_SUBSET
-
 #include "cairo-type1-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-output-stream-private.h"
 
 /* XXX: Eventually, we need to handle other font backends */
-#if CAIRO_HAS_FT_FONT
-
 #include "cairo-ft-private.h"
 
 #include <ft2build.h>
@@ -1411,7 +1405,3 @@ _cairo_type1_scaled_font_is_type1 (cairo_scaled_font_t *scaled_font)
 
     return is_type1;
 }
-
-#endif /* CAIRO_HAS_FT_FONT */
-
-#endif /* CAIRO_HAS_FONT_SUBSET */

@@ -39,8 +39,6 @@
 
 #include "cairoint.h"
 
-#if CAIRO_HAS_FONT_SUBSET
-
 /* The structs defined here should strictly follow the TrueType
  * specification and not be padded.  We use only 16-bit integer
  * in their definition to guarantee that.  The fields of type
@@ -193,7 +191,5 @@ typedef struct _tt_glyph_data {
     int8_t            data[8];
     tt_composite_glyph_t glyph;
 } tt_glyph_data_t;
-
-#endif /* CAIRO_HAS_FONT_SUBSET */
 
 #endif /* CAIRO_TRUETYPE_SUBSET_PRIVATE_H */
