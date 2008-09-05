@@ -248,7 +248,7 @@
            extends="chrome://global/content/bindings/menu.xml#menu-base">
     <content>
       <xul:hbox class="menu-iconic-left" align="center" pack="center">
-        <xul:image xbl:inherits="src=image"/>
+        <xul:image class="menu-iconic-icon" xbl:inherits="src=image"/>
       </xul:hbox>
       <xul:label class="menu-iconic-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
       <xul:hbox class="menu-accel-container" anonid="accel">
