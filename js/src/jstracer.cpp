@@ -2938,10 +2938,6 @@ TraceRecorder::cmp(LOpcode op, int flags)
     LIns* l_ins = get(&l);
     LIns* r_ins = get(&r);
 
-    /* Don't guard if the same path is always taken. */
-    if (isAnyConst(r_ins) && isAnyConst(l_ins))
-        return true;
-
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
         JS_ASSERT(!negate);
         LIns* args[] = { r_ins, l_ins };
@@ -3053,15 +3049,18 @@ TraceRecorder::cmp(LOpcode op, int flags)
         ABORT_TRACE("unsupported operand types for cmp");
     }
 
-    if (flags & CMP_CASE) {
-        guard(cond, x, BRANCH_EXIT);
-        return true;
-    }
+    /* Don't guard if the same path is always taken. */
+    if (!(isAnyConst(r_ins) && isAnyConst(l_ins))) {
+        if (flags & CMP_CASE) {
+            guard(cond, x, BRANCH_EXIT);
+            return true;
+        }
 
-    /* The interpreter fuses comparisons and the following branch,
-       so we have to do that here as well. */
-    if (flags & CMP_TRY_BRANCH_AFTER_COND) 
-        fuseIf(cx->fp->regs->pc + 1, cond, x);
+        /* The interpreter fuses comparisons and the following branch,
+           so we have to do that here as well. */
+        if (flags & CMP_TRY_BRANCH_AFTER_COND) 
+            fuseIf(cx->fp->regs->pc + 1, cond, x);
+    }
 
     /* We update the stack after the guard. This is safe since
        the guard bails out at the comparison and the interpreter
@@ -3085,10 +3084,6 @@ TraceRecorder::equal(int flags)
     LIns* r_ins = get(&r);
     LIns* l_ins = get(&l);
 
-    /* Don't guard if the same path is always taken. */
-    if (isAnyConst(r_ins) && isAnyConst(l_ins))
-        return true;
-
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
         LIns* args[] = { r_ins, l_ins };
         bool cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r)) ^ negate;
@@ -3096,15 +3091,18 @@ TraceRecorder::equal(int flags)
         if (!negate)
             x = lir->ins_eq0(x);
 
-        if (flags & CMP_CASE) {
-            guard(cond, x, BRANCH_EXIT);
-            return true;
-        }
+        /* Don't guard if the same path is always taken. */
+        if (!(isAnyConst(r_ins) && isAnyConst(l_ins))) {
+            if (flags & CMP_CASE) {
+                guard(cond, x, BRANCH_EXIT);
+                return true;
+            }
 
-        /* The interpreter fuses comparisons and the following branch,
-           so we have to do that here as well. */
-        if (flags & CMP_TRY_BRANCH_AFTER_COND)
-            fuseIf(cx->fp->regs->pc + 1, cond, x);
+            /* The interpreter fuses comparisons and the following branch,
+               so we have to do that here as well. */
+            if (flags & CMP_TRY_BRANCH_AFTER_COND)
+                fuseIf(cx->fp->regs->pc + 1, cond, x);
+        }
 
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
@@ -3120,15 +3118,18 @@ TraceRecorder::equal(int flags)
         if (negate)
             x = lir->ins_eq0(x);
 
-        if (flags & CMP_CASE) {
-            guard(cond, x, BRANCH_EXIT);
-            return true;
-        }
+        /* Don't guard if the same path is always taken. */
+        if (!(isAnyConst(r_ins) && isAnyConst(l_ins))) {
+            if (flags & CMP_CASE) {
+                guard(cond, x, BRANCH_EXIT);
+                return true;
+            }
 
-        /* The interpreter fuses comparisons and the following branch,
-           so we have to do that here as well. */
-        if (flags & CMP_TRY_BRANCH_AFTER_COND)
-            fuseIf(cx->fp->regs->pc + 1, cond, x);
+            /* The interpreter fuses comparisons and the following branch,
+               so we have to do that here as well. */
+            if (flags & CMP_TRY_BRANCH_AFTER_COND)
+                fuseIf(cx->fp->regs->pc + 1, cond, x);
+        }
 
         /* We update the stack after the guard. This is safe since
            the guard bails out at the comparison and the interpreter
