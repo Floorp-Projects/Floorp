@@ -1706,7 +1706,11 @@ nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent,
   // Append all the text into one flat string
   PRUint32 numChildren = 0;
   nsCOMPtr<nsIDOMXULSelectControlElement> selectControlEl(do_QueryInterface(aContent));
-  if (!selectControlEl) {  // Don't walk children of elements with options, just get label directly
+  
+  if (!selectControlEl && aContent->Tag() != nsAccessibilityAtoms::textarea) {
+    // Don't walk children of elements with options, just get label directly.
+    // Don't traverse the children of a textarea, we want the value, not the
+    // static text node.
     numChildren = aContent->GetChildCount();
   }
 
