@@ -55,7 +55,7 @@ variable            description
 ===============     ===========================================================
 -p products         required. one or more of firefox thunderbird
 -b branches         required. one or more of 1.8.0 1.8.1 1.9.0 1.9.1
--B buildcommands    required. one or more of clean checkout build
+-B buildcommands    required. one or more of clean clobber checkout build
 -T buildtypes       required. one or more of opt debug
 -e extra            optional. extra qualifier to pick build tree and mozconfig.
 -d datafiles        optional. one or more filenames of files containing 
@@ -108,6 +108,27 @@ if echo "$buildcommands" | grep -iq clean; then
                     clean.sh -p $product -b $branch -T $buildtype $extraflag 2>&1 | tee $TEST_LOG
                 else
                     clean.sh -p $product -b $branch -T $buildtype $extraflag > $TEST_LOG 2>&1
+                fi
+            done
+        done
+    done
+fi
+
+# clobber first in case checkout changes the configuration
+if echo "$buildcommands" | grep -iq clobber; then
+    for product in $products; do
+        for branch in $branches; do
+            for buildtype in $buildtypes; do
+
+                TEST_DATE=`date -u +%Y-%m-%d-%H-%M-%S``date +%z`
+                TEST_LOG="${TEST_DIR}/results/${TEST_DATE},$product,$branch$extra,$buildtype,$OSID,${TEST_MACHINE},clobber.log"
+
+                echo "log: $TEST_LOG"
+
+                if [[ "$verbose" == "1" ]]; then
+                    clobber.sh -p $product -b $branch -T $buildtype $extraflag 2>&1 | tee $TEST_LOG
+                else
+                    clobber.sh -p $product -b $branch -T $buildtype $extraflag > $TEST_LOG 2>&1
                 fi
             done
         done

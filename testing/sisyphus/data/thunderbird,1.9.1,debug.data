@@ -2,9 +2,13 @@ product=thunderbird
 branch=1.9.1
 profilename=thunderbird-1.9.1-profile
 profiledirectory=/tmp/thunderbird-1.9.1-profile
-executablepath=${BUILDDIR}/1.9.1/mozilla/thunderbird-debug/dist
+# thunderbird from comm-central can not live in the same source tree as firefox
+# anymore since it comes from a different repository.
+# override the default build tree since the default tree location has changed
+BUILDTREE=${BUILDDIR}/1.9.1-thunderbird
+executablepath=${BUILDTREE}/mozilla/thunderbird-debug/mozilla/dist
 userpreferences=${TEST_DIR}/prefs/test-user.js
 extensiondir=${TEST_DIR}/xpi
 profiletemplate=${TEST_DIR}/profiles/imap
 buildtype=debug
-TEST_MOZILLA_HG=http://hg.mozilla.org/mozilla-central
+TEST_MOZILLA_HG=http://hg.mozilla.org/comm-central
