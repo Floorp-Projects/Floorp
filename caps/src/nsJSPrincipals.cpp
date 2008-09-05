@@ -179,10 +179,13 @@ nsJSPrincipals::Startup()
     rtsvc->GetRuntime(&rt);
     NS_ASSERTION(rt != nsnull, "no JSRuntime?!");
 
-    JSPrincipalsTranscoder oldpx;
-    oldpx = ::JS_SetPrincipalsTranscoder(rt, nsTranscodeJSPrincipals);
-    NS_ASSERTION(oldpx == nsnull, "oops, JS_SetPrincipalsTranscoder wars!");
+    JSSecurityCallbacks *callbacks = JS_GetRuntimeSecurityCallbacks(rt);
+    NS_ASSERTION(callbacks, "Need a callbacks struct by now!");
 
+    NS_ASSERTION(!callbacks->principalsTranscoder,
+                 "oops, JS_SetPrincipalsTranscoder wars!");
+
+    callbacks->principalsTranscoder = nsTranscodeJSPrincipals;
     return NS_OK;
 }
 
