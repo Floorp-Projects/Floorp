@@ -235,15 +235,7 @@
   </notificationbox>
   <vbox>
     <hbox id="commandBarBottom" align="center">
-      <button id="installFileButton" label="&cmd.installLocalFile.label;"
-              accesskey="&cmd.installLocalFile.accesskey;"
-              tooltiptextaddons="&cmd.installFileAddon.tooltip;"
-              tooltiptextthemes="&cmd.installFileTheme.tooltip;"
-              command="cmd_installFile"/>
-      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
-              accesskey="&cmd.installUpdatesAll.accesskey;"
-              tooltiptext="&cmd.installUpdatesAll.tooltip;"
-              command="cmd_installUpdatesAll"/>
+#ifdef XP_UNIX
       <button id="showUpdateInfoButton" label="&cmd.showUpdateInfo.label;"
               accesskey="&cmd.showUpdateInfo.accesskey;"
               tooltiptext="&cmd.showUpdateInfo.tooltip;"
@@ -252,25 +244,72 @@
               accesskey="&cmd.hideUpdateInfo.accesskey;"
               tooltiptext="&cmd.hideUpdateInfo.tooltip;"
               command="cmd_hideUpdateInfo"/>
+      <label id="getMore" class="text-link"
+             onclick="if (event.button == 0) { openURL(this.getAttribute('getMoreURL')); }"
+             valuethemes="&getThemes.label;"
+             valueplugins="&getPlugins.label;"
+             valueextensions="&getExtensions.label;"/>
+      <button id="installFileButton" label="&cmd.installLocalFile.label;"
+              accesskey="&cmd.installLocalFile.accesskey;"
+              tooltiptextaddons="&cmd.installFileAddon.tooltip;"
+              tooltiptextthemes="&cmd.installFileTheme.tooltip;"
+              command="cmd_installFile"/>
       <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
               accesskey="&cmd.checkUpdatesAll.accesskey;"
               tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
               tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
               command="cmd_checkUpdatesAll"/>
       <spacer flex="1"/>
+      <button id="skipDialogButton" label="&cmd.skip.label;"
+              accesskey="&cmd.skip.accesskey;"
+              tooltiptext="&cmd.skip.tooltip;"
+              command="cmd_close"/>
+      <button id="continueDialogButton" label="&cmd.continue.label;"
+              accesskey="&cmd.continue.accesskey;"
+              tooltiptext="&cmd.continue.tooltip;"
+              command="cmd_continue"/>
+      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
+              accesskey="&cmd.installUpdatesAll.accesskey;"
+              tooltiptext="&cmd.installUpdatesAll.tooltip;"
+              command="cmd_installUpdatesAll"/>
+#else
+      <button id="installFileButton" label="&cmd.installLocalFile.label;"
+              accesskey="&cmd.installLocalFile.accesskey;"
+              tooltiptextaddons="&cmd.installFileAddon.tooltip;"
+              tooltiptextthemes="&cmd.installFileTheme.tooltip;"
+              command="cmd_installFile"/>
+      <spacer flex="1"/>
+      <button id="continueDialogButton" label="&cmd.continue.label;"
+              accesskey="&cmd.continue.accesskey;"
+              tooltiptext="&cmd.continue.tooltip;"
+              command="cmd_continue"/>
+      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
+              accesskey="&cmd.installUpdatesAll.accesskey;"
+              tooltiptext="&cmd.installUpdatesAll.tooltip;"
+              command="cmd_installUpdatesAll"/>
+      <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
+              accesskey="&cmd.checkUpdatesAll.accesskey;"
+              tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
+              tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
+              command="cmd_checkUpdatesAll"/>
+      <button id="skipDialogButton" label="&cmd.skip.label;"
+              accesskey="&cmd.skip.accesskey;"
+              tooltiptext="&cmd.skip.tooltip;"
+              command="cmd_close"/>
+      <button id="showUpdateInfoButton" label="&cmd.showUpdateInfo.label;"
+              accesskey="&cmd.showUpdateInfo.accesskey;"
+              tooltiptext="&cmd.showUpdateInfo.tooltip;"
+              command="cmd_showUpdateInfo"/>
+      <button id="hideUpdateInfoButton" label="&cmd.hideUpdateInfo.label;"
+              accesskey="&cmd.hideUpdateInfo.accesskey;"
+              tooltiptext="&cmd.hideUpdateInfo.tooltip;"
+              command="cmd_hideUpdateInfo"/>
       <label id="getMore" class="text-link"
              onclick="if (event.button == 0) { openURL(this.getAttribute('getMoreURL')); }"
              valuethemes="&getThemes.label;"
              valueplugins="&getPlugins.label;"
              valueextensions="&getExtensions.label;"/>
-      <button id="continueDialogButton" label="&cmd.continue.label;"
-              accesskey="&cmd.continue.accesskey;"
-              tooltiptext="&cmd.continue.tooltip;"
-              command="cmd_continue"/>
-      <button id="skipDialogButton" label="&cmd.skip.label;"
-              accesskey="&cmd.skip.accesskey;"
-              tooltiptext="&cmd.skip.tooltip;"
-              command="cmd_close"/>
+#endif
     </hbox>
     <hbox id="resizerBox" style="min-width:1px;">
       <spacer flex="1"/>
