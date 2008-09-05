@@ -144,7 +144,8 @@ SessionStoreService.prototype = {
   _windows: {},
 
   // in case the last closed window ain't a navigator:browser one
-  _lastWindowClosed: null,
+  // (also contains browser popup windows closed after the last non-popup one)
+  _lastClosedWindows: null,
 
   // not-"dirty" windows usually don't need to have their data updated
   _dirtyWindows: {},
@@ -296,7 +297,7 @@ SessionStoreService.prototype = {
           delete aBrowser.parentNode.__SS_data;
         });
       });
-      this._lastWindowClosed = null;
+      this._lastClosedWindows = null;
       this._clearDisk();
       // also clear all data about closed tabs
       for (ix in this._windows) {
@@ -404,6 +405,8 @@ SessionStoreService.prototype = {
 
     // and create its data object
     this._windows[aWindow.__SSi] = { tabs: [], selected: 0, _closedTabs: [] };
+    if (!aWindow.toolbar.visible)
+      this._windows[aWindow.__SSi].isPopup = true;
     
     // perform additional initialization when the first window is loading
     if (this._loadState == STATE_STOPPED) {
@@ -472,9 +475,16 @@ SessionStoreService.prototype = {
       this._collectWindowData(aWindow);
       
       // preserve this window's data (in case it was the last navigator:browser)
-      this._lastWindowClosed = this._windows[aWindow.__SSi];
-      this._lastWindowClosed.title = aWindow.content.document.title;
-      this._updateCookies([this._lastWindowClosed]);
+      var winData = this._windows[aWindow.__SSi];
+      winData.title = aWindow.content.document.title;
+      
+      // if this is a popup window, append it to what we've already got (cf. bug 368677)
+      if (!this._lastClosedWindows || !winData.isPopup)
+        this._lastClosedWindows = [winData];
+      else
+        this._lastClosedWindows.push(winData);
+      
+      this._updateCookies(this._lastClosedWindows);
       
       // clear this window from the list
       delete this._windows[aWindow.__SSi];
@@ -488,7 +498,7 @@ SessionStoreService.prototype = {
     }
     
     // cache the window state until the window is completely gone
-    aWindow.__SS_dyingCache = this._windows[aWindow.__SSi] || this._lastWindowClosed;
+    aWindow.__SS_dyingCache = this._windows[aWindow.__SSi] || winData;
     
     // reset the _tab property to avoid keeping the tab's XUL element alive
     // longer than we need it
@@ -1298,16 +1308,21 @@ SessionStoreService.prototype = {
     
     // collect the data for all windows
     var total = [], windows = [];
+    var nonPopupCount = 0;
     var ix;
     for (ix in this._windows) {
       total.push(this._windows[ix]);
       windows.push(ix);
+      if (!this._windows[ix].isPopup)
+        nonPopupCount++;
     }
     this._updateCookies(total);
     
-    // if no browser window remains open, return the state of the last closed window
-    if (total.length == 0 && this._lastWindowClosed) {
-      total.push(this._lastWindowClosed);
+    // if no non-popup browser window remains open, return the state of the last closed window(s)
+    if (nonPopupCount == 0 && this._lastClosedWindows) {
+      // prepend the last non-popup browser window, so that if the user loads more tabs
+      // at startup we don't accidentally add them to a popup window
+      total = this._lastClosedWindows.concat(total);
     }
     if (activeWindow) {
       this.activeWindowSSiCache = activeWindow.__SSi || "";
@@ -1760,6 +1775,11 @@ SessionStoreService.prototype = {
     WINDOW_HIDEABLE_FEATURES.forEach(function(aItem) {
       aWindow[aItem].visible = hidden.indexOf(aItem) == -1;
     });
+    
+    if (aWinData.isPopup)
+      this._windows[aWindow.__SSi].isPopup = true;
+    else
+      delete this._windows[aWindow.__SSi].isPopup;
     
     var _this = this;
     aWindow.setTimeout(function() {
