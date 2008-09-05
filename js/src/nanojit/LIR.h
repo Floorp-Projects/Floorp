@@ -504,7 +504,7 @@ namespace nanojit
         ~LirNameMap();
 
 		void addName(LInsp i, const char *s);
-		void addName(LInsp i, avmplus::String *s);
+		bool addName(LInsp i, avmplus::String *s);
 		void copyName(LInsp i, const char *s, int suffix);
         const char *formatRef(LIns *ref);
 		const char *formatIns(LInsp i);
