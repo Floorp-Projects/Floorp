@@ -1023,7 +1023,7 @@ namespace nanojit
 	underrunProtect(7);											\
 	AMD64_MODRM_DISP(b,r,d);									\
 	AMD64_OP3(AMD64_MOVD_RM_REG,1,b,r);							\
-	asm_output3("movd %s,%d(%s)",gpn(b),(d),gpn(r));			\
+	asm_output3("movd %d(%s),%s",(d),gpn(r),gpn(b));			\
 	} while (0)
 
 
