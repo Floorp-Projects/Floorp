@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "plstr.h"
+#include <string.h>
 
 static const unsigned char uc[] =
 {
