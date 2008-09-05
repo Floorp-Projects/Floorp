@@ -56,8 +56,7 @@ interface nsIDOMLocation : nsISupports
            attribute DOMString        protocol;
            attribute DOMString        search;
 
-  // XXX is this needed?
-  [noscript] void           reload(in boolean forceget);
+  void                      reload([optional] in boolean forceget);
   void                      replace(in DOMString url);
   void                      assign(in DOMString url);
 

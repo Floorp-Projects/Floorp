@@ -4083,6 +4083,12 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   // prompt(). IE and Opera ignore it too. See Mozilla bug 334893.
   SetDOMStringToNull(aReturn);
 
+  // This code depends on aSavePassword being defaulted to
+  // nsIAuthPrompt::SAVE_PASSWORD_NEVER, which happens to have the
+  // value 0. If that ever changes, this code needs to deal!
+
+  PR_STATIC_ASSERT(nsIAuthPrompt::SAVE_PASSWORD_NEVER == 0);
+
   nsresult rv;
   nsCOMPtr<nsIWindowWatcher> wwatch =
     do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
@@ -4123,57 +4129,6 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::Prompt(nsAString& aReturn)
-{
-  FORWARD_TO_OUTER(Prompt, (aReturn), NS_ERROR_NOT_INITIALIZED);
-
-  NS_ENSURE_STATE(mDocShell);
-
-  nsresult rv = NS_OK;
-  nsAXPCNativeCallContext *ncc = nsnull;
-
-  rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!ncc)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  JSContext *cx = nsnull;
-
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString message, initial, title;
-
-  PRUint32 argc;
-  jsval *argv = nsnull;
-
-  ncc->GetArgc(&argc);
-  ncc->GetArgvPtr(&argv);
-
-  PRUint32 savePassword = nsIAuthPrompt::SAVE_PASSWORD_NEVER;
-
-  if (argc > 0) {
-    JSAutoRequest ar(cx);
-    switch (argc) {
-      default:
-      case 4:
-        nsJSUtils::ConvertJSValToUint32(&savePassword, cx, argv[3]);
-      case 3:
-        nsJSUtils::ConvertJSValToString(title, cx, argv[2]);
-      case 2:
-        nsJSUtils::ConvertJSValToString(initial, cx, argv[1]);
-      case 1:
-        nsJSUtils::ConvertJSValToString(message, cx, argv[0]);
-        break;
-    }
-  }
-
-  return Prompt(message, initial, title, savePassword, aReturn);
 }
 
 NS_IMETHODIMP
@@ -6173,114 +6128,16 @@ nsGlobalWindow::GetSelection(nsISelection** aSelection)
   return NS_OK;
 }
 
-// Non-scriptable version of window.find(), part of nsIDOMWindowInternal
 NS_IMETHODIMP
 nsGlobalWindow::Find(const nsAString& aStr, PRBool aCaseSensitive,
                      PRBool aBackwards, PRBool aWrapAround, PRBool aWholeWord,
                      PRBool aSearchInFrames, PRBool aShowDialog,
                      PRBool *aDidFind)
 {
-  return FindInternal(aStr, aCaseSensitive, aBackwards, aWrapAround,
-                      aWholeWord, aSearchInFrames, aShowDialog, aDidFind);
-}
+  FORWARD_TO_OUTER(Find, (aStr, aCaseSensitive, aBackwards, aWrapAround,
+                          aWholeWord, aSearchInFrames, aShowDialog, aDidFind),
+                   NS_ERROR_NOT_INITIALIZED);
 
-// Scriptable version of window.find() which takes a variable number of
-// arguments, part of nsIDOMJSWindow.
-NS_IMETHODIMP
-nsGlobalWindow::Find(PRBool *aDidFind)
-{
-  nsresult rv = NS_OK;
-
-  // We get the arguments passed to the function using the XPConnect native
-  // call context.
-  nsAXPCNativeCallContext *ncc = nsnull;
-
-  rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ASSERTION(ncc, "No Native Call Context."
-                    "Please don't call this method from C++.");
-  if (!ncc) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  JSContext *cx = nsnull;
-
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 argc;
-  jsval *argv = nsnull;
-
-  ncc->GetArgc(&argc);
-  ncc->GetArgvPtr(&argv);
-
-  // Parse the arguments passed to the function
-  nsAutoString searchStr;
-  PRBool caseSensitive  = PR_FALSE;
-  PRBool backwards      = PR_FALSE;
-  PRBool wrapAround     = PR_FALSE;
-  PRBool showDialog     = PR_FALSE;
-  PRBool wholeWord      = PR_FALSE;
-  PRBool searchInFrames = PR_FALSE;
-
-  if (argc > 0) {
-    JSAutoRequest ar(cx);
-    switch (argc) {
-      default:
-      case 7:
-        if (!JS_ValueToBoolean(cx, argv[6], &showDialog)) {
-          // Seventh arg specifies whether we should search in all frames
-          showDialog = PR_FALSE;
-        }
-      case 6:
-        if (!JS_ValueToBoolean(cx, argv[5], &searchInFrames)) {
-          // Sixth arg specifies whether we should search only for whole words
-          searchInFrames = PR_FALSE;
-        }
-      case 5:
-        if (!JS_ValueToBoolean(cx, argv[4], &wholeWord)) {
-          // Fifth arg specifies whether we should show the Find dialog
-          wholeWord = PR_FALSE;
-        }
-      case 4:
-        if (!JS_ValueToBoolean(cx, argv[3], &wrapAround)) {
-          // Fourth arg specifies whether we should wrap the search
-          wrapAround = PR_FALSE;
-        }
-      case 3:
-        if (!JS_ValueToBoolean(cx, argv[2], &backwards)) {
-          // Third arg specifies whether to search backwards
-          backwards = PR_FALSE;
-        }
-      case 2:
-        if (!JS_ValueToBoolean(cx, argv[1], &caseSensitive)) {
-          // Second arg is the case sensitivity
-          caseSensitive = PR_FALSE;
-        }
-      case 1:
-        // First arg is the search pattern
-        nsJSUtils::ConvertJSValToString(searchStr, cx, argv[0]);
-        break;
-    }
-  }
-
-  return FindInternal(searchStr, caseSensitive, backwards, wrapAround,
-                      wholeWord, searchInFrames, showDialog, aDidFind);
-}
-
-nsresult
-nsGlobalWindow::FindInternal(const nsAString& aStr, PRBool caseSensitive,
-                             PRBool backwards, PRBool wrapAround,
-                             PRBool wholeWord, PRBool searchInFrames,
-                             PRBool showDialog, PRBool *aDidFind)
-{
-  FORWARD_TO_OUTER(FindInternal, (aStr, caseSensitive, backwards, wrapAround,
-                                  wholeWord, searchInFrames, showDialog,
-                                  aDidFind), NS_ERROR_NOT_INITIALIZED);
-
-  NS_ENSURE_ARG_POINTER(aDidFind);
   nsresult rv = NS_OK;
   *aDidFind = PR_FALSE;
 
@@ -6289,11 +6146,11 @@ nsGlobalWindow::FindInternal(const nsAString& aStr, PRBool caseSensitive,
   // Set the options of the search
   rv = finder->SetSearchString(PromiseFlatString(aStr).get());
   NS_ENSURE_SUCCESS(rv, rv);
-  finder->SetMatchCase(caseSensitive);
-  finder->SetFindBackwards(backwards);
-  finder->SetWrapFind(wrapAround);
-  finder->SetEntireWord(wholeWord);
-  finder->SetSearchFrames(searchInFrames);
+  finder->SetMatchCase(aCaseSensitive);
+  finder->SetFindBackwards(aBackwards);
+  finder->SetWrapFind(aWrapAround);
+  finder->SetEntireWord(aWholeWord);
+  finder->SetSearchFrames(aSearchInFrames);
 
   // the nsIWebBrowserFind is initialized to use this window
   // as the search root, but uses focus to set the current search
@@ -6306,7 +6163,7 @@ nsGlobalWindow::FindInternal(const nsAString& aStr, PRBool caseSensitive,
   }
   
   // The Find API does not accept empty strings. Launch the Find Dialog.
-  if (aStr.IsEmpty() || showDialog) {
+  if (aStr.IsEmpty() || aShowDialog) {
     // See if the find dialog is already up using nsIWindowMediator
     nsCOMPtr<nsIWindowMediator> windowMediator =
       do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
@@ -8149,6 +8006,7 @@ nsGlobalWindow::ClearTimeoutOrInterval()
 
   JSAutoRequest ar(cx);
 
+  // XXXjst: Can we deal with this w/o using GetCurrentNativeCallContext()
   if (argv[0] == JSVAL_VOID || !::JS_ValueToInt32(cx, argv[0], &timer_id) ||
       timer_id <= 0) {
     // Undefined or non-positive number passed as argument, return
@@ -9405,6 +9263,8 @@ nsNavigator::sPrefInternal_id = JSVAL_VOID;
 NS_IMETHODIMP
 nsNavigator::Preference()
 {
+  // XXXjst: We could get rid of this GetCurrentNativeCallContext()
+  // call if this method returned a variant...
   nsAXPCNativeCallContext *ncc = nsnull;
   nsresult rv = nsContentUtils::XPConnect()->
     GetCurrentNativeCallContext(&ncc);
