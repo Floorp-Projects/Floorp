@@ -4317,6 +4317,17 @@ nsContentUtils::GetContextForEventHandlers(nsINode* aNode,
 }
 
 /* static */
+JSContext *
+nsContentUtils::GetCurrentJSContext()
+{
+  JSContext *cx = nsnull;
+
+  sThreadJSContextStack->Peek(&cx);
+
+  return cx;
+}
+
+/* static */
 void
 nsAutoGCRoot::Shutdown()
 {

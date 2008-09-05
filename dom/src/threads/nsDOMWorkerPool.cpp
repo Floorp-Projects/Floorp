@@ -100,17 +100,10 @@ nsDOMWorkerPool::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsAXPCNativeCallContext* ncc;
-  nsresult rv = nsContentUtils::XPConnect()->GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // GetCurrentNativeCallContext can return NS_OK and still hand out a null
-  // context... We shouldn't ever see that here.
-  NS_ENSURE_TRUE(ncc, NS_ERROR_UNEXPECTED);
-
-  JSContext* cx;
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // GetCurrentJSContext () can return a null context... We shouldn't
+  // ever see that here.
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  NS_ENSURE_TRUE(cx, NS_ERROR_UNEXPECTED);
 
   nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
   NS_ENSURE_STATE(scriptContext);

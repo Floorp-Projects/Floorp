@@ -1323,6 +1323,9 @@ public:
 
   static nsresult GetContextForEventHandlers(nsINode* aNode,
                                              nsIScriptContext** aContext);
+
+  static JSContext *GetCurrentJSContext();
+
 private:
 
   static PRBool InitializeEventTable();
