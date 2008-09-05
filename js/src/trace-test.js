@@ -1211,6 +1211,16 @@ function testTypeofHole() {
 testTypeofHole.expected = "undefined,undefined,undefined,undefined,undefined,number"
 test(testTypeofHole);
 
+function testNativeLog() {
+  var a = new Array(5);
+  for (var i = 0; i < 5; i++) {
+    a[i] = Math.log(Math.pow(Math.E, 10));
+  }
+  return a.join(",");
+}
+testNativeLog.expected = "10,10,10,10,10";
+test(testNativeLog);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
