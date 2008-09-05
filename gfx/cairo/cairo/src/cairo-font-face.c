@@ -41,78 +41,19 @@
 #define _BSD_SOURCE /* for strdup() */
 #include "cairoint.h"
 
+/* Forward declare so we can use it as an arbitrary backend for
+ * _cairo_font_face_nil.
+ */
 static const cairo_font_face_backend_t _cairo_toy_font_face_backend;
 
 /* #cairo_font_face_t */
 
-const cairo_toy_font_face_t _cairo_font_face_nil = {
-    {
-    { 0 },				/* hash_entry */
-    CAIRO_STATUS_NO_MEMORY,		/* status */
+const cairo_font_face_t _cairo_font_face_nil = {
+    { 0 },			/* hash_entry */
+    CAIRO_STATUS_NO_MEMORY,	/* status */
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
-    { 0, 0, 0, NULL },			/* user_data */
+    { 0, 0, 0, NULL },		/* user_data */
     &_cairo_toy_font_face_backend
-    },
-    CAIRO_FONT_FAMILY_DEFAULT,		/* family */
-    TRUE,				/* owns_family */
-    CAIRO_FONT_SLANT_DEFAULT,		/* slant */
-    CAIRO_FONT_WEIGHT_DEFAULT		/* weight */
-};
-
-static const cairo_toy_font_face_t _cairo_font_face_null_pointer = {
-    {
-    { 0 },				/* hash_entry */
-    CAIRO_STATUS_NULL_POINTER,		/* status */
-    CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
-    { 0, 0, 0, NULL },			/* user_data */
-    &_cairo_toy_font_face_backend
-    },
-    CAIRO_FONT_FAMILY_DEFAULT,		/* family */
-    TRUE,				/* owns_family */
-    CAIRO_FONT_SLANT_DEFAULT,		/* slant */
-    CAIRO_FONT_WEIGHT_DEFAULT		/* weight */
-};
-
-static const cairo_toy_font_face_t _cairo_font_face_invalid_string = {
-    {
-    { 0 },				/* hash_entry */
-    CAIRO_STATUS_INVALID_STRING,	/* status */
-    CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
-    { 0, 0, 0, NULL },			/* user_data */
-    &_cairo_toy_font_face_backend
-    },
-    CAIRO_FONT_FAMILY_DEFAULT,		/* family */
-    TRUE,				/* owns_family */
-    CAIRO_FONT_SLANT_DEFAULT,		/* slant */
-    CAIRO_FONT_WEIGHT_DEFAULT		/* weight */
-};
-
-static const cairo_toy_font_face_t _cairo_font_face_invalid_slant = {
-    {
-    { 0 },				/* hash_entry */
-    CAIRO_STATUS_INVALID_SLANT,		/* status */
-    CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
-    { 0, 0, 0, NULL },			/* user_data */
-    &_cairo_toy_font_face_backend
-    },
-    CAIRO_FONT_FAMILY_DEFAULT,		/* family */
-    TRUE,				/* owns_family */
-    CAIRO_FONT_SLANT_DEFAULT,		/* slant */
-    CAIRO_FONT_WEIGHT_DEFAULT		/* weight */
-};
-
-static const cairo_toy_font_face_t _cairo_font_face_invalid_weight = {
-    {
-    { 0 },				/* hash_entry */
-    CAIRO_STATUS_INVALID_WEIGHT,	/* status */
-    CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
-    { 0, 0, 0, NULL },			/* user_data */
-    &_cairo_toy_font_face_backend
-    },
-    CAIRO_FONT_FAMILY_DEFAULT,		/* family */
-    TRUE,				/* owns_family */
-    CAIRO_FONT_SLANT_DEFAULT,		/* slant */
-    CAIRO_FONT_WEIGHT_DEFAULT		/* weight */
 };
 
 cairo_status_t
@@ -430,7 +371,7 @@ _cairo_toy_font_face_keys_equal (const void *key_a,
 }
 
 /**
- * cairo_toy_font_face_create:
+ * _cairo_toy_font_face_create:
  * @family: a font family name, encoded in UTF-8
  * @slant: the slant for the font
  * @weight: the weight for the font
@@ -439,56 +380,17 @@ _cairo_toy_font_face_keys_equal (const void *key_a,
  * These font faces are used in implementation of the the #cairo_t "toy"
  * font API.
  *
- * If @family is the zero-length string "", the platform-specific default
- * family is assumed.  The default family then can be queried using
- * cairo_toy_font_face_get_family().
- *
- * The cairo_select_font_face() function uses this to create font faces.
- * See that function for limitations of toy font faces.
- *
- * Return value: a newly created #cairo_font_face_t. Free with
- *  cairo_font_face_destroy() when you are done using it.
- *
- * Since: 1.8
+ * Return value: a newly created #cairo_font_face_t, destroy with
+ *  cairo_font_face_destroy()
  **/
 cairo_font_face_t *
-cairo_toy_font_face_create (const char          *family,
-			    cairo_font_slant_t   slant,
-			    cairo_font_weight_t  weight)
+_cairo_toy_font_face_create (const char          *family,
+			     cairo_font_slant_t   slant,
+			     cairo_font_weight_t  weight)
 {
     cairo_status_t status;
     cairo_toy_font_face_t key, *font_face;
     cairo_hash_table_t *hash_table;
-
-    if (family == NULL)
-	return (cairo_font_face_t*) &_cairo_font_face_null_pointer;
-
-    /* Make sure we've got valid UTF-8 for the family */
-    status = _cairo_utf8_to_ucs4 (family, -1, NULL, NULL);
-    if (status == CAIRO_STATUS_INVALID_STRING)
-	return (cairo_font_face_t*) &_cairo_font_face_invalid_string;
-    else if (status)
-	return (cairo_font_face_t*) &_cairo_font_face_nil;
-
-    switch (slant) {
-	case CAIRO_FONT_SLANT_NORMAL:
-	case CAIRO_FONT_SLANT_ITALIC:
-	case CAIRO_FONT_SLANT_OBLIQUE:
-	    break;
-	default:
-	    return (cairo_font_face_t*) &_cairo_font_face_invalid_slant;
-    }
-
-    switch (weight) {
-	case CAIRO_FONT_WEIGHT_NORMAL:
-	case CAIRO_FONT_WEIGHT_BOLD:
-	    break;
-	default:
-	    return (cairo_font_face_t*) &_cairo_font_face_invalid_weight;
-    }
-
-    if (*family == '\0')
-	family = CAIRO_FONT_FAMILY_DEFAULT;
 
     hash_table = _cairo_toy_font_face_hash_table_lock ();
     if (hash_table == NULL)
@@ -542,7 +444,6 @@ cairo_toy_font_face_create (const char          *family,
  UNWIND:
     return (cairo_font_face_t*) &_cairo_font_face_nil;
 }
-slim_hidden_def (cairo_toy_font_face_create);
 
 static void
 _cairo_toy_font_face_destroy (void *abstract_face)
@@ -590,77 +491,6 @@ _cairo_toy_font_face_scaled_font_create (void                *abstract_font_face
 							    ctm,
 							    options,
 							    scaled_font));
-}
-
-static cairo_bool_t
-_cairo_font_face_is_toy (cairo_font_face_t *font_face)
-{
-    return font_face->backend == &_cairo_toy_font_face_backend;
-}
-
-/**
- * cairo_toy_font_face_get_family:
- * @font_face: A toy font face
- *
- * Gets the familly name of a toy font.
- *
- * Return value: The family name.  This string is owned by the font face
- * and remains valid as long as the font face is alive (referenced).
- *
- * Since: 1.8
- **/
-const char *
-cairo_toy_font_face_get_family (cairo_font_face_t *font_face)
-{
-    cairo_toy_font_face_t *toy_font_face = (cairo_toy_font_face_t *) font_face;
-    if (! _cairo_font_face_is_toy (font_face)) {
-	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
-	    return CAIRO_FONT_FAMILY_DEFAULT;
-    }
-    assert (toy_font_face->owns_family);
-    return toy_font_face->family;
-}
-
-/**
- * cairo_toy_font_face_get_slant:
- * @font_face: A toy font face
- *
- * Gets the slant a toy font.
- *
- * Return value: The slant value
- *
- * Since: 1.8
- **/
-cairo_font_slant_t
-cairo_toy_font_face_get_slant (cairo_font_face_t *font_face)
-{
-    cairo_toy_font_face_t *toy_font_face = (cairo_toy_font_face_t *) font_face;
-    if (! _cairo_font_face_is_toy (font_face)) {
-	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
-	    return CAIRO_FONT_SLANT_DEFAULT;
-    }
-    return toy_font_face->slant;
-}
-
-/**
- * cairo_toy_font_face_get_weight:
- * @font_face: A toy font face
- *
- * Gets the weight a toy font.
- *
- * Return value: The weight value
- *
- * Since: 1.8
- **/
-cairo_font_weight_t
-cairo_toy_font_face_get_weight (cairo_font_face_t *font_face)
-{
-    cairo_toy_font_face_t *toy_font_face = (cairo_toy_font_face_t *) font_face;
-    if (! _cairo_font_face_is_toy (font_face)) {
-	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
-	    return CAIRO_FONT_WEIGHT_DEFAULT;
-    }
-    return toy_font_face->weight;
 }
 
 static const cairo_font_face_backend_t _cairo_toy_font_face_backend = {

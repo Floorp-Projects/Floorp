@@ -53,11 +53,17 @@ _cairo_pen_init (cairo_pen_t	*pen,
 {
     int i;
     int reflect;
+    double  det;
 
     pen->radius = radius;
     pen->tolerance = tolerance;
 
-    reflect = _cairo_matrix_compute_determinant (ctm) < 0.;
+    _cairo_matrix_compute_determinant (ctm, &det);
+    if (det >= 0) {
+	reflect = 0;
+    } else {
+	reflect = 1;
+    }
 
     pen->num_vertices = _cairo_pen_vertices_needed (tolerance,
 						    radius,

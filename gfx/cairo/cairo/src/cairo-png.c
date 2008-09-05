@@ -119,13 +119,6 @@ png_simple_warning_callback (png_structp png,
 }
 
 
-/* Starting with libpng-1.2.30, we must explicitly specify an output_flush_fn.
- * Otherwise, we will segfault if we are writing to a stream. */
-static void
-png_simple_output_flush_fn (png_structp png_ptr)
-{
-}
-
 static cairo_status_t
 write_png (cairo_surface_t	*surface,
 	   png_rw_ptr		write_func,
@@ -137,6 +130,7 @@ write_png (cairo_surface_t	*surface,
     void *image_extra;
     png_struct *png;
     png_info *info;
+    png_time pt;
     png_byte **volatile rows = NULL;
     png_color_16 white;
     int png_color_type;
@@ -185,7 +179,7 @@ write_png (cairo_surface_t	*surface,
 	goto BAIL3;
 #endif
 
-    png_set_write_fn (png, closure, write_func, png_simple_output_flush_fn);
+    png_set_write_fn (png, closure, write_func, NULL);
 
     switch (image->format) {
     case CAIRO_FORMAT_ARGB32:
@@ -224,12 +218,8 @@ write_png (cairo_surface_t	*surface,
     white.red = white.blue = white.green = white.gray;
     png_set_bKGD (png, info, &white);
 
-    if (0) { /* XXX extract meta-data from surface (i.e. creation date) */
-	png_time pt;
-
-	png_convert_from_time_t (&pt, time (NULL));
-	png_set_tIME (png, info, &pt);
-    }
+    png_convert_from_time_t (&pt, time (NULL));
+    png_set_tIME (png, info, &pt);
 
     /* We have to call png_write_info() before setting up the write
      * transformation, since it stores data internally in 'png'

@@ -33,11 +33,6 @@
 #ifndef CAIRO_XLIB_XRENDER_PRIVATE_H
 #define CAIRO_XLIB_XRENDER_PRIVATE_H
 
-#include "cairo-features.h"
-#include "cairo-compiler-private.h"
-
-#include <X11/Xlib.h>
-
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
 
 #include "cairo-xlib-xrender.h"
@@ -57,7 +52,7 @@
  * take a pointer as first argument */
 
 __attribute__((__unused__)) static void   _void_consume        (void *p, ...)   { }
-__attribute__((__unused__)) static void * _voidp_consume       (void *p, ...)   { return (void *)0; }
+__attribute__((__unused__)) static void * _voidp_consume       (void *p, ...)   { return NULL; }
 __attribute__((__unused__)) static int    _int_consume         (void *p, ...)   { return 0; }
 __attribute__((__unused__)) static void   _void_consume_free   (Display *p, XID n) { }
 
