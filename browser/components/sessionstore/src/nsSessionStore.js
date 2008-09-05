@@ -358,9 +358,10 @@ SessionStoreService.prototype = {
       case "pageshow":
         this.onTabLoad(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
         break;
+      case "change":
       case "input":
       case "DOMAutoComplete":
-        this.onTabInput(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget, aEvent);
+        this.onTabInput(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget);
         break;
       case "TabOpen":
       case "TabClose":
@@ -522,6 +523,7 @@ SessionStoreService.prototype = {
   onTabAdd: function sss_onTabAdd(aWindow, aPanel, aNoNotification) {
     aPanel.addEventListener("load", this, true);
     aPanel.addEventListener("pageshow", this, true);
+    aPanel.addEventListener("change", this, true);
     aPanel.addEventListener("input", this, true);
     aPanel.addEventListener("DOMAutoComplete", this, true);
     
@@ -542,11 +544,11 @@ SessionStoreService.prototype = {
   onTabRemove: function sss_onTabRemove(aWindow, aPanel, aNoNotification) {
     aPanel.removeEventListener("load", this, true);
     aPanel.removeEventListener("pageshow", this, true);
+    aPanel.removeEventListener("change", this, true);
     aPanel.removeEventListener("input", this, true);
     aPanel.removeEventListener("DOMAutoComplete", this, true);
     
     delete aPanel.__SS_data;
-    delete aPanel.__SS_text;
     
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
@@ -612,7 +614,6 @@ SessionStoreService.prototype = {
     }
     
     delete aPanel.__SS_data;
-    delete aPanel.__SS_text;
     this.saveStateDelayed(aWindow);
     
     // attempt to update the current URL we send in a crash report
@@ -621,18 +622,16 @@ SessionStoreService.prototype = {
 
   /**
    * Called when a tabpanel sends the "input" notification 
-   * stores textarea data
    * @param aWindow
    *        Window reference
    * @param aPanel
    *        TabPanel reference
-   * @param aEvent
-   *        Event obj
    */
-  onTabInput: function sss_onTabInput(aWindow, aPanel, aEvent) {
-    if (this._saveTextData(aPanel, aEvent.originalTarget)) {
-      this.saveStateDelayed(aWindow, 3000);
-    }
+  onTabInput: function sss_onTabInput(aWindow, aPanel) {
+    if (aPanel.__SS_data)
+      delete aPanel.__SS_data._formDataSaved;
+    
+    this.saveStateDelayed(aWindow, 3000);
   },
 
   /**
@@ -1042,56 +1041,6 @@ SessionStoreService.prototype = {
   },
 
   /**
-   * Updates the current document's cache of user entered text data
-   * @param aPanel
-   *        TabPanel reference
-   * @param aTextarea
-   *        HTML content element
-   * @returns bool
-   */
-  _saveTextData: function sss_saveTextData(aPanel, aTextarea) {
-    var id = aTextarea.id ? "#" + aTextarea.id :
-                            aTextarea.name;
-    if (!id
-      || !(aTextarea instanceof Ci.nsIDOMHTMLTextAreaElement 
-      || aTextarea instanceof Ci.nsIDOMHTMLInputElement)) {
-      return false; // nothing to save
-    }
-    
-    if (!aPanel.__SS_text) {
-      aPanel.__SS_text = [];
-      aPanel.__SS_text._refs = [];
-    }
-    
-    // get the index of the reference to the text element
-    var ix = aPanel.__SS_text._refs.indexOf(aTextarea);
-    if (ix == -1) {
-      // we haven't registered this text element yet - do so now
-      aPanel.__SS_text._refs.push(aTextarea);
-      ix = aPanel.__SS_text.length;
-    }
-    else if (!aPanel.__SS_text[ix].cache) {
-      // we've already marked this text element for saving (the cache is
-      // added during save operations and would have to be updated here)
-      return false;
-    }
-    
-    // determine the frame we're in and encode it into the textarea's ID
-    var content = aTextarea.ownerDocument.defaultView;
-    while (content != content.top) {
-      var frames = content.parent.frames;
-      for (var i = 0; i < frames.length && frames[i] != content; i++);
-      id = i + "|" + id;
-      content = content.parent;
-    }
-    
-    // mark this element for saving
-    aPanel.__SS_text[ix] = { id: id, element: aTextarea };
-    
-    return true;
-  },
-
-  /**
    * go through all tabs and store the current scroll positions
    * and innerHTML content of WYSIWYG editors
    * @param aWindow
@@ -1125,65 +1074,101 @@ SessionStoreService.prototype = {
    */
   _updateTextAndScrollDataForTab:
     function sss_updateTextAndScrollDataForTab(aWindow, aBrowser, aTabData, aFullData) {
-    var text = [];
-    if (aBrowser.parentNode.__SS_text &&
-        (aFullData || this._checkPrivacyLevel(aBrowser.currentURI.schemeIs("https")))) {
-      for (var ix = aBrowser.parentNode.__SS_text.length - 1; ix >= 0; ix--) {
-        var data = aBrowser.parentNode.__SS_text[ix];
-        if (!data.cache)
-          // update the text element's value before adding it to the data structure
-          data.cache = encodeURI(data.element.value);
-        text.push(data.id + "=" + data.cache);
-      }
-    }
-    if (aBrowser.currentURI.spec == "about:config")
-      text = ["#textbox=" + encodeURI(aBrowser.contentDocument.getElementById("textbox").
-                                               wrappedJSObject.value)];
-    if (text.length > 0)
-      aTabData.text = text.join(" ");
-    else if (aTabData.text)
-      delete aTabData.text;
-    
     var tabIndex = (aTabData.index || aTabData.entries.length) - 1;
     // entry data needn't exist for tabs just initialized with an incomplete session state
-    if (aTabData.entries[tabIndex])
-      this._updateTextAndScrollDataForFrame(aWindow, aBrowser.contentWindow,
-                                            aTabData.entries[tabIndex], aFullData);
+    if (!aTabData.entries[tabIndex])
+      return;
+    
+    this._updateTextAndScrollDataForFrame(aWindow, aBrowser.contentWindow,
+                                          aTabData.entries[tabIndex],
+                                          !aTabData._formDataSaved, aFullData);
+    aTabData._formDataSaved = true;
+    if (aBrowser.currentURI.spec == "about:config")
+      aTabData.entries[tabIndex].formdata = {
+        "#textbox": aBrowser.contentDocument.getElementById("textbox").wrappedJSObject.value
+      };
   },
 
   /**
-   * go through all subframes and store the current scroll positions
-   * and innerHTML content of WYSIWYG editors
+   * go through all subframes and store all form data, the current
+   * scroll positions and innerHTML content of WYSIWYG editors
    * @param aWindow
    *        Window reference
    * @param aContent
    *        frame reference
    * @param aData
    *        part of a tabData object to add the information to
+   * @param aUpdateFormData
+   *        update all form data for this tab
    * @param aFullData
    *        always return privacy sensitive data (use with care)
    */
   _updateTextAndScrollDataForFrame:
-    function sss_updateTextAndScrollDataForFrame(aWindow, aContent, aData, aFullData) {
+    function sss_updateTextAndScrollDataForFrame(aWindow, aContent, aData,
+                                                 aUpdateFormData, aFullData) {
     for (var i = 0; i < aContent.frames.length; i++) {
       if (aData.children && aData.children[i])
-        this._updateTextAndScrollDataForFrame(aWindow, aContent.frames[i], aData.children[i], aFullData);
+        this._updateTextAndScrollDataForFrame(aWindow, aContent.frames[i],
+                                              aData.children[i], aUpdateFormData, aFullData);
     }
-    // designMode is undefined e.g. for XUL documents (as about:config)
     var isHTTPS = this._getURIFromString((aContent.parent || aContent).
                                          document.location.href).schemeIs("https");
-    if ((aContent.document.designMode || "") == "on" &&
-        (aFullData || this._checkPrivacyLevel(isHTTPS))) {
-      if (aData.innerHTML === undefined && !aFullData) {
-        // we get no "input" events from iframes - listen for keypress here
-        var _this = this;
-        aContent.addEventListener("keypress", function(aEvent) {
-          _this.saveStateDelayed(aWindow, 3000); }, true);
+    if (aFullData || this._checkPrivacyLevel(isHTTPS)) {
+      if (aFullData || aUpdateFormData) {
+        let formData = this._collectFormDataForFrame(aContent.document);
+        if (formData)
+          aData.formdata = formData;
+        else if (aData.formdata)
+          delete aData.formdata;
       }
-      aData.innerHTML = aContent.document.body.innerHTML;
+      
+      // designMode is undefined e.g. for XUL documents (as about:config)
+      if ((aContent.document.designMode || "") == "on") {
+        if (aData.innerHTML === undefined && !aFullData) {
+          // we get no "input" events from iframes - listen for keypress here
+          let _this = this;
+          aContent.addEventListener("keypress", function(aEvent) {
+            _this.saveStateDelayed(aWindow, 3000);
+          }, true);
+        }
+        aData.innerHTML = aContent.document.body.innerHTML;
+      }
     }
     aData.scroll = aContent.scrollX + "," + aContent.scrollY;
    },
+
+  /**
+   * collect the state of all form elements
+   * @param aDocument
+   *        document reference
+   */
+  _collectFormDataForFrame: function sss_collectFormDataForFrame(aDocument) {
+    let formNodesXPath = "//textarea|//select|//xhtml:textarea|//xhtml:select|" +
+      "//input[not(@type) or @type='text' or @type='checkbox' or @type='radio' or @type='file']|" +
+      "//xhtml:input[not(@type) or @type='text' or @type='checkbox' or @type='radio' or @type='file']";
+    let formNodes = aDocument.evaluate(formNodesXPath, aDocument, XPathHelper.resolveNS,
+                                       Ci.nsIDOMXPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+    let node = formNodes.iterateNext();
+    if (!node)
+      return null;
+    
+    let data = {};
+    do {
+      let id = node.id ? "#" + node.id : XPathHelper.generate(node);
+      if (node instanceof Ci.nsIDOMHTMLInputElement)
+        data[id] = node.type == "checkbox" || node.type == "radio" ? node.checked : node.value;
+      else if (node instanceof Ci.nsIDOMHTMLTextAreaElement)
+        data[id] = node.value;
+      else if (!node.multiple)
+        data[id] = node.selectedIndex;
+      else {
+        let options = Array.map(node.options, function(aOpt, aIx) aOpt.selected ? aIx : -1);
+        data[id] = options.filter(function(aIx) aIx >= 0);
+      }
+    } while ((node = formNodes.iterateNext()));
+    
+    return data;
+  },
 
   /**
    * store all hosts for a URL
@@ -1717,6 +1702,7 @@ SessionStoreService.prototype = {
       return;
     }
     
+    // restore text data saved by Firefox 2.0/3.0
     var textArray = this.__SS_restore_text ? this.__SS_restore_text.split(" ") : [];
     function restoreTextData(aContent, aPrefix) {
       textArray.forEach(function(aEntry) {
@@ -1734,8 +1720,41 @@ SessionStoreService.prototype = {
       });
     }
     
+    function restoreFormData(aDocument, aData) {
+      for (let key in aData) {
+        let node = key.charAt(0) == "#" ? aDocument.getElementById(key.slice(1)) :
+                                          XPathHelper.resolve(aDocument, key);
+        if (!node)
+          continue;
+        
+        let value = aData[key];
+        if (typeof value == "string") {
+          node.value = value;
+          
+          let event = aDocument.createEvent("UIEvents");
+          event.initUIEvent("input", true, true, aDocument.defaultView, 0);
+          node.dispatchEvent(event);
+        }
+        else if (typeof value == "boolean")
+          node.checked = value;
+        else if (typeof value == "number")
+          try {
+            node.selectedIndex = value;
+          } catch (ex) { /* throws for invalid indices */ }
+        else if (value && typeof value.indexOf == "function" && node.options) {
+          Array.forEach(node.options, function(aOpt, aIx) {
+            aOpt.selected = value.indexOf(aIx) > -1;
+          });
+        }
+        // NB: dispatching "change" events might have unintended side-effects
+      }
+    }
+    
     function restoreTextDataAndScrolling(aContent, aData, aPrefix) {
-      restoreTextData(aContent, aPrefix);
+      if (aData.formdata)
+        restoreFormData(aContent.document, aData.formdata);
+      else
+        restoreTextData(aContent, aPrefix);
       if (aData.innerHTML) {
         aContent.setTimeout(function(aHTML) { if (this.document.designMode == "on") { this.document.body.innerHTML = aHTML; } }, 0, aData.innerHTML);
       }
@@ -2145,7 +2164,7 @@ SessionStoreService.prototype = {
    * @return the object's JSON representation
    */
   _toJSONString: function sss_toJSONString(aJSObject) {
-    var str = JSON.toString(aJSObject, ["_tab", "_hosts"] /* keys to drop */);
+    let str = JSON.toString(aJSObject, ["_tab", "_hosts", "_formDataSaved"] /* keys to drop */);
     
     // sanity check - so that API consumers can just eval this string
     if (!JSON.isMostlyHarmless(str))
@@ -2183,6 +2202,66 @@ SessionStoreService.prototype = {
     } else {
       stream.close();
     }
+  }
+};
+
+let XPathHelper = {
+  // these two hashes should be kept in sync
+  namespaceURIs:     { "xhtml": "http://www.w3.org/1999/xhtml" },
+  namespacePrefixes: { "http://www.w3.org/1999/xhtml": "xhtml" },
+
+  /**
+   * Generates an approximate XPath query to an (X)HTML node
+   */
+  generate: function sss_xph_generate(aNode) {
+    // have we reached the document node already?
+    if (!aNode.parentNode)
+      return "";
+    
+    let prefix = this.namespacePrefixes[aNode.namespaceURI] || null;
+    let tag = (prefix ? prefix + ":" : "") + aNode.localName;
+    
+    // stop once we've found a tag with an ID
+    if (aNode.id)
+      return "//" + tag + "[@id=" + this.quoteArgument(aNode.id) + "]";
+    
+    // count the number of previous sibling nodes of the same tag
+    // (and possible also the same name)
+    let count = 0;
+    let nName = aNode.name || null;
+    for (let n = aNode; (n = n.previousSibling); )
+      if (n.localName == aNode.localName && n.namespaceURI == aNode.namespaceURI &&
+          (!nName || n.name == nName))
+        count++;
+    
+    // recurse until hitting either the document node or an ID'd node
+    return this.generate(aNode.parentNode) + "/" + tag +
+           (nName ? "[@name=" + this.quoteArgument(nName) + "]" : "") +
+           (count ? "[" + (count + 1) + "]" : "");
+  },
+
+  /**
+   * Resolves an XPath query generated by XPathHelper.generate
+   */
+  resolve: function sss_xph_resolve(aDocument, aQuery) {
+    let xptype = Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE;
+    return aDocument.evaluate(aQuery, aDocument, this.resolveNS, xptype, null).singleNodeValue;
+  },
+
+  /**
+   * Namespace resolver for the above XPath resolver
+   */
+  resolveNS: function sss_xph_resolveNS(aPrefix) {
+    return XPathHelper.namespaceURIs[aPrefix] || null;
+  },
+
+  /**
+   * @returns a properly quoted string to insert into an XPath query
+   */
+  quoteArgument: function sss_xph_quoteArgument(aArg) {
+    return !/'/.test(aArg) ? "'" + aArg + "'" :
+           !/"/.test(aArg) ? '"' + aArg + '"' :
+           "concat('" + aArg.replace(/'+/g, "',\"$&\",'") + "')";
   }
 };
 
