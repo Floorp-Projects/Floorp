@@ -115,6 +115,19 @@
       // If nothing is left. Let's try title attribute.
       testName("btn_title", "title");
 
+      //////////////////////////////////////////////////////////////////////////
+      // textarea name
+
+      // textarea's name should have the value, which initially is specified by
+      // a text child.
+      testName("textareawithchild", "Story: Foo");
+
+      // new textarea name should reflect the value change. 
+      var elem = document.getElementById("textareawithchild");
+      elem.value = "Bar";
+
+      testName("textareawithchild", "Story: Bar");
+
       SimpleTest.finish();
     }
 
@@ -260,5 +273,13 @@
 
   <!-- name from title attribute -->
   <span id="btn_title" role="group" title="title">15</span>
+
+  <!-- A textarea nested in a label with a text child (bug #453371). -->
+  <form>
+    <label>Story: 
+      <textarea id="textareawithchild" name="name">Foo</textarea>
+    </label>
+  </form>
+
 </body>
 </html>
