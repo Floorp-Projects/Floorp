@@ -62,7 +62,7 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsinterp.h"
