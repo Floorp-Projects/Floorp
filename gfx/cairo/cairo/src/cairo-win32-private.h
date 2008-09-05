@@ -92,6 +92,7 @@ typedef struct _cairo_win32_surface {
     cairo_bool_t has_ctm;
     cairo_matrix_t ctm;
     HBRUSH brush, old_brush;
+    cairo_scaled_font_subsets_t *font_subsets;
 } cairo_win32_surface_t;
 
 /* Surface DC flag values */

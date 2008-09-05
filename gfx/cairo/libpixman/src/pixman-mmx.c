@@ -36,9 +36,6 @@
 #ifdef USE_MMX
 
 #include <mmintrin.h>
-#ifdef USE_SSE
-#include <xmmintrin.h> /* for _mm_shuffle_pi16 and _MM_SHUFFLE */
-#endif
 
 #include "pixman-mmx.h"
 
@@ -227,28 +224,6 @@ pix_add (__m64 a, __m64 b)
     return  _mm_adds_pu8 (a, b);
 }
 
-#ifdef USE_SSE
-
-static inline __m64
-expand_alpha (__m64 pixel)
-{
-    return _mm_shuffle_pi16 (pixel, _MM_SHUFFLE(3, 3, 3, 3));
-}
-
-static inline __m64
-expand_alpha_rev (__m64 pixel)
-{
-    return _mm_shuffle_pi16 (pixel, _MM_SHUFFLE(0, 0, 0, 0));
-}
-
-static inline __m64
-invert_colors (__m64 pixel)
-{
-    return _mm_shuffle_pi16 (pixel, _MM_SHUFFLE(3, 0, 1, 2));
-}
-
-#else
-
 static inline __m64
 expand_alpha (__m64 pixel)
 {
@@ -299,8 +274,6 @@ invert_colors (__m64 pixel)
 
     return x;
 }
-
-#endif
 
 static inline __m64
 over (__m64 src, __m64 srca, __m64 dest)
