@@ -990,8 +990,7 @@ nsGenericElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   // It doesn't really matter what we use as aRelativeTo here, since
   // we only care about the size. Using 'parent' might make things
   // a bit faster by speeding up the internal GetOffsetTo operations.
-  nsIFrame* parent = frame->GetParent() ? frame->GetParent() : frame;
-  nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, parent);
+  nsRect rcFrame = nsLayoutUtils::GetAllInFlowRectsUnion(frame, nsnull);
   aRect.width = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width);
   aRect.height = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.height);
 }

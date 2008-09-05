@@ -229,11 +229,8 @@ public:
    * Get the parent of aFrame. If aFrame is the root frame for a document,
    * and the document has a parent document in the same view hierarchy, then
    * we try to return the subdocumentframe in the parent document.
-   * @param aExtraOffset [in/out] if non-null, then as we cross documents
-   * an extra offset may be required and it will be added to aCrossDocOffset
    */
-  static nsIFrame* GetCrossDocParentFrame(const nsIFrame* aFrame,
-                                          nsPoint* aCrossDocOffset = nsnull);
+  static nsIFrame* GetCrossDocParentFrame(nsIFrame* aFrame);
   
   /**
    * IsProperAncestorFrame checks whether aAncestorFrame is an ancestor

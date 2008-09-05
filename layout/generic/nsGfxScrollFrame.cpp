@@ -1793,14 +1793,6 @@ nsGfxScrollFrameInner::InternalScrollPositionDidChange(nscoord aX, nscoord aY)
                       aX - GetScrolledRect(GetScrollPortSize()).x);
 }
 
-void
-nsGfxScrollFrameInner::ViewPositionDidChange(nsIScrollableView* aScrollable)
-{
-  // Update frame position to match view offsets
-  nsPoint childOffset = mScrolledFrame->GetView()->GetOffsetTo(mOuter->GetView());
-  mScrolledFrame->SetPosition(childOffset);
-}
-
 /**
  * Called whenever actual scrolling happens for any reason.
  */
@@ -1808,6 +1800,10 @@ NS_IMETHODIMP
 nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
   NS_ASSERTION(!mViewInitiatedScroll, "Cannot reenter ScrollPositionDidChange");
+
+  // Update frame position to match view offsets
+  nsPoint childOffset = mScrolledFrame->GetView()->GetOffsetTo(mOuter->GetView());
+  mScrolledFrame->SetPosition(childOffset);
 
   mViewInitiatedScroll = PR_TRUE;
   InternalScrollPositionDidChange(aX, aY);

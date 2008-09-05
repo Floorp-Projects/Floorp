@@ -479,7 +479,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   
   // Allow the child to move/size/change-visibility its view if it's currently
   // dropped down
-  PRInt32 flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_VISIBILITY | NS_FRAME_NO_SIZE_VIEW;
+  PRInt32 flags = NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_VISIBILITY | NS_FRAME_NO_SIZE_VIEW;
   if (mDroppedDown) {
     flags = 0;
   }
