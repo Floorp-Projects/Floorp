@@ -48,7 +48,7 @@
 #include "jsclist.h"
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
