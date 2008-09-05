@@ -169,11 +169,8 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
     stroker->tolerance = tolerance;
     stroker->traps = traps;
 
-    _cairo_matrix_compute_determinant (stroker->ctm, &stroker->ctm_determinant);
-    if (stroker->ctm_determinant >= 0.0)
-	stroker->ctm_det_positive = TRUE;
-    else
-	stroker->ctm_det_positive = FALSE;
+    stroker->ctm_determinant = _cairo_matrix_compute_determinant (stroker->ctm);
+    stroker->ctm_det_positive = stroker->ctm_determinant >= 0.0;
 
     status = _cairo_pen_init (&stroker->pen,
 		              stroke_style->line_width / 2.0,

@@ -37,6 +37,10 @@
 #ifndef CAIRO_TYPE3_GLYPH_SURFACE_PRIVATE_H
 #define CAIRO_TYPE3_GLYPH_SURFACE_PRIVATE_H
 
+#include "cairoint.h"
+
+#if CAIRO_HAS_FONT_SUBSET
+
 #include "cairo-surface-private.h"
 #include "cairo-pdf-operators-private.h"
 
@@ -70,5 +74,7 @@ _cairo_type3_glyph_surface_emit_glyph (void		     *abstract_surface,
 				       unsigned long	      glyph_index,
 				       cairo_box_t           *bbox,
 				       double                *width);
+
+#endif /* CAIRO_HAS_FONT_SUBSET */
 
 #endif /* CAIRO_TYPE3_GLYPH_SURFACE_PRIVATE_H */
