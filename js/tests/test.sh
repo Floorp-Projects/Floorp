@@ -166,7 +166,8 @@ if [[ -n "$javascriptoptions" ]]; then
                 splitobjects="-z"
                 ;;
             j)
-                jit="-j"
+                jitshell="-j"
+                jitbrowser=";jit"
                 ;;
         esac
     done
@@ -416,7 +417,7 @@ case $testtype in
                     -S 524288 \
                     $gczealshell \
                     $splitobjects \
-                    $jit \
+                    $jitshell \
                     -f ./shell.js \
                     -f $suitetestdir/shell.js \
                     -f $subsuitetestdir/shell.js \
@@ -469,8 +470,8 @@ EOF
 
                 version=";version=`browserfileversion $jsfile`"
                 
-                echo "http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version$gczealbrowser" >> $urllist
-                echo "<li><a href='http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version$gczealbrowser'>$jsfile</a></li>" >> $urlhtml
+                echo "http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version$gczealbrowser$jitbrowser" >> $urllist
+                echo "<li><a href='http://$TEST_HTTP/$TEST_WWW_JS/js-test-driver-standards.html?test=$jsfile;language=type;text/javascript$version$gczealbrowser$jitbrowser'>$jsfile</a></li>" >> $urlhtml
             fi
         done
 
