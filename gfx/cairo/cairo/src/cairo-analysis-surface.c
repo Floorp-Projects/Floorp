@@ -621,7 +621,7 @@ _cairo_analysis_surface_has_show_text_glyphs (void *abstract_surface)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
 
-    return cairo_surface_has_show_text_glyphs (surface->target);
+    return _cairo_surface_has_show_text_glyphs (surface->target);
 }
 
 static cairo_int_status_t

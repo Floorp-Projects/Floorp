@@ -38,45 +38,20 @@
 #ifndef CAIRO_H
 #define CAIRO_H
 
-#include "cairo-version.h"
 #include "cairo-features.h"
 #include "cairo-deprecated.h"
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
-
-#ifndef cairo_public
-# define cairo_public
-#endif
-
 CAIRO_BEGIN_DECLS
 
-#define CAIRO_VERSION_ENCODE(major, minor, micro) (	\
-	  ((major) * 10000)				\
-	+ ((minor) *   100)				\
+#define CAIRO_VERSION_ENCODE(major, minor, micro) (     \
+	  ((major) * 10000)                             \
+	+ ((minor) *   100)                             \
 	+ ((micro) *     1))
 
-#define CAIRO_VERSION CAIRO_VERSION_ENCODE(	\
-	CAIRO_VERSION_MAJOR,			\
-	CAIRO_VERSION_MINOR,			\
+#define CAIRO_VERSION CAIRO_VERSION_ENCODE(     \
+	CAIRO_VERSION_MAJOR,                    \
+	CAIRO_VERSION_MINOR,                    \
 	CAIRO_VERSION_MICRO)
-
-
-#define CAIRO_VERSION_STRINGIZE_(major, minor, micro)	\
-	#major"."#minor"."#micro
-#define CAIRO_VERSION_STRINGIZE(major, minor, micro)	\
-	CAIRO_VERSION_STRINGIZE_(major, minor, micro)
-
-#define CAIRO_VERSION_STRING CAIRO_VERSION_STRINGIZE(	\
-	CAIRO_VERSION_MAJOR,				\
-	CAIRO_VERSION_MINOR,				\
-	CAIRO_VERSION_MICRO)
-
 
 cairo_public int
 cairo_version (void);
@@ -233,8 +208,6 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_USER_FONT_ERROR: error occurred in a user-font callback function (Since 1.8)
  * @CAIRO_STATUS_NEGATIVE_COUNT: negative number used where it is not allowed (Since 1.8)
  * @CAIRO_STATUS_INVALID_CLUSTERS: input clusters do not represent the accompanying text and glyph array (Since 1.8)
- * @CAIRO_STATUS_INVALID_SLANT: invalid value for an input #cairo_font_slant_t (Since 1.8)
- * @CAIRO_STATUS_INVALID_WEIGHT: invalid value for an input #cairo_font_weight_t (Since 1.8)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -274,9 +247,7 @@ typedef enum _cairo_status {
     CAIRO_STATUS_USER_FONT_IMMUTABLE,
     CAIRO_STATUS_USER_FONT_ERROR,
     CAIRO_STATUS_NEGATIVE_COUNT,
-    CAIRO_STATUS_INVALID_CLUSTERS,
-    CAIRO_STATUS_INVALID_SLANT,
-    CAIRO_STATUS_INVALID_WEIGHT
+    CAIRO_STATUS_INVALID_CLUSTERS
     /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h */
 } cairo_status_t;
 
@@ -855,42 +826,10 @@ typedef struct {
     double               y;
 } cairo_glyph_t;
 
-cairo_public cairo_glyph_t *
-cairo_glyph_allocate (int num_glyphs);
-
-cairo_public void
-cairo_glyph_free (cairo_glyph_t *glyphs);
-
-/**
- * cairo_text_cluster_t:
- * @num_bytes: the number of bytes of UTF-8 text covered by cluster
- * @num_glyphs: the number of glyphs covered by cluster
- *
- * The #cairo_text_cluster_t structure holds information about a single
- * <firstterm>text cluster</firstterm>.  A text cluster is a minimal
- * mapping of some glyphs corresponding to some UTF-8 text.
- *
- * For a cluster to be valid, both @num_bytes and @num_glyphs should
- * be non-negative, and at least one should be non-zero.
- * Note that clusters with zero glyphs are not as well supported as
- * normal clusters.  For example, PDF rendering applications typically
- * ignore those clusters when PDF text is being selected.
- *
- * See cairo_show_text_glyphs() for how clusters are used in advanced
- * text operations.
- *
- * Since: 1.8
- **/
 typedef struct {
     int        num_bytes;
     int        num_glyphs;
 } cairo_text_cluster_t;
-
-cairo_public cairo_text_cluster_t *
-cairo_text_cluster_allocate (int num_clusters);
-
-cairo_public void
-cairo_text_cluster_free (cairo_text_cluster_t *clusters);
 
 /**
  * cairo_text_extents_t:
@@ -1029,28 +968,6 @@ typedef enum _cairo_subpixel_order {
 } cairo_subpixel_order_t;
 
 /**
- * cairo_lcd_filter_t:
- * @CAIRO_LCD_FILTER_DEFAULT: Use the default LCD filter for
- *   font backend and target device
- * @CAIRO_LCD_FILTER_NONE: Do not perform LCD filtering
- * @CAIRO_LCD_FILTER_INTRA_PIXEL: Intra-pixel filter
- * @CAIRO_LCD_FILTER_FIR3: FIR filter with a 3x3 kernel
- * @CAIRO_LCD_FILTER_FIR5: FIR filter with a 5x5 kernel
- *
- * The LCD filter specifies the low-pass filter applied to LCD-optimized
- * bitmaps generated with an antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
- *
- * Since: 1.8
- **/
-typedef enum _cairo_lcd_filter {
-    CAIRO_LCD_FILTER_DEFAULT,
-    CAIRO_LCD_FILTER_NONE,
-    CAIRO_LCD_FILTER_INTRA_PIXEL,
-    CAIRO_LCD_FILTER_FIR3,
-    CAIRO_LCD_FILTER_FIR5
-} cairo_lcd_filter_t;
-
-/**
  * cairo_hint_style_t:
  * @CAIRO_HINT_STYLE_DEFAULT: Use the default hint style for
  *   font backend and target device
@@ -1154,12 +1071,6 @@ cairo_font_options_set_subpixel_order (cairo_font_options_t   *options,
 				       cairo_subpixel_order_t  subpixel_order);
 cairo_public cairo_subpixel_order_t
 cairo_font_options_get_subpixel_order (const cairo_font_options_t *options);
-
-cairo_public void
-cairo_font_options_set_lcd_filter (cairo_font_options_t   *options,
-				   cairo_lcd_filter_t  lcd_filter);
-cairo_public cairo_lcd_filter_t
-cairo_font_options_get_lcd_filter (const cairo_font_options_t *options);
 
 cairo_public void
 cairo_font_options_set_hint_style (cairo_font_options_t *options,
@@ -1375,18 +1286,6 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 				 int                   num_glyphs,
 				 cairo_text_extents_t  *extents);
 
-cairo_public cairo_status_t
-cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
-				  double		 x,
-				  double		 y,
-				  const char	        *utf8,
-				  int		         utf8_len,
-				  cairo_glyph_t	       **glyphs,
-				  int		        *num_glyphs,
-				  cairo_text_cluster_t **clusters,
-				  int		        *num_clusters,
-				  cairo_bool_t	        *backward);
-
 cairo_public cairo_font_face_t *
 cairo_scaled_font_get_font_face (cairo_scaled_font_t *scaled_font);
 
@@ -1406,24 +1305,6 @@ cairo_public void
 cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,
 				    cairo_font_options_t	*options);
 
-
-/* Toy fonts */
-
-cairo_public cairo_font_face_t *
-cairo_toy_font_face_create (const char           *family,
-			    cairo_font_slant_t    slant,
-			    cairo_font_weight_t   weight);
-
-cairo_public const char *
-cairo_toy_font_face_get_family (cairo_font_face_t *font_face);
-
-cairo_public cairo_font_slant_t
-cairo_toy_font_face_get_slant (cairo_font_face_t *font_face);
-
-cairo_public cairo_font_weight_t
-cairo_toy_font_face_get_weight (cairo_font_face_t *font_face);
-
-
 /* User fonts */
 
 cairo_public cairo_font_face_t *
@@ -1434,17 +1315,10 @@ cairo_user_font_face_create (void);
 /**
  * cairo_user_scaled_font_init_func_t:
  * @scaled_font: the scaled-font being created
- * @cr: a cairo context, in font space
  * @extents: font extents to fill in, in font space
  *
  * #cairo_user_scaled_font_init_func_t is the type of function which is
  * called when a scaled-font needs to be created for a user font-face.
- *
- * The cairo context @cr is not used by the caller, but is prepared in font
- * space, similar to what the cairo contexts passed to the render_glyph
- * method will look like.  The callback can use this context for extents
- * computation for example.  After the callback is called, @cr is checked
- * for any error status.
  *
  * The @extents argument is where the user font sets the font extents for
  * @scaled_font.  It is in font space, which means that for most cases its
@@ -1462,10 +1336,11 @@ cairo_user_font_face_create (void);
  * Returns: %CAIRO_STATUS_SUCCESS upon success, or
  * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
  *
+ * Returns: the status code of the operation
+ *
  * Since: 1.8
  **/
 typedef cairo_status_t (*cairo_user_scaled_font_init_func_t) (cairo_scaled_font_t  *scaled_font,
-							      cairo_t              *cr,
 							      cairo_font_extents_t *extents);
 
 /**
@@ -1519,19 +1394,15 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
 /**
  * cairo_user_scaled_font_text_to_glyphs_func_t:
  * @scaled_font: the scaled-font being created
- * @utf8: a string of text encoded in UTF-8
- * @utf8_len: length of @utf8 in bytes
- * @glyphs: pointer to array of glyphs to fill, in font space
- * @num_glyphs: pointer to number of glyphs
- * @clusters: pointer to array of cluster mapping information to fill, or %NULL
- * @num_clusters: pointer to number of clusters
- * @backward: pointer to whether the text to glyphs mapping goes backward
+ * @utf8: input string of text, encoded in UTF-8
+ * @glyphs: output array of glyphs, in font space
+ * @num_glyphs: number of output glyphs
  *
  * #cairo_user_scaled_font_text_to_glyphs_func_t is the type of function which
  * is called to convert input text to an array of glyphs.  This is used by the
  * cairo_show_text() operation.
  *
- * Using this callback the user-font has full control on glyphs and their
+ * Using this callback the user font has full control on glyphs and their
  * positions.  That means, it allows for features like ligatures and kerning,
  * as well as complex <firstterm>shaping</firstterm> required for scripts like
  * Arabic and Indic.
@@ -1542,39 +1413,12 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * origin.  Cairo will free the glyph array when done with it, no matter what
  * the return value of the callback is.
  *
- * If @glyphs initially points to a non-%NULL value, that array can be used
- * as a glyph buffer, and @num_glyphs points to the number of glyph
- * entries available there.  If the provided glyph array is too short for
- * the conversion (or for convenience), a new glyph array may be allocated
- * using cairo_glyph_allocate() and placed in @glyphs.  Upon return,
- * @num_glyphs should contain the number of generated glyphs.
- * If the value @glyphs points at has changed after the call, cairo will
- * free the allocated glyph array using cairo_glyph_free().
- *
- * If @clusters is not %NULL, @num_clusters and @backward are also non-%NULL,
- * and cluster mapping should be computed.
- * The semantics of how cluster array allocation works is similar to the glyph
- * array.  That is,
- * if @clusters initially points to a non-%NULL value, that array may be used
- * as a cluster buffer, and @num_clusters points to the number of cluster
- * entries available there.  If the provided cluster array is too short for
- * the conversion (or for convenience), a new cluster array may be allocated
- * using cairo_text_cluster_allocate() and placed in @clusters.  Upon return,
- * @num_clusters should contain the number of generated clusters.
- * If the value @clusters points at has changed after the call, cairo will
- * free the allocated cluster array using cairo_text_cluster_free().
- *
  * The callback is optional.  If not set, or if @num_glyphs is negative upon
- * the callback returning, the unicode_to_glyph callback
+ * the callback returning (which by default is), the unicode_to_glyph callback
  * is tried.  See #cairo_user_scaled_font_unicode_to_glyph_func_t.
  *
- * Note: While cairo does not impose any limitation on glyph indices,
- * some applications may assume that a glyph index fits in a 16-bit
- * unsigned integer.  As such, it is advised that user-fonts keep their
- * glyphs in the 0 to 65535 range.  Furthermore, some applications may
- * assume that glyph 0 is a special glyph-not-found glyph.  User-fonts
- * are advised to use glyph 0 for such purposes and do not use that
- * glyph value for other purposes.
+ * Note: The signature and details of this callback is expected to change
+ * before cairo 1.8.0 is released.
  *
  * Returns: %CAIRO_STATUS_SUCCESS upon success, or
  * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
@@ -1582,13 +1426,9 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * Since: 1.8
  **/
 typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_scaled_font_t   *scaled_font,
-									const char	      *utf8,
-									int		       utf8_len,
-									cairo_glyph_t	     **glyphs,
-									int		      *num_glyphs,
-									cairo_text_cluster_t **clusters,
-									int		      *num_clusters,
-									cairo_bool_t	      *backward);
+									const char            *utf8,
+									cairo_glyph_t        **glyphs,
+									int                   *num_glyphs);
 
 /**
  * cairo_user_scaled_font_unicode_to_glyph_func_t:
@@ -1612,14 +1452,6 @@ typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_sc
  * The callback is optional, and only used if text_to_glyphs callback is not
  * set or fails to return glyphs.  If this callback is not set, an identity
  * mapping from Unicode code-points to glyph indices is assumed.
- *
- * Note: While cairo does not impose any limitation on glyph indices,
- * some applications may assume that a glyph index fits in a 16-bit
- * unsigned integer.  As such, it is advised that user-fonts keep their
- * glyphs in the 0 to 65535 range.  Furthermore, some applications may
- * assume that glyph 0 is a special glyph-not-found glyph.  User-fonts
- * are advised to use glyph 0 for such purposes and do not use that
- * glyph value for other purposes.
  *
  * Returns: %CAIRO_STATUS_SUCCESS upon success, or
  * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
@@ -1931,7 +1763,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_SVG,
     CAIRO_SURFACE_TYPE_OS2,
     CAIRO_SURFACE_TYPE_WIN32_PRINTING,
-    CAIRO_SURFACE_TYPE_QUARTZ_IMAGE
+    CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
+    CAIRO_SURFACE_TYPE_QPAINTER
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t
@@ -2005,9 +1838,6 @@ cairo_surface_copy_page (cairo_surface_t *surface);
 
 cairo_public void
 cairo_surface_show_page (cairo_surface_t *surface);
-
-cairo_public cairo_bool_t
-cairo_surface_has_show_text_glyphs (cairo_surface_t *surface);
 
 /* Image-surface functions */
 

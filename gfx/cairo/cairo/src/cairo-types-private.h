@@ -45,27 +45,17 @@
 #include "cairo-fixed-type-private.h"
 
 typedef struct _cairo_array cairo_array_t;
-typedef struct _cairo_cache cairo_cache_t;
-typedef struct _cairo_clip cairo_clip_t;
-typedef struct _cairo_clip_path cairo_clip_path_t;
-typedef struct _cairo_color cairo_color_t;
-typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
-typedef struct _cairo_gstate cairo_gstate_t;
-typedef struct _cairo_hash_entry cairo_hash_entry_t;
 typedef struct _cairo_hash_table cairo_hash_table_t;
-typedef struct _cairo_image_surface cairo_image_surface_t;
-typedef struct _cairo_output_stream cairo_output_stream_t;
-typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_t;
-typedef struct _cairo_path_fixed cairo_path_fixed_t;
-typedef struct _cairo_rectangle_int16 cairo_glyph_size_t;
-typedef struct _cairo_region cairo_region_t;
-typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
-typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
-typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
+typedef struct _cairo_cache cairo_cache_t;
+typedef struct _cairo_hash_entry cairo_hash_entry_t;
 typedef struct _cairo_surface_backend cairo_surface_backend_t;
-typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
+typedef struct _cairo_clip cairo_clip_t;
+typedef struct _cairo_output_stream cairo_output_stream_t;
+typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
+typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_t;
+typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
+typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
 typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;
-
 typedef cairo_array_t cairo_user_data_array_t;
 
 /**
@@ -118,7 +108,6 @@ struct _cairo_array {
 struct _cairo_font_options {
     cairo_antialias_t antialias;
     cairo_subpixel_order_t subpixel_order;
-    cairo_lcd_filter_t lcd_filter;
     cairo_hint_style_t hint_style;
     cairo_hint_metrics_t hint_metrics;
 };
@@ -148,6 +137,7 @@ typedef enum _cairo_int_status {
     CAIRO_INT_STATUS_UNSUPPORTED = 100,
     CAIRO_INT_STATUS_DEGENERATE,
     CAIRO_INT_STATUS_NOTHING_TO_DO,
+    CAIRO_INT_STATUS_CACHE_EMPTY,
     CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY,
     CAIRO_INT_STATUS_IMAGE_FALLBACK,
     CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN,
@@ -165,6 +155,8 @@ typedef enum _cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
     CAIRO_INTERNAL_SURFACE_TYPE_TYPE3_GLYPH
 } cairo_internal_surface_type_t;
+
+typedef struct _cairo_region cairo_region_t;
 
 typedef struct _cairo_point {
     cairo_fixed_t x;
@@ -207,6 +199,8 @@ struct _cairo_rectangle_int32 {
     uint32_t width, height;
 };
 
+typedef struct _cairo_rectangle_int16 cairo_glyph_size_t;
+
 struct _cairo_point_int16 {
     int16_t x, y;
 };
@@ -239,11 +233,13 @@ typedef enum _cairo_direction {
     CAIRO_DIRECTION_REVERSE
 } cairo_direction_t;
 
+typedef struct _cairo_path_fixed cairo_path_fixed_t;
 typedef enum _cairo_clip_mode {
     CAIRO_CLIP_MODE_PATH,
     CAIRO_CLIP_MODE_REGION,
     CAIRO_CLIP_MODE_MASK
 } cairo_clip_mode_t;
+typedef struct _cairo_clip_path cairo_clip_path_t;
 
 typedef struct _cairo_edge {
     cairo_line_t edge;
@@ -295,6 +291,9 @@ typedef struct _cairo_pen {
     cairo_pen_vertex_t *vertices;
     cairo_pen_vertex_t  vertices_embedded[32];
 } cairo_pen_t;
+
+typedef struct _cairo_color cairo_color_t;
+typedef struct _cairo_image_surface cairo_image_surface_t;
 
 typedef struct _cairo_stroke_style {
     double		 line_width;
