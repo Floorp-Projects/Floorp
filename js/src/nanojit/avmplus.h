@@ -99,7 +99,8 @@ typedef JSInt64  int64_t;
 #include <stdint.h>
 #endif
 
-#if defined(_MSC_VER) && defined(AVMPLUS_IA32)
+#if defined(AVMPLUS_IA32)
+#if defined(_MSC_VER)
 __declspec(naked) static inline __int64 rdtsc()
 {
     __asm
@@ -108,16 +109,22 @@ __declspec(naked) static inline __int64 rdtsc()
         ret;
     }
 }
-#endif
-
-#if defined(__i386__)
-
+#elif defined(SOLARIS)
+static inline unsigned long long rdtsc(void)
+{
+    unsigned long long int x;
+    asm volatile (".byte 0x0f, 0x31" : "=A" (x));
+    return x;
+}
+#elif defined(__i386__)
 static __inline__ unsigned long long rdtsc(void)
 {
   unsigned long long int x;
      __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
      return x;
 }
+#endif /* compilers */
+
 #elif defined(__x86_64__)
 
 static __inline__ uint64_t rdtsc(void)
@@ -151,7 +158,7 @@ static __inline__ unsigned long long rdtsc(void)
   return(result);
 }
 
-#endif
+#endif /* architecture */
 
 struct JSContext;
 
@@ -273,7 +280,11 @@ public:
 #ifdef XP_WIN
         VirtualFree(p, 0, MEM_RELEASE);
 #elif defined AVMPLUS_UNIX
+        #if defined SOLARIS
+        munmap((char*)p, pages * kNativePageSize); 
+        #else
         munmap(p, pages * kNativePageSize); 
+        #endif
 #else
         free(p);
 #endif
