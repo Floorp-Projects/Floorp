@@ -7,3 +7,4 @@ executablepath=/tmp/firefox-1.9.1
 userpreferences=${TEST_DIR}/prefs/test-user.js
 extensiondir=${TEST_DIR}/xpi
 buildtype=nightly
+TEST_MOZILLA_HG=http://hg.mozilla.org/mozilla-central
