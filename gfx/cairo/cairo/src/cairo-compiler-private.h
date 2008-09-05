@@ -38,9 +38,7 @@
 #ifndef CAIRO_COMPILER_PRIVATE_H
 #define CAIRO_COMPILER_PRIVATE_H
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
+CAIRO_BEGIN_DECLS
 
 #if __GNUC__ >= 3 && defined(__ELF__) && !defined(__sun)
 # define slim_hidden_proto(name)		slim_hidden_proto1(name, slim_hidden_int_name(name)) cairo_private
@@ -110,7 +108,6 @@
 #endif
 
 #ifndef __GNUC__
-#undef __attribute__
 #define __attribute__(x)
 #endif
 
@@ -127,5 +124,7 @@
 #undef inline
 #define inline __inline__
 #endif
+
+CAIRO_END_DECLS
 
 #endif

@@ -106,6 +106,7 @@ get_integer_default (Display    *dpy,
 		     const char *option,
 		     int        *value)
 {
+    int i;
     char *v, *e;
 
     v = XGetDefault (dpy, "Xft", option);
@@ -115,7 +116,7 @@ get_integer_default (Display    *dpy,
 	    return TRUE;
 #endif
 
-	*value = strtol (v, &e, 0);
+	i = strtol (v, &e, 0);
 	if (e != v)
 	    return TRUE;
     }
@@ -131,18 +132,6 @@ get_integer_default (Display    *dpy,
 #define FC_HINT_FULL        3
 #endif
 
-/* Fontconfig version older than 2.6 didn't have these options */
-#ifndef FC_LCD_FILTER
-#define FC_LCD_FILTER	"lcdfilter"
-#endif
-/* Some Ubuntu versions defined FC_LCD_FILTER without defining the following */
-#ifndef FC_LCD_NONE
-#define FC_LCD_NONE	0
-#define FC_LCD_DEFAULT	1
-#define FC_LCD_LIGHT	2
-#define FC_LCD_LEGACY	3
-#endif
-
 static void
 _cairo_xlib_init_screen_font_options (Display *dpy, cairo_xlib_screen_info_t *info)
 {
@@ -150,21 +139,12 @@ _cairo_xlib_init_screen_font_options (Display *dpy, cairo_xlib_screen_info_t *in
     cairo_bool_t xft_antialias;
     int xft_hintstyle;
     int xft_rgba;
-    int xft_lcdfilter;
     cairo_antialias_t antialias;
     cairo_subpixel_order_t subpixel_order;
-    cairo_lcd_filter_t lcd_filter;
     cairo_hint_style_t hint_style;
 
     if (!get_boolean_default (dpy, "antialias", &xft_antialias))
 	xft_antialias = TRUE;
-
-    if (!get_integer_default (dpy, "lcdfilter", &xft_lcdfilter)) {
-	/* -1 is an non-existant Fontconfig constant used to differentiate
-	 * the case when no lcdfilter property is available.
-	 */
-	xft_lcdfilter = -1;
-    }
 
     if (!get_boolean_default (dpy, "hinting", &xft_hinting))
 	xft_hinting = TRUE;
@@ -248,24 +228,6 @@ _cairo_xlib_init_screen_font_options (Display *dpy, cairo_xlib_screen_info_t *in
 	subpixel_order = CAIRO_SUBPIXEL_ORDER_DEFAULT;
     }
 
-    switch (xft_lcdfilter) {
-    case FC_LCD_NONE:
-	lcd_filter = CAIRO_LCD_FILTER_NONE;
-	break;
-    case FC_LCD_DEFAULT:
-	lcd_filter = CAIRO_LCD_FILTER_FIR5;
-	break;
-    case FC_LCD_LIGHT:
-	lcd_filter = CAIRO_LCD_FILTER_FIR3;
-	break;
-    case FC_LCD_LEGACY:
-	lcd_filter = CAIRO_LCD_FILTER_INTRA_PIXEL;
-	break;
-    default:
-	lcd_filter = CAIRO_LCD_FILTER_DEFAULT;
-	break;
-    }
-
     if (xft_antialias) {
 	if (subpixel_order == CAIRO_SUBPIXEL_ORDER_DEFAULT)
 	    antialias = CAIRO_ANTIALIAS_GRAY;
@@ -278,7 +240,6 @@ _cairo_xlib_init_screen_font_options (Display *dpy, cairo_xlib_screen_info_t *in
     cairo_font_options_set_hint_style (&info->font_options, hint_style);
     cairo_font_options_set_antialias (&info->font_options, antialias);
     cairo_font_options_set_subpixel_order (&info->font_options, subpixel_order);
-    cairo_font_options_set_lcd_filter (&info->font_options, lcd_filter);
     cairo_font_options_set_hint_metrics (&info->font_options, CAIRO_HINT_METRICS_ON);
 }
 
@@ -346,14 +307,19 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 }
 
 cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get (cairo_xlib_display_t *display, Screen *screen)
+_cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
 {
+    cairo_xlib_display_t *display;
     cairo_xlib_screen_info_t *info = NULL, **prev;
+
+    display = _cairo_xlib_display_get (dpy);
+    if (display == NULL)
+	return NULL;
 
     CAIRO_MUTEX_LOCK (display->mutex);
     if (display->closed) {
 	CAIRO_MUTEX_UNLOCK (display->mutex);
-	return NULL;
+	goto DONE;
     }
 
     for (prev = &display->screens; (info = *prev); prev = &(*prev)->next) {
@@ -389,9 +355,7 @@ _cairo_xlib_screen_info_get (cairo_xlib_display_t *display, Screen *screen)
 			       sizeof (cairo_xlib_visual_info_t*));
 
 	    if (screen) {
-		Display *dpy = display->display;
 		int event_base, error_base;
-
 		info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
 			(XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
 		_cairo_xlib_init_screen_font_options (dpy, info);
@@ -403,6 +367,9 @@ _cairo_xlib_screen_info_get (cairo_xlib_display_t *display, Screen *screen)
 	    CAIRO_MUTEX_UNLOCK (display->mutex);
 	}
     }
+
+DONE:
+    _cairo_xlib_display_destroy (display);
 
     return info;
 }

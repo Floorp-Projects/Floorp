@@ -196,40 +196,6 @@ _utf8_get_char_extended (const unsigned char *p,
 }
 
 /**
- * _cairo_utf8_get_char_validated:
- * @p: a UTF-8 string
- * @unicode: location to store one Unicode character
- *
- * Decodes the first character of a valid UTF-8 string, and returns
- * the number of bytes consumed.
- *
- * Note that the string should be valid.  Do not use this without
- * validating the string first.
- *
- * Returns: the number of bytes forming the character returned.
- **/
-int
-_cairo_utf8_get_char_validated (const char *p,
-				uint32_t   *unicode)
-{
-    int i, mask = 0, len;
-    uint32_t result;
-    unsigned char c = (unsigned char) *p;
-
-    UTF8_COMPUTE (c, mask, len);
-    if (len == -1) {
-	if (unicode)
-	    *unicode = (uint32_t)-1;
-	return 1;
-    }
-    UTF8_GET (result, p, i, mask, len);
-
-    if (unicode)
-	*unicode = result;
-    return len;
-}
-
-/**
  * _cairo_utf8_to_utf32:
  * @str: an UTF-8 string
  * @len: length of @str in bytes, or -1 if it is nul-terminated.
@@ -300,7 +266,7 @@ _cairo_utf8_to_ucs4 (const char *str,
  * _cairo_ucs4_to_utf8:
  * @unicode: a UCS-4 character
  * @utf8: buffer to write utf8 string into. Must have at least 4 bytes
- * space available. Or %NULL.
+ * space available.
  *
  * Return value: Number of bytes in the utf8 string or 0 if an invalid
  * unicode character
@@ -313,8 +279,7 @@ _cairo_ucs4_to_utf8 (uint32_t  unicode,
     char *p;
 
     if (unicode < 0x80) {
-	if (utf8)
-	    *utf8 = unicode;
+	*utf8 = unicode;
 	return 1;
     } else if (unicode < 0x800) {
 	bytes = 2;
@@ -325,9 +290,6 @@ _cairo_ucs4_to_utf8 (uint32_t  unicode,
     } else {
 	return 0;
     }
-
-    if (!utf8)
-	return bytes;
 
     p = utf8 + bytes;
     while (p > utf8) {

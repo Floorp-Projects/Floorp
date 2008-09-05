@@ -50,7 +50,6 @@
 #include "cairo-clip-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-win32-private.h"
-#include "cairo-scaled-font-subsets-private.h"
 
 #include <windows.h>
 
@@ -360,7 +359,6 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     surface->had_simple_clip = FALSE;
 
     surface->extents = surface->clip_rect;
-    surface->font_subsets = NULL;
 
     _cairo_surface_init (&surface->base, &cairo_win32_surface_backend,
 			 _cairo_content_from_format (format));
@@ -498,9 +496,6 @@ _cairo_win32_surface_finish (void *abstract_surface)
 
     if (surface->initial_clip_rgn)
 	DeleteObject (surface->initial_clip_rgn);
-
-    if (surface->font_subsets != NULL)
-	_cairo_scaled_font_subsets_destroy (surface->font_subsets);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1583,7 +1578,6 @@ _cairo_win32_surface_show_glyphs (void			*surface,
     int start_x, start_y;
     double user_x, user_y;
     int logical_x, logical_y;
-    unsigned int glyph_index_option;
 
     /* We can only handle win32 fonts */
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_WIN32)
@@ -1669,24 +1663,10 @@ _cairo_win32_surface_show_glyphs (void			*surface,
         }
     }
 
-    /* Using glyph indices for a Type 1 font does not work on a
-     * printer DC. The win32 printing surface will convert the the
-     * glyph indices of Type 1 fonts to the unicode values.
-     */
-    if ((dst->flags & CAIRO_WIN32_SURFACE_FOR_PRINTING) &&
-	_cairo_win32_scaled_font_is_type1 (scaled_font))
-    {
-	glyph_index_option = 0;
-    }
-    else
-    {
-	glyph_index_option = ETO_GLYPH_INDEX;
-    }
-
     win_result = ExtTextOutW(dst->dc,
                              start_x,
                              start_y,
-                             glyph_index_option | ETO_PDY,
+                             ETO_GLYPH_INDEX | ETO_PDY,
                              NULL,
                              glyph_buf,
                              num_glyphs,
@@ -1751,7 +1731,6 @@ cairo_win32_surface_create (HDC hdc)
     surface->saved_dc_bitmap = NULL;
     surface->brush = NULL;
     surface->old_brush = NULL;
-    surface->font_subsets = NULL;
 
     GetClipBox(hdc, &rect);
     surface->extents.x = rect.left;

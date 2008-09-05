@@ -28,10 +28,6 @@
  * The Original Code is the cairo graphics library.
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
- *
- * Contributors(s):
- *	Chris Wilson <chris@chris-wilson.co.uk>
- *	Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  */
 
 #ifndef CAIRO_XLIB_PRIVATE_H
@@ -52,8 +48,10 @@ typedef void (*cairo_xlib_notify_func) (Display *, void *);
 typedef void (*cairo_xlib_notify_resource_func) (Display *, XID);
 
 struct _cairo_xlib_hook {
-    cairo_xlib_hook_t *prev, *next; /* private */
-    void (*func) (cairo_xlib_display_t *display, void *data);
+    cairo_xlib_hook_t *next;
+    void (*func) (Display *display, void *data);
+    void *data;
+    const void *key;
 };
 
 struct _cairo_xlib_display {
@@ -69,6 +67,7 @@ struct _cairo_xlib_display {
     cairo_xlib_job_t *workqueue;
     cairo_freelist_t wq_freelist;
 
+    cairo_freelist_t hook_freelist;
     cairo_xlib_hook_t *close_display_hooks;
     unsigned int buggy_repeat :1;
     unsigned int closed :1;
@@ -113,11 +112,10 @@ _cairo_xlib_display_reference (cairo_xlib_display_t *info);
 cairo_private void
 _cairo_xlib_display_destroy (cairo_xlib_display_t *info);
 
+cairo_private cairo_bool_t
+_cairo_xlib_add_close_display_hook (Display *display, void (*func) (Display *, void *), void *data, const void *key);
 cairo_private void
-_cairo_xlib_add_close_display_hook (cairo_xlib_display_t *display, cairo_xlib_hook_t *hook);
-
-cairo_private void
-_cairo_xlib_remove_close_display_hook (cairo_xlib_display_t *display, cairo_xlib_hook_t *hook);
+_cairo_xlib_remove_close_display_hooks (Display *display, const void *key);
 
 cairo_private cairo_status_t
 _cairo_xlib_display_queue_work (cairo_xlib_display_t *display,
@@ -136,7 +134,7 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	                                cairo_format_t		 format);
 
 cairo_private cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get (cairo_xlib_display_t *display, Screen *screen);
+_cairo_xlib_screen_info_get (Display *display, Screen *screen);
 
 cairo_private cairo_xlib_screen_info_t *
 _cairo_xlib_screen_info_reference (cairo_xlib_screen_info_t *info);

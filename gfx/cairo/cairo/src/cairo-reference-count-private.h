@@ -37,10 +37,6 @@
 #ifndef CAIRO_REFRENCE_COUNT_PRIVATE_H
 #define CAIRO_REFRENCE_COUNT_PRIVATE_H
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "cairo-atomic-private.h"
 
 CAIRO_BEGIN_DECLS

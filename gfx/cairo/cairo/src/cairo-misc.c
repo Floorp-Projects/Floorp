@@ -3,7 +3,6 @@
  *
  * Copyright © 2002 University of Southern California
  * Copyright © 2005 Red Hat, Inc.
- * Copyright © 2007 Adrian Johnson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -35,15 +34,12 @@
  *
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
- *      Adrian Johnson <ajohnson@redneon.com>
  */
 
 #include "cairoint.h"
 
 COMPILE_TIME_ASSERT (CAIRO_STATUS_LAST_STATUS < CAIRO_INT_STATUS_UNSUPPORTED);
 COMPILE_TIME_ASSERT (CAIRO_INT_STATUS_LAST_STATUS <= 127);
-
-/* Public stuff */
 
 /**
  * cairo_status_to_string:
@@ -117,189 +113,9 @@ cairo_status_to_string (cairo_status_t status)
 	return "negative number used where it is not allowed";
     case CAIRO_STATUS_INVALID_CLUSTERS:
 	return "input clusters do not represent the accompanying text and glyph arrays";
-    case CAIRO_STATUS_INVALID_SLANT:
-	return "invalid value for an input #cairo_font_slant_t";
-    case CAIRO_STATUS_INVALID_WEIGHT:
-	return "input value for an input #cairo_font_weight_t";
     }
 
     return "<unknown error status>";
-}
-
-
-/**
- * cairo_glyph_allocate:
- * @num_glyphs: number of glyphs to allocate
- *
- * Allocates an array of #cairo_glyph_t's.
- * This function is only useful in implementations of
- * #cairo_user_scaled_font_text_to_glyphs_func_t where the user
- * needs to allocate an array of glyphs that cairo will free.
- * For all other uses, user can use their own allocation method
- * for glyphs.
- *
- * This function returns %NULL if @num_glyphs is not positive,
- * or if out of memory.  That means, the %NULL return value
- * signals out-of-memory only if @num_glyphs was positive.
- *
- * Returns: the newly allocated array of glyphs that should be
- *          freed using cairo_glyph_free()
- *
- * Since: 1.8
- */
-cairo_glyph_t *
-cairo_glyph_allocate (int num_glyphs)
-{
-    if (num_glyphs <= 0)
-	return NULL;
-
-    return _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-}
-slim_hidden_def (cairo_glyph_allocate);
-
-/**
- * cairo_glyph_free:
- * @glyphs: array of glyphs to free, or %NULL
- *
- * Frees an array of #cairo_glyph_t's allocated using cairo_glyph_allocate().
- * This function is only useful to free glyph array returned
- * by cairo_scaled_font_text_to_glyphs() where cairo returns
- * an array of glyphs that the user will free.
- * For all other uses, user can use their own allocation method
- * for glyphs.
- *
- * Since: 1.8
- */
-void
-cairo_glyph_free (cairo_glyph_t *glyphs)
-{
-    if (glyphs)
-	free (glyphs);
-}
-slim_hidden_def (cairo_glyph_free);
-
-/**
- * cairo_text_cluster_allocate:
- * @num_clusters: number of text_clusters to allocate
- *
- * Allocates an array of #cairo_text_cluster_t's.
- * This function is only useful in implementations of
- * #cairo_user_scaled_font_text_to_glyphs_func_t where the user
- * needs to allocate an array of text clusters that cairo will free.
- * For all other uses, user can use their own allocation method
- * for text clusters.
- *
- * This function returns %NULL if @num_clusters is not positive,
- * or if out of memory.  That means, the %NULL return value
- * signals out-of-memory only if @num_clusters was positive.
- *
- * Returns: the newly allocated array of text clusters that should be
- *          freed using cairo_text_cluster_free()
- *
- * Since: 1.8
- */
-cairo_text_cluster_t *
-cairo_text_cluster_allocate (int num_clusters)
-{
-    if (num_clusters <= 0)
-	return NULL;
-
-    return _cairo_malloc_ab (num_clusters, sizeof (cairo_text_cluster_t));
-}
-slim_hidden_def (cairo_text_cluster_allocate);
-
-/**
- * cairo_text_cluster_free:
- * @clusters: array of text clusters to free, or %NULL
- *
- * Frees an array of #cairo_text_cluster's allocated using cairo_text_cluster_allocate().
- * This function is only useful to free text cluster array returned
- * by cairo_scaled_font_text_to_glyphs() where cairo returns
- * an array of text clusters that the user will free.
- * For all other uses, user can use their own allocation method
- * for text clusters.
- *
- * Since: 1.8
- */
-void
-cairo_text_cluster_free (cairo_text_cluster_t *clusters)
-{
-    if (clusters)
-	free (clusters);
-}
-slim_hidden_def (cairo_text_cluster_free);
-
-
-/* Private stuff */
-
-/**
- * _cairo_validate_text_clusters:
- * @utf8: UTF-8 text
- * @utf8_len: length of @utf8 in bytes
- * @glyphs: array of glyphs
- * @num_glyphs: number of glyphs
- * @clusters: array of cluster mapping information
- * @num_clusters: number of clusters in the mapping
- * @backward: whether the text to glyphs mapping goes backward
- *
- * Check that clusters cover the entire glyphs and utf8 arrays,
- * and that cluster boundaries are UTF-8 boundaries.
- *
- * Return value: %CAIRO_STATUS_SUCCESS upon success, or
- *               %CAIRO_STATUS_INVALID_CLUSTERS on error.
- *               The error is either invalid UTF-8 input,
- *               or bad cluster mapping.
- */
-cairo_status_t
-_cairo_validate_text_clusters (const char		   *utf8,
-			       int			    utf8_len,
-			       const cairo_glyph_t	   *glyphs,
-			       int			    num_glyphs,
-			       const cairo_text_cluster_t  *clusters,
-			       int			    num_clusters,
-			       cairo_bool_t		    backward)
-{
-    cairo_status_t status;
-    unsigned int n_bytes  = 0;
-    unsigned int n_glyphs = 0;
-    int i;
-
-    for (i = 0; i < num_clusters; i++) {
-	int cluster_bytes  = clusters[i].num_bytes;
-	int cluster_glyphs = clusters[i].num_glyphs;
-
-	if (cluster_bytes < 0 || cluster_glyphs < 0)
-	    goto BAD;
-
-	/* A cluster should cover at least one character or glyph.
-	 * I can't see any use for a 0,0 cluster.
-	 * I can't see an immediate use for a zero-text cluster
-	 * right now either, but they don't harm.
-	 * Zero-glyph clusters on the other hand are useful for
-	 * things like U+200C ZERO WIDTH NON-JOINER */
-	if (cluster_bytes == 0 && cluster_glyphs == 0)
-	    goto BAD;
-
-	/* Since n_bytes and n_glyphs are unsigned, but the rest of
-	 * values involved are signed, we can detect overflow easily */
-	if (n_bytes+cluster_bytes > (unsigned int)utf8_len || n_glyphs+cluster_glyphs > (unsigned int)num_glyphs)
-	    goto BAD;
-
-	/* Make sure we've got valid UTF-8 for the cluster */
-	status = _cairo_utf8_to_ucs4 (utf8+n_bytes, cluster_bytes, NULL, NULL);
-	if (status)
-	    return CAIRO_STATUS_INVALID_CLUSTERS;
-
-	n_bytes  += cluster_bytes ;
-	n_glyphs += cluster_glyphs;
-    }
-
-    if (n_bytes != (unsigned int) utf8_len || n_glyphs != (unsigned int) num_glyphs) {
-      BAD:
-	return CAIRO_STATUS_INVALID_CLUSTERS;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 /**
@@ -601,69 +417,3 @@ _cairo_lround (double d)
 #undef MSW
 #undef LSW
 }
-
-
-#ifdef _WIN32
-
-#define WIN32_LEAN_AND_MEAN
-/* We require Windows 2000 features such as ETO_PDY */
-#if !defined(WINVER) || (WINVER < 0x0500)
-# define WINVER 0x0500
-#endif
-#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
-# define _WIN32_WINNT 0x0500
-#endif
-
-#include <windows.h>
-#include <io.h>
-
-/* tmpfile() replacment for Windows.
- *
- * On Windows tmpfile() creates the file in the root directory. This
- * may fail due to unsufficient privileges.
- */
-FILE *
-_cairo_win32_tmpfile (void)
-{
-    DWORD path_len;
-    WCHAR path_name[MAX_PATH + 1];
-    WCHAR file_name[MAX_PATH + 1];
-    HANDLE handle;
-    int fd;
-    FILE *fp;
-
-    path_len = GetTempPathW (MAX_PATH, path_name);
-    if (path_len <= 0 || path_len >= MAX_PATH)
-	return NULL;
-
-    if (GetTempFileNameW (path_name, L"ps_", 0, file_name) == 0)
-	return NULL;
-
-    handle = CreateFileW (file_name,
-			 GENERIC_READ | GENERIC_WRITE,
-			 0,
-			 NULL,
-			 CREATE_ALWAYS,
-			 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE,
-			 NULL);
-    if (handle == INVALID_HANDLE_VALUE) {
-	DeleteFileW (file_name);
-	return NULL;
-    }
-
-    fd = _open_osfhandle((intptr_t) handle, 0);
-    if (fd < 0) {
-	CloseHandle (handle);
-	return NULL;
-    }
-
-    fp = fdopen(fd, "w+b");
-    if (fp == NULL) {
-	_close(fd);
-	return NULL;
-    }
-
-    return fp;
-}
-
-#endif /* _WIN32 */
