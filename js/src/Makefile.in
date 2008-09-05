@@ -95,8 +95,12 @@ ENABLE_JIT = 1
 endif
 endif
 
+ifneq (,$(filter Linux Darwin SunOS FreeBSD,$(OS_ARCH)))
+DEFINES += -DAVMPLUS_UNIX
+endif
+
 ifeq ($(OS_ARCH),Linux)
-DEFINES += -DAVMPLUS_LINUX -DLINUX
+DEFINES += -DAVMPLUS_LINUX
 endif
 
 ifeq ($(OS_ARCH),WINNT)
