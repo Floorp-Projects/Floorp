@@ -434,6 +434,18 @@ LDFLAGS += -ljemalloc
 endif
 endif
 
+# Sun Studio x86 has an optimization bug with LIR.cpp, use -xO2 instead.
+ifeq ($(OS_ARCH),SunOS)
+ifeq (86,$(findstring 86,$(OS_TEST)))
+ifndef GNU_CC
+LIR.o: LIR.cpp Makefile.in
+    $(REPORT_BUILD)
+    @$(MAKE_DEPS_AUTO_CXX)
+    $(CXX) -o $@ -c $(patsubst -xO%,-xO2,$(COMPILE_CFLAGS)) $<
+endif
+endif
+endif
+
 # Allow building jsinterp.c with special optimization flags
 ifdef INTERP_OPTIMIZER
 jsinterp.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS=$(INTERP_OPTIMIZER)

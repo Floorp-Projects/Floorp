@@ -47,6 +47,9 @@
 #include <malloc.h>
 #define alloca _alloca
 #endif
+#ifdef SOLARIS
+#include <alloca.h>
+#endif
 
 #include "nanojit/avmplus.h"    // nanojit
 #include "nanojit/nanojit.h"
@@ -2547,6 +2550,15 @@ js_CheckForSSE2()
         : "=m" (features)
         /* We have no inputs */
         /* We don't clobber anything */
+       );
+#elif defined __SUNPRO_C || defined __SUNPRO_CC
+    asm("push %%ebx\n"
+        "mov $0x01, %%eax\n"
+        "cpuid\n"
+        "pop %%ebx\n"
+        : "=d" (features)
+        : /* We have no inputs */
+        : "%eax", "%ecx"
        );
 #endif
     return (features & (1<<26)) != 0;
