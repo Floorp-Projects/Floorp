@@ -1201,6 +1201,16 @@ function testConstIf() {
 testConstIf.expected = 2;
 test(testConstIf);
 
+function testTypeofHole() {
+  var a = new Array(6);
+  a[5] = 3;
+  for (var i = 0; i < 6; ++i)
+    a[i] = typeof a[i];
+  return a.toString();
+}
+testTypeofHole.expected = "undefined,undefined,undefined,undefined,undefined,number"
+test(testTypeofHole);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
