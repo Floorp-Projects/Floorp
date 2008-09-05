@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if defined(AVMPLUS_LINUX) || defined(DARWIN) || defined(__FreeBSD__)
+#if defined(AVMPLUS_UNIX)
 #include <unistd.h>
 #include <sys/mman.h>
 #endif
@@ -251,7 +251,7 @@ public:
                             pages * kNativePageSize,
                             MEM_COMMIT | MEM_RESERVE, 
                             PAGE_EXECUTE_READWRITE);
-#elif defined AVMPLUS_LINUX || defined DARWIN
+#elif defined AVMPLUS_UNIX
         /**
          * Don't use normal heap with mprotect+PROT_EXEC for executable code.
          * SELinux and friends don't allow this.
@@ -272,7 +272,7 @@ public:
     {
 #ifdef XP_WIN
         VirtualFree(p, 0, MEM_RELEASE);
-#elif defined AVMPLUS_LINUX || defined DARWIN
+#elif defined AVMPLUS_UNIX
         munmap(p, pages * kNativePageSize); 
 #else
         free(p);
