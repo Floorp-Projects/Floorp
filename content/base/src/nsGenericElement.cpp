@@ -149,6 +149,8 @@
 
 #include "mozAutoDocUpdate.h"
 
+#include "nsICSSParser.h"
+
 #ifdef MOZ_SVG
 PRBool NS_SVG_HaveFeature(const nsAString &aFeature);
 #endif /* MOZ_SVG */
@@ -789,10 +791,12 @@ nsNSElementTearoff::GetFirstElementChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
+#ifdef MOZ_XUL
   nsXULElement* xul = nsXULElement::FromContent(mContent);
   if (xul) {
     xul->EnsureContentsGenerated();
   }
+#endif
 
   nsAttrAndChildArray& children = mContent->mAttrsAndChildren;
   PRUint32 i, count = children.ChildCount();
@@ -811,10 +815,12 @@ nsNSElementTearoff::GetLastElementChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
+#ifdef MOZ_XUL
   nsXULElement* xul = nsXULElement::FromContent(mContent);
   if (xul) {
     xul->EnsureContentsGenerated();
   }
+#endif
 
   nsAttrAndChildArray& children = mContent->mAttrsAndChildren;
   PRUint32 i = children.ChildCount();
@@ -838,10 +844,12 @@ nsNSElementTearoff::GetPreviousElementSibling(nsIDOMElement** aResult)
     return NS_OK;
   }
 
+#ifdef MOZ_XUL
   nsXULElement* xul = nsXULElement::FromContent(parent);
   if (xul) {
     xul->EnsureContentsGenerated();
   }
+#endif
 
   NS_ASSERTION(parent->IsNodeOfType(nsINode::eELEMENT) ||
                parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
@@ -875,10 +883,12 @@ nsNSElementTearoff::GetNextElementSibling(nsIDOMElement** aResult)
     return NS_OK;
   }
 
+#ifdef MOZ_XUL
   nsXULElement* xul = nsXULElement::FromContent(parent);
   if (xul) {
     xul->EnsureContentsGenerated();
   }
+#endif
 
   NS_ASSERTION(parent->IsNodeOfType(nsINode::eELEMENT) ||
                parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
