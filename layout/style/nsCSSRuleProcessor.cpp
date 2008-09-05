@@ -1012,6 +1012,11 @@ RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
 
   PRUint32 childCount = parent->GetChildCount();
   nsIContent * const * curChildPtr = parent->GetChildArray();
+
+#ifdef DEBUG
+  nsMutationGuard debugMutationGuard;
+#endif  
+  
   PRInt32 increment;
   nsIContent * const * stopPtr;
   if (aIsFromEnd) {
@@ -1045,6 +1050,10 @@ RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
       ++result;
     }
   }
+
+#ifdef DEBUG
+  NS_ASSERTION(!debugMutationGuard.Mutated(0), "Unexpected mutations happened");
+#endif  
 
   slot = result;
   return result;
