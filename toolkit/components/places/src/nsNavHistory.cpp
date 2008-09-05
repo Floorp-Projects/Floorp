@@ -198,10 +198,6 @@
 
 #endif // LAZY_ADD
 
-// Perform "long idle" tasks after 15 minutes of idle time, repeating.
-// 15 minutes = 900 seconds = 900000 milliseconds
-#define LONG_IDLE_TIME_IN_MSECS (900000)
-
 // Perform expiration after 5 minutes of idle time, repeating.
 // 5 minutes = 300 seconds = 300000 milliseconds
 #define EXPIRE_IDLE_TIME_IN_MSECS (300000)
@@ -901,8 +897,7 @@ nsNavHistory::InitializeIdleTimer()
   mIdleTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 idleTimerTimeout = PR_MIN(LONG_IDLE_TIME_IN_MSECS,
-                                    EXPIRE_IDLE_TIME_IN_MSECS);
+  PRInt32 idleTimerTimeout = EXPIRE_IDLE_TIME_IN_MSECS;
   if (mFrecencyUpdateIdleTime)
     idleTimerTimeout = PR_MIN(idleTimerTimeout, mFrecencyUpdateIdleTime);
 
@@ -4632,87 +4627,6 @@ nsNavHistory::OnIdle()
     (void)mExpire.ExpireItems(MAX_EXPIRE_RECORDS_ON_IDLE, &dummy);
   }
 
-  // If we've been idle for more than LONG_IDLE_TIME_IN_MSECS
-  // perform long-idle tasks.
-  if (idleTime > LONG_IDLE_TIME_IN_MSECS) {
-    // Do a one-time re-creation of the moz_places.url index (bug 381795)
-    // XXX REMOVE ME AFTER BETA2.
-    PRBool oldIndexExists = PR_FALSE;
-    rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_places_urlindex"), &oldIndexExists);
-    NS_ENSURE_SUCCESS(rv, rv);
- 
-    if (oldIndexExists) {
-      // wrap in a transaction for safety and performance
-      mozStorageTransaction urlindexTransaction(mDBConn, PR_FALSE);
-      // drop old index
-      rv = mDBConn->ExecuteSimpleSQL(
-          NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_urlindex"));
-      NS_ENSURE_SUCCESS(rv, rv);
-      // remove any duplicates
-      rv = RemoveDuplicateURIs();
-      NS_ENSURE_SUCCESS(rv, rv);
-      // create new index
-      rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_places_url_uniqueindex ON moz_places (url)"));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = urlindexTransaction.Commit();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // detect and replace bogus moz_places_visitcount index
-    // see bug 402161
-    // XXX REMOVE ME AFTER FINAL
-    nsCOMPtr<mozIStorageStatement> detectBogusIndex;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT name FROM sqlite_master WHERE type = 'index' AND "
-        "name = 'moz_places_visitcount' AND sql LIKE ?1 ESCAPE '/'"),
-        getter_AddRefs(detectBogusIndex));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoString escapedString;
-    rv = detectBogusIndex->EscapeStringForLIKE(NS_LITERAL_STRING("rev_host"),
-                                               '/', escapedString);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = detectBogusIndex->BindStringParameter(0, NS_LITERAL_STRING("%") +
-                                                  escapedString +
-                                                  NS_LITERAL_STRING("%"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasResult;
-    rv = detectBogusIndex->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = detectBogusIndex->Reset();
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasResult) {
-      // drop old index
-      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-          "DROP INDEX IF EXISTS moz_places_visitcount"));
-      NS_ENSURE_SUCCESS(rv, rv);
-      // create new index
-      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-          "CREATE INDEX IF NOT EXISTS moz_places_visitcount "
-          "ON moz_places (visit_count)"));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Remove dangling livemark annotations
-    // we have moved expiration pageAnnotations to itemAnnotations
-    // we must remove pageAnnotations to allow expire do the cleanup
-    // see bug 388716
-    // XXX REMOVE ME AFTER FINAL
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_annos WHERE id IN (SELECT a.id FROM moz_annos a "
-        "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-        "WHERE n.name = 'livemark/expiration')"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-#if 0
-    // Currently commented out because vacuum is very slow
-    // see bug #390244 for more details.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
-    NS_ENSURE_SUCCESS(rv, rv);
-#endif
-  }
   return NS_OK;
 }
 
