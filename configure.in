@@ -4031,6 +4031,13 @@ elif test -n "$LIBXUL_SDK_DIR" -a "$LIBXUL_SDK_DIR" != "no"; then
 fi
 AC_SUBST(LIBXUL_SDK)
 
+if test -n "$LIBXUL_SDK"; then
+    LIBXUL_DIST="$LIBXUL_SDK"
+else
+    LIBXUL_DIST="$MOZ_BUILD_ROOT/dist"
+fi
+AC_SUBST(LIBXUL_DIST)
+
 dnl ========================================================
 dnl = If NSPR was not detected in the system, 
 dnl = use the one in the source tree (mozilla/nsprpub)
