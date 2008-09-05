@@ -46,8 +46,6 @@
 #include "cairo-surface-private.h"
 #include "cairo-pdf-operators-private.h"
 
-#include <time.h>
-
 typedef struct cairo_ps_surface {
     cairo_surface_t base;
 
@@ -82,8 +80,6 @@ typedef struct cairo_ps_surface {
     cairo_paginated_mode_t paginated_mode;
 
     cairo_bool_t force_fallbacks;
-    cairo_bool_t has_creation_date;
-    time_t creation_date;
 
     cairo_scaled_font_subsets_t *font_subsets;
 

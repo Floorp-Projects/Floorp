@@ -51,7 +51,6 @@
 #include "cairo-clip-private.h"
 #include "cairo-win32-private.h"
 #include "cairo-meta-surface-private.h"
-#include "cairo-scaled-font-subsets-private.h"
 
 #include <windows.h>
 
@@ -1314,14 +1313,16 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
-	/* When printing bitmap fonts to a printer DC, Windows may
-	 * substitute an outline font for bitmap font. As the win32
-	 * font backend always uses a screen DC when obtaining the
-	 * font metrics the metrics of the substituted font will not
-	 * match the metrics that the win32 font backend returns.
+	/* Calling ExtTextOutW() with ETO_GLYPH_INDEX and a Type 1 or
+	 * bitmap font on a printer DC prints garbled text. The text
+	 * displays correctly on a display DC. It appears that when
+	 * using a printer DC. ExtTextOutW() only works with
+	 * characters and not glyph indices.
 	 *
-	 * If we are printing a bitmap font, use fallback images to
-	 * ensure the font is not substituted.
+	 * For now we don't use ExtTextOutW for Type 1 or bitmap
+	 * fonts. These fonts will go through the fallback path for
+	 * non Windows fonts. ie filled outlines for Type 1 fonts and
+	 * fallback images for bitmap fonts.
 	 */
 	if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32) {
 	    if (_cairo_win32_scaled_font_is_bitmap (scaled_font))
@@ -1363,46 +1364,10 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     }
 
     if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32 &&
+	! _cairo_win32_scaled_font_is_type1 (scaled_font) &&
 	source->type == CAIRO_PATTERN_TYPE_SOLID)
     {
 	cairo_matrix_t ctm;
-	cairo_glyph_t  *type1_glyphs = NULL;
-	cairo_scaled_font_subsets_glyph_t subset_glyph;
-
-	/* Calling ExtTextOutW() with ETO_GLYPH_INDEX and a Type 1
-	 * font on a printer DC prints garbled text. The text displays
-	 * correctly on a display DC. When using a printer
-	 * DC, ExtTextOutW() only works with characters and not glyph
-	 * indices.
-	 *
-	 * For Type 1 fonts the glyph indices are converted back to
-	 * unicode characters before calling _cairo_win32_surface_show_glyphs().
-	 *
-	 * As _cairo_win32_scaled_font_index_to_ucs4() is a slow
-	 * operation, the font subsetting function
-	 * _cairo_scaled_font_subsets_map_glyph() is used to obtain
-	 * the unicode value because it caches the reverse mapping in
-	 * the subsets.
-	 */
-	if (_cairo_win32_scaled_font_is_type1 (scaled_font)) {
-	    type1_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-	    if (type1_glyphs == NULL)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	    memcpy (type1_glyphs, glyphs, num_glyphs * sizeof (cairo_glyph_t));
-	    for (i = 0; i < num_glyphs; i++) {
-		status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
-							       scaled_font,
-							       type1_glyphs[i].index,
-							       NULL, 0,
-							       &subset_glyph);
-		if (status)
-		    return status;
-
-		type1_glyphs[i].index = subset_glyph.unicode;
-	    }
-	    glyphs = type1_glyphs;
-	}
 
 	if (surface->has_ctm) {
 	    for (i = 0; i < num_glyphs; i++)
@@ -1419,9 +1384,6 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 						   remaining_glyphs);
 	if (surface->has_ctm)
 	    cairo_scaled_font_destroy (scaled_font);
-
-	if (type1_glyphs != NULL)
-	    free (type1_glyphs);
 
 	return status;
     }
@@ -1569,11 +1531,6 @@ cairo_win32_printing_surface_create (HDC hdc)
     surface->saved_dc_bitmap = NULL;
     surface->brush = NULL;
     surface->old_brush = NULL;
-    surface->font_subsets = _cairo_scaled_font_subsets_create_scaled ();
-    if (surface->font_subsets == NULL) {
-	free (surface);
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
-    }
 
     GetClipBox(hdc, &rect);
     surface->extents.x = rect.left;

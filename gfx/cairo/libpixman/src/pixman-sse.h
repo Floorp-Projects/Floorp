@@ -38,18 +38,18 @@
 #ifdef USE_SSE2
 
 #if !defined(__amd64__) && !defined(__x86_64__)
-pixman_bool_t pixman_have_sse2(void);
+pixman_bool_t pixman_have_sse(void);
 #else
-#define pixman_have_sse2() TRUE
+#define pixman_have_sse() TRUE
 #endif
 
 #else
-#define pixman_have_sse2() FALSE
+#define pixman_have_sse() FALSE
 #endif
 
 #ifdef USE_SSE2
 
-void fbComposeSetupSSE2(void);
+void fbComposeSetupSSE(void);
 
 pixman_bool_t
 pixmanFillsse2 (uint32_t *bits,

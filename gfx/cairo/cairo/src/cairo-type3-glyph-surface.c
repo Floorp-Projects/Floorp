@@ -35,9 +35,6 @@
  */
 
 #include "cairoint.h"
-
-#if CAIRO_HAS_FONT_SUBSET
-
 #include "cairo-type3-glyph-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-meta-surface-private.h"
@@ -115,7 +112,7 @@ _cairo_type3_glyph_surface_emit_image (cairo_type3_glyph_surface_t *surface,
     if (image_mask != image)
 	cairo_surface_destroy (&image_mask->base);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -446,5 +443,3 @@ _cairo_type3_glyph_surface_emit_glyph (void		     *abstract_surface,
 
     return status;
 }
-
-#endif /* CAIRO_HAS_FONT_SUBSET */

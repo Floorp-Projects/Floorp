@@ -162,4 +162,5 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
 				       cairo_bool_t                backward,
 				       cairo_scaled_font_t	  *scaled_font);
 
+
 #endif /* CAIRO_PDF_OPERATORS_H */

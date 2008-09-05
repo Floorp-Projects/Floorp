@@ -844,12 +844,14 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	{
 	    cairo_matrix_t dev_ctm = command->stroke.ctm;
 	    cairo_matrix_t dev_ctm_inverse = command->stroke.ctm_inverse;
+	    cairo_matrix_t tmp;
 
 	    if (has_device_transform) {
 		cairo_matrix_multiply (&dev_ctm, &dev_ctm, device_transform);
-		cairo_matrix_multiply (&dev_ctm_inverse,
-				       &surface->device_transform_inverse,
-				       &dev_ctm_inverse);
+		tmp = surface->device_transform;
+		status = cairo_matrix_invert (&tmp);
+		assert (status == CAIRO_STATUS_SUCCESS);
+		cairo_matrix_multiply (&dev_ctm_inverse, &tmp, &dev_ctm_inverse);
 	    }
 
 	    status = _cairo_surface_stroke (target,
@@ -883,15 +885,17 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 		_cairo_path_fixed_is_equal (dev_path, _cairo_command_get_path (stroke_command))) {
 		cairo_matrix_t dev_ctm;
 		cairo_matrix_t dev_ctm_inverse;
+		cairo_matrix_t tmp;
 
 		dev_ctm = stroke_command->stroke.ctm;
 		dev_ctm_inverse = stroke_command->stroke.ctm_inverse;
 
 		if (has_device_transform) {
 		    cairo_matrix_multiply (&dev_ctm, &dev_ctm, device_transform);
-		    cairo_matrix_multiply (&dev_ctm_inverse,
-					   &surface->device_transform_inverse,
-					   &dev_ctm_inverse);
+		    tmp = surface->device_transform;
+		    status = cairo_matrix_invert (&tmp);
+		    assert (status == CAIRO_STATUS_SUCCESS);
+		    cairo_matrix_multiply (&dev_ctm_inverse, &tmp, &dev_ctm_inverse);
 		}
 
 		status = _cairo_surface_fill_stroke (target,
@@ -969,6 +973,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					   command->intersect_clip_path.tolerance,
 					   command->intersect_clip_path.antialias,
 					   target);
+            assert (status == 0);
 	    break;
 	default:
 	    ASSERT_NOT_REACHED;

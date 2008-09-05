@@ -40,9 +40,6 @@
  */
 
 #include "cairoint.h"
-
-#if CAIRO_HAS_PDF_OPERATORS
-
 #include "cairo-pdf-operators-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-output-stream-private.h"
@@ -686,18 +683,15 @@ _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t	*pdf_operators,
 				  cairo_stroke_style_t	*style,
 				  cairo_matrix_t	*ctm,
 				  cairo_matrix_t	*ctm_inverse,
-				  const char		*pdf_operator)
+				  const char 		*pdf_operator)
 {
     cairo_status_t status;
     cairo_matrix_t m, path_transform;
     cairo_bool_t has_ctm = TRUE;
     double scale = 1.0;
 
-    if (pdf_operators->in_text_object) {
+    if (pdf_operators->in_text_object)
 	status = _cairo_pdf_operators_end_text (pdf_operators);
-	if (status)
-	    return status;
-    }
 
     /* Optimize away the stroke ctm when it does not affect the
      * stroke. There are other ctm cases that could be optimized
@@ -794,11 +788,8 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
     const char *pdf_operator;
     cairo_status_t status;
 
-    if (pdf_operators->in_text_object) {
+    if (pdf_operators->in_text_object)
 	status = _cairo_pdf_operators_end_text (pdf_operators);
-	if (status)
-	    return status;
-    }
 
     status = _cairo_pdf_operators_emit_path (pdf_operators,
 					     path,
@@ -936,12 +927,12 @@ static cairo_status_t
 _cairo_pdf_operators_flush_glyphs (cairo_pdf_operators_t    *pdf_operators)
 {
     cairo_output_stream_t *word_wrap_stream;
-    cairo_status_t status, status2;
+    cairo_status_t status;
     int i;
     double x;
 
     if (pdf_operators->num_glyphs == 0)
-	return CAIRO_STATUS_SUCCESS;
+	return 0;
 
     word_wrap_stream = _word_wrap_stream_create (pdf_operators->stream, 72);
     status = _cairo_output_stream_get_status (word_wrap_stream);
@@ -964,9 +955,9 @@ _cairo_pdf_operators_flush_glyphs (cairo_pdf_operators_t    *pdf_operators)
     }
 
     pdf_operators->num_glyphs = 0;
-    status2 = _cairo_output_stream_destroy (word_wrap_stream);
-    if (status == CAIRO_STATUS_SUCCESS)
-	status = status2;
+    status = _cairo_output_stream_destroy (word_wrap_stream);
+    if (status)
+	return status;
 
     return status;
 }
@@ -1275,7 +1266,7 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
 						       scaled_font,
 						       glyphs->index,
 						       utf8,
-						       utf8_len,
+						       utf8_len < 0 ? 0 : utf8_len,
 						       &subset_glyph);
 	if (status)
 	    return status;
@@ -1284,10 +1275,7 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
 	    status = _cairo_pdf_operators_emit_glyph (pdf_operators,
 						      glyphs,
 						      &subset_glyph);
-	    if (status)
-		return status;
-
-	    return CAIRO_STATUS_SUCCESS;
+	    return 0;
 	}
     }
 
@@ -1295,17 +1283,12 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
      * unicode string. */
     _cairo_pdf_operators_flush_glyphs (pdf_operators);
     status = _cairo_pdf_operators_begin_actualtext (pdf_operators, utf8, utf8_len);
-    if (status)
-	return status;
-
     cur_glyph = glyphs;
-    /* XXX
-     * If no glyphs, we should put *something* here for the text to be selectable. */
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_font_subsets_map_glyph (pdf_operators->font_subsets,
 						       scaled_font,
 						       cur_glyph->index,
-						       NULL, -1,
+						       NULL, 0,
 						       &subset_glyph);
 	if (status)
 	    return status;
@@ -1428,5 +1411,3 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
 
     return _cairo_output_stream_get_status (pdf_operators->stream);
 }
-
-#endif /* CAIRO_HAS_PDF_OPERATORS */

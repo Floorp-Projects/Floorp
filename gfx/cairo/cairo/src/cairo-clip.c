@@ -59,7 +59,7 @@ _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target)
     clip->surface = NULL;
     clip->surface_rect.x = 0;
     clip->surface_rect.y = 0;
-    clip->surface_rect.width  = 0;
+    clip->surface_rect.width = 0;
     clip->surface_rect.height = 0;
 
     clip->serial = 0;
@@ -86,7 +86,6 @@ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 
     if (other->has_region) {
 	cairo_status_t status;
-
 	status = _cairo_region_copy (&clip->region, &other->region);
 	if (status) {
 	    _cairo_region_fini (&clip->region);
@@ -381,13 +380,14 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
     if (status)
 	return status;
 
+    status = CAIRO_STATUS_SUCCESS;
+
     if (!clip->has_region) {
         status = _cairo_region_copy (&clip->region, &region);
 	if (status == CAIRO_STATUS_SUCCESS)
 	    clip->has_region = TRUE;
     } else {
 	cairo_region_t intersection;
-
         _cairo_region_init (&intersection);
 
 	status = _cairo_region_intersect (&intersection,
@@ -727,7 +727,7 @@ _cairo_clip_int_rect_to_user (cairo_gstate_t *gstate,
 
     user_rect->x = x1;
     user_rect->y = y1;
-    user_rect->width  = x2 - x1;
+    user_rect->width = x2 - x1;
     user_rect->height = y2 - y1;
 
     return is_tight;
@@ -764,12 +764,9 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 	    }
 
 	    for (i = 0; i < n_boxes; ++i) {
-               cairo_rectangle_int_t clip_rect;
-
-               clip_rect.x = boxes[i].p1.x;
-               clip_rect.y = boxes[i].p1.y;
-               clip_rect.width  = boxes[i].p2.x - boxes[i].p1.x;
-               clip_rect.height = boxes[i].p2.y - boxes[i].p1.y;
+		cairo_rectangle_int_t clip_rect = { boxes[i].p1.x, boxes[i].p1.y,
+						    boxes[i].p2.x - boxes[i].p1.x,
+						    boxes[i].p2.y - boxes[i].p1.y };
 
 		if (!_cairo_clip_int_rect_to_user(gstate, &clip_rect, &rectangles[i])) {
 		    _cairo_error_throw (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
