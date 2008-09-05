@@ -1516,6 +1516,12 @@ SessionStoreService.prototype = {
       tabbrowser.updateIcon(tab);
       tabbrowser.setTabTitleLoading(tab);
       
+      // wall-paper fix for bug 439675: make sure that the URL to be loaded
+      // is always visible in the address bar
+      let activeIndex = (aTabs[t].index || aTabs[t].entries.length) - 1;
+      let activePageData = aTabs[t].entries[activeIndex] || null;
+      browser.userTypedValue = activePageData ? activePageData.url || null : null;
+      
       // keep the data around to prevent dataloss in case
       // a tab gets closed before it's been properly restored
       browser.parentNode.__SS_data = aTabs[t];
