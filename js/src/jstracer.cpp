@@ -120,7 +120,9 @@ static avmplus::AvmCore* core = &s_core;
 /* We really need a better way to configure the JIT. Shaver, where is my fancy JIT object? */
 static bool nesting_enabled = true;
 static bool oracle_enabled = true;
+#if defined(NANOJIT_IA32)
 static bool did_we_check_sse2 = false;
+#endif
 
 #if defined(DEBUG) || defined(INCLUDE_VERBOSE_OUTPUT)
 static bool verbose_debug = getenv("TRACEMONKEY") && strstr(getenv("TRACEMONKEY"), "verbose");
@@ -363,6 +365,11 @@ static bool isPromote(LIns* i)
 static bool isconst(LIns* i, int32_t c)
 {
     return i->isconst() && i->constval() == c;
+}
+
+static bool isAnyConst(LIns* i)
+{
+    return i->isconst() || i->isconstq(); 
 }
 
 static bool overflowSafe(LIns* i)
@@ -2274,7 +2281,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     u.code = f->code();
 
 #ifdef DEBUG
-#if defined(NANOJIT_IA32)
+#if defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__))
     uint64 start = rdtsc();
 #endif
 #endif
@@ -2359,10 +2366,10 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     JS_ASSERT(fp->slots + fp->script->nfixed +
               js_ReconstructStackDepth(cx, fp->script, fp->regs->pc) == fp->regs->sp);
 
-#if defined(DEBUG) && defined(NANOJIT_IA32)
+#if defined(DEBUG) && (defined(NANOJIT_IA32) || (defined(NANOJIT_AMD64) && defined(__GNUC__)))
     uint64 cycles = rdtsc() - start;
-#else
-    debug_only_v(uint64 cycles = 0;)
+#elif defined(DEBUG)
+    uint64 cycles = 0;
 #endif
 
     debug_only_v(printf("leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%d, sp=%d, ip=%p, "
@@ -2538,8 +2545,8 @@ js_CheckForSSE2()
         "mov %%edx, %0\n"
         "popa\n"
         : "=m" (features)
-        : /* We have no inputs */
-        : /* We don't clobber anything */
+        /* We have no inputs */
+        /* We don't clobber anything */
        );
 #endif
     return (features & (1<<26)) != 0;
@@ -2788,9 +2795,15 @@ TraceRecorder::ifop()
         jsdouble d = asNumber(v);
         jsdpun u;
         u.d = 0;
-        guard(d == 0 || JSDOUBLE_IS_NaN(d),
-              lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)),
-              BRANCH_EXIT);
+        LIns* v_ins = get(&v);
+        // Only insert the guard if the condition is not constant, since in 
+        // that case at runtime we would always take the same path as the
+        // interpreter is taking right now and hence there is no need for
+        // a guard.        
+        if (!v_ins->isconst() && !v_ins->isconstq())
+            guard(d == 0 || JSDOUBLE_IS_NaN(d),
+                  lir->ins2(LIR_feq, v_ins, lir->insImmq(u.u64)),
+                  BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
               lir->ins_eq0(lir->ins2(LIR_piand,
@@ -2922,9 +2935,16 @@ TraceRecorder::cmp(LOpcode op, int flags)
     LIns* x;
     bool negate = !!(flags & CMP_NEGATE);
     bool cond;
+    LIns* l_ins = get(&l);
+    LIns* r_ins = get(&r);
+
+    /* Don't guard if the same path is always taken. */
+    if (isAnyConst(r_ins) && isAnyConst(l_ins))
+        return true;
+
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
         JS_ASSERT(!negate);
-        LIns* args[] = { get(&r), get(&l) };
+        LIns* args[] = { r_ins, l_ins };
         x = lir->ins1(LIR_i2f, lir->insCall(F_CompareStrings, args));
         x = lir->ins2i(op, x, 0);
         jsint result = js_CompareStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
@@ -2950,8 +2970,6 @@ TraceRecorder::cmp(LOpcode op, int flags)
         JSAutoTempValueRooter tvr(cx, 2, tmp);
 
         // TODO: coerce non-numbers to numbers if it's not string-on-string above
-        LIns* l_ins = get(&l);
-        LIns* r_ins = get(&r);
         jsdouble lnum;
         jsdouble rnum;
         LIns* args[] = { l_ins, cx_ins };
@@ -2971,7 +2989,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
         }
         lnum = js_ValueToNumber(cx, &tmp[0]);
 
-        args[0] = get(&r);
+        args[0] = r_ins;
         args[1] = cx_ins;
         if (JSVAL_IS_STRING(r)) {
             r_ins = lir->insCall(F_StringToNumber, args);
@@ -3063,8 +3081,16 @@ TraceRecorder::equal(int flags)
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     bool negate = !!(flags & CMP_NEGATE);
+
+    LIns* r_ins = get(&r);
+    LIns* l_ins = get(&l);
+
+    /* Don't guard if the same path is always taken. */
+    if (isAnyConst(r_ins) && isAnyConst(l_ins))
+        return true;
+
     if (JSVAL_IS_STRING(l) && JSVAL_IS_STRING(r)) {
-        LIns* args[] = { get(&r), get(&l) };
+        LIns* args[] = { r_ins, l_ins };
         bool cond = js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r)) ^ negate;
         LIns* x = lir->ins_eq0(lir->insCall(F_EqualStrings, args));
         if (!negate)
@@ -3090,7 +3116,7 @@ TraceRecorder::equal(int flags)
     }
     if (JSVAL_IS_OBJECT(l) && JSVAL_IS_OBJECT(r)) {
         bool cond = (l == r) ^ negate;
-        LIns* x = lir->ins2(LIR_eq, get(&l), get(&r));
+        LIns* x = lir->ins2(LIR_eq, l_ins, r_ins);
         if (negate)
             x = lir->ins_eq0(x);
 
@@ -3566,7 +3592,7 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
     // guard(index < capacity)
     guard(false, lir->ins_eq0(dslots_ins), MISMATCH_EXIT);
     guard(true,
-          lir->ins2(LIR_lt, idx_ins, lir->insLoad(LIR_ldp, dslots_ins, 0 - sizeof(jsval))),
+          lir->ins2(LIR_lt, idx_ins, lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval))),
           MISMATCH_EXIT);
     return true;
 }
