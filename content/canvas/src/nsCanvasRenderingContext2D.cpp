@@ -2804,6 +2804,12 @@ nsCanvasRenderingContext2D::ThebesSurfaceFromElement(nsIDOMElement *imgElt,
     nsCOMPtr<nsIDOMHTMLVideoElement> ve = do_QueryInterface(imgElt);
     if (node && ve) {
         nsHTMLVideoElement *video = static_cast<nsHTMLVideoElement*>(ve.get());
+
+        /* If it doesn't have a principal, just bail */
+        nsCOMPtr<nsIPrincipal> principal = video->GetCurrentPrincipal();
+        if (!principal)
+            return NS_ERROR_DOM_SECURITY_ERR;
+
         PRUint32 videoWidth, videoHeight;
         rv = video->GetVideoWidth(&videoWidth);
         rv |= video->GetVideoHeight(&videoHeight);
@@ -2823,7 +2829,7 @@ nsCanvasRenderingContext2D::ThebesSurfaceFromElement(nsIDOMElement *imgElt,
         *widthOut = videoWidth;
         *heightOut = videoHeight;
 
-        NS_ADDREF(*prinOut = node->NodePrincipal());
+        *prinOut = principal.forget().get();
         *forceWriteOnlyOut = PR_FALSE;
 
         return NS_OK;
