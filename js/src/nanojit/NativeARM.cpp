@@ -563,21 +563,28 @@ Assembler::asm_quad(LInsp ins)
 #ifdef NJ_ARM_VFP
     freeRsrcOf(ins, false);
 
-    // XXX We probably want nochk versions of FLDD/FSTD
-    underrunProtect(d ? 20 : 16);
+    if (rr == UnknownReg) {
+        underrunProtect(12);
 
-    // grab a register to do the load into if we don't have one already;
-    // XXX -- maybe do a mmq in this case?  We're going to use our
-    // D7 register that's never allocated (since it's the one we use
-    // for int-to-double conversions), so we don't have to worry about
-    // spilling something in a fp reg.
-    if (rr == UnknownReg)
-        rr = D7;
+        // asm_mmq might spill a reg, so don't call it;
+        // instead do the equivalent directly.
+        //asm_mmq(FP, d, PC, -16);
 
-    if (d)
-        FSTD(rr, FP, d);
+        STR(Scratch, FP, d+4);
+        LDR(Scratch, PC, -20);
+        STR(Scratch, FP, d);
+        LDR(Scratch, PC, -16);
 
-    asm_quad_nochk(rr, p);
+        *(--_nIns) = (NIns) p[1];
+        *(--_nIns) = (NIns) p[0];
+        JMP_nochk(_nIns+2);
+    } else {
+        if (d)
+            FSTD(rr, FP, d);
+
+        underrunProtect(16);
+        asm_quad_nochk(rr, p);
+    }
 #else
     freeRsrcOf(ins, false);
     if (d) {
@@ -631,10 +638,17 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     // that isn't live in an FPU reg.  Either way, don't
     // put it in an FPU reg just to load & store it.
 
+    // Don't use this with PC-relative loads; the registerAlloc might
+    // end up spilling a reg (and this the offset could end up being
+    // bogus)!
+    NanoAssert(rs != PC);
+
     // use both IP and a second scratch reg
     Register t = registerAlloc(GpRegs & ~(rmask(rd)|rmask(rs)));
     _allocator.addFree(t);
 
+    // XXX maybe figure out if we can use LDRD/STRD -- hard to
+    // ensure right register allocation
     STR(Scratch, rd, dd+4);
     STR(t, rd, dd);
     LDR(Scratch, rs, ds+4);
