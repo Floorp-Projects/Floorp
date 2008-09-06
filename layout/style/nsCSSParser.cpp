@@ -1659,7 +1659,12 @@ PRBool CSSParserImpl::ParseMediaQueryExpression(nsresult& aErrorCode, nsMediaQue
   }
 
   if (mToken.mSymbol == PRUnichar(')')) {
-    // All query expressions can be given without a value.
+    // Query expressions for any feature can be given without a value.
+    // However, min/max prefixes are not allowed.
+    if (expr->mRange != nsMediaExpression::eEqual) {
+      REPORT_UNEXPECTED(PEMQNoMinMaxWithoutValue);
+      return PR_FALSE;
+    }
     expr->mValue.Reset();
     return PR_TRUE;
   }
