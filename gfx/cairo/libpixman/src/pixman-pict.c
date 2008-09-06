@@ -33,7 +33,7 @@
 #include "pixman-private.h"
 #include "pixman-mmx.h"
 #include "pixman-vmx.h"
-#include "pixman-sse.h"
+#include "pixman-sse2.h"
 #include "pixman-combine32.h"
 
 #ifdef __GNUC__
@@ -1395,7 +1395,7 @@ static const FastPathInfo mmx_fast_paths[] =
 #endif
 
 #ifdef USE_SSE2
-static const FastPathInfo sse_fast_paths[] =
+static const FastPathInfo sse2_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565sse2,     0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565sse2,     0 },
@@ -1755,7 +1755,7 @@ pixman_image_composite (pixman_op_t      op,
 #endif
 
 #ifdef USE_SSE2
-    fbComposeSetupSSE();
+    fbComposeSetupSSE2();
 #endif
 
     if (srcRepeat && srcTransform &&
@@ -1815,8 +1815,8 @@ pixman_image_composite (pixman_op_t      op,
 	info = NULL;
 	
 #ifdef USE_SSE2
-	if (pixman_have_sse ())
-	    info = get_fast_path (sse_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+	if (pixman_have_sse2 ())
+	    info = get_fast_path (sse2_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 #endif
 
 #ifdef USE_MMX
@@ -2149,19 +2149,19 @@ pixman_have_mmx (void)
 
 #ifdef USE_SSE2
 pixman_bool_t
-pixman_have_sse (void)
+pixman_have_sse2 (void)
 {
     static pixman_bool_t initialized = FALSE;
-    static pixman_bool_t sse_present;
+    static pixman_bool_t sse2_present;
 
     if (!initialized)
     {
         unsigned int features = detectCPUFeatures();
-        sse_present = (features & (MMX|MMX_Extensions|SSE|SSE2)) == (MMX|MMX_Extensions|SSE|SSE2);
+        sse2_present = (features & (MMX|MMX_Extensions|SSE|SSE2)) == (MMX|MMX_Extensions|SSE|SSE2);
         initialized = TRUE;
     }
 
-    return sse_present;
+    return sse2_present;
 }
 #endif
 
