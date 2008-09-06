@@ -1211,6 +1211,16 @@ function testTypeofHole() {
 testTypeofHole.expected = "undefined,undefined,undefined,undefined,undefined,number"
 test(testTypeofHole);
 
+function testNativeLog() {
+  var a = new Array(5);
+  for (var i = 0; i < 5; i++) {
+    a[i] = Math.log(Math.pow(Math.E, 10));
+  }
+  return a.join(",");
+}
+testNativeLog.expected = "10,10,10,10,10";
+test(testNativeLog);
+
 function test_JSOP_ARGSUB() {
     function f0() { return arguments[0]; }
     function f1() { return arguments[1]; }
