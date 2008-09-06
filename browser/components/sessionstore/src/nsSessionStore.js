@@ -369,6 +369,9 @@ SessionStoreService.prototype = {
       case "DOMAutoComplete":
         this.onTabInput(aEvent.currentTarget.ownerDocument.defaultView, aEvent.currentTarget);
         break;
+      case "scroll":
+        this.onTabScroll(aEvent.currentTarget.ownerDocument.defaultView);
+        break;
       case "TabOpen":
       case "TabClose":
         var panelID = aEvent.originalTarget.linkedPanel;
@@ -532,6 +535,7 @@ SessionStoreService.prototype = {
     aPanel.addEventListener("change", this, true);
     aPanel.addEventListener("input", this, true);
     aPanel.addEventListener("DOMAutoComplete", this, true);
+    aPanel.addEventListener("scroll", this, true);
     
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
@@ -553,6 +557,7 @@ SessionStoreService.prototype = {
     aPanel.removeEventListener("change", this, true);
     aPanel.removeEventListener("input", this, true);
     aPanel.removeEventListener("DOMAutoComplete", this, true);
+    aPanel.removeEventListener("scroll", this, true);
     
     delete aPanel.__SS_data;
     
@@ -637,6 +642,15 @@ SessionStoreService.prototype = {
     if (aPanel.__SS_data)
       delete aPanel.__SS_data._formDataSaved;
     
+    this.saveStateDelayed(aWindow, 3000);
+  },
+
+  /**
+   * Called when a tabpanel sends a "scroll" notification 
+   * @param aWindow
+   *        Window reference
+   */
+  onTabScroll: function sss_onTabScroll(aWindow) {
     this.saveStateDelayed(aWindow, 3000);
   },
 
