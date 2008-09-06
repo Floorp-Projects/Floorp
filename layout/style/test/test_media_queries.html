@@ -169,22 +169,20 @@ function run() {
                      (Math.floor(value/em_size) - 1) + "em)");
   }
 
-  // FIXME: The TODOs in this section are because the spec is still a
-  // bit unclear here.  Until I'm sure that the spec is really asking
-  // for the more complex implementation, I'm going to stick with the
-  // simpler one.  See
-  // http://lists.w3.org/Archives/Public/www-style/2008Jun/0212.html
+  // TODO:  There are a bunch of todos here because of a bug related
+  // to dynamic changes not going into effect once one dimension is 0.
+  // (Patch to fix this is in bug 453759.)
   iframe_style.width = "0";
   should_apply("all and (height)");
-  todo_should_not_apply("all and (width)");
+  should_not_apply("all and (width)");
   iframe_style.height = "0";
   todo_should_not_apply("all and (height)");
-  todo_should_not_apply("all and (width)");
+  should_not_apply("all and (width)");
   should_apply("all and (device-height)");
   should_apply("all and (device-width)");
   iframe_style.width = width_val + "px";
   todo_should_not_apply("all and (height)");
-  should_apply("all and (width)");
+  todo_should_apply("all and (width)");
   iframe_style.height = height_val + "px";
   should_apply("all and (height)");
   should_apply("all and (width)");
