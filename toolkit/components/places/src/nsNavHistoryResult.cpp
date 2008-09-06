@@ -3497,6 +3497,9 @@ nsNavHistoryResultNode::OnItemChanged(PRInt64 aItemId,
                                       PRBool aIsAnnotationProperty,
                                       const nsACString& aValue)
 {
+  if (aItemId != mItemId)
+    return NS_OK;
+
   if (aProperty.EqualsLiteral("title")) {
     // XXX: what should we do if the new title is void?
     mTitle = aValue;
