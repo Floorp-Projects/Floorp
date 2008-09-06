@@ -188,10 +188,13 @@ nsMediaExpression::Matches(nsPresContext *aPresContext,
   }
 
   // If the expression had no value to match, the match succeeds,
-  // unless the value is an integer 0.
+  // unless the value is an integer 0 or a zero length.
   if (required.GetUnit() == eCSSUnit_Null) {
-    return actual.GetUnit() != eCSSUnit_Integer ||
-           actual.GetIntValue() != 0;
+    if (actual.GetUnit() == eCSSUnit_Integer)
+      return actual.GetIntValue() != 0;
+    if (actual.IsLengthUnit())
+      return actual.GetFloatValue() != 0;
+    return PR_TRUE;
   }
 
   NS_ASSERTION(mFeature->mRangeType == nsMediaFeature::eMinMaxAllowed ||
