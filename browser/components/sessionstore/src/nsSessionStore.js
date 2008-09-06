@@ -590,7 +590,7 @@ SessionStoreService.prototype = {
     delete tabState._tab;
     
     // store closed-tab data for undo
-    if (tabState.entries.length > 1 || tabState.entries[0].url != "about:blank") {
+    if (tabState.entries.length > 0) {
       this._windows[aWindow.__SSi]._closedTabs.unshift({
         state: tabState,
         title: aTab.getAttribute("label"),
@@ -703,7 +703,7 @@ SessionStoreService.prototype = {
 
   setTabState: function sss_setTabState(aTab, aState) {
     var tabState = this._safeEval("(" + aState + ")");
-    if (!tabState.entries || !tabState.entries.length) {
+    if (!tabState.entries) {
       Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
       return;
     }
@@ -872,7 +872,7 @@ SessionStoreService.prototype = {
    * @returns object
    */
   _collectTabData: function sss_collectTabData(aTab, aFullData) {
-    var tabData = { entries: [], index: 0 };
+    var tabData = { entries: [] };
     var browser = aTab.linkedBrowser;
     
     if (!browser || !browser.currentURI)
@@ -903,7 +903,8 @@ SessionStoreService.prototype = {
       if (!aFullData)
         browser.parentNode.__SS_data = tabData;
     }
-    else {
+    else if (browser.currentURI.spec != "about:blank" ||
+             browser.contentDocument.body.hasChildNodes()) {
       tabData.entries[0] = { url: browser.currentURI.spec };
       tabData.index = 1;
     }
@@ -1057,8 +1058,7 @@ SessionStoreService.prototype = {
     for (var i = 0; i < browsers.length; i++) {
       try {
         var tabData = this._windows[aWindow.__SSi].tabs[i];
-        if (tabData.entries.length == 0 ||
-            browsers[i].parentNode.__SS_data && browsers[i].parentNode.__SS_data._tab)
+        if (browsers[i].parentNode.__SS_data && browsers[i].parentNode.__SS_data._tab)
           continue; // ignore incompletely initialized tabs
         this._updateTextAndScrollDataForTab(aWindow, browsers[i], tabData);
       }
@@ -1413,11 +1413,9 @@ SessionStoreService.prototype = {
     }
     // don't restore a single blank tab when we've had an external
     // URL passed in for loading at startup (cf. bug 357419)
-    else if (root._firstTabs && !aOverwriteTabs && winData.tabs.length == 1) {
-      let tabEntries = winData.tabs[0].entries || [];
-      if (tabEntries.length == 0 ||
-          tabEntries.length == 1 && tabEntries[0].url == "about:blank")
-        winData.tabs = [];
+    else if (root._firstTabs && !aOverwriteTabs && winData.tabs.length == 1 &&
+             (!winData.tabs[0].entries || winData.tabs[0].entries.length == 0)) {
+      winData.tabs = [];
     }
     
     var tabbrowser = aWindow.getBrowser();
@@ -1496,11 +1494,16 @@ SessionStoreService.prototype = {
     
     // mark the tabs as loading
     for (t = 0; t < aTabs.length; t++) {
-      if (!aTabs[t].entries || !aTabs[t].entries[0])
-        continue; // there won't be anything to load
-      
       var tab = aTabs[t]._tab;
       var browser = tabbrowser.getBrowserForTab(tab);
+      
+      if (!aTabs[t].entries || aTabs[t].entries.length == 0) {
+        // make sure to blank out this tab's content
+        // (just purging the tab's history won't be enough)
+        browser.contentDocument.location = "about:blank";
+        continue;
+      }
+      
       browser.stop(); // in case about:blank isn't done yet
       
       tab.setAttribute("busy", "true");
@@ -1593,20 +1596,28 @@ SessionStoreService.prototype = {
     event.initEvent("SSTabRestoring", true, false);
     tab.dispatchEvent(event);
     
-    var activeIndex = (tabData.index || tabData.entries.length) - 1;
+    let activeIndex = (tabData.index || tabData.entries.length) - 1;
+    if (activeIndex >= tabData.entries.length)
+      activeIndex = tabData.entries.length - 1;
     try {
-      browser.webNavigation.gotoIndex(activeIndex);
+      if (activeIndex >= 0)
+        browser.webNavigation.gotoIndex(activeIndex);
     }
-    catch (ex) { } // ignore an invalid tabData.index
+    catch (ex) {
+      // ignore page load errors
+      tab.removeAttribute("busy");
+    }
     
-    // restore those aspects of the currently active documents
-    // which are not preserved in the plain history entries
-    // (mainly scroll state and text data)
-    browser.__SS_restore_data = tabData.entries[activeIndex] || {};
-    browser.__SS_restore_text = tabData.text || "";
-    browser.__SS_restore_tab = tab;
-    browser.__SS_restore = this.restoreDocument_proxy;
-    browser.addEventListener("load", browser.__SS_restore, true);
+    if (tabData.entries.length > 0) {
+      // restore those aspects of the currently active documents
+      // which are not preserved in the plain history entries
+      // (mainly scroll state and text data)
+      browser.__SS_restore_data = tabData.entries[activeIndex] || {};
+      browser.__SS_restore_text = tabData.text || "";
+      browser.__SS_restore_tab = tab;
+      browser.__SS_restore = this.restoreDocument_proxy;
+      browser.addEventListener("load", browser.__SS_restore, true);
+    }
     
     aWindow.setTimeout(function(){ _this.restoreHistory(aWindow, aTabs, aIdMap); }, 0);
   },
