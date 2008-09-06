@@ -395,7 +395,8 @@ public: // NOT in nsIViewManager, so private to the view module
   nsresult WillBitBlit(nsView* aView, nsPoint aScrollAmount);
   
   /**
-   * Called to inform the view manager that a view has scrolled.
+   * Called to inform the view manager that a view has scrolled via a
+   * bitblit.
    * The view manager will invalidate any widgets which may need
    * to be rerendered.
    * @param aView view to paint. should be the nsScrollPortView that
