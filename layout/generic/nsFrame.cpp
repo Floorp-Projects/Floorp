@@ -5559,12 +5559,19 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
     parent = parent->GetParent();
   } while (parent);
 
-  // We can get here if aProspectiveParent is the scrollframe for a viewport
-  // and the kids are the anonymous scrollbars.
-  NS_ASSERTION(aProspectiveParent->GetStyleContext()->GetPseudoType() ==
-                 nsCSSAnonBoxes::viewportScroll,
+  if (aProspectiveParent->GetStyleContext()->GetPseudoType() ==
+      nsCSSAnonBoxes::viewportScroll) {
+    // aProspectiveParent is the scrollframe for a viewport
+    // and the kids are the anonymous scrollbars
+    return aProspectiveParent;
+  }
+
+  // We can get here if the root element is absolutely positioned.
+  // We can't test for this very accurately, but it can only happen
+  // when the prospective parent is a canvas frame.
+  NS_ASSERTION(aProspectiveParent->GetType() == nsGkAtoms::canvasFrame,
                "Should have found a parent before this");
-  return aProspectiveParent;
+  return nsnull;
 }
 
 nsresult
