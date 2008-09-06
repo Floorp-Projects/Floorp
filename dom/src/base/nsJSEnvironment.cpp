@@ -3063,7 +3063,7 @@ inline PRBool
 IsJProfAction(struct sigaction *action)
 {
     return (action->sa_sigaction &&
-            action->sa_flags == SA_RESTART | SA_SIGINFO);
+            action->sa_flags == (SA_RESTART | SA_SIGINFO));
 }
 
 void NS_JProfStartProfiling();
