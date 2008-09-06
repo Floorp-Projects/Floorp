@@ -7563,8 +7563,19 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
       // FixedContainingBlock.  Note that this has to be done before we call
       // ClearPlaceholderFrameMap(), since RemoveFixedItems uses the
       // placeholder frame map.
-      rv = RemoveFixedItems(state);
+      rv = RemoveFixedItems(state, docElementFrame);
+
       if (NS_SUCCEEDED(rv)) {
+        nsPlaceholderFrame* placeholderFrame = nsnull;
+        if (docElementFrame &&
+            (docElementFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+          // Get the placeholder frame now, before we tear down the
+          // placeholder frame map
+          placeholderFrame =
+            state.mFrameManager->GetPlaceholderFrameFor(docElementFrame);
+          NS_ASSERTION(placeholderFrame, "No placeholder for out-of-flow?");
+        }
+
         // Clear the hash tables that map from content to frame and out-of-flow
         // frame to placeholder frame
         state.mFrameManager->ClearPrimaryFrameMap();
@@ -7573,7 +7584,6 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
 
         if (docElementFrame) {
           // Take the docElementFrame, and remove it from its parent.
-        
           // XXXbz So why can't we reuse ContentRemoved?
 
           // Notify self that we will destroy the entire frame tree, this blocks
@@ -7581,9 +7591,17 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
           // crash since we cleared the placeholder map above (bug 398982).
           PRBool wasDestroyingFrameTree = mIsDestroyingFrameTree;
           WillDestroyFrameTree();
-          // Remove the old document element hierarchy
+
           rv = state.mFrameManager->RemoveFrame(docElementFrame->GetParent(),
                     GetChildListNameFor(docElementFrame), docElementFrame);
+          
+          if (placeholderFrame) {
+            // Remove the placeholder frame first (XXX second for now) (so
+            // that it doesn't retain a dangling pointer to memory)
+            rv |= state.mFrameManager->RemoveFrame(placeholderFrame->GetParent(),
+                                            nsnull, placeholderFrame);
+          }
+
           mIsDestroyingFrameTree = wasDestroyingFrameTree;
           if (NS_FAILED(rv)) {
             return rv;
@@ -12838,7 +12856,9 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
   return ReconstructDocElementHierarchyInternal();
 }
 
-nsresult nsCSSFrameConstructor::RemoveFixedItems(const nsFrameConstructorState& aState)
+nsresult
+nsCSSFrameConstructor::RemoveFixedItems(const nsFrameConstructorState& aState,
+                                        nsIFrame *aRootElementFrame)
 {
   nsresult rv=NS_OK;
 
@@ -12846,6 +12866,12 @@ nsresult nsCSSFrameConstructor::RemoveFixedItems(const nsFrameConstructorState& 
     nsIFrame *fixedChild = nsnull;
     do {
       fixedChild = mFixedContainingBlock->GetFirstChild(nsGkAtoms::fixedList);
+      if (fixedChild == aRootElementFrame) {
+        // Skip the root element frame, if it happens to be fixed-positioned
+        // It will be explicitly removed later in
+        // ReconstructDocElementHierarchyInternal
+        fixedChild = fixedChild->GetNextSibling();
+      }
       if (fixedChild) {
         // Remove the placeholder so it doesn't end up sitting about pointing
         // to the removed fixed frame.
