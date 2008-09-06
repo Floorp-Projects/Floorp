@@ -651,7 +651,7 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     cairo_image_surface_t *image;
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_status_t status;
-    unsigned char *row, *byte;
+    uint8_t *row, *byte;
     int rows, cols;
     int x, y, bit;
 
@@ -677,7 +677,7 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
 
     for (y = 0, row = image->data, rows = image->height; rows; row += image->stride, rows--, y++) {
 	for (x = 0, byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
-	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
+	    uint8_t output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
 	    for (bit = 7; bit >= 0 && x < image->width; bit--, x++) {
 		if (output_byte & (1 << bit)) {
 		    _cairo_output_stream_printf (document->xml_node_glyphs,
@@ -870,12 +870,11 @@ _cairo_svg_surface_emit_alpha_filter (cairo_svg_document_t *document)
 typedef struct {
     cairo_output_stream_t *output;
     unsigned int in_mem;
-    unsigned char src[3];
-    unsigned char dst[5];
     unsigned int trailing;
+    unsigned char src[3];
 } base64_write_closure_t;
 
-static char const *base64_table =
+static char const base64_table[64] =
 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static cairo_status_t
@@ -885,26 +884,27 @@ base64_write_func (void *closure,
 {
     base64_write_closure_t *info = (base64_write_closure_t *) closure;
     unsigned int i;
-    unsigned char *src, *dst;
+    unsigned char *src;
 
-    dst = info->dst;
     src = info->src;
 
     if (info->in_mem + length < 3) {
 	for (i = 0; i < length; i++) {
-	    src[i + info->in_mem] = *data;
-	    data++;
+	    src[i + info->in_mem] = *data++;
 	}
 	info->in_mem += length;
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    while (info->in_mem + length >= 3) {
-	for (i = 0; i < 3 - info->in_mem; i++) {
-	    src[i + info->in_mem] = *data;
-	    data++;
+    do {
+	unsigned char dst[4];
+
+	for (i = info->in_mem; i < 3; i++) {
+	    src[i] = *data++;
 	    length--;
 	}
+	info->in_mem = 0;
+
 	dst[0] = base64_table[src[0] >> 2];
 	dst[1] = base64_table[(src[0] & 0x03) << 4 | src[1] >> 4];
 	dst[2] = base64_table[(src[1] & 0x0f) << 2 | src[2] >> 6];
@@ -919,16 +919,14 @@ base64_write_func (void *closure,
 		break;
 	}
 	_cairo_output_stream_write (info->output, dst, 4);
-	info->in_mem = 0;
-    }
+    } while (length >= 3);
 
     for (i = 0; i < length; i++) {
-	src[i] = *data;
-	data++;
+	src[i] = *data++;
     }
     info->in_mem = length;
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_output_stream_get_status (info->output);
 }
 
 static cairo_int_status_t
@@ -942,7 +940,6 @@ _cairo_surface_base64_encode (cairo_surface_t       *surface,
     info.output = output;
     info.in_mem = 0;
     info.trailing = 0;
-    memset (info.dst, '\x0', 5);
 
     _cairo_output_stream_printf (info.output, "data:image/png;base64,");
 

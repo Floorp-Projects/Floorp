@@ -59,23 +59,24 @@
 # ifndef HAVE_UINT64_T
 #  define HAVE_UINT64_T 1
 # endif
-# ifndef INT16_MIN
-#  define INT16_MIN	(-32767-1)
-# endif
-# ifndef INT16_MAX
-#  define INT16_MAX	(32767)
-# endif
-# ifndef UINT16_MAX
-#  define UINT16_MAX	(65535)
-# endif
-# ifndef INT32_MIN
-#  define INT32_MIN	(-2147483647-1)
-# endif
-# ifndef INT32_MAX
-#  define INT32_MAX	(2147483647)
-# endif
 #else
 #error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
+#endif
+
+#ifndef INT16_MIN
+# define INT16_MIN	(-32767-1)
+#endif
+#ifndef INT16_MAX
+# define INT16_MAX	(32767)
+#endif
+#ifndef UINT16_MAX
+# define UINT16_MAX	(65535)
+#endif
+#ifndef INT32_MIN
+# define INT32_MIN	(-2147483647-1)
+#endif
+#ifndef INT32_MAX
+# define INT32_MAX	(2147483647)
 #endif
 
 #if HAVE_BYTESWAP_H

@@ -237,7 +237,7 @@ _cairo_output_stream_write (cairo_output_stream_t *stream,
 
 void
 _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
-				       const char *data,
+				       const unsigned char *data,
 				       size_t length)
 {
     const char hex_chars[] = "0123456789abcdef";
@@ -423,7 +423,6 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 
 	/* Flush contents of buffer before snprintf()'ing into it. */
 	_cairo_output_stream_write (stream, buffer, p - buffer);
-	p = buffer;
 
 	/* We group signed and unsigned together in this switch, the
 	 * only thing that matters here is the size of the arguments,

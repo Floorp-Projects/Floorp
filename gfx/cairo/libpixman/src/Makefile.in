@@ -68,7 +68,6 @@ endif
 # Build MMX code either with VC or with gcc-on-x86
 ifdef _MSC_VER
 USE_MMX=1
-# no SSE2 yet, until compilation is fixed
 #USE_SSE2=1
 MMX_CFLAGS=
 endif
@@ -77,7 +76,7 @@ ifdef GNU_CC
 ifeq (86,$(findstring 86,$(OS_TEST)))
 USE_MMX=1
 MMX_CFLAGS=-mmmx -Winline
-# See bug 410509 why we can't use SSE2 yet
+# See bug 410509 why we can't use SSE2 yet on linux
 #USE_SSE2=1
 #MMX_CFLAGS+=-msse -msse2
 ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -114,7 +113,7 @@ DEFINES += -DUSE_MMX
 endif
 
 ifdef USE_SSE2
-CSRCS += pixman-sse.c
+CSRCS += pixman-sse2.c
 DEFINES += -DUSE_SSE -DUSE_SSE2
 endif
 
@@ -141,7 +140,7 @@ pixman-mmx.$(OBJ_SUFFIX): pixman-mmx.c Makefile Makefile.in
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(MMX_CFLAGS) $(_VPATH_SRCS)
 
-pixman-sse.$(OBJ_SUFFIX): pixman-sse.c Makefile Makefile.in
+pixman-sse2.$(OBJ_SUFFIX): pixman-sse2.c Makefile Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(MMX_CFLAGS) $(_VPATH_SRCS)

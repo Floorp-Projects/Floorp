@@ -1,6 +1,8 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2003 University of Southern California
+ * Copyright © 2002 University of Southern California
+ * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -34,61 +36,53 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_FEATURES_H
-#define CAIRO_FEATURES_H
+#define CAIRO_VERSION_H 1
 
-#include "cairo-platform.h"
+#include "cairoint.h"
 
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
+/* get the "real" version info instead of dummy cairo-version.h */
+#undef CAIRO_VERSION_H
+#include "cairo-features.h"
 
-#ifndef cairo_public
-# define cairo_public
-#endif
+/**
+ * cairo_version:
+ *
+ * Returns the version of the cairo library encoded in a single
+ * integer as per %CAIRO_VERSION_ENCODE. The encoding ensures that
+ * later versions compare greater than earlier versions.
+ *
+ * A run-time comparison to check that cairo's version is greater than
+ * or equal to version X.Y.Z could be performed as follows:
+ *
+ * <informalexample><programlisting>
+ * if (cairo_version() >= CAIRO_VERSION_ENCODE(X,Y,Z)) {...}
+ * </programlisting></informalexample>
+ *
+ * See also cairo_version_string() as well as the compile-time
+ * equivalents %CAIRO_VERSION and %CAIRO_VERSION_STRING.
+ *
+ * Return value: the encoded version.
+ **/
+int
+cairo_version (void)
+{
+    return CAIRO_VERSION;
+}
 
-#define CAIRO_VERSION_MAJOR 1
-#define CAIRO_VERSION_MINOR 7
-#define CAIRO_VERSION_MICRO 4
-
-@PS_SURFACE_FEATURE@
-
-@PDF_SURFACE_FEATURE@
-
-@SVG_SURFACE_FEATURE@
-
-@XLIB_SURFACE_FEATURE@
-
-@XLIB_XRENDER_SURFACE_FEATURE@
-
-@QUARTZ_SURFACE_FEATURE@
-
-@QUARTZ_IMAGE_SURFACE_FEATURE@
-
-@XCB_SURFACE_FEATURE@
-
-@WIN32_SURFACE_FEATURE@
-
-@OS2_SURFACE_FEATURE@
-
-@BEOS_SURFACE_FEATURE@
-
-@GLITZ_SURFACE_FEATURE@
-
-@DIRECTFB_SURFACE_FEATURE@
-
-@QPAINTER_SURFACE_FEATURE@
-
-@FT_FONT_FEATURE@
-
-@WIN32_FONT_FEATURE@
-
-@QUARTZ_FONT_FEATURE@
-
-@PNG_FUNCTIONS_FEATURE@
-
-#endif
+/**
+ * cairo_version_string:
+ *
+ * Returns the version of the cairo library as a human-readable string
+ * of the form "X.Y.Z".
+ *
+ * See also cairo_version() as well as the compile-time equivalents
+ * %CAIRO_VERSION_STRING and %CAIRO_VERSION.
+ *
+ * Return value: a string containing the version.
+ **/
+const char*
+cairo_version_string (void)
+{
+    return CAIRO_VERSION_STRING;
+}
+slim_hidden_def (cairo_version_string);

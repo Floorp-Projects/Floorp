@@ -63,7 +63,7 @@
 /*
  * CompositeTrapezoids works (without antialiasing).
  */
-#define DFB_COMPOSITE_TRAPEZOIDS 0
+#define DFB_COMPOSITE_TRAPEZOIDS 1
 
 /*
  * ShowGlyphs works fine.
@@ -71,7 +71,11 @@
 #define DFB_SHOW_GLYPHS 1
 
 
-D_DEBUG_DOMAIN (Cairo_DirectFB, "Cairo/DirectFB", "Cairo DirectFB backend");
+D_DEBUG_DOMAIN( CairoDFB_Acquire, "CairoDFB/Acquire", "Cairo DirectFB Acquire" );
+D_DEBUG_DOMAIN( CairoDFB_Clip,    "CairoDFB/Clip",    "Cairo DirectFB Clipping" );
+D_DEBUG_DOMAIN( CairoDFB_Font,    "CairoDFB/Font",    "Cairo DirectFB Font Rendering" );
+D_DEBUG_DOMAIN( CairoDFB_Render,  "CairoDFB/Render",  "Cairo DirectFB Rendering" );
+D_DEBUG_DOMAIN( CairoDFB_Surface, "CairoDFB/Surface", "Cairo DirectFB Surface" );
 
 /*****************************************************************************/
 
@@ -339,7 +343,7 @@ _directfb_acquire_surface (cairo_directfb_surface_t  *surface,
     cairo_format_t cairo_format;
     void *data;
     int   pitch; 
-        
+
     if (surface->format == (cairo_format_t) -1) {
         DFBSurfaceCapabilities caps;
         
@@ -366,7 +370,7 @@ _directfb_acquire_surface (cairo_directfb_surface_t  *surface,
         
         cairo_format = _cairo_format_from_content (surface->content);
         if (!surface->tmpsurface) {
-            D_DEBUG_AT (Cairo_DirectFB, "Allocating buffer for surface %p.\n", surface);
+            D_DEBUG_AT (CairoDFB_Acquire, "Allocating buffer for surface %p.\n", surface);
        
             surface->tmpsurface = 
                 _directfb_buffer_surface_create (surface->dfb, 
@@ -377,13 +381,13 @@ _directfb_acquire_surface (cairo_directfb_surface_t  *surface,
         }
         buffer = surface->tmpsurface;
         
-        surface->dfbsurface->GetCapabilities (surface->dfbsurface, &caps);
+/*        surface->dfbsurface->GetCapabilities (surface->dfbsurface, &caps);
         if (caps & DSCAPS_FLIPPING) {
             DFBRegion region = { .x1 = source_rect.x, .y1 = source_rect.y, 
                                  .x2 = source_rect.x + source_rect.w - 1,
                                  .y2 = source_rect.y + source_rect.h - 1 };
             surface->dfbsurface->Flip (surface->dfbsurface, &region, DSFLIP_BLIT);
-        } 
+        } */
         buffer->Blit (buffer, surface->dfbsurface, &source_rect, 0, 0);
     }
     else {
@@ -396,7 +400,7 @@ _directfb_acquire_surface (cairo_directfb_surface_t  *surface,
     *image_extra = buffer;
     
     if (buffer->Lock (buffer, lock_flags, &data, &pitch)) {
-        D_DEBUG_AT (Cairo_DirectFB, "Couldn't lock surface!\n");
+        D_DEBUG_AT (CairoDFB_Acquire, "Couldn't lock surface!\n");
         goto ERROR;
     }
             
@@ -443,7 +447,7 @@ _cairo_directfb_surface_create_similar (void            *abstract_src,
     cairo_directfb_surface_t *surface;
     cairo_format_t            format;
     
-    D_DEBUG_AT (Cairo_DirectFB, 
+    D_DEBUG_AT (CairoDFB_Surface, 
                 "%s( src=%p, content=0x%x, width=%d, height=%d).\n",
                 __FUNCTION__, source, content, width, height);
     
@@ -497,8 +501,7 @@ _cairo_directfb_surface_finish (void *data)
 {
     cairo_directfb_surface_t *surface = (cairo_directfb_surface_t *)data;
     
-    D_DEBUG_AT (Cairo_DirectFB, 
-                "%s( surface=%p ).\n", __FUNCTION__, surface);
+    D_DEBUG_AT (CairoDFB_Surface, "%s( surface=%p ).\n", __FUNCTION__, surface);
         
     if (surface->clips) {
         free (surface->clips);
@@ -534,7 +537,7 @@ _cairo_directfb_surface_acquire_source_image (void                   *abstract_s
 {
     cairo_directfb_surface_t *surface = abstract_surface;
     
-    D_DEBUG_AT (Cairo_DirectFB, 
+    D_DEBUG_AT (CairoDFB_Acquire, 
                 "%s( surface=%p ).\n", __FUNCTION__, surface);
     
     return _directfb_acquire_surface (surface, NULL, image_out, 
@@ -549,7 +552,7 @@ _cairo_directfb_surface_release_source_image (void                  *abstract_su
     cairo_directfb_surface_t *surface = abstract_surface;
     IDirectFBSurface *buffer = image_extra;
     
-    D_DEBUG_AT (Cairo_DirectFB, 
+    D_DEBUG_AT (CairoDFB_Acquire, 
                 "%s( surface=%p ).\n", __FUNCTION__, surface);
     
     buffer->Unlock (buffer);
@@ -566,13 +569,13 @@ _cairo_directfb_surface_acquire_dest_image (void                     *abstract_s
 {
     cairo_directfb_surface_t *surface = abstract_surface;
     
-    D_DEBUG_AT (Cairo_DirectFB, 
-                "%s( surface=%p, interest_rect={ %d %d %d %d } ).\n", 
-                __FUNCTION__, surface, 
+    D_DEBUG_AT (CairoDFB_Acquire, 
+                "%s( surface=%p (%dx%d), interest_rect={ %u %u %u %u } ).\n", 
+                __FUNCTION__, surface, surface->width, surface->height,
                 interest_rect ? interest_rect->x : 0,
                 interest_rect ? interest_rect->y : 0,
-                interest_rect ? interest_rect->width : surface->width,
-                interest_rect ? interest_rect->height : surface->height);
+                interest_rect ? interest_rect->width  : (unsigned) surface->width,
+                interest_rect ? interest_rect->height : (unsigned) surface->height);
     
     return _directfb_acquire_surface (surface, interest_rect, image_out, 
                                       image_rect_out, image_extra, DSLF_READ | DSLF_WRITE);
@@ -588,7 +591,7 @@ _cairo_directfb_surface_release_dest_image (void                  *abstract_surf
     cairo_directfb_surface_t *surface = abstract_surface;
     IDirectFBSurface *buffer = image_extra; 
     
-    D_DEBUG_AT (Cairo_DirectFB, 
+    D_DEBUG_AT (CairoDFB_Acquire, 
                 "%s( surface=%p ).\n", __FUNCTION__, surface);
     
     buffer->Unlock (buffer);
@@ -618,7 +621,7 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
     cairo_directfb_surface_t *surface = abstract_surface;
     cairo_directfb_surface_t *clone;
     
-    D_DEBUG_AT (Cairo_DirectFB, 
+    D_DEBUG_AT (CairoDFB_Surface, 
                 "%s( surface=%p, src=%p ).\n", __FUNCTION__, surface, src);
 
     if (src->backend == surface->base.backend) {
@@ -726,7 +729,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
                 sblend == DSBF_INVDESTALPHA) /* Doesn't work correctly */
                 return CAIRO_INT_STATUS_UNSUPPORTED;
                 
-            D_DEBUG_AT (Cairo_DirectFB, "Replacing src pattern by mask pattern.\n");
+            D_DEBUG_AT (CairoDFB_Render, "Replacing src pattern by mask pattern.\n");
                 
             tmp = src_pattern;
             tmp_x = *src_x; tmp_y = *src_y;
@@ -883,7 +886,7 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
     DFBAccelerationMask         accel, mask;
     cairo_int_status_t          ret;
     
-    D_DEBUG_AT (Cairo_DirectFB,
+    D_DEBUG_AT (CairoDFB_Render,
                 "%s( op=%d, src_pattern=%p, mask_pattern=%p, dst=%p,"
                    " src_x=%d, src_y=%d, mask_x=%d, mask_y=%d, dst_x=%d,"
                    " dst_y=%d, width=%u, height=%u ).\n",
@@ -900,7 +903,7 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
     
     dst->dfbsurface->GetAccelerationMask (dst->dfbsurface, src->dfbsurface, &mask);
     if (!(mask & accel)) {
-        D_DEBUG_AT (Cairo_DirectFB, "No acceleration (%08x)!\n", accel);
+        D_DEBUG_AT (CairoDFB_Render, "No acceleration (%08x)!\n", accel);
         if (accel != DFXL_BLIT) {
             _directfb_finish_composite (dst, src_pattern, &src->base, &src_attr);
             return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -920,7 +923,7 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
             sr.h = height;
         
             if (src_attr.extend == CAIRO_EXTEND_NONE) {
-                D_DEBUG_AT (Cairo_DirectFB, "Running Blit().\n");
+                D_DEBUG_AT (CairoDFB_Render, "Running Blit().\n");
         
                 RUN_CLIPPED( dst, NULL,
                              dst->dfbsurface->Blit (dst->dfbsurface,
@@ -934,7 +937,7 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
                 clip.x2 = dst_x + width  - 1;
                 clip.y2 = dst_y + height - 1;
             
-                D_DEBUG_AT (Cairo_DirectFB, "Running TileBlit().\n");
+                D_DEBUG_AT (CairoDFB_Render, "Running TileBlit().\n");
             
                 RUN_CLIPPED( dst, &clip,
                              dst->dfbsurface->TileBlit (dst->dfbsurface, 
@@ -961,7 +964,7 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
             dr.w = width;
             dr.h = height;
             
-            D_DEBUG_AT (Cairo_DirectFB, "Running StretchBlit().\n");
+            D_DEBUG_AT (CairoDFB_Render, "Running StretchBlit().\n");
 
             RUN_CLIPPED (dst, NULL,
                          dst->dfbsurface->StretchBlit (dst->dfbsurface, 
@@ -1019,7 +1022,7 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
             clip.x2 = dst_x + width  - 1;
             clip.y2 = dst_y + height - 1;
         
-            D_DEBUG_AT (Cairo_DirectFB, "Running TextureTriangles().\n");
+            D_DEBUG_AT (CairoDFB_Render, "Running TextureTriangles().\n");
             
             RUN_CLIPPED (dst, &clip,
                          dst->dfbsurface->TextureTriangles (dst->dfbsurface, 
@@ -1052,7 +1055,7 @@ _cairo_directfb_surface_fill_rectangles (void                  *abstract_surface
     DFBRectangle              r[n_rects];
     int                       i;
     
-    D_DEBUG_AT (Cairo_DirectFB, 
+    D_DEBUG_AT (CairoDFB_Render, 
                 "%s( dst=%p, op=%d, color=%p, rects=%p, n_rects=%d ).\n",
                 __FUNCTION__, dst, op, color, rects, n_rects);
 
@@ -1128,7 +1131,7 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
     cairo_status_t              ret;
     DFBAccelerationMask         accel;
     
-    D_DEBUG_AT (Cairo_DirectFB,
+    D_DEBUG_AT (CairoDFB_Render,
                 "%s( op=%d, pattern=%p, dst=%p, antialias=%d,"
                    " src_x=%d, src_y=%d, dst_x=%d, dst_y=%d,"
                    " width=%u, height=%u, traps=%p, num_traps=%d ).\n",
@@ -1235,7 +1238,7 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
         
 #undef ADD_TRI
               
-        D_DEBUG_AT (Cairo_DirectFB, "Running TextureTriangles().\n");
+        D_DEBUG_AT (CairoDFB_Render, "Running TextureTriangles().\n");
             
         RUN_CLIPPED (dst, NULL,
                      dst->dfbsurface->TextureTriangles (dst->dfbsurface, src->dfbsurface, 
@@ -1256,7 +1259,7 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 {
     cairo_directfb_surface_t *surface = abstract_surface;
     
-    D_DEBUG_AT (Cairo_DirectFB, 
+    D_DEBUG_AT (CairoDFB_Clip, 
                 "%s( surface=%p, region=%p ).\n",
                 __FUNCTION__, surface, region);
     
@@ -1267,6 +1270,8 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
         int              i;
 
         status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
+        if (n_boxes == 0)
+            return CAIRO_STATUS_SUCCESS;
         if (status)
             return status;
         
@@ -1310,7 +1315,7 @@ _cairo_directfb_abstract_surface_get_extents (void                  *abstract_su
 {
     cairo_directfb_surface_t *surface = abstract_surface;
     
-    D_DEBUG_AT (Cairo_DirectFB,
+    D_DEBUG_AT (CairoDFB_Surface,
                 "%s( surface=%p, rectangle=%p ).\n",
                 __FUNCTION__, surface, rectangle);
     
@@ -1379,21 +1384,29 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
     int                          h         = 8;
     int                          i;
     
+    D_DEBUG_AT (CairoDFB_Font, "%s( %p [%d] )\n", __FUNCTION__, glyphs, num_glyphs );
+
     if (scaled_font->surface_private) {
         cache = scaled_font->surface_private;
         x = cache->x;
         y = cache->y;
     }
-    
+
+    _cairo_cache_freeze( scaled_font->glyphs );
+
     for (i = 0; i < num_glyphs; i++) {
         cairo_scaled_glyph_t  *scaled_glyph;
         cairo_image_surface_t *img;
         
+        D_DEBUG_AT (CairoDFB_Font, "  -> [%2d] = %4lu\n", i, glyphs[i].index );
+
         ret = _cairo_scaled_glyph_lookup (scaled_font, glyphs[i].index,
                                           CAIRO_SCALED_GLYPH_INFO_SURFACE,
                                           &scaled_glyph);
-        if (ret)
+        if (ret) {
+            _cairo_cache_thaw( scaled_font->glyphs );
             return ret;
+        }
         
         img = scaled_glyph->surface;
         switch (img->format) {
@@ -1402,19 +1415,26 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
             case CAIRO_FORMAT_ARGB32:
                 break;
             default:
-                D_DEBUG_AT (Cairo_DirectFB,
-                            "Unsupported font format %d!\n", img->format);
+                D_DEBUG_AT (CairoDFB_Font,
+                            "  -> Unsupported font format %d!\n", img->format);
+                _cairo_cache_thaw( scaled_font->glyphs );
                 return CAIRO_INT_STATUS_UNSUPPORTED;
         }
         
         points[n].x = _cairo_lround (glyphs[i].x - img->base.device_transform.x0);
         points[n].y = _cairo_lround (glyphs[i].y - img->base.device_transform.y0);
         
+//        D_DEBUG_AT (CairoDFB_Font, "            (%4d,%4d) [%2d]\n", points[n].x, points[n].y, n );
+
         if (points[n].x >= surface->width  ||
             points[n].y >= surface->height ||
             points[n].x+img->width  <= 0   ||
             points[n].y+img->height <= 0)
-            continue;
+        {
+             D_DEBUG_AT (CairoDFB_Font,
+                         "  -> Unsupported font format %d!\n", img->format);
+             continue;
+        }
         
         if (!scaled_glyph->surface_private) {
             DFBRectangle *rect;
@@ -1436,30 +1456,31 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
             
             /* Remember glyph location */ 
             rect = malloc (sizeof(DFBRectangle));
-            if (!rect)
+            if (!rect) {
+                _cairo_cache_thaw( scaled_font->glyphs );
                 return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+            }
             *rect = rects[n];
             
             scaled_glyph->surface_private = rect;
             chars[num_chars++] = scaled_glyph;
             
-            /*D_DEBUG_AT (Cairo_DirectFB, 
-                        "Glyph %lu will be loaded at (%d,%d).\n",
-                        glyphs[i].index, rects[n].x, rects[n].y);*/
+            D_DEBUG_AT (CairoDFB_Font, "  -> loading at %4d,%2d <- rect %p, img %p, entry %p\n",
+                        rects[n].x, rects[n].y, rect, scaled_glyph->surface, scaled_glyph);
         }
         else {
             rects[n] = *((DFBRectangle *)scaled_glyph->surface_private);
             
-            /*D_DEBUG_AT (Cairo_DirectFB, 
-                        "Glyph %lu already loaded at (%d,%d).\n",
-                        glyphs[i].index, rects[n].x, rects[n].y);*/
+            D_DEBUG_AT (CairoDFB_Font, "  -> exists at  %4d,%2d\n", rects[n].x, rects[n].y);
         }
             
         n++;
     }
     
-    if (!n)
+    if (!n) {
+        _cairo_cache_thaw( scaled_font->glyphs );
         return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
     
     h += y;
     w = MAX (w, 8);
@@ -1472,12 +1493,13 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
             w = MAX (w, cache->width);
             h = MAX (h, cache->height);
             
-            D_DEBUG_AT (Cairo_DirectFB,
-                        "Reallocating font cache (%dx%d).\n", w, h);
+            D_DEBUG_AT (CairoDFB_Font, "  -> Reallocating font cache (%dx%d).\n", w, h);
             
             new_cache = _directfb_allocate_font_cache (surface->dfb, w, h);
-            if (!new_cache)
+            if (!new_cache) {
+                _cairo_cache_thaw( scaled_font->glyphs );
                 return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+            }
             
             new_cache->dfbsurface->Blit (new_cache->dfbsurface,
                                          cache->dfbsurface, NULL, 0, 0);
@@ -1487,12 +1509,13 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
         }
     }
     else {
-        D_DEBUG_AT (Cairo_DirectFB,
-                    "Allocating font cache (%dx%d).\n", w, h);
+        D_DEBUG_AT (CairoDFB_Font, "  -> Allocating font cache (%dx%d).\n", w, h);
         
         cache = _directfb_allocate_font_cache (surface->dfb, w, h);
-        if (!cache)
+        if (!cache) {
+            _cairo_cache_thaw( scaled_font->glyphs );
             return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        }
             
         scaled_font->surface_backend = &cairo_directfb_surface_backend;
         scaled_font->surface_private = cache;
@@ -1504,17 +1527,30 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
     
         if (cache->dfbsurface->Lock (cache->dfbsurface, 
                                      DSLF_WRITE, (void *)&data, &pitch))
+        {
+            _cairo_cache_thaw( scaled_font->glyphs );
             return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        }
             
+        D_DEBUG_AT (CairoDFB_Font, "  => %d chars to load, cache %dx%d\n", num_chars, cache->width, cache->height);
+
         for (i = 0; i < num_chars; i++) {
             cairo_image_surface_t *img  = chars[i]->surface;
             DFBRectangle          *rect = chars[i]->surface_private;
             unsigned char         *dst  = data;
-            unsigned char         *src  = img->data;
+            unsigned char         *src;
             int                    j;
             
+            D_DEBUG_AT (CairoDFB_Font, "  -> loading [%2d] <- rect %p, img %p, entry %p\n", i, rect, img, chars[i]);
+
+            src = img->data;
+
+            D_DEBUG_AT (CairoDFB_Font, "     from %p\n", src);
+
             dst += rect->y * pitch + (_directfb_argb_font ? (rect->x<<2) : rect->x);
                         
+            D_DEBUG_AT (CairoDFB_Font, "     to %4d,%2d (%p)\n", rect->x, rect->y, dst);
+
             if (img->format == CAIRO_FORMAT_A1) {
                 for (h = rect->h; h; h--) {
                     if (_directfb_argb_font) {
@@ -1563,9 +1599,13 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
         cache->dfbsurface->Unlock (cache->dfbsurface);
     }
 
+    _cairo_cache_thaw( scaled_font->glyphs );
+
     cache->x = x;
     cache->y = y;
     
+    D_DEBUG_AT (CairoDFB_Font, "  => cache %d,%d, %p [%d]\n", x, y, cache, n);
+
     *ret_cache = cache;
     *ret_num   = n;
 
@@ -1577,7 +1617,7 @@ _cairo_directfb_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 {
     cairo_directfb_font_cache_t *cache = scaled_font->surface_private;
     
-    D_DEBUG_AT (Cairo_DirectFB,
+    D_DEBUG_AT (CairoDFB_Font,
                 "%s( scaled_font=%p ).\n", __FUNCTION__, scaled_font);
     
     if (cache) {
@@ -1590,7 +1630,7 @@ static void
 _cairo_directfb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
                                            cairo_scaled_font_t  *scaled_font)
 {
-     D_DEBUG_AT (Cairo_DirectFB,
+     D_DEBUG_AT (CairoDFB_Font,
                  "%s( scaled_glyph=%p, scaled_font=%p ).\n",
                  __FUNCTION__, scaled_glyph, scaled_font);
 
@@ -1620,7 +1660,7 @@ _cairo_directfb_surface_show_glyphs (void                *abstract_dst,
     DFBPoint                     points[num_glyphs];
     int                          num;
     
-    D_DEBUG_AT (Cairo_DirectFB,
+    D_DEBUG_AT (CairoDFB_Font,
                 "%s( dst=%p, op=%d, pattern=%p, glyphs=%p, num_glyphs=%d, scaled_font=%p ).\n",
                 __FUNCTION__, dst, op, pattern, glyphs, num_glyphs, scaled_font);
                             
@@ -1661,7 +1701,7 @@ _cairo_directfb_surface_show_glyphs (void                *abstract_dst,
     dst->dfbsurface->SetDstBlendFunction (dst->dfbsurface, dblend);
     dst->dfbsurface->SetColor (dst->dfbsurface, color.r, color.g, color.b, color.a);
     
-    D_DEBUG_AT (Cairo_DirectFB, "Running BatchBlit().\n");
+    D_DEBUG_AT (CairoDFB_Font, "Running BatchBlit().\n");
         
     RUN_CLIPPED (dst, NULL,
                  dst->dfbsurface->BatchBlit (dst->dfbsurface,
@@ -1759,7 +1799,7 @@ cairo_directfb_surface_backend_init (IDirectFB *dfb)
         cairo_directfb_surface_backend.scaled_glyph_fini = NULL;
         cairo_directfb_surface_backend.show_glyphs = NULL;
 #endif
-        D_DEBUG_AT (Cairo_DirectFB, "Acceleration disabled.\n");
+        D_DEBUG_AT (CairoDFB_Surface, "Acceleration disabled.\n");
     }
     else {
         DFBGraphicsDeviceDescription dsc;
@@ -1767,19 +1807,19 @@ cairo_directfb_surface_backend_init (IDirectFB *dfb)
         dfb->GetDeviceDescription (dfb, &dsc);
     
 #if DFB_COMPOSITE
-        if (!(dsc.acceleration_mask & DFXL_BLIT))
-            cairo_directfb_surface_backend.composite = NULL;
+//        if (!(dsc.acceleration_mask & DFXL_BLIT))
+//            cairo_directfb_surface_backend.composite = NULL;
 #endif
 
 #if DFB_COMPOSITE_TRAPEZOIDS
-        if (!(dsc.acceleration_mask & DFXL_TEXTRIANGLES))
-            cairo_directfb_surface_backend.composite_trapezoids = NULL;
+//        if (!(dsc.acceleration_mask & DFXL_TEXTRIANGLES))
+//            cairo_directfb_surface_backend.composite_trapezoids = NULL;
 #endif
     }
     
     if (getenv ("CAIRO_DIRECTFB_ARGB_FONT")) {
         _directfb_argb_font = 1;
-        D_DEBUG_AT (Cairo_DirectFB, "Using ARGB fonts.\n");
+        D_DEBUG_AT (CairoDFB_Surface, "Using ARGB fonts.\n");
     }
 
     done = 1;
