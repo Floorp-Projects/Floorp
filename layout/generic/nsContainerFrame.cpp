@@ -1440,9 +1440,10 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
   NS_PRECONDITION(aOverflowCont->GetPrevInFlow(),
                   "overflow containers must have a prev-in-flow");
   nsresult rv = NS_OK;
+  PRBool convertedToOverflowContainer = PR_FALSE;
+  nsPresContext* presContext = aOverflowCont->PresContext();
   if (!mSentry || aOverflowCont != mSentry->GetNextInFlow()) {
     // Not in our list, so we need to add it
-    nsPresContext* presContext = aOverflowCont->PresContext();
     if (aOverflowCont->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
       // aOverflowCont is in some other overflow container list,
       // steal it first
@@ -1455,6 +1456,7 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
     }
     else {
       aOverflowCont->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+      convertedToOverflowContainer = PR_TRUE;
     }
     if (!mOverflowContList) {
       mOverflowContList = new nsFrameList();
@@ -1483,6 +1485,20 @@ nsOverflowContinuationTracker::Insert(nsIFrame*       aOverflowCont,
                 (mPrevOverflowCont->GetStateBits() & NS_FRAME_OUT_OF_FLOW) !=
                 (aOverflowCont->GetStateBits() & NS_FRAME_OUT_OF_FLOW)),
               "OverflowContTracker in unexpected state");
+
+  if (convertedToOverflowContainer) {
+    // Convert all non-overflow-container continuations of aOverflowCont
+    // into overflow containers and move them to our overflow
+    // tracker. This preserves the invariant that the next-continuations
+    // of an overflow container are also overflow containers.
+    nsIFrame* f = aOverflowCont->GetNextContinuation();
+    if (f && !(f->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+      nsContainerFrame* parent = static_cast<nsContainerFrame*>(f->GetParent());
+      rv = parent->StealFrame(presContext, f);
+      NS_ENSURE_SUCCESS(rv, rv);
+      Insert(f, aReflowStatus);
+    }
+  }
   return rv;
 }
 
@@ -1492,24 +1508,28 @@ nsOverflowContinuationTracker::Finish(nsIFrame* aChild)
   NS_PRECONDITION(aChild, "null ptr");
   NS_PRECONDITION(aChild->GetNextInFlow(),
                 "supposed to call Finish *before* deleting next-in-flow!");
-  if (aChild == mSentry) {
-    // Make sure we drop all references if this was the only frame
-    // in the overflow containers list
-    if (mOverflowContList->FirstChild() == aChild->GetNextInFlow()
-        && !aChild->GetNextInFlow()->GetNextSibling()) {
-      mOverflowContList = nsnull;
-      mPrevOverflowCont = nsnull;
-      mSentry = nsnull;
-      mParent = static_cast<nsContainerFrame*>(aChild->GetParent());
-    }
-    else {
-      // Step past aChild
-      nsIFrame* prevOverflowCont = mPrevOverflowCont;
-      StepForward();
-      if (mPrevOverflowCont == aChild->GetNextInFlow()) {
-        // Pull mPrevOverflowChild back to aChild's prevSibling:
-        // aChild will be removed from our list by our caller
-        mPrevOverflowCont = prevOverflowCont;
+
+  for (nsIFrame* f = aChild; f; f = f->GetNextInFlow()) {
+    if (f == mSentry) {
+      // Make sure we drop all references if this was the only frame
+      // in the overflow containers list
+      if (mOverflowContList->FirstChild() == f->GetNextInFlow()
+          && !f->GetNextInFlow()->GetNextSibling()) {
+        mOverflowContList = nsnull;
+        mPrevOverflowCont = nsnull;
+        mSentry = nsnull;
+        mParent = static_cast<nsContainerFrame*>(f->GetParent());
+        break;
+      }
+      else {
+        // Step past aChild
+        nsIFrame* prevOverflowCont = mPrevOverflowCont;
+        StepForward();
+        if (mPrevOverflowCont == f->GetNextInFlow()) {
+          // Pull mPrevOverflowChild back to aChild's prevSibling:
+          // aChild will be removed from our list by our caller
+          mPrevOverflowCont = prevOverflowCont;
+        }
       }
     }
   }
