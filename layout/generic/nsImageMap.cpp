@@ -161,165 +161,161 @@ static void logMessage(nsIContent*      aContent,
      "ImageMap");
 }
 
-// XXX straight copy from laymap.c
-static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
-{
-  char *tptr;
-  char *n_str;
-  PRInt32 i, cnt;
-  PRInt32 *value_list;
-
-  /*
-   * Nothing in an empty list
-   */
-  *value_cnt = 0;
-  if (!str || *str == '\0')
-  {
-    return nsnull;
-  }
-
-  /*
-   * Skip beginning whitespace, all whitespace is empty list.
-   */
-  n_str = str;
-  while (is_space(*n_str))
-  {
-    n_str++;
-  }
-  if (*n_str == '\0')
-  {
-    return nsnull;
-  }
-
-  /*
-   * Make a pass where any two numbers separated by just whitespace
-   * are given a comma separator.  Count entries while passing.
-   */
-  cnt = 0;
-  while (*n_str != '\0')
-  {
-    PRBool has_comma;
-
-    /*
-     * Skip to a separator
-     */
-    tptr = n_str;
-    while (!is_space(*tptr) && *tptr != ',' && *tptr != '\0')
-    {
-      tptr++;
-    }
-    n_str = tptr;
-
-    /*
-     * If no more entries, break out here
-     */
-    if (*n_str == '\0')
-    {
-      break;
-    }
-
-    /*
-     * Skip to the end of the separator, noting if we have a
-     * comma.
-     */
-    has_comma = PR_FALSE;
-    while (is_space(*tptr) || *tptr == ',')
-    {
-      if (*tptr == ',')
-      {
-        if (has_comma == PR_FALSE)
-        {
-          has_comma = PR_TRUE;
-        }
-        else
-        {
-          break;
-        }
-      }
-      tptr++;
-    }
-    /*
-     * If this was trailing whitespace we skipped, we are done.
-     */
-    if ((*tptr == '\0')&&(has_comma == PR_FALSE))
-    {
-      break;
-    }
-    /*
-     * Else if the separator is all whitespace, and this is not the
-     * end of the string, add a comma to the separator.
-     */
-    else if (has_comma == PR_FALSE)
-    {
-      *n_str = ',';
-    }
-
-    /*
-     * count the entry skipped.
-     */
-    cnt++;
-
-    n_str = tptr;
-  }
-  /*
-   * count the last entry in the list.
-   */
-  cnt++;
- 
-  /*
-   * Allocate space for the coordinate array.
-   */
-  value_list = new nscoord[cnt];
-  if (!value_list)
-  {
-    return nsnull;
-  }
-
-  /*
-   * Second pass to copy integer values into list.
-   */
-  tptr = str;
-  for (i=0; i<cnt; i++)
-  {
-    char *ptr;
-
-    ptr = strchr(tptr, ',');
-    if (ptr)
-    {
-      *ptr = '\0';
-    }
-    /*
-     * Strip whitespace in front of number because I don't
-     * trust atoi to do it on all platforms.
-     */
-    while (is_space(*tptr))
-    {
-      tptr++;
-    }
-    if (*tptr == '\0')
-    {
-      value_list[i] = 0;
-    }
-    else
-    {
-      value_list[i] = (nscoord) ::atoi(tptr);
-    }
-    if (ptr)
-    {
-      *ptr = ',';
-      tptr = ptr + 1;
-    }
-  }
-
-  *value_cnt = cnt;
-  return value_list;
-}
-
 void Area::ParseCoords(const nsAString& aSpec)
 {
   char* cp = ToNewCString(aSpec);
   if (cp) {
-    mCoords = lo_parse_coord_list(cp, &mNumCoords);
+    char *tptr;
+    char *n_str;
+    PRInt32 i, cnt;
+    PRInt32 *value_list;
+
+    /*
+     * Nothing in an empty list
+     */
+    mNumCoords = 0;
+    mCoords = nsnull;
+    if (*cp == '\0')
+    {
+      return;
+    }
+
+    /*
+     * Skip beginning whitespace, all whitespace is empty list.
+     */
+    n_str = cp;
+    while (is_space(*n_str))
+    {
+      n_str++;
+    }
+    if (*n_str == '\0')
+    {
+      return;
+    }
+
+    /*
+     * Make a pass where any two numbers separated by just whitespace
+     * are given a comma separator.  Count entries while passing.
+     */
+    cnt = 0;
+    while (*n_str != '\0')
+    {
+      PRBool has_comma;
+
+      /*
+       * Skip to a separator
+       */
+      tptr = n_str;
+      while (!is_space(*tptr) && *tptr != ',' && *tptr != '\0')
+      {
+        tptr++;
+      }
+      n_str = tptr;
+
+      /*
+       * If no more entries, break out here
+       */
+      if (*n_str == '\0')
+      {
+        break;
+      }
+
+      /*
+       * Skip to the end of the separator, noting if we have a
+       * comma.
+       */
+      has_comma = PR_FALSE;
+      while (is_space(*tptr) || *tptr == ',')
+      {
+        if (*tptr == ',')
+        {
+          if (has_comma == PR_FALSE)
+          {
+            has_comma = PR_TRUE;
+          }
+          else
+          {
+            break;
+          }
+        }
+        tptr++;
+      }
+      /*
+       * If this was trailing whitespace we skipped, we are done.
+       */
+      if ((*tptr == '\0')&&(has_comma == PR_FALSE))
+      {
+        break;
+      }
+      /*
+       * Else if the separator is all whitespace, and this is not the
+       * end of the string, add a comma to the separator.
+       */
+      else if (has_comma == PR_FALSE)
+      {
+        *n_str = ',';
+      }
+
+      /*
+       * count the entry skipped.
+       */
+      cnt++;
+
+      n_str = tptr;
+    }
+    /*
+     * count the last entry in the list.
+     */
+    cnt++;
+ 
+    /*
+     * Allocate space for the coordinate array.
+     */
+    value_list = new nscoord[cnt];
+    if (!value_list)
+    {
+      return;
+    }
+
+    /*
+     * Second pass to copy integer values into list.
+     */
+    tptr = cp;
+    for (i=0; i<cnt; i++)
+    {
+      char *ptr;
+
+      ptr = strchr(tptr, ',');
+      if (ptr)
+      {
+        *ptr = '\0';
+      }
+      /*
+       * Strip whitespace in front of number because I don't
+       * trust atoi to do it on all platforms.
+       */
+      while (is_space(*tptr))
+      {
+        tptr++;
+      }
+      if (*tptr == '\0')
+      {
+        value_list[i] = 0;
+      }
+      else
+      {
+        value_list[i] = (nscoord) ::atoi(tptr);
+      }
+      if (ptr)
+      {
+        *ptr = ',';
+        tptr = ptr + 1;
+      }
+    }
+
+    mNumCoords = cnt;
+    mCoords = value_list;
+  
     NS_Free(cp);
   }
 }
