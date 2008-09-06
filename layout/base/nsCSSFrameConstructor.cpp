@@ -7400,12 +7400,15 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
   }
 #endif
 
-  // Style resolution can normally happen lazily.  However, getting the
-  // Visibility struct can cause |SetBidiEnabled| to be called on the
-  // pres context, and this needs to happen before we start reflow, so
-  // do it now, when constructing frames.  See bug 115921.
+  // If the page contains markup that overrides text direction, and
+  // does not contain any characters that would activate the Unicode
+  // bidi algorithm, we need to call |SetBidiEnabled| on the pres
+  // context before reflow starts.  This requires us to resolve some
+  // style information now.  See bug 115921.
   {
-    styleContext->GetStyleVisibility();
+    if (styleContext->GetStyleVisibility()->mDirection ==
+        NS_STYLE_DIRECTION_RTL)
+      aState.mPresContext->SetBidiEnabled();
   }
   // Start background loads during frame construction. This is just
   // a hint; the paint code will do the right thing in any case.
