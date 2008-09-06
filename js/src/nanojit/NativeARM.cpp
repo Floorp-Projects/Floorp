@@ -202,9 +202,8 @@ Assembler::asm_call(LInsp ins)
             FMDRR(rr,R0,R1);
         } else {
             NanoAssert(d);
-            //fprintf (stderr, "call ins d: %d\n", d);
-            STMIA(Scratch, 1<<R0 | 1<<R1);
-            arm_ADDi(Scratch, FP, d);
+            STR(R0, FP, d+0);
+            STR(R1, FP, d+4);
         }
     }
 #endif
@@ -449,10 +448,8 @@ Assembler::asm_load64(LInsp ins)
 
     if (rr != UnknownReg) {
         if (!isS8(offset >> 2) || (offset&3) != 0) {
-            underrunProtect(LD32_size + 8);
             FLDD(rr,Scratch,0);
-            ADD(Scratch, rb);
-            LD32_nochk(Scratch, offset);
+            arm_ADDi(Scratch, rb, offset);
         } else {
             FLDD(rr,rb,offset);
         }
@@ -477,8 +474,19 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
 
 #ifdef NJ_ARM_VFP
     Reservation *valResv = getresv(value);
-
     Register rb = findRegFor(base, GpRegs);
+
+    if (value->isconstq()) {
+        const int32_t* p = (const int32_t*) (value-2);
+
+        STR(Scratch, rb, dr);
+        LD32_nochk(Scratch, p[0]);
+        STR(Scratch, rb, dr+4);
+        LD32_nochk(Scratch, p[1]);
+
+        return;
+    }
+
     Register rv = findRegFor(value, FpRegs);
 
     NanoAssert(rb != UnknownReg);
@@ -495,9 +503,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     FSTD(rv, baseReg, baseOffset);
 
     if (!isS8(dr)) {
-        underrunProtect(4 + LD32_size);
-        ADD(Scratch, rb);
-        LD32_nochk(Scratch, dr);
+        arm_ADDi(Scratch, rb, dr);
     }
 
     // if it's a constant, make sure our baseReg/baseOffset location
@@ -505,7 +511,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     if (value->isconstq()) {
         const int32_t* p = (const int32_t*) (value-2);
 
-        underrunProtect(12 + LD32_size);
+        underrunProtect(12);
 
         asm_quad_nochk(rv, p);
     }
@@ -522,27 +528,23 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
 void
 Assembler::asm_quad_nochk(Register rr, const int32_t* p)
 {
-    *(++_nSlot) = p[0];
-    *(++_nSlot) = p[1];
+    // We're not going to use a slot, because it might be too far
+    // away.  Instead, we're going to stick a branch in the stream to
+    // jump over the constants, and then load from a short PC relative
+    // offset.
 
-    intptr_t constAddr = (intptr_t) (_nSlot-1);
-    intptr_t realOffset = PC_OFFSET_FROM(constAddr, _nIns-1);
-    intptr_t offset = realOffset;
-    Register baseReg = PC;
+    // stream should look like:
+    //    branch A
+    //    p[0]
+    //    p[1]
+    // A: FLDD PC-16
 
-    //int32_t *q = (int32_t*) constAddr;
-    //fprintf (stderr, "asm_quad_nochk: rr = %d cAddr: 0x%x quad: %08x:%08x q: %f @0x%08x\n", rr, constAddr, p[0], p[1], *(double*)q, _nIns);
+    FLDD(rr, PC, -16);
 
-    // for FLDD, we only get a left-shifted 8-bit offset
-    if (!isS8(realOffset >> 2)) {
-        offset = 0;
-        baseReg = Scratch;
-    }
+    *(--_nIns) = (NIns) p[1];
+    *(--_nIns) = (NIns) p[0];
 
-    FLDD(rr, baseReg, offset);
-
-    if (!isS8(realOffset >> 2))
-        LD32_nochk(Scratch, constAddr);
+    JMP_nochk(_nIns+2);
 }
 
 void
@@ -561,21 +563,28 @@ Assembler::asm_quad(LInsp ins)
 #ifdef NJ_ARM_VFP
     freeRsrcOf(ins, false);
 
-    // XXX We probably want nochk versions of FLDD/FSTD
-    underrunProtect(16 + LD32_size);
+    if (rr == UnknownReg) {
+        underrunProtect(12);
 
-    // grab a register to do the load into if we don't have one already;
-    // XXX -- maybe do a mmq in this case?  We're going to use our
-    // D7 register that's never allocated (since it's the one we use
-    // for int-to-double conversions), so we don't have to worry about
-    // spilling something in a fp reg.
-    if (rr == UnknownReg)
-        rr = D7;
+        // asm_mmq might spill a reg, so don't call it;
+        // instead do the equivalent directly.
+        //asm_mmq(FP, d, PC, -16);
 
-    if (d)
-        FSTD(rr, FP, d);
+        STR(Scratch, FP, d+4);
+        LDR(Scratch, PC, -20);
+        STR(Scratch, FP, d);
+        LDR(Scratch, PC, -16);
 
-    asm_quad_nochk(rr, p);
+        *(--_nIns) = (NIns) p[1];
+        *(--_nIns) = (NIns) p[0];
+        JMP_nochk(_nIns+2);
+    } else {
+        if (d)
+            FSTD(rr, FP, d);
+
+        underrunProtect(16);
+        asm_quad_nochk(rr, p);
+    }
 #else
     freeRsrcOf(ins, false);
     if (d) {
@@ -628,13 +637,21 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     // value is either a 64bit struct or maybe a float
     // that isn't live in an FPU reg.  Either way, don't
     // put it in an FPU reg just to load & store it.
-    // get a scratch reg
+
+    // Don't use this with PC-relative loads; the registerAlloc might
+    // end up spilling a reg (and this the offset could end up being
+    // bogus)!
+    NanoAssert(rs != PC);
+
+    // use both IP and a second scratch reg
     Register t = registerAlloc(GpRegs & ~(rmask(rd)|rmask(rs)));
     _allocator.addFree(t);
-    // XXX use LDM,STM
-    STR(t, rd, dd+4);
-    LDR(t, rs, ds+4);
+
+    // XXX maybe figure out if we can use LDRD/STRD -- hard to
+    // ensure right register allocation
+    STR(Scratch, rd, dd+4);
     STR(t, rd, dd);
+    LDR(Scratch, rs, ds+4);
     LDR(t, rs, ds);
 }
 
@@ -643,29 +660,27 @@ Assembler::asm_pusharg(LInsp arg)
 {
     Reservation* argRes = getresv(arg);
     bool quad = arg->isQuad();
-    intptr_t stack_growth = quad ? 8 : 4;
 
-    Register ra;
-
-    if (argRes)
-        ra = argRes->reg;
-    else
-        ra = findRegFor(arg, quad ? FpRegs : GpRegs);
-
-    if (ra == UnknownReg) {
-        STR(Scratch, SP, 0);
-        LDR(Scratch, FP, disp(argRes));
-    } else {
+    if (argRes && argRes->reg != UnknownReg) {
         if (!quad) {
-            Register ra = findRegFor(arg, GpRegs);
-            STR(ra, SP, 0);
+            STR_preindex(argRes->reg, SP, -4);
         } else {
-            Register ra = findRegFor(arg, FpRegs);
-            FSTD(ra, SP, 0);
+            FSTD(argRes->reg, SP, 0);
+            SUBi(SP, 8);
+        }
+    } else {
+        int d = findMemFor(arg);
+
+        if (!quad) {
+            STR_preindex(Scratch, SP, -4);
+            LDR(Scratch, FP, d);
+        } else {
+            STR_preindex(Scratch, SP, -4);
+            LDR(Scratch, FP, d+4);
+            STR_preindex(Scratch, SP, -4);
+            LDR(Scratch, FP, d);
         }
     }
-
-    SUBi(SP, stack_growth);
 }
 
 void
@@ -818,6 +833,11 @@ Assembler::CALL(const CallInfo *ci)
 void
 Assembler::LD32_nochk(Register r, int32_t imm)
 {
+    if (imm == 0) {
+        XOR(r, r);
+        return;
+    }
+
     // We should always reach the const pool, since it's on the same page (<4096);
     // if we can't, someone didn't underrunProtect enough.
 
@@ -878,6 +898,49 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
     }
 
     asm_output2("%s %p", _c == AL ? "jmp" : "b(cnd)", (void*)(_t));
+}
+
+void
+Assembler::asm_add_imm(Register rd, Register rn, int32_t imm)
+{
+
+    int rot = 16;
+    uint32_t immval;
+    bool pos;
+
+    if (imm >= 0) {
+        immval = (uint32_t) imm;
+        pos = true;
+    } else {
+        immval = (uint32_t) (-imm);
+        pos = false;
+    }
+
+    while (immval && ((immval & 0x3) == 0)) {
+        immval >>= 2;
+        rot--;
+    }
+
+    rot &= 0xf;
+
+    if (immval < 256) {
+        underrunProtect(4);
+        if (pos)
+            *(--_nIns) = (NIns)( COND_AL | OP_IMM | OP_STAT | (1<<23) | (rn<<16) | (rd<<12) | (rot << 8) | immval );
+        else
+            *(--_nIns) = (NIns)( COND_AL | OP_IMM | OP_STAT | (1<<22) | (rn<<16) | (rd<<12) | (rot << 8) | immval );
+        asm_output3("add %s,%s,%d",gpn(rd),gpn(rn),imm);
+    } else {
+        // add scratch to rn, after loading the value into scratch.
+
+        // make sure someone isn't trying to use Scratch as an operand
+        NanoAssert(rn != Scratch);
+
+        *(--_nIns) = (NIns)( COND_AL | OP_STAT | (1<<23) | (rn<<16) | (rd<<12) | (Scratch));
+        asm_output3("add %s,%s,%s",gpn(rd),gpn(rn),gpn(Scratch));
+
+        LD32_nochk(Scratch, imm);
+    }
 }
 
 /*
