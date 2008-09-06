@@ -660,28 +660,27 @@ Assembler::asm_pusharg(LInsp arg)
 {
     Reservation* argRes = getresv(arg);
     bool quad = arg->isQuad();
-    intptr_t stack_growth = quad ? 8 : 4;
-
-    int d = 0;
 
     if (argRes && argRes->reg != UnknownReg) {
         if (!quad) {
-            STR(argRes->reg, SP, 0);
+            STR_preindex(argRes->reg, SP, -4);
         } else {
             FSTD(argRes->reg, SP, 0);
+            SUBi(SP, 8);
         }
     } else {
         int d = findMemFor(arg);
 
         if (!quad) {
-            STR(Scratch, SP, 0);
+            STR_preindex(Scratch, SP, -4);
             LDR(Scratch, FP, d);
         } else {
-            asm_mmq(SP, 0, FP, disp(argRes));
+            STR_preindex(Scratch, SP, -4);
+            LDR(Scratch, FP, d+4);
+            STR_preindex(Scratch, SP, -4);
+            LDR(Scratch, FP, d);
         }
     }
-
-    SUBi(SP, stack_growth);
 }
 
 void

@@ -505,7 +505,7 @@ typedef enum {
                 LD32_nochk(Scratch, _off);                              \
             }                                                           \
         }                                                               \
-        asm_output3("ldr %s,%d(%s)",gpn((_d)),(_off),gpn((_b)));        \
+        asm_output3("ldr %s, [%s, #%d]",gpn(_d),gpn(_b),(_off));        \
     } while(0)
 
 #define LDR(_d,_b,_off)        LDR_chk(_d,_b,_off,0)
@@ -547,7 +547,25 @@ typedef enum {
         underrunProtect(4);                                             \
         if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x50<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
         else            *(--_nIns) = (NIns)( COND_AL | (0x58<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
-        asm_output3("str %s, %d(%s)",gpn(_d), (_off), gpn(_n));         \
+        asm_output3("str %s, [%s, #%d]", gpn(_d), gpn(_n), (_off)); \
+    } while(0)
+
+// Rd += _off; [Rd] = Rn
+#define STR_preindex(_d,_n,_off) do {                                   \
+        NanoAssert(!IsFpReg(_d) && isS12(_off));                        \
+        underrunProtect(4);                                             \
+        if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x52<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
+        else            *(--_nIns) = (NIns)( COND_AL | (0x5A<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
+        asm_output3("str %s, [%s, #%d]", gpn(_d), gpn(_n), (_off));      \
+    } while(0)
+
+// [Rd] = Rn ; Rd += _off
+#define STR_postindex(_d,_n,_off) do {                                  \
+        NanoAssert(!IsFpReg(_d) && isS12(_off));                        \
+        underrunProtect(4);                                             \
+        if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x40<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
+        else            *(--_nIns) = (NIns)( COND_AL | (0x48<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
+        asm_output3("str %s, [%s], %d", gpn(_d), gpn(_n), (_off));      \
     } while(0)
 
 
