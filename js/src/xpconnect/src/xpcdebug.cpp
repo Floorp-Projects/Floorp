@@ -305,7 +305,7 @@ xpc_DumpJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals, JSBool showTh
 
 /***************************************************************************/
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 xpcDumpEvalErrorReporter(JSContext *cx, const char *message,
                          JSErrorReport *report)
 {
@@ -363,7 +363,7 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text)
 
 /***************************************************************************/
 
-JSTrapStatus JS_DLL_CALLBACK
+JSTrapStatus
 xpc_DebuggerKeywordHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
                            jsval *rval, void *closure)
 {

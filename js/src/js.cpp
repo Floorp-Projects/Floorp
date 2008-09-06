@@ -2121,7 +2121,7 @@ split_create_inner(JSContext *cx, JSObject *outer);
 static ComplexObject *
 split_get_private(JSContext *cx, JSObject *obj);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     ComplexObject *cpx;
@@ -2140,7 +2140,7 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 split_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     ComplexObject *cpx;
@@ -2164,7 +2164,7 @@ split_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 split_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     ComplexObject *cpx;
@@ -2188,7 +2188,7 @@ split_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 split_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     ComplexObject *cpx;
@@ -2206,7 +2206,7 @@ split_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                   jsval *statep, jsid *idp)
 {
@@ -2247,7 +2247,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                 JSObject **objp)
 {
@@ -2289,13 +2289,13 @@ split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 split_finalize(JSContext *cx, JSObject *obj)
 {
     JS_free(cx, JS_GetPrivate(cx, obj));
 }
 
-JS_STATIC_DLL_CALLBACK(uint32)
+static uint32
 split_mark(JSContext *cx, JSObject *obj, void *arg)
 {
     ComplexObject *cpx;
@@ -2310,7 +2310,7 @@ split_mark(JSContext *cx, JSObject *obj, void *arg)
     return 0;
 }
 
-JS_STATIC_DLL_CALLBACK(JSObject *)
+static JSObject *
 split_outerObject(JSContext *cx, JSObject *obj)
 {
     ComplexObject *cpx;
@@ -2319,7 +2319,7 @@ split_outerObject(JSContext *cx, JSObject *obj)
     return cpx->isInner ? cpx->outer : obj;
 }
 
-JS_STATIC_DLL_CALLBACK(JSObject *)
+static JSObject *
 split_innerObject(JSContext *cx, JSObject *obj)
 {
     ComplexObject *cpx;

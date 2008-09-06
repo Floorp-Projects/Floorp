@@ -6036,7 +6036,7 @@ TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len)
     }
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 trace_temp_ns_array(JSTracer *trc, JSTempValueRooter *tvr)
 {
     JSTempRootedNSArray *tmp = (JSTempRootedNSArray *)tvr;

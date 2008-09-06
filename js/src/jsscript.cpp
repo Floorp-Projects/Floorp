@@ -963,7 +963,7 @@ js_InitScriptClass(JSContext *cx, JSObject *obj)
 /*
  * Shared script filename management.
  */
-JS_STATIC_DLL_CALLBACK(int)
+static int
 js_compare_strings(const void *k1, const void *k2)
 {
     return strcmp((const char *) k1, (const char *) k2) == 0;
@@ -979,19 +979,19 @@ typedef struct ScriptFilenameEntry {
     char                filename[3];    /* two or more bytes, NUL-terminated */
 } ScriptFilenameEntry;
 
-JS_STATIC_DLL_CALLBACK(void *)
+static void *
 js_alloc_table_space(void *priv, size_t size)
 {
     return malloc(size);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 js_free_table_space(void *priv, void *item)
 {
     free(item);
 }
 
-JS_STATIC_DLL_CALLBACK(JSHashEntry *)
+static JSHashEntry *
 js_alloc_sftbl_entry(void *priv, const void *key)
 {
     size_t nbytes = offsetof(ScriptFilenameEntry, filename) +
@@ -1000,7 +1000,7 @@ js_alloc_sftbl_entry(void *priv, const void *key)
     return (JSHashEntry *) malloc(JS_MAX(nbytes, sizeof(JSHashEntry)));
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 js_free_sftbl_entry(void *priv, JSHashEntry *he, uintN flag)
 {
     if (flag != HT_FREE_ENTRY)
@@ -1238,7 +1238,7 @@ js_MarkScriptFilename(const char *filename)
     sfe->mark = JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
+static intN
 js_script_filename_marker(JSHashEntry *he, intN i, void *arg)
 {
     ScriptFilenameEntry *sfe = (ScriptFilenameEntry *) he;
@@ -1269,7 +1269,7 @@ js_MarkScriptFilenames(JSRuntime *rt, JSBool keepAtoms)
     }
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
+static intN
 js_script_filename_sweeper(JSHashEntry *he, intN i, void *arg)
 {
     ScriptFilenameEntry *sfe = (ScriptFilenameEntry *) he;

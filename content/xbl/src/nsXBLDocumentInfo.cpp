@@ -217,7 +217,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXBLDocGlobalObject, nsIScriptGlobalObject)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXBLDocGlobalObject, nsIScriptGlobalObject)
 
-void JS_DLL_CALLBACK
+void
 XBL_ProtoErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)

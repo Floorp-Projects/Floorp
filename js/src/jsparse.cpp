@@ -1851,7 +1851,7 @@ typedef struct FindPropValEntry {
                (pnkey)->pn_type == TOK_STRING ||                              \
                (pnkey)->pn_type == TOK_NAME))
 
-JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+static JSDHashNumber
 HashFindPropValKey(JSDHashTable *table, const void *key)
 {
     const JSParseNode *pnkey = (const JSParseNode *)key;
@@ -1863,7 +1863,7 @@ HashFindPropValKey(JSDHashTable *table, const void *key)
            : ATOM_HASH(pnkey->pn_atom);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 MatchFindPropValEntry(JSDHashTable *table,
                       const JSDHashEntryHdr *entry,
                       const void *key)

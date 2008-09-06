@@ -108,7 +108,7 @@
 #define JSD_AUTOREG_ENTRY "JSDebugger Startup Observer"
 #define JSD_STARTUP_ENTRY "JSDebugger Startup Observer"
 
-JS_STATIC_DLL_CALLBACK (JSBool)
+static JSBool
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
 
 /*******************************************************************************
@@ -461,7 +461,7 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
  * c callbacks
  *******************************************************************************/
 
-JS_STATIC_DLL_CALLBACK (void)
+static void
 jsds_NotifyPendingDeadScripts (JSContext *cx)
 {
 #ifdef CAUTIOUS_SCRIPTHOOK
@@ -513,7 +513,7 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
     }
 }
 
-JS_STATIC_DLL_CALLBACK (JSBool)
+static JSBool
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
 {
 #ifdef DEBUG_verbose
@@ -533,7 +533,7 @@ jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK (uintN)
+static uintN
 jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
                     JSErrorReport *report, void *callerdata)
 {
@@ -590,7 +590,7 @@ jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
     return JSD_ERROR_REPORTER_PASS_ALONG;
 }
 
-JS_STATIC_DLL_CALLBACK (JSBool)
+static JSBool
 jsds_CallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
                    uintN type, void* callerdata)
 {
@@ -630,7 +630,7 @@ jsds_CallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK (PRUint32)
+static PRUint32
 jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
                         uintN type, void* callerdata, jsval* rval)
 {
@@ -706,7 +706,7 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     return hook_rv;
 }
 
-JS_STATIC_DLL_CALLBACK (void)
+static void
 jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
                      void* callerdata)
 {

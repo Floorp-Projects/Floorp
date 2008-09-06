@@ -130,7 +130,7 @@ nsXPCToolsProfiler::~nsXPCToolsProfiler()
 // the hooks...
 
 /* called just after script creation */
-JS_STATIC_DLL_CALLBACK(void)
+static void
 xpctools_JSNewScriptHook(JSContext  *cx,
                          const char *filename,  /* URL of script */
                          uintN      lineno,     /* line script starts */
@@ -172,7 +172,7 @@ xpctools_JSNewScriptHook(JSContext  *cx,
 }
 
 /* called just before script destruction */
-JS_STATIC_DLL_CALLBACK(void)
+static void
 xpctools_JSDestroyScriptHook(JSContext  *cx,
                              JSScript   *script,
                              void       *callerdata)
@@ -188,7 +188,7 @@ xpctools_JSDestroyScriptHook(JSContext  *cx,
 
 
 /* called on entry and return of functions and top level scripts */
-JS_STATIC_DLL_CALLBACK(void*)
+static void*
 xpctools_InterpreterHook(JSContext *cx, JSStackFrame *fp, JSBool before,
                          JSBool *ok, void *closure)
 {

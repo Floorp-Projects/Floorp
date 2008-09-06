@@ -266,7 +266,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
 
 }
 
-void * JS_DLL_CALLBACK
+void *
 jsd_FunctionCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
                      JSBool *ok, void *closure)
 {
@@ -292,7 +292,7 @@ jsd_FunctionCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
     return NULL;
 }
 
-void * JS_DLL_CALLBACK
+void *
 jsd_TopLevelCallHook(JSContext *cx, JSStackFrame *fp, JSBool before,
                      JSBool *ok, void *closure)
 {

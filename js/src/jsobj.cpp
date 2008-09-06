@@ -327,7 +327,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSHashNumber)
+static JSHashNumber
 js_hash_object(const void *key)
 {
     return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;
@@ -570,7 +570,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
     }
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
+static intN
 gc_sharp_table_entry_marker(JSHashEntry *he, intN i, void *arg)
 {
     JS_CALL_OBJECT_TRACER((JSTracer *)arg, (JSObject *)he->key,
@@ -2677,7 +2677,7 @@ earlybad:
 
 JS_BEGIN_EXTERN_C
 
-JS_STATIC_DLL_CALLBACK(JSObject *)
+static JSObject *
 js_InitNullClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(0);
