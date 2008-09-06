@@ -232,8 +232,9 @@ class TraceRecorder {
     nanojit::LIns*          rval_ins;
     nanojit::LIns*          inner_sp_ins;
     nanojit::SideExit       exit;
-    bool                    trashTree;
     bool                    deepAborted;
+    bool                    applyingArguments;
+    bool                    trashTree;
     nanojit::Fragment*      whichTreeToTrash;
     Queue<jsbytecode*>      inlinedLoopEdges;
     Queue<jsbytecode*>      cfgMerges;
@@ -331,7 +332,10 @@ class TraceRecorder {
 
     void trackCfgMerges(jsbytecode* pc);
     void fuseIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
+
 public:
+    friend bool js_MonitorRecording(JSContext* cx);
+
     TraceRecorder(JSContext* cx, nanojit::GuardRecord*, nanojit::Fragment*, TreeInfo*,
             unsigned ngslots, uint8* globalTypeMap, uint8* stackTypeMap, 
             nanojit::GuardRecord* expectedInnerExit);
@@ -370,8 +374,7 @@ public:
         TraceRecorder* r = JS_TRACE_MONITOR(cx).recorder;                     \
         if (!js_MonitorRecording(cx)) {                                       \
             ENABLE_TRACER(0);                                                 \
-        } else                                                                \
-        if (!r->record_##x()) {                                               \
+        } else if (!r->record_##x()) {                                        \
             js_AbortRecording(cx, NULL, #x);                                  \
             ENABLE_TRACER(0);                                                 \
         }                                                                     \
