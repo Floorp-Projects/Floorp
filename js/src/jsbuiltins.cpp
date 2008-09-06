@@ -718,6 +718,12 @@ js_Array_3num(JSContext* cx, JSObject* proto, jsdouble n1, jsdouble n2, jsdouble
             return NULL;)
 }
 
+JSObject* FASTCALL
+js_Arguments(JSContext* cx)
+{
+    return NULL;
+}
+
 /* soft float */
 
 jsdouble FASTCALL
