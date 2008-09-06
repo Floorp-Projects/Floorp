@@ -95,8 +95,12 @@ ENABLE_JIT = 1
 endif
 endif
 
+ifneq (,$(filter Linux Darwin SunOS FreeBSD,$(OS_ARCH)))
+DEFINES += -DAVMPLUS_UNIX
+endif
+
 ifeq ($(OS_ARCH),Linux)
-DEFINES += -DAVMPLUS_LINUX -DLINUX
+DEFINES += -DAVMPLUS_LINUX
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -427,6 +431,18 @@ endif
 ifdef MOZ_MEMORY
 ifeq ($(OS_ARCH),Darwin)
 LDFLAGS += -ljemalloc
+endif
+endif
+
+# Sun Studio x86 has an optimization bug with LIR.cpp, use -xO2 instead.
+ifeq ($(OS_ARCH),SunOS)
+ifeq (86,$(findstring 86,$(OS_TEST)))
+ifndef GNU_CC
+LIR.o: LIR.cpp Makefile.in
+    $(REPORT_BUILD)
+    @$(MAKE_DEPS_AUTO_CXX)
+    $(CXX) -o $@ -c $(patsubst -xO%,-xO2,$(COMPILE_CFLAGS)) $<
+endif
 endif
 endif
 

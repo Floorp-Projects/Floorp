@@ -185,6 +185,16 @@ js_Math_sqrt(jsdouble d)
     return sqrt(d);
 }
 
+jsdouble FASTCALL
+js_Math_log(jsdouble d)
+{
+#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+    if (d < 0)
+        return js_NaN;
+#endif
+    return log(d);
+}
+
 JSBool FASTCALL
 js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
 {
