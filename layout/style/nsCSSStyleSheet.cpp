@@ -212,11 +212,18 @@ nsMediaExpression::Matches(nsPresContext *aPresContext,
       }
       break;
     case nsMediaFeature::eInteger:
+    case nsMediaFeature::eBoolInteger:
       {
         NS_ASSERTION(actual.GetUnit() == eCSSUnit_Integer,
                      "bad actual value");
         NS_ASSERTION(required.GetUnit() == eCSSUnit_Integer,
                      "bad required value");
+        NS_ASSERTION(mFeature->mValueType != nsMediaFeature::eBoolInteger ||
+                     actual.GetIntValue() == 0 || actual.GetIntValue() == 1,
+                     "bad actual bool integer value");
+        NS_ASSERTION(mFeature->mValueType != nsMediaFeature::eBoolInteger ||
+                     required.GetIntValue() == 0 || required.GetIntValue() == 1,
+                     "bad required bool integer value");
         cmp = DoCompare(actual.GetIntValue(), required.GetIntValue());
       }
       break;
@@ -392,6 +399,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
                                                    expr.mValue, aString);
           break;
         case nsMediaFeature::eInteger:
+        case nsMediaFeature::eBoolInteger:
           NS_ASSERTION(expr.mValue.GetUnit() == eCSSUnit_Integer,
                        "bad unit");
           // Use 'z-index' as a property that takes integer values

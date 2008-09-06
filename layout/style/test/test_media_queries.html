@@ -420,10 +420,8 @@ function run() {
   expression_should_be_parseable("grid: 1");
   expression_should_not_be_parseable("min-grid");
   expression_should_not_be_parseable("max-grid: 1");
-  // FIXME: Mark these as todo since the spec isn't clear:
-  // http://lists.w3.org/Archives/Public/www-style/2008Jun/0214.html
-  todo_expression_should_not_be_parseable("grid: 2");
-  todo_expression_should_be_parseable("grid: -1");
+  expression_should_not_be_parseable("grid: 2");
+  expression_should_not_be_parseable("grid: -1");
 
   // Assume we don't support grid devices
   should_not_apply("(grid)");
