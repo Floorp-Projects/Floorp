@@ -200,6 +200,7 @@ verbose_only( extern const char* regNames[]; )
     void nativePageReset();                                             \
     void nativePageSetup();                                             \
     void asm_quad_nochk(Register, const int32_t*);                      \
+    void asm_add_imm(Register, Register, int32_t);                      \
     int* _nSlot;                                                        \
     int* _nExitSlot;
 
@@ -308,48 +309,9 @@ typedef enum {
 // _l = _l + _r
 #define ADD(_l,_r)   arm_ADD(_l,_l,_r)
 
-// TODO: we can do better here, since we can rotate the 8-bit immediate left by
-// an even number of bits; should count zeros at the end.
-
 // Note that this sometimes converts negative immediate values to a to a sub.
 // _d = _r + _imm
-#define arm_ADDi(_d,_n,_imm)   do {                                     \
-        if ((_imm) > -256 && (_imm) < 256) {                            \
-            underrunProtect(4);                                         \
-            if ((_imm)>=0)                                              \
-                *(--_nIns) = (NIns)( COND_AL | OP_IMM | OP_STAT | (1<<23) | ((_n)<<16) | ((_d)<<12) | ((_imm)&0xFF) ); \
-            else                                                        \
-                *(--_nIns) = (NIns)( COND_AL | OP_IMM | OP_STAT | (1<<22) | ((_n)<<16) | ((_d)<<12) | ((-(_imm))&0xFF) ); \
-        } else {                                                        \
-            if ((_imm)>=0) {                                            \
-                if ((_imm)<=1020 && (((_imm)&3)==0) ) {                 \
-                    underrunProtect(4);                                 \
-                    *(--_nIns) = (NIns)( COND_AL | OP_IMM | OP_STAT | (1<<23) | ((_n)<<16) | ((_d)<<12) | (15<<8)| ((_imm)>>2) ); \
-                } else {                                                \
-                    underrunProtect(4+LD32_size);                       \
-                    *(--_nIns) = (NIns)( COND_AL | OP_STAT | (1<<23) | ((_n)<<16) | ((_d)<<12) | (Scratch)); \
-                    LD32_nochk(Scratch, _imm);                          \
-                }                                                       \
-            } else {                                                    \
-                underrunProtect(4+LD32_size);                           \
-                *(--_nIns) = (NIns)( COND_AL | OP_STAT | (1<<22) | ((_n)<<16) | ((_d)<<12) | (Scratch)); \
-                LD32_nochk(Scratch, -(_imm));                           \
-            }                                                           \
-        }                                                               \
-        asm_output3("add %s,%s,%d",gpn(_d),gpn(_n),(_imm));             \
-    } while(0)
-
-/*
- * There used to be a :
-                if ((_imm)>=-510) {                                     \
-                    underrunProtect(8);                                 \
-                    int rem = -(_imm) - 255;                            \
-                    *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<22) | ((_n)<<16) | ((_d)<<12) | ((rem)&0xFF) ); \
-                    *(--_nIns) = (NIns)( COND_AL | OP_IMM | (1<<22) | ((_n)<<16) | ((_d)<<12) | (0xFF) ); \
-                } else {                                               
- * above, but if we do that we can't really update the status registers.  So don't do that.
- */
-
+#define arm_ADDi(_d,_n,_imm)   asm_add_imm(_d,_n,_imm)
 #define ADDi(_r,_imm)  arm_ADDi(_r,_r,_imm)
 
 // _l = _l - _r
