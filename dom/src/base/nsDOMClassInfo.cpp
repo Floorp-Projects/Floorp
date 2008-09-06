@@ -7471,6 +7471,11 @@ nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, jsval id, PRUint32 flags,
                              JSObject **objp, PRBool *_retval)
 {
+  if (id == sLength_id) {
+    // Bail early; this isn't something we're interested in
+    return NS_OK;
+  }
+  
   PRBool is_number = PR_FALSE;
   PRInt32 n = GetArrayIndexFromId(cx, id, &is_number);
 
