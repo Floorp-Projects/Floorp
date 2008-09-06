@@ -45,7 +45,9 @@ struct _cairo_xlib_surface {
     cairo_surface_t base;
 
     Display *dpy;
+    cairo_xlib_display_t *display;
     cairo_xlib_screen_info_t *screen_info;
+    cairo_xlib_hook_t close_display_hook;
 
     GC gc;
     Drawable drawable;

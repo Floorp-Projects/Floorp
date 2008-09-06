@@ -34,13 +34,17 @@
 #include <xmmintrin.h> /* for _mm_shuffle_pi16 and _MM_SHUFFLE */
 #include <emmintrin.h> /* for SSE2 intrinsics */
 
-#include "pixman-sse.h"
+#include "pixman-sse2.h"
 
 #ifdef USE_SSE2
 
 #ifdef _MSC_VER
 #undef inline
 #define inline __forceinline
+#endif
+
+#ifdef __GNUC__
+#    define inline __inline__ __attribute__ ((__always_inline__))
 #endif
 
 /* -------------------------------------------------------------------------------------------------
@@ -139,14 +143,9 @@ pack565_2x128_128 (__m128i lo, __m128i hi)
 }
 
 static inline __m128i
-pack565_4x128_128 (__m128i xmm0, __m128i xmm1, __m128i xmm2, __m128i xmm3)
+pack565_4x128_128 (__m128i* xmm0, __m128i* xmm1, __m128i* xmm2, __m128i* xmm3)
 {
-    __m128i lo, hi;
-
-    lo = _mm_packus_epi16 (pack565_2x128_128 ( xmm0, xmm1 ), _mm_setzero_si128 ());
-    hi = _mm_packus_epi16 (_mm_setzero_si128 (), pack565_2x128_128 ( xmm2, xmm3 ));
-
-    return _mm_or_si128 (lo, hi);
+    return _mm_packus_epi16 (pack565_2x128_128 (*xmm0, *xmm1), pack565_2x128_128 (*xmm2, *xmm3));
 }
 
 static inline uint32_t
@@ -192,12 +191,12 @@ expandAlphaRev_2x128 (__m128i dataLo, __m128i dataHi, __m128i* alphaLo, __m128i*
 }
 
 static inline void
-pixMultiply_2x128 (__m128i dataLo, __m128i dataHi, __m128i alphaLo, __m128i alphaHi, __m128i* retLo, __m128i* retHi)
+pixMultiply_2x128 (__m128i* dataLo, __m128i* dataHi, __m128i* alphaLo, __m128i* alphaHi, __m128i* retLo, __m128i* retHi)
 {
     __m128i lo, hi;
 
-    lo = _mm_mullo_epi16 (dataLo, alphaLo);
-    hi = _mm_mullo_epi16 (dataHi, alphaHi);
+    lo = _mm_mullo_epi16 (*dataLo, *alphaLo);
+    hi = _mm_mullo_epi16 (*dataHi, *alphaHi);
     lo = _mm_adds_epu16 (lo, Mask0080);
     hi = _mm_adds_epu16 (hi, Mask0080);
     *retLo = _mm_mulhi_epu16 (lo, Mask0101);
@@ -205,17 +204,17 @@ pixMultiply_2x128 (__m128i dataLo, __m128i dataHi, __m128i alphaLo, __m128i alph
 }
 
 static inline void
-pixAddMultiply_2x128 (__m128i srcLo, __m128i srcHi, __m128i alphaDstLo, __m128i alphaDstHi,
-                      __m128i dstLo, __m128i dstHi, __m128i alphaSrcLo, __m128i alphaSrcHi,
+pixAddMultiply_2x128 (__m128i* srcLo, __m128i* srcHi, __m128i* alphaDstLo, __m128i* alphaDstHi,
+                      __m128i* dstLo, __m128i* dstHi, __m128i* alphaSrcLo, __m128i* alphaSrcHi,
                       __m128i* retLo, __m128i* retHi)
 {
     __m128i lo, hi;
     __m128i mulLo, mulHi;
 
-    lo = _mm_mullo_epi16 (srcLo, alphaDstLo);
-    hi = _mm_mullo_epi16 (srcHi, alphaDstHi);
-    mulLo = _mm_mullo_epi16 (dstLo, alphaSrcLo);
-    mulHi = _mm_mullo_epi16 (dstHi, alphaSrcHi);
+    lo = _mm_mullo_epi16 (*srcLo, *alphaDstLo);
+    hi = _mm_mullo_epi16 (*srcHi, *alphaDstHi);
+    mulLo = _mm_mullo_epi16 (*dstLo, *alphaSrcLo);
+    mulHi = _mm_mullo_epi16 (*dstHi, *alphaSrcHi);
     lo = _mm_adds_epu16 (lo, Mask0080);
     hi = _mm_adds_epu16 (hi, Mask0080);
     lo = _mm_adds_epu16 (lo, mulLo);
@@ -243,14 +242,14 @@ invertColors_2x128 (__m128i dataLo, __m128i dataHi, __m128i* invLo, __m128i* inv
 }
 
 static inline void
-over_2x128 (__m128i srcLo, __m128i srcHi, __m128i alphaLo, __m128i alphaHi, __m128i* dstLo, __m128i* dstHi)
+over_2x128 (__m128i* srcLo, __m128i* srcHi, __m128i* alphaLo, __m128i* alphaHi, __m128i* dstLo, __m128i* dstHi)
 {
-    negate_2x128 (alphaLo, alphaHi, &alphaLo, &alphaHi);
+    negate_2x128 (*alphaLo, *alphaHi, alphaLo, alphaHi);
 
-    pixMultiply_2x128 (*dstLo, *dstHi, alphaLo, alphaHi, dstLo, dstHi);
+    pixMultiply_2x128 (dstLo, dstHi, alphaLo, alphaHi, dstLo, dstHi);
 
-    *dstLo = _mm_adds_epu8 (srcLo, *dstLo);
-    *dstHi = _mm_adds_epu8 (srcHi, *dstHi);
+    *dstLo = _mm_adds_epu8 (*srcLo, *dstLo);
+    *dstHi = _mm_adds_epu8 (*srcHi, *dstHi);
 }
 
 static inline void
@@ -266,14 +265,14 @@ overRevNonPre_2x128 (__m128i srcLo, __m128i srcHi, __m128i* dstLo, __m128i* dstH
 
     invertColors_2x128 (srcLo, srcHi, &srcLo, &srcHi);
 
-    pixMultiply_2x128 (srcLo, srcHi, lo, hi, &lo, &hi);
+    pixMultiply_2x128 (&srcLo, &srcHi, &lo, &hi, &lo, &hi);
 
-    over_2x128 (lo, hi, alphaLo, alphaHi, dstLo, dstHi);
+    over_2x128 (&lo, &hi, &alphaLo, &alphaHi, dstLo, dstHi);
 }
 
 static inline void
-inOver_2x128 (__m128i srcLo,  __m128i srcHi,  __m128i  alphaLo, __m128i  alphaHi,
-              __m128i maskLo, __m128i maskHi, __m128i* dstLo,   __m128i* dstHi)
+inOver_2x128 (__m128i* srcLo,  __m128i* srcHi,  __m128i*  alphaLo, __m128i*  alphaHi,
+              __m128i* maskLo, __m128i* maskHi, __m128i* dstLo,   __m128i* dstHi)
 {
     __m128i sLo, sHi;
     __m128i aLo, aHi;
@@ -281,7 +280,7 @@ inOver_2x128 (__m128i srcLo,  __m128i srcHi,  __m128i  alphaLo, __m128i  alphaHi
     pixMultiply_2x128 (  srcLo,   srcHi, maskLo, maskHi, &sLo, &sHi);
     pixMultiply_2x128 (alphaLo, alphaHi, maskLo, maskHi, &aLo, &aHi);
 
-    over_2x128 (sLo, sHi, aLo, aHi, dstLo, dstHi);
+    over_2x128 (&sLo, &sHi, &aLo, &aHi, dstLo, dstHi);
 }
 
 static inline void
@@ -368,11 +367,11 @@ pixMultiply_1x64 (__m64 data, __m64 alpha)
 }
 
 static inline __m64
-pixAddMultiply_1x64 (__m64 src, __m64 alphaDst, __m64 dst, __m64 alphaSrc)
+pixAddMultiply_1x64 (__m64* src, __m64* alphaDst, __m64* dst, __m64* alphaSrc)
 {
-    return _mm_mulhi_pu16 (_mm_adds_pu16 (_mm_adds_pu16 (_mm_mullo_pi16 (src, alphaDst),
+    return _mm_mulhi_pu16 (_mm_adds_pu16 (_mm_adds_pu16 (_mm_mullo_pi16 (*src, *alphaDst),
                                                          xMask0080),
-                                          _mm_mullo_pi16 (dst, alphaSrc)),
+                                          _mm_mullo_pi16 (*dst, *alphaSrc)),
                            xMask0101);
 }
 
@@ -395,11 +394,11 @@ over_1x64 (__m64 src, __m64 alpha, __m64 dst)
 }
 
 static inline __m64
-inOver_1x64 (__m64 src, __m64 alpha, __m64 mask, __m64 dst)
+inOver_1x64 (__m64* src, __m64* alpha, __m64* mask, __m64* dst)
 {
-    return over_1x64 (pixMultiply_1x64 (src, mask),
-                      pixMultiply_1x64 (alpha, mask),
-                      dst);
+    return over_1x64 (pixMultiply_1x64 (*src, *mask),
+                      pixMultiply_1x64 (*alpha, *mask),
+                      *dst);
 }
 
 static inline __m64
@@ -530,7 +529,7 @@ coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, int w)
 
             expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
 
-            over_2x128 (xmmSrcLo, xmmSrcHi, xmmAlphaLo, xmmAlphaHi, &xmmDstLo, &xmmDstHi);
+            over_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDstLo, &xmmDstHi);
 
             /* rebuid the 4 pixel data and save*/
             save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
@@ -594,7 +593,7 @@ coreCombineOverReverseUsse2 (uint32_t* pd, const uint32_t* ps, int w)
 
         expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaLo, &xmmAlphaHi);
 
-        over_2x128 (xmmDstLo, xmmDstHi, xmmAlphaLo, xmmAlphaHi, &xmmSrcLo, &xmmSrcHi);
+        over_2x128 (&xmmDstLo, &xmmDstHi, &xmmAlphaLo, &xmmAlphaHi, &xmmSrcLo, &xmmSrcHi);
 
         /* rebuid the 4 pixel data and save*/
         save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmSrcLo, xmmSrcHi));
@@ -669,7 +668,7 @@ coreCombineInUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
 
         unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmDstLo, &xmmDstHi, &xmmDstLo, &xmmDstHi);
 
         save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -726,7 +725,7 @@ coreCombineReverseInUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
 
         unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        pixMultiply_2x128 (xmmDstLo, xmmDstHi, xmmSrcLo, xmmSrcHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmSrcLo, &xmmSrcHi, &xmmDstLo, &xmmDstHi);
 
         save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -783,7 +782,7 @@ coreCombineReverseOutUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
         negate_2x128      (xmmSrcLo, xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
 
-        pixMultiply_2x128 (xmmDstLo, xmmDstHi, xmmSrcLo, xmmSrcHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmSrcLo, &xmmSrcHi, &xmmDstLo, &xmmDstHi);
 
         save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -840,7 +839,7 @@ coreCombineOutUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
         negate_2x128      (xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
 
-        pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmDstLo, &xmmDstHi, &xmmDstLo, &xmmDstHi);
 
         save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -868,7 +867,7 @@ coreCombineAtopUPixelsse2 (uint32_t src, uint32_t dst)
     __m64 sa = negate_1x64 (expandAlpha_1x64 (s));
     __m64 da = expandAlpha_1x64 (d);
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (s, da, d, sa));
+    return pack_1x64_32 (pixAddMultiply_1x64 (&s, &da, &d, &sa));
 }
 
 static inline void
@@ -915,8 +914,8 @@ coreCombineAtopUsse2 (uint32_t* pd, const uint32_t* ps, int w)
 
         negate_2x128 (xmmAlphaSrcLo, xmmAlphaSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
 
-        pixAddMultiply_2x128 ( xmmSrcLo, xmmSrcHi, xmmAlphaDstLo, xmmAlphaDstHi,
-                               xmmDstLo, xmmDstHi, xmmAlphaSrcLo, xmmAlphaSrcHi,
+        pixAddMultiply_2x128 ( &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
+                               &xmmDstLo, &xmmDstHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi,
                                &xmmDstLo, &xmmDstHi );
 
         save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
@@ -945,7 +944,7 @@ coreCombineReverseAtopUPixelsse2 (uint32_t src, uint32_t dst)
     __m64 sa = expandAlpha_1x64 (s);
     __m64 da = negate_1x64 (expandAlpha_1x64 (d));
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (s, da, d, sa));
+    return pack_1x64_32 (pixAddMultiply_1x64 (&s, &da, &d, &sa));
 }
 
 static inline void
@@ -992,8 +991,8 @@ coreCombineReverseAtopUsse2 (uint32_t* pd, const uint32_t* ps, int w)
 
         negate_2x128 (xmmAlphaDstLo, xmmAlphaDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
 
-        pixAddMultiply_2x128 ( xmmSrcLo, xmmSrcHi, xmmAlphaDstLo, xmmAlphaDstHi,
-                               xmmDstLo, xmmDstHi, xmmAlphaSrcLo, xmmAlphaSrcHi,
+        pixAddMultiply_2x128 ( &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
+                               &xmmDstLo, &xmmDstHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi,
                                &xmmDstLo, &xmmDstHi );
 
         save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
@@ -1019,7 +1018,10 @@ coreCombineXorUPixelsse2 (uint32_t src, uint32_t dst)
     __m64 s = unpack_32_1x64 (src);
     __m64 d = unpack_32_1x64 (dst);
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (s, negate_1x64 (expandAlpha_1x64 (d)), d, negate_1x64 (expandAlpha_1x64 (s))));
+    __m64 negD = negate_1x64 (expandAlpha_1x64 (d));
+    __m64 negS = negate_1x64 (expandAlpha_1x64 (s));
+
+    return pack_1x64_32 (pixAddMultiply_1x64 (&s, &negD, &d, &negS));
 }
 
 static inline void
@@ -1070,8 +1072,8 @@ coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, int width)
         negate_2x128 (xmmAlphaSrcLo, xmmAlphaSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
         negate_2x128 (xmmAlphaDstLo, xmmAlphaDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
 
-        pixAddMultiply_2x128 ( xmmSrcLo, xmmSrcHi, xmmAlphaDstLo, xmmAlphaDstHi,
-                               xmmDstLo, xmmDstHi, xmmAlphaSrcLo, xmmAlphaSrcHi,
+        pixAddMultiply_2x128 ( &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
+                               &xmmDstLo, &xmmDstHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi,
                                &xmmDstLo, &xmmDstHi );
 
         save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
@@ -1267,7 +1269,7 @@ coreCombineSrcCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w
         unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
         unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
-        pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmMaskLo, xmmMaskHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -1290,8 +1292,11 @@ static inline uint32_t
 coreCombineOverCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
 {
     __m64 s = unpack_32_1x64 (src);
+    __m64 expAlpha = expandAlpha_1x64 (s);
+    __m64 unpkMask = unpack_32_1x64 (mask);
+    __m64 unpkDst  = unpack_32_1x64 (dst);
 
-    return pack_1x64_32 (inOver_1x64 (s, expandAlpha_1x64 (s), unpack_32_1x64 (mask), unpack_32_1x64 (dst)));
+    return pack_1x64_32 (inOver_1x64 (&s, &expAlpha, &unpkMask, &unpkDst));
 }
 
 static inline void
@@ -1341,7 +1346,7 @@ coreCombineOverCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int 
 
         expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
 
-        inOver_2x128 (xmmSrcLo, xmmSrcHi, xmmAlphaLo, xmmAlphaHi, xmmMaskLo, xmmMaskHi, &xmmDstLo, &xmmDstHi);
+        inOver_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -1416,9 +1421,9 @@ coreCombineOverReverseCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *p
         unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
         expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaLo, &xmmAlphaHi);
-        pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
-        over_2x128 (xmmDstLo, xmmDstHi, xmmAlphaLo, xmmAlphaHi, &xmmMaskLo, &xmmMaskHi);
+        over_2x128 (&xmmDstLo, &xmmDstHi, &xmmAlphaLo, &xmmAlphaHi, &xmmMaskLo, &xmmMaskHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmMaskLo, xmmMaskHi));
 
@@ -1486,9 +1491,9 @@ coreCombineInCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
         unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
         expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaLo, &xmmAlphaHi);
-        pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmMaskLo, xmmMaskHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
 
-        pixMultiply_2x128 (xmmDstLo, xmmDstHi, xmmAlphaLo, xmmAlphaHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDstLo, &xmmDstHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -1558,9 +1563,9 @@ coreCombineInReverseCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
         unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
         expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
-        pixMultiply_2x128 (xmmMaskLo, xmmMaskHi, xmmAlphaLo, xmmAlphaHi, &xmmAlphaLo, &xmmAlphaHi);
+        pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmAlphaLo, &xmmAlphaHi, &xmmAlphaLo, &xmmAlphaHi);
 
-        pixMultiply_2x128 (xmmDstLo, xmmDstHi, xmmAlphaLo, xmmAlphaHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDstLo, &xmmDstHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -1632,8 +1637,8 @@ coreCombineOutCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
         expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaLo, &xmmAlphaHi);
         negate_2x128 (xmmAlphaLo, xmmAlphaHi, &xmmAlphaLo, &xmmAlphaHi);
 
-        pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmMaskLo, xmmMaskHi, &xmmDstLo, &xmmDstHi);
-        pixMultiply_2x128 (xmmDstLo, xmmDstHi, xmmAlphaLo, xmmAlphaHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDstLo, &xmmDstHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -1704,11 +1709,11 @@ coreCombineOutReverseCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
 
         expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
 
-        pixMultiply_2x128 (xmmMaskLo, xmmMaskHi, xmmAlphaLo, xmmAlphaHi, &xmmMaskLo, &xmmMaskHi);
+        pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmAlphaLo, &xmmAlphaHi, &xmmMaskLo, &xmmMaskHi);
 
         negate_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
-        pixMultiply_2x128 (xmmDstLo, xmmDstHi, xmmMaskLo, xmmMaskHi, &xmmDstLo, &xmmDstHi);
+        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -1743,7 +1748,7 @@ coreCombineAtopCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
     s = pixMultiply_1x64 (s, m);
     m = negate_1x64 (pixMultiply_1x64 (m, sa));
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (d, m, s, da));
+    return pack_1x64_32 (pixAddMultiply_1x64 (&d, &m, &s, &da));
 }
 
 static inline void
@@ -1795,13 +1800,13 @@ coreCombineAtopCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
         expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
         expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
 
-        pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmMaskLo, xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
-        pixMultiply_2x128 (xmmMaskLo, xmmMaskHi, xmmAlphaSrcLo, xmmAlphaSrcHi, &xmmMaskLo, &xmmMaskHi);
+        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
+        pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi, &xmmMaskLo, &xmmMaskHi);
 
         negate_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
-        pixAddMultiply_2x128 (xmmDstLo, xmmDstHi, xmmMaskLo, xmmMaskHi,
-                              xmmSrcLo, xmmSrcHi, xmmAlphaDstLo, xmmAlphaDstHi,
+        pixAddMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmMaskLo, &xmmMaskHi,
+                              &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
                               &xmmDstLo, &xmmDstHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
@@ -1836,7 +1841,7 @@ coreCombineReverseAtopCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
     s = pixMultiply_1x64 (s, m);
     m = pixMultiply_1x64 (m, sa);
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (d, m, s, da));
+    return pack_1x64_32 (pixAddMultiply_1x64 (&d, &m, &s, &da));
 }
 
 static inline void
@@ -1888,13 +1893,13 @@ coreCombineReverseAtopCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
         expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
         expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
 
-        pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmMaskLo, xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
-        pixMultiply_2x128 (xmmMaskLo, xmmMaskHi, xmmAlphaSrcLo, xmmAlphaSrcHi, &xmmMaskLo, &xmmMaskHi);
+        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
+        pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi, &xmmMaskLo, &xmmMaskHi);
 
         negate_2x128 (xmmAlphaDstLo, xmmAlphaDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
 
-        pixAddMultiply_2x128 (xmmDstLo, xmmDstHi, xmmMaskLo, xmmMaskHi,
-                              xmmSrcLo, xmmSrcHi, xmmAlphaDstLo, xmmAlphaDstHi,
+        pixAddMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmMaskLo, &xmmMaskHi,
+                              &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
                               &xmmDstLo, &xmmDstHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
@@ -1923,10 +1928,14 @@ coreCombineXorCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
     __m64 s = unpack_32_1x64 (src);
     __m64 d = unpack_32_1x64 (dst);
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (d,
-                                              negate_1x64 (pixMultiply_1x64 (a, expandAlpha_1x64 (s))),
-                                              pixMultiply_1x64 (s, a),
-                                              negate_1x64 (expandAlpha_1x64 (d))));
+    __m64 alphaDst = negate_1x64 (pixMultiply_1x64 (a, expandAlpha_1x64 (s)));
+    __m64 dest      = pixMultiply_1x64 (s, a);
+    __m64 alphaSrc = negate_1x64 (expandAlpha_1x64 (d));
+
+    return pack_1x64_32 (pixAddMultiply_1x64 (&d,
+                                              &alphaDst,
+                                              &dest,
+                                              &alphaSrc));
 }
 
 static inline void
@@ -1978,14 +1987,14 @@ coreCombineXorCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
         expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
         expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
 
-        pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmMaskLo, xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
-        pixMultiply_2x128 (xmmMaskLo, xmmMaskHi, xmmAlphaSrcLo, xmmAlphaSrcHi, &xmmMaskLo, &xmmMaskHi);
+        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
+        pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi, &xmmMaskLo, &xmmMaskHi);
 
         negate_2x128 (xmmAlphaDstLo, xmmAlphaDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
         negate_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
-        pixAddMultiply_2x128 (xmmDstLo, xmmDstHi, xmmMaskLo, xmmMaskHi,
-                              xmmSrcLo, xmmSrcHi, xmmAlphaDstLo, xmmAlphaDstHi,
+        pixAddMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmMaskLo, &xmmMaskHi,
+                              &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
                               &xmmDstLo, &xmmDstHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
@@ -2053,7 +2062,7 @@ coreCombineAddCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
         unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
         unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
 
-        pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmMaskLo, xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
+        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
 
         save128Aligned( (__m128i*)pd, pack_2x128_128 (_mm_adds_epu8 (xmmSrcLo, xmmDstLo),
                                                       _mm_adds_epu8 (xmmSrcHi, xmmDstHi)));
@@ -2078,7 +2087,7 @@ coreCombineAddCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbComposeSetupSSE
+ * fbComposeSetupSSE2
  */
 static inline __m64
 createMask_16_64 (uint16_t mask)
@@ -2268,7 +2277,7 @@ sse2CombineAddC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
 }
 
 void
-fbComposeSetupSSE(void)
+fbComposeSetupSSE2(void)
 {
     static pixman_bool_t initialized = FALSE;
 
@@ -2276,7 +2285,7 @@ fbComposeSetupSSE(void)
 	return;
     
     /* check if we have SSE2 support and initialize accordingly */
-    if (pixman_have_sse())
+    if (pixman_have_sse2())
     {
         /* SSE2 constants */
         Mask565r  = createMask_2x32_128 (0x00f80000, 0x00f80000);
@@ -2404,7 +2413,7 @@ fbCompositeSolid_nx8888sse2 (pixman_op_t op,
 
             unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
 
-            over_2x128 (xmmSrc, xmmSrc, xmmAlpha, xmmAlpha, &xmmDstLo, &xmmDstHi);
+            over_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmDstLo, &xmmDstHi);
 
             /* rebuid the 4 pixel data and save*/
             save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
@@ -2491,10 +2500,10 @@ fbCompositeSolid_nx0565sse2 (pixman_op_t op,
 
             unpack565_128_4x128 (xmmDst, &xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
 
-            over_2x128 (xmmSrc, xmmSrc, xmmAlpha, xmmAlpha, &xmmDst0, &xmmDst1);
-            over_2x128 (xmmSrc, xmmSrc, xmmAlpha, xmmAlpha, &xmmDst2, &xmmDst3);
+            over_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmDst0, &xmmDst1);
+            over_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmDst2, &xmmDst3);
 
-            xmmDst = pack565_4x128_128 (xmmDst0, xmmDst1, xmmDst2, xmmDst3);
+            xmmDst = pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
 
             save128Aligned ((__m128i*)dst, xmmDst);
 
@@ -2542,6 +2551,8 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_op_t op,
     __m128i xmmDst, xmmDstLo, xmmDstHi;
     __m128i xmmMask, xmmMaskLo, xmmMaskHi;
 
+    __m64 mmxSrc, mmxAlpha, mmxMask, mmxDst;
+
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
@@ -2553,6 +2564,8 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_op_t op,
 
     xmmSrc = _mm_unpacklo_epi8 (createMask_2x32_128 (src, src), _mm_setzero_si128 ());
     xmmAlpha = expandAlpha_1x128 (xmmSrc);
+    mmxSrc   = _mm_movepi64_pi64 (xmmSrc);
+    mmxAlpha = _mm_movepi64_pi64 (xmmAlpha);
 
     while (height--)
     {
@@ -2574,11 +2587,13 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_op_t op,
             if (m)
             {
                 d = *pd;
+                mmxMask = unpack_32_1x64 (m);
+                mmxDst = unpack_32_1x64 (d);
 
-                *pd = pack_1x64_32 (inOver_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                                 _mm_movepi64_pi64 (xmmAlpha),
-                                                 unpack_32_1x64 (m),
-                                                 unpack_32_1x64 (d)));
+                *pd = pack_1x64_32 (inOver_1x64 (&mmxSrc,
+                                                 &mmxAlpha,
+                                                 &mmxMask,
+                                                 &mmxDst));
             }
 
             pd++;
@@ -2607,7 +2622,7 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_op_t op,
                 unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
                 unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
 
-                inOver_2x128 (xmmSrc, xmmSrc, xmmAlpha, xmmAlpha, xmmMaskLo, xmmMaskHi, &xmmDstLo, &xmmDstHi);
+                inOver_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
 
                 save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
             }
@@ -2624,11 +2639,13 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_op_t op,
             if (m)
             {
                 d = *pd;
+                mmxMask = unpack_32_1x64 (m);
+                mmxDst = unpack_32_1x64 (d);
 
-                *pd = pack_1x64_32 (inOver_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                                 _mm_movepi64_pi64 (xmmAlpha),
-                                                 unpack_32_1x64 (m),
-                                                 unpack_32_1x64 (d)));
+                *pd = pack_1x64_32 (inOver_1x64 (&mmxSrc,
+                                                 &mmxAlpha,
+                                                 &mmxMask,
+                                                 &mmxDst));
             }
 
             pd++;
@@ -2693,11 +2710,14 @@ fbCompositeSrc_8888x8x8888sse2 (pixman_op_t op,
             uint32_t d = *dst;
 
             __m64 ms = unpack_32_1x64 (s);
+            __m64 alpha    = expandAlpha_1x64 (ms);
+            __m64 dest     = _mm_movepi64_pi64 (xmmMask);
+            __m64 alphaDst = unpack_32_1x64 (d);
 
-            *dst++ = pack_1x64_32 (inOver_1x64 (ms,
-                                                 expandAlpha_1x64 (ms),
-                                                 _mm_movepi64_pi64 (xmmMask),
-                                                 unpack_32_1x64 (d)));
+            *dst++ = pack_1x64_32 (inOver_1x64 (&ms,
+                                                &alpha,
+                                                &dest,
+                                                &alphaDst));
 
             w--;
         }
@@ -2719,7 +2739,7 @@ fbCompositeSrc_8888x8x8888sse2 (pixman_op_t op,
             unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
             expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
 
-            inOver_2x128 (xmmSrcLo, xmmSrcHi, xmmAlphaLo, xmmAlphaHi, xmmMask, xmmMask, &xmmDstLo, &xmmDstHi);
+            inOver_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi, &xmmMask, &xmmMask, &xmmDstLo, &xmmDstHi);
 
             save128Aligned( (__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -2734,11 +2754,14 @@ fbCompositeSrc_8888x8x8888sse2 (pixman_op_t op,
             uint32_t d = *dst;
 
             __m64 ms = unpack_32_1x64 (s);
+            __m64 alpha = expandAlpha_1x64 (ms);
+            __m64 mask  = _mm_movepi64_pi64 (xmmMask);
+            __m64 dest  = unpack_32_1x64 (d);
 
-            *dst++ = pack_1x64_32 (inOver_1x64 (ms,
-                                                 expandAlpha_1x64 (ms),
-                                                 _mm_movepi64_pi64 (xmmMask),
-                                                 unpack_32_1x64 (d)));
+            *dst++ = pack_1x64_32 (inOver_1x64 (&ms,
+                                                &alpha,
+                                                &mask,
+                                                &dest));
 
             w--;
         }
@@ -2798,10 +2821,15 @@ fbCompositeSrc_x888xnx8888sse2 (pixman_op_t op,
             uint32_t s = (*src++) | 0xff000000;
             uint32_t d = *dst;
 
-            *dst++ = pack_1x64_32 (inOver_1x64 (unpack_32_1x64 (s),
-                                                 _mm_movepi64_pi64 (xmmAlpha),
-                                                 _mm_movepi64_pi64 (xmmMask),
-                                                 unpack_32_1x64 (d)));
+            __m64 src   = unpack_32_1x64 (s);
+            __m64 alpha = _mm_movepi64_pi64 (xmmAlpha);
+            __m64 mask  = _mm_movepi64_pi64 (xmmMask);
+            __m64 dest  = unpack_32_1x64 (d);
+
+            *dst++ = pack_1x64_32 (inOver_1x64 (&src,
+                                                &alpha,
+                                                &mask,
+                                                &dest));
 
             w--;
         }
@@ -2822,7 +2850,7 @@ fbCompositeSrc_x888xnx8888sse2 (pixman_op_t op,
             unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
             unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
 
-            inOver_2x128 (xmmSrcLo, xmmSrcHi, xmmAlpha, xmmAlpha, xmmMask, xmmMask, &xmmDstLo, &xmmDstHi);
+            inOver_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlpha, &xmmAlpha, &xmmMask, &xmmMask, &xmmDstLo, &xmmDstHi);
 
             save128Aligned( (__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -2837,10 +2865,15 @@ fbCompositeSrc_x888xnx8888sse2 (pixman_op_t op,
             uint32_t s = (*src++) | 0xff000000;
             uint32_t d = *dst;
 
-            *dst++ = pack_1x64_32 (inOver_1x64 (unpack_32_1x64 (s),
-                                                 _mm_movepi64_pi64 (xmmAlpha),
-                                                 _mm_movepi64_pi64 (xmmMask),
-                                                 unpack_32_1x64 (d)));
+            __m64 src  = unpack_32_1x64 (s);
+            __m64 alpha = _mm_movepi64_pi64 (xmmAlpha);
+            __m64 mask  = _mm_movepi64_pi64 (xmmMask);
+            __m64 dest  = unpack_32_1x64 (d);
+
+            *dst++ = pack_1x64_32 (inOver_1x64 (&src,
+                                                &alpha,
+                                                &mask,
+                                                &dest));
 
             w--;
         }
@@ -2982,15 +3015,15 @@ fbCompositeSrc_8888x0565sse2 (pixman_op_t op,
             /* I'm loading next 4 pixels from memory before to optimze the memory read. */
             xmmSrc = load128Unaligned ((__m128i*) (src+4));
 
-            over_2x128 (xmmSrcLo, xmmSrcHi, xmmAlphaLo, xmmAlphaHi, &xmmDst0, &xmmDst1);
+            over_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDst0, &xmmDst1);
 
             /* Unpacking */
             unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
             expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
 
-            over_2x128 (xmmSrcLo, xmmSrcHi, xmmAlphaLo, xmmAlphaHi, &xmmDst2, &xmmDst3);
+            over_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDst2, &xmmDst3);
 
-            save128Aligned ((__m128i*)dst, pack565_4x128_128 (xmmDst0, xmmDst1, xmmDst2, xmmDst3));
+            save128Aligned ((__m128i*)dst, pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3));
 
             w -= 8;
             dst += 8;
@@ -3038,6 +3071,8 @@ fbCompositeSolidMask_nx8x8888sse2 (pixman_op_t op,
     __m128i xmmDst, xmmDstLo, xmmDstHi;
     __m128i xmmMask, xmmMaskLo, xmmMaskHi;
 
+    __m64 mmxSrc, mmxAlpha, mmxMask, mmxDest;
+
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
@@ -3050,6 +3085,8 @@ fbCompositeSolidMask_nx8x8888sse2 (pixman_op_t op,
     xmmDef = createMask_2x32_128 (src, src);
     xmmSrc = expandPixel_32_1x128 (src);
     xmmAlpha = expandAlpha_1x128 (xmmSrc);
+    mmxSrc   = _mm_movepi64_pi64 (xmmSrc);
+    mmxAlpha = _mm_movepi64_pi64 (xmmAlpha);
 
     while (height--)
     {
@@ -3070,11 +3107,13 @@ fbCompositeSolidMask_nx8x8888sse2 (pixman_op_t op,
             if (m)
             {
                 d = *dst;
+                mmxMask = expandPixel_8_1x64 (m);
+                mmxDest = unpack_32_1x64 (d);
 
-                *dst = pack_1x64_32 (inOver_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                                  _mm_movepi64_pi64 (xmmAlpha),
-                                                  expandPixel_8_1x64 (m),
-                                                  unpack_32_1x64 (d)));
+                *dst = pack_1x64_32 (inOver_1x64 (&mmxSrc,
+                                                  &mmxAlpha,
+                                                  &mmxMask,
+                                                  &mmxDest));
             }
 
             w--;
@@ -3109,7 +3148,7 @@ fbCompositeSolidMask_nx8x8888sse2 (pixman_op_t op,
 
                 expandAlphaRev_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
-                inOver_2x128 (xmmSrc, xmmSrc, xmmAlpha, xmmAlpha, xmmMaskLo, xmmMaskHi, &xmmDstLo, &xmmDstHi);
+                inOver_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
 
                 save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
             }
@@ -3126,11 +3165,13 @@ fbCompositeSolidMask_nx8x8888sse2 (pixman_op_t op,
             if (m)
             {
                 d = *dst;
+                mmxMask = expandPixel_8_1x64 (m);
+                mmxDest = unpack_32_1x64 (d);
 
-                *dst = pack_1x64_32 (inOver_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                                  _mm_movepi64_pi64 (xmmAlpha),
-                                                  expandPixel_8_1x64 (m),
-                                                  unpack_32_1x64 (d)));
+                *dst = pack_1x64_32 (inOver_1x64 (&mmxSrc,
+                                                  &mmxAlpha,
+                                                  &mmxMask,
+                                                  &mmxDest));
             }
 
             w--;
@@ -3378,7 +3419,7 @@ fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_op_t op,
 
                 expandAlphaRev_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
-                pixMultiply_2x128 (xmmSrc, xmmSrc, xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+                pixMultiply_2x128 (&xmmSrc, &xmmSrc, &xmmMaskLo, &xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
                 save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmMaskLo, xmmMaskHi));
             }
@@ -3437,6 +3478,7 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_op_t op,
     int	dstStride, maskStride;
     uint16_t	w;
     uint32_t m;
+    __m64 mmxSrc, mmxAlpha, mmxMask, mmxDest;
 
     __m128i xmmSrc, xmmAlpha;
     __m128i xmmMask, xmmMaskLo, xmmMaskHi;
@@ -3453,6 +3495,8 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_op_t op,
 
     xmmSrc = expandPixel_32_1x128 (src);
     xmmAlpha = expandAlpha_1x128 (xmmSrc);
+    mmxSrc = _mm_movepi64_pi64 (xmmSrc);
+    mmxAlpha = _mm_movepi64_pi64 (xmmAlpha);
 
     while (height--)
     {
@@ -3473,11 +3517,13 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_op_t op,
             if (m)
             {
                 d = *dst;
+                mmxMask = expandAlphaRev_1x64 (unpack_32_1x64 (m));
+                mmxDest = expand565_16_1x64 (d);
 
-                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                                                 _mm_movepi64_pi64 (xmmAlpha),
-                                                                 expandAlphaRev_1x64 (unpack_32_1x64 (m)),
-                                                                 expand565_16_1x64 (d))));
+                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (&mmxSrc,
+                                                                 &mmxAlpha,
+                                                                 &mmxMask,
+                                                                 &mmxDest)));
             }
 
             w--;
@@ -3509,7 +3555,7 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_op_t op,
                 unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
 
                 expandAlphaRev_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
-                inOver_2x128 (xmmSrc, xmmSrc, xmmAlpha, xmmAlpha, xmmMaskLo, xmmMaskHi, &xmmDst0, &xmmDst1);
+                inOver_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDst0, &xmmDst1);
             }
 
             m = *((uint32_t*)mask);
@@ -3524,10 +3570,10 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_op_t op,
                 unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
 
                 expandAlphaRev_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
-                inOver_2x128 (xmmSrc, xmmSrc, xmmAlpha, xmmAlpha, xmmMaskLo, xmmMaskHi, &xmmDst2, &xmmDst3);
+                inOver_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDst2, &xmmDst3);
             }
 
-            save128Aligned ((__m128i*)dst, pack565_4x128_128 (xmmDst0, xmmDst1, xmmDst2, xmmDst3));
+            save128Aligned ((__m128i*)dst, pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3));
 
             w -= 8;
             dst += 8;
@@ -3540,11 +3586,13 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_op_t op,
             if (m)
             {
                 d = *dst;
+                mmxMask = expandAlphaRev_1x64 (unpack_32_1x64 (m));
+                mmxDest = expand565_16_1x64 (d);
 
-                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                                                 _mm_movepi64_pi64 (xmmAlpha),
-                                                                 expandAlphaRev_1x64 (unpack_32_1x64 (m)),
-                                                                 expand565_16_1x64 (d))));
+                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (&mmxSrc,
+                                                                 &mmxAlpha,
+                                                                 &mmxMask,
+                                                                 &mmxDest)));
             }
 
             w--;
@@ -3664,7 +3712,7 @@ fbCompositeSrc_8888RevNPx0565sse2 (pixman_op_t op,
                 overRevNonPre_2x128 (xmmSrcLo, xmmSrcHi, &xmmDst2, &xmmDst3);
             }
 
-            save128Aligned ((__m128i*)dst, pack565_4x128_128 (xmmDst0, xmmDst1, xmmDst2, xmmDst3));
+            save128Aligned ((__m128i*)dst, pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3));
 
             w -= 8;
             src += 8;
@@ -3830,6 +3878,8 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_op_t op,
     __m128i xmmMask, xmmMaskLo, xmmMaskHi;
     __m128i xmmDst, xmmDst0, xmmDst1, xmmDst2, xmmDst3;
 
+    __m64 mmxSrc, mmxAlpha, mmxMask, mmxDest;
+
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
@@ -3841,6 +3891,8 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_op_t op,
 
     xmmSrc = expandPixel_32_1x128 (src);
     xmmAlpha = expandAlpha_1x128 (xmmSrc);
+    mmxSrc = _mm_movepi64_pi64 (xmmSrc);
+    mmxAlpha = _mm_movepi64_pi64 (xmmAlpha);
 
     while (height--)
     {
@@ -3861,11 +3913,13 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_op_t op,
             if (m)
             {
                 d = *dst;
+                mmxMask = unpack_32_1x64 (m);
+                mmxDest = expand565_16_1x64 (d);
 
-                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                                                   _mm_movepi64_pi64 (xmmAlpha),
-                                                                   unpack_32_1x64 (m),
-                                                                   expand565_16_1x64 (d))));
+                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (&mmxSrc,
+                                                                 &mmxAlpha,
+                                                                 &mmxMask,
+                                                                 &mmxDest)));
             }
 
             w--;
@@ -3898,7 +3952,7 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_op_t op,
 
             if (packCmp != 0xffff)
             {
-                inOver_2x128(xmmSrc, xmmSrc, xmmAlpha, xmmAlpha, xmmMaskLo, xmmMaskHi, &xmmDst0, &xmmDst1);
+                inOver_2x128(&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDst0, &xmmDst1);
             }
 
             /* Second round */
@@ -3908,10 +3962,10 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_op_t op,
 
             if (packCmp != 0xffff)
             {
-                inOver_2x128(xmmSrc, xmmSrc, xmmAlpha, xmmAlpha, xmmMaskLo, xmmMaskHi, &xmmDst2, &xmmDst3);
+                inOver_2x128(&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDst2, &xmmDst3);
             }
 
-            save128Aligned ((__m128i*)dst, pack565_4x128_128 (xmmDst0, xmmDst1, xmmDst2, xmmDst3));
+            save128Aligned ((__m128i*)dst, pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3));
 
             w -= 8;
             dst += 8;
@@ -3925,11 +3979,13 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_op_t op,
             if (m)
             {
                 d = *dst;
+                mmxMask = unpack_32_1x64 (m);
+                mmxDest = expand565_16_1x64 (d);
 
-                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                                                   _mm_movepi64_pi64 (xmmAlpha),
-                                                                   unpack_32_1x64 (m),
-                                                                   expand565_16_1x64 (d))));
+                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (&mmxSrc,
+                                                                 &mmxAlpha,
+                                                                 &mmxMask,
+                                                                 &mmxDest)));
             }
 
             w--;
@@ -4019,8 +4075,8 @@ fbCompositeIn_nx8x8sse2 (pixman_op_t op,
             unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
             unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
 
-            pixMultiply_2x128 (xmmAlpha, xmmAlpha, xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
-            pixMultiply_2x128 (xmmMaskLo, xmmMaskHi, xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
+            pixMultiply_2x128 (&xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+            pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi, &xmmDstLo, &xmmDstHi);
 
             save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -4110,7 +4166,7 @@ fbCompositeIn_8x8sse2 (pixman_op_t op,
             unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
             unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
 
-            pixMultiply_2x128 (xmmSrcLo, xmmSrcHi, xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
+            pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmDstLo, &xmmDstHi, &xmmDstLo, &xmmDstHi);
 
             save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
 
@@ -4211,7 +4267,7 @@ fbCompositeSrcAdd_8888x8x8sse2 (pixman_op_t op,
             unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
             unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
 
-            pixMultiply_2x128 (xmmAlpha, xmmAlpha, xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+            pixMultiply_2x128 (&xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
 
             xmmDstLo = _mm_adds_epu16 (xmmMaskLo, xmmDstLo);
             xmmDstHi = _mm_adds_epu16 (xmmMaskHi, xmmDstHi);

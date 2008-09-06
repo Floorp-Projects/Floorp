@@ -488,7 +488,7 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
     /* inv (A) = 1/det (A) * adj (A) */
     double det;
 
-    _cairo_matrix_compute_determinant (matrix, &det);
+    det = _cairo_matrix_compute_determinant (matrix);
 
     if (! ISFINITE (det))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
@@ -508,42 +508,54 @@ _cairo_matrix_is_invertible (const cairo_matrix_t *matrix)
 {
     double det;
 
-    _cairo_matrix_compute_determinant (matrix, &det);
+    det = _cairo_matrix_compute_determinant (matrix);
 
     return ISFINITE (det) && det != 0.;
 }
 
-void
-_cairo_matrix_compute_determinant (const cairo_matrix_t *matrix,
-				   double		*det)
+double
+_cairo_matrix_compute_determinant (const cairo_matrix_t *matrix)
 {
     double a, b, c, d;
 
     a = matrix->xx; b = matrix->yx;
     c = matrix->xy; d = matrix->yy;
 
-    *det = a*d - b*c;
+    return a*d - b*c;
 }
 
-/* Compute the amount that each basis vector is scaled by. */
+/**
+ * _cairo_matrix_compute_basis_scale_factors:
+ * @matrix: a matrix
+ * @basis_scale: the scale factor in the direction of basis
+ * @normal_scale: the scale factor in the direction normal to the basis
+ * @x_basis: basis to use.  X basis if true, Y basis otherwise.
+ *
+ * Computes |Mv| and det(M)/|Mv| for v=[1,0] if x_basis is true, and v=[0,1]
+ * otherwise, and M is @matrix.
+ *
+ * Return value: the scale factor of @matrix on the height of the font,
+ * or 1.0 if @matrix is %NULL.
+ **/
 cairo_status_t
-_cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
-				     double *sx, double *sy, int x_major)
+_cairo_matrix_compute_basis_scale_factors (const cairo_matrix_t *matrix,
+					   double *basis_scale, double *normal_scale,
+					   cairo_bool_t x_basis)
 {
     double det;
 
-    _cairo_matrix_compute_determinant (matrix, &det);
+    det = _cairo_matrix_compute_determinant (matrix);
 
     if (! ISFINITE (det))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     if (det == 0)
     {
-	*sx = *sy = 0;
+	*basis_scale = *normal_scale = 0;
     }
     else
     {
-	double x = x_major != 0;
+	double x = x_basis != 0;
 	double y = x == 0;
 	double major, minor;
 
@@ -558,15 +570,15 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 	    minor = det / major;
 	else
 	    minor = 0.0;
-	if (x_major)
+	if (x_basis)
 	{
-	    *sx = major;
-	    *sy = minor;
+	    *basis_scale = major;
+	    *normal_scale = minor;
 	}
 	else
 	{
-	    *sx = minor;
-	    *sy = major;
+	    *basis_scale = minor;
+	    *normal_scale = major;
 	}
     }
 
