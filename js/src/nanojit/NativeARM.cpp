@@ -652,23 +652,22 @@ Assembler::asm_pusharg(LInsp arg)
     bool quad = arg->isQuad();
     intptr_t stack_growth = quad ? 8 : 4;
 
-    Register ra;
+    int d = 0;
 
-    if (argRes)
-        ra = argRes->reg;
-    else
-        ra = findRegFor(arg, quad ? FpRegs : GpRegs);
-
-    if (ra == UnknownReg) {
-        STR(Scratch, SP, 0);
-        LDR(Scratch, FP, disp(argRes));
-    } else {
+    if (argRes && argRes->reg != UnknownReg) {
         if (!quad) {
-            Register ra = findRegFor(arg, GpRegs);
-            STR(ra, SP, 0);
+            STR(argRes->reg, SP, 0);
         } else {
-            Register ra = findRegFor(arg, FpRegs);
-            FSTD(ra, SP, 0);
+            FSTD(argRes->reg, SP, 0);
+        }
+    } else {
+        int d = findMemFor(arg);
+
+        if (!quad) {
+            STR(Scratch, SP, 0);
+            LDR(Scratch, FP, d);
+        } else {
+            asm_mmq(SP, 0, FP, disp(argRes));
         }
     }
 
