@@ -92,7 +92,6 @@ public:
 // CSS Style Sheet
 //
 
-class CSSImportsCollectionImpl;
 class CSSRuleListImpl;
 static PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
 
@@ -206,7 +205,6 @@ protected:
   nsICSSStyleSheet*     mParent;    // weak ref
   nsICSSImportRule*     mOwnerRule; // weak ref
 
-  CSSImportsCollectionImpl* mImportsCollection;
   CSSRuleListImpl*      mRuleCollection;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsIDOMNode*           mOwningNode; // weak ref

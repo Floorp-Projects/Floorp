@@ -737,86 +737,6 @@ nsMediaList::Append(const nsAString& aNewMedium)
 }
 
 // -------------------------------
-// Imports Collection for the DOM
-//
-class CSSImportsCollectionImpl : public nsIDOMStyleSheetList
-{
-public:
-  CSSImportsCollectionImpl(nsICSSStyleSheet *aStyleSheet);
-
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMCSSStyleSheetList interface
-  NS_IMETHOD    GetLength(PRUint32* aLength); 
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn); 
-
-  void DropReference() { mStyleSheet = nsnull; }
-
-protected:
-  virtual ~CSSImportsCollectionImpl();
-
-  nsICSSStyleSheet*  mStyleSheet;
-};
-
-CSSImportsCollectionImpl::CSSImportsCollectionImpl(nsICSSStyleSheet *aStyleSheet)
-{
-  // Not reference counted to avoid circular references.
-  // The style sheet will tell us when its going away.
-  mStyleSheet = aStyleSheet;
-}
-
-CSSImportsCollectionImpl::~CSSImportsCollectionImpl()
-{
-}
-
-
-// QueryInterface implementation for CSSImportsCollectionImpl
-NS_INTERFACE_MAP_BEGIN(CSSImportsCollectionImpl)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheetList)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(StyleSheetList)
-NS_INTERFACE_MAP_END
-
-
-NS_IMPL_ADDREF(CSSImportsCollectionImpl)
-NS_IMPL_RELEASE(CSSImportsCollectionImpl)
-
-
-NS_IMETHODIMP
-CSSImportsCollectionImpl::GetLength(PRUint32* aLength)
-{
-  if (nsnull != mStyleSheet) {
-    PRInt32 count;
-    mStyleSheet->StyleSheetCount(count);
-    *aLength = (PRUint32)count;
-  }
-  else {
-    *aLength = 0;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-CSSImportsCollectionImpl::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
-{
-  nsresult result = NS_OK;
-
-  *aReturn = nsnull;
-
-  if (mStyleSheet) {
-    nsCOMPtr<nsICSSStyleSheet> sheet;
-
-    result = mStyleSheet->GetStyleSheetAt(aIndex, *getter_AddRefs(sheet));
-    if (NS_SUCCEEDED(result)) {
-      result = CallQueryInterface(sheet, aReturn);
-    }
-  }
-  
-  return result;
-}
-
-// -------------------------------
 // CSS Style Sheet Inner Data Container
 //
 
@@ -962,7 +882,6 @@ nsCSSStyleSheet::nsCSSStyleSheet()
     mNext(nsnull),
     mParent(nsnull),
     mOwnerRule(nsnull),
-    mImportsCollection(nsnull),
     mRuleCollection(nsnull),
     mDocument(nsnull),
     mOwningNode(nsnull),
@@ -987,7 +906,6 @@ nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
     mNext(nsnull),
     mParent(aParentToUse),
     mOwnerRule(aOwnerRuleToUse),
-    mImportsCollection(nsnull), // re-created lazily
     mRuleCollection(nsnull), // re-created lazily
     mDocument(aDocumentToUse),
     mOwningNode(aOwningNodeToUse),
@@ -1046,10 +964,6 @@ nsCSSStyleSheet::~nsCSSStyleSheet()
   if (nsnull != mRuleCollection) {
     mRuleCollection->DropReference();
     NS_RELEASE(mRuleCollection);
-  }
-  if (nsnull != mImportsCollection) {
-    mImportsCollection->DropReference();
-    NS_RELEASE(mImportsCollection);
   }
   if (mMedia) {
     mMedia->SetStyleSheet(nsnull);
@@ -1551,17 +1465,17 @@ nsCSSStyleSheet::EnsureUniqueInner()
 
 NS_IMETHODIMP
 nsCSSStyleSheet::Clone(nsICSSStyleSheet* aCloneParent,
-                         nsICSSImportRule* aCloneOwnerRule,
-                         nsIDocument* aCloneDocument,
-                         nsIDOMNode* aCloneOwningNode,
-                         nsICSSStyleSheet** aClone) const
+                       nsICSSImportRule* aCloneOwnerRule,
+                       nsIDocument* aCloneDocument,
+                       nsIDOMNode* aCloneOwningNode,
+                       nsICSSStyleSheet** aClone) const
 {
   NS_PRECONDITION(aClone, "Null out param!");
   nsCSSStyleSheet* clone = new nsCSSStyleSheet(*this,
-                                                   aCloneParent,
-                                                   aCloneOwnerRule,
-                                                   aCloneDocument,
-                                                   aCloneOwningNode);
+                                               aCloneParent,
+                                               aCloneOwnerRule,
+                                               aCloneDocument,
+                                               aCloneOwningNode);
   if (clone) {
     *aClone = static_cast<nsICSSStyleSheet*>(clone);
     NS_ADDREF(*aClone);
