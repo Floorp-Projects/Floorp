@@ -617,7 +617,7 @@ def writeQuickStub(f, member, stubName, isSetter=False):
     isGetter = isAttr and not isSetter
 
     # Function prolog.
-    f.write("static JS_DLL_CALLBACK JSBool\n")
+    f.write("static JSBool\n")
     if isAttr:
         # JSPropertyOp signature.
         f.write(stubName + "(JSContext *cx, JSObject *obj, jsval id, "
