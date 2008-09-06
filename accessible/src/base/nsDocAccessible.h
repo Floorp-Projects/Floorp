@@ -88,6 +88,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
 
     // ----- nsIScrollPositionListener ---------------------------
     NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
+    virtual void ViewPositionDidChange(nsIScrollableView* aScrollable) {}
     NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
 
     // nsIDocumentObserver
