@@ -1785,18 +1785,23 @@ SessionStoreService.prototype = {
       }
     }
     
-    var content = aEvent.originalTarget.defaultView;
-    if (this.currentURI.spec == "about:config") {
-      // unwrap the document for about:config because otherwise the properties
-      // of the XBL bindings - as the textbox - aren't accessible (see bug 350718)
-      content = content.wrappedJSObject;
+    // don't restore text data and scrolling state if the user has navigated
+    // away before the loading completed (except for in-page navigation)
+    if (!this.__SS_restore_data.url || this.currentURI.spec.replace(/#.*/, "") ==
+                                       this.__SS_restore_data.url.replace(/#.*/, "")) {
+      var content = aEvent.originalTarget.defaultView;
+      if (this.currentURI.spec == "about:config") {
+        // unwrap the document for about:config because otherwise the properties
+        // of the XBL bindings - as the textbox - aren't accessible (see bug 350718)
+        content = content.wrappedJSObject;
+      }
+      restoreTextDataAndScrolling(content, this.__SS_restore_data, "");
+      
+      // notify the tabbrowser that this document has been completely restored
+      var event = this.ownerDocument.createEvent("Events");
+      event.initEvent("SSTabRestored", true, false);
+      this.__SS_restore_tab.dispatchEvent(event);
     }
-    restoreTextDataAndScrolling(content, this.__SS_restore_data, "");
-    
-    // notify the tabbrowser that this document has been completely restored
-    var event = this.ownerDocument.createEvent("Events");
-    event.initEvent("SSTabRestored", true, false);
-    this.__SS_restore_tab.dispatchEvent(event);
     
     this.removeEventListener("load", this.__SS_restore, true);
     delete this.__SS_restore_data;
