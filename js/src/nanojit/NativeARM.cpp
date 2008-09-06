@@ -448,10 +448,8 @@ Assembler::asm_load64(LInsp ins)
 
     if (rr != UnknownReg) {
         if (!isS8(offset >> 2) || (offset&3) != 0) {
-            underrunProtect(LD32_size + 8);
             FLDD(rr,Scratch,0);
-            ADD(Scratch, rb);
-            LD32_nochk(Scratch, offset);
+            arm_ADDi(Scratch, rb, offset);
         } else {
             FLDD(rr,rb,offset);
         }
@@ -505,9 +503,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     FSTD(rv, baseReg, baseOffset);
 
     if (!isS8(dr)) {
-        underrunProtect(4 + LD32_size);
-        ADD(Scratch, rb);
-        LD32_nochk(Scratch, dr);
+        arm_ADDi(Scratch, rb, dr);
     }
 
     // if it's a constant, make sure our baseReg/baseOffset location
