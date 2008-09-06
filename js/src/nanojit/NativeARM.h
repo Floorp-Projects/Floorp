@@ -516,15 +516,18 @@ typedef enum {
 #define ST(base,offset,reg)    STR(reg,base,offset)
 
 #define LDi(_d,_imm) do {                                               \
-        if (isS8((_imm)) || isU8((_imm))) {                             \
+        if ((_imm) == 0) {                                              \
+            XOR(_d,_d);                                                 \
+        } else if (isS8((_imm)) || isU8((_imm))) {                      \
             underrunProtect(4);                                         \
             if ((_imm)<0)   *(--_nIns) = (NIns)( COND_AL | (0x3E<<20) | ((_d)<<12) | (((_imm)^0xFFFFFFFF)&0xFF) ); \
             else            *(--_nIns) = (NIns)( COND_AL | (0x3B<<20) | ((_d)<<12) | ((_imm)&0xFF) ); \
+            asm_output2("ld  %s,0x%x",gpn((_d)),(_imm));                \
         } else {                                                        \
             underrunProtect(LD32_size);                                 \
             LD32_nochk(_d, (_imm));                                     \
+            asm_output2("ld  %s,0x%x",gpn((_d)),(_imm));                \
         }                                                               \
-        asm_output2("ld  %s,0x%x",gpn((_d)),(_imm));                      \
     } while(0)
 
 

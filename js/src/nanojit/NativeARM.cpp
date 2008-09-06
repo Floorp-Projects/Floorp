@@ -477,8 +477,19 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
 
 #ifdef NJ_ARM_VFP
     Reservation *valResv = getresv(value);
-
     Register rb = findRegFor(base, GpRegs);
+
+    if (value->isconstq()) {
+        const int32_t* p = (const int32_t*) (value-2);
+
+        STR(Scratch, rb, dr);
+        LD32_nochk(Scratch, p[0]);
+        STR(Scratch, rb, dr+4);
+        LD32_nochk(Scratch, p[1]);
+
+        return;
+    }
+
     Register rv = findRegFor(value, FpRegs);
 
     NanoAssert(rb != UnknownReg);
@@ -814,6 +825,11 @@ Assembler::CALL(const CallInfo *ci)
 void
 Assembler::LD32_nochk(Register r, int32_t imm)
 {
+    if (imm == 0) {
+        XOR(r, r);
+        return;
+    }
+
     // We should always reach the const pool, since it's on the same page (<4096);
     // if we can't, someone didn't underrunProtect enough.
 
