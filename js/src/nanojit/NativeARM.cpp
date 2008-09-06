@@ -202,9 +202,8 @@ Assembler::asm_call(LInsp ins)
             FMDRR(rr,R0,R1);
         } else {
             NanoAssert(d);
-            //fprintf (stderr, "call ins d: %d\n", d);
-            STMIA(Scratch, 1<<R0 | 1<<R1);
-            arm_ADDi(Scratch, FP, d);
+            STR(R0, FP, d+0);
+            STR(R1, FP, d+4);
         }
     }
 #endif
@@ -635,13 +634,14 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     // value is either a 64bit struct or maybe a float
     // that isn't live in an FPU reg.  Either way, don't
     // put it in an FPU reg just to load & store it.
-    // get a scratch reg
+
+    // use both IP and a second scratch reg
     Register t = registerAlloc(GpRegs & ~(rmask(rd)|rmask(rs)));
     _allocator.addFree(t);
-    // XXX use LDM,STM
-    STR(t, rd, dd+4);
-    LDR(t, rs, ds+4);
+
+    STR(Scratch, rd, dd+4);
     STR(t, rd, dd);
+    LDR(Scratch, rs, ds+4);
     LDR(t, rs, ds);
 }
 
