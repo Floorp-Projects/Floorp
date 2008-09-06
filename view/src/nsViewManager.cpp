@@ -1685,6 +1685,11 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
   return NS_OK;
 }
 
+static double GetArea(const nsRect& aRect)
+{
+  return double(aRect.width)*double(aRect.height);
+}
+
 PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
                                           nsRegion* aUpdateRegion)
 {
@@ -1711,7 +1716,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
 #if defined(MOZ_WIDGET_GTK2) || defined(XP_OS2)
   return aUpdateRegion->IsEmpty();
 #else
-  return PR_TRUE;
+  return GetArea(aUpdateRegion->GetBounds()) < GetArea(parentBounds)/2;
 #endif
 }
 
