@@ -1073,11 +1073,8 @@ nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 nsIFrame*
 nsPositionedInlineFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (nsGkAtoms::absoluteList == aListName) {
-    nsIFrame* result = nsnull;
-    mAbsoluteContainer.FirstChild(this, aListName, &result);
-    return result;
-  }
+  if (nsGkAtoms::absoluteList == aListName)
+    return mAbsoluteContainer.GetFirstChild();
 
   return nsInlineFrame::GetFirstChild(aListName);
 }
