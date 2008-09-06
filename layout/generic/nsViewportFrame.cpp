@@ -179,8 +179,11 @@ ViewportFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 nsIFrame*
 ViewportFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (nsGkAtoms::fixedList == aListName)
-    return mFixedContainer.GetFirstChild();
+  if (nsGkAtoms::fixedList == aListName) {
+    nsIFrame* result = nsnull;
+    mFixedContainer.FirstChild(this, aListName, &result);
+    return result;
+  }
 
   return nsContainerFrame::GetFirstChild(aListName);
 }
@@ -306,7 +309,8 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
   nsPoint offset = AdjustReflowStateForScrollbars(&reflowState);
   
 #ifdef DEBUG
-  nsIFrame* f = mFixedContainer.GetFirstChild();
+  nsIFrame* f;
+  mFixedContainer.FirstChild(this, nsGkAtoms::fixedList, &f);
   NS_ASSERTION(!f || (offset.x == 0 && offset.y == 0),
                "We don't handle correct positioning of fixed frames with "
                "scrollbars in odd positions");

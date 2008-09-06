@@ -1584,9 +1584,6 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   PRInt32 listIndex = 0;
   PRBool outputOneList = PR_FALSE;
   do {
-    if (!outputOneList) {
-      fputs("\n", out);
-    }
     nsIFrame* kid = GetFirstChild(listName);
     if (nsnull != kid) {
       if (outputOneList) {

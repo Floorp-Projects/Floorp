@@ -1531,7 +1531,25 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPres
       // If the ancestor is block-level, the containing block is formed by the
       // padding edge of the ancestor
       aContainingBlockWidth += aContainingBlockRS->mComputedPadding.LeftRight();
-      aContainingBlockHeight += aContainingBlockRS->mComputedPadding.TopBottom();
+
+      // If the containing block is the initial containing block and it has a
+      // height that depends on its content, then use the viewport height instead.
+      // This gives us a reasonable value against which to compute percentage
+      // based heights and to do bottom relative positioning
+      if ((NS_AUTOHEIGHT == aContainingBlockHeight) &&
+          nsLayoutUtils::IsInitialContainingBlock(aContainingBlockRS->frame)) {
+
+        // Use the viewport height as the containing block height
+        const nsHTMLReflowState* rs = aContainingBlockRS->parentReflowState;
+        while (rs) {
+          aContainingBlockHeight = rs->mComputedHeight;
+          rs = rs->parentReflowState;
+        }
+
+      } else {
+        aContainingBlockHeight +=
+          aContainingBlockRS->mComputedPadding.TopBottom();
+      }
     }
   } else {
     // an element in quirks mode gets a containing block based on looking for a

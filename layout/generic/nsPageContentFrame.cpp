@@ -69,6 +69,55 @@ nsPageContentFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   return nsSize(aAvailableWidth, height);
 }
 
+/**
+ * Returns true if aFrame is a placeholder for one of our fixed frames.
+ */
+inline PRBool
+nsPageContentFrame::IsFixedPlaceholder(nsIFrame* aFrame)
+{
+  if (!aFrame || nsGkAtoms::placeholderFrame != aFrame->GetType())
+    return PR_FALSE;
+
+  return static_cast<nsPlaceholderFrame*>(aFrame)->GetOutOfFlowFrame()
+           ->GetParent() == this;
+}
+
+/**
+ * Steals replicated fixed placeholder frames from aDocRoot so they don't
+ * get in the way of reflow.
+ */
+inline nsFrameList
+nsPageContentFrame::StealFixedPlaceholders(nsIFrame* aDocRoot)
+{
+  nsPresContext* presContext = PresContext();
+  nsFrameList list;
+  if (GetPrevInFlow()) {
+    for (nsIFrame* f = aDocRoot->GetFirstChild(nsnull);
+        IsFixedPlaceholder(f); f = aDocRoot->GetFirstChild(nsnull)) {
+      nsresult rv = static_cast<nsContainerFrame*>(aDocRoot)
+                      ->StealFrame(presContext, f);
+      NS_ENSURE_SUCCESS(rv, list);
+      list.AppendFrame(nsnull, f);
+    }
+  }
+  return list;
+}
+
+/**
+ * Restores stolen replicated fixed placeholder frames to aDocRoot.
+ */
+static inline nsresult
+ReplaceFixedPlaceholders(nsIFrame*    aDocRoot,
+                         nsFrameList& aPlaceholderList)
+{
+  nsresult rv = NS_OK;
+  if (aPlaceholderList.NotEmpty()) {
+    rv = static_cast<nsContainerFrame*>(aDocRoot)
+           ->AddFrames(aPlaceholderList.FirstChild(), nsnull);
+  }
+  return rv;
+}
+
 NS_IMETHODIMP
 nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
@@ -80,26 +129,66 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
   nsresult rv = NS_OK;
 
-  if (GetPrevInFlow() && (GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+  // A PageContentFrame must always have one child: the doc root element's frame.
+  // We only need to get overflow frames if we don't already have that child;
+  // Also we need to avoid repeating the call to ReplicateFixedFrames.
+  nsPageContentFrame* prevPageContentFrame = static_cast<nsPageContentFrame*>
+                                               (GetPrevInFlow());
+  if (mFrames.IsEmpty() && prevPageContentFrame) {
+    // Pull the doc root frame's continuation and copy fixed frames.
+    nsIFrame* overflow = prevPageContentFrame->GetOverflowFrames(aPresContext, PR_TRUE);
+    NS_ASSERTION(overflow && !overflow->GetNextSibling(),
+                 "must have doc root as pageContentFrame's only child");
+    nsHTMLContainerFrame::ReparentFrameView(aPresContext, overflow, prevPageContentFrame, this);
+    // Prepend overflow to the page content frame. There may already be
+    // children placeholders which don't get reflowed but must not be
+    // lost until the page content frame is destroyed.
+    mFrames.InsertFrames(this, nsnull, overflow);
     nsresult rv = aPresContext->PresShell()->FrameConstructor()
                     ->ReplicateFixedFrames(this);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // A PageContentFrame must always have one child: the canvas frame.
   // Resize our frame allowing it only to be as big as we are
   // XXX Pay attention to the page's border and padding...
   if (mFrames.NotEmpty()) {
     nsIFrame* frame = mFrames.FirstChild();
     nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
-    kidReflowState.SetComputedHeight(aReflowState.availableHeight);
 
     mPD->mPageContentSize  = aReflowState.availableWidth;
+
+    // Get replicated fixed frames' placeholders out of the way
+    nsFrameList stolenPlaceholders = StealFixedPlaceholders(frame);
 
     // Reflow the page content area
     rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Put removed fixed placeholders back
+    rv = ReplaceFixedPlaceholders(frame, stolenPlaceholders);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
+      nsIFrame* nextFrame = frame->GetNextInFlow();
+      NS_ASSERTION(nextFrame || aStatus & NS_FRAME_REFLOW_NEXTINFLOW,
+        "If it's incomplete and has no nif yet, it must flag a nif reflow.");
+      if (!nextFrame) {
+        nsresult rv = nsHTMLContainerFrame::CreateNextInFlow(aPresContext,
+                                              this, frame, nextFrame);
+        NS_ENSURE_SUCCESS(rv, rv);
+        frame->SetNextSibling(nextFrame->GetNextSibling());
+        nextFrame->SetNextSibling(nsnull);
+        SetOverflowFrames(aPresContext, nextFrame);
+        // Root overflow containers will be normal children of
+        // the pageContentFrame, but that's ok because there
+        // aren't any other frames we need to isolate them from
+        // during reflow.
+      }
+      if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus)) {
+        nextFrame->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+      }
+    }
 
     // The document element's background should cover the entire canvas, so
     // take into account the combined area and any space taken up by
