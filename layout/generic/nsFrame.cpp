@@ -6609,8 +6609,6 @@ DR_cookie::~DR_cookie()
   nsFrame::DisplayReflowExit(mPresContext, mFrame, mMetrics, mStatus, mValue);
 }
 
-MOZ_DECL_CTOR_COUNTER(DR_layout_cookie)
-
 DR_layout_cookie::DR_layout_cookie(nsIFrame* aFrame)
   : mFrame(aFrame)
 {
@@ -6623,8 +6621,6 @@ DR_layout_cookie::~DR_layout_cookie()
   MOZ_COUNT_DTOR(DR_layout_cookie);
   nsFrame::DisplayLayoutExit(mFrame, mValue);
 }
-
-MOZ_DECL_CTOR_COUNTER(DR_intrinsic_width_cookie)
 
 DR_intrinsic_width_cookie::DR_intrinsic_width_cookie(
                      nsIFrame*                aFrame, 
@@ -6643,8 +6639,6 @@ DR_intrinsic_width_cookie::~DR_intrinsic_width_cookie()
   MOZ_COUNT_DTOR(DR_intrinsic_width_cookie);
   nsFrame::DisplayIntrinsicWidthExit(mFrame, mType, mResult, mValue);
 }
-
-MOZ_DECL_CTOR_COUNTER(DR_intrinsic_size_cookie)
 
 DR_intrinsic_size_cookie::DR_intrinsic_size_cookie(
                      nsIFrame*                aFrame, 

@@ -460,8 +460,6 @@ GetThreadStackLimit()
   return stackLimit;
 }
 
-MOZ_DECL_CTOR_COUNTER(xpcPerThreadData)
-
 XPCPerThreadData::XPCPerThreadData()
     :   mJSContextStack(new XPCJSContextStack()),
         mNextThread(nsnull),
