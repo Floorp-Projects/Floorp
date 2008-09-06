@@ -505,7 +505,7 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
     if (value->isconstq()) {
         const int32_t* p = (const int32_t*) (value-2);
 
-        underrunProtect(12 + LD32_size);
+        underrunProtect(12);
 
         asm_quad_nochk(rv, p);
     }
@@ -522,27 +522,23 @@ Assembler::asm_store64(LInsp value, int dr, LInsp base)
 void
 Assembler::asm_quad_nochk(Register rr, const int32_t* p)
 {
-    *(++_nSlot) = p[0];
-    *(++_nSlot) = p[1];
+    // We're not going to use a slot, because it might be too far
+    // away.  Instead, we're going to stick a branch in the stream to
+    // jump over the constants, and then load from a short PC relative
+    // offset.
 
-    intptr_t constAddr = (intptr_t) (_nSlot-1);
-    intptr_t realOffset = PC_OFFSET_FROM(constAddr, _nIns-1);
-    intptr_t offset = realOffset;
-    Register baseReg = PC;
+    // stream should look like:
+    //    branch A
+    //    p[0]
+    //    p[1]
+    // A: FLDD PC-16
 
-    //int32_t *q = (int32_t*) constAddr;
-    //fprintf (stderr, "asm_quad_nochk: rr = %d cAddr: 0x%x quad: %08x:%08x q: %f @0x%08x\n", rr, constAddr, p[0], p[1], *(double*)q, _nIns);
+    FLDD(rr, PC, -16);
 
-    // for FLDD, we only get a left-shifted 8-bit offset
-    if (!isS8(realOffset >> 2)) {
-        offset = 0;
-        baseReg = Scratch;
-    }
+    *(--_nIns) = (NIns) p[1];
+    *(--_nIns) = (NIns) p[0];
 
-    FLDD(rr, baseReg, offset);
-
-    if (!isS8(realOffset >> 2))
-        LD32_nochk(Scratch, constAddr);
+    JMP_nochk(_nIns+2);
 }
 
 void
@@ -562,7 +558,7 @@ Assembler::asm_quad(LInsp ins)
     freeRsrcOf(ins, false);
 
     // XXX We probably want nochk versions of FLDD/FSTD
-    underrunProtect(16 + LD32_size);
+    underrunProtect(d ? 20 : 16);
 
     // grab a register to do the load into if we don't have one already;
     // XXX -- maybe do a mmq in this case?  We're going to use our
