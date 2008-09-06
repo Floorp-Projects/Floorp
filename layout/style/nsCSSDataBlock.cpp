@@ -687,7 +687,9 @@ nsCSSExpandedDataBlock::ComputeSize()
                 nsCSSProperty(iHigh * kPropertiesSetChunkSize + iLow);
             NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
                          "out of range");
+#ifdef DEBUG
             void *prop = PropertyAt(iProp);
+#endif
             PRUint32 increment = 0;
             switch (nsCSSProps::kTypeTable[iProp]) {
                 case eCSSType_Value: {
