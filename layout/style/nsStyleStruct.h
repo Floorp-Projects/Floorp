@@ -161,16 +161,12 @@ struct nsStyleBackground {
   static nsChangeHint MaxDifference();
 #endif
 
-  // On Linux (others?), there is an extra byte being used up by
-  // inheritance so we only have 3 bytes to fit these 6 things into.
-  // Fortunately, the properties are enums which have few possible
-  // values.
-  PRUint8 mBackgroundFlags;            // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundAttachment   : 4; // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundClip         : 3; // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundInlinePolicy : 2; // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundOrigin       : 3; // [reset] See nsStyleConsts.h
-  PRUint8 mBackgroundRepeat       : 4; // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundFlags;        // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundAttachment;   // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundClip;         // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundInlinePolicy; // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundOrigin;       // [reset] See nsStyleConsts.h
+  PRUint8 mBackgroundRepeat;       // [reset] See nsStyleConsts.h
 
   // Note: a member of this union is valid IFF the appropriate bit flag
   // is set in mBackgroundFlags.
