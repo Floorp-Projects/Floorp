@@ -77,7 +77,7 @@
 #define HOTEXIT 1
 
 /* Max call depths for inlining. */
-#define MAX_CALLDEPTH 5
+#define MAX_CALLDEPTH 10
 
 /* Max number of type mismatchs before we trash the tree. */
 #define MAX_MISMATCH 5
@@ -3933,7 +3933,11 @@ bool
 TraceRecorder::record_JSOP_NOT()
 {
     jsval& v = stackval(-1);
-    if (JSVAL_IS_BOOLEAN(v) || JSVAL_IS_OBJECT(v)) {
+    if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
+        set(&v, lir->ins_eq0(lir->ins2i(LIR_eq, get(&v), 1)));
+        return true;
+    }
+    if (JSVAL_IS_INT(v) || JSVAL_IS_OBJECT(v)) {
         set(&v, lir->ins_eq0(get(&v)));
         return true;
     }
