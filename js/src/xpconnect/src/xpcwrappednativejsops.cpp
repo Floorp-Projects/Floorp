@@ -119,7 +119,7 @@ ToStringGuts(XPCCallContext& ccx)
 
 /***************************************************************************/
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Shared_ToString(JSContext *cx, JSObject *obj,
                        uintN argc, jsval *argv, jsval *vp)
 {
@@ -129,7 +129,7 @@ XPC_WN_Shared_ToString(JSContext *cx, JSObject *obj,
     return ToStringGuts(ccx);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Shared_ToSource(JSContext *cx, JSObject *obj,
                        uintN argc, jsval *argv, jsval *vp)
 {
@@ -178,7 +178,7 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
 // This is the getter native function we use to handle 'wrappedJSObject' for
 // double wrapped JSObjects.
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_DoubleWrappedGetter(JSContext *cx, JSObject *obj,
                            uintN argc, jsval *argv, jsval *vp)
 {
@@ -491,7 +491,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 /***************************************************************************/
 /***************************************************************************/
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_OnlyIWrite_PropertyStub(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
     CHECK_IDVAL(cx, idval);
@@ -507,14 +507,14 @@ XPC_WN_OnlyIWrite_PropertyStub(JSContext *cx, JSObject *obj, jsval idval, jsval 
     return Throw(NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN, cx);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_CannotModifyPropertyStub(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
     CHECK_IDVAL(cx, idval);
     return Throw(NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN, cx);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Shared_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     if(type == JSTYPE_OBJECT)
@@ -576,7 +576,7 @@ XPC_WN_Shared_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return JS_FALSE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
 {
     XPCCallContext ccx(JS_CALLER, cx, obj);
@@ -631,7 +631,7 @@ XPC_WN_Shared_Enumerate(JSContext *cx, JSObject *obj)
 
 /***************************************************************************/
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_WN_NoHelper_Finalize(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative* p = (XPCWrappedNative*) xpc_GetJSPrivate(obj);
@@ -695,7 +695,7 @@ xpc_TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper)
     TraceScopeJSObjects(trc, wrapper->GetScope());
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_WN_Shared_Trace(JSTracer *trc, JSObject *obj)
 {
     XPCWrappedNative* wrapper =
@@ -705,7 +705,7 @@ XPC_WN_Shared_Trace(JSTracer *trc, JSObject *obj)
         xpc_TraceForValidWrapper(trc, wrapper);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_NoHelper_Resolve(JSContext *cx, JSObject *obj, jsval idval)
 {
     CHECK_IDVAL(cx, idval);
@@ -751,7 +751,7 @@ XPC_GetIdentityObject(JSContext *cx, JSObject *obj)
     return wrapper->GetIdentityObject();
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     *bp = JS_FALSE;
@@ -789,7 +789,7 @@ XPC_WN_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSObject *)
+static JSObject *
 XPC_WN_OuterObject(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative *wrapper =
@@ -828,7 +828,7 @@ XPC_WN_OuterObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
-JS_STATIC_DLL_CALLBACK(JSObject *)
+static JSObject *
 XPC_WN_InnerObject(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative *wrapper =
@@ -905,7 +905,7 @@ JSExtendedClass XPC_WN_NoHelper_JSClass = {
 
 /***************************************************************************/
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_MaybeResolvingPropertyStub(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
     CHECK_IDVAL(cx, idval);
@@ -931,7 +931,7 @@ XPC_WN_MaybeResolvingPropertyStub(JSContext *cx, JSObject *obj, jsval idval, jsv
         return Throw(rv, cx);                                                \
     return retval;
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Helper_AddProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
     PRE_HELPER_STUB
@@ -939,7 +939,7 @@ XPC_WN_Helper_AddProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
     POST_HELPER_STUB
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Helper_DelProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
     PRE_HELPER_STUB
@@ -947,7 +947,7 @@ XPC_WN_Helper_DelProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
     POST_HELPER_STUB
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Helper_GetProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
     PRE_HELPER_STUB
@@ -955,7 +955,7 @@ XPC_WN_Helper_GetProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
     POST_HELPER_STUB
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Helper_SetProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
     PRE_HELPER_STUB
@@ -963,7 +963,7 @@ XPC_WN_Helper_SetProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
     POST_HELPER_STUB
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Helper_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     PRE_HELPER_STUB
@@ -971,7 +971,7 @@ XPC_WN_Helper_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     POST_HELPER_STUB
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Helper_CheckAccess(JSContext *cx, JSObject *obj, jsval idval,
                           JSAccessMode mode, jsval *vp)
 {
@@ -981,7 +981,7 @@ XPC_WN_Helper_CheckAccess(JSContext *cx, JSObject *obj, jsval idval,
     POST_HELPER_STUB
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Helper_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval)
 {
@@ -995,7 +995,7 @@ XPC_WN_Helper_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     POST_HELPER_STUB
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Helper_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                         jsval *rval)
 {
@@ -1009,7 +1009,7 @@ XPC_WN_Helper_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     POST_HELPER_STUB
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Helper_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     PRE_HELPER_STUB
@@ -1017,7 +1017,7 @@ XPC_WN_Helper_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     POST_HELPER_STUB
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative* wrapper = (XPCWrappedNative*) xpc_GetJSPrivate(obj);
@@ -1027,7 +1027,7 @@ XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
     wrapper->FlatJSObjectFinalized(cx);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_WN_Helper_Trace(JSTracer *trc, JSObject *obj)
 {
     XPCWrappedNative* wrapper =
@@ -1039,7 +1039,7 @@ XPC_WN_Helper_Trace(JSTracer *trc, JSObject *obj)
     }
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
                          JSObject **objp)
 {
@@ -1170,7 +1170,7 @@ static JSObjectOps XPC_WN_NoCall_JSOps;
             do shared enumerate - don't use this JSOp thing at all
 */
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                       jsval *statep, jsid *idp)
 {
@@ -1250,7 +1250,7 @@ XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     return js_ObjectOps.enumerate(cx, obj, enum_op, statep, idp);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj)
 {
     // We're likely to enter this JSOp with a wrapper prototype
@@ -1273,13 +1273,13 @@ XPC_WN_JSOp_Clear(JSContext *cx, JSObject *obj)
     js_ObjectOps.clear(cx, obj);
 }
 
-JSObjectOps * JS_DLL_CALLBACK
+JSObjectOps *
 XPC_WN_GetObjectOpsNoCall(JSContext *cx, JSClass *clazz)
 {
     return &XPC_WN_NoCall_JSOps;
 }
 
-JSObjectOps * JS_DLL_CALLBACK
+JSObjectOps *
 XPC_WN_GetObjectOpsWithCall(JSContext *cx, JSClass *clazz)
 {
     return &XPC_WN_WithCall_JSOps;
@@ -1454,7 +1454,7 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
 /***************************************************************************/
 /***************************************************************************/
 
-JSBool JS_DLL_CALLBACK
+JSBool
 XPC_WN_CallMethod(JSContext *cx, JSObject *obj,
                   uintN argc, jsval *argv, jsval *vp)
 {
@@ -1473,7 +1473,7 @@ XPC_WN_CallMethod(JSContext *cx, JSObject *obj,
     return XPCWrappedNative::CallMethod(ccx);
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
                     uintN argc, jsval *argv, jsval *vp)
 {
@@ -1507,7 +1507,7 @@ XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
 
 /***************************************************************************/
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Shared_Proto_Enumerate(JSContext *cx, JSObject *obj)
 {
     NS_ASSERTION(
@@ -1552,14 +1552,14 @@ XPC_WN_Shared_Proto_Enumerate(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_Shared_Proto_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     // XXX ?
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_WN_Shared_Proto_Finalize(JSContext *cx, JSObject *obj)
 {
     // This can be null if xpc shutdown has already happened
@@ -1568,7 +1568,7 @@ XPC_WN_Shared_Proto_Finalize(JSContext *cx, JSObject *obj)
         p->JSProtoObjectFinalized(cx, obj);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_WN_Shared_Proto_Trace(JSTracer *trc, JSObject *obj)
 {
     // This can be null if xpc shutdown has already happened
@@ -1580,7 +1580,7 @@ XPC_WN_Shared_Proto_Trace(JSTracer *trc, JSObject *obj)
 
 /*****************************************************/
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_ModsAllowed_Proto_Resolve(JSContext *cx, JSObject *obj, jsval idval)
 {
     CHECK_IDVAL(cx, idval);
@@ -1617,7 +1617,7 @@ XPC_WN_ModsAllowed_Proto_Resolve(JSContext *cx, JSObject *obj, jsval idval)
 // wrappers. This essentially duplicates the number of JSClasses we
 // use for prototype objects (from 2 to 4), but the scope sharing
 // benefit is well worth it.
-JSObjectOps * JS_DLL_CALLBACK
+JSObjectOps *
 XPC_WN_Proto_GetObjectOps(JSContext *cx, JSClass *clazz)
 {
     // Protos for wrappers that want calls to their call() hooks get
@@ -1660,7 +1660,7 @@ JSClass XPC_WN_ModsAllowed_WithCall_Proto_JSClass = {
     nsnull                          // spare;
 };
 
-JSObjectOps * JS_DLL_CALLBACK
+JSObjectOps *
 XPC_WN_ModsAllowedProto_NoCall_GetObjectOps(JSContext *cx, JSClass *clazz)
 {
     return &XPC_WN_NoCall_JSOps;
@@ -1693,7 +1693,7 @@ JSClass XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
 
 /***************************************************************************/
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_OnlyIWrite_Proto_PropertyStub(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
     CHECK_IDVAL(cx, idval);
@@ -1719,7 +1719,7 @@ XPC_WN_OnlyIWrite_Proto_PropertyStub(JSContext *cx, JSObject *obj, jsval idval, 
     return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_NoMods_Proto_Resolve(JSContext *cx, JSObject *obj, jsval idval)
 {
     CHECK_IDVAL(cx, idval);
@@ -1803,7 +1803,7 @@ JSClass XPC_WN_NoMods_NoCall_Proto_JSClass = {
 
 /***************************************************************************/
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_TearOff_Enumerate(JSContext *cx, JSObject *obj)
 {
     XPCCallContext ccx(JS_CALLER, cx, obj);
@@ -1826,7 +1826,7 @@ XPC_WN_TearOff_Enumerate(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_WN_TearOff_Resolve(JSContext *cx, JSObject *obj, jsval idval)
 {
     CHECK_IDVAL(cx, idval);
@@ -1849,7 +1849,7 @@ XPC_WN_TearOff_Resolve(JSContext *cx, JSObject *obj, jsval idval)
                                  JSPROP_ENUMERATE, nsnull);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_WN_TearOff_Finalize(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNativeTearOff* p = (XPCWrappedNativeTearOff*)

@@ -559,7 +559,7 @@ PRMJ_DSTOffset(JSInt64 local_time)
 }
 
 #ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
-JS_STATIC_DLL_CALLBACK(void)
+static void
 PRMJ_InvalidParameterHandler(const wchar_t *expression,
                              const wchar_t *function,
                              const wchar_t *file,

@@ -49,19 +49,19 @@
 #include "nsMemory.h"
 #include "nsStringBuffer.h"
 
-JS_STATIC_DLL_CALLBACK(void *)
+static void *
 nsGetPrincipalArray(JSContext *cx, JSPrincipals *prin)
 {
     return nsnull;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 nsGlobalPrivilegesEnabled(JSContext *cx, JSPrincipals *jsprin)
 {
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 nsJSPrincipalsSubsume(JSPrincipals *jsprin, JSPrincipals *other)
 {
     nsJSPrincipals *nsjsprin = static_cast<nsJSPrincipals *>(jsprin);
@@ -73,7 +73,7 @@ nsJSPrincipalsSubsume(JSPrincipals *jsprin, JSPrincipals *other)
     return NS_SUCCEEDED(rv) && result;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin)
 {
     nsJSPrincipals *nsjsprin = static_cast<nsJSPrincipals *>(jsprin);
@@ -99,7 +99,7 @@ nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin)
     // so we don't need to worry about "codebase"
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
 {
     nsresult rv;

@@ -128,7 +128,7 @@ CommonConstructor(JSContext *cx, int name, JSObject *obj, uintN argc,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 COMObjectConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
                      jsval *rval)
 {
@@ -136,7 +136,7 @@ COMObjectConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                              argv, rval, PR_FALSE);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 ActiveXConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
                    jsval *rval)
 {
@@ -144,7 +144,7 @@ ActiveXConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                              rval, PR_TRUE);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 ActiveXSupports(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
                 jsval *rval)
 {

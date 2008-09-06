@@ -2529,7 +2529,7 @@ typedef struct JSLocalNameEnumeratorArgs {
 #endif
 } JSLocalNameEnumeratorArgs;
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 get_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
                            uint32 number, void *arg)
 {
@@ -2609,7 +2609,7 @@ js_GetLocalNameArray(JSContext *cx, JSFunction *fun, JSArenaPool *pool)
     return names;
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 trace_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
                              uint32 number, void *arg)
 {

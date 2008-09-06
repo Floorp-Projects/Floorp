@@ -425,7 +425,7 @@ static PRBool gInCollection;
 // Whether cycle collection collected anything.
 static PRBool gCollected;
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPCCycleCollectGCCallback(JSContext *cx, JSGCStatus status)
 {
     // Launch the cycle collector.
@@ -554,7 +554,7 @@ struct NoteJSRootTracer : public JSTracer
     nsCycleCollectionTraversalCallback& mCb;
 };
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 NoteJSRoot(JSTracer *trc, void *thing, uint32 kind)
 {
     if(ADD_TO_CC(kind))
@@ -719,7 +719,7 @@ struct TraversalTracer : public JSTracer
     nsCycleCollectionTraversalCallback &cb;
 };
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
 {
     if(ADD_TO_CC(kind))
@@ -1113,7 +1113,7 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     return NS_OK;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 TempGlobalResolve(JSContext *aJSContext, JSObject *obj, jsval id)
 {
     JSBool resolved;
@@ -1406,7 +1406,7 @@ nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
                                (XPCWrappedNative**) _retval);
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
                       uint32 number, void *arg)
 {

@@ -530,7 +530,7 @@ js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
     return setter;
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSRuntime *rt;
@@ -674,7 +674,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval)
 {

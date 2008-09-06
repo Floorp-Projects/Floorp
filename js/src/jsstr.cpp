@@ -2383,7 +2383,7 @@ static JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
-JS_STATIC_DLL_CALLBACK(JSHashNumber)
+static JSHashNumber
 js_hash_string_pointer(const void *key)
 {
     return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;

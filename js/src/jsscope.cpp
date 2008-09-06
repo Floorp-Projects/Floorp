@@ -393,7 +393,7 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
  */
 #define SPROP_FLAGS_NOT_MATCHED (SPROP_MARK | SPROP_FLAG_SHAPE_REGEN)
 
-JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+static JSDHashNumber
 js_HashScopeProperty(JSDHashTable *table, const void *key)
 {
     const JSScopeProperty *sprop = (const JSScopeProperty *)key;
@@ -439,7 +439,7 @@ js_HashScopeProperty(JSDHashTable *table, const void *key)
      (((sprop)->flags ^ (aflags)) & ~SPROP_FLAGS_NOT_MATCHED) == 0 &&         \
      (sprop)->shortid == (ashortid))
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 js_MatchScopeProperty(JSDHashTable *table,
                       const JSDHashEntryHdr *hdr,
                       const void *key)
@@ -1617,7 +1617,7 @@ MeterPropertyTree(JSBasicStats *bs, JSScopeProperty *node)
     MeterKidCount(bs, nkids);
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 js_MeterPropertyTree(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
                      void *arg)
 {

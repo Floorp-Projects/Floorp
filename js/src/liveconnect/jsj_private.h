@@ -555,7 +555,7 @@ jsj_WrapJavaObject(JSContext *cx, JNIEnv *jEnv, jobject java_obj, jclass java_cl
 extern void
 jsj_DiscardJavaObjReflections(JNIEnv *jEnv);
 
-extern JSBool JS_DLL_CALLBACK
+extern JSBool
 JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
 JS_EXTERN_API(void)
@@ -610,13 +610,13 @@ jsj_GetJavaErrorMessage(JNIEnv *env);
 extern void
 jsj_LogError(const char *error_msg);
 
-extern const JSErrorFormatString * JS_DLL_CALLBACK
+extern const JSErrorFormatString *
 jsj_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 
-JSJHashNumber JS_DLL_CALLBACK
+JSJHashNumber
 jsj_HashJavaObject(const void *key, void* env);
 
-intN JS_DLL_CALLBACK
+intN
 jsj_JavaObjectComparator(const void *v1, const void *v2, void *arg);
 
 extern JSJavaThreadState *
@@ -643,17 +643,17 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp);
 extern void
 jsj_ExitJava(JSJavaThreadState *jsj_env);
 
-extern JSObjectMap * JS_DLL_CALLBACK
+extern JSObjectMap *
 jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
                          JSClass *clasp, JSObject *obj);
 
-extern void JS_DLL_CALLBACK
+extern void
 jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map);
 
-extern jsval JS_DLL_CALLBACK
+extern jsval
 jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
 
-extern JSBool JS_DLL_CALLBACK
+extern JSBool
 jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
 
 #ifdef DEBUG

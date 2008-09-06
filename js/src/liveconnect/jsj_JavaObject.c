@@ -90,7 +90,7 @@ static JSBool installed_GC_callback = JS_FALSE;
 static JSGCCallback old_GC_callback = NULL;
 static JavaObjectWrapper* deferred_wrappers = NULL;
 
-static JSBool JS_DLL_CALLBACK jsj_GC_callback(JSContext *cx, JSGCStatus status)
+static JSBool jsj_GC_callback(JSContext *cx, JSGCStatus status)
 {
     if (status == JSGC_END && deferred_wrappers) {
         JNIEnv *jEnv;
@@ -372,7 +372,7 @@ jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
     }
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     JavaObjectWrapper *java_wrapper;
@@ -727,7 +727,7 @@ JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaObject_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     jobject java_obj;
@@ -811,7 +811,7 @@ no_such_field:
     return JS_FALSE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                          JSObject **objp, JSProperty **propp)
 {
@@ -851,7 +851,7 @@ JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaObject_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
@@ -861,7 +861,7 @@ JavaObject_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     return JS_FALSE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaObject_getAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
@@ -870,7 +870,7 @@ JavaObject_getAttributes(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaObject_setAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
@@ -884,7 +884,7 @@ JavaObject_setAttributes(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaObject_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSVersion version = JS_GetVersion(cx);
@@ -902,14 +902,14 @@ JavaObject_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaObject_defaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     /* printf("In JavaObject_defaultValue()\n"); */
     return JavaObject_convert(cx, obj, type, vp);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaObject_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                         jsval *statep, jsid *idp)
 {
@@ -976,7 +976,7 @@ JavaObject_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     }
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
                       JSAccessMode mode, jsval *vp, uintN *attrsp)
 {
@@ -993,7 +993,7 @@ JavaObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 
 #define JSJ_SLOT_COUNT (JSSLOT_PRIVATE+1)
 
-JSObjectMap * JS_DLL_CALLBACK
+JSObjectMap *
 jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
                          JSClass *clasp, JSObject *obj)
 {
@@ -1008,13 +1008,13 @@ jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
     return map;
 }
 
-void JS_DLL_CALLBACK
+void
 jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map)
 {
     JS_free(cx, map);
 }
 
-jsval JS_DLL_CALLBACK
+jsval
 jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
 {
     JS_ASSERT(slot < JSJ_SLOT_COUNT);
@@ -1022,7 +1022,7 @@ jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
     return STOBJ_GET_SLOT(obj, slot);
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
     JS_ASSERT(slot < JSJ_SLOT_COUNT);
@@ -1061,7 +1061,7 @@ JSObjectOps JavaObject_ops = {
     jsj_wrapper_setRequiredSlot     /* setRequiredSlot */
 };
 
-JS_STATIC_DLL_CALLBACK(JSObjectOps *)
+static JSObjectOps *
 JavaObject_getObjectOps(JSContext *cx, JSClass *clazz)
 {
     return &JavaObject_ops;
