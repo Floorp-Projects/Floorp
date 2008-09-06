@@ -61,6 +61,7 @@ struct nsMediaFeature {
         // was given (in addition to the types listed below).
         eLength,     // values are such that nsCSSValue::IsLengthUnit() is true
         eInteger,    // values are eCSSUnit_Integer
+        eBoolInteger,// values are eCSSUnit_Integer (0, -0, or 1 only)
         eIntRatio,   // values are eCSSUnit_Array of two eCSSUnit_Integer
         eResolution, // values are in eCSSUnit_Inch (for dpi) or
                      //   eCSSUnit_Centimeter (for dpcm)
