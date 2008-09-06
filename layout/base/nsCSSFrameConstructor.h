@@ -1049,7 +1049,8 @@ private:
                                  nsIFrame*                aPrevSibling,
                                  nsFrameItems&            aFrameItems);
 
-  nsresult RemoveFixedItems(const nsFrameConstructorState& aState);
+  nsresult RemoveFixedItems(const nsFrameConstructorState& aState,
+                            nsIFrame*                      aRootElementFrame);
 
   // Find the right frame to use for aContent when looking for sibling
   // frames for aTargetContent.  If aPrevSibling is true, this
