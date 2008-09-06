@@ -880,6 +880,49 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
     asm_output2("%s %p", _c == AL ? "jmp" : "b(cnd)", (void*)(_t));
 }
 
+void
+Assembler::asm_add_imm(Register rd, Register rn, int32_t imm)
+{
+
+    int rot = 16;
+    uint32_t immval;
+    bool pos;
+
+    if (imm >= 0) {
+        immval = (uint32_t) imm;
+        pos = true;
+    } else {
+        immval = (uint32_t) (-imm);
+        pos = false;
+    }
+
+    while (immval && ((immval & 0x3) == 0)) {
+        immval >>= 2;
+        rot--;
+    }
+
+    rot &= 0xf;
+
+    if (immval < 256) {
+        underrunProtect(4);
+        if (pos)
+            *(--_nIns) = (NIns)( COND_AL | OP_IMM | OP_STAT | (1<<23) | (rn<<16) | (rd<<12) | (rot << 8) | immval );
+        else
+            *(--_nIns) = (NIns)( COND_AL | OP_IMM | OP_STAT | (1<<22) | (rn<<16) | (rd<<12) | (rot << 8) | immval );
+        asm_output3("add %s,%s,%d",gpn(rd),gpn(rn),imm);
+    } else {
+        // add scratch to rn, after loading the value into scratch.
+
+        // make sure someone isn't trying to use Scratch as an operand
+        NanoAssert(rn != Scratch);
+
+        *(--_nIns) = (NIns)( COND_AL | OP_STAT | (1<<23) | (rn<<16) | (rd<<12) | (Scratch));
+        asm_output3("add %s,%s,%s",gpn(rd),gpn(rn),gpn(Scratch));
+
+        LD32_nochk(Scratch, imm);
+    }
+}
+
 /*
  * VFP
  */
