@@ -294,7 +294,7 @@ private:
 
   static int PR_CALLBACK JSOptionChangedCallback(const char *pref, void *data);
 
-  static JSBool JS_DLL_CALLBACK DOMOperationCallback(JSContext *cx);
+  static JSBool DOMOperationCallback(JSContext *cx);
 };
 
 class nsIJSRuntimeService;
@@ -357,6 +357,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSArgArray, NS_IJSARGARRAY_IID)
 nsresult NS_CreateJSRuntime(nsIScriptRuntime **aRuntime);
 
 /* prototypes */
-void JS_DLL_CALLBACK NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
+void NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 
 #endif /* nsJSEnvironment_h___ */

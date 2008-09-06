@@ -120,10 +120,10 @@ extern JSPropertyOp
 js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
                     const JSScopeProperty *sprop);
 
-extern JSBool JS_DLL_CALLBACK
+extern JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-extern JSBool JS_DLL_CALLBACK
+extern JSBool
 js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval);
 

@@ -138,32 +138,31 @@ typedef enum JSTrapStatus {
 } JSTrapStatus;
 
 typedef JSTrapStatus
-(* JS_DLL_CALLBACK JSTrapHandler)(JSContext *cx, JSScript *script,
-                                  jsbytecode *pc, jsval *rval, void *closure);
+(* JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                  void *closure);
 
 typedef JSBool
-(* JS_DLL_CALLBACK JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id,
-                                        jsval old, jsval *newp, void *closure);
+(* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id, jsval old,
+                        jsval *newp, void *closure);
 
 /* called just after script creation */
 typedef void
-(* JS_DLL_CALLBACK JSNewScriptHook)(JSContext  *cx,
-                                    const char *filename,  /* URL of script */
-                                    uintN      lineno,     /* first line */
-                                    JSScript   *script,
-                                    JSFunction *fun,
-                                    void       *callerdata);
+(* JSNewScriptHook)(JSContext  *cx,
+                    const char *filename,  /* URL of script */
+                    uintN      lineno,     /* first line */
+                    JSScript   *script,
+                    JSFunction *fun,
+                    void       *callerdata);
 
 /* called just before script destruction */
 typedef void
-(* JS_DLL_CALLBACK JSDestroyScriptHook)(JSContext *cx,
-                                        JSScript  *script,
-                                        void      *callerdata);
+(* JSDestroyScriptHook)(JSContext *cx,
+                        JSScript  *script,
+                        void      *callerdata);
 
 typedef void
-(* JS_DLL_CALLBACK JSSourceHandler)(const char *filename, uintN lineno,
-                                    jschar *str, size_t length,
-                                    void **listenerTSData, void *closure);
+(* JSSourceHandler)(const char *filename, uintN lineno, jschar *str,
+                    size_t length, void **listenerTSData, void *closure);
 
 /*
  * This hook captures high level script execution and function calls (JS or
@@ -191,16 +190,15 @@ typedef void
  * be called.
  */
 typedef void *
-(* JS_DLL_CALLBACK JSInterpreterHook)(JSContext *cx, JSStackFrame *fp, JSBool before,
-                                      JSBool *ok, void *closure);
+(* JSInterpreterHook)(JSContext *cx, JSStackFrame *fp, JSBool before,
+                      JSBool *ok, void *closure);
 
 typedef void
-(* JS_DLL_CALLBACK JSObjectHook)(JSContext *cx, JSObject *obj, JSBool isNew,
-                                 void *closure);
+(* JSObjectHook)(JSContext *cx, JSObject *obj, JSBool isNew, void *closure);
 
 typedef JSBool
-(* JS_DLL_CALLBACK JSDebugErrorHook)(JSContext *cx, const char *message,
-                                     JSErrorReport *report, void *closure);
+(* JSDebugErrorHook)(JSContext *cx, const char *message, JSErrorReport *report,
+                     void *closure);
 
 typedef struct JSDebugHooks {
     JSTrapHandler       interruptHandler;
@@ -230,7 +228,7 @@ typedef struct JSDebugHooks {
  * variables. See jscntxt.h for details.
  */
 typedef void
-(* JS_DLL_CALLBACK JSTempValueTrace)(JSTracer *trc, JSTempValueRooter *tvr);
+(* JSTempValueTrace)(JSTracer *trc, JSTempValueRooter *tvr);
 
 typedef union JSTempValueUnion {
     jsval               value;

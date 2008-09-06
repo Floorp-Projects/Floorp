@@ -49,52 +49,52 @@
 // This file implements a wrapper around objects that allows them to be
 // accessed safely from across origins.
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_Enumerate(JSContext *cx, JSObject *obj);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                    JSObject **objp);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_XOW_Finalize(JSContext *cx, JSObject *obj);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_CheckAccess(JSContext *cx, JSObject *obj, jsval id, JSAccessMode mode,
                     jsval *vp);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                   jsval *rval);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
-JS_STATIC_DLL_CALLBACK(JSObject *)
+static JSObject *
 XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
 
-JS_STATIC_DLL_CALLBACK(JSObject *)
+static JSObject *
 XPC_XOW_WrappedObject(JSContext *cx, JSObject *obj);
 
 JSExtendedClass sXPC_XOW_JSClass = {
@@ -132,7 +132,7 @@ JSExtendedClass sXPC_XOW_JSClass = {
 // do anything.
 static const int XPC_XOW_ScopeSlot = XPCWrapper::sNumSlots;
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  jsval *rval);
 
@@ -542,7 +542,7 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp)
   return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   // All AddProperty needs to do is pass on addProperty requests to
@@ -582,7 +582,7 @@ XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   return XPCWrapper::AddProperty(cx, obj, wrappedObj, id, vp);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
@@ -737,19 +737,19 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   return WrapSameOriginProp(cx, obj, vp);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   return XPC_XOW_GetOrSetProperty(cx, obj, id, vp, JS_FALSE);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   return XPC_XOW_GetOrSetProperty(cx, obj, id, vp, JS_TRUE);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_Enumerate(JSContext *cx, JSObject *obj)
 {
   obj = GetWrapper(obj);
@@ -777,7 +777,7 @@ XPC_XOW_Enumerate(JSContext *cx, JSObject *obj)
   return XPCWrapper::Enumerate(cx, obj, wrappedObj);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                    JSObject **objp)
 {
@@ -853,7 +853,7 @@ XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   return XPCWrapper::NewResolve(cx, obj, wrappedObj, id, flags, objp);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
   // Don't do any work to convert to object.
@@ -900,7 +900,7 @@ XPC_XOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
          : XPC_XOW_RewrapIfNeeded(cx, obj, vp);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_XOW_Finalize(JSContext *cx, JSObject *obj)
 {
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
@@ -927,7 +927,7 @@ XPC_XOW_Finalize(JSContext *cx, JSObject *obj)
   scope->GetWrapperMap()->Remove(wrappedObj);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_CheckAccess(JSContext *cx, JSObject *obj, jsval prop, JSAccessMode mode,
                     jsval *vp)
 {
@@ -940,7 +940,7 @@ XPC_XOW_CheckAccess(JSContext *cx, JSObject *obj, jsval prop, JSAccessMode mode,
          JS_CheckAccess(cx, GetWrappedObject(cx, obj), id, mode, vp, &junk);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
@@ -975,7 +975,7 @@ XPC_XOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return XPC_XOW_RewrapIfNeeded(cx, callee, rval);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                   jsval *rval)
 {
@@ -1011,7 +1011,7 @@ XPC_XOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return XPC_XOW_RewrapIfNeeded(cx, callee, rval);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
   JSObject *iface = GetWrappedObject(cx, obj);
@@ -1051,7 +1051,7 @@ XPC_XOW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   return clasp->hasInstance(cx, iface, v, bp);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
   // Convert both sides to XPCWrappedNative and see if they match.
@@ -1092,7 +1092,7 @@ XPC_XOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     equality(cx, obj, OBJECT_TO_JSVAL(test), bp);
 }
 
-JS_STATIC_DLL_CALLBACK(JSObject *)
+static JSObject *
 XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
 {
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
@@ -1141,13 +1141,13 @@ XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
                                        keysonly);
 }
 
-JS_STATIC_DLL_CALLBACK(JSObject *)
+static JSObject *
 XPC_XOW_WrappedObject(JSContext *cx, JSObject *obj)
 {
   return GetWrappedObject(cx, obj);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_XOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  jsval *rval)
 {

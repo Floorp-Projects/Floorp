@@ -92,7 +92,7 @@ jsj_CreateJavaMember(JSContext *cx, jsval method_val, jsval field_val)
     return JavaMember_obj;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 JavaMember_finalize(JSContext *cx, JSObject *obj)
 {
     JavaMethodOrFieldValue *member_val;
@@ -103,7 +103,7 @@ JavaMember_finalize(JSContext *cx, JSObject *obj)
     JS_free(cx, member_val);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaMember_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     JavaMethodOrFieldValue *member_val;
@@ -143,14 +143,14 @@ JavaMember_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
  * engine is written now, it's never actually called because when a JavaMember
  * is invoked, it's converted to a JS function via JavaMember_convert().
  */
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaMember_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JS_ASSERT(0);
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 JavaMember_trace(JSTracer *trc, JSObject *obj)
 {
     JavaMethodOrFieldValue *member_val;

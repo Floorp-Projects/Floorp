@@ -451,7 +451,7 @@ NS_IMPL_ISUPPORTS5(nsScriptSecurityManager,
 ///////////////////////////////////////////////////
 
 ///////////////// Security Checks /////////////////
-JSBool JS_DLL_CALLBACK
+JSBool
 nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSObject *obj,
                                            jsval id, JSAccessMode mode,
                                            jsval *vp)

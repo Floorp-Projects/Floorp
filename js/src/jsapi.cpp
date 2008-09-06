@@ -4311,7 +4311,7 @@ JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
 }
 
 JS_BEGIN_EXTERN_C
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval fsv;
@@ -4364,7 +4364,7 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
     return ((JSFastNative) fs->call)(cx, argc, vp);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
                                     uintN argc, jsval *argv, jsval *rval)
 {

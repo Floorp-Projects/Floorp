@@ -193,7 +193,7 @@ struct JSThread {
 #define JS_TRACE_MONITOR(cx)    ((cx)->thread->traceMonitor)
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->thread->scriptsToGC)
 
-extern void JS_DLL_CALLBACK
+extern void
 js_ThreadDestructorCB(void *ptr);
 
 extern JSBool
@@ -966,7 +966,7 @@ class JSAutoTempValueRooter
  * success.
  */
 extern JSBool
-js_InitThreadPrivateIndex(void (JS_DLL_CALLBACK *ptr)(void *));
+js_InitThreadPrivateIndex(void (*ptr)(void *));
 
 /*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context

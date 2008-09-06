@@ -376,7 +376,7 @@ protected:
  * JS environment function and callbacks
  */
 
-JSBool JS_DLL_CALLBACK
+JSBool
 DOMWorkerOperationCallback(JSContext* aCx)
 {
   nsDOMWorkerThread* worker = (nsDOMWorkerThread*)JS_GetContextPrivate(aCx);
@@ -452,7 +452,7 @@ DOMWorkerOperationCallback(JSContext* aCx)
   return JS_TRUE;
 }
 
-void JS_DLL_CALLBACK
+void
 DOMWorkerErrorReporter(JSContext* aCx,
                        const char* aMessage,
                        JSErrorReport* aReport)

@@ -458,7 +458,7 @@ JSBool GetMember(XPCCallContext& ccx, JSObject* funobj, XPCNativeInterface*& ifa
  * @param vp The return value
  * @return Returns JS_TRUE if the operation succeeded
  */
-JSBool JS_DLL_CALLBACK
+JSBool
 XPC_IDispatch_CallMethod(JSContext* cx, JSObject* obj, uintN argc,
                          jsval* argv, jsval* vp)
 {
@@ -492,7 +492,7 @@ XPC_IDispatch_CallMethod(JSContext* cx, JSObject* obj, uintN argc,
  * @param vp The return value
  * @return Returns JS_TRUE if the operation succeeded
  */
-JSBool JS_DLL_CALLBACK
+JSBool
 XPC_IDispatch_GetterSetter(JSContext *cx, JSObject *obj, uintN argc,
                            jsval *argv, jsval *vp)
 {

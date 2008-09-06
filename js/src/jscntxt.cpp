@@ -82,7 +82,7 @@ static JSBool  tpIndexInited = JS_FALSE;
 
 JS_BEGIN_EXTERN_C
 JSBool
-js_InitThreadPrivateIndex(void (JS_DLL_CALLBACK *ptr)(void *))
+js_InitThreadPrivateIndex(void (*ptr)(void *))
 {
     PRStatus status;
 
@@ -101,7 +101,7 @@ JS_END_EXTERN_C
  * Callback function to delete a JSThread info when the thread that owns it
  * is destroyed.
  */
-void JS_DLL_CALLBACK
+void
 js_ThreadDestructorCB(void *ptr)
 {
     JSThread *thread = (JSThread *)ptr;
@@ -521,7 +521,7 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
     return cx;
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+static JSDHashNumber
 resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
     const JSResolvingKey *key = (const JSResolvingKey *)ptr;

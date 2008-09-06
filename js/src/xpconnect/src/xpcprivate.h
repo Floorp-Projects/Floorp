@@ -709,12 +709,12 @@ public:
         return mStrings[index];
     }
 
-    static void JS_DLL_CALLBACK TraceJS(JSTracer* trc, void* data);
+    static void TraceJS(JSTracer* trc, void* data);
     void TraceXPConnectRoots(JSTracer *trc);
     void AddXPConnectRoots(JSContext* cx,
                            nsCycleCollectionTraversalCallback& cb);
 
-    static JSBool JS_DLL_CALLBACK GCCallback(JSContext *cx, JSGCStatus status);
+    static JSBool GCCallback(JSContext *cx, JSGCStatus status);
 
     inline void AddVariantRoot(XPCTraceableVariant* variant);
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
@@ -1171,20 +1171,20 @@ extern JSClass XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
 extern JSClass XPC_WN_Tearoff_JSClass;
 extern JSClass XPC_WN_NoHelper_Proto_JSClass;
 
-extern JSObjectOps * JS_DLL_CALLBACK
+extern JSObjectOps *
 XPC_WN_GetObjectOpsNoCall(JSContext *cx, JSClass *clazz);
 
-extern JSObjectOps * JS_DLL_CALLBACK
+extern JSObjectOps *
 XPC_WN_GetObjectOpsWithCall(JSContext *cx, JSClass *clazz);
 
-extern JSObjectOps * JS_DLL_CALLBACK
+extern JSObjectOps *
 XPC_WN_Proto_GetObjectOps(JSContext *cx, JSClass *clazz);
 
-extern JSBool JS_DLL_CALLBACK
+extern JSBool
 XPC_WN_CallMethod(JSContext *cx, JSObject *obj,
                   uintN argc, jsval *argv, jsval *vp);
 
-extern JSBool JS_DLL_CALLBACK
+extern JSBool
 XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
                     uintN argc, jsval *argv, jsval *vp);
 
@@ -2801,7 +2801,7 @@ private:
     XPCStringConvert();         // not implemented
 };
 
-extern JSBool JS_DLL_CALLBACK
+extern JSBool
 XPC_JSArgumentFormatter(JSContext *cx, const char *format,
                         JSBool fromJS, jsval **vpp, va_list *app);
 

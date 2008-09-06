@@ -137,7 +137,7 @@ define_JavaPackage(JSContext *cx, JSObject *parent_obj,
  * it is illegal to write "java.lang.myProperty = 4".  We probably could relax
  * this restriction, but it's potentially confusing and not clearly useful.
  */
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaPackage_setProperty(JSContext *cx, JSObject *obj, jsval slot, jsval *vp)
 {
     JavaPackage_Private *package = JS_GetPrivate(cx, obj);
@@ -156,7 +156,7 @@ static JSBool quiet_resolve_failure;
 /*
  * Resolve a component name to be either the name of a class or a package.
  */
-JS_STATIC_DLL_CALLBACK(JSBool)
+static  JSBool
 JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
     JavaPackage_Private *package;
@@ -289,7 +289,7 @@ out:
     return ok;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaPackage_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     JSString *str;
@@ -342,7 +342,7 @@ JavaPackage_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 /*
  * Free the private native data associated with the JavaPackage object.
  */
-JS_STATIC_DLL_CALLBACK(void)
+static void
 JavaPackage_finalize(JSContext *cx, JSObject *obj)
 {
     JavaPackage_Private *package = JS_GetPrivate(cx, obj);
@@ -532,7 +532,7 @@ error:
     return JS_FALSE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaPackage_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  jsval *rval)
 {

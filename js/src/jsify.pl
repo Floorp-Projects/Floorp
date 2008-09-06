@@ -418,8 +418,6 @@ sub convert_declarations {
     $line =~ s/PR_EXTERN/JS_EXTERN_API/g;
     $line =~ s/PR_IMPLEMENT_DATA/JS_EXPORT_DATA/g;
     $line =~ s/PR_IMPLEMENT/JS_EXPORT_API/g;
-    $line =~ s/PR_CALLBACK/JS_DLL_CALLBACK/g;
-    $line =~ s/PR_STATIC_CALLBACK/JS_STATIC_DLL_CALLBACK/g;
     $line =~ s/PR_IMPORT/JS_IMPORT/g;
     $line =~ s/PR_PUBLIC_API/JS_EXPORT_API/g;
     $line =~ s/PR_PUBLIC_DATA/JS_EXPORT_DATA/g;
