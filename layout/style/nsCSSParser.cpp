@@ -1671,8 +1671,14 @@ PRBool CSSParserImpl::ParseMediaQueryExpression(nsresult& aErrorCode, nsMediaQue
                                 VARIANT_LENGTH, nsnull);
       break;
     case nsMediaFeature::eInteger:
+    case nsMediaFeature::eBoolInteger:
       rv = ParsePositiveVariant(aErrorCode, expr->mValue,
                                 VARIANT_INTEGER, nsnull);
+      // Enforce extra restrictions for eBoolInteger
+      if (rv &&
+          feature->mValueType == nsMediaFeature::eBoolInteger &&
+          expr->mValue.GetIntValue() > 1)
+        rv = PR_FALSE;
       break;
     case nsMediaFeature::eIntRatio:
       {
