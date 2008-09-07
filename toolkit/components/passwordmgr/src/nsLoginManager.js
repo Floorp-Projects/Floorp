@@ -1091,13 +1091,13 @@ LoginManager.prototype = {
             // If username was specified in the form, only fill in the
             // password if we find a matching login.
 
-            var username = usernameField.value;
+            var username = usernameField.value.toLowerCase();
 
             var matchingLogin;
             var found = logins.some(function(l) {
-                                        matchingLogin = l;
-                                        return (l.username == username);
-                                    });
+                                matchingLogin = l;
+                                return (l.username.toLowerCase() == username);
+                            });
             if (found)
                 selectedLogin = matchingLogin;
             else
