@@ -1,0 +1,18 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml">
+<head>
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="foo" extends="html:input">
+    <content>
+      Foo?
+      <children/>
+    </content>
+  </binding>
+</bindings>
+</head>
+
+<body>
+<div>Hi!</div>
+<div style="-moz-binding: url(#foo)">XXX</div>
+</body>
+
+</html>
