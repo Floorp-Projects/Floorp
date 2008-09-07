@@ -406,6 +406,14 @@ js_ParseInt(JSContext* cx, JSString* str)
     return d;
 }
 
+jsdouble FASTCALL
+js_ParseIntDouble(jsdouble d)
+{
+    if (!JSDOUBLE_IS_FINITE(d))
+        return js_NaN;
+    return floor(d);
+}
+
 jsval FASTCALL
 js_Any_getelem(JSContext* cx, JSObject* obj, JSString* idstr)
 {
