@@ -1724,11 +1724,13 @@ public:
    *  @param aRange is the range that will dictate if the frames need to be redrawn null means the whole content needs to be redrawn
    *  @param aSelected is it selected?
    *  @param aSpread should it spread the selection to flow elements around it? or go down to its children?
+   *  @param aType the selection type of the selection that you are setting on the frame
    */
   NS_IMETHOD  SetSelected(nsPresContext* aPresContext,
                           nsIDOMRange*    aRange,
                           PRBool          aSelected,
-                          nsSpread        aSpread) = 0;
+                          nsSpread        aSpread,
+                          SelectionType   aType) = 0;
 
   NS_IMETHOD  GetSelected(PRBool *aSelected) const = 0;
 

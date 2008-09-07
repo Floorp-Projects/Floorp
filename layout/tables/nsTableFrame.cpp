@@ -1483,7 +1483,8 @@ NS_IMETHODIMP
 nsTableFrame::SetSelected(nsPresContext* aPresContext,
                           nsIDOMRange *aRange,
                           PRBool aSelected,
-                          nsSpread aSpread)
+                          nsSpread aSpread,
+                          SelectionType aType)
 {
 #if 0
   //traverse through children unselect tables
@@ -1498,8 +1499,8 @@ nsTableFrame::SetSelected(nsPresContext* aPresContext,
   // Must call base class to set mSelected state and trigger repaint of frame
   // Note that in current version, aRange and aSpread are ignored,
   //   only this frame is considered
-  nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread);
-  return NS_OK;//return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
+  nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread, aType);
+  return NS_OK;//return nsFrame::SetSelected(aRange,aSelected,eSpreadNone, aType);
   
 }
 
