@@ -685,5 +685,30 @@ extApplication.prototype = {
     return this._events;
   },
 
+  // helper method for correct quitting/restarting
+  _quitWithFlags: function app__quitWithFlags(aFlags) {
+    let os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
+                               .createInstance(Components.interfaces.nsISupportsPRBool);
+    os.notifyObservers(cancelQuit, "quit-application-requested", null);
+    if (cancelQuit.data)
+      return false; // somebody canceled our quit request
+    
+    let appStartup = Components.classes['@mozilla.org/toolkit/app-startup;1']
+                               .getService(Components.interfaces.nsIAppStartup);
+    appStartup.quit(aFlags);
+    return true;
+  },
+
+  quit: function app_quit() {
+    return this._quitWithFlags(Components.interfaces.nsIAppStartup.eAttemptQuit);
+  },
+
+  restart: function app_restart() {
+    return this._quitWithFlags(Components.interfaces.nsIAppStartup.eAttemptQuit |
+                               Components.interfaces.nsIAppStartup.eRestart);
+  },
+
   QueryInterface : XPCOMUtils.generateQI([Ci.extIApplication, Ci.nsISupportsWeakReference])
 };
