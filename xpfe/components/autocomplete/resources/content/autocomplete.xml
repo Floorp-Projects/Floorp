@@ -1306,6 +1306,7 @@
             var oldCount = this.mRowCount;
             this.mRowCount = 0;  
             this.mResults = [];
+            this.mCounts = [];
             
             if (this.mTree) {
               this.mTree.rowCountChanged(0, -oldCount);
