@@ -9,3 +9,11 @@ deckbrowser {
 richlistitem[type="documenttab"] {
     -moz-binding: url("chrome://browser/content/deckbrowser.xml#documenttab");
 }
+
+notification {
+    -moz-binding: url("chrome://browser/content/notification.xml#notification");
+}
+
+notification button {
+    -moz-binding: url("chrome://browser/content/notification.xml#notification-button");
+}
