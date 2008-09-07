@@ -4628,6 +4628,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_math_random,              F_Math_random,          "R",    "",    INFALLIBLE },
         { js_math_log,                 F_Math_log,             "",    "d",    INFALLIBLE },
         { js_num_parseInt,             F_ParseInt,             "C",   "s",    INFALLIBLE },
+        { js_num_parseInt,             F_ParseIntDouble,       "",    "d",    INFALLIBLE },
         { js_num_parseFloat,           F_ParseFloat,           "C",   "s",    INFALLIBLE },
         { js_num_toString,             F_NumberToString,       "TC",   "",    FAIL_NULL },
         { js_obj_hasOwnProperty,       F_Object_p_hasOwnProperty,

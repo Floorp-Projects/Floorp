@@ -77,6 +77,7 @@ BUILTIN2(CompareStrings,        LO,     LO, LO, bool,      JSString*, JSString*,
 BUILTIN2(StringToNumber,        LO,     LO, F,  jsdouble,  JSContext*, JSString*, 1, 1)
 BUILTIN2(StringToInt32,         LO,     LO, LO, jsint,     JSContext*, JSString*, 1, 1)
 BUILTIN2(ParseInt,              LO,     LO, F,  jsdouble,  JSContext*, JSString*, 1, 1)
+BUILTIN1(ParseIntDouble,        F,          F,  jsdouble,  jsdouble, 1, 1)
 BUILTIN2(ParseFloat,            LO,     LO, F,  jsdouble,  JSContext*, JSString*, 1, 1)
 BUILTIN3(Any_getelem,           LO, LO, LO, P,  jsval,     JSContext*, JSObject*, JSString*, 0, 0)
 BUILTIN4(Any_setelem,           LO, LO, LO, LO, LO, bool,  JSContext*, JSObject*, JSString*, jsval, 0, 0)
