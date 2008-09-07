@@ -2825,9 +2825,8 @@ const DOMLinkHandler = {
             if (!rels.feed && rels.alternate && rels.stylesheet)
               break;
 
-            var feed = { title: link.title, href: link.href, type: link.type };
-            if (isValidFeed(feed, link.ownerDocument.nodePrincipal, rels.feed)) {
-              FeedHandler.addFeed(feed, link.ownerDocument);
+            if (isValidFeed(link, link.ownerDocument.nodePrincipal, rels.feed)) {
+              FeedHandler.addFeed(link, link.ownerDocument);
               feedAdded = true;
             }
           }

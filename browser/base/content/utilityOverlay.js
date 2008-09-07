@@ -631,7 +631,7 @@ function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
 /**
  * isValidFeed: checks whether the given data represents a valid feed.
  *
- * @param  aData
+ * @param  aLink
  *         An object representing a feed with title, href and type.
  * @param  aPrincipal
  *         The principal of the document, used for security check.
@@ -639,33 +639,28 @@ function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
  *         Whether this is already a known feed or not, if true only a security
  *         check will be performed.
  */ 
-function isValidFeed(aData, aPrincipal, aIsFeed)
+function isValidFeed(aLink, aPrincipal, aIsFeed)
 {
-  if (!aData || !aPrincipal)
+  if (!aLink || !aPrincipal)
     return false;
 
+  var type = aLink.type.toLowerCase().replace(/^\s+|\s*(?:;.*)?$/g, "");
   if (!aIsFeed) {
-    var type = aData.type && aData.type.toLowerCase();
-    type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");
-
     aIsFeed = (type == "application/rss+xml" ||
                type == "application/atom+xml");
   }
 
   if (aIsFeed) {
     try {
-      urlSecurityCheck(aData.href, aPrincipal,
+      urlSecurityCheck(aLink.href, aPrincipal,
                        Components.interfaces.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+      return type || "application/rss+xml";
     }
     catch(ex) {
-      aIsFeed = false;
     }
   }
 
-  if (type)
-    aData.type = type;
-
-  return aIsFeed;
+  return null;
 }
 
 // aCalledFromModal is optional
