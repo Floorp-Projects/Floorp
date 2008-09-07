@@ -1986,25 +1986,31 @@ ServerHandler.prototype =
             contentType = "application/octet-stream";
           }
 
-          if (data.length)
-          {
-            dumpn("PUT data \'"+data+"\' for "+path);
-            this._putDataOverrides[path] =
-              function(ametadata, aresponse)
-              {
-                aresponse.setStatusLine(metadata.httpVersion, 200, "OK");
-                aresponse.setHeader("Content-Type", contentType, false);
-                dumpn("*** writting PUT data=\'"+data+"\'");
-                aresponse.bodyOutputStream.write(data, data.length);
-              };
-          }
-          else
+          dumpn("PUT data \'"+data+"\' for "+path);
+          this._putDataOverrides[path] =
+            function(ametadata, aresponse)
+            {
+              aresponse.setStatusLine(metadata.httpVersion, 200, "OK");
+              aresponse.setHeader("Content-Type", contentType, false);
+              dumpn("*** writting PUT data=\'"+data+"\'");
+              aresponse.bodyOutputStream.write(data, data.length);
+            };
+
+          response.setStatusLine(metadata.httpVersion, 200, "OK");
+        }
+        else if (metadata.method == "DELETE")
+        {
+          if (path in this._putDataOverrides)
           {
             delete this._putDataOverrides[path];
             dumpn("clearing PUT data for "+path);
+            response.setStatusLine(metadata.httpVersion, 200, "OK");
           }
-
-          response.setStatusLine(metadata.httpVersion, 200, "OK");
+          else
+          {
+            dumpn("no PUT data for "+path+" to delete");
+            response.setStatusLine(metadata.httpVersion, 204, "No Content");
+          }
         }
         else if (path in this._putDataOverrides)
         {
