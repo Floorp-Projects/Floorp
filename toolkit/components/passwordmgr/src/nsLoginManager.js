@@ -339,10 +339,13 @@ LoginManager.prototype = {
                     // not, the DOM has been altered and we'll just give up.
                     var [usernameField, passwordField, ignored] =
                         this._pwmgr._getFormFields(acForm, false);
-                    if (usernameField == acInputField)
+                    if (usernameField == acInputField && passwordField) {
+                        // Clobber any existing password.
+                        passwordField.value = "";
                         this._pwmgr._fillForm(acForm, true, true, null);
-                    else
+                    } else {
                         this._pwmgr.log("Oops, form changed before AC invoked");
+                    }
                     return;
 
                 default:
@@ -1017,11 +1020,6 @@ LoginManager.prototype = {
             return [false, foundLogins];
         }
 
-        // If there's only a password field and it has a value, there's
-        // nothing for us to do. (Don't clobber the existing value)
-        if (!usernameField && passwordField.value)
-            return [false, foundLogins];
-
         // Need to get a list of logins if we weren't given them
         if (foundLogins == null) {
             var formOrigin = 
@@ -1066,6 +1064,10 @@ LoginManager.prototype = {
         // but even with one account we should refill if the user edits.
         if (usernameField)
             this._attachToInput(usernameField);
+
+        // Don't clobber an existing password.
+        if (passwordField.value)
+            return [false, foundLogins];
 
         // If the form has an autocomplete=off attribute in play, don't
         // fill in the login automatically. We check this after attaching
