@@ -242,19 +242,22 @@ NS_IMETHODIMP
 nsSVGGlyphFrame::SetSelected(nsPresContext* aPresContext,
                              nsIDOMRange*    aRange,
                              PRBool          aSelected,
-                             nsSpread        aSpread)
+                             nsSpread        aSpread,
+                             SelectionType   aType)
 {
 #if defined(DEBUG) && defined(SVG_DEBUG_SELECTION)
   printf("nsSVGGlyphFrame(%p)::SetSelected()\n", this);
 #endif
-//  return nsSVGGlyphFrameBase::SetSelected(aPresContext, aRange, aSelected, aSpread);
+//  return nsSVGGlyphFrameBase::SetSelected(aPresContext, aRange, aSelected, aSpread, aType);
 
-  // check whether style allows selection
-  PRBool  selectable;
-  IsSelectable(&selectable, nsnull);
-  if (!selectable)
-    return NS_OK;
-  
+  if (aType == nsISelectionController::SELECTION_NORMAL) {
+    // check whether style allows selection
+    PRBool  selectable;
+    IsSelectable(&selectable, nsnull);
+    if (!selectable)
+      return NS_OK;
+  }
+
   if ( aSelected ){
     mState |=  NS_FRAME_SELECTED_CONTENT;
   }
