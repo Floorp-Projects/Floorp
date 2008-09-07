@@ -44,7 +44,7 @@
 <!ENTITY aboutWarningCheckbox.label "Show this warning next time">
 
 <!ENTITY filterPrefs.label "Filter:">
-<!ENTITY filterPrefs.accesskey "I">
+<!ENTITY filterPrefs.accesskey "F">
 
 <!-- Columns -->
 <!ENTITY prefColumn.label "Preference Name">
