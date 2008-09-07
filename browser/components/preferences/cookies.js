@@ -875,44 +875,44 @@ var gCookiesWindow = {
         this._openIndices.push(i);
     }
   },
-  
+
   filter: function ()
   {
-      var filter = document.getElementById("filter").value;
-      if (filter == "") {
-        gCookiesWindow.clearFilter();
-        return;
-      }
-      var view = gCookiesWindow._view;
-      view._filterSet = gCookiesWindow._filterCookies(filter);
-      if (!view._filtered) {
-        // Save Display Info for the Non-Filtered mode when we first
-        // enter Filtered mode. 
-        gCookiesWindow._saveState();
-        view._filtered = true;
-      }
-      // Move to multi-select in the tree
-      gCookiesWindow._tree.setAttribute("seltype", "multiple");
-      
-      // Clear the display
-      var oldCount = view._rowCount;
-      view._rowCount = 0;
-      gCookiesWindow._tree.treeBoxObject.rowCountChanged(0, -oldCount);
-      // Set up the filtered display
-      view._rowCount = view._filterSet.length;
-      gCookiesWindow._tree.treeBoxObject.rowCountChanged(0, view.rowCount);
-      
-      // if the view is not empty then select the first item
-      if (view.rowCount > 0)
-        view.selection.select(0);
+    var filter = document.getElementById("filter").value;
+    if (filter == "") {
+      gCookiesWindow.clearFilter();
+      return;
+    }
+    var view = gCookiesWindow._view;
+    view._filterSet = gCookiesWindow._filterCookies(filter);
+    if (!view._filtered) {
+      // Save Display Info for the Non-Filtered mode when we first
+      // enter Filtered mode.
+      gCookiesWindow._saveState();
+      view._filtered = true;
+    }
+    // Move to multi-select in the tree
+    gCookiesWindow._tree.setAttribute("seltype", "multiple");
 
-      document.getElementById("cookiesIntro").value = gCookiesWindow._bundle.getString("cookiesFiltered");
+    // Clear the display
+    var oldCount = view._rowCount;
+    view._rowCount = 0;
+    gCookiesWindow._tree.treeBoxObject.rowCountChanged(0, -oldCount);
+    // Set up the filtered display
+    view._rowCount = view._filterSet.length;
+    gCookiesWindow._tree.treeBoxObject.rowCountChanged(0, view.rowCount);
+
+    // if the view is not empty then select the first item
+    if (view.rowCount > 0)
+      view.selection.select(0);
+
+    document.getElementById("cookiesIntro").value = gCookiesWindow._bundle.getString("cookiesFiltered");
   },
-  
+
   focusFilterBox: function ()
-  { 
+  {
     var filter = document.getElementById("filter");
     filter.focus();
     filter.select();
-  },
+  }
 };
