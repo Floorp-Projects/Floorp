@@ -67,8 +67,11 @@ var gCookiesWindow = {
 
     if ("arguments" in window && window.arguments[0] &&
         window.arguments[0].filterString)
-      this.setFilter(window.arguments[0].filterString);
-    
+    {
+      document.getElementById("filter").value = window.arguments[0].filterString;
+      this.filter();
+    }
+
     this._saveState();
       
     document.getElementById("filter").focus();
@@ -790,8 +793,7 @@ var gCookiesWindow = {
     // Revert to single-select in the tree
     this._tree.setAttribute("seltype", "single");
     
-    // Clear the Filter and the Tree Display
-    document.getElementById("filter").value = "";
+    // Clear the Tree Display
     this._view._filtered = false;
     this._view._rowCount = 0;
     this._tree.treeBoxObject.rowCountChanged(0, -this._view._filterSet.length);
@@ -826,8 +828,6 @@ var gCookiesWindow = {
     this._lastSelectedRanges = [];
 
     document.getElementById("cookiesIntro").value = this._bundle.getString("cookiesAll");
-    document.getElementById("clearFilter").disabled = true;
-    document.getElementById("filter").focus();
   },
   
   _cookieMatchesFilter: function (aCookie)
@@ -876,19 +876,13 @@ var gCookiesWindow = {
     }
   },
   
-  _filterTimeout: -1,
-  onFilterInput: function ()
+  filter: function ()
   {
-    if (this._filterTimeout != -1)
-      clearTimeout(this._filterTimeout);
-   
-    function filterCookies()
-    {
       var filter = document.getElementById("filter").value;
       if (filter == "") {
         gCookiesWindow.clearFilter();
         return;
-      }        
+      }
       var view = gCookiesWindow._view;
       view._filterSet = gCookiesWindow._filterCookies(filter);
       if (!view._filtered) {
@@ -913,17 +907,6 @@ var gCookiesWindow = {
         view.selection.select(0);
 
       document.getElementById("cookiesIntro").value = gCookiesWindow._bundle.getString("cookiesFiltered");
-      document.getElementById("clearFilter").disabled = false;
-    }
-    window.filterCookies = filterCookies;
-    this._filterTimeout = setTimeout("filterCookies();", 500);
-  },
-  
-  onFilterKeyPress: function (aEvent)
-  {
-    var filter = document.getElementById("filter").value;
-    if (aEvent.keyCode == 27 && filter != "") // ESC key
-      this.clearFilter();
   },
   
   focusFilterBox: function ()
@@ -932,11 +915,4 @@ var gCookiesWindow = {
     filter.focus();
     filter.select();
   },
-
-  setFilter: function (aFilterString)
-  {
-    document.getElementById("filter").value = aFilterString;
-    this.onFilterInput();
-  }
 };
-
