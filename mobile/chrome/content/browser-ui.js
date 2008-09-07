@@ -1,3 +1,4 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -48,6 +49,7 @@ const PANELMODE_ADDONS            = 5;
 const PANELMODE_SIDEBAR           = 6;
 const PANELMODE_TABLIST           = 7;
 const PANELMODE_FULL              = 8;
+const PANELMODE_PREFS             = 9;
 
 const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
 
@@ -452,6 +454,11 @@ var BrowserUI = {
     var tablist = document.getElementById("tab-list-container");
     var addons = document.getElementById("addons-container");
     var container = document.getElementById("browser-container");
+    var prefs = document.getElementById("pref-pane");
+
+    // Make sure the UI elements are sized correctly since the window size can change
+    sidebar.left = container.boxObject.width;
+    sidebar.height = tablist.height = container.boxObject.height;
 
     if (aMode == PANELMODE_URLVIEW || aMode == PANELMODE_SIDEBAR ||
         aMode == PANELMODE_TABLIST || aMode == PANELMODE_FULL)
@@ -464,6 +471,7 @@ var BrowserUI = {
       bookmark.hidden = true;
       urllist.hidden = true;
       addons.hidden = true;
+      prefs.hidden = true;
 
       let sidebarTo = toolbar.boxObject.width;
       let tablistTo = -tablist.boxObject.width;
@@ -484,6 +492,8 @@ var BrowserUI = {
       bookmark.hidden = true;
       urllist.hidden = true;
       addons.hidden = true;
+      prefs.hidden = true;
+
       sidebar.left = toolbar.boxObject.width;
       tablist.left = -tablist.boxObject.width;
     }
@@ -500,6 +510,8 @@ var BrowserUI = {
 
       bookmark.hidden = false;
       addons.hidden = true;
+      prefs.hidden = true;
+
       bookmark.width = container.boxObject.width;
     }
     else if (aMode == PANELMODE_BOOKMARKLIST) {
@@ -511,6 +523,8 @@ var BrowserUI = {
 
       bookmark.hidden = true;
       addons.hidden = true;
+      prefs.hidden = true;
+
       sidebar.left = toolbar.boxObject.width;
       tablist.left = -tablist.boxObject.width;
 
@@ -526,6 +540,7 @@ var BrowserUI = {
       this._caption.hidden = false;
 
       bookmark.hidden = true;
+      prefs.hidden = true;
       sidebar.left = toolbar.boxObject.width;
       tablist.left = -tablist.boxObject.width;
 
@@ -537,8 +552,28 @@ var BrowserUI = {
       addons.width = container.boxObject.width;
       addons.height = container.boxObject.height - toolbar.boxObject.height;
     }
-    else if (aMode == PANELMODE_NONE) {
+    else if (aMode == PANELMODE_PREFS) {
+      this._showToolbar();
+      toolbar.setAttribute("mode", "view");
+      this._edit.hidden = true;
+      this._edit.reallyClosePopup();
+      this._caption.hidden = false;
+
+      bookmark.hidden = true;
+      urllist.hidden = true;
+      addons.hidden = true;
+      prefs.hidden = false;
+      sidebar.left = toolbar.boxObject.width;
+      tablist.left = -tablist.boxObject.width;
+
+      prefs.width = container.boxObject.width;
+      prefs.height = container.boxObject.height - toolbar.boxObject.height;
+
+      PreferencesUI.init();
+    }
+      else if (aMode == PANELMODE_NONE) {
       this._hideToolbar();
+
       sidebar.left = toolbar.boxObject.width;
       tablist.left = -tablist.boxObject.width;
 
@@ -546,6 +581,7 @@ var BrowserUI = {
       urllist.hidden = true;
       bookmark.hidden = true;
       addons.hidden = true;
+      prefs.hidden = true;
     }
   },
 
@@ -685,6 +721,8 @@ var BrowserUI = {
       case "cmd_closeTab":
       case "cmd_addons":
       case "cmd_actions":
+      case "cmd_prefs":
+      case "cmd_sanitize":
         isSupported = true;
         break;
       default:
@@ -750,7 +788,7 @@ var BrowserUI = {
         break;
       case "cmd_menu":
         // XXX Remove PANELMODE_ADDON when design changes
-        if (this.mode == PANELMODE_FULL || this.mode == PANELMODE_ADDONS)
+        if (this.mode == PANELMODE_FULL || this.mode == PANELMODE_ADDONS || this.mode == PANELMODE_PREFS)
           this.show(PANELMODE_NONE);
         else
           this.show(PANELMODE_FULL);
@@ -762,8 +800,14 @@ var BrowserUI = {
         Browser.content.removeTab(Browser.content.browser);
         break;
       case "cmd_addons":
-      case "cmd_actions":
         this.show(PANELMODE_ADDONS);
+        break;
+      case "cmd_prefs":
+      case "cmd_actions":
+        this.show(PANELMODE_PREFS);
+        break;
+      case "cmd_sanitize":
+        Sanitizer.sanitize();
         break;
     }
   }
