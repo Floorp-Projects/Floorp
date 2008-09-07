@@ -43,26 +43,39 @@ var paths =
   [
    "http://localhost:4444/my/first-path/override/",
    "http://localhost:4444/my/second-path/override",
+   "http://localhost:4444/my/second-path/override",
    "http://localhost:4444/my/second-path/override"
+  ];
+  
+var methods =
+  [
+   "PUT",
+   "PUT",
+   "DELETE",
+   "DELETE"
   ];
   
 var contents =
   [
    "First content",
    "Second content",
-   "" // null means delete of the PUT data
+   // The third is missing - it is being deleted from the server
   ];
 
-var contents =
+var putResponses =
   [
-   "First content",
-   "Second content",
-   ""
+   200,
+   200,
+   200,
+   204
   ];
-
+  
 var success =
   [
-   true, true, false
+   true, 
+   true, 
+   false,
+   false
   ];
 
 var currPathIndex = 0;
@@ -78,6 +91,8 @@ var uploadListener =
     // NSIREQUESTOBSERVER
     onStartRequest: function(request, cx)
     {
+      var ch = request.QueryInterface(Ci.nsIHttpChannel);
+      do_check_eq(ch.responseStatus, putResponses[currPathIndex]);
     },
     onStopRequest: function(request, cx, status)
     {
@@ -153,12 +168,25 @@ function performNextTest()
   do_test_pending();
 
   var ch = makeChannel(paths[currPathIndex]);
-  var stream = Cc["@mozilla.org/io/string-input-stream;1"]
-      .createInstance(Ci.nsIStringInputStream);
-  stream.setData(contents[currPathIndex], contents[currPathIndex].length);
-     
-  var upch = ch.QueryInterface(Ci.nsIUploadChannel);
-  upch.setUploadStream(stream, "application/x-moz-put-test", stream.available());
+
+  var method = methods[currPathIndex];
+  switch (method)
+  {
+  case "PUT":
+    var stream = Cc["@mozilla.org/io/string-input-stream;1"]
+        .createInstance(Ci.nsIStringInputStream);
+    stream.setData(contents[currPathIndex], contents[currPathIndex].length);
+
+    var upch = ch.QueryInterface(Ci.nsIUploadChannel);
+    upch.setUploadStream(stream, "application/x-moz-put-test", stream.available());
+    break;
+    
+  case "DELETE":
+    var httpch = ch.QueryInterface(Ci.nsIHttpChannel);
+    httpch.requestMethod = method;
+    break;
+  }
+
   ch.asyncOpen(uploadListener, null);
 }
 
