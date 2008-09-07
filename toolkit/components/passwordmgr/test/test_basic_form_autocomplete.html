@@ -53,6 +53,13 @@ Login Manager test: multiple login autocomplete
     <input  type="password"   name="pword">
     <button type="submit">Submit</button>
   </form>
+
+  <!-- This form will be manipulated to insert a different username field. -->
+  <form id="form7" action="http://autocomplete3" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
 </div>
 
 <pre id="test">
@@ -103,6 +110,13 @@ var login5 = new nsLoginInfo(
     "http://localhost:8888", "http://autocomplete2", null,
     "singleuser5", "singlepass5", "uname", "pword");
 
+var login6A = new nsLoginInfo(
+    "http://localhost:8888", "http://autocomplete3", null,
+    "form7user1", "form7pass1", "uname", "pword");
+var login6B = new nsLoginInfo(
+    "http://localhost:8888", "http://autocomplete3", null,
+    "form7user2", "form7pass2", "uname", "pword");
+
 // try/catch in case someone runs the tests manually, twice.
 try {
     pwmgr.addLogin(login1);
@@ -110,6 +124,8 @@ try {
     pwmgr.addLogin(login3);
     pwmgr.addLogin(login4);
     pwmgr.addLogin(login5);
+    pwmgr.addLogin(login6A);
+    pwmgr.addLogin(login6B);
 } catch (e) {
     ok(false, "addLogin threw: " + e);
 }
@@ -534,10 +550,53 @@ function runTest(testNum) {
         pword = $_(6, "pword");
         checkACForm("singleuser5", "singlepass5");
 
-        /* FALLTHRU */
+        pwmgr.removeLogin(login5);
+        testNum = 499;
+        break;
+
+    case 500:
+        // Turn our attention to form7
+        uname = $_(7, "uname");
+        pword = $_(7, "pword");
+        checkACForm("", "");
+
+        // Insert a new username field into the form. We'll then make sure
+        // that invoking the autocomplete doesn't try to fill the form.
+        var newField = document.createElement("input");
+        newField.setAttribute("type", "text");
+        newField.setAttribute("name", "uname2");
+        pword.parentNode.insertBefore(newField, pword);
+        is($_(7, "uname2").value, "", "Verifying empty uname2");;
+
+        // Delete login6B. It was created just to prevent filling in a login
+        // automatically, removing it makes it more likely that we'll catch a
+        // future regression with form filling here.
+        pwmgr.removeLogin(login6B);
+
+        // Trigger autocomplete popup
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 501:
+        // Check first entry
+        doKey("down");
+        checkACForm("", ""); // value shouldn't update
+        doKey("return"); // not "enter"!
+        // The form changes, so we expect the old username field to get the
+        // selected autocomplete value, but neither the new username field nor
+        // the password field should have any values filled in.
+        checkACForm("form7user1", "");
+        is($_(7, "uname2").value, "", "Verifying empty uname2");;
+
+        pwmgr.removeLogin(login6A);
+
+
+        SimpleTest.finish();
+        return;
 
     default:
-        pwmgr.removeLogin(login5);
+        ok(false, "Unexpected invocataion of test #" + testNum);
         SimpleTest.finish();
         return;
   }
