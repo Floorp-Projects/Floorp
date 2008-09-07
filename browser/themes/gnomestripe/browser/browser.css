@@ -1132,21 +1132,17 @@ statusbarpanel#statusbar-display {
 }
 
 #security-button {
-  list-style-image: none;
   min-width: 20px;
   -moz-box-direction: reverse;
-  display: none;
 }
 
 #security-button[level="high"],
 #security-button[level="low"] {
   list-style-image: url("chrome://browser/skin/Secure.png");
-  display: -moz-box;
 }
 
 #security-button[level="broken"] {
   list-style-image: url("chrome://browser/skin/Security-broken.png");
-  display: -moz-box;
 }
 
 /* XXXsw prevent margins of a value-less label from shifting the image */
