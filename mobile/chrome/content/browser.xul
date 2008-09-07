@@ -40,12 +40,15 @@
 
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/richpref.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %brandDTD;
+<!ENTITY % prefsDTD SYSTEM "chrome://browser/locale/preferences.dtd">
+%prefsDTD;
 ]>
 
 <window id="main-window"
@@ -61,6 +64,7 @@
   <script type="application/x-javascript" src="chrome://browser/content/commandUtil.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/browser-ui.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser"  src="chrome://browser/locale/browser.properties"/>
@@ -90,6 +94,7 @@
     <command id="cmd_addons" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_downloads" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_actions" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_sanitize" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- scrolling -->
     <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -270,6 +275,39 @@
 
     <vbox id="addons-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
       <iframe id="addons-items-container" flex="1" src=""/>
+    </vbox>
+
+    <vbox id="pref-pane" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
+      <hbox pack="center" id="buttons"/>
+      <richlistbox id="pref-list" seltype="single" flex="1">
+        <richlistitem class="section">
+          <label class="sectiontitle" value="&content.title;" crop="end" flex="1"/>
+        </richlistitem>
+        <richpref pref="permissions.default.image" title="&permissions.default.image.title;" type="boolint" on="1" off="2">
+          &permissions.default.image.description;
+        </richpref>
+        <richpref pref="javascript.enabled" type="bool" title="&javascript.enabled.title;">
+          &javascript.enabled.description;
+        </richpref>
+        <richpref pref="plugins.enabled" type="bool" title="&plugins.enabled.title;">
+          &plugins.enabled.description;
+        </richpref>
+
+        <richlistitem class="section">
+          <label class="sectiontitle" value="&privacy.title;" crop="end" flex="1"/>
+        </richlistitem>
+        <richpref pref="network.cookie.cookieBehavior" title="&network.cookie.cookieBehavior.title;" type="boolint" on="1" off="3">
+          &network.cookie.cookieBehavior.description;
+        </richpref>
+        <richpref title="&clear.private.data.title;" type="button">
+          &clear.private.data.description;
+          <button label="&clear.private.data.button;" command="cmd_sanitize"/>
+        </richpref>
+
+      </richlistbox>
+      <hbox pack="end">
+        <button label="Dismiss" oncommand="BrowserUI.show(PANELMODE_NONE);"/>
+      </hbox>
     </vbox>
   </stack>
 

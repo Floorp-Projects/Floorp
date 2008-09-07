@@ -228,3 +228,14 @@ pref("places.frecency.tempRedirectVisitBonus", 0);
 pref("places.frecency.defaultVisitBonus", 0);
 pref("places.frecency.unvisitedBookmarkBonus", 140);
 pref("places.frecency.unvisitedTypedBonus", 200);
+
+// controls which bits of private data to clear. by default we clear them all.
+pref("privacy.sanitize.promptOnSanitize", false);
+pref("privacy.item.cache", true);
+pref("privacy.item.cookies", true);
+pref("privacy.item.offlineApps", true);
+pref("privacy.item.history", true);
+pref("privacy.item.formdata", true);
+pref("privacy.item.downloads", true);
+pref("privacy.item.passwords", true);
+pref("privacy.item.sessions", true);
