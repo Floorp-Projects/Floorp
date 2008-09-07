@@ -163,26 +163,30 @@ var Browser = {
         var bundle_browser = document.getElementById("bundle_browser");
         var buttons = [{
             label: bundle_browser.getString("gelocation.exactLocation"),
+            subLabel: bundle_browser.getString("gelocation.exactLocation.subLabel"),
             accessKey: bundle_browser.getString("gelocation.exactLocationKey"),
             callback: function(){request.allow()}
           },
           {
             label: bundle_browser.getString("gelocation.neighborhoodLocation"),
+            subLabel: bundle_browser.getString("gelocation.neighborhoodLocation.subLabel"),
             accessKey: bundle_browser.getString("gelocation.neighborhoodLocationKey"),
             callback: function(){request.allowButFuzz()}
           },
           {
             label: bundle_browser.getString("gelocation.nothingLocation"),
+            subLabel: "",
             accessKey: bundle_browser.getString("gelocation.nothingLocationKey"),
             callback: function(){request.cancel()}
           }];
 
         var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);
-        notificationBox.appendNotification(message,
-                                           "geolocation",
-                                           null, // todo "chrome://browser/skin/Info.png",
-                                           notificationBox.PRIORITY_INFO_HIGH,
-                                           buttons);
+        var notification = notificationBox.appendNotification(message,
+                             "geolocation", null, // todo "chrome://browser/skin/Info.png",
+                             notificationBox.PRIORITY_INFO_HIGH, buttons);
+        var children = notification.childNodes;
+        for (var b = 0; b < children.length; b++)
+          children[b].setAttribute("sublabel", children[b].buttonInfo.subLabel);
         return 1;
       }
     }

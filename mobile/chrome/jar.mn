@@ -8,6 +8,7 @@ browser.jar:
   content/commandUtil.js               (content/commandUtil.js)
   content/urlbar.xml                   (content/urlbar.xml)
   content/deckbrowser.xml              (content/deckbrowser.xml)
+  content/notification.xml             (content/notification.xml)
   content/browser.css                  (content/browser.css)
   content/scrollbars.css               (content/scrollbars.css)
   content/content.css                  (content/content.css)
@@ -21,6 +22,7 @@ classic.jar:
 % skin browser classic/1.0 %
   browser.css                          (skin/browser.css)
   extensions.css                       (skin/extensions.css)
+  notification.css                     (skin/notification.css)
   images/close.png                     (skin/images/close.png)
   images/close-small.png               (skin/images/close-small.png)
   images/default-favicon.png           (skin/images/default-favicon.png)
