@@ -47,20 +47,27 @@
 nsresult
 net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 {
-    // NOTE: This is identical to the implementation in nsURLHelperOSX.cpp
-
     nsresult rv;
+    nsCAutoString nativePath, ePath;
     nsAutoString path;
 
-    // construct URL spec from  file path
-    rv = aFile->GetPath(path);
+    rv = aFile->GetNativePath(nativePath);
     if (NS_FAILED(rv)) return rv;
 
+    // Convert to unicode and back to check correct conversion to native charset
+    NS_CopyNativeToUnicode(nativePath, path);
+    NS_CopyUnicodeToNative(path, ePath);
+
+    // Use UTF8 version if conversion was successful
+    if (nativePath == ePath)
+        CopyUTF16toUTF8(path, ePath);
+    else
+        ePath = nativePath;
+    
     nsCAutoString escPath;
     NS_NAMED_LITERAL_CSTRING(prefix, "file://");
         
     // Escape the path with the directory mask
-    NS_ConvertUTF16toUTF8 ePath(path);
     if (NS_EscapeURL(ePath.get(), -1, esc_Directory+esc_Forced, escPath))
         escPath.Insert(prefix, 0);
     else
