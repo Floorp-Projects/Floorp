@@ -328,6 +328,11 @@ var BrowserUI = {
   /* Set the location to the current content */
   setURI : function() {
     var browser = Browser.currentBrowser;
+
+    // FIXME: deckbrowser should not fire TebSelect on the initial tab (bug 454028)
+    if (!browser.currentURI)
+      return;
+
     var back = document.getElementById("cmd_back");
     var forward = document.getElementById("cmd_forward");
 
