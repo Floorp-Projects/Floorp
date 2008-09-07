@@ -650,13 +650,6 @@ function isValidFeed(aData, aPrincipal, aIsFeed)
 
     aIsFeed = (type == "application/rss+xml" ||
                type == "application/atom+xml");
-
-    if (!aIsFeed) {
-      // really slimy: general XML types with magic letters in the title
-      const titleRegex = /(^|\s)rss($|\s)/i;
-      aIsFeed = ((type == "text/xml" || type == "application/rdf+xml" ||
-                  type == "application/xml") && titleRegex.test(aData.title));
-    }
   }
 
   if (aIsFeed) {
