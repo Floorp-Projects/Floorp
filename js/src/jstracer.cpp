@@ -3938,7 +3938,10 @@ TraceRecorder::record_JSOP_NOT()
         return true;
     }
     if (JSVAL_IS_INT(v) || JSVAL_IS_OBJECT(v)) {
-        set(&v, lir->ins_eq0(get(&v)));
+        LIns* a = get(&v);
+        if (JSVAL_IS_INT(v) && isPromoteInt(a))
+            a = ::demote(lir, a);
+        set(&v, lir->ins_eq0(a));
         return true;
     }
     return false;
