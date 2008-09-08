@@ -260,13 +260,12 @@ txMozillaXMLOutput::endDocument(nsresult aResult)
     }
 
     if (!mRefreshString.IsEmpty()) {
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-        nsPIDOMWindow *win = doc->GetWindow();
+        nsPIDOMWindow *win = mDocument->GetWindow();
         if (win) {
             nsCOMPtr<nsIRefreshURI> refURI =
                 do_QueryInterface(win->GetDocShell());
             if (refURI) {
-                refURI->SetupRefreshURIFromHeader(doc->GetBaseURI(),
+                refURI->SetupRefreshURIFromHeader(mDocument->GetBaseURI(),
                                                   mRefreshString);
             }
         }
@@ -774,18 +773,16 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
         // The first base wins
         mHaveBaseElement = PR_TRUE;
 
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-        NS_ASSERTION(doc, "document doesn't implement nsIDocument");
         nsAutoString value;
         aElement->GetAttr(kNameSpaceID_None, txHTMLAtoms::target, value);
-        doc->SetBaseTarget(value);
+        mDocument->SetBaseTarget(value);
 
         aElement->GetAttr(kNameSpaceID_None, txHTMLAtoms::href, value);
         nsCOMPtr<nsIURI> baseURI;
         NS_NewURI(getter_AddRefs(baseURI), value, nsnull);
 
         if (baseURI) {
-            doc->SetBaseURI(baseURI); // The document checks if it is legal to set this base
+            mDocument->SetBaseURI(baseURI); // The document checks if it is legal to set this base
         }
     }
     else if (mCreatingNewDocument && atom == txHTMLAtoms::meta) {
@@ -1092,13 +1089,12 @@ txTransformNotifier::SignalTransformEnd(nsresult aResult)
     // we remove ourselfs from the scriptloader
     nsCOMPtr<nsIScriptLoaderObserver> kungFuDeathGrip(this);
 
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-    if (doc) {
-        doc->ScriptLoader()->RemoveObserver(this);
+    if (mDocument) {
+        mDocument->ScriptLoader()->RemoveObserver(this);
         // XXX Maybe we want to cancel script loads if NS_FAILED(rv)?
 
         if (NS_FAILED(aResult)) {
-            doc->CSSLoader()->Stop();
+            mDocument->CSSLoader()->Stop();
         }
     }
 
