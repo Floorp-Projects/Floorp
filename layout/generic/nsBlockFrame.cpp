@@ -4261,9 +4261,7 @@ nsBlockFrame::HandleOverflowPlaceholdersOnPulledLine(
   // First, see if it's a line of continuation placeholders. If it
   // is, remove one and retry.
   if (aLine->mFirstChild && IsContinuationPlaceholder(aLine->mFirstChild)) {
-#ifdef DEBUG
     PRBool taken =
-#endif
       HandleOverflowPlaceholdersForPulledFrame(aState, aLine->mFirstChild);
     NS_ASSERTION(taken, "We must have removed that frame");
     return PR_TRUE;
@@ -4615,10 +4613,8 @@ nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList)
     if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)) {
       return;
     }
-#ifdef DEBUG
     nsIFrame* result = static_cast<nsIFrame*>
-#endif
-      (UnsetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
+                                  (UnsetProperty(nsGkAtoms::overflowOutOfFlowsProperty));
     NS_ASSERTION(result, "value should always be non-empty when state set");
     RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   } else {
@@ -5595,7 +5591,8 @@ void
 nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
                                     nsIFrame*       aNextInFlow)
 {
-  NS_PRECONDITION(aNextInFlow->GetPrevInFlow(), "bad next-in-flow");
+  nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
+  NS_PRECONDITION(prevInFlow, "bad next-in-flow");
 
   if (NS_FRAME_IS_OVERFLOW_CONTAINER & aNextInFlow->GetStateBits()) {
     nsContainerFrame::DeleteNextInFlowChild(aPresContext, aNextInFlow);

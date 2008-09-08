@@ -671,9 +671,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
   mMightNeedSecondPass = NS_SUBTREE_DIRTY(this) ||
     aReflowState.ShouldReflowAllKids();
 
-#ifdef DEBUG
   nscoord oldHeightOfARow = HeightOfARow();
-#endif
 
   nsHTMLReflowState state(aReflowState);
 
@@ -1547,16 +1545,13 @@ nsListControlFrame::SetOptionsSelectedFromFrame(PRInt32 aStartIndex,
 {
   nsCOMPtr<nsISelectElement> selectElement(do_QueryInterface(mContent));
   PRBool wasChanged = PR_FALSE;
-#ifdef DEBUG
-  nsresult rv = 
-#endif
-    selectElement->SetOptionsSelectedByIndex(aStartIndex,
-                                             aEndIndex,
-                                             aValue,
-                                             aClearAll,
-                                             PR_FALSE,
-                                             PR_TRUE,
-                                             &wasChanged);
+  nsresult rv = selectElement->SetOptionsSelectedByIndex(aStartIndex,
+                                                         aEndIndex,
+                                                         aValue,
+                                                         aClearAll,
+                                                         PR_FALSE,
+                                                         PR_TRUE,
+                                                         &wasChanged);
   NS_ASSERTION(NS_SUCCEEDED(rv), "SetSelected failed");
   return wasChanged;
 }

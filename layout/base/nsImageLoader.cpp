@@ -212,10 +212,7 @@ nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
 {
   if (mReflowOnLoad) {
     nsIPresShell *shell = mPresContext->GetPresShell();
-#ifdef DEBUG
-    nsresult rv = 
-#endif
-      shell->FrameNeedsReflow(mFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+    nsresult rv = shell->FrameNeedsReflow(mFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not reflow after loading border-image");
     // The reflow might not do all the invalidation we need, so continue
     // on with the invalidation codepath.
