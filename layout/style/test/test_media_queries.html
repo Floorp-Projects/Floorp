@@ -44,14 +44,6 @@ function run() {
     ok(!query_applies(q), q + " should not apply");
   }
 
-  function todo_should_apply(q) {
-    todo(query_applies(q), q + " should apply");
-  }
-
-  function todo_should_not_apply(q) {
-    todo(!query_applies(q), q + " should not apply");
-  }
-
   /*
    * Functions to test whether a query is parseable at all.  (Should not
    * be used for parse errors within expressions.)
@@ -169,20 +161,17 @@ function run() {
                      (Math.floor(value/em_size) - 1) + "em)");
   }
 
-  // TODO:  There are a bunch of todos here because of a bug related
-  // to dynamic changes not going into effect once one dimension is 0.
-  // (Patch to fix this is in bug 453759.)
   iframe_style.width = "0";
   should_apply("all and (height)");
   should_not_apply("all and (width)");
   iframe_style.height = "0";
-  todo_should_not_apply("all and (height)");
+  should_not_apply("all and (height)");
   should_not_apply("all and (width)");
   should_apply("all and (device-height)");
   should_apply("all and (device-width)");
   iframe_style.width = width_val + "px";
-  todo_should_not_apply("all and (height)");
-  todo_should_apply("all and (width)");
+  should_not_apply("all and (height)");
+  should_apply("all and (width)");
   iframe_style.height = height_val + "px";
   should_apply("all and (height)");
   should_apply("all and (width)");
