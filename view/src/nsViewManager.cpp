@@ -1923,16 +1923,16 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
 
   mRefreshEnabled = PR_TRUE;
 
-  if (!mHasPendingUpdates) {
-    // Nothing to do
-    return NS_OK;
-  }
-
   // nested batching can combine IMMEDIATE with DEFERRED. Favour
-  // IMMEDIATE over DEFERRED and DEFERRED over NO_SYNC.
+  // IMMEDIATE over DEFERRED and DEFERRED over NO_SYNC.  We need to
+  // check for IMMEDIATE before checking mHasPendingUpdates, because
+  // the latter might be false as far as gecko is concerned but the OS
+  // might still have queued up expose events that it hasn't sent yet.
   if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
     FlushPendingInvalidates();
     Composite();
+  } else if (!mHasPendingUpdates) {
+    // Nothing to do
   } else if (aUpdateFlags & NS_VMREFRESH_DEFERRED) {
     PostInvalidateEvent();
   } else { // NO_SYNC
