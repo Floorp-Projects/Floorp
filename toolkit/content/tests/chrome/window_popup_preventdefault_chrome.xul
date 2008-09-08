@@ -19,9 +19,28 @@ var gBlockHiding = true;
 var gShownNotAllowed = true;
 var gHiddenNotAllowed = true;
 
+var is = function(l, r, v) { window.opener.wrappedJSObject.SimpleTest.is(l, r, v); }
+
 function runTest()
 {
+  is(window.windowState, window.STATE_NORMAL, "window is normal");
+  window.minimize();
+  is(window.windowState, window.STATE_MINIMIZED, "window is minimized");
+
   document.getElementById("menu").open = true;
+
+  setTimeout(runTestAfterMinimize, 0);
+}
+
+function runTestAfterMinimize()
+{
+  var menu = document.getElementById("menu");
+  is(menu.firstChild.state, "closed", "popup not opened when window minimized");
+
+  window.restore();
+  is(window.windowState, window.STATE_NORMAL, "window is restored");
+
+  menu.open = true;
 }
 
 function popupShowing(event)
