@@ -2314,31 +2314,32 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
 {
   NS_ASSERTION(!mForm || HasFlag(ADDED_TO_FORM),
                "Form control should have had flag set.");
+  NS_ASSERTION(!mForm || !aForm,
+               "We don't support switching from one non-null form to another.");
 
-  if (mForm && aRemoveFromForm) {
-    nsAutoString nameVal, idVal;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
-    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
+  if (mForm) {
+    if (aRemoveFromForm) {
+      nsAutoString nameVal, idVal;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
+      GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
 
-    mForm->RemoveElement(this, aNotify);
+      mForm->RemoveElement(this, aNotify);
 
-    if (!nameVal.IsEmpty()) {
-      mForm->RemoveElementFromTable(this, nameVal);
-    }
+      if (!nameVal.IsEmpty()) {
+        mForm->RemoveElementFromTable(this, nameVal);
+      }
 
-    if (!idVal.IsEmpty()) {
-      mForm->RemoveElementFromTable(this, idVal);
+      if (!idVal.IsEmpty()) {
+        mForm->RemoveElementFromTable(this, idVal);
+      }
     }
 
     UnsetFlags(ADDED_TO_FORM);
-  }
-
-  if (aForm) {
+    mForm = nsnull;
+  } else if (aForm) {
     // keep a *weak* ref to the form here
     CallQueryInterface(aForm, &mForm);
     mForm->Release();
-  } else {
-    mForm = nsnull;
   }
 
   return NS_OK;
