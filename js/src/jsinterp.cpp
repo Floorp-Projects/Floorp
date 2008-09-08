@@ -259,7 +259,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj, jsuword kshape,
      * but that is a one-time event and we'll have to miss the old shape and
      * re-fill under the new one.
      */
-    if (!(cs->format & (JOF_SET | JOF_INCDEC)))
+    if (!(cs->format & (JOF_SET | JOF_INCDEC)) && obj == pobj)
         kshape = scope->shape;
 
     khash = PROPERTY_CACHE_HASH_PC(pc, kshape);
