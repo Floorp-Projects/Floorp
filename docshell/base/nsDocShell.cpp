@@ -4435,6 +4435,31 @@ nsDocShell::RefreshURI(nsIURI * aURI, PRInt32 aDelay, PRBool aRepeat,
     return NS_OK;
 }
 
+nsresult
+nsDocShell::ForceRefreshURIFromTimer(nsIURI * aURI,
+                                     PRInt32 aDelay, 
+                                     PRBool aMetaRefresh,
+                                     nsITimer* aTimer)
+{
+    NS_PRECONDITION(aTimer, "Must have a timer here");
+
+    // Remove aTimer from mRefreshURIList if needed
+    if (mRefreshURIList) {
+        PRUint32 n = 0;
+        mRefreshURIList->Count(&n);
+
+        for (PRUint32 i = 0;  i < n; ++i) {
+            nsCOMPtr<nsITimer> timer = do_QueryElementAt(mRefreshURIList, i);
+            if (timer == aTimer) {
+                mRefreshURIList->RemoveElementAt(i);
+                break;
+            }
+        }
+    }
+
+    return ForceRefreshURI(aURI, aDelay, aMetaRefresh);
+}
+
 NS_IMETHODIMP
 nsDocShell::ForceRefreshURI(nsIURI * aURI,
                             PRInt32 aDelay, 
@@ -9303,9 +9328,7 @@ nsRefreshTimer::Notify(nsITimer * aTimer)
         // Get the delay count to determine load type
         PRUint32 delay = 0;
         aTimer->GetDelay(&delay);
-        nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(mDocShell);
-        if (refreshURI)
-            refreshURI->ForceRefreshURI(mURI, delay, mMetaRefresh);
+        mDocShell->ForceRefreshURIFromTimer(mURI, delay, mMetaRefresh, aTimer);
     }
     return NS_OK;
 }
