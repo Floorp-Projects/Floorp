@@ -537,6 +537,9 @@ pref("layout.spellcheckDefault", 1);
 
 pref("view_source.editor.path", "");
 pref("view_source.editor.external", false);
+// allows to add further arguments to the editor; use the %LINE% placeholder
+// for jumping to a specific line (e.g. "/line:%LINE%" or "--goto %LINE%")
+pref("view_source.editor.args", "");
 
 pref("browser.send_pings", false);
 
