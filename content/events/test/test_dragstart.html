@@ -82,6 +82,10 @@ function afterDragTests()
   sendMouseEventsForDrag("dragfalse");
   gDragInfo = { target: $("spanfalse").firstChild, testid: "draggable false child" };
   sendMouseEventsForDrag("spanfalse");
+
+  synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+  if (gExtraDragTests == 4)
+    SimpleTest.finish();
 }
 
 function sendMouseEventsForDrag(nodeid)
@@ -462,8 +466,6 @@ function onDragStartDraggable(event)
   ok(dt.mozItemCount == 0 && dt.types.length == 0 && event.originalTarget == gDragInfo.target, gDragInfo.testid);
 
   gExtraDragTests++;
-  if (gExtraDragTests == 6)
-    SimpleTest.finish();
 }
 
 function checkOneDataItem(dt, expectedtypes, expecteddata, index, testid)
@@ -528,7 +530,7 @@ function expectError(fn, eid, testid)
 
 <input id="input" value="Text in a box" ondragstart="doDragStartInput(event)">
 
-<div style="-moz-user-select: none;" ondragstart="onDragStartDraggable(event)">
+<div ondragstart="onDragStartDraggable(event)">
   <div id="dragtrue" draggable="true">
     This is a <span id="spantrue">draggable</span> area.
   </div>
