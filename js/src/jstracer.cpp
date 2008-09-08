@@ -3458,7 +3458,7 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
         return true;
     }
 
-    /* Insist if setting on obj being the directly addressed object. */
+    /* If modifying the slot, insist on obj being the directly addressed object. */
     uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC));
     if (setflags && obj2 != obj)
         ABORT_TRACE("JOF_SET opcode hit prototype chain");
