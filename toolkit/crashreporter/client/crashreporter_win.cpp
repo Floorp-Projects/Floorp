@@ -972,26 +972,21 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
     HWND hwndRestart = GetDlgItem(hwndDlg, IDC_RESTARTBUTTON);
     GetRelativeRect(hwndRestart, hwndDlg, &restartRect);
 
-    // Resize close button to fit text
-    ResizeControl(hwndClose, closeRect, Str(ST_QUIT), true, 0);
+    // set the close button text and shift the buttons around
+    // since the size may need to change
+    int sizeDiff = ResizeControl(hwndClose, closeRect, Str(ST_QUIT),
+                                 true, 0);
+    restartRect.left -= sizeDiff;
+    restartRect.right -= sizeDiff;
     SetDlgItemText(hwndDlg, IDC_CLOSEBUTTON, Str(ST_QUIT).c_str());
 
     if (gRestartArgs.size() > 0) {
-      // set the restart button text and shift the buttons around
-      // since the size may need to change
-      int sizeDiff = ResizeControl(hwndRestart, restartRect, Str(ST_RESTART),
-                                   true, 0);
-      closeRect.left -= sizeDiff;
-      closeRect.right -= sizeDiff;
+      // Resize restart button to fit text
+      ResizeControl(hwndRestart, restartRect, Str(ST_RESTART), true, 0);
       SetDlgItemText(hwndDlg, IDC_RESTARTBUTTON, Str(ST_RESTART).c_str());
     } else {
-      // No restart arguments, move the close button over to the side
-      // and hide the restart button
+      // No restart arguments, so just hide the restart button
       SetDlgItemVisible(hwndDlg, IDC_RESTARTBUTTON, false);
-
-      int size = closeRect.right - closeRect.left;
-      closeRect.right = restartRect.right;
-      closeRect.left = closeRect.right - size;
     }
     // See if we need to widen the window
     // Leave 6 pixels on either side + 6 pixels between the buttons
@@ -1008,22 +1003,22 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
       MoveWindow(hwndDlg, r.left, r.top,
                  r.right - r.left, r.bottom - r.top, TRUE);
       // shift both buttons right
-      if (closeRect.left + maxdiff < 6)
+      if (restartRect.left + maxdiff < 6)
         maxdiff += 6;
       closeRect.left += maxdiff;
       closeRect.right += maxdiff;
       restartRect.left += maxdiff;
       restartRect.right += maxdiff;
-      MoveWindow(hwndRestart, restartRect.left, restartRect.top,
-                 restartRect.right - restartRect.left,
-                 restartRect.bottom - restartRect.top,
+      MoveWindow(hwndClose, closeRect.left, closeRect.top,
+                 closeRect.right - closeRect.left,
+                 closeRect.bottom - closeRect.top,
                  TRUE);
       StretchControlsToFit(hwndDlg);
     }
-    // need to move the close button regardless
-    MoveWindow(hwndClose, closeRect.left, closeRect.top,
-               closeRect.right - closeRect.left,
-               closeRect.bottom - closeRect.top,
+    // need to move the restart button regardless
+    MoveWindow(hwndRestart, restartRect.left, restartRect.top,
+               restartRect.right - restartRect.left,
+               restartRect.bottom - restartRect.top,
                TRUE);
 
     // Resize the description text last, in case the window was resized
