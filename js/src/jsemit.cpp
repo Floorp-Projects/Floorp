@@ -1166,7 +1166,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
     return JS_TRUE;
 }
 
-static JSBool
+static ptrdiff_t
 EmitJump(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t off)
 {
     JSBool extend;
@@ -1175,13 +1175,13 @@ EmitJump(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t off)
 
     extend = off < JUMP_OFFSET_MIN || JUMP_OFFSET_MAX < off;
     if (extend && !cg->spanDeps && !BuildSpanDepTable(cx, cg))
-        return JS_FALSE;
+        return -1;
 
     jmp = js_Emit3(cx, cg, op, JUMP_OFFSET_HI(off), JUMP_OFFSET_LO(off));
     if (jmp >= 0 && (extend || cg->spanDeps)) {
         pc = CG_CODE(cg, jmp);
         if (!AddSpanDep(cx, cg, pc, pc, off))
-            return JS_FALSE;
+            return -1;
     }
     return jmp;
 }

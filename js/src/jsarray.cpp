@@ -1782,7 +1782,8 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
     CompareArgs ca;
     jsuint len, newlen, i, undefs;
     JSTempValueRooter tvr;
-    JSBool hole, ok;
+    JSBool hole;
+    bool ok;
     size_t elemsize;
     JSString *str;
 
