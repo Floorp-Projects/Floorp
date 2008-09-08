@@ -2143,14 +2143,9 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
   }
 
   // if no node in the hierarchy was found to drag, but the GetDragData method
-  // returned a node, use that returned node. Otherwise, just use the original
-  // node that was clicked.
-  if (!dragContent) {
-    if (dragDataNode)
-      dragContent = originalDragContent;
-    else
-      dragContent = mGestureDownContent;
-  }
+  // returned a node, use that returned node. Otherwise, nothing is draggable.
+  if (!dragContent && dragDataNode)
+    dragContent = dragDataNode;
 
   if (dragContent) {
     // if an ancestor node was used instead, clear the drag data

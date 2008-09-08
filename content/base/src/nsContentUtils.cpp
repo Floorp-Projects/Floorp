@@ -89,6 +89,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
@@ -2451,6 +2452,26 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
   nsIImage* image = nsnull;
   CallGetInterface(ir.get(), &image);
   return image;
+}
+
+// static
+PRBool
+nsContentUtils::ContentIsDraggable(nsIContent* aContent)
+{
+  nsCOMPtr<nsIDOMNSHTMLElement> htmlElement = do_QueryInterface(aContent);
+  if (htmlElement) {
+    PRBool draggable = PR_FALSE;
+    htmlElement->GetDraggable(&draggable);
+    if (draggable)
+      return PR_TRUE;
+
+    if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
+                              nsGkAtoms::_false, eIgnoreCase)
+      return PR_FALSE;
+  }
+
+  // special handling for content area image and link dragging
+  return IsDraggableImage(aContent) || IsDraggableLink(aContent);
 }
 
 // static
