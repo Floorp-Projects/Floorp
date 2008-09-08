@@ -76,6 +76,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsstaticcheck.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -537,7 +538,7 @@ js_CompileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
     js_InitCodeGenerator(cx, &cg, &pc, &codePool, &notePool,
                          pc.tokenStream.lineno);
 
-    /* From this point the control must flow via the label out. */
+    MUST_FLOW_THROUGH("out");
     cg.treeContext.flags |= (uint16) tcflags;
     cg.treeContext.u.scopeChain = scopeChain;
     cg.staticDepth = TCF_GET_STATIC_DEPTH(tcflags);

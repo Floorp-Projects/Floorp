@@ -78,6 +78,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "prmjtime.h"
+#include "jsstaticcheck.h"
 
 #ifdef JS_TRACER
 #include "jstracer.h"
@@ -4791,7 +4792,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     if (!fun)
         goto out2;
 
-    /* From this point the control must flow through the label out. */
+    MUST_FLOW_THROUGH("out");
     JS_PUSH_TEMP_ROOT_OBJECT(cx, FUN_OBJECT(fun), &tvr);
     for (i = 0; i < nargs; i++) {
         argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);

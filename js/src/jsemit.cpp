@@ -65,8 +65,8 @@
 #include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
-
 #include "jsautooplen.h"
+#include "jsstaticcheck.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
 #define BYTECODE_CHUNK  256     /* code allocation increment */
@@ -2978,6 +2978,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
          * must set ok and goto out to exit this function.  To keep things
          * simple, all switchOp cases exit that way.
          */
+        MUST_FLOW_THROUGH("out");
         if (cg->spanDeps) {
             /*
              * We have already generated at least one big jump so we must
