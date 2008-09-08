@@ -190,7 +190,7 @@ _TEST_FILES = 	test_bug5141.html \
 #		test_bug435425.html \
 #		bug435425.sjs \
 #		bug435425_redirect.sjs \
-#		test_bug438519.html \
+		test_bug438519.html \
 		test_bug444722.html \
 		test_bug451376.html \
 		test_text_replaceWholeText.html \
