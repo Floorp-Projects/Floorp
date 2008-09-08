@@ -52,6 +52,7 @@
 #include "prmon.h"
 
 class nsDOMWorkerThread;
+class nsIDocument;
 class nsIScriptError;
 class nsIScriptGlobalObject;
 
@@ -65,6 +66,8 @@ class nsDOMWorkerPool : public nsDOMWorkerBase,
   friend class nsDOMThreadService;
   friend class nsDOMWorkerFunctions;
   friend class nsDOMWorkerPoolWeakRef;
+  friend class nsDOMWorkerScriptLoader;
+  friend class nsDOMWorkerStreamObserver;
   friend class nsDOMWorkerThread;
   friend class nsReportErrorRunnable;
   friend JSBool DOMWorkerOperationCallback(JSContext* aCx);
@@ -74,7 +77,7 @@ public:
   NS_DECL_NSIDOMWORKERPOOL
   NS_DECL_NSICLASSINFO
 
-  nsDOMWorkerPool();
+  nsDOMWorkerPool(nsIDocument* aDocument);
 
   // For nsDOMWorkerBase
   virtual nsDOMWorkerPool* Pool() {
@@ -106,8 +109,13 @@ private:
     return mMonitor;
   }
 
+  nsIDocument* GetParentDocument();
+
   // Weak reference to the window that created and owns this pool.
   nsISupports* mParentGlobal;
+
+  // Weak reference to the document that created this pool.
+  nsIDocument* mParentDocument;
 
   // Weak array of workers. The idea is that workers can be garbage collected
   // independently of the owning pool and other workers.
