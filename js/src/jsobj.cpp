@@ -3638,7 +3638,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
     jsval pval;
     int32 sample;
     JSTempValueRooter tvr;
-    JSBool ok;
+    bool ok;
 
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(JS_IS_OBJ_LOCKED(cx, obj));
@@ -3899,7 +3899,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                     return JS_TRUE;
                 }
 
-                return SPROP_SET(cx, sprop, obj, pobj, vp);
+                return !!SPROP_SET(cx, sprop, obj, pobj, vp);
             }
 
             /* Restore attrs to the ECMA default for new properties. */

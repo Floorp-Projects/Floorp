@@ -206,7 +206,7 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 JSBool
 js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
-    return NativeCompareAndSwap(w, ov, nv);
+    return !!NativeCompareAndSwap(w, ov, nv);
 }
 
 #elif defined(NSPR_LOCK)

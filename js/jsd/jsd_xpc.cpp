@@ -417,7 +417,7 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
                  currentFilter->endLine >= currentLine)) {
                 /* then we're going to have to compare the url. */
                 if (currentFilter->patternType == ptIgnore)
-                    return flags & jsdIFilter::FLAG_PASS;
+                    return !!(flags & jsdIFilter::FLAG_PASS);
 
                 if (!len)
                     len = PL_strlen(url);
@@ -426,22 +426,22 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
                     switch (currentFilter->patternType) {
                         case ptEquals:
                             if (!PL_strcmp(currentFilter->urlPattern, url))
-                                return flags & jsdIFilter::FLAG_PASS;
+                                return !!(flags & jsdIFilter::FLAG_PASS);
                             break;
                         case ptStartsWith:
                             if (!PL_strncmp(currentFilter->urlPattern, url, 
                                            currentFilter->patternLength))
-                                return flags & jsdIFilter::FLAG_PASS;
+                                return !!(flags & jsdIFilter::FLAG_PASS);
                             break;
                         case ptEndsWith:
                             if (!PL_strcmp(currentFilter->urlPattern,
                                            &url[len - 
                                                currentFilter->patternLength]))
-                                return flags & jsdIFilter::FLAG_PASS;
+                                return !!(flags & jsdIFilter::FLAG_PASS);
                             break;
                         case ptContains:
                             if (PL_strstr(url, currentFilter->urlPattern))
-                                return flags & jsdIFilter::FLAG_PASS;
+                                return !!(flags & jsdIFilter::FLAG_PASS);
                             break;
                         default:
                             NS_ASSERTION(0, "Invalid pattern type");
