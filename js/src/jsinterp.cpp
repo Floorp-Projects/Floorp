@@ -68,6 +68,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsstaticcheck.h"
 #ifdef JS_TRACER
 #include "jstracer.h"
 #endif
@@ -931,7 +932,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
     obj = JSVAL_TO_OBJECT(vp[1]);
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
 
-    /* From here on, control must flow through label out:. */
+    MUST_FLOW_THROUGH("out");
     id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
 #if JS_HAS_XML_SUPPORT
     if (OBJECT_IS_XML(cx, obj)) {
@@ -1270,7 +1271,7 @@ have_fun:
     frame.xmlNamespace = NULL;
     frame.blockChain = NULL;
 
-    /* From here on, control must flow through label out: to return. */
+    MUST_FLOW_THROUGH("out");
     cx->fp = &frame;
 
     /* Init these now in case we goto out before first hook call. */
@@ -2658,7 +2659,7 @@ js_Interpret(JSContext *cx)
         DO_OP();                                                              \
     JS_END_MACRO
 
-    /* From this point control must flow through the label exit. */
+    MUST_FLOW_THROUGH("exit");
     ++cx->interpLevel;
 
     /*
@@ -5691,6 +5692,7 @@ js_Interpret(JSContext *cx)
              * paths from here must flow through the "Restore fp->scopeChain"
              * code below the OBJ_DEFINE_PROPERTY call.
              */
+            MUST_FLOW_THROUGH("restore");
             fp->scopeChain = obj;
             rval = OBJECT_TO_JSVAL(obj);
 
@@ -5750,6 +5752,7 @@ js_Interpret(JSContext *cx)
             }
 
             /* Restore fp->scopeChain now that obj is defined in fp->varobj. */
+            MUST_FLOW_LABEL(restore)
             fp->scopeChain = obj2;
             if (!ok) {
                 cx->weakRoots.newborn[GCX_OBJECT] = NULL;
@@ -5838,6 +5841,7 @@ js_Interpret(JSContext *cx)
              * paths from here must flow through the "Restore fp->scopeChain"
              * code below the OBJ_DEFINE_PROPERTY call.
              */
+            MUST_FLOW_THROUGH("restore2");
             fp->scopeChain = obj;
             rval = OBJECT_TO_JSVAL(obj);
 
@@ -5864,6 +5868,7 @@ js_Interpret(JSContext *cx)
                                      NULL);
 
             /* Restore fp->scopeChain now that obj is defined in parent. */
+            MUST_FLOW_LABEL(restore2)
             fp->scopeChain = obj2;
             if (!ok) {
                 cx->weakRoots.newborn[GCX_OBJECT] = NULL;

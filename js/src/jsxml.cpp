@@ -67,6 +67,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsxml.h"
+#include "jsstaticcheck.h"
 
 #ifdef DEBUG
 #include <string.h>     /* for #ifdef DEBUG memset calls */
@@ -4088,10 +4089,10 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             vxml = (JSXML *) JS_GetPrivate(cx, vobj);
     }
 
-    /* Control flow after here must exit via label out. */
     ok = js_EnterLocalRootScope(cx);
     if (!ok)
         return JS_FALSE;
+    MUST_FLOW_THROUGH("out");
     roots[OBJ_ROOT] = OBJECT_TO_JSVAL(obj);
     roots[ID_ROOT] = id;
     roots[VAL_ROOT] = *vp;
@@ -6263,8 +6264,8 @@ xml_namespace(JSContext *cx, uintN argc, jsval *vp)
         vp[2] = STRING_TO_JSVAL(prefix);      /* local root */
     }
 
-    /* After this point the control must flow through label out. */
     InitTempNSArray(cx, &inScopeNSes);
+    MUST_FLOW_THROUGH("out");
     ok = FindInScopeNamespaces(cx, xml, &inScopeNSes.array);
     if (!ok)
         goto out;
@@ -8003,7 +8004,7 @@ js_GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     JS_ASSERT(OBJECT_IS_XML(cx, obj));
 
-    /* After this point, control must flow through label out: to exit. */
+    MUST_FLOW_THROUGH("out");
     JS_PUSH_TEMP_ROOT_OBJECT(cx, NULL, &tvr);
 
     /*
