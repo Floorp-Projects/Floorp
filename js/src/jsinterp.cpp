@@ -2425,9 +2425,6 @@ JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
 JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
 JS_STATIC_ASSERT(JSOP_NULL_LENGTH == JSOP_NULLTHIS_LENGTH);
 
-/* Ensure we can share deffun and closure code. */
-JS_STATIC_ASSERT(JSOP_DEFFUN_LENGTH == JSOP_CLOSURE_LENGTH);
-
 /* See TRY_BRANCH_AFTER_COND. */
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
@@ -2577,7 +2574,7 @@ js_Interpret(JSContext *cx)
         tr = JS_TRACE_MONITOR(cx).recorder;
         JS_TRACE_MONITOR(cx).recorder = NULL;
     }
-#endif    
+#endif
 
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
@@ -5656,53 +5653,31 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_DEFVAR)
 
           BEGIN_CASE(JSOP_DEFFUN)
+            /*
+             * A top-level function defined in Global or Eval code (see
+             * ECMA-262 Ed. 3), or else a SpiderMonkey extension: a named
+             * function statement in a compound statement (not at the top
+             * statement level of global code, or at the top level of a
+             * function body).
+             */
             LOAD_FUNCTION(0);
 
+            if (!fp->blockChain) {
+                obj2 = fp->scopeChain;
+            } else {
+                obj2 = js_GetScopeChain(cx, fp);
+                if (!obj2)
+                    goto error;
+            }
+
             /*
-             * We must be at top-level (either outermost block that forms a
-             * function's body, or a global) scope, not inside an expression
-             * (JSOP_{ANON,NAMED}FUNOBJ) or compound statement (JSOP_CLOSURE)
-             * in the same compilation unit (ECMA Program). We also not inside
-             * an eval script.
-             *
              * If static link is not current scope, clone fun's object to link
-             * to the current scope via parent.  This clause exists to enable
+             * to the current scope via parent. This clause exists to enable
              * sharing of compiled functions among multiple equivalent scopes,
              * splitting the cost of compilation evenly among the scopes and
-             * amortizing it over a number of executions.  Examples include XUL
+             * amortizing it over a number of executions. Examples include XUL
              * scripts and event handlers shared among Mozilla chrome windows,
              * and server-side JS user-defined functions shared among requests.
-             *
-             * NB: The Script object exposes compile and exec in the language,
-             * such that this clause introduces an incompatible change from old
-             * JS versions that supported Script.  Such a JS version supported
-             * executing a script that defined and called functions scoped by
-             * the compile-time static link, not by the exec-time scope chain.
-             *
-             * We sacrifice compatibility, breaking such scripts, in order to
-             * promote compile-cost sharing and amortizing, and because Script
-             * is not and will not be standardized.
-             */
-            JS_ASSERT(!fp->blockChain);
-            JS_ASSERT((fp->flags & JSFRAME_EVAL) == 0);
-            JS_ASSERT(fp->scopeChain == fp->varobj);
-            obj2 = fp->scopeChain;
-
-            /*
-             * ECMA requires functions defined when entering Global code to be
-             * permanent.
-             */
-            attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-
-          do_deffun:
-            /*
-             * The common code for JSOP_DEFFUN and JSOP_CLOSURE.
-             *
-             * Clone the function object with the current scope chain as the
-             * clone's parent.  The original function object is the prototype
-             * of the clone.  Do this only if re-parenting; the compiler may
-             * have seen the right parent already and created a sufficiently
-             * well-scoped function object.
              */
             obj = FUN_OBJECT(fun);
             if (OBJ_GET_PARENT(cx, obj) != obj2) {
@@ -5718,6 +5693,14 @@ js_Interpret(JSContext *cx)
              */
             fp->scopeChain = obj;
             rval = OBJECT_TO_JSVAL(obj);
+
+            /*
+             * ECMA requires functions defined when entering Eval code to be
+             * impermanent.
+             */
+            attrs = (fp->flags & JSFRAME_EVAL)
+                    ? JSPROP_ENUMERATE
+                    : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
             /*
              * Load function flags that are also property attributes.  Getters
@@ -5737,8 +5720,7 @@ js_Interpret(JSContext *cx)
              * or with blocks.
              */
             parent = fp->varobj;
-            if (!parent)
-                goto error;
+            JS_ASSERT(parent);
 
             /*
              * Check for a const property of the same name -- or any kind
@@ -5751,7 +5733,6 @@ js_Interpret(JSContext *cx)
             if (ok) {
                 if (attrs == JSPROP_ENUMERATE) {
                     JS_ASSERT(fp->flags & JSFRAME_EVAL);
-                    JS_ASSERT(op == JSOP_CLOSURE);
                     ok = OBJ_SET_PROPERTY(cx, parent, id, &rval);
                 } else {
                     JS_ASSERT(attrs & JSPROP_PERMANENT);
@@ -5895,35 +5876,6 @@ js_Interpret(JSContext *cx)
              */
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_NAMEDFUNOBJ)
-
-          BEGIN_CASE(JSOP_CLOSURE)
-            /*
-             * A top-level function inside eval or ECMA ed. 3 extension: a
-             * named function expression statement in a compound statement
-             * (not at the top statement level of global code, or at the top
-             * level of a function body).
-             */
-            LOAD_FUNCTION(0);
-
-            /*
-             * Clone the function object with the current scope chain as the
-             * clone's parent. Do this only if re-parenting; the compiler may
-             * have seen the right parent already and created a sufficiently
-             * well-scoped function object.
-             */
-            obj2 = js_GetScopeChain(cx, fp);
-            if (!obj2)
-                goto error;
-
-            /*
-             * ECMA requires that functions defined when entering Eval code to
-             * be impermanent.
-             */
-            attrs = JSPROP_ENUMERATE;
-            if (!(fp->flags & JSFRAME_EVAL))
-                attrs |= JSPROP_PERMANENT;
-
-            goto do_deffun;
 
 #if JS_HAS_GETTER_SETTER
           BEGIN_CASE(JSOP_GETTER)
@@ -6811,6 +6763,7 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
+          L_JSOP_UNUSED74:
           L_JSOP_UNUSED76:
           L_JSOP_UNUSED77:
           L_JSOP_UNUSED78:
@@ -7055,12 +7008,12 @@ js_Interpret(JSContext *cx)
         js_SetVersion(cx, originalVersion);
     --cx->interpLevel;
 
-#ifdef JS_TRACER    
+#ifdef JS_TRACER
     if (tr) {
         JS_TRACE_MONITOR(cx).recorder = tr;
         tr->deepAbort();
     }
-#endif    
+#endif
     return ok;
 
   atom_not_defined:
