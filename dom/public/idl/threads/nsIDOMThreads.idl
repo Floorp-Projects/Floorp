@@ -122,6 +122,15 @@ interface nsIDOMWorkerPool : nsISupports
    *        the script will run.
    */
   nsIDOMWorkerThread createWorker(in DOMString aSourceScript);
+
+  /**
+   * Create a new worker object by evaluating the given script.
+   *
+   * @param aSourceURL (in AString)
+   *        The script url to load and compile. See below for details on the
+   *        scope in which the script will run.
+   */
+  nsIDOMWorkerThread createWorkerFromURL(in AString aSourceURL);
 };
 
 [scriptable, uuid(0f2a52ea-afc9-49e6-86dd-2d0cb65b5dd5)]
