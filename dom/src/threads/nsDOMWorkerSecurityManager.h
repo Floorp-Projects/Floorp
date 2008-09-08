@@ -48,9 +48,15 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCSECURITYMANAGER
 
-  static JSBool JSCheckAccess(JSContext *cx, JSObject *obj, jsval id,
-                              JSAccessMode mode, jsval *vp);
+  static JSPrincipals* WorkerPrincipal();
 
+  static JSBool JSCheckAccess(JSContext* aCx, JSObject* aObj, jsval aId,
+                              JSAccessMode aMode, jsval* aVp);
+
+  static JSPrincipals* JSFindPrincipal(JSContext* aCx, JSObject* aObj);
+
+  static JSBool JSTranscodePrincipals(JSXDRState* aXdr,
+                                      JSPrincipals** aJsprinp);
 };
 
 #endif /* __NSDOMWORKERSECURITYMANAGER_H__ */

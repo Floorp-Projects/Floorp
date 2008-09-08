@@ -49,6 +49,29 @@
 
 #define LOG(_args) PR_LOG(gDOMThreadsLog, PR_LOG_DEBUG, _args)
 
+class nsDOMWorkerPrincipal : public JSPrincipals
+{
+public:
+  nsDOMWorkerPrincipal() {
+    codebase = "domworker-890cfb50-cbae-4470-8475-8f60056f49f2";
+    getPrincipalArray = NULL;
+    globalPrivilegesEnabled = NULL;
+    refcount = 1;
+    destroy = nsDOMWorkerPrincipal::Destroy;
+    subsume = nsDOMWorkerPrincipal::Subsume;
+  }
+
+  static void Destroy(JSContext*, JSPrincipals*) {
+    // nothing
+  }
+
+  static JSBool Subsume(JSPrincipals*, JSPrincipals*) {
+    return JS_TRUE;
+  }
+};
+
+static nsDOMWorkerPrincipal gWorkerPrincipal;
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMWorkerSecurityManager,
                               nsIXPCSecurityManager)
 
@@ -89,12 +112,31 @@ nsDOMWorkerSecurityManager::CanAccess(PRUint32 aAction,
   return NS_OK;
 }
 
+JSPrincipals*
+nsDOMWorkerSecurityManager::WorkerPrincipal()
+{
+  return &gWorkerPrincipal;
+}
+
 JSBool
-nsDOMWorkerSecurityManager::JSCheckAccess(JSContext *cx,
-                                          JSObject *obj,
-                                          jsval id,
-                                          JSAccessMode mode,
-                                          jsval *vp)
+nsDOMWorkerSecurityManager::JSCheckAccess(JSContext* aCx,
+                                          JSObject* aObj,
+                                          jsval aId,
+                                          JSAccessMode aMode,
+                                          jsval* aVp)
 {
   return JS_TRUE;
+}
+
+JSPrincipals*
+nsDOMWorkerSecurityManager::JSFindPrincipal(JSContext* aCx, JSObject* aObj)
+{
+  return WorkerPrincipal();
+}
+
+JSBool
+nsDOMWorkerSecurityManager::JSTranscodePrincipals(JSXDRState* aXdr,
+                                                 JSPrincipals** aJsprinp)
+{
+  return JS_FALSE;
 }

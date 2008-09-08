@@ -59,6 +59,7 @@
 
 // DOMWorker includes
 #include "nsDOMWorkerPool.h"
+#include "nsDOMWorkerSecurityManager.h"
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerTimeout.h"
 
@@ -738,9 +739,13 @@ nsDOMWorkerScriptLoader::ScriptCompiler::Run()
   uint32 oldOpts =
     JS_SetOptions(mCx, JS_GetOptions(mCx) | JSOPTION_DONT_REPORT_UNCAUGHT);
 
-  JSScript* script = JS_CompileUCScript(mCx, global, mScriptText.BeginReading(),
-                                        mScriptText.Length(), mFilename.get(),
-                                        1);
+  JSPrincipals* principal = nsDOMWorkerSecurityManager::WorkerPrincipal();
+
+  JSScript* script =
+    JS_CompileUCScriptForPrincipals(mCx, global, principal,
+                                    mScriptText.BeginReading(),
+                                    mScriptText.Length(), mFilename.get(), 1);
+
   JS_SetOptions(mCx, oldOpts);
 
   if (!script) {
