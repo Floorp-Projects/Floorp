@@ -3697,12 +3697,16 @@ TraceRecorder::clearFrameSlotsFromCache()
 bool
 TraceRecorder::record_EnterFrame()
 {
+    JSStackFrame* fp = cx->fp;
+
     if (++callDepth >= MAX_CALLDEPTH)
         ABORT_TRACE("exceeded maximum call depth");
+    if (fp->script == fp->down->script)
+        ABORT_TRACE("recursive call");
+    
     debug_only_v(printf("EnterFrame %s, callDepth=%d\n",
                         js_AtomToPrintableString(cx, cx->fp->fun->atom),
                         callDepth););
-    JSStackFrame* fp = cx->fp;
     LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
 
     jsval* vp = &fp->argv[fp->argc];
