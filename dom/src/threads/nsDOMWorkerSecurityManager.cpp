@@ -88,13 +88,3 @@ nsDOMWorkerSecurityManager::CanAccess(PRUint32 aAction,
 {
   return NS_OK;
 }
-
-JSBool
-nsDOMWorkerSecurityManager::JSCheckAccess(JSContext *cx,
-                                          JSObject *obj,
-                                          jsval id,
-                                          JSAccessMode mode,
-                                          jsval *vp)
-{
-  return JS_TRUE;
-}
