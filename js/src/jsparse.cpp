@@ -1941,7 +1941,7 @@ CheckDestructuring(JSContext *cx, BindData *data,
     }
 
 #if JS_HAS_DESTRUCTURING_SHORTHAND
-    if (right && (right->pn_extra & PNX_SHORTHAND)) {
+    if (right && right->pn_arity == PN_LIST && (right->pn_extra & PNX_SHORTHAND)) {
         js_ReportCompileErrorNumber(cx, TS(tc->parseContext), right,
                                     JSREPORT_ERROR, JSMSG_BAD_OBJECT_INIT);
         return JS_FALSE;
