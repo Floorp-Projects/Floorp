@@ -53,7 +53,7 @@ class nsDOMWorkerPrincipal : public JSPrincipals
 {
 public:
   nsDOMWorkerPrincipal() {
-    codebase = "domworker-890cfb50-cbae-4470-8475-8f60056f49f2";
+    codebase = "domworkerthread";
     getPrincipalArray = NULL;
     globalPrivilegesEnabled = NULL;
     refcount = 1;
@@ -138,5 +138,6 @@ JSBool
 nsDOMWorkerSecurityManager::JSTranscodePrincipals(JSXDRState* aXdr,
                                                  JSPrincipals** aJsprinp)
 {
+  NS_NOTREACHED("Shouldn't ever call this!");
   return JS_FALSE;
 }
