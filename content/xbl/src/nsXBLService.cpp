@@ -1198,43 +1198,6 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
   return NS_OK;
 }
 
-class nsSameOriginChecker : public nsIChannelEventSink,
-                            public nsIInterfaceRequestor
-{
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICHANNELEVENTSINK
-  NS_DECL_NSIINTERFACEREQUESTOR
-};
-
-NS_IMPL_ISUPPORTS2(nsSameOriginChecker,
-                   nsIChannelEventSink,
-                   nsIInterfaceRequestor)
-
-NS_IMETHODIMP
-nsSameOriginChecker::OnChannelRedirect(nsIChannel *aOldChannel,
-                                       nsIChannel *aNewChannel,
-                                       PRUint32    aFlags)
-{
-    NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
-
-    nsCOMPtr<nsIURI> oldURI;
-    nsresult rv = aOldChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> newURI;
-    rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The new URI
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return nsContentUtils::GetSecurityManager()->
-      CheckSameOriginURI(oldURI, newURI, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsSameOriginChecker::GetInterface(const nsIID & aIID, void **aResult)
-{
-    return QueryInterface(aIID, aResult);
-}
-
 nsresult
 nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
                                    nsIURI* aDocumentURI, nsIURI* aBindingURI, 
@@ -1269,7 +1232,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   rv = NS_NewChannel(getter_AddRefs(channel), aDocumentURI, nsnull, loadGroup);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIInterfaceRequestor> sameOriginChecker = new nsSameOriginChecker;
+  nsCOMPtr<nsIInterfaceRequestor> sameOriginChecker = nsContentUtils::GetSameOriginChecker();
   NS_ENSURE_TRUE(sameOriginChecker, NS_ERROR_OUT_OF_MEMORY);
 
   channel->SetNotificationCallbacks(sameOriginChecker);

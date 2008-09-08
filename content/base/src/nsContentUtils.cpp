@@ -155,6 +155,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsReferencedElement.h"
 #include "nsIUGenCategory.h"
 #include "nsIDragService.h"
+#include "nsIChannelEventSink.h"
+#include "nsIInterfaceRequestor.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -208,6 +210,7 @@ PRUint32 nsContentUtils::sScriptBlockerCount = 0;
 PRUint32 nsContentUtils::sRemovableScriptBlockerCount = 0;
 nsCOMArray<nsIRunnable>* nsContentUtils::sBlockedScriptRunners = nsnull;
 PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
+nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 
 nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
 JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
@@ -256,6 +259,14 @@ EventListenerManagerHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   // Let the EventListenerManagerMapEntry clean itself up...
   lm->~EventListenerManagerMapEntry();
 }
+
+class nsSameOriginChecker : public nsIChannelEventSink,
+                            public nsIInterfaceRequestor
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIINTERFACEREQUESTOR
+};
 
 // static
 nsresult
@@ -899,6 +910,8 @@ nsContentUtils::Shutdown()
   delete sBlockedScriptRunners;
   sBlockedScriptRunners = nsnull;
 
+  NS_IF_RELEASE(sSameOriginChecker);
+  
   nsAutoGCRoot::Shutdown();
 }
 
@@ -4362,3 +4375,45 @@ nsContentUtils::IsNamedItem(nsIContent* aContent)
 
   return nsnull;
 }
+
+/* static */
+nsIInterfaceRequestor*
+nsContentUtils::GetSameOriginChecker()
+{
+  if (!sSameOriginChecker) {
+    sSameOriginChecker = new nsSameOriginChecker();
+    NS_IF_ADDREF(sSameOriginChecker);
+  }
+  return sSameOriginChecker;
+}
+
+
+NS_IMPL_ISUPPORTS2(nsSameOriginChecker,
+                   nsIChannelEventSink,
+                   nsIInterfaceRequestor)
+
+NS_IMETHODIMP
+nsSameOriginChecker::OnChannelRedirect(nsIChannel *aOldChannel,
+                                       nsIChannel *aNewChannel,
+                                       PRUint32    aFlags)
+{
+  NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
+
+  nsCOMPtr<nsIURI> oldURI;
+  nsresult rv = aOldChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> newURI;
+  rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The new URI
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return nsContentUtils::GetSecurityManager()->
+    CheckSameOriginURI(oldURI, newURI, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsSameOriginChecker::GetInterface(const nsIID & aIID, void **aResult)
+{
+  return QueryInterface(aIID, aResult);
+}
+
