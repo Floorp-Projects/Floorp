@@ -74,6 +74,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIEventStateManager.h"
 #include "nsIBoxLayout.h"
@@ -87,6 +88,8 @@
 #endif
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
+
+PRInt8 nsMenuPopupFrame::sDefaultLevelParent = -1;
 
 // NS_NewMenuPopupFrame
 //
@@ -118,6 +121,10 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   mInContentShell(PR_TRUE),
   mPrefSize(-1, -1)
 {
+  if (sDefaultLevelParent >= 0)
+    return;
+  sDefaultLevelParent =
+    nsContentUtils::GetBoolPref("ui.panel.default_level_parent", PR_FALSE);
 } // ctor
 
 
@@ -189,6 +196,31 @@ nsMenuPopupFrame::IsNoAutoHide()
                                  nsGkAtoms::_true, eIgnoreCase));
 }
 
+PRBool
+nsMenuPopupFrame::IsTopMost()
+{
+  // If this panel is not a panel, this is always a top-most popup
+  if (mPopupType != ePopupTypePanel)
+    return PR_TRUE;
+
+  // If this panel is a noautohide panel, it should appear just above the parent
+  // window.
+  if (IsNoAutoHide())
+    return PR_FALSE;
+
+  // Otherwise, check the topmost attribute.
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::level,
+                            nsGkAtoms::top, eIgnoreCase))
+    return PR_TRUE;
+
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::level,
+                            nsGkAtoms::parent, eIgnoreCase))
+    return PR_FALSE;
+
+  // Otherwise, the result depends on the platform.
+  return sDefaultLevelParent ? PR_TRUE : PR_FALSE;
+}
+
 void
 nsMenuPopupFrame::EnsureWidget()
 {
@@ -219,11 +251,11 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
     tag = parentContent->Tag();
   widgetData.mDropShadow = !(viewHasTransparentContent || tag == nsGkAtoms::menulist);
 
-  // panels which don't auto-hide need a parent widget. This allows them
-  // to always appear in front of the parent window but behind other windows
-  // that should be in front of it.
+  // panels which are not topmost need a parent widget. This allows them to
+  // always appear in front of the parent window but behind other windows that
+  // should be in front of it.
   nsCOMPtr<nsIWidget> parentWidget;
-  if (IsNoAutoHide()) {
+  if (!IsTopMost()) {
     nsCOMPtr<nsISupports> cont = PresContext()->GetContainer();
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
     if (!dsti)

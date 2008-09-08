@@ -419,7 +419,7 @@
       <xul:hbox class="colorpicker-button-colorbox" anonid="colorbox" flex="1" xbl:inherits="disabled"/>
 
       <xul:panel class="colorpicker-button-menupopup"
-                 anonid="colorpopup" noautofocus="true"
+                 anonid="colorpopup" noautofocus="true" level="top"
                  onmousedown="event.stopPropagation()"
                  onpopupshowing="this._colorPicker.onPopupShowing()"
                  onpopuphiding="this._colorPicker.onPopupHiding()"
