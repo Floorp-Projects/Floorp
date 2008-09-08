@@ -942,6 +942,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         // will be held alive through the parent of the JSObject of the tearoff.
         XPCWrappedNativeTearOff *to =
             (XPCWrappedNativeTearOff*) xpc_GetJSPrivate(obj);
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)->mNative");
         cb.NoteXPCOMChild(to->GetNative());
     }
     // XXX XPCNativeWrapper seems to be the only class that doesn't hold a
@@ -952,6 +953,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS &&
             !XPCNativeWrapper::IsNativeWrapperClass(clazz))
     {
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "xpc_GetJSPrivate(obj)");
         cb.NoteXPCOMChild(static_cast<nsISupports*>(xpc_GetJSPrivate(obj)));
     }
 
@@ -960,6 +962,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     {
         nsISupports *principal = nsnull;
         mScopes.Get(obj, &principal);
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "scope prinicpal");
         cb.NoteXPCOMChild(principal);
     }
 #endif
