@@ -868,7 +868,7 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
      * propagates out of scope.  This is needed for compatability
      * with the old scheme.
      */
-    if (!js_ErrorToException(cx, message, reportp)) {
+    if (!cx->fp || !js_ErrorToException(cx, message, reportp)) {
         js_ReportErrorAgain(cx, message, reportp);
     } else if (cx->debugHooks->debugErrorHook && cx->errorReporter) {
         JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
