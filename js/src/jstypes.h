@@ -95,6 +95,8 @@
 
 # ifdef HAVE_VISIBILITY_ATTRIBUTE
 #  define JS_EXTERNAL_VIS __attribute__((visibility ("default")))
+# elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#  define JS_EXTERNAL_VIS __global
 # else
 #  define JS_EXTERNAL_VIS
 # endif

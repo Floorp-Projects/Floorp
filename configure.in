@@ -2955,6 +2955,11 @@ EOF
   fi       # have visibility(hidden) attribute
 fi         # GNU_CC
 
+# visibility hidden flag for Sun Studio on Solaris
+if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+VISIBILITY_FLAGS='-xldscope=hidden'
+fi         # Sun Studio on Solaris
+
 AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(VISIBILITY_FLAGS)
 
