@@ -78,7 +78,6 @@
                       size="2" maxlength="2" flex="1" chromedir="&locale.dir;"
                       xbl:inherits="disabled,readonly"/>
         </xul:hbox>
-        <xul:label anonid="sep-third" class="datetimepicker-separator" value=""/>
         <xul:hbox class="textbox-input-box datetimepicker-input-subbox" align="center">
           <html:input class="datetimepicker-input textbox-input" anonid="input-ampm"
                       size="2" maxlength="2" flex="1" chromedir="&locale.dir;"
@@ -109,9 +108,6 @@
       </field>
       <field name="_separatorSecond">
         document.getAnonymousElementByAttribute(this, "anonid", "sep-second");
-      </field>
-      <field name="_separatorThird">
-        document.getAnonymousElementByAttribute(this, "anonid", "sep-third");
       </field>
       <field name="_lastFocusedField">null</field>
       <field name="_hasEntry">true</field>
@@ -353,7 +349,6 @@
           if (this.secondField)
             this.secondField.parentNode.collapsed = val;
           this._separatorSecond.collapsed = val;
-          this._separatorThird.collapsed = val;
           return val;
         </setter>
       </property>
@@ -518,19 +513,17 @@
             this.minuteField = this._fieldTwo;
             this.secondField = this._fieldThree;
 
-            var numberOrder = /^(\D*)\s*(\d+)(\D*)(\d+)(\D*)(\d+)(\S*)\s*(\D*)$/;
+            var numberOrder = /^(\D*)\s*(\d+)(\D*)(\d+)(\D*)(\d+)\s*(\D*)$/;
 
             var pmTime = new Date(2000,0,1,16,7,9).toLocaleFormat("%X");
             var numberFields = pmTime.match(numberOrder);
             if (numberFields) {
               this._separatorFirst.value = numberFields[3];
               this._separatorSecond.value = numberFields[5];
-              this._separatorThird.collapsed = numberFields[7] == "";
-              this._separatorThird.value = numberFields[7];
               if (Number(numberFields[2]) > 12)
                 this.is24HourClock = true;
               else
-                this.pmIndicator = numberFields[1] || numberFields[8];
+                this.pmIndicator = numberFields[1] || numberFields[7];
             }
 
             var amTime = new Date(2000,0,1,1,7,9).toLocaleFormat("%X");
@@ -541,13 +534,13 @@
               this.secondLeadingZero = (numberFields[6].length > 1);
 
               if (!this.is24HourClock) {
-                this.amIndicator = numberFields[1] || numberFields[8];
+                this.amIndicator = numberFields[1] || numberFields[7];
                 if (numberFields[1]) {
                   var mfield = this._fieldAMPM.parentNode;
                   var mcontainer = mfield.parentNode;
                   mcontainer.insertBefore(mfield, mcontainer.firstChild);
                 }
-                var size = (numberFields[1] || numberFields[8]).length;
+                var size = (numberFields[1] || numberFields[7]).length;
                 if (this.pmIndicator.length > size)
                   size = this.pmIndicator.length;
                 this._fieldAMPM.size = size;
@@ -794,15 +787,13 @@
       <method name="_init">
         <body>
           <![CDATA[
-            var numberOrder = /^(\D*)\s*(\d+)(\D*)(\d+)(\D*)(\d+)(\S*)\s*(\D*)$/;
+            var numberOrder = /^(\D*)\s*(\d+)(\D*)(\d+)(\D*)(\d+)\s*(\D*)$/;
 
             var dt = new Date(2002,9,4).toLocaleFormat("%x");
             var numberFields = dt.match(numberOrder);
             if (numberFields) {
               this._separatorFirst.value = numberFields[3];
               this._separatorSecond.value = numberFields[5];
-              this._separatorThird.collapsed = numberFields[7] == "";
-              this._separatorThird.value = numberFields[7];
 
               var twoDigitYear = false;
               var yfield = "input-one";
