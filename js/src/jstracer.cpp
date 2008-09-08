@@ -1180,11 +1180,26 @@ FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* m
     return mp - mp_base;
 }
 
-/* Box the given native stack frame into the virtual machine stack. This only fails due to a
-   hard error (out of memory for example). */
+/**
+ * Box the given native stack frame into the virtual machine stack. This fails
+ * only due to a hard error (out of memory for example).
+ *
+ * @param callDepth the distance between the entry frame into our trace and
+ *                  cx->fp when we make this call.  If this is not called as a
+ *                  result of a nested exit, callDepth is 0.
+ * @param mp pointer to an array of type tags (JSVAL_INT, etc.) that indicate
+ *           what the types of the things on the stack are.
+ * @param np pointer to the native stack.  We want to copy values from here to
+ *           the JS stack as needed.
+ * @param stopFrame if non-null, this frame and everything above it should not
+ *                  be restored.
+ * @return the number of things we popped off of np.
+ */
 static int
-FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np, jsval* stopAt)
+FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np,
+                      JSStackFrame* stopFrame)
 {
+    jsval* stopAt = stopFrame ? &stopFrame->argv[-2] : NULL;
     uint8* mp_base = mp;
     double* np_base = np;
     /* Root all string and object references first (we don't need to call the GC for this). */
@@ -1196,9 +1211,29 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np, 
     );
 skip1:
     // Restore thisp from the now-restored argv[-1] in each pending frame.
-    unsigned n = callDepth;
-    for (JSStackFrame* fp = cx->fp; n-- != 0; fp = fp->down)
-        fp->thisp = JSVAL_TO_OBJECT(fp->argv[-1]);
+    // Keep in mind that we didn't restore frames at stopFrame and above!
+    // Scope to keep |fp| from leaking into the macros we're using.
+    {
+        unsigned n = callDepth+1; // +1 to make sure we restore the entry frame
+        JSStackFrame* fp = cx->fp;
+        if (stopFrame) {
+            for (; fp != stopFrame; fp = fp->down) {
+                JS_ASSERT(n != 0);
+                --n;
+            }
+            // Skip over stopFrame itself.
+            JS_ASSERT(n != 0);
+            --n;
+            fp = fp->down;
+        }
+        for (; n != 0; fp = fp->down) {
+            --n;
+            if (fp->callee) { // might not have it if the entry frame is global
+                JS_ASSERT(JSVAL_IS_OBJECT(fp->argv[-1]));
+                fp->thisp = JSVAL_TO_OBJECT(fp->argv[-1]);
+            }
+        }
+    }
 
     /* Now do this again but this time for all values (properly quicker than actually checking
        the type and excluding strings and objects). The GC might kick in when we store doubles,
@@ -2323,14 +2358,15 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
                                 lr, lr->calldepth);)
             unsigned calldepth = lr->calldepth;
             if (calldepth > 0) {
-                /* We found a nesting guard that holds a frame, write it back. */
+                /* We found a nesting guard that holds one or more frames to
+                   reconstruct. */
                 for (unsigned i = 0; i < calldepth; ++i)
                     js_SynthesizeFrame(cx, callstack[i]);
                 /* Restore the native stack excluding the current frame, which the next tree
                    call guard or the innermost tree exit guard will restore. */
                 slots = FlushNativeStackFrame(cx, calldepth,
                                               lr->exit->typeMap + lr->exit->numGlobalSlots,
-                                              stack, &cx->fp->argv[-2]);
+                                              stack, cx->fp);
                 if (slots < 0)
                     return NULL;
                 callstack += calldepth;
