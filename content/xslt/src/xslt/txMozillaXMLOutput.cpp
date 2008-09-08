@@ -673,6 +673,9 @@ txMozillaXMLOutput::createTxWrapper()
         }
     }
 
+    if (!mCurrentNodeStack.AppendObject(wrapper)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
     mCurrentNode = wrapper;
     mRootContentCreated = PR_TRUE;
     NS_ASSERTION(rootLocation == mDocument->GetChildCount(),
