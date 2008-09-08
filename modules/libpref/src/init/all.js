@@ -1515,6 +1515,9 @@ pref("intl.jis0208.map", "CP932");
 // Switch the keyboard layout per window
 pref("intl.keyboard.per_window_layout", false);
 
+// See bug 448927, on topmost panel, some IMEs are not usable on Windows.
+pref("ui.panel.default_level_parent", false);
+
 # WINNT
 #endif
 
@@ -1932,6 +1935,9 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 // This indicates whether it should use the native dialog or the XP Dialog
 pref("print.use_native_print_dialog", true);
 
+// See bug 404131, topmost <panel> element wins to Dashboard on MacOSX.
+pref("ui.panel.default_level_parent", false);
+
 # XP_MACOSX
 #endif
 
@@ -2129,6 +2135,11 @@ pref("intl.jis0208.map", "IBM943");
 // This is because OS/2 doesn't support IPv6
 pref("network.dns.disableIPv6", true);
 
+// IMEs of OS/2 might use non-topmost windows for topmost <panel> element,
+// see bug 451015. If there are other problems by this value, we may need to
+// change this value.
+pref("ui.panel.default_level_parent", false);
+
 # OS2
 #endif
 
@@ -2219,6 +2230,11 @@ pref("ui.key.contentAccess", 3);
 
 // xxx toolkit?
 pref("browser.download.dir", "/boot/home/Downloads");
+
+// IMEs of BeOS might use non-topmost windows for topmost <panel> element,
+// see bug 451015. If there are other problems by this value, we may need to
+// change this value.
+pref("ui.panel.default_level_parent", false);
 
 # BeOS
 #endif
@@ -2481,6 +2497,17 @@ pref("font.size.fixed.x-sinh", 13);
 pref("print.postscript.paper_size",    "letter");
 pref("print.postscript.orientation",   "portrait");
 pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
+
+// On GTK2 platform, we should use topmost window level for the default window
+// level of <panel> element of XUL. GTK2 has only two window types. One is
+// normal top level window, other is popup window. The popup window is always
+// topmost window level, therefore, we are using normal top level window for
+// non-topmost panel, but it is pretty hacky. On some Window Managers, we have
+// 2 problems:
+// 1. The non-topmost panel steals focus from its parent window at showing.
+// 2. The parent of non-topmost panel is not activated when the panel is hidden.
+// So, we have no reasons we should use non-toplevel window for popup.
+pref("ui.panel.default_level_parent", true);
 
 # XP_UNIX
 #endif
