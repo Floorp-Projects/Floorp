@@ -5044,12 +5044,6 @@ TraceRecorder::record_JSOP_STRICTNE()
 }
 
 bool
-TraceRecorder::record_JSOP_CLOSURE()
-{
-    return false;
-}
-
-bool
 TraceRecorder::record_JSOP_OBJECT()
 {
     JSStackFrame* fp = cx->fp;
@@ -6343,6 +6337,7 @@ TraceRecorder::record_JSOP_HOLE()
 
 #define UNUSED(op) bool TraceRecorder::record_##op() { return false; }
 
+UNUSED(JSOP_UNUSED74)
 UNUSED(JSOP_UNUSED76)
 UNUSED(JSOP_UNUSED77)
 UNUSED(JSOP_UNUSED78)

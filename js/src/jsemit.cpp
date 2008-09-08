@@ -4019,17 +4019,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * definitions can be scheduled before generating the rest of code.
          */
         if (!(cg->treeContext.flags & TCF_IN_FUNCTION)) {
-            CG_SWITCH_TO_PROLOG(cg);
-
-            /*
-             * Emit JSOP_CLOSURE for eval code to do fewer checks when
-             * instantiating top-level functions in the non-eval case.
-             */
             JS_ASSERT(!cg->treeContext.topStmt);
-            op = (cg->treeContext.parseContext->callerFrame)
-                 ? JSOP_CLOSURE
-                 : JSOP_DEFFUN;
-            EMIT_INDEX_OP(op, index);
+            CG_SWITCH_TO_PROLOG(cg);
+            EMIT_INDEX_OP(JSOP_DEFFUN, index);
             CG_SWITCH_TO_MAIN(cg);
 
             /* Emit NOP for the decompiler. */
@@ -5116,12 +5108,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                             return JS_FALSE;
                     } else {
                         /*
-                         * A closure in a top-level block with function
+                         * JSOP_DEFFUN in a top-level block with function
                          * definitions appears, for example, when "if (true)"
                          * is optimized away from "if (true) function x() {}".
                          * See bug 428424.
                          */
-                        JS_ASSERT(pn2->pn_op == JSOP_CLOSURE);
+                        JS_ASSERT(pn2->pn_op == JSOP_DEFFUN);
                     }
                 }
             }
