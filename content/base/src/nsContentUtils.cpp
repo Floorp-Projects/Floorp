@@ -2466,7 +2466,7 @@ nsContentUtils::ContentIsDraggable(nsIContent* aContent)
       return PR_TRUE;
 
     if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
-                              nsGkAtoms::_false, eIgnoreCase)
+                              nsGkAtoms::_false, eIgnoreCase))
       return PR_FALSE;
   }
 
