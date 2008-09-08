@@ -73,7 +73,12 @@ function init(aEvent)
   button.setAttribute("accesskey", document.documentElement.getAttribute("creditsaccesskey"));
   button.addEventListener("command", switchPage, false);
 
-  document.documentElement.getButton("accept").focus();
+  var acceptButton = document.documentElement.getButton("accept");
+#ifdef XP_UNIX
+  acceptButton.setAttribute("icon", "close");
+#endif
+  acceptButton.focus();
+
 #ifdef XP_MACOSX
   // it may not be sized at this point, and we need its width to calculate its position
   window.sizeToContent();

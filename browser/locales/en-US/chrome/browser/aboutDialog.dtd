@@ -1,9 +1,12 @@
-<!ENTITY aboutDialog.title      "About &brandFullName;">
-<!ENTITY copyright              "Credits">
-<!ENTITY copyright.accesskey    "C">
-<!ENTITY aboutLink              "&lt; About &brandFullName;">
-<!ENTITY aboutLink.accesskey    "A">
-<!ENTITY aboutVersion           "version">
-<!ENTITY copyrightInfo          "&#169;1998-2008 Contributors. All Rights Reserved. Firefox and the 
-                                 Firefox logos are trademarks of the Mozilla Foundation.  All rights 
-                                 reserved.">
+<!ENTITY aboutDialog.title          "About &brandFullName;">
+<!ENTITY copyright                  "Credits">
+<!ENTITY copyright.accesskey        "C">
+<!ENTITY copyrightGNOME.accesskey   "r">
+<!ENTITY aboutLink                  "&lt; About &brandFullName;">
+<!ENTITY aboutLink.accesskey        "A">
+<!ENTITY aboutVersion               "version">
+<!ENTITY closeCmdGNOME.label        "Close">  
+<!ENTITY closeCmdGNOME.accesskey    "C">
+<!ENTITY copyrightInfo              "&#169;1998-2008 Contributors. All Rights Reserved. Firefox and the 
+                                     Firefox logos are trademarks of the Mozilla Foundation.  All rights 
+                                     reserved.">

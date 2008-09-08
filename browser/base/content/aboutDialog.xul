@@ -62,9 +62,17 @@
 #else
         title="&aboutDialog.title;"
         buttons="accept,extra2"
+#ifdef XP_UNIX
+        buttonlabelaccept="&closeCmdGNOME.label;"
+        buttonaccesskeyaccept="&closeCmdGNOME.accesskey;"
+#endif
 #endif
         creditslabel="&copyright;"
+#ifdef XP_UNIX
+        creditsaccesskey="&copyrightGNOME.accesskey;"
+#else
         creditsaccesskey="&copyright.accesskey;"
+#endif
         aboutlabel="&aboutLink;"
         aboutaccesskey="&aboutLink.accesskey;">
     
