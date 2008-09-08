@@ -1168,10 +1168,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
 
     // The Rect for the current cell.
     nscoord colWidth;
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      currCol->GetWidthInTwips(this, &colWidth);
+    nsresult rv = currCol->GetWidthInTwips(this, &colWidth);
     NS_ASSERTION(NS_SUCCEEDED(rv), "invalid column");
 
     nsRect cellRect(currX, mInnerBox.y + mRowHeight * (aRow - mTopRowIndex),
@@ -3702,7 +3699,8 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
     nsAutoString value;
     mView->GetCellValue(aRowIndex, aColumn, value);
 
-    PRInt32 intValue = value.ToInteger(nsnull);
+    PRInt32 rv;
+    PRInt32 intValue = value.ToInteger(&rv);
     if (intValue < 0)
       intValue = 0;
     else if (intValue > 100)
