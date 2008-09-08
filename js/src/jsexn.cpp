@@ -1172,11 +1172,10 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     JSString *messageStr, *filenameStr;
 
     /*
-     * Tell our caller to report immediately if cx has no active frames, or if
-     * this report is just a warning.
+     * Tell our caller to report immediately if this report is just a warning.
      */
     JS_ASSERT(reportp);
-    if (!cx->fp || JSREPORT_IS_WARNING(reportp->flags))
+    if (JSREPORT_IS_WARNING(reportp->flags))
         return JS_FALSE;
 
     /* Find the exception index associated with this error. */
