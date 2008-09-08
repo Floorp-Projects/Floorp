@@ -637,7 +637,9 @@ gfxContext::SetColor(const gfxRGBA& c)
                            1);
             gfxRGBA cms(packed, gfxRGBA::PACKED_ARGB);
 #endif
-            cairo_set_source_rgba(mCairo, cms.r, cms.g, cms.b, cms.a);
+            // Use the original alpha to avoid unnecessary float->byte->float
+            // conversion errors
+            cairo_set_source_rgba(mCairo, cms.r, cms.g, cms.b, c.a);
             return;
         }
     }
