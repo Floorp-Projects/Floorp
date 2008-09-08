@@ -2359,21 +2359,20 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     JS_ASSERT(fp->slots + fp->script->nfixed +
               js_ReconstructStackDepth(cx, fp->script, fp->regs->pc) == fp->regs->sp);
 
-#if defined(DEBUG) && defined(NANOJIT_IA32)
-    uint64 cycles = rdtsc() - start;
-#else
-    debug_only_v(uint64 cycles = 0;)
-#endif
-
-    debug_only_v(printf("leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%d, sp=%d, ip=%p, "
-                        "cycles=%llu\n",
-                        fp->script->filename, js_PCToLineNumber(cx, fp->script, fp->regs->pc),
+    debug_only_v(printf("leaving trace at %s:%u@%u, op=%s, lr=%p, "
+                        "exitType=%d, sp=%d, ip=%p, ",
+                        fp->script->filename,
+                        js_PCToLineNumber(cx, fp->script, fp->regs->pc),
                         fp->regs->pc - fp->script->code,
                         js_CodeName[*fp->regs->pc],
                         lr,
                         lr->exit->exitType,
-                        fp->regs->sp - StackBase(fp), lr->jmp,
-                        cycles));
+                        fp->regs->sp - StackBase(fp), lr->jmp));
+#if defined(DEBUG) && defined(NANOJIT_IA32)
+    debug_only_v(printf("cycles=%llu\n", rdtsc() - start));
+#else
+    debug_only_v(printf("cycles=0\n"));
+#endif
 
     /* If this trace is part of a tree, later branches might have added additional globals for
        with we don't have any type information available in the side exit. We merge in this
