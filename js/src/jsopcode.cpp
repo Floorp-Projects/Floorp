@@ -70,6 +70,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsstaticcheck.h"
 
 #if JS_HAS_DESTRUCTURING
 # include "jsnum.h"
@@ -2544,7 +2545,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                         return NULL;
                 }
 
-                /* From here on, control must flow through enterblock_out. */
+                MUST_FLOW_THROUGH("enterblock_out");
 #define LOCAL_ASSERT_OUT(expr) LOCAL_ASSERT_CUSTOM(expr, ok = JS_FALSE; \
                                                    goto enterblock_out)
                 for (sprop = OBJ_SCOPE(obj)->lastProp; sprop;
@@ -5046,7 +5047,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     oldcode = script->code;
     oldmain = script->main;
 
-    /* From this point the control must flow through the label out. */
+    MUST_FLOW_THROUGH("out");
     code = js_UntrapScriptCode(cx, script);
     if (code != oldcode) {
         script->code = code;
@@ -5122,7 +5123,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
         goto out;
     }
 
-    /* From this point the control must flow through the label out. */
+    MUST_FLOW_THROUGH("out");
     pcdepth = ReconstructPCStack(cx, script, begin, pcstack);
     if (pcdepth < 0) {
          name = FAILED_EXPRESSION_DECOMPILER;

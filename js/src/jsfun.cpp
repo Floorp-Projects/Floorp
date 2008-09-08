@@ -65,6 +65,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsexn.h"
+#include "jsstaticcheck.h"
 
 #if JS_HAS_GENERATORS
 # include "jsiter.h"
@@ -717,7 +718,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
 
     mark = JS_ARENA_MARK(&cx->tempPool);
 
-    /* From this point the control must flow through the label out. */
+    MUST_FLOW_THROUGH("out");
     names = js_GetLocalNameArray(cx, fun, &cx->tempPool);
     if (!names) {
         ok = JS_FALSE;
