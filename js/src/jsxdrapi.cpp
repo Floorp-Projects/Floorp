@@ -570,7 +570,7 @@ XDRValueBody(JSXDRState *xdr, uint32 type, jsval *vp)
         if (!JS_XDRUint32(xdr, &b))
             return JS_FALSE;
         if (xdr->mode == JSXDR_DECODE)
-            *vp = BOOLEAN_TO_JSVAL((JSBool) b);
+            *vp = BOOLEAN_TO_JSVAL(!!b);
         break;
       }
       default: {
