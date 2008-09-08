@@ -481,10 +481,7 @@ SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
   aTreeBox->GetView(getter_AddRefs(view));
   if (view) {
     nsAutoString label;
-#ifdef DEBUG
-    nsresult rv = 
-#endif
-      view->GetCellText(aRow, aCol, label);
+    nsresult rv = view->GetCellText(aRow, aCol, label);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Couldn't get the cell text!");
     aTooltip->SetAttr(kNameSpaceID_None, nsGkAtoms::label, label, PR_TRUE);
   }
