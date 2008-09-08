@@ -1896,7 +1896,7 @@ public:
 #ifdef GET_IT
 #undef GET_IT
 #endif
-#define GET_IT(f_) const {return (JSBool)(mClassInfoFlags & nsIClassInfo:: f_ );}
+#define GET_IT(f_) const {return !!(mClassInfoFlags & nsIClassInfo:: f_ );}
 
     JSBool ClassIsSingleton()           GET_IT(SINGLETON)
     JSBool ClassIsThreadSafe()          GET_IT(THREADSAFE)
