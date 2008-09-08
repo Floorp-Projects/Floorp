@@ -651,6 +651,8 @@ typedef OSErr (* NP_LOADDS BP_GetSupportedMIMETypesUPP)(BPSupportedMIMETypes*, U
 #if defined(__GNUC__) && \
     ((__GNUC__ >= 4) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
 #define NP_VISIBILITY_DEFAULT __attribute__((visibility("default")))
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#define NP_VISIBILITY_DEFAULT __global
 #else
 #define NP_VISIBILITY_DEFAULT
 #endif
