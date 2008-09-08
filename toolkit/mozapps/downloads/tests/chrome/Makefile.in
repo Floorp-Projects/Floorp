@@ -50,6 +50,7 @@ _CHROME_FILES = \
   test_basic_functionality.xul \
   test_cleanup_search.xul \
   test_clear_button_disabled.xul \
+  test_close_download_manager.xul \
   test_delete_key_removes.xul \
   test_esc_key_closes_clears.xul \
   test_multi_select.xul \
