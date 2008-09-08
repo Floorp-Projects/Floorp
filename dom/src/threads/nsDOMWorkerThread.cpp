@@ -59,6 +59,7 @@
 // DOMWorker includes
 #include "nsDOMWorkerPool.h"
 #include "nsDOMWorkerScriptLoader.h"
+#include "nsDOMWorkerSecurityManager.h"
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerTimeout.h"
 
@@ -669,9 +670,13 @@ nsDOMWorkerThread::CompileGlobalObject(JSContext* aCx)
   else {
     NS_ASSERTION(!mSource.IsEmpty(), "No source text!");
 
+    JSPrincipals* principal = nsDOMWorkerSecurityManager::WorkerPrincipal();
+
     // Evaluate and execute the script
-    success = JS_EvaluateUCScript(aCx, global, mSource.get(), mSource.Length(),
-                                  "DOMWorker inline script", 1, &val);
+    success = JS_EvaluateUCScriptForPrincipals(aCx, global, principal,
+                                               mSource.get(), mSource.Length(),
+                                               "DOMWorker inline script", 1,
+                                               &val);
     if (!success) {
       mGlobal = NULL;
       return PR_FALSE;

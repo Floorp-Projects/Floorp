@@ -784,8 +784,8 @@ nsDOMThreadService::CreateJSContext()
 
   static JSSecurityCallbacks securityCallbacks = {
     nsDOMWorkerSecurityManager::JSCheckAccess,
-    NULL,
-    NULL
+    nsDOMWorkerSecurityManager::JSTranscodePrincipals,
+    nsDOMWorkerSecurityManager::JSFindPrincipal
   };
 
   JS_SetContextSecurityCallbacks(cx, &securityCallbacks);
