@@ -2700,7 +2700,8 @@ void PresShell::RestoreCaret()
 
 NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 {
-  PRBool oldEnabled = mCaretEnabled;
+  nsresult result = NS_OK;
+  PRBool   oldEnabled = mCaretEnabled;
 
   mCaretEnabled = aInEnable;
 
