@@ -293,22 +293,27 @@ SessionStoreService.prototype = {
       this._uninit();
       break;
     case "browser:purge-session-history": // catch sanitization 
+      let openWindows = {};
       this._forEachBrowserWindow(function(aWindow) {
         Array.forEach(aWindow.getBrowser().browsers, function(aBrowser) {
           delete aBrowser.parentNode.__SS_data;
         });
+        openWindows[aWindow.__SSi] = true;
       });
+      // also clear all data about closed tabs and windows
+      for (ix in this._windows) {
+        if (ix in openWindows)
+          this._windows[ix]._closedTabs = [];
+        else
+          delete this._windows[ix];
+      }
       this._lastClosedWindows = null;
       this._clearDisk();
-      // also clear all data about closed tabs
-      for (ix in this._windows) {
-        this._windows[ix]._closedTabs = [];
-      }
       // give the tabbrowsers a chance to clear their histories first
       var win = this._getMostRecentBrowserWindow();
       if (win)
         win.setTimeout(function() { _this.saveState(true); }, 0);
-      else
+      else if (this._loadState == STATE_RUNNING)
         this.saveState(true);
       break;
     case "nsPref:changed": // catch pref changes
