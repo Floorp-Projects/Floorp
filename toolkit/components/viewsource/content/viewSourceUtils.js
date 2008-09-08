@@ -247,7 +247,7 @@ var gViewSourceUtils = {
           // Determine the command line arguments to pass to the editor.
           // We currently support a %LINE% placeholder which is set to the passed
           // line number (or to 0 if there's none)
-          var editorArgs = []
+          var editorArgs = [];
           var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                 .getService(Components.interfaces.nsIPrefBranch);
           var args = prefs.getCharPref("view_source.editor.args");
