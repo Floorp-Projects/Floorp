@@ -788,7 +788,7 @@ nsDOMThreadService::CreateJSContext()
     NULL
   };
 
-  JS_SetSecurityCallbacks(cx, &securityCallbacks);
+  JS_SetContextSecurityCallbacks(cx, &securityCallbacks);
 
   nsresult rv = nsContentUtils::XPConnect()->
     SetSecurityManagerForJSContext(cx, gWorkerSecurityManager, 0);
