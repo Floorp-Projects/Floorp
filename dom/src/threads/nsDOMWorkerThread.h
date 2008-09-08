@@ -47,8 +47,10 @@
 
 // Other includes
 #include "jsapi.h"
+#include "nsAutoJSObjectHolder.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
+#include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "prclist.h"
 #include "prlock.h"
@@ -123,6 +125,7 @@ class nsDOMWorkerThread : public nsDOMWorkerBase,
   friend class nsDOMWorkerFunctions;
   friend class nsDOMWorkerPool;
   friend class nsDOMWorkerRunnable;
+  friend class nsDOMWorkerScriptLoader;
   friend class nsDOMWorkerTimeout;
 
   friend JSBool DOMWorkerOperationCallback(JSContext* aCx);
@@ -133,7 +136,8 @@ public:
   NS_DECL_NSICLASSINFO
 
   nsDOMWorkerThread(nsDOMWorkerPool* aPool,
-                    const nsAString& aSource);
+                    const nsAString& aSource,
+                    PRBool aSourceIsURL);
 
   virtual nsDOMWorkerPool* Pool() {
     NS_ASSERTION(!IsCanceled(), "Don't touch Pool after we've been canceled!");
@@ -169,10 +173,17 @@ private:
   void SuspendTimeouts();
   void ResumeTimeouts();
 
+  void CancelScriptLoaders();
+
+  PRLock* Lock() {
+    return mLock;
+  }
+
   nsDOMWorkerPool* mPool;
   nsString mSource;
+  nsString mSourceURL;
 
-  JSObject* mGlobal;
+  nsAutoJSObjectHolder mGlobal;
   PRBool mCompiled;
 
   PRUint32 mCallbackCount;
@@ -181,6 +192,8 @@ private:
 
   PRLock* mLock;
   PRCList mTimeouts;
+
+  nsTArray<nsDOMWorkerScriptLoader*> mScriptLoaders;
 };
 
 #endif /* __NSDOMWORKERTHREAD_H__ */

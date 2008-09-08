@@ -53,6 +53,7 @@ REQUIRES = \
   content \
   js \
   layout \
+  necko \
   pref \
   string \
   widget \
@@ -64,6 +65,7 @@ CPPSRCS = \
   nsDOMThreadService.cpp \
   nsDOMWorkerBase.cpp \
   nsDOMWorkerPool.cpp \
+  nsDOMWorkerScriptLoader.cpp \
   nsDOMWorkerSecurityManager.cpp \
   nsDOMWorkerThread.cpp \
   nsDOMWorkerTimeout.cpp \
