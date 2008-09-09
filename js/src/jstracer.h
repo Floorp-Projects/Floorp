@@ -253,7 +253,7 @@ class TraceRecorder {
     nanojit::LIns* guard(bool expected, nanojit::LIns* cond, nanojit::ExitType exitType);
     nanojit::LIns* addName(nanojit::LIns* ins, const char* name);
 
-    nanojit::LIns* get(jsval* p);
+    nanojit::LIns* get(jsval* p) const;
     nanojit::LIns* writeBack(nanojit::LIns* i, nanojit::LIns* base, ptrdiff_t offset);
     void set(jsval* p, nanojit::LIns* l, bool initializing = false);
 
@@ -341,6 +341,7 @@ public:
             nanojit::GuardRecord* expectedInnerExit);
     ~TraceRecorder();
 
+    uint8 TraceRecorder::determineSlotType(jsval* vp) const;
     nanojit::SideExit* snapshot(nanojit::ExitType exitType);
     nanojit::Fragment* getFragment() const { return fragment; }
     bool isLoopHeader(JSContext* cx) const;
