@@ -92,6 +92,8 @@ CSS_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled")
 CSS_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed")
 CSS_PSEUDO_CLASS(mozLoading, ":-moz-loading")
 CSS_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported")
+CSS_PSEUDO_CLASS(mozHandlerDisabled, ":-moz-handler-disabled")
+CSS_PSEUDO_CLASS(mozHandlerBlocked, ":-moz-handler-blocked")
 
 CSS_PSEUDO_CLASS(mozHasHandlerRef, ":-moz-has-handlerref")
 
