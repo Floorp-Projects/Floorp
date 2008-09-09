@@ -120,7 +120,7 @@ struct JSObjectMap {
         }                                                                     \
     JS_END_MACRO
 
-#define JS_INITIAL_NSLOTS   6
+#define JS_INITIAL_NSLOTS   5
 
 /*
  * When JSObject.dslots is not null, JSObject.dslots[-1] records the number of
@@ -128,17 +128,17 @@ struct JSObjectMap {
  */
 struct JSObject {
     JSObjectMap *map;
+    jsuword     classword;
     jsval       fslots[JS_INITIAL_NSLOTS];
     jsval       *dslots;        /* dynamically allocated slots */
 };
 
 #define JSSLOT_PROTO        0
 #define JSSLOT_PARENT       1
-#define JSSLOT_CLASS        2
-#define JSSLOT_PRIVATE      3
+#define JSSLOT_PRIVATE      2
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \
                              ? JSSLOT_PRIVATE + 1                             \
-                             : JSSLOT_CLASS + 1)
+                             : JSSLOT_PARENT + 1)
 
 #define JSSLOT_FREE(clasp)  (JSSLOT_START(clasp)                              \
                              + JSCLASS_RESERVED_SLOTS(clasp))
@@ -167,26 +167,29 @@ struct JSObject {
 #define STOBJ_GET_PROTO(obj)                                                  \
     JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PROTO])
 #define STOBJ_SET_PROTO(obj,proto)                                            \
-    ((obj)->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto))
+    (void)((!(proto) || STOBJ_SET_DELEGATE(proto)),                           \
+           (obj)->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto))
 #define STOBJ_CLEAR_PROTO(obj)                                                \
     ((obj)->fslots[JSSLOT_PROTO] = JSVAL_NULL)
 
 #define STOBJ_GET_PARENT(obj)                                                 \
     JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PARENT])
 #define STOBJ_SET_PARENT(obj,parent)                                          \
-    ((obj)->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent))
+    (void)((!(parent) || STOBJ_SET_DELEGATE(parent)),                         \
+           (obj)->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent))
 #define STOBJ_CLEAR_PARENT(obj)                                               \
     ((obj)->fslots[JSSLOT_PARENT] = JSVAL_NULL)
 
 /*
- * We use JSSLOT_CLASS to store both JSClass* and the system flag as an int-
- * tagged value (see jsapi.h for details) with the system flag stored in the
- * second lowest bit.
+ * We use JSObject.classword to store both JSClass* and the delegate and system
+ * flags in the two least significant bits. We do *not* synchronize updates of
+ * obj->classword -- API clients must take care.
  */
-#define STOBJ_GET_CLASS(obj)    ((JSClass *)((obj)->fslots[JSSLOT_CLASS] & ~3))
-#define STOBJ_IS_SYSTEM(obj)    (((obj)->fslots[JSSLOT_CLASS] & 2) != 0)
-
-#define STOBJ_SET_SYSTEM(obj)   ((void)((obj)->fslots[JSSLOT_CLASS] |= 2))
+#define STOBJ_GET_CLASS(obj)    ((JSClass *)((obj)->classword & ~3))
+#define STOBJ_IS_DELEGATE(obj)  (((obj)->classword & 1) != 0)
+#define STOBJ_SET_DELEGATE(obj) ((obj)->classword |= 1)
+#define STOBJ_IS_SYSTEM(obj)    (((obj)->classword & 2) != 0)
+#define STOBJ_SET_SYSTEM(obj)   ((obj)->classword |= 2)
 
 #define STOBJ_GET_PRIVATE(obj)                                                \
     (JS_ASSERT(JSVAL_IS_INT(STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE))),            \
@@ -227,7 +230,7 @@ struct JSObject {
     (OBJ_CHECK_SLOT(obj, JSSLOT_PARENT), STOBJ_SET_PARENT(obj, parent))
 
 #define LOCKED_OBJ_GET_CLASS(obj) \
-    (OBJ_CHECK_SLOT(obj, JSSLOT_CLASS), STOBJ_GET_CLASS(obj))
+    STOBJ_GET_CLASS(obj)
 
 #define LOCKED_OBJ_GET_PRIVATE(obj) \
     (OBJ_CHECK_SLOT(obj, JSSLOT_PRIVATE), STOBJ_GET_PRIVATE(obj))
@@ -276,7 +279,10 @@ struct JSObject {
 
 #endif /* !JS_THREADSAFE */
 
-/* Thread-safe proto, parent, and class access macros. */
+/* Thread-safe delegate, proto, parent, and class access macros. */
+#define OBJ_IS_DELEGATE(cx,obj)         STOBJ_IS_DELEGATE(obj)
+#define OBJ_SET_DELEGATE(cx,obj)        STOBJ_SET_DELEGATE(obj)
+
 #define OBJ_GET_PROTO(cx,obj)           STOBJ_GET_PROTO(obj)
 #define OBJ_SET_PROTO(cx,obj,proto)     STOBJ_SET_PROTO(obj, proto)
 #define OBJ_CLEAR_PROTO(cx,obj)         STOBJ_CLEAR_PROTO(obj)
@@ -286,7 +292,7 @@ struct JSObject {
 #define OBJ_CLEAR_PARENT(cx,obj)        STOBJ_CLEAR_PARENT(obj)
 
 /*
- * Class is invariant and comes from the fixed JSSLOT_CLASS. Thus no locking
+ * Class is invariant and comes from the fixed clasp member. Thus no locking
  * is necessary to read it. Same for the private slot.
  */
 #define OBJ_GET_CLASS(cx,obj)           STOBJ_GET_CLASS(obj)
