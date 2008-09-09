@@ -498,11 +498,11 @@ js_FastNewArray(JSContext* cx, JSObject* proto)
     if (!obj)
         return NULL;
 
+    JSClass* clasp = &js_ArrayClass;
+    obj->classword = jsuword(clasp);
+
     obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     obj->fslots[JSSLOT_PARENT] = proto->fslots[JSSLOT_PARENT];
-
-    JSClass* clasp = &js_ArrayClass;
-    obj->fslots[JSSLOT_CLASS] = PRIVATE_TO_JSVAL(clasp);
 
     obj->fslots[JSSLOT_ARRAY_LENGTH] = 0;
     obj->fslots[JSSLOT_ARRAY_COUNT] = 0;
@@ -543,9 +543,9 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
     JSObject* proto = JSVAL_TO_OBJECT(v);
 
+    obj->classword = jsuword(clasp);
     obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
     obj->fslots[JSSLOT_PARENT] = ctor->fslots[JSSLOT_PARENT];
-    obj->fslots[JSSLOT_CLASS] = PRIVATE_TO_JSVAL(clasp);
     for (unsigned i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
 

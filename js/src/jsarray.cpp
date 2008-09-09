@@ -1170,9 +1170,9 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
                                       ? INT_TO_JSVAL(length)
                                       : JSVAL_VOID;
 
-    /* Make sure we preserve any flags borrowing bits in JSSLOT_CLASS. */
-    obj->fslots[JSSLOT_CLASS] ^= (jsval) &js_ArrayClass;
-    obj->fslots[JSSLOT_CLASS] |= (jsval) &js_SlowArrayClass;
+    /* Make sure we preserve any flags borrowing bits in classword. */
+    obj->classword ^= (jsuword) &js_ArrayClass;
+    obj->classword |= (jsuword) &js_SlowArrayClass;
 
     /* Swap in our new map. */
     oldmap = obj->map;
