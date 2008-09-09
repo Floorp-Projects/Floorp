@@ -4581,6 +4581,7 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     
     if (aType >= Flush_Layout && !mIsDestroying) {
       mFrameConstructor->RecalcQuotesAndCounters();
+      mViewManager->FlushDelayedResize();
       ProcessReflowCommands(aInterruptibleReflow);
     }
 
