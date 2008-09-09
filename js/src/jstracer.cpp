@@ -3329,16 +3329,21 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // guards the js_SetProperty case.
     uint32 format = js_CodeSpec[*cx->fp->regs->pc].format;
     uint32 mode = JOF_MODE(format);
-    size_t op_offset = 0;
-    if (mode == JOF_PROP || mode == JOF_VARPROP) {
-        JS_ASSERT(!(format & JOF_SET));
-        op_offset = offsetof(JSObjectOps, getProperty);
-    } else {
-        JS_ASSERT(mode == JOF_NAME);
-    }
 
-    if (!map_is_native(aobj->map, map_ins, ops_ins, op_offset))
-        return false;
+    // No need to guard native-ness of global object.
+    JS_ASSERT(OBJ_IS_NATIVE(globalObj));
+    if (aobj != globalObj) {
+        size_t op_offset = 0;
+        if (mode == JOF_PROP || mode == JOF_VARPROP) {
+            JS_ASSERT(!(format & JOF_SET));
+            op_offset = offsetof(JSObjectOps, getProperty);
+        } else {
+            JS_ASSERT(mode == JOF_NAME);
+        }
+
+        if (!map_is_native(aobj->map, map_ins, ops_ins, op_offset))
+            return false;
+    }
 
     JSAtom* atom;
     JSPropCacheEntry* entry;
@@ -3379,6 +3384,10 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)))
                     ABORT_TRACE("can't create slot-ful global for JSOP_SETNAME");
                 pcval = SLOT_TO_PCVAL(sprop->slot);
+
+                // We are adding to the global object, so update its saved shape.
+                JS_ASSERT(obj == globalObj);
+                traceMonitor->globalShape = OBJ_SHAPE(obj);
             } else {
                 // Use PCVAL_NULL to return "no such property" to our caller.
                 pcval = PCVAL_NULL;
@@ -4404,8 +4413,7 @@ TraceRecorder::record_JSOP_SETPROP()
     JSPropCacheEntry* entry = &cache->table[PROPERTY_CACHE_HASH_PC(pc, kshape)];
     if (entry->kpc != pc || entry->kshape != kshape)
         ABORT_TRACE("cache miss");
-    if (!PCVAL_IS_SPROP(entry->vword))
-        ABORT_TRACE("hit non-sprop cache value");
+    JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
 
     LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
     LIns* ops_ins;
@@ -4415,8 +4423,7 @@ TraceRecorder::record_JSOP_SETPROP()
     // The global object's shape is guarded at trace entry.
     if (obj != globalObj) {
         LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
-        guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"),
-                MISMATCH_EXIT);
+        guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"), MISMATCH_EXIT);
     }
 
     JSScope* scope = OBJ_SCOPE(obj);
