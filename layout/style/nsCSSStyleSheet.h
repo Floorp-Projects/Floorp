@@ -64,13 +64,14 @@ class nsCSSStyleSheet;
 
 class nsCSSStyleSheetInner {
 public:
-  nsCSSStyleSheetInner(nsICSSStyleSheet* aParentSheet);
-  nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy, nsCSSStyleSheet* aParentSheet);
+  nsCSSStyleSheetInner(nsICSSStyleSheet* aPrimarySheet);
+  nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
+                       nsCSSStyleSheet* aPrimarySheet);
   virtual ~nsCSSStyleSheetInner();
 
-  virtual nsCSSStyleSheetInner* CloneFor(nsCSSStyleSheet* aParentSheet);
-  virtual void AddSheet(nsICSSStyleSheet* aParentSheet);
-  virtual void RemoveSheet(nsICSSStyleSheet* aParentSheet);
+  virtual nsCSSStyleSheetInner* CloneFor(nsCSSStyleSheet* aPrimarySheet);
+  virtual void AddSheet(nsICSSStyleSheet* aSheet);
+  virtual void RemoveSheet(nsICSSStyleSheet* aSheet);
 
   virtual void RebuildNameSpaces();
 
