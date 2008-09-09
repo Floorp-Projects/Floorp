@@ -341,7 +341,7 @@ public:
             nanojit::GuardRecord* expectedInnerExit);
     ~TraceRecorder();
 
-    uint8 TraceRecorder::determineSlotType(jsval* vp) const;
+    uint8 determineSlotType(jsval* vp) const;
     nanojit::SideExit* snapshot(nanojit::ExitType exitType);
     nanojit::Fragment* getFragment() const { return fragment; }
     bool isLoopHeader(JSContext* cx) const;
