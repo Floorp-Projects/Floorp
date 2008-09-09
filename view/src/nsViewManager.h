@@ -123,6 +123,7 @@ public:
 
   NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height);
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
+  NS_IMETHOD  FlushDelayedResize();
 
   NS_IMETHOD  Composite(void);
 

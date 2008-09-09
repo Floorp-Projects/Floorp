@@ -95,6 +95,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug405818.html \
 		test_bug412901.html \
 		test_bug437915.html \
+		test_bug453896_deck.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
 		test_css_eof_handling.html \
@@ -136,8 +137,17 @@ _TEST_FILES =	test_acid3_test46.html \
 		media_queries_dynamic_xbl_binding.xml \
 		media_queries_dynamic_xbl_iframe.html \
 		media_queries_dynamic_xbl_style.css \
+		bug453896_iframe.html \
 		$(NULL)
 
+_BROWSER_FILES = \
+		browser_bug453896.js \
+		bug453896_iframe.html \
+		media_queries_iframe.html \
+		$(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_BROWSER_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
