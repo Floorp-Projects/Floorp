@@ -153,6 +153,17 @@ static PRBool IsLoadablePlugin(CFURLRef aURL)
 
 PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
+  nsCString temp;
+  file->GetNativeLeafName(temp);
+  /*
+   * Don't load the VDP fake plugin, to avoid tripping a bad bug in OS X
+   * 10.5.3 (see bug 436575).
+   */
+  if (!strcmp(temp.get(), "VerifiedDownloadPlugin.plugin")) {
+    NS_WARNING("Preventing load of VerifiedDownloadPlugin.plugin (see bug 436575)");
+    return PR_FALSE;
+  }
+    
   CFURLRef pluginURL = NULL;
   if (NS_FAILED(toCFURLRef(file, pluginURL)))
     return PR_FALSE;
@@ -286,16 +297,6 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
         return NS_ERROR_NULL_POINTER;
 
     nsCAutoString temp;
-    mPlugin->GetNativeLeafName(temp);
-    /*
-     * Don't load the VDP fake plugin, to avoid tripping a bad bug in OS X
-     * 10.5.3 (see bug 436575).
-     */
-    if (!strcmp(temp.get(), "VerifiedDownloadPlugin.plugin")) {
-        NS_WARNING("Preventing load of VerifiedDownloadPlugin.plugin (see bug 436575)");
-        return NS_ERROR_FAILURE;
-    }
-
     mPlugin->GetNativePath(temp);
     path = temp.get();
 
