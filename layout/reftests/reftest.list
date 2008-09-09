@@ -29,6 +29,9 @@ include bugs/reftest.list
 # canvas 2D
 include canvas/reftest.list
 
+# css @import tests
+include css-import/reftest.list
+
 # columns/
 include columns/reftest.list
 

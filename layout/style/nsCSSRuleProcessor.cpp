@@ -2333,17 +2333,16 @@ CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
   sheet->GetApplicable(bSheetApplicable);
 
   if (bSheetApplicable &&
-      sheet->UseForPresentation(data->mPresContext, data->mCacheKey)) {
-    nsCSSStyleSheet* child = sheet->mFirstChild;
+      sheet->UseForPresentation(data->mPresContext, data->mCacheKey) &&
+      sheet->mInner) {
+    nsCSSStyleSheet* child = sheet->mInner->mFirstChild;
     while (child) {
       CascadeSheetRulesInto(child, data);
       child = child->mNext;
     }
 
-    if (sheet->mInner) {
-      if (!sheet->mInner->mOrderedRules.EnumerateForwards(InsertRuleByWeight, data))
-        return PR_FALSE;
-    }
+    if (!sheet->mInner->mOrderedRules.EnumerateForwards(InsertRuleByWeight, data))
+      return PR_FALSE;
   }
   return PR_TRUE;
 }
