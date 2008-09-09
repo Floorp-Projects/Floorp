@@ -1476,6 +1476,7 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* header, jsbytecode* p
 struct FrameInfo {
     JSObject*       callee;     // callee function object
     jsbytecode*     callpc;     // pc of JSOP_CALL in caller script
+    uint8*          typemap;    // typemap for the stack frame
     union {
         struct {
             uint16  spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
@@ -4603,9 +4604,22 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
         ABORT_TRACE("can't trace calls with too few args requiring argv move");
     }
 
+    // Generate a type map for the outgoing frame and stash it in the LIR
+    unsigned stackSlots = js_NativeStackSlots(cx, 0/*callDepth*/);
+    LIns* data = lir_buf_writer->skip(stackSlots * sizeof(uint8));
+    uint8* typemap = (uint8 *)data->payload();
+    uint8* m = typemap;
+    /* Determine the type of a store by looking at the current type of the actual value the
+       interpreter is using. For numbers we have to check what kind of store we used last
+       (integer or double) to figure out what the side exit show reflect in its typemap. */
+    FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
+        *m++ = determineSlotType(vp);
+    );
+    
     FrameInfo fi = {
         JSVAL_TO_OBJECT(fval),
         fp->regs->pc,
+        typemap,
         { { fp->regs->sp - fp->slots, argc } }
     };
 
