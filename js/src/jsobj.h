@@ -167,7 +167,7 @@ struct JSObject {
 #define STOBJ_GET_PROTO(obj)                                                  \
     JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PROTO])
 #define STOBJ_SET_PROTO(obj,proto)                                            \
-    (void)((!(proto) || STOBJ_SET_DELEGATE(proto)),                           \
+    (void)(STOBJ_NULLSAFE_SET_DELEGATE(proto),                                \
            (obj)->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto))
 #define STOBJ_CLEAR_PROTO(obj)                                                \
     ((obj)->fslots[JSSLOT_PROTO] = JSVAL_NULL)
@@ -175,7 +175,7 @@ struct JSObject {
 #define STOBJ_GET_PARENT(obj)                                                 \
     JSVAL_TO_OBJECT((obj)->fslots[JSSLOT_PARENT])
 #define STOBJ_SET_PARENT(obj,parent)                                          \
-    (void)((!(parent) || STOBJ_SET_DELEGATE(parent)),                         \
+    (void)(STOBJ_NULLSAFE_SET_DELEGATE(parent),                               \
            (obj)->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent))
 #define STOBJ_CLEAR_PARENT(obj)                                               \
     ((obj)->fslots[JSSLOT_PARENT] = JSVAL_NULL)
@@ -188,6 +188,8 @@ struct JSObject {
 #define STOBJ_GET_CLASS(obj)    ((JSClass *)((obj)->classword & ~3))
 #define STOBJ_IS_DELEGATE(obj)  (((obj)->classword & 1) != 0)
 #define STOBJ_SET_DELEGATE(obj) ((obj)->classword |= 1)
+#define STOBJ_NULLSAFE_SET_DELEGATE(obj)                                      \
+    (!(obj) || STOBJ_SET_DELEGATE((JSObject*)obj))
 #define STOBJ_IS_SYSTEM(obj)    (((obj)->classword & 2) != 0)
 #define STOBJ_SET_SYSTEM(obj)   ((obj)->classword |= 2)
 
