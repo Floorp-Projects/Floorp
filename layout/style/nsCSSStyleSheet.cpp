@@ -1299,7 +1299,7 @@ nsCSSStyleSheet::AppendStyleSheet(nsICSSStyleSheet* aSheet)
     while (*tail) {
       tail = &(*tail)->mNext;
     }
-    *tail - sheet;
+    *tail = sheet;
   
     // This is not reference counted. Our parent tells us when
     // it's going away.
