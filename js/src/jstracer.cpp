@@ -1419,7 +1419,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing)
 }
 
 LIns*
-TraceRecorder::get(jsval* p)
+TraceRecorder::get(jsval* p) const
 {
     return tracker.get(p);
 }
@@ -1536,6 +1536,18 @@ bool TraceRecorder::selectCallablePeerFragment(Fragment** first)
     return (*first)->code();
 }
 
+uint8 
+TraceRecorder::determineSlotType(jsval* vp) const
+{
+    uint8 m;
+    LIns* i = get(vp);
+    m = isNumber(*vp)
+        ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
+        : JSVAL_TAG(*vp);
+    JS_ASSERT((m != JSVAL_INT) || isInt32(*vp));
+    return m;
+}
+
 SideExit*
 TraceRecorder::snapshot(ExitType exitType)
 {
@@ -1577,12 +1589,7 @@ TraceRecorder::snapshot(ExitType exitType)
        interpreter is using. For numbers we have to check what kind of store we used last
        (integer or double) to figure out what the side exit show reflect in its typemap. */
     FORALL_SLOTS(cx, ngslots, traceMonitor->globalSlots->data(), callDepth,
-        LIns* i = get(vp);
-        *m = isNumber(*vp)
-               ? (isPromoteInt(i) ? JSVAL_INT : JSVAL_DOUBLE)
-               : JSVAL_TAG(*vp);
-        JS_ASSERT((*m != JSVAL_INT) || isInt32(*vp));
-        ++m;
+        *m++ = determineSlotType(vp);
     );
     JS_ASSERT(unsigned(m - exit.typeMap) == ngslots + stackSlots);
     return &exit;
