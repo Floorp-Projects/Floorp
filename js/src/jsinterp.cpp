@@ -332,8 +332,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
         PCMETER(JS_PROPERTY_CACHE(cx).idmisses++);
 
 #ifdef DEBUG_notme
-        entry = &JS_PROPERTY_CACHE(cx)
-                 .table[PROPERTY_CACHE_HASH_PC(pc, OBJ_SCOPE(obj)->shape)];
+        entry = &JS_PROPERTY_CACHE(cx).table[PROPERTY_CACHE_HASH_PC(pc, OBJ_SHAPE(obj))];
         fprintf(stderr,
                 "id miss for %s from %s:%u"
                 " (pc %u, kpc %u, kshape %u, shape %u)\n",
@@ -343,10 +342,10 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
                 pc - cx->fp->script->code,
                 entry->kpc - cx->fp->script->code,
                 entry->kshape,
-                OBJ_SCOPE(obj)->shape);
+                OBJ_SHAPE(obj));
                 js_Disassemble1(cx, cx->fp->script, pc,
-                        PTRDIFF(pc, cx->fp->script->code, jsbytecode),
-                        JS_FALSE, stderr);
+                                PTRDIFF(pc, cx->fp->script->code, jsbytecode),
+                                JS_FALSE, stderr);
 #endif
 
         return atom;
@@ -384,7 +383,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
         --vcap;
     }
 
-    if (PCVCAP_SHAPE(vcap) == OBJ_SCOPE(pobj)->shape) {
+    if (PCVCAP_SHAPE(vcap) == OBJ_SHAPE(pobj)) {
 #ifdef DEBUG
         jsid id = ATOM_TO_JSID(atom);
 
@@ -4420,7 +4419,7 @@ js_Interpret(JSContext *cx)
                 atom = NULL;
                 if (JS_LIKELY(obj->map->ops->setProperty == js_SetProperty)) {
                     JSPropertyCache *cache = &JS_PROPERTY_CACHE(cx);
-                    uint32 kshape = OBJ_SCOPE(obj)->shape;
+                    uint32 kshape = OBJ_SHAPE(obj);
 
                     /*
                      * Open-code JS_PROPERTY_CACHE_TEST, specializing for two
