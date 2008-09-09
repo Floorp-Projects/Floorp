@@ -1512,6 +1512,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     else if (nsCSSPseudoClasses::mozTypeUnsupported == pseudoClass->mAtom) {
       stateToCheck = NS_EVENT_STATE_TYPE_UNSUPPORTED;
     }
+    else if (nsCSSPseudoClasses::mozHandlerDisabled == pseudoClass->mAtom) {
+      stateToCheck = NS_EVENT_STATE_HANDLER_DISABLED;
+    }
+    else if (nsCSSPseudoClasses::mozHandlerBlocked == pseudoClass->mAtom) {
+      stateToCheck = NS_EVENT_STATE_HANDLER_BLOCKED;
+    }
     else if (nsCSSPseudoClasses::defaultPseudo == pseudoClass->mAtom) {
       stateToCheck = NS_EVENT_STATE_DEFAULT;
     }
