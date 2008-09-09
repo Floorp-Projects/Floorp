@@ -531,7 +531,8 @@ protected:
 
   // Sheet section we're in.  This is used to enforce correct ordering of the
   // various rule types (eg the fact that a @charset rule must come before
-  // anything else).
+  // anything else).  Note that there are checks of similar things in various
+  // places in nsCSSStyleSheet.cpp (e.g in insertRule, RebuildChildList).
   enum nsCSSSection { 
     eCSSSection_Charset, 
     eCSSSection_Import, 
