@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script type="text/javascript">
+      var el = document.createElement("link");
+      el.type = "text/css";
+      el.rel = "stylesheet";
+      el.href = "outer-sheet.css";
+      var h = document.getElementsByTagName("HEAD")[0];
+      h.appendChild(el);
+      el.title = "theme"; // comment this line to make the test work!
+    </script>
+    <p>test</p>
+  </body>
+</html>
