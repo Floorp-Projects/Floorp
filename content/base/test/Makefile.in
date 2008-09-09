@@ -186,10 +186,6 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug425201.html \
 		test_bug431701.html \
 		test_bug431833.html \
-# bug 451664
-#		test_bug435425.html \
-#		bug435425.sjs \
-#		bug435425_redirect.sjs \
 		test_bug438519.html \
 		test_bug444722.html \
 		test_bug451376.html \
@@ -204,6 +200,11 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug28293.sjs \
 		test_title.html \
 		$(NULL)
+
+# bug 451664
+#		test_bug435425.html \
+#		bug435425.sjs \
+#		bug435425_redirect.sjs \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
