@@ -1206,7 +1206,7 @@ function testTypeofHole() {
   a[5] = 3;
   for (var i = 0; i < 6; ++i)
     a[i] = typeof a[i];
-  return a.toString();
+  return a.join(",");
 }
 testTypeofHole.expected = "undefined,undefined,undefined,undefined,undefined,number"
 test(testTypeofHole);
@@ -1278,6 +1278,28 @@ function test_JSOP_ARGCNT() {
 }
 test_JSOP_ARGCNT.expected = "1,2,3,4,5,6,7,8,9,10";
 test(test_JSOP_ARGCNT);
+
+function testNativeMax() {
+    var out = [], k;
+    for (var i = 0; i < 5; ++i) {
+        k = Math.max(k, i);
+    }
+    out.push(k);
+
+    k = 0;
+    for (var i = 0; i < 5; ++i) {
+        k = Math.max(k, i);
+    }
+    out.push(k);
+
+    for (var i = 0; i < 5; ++i) {
+        k = Math.max(0, -0);
+    }
+    out.push((1 / k) < 0);
+    return out.join(",");
+}
+testNativeMax.expected = "NaN,4,false";
+test(testNativeMax);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
