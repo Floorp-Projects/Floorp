@@ -3466,7 +3466,7 @@ TraceRecorder::test_property_cache_direct_slot(JSObject* obj, LIns* obj_ins, uin
         return true;
     }
 
-    /* Insist if setting on obj being the directly addressed object. */
+    /* If modifying the slot, insist on obj being the directly addressed object. */
     uint32 setflags = (js_CodeSpec[*cx->fp->regs->pc].format & (JOF_SET | JOF_INCDEC));
     if (setflags && obj2 != obj)
         ABORT_TRACE("JOF_SET opcode hit prototype chain");
@@ -4645,6 +4645,7 @@ KNOWN_NATIVE_DECL(js_math_ceil)
 KNOWN_NATIVE_DECL(js_math_cos)
 KNOWN_NATIVE_DECL(js_math_floor)
 KNOWN_NATIVE_DECL(js_math_log)
+KNOWN_NATIVE_DECL(js_math_max)
 KNOWN_NATIVE_DECL(js_math_pow)
 KNOWN_NATIVE_DECL(js_math_random)
 KNOWN_NATIVE_DECL(js_math_sin)
@@ -4700,6 +4701,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_math_ceil,                F_Math_ceil,            "",    "d",    INFALLIBLE },
         { js_math_random,              F_Math_random,          "R",    "",    INFALLIBLE },
         { js_math_log,                 F_Math_log,             "",    "d",    INFALLIBLE },
+        { js_math_max,                 F_Math_max,             "",    "dd",   INFALLIBLE },
         { js_num_parseInt,             F_ParseInt,             "C",   "s",    INFALLIBLE },
         { js_num_parseInt,             F_ParseIntDouble,       "",    "d",    INFALLIBLE },
         { js_num_parseFloat,           F_ParseFloat,           "C",   "s",    INFALLIBLE },
