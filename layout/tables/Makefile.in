@@ -89,7 +89,7 @@ CPPSRCS		= \
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
-ifdef MOZ_MOCHITEST
+ifdef ENABLE_TESTS
 DIRS  = test
 endif
 

@@ -48,7 +48,7 @@ ifndef MOZ_PLAINTEXT_EDITOR_ONLY
 DIRS		+= src
 endif
 
-ifdef MOZ_MOCHITEST
+ifdef ENABLE_TESTS
 DIRS		+= test
 endif
 

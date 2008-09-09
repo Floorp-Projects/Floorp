@@ -4357,7 +4357,6 @@ MOZ_JSLOADER=1
 MOZ_LIBART_CFLAGS=
 MOZ_LIBART_LIBS=
 MOZ_MATHML=1
-MOZ_MOCHITEST=1
 MOZ_MORK=1
 MOZ_MORKREADER=
 MOZ_AUTH_EXTENSION=1
@@ -5528,15 +5527,6 @@ if test -z "$MOZ_CRASHREPORTER_ENABLE_PERCENT"; then
    MOZ_CRASHREPORTER_ENABLE_PERCENT=100
 fi
 AC_DEFINE_UNQUOTED(MOZ_CRASHREPORTER_ENABLE_PERCENT, $MOZ_CRASHREPORTER_ENABLE_PERCENT)
-
-
-dnl ========================================================
-dnl = Build mochitest JS/DOM tests (on by default)
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(mochitest,
-[  --disable-mochitest        Disable mochitest harness],
-    MOZ_MOCHITEST=,
-    MOZ_MOCHITEST=1 )
 
 dnl ========================================================
 dnl = Enable compilation of specific extension modules
@@ -7915,7 +7905,6 @@ AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_XPFE_COMPONENTS)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
-AC_SUBST(MOZ_MOCHITEST)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)

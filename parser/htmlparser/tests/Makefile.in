@@ -45,17 +45,13 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = \
 	grabpage \
 	html \
+	mochitest \
 	$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
 DIRS += \
 	outsinks \
 	$(NULL)
-endif
-
-ifdef MOZ_MOCHITEST
-DIRS += mochitest \
-        $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
