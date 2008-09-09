@@ -42,3 +42,6 @@ classic.jar:
   browser.properties                   (locale/@AB_CD@/browser.properties)
   search.properties                    (locale/@AB_CD@/search.properties)
   region.properties                    (locale/@AB_CD@/region.properties)
+# Fennec-specific overrides of generic strings
+* netError.dtd                         (locale/@AB_CD@/overrides/netError.dtd)
+% override chrome://global/locale/netErrorApp.dtd chrome://browser/locale/netError.dtd
