@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE	= test_accessibility
 
-ifdef MOZ_MOCHITEST
+ifdef ENABLE_TESTS
 DIRS		+= mochitest
 endif
 

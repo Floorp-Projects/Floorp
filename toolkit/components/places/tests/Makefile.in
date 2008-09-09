@@ -62,14 +62,12 @@ MOCHI_TESTS = mochitest/test_bug_405924.html \
 MOCHI_CONTENT = mochitest/prompt_common.js \
 								$(NULL)
 
-ifdef MOZ_MOCHITEST
 DIRS = \
 	chrome \
 	mochitest/bug_411966 \
 # These tests are disabled for the time being, see bug 416066
 #	browser \
 	$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
 

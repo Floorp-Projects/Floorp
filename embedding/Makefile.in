@@ -50,9 +50,6 @@ DIRS = base components browser
 
 ifdef ENABLE_TESTS
 XPCSHELL_TESTS = tests/unit
-endif
-
-ifdef MOZ_MOCHITEST
 DIRS += test
 endif
 
