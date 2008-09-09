@@ -199,6 +199,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug28293.html \
 		file_bug28293.sjs \
 		test_title.html \
+		test_bug453521.html \
 		$(NULL)
 
 # bug 451664
