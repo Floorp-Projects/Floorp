@@ -48,6 +48,7 @@
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jsiter.h"
+#include "jslibmath.h"
 #include "jsmath.h"
 #include "jsnum.h"
 #include "jsscope.h"
@@ -193,6 +194,17 @@ js_Math_log(jsdouble d)
         return js_NaN;
 #endif
     return log(d);
+}
+
+jsdouble FASTCALL
+js_Math_max(jsdouble d, jsdouble p)
+{
+    if (JSDOUBLE_IS_NaN(d) || JSDOUBLE_IS_NaN(p))
+        return js_NaN;
+
+    if (p == 0 && p == d && fd_copysign(1.0, d) == -1)
+        return p;
+    return (d > p) ? d : p;
 }
 
 JSBool FASTCALL
