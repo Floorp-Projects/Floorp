@@ -161,6 +161,9 @@ pref("accessibility.typeaheadfind.casesensitive", 0);
 
 // pointer to the default engine name
 pref("browser.search.defaultenginename",      "chrome://browser/locale/region.properties");
+// SSL error page behaviour
+pref("browser.ssl_override_behavior", 2);
+pref("browser.xul.error_pages.expert_bad_cert", false);
 
 // disable logging for the search service by default
 pref("browser.search.log", false);
