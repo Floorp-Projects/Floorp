@@ -1360,7 +1360,7 @@ TraceRecorder::lazilyImportGlobalSlot(unsigned slot)
     unsigned index = traceMonitor->globalSlots->length();
     /* If this the first global we are adding, remember the shape of the global object. */
     if (index == 0)
-        traceMonitor->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+        traceMonitor->globalShape = OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain));
     /* Add the slot to the list of interned global slots. */
     traceMonitor->globalSlots->add(slot);
     uint8 type = getCoercedType(*vp);
@@ -2062,7 +2062,7 @@ bool
 js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
 {
     /* Make sure the global type map didn't change on us. */
-    uint32 globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+    uint32 globalShape = OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain));
     if (tm->globalShape != globalShape) {
         debug_only_v(printf("Global shape mismatch (%u vs. %u) in RecordTree, flushing cache.\n",
                           globalShape, tm->globalShape);)
@@ -2287,11 +2287,11 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
        the global type map must remain applicable at all times (we expect absolute type 
        stability for globals). */
     if (ngslots &&
-        (OBJ_SCOPE(globalObj)->shape != tm->globalShape || 
+        (OBJ_SHAPE(globalObj) != tm->globalShape || 
          !BuildNativeGlobalFrame(cx, ngslots, gslots, tm->globalTypeMap->data(), global))) {
         AUDIT(globalShapeMismatchAtEntry);
         debug_only_v(printf("Global shape mismatch (%u vs. %u), flushing cache.\n",
-                            OBJ_SCOPE(globalObj)->shape, tm->globalShape);)
+                            OBJ_SHAPE(globalObj), tm->globalShape);)
         const void* ip = f->ip;
         js_FlushJITCache(cx);
         *treep = tm->fragmento->newLoop(ip);
@@ -2704,7 +2704,7 @@ js_FlushJITCache(JSContext* cx)
     }
     memset(&tm->fcache, 0, sizeof(tm->fcache));
     if (cx->fp) {
-        tm->globalShape = OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->shape;
+        tm->globalShape = OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain));
         tm->globalSlots->clear();
         tm->globalTypeMap->clear();
     }
@@ -3359,7 +3359,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 ABORT_TRACE("failed to lookup property");
 
             if (prop) {
-                js_FillPropertyCache(cx, aobj, OBJ_SCOPE(aobj)->shape, 0, protoIndex, obj2,
+                js_FillPropertyCache(cx, aobj, OBJ_SHAPE(aobj), 0, protoIndex, obj2,
                                      (JSScopeProperty*) prop, &entry);
             }
         }
@@ -3429,7 +3429,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     if (PCVCAP_TAG(entry->vcap) >= 1) {
         jsuword vcap = entry->vcap;
         uint32 vshape = PCVCAP_SHAPE(vcap);
-        JS_ASSERT(OBJ_SCOPE(obj2)->shape == vshape);
+        JS_ASSERT(OBJ_SHAPE(obj2) == vshape);
 
         LIns* obj2_ins = INS_CONSTPTR(obj2);
         map_ins = lir->insLoad(LIR_ldp, obj2_ins, (int)offsetof(JSObject, map));
@@ -3640,7 +3640,7 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp)
     if (STOBJ_GET_CLASS(obj) != clasp)
         return false;
 
-    LIns* class_ins = stobj_get_fslot(obj_ins, JSSLOT_CLASS);
+    LIns* class_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, classword));
     class_ins = lir->ins2(LIR_piand, class_ins, lir->insImm(~3));
 
     char namebuf[32];
@@ -4398,7 +4398,7 @@ TraceRecorder::record_JSOP_SETPROP()
     LIns* obj_ins = get(&l);
 
     JSPropertyCache* cache = &JS_PROPERTY_CACHE(cx);
-    uint32 kshape = OBJ_SCOPE(obj)->shape;
+    uint32 kshape = OBJ_SHAPE(obj);
     jsbytecode* pc = cx->fp->regs->pc;
 
     JSPropCacheEntry* entry = &cache->table[PROPERTY_CACHE_HASH_PC(pc, kshape)];
