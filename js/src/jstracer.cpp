@@ -2526,9 +2526,9 @@ js_MonitorLoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 }
 
 bool
-js_MonitorRecording(TraceRecorder* tr)
+js_MonitorRecording(JSContext* cx)
 {
-    JSContext* cx = tr->cx;
+    TraceRecorder *tr = JS_TRACE_MONITOR(cx).recorder;
 
     // Clear one-shot flag used to communicate between record_JSOP_CALL and record_EnterFrame.
     tr->applyingArguments = false;
@@ -2540,12 +2540,11 @@ js_MonitorRecording(TraceRecorder* tr)
     }
 
     jsbytecode* pc = cx->fp->regs->pc;
-
     /* If we hit a break, end the loop and generate an always taken loop exit guard. For other
        downward gotos (like if/else) continue recording. */
-    if (*pc == JSOP_GOTO || *pc == JSOP_GOTOX) {
+    if ((*pc == JSOP_GOTO) || (*pc == JSOP_GOTOX)) {
         jssrcnote* sn = js_GetSrcNote(cx->fp->script, pc);
-        if (sn && SN_TYPE(sn) == SRC_BREAK) {
+        if ((sn != NULL) && (SN_TYPE(sn) == SRC_BREAK)) {
             AUDIT(breakLoopExits);
             tr->endLoop(JS_TRACE_MONITOR(cx).fragmento);
             js_DeleteRecorder(cx);
@@ -4394,38 +4393,41 @@ TraceRecorder::record_JSOP_GETPROP()
 bool
 TraceRecorder::record_JSOP_SETPROP()
 {
+    jsval& r = stackval(-1);
     jsval& l = stackval(-2);
+
     if (JSVAL_IS_PRIMITIVE(l))
         ABORT_TRACE("primitive this for SETPROP");
 
     JSObject* obj = JSVAL_TO_OBJECT(l);
+
     if (obj->map->ops->setProperty != js_SetProperty)
         ABORT_TRACE("non-native JSObjectOps::setProperty");
-    return true;
-}
 
-bool
-TraceRecorder::record_SetPropHit(uint32 kshape, JSScopeProperty* sprop)
-{
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
-    JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
+
+    JSPropertyCache* cache = &JS_PROPERTY_CACHE(cx);
+    uint32 kshape = OBJ_SHAPE(obj);
+    jsbytecode* pc = cx->fp->regs->pc;
+
+    JSPropCacheEntry* entry = &cache->table[PROPERTY_CACHE_HASH_PC(pc, kshape)];
+    if (entry->kpc != pc || entry->kshape != kshape)
+        ABORT_TRACE("cache miss");
+    JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
+
+    LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
+    LIns* ops_ins;
+    if (!map_is_native(obj->map, map_ins, ops_ins, offsetof(JSObjectOps, setProperty)))
+        return false;
 
     // The global object's shape is guarded at trace entry.
     if (obj != globalObj) {
-        LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
-        LIns* ops_ins;
-        if (!map_is_native(obj->map, map_ins, ops_ins, offsetof(JSObjectOps, setProperty)))
-            return false;
-
         LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
         guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"), MISMATCH_EXIT);
     }
 
     JSScope* scope = OBJ_SCOPE(obj);
+    JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
     if (scope->object != obj || !SCOPE_HAS_PROPERTY(scope, sprop)) {
         LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(F_AddProperty, args);
@@ -4439,9 +4441,7 @@ TraceRecorder::record_SetPropHit(uint32 kshape, JSScopeProperty* sprop)
         return false;
     if (!native_set(obj_ins, sprop, dslots_ins, boxed_ins))
         return false;
-
-    jsbytecode* pc = cx->fp->regs->pc;
-    if (*pc != JSOP_INITPROP && pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
+    if (*pc == JSOP_SETPROP && pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
         stack(-2, v_ins);
     return true;
 }
@@ -5368,8 +5368,8 @@ TraceRecorder::record_JSOP_ENDINIT()
 bool
 TraceRecorder::record_JSOP_INITPROP()
 {
-    // All the action is in record_SetPropHit.
-    return true;
+    // The common code avoids stacking the RHS if op is not JSOP_SETPROP.
+    return record_JSOP_SETPROP();
 }
 
 bool
@@ -5457,6 +5457,8 @@ TraceRecorder::record_JSOP_ITER()
 bool
 TraceRecorder::forInLoop(jsval* vp)
 {
+    if (!JSVAL_IS_STRING(*vp))
+        ABORT_TRACE("for-in loop variable changed type from string");
     jsval& iterobj_val = stackval(-1);
     if (!JSVAL_IS_PRIMITIVE(iterobj_val)) {
         LIns* args[] = { get(&iterobj_val), cx_ins };
@@ -5465,11 +5467,10 @@ TraceRecorder::forInLoop(jsval* vp)
 
         LIns* flag_ins = lir->ins_eq0(lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_HOLE)));
         LIns* iter_ins = get(vp);
-        jsval expected = JSVAL_IS_VOID(*vp) ? JSVAL_STRING : JSVAL_TAG(*vp);
-        if (!box_jsval(expected, iter_ins))
+        if (!box_jsval(JSVAL_STRING, iter_ins))
             return false;
         iter_ins = lir->ins_choose(flag_ins, v_ins, iter_ins, true);
-        if (!unbox_jsval(expected, iter_ins))
+        if (!unbox_jsval(JSVAL_STRING, iter_ins))
             return false;
         set(vp, iter_ins);
         stack(0, flag_ins);
