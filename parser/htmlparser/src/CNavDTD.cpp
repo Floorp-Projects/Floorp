@@ -2245,7 +2245,7 @@ CNavDTD::CanPropagate(eHTMLTags aParent, eHTMLTags aChild,
       result = PR_FALSE;
     }
   } else {
-    result = aParentContains;
+    result = !!aParentContains;
   }
 
 
