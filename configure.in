@@ -6076,11 +6076,11 @@ AC_SUBST(JS_ULTRASPARC_OPTS)
 dnl ========================================================
 dnl = Hildon and OSSO checks
 dnl ========================================================
-PKG_CHECK_MODULES(LIBHILONMIME,libhildonmime,
-                  NS_HILDON=1,
-                  NS_HILDON=)
-if test $NS_HILDON; then
-   AC_DEFINE(NS_HILDON)
+PKG_CHECK_MODULES(LIBHILDONMIME,libhildonmime,
+                  MOZ_PLATFORM_HILDON=1,
+                  MOZ_PLATFORM_HILDON=)
+if test $MOZ_PLATFORM_HILDON; then
+   AC_DEFINE(MOZ_PLATFORM_HILDON)
 fi
 
 PKG_CHECK_MODULES(LIBOSSO,libosso,
@@ -7823,7 +7823,7 @@ AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MINIMO)
-AC_SUBST(NS_HILDON)
+AC_SUBST(MOZ_PLATFORM_HILDON)
 AC_SUBST(NS_OSSO)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_MATHML)
