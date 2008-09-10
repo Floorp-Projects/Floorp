@@ -47,8 +47,6 @@ MODULE		= test_libjar
 
 XPCSHELL_TESTS = unit
 
-ifdef MOZ_MOCHITEST
-DIRS		+= mochitest
-endif
+DIRS		= mochitest
 
 include $(topsrcdir)/config/rules.mk

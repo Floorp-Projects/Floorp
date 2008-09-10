@@ -1094,6 +1094,7 @@ NS_IMETHODIMP nsRootAccessible::FireDocLoadEvents(PRUint32 aEventType)
   return NS_OK;
 }
 
+#ifdef MOZ_XUL
 nsresult
 nsRootAccessible::HandleTreeRowCountChangedEvent(nsIDOMEvent *aEvent,
                                                  nsIAccessibleTreeCache *aAccessible)
@@ -1157,4 +1158,5 @@ nsRootAccessible::HandleTreeInvalidatedEvent(nsIDOMEvent *aEvent,
 
   return aAccessible->TreeViewInvalidated(startRow, endRow, startCol, endCol);
 }
+#endif
 

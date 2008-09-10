@@ -53,6 +53,8 @@ Runs the browser from a script, and provides useful utilities
 for setting up the browser environment.
 """
 
+SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
+
 __all__ = [
            "UNIXISH",
            "IS_WIN32",
@@ -62,6 +64,7 @@ __all__ = [
            "initializeProfile",
            "DIST_BIN",
            "DEFAULT_APP",
+           "environment",
           ]
 
 # These are generated in mozilla/build/Makefile.in
@@ -74,10 +77,12 @@ __all__ = [
 IS_CYGWIN = False
 #endif
 #expand IS_CAMINO = __IS_CAMINO__ != 0
+#expand BIN_SUFFIX = __BIN_SUFFIX__
 
 UNIXISH = not IS_WIN32 and not IS_MAC
 
 #expand DEFAULT_APP = "./" + __BROWSER_PATH__
+#expand CERTS_DIR = __CERTS_DIR__
 
 ###########
 # LOGGING #
@@ -103,7 +108,7 @@ class Process:
   non-Windows platforms.  :-(
   """
 
-  def __init__(self, command, args, env):
+  def __init__(self, command, args, env, inputdata = None):
     """
     Creates a process representing the execution of the given command, which
     must be an absolute path, with the given arguments in the given environment.
@@ -111,23 +116,39 @@ class Process:
     """
     command = os.path.abspath(command)
     if IS_WIN32:
+      import tempfile
       import subprocess
+      
+      if inputdata:
+        inputfile = tempfile.TemporaryFile()
+        inputfile.write(inputdata)
+        inputfile.seek(0)
+      else:
+        inputfile = None
+        
       cmd = [command]
       cmd.extend(args)
       p = subprocess.Popen(cmd, env = env,
                            stdout = subprocess.PIPE,
-                           stderr = subprocess.STDOUT)
+                           stderr = subprocess.STDOUT,
+                           stdin = inputfile)
       self._out = p.stdout
     else:
       import popen2
       cmd = []
-      for (k, v) in env.iteritems():
-        cmd.append(k + "='" + v + "' ")
+      if env:
+        for (k, v) in env.iteritems():
+          cmd.append(k + "='" + v + "' ")
+          
       cmd.append("'" + command + "'")
       cmd.extend(map(lambda x: "'" + x + "'", args))
       cmd = " ".join(cmd)
       p = popen2.Popen4(cmd)
       self._out = p.fromchild
+
+      if inputdata:
+        p.tochild.write(inputdata)
+        p.tochild.close()
 
     self._process = p
     self.pid = p.pid
@@ -165,8 +186,13 @@ class Process:
   def kill(self):
     "Kills this process."
     try:
-      if not IS_WIN32: # XXX
+      if not IS_WIN32:
         os.kill(self._process.pid, signal.SIGKILL)
+      else:
+        import subprocess
+        pid = "%i" % self.pid
+        process = subprocess.Popen(["taskkill", "/F", "/PID", pid])
+        process.wait()
     except:
       pass
 
@@ -201,13 +227,13 @@ class Location:
     self.options = options
 
 
-def readLocations():
+def readLocations(locationsPath = "server-locations.txt"):
   """
   Reads the locations at which the Mochitest HTTP server is available from
   server-locations.txt.
   """
 
-  locationFile = codecs.open("server-locations.txt", "r", "UTF-8")
+  locationFile = codecs.open(locationsPath, "r", "UTF-8")
 
   # Perhaps more detail than necessary, but it's the easiest way to make sure
   # we get exactly the format we want.  See server-locations.txt for the exact
@@ -224,7 +250,7 @@ def readLocations():
                       r"(?P<port>\d+)"
                       r"(?:"
                       r"\s+"
-                      r"(?P<options>\w+(?:,\w+)*)"
+                      r"(?P<options>\S+(?:,\S+)*)"
                       r")?$")
   locations = []
   lineno = 0
@@ -274,12 +300,14 @@ user_pref("dom.max_script_run_time", 0); // no slow script dialogs
 user_pref("signed.applets.codebase_principal_support", true);
 user_pref("security.warn_submit_insecure", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
+user_pref("shell.checkDefaultClient", false);
 user_pref("browser.warnOnQuit", false);
 user_pref("accessibility.typeaheadfind.autostart", false);
 user_pref("javascript.options.showInConsole", true);
 user_pref("layout.debug.enable_data_xbl", true);
 user_pref("browser.EULA.override", true);
 user_pref("javascript.options.jit.content", false);
+user_pref("gfx.color_management.force_srgb", true);
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 """
@@ -319,13 +347,20 @@ function FindProxyForURL(url, host)
   if (!matches)
     return 'DIRECT';
   var isHttp = matches[1] == 'http';
+  var isHttps = matches[1] == 'https';
   if (!matches[3])
-    matches[3] = isHttp ? '80' : '443';
+  {
+    if (isHttp) matches[3] = '80';
+    if (isHttps) matches[3] = '443';
+  }
+    
   var origin = matches[1] + '://' + matches[2] + ':' + matches[3];
   if (origins.indexOf(origin) < 0)
     return 'DIRECT';
   if (isHttp)
-    return 'PROXY localhost:8888';
+    return 'PROXY 127.0.0.1:8888';
+  if (isHttps)
+    return 'PROXY 127.0.0.1:4443';
   return 'DIRECT';
 }""" % { "origins": origins }
   pacURL = "".join(pacURL.splitlines())
@@ -343,12 +378,81 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   prefsFile.write("".join(prefs))
   prefsFile.close()
 
+def fillCertificateDB(profileDir):
+
+  pwfilePath = os.path.join(profileDir, ".crtdbpw")
+  
+  pwfile = open(pwfilePath, "w")
+  pwfile.write("\n")
+  pwfile.close()
+
+  # Create head of the ssltunnel configuration file
+  sslTunnelConfigPath = os.path.join(CERTS_DIR, "ssltunnel.cfg")
+  sslTunnelConfig = open(sslTunnelConfigPath, "w")
+  
+  sslTunnelConfig.write("httpproxy:1\n")
+  sslTunnelConfig.write("certdbdir:%s\n" % CERTS_DIR)
+  sslTunnelConfig.write("forward:127.0.0.1:8888\n")
+  sslTunnelConfig.write("listen:*:4443:pgo server certificate\n")
+
+  # Generate automatic certificate and bond custom certificates
+  locations = readLocations()
+  locations.pop(0)
+  for loc in locations:
+    if loc.scheme == "https" and "nocert" not in loc.options:
+      customCertRE = re.compile("^cert=(?P<nickname>[0-9a-zA-Z_ ]+)")
+      for option in loc.options:
+        match = customCertRE.match(option)
+        if match:
+          customcert = match.group("nickname");
+          sslTunnelConfig.write("listen:%s:%s:4443:%s\n" % (loc.host, loc.port, customcert))
+          break
+
+  sslTunnelConfig.close()
+
+  # Pre-create the certification database for the profile
+  certutil = DIST_BIN + "/certutil" + BIN_SUFFIX
+  status = Process(certutil, ["-N", "-d", profileDir, "-f", pwfilePath], environment()).wait()
+  if status != 0:
+    return status
+
+  # Walk the cert directory and add custom CAs as trusted
+  files = os.listdir(CERTS_DIR)
+  for item in files:
+    root, ext = os.path.splitext(item)
+    if ext == ".ca":
+      Process(certutil, ["-A", "-i", os.path.join(CERTS_DIR, item), "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", "CT,,"], environment())
+
+  os.unlink(pwfilePath)
+  return 0
+
+def environment(env = None):
+  if env == None:
+    env = dict(os.environ)
+
+  if UNIXISH:
+    ldLibraryPath = os.path.join(SCRIPT_DIR, DIST_BIN)
+    if "LD_LIBRARY_PATH" in env:
+      ldLibraryPath = ldLibraryPath + ":" + env["LD_LIBRARY_PATH"]
+    env["LD_LIBRARY_PATH"] = ldLibraryPath
+
+  return env
 
 ###############
 # RUN THE APP #
 ###############
 
 def runApp(testURL, env, app, profileDir, extraArgs):
+  # create certificate database for the profile
+  certificateStatus = fillCertificateDB(profileDir)
+  if certificateStatus != 0:
+    log.info("ERROR FAIL Certificate integration")
+    return certificateStatus
+
+  ssltunnel = DIST_BIN + "/ssltunnel" + BIN_SUFFIX
+  ssltunnelProcess = Process(ssltunnel, [os.path.join(CERTS_DIR, "ssltunnel.cfg")], environment())
+  log.info("SSL tunnel pid: %d", ssltunnelProcess.pid)
+  
   "Run the app, returning the time at which it was started."
   # mark the start
   start = datetime.now()
@@ -374,10 +478,12 @@ def runApp(testURL, env, app, profileDir, extraArgs):
   else:
     args.append((testURL))
   args.extend(extraArgs)
-  proc = Process(cmd, args, env = env)
+  proc = Process(cmd, args, env = environment(env))
   log.info("Application pid: %d", proc.pid)
   status = proc.wait()
   if status != 0:
     log.info("ERROR FAIL Exited with code %d during test run", status)
 
+  ssltunnelProcess.kill()
+  
   return start

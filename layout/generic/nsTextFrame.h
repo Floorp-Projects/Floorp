@@ -153,7 +153,8 @@ public:
   NS_IMETHOD SetSelected(nsPresContext* aPresContext,
                          nsIDOMRange *aRange,
                          PRBool aSelected,
-                         nsSpread aSpread);
+                         nsSpread aSpread,
+                         SelectionType aType);
   
   virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);

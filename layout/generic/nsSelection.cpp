@@ -5059,7 +5059,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext,
     if (frame)
     {
       //NOTE: eSpreadDown is now IGNORED. Selected state is set only for given frame
-      frame->SetSelected(aPresContext, nsnull, aFlags, eSpreadDown);
+      frame->SetSelected(aPresContext, nsnull, aFlags, eSpreadDown, mType);
 #ifndef OLD_TABLE_SELECTION
       if (mFrameSelection->GetTableCellSelection())
       {
@@ -5084,7 +5084,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext,
         //for given frame
 
         //spread from here to hit all frames in flow
-        frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);
+        frame->SetSelected(aPresContext, nsnull, aFlags, eSpreadDown, mType);
         nsRect frameRect = frame->GetRect();
 
         //if a rect is 0 height/width then try to notify next
@@ -5096,7 +5096,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext,
           if (frame)
           {
             frameRect = frame->GetRect();
-            frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);
+            frame->SetSelected(aPresContext, nsnull, aFlags, eSpreadDown, mType);
           }
           else
             break;
@@ -5162,7 +5162,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIDOMRange *aRange,
     {
       frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(content);
       if (frame)
-        frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+        frame->SetSelected(aPresContext, aRange, aFlags, eSpreadDown, mType);//spread from here to hit all frames in flow
     }
 //end start content
     iter->First();
@@ -5186,7 +5186,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIDOMRange *aRange,
       {
         frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(content);
         if (frame)
-           frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+           frame->SetSelected(aPresContext, aRange, aFlags, eSpreadDown, mType);//spread from here to hit all frames in flow
       }
     }
 //end end parent

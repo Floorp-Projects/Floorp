@@ -86,7 +86,7 @@
 #include "jsbit.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdbgapi.h" /* for js_TraceWatchPoints */
 #include "jsdtoa.h"
 #include "jsfun.h"
@@ -97,6 +97,7 @@
 #include "jsobj.h"
 #include "jsscope.h"
 #include "jsstr.h"
+#include "jsstaticcheck.h"
 
 /* 2^32 - 1 as a number and a string */
 #define MAXINDEX 4294967295u
@@ -1781,7 +1782,8 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
     CompareArgs ca;
     jsuint len, newlen, i, undefs;
     JSTempValueRooter tvr;
-    JSBool hole, ok;
+    JSBool hole;
+    bool ok;
     size_t elemsize;
     JSString *str;
 
@@ -2278,7 +2280,7 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         argv++;
     }
 
-    /* After this, control must flow through label out: to exit. */
+    MUST_FLOW_THROUGH("out");
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
 
     /* If there are elements to remove, put them into the return value. */
@@ -2391,7 +2393,7 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
         length = 0;
     }
 
-    /* After this, control must flow through label out: to exit. */
+    MUST_FLOW_THROUGH("out");
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
 
     /* Loop over [0, argc] to concat args into nobj, expanding all Arrays. */
@@ -2519,7 +2521,7 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = OBJECT_TO_JSVAL(nobj);
 
-    /* After this, control must flow through label out: to exit. */
+    MUST_FLOW_THROUGH("out");
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
 
     for (slot = begin; slot < end; slot++) {
@@ -2739,7 +2741,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
     if (!elemroot)
         return JS_FALSE;
 
-    /* From this point the control must flow through out:. */
+    MUST_FLOW_THROUGH("out");
     ok = JS_TRUE;
     invokevp = elemroot + 1;
 

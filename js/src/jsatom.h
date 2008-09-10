@@ -43,7 +43,7 @@
  * JS atom table.
  */
 #include <stddef.h>
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jstypes.h"
 #include "jshash.h" /* Added by JSIFY */
 #include "jsdhash.h"

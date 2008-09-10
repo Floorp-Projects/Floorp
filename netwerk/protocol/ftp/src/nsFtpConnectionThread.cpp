@@ -1117,6 +1117,7 @@ nsFtpState::R_list() {
     if (mResponseCode/100 == 2) {
         //(DONE)
         mNextState = FTP_COMPLETE;
+        mDoomCache = PR_FALSE;
         return FTP_COMPLETE;
     }
     return FTP_ERROR;
@@ -1946,6 +1947,7 @@ nsFtpState::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
     if (IsClosed())
         return NS_OK;
 
+    mDoomCache = PR_TRUE;
     mCacheEntry = entry;
     if (CanReadCacheEntry() && ReadCacheEntry()) {
         mState = FTP_READ_CACHE;
@@ -2026,6 +2028,8 @@ nsFtpState::CloseWithStatus(nsresult status)
     }
 
     mDataStream = nsnull;
+    if (mDoomCache && mCacheEntry)
+        mCacheEntry->Doom();
     mCacheEntry = nsnull;
 
     return nsBaseContentStream::CloseWithStatus(status);
@@ -2078,6 +2082,7 @@ nsFtpState::ReadCacheEntry()
     if (HasPendingCallback())
         mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
 
+    mDoomCache = PR_FALSE;
     return PR_TRUE;
 }
 
@@ -2135,8 +2140,10 @@ nsFtpState::CheckCache()
 
     session->OpenCacheEntry(key, accessReq, PR_FALSE,
                             getter_AddRefs(mCacheEntry));
-    if (mCacheEntry)
+    if (mCacheEntry) {
+        mDoomCache = PR_TRUE;
         return PR_FALSE;  // great, we're ready to proceed!
+    }
 
     nsresult rv = session->AsyncOpenCacheEntry(key, accessReq, this);
     return NS_SUCCEEDED(rv);

@@ -71,10 +71,11 @@ const cairo_surface_t name = {					\
     0,					/* current_clip_serial */	\
     FALSE,				/* is_snapshot */	\
     FALSE,				/* has_font_options */	\
-    { CAIRO_ANTIALIAS_DEFAULT,					\
-      CAIRO_SUBPIXEL_ORDER_DEFAULT,				\
-      CAIRO_HINT_STYLE_DEFAULT,					\
-      CAIRO_HINT_METRICS_DEFAULT				\
+    { CAIRO_ANTIALIAS_DEFAULT,		/* antialias */		\
+      CAIRO_SUBPIXEL_ORDER_DEFAULT,	/* subpixel_order */	\
+      CAIRO_LCD_FILTER_DEFAULT,		/* lcd_filter */	\
+      CAIRO_HINT_STYLE_DEFAULT,		/* hint_style */	\
+      CAIRO_HINT_METRICS_DEFAULT	/* hint_metrics */	\
     }					/* font_options */	\
 }
 
@@ -648,7 +649,12 @@ cairo_surface_get_font_options (cairo_surface_t       *surface,
     if (cairo_font_options_status (options))
 	return;
 
-    if (!surface->has_font_options) {
+    if (surface->status) {
+	_cairo_font_options_init_default (options);
+	return;
+    }
+
+    if (! surface->has_font_options) {
 	surface->has_font_options = TRUE;
 
 	_cairo_font_options_init_default (&surface->font_options);
@@ -1732,6 +1738,9 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
  * be retained for the next page.  Use cairo_surface_show_page() if you
  * want to get an empty page after the emission.
  *
+ * There is a convenience function for this that takes a #cairo_t,
+ * namely cairo_copy_page().
+ *
  * Since: 1.6
  */
 void
@@ -1765,6 +1774,9 @@ slim_hidden_def (cairo_surface_copy_page);
  *
  * Emits and clears the current page for backends that support multiple
  * pages.  Use cairo_surface_copy_page() if you don't want to clear the page.
+ *
+ * There is a convenience function for this that takes a #cairo_t,
+ * namely cairo_show_page().
  *
  * Since: 1.6
  **/
@@ -2135,14 +2147,50 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
     return status;
 }
 
+/**
+ * cairo_surface_has_show_text_glyphs:
+ * @surface: a #cairo_surface_t
+ *
+ * Returns whether the surface supports
+ * sophisticated cairo_show_text_glyphs() operations.  That is,
+ * whether it actually uses the provided text and cluster data
+ * to a cairo_show_text_glyphs() call.
+ *
+ * Note: Even if this function returns %FALSE, a
+ * cairo_show_text_glyphs() operation targeted at @surface will
+ * still succeed.  It just will
+ * act like a cairo_show_glyphs() operation.  Users can use this
+ * function to avoid computing UTF-8 text and cluster mapping if the
+ * target surface does not use it.
+ *
+ * There is a convenience function for this that takes a #cairo_t,
+ * namely cairo_has_show_text_glyphs().
+ *
+ * Return value: %TRUE if @surface supports
+ *               cairo_show_text_glyphs(), %FALSE otherwise
+ *
+ * Since: 1.8
+ **/
 cairo_bool_t
-_cairo_surface_has_show_text_glyphs (cairo_surface_t	    *surface)
+cairo_surface_has_show_text_glyphs (cairo_surface_t	    *surface)
 {
+    cairo_status_t status_ignored;
+
+    if (surface->status)
+	return FALSE;
+
+    if (surface->finished) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   CAIRO_STATUS_SURFACE_FINISHED);
+	return FALSE;
+    }
+
     if (surface->backend->has_show_text_glyphs)
 	return surface->backend->has_show_text_glyphs (surface);
     else
 	return surface->backend->show_text_glyphs != NULL;
 }
+slim_hidden_def (cairo_surface_has_show_text_glyphs);
 
 /* Note: the backends may modify the contents of the glyph array as long as
  * they do not return %CAIRO_INT_STATUS_UNSUPPORTED. This makes it possible to
@@ -2558,15 +2606,8 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
 	return status;
 
     if (_cairo_surface_has_device_transform (destination)) {
-	cairo_matrix_t device_to_surface = destination->device_transform;
-
-	status = cairo_matrix_invert (&device_to_surface);
-	/* We only ever allow for scaling (under the implementation's
-	 * control) or translation (under the user's control). So the
-	 * matrix should always be invertible. */
-	assert (status == CAIRO_STATUS_SUCCESS);
-
-	_cairo_pattern_transform (*pattern_out, &device_to_surface);
+	_cairo_pattern_transform (*pattern_out,
+		                  &destination->device_transform_inverse);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -2639,6 +2680,8 @@ _cairo_surface_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_USER_FONT_ERROR:
     case CAIRO_STATUS_NEGATIVE_COUNT:
     case CAIRO_STATUS_INVALID_CLUSTERS:
+    case CAIRO_STATUS_INVALID_SLANT:
+    case CAIRO_STATUS_INVALID_WEIGHT:
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;

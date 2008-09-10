@@ -86,7 +86,7 @@ tests.push({
 
     // add a folder to exclude from replacing during restore
     // this will still be present post-restore
-    excludedFolderId =
+    var excludedFolderId =
       PlacesUtils.bookmarks.createFolder(PlacesUtils.placesRootId,
                                          "excluded",
                                          PlacesUtils.bookmarks.DEFAULT_INDEX);

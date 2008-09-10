@@ -49,7 +49,7 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
@@ -58,6 +58,7 @@
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsparse.h"
+#include "jsscope.h"
 #include "jsscript.h"
 #if JS_HAS_XDR
 #include "jsxdrapi.h"
@@ -200,7 +201,7 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSObject *scopeobj;
     jsval v;
     JSScript *script, *oldscript;
-    JSStackFrame *fp, *caller;
+    JSStackFrame *caller;
     const char *file;
     uintN line;
     JSPrincipals *principals;
@@ -229,19 +230,17 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     /* Compile using the caller's scope chain, which js_Invoke passes to fp. */
-    fp = cx->fp;
-    caller = JS_GetScriptedCaller(cx, fp);
-    JS_ASSERT(!caller || fp->scopeChain == caller->scopeChain);
+    caller = JS_GetScriptedCaller(cx, cx->fp);
+    JS_ASSERT(!caller || cx->fp->scopeChain == caller->scopeChain);
 
     if (caller) {
         if (!scopeobj) {
             scopeobj = js_GetScopeChain(cx, caller);
             if (!scopeobj)
                 return JS_FALSE;
-            fp->scopeChain = scopeobj;  /* for the compiler's benefit */
         }
 
-        principals = JS_EvalFramePrincipals(cx, fp, caller);
+        principals = JS_EvalFramePrincipals(cx, cx->fp, caller);
         file = js_ComputeFilename(cx, caller, principals, &line);
     } else {
         file = NULL;
@@ -257,14 +256,13 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     /*
      * Compile the new script using the caller's scope chain, a la eval().
      * Unlike jsobj.c:obj_eval, however, we do not pass TCF_COMPILE_N_GO in
-     * tcflags, because compilation is here separated from execution, and the
-     * run-time scope chain may not match the compile-time.  JSFRAME_EVAL is
-     * tested in jsemit.c and jsscan.c to optimize based on identity of run-
-     * and compile-time scope.
+     * tcflags and use NULL for the callerFrame argument, because compilation
+     * is here separated from execution, and the run-time scope chain may not
+     * match the compile-time. TCF_COMPILE_N_GO is tested in jsemit.c and
+     * jsparse.c to optimize based on identity of run- and compile-time scope.
      */
-    fp->flags |= JSFRAME_SCRIPT_OBJECT;
-    tcflags = caller ? TCF_PUT_STATIC_DEPTH(caller->staticDepth + 1) : 0;
-    script = js_CompileScript(cx, scopeobj, principals, tcflags,
+    tcflags = 0;
+    script = js_CompileScript(cx, scopeobj, NULL, principals, tcflags,
                               JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
                               NULL, file, line);
     if (!script)
@@ -428,6 +426,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     uint32 encodeable;
     JSBool filenameWasSaved;
     jssrcnote *notes, *sn;
+    JSSecurityCallbacks *callbacks;
 
     cx = xdr->cx;
     script = *scriptp;
@@ -547,25 +546,26 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         goto error;
     }
 
+    callbacks = JS_GetSecurityCallbacks(cx);
     if (xdr->mode == JSXDR_ENCODE) {
         principals = script->principals;
-        encodeable = (cx->runtime->principalsTranscoder != NULL);
+        encodeable = callbacks && callbacks->principalsTranscoder;
         if (!JS_XDRUint32(xdr, &encodeable))
             goto error;
         if (encodeable &&
-            !cx->runtime->principalsTranscoder(xdr, &principals)) {
+            !callbacks->principalsTranscoder(xdr, &principals)) {
             goto error;
         }
     } else {
         if (!JS_XDRUint32(xdr, &encodeable))
             goto error;
         if (encodeable) {
-            if (!cx->runtime->principalsTranscoder) {
+            if (!(callbacks && callbacks->principalsTranscoder)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_CANT_DECODE_PRINCIPALS);
                 goto error;
             }
-            if (!cx->runtime->principalsTranscoder(xdr, &principals))
+            if (!callbacks->principalsTranscoder(xdr, &principals))
                 goto error;
             script->principals = principals;
         }
@@ -839,14 +839,14 @@ static const char js_thaw_str[] = "thaw";
 
 static JSFunctionSpec script_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,   script_toSource,   0,0,0),
+    JS_FN(js_toSource_str,   script_toSource,   0,0),
 #endif
-    JS_FN(js_toString_str,   script_toString,   0,0,0),
-    JS_FN("compile",         script_compile,    0,2,0),
-    JS_FN("exec",            script_exec,       0,1,0),
+    JS_FN(js_toString_str,   script_toString,   0,0),
+    JS_FN("compile",         script_compile,    2,0),
+    JS_FN("exec",            script_exec,       1,0),
 #if JS_HAS_XDR_FREEZE_THAW
-    JS_FN("freeze",          script_freeze,     0,0,0),
-    JS_FN(js_thaw_str,       script_thaw,       0,1,0),
+    JS_FN("freeze",          script_freeze,     0,0),
+    JS_FN(js_thaw_str,       script_thaw,       1,0),
 #endif /* JS_HAS_XDR_FREEZE_THAW */
     JS_FS_END
 };
@@ -932,14 +932,14 @@ script_static_thaw(JSContext *cx, uintN argc, jsval *vp)
     if (!obj)
         return JS_FALSE;
     vp[1] = OBJECT_TO_JSVAL(obj);
-    if (!script_thaw(cx, vp))
+    if (!script_thaw(cx, argc, vp))
         return JS_FALSE;
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
 }
 
 static JSFunctionSpec script_static_methods[] = {
-    JS_FN(js_thaw_str,       script_static_thaw,     1,1,0),
+    JS_FN(js_thaw_str,       script_static_thaw,     1,0),
     JS_FS_END
 };
 
@@ -961,7 +961,7 @@ js_InitScriptClass(JSContext *cx, JSObject *obj)
 /*
  * Shared script filename management.
  */
-JS_STATIC_DLL_CALLBACK(int)
+static int
 js_compare_strings(const void *k1, const void *k2)
 {
     return strcmp((const char *) k1, (const char *) k2) == 0;
@@ -977,19 +977,19 @@ typedef struct ScriptFilenameEntry {
     char                filename[3];    /* two or more bytes, NUL-terminated */
 } ScriptFilenameEntry;
 
-JS_STATIC_DLL_CALLBACK(void *)
+static void *
 js_alloc_table_space(void *priv, size_t size)
 {
     return malloc(size);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 js_free_table_space(void *priv, void *item)
 {
     free(item);
 }
 
-JS_STATIC_DLL_CALLBACK(JSHashEntry *)
+static JSHashEntry *
 js_alloc_sftbl_entry(void *priv, const void *key)
 {
     size_t nbytes = offsetof(ScriptFilenameEntry, filename) +
@@ -998,7 +998,7 @@ js_alloc_sftbl_entry(void *priv, const void *key)
     return (JSHashEntry *) malloc(JS_MAX(nbytes, sizeof(JSHashEntry)));
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 js_free_sftbl_entry(void *priv, JSHashEntry *he, uintN flag)
 {
     if (flag != HT_FREE_ENTRY)
@@ -1236,7 +1236,7 @@ js_MarkScriptFilename(const char *filename)
     sfe->mark = JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
+static intN
 js_script_filename_marker(JSHashEntry *he, intN i, void *arg)
 {
     ScriptFilenameEntry *sfe = (ScriptFilenameEntry *) he;
@@ -1267,7 +1267,7 @@ js_MarkScriptFilenames(JSRuntime *rt, JSBool keepAtoms)
     }
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
+static intN
 js_script_filename_sweeper(JSHashEntry *he, intN i, void *arg)
 {
     ScriptFilenameEntry *sfe = (ScriptFilenameEntry *) he;
@@ -1473,7 +1473,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     memcpy(script->code, CG_PROLOG_BASE(cg), prologLength * sizeof(jsbytecode));
     memcpy(script->main, CG_BASE(cg), mainLength * sizeof(jsbytecode));
     nfixed = (cg->treeContext.flags & TCF_IN_FUNCTION)
-             ? cg->treeContext.fun->u.i.nvars
+             ? cg->treeContext.u.fun->u.i.nvars
              : cg->treeContext.ngvars + cg->regexpList.length;
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = (uint16) nfixed;
@@ -1523,7 +1523,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
      */
     fun = NULL;
     if (cg->treeContext.flags & TCF_IN_FUNCTION) {
-        fun = cg->treeContext.fun;
+        fun = cg->treeContext.u.fun;
         JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
         JS_ASSERT_IF(script->upvarsOffset != 0,
                      JS_SCRIPT_UPVARS(script)->length == fun->u.i.nupvars);

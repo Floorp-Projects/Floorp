@@ -74,6 +74,28 @@ typedef struct _cairo_user_scaled_font {
 
 /* #cairo_user_scaled_font_t */
 
+static cairo_t *
+_cairo_user_scaled_font_create_meta_context (cairo_user_scaled_font_t *scaled_font)
+{
+    cairo_content_t content;
+    cairo_surface_t *meta_surface;
+    cairo_t *cr;
+
+    content = scaled_font->base.options.antialias == CAIRO_ANTIALIAS_SUBPIXEL ?
+						     CAIRO_CONTENT_COLOR_ALPHA :
+						     CAIRO_CONTENT_ALPHA;
+
+    meta_surface = _cairo_meta_surface_create (content, -1, -1);
+    cr = cairo_create (meta_surface);
+    cairo_surface_destroy (meta_surface);
+
+    cairo_set_matrix (cr, &scaled_font->base.scale);
+    cairo_set_font_size (cr, 1.0);
+    cairo_set_font_options (cr, &scaled_font->base.options);
+
+    return cr;
+}
+
 static const cairo_scaled_font_backend_t cairo_user_scaled_font_backend;
 
 static cairo_int_status_t
@@ -89,17 +111,9 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	cairo_user_font_face_t *face =
 	    (cairo_user_font_face_t *) scaled_font->base.font_face;
 	cairo_text_extents_t extents = scaled_font->default_glyph_extents;
-	cairo_content_t content = scaled_font->base.options.antialias == CAIRO_ANTIALIAS_SUBPIXEL ?
-									 CAIRO_CONTENT_COLOR_ALPHA :
-									 CAIRO_CONTENT_ALPHA;
 	cairo_t *cr;
 
-	meta_surface = _cairo_meta_surface_create (content, -1, -1);
-	cr = cairo_create (meta_surface);
-
-	cairo_set_matrix (cr, &scaled_font->base.scale);
-	cairo_set_font_size (cr, 1.0);
-	cairo_set_font_options (cr, &scaled_font->base.options);
+	cr = _cairo_user_scaled_font_create_meta_context (scaled_font);
 
 	if (face->scaled_font_methods.render_glyph)
 	    status = face->scaled_font_methods.render_glyph ((cairo_scaled_font_t *)scaled_font,
@@ -110,6 +124,8 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = cairo_status (cr);
+
+	meta_surface = cairo_surface_reference (cairo_get_target (cr));
 
 	cairo_destroy (cr);
 
@@ -131,14 +147,20 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	    cairo_box_t bbox;
 	    double x1, y1, x2, y2;
 	    double x_scale, y_scale;
-	    cairo_surface_t *null_surface = _cairo_null_surface_create (cairo_surface_get_content (meta_surface));
-	    cairo_surface_t *analysis_surface = _cairo_analysis_surface_create (null_surface, -1, -1);
+	    cairo_surface_t *null_surface;
+	    cairo_surface_t *analysis_surface;
+
+	    null_surface = _cairo_null_surface_create (cairo_surface_get_content (meta_surface));
+	    analysis_surface = _cairo_analysis_surface_create (null_surface, -1, -1);
 	    cairo_surface_destroy (null_surface);
 
 	    _cairo_analysis_surface_set_ctm (analysis_surface, &scaled_font->extent_scale);
 	    status = _cairo_meta_surface_replay (meta_surface, analysis_surface);
 	    _cairo_analysis_surface_get_bounding_box (analysis_surface, &bbox);
 	    cairo_surface_destroy (analysis_surface);
+
+	    if (status)
+		return status;
 
 	    _cairo_box_to_doubles (&bbox, &x1, &y1, &x2, &y2);
 
@@ -249,12 +271,16 @@ _cairo_user_ucs4_to_index (void	    *abstract_font,
 }
 
 static cairo_int_status_t
-_cairo_user_text_to_glyphs (void           *abstract_font,
-			    double          x,
-			    double          y,
-			    const char     *utf8,
-			    cairo_glyph_t **glyphs,
-			    int	           *num_glyphs)
+_cairo_user_text_to_glyphs (void		 *abstract_font,
+			    double		  x,
+			    double		  y,
+			    const char		 *utf8,
+			    int			  utf8_len,
+			    cairo_glyph_t	**glyphs,
+			    int			  *num_glyphs,
+			    cairo_text_cluster_t **clusters,
+			    int			  *num_clusters,
+			    cairo_bool_t	  *backward)
 {
     cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -264,25 +290,21 @@ _cairo_user_text_to_glyphs (void           *abstract_font,
 
     if (face->scaled_font_methods.text_to_glyphs) {
 	int i;
+	int orig_num_glyphs = *num_glyphs;
 
-	*glyphs = NULL;
-	*num_glyphs = -1;
-
-	/* XXX currently user allocs glyphs array but cairo frees it */
 	status = face->scaled_font_methods.text_to_glyphs (&scaled_font->base,
-							   utf8, glyphs, num_glyphs);
+							   utf8, utf8_len,
+							   glyphs, num_glyphs,
+							   clusters, num_clusters,
+							   backward);
 
-	if (status != CAIRO_STATUS_SUCCESS) {
-	    status = _cairo_scaled_font_set_error (&scaled_font->base, status);
-	    if (*glyphs) {
-		free (*glyphs);
-		*glyphs = NULL;
-	    }
+	if (status != CAIRO_STATUS_SUCCESS)
 	    return status;
-	}
 
-	if (*num_glyphs < 0)
+	if (*num_glyphs < 0) {
+	    *num_glyphs = orig_num_glyphs;
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
 
 	/* Convert from font space to user space and add x,y */
 	for (i = 0; i < *num_glyphs; i++) {
@@ -351,7 +373,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	double fixed_scale, x_scale, y_scale;
 
 	user_scaled_font->extent_scale = user_scaled_font->base.scale_inverse;
-	status = _cairo_matrix_compute_scale_factors (&user_scaled_font->extent_scale,
+	status = _cairo_matrix_compute_basis_scale_factors (&user_scaled_font->extent_scale,
 						      &x_scale, &y_scale,
 						      1);
 	if (status == CAIRO_STATUS_SUCCESS) {
@@ -377,6 +399,8 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 
     if (status == CAIRO_STATUS_SUCCESS && font_face->scaled_font_methods.init != NULL) {
 
+	cairo_t *cr;
+
 	/* Lock the scaled_font mutex such that user doesn't accidentally try
          * to use it just yet. */
 	CAIRO_MUTEX_LOCK (user_scaled_font->base.mutex);
@@ -384,8 +408,16 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	/* Give away fontmap lock such that user-font can use other fonts */
 	_cairo_scaled_font_register_placeholder_and_unlock_font_map (&user_scaled_font->base);
 
+	cr = _cairo_user_scaled_font_create_meta_context (user_scaled_font);
+
 	status = font_face->scaled_font_methods.init (&user_scaled_font->base,
+						      cr,
 						      &font_extents);
+
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = cairo_status (cr);
+
+	cairo_destroy (cr);
 
 	_cairo_scaled_font_unregister_placeholder_and_lock_font_map (&user_scaled_font->base);
 

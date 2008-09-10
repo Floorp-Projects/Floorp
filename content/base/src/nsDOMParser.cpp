@@ -506,39 +506,14 @@ nsDOMParser::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
 }
 
 NS_IMETHODIMP
-nsDOMParser::Init()
+nsDOMParser::Init(nsIPrincipal *principal, nsIURI *documentURI, nsIURI *baseURI)
 {
   AttemptedInitMarker marker(&mAttemptedInit);
 
-  nsAXPCNativeCallContext *ncc = nsnull;
-
-  nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(ncc, NS_ERROR_UNEXPECTED);
-
-  JSContext *cx = nsnull;
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
   NS_ENSURE_TRUE(cx, NS_ERROR_UNEXPECTED);
 
-  PRUint32 argc;
-  jsval *argv = nsnull;
-  ncc->GetArgc(&argc);
-  ncc->GetArgvPtr(&argv);
-
-  if (argc != 3) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCOMPtr<nsIPrincipal> prin;
-  nsCOMPtr<nsIURI> documentURI;
-  nsCOMPtr<nsIURI> baseURI;
-  rv = GetInitArgs(cx, argc, argv, getter_AddRefs(prin),
-                   getter_AddRefs(documentURI), getter_AddRefs(baseURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
-  return Init(prin, documentURI, baseURI,
+  return Init(principal, documentURI, baseURI,
               scriptContext ? scriptContext->GetGlobalObject() : nsnull);
 }

@@ -45,7 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
+	browser_346337.js \
 	browser_350525.js \
+	browser_367052.js \
 	browser_393716.js \
 	browser_448741.js \
 	$(NULL)

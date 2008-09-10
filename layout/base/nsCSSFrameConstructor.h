@@ -270,7 +270,7 @@ private:
                               nsIFrame*      aParentFrame,
                               nsIFrame*      aPrevPageFrame,
                               nsIFrame*&     aPageFrame,
-                              nsIFrame*&     aPageContentFrame);
+                              nsIFrame*&     aCanvasFrame);
 
   void DoContentStateChanged(nsIContent*     aContent,
                              PRInt32         aStateMask);
@@ -1049,7 +1049,8 @@ private:
                                  nsIFrame*                aPrevSibling,
                                  nsFrameItems&            aFrameItems);
 
-  nsresult RemoveFixedItems(const nsFrameConstructorState& aState);
+  nsresult RemoveFixedItems(const nsFrameConstructorState& aState,
+                            nsIFrame*                      aRootElementFrame);
 
   // Find the right frame to use for aContent when looking for sibling
   // frames for aTargetContent.  If aPrevSibling is true, this
@@ -1164,6 +1165,9 @@ private:
   nsIDocument*        mDocument;  // Weak ref
   nsIPresShell*       mPresShell; // Weak ref
 
+  // See the comment at the start of ConstructRootFrame for more details
+  // about the following frames.
+  
   // This is not the real CSS 2.1 "initial containing block"! It is just
   // the outermost frame for the root element.
   nsIFrame*           mInitialContainingBlock;
@@ -1181,9 +1185,10 @@ private:
   PRUint16            mUpdateCount;
   PRPackedBool        mQuotesDirty : 1;
   PRPackedBool        mCountersDirty : 1;
-  PRPackedBool        mInitialContainingBlockIsAbsPosContainer : 1;
   PRPackedBool        mIsDestroyingFrameTree : 1;
   PRPackedBool        mRebuildAllStyleData : 1;
+  // This is true if mDocElementContainingBlock supports absolute positioning
+  PRPackedBool        mHasRootAbsPosContainingBlock : 1;
 
   nsRevocableEventPtr<RestyleEvent> mRestyleEvent;
 

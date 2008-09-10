@@ -50,7 +50,7 @@ XPIDLSRCS = \
 
 DIRS = src
 
-ifdef MOZ_MOCHITEST
+ifdef ENABLE_TESTS
 DIRS += test
 endif
 

@@ -67,7 +67,6 @@ LIBS		+= \
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_MOCHITEST
 relativesrcdir = extensions/universalchardet/tests
 
 _TEST_FILES =	\
@@ -88,5 +87,3 @@ _TEST_FILES =	\
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-endif # MOZ_MOCHITEST

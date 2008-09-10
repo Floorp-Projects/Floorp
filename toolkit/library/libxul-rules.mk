@@ -43,6 +43,7 @@ EXTRA_DSO_LDOPTS += \
 	$(LCMS_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(NSS_LIBS) \
+	$(MOZ_CAIRO_LIBS) \
 	$(NULL)
 
 ifdef MOZ_NATIVE_ZLIB
@@ -88,8 +89,6 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
 endif
-
-EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
 
 export:: dlldeps.cpp
 

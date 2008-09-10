@@ -47,8 +47,7 @@ class nsNavigator;
 class nsIDocShell;
 class nsIPluginHost;
 
-class nsPluginArray : public nsIDOMPluginArray,
-                      public nsIDOMJSPluginArray
+class nsPluginArray : public nsIDOMPluginArray
 {
 public:
   nsPluginArray(nsNavigator* navigator, nsIDocShell *aDocShell);
@@ -58,9 +57,6 @@ public:
 
   // nsIDOMPluginArray
   NS_DECL_NSIDOMPLUGINARRAY
-
-  // nsIDOMJSPluginArray
-  NS_DECL_NSIDOMJSPLUGINARRAY
 
   nsresult GetPluginHost(nsIPluginHost** aPluginHost);
 

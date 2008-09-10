@@ -78,7 +78,6 @@ static PRLock *_pr_logLock;
 
 #if defined(XP_PC)
 #define strcasecmp stricmp
-#define strncasecmp strnicmp
 #endif
 
 /*

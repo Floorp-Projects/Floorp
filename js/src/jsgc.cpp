@@ -61,7 +61,7 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsexn.h"
 #include "jsfun.h"
@@ -1510,7 +1510,7 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
 
 #ifdef DEBUG
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 js_root_printer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 i, void *arg)
 {
     uint32 *leakedroots = (uint32 *)arg;
@@ -1554,7 +1554,7 @@ typedef struct NamedRootDumpArgs {
     void *data;
 } NamedRootDumpArgs;
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 js_named_root_dumper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
                      void *arg)
 {
@@ -1587,7 +1587,7 @@ typedef struct GCRootMapArgs {
     void *data;
 } GCRootMapArgs;
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 js_gcroot_mapper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
                  void *arg)
 {
@@ -2594,7 +2594,7 @@ js_CallValueTracerIfGCThing(JSTracer *trc, jsval v)
     JS_CallTracer(trc, thing, kind);
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
                   void *arg)
 {
@@ -2653,7 +2653,7 @@ gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
     return JS_DHASH_NEXT;
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
                   void *arg)
 {

@@ -153,14 +153,14 @@ XPCJSContextStack::DEBUG_StackHasJSContext(JSContext*  aJSContext)
 }
 #endif
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 SafeGlobalResolve(JSContext *cx, JSObject *obj, jsval id)
 {
     JSBool resolved;
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 SafeFinalize(JSContext* cx, JSObject* obj)
 {
 #ifndef XPCONNECT_STANDALONE
@@ -459,8 +459,6 @@ GetThreadStackLimit()
 
   return stackLimit;
 }
-
-MOZ_DECL_CTOR_COUNTER(xpcPerThreadData)
 
 XPCPerThreadData::XPCPerThreadData()
     :   mJSContextStack(new XPCJSContextStack()),

@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xuldoc
 DIRS		= public src
 
-ifdef MOZ_MOCHITEST
+ifdef ENABLE_TESTS
 DIRS		+= test
 endif
 

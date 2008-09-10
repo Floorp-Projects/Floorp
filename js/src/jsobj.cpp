@@ -56,7 +56,7 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -69,8 +69,8 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
-
 #include "jsdbgapi.h"   /* whether or not JS_HAS_OBJ_WATCHPOINT */
+#include "jsstaticcheck.h"
 
 #if JS_HAS_GENERATORS
 #include "jsiter.h"
@@ -327,7 +327,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSHashNumber)
+static JSHashNumber
 js_hash_object(const void *key)
 {
     return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;
@@ -570,7 +570,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
     }
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
+static intN
 gc_sharp_table_entry_marker(JSHashEntry *he, intN i, void *arg)
 {
     JS_CALL_OBJECT_TRACER((JSTracer *)arg, (JSObject *)he->key,
@@ -635,7 +635,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
-    /* After this, control must flow through out: to exit. */
+    MUST_FLOW_THROUGH("out");
     JS_PUSH_TEMP_ROOT(cx, 4, localroot, &tvr);
 
     /* If outermost, we need parentheses to be an expression, not a block. */
@@ -775,7 +775,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
         /*
          * We simplify the source code at the price of minor dead code bloat in
-         * the ECMA version (for testing only, see jsconfig.h).  The null
+         * the ECMA version (for testing only, see jsversion.h).  The null
          * default values in gsop[j] suffice to disable non-ECMA getter and
          * setter code.
          */
@@ -1083,13 +1083,13 @@ JSBool
 js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
                          JSPrincipals *principals, JSAtom *caller)
 {
-    JSRuntime *rt;
+    JSSecurityCallbacks *callbacks;
     JSPrincipals *scopePrincipals;
     const char *callerstr;
 
-    rt = cx->runtime;
-    if (rt->findObjectPrincipals) {
-        scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
+    callbacks = JS_GetSecurityCallbacks(cx);
+    if (callbacks && callbacks->findObjectPrincipals) {
+        scopePrincipals = callbacks->findObjectPrincipals(cx, scopeobj);
         if (!principals || !scopePrincipals ||
             !principals->subsume(principals, scopePrincipals)) {
             callerstr = js_AtomToPrintableString(cx, caller);
@@ -1146,8 +1146,11 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop)
 {
     uint32 flags;
+#ifdef DEBUG
+    JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
+#endif
 
-    JS_ASSERT(principals || !cx->runtime->findObjectPrincipals);
+    JS_ASSERT(principals || !(callbacks  && callbacks->findObjectPrincipals));
     flags = JS_GetScriptFilenameFlags(caller->script);
     if ((flags & JSFILENAME_PROTECTED) &&
         principals &&
@@ -1176,6 +1179,7 @@ js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     const char *file;
     uintN line;
     JSPrincipals *principals;
+    uint32 tcflags;
     JSScript *script;
     JSBool ok;
 #if JS_HAS_EVAL_THIS_SCOPE
@@ -1231,6 +1235,7 @@ js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* From here on, control must exit through label out with ok set. */
+    MUST_FLOW_THROUGH("out");
     if (!scopeobj) {
 #if JS_HAS_EVAL_THIS_SCOPE
         /* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
@@ -1306,21 +1311,10 @@ js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         principals = NULL;
     }
 
-    /*
-     * Set JSFRAME_EVAL on fp and any frames (e.g., fun_call if eval.call was
-     * invoked) between fp and its scripted caller, to help the compiler easily
-     * find the same caller whose scope and var obj we've set.
-     *
-     * XXX this nonsense could, and perhaps should, go away with a better way
-     * to pass params to the compiler than via the top-most frame.
-     */
-    do {
-        fp->flags |= JSFRAME_EVAL;
-    } while ((fp = fp->down) != caller);
-
-    script = js_CompileScript(cx, scopeobj, principals,
-                              TCF_COMPILE_N_GO |
-                              TCF_PUT_STATIC_DEPTH(caller->script->staticDepth + 1),
+    tcflags = TCF_COMPILE_N_GO;
+    if (caller)
+        tcflags |= TCF_PUT_STATIC_DEPTH(caller->script->staticDepth + 1);
+    script = js_CompileScript(cx, scopeobj, caller, principals, tcflags,
                               JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
                               NULL, file, line);
     if (!script) {
@@ -1370,7 +1364,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
                   void *closure)
 {
     JSObject *callable;
-    JSRuntime *rt;
+    JSSecurityCallbacks *callbacks;
     JSStackFrame *caller;
     JSPrincipals *subject, *watcher;
     JSResolvingKey key;
@@ -1381,8 +1375,8 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
 
     callable = (JSObject *) closure;
 
-    rt = cx->runtime;
-    if (rt->findObjectPrincipals) {
+    callbacks = JS_GetSecurityCallbacks(cx);
+    if (callbacks && callbacks->findObjectPrincipals) {
         /* Skip over any obj_watch_* frames between us and the real subject. */
         caller = JS_GetScriptedCaller(cx, cx->fp);
         if (caller) {
@@ -1390,7 +1384,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
              * Only call the watch handler if the watcher is allowed to watch
              * the currently executing script.
              */
-            watcher = rt->findObjectPrincipals(cx, callable);
+            watcher = callbacks->findObjectPrincipals(cx, callable);
             subject = JS_StackFramePrincipals(cx, caller);
 
             if (watcher && subject && !watcher->subsume(watcher, subject)) {
@@ -2675,7 +2669,7 @@ earlybad:
 
 JS_BEGIN_EXTERN_C
 
-JS_STATIC_DLL_CALLBACK(JSObject *)
+static JSObject *
 js_InitNullClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(0);
@@ -2847,6 +2841,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
      * this point, all control flow must exit through label out with obj set.
      */
     JS_PUSH_SINGLE_TEMP_ROOT(cx, cval, &tvr);
+    MUST_FLOW_THROUGH("out");
 
     /*
      * If proto or parent are NULL, set them to Constructor.prototype and/or
@@ -3647,7 +3642,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
     jsval pval;
     int32 sample;
     JSTempValueRooter tvr;
-    JSBool ok;
+    bool ok;
 
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_ASSERT(JS_IS_OBJ_LOCKED(cx, obj));
@@ -3897,7 +3892,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
                     return JS_TRUE;
                 }
 
-                return SPROP_SET(cx, sprop, obj, pobj, vp);
+                return !!SPROP_SET(cx, sprop, obj, pobj, vp);
             }
 
             /* Restore attrs to the ECMA default for new properties. */
@@ -4458,6 +4453,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     JSProperty *prop;
     JSClass *clasp;
     JSScopeProperty *sprop;
+    JSSecurityCallbacks *callbacks;
     JSCheckAccessOp check;
 
     writing = (mode & JSACC_WRITE) != 0;
@@ -4525,8 +4521,10 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
      */
     clasp = OBJ_GET_CLASS(cx, pobj);
     check = clasp->checkAccess;
-    if (!check)
-        check = cx->runtime->checkObjectAccess;
+    if (!check) {
+        callbacks = JS_GetSecurityCallbacks(cx);
+        check = callbacks ? callbacks->checkObjectAccess : NULL;
+    }
     return !check || check(cx, pobj, ID_TO_VALUE(id), mode, vp);
 }
 

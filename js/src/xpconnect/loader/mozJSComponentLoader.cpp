@@ -123,7 +123,7 @@ static PRLogModuleInfo *gJSCLLog;
 #define ERROR_GETTING_SYMBOL "%s - Could not get symbol '%s'."
 #define ERROR_SETTING_SYMBOL "%s - Could not set symbol '%s' on target object."
 
-void JS_DLL_CALLBACK
+void
 mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 {
     nsresult rv;
@@ -181,7 +181,7 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 #endif
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
@@ -197,7 +197,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 Debug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 #ifdef DEBUG
@@ -207,7 +207,7 @@ Debug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 Atob(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
@@ -243,7 +243,7 @@ Atob(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 Btoa(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;

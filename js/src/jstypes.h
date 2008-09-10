@@ -84,9 +84,6 @@
 # define JS_EXTERN_DATA(__type) extern __declspec(dllexport) __type
 # define JS_EXPORT_DATA(__type) __declspec(dllexport) __type
 
-# define JS_DLL_CALLBACK
-# define JS_STATIC_DLL_CALLBACK(__x)    static __x
-
 #elif defined(XP_OS2) && defined(__declspec)
 
 # define JS_EXTERN_API(__type)  extern __declspec(dllexport) __type
@@ -94,13 +91,12 @@
 # define JS_EXTERN_DATA(__type) extern __declspec(dllexport) __type
 # define JS_EXPORT_DATA(__type) __declspec(dllexport) __type
 
-# define JS_DLL_CALLBACK
-# define JS_STATIC_DLL_CALLBACK(__x)    static __x
-
 #else /* Unix */
 
 # ifdef HAVE_VISIBILITY_ATTRIBUTE
 #  define JS_EXTERNAL_VIS __attribute__((visibility ("default")))
+# elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#  define JS_EXTERNAL_VIS __global
 # else
 #  define JS_EXTERNAL_VIS
 # endif
@@ -109,9 +105,6 @@
 # define JS_EXPORT_API(__type)  JS_EXTERNAL_VIS __type
 # define JS_EXTERN_DATA(__type) extern JS_EXTERNAL_VIS __type
 # define JS_EXPORT_DATA(__type) JS_EXTERNAL_VIS __type
-
-# define JS_DLL_CALLBACK
-# define JS_STATIC_DLL_CALLBACK(__x)    static __x
 
 #endif
 

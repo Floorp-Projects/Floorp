@@ -382,7 +382,7 @@ interface extISessionStorage : nsISupports
   nsIVariant get(in AString aName, in nsIVariant aDefaultValue);
 }; 
 
-[scriptable, uuid(ba9442ee-7070-44fb-8157-c111e1fa70b6)]
+[scriptable, uuid(e53d6610-7468-11dd-ad8b-0800200c9a66)]
 interface extIApplication : nsISupports
 {
   /**
@@ -427,4 +427,16 @@ interface extIApplication : nsISupports
    * supports: "load", "ready", "quit", "unload"
    */
   readonly attribute extIEvents events;
+
+  /**
+   * Quits the application (if nobody objects to quit-application-requested).
+   * @returns whether quitting will proceed
+   */
+  boolean quit();
+
+  /**
+   * Restarts the application (if nobody objects to quit-application-requested).
+   * @returns whether restarting will proceed
+   */
+  boolean restart();
 };

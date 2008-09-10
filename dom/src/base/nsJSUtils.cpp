@@ -118,49 +118,6 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
   return JS_FALSE;
 }
 
-jsval
-nsJSUtils::ConvertStringToJSVal(const nsString& aProp, JSContext* aContext)
-{
-  JSString *jsstring =
-    ::JS_NewUCStringCopyN(aContext, reinterpret_cast<const jschar*>
-                                                    (aProp.get()),
-                          aProp.Length());
-
-  // set the return value
-  return STRING_TO_JSVAL(jsstring);
-}
-
-void
-nsJSUtils::ConvertJSValToString(nsAString& aString, JSContext* aContext,
-                                jsval aValue)
-{
-  JSString *jsstring;
-  if ((jsstring = ::JS_ValueToString(aContext, aValue)) != nsnull) {
-    aString.Assign(reinterpret_cast<const PRUnichar*>
-                                   (::JS_GetStringChars(jsstring)),
-                   ::JS_GetStringLength(jsstring));
-  }
-  else {
-    aString.Truncate();
-  }
-}
-
-PRBool
-nsJSUtils::ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,
-                                jsval aValue)
-{
-  uint32 temp;
-  if (::JS_ValueToECMAUint32(aContext, aValue, &temp)) {
-    *aProp = (PRUint32)temp;
-  }
-  else {
-    ::JS_ReportError(aContext, "Parameter must be an integer");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
 nsIScriptGlobalObject *
 nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
 {

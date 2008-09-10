@@ -52,7 +52,7 @@ interface nsIDocShell;
 #define NS_SHISTORY_INTERNAL_CONTRACTID "@mozilla.org/browser/shistory-internal;1"
 %}
 
-[scriptable, uuid(9c47c121-1c6e-4d8f-b904-3ac968116e88)]
+[scriptable, uuid(0e91697a-4ba0-4ede-b08a-0bae9ee1a701)]
 interface nsISHistoryInternal: nsISupports
 {
   /**
@@ -92,13 +92,11 @@ interface nsISHistoryInternal: nsISupports
    readonly attribute nsISHistoryListener listener;
 
   /**
-   * Evict content viewers until the number of content viewers per tab
-   * is no more than gHistoryMaxViewers.  Also, count
-   * total number of content viewers globally and evict one if we are over
-   * our total max.  This is always called in Show(), after we destroy
-   * the previous viewer.
+   * Count total number of content viewers globally and evict one if we are over
+   * our total max.  This is always called in Show(), after we destroy the
+   * previous viewer.
    */
-   void evictContentViewers(in long previousIndex, in long index);
+   void evictContentViewers();
    
    /**
     * Evict the content viewer associated with a session history entry

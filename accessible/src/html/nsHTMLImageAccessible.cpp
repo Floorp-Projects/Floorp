@@ -143,8 +143,9 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetName(nsAString& aName)
   PRBool hasAltAttrib =
     content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt, aName);
   if (aName.IsEmpty()) {
-    if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby)) {
-      // Use HTML label or DHTML accessibility's labelledby attribute for name
+    if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label) ||
+        content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby)) {
+      // Use HTML label or DHTML accessibility's label or labelledby attribute for name
       // GetHTMLName will also try title attribute as a last resort
       GetHTMLName(aName, PR_FALSE);
     }

@@ -1193,7 +1193,12 @@ nsPrintEngine::MapContentToWebShells(nsPrintObject* aRootPO,
   // Recursively walk the content from the root item
   // XXX Would be faster to enumerate the subdocuments, although right now
   //     nsIDocument doesn't expose quite what would be needed.
-  MapContentForPO(aPO, aPO->mDocument->GetRootContent());
+  nsIContent *rootContent = aPO->mDocument->GetRootContent();
+  if (rootContent) {
+    MapContentForPO(aPO, rootContent);
+  } else {
+    NS_WARNING("Null root content on (sub)document.");
+  }
 
   // Continue recursively walking the chilren of this PO
   for (PRInt32 i=0;i<aPO->mKids.Count();i++) {

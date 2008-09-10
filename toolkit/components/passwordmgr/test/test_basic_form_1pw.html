@@ -2742,12 +2742,12 @@ function startTest() {
 
     for (f = 1;   f <= 4;   f++) { checkForm(f, "testpass"); }
     for (f = 5;   f <= 6;   f++) { checkUnmodifiedForm(f); }
-    for (f = 7;   f <= 14;   f++) { checkForm(f, "testuser", "testpass"); }
-    todo(false, "Don't clobber prefilled differing password");
-    //for (f = 15;   f <= 18;  f++) { checkUnmodifiedForm(f); }
+    for (f = 7;   f <= 10;  f++) { checkForm(f, "testuser", "testpass"); }
+    // 11-14 have the password prefilled, we skip filling the username.
+    for (f = 11;  f <= 14;  f++) { checkUnmodifiedForm(f); }
+    for (f = 15;  f <= 18;  f++) { checkUnmodifiedForm(f); }
     for (f = 19;  f <= 26;  f++) { checkForm(f, "testuser", "testpass"); }
-    todo(false, "Don't clobber prefilled differing password");
-    //for (f = 27;  f <= 30;  f++) { checkUnmodifiedForm(f); }
+    for (f = 27;  f <= 30;  f++) { checkUnmodifiedForm(f); }
     for (f = 31;  f <= 42;  f++) { checkUnmodifiedForm(f); }
 
     todo(false, "Add support for password before username");
@@ -2758,13 +2758,13 @@ function startTest() {
 
     //for (f = 79;  f <= 90;  f++) { checkUnmodifiedForm(f); }
 
-    for (f = 91;  f <= 98;  f++) { checkForm(f, "testuser", "testpass", ""); }
-    todo(false, "Don't clobber prefilled differing password");
-    //for (f = 99;  f <= 102; f++) { checkUnmodifiedForm(f); }
+    for (f = 91;  f <= 94;  f++) { checkForm(f, "testuser", "testpass", ""); }
+    // 95-98 have the password prefilled, we skip filling the username.
+    for (f = 95;  f <= 98;  f++) { checkUnmodifiedForm(f); }
+    for (f = 99;  f <= 102; f++) { checkUnmodifiedForm(f); }
     for (f = 103; f <= 110; f++) { checkForm(f, "testuser", "testpass", ""); }
-    todo(false, "Don't clobber prefilled differing password");
-    //for (f = 111;  f <= 114;  f++) { checkUnmodifiedForm(f); }
-    for (f = 115;  f <= 126; f++) { checkUnmodifiedForm(f); }
+    for (f = 111; f <= 114; f++) { checkUnmodifiedForm(f); }
+    for (f = 115; f <= 126; f++) { checkUnmodifiedForm(f); }
 
     todo(false, "Ambigious username fields,");
     //for (f = 127; f <= 134; f++) { checkForm(f, "testuser", "", "testpass"); }
@@ -2774,10 +2774,12 @@ function startTest() {
     //for (f = 139; f <= 146; f++) { checkForm(f, "testuser", "", "testpass"); }
     //for (f = 147; f <= 162; f++) { checkUnmodifiedForm(f); }
 
-    for (f = 163; f <= 170; f++) { checkForm(f, "", "testuser", "testpass"); }
-    //for (f = 171; f <= 174; f++) { checkUnmodifiedForm(f); }
+    for (f = 163; f <= 166; f++) { checkForm(f, "", "testuser", "testpass"); }
+    // 167-170 have the password prefilled, we skip filling the username.
+    for (f = 167; f <= 170; f++) { checkUnmodifiedForm(f); }
+    for (f = 171; f <= 174; f++) { checkUnmodifiedForm(f); }
     for (f = 175; f <= 182; f++) { checkForm(f, "", "testuser", "testpass"); }
-    //for (f = 183; f <= 186; f++) { checkUnmodifiedForm(f); }
+    for (f = 183; f <= 186; f++) { checkUnmodifiedForm(f); }
     for (f = 187; f <= 198; f++) { checkUnmodifiedForm(f); }
 
     todo(false, "Add support for password before username");

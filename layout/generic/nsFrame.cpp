@@ -4148,18 +4148,20 @@ nsFrame::VerifyTree() const
 /*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
   it will not update immediately.*/
 NS_IMETHODIMP
-nsFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelected, nsSpread aSpread)
+nsFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aSelected, nsSpread aSpread, SelectionType aType)
 {
 /*
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
 */
 
-  // check whether style allows selection
-  PRBool  selectable;
-  IsSelectable(&selectable, nsnull);
-  if (!selectable)
-    return NS_OK;
+  if (aType == nsISelectionController::SELECTION_NORMAL) {
+    // check whether style allows selection
+    PRBool  selectable;
+    IsSelectable(&selectable, nsnull);
+    if (!selectable)
+      return NS_OK;
+  }
 
 /*
   if (eSpreadDown == aSpread){
@@ -4186,7 +4188,7 @@ nsFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aS
     GetFirstLeaf(aPresContext, &frame);
     GetOffsets(start, end);
     if (start && end) {
-      frame->SetSelected(aPresContext, aRange, aSelected, aSpread);
+      frame->SetSelected(aPresContext, aRange, aSelected, aSpread, aType);
     }
   }
 #endif // IBMBIDI
@@ -5559,12 +5561,19 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
     parent = parent->GetParent();
   } while (parent);
 
-  // We can get here if aProspectiveParent is the scrollframe for a viewport
-  // and the kids are the anonymous scrollbars.
-  NS_ASSERTION(aProspectiveParent->GetStyleContext()->GetPseudoType() ==
-                 nsCSSAnonBoxes::viewportScroll,
+  if (aProspectiveParent->GetStyleContext()->GetPseudoType() ==
+      nsCSSAnonBoxes::viewportScroll) {
+    // aProspectiveParent is the scrollframe for a viewport
+    // and the kids are the anonymous scrollbars
+    return aProspectiveParent;
+  }
+
+  // We can get here if the root element is absolutely positioned.
+  // We can't test for this very accurately, but it can only happen
+  // when the prospective parent is a canvas frame.
+  NS_ASSERTION(aProspectiveParent->GetType() == nsGkAtoms::canvasFrame,
                "Should have found a parent before this");
-  return aProspectiveParent;
+  return nsnull;
 }
 
 nsresult
@@ -6609,8 +6618,6 @@ DR_cookie::~DR_cookie()
   nsFrame::DisplayReflowExit(mPresContext, mFrame, mMetrics, mStatus, mValue);
 }
 
-MOZ_DECL_CTOR_COUNTER(DR_layout_cookie)
-
 DR_layout_cookie::DR_layout_cookie(nsIFrame* aFrame)
   : mFrame(aFrame)
 {
@@ -6623,8 +6630,6 @@ DR_layout_cookie::~DR_layout_cookie()
   MOZ_COUNT_DTOR(DR_layout_cookie);
   nsFrame::DisplayLayoutExit(mFrame, mValue);
 }
-
-MOZ_DECL_CTOR_COUNTER(DR_intrinsic_width_cookie)
 
 DR_intrinsic_width_cookie::DR_intrinsic_width_cookie(
                      nsIFrame*                aFrame, 
@@ -6643,8 +6648,6 @@ DR_intrinsic_width_cookie::~DR_intrinsic_width_cookie()
   MOZ_COUNT_DTOR(DR_intrinsic_width_cookie);
   nsFrame::DisplayIntrinsicWidthExit(mFrame, mType, mResult, mValue);
 }
-
-MOZ_DECL_CTOR_COUNTER(DR_intrinsic_size_cookie)
 
 DR_intrinsic_size_cookie::DR_intrinsic_size_cookie(
                      nsIFrame*                aFrame, 

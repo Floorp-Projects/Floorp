@@ -123,10 +123,10 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
   boolean                   confirm(in DOMString text);
 
   // prompt() should return a null string if cancel is pressed
-  DOMString                 prompt(in DOMString aMessage,
-                                   in DOMString aInitial,
-                                   in DOMString aTitle,
-                                   in unsigned long aSavePassword);
+  DOMString                 prompt([optional] in DOMString aMessage,
+                                   [optional] in DOMString aInitial,
+                                   [optional] in DOMString aTitle,
+                                   [optional] in unsigned long aSavePassword);
 
   void                      focus();
   void                      blur();
@@ -160,12 +160,15 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    */
   [noscript] nsIDOMWindow   open(in DOMString url, in DOMString name,
                                  in DOMString options);
-  // This method works like open except that aExtraArgument gets
-  // converted into the array window.arguments in JS, if
-  // aExtraArgument is a nsISupportsArray then the individual items in
-  // the array are inserted into window.arguments, and primitive
-  // nsISupports (nsISupportsPrimitives) types are converted to native
-  // JS types when possible.
+
+  /**
+   * This method works like open except that aExtraArgument gets
+   * converted into the array window.arguments in JS, if
+   * aExtraArgument is a nsISupportsArray then the individual items in
+   * the array are inserted into window.arguments, and primitive
+   * nsISupports (nsISupportsPrimitives) types are converted to native
+   * JS types when possible.
+   */
   [noscript] nsIDOMWindow   openDialog(in DOMString url, in DOMString name,
                                        in DOMString options,
                                        in nsISupports aExtraArgument);
@@ -174,7 +177,7 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
   // XXX Should this be in nsIDOMChromeWindow?
   void                      updateCommands(in DOMString action);
 
-  /* See nsIDOMJSWindow for the scriptable version of find()
+  /* Find in page.
    * @param str: the search pattern
    * @param caseSensitive: is the search caseSensitive
    * @param backwards: should we search backwards
@@ -183,13 +186,13 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    * @param searchInFrames: should we search through all frames
    * @param showDialog: should we show the Find dialog
    */
-  [noscript] boolean        find(in DOMString str, 
-                                 in boolean caseSensitive,
-                                 in boolean backwards, 
-                                 in boolean wrapAround,
-                                 in boolean wholeWord, 
-                                 in boolean searchInFrames, 
-                                 in boolean showDialog);
+  boolean                   find([optional] in DOMString str,
+                                 [optional] in boolean caseSensitive,
+                                 [optional] in boolean backwards,
+                                 [optional] in boolean wrapAround,
+                                 [optional] in boolean wholeWord,
+                                 [optional] in boolean searchInFrames,
+                                 [optional] in boolean showDialog);
 
   // Ascii base64 data to binary data and vice versa...
   DOMString                 atob(in DOMString aAsciiString);

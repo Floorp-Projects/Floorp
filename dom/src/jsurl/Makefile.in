@@ -87,7 +87,7 @@ DEFINES		+= -DDEBUG_GC
 endif
 
 DIRS            = $(NULL)
-ifdef MOZ_MOCHITEST
+ifdef ENABLE_TESTS
 DIRS            += test
 endif
 

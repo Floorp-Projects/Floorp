@@ -101,7 +101,6 @@ MAKEFILES_gfx="
   gfx/public/Makefile
   gfx/src/Makefile
   gfx/src/psshared/Makefile
-  gfx/src/photon/Makefile
   gfx/src/thebes/Makefile
   gfx/tests/Makefile
 "
@@ -589,7 +588,6 @@ MAKEFILES_xpfe="
   xpfe/components/autocomplete/Makefile
   xpfe/components/autocomplete/public/Makefile
   xpfe/components/autocomplete/src/Makefile
-  xpfe/components/winhooks/Makefile
   xpfe/components/windowds/Makefile
   xpfe/components/build/Makefile
   xpfe/appshell/Makefile

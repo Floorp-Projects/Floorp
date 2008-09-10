@@ -62,9 +62,9 @@ function initFeedTab()
     }
 
     if (rels.feed || (link.type && rels.alternate && !rels.stylesheet)) {
-      var feed = { title: link.title, href: link.href, type: link.type || "" };
-      if (isValidFeed(feed, gDocument.nodePrincipal, rels.feed)) {
-        var type = feedTypes[feed.type] || feedTypes["application/rss+xml"];
+      var type = isValidFeed(link, gDocument.nodePrincipal, rels.feed);
+      if (type) {
+        type = feedTypes[type] || feedTypes["application/rss+xml"];
         addRow(feed.title, type, feed.href);
       }
     }

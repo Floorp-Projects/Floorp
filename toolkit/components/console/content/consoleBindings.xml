@@ -425,10 +425,8 @@
       <handler event="click" phase="capturing" button="0" preventdefault="true">
         <![CDATA[
           var url = this.getAttribute("href");
-          var line = getAttribute("line");  
-          window.openDialog(
-            "chrome://global/content/viewSource.xul", "_blank", 
-            "all,dialog=no", url, null, null, line, false);
+          var line = getAttribute("line");
+          gViewSourceUtils.viewSource(url, null, null, line);
         ]]>
       </handler>
     </handlers>

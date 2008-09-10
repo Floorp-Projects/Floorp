@@ -18,8 +18,6 @@ dist/bin/components/nsResetPref.js
 !xpt dist/bin/components/mozbrwsr.xpt
 
 #if OS_ARCH==WINNT
-dist/bin/components/nsSetDefaultBrowser.js
-!xpt dist/bin/components/winhooks.xpt
 !xpt dist/bin/components/urlwidgt.xpt
 !xpt dist/bin/components/alerts.xpt
 #endif
@@ -33,9 +31,3 @@ dist/bin/components/nsDownloadProgressListener.js
 !xpt dist/bin/components/history.xpt
 !xpt dist/bin/components/sidebar.xpt
 !xpt dist/bin/components/progressDlg.xpt
-
-[xpfe-mailnews]
-#if OS_ARCH==WINNT
-dist/bin/components/nsSetDefaultMail.js
-dist/bin/components/nsUnSetDefaultMail.js
-#endif

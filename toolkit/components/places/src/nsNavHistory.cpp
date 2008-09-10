@@ -78,6 +78,8 @@
 #include "nsVariant.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsIIDNService.h"
+#include "nsIClassInfoImpl.h"
+#include "nsThreadUtils.h"
 
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
@@ -196,10 +198,6 @@
 
 #endif // LAZY_ADD
 
-// Perform "long idle" tasks after 15 minutes of idle time, repeating.
-// 15 minutes = 900 seconds = 900000 milliseconds
-#define LONG_IDLE_TIME_IN_MSECS (900000)
-
 // Perform expiration after 5 minutes of idle time, repeating.
 // 5 minutes = 300 seconds = 300000 milliseconds
 #define EXPIRE_IDLE_TIME_IN_MSECS (300000)
@@ -236,7 +234,18 @@ NS_INTERFACE_MAP_BEGIN(nsNavHistory)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSimpleResultListener)
 #endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsINavHistoryService)
+  NS_IMPL_QUERY_CLASSINFO(nsNavHistory)
 NS_INTERFACE_MAP_END
+
+// We don't care about flattening everything
+NS_IMPL_CI_INTERFACE_GETTER5(
+  nsNavHistory
+, nsINavHistoryService
+, nsIGlobalHistory3
+, nsIGlobalHistory2
+, nsIDownloadHistory
+, nsIBrowserHistory
+)
 
 static nsresult GetReversedHostname(nsIURI* aURI, nsAString& host);
 static void GetReversedHostname(const nsString& aForward, nsAString& aReversed);
@@ -888,8 +897,7 @@ nsNavHistory::InitializeIdleTimer()
   mIdleTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 idleTimerTimeout = PR_MIN(LONG_IDLE_TIME_IN_MSECS,
-                                    EXPIRE_IDLE_TIME_IN_MSECS);
+  PRInt32 idleTimerTimeout = EXPIRE_IDLE_TIME_IN_MSECS;
   if (mFrecencyUpdateIdleTime)
     idleTimerTimeout = PR_MIN(idleTimerTimeout, mFrecencyUpdateIdleTime);
 
@@ -2318,6 +2326,8 @@ nsNavHistory::DomainNameFromURI(nsIURI *aURI,
 NS_IMETHODIMP
 nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   nsCOMPtr<mozIStorageStatement> dbSelectStatement;
   nsresult rv = mDBConn->CreateStatement(
       NS_LITERAL_CSTRING("SELECT id FROM moz_historyvisits LIMIT 1"),
@@ -2393,6 +2403,8 @@ nsNavHistory::CalculateFullVisitCount(PRInt64 aPlaceId, PRInt32 *aVisitCount)
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   // don't add when history is disabled
   if (IsHistoryDisabled())
     return NS_OK;
@@ -2425,6 +2437,8 @@ nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
 NS_IMETHODIMP
 nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   NS_ENSURE_ARG_POINTER(aURI);
 
   nsCAutoString scheme;
@@ -2472,6 +2486,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
                        PRInt64 aSessionID, PRInt64* aVisitID)
 {
   NS_ENSURE_ARG_POINTER(aURI);
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
   // Filter out unwanted URIs, silently failing
   PRBool canAdd = PR_FALSE;
@@ -2628,6 +2643,8 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
 
 NS_IMETHODIMP nsNavHistory::GetNewQuery(nsINavHistoryQuery **_retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   *_retval = new nsNavHistoryQuery();
   if (! *_retval)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2639,6 +2656,8 @@ NS_IMETHODIMP nsNavHistory::GetNewQuery(nsINavHistoryQuery **_retval)
 
 NS_IMETHODIMP nsNavHistory::GetNewQueryOptions(nsINavHistoryQueryOptions **_retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   *_retval = new nsNavHistoryQueryOptions();
   NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*_retval);
@@ -2652,6 +2671,8 @@ NS_IMETHODIMP
 nsNavHistory::ExecuteQuery(nsINavHistoryQuery *aQuery, nsINavHistoryQueryOptions *aOptions,
                            nsINavHistoryResult** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   return ExecuteQueries(&aQuery, 1, aOptions, _retval);
 }
 
@@ -2673,6 +2694,8 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
                              nsINavHistoryQueryOptions *aOptions,
                              nsINavHistoryResult** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aQueries);
   NS_ENSURE_ARG_POINTER(aOptions);
@@ -3557,6 +3580,8 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
 NS_IMETHODIMP
 nsNavHistory::AddObserver(nsINavHistoryObserver* aObserver, PRBool aOwnsWeak)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   return mObservers.AppendWeakElement(aObserver, aOwnsWeak);
 }
 
@@ -3566,6 +3591,8 @@ nsNavHistory::AddObserver(nsINavHistoryObserver* aObserver, PRBool aOwnsWeak)
 NS_IMETHODIMP
 nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   return mObservers.RemoveWeakElement(aObserver);
 }
 
@@ -3605,6 +3632,7 @@ nsNavHistory::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
                              nsISupports* aUserData) 
 {
   NS_ENSURE_ARG_POINTER(aCallback);
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
   UpdateBatchScoper batch(*this);
   return aCallback->RunBatched(aUserData);
@@ -3614,6 +3642,8 @@ NS_IMETHODIMP
 nsNavHistory::GetHistoryDisabled(PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   *_retval = IsHistoryDisabled();
   return NS_OK;
 }
@@ -3632,6 +3662,8 @@ NS_IMETHODIMP
 nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
                                  PRInt64 aLastVisited)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   PRInt64 visitID;
   nsresult rv = AddVisit(aURI, aLastVisited, 0, TRANSITION_LINK, PR_FALSE,
                          0, &visitID);
@@ -3650,6 +3682,8 @@ nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
 NS_IMETHODIMP
 nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.url "
@@ -3680,6 +3714,8 @@ nsNavHistory::GetLastPageVisited(nsACString & aLastPageVisited)
 NS_IMETHODIMP
 nsNavHistory::GetCount(PRUint32 *aCount)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   PRBool hasEntries = PR_FALSE;
   nsresult rv = GetHasHistoryEntries(&hasEntries);
   if (hasEntries)
@@ -3773,6 +3809,8 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
 NS_IMETHODIMP
 nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotify)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   nsresult rv;
   // build a list of place ids to delete
   nsCString deletePlaceIdsQueryString;
@@ -3803,9 +3841,11 @@ nsNavHistory::RemovePages(nsIURI **aURIs, PRUint32 aLength, PRBool aDoBatchNotif
 //    Removes all visits and the main history entry for the given URI.
 //    Silently fails if we have no knowledge of the page.
 
- NS_IMETHODIMP
+NS_IMETHODIMP
 nsNavHistory::RemovePage(nsIURI *aURI)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   nsIURI** URIs = &aURI;
   nsresult rv = RemovePages(URIs, 1, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3831,6 +3871,8 @@ nsNavHistory::RemovePage(nsIURI *aURI)
 NS_IMETHODIMP
 nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   nsresult rv;
   // Local files don't have any host name. We don't want to delete all files in
   // history when we get passed an empty string, so force to exact match
@@ -3912,6 +3954,8 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 NS_IMETHODIMP
 nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   nsresult rv;
   // build a list of place ids to delete
   nsCString deletePlaceIdsQueryString;
@@ -3959,6 +4003,8 @@ nsNavHistory::RemovePagesByTimeframe(PRTime aBeginTime, PRTime aEndTime)
 NS_IMETHODIMP
 nsNavHistory::RemoveAllPages()
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   // expire everything
   mExpire.ClearHistory();
 
@@ -3993,6 +4039,8 @@ nsNavHistory::RemoveAllPages()
 NS_IMETHODIMP
 nsNavHistory::HidePage(nsIURI *aURI)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   return NS_ERROR_NOT_IMPLEMENTED;
   /*
   // for speed to save disk accesses
@@ -4070,6 +4118,8 @@ nsNavHistory::HidePage(nsIURI *aURI)
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   // don't add when history is disabled
   if (IsHistoryDisabled())
     return NS_OK;
@@ -4100,6 +4150,8 @@ NS_IMETHODIMP
 nsNavHistory::SetCharsetForURI(nsIURI* aURI,
                                const nsAString& aCharset)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
   NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
 
@@ -4128,6 +4180,8 @@ NS_IMETHODIMP
 nsNavHistory::GetCharsetForURI(nsIURI* aURI, 
                                nsAString& aCharset)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
   NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
 
@@ -4152,6 +4206,8 @@ NS_IMETHODIMP
 nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
                      PRBool aToplevel, nsIURI *aReferrer)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   // don't add when history is disabled
   if (IsHistoryDisabled())
     return NS_OK;
@@ -4372,6 +4428,8 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
 NS_IMETHODIMP
 nsNavHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   // if history is disabled, we can optimize
   if (IsHistoryDisabled()) {
     *_retval = PR_FALSE;
@@ -4402,6 +4460,8 @@ NS_IMETHODIMP
 nsNavHistory::SetPageTitle(nsIURI* aURI,
                            const nsAString& aTitle)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   // if aTitle is empty we want to clear the previous title.
   // We don't want to set it to an empty string, but to a NULL value,
   // so we use SetIsVoid and SetPageTitleInternal will take care of that
@@ -4427,6 +4487,8 @@ nsNavHistory::SetPageTitle(nsIURI* aURI,
 NS_IMETHODIMP
 nsNavHistory::GetPageTitle(nsIURI* aURI, nsAString& aTitle)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   aTitle.Truncate(0);
 
   mozIStorageStatement *statement = DBGetURLPageInfo();
@@ -4455,6 +4517,8 @@ nsNavHistory::GetPageTitle(nsIURI* aURI, nsAString& aTitle)
 NS_IMETHODIMP
 nsNavHistory::GetURIGeckoFlags(nsIURI* aURI, PRUint32* aResult)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -4466,6 +4530,8 @@ nsNavHistory::GetURIGeckoFlags(nsIURI* aURI, PRUint32* aResult)
 NS_IMETHODIMP
 nsNavHistory::SetURIGeckoFlags(nsIURI* aURI, PRUint32 aFlags)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -4494,6 +4560,8 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
                                   PRInt32 aFlags,
                                   PRBool aTopLevel)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   nsresult rv;
   nsCOMPtr<nsIURI> oldURI, newURI;
   rv = aOldChannel->GetURI(getter_AddRefs(oldURI));
@@ -4559,87 +4627,6 @@ nsNavHistory::OnIdle()
     (void)mExpire.ExpireItems(MAX_EXPIRE_RECORDS_ON_IDLE, &dummy);
   }
 
-  // If we've been idle for more than LONG_IDLE_TIME_IN_MSECS
-  // perform long-idle tasks.
-  if (idleTime > LONG_IDLE_TIME_IN_MSECS) {
-    // Do a one-time re-creation of the moz_places.url index (bug 381795)
-    // XXX REMOVE ME AFTER BETA2.
-    PRBool oldIndexExists = PR_FALSE;
-    rv = mDBConn->IndexExists(NS_LITERAL_CSTRING("moz_places_urlindex"), &oldIndexExists);
-    NS_ENSURE_SUCCESS(rv, rv);
- 
-    if (oldIndexExists) {
-      // wrap in a transaction for safety and performance
-      mozStorageTransaction urlindexTransaction(mDBConn, PR_FALSE);
-      // drop old index
-      rv = mDBConn->ExecuteSimpleSQL(
-          NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_urlindex"));
-      NS_ENSURE_SUCCESS(rv, rv);
-      // remove any duplicates
-      rv = RemoveDuplicateURIs();
-      NS_ENSURE_SUCCESS(rv, rv);
-      // create new index
-      rv = mDBConn->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_places_url_uniqueindex ON moz_places (url)"));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = urlindexTransaction.Commit();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // detect and replace bogus moz_places_visitcount index
-    // see bug 402161
-    // XXX REMOVE ME AFTER FINAL
-    nsCOMPtr<mozIStorageStatement> detectBogusIndex;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT name FROM sqlite_master WHERE type = 'index' AND "
-        "name = 'moz_places_visitcount' AND sql LIKE ?1 ESCAPE '/'"),
-        getter_AddRefs(detectBogusIndex));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoString escapedString;
-    rv = detectBogusIndex->EscapeStringForLIKE(NS_LITERAL_STRING("rev_host"),
-                                               '/', escapedString);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = detectBogusIndex->BindStringParameter(0, NS_LITERAL_STRING("%") +
-                                                  escapedString +
-                                                  NS_LITERAL_STRING("%"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasResult;
-    rv = detectBogusIndex->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = detectBogusIndex->Reset();
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasResult) {
-      // drop old index
-      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-          "DROP INDEX IF EXISTS moz_places_visitcount"));
-      NS_ENSURE_SUCCESS(rv, rv);
-      // create new index
-      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-          "CREATE INDEX IF NOT EXISTS moz_places_visitcount "
-          "ON moz_places (visit_count)"));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Remove dangling livemark annotations
-    // we have moved expiration pageAnnotations to itemAnnotations
-    // we must remove pageAnnotations to allow expire do the cleanup
-    // see bug 388716
-    // XXX REMOVE ME AFTER FINAL
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_annos WHERE id IN (SELECT a.id FROM moz_annos a "
-        "JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id "
-        "WHERE n.name = 'livemark/expiration')"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-#if 0
-    // Currently commented out because vacuum is very slow
-    // see bug #390244 for more details.
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
-    NS_ENSURE_SUCCESS(rv, rv);
-#endif
-  }
   return NS_OK;
 }
 
@@ -4656,6 +4643,8 @@ NS_IMETHODIMP
 nsNavHistory::AddDownload(nsIURI* aSource, nsIURI* aReferrer,
                           PRTime aStartTime)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   PRInt64 visitID;
   return AddVisit(aSource, aStartTime, aReferrer, TRANSITION_DOWNLOAD, PR_FALSE,
                   0, &visitID);
@@ -4676,6 +4665,8 @@ NS_IMETHODIMP
 nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
                     const PRUnichar *aData)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
     if (mIdleTimer) {
       mIdleTimer->Cancel();
@@ -4712,6 +4703,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     observerService->RemoveObserver(this, gXpcomShutdown);
     observerService->RemoveObserver(this, gQuitApplicationMessage);
   } else if (nsCRT::strcmp(aTopic, gAutoCompleteFeedback) == 0) {
+#ifdef MOZ_XUL
     nsCOMPtr<nsIAutoCompleteInput> input = do_QueryInterface(aSubject);
     if (!input)
       return NS_OK;
@@ -4742,6 +4734,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
     rv = AutoCompleteFeedback(selectedIndex, controller);
     NS_ENSURE_SUCCESS(rv, rv);
+#endif
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
     PRInt32 oldDaysMin = mExpireDaysMin;
     PRInt32 oldDaysMax = mExpireDaysMax;
@@ -6623,6 +6616,8 @@ nsNavHistory::RequestCharset(nsIWebNavigation* aWebNavigation,
                              nsISupports** aClosure,
                              nsACString& aResult)
 {
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
   *aWantCharset = PR_FALSE;
   *aClosure = nsnull;
 
@@ -6643,6 +6638,8 @@ NS_IMETHODIMP
 nsNavHistory::NotifyResolvedCharset(const nsACString& aCharset,
                                     nsISupports* aClosure)
 {
-    NS_ERROR("Unexpected call to NotifyResolvedCharset -- we never set aWantCharset to true!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+
+  NS_ERROR("Unexpected call to NotifyResolvedCharset -- we never set aWantCharset to true!");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }

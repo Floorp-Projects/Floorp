@@ -1170,6 +1170,10 @@ var gDownloadingPage = {
     this._pauseButton = document.getElementById("pauseButton");
     this._label_downloadStatus = this._downloadStatus.textContent;
 
+    // move focus to the pause/resume button and then disable it (bug #353177)
+    this._pauseButton.focus();
+    this._pauseButton.disabled = true;
+
     var updates =
         Components.classes["@mozilla.org/updates/update-service;1"].
         getService(Components.interfaces.nsIApplicationUpdateService);
@@ -1444,7 +1448,6 @@ var gDownloadingPage = {
       this._downloadProgress.mode = "normal";
 
     var u = gUpdates.update;
-    const NS_BINDING_ABORTED = 0x804b0002;
     switch (status) {
     case Components.results.NS_ERROR_UNEXPECTED:
       if (u.selectedPatch.state == STATE_DOWNLOAD_FAILED &&
@@ -1469,7 +1472,7 @@ var gDownloadingPage = {
         return;
       }
       break;
-    case NS_BINDING_ABORTED:
+    case Components.results.NS_BINDING_ABORTED:
       LOG("UI:DownloadingPage", "onStopRequest: Pausing Download");
       // Return early, do not remove UI listener since the user may resume
       // downloading again.

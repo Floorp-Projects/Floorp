@@ -421,15 +421,6 @@ function FilterPrefs()
   view.treebox.invalidate();
   view.treebox.rowCountChanged(oldlen, gPrefView.length - oldlen);
   gotoPref(prefCol);
-  document.getElementById("button").disabled = !substring;
-}
-
-function ClearFilter(button)
-{
-  var textbox = document.getElementById("textbox");
-  textbox.value = "";
-  textbox.focus();
-  FilterPrefs();
 }
 
 function prefColSortFunction(x, y)

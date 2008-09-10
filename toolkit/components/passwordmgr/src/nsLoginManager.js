@@ -325,17 +325,27 @@ LoginManager.prototype = {
         handleEvent : function (event) {
             this._pwmgr.log("domEventListener: got event " + event.type);
 
-            var doc, inputElement;
             switch (event.type) {
                 case "DOMContentLoaded":
-                    doc = event.target;
-                    this._pwmgr._fillDocument(doc);
+                    this._pwmgr._fillDocument(event.target);
                     return;
 
                 case "DOMAutoComplete":
                 case "blur":
-                    inputElement = event.target;
-                    this._pwmgr._fillPassword(inputElement);
+                    var acInputField = event.target;
+                    var acForm = acInputField.form;
+                    // Make sure the username field fillForm will use is the
+                    // same field as the autocomplete was activated on. If
+                    // not, the DOM has been altered and we'll just give up.
+                    var [usernameField, passwordField, ignored] =
+                        this._pwmgr._getFormFields(acForm, false);
+                    if (usernameField == acInputField && passwordField) {
+                        // Clobber any existing password.
+                        passwordField.value = "";
+                        this._pwmgr._fillForm(acForm, true, true, null);
+                    } else {
+                        this._pwmgr.log("Oops, form changed before AC invoked");
+                    }
                     return;
 
                 default:
@@ -1002,10 +1012,13 @@ LoginManager.prototype = {
         if (passwordField == null)
             return [false, foundLogins];
 
-        // If there's only a password field and it has a value, there's
-        // nothing for us to do. (Don't clobber the existing value)
-        if (!usernameField && passwordField.value)
+        // If the fields are disabled or read-only, there's nothing to do.
+        if (passwordField.disabled || passwordField.readOnly ||
+            usernameField && (usernameField.disabled ||
+                              usernameField.readOnly)) {
+            this.log("not filling form, login fields disabled");
             return [false, foundLogins];
+        }
 
         // Need to get a list of logins if we weren't given them
         if (foundLogins == null) {
@@ -1052,6 +1065,10 @@ LoginManager.prototype = {
         if (usernameField)
             this._attachToInput(usernameField);
 
+        // Don't clobber an existing password.
+        if (passwordField.value)
+            return [false, foundLogins];
+
         // If the form has an autocomplete=off attribute in play, don't
         // fill in the login automatically. We check this after attaching
         // the autocomplete stuff to the username field, so the user can
@@ -1074,13 +1091,13 @@ LoginManager.prototype = {
             // If username was specified in the form, only fill in the
             // password if we find a matching login.
 
-            var username = usernameField.value;
+            var username = usernameField.value.toLowerCase();
 
             var matchingLogin;
             var found = logins.some(function(l) {
-                                        matchingLogin = l;
-                                        return (l.username == username);
-                                    });
+                                matchingLogin = l;
+                                return (l.username.toLowerCase() == username);
+                            });
             if (found)
                 selectedLogin = matchingLogin;
             else
@@ -1151,63 +1168,6 @@ LoginManager.prototype = {
         element.addEventListener("DOMAutoComplete",
                                 this._domEventListener, false);
         this._formFillService.markAsLoginManagerField(element);
-    },
-
-
-    /*
-     * _fillPassword
-     *
-     * The user has autocompleted a username field, so fill in the password.
-     */
-    _fillPassword : function (usernameField) {
-        this.log("fillPassword autocomplete username: " + usernameField.value);
-
-        var form = usernameField.form;
-        var doc = form.ownerDocument;
-
-        var hostname = this._getPasswordOrigin(doc.documentURI);
-        var formSubmitURL = this._getActionOrigin(form)
-
-        // Find the password field. We should always have at least one,
-        // or else something has gone rather wrong.
-        var pwFields = this._getPasswordFields(form, false);
-        if (!pwFields) {
-            const err = "No password field for autocomplete password fill.";
-
-            // We want to know about this even if debugging is disabled.
-            if (!this._debug)
-                dump(err);
-            else
-                this.log(err);
-
-            return;
-        }
-
-        // If there are multiple passwords fields, we can't really figure
-        // out what each field is for, so just fill out the last field.
-        var passwordField = pwFields[0].element;
-
-        // Temporary LoginInfo with the info we know.
-        var currentLogin = new this._nsLoginInfo();
-        currentLogin.init(hostname, formSubmitURL, null,
-                          usernameField.value, null,
-                          usernameField.name, passwordField.name);
-
-        // Look for a existing login and use its password.
-        var match = null;
-        var logins = this.findLogins({}, hostname, formSubmitURL, null);
-
-        if (!logins.some(function(l) {
-                                match = l;
-                                return currentLogin.matches(l, true);
-                        }))
-        {
-            this.log("Can't find a login for this autocomplete result.");
-            return;
-        }
-
-        this.log("Found a matching login, filling in password.");
-        passwordField.value = match.password;
     }
 }; // end of LoginManager implementation
 
@@ -1287,7 +1247,7 @@ UserAutoCompleteResult.prototype = {
                         getService(Ci.nsILoginManager);
             pwmgr.removeLogin(removedLogin);
         }
-    },
+    }
 };
 
 var component = [LoginManager];

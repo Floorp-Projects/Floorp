@@ -103,10 +103,10 @@ typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
 
-// 23e048f6-49bb-4ac4-b900-c63865363ad3
+// 134e504f-4fd1-4590-9f5d-899afee63d0f
 #define NS_IPRESSHELL_IID \
-{ 0x23e048f6, 0x49bb, 0x4ac4, \
-  { 0xb9, 0x00, 0xc6, 0x38, 0x65, 0x36, 0x3a, 0xd3 } }
+{ 0x134e504f, 0x4fd1, 0x4590, \
+  { 0x9f, 0x5d, 0x89, 0x9a, 0xfe, 0xe6, 0x3d, 0x0f } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -345,15 +345,6 @@ public:
    * placeholder frame.
    */
   virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const = 0;
-
-  /**
-   * Returns a layout object associated with the primary frame for the content object.
-   *
-   * @param aContent   the content object for which we seek a layout object
-   * @param aResult    the resulting layout object as an nsISupports, if found.
-   */
-  NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
-                                nsISupports** aResult) const = 0;
 
   /**
    * Gets the placeholder frame associated with the specified frame. This is

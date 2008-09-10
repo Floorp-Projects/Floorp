@@ -148,7 +148,6 @@ nsLocation::~nsLocation()
 
 // QueryInterface implementation for nsLocation
 NS_INTERFACE_MAP_BEGIN(nsLocation)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSLocation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLocation)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Location)
@@ -842,40 +841,6 @@ nsLocation::Reload(PRBool aForceget)
   nsresult rv;
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-
-  if (webNav) {
-    PRUint32 reloadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
-
-    if (aForceget) {
-      reloadFlags = nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | 
-                    nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
-    }
-    rv = webNav->Reload(reloadFlags);
-    if (rv == NS_BINDING_ABORTED) {
-      // This happens when we attempt to reload a POST result and the user says
-      // no at the "do you want to reload?" prompt.  Don't propagate this one
-      // back to callers.
-      rv = NS_OK;
-    }
-  } else {
-    rv = NS_ERROR_FAILURE;
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsLocation::Reload()
-{
-  nsAXPCNativeCallContext *ncc = nsnull;
-  nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!ncc)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(docShell));
 
   if (window && window->IsHandlingResizeEvent()) {
@@ -898,28 +863,25 @@ nsLocation::Reload()
     return NS_OK;
   }
 
-  PRBool force_get = PR_FALSE;
+  if (webNav) {
+    PRUint32 reloadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
 
-  PRUint32 argc;
-
-  ncc->GetArgc(&argc);
-
-  if (argc > 0) {
-    jsval *argv = nsnull;
-
-    ncc->GetArgvPtr(&argv);
-    NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
-
-    JSContext *cx = nsnull;
-
-    rv = ncc->GetJSContext(&cx);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JSAutoRequest ar(cx);
-    JS_ValueToBoolean(cx, argv[0], &force_get);
+    if (aForceget) {
+      reloadFlags = nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | 
+                    nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
+    }
+    rv = webNav->Reload(reloadFlags);
+    if (rv == NS_BINDING_ABORTED) {
+      // This happens when we attempt to reload a POST result and the user says
+      // no at the "do you want to reload?" prompt.  Don't propagate this one
+      // back to callers.
+      rv = NS_OK;
+    }
+  } else {
+    rv = NS_ERROR_FAILURE;
   }
 
-  return Reload(force_get);
+  return rv;
 }
 
 NS_IMETHODIMP

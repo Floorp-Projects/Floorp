@@ -89,6 +89,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
@@ -155,6 +156,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsReferencedElement.h"
 #include "nsIUGenCategory.h"
 #include "nsIDragService.h"
+#include "nsIChannelEventSink.h"
+#include "nsIInterfaceRequestor.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -208,9 +211,12 @@ PRUint32 nsContentUtils::sScriptBlockerCount = 0;
 PRUint32 nsContentUtils::sRemovableScriptBlockerCount = 0;
 nsCOMArray<nsIRunnable>* nsContentUtils::sBlockedScriptRunners = nsnull;
 PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
+nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 
 nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
 JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
+
+PRUint32 nsMutationGuard::sMutationCount = 0;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
@@ -254,6 +260,14 @@ EventListenerManagerHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   // Let the EventListenerManagerMapEntry clean itself up...
   lm->~EventListenerManagerMapEntry();
 }
+
+class nsSameOriginChecker : public nsIChannelEventSink,
+                            public nsIInterfaceRequestor
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIINTERFACEREQUESTOR
+};
 
 // static
 nsresult
@@ -897,6 +911,8 @@ nsContentUtils::Shutdown()
   delete sBlockedScriptRunners;
   sBlockedScriptRunners = nsnull;
 
+  NS_IF_RELEASE(sSameOriginChecker);
+  
   nsAutoGCRoot::Shutdown();
 }
 
@@ -2436,6 +2452,26 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
   nsIImage* image = nsnull;
   CallGetInterface(ir.get(), &image);
   return image;
+}
+
+// static
+PRBool
+nsContentUtils::ContentIsDraggable(nsIContent* aContent)
+{
+  nsCOMPtr<nsIDOMNSHTMLElement> htmlElement = do_QueryInterface(aContent);
+  if (htmlElement) {
+    PRBool draggable = PR_FALSE;
+    htmlElement->GetDraggable(&draggable);
+    if (draggable)
+      return PR_TRUE;
+
+    if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
+                              nsGkAtoms::_false, eIgnoreCase))
+      return PR_FALSE;
+  }
+
+  // special handling for content area image and link dragging
+  return IsDraggableImage(aContent) || IsDraggableLink(aContent);
 }
 
 // static
@@ -4315,6 +4351,17 @@ nsContentUtils::GetContextForEventHandlers(nsINode* aNode,
 }
 
 /* static */
+JSContext *
+nsContentUtils::GetCurrentJSContext()
+{
+  JSContext *cx = nsnull;
+
+  sThreadJSContextStack->Peek(&cx);
+
+  return cx;
+}
+
+/* static */
 void
 nsAutoGCRoot::Shutdown()
 {
@@ -4349,3 +4396,45 @@ nsContentUtils::IsNamedItem(nsIContent* aContent)
 
   return nsnull;
 }
+
+/* static */
+nsIInterfaceRequestor*
+nsContentUtils::GetSameOriginChecker()
+{
+  if (!sSameOriginChecker) {
+    sSameOriginChecker = new nsSameOriginChecker();
+    NS_IF_ADDREF(sSameOriginChecker);
+  }
+  return sSameOriginChecker;
+}
+
+
+NS_IMPL_ISUPPORTS2(nsSameOriginChecker,
+                   nsIChannelEventSink,
+                   nsIInterfaceRequestor)
+
+NS_IMETHODIMP
+nsSameOriginChecker::OnChannelRedirect(nsIChannel *aOldChannel,
+                                       nsIChannel *aNewChannel,
+                                       PRUint32    aFlags)
+{
+  NS_PRECONDITION(aNewChannel, "Redirecting to null channel?");
+
+  nsCOMPtr<nsIURI> oldURI;
+  nsresult rv = aOldChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> newURI;
+  rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The new URI
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return nsContentUtils::GetSecurityManager()->
+    CheckSameOriginURI(oldURI, newURI, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsSameOriginChecker::GetInterface(const nsIID & aIID, void **aResult)
+{
+  return QueryInterface(aIID, aResult);
+}
+
