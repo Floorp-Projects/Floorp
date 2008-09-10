@@ -4949,54 +4949,17 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::Open(nsIDOMWindow **_retval)
+nsGlobalWindow::OpenJS(const nsAString& aUrl, const nsAString& aName,
+                       const nsAString& aOptions, nsIDOMWindow **_retval)
 {
-  *_retval = nsnull;
-
-  nsAXPCNativeCallContext *ncc = nsnull;
-
-  nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!ncc)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  JSContext *cx = nsnull;
-
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString url, name, options;
-
-  PRUint32 argc;
-  jsval *argv = nsnull;
-
-  ncc->GetArgc(&argc);
-  ncc->GetArgvPtr(&argv);
-
-  if (argc > 0) {
-    JSAutoRequest ar(cx);
-    switch (argc) {
-      default:
-      case 3:
-        nsJSUtils::ConvertJSValToString(options, cx, argv[2]);
-      case 2:
-        nsJSUtils::ConvertJSValToString(name, cx, argv[1]);
-      case 1:
-        nsJSUtils::ConvertJSValToString(url, cx, argv[0]);
-        break;
-    }
-  }
-
-  return OpenInternal(url, name, options,
+  return OpenInternal(aUrl, aName, aOptions,
                       PR_FALSE,          // aDialog
                       PR_FALSE,          // aContentModal
                       PR_FALSE,          // aCalledNoScript
                       PR_TRUE,           // aDoJSFixups
                       nsnull, nsnull,    // No args
                       GetPrincipal(),    // aCalleePrincipal
-                      cx,                // aJSCallerContext
+                      nsContentUtils::GetCurrentJSContext(), // aJSCallerContext
                       _retval);
 }
 
@@ -5019,7 +4982,8 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::OpenDialog(nsIDOMWindow** _retval)
+nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
+                           const nsAString& aOptions, nsIDOMWindow** _retval)
 {
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -5038,8 +5002,6 @@ nsGlobalWindow::OpenDialog(nsIDOMWindow** _retval)
   rv = ncc->GetJSContext(&cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString url, name, options;
-
   PRUint32 argc;
   jsval *argv = nsnull;
 
@@ -5047,27 +5009,14 @@ nsGlobalWindow::OpenDialog(nsIDOMWindow** _retval)
   ncc->GetArgc(&argc);
   ncc->GetArgvPtr(&argv);
 
-  if (argc > 0) {
-    JSAutoRequest ar(cx);
-    switch (argc) {
-      default:
-      case 3:
-        nsJSUtils::ConvertJSValToString(options, cx, argv[2]);
-      case 2:
-        nsJSUtils::ConvertJSValToString(name, cx, argv[1]);
-      case 1:
-        nsJSUtils::ConvertJSValToString(url, cx, argv[0]);
-        break;
-    }
-  }
-
   // Strip the url, name and options from the args seen by scripts.
   PRUint32 argOffset = argc < 3 ? argc : 3;
   nsCOMPtr<nsIArray> argvArray;
-  rv = NS_CreateJSArgv(cx, argc-argOffset, argv+argOffset, getter_AddRefs(argvArray));
+  rv = NS_CreateJSArgv(cx, argc - argOffset, argv + argOffset,
+                       getter_AddRefs(argvArray));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return OpenInternal(url, name, options,
+  return OpenInternal(aUrl, aName, aOptions,
                       PR_TRUE,             // aDialog
                       PR_FALSE,            // aContentModal
                       PR_FALSE,            // aCalledNoScript
