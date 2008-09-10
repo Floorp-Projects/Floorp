@@ -60,15 +60,6 @@ public:
   static JSBool GetCallingLocation(JSContext* aContext, const char* *aFilename,
                                    PRUint32* aLineno, nsIPrincipal* aPrincipal);
 
-  static jsval ConvertStringToJSVal(const nsString& aProp,
-                                    JSContext* aContext);
-
-  static void ConvertJSValToString(nsAString& aString,
-                                   JSContext* aContext, jsval aValue);
-
-  static PRBool ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,
-                                     jsval aValue);
-
   static nsIScriptGlobalObject *GetStaticScriptGlobal(JSContext* aContext,
                                                       JSObject* aObj);
 

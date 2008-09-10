@@ -160,12 +160,15 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    */
   [noscript] nsIDOMWindow   open(in DOMString url, in DOMString name,
                                  in DOMString options);
-  // This method works like open except that aExtraArgument gets
-  // converted into the array window.arguments in JS, if
-  // aExtraArgument is a nsISupportsArray then the individual items in
-  // the array are inserted into window.arguments, and primitive
-  // nsISupports (nsISupportsPrimitives) types are converted to native
-  // JS types when possible.
+
+  /**
+   * This method works like open except that aExtraArgument gets
+   * converted into the array window.arguments in JS, if
+   * aExtraArgument is a nsISupportsArray then the individual items in
+   * the array are inserted into window.arguments, and primitive
+   * nsISupports (nsISupportsPrimitives) types are converted to native
+   * JS types when possible.
+   */
   [noscript] nsIDOMWindow   openDialog(in DOMString url, in DOMString name,
                                        in DOMString options,
                                        in nsISupports aExtraArgument);
