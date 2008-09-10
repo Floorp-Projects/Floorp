@@ -631,6 +631,7 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                      JSProperty **propp)
 {
     uint32 i;
+    union { JSProperty *p; jsval *v; } u;
 
     if (!OBJ_IS_DENSE_ARRAY(cx, obj))
         return js_LookupProperty(cx, obj, id, objp, propp);
@@ -661,7 +662,8 @@ array_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
      * pigeonhole this on the context instead. */
     JS_ASSERT(JSVAL_IS_VOID(obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]));
     obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER] = (jsval) id;
-    *propp = (JSProperty *)&(obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]);
+    u.v = &(obj->fslots[JSSLOT_ARRAY_LOOKUP_HOLDER]);
+    *propp = u.p;
     *objp = obj;
     return JS_TRUE;
 }
