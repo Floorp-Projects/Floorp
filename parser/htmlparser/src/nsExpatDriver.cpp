@@ -182,7 +182,7 @@ Driver_HandleStartDoctypeDecl(void *aUserData,
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
     static_cast<nsExpatDriver*>(aUserData)->
-      HandleStartDoctypeDecl(aDoctypeName, aSysid, aPubid, aHasInternalSubset);
+      HandleStartDoctypeDecl(aDoctypeName, aSysid, aPubid, !!aHasInternalSubset);
   }
 }
 
