@@ -1758,6 +1758,9 @@ PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppe
       // don't advance section, simply ignore invalid @import
       return PR_FALSE;
     }
+
+    // Safe to assert this, since we ensured that there is something
+    // other than the ';' coming after the @import's url() token.
     NS_ASSERTION(media->Count() != 0, "media list must be nonempty");
   }
 
@@ -1854,7 +1857,6 @@ PRBool CSSParserImpl::ParseMediaRule(nsresult& aErrorCode,
   }
 
   if (GatherMedia(aErrorCode, media, '{')) {
-    NS_ASSERTION(media->Count() != 0, "media list must be nonempty");
     // XXXbz this could use better error reporting throughout the method
     nsRefPtr<nsCSSMediaRule> rule(new nsCSSMediaRule());
     // Append first, so when we do SetMedia() the rule
