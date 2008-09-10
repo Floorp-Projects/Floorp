@@ -77,7 +77,7 @@ interface nsIDOMJSWindow : nsISupports
   void                      disableExternalCapture();
 
   /**
-   * This is the scriptable versions of nsIDOMWindowInternal::open()
+   * This is the scriptable version of nsIDOMWindowInternal::open()
    * that takes 3 optional arguments. Its binary name is OpenJS to
    * avoid colliding with nsIDOMWindowInternal::open(), which has the
    * same signature. The reason we can't have that collision is that
@@ -91,7 +91,7 @@ interface nsIDOMJSWindow : nsISupports
                                          [optional] in DOMString options);
 
   /**
-   * This is the scriptable versions of
+   * This is the scriptable version of
    * nsIDOMWindowInternal::openDialog() that takes 3 optional
    * arguments, plus any additional arguments are passed on as
    * arguments on the dialog's window object (window.arguments).
