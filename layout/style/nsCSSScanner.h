@@ -205,36 +205,6 @@ class nsCSSScanner {
 
   // sometimes the parser wants to make note of a low-level error
   void SetLowLevelError(nsresult aErrorCode);
-
-  static inline PRBool
-  IsIdentStart(PRInt32 aChar)
-  {
-    return aChar >= 0 &&
-      (aChar >= 256 || (gLexTable[aChar] & START_IDENT) != 0);
-  }
-
-  static inline PRBool
-  StartsIdent(PRInt32 aFirstChar, PRInt32 aSecondChar)
-  {
-    return IsIdentStart(aFirstChar) ||
-      (aFirstChar == '-' && IsIdentStart(aSecondChar));
-  }
-
-  static PRBool IsWhitespace(PRInt32 ch) {
-    return PRUint32(ch) < 256 && (gLexTable[ch] & IS_WHITESPACE) != 0;
-  }
-
-  static PRBool IsDigit(PRInt32 ch) {
-    return PRUint32(ch) < 256 && (gLexTable[ch] & IS_DIGIT) != 0;
-  }
-
-  static PRBool IsHexDigit(PRInt32 ch) {
-    return PRUint32(ch) < 256 && (gLexTable[ch] & IS_HEX_DIGIT) != 0;
-  }
-
-  static PRBool IsIdent(PRInt32 ch) {
-    return ch >= 0 && (ch >= 256 || (gLexTable[ch] & IS_IDENT) != 0);
-  }
   
 protected:
   PRBool EnsureData();
@@ -283,15 +253,6 @@ protected:
   nsFixedString mError;
   PRUnichar mErrorBuf[200];
 #endif
-
-  static const PRUint8 IS_DIGIT;
-  static const PRUint8 IS_HEX_DIGIT;
-  static const PRUint8 START_IDENT;
-  static const PRUint8 IS_IDENT;
-  static const PRUint8 IS_WHITESPACE;
-
-  static PRUint8 gLexTable[256];
-  static void BuildLexTable();
 };
 
 #endif /* nsCSSScanner_h___ */
