@@ -1878,7 +1878,7 @@ Engine.prototype = {
                  createInstance(Ci.nsIDOMParser);
 
     var doc = parser.parseFromString(EMPTY_DOC, "text/xml");
-    docElem = doc.documentElement;
+    var docElem = doc.documentElement;
 
     docElem.appendChild(doc.createTextNode("\n"));
 
@@ -1946,7 +1946,7 @@ Engine.prototype = {
 
     // Serialize the engine first - we don't want to overwrite a good file
     // if this somehow fails.
-    doc = this._serializeToElement();
+    var doc = this._serializeToElement();
 
     fos.init(file, (MODE_WRONLY | MODE_TRUNCATE), PERMS_FILE, 0);
 
