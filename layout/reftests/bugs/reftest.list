@@ -905,6 +905,7 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 fails == 441259-2.html 441259-2-ref.html # bug 441400
 == 444015-1.html 444015-1-ref.html
 # == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
++== 449171-1.html 449171-ref.html
 == 449519-1.html 449519-1-ref.html
 # == 449653-1.html 449653-1-ref.html # Disabled for now - it needs privileges
 == 450670-1.html 450670-1-ref.html
