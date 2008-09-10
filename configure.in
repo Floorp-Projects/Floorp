@@ -6082,6 +6082,8 @@ PKG_CHECK_MODULES(LIBHILDONMIME,libhildonmime,
 if test $MOZ_PLATFORM_HILDON; then
    AC_DEFINE(MOZ_PLATFORM_HILDON)
 fi
+AC_SUBST(LIBHILDONMIME_CFLAGS)
+AC_SUBST(LIBHILDONMIME_LIBS)
 
 PKG_CHECK_MODULES(LIBOSSO,libosso,
                   NS_OSSO=1,
@@ -6093,6 +6095,8 @@ if test $NS_OSSO; then
     fi
     AC_DEFINE(NS_OSSO)     
 fi
+AC_SUBST(LIBOSSO_CFLAGS)
+AC_SUBST(LIBOSSO_LIBS)
 
 dnl ========================================================
 dnl =
