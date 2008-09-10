@@ -2526,9 +2526,9 @@ js_MonitorLoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
 }
 
 bool
-js_MonitorRecording(JSContext* cx)
+js_MonitorRecording(TraceRecorder* tr)
 {
-    TraceRecorder *tr = JS_TRACE_MONITOR(cx).recorder;
+    JSContext* cx = tr->cx;
 
     // Clear one-shot flag used to communicate between record_JSOP_CALL and record_EnterFrame.
     tr->applyingArguments = false;
@@ -2540,11 +2540,12 @@ js_MonitorRecording(JSContext* cx)
     }
 
     jsbytecode* pc = cx->fp->regs->pc;
+
     /* If we hit a break, end the loop and generate an always taken loop exit guard. For other
        downward gotos (like if/else) continue recording. */
-    if ((*pc == JSOP_GOTO) || (*pc == JSOP_GOTOX)) {
+    if (*pc == JSOP_GOTO || *pc == JSOP_GOTOX) {
         jssrcnote* sn = js_GetSrcNote(cx->fp->script, pc);
-        if ((sn != NULL) && (SN_TYPE(sn) == SRC_BREAK)) {
+        if (sn && SN_TYPE(sn) == SRC_BREAK) {
             AUDIT(breakLoopExits);
             tr->endLoop(JS_TRACE_MONITOR(cx).fragmento);
             js_DeleteRecorder(cx);
@@ -3306,6 +3307,9 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, si
 bool
 TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2, jsuword& pcval)
 {
+    jsbytecode* pc = cx->fp->regs->pc;
+    JS_ASSERT(*pc != JSOP_INITPROP && *pc != JSOP_SETNAME && *pc != JSOP_SETPROP);
+
     // Mimic the interpreter's special case for dense arrays by skipping up one
     // hop along the proto chain when accessing a named (not indexed) property,
     // typically to find Array.prototype methods.
@@ -3327,7 +3331,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // We parameterize using offsetof and guard on match against the hook at
     // the given offset in js_ObjectOps. TraceRecorder::record_JSOP_SETPROP
     // guards the js_SetProperty case.
-    uint32 format = js_CodeSpec[*cx->fp->regs->pc].format;
+    uint32 format = js_CodeSpec[*pc].format;
     uint32 mode = JOF_MODE(format);
 
     // No need to guard native-ness of global object.
@@ -3347,14 +3351,14 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 
     JSAtom* atom;
     JSPropCacheEntry* entry;
-    PROPERTY_CACHE_TEST(cx, cx->fp->regs->pc, aobj, obj2, entry, atom);
+    PROPERTY_CACHE_TEST(cx, pc, aobj, obj2, entry, atom);
     if (atom) {
         // Miss: pre-fill the cache for the interpreter, as well as for our needs.
         // FIXME: 452357 - correctly propagate exceptions into the interpreter from
         // js_FindPropertyHelper, js_LookupPropertyWithFlags, and elsewhere.
         jsid id = ATOM_TO_JSID(atom);
         JSProperty* prop;
-        if (JOF_OPMODE(*cx->fp->regs->pc) == JOF_NAME) {
+        if (JOF_OPMODE(*pc) == JOF_NAME) {
             JS_ASSERT(aobj == obj);
             if (js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry) < 0)
                 ABORT_TRACE("failed to find name");
@@ -3374,24 +3378,9 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             // via our obj2 out-parameter. If we are recording JSOP_SETNAME and
             // the global it's assigning does not yet exist, create it.
             obj2 = obj;
-            if (JSOp(*cx->fp->regs->pc) == JSOP_SETNAME) {
-                jsval v = JSVAL_VOID;
-                if (!js_SetPropertyHelper(cx, obj, id, &v, &entry))
-                    return false;
-                if (!entry || !PCVAL_IS_SPROP(entry->vword))
-                    ABORT_TRACE("can't create cacheable global for JSOP_SETNAME");
-                JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
-                if (!SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)))
-                    ABORT_TRACE("can't create slot-ful global for JSOP_SETNAME");
-                pcval = SLOT_TO_PCVAL(sprop->slot);
 
-                // We are adding to the global object, so update its saved shape.
-                JS_ASSERT(obj == globalObj);
-                traceMonitor->globalShape = OBJ_SHAPE(obj);
-            } else {
-                // Use PCVAL_NULL to return "no such property" to our caller.
-                pcval = PCVAL_NULL;
-            }
+            // Use PCVAL_NULL to return "no such property" to our caller.
+            pcval = PCVAL_NULL;
             return true;
         }
 
@@ -3420,10 +3409,10 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         }
     } else {
 #ifdef DEBUG
-        JSOp op = JSOp(*cx->fp->regs->pc);
+        JSOp op = JSOp(*pc);
         ptrdiff_t pcoff = (op == JSOP_GETARGPROP) ? ARGNO_LEN :
                           (op == JSOP_GETLOCALPROP) ? SLOTNO_LEN : 0;
-        jsatomid index = js_GetIndexFromBytecode(cx, cx->fp->script, cx->fp->regs->pc, pcoff);
+        jsatomid index = js_GetIndexFromBytecode(cx, cx->fp->script, pc, pcoff);
         JS_ASSERT(entry->kpc == (jsbytecode*) atoms[index]);
         JS_ASSERT(entry->kshape == jsuword(aobj));
 #endif
@@ -4393,41 +4382,52 @@ TraceRecorder::record_JSOP_GETPROP()
 bool
 TraceRecorder::record_JSOP_SETPROP()
 {
-    jsval& r = stackval(-1);
     jsval& l = stackval(-2);
-
     if (JSVAL_IS_PRIMITIVE(l))
         ABORT_TRACE("primitive this for SETPROP");
 
     JSObject* obj = JSVAL_TO_OBJECT(l);
-
     if (obj->map->ops->setProperty != js_SetProperty)
         ABORT_TRACE("non-native JSObjectOps::setProperty");
+    return true;
+}
 
+bool
+TraceRecorder::record_SetPropHit(uint32 kshape, JSScopeProperty* sprop)
+{
+    jsbytecode* pc = cx->fp->regs->pc;
+    jsval& r = stackval(-1);
+    jsval& l = stackval(-2);
+
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
+    JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
 
-    JSPropertyCache* cache = &JS_PROPERTY_CACHE(cx);
-    uint32 kshape = OBJ_SHAPE(obj);
-    jsbytecode* pc = cx->fp->regs->pc;
+    if (obj == globalObj) {
+        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)));
+        uint32 slot = sprop->slot;
+        if (!lazilyImportGlobalSlot(slot))
+            ABORT_TRACE("lazy import of global slot failed");
 
-    JSPropCacheEntry* entry = &cache->table[PROPERTY_CACHE_HASH_PC(pc, kshape)];
-    if (entry->kpc != pc || entry->kshape != kshape)
-        ABORT_TRACE("cache miss");
-    JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
+        LIns* r_ins = get(&r);
+        set(&STOBJ_GET_SLOT(obj, slot), r_ins);
 
+        JS_ASSERT(*pc != JSOP_INITPROP);
+        if (pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
+            set(&l, r_ins);
+        return true;
+    }
+
+    // The global object's shape is guarded at trace entry, all others need a guard here.
     LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
     LIns* ops_ins;
     if (!map_is_native(obj->map, map_ins, ops_ins, offsetof(JSObjectOps, setProperty)))
         return false;
 
-    // The global object's shape is guarded at trace entry.
-    if (obj != globalObj) {
-        LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
-        guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"), MISMATCH_EXIT);
-    }
+    LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
+    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"), MISMATCH_EXIT);
 
     JSScope* scope = OBJ_SCOPE(obj);
-    JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
     if (scope->object != obj || !SCOPE_HAS_PROPERTY(scope, sprop)) {
         LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(F_AddProperty, args);
@@ -4441,9 +4441,17 @@ TraceRecorder::record_JSOP_SETPROP()
         return false;
     if (!native_set(obj_ins, sprop, dslots_ins, boxed_ins))
         return false;
-    if (*pc == JSOP_SETPROP && pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
-        stack(-2, v_ins);
+
+    if (*pc != JSOP_INITPROP && pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
+        set(&l, v_ins);
     return true;
+}
+
+bool
+TraceRecorder::record_SetPropMiss(JSPropCacheEntry* entry)
+{
+    JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
+    return record_SetPropHit(entry->kshape, PCVAL_TO_SPROP(entry->vword));
 }
 
 bool
@@ -5368,8 +5376,8 @@ TraceRecorder::record_JSOP_ENDINIT()
 bool
 TraceRecorder::record_JSOP_INITPROP()
 {
-    // The common code avoids stacking the RHS if op is not JSOP_SETPROP.
-    return record_JSOP_SETPROP();
+    // All the action is in record_SetPropHit.
+    return true;
 }
 
 bool
@@ -5457,8 +5465,6 @@ TraceRecorder::record_JSOP_ITER()
 bool
 TraceRecorder::forInLoop(jsval* vp)
 {
-    if (!JSVAL_IS_STRING(*vp))
-        ABORT_TRACE("for-in loop variable changed type from string");
     jsval& iterobj_val = stackval(-1);
     if (!JSVAL_IS_PRIMITIVE(iterobj_val)) {
         LIns* args[] = { get(&iterobj_val), cx_ins };
@@ -5467,10 +5473,11 @@ TraceRecorder::forInLoop(jsval* vp)
 
         LIns* flag_ins = lir->ins_eq0(lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_HOLE)));
         LIns* iter_ins = get(vp);
-        if (!box_jsval(JSVAL_STRING, iter_ins))
+        jsval expected = JSVAL_IS_VOID(*vp) ? JSVAL_STRING : JSVAL_TAG(*vp);
+        if (!box_jsval(expected, iter_ins))
             return false;
         iter_ins = lir->ins_choose(flag_ins, v_ins, iter_ins, true);
-        if (!unbox_jsval(JSVAL_STRING, iter_ins))
+        if (!unbox_jsval(expected, iter_ins))
             return false;
         set(vp, iter_ins);
         stack(0, flag_ins);
@@ -5554,7 +5561,6 @@ TraceRecorder::record_JSOP_BINDNAME()
 bool
 TraceRecorder::record_JSOP_SETNAME()
 {
-    jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
 
@@ -5564,16 +5570,9 @@ TraceRecorder::record_JSOP_SETNAME()
      */
     JSObject* obj = JSVAL_TO_OBJECT(l);
     if (obj != cx->fp->scopeChain || obj != globalObj)
-        return false;
+        ABORT_TRACE("JSOP_SETNAME left operand is not the global object");
 
-    jsval* vp;
-    if (!name(vp))
-        return false;
-    LIns* r_ins = get(&r);
-    set(vp, r_ins);
-
-    if (cx->fp->regs->pc[JSOP_SETNAME_LENGTH] != JSOP_POP)
-        stack(-2, r_ins);
+    // The rest of the work is in record_SetPropHit.
     return true;
 }
 
