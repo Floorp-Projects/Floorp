@@ -46,6 +46,7 @@
 
 #include "nsIWidget.h"
 #include "nsWindow.h"
+#include "nsClipboard.h"
 
 #if (_MSC_VER == 1100)
 #define INITGUID
@@ -158,9 +159,11 @@ nsNativeDragTarget::GetGeckoDragAction(LPDATAOBJECT pData, DWORD grfKeyState,
 
   // Default is move if we can, in fact drop here,
   // and if the drop source supports a move operation.
-  if (mCanMove) {
-    *pdwEffect    = DROPEFFECT_MOVE;
+  // If move is not preferred (mMovePreferred is false)
+  // move only when the shift key is down.
+  if (mCanMove && (mMovePreferred || (grfKeyState & MK_SHIFT))) {
     *aGeckoAction = nsIDragService::DRAGDROP_ACTION_MOVE;
+    *pdwEffect    = DROPEFFECT_MOVE;
   } else {
     *aGeckoAction = nsIDragService::DRAGDROP_ACTION_COPY;
     *pdwEffect    = DROPEFFECT_COPY;
@@ -285,6 +288,20 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
 
   // Remember if this operation allows a move.
   mCanMove = (*pdwEffect) & DROPEFFECT_MOVE;
+
+  void* tempOutData = nsnull;
+  PRUint32 tempDataLen = 0;
+  nsresult loadResult = nsClipboard::GetNativeDataOffClipboard(
+      pIDataSource, 0, ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT), &tempOutData, &tempDataLen);
+  if (NS_SUCCEEDED(loadResult) && tempOutData) {
+    NS_ASSERTION(tempDataLen == 2, "Expected word size");
+    WORD preferredEffect = *((WORD*)tempOutData);
+
+    // Mask effect coming from function call with effect preferred by the source.
+    mMovePreferred = (preferredEffect & DROPEFFECT_MOVE) != 0;
+  }
+  else
+    mMovePreferred = mCanMove;
 
   // Set the native data object into drag service
   //
