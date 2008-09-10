@@ -789,11 +789,6 @@ pref("network.automatic-ntlm-auth.trusted-uris", "");
 //       implementation will not be affected by this preference.
 pref("network.ntlm.send-lm-response", false);
 
-// sspitzer:  change this back to "news" when we get to beta.
-// for now, set this to news.mozilla.org because you can only
-// post to the server specified by this pref.
-pref("network.hosts.nntp_server",           "news.mozilla.org");
-
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 
 #ifndef XP_MACOSX
