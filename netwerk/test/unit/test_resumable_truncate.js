@@ -28,7 +28,7 @@ function cachedHandler(metadata, response) {
     response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
     response.setHeader("Content-Range", from + "-" + to + "/" + responseBody.length, false);
   } else if (do304) {
-    response.setStatusList(metadata.httpVersion, 304, "Not Modified");
+    response.setStatusLine(metadata.httpVersion, 304, "Not Modified");
     return;
   }
 
