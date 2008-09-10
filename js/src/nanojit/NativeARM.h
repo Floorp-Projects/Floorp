@@ -183,8 +183,7 @@ verbose_only( extern const char* regNames[]; )
 // abstract to platform specific calls
 #define nExtractPlatformFlags(x)    0
 
-#define DECLARE_PLATFORM_STATS()                \
-    counter_define(x87Top);
+#define DECLARE_PLATFORM_STATS()
 
 #define DECLARE_PLATFORM_REGALLOC()
 
