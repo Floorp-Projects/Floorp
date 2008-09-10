@@ -443,6 +443,10 @@ var BrowserUI = {
   show : function(aMode) {
     if (this.mode == aMode)
       return;
+
+    if (this.mode == PANELMODE_BOOKMARKLIST && aMode != PANELMODE_BOOKMARKLIST)
+      window.removeEventListener("keypress", BrowserUI.closePopup, false);
+
     this.mode = aMode;
 
     var toolbar = document.getElementById("toolbar-main");
@@ -503,11 +507,13 @@ var BrowserUI = {
       bookmark.width = container.boxObject.width;
     }
     else if (aMode == PANELMODE_BOOKMARKLIST) {
-      this._showToolbar();
+      this._hideToolbar();
       toolbar.setAttribute("mode", "view");
       this._edit.hidden = true;
       this._edit.reallyClosePopup();
       this._caption.hidden = false;
+
+      window.addEventListener("keypress", this.closePopup, false);
 
       bookmark.hidden = true;
       addons.hidden = true;
@@ -562,6 +568,7 @@ var BrowserUI = {
       let node = aItems[i];
       let listItem = document.createElement("richlistitem");
       listItem.setAttribute("class", "urllist-item");
+      listItem.setAttribute("value", node.uri);
 
       let box = document.createElement("vbox");
       box.setAttribute("pack", "center");
@@ -583,6 +590,12 @@ var BrowserUI = {
     }
 
     list.focus();
+  },
+
+  closePopup : function(aEvent)
+  {
+    if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
+      BrowserUI.show(PANELMODE_NONE);
   },
 
   showHistory : function() {

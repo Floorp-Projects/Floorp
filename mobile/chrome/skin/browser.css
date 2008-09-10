@@ -277,6 +277,14 @@ toolbarbutton.browser-control-button {
   padding: 8px;
 }
 
+#urllist-close {
+  -moz-appearance: none;
+  margin: 0;
+  border: none;
+  padding: 0;
+  list-style-image: url("chrome://browser/skin/images/close-small.png");
+}
+
 #urllist-items, .autocomplete-richlistbox {
   -moz-appearance: none !important;
   background-color: rgba(207,207,207,0.9);
