@@ -172,7 +172,7 @@ var BrowserUI = {
 
   _dragData :  { dragging : false, sY : 0, sTop : 0 },
 
-  _scrollToolbar : function(aEvent) {
+  _scrollToolbar : function bui_scrollToolbar(aEvent) {
     if (this._dragData.dragging && Browser.content.scrollY == 0) {
       let toolbar = document.getElementById("toolbar-main");
       let browser = document.getElementById("browser");
@@ -685,6 +685,7 @@ var BrowserUI = {
       case "cmd_closeTab":
       case "cmd_addons":
       case "cmd_actions":
+      case "cmd_prefs":
         isSupported = true;
         break;
       default:
@@ -764,6 +765,9 @@ var BrowserUI = {
       case "cmd_addons":
       case "cmd_actions":
         this.show(PANELMODE_ADDONS);
+        break;
+      case "cmd_prefs":
+        //XXX
         break;
     }
   }
