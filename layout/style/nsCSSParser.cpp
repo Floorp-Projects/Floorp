@@ -242,14 +242,14 @@ protected:
       CSSParserImpl* mParser;
   };
 
-  nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
-                       PRUint32 aLineNumber, nsIURI* aBaseURI,
-                       nsIPrincipal* aSheetPrincipal);
+  void InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
+                   PRUint32 aLineNumber, nsIURI* aBaseURI,
+                   nsIPrincipal* aSheetPrincipal);
   // the caller must hold on to aBuffer until parsing is done
-  nsresult InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
-                       PRUint32 aLineNumber, nsIURI* aBaseURI,
-                       nsIPrincipal* aSheetPrincipal);
-  nsresult ReleaseScanner(void);
+  void InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
+                   PRUint32 aLineNumber, nsIURI* aBaseURI,
+                   nsIPrincipal* aSheetPrincipal);
+  void ReleaseScanner(void);
 #ifdef MOZ_SVG
   PRBool IsSVGMode() const {
     return mScanner.IsSVGMode();
@@ -713,7 +713,7 @@ CSSParserImpl::SetChildLoader(nsICSSLoader* aChildLoader)
   return NS_OK;
 }
 
-nsresult
+void
 CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
                            PRUint32 aLineNumber, nsIURI* aBaseURI,
                            nsIPrincipal* aSheetPrincipal)
@@ -729,11 +729,9 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
   mSheetPrincipal = aSheetPrincipal;
 
   mHavePushBack = PR_FALSE;
-
-  return NS_OK;
 }
 
-nsresult
+void
 CSSParserImpl::InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
                            PRUint32 aLineNumber, nsIURI* aBaseURI,
                            nsIPrincipal* aSheetPrincipal)
@@ -752,11 +750,9 @@ CSSParserImpl::InitScanner(const nsSubstring& aString, nsIURI* aSheetURI,
   mSheetPrincipal = aSheetPrincipal;
 
   mHavePushBack = PR_FALSE;
-
-  return NS_OK;
 }
 
-nsresult
+void
 CSSParserImpl::ReleaseScanner(void)
 {
   mScanner.Close();
@@ -766,7 +762,6 @@ CSSParserImpl::ReleaseScanner(void)
   mBaseURL = nsnull;
   mSheetURL = nsnull;
   mSheetPrincipal = nsnull;
-  return NS_OK;
 }
 
 
@@ -799,11 +794,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
                "Sheet principal does not match passed principal");
 #endif
 
-  nsresult result = InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI,
-                                aSheetPrincipal);
-  if (! NS_SUCCEEDED(result)) {
-    return result;
-  }
+  InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI, aSheetPrincipal);
 
   PRInt32 ruleCount = 0;
   mSheet->StyleRuleCount(ruleCount);
@@ -887,10 +878,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
   // XXX line number?
-  nsresult rv = InitScanner(aAttributeValue, aDocURL, 0, aBaseURL, aNodePrincipal);
-  if (! NS_SUCCEEDED(rv)) {
-    return rv;
-  }
+  InitScanner(aAttributeValue, aDocURL, 0, aBaseURL, aNodePrincipal);
 
   mSection = eCSSSection_General;
 
@@ -910,7 +898,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
   if (declaration) {
     // Create a style rule for the declaration
     nsICSSStyleRule* rule = nsnull;
-    rv = NS_NewCSSStyleRule(&rule, nsnull, declaration);
+    nsresult rv = NS_NewCSSStyleRule(&rule, nsnull, declaration);
     if (NS_FAILED(rv)) {
       declaration->RuleAbort();
       ReleaseScanner();
@@ -941,13 +929,9 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
   AssertInitialState();
 
-//  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   *aChanged = PR_FALSE;
 
-  nsresult rv = InitScanner(aBuffer, aSheetURL, 0, aBaseURL, aSheetPrincipal);
-  if (! NS_SUCCEEDED(rv)) {
-    return rv;
-  }
+  InitScanner(aBuffer, aSheetURL, 0, aBaseURL, aSheetPrincipal);
 
   mSection = eCSSSection_General;
 
@@ -960,6 +944,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
     aDeclaration->ExpandTo(&mData);
   }
 
+  nsresult rv = NS_OK;
   do {
     // If we cleared the old decl, then we want to be calling
     // ValueAppended as we parse.
@@ -992,10 +977,7 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
 
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
-  nsresult rv = InitScanner(aRule, aSheetURL, 0, aBaseURL, aSheetPrincipal);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  InitScanner(aRule, aSheetURL, 0, aBaseURL, aSheetPrincipal);
 
   mSection = eCSSSection_Charset; // callers are responsible for rejecting invalid rules.
 
@@ -1033,10 +1015,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
   *aChanged = PR_FALSE;
 
-  nsresult rv = InitScanner(aPropValue, aSheetURL, 0, aBaseURL, aSheetPrincipal);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  InitScanner(aPropValue, aSheetURL, 0, aBaseURL, aSheetPrincipal);
 
   mSection = eCSSSection_General;
 
@@ -1094,10 +1073,7 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
   aMediaList->Clear();
 
   // fake base URL since media lists don't have URLs in them
-  nsresult rv = InitScanner(aBuffer, aURL, aLineNumber, aURL, nsnull);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  InitScanner(aBuffer, aURL, aLineNumber, aURL, nsnull);
 
   AssertInitialState();
   NS_ASSERTION(aHTMLMode == PR_TRUE || aHTMLMode == PR_FALSE,
@@ -1123,7 +1099,7 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
       OUTPUT_ERROR();
     }
   }
-  rv = mScanner.GetLowLevelError();
+  nsresult rv = mScanner.GetLowLevelError();
   CLEAR_ERROR();
   ReleaseScanner();
   mHTMLMediaMode = PR_FALSE;
@@ -1138,13 +1114,11 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
                                 nscolor* aColor)
 {
   AssertInitialState();
-  nsresult rv = InitScanner(aBuffer, aURL, aLineNumber, aURL, nsnull);
-  if (NS_FAILED(rv))
-    return rv;
+  InitScanner(aBuffer, aURL, aLineNumber, aURL, nsnull);
 
   nsCSSValue value;
   PRBool colorParsed = ParseColor(value);
-  rv = mScanner.GetLowLevelError();
+  nsresult rv = mScanner.GetLowLevelError();
   OUTPUT_ERROR();
   ReleaseScanner();
 
@@ -1188,16 +1162,14 @@ CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
                                    PRUint32 aLineNumber, // for error reporting
                                    nsCSSSelectorList **aSelectorList)
 {
-  nsresult rv = InitScanner(aSelectorString, aURL, aLineNumber, aURL, nsnull);
-  if (NS_FAILED(rv))
-    return rv;
+  InitScanner(aSelectorString, aURL, aLineNumber, aURL, nsnull);
 
   AssertInitialState();
 
   mUnresolvablePrefixException = PR_TRUE;
 
   PRBool success = ParseSelectorList(*aSelectorList, PR_FALSE);
-  rv = mScanner.GetLowLevelError();
+  nsresult rv = mScanner.GetLowLevelError();
   OUTPUT_ERROR();
   ReleaseScanner();
 
