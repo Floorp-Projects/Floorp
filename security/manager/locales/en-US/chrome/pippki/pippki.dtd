@@ -51,7 +51,7 @@
 
 <!-- Values for getpassword.xul -->
 <!ENTITY getPassword.title  "Enter Master Password">
-<!ENTITY getPassword.tokenName.label "Security Device">
+<!ENTITY getPassword.tokenName2.label "Security Device:">
 <!ENTITY getPassword.password.label "Password:">
 
 <!-- These should be common -->
