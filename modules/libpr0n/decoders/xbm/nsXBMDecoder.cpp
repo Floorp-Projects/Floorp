@@ -279,7 +279,11 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             mCurCol += numPixels;
             if (mCurCol == mWidth || mState == RECV_DONE) {
                 nsIntRect r(0, mCurRow, mWidth, 1);
-                img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+                nsresult rv = img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+                if (NS_FAILED(rv)) {
+                  return rv;
+                }
+
                 mObserver->OnDataAvailable(nsnull, mFrame, &r);
 
                 mCurRow++;
