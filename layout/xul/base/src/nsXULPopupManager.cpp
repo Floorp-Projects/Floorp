@@ -1210,35 +1210,43 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
 
   nsCOMPtr<nsISupports> cont = aPopup->PresContext()->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
-  if (!dsti)
+  nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(dsti);
+  if (!baseWin)
     return PR_FALSE;
 
-  // chrome shells can always open popups, but other types of shells can only
-  // open popups when they are focused
   PRInt32 type = -1;
   if (NS_FAILED(dsti->GetItemType(&type)))
     return PR_FALSE;
 
+  // chrome shells can always open popups, but other types of shells can only
+  // open popups when they are focused and visible
   if (type != nsIDocShellTreeItem::typeChrome) {
+    // only allow popups in active windows
     nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(dsti);
     if (!win)
       return PR_FALSE;
 
-    // only allow popups in active windows
     PRBool active;
     nsIFocusController* focusController = win->GetRootFocusController();
     focusController->GetActive(&active);
     if (!active)
       return PR_FALSE;
 
-    nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(dsti);
-    if (!baseWin)
-      return PR_FALSE;
-
     // only allow popups in visible frames
     PRBool visible;
     baseWin->GetVisibility(&visible);
     if (!visible)
+      return PR_FALSE;
+  }
+
+  // platforms respond differently when an popup is opened in a minimized
+  // window, so this is always disabled.
+  nsCOMPtr<nsIWidget> mainWidget;
+  baseWin->GetMainWidget(getter_AddRefs(mainWidget));
+  if (mainWidget) {
+    PRInt32 sizeMode;
+    mainWidget->GetSizeMode(&sizeMode);
+    if (sizeMode == nsSizeMode_Minimized)
       return PR_FALSE;
   }
 
