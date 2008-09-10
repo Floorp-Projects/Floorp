@@ -2367,7 +2367,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
 #if defined(DEBUG) && defined(NANOJIT_IA32)
     uint64 cycles = rdtsc() - start;
 #else
-    debug_only_v(uint64 cycles = 0;)
+    uint64 cycles = 0;
 #endif
 
     debug_only_v(printf("leaving trace at %s:%u@%u, op=%s, lr=%p, exitType=%d, sp=%d, ip=%p, "
@@ -2637,7 +2637,7 @@ js_FlushJITCache(JSContext* cx)
     }
 }
 
-void
+extern void
 js_ShutDownJIT()
 {
     if (oracle) {
