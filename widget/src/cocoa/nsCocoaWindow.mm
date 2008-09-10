@@ -909,7 +909,9 @@ NS_METHOD nsCocoaWindow::SetSizeMode(PRInt32 aMode)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aMode == nsSizeMode_Normal) {
-    if (previousMode == nsSizeMode_Maximized && [mWindow isZoomed])
+    if ([mWindow isMiniaturized])
+      [mWindow deminiaturize:nil];
+    else if (previousMode == nsSizeMode_Maximized && [mWindow isZoomed])
       [mWindow zoom:nil];
   }
   else if (aMode == nsSizeMode_Minimized) {
@@ -1155,6 +1157,17 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
   return NS_OK;
 }
 
+
+void
+nsCocoaWindow::DispatchSizeModeEvent(nsSizeMode aSizeMode)
+{
+  nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
+  event.mSizeMode = aSizeMode;
+  event.time = PR_IntervalNow();
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  DispatchEvent(&event, status);
+}
 
 void
 nsCocoaWindow::ReportSizeEvent(NSRect *r)
@@ -1555,6 +1568,20 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 - (void)windowWillMiniaturize:(NSNotification *)aNotification
 {
   RollUpPopups();
+}
+
+
+- (void)windowDidMiniaturize:(NSNotification *)aNotification
+{
+  if (mGeckoWindow)
+    mGeckoWindow->DispatchSizeModeEvent(nsSizeMode_Minimized);
+}
+
+
+- (void)windowDidDeminiaturize:(NSNotification *)aNotification
+{
+  if (mGeckoWindow)
+    mGeckoWindow->DispatchSizeModeEvent(nsSizeMode_Normal);
 }
 
 

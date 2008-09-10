@@ -250,6 +250,9 @@ public:
     virtual void SetTransparencyMode(nsTransparencyMode aMode);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
 
+    // dispatch an NS_SIZEMODE event on miniaturize or deminiaturize
+    void DispatchSizeModeEvent(nsSizeMode aSizeMode);
+
     virtual gfxASurface* GetThebesSurface();
 
     // be notified that a some form of drag event needs to go into Gecko
