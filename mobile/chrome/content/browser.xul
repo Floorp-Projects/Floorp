@@ -194,26 +194,28 @@
             <image id="urlbar-favicon" src=""/>
           </stack>
         </box>
-        <description id="urlbar-caption" crop="end" flex="1"/>
-        <textbox id="urlbar-edit"
-                 type="autocomplete"
-                 autocompletesearch="history"
-                 enablehistory="false"
-                 maxrows="6"
-                 completeselectedindex="true"
-                 minresultsforpopup="0"
-                 flex="1"
-                 hidden="true"
-                 autocompletepopup="popup_autocomplete"
-                 ontextentered="BrowserUI.goToURI();"
-                 clickSelectsAll="true"/>
+        <hbox id="urlbar-editarea" flex="1">
+          <description id="urlbar-caption" crop="end" flex="1"/>
+          <textbox id="urlbar-edit"
+                   type="autocomplete"
+                   autocompletesearch="history"
+                   enablehistory="false"
+                   maxrows="6"
+                   completeselectedindex="true"
+                   minresultsforpopup="0"
+                   flex="1"
+                   hidden="true"
+                   autocompletepopup="popup_autocomplete"
+                   ontextentered="BrowserUI.goToURI();"
+                   clickSelectsAll="true"/>
+        </hbox>
         <hbox id="urlbar-icons">
           <toolbarbutton id="tool-reload" class="urlbar-icon-button" command="cmd_reload"/>
           <toolbarbutton id="tool-stop" class="urlbar-icon-button" command="cmd_stop"/>
           <toolbarbutton id="tool-go" class="urlbar-icon-button" command="cmd_go"/>
         </hbox>
       </hbox>
-      <toolbarbutton id="tool-bookmarks" class="browser-control-button" command="cmd_bookmarks"/>
+      <toolbarbutton id="tool-bookmarks" class="urlbar-icon-button" command="cmd_bookmarks"/>
     </toolbar>
 
     <vbox id="browser-controls" style="-moz-stack-sizing: ignore; width: 80px;" top="60" left="0">
@@ -221,11 +223,15 @@
       <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
       <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
       <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions"/>
+      <toolbarbutton id="tool-prefs" class="browser-control-button" command="cmd_prefs"/>
     </vbox>
 
     <vbox id="tab-list-container" style="-moz-stack-sizing: ignore;" top="60" left="0">
       <richlistbox id="tab-list" onselect="BrowserUI.selectTab(this.selectedItem);"/>
-      <button id="newtab-button" label="+" command="cmd_newTab"/>
+      <hbox>
+        <toolbarbutton id="newtab-button" command="cmd_newTab"/>
+        <toolbarbutton id="retrievetab-button" command=""/>
+      </hbox>
     </vbox>
 
     <vbox id="urllist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
