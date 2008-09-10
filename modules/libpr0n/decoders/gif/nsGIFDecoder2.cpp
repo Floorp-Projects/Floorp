@@ -199,14 +199,17 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
 // Push any new rows according to mCurrentPass/mLastFlushedPass and
 // mCurrentRow/mLastFlushedRow.  Note: caller is responsible for
 // updating mlastFlushed{Row,Pass}.
-void
+nsresult
 nsGIFDecoder2::FlushImageData(PRUint32 fromRow, PRUint32 rows)
 {
   nsIntRect r(0, fromRow, mGIFStruct.screen_width, rows);
 
   // Update image  
   nsCOMPtr<nsIImage> img(do_GetInterface(mImageFrame));
-  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+  nsresult rv = img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Offset to the frame position
   // Only notify observer(s) for first frame
@@ -214,25 +217,29 @@ nsGIFDecoder2::FlushImageData(PRUint32 fromRow, PRUint32 rows)
     r.y += mGIFStruct.y_offset;
     mObserver->OnDataAvailable(nsnull, mImageFrame, &r);
   }
+  return NS_OK;
 }
 
-void
+nsresult
 nsGIFDecoder2::FlushImageData()
 {
+  nsresult rv = NS_OK;
+
   switch (mCurrentPass - mLastFlushedPass) {
     case 0:  // same pass
       if (mCurrentRow - mLastFlushedRow)
-        FlushImageData(mLastFlushedRow + 1, mCurrentRow - mLastFlushedRow);
+        rv = FlushImageData(mLastFlushedRow + 1, mCurrentRow - mLastFlushedRow);
       break;
   
     case 1:  // one pass on - need to handle bottom & top rects
-      FlushImageData(0, mCurrentRow + 1);
-      FlushImageData(mLastFlushedRow + 1, mGIFStruct.height - (mLastFlushedRow + 1));
+      rv = FlushImageData(0, mCurrentRow + 1);
+      rv |= FlushImageData(mLastFlushedRow + 1, mGIFStruct.height - (mLastFlushedRow + 1));
       break;
 
     default:   // more than one pass on - push the whole frame
-      FlushImageData(0, mGIFStruct.height);
+      rv = FlushImageData(0, mGIFStruct.height);
   }
+  return rv;
 }
 
 //******************************************************************************
@@ -245,14 +252,14 @@ nsresult nsGIFDecoder2::ProcessData(unsigned char *data, PRUint32 count, PRUint3
 
   // Flushing is only needed for first frame
   if (!mGIFStruct.images_decoded && mImageFrame) {
-    FlushImageData();
+    rv = FlushImageData();
     mLastFlushedRow = mCurrentRow;
     mLastFlushedPass = mCurrentPass;
   }
 
   *_retval = count;
 
-  return NS_OK;
+  return rv;
 }
 
 //******************************************************************************
@@ -370,7 +377,7 @@ void nsGIFDecoder2::EndImageFrame()
   // First flush all pending image data 
   if (!mGIFStruct.images_decoded) {
     // Only need to flush first frame
-    FlushImageData();
+    (void) FlushImageData();
 
     // If the first frame is smaller in height than the entire image, send a
     // OnDataAvailable (Display Refresh) for the area it does not have data for.
