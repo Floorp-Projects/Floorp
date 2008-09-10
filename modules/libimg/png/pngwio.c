@@ -1,9 +1,9 @@
 
 /* pngwio.c - functions for data output
  *
- * Last changed in libpng 1.2.13 November 13, 2006
+ * Last changed in libpng 1.2.30 [August 13, 2008]
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2006 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2008 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -45,7 +45,7 @@ png_default_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    png_uint_32 check;
 
-   if(png_ptr == NULL) return;
+   if (png_ptr == NULL) return;
 #if defined(_WIN32_WCE)
    if ( !WriteFile((HANDLE)(png_ptr->io_ptr), data, length, &check, NULL) )
       check = 0;
@@ -71,7 +71,7 @@ png_default_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
    png_byte *near_data;  /* Needs to be "png_byte *" instead of "png_bytep" */
    png_FILE_p io_ptr;
 
-   if(png_ptr == NULL) return;
+   if (png_ptr == NULL) return;
    /* Check if data really is near. If so, use usual code. */
    near_data = (png_byte *)CVT_PTR_NOCHECK(data);
    io_ptr = (png_FILE_p)CVT_PTR(png_ptr->io_ptr);
@@ -134,7 +134,7 @@ png_default_flush(png_structp png_ptr)
 #if !defined(_WIN32_WCE)
    png_FILE_p io_ptr;
 #endif
-   if(png_ptr == NULL) return;
+   if (png_ptr == NULL) return;
 #if !defined(_WIN32_WCE)
    io_ptr = (png_FILE_p)CVT_PTR((png_ptr->io_ptr));
    if (io_ptr != NULL)
@@ -170,7 +170,7 @@ void PNGAPI
 png_set_write_fn(png_structp png_ptr, png_voidp io_ptr,
    png_rw_ptr write_data_fn, png_flush_ptr output_flush_fn)
 {
-   if(png_ptr == NULL) return;
+   if (png_ptr == NULL) return;
    png_ptr->io_ptr = io_ptr;
 
 #if !defined(PNG_NO_STDIO)
@@ -206,27 +206,27 @@ png_set_write_fn(png_structp png_ptr, png_voidp io_ptr,
 
 #if defined(USE_FAR_KEYWORD)
 #if defined(_MSC_VER)
-void *png_far_to_near(png_structp png_ptr,png_voidp ptr, int check)
+void *png_far_to_near(png_structp png_ptr, png_voidp ptr, int check)
 {
    void *near_ptr;
    void FAR *far_ptr;
    FP_OFF(near_ptr) = FP_OFF(ptr);
    far_ptr = (void FAR *)near_ptr;
-   if(check != 0)
-      if(FP_SEG(ptr) != FP_SEG(far_ptr))
-         png_error(png_ptr,"segment lost in conversion");
+   if (check != 0)
+      if (FP_SEG(ptr) != FP_SEG(far_ptr))
+         png_error(png_ptr, "segment lost in conversion");
    return(near_ptr);
 }
 #  else
-void *png_far_to_near(png_structp png_ptr,png_voidp ptr, int check)
+void *png_far_to_near(png_structp png_ptr, png_voidp ptr, int check)
 {
    void *near_ptr;
    void FAR *far_ptr;
    near_ptr = (void FAR *)ptr;
    far_ptr = (void FAR *)near_ptr;
-   if(check != 0)
-      if(far_ptr != ptr)
-         png_error(png_ptr,"segment lost in conversion");
+   if (check != 0)
+      if (far_ptr != ptr)
+         png_error(png_ptr, "segment lost in conversion");
    return(near_ptr);
 }
 #   endif
