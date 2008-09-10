@@ -4452,7 +4452,9 @@ js_Interpret(JSContext *cx)
                             JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
                             JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj)));
 
+#ifdef JS_TRACER
                             TRACE_2(SetPropHit, kshape, sprop);
+#endif
 
                             if (scope->object == obj) {
                                 /*
@@ -4598,8 +4600,10 @@ js_Interpret(JSContext *cx)
                 if (entry) {
                     if (!js_SetPropertyHelper(cx, obj, id, &rval, &entry))
                         goto error;
+#ifdef JS_TRACER
                     if (entry)
                         TRACE_1(SetPropMiss, entry);
+#endif
                 } else {
                     if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                         goto error;
@@ -6084,7 +6088,9 @@ js_Interpret(JSContext *cx)
                     if (sprop->parent != scope->lastProp)
                         goto do_initprop_miss;
 
+#ifdef JS_TRACER
                     TRACE_2(SetPropHit, kshape, sprop);
+#endif
 
                     /*
                      * Otherwise this entry must be for a direct property of
@@ -6151,8 +6157,10 @@ js_Interpret(JSContext *cx)
                 }
                 if (!js_SetPropertyHelper(cx, obj, id, &rval, &entry))
                     goto error;
+#ifdef JS_TRACER
                 if (entry)
                     TRACE_1(SetPropMiss, entry);
+#endif
             } while (0);
 
             /* Common tail for property cache hit and miss cases. */
