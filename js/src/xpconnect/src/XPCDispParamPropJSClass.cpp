@@ -66,7 +66,7 @@ XPCDispParamPropJSClass* GetParamProp(JSContext* cx, JSObject* obj)
  * @param vp Pointer to the return value
  * @return JSBool JS_TRUE if property was retrieved
  */
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_PP_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     XPCDispParamPropJSClass* paramProp = GetParamProp(cx, obj);
@@ -87,7 +87,7 @@ XPC_PP_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
  * @param vp Pointer to the return value
  * @return JSBool JS_TRUE if property was retrieved
  */
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 XPC_PP_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     XPCDispParamPropJSClass* paramProp = GetParamProp(cx, obj);
@@ -126,7 +126,7 @@ XPC_PP_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
  * @param vp Pointer to the return value
  * @return JSBool JS_TRUE if property was retrieved
  */
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_PP_Finalize(JSContext *cx, JSObject *obj)
 {
     delete GetParamProp(cx, obj);
@@ -137,7 +137,7 @@ XPC_PP_Finalize(JSContext *cx, JSObject *obj)
  * @param trc the tracing structure
  * @param obj the object being marked
  */
-JS_STATIC_DLL_CALLBACK(void)
+static void
 XPC_PP_Trace(JSTracer *trc, JSObject *obj)
 {
     XPCDispParamPropJSClass* paramProp = GetParamProp(trc->context, obj);

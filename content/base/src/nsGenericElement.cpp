@@ -149,6 +149,8 @@
 
 #include "mozAutoDocUpdate.h"
 
+#include "nsICSSParser.h"
+
 #ifdef MOZ_SVG
 PRBool NS_SVG_HaveFeature(const nsAString &aFeature);
 #endif /* MOZ_SVG */
@@ -789,10 +791,12 @@ nsNSElementTearoff::GetFirstElementChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
+#ifdef MOZ_XUL
   nsXULElement* xul = nsXULElement::FromContent(mContent);
   if (xul) {
     xul->EnsureContentsGenerated();
   }
+#endif
 
   nsAttrAndChildArray& children = mContent->mAttrsAndChildren;
   PRUint32 i, count = children.ChildCount();
@@ -811,10 +815,12 @@ nsNSElementTearoff::GetLastElementChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
+#ifdef MOZ_XUL
   nsXULElement* xul = nsXULElement::FromContent(mContent);
   if (xul) {
     xul->EnsureContentsGenerated();
   }
+#endif
 
   nsAttrAndChildArray& children = mContent->mAttrsAndChildren;
   PRUint32 i = children.ChildCount();
@@ -838,10 +844,12 @@ nsNSElementTearoff::GetPreviousElementSibling(nsIDOMElement** aResult)
     return NS_OK;
   }
 
+#ifdef MOZ_XUL
   nsXULElement* xul = nsXULElement::FromContent(parent);
   if (xul) {
     xul->EnsureContentsGenerated();
   }
+#endif
 
   NS_ASSERTION(parent->IsNodeOfType(nsINode::eELEMENT) ||
                parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
@@ -875,10 +883,12 @@ nsNSElementTearoff::GetNextElementSibling(nsIDOMElement** aResult)
     return NS_OK;
   }
 
+#ifdef MOZ_XUL
   nsXULElement* xul = nsXULElement::FromContent(parent);
   if (xul) {
     xul->EnsureContentsGenerated();
   }
+#endif
 
   NS_ASSERTION(parent->IsNodeOfType(nsINode::eELEMENT) ||
                parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
@@ -1692,9 +1702,6 @@ nsStaticContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 //----------------------------------------------------------------------
-
-PRUint32 nsMutationGuard::sMutationCount = 0;
-
 nsGenericElement::nsDOMSlots::nsDOMSlots(PtrBits aFlags)
   : nsINode::nsSlots(aFlags),
     mBindingParent(nsnull)
@@ -5153,6 +5160,10 @@ TryMatchingElementsInSubtree(nsINode* aRoot,
   nsIContent * const * kidSlot = aRoot->GetChildArray();
   nsIContent * const * end = kidSlot + count;
 
+#ifdef DEBUG
+  nsMutationGuard debugMutationGuard;
+#endif
+  
   PRBool continueIteration = PR_TRUE;
   for (; kidSlot != end; ++kidSlot) {
     nsIContent* kid = *kidSlot;
@@ -5214,6 +5225,11 @@ TryMatchingElementsInSubtree(nsINode* aRoot,
     /* Make sure to clean this up */
     prevSibling->~RuleProcessorData();
   }
+
+#ifdef DEBUG
+  NS_ASSERTION(!debugMutationGuard.Mutated(0), "Unexpected mutations happened");
+#endif
+
   return continueIteration;
 }
 

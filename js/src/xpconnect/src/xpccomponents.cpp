@@ -2969,7 +2969,7 @@ PrincipalHolder::GetPrincipal()
     return mHoldee;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 SandboxDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
@@ -2988,7 +2988,7 @@ SandboxDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 SandboxDebug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 #ifdef DEBUG
@@ -2998,7 +2998,7 @@ SandboxDebug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 SandboxFunForwarder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     jsval *rval)
 {
@@ -3015,7 +3015,7 @@ SandboxFunForwarder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 SandboxImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
@@ -3081,20 +3081,20 @@ SandboxImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_SetReservedSlot(cx, newfunobj, 0, argv[0]);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 sandbox_enumerate(JSContext *cx, JSObject *obj)
 {
     return JS_EnumerateStandardClasses(cx, obj);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 sandbox_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
     JSBool resolved;
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 sandbox_finalize(JSContext *cx, JSObject *obj)
 {
     nsIScriptObjectPrincipal *sop =
@@ -3344,7 +3344,7 @@ public:
     NS_DECL_ISUPPORTS
 
 private:
-    static JSBool JS_DLL_CALLBACK ContextHolderOperationCallback(JSContext *cx);
+    static JSBool ContextHolderOperationCallback(JSContext *cx);
     
     XPCAutoJSContext mJSContext;
     JSContext* mOrigCx;
@@ -3372,7 +3372,7 @@ ContextHolder::ContextHolder(JSContext *aOuterCx, JSObject *aSandbox)
     }
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 ContextHolder::ContextHolderOperationCallback(JSContext *cx)
 {
     ContextHolder* thisObject =

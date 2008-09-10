@@ -44,6 +44,7 @@ use Getopt::Mixed "nextOption";
 sub debug;
 sub usage;
 sub parse_options;
+sub escape_string;
 sub escape_pattern;
 sub unescape_pattern;
 
@@ -303,6 +304,8 @@ debug "finding regressions";
 my $pass = 0;
 my $changed = ($#patterns != -1);
 
+debug "changed=$changed, \$#patterns=$#patterns, \$#failures=$#failures";
+
 while ($changed) {
 
     $pass = $pass + 1;
@@ -336,6 +339,8 @@ while ($changed) {
 
 }
 
+debug "\$#excludedtests=$#excludedtests, \$#failures=$#failures";
+
 foreach $excludedtest ( @excludedtests ) {
 
     if ($debug) {
@@ -347,8 +352,12 @@ foreach $excludedtest ( @excludedtests ) {
 
     @results = grep !m@$excludedtest@, @failures;
 
+    debug "\$#results=$#results, \$excludedtest=$excludedtest, \$#failures=$#failures";
+
     @failures = @results;
 }
+
+debug "possible regressions: \$#failures=$#failures";
 
 open OUTPUT, ">$outputprefix-results-possible-regressions.log" or die "Unable to open $outputprefix-results-possible-regressions.log: $!";
 
@@ -644,10 +653,37 @@ sub parse_options {
         $failuretimezonepattern      = "[^,]*";
     }
     else {
-        $knownfailuretimezonepattern = "(" . $timezone . "|\\.\\*)";
-        $failuretimezonepattern      = "$timezone";
+        $knownfailuretimezonepattern = "(" . escape_string($timezone) . "|\\.\\*)";
+        $failuretimezonepattern      = escape_string("$timezone");
     }
 
+
+}
+
+sub escape_string {
+    my $s = shift;
+
+    # replace unescaped regular expression characters in the 
+    # string so they are not interpreted as regexp chars
+    # when matching descriptions. leave the escaped regexp chars
+    # `regexp` alone so they can be unescaped later and used in 
+    # pattern matching.
+
+    # see perldoc perlre
+
+    $s =~ s/\\/\\\\/g;
+
+    # escape non word chars that aren't surrounded by ``
+    $s =~ s/(?<!`)([$regchars])(?!`)/\\$1/g;
+    $s =~ s/(?<!`)([$regchars])(?=`)/\\$1/g;
+    $s =~ s/(?<=`)([$regchars])(?!`)/\\$1/g;
+
+    # unquote the regchars
+    $s =~ s/\`([^\`])\`/$1/g;
+
+    debug "escape_string  : $s";
+
+    return "$s";
 
 }
 
@@ -661,24 +697,7 @@ sub escape_pattern {
 
     #    debug "escape_pattern: before: $leading$trailing";
 
-    # replace unescaped regular expression characters in the 
-    # description so they are not interpreted as regexp chars
-    # when matching descriptions. leave the escaped regexp chars
-    # `regexp alone so they can be unescaped later and used in 
-    # pattern matching.
-
-    # see perldoc perlre
-
-    $trailing =~ s/\\/\\\\/g;
-
-    # escape non word chars that aren't surrounded by ``
-    $trailing =~ s/(?<!`)([$regchars])(?!`)/\\$1/g;
-    $trailing =~ s/(?<!`)([$regchars])(?=`)/\\$1/g;
-    $trailing =~ s/(?<=`)([$regchars])(?!`)/\\$1/g;
-    #    $trailing =~ s/(?<!`)(\W)(?!`)/\\$1/g;
-
-    # unquote the regchars
-    $trailing =~ s/\`([^\`])\`/$1/g;
+    $trailing = escape_string($trailing);
 
     debug "escape_pattern  : $leading$trailing";
 

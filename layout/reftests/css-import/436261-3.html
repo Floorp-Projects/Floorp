@@ -1,0 +1,21 @@
+<html>
+  <body>
+    <script type="text/javascript">
+      var el = document.createElement("link");
+      el.type = "text/css";
+      el.rel = "stylesheet";
+      el.media = "print"
+      el.href = "outer-sheet.css";
+      var h = document.getElementsByTagName("HEAD")[0];
+      h.appendChild(el);
+
+      el = document.createElement("link");
+      el.type = "text/css";
+      el.rel = "stylesheet";
+      el.href = "outer-sheet.css";
+      var h = document.getElementsByTagName("HEAD")[0];
+      h.appendChild(el);
+    </script>
+    <p>test</p>
+  </body>
+</html>

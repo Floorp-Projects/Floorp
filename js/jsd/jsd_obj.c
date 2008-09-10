@@ -156,7 +156,7 @@ _createJSDObject(JSDContext* jsdc, JSContext *cx, JSObject *obj)
     return jsdobj;
 }
 
-void JS_DLL_CALLBACK
+void
 jsd_ObjectHook(JSContext *cx, JSObject *obj, JSBool isNew, void *closure)
 {
     JSDObject* jsdobj;
@@ -220,7 +220,7 @@ jsd_Constructing(JSDContext* jsdc, JSContext *cx, JSObject *obj,
     JSD_UNLOCK_OBJECTS(jsdc);
 }
 
-JS_STATIC_DLL_CALLBACK(JSHashNumber)
+static JSHashNumber
 _hash_root(const void *key)
 {
     return ((JSHashNumber) key) >> 2; /* help lame MSVC1.5 on Win16 */

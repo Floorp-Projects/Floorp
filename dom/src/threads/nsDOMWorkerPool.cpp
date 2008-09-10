@@ -69,10 +69,12 @@
     }                                                     \
   PR_END_MACRO
 
-nsDOMWorkerPool::nsDOMWorkerPool()
-: mParentGlobal(nsnull)
+nsDOMWorkerPool::nsDOMWorkerPool(nsIDocument* aDocument)
+: mParentGlobal(nsnull),
+  mParentDocument(aDocument)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aDocument, "Must have a document!");
 }
 
 nsDOMWorkerPool::~nsDOMWorkerPool()
@@ -100,17 +102,10 @@ nsDOMWorkerPool::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsAXPCNativeCallContext* ncc;
-  nsresult rv = nsContentUtils::XPConnect()->GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // GetCurrentNativeCallContext can return NS_OK and still hand out a null
-  // context... We shouldn't ever see that here.
-  NS_ENSURE_TRUE(ncc, NS_ERROR_UNEXPECTED);
-
-  JSContext* cx;
-  rv = ncc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // GetCurrentJSContext () can return a null context... We shouldn't
+  // ever see that here.
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  NS_ENSURE_TRUE(cx, NS_ERROR_UNEXPECTED);
 
   nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
   NS_ENSURE_STATE(scriptContext);
@@ -241,6 +236,14 @@ nsDOMWorkerPool::ResumeWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
   }
 }
 
+nsIDocument*
+nsDOMWorkerPool::GetParentDocument()
+{
+  NS_ASSERTION(NS_IsMainThread(),
+               "Don't touch the non-threadsafe document off the main thread!");
+  return mParentDocument;
+}
+
 NS_IMETHODIMP
 nsDOMWorkerPool::PostMessage(const nsAString& aMessage)
 {
@@ -283,15 +286,39 @@ nsDOMWorkerPool::GetErrorListener(nsIDOMWorkerErrorListener** aListener)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerPool::CreateWorker(const nsAString& fullScript,
+nsDOMWorkerPool::CreateWorker(const nsAString& aFullScript,
                               nsIDOMWorkerThread** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  NS_ENSURE_ARG(!fullScript.IsEmpty());
+  NS_ENSURE_ARG(!aFullScript.IsEmpty());
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsRefPtr<nsDOMWorkerThread> worker(new nsDOMWorkerThread(this, fullScript));
+  nsRefPtr<nsDOMWorkerThread> worker =
+    new nsDOMWorkerThread(this, aFullScript, PR_FALSE);
+  NS_ENSURE_TRUE(worker, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = worker->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ASSERTION(!mWorkers.Contains(worker), "Um?!");
+  mWorkers.AppendElement(worker);
+
+  NS_ADDREF(*_retval = worker);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerPool::CreateWorkerFromURL(const nsAString& aScriptURL,
+                                     nsIDOMWorkerThread** _retval)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_ARG(!aScriptURL.IsEmpty());
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsRefPtr<nsDOMWorkerThread> worker =
+    new nsDOMWorkerThread(this, aScriptURL, PR_TRUE);
   NS_ENSURE_TRUE(worker, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = worker->Init();

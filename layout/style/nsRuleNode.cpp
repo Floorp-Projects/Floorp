@@ -410,6 +410,147 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
   return result;
 }
 
+// flags for SetDiscrete - align values with SETCOORD_* constants
+// where possible
+
+#define SETDSC_NORMAL                 0x01   // N
+#define SETDSC_AUTO                   0x02   // A
+#define SETDSC_INTEGER                0x40   // I
+#define SETDSC_ENUMERATED             0x80   // E
+#define SETDSC_NONE                   0x100  // O
+#define SETDSC_SYSTEM_FONT            0x2000
+
+// no caller cares whether aField was changed or not
+template <typename FieldT,
+          typename T1, typename T2, typename T3, typename T4, typename T5>
+static void
+SetDiscrete(const nsCSSValue& aValue, FieldT & aField,
+            PRBool& aInherited, PRUint32 aMask,
+            FieldT aParentValue,
+            T1 aInitialValue,
+            T2 aAutoValue,
+            T3 aNoneValue,
+            T4 aNormalValue,
+            T5 aSystemFontValue)
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    return;
+
+    // every caller of SetDiscrete provides inherit and initial
+    // alternatives, so we don't require them to say so in the mask
+  case eCSSUnit_Inherit:
+    aInherited = PR_TRUE;
+    aField = aParentValue;
+    return;
+
+  case eCSSUnit_Initial:
+    aField = aInitialValue;
+    return;
+
+    // every caller provides one or other of these alternatives,
+    // but they have to say which
+  case eCSSUnit_Enumerated:
+    if (aMask & SETDSC_ENUMERATED) {
+      aField = aValue.GetIntValue();
+      return;
+    }
+    break;
+
+  case eCSSUnit_Integer:
+    if (aMask & SETDSC_INTEGER) {
+      aField = aValue.GetIntValue();
+      return;
+    }
+    break;
+
+    // remaining possibilities in descending order of frequency of use
+  case eCSSUnit_Auto:
+    if (aMask & SETDSC_AUTO) {
+      aField = aAutoValue;
+      return;
+    }
+    break;
+
+  case eCSSUnit_None:
+    if (aMask & SETDSC_NONE) {
+      aField = aNoneValue;
+      return;
+    }
+    break;
+    
+  case eCSSUnit_Normal:
+    if (aMask & SETDSC_NORMAL) {
+      aField = aNormalValue;
+      return;
+    }
+    break;
+
+  case eCSSUnit_System_Font:
+    if (aMask & SETDSC_SYSTEM_FONT) {
+      aField = aSystemFontValue;
+      return;
+    }
+    break;
+
+  default:
+    break;
+  }
+
+  NS_NOTREACHED("SetDiscrete: inappropriate unit");
+}
+
+// flags for SetFactor
+#define SETFCT_POSITIVE 0x01        // assert value is >= 0.0f
+#define SETFCT_OPACITY  0x02        // clamp value to [0.0f .. 1.0f]
+#define SETFCT_NONE     0x04        // allow _None (uses aInitialValue).
+
+static void
+SetFactor(const nsCSSValue& aValue, float& aField, PRBool& aInherited,
+          float aParentValue, float aInitialValue, PRUint32 aFlags = 0)
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    return;
+
+  case eCSSUnit_Number:
+    aField = aValue.GetFloatValue();
+    if (aFlags & SETFCT_POSITIVE) {
+      NS_ASSERTION(aField >= 0.0f, "negative value for positive-only property");
+      if (aField < 0.0f)
+        aField = 0.0f;
+    }
+    if (aFlags & SETFCT_OPACITY) {
+      if (aField < 0.0f)
+        aField = 0.0f;
+      if (aField > 1.0f)
+        aField = 1.0f;
+    }
+    return;
+
+  case eCSSUnit_Inherit:
+    aInherited = PR_TRUE;
+    aField = aParentValue;
+    return;
+
+  case eCSSUnit_Initial:
+    aField = aInitialValue;
+    return;
+
+  case eCSSUnit_None:
+    if (aFlags & SETFCT_NONE) {
+      aField = aInitialValue;
+      return;
+    }
+    break;
+
+  default:
+    break;
+  }
+
+  NS_NOTREACHED("SetFactor: inappropriate unit");
+}
+
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.
 void* 
@@ -2255,47 +2396,27 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mFlags |= aGenericFontID;
   }
 
-  // font-style: enum, normal, inherit
-  if (eCSSUnit_Enumerated == aFontData.mStyle.GetUnit()) {
-    aFont->mFont.style = aFontData.mStyle.GetIntValue();
-  }
-  else if (eCSSUnit_Normal == aFontData.mStyle.GetUnit()) {
-    aFont->mFont.style = NS_STYLE_FONT_STYLE_NORMAL;
-  }
-  else if (eCSSUnit_System_Font == aFontData.mStyle.GetUnit()) {
-    aFont->mFont.style = systemFont.style;
-  }
-  else if (eCSSUnit_Inherit == aFontData.mStyle.GetUnit()) {
-    aInherited = PR_TRUE;
-    aFont->mFont.style = aParentFont->mFont.style;
-  }
-  else if (eCSSUnit_Initial == aFontData.mStyle.GetUnit()) {
-    aFont->mFont.style = defaultVariableFont->style;
-  }
+  // font-style: enum, normal, inherit, initial, -moz-system-font
+  SetDiscrete(aFontData.mStyle, aFont->mFont.style, aInherited,
+              SETDSC_ENUMERATED | SETDSC_NORMAL | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.style,
+              defaultVariableFont->style,
+              0, 0,
+              NS_STYLE_FONT_STYLE_NORMAL,
+              systemFont.style);
 
-  // font-variant: enum, normal, inherit
-  if (eCSSUnit_Enumerated == aFontData.mVariant.GetUnit()) {
-    aFont->mFont.variant = aFontData.mVariant.GetIntValue();
-  }
-  else if (eCSSUnit_Normal == aFontData.mVariant.GetUnit()) {
-    aFont->mFont.variant = NS_STYLE_FONT_VARIANT_NORMAL;
-  }
-  else if (eCSSUnit_System_Font == aFontData.mVariant.GetUnit()) {
-    aFont->mFont.variant = systemFont.variant;
-  }
-  else if (eCSSUnit_Inherit == aFontData.mVariant.GetUnit()) {
-    aInherited = PR_TRUE;
-    aFont->mFont.variant = aParentFont->mFont.variant;
-  }
-  else if (eCSSUnit_Initial == aFontData.mVariant.GetUnit()) {
-    aFont->mFont.variant = defaultVariableFont->variant;
-  }
+  // font-variant: enum, normal, inherit, initial, -moz-system-font
+  SetDiscrete(aFontData.mVariant, aFont->mFont.variant, aInherited,
+              SETDSC_ENUMERATED | SETDSC_NORMAL | SETDSC_SYSTEM_FONT,
+              aParentFont->mFont.variant,
+              defaultVariableFont->variant,
+              0, 0,
+              NS_STYLE_FONT_VARIANT_NORMAL,
+              systemFont.variant);
 
-  // font-weight: int, enum, normal, inherit
-  if (eCSSUnit_Integer == aFontData.mWeight.GetUnit()) {
-    aFont->mFont.weight = aFontData.mWeight.GetIntValue();
-  }
-  else if (eCSSUnit_Enumerated == aFontData.mWeight.GetUnit()) {
+  // font-weight: int, enum, normal, inherit, initial, -moz-system-font
+  // special handling for enum
+  if (eCSSUnit_Enumerated == aFontData.mWeight.GetUnit()) {
     PRInt32 value = aFontData.mWeight.GetIntValue();
     switch (value) {
       case NS_STYLE_FONT_WEIGHT_NORMAL:
@@ -2308,20 +2429,14 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
         aFont->mFont.weight = nsStyleUtil::ConstrainFontWeight(aParentFont->mFont.weight + value);
         break;
     }
-  }
-  else if (eCSSUnit_Normal == aFontData.mWeight.GetUnit()) {
-    aFont->mFont.weight = NS_STYLE_FONT_WEIGHT_NORMAL;
-  }
-  else if (eCSSUnit_System_Font == aFontData.mWeight.GetUnit()) {
-    aFont->mFont.weight = systemFont.weight;
-  }
-  else if (eCSSUnit_Inherit == aFontData.mWeight.GetUnit()) {
-    aInherited = PR_TRUE;
-    aFont->mFont.weight = aParentFont->mFont.weight;
-  }
-  else if (eCSSUnit_Initial == aFontData.mWeight.GetUnit()) {
-    aFont->mFont.weight = defaultVariableFont->weight;
-  }
+  } else 
+    SetDiscrete(aFontData.mWeight, aFont->mFont.weight, aInherited,
+                SETDSC_INTEGER | SETDSC_NORMAL | SETDSC_SYSTEM_FONT,
+                aParentFont->mFont.weight,
+                defaultVariableFont->weight,
+                0, 0,
+                NS_STYLE_FONT_WEIGHT_NORMAL,
+                systemFont.weight);
 
 #ifdef MOZ_MATHML
   // Compute scriptlevel, scriptminsize and scriptsizemultiplier now so
@@ -2337,18 +2452,11 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
                      aPresContext, aInherited);
   }
 
-  // -moz-script-size-multiplier: factor, inherit
-  if (eCSSUnit_Number == aFontData.mScriptSizeMultiplier.GetUnit()) {
-    aFont->mScriptSizeMultiplier = aFontData.mScriptSizeMultiplier.GetFloatValue();
-    NS_ASSERTION(aFont->mScriptSizeMultiplier >= 0.0f, "Cannot have negative script size multiplier");
-  }
-  else if (eCSSUnit_Inherit == aFontData.mScriptSizeMultiplier.GetUnit()) {
-    aInherited = PR_TRUE;
-    aFont->mScriptSizeMultiplier = aParentFont->mScriptSizeMultiplier;
-  }
-  else if (eCSSUnit_Initial == aFontData.mScriptSizeMultiplier.GetUnit()) {
-    aFont->mScriptSizeMultiplier = NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER;
-  }
+  // -moz-script-size-multiplier: factor, inherit, initial
+  SetFactor(aFontData.mScriptSizeMultiplier, aFont->mScriptSizeMultiplier,
+            aInherited, aParentFont->mScriptSizeMultiplier,
+            NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER,
+            SETFCT_POSITIVE);
   
   // -moz-script-level: integer, number, inherit
   if (eCSSUnit_Integer == aFontData.mScriptLevel.GetUnit()) {
@@ -2408,23 +2516,12 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   else
     aFont->mFont.size = aFont->mSize;
 
-  // font-size-adjust: number, none, inherit
-  if (eCSSUnit_Number == aFontData.mSizeAdjust.GetUnit()) {
-    aFont->mFont.sizeAdjust = aFontData.mSizeAdjust.GetFloatValue();
-  }
-  else if (eCSSUnit_None == aFontData.mSizeAdjust.GetUnit()) {
-    aFont->mFont.sizeAdjust = 0.0f;
-  }
-  else if (eCSSUnit_System_Font == aFontData.mSizeAdjust.GetUnit()) {
+  // font-size-adjust: number, none, inherit, initial, -moz-system-font
+  if (eCSSUnit_System_Font == aFontData.mSizeAdjust.GetUnit()) {
     aFont->mFont.sizeAdjust = systemFont.sizeAdjust;
-  }
-  else if (eCSSUnit_Inherit == aFontData.mSizeAdjust.GetUnit()) {
-    aInherited = PR_TRUE;
-    aFont->mFont.sizeAdjust = aParentFont->mFont.sizeAdjust;
-  }
-  else if (eCSSUnit_Initial == aFontData.mSizeAdjust.GetUnit()) {
-    aFont->mFont.sizeAdjust = 0.0f;
-  }
+  } else
+    SetFactor(aFontData.mSizeAdjust, aFont->mFont.sizeAdjust, aInherited,
+              aParentFont->mFont.sizeAdjust, 0.0f, SETFCT_NONE);
 }
 
 // SetGenericFont:
@@ -2739,68 +2836,42 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
   }
 
 
-  // text-align: enum, string, inherit
-  if (eCSSUnit_Enumerated == textData.mTextAlign.GetUnit()) {
-    text->mTextAlign = textData.mTextAlign.GetIntValue();
-  }
-  else if (eCSSUnit_String == textData.mTextAlign.GetUnit()) {
+  // text-align: enum, string, inherit, initial
+  if (eCSSUnit_String == textData.mTextAlign.GetUnit()) {
     NS_NOTYETIMPLEMENTED("align string");
-  }
-  else if (eCSSUnit_Inherit == textData.mTextAlign.GetUnit()) {
-    inherited = PR_TRUE;
-    text->mTextAlign = parentText->mTextAlign;
-  }
-  else if (eCSSUnit_Initial == textData.mTextAlign.GetUnit())
-    text->mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
+  } else
+    SetDiscrete(textData.mTextAlign, text->mTextAlign, inherited,
+                SETDSC_ENUMERATED, parentText->mTextAlign,
+                NS_STYLE_TEXT_ALIGN_DEFAULT,
+                0, 0, 0, 0);
 
-  // text-indent: length, percent, inherit
+  // text-indent: length, percent, inherit, initial
   SetCoord(textData.mTextIndent, text->mTextIndent, parentText->mTextIndent,
            SETCOORD_LPH | SETCOORD_INITIAL_ZERO, aContext,
            mPresContext, inherited);
 
-  // text-transform: enum, none, inherit
-  if (eCSSUnit_Enumerated == textData.mTextTransform.GetUnit()) {
-    text->mTextTransform = textData.mTextTransform.GetIntValue();
-  }
-  else if (eCSSUnit_None == textData.mTextTransform.GetUnit() ||
-           eCSSUnit_Initial == textData.mTextTransform.GetUnit()) {
-    text->mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
-  }
-  else if (eCSSUnit_Inherit == textData.mTextTransform.GetUnit()) {
-    inherited = PR_TRUE;
-    text->mTextTransform = parentText->mTextTransform;
-  }
+  // text-transform: enum, none, inherit, initial
+  SetDiscrete(textData.mTextTransform, text->mTextTransform, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentText->mTextTransform,
+              NS_STYLE_TEXT_TRANSFORM_NONE, 0,
+              NS_STYLE_TEXT_TRANSFORM_NONE, 0, 0);
 
-  // white-space: enum, normal, inherit
-  if (eCSSUnit_Enumerated == textData.mWhiteSpace.GetUnit()) {
-    text->mWhiteSpace = textData.mWhiteSpace.GetIntValue();
-  }
-  else if (eCSSUnit_Normal == textData.mWhiteSpace.GetUnit() ||
-           eCSSUnit_Initial == textData.mWhiteSpace.GetUnit()) {
-    text->mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
-  }
-  else if (eCSSUnit_Inherit == textData.mWhiteSpace.GetUnit()) {
-    inherited = PR_TRUE;
-    text->mWhiteSpace = parentText->mWhiteSpace;
-  }
-
+  // white-space: enum, normal, inherit, initial
+  SetDiscrete(textData.mWhiteSpace, text->mWhiteSpace, inherited,
+              SETDSC_ENUMERATED | SETDSC_NORMAL, parentText->mWhiteSpace,
+              NS_STYLE_WHITESPACE_NORMAL, 0, 0,
+              NS_STYLE_WHITESPACE_NORMAL, 0);
+ 
   // word-spacing: normal, length, inherit
   SetCoord(textData.mWordSpacing, text->mWordSpacing, parentText->mWordSpacing,
            SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
            aContext, mPresContext, inherited);
 
-  // word-wrap: enum, normal, inherit
-  if (eCSSUnit_Enumerated == textData.mWordWrap.GetUnit()) {
-    text->mWordWrap = textData.mWordWrap.GetIntValue();
-  }
-  else if (eCSSUnit_Normal == textData.mWordWrap.GetUnit() ||
-           eCSSUnit_Initial == textData.mWordWrap.GetUnit()) {
-    text->mWordWrap = NS_STYLE_WORDWRAP_NORMAL;
-  }
-  else if (eCSSUnit_Inherit == textData.mWordWrap.GetUnit()) {
-    inherited = PR_TRUE;
-    text->mWordWrap = parentText->mWordWrap;
-  }
+  // word-wrap: enum, normal, inherit, initial
+  SetDiscrete(textData.mWordWrap, text->mWordWrap, inherited,
+              SETDSC_ENUMERATED | SETDSC_NORMAL, parentText->mWordWrap,
+              NS_STYLE_WORDWRAP_NORMAL, 0, 0,
+              NS_STYLE_WORDWRAP_NORMAL, 0);
 
   COMPUTE_END_INHERITED(Text, text)
 }
@@ -2824,7 +2895,7 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
     }
   }
 
-  // text-decoration: none, enum (bit field), inherit
+  // text-decoration: none, enum (bit field), inherit, initial
   if (eCSSUnit_Enumerated == textData.mDecoration.GetUnit()) {
     PRInt32 td = textData.mDecoration.GetIntValue();
     text->mTextDecoration = td;
@@ -2839,27 +2910,19 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
       }
     }
   }
-  else if (eCSSUnit_None == textData.mDecoration.GetUnit() ||
-           eCSSUnit_Initial == textData.mDecoration.GetUnit()) {
-    text->mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
-  }
-  else if (eCSSUnit_Inherit == textData.mDecoration.GetUnit()) {
-    inherited = PR_TRUE;
-    text->mTextDecoration = parentText->mTextDecoration;
-  }
+  else
+    SetDiscrete(textData.mDecoration, text->mTextDecoration, inherited,
+                SETDSC_NONE,
+                parentText->mTextDecoration,
+                NS_STYLE_TEXT_DECORATION_NONE, 0,
+                NS_STYLE_TEXT_DECORATION_NONE, 0, 0);
 
-  // unicode-bidi: enum, normal, inherit
-  if (eCSSUnit_Normal == textData.mUnicodeBidi.GetUnit() ||
-      eCSSUnit_Initial == textData.mUnicodeBidi.GetUnit()) {
-    text->mUnicodeBidi = NS_STYLE_UNICODE_BIDI_NORMAL;
-  }
-  else if (eCSSUnit_Enumerated == textData.mUnicodeBidi.GetUnit() ) {
-    text->mUnicodeBidi = textData.mUnicodeBidi.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == textData.mUnicodeBidi.GetUnit() ) {
-    inherited = PR_TRUE;
-    text->mUnicodeBidi = parentText->mUnicodeBidi;
-  }
+  // unicode-bidi: enum, normal, inherit, initial
+  SetDiscrete(textData.mUnicodeBidi, text->mUnicodeBidi, inherited,
+              SETDSC_ENUMERATED | SETDSC_NORMAL,
+              parentText->mUnicodeBidi,
+              NS_STYLE_UNICODE_BIDI_NORMAL, 0, 0,
+              NS_STYLE_UNICODE_BIDI_NORMAL, 0);
 
   COMPUTE_END_RESET(TextReset, text)
 }
@@ -2936,49 +2999,31 @@ nsRuleNode::ComputeUserInterfaceData(void* aStartStruct,
     }
   }
 
-  // user-input: auto, none, enum, inherit
-  if (eCSSUnit_Enumerated == uiData.mUserInput.GetUnit()) {
-    ui->mUserInput = uiData.mUserInput.GetIntValue();
-  }
-  else if (eCSSUnit_Auto == uiData.mUserInput.GetUnit() ||
-           eCSSUnit_Initial == uiData.mUserInput.GetUnit()) {
-    ui->mUserInput = NS_STYLE_USER_INPUT_AUTO;
-  }
-  else if (eCSSUnit_None == uiData.mUserInput.GetUnit()) {
-    ui->mUserInput = NS_STYLE_USER_INPUT_NONE;
-  }
-  else if (eCSSUnit_Inherit == uiData.mUserInput.GetUnit()) {
-    inherited = PR_TRUE;
-    ui->mUserInput = parentUI->mUserInput;
-  }
+  // user-input: auto, none, enum, inherit, initial
+  SetDiscrete(uiData.mUserInput, ui->mUserInput, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE | SETDSC_AUTO,
+              parentUI->mUserInput,
+              NS_STYLE_USER_INPUT_AUTO,
+              NS_STYLE_USER_INPUT_AUTO,
+              NS_STYLE_USER_INPUT_NONE,
+              0, 0);
 
-  // user-modify: enum, inherit
-  if (eCSSUnit_Enumerated == uiData.mUserModify.GetUnit()) {
-    ui->mUserModify = uiData.mUserModify.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == uiData.mUserModify.GetUnit()) {
-    inherited = PR_TRUE;
-    ui->mUserModify = parentUI->mUserModify;
-  }
-  else if (eCSSUnit_Initial == uiData.mUserModify.GetUnit()) {
-    ui->mUserModify = NS_STYLE_USER_MODIFY_READ_ONLY;
-  }
+  // user-modify: enum, inherit, initial
+  SetDiscrete(uiData.mUserModify, ui->mUserModify, inherited,
+              SETDSC_ENUMERATED,
+              parentUI->mUserModify,
+              NS_STYLE_USER_MODIFY_READ_ONLY, 
+              0, 0, 0, 0);
 
-  // user-focus: none, normal, enum, inherit
-  if (eCSSUnit_Enumerated == uiData.mUserFocus.GetUnit()) {
-    ui->mUserFocus = uiData.mUserFocus.GetIntValue();
-  }
-  else if (eCSSUnit_None == uiData.mUserFocus.GetUnit() ||
-           eCSSUnit_Initial == uiData.mUserFocus.GetUnit()) {
-    ui->mUserFocus = NS_STYLE_USER_FOCUS_NONE;
-  }
-  else if (eCSSUnit_Normal == uiData.mUserFocus.GetUnit()) {
-    ui->mUserFocus = NS_STYLE_USER_FOCUS_NORMAL;
-  }
-  else if (eCSSUnit_Inherit == uiData.mUserFocus.GetUnit()) {
-    inherited = PR_TRUE;
-    ui->mUserFocus = parentUI->mUserFocus;
-  }
+  // user-focus: none, normal, enum, inherit, initial
+  SetDiscrete(uiData.mUserFocus, ui->mUserFocus, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE | SETDSC_NORMAL,
+              parentUI->mUserFocus,
+              NS_STYLE_USER_FOCUS_NONE,
+              0,
+              NS_STYLE_USER_FOCUS_NONE,
+              NS_STYLE_USER_FOCUS_NORMAL,
+              0);
 
   COMPUTE_END_INHERITED(UserInterface, ui)
 }
@@ -2992,47 +3037,32 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
 {
   COMPUTE_START_RESET(UIReset, (), ui, parentUI, UserInterface, uiData)
   
-  // user-select: none, enum, inherit
-  if (eCSSUnit_Enumerated == uiData.mUserSelect.GetUnit()) {
-    ui->mUserSelect = uiData.mUserSelect.GetIntValue();
-  }
-  else if (eCSSUnit_None == uiData.mUserSelect.GetUnit()) {
-    ui->mUserSelect = NS_STYLE_USER_SELECT_NONE;
-  }
-  else if (eCSSUnit_Inherit == uiData.mUserSelect.GetUnit()) {
-    inherited = PR_TRUE;
-    ui->mUserSelect = parentUI->mUserSelect;
-  }
-  else if (eCSSUnit_Initial == uiData.mUserSelect.GetUnit() ||
-           eCSSUnit_Auto == uiData.mUserSelect.GetUnit()) {
-    ui->mUserSelect = NS_STYLE_USER_SELECT_AUTO;
-  }
+  // user-select: auto, none, enum, inherit, initial
+  SetDiscrete(uiData.mUserSelect, ui->mUserSelect, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE | SETDSC_AUTO,
+              parentUI->mUserSelect,
+              NS_STYLE_USER_SELECT_AUTO,
+              NS_STYLE_USER_SELECT_AUTO,
+              NS_STYLE_USER_SELECT_NONE,
+              0, 0);
 
-  // ime-mode: auto, normal, enum, inherit
-  if (eCSSUnit_Auto == uiData.mIMEMode.GetUnit() ||
-      eCSSUnit_Initial == uiData.mIMEMode.GetUnit()) {
-    ui->mIMEMode = NS_STYLE_IME_MODE_AUTO;
-  }
-  else if (eCSSUnit_Normal == uiData.mIMEMode.GetUnit()) {
-    ui->mIMEMode = NS_STYLE_IME_MODE_NORMAL;
-  }
-  else if (eCSSUnit_Enumerated == uiData.mIMEMode.GetUnit()) {
-    ui->mIMEMode = uiData.mIMEMode.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == uiData.mIMEMode.GetUnit()) {
-    inherited = PR_TRUE;
-    ui->mIMEMode = parentUI->mIMEMode;
-  }
+  // ime-mode: auto, normal, enum, inherit, initial
+  SetDiscrete(uiData.mIMEMode, ui->mIMEMode, inherited,
+              SETDSC_ENUMERATED | SETDSC_NORMAL | SETDSC_AUTO,
+              parentUI->mIMEMode,
+              NS_STYLE_IME_MODE_AUTO,
+              NS_STYLE_IME_MODE_AUTO,
+              0,
+              NS_STYLE_IME_MODE_NORMAL,
+              0);
 
-  // force-broken-image-icons: integer
-  if (eCSSUnit_Integer == uiData.mForceBrokenImageIcon.GetUnit()) {
-    ui->mForceBrokenImageIcon = uiData.mForceBrokenImageIcon.GetIntValue();
-  } else if (eCSSUnit_Inherit == uiData.mForceBrokenImageIcon.GetUnit()) {
-    inherited = PR_TRUE;
-    ui->mForceBrokenImageIcon = parentUI->mForceBrokenImageIcon;
-  } else if (eCSSUnit_Initial == uiData.mForceBrokenImageIcon.GetUnit()) {
-    ui->mForceBrokenImageIcon = 0;
-  }
+  // force-broken-image-icons: integer, inherit, initial
+  SetDiscrete(uiData.mForceBrokenImageIcon, ui->mForceBrokenImageIcon,
+              inherited,
+              SETDSC_INTEGER,
+              parentUI->mForceBrokenImageIcon,
+              0, 0, 0, 0, 0);
+
   COMPUTE_END_RESET(UIReset, ui)
 }
 
@@ -3053,49 +3083,21 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   if (parentDisplay == display && generatedContent)
     parentDisplay = parentContext->GetStyleDisplay();
 
-  // opacity: factor, inherit
-  if (eCSSUnit_Number == displayData.mOpacity.GetUnit()) {
-    display->mOpacity = displayData.mOpacity.GetFloatValue();
-    if (display->mOpacity > 1.0f)
-      display->mOpacity = 1.0f;
-    if (display->mOpacity < 0.0f)
-      display->mOpacity = 0.0f;
-  }
-  else if (eCSSUnit_Inherit == displayData.mOpacity.GetUnit()) {
-    inherited = PR_TRUE;
-    display->mOpacity = parentDisplay->mOpacity;
-  }
-  else if (eCSSUnit_Initial == displayData.mOpacity.GetUnit()) {
-    display->mOpacity = 1.0f;
-  }
+  // opacity: factor, inherit, initial
+  SetFactor(displayData.mOpacity, display->mOpacity, inherited,
+            parentDisplay->mOpacity, 1.0f, SETFCT_OPACITY);
 
-  // display: enum, none, inherit
-  if (eCSSUnit_Enumerated == displayData.mDisplay.GetUnit()) {
-    display->mDisplay = displayData.mDisplay.GetIntValue();
-  }
-  else if (eCSSUnit_None == displayData.mDisplay.GetUnit()) {
-    display->mDisplay = NS_STYLE_DISPLAY_NONE;
-  }
-  else if (eCSSUnit_Inherit == displayData.mDisplay.GetUnit()) {
-    inherited = PR_TRUE;
-    display->mDisplay = parentDisplay->mDisplay;
-  }
-  else if (eCSSUnit_Initial == displayData.mDisplay.GetUnit()) {
-    display->mDisplay = NS_STYLE_DISPLAY_INLINE;
-  }
+  // display: enum, none, inherit, initial
+  SetDiscrete(displayData.mDisplay, display->mDisplay, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentDisplay->mDisplay,
+              NS_STYLE_DISPLAY_INLINE, 0,
+              NS_STYLE_DISPLAY_NONE, 0, 0);
 
-  // appearance: enum, none, inherit
-  if (eCSSUnit_Enumerated == displayData.mAppearance.GetUnit()) {
-    display->mAppearance = displayData.mAppearance.GetIntValue();
-  }
-  else if (eCSSUnit_None == displayData.mAppearance.GetUnit() ||
-           eCSSUnit_Initial == displayData.mAppearance.GetUnit()) {
-    display->mAppearance = NS_THEME_NONE;
-  }
-  else if (eCSSUnit_Inherit == displayData.mAppearance.GetUnit()) {
-    inherited = PR_TRUE;
-    display->mAppearance = parentDisplay->mAppearance;
-  }
+  // appearance: enum, none, inherit, initial
+  SetDiscrete(displayData.mAppearance, display->mAppearance, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentDisplay->mAppearance,
+              NS_THEME_NONE, 0,
+              NS_THEME_NONE, 0, 0);
 
   // binding: url, none, inherit
   if (eCSSUnit_URL == displayData.mBinding.GetUnit()) {
@@ -3117,30 +3119,16 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     display->mBinding = parentDisplay->mBinding;
   }
 
-  // position: enum, inherit
-  if (eCSSUnit_Enumerated == displayData.mPosition.GetUnit()) {
-    display->mPosition = displayData.mPosition.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == displayData.mPosition.GetUnit()) {
-    inherited = PR_TRUE;
-    display->mPosition = parentDisplay->mPosition;
-  }
-  else if (eCSSUnit_Initial == displayData.mPosition.GetUnit()) {
-    display->mPosition = NS_STYLE_POSITION_STATIC;
-  }
+  // position: enum, inherit, initial
+  SetDiscrete(displayData.mPosition, display->mPosition, inherited,
+              SETDSC_ENUMERATED, parentDisplay->mPosition,
+              NS_STYLE_POSITION_STATIC, 0, 0, 0, 0);
 
-  // clear: enum, none, inherit
-  if (eCSSUnit_Enumerated == displayData.mClear.GetUnit()) {
-    display->mBreakType = displayData.mClear.GetIntValue();
-  }
-  else if (eCSSUnit_None == displayData.mClear.GetUnit() ||
-           eCSSUnit_Initial == displayData.mClear.GetUnit()) {
-    display->mBreakType = NS_STYLE_CLEAR_NONE;
-  }
-  else if (eCSSUnit_Inherit == displayData.mClear.GetUnit()) {
-    inherited = PR_TRUE;
-    display->mBreakType = parentDisplay->mBreakType;
-  }
+  // clear: enum, none, inherit, initial
+  SetDiscrete(displayData.mClear, display->mBreakType, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentDisplay->mBreakType,
+              NS_STYLE_CLEAR_NONE, 0,
+              NS_STYLE_CLEAR_NONE, 0, 0);
 
   // temp fix for bug 24000
   // Map 'auto' and 'avoid' to PR_FALSE, and 'always', 'left', and
@@ -3172,48 +3160,27 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
   }
   // end temp fix
 
-  // float: enum, none, inherit
-  if (eCSSUnit_Enumerated == displayData.mFloat.GetUnit()) {
-    display->mFloats = displayData.mFloat.GetIntValue();
-  }
-  else if (eCSSUnit_None == displayData.mFloat.GetUnit() ||
-           eCSSUnit_Initial == displayData.mFloat.GetUnit()) {
-    display->mFloats = NS_STYLE_FLOAT_NONE;
-  }
-  else if (eCSSUnit_Inherit == displayData.mFloat.GetUnit()) {
-    inherited = PR_TRUE;
-    display->mFloats = parentDisplay->mFloats;
-  }
+  // float: enum, none, inherit, initial
+  SetDiscrete(displayData.mFloat, display->mFloats, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentDisplay->mFloats,
+              NS_STYLE_FLOAT_NONE, 0,
+              NS_STYLE_FLOAT_NONE, 0, 0);
 
-  // overflow-x: enum, auto, inherit
-  if (eCSSUnit_Enumerated == displayData.mOverflowX.GetUnit()) {
-    display->mOverflowX = displayData.mOverflowX.GetIntValue();
-  }
-  else if (eCSSUnit_Auto == displayData.mOverflowX.GetUnit()) {
-    display->mOverflowX = NS_STYLE_OVERFLOW_AUTO;
-  }
-  else if (eCSSUnit_Inherit == displayData.mOverflowX.GetUnit()) {
-    inherited = PR_TRUE;
-    display->mOverflowX = parentDisplay->mOverflowX;
-  }
-  else if (eCSSUnit_Initial == displayData.mOverflowX.GetUnit()) {
-    display->mOverflowX = NS_STYLE_OVERFLOW_VISIBLE;
-  }
+  // overflow-x: enum, auto, inherit, initial
+  SetDiscrete(displayData.mOverflowX, display->mOverflowX, inherited,
+              SETDSC_ENUMERATED | SETDSC_AUTO,
+              parentDisplay->mOverflowX,
+              NS_STYLE_OVERFLOW_VISIBLE,
+              NS_STYLE_OVERFLOW_AUTO,
+              0, 0, 0);
 
-  // overflow-y: enum, auto, inherit
-  if (eCSSUnit_Enumerated == displayData.mOverflowY.GetUnit()) {
-    display->mOverflowY = displayData.mOverflowY.GetIntValue();
-  }
-  else if (eCSSUnit_Auto == displayData.mOverflowY.GetUnit()) {
-    display->mOverflowY = NS_STYLE_OVERFLOW_AUTO;
-  }
-  else if (eCSSUnit_Inherit == displayData.mOverflowY.GetUnit()) {
-    inherited = PR_TRUE;
-    display->mOverflowY = parentDisplay->mOverflowY;
-  }
-  else if (eCSSUnit_Initial == displayData.mOverflowY.GetUnit()) {
-    display->mOverflowY = NS_STYLE_OVERFLOW_VISIBLE;
-  }
+  // overflow-y: enum, auto, inherit, initial
+  SetDiscrete(displayData.mOverflowY, display->mOverflowY, inherited,
+              SETDSC_ENUMERATED | SETDSC_AUTO,
+              parentDisplay->mOverflowY,
+              NS_STYLE_OVERFLOW_VISIBLE,
+              NS_STYLE_OVERFLOW_AUTO,
+              0, 0, 0);
 
   // CSS3 overflow-x and overflow-y require some fixup as well in some
   // cases.  NS_STYLE_OVERFLOW_VISIBLE and NS_STYLE_OVERFLOW_CLIP are
@@ -3366,35 +3333,18 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
                           visibility, parentVisibility,
                           Display, displayData)
 
-  // direction: enum, inherit
-  if (eCSSUnit_Enumerated == displayData.mDirection.GetUnit()) {
-    visibility->mDirection = displayData.mDirection.GetIntValue();
-    if (NS_STYLE_DIRECTION_RTL == visibility->mDirection)
-      mPresContext->SetBidiEnabled();
-  }
-  else if (eCSSUnit_Inherit == displayData.mDirection.GetUnit()) {
-    inherited = PR_TRUE;
-    visibility->mDirection = parentVisibility->mDirection;
-  }
-  else if (eCSSUnit_Initial == displayData.mDirection.GetUnit()) {
-    PRUint32 bidiOptions = mPresContext->GetBidi();
-    if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL)
-      visibility->mDirection = NS_STYLE_DIRECTION_RTL;
-    else
-      visibility->mDirection = NS_STYLE_DIRECTION_LTR;
-  }
+  // direction: enum, inherit, initial
+  SetDiscrete(displayData.mDirection, visibility->mDirection, inherited,
+              SETDSC_ENUMERATED, parentVisibility->mDirection,
+              (GET_BIDI_OPTION_DIRECTION(mPresContext->GetBidi())
+               == IBMBIDI_TEXTDIRECTION_RTL)
+              ? NS_STYLE_DIRECTION_RTL : NS_STYLE_DIRECTION_LTR,
+              0, 0, 0, 0);
 
-  // visibility: enum, inherit
-  if (eCSSUnit_Enumerated == displayData.mVisibility.GetUnit()) {
-    visibility->mVisible = displayData.mVisibility.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == displayData.mVisibility.GetUnit()) {
-    inherited = PR_TRUE;
-    visibility->mVisible = parentVisibility->mVisible;
-  }
-  else if (eCSSUnit_Initial == displayData.mVisibility.GetUnit()) {
-    visibility->mVisible = NS_STYLE_VISIBILITY_VISIBLE;
-  }
+  // visibility: enum, inherit, initial
+  SetDiscrete(displayData.mVisibility, visibility->mVisible, inherited,
+              SETDSC_ENUMERATED, parentVisibility->mVisible,
+              NS_STYLE_VISIBILITY_VISIBLE, 0, 0, 0, 0);
 
   // lang: string, inherit
   // this is not a real CSS property, it is a html attribute mapped to CSS struture
@@ -3490,62 +3440,31 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
     bg->mBackgroundFlags |= NS_STYLE_BG_IMAGE_NONE;
   }
 
-  // background-repeat: enum, inherit
-  if (eCSSUnit_Enumerated == colorData.mBackRepeat.GetUnit()) {
-    bg->mBackgroundRepeat = colorData.mBackRepeat.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == colorData.mBackRepeat.GetUnit()) {
-    inherited = PR_TRUE;
-    bg->mBackgroundRepeat = parentBG->mBackgroundRepeat;
-  }
-  else if (eCSSUnit_Initial == colorData.mBackRepeat.GetUnit()) {
-    bg->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
-  }
+  // background-repeat: enum, inherit, initial
+  SetDiscrete(colorData.mBackRepeat, bg->mBackgroundRepeat, inherited,
+              SETDSC_ENUMERATED, parentBG->mBackgroundRepeat,
+              NS_STYLE_BG_REPEAT_XY, 0, 0, 0, 0);
 
-  // background-attachment: enum, inherit
-  if (eCSSUnit_Enumerated == colorData.mBackAttachment.GetUnit()) {
-    bg->mBackgroundAttachment = colorData.mBackAttachment.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == colorData.mBackAttachment.GetUnit()) {
-    inherited = PR_TRUE;
-    bg->mBackgroundAttachment = parentBG->mBackgroundAttachment;
-  }
-  else if (eCSSUnit_Initial == colorData.mBackAttachment.GetUnit()) {
-    bg->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-  }
+  // background-attachment: enum, inherit, initial
+  SetDiscrete(colorData.mBackAttachment, bg->mBackgroundAttachment, inherited,
+              SETDSC_ENUMERATED, parentBG->mBackgroundAttachment,
+              NS_STYLE_BG_ATTACHMENT_SCROLL, 0, 0, 0, 0);
 
   // background-clip: enum, inherit, initial
-  if (eCSSUnit_Enumerated == colorData.mBackClip.GetUnit()) {
-    bg->mBackgroundClip = colorData.mBackClip.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == colorData.mBackClip.GetUnit()) {
-    bg->mBackgroundClip = parentBG->mBackgroundClip;
-  }
-  else if (eCSSUnit_Initial == colorData.mBackClip.GetUnit()) {
-    bg->mBackgroundClip = NS_STYLE_BG_CLIP_BORDER;
-  }
+  SetDiscrete(colorData.mBackClip, bg->mBackgroundClip, inherited,
+              SETDSC_ENUMERATED, parentBG->mBackgroundClip,
+              NS_STYLE_BG_CLIP_BORDER, 0, 0, 0, 0);
 
   // background-inline-policy: enum, inherit, initial
-  if (eCSSUnit_Enumerated == colorData.mBackInlinePolicy.GetUnit()) {
-    bg->mBackgroundInlinePolicy = colorData.mBackInlinePolicy.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == colorData.mBackInlinePolicy.GetUnit()) {
-    bg->mBackgroundInlinePolicy = parentBG->mBackgroundInlinePolicy;
-  }
-  else if (eCSSUnit_Initial == colorData.mBackInlinePolicy.GetUnit()) {
-    bg->mBackgroundInlinePolicy = NS_STYLE_BG_INLINE_POLICY_CONTINUOUS;
-  }
+  SetDiscrete(colorData.mBackInlinePolicy, bg->mBackgroundInlinePolicy,
+              inherited, SETDSC_ENUMERATED,
+              parentBG->mBackgroundInlinePolicy,
+              NS_STYLE_BG_INLINE_POLICY_CONTINUOUS, 0, 0, 0, 0);
 
   // background-origin: enum, inherit, initial
-  if (eCSSUnit_Enumerated == colorData.mBackOrigin.GetUnit()) {
-    bg->mBackgroundOrigin = colorData.mBackOrigin.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == colorData.mBackOrigin.GetUnit()) {
-    bg->mBackgroundOrigin = parentBG->mBackgroundOrigin;
-  }
-  else if (eCSSUnit_Initial == colorData.mBackOrigin.GetUnit()) {
-    bg->mBackgroundOrigin = NS_STYLE_BG_ORIGIN_PADDING;
-  }
+  SetDiscrete(colorData.mBackOrigin, bg->mBackgroundOrigin, inherited,
+              SETDSC_ENUMERATED, parentBG->mBackgroundOrigin,
+              NS_STYLE_BG_ORIGIN_PADDING, 0, 0, 0, 0);
 
   // background-position: enum, length, percent (flags), inherit
   if (eCSSUnit_Percent == colorData.mBackPosition.mXValue.GetUnit()) {
@@ -3868,16 +3787,10 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     }
   }
 
-  // float-edge: enum, inherit
-  if (eCSSUnit_Enumerated == marginData.mFloatEdge.GetUnit())
-    border->mFloatEdge = marginData.mFloatEdge.GetIntValue();
-  else if (eCSSUnit_Inherit == marginData.mFloatEdge.GetUnit()) {
-    inherited = PR_TRUE;
-    border->mFloatEdge = parentBorder->mFloatEdge;
-  }
-  else if (eCSSUnit_Initial == marginData.mFloatEdge.GetUnit()) {
-    border->mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
-  }
+  // float-edge: enum, inherit, initial
+  SetDiscrete(marginData.mFloatEdge, border->mFloatEdge, inherited,
+              SETDSC_ENUMERATED, parentBorder->mFloatEdge,
+              NS_STYLE_FLOAT_EDGE_CONTENT, 0, 0, 0, 0);
   
   // border-image
   if (eCSSUnit_Array == marginData.mBorderImage.GetUnit()) {
@@ -4059,7 +3972,8 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
     }
   }
 
-  // outline-style: auto, enum, none, inherit
+  // outline-style: auto, enum, none, inherit, initial
+  // cannot use SetDiscrete because of SetOutlineStyle
   if (eCSSUnit_Enumerated == marginData.mOutlineStyle.GetUnit())
     outline->SetOutlineStyle(marginData.mOutlineStyle.GetIntValue());
   else if (eCSSUnit_None == marginData.mOutlineStyle.GetUnit() ||
@@ -4085,20 +3999,11 @@ nsRuleNode::ComputeListData(void* aStartStruct,
 {
   COMPUTE_START_INHERITED(List, (), list, parentList, List, listData)
 
-  // list-style-type: enum, none, inherit
-  if (eCSSUnit_Enumerated == listData.mType.GetUnit()) {
-    list->mListStyleType = listData.mType.GetIntValue();
-  }
-  else if (eCSSUnit_None == listData.mType.GetUnit()) {
-    list->mListStyleType = NS_STYLE_LIST_STYLE_NONE;
-  }
-  else if (eCSSUnit_Inherit == listData.mType.GetUnit()) {
-    inherited = PR_TRUE;
-    list->mListStyleType = parentList->mListStyleType;
-  }
-  else if (eCSSUnit_Initial == listData.mType.GetUnit()) {
-    list->mListStyleType = NS_STYLE_LIST_STYLE_DISC;
-  }
+  // list-style-type: enum, none, inherit, initial
+  SetDiscrete(listData.mType, list->mListStyleType, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentList->mListStyleType,
+              NS_STYLE_LIST_STYLE_DISC, 0,
+              NS_STYLE_LIST_STYLE_NONE, 0, 0);
 
   // list-style-image: url, none, inherit
   if (eCSSUnit_Image == listData.mImage.GetUnit()) {
@@ -4113,17 +4018,10 @@ nsRuleNode::ComputeListData(void* aStartStruct,
     list->mListStyleImage = parentList->mListStyleImage;
   }
 
-  // list-style-position: enum, inherit
-  if (eCSSUnit_Enumerated == listData.mPosition.GetUnit()) {
-    list->mListStylePosition = listData.mPosition.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == listData.mPosition.GetUnit()) {
-    inherited = PR_TRUE;
-    list->mListStylePosition = parentList->mListStylePosition;
-  }
-  else if (eCSSUnit_Initial == listData.mPosition.GetUnit()) {
-    list->mListStylePosition = NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
-  }
+  // list-style-position: enum, inherit, initial
+  SetDiscrete(listData.mPosition, list->mListStylePosition, inherited,
+              SETDSC_ENUMERATED, parentList->mListStylePosition,
+              NS_STYLE_LIST_STYLE_POSITION_OUTSIDE, 0, 0, 0, 0);
 
   // image region property: length, auto, inherit
   if (eCSSUnit_Inherit == listData.mImageRegion.mTop.GetUnit()) { // if one is inherit, they all are
@@ -4201,17 +4099,10 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
            SETCOORD_LPOH | SETCOORD_INITIAL_NONE, aContext,
            mPresContext, inherited);
 
-  // box-sizing: enum, inherit
-  if (eCSSUnit_Enumerated == posData.mBoxSizing.GetUnit()) {
-    pos->mBoxSizing = posData.mBoxSizing.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == posData.mBoxSizing.GetUnit()) {
-    inherited = PR_TRUE;
-    pos->mBoxSizing = parentPos->mBoxSizing;
-  }
-  else if (eCSSUnit_Initial == posData.mBoxSizing.GetUnit()) {
-    pos->mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
-  }
+  // box-sizing: enum, inherit, initial
+  SetDiscrete(posData.mBoxSizing, pos->mBoxSizing, inherited,
+              SETDSC_ENUMERATED, parentPos->mBoxSizing,
+              NS_STYLE_BOX_SIZING_CONTENT, 0, 0, 0, 0);
 
   // z-index
   if (! SetCoord(posData.mZIndex, pos->mZIndex, parentPos->mZIndex,
@@ -4236,16 +4127,12 @@ nsRuleNode::ComputeTableData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Table, (), table, parentTable, Table, tableData)
 
-  // table-layout: auto, enum, inherit
-  if (eCSSUnit_Enumerated == tableData.mLayout.GetUnit())
-    table->mLayoutStrategy = tableData.mLayout.GetIntValue();
-  else if (eCSSUnit_Auto == tableData.mLayout.GetUnit() ||
-           eCSSUnit_Initial == tableData.mLayout.GetUnit())
-    table->mLayoutStrategy = NS_STYLE_TABLE_LAYOUT_AUTO;
-  else if (eCSSUnit_Inherit == tableData.mLayout.GetUnit()) {
-    inherited = PR_TRUE;
-    table->mLayoutStrategy = parentTable->mLayoutStrategy;
-  }
+  // table-layout: auto, enum, inherit, initial
+  SetDiscrete(tableData.mLayout, table->mLayoutStrategy, inherited,
+              SETDSC_ENUMERATED | SETDSC_AUTO,
+              parentTable->mLayoutStrategy,
+              NS_STYLE_TABLE_LAYOUT_AUTO,
+              NS_STYLE_TABLE_LAYOUT_AUTO, 0, 0, 0);
 
   // rules: enum (not a real CSS prop)
   if (eCSSUnit_Enumerated == tableData.mRules.GetUnit())
@@ -4278,17 +4165,10 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
   COMPUTE_START_INHERITED(TableBorder, (mPresContext), table, parentTable,
                           Table, tableData)
 
-  // border-collapse: enum, inherit
-  if (eCSSUnit_Enumerated == tableData.mBorderCollapse.GetUnit()) {
-    table->mBorderCollapse = tableData.mBorderCollapse.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == tableData.mBorderCollapse.GetUnit()) {
-    inherited = PR_TRUE;
-    table->mBorderCollapse = parentTable->mBorderCollapse;
-  }
-  else if (eCSSUnit_Initial == tableData.mBorderCollapse.GetUnit()) {
-    table->mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
-  }
+  // border-collapse: enum, inherit, initial
+  SetDiscrete(tableData.mBorderCollapse, table->mBorderCollapse, inherited,
+              SETDSC_ENUMERATED, parentTable->mBorderCollapse,
+              NS_STYLE_BORDER_SEPARATE, 0, 0, 0, 0);
 
   // border-spacing-x: length, inherit
   SetCoord(tableData.mBorderSpacing.mXValue, table->mBorderSpacingX,
@@ -4299,33 +4179,18 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
            parentTable->mBorderSpacingY, SETCOORD_LH | SETCOORD_INITIAL_ZERO,
            aContext, mPresContext, inherited);
 
-  // caption-side: enum, inherit
-  if (eCSSUnit_Enumerated == tableData.mCaptionSide.GetUnit()) {
-    table->mCaptionSide = tableData.mCaptionSide.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == tableData.mCaptionSide.GetUnit()) {
-    inherited = PR_TRUE;
-    table->mCaptionSide = parentTable->mCaptionSide;
-  }
-  else if (eCSSUnit_Initial == tableData.mCaptionSide.GetUnit()) {
-    table->mCaptionSide = NS_STYLE_CAPTION_SIDE_TOP;
-  }
+  // caption-side: enum, inherit, initial
+  SetDiscrete(tableData.mCaptionSide, table->mCaptionSide, inherited,
+              SETDSC_ENUMERATED, parentTable->mCaptionSide,
+              NS_STYLE_CAPTION_SIDE_TOP, 0, 0, 0, 0);
 
-  // empty-cells: enum, inherit
-  if (eCSSUnit_Enumerated == tableData.mEmptyCells.GetUnit()) {
-    table->mEmptyCells = tableData.mEmptyCells.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == tableData.mEmptyCells.GetUnit()) {
-    inherited = PR_TRUE;
-    table->mEmptyCells = parentTable->mEmptyCells;
-  }
-  else if (eCSSUnit_Initial == tableData.mEmptyCells.GetUnit()) {
-    table->mEmptyCells =
-      (mPresContext->CompatibilityMode() == eCompatibility_NavQuirks)
-        ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND     
-        : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
-
-  }
+  // empty-cells: enum, inherit, initial
+  SetDiscrete(tableData.mEmptyCells, table->mEmptyCells, inherited,
+              SETDSC_ENUMERATED, parentTable->mEmptyCells,
+              (mPresContext->CompatibilityMode() == eCompatibility_NavQuirks)
+              ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND     
+              : NS_STYLE_TABLE_EMPTY_CELLS_SHOW,
+              0, 0, 0, 0);
 
   COMPUTE_END_INHERITED(TableBorder, table)
 }
@@ -4576,75 +4441,34 @@ nsRuleNode::ComputeXULData(void* aStartStruct,
 {
   COMPUTE_START_RESET(XUL, (), xul, parentXUL, XUL, xulData)
 
-  // box-align: enum, inherit
-  if (eCSSUnit_Enumerated == xulData.mBoxAlign.GetUnit()) {
-    xul->mBoxAlign = xulData.mBoxAlign.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == xulData.mBoxAlign.GetUnit()) {
-    inherited = PR_TRUE;
-    xul->mBoxAlign = parentXUL->mBoxAlign;
-  }
-  else if (eCSSUnit_Initial == xulData.mBoxAlign.GetUnit()) {
-    xul->mBoxAlign = NS_STYLE_BOX_ALIGN_STRETCH;
-  }
+  // box-align: enum, inherit, initial
+  SetDiscrete(xulData.mBoxAlign, xul->mBoxAlign, inherited,
+              SETDSC_ENUMERATED, parentXUL->mBoxAlign,
+              NS_STYLE_BOX_ALIGN_STRETCH, 0, 0, 0, 0);
 
-  // box-direction: enum, inherit
-  if (eCSSUnit_Enumerated == xulData.mBoxDirection.GetUnit()) {
-    xul->mBoxDirection = xulData.mBoxDirection.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == xulData.mBoxDirection.GetUnit()) {
-    inherited = PR_TRUE;
-    xul->mBoxDirection = parentXUL->mBoxDirection;
-  }
-  else if (eCSSUnit_Initial == xulData.mBoxDirection.GetUnit()) {
-    xul->mBoxDirection = NS_STYLE_BOX_DIRECTION_NORMAL;
-  }
+  // box-direction: enum, inherit, initial
+  SetDiscrete(xulData.mBoxDirection, xul->mBoxDirection, inherited,
+              SETDSC_ENUMERATED, parentXUL->mBoxDirection,
+              NS_STYLE_BOX_DIRECTION_NORMAL, 0, 0, 0, 0);
 
   // box-flex: factor, inherit
-  if (eCSSUnit_Number == xulData.mBoxFlex.GetUnit()) {
-    xul->mBoxFlex = xulData.mBoxFlex.GetFloatValue();
-  }
-  else if (eCSSUnit_Inherit == xulData.mBoxFlex.GetUnit()) {
-    inherited = PR_TRUE;
-    xul->mBoxFlex = parentXUL->mBoxFlex;
-  }
-  else if (eCSSUnit_Initial == xulData.mBoxFlex.GetUnit()) {
-    xul->mBoxFlex = 0.0f;
-  }
+  SetFactor(xulData.mBoxFlex, xul->mBoxFlex, inherited,
+            parentXUL->mBoxFlex, 0.0f);
 
-  // box-orient: enum, inherit
-  if (eCSSUnit_Enumerated == xulData.mBoxOrient.GetUnit()) {
-    xul->mBoxOrient = xulData.mBoxOrient.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == xulData.mBoxOrient.GetUnit()) {
-    inherited = PR_TRUE;
-    xul->mBoxOrient = parentXUL->mBoxOrient;
-  }
-  else if (eCSSUnit_Initial == xulData.mBoxOrient.GetUnit()) {
-    xul->mBoxOrient = NS_STYLE_BOX_ORIENT_HORIZONTAL;
-  }
+  // box-orient: enum, inherit, initial
+  SetDiscrete(xulData.mBoxOrient, xul->mBoxOrient, inherited,
+              SETDSC_ENUMERATED, parentXUL->mBoxOrient,
+              NS_STYLE_BOX_ORIENT_HORIZONTAL, 0, 0, 0, 0);
 
-  // box-pack: enum, inherit
-  if (eCSSUnit_Enumerated == xulData.mBoxPack.GetUnit()) {
-    xul->mBoxPack = xulData.mBoxPack.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == xulData.mBoxPack.GetUnit()) {
-    inherited = PR_TRUE;
-    xul->mBoxPack = parentXUL->mBoxPack;
-  }
-  else if (eCSSUnit_Initial == xulData.mBoxPack.GetUnit()) {
-    xul->mBoxPack = NS_STYLE_BOX_PACK_START;
-  }
+  // box-pack: enum, inherit, initial
+  SetDiscrete(xulData.mBoxPack, xul->mBoxPack, inherited,
+              SETDSC_ENUMERATED, parentXUL->mBoxPack,
+              NS_STYLE_BOX_PACK_START, 0, 0, 0, 0);
 
-  // box-ordinal-group: integer
-  if (eCSSUnit_Integer == xulData.mBoxOrdinal.GetUnit()) {
-    xul->mBoxOrdinal = xulData.mBoxOrdinal.GetIntValue();
-  } else if (eCSSUnit_Inherit == xulData.mBoxOrdinal.GetUnit()) {
-    inherited = PR_TRUE;
-    xul->mBoxOrdinal = parentXUL->mBoxOrdinal;
-  } else if (eCSSUnit_Initial == xulData.mBoxOrdinal.GetUnit()) {
-    xul->mBoxOrdinal = 1;
-  }
+  // box-ordinal-group: integer, inherit, initial
+  SetDiscrete(xulData.mBoxOrdinal, xul->mBoxOrdinal, inherited,
+              SETDSC_INTEGER, parentXUL->mBoxOrdinal, 1,
+              0, 0, 0, 0);
 
   if (eCSSUnit_Inherit == xulData.mStackSizing.GetUnit()) {
     inherited = PR_TRUE;
@@ -4785,23 +4609,6 @@ SetSVGPaint(const nsCSSValuePair& aValue, const nsStyleSVGPaint& parentPaint,
   }
 }
 
-static void
-SetSVGOpacity(const nsCSSValue& aValue, float parentOpacity, float& opacity, PRBool& aInherited)
-{
-  if (aValue.GetUnit() == eCSSUnit_Inherit) {
-    opacity = parentOpacity;
-    aInherited = PR_TRUE;
-  }
-  else if (aValue.GetUnit() == eCSSUnit_Number) {
-    opacity = aValue.GetFloatValue();
-    opacity = PR_MAX(opacity, 0.0f);
-    opacity = PR_MIN(opacity, 1.0f);
-  }
-  else if (aValue.GetUnit() == eCSSUnit_Initial) {
-    opacity = 1.0f;
-  }
-}
-
 const void* 
 nsRuleNode::ComputeSVGData(void* aStartStruct,
                            const nsRuleDataStruct& aData, 
@@ -4811,67 +4618,38 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
 {
   COMPUTE_START_INHERITED(SVG, (), svg, parentSVG, SVG, SVGData)
 
-  // clip-rule: enum, inherit
-  if (eCSSUnit_Enumerated == SVGData.mClipRule.GetUnit()) {
-    svg->mClipRule = SVGData.mClipRule.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == SVGData.mClipRule.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mClipRule = parentSVG->mClipRule;
-  }
-  else if (eCSSUnit_Initial == SVGData.mClipRule.GetUnit()) {
-    svg->mClipRule = NS_STYLE_FILL_RULE_NONZERO;
-  }
+  // clip-rule: enum, inherit, initial
+  SetDiscrete(SVGData.mClipRule, svg->mClipRule, inherited,
+              SETDSC_ENUMERATED, parentSVG->mClipRule,
+              NS_STYLE_FILL_RULE_NONZERO, 0, 0, 0, 0);
 
-  // color-interpolation: auto, sRGB, linearRGB, inherit
-  if (eCSSUnit_Enumerated == SVGData.mColorInterpolation.GetUnit()) {
-    svg->mColorInterpolation = SVGData.mColorInterpolation.GetIntValue();
-  }
-  else if (eCSSUnit_Auto == SVGData.mColorInterpolation.GetUnit()) {
-    svg->mColorInterpolation = NS_STYLE_COLOR_INTERPOLATION_AUTO;
-  }
-  else if (eCSSUnit_Inherit == SVGData.mColorInterpolation.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mColorInterpolation = parentSVG->mColorInterpolation;
-  }
-  else if (eCSSUnit_Initial == SVGData.mColorInterpolation.GetUnit()) {
-    svg->mColorInterpolation = NS_STYLE_COLOR_INTERPOLATION_SRGB;
-  }
+  // color-interpolation: enum, auto, inherit, initial
+  SetDiscrete(SVGData.mColorInterpolation, svg->mColorInterpolation, inherited,
+              SETDSC_ENUMERATED | SETDSC_AUTO,
+              parentSVG->mColorInterpolation,
+              NS_STYLE_COLOR_INTERPOLATION_SRGB,
+              NS_STYLE_COLOR_INTERPOLATION_AUTO, 0, 0, 0);
 
-  // color-interpolation-filters: auto, sRGB, linearRGB, inherit
-  if (eCSSUnit_Enumerated == SVGData.mColorInterpolationFilters.GetUnit()) {
-    svg->mColorInterpolationFilters = SVGData.mColorInterpolationFilters.GetIntValue();
-  }
-  else if (eCSSUnit_Auto == SVGData.mColorInterpolationFilters.GetUnit()) {
-    svg->mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_AUTO;
-  }
-  else if (eCSSUnit_Inherit == SVGData.mColorInterpolationFilters.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mColorInterpolationFilters = parentSVG->mColorInterpolationFilters;
-  }
-  else if (eCSSUnit_Initial == SVGData.mColorInterpolationFilters.GetUnit()) {
-    svg->mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
-  }
+  // color-interpolation-filters: enum, auto, inherit, initial
+  SetDiscrete(SVGData.mColorInterpolationFilters,
+              svg->mColorInterpolationFilters, inherited,
+              SETDSC_ENUMERATED | SETDSC_AUTO,
+              parentSVG->mColorInterpolationFilters,
+              NS_STYLE_COLOR_INTERPOLATION_LINEARRGB,
+              NS_STYLE_COLOR_INTERPOLATION_AUTO, 0, 0, 0);
 
   // fill: 
   SetSVGPaint(SVGData.mFill, parentSVG->mFill, mPresContext, aContext,
               svg->mFill, eStyleSVGPaintType_Color, inherited);
 
-  // fill-opacity:
-  SetSVGOpacity(SVGData.mFillOpacity, parentSVG->mFillOpacity,
-                svg->mFillOpacity, inherited);
+  // fill-opacity: factor, inherit, initial
+  SetFactor(SVGData.mFillOpacity, svg->mFillOpacity, inherited,
+            parentSVG->mFillOpacity, 1.0f, SETFCT_OPACITY);
 
-  // fill-rule: enum, inherit
-  if (eCSSUnit_Enumerated == SVGData.mFillRule.GetUnit()) {
-    svg->mFillRule = SVGData.mFillRule.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == SVGData.mFillRule.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mFillRule = parentSVG->mFillRule;
-  }
-  else if (eCSSUnit_Initial == SVGData.mFillRule.GetUnit()) {
-    svg->mFillRule = NS_STYLE_FILL_RULE_NONZERO;
-  }
+  // fill-rule: enum, inherit, initial
+  SetDiscrete(SVGData.mFillRule, svg->mFillRule, inherited,
+              SETDSC_ENUMERATED, parentSVG->mFillRule,
+              NS_STYLE_FILL_RULE_NONZERO, 0, 0, 0, 0);
 
   // marker-end: url, none, inherit
   if (eCSSUnit_URL == SVGData.mMarkerEnd.GetUnit()) {
@@ -4906,30 +4684,18 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
     svg->mMarkerStart = parentSVG->mMarkerStart;
   }
 
-  // pointer-events: enum, inherit
-  if (eCSSUnit_Enumerated == SVGData.mPointerEvents.GetUnit()) {
-    svg->mPointerEvents = SVGData.mPointerEvents.GetIntValue();
-  } else if (eCSSUnit_None == SVGData.mPointerEvents.GetUnit()) {
-    svg->mPointerEvents = NS_STYLE_POINTER_EVENTS_NONE;
-  } else if (eCSSUnit_Inherit == SVGData.mPointerEvents.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mPointerEvents = parentSVG->mPointerEvents;
-  } else if (eCSSUnit_Initial == SVGData.mPointerEvents.GetUnit()) {
-    svg->mPointerEvents = NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED;
-  }
+  // pointer-events: enum, none, inherit, initial
+  SetDiscrete(SVGData.mPointerEvents, svg->mPointerEvents, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentSVG->mPointerEvents,
+              NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED, 0,
+              NS_STYLE_POINTER_EVENTS_NONE, 0, 0);
 
   // shape-rendering: enum, auto, inherit
-  if (eCSSUnit_Enumerated == SVGData.mShapeRendering.GetUnit()) {
-    svg->mShapeRendering = SVGData.mShapeRendering.GetIntValue();
-  }
-  else if (eCSSUnit_Auto == SVGData.mShapeRendering.GetUnit() ||
-           eCSSUnit_Initial == SVGData.mShapeRendering.GetUnit()) {
-    svg->mShapeRendering = NS_STYLE_SHAPE_RENDERING_AUTO;
-  }
-  else if (eCSSUnit_Inherit == SVGData.mShapeRendering.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mShapeRendering = parentSVG->mShapeRendering;
-  }
+  SetDiscrete(SVGData.mShapeRendering, svg->mShapeRendering, inherited,
+              SETDSC_ENUMERATED | SETDSC_AUTO,
+              parentSVG->mShapeRendering,
+              NS_STYLE_SHAPE_RENDERING_AUTO, 
+              NS_STYLE_SHAPE_RENDERING_AUTO, 0, 0, 0);
 
   // stroke: 
   SetSVGPaint(SVGData.mStroke, parentSVG->mStroke, mPresContext, aContext,
@@ -4994,45 +4760,23 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
            SETCOORD_LPH | SETCOORD_FACTOR | SETCOORD_INITIAL_ZERO,
            aContext, mPresContext, inherited);
 
-  // stroke-linecap: enum, inherit
-  if (eCSSUnit_Enumerated == SVGData.mStrokeLinecap.GetUnit()) {
-    svg->mStrokeLinecap = SVGData.mStrokeLinecap.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == SVGData.mStrokeLinecap.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mStrokeLinecap = parentSVG->mStrokeLinecap;
-  }
-  else if (eCSSUnit_Initial == SVGData.mStrokeLinecap.GetUnit()) {
-    svg->mStrokeLinecap = NS_STYLE_STROKE_LINECAP_BUTT;
-  }
+  // stroke-linecap: enum, inherit, initial
+  SetDiscrete(SVGData.mStrokeLinecap, svg->mStrokeLinecap, inherited,
+              SETDSC_ENUMERATED, parentSVG->mStrokeLinecap,
+              NS_STYLE_STROKE_LINECAP_BUTT, 0, 0, 0, 0);
 
-  // stroke-linejoin: enum, inherit
-  if (eCSSUnit_Enumerated == SVGData.mStrokeLinejoin.GetUnit()) {
-    svg->mStrokeLinejoin = SVGData.mStrokeLinejoin.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == SVGData.mStrokeLinejoin.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mStrokeLinejoin = parentSVG->mStrokeLinejoin;
-  }
-  else if (eCSSUnit_Initial == SVGData.mStrokeLinejoin.GetUnit()) {
-    svg->mStrokeLinejoin = NS_STYLE_STROKE_LINEJOIN_MITER;
-  }
+  // stroke-linejoin: enum, inherit, initial
+  SetDiscrete(SVGData.mStrokeLinejoin, svg->mStrokeLinejoin, inherited,
+              SETDSC_ENUMERATED, parentSVG->mStrokeLinejoin,
+              NS_STYLE_STROKE_LINEJOIN_MITER, 0, 0, 0, 0);
 
   // stroke-miterlimit: <miterlimit>, inherit
-  if (eCSSUnit_Number == SVGData.mStrokeMiterlimit.GetUnit()) {
-    svg->mStrokeMiterlimit = SVGData.mStrokeMiterlimit.GetFloatValue();
-  }
-  else if (eCSSUnit_Inherit == SVGData.mStrokeMiterlimit.GetUnit()) {
-    svg->mStrokeMiterlimit = parentSVG->mStrokeMiterlimit;
-    inherited = PR_TRUE;
-  }
-  else if (eCSSUnit_Initial == SVGData.mStrokeMiterlimit.GetUnit()) {
-    svg->mStrokeMiterlimit = 4.0f;
-  }
+  SetFactor(SVGData.mStrokeMiterlimit, svg->mStrokeMiterlimit, inherited,
+            parentSVG->mStrokeMiterlimit, 4.0f);
 
   // stroke-opacity:
-  SetSVGOpacity(SVGData.mStrokeOpacity, parentSVG->mStrokeOpacity,
-                svg->mStrokeOpacity, inherited);  
+  SetFactor(SVGData.mStrokeOpacity, svg->mStrokeOpacity, inherited,
+            parentSVG->mStrokeOpacity, 1.0f, SETFCT_OPACITY);
 
   // stroke-width:
   if (eCSSUnit_Initial == SVGData.mStrokeWidth.GetUnit()) {
@@ -5044,30 +4788,17 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
              aContext, mPresContext, inherited);
   }
 
-  // text-anchor: enum, inherit
-  if (eCSSUnit_Enumerated == SVGData.mTextAnchor.GetUnit()) {
-    svg->mTextAnchor = SVGData.mTextAnchor.GetIntValue();
-  }
-  else if (eCSSUnit_Inherit == SVGData.mTextAnchor.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mTextAnchor = parentSVG->mTextAnchor;
-  }
-  else if (eCSSUnit_Initial == SVGData.mTextAnchor.GetUnit()) {
-    svg->mTextAnchor = NS_STYLE_TEXT_ANCHOR_START;
-  }
+  // text-anchor: enum, inherit, initial
+  SetDiscrete(SVGData.mTextAnchor, svg->mTextAnchor, inherited,
+              SETDSC_ENUMERATED, parentSVG->mTextAnchor,
+              NS_STYLE_TEXT_ANCHOR_START, 0, 0, 0, 0);
   
-  // text-rendering: enum, auto, inherit
-  if (eCSSUnit_Enumerated == SVGData.mTextRendering.GetUnit()) {
-    svg->mTextRendering = SVGData.mTextRendering.GetIntValue();
-  }
-  else if (eCSSUnit_Auto == SVGData.mTextRendering.GetUnit() ||
-           eCSSUnit_Initial == SVGData.mTextRendering.GetUnit()) {
-    svg->mTextRendering = NS_STYLE_TEXT_RENDERING_AUTO;
-  }
-  else if (eCSSUnit_Inherit == SVGData.mTextRendering.GetUnit()) {
-    inherited = PR_TRUE;
-    svg->mTextRendering = parentSVG->mTextRendering;
-  }
+  // text-rendering: enum, auto, inherit, initial
+  SetDiscrete(SVGData.mTextRendering, svg->mTextRendering, inherited,
+              SETDSC_ENUMERATED | SETDSC_AUTO,
+              parentSVG->mTextRendering,
+              NS_STYLE_TEXT_RENDERING_AUTO,
+              NS_STYLE_TEXT_RENDERING_AUTO, 0, 0, 0);
 
   COMPUTE_END_INHERITED(SVG, svg)
 }
@@ -5117,25 +4848,20 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
   }
 
   // stop-opacity:
-  SetSVGOpacity(SVGData.mStopOpacity, parentSVGReset->mStopOpacity,
-                svgReset->mStopOpacity, inherited);
+  SetFactor(SVGData.mStopOpacity, svgReset->mStopOpacity, inherited,
+            parentSVGReset->mStopOpacity, 1.0f, SETFCT_OPACITY);
 
   // flood-opacity:
-  SetSVGOpacity(SVGData.mFloodOpacity, parentSVGReset->mFloodOpacity,
-                svgReset->mFloodOpacity, inherited);
+  SetFactor(SVGData.mFloodOpacity, svgReset->mFloodOpacity, inherited,
+            parentSVGReset->mFloodOpacity, 1.0f, SETFCT_OPACITY);
 
-  // dominant-baseline: enum, auto, inherit
-  if (eCSSUnit_Enumerated == SVGData.mDominantBaseline.GetUnit()) {
-    svgReset->mDominantBaseline = SVGData.mDominantBaseline.GetIntValue();
-  }
-  else if (eCSSUnit_Auto == SVGData.mDominantBaseline.GetUnit() ||
-           eCSSUnit_Initial == SVGData.mDominantBaseline.GetUnit()) {
-    svgReset->mDominantBaseline = NS_STYLE_DOMINANT_BASELINE_AUTO;
-  }
-  else if (eCSSUnit_Inherit == SVGData.mDominantBaseline.GetUnit()) {
-    inherited = PR_TRUE;
-    svgReset->mDominantBaseline = parentSVGReset->mDominantBaseline;
-  }
+  // dominant-baseline: enum, auto, inherit, initial
+  SetDiscrete(SVGData.mDominantBaseline, svgReset->mDominantBaseline,
+              inherited,
+              SETDSC_ENUMERATED | SETDSC_AUTO,
+              parentSVGReset->mDominantBaseline,
+              NS_STYLE_DOMINANT_BASELINE_AUTO,
+              NS_STYLE_DOMINANT_BASELINE_AUTO, 0, 0, 0);
 
   // filter: url, none, inherit
   if (eCSSUnit_URL == SVGData.mFilter.GetUnit()) {

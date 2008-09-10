@@ -51,6 +51,7 @@ _TEST_FILES =\
 		common.js \
 		nsIAccessible_actions.js \
 		nsIAccessible_name.css \
+		nsIAccessible_name.js \
 		nsIAccessible_name.xbl \
 		nsIAccessibleEditableText.js \
 		test_aria_activedescendant.html \

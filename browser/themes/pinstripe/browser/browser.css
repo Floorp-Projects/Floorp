@@ -1493,23 +1493,16 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 /* ----- SECURITY DISPLAY ----- */
 
 #security-button {
-  display: none;
   -moz-box-direction: reverse;
 }
 
-#security-button[level="high"] {
-  list-style-image: url("chrome://browser/skin/Secure-statusbar.png");
-  display: -moz-box;
-}
-
+#security-button[level="high"] ,
 #security-button[level="low"] {
   list-style-image: url("chrome://browser/skin/Secure-statusbar.png");
-  display: -moz-box;
 }
 
 #security-button[level="broken"] {
   list-style-image: url("chrome://browser/skin/Secure-statusbar-broken.png");
-  display: -moz-box;
 }
 
 /* ----- PAGE REPORT DISPLAY ----- */

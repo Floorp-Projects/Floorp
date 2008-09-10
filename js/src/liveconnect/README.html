@@ -466,13 +466,6 @@ DLL entry points have their return type expanded within a JS_EXPORT_API()&nbsp;
 macro call, to get the right Windows secret type qualifiers in the right
 places for both 16- and 32-bit builds.</li>
 
-<li>
-Callback functions that might be called from a DLL are similarly macroized
-with JS_STATIC_DLL_CALLBACK (if the function otherwise would be static
-to hide its name) or JS_DLL_CALLBACK (this macro takes no type argument;
-it should be used after the return type and before the function name).</li>
-</ul>
-
 <h2>
 <a NAME="API"></a>The LiveConnect API</h2>
 All public LiveConnect entry points and callbacks are documented in 

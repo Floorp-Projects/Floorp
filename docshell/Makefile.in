@@ -51,7 +51,7 @@ DIRS = \
 	resources \
 	$(NULL)
 
-ifdef MOZ_MOCHITEST
+ifdef ENABLE_TESTS
 DIRS		+= test
 endif
 

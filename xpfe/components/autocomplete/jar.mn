@@ -1,0 +1,3 @@
+toolkit.jar:
+    content/global/autocomplete.xml                             (resources/content/autocomplete.xml)
+    content/global/autocomplete.css                             (resources/content/autocomplete.css)

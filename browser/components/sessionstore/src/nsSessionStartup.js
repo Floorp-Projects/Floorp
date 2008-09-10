@@ -101,44 +101,41 @@ SessionStartup.prototype = {
     // get file references
     var dirService = Cc["@mozilla.org/file/directory_service;1"].
                      getService(Ci.nsIProperties);
-    this._sessionFile = dirService.get("ProfD", Ci.nsILocalFile);
-    this._sessionFile.append("sessionstore.js");
+    let sessionFile = dirService.get("ProfD", Ci.nsILocalFile);
+    sessionFile.append("sessionstore.js");
+    
+    let doResumeSession = this._prefBranch.getBoolPref("sessionstore.resume_session_once") ||
+                          this._prefBranch.getIntPref("startup.page") == 3;
     
     // only read the session file if config allows possibility of restoring
     var resumeFromCrash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
-    if ((resumeFromCrash || this._doResumeSession()) && this._sessionFile.exists()) {
-      // get string containing session state
-      this._iniString = this._readStateFile(this._sessionFile);
-      if (this._iniString) {
-        try {
-          // parse the session state into JS objects
-          var s = new Components.utils.Sandbox("about:blank");
-          var initialState = Components.utils.evalInSandbox(this._iniString, s);
-
-          // set bool detecting crash
-          this._lastSessionCrashed =
-            initialState.session && initialState.session.state &&
-            initialState.session.state == STATE_RUNNING_STR;
-        // invalid .INI file - nothing can be restored
-        }
-        catch (ex) { debug("The session file is invalid: " + ex); } 
-      }
-    }
-
-    // prompt and check prefs
-    if (this._iniString) {
-      if (this._lastSessionCrashed && this._doRecoverSession())
-        this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
-      else if (!this._lastSessionCrashed && this._doResumeSession())
-        this._sessionType = Ci.nsISessionStartup.RESUME_SESSION;
-      else
-        this._iniString = null; // reset the state string
-    }
-
-    if (this._prefBranch.getBoolPref("sessionstore.resume_session_once")) {
-      this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
-    }
+    if (!resumeFromCrash && !doResumeSession || !sessionFile.exists())
+      return;
     
+    // get string containing session state
+    this._iniString = this._readStateFile(sessionFile);
+    if (!this._iniString)
+      return;
+    
+    try {
+      // parse the session state into JS objects
+      var s = new Components.utils.Sandbox("about:blank");
+      var initialState = Components.utils.evalInSandbox(this._iniString, s);
+    }
+    catch (ex) { debug("The session file is invalid: " + ex); } 
+    
+    let lastSessionCrashed =
+      initialState && initialState.session && initialState.session.state &&
+      initialState.session.state == STATE_RUNNING_STR;
+    
+    // set the startup type
+    if (lastSessionCrashed && resumeFromCrash && this._doRecoverSession())
+      this._sessionType = Ci.nsISessionStartup.RECOVER_SESSION;
+    else if (!lastSessionCrashed && doResumeSession)
+      this._sessionType = Ci.nsISessionStartup.RESUME_SESSION;
+    else
+      this._iniString = null; // reset the state string
+
     if (this._sessionType != Ci.nsISessionStartup.NO_SESSION) {
       // wait for the first browser window to open
       var observerService = Cc["@mozilla.org/observer-service;1"].
@@ -165,8 +162,7 @@ SessionStartup.prototype = {
       this.init();
       break;
     case "quit-application":
-      // make sure that we don't init at this point, as that might
-      // unwantedly discard the session (cf. bug 409115)
+      // no reason for initializing at this point (cf. bug 409115)
       observerService.removeObserver(this, "final-ui-startup");
       observerService.removeObserver(this, "quit-application");
       break;
@@ -242,24 +238,11 @@ SessionStartup.prototype = {
 /* ........ Auxiliary Functions .............. */
 
   /**
-   * Whether or not to resume session, if not recovering from a crash.
-   * @returns bool
-   */
-  _doResumeSession: function sss_doResumeSession() {
-    return this._prefBranch.getIntPref("startup.page") == 3 || 
-      this._prefBranch.getBoolPref("sessionstore.resume_session_once");
-  },
-
-  /**
    * prompt user whether or not to restore the previous session,
    * if the browser crashed
    * @returns bool
    */
   _doRecoverSession: function sss_doRecoverSession() {
-    // do not prompt or resume, post-crash
-    if (!this._prefBranch.getBoolPref("sessionstore.resume_from_crash"))
-      return false;
-
     // if the prompt fails, recover anyway
     var recover = true;
 
@@ -365,7 +348,7 @@ SessionStartup.prototype = {
       
       return content.replace(/\r\n?/g, "\n");
     }
-    catch (ex) { } // inexisting file?
+    catch (ex) { Components.utils.reportError(ex); }
     
     return null;
   },
@@ -386,8 +369,5 @@ SessionStartup.prototype = {
 
 };
 
-//module initialization
-function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([SessionStartup]);
-}
-
+function NSGetModule(aCompMgr, aFileSpec)
+  XPCOMUtils.generateModule([SessionStartup]);

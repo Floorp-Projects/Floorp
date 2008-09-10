@@ -113,15 +113,6 @@ LOCAL_INCLUDES += \
 	$(NULL)
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-SHARED_LIBRARY_LIBS += \
-	../winhooks/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
-	$(NULL)
-LOCAL_INCLUDES += \
-	-I$(srcdir)/../winhooks \
-	$(NULL)
-endif # WINNT
-
 endif # MOZ_SUITE
 
 ifeq ($(OS_ARCH),WINNT)

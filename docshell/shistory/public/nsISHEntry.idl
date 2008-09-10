@@ -58,7 +58,7 @@ class nsDocShellEditorData;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 
 
-[scriptable, uuid(c16fde76-3108-450e-8c8c-ae8286f286ed)]
+[scriptable, uuid(622412da-be41-407e-b57e-9aba2a282b00)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -151,6 +151,9 @@ interface nsISHEntry : nsIHistoryEntry
 
     /** attribute to set and get the cache key for the entry */
     attribute nsISupports cacheKey;
+
+    /** attribute to indicate whether the contentViewer should be saved */
+    attribute boolean saveContentViewerFlag;
 
     /** attribute to indicate whether layoutHistoryState should be saved */
     attribute boolean saveLayoutStateFlag;

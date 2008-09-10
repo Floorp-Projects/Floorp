@@ -218,5 +218,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 #ifdef MOZ_MATHML
 #define NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL 0x00800000
 #endif
+// Handler for the content has been blocked
+#define NS_EVENT_STATE_HANDLER_BLOCKED \
+                                     0x01000000
+// Handler for the content has been disabled
+#define NS_EVENT_STATE_HANDLER_DISABLED \
+                                     0x02000000
 
 #endif // nsIEventStateManager_h__

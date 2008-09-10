@@ -374,7 +374,7 @@ destroy_saved_js_error(JNIEnv *jEnv, CapturedJSError *error)
  * into JavaScript, in which case the error will be re-reported as a JavaScript
  * error.
  */
-JS_STATIC_DLL_CALLBACK(void)
+static void
 capture_js_error_reports_for_java(JSContext *cx, const char *message,
                                   JSErrorReport *report)
 {

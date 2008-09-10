@@ -1706,7 +1706,11 @@ nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent,
   // Append all the text into one flat string
   PRUint32 numChildren = 0;
   nsCOMPtr<nsIDOMXULSelectControlElement> selectControlEl(do_QueryInterface(aContent));
-  if (!selectControlEl) {  // Don't walk children of elements with options, just get label directly
+  
+  if (!selectControlEl && aContent->Tag() != nsAccessibilityAtoms::textarea) {
+    // Don't walk children of elements with options, just get label directly.
+    // Don't traverse the children of a textarea, we want the value, not the
+    // static text node.
     numChildren = aContent->GetChildCount();
   }
 
@@ -1843,8 +1847,14 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
     return NS_ERROR_FAILURE;   // Node shut down
   }
 
-  // Check for DHTML accessibility labelledby relationship property
+  // Check for aria-label property
   nsAutoString label;
+  if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label, label)) {
+    aLabel = label;
+    return NS_OK;
+  }
+
+  // Check for aria-labelledby relationship property
   nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_labelledby, label);
   if (NS_SUCCEEDED(rv)) {
     aLabel = label;
@@ -1894,8 +1904,14 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ASSERTION(content, "No nsIContent for DOM node");
 
-  // First check for label override via accessibility labelledby relationship
+  // First check for label override via aria-label property
   nsAutoString label;
+  if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label, label)) {
+    aLabel = label;
+    return NS_OK;
+  }
+
+  // Second check for label override via aria-labelledby relationship
   nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_labelledby, label);
   if (NS_SUCCEEDED(rv)) {
     aLabel = label;

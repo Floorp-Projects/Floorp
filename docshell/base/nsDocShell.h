@@ -109,6 +109,7 @@
 #include "nsIChannelClassifier.h"
 
 class nsIScrollableView;
+class nsDocShell;
 
 /* load commands were moved to nsIDocShell.h */
 /* load types were moved to nsDocShellLoadTypes.h */
@@ -133,7 +134,7 @@ public:
 
     PRInt32 GetDelay() { return mDelay ;}
 
-    nsCOMPtr<nsIDocShell> mDocShell;
+    nsRefPtr<nsDocShell>  mDocShell;
     nsCOMPtr<nsIURI>      mURI;
     PRInt32               mDelay;
     PRPackedBool          mRepeat;
@@ -234,6 +235,13 @@ public:
     // This method swaps out the content viewer and simulates loads for
     // subframes.  It then simulates the completion of the toplevel load.
     nsresult RestoreFromHistory();
+
+    // Perform a URI load from a refresh timer.  This is just like the
+    // ForceRefreshURI method on nsIRefreshURI, but makes sure to take
+    // the timer involved out of mRefreshURIList if it's there.
+    // aTimer must not be null.
+    nsresult ForceRefreshURIFromTimer(nsIURI * aURI, PRInt32 aDelay,
+                                      PRBool aMetaRefresh, nsITimer* aTimer);
 
 protected:
     // Object Management
@@ -639,11 +647,6 @@ protected:
 
     // hash of session storages, keyed by domain
     nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
-
-    // Index into the SHTransaction list, indicating the previous and current
-    // transaction at the time that this DocShell begins to load
-    PRInt32                    mPreviousTransIndex;
-    PRInt32                    mLoadedTransIndex;
 
     // Editor data, if this document is designMode or contentEditable.
     nsAutoPtr<nsDocShellEditorData> mEditorData;

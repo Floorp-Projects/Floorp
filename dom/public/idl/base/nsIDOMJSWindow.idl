@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(c8188620-1dd1-11b2-bc88-df8440498add)]
+[scriptable, uuid(14efb76c-5bd6-449e-b36f-0cbd22981f20)]
 interface nsIDOMJSWindow : nsISupports
 {
   void                      dump(in DOMString str);
@@ -77,23 +77,28 @@ interface nsIDOMJSWindow : nsISupports
   void                      disableExternalCapture();
 
   /**
-   * The prompt method takes up to four arguments, the arguments are
-   * message, initial prompt value, title and a save password flag
+   * This is the scriptable version of nsIDOMWindowInternal::open()
+   * that takes 3 optional arguments. Its binary name is OpenJS to
+   * avoid colliding with nsIDOMWindowInternal::open(), which has the
+   * same signature. The reason we can't have that collision is that
+   * the implementation needs to know whether it was called from JS or
+   * not.
+   *
+   * IOW, DO NOT CALL THIS FROM C++
    */
-  DOMString                 prompt();
+  [binaryname(OpenJS)] nsIDOMWindow open([optional] in DOMString url,
+                                         [optional] in DOMString name,
+                                         [optional] in DOMString options);
 
   /**
-   * These are the scriptable versions of nsIDOMWindowInternal::open() and
-   * nsIDOMWindowInternal::openDialog() that take 3 optional arguments.  Unlike
-   * the nsIDOMWindowInternal methods, these methods assume that they are
-   * called from JavaScript and hence will look on the JS context stack to
-   * determine the caller and hence correct security context for doing their
-   * search for an existing named window.  Also, these methods will set the
-   * default charset on the newly opened window based on the current document
-   * charset in the caller.
+   * This is the scriptable version of
+   * nsIDOMWindowInternal::openDialog() that takes 3 optional
+   * arguments, plus any additional arguments are passed on as
+   * arguments on the dialog's window object (window.arguments).
    */
-  nsIDOMWindow              open();
-  nsIDOMWindow              openDialog();
+  nsIDOMWindow              openDialog([optional] in DOMString url,
+                                       [optional] in DOMString name,
+                                       [optional] in DOMString options);
 
   /**
    * window.frames in Netscape 4.x and IE is just a reference to the
@@ -104,16 +109,4 @@ interface nsIDOMJSWindow : nsISupports
    * This property is "replaceable" in JavaScript.
    */
   readonly attribute nsIDOMWindow             frames;
-
-  /* Scriptable version of find(). See nsIDOMWindowInternal for the
-   * non-scriptable version. It takes 7 optional arguments:
-   * @param searchString: the search string
-   * @param caseSensitive: is the search case sensitive?
-   * @param backwards: should we search backwards?
-   * @param wrapAround: should wrap the search?
-   * @param wholeWord: should we search only for whole words?
-   * @param searchInFrames: should we search in all frames?
-   * @param showDialog: should we show the Find Dialog?
-   */  
-  boolean                   find();                
 };

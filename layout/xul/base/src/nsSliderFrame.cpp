@@ -89,10 +89,10 @@ GetContentOfBox(nsIBox *aBox)
 // Helper function to collect the "scroll to click" metric. Beware of
 // caching this, users expect to be able to change the system preference
 // and see the browser change its behavior immediately.
-static PRInt32
+static PRBool
 GetScrollToClick()
 {
-  PRInt32 scrollToClick = PR_FALSE;
+  PRBool scrollToClick = PR_FALSE;
   nsresult rv;
   nsCOMPtr<nsILookAndFeel> lookNFeel =
     do_GetService("@mozilla.org/widget/lookandfeel;1", &rv);

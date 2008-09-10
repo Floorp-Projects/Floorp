@@ -104,14 +104,12 @@
 #include "nsIDOMPlugin.h"
 #include "nsIDOMMimeTypeArray.h"
 #include "nsIDOMMimeType.h"
-#include "nsIDOMNSLocation.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMJSWindow.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMHistory.h"
-#include "nsIDOMNSHistory.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMConstructor.h"
@@ -1958,7 +1956,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Location, nsIDOMLocation)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLocation)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSLocation)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Navigator, nsIDOMNavigator)
@@ -1974,7 +1971,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(PluginArray, nsIDOMPluginArray)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMPluginArray)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSPluginArray)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(MimeType, nsIDOMMimeType)
@@ -1991,7 +1987,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHistory)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
@@ -4352,7 +4347,7 @@ static JSClass sGlobalScopePolluterClass = {
 
 
 // static
-JSBool JS_DLL_CALLBACK
+JSBool
 nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
                                            jsval id, jsval *vp)
 {
@@ -4379,7 +4374,7 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
 }
 
 // static
-JSBool JS_DLL_CALLBACK
+JSBool
 nsWindowSH::SecurityCheckOnSetProp(JSContext *cx, JSObject *obj, jsval id,
                                    jsval *vp)
 {
@@ -4397,7 +4392,7 @@ nsWindowSH::SecurityCheckOnSetProp(JSContext *cx, JSObject *obj, jsval id,
 }
 
 // static
-JSBool JS_DLL_CALLBACK
+JSBool
 nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
                                           jsval id, uintN flags,
                                           JSObject **objp)
@@ -5831,7 +5826,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
 // Native code for window._content getter, this simply maps
 // window._content to window.content for backwards compatibility only.
-static JSBool JS_DLL_CALLBACK
+static JSBool
 ContentWindowGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     jsval *rval)
 {
@@ -7035,7 +7030,7 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
 }
 
 // static
-JSBool JS_DLL_CALLBACK
+JSBool
 nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
                                           uintN argc, jsval *argv, jsval *rval)
 {
@@ -7476,6 +7471,11 @@ nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, jsval id, PRUint32 flags,
                              JSObject **objp, PRBool *_retval)
 {
+  if (id == sLength_id) {
+    // Bail early; this isn't something we're interested in
+    return NS_OK;
+  }
+  
   PRBool is_number = PR_FALSE;
   PRInt32 n = GetArrayIndexFromId(cx, id, &is_number);
 
@@ -8016,7 +8016,7 @@ nsHTMLDocumentSH::ResolveImpl(JSContext *cx,
 }
 
 // static
-JSBool JS_DLL_CALLBACK
+JSBool
 nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
                                jsval *argv, jsval *rval)
 {
@@ -8176,7 +8176,7 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
   return *nodeList != nsnull;
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
                                          jsval id, jsval *vp)
 {
@@ -8260,7 +8260,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
   return JS_TRUE;
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsval id,
                                         uintN flags, JSObject **objp)
 {
@@ -8336,7 +8336,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsval id,
 // Finalize hook used by document related JS objects, but also by
 // sGlobalScopePolluterClass!
 
-void JS_DLL_CALLBACK
+void
 nsHTMLDocumentSH::ReleaseDocument(JSContext *cx, JSObject *obj)
 {
   nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, obj);
@@ -8344,7 +8344,7 @@ nsHTMLDocumentSH::ReleaseDocument(JSContext *cx, JSObject *obj)
   NS_IF_RELEASE(doc);
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, JSObject *obj, uintN argc,
                                       jsval *argv, jsval *rval)
 {
@@ -8395,7 +8395,7 @@ GetDocumentAllHelper(JSContext *cx, JSObject *obj)
   return obj;
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
                                                jsval id, jsval *vp)
 {
@@ -8461,7 +8461,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
   return JS_TRUE;
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
                                               jsval id, uintN flags,
                                               JSObject **objp)
@@ -8484,7 +8484,7 @@ nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
 }
 
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSObject *obj,
                                             jsval id, uintN flags,
                                             JSObject **objp)
@@ -8695,7 +8695,7 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 // HTMLElement helper
 
 // static
-JSBool JS_DLL_CALLBACK
+JSBool
 nsHTMLElementSH::ScrollIntoView(JSContext *cx, JSObject *obj, uintN argc,
                                 jsval *argv, jsval *rval)
 {
@@ -9712,7 +9712,7 @@ nsHTMLOptionsCollectionSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
   return nsHTMLCollectionSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsHTMLOptionsCollectionSH::Add(JSContext *cx, JSObject *obj, uintN argc,
                                jsval *argv, jsval *rval)
 {

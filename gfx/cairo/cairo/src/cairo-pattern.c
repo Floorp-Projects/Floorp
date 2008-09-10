@@ -95,8 +95,11 @@ static void
 _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
 {
     pattern->type      = type;
-    CAIRO_REFERENCE_COUNT_INIT (&pattern->ref_count, 1);
     pattern->status    = CAIRO_STATUS_SUCCESS;
+
+    /* Set the reference count to zero for on-stack patterns.
+     * Callers needs to explicitly increment the count for heap allocations. */
+    CAIRO_REFERENCE_COUNT_INIT (&pattern->ref_count, 0);
 
     _cairo_user_data_array_init (&pattern->user_data);
 
@@ -183,7 +186,7 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
     }
 
     /* The reference count and user_data array are unique to the copy. */
-    CAIRO_REFERENCE_COUNT_INIT (&pattern->ref_count, 1);
+    CAIRO_REFERENCE_COUNT_INIT (&pattern->ref_count, 0);
     _cairo_user_data_array_init (&pattern->user_data);
 
     return CAIRO_STATUS_SUCCESS;
@@ -245,6 +248,8 @@ _cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
 	free (*pattern);
 	return status;
     }
+
+    CAIRO_REFERENCE_COUNT_INIT (&(*pattern)->ref_count, 1);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -350,8 +355,10 @@ _cairo_pattern_create_solid (const cairo_color_t *color,
     if (pattern == NULL) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	pattern = (cairo_solid_pattern_t *) &_cairo_pattern_nil;
-    } else
+    } else {
 	_cairo_pattern_init_solid (pattern, color, content);
+	CAIRO_REFERENCE_COUNT_INIT (&pattern->base.ref_count, 1);
+    }
 
     return &pattern->base;
 }
@@ -504,6 +511,7 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
     CAIRO_MUTEX_INITIALIZE ();
 
     _cairo_pattern_init_for_surface (pattern, surface);
+    CAIRO_REFERENCE_COUNT_INIT (&pattern->base.ref_count, 1);
 
     return &pattern->base;
 }
@@ -549,6 +557,7 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
     CAIRO_MUTEX_INITIALIZE ();
 
     _cairo_pattern_init_linear (pattern, x0, y0, x1, y1);
+    CAIRO_REFERENCE_COUNT_INIT (&pattern->base.base.ref_count, 1);
 
     return &pattern->base.base;
 }
@@ -596,6 +605,7 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
     CAIRO_MUTEX_INITIALIZE ();
 
     _cairo_pattern_init_radial (pattern, cx0, cy0, radius0, cx1, cy1, radius1);
+    CAIRO_REFERENCE_COUNT_INIT (&pattern->base.base.ref_count, 1);
 
     return &pattern->base.base;
 }
@@ -1308,14 +1318,19 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 	}
     }
 
+    if (! pixman_image_set_filter (pixman_image, PIXMAN_FILTER_BILINEAR,
+				   NULL, 0))
+    {
+	pixman_image_unref (pixman_image);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
     image = (cairo_image_surface_t *)
 	cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
     if (image->base.status) {
 	pixman_image_unref (pixman_image);
 	return image->base.status;
     }
-
-    pixman_image_set_filter (pixman_image, PIXMAN_FILTER_BILINEAR, NULL, 0);
 
     _cairo_matrix_to_pixman_matrix (&pattern->base.matrix, &pixman_transform);
     if (!pixman_image_set_transform (pixman_image, &pixman_transform)) {
@@ -2078,10 +2093,11 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
      * horizontal/vertical linear gradients).
      */
 
+    /* unbounded patterns -> 'infinite' extents */
     extents->x = CAIRO_RECT_INT_MIN;
     extents->y = CAIRO_RECT_INT_MIN;
-    extents->width = CAIRO_RECT_INT_MIN + CAIRO_RECT_INT_MAX;
-    extents->height = CAIRO_RECT_INT_MIN + CAIRO_RECT_INT_MAX;
+    extents->width = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
+    extents->height = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
 
     return CAIRO_STATUS_SUCCESS;
 }

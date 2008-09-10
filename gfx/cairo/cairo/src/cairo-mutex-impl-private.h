@@ -45,10 +45,6 @@
 #include "config.h"
 #endif
 
-#include "cairo-features.h"
-
-CAIRO_BEGIN_DECLS
-
 
 /* A fully qualified no-operation statement */
 #define CAIRO_MUTEX_IMPL_NOOP	do {/*no-op*/} while (0)
@@ -220,7 +216,5 @@ CAIRO_BEGIN_DECLS
 
 
 #endif
-
-CAIRO_END_DECLS
 
 #endif

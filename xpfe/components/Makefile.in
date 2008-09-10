@@ -59,13 +59,6 @@ ifdef MOZ_SUNBIRD
 MOZ_HAVE_BROWSER=
 endif
 
-ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
-# Firefox and XULRunner use this flag to suppress the distribution of chrome from
-# the jar.mn file that lives parallel to this Makefile. The jar.mn is responsible
-# for the packaging of a large number of chrome files these apps don't need. 
-DEFINES += -DSUPPRESS_CHROME
-endif
-
 DIRS = \
         find \
         $(NULL)
@@ -90,10 +83,6 @@ endif
 
 ifndef MOZ_PLACES
 DIRS += history
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-DIRS += winhooks
 endif
 endif # MOZ_SUITE
 

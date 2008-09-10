@@ -102,7 +102,7 @@ JS_ClearAllWatchPoints(JSContext *cx);
 #ifdef JS_HAS_OBJ_WATCHPOINT
 /*
  * Hide these non-API function prototypes by testing whether the internal
- * header file "jsconfig.h" has been included.
+ * header file "jsversion.h" has been included.
  */
 extern void
 js_TraceWatchPoints(JSTracer *trc, JSObject *obj);
@@ -120,10 +120,10 @@ extern JSPropertyOp
 js_GetWatchedSetter(JSRuntime *rt, JSScope *scope,
                     const JSScopeProperty *sprop);
 
-extern JSBool JS_DLL_CALLBACK
+extern JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-extern JSBool JS_DLL_CALLBACK
+extern JSBool
 js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval);
 

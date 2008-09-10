@@ -52,7 +52,7 @@
 #include "jsprf.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsexn.h"
 #include "jsfun.h"
@@ -82,7 +82,7 @@ static JSBool  tpIndexInited = JS_FALSE;
 
 JS_BEGIN_EXTERN_C
 JSBool
-js_InitThreadPrivateIndex(void (JS_DLL_CALLBACK *ptr)(void *))
+js_InitThreadPrivateIndex(void (*ptr)(void *))
 {
     PRStatus status;
 
@@ -101,7 +101,7 @@ JS_END_EXTERN_C
  * Callback function to delete a JSThread info when the thread that owns it
  * is destroyed.
  */
-void JS_DLL_CALLBACK
+void
 js_ThreadDestructorCB(void *ptr)
 {
     JSThread *thread = (JSThread *)ptr;
@@ -521,7 +521,7 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
     return cx;
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+static JSDHashNumber
 resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
     const JSResolvingKey *key = (const JSResolvingKey *)ptr;
@@ -868,7 +868,7 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
      * propagates out of scope.  This is needed for compatability
      * with the old scheme.
      */
-    if (!js_ErrorToException(cx, message, reportp)) {
+    if (!cx->fp || !js_ErrorToException(cx, message, reportp)) {
         js_ReportErrorAgain(cx, message, reportp);
     } else if (cx->debugHooks->debugErrorHook && cx->errorReporter) {
         JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;

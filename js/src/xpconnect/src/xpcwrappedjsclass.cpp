@@ -710,7 +710,7 @@ nsXPCWrappedJSClass::GetRootJSObject(XPCCallContext& ccx, JSObject* aJSObj)
     return result ? result : aJSObj;
 }
 
-void JS_DLL_CALLBACK
+void
 xpcWrappedJSErrorReporter(JSContext *cx, const char *message,
                           JSErrorReport *report)
 {

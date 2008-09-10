@@ -129,23 +129,16 @@ nsDOMWorkerBase::PostMessageInternal(const nsAString& aMessage,
 nsresult
 nsDOMWorkerBase::PostMessageInternal(const nsAString& aMessage)
 {
-  nsAXPCNativeCallContext* ncc;
-  nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsRefPtr<nsDOMWorkerBase> source;
-  if (ncc) {
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+
+  if (cx) {
     if (NS_IsMainThread()) {
       // Must be a normal DOM context, use the pool as the source.
       source = Pool();
     }
     else {
       // Must be a worker context, get the worker from the context private.
-      JSContext* cx;
-      rv = ncc->GetJSContext(&cx);
-      NS_ENSURE_SUCCESS(rv, rv);
-
       nsRefPtr<nsDOMWorkerThread> worker =
         (nsDOMWorkerThread*)JS_GetContextPrivate(cx);
 
@@ -160,7 +153,7 @@ nsDOMWorkerBase::PostMessageInternal(const nsAString& aMessage)
     source = this;
   }
 
-  rv = PostMessageInternal(aMessage, source);
+  nsresult rv = PostMessageInternal(aMessage, source);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

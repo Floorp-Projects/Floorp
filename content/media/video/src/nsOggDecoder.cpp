@@ -732,6 +732,13 @@ void nsOggDecoder::GetCurrentURI(nsIURI** aURI)
   NS_IF_ADDREF(*aURI = mURI);
 }
 
+nsIPrincipal* nsOggDecoder::GetCurrentPrincipal()
+{
+  if (!mReader)
+    return nsnull;
+
+  return mReader->GetCurrentPrincipal();
+}
 
 void nsOggDecoder::DisplayFirstFrame()
 {

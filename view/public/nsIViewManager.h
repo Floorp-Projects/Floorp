@@ -60,10 +60,10 @@ enum nsRectVisibility {
   nsRectVisibility_kZeroAreaRect
 }; 
 
-// 855e75b8-32cf-4e16-bc50-4e04c53f6cbc
+// 7eae119d-9fc8-482d-92ec-145eef228a4a
 #define NS_IVIEWMANAGER_IID   \
-{ 0x855e75b8, 0x32cf, 0x4e16, \
-  { 0xbc, 0x50, 0x4e, 0x04, 0xc5, 0x3f, 0x6c, 0xbc } }
+{ 0x7eae119d, 0x9fc8, 0x482d, \
+  { 0x92, 0xec, 0x14, 0x5e, 0xef, 0x22, 0x8a, 0x4a } }
 
 class nsIViewManager : public nsISupports
 {
@@ -137,6 +137,11 @@ public:
    * @param aHeight of window in twips
    */
   NS_IMETHOD  SetWindowDimensions(nscoord aWidth, nscoord aHeight) = 0;
+
+  /**
+   * Do any resizes that are pending.
+   */
+  NS_IMETHOD  FlushDelayedResize() = 0;
 
   /**
    * Called to force a redrawing of any dirty areas.

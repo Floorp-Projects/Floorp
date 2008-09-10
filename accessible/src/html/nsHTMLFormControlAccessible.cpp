@@ -288,6 +288,8 @@ nsHTMLButtonAccessible::GetName(nsAString& aName)
   nsAutoString name;
   // Prefer aria-labelledby attribute for name
   if (content->HasAttr(kNameSpaceID_None,
+                       nsAccessibilityAtoms::aria_label) ||
+      content->HasAttr(kNameSpaceID_None,
                        nsAccessibilityAtoms::aria_labelledby)) {
     GetHTMLName(name, PR_FALSE);
   }

@@ -208,7 +208,7 @@ access_java_array_element(JSContext *cx,
     }
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaArray_getPropertyById(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JNIEnv *jEnv;
@@ -223,7 +223,7 @@ JavaArray_getPropertyById(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return result;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaArray_setPropertyById(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JNIEnv *jEnv;
@@ -238,7 +238,7 @@ JavaArray_setPropertyById(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return result;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaArray_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                          JSObject **objp, JSProperty **propp)
 {
@@ -263,7 +263,7 @@ JavaArray_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaArray_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
@@ -277,7 +277,7 @@ JavaArray_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     return JavaArray_setPropertyById(cx, obj, id, vp);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaArray_getAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
@@ -286,7 +286,7 @@ JavaArray_getAttributes(JSContext *cx, JSObject *obj, jsid id,
     return JS_FALSE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaArray_setAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
@@ -300,7 +300,7 @@ JavaArray_setAttributes(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaArray_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSVersion version = JS_GetVersion(cx);
@@ -318,14 +318,14 @@ JavaArray_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaArray_defaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     /* printf("In JavaArray_defaultValue()\n"); */
     return JavaObject_convert(cx, obj, JSTYPE_STRING, vp);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaArray_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                        jsval *statep, jsid *idp)
 {
@@ -388,7 +388,7 @@ JavaArray_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     return ok;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaArray_checkAccess(JSContext *cx, JSObject *obj, jsid id,
                       JSAccessMode mode, jsval *vp, uintN *attrsp)
 {
@@ -433,7 +433,7 @@ JSObjectOps JavaArray_ops = {
     jsj_wrapper_setRequiredSlot     /* setRequiredSlot */
 };
 
-JS_STATIC_DLL_CALLBACK(JSObjectOps *)
+static JSObjectOps *
 JavaArray_getObjectOps(JSContext *cx, JSClass *clazz)
 {
     return &JavaArray_ops;

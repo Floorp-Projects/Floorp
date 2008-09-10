@@ -54,9 +54,12 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsJSEnvironment.h"
+#include "nsThreadUtils.h"
 
 // DOMWorker includes
 #include "nsDOMWorkerPool.h"
+#include "nsDOMWorkerScriptLoader.h"
+#include "nsDOMWorkerSecurityManager.h"
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerTimeout.h"
 
@@ -94,13 +97,16 @@ public:
   static JSBool KillTimeout(JSContext* aCx, JSObject* aObj, uintN aArgc,
                             jsval* aArgv, jsval* aRval);
 
+  static JSBool LoadScripts(JSContext* aCx, JSObject* aObj, uintN aArgc,
+                            jsval* aArgv, jsval* aRval);
+
 private:
   // Internal helper for SetTimeout and SetInterval.
   static JSBool MakeTimeout(JSContext* aCx, JSObject* aObj, uintN aArgc,
                             jsval* aArgv, jsval* aRval, PRBool aIsInterval);
 };
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsDOMWorkerFunctions::Dump(JSContext* aCx,
                            JSObject* /* aObj */,
                            uintN aArgc,
@@ -118,7 +124,7 @@ nsDOMWorkerFunctions::Dump(JSContext* aCx,
   return JS_TRUE;
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsDOMWorkerFunctions::DebugDump(JSContext* aCx,
                                 JSObject* aObj,
                                 uintN aArgc,
@@ -132,7 +138,7 @@ nsDOMWorkerFunctions::DebugDump(JSContext* aCx,
 #endif
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsDOMWorkerFunctions::PostMessage(JSContext* aCx,
                                   JSObject* /* aObj */,
                                   uintN aArgc,
@@ -159,12 +165,16 @@ nsDOMWorkerFunctions::PostMessage(JSContext* aCx,
   else {
     rv = pool->PostMessageInternal(EmptyString(), worker);
   }
-  NS_ENSURE_SUCCESS(rv, JS_FALSE);
+
+  if (NS_FAILED(rv)) {
+    JS_ReportError(aCx, "Failed to post message!");
+    return JS_FALSE;
+  }
 
   return JS_TRUE;
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsDOMWorkerFunctions::MakeTimeout(JSContext* aCx,
                                   JSObject* /* aObj */,
                                   uintN aArgc,
@@ -184,10 +194,16 @@ nsDOMWorkerFunctions::MakeTimeout(JSContext* aCx,
 
   nsAutoPtr<nsDOMWorkerTimeout>
     timeout(new nsDOMWorkerTimeout(worker, id));
-  NS_ENSURE_TRUE(timeout, JS_FALSE);
+  if (!timeout) {
+    JS_ReportOutOfMemory(aCx);
+    return JS_FALSE;
+  }
 
   nsresult rv = timeout->Init(aCx, aArgc, aArgv, aIsInterval);
-  NS_ENSURE_SUCCESS(rv, JS_FALSE);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(aCx, "Failed to initialize timeout!");
+    return JS_FALSE;
+  }
 
   timeout.forget();
 
@@ -195,7 +211,7 @@ nsDOMWorkerFunctions::MakeTimeout(JSContext* aCx,
   return JS_TRUE;
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsDOMWorkerFunctions::KillTimeout(JSContext* aCx,
                                   JSObject* /* aObj */,
                                   uintN aArgc,
@@ -226,6 +242,67 @@ nsDOMWorkerFunctions::KillTimeout(JSContext* aCx,
   return JS_TRUE;
 }
 
+JSBool
+nsDOMWorkerFunctions::LoadScripts(JSContext* aCx,
+                                  JSObject* /* aObj */,
+                                  uintN aArgc,
+                                  jsval* aArgv,
+                                  jsval* /* aRval */)
+{
+  nsDOMWorkerThread* worker =
+    static_cast<nsDOMWorkerThread*>(JS_GetContextPrivate(aCx));
+  NS_ASSERTION(worker, "This should be set by the DOM thread service!");
+
+  if (worker->IsCanceled()) {
+    return JS_FALSE;
+  }
+
+  if (!aArgc) {
+    JS_ReportError(aCx, "Function must have at least one argument!");
+    return JS_FALSE;
+  }
+
+  nsAutoTArray<nsString, 5> urls;
+
+  if (!urls.SetCapacity((PRUint32)aArgc)) {
+    JS_ReportOutOfMemory(aCx);
+    return JS_FALSE;
+  }
+
+  for (uintN index = 0; index < aArgc; index++) {
+    jsval val = aArgv[index];
+
+    if (!JSVAL_IS_STRING(val)) {
+      JS_ReportError(aCx, "Argument %d must be a string", index);
+      return JS_FALSE;
+    }
+
+    JSString* str = JS_ValueToString(aCx, val);
+    if (!str) {
+      JS_ReportError(aCx, "Couldn't convert argument %d to a string", index);
+      return JS_FALSE;
+    }
+
+    nsString* newURL = urls.AppendElement();
+    NS_ASSERTION(newURL, "Shouldn't fail if SetCapacity succeeded above!");
+
+    newURL->Assign(nsDependentJSString(str));
+  }
+
+  nsRefPtr<nsDOMWorkerScriptLoader> loader = new nsDOMWorkerScriptLoader();
+  if (!loader) {
+    JS_ReportOutOfMemory(aCx);
+    return JS_FALSE;
+  }
+
+  nsresult rv = loader->LoadScripts(worker, aCx, urls);
+  if (NS_FAILED(rv)) {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 JSFunctionSpec gDOMWorkerFunctions[] = {
   { "dump",                  nsDOMWorkerFunctions::Dump,              1, 0, 0 },
   { "debug",                 nsDOMWorkerFunctions::DebugDump,         1, 0, 0 },
@@ -234,6 +311,7 @@ JSFunctionSpec gDOMWorkerFunctions[] = {
   { "clearTimeout",          nsDOMWorkerFunctions::KillTimeout,       1, 0, 0 },
   { "setInterval",           nsDOMWorkerFunctions::SetInterval,       1, 0, 0 },
   { "clearInterval",         nsDOMWorkerFunctions::KillTimeout,       1, 0, 0 },
+  { "loadScripts",           nsDOMWorkerFunctions::LoadScripts,       1, 0, 0 },
 #ifdef MOZ_SHARK
   { "startShark",            js_StartShark,                           0, 0, 0 },
   { "stopShark",             js_StopShark,                            0, 0, 0 },
@@ -306,17 +384,24 @@ nsDOMWorkerThreadContext::GetThisThread(nsIDOMWorkerThread** aThisThread)
 }
 
 nsDOMWorkerThread::nsDOMWorkerThread(nsDOMWorkerPool* aPool,
-                                     const nsAString& aSource)
+                                     const nsAString& aSource,
+                                     PRBool aSourceIsURL)
 : mPool(aPool),
-  mSource(aSource),
-  mGlobal(nsnull),
   mCompiled(PR_FALSE),
   mCallbackCount(0),
   mNextTimeoutId(0),
   mLock(nsnull)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!aSource.IsEmpty(), "Empty source string!");
+
+  if (aSourceIsURL) {
+    mSourceURL.Assign(aSource);
+    NS_ASSERTION(!mSourceURL.IsEmpty(), "Empty source url!");
+  }
+  else {
+    mSource.Assign(aSource);
+    NS_ASSERTION(!mSource.IsEmpty(), "Empty source string!");
+  }
 
   PR_INIT_CLIST(&mTimeouts);
 }
@@ -331,17 +416,6 @@ nsDOMWorkerThread::~nsDOMWorkerThread()
   }
 
   ClearTimeouts();
-
-  // Only clean up if we created a global object
-  if (mGlobal) {
-    JSRuntime* rt;
-    if (NS_SUCCEEDED(nsDOMThreadService::JSRuntimeService()->GetRuntime(&rt))) {
-      JS_RemoveRootRT(rt, &mGlobal);
-    }
-    else {
-      NS_ERROR("This shouldn't fail!");
-    }
-  }
 
   if (mLock) {
     nsAutoLock::DestroyLock(mLock);
@@ -362,13 +436,20 @@ nsDOMWorkerThread::Init()
 
   NS_ASSERTION(!mGlobal, "Already got a global?!");
 
+  JSRuntime* rt;
+  nsresult rv = nsDOMThreadService::JSRuntimeService()->GetRuntime(&rt);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool success = mGlobal.Hold(rt);
+  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
+
   // This is pretty cool - all we have to do to get our script executed is to
   // pass a no-op runnable to the thread service and it will make sure we have
   // a context and global object.
   nsCOMPtr<nsIRunnable> runnable(new nsRunnable());
   NS_ENSURE_TRUE(runnable, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = nsDOMThreadService::get()->Dispatch(this, runnable);
+  rv = nsDOMThreadService::get()->Dispatch(this, runnable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -445,14 +526,10 @@ nsDOMWorkerThread::HandleMessage(const nsAString& aMessage,
   jsval rval;
   PRBool success = JS_CallFunctionValue(cx, mGlobal, OBJECT_TO_JSVAL(listener),
                                         2, argv, &rval);
-  if (!success) {
+  if (!success && JS_IsExceptionPending(cx)) {
     // Make sure any pending exceptions are converted to errors for the pool.
     JS_ReportPendingException(cx);
   }
-
-  // We shouldn't leave any pending exceptions - our error reporter should
-  // clear any exception it reports.
-  NS_ASSERTION(!JS_IsExceptionPending(cx), "Huh?!");
 
   return NS_OK;
 }
@@ -471,6 +548,9 @@ void
 nsDOMWorkerThread::Cancel()
 {
   nsDOMWorkerBase::Cancel();
+
+  // Do this before waiting on the thread service below!
+  CancelScriptLoaders();
 
   // If we're suspended there's a good chance that we're already paused waiting
   // on the pool's monitor. Waiting on the thread service's lock will deadlock.
@@ -499,7 +579,9 @@ PRBool
 nsDOMWorkerThread::SetGlobalForContext(JSContext* aCx)
 {
   PRBool success = CompileGlobalObject(aCx);
-  NS_ENSURE_TRUE(success, PR_FALSE);
+  if (!success) {
+    return PR_FALSE;
+  }
 
   JS_SetGlobalObject(aCx, mGlobal);
   return PR_TRUE;
@@ -563,30 +645,42 @@ nsDOMWorkerThread::CompileGlobalObject(JSContext* aCx)
                               JSPROP_ENUMERATE);
   NS_ENSURE_TRUE(success, PR_FALSE);
 
-  JSScript* script = JS_CompileUCScript(aCx, global, mSource.BeginReading(),
-                                        mSource.Length(), nsnull, 1);
-  NS_ENSURE_TRUE(script, PR_FALSE);
-
-  JSRuntime* rt;
-  rv = nsDOMThreadService::JSRuntimeService()->GetRuntime(&rt);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  mGlobal = global;
-  success = JS_AddNamedRootRT(rt, &mGlobal, "nsDOMWorkerThread Global Object");
-  if (!success) {
-    NS_WARNING("Failed to root global object for worker thread!");
-    mGlobal = nsnull;
-    return PR_FALSE;
-  }
-
-  // Execute the script
   jsval val;
-  success = JS_ExecuteScript(aCx, global, script, &val);
-  if (!success) {
-    NS_WARNING("Failed to evaluate script for worker thread!");
-    JS_RemoveRootRT(rt, &mGlobal);
-    mGlobal = nsnull;
-    return PR_FALSE;
+
+  // From here on out we have to remember to null mGlobal if something fails!
+  mGlobal = global;
+
+  if (mSource.IsEmpty()) {
+    NS_ASSERTION(!mSourceURL.IsEmpty(), "Must have a url here!");
+
+    nsRefPtr<nsDOMWorkerScriptLoader> loader = new nsDOMWorkerScriptLoader();
+    NS_ASSERTION(loader, "Out of memory!");
+    if (!loader) {
+      mGlobal = NULL;
+      return PR_FALSE;
+    }
+
+    rv = loader->LoadScript(this, aCx, mSourceURL);
+    JS_ReportPendingException(aCx);
+    if (NS_FAILED(rv)) {
+      mGlobal = NULL;
+      return PR_FALSE;
+    }
+  }
+  else {
+    NS_ASSERTION(!mSource.IsEmpty(), "No source text!");
+
+    JSPrincipals* principal = nsDOMWorkerSecurityManager::WorkerPrincipal();
+
+    // Evaluate and execute the script
+    success = JS_EvaluateUCScriptForPrincipals(aCx, global, principal,
+                                               mSource.get(), mSource.Length(),
+                                               "DOMWorker inline script", 1,
+                                               &val);
+    if (!success) {
+      mGlobal = NULL;
+      return PR_FALSE;
+    }
   }
 
   // See if the message listener function was defined.
@@ -740,6 +834,26 @@ nsDOMWorkerThread::ResumeTimeouts()
   PRUint32 count = timeouts.Length();
   for (PRUint32 i = 0; i < count; i++) {
     timeouts[i]->Resume(now);
+  }
+}
+
+void
+nsDOMWorkerThread::CancelScriptLoaders()
+{
+  nsAutoTArray<nsDOMWorkerScriptLoader*, 20> loaders;
+
+  // Must call cancel on the loaders outside the lock!
+  {
+    nsAutoLock lock(mLock);
+    loaders.AppendElements(mScriptLoaders);
+
+    // Don't clear mScriptLoaders, they'll remove themselves as they get
+    // destroyed.
+  }
+
+  PRUint32 loaderCount = loaders.Length();
+  for (PRUint32 index = 0; index < loaderCount; index++) {
+    loaders[index]->Cancel();
   }
 }
 

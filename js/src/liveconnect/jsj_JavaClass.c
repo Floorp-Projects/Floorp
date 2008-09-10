@@ -58,7 +58,7 @@
 
 #include "jsj_private.h"        /* LiveConnect internals */
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     char *name;
@@ -158,7 +158,7 @@ done:
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     jsval idval;
@@ -227,7 +227,7 @@ JavaClass_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     jclass java_class;
@@ -280,7 +280,7 @@ no_such_field:
 /*
  * Free the private native data associated with the JavaPackage object.
  */
-JS_STATIC_DLL_CALLBACK(void)
+static void
 JavaClass_finalize(JSContext *cx, JSObject *obj)
 {
     JNIEnv *jEnv;
@@ -301,7 +301,7 @@ JavaClass_finalize(JSContext *cx, JSObject *obj)
 }
 
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                          JSObject **objp, JSProperty **propp)
 {
@@ -330,7 +330,7 @@ JavaClass_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
@@ -348,7 +348,7 @@ JavaClass_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     return JS_FALSE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_getAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
@@ -357,7 +357,7 @@ JavaClass_getAttributes(JSContext *cx, JSObject *obj, jsid id,
     return JS_FALSE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_setAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
@@ -371,7 +371,7 @@ JavaClass_setAttributes(JSContext *cx, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSVersion version = JS_GetVersion(cx);
@@ -389,14 +389,14 @@ JavaClass_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_defaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     /* printf("In JavaClass_defaultValue()\n"); */
     return JavaClass_convert(cx, obj, JSTYPE_STRING, vp);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                        jsval *statep, jsid *idp)
 {
@@ -458,7 +458,7 @@ JavaClass_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     }
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_checkAccess(JSContext *cx, JSObject *obj, jsid id,
                       JSAccessMode mode, jsval *vp, uintN *attrsp)
 {
@@ -477,7 +477,7 @@ JavaClass_checkAccess(JSContext *cx, JSObject *obj, jsid id,
  * Implement the JavaScript instanceof operator for JavaClass objects by using
  * the equivalent Java instanceof operation.
  */
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_hasInstance(JSContext *cx, JSObject *obj, jsval candidate_jsval,
                       JSBool *has_instancep)
 {
@@ -558,7 +558,7 @@ JSObjectOps JavaClass_ops = {
     jsj_wrapper_setRequiredSlot     /* setRequiredSlot */
 };
 
-JS_STATIC_DLL_CALLBACK(JSObjectOps *)
+static JSObjectOps *
 JavaClass_getObjectOps(JSContext *cx, JSClass *clazz)
 {
     return &JavaClass_ops;
@@ -631,7 +631,7 @@ jsj_define_JavaClass(JSContext *cx, JNIEnv *jEnv, JSObject* parent_obj,
  *    js> getClass(new java.lang.String("foo"))
  *    [JavaClass java.lang.String]
  */
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 getClass(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSObject *obj_arg, *JavaClass_obj;
@@ -674,7 +674,7 @@ getClass(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 JavaClass_construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSObject *obj_arg, *JavaClass_obj;

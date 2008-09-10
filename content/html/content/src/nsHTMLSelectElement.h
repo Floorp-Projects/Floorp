@@ -53,6 +53,7 @@
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsISelectControlFrame.h"
+#include "nsContentUtils.h"
 
 // PresState
 #include "nsXPCOM.h"

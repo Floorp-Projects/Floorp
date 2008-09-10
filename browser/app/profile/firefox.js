@@ -535,9 +535,6 @@ pref("browser.backspace_action", 0);
 // 2 = check multi/single line controls
 pref("layout.spellcheckDefault", 1);
 
-pref("view_source.editor.path", "");
-pref("view_source.editor.external", false);
-
 pref("browser.send_pings", false);
 
 /* initial web feed readers list */

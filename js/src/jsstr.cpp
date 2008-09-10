@@ -60,7 +60,7 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jslock.h"
@@ -1145,6 +1145,54 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
     }
     *vp = INT_TO_JSVAL(i);
     return JS_TRUE;
+}
+
+static JSBool
+js_TrimString(JSContext *cx, jsval *vp, JSBool trimLeft, JSBool trimRight)
+{
+    JSString *str;
+    const jschar *chars;
+    size_t length, begin, end;
+
+    NORMALIZE_THIS(cx, vp, str);
+    JSSTRING_CHARS_AND_LENGTH(str, chars, length);
+    begin = 0;
+    end = length;
+
+    if (trimLeft) {
+        while (begin < length && JS_ISSPACE(chars[begin]))
+            ++begin;
+    }
+
+    if (trimRight) {
+        while (end > begin && JS_ISSPACE(chars[end-1]))
+            --end;
+    }
+
+    str = js_NewDependentString(cx, str, begin, end - begin);
+    if (!str)
+        return JS_FALSE;
+
+    *vp = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
+static JSBool
+str_trim(JSContext *cx, uintN argc, jsval *vp)
+{
+    return js_TrimString(cx, vp, JS_TRUE, JS_TRUE);
+}
+
+static JSBool
+str_trimLeft(JSContext *cx, uintN argc, jsval *vp)
+{
+    return js_TrimString(cx, vp, JS_TRUE, JS_FALSE);
+}
+
+static JSBool
+str_trimRight(JSContext *cx, uintN argc, jsval *vp)
+{
+    return js_TrimString(cx, vp, JS_FALSE, JS_TRUE);
 }
 
 /*
@@ -2280,6 +2328,9 @@ static JSFunctionSpec string_methods[] = {
     JS_FN("charCodeAt",        js_str_charCodeAt,     1,GENERIC_PRIMITIVE),
     JS_FN("indexOf",           str_indexOf,           1,GENERIC_PRIMITIVE),
     JS_FN("lastIndexOf",       str_lastIndexOf,       1,GENERIC_PRIMITIVE),
+    JS_FN("trim",              str_trim,              0,GENERIC_PRIMITIVE),
+    JS_FN("trimLeft",          str_trimLeft,          0,GENERIC_PRIMITIVE),
+    JS_FN("trimRight",         str_trimRight,         0,GENERIC_PRIMITIVE),
     JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,GENERIC_PRIMITIVE),
     JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,GENERIC_PRIMITIVE),
     JS_FN("localeCompare",     str_localeCompare,     1,GENERIC_PRIMITIVE),
@@ -2383,7 +2434,7 @@ static JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
-JS_STATIC_DLL_CALLBACK(JSHashNumber)
+static JSHashNumber
 js_hash_string_pointer(const void *key)
 {
     return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;

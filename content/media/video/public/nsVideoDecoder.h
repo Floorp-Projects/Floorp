@@ -70,9 +70,11 @@ class nsVideoDecoder : public nsIObserver
   // on failure.
   virtual PRBool Init();
 
-  
   // Return the current URI being played or downloaded.
   virtual void GetCurrentURI(nsIURI** aURI) = 0;
+
+  // Return the principal of the current URI being played or downloaded.
+  virtual nsIPrincipal* GetCurrentPrincipal() = 0;
 
   // Return the time position in the video stream being
   // played measured in seconds.

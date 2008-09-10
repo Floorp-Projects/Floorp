@@ -54,6 +54,7 @@ _TEST_FILES =	test_feed_discovery.html \
 _BROWSER_FILES = browser_bug321000.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
+                 browser_bug413915.js \
                  browser_autodiscovery.js \
                  browser_bug420160.js \
                  browser_bug441778.js \

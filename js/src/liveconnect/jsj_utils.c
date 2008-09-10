@@ -63,7 +63,7 @@
  * This is a hash-table utility routine that computes the hash code of a Java
  * object by calling java.lang.System.identityHashCode()
  */
-JSJHashNumber JS_DLL_CALLBACK
+JSJHashNumber
 jsj_HashJavaObject(const void *key, void* env)
 {
     JSHashNumber hash_code;
@@ -93,7 +93,7 @@ jsj_HashJavaObject(const void *key, void* env)
  * or handles (though they may be in some JVM implementations).  Instead,
  * use the JNI routine for comparing the two objects.
  */
-intN JS_DLL_CALLBACK
+intN
 jsj_JavaObjectComparator(const void *v1, const void *v2, void *arg)
 {
     jobject java_obj1, java_obj2;
