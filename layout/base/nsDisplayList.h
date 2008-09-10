@@ -957,7 +957,6 @@ protected:
 
 #endif // MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayCaret)
 class nsDisplayCaret : public nsDisplayItem {
 public:
   nsDisplayCaret(nsIFrame* aCaretFrame, nsCaret *aCaret)

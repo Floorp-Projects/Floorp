@@ -4,42 +4,25 @@
   <title>nsIAccessible::name calculation</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/nsIAccessible_name.js"></script>
 
   <script type="application/javascript">
-    const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
-    const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;
-
-    var gAccRetrieval = null;
-
-    function testName(aID, aName)
-    {
-      var elm = document.getElementById(aID);
-      if (!elm) {
-        ok(false, "There is no element with ID " + aID);
-        return;
-      }
-
-      var acc = null;
-      try {
-        acc = gAccRetrieval.getAccessibleFor(elm);
-      } catch(e) {
-      }
-
-      if (!acc) {
-        ok(false, "There is no accessible for " + aID);
-        return;
-      }
-
-      is(acc.name, aName, "Wrong name of the accessible for " + aID);
-    }
-
     function doTest()
     {
-      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                      getService(nsIAccessibleRetrieval);
+      // aria-label
 
+      // Simple label provided via ARIA
+      testName("btn_simple_aria_label", "I am a button");
+
+      // aria-label and aria-labelledby, expect aria-label
+      testName("btn_both_aria_labels", "I am a button, two");
 
       //////////////////////////////////////////////////////////////////////////
       // aria-labelledby
@@ -132,6 +115,19 @@
       // If nothing is left. Let's try title attribute.
       testName("btn_title", "title");
 
+      //////////////////////////////////////////////////////////////////////////
+      // textarea name
+
+      // textarea's name should have the value, which initially is specified by
+      // a text child.
+      testName("textareawithchild", "Story: Foo");
+
+      // new textarea name should reflect the value change. 
+      var elem = document.getElementById("textareawithchild");
+      elem.value = "Bar";
+
+      testName("textareawithchild", "Story: Bar");
+
       SimpleTest.finish();
     }
 
@@ -152,6 +148,14 @@
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
+
+  <!-- aria-label, simple label -->
+  <span id="btn_simple_aria_label" role="button" aria-label="I am a button"/>
+  <br/>
+  <!-- aria-label plus aria-labelledby -->
+  <span id="btn_both_aria_labels" role="button" aria-label="I am a button, two"
+        aria-labelledby="labelledby_text"/>
+  <br/>
 
   <!-- aria-labelledby, single relation -->
   <span id="labelledby_text">text</span>
@@ -269,5 +273,13 @@
 
   <!-- name from title attribute -->
   <span id="btn_title" role="group" title="title">15</span>
+
+  <!-- A textarea nested in a label with a text child (bug #453371). -->
+  <form>
+    <label>Story: 
+      <textarea id="textareawithchild" name="name">Foo</textarea>
+    </label>
+  </form>
+
 </body>
 </html>

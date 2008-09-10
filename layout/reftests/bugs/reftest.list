@@ -125,6 +125,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 180085-1.html 180085-1-ref.html
 == 180085-2.html 180085-2-ref.html
 == 185388-1.html 185388-1-ref.html
+!= 200774-1.html about:blank # really a crashtest
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html
 == 201293-1b.html 201293-1-ref.html
@@ -166,6 +167,28 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 240470-1.html 240470-1-ref.html
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
+== 243519-1.html 243519-1-ref.html
+== 243519-2.html 243519-2-ref.html
+== 243519-3.html 243519-3-ref.html
+== 243519-4a.html 243519-4-ref.html
+== 243519-4b.html 243519-4-ref.html
+== 243519-4c.html 243519-4-ref.html
+== 243519-4d.html 243519-4-ref.html
+== 243519-4e.html 243519-4-ref.html
+== 243519-4f.html 243519-4-ref.html
+== 243519-5a.html 243519-5-ref.html
+== 243519-5b.html 243519-5-ref.html
+== 243519-5c.html 243519-5-ref.html
+== 243519-5d.html 243519-5-ref.html
+== 243519-6.html 243519-6-ref.html
+== 243519-7.html 243519-7-ref.html
+== 243519-8.svg 243519-8-ref.svg
+== 243519-9a.html 243519-9-ref.html
+== 243519-9b.html 243519-9-ref.html
+== 243519-9c.html 243519-9-ref.html
+== 243519-9d.html 243519-9-ref.html
+== 243519-9e.html 243519-9-ref.html
+== 243519-9f.html 243519-9-ref.html
 == 244135-1.html 244135-1-ref.html
 == 244135-2.html 244135-2-ref.html
 == 244932-1.html 244932-1-ref.html
@@ -322,7 +345,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 333970-1.html 333970-1-ref.html # bug 3
 == 346774-1b.html 346774-1-ref.html
 == 346774-1c.html 346774-1-ref.html
 == 347348-1.xhtml 347348-1-ref.xhtml
-skip-if(MOZ_WIDGET_TOOLKIT=="windows") == 347496-1.xhtml 347496-1-ref.xhtml # Bug 409150
+== 347496-1.xhtml 347496-1-ref.xhtml
 == 347912-1.html 347912-1-ref.html
 == 348049-1.xhtml 348049-1-ref.xhtml
 == 348516-1.html 348516-1-ref.html
@@ -882,6 +905,7 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 fails == 441259-2.html 441259-2-ref.html # bug 441400
 == 444015-1.html 444015-1-ref.html
 # == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
+== 449171-1.html 449171-ref.html
 == 449519-1.html 449519-1-ref.html
 # == 449653-1.html 449653-1-ref.html # Disabled for now - it needs privileges
 == 450670-1.html 450670-1-ref.html

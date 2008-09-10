@@ -28,17 +28,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=377611
     <!-- type is case-insensitive -->
     <link rel="alternate" type="aPPliCAtion/ATom+xML" title="12" href="/12.atom" />
 
-    <!-- tolerate application/rdf+xml if the title includes 'rss' -->
-    <link rel="alternate" type="application/rdf+xml" title="13 rss" href="/13.rdf" />
-
-    <!-- tolerate application/xml if the title includes 'rss' -->
-    <link rel="alternate" type="application/xml" title="14 rss" href="/14.xml" />
-
-    <!-- tolerate text/xml if the title includes 'rss' -->
-    <link rel="alternate" type="text/xml" title="15 rss" href="/15.xml" />
-
     <!-- "feed stylesheet" is a feed, though "alternate stylesheet" isn't -->
-    <link rel="feed stylesheet" title="16" href="/16.atom" />
+    <link rel="feed stylesheet" title="13" href="/13.atom" />
 
     <!-- hyphens or letters around rel not allowed -->
     <link rel="disabled-alternate" type="application/atom+xml" title="Bogus1" href="/Bogus1" />
@@ -63,8 +54,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=377611
     <!-- don't find application/rss+xml by title -->
     <link rel="goats" type="application/rss+xml" title="Bogus9 RSS and Atom" href="/Bogus9" />
 
+    <!-- don't find application/rdf+xml by title -->
+    <link rel="alternate" type="application/rdf+xml" title="Bogus10 RSS and Atom" href="/Bogus10" />
+
+    <!-- don't find application/xml by title -->
+    <link rel="alternate" type="application/xml" title="Bogus11 RSS and Atom" href="/Bogus11" />
+
+    <!-- don't find text/xml by title -->
+    <link rel="alternate" type="text/xml" title="Bogus12 RSS and Atom" href="/Bogus12" />
+
     <!-- alternate and stylesheet isn't a feed -->
-    <link rel="alternate stylesheet" type="application/rss+xml" title="Bogus10 RSS" href="/Bogus10" />
+    <link rel="alternate stylesheet" type="application/rss+xml" title="Bogus13 RSS" href="/Bogus13" />
   </head>
   <body>
     <script type="text/javascript">

@@ -391,6 +391,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsEventListenerManager, nsIEventListe
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
   PRUint32 count = tmp->mListeners.Length();
   for (PRUint32 i = 0; i < count; i++) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mListeners[i] mListener");
     cb.NoteXPCOMChild(tmp->mListeners.ElementAt(i).mListener.get());
   }  
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

@@ -71,7 +71,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsApplicationAccessible,
     enumerator->GetNext(getter_AddRefs(childWeakRef));
     accessible = do_QueryReferent(childWeakRef);
     if (accessible) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, accessible);
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "nsApplicationAccessible child");
       cb.NoteXPCOMChild(accessible);
     }
   }

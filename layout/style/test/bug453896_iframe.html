@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+  <title>Bug 453896 Test middle frame</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <script type="application/javascript; version=1.7">
+
+function run(test_window)
+{
+  var subdoc = document.getElementById("subdoc").contentDocument;
+  var subwin = document.getElementById("subdoc").contentWindow;
+  var style = subdoc.getElementById("style");
+  var iframe_style = document.getElementById("subdoc").style;
+  var body_cs = subdoc.defaultView.getComputedStyle(subdoc.body, "");
+
+  function query_applies(q) {
+    style.setAttribute("media", q);
+    return body_cs.getPropertyValue("text-decoration") == "underline";
+  }
+
+  function should_apply(q) {
+    test_window.ok(query_applies(q), q + " should apply");
+  }
+
+  function should_not_apply(q) {
+    test_window.ok(!query_applies(q), q + " should not apply");
+  }
+
+  // in this test, assume the common underlying implementation is correct
+  let width_val = 157; // pick two not-too-round numbers
+  let height_val = 182;
+  iframe_style.width = width_val + "px";
+  iframe_style.height = height_val + "px";
+  for (let [feature, value] in
+         Iterator({ "width": width_val, "height": height_val })) {
+    should_apply("all and (" + feature + ": " + value + "px)");
+    should_not_apply("all and (" + feature + ": " + (value + 1) + "px)");
+    should_not_apply("all and (" + feature + ": " + (value - 1) + "px)");
+  }
+
+  iframe_style.width = "0";
+  should_apply("all and (height)");
+  should_not_apply("all and (width)");
+  iframe_style.height = "0";
+  should_not_apply("all and (height)");
+  should_not_apply("all and (width)");
+  should_apply("all and (device-height)");
+  should_apply("all and (device-width)");
+  iframe_style.width = width_val + "px";
+  should_not_apply("all and (height)");
+  should_apply("all and (width)");
+  iframe_style.height = height_val + "px";
+  should_apply("all and (height)");
+  should_apply("all and (width)");
+
+  test_window.SimpleTest.finish();
+}
+
+  </script>
+</head>
+<body>
+
+<iframe id="subdoc" src="media_queries_iframe.html"></iframe>
+
+</body>
+</html>

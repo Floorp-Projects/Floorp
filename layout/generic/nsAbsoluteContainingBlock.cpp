@@ -52,17 +52,6 @@
 #include "nsBlockFrame.h"
 #endif
 
-
-nsresult
-nsAbsoluteContainingBlock::FirstChild(const nsIFrame* aDelegatingFrame,
-                                      nsIAtom*        aListName,
-                                      nsIFrame**      aFirstChild) const
-{
-  NS_PRECONDITION(GetChildListName() == aListName, "unexpected child list name");
-  *aFirstChild = mAbsoluteFrames.FirstChild();
-  return NS_OK;
-}
-
 nsresult
 nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                                nsIAtom*        aListName,

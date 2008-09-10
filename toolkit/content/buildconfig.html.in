@@ -2,8 +2,9 @@
 <html>
 <head>
   <title>about:buildconfig</title>
+  <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css">
 </head>
-<body>
+<body class="aboutPageWideContainer">
 <h1>about:buildconfig</h1>
 <p> </p>
 <h2>Build platform</h2>

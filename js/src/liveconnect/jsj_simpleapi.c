@@ -80,7 +80,7 @@ default_map_java_object_to_js_object(JNIEnv *jEnv, void *hint, char **errp)
     return the_global_js_obj;
 }
 
-static JSBool JS_DLL_CALLBACK
+static JSBool
 default_create_java_vm(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
 {
     jint err;
@@ -116,7 +116,7 @@ default_create_java_vm(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
     return err == 0;
 }
 
-static JSBool JS_DLL_CALLBACK
+static JSBool
 default_destroy_java_vm(SystemJavaVM* jvm, JNIEnv* initialEnv)
 {
     JavaVM* java_vm = (JavaVM*)jvm;
@@ -124,7 +124,7 @@ default_destroy_java_vm(SystemJavaVM* jvm, JNIEnv* initialEnv)
     return err == 0;
 }
 
-static JNIEnv* JS_DLL_CALLBACK
+static JNIEnv*
 default_attach_current_thread(SystemJavaVM* jvm)
 {
     JavaVM* java_vm = (JavaVM*)jvm;
@@ -133,7 +133,7 @@ default_attach_current_thread(SystemJavaVM* jvm)
     return env;
 }
 
-static JSBool JS_DLL_CALLBACK
+static JSBool
 default_detach_current_thread(SystemJavaVM* jvm, JNIEnv* env)
 {
     JavaVM* java_vm = (JavaVM*)jvm;
@@ -142,7 +142,7 @@ default_detach_current_thread(SystemJavaVM* jvm, JNIEnv* env)
     return err == 0;
 }
 
-static SystemJavaVM* JS_DLL_CALLBACK
+static SystemJavaVM*
 default_get_java_vm(JNIEnv* env)
 {
     JavaVM* java_vm = NULL;

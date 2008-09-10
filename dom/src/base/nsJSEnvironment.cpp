@@ -418,7 +418,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 // it has not been done is that the code below only fills the error event
 // after it has a good nsPresContext - whereas using the above function
 // would involve always filling it.  Is that a concern?
-void JS_DLL_CALLBACK
+void
 NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)
@@ -606,7 +606,7 @@ NS_ScriptErrorReporter(JSContext *cx,
 #endif
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 LocaleToUnicode(JSContext *cx, char *src, jsval *rval)
 {
   nsresult rv;
@@ -699,19 +699,19 @@ ChangeCase(JSContext *cx, JSString *src, jsval *rval,
   return JS_TRUE;
 }
 
-static JSBool JS_DLL_CALLBACK
+static JSBool
 LocaleToUpperCase(JSContext *cx, JSString *src, jsval *rval)
 {
   return ChangeCase(cx, src, rval, ToUpperCase);
 }
 
-static JSBool JS_DLL_CALLBACK
+static JSBool
 LocaleToLowerCase(JSContext *cx, JSString *src, jsval *rval)
 {
   return ChangeCase(cx, src, rval, ToLowerCase);
 }
 
-static JSBool JS_DLL_CALLBACK
+static JSBool
 LocaleCompare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
 {
   nsresult rv;
@@ -870,7 +870,7 @@ GetPromptFromContext(nsJSContext* ctx)
   return prompt;
 }
 
-JSBool JS_DLL_CALLBACK
+JSBool
 nsJSContext::DOMOperationCallback(JSContext *cx)
 {
   nsresult rv;
@@ -909,6 +909,11 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
     // if that didn't work, warn the user
     mem->IsLowMemory(&lowMemory);
     if (lowMemory) {
+
+      PRBool preventDialog = nsContentUtils::GetBoolPref("dom.prevent_oom_dialog", PR_FALSE);
+      if (preventDialog)
+        return JS_FALSE;
+
       nsCOMPtr<nsIPrompt> prompt = GetPromptFromContext(ctx);
       
       nsXPIDLString title, msg;
@@ -2879,7 +2884,7 @@ static JSPropertySpec OptionsProperties[] = {
   {0}
 };
 
-static JSBool JS_DLL_CALLBACK
+static JSBool
 GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   if (JSVAL_IS_INT(id)) {
@@ -2890,7 +2895,7 @@ GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   return JS_TRUE;
 }
 
-static JSBool JS_DLL_CALLBACK
+static JSBool
 SetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   if (JSVAL_IS_INT(id)) {
@@ -3058,7 +3063,7 @@ inline PRBool
 IsJProfAction(struct sigaction *action)
 {
     return (action->sa_sigaction &&
-            action->sa_flags == SA_RESTART | SA_SIGINFO);
+            action->sa_flags == (SA_RESTART | SA_SIGINFO));
 }
 
 void NS_JProfStartProfiling();
@@ -3569,7 +3574,7 @@ nsJSContext::FireGCTimer(PRBool aLoadInProgress)
   first = PR_FALSE;
 }
 
-static JSBool JS_DLL_CALLBACK
+static JSBool
 DOMGCCallback(JSContext *cx, JSGCStatus status)
 {
   JSBool result = gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
@@ -3725,7 +3730,7 @@ ReportAllJSExceptionsPrefChangedCallback(const char* aPrefName, void* aClosure)
   return 0;
 }
 
-JS_STATIC_DLL_CALLBACK(JSPrincipals *)
+static JSPrincipals *
 ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
 {
   if (!sSecurityManager)
@@ -3763,7 +3768,11 @@ nsJSRuntime::Init()
     return NS_OK;
   }
 
-  nsresult rv = CallGetService(kJSRuntimeServiceContractID, &sRuntimeService);
+  nsresult rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+                               &sSecurityManager);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CallGetService(kJSRuntimeServiceContractID, &sRuntimeService);
   // get the JSRuntime from the runtime svc, if possible
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3779,12 +3788,10 @@ nsJSRuntime::Init()
   // Save the old GC callback to chain to it, for GC-observing generality.
   gOldJSGCCallback = ::JS_SetGCCallbackRT(sRuntime, DOMGCCallback);
 
-  // No chaining to a pre-existing callback here, we own this problem space.
-#ifdef NS_DEBUG
-  JSObjectPrincipalsFinder oldfop =
-#endif
-    ::JS_SetObjectPrincipalsFinder(sRuntime, ObjectPrincipalFinder);
-  NS_ASSERTION(!oldfop, " fighting over the findObjectPrincipals callback!");
+  JSSecurityCallbacks *callbacks = JS_GetRuntimeSecurityCallbacks(sRuntime);
+  NS_ASSERTION(callbacks, "SecMan should have set security callbacks!");
+
+  callbacks->findObjectPrincipals = ObjectPrincipalFinder;
 
   // Set these global xpconnect options...
   nsContentUtils::RegisterPrefCallback("dom.max_script_run_time",
@@ -3817,9 +3824,7 @@ nsJSRuntime::Init()
   NS_ENSURE_TRUE(ccMemPressureObserver, NS_ERROR_OUT_OF_MEMORY);
   obs->AddObserver(ccMemPressureObserver, "memory-pressure", PR_FALSE);
 
-  rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecurityManager);
-
-  sIsInitialized = NS_SUCCEEDED(rv);
+  sIsInitialized = PR_TRUE;
 
   return rv;
 }
@@ -3863,12 +3868,12 @@ void nsJSRuntime::ShutDown()
     // alive, release the JS runtime service and the security manager.
 
     if (sRuntimeService && sSecurityManager) {
-      // No chaining to a pre-existing callback here, we own this problem space.
-#ifdef NS_DEBUG
-      JSObjectPrincipalsFinder oldfop =
-#endif
-        ::JS_SetObjectPrincipalsFinder(sRuntime, nsnull);
-      NS_ASSERTION(oldfop == ObjectPrincipalFinder, " fighting over the findObjectPrincipals callback!");
+      JSSecurityCallbacks *callbacks = JS_GetRuntimeSecurityCallbacks(sRuntime);
+      if (callbacks) {
+        NS_ASSERTION(callbacks->findObjectPrincipals == ObjectPrincipalFinder,
+                     "Fighting over the findObjectPrincipals callback!");
+        callbacks->findObjectPrincipals = NULL;
+      }
     }
     NS_IF_RELEASE(sRuntimeService);
     NS_IF_RELEASE(sSecurityManager);

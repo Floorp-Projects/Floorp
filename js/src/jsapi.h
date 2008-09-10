@@ -455,7 +455,7 @@ class JSAutoRequest {
 
 class JSAutoSuspendRequest {
   public:
-    JSAutoSuspendRequest(JSContext *cx) : mContext(cx) {
+    JSAutoSuspendRequest(JSContext *cx) : mContext(cx), mSaveDepth(0) {
         if (mContext) {
             mSaveDepth = JS_SuspendRequest(mContext);
         }
@@ -891,7 +891,7 @@ JS_DumpNamedRoots(JSRuntime *rt,
 #define JS_MAP_GCROOT_REMOVE    2       /* remove and free the current entry */
 
 typedef intN
-(* JS_DLL_CALLBACK JSGCRootMapFun)(void *rp, const char *name, void *data);
+(* JSGCRootMapFun)(void *rp, const char *name, void *data);
 
 extern JS_PUBLIC_API(uint32)
 JS_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data);
@@ -1794,9 +1794,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp);
 
-extern JS_PUBLIC_API(JSCheckAccessOp)
-JS_SetCheckObjectAccessCallback(JSRuntime *rt, JSCheckAccessOp acb);
-
 extern JS_PUBLIC_API(JSBool)
 JS_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp);
 
@@ -1812,14 +1809,14 @@ struct JSPrincipals {
     char *codebase;
 
     /* XXX unspecified and unused by Mozilla code -- can we remove these? */
-    void * (* JS_DLL_CALLBACK getPrincipalArray)(JSContext *cx, JSPrincipals *);
-    JSBool (* JS_DLL_CALLBACK globalPrivilegesEnabled)(JSContext *cx, JSPrincipals *);
+    void * (* getPrincipalArray)(JSContext *cx, JSPrincipals *);
+    JSBool (* globalPrivilegesEnabled)(JSContext *cx, JSPrincipals *);
 
     /* Don't call "destroy"; use reference counting macros below. */
     jsrefcount refcount;
 
-    void   (* JS_DLL_CALLBACK destroy)(JSContext *cx, JSPrincipals *);
-    JSBool (* JS_DLL_CALLBACK subsume)(JSPrincipals *, JSPrincipals *);
+    void   (* destroy)(JSContext *cx, JSPrincipals *);
+    JSBool (* subsume)(JSPrincipals *, JSPrincipals *);
 };
 
 #ifdef JS_THREADSAFE
@@ -1840,11 +1837,24 @@ JS_DropPrincipals(JSContext *cx, JSPrincipals *principals);
      : (principals)->refcount)
 #endif
 
-extern JS_PUBLIC_API(JSPrincipalsTranscoder)
-JS_SetPrincipalsTranscoder(JSRuntime *rt, JSPrincipalsTranscoder px);
 
-extern JS_PUBLIC_API(JSObjectPrincipalsFinder)
-JS_SetObjectPrincipalsFinder(JSRuntime *rt, JSObjectPrincipalsFinder fop);
+struct JSSecurityCallbacks {
+  JSCheckAccessOp            checkObjectAccess;
+  JSPrincipalsTranscoder     principalsTranscoder;
+  JSObjectPrincipalsFinder   findObjectPrincipals;
+};
+
+extern JS_PUBLIC_API(JSSecurityCallbacks *)
+JS_SetRuntimeSecurityCallbacks(JSRuntime *rt, JSSecurityCallbacks *callbacks);
+
+extern JS_PUBLIC_API(JSSecurityCallbacks *)
+JS_GetRuntimeSecurityCallbacks(JSRuntime *rt);
+
+extern JS_PUBLIC_API(JSSecurityCallbacks *)
+JS_SetContextSecurityCallbacks(JSContext *cx, JSSecurityCallbacks *callbacks);
+
+extern JS_PUBLIC_API(JSSecurityCallbacks *)
+JS_GetSecurityCallbacks(JSContext *cx);
 
 /************************************************************************/
 

@@ -390,7 +390,7 @@ _cairo_matrix_to_unit_quartz_matrix (const cairo_matrix_t *m, CGAffineTransform 
     double xscale, yscale;
     cairo_status_t status;
 
-    status = _cairo_matrix_compute_scale_factors (m, &xscale, &yscale, 1);
+    status = _cairo_matrix_compute_basis_scale_factors (m, &xscale, &yscale, 1);
     if (status)
 	return status;
 
@@ -435,7 +435,7 @@ _cairo_quartz_init_glyph_metrics (cairo_quartz_scaled_font_t *font,
 	!CGFontGetGlyphBBoxesPtr (font_face->cgFont, &glyph, 1, &bbox))
 	goto FAIL;
 
-    status = _cairo_matrix_compute_scale_factors (&font->base.scale,
+    status = _cairo_matrix_compute_basis_scale_factors (&font->base.scale,
 						  &xscale, &yscale, 1);
     if (status)
 	goto FAIL;
@@ -632,7 +632,7 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    status = _cairo_matrix_compute_scale_factors (&font->base.scale,
+    status = _cairo_matrix_compute_basis_scale_factors (&font->base.scale,
 						  &xscale, &yscale, 1);
     if (status)
 	return status;

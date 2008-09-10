@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for watchPosition </title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var numCallbacks = 5;
+var callbackCounter = new Array(numCallbacks);
+var watchID = new Array(numCallbacks);
+
+// define success callbacks
+for(var i = 0; i < numCallbacks; i++) {
+  eval("function successCallback" + i + "(position) {" +
+          "callbackCounter[" + i + "]++;" +
+          "success_callback(position);" +
+       "}"
+  );
+}
+
+function registerWatches() {
+  for(var i = 0; i < numCallbacks; i++) {
+    watchID[i] = eval("navigator.geolocation.watchPosition(successCallback"
+                       + i + ", null, null);"
+    );
+  }
+}
+
+function clearWatches() {
+  for(var i = 0; i < numCallbacks; i++)
+    navigator.geolocation.clearWatch(watchID[i]);
+}
+
+function testDeclined() {
+  clearWatches();
+  removePrompt();
+  SimpleTest.finish();
+}
+
+/** Test for Bug  **/
+
+SimpleTest.waitForExplicitFinish();
+
+attachPrompt();
+
+ok(navigator.geolocation, "Ensure that the geolocation object is present");
+
+promptOption = DECLINE;
+
+registerWatches();
+
+// wait for position changes
+setTimeout(testDeclined, timeout);
+
+</script>
+</pre>
+</body>
+</html>
+
+
+

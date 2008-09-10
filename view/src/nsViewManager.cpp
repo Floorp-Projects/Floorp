@@ -378,6 +378,15 @@ NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight
   return NS_OK;
 }
 
+NS_IMETHODIMP nsViewManager::FlushDelayedResize()
+{
+  if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
+    DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height);
+    mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
+  }
+  return NS_OK;
+}
+
 static void ConvertNativeRegionToAppRegion(nsIRegion* aIn, nsRegion* aOut,
                                            nsIDeviceContext* context)
 {
@@ -1073,9 +1082,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
                       : nsnull) {
             if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
                 IsViewVisible(vm->mRootView)) {
-              vm->DoSetWindowDimensions(vm->mDelayedResize.width,
-                                        vm->mDelayedResize.height);
-              vm->mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
+              vm->FlushDelayedResize();
 
               // Paint later.
               vm->UpdateView(vm->mRootView, NS_VMREFRESH_NO_SYNC);
@@ -1685,6 +1692,11 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
   return NS_OK;
 }
 
+static double GetArea(const nsRect& aRect)
+{
+  return double(aRect.width)*double(aRect.height);
+}
+
 PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
                                           nsRegion* aUpdateRegion)
 {
@@ -1711,7 +1723,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView, nsPoint aDelta,
 #if defined(MOZ_WIDGET_GTK2) || defined(XP_OS2)
   return aUpdateRegion->IsEmpty();
 #else
-  return PR_TRUE;
+  return GetArea(aUpdateRegion->GetBounds()) < GetArea(parentBounds)/2;
 #endif
 }
 
@@ -1918,16 +1930,16 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
 
   mRefreshEnabled = PR_TRUE;
 
-  if (!mHasPendingUpdates) {
-    // Nothing to do
-    return NS_OK;
-  }
-
   // nested batching can combine IMMEDIATE with DEFERRED. Favour
-  // IMMEDIATE over DEFERRED and DEFERRED over NO_SYNC.
+  // IMMEDIATE over DEFERRED and DEFERRED over NO_SYNC.  We need to
+  // check for IMMEDIATE before checking mHasPendingUpdates, because
+  // the latter might be false as far as gecko is concerned but the OS
+  // might still have queued up expose events that it hasn't sent yet.
   if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
     FlushPendingInvalidates();
     Composite();
+  } else if (!mHasPendingUpdates) {
+    // Nothing to do
   } else if (aUpdateFlags & NS_VMREFRESH_DEFERRED) {
     PostInvalidateEvent();
   } else { // NO_SYNC

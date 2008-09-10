@@ -48,7 +48,7 @@ abs_srcdir = $(shell cd $(srcdir) && pwd)
 
 CHROME_DEPS += $(abs_srcdir)/content/overrides/app-license.html
 
-ifdef MOZ_MOCHITEST
+ifdef ENABLE_TESTS
 DIRS += content/test
 endif
 

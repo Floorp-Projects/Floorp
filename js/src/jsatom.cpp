@@ -50,7 +50,7 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsgc.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -241,16 +241,16 @@ JS_STATIC_ASSERT(ATOM_ENTRY_FLAG_MASK < JSVAL_ALIGN);
 #define CLEAR_ATOM_ENTRY_FLAGS(entry, flags)                                  \
     ((void)((entry)->keyAndFlags &= ~(jsuword)(flags)))
 
-JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+static JSDHashNumber
 HashDouble(JSDHashTable *table, const void *key);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 MatchDouble(JSDHashTable *table, const JSDHashEntryHdr *hdr, const void *key);
 
-JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+static JSDHashNumber
 HashString(JSDHashTable *table, const void *key);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 MatchString(JSDHashTable *table, const JSDHashEntryHdr *hdr, const void *key);
 
 static const JSDHashTableOps DoubleHashOps = {
@@ -280,7 +280,7 @@ static const JSDHashTableOps StringHashOps = {
 
 #define IS_INITIALIZED_STATE(state) IS_DOUBLE_TABLE(&(state)->doubleAtoms)
 
-JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+static JSDHashNumber
 HashDouble(JSDHashTable *table, const void *key)
 {
     jsdouble d;
@@ -290,14 +290,14 @@ HashDouble(JSDHashTable *table, const void *key)
     return JSDOUBLE_HI32(d) ^ JSDOUBLE_LO32(d);
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+static JSDHashNumber
 HashString(JSDHashTable *table, const void *key)
 {
     JS_ASSERT(IS_STRING_TABLE(table));
     return js_HashString((JSString *)key);
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 MatchDouble(JSDHashTable *table, const JSDHashEntryHdr *hdr, const void *key)
 {
     JSAtomHashEntry *entry = TO_ATOM_ENTRY(hdr);
@@ -321,7 +321,7 @@ MatchDouble(JSDHashTable *table, const JSDHashEntryHdr *hdr, const void *key)
     return d1 == d2;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 MatchString(JSDHashTable *table, const JSDHashEntryHdr *hdr, const void *key)
 {
     JSAtomHashEntry *entry = TO_ATOM_ENTRY(hdr);
@@ -390,7 +390,7 @@ js_InitAtomState(JSRuntime *rt)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 js_string_uninterner(JSDHashTable *table, JSDHashEntryHdr *hdr,
                      uint32 number, void *arg)
 {
@@ -456,7 +456,7 @@ js_InitCommonAtoms(JSContext *cx)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 js_atom_unpinner(JSDHashTable *table, JSDHashEntryHdr *hdr,
                  uint32 number, void *arg)
 {
@@ -477,7 +477,7 @@ js_FinishCommonAtoms(JSContext *cx)
 #endif
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 js_locked_atom_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
                       uint32 number, void *arg)
 {
@@ -494,7 +494,7 @@ js_locked_atom_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
     return JS_DHASH_NEXT;
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 js_pinned_atom_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
                         uint32 number, void *arg)
 {
@@ -528,7 +528,7 @@ js_TraceAtomState(JSTracer *trc, JSBool allAtoms)
     }
 }
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 js_atom_sweeper(JSDHashTable *table, JSDHashEntryHdr *hdr,
                 uint32 number, void *arg)
 {
@@ -832,7 +832,7 @@ js_ValueToStringId(JSContext *cx, jsval v, jsid *idp)
 
 #ifdef DEBUG
 
-JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+static JSDHashOperator
 atom_dumper(JSDHashTable *table, JSDHashEntryHdr *hdr,
             uint32 number, void *arg)
 {
@@ -886,14 +886,14 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
 
 #endif
 
-JS_STATIC_DLL_CALLBACK(JSHashNumber)
+static JSHashNumber
 js_hash_atom_ptr(const void *key)
 {
     const JSAtom *atom = (const JSAtom *) key;
     return ATOM_HASH(atom);
 }
 
-JS_STATIC_DLL_CALLBACK(void *)
+static void *
 js_alloc_temp_space(void *priv, size_t size)
 {
     JSContext *cx = (JSContext *) priv;
@@ -905,12 +905,12 @@ js_alloc_temp_space(void *priv, size_t size)
     return space;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 js_free_temp_space(void *priv, void *item)
 {
 }
 
-JS_STATIC_DLL_CALLBACK(JSHashEntry *)
+static JSHashEntry *
 js_alloc_temp_entry(void *priv, const void *key)
 {
     JSContext *cx = (JSContext *) priv;
@@ -924,7 +924,7 @@ js_alloc_temp_entry(void *priv, const void *key)
     return &ale->entry;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+static void
 js_free_temp_entry(void *priv, JSHashEntry *he, uintN flag)
 {
 }
@@ -996,7 +996,7 @@ js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
     return ale;
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
+static intN
 js_map_atom(JSHashEntry *he, intN i, void *arg)
 {
     JSAtomListElement *ale = (JSAtomListElement *)he;

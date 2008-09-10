@@ -44,11 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_dom
 
-ifdef MOZ_MOCHITEST
-DIRS		+= mochitest
-endif
-
 ifdef ENABLE_TESTS
+DIRS		+= mochitest
 XPCSHELL_TESTS = unit
 endif
 

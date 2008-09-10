@@ -7,6 +7,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452566
   <title>Test for Bug 452566</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -23,6 +25,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452566
 const NOT_ENOUGH_ARGS = 2153185281;
 
 ok(navigator.geolocation, "Should have geolocation");
+
+attachPrompt();
+promptOption = ACCEPT;
 
 var exception = null;
 try {
@@ -103,6 +108,8 @@ try {
   }
 }
 ok(!exception, exception);
+
+removePrompt();
 
 </script>
 </pre>

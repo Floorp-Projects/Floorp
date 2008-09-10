@@ -78,7 +78,6 @@ nsPluginArray::~nsPluginArray()
 NS_INTERFACE_MAP_BEGIN(nsPluginArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMPluginArray)
   NS_INTERFACE_MAP_ENTRY(nsIDOMPluginArray)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMJSPluginArray)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(PluginArray)
 NS_INTERFACE_MAP_END
 
@@ -240,41 +239,6 @@ nsPluginArray::Refresh(PRBool aReloadDocuments)
     webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
 
   return res;
-}
-
-NS_IMETHODIMP
-nsPluginArray::Refresh()
-{
-  nsAXPCNativeCallContext *ncc = nsnull;
-  nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!ncc)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  PRBool reload_doc = PR_FALSE;
-
-  PRUint32 argc;
-
-  ncc->GetArgc(&argc);
-
-  if (argc > 0) {
-    jsval *argv = nsnull;
-
-    ncc->GetArgvPtr(&argv);
-    NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
-
-    JSContext *cx = nsnull;
-
-    rv = ncc->GetJSContext(&cx);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JSAutoRequest ar(cx);
-    JS_ValueToBoolean(cx, argv[0], &reload_doc);
-  }
-
-  return Refresh(reload_doc);
 }
 
 nsresult

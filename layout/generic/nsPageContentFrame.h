@@ -83,10 +83,6 @@ protected:
   nsPageContentFrame(nsStyleContext* aContext) : ViewportFrame(aContext) {}
 
   nsSharedPageData*         mPD;
-
-private:
-  PRBool IsFixedPlaceholder(nsIFrame* aFrame);
-  nsFrameList StealFixedPlaceholders(nsIFrame* aDocRoot);
 };
 
 #endif /* nsPageContentFrame_h___ */

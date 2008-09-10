@@ -25,8 +25,8 @@ addLoadEvent(function() {
   // Need privs because the feed seems to have an about:feeds principal or some
   // such.  It's not same-origin with us in any case.
   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-  is($("testFrame").contentDocument.documentElement.id, "feedHandler",
-     "Text didn't get sniffed as a feed?");
+  is($("testFrame").contentDocument.documentElement.id, "",
+     "Text got sniffed as a feed?");
 });
 addLoadEvent(SimpleTest.finish);
 

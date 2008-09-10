@@ -20,6 +20,7 @@ notification {
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   margin: 0;
+  min-width: 245px;
 }
 
 #resizerBox {
@@ -114,8 +115,12 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   background-color: -moz-Field;
   color: -moz-FieldText;
+  min-width: 65px;
   overflow: auto;
-  width: 0px;
+}
+
+#previewImageDeck {
+  min-width: 220px;
 }
 
 #themeSplitter {

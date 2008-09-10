@@ -458,14 +458,6 @@ protected:
     mCSSAware = ((aFlags & (eEditorNoCSSMask | eEditorMailMask)) == 0);
   }
 
-  /** returns the layout object (nsIFrame in the real world) for aNode
-    * @param aNode          the content to get a frame for
-    * @param aLayoutObject  the "primary frame" for aNode, if one exists.  May be null
-    * @return NS_OK whether a frame is found or not
-    *         an error if some serious error occurs
-    */
-  NS_IMETHOD GetLayoutObject(nsIDOMNode *aInNode, nsISupports **aOutLayoutObject);
-
   // Return TRUE if aElement is a table-related elemet and caret was set
   PRBool SetCaretInTableCell(nsIDOMElement* aElement);
   PRBool IsElementInBody(nsIDOMElement* aElement);

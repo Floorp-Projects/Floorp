@@ -423,7 +423,7 @@ private:
     nsScriptSecurityManager();
     virtual ~nsScriptSecurityManager();
 
-    static JSBool JS_DLL_CALLBACK
+    static JSBool
     CheckObjectAccess(JSContext *cx, JSObject *obj,
                       jsval id, JSAccessMode mode,
                       jsval *vp);

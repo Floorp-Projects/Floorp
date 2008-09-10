@@ -53,20 +53,13 @@ REQUIRES	= xpconnect \
 		  xpconnect_tests \
 		  $(NULL)
 
-DIRS		= idl
+DIRS		= idl mochitest
 
 ifndef MOZ_ENABLE_LIBXUL
 DIRS += components
 endif
 
-ifdef MOZ_MOCHITEST
-DIRS += mochitest \
-	$(NULL)
-endif
-
-ifdef ENABLE_TESTS
 XPCSHELL_TESTS = unit
-endif
 
 CPPSRCS		= TestXPC.cpp
 

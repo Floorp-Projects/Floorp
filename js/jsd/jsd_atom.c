@@ -67,7 +67,7 @@ _testAtoms(JSDContext*jsdc)
 }        
 #endif    
 
-JS_STATIC_DLL_CALLBACK(intN)
+static intN
 _atom_smasher(JSHashEntry *he, intN i, void *arg)
 {
     JS_ASSERT(he);
@@ -81,13 +81,13 @@ _atom_smasher(JSHashEntry *he, intN i, void *arg)
     return HT_ENUMERATE_NEXT;
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
+static intN
 _compareAtomKeys(const void *v1, const void *v2)
 {
     return 0 == strcmp((const char*)v1, (const char*)v2);
 }        
 
-JS_STATIC_DLL_CALLBACK(intN)
+static intN
 _compareAtoms(const void *v1, const void *v2)
 {
     return 0 == strcmp(((JSDAtom*)v1)->str, ((JSDAtom*)v2)->str);

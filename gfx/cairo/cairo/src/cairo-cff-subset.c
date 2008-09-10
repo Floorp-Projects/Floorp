@@ -41,6 +41,9 @@
 
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
+
+#if CAIRO_HAS_FONT_SUBSET
+
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-truetype-subset-private.h"
 #include <string.h>
@@ -2282,3 +2285,5 @@ _cairo_cff_fallback_fini (cairo_cff_subset_t *subset)
     free (subset->widths);
     free (subset->data);
 }
+
+#endif /* CAIRO_HAS_FONT_SUBSET */

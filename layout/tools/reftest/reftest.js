@@ -121,6 +121,11 @@ function OnRefTestLoad()
 
 function OnRefTestUnload()
 {
+    /* Clear the sRGB forcing pref to leave the profile as we found it. */
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                getService(Components.interfaces.nsIPrefBranch2);
+    prefs.clearUserPref("gfx.color_management.force_srgb");
+
     gBrowser.removeEventListener("load", OnDocumentLoad, true);
 }
 
@@ -356,6 +361,28 @@ function OnDocumentLoad(event)
                                  .indexOf("reftest-print") != -1;
     }
 
+    function setupPrintMode() {
+       var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                  .getService(Components.interfaces.nsIPrintSettingsService);
+       var ps = PSSVC.newPrintSettings;
+       ps.paperWidth = 5;
+       ps.paperHeight = 3;
+
+       // Override any os-specific unwriteable margins
+       ps.unwriteableMarginTop = 0;
+       ps.unwriteableMarginLeft = 0;
+       ps.unwriteableMarginBottom = 0;
+       ps.unwriteableMarginRight = 0;
+
+       ps.headerStrLeft = "";
+       ps.headerStrCenter = "";
+       ps.headerStrRight = "";
+       ps.footerStrLeft = "";
+       ps.footerStrCenter = "";
+       ps.footerStrRight = "";
+       gBrowser.docShell.contentViewer.setPageMode(true, ps);
+    }
+
     if (shouldWait()) {
         // The testcase will let us know when the test snapshot should be made.
         // Register a mutation listener to know when the 'reftest-wait' class
@@ -368,31 +395,14 @@ function OnDocumentLoad(event)
                         "DOMAttrModified",
                         arguments.callee,
                         false);
+                    if (doPrintMode())
+                        setupPrintMode();
                     setTimeout(DocumentLoaded, 0);
                 }
             }, false);
     } else {
-        if (doPrintMode()) {
-            var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                    .getService(Components.interfaces.nsIPrintSettingsService);
-            var ps = PSSVC.newPrintSettings;
-            ps.paperWidth = 5;
-            ps.paperHeight = 3;
-
-            // Override any os-specific unwriteable margins
-            ps.unwriteableMarginTop = 0;
-            ps.unwriteableMarginLeft = 0;
-            ps.unwriteableMarginBottom = 0;
-            ps.unwriteableMarginRight = 0;
-
-            ps.headerStrLeft = "";
-            ps.headerStrCenter = "";
-            ps.headerStrRight = "";
-            ps.footerStrLeft = "";
-            ps.footerStrCenter = "";
-            ps.footerStrRight = "";
-            gBrowser.docShell.contentViewer.setPageMode(true, ps);
-        }
+        if (doPrintMode())
+            setupPrintMode();
 
         // Since we can't use a bubbling-phase load listener from chrome,
         // this is a capturing phase listener.  So do setTimeout twice, the

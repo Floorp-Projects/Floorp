@@ -41,11 +41,11 @@
 #include "nsIMemory.h"
 
 /** NS_NewPipe2 reimplemented, because it's not exported by XPCOM */
-nsresult NS_NewPipe2(nsIAsyncInputStream** input,
+nsresult TP_NewPipe2(nsIAsyncInputStream** input,
                      nsIAsyncOutputStream** output,
                      PRBool nonBlockingInput,
                      PRBool nonBlockingOutput,
-                     size_t segmentSize,
+                     PRUint32 segmentSize,
                      PRUint32 segmentCount,
                      nsIMemory* segmentAlloc)
 {
@@ -183,7 +183,7 @@ NS_IMETHODIMP BackwardsAllocator::IsLowMemory(PRBool* retval)
 nsresult TestBackwardsAllocator()
 {
   const PRUint32 SEGMENT_COUNT = 10;
-  const size_t SEGMENT_SIZE = 10;
+  const PRUint32 SEGMENT_SIZE = 10;
 
   nsRefPtr<BackwardsAllocator> allocator = new BackwardsAllocator();
   if (!allocator)
@@ -197,14 +197,14 @@ nsresult TestBackwardsAllocator()
 
   nsCOMPtr<nsIAsyncInputStream> input;
   nsCOMPtr<nsIAsyncOutputStream> output;
-  rv = NS_NewPipe2(getter_AddRefs(input),
+  rv = TP_NewPipe2(getter_AddRefs(input),
                    getter_AddRefs(output),
                    PR_FALSE,
                    PR_FALSE,
                    SEGMENT_SIZE, SEGMENT_COUNT, allocator); 
   if (NS_FAILED(rv))
   {
-    printf("FAIL NS_NewPipe2 failed: %x\n", rv);
+    printf("FAIL TP_NewPipe2 failed: %x\n", rv);
     return rv;
   }
 

@@ -41,6 +41,8 @@
 #undef ZLIB_DLL
 #elif defined(HAVE_VISIBILITY_ATTRIBUTE) && !defined(MOZ_ENABLE_LIBXUL)
 #define ZEXTERN __attribute__((visibility ("default"))) extern
+#elif (defined(__SUNPRO_C) || defined(__SUNPRO_CC)) && !defined(MOZ_ENABLE_LIBXUL)
+#define ZEXTERN __global extern
 #endif
 
 /* Exported Symbols */

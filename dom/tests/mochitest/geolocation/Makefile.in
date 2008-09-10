@@ -47,6 +47,12 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES	= \
 		test_lastPosition.html \
 		test_manyWindows.html \
+		test_allowCurrent.html \
+		test_allowWatch.html \
+		test_cancelCurrent.html \
+		test_cancelWatch.html \
+		test_clearWatch.html \
+		test_geoPrompt.html \
 		prompt_common.js       \
 		geolocation_common.js  \
 		geolocation.html \

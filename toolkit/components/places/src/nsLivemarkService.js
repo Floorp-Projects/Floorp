@@ -80,7 +80,6 @@ const FP_CONTRACTID = "@mozilla.org/feed-processor;1";
 const SEC_CONTRACTID = "@mozilla.org/scriptsecuritymanager;1";
 const IS_CONTRACTID = "@mozilla.org/widget/idleservice;1";
 const SEC_FLAGS = Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL;
-const NS_BINDING_ABORTED = 0x804b0002;
 
 // Expire livemarks after 1 hour by default
 var gExpiration = 3600000;
@@ -217,7 +216,7 @@ LivemarkService.prototype = {
 
     for (var livemark in this._livemarks) {
       if (livemark.loadGroup)
-        livemark.loadGroup.cancel(NS_BINDING_ABORTED);
+        livemark.loadGroup.cancel(Components.results.NS_BINDING_ABORTED);
     }
 
     // kill timer
@@ -469,7 +468,7 @@ LivemarkService.prototype = {
     this._livemarks.splice(livemarkIndex, 1);
 
     if (livemark.loadGroup)
-      livemark.loadGroup.cancel(NS_BINDING_ABORTED);
+      livemark.loadGroup.cancel(Components.results.NS_BINDING_ABORTED);
   },
 
   createInstance: function LS_createInstance(aOuter, aIID) {
@@ -556,9 +555,7 @@ LivemarkLoadListener.prototype = {
       if (!href)
         continue;
 
-      let title = entry.title ? entry.title.plainText() : entry.updated;
-      if (!title)
-        continue;
+      let title = entry.title ? entry.title.plainText() : "";
 
       try {
         secMan.checkLoadURIWithPrincipal(feedPrincipal, href, SEC_FLAGS);

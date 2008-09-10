@@ -988,6 +988,8 @@ function RequestReader(connection)
    */
   this._data = new LineData();
 
+  this._contentLength = 0;
+
   /** The current state of parsing the incoming request. */
   this._state = READER_INITIAL;
 
@@ -1030,7 +1032,8 @@ RequestReader.prototype =
       return;
 
     var moreAvailable = false;
-
+    var wasInBody = false;
+    
     switch (this._state)
     {
       case READER_INITIAL:
@@ -1042,12 +1045,15 @@ RequestReader.prototype =
         break;
 
       case READER_IN_BODY:
-        // XXX handle the request body!  until then, just stop reading
+        wasInBody = true;
+        moreAvailable = this._processBody(input, count);
         break;
-
       default:
         NS_ASSERT(false);
     }
+
+    if (!wasInBody && this._state == READER_IN_BODY && moreAvailable)
+      moreAvailable = this._processBody(input, count);
 
     if (moreAvailable)
       input.asyncWait(this, 0, 0, gThreadManager.currentThread);
@@ -1107,6 +1113,10 @@ RequestReader.prototype =
       if (!this._parseHeaders())
         return true;
 
+      dumpn("_processRequestLine, Content-length="+this._contentLength);
+      if (this._contentLength > 0)
+        return true;
+
       // headers complete, do a data check and then forward to the handler
       this._validateRequest();
       return this._handleResponse();
@@ -1145,7 +1155,47 @@ RequestReader.prototype =
       if (!this._parseHeaders())
         return true;
 
+      dumpn("_processHeaders, Content-length="+this._contentLength);
+      if (this._contentLength > 0)
+        return true;
+
       // we have all the headers, continue with the body
+      this._validateRequest();
+      return this._handleResponse();
+    }
+    catch (e)
+    {
+      this._handleError(e);
+      return false;
+    }
+  },
+
+  _processBody: function(input, count)
+  {
+    NS_ASSERT(this._state == READER_IN_BODY);
+
+    try
+    {
+      if (this._contentLength > 0)
+      {
+        var bodyData = this._data.purge();
+        if (!bodyData || bodyData.length == 0)
+        {
+          if (count > this._contentLength)
+            count = this._contentLength;
+
+          bodyData = readBytes(input, count);
+        }
+        dumpn("*** loading data="+bodyData+" len="+bodyData.length);
+
+        this._metadata._body.appendBytes(bodyData);
+        this._contentLength -= bodyData.length;
+      }
+
+      dumpn("*** remainig body data len="+this._contentLength);
+      if (this._contentLength > 0)
+        return true;
+
       this._validateRequest();
       return this._handleResponse();
     }
@@ -1279,7 +1329,7 @@ RequestReader.prototype =
    * the request to be handled.
    *
    * This method is called once per request, after the request line and all
-   * headers have been received.
+   * headers and the body, if any, have been received.
    *
    * @returns boolean
    *   true if more data must be read, false otherwise
@@ -1287,8 +1337,6 @@ RequestReader.prototype =
   _handleResponse: function()
   {
     NS_ASSERT(this._state == READER_IN_BODY);
-
-    // XXX set up a stream for data in the request body here
 
     // We don't need the line-based data any more, so make attempted reuse an
     // error.
@@ -1469,6 +1517,12 @@ RequestReader.prototype =
 
         // either way, we're done processing headers
         this._state = READER_IN_BODY;
+        try
+        {
+          this._contentLength = parseInt(headers.getHeader("Content-Length"));
+          dumpn("Content-Length="+this._contentLength);
+        }
+        catch (e) {}
         return true;
       }
       else if (firstChar == " " || firstChar == "\t")
@@ -1869,6 +1923,11 @@ function ServerHandler(server)
    * @see ServerHandler.prototype._defaultPaths
    */
   this._overridePaths = {};
+  
+  /** 
+   * Put data overrides, privileged before _overridePaths.
+   */
+  this._putDataOverrides = {};
 
   /**
    * Custom request handlers for the error handlers in the server in which this
@@ -1917,10 +1976,61 @@ ServerHandler.prototype =
     {
       try
       {
-        // explicit paths first, then files based on existing directory mappings,
-        // then (if the file doesn't exist) built-in server default paths
-        if (path in this._overridePaths)
+        if (metadata.method == "PUT")
+        {
+          // remotely set path override
+          var data = metadata.body.purge();
+          data = String.fromCharCode.apply(null, data.splice(0, data.length + 2));
+          var contentType;
+          try
+          {
+            contentType = metadata.getHeader("Content-Type");
+          }
+          catch (ex)
+          {
+            contentType = "application/octet-stream";
+          }
+
+          dumpn("PUT data \'"+data+"\' for "+path);
+          this._putDataOverrides[path] =
+            function(ametadata, aresponse)
+            {
+              aresponse.setStatusLine(metadata.httpVersion, 200, "OK");
+              aresponse.setHeader("Content-Type", contentType, false);
+              dumpn("*** writting PUT data=\'"+data+"\'");
+              aresponse.bodyOutputStream.write(data, data.length);
+            };
+
+          response.setStatusLine(metadata.httpVersion, 200, "OK");
+        }
+        else if (metadata.method == "DELETE")
+        {
+          if (path in this._putDataOverrides)
+          {
+            delete this._putDataOverrides[path];
+            dumpn("clearing PUT data for "+path);
+            response.setStatusLine(metadata.httpVersion, 200, "OK");
+          }
+          else
+          {
+            dumpn("no PUT data for "+path+" to delete");
+            response.setStatusLine(metadata.httpVersion, 204, "No Content");
+          }
+        }
+        else if (path in this._putDataOverrides)
+        {
+          // PUT data overrides are priviledged before all
+          // other overrides.
+          dumpn("calling PUT data override for "+path);
+          this._putDataOverrides[path](metadata, response);
+        }
+        else if (path in this._overridePaths)
+        {
+          // explicit paths first, then files based on existing directory mappings,
+          // then (if the file doesn't exist) built-in server default paths
+          dumpn("calling override for "+path);
           this._overridePaths[path](metadata, response);
+        }
         else
           this._handleDefault(metadata, response);
       }
@@ -3484,6 +3594,9 @@ function Request(port)
   /** Port number over which the request was received. */
   this._port = port;
 
+  /** Body data of the request */
+  this._body = new LineData();
+
   /**
    * The headers in this request.
    */
@@ -3607,6 +3720,11 @@ Request.prototype =
   {
     if (!this._bag)
       this._bag = new WritablePropertyBag();
+  },
+
+  get body()
+  {
+    return this._body;
   }
 };
 

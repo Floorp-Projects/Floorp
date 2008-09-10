@@ -55,7 +55,7 @@ extern const char js_lt_entity_str[];
 extern const char js_quot_entity_str[];
 
 typedef JSBool
-(* JS_DLL_CALLBACK JSIdentityOp)(const void *a, const void *b);
+(* JSIdentityOp)(const void *a, const void *b);
 
 struct JSXMLArray {
     uint32              length;

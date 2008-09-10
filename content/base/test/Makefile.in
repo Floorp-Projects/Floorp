@@ -202,6 +202,10 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug28293.html \
 		file_bug28293.sjs \
 		test_title.html \
+		test_bug453521.html \
+		test_bug391728.html \
+		file_bug391728.html \
+		file_bug391728_2.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

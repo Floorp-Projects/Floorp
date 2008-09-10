@@ -118,6 +118,9 @@ public:
   // events can be fired.
   void ChangeReadyState(nsMediaReadyState aState);
 
+  // principal of the currently playing stream
+  nsIPrincipal* GetCurrentPrincipal();
+
 protected:
   nsresult PickMediaElement(nsAString& aChosenMediaResource);
   virtual nsresult InitializeDecoder(nsAString& aChosenMediaResource);

@@ -97,6 +97,12 @@ RefTestCmdLineHandler.prototype =
       cmdLine.handleFlag("reftest", true);
     }
 
+    /* Force sRGB as an output profile for color management before we load a
+       window. */
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                getService(Components.interfaces.nsIPrefBranch2);
+    prefs.setBoolPref("gfx.color_management.force_srgb", true);
+
     var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                            .getService(nsIWindowWatcher);
     wwatch.openWindow(null, "chrome://reftest/content/reftest.xul", "_blank",

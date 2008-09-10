@@ -54,7 +54,7 @@
 #include "jsatom.h"
 #include "jsbool.h"
 #include "jscntxt.h"
-#include "jsconfig.h"
+#include "jsversion.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -68,6 +68,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "jsstaticcheck.h"
 #ifdef JS_TRACER
 #include "jstracer.h"
 #endif
@@ -930,7 +931,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp)
     obj = JSVAL_TO_OBJECT(vp[1]);
     JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
 
-    /* From here on, control must flow through label out:. */
+    MUST_FLOW_THROUGH("out");
     id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
 #if JS_HAS_XML_SUPPORT
     if (OBJECT_IS_XML(cx, obj)) {
@@ -1269,7 +1270,7 @@ have_fun:
     frame.xmlNamespace = NULL;
     frame.blockChain = NULL;
 
-    /* From here on, control must flow through label out: to return. */
+    MUST_FLOW_THROUGH("out");
     cx->fp = &frame;
 
     /* Init these now in case we goto out before first hook call. */
@@ -1407,6 +1408,8 @@ JSBool
 js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
                     JSAccessMode mode, uintN argc, jsval *argv, jsval *rval)
 {
+    JSSecurityCallbacks *callbacks;
+
     /*
      * js_InternalInvoke could result in another try to get or set the same id
      * again, see bug 355497.
@@ -1429,11 +1432,12 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
      * many embeddings have no security policy at all.
      */
     JS_ASSERT(mode == JSACC_READ || mode == JSACC_WRITE);
-    if (cx->runtime->checkObjectAccess &&
+    callbacks = JS_GetSecurityCallbacks(cx);
+    if (callbacks &&
+        callbacks->checkObjectAccess &&
         VALUE_IS_FUNCTION(cx, fval) &&
         FUN_INTERPRETED(GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval))) &&
-        !cx->runtime->checkObjectAccess(cx, obj, ID_TO_VALUE(id), mode,
-                                        &fval)) {
+        !callbacks->checkObjectAccess(cx, obj, ID_TO_VALUE(id), mode, &fval)) {
         return JS_FALSE;
     }
 
@@ -2421,9 +2425,6 @@ JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
 JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
 JS_STATIC_ASSERT(JSOP_NULL_LENGTH == JSOP_NULLTHIS_LENGTH);
 
-/* Ensure we can share deffun and closure code. */
-JS_STATIC_ASSERT(JSOP_DEFFUN_LENGTH == JSOP_CLOSURE_LENGTH);
-
 /* See TRY_BRANCH_AFTER_COND. */
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
@@ -2657,7 +2658,7 @@ js_Interpret(JSContext *cx)
         DO_OP();                                                              \
     JS_END_MACRO
 
-    /* From this point control must flow through the label exit. */
+    MUST_FLOW_THROUGH("exit");
     ++cx->interpLevel;
 
     /*
@@ -5655,53 +5656,31 @@ js_Interpret(JSContext *cx)
           END_CASE(JSOP_DEFVAR)
 
           BEGIN_CASE(JSOP_DEFFUN)
+            /*
+             * A top-level function defined in Global or Eval code (see
+             * ECMA-262 Ed. 3), or else a SpiderMonkey extension: a named
+             * function statement in a compound statement (not at the top
+             * statement level of global code, or at the top level of a
+             * function body).
+             */
             LOAD_FUNCTION(0);
 
+            if (!fp->blockChain) {
+                obj2 = fp->scopeChain;
+            } else {
+                obj2 = js_GetScopeChain(cx, fp);
+                if (!obj2)
+                    goto error;
+            }
+
             /*
-             * We must be at top-level (either outermost block that forms a
-             * function's body, or a global) scope, not inside an expression
-             * (JSOP_{ANON,NAMED}FUNOBJ) or compound statement (JSOP_CLOSURE)
-             * in the same compilation unit (ECMA Program). We also not inside
-             * an eval script.
-             *
              * If static link is not current scope, clone fun's object to link
-             * to the current scope via parent.  This clause exists to enable
+             * to the current scope via parent. This clause exists to enable
              * sharing of compiled functions among multiple equivalent scopes,
              * splitting the cost of compilation evenly among the scopes and
-             * amortizing it over a number of executions.  Examples include XUL
+             * amortizing it over a number of executions. Examples include XUL
              * scripts and event handlers shared among Mozilla chrome windows,
              * and server-side JS user-defined functions shared among requests.
-             *
-             * NB: The Script object exposes compile and exec in the language,
-             * such that this clause introduces an incompatible change from old
-             * JS versions that supported Script.  Such a JS version supported
-             * executing a script that defined and called functions scoped by
-             * the compile-time static link, not by the exec-time scope chain.
-             *
-             * We sacrifice compatibility, breaking such scripts, in order to
-             * promote compile-cost sharing and amortizing, and because Script
-             * is not and will not be standardized.
-             */
-            JS_ASSERT(!fp->blockChain);
-            JS_ASSERT((fp->flags & JSFRAME_EVAL) == 0);
-            JS_ASSERT(fp->scopeChain == fp->varobj);
-            obj2 = fp->scopeChain;
-
-            /*
-             * ECMA requires functions defined when entering Global code to be
-             * permanent.
-             */
-            attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-
-          do_deffun:
-            /*
-             * The common code for JSOP_DEFFUN and JSOP_CLOSURE.
-             *
-             * Clone the function object with the current scope chain as the
-             * clone's parent.  The original function object is the prototype
-             * of the clone.  Do this only if re-parenting; the compiler may
-             * have seen the right parent already and created a sufficiently
-             * well-scoped function object.
              */
             obj = FUN_OBJECT(fun);
             if (OBJ_GET_PARENT(cx, obj) != obj2) {
@@ -5715,8 +5694,17 @@ js_Interpret(JSContext *cx)
              * paths from here must flow through the "Restore fp->scopeChain"
              * code below the OBJ_DEFINE_PROPERTY call.
              */
+            MUST_FLOW_THROUGH("restore");
             fp->scopeChain = obj;
             rval = OBJECT_TO_JSVAL(obj);
+
+            /*
+             * ECMA requires functions defined when entering Eval code to be
+             * impermanent.
+             */
+            attrs = (fp->flags & JSFRAME_EVAL)
+                    ? JSPROP_ENUMERATE
+                    : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
             /*
              * Load function flags that are also property attributes.  Getters
@@ -5736,8 +5724,7 @@ js_Interpret(JSContext *cx)
              * or with blocks.
              */
             parent = fp->varobj;
-            if (!parent)
-                goto error;
+            JS_ASSERT(parent);
 
             /*
              * Check for a const property of the same name -- or any kind
@@ -5750,7 +5737,6 @@ js_Interpret(JSContext *cx)
             if (ok) {
                 if (attrs == JSPROP_ENUMERATE) {
                     JS_ASSERT(fp->flags & JSFRAME_EVAL);
-                    JS_ASSERT(op == JSOP_CLOSURE);
                     ok = OBJ_SET_PROPERTY(cx, parent, id, &rval);
                 } else {
                     JS_ASSERT(attrs & JSPROP_PERMANENT);
@@ -5768,6 +5754,7 @@ js_Interpret(JSContext *cx)
             }
 
             /* Restore fp->scopeChain now that obj is defined in fp->varobj. */
+            MUST_FLOW_LABEL(restore)
             fp->scopeChain = obj2;
             if (!ok) {
                 cx->weakRoots.newborn[GCX_OBJECT] = NULL;
@@ -5856,6 +5843,7 @@ js_Interpret(JSContext *cx)
              * paths from here must flow through the "Restore fp->scopeChain"
              * code below the OBJ_DEFINE_PROPERTY call.
              */
+            MUST_FLOW_THROUGH("restore2");
             fp->scopeChain = obj;
             rval = OBJECT_TO_JSVAL(obj);
 
@@ -5882,6 +5870,7 @@ js_Interpret(JSContext *cx)
                                      NULL);
 
             /* Restore fp->scopeChain now that obj is defined in parent. */
+            MUST_FLOW_LABEL(restore2)
             fp->scopeChain = obj2;
             if (!ok) {
                 cx->weakRoots.newborn[GCX_OBJECT] = NULL;
@@ -5894,35 +5883,6 @@ js_Interpret(JSContext *cx)
              */
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
           END_CASE(JSOP_NAMEDFUNOBJ)
-
-          BEGIN_CASE(JSOP_CLOSURE)
-            /*
-             * A top-level function inside eval or ECMA ed. 3 extension: a
-             * named function expression statement in a compound statement
-             * (not at the top statement level of global code, or at the top
-             * level of a function body).
-             */
-            LOAD_FUNCTION(0);
-
-            /*
-             * Clone the function object with the current scope chain as the
-             * clone's parent. Do this only if re-parenting; the compiler may
-             * have seen the right parent already and created a sufficiently
-             * well-scoped function object.
-             */
-            obj2 = js_GetScopeChain(cx, fp);
-            if (!obj2)
-                goto error;
-
-            /*
-             * ECMA requires that functions defined when entering Eval code to
-             * be impermanent.
-             */
-            attrs = JSPROP_ENUMERATE;
-            if (!(fp->flags & JSFRAME_EVAL))
-                attrs |= JSPROP_PERMANENT;
-
-            goto do_deffun;
 
 #if JS_HAS_GETTER_SETTER
           BEGIN_CASE(JSOP_GETTER)
@@ -6814,6 +6774,7 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
+          L_JSOP_UNUSED74:
           L_JSOP_UNUSED76:
           L_JSOP_UNUSED77:
           L_JSOP_UNUSED78:

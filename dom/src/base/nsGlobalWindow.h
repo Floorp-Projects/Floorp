@@ -66,7 +66,7 @@
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMNavigatorGeolocation.h"
-#include "nsIDOMNSLocation.h"
+#include "nsIDOMLocation.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -572,12 +572,6 @@ protected:
 
   static PRBool CanMoveResizeWindows();
 
-  // Helper for window.find()
-  nsresult FindInternal(const nsAString& aStr, PRBool caseSensitive,
-                       PRBool backwards, PRBool wrapAround, PRBool wholeWord, 
-                       PRBool searchInFrames, PRBool showDialog, 
-                       PRBool *aReturn);
-
   nsresult ConvertCharset(const nsAString& aStr, char** aDest);
 
   PRBool   GetBlurSuppression();
@@ -845,8 +839,7 @@ class nsIURI;
 // nsLocation: Script "location" object
 //*****************************************************************************
 
-class nsLocation : public nsIDOMLocation,
-                   public nsIDOMNSLocation
+class nsLocation : public nsIDOMLocation
 {
 public:
   nsLocation(nsIDocShell *aDocShell);
@@ -859,9 +852,6 @@ public:
 
   // nsIDOMLocation
   NS_DECL_NSIDOMLOCATION
-
-  // nsIDOMNSLocation
-  NS_DECL_NSIDOMNSLOCATION
 
 protected:
   // In the case of jar: uris, we sometimes want the place the jar was

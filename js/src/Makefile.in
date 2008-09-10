@@ -172,7 +172,6 @@ EXPORTS		= \
 		jsclist.h \
 		jscntxt.h \
 		jscompat.h \
-		jsconfig.h \
 		jsdate.h \
 		jsdbgapi.h \
 		jsdhash.h \
@@ -205,6 +204,7 @@ EXPORTS		= \
 		jstracer.h \
 		jstypes.h \
 		jsutil.h \
+		jsversion.h \
 		jsxdrapi.h \
 		jsxml.h \
 		$(NULL)
@@ -311,9 +311,6 @@ HOST_SIMPLE_PROGRAMS += host_jsoplengen$(HOST_BIN_SUFFIX)
 GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
 
 USE_HOST_CXX = 1
-
-HOST_SIMPLE_PROGRAMS += host_jsoplengen$(HOST_BIN_SUFFIX)
-GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
 
 ifdef HAVE_DTRACE
 ifneq ($(OS_ARCH),Darwin)
@@ -543,7 +540,7 @@ endif
 endif
 
 # Extra dependancies and rules for auto-generated headers
-host_jskwgen.$(OBJ_SUFFIX): jsconfig.h jskeyword.tbl
+host_jskwgen.$(OBJ_SUFFIX): jsversion.h jskeyword.tbl
 
 jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
 	./host_jskwgen$(HOST_BIN_SUFFIX) $@

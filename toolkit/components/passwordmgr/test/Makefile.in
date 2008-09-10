@@ -53,6 +53,7 @@ MOCHI_TESTS = \
 		test_basic_form_2.html \
 		test_basic_form_0pw.html \
 		test_basic_form_1pw.html \
+		test_basic_form_1pw_2.html \
 		test_basic_form_2pw_1.html \
 		test_basic_form_2pw_2.html \
 		test_basic_form_3pw_1.html \

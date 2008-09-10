@@ -531,7 +531,8 @@ protected:
 
   // Sheet section we're in.  This is used to enforce correct ordering of the
   // various rule types (eg the fact that a @charset rule must come before
-  // anything else).
+  // anything else).  Note that there are checks of similar things in various
+  // places in nsCSSStyleSheet.cpp (e.g in insertRule, RebuildChildList).
   enum nsCSSSection { 
     eCSSSection_Charset, 
     eCSSSection_Import, 
@@ -1659,7 +1660,12 @@ PRBool CSSParserImpl::ParseMediaQueryExpression(nsresult& aErrorCode, nsMediaQue
   }
 
   if (mToken.mSymbol == PRUnichar(')')) {
-    // All query expressions can be given without a value.
+    // Query expressions for any feature can be given without a value.
+    // However, min/max prefixes are not allowed.
+    if (expr->mRange != nsMediaExpression::eEqual) {
+      REPORT_UNEXPECTED(PEMQNoMinMaxWithoutValue);
+      return PR_FALSE;
+    }
     expr->mValue.Reset();
     return PR_TRUE;
   }
@@ -1671,8 +1677,14 @@ PRBool CSSParserImpl::ParseMediaQueryExpression(nsresult& aErrorCode, nsMediaQue
                                 VARIANT_LENGTH, nsnull);
       break;
     case nsMediaFeature::eInteger:
+    case nsMediaFeature::eBoolInteger:
       rv = ParsePositiveVariant(aErrorCode, expr->mValue,
                                 VARIANT_INTEGER, nsnull);
+      // Enforce extra restrictions for eBoolInteger
+      if (rv &&
+          feature->mValueType == nsMediaFeature::eBoolInteger &&
+          expr->mValue.GetIntValue() > 1)
+        rv = PR_FALSE;
       break;
     case nsMediaFeature::eIntRatio:
       {
@@ -1746,6 +1758,9 @@ PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppe
       // don't advance section, simply ignore invalid @import
       return PR_FALSE;
     }
+
+    // Safe to assert this, since we ensured that there is something
+    // other than the ';' coming after the @import's url() token.
     NS_ASSERTION(media->Count() != 0, "media list must be nonempty");
   }
 
@@ -1842,7 +1857,6 @@ PRBool CSSParserImpl::ParseMediaRule(nsresult& aErrorCode,
   }
 
   if (GatherMedia(aErrorCode, media, '{')) {
-    NS_ASSERTION(media->Count() != 0, "media list must be nonempty");
     // XXXbz this could use better error reporting throughout the method
     nsRefPtr<nsCSSMediaRule> rule(new nsCSSMediaRule());
     // Append first, so when we do SetMedia() the rule

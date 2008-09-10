@@ -56,6 +56,7 @@
 class nsIURI;
 class nsMediaList;
 class nsMediaQueryResultCacheKey;
+class nsCSSStyleSheet;
 
 // -------------------------------
 // CSS Style Sheet Inner Data Container
@@ -63,13 +64,14 @@ class nsMediaQueryResultCacheKey;
 
 class nsCSSStyleSheetInner {
 public:
-  nsCSSStyleSheetInner(nsICSSStyleSheet* aParentSheet);
-  nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy, nsICSSStyleSheet* aParentSheet);
+  nsCSSStyleSheetInner(nsICSSStyleSheet* aPrimarySheet);
+  nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
+                       nsCSSStyleSheet* aPrimarySheet);
   virtual ~nsCSSStyleSheetInner();
 
-  virtual nsCSSStyleSheetInner* CloneFor(nsICSSStyleSheet* aParentSheet);
-  virtual void AddSheet(nsICSSStyleSheet* aParentSheet);
-  virtual void RemoveSheet(nsICSSStyleSheet* aParentSheet);
+  virtual nsCSSStyleSheetInner* CloneFor(nsCSSStyleSheet* aPrimarySheet);
+  virtual void AddSheet(nsICSSStyleSheet* aSheet);
+  virtual void RemoveSheet(nsICSSStyleSheet* aSheet);
 
   virtual void RebuildNameSpaces();
 
@@ -81,6 +83,12 @@ public:
   nsCOMArray<nsICSSRule> mOrderedRules;
   nsAutoPtr<nsXMLNameSpaceMap> mNameSpaceMap;
   PRBool                 mComplete;
+  // Linked list of child sheets.  This is al fundamentally broken, because
+  // each of the child sheets has a unique parent... We can only hope (and
+  // currently this is the case) that any time page JS can get ts hands on a
+  // child sheet that means we've already ensured unique inners throughout its
+  // parent chain and things are good.
+  nsRefPtr<nsCSSStyleSheet> mFirstChild;
 
 #ifdef DEBUG
   PRBool                 mPrincipalSet;
@@ -92,9 +100,9 @@ public:
 // CSS Style Sheet
 //
 
-class CSSImportsCollectionImpl;
 class CSSRuleListImpl;
 static PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
+struct ChildSheetListBuilder;
 
 class nsCSSStyleSheet : public nsICSSStyleSheet, 
                         public nsIDOMCSSStyleSheet,
@@ -201,12 +209,10 @@ protected:
 protected:
   nsString              mTitle;
   nsCOMPtr<nsMediaList> mMedia;
-  nsCSSStyleSheet*      mFirstChild;
-  nsCSSStyleSheet*      mNext;
+  nsRefPtr<nsCSSStyleSheet> mNext;
   nsICSSStyleSheet*     mParent;    // weak ref
   nsICSSImportRule*     mOwnerRule; // weak ref
 
-  CSSImportsCollectionImpl* mImportsCollection;
   CSSRuleListImpl*      mRuleCollection;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsIDOMNode*           mOwningNode; // weak ref
@@ -220,6 +226,7 @@ protected:
   friend class nsMediaList;
   friend PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
   friend nsresult NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);
+  friend struct ChildSheetListBuilder;
 };
 
 #endif /* !defined(nsCSSStyleSheet_h_) */

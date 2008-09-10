@@ -74,7 +74,6 @@ nsHistory::~nsHistory()
 NS_INTERFACE_MAP_BEGIN(nsHistory)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMHistory)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHistory)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHistory)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(History)
 NS_INTERFACE_MAP_END
 
@@ -222,61 +221,7 @@ nsHistory::Forward()
 NS_IMETHODIMP
 nsHistory::Go(PRInt32 aDelta)
 {
-  nsCOMPtr<nsISHistory> session_history;
-
-  GetSessionHistoryFromDocShell(mDocShell, getter_AddRefs(session_history));
-  NS_ENSURE_TRUE(session_history, NS_ERROR_FAILURE);
-
-  // QI SHistory to nsIWebNavigation
-  nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(session_history));
-  NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
-
-  PRInt32 curIndex=-1;
-  PRInt32 len = 0;
-  nsresult rv = session_history->GetIndex(&curIndex);  
-  rv = session_history->GetCount(&len);
-  
-  PRInt32 index = curIndex + aDelta;
-  if (index > -1  &&  index < len)
-    webnav->GotoIndex(index);
-  // We always want to return a NS_OK, since returning errors 
-  // from GotoIndex() can lead to exceptions and a possible leak
-  // of history length
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHistory::Go()
-{
-  nsAXPCNativeCallContext *ncc = nsnull;
-  nsresult rv = nsContentUtils::XPConnect()->
-    GetCurrentNativeCallContext(&ncc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!ncc)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  PRUint32 argc;
-  ncc->GetArgc(&argc);
-
-  PRInt32 delta = 0;
-
-  if (argc > 0) {
-    jsval *argv = nsnull;
-
-    ncc->GetArgvPtr(&argv);
-    NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
-
-    if (!JSVAL_IS_INT(argv[0])) {
-      // Not an index, don't do anything.
-
-      return NS_OK;
-    }
-
-    delta = JSVAL_TO_INT(argv[0]);
-  }
-
-  if (delta == 0) {
+  if (aDelta == 0) {
     nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
 
     if (window && window->IsHandlingResizeEvent()) {
@@ -302,7 +247,29 @@ nsHistory::Go()
     }
   }
 
-  return Go(delta);
+  nsCOMPtr<nsISHistory> session_history;
+
+  GetSessionHistoryFromDocShell(mDocShell, getter_AddRefs(session_history));
+  NS_ENSURE_TRUE(session_history, NS_ERROR_FAILURE);
+
+  // QI SHistory to nsIWebNavigation
+  nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(session_history));
+  NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
+
+  PRInt32 curIndex=-1;
+  PRInt32 len = 0;
+  nsresult rv = session_history->GetIndex(&curIndex);  
+  rv = session_history->GetCount(&len);
+
+  PRInt32 index = curIndex + aDelta;
+  if (index > -1  &&  index < len)
+    webnav->GotoIndex(index);
+
+  // We always want to return a NS_OK, since returning errors 
+  // from GotoIndex() can lead to exceptions and a possible leak
+  // of history length
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

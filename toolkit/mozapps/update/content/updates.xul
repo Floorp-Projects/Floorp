@@ -173,7 +173,7 @@
       <image id="downloadThrobber"/>
       <description id="downloadStatus" flex="1">&connecting.label;</description>
       <button id="pauseButton" oncommand="gDownloadingPage.onPause();" 
-              disabled="true" label="&pause.label;" accesskey="&pause.accesskey;"/>
+              label="&pause.label;" accesskey="&pause.accesskey;"/>
     </hbox>
     <separator/>
     <hbox id="verificationFailed" align="start" hidden="true">

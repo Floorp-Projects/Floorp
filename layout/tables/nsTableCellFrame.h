@@ -130,7 +130,8 @@ public:
   NS_IMETHOD SetSelected(nsPresContext* aPresContext,
                          nsIDOMRange *aRange,
                          PRBool aSelected,
-                         nsSpread aSpread);
+                         nsSpread aSpread,
+                         SelectionType aType);
 
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);

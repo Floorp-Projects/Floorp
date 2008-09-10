@@ -102,7 +102,7 @@ JSClass InstallTriggerGlobalClass = {
 //
 // InstallTriggerGlobal finalizer
 //
-JS_STATIC_DLL_CALLBACK(void)
+static void
 FinalizeInstallTriggerGlobal(JSContext *cx, JSObject *obj)
 {
   nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(cx, obj);
@@ -204,7 +204,7 @@ static nsIDOMInstallTriggerGlobal* getTriggerNative(JSContext *cx, JSObject *obj
 //
 // Native method UpdateEnabled
 //
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 InstallTriggerGlobalUpdateEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = getTriggerNative(cx, obj);
@@ -230,7 +230,7 @@ InstallTriggerGlobalUpdateEnabled(JSContext *cx, JSObject *obj, uintN argc, jsva
 //
 // Native method Install
 //
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = getTriggerNative(cx, obj);
@@ -431,7 +431,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 //
 // Native method InstallChrome
 //
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = getTriggerNative(cx, obj);
@@ -541,7 +541,7 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
 //
 // Native method StartSoftwareUpdate
 //
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = getTriggerNative(cx, obj);

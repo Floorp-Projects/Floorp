@@ -182,7 +182,7 @@ private:
    *        or SYNC_BOTH)
    */
   void SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                PRBool aWhichControls);
+                PRInt32 aWhichControls);
 
   NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
   NS_IMETHOD_(nsrefcnt) Release() { return 1; }

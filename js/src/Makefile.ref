@@ -175,7 +175,6 @@ JS_HFILES =		\
 	jsarray.h	\
 	jsatom.h	\
 	jsbool.h	\
-	jsconfig.h	\
 	jscntxt.h	\
 	jsdate.h	\
 	jsemit.h	\
@@ -205,6 +204,7 @@ JS_HFILES =		\
 	jsscope.h	\
 	jsscript.h	\
 	jsstr.h		\
+	jsversion.h	\
 	jsxdrapi.h	\
 	jsxml.h		\
 	$(NULL)

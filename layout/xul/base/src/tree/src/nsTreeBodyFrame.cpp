@@ -544,7 +544,9 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
     }
 
     // View, meet the tree.
+    nsWeakFrame weakFrame(this);
     mView->SetTree(mTreeBoxObject);
+    NS_ENSURE_STATE(weakFrame.IsAlive());
     mView->GetRowCount(&mRowCount);
  
     PRBool isInReflow;
