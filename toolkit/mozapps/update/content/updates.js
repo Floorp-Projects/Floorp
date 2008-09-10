@@ -1448,7 +1448,6 @@ var gDownloadingPage = {
       this._downloadProgress.mode = "normal";
 
     var u = gUpdates.update;
-    const NS_BINDING_ABORTED = 0x804b0002;
     switch (status) {
     case Components.results.NS_ERROR_UNEXPECTED:
       if (u.selectedPatch.state == STATE_DOWNLOAD_FAILED &&
@@ -1473,7 +1472,7 @@ var gDownloadingPage = {
         return;
       }
       break;
-    case NS_BINDING_ABORTED:
+    case Components.results.NS_BINDING_ABORTED:
       LOG("UI:DownloadingPage", "onStopRequest: Pausing Download");
       // Return early, do not remove UI listener since the user may resume
       // downloading again.
