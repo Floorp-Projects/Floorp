@@ -188,10 +188,10 @@ class nsCSSScanner {
 
   // Get the next token. Return PR_FALSE on EOF. aTokenResult
   // is filled in with the data for the token.
-  PRBool Next(nsresult& aErrorCode, nsCSSToken& aTokenResult);
+  PRBool Next(nsCSSToken& aTokenResult);
 
   // Get the next token that may be a string or unquoted URL or whitespace
-  PRBool NextURL(nsresult& aErrorCode, nsCSSToken& aTokenResult);
+  PRBool NextURL(nsCSSToken& aTokenResult);
 
   // It's really ugly that we have to expose this, but it's the easiest
   // way to do :nth-child() parsing sanely.  (In particular, in
@@ -199,58 +199,34 @@ class nsCSSScanner {
   // "-1" back so we can read it again as a number.)
   void Pushback(PRUnichar aChar);
 
-  static inline PRBool
-  IsIdentStart(PRInt32 aChar)
-  {
-    return aChar >= 0 &&
-      (aChar >= 256 || (gLexTable[aChar] & START_IDENT) != 0);
-  }
+  // Reports operating-system level errors, e.g. read failures and
+  // out of memory.
+  nsresult GetLowLevelError();
 
-  static inline PRBool
-  StartsIdent(PRInt32 aFirstChar, PRInt32 aSecondChar)
-  {
-    return IsIdentStart(aFirstChar) ||
-      (aFirstChar == '-' && IsIdentStart(aSecondChar));
-  }
-
-  static PRBool IsWhitespace(PRInt32 ch) {
-    return PRUint32(ch) < 256 && (gLexTable[ch] & IS_WHITESPACE) != 0;
-  }
-
-  static PRBool IsDigit(PRInt32 ch) {
-    return PRUint32(ch) < 256 && (gLexTable[ch] & IS_DIGIT) != 0;
-  }
-
-  static PRBool IsHexDigit(PRInt32 ch) {
-    return PRUint32(ch) < 256 && (gLexTable[ch] & IS_HEX_DIGIT) != 0;
-  }
-
-  static PRBool IsIdent(PRInt32 ch) {
-    return ch >= 0 && (ch >= 256 || (gLexTable[ch] & IS_IDENT) != 0);
-  }
+  // sometimes the parser wants to make note of a low-level error
+  void SetLowLevelError(nsresult aErrorCode);
   
 protected:
-  PRBool EnsureData(nsresult& aErrorCode);
-  PRInt32 Read(nsresult& aErrorCode);
-  PRInt32 Peek(nsresult& aErrorCode);
-  PRBool LookAhead(nsresult& aErrorCode, PRUnichar aChar);
-  PRBool EatWhiteSpace(nsresult& aErrorCode);
-  PRBool EatNewline(nsresult& aErrorCode);
+  PRBool EnsureData();
+  PRInt32 Read();
+  PRInt32 Peek();
+  PRBool LookAhead(PRUnichar aChar);
+  PRBool EatWhiteSpace();
+  PRBool EatNewline();
 
-  void ParseAndAppendEscape(nsresult& aErrorCode, nsString& aOutput);
-  PRBool ParseIdent(nsresult& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
-  PRBool ParseAtKeyword(nsresult& aErrorCode, PRInt32 aChar,
-                        nsCSSToken& aResult);
-  PRBool ParseNumber(nsresult& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
-  PRBool ParseRef(nsresult& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
-  PRBool ParseString(nsresult& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
+  void ParseAndAppendEscape(nsString& aOutput);
+  PRBool ParseIdent(PRInt32 aChar, nsCSSToken& aResult);
+  PRBool ParseAtKeyword(PRInt32 aChar, nsCSSToken& aResult);
+  PRBool ParseNumber(PRInt32 aChar, nsCSSToken& aResult);
+  PRBool ParseRef(PRInt32 aChar, nsCSSToken& aResult);
+  PRBool ParseString(PRInt32 aChar, nsCSSToken& aResult);
 #if 0
-  PRBool ParseEOLComment(nsresult& aErrorCode, nsCSSToken& aResult);
-  PRBool ParseCComment(nsresult& aErrorCode, nsCSSToken& aResult);
+  PRBool ParseCComment(nsCSSToken& aResult);
+  PRBool ParseEOLComment(nsCSSToken& aResult);
 #endif
-  PRBool SkipCComment(nsresult& aErrorCode);
+  PRBool SkipCComment();
 
-  PRBool GatherIdent(nsresult& aErrorCode, PRInt32 aChar, nsString& aIdent);
+  PRBool GatherIdent(PRInt32 aChar, nsString& aIdent);
 
   // Only used when input is a stream
   nsCOMPtr<nsIUnicharInputStream> mInputStream;
@@ -263,6 +239,7 @@ protected:
   PRInt32 mPushbackCount;
   PRInt32 mPushbackSize;
   PRUnichar mLocalPushback[4];
+  nsresult mLowLevelError;
 
   PRUint32 mLineNumber;
 #ifdef MOZ_SVG
@@ -276,15 +253,6 @@ protected:
   nsFixedString mError;
   PRUnichar mErrorBuf[200];
 #endif
-
-  static const PRUint8 IS_DIGIT;
-  static const PRUint8 IS_HEX_DIGIT;
-  static const PRUint8 START_IDENT;
-  static const PRUint8 IS_IDENT;
-  static const PRUint8 IS_WHITESPACE;
-
-  static PRUint8 gLexTable[256];
-  static void BuildLexTable();
 };
 
 #endif /* nsCSSScanner_h___ */
