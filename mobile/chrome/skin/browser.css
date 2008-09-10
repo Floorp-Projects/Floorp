@@ -138,10 +138,7 @@ toolbarbutton.browser-control-button {
 }
 
 #tool-star[starred="true"] {
-  /*XXX no image yet
   -moz-image-region: rect(0px 144px 48px 96px);
-  */
-  -moz-image-region: rect(0px 48px 48px 0px);
 }
 
 #tool-back {
@@ -149,16 +146,13 @@ toolbarbutton.browser-control-button {
   padding-bottom: 0px !important;
 }
 
-#tool-back:hover:active:not([disabled="true")]) {
+#tool-back:hover:active {
   -moz-image-region: rect(48px 128px 112px 64px);
   padding-bottom: 0px !important;
 }
 
 #tool-back[disabled="true"] {
-  -moz-image-region: rect(48px 64px 112px 0px);
-  /*XXX no image yet
-  -moz-image-region: rect(48px 192px 112px 128px);
-  */
+  -moz-image-region: rect(48px 192px 112px 128px) !important;
   padding-bottom: 0px !important;
 }
 
@@ -167,16 +161,13 @@ toolbarbutton.browser-control-button {
   padding-top: 0px !important;
 }
 
-#tool-forward:hover:active:not([disabled="true")]) {
+#tool-forward:hover:active {
   -moz-image-region: rect(112px 96px 160px 48px);
   padding-top: 0px !important;
 }
 
 #tool-forward[disabled="true"] {
-  -moz-image-region: rect(112px 48px 160px 0px);
-/*XXX no image yet
-  -moz-image-region: rect(112px 144px 160px 96px);
-*/
+  -moz-image-region: rect(112px 144px 160px 96px) !important;
   padding-top: 0px !important;
 }
 
