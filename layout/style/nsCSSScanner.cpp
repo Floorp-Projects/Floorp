@@ -61,14 +61,14 @@
 #undef COLLECT_WHITESPACE
 
 static const PRUnichar CSS_ESCAPE = PRUnichar('\\');
-const PRUint8 nsCSSScanner::IS_DIGIT = 0x01;
-const PRUint8 nsCSSScanner::IS_HEX_DIGIT = 0x02;
-const PRUint8 nsCSSScanner::START_IDENT = 0x04;
-const PRUint8 nsCSSScanner::IS_IDENT = 0x08;
-const PRUint8 nsCSSScanner::IS_WHITESPACE = 0x10;
+static const PRUint8 IS_DIGIT = 0x01;
+static const PRUint8 IS_HEX_DIGIT = 0x02;
+static const PRUint8 START_IDENT = 0x04;
+static const PRUint8 IS_IDENT = 0x08;
+static const PRUint8 IS_WHITESPACE = 0x10;
 
 static PRBool gLexTableSetup = PR_FALSE;
-PRUint8 nsCSSScanner::gLexTable[256];
+static PRUint8 gLexTable[256];
 
 #ifdef CSS_REPORT_PARSE_ERRORS
 static PRBool gReportErrors = PR_TRUE;
@@ -77,9 +77,8 @@ static nsIFactory *gScriptErrorFactory;
 static nsIStringBundle *gStringBundle;
 #endif
 
-/* static */
-void
-nsCSSScanner::BuildLexTable()
+static void
+BuildLexTable()
 {
   gLexTableSetup = PR_TRUE;
 
@@ -107,6 +106,40 @@ nsCSSScanner::BuildLexTable()
     lt[i] |= IS_IDENT | START_IDENT;
     lt[i+32] |= IS_IDENT | START_IDENT;
   }
+}
+
+static inline PRBool
+IsIdentStart(PRInt32 aChar)
+{
+  return aChar >= 0 &&
+    (aChar >= 256 || (gLexTable[aChar] & START_IDENT) != 0);
+}
+
+static inline PRBool
+StartsIdent(PRInt32 aFirstChar, PRInt32 aSecondChar)
+{
+  return IsIdentStart(aFirstChar) ||
+    (aFirstChar == '-' && IsIdentStart(aSecondChar));
+}
+
+static inline PRBool
+IsWhitespace(PRInt32 ch) {
+  return PRUint32(ch) < 256 && (gLexTable[ch] & IS_WHITESPACE) != 0;
+}
+
+static inline PRBool
+IsDigit(PRInt32 ch) {
+  return PRUint32(ch) < 256 && (gLexTable[ch] & IS_DIGIT) != 0;
+}
+
+static inline PRBool
+IsHexDigit(PRInt32 ch) {
+  return PRUint32(ch) < 256 && (gLexTable[ch] & IS_HEX_DIGIT) != 0;
+}
+
+static inline PRBool
+IsIdent(PRInt32 ch) {
+  return ch >= 0 && (ch >= 256 || (gLexTable[ch] & IS_IDENT) != 0);
 }
 
 nsCSSToken::nsCSSToken()
