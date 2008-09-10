@@ -234,9 +234,13 @@
       </hbox>
     </vbox>
 
-    <vbox id="urllist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
+    <vbox id="urllist-container" hidden="true" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <hbox id="urllist-items-container" flex="1">
-        <richlistbox id="urllist-items" flex="1"/>
+        <richlistbox id="urllist-items" flex="1"
+                     onkeypress="if (event.keyCode == event.DOM_VK_RETURN) BrowserUI.goToURI(this.selectedItem.value)"/>
+      </hbox>
+      <hbox pack="end">
+        <button id="urllist-close" oncommand="BrowserUI.show(PANELMODE_NONE)"/>
       </hbox>
     </vbox>
 
