@@ -76,7 +76,7 @@ ChannelListener.prototype = {
     if (this._got_onstoprequest)
       do_throw("onDataAvailable after onStopRequest event!");
     if (!request.isPending())
-      do_throw("request reports itself as not pending from onStartRequest!");
+      do_throw("request reports itself as not pending from onDataAvailable!");
     if (this._flags & CL_EXPECT_FAILURE)
       do_throw("Got data despite expecting a failure");
 
