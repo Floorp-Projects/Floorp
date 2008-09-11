@@ -60,7 +60,7 @@ public:
   NS_DECL_NSIDOMSVGSTYLABLE
 
   // nsIContent
-  virtual const nsAttrValue* GetClasses() const;
+  virtual const nsAttrValue* DoGetClasses() const;
 
 protected:
   nsRefPtr<nsSVGClassValue> mClassName;
