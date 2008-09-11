@@ -39,7 +39,7 @@
 
 
 #define NS_SCRIPT_LANGUAGE_PYTHON_CID \
-  { 0xcee4ee7d, 0xf230, 0x49da, { 0x94, 0xd8, 0x6a, 0x9a, 0x48, 0xe, 0x12, 0xb3 } }
+  { 0x1f8c24f2, 0x8808, 0x47ec, { 0x81, 0x12, 0x94, 0x99, 0xb3, 0x70, 0x1b, 0x68 } }
 
 #define NS_SCRIPT_LANGUAGE_PYTHON_CONTRACTID_NAME \
   "@mozilla.org/script-language;1?script-type=application/x-python"
@@ -58,8 +58,6 @@ public:
   virtual PRUint32 GetScriptTypeID() {
     return nsIProgrammingLanguage::PYTHON;
   }
-
-  virtual void ShutDown() {;}
 
   virtual nsresult CreateContext(nsIScriptContext **ret);
 
