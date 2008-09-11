@@ -79,35 +79,28 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXBLInsertionPoint, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXBLInsertionPoint, Release)
 
-already_AddRefed<nsIContent>
+nsIContent*
 nsXBLInsertionPoint::GetInsertionParent()
 {
-  NS_IF_ADDREF(mParentElement);
   return mParentElement;
 }
 
-already_AddRefed<nsIContent>
+nsIContent*
 nsXBLInsertionPoint::GetDefaultContent()
 {
-  nsIContent* defaultContent = mDefaultContent;
-  NS_IF_ADDREF(defaultContent);
-  return defaultContent;
+  return mDefaultContent;
 }
 
-already_AddRefed<nsIContent>
+nsIContent*
 nsXBLInsertionPoint::GetDefaultContentTemplate()
 {
-  nsIContent* defaultContent = mDefaultContentTemplate;
-  NS_IF_ADDREF(defaultContent);
-  return defaultContent;
+  return mDefaultContentTemplate;
 }
 
-already_AddRefed<nsIContent>
+nsIContent*
 nsXBLInsertionPoint::ChildAt(PRUint32 aIndex)
 {
-  nsIContent* result = mElements.ObjectAt(aIndex);
-  NS_IF_ADDREF(result);
-  return result;
+  return mElements.ObjectAt(aIndex);
 }
 
 PRBool

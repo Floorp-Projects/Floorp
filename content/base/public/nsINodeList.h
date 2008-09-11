@@ -12,18 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is Mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Mozilla.com.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *         Boris Zbarsky <bzbarsky@mit.edu> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,38 +35,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * A base class for simple DOM NodeLists which implements nsISupports and Item()
- * and expects subclasess to implement GetLength() and GetNodeAt()
+#ifndef nsINodeList_h___
+#define nsINodeList_h___
+
+class nsINode;
+
+// IID for the nsINodeList interface
+#define NS_INODELIST_IID \
+{ 0x06a6639a, 0x2d47, 0x4551, \
+ { 0x94, 0xef, 0x93, 0xb8, 0xe1, 0x09, 0x3a, 0xb3 } }
+
+
+/**
+ * An internal interface that allows QI-less getting of nodes from node lists
  */
-
-// XXXbz we don't use this for much... should we be using it more, or
-// just nix it?
-
-#ifndef nsGenericDOMNodeList_h__
-#define nsGenericDOMNodeList_h__
-
-#include "nsISupports.h"
-#include "nsIDOMNodeList.h"
-#include "nsINodeList.h"
-
-class nsGenericDOMNodeList : public nsIDOMNodeList,
-                             public nsINodeList
-{
+class nsINodeList : public nsISupports {
 public:
-  nsGenericDOMNodeList();
-  virtual ~nsGenericDOMNodeList();
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODELIST_IID)
 
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-
-  // The following need to be defined in the subclass
-  // nsIDOMNodeList interface
-  NS_IMETHOD    GetLength(PRUint32* aLength)=0;
-
-  // nsINodeList interface
+  /**
+   * Get the node at the index.  Returns null if the index is out of bounds
+   */
   virtual nsINode* GetNodeAt(PRUint32 aIndex) = 0;
 };
 
-#endif // nsGenericDOMNodeList_h__
+NS_DEFINE_STATIC_IID_ACCESSOR(nsINodeList, NS_INODELIST_IID)
+
+#endif /* nsINodeList_h___ */
