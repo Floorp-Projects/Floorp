@@ -7570,15 +7570,12 @@ nsresult
 nsArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
                      nsISupports **aResult)
 {
-  nsCOMPtr<nsIDOMNodeList> list(do_QueryInterface(aNative));
+  nsCOMPtr<nsINodeList> list(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
 
-  nsIDOMNode *node = nsnull; // Weak, transfer the ownership over to aResult
-  nsresult rv = list->Item(aIndex, &node);
+  NS_IF_ADDREF(*aResult = list->GetNodeAt(aIndex));
 
-  *aResult = node;
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -7696,11 +7693,17 @@ nsresult
 nsHTMLCollectionSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
                               nsISupports **aResult)
 {
+  // Common case is that we're also an nsINodeList
+  nsresult rv = nsArraySH::GetItemAt(aNative, aIndex, aResult);
+  if (NS_SUCCEEDED(rv)) {
+    return rv;
+  }
+  
   nsCOMPtr<nsIDOMHTMLCollection> collection(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(collection, NS_ERROR_UNEXPECTED);
 
   nsIDOMNode *node = nsnull; // Weak, transfer the ownership over to aResult
-  nsresult rv = collection->Item(aIndex, &node);
+  rv = collection->Item(aIndex, &node);
 
   *aResult = node;
 

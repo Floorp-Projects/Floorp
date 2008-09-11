@@ -304,7 +304,7 @@ nsIdentifierMapEntry::Traverse(nsCycleCollectionTraversalCallback* aCallback)
   if (mNameContentList != NAME_NOT_VALID) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
                                        "mIdentifierMap mNameContentList");
-    aCallback->NoteXPCOMChild(mNameContentList);
+    aCallback->NoteXPCOMChild(static_cast<nsIDOMNodeList*>(mNameContentList));
   }
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback, "mIdentifierMap mDocAllList");
