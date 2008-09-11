@@ -96,7 +96,7 @@ public:
   // NP API handlers
   void print(NPPrint * pNPPrint);
   void URLNotify(const char * szURL);
-  NPError newStream(NPMIMEType type, NPStream *stream, NPBool seekable, uint16 *stype);
+  NPError newStream(NPMIMEType type, NPStream *stream, NPBool seekable, uint16_t *stype);
   NPError destroyStream(NPStream *stream, NPError reason);
 
   // Windows message handlers
