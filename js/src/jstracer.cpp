@@ -4602,6 +4602,9 @@ TraceRecorder::guardShapelessCallee(jsval& callee)
 bool
 TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
 {
+    if (JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(fval)) != globalObj)
+        ABORT_TRACE("JSOP_CALL or JSOP_NEW crosses global scopes");
+
     JSStackFrame* fp = cx->fp;
 
     // TODO: track the copying via the tracker...
