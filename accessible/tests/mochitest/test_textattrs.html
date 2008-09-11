@@ -17,6 +17,7 @@
     const nsIObserverService = Components.interfaces.nsIObserverService;
 
     var gAccRetrieval = null;
+    var gComputedStyle = null;
 
     /**
      * Test text attributes.
@@ -176,16 +177,17 @@
 
       window.setTimeout(function()
         {
+          gComputedStyle = document.defaultView.getComputedStyle(node, "");
           var defAttrs = {
-            "font-style": "normal",
-            "text-align": "start",
-            "font-size": "11px",
-            "background-color": "rgb(255, 255, 255)",
-            "font-weight": "400",
-            "text-indent": "0px",
-            "color": "rgb(0, 0, 0)",
-            "font-family": "Lucida Grande",
-            "text-position": "baseline"
+            "font-style": gComputedStyle.fontStyle,
+            "text-align": gComputedStyle.textAlign,
+            "font-size": gComputedStyle.fontSize,
+            "background-color": gComputedStyle.backgroundColor,
+            "font-weight": gComputedStyle.fontWeight,
+            "text-indent": gComputedStyle.textIndent,
+            "color": gComputedStyle.color,
+            "font-family": gComputedStyle.fontFamily,
+            "text-position": gComputedStyle.verticalAlign
           };
           testDefaultTextAttrs(ID, defAttrs);
 
@@ -218,16 +220,18 @@
       //////////////////////////////////////////////////////////////////////////
       // area1
       var ID = "area1";
+      var tempElem = document.getElementById(ID);
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       var defAttrs = {
-        "font-style": "normal",
-        "text-align": "start",
-        "font-size": "16px",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": "400",
-        "text-indent": "0px",
-        "color": "rgb(0, 0, 0)",
-        "font-family": "serif",
-        "text-position": "baseline"
+        "font-style": gComputedStyle.fontStyle,
+        "text-align": gComputedStyle.textAlign,
+        "font-size": gComputedStyle.fontSize,
+        "background-color": "rgb(255, 255, 255)", // computed style is transparent
+        "font-weight": gComputedStyle.fontWeight,
+        "text-indent": gComputedStyle.textIndent,
+        "color": gComputedStyle.color,
+        "font-family": gComputedStyle.fontFamily,
+        "text-position": gComputedStyle.verticalAlign
       };
 
       testDefaultTextAttrs(ID, defAttrs);
@@ -235,7 +239,9 @@
       var attrs = {};
       testTextAttrs(ID, 0, attrs, 0, 7);
 
-      attrs = {"font-weight": "401"};
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"font-weight": gComputedStyle.fontWeight};
       testTextAttrs(ID, 7, attrs, 7, 11);
 
       attrs = {};
@@ -244,16 +250,18 @@
       //////////////////////////////////////////////////////////////////////////
       // area2
       ID = "area2";
+      tempElem = document.getElementById(ID);
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
-        "font-style": "normal",
-        "text-align": "start",
-        "font-size": "16px",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": "400",
-        "text-indent": "0px",
-        "color": "rgb(0, 0, 0)",
-        "font-family": "serif",
-        "text-position": "baseline"
+        "font-style": gComputedStyle.fontStyle,
+        "text-align": gComputedStyle.textAlign,
+        "font-size": gComputedStyle.fontSize,
+        "background-color": "rgb(255, 255, 255)", // computedStyle is transparent
+        "font-weight": gComputedStyle.fontWeight,
+        "text-indent": gComputedStyle.textIndent,
+        "color": gComputedStyle.color,
+        "font-family": gComputedStyle.fontFamily,
+        "text-position": gComputedStyle.verticalAlign
       };
 
       testDefaultTextAttrs(ID, defAttrs);
@@ -261,12 +269,19 @@
       attrs = {};
       testTextAttrs(ID, 0, attrs, 0, 7);
 
-      attrs = {"font-weight": "401"};
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"font-weight": gComputedStyle.fontWeight};
       testTextAttrs(ID, 7, attrs, 7, 12);
 
-      attrs = {"font-style": "italic", "font-weight": "401"};
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"font-style": gComputedStyle.fontStyle,
+               "font-weight": gComputedStyle.fontWeight};
       testTextAttrs(ID, 13, attrs, 12, 19);
 
+      tempElem = tempElem.parentNode;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"font-weight": "401"};
       testTextAttrs(ID, 20, attrs, 19, 23);
 
@@ -276,82 +291,107 @@
       //////////////////////////////////////////////////////////////////////////
       // area3
       ID = "area3";
+      tempElem = document.getElementById(ID);
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
-        "font-style": "normal",
-        "text-align": "start",
-        "font-size": "16px",
-        "background-color": "rgb(0, 0, 255)",
-        "font-weight": "400",
-        "text-indent": "0px",
-        "color": "rgb(0, 0, 0)",
-        "font-family": "serif",
-        "text-position": "baseline"
+        "font-style": gComputedStyle.fontStyle,
+        "text-align": gComputedStyle.textAlign,
+        "font-size": gComputedStyle.fontSize,
+        "background-color": gComputedStyle.backgroundColor,
+        "font-weight": gComputedStyle.fontWeight,
+        "text-indent": gComputedStyle.textIndent,
+        "color": gComputedStyle.color,
+        "font-family": gComputedStyle.fontFamily,
+        "text-position": gComputedStyle.verticalAlign
       };
 
       testDefaultTextAttrs(ID, defAttrs);
 
-      attrs = {"color": "rgb(0, 128, 0)"};
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 0, attrs, 0, 6);
 
-      attrs = {"color": "rgb(255, 0, 0)"};
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 6, attrs, 6, 26);
 
-      attrs = {"color": "rgb(0, 128, 0)"};
+      tempElem = tempElem.parentNode;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 26, attrs, 26, 27);
 
-      attrs = {"color": "rgb(0, 128, 0)", "background-color": "rgb(255, 255, 0)"};
+      tempElem = tempElem.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color,
+               "background-color": gComputedStyle.backgroundColor};
       testTextAttrs(ID, 27, attrs, 27, 50);
 
       //////////////////////////////////////////////////////////////////////////
       // area4
       ID = "area4";
+      tempElem = document.getElementById(ID);
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
-        "font-style": "normal",
-        "text-align": "start",
-        "font-size": "16px",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": "400",
-        "text-indent": "0px",
-        "color": "rgb(0, 0, 0)",
-        "font-family": "serif",
-        "text-position": "baseline"
+        "font-style": gComputedStyle.fontStyle,
+        "text-align": gComputedStyle.textAlign,
+        "font-size": gComputedStyle.fontSize,
+        "background-color": "rgb(255, 255, 255)", // transparent
+        "font-weight": gComputedStyle.fontWeight,
+        "text-indent": gComputedStyle.textIndent,
+        "color": gComputedStyle.color,
+        "font-family": gComputedStyle.fontFamily,
+        "text-position": gComputedStyle.verticalAlign
       };
 
       testDefaultTextAttrs(ID, defAttrs);
 
-      attrs = {"color": "rgb(0, 128, 0)"};
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 0, attrs, 0, 16);
 
-      attrs = {"color": "rgb(255, 0, 0)"};
+      tempElem = tempElem.nextSibling.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 16, attrs, 16, 33);
 
-      attrs = {"color": "rgb(0, 128, 0)"};
+      tempElem = tempElem.parentNode;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 34, attrs, 33, 46);
 
       //////////////////////////////////////////////////////////////////////////
       // area5
       ID = "area5";
+      tempElem = document.getElementById(ID);
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
-        "font-style": "normal",
-        "text-align": "start",
-        "font-size": "16px",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": "400",
-        "text-indent": "0px",
-        "color": "rgb(0, 0, 0)",
-        "font-family": "serif",
-        "text-position": "baseline"
+        "font-style": gComputedStyle.fontStyle,
+        "text-align": gComputedStyle.textAlign,
+        "font-size": gComputedStyle.fontSize,
+        "background-color": "rgb(255, 255, 255)", // transparent
+        "font-weight": gComputedStyle.fontWeight,
+        "text-indent": gComputedStyle.textIndent,
+        "color": gComputedStyle.color,
+        "font-family": gComputedStyle.fontFamily,
+        "text-position": gComputedStyle.verticalAlign
       };
 
       testDefaultTextAttrs(ID, defAttrs);
 
-      attrs = {"color": "rgb(0, 128, 0)"};
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 0, attrs, 0, 5);
 
       attrs = {};
       testTextAttrs(ID, 7, attrs, 5, 8);
 
-      attrs = {"color": "rgb(255, 0, 0)"};
+      tempElem = tempElem.nextSibling.nextSibling.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 9, attrs, 8, 11);
 
       attrs = {};
@@ -360,16 +400,18 @@
       //////////////////////////////////////////////////////////////////////////
       // area6 (CSS vertical-align property, bug 445938)
       ID = "area6";
+      tempElem = document.getElementById(ID);
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
-        "font-style": "normal",
-        "text-align": "start",
-        "font-size": "16px",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": "400",
-        "text-indent": "0px",
-        "color": "rgb(0, 0, 0)",
-        "font-family": "serif",
-        "text-position": "baseline"
+        "font-style": gComputedStyle.fontStyle,
+        "text-align": gComputedStyle.textAlign,
+        "font-size": gComputedStyle.fontSize,
+        "background-color": "rgb(255, 255, 255)", // transparent
+        "font-weight": gComputedStyle.fontWeight,
+        "text-indent": gComputedStyle.textIndent,
+        "color": gComputedStyle.color,
+        "font-family": gComputedStyle.fontFamily,
+        "text-position": gComputedStyle.verticalAlign
       };
 
       testDefaultTextAttrs(ID, defAttrs);
@@ -377,40 +419,52 @@
       attrs = {};
       testTextAttrs(ID, 0, attrs, 0, 5);
 
-      attrs = {"text-position": "super", "font-size": "13px" };
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"text-position": gComputedStyle.verticalAlign,
+               "font-size": gComputedStyle.fontSize};
       testTextAttrs(ID, 5, attrs, 5, 13);
 
       attrs = {};
       testTextAttrs(ID, 13, attrs, 13, 27);
 
-      attrs = {"text-position": "super" };
+      tempElem = tempElem.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"text-position": gComputedStyle.verticalAlign};
       testTextAttrs(ID, 27, attrs, 27, 35);
 
       attrs = {};
       testTextAttrs(ID, 35, attrs, 35, 39);
 
-      attrs = {"text-position": "sub", "font-size": "13px" };
+      tempElem = tempElem.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"text-position": gComputedStyle.verticalAlign,
+               "font-size": gComputedStyle.fontSize};
       testTextAttrs(ID, 39, attrs, 39, 50);
 
       attrs = {};
       testTextAttrs(ID, 50, attrs, 50, 55);
 
-      attrs = {"text-position": "sub" };
+      tempElem = tempElem.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"text-position": gComputedStyle.verticalAlign};
       testTextAttrs(ID, 55, attrs, 55, 64);
 
       //////////////////////////////////////////////////////////////////////////
       // area7
       ID = "area7";
+      tempElem = document.getElementById(ID);
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       defAttrs = {
-        "font-style": "normal",
-        "text-align": "start",
-        "font-size": "16px",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": "400",
-        "text-indent": "0px",
-        "color": "rgb(0, 0, 0)",
-        "font-family": "serif",
-        "text-position": "baseline"
+        "font-style": gComputedStyle.fontStyle,
+        "text-align": gComputedStyle.textAlign,
+        "font-size": gComputedStyle.fontSize,
+        "background-color": "rgb(255, 255, 255)", // transparent
+        "font-weight": gComputedStyle.fontWeight,
+        "text-indent": gComputedStyle.textIndent,
+        "color": gComputedStyle.color,
+        "font-family": gComputedStyle.fontFamily,
+        "text-position": gComputedStyle.verticalAlign
       };
 
       testDefaultTextAttrs(ID, defAttrs);
@@ -421,7 +475,10 @@
       attrs = {"language": "en"};
       testTextAttrs(ID, 12, attrs, 12, 13);
 
-      attrs = {"language" :"en", "background-color": "rgb(0, 0, 255)"};
+      tempElem = tempElem.firstChild.nextSibling.nextSibling.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"language" :"en",
+               "background-color": gComputedStyle.backgroundColor};
       testTextAttrs(ID, 13, attrs, 13, 26);
 
       attrs = {"language": "en" };
@@ -436,13 +493,20 @@
       attrs = {};
       testTextAttrs(ID, 43, attrs, 43, 50);
 
-      attrs = {"color": "rgb(255, 0, 255)"};
+      tempElem = tempElem.nextSibling.nextSibling.nextSibling.nextSibling.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 50, attrs, 50, 57);
 
-      attrs = {"font-weight": "401", "color": "rgb(255, 0, 255)" };
+      tempElem = tempElem.firstChild.nextSibling;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"font-weight": gComputedStyle.fontWeight,
+               "color": gComputedStyle.color};
       testTextAttrs(ID, 57, attrs, 57, 61);
 
-      attrs = {"color": "rgb(255, 0, 255)"};
+      tempElem = tempElem.parentNode;
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 61, attrs, 61, 68);
 
       //////////////////////////////////////////////////////////////////////////
