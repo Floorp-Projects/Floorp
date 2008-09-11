@@ -592,7 +592,7 @@ public:
     virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
     virtual nsIAtom* GetID() const;
-    virtual const nsAttrValue* GetClasses() const;
+    virtual const nsAttrValue* DoGetClasses() const;
 
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
     virtual nsICSSStyleRule* GetInlineStyleRule();

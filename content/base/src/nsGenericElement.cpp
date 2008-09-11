@@ -2916,8 +2916,9 @@ nsGenericElement::GetID() const
 }
 
 const nsAttrValue*
-nsGenericElement::GetClasses() const
+nsGenericElement::DoGetClasses() const
 {
+  NS_NOTREACHED("Shouldn't ever be called");
   return nsnull;
 }
 
