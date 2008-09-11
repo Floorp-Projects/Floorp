@@ -774,8 +774,8 @@ CreateControl(const CLSID &clsid, PluginInstanceData *pData, PropertyList &pl, L
 static NPError
 NewControl(const char *pluginType,
            PluginInstanceData *pData,
-           uint16 mode,
-           int16 argc,
+           uint16_t mode,
+           int16_t argc,
            char *argn[],
            char *argv[])
 {
@@ -790,7 +790,7 @@ NewControl(const char *pluginType,
         clsid = MozAxPlugin::GetCLSIDForType(pluginType);
     }
 
-    for (int16 i = 0; i < argc; i++)
+    for (int16_t i = 0; i < argc; i++)
     {
         if (stricmp(argn[i], "CLSID") == 0 ||
             stricmp(argn[i], "CLASSID") == 0)
@@ -923,8 +923,8 @@ NewControl(const char *pluginType,
 //
 NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
                 NPP instance,
-                uint16 mode,
-                int16 argc,
+                uint16_t mode,
+                int16_t argc,
                 char* argn[],
                 char* argv[],
                 NPSavedData* saved)
@@ -1128,7 +1128,7 @@ NPP_NewStream(NPP instance,
               NPMIMEType type,
               NPStream *stream, 
               NPBool seekable,
-              uint16 *stype)
+              uint16_t *stype)
 {
     ATLTRACE(_T("NPP_NewStream()\n"));
 
@@ -1172,9 +1172,9 @@ NPP_StreamAsFile(NPP instance, NPStream *stream, const char* fname)
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
 
-int32 STREAMBUFSIZE = 0X0FFFFFFF;   // we are reading from a file in NPAsFile mode
-                                    // so we can take any size stream in our write
-                                    // call (since we ignore it)
+int32_t STREAMBUFSIZE = 0X0FFFFFFF;   // we are reading from a file in NPAsFile mode
+                                      // so we can take any size stream in our write
+                                      // call (since we ignore it)
                                 
 
 // NPP_WriteReady
@@ -1182,7 +1182,7 @@ int32 STREAMBUFSIZE = 0X0FFFFFFF;   // we are reading from a file in NPAsFile mo
 //    The number of bytes that a plug-in is willing to accept in a subsequent
 //    NPO_Write call.
 //
-int32 NP_LOADDS
+int32_t NP_LOADDS
 NPP_WriteReady(NPP instance, NPStream *stream)
 {
     return STREAMBUFSIZE;  
@@ -1193,8 +1193,8 @@ NPP_WriteReady(NPP instance, NPStream *stream)
 //
 //    Provides len bytes of data.
 //
-int32 NP_LOADDS
-NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
+int32_t NP_LOADDS
+NPP_Write(NPP instance, NPStream *stream, int32_t offset, int32_t len, void *buffer)
 {   
     return len;
 }
