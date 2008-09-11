@@ -69,9 +69,8 @@ class nsIFormSubmission;
 #define NS_FORM_OBJECT         21
 
 #define NS_IFORMCONTROL_IID   \
-{ 0x119c5ce8, 0xf4b0, 0x456c, \
-  {0x83, 0x4d, 0xb1, 0x90, 0x3d, 0x99, 0x9f, 0xb3} }
-
+{ 0x52dc1f0d, 0x1683, 0x4dd7, \
+ { 0xae, 0x0a, 0xc4, 0x76, 0x10, 0x64, 0x2f, 0xa8 } }
 
 /**
  * Interface which all form controls (e.g. buttons, checkboxes, text,
@@ -92,25 +91,23 @@ public:
 
   /**
    * Set the form for this form control.
-   * @param aForm the form.  Either this, or the control's current
-   *        form must be null.
+   * @param aForm the form.  This must not be null.
    *
-   * XXXbz We should really have a SetForm method (which takes aForm
-   * and nothing else) and a ClearForm() method (which takes
-   * aRemoveFromForm fand aNotify).
-   * 
+   * @note that when setting the form the control is not added to the
+   * form.  It adds itself when it gets bound to the tree thereafter,
+   * so that it can be properly sorted with the other controls in the
+   * form.
+   */
+  virtual void SetForm(nsIDOMHTMLFormElement* aForm) = 0;
+
+  /**
+   * Tell the control to forget about its form.
+   *
    * @param aRemoveFromForm set false if you do not want this element removed
    *        from the form.  (Used by nsFormControlList::Clear())
    * @param aNotify If true, send nsIDocumentObserver notifications as needed.
-   *
-   * @note that when setting a new form aNotify is ignored and the
-   * control is not added to the form itself.  It adds itself when it
-   * gets bound to the tree thereafter, so that it can be properly
-   * sorted with the other controls in the form.
    */
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
-                     PRBool aRemoveFromForm,
-                     PRBool aNotify) = 0;
+  virtual void ClearForm(PRBool aRemoveFromForm, PRBoqol aNotify) = 0;
 
   /**
    * Get the type of this control as an int (see NS_FORM_* above)

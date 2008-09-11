@@ -523,10 +523,10 @@ MaybeSetForm(nsGenericHTMLElement* aContent, nsHTMLTag aNodeType,
   NS_ASSERTION(formControl,
                "nsGenericHTMLElement didn't implement nsIFormControl");
   nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(form));
-  NS_ASSERTION(!form || formElement,
+  NS_ASSERTION(formElement,
                "nsGenericHTMLElement didn't implement nsIDOMHTMLFormElement");
 
-  formControl->SetForm(formElement, PR_TRUE, PR_FALSE);
+  formControl->SetForm(formElement);
 }
 
 /**
