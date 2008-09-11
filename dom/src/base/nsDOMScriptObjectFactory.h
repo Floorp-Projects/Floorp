@@ -96,8 +96,6 @@ public:
                                   PRBool aHasClassInterface,
                                   const nsCID *aConstructorCID);
 
-  static nsresult Startup();
-
 protected:
   PRBool mLoadedAllLanguages;
   nsCOMPtr<nsIScriptRuntime> mLanguageArray[NS_STID_ARRAY_UBOUND];
