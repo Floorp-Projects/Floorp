@@ -1337,9 +1337,17 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, PRBool aActi
     // Transform from sRGBA to monitor RGBA. This seems like it would make trying
     // to match the system appearance lame, so probably we just shouldn't color 
     // correct chrome.
-    cmsHTRANSFORM transform = NULL;
-    if ((gfxPlatform::GetCMSMode() == eCMSMode_All) && (transform = gfxPlatform::GetCMSRGBATransform()))
-      cmsDoTransform(transform, &aColor, &aColor, 1);
+    if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
+      cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBATransform();
+      if (transform) {
+        PRUint8 color[3];
+        color[0] = NS_GET_R(aColor);
+        color[1] = NS_GET_G(aColor);
+        color[2] = NS_GET_B(aColor);
+        cmsDoTransform(transform, color, color, 1);
+        aColor = NS_RGB(color[0], color[1], color[2]);
+      }
+    }
 
     [(ToolbarWindow*)mWindow setTitlebarColor:[NSColor colorWithDeviceRed:NS_GET_R(aColor)/255.0
                                                                     green:NS_GET_G(aColor)/255.0

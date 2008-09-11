@@ -538,6 +538,31 @@ gfxPlatform::GetRenderingIntent()
     return gCMSIntent;
 }
 
+void 
+gfxPlatform::TransformPixel(const gfxRGBA& in, gfxRGBA& out, cmsHTRANSFORM transform)
+{
+
+    if (transform) {
+#ifdef IS_LITTLE_ENDIAN
+        PRUint32 packed = in.Packed(gfxRGBA::PACKED_ABGR);
+        cmsDoTransform(transform,
+                       (PRUint8 *)&packed, (PRUint8 *)&packed,
+                       1);
+        out.~gfxRGBA();
+        new (&out) gfxRGBA(packed, gfxRGBA::PACKED_ABGR);
+#else
+        PRUint32 packed = in.Packed(gfxRGBA::PACKED_ARGB);
+        cmsDoTransform(transform,
+                       (PRUint8 *)&packed + 1, (PRUint8 *)&packed + 1,
+                       1);
+        out.~gfxRGBA();
+        new (&out) gfxRGBA(packed, gfxRGBA::PACKED_ARGB);
+#endif
+    }
+
+    else if (&out != &in)
+        out = in;
+}
 
 cmsHPROFILE
 gfxPlatform::GetPlatformCMSOutputProfile()
