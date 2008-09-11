@@ -666,7 +666,7 @@ var BrowserUI = {
   closePopup : function(aEvent)
   {
     if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
-      BrowserUI.show(PANELMODE_NONE);
+      BrowserUI.show(UIMODE_NONE);
   },
 
   showHistory : function() {

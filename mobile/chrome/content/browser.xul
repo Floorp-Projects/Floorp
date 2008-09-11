@@ -249,7 +249,7 @@
                      onkeypress="if (event.keyCode == event.DOM_VK_RETURN) BrowserUI.goToURI(this.selectedItem.value)"/>
       </hbox>
       <hbox pack="end">
-        <button id="urllist-close" oncommand="BrowserUI.show(PANELMODE_NONE)"/>
+        <button id="urllist-close" oncommand="BrowserUI.show(UIMODE_NONE)"/>
       </hbox>
     </vbox>
 
