@@ -254,6 +254,8 @@ public:
                                            nsXHREventTarget)
 
 protected:
+  friend class nsMultipartProxyListener;
+
   nsresult DetectCharset(nsACString& aCharset);
   nsresult ConvertBodyToText(nsAString& aOutBuffer);
   static NS_METHOD StreamReaderFunc(nsIInputStream* in,
