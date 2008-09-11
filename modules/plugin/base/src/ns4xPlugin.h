@@ -35,18 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ns4xPlugin_h__
-#define ns4xPlugin_h__
+#ifndef ns4xPlugin_h_
+#define ns4xPlugin_h_
 
 #include "nsIFactory.h"
 #include "nsIPlugin.h"
 #include "nsIPluginInstancePeer.h"
 #include "nsIWindowlessPlugInstPeer.h"
-#include "prlink.h"  // for PRLibrary
+#include "prlink.h"
 #include "npupp.h"
 #include "nsPluginHostImpl.h"
-
-////////////////////////////////////////////////////////////////////////
 
 /*
  * Use this macro before each exported function
@@ -54,15 +52,13 @@
  * itself), to ensure that the function has the
  * right calling conventions on Win16.
  */
-
-/* XXX NP_CALLBACK should be the same as NP_LOADDS in npapi.h which differs
-   for WIN16 and maybe WIN64? */
+// XXX NP_CALLBACK should be the same as NP_LOADDS in npapi.h which differs
+// for WIN16 and maybe WIN64?
 #ifdef XP_OS2
 #define NP_CALLBACK _System
 #else
 #define NP_CALLBACK
 #endif
-
 #if defined(XP_WIN)
 #define NS_4XPLUGIN_CALLBACK(_type, _name) _type (__stdcall * _name)
 #elif defined(XP_OS2)
@@ -71,103 +67,50 @@
 #define NS_4XPLUGIN_CALLBACK(_type, _name) _type (* _name)
 #endif
 
-////////////////////////////////////////////////////////////////////////
-
-// XXX These are defined in platform specific FE directories right now :-/
-
-#if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
 typedef NS_4XPLUGIN_CALLBACK(NPError, NP_GETENTRYPOINTS) (NPPluginFuncs* pCallbacks);
 typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* pCallbacks);
 typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINUNIXINIT) (const NPNetscapeFuncs* pCallbacks,NPPluginFuncs* fCallbacks);
 typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
-#endif
-
 #ifdef XP_MACOSX
-typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
 typedef NS_4XPLUGIN_CALLBACK(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, NPPluginFuncs* pCallbacks, NPP_ShutdownUPP* unloadUpp);
-
-/*  Since WebKit supports getting function pointers via NP_GetEntryPoints and
- *  sending function pointers via NP_Initialize, it would be nice if we
- *  supported that too. We can't do it on PPC because there is no standard for
- *  whether or not function pointers returned via NP_GetEntryPoints or sent
- *  via NP_Initialize are supposed to be wrapped with tvector glue. However,
- *  since there are no tvectors on Intel we can do it on that arch.
- */
-#ifndef __POWERPC__
-#define MACOSX_GETENTRYPOINT_SUPPORT 1
-typedef NS_4XPLUGIN_CALLBACK(NPError, NP_GETENTRYPOINTS) (NPPluginFuncs* pCallbacks);
-typedef NS_4XPLUGIN_CALLBACK(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* pCallbacks);
 #endif
-
-#endif
-
-class nsIServiceManagerObsolete;
-class nsIMemory;
-
-////////////////////////////////////////////////////////////////////////
-
-/**
- * A 5.0 wrapper for a 4.x style plugin.
- */
 
 class ns4xPlugin : public nsIPlugin
 {
 public:
   ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
-             NP_PLUGINSHUTDOWN aShutdown,
-             nsIServiceManagerObsolete* serviceMgr);
+             NP_PLUGINSHUTDOWN aShutdown);
   virtual ~ns4xPlugin(void);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFACTORY
   NS_DECL_NSIPLUGIN
-  
-  ////////////////////////////////////////////////////////////////////
-  // ns4xPlugin-specific methods
 
-  /**
-   * A static factory method for constructing 4.x plugins. Constructs
-   * and initializes an ns4xPlugin object, and returns it in
-   * <b>result</b>.
-   */
-   
-  static nsresult
-  CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
-               const char* aFileName,
-               const char* aFullPath,
-               PRLibrary* aLibrary,
-               nsIPlugin** aResult);
-
+  // Constructs and initializes an ns4xPlugin object
+  static nsresult CreatePlugin(const char* aFileName,
+                               const char* aFullPath,
+                               PRLibrary* aLibrary,
+                               nsIPlugin** aResult);
 #ifdef XP_MACOSX
   void SetPluginRefNum(short aRefNum);
 #endif
 
 protected:
-  /**
-   * Ensures that the static CALLBACKS is properly initialized
-   */
+  // Ensures that the static CALLBACKS is properly initialized
   static void CheckClassInitialized(void);
-
 
 #ifdef XP_MACOSX
   short fPluginRefNum;
-#ifdef MACOSX_GETENTRYPOINT_SUPPORT
-  PRBool usesGetEntryPoints;
-#endif
 #endif
 
-  /**
-   * The plugin-side callbacks that the browser calls. One set of
-   * plugin callbacks for each plugin.
-   */
+  // The plugin-side callbacks that the browser calls. One set of
+  // plugin callbacks for each plugin.
   NPPluginFuncs fCallbacks;
   PRLibrary*    fLibrary;
 
   NP_PLUGINSHUTDOWN fShutdownEntry;
 
-  /**
-   * The browser-side callbacks that a 4.x-style plugin calls.
-   */
+  // The browser-side callbacks that a 4.x-style plugin calls.
   static NPNetscapeFuncs CALLBACKS;
 };
 
@@ -321,4 +264,4 @@ protected:
   char *mOldException;
 };
 
-#endif // ns4xPlugin_h__
+#endif // ns4xPlugin_h_
