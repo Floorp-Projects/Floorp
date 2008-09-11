@@ -864,8 +864,6 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
     rv = ConvertToUTF16(channel, aString, aStringLen, hintCharset, mDocument,
                         aRequest->mScriptText);
 
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-                 "Could not convert external JavaScript to Unicode!");
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!ShouldExecuteScript(mDocument, channel)) {
