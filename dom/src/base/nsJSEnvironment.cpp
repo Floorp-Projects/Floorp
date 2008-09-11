@@ -3847,7 +3847,9 @@ nsJSRuntime::GetNameSpaceManager()
   return gNameSpaceManager;
 }
 
-void nsJSRuntime::ShutDown()
+/* static */
+void
+nsJSRuntime::Shutdown()
 {
   if (sGCTimer) {
     // We're being shut down, if we have a GC timer scheduled, cancel
