@@ -43,7 +43,7 @@
 #include "npupp.h"
 
 #ifndef HIBYTE
-#define HIBYTE(x) ((((uint32)(x)) & 0xff00) >> 8)
+#define HIBYTE(x) ((((uint32_t)(x)) & 0xff00) >> 8)
 #endif
 
 #ifndef LOBYTE
@@ -79,7 +79,7 @@ NPError NPN_GetURL(NPP instance, const char *url, const char *target)
   return rv;
 }
 
-NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uint32 len, const char* buf, NPBool file, void* notifyData)
+NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file, void* notifyData)
 {
 	int navMinorVers = NPNFuncs.version & 0xFF;
   NPError rv = NPERR_NO_ERROR;
@@ -92,7 +92,7 @@ NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uin
   return rv;
 }
 
-NPError NPN_PostURL(NPP instance, const char* url, const char* window, uint32 len, const char* buf, NPBool file)
+NPError NPN_PostURL(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file)
 {
   NPError rv = NPNFuncs.posturl(instance, url, window, len, buf, file);
   return rv;
@@ -118,10 +118,10 @@ NPError NPN_NewStream(NPP instance, NPMIMEType type, const char* target, NPStrea
   return rv;
 }
 
-int32 NPN_Write(NPP instance, NPStream *stream, int32 len, void *buffer)
+int32_t NPN_Write(NPP instance, NPStream *stream, int32_t len, void *buffer)
 {
 	int navMinorVersion = NPNFuncs.version & 0xFF;
-  int32 rv = 0;
+  int32_t rv = 0;
 
   if( navMinorVersion >= NPVERS_HAS_STREAMOUTPUT )
 		rv = NPNFuncs.write(instance, stream, len, buffer);
@@ -156,7 +156,7 @@ const char* NPN_UserAgent(NPP instance)
   return rv;
 }
 
-void* NPN_MemAlloc(uint32 size)
+void* NPN_MemAlloc(uint32_t size)
 {
   void * rv = NULL;
   rv = NPNFuncs.memalloc(size);
@@ -168,9 +168,9 @@ void NPN_MemFree(void* ptr)
   NPNFuncs.memfree(ptr);
 }
 
-uint32 NPN_MemFlush(uint32 size)
+uint32_t NPN_MemFlush(uint32_t size)
 {
-  uint32 rv = NPNFuncs.memflush(size);
+  uint32_t rv = NPNFuncs.memflush(size);
   return rv;
 }
 

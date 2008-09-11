@@ -116,7 +116,7 @@ NPError nsPluginInstance::SetWindow(NPWindow* aWindow)
   return NPERR_NO_ERROR;
 }
 
-uint16 nsPluginInstance::HandleEvent(void* aEvent)
+uint16_t nsPluginInstance::HandleEvent(void* aEvent)
 {
   NPEvent * event = (NPEvent *)aEvent;
   switch (event->event) {
