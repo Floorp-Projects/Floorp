@@ -73,7 +73,6 @@ public:
 
   // nsISVGChildFrame interface:
   virtual void NotifySVGChanged(PRUint32 aFlags);
-  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM();
 
