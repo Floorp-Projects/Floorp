@@ -2204,7 +2204,7 @@ nsFormControlList::GetNodeAt(PRUint32 aIndex)
   FlushPendingNotifications();
 
   if (aIndex < mElements.Length()) {
-    mElements[aIndex];
+    return mElements[aIndex];
   }
 
   return nsnull;
