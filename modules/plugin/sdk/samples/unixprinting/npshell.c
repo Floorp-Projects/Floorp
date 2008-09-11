@@ -135,7 +135,7 @@ NPP_New(NPMIMEType pluginType,
     This->type = dupMimeType(pluginType);
     This->instance = instance;
     This->pluginsPrintMessage = NULL;
-    This->exists = FALSE;
+    This->exists = false;
 
     /* Parse argument list passed to plugin instance */
     /* We are interested in these arguments
@@ -330,7 +330,7 @@ NPP_Print(NPP instance, NPPrint* printInfo)
              *  set printInfo->pluginPrinted to TRUE and print your
              *  plugin as you see fit.  If your plugin wants Netscape
              *  to handle printing in this case, set
-             *  printInfo->pluginPrinted to FALSE (the default) and
+             *  printInfo->pluginPrinted to false (the default) and
              *  do nothing.  If you do want to handle printing
              *  yourself, printOne is true if the print button
              *  (as opposed to the print menu) was clicked.
@@ -348,7 +348,7 @@ NPP_Print(NPP instance, NPPrint* printInfo)
     \**************************************/
 
             /* Do the default*/
-            printInfo->print.fullPrint.pluginPrinted = FALSE;
+            printInfo->print.fullPrint.pluginPrinted = false;
         }
         else {  /* If not fullscreen, we must be embedded */
             /*
