@@ -130,7 +130,7 @@ pref("browser.triple_click_selects_paragraph", true);
 
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/public/gfxPlatform.h
-pref("gfx.color_management.mode", 1);
+pref("gfx.color_management.mode", 0);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
 
