@@ -40,6 +40,8 @@
 #include "prdtoa.h"
 #include "nsTextFormatter.h"
 #include "nsSVGSVGElement.h"
+#include "nsIFrame.h"
+#include "nsSVGIntegrationUtils.h"
 
 NS_IMPL_ADDREF(nsSVGLength2::DOMBaseVal)
 NS_IMPL_RELEASE(nsSVGLength2::DOMBaseVal)
@@ -180,19 +182,50 @@ nsSVGLength2::GetMMPerPixel(nsSVGSVGElement *aCtx) const
 }
 
 float
+nsSVGLength2::GetMMPerPixel(nsIFrame *aNonSVGFrame) const
+{
+  nsPresContext* presContext = aNonSVGFrame->PresContext();
+  float pixelsPerInch =
+    presContext->AppUnitsToFloatCSSPixels(presContext->AppUnitsPerInch());
+  return 25.4f/pixelsPerInch;
+}
+
+static float
+FixAxisLength(float aLength)
+{
+  if (aLength == 0.0f) {
+    NS_WARNING("zero axis length");
+    return 1e-20f;
+  }
+  return aLength;
+}
+
+float
 nsSVGLength2::GetAxisLength(nsSVGSVGElement *aCtx) const
 {
   if (!aCtx)
     return 1;
 
-  float d = aCtx->GetLength(mCtxType);
+  return FixAxisLength(aCtx->GetLength(mCtxType));
+}
 
-  if (d == 0.0f) {
-    NS_WARNING("zero axis length");
-    d = 1e-20f;
+float
+nsSVGLength2::GetAxisLength(nsIFrame *aNonSVGFrame) const
+{
+  gfxRect rect = nsSVGIntegrationUtils::GetSVGRectForNonSVGFrame(aNonSVGFrame);
+  float length;
+  switch (mCtxType) {
+  case nsSVGUtils::X: length = rect.Width(); break;
+  case nsSVGUtils::Y: length = rect.Height(); break;
+  case nsSVGUtils::XY:
+    length = nsSVGUtils::ComputeNormalizedHypotenuse(rect.Width(), rect.Height());
+    break;
+  default:
+    NS_NOTREACHED("Unknown axis type");
+    length = 1;
+    break;
   }
-
-  return d;
+  return FixAxisLength(length);
 }
 
 float
@@ -234,6 +267,39 @@ nsSVGLength2::GetUnitScaleFactor(nsSVGSVGElement *aCtx) const
     return 1 / GetEmLength(aCtx);
   case nsIDOMSVGLength::SVG_LENGTHTYPE_EXS:
     return 1 / GetExLength(aCtx);
+  default:
+    NS_NOTREACHED("Unknown unit type");
+    return 0;
+  }
+}
+
+float
+nsSVGLength2::GetUnitScaleFactor(nsIFrame *aFrame) const
+{
+  nsIContent* content = aFrame->GetContent();
+  if (content->IsNodeOfType(nsINode::eSVG))
+    return GetUnitScaleFactor(static_cast<nsSVGElement*>(content));
+
+  switch (mSpecifiedUnitType) {
+  case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
+  case nsIDOMSVGLength::SVG_LENGTHTYPE_PX:
+    return 1;
+  case nsIDOMSVGLength::SVG_LENGTHTYPE_MM:
+    return GetMMPerPixel(aFrame);
+  case nsIDOMSVGLength::SVG_LENGTHTYPE_CM:
+    return GetMMPerPixel(aFrame) / 10.0f;
+  case nsIDOMSVGLength::SVG_LENGTHTYPE_IN:
+    return GetMMPerPixel(aFrame) / 25.4f;
+  case nsIDOMSVGLength::SVG_LENGTHTYPE_PT:
+    return GetMMPerPixel(aFrame) * POINTS_PER_INCH_FLOAT / 25.4f;
+  case nsIDOMSVGLength::SVG_LENGTHTYPE_PC:
+    return GetMMPerPixel(aFrame) * POINTS_PER_INCH_FLOAT / 24.4f / 12.0f;
+  case nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE:
+    return 100.0f / GetAxisLength(aFrame);
+  case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
+    return 1 / GetEmLength(aFrame);
+  case nsIDOMSVGLength::SVG_LENGTHTYPE_EXS:
+    return 1 / GetExLength(aFrame);
   default:
     NS_NOTREACHED("Unknown unit type");
     return 0;

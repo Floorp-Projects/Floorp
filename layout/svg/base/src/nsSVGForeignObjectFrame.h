@@ -114,6 +114,7 @@ public:
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
+  virtual PRBool GetMatrixPropagation();
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM();
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);

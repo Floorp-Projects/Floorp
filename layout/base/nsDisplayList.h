@@ -392,6 +392,9 @@ public:
     TYPE_OUTLINE,
     TYPE_CLIP,
     TYPE_OPACITY,
+#ifdef MOZ_SVG
+    TYPE_SVG_EFFECTS,
+#endif
     TYPE_WRAPLIST
   };
 
@@ -694,6 +697,10 @@ public:
    */
   void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
              const nsRect& aDirtyRect) const;
+  /**
+   * Get the bounds. Takes the union of the bounds of all children.
+   */
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder) const;
   /**
    * Find the topmost display item that returns a non-null frame, and return
    * the frame.
@@ -1251,5 +1258,40 @@ private:
   nsIFrame* mClippingFrame;
   nsRect    mClip;
 };
+
+#ifdef MOZ_SVG
+/**
+ * A display item to paint a stacking context with effects
+ * set by the stacking context root frame's style.
+ */
+class nsDisplaySVGEffects : public nsDisplayWrapList {
+public:
+  nsDisplaySVGEffects(nsIFrame* aFrame, nsDisplayList* aList);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySVGEffects();
+#endif
+  
+  virtual Type GetType() { return TYPE_SVG_EFFECTS; }
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState);
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
+    return mBounds + aBuilder->ToReferenceFrame(mEffectsFrame);
+  }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  virtual PRBool OptimizeVisibility(nsDisplayListBuilder* aBuilder,
+                                    nsRegion* aVisibleRegion);  
+  virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
+  NS_DISPLAY_DECL_NAME("SVGEffects")
+
+  nsIFrame* GetEffectsFrame() { return mEffectsFrame; }
+
+private:
+  nsIFrame* mEffectsFrame;
+  // relative to mEffectsFrame
+  nsRect    mBounds;
+};
+#endif
 
 #endif /*NSDISPLAYLIST_H_*/

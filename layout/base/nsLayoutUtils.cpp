@@ -79,6 +79,7 @@
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
+#include "nsSVGIntegrationUtils.h"
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGOuterSVGFrame.h"
 #endif
@@ -1037,7 +1038,19 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
   for (nsDisplayItem* item = aList->GetBottom(); item; item = item->GetAbove()) {
     nsDisplayList* sublist = item->GetList();
     if (sublist) {
-      if (item->GetType() == nsDisplayItem::TYPE_CLIP) {
+      nsDisplayItem::Type type = item->GetType();
+#ifdef MOZ_SVG
+      if (type == nsDisplayItem::TYPE_SVG_EFFECTS) {
+        nsDisplaySVGEffects* effectsItem = static_cast<nsDisplaySVGEffects*>(item);
+        if (!aBuilder->IsMovingFrame(effectsItem->GetEffectsFrame())) {
+          // Invalidate the whole thing
+          nsRect r;
+          r.IntersectRect(aClipRect, effectsItem->GetBounds(aBuilder));
+          aRegion->Or(*aRegion, r);
+        }
+      } else
+#endif
+      if (type == nsDisplayItem::TYPE_CLIP) {
         nsDisplayClip* clipItem = static_cast<nsDisplayClip*>(item);
         nsRect clip = aClipRect;
         // If the clipping frame is moving, then it isn't clipping any
@@ -1241,45 +1254,63 @@ nsLayoutUtils::BinarySearchForPosition(nsIRenderingContext* aRendContext,
 }
 
 static void
-AddRectsForFrame(nsIFrame* aFrame, nsIFrame* aRelativeTo,
-                 nsLayoutUtils::RectCallback* aCallback)
+AddBoxesForFrame(nsIFrame* aFrame,
+                 nsLayoutUtils::BoxCallback* aCallback)
 {
   nsIAtom* pseudoType = aFrame->GetStyleContext()->GetPseudoType();
 
   if (pseudoType == nsCSSAnonBoxes::tableOuter) {
-    AddRectsForFrame(aFrame->GetFirstChild(nsnull), aRelativeTo,
-                     aCallback);
+    AddBoxesForFrame(aFrame->GetFirstChild(nsnull), aCallback);
     nsIFrame* kid = aFrame->GetFirstChild(nsGkAtoms::captionList);
     if (kid) {
-      AddRectsForFrame(kid, aRelativeTo, aCallback);
+      AddBoxesForFrame(kid, aCallback);
     }
   } else if (pseudoType == nsCSSAnonBoxes::mozAnonymousBlock ||
              pseudoType == nsCSSAnonBoxes::mozAnonymousPositionedBlock ||
              pseudoType == nsCSSAnonBoxes::mozMathMLAnonymousBlock ||
              pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock) {
     for (nsIFrame* kid = aFrame->GetFirstChild(nsnull); kid; kid = kid->GetNextSibling()) {
-      AddRectsForFrame(kid, aRelativeTo, aCallback);
+      AddBoxesForFrame(kid, aCallback);
     }
   } else {
+    aCallback->AddBox(aFrame);
+  }
+}
+
+void
+nsLayoutUtils::GetAllInFlowBoxes(nsIFrame* aFrame, BoxCallback* aCallback)
+{
+  while (aFrame) {
+    AddBoxesForFrame(aFrame, aCallback);
+    aFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame);
+  }
+}
+
+struct BoxToBorderRect : public nsLayoutUtils::BoxCallback {
+  nsIFrame*                    mRelativeTo;
+  nsLayoutUtils::RectCallback* mCallback;
+
+  BoxToBorderRect(nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback)
+    : mCallback(aCallback), mRelativeTo(aRelativeTo) {}
+
+  virtual void AddBox(nsIFrame* aFrame) {
 #ifdef MOZ_SVG
     nsRect r;
     nsIFrame* outer = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(aFrame, &r);
     if (outer) {
-      aCallback->AddRect(r + outer->GetOffsetTo(aRelativeTo));
+      mCallback->AddRect(r + outer->GetOffsetTo(mRelativeTo));
     } else
 #endif
-      aCallback->AddRect(nsRect(aFrame->GetOffsetTo(aRelativeTo), aFrame->GetSize()));
+      mCallback->AddRect(nsRect(aFrame->GetOffsetTo(mRelativeTo), aFrame->GetSize()));
   }
-}
+};
 
 void
 nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                  RectCallback* aCallback)
 {
-  while (aFrame) {
-    AddRectsForFrame(aFrame, aRelativeTo, aCallback);
-    aFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame);
-  }
+  BoxToBorderRect converter(aRelativeTo, aCallback);
+  GetAllInFlowBoxes(aFrame, &converter);
 }
 
 struct RectAccumulator : public nsLayoutUtils::RectCallback {
@@ -1473,6 +1504,23 @@ nsLayoutUtils::GetNextContinuationOrSpecialSibling(nsIFrame *aFrame)
   }
 
   return nsnull;
+}
+
+nsIFrame*
+nsLayoutUtils::GetFirstContinuationOrSpecialSibling(nsIFrame *aFrame)
+{
+  nsIFrame *result = aFrame->GetFirstContinuation();
+  if (result->GetStateBits() & NS_FRAME_IS_SPECIAL) {
+    while (PR_TRUE) {
+      nsIFrame *f = static_cast<nsIFrame*>
+        (result->GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
+      if (!f)
+        break;
+      result = f;
+    }
+  }
+
+  return result;
 }
 
 PRBool
