@@ -4724,8 +4724,7 @@ static nsresult Create4xPlugin(nsIServiceManagerObsolete* aServiceManager,
     fullPath = aPluginTag->mFullPath;
   }
 
-  return ns4xPlugin::CreatePlugin(aServiceManager,
-                                  fileName.get(),
+  return ns4xPlugin::CreatePlugin(fileName.get(),
                                   fullPath.get(),
                                   aPluginTag->mLibrary,
                                   aOut4xPlugnin);
