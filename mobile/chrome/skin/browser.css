@@ -282,8 +282,9 @@ toolbarbutton.browser-control-button {
 
 #urllist-close {
   -moz-appearance: none;
-  margin: 0;
   border: none;
+  background-color: transparent;
+  margin: 0;
   padding: 0;
   list-style-image: url("chrome://browser/skin/images/close-small.png");
 }
