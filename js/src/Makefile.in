@@ -442,9 +442,9 @@ ifeq ($(OS_ARCH),SunOS)
 ifeq (86,$(findstring 86,$(OS_TEST)))
 ifndef GNU_CC
 LIR.o: LIR.cpp Makefile.in
-    $(REPORT_BUILD)
-    @$(MAKE_DEPS_AUTO_CXX)
-    $(CXX) -o $@ -c $(patsubst -xO%,-xO2,$(COMPILE_CFLAGS)) $<
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO_CXX)
+	$(CXX) -o $@ -c $(patsubst -xO%,-xO2,$(COMPILE_CFLAGS)) $<
 endif
 endif
 endif
