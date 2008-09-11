@@ -4450,6 +4450,9 @@ TraceRecorder::record_SetPropHit(uint32 kshape, JSScopeProperty* sprop)
 bool
 TraceRecorder::record_SetPropMiss(JSPropCacheEntry* entry)
 {
+    if (!entry->kpc)
+        ABORT_TRACE("can't trace uncacheable property set");
+
     JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
     return record_SetPropHit(entry->kshape, PCVAL_TO_SPROP(entry->vword));
 }
