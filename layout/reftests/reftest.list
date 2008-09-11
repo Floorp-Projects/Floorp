@@ -84,6 +84,9 @@ include pagination/reftest.list
 # svg/
 include svg/reftest.list
 
+# svg-integration/
+include svg-integration/reftest.list
+
 # table-background/
 include table-background/reftest.list
 

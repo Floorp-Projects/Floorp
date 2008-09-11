@@ -499,8 +499,18 @@ nsSVGPathGeometryFrame::NotifyRedrawUnsuspended()
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::SetMatrixPropagation(PRBool aPropagate)
 {
-  mPropagateTransform = aPropagate;
+  if (aPropagate) {
+    AddStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
+  } else {
+    RemoveStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
+  }
   return NS_OK;
+}
+
+PRBool
+nsSVGPathGeometryFrame::GetMatrixPropagation()
+{
+  return (GetStateBits() & NS_STATE_SVG_PROPAGATE_TRANSFORM) != 0;
 }
 
 NS_IMETHODIMP
@@ -538,7 +548,7 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 {
   *aCTM = nsnull;
 
-  if (!mPropagateTransform) {
+  if (!GetMatrixPropagation()) {
     if (mOverrideCTM) {
       *aCTM = mOverrideCTM;
       NS_ADDREF(*aCTM);

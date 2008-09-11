@@ -486,6 +486,19 @@ public:
                           PRInt32&   aIndex,
                           PRInt32&   aTextWidth);
 
+  class BoxCallback {
+  public:
+    virtual void AddBox(nsIFrame* aFrame) = 0;
+  };
+  /**
+   * Collect all CSS boxes associated with aFrame and its
+   * continuations, "drilling down" through outer table frames and
+   * some anonymous blocks since they're not real CSS boxes.
+   * If aFrame is null, no boxes are returned.
+   * SVG frames return a single box, themselves.
+   */
+  static void GetAllInFlowBoxes(nsIFrame* aFrame, BoxCallback* aCallback);
+
   class RectCallback {
   public:
     virtual void AddRect(const nsRect& aRect) = 0;
@@ -579,6 +592,13 @@ public:
   static nsIFrame*
   GetNextContinuationOrSpecialSibling(nsIFrame *aFrame);
 
+  /**
+   * Get the first frame in the continuation-plus-special-sibling chain
+   * containing aFrame.
+   */
+  static nsIFrame*
+  GetFirstContinuationOrSpecialSibling(nsIFrame *aFrame);
+  
   /**
    * Check whether aFrame is a part of the scrollbar or scrollcorner of
    * the root content.

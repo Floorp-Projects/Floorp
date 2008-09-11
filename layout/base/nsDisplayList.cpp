@@ -51,6 +51,9 @@
 #include "nsFrameManager.h"
 #include "gfxContext.h"
 #include "nsStyleStructInlines.h"
+#ifdef MOZ_SVG
+#include "nsSVGIntegrationUtils.h"
+#endif
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     PRBool aIsForEvents, PRBool aBuildCaret)
@@ -265,6 +268,15 @@ nsDisplayList::FlattenTo(nsTArray<nsDisplayItem*>* aElements) {
       aElements->AppendElement(item);
     }
   }
+}
+
+nsRect
+nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
+  nsRect bounds;
+  for (nsDisplayItem* i = GetBottom(); i != nsnull; i = i->GetAbove()) {
+    bounds.UnionRect(bounds, i->GetBounds(aBuilder));
+  }
+  return bounds;
 }
 
 void
@@ -671,11 +683,7 @@ nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
 
 nsRect
 nsDisplayWrapList::GetBounds(nsDisplayListBuilder* aBuilder) {
-  nsRect bounds;
-  for (nsDisplayItem* i = mList.GetBottom(); i != nsnull; i = i->GetAbove()) {
-    bounds.UnionRect(bounds, i->GetBounds(aBuilder));
-  }
-  return bounds;
+  return mList.GetBounds(aBuilder);
 }
 
 PRBool
@@ -928,3 +936,72 @@ nsDisplayWrapList* nsDisplayClip::WrapWithClone(nsDisplayListBuilder* aBuilder,
   return new (aBuilder)
     nsDisplayClip(aItem->GetUnderlyingFrame(), mClippingFrame, aItem, mClip);
 }
+
+#ifdef MOZ_SVG
+nsDisplaySVGEffects::nsDisplaySVGEffects(nsIFrame* aFrame, nsDisplayList* aList)
+    : nsDisplayWrapList(aFrame, aList), mEffectsFrame(aFrame),
+      mBounds(aFrame->GetOverflowRect())
+{
+  MOZ_COUNT_CTOR(nsDisplaySVGEffects);
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplaySVGEffects::~nsDisplaySVGEffects()
+{
+  MOZ_COUNT_DTOR(nsDisplaySVGEffects);
+}
+#endif
+
+PRBool nsDisplaySVGEffects::IsOpaque(nsDisplayListBuilder* aBuilder)
+{
+  return PR_FALSE;
+}
+
+nsIFrame*
+nsDisplaySVGEffects::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                             HitTestState* aState)
+{
+  if (!nsSVGIntegrationUtils::HitTestFrameForEffects(mEffectsFrame,
+          aPt - aBuilder->ToReferenceFrame(mEffectsFrame)))
+    return nsnull;
+  return mList.HitTest(aBuilder, aPt, aState);
+}
+
+void nsDisplaySVGEffects::Paint(nsDisplayListBuilder* aBuilder,
+                                nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  nsSVGIntegrationUtils::PaintFramesWithEffects(aCtx,
+          mEffectsFrame, aDirtyRect, aBuilder, &mList);
+}
+
+PRBool nsDisplaySVGEffects::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
+                                               nsRegion* aVisibleRegion) {
+  nsRegion vis;
+  vis.And(*aVisibleRegion, GetBounds(aBuilder));
+  nsPoint offset = aBuilder->ToReferenceFrame(mEffectsFrame);
+  nsRect dirtyRect = nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(mEffectsFrame,
+       vis.GetBounds() - offset) + offset;
+
+  // Our children may be translucent so we should not allow them to subtract
+  // area from aVisibleRegion.
+  nsRegion childrenVisibleRegion(dirtyRect);
+  nsDisplayWrapList::OptimizeVisibility(aBuilder, &childrenVisibleRegion);
+  return !vis.IsEmpty();
+}
+
+PRBool nsDisplaySVGEffects::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
+{
+  if (aItem->GetType() != TYPE_SVG_EFFECTS)
+    return PR_FALSE;
+  // items for the same content element should be merged into a single
+  // compositing group
+  // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplaySVGEffects
+  if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
+    return PR_FALSE;
+  nsDisplaySVGEffects* other = static_cast<nsDisplaySVGEffects*>(aItem);
+  mList.AppendToBottom(&other->mList);
+  mBounds.UnionRect(mBounds,
+    other->mBounds + other->mEffectsFrame->GetOffsetTo(mEffectsFrame));
+  return PR_TRUE;
+}
+#endif
