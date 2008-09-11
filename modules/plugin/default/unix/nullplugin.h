@@ -79,13 +79,13 @@ Click OK to download Plugin."
 
 typedef struct _PluginInstance
 {
-    uint16 mode;
+    uint16_t mode;
 #ifdef MOZ_X11
     Window window;
     Display *display;
 #endif
-    uint32 x, y;
-    uint32 width, height;
+    uint32_t x, y;
+    uint32_t width, height;
     NPMIMEType type;
     char *message;
 

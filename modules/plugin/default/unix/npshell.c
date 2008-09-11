@@ -107,8 +107,8 @@ NPP_Shutdown(void)
 NPError 
 NPP_New(NPMIMEType pluginType,
     NPP instance,
-    uint16 mode,
-    int16 argc,
+    uint16_t mode,
+    int16_t argc,
     char* argn[],
     char* argv[],
     NPSavedData* saved)
@@ -246,7 +246,7 @@ NPP_NewStream(NPP instance,
           NPMIMEType type,
           NPStream *stream, 
           NPBool seekable,
-          uint16 *stype)
+          uint16_t *stype)
 {
     if (instance == NULL)
         return NPERR_INVALID_INSTANCE_ERROR;
@@ -255,7 +255,7 @@ NPP_NewStream(NPP instance,
 }
 
 
-int32 
+int32_t 
 NPP_WriteReady(NPP instance, NPStream *stream)
 {
     if (instance == NULL)
@@ -269,8 +269,8 @@ NPP_WriteReady(NPP instance, NPStream *stream)
 }
 
 
-int32 
-NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
+int32_t 
+NPP_Write(NPP instance, NPStream *stream, int32_t offset, int32_t len, void *buffer)
 {
     if (instance == NULL)
         return NPERR_INVALID_INSTANCE_ERROR;
