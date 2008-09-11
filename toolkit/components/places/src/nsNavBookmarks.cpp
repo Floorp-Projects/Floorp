@@ -1516,21 +1516,8 @@ nsNavBookmarks::GetRemoveFolderTransaction(PRInt64 aFolder, nsITransaction** aRe
   // Create and initialize a RemoveFolderTransaction object that can be used to
   // recreate the folder safely later. 
 
-  nsCAutoString title;
-  nsresult rv = GetItemTitle(aFolder, title);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt64 parent;
-  PRInt32 index;
-  rv = GetParentAndIndexOfFolder(aFolder, &parent, &index);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString type;
-  rv = GetFolderType(aFolder, type);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   RemoveFolderTransaction* rft = 
-    new RemoveFolderTransaction(aFolder, parent, title, index, NS_ConvertUTF8toUTF16(type));
+    new RemoveFolderTransaction(aFolder);
   if (!rft)
     return NS_ERROR_OUT_OF_MEMORY;
 
