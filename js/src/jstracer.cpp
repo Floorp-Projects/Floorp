@@ -4381,7 +4381,7 @@ TraceRecorder::record_JSOP_SETPROP()
 }
 
 bool
-TraceRecorder::record_SetPropHit(uint32 kshape, JSScopeProperty* sprop)
+TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop)
 {
     jsbytecode* pc = cx->fp->regs->pc;
     jsval& r = stackval(-1);
@@ -4413,13 +4413,13 @@ TraceRecorder::record_SetPropHit(uint32 kshape, JSScopeProperty* sprop)
         return false;
 
     LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)), "shape");
-    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, kshape), "guard(shape)"), MISMATCH_EXIT);
+    guard(true, addName(lir->ins2i(LIR_eq, shape_ins, entry->kshape), "guard(shape)"),
+          MISMATCH_EXIT);
 
-    JSScope* scope = OBJ_SCOPE(obj);
-    if (scope->object != obj || !SCOPE_HAS_PROPERTY(scope, sprop)) {
+    if (entry->kshape != PCVCAP_SHAPE(entry->vcap)) {
         LIns* args[] = { INS_CONSTPTR(sprop), obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(F_AddProperty, args);
-        guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);
+        guard(false, lir->ins_eq0(ok_ins), OOM_EXIT);
     }
 
     LIns* dslots_ins = NULL;
@@ -4438,11 +4438,21 @@ TraceRecorder::record_SetPropHit(uint32 kshape, JSScopeProperty* sprop)
 bool
 TraceRecorder::record_SetPropMiss(JSPropCacheEntry* entry)
 {
-    if (!entry->kpc)
+    if (entry->kpc != cx->fp->regs->pc || !PCVAL_IS_SPROP(entry->vword))
         ABORT_TRACE("can't trace uncacheable property set");
 
-    JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
-    return record_SetPropHit(entry->kshape, PCVAL_TO_SPROP(entry->vword));
+    JSScopeProperty* sprop = PCVAL_TO_SPROP(entry->vword);
+
+#ifdef DEBUG
+    jsval& l = stackval(-2);
+    JSObject* obj = JSVAL_TO_OBJECT(l);
+    JSScope* scope = OBJ_SCOPE(obj);
+    JS_ASSERT(scope->object == obj);
+    JS_ASSERT(scope->shape == PCVCAP_SHAPE(entry->vcap));
+    JS_ASSERT(SCOPE_HAS_PROPERTY(scope, sprop));
+#endif
+
+    return record_SetPropHit(entry, sprop);
 }
 
 bool

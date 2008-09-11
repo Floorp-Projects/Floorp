@@ -42,7 +42,7 @@
 #ifndef jstracer_h___
 #define jstracer_h___
 
-#if defined JS_TRACER
+#ifdef JS_TRACER
 
 #include "jsstddef.h"
 #include "jstypes.h"
@@ -358,7 +358,7 @@ public:
     
     bool record_EnterFrame();
     bool record_LeaveFrame();
-    bool record_SetPropHit(uint32 kshape, JSScopeProperty* sprop);
+    bool record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop);
     bool record_SetPropMiss(JSPropCacheEntry* entry);
 
     void deepAbort() { deepAborted = true; }
@@ -424,6 +424,12 @@ js_FlushJITCache(JSContext* cx);
 extern void
 js_FlushJITOracle(JSContext* cx);
 
-#endif /* defined JS_TRACER */
+#else  /* !JS_TRACER */
+
+#define RECORD(x)               ((void)0)
+#define TRACE_1(x,a)            ((void)0)
+#define TRACE_2(x,a,b)          ((void)0)
+
+#endif /* !JS_TRACER */
 
 #endif /* jstracer_h___ */
