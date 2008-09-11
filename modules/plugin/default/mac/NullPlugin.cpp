@@ -63,7 +63,7 @@ public:
   // no ctor because CPlugin is allocated and constructed by hand.
   // ideally, this should use placement |new|.
 
-  void Constructor(NPP instance, NPMIMEType type, uint16 mode, int16 argc, char* argn[], char* argv[]);
+  void Constructor(NPP instance, NPMIMEType type, uint16_t mode, int16_t argc, char* argn[], char* argv[]);
   void Destructor();
 
   void SetWindow(NPWindow* window);
@@ -78,7 +78,7 @@ protected:
   Boolean FocusDraw();
   void RestoreDraw();
       
-  void DetermineURL(int16 argc, char* argn[], char* argv[]);
+  void DetermineURL(int16_t argc, char* argn[], char* argv[]);
   char* MakeDefaultURL(void);
   void AddMimeTypeToList(StringPtr cTypeString);
   Boolean CheckMimeTypes();
@@ -88,7 +88,7 @@ protected:
   Ptr New(UInt32 size);
   void Delete(Ptr ptr);
 
-  Boolean IsPluginHidden(int16 argc, char* argn[], char* argv[]);
+  Boolean IsPluginHidden(int16_t argc, char* argn[], char* argv[]);
 
 private:
   static CIconHandle sIconHandle;
@@ -101,7 +101,7 @@ private:
 
   NPP fInstance;
   NPWindow* fWindow;
-  uint16 fMode;
+  uint16_t fMode;
   NPMIMEType fType;
   char* fPageURL;
   char* fFileURL;
@@ -160,7 +160,7 @@ void NPP_Shutdown(void)
 }
 
 
-NPError NPP_New(NPMIMEType type, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData*)
+NPError NPP_New(NPMIMEType type, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData*)
 {
   if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -212,7 +212,7 @@ NPP_NewStream(NPP instance,
               NPMIMEType /*type*/,
               NPStream* /*stream*/, 
               NPBool /*seekable*/,
-              uint16* /*stype*/)
+              uint16_t* /*stype*/)
 {
   if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -221,20 +221,20 @@ NPP_NewStream(NPP instance,
 }
 
 
-int32 STREAMBUFSIZE = 0X0FFFFFFF;   // If we are reading from a file in NPAsFile
+int32_t STREAMBUFSIZE = 0X0FFFFFFF;   // If we are reading from a file in NPAsFile
                                     // mode so we can take any size stream in our
                                     // write call (since we ignore it)
 
 
-int32 NP_LOADDS
+int32_t NP_LOADDS
 NPP_WriteReady(NPP /*instance*/, NPStream* /*stream*/)
 {
   return STREAMBUFSIZE; // Number of bytes ready to accept in NPP_Write()
 }
 
 
-int32 NP_LOADDS
-NPP_Write(NPP /*instance*/, NPStream* /*stream*/, int32 /*offset*/, int32 len, void* /*buffer*/)
+int32_t NP_LOADDS
+NPP_Write(NPP /*instance*/, NPStream* /*stream*/, int32_t /*offset*/, int32_t len, void* /*buffer*/)
 {
   return len; // The number of bytes accepted
 }
@@ -276,7 +276,7 @@ NPP_Print(NPP instance, NPPrint* printInfo)
 
 
 // Mac-only
-int16 NPP_HandleEvent(NPP instance, void* event)
+int16_t NPP_HandleEvent(NPP instance, void* event)
 {
   if (instance) {
     CPlugin* This = (CPlugin*) instance->pdata;
@@ -403,7 +403,7 @@ void CPlugin::Shutdown()
 }
 
 
-void CPlugin::Constructor(NPP instance, NPMIMEType type, uint16 mode, int16 argc, char* argn[], char* argv[])
+void CPlugin::Constructor(NPP instance, NPMIMEType type, uint16_t mode, int16_t argc, char* argn[], char* argv[])
 {
   fWindow = NULL;
   fPageURL = NULL;
@@ -657,7 +657,7 @@ void CPlugin::RestoreDraw()
 
 // Get a URL from either the parameters passed from the EMBED.
 // Append "?" and our mime type and save for later use.
-void CPlugin::DetermineURL(int16 argc, char* argn[], char* argv[])
+void CPlugin::DetermineURL(int16_t argc, char* argn[], char* argv[])
 {
   char* url;
   SInt32 additionalLength = 0;
@@ -921,7 +921,7 @@ void CPlugin::DrawString(const unsigned char* text, short width, short height, s
 }
 
 
-Boolean CPlugin::IsPluginHidden(int16 argc, char* argn[], char* argv[])
+Boolean CPlugin::IsPluginHidden(int16_t argc, char* argn[], char* argv[])
 {
   for (int i = 0; i < argc; i++) {
     if (!strcasecmp(argn[i], "HIDDEN")) {
