@@ -68,7 +68,7 @@ interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 interface nsIDOMStorage;
 
-[scriptable, uuid(cf974f45-d2f1-4bd5-aecd-568a1c4da454)]
+[scriptable, uuid(7d1cf6b9-daa3-476d-8f9f-9eb2a971a95c)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -399,6 +399,22 @@ interface nsIDocShell : nsISupports
 
   /* attribute to access whether error pages are enabled */
   attribute boolean useErrorPages;
+
+  /**
+   * Keeps track of the previous SHTransaction index and the current
+   * SHTransaction index at the time that the doc shell begins to load.
+   * Used for ContentViewer eviction.
+   */
+  readonly attribute long previousTransIndex;
+  readonly attribute long loadedTransIndex;
+
+  /**
+   * Notification that entries have been removed from the beginning of a
+   * nsSHistory which has this as its rootDocShell.
+   *
+   * @param numEntries - The number of entries removed
+   */
+  void historyPurged(in long numEntries);
 
   /*
    * Retrieves the WebApps session storage object for the supplied domain.
