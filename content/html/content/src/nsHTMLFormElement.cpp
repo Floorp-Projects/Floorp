@@ -754,7 +754,7 @@ CollectOrphans(nsINode* aRemovalRoot, nsTArray<nsIFormControl*> aArray
     if (node->HasFlag(MAYBE_ORPHAN_FORM_ELEMENT)) {
       node->UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       if (!nsContentUtils::ContentIsDescendantOf(node, aRemovalRoot)) {
-        control->SetForm(nsnull, PR_TRUE, PR_TRUE);
+        control->ClearForm(PR_TRUE, PR_TRUE);
 #ifdef DEBUG
         removed = PR_TRUE;
 #endif
@@ -2075,12 +2075,12 @@ nsFormControlList::Clear()
   // Null out childrens' pointer to me.  No refcounting here
   PRInt32 i;
   for (i = mElements.Length()-1; i >= 0; i--) {
-    mElements[i]->SetForm(nsnull, PR_FALSE, PR_TRUE);
+    mElements[i]->ClearForm(PR_FALSE, PR_TRUE);
   }
   mElements.Clear();
 
   for (i = mNotInElements.Length()-1; i >= 0; i--) {
-    mNotInElements[i]->SetForm(nsnull, PR_FALSE, PR_TRUE);
+    mNotInElements[i]->ClearForm(PR_FALSE, PR_TRUE);
   }
   mNotInElements.Clear();
 
