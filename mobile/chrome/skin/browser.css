@@ -187,6 +187,18 @@ toolbarbutton.browser-control-button {
   -moz-image-region: rect(208px 96px 256px 48px);
 }
 
+#tool-addons {
+  -moz-image-region: rect(2px 151px 39px 113px);
+}
+
+#tool-downloads {
+  -moz-image-region: rect(2px 151px 39px 113px);
+}
+
+#tool-preferences {
+  -moz-image-region: rect(2px 151px 39px 113px);
+}
+
 .tool-search {
   list-style-image: url("chrome://browser/skin/images/mono-toolbar.png");
   -moz-image-region: rect(0px 36px 36px 0px);
