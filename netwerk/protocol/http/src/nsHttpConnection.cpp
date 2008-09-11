@@ -807,7 +807,7 @@ nsHttpConnection::GetInterface(const nsIID &iid, void **result)
     //       the socket transport thread.  If that weren't the case, then we'd
     //       have to worry about the possibility of mTransaction going away
     //       part-way through this function call.  See CloseTransaction.
-    NS_ASSERTION(NS_IsMainThread(), "wrong thread");
+    NS_ASSERTION(PR_GetCurrentThread() != gSocketThread, "wrong thread");
  
     if (mTransaction) {
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
