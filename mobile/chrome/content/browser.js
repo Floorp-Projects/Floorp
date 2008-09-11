@@ -230,9 +230,6 @@ var Browser = {
       case "cmd_fullscreen":
         window.fullScreen = !window.fullScreen;
         break;
-      case "cmd_downloads":
-        Cc["@mozilla.org/download-manager-ui;1"].getService(Ci.nsIDownloadManagerUI).show(window);
-        break;
     }
   },
 

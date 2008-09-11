@@ -2,12 +2,12 @@ label,
 description,
 textbox {
   font-family: "Nokia Sans", sans-serif !important;
-  font-size: 16.75pt !important;
+  font-size: 12pt !important;
 }
 
 richlistitem {
   font-family: "Nokia Sans", sans-serif !important;
-  font-size: 16.75pt !important;
+  font-size: 12pt !important;
 }
 
 #extensionsManager {

@@ -679,10 +679,6 @@
          ]]></getter>
       </property>
 
-      <field name="_fireOverpan">
-        0
-      </field>
-
       /**
        * Given a set of page coordinates, constrain them such that they
        * fit within the rect defined by [0,0] and [x,y], where x and y are
@@ -694,15 +690,6 @@
         <parameter name="aX"/>
         <parameter name="aY"/>
         <body><![CDATA[
-          const OVERPAN_LIMIT = 30;
-          const OVERPAN_LEFT = 1;
-          const OVERPAN_RIGHT = 2;
-          const OVERPAN_TOP = 3;
-          const OVERPAN_BOTTOM = 4;
-
-          var origX = aX;
-          var origY = aY;
-
           var [contentAreaWidth, contentAreaHeight] = this._contentAreaDimensions;
           var [canvasW, canvasH] = this._effectiveCanvasDimensions;
 
@@ -710,45 +697,21 @@
           if (offscreenWidth <= 0) {
             // Content is narrower than viewport, no need to pan horizontally
             aX = 0;
-
-            // Check for an overpan
-            if (origX < -OVERPAN_LIMIT)
-              this._fireOverpan = OVERPAN_LEFT;
-            else if (origX > OVERPAN_LIMIT)
-              this._fireOverpan = OVERPAN_RIGHT;
           } else {
             var newPageX = Math.min(this.dragData.pageX + aX, offscreenWidth);
             newPageX = Math.max(newPageX, 0);
             aX = newPageX - this.dragData.pageX;
-
-            // Check for an overpan
-            if (origX < -OVERPAN_LIMIT && aX <= 0 && newPageX == 0)
-              this._fireOverpan = OVERPAN_LEFT;
-            else if (origX > OVERPAN_LIMIT && aX >= 0 && (offscreenWidth - newPageX) == 0)
-              this._fireOverpan = OVERPAN_RIGHT;
           }
 
           var offscreenHeight = contentAreaHeight - canvasH;
           if (offscreenHeight <= 0) {
             // Content is shorter than viewport, no need to pan vertically
             aY = 0;
-
-            // Check for an overpan
-            if (origY < -OVERPAN_LIMIT)
-              this._fireOverpan = OVERPAN_TOP;
-            else if (origY > OVERPAN_LIMIT)
-              this._fireOverpan = OVERPAN_BOTTOM;
           } else {
             // min of 0, max of contentAreaHeight - canvasHeight
             var newPageY = Math.min(this.dragData.pageY + aY, offscreenHeight);
             newPageY = Math.max(newPageY, 0);
             aY = newPageY - this.dragData.pageY;
-
-            // Check for an overpan
-            if (origY < -OVERPAN_LIMIT && aY <= 0 && newPageY == 0)
-              this._fireOverpan = OVERPAN_TOP;
-            else if (origY > OVERPAN_LIMIT && aY >= 0 && (offscreenHeight - newPageY) == 0)
-              this._fireOverpan = OVERPAN_BOTTOM;
           }
 
           return [aX, aY];
@@ -908,14 +871,6 @@
           this._updateCanvasPosition();
 
           this.dragData.dragging = false;
-
-          // Do we need to fire a content overpan event
-          if (this._fireOverpan > 0) {
-            var event = document.createEvent("UIEvents");
-            event.initUIEvent("overpan", true, false, window, this._fireOverpan);
-            this.dispatchEvent(event);
-          }
-          this._fireOverpan = 0;
         ]]></body>
       </method>
 
@@ -967,14 +922,8 @@
           },
 
           mouseup: function seh_mouseup(aEvent) {
-            var skipKinetic = false;
             if (aEvent.button == 0 && this.deckbrowser.dragData.dragging) {
-              if (this.deckbrowser._fireOverpan) {
-                this.deckbrowser._endPan();
-                skipKinetic = true;
-              } else {
-                this.deckbrowser.dragData.dragging = false;
-              }
+              this.deckbrowser.dragData.dragging = false;
             } else if (aEvent.originalTarget == this.deckbrowser._canvas) {
               // Mouseup on canvas that isn't releasing from a drag
               // cancel scrollStart timer
@@ -999,8 +948,7 @@
               this._lastMouseUp = aEvent;
             }
 
-            if (!skipKinetic)
-              this.deckbrowser._startKinetic();
+            this.deckbrowser._startKinetic();
             for (var i = 0; i < this.deckbrowser.PAN_EVENTS_TO_TRACK; i++) {
               this.deckbrowser._panEventTracker[i] = null;
             }
