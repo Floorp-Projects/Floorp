@@ -107,7 +107,7 @@ public:
    *        from the form.  (Used by nsFormControlList::Clear())
    * @param aNotify If true, send nsIDocumentObserver notifications as needed.
    */
-  virtual void ClearForm(PRBool aRemoveFromForm, PRBoqol aNotify) = 0;
+  virtual void ClearForm(PRBool aRemoveFromForm, PRBool aNotify) = 0;
 
   /**
    * Get the type of this control as an int (see NS_FORM_* above)
