@@ -190,12 +190,13 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
     PR_DestroyMonitor(mMonitor);
 }
 
-NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl, nsISecureBrowserUI,
-                                          nsIWebProgressListener,
-                                          nsIFormSubmitObserver,
-                                          nsIObserver,
-                                          nsISupportsWeakReference,
-                                          nsISSLStatusProvider)
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsSecureBrowserUIImpl,
+                              nsISecureBrowserUI,
+                              nsIWebProgressListener,
+                              nsIFormSubmitObserver,
+                              nsIObserver,
+                              nsISupportsWeakReference,
+                              nsISSLStatusProvider)
 
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
