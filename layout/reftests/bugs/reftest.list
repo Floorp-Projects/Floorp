@@ -910,3 +910,4 @@ fails == 441259-2.html 441259-2-ref.html # bug 441400
 # == 449653-1.html 449653-1-ref.html # Disabled for now - it needs privileges
 == 450670-1.html 450670-1-ref.html
 == 451168-1.html 451168-1-ref.html
+== 454361.html about:blank
