@@ -253,31 +253,6 @@ ComputeBorderCornerDimensions(const gfxRect& aOuterRect,
   }
 }
 
-// And this is what we get due to the aRidiculous aPrefix aConvetion
-// aFor aArguments (sic).
-static PRBool
-AreCompositeColorsEqual(nsBorderColors *aA, nsBorderColors *aB)
-{
-  if (aA == aB)
-    return PR_TRUE;
-
-  if (!aA || !aB)
-    return PR_FALSE;
-
-  while (aA && aB) {
-    if (aA->mTransparent != aB->mTransparent)
-      return PR_FALSE;
-    if (!aA->mTransparent && (aA->mColor != aB->mColor))
-      return PR_FALSE;
-    aA = aA->mNext;
-    aB = aB->mNext;
-  }
-
-  // both should be NULL if these are equal, otherwise one
-  // has more colors than another
-  return (aA == aB);
-}
-
 PRBool
 nsCSSBorderRenderer::AreBorderSideFinalStylesSame(PRUint8 aSides)
 {
@@ -295,7 +270,8 @@ nsCSSBorderRenderer::AreBorderSideFinalStylesSame(PRUint8 aSides)
 
     if (mBorderStyles[firstStyle] != mBorderStyles[i] ||
         mBorderColors[firstStyle] != mBorderColors[i] ||
-        !AreCompositeColorsEqual(mCompositeColors[firstStyle], mCompositeColors[i]))
+        !nsBorderColors::Equal(mCompositeColors[firstStyle],
+                               mCompositeColors[i]))
       return PR_FALSE;
   }
 
@@ -691,9 +667,6 @@ ComputeCompositeColorForLine(PRUint32 aLineIndex,
 {
   while (aLineIndex-- && aBorderColors->mNext)
     aBorderColors = aBorderColors->mNext;
-
-  if (aBorderColors->mTransparent)
-    return gfxRGBA(0.0, 0.0, 0.0, 0.0);
 
   return gfxRGBA(aBorderColors->mColor);
 }

@@ -490,16 +490,16 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   if (mIsThemed)
     return PR_FALSE;
 
-  PRBool isCanvas;
   const nsStyleBackground* bg;
+  PRBool isCanvas; // not used
   PRBool hasBG =
-    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg, &isCanvas);
-  if (!hasBG || (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
-      bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER ||
-      nsLayoutUtils::HasNonZeroSide(mFrame->GetStyleBorder()->mBorderRadius) ||
-      NS_GET_A(bg->mBackgroundColor) < 255)
-    return PR_FALSE;
-  return PR_TRUE;
+    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame,
+                                   &bg, &isCanvas);
+
+  return (hasBG && NS_GET_A(bg->mBackgroundColor) == 255 &&
+          bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER &&
+          !nsLayoutUtils::HasNonZeroSide(mFrame->GetStyleBorder()->
+                                         mBorderRadius));
 }
 
 PRBool

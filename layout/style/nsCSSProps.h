@@ -120,7 +120,6 @@ public:
   static const PRInt32 kAzimuthKTable[];
   static const PRInt32 kBackgroundAttachmentKTable[];
   static const PRInt32 kBackgroundClipKTable[];
-  static const PRInt32 kBackgroundColorKTable[];
   static const PRInt32 kBackgroundInlinePolicyKTable[];
   static const PRInt32 kBackgroundOriginKTable[];
   static const PRInt32 kBackgroundPositionKTable[];

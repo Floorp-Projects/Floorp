@@ -276,7 +276,7 @@ CSS_PROP_BACKENDONLY(azimuth, azimuth, Azimuth, Aural, mAzimuth, eCSSType_Value,
 CSS_PROP_SHORTHAND(background, background, Background)
 CSS_PROP_BACKGROUND(background-attachment, background_attachment, BackgroundAttachment, Color, mBackAttachment, eCSSType_Value, kBackgroundAttachmentKTable)
 CSS_PROP_BACKGROUND(-moz-background-clip, _moz_background_clip, MozBackgroundClip, Color, mBackClip, eCSSType_Value, kBackgroundClipKTable)
-CSS_PROP_BACKGROUND(background-color, background_color, BackgroundColor, Color, mBackColor, eCSSType_Value, kBackgroundColorKTable)
+CSS_PROP_BACKGROUND(background-color, background_color, BackgroundColor, Color, mBackColor, eCSSType_Value, nsnull)
 CSS_PROP_BACKGROUND(background-image, background_image, BackgroundImage, Color, mBackImage, eCSSType_Value, nsnull)
 CSS_PROP_BACKGROUND(-moz-background-inline-policy, _moz_background_inline_policy, MozBackgroundInlinePolicy, Color, mBackInlinePolicy, eCSSType_Value, kBackgroundInlinePolicyKTable)
 CSS_PROP_BACKGROUND(-moz-background-origin, _moz_background_origin, MozBackgroundOrigin, Color, mBackOrigin, eCSSType_Value, kBackgroundOriginKTable)
