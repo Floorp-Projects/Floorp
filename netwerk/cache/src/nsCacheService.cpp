@@ -1596,7 +1596,7 @@ nsCacheService::SetMemoryCache()
 
     if (gService->mEnableMemoryDevice) {
         if (gService->mMemoryDevice) {
-            PRInt32 capacity = mObserver->MemoryCacheCapacity();
+            PRInt32 capacity = gService->mObserver->MemoryCacheCapacity();
             // make sure that capacity is reset to the right value
             CACHE_LOG_DEBUG(("Resetting memory device capacity to %d\n",
                              capacity));
