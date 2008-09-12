@@ -802,11 +802,11 @@ nsContentList::PopulateWithStartingAfter(nsINode *aStartRoot,
           break;
       }
     }
-  }
 #ifdef DEBUG
-  NS_ASSERTION(!debugMutationGuard.Mutated(0),
-               "Unexpected mutations happened.  Check your match function!");
+    NS_ASSERTION(!debugMutationGuard.Mutated(0),
+                 "Unexpected mutations happened.  Check your match function!");
 #endif
+  }
 
   if (aElementsToAppend == 0) {
     return;
