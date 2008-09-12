@@ -144,7 +144,7 @@ struct nsStyleColor {
 };
 
 struct nsStyleBackground {
-  nsStyleBackground(nsPresContext* aPresContext);
+  nsStyleBackground();
   nsStyleBackground(const nsStyleBackground& aOther);
   ~nsStyleBackground();
 
@@ -179,11 +179,11 @@ struct nsStyleBackground {
   nscolor mBackgroundColor;       // [reset]
   nsCOMPtr<imgIRequest> mBackgroundImage; // [reset]
 
+  // True if this background is completely transparent.
   PRBool IsTransparent() const
   {
-    return (mBackgroundFlags &
-            (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE)) ==
-            (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE);
+    return (NS_GET_A(mBackgroundColor) == 0 &&
+            (mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE));
   }
 
   // We have to take slower codepaths for fixed background attachment,
@@ -193,11 +193,10 @@ struct nsStyleBackground {
   PRBool HasFixedBackground() const;
 };
 
-#define BORDER_COLOR_TRANSPARENT  0x40
 #define BORDER_COLOR_FOREGROUND   0x20
 #define OUTLINE_COLOR_INITIAL     0x80
-// TRANSPARENT | FOREGROUND | INITIAL(OUTLINE)
-#define BORDER_COLOR_SPECIAL      0xE0
+// FOREGROUND | INITIAL(OUTLINE)
+#define BORDER_COLOR_SPECIAL      0xA0
 #define BORDER_STYLE_MASK         0x1F
 
 #define NS_SPACING_MARGIN   0
@@ -269,20 +268,18 @@ protected:
 struct nsBorderColors {
   nsBorderColors* mNext;
   nscolor mColor;
-  PRBool mTransparent;
 
   nsBorderColors* CopyColors() {
     nsBorderColors* next = nsnull;
     if (mNext)
       next = mNext->CopyColors();
-    return new nsBorderColors(mColor, mTransparent, next);
+    return new nsBorderColors(mColor, next);
   }
 
   nsBorderColors() :mNext(nsnull) { mColor = NS_RGB(0,0,0); }
 
-  nsBorderColors(const nscolor& aColor, PRBool aTransparent, nsBorderColors* aNext=nsnull) {
+  nsBorderColors(const nscolor& aColor, nsBorderColors* aNext=nsnull) {
     mColor = aColor;
-    mTransparent = aTransparent;
     mNext = aNext;
   }
 
@@ -290,16 +287,18 @@ struct nsBorderColors {
     delete mNext;
   }
 
-  PRBool Equals(nsBorderColors* aOther) {
-    nsBorderColors* c1 = this;
-    nsBorderColors* c2 = aOther;
+  static PRBool Equal(const nsBorderColors* c1,
+                      const nsBorderColors* c2) {
+    if (c1 == c2)
+      return PR_TRUE;
     while (c1 && c2) {
-      if (c1->mColor != c2->mColor ||
-          c1->mTransparent != c2->mTransparent)
+      if (c1->mColor != c2->mColor)
         return PR_FALSE;
       c1 = c1->mNext;
       c2 = c2->mNext;
     }
+    // both should be NULL if these are equal, otherwise one
+    // has more colors than another
     return !c1 && !c2;
   }
 };
@@ -510,16 +509,16 @@ struct nsStyleBorder {
   inline PRBool IsBorderImageLoaded() const;
 
   void GetBorderColor(PRUint8 aSide, nscolor& aColor,
-                      PRBool& aTransparent, PRBool& aForeground) const
+                      PRBool& aForeground) const
   {
-    aTransparent = aForeground = PR_FALSE;
+    aForeground = PR_FALSE;
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
     if ((mBorderStyle[aSide] & BORDER_COLOR_SPECIAL) == 0)
       aColor = mBorderColor[aSide]; 
     else if (mBorderStyle[aSide] & BORDER_COLOR_FOREGROUND)
       aForeground = PR_TRUE;
     else
-      aTransparent = PR_TRUE;
+      NS_NOTREACHED("OUTLINE_COLOR_INITIAL should not be set here");
   }
 
   void SetBorderColor(PRUint8 aSide, nscolor aColor) 
@@ -541,10 +540,10 @@ struct nsStyleBorder {
       *aColors = mBorderColors[aIndex];
   }
 
-  void AppendBorderColor(PRInt32 aIndex, nscolor aColor, PRBool aTransparent)
+  void AppendBorderColor(PRInt32 aIndex, nscolor aColor)
   {
     NS_ASSERTION(aIndex >= 0 && aIndex <= 3, "bad side for composite border color");
-    nsBorderColors* colorEntry = new nsBorderColors(aColor, aTransparent);
+    nsBorderColors* colorEntry = new nsBorderColors(aColor);
     if (!mBorderColors[aIndex])
       mBorderColors[aIndex] = colorEntry;
     else {
@@ -554,13 +553,6 @@ struct nsStyleBorder {
       last->mNext = colorEntry;
     }
     mBorderStyle[aIndex] &= ~BORDER_COLOR_SPECIAL;
-  }
-
-  void SetBorderTransparent(PRUint8 aSide)
-  {
-    NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
-    mBorderStyle[aSide] &= ~BORDER_COLOR_SPECIAL;
-    mBorderStyle[aSide] |= BORDER_COLOR_TRANSPARENT; 
   }
 
   void SetBorderToForeground(PRUint8 aSide)

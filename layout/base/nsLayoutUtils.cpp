@@ -2725,8 +2725,6 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aFrame) {
   const nsStyleBackground* bg;
   if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg, &isCanvas))
     return eTransparencyTransparent;
-  if (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)
-    return eTransparencyTransparent;
   if (NS_GET_A(bg->mBackgroundColor) < 255)
     return eTransparencyTransparent;
   if (bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER)

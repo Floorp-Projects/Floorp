@@ -596,14 +596,12 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
 
   // pull out styles, colors, composite colors
   NS_FOR_CSS_SIDES (i) {
-    PRBool transparent, foreground;
+    PRBool foreground;
     borderStyles[i] = aBorderStyle.GetBorderStyle(i);
-    aBorderStyle.GetBorderColor(i, borderColors[i], transparent, foreground);
+    aBorderStyle.GetBorderColor(i, borderColors[i], foreground);
     aBorderStyle.GetCompositeColors(i, &compositeColors[i]);
 
-    if (transparent)
-      borderColors[i] = 0x0;
-    else if (foreground)
+    if (foreground)
       borderColors[i] = ourColor->mColor;
   }
 
@@ -963,7 +961,7 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
   
   while (context) {
     result = context->GetStyleBackground();
-    if (0 == (result->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
+    if (NS_GET_A(result->mBackgroundColor) > 0)
       break;
 
     context = context->GetParent();
@@ -1301,7 +1299,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
 
   nsIViewManager* vm = aPresContext->GetViewManager();
 
-  if (canvasColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
+  if (NS_GET_A(canvasColor.mBackgroundColor) == 0) {
     nsIView* rootView;
     vm->GetRootView(rootView);
     if (!rootView->GetParent()) {
@@ -1314,7 +1312,6 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
       if (!widgetIsTransparent) {
         // Ensure that we always paint a color for the root (in case there's
         // no background at all or a partly transparent image).
-        canvasColor.mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
         canvasColor.mBackgroundColor = aPresContext->DefaultBackgroundColor();
       }
     }
@@ -1414,10 +1411,9 @@ IsSolidBorderEdge(const nsStyleBorder& aBorder, PRUint32 aSide)
     return PR_FALSE;
 
   nscolor color;
-  PRBool isTransparent;
   PRBool isForeground;
-  aBorder.GetBorderColor(aSide, color, isTransparent, isForeground);
-  return !isTransparent && NS_GET_A(color) == 255;
+  aBorder.GetBorderColor(aSide, color, isForeground);
+  return NS_GET_A(color) == 255;
 }
 
 /**
@@ -1590,8 +1586,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // on the dirty rect before accounting for the background-position.
   nscoord tileWidth = imageSize.width;
   nscoord tileHeight = imageSize.height;
-  PRBool  needBackgroundColor = !(aColor.mBackgroundFlags &
-                                  NS_STYLE_BG_COLOR_TRANSPARENT);
+  PRBool  needBackgroundColor = NS_GET_A(aColor.mBackgroundColor) > 0;
   PRIntn  repeat = aColor.mBackgroundRepeat;
 
   switch (repeat) {
@@ -2331,7 +2326,7 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
   // color if we're not completely transparent.  See the corresponding check
   // for whether we're allowed to paint background images in
   // PaintBackgroundWithSC before the first call to PaintBackgroundColor.
-  if ((aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
+  if (NS_GET_A(aColor.mBackgroundColor) == 0 &&
       (aCanPaintNonWhite || aColor.IsTransparent())) {
     // nothing to paint
     return;

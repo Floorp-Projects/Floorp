@@ -354,11 +354,6 @@ const PRInt32 nsCSSProps::kBackgroundAttachmentKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const PRInt32 nsCSSProps::kBackgroundColorKTable[] = {
-  eCSSKeyword_transparent, NS_STYLE_BG_COLOR_TRANSPARENT,
-  eCSSKeyword_UNKNOWN,-1
-};
-
 const PRInt32 nsCSSProps::kBackgroundClipKTable[] = {
   eCSSKeyword_border,     NS_STYLE_BG_CLIP_BORDER,
   eCSSKeyword_padding,    NS_STYLE_BG_CLIP_PADDING,
@@ -406,7 +401,6 @@ const PRInt32 nsCSSProps::kBorderCollapseKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kBorderColorKTable[] = {
-  eCSSKeyword_transparent, NS_STYLE_COLOR_TRANSPARENT,
   eCSSKeyword__moz_use_text_color, NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
   eCSSKeyword_UNKNOWN,-1
 };

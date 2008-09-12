@@ -187,13 +187,13 @@ ProcessTableRulesAttribute(void*       aStyleStruct,
       borderData->SetBorderStyle(aSide, bStyle);
 
       nscolor borderColor;
-      PRBool transparent, foreground;
-      borderData->GetBorderColor(aSide, borderColor, transparent, foreground);
-      if (transparent || foreground) {
+      PRBool foreground;
+      borderData->GetBorderColor(aSide, borderColor, foreground);
+      if (NS_GET_A(borderColor) == 0 || foreground) {
         // use the table's border color if it is set, otherwise use black
         nscolor tableBorderColor;
-        tableBorderData->GetBorderColor(aSide, tableBorderColor, transparent, foreground);
-        borderColor = (transparent || foreground) ? NS_RGB(0,0,0) : tableBorderColor;
+        tableBorderData->GetBorderColor(aSide, tableBorderColor, foreground);
+        borderColor = (NS_GET_A(borderColor) == 0 || foreground) ? NS_RGB(0,0,0) : tableBorderColor;
         borderData->SetBorderColor(aSide, borderColor);
       }
       // set the border width to be 1 pixel

@@ -1056,18 +1056,10 @@ nsComputedDOMStyle::GetBackgroundColor(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   const nsStyleBackground* color = GetStyleBackground();
-
-  if (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
-    const nsAFlatCString& backgroundColor =
-      nsCSSProps::ValueToKeyword(NS_STYLE_BG_COLOR_TRANSPARENT,
-                                 nsCSSProps::kBackgroundColorKTable);
-    val->SetIdent(backgroundColor);
-  } else {
-    nsresult rv = SetToRGBAColor(val, color->mBackgroundColor);
-    if (NS_FAILED(rv)) {
-      delete val;
-      return rv;
-    }
+  nsresult rv = SetToRGBAColor(val, color->mBackgroundColor);
+  if (NS_FAILED(rv)) {
+    delete val;
+    return rv;
   }
 
   return CallQueryInterface(val, aValue);
@@ -3055,15 +3047,11 @@ nsComputedDOMStyle::GetBorderColorsFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 
           return NS_ERROR_OUT_OF_MEMORY;
         }
-        if (borderColors->mTransparent) {
-          primitive->SetIdent(nsGkAtoms::transparent);
-        } else {
-          nsresult rv = SetToRGBAColor(primitive, borderColors->mColor);
-          if (NS_FAILED(rv)) {
-            delete valueList;
-            delete primitive;
-            return rv;
-          }
+        nsresult rv = SetToRGBAColor(primitive, borderColors->mColor);
+        if (NS_FAILED(rv)) {
+          delete valueList;
+          delete primitive;
+          return rv;
         }
 
         PRBool success = valueList->AppendCSSValue(primitive);
@@ -3125,23 +3113,16 @@ nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nscolor color; 
-  PRBool transparent;
   PRBool foreground;
-  GetStyleBorder()->GetBorderColor(aSide, color, transparent, foreground);
-  if (transparent) {
-    val->SetIdent(nsGkAtoms::transparent);
-  } else {
-    if (foreground) {
-      const nsStyleColor* colorStruct = GetStyleColor();
-      color = colorStruct->mColor;
-    }
-    // XXX else?
+  GetStyleBorder()->GetBorderColor(aSide, color, foreground);
+  if (foreground) {
+    color = GetStyleColor()->mColor;
+  }
 
-    nsresult rv = SetToRGBAColor(val, color);
-    if (NS_FAILED(rv)) {
-      delete val;
-      return rv;
-    }
+  nsresult rv = SetToRGBAColor(val, color);
+  if (NS_FAILED(rv)) {
+    delete val;
+    return rv;
   }
 
   return CallQueryInterface(val, aValue);
