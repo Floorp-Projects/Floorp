@@ -56,12 +56,8 @@
 
 NS_IMPL_ISUPPORTS2(mozStorageStatementRow, mozIStorageStatementRow, nsIXPCScriptable)
 
-mozStorageStatementRow::mozStorageStatementRow(mozIStorageStatement *aStatement,
-                                               int aNumColumns,
-                                               const nsStringArray *aColumnNames)
-    : mStatement(aStatement),
-      mNumColumns(aNumColumns),
-      mColumnNames(aColumnNames)
+mozStorageStatementRow::mozStorageStatementRow(mozStorageStatement *aStatement)
+    : mStatement(aStatement)
 {
 }
 
@@ -97,44 +93,40 @@ mozStorageStatementRow::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContex
                          JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
     if (JSVAL_IS_STRING(id)) {
-        nsDependentString jsid((PRUnichar *)::JS_GetStringChars(JSVAL_TO_STRING(id)),
-                               ::JS_GetStringLength(JSVAL_TO_STRING(id)));
+        nsDependentCString jsid(::JS_GetStringBytes(JSVAL_TO_STRING(id)));
 
-        for (int i = 0; i < mNumColumns; i++) {
-            if (jsid.Equals(*(*mColumnNames)[i])) {
-                int ctype = sqlite3_column_type(NativeStatement(), i);
+        PRUint32 idx;
+        nsresult rv = mStatement->GetColumnIndex(jsid, &idx);
+        NS_ENSURE_SUCCESS(rv, rv);
+        int ctype = sqlite3_column_type(NativeStatement(), idx);
 
-                if (ctype == SQLITE_INTEGER || ctype == SQLITE_FLOAT) {
-                    double dval = sqlite3_column_double(NativeStatement(), i);
-                    if (!JS_NewNumberValue(cx, dval, vp)) {
-                        *_retval = PR_FALSE;
-                        return NS_OK;
-                    }
-                } else if (ctype == SQLITE_TEXT) {
-                    JSString *str = JS_NewUCStringCopyN(cx,
-                                                        (jschar*) sqlite3_column_text16(NativeStatement(), i),
-                                                        sqlite3_column_bytes16(NativeStatement(), i)/2);
-                    if (!str) {
-                        *_retval = PR_FALSE;
-                        return NS_OK;
-                    }
-                    *vp = STRING_TO_JSVAL(str);
-                } else if (ctype == SQLITE_BLOB) {
-                    JSString *str = JS_NewStringCopyN(cx,
-                                                      (char*) sqlite3_column_blob(NativeStatement(), i),
-                                                      sqlite3_column_bytes(NativeStatement(), i));
-                    if (!str) {
-                        *_retval = PR_FALSE;
-                        return NS_OK;
-                    }
-                } else if (ctype == SQLITE_NULL) {
-                    *vp = JSVAL_NULL;
-                } else {
-                    NS_ERROR("sqlite3_column_type returned unknown column type, what's going on?");
-                }
-
-                break;
+        if (ctype == SQLITE_INTEGER || ctype == SQLITE_FLOAT) {
+            double dval = sqlite3_column_double(NativeStatement(), idx);
+            if (!JS_NewNumberValue(cx, dval, vp)) {
+                *_retval = PR_FALSE;
+                return NS_OK;
             }
+        } else if (ctype == SQLITE_TEXT) {
+            JSString *str = JS_NewUCStringCopyN(cx,
+                                                (jschar*) sqlite3_column_text16(NativeStatement(), idx),
+                                                sqlite3_column_bytes16(NativeStatement(), idx)/2);
+            if (!str) {
+                *_retval = PR_FALSE;
+                return NS_OK;
+            }
+            *vp = STRING_TO_JSVAL(str);
+        } else if (ctype == SQLITE_BLOB) {
+            JSString *str = JS_NewStringCopyN(cx,
+                                              (char*) sqlite3_column_blob(NativeStatement(), idx),
+                                              sqlite3_column_bytes(NativeStatement(), idx));
+            if (!str) {
+                *_retval = PR_FALSE;
+                return NS_OK;
+            }
+        } else if (ctype == SQLITE_NULL) {
+            *vp = JSVAL_NULL;
+        } else {
+            NS_ERROR("sqlite3_column_type returned unknown column type, what's going on?");
         }
     }
 
@@ -211,21 +203,20 @@ mozStorageStatementRow::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext
 {
     if (JSVAL_IS_STRING(id)) {
         JSString *str = JSVAL_TO_STRING(id);
-        nsDependentString name((PRUnichar *)::JS_GetStringChars(str),
-                               ::JS_GetStringLength(str));
+        nsDependentCString name(::JS_GetStringBytes(str));
 
-        for (int i = 0; i < mNumColumns; i++) {
-            if (name.Equals(*(*mColumnNames)[i])) {
-                *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                                 ::JS_GetStringLength(str),
-                                                 JSVAL_VOID,
-                                                 nsnull, nsnull, 0);
-                *objp = obj;
-                return *_retval ? NS_OK : NS_ERROR_FAILURE;
-            }
-        }
+        PRUint32 idx;
+        nsresult rv = mStatement->GetColumnIndex(name, &idx);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                         ::JS_GetStringLength(str),
+                                         JSVAL_VOID,
+                                         nsnull, nsnull, 0);
+        *objp = obj;
+        return *_retval ? NS_OK : NS_ERROR_FAILURE;
     }
-                
+
     *_retval = PR_TRUE;
     return NS_OK;
 }
