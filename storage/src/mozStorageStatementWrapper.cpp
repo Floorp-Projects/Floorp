@@ -72,7 +72,7 @@ mozStorageStatementWrapper::Initialize(mozIStorageStatement *aStatement)
     NS_ASSERTION(mStatement == nsnull, "mozStorageStatementWrapper is already initialized");
     NS_ENSURE_ARG_POINTER(aStatement);
 
-    mStatement = aStatement;
+    mStatement = static_cast<mozStorageStatement *>(aStatement);
 
     // fetch various things we care about
     mStatement->GetParameterCount(&mParamCount);
@@ -143,7 +143,7 @@ mozStorageStatementWrapper::GetRow(mozIStorageStatementRow **aRow)
         return NS_ERROR_FAILURE;
 
     if (!mStatementRow) {
-        mozStorageStatementRow *row = new mozStorageStatementRow(mStatement, mResultColumnCount, &mColumnNames);
+        mozStorageStatementRow *row = new mozStorageStatementRow(mStatement);
         if (!row)
             return NS_ERROR_OUT_OF_MEMORY;
         mStatementRow = row;

@@ -45,9 +45,12 @@
 #include "nsError.h"
 #include "nsISimpleEnumerator.h"
 #include "nsMemory.h"
+#include "nsIClassInfoImpl.h"
+#include "nsIProgrammingLanguage.h"
 
 #include "mozStorageConnection.h"
 #include "mozStorageStatement.h"
+#include "mozStorageStatementJSHelper.h"
 #include "mozStorageValueArray.h"
 #include "mozStorage.h"
 #include "mozStorageEvents.h"
@@ -57,6 +60,87 @@
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gStorageLog;
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsIClassInfo
+
+NS_IMPL_CI_INTERFACE_GETTER2(
+    mozStorageStatement
+,   mozIStorageStatement
+,   mozIStorageValueArray
+)
+
+class mozStorageStatementClassInfo : public nsIClassInfo
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHODIMP
+    GetInterfaces(PRUint32 *_count, nsIID ***_array)
+    {
+        return NS_CI_INTERFACE_GETTER_NAME(mozStorageStatement)(_count, _array);
+    }
+
+    NS_IMETHODIMP
+    GetHelperForLanguage(PRUint32 aLanguage, nsISupports **_helper)
+    {
+        if (aLanguage == nsIProgrammingLanguage::JAVASCRIPT) {
+            static mozStorageStatementJSHelper sJSHelper;
+            *_helper = &sJSHelper;
+            return NS_OK;
+        }
+
+        *_helper = nsnull;
+        return NS_OK;
+    }
+
+    NS_IMETHODIMP
+    GetContractID(char **_contractID)
+    {
+        *_contractID = nsnull;
+        return NS_OK;
+    }
+
+    NS_IMETHODIMP
+    GetClassDescription(char **_desc)
+    {
+        *_desc = nsnull;
+        return NS_OK;
+    }
+
+    NS_IMETHODIMP
+    GetClassID(nsCID **_id)
+    {
+        *_id = nsnull;
+        return NS_OK;
+    }
+
+    NS_IMETHODIMP
+    GetImplementationLanguage(PRUint32 *_language)
+    {
+        *_language = nsIProgrammingLanguage::CPLUSPLUS;
+        return NS_OK;
+    }
+
+    NS_IMETHODIMP
+    GetFlags(PRUint32 *_flags)
+    {
+        *_flags = nsnull;
+        return NS_OK;
+    }
+
+    NS_IMETHODIMP
+    GetClassIDNoAlloc(nsCID *_cid)
+    {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+};
+
+NS_IMETHODIMP_(nsrefcnt) mozStorageStatementClassInfo::AddRef() { return 2; }
+NS_IMETHODIMP_(nsrefcnt) mozStorageStatementClassInfo::Release() { return 1; }
+NS_IMPL_QUERY_INTERFACE1(mozStorageStatementClassInfo, nsIClassInfo);
+
+static mozStorageStatementClassInfo sStatementClassInfo;
 
 /**
  ** mozStorageStatementRowEnumerator
@@ -87,11 +171,17 @@ protected:
  ** mozStorageStatement
  **/
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(
-    mozStorageStatement
-,   mozIStorageStatement
-,   mozIStorageValueArray
-)
+NS_IMPL_THREADSAFE_ADDREF(mozStorageStatement)
+NS_IMPL_THREADSAFE_RELEASE(mozStorageStatement)
+
+NS_INTERFACE_MAP_BEGIN(mozStorageStatement)
+    NS_INTERFACE_MAP_ENTRY(mozIStorageStatement)
+    NS_INTERFACE_MAP_ENTRY(mozIStorageValueArray)
+    if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
+        foundInterface = static_cast<nsIClassInfo *>(&sStatementClassInfo);
+    } else
+    NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 mozStorageStatement::mozStorageStatement()
     : mDBConnection (nsnull), mDBStatement(nsnull), mColumnNames(nsnull), mExecuting(PR_FALSE)
@@ -175,6 +265,9 @@ mozStorageStatement::~mozStorageStatement()
 {
     (void)Finalize();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//// mozIStorageStatement
 
 /* mozIStorageStatement clone (); */
 NS_IMETHODIMP
