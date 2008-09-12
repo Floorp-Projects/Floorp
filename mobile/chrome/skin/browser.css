@@ -138,7 +138,7 @@ toolbarbutton.browser-control-button {
 }
 
 #tool-star[starred="true"] {
-  -moz-image-region: rect(0px 144px 48px 96px);
+  -moz-image-region: rect(0px 192px 48px 144px);
 }
 
 #tool-back {
