@@ -4137,6 +4137,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
                "Scrollbars should have been propagated to the viewport");
 #endif
 
+  if (NS_UNLIKELY(display->mDisplay == NS_STYLE_DISPLAY_NONE)) {
+    mInitialContainingBlock = nsnull;
+    mRootElementStyleFrame = nsnull;
+    return NS_OK;
+  }
+
   nsFrameConstructorSaveState absoluteSaveState;
   if (mHasRootAbsPosContainingBlock) {
     // Push the absolute containing block now so we can absolutely position
