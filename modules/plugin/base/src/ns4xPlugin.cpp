@@ -251,7 +251,7 @@ NPNetscapeFuncs ns4xPlugin::CALLBACKS;
 void
 ns4xPlugin::CheckClassInitialized(void)
 {
-  static PRBool initialized = FALSE;
+  static PRBool initialized = PR_FALSE;
 
   if (initialized)
     return;
@@ -400,7 +400,7 @@ ns4xPlugin::CheckClassInitialized(void)
       nsAutoLock::NewLock("sPluginThreadAsyncCallLock");
   }
 
-  initialized = TRUE;
+  initialized = PR_TRUE;
 
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,("NPN callbacks initialized\n"));
 }
@@ -2159,7 +2159,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   }
 
   case NPNVasdEnabledBool:
-    *(NPBool*)result = FALSE;
+    *(NPBool*)result = PR_FALSE;
     return NPERR_NO_ERROR;
 
   case NPNVisOfflineBool: {
