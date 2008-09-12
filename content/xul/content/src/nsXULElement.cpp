@@ -329,14 +329,12 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
         return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    nsresult rv;
     if (aDocument) {
         nsINodeInfo* ni = aPrototype->mNodeInfo;
-        rv = aDocument->NodeInfoManager()->GetNodeInfo(ni->NameAtom(),
-                                                       ni->GetPrefixAtom(),
-                                                       ni->NamespaceID(),
-                                                       getter_AddRefs(nodeInfo));
-        NS_ENSURE_SUCCESS(rv, rv);
+        nodeInfo = aDocument->NodeInfoManager()->GetNodeInfo(ni->NameAtom(),
+                                                             ni->GetPrefixAtom(),
+                                                             ni->NamespaceID());
+        NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
     }
     else {
         nodeInfo = aPrototype->mNodeInfo;
@@ -2702,9 +2700,9 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
     for (i = 0; i < mNumAttributes; ++i) {
         nsCOMPtr<nsINodeInfo> ni;
         if (mAttributes[i].mName.IsAtom()) {
-            mNodeInfo->NodeInfoManager()->
+            ni = mNodeInfo->NodeInfoManager()->
                 GetNodeInfo(mAttributes[i].mName.Atom(), nsnull,
-                            kNameSpaceID_None, getter_AddRefs(ni));
+                            kNameSpaceID_None);
             NS_ASSERTION(ni, "the nodeinfo should already exist");
         }
         else {

@@ -3569,11 +3569,10 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
         // into the element.  Get a nodeinfo from our nodeinfo manager
         // for this node.
         nsCOMPtr<nsINodeInfo> newNodeInfo;
-        rv = mNodeInfoManager->GetNodeInfo(aPrototype->mNodeInfo->NameAtom(),
-                                           aPrototype->mNodeInfo->GetPrefixAtom(),
-                                           aPrototype->mNodeInfo->NamespaceID(),
-                                           getter_AddRefs(newNodeInfo));
-        if (NS_FAILED(rv)) return rv;
+        newNodeInfo = mNodeInfoManager->GetNodeInfo(aPrototype->mNodeInfo->NameAtom(),
+                                                    aPrototype->mNodeInfo->GetPrefixAtom(),
+                                                    aPrototype->mNodeInfo->NamespaceID());
+        if (!newNodeInfo) return NS_ERROR_FAILURE;
         rv = NS_NewElement(getter_AddRefs(result), newNodeInfo->NamespaceID(),
                            newNodeInfo, PR_FALSE);
         if (NS_FAILED(rv)) return rv;

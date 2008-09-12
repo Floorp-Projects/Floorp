@@ -2994,8 +2994,8 @@ nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
 
   nsINodeInfo* nodeInfo;
   if (name->IsAtom()) {
-    mNodeInfo->NodeInfoManager()->GetNodeInfo(name->Atom(), nsnull,
-                                              kNameSpaceID_None, &nodeInfo);
+    nodeInfo = mNodeInfo->NodeInfoManager()->GetNodeInfo(name->Atom(), nsnull,
+                                                         kNameSpaceID_None).get();
   }
   else {
     NS_ADDREF(nodeInfo = name->NodeInfo());
@@ -4317,10 +4317,9 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   }
   else {
     nsCOMPtr<nsINodeInfo> ni;
-    rv = mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, aPrefix,
-                                                   aNamespaceID,
-                                                   getter_AddRefs(ni));
-    NS_ENSURE_SUCCESS(rv, rv);
+    ni = mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, aPrefix,
+                                                   aNamespaceID);
+    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     rv = mAttrsAndChildren.SetAndTakeAttr(ni, aParsedValue);
   }
