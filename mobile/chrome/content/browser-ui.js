@@ -44,7 +44,9 @@ const UIMODE_URLVIEW           = 1;
 const UIMODE_URLEDIT           = 2;
 const UIMODE_BOOKMARK          = 3;
 const UIMODE_BOOKMARKLIST      = 4;
-const UIMODE_PANEL             = 5;
+const UIMODE_TABS              = 5;
+const UIMODE_CONTROLS          = 6;
+const UIMODE_PANEL             = 7;
 
 const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
 
@@ -318,7 +320,23 @@ var BrowserUI = {
     }
   },
 
-  _showPanel : function(aShow) {
+  _editToolbar : function(aEdit) {
+    var toolbar = document.getElementById("toolbar-main");
+    if (aEdit) {
+      toolbar.setAttribute("mode", "edit");
+      this._caption.hidden = true;
+      this._edit.hidden = false;
+      this._edit.focus();
+    }
+    else {
+      toolbar.setAttribute("mode", "view");
+      this._edit.hidden = true;
+      this._edit.reallyClosePopup();
+      this._caption.hidden = false;
+    }
+  },
+
+  _showPanel : function(aMode) {
       let tabbar = document.getElementById("tab-list-container");
       let sidebar = document.getElementById("browser-controls");
       let panelUI = document.getElementById("panel-container");
@@ -329,7 +347,18 @@ var BrowserUI = {
       let sidebarW = sidebar.boxObject.width;
       let browserW = browser.boxObject.width;
 
-      let newLeft = (aShow ? -browserW : -(tabbarW + sidebarW));
+      let newLeft = -tabbarW;
+      switch (aMode) {
+        case UIMODE_PANEL:
+          newLeft = -browserW;
+          break;
+        case UIMODE_CONTROLS:
+          newLeft = -(tabbarW + sidebarW);
+          break;
+        case UIMODE_TABS:
+          newLeft = 0;
+          break;
+      }
       tabbar.left = newLeft;
 
       let newToolbarLeft = newLeft + tabbarW;
@@ -560,40 +589,35 @@ var BrowserUI = {
     if (aMode == UIMODE_URLVIEW)
     {
       this._showToolbar(true);
-      toolbar.setAttribute("mode", "view");
-      this._edit.hidden = true;
-      this._edit.reallyClosePopup();
-      this._caption.hidden = false;
-      bookmark.hidden = true;
-      urllist.hidden = true;
-    }
-    else if (aMode == UIMODE_URLEDIT) {
-      this._showToolbar(true);
-      toolbar.setAttribute("mode", "edit");
-      this._caption.hidden = true;
-      this._edit.hidden = false;
-      this._edit.focus();
+      this._editToolbar(false);
 
       bookmark.hidden = true;
       urllist.hidden = true;
+
+      this._showPanel(UIMODE_NONE);
+    }
+    else if (aMode == UIMODE_URLEDIT) {
+      this._showToolbar(true);
+      this._editToolbar(true);
+
+      bookmark.hidden = true;
+      urllist.hidden = true;
+
+      this._showPanel(UIMODE_NONE);
     }
     else if (aMode == UIMODE_BOOKMARK) {
       this._showToolbar(true);
-      toolbar.setAttribute("mode", "view");
-      this._edit.hidden = true;
-      this._edit.reallyClosePopup();
-      this._caption.hidden = false;
+      this._editToolbar(false);
 
       urllist.hidden = true;
       bookmark.hidden = false;
       bookmark.width = container.boxObject.width;
+
+      this._showPanel(UIMODE_NONE);
     }
     else if (aMode == UIMODE_BOOKMARKLIST) {
       this._showToolbar(false);
-      toolbar.setAttribute("mode", "view");
-      this._edit.hidden = true;
-      this._edit.reallyClosePopup();
-      this._caption.hidden = false;
+      this._editToolbar(false);
 
       window.addEventListener("keypress", this.closePopup, false);
 
@@ -601,13 +625,12 @@ var BrowserUI = {
       urllist.hidden = false;
       urllist.width = container.boxObject.width;
       urllist.height = container.boxObject.height;
+
+      this._showPanel(UIMODE_NONE);
     }
     else if (aMode == UIMODE_PANEL) {
       this._showToolbar(true);
-      toolbar.setAttribute("mode", "view");
-      this._edit.hidden = true;
-      this._edit.reallyClosePopup();
-      this._caption.hidden = false;
+      this._editToolbar(false);
 
       bookmark.hidden = true;
 
@@ -617,12 +640,18 @@ var BrowserUI = {
       let dloads = document.getElementById("downloads-container");
       if (dloads.getAttribute("src") == "")
         dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
+
+      this._showPanel(aMode);
+    }
+    else if (aMode == UIMODE_TABS || aMode == UIMODE_CONTROLS) {
+      this._showPanel(aMode);
     }
     else if (aMode == UIMODE_NONE) {
       this._showToolbar(false);
       this._edit.reallyClosePopup();
       urllist.hidden = true;
       bookmark.hidden = true;
+      this._showPanel(aMode);
     }
   },
 
@@ -687,6 +716,7 @@ var BrowserUI = {
 
   selectTab : function(aTab) {
     Browser.content.selectTab(aTab);
+    this.show(UIMODE_NONE);
   },
 
   handleEvent: function (aEvent) {
@@ -836,9 +866,8 @@ var BrowserUI = {
         break;
       case "cmd_panel":
       {
-        var mode = (this.mode != UIMODE_PANEL ? UIMODE_PANEL : UIMODE_URLVIEW);
+        var mode = (this.mode != UIMODE_PANEL ? UIMODE_PANEL : UIMODE_CONTROLS);
         this.show(mode);
-        this._showPanel(mode == UIMODE_PANEL);
         break;
       }
     }
