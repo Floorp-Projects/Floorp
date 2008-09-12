@@ -692,8 +692,9 @@ public:
   {
     nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
 
-    return niMgr->GetNodeInfo(aName, aNodeInfo->GetPrefixAtom(),
-                              aNodeInfo->NamespaceID(), aResult);
+    *aResult = niMgr->GetNodeInfo(aName, aNodeInfo->GetPrefixAtom(),
+                                  aNodeInfo->NamespaceID()).get();
+    return *aResult ? NS_OK : NS_ERROR_FAILURE;
   }
 
   /**
@@ -705,8 +706,9 @@ public:
   {
     nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
 
-    return niMgr->GetNodeInfo(aNodeInfo->NameAtom(), aPrefix,
-                              aNodeInfo->NamespaceID(), aResult);
+    *aResult = niMgr->GetNodeInfo(aNodeInfo->NameAtom(), aPrefix,
+                                  aNodeInfo->NamespaceID()).get();
+    return *aResult ? NS_OK : NS_ERROR_FAILURE;
   }
 
   /**

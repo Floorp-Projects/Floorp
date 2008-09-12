@@ -1964,9 +1964,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsIContent*     aParentContent,
     // XXX Check if it's an image type we can handle...
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mDocument->NodeInfoManager()->GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage, nsnull,
-                                              kNameSpaceID_XHTML,
-                                              getter_AddRefs(nodeInfo));
+    nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage, nsnull,
+                                                         kNameSpaceID_XHTML);
 
     nsCOMPtr<nsIContent> content;
     NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo,
@@ -2137,9 +2136,8 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsFrameConstructorState& aSta
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsIAtom* elemName = aPseudoElement == nsCSSPseudoElements::before ?
     nsGkAtoms::mozgeneratedcontentbefore : nsGkAtoms::mozgeneratedcontentafter;
-  mDocument->NodeInfoManager()->GetNodeInfo(elemName, nsnull,
-                                            kNameSpaceID_None,
-                                            getter_AddRefs(nodeInfo));
+  nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(elemName, nsnull,
+                                                       kNameSpaceID_None);
   nsIContent* container;
   nsresult rv = NS_NewXMLElement(&container, nodeInfo);
   if (NS_FAILED(rv))

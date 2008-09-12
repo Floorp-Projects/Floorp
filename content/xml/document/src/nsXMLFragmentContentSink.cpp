@@ -621,9 +621,8 @@ nsXHTMLParanoidFragmentSink::AddAttributes(const PRUnichar** aAtts,
   while (*aAtts) {
     nsContentUtils::SplitExpatName(aAtts[0], getter_AddRefs(prefix),
                                    getter_AddRefs(localName), &nameSpaceID);
-    rv = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
-                                       getter_AddRefs(nodeInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
+    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
     // check the attributes we allow that contain URIs
     if (IsAttrURI(nodeInfo->NameAtom())) {
       if (!aAtts[1])
@@ -670,9 +669,8 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
     return NS_OK;
   
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
-                                     getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
   
   // bounce it if it's not on the whitelist or we're inside
   // <script> or <style>
@@ -692,9 +690,8 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
   for (PRUint32 i = 0; i < aAttsCount; i += 2) {
     nsContentUtils::SplitExpatName(aAtts[i], getter_AddRefs(prefix),
                                    getter_AddRefs(localName), &nameSpaceID);
-    rv = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
-                                       getter_AddRefs(nodeInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
+    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
     
     name = nodeInfo->NameAtom();
     // Add if it's xmlns, xml: or on the HTML whitelist
@@ -717,7 +714,6 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
 NS_IMETHODIMP 
 nsXHTMLParanoidFragmentSink::HandleEndElement(const PRUnichar *aName)
 {
-  nsresult rv;
   PRInt32 nameSpaceID;
   nsCOMPtr<nsIAtom> prefix, localName;
   nsContentUtils::SplitExpatName(aName, getter_AddRefs(prefix),
@@ -729,9 +725,8 @@ nsXHTMLParanoidFragmentSink::HandleEndElement(const PRUnichar *aName)
   }
   
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
-                                     getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
   
   nsCOMPtr<nsIAtom> name = nodeInfo->NameAtom();
   if (mSkipLevel != 0) {

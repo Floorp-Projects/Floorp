@@ -545,8 +545,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     ToLowerCase(tmp);
 
     nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
-    mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
-                                  getter_AddRefs(nodeInfo));
+    nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None);
   }
   else if (mNodeInfoCache[aNodeType]) {
     nodeInfo = mNodeInfoCache[aNodeType];
@@ -559,8 +558,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     nsIAtom *name = parserService->HTMLIdToAtomTag(aNodeType);
     NS_ASSERTION(name, "What? Reverse mapping of id to string broken!!!");
 
-    mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
-                                  getter_AddRefs(nodeInfo));
+    nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None);
     NS_IF_ADDREF(mNodeInfoCache[aNodeType] = nodeInfo);
   }
 
@@ -1704,10 +1702,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mMaxTextRun = nsContentUtils::GetIntPref("content.maxtextrun", 8191);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nsnull,
-                                     kNameSpaceID_None,
-                                     getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nsnull,
+                                           kNameSpaceID_None);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
   // Make root part
   nsIContent *doc_root = mDocument->GetRootContent();
@@ -1733,10 +1730,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   }
 
   // Make head part
-  rv = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head,
-                                     nsnull, kNameSpaceID_None,
-                                     getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head,
+                                           nsnull, kNameSpaceID_None);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
   mHead = NS_NewHTMLHeadElement(nodeInfo);
   if (NS_FAILED(rv)) {
@@ -2917,8 +2913,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     // Create content object
     nsCOMPtr<nsIContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nsnull, kNameSpaceID_None,
-                                  getter_AddRefs(nodeInfo));
+    nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nsnull, kNameSpaceID_None);
 
     result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
     NS_ENSURE_SUCCESS(result, result);

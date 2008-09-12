@@ -4447,8 +4447,8 @@ nsDocument::SetTitle(const nsAString& aTitle)
 
     {
       nsCOMPtr<nsINodeInfo> titleInfo;
-      mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nsnull,
-              kNameSpaceID_None, getter_AddRefs(titleInfo));
+      titleInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nsnull,
+                                                kNameSpaceID_None);
       if (!titleInfo)
         return NS_OK;
       title = NS_NewHTMLTitleElement(titleInfo);
@@ -6159,7 +6159,6 @@ nsresult
 nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
                        PRBool aDocumentDefaultType, nsIContent **aResult)
 {
-  nsresult rv;
 #ifdef DEBUG
   nsAutoString qName;
   if (aPrefix) {
@@ -6182,12 +6181,11 @@ nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
   *aResult = nsnull;
   
   PRInt32 elementType = aDocumentDefaultType ? mDefaultElementType :
-                                               aNamespaceID;
+    aNamespaceID;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
-                                     getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
   return NS_NewElement(aResult, elementType, nodeInfo, PR_FALSE);
 }
