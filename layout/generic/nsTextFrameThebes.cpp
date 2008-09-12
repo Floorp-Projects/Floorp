@@ -3036,9 +3036,6 @@ nsTextPaintStyle::InitSelectionColors()
     if (sc) {
       const nsStyleBackground* bg = sc->GetStyleBackground();
       mSelectionBGColor = bg->mBackgroundColor;
-      if (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
-        mSelectionBGColor = NS_RGBA(0,0,0,0);
-      }
       mSelectionTextColor = sc->GetStyleColor()->mColor;
       return PR_TRUE;
     }

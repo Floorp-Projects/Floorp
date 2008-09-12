@@ -468,11 +468,9 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
     // aOther.mBorderColors
     if (mBorderColors) {
       NS_FOR_CSS_SIDES(ix) {
-        if (!mBorderColors[ix] != !aOther.mBorderColors[ix]) {
+        if (!nsBorderColors::Equal(mBorderColors[ix],
+                                   aOther.mBorderColors[ix])) {
           return NS_STYLE_HINT_VISUAL;
-        } else if (mBorderColors[ix] && aOther.mBorderColors[ix]) {
-          if (!mBorderColors[ix]->Equals(aOther.mBorderColors[ix]))
-            return NS_STYLE_HINT_VISUAL;
         }
       }
     }
@@ -1154,15 +1152,15 @@ nsChangeHint nsStyleColor::MaxDifference()
 // nsStyleBackground
 //
 
-nsStyleBackground::nsStyleBackground(nsPresContext* aPresContext)
-  : mBackgroundFlags(NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE),
+nsStyleBackground::nsStyleBackground()
+  : mBackgroundFlags(NS_STYLE_BG_IMAGE_NONE),
     mBackgroundAttachment(NS_STYLE_BG_ATTACHMENT_SCROLL),
     mBackgroundClip(NS_STYLE_BG_CLIP_BORDER),
     mBackgroundInlinePolicy(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS),
     mBackgroundOrigin(NS_STYLE_BG_ORIGIN_PADDING),
-    mBackgroundRepeat(NS_STYLE_BG_REPEAT_XY)
+    mBackgroundRepeat(NS_STYLE_BG_REPEAT_XY),
+    mBackgroundColor(NS_RGBA(0, 0, 0, 0))
 {
-  mBackgroundColor = aPresContext->DefaultBackgroundColor();
 }
 
 nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
