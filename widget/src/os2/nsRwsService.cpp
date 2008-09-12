@@ -850,7 +850,7 @@ ExtCache::ExtCache() : mCount(0), mSize(0), mExtInfo(0)
     ERRMSG(rc, "DosCreateMutexSem")
 }
 
-ExtCache::~ExtCache() {};
+ExtCache::~ExtCache() {}
 
 //------------------------------------------------------------------------
 
