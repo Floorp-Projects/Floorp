@@ -165,11 +165,9 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
   NS_ENSURE_ARG(aNodeInfoManager);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv =
-    aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentFragmentNodeName,
-                                  nsnull, kNameSpaceID_None,
-                                  getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentFragmentNodeName,
+                                           nsnull, kNameSpaceID_None);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
   nsDocumentFragment *it = new nsDocumentFragment(nodeInfo);
   if (!it) {
