@@ -224,6 +224,7 @@ toolbarbutton.browser-control-button {
   color: #000;
   -moz-box-orient: horizontal;
   -moz-box-align: center;
+  min-height: 60px;
 }
 
 #identity-box {
