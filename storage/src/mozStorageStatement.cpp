@@ -138,7 +138,7 @@ public:
 
 NS_IMETHODIMP_(nsrefcnt) mozStorageStatementClassInfo::AddRef() { return 2; }
 NS_IMETHODIMP_(nsrefcnt) mozStorageStatementClassInfo::Release() { return 1; }
-NS_IMPL_QUERY_INTERFACE1(mozStorageStatementClassInfo, nsIClassInfo);
+NS_IMPL_QUERY_INTERFACE1(mozStorageStatementClassInfo, nsIClassInfo)
 
 static mozStorageStatementClassInfo sStatementClassInfo;
 
