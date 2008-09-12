@@ -62,18 +62,20 @@ REQUIRES = xpcom \
            $(NULL)
 
 CPPSRCS = \
-	mozStorageService.cpp \
-	mozStorageConnection.cpp \
-	mozStorageStatement.cpp \
-	mozStorageStatementWrapper.cpp \
-	mozStorageValueArray.cpp \
-	mozStorageUnicodeFunctions.cpp \
-	mozStorageRow.cpp \
-	mozStorageResultSet.cpp \
+  mozStorageService.cpp \
+  mozStorageConnection.cpp \
+  mozStorageStatement.cpp \
+  mozStorageStatementWrapper.cpp \
+  mozStorageStatementParams.cpp \
+  mozStorageStatementRow.cpp \
+  mozStorageValueArray.cpp \
+  mozStorageUnicodeFunctions.cpp \
+  mozStorageRow.cpp \
+  mozStorageResultSet.cpp \
   mozStorageError.cpp \
   mozStorageBackground.cpp \
   mozStorageEvents.cpp \
-	$(NULL)
+  $(NULL)
 
 LOCAL_INCLUDES = \
 	$(SQLITE_CFLAGS)
