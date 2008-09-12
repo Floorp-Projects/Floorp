@@ -577,6 +577,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     uint32 slot = sprop->slot;
     if (!scope->table && sprop->parent == scope->lastProp && slot == scope->map.freeslot) {
         if (slot < STOBJ_NSLOTS(obj) && !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
+            JS_ASSERT(JSVAL_IS_VOID(STOBJ_GET_SLOT(obj, scope->map.freeslot)));
             ++scope->map.freeslot;
         } else {
             if (!js_AllocSlot(cx, obj, &slot)) {
