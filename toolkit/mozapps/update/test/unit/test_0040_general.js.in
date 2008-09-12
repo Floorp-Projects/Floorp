@@ -44,7 +44,6 @@ const URL_PREFIX = "http://localhost:4444/" + DIR_DATA + "/";
 const PREF_APP_UPDATE_CHANNEL        = "app.update.channel";
 const PREF_APP_UPDATE_URL_OVERRIDE   = "app.update.url.override";
 const PREF_PARTNER_BRANCH            = "app.partner.";
-const PREF_GEN_USERAGENT_LOCALE      = "general.useragent.locale";
 const PREF_APP_DISTRIBUTION          = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION  = "distribution.version";
 
@@ -154,9 +153,6 @@ function run_test_pt5() {
   var url = URL_PREFIX + "%LOCALE%/";
   dump("Testing: url constructed with %LOCALE% - " + url + "\n");
   gPrefs.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
-  var defaults = gPrefs.QueryInterface(AUS_Ci.nsIPrefService)
-                   .getDefaultBranch(null);
-  defaults.setCharPref(PREF_GEN_USERAGENT_LOCALE, "bogus_locale");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
@@ -274,6 +270,34 @@ function run_test_pt11() {
 
 function check_test_pt11(aResult) {
   do_check_eq(aResult, "bogus_distro_version");
+  run_test_pt12();
+}
+
+// url constructed that doesn't have a parameter - bug 454357
+function run_test_pt12() {
+  gCheckFunc = check_test_pt12;
+  var url = URL_PREFIX;
+  dump("Testing: url constructed that doesn't have a parameter - " + url + "\n");
+  gPrefs.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  gUpdateChecker.checkForUpdates(updateCheckListener, true);
+}
+
+function check_test_pt12(aResult) {
+  do_check_eq(aResult, "?force=1");
+  run_test_pt13();
+}
+
+// url constructed that has a parameter - bug 454357
+function run_test_pt13() {
+  gCheckFunc = check_test_pt13;
+  var url = URL_PREFIX + "?bogus=param";
+  dump("Testing: url constructed that has a parameter - " + url + "\n");
+  gPrefs.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
+  gUpdateChecker.checkForUpdates(updateCheckListener, true);
+}
+
+function check_test_pt13(aResult) {
+  do_check_eq(aResult, "?bogus=param&force=1");
   end_test();
 }
 
