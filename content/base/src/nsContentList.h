@@ -178,8 +178,8 @@ protected:
 #define LIST_LAZY 2
 
 /**
- * Class that implements a live NodeList that matches nodes in the
- * tree based on some criterion
+ * Class that implements a live NodeList that matches Elements in the
+ * tree based on some criterion.
  */
 class nsContentList : public nsBaseContentList,
                       protected nsContentListKey,
@@ -212,7 +212,11 @@ public:
 
   /**
    * @param aRootNode The node under which to limit our search.
-   * @param aFunc the function to be called to determine whether we match
+   * @param aFunc the function to be called to determine whether we match.
+   *              This function MUST NOT ever cause mutation of the DOM.
+   *              The nsContentList implementation guarantees that everything
+   *              passed to the function will be
+   *              IsNodeOfType(nsINode::eELEMENT).
    * @param aDestroyFunc the function that will be called to destroy aData
    * @param aData closure data that will need to be passed back to aFunc
    * @param aDeep If false, then look only at children of the root, nothing
@@ -286,12 +290,14 @@ protected:
    *
    * @param aContent the root of the subtree we want to traverse. This node
    *                 is always included in the traversal and is thus the
-   *                 first node tested.
+   *                 first node tested.  This must be
+   *                 IsNodeOfType(nsINode::eELEMENT).
    * @param aElementsToAppend how many elements to append to the list
    *        before stopping
    */
+  void NS_FASTCALL PopulateWith(nsIContent *aContent,
+                                PRUint32 & aElementsToAppend);
 
-  void PopulateWith(nsIContent *aContent, PRUint32 & aElementsToAppend);
   /**
    * Populate our list starting at the child of aStartRoot that comes
    * after aStartChild (if such exists) and continuing in document

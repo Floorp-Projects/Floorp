@@ -511,6 +511,8 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                 PRInt32 aModType, PRUint32 aStateMask)
 {
   NS_PRECONDITION(aContent, "Must have a content node to work with");
+  NS_PRECONDITION(aContent->IsNodeOfType(nsINode::eELEMENT),
+                  "Should be an element");
   
   if (!mFunc || !mFuncMayDependOnAttr || mState == LIST_DIRTY ||
       !MayContainRelevantNodes(aContent->GetNodeParent()) ||
@@ -614,7 +616,10 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
      */
     for (i = aNewIndexInContainer; i <= count-1; ++i) {
       PRUint32 limit = PRUint32(-1);
-      PopulateWith(aContainer->GetChildAt(i), limit);
+      nsIContent* newContent = aContainer->GetChildAt(i);
+      if (newContent->IsNodeOfType(nsINode::eELEMENT)) {
+        PopulateWith(newContent, limit);
+      }
     }
 
     ASSERT_IN_SYNC;
@@ -665,15 +670,14 @@ nsContentList::Match(nsIContent *aContent)
   if (!aContent)
     return PR_FALSE;
 
+  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eELEMENT),
+               "Must have element here");
+
   if (mFunc) {
     return (*mFunc)(aContent, mMatchNameSpaceId, mMatchAtom, mData);
   }
 
   if (mMatchAtom) {
-    if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
-      return PR_FALSE;
-    }
-
     nsINodeInfo *ni = aContent->NodeInfo();
 
     if (mMatchNameSpaceId == kNameSpaceID_Unknown) {
@@ -697,6 +701,10 @@ nsContentList::MatchSelf(nsIContent *aContent)
   NS_PRECONDITION(aContent, "Can't match null stuff, you know");
   NS_PRECONDITION(mDeep || aContent->GetNodeParent() == mRootNode,
                   "MatchSelf called on a node that we can't possibly match");
+
+  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+    return PR_FALSE;
+  }
   
   if (Match(aContent))
     return PR_TRUE;
@@ -722,6 +730,8 @@ nsContentList::PopulateWith(nsIContent *aContent, PRUint32& aElementsToAppend)
                   "PopulateWith called on nodes we can't possibly match");
   NS_PRECONDITION(aContent != mRootNode,
                   "We should never be trying to match mRootNode");
+  NS_PRECONDITION(aContent->IsNodeOfType(nsINode::eELEMENT),
+                  "Should be an element");
 
   if (Match(aContent)) {
     mElements.AppendObject(aContent);
@@ -734,13 +744,24 @@ nsContentList::PopulateWith(nsIContent *aContent, PRUint32& aElementsToAppend)
   if (!mDeep)
     return;
   
-  PRUint32 i, count = aContent->GetChildCount();
-
-  for (i = 0; i < count; i++) {
-    PopulateWith(aContent->GetChildAt(i), aElementsToAppend);
-    if (aElementsToAppend == 0)
-      return;
+#ifdef DEBUG
+  nsMutationGuard debugMutationGuard;
+#endif  
+  PRUint32 count = aContent->GetChildCount();
+  nsIContent* const* curChildPtr = aContent->GetChildArray();
+  nsIContent* const* stop = curChildPtr + count;
+  for (; curChildPtr != stop; ++curChildPtr) {
+    nsIContent* curContent = *curChildPtr;
+    if (curContent->IsNodeOfType(nsINode::eELEMENT)) {
+      PopulateWith(*curChildPtr, aElementsToAppend);
+      if (aElementsToAppend == 0)
+        break;
+    }
   }
+#ifdef DEBUG
+  NS_ASSERTION(!debugMutationGuard.Mutated(0),
+               "Unexpected mutations happened.  Check your match function!");
+#endif  
 }
 
 void 
@@ -764,15 +785,34 @@ nsContentList::PopulateWithStartingAfter(nsINode *aStartRoot,
       ++i;  // move to one past
     }
 
+#ifdef DEBUG
+    nsMutationGuard debugMutationGuard;
+#endif  
     PRUint32 childCount = aStartRoot->GetChildCount();
-    for ( ; ((PRUint32)i) < childCount; ++i) {
-      PopulateWith(aStartRoot->GetChildAt(i), aElementsToAppend);
-    
-      NS_ASSERTION(aElementsToAppend + mElements.Count() == invariant,
-                   "Something is awry in PopulateWith!");
-      if (aElementsToAppend == 0)
-        return;
+    nsIContent* const* curChildPtr = aStartRoot->GetChildArray();
+    nsIContent* const* stop = curChildPtr + childCount;
+    // Now advance curChildPtr to the child we want to be starting with
+    NS_ASSERTION(i <= childCount, "Unexpected index");
+    curChildPtr += i;
+    for ( ; curChildPtr != stop; ++curChildPtr) {
+      nsIContent* content = *curChildPtr;
+      if (content->IsNodeOfType(nsINode::eELEMENT)) {
+        PopulateWith(content, aElementsToAppend);
+
+        NS_ASSERTION(aElementsToAppend + mElements.Count() == invariant,
+                     "Something is awry in PopulateWith!");
+        if (aElementsToAppend == 0)
+          break;
+      }
     }
+#ifdef DEBUG
+    NS_ASSERTION(!debugMutationGuard.Mutated(0),
+                 "Unexpected mutations happened.  Check your match function!");
+#endif
+  }
+
+  if (aElementsToAppend == 0) {
+    return;
   }
 
   // We want to make sure we don't move up past our root node. So if
@@ -911,7 +951,7 @@ nsContentList::AssertInSync()
       break;
     }
 
-    if (Match(cur)) {
+    if (cur->IsNodeOfType(nsINode::eELEMENT) && Match(cur)) {
       NS_ASSERTION(cnt < mElements.Count() && mElements[cnt] == cur,
                    "Elements is out of sync");
       ++cnt;
