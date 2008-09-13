@@ -52,7 +52,7 @@
 
 #include <math.h>
 
-#ifdef NS_OSSO
+#ifdef NS_MAEMO_LOCATION
 #include "MaemoLocationProvider.h"
 #endif
 
@@ -469,8 +469,8 @@ nsGeolocationService::StartDevice()
     // Check to see if there is an override in place. if so, use it.
     mProvider = do_GetService(NS_GEOLOCATION_PROVIDER_CONTRACTID);
 
-    // if NS_OSSO, see if we should try the MAEMO location provider
-#ifdef NS_OSSO
+    // if NS_MAEMO_LOCATION, see if we should try the MAEMO location provider
+#ifdef NS_MAEMO_LOCATION
     if (!mProvider)
     {
       // guess not, lets try a default one:  
