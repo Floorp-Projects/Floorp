@@ -1609,18 +1609,7 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   }
   expr->mFeature = feature;
 
-  if (! GetToken(PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(PEMQExpressionEOF);
-    return PR_FALSE;
-  }
-  if (eCSSToken_Symbol != mToken.mType ||
-      (mToken.mSymbol != PRUnichar(':') && mToken.mSymbol != PRUnichar(')'))) {
-    REPORT_UNEXPECTED_TOKEN(PEMQExpectedFeatureNameEnd);
-    SkipUntil(')');
-    return PR_FALSE;
-  }
-
-  if (mToken.mSymbol == PRUnichar(')')) {
+  if (!GetToken(PR_TRUE) || mToken.IsSymbol(')')) {
     // Query expressions for any feature can be given without a value.
     // However, min/max prefixes are not allowed.
     if (expr->mRange != nsMediaExpression::eEqual) {
@@ -1629,6 +1618,12 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
     }
     expr->mValue.Reset();
     return PR_TRUE;
+  }
+
+  if (!mToken.IsSymbol(':')) {
+    REPORT_UNEXPECTED_TOKEN(PEMQExpectedFeatureNameEnd);
+    SkipUntil(')');
+    return PR_FALSE;
   }
 
   PRBool rv;
@@ -1687,12 +1682,13 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
                         feature->mKeywordTable);
       break;
   }
-  if (!rv) {
+  if (!rv || !ExpectSymbol(')', PR_TRUE)) {
     REPORT_UNEXPECTED(PEMQExpectedFeatureValue);
+    SkipUntil(')');
     return PR_FALSE;
   }
 
-  return ExpectSymbol(')', PR_TRUE);
+  return PR_TRUE;
 }
 
 // Parse a CSS2 import rule: "@import STRING | URL [medium [, medium]]"
