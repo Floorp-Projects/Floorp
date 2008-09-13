@@ -304,10 +304,10 @@ struct nsBorderColors {
 };
 
 struct nsCSSShadowItem {
-  nsStyleCoord mXOffset;    // length (coord, chars)
-  nsStyleCoord mYOffset;    // length (coord, chars)
-  nsStyleCoord mRadius;     // length (coord, chars)
-  nsStyleCoord mSpread;     // length (coord, chars)
+  nscoord mXOffset;
+  nscoord mYOffset;
+  nscoord mRadius;
+  nscoord mSpread;
 
   nscolor      mColor;
   PRPackedBool mHasColor; // Whether mColor should be used

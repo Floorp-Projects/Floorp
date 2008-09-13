@@ -4103,9 +4103,8 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
                             const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
                             gfxContext* aCtx, const nscolor& aForegroundColor)
 {
-  gfxPoint shadowOffset(aShadowDetails->mXOffset.GetCoordValue(),
-                        aShadowDetails->mYOffset.GetCoordValue());
-  nscoord blurRadius = PR_MAX(aShadowDetails->mRadius.GetCoordValue(), 0);
+  gfxPoint shadowOffset(aShadowDetails->mXOffset, aShadowDetails->mYOffset);
+  nscoord blurRadius = PR_MAX(aShadowDetails->mRadius, 0);
 
   gfxTextRun::Metrics shadowMetrics =
     mTextRun->MeasureText(aOffset, aLength, PR_FALSE,

@@ -2728,37 +2728,49 @@ nsRuleNode::GetShadowData(nsCSSValueList* aList,
   if (!shadowList)
     return nsnull;
 
+  nsStyleCoord tempCoord;
+  PRBool unitOK;
   for (nsCSSShadowItem* item = shadowList->ShadowAt(0);
        aList;
        aList = aList->mNext, ++item) {
     nsCSSValue::Array *arr = aList->mValue.GetArrayValue();
     // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
-    SetCoord(arr->Item(0), item->mXOffset, nsStyleCoord(),
-             SETCOORD_LENGTH, aContext, mPresContext, inherited);
-    SetCoord(arr->Item(1), item->mYOffset, nsStyleCoord(),
-             SETCOORD_LENGTH, aContext, mPresContext, inherited);
+    unitOK = SetCoord(arr->Item(0), tempCoord, nsStyleCoord(),
+                      SETCOORD_LENGTH, aContext, mPresContext, inherited);
+    NS_ASSERTION(unitOK, "unexpected unit");
+    item->mXOffset = tempCoord.GetCoordValue();
+
+    unitOK = SetCoord(arr->Item(1), tempCoord, nsStyleCoord(),
+                      SETCOORD_LENGTH, aContext, mPresContext, inherited);
+    NS_ASSERTION(unitOK, "unexpected unit");
+    item->mYOffset = tempCoord.GetCoordValue();
 
     // Blur radius is optional in the current box-shadow spec
     if (arr->Item(2).GetUnit() != eCSSUnit_Null) {
-      SetCoord(arr->Item(2), item->mRadius, nsStyleCoord(),
-               SETCOORD_LENGTH, aContext, mPresContext, inherited);
+      unitOK = SetCoord(arr->Item(2), tempCoord, nsStyleCoord(),
+                        SETCOORD_LENGTH, aContext, mPresContext, inherited);
+      NS_ASSERTION(unitOK, "unexpected unit");
+      item->mRadius = tempCoord.GetCoordValue();
     } else {
-      item->mRadius.SetCoordValue(0);
+      item->mRadius = 0;
     }
 
     // Find the spread radius
     if (aUsesSpread && arr->Item(3).GetUnit() != eCSSUnit_Null) {
-      SetCoord(arr->Item(3), item->mSpread, nsStyleCoord(),
-               SETCOORD_LENGTH, aContext, mPresContext, inherited);
+      unitOK = SetCoord(arr->Item(3), tempCoord, nsStyleCoord(),
+                        SETCOORD_LENGTH, aContext, mPresContext, inherited);
+      NS_ASSERTION(unitOK, "unexpected unit");
+      item->mSpread = tempCoord.GetCoordValue();
     } else {
-      item->mSpread.SetCoordValue(0);
+      item->mSpread = 0;
     }
 
     if (arr->Item(4).GetUnit() != eCSSUnit_Null) {
       item->mHasColor = PR_TRUE;
       // 2nd argument can be bogus since inherit is not a valid color
-      SetColor(arr->Item(4), 0, mPresContext, aContext, item->mColor,
-               inherited);
+      unitOK = SetColor(arr->Item(4), 0, mPresContext, aContext, item->mColor,
+                        inherited);
+      NS_ASSERTION(unitOK, "unexpected unit");
     }
   }
 
