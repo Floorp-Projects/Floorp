@@ -516,7 +516,7 @@ nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
     mOutlineRadius.Set(side, zero);
   }
 
-  mOutlineOffset.SetCoordValue(0);
+  mOutlineOffset = 0;
 
   mOutlineWidth = nsStyleCoord(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
   mOutlineStyle = NS_STYLE_BORDER_STYLE_NONE;

@@ -617,24 +617,10 @@ struct nsStyleOutline {
   nsStyleSides  mOutlineRadius;    // [reset] length, percent
                                    // (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
 
-  // Note that these are specified values.  You can get the actual values with
-  // GetOutlineWidth and GetOutlineOffset.  You cannot get the computed values
-  // directly.
-  nsStyleCoord  mOutlineOffset;   // [reset] length XXX Why nsStyleCoord?
+  // Note that this is a specified value.  You can get the actual values
+  // with GetOutlineWidth.  You cannot get the computed value directly.
   nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
-
-  PRBool GetOutlineOffset(nscoord& aOffset) const
-  {
-    if (mOutlineOffset.GetUnit() == eStyleUnit_Coord) {
-      nscoord offset = mOutlineOffset.GetCoordValue();
-      aOffset = NS_ROUND_OFFSET_TO_PIXELS(offset, mTwipsPerPixel);
-      return PR_TRUE;
-    } else {
-      NS_ERROR("GetOutlineOffset: bad unit type");
-      aOffset = 0;
-      return PR_FALSE;
-    }
-  }
+  nscoord       mOutlineOffset;   // [reset]
 
   PRBool GetOutlineWidth(nscoord& aWidth) const
   {
