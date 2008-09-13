@@ -734,6 +734,7 @@ var BrowserUI = {
       // URL textbox events
       case "click":
         this.show(UIMODE_URLEDIT);
+        this.updateAutoComplete(true);
         break;
       case "input":
         this.updateAutoComplete(false);
