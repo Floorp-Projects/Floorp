@@ -593,9 +593,7 @@ nsDisplayOutline::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   nsPoint origin = aBuilder->ToReferenceFrame(mFrame);
   if (nsRect(origin, mFrame->GetSize()).Contains(aVisibleRegion->GetBounds()) &&
       !nsLayoutUtils::HasNonZeroSide(outline->mOutlineRadius)) {
-    nscoord outlineOffset;
-    outline->GetOutlineOffset(outlineOffset);
-    if (outlineOffset >= 0) {
+    if (outline->mOutlineOffset >= 0) {
       // the visible region is entirely inside the border-rect, and the outline
       // isn't rendered inside the border-rect, so the outline is not visible
       return PR_FALSE;

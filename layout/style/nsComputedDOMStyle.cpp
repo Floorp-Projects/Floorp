@@ -1547,7 +1547,7 @@ nsComputedDOMStyle::GetOutlineOffset(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStyleOutline()->mOutlineOffset);
+  val->SetAppUnits(GetStyleOutline()->mOutlineOffset);
 
   return CallQueryInterface(val, aValue);
 }
