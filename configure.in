@@ -5149,7 +5149,7 @@ dnl ========================================================
 dnl = dbus support
 dnl ========================================================
 
-if test "$MOZ_ENABLE_GTK2"
+if test "$MOZ_ENABLE_GTK2" || "$MOZ_ENABLE_QT"
 then
     MOZ_ENABLE_DBUS=1
 
