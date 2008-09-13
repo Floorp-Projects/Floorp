@@ -1251,8 +1251,8 @@ nsComputedDOMStyle::GetBorderSpacing(nsIDOMCSSValue** aValue)
   }
 
   const nsStyleTableBorder *border = GetStyleTableBorder();
-  SetValueToCoord(xSpacing, border->mBorderSpacingX);
-  SetValueToCoord(ySpacing, border->mBorderSpacingY);
+  xSpacing->SetAppUnits(border->mBorderSpacingX);
+  ySpacing->SetAppUnits(border->mBorderSpacingY);
 
   return CallQueryInterface(valueList, aValue);
 }
