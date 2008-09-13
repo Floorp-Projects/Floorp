@@ -62,6 +62,7 @@
 #include "nsIAtom.h"
 #include "nsIURI.h"
 #include "nsCSSValue.h"
+#include "nsStyleTransformMatrix.h"
 
 class nsIFrame;
 class imgIRequest;
@@ -886,7 +887,10 @@ struct nsStyleDisplay {
   PRUint8 mOverflowX;           // [reset] see nsStyleConsts.h
   PRUint8 mOverflowY;           // [reset] see nsStyleConsts.h
   PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
-  
+  PRPackedBool mTransformPresent;  // [reset] Whether there is a -moz-transform.
+  nsStyleTransformMatrix mTransform; // [reset] The stored transform matrix
+  nsStyleCoord mTransformOrigin[2]; // [reset] percent, coord.
+
   PRBool IsBlockInside() const {
     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||
            NS_STYLE_DISPLAY_LIST_ITEM == mDisplay ||
@@ -918,8 +922,11 @@ struct nsStyleDisplay {
   PRBool IsAbsolutelyPositioned() const {return (NS_STYLE_POSITION_ABSOLUTE == mPosition) ||
                                                 (NS_STYLE_POSITION_FIXED == mPosition);}
 
-  PRBool IsPositioned() const {return IsAbsolutelyPositioned() ||
-                                      (NS_STYLE_POSITION_RELATIVE == mPosition);}
+  /* Returns true if we're positioned or there's a transform in effect. */
+  PRBool IsPositioned() const {
+    return IsAbsolutelyPositioned() ||
+      NS_STYLE_POSITION_RELATIVE == mPosition || mTransformPresent;
+  }
 
   PRBool IsScrollableOverflow() const {
     // mOverflowX and mOverflowY always match when one of them is
@@ -934,6 +941,11 @@ struct nsStyleDisplay {
     return mOverflowX == NS_STYLE_OVERFLOW_CLIP ||
            (mOverflowX == NS_STYLE_OVERFLOW_HIDDEN &&
             mOverflowY == NS_STYLE_OVERFLOW_HIDDEN);
+  }
+
+  /* Returns whether the element has the -moz-transform property. */
+  PRBool HasTransform() const {
+    return mTransformPresent;
   }
 };
 

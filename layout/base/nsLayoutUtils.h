@@ -387,6 +387,20 @@ public:
                                        nsIView* aView);
 
   /**
+   * Given a matrix and a point, let T be the transformation matrix translating points
+   * in the coordinate space with origin aOrigin to the coordinate space used by the
+   * matrix.  If M is the stored matrix, this function returns (T-1)MT, the matrix
+   * that's equivalent to aMatrix but in the coordinate space that treats aOrigin
+   * as the origin.
+   *
+   * @param aOrigin The origin to translate to.
+   * @param aMatrix The matrix to change the basis of.
+   * @return A matrix equivalent to aMatrix, but operating in the coordinate system with
+   *         origin aOrigin.
+   */
+  static gfxMatrix ChangeMatrixBasis(const gfxPoint &aOrigin, const gfxMatrix &aMatrix);
+
+  /**
    * Given aFrame, the root frame of a stacking context, find its descendant
    * frame under the point aPt that receives a mouse event at that location,
    * or nsnull if there is no such frame.
@@ -396,6 +410,54 @@ public:
    */
   static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
                                     PRBool aShouldIgnoreSuppression = PR_FALSE);
+
+  /**
+   * Given a point in the global coordinate space, returns that point expressed
+   * in the coordinate system of aFrame.  This effectively inverts all transforms
+   * between this point and the root frame.
+   *
+   * @param aFrame The frame that acts as the coordinate space container.
+   * @param aPoint The point, in the global space, to get in the frame-local space.
+   * @return aPoint, expressed in aFrame's canonical coordinate space.
+   */
+  static nsPoint InvertTransformsToRoot(nsIFrame* aFrame,
+                                        const nsPoint &aPt);
+
+
+  /**
+   * Helper function that, given a rectangle and a matrix, returns the smallest
+   * rectangle containing the image of the source rectangle.
+   *
+   * @param aBounds The rectangle to transform.
+   * @param aMatrix The matrix to transform it with.
+   * @param aFactor The number of app units per graphics unit.
+   * @return The smallest rect that contains the image of aBounds.
+   */
+  static nsRect MatrixTransformRect(const nsRect &aBounds,
+                                    const gfxMatrix &aMatrix, float aFactor);
+
+  /**
+   * Helper function that, given a point and a matrix, returns the image
+   * of that point under the matrix transform.
+   *
+   * @param aPoint The point to transform.
+   * @param aMatrix The matrix to transform it with.
+   * @param aFactor The number of app units per graphics unit.
+   * @return The image of the point under the transform.
+   */
+  static nsPoint MatrixTransformPoint(const nsPoint &aPoint,
+                                      const gfxMatrix &aMatrix, float aFactor);
+
+  /**
+   * Given a graphics rectangle in graphics space, return a rectangle in
+   * app space that contains the graphics rectangle, rounding out as necessary.
+   *
+   * @param aRect The graphics rect to round outward.
+   * @param aFactor The number of app units per graphics unit.
+   * @return The smallest rectangle in app space that contains aRect.
+   */
+  static nsRect RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor);
+
 
   /**
    * Given aFrame, the root frame of a stacking context, paint it and its

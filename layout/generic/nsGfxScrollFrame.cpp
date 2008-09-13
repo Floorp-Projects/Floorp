@@ -1391,9 +1391,16 @@ PRBool
 nsGfxScrollFrameInner::NeedsClipWidget() const
 {
   // Scrollports contained in form controls (e.g., listboxes) don't get
-  // widgets.
+  // widgets.  Also, transformed elements don't need clip widgets since they
+  // result in graphical glitches.
   for (nsIFrame* parentFrame = mOuter; parentFrame;
-       parentFrame = parentFrame->GetParent()) {
+       parentFrame = nsLayoutUtils::GetCrossDocParentFrame(parentFrame)) {
+    
+    /* See if we have a transform... we should have no widget if that's the case. */
+    if (parentFrame->GetStyleDisplay()->HasTransform())
+      return PR_FALSE;
+
+    /* If we're a form element, we don't need a widget. */
     nsIFormControlFrame* fcFrame;
     if ((NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame)))) {
       return PR_FALSE;

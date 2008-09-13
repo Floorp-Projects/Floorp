@@ -1236,6 +1236,9 @@ nsStyleDisplay::nsStyleDisplay()
   mClipFlags = NS_STYLE_CLIP_AUTO;
   mClip.SetRect(0,0,0,0);
   mOpacity = 1.0f;
+  mTransformPresent = PR_FALSE; // No transform
+  mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
+  mTransformOrigin[1].SetPercentValue(0.5f); 
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
@@ -1254,6 +1257,15 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   mClipFlags = aSource.mClipFlags;
   mClip = aSource.mClip;
   mOpacity = aSource.mOpacity;
+
+  /* Copy over the transformation information. */
+  mTransformPresent = aSource.mTransformPresent;
+  if (mTransformPresent)
+    mTransform = aSource.mTransform;
+  
+  /* Copy over transform origin. */
+  mTransformOrigin[0] = aSource.mTransformOrigin[0];
+  mTransformOrigin[1] = aSource.mTransformOrigin[1];
 }
 
 nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
@@ -1285,6 +1297,32 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   if (mOpacity != aOther.mOpacity)
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
 
+  /* If we've added or removed the transform property, we need to reconstruct the frame to add
+   * or remove the view object, and also to handle abs-pos and fixed-pos containers.
+   */
+  if (mTransformPresent != aOther.mTransformPresent) {
+    NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
+  }
+  else if (mTransformPresent) {
+    /* Otherwise, if we've kept the property lying around and we already had a
+     * transform, we need to see whether or not we've changed the transform.
+     * If so, we need to do a reflow and a repaint. The reflow is to recompute
+     * the overflow rect (which probably changed if the transform changed)
+     * and to redraw within the bounds of that new overflow rect.
+     */
+    if (mTransform != aOther.mTransform)
+      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
+                                         nsChangeHint_RepaintFrame));
+    
+    for (PRUint8 index = 0; index < 2; ++index)
+      if (mTransformOrigin[index] != aOther.mTransformOrigin[index]) {
+        NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
+                                           nsChangeHint_RepaintFrame));
+        break;
+      }
+  }
+  
+  
   return hint;
 }
 

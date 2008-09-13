@@ -71,6 +71,9 @@ enum nsCSSUnit {
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
   eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
   eCSSUnit_Counters     = 22,     // (nsCSSValue::Array*) a counters(string,string[,string]) value
+  eCSSUnit_Function     = 23,     // (nsCSSValue::Array*) a function with parameters.  First elem of array is name,
+                                  //  the rest of the values are arguments.
+
   eCSSUnit_URL          = 30,     // (nsCSSValue::URL*) value
   eCSSUnit_Image        = 31,     // (nsCSSValue::Image*) value
   eCSSUnit_Integer      = 50,     // (int) simple value
@@ -221,7 +224,7 @@ public:
 
   Array* GetArrayValue() const
   {
-    NS_ASSERTION(eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters,
+    NS_ASSERTION(eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Function,
                  "not an array value");
     return mValue.mArray;
   }

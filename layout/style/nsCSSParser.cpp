@@ -83,6 +83,8 @@
 #include "math.h"
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
+#include "nsAutoPtr.h"
+#include "nsTArray.h"
 
 // Flags for ParseVariant method
 #define VARIANT_KEYWORD         0x000001  // K
@@ -268,6 +270,7 @@ protected:
 
   PRBool ExpectSymbol(PRUnichar aSymbol, PRBool aSkipWS);
   PRBool ExpectEndProperty();
+  PRBool CheckEndProperty();
   nsSubstring* NextIdent();
   void SkipUntil(PRUnichar aStopSymbol);
   void SkipRuleSet();
@@ -388,6 +391,8 @@ protected:
   PRBool ParseBackground();
   PRBool ParseBackgroundPosition();
   PRBool ParseBackgroundPositionValues();
+  PRBool ParseBoxPosition(nsCSSValuePair& aOut);
+  PRBool ParseBoxPositionValues(nsCSSValuePair& aOut);
   PRBool ParseBorderColor();
   PRBool ParseBorderColors(nsCSSValueList** aResult,
                            nsCSSProperty aProperty);
@@ -420,6 +425,7 @@ protected:
   PRBool ParseListStyle();
   PRBool ParseMargin();
   PRBool ParseMarks(nsCSSValue& aValue);
+  PRBool ParseMozTransform();
   PRBool ParseOutline();
   PRBool ParseOverflow();
   PRBool ParsePadding();
@@ -476,6 +482,20 @@ protected:
   PRBool IsParsingCompoundProperty(void) const {
     return mParsingCompoundProperty;
   }
+
+  /* Functions for -moz-transform Parsing */
+  PRBool ReadSingleTransform(nsCSSValueList**& aTail);
+  PRBool ParseFunction(const nsString &aFunction, const PRInt32 aAllowedTypes[],
+                       PRUint16 aMinElems, PRUint16 aMaxElems,
+                       nsCSSValue &aValue);
+  PRBool ParseFunctionInternals(const PRInt32 aVariantMask[],
+                                PRUint16 aMinElems,
+                                PRUint16 aMaxElems,
+                                nsTArray<nsCSSValue>& aOutput);
+
+  /* Functions for -moz-transform-origin Parsing */
+  PRBool ParseMozTransformOrigin();
+
 
   /* Find and return the correct namespace ID for the prefix aPrefix.
      If the prefix cannot be resolved to a namespace, this method will
@@ -1256,21 +1276,36 @@ CSSParserImpl::ExpectSymbol(PRUnichar aSymbol,
   return PR_FALSE;
 }
 
+// Checks to see if we're at the end of a property.  If an error occurs during
+// the check, does not signal a parse error.
 PRBool
-CSSParserImpl::ExpectEndProperty()
+CSSParserImpl::CheckEndProperty()
 {
   if (!GetToken(PR_TRUE)) {
     return PR_TRUE; // properties may end with eof
   }
   if ((eCSSToken_Symbol == mToken.mType) &&
-      ((';' == mToken.mSymbol) || ('!' == mToken.mSymbol) || ('}' == mToken.mSymbol))) {
+      ((';' == mToken.mSymbol) ||
+       ('!' == mToken.mSymbol) ||
+       ('}' == mToken.mSymbol))) {
     // XXX need to verify that ! is only followed by "important [;|}]
     // XXX this requires a multi-token pushback buffer
     UngetToken();
     return PR_TRUE;
   }
-  REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
   UngetToken();
+  return PR_FALSE;
+}
+
+// Checks if we're at the end of a property, raising an error if we're not.
+PRBool
+CSSParserImpl::ExpectEndProperty()
+{
+  if (CheckEndProperty())
+    return PR_TRUE;
+
+  // If we're here, we read something incorrect, so we should report it.
+  REPORT_UNEXPECTED_TOKEN(PRExpectEndValue);
   return PR_FALSE;
 }
 
@@ -4178,7 +4213,7 @@ CSSParserImpl::ParsePositiveVariant(nsCSSValue& aValue,
         return PR_FALSE;
       }
     }
-    else if(aValue.GetUnit() == eCSSUnit_Percent) {
+    else if (aValue.GetUnit() == eCSSUnit_Percent) {
       if (aValue.GetPercentValue() < 0) {
         UngetToken();
         return PR_FALSE;
@@ -4786,6 +4821,8 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
     return ParseBorderRadius();
   case eCSSProperty__moz_outline_radius:
     return ParseOutlineRadius();
+  case eCSSProperty_box_shadow:
+    return ParseBoxShadow();
   case eCSSProperty_clip:
     return ParseRect(mTempData.mDisplay.mClip, eCSSProperty_clip);
   case eCSSProperty__moz_column_rule:
@@ -4849,8 +4886,10 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
     return ParseSize();
   case eCSSProperty_text_shadow:
     return ParseTextShadow();
-  case eCSSProperty_box_shadow:
-    return ParseBoxShadow();
+  case eCSSProperty__moz_transform:
+    return ParseMozTransform();
+  case eCSSProperty__moz_transform_origin:
+    return ParseMozTransformOrigin();
 
 #ifdef MOZ_SVG
   case eCSSProperty_fill:
@@ -4908,7 +4947,6 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
     // The user can't use these
     REPORT_UNEXPECTED(PEInaccessibleProperty2);
     return PR_FALSE;
-
   default:  // must be single property
     {
       nsCSSValue value;
@@ -4999,6 +5037,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_quotes:
   case eCSSProperty_size:
   case eCSSProperty_text_shadow:
+  case eCSSProperty__moz_transform:
+  case eCSSProperty__moz_transform_origin:
   case eCSSProperty_COUNT:
 #ifdef MOZ_SVG
   case eCSSProperty_fill:
@@ -5565,7 +5605,7 @@ CSSParserImpl::ParseAzimuth(nsCSSValue& aValue)
 }
 
 static nsCSSValue
-BackgroundPositionMaskToCSSValue(PRInt32 aMask, PRBool isX)
+BoxPositionMaskToCSSValue(PRInt32 aMask, PRBool isX)
 {
   PRInt32 val = NS_STYLE_BG_POSITION_CENTER;
   if (isX) {
@@ -5744,8 +5784,7 @@ CSSParserImpl::ParseBackground()
 PRBool
 CSSParserImpl::ParseBackgroundPosition()
 {
-  if (!ParseBackgroundPositionValues() ||
-      !ExpectEndProperty())
+  if (!ParseBoxPosition(mTempData.mColor.mBackPosition))
     return PR_FALSE;
   mTempData.SetPropertyBit(eCSSProperty_background_position);
   return PR_TRUE;
@@ -5754,9 +5793,28 @@ CSSParserImpl::ParseBackgroundPosition()
 PRBool
 CSSParserImpl::ParseBackgroundPositionValues()
 {
+  return ParseBoxPositionValues(mTempData.mColor.mBackPosition);
+}
+
+/**
+ * Parses two values that correspond to positions in a box.  These can be
+ * values corresponding to percentages of the box, raw offsets, or keywords
+ * like "top," "left center," etc.
+ *
+ * @param aOut The nsCSSValuePair where to place the result.
+ * @return Whether or not the operation succeeded.
+ */
+PRBool CSSParserImpl::ParseBoxPosition(nsCSSValuePair &aOut)
+{
+  // Need to read the box positions and the end of the property.
+  return ParseBoxPositionValues(aOut) && ExpectEndProperty();
+}
+
+PRBool CSSParserImpl::ParseBoxPositionValues(nsCSSValuePair &aOut)
+{
   // First try a percentage or a length value
-  nsCSSValue &xValue = mTempData.mColor.mBackPosition.mXValue,
-             &yValue = mTempData.mColor.mBackPosition.mYValue;
+  nsCSSValue &xValue = aOut.mXValue,
+             &yValue = aOut.mYValue;
   if (ParseVariant(xValue, VARIANT_HLP, nsnull)) {
     if (eCSSUnit_Inherit == xValue.GetUnit() ||
         eCSSUnit_Initial == xValue.GetUnit()) {  // both are inherited or both are set to initial
@@ -5776,7 +5834,7 @@ CSSParserImpl::ParseBackgroundPositionValues()
         // The second keyword can only be 'center', 'top', or 'bottom'
         return PR_FALSE;
       }
-      yValue = BackgroundPositionMaskToCSSValue(yVal, PR_FALSE);
+      yValue = BoxPositionMaskToCSSValue(yVal, PR_FALSE);
       return PR_TRUE;
     }
 
@@ -5812,7 +5870,7 @@ CSSParserImpl::ParseBackgroundPositionValues()
           return PR_FALSE;
         }
 
-        xValue = BackgroundPositionMaskToCSSValue(mask, PR_TRUE);
+        xValue = BoxPositionMaskToCSSValue(mask, PR_TRUE);
         return PR_TRUE;
       }
     }
@@ -5826,8 +5884,8 @@ CSSParserImpl::ParseBackgroundPositionValues()
   }
 
   // Create style values
-  xValue = BackgroundPositionMaskToCSSValue(mask, PR_TRUE);
-  yValue = BackgroundPositionMaskToCSSValue(mask, PR_FALSE);
+  xValue = BoxPositionMaskToCSSValue(mask, PR_TRUE);
+  yValue = BoxPositionMaskToCSSValue(mask, PR_FALSE);
   return PR_TRUE;
 }
 
@@ -6323,7 +6381,7 @@ CSSParserImpl::ParseCounterData(nsCSSValuePairList** aResult,
            *sv_end = singleValues + NS_ARRAY_LENGTH(singleValues);
        sv != sv_end; ++sv) {
     if (ident->LowerCaseEqualsASCII(sv->str)) {
-      if (ExpectEndProperty()) {
+      if (CheckEndProperty()) {
         nsCSSValuePairList* dataHead = new nsCSSValuePairList();
         if (!dataHead) {
           mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
@@ -6614,6 +6672,373 @@ CSSParserImpl::ParseOneFamily(nsAString& aFamily)
   }
 }
 
+///////////////////////////////////////////////////////
+// -moz-transform Parsing Implementation
+
+/* Reads a function list of arguments.  Do not call this function
+ * directly; it's mean to be caled from ParseFunction.
+ */
+PRBool
+CSSParserImpl::ParseFunctionInternals(const PRInt32 aVariantMask[],
+                                      PRUint16 aMinElems,
+                                      PRUint16 aMaxElems,
+                                      nsTArray<nsCSSValue> &aOutput)
+{
+  for (PRUint16 index = 0; index < aMaxElems; ++index) {
+    nsCSSValue newValue;
+    if (!ParseVariant(newValue, aVariantMask[index], nsnull))
+      return PR_FALSE;
+
+    if (!aOutput.AppendElement(newValue)) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      return PR_FALSE;
+    }
+    
+    // See whether to continue or whether to look for end of function.
+    if (!ExpectSymbol(',', PR_TRUE)) {
+      // We need to read the closing parenthesis, and also must take care
+      // that we haven't read too few symbols.
+      return ExpectSymbol(')', PR_TRUE) && (index + 1) >= aMinElems;
+    }
+  }
+
+  // If we're here, we finished looping without hitting the end, so we read too
+  // many elements.
+  return PR_FALSE;
+}
+
+/* Parses a function [ input of the form (a [, b]*) ] and stores it
+ * as an nsCSSValue that holds a function of the form
+ * function-name arg1 arg2 ... argN
+ *
+ * On error, the return value is PR_FALSE.
+ *
+ * @param aFunction The name of the function that we're reading.
+ * @param aAllowedTypes An array of values corresponding to the legal
+ *        types for each element in the function.  The zeroth element in the
+ *        array corresponds to the first function parameter, etc.  The length
+ *        of this array _must_ be greater than or equal to aMaxElems or the
+ *        behavior is undefined.
+ * @param aMinElems Minimum number of elements to read.  Reading fewer than
+ *        this many elements will result in the function failing.
+ * @param aMaxElems Maximum number of elements to read.  Reading more than
+ *        this many elements will result in the function failing.
+ * @param aValue (out) The value that was parsed.
+ */
+PRBool
+CSSParserImpl::ParseFunction(const nsString &aFunction,
+                             const PRInt32 aAllowedTypes[],
+                             PRUint16 aMinElems, PRUint16 aMaxElems,
+                             nsCSSValue &aValue)
+{
+  typedef nsTArray<nsCSSValue>::size_type arrlen_t;
+
+  /* 2^16 - 2, so that if we have 2^16 - 2 transforms, we have 2^16 - 1
+   * elements stored in the the nsCSSValue::Array.
+   */
+  static const arrlen_t MAX_ALLOWED_ELEMS = 0xFFFE;
+
+  /* Make a copy of the function name, since the reference is _probably_ to
+   * mToken.mIdent, which is going to get overwritten during the course of this
+   * function.
+   */
+  nsString functionName(aFunction);
+
+  /* First things first... read the parenthesis.  If it fails, abort. */
+  if (!ExpectSymbol('(', PR_TRUE))
+    return PR_FALSE;
+  
+  /* Read in a list of values as an nsTArray, failing if we can't or if
+   * it's out of bounds.
+   */
+  nsTArray<nsCSSValue> foundValues;
+  if (!ParseFunctionInternals(aAllowedTypes, aMinElems, aMaxElems,
+                              foundValues))
+    return PR_FALSE;
+  
+  /* Now, convert this nsTArray into an nsCSSValue::Array object.
+   * We'll need N + 1 spots, one for the function name and the rest for the
+   * arguments.  In case the user has given us more than 2^16 - 2 arguments,
+   * we'll truncate them at 2^16 - 2 arguments.
+   */
+  PRUint16 numElements = (foundValues.Length() <= MAX_ALLOWED_ELEMS ?
+                          foundValues.Length() + 1 : MAX_ALLOWED_ELEMS);
+  nsRefPtr<nsCSSValue::Array> convertedArray =
+	  nsCSSValue::Array::Create(numElements);
+  if (!convertedArray) {
+    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+    return PR_FALSE;
+  }
+  
+  /* Copy things over. */
+  convertedArray->Item(0).SetStringValue(functionName, eCSSUnit_String);
+  for (PRUint16 index = 0; index + 1 < numElements; ++index)
+    convertedArray->Item(index + 1) = foundValues[static_cast<arrlen_t>(index)];
+  
+  /* Fill in the outparam value with the array. */
+  aValue.SetArrayValue(convertedArray, eCSSUnit_Function);
+  
+  /* Return it! */
+  return PR_TRUE;
+}
+
+/**
+ * Given a token, determines the minimum and maximum number of function
+ * parameters to read, along with the mask that should be used to read
+ * those function parameters.  If the token isn't a transform function,
+ * returns an error.
+ *
+ * @param aToken The token identifying the function.
+ * @param aMinElems [out] The minimum number of elements to read.
+ * @param aMaxElems [out] The maximum number of elements to read
+ * @param aVariantMask [out] The variant mask to use during parsing
+ * @return Whether the information was loaded successfully.
+ */
+static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
+                                          PRUint16 &aMinElems,
+                                          PRUint16 &aMaxElems,
+                                          const PRInt32 *& aVariantMask)
+{
+/* These types represent the common variant masks that will be used to
+   * parse out the individual functions.  The order in the enumeration
+   * must match the order in which the masks are declared.
+   */
+  enum { eLengthPercent,
+         eTwoLengthPercents,
+         eAngle,
+         eNumber,
+         eTwoNumbers,
+         eMatrix,
+         eNumVariantMasks };
+  static const PRInt32 kMaxElemsPerFunction = 6;
+  static const PRInt32 kVariantMasks[eNumVariantMasks][kMaxElemsPerFunction] = {
+    {VARIANT_LENGTH | VARIANT_PERCENT},
+    {VARIANT_LENGTH | VARIANT_PERCENT, VARIANT_LENGTH | VARIANT_PERCENT},
+    {VARIANT_ANGLE},
+    {VARIANT_NUMBER},
+    {VARIANT_NUMBER, VARIANT_NUMBER},
+    {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
+     VARIANT_LENGTH | VARIANT_PERCENT, VARIANT_LENGTH | VARIANT_PERCENT}};
+
+#ifdef DEBUG
+  static const PRUint8 kVariantMaskLengths[eNumVariantMasks] =
+    {1, 2, 1, 1, 2, 6};
+#endif
+
+  PRInt32 variantIndex = eNumVariantMasks;
+
+  switch (aToken) {
+  case eCSSKeyword_translatex:
+    /* Exactly one length or percent. */
+    variantIndex = eLengthPercent;
+    aMinElems = 1U;
+    aMaxElems = 1U;
+    break;
+  case eCSSKeyword_translatey:
+    /* Exactly one length or percent. */
+    variantIndex = eLengthPercent;
+    aMinElems = 1U;
+    aMaxElems = 1U;
+    break;
+  case eCSSKeyword_scalex:
+    /* Exactly one scale factor. */
+    variantIndex = eNumber;
+    aMinElems = 1U;
+    aMaxElems = 1U;
+    break;
+  case eCSSKeyword_scaley:
+    /* Exactly one scale factor. */
+    variantIndex = eNumber;
+    aMinElems = 1U;
+    aMaxElems = 1U;
+    break;
+  case eCSSKeyword_rotate:
+    /* Exactly one angle. */
+    variantIndex = eAngle;
+    aMinElems = 1U;
+    aMaxElems = 1U;
+    break;
+  case eCSSKeyword_translate:
+    /* One or two lengths or percents. */
+    variantIndex = eTwoLengthPercents;
+    aMinElems = 1U;
+    aMaxElems = 2U;
+    break;
+  case eCSSKeyword_skew:
+    /* Exactly one angle. */
+    variantIndex = eAngle;
+    aMinElems = 1U;
+    aMaxElems = 1U;
+    break;
+  case eCSSKeyword_scale:
+    /* One or two scale factors. */
+    variantIndex = eTwoNumbers;
+    aMinElems = 1U;
+    aMaxElems = 2U;
+    break;
+  case eCSSKeyword_skewx:
+    /* Exactly one angle. */
+    variantIndex = eAngle;
+    aMinElems = 1U;
+    aMaxElems = 1U;
+    break;
+  case eCSSKeyword_skewy:
+    /* Exactly one angle. */
+    variantIndex = eAngle;
+    aMinElems = 1U;
+    aMaxElems = 1U;
+    break;
+  case eCSSKeyword_matrix:
+    /* Six values, which can be numbers, lengths, or percents. */
+    variantIndex = eMatrix;
+    aMinElems = 6U;
+    aMaxElems = 6U;
+    break;    
+  default:
+    /* Oh dear, we didn't match.  Report an error. */
+    return PR_FALSE;
+  }
+
+  NS_ASSERTION(aMinElems > 0, "Didn't update minimum elements!");
+  NS_ASSERTION(aMaxElems > 0, "Didn't update maximum elements!");
+  NS_ASSERTION(aMinElems <= aMaxElems, "aMinElems > aMaxElems!");
+  NS_ASSERTION(variantIndex >= 0, "Invalid variant mask!");
+  NS_ASSERTION(variantIndex < eNumVariantMasks, "Invalid variant mask!");
+#ifdef DEBUG
+  NS_ASSERTION(aMaxElems <= kVariantMaskLengths[variantIndex],
+               "Invalid aMaxElems for this variant mask.");
+#endif
+
+  // Convert the index into a mask.
+  aVariantMask = kVariantMasks[variantIndex];
+
+  return PR_TRUE;
+}
+                                          
+
+/* Reads a single transform function from the tokenizer stream, reporting an
+ * error if something goes wrong.
+ */
+PRBool CSSParserImpl::ReadSingleTransform(nsCSSValueList **& aTail)
+{
+  typedef nsTArray<nsCSSValue>::size_type arrlen_t;
+	
+  if (!GetToken(PR_TRUE))
+    return PR_FALSE;
+  
+  /* Check to make sure that we've read a function. */
+  if (mToken.mType != eCSSToken_Function) {
+    UngetToken();
+    return PR_FALSE;
+  }
+
+  /* Load up the variant mask information for ParseFunction.  If we can't,
+   * abort.
+   */
+  const PRInt32* variantMask;
+  PRUint16 minElems, maxElems;
+  if (!GetFunctionParseInformation(nsCSSKeywords::LookupKeyword(mToken.mIdent),
+                                   minElems, maxElems, variantMask))
+    return PR_FALSE;
+
+  /* Create a cell to populate, fail if we're out of memory. */
+  nsAutoPtr<nsCSSValue> newCell(new nsCSSValue);
+  if (!newCell) {
+    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+    return PR_FALSE;
+  }
+
+  /* Try reading things in, failing if we can't */
+  if (!ParseFunction(mToken.mIdent, variantMask, minElems, maxElems, *newCell))
+    return PR_FALSE;
+
+  /* Wrap up our result in an nsCSSValueList cell. */
+  nsAutoPtr<nsCSSValueList> toAppend(new nsCSSValueList);
+  if (!toAppend)
+    return PR_FALSE;
+
+  toAppend->mValue = *newCell;
+  
+  /* Chain the element to the end of the transform list, then update the
+   * list.
+   */
+  *aTail = toAppend.forget();
+  aTail = &(*aTail)->mNext;
+  
+  /* It worked!  Return true. */
+  return PR_TRUE;
+}
+
+/* Parses a -moz-transform property list by continuously reading in properties
+ * and constructing a matrix from it.
+ */
+PRBool CSSParserImpl::ParseMozTransform()
+{
+  mTempData.mDisplay.mTransform = nsnull;
+ 
+  /* First, check to see if this is some sort of keyword - none, inherit,
+   * or initial.
+   */
+  nsCSSValue keywordValue;
+  if (ParseVariant(keywordValue, VARIANT_INHERIT | VARIANT_NONE, nsnull)) {
+    /* Looks like it is.  Make a new value list and fill it in, failing if
+     * we can't.
+     */
+    mTempData.mDisplay.mTransform = new nsCSSValueList;
+    if (!mTempData.mDisplay.mTransform) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      return PR_FALSE;
+    }
+
+    /* Inform the parser that everything worked. */
+    mTempData.mDisplay.mTransform->mValue = keywordValue;
+    mTempData.SetPropertyBit(eCSSProperty__moz_transform);
+    return PR_TRUE;
+  }
+  
+  /* We will read a nonempty list of transforms.  Thus we'll read in a
+   * transform, then continuously read transforms until we're no longer
+   * able to do so.
+   */
+  nsCSSValueList *transformList = nsnull;
+  nsCSSValueList **tail = &transformList;
+  do {
+    /* Try reading a transform.  If we fail to do so, abort. */
+    if (!ReadSingleTransform(tail)) {
+      delete transformList;
+      return PR_FALSE;
+    }
+  }
+  while (!CheckEndProperty());
+
+  /* Confirm that this is the end of the property and set error code
+   * appropriately otherwise.
+   */
+  if (!ExpectEndProperty()) {
+    delete transformList;
+    return PR_FALSE;
+  }
+  
+  /* Validate our data. */
+  NS_ASSERTION(transformList, "Didn't read any transforms!");
+  
+  mTempData.SetPropertyBit(eCSSProperty__moz_transform);
+  mTempData.mDisplay.mTransform = transformList;
+
+  return PR_TRUE;
+}
+
+PRBool CSSParserImpl::ParseMozTransformOrigin()
+{
+  /* Read in a box position, fail if we can't. */
+  if (!ParseBoxPosition(mTempData.mDisplay.mTransformOrigin))
+    return PR_FALSE;
+
+  /* Set the property bit and return. */
+  mTempData.SetPropertyBit(eCSSProperty__moz_transform_origin);
+  return PR_TRUE;
+}
+
 PRBool
 CSSParserImpl::ParseFamily(nsCSSValue& aValue)
 {
@@ -6823,7 +7248,7 @@ CSSParserImpl::ParseMarks(nsCSSValue& aValue)
 {
   if (ParseVariant(aValue, VARIANT_HOK, nsCSSProps::kPageMarksKTable)) {
     if (eCSSUnit_Enumerated == aValue.GetUnit()) {
-      if (PR_FALSE == ExpectEndProperty()) {
+      if (PR_FALSE == CheckEndProperty()) {
         nsCSSValue  second;
         if (ParseEnum(second, nsCSSProps::kPageMarksKTable)) {
           aValue.SetIntValue(aValue.GetIntValue() | second.GetIntValue(), eCSSUnit_Enumerated);
@@ -6967,7 +7392,7 @@ CSSParserImpl::ParseQuotes()
         // get mandatory close
         if (ParseVariant(quotes->mYValue, VARIANT_STRING,
                          nsnull)) {
-          if (ExpectEndProperty()) {
+          if (CheckEndProperty()) {
             mTempData.SetPropertyBit(eCSSProperty_quotes);
             mTempData.mContent.mQuotes = quotesHead;
             return PR_TRUE;
@@ -7263,7 +7688,7 @@ CSSParserImpl::ParseDasharray()
     list->mValue = value;
 
     for (;;) {
-      if (ExpectEndProperty()) {
+      if (CheckEndProperty()) {
         mTempData.SetPropertyBit(eCSSProperty_stroke_dasharray);
         mTempData.mSVG.mStrokeDasharray = listHead;
         return PR_TRUE;
