@@ -3709,8 +3709,7 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
         SetRectProperty(aFrame, nsGkAtoms::outlineInnerRectProperty, r);
       }
 
-      nscoord offset;
-      outline->GetOutlineOffset(offset);
+      nscoord offset = outline->mOutlineOffset;
       nscoord inflateBy = PR_MAX(width + offset, 0);
       r.Inflate(inflateBy, inflateBy);
       *aAnyOutlineOrEffects = PR_TRUE;
