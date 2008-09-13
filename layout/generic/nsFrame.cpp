@@ -439,6 +439,12 @@ nsFrame::Init(nsIContent*      aContent,
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_GENERATED_CONTENT);
   }
+  if (GetStyleDisplay()->HasTransform()) {
+    // The frame gets reconstructed if we toggle the -moz-transform
+    // property, so we can set this bit here and then ignore it.
+    mState |= NS_FRAME_MAY_BE_TRANSFORMED;
+  }
+  
   DidSetStyleContext();
 
   if (IsBoxWrapped())
@@ -664,6 +670,13 @@ nsIFrame::GetPaddingRect() const
   nsRect r(mRect);
   r.Deflate(b);
   return r;
+}
+
+PRBool
+nsIFrame::IsTransformed() const
+{
+  return (mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
+    GetStyleDisplay()->HasTransform();
 }
 
 nsRect
@@ -1181,6 +1194,13 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   PRBool applyAbsPosClipping =
       ApplyAbsPosClipping(aBuilder, disp, this, &absPosClip);
   nsRect dirtyRect = aDirtyRect;
+
+  /* If we're being transformed, we need to invert the matrix transform so that we don't 
+   * grab points in the wrong coordinate system!
+   */
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) && disp->HasTransform())
+    dirtyRect = nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0));
+  
   if (applyAbsPosClipping) {
     dirtyRect.IntersectRect(dirtyRect,
                             absPosClip - aBuilder->ToReferenceFrame(this));
@@ -1275,16 +1295,38 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   }
  
 #ifdef MOZ_SVG
+  /* If there are any SVG effects, wrap up the list in an effects list. */
   if (usingSVGEffects) {
-    rv = aList->AppendNewToTop(new (aBuilder) nsDisplaySVGEffects(this, &resultList));
+    nsDisplaySVGEffects* svgList = new (aBuilder) nsDisplaySVGEffects(this, &resultList);
+    if (!svgList)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    /* List now emptied, so add the new list to the top. */
+    resultList.AppendToTop(svgList);
   } else
 #endif
+
+  /* If there is any opacity, wrap it up in an opacity list. */
   if (disp->mOpacity < 1.0f) {
-    rv = aList->AppendNewToTop(new (aBuilder) nsDisplayOpacity(this, &resultList));
-  } else {
-    aList->AppendToTop(&resultList);
+    nsDisplayOpacity* opacityList = new (aBuilder) nsDisplayOpacity(this, &resultList);
+    if (!opacityList)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    resultList.AppendToTop(opacityList);
   }
 
+  /* If we're going to apply a transformation, wrap everything in an
+   * nsDisplayTransform.
+   */
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) && disp->HasTransform()) {
+    nsDisplayTransform* transform = new (aBuilder) nsDisplayTransform(this, &resultList);
+    if (!transform)  
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    resultList.AppendToTop(transform);
+  }
+
+  aList->AppendToTop(&resultList);
   return rv;
 }
 
@@ -1423,7 +1465,11 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       !PresContext()->GetTheme()->WidgetIsContainer(ourDisp->mAppearance))
     return NS_OK;
 
-  PRBool isComposited = disp->mOpacity != 1.0f
+  // Child is composited if it's transformed, partially transparent, or has
+  // SVG effects.
+  PRBool isComposited = disp->mOpacity != 1.0f ||
+    ((aChild->mState & NS_FRAME_MAY_BE_TRANSFORMED) && 
+     aChild->GetStyleDisplay()->HasTransform())
 #ifdef MOZ_SVG
     || nsSVGIntegrationUtils::UsingEffectsForFrame(aChild)
 #endif
@@ -3608,6 +3654,51 @@ nsIFrame::Invalidate(const nsRect& aDamageRect,
   InvalidateInternal(aDamageRect, 0, 0, nsnull, aImmediate);
 }
 
+/**
+ * Helper function that funnels an InvalidateInternal request up to the
+ * parent.  This function is used so that if MOZ_SVG is not defined, we still
+ * have unified control paths in the InvalidateInternal chain.
+ *
+ * @param aDamageRect The rect to invalidate.
+ * @param aX The x offset from the origin of this frame to the rectangle.
+ * @param aY The y offset from the origin of this frame to the rectangle.
+ * @param aImmediate Whether to redraw immediately.
+ * @return None, though this funnels the request up to the parent frame.
+ */
+void
+nsIFrame::InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
+                                        nscoord aY, PRBool aImmediate)
+{
+  /* If we're a transformed frame, then we need to apply our transform to the
+   * damage rectangle so that the redraw correctly redraws the transformed
+   * region.  We're moved over aX and aY from our origin, but since this aX
+   * and aY is contained within our border, we need to scoot back by -aX and
+   * -aY to get back to the origin of the transform.
+   *
+   * There's one more problem, though, and that's that we don't know what
+   * coordinate space this rectangle is in.  Sometimes it's in the local
+   * coordinate space for the frame, and sometimes its in the transformed
+   * coordinate space.  If we get it wrong, we'll display incorrectly.  Until I
+   * find a better fix for this problem, we'll invalidate the union of the two
+   * rectangles (original rectangle and transformed rectangle).  At least one of
+   * these will be correct.
+   *
+   * See bug #452496 for more details.
+   */
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
+      GetStyleDisplay()->HasTransform()) {
+    nsRect newDamageRect;
+    newDamageRect.UnionRect(nsDisplayTransform::TransformRect
+                            (aDamageRect, this, nsPoint(-aX, -aY)), aDamageRect);
+    GetParent()->
+      InvalidateInternal(newDamageRect, aX + mRect.x, aY + mRect.y, this,
+                         aImmediate);
+  }
+  else 
+    GetParent()->
+      InvalidateInternal(aDamageRect, aX + mRect.x, aY + mRect.y, this, aImmediate);
+}
+
 void
 nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
                              nsIFrame* aForChild, PRBool aImmediate)
@@ -3616,13 +3707,81 @@ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
   if (nsSVGIntegrationUtils::UsingEffectsForFrame(this)) {
     nsRect r = nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(this,
             aDamageRect + nsPoint(aX, aY));
-    GetParent()->InvalidateInternal(r, mRect.x, mRect.y, this, aImmediate);
+    /* Rectangle is now in our own local space, so aX and aY are effectively
+     * zero.  Thus we'll pretend that the entire time this was in our own
+     * local coordinate space and do any remaining processing.
+     */
+    InvalidateInternalAfterResize(r, 0, 0, aImmediate);
     return;
   }
 #endif
+  
+  InvalidateInternalAfterResize(aDamageRect, aX, aY, aImmediate);
+}
 
-  GetParent()->
-    InvalidateInternal(aDamageRect, aX + mRect.x, aY + mRect.y, this, aImmediate);
+gfxMatrix
+nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
+{
+  NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");
+
+  /* Whether or not we're transformed, the matrix will be relative to our
+   * cross-doc parent frame.
+   */
+  *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(this);
+
+  /* If we're transformed, we want to hand back the combination
+   * transform/translate matrix that will apply our current transform, then
+   * shift us to our parent.
+   */
+  if (IsTransformed()) {
+    /* Compute the delta to the parent, which we need because we are converting
+     * coordinates to our parent.
+     */
+    NS_ASSERTION(*aOutAncestor, "Cannot transform the viewport frame!");
+    nsPoint delta = GetOffsetTo(*aOutAncestor);
+    PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
+
+    gfxMatrix result =
+      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0),
+                                                      scaleFactor);
+    /* Combine the raw transform with a translation to our parent. */
+    result *= gfxMatrix().Translate
+      (gfxPoint(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
+                NSAppUnitsToFloatPixels(delta.y, scaleFactor)));
+    return result;
+  }
+  
+  /* Otherwise, we're not transformed.  In that case, we'll walk up the frame
+   * tree until we either hit the root frame or something that may be
+   * transformed.  We'll then change coordinates into that frame, since we're
+   * guaranteed that nothing in-between can be transformed.  First, however,
+   * we have to check to see if we have a parent.  If not, we'll set the
+   * outparam to null (indicating that there's nothing left) and will hand back
+   * the identity matrix.
+   */
+  if (!*aOutAncestor)
+    return gfxMatrix();
+  
+  /* Keep iterating while the frame can't possibly be transformed. */
+  while (!((*aOutAncestor)->mState & NS_FRAME_MAY_BE_TRANSFORMED)) {
+    /* If no parent, stop iterating.  Otherwise, update the ancestor. */
+    nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(*aOutAncestor);
+    if (!parent)
+      break;
+
+    *aOutAncestor = parent;
+  }
+
+  NS_ASSERTION(*aOutAncestor, "Somehow ended up with a null ancestor...?");
+
+  /* Translate from this frame to our ancestor, if it exists.  That's the
+   * entire transform, so we're done.
+   */
+  nsPoint delta = GetOffsetTo(*aOutAncestor);
+  PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
+  return gfxMatrix().Translate
+    (gfxPoint(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
+              NSAppUnitsToFloatPixels(delta.y, scaleFactor)));
 }
 
 void
@@ -5439,6 +5598,17 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea,
                                          nsRect(nsPoint(0, 0), aNewSize));
 
+  /* If we're transformed, transform the overflow rect by the current transformation. */
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) && 
+      GetStyleDisplay()->HasTransform()) {
+    /* Since our size might not actually have been computed yet, we need to make sure that we use the
+     * correct dimensions by overriding the stored bounding rectangle with the value the caller has
+     * ensured us we'll use.
+     */
+    nsRect newBounds(nsPoint(0, 0), aNewSize);
+    *aOverflowArea = nsDisplayTransform::TransformRect(*aOverflowArea, this, nsPoint(0, 0), &newBounds);
+  }
+  
   PRBool geometricOverflow =
     aOverflowArea->x < 0 || aOverflowArea->y < 0 ||
     aOverflowArea->XMost() > aNewSize.width || aOverflowArea->YMost() > aNewSize.height;

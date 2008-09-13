@@ -742,6 +742,11 @@ public:
   // Expose this so media queries can use it
   static nscoord CalcLengthWithInitialFont(nsPresContext* aPresContext,
                                            const nsCSSValue& aValue);
+  // Expose this so nsTransformFunctions can use it.
+  static nscoord CalcLength(const nsCSSValue& aValue,
+                            nsStyleContext* aStyleContext,
+                            nsPresContext* aPresContext,
+                            PRBool& aInherited);
 };
 
 #endif
