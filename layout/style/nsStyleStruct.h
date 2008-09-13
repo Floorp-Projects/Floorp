@@ -978,8 +978,8 @@ struct nsStyleTableBorder {
   static nsChangeHint MaxDifference();
 #endif
   
-  nsStyleCoord  mBorderSpacingX;// [inherited] coord
-  nsStyleCoord  mBorderSpacingY;// [inherited] coord
+  nscoord       mBorderSpacingX;// [inherited]
+  nscoord       mBorderSpacingY;// [inherited]
   PRUint8       mBorderCollapse;// [inherited]
   PRUint8       mCaptionSide;   // [inherited]
   PRUint8       mEmptyCells;    // [inherited]
