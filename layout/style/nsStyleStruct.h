@@ -218,7 +218,7 @@ struct nsStyleMargin {
   static nsChangeHint MaxDifference();
 #endif
 
-  nsStyleSides  mMargin;          // [reset] length, percent, auto
+  nsStyleSides  mMargin;          // [reset] coord, percent, auto
 
   PRBool GetMargin(nsMargin& aMargin) const
   {
@@ -249,7 +249,7 @@ struct nsStylePadding {
   static nsChangeHint MaxDifference();
 #endif
   
-  nsStyleSides  mPadding;         // [reset] length, percent
+  nsStyleSides  mPadding;         // [reset] coord, percent
 
   PRBool GetPadding(nsMargin& aPadding) const
   {
@@ -414,7 +414,7 @@ struct nsStyleBorder {
 #endif
   PRBool ImageBorderDiffers() const;
  
-  nsStyleSides  mBorderRadius;    // [reset] length, percent
+  nsStyleSides  mBorderRadius;    // [reset] coord, percent
   nsStyleSides  mBorderImageSplit; // [reset] integer, percent
   PRUint8       mFloatEdge;       // [reset] see nsStyleConsts.h
   PRUint8       mBorderImageHFill; // [reset]
@@ -614,12 +614,12 @@ struct nsStyleOutline {
   static nsChangeHint MaxDifference();
 #endif
  
-  nsStyleSides  mOutlineRadius;    // [reset] length, percent
+  nsStyleSides  mOutlineRadius;    // [reset] coord, percent
                                    // (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
 
   // Note that this is a specified value.  You can get the actual values
   // with GetOutlineWidth.  You cannot get the computed value directly.
-  nsStyleCoord  mOutlineWidth;    // [reset] length, enum (see nsStyleConsts.h)
+  nsStyleCoord  mOutlineWidth;    // [reset] coord, enum (see nsStyleConsts.h)
   nscoord       mOutlineOffset;   // [reset]
 
   PRBool GetOutlineWidth(nscoord& aWidth) const
