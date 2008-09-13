@@ -572,13 +572,12 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
   PRBool canDrop = CanDrop(aDragEvent);
   dragSession->SetCanDrop(canDrop);
 
-  // We need to consume the event to prevent the browser's
-  // default drag listeners from being fired. (Bug 199133)
-
-  aDragEvent->PreventDefault(); // consumed
-    
   if (canDrop)
   {
+    // We need to consume the event to prevent the browser's
+    // default drag listeners from being fired. (Bug 199133)
+    aDragEvent->PreventDefault(); // consumed
+
     if (mCaret && nsuiEvent)
     {
       PRInt32 offset = 0;
