@@ -61,6 +61,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
+#include "nsTextFrame.h"
 
 //TABLECELL SELECTION
 #include "nsFrameSelection.h"
@@ -659,6 +660,36 @@ nsTableCellFrame::HasVerticalAlignBaseline()
   return PR_TRUE;
 }
 
+PRBool 
+nsTableCellFrame::CellHasVisibleContent(nscoord       height,
+                                        nsTableFrame* tableFrame,
+                                        nsIFrame* kidFrame)
+{
+  if (height > 0)
+    return PR_TRUE;
+  if (tableFrame->IsBorderCollapse())
+    return PR_TRUE;
+  nsIFrame* innerFrame = kidFrame->GetFirstChild(nsnull);
+  while(innerFrame) {
+    nsIAtom* frameType = innerFrame->GetType();
+    if (nsGkAtoms::textFrame == frameType) {
+       nsTextFrame* textFrame = static_cast<nsTextFrame*>(innerFrame);
+       if (textFrame->HasNoncollapsedCharacters())
+         return PR_TRUE;
+    }
+    else if (nsGkAtoms::placeholderFrame != frameType) {
+      return PR_TRUE;
+    }
+    else {
+      nsIFrame *floatFrame = nsLayoutUtils::GetFloatFromPlaceholder(innerFrame);
+      if (floatFrame)
+        return PR_TRUE;
+    }
+    innerFrame = innerFrame->GetNextSibling();
+  }	 
+  return PR_FALSE;
+}
+
 nscoord
 nsTableCellFrame::GetCellBaseline() const
 {
@@ -916,12 +947,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   if (prevInFlow) {
     isEmpty = static_cast<nsTableCellFrame*>(prevInFlow)->GetContentEmpty();
   } else {
-    // XXX this is a bad way to check for empty content. There are various
-    // ways the cell could have content but the kid could end up with zero
-    // height. See
-    // http://www.w3.org/TR/CSS21/tables.html#empty-cells
-    // and bug 76331.
-    isEmpty = kidSize.height == 0;
+    isEmpty = !CellHasVisibleContent(kidSize.height, tableFrame, firstKid);
   }
   SetContentEmpty(isEmpty);
 
