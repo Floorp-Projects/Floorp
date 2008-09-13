@@ -1190,9 +1190,8 @@ nsCSSRendering::PaintBoxShadow(nsPresContext* aPresContext,
   for (PRUint32 i = styleBorder->mBoxShadow->Length(); i > 0; --i) {
     nsCSSShadowItem* shadowItem = styleBorder->mBoxShadow->ShadowAt(i - 1);
     gfxRect shadowRect(frameRect.x, frameRect.y, frameRect.width, frameRect.height);
-    shadowRect.MoveBy(gfxPoint(shadowItem->mXOffset.GetCoordValue(),
-                               shadowItem->mYOffset.GetCoordValue()));
-    shadowRect.Outset(shadowItem->mSpread.GetCoordValue());
+    shadowRect.MoveBy(gfxPoint(shadowItem->mXOffset, shadowItem->mYOffset));
+    shadowRect.Outset(shadowItem->mSpread);
 
     gfxRect shadowRectPlusBlur = shadowRect;
     shadowRect.ScaleInverse(twipsPerPixel);
@@ -1200,7 +1199,7 @@ nsCSSRendering::PaintBoxShadow(nsPresContext* aPresContext,
 
     // shadowRect won't include the blur, so make an extra rect here that includes the blur
     // for use in the even-odd rule below.
-    nscoord blurRadius = shadowItem->mRadius.GetCoordValue();
+    nscoord blurRadius = shadowItem->mRadius;
     shadowRectPlusBlur.Outset(blurRadius);
     shadowRectPlusBlur.ScaleInverse(twipsPerPixel);
     shadowRectPlusBlur.RoundOut();

@@ -3682,12 +3682,9 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
     for (PRUint32 i = 0; i < boxShadows->Length(); ++i) {
       nsRect tmpRect = r;
       nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
-      nscoord xOffset = shadow->mXOffset.GetCoordValue();
-      nscoord yOffset = shadow->mYOffset.GetCoordValue();
-      nscoord outsetRadius = shadow->mRadius.GetCoordValue() +
-                             shadow->mSpread.GetCoordValue();
+      nscoord outsetRadius = shadow->mRadius + shadow->mSpread;
 
-      tmpRect.MoveBy(nsPoint(xOffset, yOffset));
+      tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
       tmpRect.Inflate(outsetRadius, outsetRadius);
 
       shadows.UnionRect(shadows, tmpRect);
