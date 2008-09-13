@@ -48,6 +48,7 @@ const UIMODE_TABS              = 5;
 const UIMODE_CONTROLS          = 6;
 const UIMODE_PANEL             = 7;
 
+const kMaxEngines = 4;
 const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
 
 var BrowserUI = {
@@ -326,7 +327,7 @@ var BrowserUI = {
       toolbar.setAttribute("mode", "edit");
       this._caption.hidden = true;
       this._edit.hidden = false;
-      this._edit.focus();
+      this._edit.inputField.focus();
     }
     else {
       toolbar.setAttribute("mode", "view");
@@ -519,11 +520,11 @@ var BrowserUI = {
     this.show(UIMODE_URLVIEW);
   },
 
-  openDefaultHistory : function () {
-    if (!this._edit.value) {
-      this._autocompleteNavbuttons.hidden = true;
+  updateAutoComplete : function(showDefault)
+  {
+    this.updateSearchEngines();
+    if (showDefault || this._edit.getAttribute("nomatch"))
       this._edit.showHistoryPopup();
-    }
   },
 
   doButtonSearch : function(button)
@@ -534,8 +535,6 @@ var BrowserUI = {
     var urlbar = this._edit;
     urlbar.open = false;
     var value = urlbar.value;
-    if (!value)
-      return;
 
     var submission = button.engine.getSubmission(value, null);
     getBrowser().loadURI(submission.uri.spec, null, submission.postData, false);
@@ -559,14 +558,15 @@ var BrowserUI = {
     this.engines = engines;
     const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     var container = this._autocompleteNavbuttons;
-    for (var e = 0; e < engines.length; e++) {
+    for (var e = 0; e < kMaxEngines && e < engines.length; e++) {
       var button = document.createElementNS(kXULNS, "toolbarbutton");
       var engine = engines[e];
       button.id = engine.name;
       button.setAttribute("label", engine.name);
+      button.className = "searchengine";
       if (engine.iconURI)
         button.setAttribute("image", engine.iconURI.spec);
-      container.insertBefore(button, container.firstChild);
+      container.appendChild(button);
       button.engine = engine;
     }
   },
@@ -734,13 +734,9 @@ var BrowserUI = {
       // URL textbox events
       case "click":
         this.show(UIMODE_URLEDIT);
-        this.openDefaultHistory();
         break;
       case "input":
-        if (this._edit.value) {
-          this.updateSearchEngines();
-          this._autocompleteNavbuttons.hidden = false;
-        }
+        this.updateAutoComplete(false);
         break;
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {

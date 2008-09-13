@@ -204,6 +204,7 @@
                    hidden="true"
                    autocompletepopup="popup_autocomplete"
                    ontextentered="BrowserUI.goToURI();"
+                   onsearchcomplete="BrowserUI.updateAutoComplete(false);"
                    clickSelectsAll="true"/>
         </hbox>
         <hbox id="urlbar-icons">

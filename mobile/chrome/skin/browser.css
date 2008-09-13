@@ -76,7 +76,7 @@ toolbarbutton {
   -moz-margin-end: 0px;
 }
 
-toolbarbutton .toolbarbutton-text {
+toolbarbutton:not(.searchengine) .toolbarbutton-text {
   display: none !important;
 }
 
@@ -217,6 +217,10 @@ toolbarbutton.browser-control-button {
 #toolbar-main[mode="edit"] > #urlbar-container > #urlbar-icons > #tool-reload,
 #toolbar-main[mode="edit"] > #urlbar-container > #urlbar-icons > #tool-stop {
   visibility: collapse;
+}
+
+.searchengine {
+  -moz-box-orient: horizontal;
 }
 
 #urlbar-container {
