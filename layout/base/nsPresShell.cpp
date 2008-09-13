@@ -913,6 +913,7 @@ public:
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD_(PRBool) IsVisible();
   NS_IMETHOD_(void) WillPaint();
+  NS_IMETHOD_(void) InvalidateFrameForView(nsIView *view);
 
   // caret handling
   NS_IMETHOD GetCaret(nsCaret **aOutCaret);
@@ -1010,7 +1011,6 @@ protected:
   void CancelPostedReflowCallbacks();
 
   void UnsuppressAndInvalidate();
-
 
   void WillCauseReflow() {
     nsContentUtils::AddScriptBlocker();
@@ -2610,7 +2610,7 @@ PresShell::CreateResizeEventTimer ()
 void
 PresShell::KillResizeEventTimer()
 {
-  if(mResizeEventTimer) {
+  if (mResizeEventTimer) {
     mResizeEventTimer->Cancel();
     mResizeEventTimer = nsnull;
   }
@@ -4013,12 +4013,12 @@ PresShell::ScrollContentIntoView(nsIContent* aContent,
   // this check is preventing.
   // XXX: The dependency on the command dispatcher needs to be fixed.
   nsPIDOMWindow* ourWindow = currentDoc->GetWindow();
-  if(ourWindow) {
+  if (ourWindow) {
     nsIFocusController *focusController = ourWindow->GetRootFocusController();
     if (focusController) {
       PRBool dontScroll = PR_FALSE;
       focusController->GetSuppressFocusScroll(&dontScroll);
-      if(dontScroll) {
+      if (dontScroll) {
         return NS_OK;
       }
     }
@@ -4191,6 +4191,14 @@ PresShell::GetSelectionForCopy(nsISelection** outSelection)
   return rv;
 }
 
+/* Just hook this call into InvalidateOverflowRect */
+void
+PresShell::InvalidateFrameForView(nsIView *aView)
+{
+  nsIFrame* frame = nsLayoutUtils::GetFrameFor(aView);
+  if (frame)
+    frame->InvalidateOverflowRect();
+}
 
 NS_IMETHODIMP
 PresShell::DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& aOutValue)

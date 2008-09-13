@@ -76,6 +76,8 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWidget.h"
+#include "gfxMatrix.h"
+#include "gfxTypes.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -639,19 +641,17 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
   if (!GUIEvent->widget)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
-  // If it is, or is a descendant of, an SVG foreignobject frame,
-  // then we need to do extra work
+  /* If we walk up the frame tree and discover that any of the frames are
+   * transformed, we need to do extra work to convert from the global
+   * space to the local space.
+   */
   nsIFrame* rootFrame = aFrame;
+  PRBool transformFound = PR_FALSE;
+
   for (nsIFrame* f = aFrame; f; f = GetCrossDocParentFrame(f)) {
-#ifdef MOZ_SVG
-    if (f->IsFrameOfType(nsIFrame::eSVGForeignObject) && f->GetFirstChild(nsnull)) {
-      nsSVGForeignObjectFrame* fo = static_cast<nsSVGForeignObjectFrame*>(f);
-      nsIFrame* outer = nsSVGUtils::GetOuterSVGFrame(fo);
-      return fo->TransformPointFromOuter(
-          GetEventCoordinatesRelativeTo(aEvent, outer)) -
-        aFrame->GetOffsetTo(fo->GetFirstChild(nsnull));
-    }
-#endif
+    if (f->IsTransformed())
+      transformFound = PR_TRUE;
+
     rootFrame = f;
   }
 
@@ -666,7 +666,132 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
   if (widgetToView == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
+  /* If we encountered a transform, we can't do simple arithmetic to figure
+   * out how to convert back to aFrame's coordinates and must use the CTM.
+   */
+  if (transformFound)
+    return InvertTransformsToRoot(aFrame, widgetToView);
+  
+  /* Otherwise, all coordinate systems are translations of one another,
+   * so we can just subtract out the different.
+   */
   return widgetToView - aFrame->GetOffsetTo(rootFrame);
+}
+
+gfxMatrix
+nsLayoutUtils::ChangeMatrixBasis(const gfxPoint &aOrigin,
+                                 const gfxMatrix &aMatrix)
+{
+  /* These are translation matrices from world-to-origin of relative frame and
+   * vice-versa.  Although I could use the gfxMatrix::Translate function to
+   * accomplish this, I'm hoping to reduce the overall number of matrix
+   * operations by hardcoding as many of the matrices as possible.
+   */
+  gfxMatrix worldToOrigin(1.0, 0.0, 0.0, 1.0, -aOrigin.x, -aOrigin.y);
+  gfxMatrix originToWorld(1.0, 0.0, 0.0, 1.0,  aOrigin.x,  aOrigin.y);
+
+  /* Multiply all three to get the transform! */
+  gfxMatrix result(worldToOrigin);
+  result.Multiply(aMatrix);
+  result.Multiply(originToWorld);
+  return result;
+}
+
+/**
+ * Given a gfxFloat, constrains its value to be between nscoord_MIN and nscoord_MAX.
+ *
+ * @param aVal The value to constrain (in/out)
+ */
+static void ConstrainToCoordValues(gfxFloat &aVal)
+{
+  if (aVal <= nscoord_MIN)
+    aVal = nscoord_MIN;
+  else if (aVal >= nscoord_MAX)
+    aVal = nscoord_MAX;
+}
+
+nsRect
+nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor)
+{ 
+  /* Get a new gfxRect whose units are app units by scaling by the specified factor. */ 
+  gfxRect scaledRect(aRect.pos.x * aFactor, aRect.pos.y * aFactor,
+                     aRect.size.width * aFactor,
+                     aRect.size.height * aFactor);
+  
+  /* Round outward. */
+  scaledRect.RoundOut();
+
+  /* We now need to constrain our results to the max and min values for coords. */
+  ConstrainToCoordValues(scaledRect.pos.x);
+  ConstrainToCoordValues(scaledRect.pos.y);
+  ConstrainToCoordValues(scaledRect.size.width);
+  ConstrainToCoordValues(scaledRect.size.height);
+  
+  /* Now typecast everything back.  This is guaranteed to be safe. */
+  return nsRect(nscoord(scaledRect.pos.x), nscoord(scaledRect.pos.y),
+                nscoord(scaledRect.size.width), nscoord(scaledRect.size.height));
+}
+
+nsRect
+nsLayoutUtils::MatrixTransformRect(const nsRect &aBounds,
+                                   const gfxMatrix &aMatrix, float aFactor)
+{
+  gfxRect image = aMatrix.TransformBounds(gfxRect(NSAppUnitsToFloatPixels(aBounds.x, aFactor),
+                                                  NSAppUnitsToFloatPixels(aBounds.y, aFactor),
+                                                  NSAppUnitsToFloatPixels(aBounds.width, aFactor),
+                                                  NSAppUnitsToFloatPixels(aBounds.height, aFactor)));
+  
+  return RoundGfxRectToAppRect(image, aFactor);
+}
+
+nsPoint
+nsLayoutUtils::MatrixTransformPoint(const nsPoint &aPoint,
+                                    const gfxMatrix &aMatrix, float aFactor)
+{
+  gfxPoint image = aMatrix.Transform(gfxPoint(NSAppUnitsToFloatPixels(aPoint.x, aFactor),
+                                              NSAppUnitsToFloatPixels(aPoint.y, aFactor)));
+  return nsPoint(NSFloatPixelsToAppUnits(float(image.x), aFactor),
+                 NSFloatPixelsToAppUnits(float(image.y), aFactor));
+}
+
+/**
+ * Returns the CTM at the specified frame.
+ *
+ * @param aFrame The frame at which we should calculate the CTM.
+ * @return The CTM at the specified frame.
+ */
+static gfxMatrix GetCTMAt(nsIFrame *aFrame)
+{
+  gfxMatrix ctm;
+
+  /* Starting at the specified frame, we'll use the GetTransformMatrix
+   * function of the frame, which gives us a matrix from this frame up
+   * to some other ancestor frame.  Once this function returns null,
+   * we've hit the top of the frame tree and can stop.  We get the CTM
+   * by simply accumulating all of these matrices together.
+   */
+  while (aFrame)
+    ctm *= aFrame->GetTransformMatrix(&aFrame);
+  return ctm;
+}
+
+nsPoint
+nsLayoutUtils::InvertTransformsToRoot(nsIFrame *aFrame,
+                                      const nsPoint &aPoint)
+{
+  NS_PRECONDITION(aFrame, "Why are you inverting transforms when there is no frame?");
+
+  /* To invert everything to the root, we'll get the CTM, invert it, and use it to transform
+   * the point.
+   */
+  gfxMatrix ctm = GetCTMAt(aFrame);
+
+  /* If the ctm is singular, hand back (0, 0) as a sentinel. */
+  if (ctm.IsSingular())
+    return nsPoint(0, 0);
+
+  /* Otherwise, invert the CTM and use it to transform the point. */
+  return MatrixTransformPoint(aPoint, ctm.Invert(), aFrame->PresContext()->AppUnitsPerDevPixel());
 }
 
 nsPoint

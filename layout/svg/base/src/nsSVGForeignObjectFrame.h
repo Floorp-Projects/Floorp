@@ -81,6 +81,19 @@ public:
                     nsReflowStatus&          aStatus);
 
   /**
+   * Foreign objects are always transformed.
+   */
+  virtual PRBool IsTransformed() const
+  {
+    return PR_TRUE;
+  }
+
+  /**
+   * Foreign objects can return a transform matrix.
+   */
+  virtual gfxMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
+
+  /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::svgForeignObjectFrame

@@ -520,6 +520,12 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoin
 {
   if (aTwipsDelta.x != 0 || aTwipsDelta.y != 0)
   {
+    /* If we should invalidate our wrapped view, we should do so at this
+     * point.
+     */
+    if (aScrolledView->NeedsInvalidateFrameOnScroll())
+      GetViewManager()->GetViewObserver()->InvalidateFrameForView(aScrolledView);
+    
     nsIWidget *scrollWidget = GetWidget();
     nsRegion updateRegion;
     PRBool canBitBlit = scrollWidget &&

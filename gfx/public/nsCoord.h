@@ -320,7 +320,7 @@ inline PRInt32 NSToIntRound(float aValue)
 /* 
  * App Unit/Pixel conversions
  */
-inline nscoord NSFloatPixelsToAppUnits(float aPixels, PRInt32 aAppUnitsPerPixel)
+inline nscoord NSFloatPixelsToAppUnits(float aPixels, float aAppUnitsPerPixel)
 {
   float product = aPixels * aAppUnitsPerPixel;
   nscoord result;
@@ -354,12 +354,12 @@ inline nscoord NSIntPixelsToAppUnits(PRInt32 aPixels, PRInt32 aAppUnitsPerPixel)
   return r;
 }
 
-inline float NSAppUnitsToFloatPixels(nscoord aAppUnits, PRInt32 aAppUnitsPerPixel)
+inline float NSAppUnitsToFloatPixels(nscoord aAppUnits, float aAppUnitsPerPixel)
 {
   return (float(aAppUnits) / aAppUnitsPerPixel);
 }
 
-inline PRInt32 NSAppUnitsToIntPixels(nscoord aAppUnits, PRInt32 aAppUnitsPerPixel)
+inline PRInt32 NSAppUnitsToIntPixels(nscoord aAppUnits, float aAppUnitsPerPixel)
 {
   return NSToIntRound(float(aAppUnits) / aAppUnitsPerPixel);
 }

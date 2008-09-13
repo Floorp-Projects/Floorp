@@ -53,6 +53,7 @@
 #include "nsStyleContext.h"
 #include "nsIContent.h"
 #include "nsHTMLReflowMetrics.h"
+#include "gfxMatrix.h"
 
 /**
  * New rules of reflow:
@@ -231,7 +232,11 @@ enum {
   // results when an inline has been split because of a nested block.
   NS_FRAME_IS_SPECIAL =                         0x00008000,
 
-  NS_FRAME_THIS_BIT_BELONGS_TO_ROC_DO_NOT_USE_OR_I_WILL_HUNT_YOU_DOWN = 0x00010000,
+  // If this bit is set, the frame may have a transform that it applies
+  // to its coordinate system (e.g. CSS transform, SVG foreignObject).
+  // This is used primarily in GetTransformMatrix to optimize for the
+  // common case.
+  NS_FRAME_MAY_BE_TRANSFORMED =                 0x00010000,
 
 #ifdef IBMBIDI
   // If this bit is set, the frame itself is a bidi continuation,
@@ -902,6 +907,12 @@ public:
   virtual PRBool NeedsView() { return PR_FALSE; }
 
   /**
+   * Returns whether this frame has a transform matrix applied to it.  This is true
+   * if we have the -moz-transform property or if we're an SVGForeignObjectFrame.
+   */
+  virtual PRBool IsTransformed() const;
+
+  /**
    * This frame needs a view with a widget (e.g. because it's fixed
    * positioned), so we call this to create the widget. If widgets for
    * this frame type need to be of a certain type or require special
@@ -1550,7 +1561,19 @@ public:
    * @see nsGkAtoms
    */
   virtual nsIAtom* GetType() const = 0;
-  
+
+  /**
+   * Returns a transformation matrix that converts points in this frame's coordinate space
+   * to points in some ancestor frame's coordinate space.  The frame decides which ancestor
+   * it will use as a reference point.  If this frame has no ancestor, aOutAncestor will be
+   * set to null.
+   *
+   * @param aOutAncestor [out] The ancestor frame the frame has chosen.  If this frame has no
+   *        ancestor, aOutAncestor will be nsnull.
+   * @return A gfxMatrix that converts points in this frame's coordinate space into
+   *         points in aOutAncestor's coordinate space.
+   */
+  virtual gfxMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
 
   /**
    * Bit-flags to pass to IsFrameOfType()
@@ -1665,6 +1688,20 @@ public:
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,
                                   nsIFrame* aForChild, PRBool aImmediate);
+
+  /**
+   * Helper function that funnels an InvalidateInternal request up to the
+   * parent.  This function is used so that if MOZ_SVG is not defined, we still
+   * have unified control paths in the InvalidateInternal chain.
+   *
+   * @param aDamageRect The rect to invalidate.
+   * @param aX The x offset from the origin of this frame to the rectangle.
+   * @param aY The y offset from the origin of this frame to the rectangle.
+   * @param aImmediate Whether to redraw immediately.
+   * @return None, though this funnels the request up to the parent frame.
+   */
+  void InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
+                                     nscoord aY, PRBool aImmediate);
 
   /**
    * Take two rectangles in the coordinate system of this frame which
