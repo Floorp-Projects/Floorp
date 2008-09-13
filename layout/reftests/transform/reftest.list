@@ -1,13 +1,13 @@
 # translatex should act like position: relative
 == translatex-1a.html translatex-1-ref.html
-== translatex-1b.html translatex-1-ref.html
+random == translatex-1b.html translatex-1-ref.html
 == translatex-1c.html translatex-1-ref.html
 == translatex-1d.html translatex-1-ref.html
 == translatex-1e.html translatex-1-ref.html
 == translatex-1a.html translatex-1-ref-2.html
 # translatey should act like position: relative
 == translatey-1a.html translatey-1-ref.html
-== translatey-1b.html translatey-1-ref.html
+random == translatey-1b.html translatey-1-ref.html
 == translatey-1c.html translatey-1-ref.html
 == translatey-1d.html translatey-1-ref.html
 == translatey-1e.html translatey-1-ref.html
@@ -16,7 +16,7 @@
 == translatey-2.html translatey-1-ref.html
 # translate should act like position: relative
 == translate-1a.html translate-1-ref.html
-== translate-1b.html translate-1-ref.html
+random == translate-1b.html translate-1-ref.html
 == translate-1c.html translate-1-ref.html
 == translate-1d.html translate-1-ref.html
 == translate-1e.html translate-1-ref.html
