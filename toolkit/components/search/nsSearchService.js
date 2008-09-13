@@ -102,7 +102,7 @@ const MAX_ICON_SIZE   = 10000;
 // match previous nsInternetSearchService behavior.
 const DEFAULT_QUERY_CHARSET = "ISO-8859-1";
 
-const SEARCH_BUNDLE = "chrome://browser/locale/search.properties";
+const SEARCH_BUNDLE = "chrome://global/locale/search/search.properties";
 const BRAND_BUNDLE = "chrome://branding/locale/brand.properties";
 
 const OPENSEARCH_NS_10  = "http://a9.com/-/spec/opensearch/1.0/";

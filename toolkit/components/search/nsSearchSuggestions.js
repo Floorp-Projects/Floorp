@@ -42,7 +42,7 @@ const SEARCH_RESPONSE_SUGGESTION_JSON = "application/x-suggestions+json";
 const BROWSER_SUGGEST_PREF = "browser.search.suggest.enabled";
 const XPCOM_SHUTDOWN_TOPIC              = "xpcom-shutdown";
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
-const SEARCH_BUNDLE = "chrome://browser/locale/search.properties";
+const SEARCH_BUNDLE = "chrome://global/locale/search/search.properties";
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;

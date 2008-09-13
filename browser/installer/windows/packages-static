@@ -73,7 +73,6 @@ bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
 bin\components\browsercompsbase.xpt
 bin\components\browserplaces.xpt
-bin\components\browsersearch.xpt
 bin\components\browser-feeds.xpt
 bin\components\caps.xpt
 bin\components\chardet.xpt
@@ -171,6 +170,7 @@ bin\components\saxparser.xpt
 bin\components\shistory.xpt
 bin\components\storage.xpt
 bin\components\toolkitprofile.xpt
+bin\components\toolkitsearch.xpt
 bin\components\txtsvc.xpt
 bin\components\txmgr.xpt
 #ifdef MOZ_USE_NATIVE_UCONV
