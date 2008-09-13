@@ -1623,20 +1623,20 @@ nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
     return CallQueryInterface(val, aValue);
   }
 
-  static nsStyleCoord nsCSSShadowItem::* const shadowValuesNoSpread[] = {
+  static nscoord nsCSSShadowItem::* const shadowValuesNoSpread[] = {
     &nsCSSShadowItem::mXOffset,
     &nsCSSShadowItem::mYOffset,
     &nsCSSShadowItem::mRadius
   };
 
-  static nsStyleCoord nsCSSShadowItem::* const shadowValuesWithSpread[] = {
+  static nscoord nsCSSShadowItem::* const shadowValuesWithSpread[] = {
     &nsCSSShadowItem::mXOffset,
     &nsCSSShadowItem::mYOffset,
     &nsCSSShadowItem::mRadius,
     &nsCSSShadowItem::mSpread
   };
 
-  nsStyleCoord nsCSSShadowItem::* const * shadowValues;
+  nscoord nsCSSShadowItem::* const * shadowValues;
   PRUint32 shadowValuesLength;
   if (aUsesSpread) {
     shadowValues = shadowValuesWithSpread;
@@ -1682,7 +1682,7 @@ nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
         delete valueList;
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      SetValueToCoord(val, item->*(shadowValues[i]));
+      val->SetAppUnits(item->*(shadowValues[i]));
     }
   }
 

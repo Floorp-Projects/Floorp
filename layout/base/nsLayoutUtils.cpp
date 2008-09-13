@@ -1349,12 +1349,9 @@ nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
   for (PRUint32 i = 0; i < textStyle->mTextShadow->Length(); ++i) {
     nsRect tmpRect(aTextAndDecorationsRect);
     nsCSSShadowItem* shadow = textStyle->mTextShadow->ShadowAt(i);
-    nscoord xOffset = shadow->mXOffset.GetCoordValue();
-    nscoord yOffset = shadow->mYOffset.GetCoordValue();
-    nscoord blurRadius = shadow->mRadius.GetCoordValue();
 
-    tmpRect.MoveBy(nsPoint(xOffset, yOffset));
-    tmpRect.Inflate(blurRadius, blurRadius);
+    tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
+    tmpRect.Inflate(shadow->mRadius, shadow->mRadius);
 
     resultRect.UnionRect(resultRect, tmpRect);
   }
