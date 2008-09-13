@@ -1077,8 +1077,8 @@ nsStyleTableBorder::nsStyleTableBorder(nsPresContext* aPresContext)
                   ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND     
                   : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
   mCaptionSide = NS_STYLE_CAPTION_SIDE_TOP;
-  mBorderSpacingX.SetCoordValue(0);
-  mBorderSpacingY.SetCoordValue(0);
+  mBorderSpacingX = 0;
+  mBorderSpacingY = 0;
 }
 
 nsStyleTableBorder::~nsStyleTableBorder(void) 
