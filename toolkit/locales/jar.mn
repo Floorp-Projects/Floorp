@@ -116,3 +116,4 @@
 #endif
 % locale places @AB_CD@ %locale/@AB_CD@/places/
   locale/@AB_CD@/places/places.properties                 (%chrome/places/places.properties)
+  locale/@AB_CD@/global/search/search.properties          (%chrome/search/search.properties)

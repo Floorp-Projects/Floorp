@@ -89,6 +89,12 @@ ifdef MOZ_VIEW_SOURCE
 DIRS +=	viewsource
 endif
 
+ifndef MOZ_SUITE
+ifndef MOZ_THUNDERBIRD
+DIRS +=	search
+endif
+endif
+
 ifdef MOZ_THUNDERBIRD
 DIRS += autocomplete/public
 else
