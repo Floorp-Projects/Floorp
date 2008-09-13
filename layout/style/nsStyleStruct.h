@@ -193,6 +193,8 @@ struct nsStyleBackground {
   PRBool HasFixedBackground() const;
 };
 
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=271586#c43 for why
+// this is hard to replace with 'currentColor'.
 #define BORDER_COLOR_FOREGROUND   0x20
 #define OUTLINE_COLOR_INITIAL     0x80
 // FOREGROUND | INITIAL(OUTLINE)
@@ -1321,6 +1323,8 @@ struct nsStyleColumn {
 
   nscolor      mColumnRuleColor;  // [reset]
   PRUint8      mColumnRuleStyle;  // [reset]
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=271586#c43 for why
+  // this is hard to replace with 'currentColor'.
   PRPackedBool mColumnRuleColorIsForeground;
 
   void SetColumnRuleWidth(nscoord aWidth) {
