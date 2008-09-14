@@ -174,6 +174,11 @@
     </div>
   </div>
 
+  <div class="vevent" id="empty-description">
+    <span class="description"></span>
+  </div>
+
+
 </div>
 
 <pre id="test">
@@ -295,6 +300,9 @@ function test_hCard() {
   hcalendar = new hCalendar(document.getElementById("18-component-vevent-uid.5"));
 
   hcalendar = new hCalendar(document.getElementById("19-calendar-attachments"));
+
+  hcalendar = new hCalendar(document.getElementById("empty-description"));
+  is (hcalendar.description, "", "Empty description");
 }
 
 </script>
