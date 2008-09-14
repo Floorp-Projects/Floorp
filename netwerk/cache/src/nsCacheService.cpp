@@ -526,8 +526,11 @@ nsCacheProfilePrefObserver::MemoryCacheCapacity()
     PRUint64 bytes = PR_GetPhysicalMemorySize();
     CACHE_LOG_DEBUG(("Physical Memory size is %llu\n", bytes));
 
-    if (LL_CMP(bytes, ==, LL_ZERO))
-        return 0;
+    // If getting the physical memory failed, arbitrarily assume
+    // 32 MB of RAM. We use a low default to have a reasonable
+    // size on all the devices we support.
+    if (bytes == 0)
+        bytes = 32 * 1024 * 1024;
 
     // Conversion from unsigned int64 to double doesn't work on all platforms.
     // We need to truncate the value at LL_MAXINT to make sure we don't
