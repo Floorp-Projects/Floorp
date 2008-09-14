@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <!--
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/licenses/publicdomain/
@@ -13,8 +13,9 @@
 	</script>
 
 	<defs>
-		<filter id="f1" filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
-	    	<feFlood id="feFlood" x="0" y="0" width="100%" height="100%" flood-color="lime"/>
+		<filter id="f1" filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox"
+				x="0" y="0" width="1" height="1">
+	    	<feFlood id="feFlood" x="0" y="0" width="100%" height="100%" flood-color="red"/>
 	    </filter>
 	</defs>
 	<g filter="url(#f1)">
