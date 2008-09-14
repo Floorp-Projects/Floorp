@@ -62,8 +62,16 @@ install::
 
 ifdef ENABLE_TESTS
 # Implemented in testing/testsuite-targets.mk
+
+# Browser tests live in a slightly different location, so we correct the path
+ifdef TEST_PATH
+BROWSER_TEST_PATH = --test-path=../browser/$(TEST_PATH)
+else
+BROWSER_TEST_PATH =
+endif
+
 mochitest-browser-chrome:
-	$(RUN_MOCHITEST) --browser-chrome
+	$(RUN_MOCHITEST) --browser-chrome $(BROWSER_TEST_PATH)
 	$(CHECK_TEST_ERROR)
 
 mochitest:: mochitest-browser-chrome
