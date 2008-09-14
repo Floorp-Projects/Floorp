@@ -186,10 +186,10 @@
         <box id="identity-box"
              onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
              onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-          <stack id="urlbar-image-stack">
-            <image id="urlbar-throbber" src=""/>
-            <image id="urlbar-favicon" src=""/>
-          </stack>
+          <deck id="urlbar-image-deck">
+            <image id="urlbar-throbber"/>
+            <image id="urlbar-favicon"/>
+          </deck>
         </box>
         <hbox id="urlbar-editarea" flex="1">
           <description id="urlbar-caption" crop="end" flex="1"/>
