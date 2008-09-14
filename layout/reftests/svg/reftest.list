@@ -19,7 +19,6 @@ include moz-only/reftest.list
 == dynamic-conditions-01.svg pass.svg
 == dynamic-clipPath-01.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
-== dynamic-feImage-01.svg pass.svg
 == dynamic-link-style-01.svg pass.svg
 == dynamic-rect-01.svg dynamic-rect-01-ref.svg
 == dynamic-rect-02.svg dynamic-rect-02-ref.svg
