@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  window.addEventListener("DOMSubtreeModified", function(){}, false);
+
+  var MATHML_NS = "http://www.w3.org/1998/Math/MathML";
+  var ms = document.createElementNS(MATHML_NS, "ms");
+  document.body.appendChild(ms);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

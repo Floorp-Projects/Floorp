@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  window.addEventListener("DOMSubtreeModified", function(){}, false);
+
+  var span = document.createElement("span");
+  document.body.appendChild(span);
+}
+
+</script>
+
+<style type="text/css">
+
+span:before { content: '0'; }
+span:after { content: '1'; }
+
+</style>
+</head>
+
+<body onload="boom();"></body>
+</html>
