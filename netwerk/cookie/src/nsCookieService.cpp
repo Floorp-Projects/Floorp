@@ -618,16 +618,18 @@ nsCookieService::Observe(nsISupports     *aSubject,
     // or is going away because the application is shutting down.
     RemoveAllFromMemory();
 
-    if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get()) && mDBConn) {
-      // clear the cookie file
-      nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_cookies"));
-      if (NS_FAILED(rv))
-        NS_WARNING("db delete failed");
-    }
+    if (mDBConn) {
+      if (!nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+        // clear the cookie file
+        nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_cookies"));
+        if (NS_FAILED(rv))
+          NS_WARNING("db delete failed");
+      }
 
-    // Close the DB connection before changing
-    mDBConn->Close();
-    mDBConn = nsnull;
+      // Close the DB connection before changing
+      mDBConn->Close();
+      mDBConn = nsnull;
+    }
 
   } else if (!strcmp(aTopic, "profile-do-change")) {
     // the profile has already changed; init the db from the new location
