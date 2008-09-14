@@ -374,7 +374,6 @@ var BrowserUI = {
       panelUI.width = browserW;
   },
 
-  _layoutControls : true,
   _sizeControls : function(aEvent) {
     var rect = document.getElementById("browser-container").getBoundingClientRect();
     var containerW = rect.right - rect.left;
@@ -387,12 +386,11 @@ var BrowserUI = {
     var sidebar = document.getElementById("browser-controls");
     var panelUI = document.getElementById("panel-container");
     var tabbar = document.getElementById("tab-list-container");
-    if (this._layoutControls) {
+    if (window == aEvent.target) {
       tabbar.left = -tabbar.boxObject.width;
       panelUI.left = containerW + sidebar.boxObject.width;
       sidebar.left = containerW;
       sidebar.height = panelUI.height = tabbar.height = containerH;
-      this._layoutControls = false;
     }
     panelUI.width = containerW - sidebar.boxObject.width - tabbar.boxObject.width;
 
