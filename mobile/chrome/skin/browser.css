@@ -242,12 +242,16 @@ toolbarbutton.browser-control-button {
 }
 
 /* favicon images are 16x16 */
-#urlbar-image-stack {
+#urlbar-image-deck {
   max-width: 24px;
   max-height: 24px;
   min-width: 24px;
   min-height: 24px;
   margin: 12px 2px 2px 12px;
+}
+
+#urlbar-throbber[loading] {
+  list-style-image: url("chrome://browser/skin/images/throbber.gif");
 }
 
 #urlbar-editarea {

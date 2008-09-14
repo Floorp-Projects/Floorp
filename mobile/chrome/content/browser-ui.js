@@ -82,7 +82,6 @@ var BrowserUI = {
     var rel = link.rel && link.rel.toLowerCase();
     var rels = rel.split(/\s+/);
     if (rels.indexOf("icon") != -1) {
-      this._throbber.setAttribute("src", "");
       this._setIcon(link.href);
     }
   },
@@ -91,7 +90,7 @@ var BrowserUI = {
     var browser = Browser.currentBrowser;
     this.setURI();
     this._titleChanged(browser.contentDocument);
-    this._favicon.setAttribute("src", browser.mIconURL || kDefaultFavIconURL);
+    this._favicon.src = browser.mIconURL || kDefaultFavIconURL;
 
     let toolbar = document.getElementById("toolbar-main");
     let browserBox = document.getElementById("browser");
@@ -124,7 +123,7 @@ var BrowserUI = {
     browser.mIconURL = faviconURI.spec;
 
     fis.setAndLoadFaviconForPage(browser.currentURI, faviconURI, true);
-    this._favicon.setAttribute("src", faviconURI.spec);
+    this._favicon.src = faviconURI.spec;
     this._faviconAdded = true;
   },
 
@@ -441,8 +440,9 @@ var BrowserUI = {
 
       toolbar.top = 0;
       toolbar.setAttribute("mode", "loading");
-      this._throbber.setAttribute("src", "chrome://browser/skin/images/throbber.gif");
-      this._favicon.setAttribute("src", "");
+      document.getElementById("urlbar-image-deck").selectedIndex = 0;
+      this._favicon.src = "";
+      this._throbber.setAttribute("loading", "true");
       this._faviconAdded = false;
     }
     else if (aState == TOOLBARSTATE_LOADED) {
@@ -450,7 +450,9 @@ var BrowserUI = {
       container.top = toolbar.boxObject.height;
 
       toolbar.setAttribute("mode", "view");
-      this._throbber.setAttribute("src", "");
+
+      document.getElementById("urlbar-image-deck").selectedIndex = 1;
+      this._throbber.removeAttribute("loading");
       if (this._faviconAdded == false) {
         var faviconURI = aBrowser.currentURI.prePath + "/favicon.ico";
         this._setIcon(faviconURI);
@@ -747,7 +749,7 @@ var BrowserUI = {
         break;
       // Favicon events
       case "error":
-        this._favicon.setAttribute("src", "chrome://browser/skin/images/default-favicon.png");
+        this._favicon.src = "chrome://browser/skin/images/default-favicon.png";
         break;
       // UI panning events
       case "mousedown":
