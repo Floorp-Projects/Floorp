@@ -99,12 +99,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 
 #endif // MOZ_SUITE
 
-#if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeStartupHandler)
-#endif
-
-
 static NS_METHOD
 RegisterProc(nsIComponentManager *aCompMgr,
              nsIFile *aPath,
@@ -183,114 +177,6 @@ static const nsModuleComponentInfo components[] = {
     },
 #endif
 
-#if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/html",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/vnd.mozilla.xul+xml",
-    nsBrowserContentHandlerConstructor
-  },
-#ifdef MOZ_SVG
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/svg+xml",
-    nsBrowserContentHandlerConstructor
-  },
-#endif // MOZ_SVG
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/rdf",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/xml",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/xml",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/xhtml+xml",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/css",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/plain",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/gif",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/jpeg",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/jpg",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/png",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/bmp",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/x-icon",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/vnd.microsoft.icon",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/x-xbitmap",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Content Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/http-index-format",
-    nsBrowserContentHandlerConstructor
-  },
-  { "Browser Startup Handler",
-    NS_BROWSERCONTENTHANDLER_CID,
-    NS_BROWSERSTARTUPHANDLER_CONTRACTID,
-    nsBrowserContentHandlerConstructor,
-    nsBrowserContentHandler::RegisterProc,
-    nsBrowserContentHandler::UnregisterProc,
-  },
-  { "Chrome Startup Handler",
-    NS_CHROMESTARTUPHANDLER_CID,
-    NS_CHROMESTARTUPHANDLER_CONTRACTID,
-    nsChromeStartupHandlerConstructor,
-    nsChromeStartupHandler::RegisterProc,
-    nsChromeStartupHandler::UnregisterProc
-  },
-#endif //!defined(MOZ_XUL_APP) && !defined(MOZ_MACBROWSER)
 };
 
 NS_IMPL_NSGETMODULE(application, components)
