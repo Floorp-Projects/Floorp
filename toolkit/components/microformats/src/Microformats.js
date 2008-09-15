@@ -306,6 +306,21 @@ var Microformats = {
      * @return A string with the value of the property
      */
     defaultGetter: function(propnode, parentnode, datatype) {
+      function collapseWhitespace(instring) {
+        /* Remove new lines, carriage returns and tabs */
+        outstring = instring.replace(/[\n\r\t]/gi, ' ');
+        /* Replace any double spaces with single spaces */
+        outstring = outstring.replace(/\s{2,}/gi, ' ');
+        /* Remove any double spaces that are left */
+        outstring = outstring.replace(/\s{2,}/gi, '');
+        /* Remove any spaces at the beginning */
+        outstring = outstring.replace(/^\s+/, '');
+        /* Remove any spaces at the end */
+        outstring = outstring.replace(/\s+$/, '');
+        return outstring;
+      }
+      
+      
       if (((((propnode.localName.toLowerCase() == "abbr") || (propnode.localName.toLowerCase() == "html:abbr")) && !propnode.namespaceURI) || 
          ((propnode.localName.toLowerCase() == "abbr") && (propnode.namespaceURI == "http://www.w3.org/1999/xhtml"))) && (propnode.getAttribute("title"))) {
         return propnode.getAttribute("title");
@@ -330,7 +345,7 @@ var Microformats = {
           for (let j=0;j<values.length;j++) {
             value += Microformats.parser.defaultGetter(values[j], propnode, datatype);
           }
-          return value;
+          return collapseWhitespace(value);
         }
         var s;
         if (datatype == "HTML") {
@@ -342,18 +357,10 @@ var Microformats = {
             s = propnode.textContent;
           }
         }
-        /* If we are processing a value node, don't remove whitespace */
+        /* If we are processing a value node, don't remove whitespace now */
+        /* (we'll do it later) */
         if (!Microformats.matchClass(propnode, "value")) {
-          /* Remove new lines, carriage returns and tabs */
-          s	= s.replace(/[\n\r\t]/gi, ' ');
-          /* Replace any double spaces with single spaces */
-          s	= s.replace(/\s{2,}/gi, ' ');
-          /* Remove any double spaces that are left */
-          s	= s.replace(/\s{2,}/gi, '');
-          /* Remove any spaces at the beginning */
-          s	= s.replace(/^\s+/, '');
-          /* Remove any spaces at the end */
-          s	= s.replace(/\s+$/, '');
+          s = collapseWhitespace(s);
         }
         if (s.length > 0) {
           return s;
