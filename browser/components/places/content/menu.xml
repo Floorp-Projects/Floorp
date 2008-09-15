@@ -965,6 +965,10 @@
           this._ensureInitialized();
           this._contextMenuShown = true;
           this.focus();
+          // The above call to focus activates the controller, but it may not
+          // always fire a consumable event for commandUpdater, so we force a
+          // command update.
+          window.updateCommands("focus");
           var show = this.controller.buildContextMenu(aPopup);
           if (show) {
             // disable the Delete command if the selection isn't explicit
