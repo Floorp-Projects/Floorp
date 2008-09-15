@@ -449,7 +449,29 @@ js_Any_setprop(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
 }
 
 jsval FASTCALL
-js_Any_getelem(JSContext* cx, JSObject* obj, jsuint index)
+js_Any_getelem(JSContext* cx, JSObject* obj, jsdouble index)
+{
+    jsval v;
+    jsid id;
+
+    if (!js_ValueToStringId(cx, DOUBLE_TO_JSVAL(&index), &id))
+        return JSVAL_ERROR_COOKIE;
+    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+        return JSVAL_ERROR_COOKIE;
+    return v;
+}
+
+JSBool FASTCALL
+js_Any_setelem(JSContext* cx, JSObject* obj, jsdouble index, jsval v)
+{
+    jsid id;
+    if (!js_ValueToStringId(cx, DOUBLE_TO_JSVAL(&index), &id))
+        return JS_FALSE;
+    return OBJ_SET_PROPERTY(cx, obj, id, &v);
+}
+
+jsval FASTCALL
+js_Any_getelem_int(JSContext* cx, JSObject* obj, jsuint index)
 {
     jsval v;
     jsid id;
@@ -462,7 +484,7 @@ js_Any_getelem(JSContext* cx, JSObject* obj, jsuint index)
 }
 
 JSBool FASTCALL
-js_Any_setelem(JSContext* cx, JSObject* obj, jsuint index, jsval v)
+js_Any_setelem_int(JSContext* cx, JSObject* obj, jsuint index, jsval v)
 {
     jsid id;
     if (!js_IndexToId(cx, index, &id))
