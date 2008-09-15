@@ -248,9 +248,6 @@ pref("print.show_print_progress", true);
 // and a change in one window does not affect the others
 pref("print.use_global_printsettings", true);
 
-// Use the native dialog or the XP dialog?
-pref("print.use_native_print_dialog", false);
-
 // Save the Printings after each print job
 pref("print.save_print_settings", true);
 
@@ -1469,9 +1466,6 @@ pref("slider.snapMultiplier", 6);
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 
-// This indicates whether it should use the native dialog or the XP Dialog
-pref("print.use_native_print_dialog", true);
-
 // Whether to extend the native dialog with information on printing frames.
 pref("print.extend_native_print_dialog", true);
 
@@ -1931,9 +1925,6 @@ pref("ui.key.contentAccess", 2);
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
-
-// This indicates whether it should use the native dialog or the XP Dialog
-pref("print.use_native_print_dialog", true);
 
 // See bug 404131, topmost <panel> element wins to Dashboard on MacOSX.
 pref("ui.panel.default_level_parent", false);
