@@ -38,15 +38,20 @@ function test() {
   /** Test for Bug 346337 **/
   
   let fieldList = {
-    "//input[@name='testinput']": Date.now().toString(),
-    "//input[@name='bad name']":  Math.random().toString(),
+    "//input[@name='input']":     Date.now().toString(),
+    "//input[@name='spaced 1']":  Math.random().toString(),
+    "//input[3]":                 "three",
     "//input[@type='checkbox']":  true,
+    "//input[@name='uncheck']":   false,
     "//input[@type='radio'][1]":  false,
     "//input[@type='radio'][2]":  true,
+    "//input[@type='radio'][3]":  false,
     "//select":                   2,
     "//select[@multiple]":        [1, 3],
     "//textarea[1]":              "",
-    "//textarea[3]":              "Some more test\n" + new Date()
+    "//textarea[2]":              "Some text... " + Math.random(),
+    "//textarea[3]":              "Some more text\n" + new Date(),
+    "//input[@type='file']":      "/dev/null"
   };
   
   function getElementByXPath(aTab, aQuery) {
@@ -91,8 +96,9 @@ function test() {
   let privacy_level = gPrefService.getIntPref("browser.sessionstore.privacy_level");
   gPrefService.setIntPref("browser.sessionstore.privacy_level", 2);
   
-  todo(false, "test doesn't run from the harness's http server");
-  let tab = tabbrowser.addTab("https://bugzilla.mozilla.org/attachment.cgi?id=328502");
+  let testURL = "chrome://mochikit/content/browser/" +
+    "browser/components/sessionstore/test/browser/browser_346337_sample.html";
+  let tab = tabbrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
     for (let xpath in fieldList)
       setFormValue(tab, xpath, fieldList[xpath]);
