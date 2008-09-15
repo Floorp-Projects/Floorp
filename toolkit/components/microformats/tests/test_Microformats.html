@@ -94,6 +94,53 @@
     <span class="dtstart">1998-01-22</span>
   </div>
   
+<div class="vcard" id="valuespace_1">
+<span class="fn">
+<span class="value">John</span>
+<span class="value"> </span>
+<span class="value">Doe</span>
+</span>
+</div>
+<div class="vcard" id="valuespace_2">
+<span class="fn">
+<span class="value">John</span>
+<span class="value">    </span>
+<span class="value">Doe</span>
+</span>
+</div>
+<div class="vcard" id="valuespace_3">
+<span class="fn">
+<span class="value">  John</span>
+<span class="value">    </span>
+<span class="value">Doe  </span>
+</span>
+</div>
+<div class="vcard" id="valuespace_4">
+<span class="fn">
+<span class="value">John    </span>
+<span class="value">    Doe</span>
+</span>
+</div>
+<div class="vcard" id="valuespace_5">
+<span class="fn">
+<span class="value">    John</span>
+<span class="value">    Doe    </span>
+</span>
+<div class="vcard" id="valuespace_6">
+<span class="fn">
+<span class="value">John
+</span>
+<span class="value">
+Doe</span>
+</span>
+</div>
+<div class="vcard" id="valuespace_7">
+<span class="fn">
+<span class="value">John</span>
+<span class="value">Doe</span>
+</span>
+</div>
+ 
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -164,6 +211,22 @@ function test_Microformats() {
 
   var dateCal = new hCalendar(document.getElementById("vcal_vcard"));
   is(dateCal.description, "Mozilla's Birthday", "vcard in vcal");
+  
+  var valueCard = new hCard(document.getElementById("valuespace_1"));
+  is(valueCard.fn, "John Doe", "valuespace_1");
+  var valueCard = new hCard(document.getElementById("valuespace_2"));
+  is(valueCard.fn, "John Doe", "valuespace_2");
+  var valueCard = new hCard(document.getElementById("valuespace_3"));
+  is(valueCard.fn, "John Doe", "valuespace_3");
+  var valueCard = new hCard(document.getElementById("valuespace_4"));
+  is(valueCard.fn, "John Doe", "valuespace_4");
+  var valueCard = new hCard(document.getElementById("valuespace_5"));
+  is(valueCard.fn, "John Doe", "valuespace_5");
+  var valueCard = new hCard(document.getElementById("valuespace_6"));
+  is(valueCard.fn, "John Doe", "valuespace_6");
+  var valueCard = new hCard(document.getElementById("valuespace_7"));
+  is(valueCard.fn, "JohnDoe", "valuespace_7");
+
 }
 
 function test_hCard() {
