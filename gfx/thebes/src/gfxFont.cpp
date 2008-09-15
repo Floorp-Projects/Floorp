@@ -2328,9 +2328,9 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
         NS_ASSERTION(font != lastFont, "Glyphruns not coalesced?");
 #ifdef DEBUG
         lastFont = font;
+        PRUint32 end = iter.GetStringEnd();
 #endif
         PRUint32 start = iter.GetStringStart();
-        PRUint32 end = iter.GetStringEnd();
         NS_ASSERTION(aSource->IsClusterStart(start),
                      "Started word in the middle of a cluster...");
         NS_ASSERTION(end == aSource->GetLength() || aSource->IsClusterStart(end),

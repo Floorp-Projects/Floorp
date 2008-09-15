@@ -1643,7 +1643,9 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
     GList *items = pango_itemize_with_base_dir(context, dir, aUTF8, 0, aUTF8Length, nsnull, nsnull);
 
     PRUint32 utf16Offset = 0;
+#ifdef DEBUG
     PRBool isRTL = aTextRun->IsRightToLeft();
+#endif
     GList *pos = items;
     PangoGlyphString *glyphString = pango_glyph_string_new();
     if (!glyphString)
