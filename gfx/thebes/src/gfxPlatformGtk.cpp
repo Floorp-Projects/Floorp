@@ -46,7 +46,6 @@
 
 #include "gfxFontconfigUtils.h"
 #ifdef MOZ_PANGO
-#include <pango/pangocairo.h>
 #include "gfxPangoFonts.h"
 #include "gfxContext.h"
 #else
@@ -89,7 +88,7 @@
 #include FT_FREETYPE_H
 #endif
 
-PRInt32 gfxPlatformGtk::sDPI = -1;
+double gfxPlatformGtk::sDPI = -1.0;
 gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
 
 #ifndef MOZ_PANGO
@@ -537,15 +536,11 @@ gfxPlatformGtk::CreateFontGroup(const nsAString &aFamilies,
 void
 gfxPlatformGtk::InitDPI()
 {
-#ifdef MOZ_PANGO
-    PangoContext *context = gdk_pango_context_get ();
-    sDPI = pango_cairo_context_get_resolution (context);
-    g_object_unref (context);
-#endif
+    sDPI = gdk_screen_get_resolution(gdk_screen_get_default());
 
-    if (sDPI <= 0) {
-	// Fall back to something sane
-	sDPI = 96;
+    if (sDPI <= 0.0) {
+        // Fall back to something sane
+        sDPI = 96.0;
     }
 }
 
