@@ -97,11 +97,7 @@ ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 
-ifdef MOZ_MEMORY
-ifneq ($(OS_ARCH),WINNT)
-LIBS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/jemalloc)
-endif
-endif
+LIBS += $(JEMALLOC_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
