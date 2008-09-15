@@ -295,7 +295,7 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitS
         if (idRangeOffset == 0) {
             aCharacterMap.SetRange(startCount, endCount);
         } else {
-            const PRUint16 idDelta = ReadShortAt16(idDeltas, i);
+            // const PRUint16 idDelta = ReadShortAt16(idDeltas, i); // Unused: self-documenting.
             for (PRUint32 c = startCount; c <= endCount; ++c) {
                 if (c == 0xFFFF)
                     break;
@@ -366,7 +366,7 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
         EncodingIDUCS4ForMicrosoftPlatform = 10
     };
 
-    PRUint16 version = ReadShortAt(aBuf, OffsetVersion);
+    // PRUint16 version = ReadShortAt(aBuf, OffsetVersion); // Unused: self-documenting.
     PRUint16 numTables = ReadShortAt(aBuf, OffsetNumTables);
 
     // save the format and offset we want here
