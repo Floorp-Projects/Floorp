@@ -250,8 +250,8 @@ IndexToValue(JSContext *cx, jsuint index, jsval *vp)
     return JS_NewDoubleValue(cx, (jsdouble)index, vp);
 }
 
-static JSBool
-IndexToId(JSContext *cx, jsuint index, jsid *idp)
+JSBool JS_FASTCALL
+js_IndexToId(JSContext *cx, jsuint index, jsid *idp)
 {
     JSString *str;
 
@@ -978,7 +978,7 @@ array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                 }
                 if (i != ii->length) {
                     ii->index = i + 1;
-                    return IndexToId(cx, i, idp);
+                    return js_IndexToId(cx, i, idp);
                 }
             }
         }

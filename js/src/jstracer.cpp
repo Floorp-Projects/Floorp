@@ -4475,20 +4475,28 @@ TraceRecorder::record_JSOP_GETELEM()
         return true;
     }
 
-    if (!JSVAL_IS_PRIMITIVE(l) && JSVAL_IS_STRING(r)) {
+    if (!JSVAL_IS_PRIMITIVE(l) &&
+        (JSVAL_IS_STRING(r) || (JSVAL_IS_INT(r) && !OBJ_IS_DENSE_ARRAY(cx, JSVAL_TO_OBJECT(l))))) {
         jsval v;
         jsid id;
+        uint32 fid;
 
-        if (!js_ValueToStringId(cx, r, &id))
-            return false;
-        r = ID_TO_VALUE(id);
+        if (JSVAL_IS_STRING(r)) {
+            if (!js_ValueToStringId(cx, r, &id))
+                return false;
+            r = ID_TO_VALUE(id);
+            fid = F_Any_getprop;
+        } else {
+            if (!js_IndexToId(cx, JSVAL_TO_INT(r), &id))
+                return false;
+            fid = F_Any_getelem;
+        }
         if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(l), id, &v))
             return false;
 
         LIns* args[] = { get(&r), get(&l), cx_ins };
-        LIns* v_ins = lir->insCall(F_Any_getelem, args);
-        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)),
-              MISMATCH_EXIT);
+        LIns* v_ins = lir->insCall(fid, args);
+        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), MISMATCH_EXIT);
         if (!unbox_jsval(v, v_ins))
             ABORT_TRACE("JSOP_GETELEM");
         set(&l, v_ins);
@@ -4517,23 +4525,19 @@ TraceRecorder::record_JSOP_SETELEM()
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
 
-    if (JSVAL_IS_STRING(r)) {
+    if (JSVAL_IS_STRING(r) || (JSVAL_IS_INT(r) && !guardDenseArray(obj, obj_ins))) {
         LIns* v_ins = get(&v);
         LIns* unboxed_v_ins = v_ins;
         if (!box_jsval(v, v_ins))
             ABORT_TRACE("boxing string-indexed JSOP_SETELEM value");
         LIns* args[] = { v_ins, get(&r), get(&l), cx_ins };
-        LIns* ok_ins = lir->insCall(F_Any_setelem, args);
+        LIns* ok_ins = lir->insCall(JSVAL_IS_STRING(r) ? F_Any_setprop : F_Any_setelem, args);
         guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);
         set(&l, unboxed_v_ins);
         return true;
     }
     if (!JSVAL_IS_INT(r))
         ABORT_TRACE("non-string, non-int JSOP_SETELEM index");
-
-    /* make sure the object is actually a dense array */
-    if (!guardDenseArray(obj, obj_ins))
-        ABORT_TRACE("not a dense array");
 
     /* check that the index is within bounds */
     LIns* idx_ins = f2i(get(&r));
