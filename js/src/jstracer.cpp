@@ -4491,7 +4491,7 @@ TraceRecorder::record_JSOP_GETELEM()
 
     if (!JSVAL_IS_PRIMITIVE(l) &&
         (JSVAL_IS_STRING(r) || 
-        (isNumber(r) && (!JSVAL_IS_INT(r) || !OBJ_IS_DENSE_ARRAY(cx, JSVAL_TO_OBJECT(l)))))) {
+         (isNumber(r) && (!JSVAL_IS_INT(r) || !OBJ_IS_DENSE_ARRAY(cx, JSVAL_TO_OBJECT(l)))))) {
         jsval v;
         jsid id;
         uint32 fid;
