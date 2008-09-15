@@ -609,6 +609,13 @@ public:
                 return out->insCall(F_Any_setelem_int, args2);
             }
             break;
+          case F_dmod: 
+            JS_ASSERT(s0->isQuad() && args[1]->isQuad());
+            if (s0->isconstq() && s0->constvalq() && isPromote(args[1])) {
+                LIns* args2[] = { demote(out, s0), demote(out, args[1]) };
+                return out->ins1(LIR_i2f, out->insCall(F_imod, args2));
+            }
+            break;
         }
         return out->insCall(fid, args);
     }
