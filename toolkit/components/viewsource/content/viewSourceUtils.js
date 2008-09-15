@@ -171,28 +171,26 @@ var gViewSourceUtils = {
   // Returns nsIProcess of the external view source editor or null
   getExternalViewSourceEditor: function()
   {
-    var editor = null;
-    var viewSourceAppPath = null;
     try {
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefBranch);
-      var prefPath = prefs.getCharPref("view_source.editor.path");
-      if (prefPath.length > 0) {
-        viewSourceAppPath = Components.classes["@mozilla.org/file/local;1"]
-                                      .createInstance(Components.interfaces.nsILocalFile);
-        viewSourceAppPath.initWithPath(prefPath);
-        // it's gotta be executable
-        if (viewSourceAppPath.exists() && viewSourceAppPath.isExecutable()) {
-          editor = Components.classes['@mozilla.org/process/util;1']
+      let prefPath =
+          Components.classes["@mozilla.org/preferences-service;1"]
+                    .getService(Components.interfaces.nsIPrefBranch)
+                    .getCharPref("view_source.editor.path");
+      let viewSourceAppPath =
+              Components.classes["@mozilla.org/file/local;1"]
+                        .createInstance(Components.interfaces.nsILocalFile);
+      viewSourceAppPath.initWithPath(prefPath);
+      let editor = Components.classes['@mozilla.org/process/util;1']
                              .createInstance(Components.interfaces.nsIProcess);
-          editor.init(viewSourceAppPath);
-        }
-      }
+      editor.init(viewSourceAppPath);
+
+      return editor;
     }
     catch (ex) {
       Components.utils.reportError(ex);
     }
-    return editor;
+
+    return null;
   },
 
   viewSourceProgressListener: {
