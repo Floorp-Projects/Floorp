@@ -802,39 +802,43 @@ var Microformats = {
      */
     preProcessMicroformat: function preProcessMicroformat(in_mfnode) {
       var mfnode;
-      var includes = Microformats.getElementsByClassName(in_mfnode, "include");
-      if ((includes.length > 0) || ((in_mfnode.nodeName.toLowerCase() == "td") && (in_mfnode.getAttribute("headers")))) {
+      if ((in_mfnode.nodeName.toLowerCase() == "td") && (in_mfnode.getAttribute("headers"))) {
         mfnode = in_mfnode.cloneNode(true);
         mfnode.origNode = in_mfnode;
-        if (includes.length > 0) {
-          includes = Microformats.getElementsByClassName(mfnode, "include");
-          var includeId;
-          var include_length = includes.length;
-          for (let i = include_length -1; i >= 0; i--) {
-            if (includes[i].nodeName.toLowerCase() == "a") {
-              includeId = includes[i].getAttribute("href").substr(1);
-            }
-            if (includes[i].nodeName.toLowerCase() == "object") {
-              includeId = includes[i].getAttribute("data").substr(1);
-            }
-            if (in_mfnode.ownerDocument.getElementById(includeId)) {
-              includes[i].parentNode.replaceChild(in_mfnode.ownerDocument.getElementById(includeId).cloneNode(true), includes[i]);
-            }
-          }
-        } else {
-          var headers = in_mfnode.getAttribute("headers").split(" ");
-          for (let i = 0; i < headers.length; i++) {
-            var tempNode = in_mfnode.ownerDocument.createElement("span");
-            var headerNode = in_mfnode.ownerDocument.getElementById(headers[i]);
-            if (headerNode) {
-              tempNode.innerHTML = headerNode.innerHTML;
-              tempNode.className = headerNode.className;
-              mfnode.appendChild(tempNode);
-            }
+        var headers = in_mfnode.getAttribute("headers").split(" ");
+        for (let i = 0; i < headers.length; i++) {
+          var tempNode = in_mfnode.ownerDocument.createElement("span");
+          var headerNode = in_mfnode.ownerDocument.getElementById(headers[i]);
+          if (headerNode) {
+            tempNode.innerHTML = headerNode.innerHTML;
+            tempNode.className = headerNode.className;
+            mfnode.appendChild(tempNode);
           }
         }
       } else {
         mfnode = in_mfnode;
+      }
+      var includes = Microformats.getElementsByClassName(mfnode, "include");
+      if (includes.length > 0) {
+        /* If we didn't clone, clone now */
+        if (!mfnode.origNode) {
+          mfnode = in_mfnode.cloneNode(true);
+          mfnode.origNode = in_mfnode;
+        }
+        includes = Microformats.getElementsByClassName(mfnode, "include");
+        var includeId;
+        var include_length = includes.length;
+        for (let i = include_length -1; i >= 0; i--) {
+          if (includes[i].nodeName.toLowerCase() == "a") {
+            includeId = includes[i].getAttribute("href").substr(1);
+          }
+          if (includes[i].nodeName.toLowerCase() == "object") {
+            includeId = includes[i].getAttribute("data").substr(1);
+          }
+          if (in_mfnode.ownerDocument.getElementById(includeId)) {
+            includes[i].parentNode.replaceChild(in_mfnode.ownerDocument.getElementById(includeId).cloneNode(true), includes[i]);
+          }
+        }
       }
       return mfnode;
     },
