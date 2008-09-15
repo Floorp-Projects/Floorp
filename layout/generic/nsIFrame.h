@@ -353,10 +353,10 @@ typedef PRUint32 nsReflowStatus;
 // These macros set or switch incompete statuses without touching th
 // NS_FRAME_REFLOW_NEXTINFLOW bit.
 #define NS_FRAME_SET_INCOMPLETE(status) \
-  status = status & ~NS_FRAME_OVERFLOW_INCOMPLETE | NS_FRAME_NOT_COMPLETE
+  status = (status & ~NS_FRAME_OVERFLOW_INCOMPLETE) | NS_FRAME_NOT_COMPLETE
 
 #define NS_FRAME_SET_OVERFLOW_INCOMPLETE(status) \
-  status = status & ~NS_FRAME_NOT_COMPLETE | NS_FRAME_OVERFLOW_INCOMPLETE
+  status = (status & ~NS_FRAME_NOT_COMPLETE) | NS_FRAME_OVERFLOW_INCOMPLETE
 
 // This macro tests to see if an nsReflowStatus is an error value
 // or just a regular return value
