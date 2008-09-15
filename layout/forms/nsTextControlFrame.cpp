@@ -495,8 +495,8 @@ nsTextInputListener::EditAction()
   PRInt32 numRedoItems = 0;
   manager->GetNumberOfUndoItems(&numUndoItems);
   manager->GetNumberOfRedoItems(&numRedoItems);
-  if (numUndoItems && !mHadUndoItems || !numUndoItems && mHadUndoItems ||
-      numRedoItems && !mHadRedoItems || !numRedoItems && mHadRedoItems) {
+  if ((numUndoItems && !mHadUndoItems) || (!numUndoItems && mHadUndoItems) ||
+      (numRedoItems && !mHadRedoItems) || (!numRedoItems && mHadRedoItems)) {
     // Modify the menu if undo or redo items are different
     UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
 
