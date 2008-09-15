@@ -284,7 +284,7 @@ class TraceRecorder {
     bool incElem(jsint incr, bool pre = true);
     bool incName(jsint incr, bool pre = true);
 
-    enum { CMP_NEGATE = 1, CMP_TRY_BRANCH_AFTER_COND = 2, CMP_CASE = 4 };
+    enum { CMP_NEGATE = 1, CMP_TRY_BRANCH_AFTER_COND = 2, CMP_CASE = 4, CMP_STRICT = 8 };
     bool cmp(nanojit::LOpcode op, int flags = 0);
     bool equal(int flags = 0);
 
