@@ -302,7 +302,10 @@ nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
         // we have the right to refuse or pre-evict
         PRUint32  newSize = entry->DataSize() + deltaSize;
         if ((PRInt32) newSize > mSoftLimit) {
-            nsresult rv = nsCacheService::DoomEntry(entry);
+#ifdef DEBUG
+            nsresult rv =
+#endif
+                nsCacheService::DoomEntry(entry);
             NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");
             return NS_ERROR_ABORT;
         }
