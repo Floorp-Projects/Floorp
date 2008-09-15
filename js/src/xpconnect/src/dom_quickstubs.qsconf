@@ -205,7 +205,10 @@ members = [
     'nsIDOMNSDocument.getElementsByClassName',
     'nsIDOMNSDocument.title',
     'nsIDOMNSDocument.hasFocus',
-    'nsIDOMNSDocument.location',
+    # This property is treated specially in nsDOMClassInfo in a way that
+    # would shadow any quick stub.  Also, document.location is a special
+    # case for security.
+    #'nsIDOMNSDocument.location',
     'nsIDOMNSDocument.elementFromPoint',
     'nsIDOMNSDocument.activeElement',
     'nsIDOMNSDocument.getBoxObjectFor',
@@ -261,7 +264,10 @@ members = [
     'nsIDOMEvent.eventPhase',
     'nsIDOMEventTarget.dispatchEvent',
     'nsIDOMEventTarget.removeEventListener',
-    'nsIDOMEventTarget.addEventListener',
+    # Conflicts with nsIDOMNSEventTarget.addEventListener;
+    # the conflict is specially resolved in nsDOMClassInfo.cpp.
+    # (See bug 453331.)
+    #'nsIDOMEventTarget.addEventListener',
     'nsIDOMEventListener.handleEvent',
     'nsIDOMCustomEvent.setCurrentTarget',
     'nsIDOMCustomEvent.setEventPhase',
@@ -310,8 +316,10 @@ members = [
     'nsIDOMHTMLButtonElement.value',
     'nsIDOMHTMLButtonElement.disabled',
     'nsIDOMHTMLCollection.item',
-    # Commented out to fix bug 453105 (special case of bug 453331).
-    #'nsIDOMHTMLCollection.length',
+    # This is shadowed by nsIDOMHTMLOptionsCollection.length,
+    # but it is also present in other objects where it isn't shadowed.
+    # Quick stubs handle the shadowing the same as XPConnect.
+    'nsIDOMHTMLCollection.length',
     'nsIDOMHTMLDocument.body',
     'nsIDOMHTMLDocument.getElementsByName',
     'nsIDOMHTMLDocument.anchors',
@@ -322,7 +330,6 @@ members = [
     'nsIDOMHTMLDocument.forms',
     'nsIDOMHTMLDocument.cookie',
     'nsIDOMHTMLDocument.images',
-    'nsIDOMHTMLDocument.close',
     'nsIDOMHTMLElement.className',
     'nsIDOMHTMLElement.id',
     'nsIDOMHTMLElement.title',
@@ -356,9 +363,7 @@ members = [
     'nsIDOMHTMLOptionElement.index',
     'nsIDOMHTMLOptionElement.selected',
     'nsIDOMHTMLOptionElement.form',
-    # Commented out because it's not writable while
-    # nsIDOMNSHTMLOptionElement.text is, which causes bustage when
-    # someone tries to assign .text.  (Special case of bug 453331.)
+    # Readonly, shadowed by nsIDOMNSHTMLOptionElement.text (below).
     #'nsIDOMHTMLOptionElement.text',
     'nsIDOMHTMLOptionElement.defaultSelected',
     'nsIDOMHTMLOptionElement.value',
@@ -504,46 +509,9 @@ irregularFilenames = {
     # abbreviations
     'nsIDOMNSHTMLOptionCollection': 'nsIDOMNSHTMLOptionCollectn',
     'nsIDOMHTMLTableSectionElement': 'nsIDOMHTMLTableSectionElem',
-    'nsIDOMHTMLTableCaptionElement': 'nsIDOMHTMLTableCaptionElem',
-    'nsIDOMSVGAnimatedEnumeration': 'nsIDOMSVGAnimatedEnum',
-    'nsIDOMSVGAnimatedPreserveAspectRatio': 'nsIDOMSVGAnimPresAspRatio',
-    'nsIDOMSVGAnimatedTransformList': 'nsIDOMSVGAnimTransformList',
-    'nsIDOMSVGForeignObjectElement': 'nsIDOMSVGForeignObjectElem',
-    'nsIDOMSVGPreserveAspectRatio': 'nsIDOMSVGPresAspectRatio',
-    'nsIDOMSVGTextPositioningElement': 'nsIDOMSVGTextPositionElem',
-    'nsIDOMXULLabeledControlElement': 'nsIDOMXULLabeledControlEl',
-    'nsIDOMXULSelectControlElement': 'nsIDOMXULSelectCntrlEl',
-    'nsIDOMXULSelectControlItemElement': 'nsIDOMXULSelectCntrlItemEl',
-    'nsIDOMXULMultiSelectControlElement': 'nsIDOMXULMultSelectCntrlEl',
 
     # stowaways
-    'nsIXPointerResult': 'nsIXPointer',
-    'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
-    'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMTextMetrics': 'nsIDOMCanvasRenderingContext2D',
-    'nsIGeolocationUpdate': 'nsIGeolocationProvider',
     'nsIDOMNSCSS2Properties': 'nsIDOMCSS2Properties',
-    'nsIDOMSVGPathSegArcRel': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegMovetoAbs': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegLinetoAbs': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegArcAbs': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegMovetoRel': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegCurvetoCubicRel': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegLinetoRel': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegLinetoVerticalAbs': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegCurvetoQuadraticRel': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegLinetoVerticalRel': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegLinetoHorizontalAbs': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegCurvetoQuadraticAbs': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegCurvetoQuadraticSmoothAbs': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegCurvetoCubicSmoothRel': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegClosePath': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegLinetoHorizontalRel': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegCurvetoCubicSmoothAbs': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegCurvetoQuadraticSmoothRel': 'nsIDOMSVGPathSeg',
-    'nsIDOMSVGPathSegCurvetoCubicAbs': 'nsIDOMSVGPathSeg',
-
-    # mistakes
-    'nsIDOMXULTextBoxElement': 'nsIDOMXULTextboxElement',
-    'nsIDOMDOMConstructor': 'nsIDOMConstructor'
+    'nsIXPointerResult': 'nsIXPointer',
     }
