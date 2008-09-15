@@ -290,6 +290,9 @@ static GdkEventKey *gKeyEvent = NULL;
 static PRBool       gKeyEventCommitted = PR_FALSE;
 static PRBool       gKeyEventChanged = PR_FALSE;
 static PRBool       gIMESuppressCommit = PR_FALSE;
+#ifdef MOZ_PLATFORM_HILDON
+static PRBool       gIMEVirtualKeyboardOpened = PR_FALSE;
+#endif
 
 static void IM_commit_cb              (GtkIMContext *aContext,
                                        const gchar *aString,
@@ -2795,6 +2798,17 @@ nsWindow::OnVisibilityNotifyEvent(GtkWidget *aWidget,
     case GDK_VISIBILITY_UNOBSCURED:
     case GDK_VISIBILITY_PARTIAL:
         mIsVisible = PR_TRUE;
+#ifdef MOZ_PLATFORM_HILDON
+#ifdef USE_XIM
+        // In Hildon/Maemo, a browser window will get into 'patially visible' state wheneven an
+        // autocomplete feature is dropped down (from urlbar or from an entry form completion),
+        // and there are no much further ways for that to happen in the plaftorm. In such cases, if hildon
+        // virtual keyboard is up, we can not grab focus to any dropdown list. Reason: nsWindow::EnsureGrabs()
+        // calls gdk_pointer_grab() which grabs the pointer (usually a mouse) so that all events are passed
+        // to this it until the pointer is ungrabbed.
+        if(!gIMEVirtualKeyboardOpened)
+#endif // USE_XIM
+#endif // MOZ_PLATFORM_HILDON
         // if we have to retry the grab, retry it.
         EnsureGrabs();
         break;
@@ -6120,10 +6134,13 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
         // Because some IMs are updating the status bar of them in this time.
         focusedWin->IMESetFocus();
 #ifdef MOZ_PLATFORM_HILDON
-        if (mIMEData->mEnabled)
+        if (mIMEData->mEnabled) {
+            gIMEVirtualKeyboardOpened = PR_TRUE;
             hildon_gtk_im_context_show (focusedIm);
-        else
+        } else {
+            gIMEVirtualKeyboardOpened = PR_FALSE;
             hildon_gtk_im_context_hide (focusedIm);
+        }
 #endif
         
     } else {
