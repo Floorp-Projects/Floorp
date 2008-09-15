@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef ns4xPluginStreamListener_h_
-#define ns4xPluginStreamListener_h_
+#ifndef nsNPAPIPluginStreamListener_h_
+#define nsNPAPIPluginStreamListener_h_
 
 #include "nsIPluginStreamListener.h"
 #include "nsIPluginStreamInfo.h"
@@ -47,10 +47,10 @@
 
 #define MAX_PLUGIN_NECKO_BUFFER 16384
 
-class ns4xPluginInstance;
-class nsI4xPluginStreamInfo;
+class nsNPAPIPluginInstance;
+class nsINPAPIPluginStreamInfo;
 
-class ns4xPluginStreamListener : public nsIPluginStreamListener,
+class nsNPAPIPluginStreamListener : public nsIPluginStreamListener,
                                  public nsITimerCallback,
                                  public nsIHTTPHeaderListener
 {
@@ -60,10 +60,10 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIHTTPHEADERLISTENER
 
-  // ns4xPluginStreamListener specific methods:
-  ns4xPluginStreamListener(ns4xPluginInstance* inst, void* notifyData,
-                           const char* aURL);
-  virtual ~ns4xPluginStreamListener();
+  // nsNPAPIPluginStreamListener specific methods:
+  nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* inst, void* notifyData,
+                              const char* aURL);
+  virtual ~nsNPAPIPluginStreamListener();
   PRBool IsStarted();
   nsresult CleanUpStream(NPReason reason);
   void CallURLNotify(NPReason reason);
@@ -82,7 +82,7 @@ protected:
   void* mNotifyData;
   char* mStreamBuffer;
   char* mNotifyURL;
-  ns4xPluginInstance* mInst;
+  nsNPAPIPluginInstance* mInst;
   NPStream mNPStream;
   PRUint32 mStreamBufferSize;
   PRInt32 mStreamBufferByteCount;
@@ -101,16 +101,16 @@ public:
   nsCOMPtr<nsIPluginStreamInfo> mStreamInfo;
 };
 
-// nsI4xPluginStreamInfo is an internal helper interface that exposes
+// nsINPAPIPluginStreamInfo is an internal helper interface that exposes
 // the underlying necko request to consumers of nsIPluginStreamInfo's.
-#define NS_I4XPLUGINSTREAMINFO_IID       \
+#define NS_INPAPIPLUGINSTREAMINFO_IID       \
 { 0x097fdaaa, 0xa2a3, 0x49c2, \
   {0x91, 0xee, 0xeb, 0xc5, 0x7d, 0x6c, 0x9c, 0x97} }
 
-class nsI4xPluginStreamInfo : public nsIPluginStreamInfo
+class nsINPAPIPluginStreamInfo : public nsIPluginStreamInfo
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_I4XPLUGINSTREAMINFO_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INPAPIPLUGINSTREAMINFO_IID)
 
   nsIRequest *GetRequest()
   {
@@ -121,7 +121,7 @@ protected:
   nsCOMPtr<nsIRequest> mRequest;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsI4xPluginStreamInfo,
-                              NS_I4XPLUGINSTREAMINFO_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsINPAPIPluginStreamInfo,
+                              NS_INPAPIPLUGINSTREAMINFO_IID)
 
-#endif // ns4xPluginStreamListener_h_
+#endif // nsNPAPIPluginStreamListener_h_
