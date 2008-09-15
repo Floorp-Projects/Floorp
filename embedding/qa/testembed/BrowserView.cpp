@@ -973,7 +973,6 @@ void CBrowserView::OnFilePrint()
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) 
   {
-    prefs->SetBoolPref("print.use_native_print_dialog", PR_TRUE);
     prefs->SetBoolPref("print.show_print_progress", PR_FALSE);
   }
   else
