@@ -194,11 +194,11 @@ nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
     // a 'viewBox'.
 
     if (!(aFlags & TRANSFORM_CHANGED) &&
-        svg->mLengthAttributes[nsSVGSVGElement::X].IsPercentage() ||
-        svg->mLengthAttributes[nsSVGSVGElement::Y].IsPercentage() ||
-        (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox) &&
-         (svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() ||
-          svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage()))) {
+        (svg->mLengthAttributes[nsSVGSVGElement::X].IsPercentage() ||
+         svg->mLengthAttributes[nsSVGSVGElement::Y].IsPercentage() ||
+         (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox) &&
+          (svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() ||
+           svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage())))) {
     
       aFlags |= TRANSFORM_CHANGED;
     }

@@ -1435,9 +1435,9 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aEventStatus);
   nsImageMap* map;
 
-  if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-      (aEvent->message == NS_MOUSE_BUTTON_UP && 
-      static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) ||
+  if ((aEvent->eventStructType == NS_MOUSE_EVENT &&
+       aEvent->message == NS_MOUSE_BUTTON_UP && 
+       static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) ||
       aEvent->message == NS_MOUSE_MOVE) {
     map = GetImageMap(aPresContext);
     PRBool isServerMap = IsServerImageMap();

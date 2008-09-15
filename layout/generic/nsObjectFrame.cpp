@@ -1006,9 +1006,9 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
     nsAutoString hidden;
     if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::hidden, hidden) &&
        (hidden.IsEmpty() ||
-        !hidden.LowerCaseEqualsLiteral("false") &&
-        !hidden.LowerCaseEqualsLiteral("no") &&
-        !hidden.LowerCaseEqualsLiteral("off"))) {
+        (!hidden.LowerCaseEqualsLiteral("false") &&
+         !hidden.LowerCaseEqualsLiteral("no") &&
+         !hidden.LowerCaseEqualsLiteral("off")))) {
       return PR_TRUE;
     }
   }
