@@ -595,6 +595,20 @@ public:
             if (s0->isCall() && s0->fid() == F_UnboxDouble) 
                 return callArgN(s0, 0);
             break;
+          case F_Any_getelem:
+            JS_ASSERT(s0->isQuad());
+            if (isPromote(s0)) {
+                LIns* args2[] = { demote(out, s0), args[1], args[2] };
+                return out->insCall(F_Any_getelem_int, args2);
+            }
+            break;
+          case F_Any_setelem:
+            JS_ASSERT(args[1]->isQuad());
+            if (isPromote(args[1])) {
+                LIns* args2[] = { s0, demote(out, args[1]), args[2], args[3] };
+                return out->insCall(F_Any_setelem_int, args2);
+            }
+            break;
         }
         return out->insCall(fid, args);
     }
@@ -4476,7 +4490,8 @@ TraceRecorder::record_JSOP_GETELEM()
     }
 
     if (!JSVAL_IS_PRIMITIVE(l) &&
-        (JSVAL_IS_STRING(r) || (JSVAL_IS_INT(r) && !OBJ_IS_DENSE_ARRAY(cx, JSVAL_TO_OBJECT(l))))) {
+        (JSVAL_IS_STRING(r) || 
+        (isNumber(r) && (!JSVAL_IS_INT(r) || !OBJ_IS_DENSE_ARRAY(cx, JSVAL_TO_OBJECT(l)))))) {
         jsval v;
         jsid id;
         uint32 fid;
@@ -4525,7 +4540,8 @@ TraceRecorder::record_JSOP_SETELEM()
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
 
-    if (JSVAL_IS_STRING(r) || (JSVAL_IS_INT(r) && !guardDenseArray(obj, obj_ins))) {
+    if (JSVAL_IS_STRING(r) || 
+        (isNumber(r) && (!JSVAL_IS_INT(r) || !guardDenseArray(obj, obj_ins)))) {
         LIns* v_ins = get(&v);
         LIns* unboxed_v_ins = v_ins;
         if (!box_jsval(v, v_ins))
