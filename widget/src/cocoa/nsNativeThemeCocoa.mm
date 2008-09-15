@@ -184,15 +184,6 @@ nsNativeThemeCocoa::DrawCheckbox(CGContextRef cgContext, ThemeButtonKind inKind,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Limit on the area of destRect (in pixels^2) in DrawCellWithScaling(),
-// above which we don't do any scaling.  This is to avoid crashes in
-// [NSGraphicsContext graphicsContextWithGraphicsPort:flipped:] and
-// CGContextDrawImage(), and also to avoid very poor drawing performance in
-// CGContextDrawImage() (particularly if xscale or yscale is less than but
-// near 1 -- e.g. 0.9).  This value was determined by trial and error, on
-// OS X 10.4.11 and 10.5.4, and on systems with different amounts of RAM.
-#define CELL_SCALING_MAX_AREA 500000
-
 /*
  * Draw the given NSCell into the given cgContext.
  *
@@ -228,12 +219,6 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSView *focusView = [NSView focusView];
-  // Abort if we have no place to draw (which can happen when switching back
-  // to a previously loaded tab).
-  if (!focusView)
-    return;
-
   NSRect drawRect = NSMakeRect(destRect.origin.x, destRect.origin.y, destRect.size.width, destRect.size.height);
 
   CGAffineTransform savedCTM;
@@ -266,10 +251,6 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
   if (doSaveCTM)
     savedCTM = CGContextGetCTM(cgContext);
 
-  // Fall back to no scaling if the area of our cell (in pixels^2) is too large.
-  if (drawRect.size.width * drawRect.size.height > CELL_SCALING_MAX_AREA)
-    xscale = yscale = 1.0f;
-
   if (xscale == 1.0f && yscale == 1.0f) {
     // Inflate the rect Gecko gave us by the margin for the control.
     InflateControlRect(&drawRect, controlSize, marginSet);
@@ -278,7 +259,7 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
     savedContext = [NSGraphicsContext currentContext];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
 
-    [cell drawWithFrame:drawRect inView:focusView];
+    [cell drawWithFrame:drawRect inView:[NSView focusView]];
   }
   else {
     float w = ceil(drawRect.size.width);
@@ -305,7 +286,7 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
     savedContext = [NSGraphicsContext currentContext];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:YES]];
 
-    [cell drawWithFrame:tmpRect inView:focusView];
+    [cell drawWithFrame:tmpRect inView:[NSView focusView]];
 
     [NSGraphicsContext setCurrentContext:savedContext];
 
