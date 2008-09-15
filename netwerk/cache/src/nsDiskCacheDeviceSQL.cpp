@@ -1406,7 +1406,10 @@ nsOfflineCacheDevice::OnDataSizeChange(nsCacheEntry *entry, PRInt32 deltaSize)
     if (CacheSize() > mCacheCapacity) {
       // the entry will overrun the cache capacity, doom the entry
       // and abort
-      nsresult rv = nsCacheService::DoomEntry(entry);
+#ifdef DEBUG
+      nsresult rv =
+#endif
+        nsCacheService::DoomEntry(entry);
       NS_ASSERTION(NS_SUCCEEDED(rv), "DoomEntry() failed.");
       return NS_ERROR_ABORT;
     }
