@@ -3110,6 +3110,10 @@ NSEvent* gLastDragEvent = nil;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
+  if ([theEvent modifierFlags] & NSControlKeyMask)
+    geckoEvent.button = nsMouseEvent::eRightButton;
+  else
+    geckoEvent.button = nsMouseEvent::eLeftButton;
 
   // create native EventRecord for use by plugins
   EventRecord macEvent;
