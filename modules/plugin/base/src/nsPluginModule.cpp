@@ -40,7 +40,6 @@
 #include "nsIPluginManager.h"
 #include "nsPluginsCID.h"
 #include "nsPluginHostImpl.h"
-#include "ns4xPlugin.h"
 #include "nsJVMAuthTools.h"
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPluginHostImpl,
