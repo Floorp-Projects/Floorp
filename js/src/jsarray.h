@@ -96,6 +96,9 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsuint length);
 extern JSBool
 js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
+extern JSBool JS_FASTCALL
+js_IndexToId(JSContext *cx, jsuint index, jsid *idp);
+
 /*
  * Test whether an object is "array-like".  Currently this means whether obj
  * is an Array or an arguments object.  We would like an API, and probably a
