@@ -298,6 +298,27 @@ js_String_p_concat_1int(JSContext* cx, JSString* str, jsint i)
     return js_ConcatStrings(cx, str, istr);
 }
 
+JSString* FASTCALL
+js_String_p_concat_2str(JSContext* cx, JSString* str, JSString* a, JSString* b)
+{
+    str = js_ConcatStrings(cx, str, a);
+    if (str)
+        return js_ConcatStrings(cx, str, b);
+    return NULL;
+}
+
+JSString* FASTCALL
+js_String_p_concat_3str(JSContext* cx, JSString* str, JSString* a, JSString* b, JSString* c)
+{
+    str = js_ConcatStrings(cx, str, a);
+    if (str) {
+        str = js_ConcatStrings(cx, str, b);
+        if (str)
+            return js_ConcatStrings(cx, str, c);
+    }
+    return NULL;
+}
+
 JSObject* FASTCALL
 js_String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp)
 {
