@@ -2141,6 +2141,8 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLOptionsCollection, nsIDOMHTMLOptionsCollection)
+    // Order is significant.  nsIDOMHTMLOptionsCollection.length shadows
+    // nsIDOMHTMLCollection.length, which is readonly.
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOptionsCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLOptionCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
@@ -2364,6 +2366,8 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLOptionElement, nsIDOMHTMLOptionElement)
+    // Order is significant.  nsIDOMNSHTMLOptionElement.text shdaows
+    // nsIDOMHTMLOptionElement.text, which is readonly.
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLOptionElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOptionElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
@@ -2710,8 +2714,10 @@ nsDOMClassInfo::Init()
   // The SVG document
 
   DOM_CLASSINFO_MAP_BEGIN(SVGDocument, nsIDOMSVGDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDocument)
+    // Order is significant.  nsIDOMDocument.title shadows
+    // nsIDOMSVGDocument.title, which is readonly.
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDocument)
     DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
