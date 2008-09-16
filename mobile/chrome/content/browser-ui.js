@@ -277,6 +277,12 @@ var BrowserUI = {
         sidebar.left = newLeft + tabbarW + browserW;
         panelUI.left = newLeft + tabbarW + browserW + sidebarW;
 
+        // Set the UI mode based on where we ended up
+        if (newLeft > -tabbarW && newLeft <= 0)
+          this.mode = UIMODE_TABS;
+        if (newLeft >= -(tabbarW + sidebarW) && newLeft < -tabbarW)
+          this.mode = UIMODE_CONTROL
+
         pannedUI = true;
       }
     }
