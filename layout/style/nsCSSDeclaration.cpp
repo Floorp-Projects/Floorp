@@ -470,6 +470,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_None:         aResult.AppendLiteral("none");     break;
     case eCSSUnit_Normal:       aResult.AppendLiteral("normal");   break;
     case eCSSUnit_System_Font:  aResult.AppendLiteral("-moz-use-system-font"); break;
+    case eCSSUnit_Dummy:        break;
 
     case eCSSUnit_String:       break;
     case eCSSUnit_URL:          break;
@@ -478,6 +479,8 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_Attr:
     case eCSSUnit_Counter:
     case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;
+    case eCSSUnit_Local_Font:   break;
+    case eCSSUnit_Font_Format:  break;
     case eCSSUnit_Function:     break;
     case eCSSUnit_Integer:      break;
     case eCSSUnit_Enumerated:   break;
