@@ -154,9 +154,7 @@ deb: debian/changelog
 	cd $(DEBDESTDIR)/usr/local; cat ../../../../$(DEPTH)/dist/$(PKG_BASENAME)$(PKG_SUFFIX) | $(UNMAKE_PACKAGE)
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
 	cp debian/$(MOZ_BUILD_APP).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_BUILD_APP).service
-	$(NSINSTALL) debian/postinst $(DEBDESTDIR)/DEBIAN
-	$(NSINSTALL) debian/prerm $(DEBDESTDIR)/DEBIAN
 	rm  $(DEBDESTDIR)/usr/local/$(MOZ_BUILD_APP)/xpidl
-	dh_shlibdeps; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
+	dh_shlibdeps; fakeroot dh_fixperms; fakeroot dh_installdeb ; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
 endif
 
