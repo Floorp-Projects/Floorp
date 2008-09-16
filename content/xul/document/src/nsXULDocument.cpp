@@ -679,6 +679,12 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
                                             nsIDOMElement   *aListener,
                                             const nsAString &aAttr)
 {
+    if (mUpdateNestLevel > 0) {
+        nsDelayedBroadcastUpdate delayedUpdate(aBroadcaster, aListener,
+                                               aAttr);
+        mDelayedBroadcasters.AppendElement(delayedUpdate);
+        return;
+    }
     nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
     nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
 
@@ -3218,6 +3224,24 @@ nsXULDocument::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
     }
 
     return NS_OK;
+}
+
+void
+nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
+{
+    nsXMLDocument::EndUpdate(aUpdateType);
+    if (mUpdateNestLevel == 0) {
+        PRUint32 length = mDelayedBroadcasters.Length();
+        if (length) {
+            nsTArray<nsDelayedBroadcastUpdate> delayedBroadcasters;
+            mDelayedBroadcasters.SwapElements(delayedBroadcasters);
+            for (PRUint32 i = 0; i < length; ++i) {
+                SynchronizeBroadcastListener(delayedBroadcasters[i].mBroadcaster,
+                                             delayedBroadcasters[i].mListener,
+                                             delayedBroadcasters[i].mAttr);
+            }
+        }
+    }
 }
 
 void
