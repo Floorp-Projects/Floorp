@@ -2571,6 +2571,7 @@ js_Interpret(JSContext *cx)
     if (JS_ON_TRACE(cx)) {
         tr = TRACE_RECORDER(cx);
         SET_TRACE_RECORDER(cx, NULL);
+        JS_TRACE_MONITOR(cx).onTrace = JS_FALSE;
     }
 #endif
 
@@ -7023,6 +7024,7 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
     if (tr) {
+        JS_TRACE_MONITOR(cx).onTrace = JS_TRUE;
         SET_TRACE_RECORDER(cx, tr);
         tr->deepAbort();
     }
