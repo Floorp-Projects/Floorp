@@ -151,6 +151,26 @@ nsXPCException::~nsXPCException()
     Reset();
 }
 
+PRBool
+nsXPCException::GetThrownJSVal(jsval *vp) const
+{
+    if(mThrownJSVal)
+    {
+        if(vp)
+            *vp = mThrownJSVal->GetJSVal();
+        return PR_TRUE;
+    }
+    return PR_FALSE;
+}
+
+void
+nsXPCException::SetThrownJSVal(jsval v)
+{
+    mThrownJSVal = JSVAL_IS_TRACEABLE(v)
+        ? new XPCTraceableVariant(nsXPConnect::GetRuntime(), v)
+        : new XPCVariant(v);
+}
+
 void
 nsXPCException::Reset()
 {
