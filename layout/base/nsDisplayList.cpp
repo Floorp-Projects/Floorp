@@ -1329,7 +1329,7 @@ nsRect nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
 #ifdef MOZ_SVG
 nsDisplaySVGEffects::nsDisplaySVGEffects(nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aFrame, aList), mEffectsFrame(aFrame),
-      mBounds(aFrame->GetOverflowRect())
+      mBounds(aFrame->GetOverflowRectRelativeToSelf())
 {
   MOZ_COUNT_CTOR(nsDisplaySVGEffects);
 }
