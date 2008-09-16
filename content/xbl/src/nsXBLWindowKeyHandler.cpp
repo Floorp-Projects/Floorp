@@ -318,7 +318,7 @@ DoCommandCallback(const char *aCommand, void *aData)
 }
 
 nsresult
-nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
+nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType)
 {
   nsCOMPtr<nsIDOMNSUIEvent> evt = do_QueryInterface(aKeyEvent);
   PRBool prevent;
@@ -335,11 +335,6 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
   }
 
   if (!trustedEvent)
-    return NS_OK;
-
-  // Make sure our event is really a key event
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aKeyEvent));
-  if (!keyEvent)
     return NS_OK;
 
   PRBool isEditor;
@@ -402,19 +397,25 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
   return NS_OK;
 }
 
-nsresult nsXBLWindowKeyHandler::KeyUp(nsIDOMEvent* aKeyEvent)
+nsresult nsXBLWindowKeyHandler::KeyUp(nsIDOMEvent* aEvent)
 {
-  return WalkHandlers(aKeyEvent, nsGkAtoms::keyup);
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
+  NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
+  return WalkHandlers(keyEvent, nsGkAtoms::keyup);
 }
 
-nsresult nsXBLWindowKeyHandler::KeyDown(nsIDOMEvent* aKeyEvent)
+nsresult nsXBLWindowKeyHandler::KeyDown(nsIDOMEvent* aEvent)
 {
-  return WalkHandlers(aKeyEvent, nsGkAtoms::keydown);
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
+  NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
+  return WalkHandlers(keyEvent, nsGkAtoms::keydown);
 }
 
-nsresult nsXBLWindowKeyHandler::KeyPress(nsIDOMEvent* aKeyEvent)
+nsresult nsXBLWindowKeyHandler::KeyPress(nsIDOMEvent* aEvent)
 {
-  return WalkHandlers(aKeyEvent, nsGkAtoms::keypress);
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
+  NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
+  return WalkHandlers(keyEvent, nsGkAtoms::keypress);
 }
 
 
@@ -425,15 +426,12 @@ nsresult nsXBLWindowKeyHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 //
 PRBool
 nsXBLWindowKeyHandler::EventMatched(nsXBLPrototypeHandler* inHandler,
-                                    nsIAtom* inEventType, nsIDOMEvent* inEvent,
+                                    nsIAtom* inEventType,
+                                    nsIDOMKeyEvent* inEvent,
                                     PRUint32 aCharCode, PRBool aIgnoreShiftKey)
 {
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(inEvent));
-  if (keyEvent)
-    return inHandler->KeyEventMatched(inEventType, keyEvent, aCharCode,
-                                      aIgnoreShiftKey);
-
-  return PR_FALSE;
+  return inHandler->KeyEventMatched(inEventType, inEvent, aCharCode,
+                                    aIgnoreShiftKey);
 }
 
 /* static */ void
@@ -487,21 +485,21 @@ nsXBLWindowKeyHandler::IsEditor()
 // so.
 //
 nsresult
-nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
+nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
                                             nsIAtom* aEventType, 
                                             nsXBLPrototypeHandler* aHandler)
 {
   nsAutoTArray<nsShortcutCandidate, 10> accessKeys;
-  nsContentUtils::GetAccelKeyCandidates(aEvent, accessKeys);
+  nsContentUtils::GetAccelKeyCandidates(aKeyEvent, accessKeys);
 
   if (accessKeys.IsEmpty()) {
-    WalkHandlersAndExecute(aEvent, aEventType, aHandler, 0, PR_FALSE);
+    WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler, 0, PR_FALSE);
     return NS_OK;
   }
 
   for (PRUint32 i = 0; i < accessKeys.Length(); ++i) {
     nsShortcutCandidate &key = accessKeys[i];
-    if (WalkHandlersAndExecute(aEvent, aEventType, aHandler,
+    if (WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler,
                                key.mCharCode, key.mIgnoreShift))
       return NS_OK;
   }
@@ -509,14 +507,14 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
 }
 
 PRBool
-nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMEvent* aEvent,
+nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
                                               nsIAtom* aEventType,
                                               nsXBLPrototypeHandler* aHandler,
                                               PRUint32 aCharCode,
                                               PRBool aIgnoreShiftKey)
 {
   nsresult rv;
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
 
   // Try all of the handlers until we find one that matches the event.
   for (nsXBLPrototypeHandler *currHandler = aHandler; currHandler;
@@ -528,7 +526,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMEvent* aEvent,
       return NS_OK;
     }
 
-    if (!EventMatched(currHandler, aEventType, aEvent,
+    if (!EventMatched(currHandler, aEventType, aKeyEvent,
                       aCharCode, aIgnoreShiftKey))
       continue;  // try the next one
 
@@ -586,7 +584,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMEvent* aEvent,
       piTarget = mTarget;
     }
 
-    rv = currHandler->ExecuteHandler(piTarget, aEvent);
+    rv = currHandler->ExecuteHandler(piTarget, aKeyEvent);
     if (NS_SUCCEEDED(rv)) {
       return PR_TRUE;
     }
