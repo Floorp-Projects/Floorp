@@ -463,7 +463,7 @@
           ctx.scale(this._zoomLevel, this._zoomLevel);
           ctx.drawWindow(this.browser.contentWindow,
                          this.dragData.pageX, this.dragData.pageY,
-                         w / this._zoomLevel, h / this._zoomLevel,
+                         this._screenToPage(w), this._screenToPage(h),
                          "white");
           ctx.restore();
         ]]></body>
@@ -621,8 +621,8 @@
           // Need to adjust for the toolbar height, etc.
           var browserTop = this.browser.getBoundingClientRect().top;
 
-          var clickOffsetX = (aClientX / this._zoomLevel) + this.dragData.pageX;
-          var clickOffsetY = ((aClientY - browserTop) / this._zoomLevel) + this.dragData.pageY;
+          var clickOffsetX = this._screenToPage(aClientX) + this.dragData.pageX;
+          var clickOffsetY = this._screenToPage(aClientY - browserTop) + this.dragData.pageY;
 
           // Scroll the browser so that the event is targeted properly
           var cwin = this.browser.contentWindow;
@@ -662,20 +662,20 @@
 
       <property name="_effectiveCanvasDimensions" readonly="true">
         <getter><![CDATA[
-          return [this._canvas.width / this._zoomLevel,
-                  this._canvas.height / this._zoomLevel];
+          return [this._screenToPage(this._canvas.width),
+                  this._screenToPage(this._canvas.height)];
          ]]></getter>
       </property>
 
       <property name="scrollX" readonly="true">
         <getter><![CDATA[
-          return this.dragData.pageX - this.dragData.dragX / this._zoomLevel;
+          return this.dragData.pageX - this._screenToPage(this.dragData.dragX);
          ]]></getter>
       </property>
 
       <property name="scrollY" readonly="true">
         <getter><![CDATA[
-          return this.dragData.pageY - this.dragData.dragY / this._zoomLevel;
+          return this.dragData.pageY - this._screenToPage(this.dragData.dragY);
          ]]></getter>
       </property>
 
@@ -698,7 +698,8 @@
             // Content is narrower than viewport, no need to pan horizontally
             aX = 0;
           } else {
-            var newPageX = Math.min(this.dragData.pageX + aX, offscreenWidth);
+            // min of 0, max of contentAreaWidth - canvasW
+            var newPageX = Math.min(this.dragData.pageX  + aX, offscreenWidth);
             newPageX = Math.max(newPageX, 0);
             aX = newPageX - this.dragData.pageX;
           }
@@ -708,7 +709,7 @@
             // Content is shorter than viewport, no need to pan vertically
             aY = 0;
           } else {
-            // min of 0, max of contentAreaHeight - canvasHeight
+            // min of 0, max of contentAreaHeight - canvasH
             var newPageY = Math.min(this.dragData.pageY + aY, offscreenHeight);
             newPageY = Math.max(newPageY, 0);
             aY = newPageY - this.dragData.pageY;
@@ -718,16 +719,30 @@
         ]]></body>
       </method>
 
+      <method name="_screenToPage">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          return aValue / this._zoomLevel;
+        ]]></body>
+      </method>
+
+      <method name="_pageToScreen">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          return aValue * this._zoomLevel;
+        ]]></body>
+      </method>
+
       <method name="_moveCanvas">
         <parameter name="aDx"/>
         <parameter name="aDy"/>
         <body><![CDATA[
           // Constrain offsets to the actual scrollWidth/scrollHeight
-          var [x, y] = this._constrainPanCoords(aDx, aDy);
+          var [x, y] = this._constrainPanCoords(this._screenToPage(aDx), this._screenToPage(aDy));
 
           // Canvas needs to move up for content to scroll down
-          this.dragData.dragX = -x;
-          this.dragData.dragY = -y;
+          this.dragData.dragX = -this._pageToScreen(x);
+          this.dragData.dragY = -this._pageToScreen(y);
 
           this._updateCanvasPosition();
         ]]></body>
@@ -735,26 +750,29 @@
 
       <method name="_startKinetic">
         <body><![CDATA[
-           var p2 = this._panEventTracker[this._panEventTrackerIndex];
-           var p1 = this._panEventTracker[(this._panEventTrackerIndex + 1) % this.PAN_EVENTS_TO_TRACK];
+           let p2 = this._panEventTracker[this._panEventTrackerIndex];
+           let p1 = this._panEventTracker[(this._panEventTrackerIndex + 1) % this.PAN_EVENTS_TO_TRACK];
            if (p2 && p1) {
-             var dx = p2.x - p1.x;
-             var dy = p2.y - p1.y;
-             var dt = p2.t - p1.t;
+             let dx = p2.x - p1.x;
+             let dy = p2.y - p1.y;
+             let dt = p2.t - p1.t;
              if (dt > 0) {
                this.dragData.velocityX = -dx / dt;
                this.dragData.velocityY = -dy / dt;
+               
                this.dragData.originalX = this.dragData.dragX;
                this.dragData.originalY = this.dragData.dragY;
-               var [canvasWidth, canvasHeight] = this._effectiveCanvasDimensions;
-               var [contentAreaWidth, contentAreaHeight] = this._contentAreaDimensions;
-               let destX = Math.min(this.dragData.pageX - this.dragData.dragX + this.dragData.velocityX * 800,  contentAreaWidth - canvasWidth);
-               let destY = Math.min(this.dragData.pageY - this.dragData.dragY + this.dragData.velocityY * 800,  contentAreaHeight - canvasHeight);
-               destX = Math.max(destX, 0);
-               destY = Math.max(destY, 0);
-               this.dragData.destinationX = -destX + this.dragData.pageX;
-               this.dragData.destinationY = -destY + this.dragData.pageY;
-               this.dragData.kineticId = window.setInterval(this._doKinetic, dt / (this.PAN_EVENTS_TO_TRACK - 1), this, dt / (this.PAN_EVENTS_TO_TRACK - 1));
+
+               let [destPageX, destPageY] =  this._constrainPanCoords(this._screenToPage(this.dragData.dragX 
+                                                                      + this.dragData.velocityX * 800),
+                                                                      this._screenToPage(this.dragData.dragY 
+                                                                      + this.dragData.velocityY * 800));
+
+               this.dragData.destinationX = -this._pageToScreen(destPageX);
+               this.dragData.destinationY = -this._pageToScreen(destPageY);
+
+               this.dragData.kineticId = window.setInterval(this._doKinetic, dt / (this.PAN_EVENTS_TO_TRACK - 1), 
+                                                            this, dt / (this.PAN_EVENTS_TO_TRACK - 1));
              } else {
                this._endPan();
              }
@@ -816,20 +834,7 @@
           window.clearInterval(this.dragData.kineticId);
           this.dragData.kineticId = 0;
 
-          // dragX/dragY are guaranteed to be within the correct bounds, so just
-          // update pageX/pageY directly.
-          this.dragData.pageX -= this.dragData.dragX / this._zoomLevel;
-          this.dragData.pageY -= this.dragData.dragY / this._zoomLevel;
-
-          // relocate the canvas to 0x0 in the window
-          this.dragData.dragX = 0;
-          this.dragData.dragY = 0;
-
-          // update canvas position and draw the canvas at the new location
-          this._browserToCanvas();
-          this._updateCanvasPosition();
-
-          this.dragData.dragging = false;
+          this._endPan();
         ]]></body>
       </method>
 
@@ -849,7 +854,6 @@
 
       <method name="_dragStartTimer">
         <body><![CDATA[
-          this.dragData.lastMouseEvent = Date.now() - 10;
           this.dragData.dragging = true;
           this._dragStartTimeout = -1;
         ]]></body>
@@ -859,8 +863,8 @@
         <body><![CDATA[
           // dragX/dragY are garanteed to be within the correct bounds, so just
           // update pageX/pageY directly.
-          this.dragData.pageX -= this.dragData.dragX / this._zoomLevel;
-          this.dragData.pageY -= this.dragData.dragY / this._zoomLevel;
+          this.dragData.pageX -= this._screenToPage(this.dragData.dragX);
+          this.dragData.pageY -= this._screenToPage(this.dragData.dragY);
 
           // relocate the canvas to 0x0 in the window
           this.dragData.dragX = 0;
@@ -948,10 +952,13 @@
               this._lastMouseUp = aEvent;
             }
 
+            //this.deckbrowser._endPan();
+            
             this.deckbrowser._startKinetic();
             for (var i = 0; i < this.deckbrowser.PAN_EVENTS_TO_TRACK; i++) {
               this.deckbrowser._panEventTracker[i] = null;
             }
+            
           },
 
           mousemove: function seh_mousemove(aEvent) {
@@ -981,25 +988,16 @@
                 dy = 0;
             }
             let now = Date.now();
-            if (this.deckbrowser.dragData.dragging) {
-              this.deckbrowser._panEventTrackerIndex = (this.deckbrowser._panEventTrackerIndex + 1) % this.deckbrowser.PAN_EVENTS_TO_TRACK;
 
-              var pt = new Object();
-              pt.x = aEvent.screenX;
-              pt.y = aEvent.screenY;
-              pt.t = now;
+            this.deckbrowser._panEventTrackerIndex = (this.deckbrowser._panEventTrackerIndex + 1) % this.deckbrowser.PAN_EVENTS_TO_TRACK;
+            var pt = {
+              x: aEvent.screenX,
+              y: aEvent.screenY,
+              t: now
+            };
+            this.deckbrowser._panEventTracker[this.deckbrowser._panEventTrackerIndex] = pt;
 
-              this.deckbrowser._panEventTracker[this.deckbrowser._panEventTrackerIndex] = pt;
-
-            }
             this.deckbrowser._moveCanvas(dx, dy);
-
-            if (now - this.deckbrowser.dragData.lastMouseEvent < 75) { // FIXME: make this a constant
-              //dump("dropping event\n");
-              return false;
-            }
-
-            this.deckbrowser.dragData.lastMouseEvent = now;
 
             aEvent.preventDefault();
             return true;
