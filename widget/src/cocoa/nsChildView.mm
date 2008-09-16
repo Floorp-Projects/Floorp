@@ -177,6 +177,8 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
+- (BOOL)isPaintingSuppressed;
+
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
  // a context menu (click-hold)
@@ -2713,10 +2715,9 @@ NSEvent* gLastDragEvent = nil;
 }
 
 
-static BOOL IsPaintingSuppressed(nsIWidget* aWidget)
+- (BOOL)isPaintingSuppressed
 {
-  nsIWidget* topLevelWidget = aWidget->GetTopLevelWidget();
-  NSWindow* win = (NSWindow*)topLevelWidget->GetNativeData(NS_NATIVE_WINDOW);
+  NSWindow* win = [self window];
   return ([win isKindOfClass:[ToolbarWindow class]] &&
           [(ToolbarWindow*)win isPaintingSuppressed]);
 }
@@ -2730,7 +2731,7 @@ static BOOL IsPaintingSuppressed(nsIWidget* aWidget)
 
   PRBool isVisible;
   if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) ||
-      !isVisible || IsPaintingSuppressed(mGeckoChild))
+      !isVisible || [self isPaintingSuppressed])
     return;
 
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
