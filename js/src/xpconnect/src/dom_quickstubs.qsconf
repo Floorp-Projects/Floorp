@@ -70,8 +70,6 @@ members = [
     'nsIDOMWindow.getSelection',
     'nsIDOMWindowCollection.item',
     'nsIDOMWindowCollection.length',
-    'nsIDOMLocation.hostname',
-    'nsIDOMLocation.href',
     'nsIDOMScreen.top',
     'nsIDOMScreen.height',
     'nsIDOMScreen.width',
@@ -82,6 +80,9 @@ members = [
     'nsIDOMClientRect.left',
     'nsIDOMClientRectList.item',
     'nsIDOMClientRectList.length',
+    # nsLocationSH has ~ALLOW_PROP_MODS_TO_PROTOTYPE, so don't try.
+    #'nsIDOMLocation.hostname',
+    #'nsIDOMLocation.href',
 
     # dom/public/idl/canvas
     #
