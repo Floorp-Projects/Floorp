@@ -59,6 +59,7 @@ _TEST_FILES =\
 		test_bug368835.xul \
 		test_bug420863.html \
 		test_cssattrs.html \
+		test_events_caretmove.html \
 		test_groupattrs.xul \
 	$(warning test_table_indexes.html temporarily disabled) \
 		test_nsIAccessible_actions.html \
