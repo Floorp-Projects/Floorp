@@ -1031,15 +1031,6 @@ gfxPangoFont::GetMetrics()
     return mMetrics;
 }
 
-PRUint32
-gfxPangoFont::GetGlyph(const PRUint32 aChar)
-{
-    // Ensure that null character should be missing.
-    if (aChar == 0)
-        return 0;
-    return pango_fc_font_get_glyph(PANGO_FC_FONT(GetPangoFont()), aChar);
-}
-
 nsString
 gfxPangoFont::GetUniqueName()
 {
@@ -1328,6 +1319,7 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
     if (aGlyphCount == 1 && advance >= 0 && atClusterStart &&
         aGlyphs[0].geometry.x_offset == 0 &&
         aGlyphs[0].geometry.y_offset == 0 &&
+        !IS_EMPTY_GLYPH(aGlyphs[0].glyph) &&
         gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
         gfxTextRun::CompressedGlyph::IsSimpleGlyphID(aGlyphs[0].glyph)) {
         aTextRun->SetSimpleGlyph(utf16Offset,
@@ -1337,11 +1329,20 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
         if (!detailedGlyphs.AppendElements(aGlyphCount))
             return NS_ERROR_OUT_OF_MEMORY;
 
-        PRUint32 i;
-        for (i = 0; i < aGlyphCount; ++i) {
-            gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
-            PRUint32 j = (aTextRun->IsRightToLeft()) ? aGlyphCount - 1 - i : i; 
-            const PangoGlyphInfo &glyph = aGlyphs[j];
+        PRInt32 direction = aTextRun->IsRightToLeft() ? -1 : 1;
+        PRUint32 pangoIndex = direction > 0 ? 0 : aGlyphCount - 1;
+        PRUint32 detailedIndex = 0;
+        for (PRUint32 i = 0; i < aGlyphCount; ++i) {
+            const PangoGlyphInfo &glyph = aGlyphs[pangoIndex];
+            pangoIndex += direction;
+            // The zero width characters return empty glyph ID at
+            // shaping; we should skip these.
+            if (IS_EMPTY_GLYPH(glyph.glyph))
+                continue;
+
+            gfxTextRun::DetailedGlyph *details = &detailedGlyphs[detailedIndex];
+            ++detailedIndex;
+
             details->mGlyphID = glyph.glyph;
             NS_ASSERTION(details->mGlyphID == glyph.glyph,
                          "Seriously weird glyph ID detected!");
@@ -1353,7 +1354,7 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
             details->mYOffset =
                 float(glyph.geometry.y_offset)*appUnitsPerDevUnit/PANGO_SCALE;
         }
-        g.SetComplex(atClusterStart, PR_TRUE, aGlyphCount);
+        g.SetComplex(atClusterStart, PR_TRUE, detailedIndex);
         aTextRun->SetGlyphs(utf16Offset, g, detailedGlyphs.Elements());
     }
 
@@ -1392,7 +1393,7 @@ SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
 }
 
 nsresult
-gfxPangoFontGroup::SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
+gfxPangoFontGroup::SetGlyphs(gfxTextRun *aTextRun,
                              const gchar *aUTF8, PRUint32 aUTF8Length,
                              PRUint32 *aUTF16Offset, PangoGlyphString *aGlyphs,
                              PangoGlyphUnit aOverrideSpaceWidth,
@@ -1457,12 +1458,7 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
 
         // It's now unncecessary to do NUL handling here.
         do {
-            if (IS_EMPTY_GLYPH(glyphs[glyphIndex].glyph)) {
-                // The zero width characters return empty glyph ID at
-                // shaping, we should override it.
-                glyphs[glyphIndex].glyph = aFont->GetGlyph(' ');
-                glyphs[glyphIndex].geometry.width = 0;
-            } else if (IS_MISSING_GLYPH(glyphs[glyphIndex].glyph)) {
+            if (IS_MISSING_GLYPH(glyphs[glyphIndex].glyph)) {
                 // Does pango ever provide more than one glyph in the
                 // cluster if there is a missing glyph?
                 // behdad: yes
@@ -1697,7 +1693,7 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
 
             pango_shape(text, len, &item->analysis, glyphString);
             SetupClusterBoundaries(aTextRun, text, len, utf16Offset, &item->analysis);
-            SetGlyphs(aTextRun, font, text, len, &utf16Offset, glyphString, spaceWidth, PR_FALSE);
+            SetGlyphs(aTextRun, text, len, &utf16Offset, glyphString, spaceWidth, PR_FALSE);
         }
     }
 
