@@ -86,6 +86,17 @@ js_dmod(jsdouble a, jsdouble b)
     return r;
 }
 
+/*
+ * Note: Caller is responsible for ensuring that b is not 0, or really bad 
+ *       things are going to happen.
+ */
+
+jsint FASTCALL
+js_imod(jsint a, jsint b)
+{
+    return a % b;
+}
+
 /* The following boxing/unboxing primitives we can't emit inline because
    they either interact with the GC and depend on Spidermonkey's 32-bit
    integer representation. */
