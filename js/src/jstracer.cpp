@@ -4017,12 +4017,13 @@ TraceRecorder::record_JSOP_NOT()
     if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
         set(&v, lir->ins_eq0(lir->ins2i(LIR_eq, get(&v), 1)));
         return true;
-    }
-    if (JSVAL_IS_INT(v) || JSVAL_IS_OBJECT(v)) {
-        LIns* a = get(&v);
-        if (JSVAL_IS_INT(v) && isPromoteInt(a))
-            a = ::demote(lir, a);
-        set(&v, lir->ins_eq0(a));
+    } 
+    if (isNumber(v)) {
+        set(&v, lir->ins2(LIR_feq, get(&v), lir->insImmq(0)));
+        return true;
+    } 
+    if (JSVAL_IS_OBJECT(v)) {
+        set(&v, lir->ins_eq0(get(&v)));
         return true;
     }
     return false;
