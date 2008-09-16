@@ -4002,20 +4002,22 @@ IsCaseChangeableChar(PRUint32 aChar)
 
 /* static */
 void
-nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
+nsContentUtils::GetAccelKeyCandidates(nsIDOMKeyEvent* aDOMKeyEvent,
                   nsTArray<nsShortcutCandidate>& aCandidates)
 {
   NS_PRECONDITION(aCandidates.IsEmpty(), "aCandidates must be empty");
 
   nsAutoString eventType;
-  aDOMEvent->GetType(eventType);
-  // Don't process if aDOMEvent is not a keypress event.
+  aDOMKeyEvent->GetType(eventType);
+  // Don't process if aDOMKeyEvent is not a keypress event.
   if (!eventType.EqualsLiteral("keypress"))
     return;
 
   nsKeyEvent* nativeKeyEvent =
-    static_cast<nsKeyEvent*>(GetNativeEvent(aDOMEvent));
+    static_cast<nsKeyEvent*>(GetNativeEvent(aDOMKeyEvent));
   if (nativeKeyEvent) {
+    NS_ASSERTION(nativeKeyEvent->eventStructType == NS_KEY_EVENT,
+                 "wrong type of native event");
     // nsShortcutCandidate::mCharCode is a candidate charCode.
     // nsShoftcutCandidate::mIgnoreShift means the mCharCode should be tried to
     // execute a command with/without shift key state. If this is TRUE, the
@@ -4092,9 +4094,8 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
       }
     }
   } else {
-    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aDOMEvent));
     PRUint32 charCode;
-    key->GetCharCode(&charCode);
+    aDOMKeyEvent->GetCharCode(&charCode);
     if (charCode) {
       nsShortcutCandidate key(charCode, PR_FALSE);
       aCandidates.AppendElement(key);

@@ -166,9 +166,11 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
+  if (!key)
+    return NS_OK;
 
   nsAutoTArray<nsShortcutCandidate, 10> accessKeys;
-  nsContentUtils::GetAccelKeyCandidates(aEvent, accessKeys);
+  nsContentUtils::GetAccelKeyCandidates(key, accessKeys);
 
   if (accessKeys.IsEmpty()) {
     ExecuteMatchedHandlers(key, 0, PR_FALSE);
