@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "gfxFontconfigUtils.h"
+#include "gfxFont.h"
 
 #include <fontconfig/fontconfig.h>
 
@@ -48,6 +49,63 @@
 #include "nsCRT.h"
 
 /* static */ gfxFontconfigUtils* gfxFontconfigUtils::sUtils = nsnull;
+
+/* static */ PRUint8
+gfxFontconfigUtils::GetThebesStyle(FcPattern *aPattern)
+{
+    int slant;
+    if (FcPatternGetInteger(aPattern, FC_SLANT, 0, &slant) == FcResultMatch) {
+        if (slant == FC_SLANT_ITALIC)
+            return FONT_STYLE_ITALIC;
+        if (slant == FC_SLANT_OBLIQUE)
+            return FONT_STYLE_OBLIQUE;
+    }
+
+    return FONT_STYLE_NORMAL;
+}
+
+// OS/2 weight classes were introduced in fontconfig-2.1.93 (2003).
+#ifndef FC_WEIGHT_THIN 
+#define FC_WEIGHT_THIN              0 // 2.1.93
+#define FC_WEIGHT_EXTRALIGHT        40 // 2.1.93
+#define FC_WEIGHT_REGULAR           80 // 2.1.93
+#define FC_WEIGHT_EXTRABOLD         205 // 2.1.93
+#endif
+// book was introduced in fontconfig-2.2.90 (and so fontconfig-2.3.0 in 2005)
+#ifndef FC_WEIGHT_BOOK
+#define FC_WEIGHT_BOOK              75
+#endif
+
+/* static */ PRUint16
+gfxFontconfigUtils::GetThebesWeight(FcPattern *aPattern)
+{
+    int weight;
+    if (FcPatternGetInteger(aPattern, FC_WEIGHT, 0, &weight) != FcResultMatch)
+        return FONT_WEIGHT_NORMAL;
+
+    if (weight <= (FC_WEIGHT_THIN + FC_WEIGHT_EXTRALIGHT) / 2)
+        return 100;
+    if (weight <= (FC_WEIGHT_EXTRALIGHT + FC_WEIGHT_LIGHT) / 2)
+        return 200;
+    if (weight <= (FC_WEIGHT_LIGHT + FC_WEIGHT_BOOK) / 2)
+        return 300;
+    if (weight <= (FC_WEIGHT_REGULAR + FC_WEIGHT_MEDIUM) / 2)
+        // This includes FC_WEIGHT_BOOK
+        return 400;
+    if (weight <= (FC_WEIGHT_MEDIUM + FC_WEIGHT_DEMIBOLD) / 2)
+        return 500;
+    if (weight <= (FC_WEIGHT_DEMIBOLD + FC_WEIGHT_BOLD) / 2)
+        return 600;
+    if (weight <= (FC_WEIGHT_BOLD + FC_WEIGHT_EXTRABOLD) / 2)
+        return 700;
+    if (weight <= (FC_WEIGHT_EXTRABOLD + FC_WEIGHT_BLACK) / 2)
+        return 800;
+    if (weight <= FC_WEIGHT_BLACK)
+        return 900;
+
+    // FC_WEIGHT_EXTRABLACK was introduced in fontconfig-2.4.91 (2007)
+    return 901;
+}
 
 gfxFontconfigUtils::gfxFontconfigUtils()
 {
