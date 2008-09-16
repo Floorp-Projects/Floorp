@@ -771,6 +771,8 @@
                this.dragData.destinationX = -this._pageToScreen(destPageX);
                this.dragData.destinationY = -this._pageToScreen(destPageY);
 
+               if (this.dragData.kineticId)
+                 window.clearInterval(this.dragData.kineticId);
                this.dragData.kineticId = window.setInterval(this._doKinetic, dt / (this.PAN_EVENTS_TO_TRACK - 1), 
                                                             this, dt / (this.PAN_EVENTS_TO_TRACK - 1));
              } else {
@@ -899,6 +901,11 @@
             if (this._updateTimeout)
               clearTimeout(this._updateTimeout);
 
+            // stop any kinetic scrolling
+            var self = this.deckbrowser;
+            if (self.dragData.kineticId)
+               self._endKinetic(); 
+
             var zoomLevel = this.deckbrowser._zoomLevel;
             var dragData = this.deckbrowser.dragData;
 
@@ -912,7 +919,6 @@
 
             //this.deckbrowser._updateCanvasPosition();
 
-            var self = this.deckbrowser;
             this.deckbrowser._dragStartTimeout = setTimeout(function () {
               self._dragStartTimer();
             }, 200);
@@ -921,8 +927,7 @@
             for (var i = 0; i < self.PAN_EVENTS_TO_TRACK; i++) {
               self._panEventTracker[i] = null;
             }
-            if (self.dragData.kineticId)
-               self._endPan();
+            
           },
 
           mouseup: function seh_mouseup(aEvent) {
