@@ -1,0 +1,130 @@
+<html>
+
+<head>
+  <title>Accessible caret move events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+
+  <script type="application/javascript">
+    function synthMouseTest(aNode)
+    {
+      this.node = aNode;
+      this.testFunc = function testFunc()
+      {
+        synthesizeMouse(this.node, 1, 1, {});
+      }
+    }
+
+    function synthKeyTest(aNode, aKey)
+    {
+      this.node = aNode;
+      this.testFunc = function testFunc()
+      {
+        synthesizeKey(aKey, {});
+      }
+    }
+
+    function synthTabTest(aNode, aBackTab)
+    {
+      this.node = aNode;
+      this.testFunc = function testFunc()
+      {
+        synthesizeKey("VK_TAB", {shiftKey: aBackTab});
+      }
+    }
+
+    var gTestsArray = [];
+    var gTestIdx = -1;
+
+    var gCaretMoveHandler =
+    {
+      handleEvent: function handleEvent(aEvent)
+      {
+        if (aEvent.DOMNode == gTestsArray[gTestIdx].node)
+          gTestsArray[gTestIdx].wasCaught = true;
+      }
+    };
+
+    function doTest()
+    {
+      window.setTimeout(
+        function()
+        {
+          if (gTestIdx == gTestsArray.length - 1) {
+          
+            unregisterA11yEventListener(nsIAccessibleEvent.EVENT_TEXT_CARET_MOVED,
+                                        gCaretMoveHandler);
+
+            for (var idx = 0; idx < gTestsArray.length; idx++)
+              ok(gTestsArray[idx].wasCaught, "test " + idx + " failed");
+
+            SimpleTest.finish();
+            return;
+          }
+
+          gTestsArray[++gTestIdx].testFunc();
+          doTest();
+        },
+        100
+      );
+    }
+
+    function doTests()
+    {
+      var textbox = document.getElementById("textbox");
+      gTestsArray.push(new synthMouseTest(textbox));
+      gTestsArray.push(new synthKeyTest(textbox, "VK_RIGHT"));
+
+      var textarea = document.getElementById("textarea");
+      gTestsArray.push(new synthMouseTest(textarea));
+      gTestsArray.push(new synthKeyTest(textarea, "VK_RIGHT"));
+      gTestsArray.push(new synthKeyTest(textarea, "VK_DOWN"));
+
+      var p = document.getElementById("p");
+      gTestsArray.push(new synthMouseTest(p));
+      gTestsArray.push(new synthKeyTest(p, "VK_RIGHT"));
+      gTestsArray.push(new synthKeyTest(p, "VK_DOWN"));
+
+      gTestsArray.push(new synthTabTest(textarea, true));
+      gTestsArray.push(new synthTabTest(p));
+
+      registerA11yEventListener(nsIAccessibleEvent.EVENT_TEXT_CARET_MOVED,
+                                gCaretMoveHandler);
+
+      doTest();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=454377"
+     title="Accessible caret move events testing">
+    Mozilla Bug 454377
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="textbox" value="hello"/>
+  <textarea id="textarea">text<br>text</textarea>
+  <p id="p" contentEditable="true"><span>text</span><br/>text</p>
+
+</body>
+</html>
