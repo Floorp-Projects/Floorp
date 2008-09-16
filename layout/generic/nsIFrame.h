@@ -105,10 +105,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface
-// 98a0c040-09cf-408b-b55f-321b4f8d9d67
+// bc99463c-5ff7-4ff3-b2c8-b4172646f793
 #define NS_IFRAME_IID \
-    { 0x98a0c040, 0x09cf, 0x408b, \
-      { 0xb5, 0x5f, 0x32, 0x1b, 0x4f, 0x8d, 0x9d, 0x67 } }
+{ 0xbc99463c, 0x5ff7, 0x4ff3, \
+  { 0xb2, 0xc8, 0xb4, 0x17, 0x26, 0x46, 0xf7, 0x93 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1731,9 +1731,41 @@ public:
    * FinishAndStoreOverflow has been called but mRect hasn't yet been
    * updated yet.
    *
-   * @return the rect relative to this frame's origin
+   * @return the rect relative to this frame's origin, but after
+   * CSS transforms have been applied (i.e. not really this frame's coordinate
+   * system, and may not contain the frame's border-box, e.g. if there
+   * is a CSS transform scaling it down)
    */
   nsRect GetOverflowRect() const;
+
+  /**
+   * Computes a rect that encompasses everything that might be painted by
+   * this frame.  This includes this frame, all its descendent frames, this
+   * frame's outline, and descentant frames' outline, but does not include
+   * areas clipped out by the CSS "overflow" and "clip" properties.
+   *
+   * The NS_FRAME_OUTSIDE_CHILDREN state bit is set when this overflow rect
+   * is different from nsRect(0, 0, GetRect().width, GetRect().height).
+   * XXX Note: because of a space optimization using the formula above,
+   * during reflow this function does not give accurate data if
+   * FinishAndStoreOverflow has been called but mRect hasn't yet been
+   * updated yet.
+   *
+   * @return the rect relative to the parent frame, in the parent frame's
+   * coordinate system
+   */
+  nsRect GetOverflowRectRelativeToParent() const;
+
+  /**
+   * Computes a rect that encompasses everything that might be painted by
+   * this frame.  This includes this frame, all its descendent frames, this
+   * frame's outline, and descentant frames' outline, but does not include
+   * areas clipped out by the CSS "overflow" and "clip" properties.
+   *
+   * @return the rect relative to this frame, before any CSS transforms have
+   * been applied, i.e. in this frame's coordinate system
+   */
+  nsRect GetOverflowRectRelativeToSelf() const;
 
   /**
    * Set/unset the NS_FRAME_OUTSIDE_CHILDREN flag and store the overflow area
