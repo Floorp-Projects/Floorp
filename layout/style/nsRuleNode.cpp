@@ -1901,6 +1901,12 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       return svgReset;
     }
 #endif
+    default:
+      /*
+       * unhandled case: nsStyleStructID_Length.
+       * last item of nsStyleStructID, to know its length.
+       */
+      return nsnull;
   }
   return nsnull;
 }
