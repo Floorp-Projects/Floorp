@@ -3653,7 +3653,6 @@ TraceRecorder::getThis(LIns*& this_ins)
         this_ins = get(&cx->fp->argv[-1]);
         guard(false, lir->ins_eq0(this_ins), MISMATCH_EXIT);
     } else { /* in global code */
-        JS_ASSERT(!JSVAL_IS_NULL(cx->fp->argv[-1]));
         this_ins = scopeChain();
     }
     return true;
