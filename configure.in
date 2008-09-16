@@ -1874,11 +1874,16 @@ case "$target" in
     AR_DELETE="$AR d"
     AR_FLAGS='-OUT:"$@"'
 
+    if test -z "$AS_BIN"; then
+        AS="$AS_BIN"
+    fi
     DSO_CFLAGS=
     DSO_PIC_CFLAGS=
     DLL_SUFFIX=.dll
     BIN_SUFFIX='.exe'
-    RC=rc.exe
+    if test -z "$RC"; then 
+        RC=rc.exe  
+    fi
     # certain versions of cygwin's makedepend barf on the 
     # #include <string> vs -I./dist/include/string issue so don't use it
     SYSTEM_MAKEDEPEND=
