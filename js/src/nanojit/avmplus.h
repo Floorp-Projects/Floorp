@@ -316,6 +316,7 @@ public:
     }
 };
 
+#ifdef AVMPLUS_DEFINE_NEW_DELETE
 inline void*
 operator new(size_t size, GC* gc)
 {
@@ -327,6 +328,7 @@ operator delete(void* p)
 {
     free(p);
 }
+#endif
 
 #define DWB(x) x
 #define DRCWB(x) x

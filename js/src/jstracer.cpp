@@ -51,6 +51,7 @@
 #include <alloca.h>
 #endif
 
+#define AVMPLUS_DEFINE_NEW_DELETE
 #include "nanojit/avmplus.h"    // nanojit
 #include "nanojit/nanojit.h"
 #include "jsarray.h"            // higher-level library and API headers
