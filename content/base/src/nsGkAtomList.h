@@ -1616,6 +1616,7 @@ GK_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
 GK_ATOM(overflowOutOfFlowsProperty, "OverflowOutOfFlowsProperty")      // nsFrameList*
 GK_ATOM(overflowPlaceholdersProperty, "OverflowPlaceholdersProperty")  // nsFrameList*
 GK_ATOM(preEffectsBBoxProperty, "PreEffectsBBoxProperty") // nsRect*
+GK_ATOM(preTransformBBoxProperty, "PreTransformBBoxProperty") // nsRect*
 GK_ATOM(rowUnpaginatedHeightProperty, "RowUnpaginatedHeightProperty")  // nscoord*
 GK_ATOM(spaceManagerProperty, "SpaceManagerProperty")      // the space manager for a block
 GK_ATOM(tabWidthProperty, "TabWidthProperty")              // nsTArray<TabSetting>* array of tab widths

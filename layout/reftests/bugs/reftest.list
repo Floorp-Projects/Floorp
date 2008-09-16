@@ -912,3 +912,5 @@ fails == 441259-2.html 441259-2-ref.html # bug 441400
 == 450670-1.html 450670-1-ref.html
 == 451168-1.html 451168-1-ref.html
 == 454361.html about:blank
+== 455280-1.xhtml 455280-1-ref.xhtml
+
