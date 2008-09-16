@@ -475,6 +475,12 @@ nsXPLookAndFeel::IsSpecialColor(const nsColorID aID, nscolor &aColor)
     case eColor_IMESelectedRawTextUnderline:
     case eColor_IMESelectedConvertedTextUnderline:
       return NS_IS_IME_SPECIAL_COLOR(aColor);
+    default:
+      /*
+       * In GetColor(), every color that is not a special color is color
+       * corrected. Use PR_FALSE to make other colors color corrected.
+       */
+      return PR_FALSE;
   }
   return PR_FALSE;
 }
@@ -644,6 +650,12 @@ nsXPLookAndFeel::GetMetric(const nsMetricID aID, PRInt32& aMetric)
     case eMetric_ScrollButtonRightMouseButtonAction:
       aMetric = 3;
       return NS_OK;
+    default:
+      /*
+       * The metrics above are hardcoded platform defaults. All the other
+       * metrics are stored in sIntPrefs and can be changed at runtime.
+       */
+    break;
   }
 
   for (unsigned int i = 0; i < ((sizeof (sIntPrefs) / sizeof (*sIntPrefs))); ++i)
