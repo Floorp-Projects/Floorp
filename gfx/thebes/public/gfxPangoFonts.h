@@ -86,8 +86,6 @@ public:
     // Check GetStyle()->sizeAdjust != 0.0 before calling this 
     gfxFloat GetAdjustedSize() { if (!mPangoFont) RealizePangoFont(); return mAdjustedSize; }
 
-    PRUint32 GetGlyph(const PRUint32 aChar);
-
     virtual nsString GetUniqueName();
 
     // Get the glyphID of a space
@@ -148,7 +146,7 @@ protected:
                      PRBool aTake8BitPath);
 
     // Returns NS_ERROR_FAILURE if there's a missing glyph
-    nsresult SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
+    nsresult SetGlyphs(gfxTextRun *aTextRun,
                        const gchar *aUTF8, PRUint32 aUTF8Length,
                        PRUint32 *aUTF16Offset, PangoGlyphString *aGlyphs,
                        PangoGlyphUnit aOverrideSpaceWidth,
