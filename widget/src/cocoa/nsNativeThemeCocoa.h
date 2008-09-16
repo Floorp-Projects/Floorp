@@ -126,6 +126,9 @@ protected:
   void DrawCheckbox(CGContextRef context, ThemeButtonKind inKind,
                     const HIRect& inBoxRect, PRBool inChecked, 
                     PRBool inDisabled, PRInt32 inState);
+  void DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
+                          nsIFrame *aFrame);
+
   // Scrollbars
   void DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame);
   void GetScrollbarPressStates (nsIFrame *aFrame, PRInt32 aButtonStates[]);

@@ -328,6 +328,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword__moz_win_communications_toolbox, NS_THEME_WIN_COMMUNICATIONS_TOOLBOX,
   eCSSKeyword__moz_win_browsertabbar_toolbox,  NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX,
   eCSSKeyword__moz_win_glass,         NS_THEME_WIN_GLASS,
+  eCSSKeyword__moz_mac_unified_toolbar,        NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR,
   eCSSKeyword_UNKNOWN,-1
 };
 
