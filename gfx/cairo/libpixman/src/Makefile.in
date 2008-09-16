@@ -62,6 +62,7 @@ endif
 endif
 
 # Build MMX code either with VC or with gcc-on-x86
+ifneq (arm,$(findstring arm,$(OS_TEST)))
 ifdef _MSC_VER
 USE_MMX=1
 #USE_SSE2=1
@@ -77,6 +78,7 @@ MMX_CFLAGS=-mmmx -Winline
 #MMX_CFLAGS+=-msse -msse2
 ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 MMX_CFLAGS+=--param inline-unit-growth=10000 --param large-function-growth=10000
+endif
 endif
 endif
 endif
