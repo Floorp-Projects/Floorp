@@ -3743,7 +3743,7 @@ TraceRecorder::record_EnterFrame()
     LIns* void_ins = INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_VOID));
 
     jsval* vp = &fp->argv[fp->argc];
-    jsval* vpstop = vp + (fp->fun->nargs - fp->argc);
+    jsval* vpstop = vp + ptrdiff_t(fp->fun->nargs) - ptrdiff_t(fp->argc);
     if (applyingArguments) {
         applyingArguments = false;
         while (vp < vpstop) {
