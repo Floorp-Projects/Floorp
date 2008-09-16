@@ -4417,10 +4417,6 @@ TraceRecorder::record_JSOP_SETPROP()
     JSObject* obj = JSVAL_TO_OBJECT(l);
     if (obj->map->ops->setProperty != js_SetProperty)
         ABORT_TRACE("non-native JSObjectOps::setProperty");
-
-    // Set RHS as result now, in case we don't call either record_SetPropHit or
-    // record_SetPropMiss.
-    set(&l, stack(-1));
     return true;
 }
 
