@@ -66,6 +66,8 @@ _TEST_FILES = 	findbar_window.xul \
 		frame_popup_anchor.xul \
 		test_preferences.xul \
 		window_preferences.xul \
+		window_preferences2.xul \
+		window_preferences3.xul \
 		test_autocomplete2.xul \
 		test_keys.xul \
 		window_keys.xul \
