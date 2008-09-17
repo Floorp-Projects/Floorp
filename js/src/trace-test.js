@@ -1339,6 +1339,15 @@ function testSetPropNeitherMissNorHit() {
 testSetPropNeitherMissNorHit.expected = "ok";
 test(testSetPropNeitherMissNorHit);
 
+function testPrimitiveConstructorPrototype() {
+    var f = function(){};
+    f.prototype = false;
+    for (let j=0;j<5;++j) { new f; }
+    return "ok";
+}    
+testPrimitiveConstructorPrototype.expected = "ok";
+test(testPrimitiveConstructorPrototype);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
