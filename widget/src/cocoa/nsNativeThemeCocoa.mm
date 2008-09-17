@@ -1035,9 +1035,7 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
   CGShadingRelease(shading);
 
   // Draw the border at the bottom of the toolbar.
-  float borderGrey = isMain ? sLeopardTitlebarBorderGrey :
-                              sLeopardTitlebarBackgroundBorderGrey;
-  [[NSColor colorWithDeviceWhite:borderGrey alpha:1.0f] set];
+  [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
   NSRectFill(NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y +
                         inBoxRect.size.height - 1.0f, inBoxRect.size.width, 1.0f));
 
