@@ -52,14 +52,11 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  if (!options().match(/jit/))
-  {
-    options('jit');
-  }
+  jit(true);
 
   for (var j=0;j<5;++j) { switch(1.1) { case NaN: case 2: } }
  
-  options('jit');
+  jit(false);
 
   reportCompare(expect, actual, summary);
 
