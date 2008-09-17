@@ -69,7 +69,7 @@ usage()
 usage: runtests.sh -p products -b branches -e extra\\
                    -T  buildtypes -B buildcommands  \\
                    [-v] [-S] [-X excludetests] [-I includetests] [-c] [-t] \\
-                   [-Z n]
+                   [-J javascriptoptions]
 
 variable            description
 ===============     ============================================================
