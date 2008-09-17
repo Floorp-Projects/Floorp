@@ -111,7 +111,7 @@
 
           var self = this;
           this._updateTimeout = setTimeout(function () {
-            if (!self.dragData.dragging && !self.dragData.kineticId)
+            if (!self.dragData.dragging)
               self._browserToCanvas();
           }, 100);
         ]]></body>
@@ -750,37 +750,42 @@
 
       <method name="_startKinetic">
         <body><![CDATA[
-           let p2 = this._panEventTracker[this._panEventTrackerIndex];
-           let p1 = this._panEventTracker[(this._panEventTrackerIndex + 1) % this.PAN_EVENTS_TO_TRACK];
-           if (p2 && p1) {
-             let dx = p2.x - p1.x;
-             let dy = p2.y - p1.y;
-             let dt = p2.t - p1.t;
-             if (dt > 0) {
-               this.dragData.velocityX = -dx / dt;
-               this.dragData.velocityY = -dy / dt;
-               
-               this.dragData.originalX = this.dragData.dragX;
-               this.dragData.originalY = this.dragData.dragY;
+          let p2 = this._panEventTracker[this._panEventTrackerIndex];
+          let p1 = this._panEventTracker[(this._panEventTrackerIndex + 1) % this.PAN_EVENTS_TO_TRACK];
+          if (p2 && p1) {
+            let dx = p2.x - p1.x;
+            let dy = p2.y - p1.y;
+            let dt = p2.t - p1.t;
+            if (dt > 0) {
+              this.dragData.velocityX = -dx / dt;
+              this.dragData.velocityY = -dy / dt;
+              
+              this.dragData.originalX = this.dragData.dragX;
+              this.dragData.originalY = this.dragData.dragY;
 
-               let [destPageX, destPageY] =  this._constrainPanCoords(this._screenToPage(this.dragData.dragX 
-                                                                      + this.dragData.velocityX * 800),
-                                                                      this._screenToPage(this.dragData.dragY 
-                                                                      + this.dragData.velocityY * 800));
+              let [destPageX, destPageY] =  this._constrainPanCoords(this._screenToPage(this.dragData.dragX 
+                                                                     + this.dragData.velocityX * 800),
+                                                                     this._screenToPage(this.dragData.dragY 
+                                                                     + this.dragData.velocityY * 800));
 
-               this.dragData.destinationX = -this._pageToScreen(destPageX);
-               this.dragData.destinationY = -this._pageToScreen(destPageY);
+              this.dragData.destinationX = -this._pageToScreen(destPageX);
+              this.dragData.destinationY = -this._pageToScreen(destPageY);
 
-               if (this.dragData.kineticId)
-                 window.clearInterval(this.dragData.kineticId);
-               this.dragData.kineticId = window.setInterval(this._doKinetic, dt / (this.PAN_EVENTS_TO_TRACK - 1), 
-                                                            this, dt / (this.PAN_EVENTS_TO_TRACK - 1));
-             } else {
-               this._endPan();
-             }
-           } else {
-             this._endPan()
-           }
+              if (this.dragData.kineticId)
+                window.clearInterval(this.dragData.kineticId);
+              this.dragData.kineticId = window.setInterval(this._doKinetic, dt / (this.PAN_EVENTS_TO_TRACK - 1), 
+                                                           this, dt / (this.PAN_EVENTS_TO_TRACK - 1));
+            } else {
+              this._endPan();
+            }
+          } else {
+            this._endPan()
+          }
+
+          // Clear out the old events since they aren't needed anymore
+          for (var i = 0; i < this.PAN_EVENTS_TO_TRACK; i++) {
+            this._panEventTracker[i] = null;
+          }
         ]]></body>
       </method>
 
@@ -863,7 +868,7 @@
 
       <method name="_endPan">
         <body><![CDATA[
-          // dragX/dragY are garanteed to be within the correct bounds, so just
+          // dragX/dragY are guaranteed to be within the correct bounds, so just
           // update pageX/pageY directly.
           this.dragData.pageX -= this._screenToPage(this.dragData.dragX);
           this.dragData.pageY -= this._screenToPage(this.dragData.dragY);
@@ -901,13 +906,22 @@
             if (this._updateTimeout)
               clearTimeout(this._updateTimeout);
 
-            // stop any kinetic scrolling
-            var self = this.deckbrowser;
-            if (self.dragData.kineticId)
-               self._endKinetic(); 
+            // stop kinetic scrolling if it's in progress
+            // avoid setting _lastMouseDown in that case so that we don't
+            // redispatch it in mouseup
+            let dragData = this.deckbrowser.dragData;
+            if (dragData.kineticId) {
+               this.deckbrowser._endKinetic();
+            } else {
+              // Keep a reference to the event so that we can redispatch it
+              // on mouseup
+              this._lastMouseDown = aEvent;
+            }
 
-            var zoomLevel = this.deckbrowser._zoomLevel;
-            var dragData = this.deckbrowser.dragData;
+            // kinetic gets canceled above, so we should be guaranteed to not be
+            // in the panning state
+            if (dragData.dragging)
+              throw "Mousedown while panning - how'd this happen?";
 
             // The start of the current portion drag
             dragData.sX = aEvent.screenX;
@@ -917,28 +931,29 @@
             dragData.dragX = 0;
             dragData.dragY = 0;
 
-            //this.deckbrowser._updateCanvasPosition();
-
-            this.deckbrowser._dragStartTimeout = setTimeout(function () {
-              self._dragStartTimer();
-            }, 200);
-
-            this._lastMouseDown = aEvent;
-            for (var i = 0; i < self.PAN_EVENTS_TO_TRACK; i++) {
-              self._panEventTracker[i] = null;
-            }
-            
+            this.deckbrowser._dragStartTimeout = setTimeout(function (db) {
+              db._dragStartTimer();
+            }, 200, this.deckbrowser);
           },
 
           mouseup: function seh_mouseup(aEvent) {
-            if (aEvent.button == 0 && this.deckbrowser.dragData.dragging) {
-              this.deckbrowser.dragData.dragging = false;
-            } else if (aEvent.originalTarget == this.deckbrowser._canvas) {
-              // Mouseup on canvas that isn't releasing from a drag
-              // cancel scrollStart timer
-              clearTimeout(this.deckbrowser._dragStartTimeout);
-              this.deckbrowser._dragStartTimeout = -1;
+            if (aEvent.button != 0)
+              return;
 
+            // cancel scrollStart timer if it's pending
+            clearTimeout(this.deckbrowser._dragStartTimeout);
+            this.deckbrowser._dragStartTimeout = -1;
+
+            // If we're panning, just start kinetic scrolling
+            if (this.deckbrowser.dragData.dragging) {
+              this.deckbrowser._startKinetic();
+
+              return;
+            }
+
+            // Otherwise, dispatch the click event (if this mouseup was on the canvas)
+            if (this._lastMouseDown &&
+                aEvent.originalTarget == this.deckbrowser._canvas) {
               // send mousedown & mouseup
               this.deckbrowser._redispatchMouseEvent(this._lastMouseDown);
               this._lastMouseDown = null;
@@ -951,19 +966,12 @@
                   Math.abs(aEvent.clientX - this._lastMouseUp.clientX) < 30 &&
                   Math.abs(aEvent.clientY - this._lastMouseUp.clientY) < 30) {
                 this.dblclick(aEvent);
+
                 return;
               }
 
               this._lastMouseUp = aEvent;
             }
-
-            //this.deckbrowser._endPan();
-            
-            this.deckbrowser._startKinetic();
-            for (var i = 0; i < this.deckbrowser.PAN_EVENTS_TO_TRACK; i++) {
-              this.deckbrowser._panEventTracker[i] = null;
-            }
-            
           },
 
           mousemove: function seh_mousemove(aEvent) {
