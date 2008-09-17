@@ -246,6 +246,29 @@ js_Array_p_join(JSContext* cx, JSObject* obj, JSString *str)
     return JSVAL_TO_STRING(v);
 }
 
+jsval FASTCALL
+js_Array_p_push1(JSContext* cx, JSObject* obj, jsval v)
+{
+    if (!(OBJ_IS_DENSE_ARRAY(cx, obj) 
+          ? js_array_push1_dense(cx, obj, v, &v)
+          : js_array_push_slowly(cx, obj, 1, &v, &v))) {
+        return JSVAL_ERROR_COOKIE;
+    }
+    return v;
+}
+
+jsval FASTCALL
+js_Array_p_pop(JSContext* cx, JSObject* obj)
+{
+    jsval v;
+    if (!(OBJ_IS_DENSE_ARRAY(cx, obj) 
+          ? js_array_pop_dense(cx, obj, &v)
+          : js_array_pop_slowly(cx, obj, &v))) {
+        return JSVAL_ERROR_COOKIE;
+    }
+    return v;
+}
+
 JSString* FASTCALL
 js_String_p_substring(JSContext* cx, JSString* str, jsint begin, jsint end)
 {

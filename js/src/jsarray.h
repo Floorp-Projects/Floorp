@@ -134,6 +134,24 @@ js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 extern JSBool
 js_array_join(JSContext *cx, uintN argc, jsval *vp);
 
+extern JSBool
+js_array_push_slowly(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+
+extern JSBool
+js_array_push1_dense(JSContext *cx, JSObject *obj, jsval v, jsval *rval);
+
+extern JSBool
+js_array_push(JSContext *cx, uintN argc, jsval *vp);
+
+extern JSBool
+js_array_pop_slowly(JSContext *cx, JSObject* obj, jsval *vp);
+
+extern JSBool
+js_array_pop_dense(JSContext *cx, JSObject* obj, jsval *vp);
+
+extern JSBool
+js_array_pop(JSContext *cx, uintN argc, jsval *vp);
+
 enum ArrayToStringOp {
     TO_STRING,
     TO_LOCALE_STRING,
