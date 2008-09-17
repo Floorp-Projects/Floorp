@@ -151,7 +151,7 @@
         <parameter name="aUpdate"/>
         <body>
         <![CDATA[
-          if (aUpdate && this.value != aValue) {
+          if (aUpdate && this.value !== aValue) {
             this._value = aValue;
             if (this.instantApply)
               this.valueFromPreferences = aValue;
@@ -231,7 +231,10 @@
 
       <property name="hasUserValue">
         <getter>
-          return this.preferences.rootBranch.prefHasUserValue(this.name);
+        <![CDATA[
+          return this.preferences.rootBranch.prefHasUserValue(this.name) &&
+                 this.value !== undefined;
+        ]]>
         </getter>
       </property>
       
