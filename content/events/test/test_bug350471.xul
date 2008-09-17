@@ -216,6 +216,13 @@ function runTests() {
   Components.utils.import("resource://gre/modules/JSON.jsm");
 
   testEventDispatching();
+
+  let scrollbox = document.getElementById("scrollbox");
+  synthesizeMouse(scrollbox, 10, 10, { type: "mousemove" });
+
+  setTimeout(runOtherTests, 1000);
+}
+function runOtherTests() {
   testDefaultHandling();
 
   SimpleTest.finish();
