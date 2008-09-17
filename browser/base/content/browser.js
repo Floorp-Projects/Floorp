@@ -1313,6 +1313,7 @@ AutoHideTabbarPrefListener.prototype =
       catch (e) {
       }
       gBrowser.setStripVisibilityTo(aVisible);
+      gPrefService.setBoolPref("browser.tabs.forceHide", false);
     }
   }
 }
@@ -1635,7 +1636,8 @@ function BrowserOpenFileWindow()
   }
 }
 
-function BrowserCloseTabOrWindow() {
+function BrowserCloseTabOrWindow()
+{
 #ifdef XP_MACOSX
   // If we're not a browser window, just close the window
   if (window.location.href != getBrowserURL()) {
@@ -1644,8 +1646,23 @@ function BrowserCloseTabOrWindow() {
   }
 #endif
 
-  // If the current tab is the last one, this will close the window.
-  gBrowser.removeCurrentTab();
+  if (gBrowser.tabContainer.childNodes.length > 1) {
+    gBrowser.removeCurrentTab(); 
+    return;
+  }
+
+#ifndef XP_MACOSX
+  if (gBrowser.localName == "tabbrowser" && window.toolbar.visible &&
+      !gPrefService.getBoolPref("browser.tabs.autoHide")) {
+    // Replace the remaining tab with a blank one and focus the address bar
+    gBrowser.removeCurrentTab();
+    if (gURLBar)
+      setTimeout(function() { gURLBar.focus(); }, 0);
+    return;
+  }
+#endif
+
+  closeWindow(true);
 }
 
 function BrowserTryToCloseWindow()
