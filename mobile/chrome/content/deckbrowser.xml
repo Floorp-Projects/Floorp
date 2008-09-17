@@ -111,7 +111,7 @@
 
           var self = this;
           this._updateTimeout = setTimeout(function () {
-            if (!self.dragData.dragging)
+            if (!self.dragData.dragging && !self.dragData.kineticId)
               self._browserToCanvas();
           }, 100);
         ]]></body>
@@ -880,8 +880,6 @@
           // update canvas position and draw the canvas at the new location
           this._browserToCanvas();
           this._updateCanvasPosition();
-
-          this.dragData.dragging = false;
         ]]></body>
       </method>
 
@@ -944,8 +942,10 @@
             clearTimeout(this.deckbrowser._dragStartTimeout);
             this.deckbrowser._dragStartTimeout = -1;
 
-            // If we're panning, just start kinetic scrolling
+            // If we're panning, stop dragging and start kinetic scrolling
             if (this.deckbrowser.dragData.dragging) {
+              this.deckbrowser.dragData.dragging = false;
+
               this.deckbrowser._startKinetic();
 
               return;
