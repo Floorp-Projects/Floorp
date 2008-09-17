@@ -2248,6 +2248,10 @@ NSEvent* gLastDragEvent = nil;
                                                           kCorePboardType_urld,
                                                           kCorePboardType_urln,
                                                           nil]];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(controlTintChanged)
+                                               name:NSControlTintDidChangeNotification
+                                             object:nil];
 
   return self;
 
@@ -2266,6 +2270,8 @@ NSEvent* gLastDragEvent = nil;
   
   if (sLastViewEntered == self)
     sLastViewEntered = nil;
+
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
 
   [super dealloc];    
 
@@ -2314,6 +2320,16 @@ NSEvent* gLastDragEvent = nil;
 - (void)setNativeWindow:(NSWindow*)aWindow
 {
   mWindow = aWindow;
+}
+
+
+- (void)controlTintChanged
+{
+  if (!mGeckoChild)
+    return;
+
+  nsGUIEvent guiEvent(PR_TRUE, NS_THEMECHANGED, mGeckoChild);
+  mGeckoChild->DispatchWindowEvent(guiEvent);
 }
 
 
