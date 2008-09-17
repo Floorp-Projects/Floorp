@@ -224,3 +224,6 @@ pref("places.frecency.tempRedirectVisitBonus", 0);
 pref("places.frecency.defaultVisitBonus", 0);
 pref("places.frecency.unvisitedBookmarkBonus", 140);
 pref("places.frecency.unvisitedTypedBonus", 200);
+
+// disable color management
+pref("gfx.color_management.mode", 0);
