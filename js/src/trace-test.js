@@ -1332,6 +1332,22 @@ this.__proto__.a = 3; for (var j = 0; j < 4; ++j) { [a]; }
 testGlobalProtoAccess.expected = "ok";
 test(testGlobalProtoAccess);
 
+function testSetPropNeitherMissNorHit() {
+    for (var j = 0; j < 5; ++j) { if (({}).__proto__ = 1) { } }
+    return "ok";
+}
+testSetPropNeitherMissNorHit.expected = "ok";
+test(testSetPropNeitherMissNorHit);
+
+function testPrimitiveConstructorPrototype() {
+    var f = function(){};
+    f.prototype = false;
+    for (let j=0;j<5;++j) { new f; }
+    return "ok";
+}    
+testPrimitiveConstructorPrototype.expected = "ok";
+test(testPrimitiveConstructorPrototype);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
