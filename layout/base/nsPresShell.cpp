@@ -2936,36 +2936,9 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
                               PR_TRUE);
   }
 
-  nsIScrollableView *scrollableView;
-  if (!mViewManager) 
-    return NS_ERROR_UNEXPECTED;
-  nsresult result = mViewManager->GetRootScrollableView(&scrollableView);
-  if (NS_FAILED(result)) 
-    return result;
-  if (!scrollableView) 
-    return NS_ERROR_UNEXPECTED;
-  nsIView *scrolledView;
-  result = scrollableView->GetScrolledView(scrolledView);
-  // get a frame
-  nsIFrame *frame = (nsIFrame*)scrolledView->GetClientData();
+  nsIFrame *frame = FrameConstructor()->GetRootElementFrame();
   if (!frame)
     return NS_ERROR_FAILURE;
-  //we need to get to the area frame.
-  nsIAtom* frameType;
-  do 
-  {
-    frameType = frame->GetType();
-    if (frameType != nsGkAtoms::areaFrame)
-    {
-      frame = frame->GetFirstChild(nsnull);
-      if (!frame)
-        break;
-    }
-  }while(frameType != nsGkAtoms::areaFrame);
-  
-  if (!frame)
-    return NS_ERROR_FAILURE; //could not find an area frame.
-
   nsPeekOffsetStruct pos = frame->GetExtremeCaretPosition(!aForward);
 
   mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffset/*End*/ ,aExtend, PR_FALSE, aForward);

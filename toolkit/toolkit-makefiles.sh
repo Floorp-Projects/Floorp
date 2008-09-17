@@ -88,6 +88,11 @@ MAKEFILES_editor="
   editor/composer/public/Makefile
   editor/composer/src/Makefile
   editor/composer/test/Makefile
+  editor/libeditor/Makefile
+  editor/libeditor/base/Makefile
+  editor/libeditor/base/tests/Makefile
+  editor/libeditor/html/Makefile
+  editor/libeditor/text/Makefile
 "
 
 MAKEFILES_expat="
