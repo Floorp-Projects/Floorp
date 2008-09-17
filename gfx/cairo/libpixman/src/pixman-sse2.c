@@ -73,6 +73,9 @@ static __m128i MaskRed;
 static __m128i MaskGreen;
 static __m128i MaskBlue;
 
+static __m128i Mask565FixRB;
+static __m128i Mask565FixG;
+
 /* -------------------------------------------------------------------------------------------------
  * SSE2 Inlines
  */
@@ -89,26 +92,37 @@ unpack_128_2x128 (__m128i data, __m128i* dataLo, __m128i* dataHi)
     *dataHi = _mm_unpackhi_epi8 (data, _mm_setzero_si128 ());
 }
 
-static inline void
-unpack565_128_4x128 (__m128i data, __m128i* data0, __m128i* data1, __m128i* data2, __m128i* data3)
+static inline __m128i
+unpack565to8888 (__m128i lo)
 {
-    __m128i lo, hi;
-    __m128i r, g, b;
-
-    lo = _mm_unpacklo_epi16 (data, _mm_setzero_si128 ());
-    hi = _mm_unpackhi_epi16 (data, _mm_setzero_si128 ());
-
+    __m128i r, g, b, rb, t;
+    
     r = _mm_and_si128 (_mm_slli_epi32 (lo, 8), MaskRed);
     g = _mm_and_si128 (_mm_slli_epi32 (lo, 5), MaskGreen);
     b = _mm_and_si128 (_mm_slli_epi32 (lo, 3), MaskBlue);
 
-    lo = _mm_or_si128 (_mm_or_si128 (r, g), b);
+    rb = _mm_or_si128 (r, b);
+    t  = _mm_and_si128 (rb, Mask565FixRB);
+    t  = _mm_srli_epi32 (t, 5);
+    rb = _mm_or_si128 (rb, t);
 
-    r = _mm_and_si128 (_mm_slli_epi32 (hi, 8), MaskRed);
-    g = _mm_and_si128 (_mm_slli_epi32 (hi, 5), MaskGreen);
-    b = _mm_and_si128 (_mm_slli_epi32 (hi, 3), MaskBlue);
+    t  = _mm_and_si128 (g, Mask565FixG);
+    t  = _mm_srli_epi32 (t, 6);
+    g  = _mm_or_si128 (g, t);
+    
+    return _mm_or_si128 (rb, g);
+}
 
-    hi = _mm_or_si128 (_mm_or_si128 (r, g), b);
+static inline void
+unpack565_128_4x128 (__m128i data, __m128i* data0, __m128i* data1, __m128i* data2, __m128i* data3)
+{
+    __m128i lo, hi;
+
+    lo = _mm_unpacklo_epi16 (data, _mm_setzero_si128 ());
+    hi = _mm_unpackhi_epi16 (data, _mm_setzero_si128 ());
+
+    lo = unpack565to8888 (lo);
+    hi = unpack565to8888 (hi);
 
     unpack_128_2x128 (lo, data0, data1);
     unpack_128_2x128 (hi, data2, data3);
@@ -244,9 +258,11 @@ invertColors_2x128 (__m128i dataLo, __m128i dataHi, __m128i* invLo, __m128i* inv
 static inline void
 over_2x128 (__m128i* srcLo, __m128i* srcHi, __m128i* alphaLo, __m128i* alphaHi, __m128i* dstLo, __m128i* dstHi)
 {
-    negate_2x128 (*alphaLo, *alphaHi, alphaLo, alphaHi);
+    __m128i t1, t2;
 
-    pixMultiply_2x128 (dstLo, dstHi, alphaLo, alphaHi, dstLo, dstHi);
+    negate_2x128 (*alphaLo, *alphaHi, &t1, &t2);
+
+    pixMultiply_2x128 (dstLo, dstHi, &t1, &t2, dstLo, dstHi);
 
     *dstLo = _mm_adds_epu8 (*srcLo, *dstLo);
     *dstHi = _mm_adds_epu8 (*srcHi, *dstHi);
@@ -2295,7 +2311,8 @@ fbComposeSetupSSE2(void)
         MaskRed   = createMask_2x32_128 (0x00f80000, 0x00f80000);
         MaskGreen = createMask_2x32_128 (0x0000fc00, 0x0000fc00);
         MaskBlue  = createMask_2x32_128 (0x000000f8, 0x000000f8);
-
+	Mask565FixRB = createMask_2x32_128 (0x00e000e0, 0x00e000e0);
+	Mask565FixG = createMask_2x32_128  (0x0000c000, 0x0000c000);
         Mask0080 = createMask_16_128 (0x0080);
         Mask00ff = createMask_16_128 (0x00ff);
         Mask0101 = createMask_16_128 (0x0101);
@@ -2482,6 +2499,7 @@ fbCompositeSolid_nx0565sse2 (pixman_op_t op,
         while (w && (unsigned long)dst & 15)
         {
             d = *dst;
+
             *dst++ = pack565_32_16 (pack_1x64_32 (over_1x64 (_mm_movepi64_pi64 (xmmSrc),
                                                              _mm_movepi64_pi64 (xmmAlpha),
                                                              expand565_16_1x64 (d))));
@@ -2496,15 +2514,14 @@ fbCompositeSolid_nx0565sse2 (pixman_op_t op,
             /* fill cache line with next memory */
             cachePrefetchNext ((__m128i*)dst);
 
-            xmmDst = load128Aligned ((__m128i*)dst);
-
-            unpack565_128_4x128 (xmmDst, &xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
-
+	    xmmDst = load128Aligned ((__m128i*)dst);
+	    
+	    unpack565_128_4x128 (xmmDst, &xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
+	    
             over_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmDst0, &xmmDst1);
             over_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmDst2, &xmmDst3);
 
             xmmDst = pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
-
             save128Aligned ((__m128i*)dst, xmmDst);
 
             dst += 8;
