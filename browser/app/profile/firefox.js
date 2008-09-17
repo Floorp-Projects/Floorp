@@ -309,7 +309,8 @@ pref("browser.link.open_newwindow", 3);
 pref("browser.link.open_newwindow.restriction", 2);
 
 // Tabbed browser
-pref("browser.tabs.autoHide", false);
+pref("browser.tabs.autoHide", true);
+pref("browser.tabs.forceHide", false);
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnOpen", true);
 pref("browser.tabs.maxOpenBeforeWarn", 15);
