@@ -1,0 +1,229 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=350471
+-->
+<window title="Mozilla Bug 350471"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 350471</title>
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+<body  xmlns="http://www.w3.org/1999/xhtml">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=350471">Mozilla Bug 350471</a>
+
+  <p id="display"></p>
+<div id="content" style="display: none">
+</div>
+</body>
+
+<vbox style="height: 150px; background: cyan; overflow: auto;" id="scrollbox">
+  <hbox style="height: 8000px;"><vbox style="width: 8000px;"/></hbox>
+</vbox>
+
+<script class="testbody" type="application/javascript;version=1.7"><![CDATA[
+
+/** Test for Bug 350471 **/
+
+// This test depends on general.smoothScroll being off.
+
+const minLineHeight = 10, maxLineHeight = 20;
+
+function between(x, min, max) (min <= max) ? (min <= x && x <= max) : (max <= x && x <= min);
+function isbetween(x, min, max, msg) ok(between(x, min, max), msg + " - Expected " + min + " to " + max + ", got " + x);
+
+function testEventDispatching() {
+  function helper(aAxis, aDelta, aKind, aShiftKey, aCtrlKey, aAltKey, aMetaKey) {
+    let expectedEvents = [];
+    let deltaUnit = "";
+    function listener(e) {
+      if (!expectedEvents.length) {
+        ok(false, "Received an event that I didn't expect. type: " + e.type +
+           ", axis: " + e.axis + ", delta: " + e.delta);
+        return;
+      }
+      let expected = expectedEvents.shift();
+      
+      ["type", "shiftKey", "ctrlKey", "altKey", "metaKey"].forEach(function(field) {
+        is(e[field], expected[field],
+          "e." + field + " (" + e[field] + ") does not match expected value (" + expected[field] + ")");
+      });
+      
+      let expectedAxis = expected.axis == "horizontal" ? e.HORIZONTAL_AXIS : e.VERTICAL_AXIS;
+      is(e.axis, expectedAxis,
+         "e.axis (" + e.axis + ") does not match expected value (" + expectedAxis + ")");
+      
+      // When modifier keys are pressed, cancel the event.
+      // We don't want to zoom or navigate back / forward (history scroll).
+      if (aShiftKey || aCtrlKey || aAltKey || aMetaKey) {
+        e.preventDefault();
+        // Note: If this is a DOMMouseScroll event without hasPixels, we still
+        // expect a follow-up MozMousePixelScroll event.
+      } else {
+        // Only check the delta if no modifiers are pressed.
+        // History scroll and zoom change the deltas in nsESM::PreHandleEvent.
+        if (deltaUnit == (e.type == "DOMMouseScroll" ? "lines" : "pixels")) {
+          // no unit conversion necessary
+          is(e.detail, expected.delta,
+             "e.detail (" + e.detail + ") does not match expected value (" + expected.delta + ")");
+        } else if (e.type == "MozMousePixelScroll") {
+          // We sent a line scroll event but are receiving a pixel scroll event,
+          // so we need to convert the delta.
+          let minDelta = expected.delta * minLineHeight;
+          let maxDelta = expected.delta * maxLineHeight;
+          isbetween(e.detail, minDelta, maxDelta, "wrong pixel scroll event delta");
+        }
+      }
+      e.stopPropagation();
+    }
+    // Set up the expected values.
+    if (aKind == 0 || aKind == 1) {
+      expectedEvents.push({
+        type: "DOMMouseScroll",
+        axis: aAxis,
+        delta: aDelta,
+        hasPixels: (aKind == 1),
+        shiftKey: aShiftKey,
+        ctrlKey: aCtrlKey,
+        altKey: aAltKey,
+        metaKey: aMetaKey
+      });
+    }
+    if (aKind == 0 || aKind == 2) {
+      expectedEvents.push({
+        type: "MozMousePixelScroll",
+        axis: aAxis,
+        delta: aDelta,
+        shiftKey: aShiftKey,
+        ctrlKey: aCtrlKey,
+        altKey: aAltKey,
+        metaKey: aMetaKey
+      });
+    }
+    deltaUnit = aKind == 2 ? "pixels" : "lines";
+    
+    document.addEventListener("DOMMouseScroll", listener, true);
+    document.addEventListener("MozMousePixelScroll", listener, true);
+  
+    // Send the event to the documentElement.
+    synthesizeMouseScroll(document.documentElement, 10, 10, expectedEvents[0]);
+  
+    document.removeEventListener("DOMMouseScroll", listener, true);
+    document.removeEventListener("MozMousePixelScroll", listener, true);
+  
+    // expectedEvents should be empty now. If it's not, print errors.
+    expectedEvents.forEach(function(e) {
+      ok(false, "Didn't receive expected event: " + JSON.toString(e));
+    });
+  };
+  let i = 0;
+  [0, 1, 2].forEach(function(aKind) {
+    ["horizontal", "vertical"].forEach(function(aAxis) {
+      [false, true].forEach(function(aShift) {
+        [false, true].forEach(function(aCtrl) {
+          [false, true].forEach(function(aAlt) {
+            [false, true].forEach(function(aMeta) {
+              helper(aAxis, [-5, -1, 0, 1, 5][i++ % 5], aKind, aShift, aCtrl, aAlt, aMeta);
+            });
+          });
+        });
+      });
+    });
+  });
+}
+
+function testDefaultHandling() {
+  let scrollbox = document.getElementById("scrollbox");
+  let currentTest = "";
+  
+  function scrollWithPreventDefault(aEvent, aDoConsume) {
+    function listener(e) {
+      if (aDoConsume[e.type])
+        e.preventDefault();
+    }
+    scrollbox.addEventListener("DOMMouseScroll", listener, true);
+    scrollbox.addEventListener("MozMousePixelScroll", listener, true);
+    synthesizeMouseScroll(scrollbox, 10, 10, aEvent);
+    scrollbox.removeEventListener("DOMMouseScroll", listener, true);
+    scrollbox.removeEventListener("MozMousePixelScroll", listener, true);
+  }
+  
+  function helper(aType, aHasPixels, aAxis, aStart, aDelta, aConsumeLine, aConsumePixel, aPositionShouldChange) {
+    scrollbox.scrollLeft = aStart;
+    scrollbox.scrollTop = aStart;
+    scrollWithPreventDefault({
+      type: aType,
+      axis: aAxis,
+      hasPixels: aHasPixels,
+      delta: aDelta
+    }, {
+      "DOMMouseScroll": aConsumeLine,
+      "MozMousePixelScroll": aConsumePixel
+    });
+    let newPos = scrollbox[aAxis == "horizontal" ? "scrollLeft" : "scrollTop"];
+    let newPosWrongAxis = scrollbox[aAxis == "horizontal" ? "scrollTop" : "scrollLeft"];
+
+    is(newPosWrongAxis, aStart, currentTest + " wrong axis scrolled - type: " + aType);
+
+    if (aPositionShouldChange) {
+      if (aType == "MozMousePixelScroll") {
+        // aDelta is in pixels, no conversion necessary
+        is(newPos, aStart + aDelta, currentTest + " wrong scroll position - type: " + aType);
+      } else {
+        // Use minLineHeight and maxLineHeight as an estimate for the conversion factor.
+        isbetween(newPos, aStart + aDelta * minLineHeight, aStart + aDelta * maxLineHeight,
+                  currentTest + " wrong scroll position - type: " + aType);
+      }
+    } else {
+      is(newPos, aStart, currentTest + " The scroll position shouldn't have changed. - type: " + aType);
+    }
+  }
+
+  ["horizontal", "vertical"].forEach(function(aAxis) {
+    [-5, 5].forEach(function(aDelta) {
+      [false, true].forEach(function(aConsumeLine) {
+        [false, true].forEach(function(aConsumePixel) {
+          let shouldScroll = !aConsumeLine && !aConsumePixel;
+          
+          currentTest = "normal DOMMouseScroll: only scroll if neither line nor pixel scroll are consumed.";
+          helper("DOMMouseScroll", false, aAxis, 4000, aDelta, aConsumeLine, aConsumePixel, shouldScroll);
+          
+          currentTest = "DOMMouseScroll with hasPixels: never scroll.";
+          helper("DOMMouseScroll", true, aAxis, 4000, aDelta, aConsumeLine, aConsumePixel, false);
+          
+          currentTest = "MozMousePixelScroll (consumed: " + aConsumePixel +
+                        ") with preceding DOMMouseScroll (consumed: " + aConsumeLine +
+                        "): " + (shouldScroll ? "scroll." : "don't scroll.");
+          // It shouldn't matter:
+          //  1. whether hasPixels is set on the preceding DOMMouseScroll event or
+          //  2. whether the preceding DOMMouseScroll event's MozMousePixelScroll event is consumed.
+          helper("DOMMouseScroll", true, aAxis, 4000, aDelta, aConsumeLine, false, false);
+          helper("MozMousePixelScroll", false, aAxis, 4000, aDelta, false, aConsumePixel, shouldScroll);
+          helper("DOMMouseScroll", false, aAxis, 4000, aDelta, aConsumeLine, false, !aConsumeLine);
+          helper("MozMousePixelScroll", false, aAxis, 4000, aDelta, false, aConsumePixel, shouldScroll);
+          helper("DOMMouseScroll", false, aAxis, 4000, aDelta, aConsumeLine, true, false);
+          helper("MozMousePixelScroll", false, aAxis, 4000, aDelta, false, aConsumePixel, shouldScroll);
+        });
+      });
+    });
+  });
+}
+
+function runTests() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  Components.utils.import("resource://gre/modules/JSON.jsm");
+
+  testEventDispatching();
+  testDefaultHandling();
+
+  SimpleTest.finish();
+}
+
+window.onload = function() { setTimeout(runTests, 0); };
+SimpleTest.waitForExplicitFinish();
+
+]]></script>
+
+</window>

@@ -270,6 +270,8 @@ nsDOMWindowUtils::SendMouseScrollEvent(const nsAString& aType,
   PRInt32 msg;
   if (aType.EqualsLiteral("DOMMouseScroll"))
     msg = NS_MOUSE_SCROLL;
+  else if (aType.EqualsLiteral("MozMousePixelScroll"))
+    msg = NS_MOUSE_PIXEL_SCROLL;
   else
     return NS_ERROR_UNEXPECTED;
 
