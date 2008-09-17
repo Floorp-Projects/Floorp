@@ -281,7 +281,7 @@ var BrowserUI = {
         if (newLeft > -tabbarW && newLeft <= 0)
           this.mode = UIMODE_TABS;
         if (newLeft >= -(tabbarW + sidebarW) && newLeft < -tabbarW)
-          this.mode = UIMODE_CONTROL
+          this.mode = UIMODE_CONTROLS;
 
         pannedUI = true;
       }
