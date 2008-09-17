@@ -102,10 +102,41 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
-#ifdef NATIVE_THEME_SUPPORT
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
-#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
+
+
+#ifdef NATIVE_THEME_SUPPORT
+// from nsWindow.cpp
+extern PRBool gDisableNativeTheme;
+
+static NS_IMETHODIMP
+nsNativeThemeGTKConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
+{
+    nsresult rv;
+    nsNativeThemeGTK * inst;
+
+    if (gDisableNativeTheme)
+        return NS_ERROR_NO_INTERFACE;
+
+    *aResult = NULL;
+    if (NULL != aOuter) {
+        rv = NS_ERROR_NO_AGGREGATION;
+        return rv;
+    }
+
+    NS_NEWXPCOM(inst, nsNativeThemeGTK);
+    if (NULL == inst) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        return rv;
+    }
+    NS_ADDREF(inst);
+    rv = inst->QueryInterface(aIID, aResult);
+    NS_RELEASE(inst);
+
+    return rv;
+}
+#endif
 
 #if defined(NS_OSSO)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceOSSO)
