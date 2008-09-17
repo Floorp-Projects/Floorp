@@ -1104,10 +1104,10 @@ NS_IMETHODIMP nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
   return NS_OK;
 }
 
-  /* nsIAccessible getChildAtPoint (in long x, in long y); */
+// nsIAccessible getDeepestChildAtPoint(in long x, in long y)
 NS_IMETHODIMP
-nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                              nsIAccessible **aAccessible)
+nsAccessible::GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                     nsIAccessible **aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nsnull;
@@ -1205,26 +1205,49 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
     // Fall through -- the point is in this accessible but not in a child
     // We are allowed to return |this| as the answer
   }
-  else {
-    nsCOMPtr<nsIAccessible> parent;
-    while (PR_TRUE) {
-      accessible->GetParent(getter_AddRefs(parent));
-      if (!parent) {
-        // Reached the top of the hierarchy
-        // these bounds were inside an accessible that is not a descendant of this one
-        NS_IF_ADDREF(*aAccessible = fallbackAnswer);
-        return NS_OK;
-      }
-      if (parent == this) {
-        // We reached |this|, so |accessible| is the
-        // child we want to return
-        break;
-      }
-      accessible.swap(parent);
-    }
-  }
 
   NS_IF_ADDREF(*aAccessible = accessible);
+  return NS_OK;
+}
+
+// nsIAccessible getChildAtPoint(in long x, in long y)
+NS_IMETHODIMP
+nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
+                              nsIAccessible **aAccessible)
+{
+  nsresult rv = GetDeepestChildAtPoint(aX, aY, aAccessible);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!*aAccessible)
+    return NS_OK;
+
+  nsCOMPtr<nsIAccessible> parent, accessible(*aAccessible);
+  while (PR_TRUE) {
+    accessible->GetParent(getter_AddRefs(parent));
+    if (!parent) {
+      NS_ASSERTION(PR_FALSE,
+                   "Obtained accessible isn't a child of this accessible.");
+      // Reached the top of the hierarchy. These bounds were inside an
+      // accessible that is not a descendant of this one.
+
+      // If we can't find the point in a child, we will return the fallback
+      // answer: we return |this| if the point is within it, otherwise nsnull.
+      PRInt32 x, y, width, height;
+      GetBounds(&x, &y, &width, &height);
+      if (aX >= x && aX < x + width && aY >= y && aY < y + height)
+        NS_ADDREF(*aAccessible = this);
+
+      return NS_OK;
+    }
+
+    if (parent == this) {
+      // We reached |this|, so |accessible| is the child we want to return.
+      NS_ADDREF(*aAccessible = accessible);
+      return NS_OK;
+    }
+    accessible.swap(parent);
+  }
+
   return NS_OK;
 }
 
