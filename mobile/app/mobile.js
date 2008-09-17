@@ -64,13 +64,6 @@ pref("network.http.max-persistent-connections-per-proxy", 4);
 pref("browser.sessionhistory.max_total_viewers", 0);
 pref("browser.sessionhistory.max_entries", 50);
 
-/* debugging prefs */
-pref("browser.dom.window.dump.enabled", true);
-pref("javascript.options.showInConsole", true);
-pref("javascript.options.strict", true);
-pref("nglayout.debug.disable_xul_cache", false);
-pref("nglayout.debug.disable_xul_fastload", false);
-
 /* download manager (don't show the window or alert) */
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 1); // Default to ~/Downloads
