@@ -70,8 +70,8 @@ static const char* const sEventNames[] = {
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
   "DOMAttrModified", "DOMCharacterDataModified",
   "DOMActivate", "DOMFocusIn", "DOMFocusOut",
-  "pageshow", "pagehide", "DOMMouseScroll", "offline", "online",
-  "copy", "cut", "paste"
+  "pageshow", "pagehide", "DOMMouseScroll", "MozMousePixelScroll",
+  "offline", "online", "copy", "cut", "paste"
 #ifdef MOZ_SVG
  ,
   "SVGLoad", "SVGUnload", "SVGAbort", "SVGError", "SVGResize", "SVGScroll",
@@ -479,6 +479,8 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
   } else if (mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
     if (atom == nsGkAtoms::onDOMMouseScroll)
       mEvent->message = NS_MOUSE_SCROLL;
+    else if (atom == nsGkAtoms::onMozMousePixelScroll)
+      mEvent->message = NS_MOUSE_PIXEL_SCROLL;
   } else if (mEvent->eventStructType == NS_DRAG_EVENT) {
     if (atom == nsGkAtoms::ondragstart)
       mEvent->message = NS_DRAGDROP_START;
@@ -1393,6 +1395,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_pagehide];
   case NS_MOUSE_SCROLL:
     return sEventNames[eDOMEvents_DOMMouseScroll];
+  case NS_MOUSE_PIXEL_SCROLL:
+    return sEventNames[eDOMEvents_MozMousePixelScroll];
   case NS_OFFLINE:
     return sEventNames[eDOMEvents_offline];
   case NS_ONLINE:

@@ -1096,24 +1096,37 @@ function testtag_tree_column_reorder()
 
 function testtag_tree_mousescroll(aTree)
 {
-  function helper(aStart, aDelta)
+  /* Scroll event kinds, see test_mousescroll.xul */
+  const kinds = [
+    { eventType: "DOMMouseScroll", hasPixels: false, shouldScrollDOM: true, shouldScrollNative: true },
+    { eventType: "DOMMouseScroll", hasPixels: true, shouldScrollDOM: true, shouldScrollNative: false },
+    { eventType: "MozMousePixelScroll", hasPixels: false, shouldScrollDOM: false, shouldScrollNative: true }
+  ];
+  function helper(aStart, aDelta, aKind)
   {
     aTree.treeBoxObject.scrollToRow(aStart);
     synthesizeMouseScroll(aTree.body, 1, 1,
-                         {type:"DOMMouseScroll", axis:"vertical", delta:aDelta});
-    is(aTree.treeBoxObject.getFirstVisibleRow(), aStart + aDelta, "mouse-scroll vertical starting " + aStart + " delta " + aDelta);
+                          {axis:"vertical", delta:aDelta, type:aKind.eventType,
+                           hasPixels:aKind.hasPixels});
+    var expected = aKind.shouldScrollDOM ? aStart + aDelta : aStart;
+    is(aTree.treeBoxObject.getFirstVisibleRow(), expected, "mouse-scroll vertical starting " + aStart + " delta " + aDelta
+       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
 
     aTree.treeBoxObject.scrollToRow(aStart);
     // Check that horizontal scrolling has no effect
     synthesizeMouseScroll(aTree.body, 1, 1,
-                          {type:"DOMMouseScroll", axis:"horizontal", delta:aDelta});  
-    is(aTree.treeBoxObject.getFirstVisibleRow(), aStart, "mouse-scroll horizontal starting " + aStart + " delta " + aDelta);
+                          {axis:"horizontal", delta:aDelta, type:aKind.eventType,
+                           hasPixels:aKind.hasPixels});  
+    is(aTree.treeBoxObject.getFirstVisibleRow(), aStart, "mouse-scroll horizontal starting " + aStart + " delta " + aDelta
+       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
   }
   
-  helper(2, -1);
-  helper(2, 1);
-  helper(2, -2);
-  helper(2, 2);
+  kinds.forEach(function(aKind) {
+    helper(2, -1, aKind);
+    helper(2, 1, aKind);
+    helper(2, -2, aKind);
+    helper(2, 2, aKind);
+  });
 }
 
 function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumber, aAfter)
