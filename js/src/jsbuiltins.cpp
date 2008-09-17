@@ -624,11 +624,6 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
     JSClass* clasp = FUN_INTERPRETED(fun) ? &js_ObjectClass : fun->u.n.clasp;
     JS_ASSERT(clasp != &js_ArrayClass);
 
-    JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
-    if (!obj)
-        return NULL;
-
     JS_LOCK_OBJ(cx, ctor);
     JSScope *scope = OBJ_SCOPE(ctor);
     JS_ASSERT(scope->object == ctor);
@@ -639,8 +634,20 @@ js_FastNewObject(JSContext* cx, JSObject* ctor)
     jsval v = LOCKED_OBJ_GET_SLOT(ctor, sprop->slot);
     JS_UNLOCK_SCOPE(cx, scope);
 
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
-    JSObject* proto = JSVAL_TO_OBJECT(v);
+    JSObject* proto;
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        if (!js_GetClassPrototype(cx, JSVAL_TO_OBJECT(ctor->fslots[JSSLOT_PARENT]), 
+                                  INT_TO_JSID(JSProto_Object), &proto)) {
+            return NULL;
+        }
+    } else {
+        proto = JSVAL_TO_OBJECT(v);
+    }
+
+    JS_ASSERT(JS_ON_TRACE(cx));
+    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    if (!obj)
+        return NULL;
 
     obj->classword = jsuword(clasp);
     obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
