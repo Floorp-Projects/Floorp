@@ -1217,8 +1217,6 @@
             if (this.mStrip.collapsed)
               this.setStripVisibilityTo(true);
 
-            this.mPrefs.setBoolPref("browser.tabs.forceHide", false);
-
             // wire up a progress listener for the new browser object.
             var position = this.mTabContainer.childNodes.length-1;
             var tabListener = this.mTabProgressListener(t, b, blank);
@@ -1404,39 +1402,30 @@
             if (aTab.localName != "tab")
               aTab = this.mCurrentTab;
 
-            var l = this.mTabContainer.childNodes.length;
-            if (l == 1 && this.mPrefs.getBoolPref("browser.tabs.autoHide")) {
-              // hide the tab bar
-              this.mPrefs.setBoolPref("browser.tabs.forceHide", true);
-              this.setStripVisibilityTo(false);
-              return;
-            }
-
             if (aFireBeforeUnload) {
-              var ds = this.getBrowserForTab(aTab).docShell;
+              let ds = this.getBrowserForTab(aTab).docShell;
               if (ds.contentViewer && !ds.contentViewer.permitUnload())
-                return;
+                return null;
             }
 
-            // see notes in addTab
-            var _delayedUpdate = function(aTabContainer) {
-              aTabContainer.adjustTabstrip();
-              aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
-            }
-            setTimeout(_delayedUpdate, 0, this.mTabContainer);
-
+            var l = this.mTabContainer.childNodes.length;
             if (l == 1) {
-              // add a new blank tab to replace the one we're about to close
-              // (this ensures that the remaining tab is as good as new)
-              this.addTab("about:blank");
-              l++;
+              closeWindow(true);
+              return null;
             }
-            else if (l == 2) {
+            if (l == 2) {
               var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
               var tabStripHide = !window.toolbar.visible;
               if (autohide || tabStripHide)
                 this.setStripVisibilityTo(false);
             }
+
+            // see notes in addTab
+            var _delayedUpdate = function (aTabContainer) {
+              aTabContainer.adjustTabstrip();
+              aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
+            };
+            setTimeout(_delayedUpdate, 0, this.mTabContainer);
 
             // We're committed to closing the tab now.  
             // Dispatch a notification.
@@ -1479,6 +1468,9 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
+            if (!aTab)
+              return null;
+
             var browser = this.getBrowserForTab(aTab);
             var length = this.mTabs.length;
 
@@ -1668,9 +1660,8 @@
             if (!this.mAddProgressListenerWasCalled) {
               this.mAddProgressListenerWasCalled = true;
               var autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
-              var forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
               var tabStripHide = !window.toolbar.visible;
-              if (!autoHide && !forceHide && !tabStripHide)
+              if (!autoHide && !tabStripHide)
                 this.setStripVisibilityTo(true);
             }
 
