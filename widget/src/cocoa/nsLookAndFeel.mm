@@ -43,6 +43,7 @@
 #include "nsNativeThemeColors.h"
 
 #import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
@@ -612,6 +613,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_WindowsDefaultTheme:
       aMetric = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
+      break;
+    case eMetric_MacGraphiteTheme:
+      aMetric = [NSColor currentControlTint] == NSGraphiteControlTint;
       break;
     case eMetric_TabFocusModel:
     {
