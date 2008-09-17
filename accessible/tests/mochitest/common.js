@@ -77,16 +77,16 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
       acc = gAccRetrieval.getAccessibleFor(elm);
     } catch (e) {
     }
-    
+
     if (!acc) {
-      ok(false, "Can't get accessible for " + aID);
+      ok(false, "Can't get accessible for " + aAccOrElmOrID);
       return null;
     }
   }
-  
+
   if (!aInterfaces)
     return acc;
-  
+
   if (aInterfaces instanceof Array) {
     for (var index = 0; index < aInterfaces.length; index++) {
       try {
