@@ -15,8 +15,8 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,79 +35,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = editor/libeditor/base/tests
 
 include $(DEPTH)/config/autoconf.mk
-
-ifdef ENABLE_TESTS
-DIRS            += tests
-endif
-
-MODULE		= editor
-LIBRARY_NAME	= editorbase_s
-LIBXUL_LIBRARY	= 1
-
-REQUIRES	= xpcom \
-		  string \
-		  dom \
-		  locale \
-		  layout \
-		  content \
-		  txmgr \
-		  txtsvc \
-		  htmlparser \
-		  necko \
-		  pref \
-		  view \
-		  gfx \
-		  thebes \
-		  widget \
-		  unicharutil \
-		  commandhandler \
-		  docshell \
-		  $(NULL)
-
-# Internal header files, needed by other editor sublibs:
-INTERNAL_HDR_DIR = ../internal
-
-CPPSRCS		=                           \
-		nsEditor.cpp                \
-		nsEditorCommands.cpp        \
-		nsEditorController.cpp      \
-		nsEditorUtils.cpp           \
-		nsSelectionState.cpp        \
-		$(NULL)
-
-# Transactions: we'd like to split these off,
-# but currently they and nsEditor are too intertwined!
-CPPSRCS		+=                          \
-		EditTxn.cpp                 \
-		PlaceholderTxn.cpp          \
-		ChangeAttributeTxn.cpp      \
-		ChangeCSSInlineStyleTxn.cpp \
-		CreateElementTxn.cpp        \
-		DeleteElementTxn.cpp        \
-		DeleteRangeTxn.cpp          \
-		DeleteTextTxn.cpp           \
-		EditAggregateTxn.cpp        \
-		IMETextTxn.cpp              \
-		InsertElementTxn.cpp        \
-		InsertTextTxn.cpp           \
-		JoinElementTxn.cpp          \
-		SetDocTitleTxn.cpp          \
-		SplitElementTxn.cpp         \
-		nsStyleSheetTxns.cpp        \
-		TransactionFactory.cpp      \
-		$(NULL)
-
-# don't want the shared lib; force the creation of a static lib.
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= \
-		-I$(topsrcdir)/content/base/src \
+_TEST_FILES = \
+		test_selection_move_commands.xul \
 		$(NULL)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
