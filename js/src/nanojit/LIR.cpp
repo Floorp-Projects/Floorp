@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
+#define AVMPLUS_DEFINE_NEW_DELETE
 #include "nanojit.h"
 #include <stdio.h>
 
