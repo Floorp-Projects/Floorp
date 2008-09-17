@@ -293,22 +293,17 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 {
   if (mIsExpired)
     return nil;
-  
+
   // Convert from cocoa's coordinate system to gecko's. According to the docs
   // the point we're given is guaranteed to be bottom-left screen coordinates.
   nsPoint geckoPoint;
   ConvertCocoaToGeckoPoint (point, geckoPoint);
 
-  // start iterating as deep down as we can on this point, with the current accessible as the root.
-  // as soon as GetChildAtPoint() returns null, or can't descend further (without getting the same accessible again)
-  // we stop.
-  nsCOMPtr<nsIAccessible> deepestFoundChild, newChild(mGeckoAccessible);
-  do {
-    deepestFoundChild = newChild;
-    deepestFoundChild->GetChildAtPoint((PRInt32)geckoPoint.x, (PRInt32)geckoPoint.y, getter_AddRefs(newChild));
-  } while (newChild && newChild.get() != deepestFoundChild.get());
+  nsCOMPtr<nsIAccessible> deepestFoundChild;
+  mGeckoAccessible->GetDeepestChildAtPoint((PRInt32)geckoPoint.x,
+                                           (PRInt32)geckoPoint.y,
+                                           getter_AddRefs(deepestFoundChild));
   
-
   // if we found something, return its native accessible.
   if (deepestFoundChild) {
     mozAccessible *nativeChild = GetNativeFromGeckoAccessible(deepestFoundChild);

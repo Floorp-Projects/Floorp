@@ -58,7 +58,7 @@ interface nsIAccessibleRelation;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(004b6882-2df1-49df-bb5f-0fb81a5b1edf)]
+[scriptable, uuid(c7520419-87ec-42bc-98cc-04c0bf173530)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -199,8 +199,24 @@ interface nsIAccessible : nsISupports
    * current accessible will be returned.
    * If the point is in neither the current accessible or a child, then
    * null will be returned.
+   *
+   * @param x  screen's x coordinate
+   * @param y  screen's y coordinate
+   * @return   the deepest accessible child containing the given point
    */
   nsIAccessible getChildAtPoint(in long x, in long y);
+
+  /**
+   * Deepest accessible child which contains the coordinate at (x, y) in screen
+   * pixels. If the point is in the current accessible but not in a child, the
+   * current accessible will be returned. If the point is in neither the current
+   * accessible or a child, then null will be returned.
+   *
+   * @param x  screen's x coordinate
+   * @param y  screen's y coordinate
+   * @return   the deepest accessible child containing the given point
+   */
+  nsIAccessible getDeepestChildAtPoint(in long x, in long y);
 
   /**
    * Nth accessible child using zero-based index or last child if index less than zero
