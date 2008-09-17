@@ -427,6 +427,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       aMetric = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
       break;
+    case eMetric_MacGraphiteTheme:
+      aMetric = 0;
+      res = NS_ERROR_NOT_IMPLEMENTED;
+      break;
     case eMetric_IMERawInputUnderlineStyle:
     case eMetric_IMEConvertedTextUnderlineStyle:
       aMetric = NS_UNDERLINE_STYLE_SOLID;

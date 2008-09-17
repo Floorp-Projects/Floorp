@@ -256,6 +256,15 @@ public:
     eMetric_WindowsClassic,
 
     /*
+     * A Boolean value to determine whether the Mac graphite theme is
+     * being used.
+     *
+     * The value of this metric is not used on other platforms. These platforms
+     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
+     */
+    eMetric_MacGraphiteTheme,
+
+    /*
      * eMetric_AlertNotificationOrigin indicates from which corner of the
      * screen alerts slide in, and from which direction (horizontal/vertical).
      * 0, the default, represents bottom right, sliding vertically.
