@@ -4451,8 +4451,6 @@ js_Interpret(JSContext *cx)
                             JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
                             JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj)));
 
-                            TRACE_2(SetPropHit, entry, sprop);
-
                             if (scope->object == obj) {
                                 /*
                                  * Fastest path: the cached sprop is already
@@ -4465,6 +4463,7 @@ js_Interpret(JSContext *cx)
                                     PCMETER(cache->setpchits++);
                                     NATIVE_SET(cx, obj, sprop, &rval);
                                     JS_UNLOCK_SCOPE(cx, scope);
+                                    TRACE_2(SetPropHit, entry, sprop);
                                     break;
                                 }
                             } else {
@@ -4556,6 +4555,7 @@ js_Interpret(JSContext *cx)
                                                  rval);
                                 LOCKED_OBJ_SET_SLOT(obj, slot, rval);
                                 JS_UNLOCK_SCOPE(cx, scope);
+                                TRACE_2(SetPropHit, entry, sprop);
                                 break;
                             }
 
@@ -4574,20 +4574,17 @@ js_Interpret(JSContext *cx)
                     } else {
                         ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
                         if (obj == obj2) {
-                            if (PCVAL_IS_SLOT(entry->vword)) {
-                                slot = PCVAL_TO_SLOT(entry->vword);
-                                JS_ASSERT(slot < obj->map->freeslot);
-                                LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, rval);
-                            } else if (PCVAL_IS_SPROP(entry->vword)) {
-                                sprop = PCVAL_TO_SPROP(entry->vword);
-                                JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
-                                JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj2)));
-                                NATIVE_SET(cx, obj, sprop, &rval);
-                            }
+                            JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
+                            sprop = PCVAL_TO_SPROP(entry->vword);
+                            JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
+                            JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj2)));
+                            NATIVE_SET(cx, obj, sprop, &rval);
                         }
                         JS_UNLOCK_OBJ(cx, obj2);
-                        if (obj == obj2 && !PCVAL_IS_OBJECT(entry->vword))
+                        if (obj == obj2) {
+                            TRACE_2(SetPropHit, entry, sprop);
                             break;
+                        }
                     }
                 }
 
@@ -4605,6 +4602,12 @@ js_Interpret(JSContext *cx)
                     if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                         goto error;
                 }
+#ifdef JS_TRACER
+                if (!entry && TRACE_RECORDER(cx)) {
+                    js_AbortRecording(cx, NULL, "SetPropUncached");
+                    ENABLE_TRACER(0);
+                }
+#endif
             } while (0);
           END_SET_CASE_STORE_RVAL(JSOP_SETPROP, 2);
 
