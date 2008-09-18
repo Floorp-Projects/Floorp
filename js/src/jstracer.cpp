@@ -2040,10 +2040,13 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.callee = fi.callee;
     newifp->frame.fun = fun;
 
-    newifp->frame.argc = fi.s.argc;
+    uint16 argc = fi.s.argc & 0x7fff;
+    bool constructing = fi.s.argc & 0x8000;
+    
+    newifp->frame.argc = argc;
     newifp->callerRegs.pc = fi.callpc;
     newifp->callerRegs.sp = cx->fp->slots + fi.s.spdist;
-    newifp->frame.argv = newifp->callerRegs.sp - JS_MAX(fun->nargs, fi.s.argc);
+    newifp->frame.argv = newifp->callerRegs.sp - JS_MAX(fun->nargs, argc);
     JS_ASSERT(newifp->frame.argv >= StackBase(cx->fp));
 
     newifp->frame.rval = JSVAL_VOID;
@@ -2052,7 +2055,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.scopeChain = OBJ_GET_PARENT(cx, fi.callee);
     newifp->frame.sharpDepth = 0;
     newifp->frame.sharpArray = NULL;
-    newifp->frame.flags = 0;
+    newifp->frame.flags = constructing ? JSFRAME_CONSTRUCTING : 0;
     newifp->frame.dormantNext = NULL;
     newifp->frame.xmlNamespace = NULL;
     newifp->frame.blockChain = NULL;
@@ -4052,7 +4055,7 @@ TraceRecorder::record_JSOP_NEW()
         LIns* tv_ins = lir->insCall(F_FastNewObject, args);
         guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
         set(&tval, tv_ins);
-        return interpretedFunctionCall(fval, fun, argc);
+        return interpretedFunctionCall(fval, fun, argc, true);
     }
 
     static JSTraceableNative knownNatives[] = {
@@ -4596,7 +4599,7 @@ TraceRecorder::guardShapelessCallee(jsval& callee)
 }
 
 bool
-TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
+TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc, bool constructing)
 {
     if (JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(fval)) != globalObj)
         ABORT_TRACE("JSOP_CALL or JSOP_NEW crosses global scopes");
@@ -4620,12 +4623,15 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc)
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, 0/*callDepth*/,
         *m++ = determineSlotType(vp);
     );
-    
+
+    if (argc >= 0x8000)
+        ABORT_TRACE("too many arguments");
+
     FrameInfo fi = {
         JSVAL_TO_OBJECT(fval),
         fp->regs->pc,
         typemap,
-        { { fp->regs->sp - fp->slots, argc } }
+        { { fp->regs->sp - fp->slots, argc | (constructing ? 0x8000 : 0) } }
     };
 
     unsigned callDepth = getCallDepth();
@@ -4691,7 +4697,7 @@ TraceRecorder::record_JSOP_CALL()
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
 
     if (FUN_INTERPRETED(fun))
-        return interpretedFunctionCall(fval, fun, argc);
+        return interpretedFunctionCall(fval, fun, argc, false);
 
     if (FUN_SLOW_NATIVE(fun))
         ABORT_TRACE("slow native");
@@ -4789,7 +4795,7 @@ TraceRecorder::record_JSOP_CALL()
                 sp[i] = argv[i];
             }
             applyingArguments = true;
-            return interpretedFunctionCall(tval, tfun, argc);
+            return interpretedFunctionCall(tval, tfun, argc, false);
         }
 
         if (aval_ins->fid() != F_Array_1str)

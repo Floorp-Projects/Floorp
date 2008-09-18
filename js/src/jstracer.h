@@ -326,7 +326,7 @@ class TraceRecorder {
                               nanojit::LIns* dslots_ins, nanojit::LIns* idx_ins);
     void clearFrameSlotsFromCache();
     bool guardShapelessCallee(jsval& callee);
-    bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc);
+    bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc, bool constructing);
     bool forInLoop(jsval* vp);
 
     void trackCfgMerges(jsbytecode* pc);

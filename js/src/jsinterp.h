@@ -455,7 +455,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN flags, jsval *result);
 
 extern JSBool
-js_InvokeConstructor(JSContext *cx, uintN argc, jsval *vp);
+js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp);
 
 extern JSBool
 js_Interpret(JSContext *cx);
