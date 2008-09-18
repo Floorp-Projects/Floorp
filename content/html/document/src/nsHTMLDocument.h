@@ -228,6 +228,8 @@ public:
 
   virtual nsresult SetEditingState(EditingState aState);
 
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
 protected:
   nsresult GetBodySize(PRInt32* aWidth,
                        PRInt32* aHeight);

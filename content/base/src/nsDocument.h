@@ -815,6 +815,10 @@ public:
 
   void DoNotifyPossibleTitleChange();
 
+  void SetLoadedAsData(PRBool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
+
+  nsresult CloneDocHelper(nsDocument* clone) const;
+
 protected:
 
   void RegisterNamedItems(nsIContent *aContent);

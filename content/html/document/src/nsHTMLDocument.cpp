@@ -4106,3 +4106,20 @@ nsHTMLDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
                                 aDocumentDefaultType, aResult);
 }
 #endif
+
+nsresult
+nsHTMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+{
+  NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
+               "Can't import this document into another document!");
+
+  nsRefPtr<nsHTMLDocument> clone = new nsHTMLDocument();
+  NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = CloneDocHelper(clone.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // State from nsHTMLDocument
+  clone->mLoadFlags = mLoadFlags;
+
+  return CallQueryInterface(clone.get(), aResult);
+}
