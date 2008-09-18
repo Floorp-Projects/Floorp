@@ -1388,8 +1388,6 @@ nsAutoCompleteController::CompleteValue(nsString &aValue,
     // autocomplete to aValue.
     mInput->SetTextValue(aValue);
   } else {
-    PRInt32 findIndex;  // Offset of mSearchString within aValue.
-
     nsresult rv;
     nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1399,7 +1397,7 @@ nsAutoCompleteController::CompleteValue(nsString &aValue,
       // Only succeed if the missing portion is "http://"; otherwise do not
       // autocomplete.  This prevents us from "helpfully" autocompleting to a
       // URI that isn't equivalent to what the user expected.
-      findIndex = 7; // length of "http://"
+      const PRInt32 findIndex = 7; // length of "http://"
 
       if ((endSelect < findIndex + mSearchStringLength) ||
           !scheme.LowerCaseEqualsLiteral("http") ||
@@ -1407,27 +1405,20 @@ nsAutoCompleteController::CompleteValue(nsString &aValue,
             mSearchString, nsCaseInsensitiveStringComparator())) {
         return NS_OK;
       }
+
+      mInput->SetTextValue(mSearchString +
+                           Substring(aValue, mSearchStringLength + findIndex,
+                                     endSelect));
+
+      endSelect -= findIndex; // We're skipping this many characters of aValue.
     } else {
-      // Autocompleting something other than a URI from the middle.  Assume we
-      // can just go ahead and autocomplete the missing final portion; this
-      // seems like a problematic assumption...
-      nsString::const_iterator iter, end;
-      aValue.BeginReading(iter);
-      aValue.EndReading(end);
-      const nsString::const_iterator::pointer start = iter.get();
-      ++iter;  // Skip past beginning since we know that doesn't match
+      // Autocompleting something other than a URI from the middle.
+      // Use the format "searchstring >> full string" to indicate to the user
+      // what we are going to replace their search string with.
+      mInput->SetTextValue(mSearchString + NS_LITERAL_STRING(" >> ") + aValue);
 
-      FindInReadable(mSearchString, iter, end,
-                     nsCaseInsensitiveStringComparator());
-
-      findIndex = iter.get() - start;
+      endSelect = mSearchString.Length() + 4 + aValue.Length();
     }
-
-    mInput->SetTextValue(mSearchString +
-                         Substring(aValue, mSearchStringLength + findIndex,
-                                   endSelect));
-
-    endSelect -= findIndex; // We're skipping this many characters of aValue.
   }
 
   mInput->SelectTextRange(selectDifference ?
