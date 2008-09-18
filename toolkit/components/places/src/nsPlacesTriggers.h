@@ -40,6 +40,38 @@
 #define __nsPlacesTriggers_h__
 
 /**
+ * Trigger increments the visit count by one for each inserted visit that isn't
+ * an invalid transition, embedded transition, or a download transition.
+ */
+#define CREATE_VISIT_COUNT_INSERT_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TRIGGER moz_historyvisits_afterinsert_v1_trigger " \
+  "AFTER INSERT ON moz_historyvisits FOR EACH ROW " \
+  "WHEN NEW.visit_type NOT IN (0, 4, 7) " /* invalid, EMBED, DOWNLOAD */ \
+  "BEGIN " \
+    "UPDATE moz_places " \
+    "SET visit_count = visit_count + 1 " \
+    "WHERE moz_places.id = NEW.place_id; " \
+  "END" \
+)
+
+/**
+ * Trigger decrements the visit count by one for each removed visit that isn't
+ * an invalid transition, embeded transition, or a download transition.  To be
+ * safe, we ensure that the visit count will not fall below zero.
+ */
+#define CREATE_VISIT_COUNT_DELETE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TRIGGER moz_historyvisits_afterdelete_v1_trigger " \
+  "AFTER DELETE ON moz_historyvisits FOR EACH ROW " \
+  "WHEN OLD.visit_type NOT IN (0, 4, 7) " /* invalid, EMBED, DOWNLOAD */ \
+  "BEGIN " \
+    "UPDATE moz_places " \
+    "SET visit_count = visit_count - 1 " \
+    "WHERE moz_places.id = OLD.place_id " \
+    "AND visit_count > 0; " \
+  "END" \
+)
+
+/**
  * Trigger checks to ensure that at least one bookmark is still using a keyword
  * when any bookmark is deleted.  If there are no more bookmarks using it, the
  * keyword is deleted.
