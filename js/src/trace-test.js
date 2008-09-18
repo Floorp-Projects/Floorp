@@ -1433,6 +1433,19 @@ function testMoreArgcThanNargs()
 testMoreArgcThanNargs.expected = 4*10;
 test(testMoreArgcThanNargs);
 
+function testArrayPushPop() {
+    var a = [], sum1 = 0, sum2 = 0;
+    for (var i = 0; i < 10; ++i)
+	sum1 += a.push(i);
+    for (var i = 0; i < 10; ++i)
+	sum2 += a.pop();
+    a.push(sum1);
+    a.push(sum2);
+    return a.join(",");
+}
+testArrayPushPop.expected = "55,45";
+test(testArrayPushPop);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
