@@ -128,9 +128,7 @@ public:
     virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                     const Parameters *aParams, PRUint32 aFlags);
 
-    gfxPangoFont *GetFontAt(PRInt32 i) {
-        return static_cast<gfxPangoFont*>(static_cast<gfxFont*>(mFonts[i]));
-    }
+    virtual gfxPangoFont *GetFontAt(PRInt32 i);
 
 protected:
     // ****** Textrun glyph conversion helpers ******
@@ -163,9 +161,7 @@ protected:
                                  const gchar *aUTF8, PRUint32 aUTF8Length);
 #endif
 
-    static PRBool FontCallback (const nsAString& fontName,
-                                const nsACString& genericName,
-                                void *closure);
+    void GetFcFamilies(nsAString &aFcFamilies);
 };
 
 class gfxPangoFontWrapper {
