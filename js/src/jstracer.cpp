@@ -4013,15 +4013,6 @@ TraceRecorder::record_JSOP_NEG()
     return false;
 }
 
-enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID };
-struct JSTraceableNative {
-    JSFastNative native;
-    int          builtin;
-    const char  *prefix;
-    const char  *argtypes;
-    JSTNErrType  errtype;
-};
-
 JSBool
 js_Array(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
 
@@ -4710,6 +4701,8 @@ TraceRecorder::record_JSOP_CALL()
 
     static JSTraceableNative knownNatives[] = {
         { js_array_join,               F_Array_p_join,         "TC",  "s",    FAIL_NULL },
+        { js_array_push,               F_Array_p_push1,        "TC",  "v",    FAIL_JSVAL },
+        { js_array_pop,                F_Array_p_pop,          "TC",  "",     FAIL_JSVAL },
         { js_math_sin,                 F_Math_sin,             "",    "d",    INFALLIBLE },
         { js_math_cos,                 F_Math_cos,             "",    "d",    INFALLIBLE },
         { js_math_pow,                 F_Math_pow,             "",    "dd",   INFALLIBLE },
@@ -4749,7 +4742,8 @@ TraceRecorder::record_JSOP_CALL()
     LIns* arg1_ins = NULL;
     jsval arg1 = JSVAL_VOID;
 
-    if ((JSFastNative)fun->u.n.native == js_fun_apply) {
+    JSFastNative native = (JSFastNative)fun->u.n.native;
+    if (native == js_fun_apply) {
         if (argc != 2)
             ABORT_TRACE("can't trace Function.prototype.apply with other than 2 args");
 
@@ -4909,6 +4903,9 @@ TraceRecorder::record_JSOP_CALL()
         } else if (argtype == 'f') {                                           \
             if (!VALUE_IS_FUNCTION(cx, arg))                                   \
                 continue; /* might have another specialization for arg */      \
+        } else if (argtype == 'v') {                                           \
+            if (!box_jsval(arg, *argp))                                        \
+                return false;                                                  \
         } else {                                                               \
             continue;     /* might have another specialization for arg */      \
         }                                                                      \
@@ -4940,30 +4937,52 @@ TraceRecorder::record_JSOP_CALL()
         JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
 #endif
 
-        LIns* res_ins = lir->insCall(known->builtin, args);
-        switch (known->errtype) {
-          case FAIL_NULL:
-            guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
-            break;
-          case FAIL_NEG:
-          {
-            res_ins = lir->ins1(LIR_i2f, res_ins);
-            jsdpun u;
-            u.d = 0.0;
-            guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(u.u64)), OOM_EXIT);
-            break;
-          }
-          case FAIL_VOID:
-            guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
-            break;
-          default:;
-        }
-        set(&fval, res_ins);
+        rval_ins = lir->insCall(known->builtin, args);
+
+        /* The return value will be processed by FastNativeCallComplete since we have to
+           know the actual return value type for calls that return jsval (like Array_p_pop). */
+        pendingTraceableNative = known;
+        
         return true;
     }
 
     /* Didn't find it. */
     ABORT_TRACE("unknown native");
+}
+
+bool
+TraceRecorder::record_FastNativeCallComplete()
+{
+    JSStackFrame* fp = cx->fp;
+    jsbytecode *pc = fp->regs->pc;
+    uintN argc = GET_ARGC(pc);
+    jsval& fval = stackval(0 - (argc + 2));
+    JS_ASSERT(&fval >= StackBase(fp));
+
+    switch (pendingTraceableNative->errtype) {
+      case FAIL_NULL:
+        guard(false, lir->ins_eq0(rval_ins), OOM_EXIT);
+        break;
+      case FAIL_NEG:
+      {
+        rval_ins = lir->ins1(LIR_i2f, rval_ins);
+        jsdpun u;
+        u.d = 0.0;
+        guard(false, lir->ins2(LIR_flt, rval_ins, lir->insImmq(u.u64)), OOM_EXIT);
+        break;
+      }
+      case FAIL_VOID:
+        guard(false, lir->ins2i(LIR_eq, rval_ins, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+        break;
+      case FAIL_JSVAL:
+        guard(false, lir->ins2i(LIR_eq, rval_ins, JSVAL_ERROR_COOKIE), OOM_EXIT);
+        if (!unbox_jsval(fval, rval_ins))
+            return false;
+        break;
+      default:;
+    }
+    set(&fval, rval_ins);
+    return true;
 }
 
 bool
