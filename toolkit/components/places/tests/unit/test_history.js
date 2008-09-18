@@ -41,6 +41,8 @@
 // Get history service
 try {
   var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
+  var gh = Cc["@mozilla.org/browser/global-history;2"].
+           getService(Ci.nsIGlobalHistory2);
 } catch(ex) {
   do_throw("Could not get history service\n");
 } 
@@ -61,7 +63,9 @@ function add_visit(aURI, aReferrer) {
                                  histsvc.TRANSITION_TYPED, // user typed in URL bar
                                  false, // not redirect
                                  0);
+  dump("### Added visit with id of " + placeID + "\n");
   do_check_true(placeID > 0);
+  do_check_true(gh.isVisited(aURI));
   return placeID;
 }
 
