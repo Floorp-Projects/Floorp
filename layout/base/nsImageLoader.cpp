@@ -257,5 +257,5 @@ nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
 
 #endif
 
-  mFrame->Invalidate(bounds, PR_FALSE);
+  mFrame->Invalidate(bounds);
 }

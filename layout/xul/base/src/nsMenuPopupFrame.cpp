@@ -684,9 +684,9 @@ nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu, nsPopupState aNewState)
 void
 nsMenuPopupFrame::InvalidateInternal(const nsRect& aDamageRect,
                                      nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                     PRBool aImmediate)
+                                     PRUint32 aFlags)
 {
-  InvalidateRoot(aDamageRect, aX, aY, aImmediate);
+  InvalidateRoot(aDamageRect + nsPoint(aX, aY), aFlags);
 }
 
 void

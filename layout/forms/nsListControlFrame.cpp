@@ -1818,11 +1818,13 @@ nsListControlFrame::IsContainingBlock() const
 void
 nsListControlFrame::InvalidateInternal(const nsRect& aDamageRect,
                                        nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                       PRBool aImmediate)
+                                       PRUint32 aFlags)
 {
-  if (!IsInDropDownMode())
-    nsHTMLScrollFrame::InvalidateInternal(aDamageRect, aX, aY, this, aImmediate);
-  InvalidateRoot(aDamageRect, aX, aY, aImmediate);
+  if (!IsInDropDownMode()) {
+    nsHTMLScrollFrame::InvalidateInternal(aDamageRect, aX, aY, this, aFlags);
+    return;
+  }
+  InvalidateRoot(aDamageRect + nsPoint(aX, aY), aFlags);
 }
 
 #ifdef DEBUG

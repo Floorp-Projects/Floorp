@@ -2756,7 +2756,7 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
     // Determine damaged area and tell view manager to redraw it
     // blink doesn't blink outline ... I hope
     nsRect bounds(nsPoint(0, 0), frameData->mFrame->GetSize());
-    frameData->mFrame->Invalidate(bounds, PR_FALSE);
+    frameData->mFrame->Invalidate(bounds);
   }
   return NS_OK;
 }
@@ -4700,7 +4700,7 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
                                                    NS_FRAME_IS_DIRTY);
     }
     // Selection might change anything. Invalidate the overflow area.
-    Invalidate(GetOverflowRect(), PR_FALSE);
+    InvalidateOverflowRect();
   }
   if (aSpread == eSpreadDown)
   {

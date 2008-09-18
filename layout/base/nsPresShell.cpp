@@ -4312,7 +4312,7 @@ PresShell::UnsuppressAndInvalidate()
   if (rootFrame) {
     // let's assume that outline on a root frame is not supported
     nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
-    rootFrame->Invalidate(rect, PR_FALSE);
+    rootFrame->Invalidate(rect);
   }
 
   // This makes sure to get the same thing that nsPresContext::EnsureVisible()
