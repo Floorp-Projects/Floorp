@@ -202,26 +202,4 @@
   "END" \
 )
 
-/**
- * This trigger moves the data out of a temporary table into the permanent one
- * before deleting from the temporary table.
- *
- * Note - it's OK to use an INSERT OR REPLACE here because the only conflict
- * that will happen is the primary key.  As a result, the row will be deleted,
- * and the replacement will be inserted with the same id.
- */
-#define CREATE_TEMP_SYNC_TRIGGER_BASE(__table) NS_LITERAL_CSTRING( \
-  "CREATE TEMPORARY TRIGGER " __table "_beforedelete_trigger " \
-  "BEFORE DELETE ON " __table "_temp FOR EACH ROW " \
-  "BEGIN " \
-    "INSERT OR REPLACE INTO " __table " " \
-    "SELECT * FROM " __table "_temp " \
-    "WHERE id = OLD.id;" \
-  "END" \
-)
-#define CREATE_MOZ_PLACES_SYNC_TRIGGER \
-  CREATE_TEMP_SYNC_TRIGGER_BASE("moz_places")
-#define CREATE_MOZ_HISTORYVISITS_SYNC_TRIGGER \
-  CREATE_TEMP_SYNC_TRIGGER_BASE("moz_historyvisits")
-
 #endif // __nsPlacesTriggers_h__
