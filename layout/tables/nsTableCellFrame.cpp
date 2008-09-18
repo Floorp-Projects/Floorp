@@ -517,7 +517,7 @@ nsTableCellFrame::SetSelected(nsPresContext* aPresContext,
     aPresContext->PresShell()->FrameSelection();
   if (frameSelection->GetTableCellSelection()) {
     // Selection can affect content, border and outline
-    Invalidate(GetOverflowRect(), PR_FALSE);
+    InvalidateOverflowRect();
   }
   return NS_OK;
 }
@@ -933,7 +933,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 
   // XXXbz is this invalidate actually needed, really?
   if (GetStateBits() & NS_FRAME_IS_DIRTY) {
-    Invalidate(GetOverflowRect(), PR_FALSE);
+    InvalidateOverflowRect();
   }
 
 #ifdef NS_DEBUG
