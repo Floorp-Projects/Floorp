@@ -101,19 +101,12 @@
       <field name="progressListenerCreator"/>
 
       <method name="updateCanvasState">
-        <parameter name="aNewDoc"/>
         <body><![CDATA[
-          if (aNewDoc)
-            this._updateViewState();
-
-          if (this._updateTimeout)
-            clearTimeout(this._updateTimeout);
-
-          var self = this;
-          this._updateTimeout = setTimeout(function () {
-            if (!self.dragData.dragging && !self.dragData.kineticId)
-              self._browserToCanvas();
-          }, 100);
+          this._updateViewState();
+          // clear the whole canvas and redraw
+          var ctx = this._canvas.getContext("2d");
+          ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+          this._browserToCanvas();
         ]]></body>
       </method>
 
@@ -208,6 +201,28 @@
         ]]></body>
       </method>
 
+
+      <field name="browserRedrawHandler">
+        <![CDATA[
+        ({
+          deckbrowser: this,
+
+          handleEvent: function (aEvent) {
+            let self = this.deckbrowser;
+
+            if (self.dragData.dragging || self.dragData.kineticId)
+              return;
+
+            for (let i = 0; i < aEvent.clientRects.length; i++) {
+              let e = aEvent.clientRects.item(i);
+              //dump(Math.floor(e.left) + ", " + Math.floor(e.top) + ", " + Math.ceil(e.width) + ", " + Math.ceil(e.height) + "\n");
+              self._browserToCanvas2(Math.floor(e.left), Math.floor(e.top), Math.ceil(e.width), Math.ceil(e.height));
+            }
+          }
+        });
+        ]]>
+      </field>
+
       <method name="selectTab">
         <parameter name="tab"/>
         <body><![CDATA[
@@ -218,6 +233,9 @@
             var currentDisplay = this.getDisplayForTab(currentTab);
             var currentBrowser = this.getBrowserForDisplay(currentDisplay);
             if (currentBrowser) {
+              // stop monitor paint events for this browser
+              currentBrowser.removeEventListener("MozAfterPaint", this.browserRedrawHandler, false);
+
               currentDisplay.url = currentBrowser.contentWindow.location.toString();
               currentBrowser.setAttribute("type", "content");
               currentTab.updateTab(currentBrowser);
@@ -235,9 +253,13 @@
           browser.setAttribute("type", "content-primary");
           this.displayList.selectedPanel = display;
 
+          // start monitoring paint events for this browser
+          browser.addEventListener("MozAfterPaint", this.browserRedrawHandler, false);
+
           var event = document.createEvent("Events");
           event.initEvent("TabSelect", true, false);
           tab.dispatchEvent(event);
+
         ]]></body>
       </method>
 
@@ -355,7 +377,7 @@
           canvas.setAttribute("height", domWin.innerHeight);
 
           var ctx = canvas.getContext("2d");
-          ctx.drawWindow(domWin, 0, 0, domWin.innerWidth, domWin.innerHeight, "rgba(0,0,0,0)");
+          ctx.drawWindow(domWin, 0, 0, domWin.innerWidth, domWin.innerHeight, "white");
           display.insertBefore(canvas, display.firstChild);
 
           display.lastAccess = Date.now();
@@ -448,7 +470,10 @@
 
       <method name="_browserToCanvas">
         <body><![CDATA[
+
           // FIXME: canvas needs to know it's actual width/height
+          // we should be able to use _canvas.width/_canvas.height here
+          // and can, most of the time
           var rect = this._canvas.getBoundingClientRect();
           var w = rect.right - rect.left;
           var h = rect.bottom - rect.top;
@@ -456,9 +481,6 @@
           this._canvas.height = h;
 
           var ctx = this._canvas.getContext("2d");
-
-          ctx.clearRect(0,0,w,h);
-
           ctx.save();
           ctx.scale(this._zoomLevel, this._zoomLevel);
           ctx.drawWindow(this.browser.contentWindow,
@@ -466,6 +488,74 @@
                          this._screenToPage(w), this._screenToPage(h),
                          "white");
           ctx.restore();
+        ]]></body>
+      </method>
+
+      <method name="_browserToCanvas2">
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <parameter name="width"/>
+        <parameter name="height"/>
+        <body><![CDATA[
+          
+          function intersect(r1, r2) {
+            let xmost1 = r1.x + r1.width;
+            let ymost1 = r1.y + r1.height;
+            let xmost2 = r2.x + r2.width;
+            let ymost2 = r2.y + r2.height;
+
+            let x = Math.max(r1.x, r2.x);
+            let y = Math.max(r1.y, r2.y);
+
+            let temp = Math.min(xmost1, xmost2);
+            if (temp <= x)
+              return null;
+
+            let width = temp - x;
+
+            temp = Math.min(ymost1, ymost2);
+            if (temp <= y)
+              return null;
+
+            let height = temp - y;
+
+            return {
+              x: x,
+              y: y,
+              width: width,
+              height: height
+            };
+          }
+
+          let r1 = { x : x, 
+                     y : y, 
+                     width : width, 
+                     height: height };
+
+          // check to see if the input coordinates are inside the visiable destination
+          let r2 = { x : this.dragData.pageX, 
+                     y : this.dragData.pageY, 
+                     width : this._canvas.width / this._zoomLevel, 
+                     height: this._canvas.height / this._zoomLevel };
+
+          let dest = intersect(r1, r2);
+
+          if (!dest)
+            return;
+
+          var ctx = this._canvas.getContext("2d");
+
+          ctx.save();
+          ctx.scale(this._zoomLevel, this._zoomLevel);
+          ctx.translate(dest.x - this.dragData.pageX, dest.y - this.dragData.pageY);
+
+          ctx.drawWindow(this.browser.contentWindow,
+                         dest.x, dest.y,
+                         dest.width, dest.height,
+                         "white");
+
+          ctx.restore();
+
         ]]></body>
       </method>
 
@@ -654,7 +744,7 @@
           var h = Math.max(body.scrollHeight, html.scrollHeight);
 
           if (isNaN(w) || isNaN(h))
-            throw "Can't get content width/height";
+            return [this._canvas.width, this._canvas.height];
 
           return [w, h];
         </getter>
@@ -900,10 +990,6 @@
             if (aEvent.button != 0)
               return;
 
-            // cancel any pending canvas updates, since we're going to update again
-            if (this._updateTimeout)
-              clearTimeout(this._updateTimeout);
-
             // stop kinetic scrolling if it's in progress
             // avoid setting _lastMouseDown in that case so that we don't
             // redispatch it in mouseup
@@ -1084,11 +1170,12 @@
             let height = domWin.innerHeight;
 
             let ctx = canvas.getContext("2d");
+
             ctx.clearRect(0, 0, 80, 60);
             ctx.restore(); // XXXndeakin remove this
             ctx.save();
             ctx.scale(80 / width, 60 / height);
-            ctx.drawWindow(domWin, 0, 0, width, height, "rgba(0,0,0,0)");
+            ctx.drawWindow(domWin, 0, 0, width, height, "white");
             ctx.restore();
           ]]>
         </body>
