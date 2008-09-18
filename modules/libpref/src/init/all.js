@@ -2268,7 +2268,7 @@ pref("autocomplete.ungrab_during_mode_switch", true);
 pref("ui.allow_platform_file_picker", true);
 
 // should NetworkManager be authoritative for online/offline status?
-pref("toolkit.networkmanager.disable", false);
+pref("toolkit.networkmanager.disable", true);
 
 pref("helpers.global_mime_types_file", "/etc/mime.types");
 pref("helpers.global_mailcap_file", "/etc/mailcap");
