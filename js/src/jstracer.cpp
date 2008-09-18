@@ -3970,6 +3970,12 @@ TraceRecorder::record_JSOP_NOT()
         set(&v, lir->ins_eq0(get(&v)));
         return true;
     }
+    if (JSVAL_IS_STRING(v)) {
+        set(&v, lir->ins_eq0(lir->ins2(LIR_piand, 
+                lir->insLoad(LIR_ldp, get(&v), (int)offsetof(JSString, length)),
+                INS_CONSTPTR(JSSTRING_LENGTH_MASK))));
+        return true;
+    }
     return false;
 }
 
