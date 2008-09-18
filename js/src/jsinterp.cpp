@@ -1005,7 +1005,7 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
     } else {
         invokevp[3] = OBJECT_TO_JSVAL(argsobj);
         ok = (flags & JSINVOKE_CONSTRUCT)
-             ? js_InvokeConstructor(cx, 2, invokevp)
+             ? js_InvokeConstructor(cx, 2, JS_TRUE, invokevp)
              : js_Invoke(cx, 2, invokevp, flags);
         vp[0] = invokevp[0];
     }
@@ -1720,7 +1720,7 @@ js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval)
 }
 
 JSBool
-js_InvokeConstructor(JSContext *cx, uintN argc, jsval *vp)
+js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp)
 {
     JSFunction *fun, *fun2;
     JSObject *obj, *obj2, *proto, *parent;
@@ -1781,7 +1781,7 @@ js_InvokeConstructor(JSContext *cx, uintN argc, jsval *vp)
 
     /* Check the return value and if it's primitive, force it to be obj. */
     rval = *vp;
-    if (JSVAL_IS_PRIMITIVE(rval)) {
+    if (clampReturn && JSVAL_IS_PRIMITIVE(rval)) {
         if (!fun) {
             /* native [[Construct]] returning primitive is error */
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -2931,6 +2931,16 @@ js_Interpret(JSContext *cx)
              */
             ASSERT_NOT_THROWING(cx);
             JS_ASSERT(regs.sp == StackBase(fp));
+            if ((fp->flags & JSFRAME_CONSTRUCTING) &&
+                JSVAL_IS_PRIMITIVE(fp->rval)) {
+                if (!fp->fun) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_BAD_NEW_RESULT,
+                                         js_ValueToPrintableString(cx, rval));
+                    goto error;
+                }
+                fp->rval = OBJECT_TO_JSVAL(fp->thisp);
+            }
             ok = JS_TRUE;
             if (inlineCallCount)
           inline_return:
@@ -4749,7 +4759,7 @@ js_Interpret(JSContext *cx)
                 }
             }
 
-            if (!js_InvokeConstructor(cx, argc, vp))
+            if (!js_InvokeConstructor(cx, argc, JS_FALSE, vp))
                 goto error;
             regs.sp = vp + 1;
             LOAD_INTERRUPT_HANDLER(cx);
