@@ -370,7 +370,7 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
     // Damage the area occupied by the deleted frame
     // The child of the canvas probably can't have an outline, but why bother
     // thinking about that?
-    Invalidate(aOldFrame->GetOverflowRect() + aOldFrame->GetPosition(), PR_FALSE);
+    Invalidate(aOldFrame->GetOverflowRect() + aOldFrame->GetPosition());
 
     // Remove the frame and destroy it
     mFrames.DestroyFrame(aOldFrame);

@@ -105,10 +105,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface
-// bc99463c-5ff7-4ff3-b2c8-b4172646f793
+// 626a1563-1bae-4a6e-8d2c-2dc2c13048dd
 #define NS_IFRAME_IID \
-{ 0xbc99463c, 0x5ff7, 0x4ff3, \
-  { 0xb2, 0xc8, 0xb4, 0x17, 0x26, 0x46, 0xf7, 0x93 } }
+  { 0x626a1563, 0x1bae, 0x4a6e, \
+    { 0x8d, 0x2c, 0x2d, 0xc2, 0xc1, 0x30, 0x48, 0xdd } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -1653,6 +1653,11 @@ public:
   virtual nsIView* GetMouseCapturer() const { return nsnull; }
 
   /**
+   * @param aFlags see InvalidateInternal below
+   */
+  void InvalidateWithFlags(const nsRect& aDamageRect, PRUint32 aFlags);
+
+  /**
    * Invalidate part of the frame by asking the view manager to repaint.
    * aDamageRect is allowed to extend outside the frame's bounds. We'll do the right
    * thing.
@@ -1661,11 +1666,9 @@ public:
    * need to be repainted.
    *
    * @param aDamageRect is in the frame's local coordinate space
-   * @param aImmediate repaint now if true, repaint later if false.
-   *   In case it's true, pending notifications will be flushed which
-   *   could cause frames to be deleted (including |this|).
    */
-  void Invalidate(const nsRect& aDamageRect, PRBool aImmediate = PR_FALSE);
+  void Invalidate(const nsRect& aDamageRect)
+  { return InvalidateWithFlags(aDamageRect, 0); }
 
   /**
    * Helper function that can be overridden by frame classes. The rectangle
@@ -1681,13 +1684,20 @@ public:
    * 
    * @param aForChild if the invalidation is coming from a child frame, this
    * is the frame; otherwise, this is null.
-   * @param aImmediate repaint now if true, repaint later if false.
+   * @param aFlags INVALIDATE_IMMEDIATE: repaint now if true, repaint later if false.
    *   In case it's true, pending notifications will be flushed which
    *   could cause frames to be deleted (including |this|).
-   */  
+   * @param aFlags INVALIDATE_CROSS_DOC: true if the invalidation
+   *   originated in a subdocument
+   */
+  enum {
+  	INVALIDATE_IMMEDIATE = 0x1,
+  	INVALIDATE_CROSS_DOC = 0x2,
+  	INVALIDATE_NOTIFY_ONLY = 0x4
+  };
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,
-                                  nsIFrame* aForChild, PRBool aImmediate);
+                                  nsIFrame* aForChild, PRUint32 aFlags);
 
   /**
    * Helper function that funnels an InvalidateInternal request up to the
@@ -1701,7 +1711,7 @@ public:
    * @return None, though this funnels the request up to the parent frame.
    */
   void InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
-                                     nscoord aY, PRBool aImmediate);
+                                     nscoord aY, PRUint32 aFlags);
 
   /**
    * Take two rectangles in the coordinate system of this frame which
@@ -2221,9 +2231,7 @@ protected:
    * For frames that have top-level windows (top-level viewports,
    * comboboxes, menupoups) this function will invalidate the window.
    */
-  void InvalidateRoot(const nsRect& aDamageRect,
-                      nscoord aOffsetX, nscoord aOffsetY,
-                      PRBool aImmediate);
+  void InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags);
 
   /**
    * Gets the overflow area for any properties that are common to all types of frames

@@ -1278,7 +1278,7 @@ void nsCaret::InvalidateRects(const nsRect &aRect, const nsRect &aHook,
   NS_ASSERTION(aFrame, "Must have a frame to invalidate");
   nsRect rect;
   rect.UnionRect(aRect, aHook);
-  aFrame->Invalidate(rect, PR_FALSE);
+  aFrame->Invalidate(rect);
 }
 
 //-----------------------------------------------------------------------------

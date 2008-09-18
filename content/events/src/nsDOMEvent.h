@@ -129,19 +129,17 @@ public:
     eDOMEvents_online,
     eDOMEvents_copy,
     eDOMEvents_cut,
-    eDOMEvents_paste
+    eDOMEvents_paste,
 #ifdef MOZ_SVG
-   ,
     eDOMEvents_SVGLoad,
     eDOMEvents_SVGUnload,
     eDOMEvents_SVGAbort,
     eDOMEvents_SVGError,
     eDOMEvents_SVGResize,
     eDOMEvents_SVGScroll,
-    eDOMEvents_SVGZoom
+    eDOMEvents_SVGZoom,
 #endif // MOZ_SVG
 #ifdef MOZ_MEDIA
-    ,
     eDOMEvents_loadstart,
     eDOMEvents_progress,
     eDOMEvents_loadedmetadata,
@@ -161,8 +159,9 @@ public:
     eDOMEvents_canplaythrough,
     eDOMEvents_ratechange,
     eDOMEvents_durationchange,
-    eDOMEvents_volumechange
+    eDOMEvents_volumechange,
 #endif
+    eDOMEvents_afterpaint
   };
 
   nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);
