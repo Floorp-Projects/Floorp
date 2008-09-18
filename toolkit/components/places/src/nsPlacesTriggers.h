@@ -93,4 +93,145 @@
   "END" \
 )
 
+/**
+ * This trigger allows for an insertion into moz_places_view.  It enters the new
+ * data into the temporary table, ensuring that the new id is one greater than
+ * the largest id value found.
+ */
+#define CREATE_PLACES_VIEW_INSERT_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMPORARY TRIGGER moz_places_view_insert_trigger " \
+  "INSTEAD OF INSERT " \
+  "ON moz_places_view " \
+  "BEGIN " \
+    "INSERT INTO moz_places_temp ( " \
+      "id, url, title, rev_host, visit_count, hidden, typed, favicon_id, " \
+      "frecency " \
+    ") " \
+    "VALUES (MAX((SELECT IFNULL(MAX(id), 0) FROM moz_places_temp), " \
+                "(SELECT IFNULL(MAX(id), 0) FROM moz_places)) + 1, " \
+            "NEW.url, NEW.title, NEW.rev_host, " \
+            "IFNULL(NEW.visit_count, 0), " /* enforce having a value */ \
+            "NEW.hidden, NEW.typed, NEW.favicon_id, NEW.frecency);" \
+  "END" \
+)
+
+/**
+ * This trigger allows for the deletion of a record in moz_places_view.  It
+ * removes any entry in the temporary table, and any entry in the permanent
+ * table as well.
+ */
+#define CREATE_PLACES_VIEW_DELETE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMPORARY TRIGGER moz_places_view_delete_trigger " \
+  "INSTEAD OF DELETE " \
+  "ON moz_places_view " \
+  "BEGIN " \
+    "DELETE FROM moz_places_temp " \
+    "WHERE id = OLD.id; " \
+    "DELETE FROM moz_places " \
+    "WHERE id = OLD.id; " \
+  "END" \
+)
+
+/**
+ * This trigger allows for updates to a record in moz_places_view.  It first
+ * copies the row from the permanent table over to the temp table if it does not
+ * exist in the temporary table.  Then, it will update the temporary table with
+ * the new data.
+ */
+#define CREATE_PLACES_VIEW_UPDATE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMPORARY TRIGGER moz_places_view_update_trigger " \
+  "INSTEAD OF UPDATE " \
+  "ON moz_places_view " \
+  "BEGIN " \
+    "INSERT INTO moz_places_temp " \
+    "SELECT * " \
+    "FROM moz_places " \
+    "WHERE id = OLD.id " \
+    "AND id NOT IN (SELECT id FROM moz_places_temp); " \
+    "UPDATE moz_places_temp " \
+    "SET url = IFNULL(NEW.url, OLD.url), " \
+        "title = IFNULL(NEW.title, OLD.title), " \
+        "rev_host = IFNULL(NEW.rev_host, OLD.rev_host), " \
+        "visit_count = IFNULL(NEW.visit_count, OLD.visit_count), " \
+        "hidden = IFNULL(NEW.hidden, OLD.hidden), " \
+        "typed = IFNULL(NEW.typed, OLD.typed), " \
+        "favicon_id = IFNULL(NEW.favicon_id, OLD.favicon_id), " \
+        "frecency = IFNULL(NEW.frecency, OLD.frecency) " \
+    "WHERE id = OLD.id; " \
+  "END" \
+)
+
+/**
+ * This trigger allows for an insertion into  moz_historyvisits_view.  It enters
+ * the new data into the temporary table, ensuring that the new id is one
+ * greater than the largest id value found.  It then updates moz_places_view
+ * with the new visit count.
+ */
+#define CREATE_HISTORYVISITS_VIEW_INSERT_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMPORARY TRIGGER moz_historyvisits_view_insert_trigger " \
+  "INSTEAD OF INSERT " \
+  "ON moz_historyvisits_view " \
+  "BEGIN " \
+    "INSERT INTO moz_historyvisits_temp ( " \
+      "id, from_visit, place_id, visit_date, visit_type, session " \
+    ") " \
+    "VALUES (MAX((SELECT IFNULL(MAX(id), 0) FROM moz_historyvisits_temp), " \
+                "(SELECT IFNULL(MAX(id), 0) FROM moz_historyvisits)) + 1, " \
+            "NEW.from_visit, NEW.place_id, NEW.visit_date, NEW.visit_type, " \
+            "NEW.session); " \
+    "UPDATE moz_places_view " \
+    "SET visit_count = visit_count + 1 " \
+    "WHERE id = NEW.place_id " \
+    "AND NEW.visit_type NOT IN (0, 4, 7); " /* invalid, EMBED, DOWNLOAD */ \
+  "END" \
+)
+
+/**
+ * This trigger allows for the deletion of a record in moz_historyvisits_view.
+ * It removes any entry in the temporary table, and removes any entry in the
+ * permanent table as well.  It then updates moz_places_view with the new visit
+ * count.
+ */
+#define CREATE_HISTORYVISITS_VIEW_DELETE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMPORARY TRIGGER moz_historyvisits_view_delete_trigger " \
+  "INSTEAD OF DELETE " \
+  "ON moz_historyvisits_view " \
+  "BEGIN " \
+    "DELETE FROM moz_historyvisits_temp " \
+    "WHERE id = OLD.id; " \
+    "DELETE FROM moz_historyvisits " \
+    "WHERE id = OLD.id; " \
+    "UPDATE moz_places_view " \
+    "SET visit_count = visit_count - 1 " \
+    "WHERE moz_places_view.id = OLD.place_id " \
+    "AND OLD.visit_type NOT IN (0, 4, 7); " /* invalid, EMBED, DOWNLOAD */ \
+  "END" \
+)
+
+/**
+ * This trigger allows for updates to a record in moz_historyvisits_view.  It
+ * first copies the row from the permanent table over to the temp table if it
+ * does not exist in the temporary table.  Then it will update the temporary
+ * table with the new data.
+ */
+#define CREATE_HISTORYVISITS_VIEW_UPDATE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMPORARY TRIGGER moz_historyvisits_view_update_trigger " \
+  "INSTEAD OF UPDATE " \
+  "ON moz_historyvisits_view " \
+  "BEGIN " \
+    "INSERT INTO moz_historyvisits_temp " \
+    "SELECT * " \
+    "FROM moz_historyvisits " \
+    "WHERE id = OLD.id " \
+    "AND id NOT IN (SELECT id FROM moz_historyvisits_temp); " \
+    "UPDATE moz_historyvisits_temp " \
+    "SET from_visit = IFNULL(NEW.from_visit, OLD.from_visit), " \
+        "place_id = IFNULL(NEW.place_id, OLD.place_id), " \
+        "visit_date = IFNULL(NEW.visit_date, OLD.visit_date), " \
+        "visit_type = IFNULL(NEW.visit_type, OLD.visit_type), " \
+        "session = IFNULL(NEW.session, OLD.session) " \
+    "WHERE id = OLD.id; " \
+  "END" \
+)
+
 #endif // __nsPlacesTriggers_h__
