@@ -544,14 +544,6 @@ nsXMLDocument::EndLoad()
                                 &event);
   }    
 }
-
-// nsIDOMNode interface
-
-NS_IMETHODIMP    
-nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  return nsNodeUtils::CloneNodeImpl(this, aDeep, aReturn);
-}
  
 // nsIDOMDocument interface
 
@@ -561,19 +553,13 @@ nsXMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
-  PRBool hasHadScriptObject = PR_TRUE;
-  nsIScriptGlobalObject* scriptObject =
-    GetScriptHandlingObject(hasHadScriptObject);
-  NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
-  nsCOMPtr<nsIDOMDocument> newDoc;
-  nsresult rv = NS_NewDOMDocument(getter_AddRefs(newDoc), EmptyString(),
-                                  EmptyString(), nsnull,
-                                  nsIDocument::GetDocumentURI(),
-                                  nsIDocument::GetBaseURI(), NodePrincipal(),
-                                  PR_TRUE);
+  nsRefPtr<nsXMLDocument> clone = new nsXMLDocument();
+  NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = CloneDocHelper(clone);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(newDoc);
-  document->SetScriptHandlingObject(scriptObject);
 
-  return CallQueryInterface(newDoc, aResult);
+  // State from nsXMLDocument
+  clone->mAsync = mAsync;
+
+  return CallQueryInterface(clone.get(), aResult);
 }
