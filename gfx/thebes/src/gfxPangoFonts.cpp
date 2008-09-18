@@ -460,10 +460,9 @@ FFRECountHyphens (const nsAString &aFFREName)
     return h;
 }
 
-PRBool
-gfxPangoFontGroup::FontCallback (const nsAString& fontName,
-                                 const nsACString& genericName,
-                                 void *closure)
+static PRBool
+FontCallback (const nsAString& fontName, const nsACString& genericName,
+              void *closure)
 {
     nsStringArray *sa = static_cast<nsStringArray*>(closure);
 
@@ -503,40 +502,7 @@ gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
                                       const gfxFontStyle *aStyle)
     : gfxFontGroup(families, aStyle)
 {
-    g_type_init();
-
-    nsStringArray familyArray;
-
-    // Leave non-existing fonts in the list so that fontconfig can get the
-    // best match.
-    ForEachFontInternal(families, aStyle->langGroup, PR_TRUE, PR_FALSE,
-                        FontCallback, &familyArray);
-
-    // Construct a string suitable for fontconfig
-    nsAutoString fcFamilies;
-    if (familyArray.Count()) {
-        int i = 0;
-        while (1) {
-            fcFamilies.Append(*familyArray[i]);
-            ++i;
-            if (i >= familyArray.Count())
-                break;
-            fcFamilies.Append(NS_LITERAL_STRING(","));
-        }
-    }
-    else {
-        // XXX If there are no fonts, we should use dummy family.
-        // Pango will resolve from this.
-        // behdad: yep, looks good.
-        // printf("%s(%s)\n", NS_ConvertUTF16toUTF8(families).get(),
-        //                    aStyle->langGroup.get());
-        fcFamilies.Append(NS_LITERAL_STRING("sans-serif"));
-    }
-
-    nsRefPtr<gfxPangoFont> font = GetOrMakeFont(fcFamilies, &mStyle);
-    if (font) {
-        mFonts.AppendElement(font);
-    }
+    mFonts.AppendElements(1);
 }
 
 gfxPangoFontGroup::~gfxPangoFontGroup()
@@ -547,6 +513,51 @@ gfxFontGroup *
 gfxPangoFontGroup::Copy(const gfxFontStyle *aStyle)
 {
     return new gfxPangoFontGroup(mFamilies, aStyle);
+}
+
+// A string of family names suitable for fontconfig
+void
+gfxPangoFontGroup::GetFcFamilies(nsAString& aFcFamilies)
+{
+    nsStringArray familyArray;
+
+    // Leave non-existing fonts in the list so that fontconfig can get the
+    // best match.
+    ForEachFontInternal(mFamilies, mStyle.langGroup, PR_TRUE, PR_FALSE,
+                        FontCallback, &familyArray);
+
+    if (familyArray.Count()) {
+        int i = 0;
+        while (1) {
+            aFcFamilies.Append(*familyArray[i]);
+            ++i;
+            if (i >= familyArray.Count())
+                break;
+            aFcFamilies.Append(NS_LITERAL_STRING(","));
+        }
+    }
+    else {
+        // XXX If there are no fonts, we should use dummy family.
+        // Pango will resolve from this.
+        // behdad: yep, looks good.
+        // printf("%s(%s)\n", NS_ConvertUTF16toUTF8(families).get(),
+        //                    aStyle->langGroup.get());
+        aFcFamilies.Append(NS_LITERAL_STRING("sans-serif"));
+    }
+}
+
+gfxPangoFont *
+gfxPangoFontGroup::GetFontAt(PRInt32 i) {
+    NS_PRECONDITION(i == 0, "Only have one font");
+
+    if (!mFonts[0]) {
+        nsAutoString fcFamilies;
+        GetFcFamilies(fcFamilies);
+        nsRefPtr<gfxPangoFont> font = GetOrMakeFont(fcFamilies, &mStyle);
+        mFonts[0] = font;
+    }
+
+    return static_cast<gfxPangoFont*>(mFonts[i].get());
 }
 
 /**
