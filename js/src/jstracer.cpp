@@ -4790,7 +4790,8 @@ TraceRecorder::record_JSOP_CALL()
             }
 
             jsval* argv = fp->argv;
-            for (uintN i = 0; i < JS_MIN(argc, 2); i++) {
+            uintN nargs = JS_MIN((JS_MIN(argc, fp->fun->nargs)), 2);
+            for (uintN i = 0; i < nargs; i++) {
                 set(&sp[i], get(&argv[i]));
                 sp[i] = argv[i];
             }
@@ -5826,7 +5827,7 @@ TraceRecorder::record_JSOP_ARGSUB()
     JSStackFrame* fp = cx->fp;
     if (!(fp->fun->flags & JSFUN_HEAVYWEIGHT)) {
         uintN slot = GET_ARGNO(fp->regs->pc);
-        if (slot < fp->argc && !fp->argsobj) {
+        if (slot < fp->fun->nargs && slot < fp->argc && !fp->argsobj) {
             stack(0, get(&cx->fp->argv[slot]));
             return true;
         }
