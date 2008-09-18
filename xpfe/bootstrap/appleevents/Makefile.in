@@ -93,7 +93,6 @@ LIBXUL_LIBRARY = 1
 
 LOCAL_INCLUDES	= \
 	-I$(srcdir) \
-	-I$(srcdir)/.. \
 	$(NULL)
 
 LOCAL_INCLUDES += \
@@ -123,12 +122,7 @@ $(PACKAGE_DIR):
 
 libs:: $(RSRC_DEST)
 
-# workaround gcc -MD dependency issue by copying source to local dir
-export:: $(srcdir)/../nsDocLoadObserver.cpp
-	$(INSTALL) $< .
-
 GARBAGE += $(RES_DEST) $(RSRC_DEST) \
-	../nsDocLoadObserver.$(OBJ_SUFFIX) nsDocLoadObserver.cpp \
 	$(NULL)
 
 OS_CXXFLAGS += -fexceptions
