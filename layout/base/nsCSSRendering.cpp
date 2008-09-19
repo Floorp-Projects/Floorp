@@ -1301,17 +1301,14 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
     // If the window is intended to be opaque, ensure that we always
     // paint an opaque color for its root element, in case there's no
     // background at all or a partly transparent image.
-    //
-    // The default background color from the prescontext is under user
-    // control, so it might not be opaque either.
     nsIView* rView;
     vm->GetRootView(rView);
     if (!rView->GetParent() &&
         (!rView->HasWidget() ||
          rView->GetWidget()->GetTransparencyMode() == eTransparencyOpaque)) {
-      nscolor backColor =
-        NS_ComposeColors(NS_RGB(255,255,255),
-                         aPresContext->DefaultBackgroundColor());
+      nscolor backColor = aPresContext->DefaultBackgroundColor();
+      NS_ASSERTION(NS_GET_A(backColor) == 255,
+                   "default background color is not opaque");
 
       canvasColor.mBackgroundColor =
         NS_ComposeColors(backColor, canvasColor.mBackgroundColor);
