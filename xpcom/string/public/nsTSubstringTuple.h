@@ -55,12 +55,7 @@ class nsTSubstringTuple_CharT
 
       typedef nsTSubstringTuple_CharT    self_type;
       typedef nsTSubstring_CharT         substring_type;
-#ifdef MOZ_V1_STRING_ABI
-      typedef nsTAString_CharT           base_string_type;
-      typedef nsTObsoleteAString_CharT   obsolete_string_type;
-#else
       typedef nsTSubstring_CharT         base_string_type;
-#endif
       typedef PRUint32                   size_type;
 
     public:
