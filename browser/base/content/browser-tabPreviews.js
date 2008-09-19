@@ -176,7 +176,7 @@ var ctrlTab = {
 
     this.tabs = [];
     Array.forEach(tabContainer.childNodes, function (tab) {
-      this.attachTab(tab, tab == gBrowser.selectedTab);
+      this.attachTab(tab, tab == gBrowser.selectedTab ? 0 : null);
     }, this);
 
     tabContainer.addEventListener("TabOpen", this, false);
@@ -422,9 +422,11 @@ var ctrlTab = {
     }
     XULBrowserWindow.setOverLink(value, null);
   },
-  attachTab: function (aTab, aSelected) {
-    if (aSelected)
+  attachTab: function (aTab, aPos) {
+    if (aPos == 0)
       this.tabs.unshift(aTab);
+    else if (aPos)
+      this.tabs.splice(aPos, 0, aTab);
     else
       this.tabs.push(aTab);
   },
@@ -506,7 +508,7 @@ var ctrlTab = {
   onTabSelect: function (aTab) {
     if (aTab.parentNode) {
       this.detachTab(aTab);
-      this.attachTab(aTab, true);
+      this.attachTab(aTab, 0);
     }
   },
   handleEvent: function (event) {
@@ -522,7 +524,7 @@ var ctrlTab = {
           this.onTabSelect(event.target);
         break;
       case "TabOpen":
-        this.attachTab(event.target);
+        this.attachTab(event.target, 1);
         break;
       case "TabClose":
         if (this.isOpen) {
