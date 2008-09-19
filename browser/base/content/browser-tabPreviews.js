@@ -42,9 +42,9 @@
  * Tab previews utility, produces thumbnails
  */
 var tabPreviews = {
-  aspectRatio: 0.6875, // 16:11
+  aspectRatio: 0.5625, // 16:9
   init: function () {
-    this.width = Math.ceil(screen.availWidth / 7);
+    this.width = Math.ceil(screen.availWidth / 5);
     this.height = Math.round(this.width * this.aspectRatio);
 
     gBrowser.tabContainer.addEventListener("TabSelect", this, false);
@@ -64,16 +64,19 @@ var tabPreviews = {
     return aTab.__thumbnail || this.capture(aTab, !aTab.hasAttribute("busy"));
   },
   capture: function (aTab, aStore) {
-    var win = aTab.linkedBrowser.contentWindow;
     var thumbnail = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     thumbnail.mozOpaque = true;
     thumbnail.height = this.height;
     thumbnail.width = this.width;
+
     var ctx = thumbnail.getContext("2d");
-    var widthScale = this.width / win.innerWidth;
-    ctx.scale(widthScale, widthScale);
+    var win = aTab.linkedBrowser.contentWindow;
+    var snippetWidth = win.innerWidth * .6;
+    var scale = this.width / snippetWidth;
+    ctx.scale(scale, scale);
     ctx.drawWindow(win, win.scrollX, win.scrollY,
-                   win.innerWidth, win.innerWidth * this.aspectRatio, "rgb(255,255,255)");
+                   snippetWidth, snippetWidth * this.aspectRatio, "rgb(255,255,255)");
+
     var data = thumbnail.toDataURL("image/jpeg", "quality=60");
     if (aStore) {
       aTab.__thumbnail = data;
