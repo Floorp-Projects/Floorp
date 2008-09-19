@@ -42,6 +42,7 @@ pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.startup.homepage", "http://www.mozilla.org/");
 pref("browser.ui.cursor", false);
+pref("browser.ui.panning.kinetic", true);
 
 /* cache prefs */
 pref("browser.cache.disk.enable", false);
