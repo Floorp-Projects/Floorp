@@ -23,6 +23,7 @@
 #   Annie Sullivan <annie.sullivan@gmail.com>
 #   Ben Goodger <beng@google.com>
 #   Myk Melez <myk@mozilla.org>
+#   Marco Bonardo <mak77@bonardo.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -307,6 +308,14 @@
               popup.setAttribute("type", "places");
             }
           }
+
+          // We rebuild the chevron on popupShowing, so if it is open
+          // we must force a rebuild
+          if (this._chevron.open) {
+            var popup = this._chevron.firstChild;
+            for (var i = 0; i < popup.childNodes.length; i++)
+              popup.childNodes[i].hidden = !this.childNodes[i].collapsed;
+          }
         ]]></body>
       </method>
 
@@ -406,25 +415,13 @@
             }
           }
 
-          if (this._disallowInsertion(container))
+          if (PlacesControllerDragHelper.disallowInsertion(container))
             return null;
 
           return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
                                     index, orientation, isTag);
         ]]></getter>
       </property>
-
-      <method name="_disallowInsertion">
-        <parameter name="aContainer"/>
-        <body><![CDATA[
-          // allow dropping into Tag containers
-          if (PlacesUtils.nodeIsTagQuery(aContainer))
-            return false;
-          // Disallow insertion of items under readonly folders
-          return (!PlacesUtils.nodeIsFolder(aContainer) ||
-                   PlacesUtils.nodeIsReadOnly(aContainer));
-        ]]></body>
-      </method>
 
       <!-- nsIPlacesView -->
       <method name="selectAll">
@@ -520,6 +517,9 @@
                      popup.firstChild == popup._emptyMenuItem)) {
                   this._self._showEmptyMenuItem(popup);
                 }
+                if (popup._endMarker != -1)
+                  popup._endMarker--;
+                return;
               }
             }
           }
@@ -534,11 +534,19 @@
 
           if (aNewParent == this._self.getResultNode()) {
             var children = this._self.childNodes;
+            var chevronPopup = this._self._chevron.firstChild;
             for (var i = 0; i < children.length; i++) {
               var button = children[i];
               if (button.node == aItem) {
                 this._self.removeChild(button);
                 this._self.insertBefore(button, children[aNewIndex]);
+                if (chevronPopup) {
+                  // Maintain chevron in sync
+                  menuitem = chevronPopup.childNodes[i];
+                  chevronPopup.removeChild(menuitem);
+                  chevronPopup.insertBefore(menuitem,
+                                            chevronPopup.childNodes[aNewIndex]);
+                }
                 this._self.updateChevron();
                 return;
               }
@@ -697,7 +705,10 @@
         // Menu buttons should be opened when the mouse drags over them, and closed
         // when the mouse drags off.  The overFolder object manages opening and closing
         // of folders when the mouse hovers.
-        _overFolder: {node: null, openTimer: null, hoverTime: 350, closeTimer: null},
+        _overFolder: {node: null,
+                      openTimer: null,
+                      hoverTime: 350,
+                      closeTimer: null},
 
         // timer for turning of indicator bar, to get rid of flicker
         _ibTimer: null, 
@@ -794,8 +805,10 @@
               // node (or 25% of the right, in RTL UI), drop before the folder.
               // If it's in the middle 50%, drop into the folder. If it's past
               // that, drop after.
-              if ((isRTL && event.clientX > xulNode.boxObject.x + (xulNode.boxObject.width * 0.75)) ||
-                  (!isRTL && event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width * 0.25))) {
+              if ((isRTL && event.clientX > xulNode.boxObject.x +
+                                            (xulNode.boxObject.width * 0.75)) ||
+                  (!isRTL && event.clientX < xulNode.boxObject.x + 
+                                             (xulNode.boxObject.width * 0.25))) {
                 // Drop to the left of this folder.
                 dropPoint.ip =
                   new InsertionPoint(PlacesUtils.getConcreteItemId(result.root),
@@ -803,12 +816,15 @@
                 dropPoint.beforeIndex = i;
                 return dropPoint;
               }
-              else if ((isRTL && event.clientX > xulNode.boxObject.x + (xulNode.boxObject.width * 0.25)) ||
-                       (!isRTL && event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width * 0.75))) {
+              else if ((isRTL && event.clientX > xulNode.boxObject.x + 
+                                                 (xulNode.boxObject.width * 0.25)) ||
+                       (!isRTL && event.clientX < xulNode.boxObject.x +
+                                                  (xulNode.boxObject.width * 0.75))) {
                 // Drop inside this folder.
                 dropPoint.ip =
                   new InsertionPoint(PlacesUtils.getConcreteItemId(xulNode.node),
-                                     -1, 1);
+                                     -1, 1,
+                                     PlacesUtils.nodeIsTagQuery(xulNode.node));
                 dropPoint.beforeIndex = i;
                 dropPoint.folderNode = xulNode;
                 return dropPoint;
@@ -836,39 +852,43 @@
           dropPoint.beforeIndex = -1;
           return dropPoint;
         },
-        
-        onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
+
+        onDragStart: function TBV_DO_onDragStart(aEvent, aXferData, aDragAction) {
+          var draggedXulNode = aEvent.target;
           // sub menus have their own d&d handlers
-          if (event.target.parentNode != this._self)
+          if (draggedXulNode.parentNode != this._self)
             return false;
 
-          if (event.target.localName == "toolbarbutton" &&
-              event.target.getAttribute("type") == "menu") {
+          if (draggedXulNode.localName == "toolbarbutton" &&
+              draggedXulNode.getAttribute("type") == "menu") {
 #ifdef XP_WIN
-            // Support folder dragging on the personal toolbar when the user 
-            // holds the "alt" key while they drag (Ctrl+drag has another 
-            // meaning - Copy). This does not appear to work at all on Linux.
-            if (!event.shiftKey && !event.altKey && !event.ctrlKey)
+            // Support folder dragging on the personal toolbar when the user
+            // holds the "alt" or "shift" key while dragging.
+            // Ctrl+drag is Copy
+            if (!aEvent.shiftKey && !aEvent.altKey && !aEvent.ctrlKey)
               return false;
-            event.target.firstChild.hidePopup();
 #else
-            return;
+            // Support folder dragging on the personal toolbar when the user
+            // holds the "shift" key while dragging
+            // Ctrl+drag is Copy
+            if (!aEvent.shiftKey && !aEvent.ctrlKey)
+              return false;
 #endif
+            draggedXulNode.firstChild.hidePopup();
           }
 
-          if (event.ctrlKey)
-            dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
-
           // activate the view and cache the dragged node
-          this._self._draggedNode = event.target.node;
+          this._self._draggedNode = draggedXulNode.node;
           this._self.focus();
-          xferData.data = this._self._controller.getTransferData(dragAction.action);
-#ifdef XP_WIN
+
+          this._self._controller.setDataTransfer(aEvent);
           return true;
-#endif
         },
 
-        canDrop: function TBV_DO_canDrop(event, session) {
+        canDrop: function TBV_DO_canDrop(aEvent, aDragSession) {
+          // Cache the dataTransfer
+          PlacesControllerDragHelper.currentDataTransfer = aEvent.dataTransfer;
+
           var ip = this._self.insertionPoint;
           return ip && PlacesControllerDragHelper.canDrop(ip);
         },
@@ -939,13 +959,19 @@
         },
 
         onDrop: function TBV_DO_onDrop(event, dropData, session) {
+          // Cache the dataTransfer
+          PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
+
           var dropPoint = this._getDropPoint(event);
-          if (dropPoint == null)
+          if (!dropPoint)
             return;
           PlacesControllerDragHelper.onDrop(dropPoint.ip);
         },
 
         onDragExit: function TBV_DO_onDragExit(event, session) {
+          PlacesControllerDragHelper.currentDropTarget = null;
+          PlacesControllerDragHelper.currentDataTransfer = null;
+
           // Set timer to turn off indicator bar (if we turn it off
           // here, dragenter might be called immediately after, creating
           // flicker.)
@@ -955,17 +981,12 @@
           // Close any folder being hovered over
           if (this._overFolder.node)
             this._overFolder.closeTimer = this._setTimer(this._overFolder.hoverTime);
-          PlacesControllerDragHelper.currentDropTarget = null;
 
           this._self._draggedNode = null;
         },
 
         getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
-          var flavorSet = new FlavourSet();
-          var types = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
-          for (var i = 0; i < types.length; ++i)
-            flavorSet.appendFlavour(types[i]);
-          return flavorSet;
+          return PlacesControllerDragHelper.flavourSet;
         }
       })]]></field>
 
@@ -1056,11 +1077,14 @@
             // just add to the end.
             if (aParentPopup._endMarker != -1) {
               aParentPopup.insertBefore(element,
-                                        aParentPopup.childNodes[aParentPopup._endMarker++]);
+                                        aParentPopup.childNodes[aParentPopup._endMarker]);
             }
             else
               aParentPopup.appendChild(element);
           }
+
+          if (aParentPopup._endMarker != -1)
+            aParentPopup._endMarker++;
         ]]></body>
       </method>
 
@@ -1130,6 +1154,17 @@
           nsDragAndDrop.dragExit(event, this._DNDObserver);
       ]]></handler>
       <handler event="popupshowing" phase="capturing"><![CDATA[
+      // Don't show the popup if we are dragging a container.
+      if (this._draggingContainer) {
+          this._draggingContainer = false;
+#ifdef MOZ_WIDGET_GTK2
+          // Allow drag and drop of folders in Linux.
+          // We must prevent popupshowing event from firing when shift is pressed.
+          event.preventDefault();
+          return false;
+#endif
+        }
+
         var popup = event.originalTarget;
 
         // Avoid handling popupshowing of inner views
@@ -1158,8 +1193,18 @@
           this._openedMenuButton = null;
       ]]></handler>
 
+      <handler event="mousedown"><![CDATA[
+        // Allow drag and drop of folders in Linux.
+        // We must prevent popupshowing event from firing when shift is pressed.
+        var target = event.originalTarget;
+        if (event.button == 1 && event.shiftKey &&
+            target.localName == "toolbarbutton" && target.type == "menu")
+          this._draggingContainer = true;
+      ]]></handler>
+
       <handler event="mousemove"><![CDATA[
-        if (this._openedMenuButton == null || PlacesControllerDragHelper.getSession())
+        if (this._openedMenuButton == null ||
+            PlacesControllerDragHelper.getSession())
           return;
 
         var target = event.originalTarget;
