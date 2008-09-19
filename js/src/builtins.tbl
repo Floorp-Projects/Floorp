@@ -36,6 +36,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * This file declares the various builtins we recognize, and is
+ * included in various places in interesting ways.  Each line starts
+ * with "BUILTIN" then an integer indicating the number of arguments
+ * the builtin takes.  Builtins with no arguments are not supported at
+ * the moment.
+ *
+ * This is followed, in parentheses, by the following things, in order:
+ * - A name for the builtin.  Prefixed with "F_" this is the opcode name to
+ *   pass to insCall.  Prefixed with "js_" this is the name of the actual
+ *   native method to call.
+ * - The sizes of the arguments to the native, in order.  These can be "LO" for
+ *   integers (any size), pointers, or jsvals and "F" for doubles.
+ * - The size of the return value.  This can be "LO" for 32-bit integers, "P"
+ *   for pointers or jsvals, "F" for doubles, "Q" for 64-bit integers.
+ * - The actual C++ type of the return value
+ * - The C++ types of the arguments, in order
+ * - A boolean value (0 = false, 1 = true) indicating whether the builtin call
+ *   can be optimized away during common subexpression elimination.  This
+ *   should only be true if the the builtin is idempotent and the return value
+ *   is uniquely determined by the values of the arguments.
+ * - A boolean value  (0 = false, 1 = true) indicating whether the builtin call
+ *   can be optimized away during constant folding.  This should only be true
+ *   if the builtin is idempotent and if the return value can be determined at
+ *   compile time if the input values are known at compile time.
+ */
+
 /*
  * NB: bool FASTCALL is not compatible with Nanojit's calling convention usage.
  * Do not use bool FASTCALL, use JSBool only!
