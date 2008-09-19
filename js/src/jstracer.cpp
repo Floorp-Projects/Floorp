@@ -3555,7 +3555,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
                                                 lir->ins2(LIR_piand, v_ins,
                                                           INS_CONST(JSVAL_TAGMASK)),
                                                 JSVAL_DOUBLE))),
-              MISMATCH_EXIT);
+              BRANCH_EXIT);
         LIns* args[] = { v_ins };
         v_ins = lir->insCall(F_UnboxDouble, args);
         return true;
@@ -3566,7 +3566,7 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
               lir->ins2i(LIR_eq,
                          lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
                          JSVAL_BOOLEAN),
-              MISMATCH_EXIT);
+              BRANCH_EXIT);
          v_ins = lir->ins2i(LIR_ush, v_ins, JSVAL_TAGBITS);
          return true;
        case JSVAL_OBJECT:
@@ -3574,14 +3574,14 @@ TraceRecorder::unbox_jsval(jsval v, LIns*& v_ins)
               lir->ins2i(LIR_eq,
                          lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
                          JSVAL_OBJECT),
-              MISMATCH_EXIT);
+              BRANCH_EXIT);
         return true;
       case JSVAL_STRING:
         guard(true,
               lir->ins2i(LIR_eq,
                         lir->ins2(LIR_piand, v_ins, INS_CONST(JSVAL_TAGMASK)),
                         JSVAL_STRING),
-              MISMATCH_EXIT);
+              BRANCH_EXIT);
         v_ins = lir->ins2(LIR_piand, v_ins, INS_CONST(~JSVAL_TAGMASK));
         return true;
     }
