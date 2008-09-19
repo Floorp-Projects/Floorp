@@ -39,8 +39,17 @@
 #ifndef __nanojit_LIR__
 #define __nanojit_LIR__
 
-namespace avmplus { class RegionTracker; }    
+namespace avmplus { class RegionTracker; }
 
+/**
+ * Fundamentally, the arguments to the various operands can be grouped along
+ * two dimensions.  One dimension is size: can the arguments fit into a 32-bit
+ * register, or not?  The other dimension is whether the argument is an integer
+ * (including pointers) or a floating-point value.  In all comments below,
+ * "integer" means integer of any size, including 64-bit, unless otherwise
+ * specified.  All floating-point values are always 64-bit.  Below, "quad" is
+ * used for a 64-bit value that might be either integer or floating-point.
+ */
 namespace nanojit
 {
 	#define is_trace_skip_tramp(op) ((op) <= LIR_tramp)
@@ -62,10 +71,10 @@ namespace nanojit
 
 		// non-pure operations
 		LIR_param	= 10,
-		LIR_st		= 11,
-		LIR_ld		= 12,
+		LIR_st		= 11, // 32-bit store
+		LIR_ld		= 12, // 32-bit load
         LIR_sti     = 14,
-		LIR_call	= 18,
+		LIR_call	= 18, // subrouting call returning a 32-bit value
 			
 		// guards
 		LIR_loop    = 19, // loop fragment
@@ -73,21 +82,26 @@ namespace nanojit
 
 		// operators
 
-		LIR_feq		= 26,
-		LIR_flt		= 27,
-		LIR_fgt		= 28,
-		LIR_fle		= 29,
-		LIR_fge		= 30,
-        LIR_cmov    = 31, // conditional move (op1=cond, op2=cond(iftrue,iffalse))
-		LIR_short   = 32,
-		LIR_int		= 33,
+		// LIR_feq though LIR_fge must only be used on float arguments.  They
+		// return integers.
+		LIR_feq		= 26, // floating-point equality [2 float inputs]
+		LIR_flt		= 27, // floating-point less than: arg1 < arg2
+		LIR_fgt		= 28, // floating-point greater than: arg1 > arg2
+		LIR_fle		= 29, // arg1 <= arg2, both floating-point
+		LIR_fge		= 30, // arg1 >= arg2, both floating-point
+
+		LIR_cmov    = 31, // conditional move (op1=cond, op2=cond(iftrue,iffalse))
+		LIR_short   = 32, // constant 16-bit integer
+		LIR_int		= 33, // constant 32-bit integer
 		LIR_ldc     = 34, // non-volatile load
 		LIR_2       = 35, // wraps a pair of refs
-		LIR_neg		= 36,					// [ 1 integer input / integer output ]
-		LIR_add		= 37,					// [ 2 operand integer intputs / integer output ]
-		LIR_sub		= 38,
-		LIR_mul		= 39,
-        LIR_callh   = 40,
+
+		// LIR_neg through LIR_ush are all integer operations
+		LIR_neg		= 36, // numeric negation [ 1 integer input / integer output ]
+		LIR_add		= 37, // integer addition [ 2 operand integer intputs / integer output ]
+		LIR_sub		= 38, // integer subtraction
+		LIR_mul		= 39, // integer multiplication
+		LIR_callh   = 40, 
 		LIR_and		= 41,
 		LIR_or		= 42,
 		LIR_xor		= 43,
@@ -95,21 +109,29 @@ namespace nanojit
 		LIR_lsh		= 45,
 		LIR_rsh		= 46,	// >>
 		LIR_ush		= 47,	// >>>
-        // conditional guards, op^1 to complement
+
+		// conditional guards, op^1 to complement.  Only things that are
+		// isCond() can be passed to these.
 		LIR_xt		= 48, // exit if true   0x30 0011 0000
 		LIR_xf		= 49, // exit if false  0x31 0011 0001
+
+		// qlo and qhi take a single quad argument and return its low and high
+		// 32 bits respectively as 32-bit integers.
 		LIR_qlo		= 50,
 		LIR_qhi		= 51,
+
 		LIR_ldcb    = 52, // non-volatile 8-bit load
 
         LIR_ov      = 53,
         LIR_cs      = 54,
-        LIR_eq      = 55,
-        // relational operators.  op^1 to swap left/right, op^3 to complement.
+		LIR_eq      = 55, // integer equality
+        // integer (all sizes) relational operators.  op^1 to swap left/right,
+        // op^3 to complement.
 		LIR_lt      = 56, // 0x38 0011 1000
 		LIR_gt      = 57, // 0x39 0011 1001
 		LIR_le		= 58, // 0x3A 0011 1010
 		LIR_ge		= 59, // 0x3B 0011 1011
+		// and the unsigned integer versions
 		LIR_ult		= 60, // 0x3C 0011 1100
 		LIR_ugt		= 61, // 0x3D 0011 1101
 		LIR_ule		= 62, // 0x3E 0011 1110
@@ -118,25 +140,25 @@ namespace nanojit
 		/**
 		 * 64bit operations
 		 */
-		LIR_stq		= LIR_st | LIR64,
+		LIR_stq		= LIR_st | LIR64, // quad store
 		LIR_stqi	= LIR_sti | LIR64,
-		LIR_quad    = LIR_int | LIR64,
-		LIR_ldq		= LIR_ld    | LIR64,
+		LIR_quad    = LIR_int | LIR64, // quad constant value
+		LIR_ldq		= LIR_ld    | LIR64, // quad load
         LIR_qiand   = 24 | LIR64,
         LIR_qiadd   = 25 | LIR64,
         LIR_qilsh   = LIR_lsh | LIR64,
 
-        LIR_fcall   = LIR_call  | LIR64,
-		LIR_fneg	= LIR_neg  | LIR64,
-		LIR_fadd	= LIR_add  | LIR64,
-		LIR_fsub	= LIR_sub  | LIR64,
-		LIR_fmul	= LIR_mul  | LIR64,
-		LIR_fdiv	= 40        | LIR64,
-		LIR_qcmov	= LIR_cmov | LIR64,
+		LIR_fcall   = LIR_call  | LIR64, // subroutine call returning quad
+		LIR_fneg	= LIR_neg  | LIR64, // floating-point numeric negation
+		LIR_fadd	= LIR_add  | LIR64, // floating-point addition
+		LIR_fsub	= LIR_sub  | LIR64, // floating-point subtraction
+		LIR_fmul	= LIR_mul  | LIR64, // floating-point multiplication
+		LIR_fdiv	= 40        | LIR64, // floating-point division
+		LIR_qcmov	= LIR_cmov | LIR64, 
 
 		LIR_qjoin	= 41 | LIR64,
-		LIR_i2f		= 42 | LIR64,
-		LIR_u2f		= 43 | LIR64,
+		LIR_i2f		= 42 | LIR64, // convert an integer to a float
+		LIR_u2f		= 43 | LIR64, // convert an unsigned integer to a float
         LIR_qior    = 44 | LIR64
 	};
 
@@ -348,18 +370,28 @@ namespace nanojit
         bool isStore() const;
         bool isLoad() const;
 		bool isGuard() const;
+		// True if the instruction is a 32-bit or smaller constant integer.
 		bool isconst() const;
+		// True if the instruction is a 32-bit or smaller constant integer and
+		// has the value val when treated as a 32-bit signed integer.
 		bool isconstval(int32_t val) const;
+		// True if the instruction is a constant quad value.
 		bool isconstq() const;
+		// True if the instruction is a constant pointer value.
 		bool isconstp() const;
         bool isTramp() {
             return isop(LIR_neartramp) || isop(LIR_tramp);
         }
 
+		// Set the imm16 member.  Should only be used on instructions that use
+		// that.  If you're not sure, you shouldn't be calling it.
 		void setimm16(int32_t i);
-		void setimm24(int32_t i);
+		// Set the resv member.  Should only be used on instructions that use
+		// that.  If you're not sure, you shouldn't be calling it.
 		void setresv(uint32_t resv);
+		// Set the opcode
 		void initOpcode(LOpcode);
+		// operand-setting methods
 		void setOprnd1(LIns*);
 		void setOprnd2(LIns*);
 		void setOprnd3(LIns*);
@@ -439,6 +471,7 @@ namespace nanojit
 	    LIns*		insLoadi(LIns *base, int disp);
 	    LIns*		insLoad(LOpcode op, LIns *base, int disp);
 	    LIns*		ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse, bool);
+	    // Inserts an integer comparison to 0
 	    LIns*		ins_eq0(LIns* oprnd1);
         LIns*       ins2i(LOpcode op, LIns *oprnd1, int32_t);
 		LIns*		qjoin(LInsp lo, LInsp hi);
