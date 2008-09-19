@@ -376,7 +376,7 @@ function runTest(testNum) {
         // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
         doKey("delete", shiftModifier);
 
-        checkACForm("zzzuser4", ""); // why does a value get set here?
+        checkACForm("", "");
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 3, "Correct number of logins after deleting one");
         doKey("return");
@@ -403,7 +403,7 @@ function runTest(testNum) {
         doKey("down");
         doKey("down");
         doKey("delete", shiftModifier);
-        checkACForm("testuser2", ""); // XXX why does a value get set here?
+        checkACForm("", "");
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 2, "Correct number of logins after deleting one");
         doKey("return");
@@ -430,7 +430,7 @@ function runTest(testNum) {
         doKey("down");
         doKey("down");
         doKey("delete", shiftModifier);
-        checkACForm("testuser2", ""); // XXX why does a value get set here?
+        checkACForm("", "");
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 1, "Correct number of logins after deleting one");
         doKey("return");
