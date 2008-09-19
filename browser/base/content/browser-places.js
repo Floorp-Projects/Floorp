@@ -711,7 +711,6 @@ var BookmarksEventHandler = {
     if (!target._endOptSeparator) {
       // create a separator before options
       target._endOptSeparator = document.createElement("menuseparator");
-      target._endOptSeparator.setAttribute("builder", "end");
       target._endMarker = target.childNodes.length;
       target.appendChild(target._endOptSeparator);
     }
@@ -789,7 +788,8 @@ var BookmarksMenuDropHandler = {
    * state.
    */
   onDragOver: function BMDH_onDragOver(event, flavor, session) {
-    session.canDrop = this.canDrop(event, session);
+    if (!this.canDrop(event, session))
+      event.dataTransfer.effectAllowed = "none";
   },
 
   /**
@@ -812,6 +812,8 @@ var BookmarksMenuDropHandler = {
    *          otherwise.
    */
   canDrop: function BMDH_canDrop(event, session) {
+    PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
+
     var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1);  
     return ip && PlacesControllerDragHelper.canDrop(ip);
   },
@@ -826,9 +828,21 @@ var BookmarksMenuDropHandler = {
    *          The active DragSession
    */
   onDrop: function BMDH_onDrop(event, data, session) {
-    // Put the item at the end of bookmark menu
-    var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1);
+    PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
+
+  // Put the item at the end of bookmark menu
+    var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1,
+                                Ci.nsITreeView.DROP_ON);
     PlacesControllerDragHelper.onDrop(ip);
+  },
+
+  /**
+   * Called when drop target leaves the menu or after a drop.
+   * @param   aEvent
+   *          A drop event
+   */
+  onDragExit: function BMDH_onDragExit(event, session) {
+    PlacesControllerDragHelper.currentDataTransfer = null;
   }
 };
 
@@ -903,8 +917,9 @@ var PlacesMenuDNDController = {
    *`         menu-toolbarbutton), false otherwise.
    */
   _isContainer: function PMDC__isContainer(node) {
-    return node.localName == "menu" || 
-           node.localName == "toolbarbutton" && node.getAttribute("type") == "menu";
+    return node.localName == "menu" ||
+           (node.localName == "toolbarbutton" &&
+            node.getAttribute("type") == "menu");
   },
   
   /**
