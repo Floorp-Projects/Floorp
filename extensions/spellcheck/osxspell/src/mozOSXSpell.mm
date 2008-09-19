@@ -103,8 +103,16 @@ NS_IMETHODIMP mozOSXSpell::GetLanguage(PRUnichar **aLanguage)
   NS_ENSURE_ARG_POINTER(aLanguage);
 
   if (!mLanguage.Length()) {
-    NSString* lang = [[NSSpellChecker sharedSpellChecker] language];
-    *aLanguage = [lang createNewUnicodeBuffer];
+    @try {
+      NSString* lang = [[NSSpellChecker sharedSpellChecker] language];
+      *aLanguage = [lang createNewUnicodeBuffer];
+    }
+    @catch (id exception) {
+      // If we get here, the spelling system on the user's machine is almost
+      // certainly damaged; do what the rest of the OS does, and silently
+      // ignore it.
+      *aLanguage = NULL;
+    }
     mLanguage.Assign(*aLanguage);
   }
   else
@@ -218,7 +226,17 @@ NS_IMETHODIMP mozOSXSpell::Check(const PRUnichar *aWord, PRBool *aResult)
   *aResult = PR_FALSE;
 
   NSString* wordStr = [NSString stringWithPRUnichars:aWord];
-  NSRange misspelledRange = [[NSSpellChecker sharedSpellChecker] checkSpellingOfString:wordStr startingAt:0];
+  NSRange misspelledRange;
+  @try {
+    misspelledRange = [[NSSpellChecker sharedSpellChecker] checkSpellingOfString:wordStr startingAt:0];
+  }
+  @catch (id exception) {
+    // Silently return true; if something is seriously wrong with the
+    // spelling system on a user's machine, the best thing to do is
+    // to just treat everything as correct.
+    *aResult = PR_TRUE;
+    return NS_OK;
+  }
   if (misspelledRange.location != NSNotFound && mPersonalDictionary)
     mPersonalDictionary->Check(aWord, mLanguage.get(), aResult);
   else
