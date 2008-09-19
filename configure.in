@@ -4413,7 +4413,6 @@ MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
 MOZ_USE_NATIVE_UCONV=
-MOZ_V1_STRING_ABI=
 MOZ_VIEW_SOURCE=1
 MOZ_XPFE_COMPONENTS=1
 MOZ_XPINSTALL=1
@@ -7798,18 +7797,6 @@ fi
 dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
 
-dnl ========================================================
-dnl string api compatibility
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(v1-string-abi,
-[  --disable-v1-string-abi   Disable binary compatibility layer for strings],
-    MOZ_V1_STRING_ABI=,
-    MOZ_V1_STRING_ABI=1)
-AC_SUBST(MOZ_V1_STRING_ABI)
-if test "$MOZ_V1_STRING_ABI"; then
-    AC_DEFINE(MOZ_V1_STRING_ABI)
-fi
-
 dnl Only build Mork if it's required
 AC_SUBST(MOZ_MORK)
 if test "$MOZ_MORK"; then
@@ -8247,7 +8234,6 @@ HAVE_MBRTOWC
 HAVE_SYS_MOUNT_H
 HAVE_SYS_VFS_H
 HAVE_WCRTOMB
-MOZ_V1_STRING_ABI
 "
 
 AC_CONFIG_HEADER(
