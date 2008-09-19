@@ -562,6 +562,7 @@ protected:
     PRPackedBool               mObserveErrorPages;
     PRPackedBool               mAllowAuth;
     PRPackedBool               mAllowKeywordFixup;
+    PRPackedBool               mIsOffScreenBrowser;
 
     // This boolean is set to true right before we fire pagehide and generally
     // unset when we embed a new content viewer.  While it's true no navigation
