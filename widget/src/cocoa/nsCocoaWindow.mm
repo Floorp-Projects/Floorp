@@ -1736,6 +1736,12 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
     // we respond to it just in case.
     if ([self respondsToSelector:@selector(setBottomCornerRounded:)])
       [self setBottomCornerRounded:NO];
+
+    // This method only exists on Leopard.
+    if ([self respondsToSelector:@selector(setAutorecalculatesContentBorderThickness:forEdge:)]) {
+      [self setAutorecalculatesContentBorderThickness:NO forEdge:NSMaxYEdge];
+      [self setContentBorderThickness:0.0f forEdge:NSMaxYEdge];
+    }
   }
   return self;
 
@@ -1797,6 +1803,8 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
   if (mUnifiedToolbarHeight == aToolbarHeight)
     return;
   mUnifiedToolbarHeight = aToolbarHeight;
+  if ([self respondsToSelector:@selector(setContentBorderThickness:forEdge:)])
+    [self setContentBorderThickness:aToolbarHeight forEdge:NSMaxYEdge];
   [self redrawTitlebar];
 }
 
