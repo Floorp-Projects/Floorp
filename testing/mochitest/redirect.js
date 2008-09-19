@@ -44,10 +44,11 @@ function redirect(aURL)
   
   const Cc = Components.classes;
   const Ci = Components.interfaces;
-  
-  var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
-  getService(Ci.nsIWindowMediator);
-  var win = windowMediator.getMostRecentWindow("navigator:browser");
-  win.getWebNavigation().loadURI(aURL + location.search,
-                                 null, null, null, null);
+
+  // Can't just set window.location because of security restrictions
+  // that don't care about our UniversalXPConnectness
+  var webNav = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation);
+  webNav.loadURI(aURL + location.search,
+                 null, null, null, null);
 }
