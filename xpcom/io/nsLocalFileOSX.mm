@@ -339,7 +339,6 @@ const PRInt64   nsLocalFile::kJanuaryFirst1970Seconds = 2082844800LL;
 nsLocalFile::nsLocalFile() :
   mBaseRef(nsnull),
   mTargetRef(nsnull),
-  mCachedFSRefValid(PR_FALSE),
   mFollowLinks(PR_TRUE),
   mFollowLinksDirty(PR_TRUE)
 {
@@ -348,8 +347,6 @@ nsLocalFile::nsLocalFile() :
 nsLocalFile::nsLocalFile(const nsLocalFile& src) :
   mBaseRef(src.mBaseRef),
   mTargetRef(src.mTargetRef),
-  mCachedFSRef(src.mCachedFSRef),
-  mCachedFSRefValid(src.mCachedFSRefValid),
   mFollowLinks(src.mFollowLinks),
   mFollowLinksDirty(src.mFollowLinksDirty)
 {
@@ -819,7 +816,6 @@ NS_IMETHODIMP nsLocalFile::Remove(PRBool recursive)
       rv = NSRESULT_FOR_ERRNO();
   }
 
-  mCachedFSRefValid = PR_FALSE;
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1098,7 +1094,7 @@ NS_IMETHODIMP nsLocalFile::Exists(PRBool *_retval)
   *_retval = PR_FALSE;
   
   FSRef fsRef;
-  if (NS_SUCCEEDED(GetFSRefInternal(fsRef, PR_TRUE))) {
+  if (NS_SUCCEEDED(GetFSRefInternal(fsRef))) {
     *_retval = PR_TRUE;
   }
   
@@ -1219,7 +1215,7 @@ NS_IMETHODIMP nsLocalFile::IsDirectory(PRBool *_retval)
   *_retval = PR_FALSE;
   
   FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef, PR_FALSE);
+  nsresult rv = GetFSRefInternal(fsRef);
   if (NS_FAILED(rv))
     return rv;
     
@@ -1243,7 +1239,7 @@ NS_IMETHODIMP nsLocalFile::IsFile(PRBool *_retval)
   *_retval = PR_FALSE;
   
   FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef, PR_FALSE);
+  nsresult rv = GetFSRefInternal(fsRef);
   if (NS_FAILED(rv))
     return rv;
     
@@ -1306,12 +1302,11 @@ NS_IMETHODIMP nsLocalFile::Clone(nsIFile **_retval)
 /* boolean equals (in nsIFile inFile); */
 NS_IMETHODIMP nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 {
-    return EqualsInternal(inFile, PR_TRUE, _retval);
+    return EqualsInternal(inFile, _retval);
 }
 
 nsresult
-nsLocalFile::EqualsInternal(nsISupports* inFile, PRBool aUpdateCache,
-                            PRBool *_retval)
+nsLocalFile::EqualsInternal(nsISupports* inFile, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -1325,8 +1320,8 @@ nsLocalFile::EqualsInternal(nsISupports* inFile, PRBool aUpdateCache,
 
   // If both exist, compare FSRefs
   FSRef thisFSRef, inFSRef;
-  nsresult rv1 = GetFSRefInternal(thisFSRef, aUpdateCache);
-  nsresult rv2 = inLF->GetFSRefInternal(inFSRef, aUpdateCache);
+  nsresult rv1 = GetFSRefInternal(thisFSRef);
+  nsresult rv2 = inLF->GetFSRefInternal(inFSRef);
   if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2)) {
     *_retval = (thisFSRef == inFSRef);
     return NS_OK;
@@ -2312,7 +2307,6 @@ nsresult nsLocalFile::SetBaseRef(CFURLRef aCFURLRef)
 
   mFollowLinksDirty = PR_TRUE;  
   UpdateTargetRef();
-  mCachedFSRefValid = PR_FALSE;
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -2353,24 +2347,17 @@ nsresult nsLocalFile::UpdateTargetRef()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult nsLocalFile::GetFSRefInternal(FSRef& aFSRef, PRBool bForceUpdateCache)
+nsresult nsLocalFile::GetFSRefInternal(FSRef& aFSRef)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (bForceUpdateCache || !mCachedFSRefValid) {
-    mCachedFSRefValid = PR_FALSE;
-    CFURLRef whichURLRef = mFollowLinks ? mTargetRef : mBaseRef;
-    NS_ENSURE_TRUE(whichURLRef, NS_ERROR_NULL_POINTER);
-    if (::CFURLGetFSRef(whichURLRef, &mCachedFSRef))
-      mCachedFSRefValid = PR_TRUE;
-  }
-  if (mCachedFSRefValid) {
-    aFSRef = mCachedFSRef;
+  CFURLRef whichURLRef = mFollowLinks ? mTargetRef : mBaseRef;
+  NS_ENSURE_TRUE(whichURLRef, NS_ERROR_NULL_POINTER);
+  if (::CFURLGetFSRef(whichURLRef, &aFSRef))
     return NS_OK;
-  }
-  // CFURLGetFSRef only returns a Boolean for success,
-  // so we have to assume what the error was. This is
-  // the only probable cause.
+
+  // We have to make an assumption about why CFURLGetFSRef failed as it only
+  // returns a bool. This is the most likely reason for failure.
   return NS_ERROR_FILE_NOT_FOUND;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -2507,7 +2494,7 @@ nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutS
 NS_IMETHODIMP
 nsLocalFile::Equals(nsIHashable* aOther, PRBool *aResult)
 {
-    return EqualsInternal(aOther, PR_FALSE, aResult);
+    return EqualsInternal(aOther, aResult);
 }
 
 NS_IMETHODIMP
