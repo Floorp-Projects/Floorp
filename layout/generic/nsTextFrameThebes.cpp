@@ -2968,7 +2968,13 @@ nsTextPaintStyle::InitCommonColors()
   const nsStyleBackground* bg =
     nsCSSRendering::FindNonTransparentBackground(sc);
   NS_ASSERTION(bg, "Cannot find NonTransparentBackground.");
-  mFrameBackgroundColor = bg->mBackgroundColor;
+
+  nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
+  NS_ASSERTION(NS_GET_A(defaultBgColor) == 255,
+               "default background color is not opaque");
+
+  mFrameBackgroundColor = NS_ComposeColors(defaultBgColor,
+                                           bg->mBackgroundColor);
 
   nsILookAndFeel* look = mPresContext->LookAndFeel();
   nscolor defaultWindowBackgroundColor, selectionTextColor, selectionBGColor;

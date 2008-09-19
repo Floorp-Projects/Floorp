@@ -569,6 +569,11 @@ nsPresContext::GetDocumentColorPreferences()
                            mBackgroundColor);
   }
 
+  // Wherever we got the default background color from, ensure it is
+  // opaque.
+  mBackgroundColor = NS_ComposeColors(NS_RGB(0xFF, 0xFF, 0xFF),
+                                      mBackgroundColor);
+
   mUseDocumentColors = !useAccessibilityTheme &&
     nsContentUtils::GetBoolPref("browser.display.use_document_colors",
                                 mUseDocumentColors);
