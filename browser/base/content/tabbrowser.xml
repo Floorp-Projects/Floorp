@@ -1918,20 +1918,16 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-#ifndef XP_MACOSX
-            var accelKeyPressed = aEvent.ctrlKey;
-#else
-            var accelKeyPressed = aEvent.metaKey;
-#endif
+            var isCopy = aEvent.dataTransfer.dropEffect == "copy";
             var draggedTab;
             if (aDragSession.sourceNode && aDragSession.sourceNode.localName == "tab" &&
                 (aDragSession.sourceNode.parentNode == this.mTabContainer ||
                  aDragSession.sourceNode.ownerDocument.defaultView instanceof ChromeWindow &&
                  aDragSession.sourceNode.ownerDocument.documentElement.getAttribute("windowtype") == "navigator:browser"))
               draggedTab = aDragSession.sourceNode;
-            if (draggedTab && (accelKeyPressed || draggedTab.parentNode == this.mTabContainer)) {
+            if (draggedTab && (isCopy || draggedTab.parentNode == this.mTabContainer)) {
               var newIndex = this.getNewIndex(aEvent);
-              if (accelKeyPressed) {
+              if (isCopy) {
                 // copy the dropped tab (wherever it's from)
                 var newTab = this.duplicateTab(draggedTab);
                 this.moveTabTo(newTab, newIndex);
@@ -1988,7 +1984,7 @@
               if (aEvent.shiftKey)
                 bgLoad = !bgLoad;
 
-              if (document.getBindingParent(aEvent.originalTarget).localName != "tab" || accelKeyPressed) {
+              if (document.getBindingParent(aEvent.originalTarget).localName != "tab" || isCopy) {
                 // We're adding a new tab.
                 newIndex = this.getNewIndex(aEvent);
                 newTab = this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad, false);
