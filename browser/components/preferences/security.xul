@@ -97,11 +97,11 @@
 
       <separator class="thin"/>
       <checkbox id="tellMaybeAttackSite"
-                label="&tellMaybeAttackSite.label;"
+                label="&tellMaybeAttackSite2.label;"
                 accesskey="&tellMaybeAttackSite.accesskey;"
                 preference="browser.safebrowsing.malware.enabled" />
       <checkbox id="tellMaybeForgery"
-                label="&tellMaybeForgery.label;"
+                label="&tellMaybeForgery2.label;"
                 accesskey="&tellMaybeForgery.accesskey;"
                 preference="browser.safebrowsing.enabled" />
     </groupbox>
