@@ -135,8 +135,18 @@ nscoord nsStyleTransformMatrix::GetYTranslation(const nsRect& aBounds) const
 gfxMatrix nsStyleTransformMatrix::GetThebesMatrix(const nsRect& aBounds,
                                                   PRInt32 aScale) const
 {
-  /* Compute the graphics matrix.  We take the stored main elements, along with
-   * the delta, and add in the matrices:
+  /* Compute the graphics matrix.  Unfortunately, the gfxMatrix stores entries
+   * as
+   * | a b e |
+   * | c d f |
+   * | 0 0 1 |
+   * But we store the matrix as
+   * | a c e |
+   * | b d f |
+   * | 0 0 1 |
+   * So, we'll have to be a bit clever about how we do the conversion.
+   *
+   * Also, we need to be sure to add to this matrices the following:
    *
    * | 0 0 dx1|
    * | 0 0 dx2| * width
@@ -147,7 +157,7 @@ gfxMatrix nsStyleTransformMatrix::GetThebesMatrix(const nsRect& aBounds,
    * | 0 0   0|
    */
 
-  return gfxMatrix(mMain[0], mMain[1], mMain[2], mMain[3],
+  return gfxMatrix(mMain[0], mMain[2], mMain[1], mMain[3],
                    NSAppUnitsToFloatPixels(GetXTranslation(aBounds), aScale),
                    NSAppUnitsToFloatPixels(GetYTranslation(aBounds), aScale));
 }
@@ -167,25 +177,27 @@ nsStyleTransformMatrix::operator *= (const nsStyleTransformMatrix &aOther)
   float newX[2];
   float newY[2];
   
-  /*   [this]    [aOther]
+  /*  [aOther]    [this]
    * |a1 c1 e1| |a0 c0 e0|   |a0a1 + b0c1    c0a1 + d0c1     e0a1 + f0c1 + e1|
    * |b1 d1 f1|x|b0 d0 f0| = |a0b1 + b0d1    c0b1 + d0d1     e0b1 + f0d1 + f1|
    * |0  0  1 | | 0  0  1|   |          0              0                    1|
    */
-  newMatrix[0] = aOther.mMain[0] * mMain[0] + aOther.mMain[1] * mMain[2];
-  newMatrix[1] = aOther.mMain[0] * mMain[1] + aOther.mMain[1] * mMain[3];
-  newMatrix[2] = aOther.mMain[2] * mMain[0] + aOther.mMain[3] * mMain[2];
-  newMatrix[3] = aOther.mMain[2] * mMain[1] + aOther.mMain[3] * mMain[3];
+  newMatrix[0] = mMain[0] * aOther.mMain[0] + mMain[1] * aOther.mMain[2];
+  newMatrix[1] = mMain[0] * aOther.mMain[1] + mMain[1] * aOther.mMain[3];
+  newMatrix[2] = mMain[2] * aOther.mMain[0] + mMain[3] * aOther.mMain[2];
+  newMatrix[3] = mMain[2] * aOther.mMain[1] + mMain[3] * aOther.mMain[3];
   newDelta[0] =
-    NSCoordMultiply(aOther.mDelta[0], mMain[0]) +
-    NSCoordMultiply(aOther.mDelta[1], mMain[2]) + mDelta[0];
+    NSCoordMultiply(mDelta[0], aOther.mMain[0]) +
+    NSCoordMultiply(mDelta[1], aOther.mMain[2]) +
+    aOther.mDelta[0];
   newDelta[1] =
-    NSCoordMultiply(aOther.mDelta[0], mMain[1]) +
-    NSCoordMultiply(aOther.mDelta[1], mMain[3]) + mDelta[1];
+    NSCoordMultiply(mDelta[0], aOther.mMain[1]) +
+    NSCoordMultiply(mDelta[1], aOther.mMain[3]) +
+    aOther.mDelta[1];
 
   /* For consistent terminology, let u0, u1, v0, and v1 be the four transform
-   * coordinates from our matrix, and let x0, x1, y0, and y1 be the four
-   * transform coordinates from the other  matrix.  Then the new transform
+   * coordinates from the old matrix, and let x0, x1, y0, and y1 be the four
+   * transform coordinates from the new matrix.  Then the new transform
    * coordinates are:
    *
    * u0' = a1u0 + c1u1 + x0
@@ -193,10 +205,10 @@ nsStyleTransformMatrix::operator *= (const nsStyleTransformMatrix &aOther)
    * v0' = a1v0 + c1v1 + y0
    * v1' = b1v0 + d1v1 + y1
    */
-  newX[0] = mMain[0] * aOther.mX[0] + mMain[2] * aOther.mX[1] + mX[0];
-  newX[1] = mMain[1] * aOther.mX[0] + mMain[3] * aOther.mX[1] + mX[1];
-  newY[0] = mMain[0] * aOther.mY[0] + mMain[2] * aOther.mY[1] + mY[0];
-  newY[1] = mMain[1] * aOther.mY[0] + mMain[3] * aOther.mY[1] + mY[1];
+  newX[0] = aOther.mMain[0] * mX[0] + aOther.mMain[2] * mX[1] + aOther.mX[0];
+  newX[1] = aOther.mMain[1] * mX[0] + aOther.mMain[3] * mX[1] + aOther.mX[1];
+  newY[0] = aOther.mMain[0] * mY[0] + aOther.mMain[2] * mY[1] + aOther.mY[0];
+  newY[1] = aOther.mMain[1] * mY[0] + aOther.mMain[3] * mY[1] + aOther.mY[1];
 
   /* Now, write everything back in. */
   for (PRInt32 index = 0; index < 4; ++index)
@@ -389,14 +401,14 @@ static void ProcessScale(float aMain[4], const nsCSSValue::Array* aData)
 static void ProcessSkewHelper(float aXAngle, float aYAngle, float aMain[4])
 {
   /* We want our matrix to look like this:
-   * |  1           tan(ThetaX)  0|
-   * |  tan(ThetaY) 1            0|
+   * |  1           tan(ThetaY)  0|
+   * |  tan(ThetaX) 1            0|
    * |  0           0            1|
    * However, to avoid infinte values, we'll use the SafeTangent function
    * instead of the C standard tan function.
    */
-  aMain[2] = SafeTangent(aXAngle);
-  aMain[1] = SafeTangent(aYAngle);
+  aMain[1] = SafeTangent(aXAngle);
+  aMain[2] = SafeTangent(aYAngle);
 }
 
 /* Function that converts a skewx transform into a matrix. */
@@ -433,6 +445,10 @@ static void ProcessRotate(float aMain[4], const nsCSSValue::Array* aData)
    * |  cos(theta)  -sin(theta)  0|
    * |  sin(theta)   cos(theta)  0|
    * |           0            0  1|
+   * However, there's a bit of a problem - our coordinate system has Y
+   * increasing downward.  Thus we will rotate by -theta
+   * degrees.  Thus:
+   * A = cos(theta), B = -sin(theta), C = sin(theta), D = cos(theta)
    * (see http://www.w3.org/TR/SVG/coords.html#RotationDefined)
    */
   float theta = CSSToRadians(aData->Item(1));
@@ -440,8 +456,8 @@ static void ProcessRotate(float aMain[4], const nsCSSValue::Array* aData)
   float sinTheta = sin(theta);
 
   aMain[0] = cosTheta;
-  aMain[1] = sinTheta;
-  aMain[2] = -sinTheta;
+  aMain[1] = -sinTheta;
+  aMain[2] = sinTheta;
   aMain[3] = cosTheta;
 }
 
