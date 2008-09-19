@@ -62,7 +62,4 @@
 /* Define to either <new> or <new.h> */
 #undef NEW_H
 
-/* Define if binary compatibility with Mozilla 1.x string code is desired */
-#undef MOZ_V1_STRING_ABI
-
 #endif /* _XPCOM_CONFIG_H_ */
