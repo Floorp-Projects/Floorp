@@ -52,9 +52,9 @@
  * A matrix that represents an affine transformation. Projective
  * transformations are not supported. This matrix looks like:
  *
- * / a  b  0 \
- * | c  d  0 |
- * \ tx ty 1 /
+ * / a b tx \
+ * | c d ty |
+ * \ 0 0  1 /
  *
  * So, transforming a point (x, y) results in:
  *
