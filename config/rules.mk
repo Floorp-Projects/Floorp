@@ -1796,12 +1796,10 @@ ifndef NO_DIST_INSTALL
 	@$(EXIT_ON_ERROR) \
 	if test -f $(JAR_MANIFEST); then \
 	  if test ! -d $(FINAL_TARGET)/chrome; then $(NSINSTALL) -D $(FINAL_TARGET)/chrome; fi; \
-	  if test ! -d $(MAKE_JARS_TARGET)/chrome; then $(NSINSTALL) -D $(MAKE_JARS_TARGET)/chrome; fi; \
-	  $(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
-	    $(JAR_MANIFEST) | \
-	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl \
-	    $(QUIET) -d $(MAKE_JARS_TARGET)/chrome -j $(FINAL_TARGET)/chrome \
-	    $(MAKE_JARS_FLAGS) -- "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
+	  $(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
+	    $(QUIET) -j $(FINAL_TARGET)/chrome \
+	    $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
+	    $(JAR_MANIFEST); \
 	fi
 endif
 

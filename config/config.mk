@@ -434,28 +434,12 @@ endif
 # Flags passed to make-jars.pl
 
 MAKE_JARS_FLAGS = \
-	-s $(srcdir) -t $(topsrcdir) -z $(ZIP) -p $(MOZILLA_DIR)/config/preprocessor.pl \
+	-t $(topsrcdir) \
 	-f $(MOZ_CHROME_FILE_FORMAT) \
 	$(NULL)
 
-ifdef NO_JAR_AUTO_REG
-MAKE_JARS_FLAGS += -a
-endif
-
 ifdef USE_EXTENSION_MANIFEST
 MAKE_JARS_FLAGS += -e
-endif
-
-ifeq ($(OS_TARGET),WIN95)
-MAKE_JARS_FLAGS += -l
-endif
-
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-MAKE_JARS_FLAGS += -x
-endif
-
-ifdef CROSS_COMPILE
-MAKE_JARS_FLAGS += -o $(OS_ARCH)
 endif
 
 TAR_CREATE_FLAGS = -cvhf
