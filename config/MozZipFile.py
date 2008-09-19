@@ -39,6 +39,7 @@ import zipfile
 import time
 import binascii, struct
 import zlib
+from utils import lockFile
 
 
 class ZipFile(zipfile.ZipFile):
@@ -47,11 +48,17 @@ class ZipFile(zipfile.ZipFile):
   Subclassing zipfile.ZipFile to allow for overwriting of existing
   entries, though only for writestr, not for write.
   """
-  def __init__(self, file, mode="r", compression=zipfile.ZIP_STORED):
+  def __init__(self, file, mode="r", compression=zipfile.ZIP_STORED,
+               lock = False):
     zipfile.ZipFile.__init__(self, file, mode, compression)
     self._remove = []
     self.end = self.fp.tell()
     self.debug = 0
+    if lock:
+      assert isinstance(file, basestring)
+      self.lockfile = lockFile(file + '.lck')
+    else:
+      self.lockfile = None
 
   def writestr(self, zinfo_or_arcname, bytes):
     """Write contents into the archive.
@@ -120,7 +127,9 @@ class ZipFile(zipfile.ZipFile):
     """
     if not self._remove:
       # we don't have anything special to do, let's just call base
-      return zipfile.ZipFile.close(self)
+      r = zipfile.ZipFile.close(self)
+      self.lockfile = None
+      return r
 
     if self.fp.mode != 'r+b':
       # adjust file mode if we originally just wrote, now we rewrite
@@ -148,3 +157,4 @@ class ZipFile(zipfile.ZipFile):
       to_pos += length
     self.fp.truncate()
     zipfile.ZipFile.close(self)
+    self.lockfile = None
