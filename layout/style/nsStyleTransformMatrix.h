@@ -49,7 +49,16 @@
  * A class representing a style transformation matrix.  The class actually
  * wraps three different matrices, a constant matrix and two matrices
  * whose values are scaled by the width and the height of the bounding
- * rectangle for the object to transform.
+ * rectangle for the object to transform.  Thus, given a frame rectangle
+ * of dimensions (width, height) and a point (x, y) to transform, the matrix
+ * corresponds to the transform operation
+ *
+ * | a c e |   |0 0 dX1|           |0 0 dY1|           | x |
+ *(| b d f | + |0 0 dX2| (width) + |0 0 dY2| (height)) | y |
+ * | 0 0 1 |   |0 0   0|           |0 0   0|           | 1 |
+ *
+ * Note that unlike the Thebes gfxMatrix, vectors are column vectors and
+ * consequently the multiplication of a matrix A and a vector x is Ax, not xA.
  */
 class nsStyleContext;
 class nsPresContext;
@@ -75,8 +84,9 @@ class nsStyleTransformMatrix
   gfxMatrix GetThebesMatrix(const nsRect& aBounds, PRInt32 aFactor) const;
 
   /**
-   * Multiplies this matrix by another matrix.  The multiplication is
-   * a post-multiplication, so A *= B updates this matrix to be BA.
+   * Multiplies this matrix by another matrix, in that order.  If A'
+   * is the value of A after A *= B, then for any vector x, the
+   * equivalence A'(x) == A(B(x)) holds.
    *
    * @param aOther The matrix to multiply this matrix by.
    * @return A reference to this matrix.
@@ -84,12 +94,13 @@ class nsStyleTransformMatrix
   nsStyleTransformMatrix& operator *= (const nsStyleTransformMatrix &aOther);
 
   /**
-   * Returns a new nsStyleTransformMatrix that's equal to this matrix
-   * post-multiplied with another matrix.
+   * Returns a new nsStyleTransformMatrix that is equal to one matrix
+   * multiplied by another matrix, in that order.  If C is the result of
+   * A * B, then for any vector x, the equivalence C(x) = A(B(x)).
    *
    * @param aOther The matrix to multiply this matrix by.
-   * @return A new nsStyleTransformMatrix equal to this matrix postmultiplied
-   *         with the other matrix.
+   * @return A new nsStyleTransformMatrix equal to this matrix multiplied
+   *         by the other matrix.
    */
   const nsStyleTransformMatrix
     operator * (const nsStyleTransformMatrix &aOther) const;
