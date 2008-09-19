@@ -1,0 +1,7 @@
+<window title="Mozilla Bug 454235 SubFrame"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <deck flex="1">
+    <browser id="topBrowser" src="about:mozilla"/>
+    <browser id="burriedBrowser" src="about:mozilla"/>
+  </deck>
+</window>
