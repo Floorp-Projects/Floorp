@@ -33,6 +33,11 @@
         window.addEventListener("mouseup", this.stackEventHandler, true);
         this._stack.addEventListener("mousemove", this.stackEventHandler, true);
 
+        var prefsvc = Components.classes["@mozilla.org/preferences-service;1"].
+                        getService(Components.interfaces.nsIPrefBranch2);
+
+        this._allowKinetic = prefsvc.getBoolPref("browser.ui.panning.kinetic");
+
         // zoom
         // FIXME: dblclicks don't work on the device
         // this._stack.addEventListener("dblclick", this.stackEventHandler, true);
@@ -497,7 +502,7 @@
         <parameter name="width"/>
         <parameter name="height"/>
         <body><![CDATA[
-          
+
           function intersect(r1, r2) {
             let xmost1 = r1.x + r1.width;
             let ymost1 = r1.y + r1.height;
@@ -527,15 +532,15 @@
             };
           }
 
-          let r1 = { x : x, 
-                     y : y, 
-                     width : width, 
+          let r1 = { x : x,
+                     y : y,
+                     width : width,
                      height: height };
 
           // check to see if the input coordinates are inside the visiable destination
-          let r2 = { x : this.dragData.pageX, 
-                     y : this.dragData.pageY, 
-                     width : this._canvas.width / this._zoomLevel, 
+          let r2 = { x : this.dragData.pageX,
+                     y : this.dragData.pageY,
+                     width : this._canvas.width / this._zoomLevel,
                      height: this._canvas.height / this._zoomLevel };
 
           let dest = intersect(r1, r2);
@@ -849,13 +854,13 @@
             if (dt > 0) {
               this.dragData.velocityX = -dx / dt;
               this.dragData.velocityY = -dy / dt;
-              
+
               this.dragData.originalX = this.dragData.dragX;
               this.dragData.originalY = this.dragData.dragY;
 
-              let [destPageX, destPageY] =  this._constrainPanCoords(this._screenToPage(this.dragData.dragX 
+              let [destPageX, destPageY] =  this._constrainPanCoords(this._screenToPage(this.dragData.dragX
                                                                      + this.dragData.velocityX * 800),
-                                                                     this._screenToPage(this.dragData.dragY 
+                                                                     this._screenToPage(this.dragData.dragY
                                                                      + this.dragData.velocityY * 800));
 
               this.dragData.destinationX = -this._pageToScreen(destPageX);
@@ -863,7 +868,7 @@
 
               if (this.dragData.kineticId)
                 window.clearInterval(this.dragData.kineticId);
-              this.dragData.kineticId = window.setInterval(this._doKinetic, dt / (this.PAN_EVENTS_TO_TRACK - 1), 
+              this.dragData.kineticId = window.setInterval(this._doKinetic, dt / (this.PAN_EVENTS_TO_TRACK - 1),
                                                            this, dt / (this.PAN_EVENTS_TO_TRACK - 1));
             } else {
               this._endPan();
@@ -1032,7 +1037,10 @@
             if (this.deckbrowser.dragData.dragging) {
               this.deckbrowser.dragData.dragging = false;
 
-              this.deckbrowser._startKinetic();
+              if (this.deckbrowser._allowKinetic)
+                this.deckbrowser._startKinetic();
+              else
+                this.deckbrowser._endPan();
 
               return;
             }
