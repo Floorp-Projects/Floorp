@@ -579,8 +579,19 @@ js_CallTree(InterpState* state, Fragment* f)
     lr = u.func(state, NULL);
 #endif
 
-    if (lr->exit->exitType == NESTED_EXIT)
-        lr = state->nestedExit;
+    if (lr->exit->exitType == NESTED_EXIT) {
+        /* This only occurs once a tree call guard mismatches and we unwind the tree call stack.
+           We store the first (innermost) tree call guard in state and we will try to grow
+           the outer tree the failing call was in starting at that guard. */
+        if (!state->lastTreeCallGuard)
+            state->lastTreeCallGuard = lr;
+    } else {
+        /* If the tree exits on a regular (non-nested) guard, keep updating lastTreeExitGuard
+           with that guard. If we mismatch on a tree call guard, this will contain the last
+           non-nested guard we encountered, which is the innermost loop or branch guard. */
+        state->lastTreeExitGuard = lr;
+    }
+
     return lr;
 }
 
