@@ -1,3 +1,15 @@
+/**
+ * A number of the tests in this file depend on the setting of
+ * HOTLOOP.  Define some constants up front, so they're easy to grep
+ * for.
+ */
+// The HOTLOOP constant we depend on
+const HOTLOOP = 2;
+// The loop count at which we trace
+const RECORDLOOP = HOTLOOP;
+// The loop count at which we run the trace
+const RUNLOOP = HOTLOOP + 1;
+
 var testName = null;
 if ("arguments" in this && arguments.length > 0)
   testName = arguments[0];
@@ -1445,6 +1457,37 @@ function testArrayPushPop() {
 }
 testArrayPushPop.expected = "55,45";
 test(testArrayPushPop);
+
+// Test stack reconstruction after a nested exit
+function testNestedExitStackInner(j, counter) {
+  ++counter;
+  var b = 0;
+  for (var i = 1; i <= RUNLOOP; i++) {
+    ++b;
+    var a;
+    // Make sure that once everything has been traced we suddenly switch to
+    // a different control flow the first time we run the outermost tree,
+    // triggering a side exit.
+    if (j < RUNLOOP)
+      a = 1;
+    else
+      a = 0;
+    ++b;
+    b += a;
+  }
+  return counter + b;
+}
+function testNestedExitStackOuter() {
+  var counter = 0;
+  for (var j = 1; j <= RUNLOOP; ++j) {
+    for (var k = 1; k <= RUNLOOP; ++k) {
+      counter = testNestedExitStackInner(j, counter);
+    }
+  }
+  return counter;
+}
+testNestedExitStackOuter.expected = 81;
+test(testNestedExitStackOuter);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
