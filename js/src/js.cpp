@@ -462,6 +462,13 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         case 'j':
             JS_ToggleOptions(cx, JSOPTION_JIT);
+#ifdef DEBUG
+extern struct JSClass jitstats_class;
+extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
+            js_InitJITStatsClass(cx, JS_GetGlobalObject(cx));
+            JS_DefineObject(cx, JS_GetGlobalObject(cx), "tracemonkey",
+                            &jitstats_class, NULL, 0);
+#endif
             break;
             
         case 'o':
