@@ -478,7 +478,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
       fontMet->GetStrikeout(offset, size);
       gfxFloat offsetPixel = presContext->AppUnitsToGfxUnits(offset);
       gfxFloat sizePixel = presContext->AppUnitsToGfxUnits(size);
-      nsCSSRendering::PaintDecorationLine(ctx, underColor,
+      nsCSSRendering::PaintDecorationLine(ctx, strikeColor,
                                           pt, gfxSize(width, sizePixel),
                                           ascentPixel, offsetPixel,
                                           NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
