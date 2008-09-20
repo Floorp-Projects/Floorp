@@ -890,11 +890,6 @@ nsresult nsComputedDOMStyle::GetMozTransform(nsIDOMCSSValue **aValue)
     resultString.AppendFloat(display->mTransform.GetMainMatrixEntry(index));
     resultString.Append(NS_LITERAL_STRING(", "));
   }
-  
-  /* For the next part, we need to compute the translate values.  This means
-   * that we'll need to get the width and height of this object.
-   */
-  PRInt32 cssPxWidth = 0, cssPxHeight = 0;
 
   /* Use the inner frame for width and height.  If we fail, assume zero.
    * TODO: There is no good way for us to represent the case where there's no

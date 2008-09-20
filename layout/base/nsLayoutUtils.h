@@ -866,14 +866,11 @@ public:
    * Indicates if the nsIFrame::GetUsedXXX assertions in nsFrame.cpp should
    * disabled.
    */
-#ifdef DEBUG
   static PRBool sDisableGetUsedXAssertions;
-#endif
 };
 
 class nsAutoDisableGetUsedXAssertions
 {
-#ifdef DEBUG
 public:
   nsAutoDisableGetUsedXAssertions()
     : mOldValue(nsLayoutUtils::sDisableGetUsedXAssertions)
@@ -887,7 +884,6 @@ public:
 
 private:
   PRBool mOldValue;
-#endif  
 };
 
 class nsSetAttrRunnable : public nsRunnable
