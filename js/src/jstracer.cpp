@@ -71,7 +71,10 @@
 
 #include "jsautooplen.h"        // generated headers last
 
-/* Number of iterations of a loop before we start tracing. */
+/* Number of iterations of a loop where we start tracing.  That is, we don't
+   start tracing until the beginning of the HOTLOOP-th iteration.  If you
+   change this value, make sure to update all the tests in trace-test.js that
+   depend on it.  */
 #define HOTLOOP 2
 
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
@@ -2050,6 +2053,12 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->callerRegs.pc = fi.callpc;
     newifp->callerRegs.sp = cx->fp->slots + fi.s.spdist;
     newifp->frame.argv = newifp->callerRegs.sp - JS_MAX(fun->nargs, argc);
+    JS_ASSERT(newifp->frame.argv);
+#ifdef DEBUG
+    // Initialize argv[-1] to a known-bogus value so we'll catch it if
+    // someone forgets to initialize it later.
+    newifp->frame.argv[-1] = JSVAL_HOLE;
+#endif
     JS_ASSERT(newifp->frame.argv >= StackBase(cx->fp));
 
     newifp->frame.rval = JSVAL_VOID;
@@ -2499,6 +2508,14 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     if (slots < 0)
         return NULL;
     JS_ASSERT(unsigned(slots) == e->numStackSlots);
+
+#ifdef DEBUG
+    // Verify that our state restoration worked
+    for (JSStackFrame* fp = cx->fp; fp; fp = fp->down) {
+        JS_ASSERT(!fp->callee || JSVAL_IS_OBJECT(fp->argv[-1]));
+        JS_ASSERT(!fp->callee || fp->thisp == JSVAL_TO_OBJECT(fp->argv[-1]));
+    }
+#endif
 
     AUDIT(sideExitIntoInterpreter);
 
