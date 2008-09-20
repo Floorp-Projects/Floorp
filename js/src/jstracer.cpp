@@ -72,9 +72,7 @@
 #include "jsautooplen.h"        // generated headers last
 
 /* Number of iterations of a loop where we start tracing.  That is, we don't
-   start tracing until the beginning of the HOTLOOP-th iteration.  If you
-   change this value, make sure to update all the tests in trace-test.js that
-   depend on it.  */
+   start tracing until the beginning of the HOTLOOP-th iteration. */
 #define HOTLOOP 2
 
 /* Number of times we wait to exit on a side exit before we try to extend the tree. */
@@ -102,13 +100,79 @@
 #endif
 
 #ifdef DEBUG
-static struct {
-    uint64
-        recorderStarted, recorderAborted, traceCompleted, sideExitIntoInterpreter,
-        typeMapMismatchAtEntry, returnToDifferentLoopHeader, traceTriggered,
-        globalShapeMismatchAtEntry, treesTrashed, slotPromoted,
-        unstableLoopVariable, breakLoopExits, returnLoopExits;
+struct __jitstats {
+#define JITSTAT(x) uint64 x;
+#include "jitstats.tbl"
+#undef JITSTAT
 } stat = { 0LL, };
+
+JS_STATIC_ASSERT(sizeof(stat) % sizeof(uint64) == 0);
+
+enum jitstat_ids {
+#define JITSTAT(x) STAT ## x ## ID,
+#include "jitstats.tbl"
+#undef JITSTAT
+};
+
+static JSPropertySpec jitstats_props[] = {
+#define JITSTAT(x) { #x, STAT ## x ## ID, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT },
+#include "jitstats.tbl"
+#undef JITSTAT
+    { 0 }
+};
+
+static JSBool
+jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+    int index = -1;
+
+    if (JSVAL_IS_STRING(id)) {
+        JSString* str = JSVAL_TO_STRING(id);
+        if (strcmp(JS_GetStringBytes(str), "HOTLOOP") == 0) {
+            *vp = INT_TO_JSVAL(HOTLOOP);
+            return JS_TRUE;
+        }
+    }
+
+    if (JSVAL_IS_INT(id))
+        index = JSVAL_TO_INT(id);
+
+    uint64 result = 0;
+    switch (index) {
+#define JITSTAT(x) case STAT ## x ## ID: result = stat.x; break;
+#include "jitstats.tbl"
+#undef JITSTAT
+    default:
+        *vp = JSVAL_VOID;
+        return JS_TRUE;
+    }
+
+    if (result < JSVAL_INT_MAX) {
+        *vp = INT_TO_JSVAL(result);
+        return JS_TRUE;
+    }
+    char retstr[64];
+    snprintf(retstr, JS_ARRAY_LENGTH(retstr), "%llu", result);
+    *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, retstr));
+    return JS_TRUE;
+}
+
+JSClass jitstats_class = {
+    "jitstats",
+    JSCLASS_HAS_PRIVATE,
+    JS_PropertyStub,       JS_PropertyStub,
+    jitstats_getProperty,  JS_PropertyStub,
+    JS_EnumerateStub,      JS_ResolveStub,
+    JS_ConvertStub,        JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+void
+js_InitJITStatsClass(JSContext *cx, JSObject *glob)
+{
+    JS_InitClass(cx, glob, NULL, &jitstats_class, NULL, 0, jitstats_props, NULL, NULL, NULL);
+}
+
 #define AUDIT(x) (stat.x++)
 #else
 #define AUDIT(x) ((void)0)
