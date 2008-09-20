@@ -233,3 +233,6 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 
 // disable color management
 pref("gfx.color_management.mode", 0);
+
+// don't allow JS to move and resize existing windows
+pref("dom.disable_window_move_resize", true);
