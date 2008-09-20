@@ -311,7 +311,7 @@ static void ProcessTranslateY(nscoord aDelta[2], float aY[2],
     aY[1] = aData->Item(1).GetPercentValue();
 }
 
-/* Helper functiont to process a translate function. */
+/* Helper function to process a translate function. */
 static void ProcessTranslate(nscoord aDelta[2], float aX[2], float aY[2],
 			     const nsCSSValue::Array* aData,
 			     nsStyleContext* aContext,
