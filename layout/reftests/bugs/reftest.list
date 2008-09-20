@@ -903,6 +903,7 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 == 438987-2c.html 438987-2-ref.html
 != about:blank 438987-2-ref.html # check that backgrounds work at all 
 == 439004-1.html 439004-1-ref.html
+== 439639-1.html 439639-1-ref.html
 == 439910.html 439910-ref.html
 == 441259-1.html 441259-1-ref.html
 fails == 441259-2.html 441259-2-ref.html # bug 441400
