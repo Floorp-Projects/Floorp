@@ -223,7 +223,10 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
         if (!parent->mFrames.DestroyFrame(aOldFrame)) {
           // Try to remove it from our overflow list, if we have one.
           // The simplest way is to reuse StealFrame.
-          nsresult rv = StealFrame(PresContext(), aOldFrame, PR_TRUE);
+#ifdef DEBUG
+          nsresult rv =
+#endif
+            StealFrame(PresContext(), aOldFrame, PR_TRUE);
           NS_ASSERTION(NS_SUCCEEDED(rv), "Could not find frame to remove!");
           aOldFrame->Destroy();
         }
@@ -489,8 +492,7 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
 
   PRBool isCanvas;
   const nsStyleBackground* bg;
-  PRBool hasBG =
-    nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
+  nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
 
   if (isCanvas) {
     nsIView* rootView;
@@ -1103,7 +1105,9 @@ void
 nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
                                         nsIFrame*      aNextInFlow)
 {
+#ifdef DEBUG
   nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
+#endif
   NS_PRECONDITION(prevInFlow, "bad prev-in-flow");
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
@@ -1129,7 +1133,10 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
   nsSplittableFrame::BreakFromPrevFlow(aNextInFlow);
 
   // Take the next-in-flow out of the parent's child list
-  nsresult rv = StealFrame(aPresContext, aNextInFlow);
+#ifdef DEBUG
+  nsresult rv = 
+#endif
+    StealFrame(aPresContext, aNextInFlow);
   NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame failure");
 
   // Delete the next-in-flow frame and its descendants.
