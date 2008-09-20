@@ -871,7 +871,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
        is what we expect it to be. */
     if (_anchor && _anchor->exit->exitType == NESTED_EXIT) {
         LIns* nested_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, 
-                                                offsetof(InterpState, nestedExit)), "nestedExit");
+                                                offsetof(InterpState, lastTreeExitGuard)), 
+                                                "lastTreeExitGuard");
         guard(true, lir->ins2(LIR_eq, nested_ins, INS_CONSTPTR(innermostNestedGuard)), NESTED_EXIT);
     }
 }
@@ -1837,8 +1838,6 @@ TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
     SideExit* exit = lr->exit;
     import(ti, inner_sp_ins, exit->numGlobalSlots, exit->calldepth,
            exit->typeMap, exit->typeMap + exit->numGlobalSlots);
-    /* Store the guard pointer in case we exit on an unexpected guard */
-    lir->insStorei(ret, lirbuf->state, offsetof(InterpState, nestedExit));
     /* Restore sp and rp to their original values (we still have them in a register). */
     if (callDepth > 0) {
         lir->insStorei(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp));
@@ -2353,9 +2352,8 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     state.eor = callstack + MAX_CALL_STACK_ENTRIES;
     state.gp = global;
     state.cx = cx;
-#ifdef DEBUG
-    state.nestedExit = NULL;
-#endif    
+    state.lastTreeExitGuard = NULL;
+    state.lastTreeCallGuard = NULL;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 
@@ -2393,8 +2391,14 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
        stack (rp) is empty, we can process the final frames (which again are not directly
        visible and only the guard we exited on will tells us about). */
     FrameInfo* rp = (FrameInfo*)state.rp;
-    if (lr->exit->exitType == NESTED_EXIT)
+    if (lr->exit->exitType == NESTED_EXIT) {
+        if (state.lastTreeCallGuard)
+            lr = state.lastTreeCallGuard;
+        JS_ASSERT(lr->exit->exitType == NESTED_EXIT);
+        if (innermostNestedGuardp)
+            *innermostNestedGuardp = lr;
         rp += lr->calldepth;
+    }
     while (callstack < rp) {
         /* Synthesize a stack frame and write out the values in it using the type map pointer
            on the native call stack. */
@@ -2414,20 +2418,12 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
         ++callstack;
         stack += slots;
     }
-    
-    /* If we bail out on a nested exit, the compiled code returns the outermost nesting
-       guard but what we are really interested in is the innermost guard that we hit
-       instead of the guard we were expecting there. */
-    if (lr->exit->exitType == NESTED_EXIT) {
-        do {
-            if (innermostNestedGuardp)
-                *innermostNestedGuardp = lr;
-            JS_ASSERT(lr->guard->oprnd1()->oprnd2()->isconstp());
-            lr = (GuardRecord*)lr->guard->oprnd1()->oprnd2()->constvalp();
-        } while (lr->exit->exitType == NESTED_EXIT);
-        lr = state.nestedExit;
-        JS_ASSERT(lr);
-    }
+
+    /* If we bail out on a nested exit, the final state is contained in the innermost
+       guard which we stored in lastTreeExitGuard. */
+    if (lr->exit->exitType == NESTED_EXIT)
+        lr = state.lastTreeExitGuard;
+    JS_ASSERT(lr->exit->exitType != NESTED_EXIT);
 
     /* sp_adj and ip_adj are relative to the tree we exit out of, not the tree we
        entered into (which might be different in the presence of nested trees). */
