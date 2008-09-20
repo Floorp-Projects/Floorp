@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   title="Colored strikethrough test"
+   style="padding: 8px; background-color: white;">
+<label value="The next three lines should all have:"/>
+<vbox style="text-decoration: underline; color: orange;">
+<vbox style="text-decoration: line-through; color: blue;">
+<label       value="No overline."        style="color: black"/>
+<text        value="Orange underline."   style="color: black"/>
+<description value="Blue strikethrough." style="color: black"/>
+</vbox>
+</vbox>
+</window>
