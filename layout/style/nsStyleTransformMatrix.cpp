@@ -321,24 +321,26 @@ static void ProcessTranslate(nscoord aDelta[2], float aX[2], float aY[2],
 
   /* There are several cases to consider.
    * First, we might have one value, or we might have two.  If we have
-   * one, pretend we got two of the same value.
+   * two, we need to consider both dX and dY components.
    * Next, the values might be lengths, or they might be percents.  If they're
    * percents, store them in the dX and dY components.  Otherwise, store them in
    * the main matrix.
    */
 
   const nsCSSValue &dx = aData->Item(1);
-  const nsCSSValue &dy = (aData->Count() == 2 ? dx : aData->Item(2));
-
   if (dx.GetUnit() == eCSSUnit_Percent)
     aX[0] = dx.GetPercentValue();
   else
     SetCoordToValue(dx, aContext, aPresContext, aDelta[0]);
 
-  if (dy.GetUnit() == eCSSUnit_Percent)
-    aY[1] = dy.GetPercentValue();
-  else
-    SetCoordToValue(dy, aContext, aPresContext, aDelta[1]); 
+  /* If we read in a Y component, set it appropriately */
+  if (aData->Count() == 3) {
+    const nsCSSValue &dy = aData->Item(2);
+    if (dy.GetUnit() == eCSSUnit_Percent)
+      aY[1] = dy.GetPercentValue();
+    else
+      SetCoordToValue(dy, aContext, aPresContext, aDelta[1]); 
+  }
 }
 
 /* Helper function to set up a scale matrix. */
