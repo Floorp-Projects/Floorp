@@ -419,7 +419,7 @@ static void ProcessSkew(float aMain[4], const nsCSSValue::Array* aData)
   NS_ASSERTION(aData->Count() == 2 || aData->Count() == 3, "Bad array!");
   
   float xSkew = CSSToRadians(aData->Item(1));
-  float ySkew = (aData->Count() == 2 ? xSkew : CSSToRadians(aData->Item(2)));
+  float ySkew = (aData->Count() == 2 ? 0.0f : CSSToRadians(aData->Item(2)));
 
   ProcessSkewHelper(xSkew, ySkew, aMain);
 }
