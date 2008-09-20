@@ -260,6 +260,8 @@
 
           // start monitoring paint events for this browser
           browser.addEventListener("MozAfterPaint", this.browserRedrawHandler, false);
+          // force a repaint of the selected tab
+          this._browserToCanvas();
 
           var event = document.createEvent("Events");
           event.initEvent("TabSelect", true, false);
