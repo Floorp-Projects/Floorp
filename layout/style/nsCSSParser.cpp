@@ -6806,6 +6806,7 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
   enum { eLengthPercent,
          eTwoLengthPercents,
          eAngle,
+         eTwoAngles,
          eNumber,
          eTwoNumbers,
          eMatrix,
@@ -6815,6 +6816,7 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
     {VARIANT_LENGTH | VARIANT_PERCENT},
     {VARIANT_LENGTH | VARIANT_PERCENT, VARIANT_LENGTH | VARIANT_PERCENT},
     {VARIANT_ANGLE},
+    {VARIANT_ANGLE, VARIANT_ANGLE},
     {VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER},
     {VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER, VARIANT_NUMBER,
@@ -6822,7 +6824,7 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
 
 #ifdef DEBUG
   static const PRUint8 kVariantMaskLengths[eNumVariantMasks] =
-    {1, 2, 1, 1, 2, 6};
+    {1, 2, 1, 2, 1, 2, 6};
 #endif
 
   PRInt32 variantIndex = eNumVariantMasks;
@@ -6865,10 +6867,10 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
     aMaxElems = 2U;
     break;
   case eCSSKeyword_skew:
-    /* Exactly one angle. */
-    variantIndex = eAngle;
+    /* Exactly one or two angles. */
+    variantIndex = eTwoAngles;
     aMinElems = 1U;
-    aMaxElems = 1U;
+    aMaxElems = 2U;
     break;
   case eCSSKeyword_scale:
     /* One or two scale factors. */
