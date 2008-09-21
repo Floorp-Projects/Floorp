@@ -51,8 +51,6 @@
 #include "jslibmath.h"
 #include "jsmath.h"
 #include "jsnum.h"
-#include "prmjtime.h"
-#include "jsdate.h"
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jstracer.h"
@@ -872,52 +870,6 @@ JSObject* FASTCALL
 js_Arguments(JSContext* cx)
 {
     return NULL;
-}
-
-jsdouble FASTCALL
-js_Date_now(JSContext*)
-{
-    return PRMJ_Now() / PRMJ_USEC_PER_MSEC;
-}
-
-JS_STATIC_ASSERT(JSSLOT_PRIVATE == JSSLOT_UTC_TIME);
-JS_STATIC_ASSERT(JSSLOT_UTC_TIME + 1 == JSSLOT_LOCAL_TIME);
-
-JSObject* FASTCALL
-js_FastNewDate(JSContext* cx, JSObject* proto)
-{
-    JS_ASSERT(JS_ON_TRACE(cx));
-    JSObject* obj = (JSObject*) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
-    if (!obj)
-        return NULL;
-
-    JSClass* clasp = &js_DateClass;
-    obj->classword = jsuword(clasp);
-
-    obj->fslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
-    obj->fslots[JSSLOT_PARENT] = proto->fslots[JSSLOT_PARENT];
-
-    jsdouble* date = js_NewWeaklyRootedDouble(cx, 0.0);
-    if (!date)
-        return NULL;
-    *date = js_Date_now(cx);
-    obj->fslots[JSSLOT_UTC_TIME] = DOUBLE_TO_JSVAL(date);
-    obj->fslots[JSSLOT_LOCAL_TIME] = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);;
-
-    JS_ASSERT(!clasp->getObjectOps);
-    JSObjectOps* ops = &js_ObjectOps;
-    // XXXbz is this the right thing to be doing?
-    obj->map = ops->newObjectMap(cx, 1, ops, clasp, obj);
-    if (!obj->map)
-        return NULL;
-    obj->dslots = NULL;
-    return obj;    
-}
-
-jsdouble FASTCALL
-js_DateToNumber(JSContext* cx, JSObject* date)
-{
-    return *JSVAL_TO_DOUBLE(date->fslots[JSSLOT_UTC_TIME]);
 }
 
 /* soft float */
