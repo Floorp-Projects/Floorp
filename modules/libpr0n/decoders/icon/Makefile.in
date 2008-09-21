@@ -58,6 +58,11 @@ LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
 endif
 
+ifneq (,$(filter qt,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS = $(MOZ_QT_LIBS)
+PLATFORM = qt
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS = gkgfx
 PLATFORM = win
@@ -89,7 +94,7 @@ CPPSRCS		= \
 		nsIconProtocolHandler.cpp \
 		$(NULL)
 
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter qt gtk2,$(MOZ_WIDGET_TOOLKIT)))
 USE_ICON_DECODER = 1
 endif
 ifeq (,$(filter-out Darwin OS2 BeOS,$(OS_ARCH)))

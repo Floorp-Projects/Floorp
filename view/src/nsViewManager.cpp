@@ -123,6 +123,7 @@ static PRBool IsViewVisible(nsView *aView)
     if (view->GetVisibility() == nsViewVisibility_kHide)
       return PR_FALSE;
   }
+
   // Find out if the root view is visible by asking the view observer
   // (this won't be needed anymore if we link view trees across chrome /
   // content boundaries in DocumentViewerImpl::MakeWindow).
@@ -729,6 +730,7 @@ nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
   }
 
   NS_PRECONDITION(aView, "Must have a view");
+  NS_PRECONDITION(!aView->NeedsInvalidateFrameOnScroll(), "We shouldn't be BitBlting.");
   NS_PRECONDITION(aView->HasWidget(), "View must have a widget");
 
   ++mScrollCnt;

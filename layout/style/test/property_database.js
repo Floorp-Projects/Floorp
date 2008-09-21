@@ -504,6 +504,31 @@ var gCSSProperties = {
 		other_values: [ "1px", "3em" ],
 		invalid_values: []
 	},
+	"-moz-transform": {
+		domProp: "MozTransform",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "translatex(1px)", "translatex(4em)", "translatex(-4px)", "translatex(3px)", "translatex(0px) translatex(1px) translatex(2px) translatex(3px) translatex(4px)", "translatey(4em)", "translate(3px)", "translate(10px, -3px)", "rotate(45deg)", "rotate(45grad)", "rotate(45rad)", "rotate(0)", "scalex(10)", "scaley(10)", "scale(10)", "scale(10, 20)", "skewx(30deg)", "skewx(0)", "skewy(0)", "skewx(30grad)", "skewx(30rad)", "skewy(30deg)", "skewy(30grad)", "skewy(30rad)", "matrix(1, 2, 3, 4, 5px, 6em)", "rotate(45deg) scale(2, 1)", "skewx(45deg) skewx(-50grad)", "translate(0, 0) scale(1, 1) skewx(0) skewy(0) matrix(1, 0, 0, 1, 0, 0)", "translatex(50%)", "translatey(50%)", "translate(50%)", "translate(3%, 5px)", "translate(5px, 3%)", "matrix(1, 2, 3, 4, 5px, 6%)", "matrix(1, 2, 3, 4, 5%, 6px)", "matrix(1, 2, 3, 4, 5%, 6%)"],
+		invalid_values: ["1px", "#0000ff", "red", "auto", "translatex(1px 1px)", "translatex(translatex(1px))", "translatex(#0000ff)", "translatex(red)", "translatey()", "matrix(1, 2, 3, 4, 5, 6)", "matrix(1px, 2px, 3px, 4px, 5px, 6px)", "scale(150%)", "skewx(red)", "matrix(1%, 0, 0, 0, 0px, 0px)", "matrix(0, 1%, 2, 3, 4px,5px)", "matrix(0, 1, 2%, 3, 4px, 5px)", "matrix(0, 1, 2, 3%, 4%, 5%)"]
+	},
+	"-moz-transform-origin": {
+		domProp: "MozTransformOrigin",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		/* no subproperties */
+		prerequisites: { "width": "10px", "height": "10px", "display": "block"},
+		initial_values: [ "50% 50%", "center", "center center" ],
+		other_values: [ "25% 25%", "5px 5px", "20% 3em", "0 0", "0in 1in",
+						"top", "bottom","top left", "top right",
+						"top center", "center left", "center right",
+						"bottom left", "bottom right", "bottom center",
+						"20% center", "5px center", "13in bottom",
+						"left 50px", "right 13%", "center 40px"],
+		invalid_values: ["red", "auto", "none", "0.5 0.5", "40px #0000ff",
+						 "border", "center red", "right diagonal",
+						 "#00ffff bottom"]
+	},
 	"-moz-stack-sizing": {
 		domProp: "MozStackSizing",
 		inherited: false,

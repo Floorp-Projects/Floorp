@@ -110,4 +110,6 @@ nsresult
 NS_NewDOMMessageEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsEvent* aEvent);
 nsresult
 NS_NewDOMProgressEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, class nsEvent* aEvent);
+nsresult
+NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aResult, nsPresContext* aPresContext, class nsNotifyPaintEvent* aEvent);
 #endif // nsIPrivateDOMEvent_h__

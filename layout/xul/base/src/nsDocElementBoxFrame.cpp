@@ -121,21 +121,20 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   // create the top-secret popupgroup node. shhhhh!
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = nodeInfoManager->GetNodeInfo(nsGkAtoms::popupgroup,
-                                             nsnull, kNameSpaceID_XUL,
-                                             getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::popupgroup,
+                                          nsnull, kNameSpaceID_XUL);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
-  rv = NS_NewXULElement(getter_AddRefs(mPopupgroupContent), nodeInfo);
+  nsresult rv = NS_NewXULElement(getter_AddRefs(mPopupgroupContent), nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aElements.AppendElement(mPopupgroupContent))
     return NS_ERROR_OUT_OF_MEMORY;
 
   // create the top-secret default tooltip node. shhhhh!
-  rv = nodeInfoManager->GetNodeInfo(nsGkAtoms::tooltip, nsnull,
-                                    kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::tooltip, nsnull,
+                                          kNameSpaceID_XUL);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
   rv = NS_NewXULElement(getter_AddRefs(mTooltipContent), nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);

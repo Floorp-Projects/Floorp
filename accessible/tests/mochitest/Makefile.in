@@ -53,18 +53,21 @@ _TEST_FILES =\
 		nsIAccessible_name.css \
 		nsIAccessible_name.js \
 		nsIAccessible_name.xbl \
+ 		nsIAccessible_selects.js \
 		nsIAccessibleEditableText.js \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
 		test_bug368835.xul \
 		test_bug420863.html \
 		test_cssattrs.html \
+		test_events_caretmove.html \
 		test_groupattrs.xul \
 	$(warning test_table_indexes.html temporarily disabled) \
 		test_nsIAccessible_actions.html \
 		test_nsIAccessible_actions.xul \
 		test_nsIAccessible_name.html \
 		test_nsIAccessible_name.xul \
+ 		test_nsIAccessible_selects.html \
 		test_nsIAccessible_focus.html \
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleEditableText.html \
@@ -77,6 +80,7 @@ _TEST_FILES =\
 		test_nsIAccessibleTable_3.html \
 		test_nsIAccessibleTable_4.html \
 		test_nsIAccessibleTable_listboxes.xul \
+		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \
 		test_textattrs.html \
 		test_textboxes.html \

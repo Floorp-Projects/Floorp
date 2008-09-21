@@ -47,6 +47,7 @@
 ]>
 
 <dialog id="crlviewer"
+        windowtype="mozilla:crlmanager"
         title="&validation.crlmanager.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 65ch;"

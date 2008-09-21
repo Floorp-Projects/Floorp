@@ -201,8 +201,8 @@
         <description id="general-security-identity" class="header"/>
         <description id="general-security-privacy"  class="header"/>
         <hbox align="right">
-          <button id="security-view-more" label="&generalSecurityMore;"
-                  accesskey="&generalSecurityMore.accesskey;"
+          <button id="security-view-details" label="&generalSecurityDetails;"
+                  accesskey="&generalSecurityDetails.accesskey;"
                   oncommand="onClickMore();"/>
         </hbox>
       </groupbox>

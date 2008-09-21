@@ -50,6 +50,7 @@ _TEST_FILES =	test_bug361111.xul \
 		test_bug428021.html \
 		test_bug448587.html \
 		test_wrappers.html \
+		test_bug446584.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

@@ -114,7 +114,7 @@ class nsAccessNode: public nsIAccessNode,
     static already_AddRefed<nsIPresShell> GetPresShellFor(nsIDOMNode *aStartNode);
     
     static void GetComputedStyleDeclaration(const nsAString& aPseudoElt,
-                                            nsIDOMElement *aElement,
+                                            nsIDOMNode *aNode,
                                             nsIDOMCSSStyleDeclaration **aCssDecl);
 
     already_AddRefed<nsRootAccessible> GetRootAccessible();

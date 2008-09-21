@@ -366,6 +366,13 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint64 progress)
         if (!mHasRequestBody)
             return;
 
+        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mRequestStream);
+        NS_ASSERTION(seekable, "Request stream isn't seekable?!?");
+
+        PRInt64 prog = 0;
+        seekable->Tell(&prog);
+        progress = prog;
+
         // when uploading, we include the request headers in the progress
         // notifications.
         progressMax = mRequestSize; // XXX mRequestSize is 32-bit!

@@ -135,6 +135,7 @@ GlobalNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
 nsScriptNameSpaceManager::nsScriptNameSpaceManager()
   : mIsInitialized(PR_FALSE)
 {
+  MOZ_COUNT_CTOR(nsScriptNameSpaceManager);
 }
 
 nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
@@ -143,6 +144,7 @@ nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
     // Destroy the hash
     PL_DHashTableFinish(&mGlobalNames);
   }
+  MOZ_COUNT_DTOR(nsScriptNameSpaceManager);
 }
 
 nsGlobalNameStruct *

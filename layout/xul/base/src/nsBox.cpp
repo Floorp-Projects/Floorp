@@ -656,7 +656,7 @@ nsIFrame::Redraw(nsBoxLayoutState& aState,
   else
     damageRect = GetOverflowRect();
 
-  Invalidate(damageRect, aImmediate);
+  InvalidateWithFlags(damageRect, aImmediate ? INVALIDATE_IMMEDIATE : 0);
 
   return NS_OK;
 }
@@ -757,8 +757,8 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
            widthSet = PR_TRUE;
         }
     } else if (position->mMinWidth.GetUnit() == eStyleUnit_Percent) {
-        float min = position->mMinWidth.GetPercentValue();
-        NS_ASSERTION(min == 0.0f, "Non-zero percentage values not currently supported");
+        NS_ASSERTION(position->mMinWidth.GetPercentValue() == 0.0f,
+          "Non-zero percentage values not currently supported");
         aSize.width = 0;
         widthSet = PR_TRUE;
     }
@@ -774,8 +774,8 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
            heightSet = PR_TRUE;
         }
     } else if (position->mMinHeight.GetUnit() == eStyleUnit_Percent) {
-        float min = position->mMinHeight.GetPercentValue();
-        NS_ASSERTION(min == 0.0f, "Non-zero percentage values not currently supported");
+        NS_ASSERTION(position->mMinHeight.GetPercentValue() == 0.0f,
+          "Non-zero percentage values not currently supported");
         aSize.height = 0;
         heightSet = PR_TRUE;
     }

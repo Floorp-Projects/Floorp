@@ -45,6 +45,8 @@ var summary = 'trace-capability mini-testsuite';
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);
+
+jit(true);
  
 var testName = null;
 if ("arguments" in this && arguments.length > 0)
@@ -106,8 +108,10 @@ if (!testName || testName == "bitwiseGlobal") {
 
 function equalInt()
 {
-  var i1 = 55;
-  var hits = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+  var i1 = 55, one = 1, zero = 0, undef;
+  var o1 = { }, o2 = { };
+  var s = "5";
+  var hits = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
   for (var i = 0; i < 5000; i++) {
     if (i1 == 55) hits[0]++;
     if (i1 != 56) hits[1]++;
@@ -121,10 +125,16 @@ function equalInt()
     if (i1 > 90)  hits[9]++;
     if (i1 <= 40) hits[10]++;
     if (i1 >= 70) hits[11]++;
+    if (o1 == o2) hits[12]++;
+    if (o2 != null) hits[13]++;
+    if (s < 10) hits[14]++;
+    if (true < zero) hits[15]++;
+    if (undef > one) hits[16]++;
+    if (undef < zero) hits[17]++;
   }
   return hits.toString();
 }
-equalInt.expected = "5000,5000,5000,5000,5000,5000,0,0,0,0,0,0,0,0,0,0,0,0,0";
+equalInt.expected = "5000,5000,5000,5000,5000,5000,0,0,0,0,0,0,0,5000,5000,0,0,0";
 test(equalInt);
 
 var a;
@@ -365,6 +375,7 @@ function testif() {
 testif.expected = "0";
 test(testif);
 
+var globalinc = 0;
 function testincops(n) {
   var i = 0, o = {p:0}, a = [0];
   n = 100;
@@ -374,10 +385,10 @@ function testincops(n) {
   for (i = 0; i < n; ++i);
   while (--i >= 0);
 
-  for (o.p = 0; o.p < n; o.p++);
-  while (o.p-- > 0);
-  for (o.p = 0; o.p < n; ++o.p);
-  while (--o.p >= 0);
+  for (o.p = 0; o.p < n; o.p++) globalinc++;
+  while (o.p-- > 0) --globalinc;
+  for (o.p = 0; o.p < n; ++o.p) ++globalinc;
+  while (--o.p >= 0) globalinc--;
 
   ++i; // set to 0
   for (a[i] = 0; a[i] < n; a[i]++);
@@ -385,9 +396,9 @@ function testincops(n) {
   for (a[i] = 0; a[i] < n; ++a[i]);
   while (--a[i] >= 0);
 
-  return [++o.p, ++a[i]].toString();
+  return [++o.p, ++a[i], globalinc].toString();
 }
-testincops.expected = "0,0";
+testincops.expected = "0,0,0";
 test(testincops);
 
 function trees() {
@@ -419,7 +430,7 @@ function strings()
   var f = "f";
   var c = 0, d = 0, e = 0, g = 0;
   for (var i = 0; i < 10; i++) {
-    a[i] = (s.substring(i, i+1) + s[i] + String.fromCharCode(s2.charCodeAt(0) + i)).concat(i);
+    a[i] = (s.substring(i, i+1) + s[i] + String.fromCharCode(s2.charCodeAt(0) + i)).concat(i) + i;
     if (s[i] == f)
       c++;
     if (s[i] != 'b')
@@ -432,8 +443,21 @@ function strings()
   }
   return a.toString() + b + c + d + e + g;
 }
-strings.expected = "aaa0,bbb1,ccc2,ddd3,eee4,fff5,ggg6,hhh7,iii8,jjj91019100";
+strings.expected = "aaa00,bbb11,ccc22,ddd33,eee44,fff55,ggg66,hhh77,iii88,jjj991019100";
 test(strings);
+
+function dependentStrings()
+{
+  var a = [];
+  var t = "abcdefghijklmnopqrst";
+  for (var i = 0; i < 10; i++) {
+    var s = t.substring(2*i, 2*i + 2);
+    a[i] = s + s.length;
+  }
+  return a.join("");
+}
+dependentStrings.expected = "ab2cd2ef2gh2ij2kl2mn2op2qr2st2";
+test(dependentStrings);
 
 function stringConvert()
 {
@@ -444,7 +468,7 @@ function stringConvert()
     a[1] = 10 - s2;
     a[2] = 15 * s3;
     a[3] = s3 | 32;
-    // a[4] = s2 + 60;
+    a[4] = s2 + 60;
     // a[5] = 9 + s3;
     // a[6] = -s3;
     a[7] = s3 & "7";
@@ -452,7 +476,7 @@ function stringConvert()
   }
   return a.toString();
 }
-stringConvert.expected = "1,8.7,75,37,,,,5";
+stringConvert.expected = "1,8.7,75,37,1.360,,,5";
 test(stringConvert);
 
 function orTestHelper(a, b, n)
@@ -464,6 +488,17 @@ function orTestHelper(a, b, n)
   }
   return k;
 }
+
+var orNaNTest1, orNaNTest2;
+
+orNaNTest1 = new Function("return orTestHelper(NaN, NaN, 10);");
+orNaNTest1.name = 'orNaNTest1';
+orNaNTest1.expected = '0';
+orNaNTest2 = new Function("return orTestHelper(NaN, 1, 10);");
+orNaNTest2.name = 'orNaNTest2';
+orNaNTest2.expected = '45';
+test(orNaNTest1);
+test(orNaNTest2);
 
 function andTestHelper(a, b, n)
 {
@@ -565,51 +600,73 @@ function newTest()
 newTest.expected = "0123456789";
 test(newTest);
 
-function shapelessArgCalleeLoop(f, a)
-{
-  for (var i = 0; i < 10; i++)
-    f(i, a);
-}
-
-function shapelessVarCalleeLoop(f, a)
-{
-  var g = f;
-  for (var i = 0; i < 10; i++)
-    g(i, a);
-}
-
-function shapelessLetCalleeLoop(f, a)
+// The following functions use a delay line of length 2 to change the value
+// of the callee without exiting the traced loop. This is obviously tuned to
+// match the current HOTLOOP setting of 2.
+function shapelessArgCalleeLoop(f, g, h, a)
 {
   for (var i = 0; i < 10; i++) {
-    let g = f;
-    g(i, a);
+    f(i, a);
+    f = g;
+    g = h;
   }
 }
 
-function shapelessUnknownCalleeLoop(f, g, a)
+function shapelessVarCalleeLoop(f0, g, h, a)
+{
+  var f = f0;
+  for (var i = 0; i < 10; i++) {
+    f(i, a);
+    f = g;
+    g = h;
+  }
+}
+
+function shapelessLetCalleeLoop(f0, g, h, a)
 {
   for (var i = 0; i < 10; i++) {
-    (f || g)(i, a);
-    f = null;
+    let f = f0;
+    f(i, a);
+    f = g;
+    g = h;
+  }
+}
+
+function shapelessUnknownCalleeLoop(n, f, g, h, a)
+{
+  for (var i = 0; i < 10; i++) {
+    (n || f)(i, a);
+    f = g;
+    g = h;
   }
 }
 
 function shapelessCalleeTest()
 {
   var a = [];
-  shapelessArgCalleeLoop(function (i, a) a[i] = i, a);
-  shapelessVarCalleeLoop(function (i, a) a[10 + i] = i, a);
-  shapelessLetCalleeLoop(function (i, a) a[20 + i] = i, a);
-  shapelessUnknownCalleeLoop(null, function (i, a) a[30 + i] = i, a);
+
+  var helper = function (i, a) a[i] = i;
+  shapelessArgCalleeLoop(helper, helper, function (i, a) a[i] = -i, a);
+
+  helper = function (i, a) a[10 + i] = i;
+  shapelessVarCalleeLoop(helper, helper, function (i, a) a[10 + i] = -i, a);
+
+  helper = function (i, a) a[20 + i] = i;
+  shapelessLetCalleeLoop(helper, helper, function (i, a) a[20 + i] = -i, a);
+
+  helper = function (i, a) a[30 + i] = i;
+  shapelessUnknownCalleeLoop(null, helper, helper, function (i, a) a[30 + i] = -i, a);
+
   try {
-    shapelessUnknownCalleeLoop(null, {hack: 42}, a);
+    helper = {hack: 42};
+    shapelessUnknownCalleeLoop(null, helper, helper, helper, a);
   } catch (e) {
-    if (e + "" != "TypeError: g is not a function")
+    if (e + "" != "TypeError: f is not a function")
       print("shapelessUnknownCalleeLoop: unexpected exception " + e);
   }
   return a.join("");
 }
-shapelessCalleeTest.expected = "0123456789012345678901234567890123456789";
+shapelessCalleeTest.expected = "01-2-3-4-5-6-7-8-901-2-3-4-5-6-7-8-9012345678901-2-3-4-5-6-7-8-9";
 test(shapelessCalleeTest);
 
 function typeofTest()
@@ -622,7 +679,682 @@ function typeofTest()
 typeofTest.expected = "string,string,string,object,number,number,boolean,undefined,object,function,object,object";
 test(typeofTest);
 
+function joinTest()
+{
+  var s = "";
+  var a = [];
+  for (var i = 0; i < 8; i++)
+    a[i] = [String.fromCharCode(97 + i)];
+  for (i = 0; i < 8; i++) {
+    for (var j = 0; j < 8; j++)
+      a[i][1 + j] = j;
+  }
+  for (i = 0; i < 8; i++)
+    s += a[i].join(",");
+  return s;
+}
+joinTest.expected = "a,0,1,2,3,4,5,6,7b,0,1,2,3,4,5,6,7c,0,1,2,3,4,5,6,7d,0,1,2,3,4,5,6,7e,0,1,2,3,4,5,6,7f,0,1,2,3,4,5,6,7g,0,1,2,3,4,5,6,7h,0,1,2,3,4,5,6,7";
+test(joinTest);
+
+function arity1(x)
+{
+  return (x == undefined) ? 1 : 0;
+}
+function missingArgTest() {
+  var q;
+  for (var i = 0; i < 10; i++) {
+    q = arity1();
+  }
+  return q;
+}
+missingArgTest.expected = "1"
+test(missingArgTest);
+
+JSON = function () {
+    return {
+        stringify: function stringify(value, whitelist) {
+            switch (typeof(value)) {
+              case "object":
+                return value.constructor.name;
+            }
+        }
+    };
+}();
+
+function missingArgTest2() {
+  var testPairs = [
+    ["{}", {}],
+    ["[]", []],
+    ['{"foo":"bar"}', {"foo":"bar"}],
+  ]
+
+  var a = [];
+  for (var i=0; i < testPairs.length; i++) {
+    var s = JSON.stringify(testPairs[i][1])
+    a[i] = s;
+  }
+  return a.join(",");
+}
+missingArgTest2.expected = "Object,Array,Object";
+test(missingArgTest2);
+
+function deepForInLoop() {
+  // NB: the number of props set in C is arefully tuned to match HOTLOOP = 2.
+  function C(){this.p = 1, this.q = 2}
+  C.prototype = {p:1, q:2, r:3, s:4, t:5};
+  var o = new C;
+  var j = 0;
+  var a = [];
+  for (var i in o)
+    a[j++] = i;
+  return a.join("");
+}
+deepForInLoop.expected = "pqrst";
+test(deepForInLoop);
+
+function nestedExit(x) {
+    var q = 0;
+    for (var i = 0; i < 10; ++i)
+	if (x)
+	    ++q;
+}
+function nestedExitLoop() {
+    for (var j = 0; j < 10; ++j)
+	nestedExit(j < 7);
+    return "ok";
+}
+nestedExitLoop.expected = "ok";
+test(nestedExitLoop);
+
+function bitsinbyte(b) {
+    var m = 1, c = 0;
+    while(m<0x100) {
+        if(b & m) c++;
+        m <<= 1;
+    }
+    return 1;
+}
+function TimeFunc(func) {
+    var x,y;
+    for(var y=0; y<256; y++) func(y);
+}
+function nestedExit2() {
+    TimeFunc(bitsinbyte);
+    return "ok";
+}
+nestedExit2.expected = "ok";
+test(nestedExit2);
+
+function parsingNumbers() {
+    var s1 = "123";
+    var s1z = "123zzz";
+    var s2 = "123.456";
+    var s2z = "123.456zzz";
+
+    var e1 = 123;
+    var e2 = 123.456;
+
+    var r1, r1z, r2, r2z;
+
+    for (var i = 0; i < 10; i++) {
+	r1 = parseInt(s1);
+	r1z = parseInt(s1z);
+	r2 = parseFloat(s2);
+	r2z = parseFloat(s2z);
+    }
+
+    if (r1 == e1 && r1z == e1 && r2 == e2 && r2z == e2)
+	return "ok";
+    return "fail";
+}
+parsingNumbers.expected = "ok";
+test(parsingNumbers);
+
+function matchInLoop() {
+    var k = "hi";
+    for (var i = 0; i < 10; i++) {
+        var result = k.match(/hi/) != null;
+    }
+    return result;
+}
+matchInLoop.expected = true;
+test(matchInLoop);
+
+function deep1(x) {
+    if (x > 90)
+	return 1;
+    return 2;
+}
+function deep2() {
+    for (var i = 0; i < 100; ++i)
+	deep1(i);
+    return "ok";
+}
+deep2.expected = "ok";
+test(deep2);
+
+var merge_type_maps_x = 0, merge_type_maps_y = 0;
+function merge_type_maps() {
+    for (merge_type_maps_x = 0; merge_type_maps_x < 50; ++merge_type_maps_x)
+        if ((merge_type_maps_x & 1) == 1)
+	    ++merge_type_maps_y;
+    return [merge_type_maps_x,merge_type_maps_y].join(",");
+}
+merge_type_maps.expected = "50,25";
+test(merge_type_maps)
+
+function inner_double_outer_int() {
+    function f(i) {
+	for (var m = 0; m < 20; ++m)
+	    for (var n = 0; n < 100; n += i)
+		;
+	return n;
+    }
+    return f(.5);
+}
+inner_double_outer_int.expected = "100";
+test(inner_double_outer_int);
+
+function newArrayTest()
+{
+  var a = [];
+  for (var i = 0; i < 10; i++)
+    a[i] = new Array();
+  return a.map(function(x) x.length).toString();
+}
+newArrayTest.expected="0,0,0,0,0,0,0,0,0,0";
+test(newArrayTest);
+
+function stringSplitTest()
+{
+  var s = "a,b"
+  var a = null;
+  for (var i = 0; i < 10; ++i)
+    a = s.split(",");
+  return a.join();
+}
+stringSplitTest.expected="a,b";
+test(stringSplitTest);
+
+function stringSplitIntoArrayTest()
+{
+  var s = "a,b"
+  var a = [];
+  for (var i = 0; i < 10; ++i)
+    a[i] = s.split(",");
+  return a.join();
+}
+stringSplitIntoArrayTest.expected="a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b,a,b";
+test(stringSplitIntoArrayTest);
+
+function forVarInWith() {
+    function foo() ({notk:42});
+    function bar() ({p:1, q:2, r:3, s:4, t:5});
+    var o = foo();
+    var a = [];
+    with (o) {
+        for (var k in bar())
+            a[a.length] = k;
+    }
+    return a.join("");
+}
+forVarInWith.expected = "pqrst";
+test(forVarInWith);
+
+function inObjectTest() {
+    var o = {p: 1, q: 2, r: 3, s: 4, t: 5};
+    var r = 0;
+    for (var i in o) {
+        if (!(i in o))
+            break;
+        if ((i + i) in o)
+            break;
+        ++r;
+    }
+    return r;
+}
+inObjectTest.expected = 5;
+test(inObjectTest);
+
+function inArrayTest() {
+    var a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    for (var i = 0; i < a.length; i++) {
+        if (!(i in a))
+            break;
+    }
+    return i;
+}
+inArrayTest.expected = 10;
+test(inArrayTest);
+
+function innerLoopIntOuterDouble() {
+    var n = 10000, i=0, j=0, count=0, limit=0;
+    for (i = 1; i <= n; ++i) {
+	limit = i * 1;
+	for (j = 0; j < limit; ++j) {
+	    ++count;
+	}
+    }
+    return "" + count;
+}
+innerLoopIntOuterDouble.expected="50005000";
+test(innerLoopIntOuterDouble);
+
+function outerline(){
+    var i=0;
+    var j=0;
+
+    for (i = 3; i<= 100000; i+=2)
+	for (j = 3; j < 1000; j+=2)
+	    if ((i & 1) == 1)
+		break;
+    return "ok";
+}
+outerline.expected="ok";
+test(outerline);
+
+function addAccumulations(f) {
+  var a = f();
+  var b = f();
+  return a() + b();
+}
+
+function loopingAccumulator() {
+  var x = 0;
+  return function () {
+    for (var i = 0; i < 10; ++i) {
+      ++x;
+    }
+    return x;
+  }
+}
+
+function testLoopingAccumulator() {
+	var x = addAccumulations(loopingAccumulator);
+	return x;
+}
+testLoopingAccumulator.expected = 20;
+test(testLoopingAccumulator);
+
+function testBranchingLoop() {
+  var x = 0;
+  for (var i=0; i < 100; ++i) {
+    if (i == 51) {
+      x += 10;
+    }
+    x++;
+  }
+  return x;
+}
+testBranchingLoop.expected = 110;
+test(testBranchingLoop);
+
+function testBranchingUnstableLoop() {
+  var x = 0;
+  for (var i=0; i < 100; ++i) {
+    if (i == 51) {
+      x += 10.1;
+    }
+    x++;
+  }
+  return x;
+}
+testBranchingUnstableLoop.expected = 110.1;
+test(testBranchingUnstableLoop);
+
+function testBranchingUnstableLoopCounter() {
+  var x = 0;
+  for (var i=0; i < 100; ++i) {
+    if (i == 51) {
+      i += 1.1;
+    }
+    x++;    
+  }
+  return x;
+}
+testBranchingUnstableLoopCounter.expected = 99;
+test(testBranchingUnstableLoopCounter);
+
+
+function testBranchingUnstableObject() {
+  var x = {s: "a"};
+  var t = "";
+  for (var i=0; i < 100; ++i) {
+      if (i == 51)
+      {
+        x.s = 5;
+      }
+      t += x.s;
+  }
+  return t.length;
+}
+testBranchingUnstableObject.expected = 100;
+test(testBranchingUnstableObject);
+
+function testArrayDensityChange() {
+  var x = [];
+  var count = 0;
+  for (var i=0; i < 100; ++i) {
+    x[i] = "asdf";
+  }
+  for (var i=0; i < x.length; ++i) {
+      if (i == 51)
+      {
+        x[199] = "asdf";
+      }
+      if (x[i])
+        count += x[i].length;
+  }
+  return count;
+}
+testArrayDensityChange.expected = 404;
+test(testArrayDensityChange);
+
+function testDoubleToStr() {
+    var x = 0.0;
+    var y = 5.5;
+    for (var i = 0; i < 200; i++) {
+       x += parseFloat(y.toString());
+    }
+    return x;
+}
+testDoubleToStr.expected = 5.5*200;
+test(testDoubleToStr);
+
+function testDecayingInnerLoop() {
+    var i, j, k = 10;
+    for (i = 0; i < 5000; ++i) {
+	for (j = 0; j < k; ++j);
+	--k;
+    }
+    return i;
+}
+testDecayingInnerLoop.expected = 5000;
+test(testDecayingInnerLoop);
+
+function testContinue() {
+    var i;
+    var total = 0;
+    for (i = 0; i < 20; ++i) {
+	if (i == 11)
+	    continue;
+	total++;
+    }
+    return total;
+}
+testContinue.expected = 19;
+test(testContinue);
+
+function testContinueWithLabel() {
+    var i = 0;
+    var j = 20;
+    checkiandj :
+    while (i<10) {
+	i+=1;
+	checkj :
+	while (j>10) {
+	    j-=1;
+	    if ((j%2)==0)
+		continue checkj;
+	}   
+    }
+    return i + j;
+}
+testContinueWithLabel.expected = 20;
+test(testContinueWithLabel);
+
+function testDivision() {
+    var a = 32768;
+    var b;
+    while (b !== 1) {
+	b = a / 2;
+	a = b;
+    }
+    return a;
+}
+testDivision.expected = 1;
+test(testDivision);
+
+function testDivisionFloat() {
+    var a = 32768.0;
+    var b;
+    while (b !== 1) {
+	b = a / 2.0;
+	a = b;
+    }
+    return a === 1.0;
+}
+testDivisionFloat.expected = true;
+test(testDivisionFloat);
+
+function testToUpperToLower() {
+    var s = "Hello", s1, s2;
+    for (i = 0; i < 100; ++i) {
+	s1 = s.toLowerCase();
+	s2 = s.toUpperCase();
+    }
+    return s1 + s2;
+}
+testToUpperToLower.expected = "helloHELLO";
+test(testToUpperToLower);
+
+function testReplace2() {
+    var s = "H e l l o", s1;
+    for (i = 0; i < 100; ++i) {
+	s1 = s.replace(" ", "");
+    }
+    return s1;
+}
+testReplace2.expected = "He l l o";
+test(testReplace2);
+
+function testBitwise() {
+    var x = 10000;
+    var y = 123456;
+    var z = 987234;
+    for (var i = 0; i < 50; i++) {
+        x = x ^ y;
+        y = y | z;
+        z = ~x;
+    }
+    return x + y + z;
+}
+testBitwise.expected = -1298;
+test(testBitwise);
+
+function testSwitch() {
+    var x = 0;
+    var ret = 0;
+    for (var i = 0; i < 100; ++i) {
+        switch (x) {
+            case 0:
+                ret += 1;
+                break;
+            case 1:
+                ret += 2;
+                break;
+            case 2:
+                ret += 3;
+                break;
+            case 3:
+                ret += 4;
+                break;
+            default:
+                x = 0;
+        }
+        x++;
+    }
+    return ret;
+}
+testSwitch.expected = 226;
+test(testSwitch);
+
+function testSwitchString() {
+    var x = "asdf";
+    var ret = 0;
+    for (var i = 0; i < 100; ++i) {
+        switch (x) {
+        case "asdf":
+            x = "asd";
+            ret += 1;
+            break;
+        case "asd":
+            x = "as";
+            ret += 2;
+            break;
+        case "as":
+            x = "a";
+            ret += 3;
+            break;
+        case "a":
+            x = "foo";
+            ret += 4;
+            break;
+        default:
+            x = "asdf";
+        }
+    }
+    return ret;
+}
+testSwitchString.expected = 200;
+test(testSwitchString);
+
+function testNegZero1Helper(z) {
+    for (let j = 0; j < 5; ++j) { z = -z; }
+    return Math.atan2(0, -0) == Math.atan2(0, z);
+}
+
+var testNegZero1 = function() { return testNegZero1Helper(0); }
+testNegZero1.expected = true;
+testNegZero1.name = 'testNegZero1';
+testNegZero1Helper(1);
+test(testNegZero1);
+
+// No test case, just make sure this doesn't assert. 
+function testNegZero2() {
+    var z = 0;
+    for (let j = 0; j < 5; ++j) { ({p: (-z)}); }
+}
+testNegZero2();
+
+function testConstSwitch() {
+    var x;
+    for (var j=0;j<5;++j) { switch(1.1) { case NaN: case 2: } x = 2; }
+    return x;
+}
+testConstSwitch.expected = 2;
+test(testConstSwitch);
+
+function testConstIf() {
+    var x;
+    for (var j=0;j<5;++j) { if (1.1 || 5) { } x = 2;}
+    return x;
+}
+testConstIf.expected = 2;
+test(testConstIf);
+
+function testTypeofHole() {
+  var a = new Array(6);
+  a[5] = 3;
+  for (var i = 0; i < 6; ++i)
+    a[i] = typeof a[i];
+  return a.join(",");
+}
+testTypeofHole.expected = "undefined,undefined,undefined,undefined,undefined,number"
+test(testTypeofHole);
+
+function testNativeLog() {
+  var a = new Array(5);
+  for (var i = 0; i < 5; i++) {
+    a[i] = Math.log(Math.pow(Math.E, 10));
+  }
+  return a.join(",");
+}
+testNativeLog.expected = "10,10,10,10,10";
+test(testNativeLog);
+
+function test_JSOP_ARGSUB() {
+    function f0() { return arguments[0]; }
+    function f1() { return arguments[1]; }
+    function f2() { return arguments[2]; }
+    function f3() { return arguments[3]; }
+    function f4() { return arguments[4]; }
+    function f5() { return arguments[5]; }
+    function f6() { return arguments[6]; }
+    function f7() { return arguments[7]; }
+    function f8() { return arguments[8]; }
+    function f9() { return arguments[9]; }
+    var a = [];
+    for (var i = 0; i < 10; i++) {
+        a[0] = f0('a');
+        a[1] = f1('a','b');
+        a[2] = f2('a','b','c');
+        a[3] = f3('a','b','c','d');
+        a[4] = f4('a','b','c','d','e');
+        a[5] = f5('a','b','c','d','e','f');
+        a[6] = f6('a','b','c','d','e','f','g');
+        a[7] = f7('a','b','c','d','e','f','g','h');
+        a[8] = f8('a','b','c','d','e','f','g','h','i');
+        a[9] = f9('a','b','c','d','e','f','g','h','i','j');
+    }
+    return a.join("");
+}
+test_JSOP_ARGSUB.expected = "abcdefghij";
+test(test_JSOP_ARGSUB);
+
+function test_JSOP_ARGCNT() {
+    function f0() { return arguments.length; }
+    function f1() { return arguments.length; }
+    function f2() { return arguments.length; }
+    function f3() { return arguments.length; }
+    function f4() { return arguments.length; }
+    function f5() { return arguments.length; }
+    function f6() { return arguments.length; }
+    function f7() { return arguments.length; }
+    function f8() { return arguments.length; }
+    function f9() { return arguments.length; }
+    var a = [];
+    for (var i = 0; i < 10; i++) {
+        a[0] = f0('a');
+        a[1] = f1('a','b');
+        a[2] = f2('a','b','c');
+        a[3] = f3('a','b','c','d');
+        a[4] = f4('a','b','c','d','e');
+        a[5] = f5('a','b','c','d','e','f');
+        a[6] = f6('a','b','c','d','e','f','g');
+        a[7] = f7('a','b','c','d','e','f','g','h');
+        a[8] = f8('a','b','c','d','e','f','g','h','i');
+        a[9] = f9('a','b','c','d','e','f','g','h','i','j');
+    }
+    return a.join(",");
+}
+test_JSOP_ARGCNT.expected = "1,2,3,4,5,6,7,8,9,10";
+test(test_JSOP_ARGCNT);
+
+function testNativeMax() {
+    var out = [], k;
+    for (var i = 0; i < 5; ++i) {
+        k = Math.max(k, i);
+    }
+    out.push(k);
+
+    k = 0;
+    for (var i = 0; i < 5; ++i) {
+        k = Math.max(k, i);
+    }
+    out.push(k);
+
+    for (var i = 0; i < 5; ++i) {
+        k = Math.max(0, -0);
+    }
+    out.push((1 / k) < 0);
+    return out.join(",");
+}
+testNativeMax.expected = "NaN,4,false";
+test(testNativeMax);
+
+jit(false);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
-

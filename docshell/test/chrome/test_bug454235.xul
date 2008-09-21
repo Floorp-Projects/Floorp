@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=454235
+-->
+<window title="Mozilla Bug 454235"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=454235"
+     target="_blank">Mozilla Bug 454235</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    /** Test for Bug 454235 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(doTest);
+
+function doTest() {
+  var shownBrowser = document.getElementById("shownBrowser");
+  var hiddenBrowser = document.getElementById("hiddenBrowser");
+  var offScreenBrowser = document.getElementById("offScreenBrowser");
+  var offScreenSubBrowser = offScreenBrowser.contentDocument.getElementById("topBrowser");
+  var offScreenBurriedBrowser = offScreenBrowser.contentDocument.getElementById("burriedBrowser");
+  
+  shownBrowser.contentWindow.focus();
+  ok(shownBrowser.contentDocument.hasFocus(), "visible browser is not visible");  
+
+  hiddenBrowser.contentWindow.focus();
+  ok(!hiddenBrowser.contentDocument.hasFocus(),"hidden browser is visible");
+
+  offScreenBrowser.docShell.isOffScreenBrowser = true;
+  offScreenBrowser.contentWindow.focus();
+  ok(offScreenBrowser.contentDocument.hasFocus(),"offscreen browser is not visible");
+
+  offScreenSubBrowser.wrappedJSObject.contentWindow.focus();
+  todo(offScreenSubBrowser.wrappedJSObject.contentDocument.hasFocus(),"visible browser in offscreen browser is not visible");
+
+  offScreenBurriedBrowser.wrappedJSObject.contentWindow.focus();
+  ok(!offScreenBurriedBrowser.wrappedJSObject.contentDocument.hasFocus(),"hidden browser in offscreen browser is visible");
+
+  SimpleTest.finish();
+}
+
+
+
+  ]]></script>
+  <deck flex="1" style="border:5px black solid">
+    <browser style="border:5px green solid" id="shownBrowser" src="bug454235-subframe.xul"/>
+    <browser style="border:5px blue solid" id="hiddenBrowser" src="bug454235-subframe.xul"/>
+    <browser style="border:5px yellow solid" id="offScreenBrowser" src="bug454235-subframe.xul"/>
+  </deck>
+</window>

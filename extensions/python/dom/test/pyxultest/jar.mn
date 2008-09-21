@@ -9,13 +9,7 @@
 # Clarifications and simplifications welcome!
 
 pyxultest.jar:
-#ifdef MOZ_XUL_APP
-## A xulrunner app
 %   content pyxultest %content/pyxultest/
-#else
-## Old style manifest.
-    content/pyxultest/contents.rdf            (chrome/contents.rdf)
-#endif
     content/pyxultest/pyxultest.xul           (chrome/content/pyxultest.xul)
     content/pyxultest/pyxultest.py            (chrome/content/pyxultest.py)
     content/pyxultest/pyxultest.css           (chrome/content/pyxultest.css)

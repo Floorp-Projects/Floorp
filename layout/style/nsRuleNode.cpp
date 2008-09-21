@@ -69,6 +69,8 @@
 #include "nsIStyleRule.h"
 #include "nsBidiUtils.h"
 #include "nsStyleStructInlines.h"
+#include "nsStyleTransformMatrix.h"
+#include "nsCSSKeywords.h"
 
 /*
  * For storage of an |nsRuleNode|'s children in a PLDHashTable.
@@ -231,14 +233,25 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   return 0;
 }
 
-static nscoord CalcLength(const nsCSSValue& aValue,
-                          nsStyleContext* aStyleContext,
-                          nsPresContext* aPresContext,
-                          PRBool& aInherited)
+/* static */ nscoord
+nsRuleNode::CalcLength(const nsCSSValue& aValue,
+                       nsStyleContext* aStyleContext,
+                       nsPresContext* aPresContext,
+                       PRBool& aInherited)
 {
   NS_ASSERTION(aStyleContext, "Must have style data");
 
   return CalcLengthWith(aValue, -1, nsnull, aStyleContext, aPresContext, aInherited);
+}
+
+/* Inline helper function to redirect requests to CalcLength. */
+static inline nscoord CalcLength(const nsCSSValue& aValue,
+                                 nsStyleContext* aStyleContext,
+                                 nsPresContext* aPresContext,
+                                 PRBool& aInherited)
+{
+  return nsRuleNode::CalcLength(aValue, aStyleContext,
+                                aPresContext, aInherited);
 }
 
 /* static */ nscoord
@@ -264,6 +277,7 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
 #define SETCOORD_INITIAL_AUTO           0x400
 #define SETCOORD_INITIAL_NONE           0x800
 #define SETCOORD_INITIAL_NORMAL         0x1000
+#define SETCOORD_INITIAL_HALF           0x2000
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -343,10 +357,38 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
            (aValue.GetUnit() == eCSSUnit_Initial)) {
     aCoord.SetNormalValue();
   }
+  else if (((aMask & SETCOORD_INITIAL_HALF) != 0) &&
+           (aValue.GetUnit() == eCSSUnit_Initial)) {
+    aCoord.SetPercentValue(0.5f);
+  }
   else {
     result = PR_FALSE;  // didn't set anything
   }
   return result;
+}
+
+/* Given an enumerated value that represents a box position, converts it to
+ * a float representing the percentage of the box it corresponds to.  For
+ * example, "center" becomes 0.5f.
+ *
+ * @param aEnumValue The enumerated value.
+ * @return The float percent it corresponds to.
+ */
+static float GetFloatFromBoxPosition(PRInt32 aEnumValue)
+{
+  switch (aEnumValue) {
+  case NS_STYLE_BG_POSITION_LEFT:
+  case NS_STYLE_BG_POSITION_TOP:
+    return 0.0f;
+  case NS_STYLE_BG_POSITION_RIGHT:
+  case NS_STYLE_BG_POSITION_BOTTOM:
+    return 1.0f;
+  default:
+    NS_NOTREACHED("unexpected value");
+    // fall through
+  case NS_STYLE_BG_POSITION_CENTER:
+    return 0.5f;
+  }
 }
 
 static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor, 
@@ -1719,7 +1761,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     }
     case eStyleStruct_Background:
     {
-      nsStyleBackground* bg = new (mPresContext) nsStyleBackground(mPresContext);
+      nsStyleBackground* bg = new (mPresContext) nsStyleBackground();
       if (NS_LIKELY(bg != nsnull)) {
         aContext->SetStyle(eStyleStruct_Background, bg);
       }
@@ -1859,6 +1901,12 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       return svgReset;
     }
 #endif
+    default:
+      /*
+       * unhandled case: nsStyleStructID_Length.
+       * last item of nsStyleStructID, to know its length.
+       */
+      return nsnull;
   }
   return nsnull;
 }
@@ -2728,37 +2776,49 @@ nsRuleNode::GetShadowData(nsCSSValueList* aList,
   if (!shadowList)
     return nsnull;
 
+  nsStyleCoord tempCoord;
+  PRBool unitOK;
   for (nsCSSShadowItem* item = shadowList->ShadowAt(0);
        aList;
        aList = aList->mNext, ++item) {
     nsCSSValue::Array *arr = aList->mValue.GetArrayValue();
     // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
-    SetCoord(arr->Item(0), item->mXOffset, nsStyleCoord(),
-             SETCOORD_LENGTH, aContext, mPresContext, inherited);
-    SetCoord(arr->Item(1), item->mYOffset, nsStyleCoord(),
-             SETCOORD_LENGTH, aContext, mPresContext, inherited);
+    unitOK = SetCoord(arr->Item(0), tempCoord, nsStyleCoord(),
+                      SETCOORD_LENGTH, aContext, mPresContext, inherited);
+    NS_ASSERTION(unitOK, "unexpected unit");
+    item->mXOffset = tempCoord.GetCoordValue();
+
+    unitOK = SetCoord(arr->Item(1), tempCoord, nsStyleCoord(),
+                      SETCOORD_LENGTH, aContext, mPresContext, inherited);
+    NS_ASSERTION(unitOK, "unexpected unit");
+    item->mYOffset = tempCoord.GetCoordValue();
 
     // Blur radius is optional in the current box-shadow spec
     if (arr->Item(2).GetUnit() != eCSSUnit_Null) {
-      SetCoord(arr->Item(2), item->mRadius, nsStyleCoord(),
-               SETCOORD_LENGTH, aContext, mPresContext, inherited);
+      unitOK = SetCoord(arr->Item(2), tempCoord, nsStyleCoord(),
+                        SETCOORD_LENGTH, aContext, mPresContext, inherited);
+      NS_ASSERTION(unitOK, "unexpected unit");
+      item->mRadius = tempCoord.GetCoordValue();
     } else {
-      item->mRadius.SetCoordValue(0);
+      item->mRadius = 0;
     }
 
     // Find the spread radius
     if (aUsesSpread && arr->Item(3).GetUnit() != eCSSUnit_Null) {
-      SetCoord(arr->Item(3), item->mSpread, nsStyleCoord(),
-               SETCOORD_LENGTH, aContext, mPresContext, inherited);
+      unitOK = SetCoord(arr->Item(3), tempCoord, nsStyleCoord(),
+                        SETCOORD_LENGTH, aContext, mPresContext, inherited);
+      NS_ASSERTION(unitOK, "unexpected unit");
+      item->mSpread = tempCoord.GetCoordValue();
     } else {
-      item->mSpread.SetCoordValue(0);
+      item->mSpread = 0;
     }
 
     if (arr->Item(4).GetUnit() != eCSSUnit_Null) {
       item->mHasColor = PR_TRUE;
       // 2nd argument can be bogus since inherit is not a valid color
-      SetColor(arr->Item(4), 0, mPresContext, aContext, item->mColor,
-               inherited);
+      unitOK = SetColor(arr->Item(4), 0, mPresContext, aContext, item->mColor,
+                        inherited);
+      NS_ASSERTION(unitOK, "unexpected unit");
     }
   }
 
@@ -3066,6 +3126,38 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
   COMPUTE_END_RESET(UIReset, ui)
 }
 
+/* Given a -moz-transform token stream, accumulates them into an
+ * nsStyleTransformMatrix
+ *
+ * @param aList The nsCSSValueList of arrays to read into transform functions.
+ * @param aContext The style context to use for unit conversion.
+ * @param aPresContext The presentation context to use for unit conversion
+ * @param aInherited If the value is inherited, this is set to PR_TRUE.
+ * @return An nsStyleTransformMatrix corresponding to the net transform.
+ */
+static nsStyleTransformMatrix ReadTransforms(const nsCSSValueList* aList,
+                                             nsStyleContext* aContext,
+                                             nsPresContext* aPresContext,
+                                             PRBool &aInherited)
+{
+  nsStyleTransformMatrix result;
+
+  for (const nsCSSValueList* curr = aList; curr != nsnull; curr = curr->mNext) {
+    const nsCSSValue &currElem = curr->mValue;
+    NS_ASSERTION(currElem.GetUnit() == eCSSUnit_Function,
+                 "Stream should consist solely of functions!");
+    NS_ASSERTION(currElem.GetArrayValue()->Count() >= 1,
+                 "Incoming function is too short!");
+
+    /* Read in a single transform matrix, then accumulate it with the total. */
+    nsStyleTransformMatrix currMatrix;
+    currMatrix.SetToTransformFunction(currElem.GetArrayValue(), aContext,
+                                      aPresContext);
+    result *= currMatrix;
+  }
+  return result;
+}
+
 const void*
 nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                const nsRuleDataStruct& aData, 
@@ -3318,6 +3410,85 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     }
 
   }
+  
+  /* Convert the nsCSSValueList into an nsTArray<nsTransformFunction *>. */
+  const nsCSSValueList *head = displayData.mTransform;
+  
+  if (head != nsnull) {
+    /* There is a chance that we will discover that
+     * the transform property has been set to 'none,' 'initial,' or 'inherit.'
+     * If so, process appropriately.
+     */
+    
+    /* If it's 'none,' indicate that there are no transforms. */
+    if (head->mValue.GetUnit() == eCSSUnit_None)
+      display->mTransformPresent = PR_FALSE;
+    
+    /* If we need to inherit, do so by making a full deep-copy. */
+    else if (head->mValue.GetUnit() == eCSSUnit_Inherit)  {
+      display->mTransformPresent = parentDisplay->mTransformPresent;
+      if (parentDisplay->mTransformPresent)
+        display->mTransform = parentDisplay->mTransform;
+      inherited = PR_TRUE;
+    }
+    /* If it's 'initial', then we reset to empty. */
+    else if (head->mValue.GetUnit() == eCSSUnit_Initial)
+      display->mTransformPresent = PR_FALSE;
+    
+    /* Otherwise, we are looking at a list of CSS tokens.  We'll read each of
+     * them in as an array of nsTransformFunction objects, then will accumulate
+     * them all together to form the final transform matrix.
+     */
+    else {
+ 
+      display->mTransform = 
+        ReadTransforms(head, aContext, mPresContext, inherited);
+
+      /* Make sure to say that this data is valid! */
+      display->mTransformPresent = PR_TRUE;
+    }
+  }
+  
+  /* Convert -moz-transform-origin. */
+  if (displayData.mTransformOrigin.mXValue.GetUnit() != eCSSUnit_Null ||
+      displayData.mTransformOrigin.mXValue.GetUnit() != eCSSUnit_Null) {
+
+    /* If X coordinate is an enumerated type, handle it explicitly. */
+    if (eCSSUnit_Enumerated == displayData.mTransformOrigin.mXValue.GetUnit())
+      display->mTransformOrigin[0].SetPercentValue
+        (GetFloatFromBoxPosition
+         (displayData.mTransformOrigin.mXValue.GetIntValue()));
+    else {
+      /* Convert lengths, percents, and inherit.  Default value is 50%. */
+#ifdef DEBUG
+      PRBool result =
+#endif
+        SetCoord(displayData.mTransformOrigin.mXValue,
+                 display->mTransformOrigin[0],
+                 parentDisplay->mTransformOrigin[0],
+                 SETCOORD_LPH | SETCOORD_INITIAL_HALF,
+                 aContext, mPresContext, aInherited);
+      NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
+    }
+
+    /* If Y coordinate is an enumerated type, handle it explicitly. */
+    if (eCSSUnit_Enumerated == displayData.mTransformOrigin.mYValue.GetUnit())
+      display->mTransformOrigin[1].SetPercentValue
+        (GetFloatFromBoxPosition
+         (displayData.mTransformOrigin.mYValue.GetIntValue()));
+    else {
+      /* Convert lengths, percents, initial, inherit. */
+#ifdef DEBUG
+      PRBool result =
+#endif
+        SetCoord(displayData.mTransformOrigin.mYValue,
+                 display->mTransformOrigin[1],
+                 parentDisplay->mTransformOrigin[1],
+                 SETCOORD_LPH | SETCOORD_INITIAL_HALF,
+                 aContext, mPresContext, aInherited);
+      NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
+    }
+  }
 
   COMPUTE_END_RESET(Display, display)
 }
@@ -3397,28 +3568,22 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                                   const nsRuleDataStruct& aData, 
                                   nsStyleContext* aContext, 
                                   nsRuleNode* aHighestNode,
-                                  const RuleDetail aRuleDetail, PRBool aInherited)
+                                  const RuleDetail aRuleDetail,
+                                  PRBool aInherited)
 {
-  COMPUTE_START_RESET(Background, (mPresContext), bg, parentBG,
-                      Color, colorData)
+  COMPUTE_START_RESET(Background, (), bg, parentBG, Color, colorData)
 
   // save parentFlags in case bg == parentBG and we clobber them later
   PRUint8 parentFlags = parentBG->mBackgroundFlags;
 
-  // background-color: color, string, enum (flags), inherit
-  if (eCSSUnit_Inherit == colorData.mBackColor.GetUnit()) { // do inherit first, so SetColor doesn't do it
-    bg->mBackgroundColor = parentBG->mBackgroundColor;
-    bg->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-    bg->mBackgroundFlags |= (parentFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-    inherited = PR_TRUE;
-  }
-  else if (SetColor(colorData.mBackColor, parentBG->mBackgroundColor, 
-                    mPresContext, aContext, bg->mBackgroundColor, inherited)) {
-    bg->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-  }
-  else if (eCSSUnit_Enumerated == colorData.mBackColor.GetUnit() ||
-           eCSSUnit_Initial == colorData.mBackColor.GetUnit()) {
-    bg->mBackgroundFlags |= NS_STYLE_BG_COLOR_TRANSPARENT;
+  // background-color: color, string, inherit
+  if (eCSSUnit_Initial == colorData.mBackColor.GetUnit()) {
+    bg->mBackgroundColor = NS_RGBA(0, 0, 0, 0);
+  } else if (!SetColor(colorData.mBackColor, parentBG->mBackgroundColor,
+                       mPresContext, aContext, bg->mBackgroundColor,
+                       inherited)) {
+    NS_ASSERTION(eCSSUnit_Null == colorData.mBackColor.GetUnit(),
+                 "unexpected color unit");
   }
 
   // background-image: url (stored as image), none, inherit
@@ -3479,20 +3644,9 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PERCENT;
   }
   else if (eCSSUnit_Enumerated == colorData.mBackPosition.mXValue.GetUnit()) {
-    switch (colorData.mBackPosition.mXValue.GetIntValue()) {
-      case NS_STYLE_BG_POSITION_LEFT:
-        bg->mBackgroundXPosition.mFloat = 0.0f;
-        break;
-      case NS_STYLE_BG_POSITION_RIGHT:
-        bg->mBackgroundXPosition.mFloat = 1.0f;
-        break;
-      default:
-        NS_NOTREACHED("unexpected value");
-        // fall through
-      case NS_STYLE_BG_POSITION_CENTER:
-        bg->mBackgroundXPosition.mFloat = 0.5f;
-        break;
-    }
+    bg->mBackgroundXPosition.mFloat =
+      GetFloatFromBoxPosition(colorData.mBackPosition.mXValue.GetIntValue());
+
     bg->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
   }
@@ -3518,20 +3672,9 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PERCENT;
   }
   else if (eCSSUnit_Enumerated == colorData.mBackPosition.mYValue.GetUnit()) {
-    switch (colorData.mBackPosition.mYValue.GetIntValue()) {
-      case NS_STYLE_BG_POSITION_TOP:
-        bg->mBackgroundYPosition.mFloat = 0.0f;
-        break;
-      case NS_STYLE_BG_POSITION_BOTTOM:
-        bg->mBackgroundYPosition.mFloat = 1.0f;
-        break;
-      default:
-        NS_NOTREACHED("unexpected value");
-        // fall through
-      case NS_STYLE_BG_POSITION_CENTER:
-        bg->mBackgroundYPosition.mFloat = 0.5f;
-        break;
-    }
+    bg->mBackgroundYPosition.mFloat =
+      GetFloatFromBoxPosition(colorData.mBackPosition.mYValue.GetIntValue());
+
     bg->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
   }
@@ -3708,11 +3851,9 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
         border->EnsureBorderColors();
         border->ClearBorderColors(side);
         while (list) {
-          if (SetColor(list->mValue, unused, mPresContext, aContext, borderColor, inherited))
-            border->AppendBorderColor(side, borderColor, PR_FALSE);
-          else if (eCSSUnit_Enumerated == list->mValue.GetUnit() &&
-                   NS_STYLE_COLOR_TRANSPARENT == list->mValue.GetIntValue())
-            border->AppendBorderColor(side, nsnull, PR_TRUE);
+          if (SetColor(list->mValue, unused, mPresContext,
+                       aContext, borderColor, inherited))
+            border->AppendBorderColor(side, borderColor);
           list = list->mNext;
         }
       }
@@ -3721,7 +3862,6 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
 
   // border-color, border-*-color: color, string, enum, inherit
   nsCSSRect ourBorderColor(marginData.mBorderColor);
-  PRBool transparent;
   PRBool foreground;
   AdjustLogicalBoxProp(aContext,
                        marginData.mBorderLeftColorLTRSource,
@@ -3739,11 +3879,8 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
       if (eCSSUnit_Inherit == value.GetUnit()) {
         if (parentContext) {
           inherited = PR_TRUE;
-          parentBorder->GetBorderColor(side, borderColor,
-                                       transparent, foreground);
-          if (transparent)
-            border->SetBorderTransparent(side);
-          else if (foreground) {
+          parentBorder->GetBorderColor(side, borderColor, foreground);
+          if (foreground) {
             // We want to inherit the color from the parent, not use the
             // color on the element where this chunk of style data will be
             // used.  We can ensure that the data for the parent are fully
@@ -3762,9 +3899,6 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
       }
       else if (eCSSUnit_Enumerated == value.GetUnit()) {
         switch (value.GetIntValue()) {
-          case NS_STYLE_COLOR_TRANSPARENT:
-            border->SetBorderTransparent(side);
-            break;
           case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
             border->SetBorderToForeground(side);
             break;
@@ -3924,10 +4058,16 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
   }
 
   // outline-offset: length, inherit
-  SetCoord(marginData.mOutlineOffset, outline->mOutlineOffset, parentOutline->mOutlineOffset,
-           SETCOORD_LH | SETCOORD_INITIAL_ZERO, aContext, mPresContext,
-           inherited);
-  
+  nsStyleCoord tempCoord;
+  if (SetCoord(marginData.mOutlineOffset, tempCoord,
+               parentOutline->mOutlineOffset,
+               SETCOORD_LH | SETCOORD_INITIAL_ZERO, aContext, mPresContext,
+               inherited)) {
+    outline->mOutlineOffset = tempCoord.GetCoordValue();
+  } else {
+    NS_ASSERTION(marginData.mOutlineOffset.GetUnit() == eCSSUnit_Null,
+                 "unexpected unit");
+  }
 
   // outline-color: color, string, enum, inherit
   nscolor outlineColor;
@@ -4171,13 +4311,27 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
               NS_STYLE_BORDER_SEPARATE, 0, 0, 0, 0);
 
   // border-spacing-x: length, inherit
-  SetCoord(tableData.mBorderSpacing.mXValue, table->mBorderSpacingX,
-           parentTable->mBorderSpacingX, SETCOORD_LH | SETCOORD_INITIAL_ZERO,
-           aContext, mPresContext, inherited);
+  nsStyleCoord tempCoord;
+  if (SetCoord(tableData.mBorderSpacing.mXValue, tempCoord,
+               parentTable->mBorderSpacingX,
+               SETCOORD_LH | SETCOORD_INITIAL_ZERO,
+               aContext, mPresContext, inherited)) {
+    table->mBorderSpacingX = tempCoord.GetCoordValue();
+  } else {
+    NS_ASSERTION(tableData.mBorderSpacing.mXValue.GetUnit() == eCSSUnit_Null,
+                 "unexpected unit");
+  }
+
   // border-spacing-y: length, inherit
-  SetCoord(tableData.mBorderSpacing.mYValue, table->mBorderSpacingY,
-           parentTable->mBorderSpacingY, SETCOORD_LH | SETCOORD_INITIAL_ZERO,
-           aContext, mPresContext, inherited);
+  if (SetCoord(tableData.mBorderSpacing.mYValue, tempCoord,
+               parentTable->mBorderSpacingY,
+               SETCOORD_LH | SETCOORD_INITIAL_ZERO,
+               aContext, mPresContext, inherited)) {
+    table->mBorderSpacingY = tempCoord.GetCoordValue();
+  } else {
+    NS_ASSERTION(tableData.mBorderSpacing.mYValue.GetUnit() == eCSSUnit_Null,
+                 "unexpected unit");
+  }
 
   // caption-side: enum, inherit, initial
   SetDiscrete(tableData.mCaptionSide, table->mCaptionSide, inherited,

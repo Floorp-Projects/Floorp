@@ -62,8 +62,8 @@ class nsIDocShell;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x0acd0482, 0x09a2, 0x42fd, \
-  { 0xb6, 0x1b, 0x95, 0xa2, 0x01, 0x6a, 0x55, 0xd3 } }
+{ 0x2813b1d9, 0x7fe1, 0x496f, \
+ { 0x85, 0x52, 0xa2, 0xc1, 0xc5, 0x6b, 0x15, 0x40 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -784,10 +784,15 @@ public:
   /**
    * Get the class list of this content node (this corresponds to the
    * value of the null-namespace attribute whose name is given by
-   * GetClassAttributeName().  This may be null if there are no
+   * GetClassAttributeName()).  This may be null if there are no
    * classes, but that's not guaranteed.
    */
-  virtual const nsAttrValue* GetClasses() const = 0;
+  const nsAttrValue* GetClasses() const {
+    if (HasFlag(NODE_MAY_HAVE_CLASS)) {
+      return DoGetClasses();
+    }
+    return nsnull;
+  }
 
   /**
    * Walk aRuleWalker over the content style rules (presentational
@@ -849,6 +854,14 @@ public:
    */
   virtual void SaveSubtreeState() = 0;
 
+private:
+  /**
+   * Hook for implementing GetClasses.  This is guaranteed to only be
+   * called if the NODE_MAY_HAVE_CLASS flag is set.
+   */
+  virtual const nsAttrValue* DoGetClasses() const = 0;
+
+public:
 #ifdef DEBUG
   /**
    * List the content (and anything it contains) out to the given

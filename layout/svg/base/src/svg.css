@@ -63,4 +63,5 @@ foreignObject {
 *|*::-moz-svg-foreign-content {
   display: block !important;
   position: static !important;
+  text-indent: 0;
 }

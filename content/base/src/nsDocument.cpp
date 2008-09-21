@@ -304,7 +304,7 @@ nsIdentifierMapEntry::Traverse(nsCycleCollectionTraversalCallback* aCallback)
   if (mNameContentList != NAME_NOT_VALID) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
                                        "mIdentifierMap mNameContentList");
-    aCallback->NoteXPCOMChild(mNameContentList);
+    aCallback->NoteXPCOMChild(static_cast<nsIDOMNodeList*>(mNameContentList));
   }
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback, "mIdentifierMap mDocAllList");
@@ -4447,8 +4447,8 @@ nsDocument::SetTitle(const nsAString& aTitle)
 
     {
       nsCOMPtr<nsINodeInfo> titleInfo;
-      mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nsnull,
-              kNameSpaceID_None, getter_AddRefs(titleInfo));
+      titleInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nsnull,
+                                                kNameSpaceID_None);
       if (!titleInfo)
         return NS_OK;
       title = NS_NewHTMLTitleElement(titleInfo);
@@ -4956,10 +4956,7 @@ nsDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  // XXX should be implemented by subclass
-  *aReturn = nsnull;
-
-  return NS_OK;
+  return nsNodeUtils::CloneNodeImpl(this, aDeep, aReturn);
 }
 
 NS_IMETHODIMP
@@ -6159,7 +6156,6 @@ nsresult
 nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
                        PRBool aDocumentDefaultType, nsIContent **aResult)
 {
-  nsresult rv;
 #ifdef DEBUG
   nsAutoString qName;
   if (aPrefix) {
@@ -6182,12 +6178,11 @@ nsDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
   *aResult = nsnull;
   
   PRInt32 elementType = aDocumentDefaultType ? mDefaultElementType :
-                                               aNamespaceID;
+    aNamespaceID;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
-                                     getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
   return NS_NewElement(aResult, elementType, nodeInfo, PR_FALSE);
 }
@@ -6838,4 +6833,47 @@ nsDocument::QuerySelectorAll(const nsAString& aSelector,
                              nsIDOMNodeList **aReturn)
 {
   return nsGenericElement::doQuerySelectorAll(this, aSelector, aReturn);
+}
+
+nsresult
+nsDocument::CloneDocHelper(nsDocument* clone) const
+{
+  // Init document
+  nsresult rv = clone->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set URI/principal
+  clone->nsDocument::SetDocumentURI(nsIDocument::GetDocumentURI());
+  // Must set the principal first, since SetBaseURI checks it.
+  clone->SetPrincipal(NodePrincipal());
+  rv = clone->SetBaseURI(nsIDocument::GetBaseURI());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set scripting object
+  PRBool hasHadScriptObject = PR_TRUE;
+  nsIScriptGlobalObject* scriptObject =
+    GetScriptHandlingObject(hasHadScriptObject);
+  NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
+  clone->SetScriptHandlingObject(scriptObject);
+
+  // Make the clone a data document
+  clone->SetLoadedAsData(PR_TRUE);
+
+  // Misc state
+
+  // State from nsIDocument
+  clone->mCharacterSet = mCharacterSet;
+  clone->mCharacterSetSource = mCharacterSetSource;
+  clone->mCompatMode = mCompatMode;
+  clone->mBidiOptions = mBidiOptions;
+  clone->mContentLanguage = mContentLanguage;
+  clone->mContentType = mContentType;
+  clone->mSecurityInfo = mSecurityInfo;
+
+  // State from nsDocument
+  clone->mIsRegularHTML = mIsRegularHTML;
+  clone->mXMLDeclarationBits = mXMLDeclarationBits;
+  clone->mBaseTarget = mBaseTarget;
+
+  return NS_OK;
 }

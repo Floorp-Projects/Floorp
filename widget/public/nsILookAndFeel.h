@@ -143,7 +143,9 @@ public:
     eColor__moz_eventreerow,
     eColor__moz_oddtreerow,
 
-    //colours needed by Mac Classic skin
+    // colors needed by the Mac OS X theme
+    eColor__moz_mac_chrome_active,                          // background color of chrome toolbars in active windows
+    eColor__moz_mac_chrome_inactive,                        // background color of chrome toolbars in inactive windows
     eColor__moz_mac_focusring,				//ring around text fields and lists
     eColor__moz_mac_menuselect,				//colour used when mouse is over a menu item
     eColor__moz_mac_menushadow,				//colour used to do shadows on menu items
@@ -252,6 +254,15 @@ public:
      * (will return the default of NS_ERROR_FAILURE).
      */
     eMetric_WindowsClassic,
+
+    /*
+     * A Boolean value to determine whether the Mac graphite theme is
+     * being used.
+     *
+     * The value of this metric is not used on other platforms. These platforms
+     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
+     */
+    eMetric_MacGraphiteTheme,
 
     /*
      * eMetric_AlertNotificationOrigin indicates from which corner of the

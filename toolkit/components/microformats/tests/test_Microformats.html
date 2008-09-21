@@ -94,6 +94,69 @@
     <span class="dtstart">1998-01-22</span>
   </div>
   
+<div class="vcard" id="valuespace_1">
+<span class="fn">
+<span class="value">John</span>
+<span class="value"> </span>
+<span class="value">Doe</span>
+</span>
+</div>
+<div class="vcard" id="valuespace_2">
+<span class="fn">
+<span class="value">John</span>
+<span class="value">    </span>
+<span class="value">Doe</span>
+</span>
+</div>
+<div class="vcard" id="valuespace_3">
+<span class="fn">
+<span class="value">  John</span>
+<span class="value">    </span>
+<span class="value">Doe  </span>
+</span>
+</div>
+<div class="vcard" id="valuespace_4">
+<span class="fn">
+<span class="value">John    </span>
+<span class="value">    Doe</span>
+</span>
+</div>
+<div class="vcard" id="valuespace_5">
+<span class="fn">
+<span class="value">    John</span>
+<span class="value">    Doe    </span>
+</span>
+<div class="vcard" id="valuespace_6">
+<span class="fn">
+<span class="value">John
+</span>
+<span class="value">
+Doe</span>
+</span>
+</div>
+<div class="vcard" id="valuespace_7">
+<span class="fn">
+<span class="value">John</span>
+<span class="value">Doe</span>
+</span>
+</div>
+ 
+  <span id="austin" class="location">Austin - Sixth Street</span>
+  <table summary="Timetable">
+    <thead>
+      <tr>
+        <th id="location-1"><a href="#austin" class="include"></a>New York</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th id="time-1"><abbr title="2008-01-01" class="dtstart">Jan 1, 2008</abbr></th>
+        <td id="nested_header_include" class="vevent" headers="time-1 location-1"><div class="summary">New Years Party</div></td>
+      </tr>
+    </tbody>
+  </table>
+
+ 
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -164,6 +227,27 @@ function test_Microformats() {
 
   var dateCal = new hCalendar(document.getElementById("vcal_vcard"));
   is(dateCal.description, "Mozilla's Birthday", "vcard in vcal");
+
+  var nestedCal = new hCalendar(document.getElementById("nested_header_include"));
+  is(nestedCal.dtstart, "2008-01-01", "nested_header_include - dtstart");
+  is(nestedCal.location, "Austin - Sixth Street", "nested_header_include - location");
+  is(nestedCal.summary, "New Years Party", "nested_header_include - summary");
+
+  var valueCard = new hCard(document.getElementById("valuespace_1"));
+  is(valueCard.fn, "John Doe", "valuespace_1");
+  var valueCard = new hCard(document.getElementById("valuespace_2"));
+  is(valueCard.fn, "John Doe", "valuespace_2");
+  var valueCard = new hCard(document.getElementById("valuespace_3"));
+  is(valueCard.fn, "John Doe", "valuespace_3");
+  var valueCard = new hCard(document.getElementById("valuespace_4"));
+  is(valueCard.fn, "John Doe", "valuespace_4");
+  var valueCard = new hCard(document.getElementById("valuespace_5"));
+  is(valueCard.fn, "John Doe", "valuespace_5");
+  var valueCard = new hCard(document.getElementById("valuespace_6"));
+  is(valueCard.fn, "John Doe", "valuespace_6");
+  var valueCard = new hCard(document.getElementById("valuespace_7"));
+  is(valueCard.fn, "JohnDoe", "valuespace_7");
+
 }
 
 function test_hCard() {

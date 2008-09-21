@@ -107,8 +107,8 @@ NPP_Shutdown(void)
 NPError
 NPP_New(NPMIMEType pluginType,
     NPP instance,
-    uint16 mode,
-    int16 argc,
+    uint16_t mode,
+    int16_t argc,
     char* argn[],
     char* argv[],
     NPSavedData* saved)
@@ -135,7 +135,7 @@ NPP_New(NPMIMEType pluginType,
     This->type = dupMimeType(pluginType);
     This->instance = instance;
     This->pluginsPrintMessage = NULL;
-    This->exists = FALSE;
+    This->exists = false;
 
     /* Parse argument list passed to plugin instance */
     /* We are interested in these arguments
@@ -237,7 +237,7 @@ NPP_NewStream(NPP instance,
           NPMIMEType type,
           NPStream *stream,
           NPBool seekable,
-          uint16 *stype)
+          uint16_t *stype)
 {
     if (instance == NULL)
         return NPERR_INVALID_INSTANCE_ERROR;
@@ -246,7 +246,7 @@ NPP_NewStream(NPP instance,
 }
 
 
-int32
+int32_t
 NPP_WriteReady(NPP instance, NPStream *stream)
 {
     if (instance == NULL)
@@ -260,8 +260,8 @@ NPP_WriteReady(NPP instance, NPStream *stream)
 }
 
 
-int32
-NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
+int32_t
+NPP_Write(NPP instance, NPStream *stream, int32_t offset, int32_t len, void *buffer)
 {
     if (instance == NULL)
         return NPERR_INVALID_INSTANCE_ERROR;
@@ -330,7 +330,7 @@ NPP_Print(NPP instance, NPPrint* printInfo)
              *  set printInfo->pluginPrinted to TRUE and print your
              *  plugin as you see fit.  If your plugin wants Netscape
              *  to handle printing in this case, set
-             *  printInfo->pluginPrinted to FALSE (the default) and
+             *  printInfo->pluginPrinted to false (the default) and
              *  do nothing.  If you do want to handle printing
              *  yourself, printOne is true if the print button
              *  (as opposed to the print menu) was clicked.
@@ -348,7 +348,7 @@ NPP_Print(NPP instance, NPPrint* printInfo)
     \**************************************/
 
             /* Do the default*/
-            printInfo->print.fullPrint.pluginPrinted = FALSE;
+            printInfo->print.fullPrint.pluginPrinted = false;
         }
         else {  /* If not fullscreen, we must be embedded */
             /*

@@ -12,15 +12,14 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/a11y/accessible/testTextboxes.js"></script>
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/testTextboxes.js" />
 
   <script type="application/javascript">
   <![CDATA[
     function doTest()
     {
-      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                      getService(nsIAccessibleRetrieval);
-
       //////////////////////////////////////////////////////////////////////////
       // normal textbox without content and with no proper label
       testThis("unlabelled_Textbox", // ID

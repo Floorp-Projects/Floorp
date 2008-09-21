@@ -51,6 +51,11 @@
 #include "nsFrameManager.h"
 #include "gfxContext.h"
 #include "nsStyleStructInlines.h"
+#include "nsStyleTransformMatrix.h"
+#include "gfxMatrix.h"
+#ifdef MOZ_SVG
+#include "nsSVGIntegrationUtils.h"
+#endif
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     PRBool aIsForEvents, PRBool aBuildCaret)
@@ -267,6 +272,15 @@ nsDisplayList::FlattenTo(nsTArray<nsDisplayItem*>* aElements) {
   }
 }
 
+nsRect
+nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
+  nsRect bounds;
+  for (nsDisplayItem* i = GetBottom(); i != nsnull; i = i->GetAbove()) {
+    bounds.UnionRect(bounds, i->GetBounds(aBuilder));
+  }
+  return bounds;
+}
+
 void
 nsDisplayList::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
                                   nsRegion* aVisibleRegion) {
@@ -358,7 +372,7 @@ nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
       }
     }
   }
-  NS_ASSERTION(aState->mItemBuffer.Length() == itemBufferStart,
+  NS_ASSERTION(aState->mItemBuffer.Length() == PRUint32(itemBufferStart),
                "How did we forget to pop some elements?");
   return nsnull;
 }
@@ -478,16 +492,16 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
   if (mIsThemed)
     return PR_FALSE;
 
-  PRBool isCanvas;
   const nsStyleBackground* bg;
+  PRBool isCanvas; // not used
   PRBool hasBG =
-    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bg, &isCanvas);
-  if (!hasBG || (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
-      bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER ||
-      nsLayoutUtils::HasNonZeroSide(mFrame->GetStyleBorder()->mBorderRadius) ||
-      NS_GET_A(bg->mBackgroundColor) < 255)
-    return PR_FALSE;
-  return PR_TRUE;
+    nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame,
+                                   &bg, &isCanvas);
+
+  return (hasBG && NS_GET_A(bg->mBackgroundColor) == 255 &&
+          bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER &&
+          !nsLayoutUtils::HasNonZeroSide(mFrame->GetStyleBorder()->
+                                         mBorderRadius));
 }
 
 PRBool
@@ -581,9 +595,7 @@ nsDisplayOutline::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   nsPoint origin = aBuilder->ToReferenceFrame(mFrame);
   if (nsRect(origin, mFrame->GetSize()).Contains(aVisibleRegion->GetBounds()) &&
       !nsLayoutUtils::HasNonZeroSide(outline->mOutlineRadius)) {
-    nscoord outlineOffset;
-    outline->GetOutlineOffset(outlineOffset);
-    if (outlineOffset >= 0) {
+    if (outline->mOutlineOffset >= 0) {
       // the visible region is entirely inside the border-rect, and the outline
       // isn't rendered inside the border-rect, so the outline is not visible
       return PR_FALSE;
@@ -671,11 +683,7 @@ nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
 
 nsRect
 nsDisplayWrapList::GetBounds(nsDisplayListBuilder* aBuilder) {
-  nsRect bounds;
-  for (nsDisplayItem* i = mList.GetBottom(); i != nsnull; i = i->GetAbove()) {
-    bounds.UnionRect(bounds, i->GetBounds(aBuilder));
-  }
-  return bounds;
+  return mList.GetBounds(aBuilder);
 }
 
 PRBool
@@ -928,3 +936,461 @@ nsDisplayWrapList* nsDisplayClip::WrapWithClone(nsDisplayListBuilder* aBuilder,
   return new (aBuilder)
     nsDisplayClip(aItem->GetUnderlyingFrame(), mClippingFrame, aItem, mClip);
 }
+
+
+
+///////////////////////////////////////////////////
+// nsDisplayTransform Implementation
+//
+
+// Write #define UNIFIED_CONTINUATIONS here to have the transform property try
+// to transform content with continuations as one unified block instead of
+// several smaller ones.  This is currently disabled because it doesn't work
+// correctly, since when the frames are initially being reflown, their
+// continuations all compute their bounding rects independently of each other
+// and consequently get the wrong value.  Write #define DEBUG_HIT here to have
+// the nsDisplayTransform class dump out a bunch of information about hit
+// detection.
+#undef  UNIFIED_CONTINUATIONS
+#undef  DEBUG_HIT
+
+/* Returns the bounds of a frame as defined for transforms.  If
+ * UNIFIED_CONTINUATIONS is not defined, this is simply the frame's bounding
+ * rectangle, translated to the origin. Otherwise, returns the smallest
+ * rectangle containing a frame and all of its continuations.  For example, if
+ * there is a <span> element with several continuations split over several
+ * lines, this function will return the rectangle containing all of those
+ * continuations.  This rectangle is relative to the origin of the frame's local
+ * coordinate space.
+ */
+#ifndef UNIFIED_CONTINUATIONS
+
+nsRect
+nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "Can't get the bounds of a nonexistent frame!");
+  return nsRect(nsPoint(0, 0), aFrame->GetSize());
+}
+
+#else
+
+nsRect
+nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "Can't get the bounds of a nonexistent frame!");
+
+  nsRect result;
+  
+  /* Iterate through the continuation list, unioning together all the
+   * bounding rects.
+   */
+  for (const nsIFrame *currFrame = aFrame->GetFirstContinuation();
+       currFrame != nsnull;
+       currFrame = currFrame->GetNextContinuation())
+    {
+      /* Get the frame rect in local coordinates, then translate back to the
+       * original coordinates.
+       */
+      result.UnionRect(result, nsRect(currFrame->GetOffsetTo(aFrame),
+                                      currFrame->GetSize()));
+    }
+
+  return result;
+}
+
+#endif
+
+/* Returns the delta specified by the -moz-tranform-origin property.
+ * This is a positive delta, meaning that it indicates the direction to move
+ * to get from (0, 0) of the frame to the transform origin.
+ */
+static
+gfxPoint GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
+                                      float aFactor,
+                                      const nsRect* aBoundsOverride)
+{
+  NS_PRECONDITION(aFrame, "Can't get delta for a null frame!");
+  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
+                  "Can't get a delta for an untransformed frame!");
+
+  /* For both of the coordinates, if the value of -moz-transform is a
+   * percentage, it's relative to the size of the frame.  Otherwise, if it's
+   * a distance, it's already computed for us!
+   */
+  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
+  nsRect boundingRect = (aBoundsOverride ? *aBoundsOverride :
+                         nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
+
+  /* Allows us to access named variables by index. */
+  gfxPoint result;
+  gfxFloat* coords[2] = {&result.x, &result.y};
+  const nscoord* dimensions[2] =
+    {&boundingRect.width, &boundingRect.height};
+
+  for (PRUint8 index = 0; index < 2; ++index) {
+    /* If the -moz-transform-origin specifies a percentage, take the percentage
+     * of the size of the box.
+     */
+    if (display->mTransformOrigin[index].GetUnit() == eStyleUnit_Percent)
+      *coords[index] = NSAppUnitsToFloatPixels(*dimensions[index], aFactor) *
+        display->mTransformOrigin[index].GetPercentValue();
+    
+    /* Otherwise, it's a length. */
+    else
+      *coords[index] =
+        NSAppUnitsToFloatPixels(display->
+                                mTransformOrigin[index].GetCoordValue(),
+                                aFactor);
+  }
+  
+  /* Adjust based on the origin of the rectangle. */
+  result.x += NSAppUnitsToFloatPixels(boundingRect.x, aFactor);
+  result.y += NSAppUnitsToFloatPixels(boundingRect.y, aFactor);
+
+  return result;
+}
+
+/* Wraps up the -moz-transform matrix in a change-of-basis matrix pair that
+ * translates from local coordinate space to transform coordinate space, then
+ * hands it back.
+ */
+gfxMatrix
+nsDisplayTransform::GetResultingTransformMatrix(const nsIFrame* aFrame,
+                                                const nsPoint &aOrigin,
+                                                float aFactor,
+                                                const nsRect* aBoundsOverride)
+{
+  NS_PRECONDITION(aFrame, "Cannot get transform matrix for a null frame!");
+  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
+                  "Cannot get transform matrix if frame isn't transformed!");
+
+  /* Account for the -moz-transform-origin property by translating the
+   * coordinate space to the new origin.
+   */
+  gfxPoint toMozOrigin = GetDeltaToMozTransformOrigin(aFrame, aFactor, aBoundsOverride);
+  gfxPoint newOrigin = gfxPoint(NSAppUnitsToFloatPixels(aOrigin.x, aFactor),
+                                NSAppUnitsToFloatPixels(aOrigin.y, aFactor));
+
+  /* Get the underlying transform matrix.  This requires us to get the
+   * bounds of the frame.
+   */
+  const nsStyleDisplay* disp = aFrame->GetStyleDisplay();
+  nsRect bounds = (aBoundsOverride ? *aBoundsOverride :
+                   nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
+
+  /* Get the matrix, then change its basis to factor in the origin. */
+  return nsLayoutUtils::ChangeMatrixBasis
+    (newOrigin + toMozOrigin, disp->mTransform.GetThebesMatrix(bounds, aFactor));
+}
+
+/* Painting applies the transform, paints the sublist, then unapplies
+ * the transform.
+ */
+void nsDisplayTransform::Paint(nsDisplayListBuilder *aBuilder,
+                               nsIRenderingContext *aCtx,
+                               const nsRect &aDirtyRect)
+{
+  /* Here's how this is going to work:
+   * 1. Convert the stored transform matrix into a gfxMatrix
+   * 2. Read out the old graphics matrix.
+   * 3. Compute the net graphics matrix at this point.
+   * 4. Set that as the active matrix.
+   * 5. Apply the inverse transform to the dirty rect so that children think
+   *    they're drawing in local space.
+   * 6. Render everything.
+   * 7. Reset the matrix.
+   */
+  /* Get the context and automatically save and restore it. */
+  gfxContext* gfx = aCtx->ThebesContext();
+  gfxContextAutoSaveRestore autoRestorer(gfx);
+
+  /* Unit conversion is based on the local presentation context. */
+  float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+
+  /* Compute the new matrix by taking the old matrix and multiplying the
+   * transform matrix of this frame only.  The new transform is prepended to
+   * the old transform, since that way, if we have several stacked transforms,
+   * the innermost transform is applied first.
+   */
+  gfxMatrix newTransformMatrix =
+    GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
+                                factor, nsnull);
+
+  newTransformMatrix.Multiply(gfx->CurrentMatrix());
+
+  /* Set the matrix for the transform based on the old matrix and the new
+   * transform data.
+   */
+  gfx->SetMatrix(newTransformMatrix);
+
+  /* Now, send the paint call down.  As we do this, we need to be sure to
+   * untransform the dirty rect, since we want everything that's painting to
+   * think that it's painting in its original rectangular coordinate space.
+   */    
+  mStoredList.Paint(aBuilder, aCtx,
+                    UntransformRect(aDirtyRect, mFrame,
+                                    aBuilder->ToReferenceFrame(mFrame)));
+
+  /* The AutoSaveRestore object will clean things up. */
+}
+
+/* We don't need to do anything here. */
+PRBool nsDisplayTransform::OptimizeVisibility(nsDisplayListBuilder *aBuilder,
+                                              nsRegion *aVisibleRegion)
+{
+  return PR_TRUE;
+}
+
+#ifdef DEBUG_HIT
+#include <time.h>
+#endif
+
+/* HitTest does some fun stuff with matrix transforms to obtain the answer. */
+nsIFrame *nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
+                                      nsPoint aPt,
+                                      HitTestState *aState)
+{
+  /* Here's how this works:
+   * 1. Get the matrix.  If it's singular, abort (clearly we didn't hit
+   *    anything).
+   * 2. Invert the matrix.
+   * 3. Use it to transform the point into the correct space.
+   * 4. Pass that point down through to the list's version of HitTest.
+   */
+  float factor = nsPresContext::AppUnitsPerCSSPixel();
+  gfxMatrix matrix =
+    GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
+                                factor, nsnull);
+  if (matrix.IsSingular())
+    return nsnull;
+
+  /* We want to go from transformed-space to regular space.
+   * Thus we have to invert the matrix, which normally does
+   * the reverse operation (e.g. regular->transformed)
+   */
+  matrix.Invert();
+
+  /* Now, apply the transform and pass it down the channel. */
+  gfxPoint result = matrix.Transform(gfxPoint(NSAppUnitsToFloatPixels(aPt.x, factor),
+                                              NSAppUnitsToFloatPixels(aPt.y, factor)));
+
+#ifdef DEBUG_HIT
+  printf("Frame: %p\n", dynamic_cast<void *>(mFrame));
+  printf("  Untransformed point: (%f, %f)\n", result.x, result.y);
+#endif
+
+  nsIFrame* resultFrame =
+    mStoredList.HitTest(aBuilder,
+                        nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
+                                NSFloatPixelsToAppUnits(float(result.y), factor)), aState);
+  
+#ifdef DEBUG_HIT
+  if (resultFrame)
+    printf("  Hit!  Time: %f, frame: %p\n", static_cast<double>(clock()),
+           dynamic_cast<void *>(resultFrame));
+  printf("=== end of hit test ===\n");
+#endif
+
+  return resultFrame;
+}
+
+/* The bounding rectangle for the object is the overflow rectangle translated
+ * by the reference point.
+ */
+nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder)
+{
+  return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+}
+
+/* The transform is opaque iff the transform consists solely of scales and
+ * transforms and if the underlying content is opaque.  Thus if the transform
+ * is of the form
+ *
+ * |a c e|
+ * |b d f|
+ * |0 0 1|
+ *
+ * We need b and c to be zero.
+ */
+PRBool nsDisplayTransform::IsOpaque(nsDisplayListBuilder *aBuilder)
+{
+  const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+  return disp->mTransform.GetMainMatrixEntry(1) == 0.0f &&
+    disp->mTransform.GetMainMatrixEntry(2) == 0.0f &&
+    mStoredList.IsOpaque(aBuilder);
+}
+
+/* The transform is uniform if it fills the entire bounding rect and the
+ * wrapped list is uniform.  See IsOpaque for discussion of why this
+ * works.
+ */
+PRBool nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder)
+{
+  const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
+  return disp->mTransform.GetMainMatrixEntry(1) == 0.0f &&
+    disp->mTransform.GetMainMatrixEntry(2) == 0.0f &&
+    mStoredList.IsUniform(aBuilder);
+}
+
+/* If UNIFIED_CONTINUATIONS is defined, we can merge two display lists that
+ * share the same underlying content.  Otherwise, doing so results in graphical
+ * glitches.
+ */
+#ifndef UNIFIED_CONTINUATIONS
+
+PRBool
+nsDisplayTransform::TryMerge(nsDisplayListBuilder *aBuilder,
+                             nsDisplayItem *aItem)
+{
+  return PR_FALSE;
+}
+
+#else
+
+PRBool
+nsDisplayTransform::TryMerge(nsDisplayListBuilder *aBuilder,
+                             nsDisplayItem *aItem)
+{
+  NS_PRECONDITION(aItem, "Why did you try merging with a null item?");
+  NS_PRECONDITION(aBuilder, "Why did you try merging with a null builder?");
+
+  /* Make sure that we're dealing with two transforms. */
+  if (aItem->GetType() != TYPE_TRANSFORM)
+    return PR_FALSE;
+
+  /* Check to see that both frames are part of the same content. */
+  if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
+    return PR_FALSE;
+
+  /* Now, move everything over to this frame and signal that
+   * we merged things!
+   */
+  mStoredList.GetList()->
+    AppendToBottom(&static_cast<nsDisplayTransform *>(aItem)->mStoredList);
+  return PR_TRUE;
+}
+
+#endif
+
+/* TransformRect takes in as parameters a rectangle (in app space) and returns
+ * the smallest rectangle (in app space) containing the transformed image of
+ * that rectangle.  That is, it takes the four corners of the rectangle,
+ * transforms them according to the matrix associated with the specified frame,
+ * then returns the smallest rectangle containing the four transformed points.
+ *
+ * @param aUntransformedBounds The rectangle (in app units) to transform.
+ * @param aFrame The frame whose transformation should be applied.
+ * @param aOrigin The delta from the frame origin to the coordinate space origin
+ * @param aBoundsOverride (optional) Force the frame bounds to be the
+ *        specified bounds.
+ * @return The smallest rectangle containing the image of the transformed
+ *         rectangle.
+ */
+nsRect nsDisplayTransform::TransformRect(const nsRect &aUntransformedBounds,
+                                         const nsIFrame* aFrame,
+                                         const nsPoint &aOrigin,
+                                         const nsRect* aBoundsOverride)
+{
+  NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
+  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
+                  "Cannot transform a rectangle if there's no transformation!");
+
+  float factor = nsPresContext::AppUnitsPerCSSPixel();
+  return nsLayoutUtils::MatrixTransformRect
+    (aUntransformedBounds,
+     GetResultingTransformMatrix(aFrame, aOrigin, factor, aBoundsOverride),
+     factor);
+}
+
+nsRect nsDisplayTransform::UntransformRect(const nsRect &aUntransformedBounds,
+                                           const nsIFrame* aFrame,
+                                           const nsPoint &aOrigin)
+{
+  NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
+  NS_PRECONDITION(aFrame->GetStyleDisplay()->HasTransform(),
+                  "Cannot transform a rectangle if there's no transformation!");
+
+
+  /* Grab the matrix.  If the transform is degenerate, just hand back the
+   * empty rect.
+   */
+  float factor = nsPresContext::AppUnitsPerCSSPixel();
+  gfxMatrix matrix = GetResultingTransformMatrix(aFrame, aOrigin, factor, nsnull);
+  if (matrix.IsSingular())
+    return nsRect();
+
+  /* We want to untransform the matrix, so invert the transformation first! */
+  matrix.Invert();
+
+  return nsLayoutUtils::MatrixTransformRect(aUntransformedBounds, matrix,
+                                            factor);
+}
+
+#ifdef MOZ_SVG
+nsDisplaySVGEffects::nsDisplaySVGEffects(nsIFrame* aFrame, nsDisplayList* aList)
+    : nsDisplayWrapList(aFrame, aList), mEffectsFrame(aFrame),
+      mBounds(aFrame->GetOverflowRectRelativeToSelf())
+{
+  MOZ_COUNT_CTOR(nsDisplaySVGEffects);
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplaySVGEffects::~nsDisplaySVGEffects()
+{
+  MOZ_COUNT_DTOR(nsDisplaySVGEffects);
+}
+#endif
+
+PRBool nsDisplaySVGEffects::IsOpaque(nsDisplayListBuilder* aBuilder)
+{
+  return PR_FALSE;
+}
+
+nsIFrame*
+nsDisplaySVGEffects::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                             HitTestState* aState)
+{
+  if (!nsSVGIntegrationUtils::HitTestFrameForEffects(mEffectsFrame,
+          aPt - aBuilder->ToReferenceFrame(mEffectsFrame)))
+    return nsnull;
+  return mList.HitTest(aBuilder, aPt, aState);
+}
+
+void nsDisplaySVGEffects::Paint(nsDisplayListBuilder* aBuilder,
+                                nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+{
+  nsSVGIntegrationUtils::PaintFramesWithEffects(aCtx,
+          mEffectsFrame, aDirtyRect, aBuilder, &mList);
+}
+
+PRBool nsDisplaySVGEffects::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
+                                               nsRegion* aVisibleRegion) {
+  nsRegion vis;
+  vis.And(*aVisibleRegion, GetBounds(aBuilder));
+  nsPoint offset = aBuilder->ToReferenceFrame(mEffectsFrame);
+  nsRect dirtyRect = nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(mEffectsFrame,
+       vis.GetBounds() - offset) + offset;
+
+  // Our children may be translucent so we should not allow them to subtract
+  // area from aVisibleRegion.
+  nsRegion childrenVisibleRegion(dirtyRect);
+  nsDisplayWrapList::OptimizeVisibility(aBuilder, &childrenVisibleRegion);
+  return !vis.IsEmpty();
+}
+
+PRBool nsDisplaySVGEffects::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
+{
+  if (aItem->GetType() != TYPE_SVG_EFFECTS)
+    return PR_FALSE;
+  // items for the same content element should be merged into a single
+  // compositing group
+  // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplaySVGEffects
+  if (aItem->GetUnderlyingFrame()->GetContent() != mFrame->GetContent())
+    return PR_FALSE;
+  nsDisplaySVGEffects* other = static_cast<nsDisplaySVGEffects*>(aItem);
+  mList.AppendToBottom(&other->mList);
+  mBounds.UnionRect(mBounds,
+    other->mBounds + other->mEffectsFrame->GetOffsetTo(mEffectsFrame));
+  return PR_TRUE;
+}
+#endif

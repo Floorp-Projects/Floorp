@@ -1,0 +1,17 @@
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.documentElement.style.MozBinding = "url('#none')";
+  document.body.offsetHeight;
+  document.removeChild(document.documentElement) 
+  document.appendChild(document.createElement("div"));
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

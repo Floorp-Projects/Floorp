@@ -46,6 +46,7 @@
 
 #include "gfxTypes.h"
 #include "gfxASurface.h"
+#include "gfxColor.h"
 
 #ifdef XP_OS2
 #undef OS2EMX_PLAIN_CHAR
@@ -236,6 +237,13 @@ public:
      * See bug 444014 for details.
      */
     static int GetRenderingIntent();
+
+    /**
+     * Convert a pixel using a cms transform in an endian-aware manner.
+     *
+     * Sets 'out' to 'in' if transform is NULL.
+     */
+    static void TransformPixel(const gfxRGBA& in, gfxRGBA& out, cmsHTRANSFORM transform);
 
     /**
      * Return the output device ICC profile.

@@ -86,11 +86,11 @@ public:
     FontEntry *FindFontEntry(const nsAString& aFamilyName, const gfxFontStyle& aFontStyle);
 #endif
 
-    static PRInt32 DPI() {
-        if (sDPI == -1) {
+    static double DPI() {
+        if (sDPI < 0.0) {
             InitDPI();
         }
-        NS_ASSERTION(sDPI > 0, "Something is wrong");
+        NS_ASSERTION(sDPI > 0.0, "Something is wrong");
         return sDPI;
     }
 
@@ -105,7 +105,7 @@ public:
 protected:
     static void InitDPI();
 
-    static PRInt32 sDPI;
+    static double sDPI;
     static gfxFontconfigUtils *sFontconfigUtils;
 
 private:

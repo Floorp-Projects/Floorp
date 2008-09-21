@@ -74,7 +74,7 @@ SOFTWARE.
 /*
  * Standard integers
  */
-#if defined (_SVR4) || defined (SVR4) || defined (__OpenBSD__) || defined (_sgi)
+#if defined (_SVR4) || defined (SVR4) || defined (__OpenBSD__) || defined (_sgi) || defined (__sun) || defined (sun)
 #  include <inttypes.h>
 #elif defined (_MSC_VER)
 typedef __int8 int8_t;

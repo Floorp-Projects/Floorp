@@ -5195,12 +5195,11 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGFEImageElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGFEImageElementBase::)
 
-  // nsSVGElement
-  virtual void DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-
   // nsIContent
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
@@ -5317,6 +5316,22 @@ nsSVGFEImageElement::LoadSVGImage(PRBool aForce, PRBool aNotify)
 // nsIContent methods:
 
 nsresult
+nsSVGFEImageElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                  const nsAString* aValue, PRBool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_XLink && aName == nsGkAtoms::href) {
+    if (aValue) {
+      LoadSVGImage(PR_TRUE, aNotify);
+    } else {
+      CancelImageRequests(aNotify);
+    }
+  }
+
+  return nsSVGFEImageElementBase::AfterSetAttr(aNamespaceID, aName,
+                                               aValue, aNotify);
+}
+
+nsresult
 nsSVGFEImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
                                 PRBool aCompileEventHandlers)
@@ -5326,11 +5341,13 @@ nsSVGFEImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                     aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Our base URI may have changed; claim that our URI changed, and the
-  // nsImageLoadingContent will decide whether a new image load is warranted.
-  // Note: no need to notify here; since we're just now being bound
-  // we don't have any frames or anything yet.
-  LoadSVGImage(PR_FALSE, PR_FALSE);
+  if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
+    // Our base URI may have changed; claim that our URI changed, and the
+    // nsImageLoadingContent will decide whether a new image load is warranted.
+    // Note: no need to notify here; since we're just now being bound
+    // we don't have any frames or anything yet.
+    LoadSVGImage(PR_FALSE, PR_FALSE);
+  }
 
   return rv;
 }
@@ -5432,16 +5449,6 @@ nsSVGFEImageElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               NS_ARRAY_LENGTH(sStringInfo));
-}
-
-void
-nsSVGFEImageElement::DidChangeString(PRUint8 aAttrEnum, PRBool aDoSetAttr)
-{
-  nsSVGFEImageElementBase::DidChangeString(aAttrEnum, aDoSetAttr);
-
-  if (aAttrEnum == HREF) {
-    LoadSVGImage(PR_TRUE, PR_TRUE);
-  }
 }
 
 //----------------------------------------------------------------------

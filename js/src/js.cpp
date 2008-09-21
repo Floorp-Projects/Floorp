@@ -2917,7 +2917,7 @@ static const char *const shell_help_messages[] = {
 "stats([string ...])      Dump 'arena', 'atom', 'global' stats",
 #endif
 #ifdef TEST_CVTARGS
-"cvtargs(arg1..., arg12)  Test argument formater",
+"cvtargs(arg1..., arg12)  Test argument formatter",
 #endif
 "build()                  Show build date and time",
 "clear([obj])             Clear properties of object",

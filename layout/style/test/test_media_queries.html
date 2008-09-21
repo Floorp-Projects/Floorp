@@ -409,6 +409,19 @@ function run() {
   should_not_apply("(grid: 2)");
   should_not_apply("(grid: -1)");
 
+  // Parsing tests
+  // bug 454227
+  should_apply("(orientation");
+  should_not_apply("not all and (orientation");
+  should_not_apply("(orientation:");
+  should_apply("all,(orientation:");
+  should_not_apply("(orientation:,all");
+  should_apply("not all and (grid");
+  should_not_apply("only all and (grid");
+  should_not_apply("(grid");
+  should_apply("all,(grid");
+  should_not_apply("(grid,all");
+
   SimpleTest.finish();
 }
 

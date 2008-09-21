@@ -1446,9 +1446,13 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
     else
         mJSClass.base.mark = JS_CLASS_TRACE(XPC_WN_Shared_Trace);
 
+    // Equality is a required hook.
     mJSClass.equality = XPC_WN_Equality;
-    mJSClass.outerObject = XPC_WN_OuterObject;
-    mJSClass.innerObject = XPC_WN_InnerObject;
+
+    if(mFlags.WantOuterObject())
+        mJSClass.outerObject = XPC_WN_OuterObject;
+    if(mFlags.WantInnerObject())
+        mJSClass.innerObject = XPC_WN_InnerObject;
 }
 
 /***************************************************************************/

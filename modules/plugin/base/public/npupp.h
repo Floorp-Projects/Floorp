@@ -83,7 +83,7 @@ typedef void (* NP_LOADDS NPP_ShutdownUPP)(void);
 		(*(FUNC))()
 
 /* NPP_New */
-typedef NPError	(* NP_LOADDS NPP_NewUPP)(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved);
+typedef NPError	(* NP_LOADDS NPP_NewUPP)(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved);
 #define NewNPP_NewProc(FUNC)		\
 		((NPP_NewUPP) (FUNC))
 #define CallNPP_NewProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)		\
@@ -104,7 +104,7 @@ typedef NPError	(* NP_LOADDS NPP_SetWindowUPP)(NPP instance, NPWindow* window);
 		(*(FUNC))((ARG1), (ARG2))
 
 /* NPP_NewStream */
-typedef NPError	(* NP_LOADDS NPP_NewStreamUPP)(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype);
+typedef NPError	(* NP_LOADDS NPP_NewStreamUPP)(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype);
 #define NewNPP_NewStreamProc(FUNC)		\
 		((NPP_NewStreamUPP) (FUNC))
 #define CallNPP_NewStreamProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5) \
@@ -118,14 +118,14 @@ typedef NPError	(* NP_LOADDS NPP_DestroyStreamUPP)(NPP instance, NPStream* strea
 		(*(FUNC))((NPParg), (NPStreamPtr), (NPReasonArg))
 
 /* NPP_WriteReady */
-typedef int32 (* NP_LOADDS NPP_WriteReadyUPP)(NPP instance, NPStream* stream);
+typedef int32_t (* NP_LOADDS NPP_WriteReadyUPP)(NPP instance, NPStream* stream);
 #define NewNPP_WriteReadyProc(FUNC)		\
 		((NPP_WriteReadyUPP) (FUNC))
 #define CallNPP_WriteReadyProc(FUNC,  NPParg, NPStreamPtr)		\
 		(*(FUNC))((NPParg), (NPStreamPtr))
 
 /* NPP_Write */
-typedef int32 (* NP_LOADDS NPP_WriteUPP)(NPP instance, NPStream* stream, int32 offset, int32 len, void* buffer);
+typedef int32_t (* NP_LOADDS NPP_WriteUPP)(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer);
 #define NewNPP_WriteProc(FUNC)		\
 		((NPP_WriteUPP) (FUNC))
 #define CallNPP_WriteProc(FUNC,  NPParg, NPStreamPtr, offsetArg, lenArg, bufferPtr)		\
@@ -146,7 +146,7 @@ typedef void (* NP_LOADDS NPP_PrintUPP)(NPP instance, NPPrint* platformPrint);
 		(*(FUNC))((NPParg), (NPPrintArg))
 
 /* NPP_HandleEvent */
-typedef int16 (* NP_LOADDS NPP_HandleEventUPP)(NPP instance, void* event);
+typedef int16_t (* NP_LOADDS NPP_HandleEventUPP)(NPP instance, void* event);
 #define NewNPP_HandleEventProc(FUNC)		\
 		((NPP_HandleEventUPP) (FUNC))
 #define CallNPP_HandleEventProc(FUNC,  NPParg, voidPtr)		\
@@ -200,7 +200,7 @@ typedef NPError	(* NP_LOADDS NPN_GetURLNotifyUPP)(NPP instance, const char* url,
 		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4))
 
 /* NPN_PostUrlNotify */
-typedef NPError (* NP_LOADDS NPN_PostURLNotifyUPP)(NPP instance, const char* url, const char* window, uint32 len, const char* buf, NPBool file, void* notifyData);
+typedef NPError (* NP_LOADDS NPN_PostURLNotifyUPP)(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file, void* notifyData);
 #define NewNPN_PostURLNotifyProc(FUNC)		\
 		((NPN_PostURLNotifyUPP) (FUNC))
 #define CallNPN_PostURLNotifyProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) \
@@ -214,7 +214,7 @@ typedef NPError	(* NP_LOADDS NPN_GetURLUPP)(NPP instance, const char* url, const
 		(*(FUNC))((ARG1), (ARG2), (ARG3))
 
 /* NPN_PostUrl */
-typedef NPError (* NP_LOADDS NPN_PostURLUPP)(NPP instance, const char* url, const char* window, uint32 len, const char* buf, NPBool file);
+typedef NPError (* NP_LOADDS NPN_PostURLUPP)(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file);
 #define NewNPN_PostURLProc(FUNC)		\
 		((NPN_PostURLUPP) (FUNC))
 #define CallNPN_PostURLProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) \
@@ -235,7 +235,7 @@ typedef NPError	(* NP_LOADDS NPN_NewStreamUPP)(NPP instance, NPMIMEType type, co
 		(*(FUNC))((npp), (type), (window), (stream))
 
 /* NPN_Write */
-typedef int32 (* NP_LOADDS NPN_WriteUPP)(NPP instance, NPStream* stream, int32 len, void* buffer);
+typedef int32_t (* NP_LOADDS NPN_WriteUPP)(NPP instance, NPStream* stream, int32_t len, void* buffer);
 #define NewNPN_WriteProc(FUNC)		\
 		((NPN_WriteUPP) (FUNC))
 #define CallNPN_WriteProc(FUNC, npp, stream, len, buffer)		\
@@ -263,7 +263,7 @@ typedef const char*	(* NP_LOADDS NPN_UserAgentUPP)(NPP instance);
                 (*(FUNC))((ARG1))
 
 /* NPN_MemAlloc */
-typedef void* (* NP_LOADDS NPN_MemAllocUPP)(uint32 size);
+typedef void* (* NP_LOADDS NPN_MemAllocUPP)(uint32_t size);
 #define NewNPN_MemAllocProc(FUNC)		\
 		((NPN_MemAllocUPP) (FUNC))
 #define CallNPN_MemAllocProc(FUNC, ARG1)		\
@@ -277,7 +277,7 @@ typedef void (* NP_LOADDS NPN_MemFreeUPP)(void* ptr);
 		(*(FUNC))((ARG1))	
 
 /* NPN_MemFlush */
-typedef uint32 (* NP_LOADDS NPN_MemFlushUPP)(uint32 size);
+typedef uint32_t (* NP_LOADDS NPN_MemFlushUPP)(uint32_t size);
 #define NewNPN_MemFlushProc(FUNC)		\
 		((NPN_MemFlushUPP) (FUNC))
 #define CallNPN_MemFlushProc(FUNC, ARG1)		\
@@ -508,8 +508,8 @@ typedef bool (* NP_LOADDS NPN_ConstructUPP)(NPP npp, NPObject* obj, const NPVari
  *******************************************************************************************/
 
 typedef struct _NPPluginFuncs {
-    uint16 size;
-    uint16 version;
+    uint16_t size;
+    uint16_t version;
     NPP_NewUPP newp;
     NPP_DestroyUPP destroy;
     NPP_SetWindowUPP setwindow;
@@ -530,8 +530,8 @@ typedef struct _NPPluginFuncs {
 } NPPluginFuncs;
 
 typedef struct _NPNetscapeFuncs {
-    uint16 size;
-    uint16 version;
+    uint16_t size;
+    uint16_t version;
     NPN_GetURLUPP geturl;
     NPN_PostURLUPP posturl;
     NPN_RequestReadUPP requestread;

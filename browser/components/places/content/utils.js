@@ -24,6 +24,7 @@
  *   Asaf Romano <mano@mozilla.com>
  *   Sungjoon Steve Won <stevewon@gmail.com>
  *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -377,10 +378,12 @@ var PlacesUIUtils = {
         return this.ptm.moveItem(data.id, container, index);
         break;
       default:
-        if (type == PlacesUtils.TYPE_X_MOZ_URL || type == PlacesUtils.TYPE_UNICODE) {
-          var title = (type == PlacesUtils.TYPE_X_MOZ_URL) ? data.title : data.uri;
-          return this.ptm.createItem(PlacesUtils._uri(data.uri), container, index,
-                                     title);
+        if (type == PlacesUtils.TYPE_X_MOZ_URL ||
+            type == PlacesUtils.TYPE_UNICODE) {
+          var title = (type == PlacesUtils.TYPE_X_MOZ_URL) ? data.title :
+                                                             data.uri;
+          return this.ptm.createItem(PlacesUtils._uri(data.uri),
+                                     container, index, title);
         }
     }
     return null;
@@ -1035,50 +1038,44 @@ var PlacesUIUtils = {
   },
 
   cleanPlacesPopup: function PU_cleanPlacesPopup(aPopup) {
-    // Find static menuitems at the start and at the end of the menupopup,
-    // marked by builder="start" and builder="end" attributes, and set
-    // markers to keep track of their indices.
+    // Remove places popup children and update markers to keep track of
+    // their indices.
+    var start = aPopup._startMarker != -1 ? aPopup._startMarker + 1 : 0;
+    var end = aPopup._endMarker != -1 ? aPopup._endMarker :
+                                        aPopup.childNodes.length;
     var items = [];
-    aPopup._startMarker = -1;
-    aPopup._endMarker = -1;
-    for (var i = 0; i < aPopup.childNodes.length; ++i) {
+    var placesNodeFound = false;
+    for (var i = start; i < end; ++i) {
       var item = aPopup.childNodes[i];
-      if (item.getAttribute("builder") == "start") {
-        aPopup._startMarker = i;
-        continue;
-      }
       if (item.getAttribute("builder") == "end") {
+        // we need to do this for menus that have static content at the end but
+        // are initially empty, eg. the history menu, we need to know where to
+        // start inserting new items.
         aPopup._endMarker = i;
-        continue;
+        break;
       }
-      if ((aPopup._startMarker != -1) && (aPopup._endMarker == -1))
+      if (item.node) {
         items.push(item);
-    }
-
-    // If static items at the beginning were found, remove all items between
-    // them and the static content at the end.
-    for (var i = 0; i < items.length; ++i) {
-      // skip the empty menu item
-      if (aPopup._emptyMenuItem != items[i]) {
-        aPopup.removeChild(items[i]);
-        if (aPopup._endMarker > 0)
-          --aPopup._endMarker;
+        placesNodeFound = true;
       }
-    }
-
-    // If no static items were found at the beginning, remove all items before
-    // the static items at the end.
-    if (aPopup._startMarker == -1) {
-      var end = aPopup._endMarker == -1 ?
-                aPopup.childNodes.length - 1 : aPopup._endMarker - 1;
-      for (var i = end; i >= 0; i--) {
-        // skip the empty menu item
-        if (aPopup._emptyMenuItem != aPopup.childNodes[i]) {
-          aPopup.removeChild(aPopup.childNodes[i]);
-          if (aPopup._endMarker > 0)
-            --aPopup._endMarker;
+      else {
+        // This is static content...
+        if (!placesNodeFound)
+          // ...at the start of the popup
+          // Initialized in menu.xml, in the base binding
+          aPopup._startMarker++;
+        else {
+          // ...after places nodes
+          aPopup._endMarker = i;
+          break;
         }
       }
+    }
+
+    for (var i = 0; i < items.length; ++i) {
+      aPopup.removeChild(items[i]);
+      if (aPopup._endMarker != -1)
+        aPopup._endMarker--;
     }
   },
 
@@ -1232,13 +1229,3 @@ var PlacesUIUtils = {
     return this.allBookmarksFolderId = this.leftPaneQueries["AllBookmarks"];
   }
 };
-
-PlacesUIUtils.placesFlavors = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
-                             PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
-                             PlacesUtils.TYPE_X_MOZ_PLACE];
-
-PlacesUIUtils.GENERIC_VIEW_DROP_TYPES = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
-                                       PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
-                                       PlacesUtils.TYPE_X_MOZ_PLACE,
-                                       PlacesUtils.TYPE_X_MOZ_URL,
-                                       PlacesUtils.TYPE_UNICODE];

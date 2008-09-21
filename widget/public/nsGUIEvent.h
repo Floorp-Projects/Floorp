@@ -42,6 +42,7 @@
 
 #include "nsPoint.h"
 #include "nsRect.h"
+#include "nsRegion.h"
 #include "nsEvent.h"
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"
@@ -101,6 +102,7 @@ class nsHashKey;
 #define NS_MEDIA_EVENT                    34
 #endif // MOZ_MEDIA
 #define NS_DRAG_EVENT                     35
+#define NS_NOTIFYPAINT_EVENT              36
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -271,6 +273,7 @@ class nsHashKey;
 // Scroll events
 #define NS_MOUSE_SCROLL_START         1600
 #define NS_MOUSE_SCROLL               (NS_MOUSE_SCROLL_START)
+#define NS_MOUSE_PIXEL_SCROLL         (NS_MOUSE_SCROLL_START + 1)
 
 #define NS_SCROLLPORT_START           1700
 #define NS_SCROLLPORT_UNDERFLOW       (NS_SCROLLPORT_START)
@@ -374,6 +377,10 @@ class nsHashKey;
 #define NS_MEDIA_ABORT         (NS_MEDIA_EVENT_START+20)
 #define NS_MEDIA_ERROR         (NS_MEDIA_EVENT_START+21)
 #endif // MOZ_MEDIA
+
+// paint notification events
+#define NS_NOTIFYPAINT_START    3400
+#define NS_AFTERPAINT           (NS_NOTIFYPAINT_START)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -849,6 +856,43 @@ public:
   nsTextEventReply theReply;
 };
 
+/* Mouse Scroll Events: Line Scrolling, Pixel Scrolling and Common Event Flows
+ *
+ * There are two common event flows:
+ *  (1) Normal line scrolling:
+ *      1. An NS_MOUSE_SCROLL event without kHasPixels is dispatched to Gecko.
+ *      2. A DOMMouseScroll event is sent into the DOM.
+ *      3. A MozMousePixelScroll event is sent into the DOM.
+ *      4. If neither event has been consumed, the default handling of the
+ *         NS_MOUSE_SCROLL event is executed.
+ *
+ *  (2) Pixel scrolling:
+ *      1. An NS_MOUSE_SCROLL event with kHasPixels is dispatched to Gecko.
+ *      2. A DOMMouseScroll event is sent into the DOM.
+ *      3. No scrolling takes place in the default handler.
+ *      4. An NS_MOUSE_PIXEL_SCROLL event is dispatched to Gecko.
+ *      5. A MozMousePixelScroll event is sent into the DOM.
+ *      6. If neither the NS_MOUSE_PIXELSCROLL event nor the preceding
+ *         NS_MOUSE_SCROLL event have been consumed, the default handler scrolls.
+ *      7. Steps 4.-6. are repeated for every pixel scroll that belongs to
+ *         the announced line scroll. Once enough pixels have been sent to
+ *         complete a line, a new NS_MOUSE_SCROLL event is sent (goto step 1.).
+ *
+ * If a DOMMouseScroll event has been preventDefaulted, the associated
+ * following MozMousePixelScroll events are still sent - they just don't result
+ * in any scrolling (their default handler isn't executed).
+ *
+ * How many pixel scrolls make up one line scroll is decided in the widget layer
+ * where the NS_MOUSE(_PIXEL)_SCROLL events are created.
+ *
+ * This event flow model satisfies several requirements:
+ *  - DOMMouseScroll handlers don't need to be aware of the existence of pixel
+ *    scrolling.
+ *  - preventDefault on a DOMMouseScroll event results in no scrolling.
+ *  - DOMMouseScroll events aren't polluted with a kHasPixels flag.
+ *  - You can make use of pixel scroll DOM events (MozMousePixelScroll).
+ */
+
 class nsMouseScrollEvent : public nsMouseEvent_base
 {
 public:
@@ -856,7 +900,15 @@ public:
     kIsFullPage =   1 << 0,
     kIsVertical =   1 << 1,
     kIsHorizontal = 1 << 2,
-    kIsPixels =     1 << 3
+    kHasPixels =    1 << 3  // Marks line scroll events that are provided as
+                            // a fallback for pixel scroll events.
+                            // These scroll events are used by things that can't
+                            // be scrolled pixel-wise, like trees. You should
+                            // ignore them when processing pixel scroll events
+                            // to avoid double-processing the same scroll gesture.
+                            // When kHasPixels is set, the event is guaranteed to
+                            // be followed up by an event that contains pixel
+                            // scrolling information.
   };
 
   nsMouseScrollEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
@@ -1020,6 +1072,23 @@ public:
   }
 
   PRInt32 detail;
+};
+
+/**
+ * NotifyPaint event
+ */
+class nsNotifyPaintEvent : public nsEvent
+{
+public:
+  nsNotifyPaintEvent(PRBool isTrusted, PRUint32 msg,
+                     const nsRegion& aSameDocRegion, const nsRegion& aCrossDocRegion)
+    : nsEvent(isTrusted, msg, NS_NOTIFYPAINT_EVENT),
+      sameDocRegion(aSameDocRegion), crossDocRegion(aCrossDocRegion)
+  {
+  }
+
+  nsRegion sameDocRegion;
+  nsRegion crossDocRegion;
 };
 
 /**

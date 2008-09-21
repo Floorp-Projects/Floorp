@@ -67,6 +67,7 @@ class nsIXPConnect;
 class nsINode;
 class nsIContent;
 class nsIDOMNode;
+class nsIDOMKeyEvent;
 class nsIDocument;
 class nsIDocShell;
 class nsINameSpaceManager;
@@ -692,8 +693,9 @@ public:
   {
     nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
 
-    return niMgr->GetNodeInfo(aName, aNodeInfo->GetPrefixAtom(),
-                              aNodeInfo->NamespaceID(), aResult);
+    *aResult = niMgr->GetNodeInfo(aName, aNodeInfo->GetPrefixAtom(),
+                                  aNodeInfo->NamespaceID()).get();
+    return *aResult ? NS_OK : NS_ERROR_FAILURE;
   }
 
   /**
@@ -705,8 +707,9 @@ public:
   {
     nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
 
-    return niMgr->GetNodeInfo(aNodeInfo->NameAtom(), aPrefix,
-                              aNodeInfo->NamespaceID(), aResult);
+    *aResult = niMgr->GetNodeInfo(aNodeInfo->NameAtom(), aPrefix,
+                                  aNodeInfo->NamespaceID()).get();
+    return *aResult ? NS_OK : NS_ERROR_FAILURE;
   }
 
   /**
@@ -1188,19 +1191,19 @@ public:
                                          PRBool aGetCharCode);
 
   /**
-   * Get the candidates for accelkeys for aDOMEvent.
+   * Get the candidates for accelkeys for aDOMKeyEvent.
    *
-   * @param aDOMEvent [in] the input event for accelkey handling.
+   * @param aDOMKeyEvent [in] the key event for accelkey handling.
    * @param aCandidates [out] the candidate shortcut key combination list.
    *                          the first item is most preferred.
    */
-  static void GetAccelKeyCandidates(nsIDOMEvent* aDOMEvent,
+  static void GetAccelKeyCandidates(nsIDOMKeyEvent* aDOMKeyEvent,
                                     nsTArray<nsShortcutCandidate>& aCandidates);
 
   /**
-   * Get the candidates for accesskeys for aDOMEvent.
+   * Get the candidates for accesskeys for aNativeKeyEvent.
    *
-   * @param aNativeKeyEvent [in] the input event for accesskey handling.
+   * @param aNativeKeyEvent [in] the key event for accesskey handling.
    * @param aCandidates [out] the candidate access key list.
    *                          the first item is most preferred.
    */

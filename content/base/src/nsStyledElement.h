@@ -67,7 +67,7 @@ public:
   // nsIContent interface methods for styling
   virtual nsIAtom* GetClassAttributeName() const;
   virtual nsIAtom* GetIDAttributeName() const;
-  virtual const nsAttrValue* GetClasses() const;
+  virtual const nsAttrValue* DoGetClasses() const;
 
   virtual nsICSSStyleRule* GetInlineStyleRule();
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);

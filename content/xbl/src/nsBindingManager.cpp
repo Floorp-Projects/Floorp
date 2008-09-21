@@ -92,16 +92,20 @@
   { 0xa29df1f8, 0xaeca, 0x4356, \
     { 0xa8, 0xc2, 0xa7, 0x24, 0xa2, 0x11, 0x73, 0xac } }
 
-class nsAnonymousContentList : public nsIDOMNodeList
+class nsAnonymousContentList : public nsIDOMNodeList,
+                               public nsINodeList
 {
 public:
   nsAnonymousContentList(nsInsertionPointList* aElements);
   virtual ~nsAnonymousContentList();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsAnonymousContentList)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsAnonymousContentList, nsIDOMNodeList)
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
+
+  // nsINodeList interface
+  virtual nsINode* GetNodeAt(PRUint32 aIndex);
 
   PRInt32 GetInsertionPointCount() { return mElements->Length(); }
 
@@ -136,9 +140,12 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsAnonymousContentList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAnonymousContentList)
 
 NS_INTERFACE_MAP_BEGIN(nsAnonymousContentList)
+  NS_INTERFACE_MAP_ENTRY(nsINodeList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
-  NS_INTERFACE_MAP_ENTRY(nsAnonymousContentList)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  if (aIID.Equals(NS_GET_IID(nsAnonymousContentList)))
+    foundInterface = static_cast<nsIDOMNodeList*>(this);
+  else
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsAnonymousContentList)
 NS_INTERFACE_MAP_END
@@ -173,6 +180,16 @@ nsAnonymousContentList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP    
 nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
+  nsINode* item = GetNodeAt(aIndex);
+  if (!item)
+    return NS_ERROR_FAILURE;
+
+  return CallQueryInterface(item, aReturn);    
+}
+
+nsINode*
+nsAnonymousContentList::GetNodeAt(PRUint32 aIndex)
+{
   PRInt32 cnt = mElements->Length();
   PRUint32 pointCount = 0;
 
@@ -183,14 +200,11 @@ nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     pointCount = point->ChildCount();
 
     if (aIndex < pointCount) {
-      nsCOMPtr<nsIContent> result = point->ChildAt(aIndex);
-      if (result)
-        return CallQueryInterface(result, aReturn);
-      return NS_ERROR_FAILURE;
+      return point->ChildAt(aIndex);
     }
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 //
@@ -444,7 +458,10 @@ PR_CALLBACK RemoveInsertionParentCB(PLDHashTable* aTable, PLDHashEntryHdr* aEntr
 static void
 RemoveInsertionParentForNodeList(nsIDOMNodeList* aList, nsIContent* aParent)
 {
-  nsCOMPtr<nsAnonymousContentList> list = do_QueryInterface(aList);
+  nsAnonymousContentList* list = nsnull;
+  if (aList) {
+    CallQueryInterface(aList, &list);
+  }
   if (list) {
     PRInt32 count = list->GetInsertionPointCount();
     for (PRInt32 i = 0; i < count; ++i) {
@@ -456,6 +473,7 @@ RemoveInsertionParentForNodeList(nsIDOMNodeList* aList, nsIContent* aParent)
 #endif
       currPoint->ClearInsertionParent();
     }
+    NS_RELEASE(list);
   }
 }
 
@@ -1509,8 +1527,9 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
     // aChild from the pseudo insertion point it's in.
     if (mContentListTable.ops) {
       nsAnonymousContentList* insertionPointList =
-        static_cast<nsAnonymousContentList*>(LookupObject(mContentListTable,
-                                                          aContainer));
+        static_cast<nsAnonymousContentList*>(
+          static_cast<nsIDOMNodeList*>(LookupObject(mContentListTable,
+                                                    aContainer)));
       if (insertionPointList) {
         RemoveChildFromInsertionPoint(insertionPointList, aChild, PR_TRUE);
       }

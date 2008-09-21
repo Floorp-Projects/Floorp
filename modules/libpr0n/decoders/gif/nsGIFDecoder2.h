@@ -78,8 +78,8 @@ private:
   void      EndGIF();
   void      BeginImageFrame(gfx_depth aDepth);
   void      EndImageFrame();
-  void      FlushImageData();
-  void      FlushImageData(PRUint32 fromRow, PRUint32 rows);
+  nsresult  FlushImageData();
+  nsresult  FlushImageData(PRUint32 fromRow, PRUint32 rows);
 
   nsresult  GifWrite(const PRUint8 * buf, PRUint32 numbytes);
   PRUint32  OutputRow();

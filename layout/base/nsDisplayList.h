@@ -53,7 +53,6 @@
 #include "nsCaret.h"
 #include "plarena.h"
 #include "nsLayoutUtils.h"
-#include "nsTArray.h"
 
 #include <stdlib.h>
 
@@ -207,7 +206,7 @@ public:
    * aFrame->GetOffsetTo(ReferenceFrame()). It may be optimized to be faster
    * than aFrame->GetOffsetTo(ReferenceFrame()) (but currently isn't).
    */
-  nsPoint ToReferenceFrame(nsIFrame* aFrame) {
+  nsPoint ToReferenceFrame(const nsIFrame* aFrame) {
     return aFrame->GetOffsetTo(ReferenceFrame());
   }
   /**
@@ -392,7 +391,11 @@ public:
     TYPE_OUTLINE,
     TYPE_CLIP,
     TYPE_OPACITY,
-    TYPE_WRAPLIST
+#ifdef MOZ_SVG
+    TYPE_SVG_EFFECTS,
+#endif
+    TYPE_WRAPLIST,
+    TYPE_TRANSFORM
   };
 
   struct HitTestState {
@@ -694,6 +697,10 @@ public:
    */
   void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
              const nsRect& aDirtyRect) const;
+  /**
+   * Get the bounds. Takes the union of the bounds of all children.
+   */
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder) const;
   /**
    * Find the topmost display item that returns a non-null frame, and return
    * the frame.
@@ -1250,6 +1257,152 @@ private:
   // content.
   nsIFrame* mClippingFrame;
   nsRect    mClip;
+};
+
+#ifdef MOZ_SVG
+/**
+ * A display item to paint a stacking context with effects
+ * set by the stacking context root frame's style.
+ */
+class nsDisplaySVGEffects : public nsDisplayWrapList {
+public:
+  nsDisplaySVGEffects(nsIFrame* aFrame, nsDisplayList* aList);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySVGEffects();
+#endif
+  
+  virtual Type GetType() { return TYPE_SVG_EFFECTS; }
+  virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
+  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
+                            HitTestState* aState);
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
+    return mBounds + aBuilder->ToReferenceFrame(mEffectsFrame);
+  }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect);
+  virtual PRBool OptimizeVisibility(nsDisplayListBuilder* aBuilder,
+                                    nsRegion* aVisibleRegion);  
+  virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
+  NS_DISPLAY_DECL_NAME("SVGEffects")
+
+  nsIFrame* GetEffectsFrame() { return mEffectsFrame; }
+
+private:
+  nsIFrame* mEffectsFrame;
+  // relative to mEffectsFrame
+  nsRect    mBounds;
+};
+#endif
+
+/* A display item that applies a transformation to all of its descendent
+ * elements.  This wrapper should only be used if there is a transform applied
+ * to the root element.
+ * INVARIANT: The wrapped frame is transformed.
+ * INVARIANT: The wrapped frame is non-null.
+ */ 
+class nsDisplayTransform: public nsDisplayItem
+{
+public:
+  /* Constructor accepts a display list, empties it, and wraps it up.  It also
+   * ferries the underlying frame to the nsDisplayItem constructor.
+   */
+  nsDisplayTransform(nsIFrame *aFrame, nsDisplayList *aList) :
+    nsDisplayItem(aFrame), mStoredList(aFrame, aList)
+  {
+    MOZ_COUNT_CTOR(nsDisplayTransform);
+  }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayTransform()
+  {
+    MOZ_COUNT_DTOR(nsDisplayTransform);
+  }
+#endif
+
+  NS_DISPLAY_DECL_NAME("nsDisplayTransform");
+
+  virtual Type GetType() 
+  {
+    return TYPE_TRANSFORM;
+  }
+
+  virtual nsIFrame* HitTest(nsDisplayListBuilder *aBuilder, nsPoint aPt,
+                            HitTestState *aState);
+  virtual nsRect GetBounds(nsDisplayListBuilder *aBuilder);
+  virtual PRBool IsOpaque(nsDisplayListBuilder *aBuilder);
+  virtual PRBool IsUniform(nsDisplayListBuilder *aBuilder);
+  virtual void   Paint(nsDisplayListBuilder *aBuilder,
+                       nsIRenderingContext *aCtx,
+                       const nsRect &aDirtyRect);
+  virtual PRBool OptimizeVisibility(nsDisplayListBuilder *aBuilder,
+                                    nsRegion *aVisibleRegion);
+  virtual PRBool TryMerge(nsDisplayListBuilder *aBuilder, nsDisplayItem *aItem);
+
+  /**
+   * TransformRect takes in as parameters a rectangle (in aFrame's coordinate
+   * space) and returns the smallest rectangle (in aFrame's coordinate space)
+   * containing the transformed image of that rectangle.  That is, it takes
+   * the four corners of the rectangle, transforms them according to the
+   * matrix associated with the specified frame, then returns the smallest
+   * rectangle containing the four transformed points.
+   *
+   * @param untransformedBounds The rectangle (in app units) to transform.
+   * @param aFrame The frame whose transformation should be applied.  This
+   *        function raises an assertion if aFrame is null or doesn't have a
+   *        transform applied to it.
+   * @param aOrigin The origin of the transform relative to aFrame's local
+   *        coordinate space.
+   * @param aBoundsOverride (optional) Rather than using the frame's computed
+   *        bounding rect as frame bounds, use this rectangle instead.  Pass
+   *        nsnull (or nothing at all) to use the default.
+   */
+  static nsRect TransformRect(const nsRect &aUntransformedBounds, 
+                              const nsIFrame* aFrame,
+                              const nsPoint &aOrigin,
+                              const nsRect* aBoundsOverride = nsnull);
+
+  /* UntransformRect is like TransformRect, except that it inverts the
+   * transform.
+   */
+  static nsRect UntransformRect(const nsRect &aUntransformedBounds, 
+                                const nsIFrame* aFrame,
+                                const nsPoint &aOrigin);
+
+  /**
+   * Returns the bounds of a frame as defined for transforms.  If
+   * UNIFIED_CONTINUATIONS is not defined, this is simply the frame's bounding
+   * rectangle, translated to the origin.  Otherwise, returns the smallest
+   * rectangle containing a frame and all of its continuations.  For example,
+   * if there is a <span> element with several continuations split over
+   * several lines, this function will return the rectangle containing all of
+   * those continuations.  This rectangle is relative to the origin of the
+   * frame's local coordinate space.
+   *
+   * @param aFrame The frame to get the bounding rect for.
+   * @return The frame's bounding rect, as described above.
+   */
+  static nsRect GetFrameBoundsForTransform(const nsIFrame* aFrame);
+
+  /**
+   * Given a frame with the -moz-transform property, returns the
+   * transformation matrix for that frame.
+   *
+   * @param aFrame The frame to get the matrix from.
+   * @param aOrigin Relative to which point this transform should be applied.
+   * @param aScaleFactor The number of app units per graphics unit.
+   * @param aBoundsOverride [optional] If this is nsnull (the default), the
+   *        computation will use the value of GetFrameBoundsForTransform(aFrame)
+   *        for the frame's bounding rectangle. Otherwise, it will use the
+   *        value of aBoundsOverride.  This is mostly for internal use and in
+   *        most cases you will not need to specify a value.
+   */
+  static gfxMatrix GetResultingTransformMatrix(const nsIFrame* aFrame,
+                                               const nsPoint& aOrigin,
+                                               float aFactor,
+                                               const nsRect* aBoundsOverride = nsnull);
+
+private:
+  nsDisplayWrapList mStoredList;
 };
 
 #endif /*NSDISPLAYLIST_H_*/
