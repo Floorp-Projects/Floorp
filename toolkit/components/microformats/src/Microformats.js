@@ -439,6 +439,15 @@ var Microformats = {
       if (Microformats.matchClass(propnode, "value")) {
         return Microformats.parser.textGetter(parentnode, parentnode);
       } else {
+        /* Virtual case */
+        if (!parentnode && (Microformats.getElementsByClassName(propnode, "type").length > 0)) {
+          var tempNode = propnode.cloneNode(true);
+          var typeNodes = Microformats.getElementsByClassName(tempNode, "type");
+          for (let i=0; i < typeNodes.length; i++) {
+            typeNodes[i].parentNode.removeChild(typeNodes[i]);
+          }
+          return Microformats.parser.textGetter(tempNode);
+        }
         return Microformats.parser.textGetter(propnode, parentnode);
       }
     },
@@ -469,6 +478,15 @@ var Microformats = {
         if (Microformats.matchClass(propnode, "value")) {
           return Microformats.parser.textGetter(parentnode, parentnode);
         } else {
+          /* Virtual case */
+          if (!parentnode && (Microformats.getElementsByClassName(propnode, "type").length > 0)) {
+            var tempNode = propnode.cloneNode(true);
+            var typeNodes = Microformats.getElementsByClassName(tempNode, "type");
+            for (let i=0; i < typeNodes.length; i++) {
+              typeNodes[i].parentNode.removeChild(typeNodes[i]);
+            }
+            return Microformats.parser.textGetter(tempNode);
+          }
           return Microformats.parser.textGetter(propnode, parentnode);
         }
       }
@@ -524,9 +542,6 @@ var Microformats = {
     datatypeHelper: function(prop, node, parentnode) {
       var result;
       var datatype = prop.datatype;
-      if (prop.implied) {
-        datatype = prop.subproperties[prop.implied].datatype;
-      }
       switch (datatype) {
         case "dateTime":
           result = Microformats.parser.dateTimeGetter(node, parentnode);
@@ -571,15 +586,11 @@ var Microformats = {
       }
       /* This handles the case where one property implies another property */
       /* For instance, org by itself is actually org.organization-name */
-      if (prop.implied && (result != undefined)) {
-        var temp = result;
-        result = {};
-        result[prop.implied] = temp;
-      }
       if (prop.values && (result != undefined)) {
         var validType = false;
         for (let value in prop.values) {
           if (result.toLowerCase() == prop.values[value]) {
+            result = result.toLowerCase();
             validType = true;
             break;
           }
@@ -683,8 +694,6 @@ var Microformats = {
           } else {
             result = Microformats.parser.datatypeHelper(propobj, propnode);
           }
-        } else if (propobj.implied) {
-          result = Microformats.parser.datatypeHelper(propobj, propnode);
         }
       } else if (!result) {
         result = Microformats.parser.datatypeHelper(propobj, propnode, parentnode);
@@ -1357,13 +1366,13 @@ var hCard_definition = {
     "org" : {
       subproperties: {
         "organization-name" : {
+          virtual: true
         },
         "organization-unit" : {
           plural: true
         }
       },
-      plural: true,
-      implied: "organization-name"
+      plural: true
     },
     "photo" : {
       plural: true,
@@ -1392,11 +1401,11 @@ var hCard_definition = {
           values: ["msg", "home", "work", "pref", "voice", "fax", "cell", "video", "pager", "bbs", "car", "isdn", "pcs"]
         },
         "value" : {
-          datatype: "tel"
+          datatype: "tel",
+          virtual: true
         }
       },
-      plural: true,
-      implied: "value"
+      plural: true
     },
     "tz" : {
     },
