@@ -478,9 +478,6 @@ msFromTime(jsdouble t)
  * We use the first reseved slot to store UTC time, and the second for caching
  * the local time. The initial value of the cache entry is NaN.
  */
-const uint32 JSSLOT_UTC_TIME    = JSSLOT_PRIVATE;
-const uint32 JSSLOT_LOCAL_TIME  = JSSLOT_PRIVATE + 1;
-
 const uint32 DATE_RESERVED_SLOTS = 2;
 
 JSClass js_DateClass = {
@@ -912,18 +909,10 @@ date_parse(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, result, vp);
 }
 
-static JSBool
-date_now(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_date_now(JSContext *cx, uintN argc, jsval *vp)
 {
-    int64 us, ms, us2ms;
-    jsdouble msec_time;
-
-    us = PRMJ_Now();
-    JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
-    JSLL_DIV(ms, us, us2ms);
-    JSLL_L2D(msec_time, ms);
-
-    return js_NewDoubleInRootedValue(cx, msec_time, vp);
+    return js_NewDoubleInRootedValue(cx, PRMJ_Now() / PRMJ_USEC_PER_MSEC, vp);
 }
 
 /*
@@ -1966,7 +1955,7 @@ date_valueOf(JSContext *cx, uintN argc, jsval *vp)
 static JSFunctionSpec date_static_methods[] = {
     JS_FN("UTC",                 date_UTC,                MAXARGS,0),
     JS_FN("parse",               date_parse,              1,0),
-    JS_FN("now",                 date_now,                0,0),
+    JS_FN("now",                 js_date_now,                0,0),
     JS_FS_END
 };
 
@@ -2035,8 +2024,8 @@ date_constructor(JSContext *cx, JSObject* obj)
     return date;
 }
 
-static JSBool
-Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+JSBool
+js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsdouble *date;
     JSString *str;
@@ -2044,35 +2033,16 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Date called as function. */
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
-        int64 us, ms, us2ms;
-        jsdouble msec_time;
-
-        /* NSPR 2.0 docs say 'We do not support PRMJ_NowMS and PRMJ_NowS',
-         * so compute ms from PRMJ_Now.
-         */
-        us = PRMJ_Now();
-        JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
-        JSLL_DIV(ms, us, us2ms);
-        JSLL_L2D(msec_time, ms);
-
-        return date_format(cx, msec_time, FORMATSPEC_FULL, rval);
+        return date_format(cx, PRMJ_Now() / PRMJ_USEC_PER_MSEC,
+                           FORMATSPEC_FULL, rval);
     }
 
     /* Date called as constructor. */
     if (argc == 0) {
-        int64 us, ms, us2ms;
-        jsdouble msec_time;
-
         date = date_constructor(cx, obj);
         if (!date)
             return JS_FALSE;
-
-        us = PRMJ_Now();
-        JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
-        JSLL_DIV(ms, us, us2ms);
-        JSLL_L2D(msec_time, ms);
-
-        *date = msec_time;
+        *date = PRMJ_Now() / PRMJ_USEC_PER_MSEC;
     } else if (argc == 1) {
         if (!JSVAL_IS_STRING(argv[0])) {
             /* the argument is a millisecond number */
@@ -2126,7 +2096,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 
     /* set static LocalTZA */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
-    proto = JS_InitClass(cx, obj, NULL, &js_DateClass, Date, MAXARGS,
+    proto = JS_InitClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
                          NULL, date_methods, NULL, date_static_methods);
     if (!proto)
         return NULL;

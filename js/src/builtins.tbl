@@ -142,6 +142,12 @@ BUILTIN5(Array_3num,            LO, LO, F, F, F, P, JSObject*, JSContext*, JSObj
 BUILTIN1(Arguments,             LO,     P,      JSObject*, JSContext*, 0, 0)
 BUILTIN2(imod,                  LO, LO, LO,     jsint,     jsint,      jsint, 1, 1)
 
+// Don't really need an argument here, but we don't support arg-less builtins
+BUILTIN1(Date_now,              LO,     F,      jsdouble, JSContext*, 0, 0)
+BUILTIN2(FastNewDate,           LO, LO, P,      JSObject*, JSContext*, JSObject*, 0, 0)
+// Conversion to number depends on the internal state of the date
+BUILTIN2(DateToNumber,          LO,     LO, F,  jsdouble,  JSContext*, JSObject*, 0, 0)
+
 // soft float
 BUILTIN1(fneg,   F,       F,  jsdouble, jsdouble, 1, 1)
 BUILTIN1(i2f,    LO,      F,  jsdouble, jsint,    1, 1)
