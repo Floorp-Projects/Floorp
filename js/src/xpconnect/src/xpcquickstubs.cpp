@@ -105,7 +105,15 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                        PRUint32 ifacec, const nsIID **interfaces,
                        PRUint32 tableSize, const xpc_qsHashEntry *table)
 {
-    for(uint32 i = 0; i < ifacec; i++)
+    /*
+     * Walk interfaces in reverse order to behave like XPConnect when a
+     * feature is defined in more than one of the interfaces.
+     *
+     * XPCNativeSet::FindMethod returns the first matching feature it finds,
+     * searching the interfaces forward.  Here, definitions toward the
+     * front of 'interfaces' overwrite those toward the back.
+     */
+    for(uint32 i = ifacec; i-- != 0;)
     {
         const nsID &iid = *interfaces[i];
         const xpc_qsHashEntry *entry =

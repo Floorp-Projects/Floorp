@@ -684,7 +684,7 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext,
   thumbFrame->SetRect(newThumbRect);
 
   // Redraw the scrollbar
-  Invalidate(clientRect, aImmediateRedraw);
+  InvalidateWithFlags(clientRect, aImmediateRedraw ? INVALIDATE_IMMEDIATE : 0);
 
   if (mScrollbarListener)
     mScrollbarListener->PositionChanged(aPresContext, mCurPos, curpospx);

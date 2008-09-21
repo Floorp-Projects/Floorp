@@ -146,10 +146,10 @@ nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
   }
 
   nsCOMPtr<nsINodeInfo> newNodeInfo;
-  nsresult rv = aDocument->NodeInfoManager()->
+  newNodeInfo = aDocument->NodeInfoManager()->
     GetNodeInfo(mNodeInfo->NameAtom(), mNodeInfo->GetPrefixAtom(),
-                mNodeInfo->NamespaceID(), getter_AddRefs(newNodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+                mNodeInfo->NamespaceID());
+  NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_FAILURE);
   NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
   mNodeInfo.swap(newNodeInfo);
 

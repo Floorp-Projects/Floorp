@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Ben Goodger <beng@google.com>
 #   Annie Sullivan <annie.sullivan@gmail.com>
+#   Marco Bonardo <mak77@bonardo.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -434,11 +435,10 @@
           // there is no insertion point for history queries
           // so bail out now and save a lot of work when updating commands
           var resultNode = this.getResultNode();
-          if (PlacesUtils.nodeIsQuery(resultNode)) {
-            var options = asQuery(resultNode).queryOptions;
-            if (options.queryType == options.QUERY_TYPE_HISTORY)
+          if (PlacesUtils.nodeIsQuery(resultNode) &&
+              asQuery(resultNode).queryOptions.queryType ==
+                Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY)
               return this._cachedInsertionPoint = null;
-          }
 
           var orientation = Ci.nsITreeView.DROP_BEFORE;
           // If there is no selection, insert at the end of the container. 
@@ -488,18 +488,6 @@
         ]]></getter>
       </property>
 
-      <method name="_disallowInsertion">
-        <parameter name="aContainer"/>
-        <body><![CDATA[
-          // allow dropping into Tag containers
-          if (PlacesUtils.nodeIsTagQuery(aContainer))
-            return false;
-          // Disallow insertion of items under readonly folders
-          return (!PlacesUtils.nodeIsFolder(aContainer) ||
-                   PlacesUtils.nodeIsReadOnly(aContainer));
-        ]]></body>
-      </method>
-
       <method name="_getInsertionPoint">
         <parameter name="index"/>
         <parameter name="orientation"/>
@@ -519,14 +507,13 @@
               container = lastSelected;
               index = -1;
             }
-            else if (!this._disallowInsertion(lastSelected) &&
-                     lastSelected.containerOpen &&
+            else if (lastSelected.containerOpen &&
                      orientation == Ci.nsITreeView.DROP_AFTER &&
                      lastSelected.hasChildren) {
              // If the last selected item is an open container and the user is
              // trying to drag into it as a first item, really insert into it.
              container = lastSelected;
-             orientation = Ci.nsITreeView.DROP_BEFORE;
+             orientation = Ci.nsITreeView.DROP_ON;
              index = 0;
             }
             else {
@@ -537,7 +524,7 @@
 
               // avoid the potentially expensive call to getIndexOfNode() 
               // if we know this container doesn't allow insertion
-              if (this._disallowInsertion(container))
+              if (PlacesControllerDragHelper.disallowInsertion(container))
                 return null;
 
               var queryOptions = asQuery(result.root).queryOptions;
@@ -562,7 +549,7 @@
             }
           }
 
-          if (this._disallowInsertion(container))
+          if (PlacesControllerDragHelper.disallowInsertion(container))
             return null;
 
           return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
@@ -675,14 +662,10 @@
 
       <!-- nsDragAndDrop -->
       <method name="onDragStart">
-        <parameter name="event"/>
-        <parameter name="xferData"/>
-        <parameter name="dragAction"/>
+        <parameter name="aEvent"/>
+        <parameter name="aXferData"/>
+        <parameter name="aDragAction"/>
         <body><![CDATA[ 
-          // Drag and Drop does not work while a tree view is sorted.
-          if (this.getAttribute("sortActive") == "true")
-            throw Cr.NS_OK;
-
           var nodes = this.getSelectionNodes();
           for (var i = 0; i < nodes.length; ++i) {
             var node = nodes[i];
@@ -690,61 +673,83 @@
             // Disallow dragging the root node of a tree
             var parent = node.parent;
             if (!parent)
-              throw Cr.NS_OK;
+              return;
 
-            // If this node is part of a readonly container (e.g. a livemark) it 
-            // cannot be moved, only copied, so we must change the action used
-            // by the drag session.
-            if (PlacesUtils.nodeIsTagQuery(parent) ||
-                !PlacesControllerDragHelper.canMoveContainerNode(node)) {
-              // XXX DOES NOTHING! dragAction doesn't persist
-              dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+            // If this node is child of a readonly container (e.g. a livemark)
+            // or cannot be moved, we must force a copy.
+            if (!PlacesControllerDragHelper.canMoveNode(node)) {
+              aEvent.dataTransfer.effectAllowed = "copyLink";
               break;
             }
           }
- 
-          // XXXben - the drag wrapper should do this automatically.
-          if (event.ctrlKey)
-            dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+
           // Stuff the encoded selection into the transferable data object
-          xferData.data = this._controller.getTransferData(dragAction.action);
+          this._controller.setDataTransfer(aEvent);
         ]]></body>
       </method>
       
       <!-- nsDragAndDrop -->
       <method name="canDrop">
-        <parameter name="event"/>
-        <parameter name="session"/>
-        <body><![CDATA[ 
+        <parameter name="aEvent"/>
+        <parameter name="aDragSession"/>
+        <body><![CDATA[
+          // Cache the dataTransfer for the view
+          PlacesControllerDragHelper.currentDataTransfer = aEvent.dataTransfer;
+
           var row = { }, col = { }, child = { };
-          this.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, 
-                                       child);
-          return this.view.canDrop(row.value, -1);
+          this.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY,
+                                       row, col, child);
+          var node = row.value != -1 ?
+                     this.getResultView().nodeForTreeIndex(row.value) :
+                     this.getResultNode();
+          // cache the dropTarget for the view
+          PlacesControllerDragHelper.currentDropTarget = node;
+
+          // We have to calculate the orientation since view.canDrop will use
+          // it and we want to be consistent with the dropfeedback
+          var tbo = this.treeBoxObject;
+          var rowHeight = tbo.rowHeight;
+          var eventY = aEvent.clientY - tbo.treeBody.boxObject.y -
+                       rowHeight * (row.value - tbo.getFirstVisibleRow());
+
+          var orientation = Ci.nsITreeView.DROP_BEFORE;
+
+          if (row.value == -1) {
+            // If the row is not valid we try to insert inside the resultNode.
+            orientation = Ci.nsITreeView.DROP_ON;
+          }
+          else if (PlacesUtils.nodeIsContainer(node) &&
+                   eventY > rowHeight * 0.75) {
+            // If we are below the 75% of a container the treeview we try
+            // to drop after the node.
+            orientation = Ci.nsITreeView.DROP_AFTER;
+          }
+          else if (PlacesUtils.nodeIsContainer(node) &&
+                   eventY > rowHeight * 0.25) {
+            // If we are below the 25% of a container the treeview we try
+            // to drop inside the node.
+            orientation = Ci.nsITreeView.DROP_ON;
+          }
+
+          return this.view.canDrop(row.value, orientation);
         ]]></body>
       </method>
       
       <!-- nsDragAndDrop -->
       <method name="onDragOver">
-        <parameter name="event"/>
-        <parameter name="flavor"/>
-        <parameter name="session"/>
-        <body><![CDATA[ 
-          var dragService = 
-              Cc["@mozilla.org/widget/dragservice;1"].
-              getService(Ci.nsIDragService);
-          var dragSession = dragService.getCurrentSession();
-          dragSession.canDrop = this.canDrop(event, session);
+        <parameter name="aEvent"/>
+        <parameter name="aFlavour"/>
+        <parameter name="aDragSession"/>
+        <body><![CDATA[      
+          if (!this.canDrop(aEvent, aDragSession))
+            aEvent.dataTransfer.effectAllowed = "none";
         ]]></body>
       </method>
 
       <!-- nsDragAndDrop -->
       <method name="getSupportedFlavours">
         <body><![CDATA[
-          var flavorSet = new FlavourSet();
-          var types = PlacesUIUtils.GENERIC_VIEW_DROP_TYPES;
-          for (var i = 0; i < types.length; ++i)
-            flavorSet.appendFlavour(types[i]);
-          return flavorSet;
+          return PlacesControllerDragHelper.flavourSet;
         ]]></body>
       </method>
 
@@ -782,13 +787,19 @@
         }
       ]]></handler>
       <handler event="draggesture"><![CDATA[
-        // XXXben ew.
         if (event.target.localName == "treechildren")
           nsDragAndDrop.startDrag(event, this);
       ]]></handler>
       <handler event="dragover"><![CDATA[
         if (event.target.localName == "treechildren")
           nsDragAndDrop.dragOver(event, this);
+      ]]></handler>
+      <handler event="drop"><![CDATA[
+          PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
+      ]]></handler>
+      <handler event="dragexit"><![CDATA[
+        PlacesControllerDragHelper.currentDataTransfer = null;
+        PlacesControllerDragHelper.currentDropTarget = null;
       ]]></handler>
     </handlers>
   </binding>

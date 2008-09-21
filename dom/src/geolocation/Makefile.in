@@ -76,9 +76,9 @@ LOCAL_INCLUDES = \
 		-I$(srcdir)/../base \
 		$(NULL)
 
-ifdef NS_OSSO
+ifdef NS_MAEMO_LOCATION
 CPPSRCS		+= MaemoLocationProvider.cpp
-LOCAL_INCLUDES	+= $(MOZ_GTK2_CFLAGS)
+LOCAL_INCLUDES	+= $(MOZ_LOCATION_CFLAGS)
 endif
 
 include $(topsrcdir)/config/rules.mk

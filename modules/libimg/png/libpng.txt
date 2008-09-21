@@ -1,13 +1,17 @@
 libpng.txt - A description on how to use and modify libpng
 
- libpng version 1.2.24 - December 14, 2007
+ libpng version 1.2.31 - August 21, 2008
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
- Copyright (c) 1998-2007 Glenn Randers-Pehrson
+ Copyright (c) 1998-2008 Glenn Randers-Pehrson
  For conditions of distribution and use, see copyright
  notice in png.h.
 
- based on:
+ Based on:
+
+ libpng versions 0.97, January 1998, through 1.2.31 - August 21, 2008
+ Updated and distributed by Glenn Randers-Pehrson
+ Copyright (c) 1998-2008 Glenn Randers-Pehrson
 
  libpng 1.0 beta 6  version 0.96 May 28, 1997
  Updated and distributed by Andreas Dilger
@@ -47,12 +51,14 @@ a W3C Recommendation and as an ISO Standard (ISO/IEC 15948:2003 (E)) at
 The W3C and ISO documents have identical technical content.
 
 The PNG-1.2 specification is available at
-<http://www.libpng.org/pub/png/documents/>
+<http://www.libpng.org/pub/png/documents/>.  It is technically equivalent
+to the PNG specification (second edition) but has some additional material.
 
 The PNG-1.0 specification is available
 as RFC 2083 <http://www.libpng.org/pub/png/documents/> and as a
-W3C Recommendation <http://www.w3.org/TR/REC.png.html>. Some
-additional chunks are described in the special-purpose public chunks
+W3C Recommendation <http://www.w3.org/TR/REC.png.html>.
+
+Some additional chunks are described in the special-purpose public chunks
 documents at <http://www.libpng.org/pub/png/documents/>.
 
 Other information
@@ -260,15 +266,19 @@ input stream. You must supply the function
          png_unknown_chunkp chunk);
     {
        /* The unknown chunk structure contains your
-          chunk data: */
+          chunk data, along with similar data for any other
+          unknown chunks: */
+
            png_byte name[5];
            png_byte *data;
            png_size_t size;
+
        /* Note that libpng has already taken care of
           the CRC handling */
 
-       /* put your code here.  Return one of the
-          following: */
+       /* put your code here.  Search for your chunk in the
+          unknown chunk structure, process it, and return one
+          of the following: */
 
        return (-n); /* chunk had an error */
        return (0); /* did not recognize */
@@ -287,6 +297,11 @@ This names not only the callback function, but also a user pointer that
 you can retrieve with
 
     png_get_user_chunk_ptr(png_ptr);
+
+If you call the png_set_read_user_chunk_fn() function, then all unknown
+chunks will be saved when read, in case your callback function will need
+one or more of them.  This behavior can be changed with the
+png_set_keep_unknown_chunks() function, described below.
 
 At this point, you can set up a callback function that will be
 called after each row has been read, which you can use to control
@@ -332,13 +347,13 @@ Unknown-chunk handling
 Now you get to set the way the library processes unknown chunks in the
 input PNG stream. Both known and unknown chunks will be read.  Normal
 behavior is that known chunks will be parsed into information in
-various info_ptr members; unknown chunks will be discarded. To change
+various info_ptr members while unknown chunks will be discarded. To change
 this, you can call:
 
     png_set_keep_unknown_chunks(png_ptr, keep,
         chunk_list, num_chunks);
-    keep       - 0: do not handle as unknown
-                 1: do not keep
+    keep       - 0: default unknown chunk handling
+                 1: ignore; do not keep
                  2: keep only if safe-to-copy
                  3: keep even if unsafe-to-copy
                You can use these definitions:
@@ -360,6 +375,37 @@ according to the "keep" directive.  If a chunk is named in successive
 instances of png_set_keep_unknown_chunks(), the final instance will
 take precedence.  The IHDR and IEND chunks should not be named in
 chunk_list; if they are, libpng will process them normally anyway.
+
+Here is an example of the usage of png_set_keep_unknown_chunks(),
+where the private "vpAg" chunk will later be processed by a user chunk
+callback function:
+
+    png_byte vpAg[5]={118, 112,  65, 103, (png_byte) '\0'};
+
+    #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
+      png_byte unused_chunks[]=
+      {
+        104,  73,  83,  84, (png_byte) '\0',   /* hIST */
+        105,  84,  88, 116, (png_byte) '\0',   /* iTXt */
+        112,  67,  65,  76, (png_byte) '\0',   /* pCAL */
+        115,  67,  65,  76, (png_byte) '\0',   /* sCAL */
+        115,  80,  76,  84, (png_byte) '\0',   /* sPLT */
+        116,  73,  77,  69, (png_byte) '\0',   /* tIME */
+      };
+    #endif
+
+    ...
+
+    #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
+      /* ignore all unknown chunks: */
+      png_set_keep_unknown_chunks(read_ptr, 1, NULL, 0);
+      /* except for vpAg: */
+      png_set_keep_unknown_chunks(read_ptr, 2, vpAg, 1);
+      /* also ignore unused known chunks: */
+      png_set_keep_unknown_chunks(read_ptr, 1, unused_chunks,
+         (int)sizeof(unused_chunks)/5);
+    #endif
+
 
 The high-level read interface
 
@@ -803,6 +849,7 @@ As of libpng version 1.2.9, png_set_expand_gray_1_2_4_to_8() was
 added.  It expands the sample depth without changing tRNS to alpha.
 At the same time, png_set_gray_1_2_4_to_8() was deprecated, and it
 will be removed from a future version.
+
 
 PNG can have files with 16 bits per channel.  If you only can handle
 8 bits per channel, this will strip the pixels down to 8 bit.
@@ -1743,6 +1790,11 @@ Some of the more important parts of the png_info are:
                      can also be
                      PNG_INTRAPIXEL_DIFFERENCING)
 
+If you call png_set_IHDR(), the call must appear before any of the
+other png_set_*() functions, which might require access to some of
+the IHDR settings.  The remaining png_set_*() functions can be called
+in any order.
+
     png_set_PLTE(png_ptr, info_ptr, palette,
        num_palette);
     palette        - the palette for the file
@@ -2391,6 +2443,9 @@ Your malloc_fn() must return NULL in case of failure.  The png_malloc()
 function will normally call png_error() if it receives a NULL from the
 system memory allocator or from your replacement malloc_fn().
 
+Your free_fn() will never be called with a NULL ptr, since libpng's
+png_free() checks for NULL before calling free_fn().
+
 Input/Output in libpng is done through png_read() and png_write(),
 which currently just call fread() and fwrite().  The FILE * is stored in
 png_struct and is initialized via png_init_io().  If you wish to change
@@ -2796,13 +2851,13 @@ application:
 
 IX. Y2K Compliance in libpng
 
-December 14, 2007
+August 21, 2008
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.2.24 are Y2K compliant.  It is my belief that earlier
+upward through 1.2.31 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has three year fields.  One is a 2-byte unsigned integer that

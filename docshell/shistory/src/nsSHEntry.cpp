@@ -106,7 +106,6 @@ nsSHEntry::nsSHEntry()
   , mPageIdentifier(mID)
   , mScrollPositionX(0)
   , mScrollPositionY(0)
-  , mSaveContentViewer(PR_TRUE)
   , mIsFrameNavigation(PR_FALSE)
   , mSaveLayoutState(PR_TRUE)
   , mExpired(PR_FALSE)
@@ -128,7 +127,6 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mPageIdentifier(other.mPageIdentifier)
   , mScrollPositionX(0)  // XXX why not copy?
   , mScrollPositionY(0)  // XXX why not copy?
-  , mSaveContentViewer(other.mSaveContentViewer)
   , mIsFrameNavigation(other.mIsFrameNavigation)
   , mSaveLayoutState(other.mSaveLayoutState)
   , mExpired(other.mExpired)
@@ -415,18 +413,6 @@ NS_IMETHODIMP nsSHEntry::GetCacheKey(nsISupports** aResult)
 NS_IMETHODIMP nsSHEntry::SetCacheKey(nsISupports* aCacheKey)
 {
   mCacheKey = aCacheKey;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::GetSaveContentViewerFlag(PRBool * aFlag)
-{
-  *aFlag = mSaveContentViewer;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::SetSaveContentViewerFlag(PRBool  aFlag)
-{
-  mSaveContentViewer = aFlag;
   return NS_OK;
 }
 

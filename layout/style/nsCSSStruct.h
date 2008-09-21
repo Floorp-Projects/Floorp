@@ -279,6 +279,8 @@ struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSValue mOverflowY;
   nsCSSValue mVisibility;
   nsCSSValue mOpacity;
+  nsCSSValueList *mTransform; // List of Arrays containing transform information
+  nsCSSValuePair mTransformOrigin;
 
   // temp fix for bug 24000 
   nsCSSValue mBreakBefore;

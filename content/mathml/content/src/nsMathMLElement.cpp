@@ -402,12 +402,6 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       nscolor color;
       if (value->GetColorValue(color)) {
         aData->mColorData->mBackColor.SetColorValue(color);
-      } else {
-        nsAutoString str(value->GetStringValue());
-        str.CompressWhitespace();
-        if (str.EqualsLiteral("transparent")) {
-          aData->mColorData->mBackColor.SetColorValue(NS_RGBA(0,0,0,0));
-        }
       }
     }
   }

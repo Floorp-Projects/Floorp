@@ -13,3 +13,5 @@ pref("app.releaseNotesURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/%APP%/%VER
 pref("browser.search.param.yahoo-fr", "moz2");
 pref("browser.search.param.yahoo-fr-cjkt", "moz2");
 pref("browser.search.param.yahoo-f-CN", "D3_g");
+
+pref("browser.EULA.override", false); // false = Do show EULA on first start

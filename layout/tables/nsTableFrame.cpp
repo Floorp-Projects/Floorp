@@ -3561,9 +3561,7 @@ nscoord nsTableFrame::GetCellSpacingX()
   if (IsBorderCollapse())
     return 0;
 
-  NS_ASSERTION(GetStyleTableBorder()->mBorderSpacingX.GetUnit() == eStyleUnit_Coord,
-               "Not a coord value!");
-  return GetStyleTableBorder()->mBorderSpacingX.GetCoordValue();
+  return GetStyleTableBorder()->mBorderSpacingX;
 }
 
 // XXX: could cache this. But be sure to check style changes if you do!
@@ -3572,9 +3570,7 @@ nscoord nsTableFrame::GetCellSpacingY()
   if (IsBorderCollapse())
     return 0;
 
-  NS_ASSERTION(GetStyleTableBorder()->mBorderSpacingY.GetUnit() == eStyleUnit_Coord,
-               "Not a coord value!");
-  return GetStyleTableBorder()->mBorderSpacingY.GetCoordValue();
+  return GetStyleTableBorder()->mBorderSpacingY;
 }
 
 
@@ -4575,12 +4571,9 @@ GetColorAndStyle(const nsIFrame*  aFrame,
       (NS_STYLE_BORDER_STYLE_HIDDEN == aStyle)) {
     return;
   }
-  PRBool transparent, foreground;
-  styleData->GetBorderColor(aSide, aColor, transparent, foreground);
-  if (transparent) { 
-    aColor = 0;
-  }
-  else if (foreground) {
+  PRBool foreground;
+  styleData->GetBorderColor(aSide, aColor, foreground);
+  if (foreground) {
     aColor = aFrame->GetStyleColor()->mColor;
   }
 }

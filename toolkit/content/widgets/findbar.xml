@@ -571,7 +571,6 @@
               sel.removeAllRanges();
             }
             controller.setDisplaySelection(this.nsISelectionController.SELECTION_ON);
-            controller.repaintSelection(this.nsISelectionController.SELECTION_FIND);
           }
 
           return textFound;
@@ -601,11 +600,8 @@
           var findSelection = controller.getSelection(this.nsISelectionController.SELECTION_FIND);
           if (aHighlight)
             findSelection.addRange(aRange);
-          if (isEditable) {
-            if (!aHighlight)
-              findSelection.removeAllRanges();
-            controller.repaintSelection(this.nsISelectionController.SELECTION_FIND);
-          }
+          else if (isEditable)
+            findSelection.removeAllRanges();
         ]]></body>
       </method>
 

@@ -328,6 +328,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword__moz_win_communications_toolbox, NS_THEME_WIN_COMMUNICATIONS_TOOLBOX,
   eCSSKeyword__moz_win_browsertabbar_toolbox,  NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX,
   eCSSKeyword__moz_win_glass,         NS_THEME_WIN_GLASS,
+  eCSSKeyword__moz_mac_unified_toolbar,        NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -351,11 +352,6 @@ const PRInt32 nsCSSProps::kAzimuthKTable[] = {
 const PRInt32 nsCSSProps::kBackgroundAttachmentKTable[] = {
   eCSSKeyword_fixed, NS_STYLE_BG_ATTACHMENT_FIXED,
   eCSSKeyword_scroll, NS_STYLE_BG_ATTACHMENT_SCROLL,
-  eCSSKeyword_UNKNOWN,-1
-};
-
-const PRInt32 nsCSSProps::kBackgroundColorKTable[] = {
-  eCSSKeyword_transparent, NS_STYLE_BG_COLOR_TRANSPARENT,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -406,7 +402,6 @@ const PRInt32 nsCSSProps::kBorderCollapseKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kBorderColorKTable[] = {
-  eCSSKeyword_transparent, NS_STYLE_COLOR_TRANSPARENT,
   eCSSKeyword__moz_use_text_color, NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -512,6 +507,8 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_hyperlinktext, NS_COLOR_MOZ_HYPERLINKTEXT,
   eCSSKeyword__moz_html_cellhighlight, nsILookAndFeel::eColor__moz_html_cellhighlight,
   eCSSKeyword__moz_html_cellhighlighttext, nsILookAndFeel::eColor__moz_html_cellhighlighttext,
+  eCSSKeyword__moz_mac_chrome_active, nsILookAndFeel::eColor__moz_mac_chrome_active,
+  eCSSKeyword__moz_mac_chrome_inactive, nsILookAndFeel::eColor__moz_mac_chrome_inactive,
   eCSSKeyword__moz_mac_focusring, nsILookAndFeel::eColor__moz_mac_focusring,
   eCSSKeyword__moz_mac_menuselect, nsILookAndFeel::eColor__moz_mac_menuselect,
   eCSSKeyword__moz_mac_menushadow, nsILookAndFeel::eColor__moz_mac_menushadow,

@@ -88,6 +88,11 @@ MAKEFILES_editor="
   editor/composer/public/Makefile
   editor/composer/src/Makefile
   editor/composer/test/Makefile
+  editor/libeditor/Makefile
+  editor/libeditor/base/Makefile
+  editor/libeditor/base/tests/Makefile
+  editor/libeditor/html/Makefile
+  editor/libeditor/text/Makefile
 "
 
 MAKEFILES_expat="
@@ -344,16 +349,12 @@ MAKEFILES_plugin="
   modules/plugin/Makefile
   modules/plugin/base/src/Makefile
   modules/plugin/base/public/Makefile
-  modules/plugin/samples/simple/Makefile
-  modules/plugin/samples/SanePlugin/Makefile
   modules/plugin/default/unix/Makefile
-  modules/plugin/tools/sdk/Makefile
-  modules/plugin/tools/sdk/samples/Makefile
-  modules/plugin/tools/sdk/samples/common/Makefile
-  modules/plugin/tools/sdk/samples/basic/windows/Makefile
-  modules/plugin/tools/sdk/samples/scriptable/windows/Makefile
-  modules/plugin/tools/sdk/samples/simple/Makefile
-  modules/plugin/tools/sdk/samples/winless/windows/Makefile
+  modules/plugin/sdk/Makefile
+  modules/plugin/sdk/samples/Makefile
+  modules/plugin/sdk/samples/common/Makefile
+  modules/plugin/sdk/samples/basic/windows/Makefile
+  modules/plugin/sdk/samples/winless/windows/Makefile
 "
 
 MAKEFILES_netwerk="
@@ -670,9 +671,6 @@ MAKEFILES_xulapp="
   toolkit/system/unixproxy/Makefile
   toolkit/system/osxproxy/Makefile
   toolkit/components/help/Makefile
-  toolkit/components/history/Makefile
-  toolkit/components/history/public/Makefile
-  toolkit/components/history/src/Makefile
   toolkit/components/passwordmgr/Makefile
   toolkit/components/passwordmgr/public/Makefile
   toolkit/components/passwordmgr/src/Makefile

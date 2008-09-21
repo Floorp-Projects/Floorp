@@ -1874,11 +1874,16 @@ case "$target" in
     AR_DELETE="$AR d"
     AR_FLAGS='-OUT:"$@"'
 
+    if test -z "$AS_BIN"; then
+        AS="$AS_BIN"
+    fi
     DSO_CFLAGS=
     DSO_PIC_CFLAGS=
     DLL_SUFFIX=.dll
     BIN_SUFFIX='.exe'
-    RC=rc.exe
+    if test -z "$RC"; then 
+        RC=rc.exe  
+    fi
     # certain versions of cygwin's makedepend barf on the 
     # #include <string> vs -I./dist/include/string issue so don't use it
     SYSTEM_MAKEDEPEND=
@@ -2985,6 +2990,17 @@ dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
 dnl included (or another option which implies it, such as -march=pentium-mmx)
 AC_CHECK_HEADERS(mmintrin.h)
+
+AC_MSG_CHECKING(for ARM SIMD support)
+AC_TRY_COMPILE([],
+               [asm("uqadd8 r1, r1, r2");],
+               result="yes", result="no")
+AC_MSG_RESULT("$result")
+if test "$result" = "yes"; then
+    AC_DEFINE(HAVE_ARM_SIMD)
+    HAVE_ARM_SIMD=1
+fi
+AC_SUBST(HAVE_ARM_SIMD)
 
 dnl Check whether the compiler supports the new-style C++ standard
 dnl library headers (i.e. <new>) or needs the old "new.h"
@@ -4397,7 +4413,6 @@ MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
 MOZ_USE_NATIVE_UCONV=
-MOZ_V1_STRING_ABI=
 MOZ_VIEW_SOURCE=1
 MOZ_XPFE_COMPONENTS=1
 MOZ_XPINSTALL=1
@@ -5149,7 +5164,7 @@ dnl ========================================================
 dnl = dbus support
 dnl ========================================================
 
-if test "$MOZ_ENABLE_GTK2"
+if test "$MOZ_ENABLE_GTK2" || "$MOZ_ENABLE_QT"
 then
     MOZ_ENABLE_DBUS=1
 
@@ -5639,8 +5654,8 @@ case "$MOZ_WIDGET_TOOLKIT" in
 beos|windows|os2|mac|cocoa)
     ;;
 *)
-    if test -z "$MOZ_ENABLE_GTK2"; then
-       MOZ_IMG_DECODERS_DEFAULT=`echo $MOZ_IMG_DECODERS_DEFAULT | sed -e 's|icon||'`                
+    if test -z "$MOZ_ENABLE_GTK2" && test -z "$MOZ_ENABLE_QT"; then
+       MOZ_IMG_DECODERS_DEFAULT=`echo $MOZ_IMG_DECODERS_DEFAULT | sed -e 's|icon||'`
     fi
     ;;
 esac
@@ -6076,12 +6091,14 @@ AC_SUBST(JS_ULTRASPARC_OPTS)
 dnl ========================================================
 dnl = Hildon and OSSO checks
 dnl ========================================================
-PKG_CHECK_MODULES(LIBHILONMIME,libhildonmime,
-                  NS_HILDON=1,
-                  NS_HILDON=)
-if test $NS_HILDON; then
-   AC_DEFINE(NS_HILDON)
+PKG_CHECK_MODULES(LIBHILDONMIME,libhildonmime,
+                  MOZ_PLATFORM_HILDON=1,
+                  MOZ_PLATFORM_HILDON=)
+if test $MOZ_PLATFORM_HILDON; then
+   AC_DEFINE(MOZ_PLATFORM_HILDON)
 fi
+AC_SUBST(LIBHILDONMIME_CFLAGS)
+AC_SUBST(LIBHILDONMIME_LIBS)
 
 PKG_CHECK_MODULES(LIBOSSO,libosso,
                   NS_OSSO=1,
@@ -6093,6 +6110,19 @@ if test $NS_OSSO; then
     fi
     AC_DEFINE(NS_OSSO)     
 fi
+AC_SUBST(LIBOSSO_CFLAGS)
+AC_SUBST(LIBOSSO_LIBS)
+
+PKG_CHECK_MODULES(MOZ_LOCATION, [liblocation gpsbt],
+                  NS_MAEMO_LOCATION=1,
+                  NS_MAEMO_LOCATION=)
+
+if test $NS_MAEMO_LOCATION; then
+  AC_DEFINE(NS_MAEMO_LOCATION)
+fi
+
+AC_SUBST(MOZ_LOCATION_CFLAGS)
+AC_SUBST(MOZ_LOCATION_LIBS)
 
 dnl ========================================================
 dnl =
@@ -7767,18 +7797,6 @@ fi
 dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
 
-dnl ========================================================
-dnl string api compatibility
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(v1-string-abi,
-[  --disable-v1-string-abi   Disable binary compatibility layer for strings],
-    MOZ_V1_STRING_ABI=,
-    MOZ_V1_STRING_ABI=1)
-AC_SUBST(MOZ_V1_STRING_ABI)
-if test "$MOZ_V1_STRING_ABI"; then
-    AC_DEFINE(MOZ_V1_STRING_ABI)
-fi
-
 dnl Only build Mork if it's required
 AC_SUBST(MOZ_MORK)
 if test "$MOZ_MORK"; then
@@ -7823,8 +7841,9 @@ AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MINIMO)
-AC_SUBST(NS_HILDON)
+AC_SUBST(MOZ_PLATFORM_HILDON)
 AC_SUBST(NS_OSSO)
+AC_SUBST(NS_MAEMO_LOCATION)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_PERMISSIONS)
@@ -8184,11 +8203,6 @@ AC_SUBST(WIN_TOP_SRC)
 
 AC_SUBST(MOZILLA_VERSION)
 
-. ${srcdir}/config/chrome-versions.sh
-AC_DEFINE_UNQUOTED(MOZILLA_LOCALE_VERSION,"$MOZILLA_LOCALE_VERSION")
-AC_DEFINE_UNQUOTED(MOZILLA_REGION_VERSION,"$MOZILLA_REGION_VERSION")
-AC_DEFINE_UNQUOTED(MOZILLA_SKIN_VERSION,"$MOZILLA_SKIN_VERSION")
-
 AC_SUBST(ac_configure_args)
 
 dnl Spit out some output
@@ -8220,7 +8234,6 @@ HAVE_MBRTOWC
 HAVE_SYS_MOUNT_H
 HAVE_SYS_VFS_H
 HAVE_WCRTOMB
-MOZ_V1_STRING_ABI
 "
 
 AC_CONFIG_HEADER(

@@ -489,7 +489,7 @@ static nsIFrame* GetSpecialSibling(nsIFrame* aFrame)
 }
 
 static nsIFrame*
-GetIBSplitSpecialPrevSibling(nsIFrame* aFrame)
+GetIBSplitSpecialPrevSiblingForAnonymousBlock(nsIFrame* aFrame)
 {
   NS_PRECONDITION(IsFrameSpecial(aFrame) && !IsInlineFrame(aFrame),
                   "Shouldn't call this");
@@ -608,10 +608,7 @@ FindLastBlock(nsIFrame* aKid)
 }
 
 /*
- * Unlike the special (next) sibling, the special previous sibling
- * property points only from the anonymous block to the original
- * inline that preceded it.  DO NOT CHANGE THAT -- the
- * GetParentStyleContextFrame code depends on it!  It is useful for
+ * The special-prev-sibling is useful for
  * finding the "special parent" of a frame (i.e., a frame from which a
  * good parent style context can be obtained), one looks at the
  * special previous sibling annotation of the real parent of the frame
@@ -1079,10 +1076,12 @@ private:
   nsAbsoluteItems* mItems;                // pointer to struct whose data we save/restore
   PRBool*          mFirstLetterStyle;
   PRBool*          mFirstLineStyle;
+  PRBool*          mFixedPosIsAbsPos;
 
   nsAbsoluteItems  mSavedItems;           // copy of original data
   PRBool           mSavedFirstLetterStyle;
   PRBool           mSavedFirstLineStyle;
+  PRBool           mSavedFixedPosIsAbsPos;
 
   // The name of the child list in which our frames would belong
   nsIAtom* mChildListName;
@@ -1112,6 +1111,14 @@ public:
   nsAbsoluteItems           mFloatedItems;
   PRBool                    mFirstLetterStyle;
   PRBool                    mFirstLineStyle;
+
+  // When working with the -moz-transform property, we want to hook
+  // the abs-pos and fixed-pos lists together, since transformed
+  // elements are fixed-pos containing blocks.  This flag determines
+  // whether or not we want to wire the fixed-pos and abs-pos lists
+  // together.
+  PRBool                    mFixedPosIsAbsPos;
+
   nsCOMPtr<nsILayoutHistoryState> mFrameState;
   nsPseudoFrames            mPseudoFrames;
   // These bits will be added to the state bits of any frame we construct
@@ -1192,6 +1199,21 @@ public:
                     PRBool aInsertAfter = PR_FALSE,
                     nsIFrame* aInsertAfterFrame = nsnull);
 
+  /**
+   * Function to return the fixed-pos element list.  Normally this will just hand back the
+   * fixed-pos element list, but in case we're dealing with a transformed element that's
+   * acting as an abs-pos and fixed-pos container, we'll hand back the abs-pos list.  Callers should
+   * use this function if they want to get the list acting as the fixed-pos item parent.
+   */
+  nsAbsoluteItems& GetFixedItems()
+  {
+    return mFixedPosIsAbsPos ? mAbsoluteItems : mFixedItems;
+  }
+  const nsAbsoluteItems& GetFixedItems() const
+  {
+    return mFixedPosIsAbsPos ? mAbsoluteItems : mFixedItems;
+  }
+
 protected:
   friend class nsFrameConstructorSaveState;
 
@@ -1220,6 +1242,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mFloatedItems(aFloatContainingBlock),
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
+    mFixedPosIsAbsPos(PR_FALSE),
     mFrameState(aHistoryState),
     mPseudoFrames(),
     mAdditionalStateBits(0)
@@ -1243,6 +1266,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mFloatedItems(aFloatContainingBlock),
     mFirstLetterStyle(PR_FALSE),
     mFirstLineStyle(PR_FALSE),
+    mFixedPosIsAbsPos(PR_FALSE),
     mPseudoFrames(),
     mAdditionalStateBits(0)
 {
@@ -1289,8 +1313,19 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteConta
   aSaveState.mSavedItems = mAbsoluteItems;
   aSaveState.mChildListName = nsGkAtoms::absoluteList;
   aSaveState.mState = this;
+
+  /* Store whether we're wiring the abs-pos and fixed-pos lists together. */
+  aSaveState.mFixedPosIsAbsPos = &mFixedPosIsAbsPos;
+  aSaveState.mSavedFixedPosIsAbsPos = mFixedPosIsAbsPos;
+
   mAbsoluteItems = 
     nsAbsoluteItems(AdjustAbsoluteContainingBlock(aNewAbsoluteContainingBlock));
+
+  /* See if we're wiring the fixed-pos and abs-pos lists together.  This happens iff
+   * we're a transformed element.
+   */
+  mFixedPosIsAbsPos = (aNewAbsoluteContainingBlock &&
+                       aNewAbsoluteContainingBlock->GetStyleDisplay()->HasTransform());
 }
 
 void
@@ -1353,8 +1388,8 @@ nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
   }
 
   if (aStyleDisplay->mPosition == NS_STYLE_POSITION_FIXED &&
-      mFixedItems.containingBlock) {
-    return mFixedItems.containingBlock;
+      GetFixedItems().containingBlock) {
+    return GetFixedItems().containingBlock;
   }
 
   return aContentParentFrame;
@@ -1405,11 +1440,11 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
       frameItems = &mAbsoluteItems;
     }
     if (disp->mPosition == NS_STYLE_POSITION_FIXED &&
-        mFixedItems.containingBlock) {
-      NS_ASSERTION(aNewFrame->GetParent() == mFixedItems.containingBlock,
+        GetFixedItems().containingBlock) {
+      NS_ASSERTION(aNewFrame->GetParent() == GetFixedItems().containingBlock,
                    "Fixed pos whose parent is not the fixed pos containing block?");
       needPlaceholder = PR_TRUE;
-      frameItems = &mFixedItems;
+      frameItems = &GetFixedItems();
     }
   }
 
@@ -1551,9 +1586,11 @@ nsFrameConstructorSaveState::nsFrameConstructorSaveState()
   : mItems(nsnull),
     mFirstLetterStyle(nsnull),
     mFirstLineStyle(nsnull),
+    mFixedPosIsAbsPos(nsnull),
     mSavedItems(nsnull),
     mSavedFirstLetterStyle(PR_FALSE),
     mSavedFirstLineStyle(PR_FALSE),
+    mSavedFixedPosIsAbsPos(PR_FALSE),
     mChildListName(nsnull),
     mState(nsnull)
 {
@@ -1577,6 +1614,9 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
   }
   if (mFirstLineStyle) {
     *mFirstLineStyle = mSavedFirstLineStyle;
+  }
+  if (mFixedPosIsAbsPos) {
+    *mFixedPosIsAbsPos = mSavedFixedPosIsAbsPos;
   }
 }
 
@@ -1967,9 +2007,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsIContent*     aParentContent,
     // XXX Check if it's an image type we can handle...
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    mDocument->NodeInfoManager()->GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage, nsnull,
-                                              kNameSpaceID_XHTML,
-                                              getter_AddRefs(nodeInfo));
+    nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage, nsnull,
+                                                         kNameSpaceID_XHTML);
 
     nsCOMPtr<nsIContent> content;
     NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo,
@@ -2140,9 +2179,8 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsFrameConstructorState& aSta
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsIAtom* elemName = aPseudoElement == nsCSSPseudoElements::before ?
     nsGkAtoms::mozgeneratedcontentbefore : nsGkAtoms::mozgeneratedcontentafter;
-  mDocument->NodeInfoManager()->GetNodeInfo(elemName, nsnull,
-                                            kNameSpaceID_None,
-                                            getter_AddRefs(nodeInfo));
+  nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(elemName, nsnull,
+                                                       kNameSpaceID_None);
   nsIContent* container;
   nsresult rv = NS_NewXMLElement(&container, nodeInfo);
   if (NS_FAILED(rv))
@@ -4139,6 +4177,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
                propagatedScrollToViewport,
                "Scrollbars should have been propagated to the viewport");
 #endif
+
+  if (NS_UNLIKELY(display->mDisplay == NS_STYLE_DISPLAY_NONE)) {
+    mInitialContainingBlock = nsnull;
+    mRootElementStyleFrame = nsnull;
+    return NS_OK;
+  }
 
   nsFrameConstructorSaveState absoluteSaveState;
   if (mHasRootAbsPosContainingBlock) {
@@ -6469,15 +6513,17 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     rv = ConstructBlock(aState, aDisplay, aContent, 
                         aState.GetGeometricParent(aDisplay, aParentFrame),
                         aParentFrame, aStyleContext, &newFrame, aFrameItems,
-                        aDisplay->mPosition == NS_STYLE_POSITION_RELATIVE);
+                        aDisplay->mPosition == NS_STYLE_POSITION_RELATIVE ||
+                        aDisplay->HasTransform());
     if (NS_FAILED(rv)) {
       return rv;
     }
 
     addedToFrameList = PR_TRUE;
   }
-  // See if it's relatively positioned
-  else if ((NS_STYLE_POSITION_RELATIVE == aDisplay->mPosition) &&
+  // See if it's relatively positioned or transformed
+  else if ((NS_STYLE_POSITION_RELATIVE == aDisplay->mPosition ||
+            aDisplay->HasTransform()) &&
            (aDisplay->IsBlockInside() ||
             (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay))) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -7837,7 +7883,8 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
       nsIContent* content = nsnull;
       nsStyleContext* styleContext = nsnull;
       if (!inlineSibling) {
-        nsIFrame* firstInline = GetIBSplitSpecialPrevSibling(parentFrame);
+        nsIFrame* firstInline =
+          GetIBSplitSpecialPrevSiblingForAnonymousBlock(parentFrame);
         NS_ASSERTION(firstInline, "How did that happen?");
 
         content = firstInline->GetContent();
@@ -12455,8 +12502,11 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   SetFrameIsSpecial(aNewFrame, blockFrame);
   SetFrameIsSpecial(blockFrame, inlineFrame);
   MarkIBSpecialPrevSibling(blockFrame, aNewFrame);
+  if (inlineFrame) {
+    MarkIBSpecialPrevSibling(inlineFrame, blockFrame);
+  }
 
-#ifdef DEBUG
+  #ifdef DEBUG
   if (gNoisyInlineConstruction) {
     nsIFrameDebug*  frameDebug;
 
@@ -12725,8 +12775,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
       // too.
       nsIFrame* floatContainer = aFrame;
       do {
-        floatContainer =
-          GetFloatContainingBlock(GetIBSplitSpecialPrevSibling(floatContainer));
+        floatContainer = GetFloatContainingBlock(
+          GetIBSplitSpecialPrevSiblingForAnonymousBlock(floatContainer));
         if (!floatContainer) {
           break;
         }

@@ -113,7 +113,7 @@
 #include "nsIScrollableViewProvider.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentEvent.h"
-#include "nsIDOMMouseEvent.h"
+#include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMDocumentView.h"
@@ -141,6 +141,7 @@
 
 #include "nsServiceManagerUtils.h"
 #include "nsITimer.h"
+#include "nsIFontMetrics.h"
 
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
@@ -460,7 +461,9 @@ nsEventStateManager::nsEventStateManager()
     mNormalLMouseEventInProcess(PR_FALSE),
     m_haveShutdown(PR_FALSE),
     mBrowseWithCaret(PR_FALSE),
-    mTabbedThroughDocument(PR_FALSE)
+    mTabbedThroughDocument(PR_FALSE),
+    mLastLineScrollConsumedX(PR_FALSE),
+    mLastLineScrollConsumedY(PR_FALSE)
 {
   if (sESMInstanceCount == 0) {
     gUserInteractionTimerCallback = new nsUITimerCallback();
@@ -1404,6 +1407,20 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           msEvent->delta = (msEvent->delta > 0)
             ? nsIDOMNSUIEvent::SCROLL_PAGE_DOWN
             : nsIDOMNSUIEvent::SCROLL_PAGE_UP;
+      }
+    }
+    break;
+  case NS_MOUSE_PIXEL_SCROLL:
+    {
+      if (mCurrentFocus) {
+        mCurrentTargetContent = mCurrentFocus;
+      }
+
+      // When the last line scroll has been canceled, eat the pixel scroll event
+      nsMouseScrollEvent *msEvent = static_cast<nsMouseScrollEvent*>(aEvent);
+      if ((msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) ?
+           mLastLineScrollConsumedX : mLastLineScrollConsumedY) {
+        *aStatus = nsEventStatus_eConsumeNoDefault;
       }
     }
     break;
@@ -2414,6 +2431,66 @@ GetParentFrameToScroll(nsPresContext* aPresContext, nsIFrame* aFrame)
   return aFrame->GetParent();
 }
 
+static nsIScrollableView*
+GetScrollableViewForFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
+{
+  for (; aFrame; aFrame = GetParentFrameToScroll(aPresContext, aFrame)) {
+    nsIScrollableViewProvider* svp;
+    CallQueryInterface(aFrame, &svp);
+    if (svp) {
+      nsIScrollableView* scrollView = svp->GetScrollableView();
+      if (scrollView)
+        return scrollView;
+    }
+  }
+  return nsnull;
+}
+
+void
+nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
+                                          nsMouseScrollEvent* aEvent,
+                                          nsPresContext* aPresContext,
+                                          nsEventStatus* aStatus)
+{
+  nsCOMPtr<nsIContent> targetContent = aTargetFrame->GetContent();
+  if (!targetContent)
+    GetFocusedContent(getter_AddRefs(targetContent));
+  if (!targetContent)
+    return;
+
+  while (targetContent->IsNodeOfType(nsINode::eTEXT)) {
+    targetContent = targetContent->GetParent();
+  }
+
+  nsIScrollableView* scrollView = GetScrollableViewForFrame(aPresContext, aTargetFrame);
+  nscoord lineHeight = 0;
+  if (scrollView) {
+    scrollView->GetLineHeight(&lineHeight);
+  } else {
+    // Fall back to the font height of the target frame.
+    const nsStyleFont* font = aTargetFrame->GetStyleFont();
+    const nsFont& f = font->mFont;
+    nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(f);
+    NS_ASSERTION(fm, "FontMetrics is null!");
+    if (fm)
+      fm->GetHeight(lineHeight);
+  }
+
+  PRBool isTrusted = (aEvent->flags & NS_EVENT_FLAG_TRUSTED) != 0;
+  nsMouseScrollEvent event(isTrusted, NS_MOUSE_PIXEL_SCROLL, nsnull);
+  event.refPoint = aEvent->refPoint;
+  event.widget = aEvent->widget;
+  event.time = aEvent->time;
+  event.isShift = aEvent->isShift;
+  event.isControl = aEvent->isControl;
+  event.isAlt = aEvent->isAlt;
+  event.isMeta = aEvent->isMeta;
+  event.scrollFlags = aEvent->scrollFlags;
+  event.delta = aPresContext->AppUnitsToIntCSSPixels(aEvent->delta * lineHeight);
+
+  nsEventDispatcher::Dispatch(targetContent, aPresContext, &event, nsnull, aStatus);
+}
+
 nsresult
 nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
                                   nsIFrame* aTargetFrame,
@@ -2732,79 +2809,106 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case NS_MOUSE_SCROLL:
-    if (nsEventStatus_eConsumeNoDefault != *aStatus) {
+  case NS_MOUSE_PIXEL_SCROLL:
+    {
+      nsMouseScrollEvent *msEvent = static_cast<nsMouseScrollEvent*>(aEvent);
 
-      // Build the preference keys, based on the event properties.
-      nsMouseScrollEvent *msEvent = (nsMouseScrollEvent*) aEvent;
-
-      NS_NAMED_LITERAL_CSTRING(actionslot,      ".action");
-      NS_NAMED_LITERAL_CSTRING(sysnumlinesslot, ".sysnumlines");
-
-      nsCAutoString baseKey;
-      GetBasePrefKeyForMouseWheel(msEvent, baseKey);
-
-      // Extract the preferences
-      nsCAutoString actionKey(baseKey);
-      actionKey.Append(actionslot);
-
-      nsCAutoString sysNumLinesKey(baseKey);
-      sysNumLinesKey.Append(sysnumlinesslot);
-
-      PRInt32 action = nsContentUtils::GetIntPref(actionKey.get());
-      PRBool useSysNumLines =
-        nsContentUtils::GetBoolPref(sysNumLinesKey.get());
-
-      if (useSysNumLines) {
-        if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
-          action = MOUSE_SCROLL_PAGE;
-        else if (msEvent->scrollFlags & nsMouseScrollEvent::kIsPixels)
-          action = MOUSE_SCROLL_PIXELS;
+      if (aEvent->message == NS_MOUSE_SCROLL) {
+        // Mark the subsequent pixel scrolls as valid / invalid, based on the
+        // observation if the previous line scroll has been canceled
+        if (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal) {
+          mLastLineScrollConsumedX = (nsEventStatus_eConsumeNoDefault == *aStatus);
+        } else if (msEvent->scrollFlags & nsMouseScrollEvent::kIsVertical) {
+          mLastLineScrollConsumedY = (nsEventStatus_eConsumeNoDefault == *aStatus);
+        }
+        if (!(msEvent->scrollFlags & nsMouseScrollEvent::kHasPixels)) {
+          // No generated pixel scroll event will follow.
+          // Create and send a pixel scroll DOM event now.
+          SendPixelScrollEvent(aTargetFrame, msEvent, presContext, aStatus);
+        }
       }
 
-      switch (action) {
-      case MOUSE_SCROLL_N_LINES:
-        {
-          DoScrollText(presContext, aTargetFrame, msEvent, msEvent->delta,
-                       (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
-                       eScrollByLine);
-        }
-        break;
+      if (*aStatus != nsEventStatus_eConsumeNoDefault) {
+        // Build the preference keys, based on the event properties.
+        NS_NAMED_LITERAL_CSTRING(actionslot,      ".action");
+        NS_NAMED_LITERAL_CSTRING(sysnumlinesslot, ".sysnumlines");
 
-      case MOUSE_SCROLL_PAGE:
-        {
-          DoScrollText(presContext, aTargetFrame, msEvent, msEvent->delta,
-                       (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
-                       eScrollByPage);
-        }
-        break;
+        nsCAutoString baseKey;
+        GetBasePrefKeyForMouseWheel(msEvent, baseKey);
 
-      case MOUSE_SCROLL_PIXELS:
-        {
-          DoScrollText(presContext, aTargetFrame, msEvent, msEvent->delta,
-                       (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
-                       eScrollByPixel);
-        }
-        break;
+        // Extract the preferences
+        nsCAutoString actionKey(baseKey);
+        actionKey.Append(actionslot);
 
-      case MOUSE_SCROLL_HISTORY:
-        {
-          DoScrollHistory(msEvent->delta);
-        }
-        break;
+        nsCAutoString sysNumLinesKey(baseKey);
+        sysNumLinesKey.Append(sysnumlinesslot);
 
-      case MOUSE_SCROLL_ZOOM:
-        {
-          DoScrollZoom(aTargetFrame, msEvent->delta);
-        }
-        break;
+        PRInt32 action = nsContentUtils::GetIntPref(actionKey.get());
+        PRBool useSysNumLines =
+          nsContentUtils::GetBoolPref(sysNumLinesKey.get());
 
-      default:  // Including -1 (do nothing)
-        break;
+        if (useSysNumLines) {
+          if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
+            action = MOUSE_SCROLL_PAGE;
+        }
+
+        if (aEvent->message == NS_MOUSE_PIXEL_SCROLL) {
+          if (action == MOUSE_SCROLL_N_LINES) {
+             action = MOUSE_SCROLL_PIXELS;
+          } else {
+            // Do not scroll pixels when zooming
+            action = -1;
+          }
+        } else if (msEvent->scrollFlags & nsMouseScrollEvent::kHasPixels) {
+          if (action == MOUSE_SCROLL_N_LINES) {
+            // We shouldn't scroll lines when a pixel scroll event will follow.
+            action = -1;
+          }
+        }
+
+        switch (action) {
+        case MOUSE_SCROLL_N_LINES:
+          {
+            DoScrollText(presContext, aTargetFrame, msEvent, msEvent->delta,
+                         (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
+                         eScrollByLine);
+          }
+          break;
+
+        case MOUSE_SCROLL_PAGE:
+          {
+            DoScrollText(presContext, aTargetFrame, msEvent, msEvent->delta,
+                         (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
+                         eScrollByPage);
+          }
+          break;
+
+        case MOUSE_SCROLL_PIXELS:
+          {
+            DoScrollText(presContext, aTargetFrame, msEvent, msEvent->delta,
+                         (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
+                         eScrollByPixel);
+          }
+          break;
+
+        case MOUSE_SCROLL_HISTORY:
+          {
+            DoScrollHistory(msEvent->delta);
+          }
+          break;
+
+        case MOUSE_SCROLL_ZOOM:
+          {
+            DoScrollZoom(aTargetFrame, msEvent->delta);
+          }
+          break;
+
+        default:  // Including -1 (do nothing)
+          break;
+        }
+        *aStatus = nsEventStatus_eConsumeNoDefault;
       }
-      *aStatus = nsEventStatus_eConsumeNoDefault;
-
     }
-
     break;
 
   case NS_DRAGDROP_ENTER:

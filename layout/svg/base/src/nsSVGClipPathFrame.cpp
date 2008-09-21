@@ -61,7 +61,7 @@ NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCo
 
 nsresult
 nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
-                              nsISVGChildFrame* aParent,
+                              nsIFrame* aParent,
                               nsIDOMSVGMatrix *aMatrix)
 {
   // If the flag is set when we get here, it means this clipPath frame
@@ -103,7 +103,7 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
 }
 
 PRBool
-nsSVGClipPathFrame::ClipHitTest(nsISVGChildFrame* aParent,
+nsSVGClipPathFrame::ClipHitTest(nsIFrame* aParent,
                                 nsIDOMSVGMatrix *aMatrix,
                                 const nsPoint &aPoint)
 {

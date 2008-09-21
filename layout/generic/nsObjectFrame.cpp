@@ -1006,9 +1006,9 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
     nsAutoString hidden;
     if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::hidden, hidden) &&
        (hidden.IsEmpty() ||
-        !hidden.LowerCaseEqualsLiteral("false") &&
-        !hidden.LowerCaseEqualsLiteral("no") &&
-        !hidden.LowerCaseEqualsLiteral("off"))) {
+        (!hidden.LowerCaseEqualsLiteral("false") &&
+         !hidden.LowerCaseEqualsLiteral("no") &&
+         !hidden.LowerCaseEqualsLiteral("off")))) {
       return PR_TRUE;
     }
   }
@@ -1169,7 +1169,6 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
     return;
 
   // now we need to setup the correct location for printing
-  nsresult rv;
   nsPluginWindow    window;
   window.window =   nsnull;
 
@@ -1218,7 +1217,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   window.width =   aDirtyRect.width;
   window.height =   aDirtyRect.height;
   npprint.print.embedPrint.window        = window;
-  rv = pi->Print(&npprint);
+  nsresult rv = pi->Print(&npprint);
   if (NS_FAILED(rv)) {
     PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG, ("error: plugin returned failure %lx\n", (long)rv));
     fclose(plugintmpfile);
@@ -1241,7 +1240,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   npprint.print.embedPrint.platformPrint = hps;
   npprint.print.embedPrint.window = window;
   // send off print info to plugin
-  rv = pi->Print(&npprint);
+  pi->Print(&npprint);
 #elif defined(XP_WIN)
 
   /* On Windows, we use the win32 printing surface to print.  This, in
@@ -1295,7 +1294,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
     npprint.print.embedPrint.platformPrint = dc;
     npprint.print.embedPrint.window = window;
     // send off print info to plugin
-    rv = pi->Print(&npprint);
+    pi->Print(&npprint);
 
     nativeDraw.EndNativeDrawing();
   } while (nativeDraw.ShouldRenderAgain());
@@ -1332,7 +1331,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   npprint.print.embedPrint.platformPrint = dc;
   npprint.print.embedPrint.window = window;
   // send off print info to plugin
-    rv = pi->Print(&npprint);
+  pi->Print(&npprint);
 #endif
 
   // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?

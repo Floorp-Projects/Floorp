@@ -177,7 +177,7 @@ public:
   virtual void RemovedForm();
   virtual PRInt32 GetNumFormsSynchronous();
   virtual void TearingDownEditor(nsIEditor *aEditor);
-
+  virtual void SetIsXHTML(PRBool aXHTML) { mIsRegularHTML = !aXHTML; }
   PRBool IsXHTML()
   {
     return !mIsRegularHTML;
@@ -198,6 +198,22 @@ public:
   }
 
   virtual nsIContent* GetBodyContentExternal();
+  
+  class nsAutoEditingState {
+  public:
+    nsAutoEditingState(nsHTMLDocument* aDoc, EditingState aState)
+      : mDoc(aDoc), mSavedState(aDoc->mEditingState)
+    {
+      aDoc->mEditingState = aState;
+    }
+    ~nsAutoEditingState() {
+      mDoc->mEditingState = mSavedState;
+    }
+  private:
+    nsHTMLDocument* mDoc;
+    EditingState    mSavedState;
+  };
+  friend class nsAutoEditingState;
 
   void EndUpdate(nsUpdateType aUpdateType);
 
@@ -211,6 +227,8 @@ public:
   }
 
   virtual nsresult SetEditingState(EditingState aState);
+
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
   nsresult GetBodySize(PRInt32* aWidth,

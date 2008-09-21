@@ -262,7 +262,7 @@ public:
        
     PRBool eq;
     return !mPrincipal ||
-      NS_SUCCEEDED(mPrincipal->Equals(aKey->mPrincipal, &eq)) && eq;
+      (NS_SUCCEEDED(mPrincipal->Equals(aKey->mPrincipal, &eq)) && eq);
   }
  
   static const nsURIAndPrincipalHashKey*

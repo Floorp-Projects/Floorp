@@ -151,6 +151,14 @@ function run_test() {
   do_check_eq(observer._itemRemovedId, folderId);
   do_check_eq(observer._itemRemovedFolder, root);
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
+  txn1.redoTransaction();
+  do_check_eq(observer._itemAddedIndex, bmStartIndex);
+  do_check_eq(observer._itemAddedParent, root);
+  do_check_eq(observer._itemAddedId, folderId);
+  txn1.undoTransaction();
+  do_check_eq(observer._itemRemovedId, folderId);
+  do_check_eq(observer._itemRemovedFolder, root);
+  do_check_eq(observer._itemRemovedIndex, bmStartIndex);
 
   // Test creating an item
   // Create to Root
@@ -163,8 +171,19 @@ function run_test() {
   txn2.undoTransaction();
   do_check_eq(observer._itemRemovedId, b);
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
+  do_check_false(bmsvc.isBookmarked(uri("http://www.example.com")));
+  txn2.redoTransaction();
+  do_check_true(bmsvc.isBookmarked(uri("http://www.example.com")));
+  var newId = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com"), {}))[0];
+  do_check_eq(observer._itemAddedIndex, bmStartIndex);
+  do_check_eq(observer._itemAddedParent, root);
+  do_check_eq(observer._itemAddedId, newId);
+  txn2.undoTransaction();
+  do_check_eq(observer._itemRemovedId, newId);
+  do_check_eq(observer._itemRemovedFolder, root);
+  do_check_eq(observer._itemRemovedIndex, bmStartIndex);
 
-  // Create to a folder
+  // Create item to a folder
   var txn2a = ptSvc.createFolder("Folder", root, bmStartIndex);
   ptSvc.doTransaction(txn2a);
   var fldrId = bmsvc.getChildFolder(root, "Folder");
@@ -177,10 +196,19 @@ function run_test() {
   txn2b.undoTransaction();
   do_check_eq(observer._itemRemovedId, b2);
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
+  txn2b.redoTransaction();
+  newId = (bmsvc.getBookmarkIdsForURI(uri("http://www.example2.com"), {}))[0];
+  do_check_eq(observer._itemAddedIndex, bmStartIndex);
+  do_check_eq(observer._itemAddedParent, fldrId);
+  do_check_eq(observer._itemAddedId, newId);
+  txn2b.undoTransaction();
+  do_check_eq(observer._itemRemovedId, newId);
+  do_check_eq(observer._itemRemovedFolder, fldrId);
+  do_check_eq(observer._itemRemovedIndex, bmStartIndex);
 
   // Testing moving an item
   ptSvc.doTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing2"));
-  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing3"));   
+  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing3"));
   ptSvc.doTransaction(ptSvc.createItem(uri("http://www.example3.com"), fldrId, -1, "Testing4"));
   var bkmkIds = bmsvc.getBookmarkIdsForURI(uri("http://www.example3.com"), {});
   bkmkIds.sort();
@@ -191,6 +219,18 @@ function run_test() {
   // Moving items between the same folder
   var txn3 = ptSvc.moveItem(bkmk1Id, root, -1);
   txn3.doTransaction();
+  do_check_eq(observer._itemMovedId, bkmk1Id);
+  do_check_eq(observer._itemMovedOldParent, root);
+  do_check_eq(observer._itemMovedOldIndex, 1);
+  do_check_eq(observer._itemMovedNewParent, root);
+  do_check_eq(observer._itemMovedNewIndex, 2);
+  txn3.undoTransaction();
+  do_check_eq(observer._itemMovedId, bkmk1Id);
+  do_check_eq(observer._itemMovedOldParent, root);
+  do_check_eq(observer._itemMovedOldIndex, 2);
+  do_check_eq(observer._itemMovedNewParent, root);
+  do_check_eq(observer._itemMovedNewIndex, 1);
+  txn3.redoTransaction();
   do_check_eq(observer._itemMovedId, bkmk1Id);
   do_check_eq(observer._itemMovedOldParent, root);
   do_check_eq(observer._itemMovedOldIndex, 1);
@@ -217,6 +257,18 @@ function run_test() {
   do_check_eq(observer._itemMovedOldIndex, 1);
   do_check_eq(observer._itemMovedNewParent, root);
   do_check_eq(observer._itemMovedNewIndex, 1);
+  txn3b.redoTransaction();
+  do_check_eq(observer._itemMovedId, bkmk1Id);
+  do_check_eq(observer._itemMovedOldParent, root);
+  do_check_eq(observer._itemMovedOldIndex, 1);
+  do_check_eq(observer._itemMovedNewParent, fldrId);
+  do_check_eq(observer._itemMovedNewIndex, 1);
+  txn3.undoTransaction();
+  do_check_eq(observer._itemMovedId, bkmk1Id);
+  do_check_eq(observer._itemMovedOldParent, fldrId);
+  do_check_eq(observer._itemMovedOldIndex, 1);
+  do_check_eq(observer._itemMovedNewParent, root);
+  do_check_eq(observer._itemMovedNewIndex, 1);
 
   // Test Removing a Folder
   ptSvc.doTransaction(ptSvc.createFolder("Folder2", root, -1));
@@ -230,11 +282,27 @@ function run_test() {
   do_check_eq(observer._itemAddedId, fldrId2);
   do_check_eq(observer._itemAddedParent, root);
   do_check_eq(observer._itemAddedIndex, 3);
+  txn4.redoTransaction();
+  do_check_eq(observer._itemRemovedId, fldrId2);
+  do_check_eq(observer._itemRemovedFolder, root);
+  do_check_eq(observer._itemRemovedIndex, 3);
+  txn4.undoTransaction();
+  do_check_eq(observer._itemAddedId, fldrId2);
+  do_check_eq(observer._itemAddedParent, root);
+  do_check_eq(observer._itemAddedIndex, 3);
 
   // Test removing an item
   var txn5 = ptSvc.removeItem(bkmk2Id);
   txn5.doTransaction();
   do_check_eq(observer._itemRemovedId, bkmk2Id);
+  do_check_eq(observer._itemRemovedFolder, root);
+  do_check_eq(observer._itemRemovedIndex, 2);
+  txn5.undoTransaction();
+  var newbkmk2Id = observer._itemAddedId;
+  do_check_eq(observer._itemAddedParent, root);
+  do_check_eq(observer._itemAddedIndex, 2);
+  txn5.redoTransaction();
+  do_check_eq(observer._itemRemovedId, newbkmk2Id);
   do_check_eq(observer._itemRemovedFolder, root);
   do_check_eq(observer._itemRemovedIndex, 2);
   txn5.undoTransaction();
@@ -251,12 +319,28 @@ function run_test() {
   do_check_eq(observer._itemRemovedId, sepId);
   do_check_eq(observer._itemRemovedFolder, root);
   do_check_eq(observer._itemRemovedIndex, 1);
+  txn6.redoTransaction();
+  var newSepId = observer._itemAddedId;
+  do_check_eq(observer._itemAddedIndex, 1);
+  do_check_eq(observer._itemAddedParent, root);
+  txn6.undoTransaction();
+  do_check_eq(observer._itemRemovedId, newSepId);
+  do_check_eq(observer._itemRemovedFolder, root);
+  do_check_eq(observer._itemRemovedIndex, 1);
 
   // Test removing a separator
   ptSvc.doTransaction(ptSvc.createSeparator(root, 1));
   var sepId2 = observer._itemAddedId;
   var txn7 = ptSvc.removeItem(sepId2);
   txn7.doTransaction();
+  do_check_eq(observer._itemRemovedId, sepId2);
+  do_check_eq(observer._itemRemovedFolder, root);
+  do_check_eq(observer._itemRemovedIndex, 1);
+  txn7.undoTransaction();
+  do_check_eq(observer._itemAddedId, sepId2); //New separator created
+  do_check_eq(observer._itemAddedParent, root);
+  do_check_eq(observer._itemAddedIndex, 1);
+  txn7.redoTransaction();
   do_check_eq(observer._itemRemovedId, sepId2);
   do_check_eq(observer._itemRemovedFolder, root);
   do_check_eq(observer._itemRemovedIndex, 1);
@@ -275,10 +359,26 @@ function run_test() {
   do_check_eq(observer._itemChangedId, bkmk1Id); 
   do_check_eq(observer._itemChangedProperty, "title");
   do_check_eq(observer._itemChangedValue, "Testing2");
+  txn8.redoTransaction();
+  do_check_eq(observer._itemChangedId, bkmk1Id); 
+  do_check_eq(observer._itemChangedProperty, "title");
+  do_check_eq(observer._itemChangedValue, "Testing2_mod");
+  txn8.undoTransaction();
+  do_check_eq(observer._itemChangedId, bkmk1Id); 
+  do_check_eq(observer._itemChangedProperty, "title");
+  do_check_eq(observer._itemChangedValue, "Testing2");
 
   // Test editing item uri
   var txn9 = ptSvc.editBookmarkURI(bkmk1Id, uri("http://newuri.com"));
   txn9.doTransaction();
+  do_check_eq(observer._itemChangedId, bkmk1Id);
+  do_check_eq(observer._itemChangedProperty, "uri");
+  do_check_eq(observer._itemChangedValue, "http://newuri.com/");
+  txn9.undoTransaction();
+  do_check_eq(observer._itemChangedId, bkmk1Id);
+  do_check_eq(observer._itemChangedProperty, "uri");
+  do_check_eq(observer._itemChangedValue, "http://www.example3.com/");
+  txn9.redoTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
   do_check_eq(observer._itemChangedProperty, "uri");
   do_check_eq(observer._itemChangedValue, "http://newuri.com/");
@@ -371,6 +471,14 @@ function run_test() {
   do_check_eq(0, bmsvc.getItemIndex(b1));
   do_check_eq(1, bmsvc.getItemIndex(b2));
   do_check_eq(2, bmsvc.getItemIndex(b3));
+  txn17.redoTransaction();
+  do_check_eq(2, bmsvc.getItemIndex(b1));
+  do_check_eq(1, bmsvc.getItemIndex(b2));
+  do_check_eq(0, bmsvc.getItemIndex(b3));
+  txn17.undoTransaction();
+  do_check_eq(0, bmsvc.getItemIndex(b1));
+  do_check_eq(1, bmsvc.getItemIndex(b2));
+  do_check_eq(2, bmsvc.getItemIndex(b3));
 
   // editBookmarkMicrosummary
   var tmpMs = mss.createMicrosummary(uri("http://testmicro.com"), 
@@ -436,4 +544,76 @@ function run_test() {
   do_check_eq(uneval(tagssvc.getTagsForURI(tagURI, { })), uneval(["bar","foo"]));
   untagTxn.redoTransaction();
   do_check_eq(uneval(tagssvc.getTagsForURI(tagURI, { })), uneval(["foo"]));
+
+  // Test aggregate removeItem transaction
+  var bkmk1Id = bmsvc.insertBookmark(root, uri("http://www.mozilla.org/"), 0, "Mozilla");
+  var bkmk2Id = bmsvc.insertSeparator(root, 1);
+  var bkmk3Id = bmsvc.createFolder(root, "folder", 2);
+  var bkmk3_1Id = bmsvc.insertBookmark(bkmk3Id, uri("http://www.mozilla.org/"), 0, "Mozilla");
+  var bkmk3_2Id = bmsvc.insertSeparator(bkmk3Id, 1);
+  var bkmk3_3Id = bmsvc.createFolder(bkmk3Id, "folder", 2);
+
+  var transactions = [];
+  transactions.push(ptSvc.removeItem(bkmk1Id));
+  transactions.push(ptSvc.removeItem(bkmk2Id));
+  transactions.push(ptSvc.removeItem(bkmk3Id));
+  var txn = ptSvc.aggregateTransactions("RemoveItems", transactions);
+
+  txn.doTransaction();
+  do_check_eq(bmsvc.getItemIndex(bkmk1Id), -1);
+  do_check_eq(bmsvc.getItemIndex(bkmk2Id), -1);
+  do_check_eq(bmsvc.getItemIndex(bkmk3Id), -1);
+  do_check_eq(bmsvc.getItemIndex(bkmk3_1Id), -1);
+  do_check_eq(bmsvc.getItemIndex(bkmk3_2Id), -1);
+  do_check_eq(bmsvc.getItemIndex(bkmk3_3Id), -1);
+
+  txn.undoTransaction();
+  var newBkmk1Id = bmsvc.getIdForItemAt(root, 0);
+  var newBkmk2Id = bmsvc.getIdForItemAt(root, 1);
+  var newBkmk3Id = bmsvc.getIdForItemAt(root, 2);
+  var newBkmk3_1Id = bmsvc.getIdForItemAt(newBkmk3Id, 0);
+  var newBkmk3_2Id = bmsvc.getIdForItemAt(newBkmk3Id, 1);
+  var newBkmk3_3Id = bmsvc.getIdForItemAt(newBkmk3Id, 2);
+  do_check_eq(bmsvc.getItemType(newBkmk1Id), bmsvc.TYPE_BOOKMARK);
+  do_check_eq(bmsvc.getBookmarkURI(newBkmk1Id).spec, "http://www.mozilla.org/");
+  do_check_eq(bmsvc.getItemType(newBkmk2Id), bmsvc.TYPE_SEPARATOR);
+  do_check_eq(bmsvc.getItemType(newBkmk3Id), bmsvc.TYPE_FOLDER);
+  do_check_eq(bmsvc.getItemTitle(newBkmk3Id), "folder");
+  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_1Id), newBkmk3Id);
+  do_check_eq(bmsvc.getItemType(newBkmk3_1Id), bmsvc.TYPE_BOOKMARK);
+  do_check_eq(bmsvc.getBookmarkURI(newBkmk3_1Id).spec, "http://www.mozilla.org/");
+  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_2Id), newBkmk3Id);
+  do_check_eq(bmsvc.getItemType(newBkmk3_2Id), bmsvc.TYPE_SEPARATOR);
+  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_3Id), newBkmk3Id);
+  do_check_eq(bmsvc.getItemType(newBkmk3_3Id), bmsvc.TYPE_FOLDER);
+  do_check_eq(bmsvc.getItemTitle(newBkmk3_3Id), "folder");
+
+  txn.redoTransaction();
+  do_check_eq(bmsvc.getItemIndex(newBkmk1Id), -1);
+  do_check_eq(bmsvc.getItemIndex(newBkmk2Id), -1);
+  do_check_eq(bmsvc.getItemIndex(newBkmk3Id), -1);
+  do_check_eq(bmsvc.getItemIndex(newBkmk3_1Id), -1);
+  do_check_eq(bmsvc.getItemIndex(newBkmk3_2Id), -1);
+  do_check_eq(bmsvc.getItemIndex(newBkmk3_3Id), -1);
+
+  txn.undoTransaction();
+  newBkmk1Id = bmsvc.getIdForItemAt(root, 0);
+  newBkmk2Id = bmsvc.getIdForItemAt(root, 1);
+  newBkmk3Id = bmsvc.getIdForItemAt(root, 2);
+  newBkmk3_1Id = bmsvc.getIdForItemAt(newBkmk3Id, 0);
+  newBkmk3_2Id = bmsvc.getIdForItemAt(newBkmk3Id, 1);
+  newBkmk3_3Id = bmsvc.getIdForItemAt(newBkmk3Id, 2);
+  do_check_eq(bmsvc.getItemType(newBkmk1Id), bmsvc.TYPE_BOOKMARK);
+  do_check_eq(bmsvc.getBookmarkURI(newBkmk1Id).spec, "http://www.mozilla.org/");
+  do_check_eq(bmsvc.getItemType(newBkmk2Id), bmsvc.TYPE_SEPARATOR);
+  do_check_eq(bmsvc.getItemType(newBkmk3Id), bmsvc.TYPE_FOLDER);
+  do_check_eq(bmsvc.getItemTitle(newBkmk3Id), "folder");
+  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_1Id), newBkmk3Id);
+  do_check_eq(bmsvc.getItemType(newBkmk3_1Id), bmsvc.TYPE_BOOKMARK);
+  do_check_eq(bmsvc.getBookmarkURI(newBkmk3_1Id).spec, "http://www.mozilla.org/");
+  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_2Id), newBkmk3Id);
+  do_check_eq(bmsvc.getItemType(newBkmk3_2Id), bmsvc.TYPE_SEPARATOR);
+  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_3Id), newBkmk3Id);
+  do_check_eq(bmsvc.getItemType(newBkmk3_3Id), bmsvc.TYPE_FOLDER);
+  do_check_eq(bmsvc.getItemTitle(newBkmk3_3Id), "folder");
 }

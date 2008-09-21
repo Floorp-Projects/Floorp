@@ -68,8 +68,8 @@ void NPP_Shutdown(void)
 //---------------------------------------------------------------------------
 NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
                           NPP pInstance,
-                          uint16 mode,
-                          int16 argc,
+                          uint16_t mode,
+                          int16_t argc,
                           char* argn[],
                           char* argv[],
                           NPSavedData* saved)
@@ -82,7 +82,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
   char * szFileURL = NULL;
   char * szFileExtension = NULL;
   char * buf = NULL;
-  BOOL bHidden = FALSE;
+  BOOL bHidden = false;
 
   for(int i = 0; i < argc; i++)
   {
@@ -224,7 +224,7 @@ NPP_NewStream(NPP pInstance,
               NPMIMEType type,
               NPStream *stream, 
               NPBool seekable,
-              uint16 *stype)
+              uint16_t *stype)
 {
   dbgOut1("NPP_NewStream");
   if(pInstance == NULL)
@@ -242,7 +242,7 @@ NPP_NewStream(NPP pInstance,
 //------------------------------------------------------------------------------------
 // NPP_WriteReady:
 //------------------------------------------------------------------------------------
-int32 NP_LOADDS
+int32_t NP_LOADDS
 NPP_WriteReady(NPP pInstance, NPStream *stream)
 {
   dbgOut1("NPP_WriteReady");
@@ -261,8 +261,8 @@ NPP_WriteReady(NPP pInstance, NPStream *stream)
 //------------------------------------------------------------------------------------
 // NPP_Write:
 //------------------------------------------------------------------------------------
-int32 NP_LOADDS
-NPP_Write(NPP pInstance, NPStream *stream, int32 offset, int32 len, void *buffer)
+int32_t NP_LOADDS
+NPP_Write(NPP pInstance, NPStream *stream, int32_t offset, int32_t len, void *buffer)
 {
   //dbgOut1("NPP_Write");
   if(pInstance == NULL)

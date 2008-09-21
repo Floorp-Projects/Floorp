@@ -144,7 +144,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(TableRowsCollection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(TableRowsCollection)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TableRowsCollection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mOrphanRows,
-                                                       nsBaseContentList)
+                                                       nsIDOMNodeList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TableRowsCollection)
@@ -354,7 +354,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLTableElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTableElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTBodies,
-                                                       nsBaseContentList)
+                                                       nsIDOMNodeList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRows)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 

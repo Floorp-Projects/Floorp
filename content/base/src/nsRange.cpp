@@ -1756,7 +1756,27 @@ nsresult nsRange::InsertNode(nsIDOMNode* aN)
 nsresult nsRange::SurroundContents(nsIDOMNode* aNewParent)
 {
   VALIDATE_ACCESS(aNewParent);
-  
+
+  NS_ENSURE_TRUE(mRoot, NS_ERROR_DOM_INVALID_STATE_ERR);
+  // BAD_BOUNDARYPOINTS_ERR: Raised if the Range partially selects a non-text
+  // node.
+  if (mStartParent != mEndParent) {
+    PRBool startIsText = mStartParent->IsNodeOfType(nsINode::eTEXT);
+    PRBool endIsText = mEndParent->IsNodeOfType(nsINode::eTEXT);
+    nsINode* startGrandParent = mStartParent->GetNodeParent();
+    nsINode* endGrandParent = mEndParent->GetNodeParent();
+    NS_ENSURE_TRUE((startIsText && endIsText &&
+                    startGrandParent &&
+                    startGrandParent == endGrandParent) ||
+                   (startIsText &&
+                    startGrandParent &&
+                    startGrandParent == mEndParent) ||
+                   (endIsText &&
+                    endGrandParent &&
+                    endGrandParent == mStartParent),
+                   NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR);
+  }
+
   // Extract the contents within the range.
 
   nsCOMPtr<nsIDOMDocumentFragment> docFrag;

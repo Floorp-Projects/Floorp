@@ -48,6 +48,7 @@
 #include "nsMemory.h"
 #include "nsBidiUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsUTF8Utils.h"
 
 #define TEXTFRAG_WHITE_AFTER_NEWLINE 50
 #define TEXTFRAG_MAX_NEWLINES 7
@@ -226,9 +227,10 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
     }
 
     // Copy data
-    for (PRUint32 i = 0; i < (PRUint32)aLength; ++i) {
-      buff[i] = (char)aBuffer[i];
-    }
+    // Use the same copying code we use elsewhere; it's likely to be
+    // carefully tuned.
+    LossyConvertEncoding<PRUnichar, char> converter(buff);
+    copy_string(aBuffer, aBuffer+aLength, converter);
     m1b = buff;
   }
 

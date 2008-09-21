@@ -53,6 +53,7 @@
 #include "nsStyleContext.h"
 #include "nsIContent.h"
 #include "nsHTMLReflowMetrics.h"
+#include "gfxMatrix.h"
 
 /**
  * New rules of reflow:
@@ -104,10 +105,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface
-// 98a0c040-09cf-408b-b55f-321b4f8d9d67
+// 626a1563-1bae-4a6e-8d2c-2dc2c13048dd
 #define NS_IFRAME_IID \
-    { 0x98a0c040, 0x09cf, 0x408b, \
-      { 0xb5, 0x5f, 0x32, 0x1b, 0x4f, 0x8d, 0x9d, 0x67 } }
+  { 0x626a1563, 0x1bae, 0x4a6e, \
+    { 0x8d, 0x2c, 0x2d, 0xc2, 0xc1, 0x30, 0x48, 0xdd } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -231,7 +232,11 @@ enum {
   // results when an inline has been split because of a nested block.
   NS_FRAME_IS_SPECIAL =                         0x00008000,
 
-  NS_FRAME_THIS_BIT_BELONGS_TO_ROC_DO_NOT_USE_OR_I_WILL_HUNT_YOU_DOWN = 0x00010000,
+  // If this bit is set, the frame may have a transform that it applies
+  // to its coordinate system (e.g. CSS transform, SVG foreignObject).
+  // This is used primarily in GetTransformMatrix to optimize for the
+  // common case.
+  NS_FRAME_MAY_BE_TRANSFORMED =                 0x00010000,
 
 #ifdef IBMBIDI
   // If this bit is set, the frame itself is a bidi continuation,
@@ -348,10 +353,10 @@ typedef PRUint32 nsReflowStatus;
 // These macros set or switch incompete statuses without touching th
 // NS_FRAME_REFLOW_NEXTINFLOW bit.
 #define NS_FRAME_SET_INCOMPLETE(status) \
-  status = status & ~NS_FRAME_OVERFLOW_INCOMPLETE | NS_FRAME_NOT_COMPLETE
+  status = (status & ~NS_FRAME_OVERFLOW_INCOMPLETE) | NS_FRAME_NOT_COMPLETE
 
 #define NS_FRAME_SET_OVERFLOW_INCOMPLETE(status) \
-  status = status & ~NS_FRAME_NOT_COMPLETE | NS_FRAME_OVERFLOW_INCOMPLETE
+  status = (status & ~NS_FRAME_NOT_COMPLETE) | NS_FRAME_OVERFLOW_INCOMPLETE
 
 // This macro tests to see if an nsReflowStatus is an error value
 // or just a regular return value
@@ -900,6 +905,12 @@ public:
    * Does this frame type always need a view?
    */
   virtual PRBool NeedsView() { return PR_FALSE; }
+
+  /**
+   * Returns whether this frame has a transform matrix applied to it.  This is true
+   * if we have the -moz-transform property or if we're an SVGForeignObjectFrame.
+   */
+  virtual PRBool IsTransformed() const;
 
   /**
    * This frame needs a view with a widget (e.g. because it's fixed
@@ -1550,7 +1561,19 @@ public:
    * @see nsGkAtoms
    */
   virtual nsIAtom* GetType() const = 0;
-  
+
+  /**
+   * Returns a transformation matrix that converts points in this frame's coordinate space
+   * to points in some ancestor frame's coordinate space.  The frame decides which ancestor
+   * it will use as a reference point.  If this frame has no ancestor, aOutAncestor will be
+   * set to null.
+   *
+   * @param aOutAncestor [out] The ancestor frame the frame has chosen.  If this frame has no
+   *        ancestor, aOutAncestor will be nsnull.
+   * @return A gfxMatrix that converts points in this frame's coordinate space into
+   *         points in aOutAncestor's coordinate space.
+   */
+  virtual gfxMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
 
   /**
    * Bit-flags to pass to IsFrameOfType()
@@ -1630,6 +1653,11 @@ public:
   virtual nsIView* GetMouseCapturer() const { return nsnull; }
 
   /**
+   * @param aFlags see InvalidateInternal below
+   */
+  void InvalidateWithFlags(const nsRect& aDamageRect, PRUint32 aFlags);
+
+  /**
    * Invalidate part of the frame by asking the view manager to repaint.
    * aDamageRect is allowed to extend outside the frame's bounds. We'll do the right
    * thing.
@@ -1638,11 +1666,9 @@ public:
    * need to be repainted.
    *
    * @param aDamageRect is in the frame's local coordinate space
-   * @param aImmediate repaint now if true, repaint later if false.
-   *   In case it's true, pending notifications will be flushed which
-   *   could cause frames to be deleted (including |this|).
    */
-  void Invalidate(const nsRect& aDamageRect, PRBool aImmediate = PR_FALSE);
+  void Invalidate(const nsRect& aDamageRect)
+  { return InvalidateWithFlags(aDamageRect, 0); }
 
   /**
    * Helper function that can be overridden by frame classes. The rectangle
@@ -1658,13 +1684,34 @@ public:
    * 
    * @param aForChild if the invalidation is coming from a child frame, this
    * is the frame; otherwise, this is null.
-   * @param aImmediate repaint now if true, repaint later if false.
+   * @param aFlags INVALIDATE_IMMEDIATE: repaint now if true, repaint later if false.
    *   In case it's true, pending notifications will be flushed which
    *   could cause frames to be deleted (including |this|).
-   */  
+   * @param aFlags INVALIDATE_CROSS_DOC: true if the invalidation
+   *   originated in a subdocument
+   */
+  enum {
+  	INVALIDATE_IMMEDIATE = 0x1,
+  	INVALIDATE_CROSS_DOC = 0x2,
+  	INVALIDATE_NOTIFY_ONLY = 0x4
+  };
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aOffsetX, nscoord aOffsetY,
-                                  nsIFrame* aForChild, PRBool aImmediate);
+                                  nsIFrame* aForChild, PRUint32 aFlags);
+
+  /**
+   * Helper function that funnels an InvalidateInternal request up to the
+   * parent.  This function is used so that if MOZ_SVG is not defined, we still
+   * have unified control paths in the InvalidateInternal chain.
+   *
+   * @param aDamageRect The rect to invalidate.
+   * @param aX The x offset from the origin of this frame to the rectangle.
+   * @param aY The y offset from the origin of this frame to the rectangle.
+   * @param aImmediate Whether to redraw immediately.
+   * @return None, though this funnels the request up to the parent frame.
+   */
+  void InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
+                                     nscoord aY, PRUint32 aFlags);
 
   /**
    * Take two rectangles in the coordinate system of this frame which
@@ -1694,9 +1741,41 @@ public:
    * FinishAndStoreOverflow has been called but mRect hasn't yet been
    * updated yet.
    *
-   * @return the rect relative to this frame's origin
+   * @return the rect relative to this frame's origin, but after
+   * CSS transforms have been applied (i.e. not really this frame's coordinate
+   * system, and may not contain the frame's border-box, e.g. if there
+   * is a CSS transform scaling it down)
    */
   nsRect GetOverflowRect() const;
+
+  /**
+   * Computes a rect that encompasses everything that might be painted by
+   * this frame.  This includes this frame, all its descendent frames, this
+   * frame's outline, and descentant frames' outline, but does not include
+   * areas clipped out by the CSS "overflow" and "clip" properties.
+   *
+   * The NS_FRAME_OUTSIDE_CHILDREN state bit is set when this overflow rect
+   * is different from nsRect(0, 0, GetRect().width, GetRect().height).
+   * XXX Note: because of a space optimization using the formula above,
+   * during reflow this function does not give accurate data if
+   * FinishAndStoreOverflow has been called but mRect hasn't yet been
+   * updated yet.
+   *
+   * @return the rect relative to the parent frame, in the parent frame's
+   * coordinate system
+   */
+  nsRect GetOverflowRectRelativeToParent() const;
+
+  /**
+   * Computes a rect that encompasses everything that might be painted by
+   * this frame.  This includes this frame, all its descendent frames, this
+   * frame's outline, and descentant frames' outline, but does not include
+   * areas clipped out by the CSS "overflow" and "clip" properties.
+   *
+   * @return the rect relative to this frame, before any CSS transforms have
+   * been applied, i.e. in this frame's coordinate system
+   */
+  nsRect GetOverflowRectRelativeToSelf() const;
 
   /**
    * Set/unset the NS_FRAME_OUTSIDE_CHILDREN flag and store the overflow area
@@ -2152,9 +2231,7 @@ protected:
    * For frames that have top-level windows (top-level viewports,
    * comboboxes, menupoups) this function will invalidate the window.
    */
-  void InvalidateRoot(const nsRect& aDamageRect,
-                      nscoord aOffsetX, nscoord aOffsetY,
-                      PRBool aImmediate);
+  void InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags);
 
   /**
    * Gets the overflow area for any properties that are common to all types of frames

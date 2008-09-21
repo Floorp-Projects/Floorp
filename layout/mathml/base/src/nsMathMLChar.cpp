@@ -2047,7 +2047,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
   else if (mRect.width && mRect.height) {
     const nsStyleBackground* backg = styleContext->GetStyleBackground();
     if (styleContext != parentContext &&
-        0 == (backg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
+        NS_GET_A(backg->mBackgroundColor) > 0) {
       rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
           nsDisplayMathMLCharBackground(aForFrame, mRect, styleContext));
       NS_ENSURE_SUCCESS(rv, rv);

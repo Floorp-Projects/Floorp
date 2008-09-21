@@ -177,10 +177,9 @@ BrowserGlue.prototype = {
   {
     // Check to see if the EULA must be shown on startup
 
-    // Global override for tinderbox machines
     var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                      getService(Ci.nsIPrefBranch);
-    var mustDisplayEULA = true;
+    var mustDisplayEULA = false;
     try {
       mustDisplayEULA = !prefBranch.getBoolPref("browser.EULA.override");
     } catch (e) {

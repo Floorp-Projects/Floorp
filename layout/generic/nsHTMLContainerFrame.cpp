@@ -270,7 +270,7 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
   if (textStyle->mTextShadow) {
     for (PRUint32 i = textStyle->mTextShadow->Length(); i > 0; --i) {
       nsCSSShadowItem* shadow = textStyle->mTextShadow->ShadowAt(i - 1);
-      nscoord blurRadius = shadow->mRadius.GetCoordValue();
+      nscoord blurRadius = shadow->mRadius;
       nscolor shadowColor;
 
       if (shadow->mHasColor)
@@ -278,8 +278,7 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
       else
         shadowColor = GetStyleColor()->mColor;
 
-      gfxPoint offset = gfxPoint(shadow->mXOffset.GetCoordValue(),
-                                 shadow->mYOffset.GetCoordValue());
+      gfxPoint offset = gfxPoint(shadow->mXOffset, shadow->mYOffset);
 
       // Add it to the display list so it is painted underneath the text and all decorations
       nsresult rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)

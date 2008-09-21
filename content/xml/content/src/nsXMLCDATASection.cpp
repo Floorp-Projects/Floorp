@@ -82,10 +82,9 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
   *aInstancePtrResult = nsnull;
 
   nsCOMPtr<nsINodeInfo> ni;
-  nsresult rv = aNodeInfoManager->GetNodeInfo(nsGkAtoms::cdataTagName,
-                                              nsnull, kNameSpaceID_None,
-                                              getter_AddRefs(ni));
-  NS_ENSURE_SUCCESS(rv, rv);
+  ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::cdataTagName,
+                                     nsnull, kNameSpaceID_None);
+  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   nsXMLCDATASection *instance = new nsXMLCDATASection(ni);
   if (!instance) {

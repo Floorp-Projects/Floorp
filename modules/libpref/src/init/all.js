@@ -130,7 +130,7 @@ pref("browser.triple_click_selects_paragraph", true);
 
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/public/gfxPlatform.h
-pref("gfx.color_management.mode", 0);
+pref("gfx.color_management.mode", 2);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
 
@@ -247,9 +247,6 @@ pref("print.show_print_progress", true);
 // When this is set to false each window has its own PrintSettings
 // and a change in one window does not affect the others
 pref("print.use_global_printsettings", true);
-
-// Use the native dialog or the XP dialog?
-pref("print.use_native_print_dialog", false);
 
 // Save the Printings after each print job
 pref("print.save_print_settings", true);
@@ -789,11 +786,6 @@ pref("network.automatic-ntlm-auth.trusted-uris", "");
 //       implementation will not be affected by this preference.
 pref("network.ntlm.send-lm-response", false);
 
-// sspitzer:  change this back to "news" when we get to beta.
-// for now, set this to news.mozilla.org because you can only
-// post to the server specified by this pref.
-pref("network.hosts.nntp_server",           "news.mozilla.org");
-
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 
 #ifndef XP_MACOSX
@@ -909,6 +901,9 @@ pref("clipboard.autocopy", false);
 pref("mousewheel.transaction.timeout", 1500);
 // mouse wheel scroll transaction is held even if the mouse cursor is moved.
 pref("mousewheel.transaction.ignoremovedelay", 100);
+
+// Macbook touchpad two finger pixel scrolling
+pref("mousewheel.enable_pixel_scrolling", true);
 
 // 0=lines, 1=pages, 2=history , 3=text size
 pref("mousewheel.withnokey.action",0);
@@ -1474,9 +1469,6 @@ pref("slider.snapMultiplier", 6);
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 
-// This indicates whether it should use the native dialog or the XP Dialog
-pref("print.use_native_print_dialog", true);
-
 // Whether to extend the native dialog with information on printing frames.
 pref("print.extend_native_print_dialog", true);
 
@@ -1937,9 +1929,6 @@ pref("ui.key.contentAccess", 2);
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 
-// This indicates whether it should use the native dialog or the XP Dialog
-pref("print.use_native_print_dialog", true);
-
 // See bug 404131, topmost <panel> element wins to Dashboard on MacOSX.
 pref("ui.panel.default_level_parent", false);
 
@@ -2279,7 +2268,7 @@ pref("autocomplete.ungrab_during_mode_switch", true);
 pref("ui.allow_platform_file_picker", true);
 
 // should NetworkManager be authoritative for online/offline status?
-pref("toolkit.networkmanager.disable", false);
+pref("toolkit.networkmanager.disable", true);
 
 pref("helpers.global_mime_types_file", "/etc/mime.types");
 pref("helpers.global_mailcap_file", "/etc/mailcap");

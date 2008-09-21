@@ -47,10 +47,6 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 @namespace svg url("http://www.w3.org/2000/svg");
 
-#main-window {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
-}
-
 #main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
   border-top: 1px solid rgba(0,0,0,0.65);
   -moz-appearance: none;
@@ -59,18 +55,12 @@
 
 /* ----- INACTIVE WINDOW ----- */
 
-#main-window:not([active="true"]) > #navigator-toolbox > toolbar {
-  border-top-color: rgba(255,255,255,0.45);
-  border-bottom-color: rgba(0,0,0,0.35);
-  background-color: #cfcfcf;
-}
-
 #main-window:not([active="true"]) > #navigator-toolbox > #nav-bar {
   background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
 }
 
 #main-window:not([active="true"]) > #navigator-toolbox > #PersonalToolbar {
-  background-image: url("chrome://browser/skin/bookmark_toolbar_background-inactive.png");
+  background-color: -moz-mac-chrome-inactive;
 }
 
 #main-window:not([active="true"]) > #navigator-toolbox > toolbar > toolbaritem,
@@ -92,20 +82,8 @@
   color: #575757;
 }
 
-#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-middle,
-#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-closebutton,
-#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-close-button {
-  background-image: url("chrome://browser/skin/tabbrowser/tab-middle-inactive.png");
-}
-
-#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-left,
-#main-window:not([active="true"]) .tabbrowser-tab[selected="true"][chromedir="rtl"] > .tab-image-right {
-  background: url("chrome://browser/skin/tabbrowser/tab-left-inactive.png") no-repeat;
-}
-
-#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] > .tab-image-right,
-#main-window:not([active="true"]) .tabbrowser-tab[selected="true"][chromedir="rtl"] > .tab-image-left {
-  background: url("chrome://browser/skin/tabbrowser/tab-right-inactive.png") no-repeat;
+#main-window:not([active="true"]) .tabbrowser-tab[selected="true"] {
+  background-color: -moz-mac-chrome-inactive;
 }
 
 /* ----- SEARCH FIELD ----- */
@@ -117,7 +95,7 @@
 /* ----- BOOKMARK TOOLBAR ----- */
 
 #PersonalToolbar {
-  background: url("chrome://browser/skin/bookmark_toolbar_background.gif") repeat-x center center;
+  background: url("chrome://browser/skin/bookmark_toolbar_background.png") repeat-x center center -moz-mac-chrome-active;
   border-top: 1px solid rgba(255,255,255,0.25);
   border-bottom: 2px solid;
   -moz-border-bottom-colors: rgba(0,0,0,0.35) transparent;
@@ -1597,8 +1575,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #nav-bar {
   background-color: #9e9e9e;
-  border-top: none;
-  border-bottom: 1px solid rgba(0,0,0,0.35);
   background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
   background-repeat: repeat-x;
   background-position: top right;
@@ -1627,7 +1603,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tab-icon {
-  margin: 0 0 4px 0;
+  margin: 0 0 3px 0;
   opacity: 0.6;
 }
 
@@ -1654,17 +1630,20 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabbrowser-tab {
   -moz-binding: url("chrome://browser/skin/browser.xml#tabbrowser-tab") !important;
   -moz-appearance: none;
+  -moz-border-radius: 0 0 3px 3px;
   color: #222;
   -moz-box-pack: center;
+  margin: 0 3px 3px 2px;
   padding: 0px;
   border: none !important;
   min-width: 1px !important;
   text-align: center;
-  height: 27px;
+  height: 22px;
 }
 
 .tabbrowser-tab[selected="true"] {
   -moz-user-focus: normal;
+  background-color: -moz-mac-chrome-active;
 }
 
 .tabbrowser-tab[selected="true"]:focus > .tab-image-middle > .tab-text-stack > .tab-text {
@@ -1685,8 +1664,17 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   padding: 0px;
 }
 
+.tab-image-left,
+.tab-image-right,
+.tabbrowser-tab > .tab-image-middle,
+.tabbrowser-tab > .tab-close-button {
+  margin-bottom: -3px;
+  padding-top: 1px;
+}
+
 .tabbrowser-tab > .tab-image-right,
 .tabbrowser-tab[chromedir="rtl"] > .tab-image-left {
+  margin-right: -3px;
   background: url("chrome://browser/skin/tabbrowser/tab-right.png") no-repeat;
 }
 
@@ -1697,6 +1685,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab > .tab-image-left,
 .tabbrowser-tab[chromedir="rtl"] > .tab-image-right {
+  margin-left: -2px;
   background: url("chrome://browser/skin/tabbrowser/tab-left.png") no-repeat;
 }
 
@@ -1706,7 +1695,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabbrowser-tab > .tab-image-middle,
-.tabbrowser-tab > .tab-closebutton {
+.tabbrowser-tab > .tab-close-button {
   background: url("chrome://browser/skin/tabbrowser/tab-middle.png") repeat-x;
   -moz-box-pack: center;
 }
@@ -1720,16 +1709,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://global/skin/tree/item-grayscale.png");
 }
 
-.tabs-closebutton {
-  margin: 0;
-  list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
-}
-
-.tabs-closebutton:hover:active {
-  list-style-image: url("chrome://global/skin/icons/closetab-active.png") !important;
-  border: none !important;
-}
-
 .tabbrowser-strip {
   margin-top: -1px;
   border-bottom: 1px solid #404040;
@@ -1741,7 +1720,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-box-pack: center;
   -moz-box-align: center;
   background: url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") repeat-x;
-  height: 27px;
+  height: 25px;
+  margin-bottom: 0;
 }
 
 .tabs-left {
@@ -1790,7 +1770,7 @@ tabbrowser > tabbox > tabpanels {
   list-style-image: url("chrome://global/skin/icons/closetab.png");
   -moz-appearance: none;
   border: none !important;
-  padding: 0 0 4px 0;
+  padding: 0 0 3px 0;
   margin: 0;
   background: inherit;
   cursor: default;
@@ -1806,19 +1786,10 @@ tabbrowser > tabbox > tabpanels {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png");
 }
 
-.tabbrowser-tab > .tab-close-button {
-  background-image: url("chrome://browser/skin/tabbrowser/tab-middle.png");
-  background-repeat: repeat-x;
-}
-
 .tabbrowser-tab[selected="true"] > .tab-close-button {
   /* Make this button focusable so clicking on it will not focus the tab while
      it's getting closed */
   -moz-user-focus: normal;
-}
-
-.tabbrowser-tab:not([selected="true"]) > .tab-close-button {
-  background-image: url("chrome://browser/skin/tabbrowser/tab-middle-bkgnd.png");
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
@@ -1897,8 +1868,7 @@ tabbrowser > tabbox > tabpanels {
   -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   -moz-border-right-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   margin: 0;
-  padding-left: 0;
-  padding-right: 0;
+  padding: 2px 0 0 0;
 }
 .tabs-alltabs-button:hover {
   background-color: rgba(0,0,0,0.10);

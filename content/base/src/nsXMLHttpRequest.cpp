@@ -121,6 +121,9 @@
 #define XML_HTTP_REQUEST_MULTIPART      (1 << 12) // Internal
 #define XML_HTTP_REQUEST_GOT_FINAL_STOP (1 << 13) // Internal
 #define XML_HTTP_REQUEST_BACKGROUND     (1 << 14) // Internal
+// This is set when we've got the headers for a multipart XMLHttpRequest,
+// but haven't yet started to process the first part.
+#define XML_HTTP_REQUEST_MPART_HEADERS  (1 << 15) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNINITIALIZED |         \
@@ -227,6 +230,8 @@ nsMultipartProxyListener::OnStartRequest(nsIRequest *aRequest,
   // decoder in the pipeline to handle the content and pass it along
   // to our original listener.
 
+  nsCOMPtr<nsIXMLHttpRequest> xhr = do_QueryInterface(mDestListener);
+
   nsCOMPtr<nsIStreamConverterService> convServ =
     do_GetService("@mozilla.org/streamConverters;1", &rv);
   if (NS_SUCCEEDED(rv)) {
@@ -242,6 +247,11 @@ nsMultipartProxyListener::OnStartRequest(nsIRequest *aRequest,
 
     mDestListener = fromListener;
   }
+
+  if (xhr) {
+    static_cast<nsXMLHttpRequest*>(xhr.get())->mState |=
+      XML_HTTP_REQUEST_MPART_HEADERS;
+   }
 
   return mDestListener->OnStartRequest(aRequest, ctxt);
 }
@@ -1315,6 +1325,8 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
     mState &= ~XML_HTTP_REQUEST_ASYNC;
   }
 
+  mState &= ~XML_HTTP_REQUEST_MPART_HEADERS;
+
   rv = NS_NewURI(getter_AddRefs(uri), url, nsnull, GetBaseURI());
   if (NS_FAILED(rv)) return rv;
 
@@ -1586,6 +1598,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   mReadRequest = request;
   mContext = ctxt;
   mState |= XML_HTTP_REQUEST_PARSEBODY;
+  mState &= ~XML_HTTP_REQUEST_MPART_HEADERS;
   ChangeState(XML_HTTP_REQUEST_LOADED);
 
   nsIURI* uri = GetBaseURI();
@@ -2441,6 +2454,13 @@ nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
 NS_IMETHODIMP
 nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint64 aProgress, PRUint64 aProgressMax)
 {
+  // We're in middle of processing multipart headers and we don't want to report
+  // any progress because upload's 'load' is dispatched when we start to load
+  // the first response.
+  if (XML_HTTP_REQUEST_MPART_HEADERS & mState) {
+    return NS_OK;
+  }
+
   // We're uploading if our state is XML_HTTP_REQUEST_OPENED or
   // XML_HTTP_REQUEST_SENT
   PRBool upload = !!((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState);

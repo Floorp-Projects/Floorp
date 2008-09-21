@@ -49,6 +49,7 @@
 #include "nsDOMString.h"
 #include "nsIDOMCSS2Properties.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMCSSPrimitiveValue.h"
 #include "nsStyleContext.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
@@ -72,6 +73,9 @@
 #include "nsInspectorCSSUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsFrameManager.h"
+#include "nsCSSKeywords.h"
+#include "nsStyleCoord.h"
+#include "nsDisplayList.h"
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -812,6 +816,120 @@ nsComputedDOMStyle::GetCounterIncrement(nsIDOMCSSValue** aValue)
   return CallQueryInterface(valueList, aValue);
 }
 
+/* Convert the stored representation into a list of two values and then hand
+ * it back.
+ */
+nsresult nsComputedDOMStyle::GetMozTransformOrigin(nsIDOMCSSValue **aValue)
+{
+  /* We need to build up a list of two values.  We'll call them
+   * width and height.
+   */
+  nsAutoPtr<nsROCSSPrimitiveValue> width(GetROCSSPrimitiveValue());
+  nsAutoPtr<nsROCSSPrimitiveValue> height(GetROCSSPrimitiveValue());
+  if (!width || !height)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  /* Now, get the values. */
+  const nsStyleDisplay* display = GetStyleDisplay();
+  SetValueToCoord(width, display->mTransformOrigin[0],
+                  &nsComputedDOMStyle::GetFrameBoundsWidthForTransform);
+  SetValueToCoord(height, display->mTransformOrigin[1],
+                  &nsComputedDOMStyle::GetFrameBoundsHeightForTransform);
+
+  /* Store things as a value list, fail if we can't get one. */
+  nsAutoPtr<nsDOMCSSValueList> valueList(GetROCSSValueList(PR_FALSE));
+  if (!valueList)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  /* Chain on width and height, fail if we can't. */
+  if (!valueList->AppendCSSValue(width))
+    return NS_ERROR_OUT_OF_MEMORY;
+  width.forget();
+  if (!valueList->AppendCSSValue(height))
+    return NS_ERROR_OUT_OF_MEMORY;
+  height.forget();
+
+  /* Release the pointer and call query interface!  We're done. */
+  return CallQueryInterface(valueList.forget(), aValue);
+}
+
+/* If the property is "none", hand back "none" wrapped in a value.
+ * Otherwise, compute the aggregate transform matrix and hands it back in a
+ * "matrix" wrapper.
+ */
+nsresult nsComputedDOMStyle::GetMozTransform(nsIDOMCSSValue **aValue)
+{
+  static const PRInt32 NUM_FLOATS = 4;
+  
+  /* First, get the display data.  We'll need it. */
+  const nsStyleDisplay* display = GetStyleDisplay();
+  
+  /* If the "no transforms" flag is set, then we should construct a
+   * single-element entry and hand it back.
+   */
+  if (!display->mTransformPresent) {
+    nsROCSSPrimitiveValue *val(GetROCSSPrimitiveValue());
+    if (!val)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    /* Set it to "none." */
+    val->SetIdent(eCSSKeyword_none);
+    return CallQueryInterface(val, aValue);
+  }
+  
+  /* Otherwise, we need to compute the current value of the transform matrix,
+   * store it in a string, and hand it back to the caller.
+   */
+  nsAutoString resultString(NS_LITERAL_STRING("matrix("));
+  
+  /* Now, we need to convert the matrix into a string.  We'll start by taking
+   * the first four entries and converting them directly to floating-point
+   * values.
+   */
+  for (PRInt32 index = 0; index < NUM_FLOATS; ++index) {
+    resultString.AppendFloat(display->mTransform.GetMainMatrixEntry(index));
+    resultString.Append(NS_LITERAL_STRING(", "));
+  }
+
+  /* Use the inner frame for width and height.  If we fail, assume zero.
+   * TODO: There is no good way for us to represent the case where there's no
+   * frame, which is problematic.  The reason is that when we have percentage
+   * transforms, there are a total of four stored matrix entries that influence
+   * the transform based on the size of the element.  However, this poses a
+   * problem, because only two of these values can be explicitly referenced
+   * using the named transforms.  Until a real solution is found, we'll just
+   * use this approach.
+   */
+  nsRect bounds =
+    (mInnerFrame ? nsDisplayTransform::GetFrameBoundsForTransform(mInnerFrame) :
+     nsRect(0, 0, 0, 0));
+
+  /* Now, compute the dX and dY components by adding the stored coord value
+   * (in CSS pixels) to the translate values.
+   */
+  
+  float deltaX = nsPresContext::AppUnitsToFloatCSSPixels
+    (display->mTransform.GetXTranslation(bounds));
+  float deltaY = nsPresContext::AppUnitsToFloatCSSPixels
+    (display->mTransform.GetYTranslation(bounds));
+     
+
+  /* Append these values! */
+  resultString.AppendFloat(deltaX);
+  resultString.Append(NS_LITERAL_STRING("px, "));
+  resultString.AppendFloat(deltaY);
+  resultString.Append(NS_LITERAL_STRING("px)"));
+
+  /* Create a value to hold our result. */
+  nsROCSSPrimitiveValue* rv(GetROCSSPrimitiveValue());
+
+  if (!rv)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  rv->SetString(resultString);
+  return CallQueryInterface(rv, aValue);
+}
+
 nsresult
 nsComputedDOMStyle::GetCounterReset(nsIDOMCSSValue** aValue)
 {
@@ -1056,18 +1174,10 @@ nsComputedDOMStyle::GetBackgroundColor(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   const nsStyleBackground* color = GetStyleBackground();
-
-  if (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
-    const nsAFlatCString& backgroundColor =
-      nsCSSProps::ValueToKeyword(NS_STYLE_BG_COLOR_TRANSPARENT,
-                                 nsCSSProps::kBackgroundColorKTable);
-    val->SetIdent(backgroundColor);
-  } else {
-    nsresult rv = SetToRGBAColor(val, color->mBackgroundColor);
-    if (NS_FAILED(rv)) {
-      delete val;
-      return rv;
-    }
+  nsresult rv = SetToRGBAColor(val, color->mBackgroundColor);
+  if (NS_FAILED(rv)) {
+    delete val;
+    return rv;
   }
 
   return CallQueryInterface(val, aValue);
@@ -1259,8 +1369,8 @@ nsComputedDOMStyle::GetBorderSpacing(nsIDOMCSSValue** aValue)
   }
 
   const nsStyleTableBorder *border = GetStyleTableBorder();
-  SetValueToCoord(xSpacing, border->mBorderSpacingX);
-  SetValueToCoord(ySpacing, border->mBorderSpacingY);
+  xSpacing->SetAppUnits(border->mBorderSpacingX);
+  ySpacing->SetAppUnits(border->mBorderSpacingY);
 
   return CallQueryInterface(valueList, aValue);
 }
@@ -1555,7 +1665,7 @@ nsComputedDOMStyle::GetOutlineOffset(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  SetValueToCoord(val, GetStyleOutline()->mOutlineOffset);
+  val->SetAppUnits(GetStyleOutline()->mOutlineOffset);
 
   return CallQueryInterface(val, aValue);
 }
@@ -1631,20 +1741,20 @@ nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
     return CallQueryInterface(val, aValue);
   }
 
-  static nsStyleCoord nsCSSShadowItem::* const shadowValuesNoSpread[] = {
+  static nscoord nsCSSShadowItem::* const shadowValuesNoSpread[] = {
     &nsCSSShadowItem::mXOffset,
     &nsCSSShadowItem::mYOffset,
     &nsCSSShadowItem::mRadius
   };
 
-  static nsStyleCoord nsCSSShadowItem::* const shadowValuesWithSpread[] = {
+  static nscoord nsCSSShadowItem::* const shadowValuesWithSpread[] = {
     &nsCSSShadowItem::mXOffset,
     &nsCSSShadowItem::mYOffset,
     &nsCSSShadowItem::mRadius,
     &nsCSSShadowItem::mSpread
   };
 
-  nsStyleCoord nsCSSShadowItem::* const * shadowValues;
+  nscoord nsCSSShadowItem::* const * shadowValues;
   PRUint32 shadowValuesLength;
   if (aUsesSpread) {
     shadowValues = shadowValuesWithSpread;
@@ -1690,7 +1800,7 @@ nsComputedDOMStyle::GetCSSShadowArray(nsCSSShadowArray* aArray,
         delete valueList;
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      SetValueToCoord(val, item->*(shadowValues[i]));
+      val->SetAppUnits(item->*(shadowValues[i]));
     }
   }
 
@@ -3055,15 +3165,11 @@ nsComputedDOMStyle::GetBorderColorsFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 
           return NS_ERROR_OUT_OF_MEMORY;
         }
-        if (borderColors->mTransparent) {
-          primitive->SetIdent(nsGkAtoms::transparent);
-        } else {
-          nsresult rv = SetToRGBAColor(primitive, borderColors->mColor);
-          if (NS_FAILED(rv)) {
-            delete valueList;
-            delete primitive;
-            return rv;
-          }
+        nsresult rv = SetToRGBAColor(primitive, borderColors->mColor);
+        if (NS_FAILED(rv)) {
+          delete valueList;
+          delete primitive;
+          return rv;
         }
 
         PRBool success = valueList->AppendCSSValue(primitive);
@@ -3125,23 +3231,16 @@ nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nscolor color; 
-  PRBool transparent;
   PRBool foreground;
-  GetStyleBorder()->GetBorderColor(aSide, color, transparent, foreground);
-  if (transparent) {
-    val->SetIdent(nsGkAtoms::transparent);
-  } else {
-    if (foreground) {
-      const nsStyleColor* colorStruct = GetStyleColor();
-      color = colorStruct->mColor;
-    }
-    // XXX else?
+  GetStyleBorder()->GetBorderColor(aSide, color, foreground);
+  if (foreground) {
+    color = GetStyleColor()->mColor;
+  }
 
-    nsresult rv = SetToRGBAColor(val, color);
-    if (NS_FAILED(rv)) {
-      delete val;
-      return rv;
-    }
+  nsresult rv = SetToRGBAColor(val, color);
+  if (NS_FAILED(rv)) {
+    delete val;
+    return rv;
   }
 
   return CallQueryInterface(val, aValue);
@@ -3317,6 +3416,42 @@ nsComputedDOMStyle::GetFrameBorderRectWidth(nscoord& aWidth)
   FlushPendingReflows();
 
   aWidth = mInnerFrame->GetSize().width;
+  return PR_TRUE;
+}
+
+PRBool
+nsComputedDOMStyle::GetFrameBoundsWidthForTransform(nscoord& aWidth)
+{
+  // We need a frame to work with.
+  if (!mInnerFrame) {
+    return PR_FALSE;
+  }
+
+  FlushPendingReflows();
+
+  // Check to see that we're transformed.
+  if (!mInnerFrame->GetStyleDisplay()->HasTransform())
+    return PR_FALSE;
+
+  aWidth = nsDisplayTransform::GetFrameBoundsForTransform(mInnerFrame).width;
+  return PR_TRUE;
+}
+
+PRBool
+nsComputedDOMStyle::GetFrameBoundsHeightForTransform(nscoord& aHeight)
+{
+  // We need a frame to work with.
+  if (!mInnerFrame) {
+    return PR_FALSE;
+  }
+
+  FlushPendingReflows();
+
+  // Check to see that we're transformed.
+  if (!mInnerFrame->GetStyleDisplay()->HasTransform())
+    return PR_FALSE;
+
+  aHeight = nsDisplayTransform::GetFrameBoundsForTransform(mInnerFrame).height;
   return PR_TRUE;
 }
 
@@ -4030,6 +4165,8 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topRight,   OutlineRadiusTopRight),
     COMPUTED_STYLE_MAP_ENTRY(stack_sizing,                  StackSizing),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_transform,                MozTransform),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_transform_origin,         MozTransformOrigin),
     COMPUTED_STYLE_MAP_ENTRY(user_focus,                    UserFocus),
     COMPUTED_STYLE_MAP_ENTRY(user_input,                    UserInput),
     COMPUTED_STYLE_MAP_ENTRY(user_modify,                   UserModify),

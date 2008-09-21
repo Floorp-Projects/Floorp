@@ -165,7 +165,7 @@ NS_IMETHODIMP
 nsGfxCheckboxControlFrame::OnChecked(nsPresContext* aPresContext,
                                      PRBool aChecked)
 {
-  Invalidate(GetOverflowRect(), PR_FALSE);
+  InvalidateOverflowRect();
   return NS_OK;
 }
 

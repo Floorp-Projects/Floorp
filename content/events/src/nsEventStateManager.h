@@ -295,6 +295,10 @@ protected:
                                   nsIFrame* &targetOuterFrame,
                                   nsPresContext* &presCtxOuter);
 
+  void SendPixelScrollEvent(nsIFrame* aTargetFrame,
+                            nsMouseScrollEvent* aEvent,
+                            nsPresContext* aPresContext,
+                            nsEventStatus* aStatus);
   typedef enum {
     eScrollByPixel,
     eScrollByLine,
@@ -444,6 +448,10 @@ protected:
   nsCOMArray<nsIContent> mAccessKeys;
 
   nsCOMArray<nsIDocShell> mTabbingFromDocShells;
+
+  // Unlocks pixel scrolling
+  PRPackedBool mLastLineScrollConsumedX;
+  PRPackedBool mLastLineScrollConsumedY;
 
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   enum { kClickHoldDelay = 500 } ;        // 500ms == 1/2 second

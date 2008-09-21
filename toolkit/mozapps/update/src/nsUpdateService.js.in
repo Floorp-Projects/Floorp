@@ -1953,7 +1953,7 @@ Checker.prototype = {
     url = url.replace(/\+/g, "%2B");
 
     if (force)
-      url += "?force=1"
+      url += (url.indexOf("?") != -1 ? "&" : "?") + "force=1";
 
     LOG("Checker", "update url: " + url);
     return url;
@@ -1966,12 +1966,13 @@ Checker.prototype = {
     if (!listener)
       throw Cr.NS_ERROR_NULL_POINTER;
 
-    if (!this.getUpdateURL(force) || (!this.enabled && !force))
+    var url = this.getUpdateURL(force);
+    if (!url || (!this.enabled && !force))
       return;
 
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);
-    this._request.open("GET", this.getUpdateURL(force), true);
+    this._request.open("GET", url, true);
     this._request.channel.notificationCallbacks = new BadCertHandler();
     this._request.overrideMimeType("text/xml");
     this._request.setRequestHeader("Cache-Control", "no-cache");
@@ -1981,7 +1982,7 @@ Checker.prototype = {
     this._request.onload      = function(event) { self.onLoad(event);     };
     this._request.onprogress  = function(event) { self.onProgress(event); };
 
-    LOG("Checker", "checkForUpdates: sending request to " + this.getUpdateURL(force));
+    LOG("Checker", "checkForUpdates: sending request to " + url);
     this._request.send(null);
 
     this._callback = listener;

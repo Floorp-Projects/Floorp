@@ -152,7 +152,7 @@ function (engineURL, iconURL)
     debug(ex);
     Components.utils.reportError("Invalid argument passed to window.sidebar.addSearchEngine: " + ex);
     
-    var searchBundle = srGetStrBundle("chrome://browser/locale/search.properties");
+    var searchBundle = srGetStrBundle("chrome://global/locale/search/search.properties");
     var brandBundle = srGetStrBundle("chrome://branding/locale/brand.properties");
     var brandName = brandBundle.GetStringFromName("brandShortName");
     var title = searchBundle.GetStringFromName("error_invalid_engine_title");

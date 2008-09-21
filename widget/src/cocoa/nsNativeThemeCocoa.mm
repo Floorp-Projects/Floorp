@@ -57,6 +57,7 @@
 #include "nsILookAndFeel.h"
 #include "nsWidgetAtoms.h"
 #include "nsToolkit.h"
+#include "nsCocoaWindow.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -116,6 +117,19 @@ static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize, con
   rect->size.height += buttonMargins[bottomMargin] + buttonMargins[topMargin];
 }
 
+static NSWindow* NativeWindowForFrame(nsIFrame* aFrame, int* aLevelsUp = NULL)
+{
+  if (!aFrame)
+    return nil;  
+
+  nsIWidget* widget = aFrame->GetWindow();
+  if (!widget)
+    return nil;
+
+  nsIWidget* topLevelWidget = widget->GetTopLevelWidget(aLevelsUp);
+
+  return (NSWindow*)topLevelWidget->GetNativeData(NS_NATIVE_WINDOW);
+}
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
 
@@ -184,6 +198,15 @@ nsNativeThemeCocoa::DrawCheckbox(CGContextRef cgContext, ThemeButtonKind inKind,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+// Limit on the area of destRect (in pixels^2) in DrawCellWithScaling(),
+// above which we don't do any scaling.  This is to avoid crashes in
+// [NSGraphicsContext graphicsContextWithGraphicsPort:flipped:] and
+// CGContextDrawImage(), and also to avoid very poor drawing performance in
+// CGContextDrawImage() (particularly if xscale or yscale is less than but
+// near 1 -- e.g. 0.9).  This value was determined by trial and error, on
+// OS X 10.4.11 and 10.5.4, and on systems with different amounts of RAM.
+#define CELL_SCALING_MAX_AREA 500000
+
 /*
  * Draw the given NSCell into the given cgContext.
  *
@@ -251,6 +274,10 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
   if (doSaveCTM)
     savedCTM = CGContextGetCTM(cgContext);
 
+  // Fall back to no scaling if the area of our cell (in pixels^2) is too large.
+  if (drawRect.size.width * drawRect.size.height > CELL_SCALING_MAX_AREA)
+    xscale = yscale = 1.0f;
+
   if (xscale == 1.0f && yscale == 1.0f) {
     // Inflate the rect Gecko gave us by the margin for the control.
     InflateControlRect(&drawRect, controlSize, marginSet);
@@ -259,6 +286,8 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
     savedContext = [NSGraphicsContext currentContext];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
 
+    // [NSView focusView] may return nil here, but
+    // [NSCell drawWithFrame:inView:] can deal with that.
     [cell drawWithFrame:drawRect inView:[NSView focusView]];
   }
   else {
@@ -286,6 +315,8 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
     savedContext = [NSGraphicsContext currentContext];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:YES]];
 
+    // [NSView focusView] may return nil here, but
+    // [NSCell drawWithFrame:inView:] can deal with that.
     [cell drawWithFrame:tmpRect inView:[NSView focusView]];
 
     [NSGraphicsContext setCurrentContext:savedContext];
@@ -981,6 +1012,54 @@ nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
 }
 
 
+void
+nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
+                                       nsIFrame *aFrame)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  float titlebarHeight = 0;
+  int levelsUp = 0;
+  NSWindow* win = NativeWindowForFrame(aFrame, &levelsUp);
+
+  // If the toolbar is directly below the titlebar in the top level view of a ToolbarWindow
+  if ([win isKindOfClass:[ToolbarWindow class]] && levelsUp == 0 &&
+      inBoxRect.origin.y <= 0) {
+    // Consider the titlebar height when calculating the gradient.
+    titlebarHeight = [(ToolbarWindow*)win titlebarHeight];
+    // Notify the window about the toolbar's height so that it can draw the
+    // correct gradient in the titlebar.
+    [(ToolbarWindow*)win setUnifiedToolbarHeight:inBoxRect.size.height];
+  }
+  
+  BOOL isMain = win ? [win isMainWindow] : YES;
+
+  // Draw the gradient
+  UnifiedGradientInfo info = { titlebarHeight, inBoxRect.size.height, isMain, NO };
+  struct CGFunctionCallbacks callbacks = { 0, unifiedShading, NULL };
+  CGFunctionRef function = CGFunctionCreate(&info, 1,  NULL, 4, NULL, &callbacks);
+  float srcY = inBoxRect.origin.y;
+  float dstY = srcY + inBoxRect.size.height - 1;
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  CGShadingRef shading = CGShadingCreateAxial(colorSpace,
+                                              CGPointMake(0, srcY),
+                                              CGPointMake(0, dstY), function,
+                                              NO, NO);
+  CGColorSpaceRelease(colorSpace);
+  CGFunctionRelease(function);
+  CGContextClipToRect(cgContext, inBoxRect);
+  CGContextDrawShading(cgContext, shading);
+  CGShadingRelease(shading);
+
+  // Draw the border at the bottom of the toolbar.
+  [NativeGreyColorAsNSColor(headerBorderGrey, isMain) set];
+  NSRectFill(NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y +
+                        inBoxRect.size.height - 1.0f, inBoxRect.size.width, 1.0f));
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                          PRUint8 aWidgetType, const nsRect& aRect,
@@ -1147,6 +1226,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       HIThemeSeparatorDrawInfo sdi = { 0, kThemeStateActive };
       HIThemeDrawSeparator(&macRect, &sdi, cgContext, HITHEME_ORIENTATION);
     }
+      break;
+
+    case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
+      DrawUnifiedToolbar(cgContext, macRect, aFrame);
       break;
 
     case NS_THEME_TOOLBAR:
@@ -1436,6 +1519,10 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
       }
       break;
     }
+
+    case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
+      aResult->SizeTo(0, 0, 1, 0);
+      break;
   }
 
   return NS_OK;
@@ -1748,6 +1835,7 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
   switch (aWidgetType) {
     case NS_THEME_TOOLBOX:
     case NS_THEME_TOOLBAR:
+    case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
     case NS_THEME_TOOLBAR_BUTTON:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL: 
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
@@ -1838,6 +1926,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_SPINNER:
     case NS_THEME_TOOLBAR:
+    case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
     case NS_THEME_STATUSBAR:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:

@@ -85,9 +85,9 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   }
 
   nsCOMPtr<nsINodeInfo> ni;
-  rv = nimgr->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nsnull,
-                          kNameSpaceID_None, getter_AddRefs(ni));
-  NS_ENSURE_SUCCESS(rv, rv);
+  ni = nimgr->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nsnull,
+                          kNameSpaceID_None);
+  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   *aDocType = new nsDOMDocumentType(ni, aName, aEntities, aNotations,
                                     aPublicId, aSystemId, aInternalSubset);
@@ -254,14 +254,13 @@ nsDOMDocumentType::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
     //     break inserting DOMDocumentType nodes through other DOM methods
     //     though.
     nsNodeInfoManager *nimgr = aParent ?
-                               aParent->NodeInfo()->NodeInfoManager() :
-                               aDocument->NodeInfoManager();
+      aParent->NodeInfo()->NodeInfoManager() :
+      aDocument->NodeInfoManager();
     nsCOMPtr<nsINodeInfo> newNodeInfo;
-    nsresult rv = nimgr->GetNodeInfo(mNodeInfo->NameAtom(),
+    newNodeInfo = nimgr->GetNodeInfo(mNodeInfo->NameAtom(),
                                      mNodeInfo->GetPrefixAtom(),
-                                     mNodeInfo->NamespaceID(),
-                                     getter_AddRefs(newNodeInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
+                                     mNodeInfo->NamespaceID());
+    NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_FAILURE);
 
     mNodeInfo.swap(newNodeInfo);
 
@@ -273,8 +272,8 @@ nsDOMDocumentType::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
 
       JSContext *cx = nsnull;
       JSObject *oldScope = nsnull, *newScope = nsnull;
-      rv = nsContentUtils::GetContextAndScopes(oldOwnerDoc, newOwnerDoc, &cx,
-                                               &oldScope, &newScope);
+      nsresult rv = nsContentUtils::GetContextAndScopes(oldOwnerDoc, newOwnerDoc, &cx,
+                                                        &oldScope, &newScope);
       if (cx && xpc) {
         nsISupports *node = NS_ISUPPORTS_CAST(nsIContent*, this);
         nsCOMPtr<nsIXPConnectJSObjectHolder> oldWrapper;

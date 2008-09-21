@@ -46,21 +46,25 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
+# input location for the build, usually $(DIST)
+# set this to $(DIST)/l10n-stage per override for L10n builds
+PACKAGE_BASE_DIR	= $(DIST)
+
 # Default output location for update archive
-STAGE_DIR	= $(DIST)/update
+STAGE_DIR	= $(DIST)/$(PKG_UPDATE_PATH)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifdef UNIVERSAL_BINARY
-ifneq (,$(filter %/l10n-stage,$(DIST)))
-PACKAGE_DIR	= $(DIST)/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app
+ifneq (,$(filter %/l10n-stage,$(PACKAGE_BASE_DIR)))
+PACKAGE_DIR	= $(PACKAGE_BASE_DIR)/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app
 else
-PACKAGE_DIR	= $(DIST)/universal/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app
+PACKAGE_DIR	= $(PACKAGE_BASE_DIR)/universal/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app
 endif
 else
-PACKAGE_DIR	= $(DIST)/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app
+PACKAGE_DIR	= $(PACKAGE_BASE_DIR)/$(MOZ_PKG_APPNAME)/$(MOZ_APP_DISPLAYNAME).app
 endif
 else
-PACKAGE_DIR	= $(DIST)/$(MOZ_PKG_APPNAME)
+PACKAGE_DIR	= $(PACKAGE_BASE_DIR)/$(MOZ_PKG_APPNAME)
 endif
 
 MAR_BIN	= $(DIST)/host/bin/mar$(HOST_BIN_SUFFIX)
@@ -72,7 +76,7 @@ complete-patch::
 	mkdir -p $(STAGE_DIR)
 	MAR=$(MAR_BIN) \
 	  $(srcdir)/make_full_update.sh \
-	  "$(STAGE_DIR)/$(PKG_BASENAME).complete.mar" \
+	  "$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).complete.mar" \
 	  "$(PACKAGE_DIR)"
 
 partial-patch::
@@ -80,7 +84,7 @@ partial-patch::
 	MAR=$(MAR_BIN) \
 	MBSDIFF=$(MBSDIFF_BIN) \
 	  $(srcdir)/make_incremental_update.sh \
-	  "$(STAGE_DIR)/$(PKG_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar" \
+	  "$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar" \
 	  "$(SRC_BUILD)" \
 	  "$(DST_BUILD)"
 
