@@ -1486,8 +1486,7 @@ testArrayPushPop.expected = "55,45";
 test(testArrayPushPop);
 
 // Test stack reconstruction after a nested exit
-function testNestedExitStackInner(j, counter)
-{
+function testNestedExitStackInner(j, counter) {
   ++counter;
   var b = 0;
   for (var i = 1; i <= RUNLOOP; i++) {
@@ -1505,8 +1504,7 @@ function testNestedExitStackInner(j, counter)
   }
   return counter + b;
 }
-function testNestedExitStackOuter()
-{
+function testNestedExitStackOuter() {
   var counter = 0;
   for (var j = 1; j <= RUNLOOP; ++j) {
     for (var k = 1; k <= RUNLOOP; ++k) {
@@ -1516,33 +1514,16 @@ function testNestedExitStackOuter()
   return counter;
 }
 testNestedExitStackOuter.expected = 81;
-testNestedExitStackOuter.jitstats = {
-    recorderStarted: 4,
-    recorderAborted: 0
-};
+testNestedExitStackOuter.jitstats = {};
+testNestedExitStackOuter.jitstats.recorderStarted = 4;
+testNestedExitStackOuter.jitstats.recorderAborted = 0;
 test(testNestedExitStackOuter);
 
-function testHOTLOOPSize()
-{
+function testHOTLOOPSize() {
     return HOTLOOP > 1;
 }
 testHOTLOOPSize.expected = true;
 test(testHOTLOOPSize);
-
-function testDateNow()
-{
-    var time = 0;
-    for (var j = 1; j <= RUNLOOP; ++j) {
-	time = Date.now();
-    }
-    return "ok";
-}
-testDateNow.expected = "ok";
-testDateNow.jitstats = {
-    recorderStarted: 1,
-    recorderAborted: 0
-};
-test(testDateNow);
 
 // This test has to come last, since it messes with Object.prototype
 // and thus confuses jitstats.

@@ -67,7 +67,6 @@
 #include "jsregexp.h"
 #include "jsscope.h"
 #include "jsscript.h"
-#include "jsdate.h"
 #include "jstracer.h"
 
 #include "jsautooplen.h"        // generated headers last
@@ -3330,24 +3329,10 @@ TraceRecorder::binary(LOpcode op)
             a = lir->insCall(F_StringToNumber, args);
             leftNumber = true;
         }
-        if (JSVAL_IS_OBJECT(l) &&
-            guardClass(JSVAL_TO_OBJECT(l), a, &js_DateClass)) {
-            args[0] = a;
-            args[1] = cx_ins;
-            a = lir->insCall(F_DateToNumber, args);
-            leftNumber = true;
-        }
         if (JSVAL_IS_STRING(r)) {
             args[0] = b;
             args[1] = cx_ins;
             b = lir->insCall(F_StringToNumber, args);
-            rightNumber = true;
-        }
-        if (JSVAL_IS_OBJECT(r) &&
-            guardClass(JSVAL_TO_OBJECT(r), b, &js_DateClass)) {
-            args[0] = b;
-            args[1] = cx_ins;
-            b = lir->insCall(F_DateToNumber, args);
             rightNumber = true;
         }
     }
@@ -4131,9 +4116,6 @@ js_Array(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
 JSBool
 js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
-JSBool
-js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
-
 bool
 TraceRecorder::record_JSOP_NEW()
 {
@@ -4176,7 +4158,6 @@ TraceRecorder::record_JSOP_NEW()
         { (JSFastNative)js_Array,  F_Array_2obj,    "pC", "oo",  FAIL_NULL },
         { (JSFastNative)js_Array,  F_Array_3num,    "pC", "ddd", FAIL_NULL },
         { (JSFastNative)js_Object, F_FastNewObject, "fC", "",    FAIL_NULL },
-        { (JSFastNative)js_Date,   F_FastNewDate,   "pC", "",    FAIL_NULL },
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
@@ -4854,7 +4835,6 @@ TraceRecorder::record_JSOP_CALL()
         { js_str_substring,            F_String_p_substring_1, "TC",  "i",    FAIL_NULL },
         { js_str_toLowerCase,          F_toLowerCase,          "TC",   "",    FAIL_NULL },
         { js_str_toUpperCase,          F_toUpperCase,          "TC",   "",    FAIL_NULL },
-        { js_date_now,                 F_Date_now,             "C",    "",    INFALLIBLE },
     };
 
     uintN i = 0;
