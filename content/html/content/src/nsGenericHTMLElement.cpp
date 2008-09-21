@@ -2286,7 +2286,7 @@ nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
 
   // Clean up.  Set the form to nsnull so it knows we went away.
   // Do not notify as the content is being destroyed.
-  SetForm(nsnull, PR_TRUE, PR_FALSE);
+  ClearForm(PR_TRUE, PR_FALSE);
 }
 
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGenericHTMLFormElement,
@@ -2307,42 +2307,47 @@ nsGenericHTMLFormElement::SaveSubtreeState()
   nsGenericHTMLElement::SaveSubtreeState();
 }
 
-NS_IMETHODIMP
-nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
-                                  PRBool aRemoveFromForm,
-                                  PRBool aNotify)
+void
+nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
-  NS_ASSERTION(!mForm || HasFlag(ADDED_TO_FORM),
-               "Form control should have had flag set.");
-  NS_ASSERTION(!mForm || !aForm,
+  NS_PRECONDITION(aForm, "Don't pass null here");
+  NS_ASSERTION(!mForm,
                "We don't support switching from one non-null form to another.");
 
-  if (mForm) {
-    if (aRemoveFromForm) {
-      nsAutoString nameVal, idVal;
-      GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
-      GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
+  // keep a *weak* ref to the form here
+  CallQueryInterface(aForm, &mForm);
+  mForm->Release();
+}
 
-      mForm->RemoveElement(this, aNotify);
+void
+nsGenericHTMLFormElement::ClearForm(PRBool aRemoveFromForm,
+                                    PRBool aNotify)
+{
+  NS_ASSERTION((mForm != nsnull) == HasFlag(ADDED_TO_FORM),
+               "Form control should have had flag set correctly");
 
-      if (!nameVal.IsEmpty()) {
-        mForm->RemoveElementFromTable(this, nameVal);
-      }
+  if (!mForm) {
+    return;
+  }
+  
+  if (aRemoveFromForm) {
+    nsAutoString nameVal, idVal;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
+    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
 
-      if (!idVal.IsEmpty()) {
-        mForm->RemoveElementFromTable(this, idVal);
-      }
+    mForm->RemoveElement(this, aNotify);
+
+    if (!nameVal.IsEmpty()) {
+      mForm->RemoveElementFromTable(this, nameVal);
     }
 
-    UnsetFlags(ADDED_TO_FORM);
-    mForm = nsnull;
-  } else if (aForm) {
-    // keep a *weak* ref to the form here
-    CallQueryInterface(aForm, &mForm);
-    mForm->Release();
+    if (!idVal.IsEmpty()) {
+      mForm->RemoveElementFromTable(this, idVal);
+    }
   }
 
-  return NS_OK;
+  UnsetFlags(ADDED_TO_FORM);
+  mForm = nsnull;
 }
 
 NS_IMETHODIMP
@@ -2444,7 +2449,7 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
     // probably changed _somewhere_.
     nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm();
     if (form) {
-      SetForm(form, PR_FALSE, PR_FALSE);
+      SetForm(form);
     }
   }
 
@@ -2481,12 +2486,12 @@ nsGenericHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // Might need to unset mForm
     if (aNullParent) {
       // No more parent means no more form
-      SetForm(nsnull, PR_TRUE, PR_TRUE);
+      ClearForm(PR_TRUE, PR_TRUE);
     } else {
       // Recheck whether we should still have an mForm.
       nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm(mForm);
       if (!form) {
-        SetForm(nsnull, PR_TRUE, PR_TRUE);
+        ClearForm(PR_TRUE, PR_TRUE);
       } else {
         UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
       }

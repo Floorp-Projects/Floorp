@@ -767,13 +767,10 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   // TABLEBORDER
   IndentBy(out,aIndent);
   const nsStyleTableBorder* tableBorder = GetStyleTableBorder();
-  fprintf(out, "<tableborder data=\"%d ",
-    (int)tableBorder->mBorderCollapse);
-  tableBorder->mBorderSpacingX.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
-  tableBorder->mBorderSpacingY.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
-  fprintf(out, "%d %d ",
+  fprintf(out, "<tableborder data=\"%d %d %d %d %d ",
+    (int)tableBorder->mBorderCollapse,
+    (int)tableBorder->mBorderSpacingX,
+    (int)tableBorder->mBorderSpacingY,
     (int)tableBorder->mCaptionSide,
     (int)tableBorder->mEmptyCells);
   fprintf(out, "\" />\n");

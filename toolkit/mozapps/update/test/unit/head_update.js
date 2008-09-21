@@ -196,9 +196,46 @@ function remove_dirs_and_files () {
   if (file.exists())
     file.remove(false);
 
+  file = dir.clone();
+  file.append("updates");
+  file.append("last-update.log");
+  try {
+    if (file.exists())
+      file.remove(false);
+  }
+  catch (e) {
+  }
+
+  file = dir.clone();
+  file.append("updates");
+  file.append("0");
+  file.append("update.mar");
+  try {
+    if (file.exists())
+      file.remove(false);
+  }
+  catch (e) {
+  }
+
+  file = dir.clone();
+  file.append("updates");
+  file.append("0");
+  file.append("update.status");
+  try {
+    if (file.exists())
+      file.remove(false);
+  }
+  catch (e) {
+  }
+
+  // This fails sporadically on Mac OS X so wrap it in a try catch
   dir.append("updates");
-  if (dir.exists())
-    dir.remove(true);
+  try {
+    if (dir.exists())
+      dir.remove(true);
+  }
+  catch (e) {
+  }
 }
 
 /**

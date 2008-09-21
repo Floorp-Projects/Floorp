@@ -47,8 +47,8 @@ class nsIRenderingContext;
 class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID   \
-{ 0x0f4bc34a, 0xc93b, 0x4699, \
-{ 0xb6, 0xc2, 0xb3, 0xca, 0x9e, 0xe4, 0x6c, 0x95 } }
+{ 0x63ae23ee, 0xe251, 0x4005, \
+{ 0xaf, 0xe4, 0x5b, 0x0f, 0xa1, 0x5a, 0xb4, 0x99 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -114,6 +114,12 @@ public:
    * and geometry changes if it wants to.
    */
   NS_IMETHOD_(void) WillPaint() = 0;
+
+  /**
+   * Notify the observer that it should invalidate the frame bounds for
+   * the frame associated with this view.
+   */
+  NS_IMETHOD_(void) InvalidateFrameForView(nsIView *aView) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewObserver, NS_IVIEWOBSERVER_IID)

@@ -593,7 +593,7 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
 
     /* This allows filtering code to pretend that pixels are located at integer coordinates */
     adjust (&v, &unit, -(pixman_fixed_1 / 2));
-    
+
     if (pict->common.filter == PIXMAN_FILTER_NEAREST || pict->common.filter == PIXMAN_FILTER_FAST)
     {
 	/* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */
@@ -602,7 +602,6 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
         if (pict->common.repeat == PIXMAN_REPEAT_NORMAL)
         {
             fbFetchTransformed_Nearest_Normal(pict, width, buffer, mask, maskBits, affine, v, unit);
-
         }
         else if (pict->common.repeat == PIXMAN_REPEAT_PAD)
         {

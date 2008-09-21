@@ -39,7 +39,7 @@
 #ifndef _MOZSTORAGESTATEMENTWRAPPER_H_
 #define _MOZSTORAGESTATEMENTWRAPPER_H_
 
-#include "mozIStorageStatement.h"
+#include "mozStorageStatement.h"
 #include "mozIStorageStatementWrapper.h"
 #include "nsIXPCScriptable.h"
 
@@ -71,7 +71,7 @@ protected:
     }
 
     // note: pointer to the concrete statement
-    nsCOMPtr<mozIStorageStatement> mStatement;
+    nsRefPtr<mozStorageStatement> mStatement;
     PRUint32 mParamCount;
     PRUint32 mResultColumnCount;
     nsStringArray mColumnNames;

@@ -1861,10 +1861,15 @@ DocumentViewerImpl::Show(void)
       webNav->GetSessionHistory(getter_AddRefs(history));
       nsCOMPtr<nsISHistoryInternal> historyInt = do_QueryInterface(history);
       if (historyInt) {
+        PRInt32 prevIndex,loadedIndex;
+        nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
+        docShell->GetPreviousTransIndex(&prevIndex);
+        docShell->GetLoadedTransIndex(&loadedIndex);
 #ifdef DEBUG_PAGE_CACHE
-        printf("About to evict content viewers\n");
+        printf("About to evict content viewers: prev=%d, loaded=%d\n",
+               prevIndex, loadedIndex);
 #endif
-        historyInt->EvictContentViewers();
+        historyInt->EvictContentViewers(prevIndex, loadedIndex);
       }
     }
   }

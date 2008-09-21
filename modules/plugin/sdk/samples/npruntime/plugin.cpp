@@ -660,7 +660,7 @@ NPBool CPlugin::isInitialized()
   return m_bInitialized;
 }
 
-int16 CPlugin::handleEvent(void* event)
+int16_t CPlugin::handleEvent(void* event)
 {
 #ifdef XP_MAC
   NPEvent* ev = (NPEvent*)event;
@@ -689,9 +689,9 @@ void CPlugin::showVersion()
   if (m_Window) {
     NPRect r =
       {
-        (uint16)m_Window->y, (uint16)m_Window->x,
-        (uint16)(m_Window->y + m_Window->height),
-        (uint16)(m_Window->x + m_Window->width)
+        (uint16_t)m_Window->y, (uint16_t)m_Window->x,
+        (uint16_t)(m_Window->y + m_Window->height),
+        (uint16_t)(m_Window->x + m_Window->width)
       };
 
     NPN_InvalidateRect(m_pNPInstance, &r);

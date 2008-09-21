@@ -36,20 +36,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/* XXX ajvincent XPCOM_DEBUG_BREAK automatically causes a xpcshell test to crash
-   if a NS_ASSERTION fires.  However, the assertions this testcase triggers are
-   unrelated to the actual test, and the component this test runs against is
-   JavaScript-based - so assertions here do not apply against the tested
-   component.  I am (reluctantly) turning the assertions into stack warnings in
-   order to prevent test failures at this point which are not the fault of the
-   code being tested or the test script.
-
-   At present, the assertions fired are for calls which aren't thread-safe.
-*/
-var env = Components.classes["@mozilla.org/process/environment;1"]
-                    .getService(Components.interfaces.nsIEnvironment);
-env.set("XPCOM_DEBUG_BREAK", "stack");
-
 // Disables security checking our updates which haven't been signed
 gPrefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
@@ -468,7 +454,4 @@ function run_test_pt4() {
   do_test_finished();
 
   testserver.stop();
-
-  // If we've gotten this far, then the test has passed.
-  env.set("XPCOM_DEBUG_BREAK", "abort");
 }

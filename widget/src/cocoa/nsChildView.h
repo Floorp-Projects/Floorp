@@ -99,6 +99,22 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 
 @end
 
+// Needed to support pixel scrolling.
+// See http://developer.apple.com/qa/qa2005/qa1453.html.
+// kEventMouseScroll is only defined on 10.5+. Using the moz prefix avoids
+// potential symbol conflicts.
+// This should be changed when 10.4 support is dropped.
+enum {
+  mozkEventMouseScroll             = 11
+};
+
+// Support for pixel scroll deltas, not part of NSEvent.h
+// See http://lists.apple.com/archives/cocoa-dev/2007/Feb/msg00050.html
+@interface NSEvent (DeviceDelta)
+  - (float)deviceDeltaX;
+  - (float)deviceDeltaY;
+@end
+
 @interface ChildView : NSView<
 #ifdef ACCESSIBILITY
                               mozAccessible,
@@ -275,7 +291,6 @@ public:
   NS_IMETHOD              IsVisible(PRBool& outState);
 
   virtual nsIWidget*      GetParent(void);
-  nsIWidget*              GetTopLevelWidget();
 
   NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                            PRBool *aForWindow);

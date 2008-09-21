@@ -86,8 +86,6 @@ public:
     // Check GetStyle()->sizeAdjust != 0.0 before calling this 
     gfxFloat GetAdjustedSize() { if (!mPangoFont) RealizePangoFont(); return mAdjustedSize; }
 
-    PRUint32 GetGlyph(const PRUint32 aChar);
-
     virtual nsString GetUniqueName();
 
     // Get the glyphID of a space
@@ -130,9 +128,7 @@ public:
     virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                     const Parameters *aParams, PRUint32 aFlags);
 
-    gfxPangoFont *GetFontAt(PRInt32 i) {
-        return static_cast<gfxPangoFont*>(static_cast<gfxFont*>(mFonts[i]));
-    }
+    virtual gfxPangoFont *GetFontAt(PRInt32 i);
 
 protected:
     // ****** Textrun glyph conversion helpers ******
@@ -148,7 +144,7 @@ protected:
                      PRBool aTake8BitPath);
 
     // Returns NS_ERROR_FAILURE if there's a missing glyph
-    nsresult SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
+    nsresult SetGlyphs(gfxTextRun *aTextRun,
                        const gchar *aUTF8, PRUint32 aUTF8Length,
                        PRUint32 *aUTF16Offset, PangoGlyphString *aGlyphs,
                        PangoGlyphUnit aOverrideSpaceWidth,
@@ -165,9 +161,7 @@ protected:
                                  const gchar *aUTF8, PRUint32 aUTF8Length);
 #endif
 
-    static PRBool FontCallback (const nsAString& fontName,
-                                const nsACString& genericName,
-                                void *closure);
+    void GetFcFamilies(nsAString &aFcFamilies);
 };
 
 class gfxPangoFontWrapper {

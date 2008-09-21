@@ -674,7 +674,9 @@ nsDOMWorkerThread::CompileGlobalObject(JSContext* aCx)
 
     // Evaluate and execute the script
     success = JS_EvaluateUCScriptForPrincipals(aCx, global, principal,
-                                               mSource.get(), mSource.Length(),
+                                               reinterpret_cast<const jschar*>
+                                                          (mSource.get()), 
+                                               mSource.Length(),
                                                "DOMWorker inline script", 1,
                                                &val);
     if (!success) {

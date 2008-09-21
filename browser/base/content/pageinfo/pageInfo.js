@@ -1106,7 +1106,7 @@ function formatNumber(number)
 
 function formatDate(datestr, unknown)
 {
-  // scriptable date formater, for pretty printing dates
+  // scriptable date formatter, for pretty printing dates
   var dateService = Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
                               .getService(Components.interfaces.nsIScriptableDateFormat);
 

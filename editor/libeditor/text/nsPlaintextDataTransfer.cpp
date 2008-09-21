@@ -409,6 +409,7 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
   if (NS_FAILED(rv)) return rv;
 
   aDragEvent->StopPropagation();
+  aDragEvent->PreventDefault();
 
   return rv;
 }

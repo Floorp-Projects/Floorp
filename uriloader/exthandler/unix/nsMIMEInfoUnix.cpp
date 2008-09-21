@@ -37,14 +37,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_PLATFORM_HILDON
+#include <glib.h>
+#include <hildon-uri.h>
+#endif
+
+
 #include "nsMIMEInfoUnix.h"
 #include "nsGNOMERegistry.h"
 #include "nsIGnomeVFSService.h"
+#ifdef MOZ_ENABLE_DBUS
+#include "nsDBusHandlerApp.h"
+#endif
+
 
 nsresult
 nsMIMEInfoUnix::LoadUriInternal(nsIURI * aURI)
-{
-  return nsGNOMERegistry::LoadURL(aURI);
+{ 
+  nsresult rv = nsGNOMERegistry::LoadURL(aURI);
+#ifdef MOZ_PLATFORM_HILDON
+  if (NS_FAILED(rv)){
+    HildonURIAction *action = hildon_uri_get_default_action(mType.get(), nsnull);
+    if (action) {
+      nsCAutoString spec;
+      aURI->GetAsciiSpec(spec);
+      if (hildon_uri_open(spec.get(), action, nsnull))
+        rv = NS_OK;
+      hildon_uri_action_unref(action);
+    }
+  }
+#endif
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -61,6 +84,15 @@ nsMIMEInfoUnix::GetHasDefaultHandler(PRBool *_retval)
   if (*_retval)
     return NS_OK;
 
+#ifdef MOZ_PLATFORM_HILDON
+  HildonURIAction *action = hildon_uri_get_default_action(mType.get(), nsnull);
+  if (action) {
+    *_retval = PR_TRUE;
+    hildon_uri_action_unref(action);
+    return NS_OK;
+  }
+#endif
+  
   // If we didn't find a VFS handler, fallback.
   return nsMIMEInfoImpl::GetHasDefaultHandler(_retval);
 }
@@ -84,3 +116,56 @@ nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile *aFile)
 
   return LaunchWithIProcess(mDefaultApplication, nativePath);
 }
+
+#ifdef MOZ_PLATFORM_HILDON
+
+NS_IMETHODIMP
+nsMIMEInfoUnix::GetPossibleApplicationHandlers(nsIMutableArray ** aPossibleAppHandlers)
+{
+  if (!mPossibleApplications) {
+    mPossibleApplications = do_CreateInstance(NS_ARRAY_CONTRACTID);
+    
+    if (!mPossibleApplications)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    GSList *actions = hildon_uri_get_actions(mType.get(), nsnull);
+    GSList *actionsPtr = actions;
+    while (actionsPtr) {
+      HildonURIAction *action = (HildonURIAction*)actionsPtr->data;
+      actionsPtr = actionsPtr->next;
+      nsDBusHandlerApp* app = new nsDBusHandlerApp();
+      if (!app){
+        hildon_uri_free_actions(actions);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      nsDependentCString method(hildon_uri_action_get_method(action));
+      nsDependentCString key(hildon_uri_action_get_service(action));
+      nsCString service, objpath, interface;
+      app->SetMethod(method);
+      app->SetName(NS_ConvertUTF8toUTF16(key));
+      
+      if (key.FindChar('.', 0) > 0) {
+        service.Assign(key);
+        objpath.Assign(NS_LITERAL_CSTRING("/")+ key);
+        objpath.ReplaceChar('.', '/');
+        interface.Assign(key);
+      } else {
+        service.Assign(NS_LITERAL_CSTRING("com.nokia.")+ key);
+        objpath.Assign(NS_LITERAL_CSTRING("/com/nokia/")+ key);
+        interface.Assign(NS_LITERAL_CSTRING("com.nokia.")+ key);  
+      }
+      
+      app->SetService(service);
+      app->SetObjectPath(objpath);
+      app->SetDBusInterface(interface);
+      
+      mPossibleApplications->AppendElement(app, PR_FALSE);
+    }
+    hildon_uri_free_actions(actions);
+  }
+
+  *aPossibleAppHandlers = mPossibleApplications;
+  NS_ADDREF(*aPossibleAppHandlers);
+  return NS_OK;
+}
+#endif

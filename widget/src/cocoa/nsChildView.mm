@@ -177,6 +177,8 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
+- (BOOL)isPaintingSuppressed;
+
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
  // a context menu (click-hold)
@@ -877,14 +879,6 @@ nsChildView::GetParent(void)
   return mParentWidget;
 }
 
-nsIWidget*
-nsChildView::GetTopLevelWidget()
-{
-  nsIWidget* current = this;
-  for (nsIWidget* parent = GetParent(); parent ; parent = parent->GetParent())
-    current = parent;
-  return current;
-}
 
 NS_IMETHODIMP nsChildView::ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                             PRBool *aForWindow)
@@ -2254,6 +2248,10 @@ NSEvent* gLastDragEvent = nil;
                                                           kCorePboardType_urld,
                                                           kCorePboardType_urln,
                                                           nil]];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(controlTintChanged)
+                                               name:NSControlTintDidChangeNotification
+                                             object:nil];
 
   return self;
 
@@ -2272,6 +2270,8 @@ NSEvent* gLastDragEvent = nil;
   
   if (sLastViewEntered == self)
     sLastViewEntered = nil;
+
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
 
   [super dealloc];    
 
@@ -2320,6 +2320,16 @@ NSEvent* gLastDragEvent = nil;
 - (void)setNativeWindow:(NSWindow*)aWindow
 {
   mWindow = aWindow;
+}
+
+
+- (void)controlTintChanged
+{
+  if (!mGeckoChild)
+    return;
+
+  nsGUIEvent guiEvent(PR_TRUE, NS_THEMECHANGED, mGeckoChild);
+  mGeckoChild->DispatchWindowEvent(guiEvent);
 }
 
 
@@ -2721,6 +2731,14 @@ NSEvent* gLastDragEvent = nil;
 }
 
 
+- (BOOL)isPaintingSuppressed
+{
+  NSWindow* win = [self window];
+  return ([win isKindOfClass:[ToolbarWindow class]] &&
+          [(ToolbarWindow*)win isPaintingSuppressed]);
+}
+
+
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
@@ -2728,7 +2746,8 @@ NSEvent* gLastDragEvent = nil;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   PRBool isVisible;
-  if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) || !isVisible)
+  if (!mGeckoChild || NS_FAILED(mGeckoChild->IsVisible(isVisible)) ||
+      !isVisible || [self isPaintingSuppressed])
     return;
 
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
@@ -3110,6 +3129,10 @@ NSEvent* gLastDragEvent = nil;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
+  if ([theEvent modifierFlags] & NSControlKeyMask)
+    geckoEvent.button = nsMouseEvent::eRightButton;
+  else
+    geckoEvent.button = nsMouseEvent::eLeftButton;
 
   // create native EventRecord for use by plugins
   EventRecord macEvent;
@@ -3486,77 +3509,119 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
   if (!mGeckoChild)
     return;
 
-  float scrollDelta;
+  float scrollDelta = 0;
+  float scrollDeltaPixels = 0;
+  PRBool checkPixels = PR_TRUE;
 
-  if (inAxis & nsMouseScrollEvent::kIsVertical)
-    scrollDelta = -[theEvent deltaY];
-  else if (inAxis & nsMouseScrollEvent::kIsHorizontal)
-    scrollDelta = -[theEvent deltaX];
-  else
-    return; // caller screwed up
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs)
+    prefs->GetBoolPref("mousewheel.enable_pixel_scrolling", &checkPixels);
 
-  if (scrollDelta == 0)
-    // No sense in firing off a Gecko event.  Note that as of 10.4 Tiger,
-    // a single NSScrollWheel event might result in deltaX = deltaY = 0.
-    return;
-  
-  nsMouseScrollEvent geckoEvent(PR_TRUE, NS_MOUSE_SCROLL, nsnull);
-  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.scrollFlags |= inAxis;
-
-  // Gecko only understands how to scroll by an integer value.  Using floor
-  // and ceil is better than truncating the fraction, especially when
-  // |delta| < 1.
-  if (scrollDelta < 0)
-    geckoEvent.delta = (PRInt32)floorf(scrollDelta);
-  else
-    geckoEvent.delta = (PRInt32)ceilf(scrollDelta);
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  mGeckoChild->DispatchWindowEvent(geckoEvent);
-  if (!mGeckoChild)
-    return;
-
-  // dispatch scroll wheel carbon event for plugins
-  {
-    EventRef theEvent;
-    OSStatus err = ::MacCreateEvent(NULL,
-                          kEventClassMouse,
-                          kEventMouseWheelMoved,
-                          TicksToEventTime(TickCount()),
-                          kEventAttributeUserEvent,
-                          &theEvent);
-    if (err == noErr) {
-      EventMouseWheelAxis axis;
-      if (inAxis & nsMouseScrollEvent::kIsVertical)
-        axis = kEventMouseWheelAxisY;
-      else if (inAxis & nsMouseScrollEvent::kIsHorizontal)
-        axis = kEventMouseWheelAxisX;
-      
-      SetEventParameter(theEvent,
-                            kEventParamMouseWheelAxis,
-                            typeMouseWheelAxis,
-                            sizeof(EventMouseWheelAxis),
-                            &axis);
-
-      SInt32 delta = (SInt32)-geckoEvent.delta;
-      SetEventParameter(theEvent,
-                            kEventParamMouseWheelDelta,
-                            typeLongInteger,
-                            sizeof(SInt32),
-                            &delta);
-
-      Point mouseLoc;
-      ::GetGlobalMouse(&mouseLoc);
-      SetEventParameter(theEvent,
-                            kEventParamMouseLocation,
-                            typeQDPoint,
-                            sizeof(Point),
-                            &mouseLoc);
-      
-      ::SendEventToEventTarget(theEvent, GetWindowEventTarget((WindowRef)[[self window] windowRef]));
-      ReleaseEvent(theEvent);
+  EventRef theCarbonEvent = [theEvent _eventRef];
+  UInt32 carbonEventKind = theCarbonEvent ? ::GetEventKind(theCarbonEvent) : 0;
+  // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
+  // assertion and an Objective-C NSInternalInconsistencyException if the
+  // underlying "Carbon" event doesn't contain pixel scrolling information.
+  // For these events, carbonEventKind is kEventMouseWheelMoved instead of
+  // kEventMouseScroll.
+  if (carbonEventKind != mozkEventMouseScroll)
+    checkPixels = PR_FALSE;
+  // Some scrolling devices supports pixel scrolling, e.g. a Macbook
+  // touchpad or a Mighty Mouse. On those devices, [event deviceDeltaX/Y]
+  // contains the amount of pixels to scroll. 
+  if (inAxis & nsMouseScrollEvent::kIsVertical) {
+    scrollDelta       = -[theEvent deltaY];
+    if (checkPixels && (scrollDelta == 0 || scrollDelta != floor(scrollDelta))) {
+      scrollDeltaPixels = -[theEvent deviceDeltaY];
     }
+  } else if (inAxis & nsMouseScrollEvent::kIsHorizontal) {
+    scrollDelta       = -[theEvent deltaX];
+    if (checkPixels && (scrollDelta == 0 || scrollDelta != floor(scrollDelta))) {
+      scrollDeltaPixels = -[theEvent deviceDeltaX];
+    }
+  } else {
+    return; // caller screwed up
+  }
+
+  BOOL hasPixels = (scrollDeltaPixels != 0);
+
+  if (!hasPixels && scrollDelta == 0)
+    // No sense in firing off a Gecko event.
+     return;
+
+  if (scrollDelta != 0) {
+    // Send the line scroll event.
+    nsMouseScrollEvent geckoEvent(PR_TRUE, NS_MOUSE_SCROLL, nsnull);
+    [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
+    geckoEvent.scrollFlags |= inAxis;
+
+    if (hasPixels)
+      geckoEvent.scrollFlags |= nsMouseScrollEvent::kHasPixels;
+
+    // Gecko only understands how to scroll by an integer value. Using floor
+    // and ceil is better than truncating the fraction, especially when
+    // |delta| < 1.
+    if (scrollDelta < 0)
+      geckoEvent.delta = (PRInt32)floorf(scrollDelta);
+    else
+      geckoEvent.delta = (PRInt32)ceilf(scrollDelta);
+
+    nsAutoRetainCocoaObject kungFuDeathGrip(self);
+    mGeckoChild->DispatchWindowEvent(geckoEvent);
+    if (!mGeckoChild)
+      return;
+
+    // dispatch scroll wheel carbon event for plugins
+    {
+      EventRef theEvent;
+      OSStatus err = ::MacCreateEvent(NULL,
+                                      kEventClassMouse,
+                                      kEventMouseWheelMoved,
+                                      TicksToEventTime(TickCount()),
+                                      kEventAttributeUserEvent,
+                                      &theEvent);
+      if (err == noErr) {
+        EventMouseWheelAxis axis;
+        if (inAxis & nsMouseScrollEvent::kIsVertical)
+          axis = kEventMouseWheelAxisY;
+        else if (inAxis & nsMouseScrollEvent::kIsHorizontal)
+          axis = kEventMouseWheelAxisX;
+        
+        SetEventParameter(theEvent,
+                          kEventParamMouseWheelAxis,
+                          typeMouseWheelAxis,
+                          sizeof(EventMouseWheelAxis),
+                          &axis);
+        
+        SInt32 delta = (SInt32)-geckoEvent.delta;
+        SetEventParameter(theEvent,
+                          kEventParamMouseWheelDelta,
+                          typeLongInteger,
+                          sizeof(SInt32),
+                          &delta);
+        
+        Point mouseLoc;
+        ::GetGlobalMouse(&mouseLoc);
+        SetEventParameter(theEvent,
+                          kEventParamMouseLocation,
+                          typeQDPoint,
+                          sizeof(Point),
+                          &mouseLoc);
+        
+        ::SendEventToEventTarget(theEvent, GetWindowEventTarget((WindowRef)[[self window] windowRef]));
+        ReleaseEvent(theEvent);
+      }
+    }
+  }
+
+  if (hasPixels) {
+    // Send the pixel scroll event.
+    nsMouseScrollEvent geckoEvent(PR_TRUE, NS_MOUSE_PIXEL_SCROLL, nsnull);
+    [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
+    geckoEvent.scrollFlags |= inAxis;
+    geckoEvent.delta = NSToIntRound(scrollDeltaPixels);
+    nsAutoRetainCocoaObject kungFuDeathGrip(self);
+    mGeckoChild->DispatchWindowEvent(geckoEvent);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

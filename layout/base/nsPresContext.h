@@ -65,6 +65,7 @@
 #include "nsChangeHint.h"
 // This also pulls in gfxTypes.h, which we cannot include directly.
 #include "gfxRect.h"
+#include "nsRegion.h"
 class nsImageLoader;
 #ifdef IBMBIDI
 class nsBidiPresUtils;
@@ -778,6 +779,9 @@ public:
 
   PRBool           SupressingResizeReflow() const { return mSupressResizeReflow; }
 
+  void NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc);
+  void FireDOMPaintEvent();
+
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
@@ -837,6 +841,9 @@ protected:
   nsCOMPtr<nsITimer>    mPrefChangedTimer;
 
   nsPropertyTable       mPropertyTable;
+
+  nsRegion              mSameDocDirtyRegion;
+  nsRegion              mCrossDocDirtyRegion;
 
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
   PRInt32               mFontScaler;

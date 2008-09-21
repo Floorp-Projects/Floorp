@@ -1,4 +1,0 @@
-#ifndef MOZ_XUL_APP
-pipnss.jar:
-*   content/pipnss/contents.rdf             (content/contents.rdf)
-#endif

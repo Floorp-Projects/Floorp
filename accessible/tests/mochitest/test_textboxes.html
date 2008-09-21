@@ -7,17 +7,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=442648
   <title>nsIAccessible textboxes chrome tests</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
-  <script type="application/javascript" src="chrome://mochikit/content/a11y/accessible/testTextboxes.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/testTextboxes.js"></script>
 
   <script type="application/javascript">
     function doTest()
     {
-      gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
-                      getService(nsIAccessibleRetrieval);
-
       //////////////////////////////////////////////////////////////////////////
       // normal textbox without content and with no proper label
       testThis("unlabelled_Textbox", // ID

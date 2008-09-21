@@ -120,6 +120,10 @@
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
 
+#ifdef MOZ_SVG
+#include "nsSVGIntegrationUtils.h"
+#endif
+
 #include "gfxContext.h"
 
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
@@ -435,6 +439,12 @@ nsFrame::Init(nsIContent*      aContent,
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_GENERATED_CONTENT);
   }
+  if (GetStyleDisplay()->HasTransform()) {
+    // The frame gets reconstructed if we toggle the -moz-transform
+    // property, so we can set this bit here and then ignore it.
+    mState |= NS_FRAME_MAY_BE_TRANSFORMED;
+  }
+  
   DidSetStyleContext();
 
   if (IsBoxWrapped())
@@ -660,6 +670,13 @@ nsIFrame::GetPaddingRect() const
   nsRect r(mRect);
   r.Deflate(b);
   return r;
+}
+
+PRBool
+nsIFrame::IsTransformed() const
+{
+  return (mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
+    GetStyleDisplay()->HasTransform();
 }
 
 nsRect
@@ -1177,11 +1194,26 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   PRBool applyAbsPosClipping =
       ApplyAbsPosClipping(aBuilder, disp, this, &absPosClip);
   nsRect dirtyRect = aDirtyRect;
+
+  /* If we're being transformed, we need to invert the matrix transform so that we don't 
+   * grab points in the wrong coordinate system!
+   */
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) && disp->HasTransform())
+    dirtyRect = nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0));
+  
   if (applyAbsPosClipping) {
     dirtyRect.IntersectRect(dirtyRect,
                             absPosClip - aBuilder->ToReferenceFrame(this));
   }
-      
+
+#ifdef MOZ_SVG
+  PRBool usingSVGEffects = nsSVGIntegrationUtils::UsingEffectsForFrame(this);
+  if (usingSVGEffects) {
+    dirtyRect =
+      nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
+  }
+#endif
+
   nsDisplayListCollection set;
   nsresult rv;
   {    
@@ -1262,12 +1294,39 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     resultList.AppendToTop(item);
   }
  
-  if (disp->mOpacity == 1.0f) {
-    aList->AppendToTop(&resultList);
-  } else {
-    rv = aList->AppendNewToTop(new (aBuilder) nsDisplayOpacity(this, &resultList));
+#ifdef MOZ_SVG
+  /* If there are any SVG effects, wrap up the list in an effects list. */
+  if (usingSVGEffects) {
+    nsDisplaySVGEffects* svgList = new (aBuilder) nsDisplaySVGEffects(this, &resultList);
+    if (!svgList)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    /* List now emptied, so add the new list to the top. */
+    resultList.AppendToTop(svgList);
+  } else
+#endif
+
+  /* If there is any opacity, wrap it up in an opacity list. */
+  if (disp->mOpacity < 1.0f) {
+    nsDisplayOpacity* opacityList = new (aBuilder) nsDisplayOpacity(this, &resultList);
+    if (!opacityList)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    resultList.AppendToTop(opacityList);
   }
-  
+
+  /* If we're going to apply a transformation, wrap everything in an
+   * nsDisplayTransform.
+   */
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) && disp->HasTransform()) {
+    nsDisplayTransform* transform = new (aBuilder) nsDisplayTransform(this, &resultList);
+    if (!transform)  
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    resultList.AppendToTop(transform);
+  }
+
+  aList->AppendToTop(&resultList);
   return rv;
 }
 
@@ -1406,7 +1465,15 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       !PresContext()->GetTheme()->WidgetIsContainer(ourDisp->mAppearance))
     return NS_OK;
 
-  PRBool isComposited = disp->mOpacity != 1.0f;
+  // Child is composited if it's transformed, partially transparent, or has
+  // SVG effects.
+  PRBool isComposited = disp->mOpacity != 1.0f ||
+    ((aChild->mState & NS_FRAME_MAY_BE_TRANSFORMED) && 
+     aChild->GetStyleDisplay()->HasTransform())
+#ifdef MOZ_SVG
+    || nsSVGIntegrationUtils::UsingEffectsForFrame(aChild)
+#endif
+    ;
   PRBool isPositioned = disp->IsPositioned();
   if (isComposited || isPositioned || (aFlags & DISPLAY_CHILD_FORCE_STACKING_CONTEXT)) {
     // If you change this, also change IsPseudoStackingContextFromStyle()
@@ -3567,8 +3634,7 @@ nsIFrame::IsLeaf() const
 }
 
 void
-nsIFrame::Invalidate(const nsRect& aDamageRect,
-                     PRBool        aImmediate)
+nsIFrame::InvalidateWithFlags(const nsRect& aDamageRect, PRUint32 aFlags)
 {
   if (aDamageRect.IsEmpty()) {
     return;
@@ -3584,15 +3650,137 @@ nsIFrame::Invalidate(const nsRect& aDamageRect,
       return;
   }
   
-  InvalidateInternal(aDamageRect, 0, 0, nsnull, aImmediate);
+  InvalidateInternal(aDamageRect, 0, 0, nsnull, aFlags);
+}
+
+/**
+ * Helper function that funnels an InvalidateInternal request up to the
+ * parent.  This function is used so that if MOZ_SVG is not defined, we still
+ * have unified control paths in the InvalidateInternal chain.
+ *
+ * @param aDamageRect The rect to invalidate.
+ * @param aX The x offset from the origin of this frame to the rectangle.
+ * @param aY The y offset from the origin of this frame to the rectangle.
+ * @param aImmediate Whether to redraw immediately.
+ * @return None, though this funnels the request up to the parent frame.
+ */
+void
+nsIFrame::InvalidateInternalAfterResize(const nsRect& aDamageRect, nscoord aX,
+                                        nscoord aY, PRUint32 aFlags)
+{
+  /* If we're a transformed frame, then we need to apply our transform to the
+   * damage rectangle so that the redraw correctly redraws the transformed
+   * region.  We're moved over aX and aY from our origin, but since this aX
+   * and aY is contained within our border, we need to scoot back by -aX and
+   * -aY to get back to the origin of the transform.
+   *
+   * There's one more problem, though, and that's that we don't know what
+   * coordinate space this rectangle is in.  Sometimes it's in the local
+   * coordinate space for the frame, and sometimes its in the transformed
+   * coordinate space.  If we get it wrong, we'll display incorrectly.  Until I
+   * find a better fix for this problem, we'll invalidate the union of the two
+   * rectangles (original rectangle and transformed rectangle).  At least one of
+   * these will be correct.
+   *
+   * See bug #452496 for more details.
+   */
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
+      GetStyleDisplay()->HasTransform()) {
+    nsRect newDamageRect;
+    newDamageRect.UnionRect(nsDisplayTransform::TransformRect
+                            (aDamageRect, this, nsPoint(-aX, -aY)), aDamageRect);
+    GetParent()->
+      InvalidateInternal(newDamageRect, aX + mRect.x, aY + mRect.y, this,
+                         aFlags);
+  }
+  else 
+    GetParent()->
+      InvalidateInternal(aDamageRect, aX + mRect.x, aY + mRect.y, this, aFlags);
 }
 
 void
 nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
-                             nsIFrame* aForChild, PRBool aImmediate)
+                             nsIFrame* aForChild, PRUint32 aFlags)
 {
-  GetParent()->
-    InvalidateInternal(aDamageRect, aX + mRect.x, aY + mRect.y, this, aImmediate);
+#ifdef MOZ_SVG
+  if (nsSVGIntegrationUtils::UsingEffectsForFrame(this)) {
+    nsRect r = nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(this,
+            aDamageRect + nsPoint(aX, aY));
+    /* Rectangle is now in our own local space, so aX and aY are effectively
+     * zero.  Thus we'll pretend that the entire time this was in our own
+     * local coordinate space and do any remaining processing.
+     */
+    InvalidateInternalAfterResize(r, 0, 0, aFlags);
+    return;
+  }
+#endif
+  
+  InvalidateInternalAfterResize(aDamageRect, aX, aY, aFlags);
+}
+
+gfxMatrix
+nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
+{
+  NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");
+
+  /* Whether or not we're transformed, the matrix will be relative to our
+   * cross-doc parent frame.
+   */
+  *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(this);
+
+  /* If we're transformed, we want to hand back the combination
+   * transform/translate matrix that will apply our current transform, then
+   * shift us to our parent.
+   */
+  if (IsTransformed()) {
+    /* Compute the delta to the parent, which we need because we are converting
+     * coordinates to our parent.
+     */
+    NS_ASSERTION(*aOutAncestor, "Cannot transform the viewport frame!");
+    nsPoint delta = GetOffsetTo(*aOutAncestor);
+    PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
+
+    gfxMatrix result =
+      nsDisplayTransform::GetResultingTransformMatrix(this, nsPoint(0, 0),
+                                                      scaleFactor);
+    /* Combine the raw transform with a translation to our parent. */
+    result *= gfxMatrix().Translate
+      (gfxPoint(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
+                NSAppUnitsToFloatPixels(delta.y, scaleFactor)));
+    return result;
+  }
+  
+  /* Otherwise, we're not transformed.  In that case, we'll walk up the frame
+   * tree until we either hit the root frame or something that may be
+   * transformed.  We'll then change coordinates into that frame, since we're
+   * guaranteed that nothing in-between can be transformed.  First, however,
+   * we have to check to see if we have a parent.  If not, we'll set the
+   * outparam to null (indicating that there's nothing left) and will hand back
+   * the identity matrix.
+   */
+  if (!*aOutAncestor)
+    return gfxMatrix();
+  
+  /* Keep iterating while the frame can't possibly be transformed. */
+  while (!((*aOutAncestor)->mState & NS_FRAME_MAY_BE_TRANSFORMED)) {
+    /* If no parent, stop iterating.  Otherwise, update the ancestor. */
+    nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(*aOutAncestor);
+    if (!parent)
+      break;
+
+    *aOutAncestor = parent;
+  }
+
+  NS_ASSERTION(*aOutAncestor, "Somehow ended up with a null ancestor...?");
+
+  /* Translate from this frame to our ancestor, if it exists.  That's the
+   * entire transform, so we're done.
+   */
+  nsPoint delta = GetOffsetTo(*aOutAncestor);
+  PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
+  return gfxMatrix().Translate
+    (gfxPoint(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
+              NSAppUnitsToFloatPixels(delta.y, scaleFactor)));
 }
 
 void
@@ -3611,21 +3799,62 @@ nsIFrame::InvalidateOverflowRect()
 }
 
 void
-nsIFrame::InvalidateRoot(const nsRect& aDamageRect,
-                         nscoord aX, nscoord aY, PRBool aImmediate)
+nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
 {
-  PRUint32 flags = aImmediate ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
+  if (aFlags & INVALIDATE_NOTIFY_ONLY)
+    return;
+
+  PRUint32 flags =
+    (aFlags & INVALIDATE_IMMEDIATE) ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
   nsIView* view = GetView();
   NS_ASSERTION(view, "This can only be called on frames with views");
-  view->GetViewManager()->UpdateView(view, aDamageRect + nsPoint(aX, aY), flags);
+  view->GetViewManager()->UpdateView(view, aDamageRect, flags);
 }
 
-static nsRect ComputeOutlineRect(const nsIFrame* aFrame, PRBool* aAnyOutline,
-                                 const nsRect& aOverflowRect) {
+static void
+DestroyRectFunc(void*    aFrame,
+                nsIAtom* aPropertyName,
+                void*    aPropertyValue,
+                void*    aDtorData)
+{
+  delete static_cast<nsRect*>(aPropertyValue);
+}
+
+static void
+SetRectProperty(nsIFrame* aFrame, nsIAtom* aProp, const nsRect& aRect)
+{
+  nsRect* r = new nsRect(aRect);
+  if (!r)
+    return;
+  aFrame->SetProperty(aProp, r, DestroyRectFunc);
+}
+
+static nsRect
+ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
+                             const nsRect& aOverflowRect,
+                             PRBool aStoreRectProperties) {
+  nsRect r = aOverflowRect;
+  *aAnyOutlineOrEffects = PR_FALSE;
+
+  // box-shadow
+  nsCSSShadowArray* boxShadows = aFrame->GetStyleBorder()->mBoxShadow;
+  if (boxShadows) {
+    nsRect shadows;
+    for (PRUint32 i = 0; i < boxShadows->Length(); ++i) {
+      nsRect tmpRect = r;
+      nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
+      nscoord outsetRadius = shadow->mRadius + shadow->mSpread;
+
+      tmpRect.MoveBy(nsPoint(shadow->mXOffset, shadow->mYOffset));
+      tmpRect.Inflate(outsetRadius, outsetRadius);
+
+      shadows.UnionRect(shadows, tmpRect);
+    }
+    r.UnionRect(r, shadows);
+  }
+
   const nsStyleOutline* outline = aFrame->GetStyleOutline();
   PRUint8 outlineStyle = outline->GetOutlineStyle();
-  nsRect r = aOverflowRect;
-  *aAnyOutline = PR_FALSE;
   if (outlineStyle != NS_STYLE_BORDER_STYLE_NONE) {
     nscoord width;
 #ifdef DEBUG
@@ -3634,13 +3863,34 @@ static nsRect ComputeOutlineRect(const nsIFrame* aFrame, PRBool* aAnyOutline,
       outline->GetOutlineWidth(width);
     NS_ASSERTION(result, "GetOutlineWidth had no cached outline width");
     if (width > 0) {
-      nscoord offset;
-      outline->GetOutlineOffset(offset);
+      if (aStoreRectProperties) {
+        SetRectProperty(aFrame, nsGkAtoms::outlineInnerRectProperty, r);
+      }
+
+      nscoord offset = outline->mOutlineOffset;
       nscoord inflateBy = PR_MAX(width + offset, 0);
       r.Inflate(inflateBy, inflateBy);
-      *aAnyOutline = PR_TRUE;
+      *aAnyOutlineOrEffects = PR_TRUE;
     }
   }
+  
+  // Note that we don't remove the outlineInnerRect if a frame loses outline
+  // style. That would require an extra property lookup for every frame,
+  // or a new frame state bit to track whether a property had been stored,
+  // or something like that. It's not worth doing that here. At most it's
+  // only one heap-allocated rect per frame and it will be cleaned up when
+  // the frame dies.
+
+#ifdef MOZ_SVG
+  if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame)) {
+    *aAnyOutlineOrEffects = PR_TRUE;
+    if (aStoreRectProperties) {
+      SetRectProperty(aFrame, nsGkAtoms::preEffectsBBoxProperty, r);
+    }
+    r = nsSVGIntegrationUtils::ComputeFrameEffectsRect(aFrame, r);
+  }
+#endif
+
   return r;
 }
 
@@ -3672,6 +3922,22 @@ nsIFrame::GetOverflowRect() const
   // but the mRect hasn't been set yet!
   return nsRect(nsPoint(0, 0), GetSize());
 }
+
+nsRect
+nsIFrame::GetOverflowRectRelativeToParent() const
+{
+  return GetOverflowRect() + mRect.TopLeft();
+}
+  
+nsRect
+nsIFrame::GetOverflowRectRelativeToSelf() const
+{
+  if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED) ||
+      !GetStyleDisplay()->HasTransform())
+    return GetOverflowRect();
+  return *static_cast<nsRect*>
+    (GetProperty(nsGkAtoms::preEffectsBBoxProperty));
+}
   
 void
 nsFrame::CheckInvalidateSizeChange(nsHTMLReflowMetrics& aNewDesiredSize)
@@ -3699,10 +3965,10 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   // invalidated)
 
   // Invalidate the entire old frame+outline if the frame has an outline
-  PRBool anyOutline;
-  nsRect r = ComputeOutlineRect(this, &anyOutline,
-                                aNewDesiredSize.mOverflowArea);
-  if (anyOutline) {
+  PRBool anyOutlineOrEffects;
+  nsRect r = ComputeOutlineAndEffectsRect(this, &anyOutlineOrEffects,
+                                          aOldOverflowRect, PR_FALSE);
+  if (anyOutlineOrEffects) {
     r.UnionRect(aOldOverflowRect, r);
     Invalidate(r);
     return;
@@ -4179,7 +4445,7 @@ nsFrame::SetSelected(nsPresContext* aPresContext, nsIDOMRange *aRange, PRBool aS
     RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
 
   // Repaint this frame subtree's entire area
-  Invalidate(GetOverflowRect(), PR_FALSE);
+  InvalidateOverflowRect();
 
 #ifdef IBMBIDI
   PRInt32 start, end;
@@ -4217,8 +4483,8 @@ nsFrame::GetPointFromOffset(PRInt32 inOffset, nsPoint* outPoint)
       PRInt32 newOffset = newContent->IndexOf(mContent);
 
       PRBool isRTL = (NS_GET_EMBEDDING_LEVEL(this) & 1) == 1;
-      if (!isRTL && inOffset > newOffset ||
-          isRTL && inOffset <= newOffset)
+      if ((!isRTL && inOffset > newOffset) ||
+          (isRTL && inOffset <= newOffset))
         bottomLeft.x = GetRect().width;
     }
   }
@@ -4551,7 +4817,7 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
   // Fall through "special" block frames because their mContent is the content
   // of the inline frames they were created from. The first/last child of
   // such frames is the real block frame we're looking for.
-  if (nsLayoutUtils::GetAsBlock(aFrame) && !(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) ||
+  if ((nsLayoutUtils::GetAsBlock(aFrame) && !(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) ||
       aFrame->GetType() == nsGkAtoms::brFrame) {
     nsIContent* content = aFrame->GetContent();
     result.mContent = content->GetParent();
@@ -4774,7 +5040,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           // We can't jump lines if we're looking for whitespace following
           // non-whitespace, and we already encountered non-whitespace.
           if (NS_FAILED(result) ||
-              jumpedLine && !wordSelectEatSpace && state.mSawBeforeType) {
+              (jumpedLine && !wordSelectEatSpace && state.mSawBeforeType)) {
             done = PR_TRUE;
           } else {
             if (jumpedLine) {
@@ -5140,7 +5406,7 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
       nsIFrame** framePtr = aDirection == eDirPrevious ? &firstFrame : &lastFrame;
       if (*framePtr) {
         nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(*framePtr);
-        if (((embeddingLevel & 1) && lineIsRTL || !(embeddingLevel & 1) && !lineIsRTL) ==
+        if ((((embeddingLevel & 1) && lineIsRTL) || (!(embeddingLevel & 1) && !lineIsRTL)) ==
             (aDirection == eDirPrevious)) {
           nsFrame::GetFirstLeaf(presContext, framePtr);
         } else {
@@ -5261,16 +5527,6 @@ nsFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-// Destructor function for the overflow area property
-static void
-DestroyRectFunc(void*    aFrame,
-                nsIAtom* aPropertyName,
-                void*    aPropertyValue,
-                void*    aDtorData)
-{
-  delete static_cast<nsRect*>(aPropertyValue);
-}
-
 /** Create or retrieve the previously stored overflow area, if the frame does 
  * not overflow and no creation is required return nsnull.
  * @param aCreateIfNecessary  create a new nsRect for the overflow area
@@ -5314,29 +5570,11 @@ nsRect
 nsIFrame::GetAdditionalOverflow(const nsRect& aOverflowArea,
                                 const nsSize& aNewSize)
 {
-  nsRect overflowRect;
-
   // outline
-  PRBool hasOutline;
-  overflowRect = ComputeOutlineRect(this, &hasOutline, aOverflowArea);
-
-  // box-shadow
-  nsCSSShadowArray* boxShadows = GetStyleBorder()->mBoxShadow;
-  if (boxShadows) {
-    for (PRUint32 i = 0; i < boxShadows->Length(); ++i) {
-      nsRect tmpRect(nsPoint(0, 0), aNewSize);
-      nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
-      nscoord xOffset = shadow->mXOffset.GetCoordValue();
-      nscoord yOffset = shadow->mYOffset.GetCoordValue();
-      nscoord outsetRadius = shadow->mRadius.GetCoordValue() +
-                             shadow->mSpread.GetCoordValue();
-
-      tmpRect.MoveBy(nsPoint(xOffset, yOffset));
-      tmpRect.Inflate(outsetRadius, outsetRadius);
-
-      overflowRect.UnionRect(overflowRect, tmpRect);
-    }
-  }
+  PRBool hasOutlineOrEffects;
+  nsRect overflowRect =
+    ComputeOutlineAndEffectsRect(this, &hasOutlineOrEffects,
+                                 aOverflowArea, PR_TRUE);
 
   // Absolute position clipping
   PRBool hasAbsPosClip;
@@ -5391,21 +5629,35 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     geometricOverflow = PR_FALSE;
   }
 
-  nsRect overflowRect = GetAdditionalOverflow(*aOverflowArea, aNewSize);
+  *aOverflowArea = GetAdditionalOverflow(*aOverflowArea, aNewSize);
 
-  if (overflowRect != nsRect(nsPoint(0, 0), aNewSize)) {
+  /* If we're transformed, transform the overflow rect by the current transformation. */
+  if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) && 
+      GetStyleDisplay()->HasTransform()) {
+    // Save overflow area before the transform
+    SetRectProperty(this, nsGkAtoms::preTransformBBoxProperty, *aOverflowArea);
+
+    /* Since our size might not actually have been computed yet, we need to make sure that we use the
+     * correct dimensions by overriding the stored bounding rectangle with the value the caller has
+     * ensured us we'll use.
+     */
+    nsRect newBounds(nsPoint(0, 0), aNewSize);
+    *aOverflowArea = nsDisplayTransform::TransformRect(*aOverflowArea, this, nsPoint(0, 0), &newBounds);
+  }
+  
+  if (*aOverflowArea != nsRect(nsPoint(0, 0), aNewSize)) {
     mState |= NS_FRAME_OUTSIDE_CHILDREN;
     nsRect* overflowArea = GetOverflowAreaProperty(PR_TRUE); 
     NS_ASSERTION(overflowArea, "should have created rect");
-    *aOverflowArea = *overflowArea = overflowRect;
-  } 
+    *overflowArea = *aOverflowArea;
+  }
   else {
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
       // remove the previously stored overflow area 
       DeleteProperty(nsGkAtoms::overflowAreaProperty);
     }
     mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-  }   
+  }
 }
 
 void
@@ -5437,18 +5689,25 @@ nsFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
  * as aSpecialSibling.  This is needed because the split inline's
  * style context is the parent of the anonymous block's srtyle context.
  *
- * If aFrame is not the anonymous block, aSpecialSibling is not
- * touched.
+ * If aFrame is not the anonymous block, aSpecialSibling is set to null.
  */
 static nsresult
-GetIBSpecialSibling(nsPresContext* aPresContext,
-                    nsIFrame* aFrame,
-                    nsIFrame** aSpecialSibling)
+GetIBSpecialSiblingForAnonymousBlock(nsPresContext* aPresContext,
+                                     nsIFrame* aFrame,
+                                     nsIFrame** aSpecialSibling)
 {
   NS_PRECONDITION(aFrame, "Must have a non-null frame!");
   NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL,
                "GetIBSpecialSibling should not be called on a non-special frame");
-  
+
+  nsIAtom* type = aFrame->GetStyleContext()->GetPseudoType();
+  if (type != nsCSSAnonBoxes::mozAnonymousBlock &&
+      type != nsCSSAnonBoxes::mozAnonymousPositionedBlock) {
+    // it's not the anonymous block
+    *aSpecialSibling = nsnull;
+    return NS_OK;
+  }
+
   // Find the first-in-flow of the frame.  (Ugh.  This ends up
   // being O(N^2) when it is called O(N) times.)
   aFrame = aFrame->GetFirstInFlow();
@@ -5532,10 +5791,11 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
     if (parent->GetStateBits() & NS_FRAME_IS_SPECIAL) {
       nsIFrame* sibling;
       nsresult rv =
-        GetIBSpecialSibling(parent->PresContext(), parent, &sibling);
+        GetIBSpecialSiblingForAnonymousBlock(parent->PresContext(), parent, &sibling);
       if (NS_FAILED(rv)) {
-        // If GetIBSpecialSibling fails, then what?  we used to return what is
-        // now |aProspectiveParent|, but maybe |parent| would make more sense?
+        // If GetIBSpecialSiblingForAnonymousBlock fails, then what?
+        // we used to return what is now |aProspectiveParent|, but maybe
+        // |parent| would make more sense?
         NS_NOTREACHED("Shouldn't get here");
         return aProspectiveParent;
       }
@@ -5594,10 +5854,11 @@ nsFrame::DoGetParentStyleContextFrame(nsPresContext* aPresContext,
      * If this frame is the anonymous block created when an inline
      * with a block inside it got split, then the parent style context
      * is on the first of the three special frames.  We can get to it
-     * using GetIBSpecialSibling
+     * using GetIBSpecialSiblingForAnonymousBlock
      */
     if (mState & NS_FRAME_IS_SPECIAL) {
-      nsresult rv = GetIBSpecialSibling(aPresContext, this, aProviderFrame);
+      nsresult rv =
+        GetIBSpecialSiblingForAnonymousBlock(aPresContext, this, aProviderFrame);
       if (NS_FAILED(rv)) {
         NS_NOTREACHED("Shouldn't get here");
         *aProviderFrame = nsnull;

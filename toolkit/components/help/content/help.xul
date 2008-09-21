@@ -198,7 +198,7 @@
                    accesskey="&toctab.accesskey;" control="help-toc-panel"/>
           </sidebarheader>
           <tree id="help-toc-panel" class="focusring"
-                flex="1"  hidecolumnpicker="true"
+                flex="1" treelines="true" hidecolumnpicker="true"
                 datasources="rdf:null"
                 containment="http://home.netscape.com/NC-rdf#subheadings"
                 ref="urn:root" flags="dont-build-content"

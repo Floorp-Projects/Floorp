@@ -1,0 +1,41 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+function zap()
+{
+  var j = document.getElementById("j");
+  j.parentNode.removeChild(j);
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+<body onload="setTimeout(zap, 1);">
+
+
+<div>
+
+  <form>
+    <fieldset>
+      <div id="j">
+        <div>
+          <div>
+            <span>
+             <input type="submit">
+             <label></label>
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </fieldset>
+  </form>
+
+</div>
+
+
+</body>
+
+</html>

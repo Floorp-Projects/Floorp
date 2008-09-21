@@ -1,0 +1,21 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  var prefs = document.createElementNS(XUL_NS, "preferences");
+  var textbox = document.createElementNS(XUL_NS, "textbox");
+  textbox.setAttribute("onchange", "1");
+  prefs.appendChild(textbox);
+  prefs.cloneNode(true);
+}
+
+]]>
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

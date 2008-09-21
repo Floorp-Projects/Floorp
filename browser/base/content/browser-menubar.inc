@@ -384,7 +384,7 @@
                           key="showAllHistoryKb"
 #endif
                           command="Browser:ShowAllHistory"/>
-                <menuseparator id="startHistorySeparator" builder="start"/>
+                <menuseparator id="startHistorySeparator"/>
                 <menuseparator id="endHistorySeparator" builder="end"/>
                 <menu id="historyUndoMenu" label="&historyUndoMenu.label;" disabled="true">
                   <menupopup id="historyUndoPopup" onpopupshowing="HistoryMenu.populateUndoSubmenu();"/>
@@ -396,7 +396,8 @@
         label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
         ondragenter="PlacesMenuDNDController.onBookmarksMenuDragEnter(event);"
         ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDropHandler);"
-        ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDropHandler);">
+        ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDropHandler);"
+        ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDropHandler);">
     <menupopup id="bookmarksMenuPopup"
                type="places"
                place="place:folder=BOOKMARKS_MENU"
@@ -437,7 +438,7 @@
                    context="placesContext"
                    onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"/>
       </menu>
-      <menuseparator builder="start"/>
+      <menuseparator/>
     </menupopup>
   </menu>
 

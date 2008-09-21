@@ -641,6 +641,8 @@ GK_ATOM(onmousemove, "onmousemove")
 GK_ATOM(onmouseout, "onmouseout")
 GK_ATOM(onmouseover, "onmouseover")
 GK_ATOM(onmouseup, "onmouseup")
+GK_ATOM(onMozAfterPaint, "onMozAfterPaint")
+GK_ATOM(onMozMousePixelScroll, "onMozMousePixelScroll")
 GK_ATOM(ononline, "ononline")
 GK_ATOM(onoffline, "onoffline")
 GK_ATOM(onoverflow, "onoverflow")
@@ -1606,6 +1608,7 @@ GK_ATOM(IBSplitSpecialSibling, "IBSplitSpecialSibling")    // nsIFrame*
 GK_ATOM(lineCursorProperty, "LineCursorProperty") // nsLineBox*
 GK_ATOM(rowCursorProperty, "RowCursorProperty") // nsTableRowGroupFrame::FrameCursorData*
 GK_ATOM(maxElementWidthProperty, "MaxElementWidthProperty")  // nscoord*
+GK_ATOM(outlineInnerRectProperty, "OutlineInnerRectProperty") // nsRect*
 GK_ATOM(outOfFlowDirtyRectProperty, "OutOfFlowDirtyRectProperty") // nsRect*
 GK_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*
 GK_ATOM(overflowProperty, "OverflowProperty")              // list of nsIFrame*
@@ -1614,6 +1617,8 @@ GK_ATOM(excessOverflowContainersProperty, "ExcessOverflowContainersProperty") //
 GK_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
 GK_ATOM(overflowOutOfFlowsProperty, "OverflowOutOfFlowsProperty")      // nsFrameList*
 GK_ATOM(overflowPlaceholdersProperty, "OverflowPlaceholdersProperty")  // nsFrameList*
+GK_ATOM(preEffectsBBoxProperty, "PreEffectsBBoxProperty") // nsRect*
+GK_ATOM(preTransformBBoxProperty, "PreTransformBBoxProperty") // nsRect*
 GK_ATOM(rowUnpaginatedHeightProperty, "RowUnpaginatedHeightProperty")  // nscoord*
 GK_ATOM(spaceManagerProperty, "SpaceManagerProperty")      // the space manager for a block
 GK_ATOM(tabWidthProperty, "TabWidthProperty")              // nsTArray<TabSetting>* array of tab widths

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<tree flex="1">
+  <treecols>
+    <treecol label="test" flex="1" type="progressmeter" />
+  </treecols>
+  <treechildren>
+    <treeitem>
+      <treerow>
+        <treecell value="50" mode="normal" />
+      </treerow>
+    </treeitem>
+    <treeitem>
+      <treerow>
+        <treecell mode="undetermined" />
+      </treerow>
+    </treeitem>
+  </treechildren>
+</tree>
+
+</window>

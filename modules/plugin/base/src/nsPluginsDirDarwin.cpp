@@ -50,7 +50,7 @@
 #include "nsXPCOM.h"
 
 #include "nsPluginsDir.h"
-#include "ns4xPlugin.h"
+#include "nsNPAPIPlugin.h"
 #include "nsPluginsDirUtils.h"
 
 #include "nsILocalFileMac.h"
@@ -65,8 +65,8 @@
 #include <mach-o/loader.h>
 #include <mach-o/fat.h>
 
-typedef NS_4XPLUGIN_CALLBACK(const char *, NP_GETMIMEDESCRIPTION) ();
-typedef NS_4XPLUGIN_CALLBACK(OSErr, BP_GETSUPPORTEDMIMETYPES) (BPSupportedMIMETypes *mimeInfo, UInt32 flags);
+typedef NS_NPAPIPLUGIN_CALLBACK(const char *, NP_GETMIMEDESCRIPTION) ();
+typedef NS_NPAPIPLUGIN_CALLBACK(OSErr, BP_GETSUPPORTEDMIMETYPES) (BPSupportedMIMETypes *mimeInfo, UInt32 flags);
 
 
 /*

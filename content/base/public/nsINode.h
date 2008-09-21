@@ -95,6 +95,8 @@ enum {
   // Optimizations to quickly check whether element may have ID, class or style
   // attributes. Not all element implementations may use these!
   NODE_MAY_HAVE_ID =             0x00000200U,
+  // For all Element nodes, NODE_MAY_HAVE_CLASS is guaranteed to be set if the
+  // node in fact has a class, but may be set even if it doesn't.
   NODE_MAY_HAVE_CLASS =          0x00000400U,
   NODE_MAY_HAVE_STYLE =          0x00000800U,
 

@@ -306,6 +306,21 @@ var Microformats = {
      * @return A string with the value of the property
      */
     defaultGetter: function(propnode, parentnode, datatype) {
+      function collapseWhitespace(instring) {
+        /* Remove new lines, carriage returns and tabs */
+        outstring = instring.replace(/[\n\r\t]/gi, ' ');
+        /* Replace any double spaces with single spaces */
+        outstring = outstring.replace(/\s{2,}/gi, ' ');
+        /* Remove any double spaces that are left */
+        outstring = outstring.replace(/\s{2,}/gi, '');
+        /* Remove any spaces at the beginning */
+        outstring = outstring.replace(/^\s+/, '');
+        /* Remove any spaces at the end */
+        outstring = outstring.replace(/\s+$/, '');
+        return outstring;
+      }
+      
+      
       if (((((propnode.localName.toLowerCase() == "abbr") || (propnode.localName.toLowerCase() == "html:abbr")) && !propnode.namespaceURI) || 
          ((propnode.localName.toLowerCase() == "abbr") && (propnode.namespaceURI == "http://www.w3.org/1999/xhtml"))) && (propnode.getAttribute("title"))) {
         return propnode.getAttribute("title");
@@ -330,7 +345,7 @@ var Microformats = {
           for (let j=0;j<values.length;j++) {
             value += Microformats.parser.defaultGetter(values[j], propnode, datatype);
           }
-          return value;
+          return collapseWhitespace(value);
         }
         var s;
         if (datatype == "HTML") {
@@ -342,18 +357,10 @@ var Microformats = {
             s = propnode.textContent;
           }
         }
-        /* If we are processing a value node, don't remove whitespace */
+        /* If we are processing a value node, don't remove whitespace now */
+        /* (we'll do it later) */
         if (!Microformats.matchClass(propnode, "value")) {
-          /* Remove new lines, carriage returns and tabs */
-          s	= s.replace(/[\n\r\t]/gi, ' ');
-          /* Replace any double spaces with single spaces */
-          s	= s.replace(/\s{2,}/gi, ' ');
-          /* Remove any double spaces that are left */
-          s	= s.replace(/\s{2,}/gi, '');
-          /* Remove any spaces at the beginning */
-          s	= s.replace(/^\s+/, '');
-          /* Remove any spaces at the end */
-          s	= s.replace(/\s+$/, '');
+          s = collapseWhitespace(s);
         }
         if (s.length > 0) {
           return s;
@@ -494,8 +501,8 @@ var Microformats = {
       /* but also has a new function that can return the HTML that corresponds */
       /* to the string. */
       function mfHTML(value) {
-        this.valueOf = function() {return value.valueOf();}
-        this.toString = function() {return value.toString();}
+        this.valueOf = function() {return value ? value.valueOf() : "";}
+        this.toString = function() {return value ? value.toString() : "";}
       }
       mfHTML.prototype = new String;
       mfHTML.prototype.toHTML = function() {
@@ -795,39 +802,43 @@ var Microformats = {
      */
     preProcessMicroformat: function preProcessMicroformat(in_mfnode) {
       var mfnode;
-      var includes = Microformats.getElementsByClassName(in_mfnode, "include");
-      if ((includes.length > 0) || ((in_mfnode.nodeName.toLowerCase() == "td") && (in_mfnode.getAttribute("headers")))) {
+      if ((in_mfnode.nodeName.toLowerCase() == "td") && (in_mfnode.getAttribute("headers"))) {
         mfnode = in_mfnode.cloneNode(true);
         mfnode.origNode = in_mfnode;
-        if (includes.length > 0) {
-          includes = Microformats.getElementsByClassName(mfnode, "include");
-          var includeId;
-          var include_length = includes.length;
-          for (let i = include_length -1; i >= 0; i--) {
-            if (includes[i].nodeName.toLowerCase() == "a") {
-              includeId = includes[i].getAttribute("href").substr(1);
-            }
-            if (includes[i].nodeName.toLowerCase() == "object") {
-              includeId = includes[i].getAttribute("data").substr(1);
-            }
-            if (in_mfnode.ownerDocument.getElementById(includeId)) {
-              includes[i].parentNode.replaceChild(in_mfnode.ownerDocument.getElementById(includeId).cloneNode(true), includes[i]);
-            }
-          }
-        } else {
-          var headers = in_mfnode.getAttribute("headers").split(" ");
-          for (let i = 0; i < headers.length; i++) {
-            var tempNode = in_mfnode.ownerDocument.createElement("span");
-            var headerNode = in_mfnode.ownerDocument.getElementById(headers[i]);
-            if (headerNode) {
-              tempNode.innerHTML = headerNode.innerHTML;
-              tempNode.className = headerNode.className;
-              mfnode.appendChild(tempNode);
-            }
+        var headers = in_mfnode.getAttribute("headers").split(" ");
+        for (let i = 0; i < headers.length; i++) {
+          var tempNode = in_mfnode.ownerDocument.createElement("span");
+          var headerNode = in_mfnode.ownerDocument.getElementById(headers[i]);
+          if (headerNode) {
+            tempNode.innerHTML = headerNode.innerHTML;
+            tempNode.className = headerNode.className;
+            mfnode.appendChild(tempNode);
           }
         }
       } else {
         mfnode = in_mfnode;
+      }
+      var includes = Microformats.getElementsByClassName(mfnode, "include");
+      if (includes.length > 0) {
+        /* If we didn't clone, clone now */
+        if (!mfnode.origNode) {
+          mfnode = in_mfnode.cloneNode(true);
+          mfnode.origNode = in_mfnode;
+        }
+        includes = Microformats.getElementsByClassName(mfnode, "include");
+        var includeId;
+        var include_length = includes.length;
+        for (let i = include_length -1; i >= 0; i--) {
+          if (includes[i].nodeName.toLowerCase() == "a") {
+            includeId = includes[i].getAttribute("href").substr(1);
+          }
+          if (includes[i].nodeName.toLowerCase() == "object") {
+            includeId = includes[i].getAttribute("data").substr(1);
+          }
+          if (in_mfnode.ownerDocument.getElementById(includeId)) {
+            includes[i].parentNode.replaceChild(in_mfnode.ownerDocument.getElementById(includeId).cloneNode(true), includes[i]);
+          }
+        }
       }
       return mfnode;
     },

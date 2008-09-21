@@ -89,9 +89,24 @@ function initExceptionDialog() {
       document.getElementById("locationTextBox").value = args[0].location;
       document.getElementById('checkCertButton').disabled = false;
       
-      // We can optionally pre-fetch the certificate too
-      if (args[0].prefetchCert)
-        checkCert();
+      // We can optionally pre-fetch the certificate too.  Don't do this
+      // synchronously, since it would prevent the window from appearing
+      // until the fetch is completed, which could be multiple seconds.
+      // Instead, let's use a timer to spawn the actual fetch, but update
+      // the dialog to "checking..." state right away, so that the UI
+      // is appropriately responsive.  We could include a very short lag
+      // and there would still be time for the window to draw, but bringing
+      // it up to a couple seconds still feels responsive, while also giving
+      // users who are unfamiliar with the dialog a chance to read the preamble
+      // before the dialog fills up with details about the certificate
+      // problems.  Bug 453855
+      if (args[0].prefetchCert) {
+        
+        gChecking = true;
+        updateCertStatus();
+        
+        window.setTimeout(checkCert, 2000);
+      }
     }
     
     // Set out parameter to false by default

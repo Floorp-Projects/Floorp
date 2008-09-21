@@ -89,6 +89,12 @@ ifdef MOZ_VIEW_SOURCE
 DIRS +=	viewsource
 endif
 
+ifndef MOZ_SUITE
+ifndef MOZ_THUNDERBIRD
+DIRS +=	search
+endif
+endif
+
 ifdef MOZ_THUNDERBIRD
 DIRS += autocomplete/public
 else
@@ -108,9 +114,6 @@ ifdef MOZ_SUITE
 DIRS += passwordmgr/public
 else
 DIRS += passwordmgr
-ifndef MOZ_PLACES
-DIRS +=	history
-endif # MOZ_PLACES
 endif # MOZ_SUITE
 endif # MOZ_THUNDERBIRD
 

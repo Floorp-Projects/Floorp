@@ -2756,7 +2756,7 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
     // Determine damaged area and tell view manager to redraw it
     // blink doesn't blink outline ... I hope
     nsRect bounds(nsPoint(0, 0), frameData->mFrame->GetSize());
-    frameData->mFrame->Invalidate(bounds, PR_FALSE);
+    frameData->mFrame->Invalidate(bounds);
   }
   return NS_OK;
 }
@@ -2968,7 +2968,13 @@ nsTextPaintStyle::InitCommonColors()
   const nsStyleBackground* bg =
     nsCSSRendering::FindNonTransparentBackground(sc);
   NS_ASSERTION(bg, "Cannot find NonTransparentBackground.");
-  mFrameBackgroundColor = bg->mBackgroundColor;
+
+  nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
+  NS_ASSERTION(NS_GET_A(defaultBgColor) == 255,
+               "default background color is not opaque");
+
+  mFrameBackgroundColor = NS_ComposeColors(defaultBgColor,
+                                           bg->mBackgroundColor);
 
   nsILookAndFeel* look = mPresContext->LookAndFeel();
   nscolor defaultWindowBackgroundColor, selectionTextColor, selectionBGColor;
@@ -3036,9 +3042,6 @@ nsTextPaintStyle::InitSelectionColors()
     if (sc) {
       const nsStyleBackground* bg = sc->GetStyleBackground();
       mSelectionBGColor = bg->mBackgroundColor;
-      if (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
-        mSelectionBGColor = NS_RGBA(0,0,0,0);
-      }
       mSelectionTextColor = sc->GetStyleColor()->mColor;
       return PR_TRUE;
     }
@@ -4106,9 +4109,8 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
                             const gfxPoint& aFramePt, const gfxPoint& aTextBaselinePt,
                             gfxContext* aCtx, const nscolor& aForegroundColor)
 {
-  gfxPoint shadowOffset(aShadowDetails->mXOffset.GetCoordValue(),
-                        aShadowDetails->mYOffset.GetCoordValue());
-  nscoord blurRadius = PR_MAX(aShadowDetails->mRadius.GetCoordValue(), 0);
+  gfxPoint shadowOffset(aShadowDetails->mXOffset, aShadowDetails->mYOffset);
+  nscoord blurRadius = PR_MAX(aShadowDetails->mRadius, 0);
 
   gfxTextRun::Metrics shadowMetrics =
     mTextRun->MeasureText(aOffset, aLength, PR_FALSE,
@@ -4704,7 +4706,7 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
                                                    NS_FRAME_IS_DIRTY);
     }
     // Selection might change anything. Invalidate the overflow area.
-    Invalidate(GetOverflowRect(), PR_FALSE);
+    InvalidateOverflowRect();
   }
   if (aSpread == eSpreadDown)
   {

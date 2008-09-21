@@ -732,6 +732,14 @@ nsStringArray::~nsStringArray(void)
 nsStringArray& 
 nsStringArray::operator=(const nsStringArray& other)
 {
+  if (this == &other)
+  {
+    return *this;
+  }
+
+  // Free our strings
+  Clear();
+  
   // Copy the pointers
   nsVoidArray::operator=(other);
 
@@ -982,6 +990,14 @@ nsCStringArray::~nsCStringArray(void)
 nsCStringArray& 
 nsCStringArray::operator=(const nsCStringArray& other)
 {
+  if (this == &other)
+  {
+    return *this;
+  }
+
+  // Free our strings
+  Clear();
+  
   // Copy the pointers
   nsVoidArray::operator=(other);
 

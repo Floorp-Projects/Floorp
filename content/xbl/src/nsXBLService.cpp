@@ -127,9 +127,9 @@ IsAncestorBinding(nsIDocument* aDocument,
         childRef.IsEmpty()) {
       // If the child URL has no ref, we need to strip away the ref from the
       // URI we're comparing it to, since the child URL will end up pointing
-      // to the first binding defined at it's URI, and that could be the same
+      // to the first binding defined at its URI, and that could be the same
       // binding that's referred to more specifically by the already attached
-      // binding's URI via it's ref.
+      // binding's URI via its ref.
 
       // This means we'll get false positives if someone refers to the first
       // binding at a given URI without a ref and also binds a parent or child

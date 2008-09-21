@@ -49,7 +49,7 @@ function test() {
   }
   assertTabs(2);
 
-  ctrlTabTest([1]      , 1, 0);
+  //ctrlTabTest([1], 1, 0);
 
   gBrowser.removeTab(gBrowser.tabContainer.lastChild);
 

@@ -792,6 +792,11 @@ InitSystemMetrics()
     sSystemMetrics->AppendElement(do_GetAtom("windows-default-theme"));
   }
 
+  rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MacGraphiteTheme, metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
+    sSystemMetrics->AppendElement(do_GetAtom("mac-graphite-theme"));
+  }
+
   rv = lookAndFeel->GetMetric(nsILookAndFeel::eMetric_DWMCompositor, metricResult);
   if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(do_GetAtom("windows-compositor"));

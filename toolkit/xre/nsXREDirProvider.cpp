@@ -1283,6 +1283,9 @@ nsXREDirProvider::AppendProfilePath(nsIFile* aFile)
 
   nsresult rv;
 
+  if (!gAppData)
+    return NS_ERROR_FAILURE;
+
 #if defined (XP_MACOSX)
   if (gAppData->profile) {
     rv = AppendProfileString(aFile, gAppData->profile);

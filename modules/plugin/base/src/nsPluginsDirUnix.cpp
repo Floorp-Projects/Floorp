@@ -44,8 +44,8 @@
  */
 
 #include "nsplugin.h"
-#include "ns4xPlugin.h"
-#include "ns4xPluginInstance.h"
+#include "nsNPAPIPlugin.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
 #include "nsIPluginStreamListener.h"
@@ -458,8 +458,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
             // a reference to an unrelated function when we have an NPAPI
             // plugin linked to libxul.so.  Give this plugin another shot as
             // an NPAPI plugin
-            rv = ns4xPlugin::CreatePlugin(mgr, 0, 0, pLibrary,
-                                          getter_AddRefs(plugin));
+            rv = nsNPAPIPlugin::CreatePlugin(0, 0, pLibrary, getter_AddRefs(plugin));
             if (NS_FAILED(rv))
                 return rv;
         } else {
@@ -467,9 +466,8 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         }
     } else {
         // It's old sk00l
-        // if fileName parameter == 0 ns4xPlugin::CreatePlugin() will not call NP_Initialize()
-        rv = ns4xPlugin::CreatePlugin(mgr, 0, 0, pLibrary, 
-				      getter_AddRefs(plugin));
+        // if fileName parameter == 0 nsNPAPIPlugin::CreatePlugin() will not call NP_Initialize()
+        rv = nsNPAPIPlugin::CreatePlugin(0, 0, pLibrary, getter_AddRefs(plugin));
         if (NS_FAILED(rv)) return rv;
     }
 

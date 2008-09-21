@@ -46,6 +46,9 @@ ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 TOOL_DIRS = icon/gtk icon
 endif
+ifneq (,$(filter qt,$(MOZ_WIDGET_TOOLKIT)))
+DIRS = icon/qt icon
+endif
 ifeq ($(OS_ARCH),WINNT)
 DIRS = icon/win icon
 endif

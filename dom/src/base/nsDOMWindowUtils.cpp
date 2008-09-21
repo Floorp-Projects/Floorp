@@ -178,7 +178,7 @@ nsDOMWindowUtils::Redraw(PRUint32 aCount, PRUint32 *aDurationOut)
         PRIntervalTime iStart = PR_IntervalNow();
 
         for (PRUint32 i = 0; i < aCount; i++)
-          rootFrame->Invalidate(r, PR_TRUE);
+          rootFrame->InvalidateWithFlags(r, nsIFrame::INVALIDATE_IMMEDIATE);
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
         XSync(GDK_DISPLAY(), False);
@@ -270,6 +270,8 @@ nsDOMWindowUtils::SendMouseScrollEvent(const nsAString& aType,
   PRInt32 msg;
   if (aType.EqualsLiteral("DOMMouseScroll"))
     msg = NS_MOUSE_SCROLL;
+  else if (aType.EqualsLiteral("MozMousePixelScroll"))
+    msg = NS_MOUSE_PIXEL_SCROLL;
   else
     return NS_ERROR_UNEXPECTED;
 
