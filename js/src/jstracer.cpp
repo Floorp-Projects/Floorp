@@ -4889,8 +4889,7 @@ TraceRecorder::record_JSOP_CALL()
             }
 
             jsval* argv = fp->argv;
-            uintN nargs = JS_MIN((JS_MIN(argc, fp->fun->nargs)), 2);
-            for (uintN i = 0; i < nargs; i++) {
+            for (uintN i = 0; i < JS_MIN(argc, 2); i++) {
                 set(&sp[i], get(&argv[i]));
                 sp[i] = argv[i];
             }
