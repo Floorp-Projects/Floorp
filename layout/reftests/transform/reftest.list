@@ -71,3 +71,11 @@ random == percent-1g.html percent-1-ref.html
 == skew-1a.html skew-1-ref.html
 == skew-1b.html skew-1-ref.html
 == skew-2a.html skew-2-ref.html
+# matrix with values equal to other transforms should behave indistinguishably
+== matrix-1a.html matrix-1-ref.html
+== matrix-2a.html matrix-2-ref.html
+== matrix-3a.html matrix-3-ref.html
+== matrix-4a.html matrix-4-ref.html
+== matrix-5a.html matrix-5-ref.html
+== matrix-6a.html matrix-6-ref.html
+== matrix-7a.html matrix-7-ref.html
