@@ -126,10 +126,6 @@ textbox[disabled] {
 #generalPanel > #titletext {
   -moz-margin-start: 5px;
 }
-#metaTags > .groupbox-body {
-  -moz-margin-start: 5px;
-  -moz-margin-end: 1px;
-}
 
 groupbox.collapsable caption .caption-icon { 
   width: 9px;
@@ -155,6 +151,8 @@ groupbox tree {
 }
 
 groupbox.treebox .groupbox-body { 
+  -moz-margin-start: 5px;
+  -moz-margin-end: 1px;
   padding-top: 0;
 }
 
