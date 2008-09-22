@@ -61,6 +61,7 @@
 #define _isatty		isatty
 #undef fileno
 #define fileno      (int)_fileno
+#define fstat       (int)_fstat
 #define _mbctolower tolower
 #define _mbsicmp    mbsicmp
 #define _mbsdec     mbsdec
@@ -127,6 +128,11 @@
 
 #undef  GetProcAddress
 #define GetProcAddress            GetProcAddressA
+
+#define SHELLEXECUTEINFOW         SHELLEXECUTEINFO
+#define ShellExecuteExW(x)        ShellExecuteEx(x)
+
+#define MapVirtualKeyEx(a,b,c)    MapVirtualKey(a,b)
 
 
 //still need these
