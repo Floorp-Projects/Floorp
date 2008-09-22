@@ -55,7 +55,8 @@ all: output_some_env \
 	 $(MOZCE_TOOLS_DIR)/arm-wince-as.exe \
 	 $(MOZCE_TOOLS_DIR)/arm-wince-gcc.exe \
 	 $(MOZCE_TOOLS_DIR)/arm-wince-lib.exe \
-	 $(MOZCE_TOOLS_DIR)/arm-wince-link.exe 
+	 $(MOZCE_TOOLS_DIR)/arm-wince-link.exe \
+	 $(MOZCE_TOOLS_DIR)/arm-wince-res.exe 
 	devenv $(MOZCE_SHUNT_SLN) $(BUILD_SWITCH) $(MOZCE_PROJECT)
 
 clobber:
@@ -90,4 +91,9 @@ $(MOZCE_TOOLS_DIR)/arm-wince-link.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-link.c
 	$(CC) $(MOZCE_TOOLS_DIR)/arm-wince-link.c
 	mkdir -p bin;
 	cp arm-wince-link.exe bin; mv arm-wince-link.exe $(MOZCE_TOOLS_DIR); rm *.obj
+
+$(MOZCE_TOOLS_DIR)/arm-wince-res.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-res.c
+	$(CC) $(MOZCE_TOOLS_DIR)/arm-wince-res.c
+	mkdir -p bin;
+	cp arm-wince-res.exe bin; mv arm-wince-res.exe $(MOZCE_TOOLS_DIR); rm *.obj
 
