@@ -1,3 +1,7 @@
+# Transforms specifying singular matrices shouldn't display at all.
+# NOTE: Regressions might manifest themselves as reftest timeouts on
+# this test.
+== singular-1a.html about:blank
 # Multiple transforms should act identically to nested divs.
 == compound-1a.html compound-1-ref.html
 != compound-1a.html compound-1-fail.html
