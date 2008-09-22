@@ -496,23 +496,6 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   GeckoRectToNSRect(mBounds, r);
   mView = [CreateCocoaView(r) retain];
   if (!mView) return NS_ERROR_FAILURE;
-  
-#if DEBUG
-  // if our parent is a popup window, we're most certainly coming from a <select> list dropdown which
-  // we handle in a different way than other platforms. It's ok that we don't have a parent
-  // view because we bailed before even creating the cocoa widgetry and as a result, we
-  // don't need to assert. However, if that's not the case, we definitely want to assert
-  // to show views aren't getting correctly parented.
-  if (aParent) {
-    nsWindowType windowType;
-    aParent->GetWindowType(windowType);
-    if (windowType != eWindowType_popup)
-      NS_ASSERTION(mParentView && mView, "couldn't hook up new NSView in hierarchy");
-  }
-  else {
-    NS_ASSERTION(mParentView && mView, "couldn't hook up new NSView in hierarchy");
-  }
-#endif
 
   // If this view was created in a Gecko view hierarchy, the initial state
   // is hidden.  If the view is attached only to a native NSView but has
@@ -1646,6 +1629,10 @@ NS_IMETHODIMP nsChildView::Update()
 NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  NS_ASSERTION(mParentView, "Attempting to scroll a view that does not have a parent");
+  if (!mParentView)
+    return NS_ERROR_NOT_AVAILABLE;
 
   BOOL viewWasDirty = NO;
   if (mVisible) {
