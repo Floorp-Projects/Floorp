@@ -80,18 +80,39 @@ var Microformats = {
                                             Microformats[name].attributeValues);
       
     }
+    
+
+    function isVisible(node, checkChildren) {
+      if (node.getBoundingClientRect) {
+        var box = node.getBoundingClientRect();
+      } else {
+        var box = node.ownerDocument.getBoxObjectFor(node);
+      }
+      /* If the parent has is an empty box, double check the children */
+      if ((box.height == 0) || (box.width == 0)) {
+        if (checkChildren && node.childNodes.length > 0) {
+          for(let i=0; i < node.childNodes.length; i++) {
+            if (node.childNodes[i].nodeType == Components.interfaces.nsIDOMNode.ELEMENT_NODE) {
+              /* For performance reasons, we only go down one level */
+              /* of children */
+              if (isVisible(node.childNodes[i], false)) {
+                return true;
+              }
+            }
+          }
+        }
+        return false
+      }
+      return true;
+    }
+    
     /* Create objects for the microformat nodes and put them into the microformats */
     /* array */
     for (let i = 0; i < microformatNodes.length; i++) {
       /* If showHidden undefined or false, don't add microformats to the list that aren't visible */
       if (!options || !options.hasOwnProperty("showHidden") || !options.showHidden) {
         if (microformatNodes[i].ownerDocument) {
-          if (microformatNodes[i].getBoundingClientRect) {
-            var box = microformatNodes[i].getBoundingClientRect();
-          } else {
-            var box = microformatNodes[i].ownerDocument.getBoxObjectFor(microformatNodes[i]);
-          }
-          if ((box.height == 0) || (box.width == 0)) {
+          if (!isVisible(microformatNodes[i], true)) {
             continue;
           }
         }
