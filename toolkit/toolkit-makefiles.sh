@@ -646,7 +646,6 @@ MAKEFILES_xulapp="
   toolkit/crashreporter/google-breakpad/src/common/windows/Makefile
   toolkit/crashreporter/google-breakpad/src/tools/mac/dump_syms/Makefile
   toolkit/content/Makefile
-  toolkit/content/buildconfig.html
   toolkit/obsolete/Makefile
   toolkit/components/alerts/Makefile
   toolkit/components/alerts/public/Makefile
