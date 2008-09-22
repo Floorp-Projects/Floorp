@@ -3,14 +3,14 @@
 != compound-1a.html compound-1-fail.html
 # translatex should act like position: relative
 == translatex-1a.html translatex-1-ref.html
-random == translatex-1b.html translatex-1-ref.html # bug 455138
+== translatex-1b.html translatex-1-ref.html
 == translatex-1c.html translatex-1-ref.html
 == translatex-1d.html translatex-1-ref.html
 == translatex-1e.html translatex-1-ref.html
 == translatex-1a.html translatex-1-ref-2.html
 # translatey should act like position: relative
 == translatey-1a.html translatey-1-ref.html
-random == translatey-1b.html translatey-1-ref.html # bug 455138
+== translatey-1b.html translatey-1-ref.html
 == translatey-1c.html translatey-1-ref.html
 == translatey-1d.html translatey-1-ref.html
 == translatey-1e.html translatey-1-ref.html
@@ -19,36 +19,40 @@ random == translatey-1b.html translatey-1-ref.html # bug 455138
 == translatey-2.html translatey-1-ref.html
 # translate should act like position: relative
 != translate-1a.html translate-1-ref.html
-random == translate-1b.html translate-1-ref.html # bug 455138
+== translate-1b.html translate-1-ref.html
 == translate-1c.html translate-1-ref.html
 == translate-1d.html translate-1-ref.html
 == translate-1e.html translate-1-ref.html
 == translate-2a.html translate-2-ref.html
-# rotate: Several rotations of the same object should be idempotent
-== rotate-1a.html rotate-1-ref.html
-== rotate-1b.html rotate-1-ref.html
-== rotate-1c.html rotate-1-ref.html
-== rotate-1d.html rotate-1-ref.html
-== rotate-1e.html rotate-1-ref.html
-# rotate: 90deg rotations should be indistinguishable from objects constructed to look the same.
+# rotate: Several rotations of the same object should be idempotent.  These
+# tests are currently disabled because of subpixel (< 0.00001 gfx units)
+# rounding errors.
+random == rotate-1a.html rotate-1-ref.html
+random == rotate-1b.html rotate-1-ref.html
+random == rotate-1c.html rotate-1-ref.html
+random == rotate-1d.html rotate-1-ref.html
+random == rotate-1e.html rotate-1-ref.html
+# rotate: 90deg rotations should be indistinguishable from objects constructed
+# to look the same.
 == rotate-2a.html rotate-2-ref.html
-# -moz-transform-origin: We should NOT get the same images when using different -moz-transform-origins.
+# -moz-transform-origin: We should NOT get the same images when using different
+# -moz-transform-origins.
 != origin-1a.html origin-1-ref.html
 != origin-1b.html origin-1-ref.html
-# -moz-transform-origin: We should get the same images when using equivalent -moz-transform-origins.
+# -moz-transform-origin: We should get the same images when using equivalent
+# -moz-transform-origins.
 == origin-2a.html origin-2-ref.html
 == origin-2b.html origin-2-ref.html
 == origin-2c.html origin-2-ref.html
 # "Translate" with percentages should be indistinguishable from translate with
-# equivalent values.  This entire family of reftests has subpixel rounding
-# errors, however, and so they're marked "random" until a resolution is found.
-random == percent-1a.html percent-1-ref.html
-random == percent-1b.html percent-1-ref.html
-random == percent-1c.html percent-1-ref.html
-random == percent-1d.html percent-1-ref.html # bug 455138
-random == percent-1e.html percent-1-ref.html # bug 455138
-random == percent-1f.html percent-1-ref.html # bug 455138
-random == percent-1g.html percent-1-ref.html
+# equivalent values.
+== percent-1a.html percent-1-ref.html
+== percent-1b.html percent-1-ref.html
+== percent-1c.html percent-1-ref.html
+== percent-1d.html percent-1-ref.html
+== percent-1e.html percent-1-ref.html
+== percent-1f.html percent-1-ref.html
+== percent-1g.html percent-1-ref.html
 # Transformed elements are abs-pos and fixed-pos containing blocks.
 == abspos-1a.html abspos-1-ref.html
 == abspos-1b.html abspos-1-ref.html
