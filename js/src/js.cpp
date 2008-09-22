@@ -462,7 +462,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         case 'j':
             JS_ToggleOptions(cx, JSOPTION_JIT);
-#ifdef DEBUG
+#if defined(JS_TRACER) && defined(DEBUG)
 extern struct JSClass jitstats_class;
 extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
             js_InitJITStatsClass(cx, JS_GetGlobalObject(cx));
