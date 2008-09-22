@@ -438,6 +438,7 @@ js_FlushJITOracle(JSContext* cx);
 #else  /* !JS_TRACER */
 
 #define RECORD(x)               ((void)0)
+#define TRACE_0(x)              ((void)0)
 #define TRACE_1(x,a)            ((void)0)
 #define TRACE_2(x,a,b)          ((void)0)
 
