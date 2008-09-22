@@ -236,3 +236,14 @@ pref("gfx.color_management.mode", 0);
 
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
+
+// controls which bits of private data to clear. by default we clear them all.
+pref("privacy.sanitize.promptOnSanitize", false);
+pref("privacy.item.cache", true);
+pref("privacy.item.cookies", true);
+pref("privacy.item.offlineApps", true);
+pref("privacy.item.history", true);
+pref("privacy.item.formdata", true);
+pref("privacy.item.downloads", true);
+pref("privacy.item.passwords", true);
+pref("privacy.item.sessions", true);

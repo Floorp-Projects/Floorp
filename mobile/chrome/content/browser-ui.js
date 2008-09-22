@@ -1,3 +1,4 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -591,6 +592,11 @@ var BrowserUI = {
     var bookmark = document.getElementById("bookmark-container");
     var urllist = document.getElementById("urllist-container");
     var container = document.getElementById("browser-container");
+    var prefs = document.getElementById("pref-pane");
+
+    // Make sure the UI elements are sized correctly since the window size can change
+    sidebar.left = container.boxObject.width;
+    sidebar.height = tablist.height = container.boxObject.height;
 
     if (aMode == UIMODE_URLVIEW)
     {
@@ -646,6 +652,8 @@ var BrowserUI = {
       let dloads = document.getElementById("downloads-container");
       if (dloads.getAttribute("src") == "")
         dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
+
+      PreferencesUI.init();
 
       this._showPanel(aMode);
     }
@@ -794,6 +802,7 @@ var BrowserUI = {
       case "cmd_closeTab":
       case "cmd_actions":
       case "cmd_panel":
+      case "cmd_sanitize":
         isSupported = true;
         break;
       default:
@@ -865,7 +874,8 @@ var BrowserUI = {
       case "cmd_closeTab":
         Browser.content.removeTab(Browser.content.browser);
         break;
-      case "cmd_actions":
+      case "cmd_sanitize":
+        Sanitizer.sanitize();
         break;
       case "cmd_panel":
       {

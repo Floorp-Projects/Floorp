@@ -17,6 +17,9 @@ browser.jar:
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
   branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
 % style chrome://mozapps/content/extensions/extensions.xul chrome://browser/skin/extensions.css
+  content/preferences/richpref.xml
+* content/sanitize.xul
+* content/sanitize.js
 
 classic.jar:
 % skin browser classic/1.0 %
@@ -49,6 +52,8 @@ classic.jar:
   images/right_sidebar_middle.png      (skin/images/right_sidebar_middle.png)
   images/right_sidebar_bottom.png      (skin/images/right_sidebar_bottom.png)
   images/right_buttons.png             (skin/images/right_buttons.png)
+  section.css                          (skin/section.css)
+  richpref.css                         (skin/richpref.css)
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %
@@ -56,6 +61,7 @@ classic.jar:
   browser.properties                   (locale/@AB_CD@/browser.properties)
   search.properties                    (locale/@AB_CD@/search.properties)
   region.properties                    (locale/@AB_CD@/region.properties)
+  preferences.dtd                      (locale/@AB_CD@/preferences.dtd)
 # Fennec-specific overrides of generic strings
 * netError.dtd                         (locale/@AB_CD@/overrides/netError.dtd)
 % override chrome://global/locale/netErrorApp.dtd chrome://browser/locale/netError.dtd

@@ -10,6 +10,22 @@ richlistitem[type="documenttab"] {
     -moz-binding: url("chrome://browser/content/deckbrowser.xml#documenttab");
 }
 
+richpreflist {
+    -moz-binding: url("chrome://browser/content/preferences/richpref.xml#richpreflist");
+}
+
+richpref[type="bool"] {
+    -moz-binding: url("chrome://browser/content/preferences/richpref.xml#richpref-bool");
+}
+
+richpref[type="boolint"] {
+    -moz-binding: url("chrome://browser/content/preferences/richpref.xml#richpref-boolint");
+}
+
+richpref[type="button"] {
+    -moz-binding: url("chrome://browser/content/preferences/richpref.xml#richpref-button");
+}
+
 notification {
     -moz-binding: url("chrome://browser/content/notification.xml#notification");
 }
