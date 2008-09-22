@@ -569,10 +569,18 @@ var Microformats = {
           break;
         case "microformat":
           try {
-            result = new Microformats[prop.microformat].mfObject(node);
+            result = new Microformats[prop.microformat].mfObject(node, true);
           } catch (ex) {
-            /* We can swallow this exception. If the creation of the */
-            /* mf object fails, then the node isn't a microformat */
+            /* There are two reasons we get here, one because the node is not */
+            /* a microformat and two because the node is a microformat and */
+            /* creation failed. If the node is not a microformat, we just fall */
+            /* through and use the default getter since there are some cases */
+            /* (location in hCalendar) where a property can be either a microformat */
+            /* or a string. If creation failed, we break and simply don't add the */
+            /* microformat property to the parent microformat */
+            if (ex != "Node is not a microformat (" + prop.microformat + ")") {
+              break;
+            }
           }
           if (result != undefined) {
             if (prop.microformat_property) {
