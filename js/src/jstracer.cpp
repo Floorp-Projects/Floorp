@@ -112,6 +112,7 @@ enum jitstat_ids {
 #define JITSTAT(x) STAT ## x ## ID,
 #include "jitstats.tbl"
 #undef JITSTAT
+    STAT_IDS_TOTAL
 };
 
 static JSPropertySpec jitstats_props[] = {
