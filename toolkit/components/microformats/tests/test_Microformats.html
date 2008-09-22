@@ -5,6 +5,13 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"></link>
+  <style type="text/css">
+    /*vcards weee! */
+    .floated div {
+      float:left;
+    }
+  </style>
+
 </head>
 <body>
 <div id="content" style="display: none">
@@ -65,7 +72,7 @@
       <span><span class="value">Middle</span></span>
       <span class="value">Doe</span>
     </span>
-  </span>
+  </div>
 
   <div class="vcard" id="nested_vcard1">
     <div class="agent vcard" id="nested_vcard2">
@@ -107,52 +114,53 @@
     <span class="location vcard"><span class="fn">The White House</span></span>
   </div>
   
-<div class="vcard" id="valuespace_1">
-<span class="fn">
-<span class="value">John</span>
-<span class="value"> </span>
-<span class="value">Doe</span>
-</span>
-</div>
-<div class="vcard" id="valuespace_2">
-<span class="fn">
-<span class="value">John</span>
-<span class="value">    </span>
-<span class="value">Doe</span>
-</span>
-</div>
-<div class="vcard" id="valuespace_3">
-<span class="fn">
-<span class="value">  John</span>
-<span class="value">    </span>
-<span class="value">Doe  </span>
-</span>
-</div>
-<div class="vcard" id="valuespace_4">
-<span class="fn">
-<span class="value">John    </span>
-<span class="value">    Doe</span>
-</span>
-</div>
-<div class="vcard" id="valuespace_5">
-<span class="fn">
-<span class="value">    John</span>
-<span class="value">    Doe    </span>
-</span>
-<div class="vcard" id="valuespace_6">
-<span class="fn">
-<span class="value">John
-</span>
-<span class="value">
-Doe</span>
-</span>
-</div>
-<div class="vcard" id="valuespace_7">
-<span class="fn">
-<span class="value">John</span>
-<span class="value">Doe</span>
-</span>
-</div>
+  <div class="vcard" id="valuespace_1">
+    <span class="fn">
+      <span class="value">John</span>
+      <span class="value"> </span>
+      <span class="value">Doe</span>
+    </span>
+  </div>
+  <div class="vcard" id="valuespace_2">
+    <span class="fn">
+      <span class="value">John</span>
+      <span class="value">    </span>
+      <span class="value">Doe</span>
+    </span>
+  </div>
+  <div class="vcard" id="valuespace_3">
+    <span class="fn">
+      <span class="value">  John</span>
+      <span class="value">    </span>
+      <span class="value">Doe  </span>
+    </span>
+  </div>
+  <div class="vcard" id="valuespace_4">
+    <span class="fn">
+      <span class="value">John    </span>
+      <span class="value">    Doe</span>
+    </span>
+  </div>
+  <div class="vcard" id="valuespace_5">
+    <span class="fn">
+      <span class="value">    John</span>
+      <span class="value">    Doe    </span>
+    </span>
+  </div>
+  <div class="vcard" id="valuespace_6">
+    <span class="fn">
+      <span class="value">John
+      </span>
+      <span class="value">
+      Doe</span>
+      </span>
+  </div>
+  <div class="vcard" id="valuespace_7">
+    <span class="fn">
+      <span class="value">John</span>
+      <span class="value">Doe</span>
+    </span>
+  </div>
  
   <span id="austin" class="location">Austin - Sixth Street</span>
   <table summary="Timetable">
@@ -169,8 +177,17 @@ Doe</span>
     </tbody>
   </table>
 
- 
 </div>
+
+<div id="float_test">
+  <div class="vcard floated" id="one">
+    <div class="fn">John Doe</div>
+  </div>
+  <div class="vcard" id="two">
+    <div class="fn">John Smith</div>
+  </div>
+</div>
+
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -240,6 +257,8 @@ function test_Microformats() {
 
   var dateCal = new hCalendar(document.getElementById("vcal_vcard"));
   is(dateCal.description, "Mozilla's Birthday", "vcard in vcal");
+
+  is(Microformats.count("hCard", document.getElementById("float_test")), 2, "Check Microformats.count for floated div");
 
   var hcard = new hCard(document.getElementById("geo_vcard"));
   ok(!hcard.geo, "Check if invalid geo does not exist");
