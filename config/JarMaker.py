@@ -403,7 +403,11 @@ def main():
   noise = logging.INFO
   if options.verbose is not None:
     noise = (options.verbose and logging.DEBUG) or logging.WARN
-  logging.basicConfig(level = noise, format = "%(message)s")
+  if sys.version_info[:2] > (2,3):
+    logging.basicConfig(format = "%(message)s")
+  else:
+    logging.basicConfig()
+  logging.getLogger().setLevel(noise)
   if not args:
     jm.makeJar(infile=sys.stdin,
                sourcedirs=options.s, topsourcedir=options.t,
