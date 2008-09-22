@@ -167,6 +167,9 @@ typedef int ptrdiff_t;
 typedef long _off_t;
 typedef long off_t;
 
+// Not defined anywhere
+typedef INT_PTR intptr_t; 
+
 // From sys/stat.h
 #if !defined(_STAT_DEFINED)
 #define _STAT_DEFINED
