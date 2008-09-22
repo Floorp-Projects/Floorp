@@ -2249,8 +2249,12 @@ NSEvent* gLastDragEvent = nil;
                                                           kCorePboardType_urln,
                                                           nil]];
   [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(controlTintChanged)
+                                           selector:@selector(systemColorChanged)
                                                name:NSControlTintDidChangeNotification
+                                             object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(systemColorChanged)
+                                               name:NSSystemColorsDidChangeNotification
                                              object:nil];
 
   return self;
@@ -2323,7 +2327,7 @@ NSEvent* gLastDragEvent = nil;
 }
 
 
-- (void)controlTintChanged
+- (void)systemColorChanged
 {
   if (!mGeckoChild)
     return;
