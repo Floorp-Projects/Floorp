@@ -45,7 +45,32 @@ CHROME_DEPS = buildconfig.html
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
+DEFINES += \
+  -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
+  -Dtarget="$(target)" \
+  -Dac_configure_args="$(ac_configure_args)" \
+  -DCC="$(CC)" \
+  -DCC_VERSION="$(CC_VERSION)" \
+  -DCFLAGS="$(CFLAGS)" \
+  -DCXX="$(CXX)" \
+  -DCXX_VERSION="$(CXX_VERSION)" \
+  -DCXXFLAGS="$(CXXFLAGS)" \
+  -DCPPFLAGS="$(CPPFLAGS)" \
+  $(NULL)
+
+CHANGESET := $(shell hg identify -i $(topsrcdir) 2>/dev/null)
+ifdef CHANGESET
+DEFINES += -DSOURCE_CHANGESET="$(CHANGESET)"
+endif
+
+# strip a trailing slash from the repo URL because it's not always present,
+# and we want to construct a working URL in buildconfig.html
+# make+shell+sed = awful
+_dollar=$$
+SOURCE_REPO := $(shell hg -R $(topsrcdir) showconfig paths.default 2>/dev/null | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
+ifdef SOURCE_REPO
+DEFINES += -DSOURCE_REPO="$(SOURCE_REPO)"
+endif
 
 ifdef ENABLE_TESTS
 DIRS += tests
@@ -55,6 +80,3 @@ EXTRA_JS_MODULES = debug.js
 EXTRA_PP_JS_MODULES = debug.js
 
 include $(topsrcdir)/config/rules.mk
-
-distclean::
-	$(RM) -f buildconfig.html
