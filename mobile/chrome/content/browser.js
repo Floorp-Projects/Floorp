@@ -145,6 +145,13 @@ var Browser = {
         var self = this;
         setTimeout(function() { self.currentBrowser.loadURI(whereURI, null, null, false); }, 0);
       }
+    
+      // Disable plugins
+      var phs = Cc["@mozilla.org/plugin/host;1"].
+                getService(Ci.nsIPluginHost);
+      var plugins = phs.getPluginTags({ });
+      for (i = 0; i < plugins.length; ++i)
+        plugins[i].disabled = true;
     }
   },
 
