@@ -61,7 +61,6 @@
 #define _isatty		isatty
 #undef fileno
 #define fileno      (int)_fileno
-#define fstat       (int)_fstat
 #define _mbctolower tolower
 #define _mbsicmp    mbsicmp
 #define _mbsdec     mbsdec
@@ -217,6 +216,7 @@ extern "C" {
   MOZCE_SHUNT_API int unlink(const char *pathname);
   MOZCE_SHUNT_API int lseek(int fildes, int offset, int whence);
 
+  MOZCE_SHUNT_API int fstat(FILE* handle, struct stat* buff);
 
   // From stdlib.cpp
   MOZCE_SHUNT_API void splitpath(const char* inPath, char* outDrive, char* outDir, char* outFname, char* outExt);
