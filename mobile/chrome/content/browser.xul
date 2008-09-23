@@ -231,13 +231,45 @@
 
     <hbox id="panel-container" style="-moz-stack-sizing: ignore;" top="0" left="0">
       <vbox id="panel-controls">
-        <toolbarbutton id="tool-addons" class="browser-control-button" oncommand="this.parentNode.nextSibling.selectedIndex=0"/>
-        <toolbarbutton id="tool-downloads" class="browser-control-button" oncommand="this.parentNode.nextSibling.selectedIndex=1"/>
-        <toolbarbutton id="tool-preferences" class="browser-control-button" command="cmd_preferences"/>
+        <toolbarbutton id="tool-addons" class="browser-control-button" oncommand="this.parentNode.nextSibling.selectedIndex=0;"/>
+        <toolbarbutton id="tool-downloads" class="browser-control-button" oncommand="this.parentNode.nextSibling.selectedIndex=1;"/>
+        <toolbarbutton id="tool-preferences" class="browser-control-button" oncommand="this.parentNode.nextSibling.selectedIndex=2;"/>
       </vbox>
       <deck id="panel-items" flex="1">
         <iframe id="addons-container" flex="1" src=""/>
         <iframe id="downloads-container" flex="1" src=""/>
+
+        <vbox id="pref-pane">
+          <hbox pack="center" id="buttons"/>
+          <richlistbox id="pref-list" seltype="single" flex="1">
+            <richlistitem class="section">
+              <label class="sectiontitle" value="&content.title;" crop="end" flex="1"/>
+            </richlistitem>
+            <richpref pref="permissions.default.image" title="&permissions.default.image.title;" type="boolint" on="1" off="2">
+              &permissions.default.image.description;
+            </richpref>
+            <richpref pref="javascript.enabled" type="bool" title="&javascript.enabled.title;">
+              &javascript.enabled.description;
+            </richpref>
+            <richpref pref="plugins.enabled" type="bool" title="&plugins.enabled.title;">
+              &plugins.enabled.description;
+            </richpref>
+
+            <richlistitem class="section">
+              <label class="sectiontitle" value="&privacy.title;" crop="end" flex="1"/>
+            </richlistitem>
+            <richpref pref="network.cookie.cookieBehavior" title="&network.cookie.cookieBehavior.title;" type="boolint" on="1" off="3">
+              &network.cookie.cookieBehavior.description;
+            </richpref>
+            <richpref title="&clear.private.data.title;" type="button">
+              &clear.private.data.description;
+              <button label="&clear.private.data.button;" command="cmd_sanitize"/>
+            </richpref>
+          </richlistbox>
+          <hbox pack="end">
+            <button label="Dismiss" oncommand="BrowserUI.show(PANELMODE_NONE);"/>
+          </hbox>
+        </vbox>
       </deck>
     </hbox>
 
@@ -291,43 +323,6 @@
           <button label="&bookmarkDone.label;" oncommand="BookmarkHelper.save()"/>
         </hbox>
       </vbox>
-    </vbox>
-
-    <vbox id="addons-container" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
-      <iframe id="addons-items-container" flex="1" src=""/>
-    </vbox>
-
-    <vbox id="pref-pane" hidden="true" style="-moz-stack-sizing: ignore;" top="60" left="0">
-      <hbox pack="center" id="buttons"/>
-      <richlistbox id="pref-list" seltype="single" flex="1">
-        <richlistitem class="section">
-          <label class="sectiontitle" value="&content.title;" crop="end" flex="1"/>
-        </richlistitem>
-        <richpref pref="permissions.default.image" title="&permissions.default.image.title;" type="boolint" on="1" off="2">
-          &permissions.default.image.description;
-        </richpref>
-        <richpref pref="javascript.enabled" type="bool" title="&javascript.enabled.title;">
-          &javascript.enabled.description;
-        </richpref>
-        <richpref pref="plugins.enabled" type="bool" title="&plugins.enabled.title;">
-          &plugins.enabled.description;
-        </richpref>
-
-        <richlistitem class="section">
-          <label class="sectiontitle" value="&privacy.title;" crop="end" flex="1"/>
-        </richlistitem>
-        <richpref pref="network.cookie.cookieBehavior" title="&network.cookie.cookieBehavior.title;" type="boolint" on="1" off="3">
-          &network.cookie.cookieBehavior.description;
-        </richpref>
-        <richpref title="&clear.private.data.title;" type="button">
-          &clear.private.data.description;
-          <button label="&clear.private.data.button;" command="cmd_sanitize"/>
-        </richpref>
-
-      </richlistbox>
-      <hbox pack="end">
-        <button label="Dismiss" oncommand="BrowserUI.show(PANELMODE_NONE);"/>
-      </hbox>
     </vbox>
   </stack>
 
