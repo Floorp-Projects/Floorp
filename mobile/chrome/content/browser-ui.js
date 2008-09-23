@@ -384,6 +384,8 @@ var BrowserUI = {
     var rect = document.getElementById("browser-container").getBoundingClientRect();
     var containerW = rect.right - rect.left;
     var containerH = rect.bottom - rect.top;
+    var toolbar = document.getElementById("toolbar-main");
+    var toolbarH = toolbar.boxObject.height;
 
     var browser = document.getElementById("browser");
     browser.width = containerW;
@@ -396,14 +398,13 @@ var BrowserUI = {
       tabbar.left = -tabbar.boxObject.width;
       panelUI.left = containerW + sidebar.boxObject.width;
       sidebar.left = containerW;
-      sidebar.height = panelUI.height = tabbar.height = containerH;
+      sidebar.height = tabbar.height = (panelUI.height = containerH) - toolbarH;
     }
     panelUI.width = containerW - sidebar.boxObject.width - tabbar.boxObject.width;
 
-    var toolbar = document.getElementById("toolbar-main");
     var popup = document.getElementById("popup_autocomplete");
     toolbar.width = containerW;
-    popup.height = containerH - toolbar.boxObject.height;
+    popup.height = containerH - toolbarH;
   },
 
   init : function() {
