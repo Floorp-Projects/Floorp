@@ -847,35 +847,51 @@
 
       <method name="_startKinetic">
         <body><![CDATA[
+          // Get the first and last mouse move event
           let p2 = this._panEventTracker[this._panEventTrackerIndex];
           let p1 = this._panEventTracker[(this._panEventTrackerIndex + 1) % this.PAN_EVENTS_TO_TRACK];
           if (p2 && p1) {
             let dx = p2.x - p1.x;
             let dy = p2.y - p1.y;
             let dt = p2.t - p1.t;
-            if (dt > 0) {
-              this.dragData.velocityX = -dx / dt;
-              this.dragData.velocityY = -dy / dt;
+            if (dt > 0) { // dt should never be less than 0
+              this.dragData.velocityX = dx / dt;
+              this.dragData.velocityY = dy / dt;
 
+              // Save the original x.y we're starting from to make sure
+              // we don't go backwards
               this.dragData.originalX = this.dragData.dragX;
               this.dragData.originalY = this.dragData.dragY;
 
-              let [destPageX, destPageY] =  this._constrainPanCoords(this._screenToPage(this.dragData.dragX
-                                                                     + this.dragData.velocityX * 800),
-                                                                     this._screenToPage(this.dragData.dragY
-                                                                     + this.dragData.velocityY * 800));
 
+              // s = S0 + 0.5 * v0^2 * 1/CoK); s = position, s0 = initial pos
+              // v0 = initial velocity, CoK = Coefficient of Kinetic friction
+              // All in page coords
+              let idealDestScreenX = this.dragData.dragX  + Math.abs(this.dragData.velocityX) 
+                                     * this.dragData.velocityX * 100;
+              let idealDestScreenY = this.dragData.dragY + Math.abs(this.dragData.velocityY) 
+                                     * this.dragData.velocityY * 100
+          
+              let [destPageX, destPageY] =  this._constrainPanCoords(-this._screenToPage(idealDestScreenX),
+                                                                     -this._screenToPage(idealDestScreenY));
+
+
+              // Convert to screen coords
               this.dragData.destinationX = -this._pageToScreen(destPageX);
               this.dragData.destinationY = -this._pageToScreen(destPageY);
 
+              // If we have a kinetic timer, kill it.  This shouldn't happen
               if (this.dragData.kineticId)
                 window.clearInterval(this.dragData.kineticId);
-              this.dragData.kineticId = window.setInterval(this._doKinetic, dt / (this.PAN_EVENTS_TO_TRACK - 1),
-                                                           this, dt / (this.PAN_EVENTS_TO_TRACK - 1));
+              // Start timer for kinetic movements
+              let interval =  dt / (this.PAN_EVENTS_TO_TRACK - 1);
+              this.dragData.kineticId = window.setInterval(this._doKinetic, interval, this, interval);
             } else {
+              // dt <= 0, this is bad
               this._endPan();
             }
           } else {
+            // p1 or p2 is null, either we didn't pan enough, or something went wrong
             this._endPan()
           }
 
@@ -890,24 +906,45 @@
         <parameter name="self"/>
         <parameter name="dt"/>
         <body><![CDATA[
+          // record where we're starting so we can test how far we went later
           let startX = self.dragData.dragX;
           let startY = self.dragData.dragY;
           const stopTheshold = 3;  //Distance from the destination point that we'll consider to be "there"
+          let dx = 0;
+          let dy = 0;
           if (Math.abs(self.dragData.destinationX - self.dragData.dragX) < stopTheshold) {
-            self.dragData.velocityX = 1/dt;
+            dx = self.dragData.destinationX - self.dragData.dragX;
+            self.dragData.velocityX = dx/dt;
+          } else {
+            // decelerate, this assumes we decelerate perfectly to our destination
+            // it gets skewed if we're hitting an edge since we're using our progress
+            // instead of the time  
+            dx = self.dragData.velocityX * dt * (Math.sqrt(Math.abs(self.dragData.destinationX - self.dragData.dragX))
+                 / Math.sqrt(Math.abs(self.dragData.destinationX - self.dragData.originalX)));
+            // if we're already at the destination, we don't want to move anymore
+            dx = self.dragData.originalX == self.dragData.destinationX ? 0 : dx;
           }
+          
           if (Math.abs(self.dragData.destinationY - self.dragData.dragY) < stopTheshold) {
-            self.dragData.velocityY = 1/dt;
+            dx = self.dragData.destinationY - self.dragData.dragY;
+            self.dragData.velocityY = dx/dt;
+          } else {
+            // decelerate, this assumes we decelerate perfectly to our destination
+            // it gets skewed if we're hitting an edge since we're using our progress
+            // instead of the time 
+            dy = self.dragData.velocityY * dt * (Math.sqrt(Math.abs(self.dragData.destinationY - self.dragData.dragY))
+                 / Math.sqrt(Math.abs(self.dragData.destinationY - self.dragData.originalY)));
+            // if we're already at the destination, we don't want to move anymore
+            dy = self.dragData.originalY == self.dragData.destinationY ? 0 : dy;
+          
           }
-          let dx = self.dragData.originalX == self.dragData.destinationX ? 0 :
-                   self.dragData.velocityX * dt *(Math.sqrt(Math.abs(self.dragData.destinationX - self.dragData.dragX)) /
-                                               Math.sqrt(Math.abs(self.dragData.destinationX - self.dragData.originalX)));
-          let dy = self.dragData.originalY == self.dragData.destinationY ? 0 :
-                   self.dragData.velocityY * dt * (Math.sqrt(Math.abs(self.dragData.destinationY - self.dragData.dragY)) /
-                                               Math.sqrt(Math.abs(self.dragData.destinationY - self.dragData.originalY)));
-          let nextX = self.dragData.dragX - dx;
-          let nextY = self.dragData.dragY - dy;
+         
+          // Calculate the next x, y in screen space
+          let nextX = self.dragData.dragX + dx;
+          let nextY = self.dragData.dragY + dy;
+          
 
+          // make sure we're still between original and destination coords
           if((self.dragData.originalX > nextX &&
               nextX > self.dragData.destinationX) ||
              (self.dragData.originalX < nextX &&
@@ -925,9 +962,12 @@
 
           self._updateCanvasPosition();
 
+          // calculate how much we've actually moved and end if less than 4px
           let actualDx = startX - self.dragData.dragX;
-          let actualDy = startY - self.dragData.dragY
-          if ((actualDx / (self.dragData.destinationX - self.dragData.originalX)  < 0 &&  actualDy / (self.dragData.destinationY - self.dragData.originalY) < 0) || ( Math.abs(actualDx) < 4 && Math.abs(actualDy) < 4)) {
+          let actualDy = startY - self.dragData.dragY;
+          if ((actualDx / (self.dragData.destinationX - self.dragData.originalX)  < 0 &&  
+               actualDy / (self.dragData.destinationY - self.dragData.originalY) < 0) || 
+              (Math.abs(actualDx) < 4 && Math.abs(actualDy) < 4)) {
             self._endKinetic();
           }
         ]]></body>
