@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=450048
+-->
+<head>
+  <title>Test for nsFind::Find()</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450048">Mozilla Bug 450048</a>
+<p id="display">This is the text to search i<b>n&shy;t</b>o</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 450048 **/
+
+  // Check nsFind class and its nsIFind interface.
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var rf = Components.classes["@mozilla.org/embedcomp/rangefind;1"]
+                     .getService(Components.interfaces.nsIFind);
+
+  var display = window.document.getElementById("display");
+  var searchRange = window.document.createRange();
+  searchRange.setStart(display, 0);
+  searchRange.setEnd(display, display.childNodes.length);
+  var startPt = searchRange;
+  var endPt = searchRange;
+
+  // Check |null| detection on |aPatText| parameter.
+  try {
+    rf.Find(null, searchRange, startPt, endPt);
+
+    ok(false, "Missing NS_ERROR_NULL_POINTER exception");
+  } catch (e if (e instanceof Components.interfaces.nsIException &&
+                 e.result == Components.results.NS_ERROR_NULL_POINTER)) {
+    ok(true, null);
+  }
+
+  // Check |null| detection on |aSearchRange| parameter.
+  try {
+    rf.Find("", null, startPt, endPt);
+
+    ok(false, "Missing NS_ERROR_ILLEGAL_VALUE exception");
+  } catch (e if (e instanceof Components.interfaces.nsIException &&
+                 e.result == Components.results.NS_ERROR_ILLEGAL_VALUE)) {
+    ok(true, null);
+  }
+
+  // Check |null| detection on |aStartPoint| parameter.
+  try {
+    rf.Find("", searchRange, null, endPt);
+
+    ok(false, "Missing NS_ERROR_ILLEGAL_VALUE exception");
+  } catch (e if (e instanceof Components.interfaces.nsIException &&
+                 e.result == Components.results.NS_ERROR_ILLEGAL_VALUE)) {
+    ok(true, null);
+  }
+
+  // Check |null| detection on |aEndPoint| parameter.
+  try {
+    rf.Find("", searchRange, startPt, null);
+
+    ok(false, "Missing NS_ERROR_ILLEGAL_VALUE exception");
+  } catch (e if (e instanceof Components.interfaces.nsIException &&
+                 e.result == Components.results.NS_ERROR_ILLEGAL_VALUE)) {
+    ok(true, null);
+  }
+
+  var searchValue, retRange;
+
+  rf.findBackwards = false;
+
+  rf.caseSensitive = false;
+
+  searchValue = "TexT";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
+
+  rf.caseSensitive = true;
+
+  // searchValue = "TexT";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(!retRange, "\"" + searchValue + "\" found (caseSensitive)");
+
+  searchValue = "text";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found");
+
+  // Matches |i<b>n&shy;t</b>o|.
+  searchValue = "into";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found");
+
+  // Matches inside |search|.
+  searchValue = "ear";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found");
+
+  // Set new start point (to end of last search).
+  startPt = retRange.endContainer.ownerDocument.createRange();
+  startPt.setStart(retRange.endContainer, retRange.endOffset);
+  startPt.setEnd(retRange.endContainer, retRange.endOffset);
+
+  searchValue = "t";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found (forward)");
+
+  searchValue = "the";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(!retRange, "\"" + searchValue + "\" found (forward)");
+
+  rf.findBackwards = true;
+
+  // searchValue = "the";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found (backward)");
+</script>
+</pre>
+</body>
+</html>

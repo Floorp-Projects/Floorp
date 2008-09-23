@@ -129,6 +129,11 @@ var gViewSourceUtils = {
           webBrowserPersist.persistFlags = this.mnsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
           webBrowserPersist.progressListener = this.viewSourceProgressListener;
           webBrowserPersist.saveURI(uri, null, null, null, null, file);
+
+          // register the file to be deleted on app exit
+          Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
+                    .getService(Components.interfaces.nsPIExternalAppLauncher)
+                    .deleteTemporaryFileOnExit(file);
         } else {
           // we'll use nsIWebPageDescriptor to get the source because it may not have to refetch
           // the file from the server
@@ -240,6 +245,11 @@ var gViewSourceUtils = {
             // clean up
             coStream.close();
             foStream.close();
+
+            // register the file to be deleted on app exit
+            Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
+                      .getService(Components.interfaces.nsPIExternalAppLauncher)
+                      .deleteTemporaryFileOnExit(this.file);
           }
 
           // Determine the command line arguments to pass to the editor.
