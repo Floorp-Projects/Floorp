@@ -253,12 +253,9 @@ var BrowserUI = {
         // Limit the panning
         if (newLeft > 0)
           newLeft = 0;
-        if (newLeft < -(tabbarW + sidebarW))
+        else if (newLeft < -(tabbarW + sidebarW))
           newLeft = -(tabbarW + sidebarW);
 
-        // Add a "snap" for the tabbar
-        if (Math.abs(newLeft + tabbarW) < 30)
-          newLeft = -tabbarW;
         tabbar.left = newLeft;
 
         // Never let the toolbar pan off the screen
@@ -280,8 +277,10 @@ var BrowserUI = {
         // Set the UI mode based on where we ended up
         if (newLeft > -tabbarW && newLeft <= 0)
           this.mode = UIMODE_TABS;
-        if (newLeft >= -(tabbarW + sidebarW) && newLeft < -tabbarW)
+        else if (newLeft >= -(tabbarW + sidebarW) && newLeft < -tabbarW)
           this.mode = UIMODE_CONTROLS;
+        else if (newLeft == -tabbarW)
+          this.mode = (browser.top == 0 ? UIMODE_NONE : UIMODE_URLVIEW);
 
         pannedUI = true;
       }
@@ -367,11 +366,11 @@ var BrowserUI = {
       }
       tabbar.left = newLeft;
 
-      let newToolbarLeft = newLeft + tabbarW;
-      if (newToolbarLeft < -sidebarW)
-        newToolbarLeft += sidebarW;
-      else if (newToolbarLeft < 0)
+      let newToolbarLeft = newLeft;
+      if (newToolbarLeft < 0 && aMode != UIMODE_PANEL)
         newToolbarLeft = 0;
+      else if (newToolbarLeft < 0 && aMode == UIMODE_PANEL)
+        newToolbarLeft += tabbarW + sidebarW;
       toolbar.left = newToolbarLeft;
 
       browser.left = newLeft + tabbarW;
@@ -768,6 +767,8 @@ var BrowserUI = {
         break;
       case "mouseup":
         this._dragData.dragging = false;
+        // Cause the UI to snap, if needed
+        this._showPanel(this.mode);
         break;
       case "mousemove":
         this._scrollToolbar(aEvent);
