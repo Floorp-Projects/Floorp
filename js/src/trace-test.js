@@ -1269,6 +1269,14 @@ function testConstSwitch() {
 testConstSwitch.expected = 2;
 test(testConstSwitch);
 
+function testConstSwitch2() {
+    var x;
+    for (var j = 0; j < 4; ++j) { switch(0/0) { } }
+    return "ok";
+}
+testConstSwitch2.expected = "ok";
+test(testConstSwitch2);
+
 function testConstIf() {
     var x;
     for (var j=0;j<5;++j) { if (1.1 || 5) { } x = 2;}
