@@ -10,10 +10,6 @@ richlistitem[type="documenttab"] {
     -moz-binding: url("chrome://browser/content/deckbrowser.xml#documenttab");
 }
 
-richpreflist {
-    -moz-binding: url("chrome://browser/content/preferences/richpref.xml#richpreflist");
-}
-
 richpref[type="bool"] {
     -moz-binding: url("chrome://browser/content/preferences/richpref.xml#richpref-bool");
 }

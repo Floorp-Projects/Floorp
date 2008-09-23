@@ -49,15 +49,42 @@
         this.prefChanged();
       </constructor>
 
+      <method name="fireEvent">
+        <parameter name="eventName"/>
+        <parameter name="funcStr"/>
+        <body>
+          <![CDATA[
+            var body = funcStr || this.getAttribute(eventName);
+            if (!body)
+              return;
+
+            try
+            {
+              var event = document.createEvent("Events");
+              event.initEvent(eventName, true, true);
+              var f = new Function("event", body);
+              f.call(this, event);
+            }
+            catch (e)
+            {
+              dump(">>> "+ e +"\n");
+              Components.utils.reportError(e);
+            }
+          ]]>
+        </body>
+      </method>
+
       <method name="inputChanged">
         <body>
           this.pref.value = this.value;
+          this.fireEvent("onsynctopreference");
         </body>
       </method>
 
       <method name="prefChanged">
         <body>
           this.value = this.pref.value;
+          this.fireEvent("onsyncfrompreference");
         </body>
       </method>
 
@@ -85,6 +112,7 @@
         <xul:preference anonid="pref" xbl:inherits="name=pref,type,inverted" instantApply="true" onchange="prefChanged();"/>
       </xul:preferences>
     </content>
+
     <implementation>
       <property name="value" onget="return this.input.checked;" onset="return this.input.setChecked(val);"/>
     </implementation>
@@ -107,16 +135,19 @@
         <xul:preference anonid="pref" xbl:inherits="name=pref,inverted" type="int" instantApply="true" onchange="prefChanged();"/>
       </xul:preferences>
     </content>
+
     <implementation>
       <method name="inputChanged">
         <body>
           this.pref.value = this.getAttribute(this.value ? "on" : "off");
+          this.fireEvent("onsynctopreference");
         </body>
       </method>
 
       <method name="prefChanged">
         <body>
           this.value = this.pref.value == this.getAttribute("on");
+          this.fireEvent("onsyncfrompreference");
         </body>
       </method>
 
