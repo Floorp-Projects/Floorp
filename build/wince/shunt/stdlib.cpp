@@ -53,9 +53,7 @@ extern "C" {
 
 MOZCE_SHUNT_API char *fullpath(char *absPath, const char *relPath, size_t maxLength)
 {
-#ifdef API_LOGGING
-    mozce_printf("fullpath called\n");
-#endif
+    WINCE_LOG_API_CALL("fullpath called\n");
 
     if (relPath[0] != '\\') 
     {
@@ -75,9 +73,8 @@ MOZCE_SHUNT_API char *fullpath(char *absPath, const char *relPath, size_t maxLen
 
 MOZCE_SHUNT_API void splitpath(const char* inPath, char* outDrive, char* outDir, char* outFname, char* outExt)
 {
-#ifdef API_LOGGING
-    mozce_printf("splitpath called\n");
-#endif
+    WINCE_LOG_API_CALL("splitpath called\n");
+
     if(NULL != outDrive)
     {
         *outDrive = '\0';
@@ -182,9 +179,8 @@ MOZCE_SHUNT_API void splitpath(const char* inPath, char* outDrive, char* outDir,
 
 MOZCE_SHUNT_API void makepath(char* outPath, const char* inDrive, const char* inDir, const char* inFname, const char* inExt)
 {
-#ifdef API_LOGGING
-    mozce_printf("makepath called\n");
-#endif
+    WINCE_LOG_API_CALL("makepath called\n");
+
     if(NULL != outPath)
     {
         int dirLen = 0;
@@ -208,9 +204,8 @@ MOZCE_SHUNT_API void makepath(char* outPath, const char* inDrive, const char* in
 
 MOZCE_SHUNT_API int mozce_strcmpi(const char *dest, const char *src)
 {
-#ifdef API_LOGGING
-    mozce_printf("mozce_strcmpi called\n");
-#endif
+    WINCE_LOG_API_CALL("mozce_strcmpi called\n");
+
     int f,l;
     
     do {

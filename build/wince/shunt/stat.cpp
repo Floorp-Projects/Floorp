@@ -50,9 +50,7 @@ extern "C" {
 
 MOZCE_SHUNT_API int stat(const char* inPath, struct stat* outStats)
 {
-#ifdef API_LOGGING
-        mozce_printf("stat called\n");
-#endif
+    WINCE_LOG_API_CALL("stat called\n");
     
     int retval = -1;
     
