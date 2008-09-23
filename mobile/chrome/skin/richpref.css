@@ -1,20 +1,41 @@
-richlistitem.section {
+#pref-pane
+{
+  background-color: rgba(123,125,123,0.9);
+}
+
+richpref
+{
+  background-color: white;
+}
+
+.prefsection
+{
   font-size: 1.5em ! important;
   color: white;
   background-color: grey;
+  padding: .3em 0 .3em 0;
 }
 
-.prefbox {
+.prefbox
+{
   padding: .3em .3em .3em .5em;
   border: thin solid lightgrey;
 }
 
-.preftitle {
- font-size: 1.2em ! important;
+.preftitle
+{
+  font-size: 1.25em ! important;
 }
 
-.prefdesc {
+.prefdesc
+{
   font-size: 1em ! important;
   color: grey;
   background-color: white;
+}
+
+/* BUG: This rule doesn't actually work; I don't know why. */
+richpref > button
+{
+  font-size: 1em ! important;
 }

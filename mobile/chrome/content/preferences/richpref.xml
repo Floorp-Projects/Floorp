@@ -42,7 +42,7 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="richpref-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+  <binding id="richpref-base">
     <implementation>
       <constructor>
         this.pref._setValue(this.pref.valueFromPreferences, false);

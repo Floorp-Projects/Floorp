@@ -544,7 +544,3 @@ findbar {
   min-width: 280px;
   padding: 10px;
 }
-
-#pref-pane {
-  background-color: rgba(123,125,123,0.9);
-}

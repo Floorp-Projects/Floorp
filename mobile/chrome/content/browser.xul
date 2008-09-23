@@ -242,10 +242,10 @@
 
         <vbox id="pref-pane">
           <hbox pack="center" id="buttons"/>
-          <richlistbox id="pref-list" seltype="single" flex="1">
-            <richlistitem class="section">
-              <label class="sectiontitle" value="&content.title;" crop="end" flex="1"/>
-            </richlistitem>
+          <scrollbox orient="vertical" id="pref-list" seltype="single" flex="1">
+            <vbox class="prefsection">
+              <label value="&content.title;" crop="end" flex="1"/>
+            </vbox>
             <richpref pref="permissions.default.image" title="&permissions.default.image.title;" type="boolint" on="1" off="2">
               &permissions.default.image.description;
             </richpref>
@@ -256,9 +256,9 @@
               &plugins.enabled.description;
             </richpref>
 
-            <richlistitem class="section">
-              <label class="sectiontitle" value="&privacy.title;" crop="end" flex="1"/>
-            </richlistitem>
+            <vbox class="prefsection">
+              <label value="&privacy.title;" crop="end" flex="1"/>
+            </vbox>
             <richpref pref="network.cookie.cookieBehavior" title="&network.cookie.cookieBehavior.title;" type="boolint" on="1" off="3">
               &network.cookie.cookieBehavior.description;
             </richpref>
@@ -266,7 +266,7 @@
               &clear.private.data.description;
               <button label="&clear.private.data.button;" command="cmd_sanitize"/>
             </richpref>
-          </richlistbox>
+          </scrollbox>
           <hbox pack="end">
             <button label="Dismiss" oncommand="BrowserUI.show(UIMODE_NONE);"/>
           </hbox>
