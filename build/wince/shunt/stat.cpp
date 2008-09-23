@@ -47,6 +47,32 @@ extern "C" {
 }
 #endif
 
+MOZCE_SHUNT_API int fstat(FILE* handle, struct stat* buff)
+{
+    WINCE_LOG_API_CALL("fstat called\n");
+
+    int position = ftell(handle);
+    if (position < 0)
+        return -1;
+
+    if (fseek(handle, 0, SEEK_END) < 0)
+        return -1;
+
+    buff->st_size = ftell(handle);
+
+    if (fseek(handle, position, SEEK_SET) < 0)
+        return -1;
+
+    if (buff->st_size < 0)
+        return -1;
+
+    buff->st_mode = _S_IFREG | _S_IREAD | _S_IWRITE | _S_IEXEC;
+    /* can't get time from a file handle on wince */
+    buff->st_ctime = 0;
+    buff->st_atime = 0;
+    buff->st_mtime = 0;
+    return 0;
+}
 
 MOZCE_SHUNT_API int stat(const char* inPath, struct stat* outStats)
 {
@@ -71,7 +97,6 @@ MOZCE_SHUNT_API int stat(const char* inPath, struct stat* outStats)
                 
                 if (readHandle != INVALID_HANDLE_VALUE && readHandle != NULL)
                 {
-                    
                     retval = 0;
                     outStats->st_size = findData.nFileSizeLow;
                     

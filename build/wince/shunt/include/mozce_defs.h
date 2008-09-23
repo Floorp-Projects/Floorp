@@ -177,7 +177,9 @@ typedef INT_PTR intptr_t;
 #define _S_IFREG    0100000 /* stat, is a normal file */
 #define _S_IREAD    0000400 /* stat, can read */
 #define _S_IWRITE   0000200 /* stat, can write */
-#define	_S_IEXEC	0000100
+#define _S_IEXEC    0000100
+
+#define S_IFREG     0x8000
 
 struct stat
 {
@@ -306,18 +308,18 @@ typedef struct MAT2 {
 
   
 struct color{
-	unsigned char Red;
-	unsigned char Green;
-	unsigned char Blue;
-	double Alpha;
+    unsigned char Red;
+    unsigned char Green;
+    unsigned char Blue;
+    double Alpha;
 };
 
 #ifndef SEE_MASK_FLAG_DDEWAIT
-#define SEE_MASK_FLAG_DDEWAIT	0
+#define SEE_MASK_FLAG_DDEWAIT   0
 #endif
 
 #ifndef SEE_MASK_INVOKEIDLIST
-#define SEE_MASK_INVOKEIDLIST	0
+#define SEE_MASK_INVOKEIDLIST   0
 #endif
 
 
