@@ -268,33 +268,38 @@ class JarMaker(object):
     # This loop exits on either
     # - the end of the jar.mn file
     # - an line in the jar.mn file that's not part of a jar section
-    while True:
-      try:
-        l = lines.next()
-      except StopIteration:
-        # we're done with this jar.mn, and this jar section
-        self.finalizeJar(jarfile, chromebasepath, register)
-        if jf is not None:
-          jf.close()
-        # reraise the StopIteration for makeJar
-        raise
-      if self.ignore.match(l):
-        continue
-      m = self.regline.match(l)
-      if  m:
-        rline = m.group(1)
-        register[rline] = 1
-        continue
-      m = self.entryline.match(l)
-      if not m:
-        # neither an entry line nor chrome reg, this jar section is done
-        self.finalizeJar(jarfile, chromebasepath, register)
-        if jf is not None:
-          jf.close()
-        lines.pushback(l)
-        return
-      self._processEntryLine(m, sourcedirs, topsourcedir, localedirs,
-                            outHelper, jf)
+    # - on an exception raised, close the jf in that case in a finally
+    try:
+      while True:
+        try:
+          l = lines.next()
+        except StopIteration:
+          # we're done with this jar.mn, and this jar section
+          self.finalizeJar(jarfile, chromebasepath, register)
+          if jf is not None:
+            jf.close()
+          # reraise the StopIteration for makeJar
+          raise
+        if self.ignore.match(l):
+          continue
+        m = self.regline.match(l)
+        if  m:
+          rline = m.group(1)
+          register[rline] = 1
+          continue
+        m = self.entryline.match(l)
+        if not m:
+          # neither an entry line nor chrome reg, this jar section is done
+          self.finalizeJar(jarfile, chromebasepath, register)
+          if jf is not None:
+            jf.close()
+          lines.pushback(l)
+          return
+        self._processEntryLine(m, sourcedirs, topsourcedir, localedirs,
+                              outHelper, jf)
+    finally:
+      if jf is not None:
+        jf.close()
     return
 
   def _processEntryLine(self, m, 
@@ -403,7 +408,11 @@ def main():
   noise = logging.INFO
   if options.verbose is not None:
     noise = (options.verbose and logging.DEBUG) or logging.WARN
-  logging.basicConfig(level = noise, format = "%(message)s")
+  if sys.version_info[:2] > (2,3):
+    logging.basicConfig(format = "%(message)s")
+  else:
+    logging.basicConfig()
+  logging.getLogger().setLevel(noise)
   if not args:
     jm.makeJar(infile=sys.stdin,
                sourcedirs=options.s, topsourcedir=options.t,

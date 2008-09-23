@@ -1090,32 +1090,24 @@ void nsDisplayTransform::Paint(nsDisplayListBuilder *aBuilder,
                                nsIRenderingContext *aCtx,
                                const nsRect &aDirtyRect)
 {
-  /* Here's how this is going to work:
-   * 1. Convert the stored transform matrix into a gfxMatrix
-   * 2. Read out the old graphics matrix.
-   * 3. Compute the net graphics matrix at this point.
-   * 4. Set that as the active matrix.
-   * 5. Apply the inverse transform to the dirty rect so that children think
-   *    they're drawing in local space.
-   * 6. Render everything.
-   * 7. Reset the matrix.
+  /* Get the local transform matrix with which we'll transform all wrapped
+   * elements.  If this matrix is singular, we shouldn't display anything
+   * and can abort.
    */
+  gfxMatrix newTransformMatrix =
+    GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
+                                 mFrame->PresContext()->AppUnitsPerDevPixel(),
+                                nsnull);
+  if (newTransformMatrix.IsSingular())
+    return;
+
   /* Get the context and automatically save and restore it. */
   gfxContext* gfx = aCtx->ThebesContext();
   gfxContextAutoSaveRestore autoRestorer(gfx);
 
-  /* Unit conversion is based on the local presentation context. */
-  float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-
-  /* Compute the new matrix by taking the old matrix and multiplying the
-   * transform matrix of this frame only.  The new transform is prepended to
-   * the old transform, since that way, if we have several stacked transforms,
-   * the innermost transform is applied first.
+  /* Get the new CTM by applying this transform after all of the
+   * transforms preceding it.
    */
-  gfxMatrix newTransformMatrix =
-    GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
-                                factor, nsnull);
-
   newTransformMatrix.Multiply(gfx->CurrentMatrix());
 
   /* Set the matrix for the transform based on the old matrix and the new

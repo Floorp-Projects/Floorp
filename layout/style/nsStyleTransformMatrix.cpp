@@ -48,7 +48,8 @@
 #include <math.h>
 
 /* Arguably, this loses precision, but it doesn't hurt! */
-const float kPi = 3.1415926535897932384626433f;
+const float kPi      = 3.1415926535897932384626433832795f;
+const float kTwoPi   = 6.283185307179586476925286766559f;
 const float kEpsilon = 0.0001f;
 
 /* Computes tan(theta).  For values of theta such that
@@ -73,8 +74,20 @@ static float SafeTangent(float aTheta)
   return sinTheta / cosTheta;
 }
 
+/* Helper function to constrain an angle to a value in the range [-pi, pi),
+ * which reduces accumulated floating point errors from trigonometric functions
+ * by keeping the error terms small.
+ */
+static inline float ConstrainFloatValue(float aValue)
+{
+  /* Get in range [0, 2pi) */
+  aValue = fmod(aValue, kTwoPi);
+  return aValue >= kPi ? aValue - kTwoPi : aValue;
+}
+
 /* Converts an nsCSSValue containing an angle into an equivalent measure
- * of radians.
+ * of radians.  The value is guaranteed to be in the range (-pi, pi) to
+ * minimize error.
  */
 static float CSSToRadians(const nsCSSValue &aValue)
 {
@@ -84,13 +97,15 @@ static float CSSToRadians(const nsCSSValue &aValue)
   switch (aValue.GetUnit()) {
   case eCSSUnit_Degree:
     /* 360deg = 2pi rad, so deg = pi / 180 rad */
-    return aValue.GetFloatValue() * kPi / 180.0f;
+    return
+      ConstrainFloatValue(aValue.GetFloatValue() * kPi / 180.0f);
   case eCSSUnit_Grad:
     /* 400grad = 2pi rad, so grad = pi / 200 rad */
-    return aValue.GetFloatValue() * kPi / 200.0f;
+    return
+      ConstrainFloatValue(aValue.GetFloatValue() * kPi / 200.0f);
   case eCSSUnit_Radian:
     /* Yay identity transforms! */
-    return aValue.GetFloatValue();
+    return ConstrainFloatValue(aValue.GetFloatValue());
   default:
     NS_NOTREACHED("Unexpected angular unit!");
     return 0.0f;
@@ -124,16 +139,18 @@ void nsStyleTransformMatrix::SetToIdentity()
 /* Adds the constant translation to the scale factor translation components. */
 nscoord nsStyleTransformMatrix::GetXTranslation(const nsRect& aBounds) const
 {
-  return nscoord(aBounds.width * mX[0] + aBounds.height * mY[0]) + mDelta[0];
+  return NSToCoordRound(aBounds.width * mX[0] + aBounds.height * mY[0]) +
+    mDelta[0];
 }
 nscoord nsStyleTransformMatrix::GetYTranslation(const nsRect& aBounds) const
 {
-  return nscoord(aBounds.width * mX[1] + aBounds.height * mY[1]) + mDelta[1];
+  return NSToCoordRound(aBounds.width * mX[1] + aBounds.height * mY[1]) +
+    mDelta[1];
 }
 
 /* GetThebesMatrix converts the stored matrix in a few steps. */
 gfxMatrix nsStyleTransformMatrix::GetThebesMatrix(const nsRect& aBounds,
-                                                  PRInt32 aScale) const
+                                                  float aScale) const
 {
   /* Compute the graphics matrix.  We take the stored main elements, along with
    * the delta, and add in the matrices:
@@ -146,7 +163,6 @@ gfxMatrix nsStyleTransformMatrix::GetThebesMatrix(const nsRect& aBounds,
    * | 0 0 dy2| * height
    * | 0 0   0|
    */
-
   return gfxMatrix(mMain[0], mMain[1], mMain[2], mMain[3],
                    NSAppUnitsToFloatPixels(GetXTranslation(aBounds), aScale),
                    NSAppUnitsToFloatPixels(GetYTranslation(aBounds), aScale));
@@ -176,12 +192,10 @@ nsStyleTransformMatrix::operator *= (const nsStyleTransformMatrix &aOther)
   newMatrix[1] = aOther.mMain[0] * mMain[1] + aOther.mMain[1] * mMain[3];
   newMatrix[2] = aOther.mMain[2] * mMain[0] + aOther.mMain[3] * mMain[2];
   newMatrix[3] = aOther.mMain[2] * mMain[1] + aOther.mMain[3] * mMain[3];
-  newDelta[0] =
-    NSCoordMultiply(aOther.mDelta[0], mMain[0]) +
-    NSCoordMultiply(aOther.mDelta[1], mMain[2]) + mDelta[0];
-  newDelta[1] =
-    NSCoordMultiply(aOther.mDelta[0], mMain[1]) +
-    NSCoordMultiply(aOther.mDelta[1], mMain[3]) + mDelta[1];
+  newDelta[0] = NSToCoordRound(aOther.mDelta[0] * mMain[0] +
+                               aOther.mDelta[1] * mMain[2]) + mDelta[0];
+  newDelta[1] = NSToCoordRound(aOther.mDelta[0] * mMain[1] +
+                               aOther.mDelta[1] * mMain[3]) + mDelta[1];
 
   /* For consistent terminology, let u0, u1, v0, and v1 be the four transform
    * coordinates from our matrix, and let x0, x1, y0, and y1 be the four

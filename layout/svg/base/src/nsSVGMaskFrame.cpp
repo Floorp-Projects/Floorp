@@ -106,19 +106,12 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
     nsSVGUtils::PaintChildWithEffects(aContext, nsnull, kid);
   }
 
+  gfxRect clipExtents = gfx->GetClipExtents();
   gfx->Restore();
 
   nsRefPtr<gfxPattern> pattern = gfx->PopGroup();
   if (!pattern || pattern->CairoStatus())
     return nsnull;
-
-  nsRefPtr<gfxASurface> surface = pattern->GetSurface();
-  if (!surface || surface->CairoStatus())
-    return nsnull;
-
-  surface->SetDeviceOffset(gfxPoint(0,0));
-
-  gfxRect clipExtents = gfx->GetClipExtents();
 
 #ifdef DEBUG_tor
   fprintf(stderr, "clip extent: %f,%f %fx%f\n",
@@ -143,10 +136,11 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
     new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatARGB32);
   if (!image || image->CairoStatus())
     return nsnull;
+  image->SetDeviceOffset(-clipExtents.pos);
 
   gfxContext transferCtx(image);
   transferCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
-  transferCtx.SetSource(surface);
+  transferCtx.SetPattern(pattern);
   transferCtx.Paint();
 
   PRUint8 *data   = image->Data();
@@ -172,10 +166,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
     }
 
   gfxPattern *retval = new gfxPattern(image);
-  if (retval) {
-    retval->SetMatrix(gfxMatrix().Translate(-clipExtents.pos));
-    NS_ADDREF(retval);
-  }
+  NS_IF_ADDREF(retval);
   return retval;
 }
 
