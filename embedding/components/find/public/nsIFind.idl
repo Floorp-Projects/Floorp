@@ -51,7 +51,7 @@ interface nsIFind : nsISupports
    * Use "find entire words" mode by setting to a word breaker
    * or null, to disable "entire words" mode.
    */
-  attribute nsIWordBreaker wordBreaker;
+  [noscript] attribute nsIWordBreaker wordBreaker;
 
   /**
    * Find some text in the current context. The implementation is
@@ -62,13 +62,9 @@ interface nsIFind : nsISupports
    * @param aStartPoint  A Range specifying search start point.
    *                     If not collapsed, we'll start from
    *                     end (forward) or start (backward).
-   *                     May be null; if so, we'll start at the start
-   *                     (forward) or end (back) of aSearchRange.
    * @param aEndPoint    A Range specifying search end point.
    *                     If not collapsed, we'll end at
    *                     end (forward) or start (backward).
-   *                     May be null; if so, we'll end at the end
-   *                     (forward) or start (back) of aSearchRange.
    * @retval             A range spanning the match that was found (or null).
    */
   nsIDOMRange Find(in wstring aPatText, in nsIDOMRange aSearchRange,
