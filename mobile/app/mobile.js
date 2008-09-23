@@ -247,3 +247,5 @@ pref("privacy.item.formdata", true);
 pref("privacy.item.downloads", true);
 pref("privacy.item.passwords", true);
 pref("privacy.item.sessions", true);
+
+pref("plugins.enabled", false);

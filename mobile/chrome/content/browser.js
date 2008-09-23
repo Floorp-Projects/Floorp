@@ -1,4 +1,5 @@
-/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
+/*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -148,6 +149,16 @@ var Browser = {
     }
   },
 
+  setPluginState: function(state)
+  {
+    var phs = Components.classes["@mozilla.org/plugin/host;1"]
+                        .getService(Components.interfaces.nsIPluginHost);
+    var plugins = phs.getPluginTags({ });
+     for (i = 0; i < plugins.length; ++i)
+       plugins[i].disabled = state;
+    dump(">>> plugins "+ (state ? "enabled" : "disabled") +" <<<\n");
+  },
+
   setupGeolocationPrompt: function() {
     try {
       var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
@@ -288,7 +299,7 @@ var Browser = {
       }
     }
   },
-  
+
   /**
    * Handle command event bubbling up from content.  This allows us to do chrome-
    * privileged things based on buttons in, e.g., unprivileged error pages.
@@ -308,7 +319,7 @@ var Browser = {
     if (/^about:neterror\?e=nssBadCert/.test(errorDoc.documentURI)) {
       if (ot == errorDoc.getElementById('exceptionDialogButton')) {
         var params = { exceptionAdded : false };
-        
+
         try {
           switch (gPrefService.getIntPref("browser.ssl_override_behavior")) {
             case 2 : // Pre-fetch & pre-populate
@@ -319,10 +330,10 @@ var Browser = {
         } catch (e) {
           Components.utils.reportError("Couldn't get ssl_override pref: " + e);
         }
-        
+
         window.openDialog('chrome://pippki/content/exceptionDialog.xul',
                           '','chrome,centerscreen,modal', params);
-        
+
         // If the user added the exception cert, attempt to reload the page
         if (params.exceptionAdded)
           errorDoc.location.reload();
@@ -338,7 +349,7 @@ var Browser = {
           if (url.indexOf("|") != -1)
             url = url.split("|")[0];
         } catch (e) { /* Fall back on about blank */ }
-        
+
         Browser.currentBrowser.loadURI(url, null, null, false);
       }
     }
