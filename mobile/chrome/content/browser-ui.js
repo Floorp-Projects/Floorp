@@ -275,11 +275,11 @@ var BrowserUI = {
         panelUI.left = newLeft + tabbarW + browserW + sidebarW;
 
         // Set the UI mode based on where we ended up
-        if (newLeft > -tabbarW && newLeft <= 0)
+        if (newLeft > -(tabbarW - tabbarW / 3) && newLeft <= 0)
           this.mode = UIMODE_TABS;
-        else if (newLeft >= -(tabbarW + sidebarW) && newLeft < -tabbarW)
+        else if (newLeft >= -(tabbarW + sidebarW) && newLeft < -(tabbarW + sidebarW / 3))
           this.mode = UIMODE_CONTROLS;
-        else if (newLeft == -tabbarW)
+        else
           this.mode = (browser.top == 0 ? UIMODE_NONE : UIMODE_URLVIEW);
 
         pannedUI = true;
