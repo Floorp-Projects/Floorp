@@ -679,6 +679,12 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
                                             nsIDOMElement   *aListener,
                                             const nsAString &aAttr)
 {
+    if (mUpdateNestLevel > 0) {
+        nsDelayedBroadcastUpdate delayedUpdate(aBroadcaster, aListener,
+                                               aAttr);
+        mDelayedBroadcasters.AppendElement(delayedUpdate);
+        return;
+    }
     nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
     nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
 
@@ -3221,6 +3227,24 @@ nsXULDocument::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
 }
 
 void
+nsXULDocument::EndUpdate(nsUpdateType aUpdateType)
+{
+    nsXMLDocument::EndUpdate(aUpdateType);
+    if (mUpdateNestLevel == 0) {
+        PRUint32 length = mDelayedBroadcasters.Length();
+        if (length) {
+            nsTArray<nsDelayedBroadcastUpdate> delayedBroadcasters;
+            mDelayedBroadcasters.SwapElements(delayedBroadcasters);
+            for (PRUint32 i = 0; i < length; ++i) {
+                SynchronizeBroadcastListener(delayedBroadcasters[i].mBroadcaster,
+                                             delayedBroadcasters[i].mListener,
+                                             delayedBroadcasters[i].mAttr);
+            }
+        }
+    }
+}
+
+void
 nsXULDocument::ReportMissingOverlay(nsIURI* aURI)
 {
     NS_PRECONDITION(aURI, "Must have a URI");
@@ -3569,11 +3593,10 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
         // into the element.  Get a nodeinfo from our nodeinfo manager
         // for this node.
         nsCOMPtr<nsINodeInfo> newNodeInfo;
-        rv = mNodeInfoManager->GetNodeInfo(aPrototype->mNodeInfo->NameAtom(),
-                                           aPrototype->mNodeInfo->GetPrefixAtom(),
-                                           aPrototype->mNodeInfo->NamespaceID(),
-                                           getter_AddRefs(newNodeInfo));
-        if (NS_FAILED(rv)) return rv;
+        newNodeInfo = mNodeInfoManager->GetNodeInfo(aPrototype->mNodeInfo->NameAtom(),
+                                                    aPrototype->mNodeInfo->GetPrefixAtom(),
+                                                    aPrototype->mNodeInfo->NamespaceID());
+        if (!newNodeInfo) return NS_ERROR_FAILURE;
         rv = NS_NewElement(getter_AddRefs(result), newNodeInfo->NamespaceID(),
                            newNodeInfo, PR_FALSE);
         if (NS_FAILED(rv)) return rv;

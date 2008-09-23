@@ -54,10 +54,6 @@
    */
 
 class nsAString;
-class nsObsoleteAString;
-#ifdef MOZ_V1_STRING_ABI
-class nsSubstring;
-#endif
 class nsSubstringTuple;
 class nsString;
 class nsAutoString;
@@ -74,10 +70,6 @@ class nsXPIDLString;
    */
 
 class nsACString;
-class nsObsoleteACString;
-#ifdef MOZ_V1_STRING_ABI
-class nsCSubstring;
-#endif
 class nsCSubstringTuple;
 class nsCString;
 class nsCAutoString;
@@ -93,10 +85,8 @@ class nsXPIDLCString;
    * typedefs for backwards compatibility
    */
 
-#ifndef MOZ_V1_STRING_ABI
 typedef nsAString             nsSubstring;
 typedef nsACString            nsCSubstring;
-#endif
 
 typedef nsString              nsAFlatString;
 typedef nsSubstring           nsASingleFragmentString;

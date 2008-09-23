@@ -48,7 +48,7 @@
 #include "prlink.h"
 #include "prclist.h"
 #include "npapi.h"
-#include "ns4xPluginInstance.h"
+#include "nsNPAPIPluginInstance.h"
 
 #include "nsIPlugin.h"
 #include "nsIPluginTag.h"
@@ -73,7 +73,7 @@
 // XXX this file really doesn't think this is possible, but ...
 #include "nsIFactory.h"
 
-class ns4xPlugin;
+class nsNPAPIPlugin;
 class nsIComponentManager;
 class nsIFile;
 class nsIChannel;
@@ -482,7 +482,7 @@ public:
   }
 
   PluginDestructionGuard(NPP npp)
-    : mInstance(npp ? static_cast<ns4xPluginInstance*>(npp->ndata) : nsnull)
+    : mInstance(npp ? static_cast<nsNPAPIPluginInstance*>(npp->ndata) : nsnull)
   {
     Init();
   }

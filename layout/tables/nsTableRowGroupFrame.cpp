@@ -464,7 +464,10 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
           // Inform the row of its new height.
           ((nsTableRowFrame*)kidFrame)->DidResize();
           // the overflow area may have changed inflate the overflow area
-          if (aReflowState.tableFrame->IsAutoHeight()) {
+          const nsStylePosition *stylePos = GetStylePosition();
+          nsStyleUnit unit = stylePos->mHeight.GetUnit();
+          if (aReflowState.tableFrame->IsAutoHeight() &&
+              unit != eStyleUnit_Coord) {
             // Because other cells in the row may need to be aligned
             // differently, repaint the entire row
             nsRect kidRect(0, aReflowState.y,

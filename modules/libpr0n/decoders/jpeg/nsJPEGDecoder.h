@@ -94,7 +94,7 @@ public:
   nsresult  ProcessData(const char *data, PRUint32 count, PRUint32 *writeCount);
 
 protected:
-  PRBool OutputScanlines();
+  nsresult OutputScanlines(PRBool* suspend);
 
 public:
   nsCOMPtr<imgIContainer> mImage;

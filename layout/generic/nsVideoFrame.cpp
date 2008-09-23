@@ -99,11 +99,11 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   nsNodeInfoManager *nodeInfoManager =
     presContext->Document()->NodeInfoManager();
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = nodeInfoManager->GetNodeInfo(nsGkAtoms::videocontrols, nsnull,
-                                             kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::videocontrols, nsnull,
+                                          kNameSpaceID_XUL);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
-  rv = NS_NewElement(getter_AddRefs(mVideoControls), kNameSpaceID_XUL, nodeInfo, PR_FALSE);
+  nsresult rv = NS_NewElement(getter_AddRefs(mVideoControls), kNameSpaceID_XUL, nodeInfo, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!aElements.AppendElement(mVideoControls))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -182,7 +182,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
   FinishAndStoreOverflow(&aMetrics);
 
   if (mRect.width != aMetrics.width || mRect.height != aMetrics.height) {
-    Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
+    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
   }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,

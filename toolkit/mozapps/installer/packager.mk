@@ -72,12 +72,12 @@ endif
 endif
 endif # MOZ_PKG_FORMAT
 
-PACKAGE       = $(PKG_BASENAME)$(PKG_SUFFIX)
+PACKAGE       = $(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX)
 
 # By default, the SDK uses the same packaging type as the main bundle,
 # but on mac it is a .tar.bz2
 SDK_SUFFIX    = $(PKG_SUFFIX)
-SDK           = $(PKG_BASENAME).sdk$(SDK_SUFFIX)
+SDK           = $(PKG_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
 
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 
@@ -337,7 +337,7 @@ endif
 	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v -x "$(XPIDL_LINK)"
 
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
-	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $(DIST)/$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
+	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
 # NOTE: this must be a tar now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
@@ -400,6 +400,7 @@ endif # MOZ_PKG_REMOVALS
 
 make-package: stage-package
 	@echo "Compressing..."
+	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	cd $(DIST) && $(MAKE_PACKAGE)
 
 # The install target will install the application to prefix/lib/appname-version

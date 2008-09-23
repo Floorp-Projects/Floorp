@@ -75,7 +75,7 @@ var BUGNUMBER = "";
 /*
  * constant strings
  */
-var GLOBAL = "[object global]";
+var GLOBAL = this + '';
 var PASSED = " PASSED! ";
 var FAILED = " FAILED! ";
 
@@ -849,6 +849,18 @@ function jsTestDriverEnd()
     gTestcases[i].dump();
   }
 
+}
+
+function jit(on)
+{
+  if (on && !options().match(/jit/))
+  {
+    options('jit');
+  }
+  else if (!on && options().match(/jit/))
+  {
+    options('jit');
+  }
 }
 
 /*

@@ -39,12 +39,12 @@
 NS_COM int NS_FASTCALL
 Compare( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs, const nsTStringComparator_CharT& comp )
   {
-    typedef nsTAString_CharT::size_type size_type;
+    typedef nsTSubstring_CharT::size_type size_type;
 
     if ( &lhs == &rhs )
       return 0;
 
-    nsTAString_CharT::const_iterator leftIter, rightIter;
+    nsTSubstring_CharT::const_iterator leftIter, rightIter;
     lhs.BeginReading(leftIter);
     rhs.BeginReading(rightIter);
 

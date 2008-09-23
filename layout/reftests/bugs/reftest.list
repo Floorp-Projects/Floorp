@@ -65,6 +65,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 50630-3.html 50630-3-ref.html
 == 50630-4.html 50630-4-ref.html
 == 50630-4.html 50630-4-ref2.html
+== 76331-1.html 76331-1-ref.html
 == 84400-1.html 84400-1-ref.html
 == 84400-2.html 84400-2-ref.html
 == 97777-1.html 97777-1-ref.html
@@ -137,9 +138,11 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 != 210094-1c.html 210094-1-ref.html
 == 210876-1.html 210876-1-ref.html
 == 212563-1.html 212563-1-ref.html
+== 212563-2.html 212563-2-ref.html
 == 214077-1a.html 214077-1-ref.html
 == 214077-1b.html 214077-1-ref.html
 == 218473-1.html 218473-1-ref.html
+== 223809-1.html 223809-1-ref.html
 # == 231823-1.html 231823-1-ref.html
 == 234686-1.html 234686-ref.html
 == 234686-2.html 234686-ref.html
@@ -900,6 +903,7 @@ random == 429849-1.html 429849-1-ref.html # bug 432288
 == 438987-2c.html 438987-2-ref.html
 != about:blank 438987-2-ref.html # check that backgrounds work at all 
 == 439004-1.html 439004-1-ref.html
+== 439639-1.html 439639-1-ref.html
 == 439910.html 439910-ref.html
 == 441259-1.html 441259-1-ref.html
 fails == 441259-2.html 441259-2-ref.html # bug 441400
@@ -910,3 +914,6 @@ fails == 441259-2.html 441259-2-ref.html # bug 441400
 # == 449653-1.html 449653-1-ref.html # Disabled for now - it needs privileges
 == 450670-1.html 450670-1-ref.html
 == 451168-1.html 451168-1-ref.html
+== 454361.html about:blank
+== 455280-1.xhtml 455280-1-ref.xhtml
+

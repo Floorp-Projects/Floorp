@@ -62,9 +62,6 @@ _TEST_FILES = \
   test1.css^headers^ \
   test2.css \
   test2.css^headers^ \
-  test_loadflags.html \
-  file_testloadflags.js \
-  file_loadflags_inner.html \
   test_same_base_domain.html \
   file_subdomain_inner.html \
   test_same_base_domain_2.html \
@@ -75,6 +72,11 @@ _TEST_FILES = \
   test_same_base_domain_6.html \
   file_loopback_inner.html \
 	$(NULL)
+
+# XXX see bug 454857
+#  test_loadflags.html \
+#  file_testloadflags.js \
+#  file_loadflags_inner.html \
 
 # the tests below use Firefox-specific features
 ifdef MOZ_PHOENIX

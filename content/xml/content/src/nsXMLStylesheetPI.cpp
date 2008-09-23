@@ -259,11 +259,9 @@ NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
   *aInstancePtrResult = nsnull;
   
   nsCOMPtr<nsINodeInfo> ni;
-  nsresult rv =
-    aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
-                                  nsnull, kNameSpaceID_None,
-                                  getter_AddRefs(ni));
-  NS_ENSURE_SUCCESS(rv, rv);
+  ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
+                                     nsnull, kNameSpaceID_None);
+  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   nsXMLStylesheetPI *instance = new nsXMLStylesheetPI(ni, aData);
   if (!instance) {

@@ -42,7 +42,7 @@
 // here the plugin creates a plugin instance object which 
 // will be associated with this newly created NPP instance and 
 // will do all the necessary job
-NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved)
+NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {   
   if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -121,7 +121,7 @@ NPError NPP_SetWindow (NPP instance, NPWindow* pNPWindow)
   return NPERR_NO_ERROR;
 }
 
-NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype)
+NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
 {
   if (!instance)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -133,7 +133,7 @@ NPError NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool se
   return plugin->NewStream(type, stream, seekable, stype);
 }
 
-int32 NPP_WriteReady (NPP instance, NPStream *stream)
+int32_t NPP_WriteReady (NPP instance, NPStream *stream)
 {
   if (!instance)
     return 0x0fffffff;
@@ -145,7 +145,7 @@ int32 NPP_WriteReady (NPP instance, NPStream *stream)
   return plugin->WriteReady(stream);
 }
 
-int32 NPP_Write (NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
+int32_t NPP_Write (NPP instance, NPStream *stream, int32_t offset, int32_t len, void *buffer)
 {   
   if (!instance)
     return len;
@@ -229,7 +229,7 @@ NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value)
   return plugin->SetValue(variable, value);
 }
 
-int16	NPP_HandleEvent(NPP instance, void* event)
+int16_t	NPP_HandleEvent(NPP instance, void* event)
 {
   if (!instance)
     return 0;

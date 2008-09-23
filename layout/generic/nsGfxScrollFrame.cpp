@@ -227,19 +227,30 @@ nsHTMLScrollFrame::GetType() const
 void
 nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
                                       nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                      PRBool aImmediate)
+                                      PRUint32 aFlags)
 {
-  if (aForChild == mInner.mScrolledFrame) {
+  if (aForChild == mInner.mScrolledFrame && !(aFlags & INVALIDATE_NOTIFY_ONLY)) {
     // restrict aDamageRect to the scrollable view's bounds
+    nsRect damage = aDamageRect + nsPoint(aX, aY);
     nsRect r;
-    if (r.IntersectRect(aDamageRect + nsPoint(aX, aY),
-                        mInner.mScrollableView->View()->GetBounds())) {
-      nsHTMLContainerFrame::InvalidateInternal(r, 0, 0, aForChild, aImmediate);
+    if (r.IntersectRect(damage, mInner.mScrollableView->View()->GetBounds())) {
+      nsHTMLContainerFrame::InvalidateInternal(r, 0, 0, aForChild, aFlags);
+    }
+    if (mInner.mIsRoot && r != damage) {
+      // Make sure we notify our prescontext about invalidations outside
+      // viewport clipping.
+      // This is important for things that are snapshotting the viewport,
+      // possibly outside the scrolled bounds.
+      // We don't need to propagate this any further up, though. Anyone who
+      // cares about scrolled-out-of-view invalidates had better be listening
+      // to our window directly.
+      PresContext()->NotifyInvalidation(damage,
+          (aFlags & INVALIDATE_CROSS_DOC) != 0);
     }
     return;
   }
   
-  nsHTMLContainerFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
+  nsHTMLContainerFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aFlags);
 }
 
 /**
@@ -1097,19 +1108,19 @@ nsXULScrollFrame::GetType() const
 void
 nsXULScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
                                      nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                     PRBool aImmediate)
+                                     PRUint32 aFlags)
 {
   if (aForChild == mInner.mScrolledFrame) {
     // restrict aDamageRect to the scrollable view's bounds
     nsRect r;
     if (r.IntersectRect(aDamageRect + nsPoint(aX, aY),
                         mInner.mScrollableView->View()->GetBounds())) {
-      nsBoxFrame::InvalidateInternal(r, 0, 0, aForChild, aImmediate);
+      nsBoxFrame::InvalidateInternal(r, 0, 0, aForChild, aFlags);
     }
     return;
   }
   
-  nsBoxFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
+  nsBoxFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aFlags);
 }
 
 nscoord
@@ -1391,9 +1402,16 @@ PRBool
 nsGfxScrollFrameInner::NeedsClipWidget() const
 {
   // Scrollports contained in form controls (e.g., listboxes) don't get
-  // widgets.
+  // widgets.  Also, transformed elements don't need clip widgets since they
+  // result in graphical glitches.
   for (nsIFrame* parentFrame = mOuter; parentFrame;
-       parentFrame = parentFrame->GetParent()) {
+       parentFrame = nsLayoutUtils::GetCrossDocParentFrame(parentFrame)) {
+    
+    /* See if we have a transform... we should have no widget if that's the case. */
+    if (parentFrame->GetStyleDisplay()->HasTransform())
+      return PR_FALSE;
+
+    /* If we're a form element, we don't need a widget. */
     nsIFormControlFrame* fcFrame;
     if ((NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame)))) {
       return PR_FALSE;
@@ -1711,9 +1729,9 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   nsNodeInfoManager *nodeInfoManager =
     presContext->Document()->NodeInfoManager();
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbar, nsnull,
-                                    kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbar, nsnull,
+                                          kNameSpaceID_XUL);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
   if (canHaveHorizontal) {
     rv = NS_NewElement(getter_AddRefs(mHScrollbarContent),
@@ -1736,8 +1754,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   }
 
   if (canHaveHorizontal && canHaveVertical) {
-    nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollcorner, nsnull,
-                                 kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
+    nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollcorner, nsnull,
+                                            kNameSpaceID_XUL);
     rv = NS_NewElement(getter_AddRefs(mScrollCornerContent),
                        kNameSpaceID_XUL, nodeInfo, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1812,9 +1830,12 @@ nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, n
   mViewInitiatedScroll = PR_TRUE;
   InternalScrollPositionDidChange(aX, aY);
   mViewInitiatedScroll = PR_FALSE;
-  
+
   PostScrollEvent();
-  
+
+  // Notify that the display has changed
+  mOuter->InvalidateWithFlags(nsRect(nsPoint(0, 0), mOuter->GetSize()),
+                              nsIFrame::INVALIDATE_NOTIFY_ONLY);
   return NS_OK;
 }
 

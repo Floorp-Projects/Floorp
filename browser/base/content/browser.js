@@ -69,7 +69,6 @@ const MAX_HISTORY_MENU_ITEMS = 15;
 // We use this once, for Clear Private Data
 const GLUE_CID = "@mozilla.org/browser/browserglue;1";
 
-var gURIFixup = null;
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
@@ -986,10 +985,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
   UpdateUrlbarSearchSplitterState();
   
-  try {
-    placesMigrationTasks();
-  } catch(ex) {}
-
   PlacesStarButton.init();
 
   // called when we go into full screen, even if it is
@@ -1318,7 +1313,6 @@ AutoHideTabbarPrefListener.prototype =
       catch (e) {
       }
       gBrowser.setStripVisibilityTo(aVisible);
-      gPrefService.setBoolPref("browser.tabs.forceHide", false);
     }
   }
 }
@@ -1641,8 +1635,7 @@ function BrowserOpenFileWindow()
   }
 }
 
-function BrowserCloseTabOrWindow()
-{
+function BrowserCloseTabOrWindow() {
 #ifdef XP_MACOSX
   // If we're not a browser window, just close the window
   if (window.location.href != getBrowserURL()) {
@@ -1651,23 +1644,8 @@ function BrowserCloseTabOrWindow()
   }
 #endif
 
-  if (gBrowser.tabContainer.childNodes.length > 1) {
-    gBrowser.removeCurrentTab(); 
-    return;
-  }
-
-#ifndef XP_MACOSX
-  if (gBrowser.localName == "tabbrowser" && window.toolbar.visible &&
-      !gPrefService.getBoolPref("browser.tabs.autoHide")) {
-    // Replace the remaining tab with a blank one and focus the address bar
-    gBrowser.removeCurrentTab();
-    if (gURLBar)
-      setTimeout(function() { gURLBar.focus(); }, 0);
-    return;
-  }
-#endif
-
-  closeWindow(true);
+  // If the current tab is the last one, this will close the window.
+  gBrowser.removeCurrentTab();
 }
 
 function BrowserTryToCloseWindow()
@@ -1970,37 +1948,25 @@ function checkForDirectoryListing()
   }
 }
 
-function URLBarSetURI(aURI) {
+function URLBarSetURI(aURI, aValid) {
   var value = gBrowser.userTypedValue;
-  var state = "invalid";
+  var valid = false;
 
   if (!value) {
-    if (aURI) {
-      // If the url has "wyciwyg://" as the protocol, strip it off.
-      // Nobody wants to see it on the urlbar for dynamically generated
-      // pages.
-      if (!gURIFixup)
-        gURIFixup = Cc["@mozilla.org/docshell/urifixup;1"]
-                      .getService(Ci.nsIURIFixup);
-      try {
-        aURI = gURIFixup.createExposableURI(aURI);
-      } catch (ex) {}
-    } else {
-      aURI = getWebNavigation().currentURI;
-    }
+    let uri = aURI || getWebNavigation().currentURI;
 
-    if (aURI.spec == "about:blank") {
-      // Replace "about:blank" with an empty string
-      // only if there's no opener (bug 370555).
-      value = content.opener ? aURI.spec : "";
-    } else {
-      value = losslessDecodeURI(aURI);
-      state = "valid";
-    }
+    // Replace "about:blank" with an empty string
+    // only if there's no opener (bug 370555).
+    if (uri.spec == "about:blank")
+      value = content.opener ? "about:blank" : "";
+    else
+      value = losslessDecodeURI(uri);
+
+    valid = value && (!aURI || aValid);
   }
 
   gURLBar.value = value;
-  SetPageProxyState(state);
+  SetPageProxyState(valid ? "valid" : "invalid");
 }
 
 function losslessDecodeURI(aURI) {
@@ -2076,7 +2042,7 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef) {
   // Since this function is called from handleURLBarCommand, which receives
   // both mouse (from the go button) and keyboard events, we also make sure not
   // to do the fixup unless we get a keyboard event, to match user expectations.
-  if (!/^(www|https?)\b|\/\s*$/i.test(url) &&
+  if (!/^\s*(www|https?)\b|\/\s*$/i.test(url) &&
       (aTriggeringEvent instanceof KeyEvent)) {
 #ifdef XP_MACOSX
     var accel = aTriggeringEvent.metaKey;
@@ -3760,6 +3726,11 @@ var XULBrowserWindow = {
     delete this.isImage;
     return this.isImage = document.getElementById("isImage");
   },
+  get _uriFixup () {
+    delete this._uriFixup;
+    return this._uriFixup = Cc["@mozilla.org/docshell/urifixup;1"]
+                              .getService(Ci.nsIURIFixup);
+  },
 
   init: function () {
     this.throbberElement = document.getElementById("navigator-throbber");
@@ -3892,9 +3863,10 @@ var XULBrowserWindow = {
       // and progress bars and such
       if (aRequest) {
         let msg = "";
+        let location;
         // Get the URI either from a channel or a pseudo-object
         if (aRequest instanceof nsIChannel || "URI" in aRequest) {
-          let location = aRequest.URI;
+          location = aRequest.URI;
 
           // For keyword URIs clear the user typed value since they will be changed into real URIs
           if (location.scheme == "keyword" && aWebProgress.DOMWindow == content)
@@ -4017,8 +3989,15 @@ var XULBrowserWindow = {
         gBrowser.setIcon(gBrowser.mCurrentTab, null);
 
       if (gURLBar) {
-        URLBarSetURI(aLocationURI);
-        PlacesStarButton.updateState(); // Update starring UI
+        // Strip off "wyciwyg://" and passwords for the location bar
+        let uri = aLocationURI;
+        try {
+          uri = this._uriFixup.createExposableURI(uri);
+        } catch (e) {}
+        URLBarSetURI(uri, true);
+
+        // Update starring UI
+        PlacesStarButton.updateState();
       }
 
       FullZoom.onLocationChange(aLocationURI);
@@ -4225,22 +4204,26 @@ var XULBrowserWindow = {
     // clear out search-engine data
     gBrowser.mCurrentBrowser.engines = null;    
 
-    const nsIChannel = Components.interfaces.nsIChannel;
-    var urlStr = aRequest.QueryInterface(nsIChannel).URI.spec;
-    var observerService = Components.classes["@mozilla.org/observer-service;1"]
-                                    .getService(Components.interfaces.nsIObserverService);
+    var uri = aRequest.QueryInterface(Ci.nsIChannel).URI;
+    var observerService = Cc["@mozilla.org/observer-service;1"]
+                            .getService(Ci.nsIObserverService);
+
+    if (gURLBar &&
+        gURLBar.value == "" &&
+        getWebNavigation().currentURI.spec == "about:blank")
+      URLBarSetURI(uri);
+
     try {
-      observerService.notifyObservers(content, "StartDocumentLoad", urlStr);
+      observerService.notifyObservers(content, "StartDocumentLoad", uri.spec);
     } catch (e) {
     }
   },
 
   endDocumentLoad: function (aRequest, aStatus) {
-    const nsIChannel = Components.interfaces.nsIChannel;
-    var urlStr = aRequest.QueryInterface(nsIChannel).originalURI.spec;
+    var urlStr = aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec;
 
-    var observerService = Components.classes["@mozilla.org/observer-service;1"]
-                                    .getService(Components.interfaces.nsIObserverService);
+    var observerService = Cc["@mozilla.org/observer-service;1"]
+                            .getService(Ci.nsIObserverService);
 
     var notification = Components.isSuccessCode(aStatus) ? "EndDocumentLoad" : "FailDocumentLoad";
     try {

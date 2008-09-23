@@ -248,7 +248,7 @@ public:
   virtual PRBool MayHaveFrame() const;
 
   virtual nsIAtom* GetID() const;
-  virtual const nsAttrValue* GetClasses() const;
+  virtual const nsAttrValue* DoGetClasses() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   virtual nsICSSStyleRule* GetInlineStyleRule();
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);

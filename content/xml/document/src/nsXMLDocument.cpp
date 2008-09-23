@@ -92,7 +92,7 @@
 #include "nsNodeUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-
+#include "nsIHTMLDocument.h"
 
 // ==================================================================
 // =
@@ -117,23 +117,59 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 
   *aInstancePtrResult = nsnull;
 
-  nsRefPtr<nsXMLDocument> doc = new nsXMLDocument();
-  if (!doc)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = doc->Init();
+  nsCOMPtr<nsIDocument> d;
+  PRBool isHTML = PR_FALSE;
+  PRBool isXHTML = PR_FALSE;
+  if (aDoctype) {
+    nsAutoString publicId;
+    aDoctype->GetPublicId(publicId);
+    if (publicId.EqualsLiteral("-//W3C//DTD HTML 4.01//EN") ||
+        publicId.EqualsLiteral("-//W3C//DTD HTML 4.01 Frameset//EN") ||
+        publicId.EqualsLiteral("-//W3C//DTD HTML 4.01 Transitional//EN") ||
+        publicId.EqualsLiteral("-//W3C//DTD HTML 4.0//EN") ||
+        publicId.EqualsLiteral("-//W3C//DTD HTML 4.0 Frameset//EN") ||
+        publicId.EqualsLiteral("-//W3C//DTD HTML 4.0 Transitional//EN")) {
+      rv = NS_NewHTMLDocument(getter_AddRefs(d));
+      isHTML = PR_TRUE;
+    } else if (publicId.EqualsLiteral("-//W3C//DTD XHTML 1.0 Strict//EN") ||
+               publicId.EqualsLiteral("-//W3C//DTD XHTML 1.0 Transitional//EN") ||
+               publicId.EqualsLiteral("-//W3C//DTD XHTML 1.0 Frameset//EN")) {
+      rv = NS_NewHTMLDocument(getter_AddRefs(d));
+      isHTML = PR_TRUE;
+      isXHTML = PR_TRUE;
+    }
+#ifdef MOZ_SVG
+    else if (publicId.EqualsLiteral("-//W3C//DTD SVG 1.1//EN")) {
+      rv = NS_NewSVGDocument(getter_AddRefs(d));
+    }
+#endif
+    // XXX Add support for XUL documents.
+    else {
+      rv = NS_NewXMLDocument(getter_AddRefs(d));
+    }
+  } else {
+    rv = NS_NewXMLDocument(getter_AddRefs(d));
+  }
 
   if (NS_FAILED(rv)) {
     return rv;
   }
 
+  if (isHTML) {
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(d);
+    NS_ASSERTION(htmlDoc, "HTML Document doesn't implement nsIHTMLDocument?");
+    htmlDoc->SetCompatibilityMode(eCompatibility_FullStandards);
+    htmlDoc->SetIsXHTML(isXHTML);
+  }
+  nsDocument* doc = static_cast<nsDocument*>(d.get());
   doc->SetLoadedAsData(aLoadedAsData);
   doc->nsDocument::SetDocumentURI(aDocumentURI);
   // Must set the principal first, since SetBaseURI checks it.
   doc->SetPrincipal(aPrincipal);
   doc->SetBaseURI(aBaseURI);
 
-  // XMLDocuments get to be UTF-8 by default, unlike the legacy HTML mess
+  // XMLDocuments and documents "created in memory" get to be UTF-8 by default,
+  // unlike the legacy HTML mess
   doc->SetDocumentCharacterSet(NS_LITERAL_CSTRING("UTF-8"));
   
   if (aDoctype) {
@@ -544,14 +580,6 @@ nsXMLDocument::EndLoad()
                                 &event);
   }    
 }
-
-// nsIDOMNode interface
-
-NS_IMETHODIMP    
-nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  return nsNodeUtils::CloneNodeImpl(this, aDeep, aReturn);
-}
  
 // nsIDOMDocument interface
 
@@ -561,19 +589,13 @@ nsXMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
-  PRBool hasHadScriptObject = PR_TRUE;
-  nsIScriptGlobalObject* scriptObject =
-    GetScriptHandlingObject(hasHadScriptObject);
-  NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
-  nsCOMPtr<nsIDOMDocument> newDoc;
-  nsresult rv = NS_NewDOMDocument(getter_AddRefs(newDoc), EmptyString(),
-                                  EmptyString(), nsnull,
-                                  nsIDocument::GetDocumentURI(),
-                                  nsIDocument::GetBaseURI(), NodePrincipal(),
-                                  PR_TRUE);
+  nsRefPtr<nsXMLDocument> clone = new nsXMLDocument();
+  NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = CloneDocHelper(clone);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(newDoc);
-  document->SetScriptHandlingObject(scriptObject);
 
-  return CallQueryInterface(newDoc, aResult);
+  // State from nsXMLDocument
+  clone->mAsync = mAsync;
+
+  return CallQueryInterface(clone.get(), aResult);
 }

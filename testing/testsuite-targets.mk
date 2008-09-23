@@ -52,16 +52,22 @@ define CHECK_TEST_ERROR
 endef
 endif
 
+ifdef TEST_PATH
+MOCHITEST_PATH = --test-path=$(TEST_PATH)
+else
+MOCHITEST_PATH =
+endif
+
 mochitest-plain:
-	$(RUN_MOCHITEST)
+	$(RUN_MOCHITEST) $(MOCHITEST_PATH)
 	$(CHECK_TEST_ERROR)
 
 mochitest-chrome:
-	$(RUN_MOCHITEST) --chrome
+	$(RUN_MOCHITEST) --chrome $(MOCHITEST_PATH)
 	$(CHECK_TEST_ERROR)
 
 mochitest-a11y:
-	$(RUN_MOCHITEST) --a11y
+	$(RUN_MOCHITEST) --a11y $(MOCHITEST_PATH)
 	$(CHECK_TEST_ERROR)
 
 .PHONY: mochitest mochitest-plain mochitest-chrome mochitest-a11y

@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+#filter substitution
+<html>
+<head>
+  <title>about:buildconfig</title>
+  <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css">
+</head>
+<body class="aboutPageWideContainer">
+<h1>about:buildconfig</h1>
+<p> </p>
+#ifdef SOURCE_REPO
+#ifdef SOURCE_CHANGESET
+<h2>Source</h2>
+<p>Built from <a href="@SOURCE_REPO@/rev/@SOURCE_CHANGESET@">@SOURCE_REPO@/rev/@SOURCE_CHANGESET@</a></p>
+#endif
+#endif
+<h2>Build platform</h2>
+<table>
+  <tbody>
+    <tr>
+      <th>target</th>
+    </tr>
+    <tr>
+      <td>@target@</td>
+    </tr>
+  </tbody>
+</table>
+<p> </p>
+<h2>Build tools</h2>
+<table>
+  <tbody>
+    <tr>
+      <th>Compiler</th>
+      <th>Version</th>
+      <th>Compiler flags</th>
+    </tr>
+    <tr>
+      <td>@CC@</td>
+      <td>@CC_VERSION@</td>
+      <td>@CFLAGS@</td>
+    </tr>
+    <tr>
+      <td>@CXX@</td>
+      <td>@CXX_VERSION@</td>
+      <td>@CXXFLAGS@ @CPPFLAGS@</td>
+    </tr>
+  </tbody>
+</table>
+<p> </p>
+<h2>Configure arguments</h2>
+@ac_configure_args@
+</body>
+</html>

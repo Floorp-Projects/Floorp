@@ -63,22 +63,14 @@
     
     <script type="application/x-javascript" src="chrome://browser/content/preferences/tabs.js"/>
 
-    <vbox id="linksOpenInBox">
-      <label control="linkTargeting">&newPagesIn.label;</label>
-      <radiogroup id="linkTargeting" class="indent"
-                  preference="browser.link.open_external"
-                  onsyncfrompreference="return gTabsPane.readLinkTarget();"
-                  onsynctopreference="return gTabsPane.writeLinkTarget();">
-        <radio label="&inNewWindow.label;" accesskey="&inNewWindow.accesskey;" value="2"/>
-        <radio label="&inNewTab.label;" accesskey="&inNewTab.accesskey;" value="3"/>
-      </radiogroup>
-    </vbox>
-
-    <separator id="tabsSeparator"/>
-
     <!-- XXX flex below is a hack because wrapping checkboxes don't reflow
              properly; see bug 349098 -->
     <vbox id="tabPrefsBox" align="start" flex="1">
+      <checkbox id="linkTargeting" label="&newWindowsAsTabs.label;"
+                accesskey="&newWindowsAsTabs.accesskey;"
+                preference="browser.link.open_external"
+                onsyncfrompreference="return gTabsPane.readLinkTarget();"
+                onsynctopreference="return gTabsPane.writeLinkTarget();"/>
       <checkbox id="warnCloseMultiple" label="&warnCloseMultipleTabs.label;"
                 accesskey="&warnCloseMultipleTabs.accesskey;"
                 preference="browser.tabs.warnOnClose"/>

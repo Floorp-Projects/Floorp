@@ -40,7 +40,8 @@
 #include "nsRect.h"
 #include "nsSVGContainerFrame.h"
 
-class nsSVGFilterInstance;
+class nsSVGRenderState;
+class nsSVGFilterPaintCallback;
 
 typedef nsSVGContainerFrame nsSVGFilterFrameBase;
 class nsSVGFilterFrame : public nsSVGFilterFrameBase
@@ -50,17 +51,33 @@ class nsSVGFilterFrame : public nsSVGFilterFrameBase
 protected:
   nsSVGFilterFrame(nsStyleContext* aContext) : nsSVGFilterFrameBase(aContext) {}
 
-public:    
+public:
   nsresult FilterPaint(nsSVGRenderState *aContext,
-                       nsISVGChildFrame *aTarget,
+                       nsIFrame *aTarget, nsSVGFilterPaintCallback *aPaintCallback,
                        const nsIntRect* aDirtyRect);
 
-  // Returns invalidation region for filter (can be bigger than the
-  // referencing geometry to filter region sizing) in app units
-  // relative to the origin of the outer svg.
-  // aRect is the area that would be invalidated. Normally you'd just pass
-  // aTarget->GetRect() here.
-  nsRect GetInvalidationRegion(nsIFrame *aTarget, const nsRect& aRect);
+  /**
+   * Returns the area that could change when the given rect of the source changes.
+   * The rectangles are relative to the origin of the outer svg, if aTarget is SVG,
+   * relative to aTarget itself otherwise, in device pixels.
+   */
+  nsIntRect GetInvalidationBBox(nsIFrame *aTarget, const nsIntRect& aRect);
+
+  /**
+   * Returns the area in device pixels that is needed from the source when
+   * the given area needs to be repainted.
+   * The rectangles are relative to the origin of the outer svg, if aTarget is SVG,
+   * relative to aTarget itself otherwise, in device pixels.
+   */
+  nsIntRect GetSourceForInvalidArea(nsIFrame *aTarget, const nsIntRect& aRect);
+
+  /**
+   * Returns the bounding box of the post-filter area of aTarget.
+   * The rectangles are relative to the origin of the outer svg, if aTarget is SVG,
+   * relative to aTarget itself otherwise, in device pixels.
+   * @param aSourceBBox overrides the normal bbox for the source, if non-null
+   */
+  nsIntRect GetFilterBBox(nsIFrame *aTarget, const nsIntRect *aSourceBBox);
 
   /**
    * Get the "type" of the frame
@@ -68,13 +85,6 @@ public:
    * @see nsGkAtoms::svgFilterFrame
    */
   virtual nsIAtom* GetType() const;
-
-private:
-  // implementation helpers
-  nsresult CreateInstance(nsISVGChildFrame *aTarget,
-                          const nsIntRect *aDirtyOutputRect,
-                          const nsIntRect *aDirtyInputRect,
-                          nsSVGFilterInstance **aInstance);
 };
 
 #endif

@@ -276,7 +276,7 @@ CSS_PROP_BACKENDONLY(azimuth, azimuth, Azimuth, Aural, mAzimuth, eCSSType_Value,
 CSS_PROP_SHORTHAND(background, background, Background)
 CSS_PROP_BACKGROUND(background-attachment, background_attachment, BackgroundAttachment, Color, mBackAttachment, eCSSType_Value, kBackgroundAttachmentKTable)
 CSS_PROP_BACKGROUND(-moz-background-clip, _moz_background_clip, MozBackgroundClip, Color, mBackClip, eCSSType_Value, kBackgroundClipKTable)
-CSS_PROP_BACKGROUND(background-color, background_color, BackgroundColor, Color, mBackColor, eCSSType_Value, kBackgroundColorKTable)
+CSS_PROP_BACKGROUND(background-color, background_color, BackgroundColor, Color, mBackColor, eCSSType_Value, nsnull)
 CSS_PROP_BACKGROUND(background-image, background_image, BackgroundImage, Color, mBackImage, eCSSType_Value, nsnull)
 CSS_PROP_BACKGROUND(-moz-background-inline-policy, _moz_background_inline_policy, MozBackgroundInlinePolicy, Color, mBackInlinePolicy, eCSSType_Value, kBackgroundInlinePolicyKTable)
 CSS_PROP_BACKGROUND(-moz-background-origin, _moz_background_origin, MozBackgroundOrigin, Color, mBackOrigin, eCSSType_Value, kBackgroundOriginKTable)
@@ -500,6 +500,8 @@ CSS_PROP_TEXTRESET(text-decoration, text_decoration, TextDecoration, Text, mDeco
 CSS_PROP_TEXT(text-indent, text_indent, TextIndent, Text, mTextIndent, eCSSType_Value, nsnull)
 CSS_PROP_TEXT(text-shadow, text_shadow, TextShadow, Text, mTextShadow, eCSSType_ValueList, nsnull)
 CSS_PROP_TEXT(text-transform, text_transform, TextTransform, Text, mTextTransform, eCSSType_Value, kTextTransformKTable)
+CSS_PROP_DISPLAY(-moz-transform, _moz_transform, MozTransform, Display, mTransform, eCSSType_ValueList, kDisplayKTable)
+CSS_PROP_DISPLAY(-moz-transform-origin, _moz_transform_origin, MozTransformOrigin, Display, mTransformOrigin, eCSSType_ValuePair, kBackgroundPositionKTable)
 CSS_PROP_POSITION(top, top, Top, Position, mOffset.mTop, eCSSType_Value, nsnull)
 CSS_PROP_TEXTRESET(unicode-bidi, unicode_bidi, UnicodeBidi, Text, mUnicodeBidi, eCSSType_Value, kUnicodeBidiKTable)
 CSS_PROP_USERINTERFACE(-moz-user-focus, user_focus, MozUserFocus, UserInterface, mUserFocus, eCSSType_Value, kUserFocusKTable) // XXX bug 3935

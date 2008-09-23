@@ -495,8 +495,8 @@ nsTextInputListener::EditAction()
   PRInt32 numRedoItems = 0;
   manager->GetNumberOfUndoItems(&numUndoItems);
   manager->GetNumberOfRedoItems(&numRedoItems);
-  if (numUndoItems && !mHadUndoItems || !numUndoItems && mHadUndoItems ||
-      numRedoItems && !mHadRedoItems || !numRedoItems && mHadRedoItems) {
+  if ((numUndoItems && !mHadUndoItems) || (!numUndoItems && mHadUndoItems) ||
+      (numRedoItems && !mHadRedoItems) || (!numRedoItems && mHadRedoItems)) {
     // Modify the menu if undo or redo items are different
     UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
 
@@ -1712,12 +1712,11 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   // Now create a DIV and add it to the anonymous content child list.
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nsnull,
-                                                    kNameSpaceID_XHTML,
-                                                    getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nsnull,
+                                                 kNameSpaceID_XHTML);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
 
-  rv = NS_NewHTMLElement(getter_AddRefs(mAnonymousDiv), nodeInfo, PR_FALSE);
+  nsresult rv = NS_NewHTMLElement(getter_AddRefs(mAnonymousDiv), nodeInfo, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the div native anonymous, so CSS will be its style language

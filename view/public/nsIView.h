@@ -87,6 +87,11 @@ enum nsViewVisibility {
 // to other code to destroy it.
 #define NS_VIEW_DISOWNS_WIDGET             0x0020
 
+// If set, the view should always invalidate its frame
+// during a scroll instead of doing a BitBlt.  This bit
+// is propagated down to children.
+#define NS_VIEW_FLAG_INVALIDATE_ON_SCROLL  0x0040
+
 struct nsViewZIndex {
   PRBool mIsAuto;
   PRInt32 mZIndex;
@@ -314,6 +319,22 @@ public:
   void DisownWidget() {
     mVFlags |= NS_VIEW_DISOWNS_WIDGET;
   }
+
+  /**
+   * If called, will make the view invalidate its frame instead of BitBlitting
+   * it when there's a scroll.
+   */
+  void SetInvalidateFrameOnScroll()
+  {
+    mVFlags |= NS_VIEW_FLAG_INVALIDATE_ON_SCROLL;
+  }
+
+  /**
+   * Returns whether or not we should automatically fail to BitBlt when scrolling.
+   * This is true if either we're marked to have invalidate on scroll or if some
+   * ancestor does.
+   */
+  PRBool NeedsInvalidateFrameOnScroll() const;
 
 #ifdef DEBUG
   /**

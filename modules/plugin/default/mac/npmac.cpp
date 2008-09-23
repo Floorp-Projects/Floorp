@@ -60,7 +60,7 @@ static inline void* SetupFPtoTVGlue(TFPtoTVGlue* functionGlue, void* fp)
 
 // glue for mapping netscape TVectors to Macho function pointers
 struct TTVtoFPGlue {
-    uint32 glue[6];
+    uint32_t glue[6];
 };
 
 struct netscapeFuncsGlueTable {
@@ -161,7 +161,7 @@ NPError NPN_GetURL(NPP instance, const char* url, const char* window)
 	return CallNPN_GetURLProc(gNetscapeFuncs.geturl, instance, url, window);
 }
 
-NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uint32 len, const char* buf, NPBool file, void* notifyData)
+NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file, void* notifyData)
 {
 	int navMinorVers = gNetscapeFuncs.version & 0xFF;
 	NPError err;
@@ -178,7 +178,7 @@ NPError NPN_PostURLNotify(NPP instance, const char* url, const char* window, uin
 	return err;
 }
 
-NPError NPN_PostURL(NPP instance, const char* url, const char* window, uint32 len, const char* buf, NPBool file)
+NPError NPN_PostURL(NPP instance, const char* url, const char* window, uint32_t len, const char* buf, NPBool file)
 {
 	return CallNPN_PostURLProc(gNetscapeFuncs.posturl, instance, url, window, len, buf, file);
 }
@@ -204,7 +204,7 @@ NPError NPN_NewStream(NPP instance, NPMIMEType type, const char* window, NPStrea
 	return err;
 }
 
-int32 NPN_Write(NPP instance, NPStream* stream, int32 len, void* buffer)
+int32_t NPN_Write(NPP instance, NPStream* stream, int32_t len, void* buffer)
 {
 	int navMinorVers = gNetscapeFuncs.version & 0xFF;
 	NPError err;
@@ -246,7 +246,7 @@ const char* NPN_UserAgent(NPP instance)
 	return CallNPN_UserAgentProc(gNetscapeFuncs.uagent, instance);
 }
 
-void* NPN_MemAlloc(uint32 size)
+void* NPN_MemAlloc(uint32_t size)
 {
 	return CallNPN_MemAllocProc(gNetscapeFuncs.memalloc, size);
 }
@@ -256,7 +256,7 @@ void NPN_MemFree(void* ptr)
 	CallNPN_MemFreeProc(gNetscapeFuncs.memfree, ptr);
 }
 
-uint32 NPN_MemFlush(uint32 size)
+uint32_t NPN_MemFlush(uint32_t size)
 {
 	return CallNPN_MemFlushProc(gNetscapeFuncs.memflush, size);
 }
@@ -315,17 +315,17 @@ void NPN_PopPopupsEnabledState(NPP instance)
 
 NPError 	Private_Initialize(void);
 void 		Private_Shutdown(void);
-NPError		Private_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved);
+NPError		Private_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved);
 NPError 	Private_Destroy(NPP instance, NPSavedData** save);
 NPError		Private_SetWindow(NPP instance, NPWindow* window);
-NPError		Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype);
+NPError		Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype);
 NPError		Private_DestroyStream(NPP instance, NPStream* stream, NPError reason);
-int32		Private_WriteReady(NPP instance, NPStream* stream);
-int32		Private_Write(NPP instance, NPStream* stream, int32 offset, int32 len, void* buffer);
-void		Private_StreamAsFile(NPP instance, NPStream* stream, const char* fname);
-void		Private_Print(NPP instance, NPPrint* platformPrint);
-int16 		Private_HandleEvent(NPP instance, void* event);
-void        Private_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData);
+int32_t		Private_WriteReady(NPP instance, NPStream* stream);
+int32_t		Private_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer);
+void		  Private_StreamAsFile(NPP instance, NPStream* stream, const char* fname);
+void	  	Private_Print(NPP instance, NPPrint* platformPrint);
+int16_t 	Private_HandleEvent(NPP instance, void* event);
+void      Private_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData);
 
 
 NPError Private_Initialize(void)
@@ -341,7 +341,7 @@ void Private_Shutdown(void)
 }
 
 
-NPError	Private_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved)
+NPError	Private_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
 	PLUGINDEBUGSTR("\pNew;g;");
 	return NPP_New(pluginType, instance, mode, argc, argn, argv, saved);
@@ -359,19 +359,19 @@ NPError Private_SetWindow(NPP instance, NPWindow* window)
 	return NPP_SetWindow(instance, window);
 }
 
-NPError Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16* stype)
+NPError Private_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, uint16_t* stype)
 {
 	PLUGINDEBUGSTR("\pNewStream;g;");
 	return NPP_NewStream(instance, type, stream, seekable, stype);
 }
 
-int32 Private_WriteReady(NPP instance, NPStream* stream)
+int32_t Private_WriteReady(NPP instance, NPStream* stream)
 {
 	PLUGINDEBUGSTR("\pWriteReady;g;");
 	return NPP_WriteReady(instance, stream);
 }
 
-int32 Private_Write(NPP instance, NPStream* stream, int32 offset, int32 len, void* buffer)
+int32_t Private_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buffer)
 {
 	PLUGINDEBUGSTR("\pWrite;g;");
 	return NPP_Write(instance, stream, offset, len, buffer);
@@ -390,7 +390,7 @@ NPError Private_DestroyStream(NPP instance, NPStream* stream, NPError reason)
 	return NPP_DestroyStream(instance, stream, reason);
 }
 
-int16 Private_HandleEvent(NPP instance, void* event)
+int16_t Private_HandleEvent(NPP instance, void* event)
 {
 	PLUGINDEBUGSTR("\pHandleEvent;g;");
 	return NPP_HandleEvent(instance, event);

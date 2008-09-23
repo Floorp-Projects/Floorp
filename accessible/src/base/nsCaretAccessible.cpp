@@ -247,8 +247,17 @@ nsCaretAccessible::NormalSelectionChanged(nsIDOMDocument *aDoc,
     return NS_OK;  // Don't fire caret moves until doc loaded
   }
 
-  nsCOMPtr<nsIDOMNode> nodeWithCaret = focusNode;
+  // Get focused node.
+  nsCOMPtr<nsIContent> focusContainer(do_QueryInterface(focusNode));
+  if (focusContainer && focusContainer->IsNodeOfType(nsINode::eELEMENT)) {
+    PRInt32 focusOffset = 0;
+    aSel->GetFocusOffset(&focusOffset);
 
+    nsCOMPtr<nsIContent> focusContent = focusContainer->GetChildAt(focusOffset);
+    focusNode = do_QueryInterface(focusContent);
+  }
+
+  // Get relevant accessible for the focused node.
   nsCOMPtr<nsIAccessibleText> textAcc;
   while (focusNode) {
     // Make sure to get the correct starting node for selection events inside XBL content trees
@@ -306,6 +315,16 @@ nsCaretAccessible::SpellcheckSelectionChanged(nsIDOMDocument *aDoc,
   aSel->GetFocusNode(getter_AddRefs(targetNode));
   if (!targetNode)
     return NS_OK;
+
+  // Get focused node.
+  nsCOMPtr<nsIContent> focusContainer(do_QueryInterface(targetNode));
+  if (focusContainer && focusContainer->IsNodeOfType(nsINode::eELEMENT)) {
+    PRInt32 focusOffset = 0;
+    aSel->GetFocusOffset(&focusOffset);
+    
+    nsCOMPtr<nsIContent> focusContent = focusContainer->GetChildAt(focusOffset);
+    targetNode = do_QueryInterface(focusContent);
+  }
 
   nsCOMPtr<nsIAccessibleDocument> docAccessible =
     nsAccessNode::GetDocAccessibleFor(targetNode);

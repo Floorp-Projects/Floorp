@@ -743,7 +743,8 @@ nsDOMWorkerScriptLoader::ScriptCompiler::Run()
 
   JSScript* script =
     JS_CompileUCScriptForPrincipals(mCx, global, principal,
-                                    mScriptText.BeginReading(),
+                                    reinterpret_cast<const jschar*>
+                                               (mScriptText.BeginReading()),
                                     mScriptText.Length(), mFilename.get(), 1);
 
   JS_SetOptions(mCx, oldOpts);

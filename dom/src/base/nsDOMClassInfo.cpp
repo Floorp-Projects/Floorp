@@ -242,6 +242,7 @@
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMPageTransitionEvent.h"
 #include "nsIDOMMessageEvent.h"
+#include "nsIDOMNotifyPaintEvent.h"
 #include "nsIDOMNSDocumentStyle.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentTraversal.h"
@@ -1290,6 +1291,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(DataTransfer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA(NotifyPaintEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -2125,6 +2128,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MouseScrollEvent, nsIDOMMouseScrollEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseScrollEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -2140,6 +2144,8 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLOptionsCollection, nsIDOMHTMLOptionsCollection)
+    // Order is significant.  nsIDOMHTMLOptionsCollection.length shadows
+    // nsIDOMHTMLCollection.length, which is readonly.
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOptionsCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLOptionCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
@@ -2363,6 +2369,8 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLOptionElement, nsIDOMHTMLOptionElement)
+    // Order is significant.  nsIDOMNSHTMLOptionElement.text shdaows
+    // nsIDOMHTMLOptionElement.text, which is readonly.
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLOptionElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLOptionElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
@@ -2709,8 +2717,10 @@ nsDOMClassInfo::Init()
   // The SVG document
 
   DOM_CLASSINFO_MAP_BEGIN(SVGDocument, nsIDOMSVGDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDocument)
+    // Order is significant.  nsIDOMDocument.title shadows
+    // nsIDOMSVGDocument.title, which is readonly.
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGDocument)
     DOM_CLASSINFO_DOCUMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -3520,6 +3530,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(DataTransfer, nsIDOMDataTransfer)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDataTransfer)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDataTransfer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(NotifyPaintEvent, nsIDOMNotifyPaintEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNotifyPaintEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
@@ -7570,15 +7585,12 @@ nsresult
 nsArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
                      nsISupports **aResult)
 {
-  nsCOMPtr<nsIDOMNodeList> list(do_QueryInterface(aNative));
+  nsCOMPtr<nsINodeList> list(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
 
-  nsIDOMNode *node = nsnull; // Weak, transfer the ownership over to aResult
-  nsresult rv = list->Item(aIndex, &node);
+  NS_IF_ADDREF(*aResult = list->GetNodeAt(aIndex));
 
-  *aResult = node;
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -7696,11 +7708,17 @@ nsresult
 nsHTMLCollectionSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
                               nsISupports **aResult)
 {
+  // Common case is that we're also an nsINodeList
+  nsresult rv = nsArraySH::GetItemAt(aNative, aIndex, aResult);
+  if (NS_SUCCEEDED(rv)) {
+    return rv;
+  }
+  
   nsCOMPtr<nsIDOMHTMLCollection> collection(do_QueryInterface(aNative));
   NS_ENSURE_TRUE(collection, NS_ERROR_UNEXPECTED);
 
   nsIDOMNode *node = nsnull; // Weak, transfer the ownership over to aResult
-  nsresult rv = collection->Item(aIndex, &node);
+  rv = collection->Item(aIndex, &node);
 
   *aResult = node;
 

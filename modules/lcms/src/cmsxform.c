@@ -1539,6 +1539,10 @@ _LPcmsTRANSFORM PickTransformRoutine(_LPcmsTRANSFORM p,
                        (p -> ExitColorSpace == icSigRgbData)  &&
                        !(p -> dwOriginalFlags & cmsFLAGS_BLACKPOINTCOMPENSATION)) {
 
+                          // We've found our type of transform - don't override it later with a precalculated transform
+                          p -> dwOriginalFlags |= cmsFLAGS_NOTPRECALC;
+
+
                           // If the input profile pointer-matches with the output profile, 
                           // optimize the transformation away into a null xform
                           if (p -> InputProfile == p -> OutputProfile) {
@@ -1567,8 +1571,6 @@ _LPcmsTRANSFORM PickTransformRoutine(_LPcmsTRANSFORM p,
 #else
                           p -> xform = (p -> dwOriginalFlags & cmsFLAGS_FLOATSHAPER) ? MatrixShaperXFORMFloat : MatrixShaperXFORM;
 #endif
-
-                          p -> dwOriginalFlags |= cmsFLAGS_NOTPRECALC;
 
                           if (!cmsBuildSmeltMatShaper(p))
                           {

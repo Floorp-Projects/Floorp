@@ -226,12 +226,14 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
         const nsCSSValuePair *pair = static_cast<const nsCSSValuePair*>(storage);
         AppendCSSValueToString(aProperty, pair->mXValue, aResult);
         if (pair->mYValue != pair->mXValue ||
-            (aProperty == eCSSProperty_background_position &&
+            ((aProperty == eCSSProperty_background_position ||
+              aProperty == eCSSProperty__moz_transform_origin) &&
              pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
              pair->mXValue.GetUnit() != eCSSUnit_Initial)) {
           // Only output a Y value if it's different from the X value
           // or if it's a background-position value other than 'initial'
-          // or 'inherit'.
+          // or 'inherit' or if it's a -moz-transform-origin value other
+          // than 'initial' or 'inherit'.
           aResult.Append(PRUnichar(' '));
           AppendCSSValueToString(aProperty, pair->mYValue, aResult);
         }
@@ -328,6 +330,29 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
         mark = PR_TRUE;
       }
     }
+  }
+  /* Although Function is backed by an Array, we'll handle it separately
+   * because it's a bit quirky.
+   */
+  else if (eCSSUnit_Function == unit) {
+    const nsCSSValue::Array* array = aValue.GetArrayValue();
+    NS_ASSERTION(array->Count() >= 1, "Functions must have at least one element for the name.");
+
+    /* Append the function name. */
+    AppendCSSValueToString(aProperty, array->Item(0), aResult);
+    aResult.AppendLiteral("(");
+
+    /* Now, step through the function contents, writing each of them as we go. */
+    for (PRUint16 index = 1; index < array->Count(); ++index) {
+      AppendCSSValueToString(aProperty, array->Item(index), aResult);
+
+      /* If we're not at the final element, append a comma. */
+      if (index + 1 != array->Count())
+        aResult.AppendLiteral(", ");
+    }
+
+    /* Finally, append the closing parenthesis. */
+    aResult.AppendLiteral(")");
   }
   else if (eCSSUnit_Integer == unit) {
     nsAutoString tmpStr;
@@ -445,6 +470,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_None:         aResult.AppendLiteral("none");     break;
     case eCSSUnit_Normal:       aResult.AppendLiteral("normal");   break;
     case eCSSUnit_System_Font:  aResult.AppendLiteral("-moz-use-system-font"); break;
+    case eCSSUnit_Dummy:        break;
 
     case eCSSUnit_String:       break;
     case eCSSUnit_URL:          break;
@@ -453,6 +479,9 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     case eCSSUnit_Attr:
     case eCSSUnit_Counter:
     case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;
+    case eCSSUnit_Local_Font:   break;
+    case eCSSUnit_Font_Format:  break;
+    case eCSSUnit_Function:     break;
     case eCSSUnit_Integer:      break;
     case eCSSUnit_Enumerated:   break;
     case eCSSUnit_EnumColor:    break;

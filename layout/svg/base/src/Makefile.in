@@ -80,6 +80,7 @@ CPPSRCS		= \
 		nsSVGGradientFrame.cpp \
 		nsSVGImageFrame.cpp \
 		nsSVGInnerSVGFrame.cpp \
+		nsSVGIntegrationUtils.cpp \
 		nsSVGLeafFrame.cpp \
 		nsSVGMarkerFrame.cpp \
 		nsSVGMaskFrame.cpp \
@@ -103,6 +104,7 @@ include $(topsrcdir)/config/config.mk
 FORCE_STATIC_LIB = 1
 
 EXPORTS = \
+	nsSVGIntegrationUtils.h \
 	nsSVGUtils.h \
 	nsSVGFilterInstance.h \
 	nsSVGForeignObjectFrame.h \

@@ -43,6 +43,8 @@
 #include "nsSVGElement.h"
 #include "nsDOMError.h"
 
+class nsIFrame;
+
 class nsSVGLength2
 {
 
@@ -64,10 +66,12 @@ public:
   void GetBaseValueString(nsAString& aValue);
   void GetAnimValueString(nsAString& aValue);
 
-  float GetBaseValue(nsSVGElement* aSVGElement)
+  float GetBaseValue(nsSVGElement* aSVGElement) const
     { return mBaseVal / GetUnitScaleFactor(aSVGElement); }
-  float GetAnimValue(nsSVGElement* aSVGElement)
+  float GetAnimValue(nsSVGElement* aSVGElement) const
     { return mAnimVal / GetUnitScaleFactor(aSVGElement); }
+  float GetAnimValue(nsIFrame* aFrame) const
+    { return mAnimVal / GetUnitScaleFactor(aFrame); }
 
   PRUint8 GetCtxType() const { return mCtxType; }
   PRUint8 GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
@@ -76,9 +80,9 @@ public:
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
 
-  float GetBaseValue(nsSVGSVGElement* aCtx)
+  float GetBaseValue(nsSVGSVGElement* aCtx) const
     { return mBaseVal / GetUnitScaleFactor(aCtx); }
-  float GetAnimValue(nsSVGSVGElement* aCtx)
+  float GetAnimValue(nsSVGSVGElement* aCtx) const
     { return mAnimVal / GetUnitScaleFactor(aCtx); }
   
   nsresult ToDOMAnimatedLength(nsIDOMSVGAnimatedLength **aResult,
@@ -93,6 +97,14 @@ private:
   PRUint8 mCtxType; // X, Y or Unspecified
   PRPackedBool mIsAnimated;
   
+  float GetMMPerPixel(nsIFrame *aNonSVGFrame) const;
+  float GetAxisLength(nsIFrame *aNonSVGFrame) const;
+  float GetEmLength(nsIFrame *aFrame) const
+    { return nsSVGUtils::GetFontSize(aFrame); }
+  float GetExLength(nsIFrame *aFrame) const
+    { return nsSVGUtils::GetFontXHeight(aFrame); }
+  float GetUnitScaleFactor(nsIFrame *aFrame) const;
+
   float GetMMPerPixel(nsSVGSVGElement *aCtx) const;
   float GetAxisLength(nsSVGSVGElement *aCtx) const;
   float GetEmLength(nsSVGElement *aSVGElement) const

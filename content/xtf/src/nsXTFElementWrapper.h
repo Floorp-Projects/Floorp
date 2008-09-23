@@ -109,7 +109,7 @@ public:
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
 
   virtual nsIAtom *GetClassAttributeName() const;
-  virtual const nsAttrValue* GetClasses() const;
+  virtual const nsAttrValue* DoGetClasses() const;
 
   virtual void PerformAccesskey(PRBool aKeyCausesActivation,
                                 PRBool aIsTrustedEvent);
