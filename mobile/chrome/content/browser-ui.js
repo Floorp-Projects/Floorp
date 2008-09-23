@@ -594,10 +594,6 @@ var BrowserUI = {
     var container = document.getElementById("browser-container");
     var prefs = document.getElementById("pref-pane");
 
-    // Make sure the UI elements are sized correctly since the window size can change
-    sidebar.left = container.boxObject.width;
-    sidebar.height = tablist.height = container.boxObject.height;
-
     if (aMode == UIMODE_URLVIEW)
     {
       this._showToolbar(true);
@@ -652,8 +648,6 @@ var BrowserUI = {
       let dloads = document.getElementById("downloads-container");
       if (dloads.getAttribute("src") == "")
         dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
-
-      PreferencesUI.init();
 
       this._showPanel(aMode);
     }

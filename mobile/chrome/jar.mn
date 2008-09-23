@@ -17,9 +17,9 @@ browser.jar:
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
   branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
 % style chrome://mozapps/content/extensions/extensions.xul chrome://browser/skin/extensions.css
-  content/preferences/richpref.xml
-* content/sanitize.xul
-* content/sanitize.js
+  content/preferences/richpref.xml (content/preferences/richpref.xml)
+* content/sanitize.xul (content/sanitize.xul)
+* content/sanitize.js (content/sanitize.js)
 
 classic.jar:
 % skin browser classic/1.0 %
