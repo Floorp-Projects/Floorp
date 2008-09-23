@@ -75,7 +75,7 @@
 }
 
 #main-window:not([active="true"]) .tabbrowser-strip {
-  background-color: #cfcfcf;
+  background-color: #e2e2e2;
 }
 
 #main-window:not([active="true"]) .tabbrowser-tab {

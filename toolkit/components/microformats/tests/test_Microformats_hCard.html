@@ -190,6 +190,16 @@
     <object class="tel" data="modem:+1.415.555.1242">call me</object>
     <area class="tel" href="modem:+1.415.555.1243">call me</area>
   </div>
+  
+  <div class="vcard" id="21-tel.2">
+    <span class="fn">John Doe</span>
+    <span class="tel"><span class="type">Home</span> +1.415.555.1212</span>
+  </div>
+
+  <div class="vcard" id="21-tel.3">
+    <span class="fn">John Doe</span>
+    <span class="tel"><span class="type">Home</span><span class="type"> Pref</span> +1.415.555.1212</span>
+  </div>
 
   <!--     TODO: add test for 'extended' -->
   <div class="vcard" id="22-adr">
@@ -540,6 +550,15 @@
     <span class="note"><b>Note</b></span>
   </div>
 
+  <div class="vcard" id="email-type">
+		      <span class="fn">John Doe</span>
+		      <span class="email">
+			      <span class="type">internet</span>
+			      <a href="mailto:notthis@example.com">john@example.com</a>
+		      </span>
+       </div>
+
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -790,6 +809,17 @@ function test_hCard() {
   is(hcard.tel[7].value, "+1.415.555.1239", "21-tel - tel");
   is(hcard.tel[8].value, "+1.415.555.1241", "21-tel - tel");
   is(hcard.tel[9].value, "+1.415.555.1242", "21-tel - tel");
+
+  hcard = new hCard(document.getElementById("21-tel.2"));
+
+  is(hcard.tel[0].type[0], "home", "21-tel.2 - type");
+  is(hcard.tel[0].value, "+1.415.555.1212", "21-tel.2 - tel");
+  
+  hcard = new hCard(document.getElementById("21-tel.3"));
+
+  is(hcard.tel[0].type[0], "home", "21-tel.3 - type (home)");
+  is(hcard.tel[0].type[1], "pref", "21-tel.3 - type (pref)");
+  is(hcard.tel[0].value, "+1.415.555.1212", "21-tel.3 - tel");
 
   hcard = new hCard(document.getElementById("22-adr"));
 
@@ -1142,7 +1172,10 @@ function test_hCard() {
   is(hcard.note[0], "Note", "39-noteHTML - note");
   is(hcard.note[0].toHTML(), "<b>Note</b>", "39-noteHTML - note as HTML");
   is(hcard.note[0].match("Note"), "Note", "39-noteHTML - match in note");
-  
+
+  hcard = new hCard(document.getElementById("email-type"));
+  is(hcard.email[0].type, "internet", "email - type no value (type)");
+  is(hcard.email[0].value, "john@example.com", "email - type no value (value)");
 }
 
 </script>

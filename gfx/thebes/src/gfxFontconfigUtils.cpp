@@ -108,9 +108,9 @@ gfxFontconfigUtils::GetThebesWeight(FcPattern *aPattern)
 }
 
 gfxFontconfigUtils::gfxFontconfigUtils()
+    : mLastConfig(NULL)
 {
     mAliasTable.Init(50);
-    UpdateFontListInternal(PR_TRUE);
 }
 
 nsresult
@@ -306,10 +306,23 @@ gfxFontconfigUtils::UpdateFontList()
 nsresult
 gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
 {
-    if (!aForce && FcConfigUptoDate(NULL))
-        return NS_OK;
+    if (!aForce) {
+        // This checks periodically according to fontconfig's configured
+        // <rescan> interval.
+        FcInitBringUptoDate();
+    } else if (!FcConfigUptoDate(NULL)) { // check now with aForce
+        mLastConfig = NULL;
+        FcInitReinitialize();
+    }
 
-    FcInitReinitialize();
+    // FcInitReinitialize() (used by FcInitBringUptoDate) creates a new config
+    // before destroying the old config, so the only way that we'd miss an
+    // update is if fontconfig did more than one update and the memory for the
+    // most recent config happened to be at the same location as the original
+    // config.
+    FcConfig *currentConfig = FcConfigGetCurrent();
+    if (currentConfig == mLastConfig)
+        return NS_OK;
 
     mFonts.Clear();
     mAliasForSingleFont.Clear();
@@ -337,9 +350,7 @@ gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
         return NS_ERROR_FAILURE;
 
     nsXPIDLCString list;
-    rv = prefBranch->GetCharPref("font.alias-list", getter_Copies(list));
-    if (NS_FAILED(rv))
-        return NS_OK;
+    prefBranch->GetCharPref("font.alias-list", getter_Copies(list));
 
     if (!list.IsEmpty()) {
         const char kComma = ',';
@@ -363,9 +374,6 @@ gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
         }
     }
 
-    if (mAliasForMultiFonts.Count() == 0)
-        return NS_OK;
-
     for (PRInt32 i = 0; i < mAliasForMultiFonts.Count(); i++) {
         nsRefPtr<gfxFontNameList> fonts = new gfxFontNameList;
         nsCAutoString fontname(*mAliasForMultiFonts.CStringAt(i));
@@ -377,6 +385,8 @@ gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
         ToLowerCase(fontname, key);
         mAliasTable.Put(key, fonts);
     }
+
+    mLastConfig = currentConfig;
     return NS_OK;
 }
 
@@ -443,6 +453,10 @@ gfxFontconfigUtils::GetStandardFamilyName(const nsAString& aFontName, nsAString&
         return NS_OK;
     }
 
+    nsresult rv = UpdateFontListInternal();
+    if (NS_FAILED(rv))
+        return rv;
+
     NS_ConvertUTF16toUTF8 fontname(aFontName);
 
     if (mFonts.IndexOf(fontname) >= 0) {
@@ -458,7 +472,7 @@ gfxFontconfigUtils::GetStandardFamilyName(const nsAString& aFontName, nsAString&
     FcFontSet *givenFS = NULL;
     nsCStringArray candidates;
     FcFontSet *candidateFS = NULL;
-    nsresult rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_FAILURE;
 
     pat = FcPatternCreate();
     if (!pat)

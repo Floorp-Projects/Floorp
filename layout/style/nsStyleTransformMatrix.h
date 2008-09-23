@@ -81,7 +81,7 @@ class nsStyleTransformMatrix
    * @param aFactor The number of app units per device pixel.
    * @return A Thebes matrix corresponding to the transform.
    */
-  gfxMatrix GetThebesMatrix(const nsRect& aBounds, PRInt32 aFactor) const;
+  gfxMatrix GetThebesMatrix(const nsRect& aBounds, float aFactor) const;
 
   /**
    * Multiplies this matrix by another matrix, in that order.  If A'
@@ -175,7 +175,7 @@ class nsStyleTransformMatrix
    * |       0        0         1|
    */
   float mMain[4];
-  nscoord  mDelta[2];
+  nscoord mDelta[2];
   float mX[2];
   float mY[2];
 };
