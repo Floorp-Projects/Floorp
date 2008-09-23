@@ -562,7 +562,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content ignorekeys="true">
+    <content ignorekeys="true" level="top">
       <xul:tree anonid="tree" class="autocomplete-tree plain" hidecolumnpicker="true" flex="1" seltype="single">
         <xul:treecols anonid="treecols">
           <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
@@ -905,7 +905,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content ignorekeys="true">
+    <content ignorekeys="true" level="top">
       <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox" flex="1"/>
       <xul:hbox>
         <children/>
@@ -988,13 +988,15 @@
       <method name="_invalidate">
         <body>
           <![CDATA[
-          // collapsed if no matches
-          this.richlistbox.collapsed = (this._matchCount == 0);
+          if (!this.hasAttribute("height")) {
+            // collapsed if no matches
+            this.richlistbox.collapsed = (this._matchCount == 0);
 
-          // Dynamically update height until richlistbox.rows works (bug 401939)
-          // Adjust the height immediately and after the row contents update
-          this.adjustHeight();
-          setTimeout(function(self) self.adjustHeight(), 0, this);
+            // Dynamically update height until richlistbox.rows works (bug 401939)
+            // Adjust the height immediately and after the row contents update
+            this.adjustHeight();
+            setTimeout(function(self) self.adjustHeight(), 0, this);
+          }
 
           // make sure to collapse any existing richlistitems
           // that aren't going to be used

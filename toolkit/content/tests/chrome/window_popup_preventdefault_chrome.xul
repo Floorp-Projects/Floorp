@@ -2,7 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <window title="Popup Prevent Default Tests"
-  onload="setTimeout(runTest, 0);"
+  onfocus="if (!gDone) { gDone = true; setTimeout(runTest, 0); }"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <title>Popup Prevent Default Tests</title>
@@ -14,14 +14,41 @@
 
 <script>
 
+var gDone = false;
 var gBlockShowing = true;
 var gBlockHiding = true;
 var gShownNotAllowed = true;
 var gHiddenNotAllowed = true;
 
+var is = function(l, r, v) { window.opener.wrappedJSObject.SimpleTest.is(l, r, v); }
+
 function runTest()
 {
-  document.getElementById("menu").open = true;
+  var menu = document.getElementById("menu");
+
+  is(window.windowState, window.STATE_NORMAL, "window is normal");
+  // the minimizing test sometimes fails on Linux so don't test it there
+  if (navigator.platform.indexOf("Lin") == 0) {
+    menu.open = true;
+    return;
+  }
+  window.minimize();
+  is(window.windowState, window.STATE_MINIMIZED, "window is minimized");
+
+  menu.open = true;
+
+  setTimeout(runTestAfterMinimize, 0);
+}
+
+function runTestAfterMinimize()
+{
+  var menu = document.getElementById("menu");
+  is(menu.firstChild.state, "closed", "popup not opened when window minimized");
+
+  window.restore();
+  is(window.windowState, window.STATE_NORMAL, "window is restored");
+
+  menu.open = true;
 }
 
 function popupShowing(event)

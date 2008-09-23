@@ -82,6 +82,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsStyleChangeList.h"
 #include "nsRuleNode.h"
+#include "nsEventDispatcher.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -567,6 +568,11 @@ nsPresContext::GetDocumentColorPreferences()
     mLookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground,
                            mBackgroundColor);
   }
+
+  // Wherever we got the default background color from, ensure it is
+  // opaque.
+  mBackgroundColor = NS_ComposeColors(NS_RGB(0xFF, 0xFF, 0xFF),
+                                      mBackgroundColor);
 
   mUseDocumentColors = !useAccessibilityTheme &&
     nsContentUtils::GetBoolPref("browser.display.use_document_colors",
@@ -1568,4 +1574,55 @@ nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) 
 {
   return nsRuleNode::
     HasAuthorSpecifiedRules(aFrame->GetStyleContext(), ruleTypeMask);
+}
+
+void
+nsPresContext::FireDOMPaintEvent()
+{
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
+  if (!docShell)
+    return;
+  nsCOMPtr<nsPIDOMWindow> ourWindow = do_GetInterface(docShell);
+  nsISupports* eventTarget = ourWindow;
+  if (mSameDocDirtyRegion.IsEmpty() && !IsChrome()) {
+    // Don't tell the window about this event, it should not know that
+    // something happened in a subdocument. Tell only the chrome event handler.
+    // (Events sent to the window get propagated to the chrome event handler
+    // automatically.)
+    eventTarget = ourWindow->GetChromeEventHandler();
+  }
+  // Events sent to the window get propagated to the chrome event handler
+  // automatically.
+
+  nsNotifyPaintEvent event(PR_TRUE, NS_AFTERPAINT, mSameDocDirtyRegion,
+                           mCrossDocDirtyRegion);
+  // Empty our regions now in case dispatching the event causes more damage
+  // (hopefully it won't, or we're likely to get an infinite loop! At least
+  // it won't be blocking app execution though).
+  mSameDocDirtyRegion.SetEmpty();
+  mCrossDocDirtyRegion.SetEmpty();
+  // Even if we're not telling the window about the event (so eventTarget is
+  // the chrome event handler, not the window), the window is still
+  // logically the event target.
+  event.target = do_QueryInterface(ourWindow);
+  nsEventDispatcher::Dispatch(eventTarget, this, &event);
+}
+
+void
+nsPresContext::NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc)
+{
+  if (aRect.IsEmpty())
+    return;
+
+  if (mSameDocDirtyRegion.IsEmpty() && mCrossDocDirtyRegion.IsEmpty()) {
+    // No event is pending. Dispatch one now.
+    nsCOMPtr<nsIRunnable> ev =
+      new nsRunnableMethod<nsPresContext>(this,
+                                          &nsPresContext::FireDOMPaintEvent);
+    NS_DispatchToCurrentThread(ev);
+  }
+
+  nsRegion* r = aIsCrossDoc ? &mCrossDocDirtyRegion : &mSameDocDirtyRegion;
+  r->Or(*r, aRect);
+  r->SimplifyOutward(10);
 }

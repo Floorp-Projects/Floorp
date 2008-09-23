@@ -1,8 +1,5 @@
-<!ENTITY newPagesIn.label             "New pages should be opened in:">
-<!ENTITY inNewWindow.label            "a new window">
-<!ENTITY inNewWindow.accesskey        "w">
-<!ENTITY inNewTab.label               "a new tab">
-<!ENTITY inNewTab.accesskey           "t">
+<!ENTITY newWindowsAsTabs.label       "Open new windows in a new tab instead">
+<!ENTITY newWindowsAsTabs.accesskey   "t">
 
 <!ENTITY warnCloseMultipleTabs.label  "Warn me when closing multiple tabs">
 <!ENTITY warnCloseMultipleTabs.accesskey  "m">

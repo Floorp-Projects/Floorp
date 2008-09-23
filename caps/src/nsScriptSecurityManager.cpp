@@ -3785,7 +3785,8 @@ nsScriptSecurityManager::ScriptSecurityPrefChanged()
 
     rv = mSecurityPref->SecurityGetBoolPref(sJSMailEnabledPrefName, &temp);
     // JavaScript in Mail defaults to disabled in failure cases.
-    mIsMailJavaScriptEnabled = NS_SUCCEEDED(rv) && temp;
+    // disable javascript in mailnews for TB 3.0 beta1
+    mIsMailJavaScriptEnabled = PR_FALSE; // NS_SUCCEEDED(rv) && temp;
 
     rv = mSecurityPref->SecurityGetBoolPref(sFileOriginPolicyPrefName, &temp);
     sStrictFileOriginPolicy = NS_SUCCEEDED(rv) && temp;

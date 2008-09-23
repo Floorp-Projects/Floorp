@@ -913,6 +913,7 @@ public:
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD_(PRBool) IsVisible();
   NS_IMETHOD_(void) WillPaint();
+  NS_IMETHOD_(void) InvalidateFrameForView(nsIView *view);
 
   // caret handling
   NS_IMETHOD GetCaret(nsCaret **aOutCaret);
@@ -1010,7 +1011,6 @@ protected:
   void CancelPostedReflowCallbacks();
 
   void UnsuppressAndInvalidate();
-
 
   void WillCauseReflow() {
     nsContentUtils::AddScriptBlocker();
@@ -2610,7 +2610,7 @@ PresShell::CreateResizeEventTimer ()
 void
 PresShell::KillResizeEventTimer()
 {
-  if(mResizeEventTimer) {
+  if (mResizeEventTimer) {
     mResizeEventTimer->Cancel();
     mResizeEventTimer = nsnull;
   }
@@ -2700,8 +2700,7 @@ void PresShell::RestoreCaret()
 
 NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 {
-  nsresult result = NS_OK;
-  PRBool   oldEnabled = mCaretEnabled;
+  PRBool oldEnabled = mCaretEnabled;
 
   mCaretEnabled = aInEnable;
 
@@ -2936,36 +2935,9 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
                               PR_TRUE);
   }
 
-  nsIScrollableView *scrollableView;
-  if (!mViewManager) 
-    return NS_ERROR_UNEXPECTED;
-  nsresult result = mViewManager->GetRootScrollableView(&scrollableView);
-  if (NS_FAILED(result)) 
-    return result;
-  if (!scrollableView) 
-    return NS_ERROR_UNEXPECTED;
-  nsIView *scrolledView;
-  result = scrollableView->GetScrolledView(scrolledView);
-  // get a frame
-  nsIFrame *frame = (nsIFrame*)scrolledView->GetClientData();
+  nsIFrame *frame = FrameConstructor()->GetRootElementFrame();
   if (!frame)
     return NS_ERROR_FAILURE;
-  //we need to get to the area frame.
-  nsIAtom* frameType;
-  do 
-  {
-    frameType = frame->GetType();
-    if (frameType != nsGkAtoms::areaFrame)
-    {
-      frame = frame->GetFirstChild(nsnull);
-      if (!frame)
-        break;
-    }
-  }while(frameType != nsGkAtoms::areaFrame);
-  
-  if (!frame)
-    return NS_ERROR_FAILURE; //could not find an area frame.
-
   nsPeekOffsetStruct pos = frame->GetExtremeCaretPosition(!aForward);
 
   mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffset/*End*/ ,aExtend, PR_FALSE, aForward);
@@ -4013,12 +3985,12 @@ PresShell::ScrollContentIntoView(nsIContent* aContent,
   // this check is preventing.
   // XXX: The dependency on the command dispatcher needs to be fixed.
   nsPIDOMWindow* ourWindow = currentDoc->GetWindow();
-  if(ourWindow) {
+  if (ourWindow) {
     nsIFocusController *focusController = ourWindow->GetRootFocusController();
     if (focusController) {
       PRBool dontScroll = PR_FALSE;
       focusController->GetSuppressFocusScroll(&dontScroll);
-      if(dontScroll) {
+      if (dontScroll) {
         return NS_OK;
       }
     }
@@ -4191,6 +4163,14 @@ PresShell::GetSelectionForCopy(nsISelection** outSelection)
   return rv;
 }
 
+/* Just hook this call into InvalidateOverflowRect */
+void
+PresShell::InvalidateFrameForView(nsIView *aView)
+{
+  nsIFrame* frame = nsLayoutUtils::GetFrameFor(aView);
+  if (frame)
+    frame->InvalidateOverflowRect();
+}
 
 NS_IMETHODIMP
 PresShell::DoGetContents(const nsACString& aMimeType, PRUint32 aFlags, PRBool aSelectionOnly, nsAString& aOutValue)
@@ -4331,7 +4311,7 @@ PresShell::UnsuppressAndInvalidate()
   if (rootFrame) {
     // let's assume that outline on a root frame is not supported
     nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
-    rootFrame->Invalidate(rect, PR_FALSE);
+    rootFrame->Invalidate(rect);
   }
 
   // This makes sure to get the same thing that nsPresContext::EnsureVisible()

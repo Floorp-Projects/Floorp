@@ -58,11 +58,6 @@ public:
    */
   virtual PRUint32 GetScriptTypeID() = 0;
 
-  /*
-   * Called as the language factory is shutting down.
-   */
-  virtual void ShutDown() = 0;
-
   /* Parses a "version string" for the language into a bit-mask used by
    * the language implementation.  If the specified version is not supported
    * an error should be returned.  If the specified version is blank, a default

@@ -608,16 +608,17 @@ nsAccessNode::GetChildNodeAt(PRInt32 aChildNum, nsIAccessNode **aAccessNode)
 }
 
 NS_IMETHODIMP
-nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt, const nsAString& aPropertyName, nsAString& aValue)
+nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt,
+                                    const nsAString& aPropertyName,
+                                    nsAString& aValue)
 {
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-  if (!domElement) {
+  if (IsDefunct())
     return NS_ERROR_FAILURE;
-  }
+
   nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl;
-  GetComputedStyleDeclaration(aPseudoElt, domElement, getter_AddRefs(styleDecl));
+  GetComputedStyleDeclaration(aPseudoElt, mDOMNode, getter_AddRefs(styleDecl));
   NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
-  
+
   return styleDecl->GetPropertyValue(aPropertyName, aValue);
 }
 
@@ -627,15 +628,13 @@ nsAccessNode::GetComputedStyleCSSValue(const nsAString& aPseudoElt,
                                        nsIDOMCSSPrimitiveValue **aCSSValue)
 {
   NS_ENSURE_ARG_POINTER(aCSSValue);
-
   *aCSSValue = nsnull;
 
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-  if (!domElement)
+  if (IsDefunct())
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl;
-  GetComputedStyleDeclaration(aPseudoElt, domElement,
+  GetComputedStyleDeclaration(aPseudoElt, mDOMNode,
                               getter_AddRefs(styleDecl));
   NS_ENSURE_STATE(styleDecl);
 
@@ -646,28 +645,29 @@ nsAccessNode::GetComputedStyleCSSValue(const nsAString& aPseudoElt,
   return CallQueryInterface(cssValue, aCSSValue);
 }
 
-void nsAccessNode::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
-                                               nsIDOMElement *aElement,
-                                               nsIDOMCSSStyleDeclaration **aCssDecl)
+void
+nsAccessNode::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
+                                          nsIDOMNode *aNode,
+                                          nsIDOMCSSStyleDeclaration **aCssDecl)
 {
   *aCssDecl = nsnull;
+
+  nsCOMPtr<nsIDOMElement> domElement = nsAccUtils::GetDOMElementFor(aNode);
+  if (!domElement)
+    return;
+
   // Returns number of items in style declaration
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  if (!content) {
-    return;
-  }
+  nsCOMPtr<nsIContent> content = do_QueryInterface(domElement);
   nsCOMPtr<nsIDocument> doc = content->GetDocument();
-  if (!doc) {
+  if (!doc)
     return;
-  }
 
   nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(doc->GetWindow()));
-  if (!viewCSS) {
+  if (!viewCSS)
     return;
-  }
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  viewCSS->GetComputedStyle(aElement, aPseudoElt, getter_AddRefs(cssDecl));
+  viewCSS->GetComputedStyle(domElement, aPseudoElt, getter_AddRefs(cssDecl));
   NS_IF_ADDREF(*aCssDecl = cssDecl);
 }
 

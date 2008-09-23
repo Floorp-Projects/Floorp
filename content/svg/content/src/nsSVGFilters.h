@@ -42,6 +42,7 @@
 #include "nsIFrame.h"
 #include "gfxRect.h"
 #include "gfxImageSurface.h"
+#include "nsIDOMSVGFilters.h"
 
 class nsSVGFilterResource;
 class nsSVGString;

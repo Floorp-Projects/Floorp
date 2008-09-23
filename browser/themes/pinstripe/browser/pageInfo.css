@@ -39,27 +39,13 @@
 
 @import "chrome://global/skin/";
 
-#main-window {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
-}
-
-#main-window:not([active="true"]) > #topStackBar {
-  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
-  background-color: #cfcfcf;
-  border-bottom: 1px solid rgba(0,0,0,0.35);
-}
-
 #main-window:not([active="true"]) > #topStackBar > #viewGroup {
   opacity: 0.7;
 }
 
 #topStackBar {
   display: -moz-box;
-  background-color: #969696;
-  border-bottom: 1px solid #404040;
-  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
-  background-repeat: repeat-x;
-  background-position: top right;
+  -moz-appearance: -moz-mac-unified-toolbar;
   padding: 4px 0 8px;
   -moz-box-pack: center;
 }

@@ -102,6 +102,7 @@
 #define ENODEV          19
 #define ENOTDIR         20
 #define EISDIR          21
+#define EINVAL          22
 #define ENFILE          23
 #define EMFILE          24
 #define ENOTTY          25
@@ -112,6 +113,7 @@
 #define EMLINK          31
 #define EPIPE           32
 #define EDOM            33
+#define ERANGE          34
 #define EDEADLK         36
 #ifndef ENAMETOOLONG
 #define ENAMETOOLONG    38
@@ -164,6 +166,9 @@
 typedef int ptrdiff_t;
 typedef long _off_t;
 typedef long off_t;
+
+// Not defined anywhere
+typedef INT_PTR intptr_t; 
 
 // From sys/stat.h
 #if !defined(_STAT_DEFINED)

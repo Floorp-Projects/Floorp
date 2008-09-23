@@ -40,8 +40,10 @@
 #include "nsObjCExceptions.h"
 #include "nsIInternetConfigService.h"
 #include "nsIServiceManager.h"
+#include "nsNativeThemeColors.h"
 
 #import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
@@ -284,6 +286,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_dragtargetzone:
       //default to lavender if not available
       res = GetMacBrushColor(kThemeBrushDragHilite, aColor, NS_RGB(0x63,0x63,0xCE));
+      break;
+    case eColor__moz_mac_chrome_active:
+    case eColor__moz_mac_chrome_inactive: {
+      int grey = NativeGreyColorAsInt(headerEndGrey, (aID == eColor__moz_mac_chrome_active));
+      aColor = NS_RGB(grey, grey, grey);
+    }
       break;
     case eColor__moz_mac_focusring:
       //default to lavender if not available
@@ -605,6 +613,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_WindowsDefaultTheme:
       aMetric = 0;
       res = NS_ERROR_NOT_IMPLEMENTED;
+      break;
+    case eMetric_MacGraphiteTheme:
+      aMetric = [NSColor currentControlTint] == NSGraphiteControlTint;
       break;
     case eMetric_TabFocusModel:
     {

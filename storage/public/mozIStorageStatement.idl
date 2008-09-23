@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2 expandtab 
+ * vim: sw=2 ts=2 sts=2 expandtab
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -151,6 +151,30 @@ interface mozIStorageStatement : mozIStorageValueArray {
    *
    */
   boolean executeStep();
+
+  /**
+   * Execute a query, using any currently-bound parameters.  Reset is called
+   * when no more data is returned.  This method is only available to JavaScript
+   * consumers.
+   *
+   * @returns a boolean indicating whether there are more rows or not.
+   *
+   * boolean step();
+   */
+
+  /**
+   * Obtains the current list of named parameters, which are settable.  This
+   * property is only available to JavaScript consumers.
+   *
+   * readonly attribute mozIStorageStatementParams params;
+   */
+
+  /**
+   * Obtains the current row, with access to all the data members by name.  This
+   * property is only available to JavaScript consumers.
+   *
+   * readonly attribute mozIStorageStatementRow row;
+   */
 
   /**
    * Execute a query asynchronously using any currently bound parameters.  This

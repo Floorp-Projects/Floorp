@@ -129,6 +129,11 @@ var gViewSourceUtils = {
           webBrowserPersist.persistFlags = this.mnsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
           webBrowserPersist.progressListener = this.viewSourceProgressListener;
           webBrowserPersist.saveURI(uri, null, null, null, null, file);
+
+          // register the file to be deleted on app exit
+          Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
+                    .getService(Components.interfaces.nsPIExternalAppLauncher)
+                    .deleteTemporaryFileOnExit(file);
         } else {
           // we'll use nsIWebPageDescriptor to get the source because it may not have to refetch
           // the file from the server
@@ -171,28 +176,26 @@ var gViewSourceUtils = {
   // Returns nsIProcess of the external view source editor or null
   getExternalViewSourceEditor: function()
   {
-    var editor = null;
-    var viewSourceAppPath = null;
     try {
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefBranch);
-      var prefPath = prefs.getCharPref("view_source.editor.path");
-      if (prefPath.length > 0) {
-        viewSourceAppPath = Components.classes["@mozilla.org/file/local;1"]
-                                      .createInstance(Components.interfaces.nsILocalFile);
-        viewSourceAppPath.initWithPath(prefPath);
-        // it's gotta be executable
-        if (viewSourceAppPath.exists() && viewSourceAppPath.isExecutable()) {
-          editor = Components.classes['@mozilla.org/process/util;1']
+      let prefPath =
+          Components.classes["@mozilla.org/preferences-service;1"]
+                    .getService(Components.interfaces.nsIPrefBranch)
+                    .getCharPref("view_source.editor.path");
+      let viewSourceAppPath =
+              Components.classes["@mozilla.org/file/local;1"]
+                        .createInstance(Components.interfaces.nsILocalFile);
+      viewSourceAppPath.initWithPath(prefPath);
+      let editor = Components.classes['@mozilla.org/process/util;1']
                              .createInstance(Components.interfaces.nsIProcess);
-          editor.init(viewSourceAppPath);
-        }
-      }
+      editor.init(viewSourceAppPath);
+
+      return editor;
     }
     catch (ex) {
       Components.utils.reportError(ex);
     }
-    return editor;
+
+    return null;
   },
 
   viewSourceProgressListener: {
@@ -242,6 +245,11 @@ var gViewSourceUtils = {
             // clean up
             coStream.close();
             foStream.close();
+
+            // register the file to be deleted on app exit
+            Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
+                      .getService(Components.interfaces.nsPIExternalAppLauncher)
+                      .deleteTemporaryFileOnExit(this.file);
           }
 
           // Determine the command line arguments to pass to the editor.

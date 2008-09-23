@@ -72,11 +72,17 @@ GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBX
 
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 
-ifdef MOZ_MEMORY
-ifneq ($(OS_ARCH),WINNT)
-LIBS += -ljemalloc
+SOURCE_STAMP := $(shell cd $(topsrcdir) ; hg identify 2>/dev/null | cut -f1 -d' ')
+ifdef SOURCE_STAMP
+DEFINES += -DMOZ_SOURCE_STAMP="$(SOURCE_STAMP)"
 endif
+
+SOURCE_REPO := $(shell hg -R $(topsrcdir) showconfig paths.default 2>/dev/null | sed s/^ssh:/http:/)
+ifdef SOURCE_REPO
+DEFINES += -DMOZ_SOURCE_REPO="$(SOURCE_REPO)"
 endif
+
+LIBS += $(JEMALLOC_LIBS)
 
 ifdef LIBXUL_SDK
 include $(topsrcdir)/config/rules.mk
@@ -117,11 +123,18 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 TK_LIBS := $(TK_LIBS)
 endif
 
+ifdef MOZ_ENABLE_LIBXUL
+APP_XPCOM_LIBS = $(XPCOM_GLUE_LDOPTS)
+else
+MOZILLA_INTERNAL_API = 1
+APP_XPCOM_LIBS = $(XPCOM_LIBS)
+endif
+
 LIBS += \
 	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_JS_LIBS) \
-	$(XPCOM_GLUE_LDOPTS) \
+	$(APP_XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)

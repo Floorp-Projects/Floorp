@@ -1,9 +1,9 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.2.24 - December 14, 2007
+ * libpng version 1.2.31 - August 21, 2008
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2007 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2008 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -1135,10 +1135,10 @@ typedef unsigned char png_byte;
    change (I'm not sure if you will or not, so I thought I'd be safe) */
 #ifdef PNG_SIZE_T
    typedef PNG_SIZE_T png_size_t;
-#  define png_sizeof(x) png_convert_size(sizeof (x))
+#  define png_sizeof(x) png_convert_size(sizeof(x))
 #else
    typedef size_t png_size_t;
-#  define png_sizeof(x) sizeof (x)
+#  define png_sizeof(x) sizeof(x)
 #endif
 
 /* The following is needed for medium model support.  It cannot be in the

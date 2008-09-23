@@ -38,6 +38,9 @@
 #include "nsSVGUtils.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGMatrix.h"
+#include "gfxPlatform.h"
+#include "nsSVGFilterPaintCallback.h"
+#include "nsSVGFilterElement.h"
 
 static double Square(double aX)
 {
@@ -48,10 +51,11 @@ float
 nsSVGFilterInstance::GetPrimitiveLength(nsSVGLength2 *aLength) const
 {
   float value;
-  if (mPrimitiveUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX)
+  if (mPrimitiveUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     value = nsSVGUtils::ObjectSpace(mTargetBBox, aLength);
-  else
-    value = nsSVGUtils::UserSpace(TargetElement(), aLength);
+  } else {
+    value = nsSVGUtils::UserSpace(mTargetFrame, aLength);
+  }
 
   switch (aLength->GetCtxType()) {
   case nsSVGUtils::X:
@@ -123,29 +127,9 @@ nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(PrimitiveInfo* aPrimitive)
       gfxRect(0, 0, mFilterSpaceSize.width, mFilterSpaceSize.height);
   }
 
-  nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
-  tmpX = &fE->mLengthAttributes[nsSVGFE::X];
-  tmpY = &fE->mLengthAttributes[nsSVGFE::Y];
-  tmpWidth = &fE->mLengthAttributes[nsSVGFE::WIDTH];
-  tmpHeight = &fE->mLengthAttributes[nsSVGFE::HEIGHT];
-
-  float x, y, width, height;
-  if (mPrimitiveUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
-    mTargetBBox->GetX(&x);
-    x     += nsSVGUtils::ObjectSpace(mTargetBBox, tmpX);
-    mTargetBBox->GetY(&y);
-    y     += nsSVGUtils::ObjectSpace(mTargetBBox, tmpY);
-    width  = nsSVGUtils::ObjectSpace(mTargetBBox, tmpWidth);
-    height = nsSVGUtils::ObjectSpace(mTargetBBox, tmpHeight);
-  } else {
-    nsSVGElement* targetElement = TargetElement();
-    x      = nsSVGUtils::UserSpace(targetElement, tmpX);
-    y      = nsSVGUtils::UserSpace(targetElement, tmpY);
-    width  = nsSVGUtils::UserSpace(targetElement, tmpWidth);
-    height = nsSVGUtils::UserSpace(targetElement, tmpHeight);
-  }
-
-  gfxRect region = UserSpaceToFilterSpace(gfxRect(x, y, width, height));
+  gfxRect feArea = nsSVGUtils::GetRelativeRect(mPrimitiveUnits,
+    &fE->mLengthAttributes[nsSVGFE::X], mTargetBBox, mTargetFrame);
+  gfxRect region = UserSpaceToFilterSpace(feArea);
 
   if (!fE->HasAttr(kNameSpaceID_None, nsGkAtoms::x))
     region.pos.x = defaultFilterSubregion.X();
@@ -340,19 +324,52 @@ nsSVGFilterInstance::ComputeUnionOfAllNeededBoxes()
 nsresult
 nsSVGFilterInstance::BuildSourceImages()
 {
-  if (mSourceColorAlpha.mResultNeededBox.IsEmpty() &&
-      mSourceAlpha.mResultNeededBox.IsEmpty())
+  nsIntRect neededRect;
+  neededRect.UnionRect(mSourceColorAlpha.mResultNeededBox,
+                       mSourceAlpha.mResultNeededBox);
+  if (neededRect.IsEmpty())
     return NS_OK;
 
   nsRefPtr<gfxImageSurface> sourceColorAlpha = CreateImage();
   if (!sourceColorAlpha)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsSVGRenderState tmpState(sourceColorAlpha);
-  nsresult rv = mTargetFrame->PaintSVG(&tmpState, nsnull);
-  if (NS_FAILED(rv))
-    return rv;
+  {
+    // Paint to an offscreen surface first, then copy it to an image
+    // surface. This can be faster especially when the stuff we're painting
+    // contains native themes.
+    nsRefPtr<gfxASurface> offscreen =
+      gfxPlatform::GetPlatform()->CreateOffscreenSurface(
+              gfxIntSize(mSurfaceRect.width, mSurfaceRect.height),
+              gfxASurface::ImageFormatARGB32);
+    if (!offscreen || offscreen->CairoStatus())
+      return NS_ERROR_OUT_OF_MEMORY;
+    offscreen->SetDeviceOffset(gfxPoint(-mSurfaceRect.x, -mSurfaceRect.y));
+  
+    nsSVGRenderState tmpState(offscreen);
+    nsCOMPtr<nsIDOMSVGMatrix> userSpaceToFilterSpaceTransform
+      = GetUserSpaceToFilterSpaceTransform();
+    if (!userSpaceToFilterSpaceTransform)
+      return NS_ERROR_OUT_OF_MEMORY;
 
+    gfxMatrix m =
+      nsSVGUtils::ConvertSVGMatrixToThebes(userSpaceToFilterSpaceTransform);
+    gfxRect r(neededRect.x, neededRect.y, neededRect.width, neededRect.height);
+    m.Invert();
+    r = m.TransformBounds(r);
+    r.RoundOut();
+    nsIntRect dirty;
+    nsresult rv = nsSVGUtils::GfxRectToIntRect(r, &dirty);
+    if (NS_FAILED(rv))
+      return rv;
+    mPaintCallback->Paint(&tmpState, mTargetFrame, &dirty,
+                          userSpaceToFilterSpaceTransform);
+
+    gfxContext copyContext(sourceColorAlpha);
+    copyContext.SetSource(offscreen);
+    copyContext.Paint();
+  }
+  
   if (!mSourceColorAlpha.mResultNeededBox.IsEmpty()) {
     NS_ASSERTION(mSourceColorAlpha.mImageUsers > 0, "Some user must have needed this");
     mSourceColorAlpha.mImage.mImage = sourceColorAlpha;
@@ -526,5 +543,52 @@ nsSVGFilterInstance::ComputeOutputDirtyRect(nsIntRect* aDirty)
 
   PrimitiveInfo* result = &mPrimitives[mPrimitives.Length() - 1];
   *aDirty = result->mResultChangeBox;
+  return NS_OK;
+}
+
+nsresult
+nsSVGFilterInstance::ComputeSourceNeededRect(nsIntRect* aDirty)
+{
+  nsresult rv = BuildSources();
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = BuildPrimitives();
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (mPrimitives.IsEmpty()) {
+    // Nothing should be rendered, so nothing is needed.
+    return NS_OK;
+  }
+
+  ComputeResultBoundingBoxes();
+  ComputeNeededBoxes();
+  aDirty->UnionRect(mSourceColorAlpha.mResultNeededBox,
+                    mSourceAlpha.mResultNeededBox);
+  return NS_OK;
+}
+
+nsresult
+nsSVGFilterInstance::ComputeOutputBBox(nsIntRect* aDirty)
+{
+  nsresult rv = BuildSources();
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = BuildPrimitives();
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (mPrimitives.IsEmpty()) {
+    // Nothing should be rendered.
+    *aDirty = nsIntRect();
+    return NS_OK;
+  }
+
+  ComputeResultBoundingBoxes();
+
+  PrimitiveInfo* result = &mPrimitives[mPrimitives.Length() - 1];
+  *aDirty = result->mResultBoundingBox;
   return NS_OK;
 }

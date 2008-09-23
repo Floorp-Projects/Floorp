@@ -3345,65 +3345,64 @@ nsHTMLDocument::EditingStateChanged()
   }
 
   PRBool makeWindowEditable = mEditingState == eOff;
-  if (makeWindowEditable) {
-    // Editing is being turned on (through designMode or contentEditable)
-    // Turn on editor.
-    // XXX This can cause flushing which can change the editing state, so make
-    //     sure to avoid recursing.
-    EditingState oldState = mEditingState;
-    mEditingState = eSettingUp;
-
-    rv = editSession->MakeWindowEditable(window, "html", PR_FALSE, PR_FALSE,
-                                         PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mEditingState = oldState;
-  }
-
-  // XXX Need to call TearDownEditorOnWindow for all failures.
-  nsCOMPtr<nsIEditorDocShell> editorDocShell =
-    do_QueryInterface(docshell, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIEditor> editor;
-  editorDocShell->GetEditor(getter_AddRefs(editor));
-  if (!editor)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
-
-  // Should we update the editable state of all the nodes in the document? We
-  // need to do this when the designMode value changes, as that overrides
-  // specific states on the elements.
   PRBool updateState;
-
   PRBool spellRecheckAll = PR_FALSE;
-  if (designMode) {
-    // designMode is being turned on (overrides contentEditable).
-    editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
+  nsCOMPtr<nsIEditor> editor;
 
-    // Disable scripting and plugins.
-    rv = editSession->DisableJSAndPlugins(window);
+  {
+    nsAutoEditingState push(this, eSettingUp);
+
+    if (makeWindowEditable) {
+      // Editing is being turned on (through designMode or contentEditable)
+      // Turn on editor.
+      // XXX This can cause flushing which can change the editing state, so make
+      //     sure to avoid recursing.
+      rv = editSession->MakeWindowEditable(window, "html", PR_FALSE, PR_FALSE,
+                                           PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // XXX Need to call TearDownEditorOnWindow for all failures.
+    nsCOMPtr<nsIEditorDocShell> editorDocShell =
+      do_QueryInterface(docshell, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    updateState = PR_TRUE;
-    spellRecheckAll = mEditingState == eContentEditable;
-  }
-  else if (mEditingState == eDesignMode) {
-    // designMode is being turned off (contentEditable is still on).
-    editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
+    editorDocShell->GetEditor(getter_AddRefs(editor));
+    if (!editor)
+      return NS_ERROR_FAILURE;
 
-    rv = editSession->RestoreJSAndPlugins(window);
+    nsCOMPtr<nsIEditorStyleSheets> editorss = do_QueryInterface(editor, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    updateState = PR_TRUE;
-  }
-  else {
-    // contentEditable is being turned on (and designMode is off).
-    updateState = PR_FALSE;
+    editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/contenteditable.css"));
+
+    // Should we update the editable state of all the nodes in the document? We
+    // need to do this when the designMode value changes, as that overrides
+    // specific states on the elements.
+    if (designMode) {
+      // designMode is being turned on (overrides contentEditable).
+      editorss->AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
+
+      // Disable scripting and plugins.
+      rv = editSession->DisableJSAndPlugins(window);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      updateState = PR_TRUE;
+      spellRecheckAll = mEditingState == eContentEditable;
+    }
+    else if (mEditingState == eDesignMode) {
+      // designMode is being turned off (contentEditable is still on).
+      editorss->RemoveOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/designmode.css"));
+
+      rv = editSession->RestoreJSAndPlugins(window);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      updateState = PR_TRUE;
+    }
+    else {
+      // contentEditable is being turned on (and designMode is off).
+      updateState = PR_FALSE;
+    }
   }
 
   mEditingState = newState;
@@ -4107,3 +4106,20 @@ nsHTMLDocument::CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
                                 aDocumentDefaultType, aResult);
 }
 #endif
+
+nsresult
+nsHTMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+{
+  NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
+               "Can't import this document into another document!");
+
+  nsRefPtr<nsHTMLDocument> clone = new nsHTMLDocument();
+  NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = CloneDocHelper(clone.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // State from nsHTMLDocument
+  clone->mLoadFlags = mLoadFlags;
+
+  return CallQueryInterface(clone.get(), aResult);
+}

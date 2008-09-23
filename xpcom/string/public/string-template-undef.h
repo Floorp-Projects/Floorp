@@ -39,9 +39,6 @@
 #undef CharT
 #undef CharT_is_PRUnichar
 #undef CharT_is_char
-#undef nsTObsoleteAString_CharT
-#undef nsTObsoleteAStringThunk_CharT
-#undef nsTAString_CharT
 #undef nsTAString_IncompatibleCharT
 #undef nsTString_CharT
 #undef nsTFixedString_CharT

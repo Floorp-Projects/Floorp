@@ -462,6 +462,13 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         case 'j':
             JS_ToggleOptions(cx, JSOPTION_JIT);
+#if defined(JS_TRACER) && defined(DEBUG)
+extern struct JSClass jitstats_class;
+extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
+            js_InitJITStatsClass(cx, JS_GetGlobalObject(cx));
+            JS_DefineObject(cx, JS_GetGlobalObject(cx), "tracemonkey",
+                            &jitstats_class, NULL, 0);
+#endif
             break;
             
         case 'o':
@@ -2910,7 +2917,7 @@ static const char *const shell_help_messages[] = {
 "stats([string ...])      Dump 'arena', 'atom', 'global' stats",
 #endif
 #ifdef TEST_CVTARGS
-"cvtargs(arg1..., arg12)  Test argument formater",
+"cvtargs(arg1..., arg12)  Test argument formatter",
 #endif
 "build()                  Show build date and time",
 "clear([obj])             Clear properties of object",

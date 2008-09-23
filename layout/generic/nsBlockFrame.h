@@ -187,7 +187,7 @@ public:
                               const nsDisplayListSet& aLists);
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                  PRBool aImmediate);
+                                  PRUint32 aFlags);
   virtual nsIAtom* GetType() const;
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {

@@ -88,7 +88,7 @@ nsSVGContainerFrame::Init(nsIContent* aContent,
                           nsIFrame* aParent,
                           nsIFrame* aPrevInFlow)
 {
-  AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
+  AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD | NS_STATE_SVG_PROPAGATE_TRANSFORM);
   nsresult rv = nsSVGContainerFrameBase::Init(aContent, aParent, aPrevInFlow);
   return rv;
 }
@@ -98,6 +98,7 @@ nsSVGDisplayContainerFrame::Init(nsIContent* aContent,
                                  nsIFrame* aParent,
                                  nsIFrame* aPrevInFlow)
 {
+  AddStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
   if (!(GetStateBits() & NS_STATE_IS_OUTER_SVG)) {
     AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
   }
@@ -276,4 +277,21 @@ NS_IMETHODIMP
 nsSVGDisplayContainerFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   return nsSVGUtils::GetBBox(&mFrames, _retval);
+}
+
+NS_IMETHODIMP
+nsSVGDisplayContainerFrame::SetMatrixPropagation(PRBool aPropagate)
+{
+  if (aPropagate) {
+    AddStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
+  } else {
+    RemoveStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
+  }
+  return NS_OK;
+}
+
+PRBool
+nsSVGDisplayContainerFrame::GetMatrixPropagation()
+{
+  return (GetStateBits() & NS_STATE_SVG_PROPAGATE_TRANSFORM) != 0;
 }

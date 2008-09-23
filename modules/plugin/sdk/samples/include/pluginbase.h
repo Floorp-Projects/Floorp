@@ -44,8 +44,8 @@ struct nsPluginCreateData
 {
   NPP instance;
   NPMIMEType type; 
-  uint16 mode; 
-  int16 argc; 
+  uint16_t mode; 
+  int16_t argc; 
   char** argn; 
   char** argv; 
   NPSavedData* saved;
@@ -64,14 +64,14 @@ public:
   // class as needed
   virtual NPError SetWindow(NPWindow* pNPWindow)                    { return NPERR_NO_ERROR; }
   virtual NPError NewStream(NPMIMEType type, NPStream* stream, 
-                            NPBool seekable, uint16* stype)         { return NPERR_NO_ERROR; }
+                            NPBool seekable, uint16_t* stype)       { return NPERR_NO_ERROR; }
   virtual NPError DestroyStream(NPStream *stream, NPError reason)   { return NPERR_NO_ERROR; }
   virtual void    StreamAsFile(NPStream* stream, const char* fname) { return; }
-  virtual int32   WriteReady(NPStream *stream)                      { return 0x0fffffff; }
-  virtual int32   Write(NPStream *stream, int32 offset, 
-                        int32 len, void *buffer)                    { return len; }
+  virtual int32_t WriteReady(NPStream *stream)                      { return 0x0fffffff; }
+  virtual int32_t Write(NPStream *stream, int32_t offset, 
+                        int32_t len, void *buffer)                  { return len; }
   virtual void    Print(NPPrint* printInfo)                         { return; }
-  virtual uint16  HandleEvent(void* event)                          { return 0; }
+  virtual uint16_t HandleEvent(void* event)                         { return 0; }
   virtual void    URLNotify(const char* url, NPReason reason, 
                             void* notifyData)                       { return; }
   virtual NPError GetValue(NPPVariable variable, void *value)       { return NPERR_NO_ERROR; }

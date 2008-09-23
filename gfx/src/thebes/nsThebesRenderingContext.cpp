@@ -98,8 +98,6 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxASurface *aThebesS
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p thebesSurface %p\n", this, aContext, aThebesSurface));
 
-    nsThebesDeviceContext *thebesDC = static_cast<nsThebesDeviceContext*>(aContext);
-
     mDeviceContext = aContext;
     mWidget = nsnull;
 
@@ -125,8 +123,6 @@ NS_IMETHODIMP
 nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p widget %p\n", this, aContext, aWidget));
-
-    nsThebesDeviceContext *thebesDC = static_cast<nsThebesDeviceContext*>(aContext);
 
     mDeviceContext = aContext;
     mWidget = aWidget;

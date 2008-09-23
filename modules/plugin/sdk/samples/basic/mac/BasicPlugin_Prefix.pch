@@ -1,0 +1,5 @@
+//
+// Prefix header for all source files of the 'BasicPlugin' target in the 'BasicPlugin' project.
+//
+
+#include <Carbon/Carbon.h>

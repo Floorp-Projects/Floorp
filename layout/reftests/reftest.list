@@ -84,6 +84,9 @@ include pagination/reftest.list
 # svg/
 include svg/reftest.list
 
+# svg-integration/
+include svg-integration/reftest.list
+
 # table-background/
 include table-background/reftest.list
 
@@ -107,6 +110,9 @@ include text-shadow/reftest.list
 
 # text-transform/
 include text-transform/reftest.list
+
+# -moz-transform/
+include transform/reftest.list
 
 # xul-document-load/
 include xul-document-load/reftest.list

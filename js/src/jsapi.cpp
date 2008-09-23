@@ -2574,7 +2574,7 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32 value)
         rt->gcMaxMallocBytes = value;
         break;
       case JSGC_STACKPOOL_LIFESPAN:
-        rt->gcStackPoolLifespan = value;
+        rt->gcEmptyArenaPoolLifespan = value;
         break;
     }
 }

@@ -73,59 +73,86 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
   <script type="application/javascript"><![CDATA[
 
 /** Test for Bug 378028 **/
+/*   and for Bug 350471 **/
 SimpleTest.waitForExplicitFinish();
+
+/* There are three kinds of scroll events:
+    1. line scrolls without hasPixels
+    2. line scrolls with hasPixels
+    3. pixel scrolls
+   Listboxes and arrowscrollboxes (DOM event scrolling) should only react to
+   line scrolls and ignore hasPixels.
+   Richlistboxes ("native" scrolling) should be scrollable by kind 1 and 3.
+*/
+const kinds = [
+  { eventType: "DOMMouseScroll", hasPixels: false, shouldScrollDOM: true, shouldScrollNative: true },
+  { eventType: "DOMMouseScroll", hasPixels: true, shouldScrollDOM: true, shouldScrollNative: false },
+  { eventType: "MozMousePixelScroll", hasPixels: false, shouldScrollDOM: false, shouldScrollNative: true }
+];
+
 
 function testListbox(id)
 {
   var listbox = document.getElementById(id);
   
-  function helper(aStart, aDelta)
+  function helper(aStart, aDelta, aKind)
   {
     listbox.scrollToIndex(aStart);
     synthesizeMouseScroll(listbox, 10, 10,
-                          {axis:"vertical", delta:aDelta});
-    is(listbox.getIndexOfFirstVisibleRow(), aStart + aDelta,
-       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta);
+                          {axis:"vertical", delta:aDelta, type:aKind.eventType,
+                           hasPixels:aKind.hasPixels});
+    is(listbox.getIndexOfFirstVisibleRow(), aKind.shouldScrollDOM ? aStart + aDelta : aStart,
+       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta
+       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
 
     // Check that horizontal scrolling has no effect
     listbox.scrollToIndex(aStart);
     synthesizeMouseScroll(listbox, 10, 10,
-                          {axis:"horizontal", delta:aDelta});  
+                          {axis:"horizontal", delta:aDelta, type:aKind.eventType,
+                           hasPixels:aKind.hasPixels});  
     is(listbox.getIndexOfFirstVisibleRow(), aStart,
-       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta);
+       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta
+       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
   }
-  
-  helper(2, -1);
-  helper(2, 1);
-  helper(2, -2);
-  helper(2, 2);
+  kinds.forEach(function(aKind) {
+    helper(2, -1, aKind);
+    helper(2, 1, aKind);
+    helper(2, -2, aKind);
+    helper(2, 2, aKind);
+  });
 }
 
 function testRichListbox(id)
 {
   var listbox = document.getElementById(id);
   
-  function helper(aStart, aDelta, aExpected)
+  function helper(aStart, aDelta, aExpected, aKind)
   {
     listbox.scrollToIndex(aStart);
     synthesizeMouseScroll(listbox, 10, 10,
-                          {axis:"vertical", delta:aDelta});
-    is(listbox.getIndexOfFirstVisibleRow(), aExpected,
-       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta);
+                          {axis:"vertical", delta:aDelta, type:aKind.eventType,
+                           hasPixels:aKind.hasPixels});
+    is(listbox.getIndexOfFirstVisibleRow(), aKind.shouldScrollNative ? aExpected : aStart,
+       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta
+       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
 
     // Check that horizontal scrolling has no effect
     listbox.scrollToIndex(aStart);
     synthesizeMouseScroll(listbox, 10, 10,
-                          {axis:"horizontal", delta:aDelta});  
+                          {axis:"horizontal", delta:aDelta, type:aKind.eventType,
+                           hasPixels:aKind.hasPixels});  
     is(listbox.getIndexOfFirstVisibleRow(), aStart,
-       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta);
+       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta
+       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
   }
   
   // richlistbox currently uses native XUL scrolling, so the "line"
   // amounts don't necessarily correspond 1-to-1 with listbox items. So
   // we just check that scrolling up/down a lot hits the first/last items
-  helper(2, -100, 0);
-  helper(2, 100, listbox.getRowCount() - listbox.getNumberOfVisibleRows());
+  kinds.forEach(function(aKind) {
+    helper(2, -100, 0, aKind);
+    helper(2, 100, listbox.getRowCount() - listbox.getNumberOfVisibleRows(), aKind);
+  });
 }
 
 function testArrowScrollbox(id)
@@ -134,7 +161,7 @@ function testArrowScrollbox(id)
   var scrollBoxObject = scrollbox.scrollBoxObject;
   var orient = scrollbox.getAttribute("orient");
   
-  function helper(aStart, aDelta, aExpected)
+  function helper(aStart, aDelta, aExpected, aKind)
   {
     var xpos = {};
     var ypos = {};
@@ -142,23 +169,27 @@ function testArrowScrollbox(id)
 
     scrollBoxObject.scrollTo(aStart, aStart);
     synthesizeMouseScroll(scrollbox, 5, 5,
-                          {axis:"vertical", delta:aDelta});
+                          {axis:"vertical", delta:aDelta, type:aKind.eventType,
+                           hasPixels:aKind.hasPixels});
     scrollBoxObject.getPosition(xpos, ypos);
     // Note, vertical mouse scrolling is allowed to scroll horizontal
     // arrowscrollboxes, because many users have no horizontal mouse scroll
     // capability
-    is(pos.value, aExpected,
-       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta);
+    is(pos.value, aKind.shouldScrollDOM ? aExpected : aStart,
+       "mouse-scroll of '" + id + "' vertical starting " + aStart + " delta " + aDelta
+       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
 
     scrollBoxObject.scrollTo(aStart, aStart);
     synthesizeMouseScroll(scrollbox, 5, 5,
-                          {axis:"horizontal", delta:aDelta});
+                          {axis:"horizontal", delta:aDelta, type:aKind.eventType,
+                           hasPixels:aKind.hasPixels});
     // horizontal mouse scrolling is never allowed to scroll vertical
     // arrowscrollboxes
     scrollBoxObject.getPosition(xpos, ypos);
-    var expected = orient == "horizontal" ? aExpected : aStart;
+    var expected = (aKind.shouldScrollDOM && (orient == "horizontal")) ? aExpected : aStart;
     is(pos.value, expected,
-       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta);
+       "mouse-scroll of '" + id + "' horizontal starting " + aStart + " delta " + aDelta
+       + " eventType " + aKind.eventType + " hasPixels " + aKind.hasPixels);
   }
 
   var scrolledWidth = {};
@@ -168,8 +199,10 @@ function testArrowScrollbox(id)
   var scrollMaxY = scrolledHeight.value - scrollBoxObject.height;
   var scrollMax = orient == "horizontal" ? scrollMaxX : scrollMaxY;
 
-  helper(50, -100, 0);
-  helper(50, 100, scrollMax);
+  kinds.forEach(function(aKind) {
+    helper(50, -100, 0, aKind);
+    helper(50, 100, scrollMax, aKind);
+  });
 }
 
 function runTests()

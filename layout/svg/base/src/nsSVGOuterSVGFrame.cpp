@@ -419,7 +419,10 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
     // Now that all viewport establishing descendants have their correct size,
     // tell our foreignObject descendants to reflow their children.
     if (mForeignObjectHash.IsInitialized()) {
-      PRUint32 count = mForeignObjectHash.EnumerateEntries(ReflowForeignObject, nsnull);
+#ifdef DEBUG
+      PRUint32 count =
+#endif
+        mForeignObjectHash.EnumerateEntries(ReflowForeignObject, nsnull);
       NS_ASSERTION(count == mForeignObjectHash.Count(),
                    "We didn't reflow all our nsSVGForeignObjectFrames!");
     }
@@ -592,13 +595,22 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
     // odd document is probably no worse than printing horribly for all
     // documents. Better to fix things so we don't need fallback.
     nsIFrame* frame = this;
+    nsPresContext* presContext = PresContext();
+    PRUint32 flags = 0;
     while (PR_TRUE) {
       nsIFrame* next = nsLayoutUtils::GetCrossDocParentFrame(frame);
       if (!next)
         break;
+      if (frame->GetParent() != next) {
+        // We're crossing a document boundary. Logically, the invalidation is
+        // being triggered by a subdocument of the root document. This will
+        // prevent an untrusted root document being told about invalidation
+        // that happened because a child was using SVG...
+        flags |= INVALIDATE_CROSS_DOC;
+      }
       frame = next;
     }
-    frame->Invalidate(nsRect(nsPoint(0, 0), frame->GetSize()));
+    frame->InvalidateWithFlags(nsRect(nsPoint(0, 0), frame->GetSize()), flags);
   }
 #endif
 

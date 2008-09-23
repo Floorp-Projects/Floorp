@@ -47,11 +47,6 @@
 #include "EmbedPrivate.h"
 #include "EmbedWindow.h"
 
-#ifdef MOZ_GTKPASSWORD_INTERFACE
-#include "EmbedPasswordMgr.h"
-#include "nsIPassword.h"
-#endif
-
 #include "EmbedGlobalHistory.h"
 //#include "EmbedDownloadMgr.h"
 // so we can do our get_nsIWebBrowser later...
@@ -387,72 +382,6 @@ gtk_moz_embed_common_save_prefs()
     return FALSE;
   nsresult rv = prefService->SavePrefFile (nsnull);
   return NS_SUCCEEDED(rv);
-}
-
-gint
-gtk_moz_embed_common_get_logins(const char* uri, GList **list)
-{
-  gint ret = 0;
-#ifdef MOZ_GTKPASSWORD_INTERFACE
-  EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
-  nsCOMPtr<nsISimpleEnumerator> passwordEnumerator;
-  nsresult result = passwordManager->GetEnumerator(getter_AddRefs(passwordEnumerator));
-  PRBool enumResult;
-  for (passwordEnumerator->HasMoreElements(&enumResult) ;
-       enumResult == PR_TRUE ;
-       passwordEnumerator->HasMoreElements(&enumResult))
-  {
-    nsCOMPtr<nsIPassword> nsPassword;
-    result = passwordEnumerator->GetNext(getter_AddRefs(nsPassword));
-    if (NS_FAILED(result)) {
-      /* this almost certainly leaks logins */
-      return ret;
-    }
-    nsCString host;
-    nsPassword->GetHost(host);
-    nsCString nsCURI(uri);
-    if (uri) {
-      if (!StringBeginsWith(nsCURI, host)
-          // && !StringBeginsWith(host, nsCURI)
-          )
-        continue;
-    } else if (!passwordManager->IsEqualToLastHostQuery(host))
-      continue;
-
-    if (list) {
-      nsString unicodeName;
-      nsString unicodePassword;
-      nsPassword->GetUser(unicodeName);
-      nsPassword->GetPassword(unicodePassword);
-      GtkMozLogin * login = g_new0(GtkMozLogin, 1);
-      UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(login);
-      login->user = ToNewUTF8String(unicodeName);
-      ALLOC_NOT_CHECKED(login->user);
-      login->pass = ToNewUTF8String(unicodePassword);
-      ALLOC_NOT_CHECKED(login->pass);
-      login->host = NS_strdup(host.get());
-      ALLOC_NOT_CHECKED(login->host);
-      login->index = ret;
-      *list = g_list_append(*list, login);
-    }
-    ret++;
-  }
-#endif
-  return ret;
-}
-
-gboolean
-gtk_moz_embed_common_remove_passwords(const gchar *host, const gchar *user, gint index)
-{
-#ifdef MOZ_GTKPASSWORD_INTERFACE
-  EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
-  if (index >= 0) {
-    passwordManager->RemovePasswordsByIndex(index);
-  } else {
-    passwordManager->RemovePasswords(host, user);
-  }
-#endif
-  return TRUE;
 }
 
 gint

@@ -191,8 +191,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   // Create an hr
   nsCOMPtr<nsINodeInfo> hrInfo;
-  nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_None,
-                     getter_AddRefs(hrInfo));
+  hrInfo = nimgr->GetNodeInfo(nsGkAtoms::hr, nsnull, kNameSpaceID_None);
 
   NS_NewHTMLElement(getter_AddRefs(mPreHr), hrInfo, PR_FALSE);
   if (!mPreHr || !aElements.AppendElement(mPreHr))
@@ -210,8 +209,7 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   // Create text input field
   nsCOMPtr<nsINodeInfo> inputInfo;
-  nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_None,
-                     getter_AddRefs(inputInfo));
+  inputInfo = nimgr->GetNodeInfo(nsGkAtoms::input, nsnull, kNameSpaceID_None);
 
   NS_NewHTMLElement(getter_AddRefs(mInputContent), inputInfo, PR_FALSE);
   if (!mInputContent)

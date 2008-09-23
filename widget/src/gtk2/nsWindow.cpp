@@ -38,6 +38,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_PLATFORM_HILDON
+#define MAEMO_CHANGES
+#include <gtk/gtkimcontext.h>
+#endif
+
 #include "prlink.h"
 
 #include "nsWindow.h"
@@ -285,6 +290,9 @@ static GdkEventKey *gKeyEvent = NULL;
 static PRBool       gKeyEventCommitted = PR_FALSE;
 static PRBool       gKeyEventChanged = PR_FALSE;
 static PRBool       gIMESuppressCommit = PR_FALSE;
+#ifdef MOZ_PLATFORM_HILDON
+static PRBool       gIMEVirtualKeyboardOpened = PR_FALSE;
+#endif
 
 static void IM_commit_cb              (GtkIMContext *aContext,
                                        const gchar *aString,
@@ -330,6 +338,20 @@ typedef void (*_gdk_window_set_urgency_hint_fn)(GdkWindow *window,
 
 // cursor cache
 static GdkCursor *gCursorCache[eCursorCount];
+
+// Global update pixmap
+static PRBool gUseBufferPixmap = PR_FALSE;
+static GdkPixmap *gBufferPixmap = nsnull;
+static gfxIntSize gBufferPixmapSize(0,0);
+static gfxIntSize gBufferPixmapMaxSize(0,0);
+static int gBufferPixmapUsageCount = 0;
+
+// imported in nsWidgetFactory.cpp
+PRBool gDisableNativeTheme = PR_FALSE;
+
+// If this is 1, then a 24bpp buffer surface is always
+// created for exposes, even if the display has a different depth
+static PRBool gForce24bpp = PR_FALSE;
 
 nsWindow::nsWindow()
 {
@@ -393,6 +415,17 @@ nsWindow::nsWindow()
     mDFB            = NULL;
     mDFBLayer       = NULL;
 #endif
+
+    
+    if (gUseBufferPixmap) {
+        if (gBufferPixmapMaxSize.width == 0) {
+            gBufferPixmapMaxSize.width = gdk_screen_width();
+            gBufferPixmapMaxSize.height = gdk_screen_height();
+        }
+
+        gBufferPixmapUsageCount++;
+    }
+
 }
 
 nsWindow::~nsWindow()
@@ -467,7 +500,19 @@ nsWindow::Destroy(void)
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
     mIsDestroyed = PR_TRUE;
     mCreated = PR_FALSE;
-    
+
+    if (gUseBufferPixmap &&
+        gBufferPixmapUsageCount &&
+        --gBufferPixmapUsageCount == 0)
+    {
+        if (gBufferPixmap)
+            g_object_unref(G_OBJECT(gBufferPixmap));
+
+        gBufferPixmap = nsnull;
+        gBufferPixmapSize.width = 0;
+        gBufferPixmapSize.height = 0;
+    }
+
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),
                                          (gpointer)G_CALLBACK(theme_changed_cb),
                                          this);
@@ -1771,7 +1816,10 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     PRBool translucent;
     translucent = eTransparencyTransparent == GetTransparencyMode();
     nsIntRect boundsRect;
+
     GdkPixmap* bufferPixmap = nsnull;
+    gfxIntSize bufferPixmapSize;
+
     nsRefPtr<gfxASurface> bufferPixmapSurface;
 
     updateRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y,
@@ -1799,20 +1847,56 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     if (translucent) {
         ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
     } else {
-#ifdef MOZ_ENABLE_GLITZ
-        ctx->PushGroup(gfxASurface::CONTENT_COLOR);
-#else // MOZ_ENABLE_GLITZ
         // Instead of just doing PushGroup we're going to do a little dance
         // to ensure that GDK creates the pixmap, so it doesn't go all
         // XGetGeometry on us in gdk_pixmap_foreign_new_for_display when we
         // paint native themes
-        GdkDrawable* d = GDK_DRAWABLE(mDrawingarea->inner_window);
-        gint depth = gdk_drawable_get_depth(d);
-        bufferPixmap = gdk_pixmap_new(d, boundsRect.width, boundsRect.height, depth);
+        gint depth;
+
+        if (gForce24bpp) {
+            depth = 24; // 24 always
+        } else {
+            depth = gdk_drawable_get_depth(GDK_DRAWABLE(mDrawingarea->inner_window));
+        }
+
+        if (!gUseBufferPixmap ||
+            boundsRect.width > gBufferPixmapMaxSize.width ||
+            boundsRect.height > gBufferPixmapMaxSize.height)
+        {
+            // create a one-off always if we're not using the global pixmap
+            // if gUseBufferPixmap == TRUE, who's redrawing an area bigger than the screen?
+            bufferPixmap = gdk_pixmap_new(GDK_DRAWABLE(mDrawingarea->inner_window),
+                                          boundsRect.width, boundsRect.height,
+                                          depth);
+            bufferPixmapSize.width = boundsRect.width;
+            bufferPixmapSize.height = boundsRect.height;
+        } else if (boundsRect.width > gBufferPixmapSize.width ||
+                   boundsRect.height > gBufferPixmapSize.height)
+        {
+            // grow the global pixmap
+            if (gBufferPixmap)
+                g_object_unref(G_OBJECT(gBufferPixmap));
+
+            gBufferPixmapSize.width = PR_MAX(gBufferPixmapSize.width, boundsRect.width);
+            gBufferPixmapSize.height = PR_MAX(gBufferPixmapSize.height, boundsRect.height);
+
+            gBufferPixmap = gdk_pixmap_new(GDK_DRAWABLE(mDrawingarea->inner_window),
+                                           gBufferPixmapSize.width, gBufferPixmapSize.height,
+                                           depth);
+
+            // use the newly-resized global
+            bufferPixmap = gBufferPixmap;
+            bufferPixmapSize = gBufferPixmapSize;
+        }  else {
+            // global's big enough, just use it
+            bufferPixmap = gBufferPixmap;
+            bufferPixmapSize = gBufferPixmapSize;
+        }
 
         if (bufferPixmap) {
             bufferPixmapSurface = GetSurfaceForGdkDrawable(GDK_DRAWABLE(bufferPixmap),
-                                                           boundsRect.Size());
+                                                           nsSize(bufferPixmapSize.width, bufferPixmapSize.height));
+
             if (bufferPixmapSurface && bufferPixmapSurface->CairoStatus()) {
                 bufferPixmapSurface = nsnull;
             }
@@ -1837,7 +1921,6 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                 }
             }
         }
-#endif // MOZ_ENABLE_GLITZ
     }
 
 #if 0
@@ -1891,30 +1974,21 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                                                          img->Data(), img->Stride());
                 }
             } else {
-#ifdef MOZ_ENABLE_GLITZ
-                ctx->PopGroupToSource();
-                ctx->Paint();
-#else // MOZ_ENABLE_GLITZ
                 if (bufferPixmapSurface) {
+                    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
                     ctx->SetSource(bufferPixmapSurface);
                     ctx->Paint();
                 }
-#endif // MOZ_ENABLE_GLITZ
             }
         } else {
             // ignore
-            if (translucent) {
+            if (translucent)
                 ctx->PopGroup();
-            } else {
-#ifdef MOZ_ENABLE_GLITZ
-                ctx->PopGroup();
-#endif // MOZ_ENABLE_GLITZ
-            }
         }
 
-        if (bufferPixmap) {
+        // if we had to allocate a local pixmap, free it here
+        if (bufferPixmap && bufferPixmap != gBufferPixmap)
             g_object_unref(G_OBJECT(bufferPixmap));
-        }
 
         ctx->Restore();
     }
@@ -2790,6 +2864,17 @@ nsWindow::OnVisibilityNotifyEvent(GtkWidget *aWidget,
     case GDK_VISIBILITY_UNOBSCURED:
     case GDK_VISIBILITY_PARTIAL:
         mIsVisible = PR_TRUE;
+#ifdef MOZ_PLATFORM_HILDON
+#ifdef USE_XIM
+        // In Hildon/Maemo, a browser window will get into 'patially visible' state wheneven an
+        // autocomplete feature is dropped down (from urlbar or from an entry form completion),
+        // and there are no much further ways for that to happen in the plaftorm. In such cases, if hildon
+        // virtual keyboard is up, we can not grab focus to any dropdown list. Reason: nsWindow::EnsureGrabs()
+        // calls gdk_pointer_grab() which grabs the pointer (usually a mouse) so that all events are passed
+        // to this it until the pointer is ungrabbed.
+        if(!gIMEVirtualKeyboardOpened)
+#endif // USE_XIM
+#endif // MOZ_PLATFORM_HILDON
         // if we have to retry the grab, retry it.
         EnsureGrabs();
         break;
@@ -3568,7 +3653,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         //check if accessibility enabled/disabled by environment variable
         const char *envValue = PR_GetEnv(sAccEnv);
         if (envValue) {
-            sAccessibilityEnabled = atoi(envValue);
+            sAccessibilityEnabled = atoi(envValue) != 0;
             LOG(("Accessibility Env %s=%s\n", sAccEnv, envValue));
         }
         //check gconf-2 setting
@@ -5268,16 +5353,28 @@ drag_data_received_event_cb(GtkWidget *aWidget,
 nsresult
 initialize_prefs(void)
 {
-    // check to see if we should set our raise pref
     nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefs)
         return NS_OK;
 
     PRBool val = PR_TRUE;
     nsresult rv;
+
     rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus", &val);
     if (NS_SUCCEEDED(rv))
         gRaiseWindows = val;
+
+    rv = prefs->GetBoolPref("mozilla.widget.force-24bpp", &val);
+    if (NS_SUCCEEDED(rv))
+        gForce24bpp = val;
+
+    rv = prefs->GetBoolPref("mozilla.widget.use-buffer-pixmap", &val);
+    if (NS_SUCCEEDED(rv))
+        gUseBufferPixmap = val;
+
+    rv = prefs->GetBoolPref("mozilla.widget.disable-native-theme", &val);
+    if (NS_SUCCEEDED(rv))
+        gDisableNativeTheme = val;
 
     return NS_OK;
 }
@@ -6114,6 +6211,16 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
         // Even when aState is not PR_TRUE, we need to set IME focus.
         // Because some IMs are updating the status bar of them in this time.
         focusedWin->IMESetFocus();
+#ifdef MOZ_PLATFORM_HILDON
+        if (mIMEData->mEnabled) {
+            gIMEVirtualKeyboardOpened = PR_TRUE;
+            hildon_gtk_im_context_show (focusedIm);
+        } else {
+            gIMEVirtualKeyboardOpened = PR_FALSE;
+            hildon_gtk_im_context_hide (focusedIm);
+        }
+#endif
+        
     } else {
         if (IsIMEEditableState(mIMEData->mEnabled))
             ResetInputState();
@@ -6472,12 +6579,36 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
                                    const nsSize& aSize)
 {
     GdkVisual* visual = gdk_drawable_get_visual(aDrawable);
-    Visual* xVisual = gdk_x11_visual_get_xvisual(visual);
     Display* xDisplay = gdk_x11_drawable_get_xdisplay(aDrawable);
     Drawable xDrawable = gdk_x11_drawable_get_xid(aDrawable);
 
-    gfxASurface* result = new gfxXlibSurface(xDisplay, xDrawable, xVisual,
-                                       gfxIntSize(aSize.width, aSize.height));
+    gfxASurface* result = nsnull;
+
+    if (visual) {
+        Visual* xVisual = gdk_x11_visual_get_xvisual(visual);
+
+        result = new gfxXlibSurface(xDisplay, xDrawable, xVisual,
+                                    gfxIntSize(aSize.width, aSize.height));
+    } else {
+        // no visual? we must be using an xrender format.  Find a format
+        // for this depth.
+        XRenderPictFormat *pf = NULL;
+        switch (gdk_drawable_get_depth(aDrawable)) {
+            case 32:
+                pf = XRenderFindStandardFormat(xDisplay, PictStandardARGB32);
+                break;
+            case 24:
+                pf = XRenderFindStandardFormat(xDisplay, PictStandardRGB24);
+                break;
+            default:
+                NS_ERROR("Don't know how to handle the given depth!");
+                break;
+        }
+
+        result = new gfxXlibSurface(xDisplay, xDrawable, pf,
+                                    gfxIntSize(aSize.width, aSize.height));
+    }
+
     NS_IF_ADDREF(result);
     return result;
 }

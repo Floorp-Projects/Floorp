@@ -1138,10 +1138,12 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   for (PRInt32 rowCount = 0; rowCount < rows; rowCount ++) {
     nsCOMPtr<nsIDOMNode> rowNode;
     nodeList->Item(rowCount, getter_AddRefs(rowNode));
-    nsCOMPtr<nsIDOMElement> rowElement = do_QueryInterface(rowNode);
+
     nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl;
-    GetComputedStyleDeclaration(EmptyString(), rowElement, getter_AddRefs(styleDecl));
+    GetComputedStyleDeclaration(EmptyString(), rowNode,
+                                getter_AddRefs(styleDecl));
     NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
+
     lastRowColor = color;
     styleDecl->GetPropertyValue(NS_LITERAL_STRING("background-color"), color);
     if (rowCount > 0 && PR_FALSE == lastRowColor.Equals(color)) {

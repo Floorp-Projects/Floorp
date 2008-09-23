@@ -15,10 +15,8 @@ function run_test() {
   catch (e) {
     success = e.result == Cr.NS_ERROR_MALFORMED_URI;
   }
-  if (!success) {
-    // This is failing: bug 431890
-    //do_throw("We didn't throw NS_ERROR_MALFORMED_URI when a space was passed in the hostname!");
-  }
+  if (!success)
+    do_throw("We didn't throw NS_ERROR_MALFORMED_URI when a space was passed in the hostname!");
 
   success = false;
   try {

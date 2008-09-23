@@ -562,6 +562,7 @@ protected:
     PRPackedBool               mObserveErrorPages;
     PRPackedBool               mAllowAuth;
     PRPackedBool               mAllowKeywordFixup;
+    PRPackedBool               mIsOffScreenBrowser;
 
     // This boolean is set to true right before we fire pagehide and generally
     // unset when we embed a new content viewer.  While it's true no navigation
@@ -647,6 +648,11 @@ protected:
 
     // hash of session storages, keyed by domain
     nsInterfaceHashtable<nsCStringHashKey, nsIDOMStorage> mStorages;
+
+    // Index into the SHTransaction list, indicating the previous and current
+    // transaction at the time that this DocShell begins to load
+    PRInt32                    mPreviousTransIndex;
+    PRInt32                    mLoadedTransIndex;
 
     // Editor data, if this document is designMode or contentEditable.
     nsAutoPtr<nsDocShellEditorData> mEditorData;

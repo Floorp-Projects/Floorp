@@ -711,7 +711,6 @@ var BookmarksEventHandler = {
     if (!target._endOptSeparator) {
       // create a separator before options
       target._endOptSeparator = document.createElement("menuseparator");
-      target._endOptSeparator.setAttribute("builder", "end");
       target._endMarker = target.childNodes.length;
       target.appendChild(target._endOptSeparator);
     }
@@ -789,7 +788,8 @@ var BookmarksMenuDropHandler = {
    * state.
    */
   onDragOver: function BMDH_onDragOver(event, flavor, session) {
-    session.canDrop = this.canDrop(event, session);
+    if (!this.canDrop(event, session))
+      event.dataTransfer.effectAllowed = "none";
   },
 
   /**
@@ -812,6 +812,8 @@ var BookmarksMenuDropHandler = {
    *          otherwise.
    */
   canDrop: function BMDH_canDrop(event, session) {
+    PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
+
     var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1);  
     return ip && PlacesControllerDragHelper.canDrop(ip);
   },
@@ -826,9 +828,21 @@ var BookmarksMenuDropHandler = {
    *          The active DragSession
    */
   onDrop: function BMDH_onDrop(event, data, session) {
-    // Put the item at the end of bookmark menu
-    var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1);
+    PlacesControllerDragHelper.currentDataTransfer = event.dataTransfer;
+
+  // Put the item at the end of bookmark menu
+    var ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId, -1,
+                                Ci.nsITreeView.DROP_ON);
     PlacesControllerDragHelper.onDrop(ip);
+  },
+
+  /**
+   * Called when drop target leaves the menu or after a drop.
+   * @param   aEvent
+   *          A drop event
+   */
+  onDragExit: function BMDH_onDragExit(event, session) {
+    PlacesControllerDragHelper.currentDataTransfer = null;
   }
 };
 
@@ -903,8 +917,9 @@ var PlacesMenuDNDController = {
    *`         menu-toolbarbutton), false otherwise.
    */
   _isContainer: function PMDC__isContainer(node) {
-    return node.localName == "menu" || 
-           node.localName == "toolbarbutton" && node.getAttribute("type") == "menu";
+    return node.localName == "menu" ||
+           (node.localName == "toolbarbutton" &&
+            node.getAttribute("type") == "menu");
   },
   
   /**
@@ -1009,62 +1024,3 @@ var PlacesStarButton = {
   onItemVisited: function() { },
   onItemMoved: function() { }
 };
-
-/**
- * Various migration tasks.
- */
-function placesMigrationTasks() {
-  // bug 398914 - move all post-data annotations from URIs to bookmarks
-  // XXX - REMOVE ME FOR BETA 3 (bug 391419)
-  if (gPrefService.getBoolPref("browser.places.migratePostDataAnnotations")) {
-    const annosvc = PlacesUtils.annotations;
-    var bmsvc = PlacesUtils.bookmarks;
-    const oldPostDataAnno = "URIProperties/POSTData";
-    var pages = annosvc.getPagesWithAnnotation(oldPostDataAnno, {});
-    for (let i = 0; i < pages.length; i++) {
-      try {
-        let uri = pages[i];
-        var postData = annosvc.getPageAnnotation(uri, oldPostDataAnno);
-        // We can't know which URI+keyword combo this postdata was for, but
-        // it's very likely that if this URI is bookmarked and has a keyword
-        // *and* the URI has postdata, then this bookmark was using the
-        // postdata. Propagate the annotation to all bookmarks for this URI
-        // just to be safe.
-        let bookmarks = bmsvc.getBookmarkIdsForURI(uri, {});
-        for (let i = 0; i < bookmarks.length; i++) {
-          var keyword = bmsvc.getKeywordForBookmark(bookmarks[i]);
-          if (keyword)
-            annosvc.setItemAnnotation(bookmarks[i], POST_DATA_ANNO, postData, 0, annosvc.EXPIRE_NEVER); 
-        }
-        // Remove the old annotation.
-        annosvc.removePageAnnotation(uri, oldPostDataAnno);
-      } catch(ex) {}
-    }
-    gPrefService.setBoolPref("browser.places.migratePostDataAnnotations", false);
-  }
-
-  if (gPrefService.getBoolPref("browser.places.updateRecentTagsUri")) {
-    var oldUriSpec = "place:folder=TAGS&group=3&queryType=1" +
-                     "&applyOptionsToContainers=1&sort=12&maxResults=10";
-
-    var maxResults = 10;
-    var newUriSpec = "place:type=" + 
-                     Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
-                     "&sort=" + 
-                     Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING +
-                     "&maxResults=" + maxResults;
-                     
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-
-    var oldUri = ios.newURI(oldUriSpec, null, null);
-    var newUri = ios.newURI(newUriSpec, null, null);
-
-    let bmsvc = PlacesUtils.bookmarks;
-    let bookmarks = bmsvc.getBookmarkIdsForURI( oldUri, {});
-    for (let i = 0; i < bookmarks.length; i++) {
-      bmsvc.changeBookmarkURI( bookmarks[i], newUri);
-    }
-    gPrefService.setBoolPref("browser.places.updateRecentTagsUri", false);
-  }
-}

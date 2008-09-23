@@ -652,17 +652,6 @@ class ConvertToUpperCase
         }
   };
 
-#ifdef MOZ_V1_STRING_ABI
-NS_COM
-void
-ToUpperCase( nsACString& aCString )
-  {
-    nsACString::iterator fromBegin, fromEnd;
-    ConvertToUpperCase converter;
-    copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
-  }
-#endif
-
 NS_COM
 void
 ToUpperCase( nsCSubstring& aCString )
@@ -743,17 +732,6 @@ class ConvertToLowerCase
           return aSourceLength;
         }
   };
-
-#ifdef MOZ_V1_STRING_ABI
-NS_COM
-void
-ToLowerCase( nsACString& aCString )
-  {
-    nsACString::iterator fromBegin, fromEnd;
-    ConvertToLowerCase converter;
-    copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
-  }
-#endif
 
 NS_COM
 void

@@ -479,11 +479,17 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   // using the source rather than the displayed image. But if mImage isn't
   // an image, fall through to RenderNode below.
   if (mImage) {
+    nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(dragNode);
+    if (canvas) {
+      return DrawDragForImage(*aPresContext, nsnull, canvas, aScreenX,
+                              aScreenY, aScreenDragRect, aSurface);
+    }
+
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(dragNode);
     // for image nodes, create the drag image from the actual image data
     if (imageLoader) {
-      return DrawDragForImage(*aPresContext, imageLoader, aScreenX, aScreenY,
-                              aScreenDragRect, aSurface);
+      return DrawDragForImage(*aPresContext, imageLoader, nsnull, aScreenX,
+                              aScreenY, aScreenDragRect, aSurface);
     }
   }
 
@@ -512,35 +518,46 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 nsresult
 nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                                     nsIImageLoadingContent* aImageLoader,
+                                    nsICanvasElement* aCanvas,
                                     PRInt32 aScreenX, PRInt32 aScreenY,
                                     nsRect* aScreenDragRect,
                                     gfxASurface** aSurface)
 {
-  nsCOMPtr<imgIRequest> imgRequest;
-  nsresult rv = aImageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                                        getter_AddRefs(imgRequest));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!imgRequest)
-    return NS_ERROR_NOT_AVAILABLE;
+  nsCOMPtr<nsIImage> img;
+  if (aImageLoader) {
+    nsCOMPtr<imgIRequest> imgRequest;
+    nsresult rv = aImageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                                          getter_AddRefs(imgRequest));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!imgRequest)
+      return NS_ERROR_NOT_AVAILABLE;
 
-  nsCOMPtr<imgIContainer> imgContainer;
-  rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!imgContainer)
-    return NS_ERROR_NOT_AVAILABLE;
+    nsCOMPtr<imgIContainer> imgContainer;
+    rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!imgContainer)
+      return NS_ERROR_NOT_AVAILABLE;
 
-  nsCOMPtr<gfxIImageFrame> iframe;
-  imgContainer->GetCurrentFrame(getter_AddRefs(iframe));
-  if (!iframe)
-    return NS_ERROR_FAILURE;
+    nsCOMPtr<gfxIImageFrame> iframe;
+    imgContainer->GetCurrentFrame(getter_AddRefs(iframe));
+    if (!iframe)
+      return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
-  if (!img)
-    return NS_ERROR_FAILURE;
+    img = do_GetInterface(iframe);
+    if (!img)
+      return NS_ERROR_FAILURE;
 
-  // use the size of the image as the size of the drag image
-  imgContainer->GetWidth(&aScreenDragRect->width);
-  imgContainer->GetHeight(&aScreenDragRect->height);
+    // use the size of the image as the size of the drag image
+    imgContainer->GetWidth(&aScreenDragRect->width);
+    imgContainer->GetHeight(&aScreenDragRect->height);
+  }
+  else {
+    NS_ASSERTION(aCanvas, "both image and canvas are null");
+    PRUint32 width, height;
+    aCanvas->GetSize(&width, &height);
+    aScreenDragRect->width = width;
+    aScreenDragRect->height = height;
+  }
 
   nsRect srcRect = *aScreenDragRect;
   srcRect.MoveTo(0, 0);
@@ -585,15 +602,20 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
   deviceContext->CreateRenderingContextInstance(*getter_AddRefs(rc));
   rc->Init(deviceContext, surface);
 
-  // clear the image before drawing
-  gfxContext context(surface);
-  context.SetOperator(gfxContext::OPERATOR_CLEAR);
-  context.Rectangle(gfxRect(0, 0, destRect.width, destRect.height));
-  context.Fill();
+  if (aImageLoader) {
+    // clear the image before drawing
+    gfxContext context(surface);
+    context.SetOperator(gfxContext::OPERATOR_CLEAR);
+    context.Rectangle(gfxRect(0, 0, destRect.width, destRect.height));
+    context.Fill();
 
-  gfxRect inRect = gfxRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height);
-  gfxRect outRect = gfxRect(destRect.x, destRect.y, destRect.width, destRect.height);
-  return img->Draw(*rc, inRect, inRect, outRect);
+    gfxRect inRect = gfxRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height);
+    gfxRect outRect = gfxRect(destRect.x, destRect.y, destRect.width, destRect.height);
+    return img->Draw(*rc, inRect, inRect, outRect);
+  }
+  else {
+    return aCanvas->RenderContexts(rc->ThebesContext());
+  }
 }
 
 void

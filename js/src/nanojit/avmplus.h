@@ -316,6 +316,7 @@ public:
     }
 };
 
+#ifdef AVMPLUS_DEFINE_NEW_DELETE
 inline void*
 operator new(size_t size, GC* gc)
 {
@@ -327,6 +328,7 @@ operator delete(void* p)
 {
     free(p);
 }
+#endif
 
 #define DWB(x) x
 #define DRCWB(x) x
@@ -345,7 +347,9 @@ namespace avmplus
         JSContext *cx; /* current VM context handle */
         void* eos; /* first unusable word after the native stack */
         void* eor; /* first unusable word after the call stack */
-        nanojit::GuardRecord* nestedExit; /* innermost nested guard for NESTED_EXIT exits */
+        nanojit::GuardRecord* lastTreeExitGuard; /* guard we exited on during a tree call */
+        nanojit::GuardRecord* lastTreeCallGuard; /* guard we want to grow from if the tree
+                                                    call exit guard mismatched */
     };
 
     class String

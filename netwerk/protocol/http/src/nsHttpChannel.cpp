@@ -4601,8 +4601,10 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
         mProgressSink->OnStatus(this, nsnull, status,
                                 NS_ConvertUTF8toUTF16(host).get());
 
-        if (progress > 0)
+        if (progress > 0) {
+            NS_ASSERTION(progress <= progressMax, "unexpected progress values");
             mProgressSink->OnProgress(this, nsnull, progress, progressMax);
+        }
     }
 #ifdef DEBUG
     else

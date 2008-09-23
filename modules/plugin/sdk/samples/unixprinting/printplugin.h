@@ -45,14 +45,14 @@
 
 typedef struct _PluginInstance
 {
-    uint16       mode;
+    uint16_t     mode;
 #ifdef MOZ_X11
     Window       window;
     Display     *display;
 #endif /* MOZ_X11 */
-    uint32       x,
+    uint32_t     x,
                  y;
-    uint32       width,
+    uint32_t     width,
                  height;
     NPMIMEType   type;
     char        *message;

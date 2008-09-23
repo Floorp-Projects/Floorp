@@ -45,6 +45,8 @@
 #include "nsRegion.h"
 #include "nsIPresShell.h"
 
+class nsSVGOuterSVGFrame;
+
 typedef nsContainerFrame nsSVGForeignObjectFrameBase;
 
 class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
@@ -81,6 +83,19 @@ public:
                     nsReflowStatus&          aStatus);
 
   /**
+   * Foreign objects are always transformed.
+   */
+  virtual PRBool IsTransformed() const
+  {
+    return PR_TRUE;
+  }
+
+  /**
+   * Foreign objects can return a transform matrix.
+   */
+  virtual gfxMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
+
+  /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::svgForeignObjectFrame
@@ -95,7 +110,7 @@ public:
 
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                  PRBool aImmediate);
+                                  PRUint32 aFlags);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -114,6 +129,7 @@ public:
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
+  virtual PRBool GetMatrixPropagation();
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM();
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
@@ -139,6 +155,8 @@ protected:
   void UpdateGraphic();
   already_AddRefed<nsIDOMSVGMatrix> GetTMIncludingOffset();
   nsresult TransformPointFromOuterPx(const nsPoint &aIn, nsPoint* aOut);
+  void InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
+                           const nsRect& aRect, PRUint32 aFlags);
   void FlushDirtyRegion();
 
   // If width or height is less than or equal to zero we must disable rendering
@@ -146,7 +164,10 @@ protected:
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
-  nsRegion                  mDirtyRegion;
+  // Damage area due to in-this-doc invalidation
+  nsRegion mSameDocDirtyRegion;
+  // Damage area due to cross-doc invalidation
+  nsRegion mCrossDocDirtyRegion;
 
   PRPackedBool mPropagateTransform;
   PRPackedBool mInReflow;

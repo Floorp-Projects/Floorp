@@ -85,8 +85,8 @@ REQUIRES	+= gtkxtbin
 endif
 
 CPPSRCS		= \
-		ns4xPlugin.cpp \
-		ns4xPluginInstance.cpp \
+		nsNPAPIPlugin.cpp \
+		nsNPAPIPluginInstance.cpp \
 		nsPluginHostImpl.cpp \
 		nsPluginModule.cpp \
 		nsPluginInstancePeer.cpp \

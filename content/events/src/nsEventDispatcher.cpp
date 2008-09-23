@@ -611,6 +611,10 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_COMMAND_EVENT:
       return NS_NewDOMCommandEvent(aDOMEvent, aPresContext,
                                    static_cast<nsCommandEvent*>(aEvent));
+    case NS_NOTIFYPAINT_EVENT:
+      return NS_NewDOMNotifyPaintEvent(aDOMEvent, aPresContext,
+                                       static_cast<nsNotifyPaintEvent*>
+                                                     (aEvent));
     }
 
     // For all other types of events, create a vanilla event object.
@@ -667,6 +671,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMMessageEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("progressevent"))
     return NS_NewDOMProgressEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("notifypaintevent"))
+    return NS_NewDOMNotifyPaintEvent(aDOMEvent, aPresContext, nsnull);
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
