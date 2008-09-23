@@ -2971,32 +2971,28 @@ bool
 TraceRecorder::ifop()
 {
     jsval& v = stackval(-1);
+    LIns* v_ins = get(&v);
+    /* no need to guard if condition is constant */
+    if (v_ins->isconst() || v_ins->isconstq())
+        return true;
     if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
         guard(JSVAL_TO_BOOLEAN(v) != 1,
-              lir->ins_eq0(lir->ins2i(LIR_eq, get(&v), 1)),
+              lir->ins_eq0(lir->ins2i(LIR_eq, v_ins, 1)),
               BRANCH_EXIT);
     } else if (JSVAL_IS_OBJECT(v)) {
-        guard(JSVAL_IS_NULL(v), lir->ins_eq0(get(&v)), BRANCH_EXIT);
+        guard(JSVAL_IS_NULL(v), lir->ins_eq0(v_ins), BRANCH_EXIT);
     } else if (isNumber(v)) {
         jsdouble d = asNumber(v);
         jsdpun u;
         u.d = 0;
-        LIns* v_ins = get(&v);
-
-        // Only insert the guard if the condition is not constant, since in 
-        // that case at runtime we would always take the same path as the
-        // interpreter is taking right now and hence there is no need for
-        // a guard.        
-        if (!v_ins->isconst() && !v_ins->isconstq()) {
-            guard(d == 0 || JSDOUBLE_IS_NaN(d),
-                  lir->ins2(LIR_feq, v_ins, lir->insImmq(u.u64)),
-                  BRANCH_EXIT);
-        }
+        guard(d == 0 || JSDOUBLE_IS_NaN(d),
+              lir->ins2(LIR_feq, v_ins, lir->insImmq(u.u64)),
+              BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
               lir->ins_eq0(lir->ins2(LIR_piand,
                                      lir->insLoad(LIR_ldp, 
-                                                  get(&v), 
+                                                  v_ins, 
                                                   (int)offsetof(JSString, length)),
                                      INS_CONSTPTR(JSSTRING_LENGTH_MASK))),
               BRANCH_EXIT);
@@ -3010,23 +3006,27 @@ bool
 TraceRecorder::switchop()
 {
     jsval& v = stackval(-1);
+    LIns* v_ins = get(&v);
+    /* no need to guard if condition is constant */
+    if (v_ins->isconst() || v_ins->isconstq())
+        return true;
     if (isNumber(v)) {
         jsdouble d = asNumber(v);
         jsdpun u;
         u.d = d;
         guard(true,
-              addName(lir->ins2(LIR_feq, get(&v), lir->insImmq(u.u64)),
+              addName(lir->ins2(LIR_feq, v_ins, lir->insImmq(u.u64)),
                       "guard(switch on numeric)"),
               BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
-        LIns* args[] = { get(&v), INS_CONSTPTR(JSVAL_TO_STRING(v)) };
+        LIns* args[] = { v_ins, INS_CONSTPTR(JSVAL_TO_STRING(v)) };
         guard(true,
               addName(lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args))),
                       "guard(switch on string)"),
               BRANCH_EXIT);
     } else if (JSVAL_IS_BOOLEAN(v)) {
         guard(true,
-              addName(lir->ins2(LIR_eq, get(&v), lir->insImm(JSVAL_TO_BOOLEAN(v))),
+              addName(lir->ins2(LIR_eq, v_ins, lir->insImm(JSVAL_TO_BOOLEAN(v))),
                       "guard(switch on boolean)"),
               BRANCH_EXIT);
     } else {
