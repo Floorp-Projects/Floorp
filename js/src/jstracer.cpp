@@ -153,7 +153,7 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return JS_TRUE;
     }
     char retstr[64];
-    snprintf(retstr, JS_ARRAY_LENGTH(retstr), "%llu", result);
+    JS_snprintf(retstr, sizeof retstr, "%llu", result);
     *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, retstr));
     return JS_TRUE;
 }
