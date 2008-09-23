@@ -67,13 +67,40 @@ extern "C" {
 
 #define wcharcount(array) (sizeof(array) / sizeof(TCHAR))
 
+
+
+static int memory_checkpoint_count = 0;
+
+MOZCE_SHUNT_API void mozce_MemoryCheckpoint()
+{
+#ifdef API_LOGGING
+#ifdef WINCE_MEMORY_CHECKPOINTING
+    MEMORYSTATUS memInfo;
+    STORE_INFORMATION si;
+
+    // Program memory.
+    memInfo.dwLength = sizeof(memInfo);
+    GlobalMemoryStatus(&memInfo);
+    GetStoreInformation(&si);
+    // OUTPUT: MEM_CHECKPOINT_STRING, counter, Storage Memory Free, RAM TOTAL, RAM FREE, RAM USED
+    // Can then grep for "MEM, ", put all those lines into one file,
+    // save the file, and use the resulting text file as 
+    // comma-delimited-text-file input into excel.
+    //   -- wolfe@lobo.us
+    if (memory_checkpoint_count == 0)
+        mozce_printf("MEM, counter, Storage Memory Free, RAM TOTAL, RAM FREE, RAM USED\n");
+
+    mozce_printf("MEM, %d, %d, %d, %d, %d\n", memory_checkpoint_count, si.dwFreeSize, memInfo.dwTotalPhys, memInfo.dwAvailPhys, memInfo.dwTotalPhys - memInfo.dwAvailPhys);
+    memory_checkpoint_count++;
+#endif
+#endif
+}
+
 /*this is defined in the WM6 header commdlg.h, but the sdk is missing commdlg.lib*/
 
 MOZCE_SHUNT_API DWORD CommDlgExtendedError()
 {
-#ifdef API_LOGGING
-    mozce_printf("CommDlgExtendedError called\n");
-#endif
+    WINCE_LOG_API_CALL("CommDlgExtendedError called\n");
     
     return -1 /*CDERR_DIALOGFAILURE*/;
 }
@@ -119,9 +146,7 @@ MOZCE_SHUNT_API BOOL LineDDA(int inXStart, int inYStart, int inXEnd, int inYEnd,
 
 MOZCE_SHUNT_API int ExtSelectClipRgn(HDC inDC, HRGN inRGN, int inMode)
 {
-#ifdef API_LOGGING
-    mozce_printf("ExtSelectClipRgn called\n");
-#endif
+    WINCE_LOG_API_CALL("ExtSelectClipRgn called\n");
 
     // inModes are defined as:
     // RGN_AND = 1
@@ -185,9 +210,7 @@ MOZCE_SHUNT_API int ExtSelectClipRgn(HDC inDC, HRGN inRGN, int inMode)
 
 MOZCE_SHUNT_API int FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush)
 {
-#ifdef API_LOGGING
-    mozce_printf("FrameRect called\n");
-#endif
+    WINCE_LOG_API_CALL("FrameRect called\n");
 
     HBRUSH oldBrush = (HBRUSH)SelectObject(inDC, inBrush);
     RECT myRect = *inRect;
@@ -222,10 +245,7 @@ MOZCE_SHUNT_API int FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush)
 
 MOZCE_SHUNT_API UINT GetTextCharset(HDC inDC)
 {
-
-#ifdef API_LOGGING
-    mozce_printf("GetTextCharset called\n");
-#endif
+    WINCE_LOG_API_CALL("GetTextCharset called\n");
 
     UINT retval = DEFAULT_CHARSET;
 
@@ -241,9 +261,7 @@ MOZCE_SHUNT_API UINT GetTextCharset(HDC inDC)
 
 MOZCE_SHUNT_API UINT GetTextCharsetInfo(HDC inDC, LPFONTSIGNATURE outSig, DWORD inFlags)
 {
-#ifdef API_LOGGING
-    mozce_printf("GetTextCharsetInfo called\n");
-#endif
+    WINCE_LOG_API_CALL("GetTextCharsetInfo called\n");
 
     // Zero out the FONTSIGNATURE as we do not know how to fill it out properly.
     if(NULL != outSig)
@@ -283,9 +301,7 @@ static int CALLBACK collectProc(CONST LOGFONT* inLF, CONST TEXTMETRIC* inTM, DWO
 
 MOZCE_SHUNT_API int GetMapMode(HDC inDC)
 {
-#ifdef API_LOGGING
-    mozce_printf("GetMapMode called\n");
-#endif
+    WINCE_LOG_API_CALL("GetMapMode called\n");
 
     int retval = MM_TEXT;
     return retval;
@@ -295,9 +311,7 @@ MOZCE_SHUNT_API int GetMapMode(HDC inDC)
 
 MOZCE_SHUNT_API LONG RegCreateKey(HKEY inKey, LPCTSTR inSubKey, PHKEY outResult)
 {
-#ifdef API_LOGGING
-    mozce_printf("RegCreateKey called\n");
-#endif
+    WINCE_LOG_API_CALL("RegCreateKey called\n");
 
     LONG retval = ERROR_SUCCESS;
     DWORD disp = 0;
@@ -310,9 +324,7 @@ MOZCE_SHUNT_API LONG RegCreateKey(HKEY inKey, LPCTSTR inSubKey, PHKEY outResult)
 
 MOZCE_SHUNT_API BOOL WaitMessage(VOID)
 {
-#ifdef API_LOGGING
-    mozce_printf("WaitMessage called\n");
-#endif
+    WINCE_LOG_API_CALL("WaitMessage called\n");
 
     BOOL retval = TRUE;
 
@@ -354,9 +366,7 @@ static BOOL CALLBACK MyEnumWindowsProc(HWND hwnd, LPARAM lParam)
 
 MOZCE_SHUNT_API BOOL EnumChildWindows(HWND inParent, WNDENUMPROC inFunc, LPARAM inParam)
 {
-#ifdef API_LOGGING
-    mozce_printf("EnumChildWindows called\n");
-#endif
+    WINCE_LOG_API_CALL("EnumChildWindows called\n");
 
     ECWWindows myParams;
     myParams.params = inParam;
@@ -381,9 +391,7 @@ MOZCE_SHUNT_API BOOL IsIconic(HWND inWnd)
 
 MOZCE_SHUNT_API BOOL OpenIcon(HWND inWnd)
 {
-#ifdef API_LOGGING
-    mozce_printf("OpenIcon called\n");
-#endif
+    WINCE_LOG_API_CALL("OpenIcon called\n");
     return SetActiveWindow(inWnd) ? 1:0;
 }
 
@@ -416,9 +424,7 @@ MOZCE_SHUNT_API BOOL InvertRgn(HDC inDC, HRGN inRGN)
 
 MOZCE_SHUNT_API int GetScrollPos(HWND inWnd, int inBar)
 {
-#ifdef API_LOGGING
-    mozce_printf("GetScrollPos called\n");
-#endif
+    WINCE_LOG_API_CALL("GetScrollPos called\n");
 
     int retval = 0;
     SCROLLINFO info;
@@ -434,9 +440,7 @@ MOZCE_SHUNT_API int GetScrollPos(HWND inWnd, int inBar)
 
 MOZCE_SHUNT_API BOOL GetScrollRange(HWND inWnd, int inBar, LPINT outMinPos, LPINT outMaxPos)
 {
- #ifdef API_LOGGING
-    mozce_printf("GetScrollRange called\n");
-#endif
+    WINCE_LOG_API_CALL("GetScrollRange called\n");
 
     BOOL retval = FALSE;
     SCROLLINFO info;
@@ -459,9 +463,7 @@ MOZCE_SHUNT_API BOOL GetScrollRange(HWND inWnd, int inBar, LPINT outMinPos, LPIN
 
 MOZCE_SHUNT_API HRESULT CoLockObjectExternal(IUnknown* inUnk, BOOL inLock, BOOL inLastUnlockReleases)
 {
-#ifdef API_LOGGING
-    mozce_printf("CoLockObjectExternal called\n");
-#endif
+    WINCE_LOG_API_CALL("CoLockObjectExternal called\n");
 
     HRESULT retval = S_OK;
 
@@ -543,9 +545,7 @@ MOZCE_SHUNT_API DWORD GetEnvironmentVariable(LPCWSTR lpName, LPCSTR lpBuffer, DW
 
 MOZCE_SHUNT_API void GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime)
 {
-#ifdef API_LOGGING
-    mozce_printf("GetSystemTimeAsFileTime called\n");
-#endif
+    WINCE_LOG_API_CALL("GetSystemTimeAsFileTime called\n");
 
     SYSTEMTIME st;
     GetSystemTime(&st);
@@ -554,9 +554,7 @@ MOZCE_SHUNT_API void GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime)
 
 MOZCE_SHUNT_API DWORD GetLongPathNameW(LPCWSTR lpszShortPath, LPCWSTR lpszLongPath, DWORD cchBuffer)
 {
-#ifdef API_LOGGING
-    mozce_printf("GetLongPathNameW called\n");
-#endif
+    WINCE_LOG_API_CALL("GetLongPathNameW called\n");
 
     return 0;
 }
@@ -566,9 +564,7 @@ MOZCE_SHUNT_API DWORD GetFullPathName(const char* lpFileName,
                                       const char* lpBuffer,
                                       const char** lpFilePart)
 {
-#ifdef API_LOGGING
-    mozce_printf("GetFullPathName called\n");
-#endif
+    WINCE_LOG_API_CALL("GetFullPathName called\n");
 
     DWORD len = strlen(lpFileName);
     if (len > nBufferLength)
@@ -588,9 +584,7 @@ MOZCE_SHUNT_API DWORD GetFullPathName(const char* lpFileName,
             *lpFilePart = lpBuffer;
     }
 
-#ifdef API_LOGGING
-    mozce_printf("GetFullPathName called %s (%s)\n", lpBuffer, *lpFilePart);
-#endif
+    WINCE_LOG_API_CALL_2("GetFullPathName called %s (%s)\n", lpBuffer, *lpFilePart);
     return len;
 }
 
@@ -600,9 +594,7 @@ MOZCE_SHUNT_API BOOL mozce_GetMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin
 {
     SetLastError(0);
 
-#ifdef API_LOGGING
-    mozce_printf("mozce_GetMessage called\n");
-#endif
+    WINCE_LOG_API_CALL("mozce_GetMessage called\n");
 
     BOOL b = GetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMin);
 
@@ -617,9 +609,7 @@ MOZCE_SHUNT_API BOOL mozce_PeekMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMi
 {
     SetLastError(0);
 
-#ifdef API_LOGGING
-    mozce_printf("mozce_PeekMessageA called\n");
-#endif
+    WINCE_LOG_API_CALL("mozce_PeekMessageA called\n");
 
     BOOL b = PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
 
@@ -634,9 +624,7 @@ MOZCE_SHUNT_API LONG GetMessageTime(void)
 {
     SetLastError(0);
 
-#ifdef API_LOGGING
-    mozce_printf("GetMessageTime called\n");
-#endif
+    WINCE_LOG_API_CALL("GetMessageTime called\n");
 
   return gGetMessageTime;
 }
@@ -660,9 +648,7 @@ MOZCE_SHUNT_API BOOL GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl)
 {
     SetLastError(0);
 
-#ifdef API_LOGGING
-    mozce_printf("GetWindowPlacement called\n");
-#endif
+    WINCE_LOG_API_CALL("GetWindowPlacement called\n");
 
    memset(lpwndpl, 0, sizeof(WINDOWPLACEMENT));
 
@@ -712,12 +698,9 @@ MOZCE_SHUNT_API HINSTANCE ShellExecute(HWND hwnd,
 
 MOZCE_SHUNT_API HINSTANCE ShellExecuteW(HWND hwnd, LPCWSTR lpOperation, LPCWSTR lpFile, LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd)
 {
-
     SetLastError(0);
 
-#ifdef API_LOGGING
-    mozce_printf("ShellExecuteW called\n");
-#endif
+    WINCE_LOG_API_CALL("ShellExecuteW called\n");
 
     SHELLEXECUTEINFO info;
     info.cbSize = sizeof(SHELLEXECUTEINFO);
@@ -758,9 +741,7 @@ struct lconv s_locale_conv =
 
 MOZCE_SHUNT_API struct lconv * mozce_localeconv(void)
 {
-#ifdef API_LOGGING
-    mozce_printf("mozce_localeconv called\n");
-#endif
+    WINCE_LOG_API_CALL("mozce_localeconv called\n");
     return &s_locale_conv;
 }
 
@@ -1055,9 +1036,7 @@ MOZCE_SHUNT_API DWORD WINAPI GetCharacterPlacementW(  __in HDC hdc, __in_ecount(
 
 MOZCE_SHUNT_API wchar_t* wgetcwd(wchar_t* dir, size_t size)
 {
-#ifdef API_LOGGING
-        mozce_printf("getcwd called.\n");
-#endif
+    WINCE_LOG_API_CALL("getcwd called.\n");
     int i;
 
     GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
@@ -1084,9 +1063,7 @@ MOZCE_SHUNT_API int _wremove(const wchar_t * _Filename)
 
 MOZCE_SHUNT_API int wchmod(const wchar_t * buffer, int inMode)
 {
-#ifdef API_LOGGING
-    mozce_printf("wchmod called\n");
-#endif
+    WINCE_LOG_API_CALL("wchmod called\n");
 
     int retval = -1;
 
