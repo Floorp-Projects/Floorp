@@ -1810,13 +1810,16 @@ static PRBool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
 {
   // Don't delay stopping QuickTime (bug 425157), Flip4Mac (bug 426524),
-  // XStandard (bug 430219), CMISS Zinc (bug 429604).
+  // XStandard (bug 430219), CMISS Zinc (bug 429604). ARM Flash (454756)
   if (aDelayedStop
 #ifndef XP_WIN
       && !::MatchPluginName(aInstanceOwner, "QuickTime")
       && !::MatchPluginName(aInstanceOwner, "Flip4Mac")
       && !::MatchPluginName(aInstanceOwner, "XStandard plugin")
       && !::MatchPluginName(aInstanceOwner, "CMISS Zinc Plugin")
+#endif
+#if defined(XP_UNIX) && defined(__arm__)
+      && !::MatchPluginName(aInstanceOwner, "Shockwave Flash")
 #endif
       ) {
     nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(aInstanceOwner);
