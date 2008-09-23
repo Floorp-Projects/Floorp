@@ -164,7 +164,7 @@ static void
 copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
           int dotimes, uid_t uid, gid_t gid )
 {
-  int fromfd, tofd, cc, wc, exists;
+  int fromfd, tofd = -1, cc, wc, exists;
   char buf[BUFSIZ], *bp;
   struct stat sb, tosb;
   struct utimbuf utb;
@@ -174,11 +174,20 @@ copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
   fromfd = open(name, O_RDONLY);
   if (fromfd < 0 || fstat(fromfd, &sb) < 0)
     fail("cannot access %s", name);
-  if (exists && (!S_ISREG(tosb.st_mode) || access(toname, W_OK) < 0))
-    (void) (S_ISDIR(tosb.st_mode) ? rmdir : unlink)(toname);
-  tofd = open(toname, O_CREAT | O_WRONLY, 0666);
-  if (tofd < 0)
-    fail("cannot create %s", toname);
+  if (exists) {
+    if (S_ISREG(tosb.st_mode)) {
+      /* See if we can open it. This is more reliable than 'access'. */
+      tofd = open(toname, O_CREAT | O_WRONLY, 0666);
+    }
+    if (tofd < 0) {
+      (void) (S_ISDIR(tosb.st_mode) ? rmdir : unlink)(toname);
+    }
+  }
+  if (tofd < 0) {
+    tofd = open(toname, O_CREAT | O_WRONLY, 0666);
+    if (tofd < 0)
+      fail("cannot create %s", toname);
+  }
 
   bp = buf;
   while ((cc = read(fromfd, bp, sizeof buf)) > 0)

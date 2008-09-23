@@ -1,0 +1,36 @@
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+function p(n)
+{
+  dump("Test 212563-2 says: " + n + "\n");
+}
+
+// Step 1: replace the innermost frame
+function changeInnermost(iframeElement)
+{
+  iframeElement.setAttribute("src", 
+    "data:text/html,<body onload='" + w + "w(parent.document, top);'><font color=blue>new innermost");
+}
+
+// Step 2: replace the middle iframe (from the new innermost iframe's onload handler)
+var replacementForMiddleFrame = "<body onload=top.p(5);parent.document.documentElement.removeAttribute('class');>replacement for middle frame<script>top.p(2);<\/script><\/body>";
+
+function w(md, t)
+{
+  t.p(0); 
+  md.write(t.replacementForMiddleFrame);
+  t.p(3);
+  t.p(md.documentElement.innerHTML); 
+  md.close(); 
+  t.p(4);
+}
+
+
+</script>
+</head>
+<body>
+<iframe src="212563-2-inner.html"></iframe>
+</body>
+</html>

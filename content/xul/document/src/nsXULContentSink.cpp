@@ -478,10 +478,9 @@ XULContentSinkImpl::NormalizeAttributeString(const PRUnichar *aExpatName,
     }
 
     nsCOMPtr<nsINodeInfo> ni;
-    nsresult rv = mNodeInfoManager->GetNodeInfo(localName, prefix,
-                                                nameSpaceID,
-                                                getter_AddRefs(ni));
-    NS_ENSURE_SUCCESS(rv, rv);
+    ni = mNodeInfoManager->GetNodeInfo(localName, prefix,
+                                       nameSpaceID);
+    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     aName.SetTo(ni);
 
@@ -533,10 +532,10 @@ XULContentSinkImpl::HandleStartElement(const PRUnichar *aName,
                                  getter_AddRefs(localName), &nameSpaceID);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
-                                              getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+  
+  nsresult rv = NS_OK;
   switch (mState) {
   case eInProlog:
       // We're the root document element

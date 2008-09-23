@@ -574,12 +574,16 @@ nsAutoCompleteController::HandleDelete(PRBool *_retval)
     popup->SetSelectedIndex(index);
 
     // Complete to the new current value.
-    nsAutoString value;
-    if (NS_SUCCEEDED(GetResultValueAt(index, PR_TRUE, value))) {
-      CompleteValue(value, PR_FALSE);
-
-      // Make sure we cancel the event that triggerd this call.
-      *_retval = PR_TRUE;
+    PRBool shouldComplete = PR_FALSE;
+    mInput->GetCompleteDefaultIndex(&shouldComplete);
+    if (shouldComplete) {
+      nsAutoString value;
+      if (NS_SUCCEEDED(GetResultValueAt(index, PR_TRUE, value))) {
+        CompleteValue(value);
+      
+        // Make sure we cancel the event that triggered this call.
+        *_retval = PR_TRUE;
+      }
     }
 
     // Invalidate the popup.
@@ -1349,8 +1353,6 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
   if (!shouldComplete)
     return NS_OK;
 
-  nsCOMPtr<nsIAutoCompleteSearch> search;
-  mSearches->GetElementAt(aSearchIndex, getter_AddRefs(search));
   nsCOMPtr<nsIAutoCompleteResult> result;
   mResults->GetElementAt(aSearchIndex, getter_AddRefs(result));
   NS_ENSURE_TRUE(result != nsnull, NS_ERROR_FAILURE);
@@ -1363,7 +1365,7 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
 
   nsAutoString resultValue;
   result->GetValueAt(defaultIndex, resultValue);
-  CompleteValue(resultValue, PR_TRUE);
+  CompleteValue(resultValue);
 
   mDefaultIndexCompleted = PR_TRUE;
 
@@ -1371,8 +1373,7 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
 }
 
 nsresult
-nsAutoCompleteController::CompleteValue(nsString &aValue,
-                                        PRBool selectDifference)
+nsAutoCompleteController::CompleteValue(nsString &aValue)
 /* mInput contains mSearchString, which we want to autocomplete to aValue.  If
  * selectDifference is true, select the remaining portion of aValue not
  * contained in mSearchString. */
@@ -1388,8 +1389,6 @@ nsAutoCompleteController::CompleteValue(nsString &aValue,
     // autocomplete to aValue.
     mInput->SetTextValue(aValue);
   } else {
-    PRInt32 findIndex;  // Offset of mSearchString within aValue.
-
     nsresult rv;
     nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1399,7 +1398,7 @@ nsAutoCompleteController::CompleteValue(nsString &aValue,
       // Only succeed if the missing portion is "http://"; otherwise do not
       // autocomplete.  This prevents us from "helpfully" autocompleting to a
       // URI that isn't equivalent to what the user expected.
-      findIndex = 7; // length of "http://"
+      const PRInt32 findIndex = 7; // length of "http://"
 
       if ((endSelect < findIndex + mSearchStringLength) ||
           !scheme.LowerCaseEqualsLiteral("http") ||
@@ -1407,31 +1406,23 @@ nsAutoCompleteController::CompleteValue(nsString &aValue,
             mSearchString, nsCaseInsensitiveStringComparator())) {
         return NS_OK;
       }
+
+      mInput->SetTextValue(mSearchString +
+                           Substring(aValue, mSearchStringLength + findIndex,
+                                     endSelect));
+
+      endSelect -= findIndex; // We're skipping this many characters of aValue.
     } else {
-      // Autocompleting something other than a URI from the middle.  Assume we
-      // can just go ahead and autocomplete the missing final portion; this
-      // seems like a problematic assumption...
-      nsString::const_iterator iter, end;
-      aValue.BeginReading(iter);
-      aValue.EndReading(end);
-      const nsString::const_iterator::pointer start = iter.get();
-      ++iter;  // Skip past beginning since we know that doesn't match
+      // Autocompleting something other than a URI from the middle.
+      // Use the format "searchstring >> full string" to indicate to the user
+      // what we are going to replace their search string with.
+      mInput->SetTextValue(mSearchString + NS_LITERAL_STRING(" >> ") + aValue);
 
-      FindInReadable(mSearchString, iter, end,
-                     nsCaseInsensitiveStringComparator());
-
-      findIndex = iter.get() - start;
+      endSelect = mSearchString.Length() + 4 + aValue.Length();
     }
-
-    mInput->SetTextValue(mSearchString +
-                         Substring(aValue, mSearchStringLength + findIndex,
-                                   endSelect));
-
-    endSelect -= findIndex; // We're skipping this many characters of aValue.
   }
 
-  mInput->SelectTextRange(selectDifference ?
-                          mSearchStringLength : endSelect, endSelect);
+  mInput->SelectTextRange(mSearchStringLength, endSelect);
 
   return NS_OK;
 }

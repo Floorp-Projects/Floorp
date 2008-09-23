@@ -1430,6 +1430,9 @@ nsPrintEngine::GetDisplayTitleAndURL(nsPrintObject*    aPO,
           *aTitle = NS_strdup(mPrt->mBrandName);
         }
         break;
+      case eDocTitleDefNone:
+        // *aTitle defaults to nsnull
+        break;
     }
   }
 }

@@ -104,7 +104,7 @@ nsHTMLTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes
   GetRole(&role);
   if (role == nsIAccessibleRole::ROLE_STATICTEXT) {
     nsAutoString oldValueUnused;
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("static"),
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("auto-generated"),
                                   NS_LITERAL_STRING("true"), oldValueUnused);
   }
 

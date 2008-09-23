@@ -235,31 +235,46 @@ struct THEBES_API gfxRGBA {
     /**
      * Returns this color value as a packed 32-bit integer. This reconstructs
      * the int32 based on the given colorType, always in the native byte order.
+     *
+     * Note: gcc 4.2.3 on at least Ubuntu (x86) does something strange with
+     * (PRUint8)(c * 255.0) << x, where the result is different than
+     * double d = c * 255.0; v = ((PRUint8) d) << x. 
      */
     PRUint32 Packed(PackedColorType colorType = PACKED_ABGR) const {
+        gfxFloat rb = (r * 255.0);
+        gfxFloat gb = (g * 255.0);
+        gfxFloat bb = (b * 255.0);
+        gfxFloat ab = (a * 255.0);
+
         if (colorType == PACKED_ABGR || colorType == PACKED_XBGR) {
-            return (((PRUint8)(a * 255.0) << 24) |
-                    ((PRUint8)(b * 255.0) << 16) |
-                    ((PRUint8)(g * 255.0) << 8) |
-                    ((PRUint8)(r * 255.0)));
+            return (PRUint8(ab) << 24) |
+                   (PRUint8(bb) << 16) |
+                   (PRUint8(gb) << 8) |
+                   (PRUint8(rb) << 0);
         } else if (colorType == PACKED_ARGB || colorType == PACKED_XRGB) {
-            return (((PRUint8)(a * 255.0) << 24) |
-                    ((PRUint8)(r * 255.0) << 16) |
-                    ((PRUint8)(g * 255.0) << 8) |
-                    ((PRUint8)(b * 255.0)));
-        } else if (colorType == PACKED_ABGR_PREMULTIPLIED) {
-            return (((PRUint8)(a * 255.0) << 24) |
-                    ((PRUint8)((b*a) * 255.0) << 16) |
-                    ((PRUint8)((g*a) * 255.0) << 8) |
-                    ((PRUint8)((r*a) * 255.0)));
-        } else if (colorType == PACKED_ARGB_PREMULTIPLIED) {
-            return (((PRUint8)(a * 255.0) << 24) |
-                    ((PRUint8)((r*a) * 255.0) << 16) |
-                    ((PRUint8)((g*a) * 255.0) << 8) |
-                    ((PRUint8)((b*a) * 255.0)));
-        } else {
-            return 0;
+            return (PRUint8(ab) << 24) |
+                   (PRUint8(rb) << 16) |
+                   (PRUint8(gb) << 8) |
+                   (PRUint8(bb) << 0);
         }
+
+        rb = (r*a) * 255.0;
+        gb = (g*a) * 255.0;
+        bb = (b*a) * 255.0;
+
+        if (colorType == PACKED_ABGR_PREMULTIPLIED) {
+            return (((PRUint8)(ab) << 24) |
+                    ((PRUint8)(bb) << 16) |
+                    ((PRUint8)(gb) << 8) |
+                    ((PRUint8)(rb) << 0));
+        } else if (colorType == PACKED_ARGB_PREMULTIPLIED) {
+            return (((PRUint8)(ab) << 24) |
+                    ((PRUint8)(rb) << 16) |
+                    ((PRUint8)(gb) << 8) |
+                    ((PRUint8)(bb) << 0));
+        }
+
+        return 0;
     }
 
 #ifdef MOZILLA_INTERNAL_API

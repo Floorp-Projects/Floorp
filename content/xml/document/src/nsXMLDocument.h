@@ -75,9 +75,6 @@ public:
 
   virtual void EndLoad();
 
-  // nsIDOMNode interface
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
-
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
 
@@ -91,7 +88,6 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
-  void SetLoadedAsData(PRBool aLoadedAsData) { mLoadedAsData = aLoadedAsData; }
 protected:
   // mChannelIsPending indicates whether we're currently asynchronously loading
   // data from mChannel (via document.load() or normal load).  It's set to true

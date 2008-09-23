@@ -471,14 +471,13 @@ var nsDragAndDrop = {
       var count = dt.mozItemCount;
       for (var i = 0; i < count; ++i) {
         var types = dt.mozTypesAt(i);
-        for (var j = 0; j < types.length; ++j) {
-          var type = types[j];
+        for (var j = 0; j < flavourSet.flavours.length; j++) {
+          var type = flavourSet.flavours[j].contentType;
           // dataTransfer uses text/plain but older code used text/unicode, so
           // switch this for compatibility
-          if (type == "text/plain")
-            type = "text/unicode";
-          if (type in flavourSet.flavourTable) {
-            var data = dt.mozGetDataAt(type, i);
+          var modtype = (type == "text/unicode") ? "text/plain" : type;
+          if (Array.indexOf(types, modtype) >= 0) {
+            var data = dt.mozGetDataAt(modtype, i);
             if (data) {
               var length = (typeof data == "string") ? data.length : kNonStringDataLength;
               dataArray[i] = FlavourToXfer(data, length, flavourSet.flavourTable[type]);

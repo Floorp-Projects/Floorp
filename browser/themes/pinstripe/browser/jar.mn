@@ -1,7 +1,6 @@
 classic.jar:
 % skin browser classic/1.0 %skin/classic/browser/
-  skin/classic/browser/bookmark_toolbar_background.gif
-  skin/classic/browser/bookmark_toolbar_background-inactive.png
+  skin/classic/browser/bookmark_toolbar_background.png
   skin/classic/browser/bookmark-open-left.png
   skin/classic/browser/bookmark-open-mid.png
   skin/classic/browser/bookmark-open-right.png
@@ -129,16 +128,10 @@ classic.jar:
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabbrowser/tab-left.png                           (tabbrowser/tab-left.png)
   skin/classic/browser/tabbrowser/tab-left-bkgnd.png                     (tabbrowser/tab-left-bkgnd.png)
-  skin/classic/browser/tabbrowser/tab-left-hover.png                     (tabbrowser/tab-left-hover.png)
-  skin/classic/browser/tabbrowser/tab-left-inactive.png                  (tabbrowser/tab-left-inactive.png)
   skin/classic/browser/tabbrowser/tab-middle.png                         (tabbrowser/tab-middle.png)
   skin/classic/browser/tabbrowser/tab-middle-bkgnd.png                   (tabbrowser/tab-middle-bkgnd.png)
-  skin/classic/browser/tabbrowser/tab-middle-hover.png                   (tabbrowser/tab-middle-hover.png)
-  skin/classic/browser/tabbrowser/tab-middle-inactive.png                (tabbrowser/tab-middle-inactive.png)
   skin/classic/browser/tabbrowser/tab-right.png                          (tabbrowser/tab-right.png)
   skin/classic/browser/tabbrowser/tab-right-bkgnd.png                    (tabbrowser/tab-right-bkgnd.png)
-  skin/classic/browser/tabbrowser/tab-right-hover.png                    (tabbrowser/tab-right-hover.png)
-  skin/classic/browser/tabbrowser/tab-right-inactive.png                 (tabbrowser/tab-right-inactive.png)
   skin/classic/browser/tabbrowser/tabs-bottom-bg.png                     (tabbrowser/tabs-bottom-bg.png)
   skin/classic/browser/urlbar/endcap.png                                 (urlbar/endcap.png)
   skin/classic/browser/urlbar/endcap-rtl.png                             (urlbar/endcap-rtl.png)

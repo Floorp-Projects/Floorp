@@ -44,6 +44,10 @@
    * promise null-terminated storage.  Instances of this class allocate
    * strings on the heap.
    *
+   * NAMES:
+   *   nsString for wide characters
+   *   nsCString for narrow characters
+   * 
    * This class is also known as nsAFlat[C]String, where "flat" is used
    * to denote a null-terminated string.
    */
@@ -89,11 +93,7 @@ class nsTString_CharT : public nsTSubstring_CharT
         }
 
       explicit
-#ifdef MOZ_V1_STRING_ABI
-      nsTString_CharT( const abstract_string_type& readable )
-#else
       nsTString_CharT( const substring_type& readable )
-#endif
         : substring_type()
         {
           Assign(readable);
@@ -106,10 +106,6 @@ class nsTString_CharT : public nsTSubstring_CharT
       self_type& operator=( const self_type& str )                                              { Assign(str);      return *this; }
       self_type& operator=( const substring_type& str )                                         { Assign(str);      return *this; }
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
-#ifdef MOZ_V1_STRING_ABI
-      self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
-#endif
-
 
         /**
          * returns the null-terminated string
@@ -457,9 +453,6 @@ class nsTFixedString_CharT : public nsTString_CharT
       self_type& operator=( const char_type* data )                                             { Assign(data);     return *this; }
       self_type& operator=( const substring_type& str )                                         { Assign(str);      return *this; }
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
-#ifdef MOZ_V1_STRING_ABI
-      self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
-#endif
 
     protected:
 
@@ -474,7 +467,13 @@ class nsTFixedString_CharT : public nsTString_CharT
    * nsTAutoString_CharT
    *
    * Subclass of nsTString_CharT that adds support for stack-based string
-   * allocation.  Do not allocate this class on the heap! ;-)
+   * allocation.  It is normally not a good idea to use this class on the
+   * heap, because it will allocate space which may be wasted if the string
+   * it contains is significantly smaller or any larger than 64 characters.
+   *
+   * NAMES:
+   *   nsAutoString for wide characters
+   *   nsCAutoString for narrow characters
    */
 class NS_STACK_CLASS nsTAutoString_CharT : public nsTFixedString_CharT
   {
@@ -525,24 +524,12 @@ class NS_STACK_CLASS nsTAutoString_CharT : public nsTFixedString_CharT
           Assign(tuple);
         }
 
-#ifdef MOZ_V1_STRING_ABI
-      explicit
-      nsTAutoString_CharT( const abstract_string_type& readable )
-        : fixed_string_type(mStorage, kDefaultStorageSize, 0)
-        {
-          Assign(readable);
-        }
-#endif
-
         // |operator=| does not inherit, so we must define our own
       self_type& operator=( char_type c )                                                       { Assign(c);        return *this; }
       self_type& operator=( const char_type* data )                                             { Assign(data);     return *this; }
       self_type& operator=( const self_type& str )                                              { Assign(str);      return *this; }
       self_type& operator=( const substring_type& str )                                         { Assign(str);      return *this; }
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
-#ifdef MOZ_V1_STRING_ABI
-      self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
-#endif
 
       enum { kDefaultStorageSize = 64 };
 
@@ -557,7 +544,12 @@ class NS_STACK_CLASS nsTAutoString_CharT : public nsTFixedString_CharT
    *
    *   (1) mData can be null
    *   (2) objects of this type can be automatically cast to |const CharT*|
-   *   (3) getter_Copies method is supported to adopt data
+   *   (3) getter_Copies method is supported to adopt data allocated with
+   *       NS_Alloc, such as "out string" parameters in XPIDL.
+   *
+   * NAMES:
+   *   nsXPIDLString for wide characters
+   *   nsXPIDLCString for narrow characters
    */
 class nsTXPIDLString_CharT : public nsTString_CharT
   {
@@ -602,9 +594,6 @@ class nsTXPIDLString_CharT : public nsTString_CharT
       self_type& operator=( const self_type& str )                                              { Assign(str);      return *this; }
       self_type& operator=( const substring_type& str )                                         { Assign(str);      return *this; }
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
-#ifdef MOZ_V1_STRING_ABI
-      self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
-#endif
   };
 
 
@@ -685,9 +674,6 @@ class nsTAdoptingString_CharT : public nsTXPIDLString_CharT
         // |operator=| does not inherit, so we must define our own
       self_type& operator=( const substring_type& str )                                         { Assign(str);      return *this; }
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
-#ifdef MOZ_V1_STRING_ABI
-      self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
-#endif
 
         // Adopt(), if possible, when assigning to a self_type&. Note
         // that this violates the constness of str, str is always

@@ -327,7 +327,7 @@ typedef enum nsCharType nsCharType;
 #define IS_ARABIC_CHAR(c) ((0x0600 <= (c)) && ((c)<= 0x06FF))
 #define IS_ARABIC_ALPHABETIC(c) (IS_ARABIC_CHAR(c) && \
                                 !(IS_HINDI_DIGIT(c) || IS_FARSI_DIGIT(c) || IS_ARABIC_SEPARATOR(c)))
-#define IS_BIDI_CONTROL_CHAR(c) ((0x202a <= (c)) && ((c)<= 0x202e) \
+#define IS_BIDI_CONTROL_CHAR(c) (((0x202a <= (c)) && ((c)<= 0x202e)) \
                                 || ((c) == 0x200e) || ((c) == 0x200f))
 
 /**

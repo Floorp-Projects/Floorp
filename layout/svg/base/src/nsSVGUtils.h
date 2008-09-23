@@ -100,6 +100,8 @@ class nsISVGChildFrame;
 /* are we the child of a non-display container? */
 #define NS_STATE_SVG_NONDISPLAY_CHILD 0x02000000
 
+#define NS_STATE_SVG_PROPAGATE_TRANSFORM 0x04000000
+
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
  */
@@ -192,11 +194,12 @@ public:
    * Get a font-size (em) of an nsIContent
    */
   static float GetFontSize(nsIContent *aContent);
-
+  static float GetFontSize(nsIFrame *aFrame);
   /*
    * Get an x-height of of an nsIContent
    */
   static float GetFontXHeight(nsIContent *aContent);
+  static float GetFontXHeight(nsIFrame *aFrame);
 
   /*
    * Converts image data from premultipled to unpremultiplied alpha
@@ -266,8 +269,8 @@ public:
   /**
    * Figures out the worst case invalidation area for a frame, taking
    * filters into account.
-   * @param aRect the area in device pixels that needs to be invalidated in aFrame
-   * @return the rect in device pixels that should be invalidated, taking
+   * @param aRect the area in app units that needs to be invalidated in aFrame
+   * @return the rect in app units that should be invalidated, taking
    * filters into account. Will return aRect when no filters are present.
    */
   static nsRect FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect);
@@ -299,13 +302,19 @@ public:
      Input: rect - bounding box
             length - length to be converted
   */
-  static float ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength);
+  static float ObjectSpace(nsIDOMSVGRect *aRect, const nsSVGLength2 *aLength);
 
   /* Computes the input length in terms of user space coordinates.
      Input: content - object to be used for determining user space
+     Input: length - length to be converted
+  */
+  static float UserSpace(nsSVGElement *aSVGElement, const nsSVGLength2 *aLength);
+
+  /* Computes the input length in terms of user space coordinates.
+     Input: aFrame - object to be used for determining user space
             length - length to be converted
   */
-  static float UserSpace(nsSVGElement *aSVGElement, nsSVGLength2 *aLength);
+  static float UserSpace(nsIFrame *aFrame, const nsSVGLength2 *aLength);
 
   /* Tranforms point by the matrix.  In/out: x,y */
   static void
@@ -337,8 +346,8 @@ public:
                       nsIDOMSVGAnimatedPreserveAspectRatio *aPreserveAspectRatio,
                       PRBool aIgnoreAlign = PR_FALSE);
 
-  /* Paint frame with SVG effects - aDirtyRect is the area being
-   * redrawn, in frame offset pixel coordinates */
+  /* Paint SVG frame with SVG effects - aDirtyRect is the area being
+   * redrawn, in device pixel coordinates relative to the outer svg */
   static void
   PaintChildWithEffects(nsSVGRenderState *aContext,
                         nsIntRect *aDirtyRect,
@@ -371,7 +380,8 @@ public:
 
   /*
    * Returns the CanvasTM of the indicated frame, whether it's a
-   * child or container SVG frame.
+   * child SVG frame, container SVG frame, or a regular frame.
+   * For regular frames, we just return an identity matrix.
    */
   static already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM(nsIFrame *aFrame);
 
@@ -469,7 +479,26 @@ public:
   static already_AddRefed<nsIDOMSVGMatrix>
   AdjustMatrixForUnits(nsIDOMSVGMatrix *aMatrix,
                        nsSVGEnum *aUnits,
-                       nsISVGChildFrame *aFrame);
+                       nsIFrame *aFrame);
+
+  /**
+   * Get bounding-box for aFrame. Matrix propagation is disabled so the
+   * bounding box is computed in terms of aFrame's own user space.
+   */
+  static already_AddRefed<nsIDOMSVGRect>
+  GetBBox(nsIFrame *aFrame);
+  /**
+   * Compute a rectangle in userSpaceOnUse or objectBoundingBoxUnits.
+   * @param aXYWH pointer to 4 consecutive nsSVGLength2 objects containing
+   * the x, y, width and height values in that order
+   * @param aBBox the bounding box of the object the rect is relative to;
+   * may be null if aUnits is not SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
+   * @param aFrame the object in which to interpret user-space units;
+   * may be null if aUnits is SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
+   */
+  static gfxRect
+  GetRelativeRect(PRUint16 aUnits, const nsSVGLength2 *aXYWH, nsIDOMSVGRect *aBBox,
+                  nsIFrame *aFrame);
 
 #ifdef DEBUG
   static void

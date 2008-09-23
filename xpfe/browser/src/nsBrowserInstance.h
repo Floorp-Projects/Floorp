@@ -47,12 +47,6 @@
 #include "nscore.h"
 #include "nsISupports.h"
 
-#ifndef MOZ_XUL_APP
-// for nsBrowserStatusHandler
-#include "nsIContentHandler.h"
-#include "nsICmdLineHandler.h"
-#endif
-
 class nsIDocShell;
 class nsIDOMWindowInternal;
 class nsIPrefBranch;
@@ -95,27 +89,5 @@ class nsBrowserInstance : public nsIBrowserInstance,
     PRIntervalTime      mLoadStartTime;
 #endif
 };
-
-#ifndef MOZ_XUL_APP
-class nsChromeStartupHandler : public nsICmdLineHandler
-{
-public:
-  NS_DECL_NSICMDLINEHANDLER
-  NS_DECL_ISUPPORTS
-  CMDLINEHANDLER_REGISTERPROC_DECLS
-};
-
-class nsBrowserContentHandler : public nsIContentHandler, public nsICmdLineHandler
-{
-public:
-  NS_DECL_NSICONTENTHANDLER
-  NS_DECL_NSICMDLINEHANDLER
-  NS_DECL_ISUPPORTS
-  CMDLINEHANDLER_REGISTERPROC_DECLS
-
-protected:
-  PRBool NeedHomepageOverride(nsIPrefBranch *aPrefService);
-};
-#endif
 
 #endif // nsBrowserInstance_h___

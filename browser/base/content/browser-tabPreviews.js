@@ -42,9 +42,9 @@
  * Tab previews utility, produces thumbnails
  */
 var tabPreviews = {
-  aspectRatio: 0.6875, // 16:11
+  aspectRatio: 0.5625, // 16:9
   init: function () {
-    this.width = Math.ceil(screen.availWidth / 7);
+    this.width = Math.ceil(screen.availWidth / 5);
     this.height = Math.round(this.width * this.aspectRatio);
 
     gBrowser.tabContainer.addEventListener("TabSelect", this, false);
@@ -64,16 +64,19 @@ var tabPreviews = {
     return aTab.__thumbnail || this.capture(aTab, !aTab.hasAttribute("busy"));
   },
   capture: function (aTab, aStore) {
-    var win = aTab.linkedBrowser.contentWindow;
     var thumbnail = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     thumbnail.mozOpaque = true;
     thumbnail.height = this.height;
     thumbnail.width = this.width;
+
     var ctx = thumbnail.getContext("2d");
-    var widthScale = this.width / win.innerWidth;
-    ctx.scale(widthScale, widthScale);
+    var win = aTab.linkedBrowser.contentWindow;
+    var snippetWidth = win.innerWidth * .6;
+    var scale = this.width / snippetWidth;
+    ctx.scale(scale, scale);
     ctx.drawWindow(win, win.scrollX, win.scrollY,
-                   win.innerWidth, win.innerWidth * this.aspectRatio, "rgb(255,255,255)");
+                   snippetWidth, snippetWidth * this.aspectRatio, "rgb(255,255,255)");
+
     var data = thumbnail.toDataURL("image/jpeg", "quality=60");
     if (aStore) {
       aTab.__thumbnail = data;
@@ -111,7 +114,6 @@ var tabPreviews = {
  * Ctrl-Tab panel
  */
 var ctrlTab = {
-  tabs: null,
   visibleCount: 3,
   _uniqid: 0,
   get panel () {
@@ -152,9 +154,16 @@ var ctrlTab = {
                                         .getAttribute("key")
                                         .toLowerCase().charCodeAt(0);
   },
+  get recentlyUsedLimit () {
+    delete this.recentlyUsedLimit;
+    return this.recentlyUsedLimit = gPrefService.getIntPref("browser.ctrlTab.recentlyUsedLimit");
+  },
   get smoothScroll () {
     delete this.smoothScroll;
     return this.smoothScroll = gPrefService.getBoolPref("browser.ctrlTab.smoothScroll");
+  },
+  get tabCount () {
+    return gBrowser.mTabs.length;
   },
   get offscreenStart () {
     return Array.indexOf(this.container.childNodes, this.selected) - 1;
@@ -169,16 +178,11 @@ var ctrlTab = {
     return this.panel.state == "open" || this.panel.state == "showing";
   },
   init: function () {
-    if (this.tabs)
+    if (this._recentlyUsedTabs)
       return;
+    this._recentlyUsedTabs = [gBrowser.selectedTab];
 
     var tabContainer = gBrowser.tabContainer;
-
-    this.tabs = [];
-    Array.forEach(tabContainer.childNodes, function (tab) {
-      this.attachTab(tab, tab == gBrowser.selectedTab);
-    }, this);
-
     tabContainer.addEventListener("TabOpen", this, false);
     tabContainer.addEventListener("TabSelect", this, false);
     tabContainer.addEventListener("TabClose", this, false);
@@ -187,7 +191,7 @@ var ctrlTab = {
     document.addEventListener("keypress", this, false);
   },
   uninit: function () {
-    this.tabs = null;
+    this._recentlyUsedTabs = null;
 
     var tabContainer = gBrowser.tabContainer;
     tabContainer.removeEventListener("TabOpen", this, false);
@@ -348,12 +352,12 @@ var ctrlTab = {
   advanceSelected: function () {
     // regardless of visibleCount, the new highlighted tab will be
     // the first or third-visible tab, depending on whether Shift is pressed
-    var index = ((this.invertDirection ? 0 : 2) + this.offscreenStart + this.tabs.length)
-                % this.tabs.length;
+    var index = ((this.invertDirection ? 0 : 2) + this.offscreenStart + this.tabCount)
+                % this.tabCount;
     if (index < 2)
-      index += this.tabs.length;
+      index += this.tabCount;
     if (index > this.container.childNodes.length - this.visibleCount + 1)
-      index -= this.tabs.length;
+      index -= this.tabCount;
     this.selected = this.container.childNodes[index];
   },
   arrangeBoxes: function () {
@@ -372,13 +376,14 @@ var ctrlTab = {
       this.arrange(i);
   },
   addOffscreenBox: function (aAtStart) {
-    if (this.container.childNodes.length < this.tabs.length + this.visibleCount + 1 &&
+    if (this.container.childNodes.length < this.tabCount + this.visibleCount + 1 &&
         !(aAtStart ? this.offscreenStart : this.offscreenEnd)) {
+      let tabs = this.getTabList();
       let i = aAtStart ?
-              this.tabs.indexOf(this.container.firstChild._tab) - 1:
-              this.tabs.indexOf(this.container.lastChild._tab) + 1;
-      i = (i + this.tabs.length) % this.tabs.length;
-      this.addPreview(this.addBox(aAtStart), this.tabs[i]);
+              tabs.indexOf(this.container.firstChild._tab) - 1:
+              tabs.indexOf(this.container.lastChild._tab) + 1;
+      i = (i + tabs.length) % tabs.length;
+      this.addPreview(this.addBox(aAtStart), tabs[i]);
     }
   },
   arrange: function (aIndex) {
@@ -422,19 +427,36 @@ var ctrlTab = {
     }
     XULBrowserWindow.setOverLink(value, null);
   },
-  attachTab: function (aTab, aSelected) {
-    if (aSelected)
-      this.tabs.unshift(aTab);
+  getTabList: function () {
+    var list = Array.slice(gBrowser.mTabs);
+    for (let i = 0; i < gBrowser.tabContainer.selectedIndex; i++)
+      list.push(list.shift());
+    if (!this._useTabBarOrder && this.recentlyUsedLimit > 0) {
+      let recentlyUsedTabs = this._recentlyUsedTabs.slice(0, this.recentlyUsedLimit);
+      for (let i = recentlyUsedTabs.length - 1; i >= 0; i--) {
+        list.splice(list.indexOf(recentlyUsedTabs[i]), 1);
+        list.unshift(recentlyUsedTabs[i]);
+      }
+    }
+    return list;
+  },
+  attachTab: function (aTab, aPos) {
+    if (aPos == 0)
+      this._recentlyUsedTabs.unshift(aTab);
+    else if (aPos)
+      this._recentlyUsedTabs.splice(aPos, 0, aTab);
     else
-      this.tabs.push(aTab);
+      this._recentlyUsedTabs.push(aTab);
   },
   detachTab: function (aTab) {
-    var i = this.tabs.indexOf(aTab);
+    var i = this._recentlyUsedTabs.indexOf(aTab);
     if (i >= 0)
-      this.tabs.splice(i, 1);
+      this._recentlyUsedTabs.splice(i, 1);
   },
   open: function () {
     this._deferOnTabSelect = [];
+    if (this.invertDirection)
+      this._useTabBarOrder = true;
 
     document.addEventListener("keyup", this, false);
     document.addEventListener("keydown", this, false);
@@ -447,9 +469,12 @@ var ctrlTab = {
 
     // display $visibleCount tabs, starting with the first or
     // the second to the last tab, depending on whether Shift is pressed
-    for (let index = this.invertDirection ? this.tabs.length - 2 : 0,
-             i = this.visibleCount; i > 0; i--)
-      this.addPreview(this.addBox(), this.tabs[index++ % this.tabs.length]);
+    {
+      let tabs = this.getTabList();
+      let index = this.invertDirection ? tabs.length - 2 : 0;
+      for (let i = this.visibleCount; i > 0; i--)
+        this.addPreview(this.addBox(), tabs[index++ % tabs.length]);
+    }
 
     // regardless of visibleCount, highlight the second-visible tab
     this.selected = this.container.childNodes[1];
@@ -465,9 +490,9 @@ var ctrlTab = {
           this.invertDirection = event.shiftKey;
           if (isOpen)
             this.scroll();
-          else if (this.tabs.length == 2)
-            gBrowser.selectedTab = this.tabs[1];
-          else if (this.tabs.length > 2)
+          else if (this.tabCount == 2)
+            gBrowser.selectedTab = this.getTabList()[1];
+          else if (this.tabCount > 2)
             this.open();
         }
         break;
@@ -494,6 +519,7 @@ var ctrlTab = {
       this.removeBox(this.container.lastChild);
     this.selected = null;
     this.invertDirection = false;
+    this._useTabBarOrder = false;
     this._uniqid = 0;
     this.label.value = "";
     this.setStatusbarValue();
@@ -506,7 +532,7 @@ var ctrlTab = {
   onTabSelect: function (aTab) {
     if (aTab.parentNode) {
       this.detachTab(aTab);
-      this.attachTab(aTab, true);
+      this.attachTab(aTab, 0);
     }
   },
   handleEvent: function (event) {
@@ -522,11 +548,11 @@ var ctrlTab = {
           this.onTabSelect(event.target);
         break;
       case "TabOpen":
-        this.attachTab(event.target);
+        this.attachTab(event.target, 1);
         break;
       case "TabClose":
         if (this.isOpen) {
-          if (this.tabs.length == 2) {
+          if (this.tabCount == 2) {
             // we have two tabs, one is being closed, so the panel isn't needed anymore
             this.panel.hidePopup();
           } else {

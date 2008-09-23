@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "gfxFontconfigUtils.h"
+#include "gfxFont.h"
 
 #include <fontconfig/fontconfig.h>
 
@@ -49,10 +50,67 @@
 
 /* static */ gfxFontconfigUtils* gfxFontconfigUtils::sUtils = nsnull;
 
+/* static */ PRUint8
+gfxFontconfigUtils::GetThebesStyle(FcPattern *aPattern)
+{
+    int slant;
+    if (FcPatternGetInteger(aPattern, FC_SLANT, 0, &slant) == FcResultMatch) {
+        if (slant == FC_SLANT_ITALIC)
+            return FONT_STYLE_ITALIC;
+        if (slant == FC_SLANT_OBLIQUE)
+            return FONT_STYLE_OBLIQUE;
+    }
+
+    return FONT_STYLE_NORMAL;
+}
+
+// OS/2 weight classes were introduced in fontconfig-2.1.93 (2003).
+#ifndef FC_WEIGHT_THIN 
+#define FC_WEIGHT_THIN              0 // 2.1.93
+#define FC_WEIGHT_EXTRALIGHT        40 // 2.1.93
+#define FC_WEIGHT_REGULAR           80 // 2.1.93
+#define FC_WEIGHT_EXTRABOLD         205 // 2.1.93
+#endif
+// book was introduced in fontconfig-2.2.90 (and so fontconfig-2.3.0 in 2005)
+#ifndef FC_WEIGHT_BOOK
+#define FC_WEIGHT_BOOK              75
+#endif
+
+/* static */ PRUint16
+gfxFontconfigUtils::GetThebesWeight(FcPattern *aPattern)
+{
+    int weight;
+    if (FcPatternGetInteger(aPattern, FC_WEIGHT, 0, &weight) != FcResultMatch)
+        return FONT_WEIGHT_NORMAL;
+
+    if (weight <= (FC_WEIGHT_THIN + FC_WEIGHT_EXTRALIGHT) / 2)
+        return 100;
+    if (weight <= (FC_WEIGHT_EXTRALIGHT + FC_WEIGHT_LIGHT) / 2)
+        return 200;
+    if (weight <= (FC_WEIGHT_LIGHT + FC_WEIGHT_BOOK) / 2)
+        return 300;
+    if (weight <= (FC_WEIGHT_REGULAR + FC_WEIGHT_MEDIUM) / 2)
+        // This includes FC_WEIGHT_BOOK
+        return 400;
+    if (weight <= (FC_WEIGHT_MEDIUM + FC_WEIGHT_DEMIBOLD) / 2)
+        return 500;
+    if (weight <= (FC_WEIGHT_DEMIBOLD + FC_WEIGHT_BOLD) / 2)
+        return 600;
+    if (weight <= (FC_WEIGHT_BOLD + FC_WEIGHT_EXTRABOLD) / 2)
+        return 700;
+    if (weight <= (FC_WEIGHT_EXTRABOLD + FC_WEIGHT_BLACK) / 2)
+        return 800;
+    if (weight <= FC_WEIGHT_BLACK)
+        return 900;
+
+    // FC_WEIGHT_EXTRABLACK was introduced in fontconfig-2.4.91 (2007)
+    return 901;
+}
+
 gfxFontconfigUtils::gfxFontconfigUtils()
+    : mLastConfig(NULL)
 {
     mAliasTable.Init(50);
-    UpdateFontListInternal(PR_TRUE);
 }
 
 nsresult
@@ -248,10 +306,23 @@ gfxFontconfigUtils::UpdateFontList()
 nsresult
 gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
 {
-    if (!aForce && FcConfigUptoDate(NULL))
-        return NS_OK;
+    if (!aForce) {
+        // This checks periodically according to fontconfig's configured
+        // <rescan> interval.
+        FcInitBringUptoDate();
+    } else if (!FcConfigUptoDate(NULL)) { // check now with aForce
+        mLastConfig = NULL;
+        FcInitReinitialize();
+    }
 
-    FcInitReinitialize();
+    // FcInitReinitialize() (used by FcInitBringUptoDate) creates a new config
+    // before destroying the old config, so the only way that we'd miss an
+    // update is if fontconfig did more than one update and the memory for the
+    // most recent config happened to be at the same location as the original
+    // config.
+    FcConfig *currentConfig = FcConfigGetCurrent();
+    if (currentConfig == mLastConfig)
+        return NS_OK;
 
     mFonts.Clear();
     mAliasForSingleFont.Clear();
@@ -279,9 +350,7 @@ gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
         return NS_ERROR_FAILURE;
 
     nsXPIDLCString list;
-    rv = prefBranch->GetCharPref("font.alias-list", getter_Copies(list));
-    if (NS_FAILED(rv))
-        return NS_OK;
+    prefBranch->GetCharPref("font.alias-list", getter_Copies(list));
 
     if (!list.IsEmpty()) {
         const char kComma = ',';
@@ -305,9 +374,6 @@ gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
         }
     }
 
-    if (mAliasForMultiFonts.Count() == 0)
-        return NS_OK;
-
     for (PRInt32 i = 0; i < mAliasForMultiFonts.Count(); i++) {
         nsRefPtr<gfxFontNameList> fonts = new gfxFontNameList;
         nsCAutoString fontname(*mAliasForMultiFonts.CStringAt(i));
@@ -319,6 +385,8 @@ gfxFontconfigUtils::UpdateFontListInternal(PRBool aForce)
         ToLowerCase(fontname, key);
         mAliasTable.Put(key, fonts);
     }
+
+    mLastConfig = currentConfig;
     return NS_OK;
 }
 
@@ -385,6 +453,10 @@ gfxFontconfigUtils::GetStandardFamilyName(const nsAString& aFontName, nsAString&
         return NS_OK;
     }
 
+    nsresult rv = UpdateFontListInternal();
+    if (NS_FAILED(rv))
+        return rv;
+
     NS_ConvertUTF16toUTF8 fontname(aFontName);
 
     if (mFonts.IndexOf(fontname) >= 0) {
@@ -400,7 +472,7 @@ gfxFontconfigUtils::GetStandardFamilyName(const nsAString& aFontName, nsAString&
     FcFontSet *givenFS = NULL;
     nsCStringArray candidates;
     FcFontSet *candidateFS = NULL;
-    nsresult rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_FAILURE;
 
     pat = FcPatternCreate();
     if (!pat)

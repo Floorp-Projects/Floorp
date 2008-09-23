@@ -18,6 +18,7 @@ include moz-only/reftest.list
 == currentColor-03.svg pass.svg
 == dynamic-conditions-01.svg pass.svg
 == dynamic-clipPath-01.svg pass.svg
+== dynamic-feFlood-01.svg pass.svg
 == dynamic-link-style-01.svg pass.svg
 == dynamic-rect-01.svg dynamic-rect-01-ref.svg
 == dynamic-rect-02.svg dynamic-rect-02-ref.svg
@@ -51,6 +52,8 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == invalid-text-01.svg pass.svg
 == linearGradient-basic-01.svg pass.svg
 == linearGradient-basic-02.svg pass.svg
+# Bug 456323
+# == mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg

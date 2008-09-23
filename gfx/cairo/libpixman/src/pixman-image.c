@@ -818,6 +818,10 @@ pixman_image_is_opaque(pixman_image_t *image)
 
         if (image->common.transform)
             return FALSE;
+
+	/* Gradients do not necessarily cover the entire compositing area */
+	if (image->type == LINEAR || image->type == CONICAL || image->type == RADIAL)
+	    return FALSE;
     }
 
      return TRUE;

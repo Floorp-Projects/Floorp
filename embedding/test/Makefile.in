@@ -43,10 +43,11 @@ relativesrcdir  = embedding/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	test_bug293834.html \
-		bug293834_form.html \
-		$(NULL)
+_TEST_FILES = \
+	test_bug293834.html \
+	bug293834_form.html \
+	test_nsFind.html \
+	$(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-

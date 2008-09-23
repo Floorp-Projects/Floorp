@@ -303,6 +303,14 @@
       ok(found.unichar_data === expected.unichar_data, "instant reset element unichar");
 //      ok(found.file_data    === expected.file_data,    "instant reset element file"   );
 
+      // check hasUserValue
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_int"    ).hasUserValue === false, "instant reset hasUserValue int"    );
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_bool"   ).hasUserValue === false, "instant reset hasUserValue bool"   );
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_string" ).hasUserValue === false, "instant reset hasUserValue string" );
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_wstring").hasUserValue === false, "instant reset hasUserValue wstring");
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_unichar").hasUserValue === false, "instant reset hasUserValue unichar");
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_file"   ).hasUserValue === false, "instant reset hasUserValue file"   );
+
       // done with instant apply checks
     }
 
@@ -400,11 +408,30 @@
       ok(found.wstring_data === expected.wstring_data, "non-instant reset element wstring");
       ok(found.unichar_data === expected.unichar_data, "non-instant reset element unichar");
 //      ok(found.file_data    === expected.file_data,    "non-instant reset element file"   );
+
+      // check hasUserValue
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_int"    ).hasUserValue === false, "non-instant reset hasUserValue int"    );
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_bool"   ).hasUserValue === false, "non-instant reset hasUserValue bool"   );
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_string" ).hasUserValue === false, "non-instant reset hasUserValue string" );
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_wstring").hasUserValue === false, "non-instant reset hasUserValue wstring");
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_unichar").hasUserValue === false, "non-instant reset hasUserValue unichar");
+      ok(GetXULElement(aPrefWindow, "tests.static_preference_file"   ).hasUserValue === false, "non-instant reset hasUserValue file"   );
     }
 
     function RunNonInstantPrefTestClose(aPrefWindow)
     {
       WritePrefsToPreferences(aPrefWindow, kPrefValueSet2);
+    }
+
+    function RunResetPrefTest(aPrefWindow)
+    {
+      // try resetting the prefs to default values
+      GetXULElement(aPrefWindow, "tests.static_preference_int"    ).reset();
+      GetXULElement(aPrefWindow, "tests.static_preference_bool"   ).reset();
+      GetXULElement(aPrefWindow, "tests.static_preference_string" ).reset();
+      GetXULElement(aPrefWindow, "tests.static_preference_wstring").reset();
+      GetXULElement(aPrefWindow, "tests.static_preference_unichar").reset();
+      GetXULElement(aPrefWindow, "tests.static_preference_file"   ).reset();
     }
 
     function InitTestPrefs(aInstantApply)
@@ -419,6 +446,18 @@
       // test with instantApply
       InitTestPrefs(true);
       openDialog("window_preferences.xul", "", "modal", RunInstantPrefTest, false);
+
+      // - test deferred reset in child window
+      InitTestPrefs(true);
+      openDialog("window_preferences2.xul", "", "modal", RunResetPrefTest, false);
+      expected = kPrefValueSet1;
+      found    = ReadPrefsFromSystem();
+      ok(found.int          === expected.int,          "instant reset deferred int"    );
+      ok(found.bool         === expected.bool,         "instant reset deferred bool"   );
+      ok(found.string       === expected.string,       "instant reset deferred string" );
+      ok(found.wstring_data === expected.wstring_data, "instant reset deferred wstring");
+      ok(found.unichar_data === expected.unichar_data, "instant reset deferred unichar");
+      todo(found.file_data  === expected.file_data,    "instant reset deferred file"   );
     }
 
     function RunTestNonInstant()
@@ -451,6 +490,18 @@
       ok(found.wstring_data === expected.wstring_data, "non-instant accept system wstring");
       ok(found.unichar_data === expected.unichar_data, "non-instant accept system unichar");
       todo(found.file_data  === expected.file_data,    "non-instant accept system file"   );
+
+      // - test deferred reset in child window
+      InitTestPrefs(false);
+      openDialog("window_preferences2.xul", "", "modal", RunResetPrefTest, true);
+      expected = CreateEmptyPrefValueSet();
+      found    = ReadPrefsFromSystem();
+      ok(found.int          === expected.int,          "non-instant reset deferred int"    );
+      ok(found.bool         === expected.bool,         "non-instant reset deferred bool"   );
+      ok(found.string       === expected.string,       "non-instant reset deferred string" );
+      ok(found.wstring_data === expected.wstring_data, "non-instant reset deferred wstring");
+      ok(found.unichar_data === expected.unichar_data, "non-instant reset deferred unichar");
+      ok(found.file_data    === expected.file_data,    "non-instant reset deferred file"   );
     }
 
     function RunTest()

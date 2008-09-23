@@ -72,10 +72,13 @@
 # The complete list of known differences, as of this writing, after an
 # assiduous search:
 #
-# - Quick stubs are currently always enumerable; XPConnect properties are
-#   non-enumerable if the object being wrapped has a scriptable helper with the
-#   DONT_ENUM_STATIC_PROPS flag (in nsIXPCScriptable.scriptableFlags).  (I
-#   think this is a bug that I'll have to fix.)
+# - Quick stubs affect the handling of naming conflicts--that is, which C++
+#   method gets called when a script uses an XPCOM feature that is declared in
+#   more than one of the interfaces the object implements.  Without quick
+#   stubs, XPConnect just walks the interfaces in the order they're listed by
+#   nsClassInfo.  You get the first interface that implements a feature with
+#   that name.  With quick stubs, it's the same except that non-quick-stubbed
+#   features are shadowed.
 #
 # - Quick stub getters and setters are JSPropertyOps-- that is, they do not use
 #   JSPROP_GETTER or JSPROP_SETTER.  This means __lookupGetter__ does not work

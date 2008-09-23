@@ -193,11 +193,10 @@
 #define NS_STYLE_VOLUME_X_LOUD            5
 
 // See nsStyleColor
-#define NS_STYLE_COLOR_TRANSPARENT        0
+#define NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR      1
 #ifdef GFX_HAS_INVERT
-#define NS_STYLE_COLOR_INVERT             1
+#define NS_STYLE_COLOR_INVERT             2
 #endif
-#define NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR      2
 
 // See nsStyleColor
 #define NS_COLOR_MOZ_HYPERLINKTEXT              -1
@@ -206,7 +205,7 @@
 #define NS_COLOR_CURRENTCOLOR                   -4
 
 // See nsStyleBackground
-#define NS_STYLE_BG_COLOR_TRANSPARENT           0x01
+// 0x01 was background-color:transparent
 #define NS_STYLE_BG_IMAGE_NONE                  0x02
 #define NS_STYLE_BG_X_POSITION_PERCENT          0x04
 #define NS_STYLE_BG_X_POSITION_LENGTH           0x08

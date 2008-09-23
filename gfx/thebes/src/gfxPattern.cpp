@@ -88,29 +88,16 @@ void
 gfxPattern::AddColorStop(gfxFloat offset, const gfxRGBA& c)
 {
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
-        cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
-        if (transform) {
-#ifdef IS_LITTLE_ENDIAN
-            PRUint32 packed = c.Packed(gfxRGBA::PACKED_ABGR);
-            cmsDoTransform(transform,
-                           (PRUint8 *)&packed, (PRUint8 *)&packed,
-                           1);
-            gfxRGBA cms(packed, gfxRGBA::PACKED_ABGR);
-#else
-            PRUint32 packed = c.Packed(gfxRGBA::PACKED_ARGB);
-            cmsDoTransform(transform,
-                           (PRUint8 *)&packed + 1, (PRUint8 *)&packed + 1,
-                           1);
-            gfxRGBA cms(packed, gfxRGBA::PACKED_ARGB);
-#endif
-            // Use the original alpha to avoid unnecessary float->byte->float
-            // conversion errors
-            cairo_pattern_add_color_stop_rgba(mPattern, offset,
-                                              cms.r, cms.g, cms.b, c.a);
-            return;
-        }
+        gfxRGBA cms;
+        gfxPlatform::TransformPixel(c, cms, gfxPlatform::GetCMSRGBTransform());
+
+        // Use the original alpha to avoid unnecessary float->byte->float
+        // conversion errors
+        cairo_pattern_add_color_stop_rgba(mPattern, offset,
+                                          cms.r, cms.g, cms.b, c.a);
     }
-    cairo_pattern_add_color_stop_rgba(mPattern, offset, c.r, c.g, c.b, c.a);
+    else
+        cairo_pattern_add_color_stop_rgba(mPattern, offset, c.r, c.g, c.b, c.a);
 }
 
 void

@@ -56,7 +56,6 @@
 #include "nsICSSStyleSheet.h"
 #include "nsDOMAttribute.h"
 #include "nsDOMClassInfo.h"
-#include "nsDOMScriptObjectFactory.h"
 #include "nsEventListenerManager.h"
 #include "nsFrame.h"
 #include "nsGenericElement.h"  // for nsDOMEventRTTearoff
@@ -124,6 +123,7 @@ PRBool NS_SVGEnabled();
 #include "nsTraceRefcnt.h"
 
 #include "nsCycleCollector.h"
+#include "nsJSEnvironment.h"
 
 static nsrefcnt sLayoutStaticRefcnt;
 
@@ -148,7 +148,7 @@ nsLayoutStatics::Initialize()
   nsColorNames::AddRefTable();
   nsGkAtoms::AddRefAtoms();
 
-  nsDOMScriptObjectFactory::Startup();
+  nsJSRuntime::Startup();
   rv = nsContentUtils::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsContentUtils");
@@ -326,6 +326,7 @@ nsLayoutStatics::Shutdown()
   NS_NameSpaceManagerShutdown();
   nsStyleSet::FreeGlobals();
 
+  nsJSRuntime::Shutdown();
   nsGlobalWindow::ShutDown();
   nsDOMClassInfo::ShutDown();
   nsTextControlFrame::ShutDown();

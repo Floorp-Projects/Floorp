@@ -550,7 +550,10 @@ nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
 
     if (!binding->mDoomed) {
         // so it can't be seen by FindEntry() ever again.
-        nsresult rv = mCacheMap.DeleteRecord(&binding->mRecord);
+#ifdef DEBUG
+        nsresult rv =
+#endif
+            mCacheMap.DeleteRecord(&binding->mRecord);
         NS_ASSERTION(NS_SUCCEEDED(rv),"DeleteRecord failed.");
         binding->mDoomed = PR_TRUE; // record in no longer in cache map
     }
@@ -685,7 +688,10 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
     // If the new size is larger than max. file size or larger than
     // half the cache capacity (which is in KiB's), doom the entry and abort
     if ((newSize > kMaxDataFileSize) || (newSizeK > mCacheCapacity/2)) {
-        nsresult rv = nsCacheService::DoomEntry(entry);
+#ifdef DEBUG
+        nsresult rv =
+#endif
+            nsCacheService::DoomEntry(entry);
         NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");
         return NS_ERROR_ABORT;
     }

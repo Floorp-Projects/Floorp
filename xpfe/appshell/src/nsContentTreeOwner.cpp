@@ -909,7 +909,7 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
             docShellElement->GetAttribute(NS_LITERAL_STRING("titlemodifier"), mWindowTitleModifier);
             docShellElement->GetAttribute(NS_LITERAL_STRING("titlepreface"), mTitlePreface);
             
-#if defined(XP_MACOSX) && defined(MOZ_XUL_APP)
+#if defined(XP_MACOSX)
             // On OS X, treat the titlemodifier like it's the titledefault, and don't ever append
             // the separator + appname.
             if (mTitleDefault.IsEmpty()) {

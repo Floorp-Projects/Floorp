@@ -161,11 +161,14 @@ nsMemoryCacheDevice::FindEntry(nsCString * key, PRBool *collision)
 nsresult
 nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
+    CACHE_LOG_DEBUG(("nsMemoryCacheDevice::DeactivateEntry for entry 0x%p\n",
+                     entry));
     if (entry->IsDoomed()) {
 #ifdef DEBUG
         // XXX verify we've removed it from mMemCacheEntries & eviction list
 #endif
         delete entry;
+        CACHE_LOG_DEBUG(("deleted doomed entry 0x%p\n", entry));
         return NS_OK;
     }
 
@@ -221,7 +224,7 @@ nsMemoryCacheDevice::DoomEntry(nsCacheEntry * entry)
     if (!hashEntry)               NS_WARNING("no entry for key");
     else if (entry != hashEntry)  NS_WARNING("entry != hashEntry");
 #endif
-
+    CACHE_LOG_DEBUG(("Dooming entry 0x%p in memory cache\n", entry));
     EvictEntry(entry, DO_NOT_DELETE_ENTRY);
 }
 
@@ -299,7 +302,10 @@ nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
         // we have the right to refuse or pre-evict
         PRUint32  newSize = entry->DataSize() + deltaSize;
         if ((PRInt32) newSize > mSoftLimit) {
-            nsresult rv = nsCacheService::DoomEntry(entry);
+#ifdef DEBUG
+            nsresult rv =
+#endif
+                nsCacheService::DoomEntry(entry);
             NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");
             return NS_ERROR_ABORT;
         }
@@ -333,6 +339,8 @@ nsMemoryCacheDevice::AdjustMemoryLimits(PRInt32  softLimit, PRInt32  hardLimit)
 void
 nsMemoryCacheDevice::EvictEntry(nsCacheEntry * entry, PRBool deleteEntry)
 {
+    CACHE_LOG_DEBUG(("Evicting entry 0x%p from memory cache, deleting: %d\n",
+                     entry, deleteEntry));
     // remove entry from our hashtable
     mMemCacheEntries.RemoveEntry(entry);
     
@@ -355,6 +363,10 @@ nsMemoryCacheDevice::EvictEntriesIfNecessary(void)
 {
     nsCacheEntry * entry, * next;
 
+    CACHE_LOG_DEBUG(("EvictEntriesIfNecessary.  mTotalSize: %d, mHardLimit: %d,"
+                     "mInactiveSize: %d, mSoftLimit: %d\n",
+                     mTotalSize, mHardLimit, mInactiveSize, mSoftLimit));
+    
     if ((mTotalSize < mHardLimit) && (mInactiveSize < mSoftLimit))
         return;
 

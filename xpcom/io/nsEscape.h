@@ -184,42 +184,6 @@ NS_UnescapeURL(const nsCSubstring &str, PRUint32 flags, nsCSubstring &result) {
     return str;
 }
 
-// nsACString is nsCSubstring when MOZ_V1_STRING_ABI is undefined.
-#ifdef MOZ_V1_STRING_ABI
-inline const nsACString &
-NS_EscapeURL(const nsACString &str, PRUint32 flags, nsACString &result) {
-    // The iterator version of BeginReading provides us with both the data
-    // pointer and the length with only one function call.
-    nsACString::const_iterator iter;
-    str.BeginReading(iter);
-    if (NS_EscapeURL(iter.get(), iter.size_forward(), flags, result))
-        return result;
-    return str;
-}
-inline const nsACString &
-NS_EscapeURL(const nsCSubstring &str, PRUint32 flags, nsACString &result) {
-    if (NS_EscapeURL(str.Data(), str.Length(), flags, result))
-        return result;
-    return str;
-}
-inline const nsACString &
-NS_UnescapeURL(const nsACString &str, PRUint32 flags, nsACString &result) {
-    // The iterator version of BeginReading provides us with both the data
-    // pointer and the length with only one function call.
-    nsACString::const_iterator iter;
-    str.BeginReading(iter);
-    if (NS_UnescapeURL(iter.get(), iter.size_forward(), flags, result))
-        return result;
-    return str;
-}
-inline const nsACString &
-NS_UnescapeURL(const nsCSubstring &str, PRUint32 flags, nsACString &result) {
-    if (NS_UnescapeURL(str.Data(), str.Length(), flags, result))
-        return result;
-    return str;
-}
-#endif  // MOZ_V1_STRING_ABI
-
 /**
  * CString version of nsEscape. Returns true on success, false
  * on out of memory. To reverse this function, use NS_UnescapeURL.

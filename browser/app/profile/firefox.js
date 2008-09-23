@@ -309,8 +309,8 @@ pref("browser.link.open_newwindow", 3);
 pref("browser.link.open_newwindow.restriction", 2);
 
 // Tabbed browser
-pref("browser.tabs.autoHide", true);
-pref("browser.tabs.forceHide", false);
+pref("browser.tabs.autoHide", false);
+pref("browser.tabs.closeWindowWithLastTab", true);
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnOpen", true);
 pref("browser.tabs.maxOpenBeforeWarn", 15);
@@ -338,6 +338,7 @@ pref("browser.tabs.closeButtons", 1);
 pref("browser.tabs.selectOwnerOnClose", true);
 
 pref("browser.ctrlTab.mostRecentlyUsed", true);
+pref("browser.ctrlTab.recentlyUsedLimit", 7);
 pref("browser.ctrlTab.smoothScroll", true);
 
 // Default bookmark sorting
@@ -694,15 +695,6 @@ pref("browser.sessionstore.max_tabs_undo", 10);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
-
-// If true, will migrate uri post-data annotations to
-// bookmark post-data annotations (bug 398914)
-// XXX to be removed after beta 2 (bug 391419)
-pref("browser.places.migratePostDataAnnotations", true);
-
-// If true, will update the Smart Bookmarks uri for
-// recent tags (bug 385245). Useful just for FX3 beta users.
-pref("browser.places.updateRecentTagsUri", true);
 
 // the (maximum) number of the recent visits to sample
 // when calculating frecency

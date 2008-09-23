@@ -101,17 +101,13 @@ EXPORTS = \
 	nsXULAppAPI.h \
 	$(NULL)
 
-SHAREDCPPSRCS = \
-	showOSAlert.cpp \
-	$(NULL)
-
 CPPSRCS = \
-	$(SHAREDCPPSRCS) \
 	nsAppRunner.cpp \
 	nsConsoleWriter.cpp \
 	nsXREDirProvider.cpp \
 	nsNativeAppSupportBase.cpp \
 	nsAppData.cpp \
+	showOSAlert.cpp \
 	$(NULL)
 
 DEFINES += -DIMPL_XREAPI
@@ -164,12 +160,7 @@ CMMSRCS += MacApplicationDelegate.mm
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-SHAREDCPPSRCS	  += nsSigHandlers.cpp
-endif
-
-GARBAGE += $(SHAREDCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
-ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
-GARBAGE	+= $(addprefix $(srcdir)/,$(SHAREDCPPSRCS))
+CPPSRCS	  += nsSigHandlers.cpp
 endif
 
 SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
@@ -255,9 +246,6 @@ ifneq (,$(findstring lib64,$(libdir)))
 DEFINES     += -DHAVE_USR_LIB64_DIR
 endif
 endif
-
-export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS))
-	$(INSTALL) $^ .
 
 platform.ini: FORCE
 	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(shell cat $(DEPTH)/config/buildid) $(topsrcdir)/config/milestone.txt > $@

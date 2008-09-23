@@ -451,6 +451,8 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_DataTransfer_id,
 
+  eDOMClassInfo_NotifyPaintEvent_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

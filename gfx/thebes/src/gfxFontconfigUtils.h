@@ -43,6 +43,8 @@
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 
+#include <fontconfig/fontconfig.h>
+
 class gfxFontNameList : public nsTArray<nsString>
 {
 public:
@@ -77,6 +79,9 @@ public:
 
     nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
+    static PRUint8 GetThebesStyle(FcPattern *aPattern); // slant
+    static PRUint16 GetThebesWeight(FcPattern *aPattern);
+
 protected:
     static gfxFontconfigUtils* sUtils;
 
@@ -94,6 +99,8 @@ protected:
     nsCStringArray mAliasForMultiFonts;
 
     nsDataHashtable<nsCStringHashKey, nsRefPtr<gfxFontNameList> > mAliasTable;
+
+    FcConfig *mLastConfig;
 };
 
 #endif /* GFX_FONTCONFIG_UTILS_H */

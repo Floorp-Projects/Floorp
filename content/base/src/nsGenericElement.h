@@ -101,7 +101,10 @@ public:
   virtual ~nsChildContentList();
 
   // nsIDOMNodeList interface
-  NS_DECL_NSIDOMNODELIST
+  NS_IMETHOD GetLength(PRUint32* aLength);
+
+  // nsINodeList interface
+  virtual nsINode* GetNodeAt(PRUint32 aIndex);  
   
   void DropReference()
   {
@@ -295,28 +298,6 @@ private:
   nsCOMPtr<nsIContent> mContent;
 };
 
-/**
- * A static NodeList class, which just holds a COMArray of nodes
- */
-class nsStaticContentList : public nsIDOMNodeList {
-public:
-  nsStaticContentList() {}
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMNODELIST
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsStaticContentList)
-
-  PRBool AppendContent(nsIContent* aContent) {
-    return mList.AppendObject(aContent);
-  }
-
-private:
-  ~nsStaticContentList() {}
-  
-  nsCOMArray<nsIContent> mList;
-};
-
 // Forward declare to allow being a friend
 class nsNSElementTearoff;
 
@@ -436,7 +417,7 @@ public:
 #endif
 
   virtual nsIAtom* GetID() const;
-  virtual const nsAttrValue* GetClasses() const;
+  virtual const nsAttrValue* DoGetClasses() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   virtual nsICSSStyleRule* GetInlineStyleRule();
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);

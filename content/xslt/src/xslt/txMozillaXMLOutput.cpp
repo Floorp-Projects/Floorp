@@ -534,9 +534,8 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
 
     // Create the element
     nsCOMPtr<nsINodeInfo> ni;
-    rv = mNodeInfoManager->GetNodeInfo(aLocalName, aPrefix, aNsID,
-                                       getter_AddRefs(ni));
-    NS_ENSURE_SUCCESS(rv, rv);
+    ni = mNodeInfoManager->GetNodeInfo(aLocalName, aPrefix, aNsID);
+    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     NS_NewElement(getter_AddRefs(mOpenedElement), aElemType, ni, PR_FALSE);
 
@@ -967,10 +966,9 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
     *aResult = nsnull;
 
     nsCOMPtr<nsINodeInfo> ni;
-    nsresult rv = mNodeInfoManager->GetNodeInfo(aName, nsnull,
-                                                kNameSpaceID_None,
-                                                getter_AddRefs(ni));
-    NS_ENSURE_SUCCESS(rv, rv);
+    ni = mNodeInfoManager->GetNodeInfo(aName, nsnull,
+                                       kNameSpaceID_None);
+    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     return NS_NewHTMLElement(aResult, ni, PR_FALSE);
 }

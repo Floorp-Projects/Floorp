@@ -130,7 +130,7 @@ nsNativeThemeGTK::RefreshWidgetWindow(nsIFrame* aFrame)
 }
 
 static PRBool IsWidgetTypeDisabled(PRUint8* aDisabledVector, PRUint8 aWidgetType) {
-  return aDisabledVector[aWidgetType >> 3] & (1 << (aWidgetType & 7));
+  return (aDisabledVector[aWidgetType >> 3] & (1 << (aWidgetType & 7))) != 0;
 }
 
 static void SetWidgetTypeDisabled(PRUint8* aDisabledVector, PRUint8 aWidgetType) {
@@ -153,7 +153,7 @@ static PRBool IsWidgetStateSafe(PRUint8* aSafeVector,
                                 GtkWidgetState *aWidgetState)
 {
   PRUint8 key = GetWidgetStateKey(aWidgetType, aWidgetState);
-  return aSafeVector[key >> 3] & (1 << (key & 7));
+  return (aSafeVector[key >> 3] & (1 << (key & 7))) != 0;
 }
 
 static void SetWidgetStateSafe(PRUint8 *aSafeVector,

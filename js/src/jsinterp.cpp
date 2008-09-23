@@ -1005,7 +1005,7 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
     } else {
         invokevp[3] = OBJECT_TO_JSVAL(argsobj);
         ok = (flags & JSINVOKE_CONSTRUCT)
-             ? js_InvokeConstructor(cx, 2, invokevp)
+             ? js_InvokeConstructor(cx, 2, JS_TRUE, invokevp)
              : js_Invoke(cx, 2, invokevp, flags);
         vp[0] = invokevp[0];
     }
@@ -1720,7 +1720,7 @@ js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval)
 }
 
 JSBool
-js_InvokeConstructor(JSContext *cx, uintN argc, jsval *vp)
+js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp)
 {
     JSFunction *fun, *fun2;
     JSObject *obj, *obj2, *proto, *parent;
@@ -1781,7 +1781,7 @@ js_InvokeConstructor(JSContext *cx, uintN argc, jsval *vp)
 
     /* Check the return value and if it's primitive, force it to be obj. */
     rval = *vp;
-    if (JSVAL_IS_PRIMITIVE(rval)) {
+    if (clampReturn && JSVAL_IS_PRIMITIVE(rval)) {
         if (!fun) {
             /* native [[Construct]] returning primitive is error */
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -2571,6 +2571,7 @@ js_Interpret(JSContext *cx)
     if (JS_ON_TRACE(cx)) {
         tr = TRACE_RECORDER(cx);
         SET_TRACE_RECORDER(cx, NULL);
+        JS_TRACE_MONITOR(cx).onTrace = JS_FALSE;
     }
 #endif
 
@@ -2930,6 +2931,16 @@ js_Interpret(JSContext *cx)
              */
             ASSERT_NOT_THROWING(cx);
             JS_ASSERT(regs.sp == StackBase(fp));
+            if ((fp->flags & JSFRAME_CONSTRUCTING) &&
+                JSVAL_IS_PRIMITIVE(fp->rval)) {
+                if (!fp->fun) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_BAD_NEW_RESULT,
+                                         js_ValueToPrintableString(cx, rval));
+                    goto error;
+                }
+                fp->rval = OBJECT_TO_JSVAL(fp->thisp);
+            }
             ok = JS_TRUE;
             if (inlineCallCount)
           inline_return:
@@ -4450,8 +4461,6 @@ js_Interpret(JSContext *cx)
                             JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
                             JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj)));
 
-                            TRACE_2(SetPropHit, entry, sprop);
-
                             if (scope->object == obj) {
                                 /*
                                  * Fastest path: the cached sprop is already
@@ -4464,6 +4473,7 @@ js_Interpret(JSContext *cx)
                                     PCMETER(cache->setpchits++);
                                     NATIVE_SET(cx, obj, sprop, &rval);
                                     JS_UNLOCK_SCOPE(cx, scope);
+                                    TRACE_2(SetPropHit, entry, sprop);
                                     break;
                                 }
                             } else {
@@ -4555,6 +4565,7 @@ js_Interpret(JSContext *cx)
                                                  rval);
                                 LOCKED_OBJ_SET_SLOT(obj, slot, rval);
                                 JS_UNLOCK_SCOPE(cx, scope);
+                                TRACE_2(SetPropHit, entry, sprop);
                                 break;
                             }
 
@@ -4573,20 +4584,17 @@ js_Interpret(JSContext *cx)
                     } else {
                         ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
                         if (obj == obj2) {
-                            if (PCVAL_IS_SLOT(entry->vword)) {
-                                slot = PCVAL_TO_SLOT(entry->vword);
-                                JS_ASSERT(slot < obj->map->freeslot);
-                                LOCKED_OBJ_WRITE_BARRIER(cx, obj, slot, rval);
-                            } else if (PCVAL_IS_SPROP(entry->vword)) {
-                                sprop = PCVAL_TO_SPROP(entry->vword);
-                                JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
-                                JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj2)));
-                                NATIVE_SET(cx, obj, sprop, &rval);
-                            }
+                            JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
+                            sprop = PCVAL_TO_SPROP(entry->vword);
+                            JS_ASSERT(!(sprop->attrs & JSPROP_READONLY));
+                            JS_ASSERT(!SCOPE_IS_SEALED(OBJ_SCOPE(obj2)));
+                            NATIVE_SET(cx, obj, sprop, &rval);
                         }
                         JS_UNLOCK_OBJ(cx, obj2);
-                        if (obj == obj2 && !PCVAL_IS_OBJECT(entry->vword))
+                        if (obj == obj2) {
+                            TRACE_2(SetPropHit, entry, sprop);
                             break;
+                        }
                     }
                 }
 
@@ -4604,6 +4612,12 @@ js_Interpret(JSContext *cx)
                     if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                         goto error;
                 }
+#ifdef JS_TRACER
+                if (!entry && TRACE_RECORDER(cx)) {
+                    js_AbortRecording(cx, NULL, "SetPropUncached");
+                    ENABLE_TRACER(0);
+                }
+#endif
             } while (0);
           END_SET_CASE_STORE_RVAL(JSOP_SETPROP, 2);
 
@@ -4745,7 +4759,7 @@ js_Interpret(JSContext *cx)
                 }
             }
 
-            if (!js_InvokeConstructor(cx, argc, vp))
+            if (!js_InvokeConstructor(cx, argc, JS_FALSE, vp))
                 goto error;
             regs.sp = vp + 1;
             LOAD_INTERRUPT_HANDLER(cx);
@@ -4958,6 +4972,7 @@ js_Interpret(JSContext *cx)
                     JS_ASSERT(JSVAL_IS_OBJECT(vp[1]) ||
                               PRIMITIVE_THIS_TEST(fun, vp[1]));
                     ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
+                    TRACE_0(FastNativeCallComplete);
 #ifdef INCLUDE_MOZILLA_DTRACE
                     if (VALUE_IS_FUNCTION(cx, lval)) {
                         if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
@@ -7023,6 +7038,7 @@ js_Interpret(JSContext *cx)
 
 #ifdef JS_TRACER
     if (tr) {
+        JS_TRACE_MONITOR(cx).onTrace = JS_TRUE;
         SET_TRACE_RECORDER(cx, tr);
         tr->deepAbort();
     }

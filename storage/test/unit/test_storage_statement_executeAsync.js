@@ -301,14 +301,39 @@ function test_tuple_out_of_bounds()
   stmt.finalize();
 }
 
-function test_no_listener_works()
+function test_no_listener_works_on_success()
 {
-  dump("test_no_listener_works()\n");
+  dump("test_no_listener_works_on_success()\n");
 
   var stmt = getOpenedDatabase().createStatement(
     "DELETE FROM test WHERE id = ?"
   );
   stmt.bindInt32Parameter(0, 0);
+  stmt.executeAsync();
+  stmt.finalize();
+}
+
+function test_no_listener_works_on_results()
+{
+  dump("test_no_listener_works_on_results()\n");
+
+  var stmt = getOpenedDatabase().createStatement(
+    "SELECT ?"
+  );
+  stmt.bindInt32Parameter(0, 1);
+  stmt.executeAsync();
+  stmt.finalize();
+}
+
+function test_no_listener_works_on_error()
+{
+  return;
+  dump("test_no_listener_works_on_error()\n");
+
+  // commit without a transaction will trigger an error
+  var stmt = getOpenedDatabase().createStatement(
+    "COMMIT"
+  );
   stmt.executeAsync();
   stmt.finalize();
 }
@@ -453,7 +478,9 @@ var tests =
   test_add_data,
   test_get_data,
   test_tuple_out_of_bounds,
-  test_no_listener_works,
+  test_no_listener_works_on_success,
+  test_no_listener_works_on_results,
+  test_no_listener_works_on_error,
   test_partial_listener_works,
   test_immediate_cancellation,
   test_double_cancellation,

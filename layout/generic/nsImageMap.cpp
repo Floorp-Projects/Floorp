@@ -1024,7 +1024,7 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus)
               if (imgFrame) {
                 nsRect dmgRect;
                 area->GetRect(imgFrame, dmgRect);
-                imgFrame->Invalidate(dmgRect, PR_FALSE);
+                imgFrame->Invalidate(dmgRect);
               }
             }
           }

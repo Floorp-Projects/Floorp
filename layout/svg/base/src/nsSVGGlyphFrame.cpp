@@ -1284,6 +1284,23 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
   return PR_TRUE;
 }
 
+NS_IMETHODIMP
+nsSVGGlyphFrame::SetMatrixPropagation(PRBool aPropagate)
+{
+  if (aPropagate) {
+    AddStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
+  } else {
+    RemoveStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
+  }
+  return NS_OK;
+}
+
+PRBool
+nsSVGGlyphFrame::GetMatrixPropagation()
+{
+  return (GetStateBits() & NS_STATE_SVG_PROPAGATE_TRANSFORM) != 0;
+}
+
 //----------------------------------------------------------------------
 // helper class
 

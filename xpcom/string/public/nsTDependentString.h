@@ -128,7 +128,4 @@ class nsTDependentString_CharT : public nsTString_CharT
       
       // NOT USED
       nsTDependentString_CharT( const substring_tuple_type& );
-#ifdef MOZ_V1_STRING_ABI
-      nsTDependentString_CharT( const abstract_string_type& );
-#endif
   };

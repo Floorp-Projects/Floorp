@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Robert Kaiser <kairo@kairo.at>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,9 +36,11 @@
 #
 # ***** END LICENSE BLOCK *****
 
-ifndef MOZ_PKG_APPNAME
-MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
-endif
+# assemble package names, see convention at
+# http://developer.mozilla.org/index.php?title=En/Package_Filename_Convention
+# for (at least Firefox) releases we use a different format with directories,
+# e.g. win32/de/Firefox Setup 3.0.1.exe
+# the latter format is triggered with MOZ_PKG_PRETTYNAMES=1
 
 ifndef MOZ_PKG_VERSION
 MOZ_PKG_VERSION = $(MOZ_APP_VERSION)
@@ -84,4 +87,45 @@ ifdef MOZ_PKG_SPECIAL
 MOZ_PKG_PLATFORM := $(MOZ_PKG_PLATFORM)-$(MOZ_PKG_SPECIAL)
 endif
 
+
+ifndef MOZ_PKG_PRETTYNAMES # standard package names
+
+ifndef MOZ_PKG_APPNAME
+MOZ_PKG_APPNAME = $(MOZ_APP_NAME)
+endif
+
 PKG_BASENAME = $(MOZ_PKG_APPNAME)-$(MOZ_PKG_VERSION).$(AB_CD).$(MOZ_PKG_PLATFORM)
+PKG_PATH =
+PKG_INST_BASENAME = $(PKG_BASENAME).installer
+PKG_INST_PATH = install/sea/
+PKG_UPDATE_BASENAME = $(PKG_BASENAME)
+PKG_UPDATE_PATH = update/
+PKG_LANGPACK_BASENAME = $(MOZ_PKG_APPNAME)-$(MOZ_PKG_VERSION).$(AB_CD).langpack
+PKG_LANGPACK_PATH = install/
+
+else # "pretty" release package names
+
+ifndef MOZ_PKG_APPNAME
+MOZ_PKG_APPNAME = $(MOZ_APP_DISPLAYNAME)
+endif
+MOZ_PKG_APPNAME_LC = $(shell echo $(MOZ_PKG_APPNAME) | tr '[A-Z]' '[a-z]')
+
+ifndef MOZ_PKG_LONGVERSION
+MOZ_PKG_LONGVERSION = $(MOZ_PKG_VERSION)
+endif
+
+ifeq (,$(filter-out Darwin OS2 WINNT, $(OS_ARCH)))
+PKG_BASENAME = $(MOZ_PKG_APPNAME) $(MOZ_PKG_LONGVERSION)
+PKG_INST_BASENAME = $(MOZ_PKG_APPNAME) Setup $(MOZ_PKG_LONGVERSION)
+else # unix (actually, not Windows, Mac or OS/2)
+PKG_BASENAME = $(MOZ_PKG_APPNAME_LC)-$(MOZ_PKG_VERSION)
+PKG_INST_BASENAME = $(MOZ_PKG_APPNAME_LC)-setup-$(MOZ_PKG_VERSION)
+endif
+PKG_PATH = $(MOZ_PKG_PLATFORM)/$(AB_CD)/
+PKG_INST_PATH = $(PKG_PATH)
+PKG_UPDATE_BASENAME = $(MOZ_PKG_APPNAME_LC)-$(MOZ_PKG_VERSION)
+PKG_UPDATE_PATH = update/$(PKG_PATH)
+PKG_LANGPACK_BASENAME = $(AB_CD)
+PKG_LANGPACK_PATH = langpack/
+
+endif # MOZ_PKG_PRETTYNAMES

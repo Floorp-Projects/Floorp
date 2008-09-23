@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var y = document.createTextNode('Y');
+  document.body.insertBefore(y, document.getElementById("v").nextSibling);
+}
+
+</script>
+</head>
+
+<body onload="boom();" style="-moz-column-count: 2; width: 10ch; letter-spacing: 1px; font-family: monospace;">
+<div style="background: lightblue; float: right; height: 14em; width: 1ch;" id="v"></div>a bcd<span>&#x202B;X</span>
+</body>
+</html>

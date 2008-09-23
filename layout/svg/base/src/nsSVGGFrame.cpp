@@ -81,13 +81,6 @@ nsSVGGFrame::NotifySVGChanged(PRUint32 aFlags)
 }
 
 NS_IMETHODIMP
-nsSVGGFrame::SetMatrixPropagation(PRBool aPropagate)
-{
-  mPropagateTransform = aPropagate;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSVGGFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
 {
   mOverrideCTM = aCTM;
@@ -105,7 +98,7 @@ nsSVGGFrame::GetOverrideCTM()
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGGFrame::GetCanvasTM()
 {
-  if (!mPropagateTransform) {
+  if (!GetMatrixPropagation()) {
     nsIDOMSVGMatrix *retval;
     if (mOverrideCTM) {
       retval = mOverrideCTM;
