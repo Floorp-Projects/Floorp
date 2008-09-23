@@ -1199,6 +1199,24 @@ MOZCE_SHUNT_API HWND GetAncestor(HWND hwnd, UINT gaFlags)
     return(hwndParent);
 }
 
+MOZCE_SHUNT_API BOOL InitializeAcl(PACL apAcl, DWORD len, DWORD rev)
+{
+    return FALSE;
+}
+
+MOZCE_SHUNT_API DWORD SetNamedSecurityInfoW(unsigned short* pObjectName,
+                                            SE_OBJECT_TYPE ObjectType,
+                                            SECURITY_INFORMATION SecurityInfo,
+                                            PSID psidOwner,
+                                            PSID psidGroup,
+                                            PACL pDacl,
+                                            PACL pSacl)
+{
+    return 0;
+}
+
+
+
 #if 0
 {
 #endif

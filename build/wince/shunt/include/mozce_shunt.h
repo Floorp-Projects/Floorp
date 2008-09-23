@@ -150,6 +150,15 @@
 extern "C" {
 #endif
 
+  MOZCE_SHUNT_API BOOL InitializeAcl(PACL apAcl, DWORD len, DWORD rev);
+  MOZCE_SHUNT_API DWORD SetNamedSecurityInfoW(unsigned short* pObjectName,
+					      SE_OBJECT_TYPE ObjectType,
+					      SECURITY_INFORMATION SecurityInfo,
+					      PSID psidOwner,
+					      PSID psidGroup,
+					      PACL pDacl,
+					      PACL pSacl);
+
   // From assert.cpp
   MOZCE_SHUNT_API void mozce_assert(int inExpression);
 
