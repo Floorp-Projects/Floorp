@@ -47,9 +47,7 @@ extern "C" {
 
 MOZCE_SHUNT_API char* strerror(int inErrno)
 {
-#ifdef API_LOGGING
-    mozce_printf("strerror called\n");
-#endif
+    WINCE_LOG_API_CALL("strerror called\n");
     return "Unknown Error";
 }
 
