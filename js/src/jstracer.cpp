@@ -683,7 +683,7 @@ public:
           case F_dmod: 
             // FIXME: We should really have LIR_imod and LIR_idiv (455496).
             JS_ASSERT(s0->isQuad() && args[1]->isQuad());
-            if (args[1]->isconstq() && args[1]->constvalq() && isPromote(s0)) {
+            if (args[1]->isconstq() && args[1]->constvalq() && isPromote(args[1]) && isPromote(s0)) {
                 LIns* args2[] = { demote(out, s0), demote(out, args[1]) };
                 return out->ins1(LIR_i2f, out->insCall(F_imod, args2));
             }
