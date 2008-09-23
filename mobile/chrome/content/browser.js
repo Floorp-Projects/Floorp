@@ -156,7 +156,6 @@ var Browser = {
     var plugins = phs.getPluginTags({ });
      for (i = 0; i < plugins.length; ++i)
        plugins[i].disabled = state;
-    dump(">>> plugins "+ (state ? "enabled" : "disabled") +" <<<\n");
   },
 
   setupGeolocationPrompt: function() {

@@ -67,7 +67,6 @@
             }
             catch (e)
             {
-              dump(">>> "+ e +"\n");
               Components.utils.reportError(e);
             }
           ]]>

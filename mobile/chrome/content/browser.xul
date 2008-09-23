@@ -222,9 +222,10 @@
     </toolbar>
 
     <vbox id="browser-controls" style="-moz-stack-sizing: ignore;" top="60" left="0">
+      <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
       <toolbarbutton id="tool-back" class="browser-control-button" command="cmd_back"/>
       <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
-      <toolbarbutton id="tool-star" class="browser-control-button" command="cmd_star"/>
+      <toolbarspring/>
       <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions"/>
       <toolbarbutton id="tool-prefs" class="browser-control-button" command="cmd_panel"/>
     </vbox>
