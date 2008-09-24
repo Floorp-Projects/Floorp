@@ -40,7 +40,6 @@
 
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/richpref.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
@@ -240,7 +239,7 @@
         <iframe id="addons-container" flex="1" src=""/>
         <iframe id="downloads-container" flex="1" src=""/>
 
-        <vbox id="pref-pane">
+        <vbox id="prefs-container">
           <hbox pack="center" id="buttons"/>
           <scrollbox orient="vertical" id="pref-list" seltype="single" flex="1">
             <vbox class="prefsection">
