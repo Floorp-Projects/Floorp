@@ -248,6 +248,7 @@ class TraceRecorder {
     Queue<jsbytecode*>      inlinedLoopEdges;
     Queue<jsbytecode*>      cfgMerges;
     JSTraceableNative*      pendingTraceableNative;
+    jsval*                  global_dslots;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
