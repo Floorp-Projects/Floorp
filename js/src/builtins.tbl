@@ -97,6 +97,7 @@ BUILTIN3(String_p_concat_1int,  LO, LO, LO, P,  JSString*, JSContext*, JSString*
 BUILTIN4(String_p_concat_2str,  LO, LO, LO, LO, P,  JSString*, JSContext*, JSString*, JSString*, JSString*, 1, 1)
 BUILTIN5(String_p_concat_3str,  LO, LO, LO, LO, LO, P,  JSString*, JSContext*, JSString*, JSString*, JSString*, JSString*, 1, 1)
 BUILTIN4(String_p_match,        LO, LO, LO, LO, P, JSObject*, JSContext*, JSString*, jsbytecode*, JSObject*, 1, 1)
+BUILTIN4(String_p_match_obj,    LO, LO, LO, LO, P, JSObject*, JSContext*, JSObject*, jsbytecode*, JSObject*, 1, 1)
 BUILTIN4(String_p_replace_str,  LO, LO, LO, LO, P, JSString*, JSContext*, JSString*, JSObject*, JSString*, 1, 1)
 BUILTIN4(String_p_replace_str2, LO, LO, LO, LO, P, JSString*, JSContext*, JSString*, JSString*, JSString*, 1, 1)
 BUILTIN5(String_p_replace_str3, LO, LO, LO, LO, LO, P, JSString*, JSContext*, JSString*, JSString*, JSString*, JSString*, 1, 1)

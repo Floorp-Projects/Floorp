@@ -364,6 +364,17 @@ js_String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp
     return JSVAL_TO_OBJECT(vp[0]);
 }
 
+JSObject* FASTCALL
+js_String_p_match_obj(JSContext* cx, JSObject* str, jsbytecode *pc, JSObject* regexp)
+{
+    jsval vp[3] = { JSVAL_NULL, OBJECT_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
+    if (!js_StringMatchHelper(cx, 1, vp, pc))
+        return (JSObject*) JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    JS_ASSERT(JSVAL_IS_NULL(vp[0]) ||
+              (!JSVAL_IS_PRIMITIVE(vp[0]) && OBJ_IS_ARRAY(cx, JSVAL_TO_OBJECT(vp[0]))));
+    return JSVAL_TO_OBJECT(vp[0]);
+}
+
 JSString* FASTCALL
 js_String_p_replace_str(JSContext* cx, JSString* str, JSObject* regexp, JSString* repstr)
 {

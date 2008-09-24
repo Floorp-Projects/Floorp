@@ -1572,6 +1572,17 @@ this.__proto__.a = 3; for (var j = 0; j < 4; ++j) { [a]; }
 testGlobalProtoAccess.expected = "ok";
 test(testGlobalProtoAccess);
 
+function testMatchStringObject() {
+    var a = new String("foo");
+    var b;
+    for (i = 0; i < 300; i++) {
+	b = a.match(/bar/);
+    }
+    return b;
+}
+testMatchStringObject.expected = null;
+test(testMatchStringObject);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
