@@ -345,8 +345,7 @@ nsTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
 {
   nsRect rect(aPt, GetSize());
   nsCSSRendering::PaintBackground(PresContext(), aRenderingContext, this,
-                                  aDirtyRect, rect, *GetStyleBorder(),
-                                  *GetStylePadding(), PR_TRUE);
+                                  aDirtyRect, rect, PR_TRUE);
 }
 
 // Called by nsTablePainter
@@ -1202,7 +1201,10 @@ nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
   }
 
   nsRect rect(aPt, GetSize());
-  nsCSSRendering::PaintBackground(PresContext(), aRenderingContext, this,
-                                  aDirtyRect, rect, myBorder, *GetStylePadding(),
-                                  PR_TRUE);
+  // bypassing nsCSSRendering::PaintBackground is safe because this kind
+  // of frame cannot be used for the root element
+  nsCSSRendering::PaintBackgroundWithSC(PresContext(), aRenderingContext, this,
+                                        aDirtyRect, rect,
+                                        *GetStyleBackground(), myBorder,
+                                        *GetStylePadding(), PR_TRUE, nsnull);
 }

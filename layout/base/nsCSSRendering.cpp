@@ -1258,8 +1258,6 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                                 nsIFrame* aForFrame,
                                 const nsRect& aDirtyRect,
                                 const nsRect& aBorderArea,
-                                const nsStyleBorder& aBorder,
-                                const nsStylePadding& aPadding,
                                 PRBool aUsePrintSettings,
                                 nsRect* aBGClipRect)
 {
@@ -1268,6 +1266,8 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
 
   PRBool isCanvas;
   const nsStyleBackground *color;
+  const nsStylePadding* padding = aForFrame->GetStylePadding();
+  const nsStyleBorder* border = aForFrame->GetStyleBorder();
 
   if (!FindBackground(aPresContext, aForFrame, &color, &isCanvas)) {
     // we don't want to bail out of moz-appearance is set on a root
@@ -1288,8 +1288,8 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
   }
   if (!isCanvas) {
     PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
-                          aDirtyRect, aBorderArea, *color, aBorder,
-                          aPadding, aUsePrintSettings, aBGClipRect);
+                          aDirtyRect, aBorderArea, *color, *border,
+                          *padding, aUsePrintSettings, aBGClipRect);
     return;
   }
 
@@ -1319,7 +1319,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
 
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                         aDirtyRect, aBorderArea, canvasColor,
-                        aBorder, aPadding, aUsePrintSettings, aBGClipRect);
+                        *border, *padding, aUsePrintSettings, aBGClipRect);
 }
 
 inline nscoord IntDivFloor(nscoord aDividend, nscoord aDivisor)
