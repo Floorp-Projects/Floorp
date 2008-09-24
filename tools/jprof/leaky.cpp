@@ -291,8 +291,8 @@ static int symbolOrder(void const* a, void const* b)
 {
   Symbol const* ap = (Symbol const *)a;
   Symbol const* bp = (Symbol const *)b;
-  ptrdiff_t diff = ap->address - bp->address;
-  return (diff == 0) ? 0 : ((diff > 0) ? 1 : -1);
+  return ap->address == bp->address ? 0 :
+    (ap->address > bp->address ? 1 : -1);
 }
 
 void leaky::ReadSharedLibrarySymbols()

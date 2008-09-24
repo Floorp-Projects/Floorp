@@ -144,14 +144,12 @@ public:
                               nsIFrame* aForFrame,
                               const nsRect& aDirtyRect,
                               const nsRect& aBorderArea,
-                              const nsStyleBorder& aBorder,
-                              const nsStylePadding& aPadding,
                               PRBool aUsePrintSettings,
                               nsRect* aBGClipRect = nsnull);
 
   /**
-   * Same as |PaintBackground|, except using the provided style context
-   * (which short-circuits the code that ensures that the root element's
+   * Same as |PaintBackground|, except using the provided style structs.
+   * This short-circuits the code that ensures that the root element's
    * background is drawn on the canvas.
    */
   static void PaintBackgroundWithSC(nsPresContext* aPresContext,
