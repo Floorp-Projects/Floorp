@@ -145,7 +145,7 @@ var Browser = {
         var self = this;
         setTimeout(function() { self.currentBrowser.loadURI(whereURI, null, null, false); }, 0);
       }
-    
+
       // Disable plugins
       var phs = Cc["@mozilla.org/plugin/host;1"].
                 getService(Ci.nsIPluginHost);
@@ -295,7 +295,7 @@ var Browser = {
       }
     }
   },
-  
+
   /**
    * Handle command event bubbling up from content.  This allows us to do chrome-
    * privileged things based on buttons in, e.g., unprivileged error pages.
@@ -315,7 +315,7 @@ var Browser = {
     if (/^about:neterror\?e=nssBadCert/.test(errorDoc.documentURI)) {
       if (ot == errorDoc.getElementById('exceptionDialogButton')) {
         var params = { exceptionAdded : false };
-        
+
         try {
           switch (gPrefService.getIntPref("browser.ssl_override_behavior")) {
             case 2 : // Pre-fetch & pre-populate
@@ -326,10 +326,10 @@ var Browser = {
         } catch (e) {
           Components.utils.reportError("Couldn't get ssl_override pref: " + e);
         }
-        
+
         window.openDialog('chrome://pippki/content/exceptionDialog.xul',
                           '','chrome,centerscreen,modal', params);
-        
+
         // If the user added the exception cert, attempt to reload the page
         if (params.exceptionAdded)
           errorDoc.location.reload();
@@ -345,7 +345,7 @@ var Browser = {
           if (url.indexOf("|") != -1)
             url = url.split("|")[0];
         } catch (e) { /* Fall back on about blank */ }
-        
+
         Browser.currentBrowser.loadURI(url, null, null, false);
       }
     }

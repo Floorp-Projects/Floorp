@@ -912,6 +912,7 @@ var BookmarkHelper = {
       document.getElementById("bookmark-name").value = this._bmksvc.getItemTitle(this._item);
       var currentTags = this._tagsvc.getTagsForURI(this._uri, {});
       document.getElementById("bookmark-tags").value = currentTags.join(", ");
+      document.getElementById("bookmark-folder").value = ""; // XXX either use this or remove it
     }
 
     window.addEventListener("keypress", this, true);
