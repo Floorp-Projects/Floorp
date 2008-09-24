@@ -544,3 +544,46 @@ findbar {
   min-width: 280px;
   padding: 10px;
 }
+
+/* Preferences window */
+#prefs-container
+{
+  background-color: rgba(123,125,123,0.9);
+}
+
+richpref
+{
+  background-color: white;
+}
+
+.prefsection
+{
+  font-size: 1.5em ! important;
+  color: white;
+  background-color: grey;
+  padding: .2em 0 .2em 0;
+}
+
+.prefbox
+{
+  padding: .3em .3em .3em .5em;
+  border: thin solid lightgrey;
+}
+
+.preftitle
+{
+  font-size: 1.25em ! important;
+}
+
+.prefdesc
+{
+  font-size: 1em ! important;
+  color: grey;
+  background-color: white;
+}
+
+/* BUG: This rule doesn't actually work; I don't know why. */
+richpref > button
+{
+  font-size: 1em ! important;
+}

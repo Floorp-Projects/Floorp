@@ -52,7 +52,6 @@ classic.jar:
   images/right_sidebar_middle.png      (skin/images/right_sidebar_middle.png)
   images/right_sidebar_bottom.png      (skin/images/right_sidebar_bottom.png)
   images/right_buttons.png             (skin/images/right_buttons.png)
-  richpref.css                         (skin/richpref.css)
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %

@@ -592,7 +592,6 @@ var BrowserUI = {
     var bookmark = document.getElementById("bookmark-container");
     var urllist = document.getElementById("urllist-container");
     var container = document.getElementById("browser-container");
-    var prefs = document.getElementById("pref-pane");
 
     if (aMode == UIMODE_URLVIEW)
     {

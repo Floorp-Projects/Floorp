@@ -10,7 +10,7 @@ richlistitem[type="documenttab"] {
     -moz-binding: url("chrome://browser/content/deckbrowser.xml#documenttab");
 }
 
-#pref-pane > scrollbox
+#prefs-container > scrollbox
 {
     overflow: auto;
 }
