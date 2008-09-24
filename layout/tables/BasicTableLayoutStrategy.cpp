@@ -51,7 +51,8 @@
 #undef  DEBUG_TABLE_STRATEGY 
 
 BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aTableFrame)
-  : mTableFrame(aTableFrame)
+  : nsITableLayoutStrategy(nsITableLayoutStrategy::Auto)
+  , mTableFrame(aTableFrame)
 {
     MarkIntrinsicWidthsDirty();
 }
@@ -421,7 +422,7 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
             NS_ERROR("column frames out of sync with cell map");
             continue;
         }
-        if (mTableFrame->GetNumCellsOriginatingInCol(col)) {
+        if (mTableFrame->ColumnHasCellSpacingBefore(col)) {
             add += spacing;
         }
         min += colFrame->GetMinCoord();
@@ -630,7 +631,7 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
     // each of the columns. We start at aFirstCol + 1 because the first
     // in-between boundary would be at the left edge of column aFirstCol + 1
     for (PRInt32 col = aFirstCol + 1; col < aFirstCol + aColCount; ++col) {
-        if (mTableFrame->GetNumCellsOriginatingInCol(col)) {
+        if (mTableFrame->ColumnHasCellSpacingBefore(col)) {
             subtract += spacing;
         }
     }
@@ -739,7 +740,7 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                                                         pref_width);
             } else if (pref_width == 0) {
                 if (aWidthType == BTLS_FINAL_WIDTH &&
-                    mTableFrame->GetNumCellsOriginatingInCol(col)) {
+                    mTableFrame->ColumnHasCellSpacingBefore(col)) {
                     ++numNonSpecZeroWidthCols;
                 }
             } else {
@@ -937,7 +938,7 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                              "when we're setting final width.");
                 if (pct == 0.0f &&
                     !colFrame->GetHasSpecifiedCoord() &&
-                    mTableFrame->GetNumCellsOriginatingInCol(col)) {
+                    mTableFrame->ColumnHasCellSpacingBefore(col)) {
 
                     NS_ASSERTION(col_width == 0 &&
                                  colFrame->GetPrefCoord() == 0,
