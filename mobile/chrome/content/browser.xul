@@ -267,9 +267,6 @@
               <button label="&clear.private.data.button;" command="cmd_sanitize"/>
             </richpref>
           </scrollbox>
-          <hbox pack="end">
-            <button label="Dismiss" oncommand="BrowserUI.show(UIMODE_NONE);"/>
-          </hbox>
         </vbox>
       </deck>
     </hbox>
