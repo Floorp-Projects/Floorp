@@ -1832,7 +1832,7 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     }
     compile(fragmento);
 
-    debug_only_v(printf("recording completed at %s:%u@%u\n", cx->fp->script->filename,
+    debug_only_v(printf("recording completed at %s:%u@%u via closeLoop\n", cx->fp->script->filename,
                         js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
                         cx->fp->regs->pc - cx->fp->script->code););
 }
@@ -1844,6 +1844,10 @@ TraceRecorder::endLoop(Fragmento* fragmento)
     SideExit *exit = snapshot(LOOP_EXIT);
     fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exit);
     compile(fragmento);
+
+    debug_only_v(printf("recording completed at %s:%u@%u via endLoop\n", cx->fp->script->filename,
+                        js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+                        cx->fp->regs->pc - cx->fp->script->code););
 }
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
@@ -1890,7 +1894,6 @@ TraceRecorder::prepareTreeCall(Fragment* inner)
 void
 TraceRecorder::emitTreeCall(Fragment* inner, GuardRecord* lr)
 {
-    JS_ASSERT(lr->exit->exitType == LOOP_EXIT && !lr->calldepth);
     TreeInfo* ti = (TreeInfo*)inner->vmprivate;
     /* Invoke the inner tree. */
     LIns* args[] = { INS_CONSTPTR(inner), lirbuf->state }; /* reverse order */
@@ -2445,6 +2448,8 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
 #else
     lr = u.func(&state, NULL);
 #endif
+
+    JS_ASSERT(lr->exit->exitType != LOOP_EXIT || !lr->calldepth);
 
     if (!onTrace)
         tm->onTrace = false;
