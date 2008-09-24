@@ -2064,7 +2064,7 @@ js_TrashTree(JSContext* cx, Fragment* f)
     JS_ASSERT(!f->code() && !f->vmprivate);
 }
 
-static unsigned
+static int
 js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(fi.callee));
@@ -2186,6 +2186,11 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 
     cx->fp->regs = &newifp->callerRegs;
     cx->fp = &newifp->frame;
+
+    if (fun->flags & JSFUN_HEAVYWEIGHT) {
+        if (!js_GetCallObject(cx, &newifp->frame, newifp->frame.scopeChain))
+            return -1;
+    }
 
     // FIXME: we must count stack slots from caller's operand stack up to (but not including)
     // callee's, including missing arguments. Could we shift everything down to the caller's
@@ -2510,7 +2515,8 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     while (callstack < rp) {
         /* Synthesize a stack frame and write out the values in it using the type map pointer
            on the native call stack. */
-        js_SynthesizeFrame(cx, *callstack);
+        if (js_SynthesizeFrame(cx, *callstack) < 0)
+            return NULL;
         int slots = FlushNativeStackFrame(cx, 1/*callDepth*/, callstack->typemap, stack, cx->fp);
 #ifdef DEBUG
         JSStackFrame* fp = cx->fp;
@@ -2543,7 +2549,10 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     unsigned calldepth = lr->calldepth;
     unsigned calldepth_slots = 0;
     for (unsigned n = 0; n < calldepth; ++n) {
-        calldepth_slots += js_SynthesizeFrame(cx, callstack[n]);
+        int nslots = js_SynthesizeFrame(cx, callstack[n]);
+        if (nslots < 0)
+            return NULL;
+        calldepth_slots += nslots;
 #ifdef DEBUG        
         JSStackFrame* fp = cx->fp;
         debug_only_v(printf("synthesized shallow frame for %s:%u@%u\n",
