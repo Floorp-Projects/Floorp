@@ -262,6 +262,9 @@
             <richpref pref="network.cookie.cookieBehavior" title="&network.cookie.cookieBehavior.title;" type="boolint" on="1" off="3">
               &network.cookie.cookieBehavior.description;
             </richpref>
+            <richpref pref="signon.rememberSignons" title="&signon.rememberSignons.title;" type="bool">
+              &signon.rememberSignons.description;
+            </richpref>
             <richpref title="&clear.private.data.title;" type="button">
               &clear.private.data.description;
               <button label="&clear.private.data.button;" command="cmd_sanitize"/>
