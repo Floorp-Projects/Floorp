@@ -1197,7 +1197,7 @@
         // Allow drag and drop of folders in Linux.
         // We must prevent popupshowing event from firing when shift is pressed.
         var target = event.originalTarget;
-        if (event.button == 1 && event.shiftKey &&
+        if (event.button == 0 && event.shiftKey &&
             target.localName == "toolbarbutton" && target.type == "menu")
           this._draggingContainer = true;
       ]]></handler>
