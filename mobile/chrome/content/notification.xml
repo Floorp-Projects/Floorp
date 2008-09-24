@@ -13,7 +13,7 @@
 
     <content>
       <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
-        <xul:vbox>
+        <xul:vbox flex="1">
           <xul:hbox anonid="details" align="center" flex="1">
             <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image"/>
             <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>

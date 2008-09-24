@@ -93,6 +93,18 @@
         </getter>
       </property>
 
+      <property name="browsers" readonly="true">
+        <getter>
+          <![CDATA[
+            var browsers = [];
+            var tabList = this.tabList.childNodes;
+            for (var t = 0; t < tabList.length; t++)
+              browsers.push(getBrowserForDisplay(this.displayList.childNodes[t]));
+            return browsers;
+          ]]>
+        </getter>
+      </property>
+
       <property name="displayList" readonly="true">
         <getter>
           return document.getAnonymousElementByAttribute(this, "anonid", "display-list");
