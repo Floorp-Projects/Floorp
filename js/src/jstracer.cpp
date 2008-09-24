@@ -2064,7 +2064,7 @@ js_TrashTree(JSContext* cx, Fragment* f)
     JS_ASSERT(!f->code() && !f->vmprivate);
 }
 
-static unsigned
+static int
 js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 {
     JS_ASSERT(HAS_FUNCTION_CLASS(fi.callee));
@@ -2072,27 +2072,64 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, fi.callee);
     JS_ASSERT(FUN_INTERPRETED(fun));
 
-    JSArena* a = cx->stackPool.current;
-    void* newmark = (void*) a->avail;
-    JSScript* script = fun->u.i.script;
-
-    // Assert that we have a correct sp distance from cx->fp->slots in fi.
+    /* Assert that we have a correct sp distance from cx->fp->slots in fi. */
     JS_ASSERT(js_ReconstructStackDepth(cx, cx->fp->script, fi.callpc) ==
               uintN(fi.s.spdist - cx->fp->script->nfixed));
 
     uintN nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
+    JSScript* script = fun->u.i.script;
     size_t nbytes = (nframeslots + script->nslots) * sizeof(jsval);
 
-    /* Allocate the inline frame with its vars and operands. */
+    /* Code duplicated from inline_call: case in js_Interpret (FIXME). */
+    JSArena* a = cx->stackPool.current;
+    void* newmark = (void*) a->avail;
+    uintN argc = fi.s.argc & 0x7fff;
+    jsval* vp = cx->fp->slots + fi.s.spdist - (2 + argc);
+    uintN missing = 0;
     jsval* newsp;
+
+    if (fun->nargs > argc) {
+        const JSFrameRegs& regs = *cx->fp->regs;
+
+        newsp = vp + 2 + fun->nargs;
+        JS_ASSERT(newsp > regs.sp);
+        if ((jsuword) newsp <= a->limit) {
+            if ((jsuword) newsp > a->avail)
+                a->avail = (jsuword) newsp;
+            jsval* argsp = newsp;
+            do {
+                *--argsp = JSVAL_VOID;
+            } while (argsp != regs.sp);
+            missing = 0;
+        } else {
+            missing = fun->nargs - argc;
+            nbytes += (2 + fun->nargs) * sizeof(jsval);
+        }
+    }
+
+    /* Allocate the inline frame with its vars and operands. */
     if (a->avail + nbytes <= a->limit) {
         newsp = (jsval *) a->avail;
         a->avail += nbytes;
+        JS_ASSERT(missing == 0);
     } else {
         JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool, nbytes);
         if (!newsp) {
             js_ReportOutOfScriptQuota(cx);
             return 0;
+        }
+
+        /*
+         * Move args if the missing ones overflow arena a, then push
+         * undefined for the missing args.
+         */
+        if (missing) {
+            memcpy(newsp, vp, (2 + argc) * sizeof(jsval));
+            vp = newsp;
+            newsp = vp + 2 + argc;
+            do {
+                *newsp++ = JSVAL_VOID;
+            } while (--missing != 0);
         }
     }
 
@@ -2107,7 +2144,6 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.callee = fi.callee;
     newifp->frame.fun = fun;
 
-    uint16 argc = fi.s.argc & 0x7fff;
     bool constructing = fi.s.argc & 0x8000;
     
     newifp->frame.argc = argc;
@@ -2150,6 +2186,11 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
 
     cx->fp->regs = &newifp->callerRegs;
     cx->fp = &newifp->frame;
+
+    if (fun->flags & JSFUN_HEAVYWEIGHT) {
+        if (!js_GetCallObject(cx, &newifp->frame, newifp->frame.scopeChain))
+            return -1;
+    }
 
     // FIXME: we must count stack slots from caller's operand stack up to (but not including)
     // callee's, including missing arguments. Could we shift everything down to the caller's
@@ -2474,7 +2515,8 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     while (callstack < rp) {
         /* Synthesize a stack frame and write out the values in it using the type map pointer
            on the native call stack. */
-        js_SynthesizeFrame(cx, *callstack);
+        if (js_SynthesizeFrame(cx, *callstack) < 0)
+            return NULL;
         int slots = FlushNativeStackFrame(cx, 1/*callDepth*/, callstack->typemap, stack, cx->fp);
 #ifdef DEBUG
         JSStackFrame* fp = cx->fp;
@@ -2507,7 +2549,10 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     unsigned calldepth = lr->calldepth;
     unsigned calldepth_slots = 0;
     for (unsigned n = 0; n < calldepth; ++n) {
-        calldepth_slots += js_SynthesizeFrame(cx, callstack[n]);
+        int nslots = js_SynthesizeFrame(cx, callstack[n]);
+        if (nslots < 0)
+            return NULL;
+        calldepth_slots += nslots;
 #ifdef DEBUG        
         JSStackFrame* fp = cx->fp;
         debug_only_v(printf("synthesized shallow frame for %s:%u@%u\n",
