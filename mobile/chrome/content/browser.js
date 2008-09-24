@@ -96,6 +96,8 @@ var Browser = {
 
     BrowserUI.init();
 
+    window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
+
     this._content.addEventListener("command", this._handleContentCommand, false);
     this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
     this._content.tabList = document.getElementById("tab-list");
@@ -488,6 +490,87 @@ ProgressController.prototype = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 };
+
+function nsBrowserAccess()
+{
+}
+
+nsBrowserAccess.prototype =
+{
+  QueryInterface : function(aIID)
+  {
+    if (aIID.equals(Ci.nsIBrowserDOMWindow) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  },
+
+  openURI : function(aURI, aOpener, aWhere, aContext)
+  {
+    var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+
+    if (isExternal && aURI && aURI.schemeIs("chrome")) {
+      dump("use -chrome command-line option to load external chrome urls\n");
+      return null;
+    }
+    var loadflags = isExternal ?
+                       Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
+                       Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    var location;
+    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
+      switch (aContext) {
+        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL :
+          aWhere = gPrefService.getIntPref("browser.link.open_external");
+          break;
+        default : // OPEN_NEW or an illegal value
+          aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
+      }
+    }
+
+    var newWindow;
+    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW) {
+      var url = aURI ? aURI.spec : "about:blank";
+      newWindow = openDialog("chrome://browser/content/browser.xul", "_blank",
+                             "all,dialog=no", url, null, null, null);
+    }
+    else {
+      if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
+        var tab = Browser._content.newTab(true);
+        if (tab) {
+          var content = Browser._content;
+          var browser = content.getBrowserForDisplay(content.getDisplayForTab(tab));
+          newWindow = browser.contentWindow;
+        }
+      }
+      else {
+        newWindow = aOpener ? aOpener.top : browser.contentWindow;
+      }
+    }
+      
+    try {
+      var referrer;
+      if (aURI) {
+        if (aOpener) {
+          location = aOpener.location;
+          referrer = Components.classes["@mozilla.org/network/io-service;1"]
+                               .getService(Components.interfaces.nsIIOService)
+                               .newURI(location, null, null);
+        }
+        newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIWebNavigation)
+                 .loadURI(aURI.spec, loadflags, referrer, null, null);
+      }
+      newWindow.focus();
+    } catch(e) { }
+
+    return newWindow;
+  },
+
+  isTabContentWindow : function(aWindow)
+  {
+    return Browser._content.browsers.some(function (browser) browser.contentWindow == aWindow);
+  }
+}
 
 /**
  * Utility class to handle manipulations of the identity indicators in the UI
