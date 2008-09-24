@@ -4973,7 +4973,6 @@ js_Interpret(JSContext *cx)
                     JS_ASSERT(JSVAL_IS_OBJECT(vp[1]) ||
                               PRIMITIVE_THIS_TEST(fun, vp[1]));
                     ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
-                    TRACE_0(FastNativeCallComplete);
 #ifdef INCLUDE_MOZILLA_DTRACE
                     if (VALUE_IS_FUNCTION(cx, lval)) {
                         if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
