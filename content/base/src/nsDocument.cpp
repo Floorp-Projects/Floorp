@@ -5760,9 +5760,7 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
 void
 nsDocument::AddReference(void *aKey, nsISupports *aReference)
 {
-  PRBool dummy;
-  nsIScriptGlobalObject* scriptObject = GetScriptHandlingObject(dummy);
-  if (scriptObject) {
+  if (mScriptGlobalObject) {
     if (!mContentWrapperHash) {
       mContentWrapperHash = new nsInterfaceHashtable<nsVoidPtrHashKey, nsISupports>;
       if (mContentWrapperHash) {
