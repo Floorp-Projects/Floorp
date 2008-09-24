@@ -63,7 +63,7 @@ namespace nanojit
             NIns code[(NJ_PAGE_SIZE-sizeof(PageHeader))/sizeof(NIns)];
         };
     };
-    struct AllocEntry
+    struct AllocEntry : public GCObject
     {
         Page *page;
         uint32_t allocSize;

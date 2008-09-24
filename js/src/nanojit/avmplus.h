@@ -216,9 +216,17 @@ namespace nanojit
     #define SideExitSize(e) sizeof(SideExit)
 }
 
+class GC;
+
 class GCObject 
 {
 public:
+    inline void*
+    operator new(size_t size, GC* gc)
+    {
+        return calloc(1, size);
+    }
+
     static void operator delete (void *gcObject)
     {
         free(gcObject); 
@@ -315,20 +323,6 @@ public:
         return &heap;
     }
 };
-
-#ifdef AVMPLUS_DEFINE_NEW_DELETE
-inline void*
-operator new(size_t size, GC* gc)
-{
-    return calloc(1, size);
-}
-
-inline void
-operator delete(void* p)
-{
-    free(p);
-}
-#endif
 
 #define DWB(x) x
 #define DRCWB(x) x
@@ -752,7 +746,7 @@ namespace avmplus
      * no duplicates are allowed.
      */
     template <class K, class T, ListElementType valType>
-    class SortedMap
+    class SortedMap : public GCObject
     {
     public:
         enum { kInitialCapacity= 64 };
@@ -918,7 +912,7 @@ namespace avmplus
             ~BitSet()
             {
                 if (capacity > kDefaultCapacity)
-                    delete bits.ptr;
+                    free(bits.ptr);
             }
 
             void reset()
