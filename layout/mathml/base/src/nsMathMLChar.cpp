@@ -2052,11 +2052,8 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
           nsDisplayMathMLCharBackground(aForFrame, mRect, styleContext));
       NS_ENSURE_SUCCESS(rv, rv);
     }
-
     //else
     //  our container frame will take care of painting its background
-    //  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
-    //                                  aDirtyRect, rect, *border, *padding, PR_TRUE);
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
