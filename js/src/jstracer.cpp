@@ -4819,7 +4819,8 @@ TraceRecorder::record_JSOP_CALL()
         { js_str_concat,               F_String_p_concat_2str, "TC",  "ss",   FAIL_NULL },
         { js_str_concat,               F_String_p_concat_3str, "TC",  "sss",  FAIL_NULL },
         { js_str_fromCharCode,         F_String_fromCharCode,  "C",   "i",    FAIL_NULL },
-        { js_str_match,                F_String_p_match,       "PTC", "r",    FAIL_VOID },
+        { js_str_match,                F_String_p_match,       "PSC", "r",    FAIL_VOID },
+        { js_str_match,                F_String_p_match_obj,   "PTC", "r",    FAIL_VOID },
         { js_str_replace,              F_String_p_replace_str, "TC",  "sr",   FAIL_NULL },
         { js_str_replace,              F_String_p_replace_str2,"TC",  "ss",   FAIL_NULL },
         { js_str_replace,              F_String_p_replace_str3,"TC",  "sss",  FAIL_NULL },
@@ -4833,7 +4834,7 @@ TraceRecorder::record_JSOP_CALL()
     uintN i = 0;
     LIns* arg1_ins = NULL;
     jsval arg1 = JSVAL_VOID;
-
+    jsval thisval = tval;
     JSFastNative native = (JSFastNative)fun->u.n.native;
     if (native == js_fun_apply) {
         if (argc != 2)
@@ -4911,6 +4912,7 @@ TraceRecorder::record_JSOP_CALL()
         if (strlen(known->argtypes) != 1)
             ABORT_TRACE("known native being Function.prototype.apply'ed with wrong argc");
 
+        thisval = oval;
         this_ins = get(&oval);
         arg1_ins = callArgN(aval_ins, 1);
         arg1 = aobj->dslots[0];
@@ -4936,12 +4938,22 @@ TraceRecorder::record_JSOP_CALL()
         memset(args, 0xCD, sizeof(args));
 #endif
 
+/*
+ * NB: do not use JS_BEGIN_MACRO/JS_END_MACRO or the do-while(0) loop they hide,
+ * because of the embedded continues below.
+ */
 #define HANDLE_PREFIX(i)                                                       \
-    JS_BEGIN_MACRO                                                             \
+    {                                                                          \
         argtype = known->prefix[i];                                            \
         if (argtype == 'C') {                                                  \
             *argp = cx_ins;                                                    \
-        } else if (argtype == 'T') {                                           \
+        } else if (argtype == 'T') {   /* this, as an object */                \
+            if (!JSVAL_IS_OBJECT(thisval))                                     \
+                continue;                                                      \
+            *argp = this_ins;                                                  \
+        } else if (argtype == 'S') {   /* this, as a string */                 \
+            if (!JSVAL_IS_STRING(thisval))                                     \
+                continue;                                                      \
             *argp = this_ins;                                                  \
         } else if (argtype == 'R') {                                           \
             *argp = INS_CONSTPTR(cx->runtime);                                 \
@@ -4951,7 +4963,7 @@ TraceRecorder::record_JSOP_CALL()
             JS_NOT_REACHED("unknown prefix arg type");                         \
         }                                                                      \
         argp--;                                                                \
-    JS_END_MACRO
+    }
 
         switch (prefixc) {
           case 3:
