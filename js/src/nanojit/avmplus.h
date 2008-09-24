@@ -65,12 +65,12 @@
 #include <windows.h>
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(_MSC_VER) && _MSC_VER < 1400
 #if !defined _DEBUG
 #define _DEBUG
 #endif
-#define NJ_VERBOSE
-#define NJ_PROFILE
+#define NJ_VERBOSE 1
+#define NJ_PROFILE 1
 #include <stdarg.h>
 #endif
 
