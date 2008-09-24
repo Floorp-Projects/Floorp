@@ -1583,6 +1583,32 @@ function testMatchStringObject() {
 testMatchStringObject.expected = null;
 test(testMatchStringObject);
 
+function innerSwitch(k)
+{
+    var m = 0;
+
+    switch (k)
+    {
+    case 0:
+        m = 1;
+        break;
+    }
+
+    return m;
+}
+function testInnerSwitchBreak()
+{
+    var r = new Array(5);
+    for (var i = 0; i < 5; i++)
+    {
+        r[i] = innerSwitch(0);
+    }
+
+    return r.join(",");
+}
+testInnerSwitchBreak.expected = "1,1,1,1,1";
+test(testInnerSwitchBreak);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
