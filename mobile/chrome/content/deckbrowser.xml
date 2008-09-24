@@ -868,9 +868,9 @@
               // v0 = initial velocity, CoK = Coefficient of Kinetic friction
               // All in page coords
               let idealDestScreenX = this.dragData.dragX  + Math.abs(this.dragData.velocityX) 
-                                     * this.dragData.velocityX * 100;
+                                     * this.dragData.velocityX * 200;
               let idealDestScreenY = this.dragData.dragY + Math.abs(this.dragData.velocityY) 
-                                     * this.dragData.velocityY * 100
+                                     * this.dragData.velocityY * 200
           
               let [destPageX, destPageY] =  this._constrainPanCoords(-this._screenToPage(idealDestScreenX),
                                                                      -this._screenToPage(idealDestScreenY));
