@@ -2072,27 +2072,64 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     JSFunction* fun = GET_FUNCTION_PRIVATE(cx, fi.callee);
     JS_ASSERT(FUN_INTERPRETED(fun));
 
-    JSArena* a = cx->stackPool.current;
-    void* newmark = (void*) a->avail;
-    JSScript* script = fun->u.i.script;
-
-    // Assert that we have a correct sp distance from cx->fp->slots in fi.
+    /* Assert that we have a correct sp distance from cx->fp->slots in fi. */
     JS_ASSERT(js_ReconstructStackDepth(cx, cx->fp->script, fi.callpc) ==
               uintN(fi.s.spdist - cx->fp->script->nfixed));
 
     uintN nframeslots = JS_HOWMANY(sizeof(JSInlineFrame), sizeof(jsval));
+    JSScript* script = fun->u.i.script;
     size_t nbytes = (nframeslots + script->nslots) * sizeof(jsval);
 
-    /* Allocate the inline frame with its vars and operands. */
+    /* Code duplicated from inline_call: case in js_Interpret (FIXME). */
+    JSArena* a = cx->stackPool.current;
+    void* newmark = (void*) a->avail;
+    uintN argc = fi.s.argc & 0x7fff;
+    jsval* vp = cx->fp->slots + fi.s.spdist - (2 + argc);
+    uintN missing = 0;
     jsval* newsp;
+
+    if (fun->nargs > argc) {
+        const JSFrameRegs& regs = *cx->fp->regs;
+
+        newsp = vp + 2 + fun->nargs;
+        JS_ASSERT(newsp > regs.sp);
+        if ((jsuword) newsp <= a->limit) {
+            if ((jsuword) newsp > a->avail)
+                a->avail = (jsuword) newsp;
+            jsval* argsp = newsp;
+            do {
+                *--argsp = JSVAL_VOID;
+            } while (argsp != regs.sp);
+            missing = 0;
+        } else {
+            missing = fun->nargs - argc;
+            nbytes += (2 + fun->nargs) * sizeof(jsval);
+        }
+    }
+
+    /* Allocate the inline frame with its vars and operands. */
     if (a->avail + nbytes <= a->limit) {
         newsp = (jsval *) a->avail;
         a->avail += nbytes;
+        JS_ASSERT(missing == 0);
     } else {
         JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool, nbytes);
         if (!newsp) {
             js_ReportOutOfScriptQuota(cx);
             return 0;
+        }
+
+        /*
+         * Move args if the missing ones overflow arena a, then push
+         * undefined for the missing args.
+         */
+        if (missing) {
+            memcpy(newsp, vp, (2 + argc) * sizeof(jsval));
+            vp = newsp;
+            newsp = vp + 2 + argc;
+            do {
+                *newsp++ = JSVAL_VOID;
+            } while (--missing != 0);
         }
     }
 
@@ -2107,7 +2144,6 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.callee = fi.callee;
     newifp->frame.fun = fun;
 
-    uint16 argc = fi.s.argc & 0x7fff;
     bool constructing = fi.s.argc & 0x8000;
     
     newifp->frame.argc = argc;
