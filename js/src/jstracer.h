@@ -68,7 +68,7 @@
 #define INT32_ERROR_COOKIE 0xffffabcd
 
 template <typename T>
-class Queue {
+class Queue : public GCObject {
     T* _data;
     unsigned _len;
     unsigned _max;
@@ -212,7 +212,7 @@ struct JSTraceableNative {
     JSTNErrType  errtype;
 };
 
-class TraceRecorder {
+class TraceRecorder : public GCObject {
     JSContext*              cx;
     JSTraceMonitor*         traceMonitor;
     JSObject*               globalObj;
