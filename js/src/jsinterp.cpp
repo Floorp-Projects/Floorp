@@ -1493,7 +1493,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.sharpArray = NULL;
     }
     if (script->nslots != 0) {
-        frame.slots = js_AllocRawStack(cx, script->nslots, NULL);
+        frame.slots = js_AllocRawStack(cx, script->nslots, &mark);
         if (!frame.slots) {
             ok = JS_FALSE;
             goto out;
@@ -4811,9 +4811,10 @@ js_Interpret(JSContext *cx)
                         if ((jsuword) newsp <= a->limit) {
                             if ((jsuword) newsp > a->avail)
                                 a->avail = (jsuword) newsp;
+                            jsval *argsp = newsp;
                             do {
-                                *--newsp = JSVAL_VOID;
-                            } while (newsp != regs.sp);
+                                *--argsp = JSVAL_VOID;
+                            } while (argsp != regs.sp);
                             missing = 0;
                         } else {
                             missing = fun->nargs - argc;
@@ -4835,8 +4836,8 @@ js_Interpret(JSContext *cx)
                         }
 
                         /*
-                         * Move args if missing overflow arena a, then push
-                         * any missing args.
+                         * Move args if the missing ones overflow arena a, then
+                         * push undefined for the missing args.
                          */
                         if (missing) {
                             memcpy(newsp, vp, (2 + argc) * sizeof(jsval));
