@@ -86,10 +86,6 @@ EXTRA_DSO_LDOPTS += -lmozglitzagl -framework OpenGL -framework AGL
 endif
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
-endif
-
 export:: dlldeps.cpp
 
 dlldeps.cpp: $(topsrcdir)/xpcom/build/dlldeps.cpp
