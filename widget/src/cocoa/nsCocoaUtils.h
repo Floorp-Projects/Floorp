@@ -141,6 +141,12 @@ class nsCocoaUtils
 
   static void PrepareForNativeAppModalDialog();
   static void CleanUpAfterNativeAppModalDialog();
+
+  // Wrap calls to [theEvent keyCode] and [theEvent modifierFlags].  Needed to
+  // work around an Apple bug (on OS X 10.4.X) that causes ctrl-ESC key events
+  // sent via performKeyEquivalent: to return 0 on these calls.
+  static unsigned short GetCocoaEventKeyCode(NSEvent *theEvent);
+  static NSUInteger GetCocoaEventModifierFlags(NSEvent *theEvent);
 };
 
 #endif // nsCocoaUtils_h_
