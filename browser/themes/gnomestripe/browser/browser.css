@@ -1296,7 +1296,7 @@ tabpanels {
 }
 
 .tabs-newtab-button > .toolbarbutton-icon {
-  margin: -3px !important;
+  margin: -1px 0 0;
 }
 
 /* Tabstrip close button */
@@ -1306,7 +1306,7 @@ tabpanels {
 }
 
 .tabs-closebutton > .toolbarbutton-icon {
-  margin: -3px !important;
+  margin: 0;
 }
 
 /* Tabbrowser arrowscrollbox arrows */
