@@ -1843,6 +1843,7 @@
                   break;
                 case "scrollbutton-down":
                 case "alltabs-button":
+                case "newtab-button":
                   pixelsToScroll = tabStrip.scrollIncrement;
                   break;
               }
@@ -2696,6 +2697,9 @@
                               class="tabbrowser-arrowscrollbox">
             <children/>
           </xul:arrowscrollbox>
+          <xul:toolbarbutton class="tabs-newtab-button" anonid="newtab-button"
+                             command="cmd_newNavigatorTab" chromedir="&locale.dir;"
+                             tooltiptext="&newTabButton.tooltip;"/>
           <xul:stack align="center" pack="end" chromedir="&locale.dir;">
             <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
             <xul:hbox flex="1" class="tabs-alltabs-box-animate" anonid="alltabs-box-animate"/>
