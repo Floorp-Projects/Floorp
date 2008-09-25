@@ -1090,10 +1090,8 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                                 nsIDOMRange **aFirstVisibleRange,
                                 PRBool *aUsesIndependentSelection)
 {
-  NS_ENSURE_ARG_POINTER(aPresShell);
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_ARG_POINTER(aRange);
-  NS_ENSURE_ARG_POINTER(aFirstVisibleRange);
+  NS_ASSERTION(aPresShell && aPresContext && aRange && aFirstVisibleRange, 
+               "params are invalid");
 
   // We need to know if the range start is visible.
   // Otherwise, return a the first visible range start 
