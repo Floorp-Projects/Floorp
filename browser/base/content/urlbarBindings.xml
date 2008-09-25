@@ -107,7 +107,7 @@
           gBrowser.userTypedValue = url;
           try {
             addToUrlbarHistory(url);
-          catch (ex) {
+          } catch (ex) {
             // Things may go wrong when adding url to session history,
             // but don't let that interfere with the loading of the url.
             Cu.reportError(ex);
