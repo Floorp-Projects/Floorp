@@ -1930,12 +1930,10 @@ void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
   const nsStyleBorder* border = mStyleContext->GetStyleBorder();
-  const nsStylePadding* padding = mStyleContext->GetStylePadding();
   const nsStyleBackground* backg = mStyleContext->GetStyleBackground();
+  nsRect rect(mRect + aBuilder->ToReferenceFrame(mFrame));
   nsCSSRendering::PaintBackgroundWithSC(mFrame->PresContext(), *aCtx, mFrame,
-                                        aDirtyRect,
-                                        mRect + aBuilder->ToReferenceFrame(mFrame),
-                                        *backg, *border, *padding,
+                                        aDirtyRect, rect, *backg, *border,
                                         PR_TRUE);
 }
 

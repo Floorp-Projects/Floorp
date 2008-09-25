@@ -159,7 +159,6 @@ public:
                                     const nsRect& aBorderArea,
                                     const nsStyleBackground& aColor,
                                     const nsStyleBorder& aBorder,
-                                    const nsStylePadding& aPadding,
                                     PRBool aUsePrintSettings = PR_FALSE,
                                     nsRect* aBGClipRect = nsnull);
 
@@ -276,7 +275,6 @@ protected:
                                    const nsRect& aBgClipArea,
                                    const nsStyleBackground& aColor,
                                    const nsStyleBorder& aBorder,
-                                   const nsStylePadding& aPadding,
                                    PRBool aCanPaintNonWhite);
 
   static void PaintRoundedBackground(nsPresContext* aPresContext,

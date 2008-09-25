@@ -1266,7 +1266,6 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
 
   PRBool isCanvas;
   const nsStyleBackground *color;
-  const nsStylePadding* padding = aForFrame->GetStylePadding();
   const nsStyleBorder* border = aForFrame->GetStyleBorder();
 
   if (!FindBackground(aPresContext, aForFrame, &color, &isCanvas)) {
@@ -1289,7 +1288,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
   if (!isCanvas) {
     PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                           aDirtyRect, aBorderArea, *color, *border,
-                          *padding, aUsePrintSettings, aBGClipRect);
+                          aUsePrintSettings, aBGClipRect);
     return;
   }
 
@@ -1319,7 +1318,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
 
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                         aDirtyRect, aBorderArea, canvasColor,
-                        *border, *padding, aUsePrintSettings, aBGClipRect);
+                        *border, aUsePrintSettings, aBGClipRect);
 }
 
 inline nscoord IntDivFloor(nscoord aDividend, nscoord aDivisor)
@@ -1437,7 +1436,6 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
                                       const nsRect& aBorderArea,
                                       const nsStyleBackground& aColor,
                                       const nsStyleBorder& aBorder,
-                                      const nsStylePadding& aPadding,
                                       PRBool aUsePrintSettings,
                                       nsRect* aBGClipRect)
 {
@@ -1502,7 +1500,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // if there is no background image or background images are turned off, try a color.
   if (!aColor.mBackgroundImage || !canDrawBackgroundImage) {
     PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
-                         aColor, aBorder, aPadding, canDrawBackgroundColor);
+                         aColor, aBorder, canDrawBackgroundColor);
     return;
   }
 
@@ -1518,7 +1516,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 
   if (!req || !(status & imgIRequest::STATUS_FRAME_COMPLETE) || !(status & imgIRequest::STATUS_SIZE_AVAILABLE)) {
     PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
-                         aColor, aBorder, aPadding, canDrawBackgroundColor);
+                         aColor, aBorder, canDrawBackgroundColor);
     return;
   }
 
@@ -1623,7 +1621,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   // The background color is rendered over the 'background-clip' area
   if (needBackgroundColor) {
     PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
-                         aColor, aBorder, aPadding, canDrawBackgroundColor);
+                         aColor, aBorder, canDrawBackgroundColor);
   }
 
   if ((tileWidth == 0) || (tileHeight == 0) || dirtyRect.IsEmpty()) {
@@ -2317,7 +2315,6 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
                                      const nsRect& aBgClipArea,
                                      const nsStyleBackground& aColor,
                                      const nsStyleBorder& aBorder,
-                                     const nsStylePadding& aPadding,
                                      PRBool aCanPaintNonWhite)
 {
   // If we're only allowed to paint white, then don't bail out on transparent
