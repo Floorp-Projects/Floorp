@@ -2472,6 +2472,7 @@ js_Interpret(JSContext *cx)
 #if JS_HAS_GETTER_SETTER
     JSPropertyOp getter, setter;
 #endif
+    JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
 
 #ifdef __GNUC__
 # define JS_EXTENSION __extension__

@@ -722,6 +722,9 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(void *));
 #define JS_PUSH_TEMP_ROOT_SCRIPT(cx,script_,tvr)                              \
     JS_PUSH_TEMP_ROOT_COMMON(cx, script_, tvr, JSTVU_SCRIPT, script)
 
+
+#define JSRESOLVE_INFER         0xffff  /* infer bits from current bytecode */
+
 struct JSContext {
     /* JSRuntime contextList linkage. */
     JSCList             links;
@@ -889,6 +892,9 @@ struct JSContext {
 
     /* Pinned regexp pool used for regular expressions. */
     JSArenaPool         regexpPool;
+
+    /* Stored here to avoid passing it around as a parameter. */
+    uintN               resolveFlags;
 };
 
 #ifdef JS_THREADSAFE
@@ -921,6 +927,21 @@ class JSAutoTempValueRooter
 
     JSContext *mContext;
     JSTempValueRooter mTvr;
+};
+
+class JSAutoResolveFlags
+{
+  public:
+    JSAutoResolveFlags(JSContext *cx, uintN flags)
+        : mContext(cx), mSaved(cx->resolveFlags) {
+        cx->resolveFlags = flags;
+    }
+
+    ~JSAutoResolveFlags() { mContext->resolveFlags = mSaved; }
+
+  private:
+    JSContext *mContext;
+    uintN mSaved;
 };
 #endif
 
