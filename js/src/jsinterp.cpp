@@ -5800,6 +5800,8 @@ js_Interpret(JSContext *cx)
                     goto error;
             }
 
+            TRACE_2(DefLocalFunSetSlot, slot, obj);
+            
             fp->slots[slot] = OBJECT_TO_JSVAL(obj);
           END_CASE(JSOP_DEFLOCALFUN)
 
