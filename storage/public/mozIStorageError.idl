@@ -39,6 +39,12 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#ifdef ERROR
+#undef ERROR
+#endif
+%}
+
 [scriptable, uuid(1f350f96-7023-434a-8864-40a1c493aac1)]
 interface mozIStorageError : nsISupports {
 

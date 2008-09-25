@@ -371,7 +371,10 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
   if (aScriptGlobalObject) {
     if (!GetRootContent()) {
       // Create synthetic document
-      nsresult rv = CreateSyntheticDocument();
+#ifdef DEBUG
+      nsresult rv =
+#endif
+        CreateSyntheticDocument();
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic document");
 
       target = do_QueryInterface(mImageContent);

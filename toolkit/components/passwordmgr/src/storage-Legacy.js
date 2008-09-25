@@ -862,7 +862,11 @@ LoginManagerStorage_legacy.prototype = {
 
         do {
             var hasMore = lineStream.readLine(line);
-            line.value = this._utfConverter.ConvertToUnicode(line.value);
+            try {
+              line.value = this._utfConverter.ConvertToUnicode(line.value);
+            } catch (e) {
+              this.log("Bad UTF8 conversion: " + line.value);
+            }
 
             switch (parseState) {
                 // Check file header
