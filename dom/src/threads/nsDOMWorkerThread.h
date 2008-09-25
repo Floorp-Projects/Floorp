@@ -117,6 +117,7 @@ _class::GetClassIDNoAlloc(nsCID* _classIDNoAlloc)                             \
 class nsDOMWorkerPool;
 class nsDOMWorkerScriptLoader;
 class nsDOMWorkerTimeout;
+class nsDOMWorkerXHR;
 
 class nsDOMWorkerThread : public nsDOMWorkerBase,
                           public nsIDOMWorkerThread,
@@ -128,6 +129,7 @@ class nsDOMWorkerThread : public nsDOMWorkerBase,
   friend class nsDOMWorkerRunnable;
   friend class nsDOMWorkerScriptLoader;
   friend class nsDOMWorkerTimeout;
+  friend class nsDOMWorkerXHR;
 
   friend JSBool DOMWorkerOperationCallback(JSContext* aCx);
 
@@ -167,7 +169,7 @@ private:
   inline nsDOMWorkerTimeout* FirstTimeout();
   inline nsDOMWorkerTimeout* NextTimeout(nsDOMWorkerTimeout* aTimeout);
 
-  void AddTimeout(nsDOMWorkerTimeout* aTimeout);
+  PRBool AddTimeout(nsDOMWorkerTimeout* aTimeout);
   void RemoveTimeout(nsDOMWorkerTimeout* aTimeout);
   void ClearTimeouts();
   void CancelTimeout(PRUint32 aId);
@@ -175,6 +177,10 @@ private:
   void ResumeTimeouts();
 
   void CancelScriptLoaders();
+
+  PRBool AddXHR(nsDOMWorkerXHR* aXHR);
+  void RemoveXHR(nsDOMWorkerXHR* aXHR);
+  void CancelXHRs();
 
   PRLock* Lock() {
     return mLock;
@@ -195,6 +201,7 @@ private:
   PRCList mTimeouts;
 
   nsTArray<nsDOMWorkerScriptLoader*> mScriptLoaders;
+  nsTArray<nsDOMWorkerXHR*> mXHRs;
 };
 
 #endif /* __NSDOMWORKERTHREAD_H__ */
