@@ -119,6 +119,7 @@
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsDOMDragEvent.h"
+#include "nsIDOMNSEditableElement.h"
 
 #include "nsIDOMRange.h"
 #include "nsCaret.h"
@@ -2005,13 +2006,15 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       if (!dataTransfer)
         return;
 
+      PRBool isInEditor = PR_FALSE;
       PRBool isSelection = PR_FALSE;
       nsCOMPtr<nsIContent> eventContent, targetContent;
       mCurrentTarget->GetContentForEvent(aPresContext, aEvent,
                                          getter_AddRefs(eventContent));
       if (eventContent)
         DetermineDragTarget(aPresContext, eventContent, dataTransfer,
-                            &isSelection, getter_AddRefs(targetContent));
+                            &isSelection, &isInEditor,
+                            getter_AddRefs(targetContent));
 
       // Stop tracking the drag gesture now. This should stop us from
       // reentering GenerateDragGesture inside DOM event processing.
@@ -2046,10 +2049,13 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       // Set the current target to the content for the mouse down
       mCurrentTargetContent = targetContent;
 
-      // Dispatch both the dragstart and draggesture events to the DOM
+      // Dispatch both the dragstart and draggesture events to the DOM. For
+      // elements in an editor, only fire the draggesture event so that the
+      // editor code can handle it but content doesn't see a dragstart.
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEventDispatcher::Dispatch(targetContent, aPresContext, &startEvent, nsnull,
-                                  &status);
+      if (!isInEditor)
+        nsEventDispatcher::Dispatch(targetContent, aPresContext, &startEvent, nsnull,
+                                    &status);
 
       nsDragEvent* event = &startEvent;
       if (status != nsEventStatus_eConsumeNoDefault) {
@@ -2087,9 +2093,11 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
                                          nsIContent* aSelectionTarget,
                                          nsDOMDataTransfer* aDataTransfer,
                                          PRBool* aIsSelection,
+                                         PRBool* aIsInEditor,
                                          nsIContent** aTargetNode)
 {
   *aTargetNode = nsnull;
+  *aIsInEditor = PR_FALSE;
 
   nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
   nsCOMPtr<nsIDOMWindow> window = do_GetInterface(container);
@@ -2156,6 +2164,17 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
         // otherwise, it's not an HTML or XUL element, so just keep looking
       }
       dragContent = dragContent->GetParent();
+
+      // if an editable parent is encountered, then we don't look at any
+      // ancestors. This is used because the editor attaches a draggesture
+      // listener to the editable element and we want to call it without
+      // making the editable element draggable. This should be removed once
+      // the editor is switched over to using the proper drag and drop api.
+      nsCOMPtr<nsIDOMNSEditableElement> editableElement = do_QueryInterface(dragContent);
+      if (editableElement) {
+        *aIsInEditor = PR_TRUE;
+        break;
+      }
     }
   }
 
