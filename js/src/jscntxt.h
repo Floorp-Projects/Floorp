@@ -166,9 +166,6 @@ struct JSThread {
      */
     uint32              gcMallocBytes;
 
-    /* Thread-local gc free lists array. */
-    JSGCThing           *gcFreeLists[GC_NUM_FREELISTS];
-
     /*
      * Store the GSN cache in struct JSThread, not struct JSContext, both to
      * save space and to simplify cleanup in js_GC.  Any embedding (Firefox
@@ -247,6 +244,7 @@ struct JSRuntime {
     JSGCChunkInfo       *gcChunkList;
     JSGCArenaList       gcArenaList[GC_NUM_FREELISTS];
     JSGCDoubleArenaList gcDoubleArenaList;
+    JSGCFreeListSet     *gcFreeListsPool;
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
     jsrefcount          gcKeepAtoms;
@@ -875,6 +873,10 @@ struct JSContext {
 
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
+
+#ifdef JS_THREADSAFE
+    JSGCFreeListSet     *gcLocalFreeLists;
+#endif
 
     /* List of pre-allocated doubles. */
     JSGCDoubleCell      *doubleFreeList;
