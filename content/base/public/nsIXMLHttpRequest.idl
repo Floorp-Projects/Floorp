@@ -101,7 +101,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(ae8f1468-cd7f-4aea-9c40-a3f085db9369)]
+[scriptable, uuid(acda85ab-d06c-4176-b834-6d129ca97ca3)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -334,31 +334,64 @@ interface nsIXMLHttpRequest : nsISupports
   [noscript] void init(in nsIPrincipal principal,
                        in nsIScriptContext scriptContext,
                        in nsPIDOMWindow ownerWindow);
+};
 
+[scriptable, uuid(6e127bd2-b4c1-4a82-be0d-012bd24efb37)]
+interface nsIXMLHttpRequestUploadGetter : nsISupports {
   /**
    * Upload process can be tracked by adding event listener to |upload|.
    */
   readonly attribute nsIXMLHttpRequestUpload upload;
+};
 
+[scriptable, uuid(261676b4-d508-43bf-b099-74635a0ee2e9)]
+interface nsIJSXMLHttpRequest : nsISupports {
   /**
-   * Meant to be a script-only mechanism for setting a callback function.
-   * The attribute is expected to be JavaScript function object. When the
-   * readyState changes, the callback function will be called.
+   * Meant to be a script-only mechanism for setting a load event listener.
+   * The attribute is expected to be JavaScript function object. When
+   * the load event occurs, the function is invoked.
    * This attribute should not be used from native code!!
    *
    * After the initial response, all event listeners will be cleared.
    * // XXXbz what does that mean, exactly?   
    *
-   * Call open() before setting an onreadystatechange listener.
+   * Call open() before setting an onload listener.
+   *
+   * Mozilla only.
    */
-  attribute nsIDOMEventListener onreadystatechange;
-};
+  attribute nsIDOMEventListener onload;
 
-/**
- * DEPRECATED.
- */
-[scriptable, uuid(261676b4-d508-43bf-b099-74635a0ee2e9)]
-interface nsIJSXMLHttpRequest : nsISupports {
+  /**
+   * Meant to be a script-only mechanism for setting an error event listener.
+   * The attribute is expected to be JavaScript function object. When
+   * the error event occurs, the function is invoked.
+   * This attribute should not be used from native code!!
+   *
+   * After the initial response, all event listeners will be cleared.
+   * // XXXbz what does that mean, exactly?   
+   *
+   * Call open() before setting an onerror listener.
+   *
+   * Mozilla only.
+   */
+  attribute nsIDOMEventListener onerror;
+
+  /**
+   * Meant to be a script-only mechanism for setting a progress event listener.
+   * The attribute is expected to be JavaScript function object. When
+   * the error event occurs, the function is invoked.
+   * This attribute should not be used from native code!!
+   * This event listener may be called multiple times during the open request.
+   *
+   * After the initial response, all event listeners will be cleared.
+   * // XXXbz what does that mean, exactly?
+   *
+   * This event listener must be set BEFORE calling open().
+   *
+   * Mozilla only.
+   */
+  attribute nsIDOMEventListener onprogress;
+
   /**
    * Meant to be a script-only mechanism for setting an upload progress event
    * listener.
@@ -373,6 +406,19 @@ interface nsIJSXMLHttpRequest : nsISupports {
    * Mozilla only.
    */
   attribute nsIDOMEventListener onuploadprogress;
+
+  /**
+   * Meant to be a script-only mechanism for setting a callback function.
+   * The attribute is expected to be JavaScript function object. When the
+   * readyState changes, the callback function will be called.
+   * This attribute should not be used from native code!!
+   *
+   * After the initial response, all event listeners will be cleared.
+   * // XXXbz what does that mean, exactly?   
+   *
+   * Call open() before setting an onreadystatechange listener.
+   */
+  attribute nsIDOMEventListener onreadystatechange;
 };
 
 %{ C++
