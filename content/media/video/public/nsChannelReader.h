@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -34,53 +35,87 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined(nsChannelReader_h_)
-#define nsChannelReader_h_
+#if !defined(nsChannelReader_h___)
+#define nsChannelReader_h___
 
-#include "nsAutoPtr.h"
-#include "nsMediaStream.h"
-#include "nsMediaDecoder.h"
+#include "nsCOMPtr.h"
+#include "nsIChannel.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsIRequestObserver.h"
+#include "nsIStreamListener.h"
 #include "nsIPrincipal.h"
 
 #include "oggplay/oggplay.h"
+
+class nsOggDecoder;
+
+/* 
+   Reads all data on the input stream of a channel and
+   writes it to a pipe. This allows a seperate thread to
+   read data from a channel running on the main thread
+*/
+class nsChannelToPipeListener : public nsIStreamListener
+{
+  // ISupports
+  NS_DECL_ISUPPORTS
+
+  // IRequestObserver
+  NS_DECL_NSIREQUESTOBSERVER
+
+  // IStreamListener
+  NS_DECL_NSISTREAMLISTENER
+
+  public:
+  nsChannelToPipeListener(nsOggDecoder* aDecoder);
+  nsresult Init();
+  void GetInputStream(nsIInputStream** aStream);
+  void Stop();
+  double BytesPerSecond() const;
+
+  nsIPrincipal* GetCurrentPrincipal();
+
+private:
+  nsCOMPtr<nsIInputStream> mInput;
+  nsCOMPtr<nsIOutputStream> mOutput;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsOggDecoder* mDecoder;
+
+  // Interval when download started. Used in
+  // computing bytes per second download rate.
+  PRIntervalTime mIntervalStart;
+
+  // Interval when last downloaded bytes occurred. Used in computer
+  // bytes per second download rate.
+  PRIntervalTime mIntervalEnd;
+
+  // Total bytes transferred so far
+  PRInt64 mTotalBytes;
+};
 
 class nsChannelReader : public OggPlayReader
 {
 public:
   nsChannelReader();
-  ~nsChannelReader();
-
-  // Initialize the reader with the given decoder and URI.
-  nsresult Init(nsMediaDecoder* aDecoder, nsIURI* aURI);
-
-  // Cancel any blocking request currently in progress and cause that
-  // request to return an error. Call on main thread only.
-  void Cancel();
-
-  // Return the number of bytes buffered from the file. This can safely
-  // be read without blocking.
+  nsresult Init(nsOggDecoder* aDecoder, nsIURI* aURI);
   PRUint32 Available();
-
-  // Return average number of bytes per second that the 
-  // download of the media resource is achieving.
-  float DownloadRate();
-
-  // Return average number of bytes per second that the 
-  // playback of the media resource is achieving.
-  float PlaybackRate();
-
-  nsIPrincipal* GetCurrentPrincipal();
-  
-  // Implementation of OggPlay Reader API.
   OggPlayErrorCode initialise(int aBlock);
   OggPlayErrorCode destroy();
   size_t io_read(char* aBuffer, size_t aCount);
   int io_seek(long aOffset, int aWhence);
   long io_tell();  
-  int duration();
-  
+
+  // Return average number of bytes per second that the 
+  // download of the media resource is achieving.
+  double BytesPerSecond() const;
+
+  // return the principal that we saved in GetRequest
+  nsIPrincipal* GetCurrentPrincipal();
+
 public:
-  nsMediaStream mStream;
+  nsCOMPtr<nsIChannel>  mChannel;
+  nsCOMPtr<nsIInputStream>  mInput;
+  nsCOMPtr<nsChannelToPipeListener> mListener;
   unsigned long mCurrentPosition;
 };
 
