@@ -55,7 +55,7 @@ CSRCS		= \
 		$(NULL)
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 CSRCS		= \
 		sydney_audio_waveapi.c \
 		$(NULL)
