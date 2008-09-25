@@ -39,20 +39,16 @@
 #include "nsPrintSessionX.h"
 #include "nsObjCExceptions.h"
 
-//*****************************************************************************
-//***    nsPrintSessionX
-//*****************************************************************************
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSessionX, 
                              nsPrintSession, 
                              nsIPrintSessionX)
                              
-//-----------------------------------------------------------------------------
 nsPrintSessionX::nsPrintSessionX()
 {
 }
 
-//-----------------------------------------------------------------------------
+
 nsPrintSessionX::~nsPrintSessionX()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -65,7 +61,7 @@ nsPrintSessionX::~nsPrintSessionX()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-//-----------------------------------------------------------------------------
+
 nsresult nsPrintSessionX::Init()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -73,26 +69,25 @@ nsresult nsPrintSessionX::Init()
   nsresult rv = nsPrintSession::Init();
   if (NS_FAILED(rv))
     return rv;
-  
+
   OSStatus status = ::PMCreateSession(&mSession);
   if (status != noErr)
     return NS_ERROR_FAILURE;
-    
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-//-----------------------------------------------------------------------------
-/* readonly attribute nsPMPrintSession nativeSession; */
+
 NS_IMETHODIMP nsPrintSessionX::GetNativeSession(PMPrintSession *aNativeSession)
 {
   NS_ENSURE_ARG_POINTER(aNativeSession);
   *aNativeSession = nsnull;
-  
+
   if (!mSession)
     return NS_ERROR_NOT_INITIALIZED;
-    
+
   *aNativeSession = mSession;
   return NS_OK;
 }
