@@ -124,14 +124,12 @@ ifdef BUILD_OPT
 ifdef USE_MSVC
 OPTIMIZER  = -O2 -GL
 INTERP_OPTIMIZER = -O2 -GL
-REGEXP_OPTIMIZER = -O2 -GL
 BUILTINS_OPTIMIZER = -O2 -GL
 LDFLAGS    += -LTCG
 else
 OPTIMIZER  = -Os -fno-exceptions -fno-rtti -fstrict-aliasing -Wall -Wstrict-aliasing=2
-INTERP_OPTIMIZER = -O3 -fstrict-aliasing -fno-exceptions -fno-rtti
-REGEXP_OPTIMIZER = -O9 -fomit-frame-pointer -fstrict-aliasing -fno-exceptions -fno-rtti
 BUILTINS_OPTIMIZER = -O9 -fstrict-aliasing -fno-exceptions -fno-rtti
+INTERP_OPTIMIZER = -O3 -fstrict-aliasing -fno-exceptions -fno-rtti
 endif
 DEFINES    += -UDEBUG -DNDEBUG -UDEBUG_$(USER)
 OBJDIR_TAG = _OPT

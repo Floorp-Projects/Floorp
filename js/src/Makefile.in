@@ -60,8 +60,6 @@ else
 MODULE_OPTIMIZE_FLAGS = -Os -fstrict-aliasing $(MOZ_OPTIMIZE_SIZE_TWEAK)
 # Special optimization flags for jsinterp.c
 INTERP_OPTIMIZER = -O3 -fstrict-aliasing
-BUILTINS_OPTIMIZER = -O9 -fstrict-aliasing
-REGEXP_OPTIMIZER = -O9 -fstrict-aliasing -fomit-frame-pointer
 endif
 else
 ifeq ($(OS_ARCH),SunOS)
@@ -451,17 +449,9 @@ endif
 endif
 endif
 
-# Allow building jsinterp.c and a few others with special optimization flags
+# Allow building jsinterp.c with special optimization flags
 ifdef INTERP_OPTIMIZER
 jsinterp.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS=$(INTERP_OPTIMIZER)
-endif
-
-ifdef BUILTINS_OPTIMIZER
-jsbuiltins.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS=$(BUILTINS_OPTIMIZER)
-endif
-
-ifdef REGEXP_OPTIMIZER
-jsregexp.$(OBJ_SUFFIX): MODULE_OPTIMIZE_FLAGS=$(REGEXP_OPTIMIZER)
 endif
 
 ifeq ($(OS_ARCH),IRIX)
