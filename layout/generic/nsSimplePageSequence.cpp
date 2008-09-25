@@ -199,13 +199,13 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   // now get out margins & edges
   if (mPageData->mPrintSettings) {
-    nsMargin unwriteableTwips;
+    nsIntMargin unwriteableTwips;
     mPageData->mPrintSettings->GetUnwriteableMarginInTwips(unwriteableTwips);
     NS_ASSERTION(unwriteableTwips.left  >= 0 && unwriteableTwips.top >= 0 &&
                  unwriteableTwips.right >= 0 && unwriteableTwips.bottom >= 0,
                  "Unwriteable twips should be non-negative");
 
-    nsMargin marginTwips;
+    nsIntMargin marginTwips;
     mPageData->mPrintSettings->GetMarginInTwips(marginTwips);
     mMargin = aPresContext->TwipsToAppUnits(marginTwips + unwriteableTwips);
 
@@ -213,11 +213,11 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     mPageData->mPrintSettings->GetPrintRange(&printType);
     mPrintRangeType = printType;
 
-    nsMargin edgeTwips;
+    nsIntMargin edgeTwips;
     mPageData->mPrintSettings->GetEdgeInTwips(edgeTwips);
 
     // sanity check the values. three inches are sometimes needed
-    nscoord inchInTwips = NS_INCHES_TO_TWIPS(3.0);
+    PRInt32 inchInTwips = NS_INCHES_TO_TWIPS(3.0);
     edgeTwips.top = PR_MIN(PR_MAX(edgeTwips.top, 0), inchInTwips);
     edgeTwips.bottom = PR_MIN(PR_MAX(edgeTwips.bottom, 0), inchInTwips);
     edgeTwips.left = PR_MIN(PR_MAX(edgeTwips.left, 0), inchInTwips);
@@ -700,9 +700,8 @@ nsSimplePageSequenceFrame::PaintPageSequence(nsIRenderingContext& aRenderingCont
   aRenderingContext.PushState();
   nsPoint framePos = aPt;
   aRenderingContext.Translate(framePos.x, framePos.y);
-  rect -= framePos;
   aRenderingContext.Scale(scale, scale);
-  rect.ScaleRoundOut(1.0f / scale);
+  rect = (rect - framePos).ScaleRoundOutInverse(scale);
 
   // Now the rect and the rendering coordinates are are relative to this frame.
   // Loop over the pages and paint them.

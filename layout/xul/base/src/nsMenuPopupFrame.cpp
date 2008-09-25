@@ -1000,7 +1000,8 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
     if (mAnchorContent) {
       anchorScreenRect = aAnchorFrame->GetScreenRectInAppUnits();
       // adjust for differences in the anchor frame's scaling
-      anchorScreenRect.ScaleRoundOut(adj);
+      anchorScreenRect = nsIntRect::ToAppUnits(nsRect::ToOutsidePixels(anchorScreenRect,
+                         aAnchorFrame->PresContext()->AppUnitsPerDevPixel()), presContext->AppUnitsPerDevPixel());
       xpos = anchorScreenRect.x - rootScreenRect.x;
       ypos = anchorScreenRect.y - rootScreenRect.y;
 

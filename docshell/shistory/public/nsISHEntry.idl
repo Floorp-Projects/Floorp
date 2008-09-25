@@ -51,14 +51,14 @@ interface nsIInputStream;
 interface nsIDocShellTreeItem;
 interface nsISupportsArray;
 %{C++
-struct nsRect;
+struct nsIntRect;
 class nsDocShellEditorData;
 %}
-[ref] native nsRect(nsRect);
+[ref] native nsIntRect(nsIntRect);
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 
 
-[scriptable, uuid(c16fde76-3108-450e-8c8c-ae8286f286ed)]
+[scriptable, uuid(09fecea6-5453-43ba-bf91-3ff32618f037)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -81,8 +81,8 @@ interface nsISHEntry : nsIHistoryEntry
      * root view's widget accordingly if this has changed when the presentation
      * is restored.
      */
-    [noscript] void getViewerBounds(in nsRect bounds);
-    [noscript] void setViewerBounds([const] in nsRect bounds);
+    [noscript] void getViewerBounds(in nsIntRect bounds);
+    [noscript] void setViewerBounds([const] in nsIntRect bounds);
 
     /**
      * Saved child docshells corresponding to contentViewer.  The child shells

@@ -160,7 +160,7 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
 
 NSImage*
 nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
-                                  nsRect* aDragRect,
+                                  nsIntRect* aDragRect,
                                   nsIScriptableRegion* aRegion)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -264,7 +264,7 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
   if (NS_FAILED(SetUpDragClipboard(aTransferableArray)))
     return NS_ERROR_FAILURE;
 
-  nsRect dragRect(0, 0, 20, 20);
+  nsIntRect dragRect(0, 0, 20, 20);
   NSImage* image = ConstructDragImage(aDOMNode, &dragRect, aDragRgn);
   if (!image) {
     // if no image was returned, just draw a rectangle
