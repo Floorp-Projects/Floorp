@@ -2608,7 +2608,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     int slots = FlushNativeGlobalFrame(cx, exit_gslots, gslots, globalTypeMap, global);
     if (slots < 0)
         return NULL;
-    JS_ASSERT(globalFrameSize == STOBJ_NSLOTS(globalObj));
+    JS_ASSERT_IF(ngslots != 0, globalFrameSize == STOBJ_NSLOTS(globalObj));
     JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
 
     /* write back native stack frame */
@@ -6145,7 +6145,7 @@ TraceRecorder::record_JSOP_GETGVAR()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    stack(0, get(&STOBJ_GET_SLOT(cx->fp->scopeChain, slot)));
+    stack(0, get(&STOBJ_GET_SLOT(globalObj, slot)));
     return true;
 }
 
@@ -6161,7 +6161,7 @@ TraceRecorder::record_JSOP_SETGVAR()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    set(&STOBJ_GET_SLOT(cx->fp->scopeChain, slot), stack(-1));
+    set(&STOBJ_GET_SLOT(globalObj, slot), stack(-1));
     return true;
 }
 
@@ -6177,7 +6177,7 @@ TraceRecorder::record_JSOP_INCGVAR()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), 1);
+    return inc(STOBJ_GET_SLOT(globalObj, slot), 1);
 }
 
 bool
@@ -6192,7 +6192,7 @@ TraceRecorder::record_JSOP_DECGVAR()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), -1);
+    return inc(STOBJ_GET_SLOT(globalObj, slot), -1);
 }
 
 bool
@@ -6207,7 +6207,7 @@ TraceRecorder::record_JSOP_GVARINC()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), 1, false);
+    return inc(STOBJ_GET_SLOT(globalObj, slot), 1, false);
 }
 
 bool
@@ -6222,7 +6222,7 @@ TraceRecorder::record_JSOP_GVARDEC()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), -1, false);
+    return inc(STOBJ_GET_SLOT(globalObj, slot), -1, false);
 }
 
 bool
