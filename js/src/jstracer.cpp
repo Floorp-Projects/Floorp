@@ -665,20 +665,6 @@ public:
             if (s0->isCall() && s0->fid() == F_UnboxDouble) 
                 return callArgN(s0, 0);
             break;
-          case F_Any_getelem:
-            JS_ASSERT(s0->isQuad());
-            if (isPromote(s0)) {
-                LIns* args2[] = { demote(out, s0), args[1], args[2] };
-                return out->insCall(F_Any_getelem_int, args2);
-            }
-            break;
-          case F_Any_setelem:
-            JS_ASSERT(args[1]->isQuad());
-            if (isPromote(args[1])) {
-                LIns* args2[] = { s0, demote(out, args[1]), args[2], args[3] };
-                return out->insCall(F_Any_setelem_int, args2);
-            }
-            break;
         }
         return out->insCall(fid, args);
     }
@@ -3016,6 +3002,19 @@ LIns* TraceRecorder::f2i(LIns* f)
     return lir->insCall(F_DoubleToInt32, &f);
 }
 
+LIns* TraceRecorder::makeNumberInt32(LIns* f)
+{
+    JS_ASSERT(f->isQuad());
+    LIns* x;
+    if (!isPromote(f)) {
+        x = f2i(f);
+        guard(true, lir->ins2(LIR_feq, f, lir->ins1(LIR_i2f, x)), MISMATCH_EXIT);
+    } else {
+        x = ::demote(lir, f);
+    }
+    return x;
+}
+
 bool
 TraceRecorder::ifop()
 {
@@ -3762,6 +3761,19 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp)
     JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
     guard(true, addName(lir->ins2(LIR_eq, class_ins, INS_CONSTPTR(clasp)), namebuf),
           MISMATCH_EXIT);
+    return true;
+}
+
+bool
+TraceRecorder::guardNotGlobalObject(JSObject* obj, LIns* obj_ins)
+{
+    /*
+     * Can't specialize to assert obj != global, must guard to avoid aliasing
+     * stale homes of stacked global variables.
+     */
+    if (obj == globalObj)
+        ABORT_TRACE("elem op aliases global");
+    guard(false, lir->ins2(LIR_eq, obj_ins, INS_CONSTPTR(globalObj)), MISMATCH_EXIT);
     return true;
 }
 
@@ -4606,58 +4618,73 @@ TraceRecorder::record_SetPropMiss(JSPropCacheEntry* entry)
 bool
 TraceRecorder::record_JSOP_GETELEM()
 {
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
+    jsval& idx = stackval(-1);
+    jsval& obj = stackval(-2);
 
-    if (JSVAL_IS_STRING(l) && JSVAL_IS_INT(r)) {
-        int i;
-
-        i = JSVAL_TO_INT(r);
-        if ((size_t)i >= JSSTRING_LENGTH(JSVAL_TO_STRING(l)))
+    LIns* obj_ins = get(&obj);
+    LIns* idx_ins = get(&idx);
+    
+    if (JSVAL_IS_STRING(obj) && JSVAL_IS_INT(idx)) {
+        int i = JSVAL_TO_INT(idx);
+        if ((size_t)i >= JSSTRING_LENGTH(JSVAL_TO_STRING(obj)))
             ABORT_TRACE("Invalid string index in JSOP_GETELEM");
-
-        LIns* args[] = { f2i(get(&r)), get(&l), cx_ins };
+        idx_ins = makeNumberInt32(idx_ins);
+        LIns* args[] = { idx_ins, obj_ins, cx_ins };
         LIns* unitstr_ins = lir->insCall(F_String_getelem, args);
         guard(false, lir->ins_eq0(unitstr_ins), MISMATCH_EXIT);
-        set(&l, unitstr_ins);
+        set(&obj, unitstr_ins);
         return true;
     }
 
-    if (!JSVAL_IS_PRIMITIVE(l) &&
-        (JSVAL_IS_STRING(r) || 
-         (isNumber(r) && (!JSVAL_IS_INT(r) || !OBJ_IS_DENSE_ARRAY(cx, JSVAL_TO_OBJECT(l)))))) {
-        jsval v;
-        jsid id;
-        uint32 fid;
-
-        if (JSVAL_IS_STRING(r)) {
-            if (!js_ValueToStringId(cx, r, &id))
-                return false;
-            r = ID_TO_VALUE(id);
-            fid = F_Any_getprop;
-        } else {
-            if (!js_IndexToId(cx, JSVAL_TO_INT(r), &id))
-                return false;
-            fid = F_Any_getelem;
-        }
-        if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(l), id, &v))
+    if (JSVAL_IS_PRIMITIVE(obj))
+        ABORT_TRACE("JSOP_GETLEM on a primitive");
+    
+    jsval id;
+    jsval v;
+    LIns* v_ins;
+    
+    /* Property access using a string name. */
+    if (JSVAL_IS_STRING(idx)) {
+        if (!guardNotGlobalObject(JSVAL_TO_OBJECT(obj), obj_ins))
             return false;
-
-        LIns* args[] = { get(&r), get(&l), cx_ins };
-        LIns* v_ins = lir->insCall(fid, args);
+        if (!js_ValueToStringId(cx, idx, &id))
+            return false;
+        if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(obj), id, &v))
+            return false;
+        LIns* args[] = { idx_ins, obj_ins, cx_ins };
+        v_ins = lir->insCall(F_Any_getprop, args);
         guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), MISMATCH_EXIT);
         if (!unbox_jsval(v, v_ins))
             ABORT_TRACE("JSOP_GETELEM");
-        set(&l, v_ins);
+        set(&obj, v_ins);
+        return true;
+    }
+    
+    /* At this point we expect a whole number or we bail. */
+    if (!JSVAL_IS_INT(idx))
+        ABORT_TRACE("non-string, non-int JSOP_GETELEM index");
+
+    /* Accessing an object using integer index but not a dense array. */
+    if (!OBJ_IS_DENSE_ARRAY(cx, JSVAL_TO_OBJECT(obj))) {
+        idx_ins = makeNumberInt32(idx_ins);
+        if (!js_IndexToId(cx, JSVAL_TO_INT(idx), &id))
+            return false;
+        if (!OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(obj), id, &v))
+            return false;
+        LIns* args[] = { idx_ins, obj_ins, cx_ins };
+        LIns* v_ins = lir->insCall(F_Any_getelem, args);
+        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), MISMATCH_EXIT);
+        if (!unbox_jsval(v, v_ins))
+            ABORT_TRACE("JSOP_GETELEM");
+        set(&obj, v_ins);
         return true;
     }
 
     jsval* vp;
-    LIns* v_ins;
     LIns* addr_ins;
-    if (!elem(l, r, vp, v_ins, addr_ins))
+    if (!elem(obj, idx, vp, v_ins, addr_ins))
         return false;
-    set(&l, v_ins);
+    set(&obj, v_ins);
     return true;
 }
 
@@ -4665,38 +4692,47 @@ bool
 TraceRecorder::record_JSOP_SETELEM()
 {
     jsval& v = stackval(-1);
-    jsval& r = stackval(-2);
-    jsval& l = stackval(-3);
+    jsval& idx = stackval(-2);
+    jsval& obj = stackval(-3);
 
     /* no guards for type checks, trace specialized this already */
-    if (JSVAL_IS_PRIMITIVE(l))
+    if (JSVAL_IS_PRIMITIVE(obj))
         ABORT_TRACE("left JSOP_SETELEM operand is not an object");
-    JSObject* obj = JSVAL_TO_OBJECT(l);
-    LIns* obj_ins = get(&l);
 
-    if (JSVAL_IS_STRING(r) || 
-        (isNumber(r) && (!JSVAL_IS_INT(r) || !guardDenseArray(obj, obj_ins)))) {
-        LIns* v_ins = get(&v);
+    LIns* obj_ins = get(&obj);
+    LIns* idx_ins = get(&idx);
+    LIns* v_ins = get(&v);
+    
+    if (JSVAL_IS_STRING(idx)) {
+        if (!guardNotGlobalObject(JSVAL_TO_OBJECT(obj), obj_ins))
+            return false;
         LIns* unboxed_v_ins = v_ins;
         if (!box_jsval(v, v_ins))
             ABORT_TRACE("boxing string-indexed JSOP_SETELEM value");
-        LIns* args[] = { v_ins, get(&r), get(&l), cx_ins };
-        LIns* ok_ins = lir->insCall(JSVAL_IS_STRING(r) ? F_Any_setprop : F_Any_setelem, args);
+        LIns* args[] = { v_ins, idx_ins, obj_ins, cx_ins };
+        LIns* ok_ins = lir->insCall(F_Any_setprop, args);
         guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);
-        set(&l, unboxed_v_ins);
+        set(&obj, unboxed_v_ins);
         return true;
     }
-    if (!JSVAL_IS_INT(r))
+
+    if (!JSVAL_IS_INT(idx))
         ABORT_TRACE("non-string, non-int JSOP_SETELEM index");
 
-    /* check that the index is within bounds */
-    LIns* idx_ins = f2i(get(&r));
+    idx_ins = makeNumberInt32(idx_ins);
+    
+    if (!guardDenseArray(JSVAL_TO_OBJECT(obj), obj_ins)) {
+        LIns* unboxed_v_ins = v_ins;
+        if (!box_jsval(v, v_ins))
+            ABORT_TRACE("boxing string-indexed JSOP_SETELEM value");
+        LIns* args[] = { v_ins, idx_ins, obj_ins, cx_ins };
+        LIns* ok_ins = lir->insCall(F_Any_setelem, args);
+        guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);
+        set(&obj, unboxed_v_ins);
+        return true;
+    }
 
-    /* we have to check that its really an integer, but this check will to go away
-       once we peel the loop type down to integer for this slot */
-    guard(true, lir->ins2(LIR_feq, get(&r), lir->ins1(LIR_i2f, idx_ins)), MISMATCH_EXIT);
     /* ok, box the value we are storing, store it and we are done */
-    LIns* v_ins = get(&v);
     LIns* boxed_ins = v_ins;
     if (!box_jsval(v, boxed_ins))
         ABORT_TRACE("boxing failed");
@@ -4706,7 +4742,7 @@ TraceRecorder::record_JSOP_SETELEM()
 
     jsbytecode* pc = cx->fp->regs->pc;
     if (*pc == JSOP_SETELEM && pc[JSOP_SETELEM_LENGTH] != JSOP_POP)
-        set(&l, v_ins);
+        set(&obj, v_ins);
     return true;
 }
 
@@ -5252,38 +5288,29 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32& slot, LIns*& v_ins)
 }
 
 bool
-TraceRecorder::elem(jsval& l, jsval& r, jsval*& vp, LIns*& v_ins, LIns*& addr_ins)
+TraceRecorder::elem(jsval& obj, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& addr_ins)
 {
     /* no guards for type checks, trace specialized this already */
-    if (JSVAL_IS_PRIMITIVE(l) || !JSVAL_IS_INT(r))
+    if (JSVAL_IS_PRIMITIVE(obj) || !JSVAL_IS_INT(idx))
         return false;
 
-    /*
-     * Can't specialize to assert obj != global, must guard to avoid aliasing
-     * stale homes of stacked global variables.
-     */
-    JSObject* obj = JSVAL_TO_OBJECT(l);
-    if (obj == globalObj)
-        ABORT_TRACE("elem op aliases global");
-    LIns* obj_ins = get(&l);
-    guard(false, lir->ins2(LIR_eq, obj_ins, INS_CONSTPTR(globalObj)), MISMATCH_EXIT);
+    LIns* obj_ins = get(&obj);
+    
+    if (!guardNotGlobalObject(JSVAL_TO_OBJECT(obj), obj_ins))
+        return false;
 
     /* make sure the object is actually a dense array */
-    if (!guardDenseArray(obj, obj_ins))
+    if (!guardDenseArray(JSVAL_TO_OBJECT(obj), obj_ins))
         return false;
 
     /* check that the index is within bounds */
-    jsint idx = JSVAL_TO_INT(r);
-    LIns* idx_ins = f2i(get(&r));
-
-    /* we have to check that its really an integer, but this check will to go away
-       once we peel the loop type down to integer for this slot */
-    guard(true, lir->ins2(LIR_feq, get(&r), lir->ins1(LIR_i2f, idx_ins)), MISMATCH_EXIT);
+    jsint i = JSVAL_TO_INT(idx);
+    LIns* idx_ins = makeNumberInt32(get(&idx));
 
     LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
-    if (!guardDenseArrayIndex(obj, idx, obj_ins, dslots_ins, idx_ins))
+    if (!guardDenseArrayIndex(JSVAL_TO_OBJECT(obj), i, obj_ins, dslots_ins, idx_ins))
         return false;
-    vp = &obj->dslots[idx];
+    vp = &JSVAL_TO_OBJECT(obj)->dslots[i];
 
     addr_ins = lir->ins2(LIR_piadd, dslots_ins,
                          lir->ins2i(LIR_pilsh, idx_ins, (sizeof(jsval) == 4) ? 2 : 3));

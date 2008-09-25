@@ -1596,6 +1596,15 @@ function testInnerSwitchBreak()
 testInnerSwitchBreak.expected = "1,1,1,1,1";
 test(testInnerSwitchBreak);
 
+function testArrayNaNIndex() 
+{
+    for (var j = 0; j < 4; ++j) { [this[NaN]]; }
+    for (var j = 0; j < 5; ++j) { if([1][-0]) { } }
+    return "ok";
+}
+testArrayNaNIndex.expected = "ok";
+test(testArrayNaNIndex);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
