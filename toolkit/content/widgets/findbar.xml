@@ -468,17 +468,19 @@
         <parameter name="aHighlight"/>
         <body><![CDATA[
           var word = this._findField.value;
-          if (aHighlight) {
-            // We have to update the status because we might still have the status
-            // of another tab
-            if (this._highlightDoc(aHighlight, word))
-              this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
-            else
-              this._updateStatusUI(this.nsITypeAheadFind.FIND_NOTFOUND);
+          if (!aHighlight)
+            word = this._lastHighlightString;
+
+          if (!word) {
+            this._updateStatusUI();
+            return;
           }
-          else {
-            this._highlightDoc(aHighlight, this._lastHighlightString, null);
-          }
+          // We have to update the status because we might still have the status
+          // of another tab
+          if (this._highlightDoc(aHighlight, word))
+            this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
+          else
+            this._updateStatusUI(this.nsITypeAheadFind.FIND_NOTFOUND);
         ]]></body>
       </method>
 
