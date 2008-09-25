@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsHTMLMediaElement.h"
+#include "nsVideoDecoder.h"
 
 class nsHTMLVideoElement : public nsHTMLMediaElement,
                            public nsIDOMHTMLVideoElement
@@ -73,6 +74,7 @@ public:
   // Returns the current video frame width and height.
   // If there is no video frame, returns the given default size.
   nsIntSize GetVideoSize(nsIntSize defaultSize);
+  double GetVideoFramerate();
 
 protected:
   virtual nsresult InitializeDecoder(nsAString& aChosenMediaResource);
