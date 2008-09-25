@@ -126,7 +126,13 @@ nsDOMWorkerScriptLoader::LoadScripts(nsDOMWorkerThread* aWorker,
 
   {
     JSAutoSuspendRequest asr(aCx);
+
     nsAutoLock lock(mWorker->Lock());
+
+    if (mWorker->IsCanceled()) {
+      return NS_ERROR_ABORT;
+    }
+
     mTrackedByWorker = nsnull != mWorker->mScriptLoaders.AppendElement(this);
     NS_ASSERTION(mTrackedByWorker, "Failed to add loader to worker's array!");
   }
@@ -442,7 +448,7 @@ nsDOMWorkerScriptLoader::RunInternal()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   // Things we need to make all this work...
-  nsIDocument* parentDoc = mWorker->Pool()->GetParentDocument();
+  nsIDocument* parentDoc = mWorker->Pool()->ParentDocument();
   NS_ASSERTION(parentDoc, "Null parent document?!");
 
   // All of these can potentially be null, but that should be ok. We'll either
@@ -578,7 +584,7 @@ nsDOMWorkerScriptLoader::OnStreamCompleteInternal(nsIStreamLoader* aLoader,
     return rv = NS_ERROR_UNEXPECTED;
   }
 
-  nsIDocument* parentDoc = mWorker->Pool()->GetParentDocument();
+  nsIDocument* parentDoc = mWorker->Pool()->ParentDocument();
   NS_ASSERTION(parentDoc, "Null parent document?!");
 
   // Use the regular nsScriptLoader for this grunt work! Should be just fine

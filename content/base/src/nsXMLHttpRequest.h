@@ -165,8 +165,7 @@ class nsXMLHttpRequest : public nsXHREventTarget,
                          public nsIProgressEventSink,
                          public nsIInterfaceRequestor,
                          public nsSupportsWeakReference,
-                         public nsIJSNativeInitializer,
-                         public nsIXMLHttpRequestUploadGetter
+                         public nsIJSNativeInitializer
 {
 public:
   nsXMLHttpRequest();
@@ -180,16 +179,11 @@ public:
   // nsIJSXMLHttpRequest
   NS_IMETHOD GetOnuploadprogress(nsIDOMEventListener** aOnuploadprogress);
   NS_IMETHOD SetOnuploadprogress(nsIDOMEventListener* aOnuploadprogress);
-  NS_IMETHOD GetOnreadystatechange(nsIDOMEventListener** aOnreadystatechange);
-  NS_IMETHOD SetOnreadystatechange(nsIDOMEventListener* aOnreadystatechange);
 
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::)
 
   // nsIDOMEventListener
   NS_DECL_NSIDOMEVENTLISTENER
-
-  // nsIXMLHttpRequestUploadGetter
-  NS_DECL_NSIXMLHTTPREQUESTUPLOADGETTER
 
   // nsIDOMLoadListener
   NS_IMETHOD Load(nsIDOMEvent* aEvent);
@@ -249,6 +243,8 @@ public:
 
   // This is called by the factory constructor.
   nsresult Init();
+
+  void SetRequestObserver(nsIRequestObserver* aObserver);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXMLHttpRequest,
                                            nsXHREventTarget)
@@ -345,6 +341,8 @@ protected:
   nsCOMPtr<nsIChannelEventSink> mChannelEventSink;
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
 
+  nsIRequestObserver* mRequestObserver;
+
   PRUint32 mState;
 
   // List of potentially dangerous headers explicitly set using
@@ -357,6 +355,8 @@ protected:
   PRPackedBool mUploadComplete;
 
   PRPackedBool mErrorLoad;
+
+  PRPackedBool mFirstStartRequestSeen;
 };
 
 // helper class to expose a progress DOM Event
