@@ -115,7 +115,7 @@ STDMETHODIMP nsTextAccessibleWrap::get_clippedSubstringBounds(
 {
 __try {
   *aX = *aY = *aWidth = *aHeight = 0;
-  nscoord x, y, width, height, docX, docY, docWidth, docHeight;
+  PRInt32 x, y, width, height, docX, docY, docWidth, docHeight;
   HRESULT rv = get_unclippedSubstringBounds(aStartIndex, aEndIndex, &x, &y, &width, &height);
   if (FAILED(rv)) {
     return rv;
@@ -127,9 +127,9 @@ __try {
 
   accessible->GetBounds(&docX, &docY, &docWidth, &docHeight);
 
-  nsRect unclippedRect(x, y, width, height);
-  nsRect docRect(docX, docY, docWidth, docHeight);
-  nsRect clippedRect;
+  nsIntRect unclippedRect(x, y, width, height);
+  nsIntRect docRect(docX, docY, docWidth, docHeight);
+  nsIntRect clippedRect;
 
   clippedRect.IntersectRect(unclippedRect, docRect);
 
