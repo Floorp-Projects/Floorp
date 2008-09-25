@@ -22,7 +22,7 @@
 #define LINK_PATH WCE_BIN "link.exe"
 #define RC_PATH   WCE_RC_BIN "rc.exe"
 
-#define MAX_NOLEAK_BUFFERS 100
+#define MAX_NOLEAK_BUFFERS 1000
 char noleak_buffers[MAX_NOLEAK_BUFFERS][1024];
 static int next_buffer = 0;
 
