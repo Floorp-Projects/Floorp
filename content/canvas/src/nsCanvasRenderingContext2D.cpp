@@ -2153,7 +2153,10 @@ gfxFontGroup *nsCanvasRenderingContext2D::GetCurrentFontStyle()
 {
     // use lazy initilization for the font group since it's rather expensive
     if(!CurrentState().fontGroup) {
-        nsresult res = SetMozTextStyle(NS_LITERAL_STRING("10px sans-serif"));
+#ifdef DEBUG
+        nsresult res =
+#endif
+            SetMozTextStyle(NS_LITERAL_STRING("10px sans-serif"));
         NS_ASSERTION(res == NS_OK, "Default canvas font is invalid");
     }
 
