@@ -5004,23 +5004,17 @@ MOZ_ARG_DISABLE_BOOL(pango,
 
 
 dnl ========================================================
-dnl = Xft and Pango
+dnl = Pango
 dnl ========================================================
 if test "$MOZ_ENABLE_GTK2"
 then
-    if test "$MOZ_X11"; then
-        PKG_CHECK_MODULES(MOZ_XFT, xft)
-        AC_SUBST(MOZ_XFT_CFLAGS)
-        AC_SUBST(MOZ_XFT_LIBS)
-    fi
-
     AC_SUBST(MOZ_PANGO)
 
     PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
 
     if test "$MOZ_PANGO"
     then
-        PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangocairo >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
+        PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION)
         AC_SUBST(MOZ_PANGO_CFLAGS)
         AC_SUBST(MOZ_PANGO_LIBS)
         AC_DEFINE(MOZ_PANGO)
