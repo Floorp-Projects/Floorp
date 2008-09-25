@@ -130,7 +130,6 @@ nsGfxRadioControlFrame::PaintRadioButtonFromStyle(
   // Paint the button for the radio button using CSS background rendering code
   const nsStyleBackground* myColor = mRadioButtonFaceStyle->GetStyleBackground();
   const nsStyleColor* color = mRadioButtonFaceStyle->GetStyleColor();
-  const nsStylePadding* myPadding = mRadioButtonFaceStyle->GetStylePadding();
   const nsStylePosition* myPosition = mRadioButtonFaceStyle->GetStylePosition();
 
   NS_ASSERTION(myPosition->mWidth.GetUnit() == eStyleUnit_Coord &&
@@ -154,7 +153,7 @@ nsGfxRadioControlFrame::PaintRadioButtonFromStyle(
   nsPresContext* pc = PresContext();
   nsCSSRendering::PaintBackgroundWithSC(pc, aRenderingContext,
                                         this, aDirtyRect, rect,
-                                        tmpColor, *myBorder, *myPadding, PR_FALSE);
+                                        tmpColor, *myBorder, PR_FALSE);
   nsCSSRendering::PaintBorder(pc, aRenderingContext, this,
                               aDirtyRect, rect, *myBorder, mRadioButtonFaceStyle, 0);
 }
