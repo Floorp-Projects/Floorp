@@ -37,9 +37,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-// non-strings need some non-zero value used for their data length
-const kNonStringDataLength = 4;
-
 /** 
  *  nsTransferable - a wrapper for nsITransferable that simplifies
  *                   javascript clipboard and drag&drop. for use in
@@ -479,6 +476,9 @@ var nsDragAndDrop = {
           if (Array.indexOf(types, modtype) >= 0) {
             var data = dt.mozGetDataAt(modtype, i);
             if (data) {
+              // Non-strings need some non-zero value used for their data length.
+              const kNonStringDataLength = 4;
+
               var length = (typeof data == "string") ? data.length : kNonStringDataLength;
               dataArray[i] = FlavourToXfer(data, length, flavourSet.flavourTable[type]);
               break;
