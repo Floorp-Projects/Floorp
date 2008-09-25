@@ -177,7 +177,9 @@ typedef INT_PTR intptr_t;
 #define _S_IFREG    0100000 /* stat, is a normal file */
 #define _S_IREAD    0000400 /* stat, can read */
 #define _S_IWRITE   0000200 /* stat, can write */
-#define	_S_IEXEC	0000100
+#define _S_IEXEC    0000100
+
+#define S_IFREG     0x8000
 
 struct stat
 {
@@ -306,18 +308,18 @@ typedef struct MAT2 {
 
   
 struct color{
-	unsigned char Red;
-	unsigned char Green;
-	unsigned char Blue;
-	double Alpha;
+    unsigned char Red;
+    unsigned char Green;
+    unsigned char Blue;
+    double Alpha;
 };
 
 #ifndef SEE_MASK_FLAG_DDEWAIT
-#define SEE_MASK_FLAG_DDEWAIT	0
+#define SEE_MASK_FLAG_DDEWAIT   0
 #endif
 
 #ifndef SEE_MASK_INVOKEIDLIST
-#define SEE_MASK_INVOKEIDLIST	0
+#define SEE_MASK_INVOKEIDLIST   0
 #endif
 
 
@@ -799,4 +801,29 @@ typedef struct
 #define SetPropW             SetProp
 #define FONTENUMPROCW        FONTENUMPROC
 #define GetLongPathNameW     GetLongPathName
+
+// ACL Defines
+
+
+typedef enum _SE_OBJECT_TYPE {
+  SE_UNKNOWN_OBJECT_TYPE       = 0,
+  SE_FILE_OBJECT,
+  SE_SERVICE,
+  SE_PRINTER,
+  SE_REGISTRY_KEY,
+  SE_LMSHARE,
+  SE_KERNEL_OBJECT,
+  SE_WINDOW_OBJECT,
+  SE_DS_OBJECT,
+  SE_DS_OBJECT_ALL,
+  SE_PROVIDER_DEFINED_OBJECT,
+  SE_WMIGUID_OBJECT,
+  SE_REGISTRY_WOW64_32KEY 
+} SE_OBJECT_TYPE;
+
+typedef DWORD SECURITY_INFORMATION, *PSECURITY_INFORMATION;
+
+#define UNPROTECTED_DACL_SECURITY_INFORMATION 0x0
+
+
 #endif // _MOZCE_DEFS

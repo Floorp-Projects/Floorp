@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,19 +13,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is JavaScript Engine testing utilities.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- *   Alec Flett <alecf@netscape.com>
+ * Contributor(s): Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,28 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+gTestfile = 'regress-444608.js';
 
-#include "nsIWebProgressListener.h"
-#include "nsIBrowserHistory.h"
-#include "nsCOMPtr.h"
-#include "nsIComponentManager.h"
-#include "nsWeakReference.h"
-#include "nsIGenericFactory.h"
+var summary = '13.2 Namespaces - call constructors directly';
+var BUGNUMBER = 444608;
+var actual = 'No Crash';
+var expect = 'No Crash';
 
-class nsHistoryLoadListener : public nsIWebProgressListener,
-                              public nsSupportsWeakReference
-{
- public:
-    nsHistoryLoadListener(nsIBrowserHistory *);
-    virtual ~nsHistoryLoadListener();
+printBugNumber(BUGNUMBER);
+START(summary);
 
-    nsresult Init();
+var x = <xml/>;
+Namespace = function() { return 10; };
+x.addNamespace("x");
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBPROGRESSLISTENER
-        
- protected:
-    nsCOMPtr<nsIBrowserHistory> mHistory;
+TEST(1, expect, actual);
 
-};
-
+END();
