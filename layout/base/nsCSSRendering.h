@@ -42,8 +42,10 @@
 
 #include "nsIRenderingContext.h"
 #include "nsStyleConsts.h"
+#include "gfxBlur.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
+
 struct nsPoint;
 class nsStyleContext;
 class nsPresContext;
@@ -257,7 +259,7 @@ struct nsCSSRendering {
  * nsContextBoxBlur
  * Creates an 8-bit alpha channel context for callers to draw in, blurs the
  * contents of that context and applies it as a 1-color mask on a
- * different existing context.
+ * different existing context. Uses gfxAlphaBoxBlur as its back end.
  *
  * You must call Init() first to create a suitable temporary surface to draw
  * on.  You must then draw any desired content onto the given context, then
@@ -324,22 +326,9 @@ public:
   gfxContext* GetContext();
 
 protected:
-  void BoxBlurHorizontal(unsigned char* aInput,
-                         unsigned char* aOutput,
-                         PRUint32 aLeftLobe,
-                         PRUint32 aRightLobe);
-  void BoxBlurVertical(unsigned char* aInput,
-                       unsigned char* aOutput,
-                       PRUint32 aTopLobe,
-                       PRUint32 aBottomLobe);
-
+  gfxAlphaBoxBlur blur;
   nsRefPtr<gfxContext> mContext;
-  nsRefPtr<gfxImageSurface> mImageSurface;
   gfxContext* mDestinationCtx;
-
-  // Contrary to what is passed as parameters, these are in device pixels
-  gfxRect mRect;
-  PRInt32 mBlurRadius;
   
 };
 
