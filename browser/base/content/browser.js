@@ -3025,7 +3025,7 @@ function BrowserCustomizeToolbar()
 #else
   window.openDialog(customizeURL,
                     "CustomizeToolbar",
-                    "chrome,all,dependent",
+                    "chrome,titlebar,resizable,dependent",
                     gNavToolbox);
 #endif
 }
