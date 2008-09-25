@@ -81,6 +81,10 @@ $(OBJDIR)/jsinterp.o: jsinterp.cpp jsinterp.h
 	@$(MAKE_OBJDIR)
 	$(CXX) -o $@ -c $(INTERP_CFLAGS) jsinterp.cpp
 
+$(OBJDIR)/jsregexp.o: jsregexp.cpp jsregexp.h
+	@$(MAKE_OBJDIR)
+	$(CXX) -o $@ -c $(REGEXP_CFLAGS) jsregexp.cpp
+
 $(OBJDIR)/jsbuiltins.o: jsbuiltins.cpp jsinterp.h
 	@$(MAKE_OBJDIR)
 	$(CXX) -o $@ -c $(BUILTINS_CFLAGS) jsbuiltins.cpp
@@ -101,6 +105,10 @@ $(OBJDIR)/%.obj: %.cpp %.h
 $(OBJDIR)/jsinterp.obj: jsinterp.cpp jsinterp.h
 	@$(MAKE_OBJDIR)
 	$(CXX) -Fo$(OBJDIR)/ -c $(INTERP_CFLAGS) $(JSDLL_CFLAGS) jsinterp.cpp
+
+$(OBJDIR)/jsregexp.obj: jsregexp.cpp jsregexp.h
+	@$(MAKE_OBJDIR)
+	$(CXX) -Fo$(OBJDIR)/ -c $(REGEXP_CFLAGS) $(JSDLL_CFLAGS) jsregexp.cpp
 
 $(OBJDIR)/jsbuiltins.obj: jsbuiltins.cpp jsinterp.h
 	@$(MAKE_OBJDIR)
