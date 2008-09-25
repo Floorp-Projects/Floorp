@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsMediaDecoder.h"
+#include "nsVideoDecoder.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -97,22 +97,14 @@ public:
 
   // Called by the video decoder object, on the main thread,
   // when the video playback has ended.
-  void PlaybackEnded();
+  void PlaybackCompleted();
 
   // Called by the decoder object, on the main thread, when
   // approximately enough of the resource has been loaded to play
   // through without pausing for buffering.
   void CanPlayThrough();
 
-  // Called by the video decoder object, on the main thread,
-  // when the resource has started seeking.
-  void SeekStarted();
-
-  // Called by the video decoder object, on the main thread,
-  // when the resource has completed seeking.
-  void SeekCompleted();
-
-  // Draw the latest video data. See nsMediaDecoder for 
+  // Draw the latest video data. See nsVideoDecoder for 
   // details.
   void Paint(gfxContext* aContext, const gfxRect& aRect);
 
@@ -126,26 +118,14 @@ public:
   // events can be fired.
   void ChangeReadyState(nsMediaReadyState aState);
 
-  // Is the media element actively playing as defined by the HTML 5 specification.
-  // http://www.whatwg.org/specs/web-apps/current-work/#actively
-  PRBool IsActivelyPlaying() const;
-
-  // Has playback ended as defined by the HTML 5 specification.
-  // http://www.whatwg.org/specs/web-apps/current-work/#ended
-  PRBool IsPlaybackEnded() const;
-
   // principal of the currently playing stream
   nsIPrincipal* GetCurrentPrincipal();
-
-  // Update the visual size of the media. Called from the decoder on the
-  // main thread when/if the size changes.
-  void UpdateMediaSize(nsIntSize size);
 
 protected:
   nsresult PickMediaElement(nsAString& aChosenMediaResource);
   virtual nsresult InitializeDecoder(nsAString& aChosenMediaResource);
 
-  nsRefPtr<nsMediaDecoder> mDecoder;
+  nsRefPtr<nsVideoDecoder> mDecoder;
 
   // Error attribute
   nsCOMPtr<nsIDOMHTMLMediaError> mError;
@@ -154,13 +134,6 @@ protected:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
   nsMediaNetworkState mNetworkState;
   nsMediaReadyState mReadyState;
-
-  // Value of the volume before it was muted
-  float mMutedVolume; 
-
-  // Size of the media. Updated by the decoder on the main thread if
-  // it changes. Defaults to a width and height of -1 if not set.
-  nsIntSize mMediaSize;
 
   // If true then we have begun downloading the media content.
   // Set to false when completed, or not yet started.
@@ -188,16 +161,16 @@ protected:
   // 'Pause' method, or playback not yet having started.
   PRPackedBool mPaused;
 
+  // True if we are currently seeking through the media file.
+  PRPackedBool mSeeking;
+
   // True if the sound is muted
   PRPackedBool mMuted;
+
+  // Value of the volume before it was muted
+  float mMutedVolume; 
 
   // Flag to indicate if the child elements (eg. <source/>) have been
   // parsed.
   PRPackedBool mIsDoneAddingChildren;
-
-  // If TRUE then the media element was actively playing before the currently
-  // in progress seeking. If FALSE then the media element is either not seeking
-  // or was not actively playing before the current seek. Used to decide whether
-  // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
-  PRPackedBool mPlayingBeforeSeek;
 };

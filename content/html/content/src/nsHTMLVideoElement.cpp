@@ -88,16 +88,25 @@ NS_IMPL_URI_ATTR(nsHTMLVideoElement, Poster, poster)
 /* readonly attribute unsigned long videoWidth; */
 NS_IMETHODIMP nsHTMLVideoElement::GetVideoWidth(PRUint32 *aVideoWidth)
 {
-  *aVideoWidth = mMediaSize.width == -1 ? 0 : mMediaSize.width;
+  nsIntSize size(0,0);
+  if (mDecoder) 
+    size = mDecoder->GetVideoSize(size);
+
+  *aVideoWidth = size.width;
   return NS_OK;
 }
 
 /* readonly attribute unsigned long videoHeight; */
 NS_IMETHODIMP nsHTMLVideoElement::GetVideoHeight(PRUint32 *aVideoHeight)
 {
-  *aVideoHeight = mMediaSize.height == -1 ? 0 : mMediaSize.height;
+  nsIntSize size(0,0);
+  if (mDecoder) 
+    size = mDecoder->GetVideoSize(size);
+
+  *aVideoHeight = size.height;
   return NS_OK;
 }
+
 
 nsHTMLVideoElement::nsHTMLVideoElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
   : nsHTMLMediaElement(aNodeInfo, aFromParser)
@@ -108,10 +117,15 @@ nsHTMLVideoElement::~nsHTMLVideoElement()
 {
 }
 
-nsIntSize nsHTMLVideoElement::GetVideoSize(nsIntSize aDefaultSize)
+nsIntSize nsHTMLVideoElement::GetVideoSize(nsIntSize defaultSize)
 {
-  return mMediaSize.width == -1 && mMediaSize.height == -1 ? aDefaultSize : mMediaSize;
+  return mDecoder ? mDecoder->GetVideoSize(defaultSize) : defaultSize;
 }
+
+double nsHTMLVideoElement::GetVideoFramerate() {
+  return mDecoder ? mDecoder->GetVideoFramerate() : 0.0;
+}
+
 
 nsresult nsHTMLVideoElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                         nsIContent* aBindingParent,
