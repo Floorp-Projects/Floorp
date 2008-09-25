@@ -2319,7 +2319,7 @@ DrawBorderImageSide(gfxContext *aThebesContext,
   gfxFloat hScale(1.0), vScale(1.0);
 
   nsRefPtr<gfxPattern> pattern = new gfxPattern(interSurface);
-  pattern->SetExtend(gfxPattern::EXTEND_PAD);
+  pattern->SetExtend(gfxPattern::EXTEND_PAD_EDGE);
   switch (aHFillType) {
     case NS_STYLE_BORDER_IMAGE_REPEAT:
       renderOffset.x = (rectSize.width - aInterSize.width*NS_ceil(rectSize.width/aInterSize.width))*-0.5;
