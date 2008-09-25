@@ -55,11 +55,7 @@ void AutoScriptEvaluate::StartEvaluating(JSErrorReporter errorReporter)
     if(!mJSContext)
         return;
     mEvaluated = PR_TRUE;
-    if(!mJSContext->errorReporter)
-    {
-        JS_SetErrorReporter(mJSContext, errorReporter);
-        mErrorReporterSet = PR_TRUE;
-    }
+    mOldErrorReporter = JS_SetErrorReporter(mJSContext, errorReporter);
     mContextHasThread = JS_GetContextThread(mJSContext);
     if (mContextHasThread)
         JS_BeginRequest(mJSContext);
@@ -109,9 +105,7 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
         if(scriptNotify)
             scriptNotify->ScriptExecuted();
     }
-
-    if(mErrorReporterSet)
-        JS_SetErrorReporter(mJSContext, NULL);
+    JS_SetErrorReporter(mJSContext, mOldErrorReporter);
 }
 
 // It turns out that some errors may be not worth reporting. So, this
@@ -912,15 +906,6 @@ nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
     }
 }
 
-class AutoClearPendingException
-{
-public:
-  AutoClearPendingException(JSContext *cx) : mCx(cx) { }
-  ~AutoClearPendingException() { JS_ClearPendingException(mCx); }
-private:
-  JSContext* mCx;
-};
-
 nsresult
 nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        const char * aPropertyName,
@@ -941,10 +926,8 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     nsresult pending_result = xpcc->GetPendingResult();
 
     jsval js_exception;
-    JSBool is_js_exception = JS_GetPendingException(cx, &js_exception);
-
     /* JS might throw an expection whether the reporter was called or not */
-    if(is_js_exception)
+    if(JS_GetPendingException(cx, &js_exception))
     {
         if(!xpc_exception)
             XPCConvert::JSValToXPCException(ccx, js_exception, anInterfaceName,
@@ -956,9 +939,8 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
         {
             ccx.GetThreadData()->SetException(nsnull); // XXX necessary?
         }
+        JS_ClearPendingException(cx);
     }
-
-    AutoClearPendingException acpe(cx);
 
     if(xpc_exception)
     {
@@ -1008,14 +990,6 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                 {
                     reportable = PR_FALSE;
                 }
-            }
-
-            // Try to use the error reporter set on the context to handle this
-            // error if it came from a JS exception.
-            if(reportable && is_js_exception &&
-               cx->errorReporter != xpcWrappedJSErrorReporter)
-            {
-                reportable = !JS_ReportPendingException(cx);
             }
 
             if(reportable)

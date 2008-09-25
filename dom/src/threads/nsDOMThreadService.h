@@ -78,8 +78,6 @@ class nsDOMThreadService : public nsIEventTarget,
   friend class nsDOMWorkerRunnable;
   friend class nsDOMWorkerThread;
   friend class nsDOMWorkerTimeout;
-  friend class nsDOMWorkerXHR;
-  friend class nsDOMWorkerXHRProxy;
   friend class nsLayoutStatics;
 
 public:
