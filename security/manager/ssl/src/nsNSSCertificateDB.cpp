@@ -407,9 +407,9 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
 
   nsNSSCertTrust trust;
   trust.SetValidCA();
-  trust.AddCATrust(trustBits & nsIX509CertDB::TRUSTED_SSL,
-                   trustBits & nsIX509CertDB::TRUSTED_EMAIL,
-                   trustBits & nsIX509CertDB::TRUSTED_OBJSIGN);
+  trust.AddCATrust(!!(trustBits & nsIX509CertDB::TRUSTED_SSL),
+                   !!(trustBits & nsIX509CertDB::TRUSTED_EMAIL),
+                   !!(trustBits & nsIX509CertDB::TRUSTED_OBJSIGN));
 
   SECStatus srv = CERT_AddTempCertToPerm(tmpCert, 
                                          const_cast<char*>(nickname.get()), 
@@ -1018,9 +1018,9 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   if (type == nsIX509Cert::CA_CERT) {
     // always start with untrusted and move up
     trust.SetValidCA();
-    trust.AddCATrust(trusted & nsIX509CertDB::TRUSTED_SSL,
-                     trusted & nsIX509CertDB::TRUSTED_EMAIL,
-                     trusted & nsIX509CertDB::TRUSTED_OBJSIGN);
+    trust.AddCATrust(!!(trusted & nsIX509CertDB::TRUSTED_SSL),
+                     !!(trusted & nsIX509CertDB::TRUSTED_EMAIL),
+                     !!(trusted & nsIX509CertDB::TRUSTED_OBJSIGN));
     srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
                                nsscert,
                                trust.GetTrust());
@@ -1034,7 +1034,7 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   } else if (type == nsIX509Cert::EMAIL_CERT) {
     // always start with untrusted and move up
     trust.SetValidPeer();
-    trust.AddPeerTrust(0, trusted & nsIX509CertDB::TRUSTED_EMAIL, 0);
+    trust.AddPeerTrust(0, !!(trusted & nsIX509CertDB::TRUSTED_EMAIL), 0);
     srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
                                nsscert,
                                trust.GetTrust());
