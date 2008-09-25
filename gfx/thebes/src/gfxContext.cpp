@@ -116,7 +116,7 @@ gfxContext::ClosePath()
     cairo_close_path(mCairo);
 }
 
-already_AddRefed<gfxPath> gfxContext::CopyPath()
+already_AddRefed<gfxPath> gfxContext::CopyPath() const
 {
     nsRefPtr<gfxPath> path = new gfxPath(cairo_copy_path(mCairo));
     return path.forget();
