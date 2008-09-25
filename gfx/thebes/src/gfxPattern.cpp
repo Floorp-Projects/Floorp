@@ -125,13 +125,13 @@ gfxPattern::SetExtend(GraphicsExtend extend)
             cairo_pattern_get_surface (mPattern, &surf);
             if (surf) {
                 switch (cairo_surface_get_type(surf)) {
-                    case CAIRO_SURFACE_TYPE_XLIB:
                     case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
                     case CAIRO_SURFACE_TYPE_QUARTZ:
                         extend = EXTEND_NONE;
                         break;
 
                     case CAIRO_SURFACE_TYPE_WIN32:
+                    case CAIRO_SURFACE_TYPE_XLIB:
                     default:
                         extend = EXTEND_PAD;
                         break;
