@@ -2300,7 +2300,7 @@ already_AddRefed<nsIDOMElement> GetFocusedElement()
           // will "work" on an NSLeftMouseUp.
           NSEvent *newEvent = [NSEvent mouseEventWithType:NSLeftMouseUp
                                                  location:windowLocation
-                                            modifierFlags:[anEvent modifierFlags]
+                                            modifierFlags:nsCocoaUtils::GetCocoaEventModifierFlags(anEvent)
                                                 timestamp:GetCurrentEventTime()
                                              windowNumber:[self windowNumber]
                                                   context:nil
