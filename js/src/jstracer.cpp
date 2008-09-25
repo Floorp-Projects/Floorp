@@ -4834,6 +4834,7 @@ TraceRecorder::record_JSOP_CALL()
 
     jsval& tval = stackval(0 - (argc + 1));
     LIns* this_ins = get(&tval);
+
     if (this_ins->isconstp() && !this_ins->constvalp() && !guardShapelessCallee(fval))
         return false;
 
@@ -6016,14 +6017,15 @@ TraceRecorder::record_JSOP_ARGCNT()
 }
 
 bool
+TraceRecorder::record_DefLocalFunSetSlot(uint32 slot, JSObject* obj)
+{
+    var(slot, INS_CONSTPTR(obj));
+    return true;
+}
+
+bool
 TraceRecorder::record_JSOP_DEFLOCALFUN()
 {
-    JSFunction* fun;
-    JSFrameRegs& regs = *cx->fp->regs;
-    JSScript* script = cx->fp->script;
-    LOAD_FUNCTION(SLOTNO_LEN); // needs script, regs, fun
-
-    var(GET_SLOTNO(regs.pc), INS_CONSTPTR(FUN_OBJECT(fun)));
     return true;
 }
 
