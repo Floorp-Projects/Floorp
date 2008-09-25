@@ -611,9 +611,8 @@ nsXMLHttpRequestUpload::GetContextForEventHandlers(nsIScriptContext** aContext)
 /////////////////////////////////////////////
 
 nsXMLHttpRequest::nsXMLHttpRequest()
-  : mRequestObserver(nsnull), mState(XML_HTTP_REQUEST_UNINITIALIZED),
-    mUploadTransferred(0), mUploadTotal(0), mUploadComplete(PR_TRUE),
-    mErrorLoad(PR_FALSE), mFirstStartRequestSeen(PR_FALSE)
+  : mState(XML_HTTP_REQUEST_UNINITIALIZED), mUploadTransferred(0),
+    mUploadTotal(0), mUploadComplete(PR_TRUE), mErrorLoad(PR_FALSE)
 {
   nsLayoutStatics::AddRef();
 }
@@ -728,12 +727,6 @@ nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
   return NS_OK; 
 }
 
-void
-nsXMLHttpRequest::SetRequestObserver(nsIRequestObserver* aObserver)
-{
-  mRequestObserver = aObserver;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
@@ -783,6 +776,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIJSXMLHttpRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestUploadGetter)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
@@ -1571,11 +1565,6 @@ IsSameOrBaseChannel(nsIRequest* aPossibleBase, nsIChannel* aChannel)
 NS_IMETHODIMP
 nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-  if (!mFirstStartRequestSeen && mRequestObserver) {
-    mFirstStartRequestSeen = PR_TRUE;
-    mRequestObserver->OnStartRequest(request, ctxt);
-  }
-
   if (!IsSameOrBaseChannel(request, mChannel)) {
     return NS_OK;
   }
@@ -1795,12 +1784,6 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   }
 
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
-
-  if (mRequestObserver && mState & XML_HTTP_REQUEST_GOT_FINAL_STOP) {
-    NS_ASSERTION(mFirstStartRequestSeen, "Inconsistent state!");
-    mFirstStartRequestSeen = PR_FALSE;
-    mRequestObserver->OnStopRequest(request, ctxt, status);
-  }
 
   return rv;
 }

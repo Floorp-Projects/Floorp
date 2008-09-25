@@ -329,26 +329,19 @@ nsDOMWorkerTimeout::Init(JSContext* aCx, PRUint32 aArgc, jsval* aArgv,
   }
   mIsInterval = aIsInterval;
 
-  nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+  mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIEventTarget* target =
     static_cast<nsIEventTarget*>(nsDOMThreadService::get());
 
-  rv = timer->SetTarget(target);
+  rv = mTimer->SetTarget(target);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = timer->InitWithCallback(this, interval, type);
+  rv = mTimer->InitWithCallback(this, interval, type);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mTimer.swap(timer);
-
-  if (!mWorker->AddTimeout(this)) {
-    // Must have been canceled.
-    mTimer->Cancel();
-    mTimer = nsnull;
-    return NS_ERROR_ABORT;
-  }
+  mWorker->AddTimeout(this);
 
   return NS_OK;
 }
