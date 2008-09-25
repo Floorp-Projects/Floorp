@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  window.addEventListener("DOMCharacterDataModified", function(){}, false);
+  document.body.appendChild(document.createElement("isindex"));
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+
+</html>
