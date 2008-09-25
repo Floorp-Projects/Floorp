@@ -2475,7 +2475,7 @@ static PRBool hasExplicitKeyUsageNonRepudiation(CERTCertificate *cert)
   unsigned char keyUsage = keyUsageItem.data[0];
   PORT_Free (keyUsageItem.data);
 
-  return (keyUsage & KU_NON_REPUDIATION);
+  return !!(keyUsage & KU_NON_REPUDIATION);
 }
 
 /*

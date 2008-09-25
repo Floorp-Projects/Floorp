@@ -361,6 +361,6 @@ nsNSSCertTrust::addTrust(unsigned int *t, unsigned int v)
 PRBool
 nsNSSCertTrust::hasTrust(unsigned int t, unsigned int v)
 {
-  return (t & v);
+  return !!(t & v);
 }
 
