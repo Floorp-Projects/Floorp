@@ -73,6 +73,7 @@ BUILTIN2(BoxInt32,              LO, LO, P,      jsval,     JSContext*, jsint, 1,
 BUILTIN1(UnboxDouble,           LO,     F,      jsdouble,  jsval, 1, 1)
 BUILTIN1(UnboxInt32,            LO,     LO,     int32,     jsval, 1, 1)
 BUILTIN2(dmod,                  F,  F,  F,      jsdouble,  jsdouble, jsdouble, 1, 1)
+BUILTIN2(imod,                  LO, LO, LO,     jsint,     jsint,      jsint, 1, 1)
 BUILTIN1(DoubleToInt32,         F,      LO,     int32,     jsdouble, 1, 1)
 BUILTIN1(DoubleToUint32,        F,      LO,     int32,     jsdouble, 1, 1)
 BUILTIN1(Math_sin,              F,      F,      jsdouble,  jsdouble, 1, 1)
@@ -139,7 +140,6 @@ BUILTIN3(Array_1str,            LO, LO, LO, P,  JSObject*, JSContext*, JSObject*
 BUILTIN4(Array_2obj,            LO, LO, LO, LO, P, JSObject*, JSContext*, JSObject*, JSObject*, JSObject**, 0, 0)
 BUILTIN5(Array_3num,            LO, LO, F, F, F, P, JSObject*, JSContext*, JSObject*, jsdouble, jsdouble, jsdouble, 0, 0)
 BUILTIN1(Arguments,             LO,     P,      JSObject*, JSContext*, 0, 0)
-BUILTIN2(imod,                  LO, LO, LO,     jsint,     jsint,      jsint, 1, 1)
 
 // soft float
 BUILTIN1(fneg,   F,       F,  jsdouble, jsdouble, 1, 1)

@@ -4094,8 +4094,20 @@ TraceRecorder::record_JSOP_MOD()
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     if (isNumber(l) && isNumber(r)) {
-        LIns* args[] = { get(&r), get(&l) };
-        set(&l, lir->insCall(F_dmod, args));
+        LIns* l_ins = get(&l);
+        LIns* r_ins = get(&r);
+        LIns* x;
+        /* We can't demote this in a filter since we need the actual values of l and r. */
+        if (isPromote(l_ins) && isPromote(r_ins) && asNumber(l) >= 0 && asNumber(r) > 0) {
+            LIns* args[] = { ::demote(lir, r_ins), ::demote(lir, l_ins) };
+            x = lir->insCall(F_imod, args);
+            guard(false, lir->ins2(LIR_eq, x, lir->insImm(-1)), BRANCH_EXIT);
+            x = lir->ins1(LIR_i2f, x);
+        } else {
+            LIns* args[] = { r_ins, l_ins };
+            x = lir->insCall(F_dmod, args);
+        }
+        set(&l, x);
         return true;
     }
     return false;
