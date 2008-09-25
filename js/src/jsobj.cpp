@@ -3641,7 +3641,6 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
 {
     JSScope *scope;
     uint32 slot;
-    jsval pval;
     int32 sample;
     JSTempValueRooter tvr;
     bool ok;
@@ -3653,7 +3652,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
 
     slot = sprop->slot;
     if (slot != SPROP_INVALID_SLOT) {
-        pval = LOCKED_OBJ_GET_SLOT(obj, slot);
+        OBJ_CHECK_SLOT(obj, slot);
 
         /* If sprop has a stub setter, keep scope locked and just store *vp. */
         if (SPROP_HAS_STUB_SETTER(sprop))
@@ -3666,7 +3665,6 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, jsval *vp)
          */
         if (SPROP_HAS_STUB_SETTER(sprop))
             return JS_TRUE;
-        pval = JSVAL_VOID;
     }
 
     sample = cx->runtime->propertyRemovals;
