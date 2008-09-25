@@ -5919,20 +5919,17 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 #endif
 
       jsid interned_id;
-      JSObject *pobj;
-      JSProperty *prop = nsnull;
+      JSObject *pobj = NULL;
+      jsval val;
 
       *_retval = (::JS_ValueToId(cx, id, &interned_id) &&
-                  OBJ_LOOKUP_PROPERTY(cx, innerObj, interned_id, &pobj,
-                                      &prop));
+                  ::JS_LookupPropertyByIdWithFlags(cx, innerObj, interned_id,
+                                                   flags, &pobj, &val));
 
-      if (*_retval && prop) {
+      if (*_retval && pobj) {
 #ifdef DEBUG_SH_FORWARDING
         printf(" --- Resolve on inner window found property.\n");
 #endif
-
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
-
         *objp = pobj;
       }
 
@@ -6411,8 +6408,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // binding a name) a new undefined property that's not already
   // defined on our prototype chain. This way we can access this
   // expando w/o ever getting back into XPConnect.
-  if ((flags & (JSRESOLVE_ASSIGNING)) && cx->fp->regs &&
-      (JSOp)*cx->fp->regs->pc != JSOP_BINDNAME && win->IsInnerWindow()) {
+  if ((flags & (JSRESOLVE_ASSIGNING)) &&
+      !(cx->fp && cx->fp->regs && (JSOp)*cx->fp->regs->pc == JSOP_BINDNAME) &&
+      win->IsInnerWindow()) {
     JSObject *realObj;
     wrapper->GetJSObject(&realObj);
 
@@ -6420,21 +6418,20 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       JSObject *proto = STOBJ_GET_PROTO(obj);
       if (proto) {
         jsid interned_id;
-        JSProperty *prop = nsnull;
+        JSObject *pobj = NULL;
+        jsval val;
 
         if (!::JS_ValueToId(cx, id, &interned_id) ||
-            !OBJ_LOOKUP_PROPERTY(cx, proto, interned_id, objp, &prop)) {
+            !::JS_LookupPropertyByIdWithFlags(cx, proto, interned_id, flags,
+                                              &pobj, &val)) {
           *_retval = JS_FALSE;
 
           return NS_OK;
         }
 
-        if (prop) {
-          // A property was found on the prototype chain, and *objp is
-          // already set to point to the prototype where the property
-          // was found.
-          OBJ_DROP_PROPERTY(cx, proto, prop);
-
+        if (pobj) {
+          // A property was found on the prototype chain.
+          *objp = pobj;
           return NS_OK;
         }
       }
