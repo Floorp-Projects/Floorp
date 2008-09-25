@@ -1194,6 +1194,15 @@ MOZCE_SHUNT_API DWORD SetNamedSecurityInfoW(unsigned short* pObjectName,
 
 
 
+MOZCE_SHUNT_API void FatalAppExitW(UINT uAction, LPCWSTR lpMessageText)
+{
+  if ( ::MessageBoxW(NULL, lpMessageText, L"Runtime Error", MB_OKCANCEL | MB_ICONERROR) == IDCANCEL )
+    return;
+
+  exit(-1);
+}
+
+
 #if 0
 {
 #endif
