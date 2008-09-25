@@ -662,7 +662,6 @@ void nsHTMLMediaElement::PlaybackEnded()
 {
   mBegun = PR_FALSE;
   mEnded = PR_TRUE;
-  mPaused = PR_TRUE;
   SetCurrentTime(0);
   DispatchSimpleEvent(NS_LITERAL_STRING("ended"));
 }
