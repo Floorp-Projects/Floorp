@@ -35,10 +35,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined(nsVideoDecoder_h___)
-#define nsVideoDecoder_h___
+#if !defined(nsMediaDecoder_h_)
+#define nsMediaDecoder_h_
 
 #include "nsIObserver.h"
+#include "nsIPrincipal.h"
 #include "nsSize.h"
 #include "prlog.h"
 #include "gfxContext.h"
@@ -54,13 +55,13 @@ extern PRLogModuleInfo* gVideoDecoderLog;
 
 class nsHTMLMediaElement;
 
-// All methods of nsVideoDecoder must be called from the main thread only
+// All methods of nsMediaDecoder must be called from the main thread only
 // with the exception of SetRGBData. The latter can be called from any thread.
-class nsVideoDecoder : public nsIObserver
+class nsMediaDecoder : public nsIObserver
 {
  public:
-  nsVideoDecoder();
-  virtual ~nsVideoDecoder() { }
+  nsMediaDecoder();
+  virtual ~nsMediaDecoder();
 
   // Initialize the logging object
   static nsresult InitLogger();
@@ -101,13 +102,6 @@ class nsVideoDecoder : public nsIObserver
   // Set the audio volume. It should be a value from 0 to 1.0.
   virtual void SetVolume(float volume) = 0;
 
-  // Returns the current video frame width and height.
-  // If there is no video frame, returns the given default size.
-  virtual nsIntSize GetVideoSize(nsIntSize defaultSize) = 0;
-
-  // Return the current framerate of the video, in frames per second.
-  virtual double GetVideoFramerate() = 0;
-
   // Start playback of a video. 'Load' must have previously been
   // called.
   virtual nsresult Play() = 0;
@@ -130,6 +124,10 @@ class nsVideoDecoder : public nsIObserver
   // Called when the video file has completed downloading.
   virtual void ResourceLoaded() = 0;
 
+  // Call from any thread safely. Return PR_TRUE if we are currently
+  // seeking in the media resource.
+  virtual PRBool IsSeeking() const = 0;
+
   // Return the current number of bytes loaded from the video file.
   // This is used for progress events.
   virtual PRUint32 GetBytesLoaded() = 0;
@@ -150,13 +148,16 @@ class nsVideoDecoder : public nsIObserver
   // Update progress information.
   virtual void Progress();
 
+  // Keep track of the number of bytes downloaded
+  virtual void UpdateBytesDownloaded(PRUint32 aBytes) = 0;
+
 protected:
   // Cleanup internal data structures
   virtual void Shutdown();
 
   // Start invalidating the video frame at the interval required
   // by the specificed framerate (in frames per second).
-  nsresult StartInvalidating(double aFramerate);
+  nsresult StartInvalidating(float aFramerate);
 
   // Stop invalidating the video frame
   void StopInvalidating();
@@ -167,14 +168,19 @@ protected:
   // Stop progress information timer.
   nsresult StopProgress();
 
+  // Called on the main thread when the size of the media data has
+  // changed to inform the element so it can keep a local copy of the
+  // current size.
+  void MediaSizeChanged();
+
   // Set the RGB width, height and framerate. The passed RGB buffer is
   // copied to the mRGB buffer. This also allocates the mRGB buffer if
   // needed.
-  // This is the only nsVideoDecoder method that may be called 
+  // This is the only nsMediaDecoder method that may be called 
   // from threads other than the main thread.
   void SetRGBData(PRInt32 aWidth, 
                   PRInt32 aHeight, 
-                  double aFramerate, 
+                  float aFramerate, 
                   unsigned char* aRGBBuffer);
 
 protected:
@@ -213,7 +219,7 @@ protected:
 
   // Framerate of video being displayed in the element
   // expressed in numbers of frames per second.
-  double mFramerate;
+  float mFramerate;
 };
 
 #endif
