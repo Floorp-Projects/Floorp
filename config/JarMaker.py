@@ -394,6 +394,12 @@ class JarMaker(object):
     '''
     def symlink(self, src, dest):
       out = self.ensureDirFor(dest)
+      # remove previous link or file
+      try:
+        os.remove(out)
+      except OSError, e:
+        if e.errno != 2:
+          raise
       os.symlink(src, out)
 
 def main():
