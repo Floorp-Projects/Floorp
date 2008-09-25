@@ -14,9 +14,9 @@ var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');
 
 ctx.shadowColor = 'lime';
-todo(ctx.shadowColor === '#00ff00', "ctx.shadowColor === '#00ff00'");
+ok(ctx.shadowColor === '#00ff00', "ctx.shadowColor === '#00ff00'");
 ctx.shadowColor = 'RGBA(0,255, 0,0)';
-todo(ctx.shadowColor === 'rgba(0, 255, 0, 0.0)', "ctx.shadowColor === 'rgba(0, 255, 0, 0.0)'");
+ok(ctx.shadowColor === 'rgba(0, 255, 0, 0.0)', "ctx.shadowColor === 'rgba(0, 255, 0, 0.0)'");
 
 SimpleTest.finish();
 

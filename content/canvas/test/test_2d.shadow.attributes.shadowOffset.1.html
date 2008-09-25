@@ -15,20 +15,20 @@ var ctx = canvas.getContext('2d');
 
 ctx.shadowOffsetX = 1;
 ctx.shadowOffsetY = 2;
-todo(ctx.shadowOffsetX === 1, "ctx.shadowOffsetX === 1");
-todo(ctx.shadowOffsetY === 2, "ctx.shadowOffsetY === 2");
+ok(ctx.shadowOffsetX === 1, "ctx.shadowOffsetX === 1");
+ok(ctx.shadowOffsetY === 2, "ctx.shadowOffsetY === 2");
 ctx.shadowOffsetX = 0.5;
 ctx.shadowOffsetY = 0.25;
-todo(ctx.shadowOffsetX === 0.5, "ctx.shadowOffsetX === 0.5");
-todo(ctx.shadowOffsetY === 0.25, "ctx.shadowOffsetY === 0.25");
+ok(ctx.shadowOffsetX === 0.5, "ctx.shadowOffsetX === 0.5");
+ok(ctx.shadowOffsetY === 0.25, "ctx.shadowOffsetY === 0.25");
 ctx.shadowOffsetX = -0.5;
 ctx.shadowOffsetY = -0.25;
-todo(ctx.shadowOffsetX === -0.5, "ctx.shadowOffsetX === -0.5");
-todo(ctx.shadowOffsetY === -0.25, "ctx.shadowOffsetY === -0.25");
+ok(ctx.shadowOffsetX === -0.5, "ctx.shadowOffsetX === -0.5");
+ok(ctx.shadowOffsetY === -0.25, "ctx.shadowOffsetY === -0.25");
 ctx.shadowOffsetX = 1e6;
 ctx.shadowOffsetY = 1e6;
-todo(ctx.shadowOffsetX === 1e6, "ctx.shadowOffsetX === 1e6");
-todo(ctx.shadowOffsetY === 1e6, "ctx.shadowOffsetY === 1e6");
+ok(ctx.shadowOffsetX === 1e6, "ctx.shadowOffsetX === 1e6");
+ok(ctx.shadowOffsetY === 1e6, "ctx.shadowOffsetY === 1e6");
 
 SimpleTest.finish();
 
