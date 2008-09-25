@@ -416,7 +416,8 @@ var PlacesCommandHook = {
     }
 
     // Revert the contents of the location bar
-    handleURLBarRevert();
+    if (gURLBar)
+      gURLBar.handleRevert();
 
     // dock the panel to the star icon when possible, otherwise dock
     // it to the content area

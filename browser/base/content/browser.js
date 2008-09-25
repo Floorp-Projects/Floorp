@@ -1684,34 +1684,6 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup)
   }
 }
 
-function BrowserLoadURL(aTriggeringEvent, aPostData) {
-  var url = gURLBar.value;
-
-  if (aTriggeringEvent instanceof MouseEvent) {
-    if (aTriggeringEvent.button == 2)
-      return; // Do nothing for right clicks
-
-    // We have a mouse event (from the go button), so use the standard
-    // UI link behaviors
-    openUILink(url, aTriggeringEvent, false, false,
-               true /* allow third party fixup */, aPostData);
-    return;
-  }
-
-  if (aTriggeringEvent && aTriggeringEvent.altKey) {
-    handleURLBarRevert();
-    content.focus();
-    gBrowser.loadOneTab(url, null, null, aPostData, false,
-                        true /* allow third party fixup */);
-    aTriggeringEvent.preventDefault();
-    aTriggeringEvent.stopPropagation();
-  }
-  else
-    loadURI(url, null, aPostData, true /* allow third party fixup */);
-
-  focusElement(content);
-}
-
 function getShortcutOrURI(aURL, aPostDataRef) {
   var shortcutURL = null;
   var keyword = aURL;
@@ -1991,119 +1963,6 @@ function losslessDecodeURI(aURI) {
   value = value.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
                         encodeURIComponent);
   return value;
-}
-
-// Replace the urlbar's value with the url of the page.
-function handleURLBarRevert() {
-  var throbberElement = document.getElementById("navigator-throbber");
-  var isScrolling = gURLBar.popupOpen;
-
-  gBrowser.userTypedValue = null;
-
-  // don't revert to last valid url unless page is NOT loading
-  // and user is NOT key-scrolling through autocomplete list
-  if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
-    URLBarSetURI();
-
-    // If the value isn't empty and the urlbar has focus, select the value.
-    if (gURLBar.value && gURLBar.hasAttribute("focused"))
-      gURLBar.select();
-  }
-
-  // tell widget to revert to last typed text only if the user
-  // was scrolling when they hit escape
-  return !isScrolling;
-}
-
-function handleURLBarCommand(aTriggeringEvent) {
-  if (!gURLBar.value)
-    return;
-
-  var postData = { };
-  canonizeUrl(aTriggeringEvent, postData);
-
-  try {
-    addToUrlbarHistory(gURLBar.value);
-  } catch (ex) {
-    // Things may go wrong when adding url to session history,
-    // but don't let that interfere with the loading of the url.
-  }
-
-  BrowserLoadURL(aTriggeringEvent, postData.value);
-}
-
-function canonizeUrl(aTriggeringEvent, aPostDataRef) {
-  if (!gURLBar || !gURLBar.value)
-    return;
-
-  var url = gURLBar.value;
-
-  // Only add the suffix when the URL bar value isn't already "URL-like".
-  // Since this function is called from handleURLBarCommand, which receives
-  // both mouse (from the go button) and keyboard events, we also make sure not
-  // to do the fixup unless we get a keyboard event, to match user expectations.
-  if (!/^\s*(www|https?)\b|\/\s*$/i.test(url) &&
-      (aTriggeringEvent instanceof KeyEvent)) {
-#ifdef XP_MACOSX
-    var accel = aTriggeringEvent.metaKey;
-#else
-    var accel = aTriggeringEvent.ctrlKey;
-#endif
-    var shift = aTriggeringEvent.shiftKey;
-
-    var suffix = "";
-
-    switch (true) {
-      case (accel && shift):
-        suffix = ".org/";
-        break;
-      case (shift):
-        suffix = ".net/";
-        break;
-      case (accel):
-        try {
-          suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
-          if (suffix.charAt(suffix.length - 1) != "/")
-            suffix += "/";
-        } catch(e) {
-          suffix = ".com/";
-        }
-        break;
-    }
-
-    if (suffix) {
-      // trim leading/trailing spaces (bug 233205)
-      url = url.replace(/^\s+/, "").replace(/\s+$/, "");
-
-      // Tack www. and suffix on.  If user has appended directories, insert
-      // suffix before them (bug 279035).  Be careful not to get two slashes.
-      // Also, don't add the suffix if it's in the original url (bug 233853).
-      
-      var firstSlash = url.indexOf("/");
-      var existingSuffix = url.indexOf(suffix.substring(0, suffix.length - 1));
-
-      // * Logic for slash and existing suffix (example)
-      // No slash, no suffix: Add suffix (mozilla)
-      // No slash, yes suffix: Add slash (mozilla.com)
-      // Yes slash, no suffix: Insert suffix (mozilla/stuff)
-      // Yes slash, suffix before slash: Do nothing (mozilla.com/stuff)
-      // Yes slash, suffix after slash: Insert suffix (mozilla/?stuff=.com)
-      
-      if (firstSlash >= 0) {
-        if (existingSuffix == -1 || existingSuffix > firstSlash)
-          url = url.substring(0, firstSlash) + suffix +
-                url.substring(firstSlash + 1);
-      } else
-        url = url + (existingSuffix == -1 ? suffix : "/");
-
-      url = "http://www." + url;
-    }
-  }
-
-  gURLBar.value = getShortcutOrURI(url, aPostDataRef);
-
-  // Also update this so the browser display keeps the new value (bug 310651)
-  gBrowser.userTypedValue = gURLBar.value;
 }
 
 function UpdateUrlbarSearchSplitterState()
@@ -3049,20 +2908,11 @@ function FillHistoryMenu(aParent) {
   return true;
 }
 
-function addToUrlbarHistory(aUrlToAdd)
-{
-  if (!aUrlToAdd)
-     return;
-  if (aUrlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
-     return;
-
-   try {
-     if (aUrlToAdd.indexOf(" ") == -1) {
-       PlacesUIUtils.markPageAsTyped(aUrlToAdd);
-     }
-   }
-   catch(ex) {
-   }
+function addToUrlbarHistory(aUrlToAdd) {
+  if (aUrlToAdd &&
+      aUrlToAdd.indexOf(" ") == -1 &&
+      !/[\x00-\x1F]/.test(aUrlToAdd))
+    PlacesUIUtils.markPageAsTyped(aUrlToAdd);
 }
 
 function toJavaScriptConsole()
@@ -4832,6 +4682,7 @@ function middleMousePaste(event)
   var url = readFromClipboard();
   if (!url)
     return;
+
   var postData = { };
   url = getShortcutOrURI(url, postData);
   if (!url)
@@ -4842,6 +4693,7 @@ function middleMousePaste(event)
   } catch (ex) {
     // Things may go wrong when adding url to session history,
     // but don't let that interfere with the loading of the url.
+    Cu.reportError(ex);
   }
 
   openUILink(url,
@@ -6539,7 +6391,7 @@ var gIdentityHandler = {
       return; // Left click, space or enter only
 
     // Revert the contents of the location bar, see bug 406779
-    handleURLBarRevert();
+    gURLBar.handleRevert();
 
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed
