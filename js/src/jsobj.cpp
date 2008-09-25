@@ -5309,95 +5309,215 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
-#ifdef DEBUG
+#if DEBUG
 
-/* Routines to print out values during debugging. */
+/*
+ * Routines to print out values during debugging.  These are FRIEND_API to help
+ * the debugger find them and to support temporarily hacking js_Dump* calls
+ * into other code.
+ */
 
-void printChar(jschar *cp) {
-    fprintf(stderr, "jschar* (%p) \"", (void *)cp);
-    while (*cp)
-        fputc(*cp++, stderr);
+void
+dumpChars(const jschar *s, size_t n)
+{
+    size_t i;
+
+    if (n == (size_t) -1) {
+        while (s[++n]) ;
+    }
+
     fputc('"', stderr);
+    for (i = 0; i < n; i++) {
+        if (s[i] == '\n')
+            fprintf(stderr, "\\n");
+        else if (s[i] == '\t')
+            fprintf(stderr, "\\t");
+        else if (s[i] >= 32 && s[i] < 127)
+            fputc(s[i], stderr);
+        else if (s[i] <= 255)
+            fprintf(stderr, "\\x%02x", (unsigned int) s[i]);
+        else
+            fprintf(stderr, "\\u%04x", (unsigned int) s[i]);
+    }
+    fputc('"', stderr);
+}
+
+JS_FRIEND_API(void)
+js_DumpChars(const jschar *s, size_t n)
+{
+    fprintf(stderr, "jschar * (%p) = ", (void *) s);
+    dumpChars(s, n);
     fputc('\n', stderr);
 }
 
-void printString(JSString *str) {
-    size_t i, n;
-    jschar *s;
-    fprintf(stderr, "string (%p) \"", (void *)str);
-    JSSTRING_CHARS_AND_LENGTH(str, s, n);
-    for (i=0; i < n; i++)
-        fputc(s[i], stderr);
-    fputc('"', stderr);
+void
+dumpString(JSString *str)
+{
+    dumpChars(JSSTRING_CHARS(str), JSSTRING_LENGTH(str));
+}
+
+JS_FRIEND_API(void)
+js_DumpString(JSString *str)
+{
+    fprintf(stderr, "JSString* (%p) = jschar * (%p) = ",
+            (void *) str, (void *) JSSTRING_CHARS(str));
+    dumpString(str);
     fputc('\n', stderr);
 }
 
-void printVal(JSContext *cx, jsval val);
+JS_FRIEND_API(void)
+js_DumpAtom(JSAtom *atom)
+{
+    fprintf(stderr, "JSAtom* (%p) = ", (void *) atom);
+    js_DumpValue(ATOM_KEY(atom));
+}
 
-void printObj(JSContext *cx, JSObject *obj) {
-    jsuint i, slots;
-    jsval val;
+void
+dumpValue(jsval val)
+{
+    if (JSVAL_IS_NULL(val)) {
+        fprintf(stderr, "null");
+    } else if (JSVAL_IS_VOID(val)) {
+        fprintf(stderr, "undefined");
+    } else if (JSVAL_IS_OBJECT(val)) {
+        JSObject *obj = JSVAL_TO_OBJECT(val);
+        JSClass *cls = STOBJ_GET_CLASS(obj);
+        fprintf(stderr, "<%s%s at %p>",
+                cls->name,
+                cls == &js_ObjectClass ? "" : " object",
+                obj);
+    } else if (JSVAL_IS_INT(val)) {
+        fprintf(stderr, "%d", JSVAL_TO_INT(val));
+    } else if (JSVAL_IS_STRING(val)) {
+        dumpString(JSVAL_TO_STRING(val));
+    } else if (JSVAL_IS_DOUBLE(val)) {
+        fprintf(stderr, "%g", *JSVAL_TO_DOUBLE(val));
+    } else if (val == JSVAL_TRUE) {
+        fprintf(stderr, "true");
+    } else if (val == JSVAL_FALSE) {
+        fprintf(stderr, "false");
+    } else if (val == JSVAL_HOLE) {
+        fprintf(stderr, "hole");
+    } else {
+        /* jsvals are pointer-sized, and %p is portable */
+        fprintf(stderr, "unrecognized jsval %p", (void *) val);
+    }
+}
+
+JS_FRIEND_API(void)
+js_DumpValue(jsval val)
+{
+    fprintf(stderr, "jsval %d (%p) = ", (int) val, (void *) val);
+    dumpValue(val);
+    fputc('\n', stderr);
+}
+
+JS_FRIEND_API(void)
+js_DumpId(jsid id)
+{
+    fprintf(stderr, "id %d (%p) = ", (int) id, (void *) id);
+    dumpValue(ID_TO_VALUE(id));
+    fputc('\n', stderr);
+}
+
+void
+dumpScopeProp(JSScopeProperty *sprop)
+{
+    jsid id = sprop->id;
+    uint8 attrs = sprop->attrs;
+
+    fprintf(stderr, "    ");
+    if (attrs & JSPROP_ENUMERATE) fprintf(stderr, "enumerate ");
+    if (attrs & JSPROP_READONLY) fprintf(stderr, "readonly ");
+    if (attrs & JSPROP_PERMANENT) fprintf(stderr, "permanent ");
+    if (attrs & JSPROP_GETTER) fprintf(stderr, "getter ");
+    if (attrs & JSPROP_SETTER) fprintf(stderr, "setter ");
+    if (attrs & JSPROP_SHARED) fprintf(stderr, "shared ");
+    if (sprop->flags & SPROP_IS_ALIAS) fprintf(stderr, "alias ");
+    if (JSID_IS_ATOM(id))
+        dumpString(JSVAL_TO_STRING(ID_TO_VALUE(id)));
+    else if (JSID_IS_INT(id))
+        fprintf(stderr, "%d", (int) JSID_TO_INT(id));
+    else
+        fprintf(stderr, "unknown jsid %p", (void *) id);
+    fprintf(stderr, ": slot %d", sprop->slot);
+    fprintf(stderr, "\n");
+}
+
+JS_FRIEND_API(void)
+js_DumpObject(JSObject *obj)
+{
+    uint32 i, slots;
     JSClass *clasp;
+    jsuint reservedEnd;
 
     fprintf(stderr, "object %p\n", (void *) obj);
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = STOBJ_GET_CLASS(obj);
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
-    if (OBJ_IS_DENSE_ARRAY(cx, obj)) {
+
+    /* OBJ_IS_DENSE_ARRAY ignores the cx argument. */
+    if (OBJ_IS_DENSE_ARRAY(BOGUS_CX, obj)) {
         slots = JS_MIN((jsuint) obj->fslots[JSSLOT_ARRAY_LENGTH],
                        ARRAY_DENSE_LENGTH(obj));
+        fprintf(stderr, "elements\n");
         for (i = 0; i < slots; i++) {
-            val = obj->dslots[i];
-            if (JSVAL_IS_OBJECT(val))
-                fprintf(stderr, "object %p\n", (void*)JSVAL_TO_OBJECT(val));
-            else
-                printVal(cx, val);
+            fprintf(stderr, " %3d: ", i);
+            dumpValue(obj->dslots[i]);
+            fprintf(stderr, "\n");
+            fflush(stderr);
         }
-
         return;
     }
 
-    slots = STOBJ_NSLOTS(obj);
-    for (i=0; i < slots; i++) {
-        fprintf(stderr, "slot %3d ", i);
-        val = STOBJ_GET_SLOT(obj, i);
-        if (JSVAL_IS_OBJECT(val))
-            fprintf(stderr, "object %p\n", (void *)JSVAL_TO_OBJECT(val));
-        else
-            printVal(cx, val);
-    }
-}
+    if (OBJ_IS_NATIVE(obj)) {
+        JSScope *scope = OBJ_SCOPE(obj);
+        JSObject *proto = STOBJ_GET_PROTO(obj);
 
-void printVal(JSContext *cx, jsval val) {
-    fprintf(stderr, "val %d (%p) = ", (int)val, (void *)val);
-    if (JSVAL_IS_NULL(val)) {
-        fprintf(stderr, "null\n");
-    } else if (JSVAL_IS_VOID(val)) {
-        fprintf(stderr, "undefined\n");
-    } else if (JSVAL_IS_OBJECT(val)) {
-        printObj(cx, JSVAL_TO_OBJECT(val));
-    } else if (JSVAL_IS_INT(val)) {
-        fprintf(stderr, "(int) %d\n", JSVAL_TO_INT(val));
-    } else if (JSVAL_IS_STRING(val)) {
-        printString(JSVAL_TO_STRING(val));
-    } else if (JSVAL_IS_DOUBLE(val)) {
-        fprintf(stderr, "(double) %g\n", *JSVAL_TO_DOUBLE(val));
-    } else if (val == JSVAL_HOLE) {
-        fprintf(stderr, "hole\n");
+        if (SCOPE_IS_SEALED(scope))
+            fprintf(stderr, "sealed\n");
+
+        if (proto && scope == OBJ_SCOPE(proto)) {
+            fprintf(stderr, "shares scope with proto (%s at %p)\n",
+                    STOBJ_GET_CLASS(proto)->name, proto);
+        }
+
+        fprintf(stderr, "properties:\n");
+        for (JSScopeProperty *sprop = SCOPE_LAST_PROP(scope); sprop;
+             sprop = sprop->parent) {
+            if (!SCOPE_HAD_MIDDLE_DELETE(scope) ||
+                SCOPE_HAS_PROPERTY(scope, sprop)) {
+                dumpScopeProp(sprop);
+            }
+        }
     } else {
-        JS_ASSERT(JSVAL_IS_BOOLEAN(val));
-        fprintf(stderr, "(boolean) %s\n",
-                JSVAL_TO_BOOLEAN(val) ? "true" : "false");
+        if (!OBJ_IS_NATIVE(obj))
+            fprintf(stderr, "not native\n");
     }
-    fflush(stderr);
-}
 
-void printId(JSContext *cx, jsid id) {
-    fprintf(stderr, "id %d (%p) is ", (int)id, (void *)id);
-    printVal(cx, ID_TO_VALUE(id));
-}
-
-void printAtom(JSAtom *atom) {
-    printString(ATOM_TO_STRING(atom));
+    fprintf(stderr, "slots:\n");
+    slots = obj->map->freeslot;
+    reservedEnd = JSSLOT_PRIVATE;
+    if (clasp->flags & JSCLASS_HAS_PRIVATE)
+        reservedEnd++;
+    reservedEnd += JSCLASS_RESERVED_SLOTS(clasp);
+    for (i = 0; i < slots; i++) {
+        fprintf(stderr, " %3d ", i);
+        if (i == JSSLOT_PRIVATE && (clasp->flags & JSCLASS_HAS_PRIVATE)) {
+            fprintf(stderr, "(private) = %p",
+                    JSVAL_TO_PRIVATE(STOBJ_GET_SLOT(obj, i)));
+            continue;
+        }
+        if (i == JSSLOT_PROTO)
+            fprintf(stderr, "(proto) ");
+        else if (i == JSSLOT_PARENT)
+            fprintf(stderr, "(parent) ");
+        else if (i < reservedEnd)
+            fprintf(stderr, "(reserved) ");
+        fprintf(stderr, "= ");
+        dumpValue(STOBJ_GET_SLOT(obj, i));
+        fputc('\n', stderr);
+    }
+    fputc('\n', stderr);
 }
 
 #endif
