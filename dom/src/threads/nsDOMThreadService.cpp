@@ -478,13 +478,6 @@ DOMWorkerErrorReporter(JSContext* aCx,
 
   nsDOMWorkerThread* worker = (nsDOMWorkerThread*)JS_GetContextPrivate(aCx);
 
-  if (worker->IsCanceled()) {
-    // We don't want to report errors from canceled workers. It's very likely
-    // that we only returned an error in the first place because the worker was
-    // already canceled.
-    return;
-  }
-
   nsresult rv;
   nsCOMPtr<nsIScriptError> errorObject =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
