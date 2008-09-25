@@ -2135,14 +2135,14 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
     newifp->frame.argc = argc;
     newifp->callerRegs.pc = fi.callpc;
     newifp->callerRegs.sp = cx->fp->slots + fi.s.spdist;
-    newifp->frame.argv = newifp->callerRegs.sp - JS_MAX(fun->nargs, argc);
+    newifp->frame.argv = newifp->callerRegs.sp - argc;
     JS_ASSERT(newifp->frame.argv);
 #ifdef DEBUG
     // Initialize argv[-1] to a known-bogus value so we'll catch it if
     // someone forgets to initialize it later.
     newifp->frame.argv[-1] = JSVAL_HOLE;
 #endif
-    JS_ASSERT(newifp->frame.argv >= StackBase(cx->fp));
+    JS_ASSERT(newifp->frame.argv >= StackBase(cx->fp) + 2);
 
     newifp->frame.rval = JSVAL_VOID;
     newifp->frame.down = cx->fp;
