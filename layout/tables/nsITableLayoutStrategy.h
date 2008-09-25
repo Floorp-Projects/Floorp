@@ -70,6 +70,18 @@ public:
      * the available width.
      */
     virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState) = 0;
+
+    /**
+     * Return the type of table layout strategy, without the cost of
+     * a virtual function call
+     */
+    enum Type { Auto, Fixed };
+    Type GetType() const { return mType; }
+
+protected:
+    nsITableLayoutStrategy(Type aType) : mType(aType) {}
+private:
+    Type mType;
 };
 
 #endif /* !defined(nsITableLayoutStrategy_h_) */
