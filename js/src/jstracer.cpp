@@ -6133,7 +6133,7 @@ TraceRecorder::record_JSOP_GETGVAR()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    stack(0, get(&STOBJ_GET_SLOT(cx->fp->scopeChain, slot)));
+    stack(0, get(&STOBJ_GET_SLOT(globalObj, slot)));
     return true;
 }
 
@@ -6149,7 +6149,7 @@ TraceRecorder::record_JSOP_SETGVAR()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    set(&STOBJ_GET_SLOT(cx->fp->scopeChain, slot), stack(-1));
+    set(&STOBJ_GET_SLOT(globalObj, slot), stack(-1));
     return true;
 }
 
@@ -6165,7 +6165,7 @@ TraceRecorder::record_JSOP_INCGVAR()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), 1);
+    return inc(STOBJ_GET_SLOT(globalObj, slot), 1);
 }
 
 bool
@@ -6180,7 +6180,7 @@ TraceRecorder::record_JSOP_DECGVAR()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), -1);
+    return inc(STOBJ_GET_SLOT(globalObj, slot), -1);
 }
 
 bool
@@ -6195,7 +6195,7 @@ TraceRecorder::record_JSOP_GVARINC()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), 1, false);
+    return inc(STOBJ_GET_SLOT(globalObj, slot), 1, false);
 }
 
 bool
@@ -6210,7 +6210,7 @@ TraceRecorder::record_JSOP_GVARDEC()
     if (!lazilyImportGlobalSlot(slot))
          ABORT_TRACE("lazy import of global slot failed");
 
-    return inc(STOBJ_GET_SLOT(cx->fp->scopeChain, slot), -1, false);
+    return inc(STOBJ_GET_SLOT(globalObj, slot), -1, false);
 }
 
 bool
