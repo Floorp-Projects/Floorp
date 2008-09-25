@@ -257,7 +257,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
 {
   nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
   *aNodeInfo = nsNodeInfoManager::GetNodeInfo(name, aPrefix, aNamespaceID).get();
-  return *aNodeInfo ? NS_OK : NS_ERROR_FAILURE;
+  return *aNodeInfo ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -301,7 +301,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
   }
 
   *aNodeInfo = GetNodeInfo(nameAtom, prefixAtom, nsid).get();
-  return *aNodeInfo ? NS_OK : NS_ERROR_FAILURE;
+  return *aNodeInfo ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 already_AddRefed<nsINodeInfo>

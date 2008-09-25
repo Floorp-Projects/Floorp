@@ -87,7 +87,7 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   nsCOMPtr<nsINodeInfo> ni;
   ni = nimgr->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nsnull,
                           kNameSpaceID_None);
-  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   *aDocType = new nsDOMDocumentType(ni, aName, aEntities, aNotations,
                                     aPublicId, aSystemId, aInternalSubset);
@@ -260,7 +260,7 @@ nsDOMDocumentType::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
     newNodeInfo = nimgr->GetNodeInfo(mNodeInfo->NameAtom(),
                                      mNodeInfo->GetPrefixAtom(),
                                      mNodeInfo->NamespaceID());
-    NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
     mNodeInfo.swap(newNodeInfo);
 
