@@ -132,12 +132,12 @@ done
 # RUN TEST #
 ############
 
-echo "NATIVE_TOPSRCDIR='$native_topsrcdir' TOPSRCDIR='$topsrcdir' $xpcshell -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles 2>&1"
+echo "NATIVE_TOPSRCDIR='$native_topsrcdir' TOPSRCDIR='$topsrcdir' $xpcshell -j -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles 2>&1"
 echo -n "$target_js: "
 if [ ! "$interactive_mode" = "1" ]; then
-    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles  2> $testdir/$target_dir/$target_js.log 1>&2
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -j -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles  2> $testdir/$target_dir/$target_js.log 1>&2
 else
-    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles -i 2>&1
+    NATIVE_TOPSRCDIR="$native_topsrcdir" TOPSRCDIR="$topsrcdir" $xpcshell -j -s $headfiles -f $testdir/$target_dir/$target_js $tailfiles -i 2>&1
 fi
 rv="$?"
 if [ ! "$rv" = "0"  -o \
