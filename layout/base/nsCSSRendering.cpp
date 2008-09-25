@@ -3020,153 +3020,43 @@ GetTextDecorationRectInternal(const gfxPoint& aPt,
 // -----
 // nsContextBoxBlur
 // -----
-void
-nsContextBoxBlur::BoxBlurHorizontal(unsigned char* aInput,
-                                    unsigned char* aOutput,
-                                    PRUint32 aLeftLobe,
-                                    PRUint32 aRightLobe)
-{
-  // Box blur involves looking at one pixel, and setting its value to the average of
-  // its neighbouring pixels. leftLobe is how many pixels to the left to include
-  // in the average, rightLobe is to the right.
-  // boxSize is how many pixels total will be averaged when looking at each pixel.
-  PRUint32 boxSize = aLeftLobe + aRightLobe + 1;
-
-  long stride = mImageSurface->Stride();
-  PRUint32 rows = mRect.Height();
-
-  for (PRUint32 y = 0; y < rows; y++) {
-    PRUint32 alphaSum = 0;
-    for (PRUint32 i = 0; i < boxSize; i++) {
-      PRInt32 pos = i - aLeftLobe;
-      pos = PR_MAX(pos, 0);
-      pos = PR_MIN(pos, stride - 1);
-      alphaSum += aInput[stride * y + pos];
-    }
-    for (PRInt32 x = 0; x < stride; x++) {
-      PRInt32 tmp = x - aLeftLobe;
-      PRInt32 last = PR_MAX(tmp, 0);
-      PRInt32 next = PR_MIN(tmp + boxSize, stride - 1);
-
-      aOutput[stride * y + x] = alphaSum/boxSize;
-
-      alphaSum += aInput[stride * y + next] -
-                  aInput[stride * y + last];
-    }
-  }
-}
-
-void
-nsContextBoxBlur::BoxBlurVertical(unsigned char* aInput,
-                                  unsigned char* aOutput,
-                                  PRUint32 aTopLobe,
-                                  PRUint32 aBottomLobe)
-{
-  PRUint32 boxSize = aTopLobe + aBottomLobe + 1;
-
-  long stride = mImageSurface->Stride();
-  PRUint32 rows = mRect.Height();
-
-  for (PRInt32 x = 0; x < stride; x++) {
-    PRUint32 alphaSum = 0;
-    for (PRUint32 i = 0; i < boxSize; i++) {
-      PRInt32 pos = i - aTopLobe;
-      pos = PR_MAX(pos, 0);
-      pos = PR_MIN(pos, rows - 1);
-      alphaSum += aInput[stride * pos + x];
-    }
-    for (PRUint32 y = 0; y < rows; y++) {
-      PRInt32 tmp = y - aTopLobe;
-      PRInt32 last = PR_MAX(tmp, 0);
-      PRInt32 next = PR_MIN(tmp + boxSize, rows - 1);
-
-      aOutput[stride * y + x] = alphaSum/boxSize;
-
-      alphaSum += aInput[stride * next + x] -
-                  aInput[stride * last + x];
-    }
-  }
-}
-
 gfxContext*
 nsContextBoxBlur::Init(const gfxRect& aRect, nscoord aBlurRadius,
                        PRInt32 aAppUnitsPerDevPixel,
                        gfxContext* aDestinationCtx)
 {
-  mBlurRadius = aBlurRadius / aAppUnitsPerDevPixel;
+  mDestinationCtx = aDestinationCtx;
 
-  if (mBlurRadius <= 0) {
+  PRInt32 blurRadius = static_cast<PRInt32>(aBlurRadius / aAppUnitsPerDevPixel);
+
+  // if not blurring, draw directly onto the destination device
+  if (blurRadius <= 0) {
     mContext = aDestinationCtx;
     return mContext;
   }
 
   // Convert from app units to device pixels
-  mRect = aRect;
-  mRect.Outset(aBlurRadius);
-  mRect.ScaleInverse(aAppUnitsPerDevPixel);
-  mRect.RoundOut();
+  gfxRect rect = aRect;
+  rect.ScaleInverse(aAppUnitsPerDevPixel);
 
-  if (mRect.IsEmpty()) {
-    mBlurRadius = 0;
+  if (rect.IsEmpty()) {
     mContext = aDestinationCtx;
     return mContext;
   }
 
   mDestinationCtx = aDestinationCtx;
 
-  // Make an alpha-only surface to draw on. We will play with the data after everything is drawn
-  // to create a blur effect.
-  mImageSurface = new gfxImageSurface(gfxIntSize(mRect.Width(), mRect.Height()),
-                                      gfxASurface::ImageFormatA8);
-  if (!mImageSurface || mImageSurface->CairoStatus())
-    return nsnull;
-
-  // Use a device offset so callers don't need to worry about translating coordinates,
-  // they can draw as if this was part of the destination context at the coordinates
-  // of mRect.
-  mImageSurface->SetDeviceOffset(-mRect.TopLeft());
-
-  mContext = new gfxContext(mImageSurface);
+  mContext = blur.Init(rect, gfxIntSize(blurRadius, blurRadius));
   return mContext;
 }
 
 void
 nsContextBoxBlur::DoPaint()
 {
-  if (mBlurRadius <= 0)
+  if (mContext == mDestinationCtx)
     return;
 
-  unsigned char* boxData = mImageSurface->Data();
-
-  // A blur radius of 1 achieves nothing (1/2 = 0 in int terms),
-  // but we still want a blur!
-  mBlurRadius = PR_MAX(mBlurRadius, 2);
-
-  nsTArray<unsigned char> tempAlphaDataBuf;
-  if (!tempAlphaDataBuf.SetLength(mImageSurface->GetDataSize()))
-    return; // OOM
-
-  // Here we do like what the SVG gaussian blur filter does in calculating
-  // the lobes.
-  if (mBlurRadius & 1) {
-    // blur radius is odd
-    BoxBlurHorizontal(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2, mBlurRadius/2);
-    BoxBlurHorizontal(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2, mBlurRadius/2);
-    BoxBlurHorizontal(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2, mBlurRadius/2);
-    BoxBlurVertical(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2, mBlurRadius/2);
-    BoxBlurVertical(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2, mBlurRadius/2);
-    BoxBlurVertical(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2, mBlurRadius/2);
-  } else {
-    // blur radius is even
-    BoxBlurHorizontal(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2, mBlurRadius/2 - 1);
-    BoxBlurHorizontal(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2 - 1, mBlurRadius/2);
-    BoxBlurHorizontal(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2, mBlurRadius/2);
-    BoxBlurVertical(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2, mBlurRadius/2 - 1);
-    BoxBlurVertical(boxData, tempAlphaDataBuf.Elements(), mBlurRadius/2 - 1, mBlurRadius/2);
-    BoxBlurVertical(tempAlphaDataBuf.Elements(), boxData, mBlurRadius/2, mBlurRadius/2);
-  }
-
-  mDestinationCtx->Mask(mImageSurface);
+  blur.Paint(mDestinationCtx);
 }
 
 gfxContext*
