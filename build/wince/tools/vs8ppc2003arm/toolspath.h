@@ -7,10 +7,12 @@
 #endif
 
 #define WCE_BIN   "c:\\Program Files\\Microsoft Visual Studio 8\\VC\\ce\\bin\\x86_arm\\"
-#define WCE_RC_BIN "C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0a\\bin\\"
 #define WCE_CRT   "c:\\Program Files\\Microsoft Visual Studio 8\\VC/ce\\lib\\armv4i"
-#define WCE_INC   "C:\\Program Files\\Windows Mobile 6 SDK\\Smartphone\\Include\\Armv4i"
-#define WCE_LIB   "C:\\Program Files\\Windows Mobile 6 SDK\\Smartphone\\Lib\\Armv4i"
+#define WCE_INC   "c:\\Program Files\\Windows Mobile 6 SDK\\Smartphone\\Include\\Armv4i"
+#define WCE_LIB   "c:\\Program Files\\Windows Mobile 6 SDK\\Smartphone\\Lib\\Armv4i"
+
+#define WCE_RC_BIN "c:\\Program Files\\Microsoft Visual Studio 8\\VC\\bin\\"
+//#define WCE_RC_BIN "c:\\Program Files\\Microsoft SDKs\\Windows\\v6.0a\\bin\\"
 
 #define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/vs8/"
 #define SHUNT_INC TOPSRCDIR "/build/wince/shunt/include/"
@@ -21,7 +23,7 @@
 #define LINK_PATH WCE_BIN "link.exe"
 #define RC_PATH   WCE_RC_BIN "rc.exe"
 
-#define MAX_NOLEAK_BUFFERS 100
+#define MAX_NOLEAK_BUFFERS 1000
 char noleak_buffers[MAX_NOLEAK_BUFFERS][1024];
 static int next_buffer = 0;
 
