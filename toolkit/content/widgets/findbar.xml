@@ -435,13 +435,17 @@
         - Gets the selection controller for the current browser 
         -->
       <method name="_getSelectionController">
+        <parameter name="aWindow"/>
         <body><![CDATA[
           // Yuck. See bug 138068.
           var Ci = Components.interfaces;
-          var controller = this.browser.docShell
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsISelectionDisplay)
-                               .QueryInterface(Ci.nsISelectionController);
+          var docShell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIWebNavigation)
+                                .QueryInterface(Ci.nsIDocShell);
+
+          var controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsISelectionDisplay)
+                                   .QueryInterface(Ci.nsISelectionController);
           return controller;
         ]]></body>
       </method>
@@ -532,7 +536,7 @@
           this._endPt.setStart(body, count);
           this._endPt.setEnd(body, count);
 
-          var controller = this._getSelectionController();
+          var controller = this._getSelectionController(win);
           if (!controller) {
             // Without the selection controller, 
             // we are unable to (un)highlight any matches
