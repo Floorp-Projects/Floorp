@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek test 3</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id='v'
+       src='seek.ogg'
+       onloadedmetadata='return startTest();'
+       onended='return playbackEnded();'
+       onseeking='return seekStarted();'
+       onseeked='return seekEnded();'></video>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test seeking works if current time is set before video is
+// playing.
+var startPassed = false;
+var endPassed = false;
+var timeStart;
+function startTest() {
+  var v = document.getElementById('v');
+  v.currentTime=2;
+  v.play();
+}
+
+function seekStarted() {
+  startPassed = true;
+  return false;
+}
+
+function seekEnded() {
+  var t = document.getElementById('v').currentTime;
+  ok(t >= 2 && t <= 3, "Video currentTime is incorrect: " + t);
+  endPassed = true;
+  timeStart = new Date();
+  return false;
+}
+
+function playbackEnded() {
+  var t = (new Date()) - timeStart;
+  ok(startPassed, "Video did not send seeking event");
+  ok(endPassed, "Video did not send seeked event");
+  ok(t > 0 && t <= 2500, "Video did not seek to correct time");
+  SimpleTest.finish();
+  return false;
+}
+setTimeout(function () {
+             ok(false, "Test timed out");
+             SimpleTest.finish();
+            }, 30000); 
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
