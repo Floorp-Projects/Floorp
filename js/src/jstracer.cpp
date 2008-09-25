@@ -3954,11 +3954,15 @@ TraceRecorder::record_JSOP_IFNE()
 bool
 TraceRecorder::record_JSOP_ARGUMENTS()
 {
+#if 1
+    ABORT_TRACE("can't trace arguments yet");
+#else
     LIns* args[] = { cx_ins };
     LIns* a_ins = lir->insCall(F_Arguments, args);
     guard(false, lir->ins_eq0(a_ins), OOM_EXIT);
     stack(0, a_ins);
     return true;
+#endif
 }
 
 bool
