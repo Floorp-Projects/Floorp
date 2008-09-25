@@ -794,12 +794,6 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
   rv = mDBConn->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // lock the db file
-  // http://www.sqlite.org/pragma.html#pragma_locking_mode
-  rv = mDBConn->ExecuteSimpleSQL(
-    NS_LITERAL_CSTRING("PRAGMA locking_mode = EXCLUSIVE"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // moz_places
   if (!tableExists) {
     *aMadeChanges = DB_MIGRATION_CREATED;
