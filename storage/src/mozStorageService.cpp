@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 sts=4
+ * vim: sw=4 ts=4 sts=4 expandtab
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -52,57 +52,23 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(mozStorageService, mozIStorageService)
 
-/**
- * Lock used in mozStorageService::GetSingleton to ensure that we only create
- * one instance of the storage service.  This lock is created in SingetonInit()
- * and destroyed in mozStorageService::~mozStorageService().
- */
-static PRLock *gSingletonLock;
-
-/**
- * Creates the lock used in the singleton getter.  This lock is destroyed in
- * the services destructor.
- *
- * @returns PR_SUCCESS if creating the lock was successful, PR_FAILURE otherwise
- */
-static
-PRStatus
-SingletonInit()
-{
-    gSingletonLock = PR_NewLock();
-    NS_ENSURE_TRUE(gSingletonLock, PR_FAILURE);
-    return PR_SUCCESS;
-}
-
 mozStorageService *mozStorageService::gStorageService = nsnull;
 
 mozStorageService *
 mozStorageService::GetSingleton()
 {
-    // Since this service can be called by multiple threads, we have to use a
-    // a lock to test and possibly create gStorageService
-    static PRCallOnceType sInitOnce;
-    PRStatus rc = PR_CallOnce(&sInitOnce, SingletonInit);
-    if (rc != PR_SUCCESS)
-        return nsnull;
-
-    // If someone managed to start us twice, error out early.
-    if (!gSingletonLock)
-        return nsnull;
-
-    nsAutoLock lock(gSingletonLock);
     if (gStorageService) {
         NS_ADDREF(gStorageService);
         return gStorageService;
     }
-    
+
     gStorageService = new mozStorageService();
     if (gStorageService) {
         NS_ADDREF(gStorageService);
         if (NS_FAILED(gStorageService->Init()))
             NS_RELEASE(gStorageService);
     }
-    
+
     return gStorageService;
 }
 
@@ -110,8 +76,6 @@ mozStorageService::~mozStorageService()
 {
     gStorageService = nsnull;
     PR_DestroyLock(mLock);
-    PR_DestroyLock(gSingletonLock);
-    gSingletonLock = nsnull;
 }
 
 nsresult
