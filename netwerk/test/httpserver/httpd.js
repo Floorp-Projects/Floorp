@@ -2269,9 +2269,16 @@ ServerHandler.prototype =
     if (!file.exists())
       throw HTTP_404;
 
+    var offset = 0;
+    if (metadata.hasHeader("Range")) {
+      response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
+      offset = parseInt(metadata.getHeader("Range").match(/\d+/));
+    }
+
+
     // finally...
     dumpn("*** handling '" + path + "' as mapping to " + file.path);
-    this._writeFileResponse(metadata, file, response);
+    this._writeFileResponse(metadata, file, response, offset);
   },
 
   /**
@@ -2284,8 +2291,10 @@ ServerHandler.prototype =
    *   the file which is to be sent in the response
    * @param response : Response
    *   the response to which the file should be written
+   * @param offset: integer
+   *   the byte offset to skip to when writing
    */
-  _writeFileResponse: function(metadata, file, response)
+  _writeFileResponse: function(metadata, file, response, offset)
   {
     const PR_RDONLY = 0x01;
 
@@ -2321,6 +2330,16 @@ ServerHandler.prototype =
   
       var fis = new FileInputStream(file, PR_RDONLY, 0444,
                                     Ci.nsIFileInputStream.CLOSE_ON_EOF);
+      offset = offset || 0;
+      if (offset != 0) {
+        if (fis instanceof Ci.nsISeekableStream) {
+          fis.seek(Ci.nsISeekableStream.SEEK_SET, offset);
+        }
+        else {
+          dumpn("*** file stream is not seekable, failed to seek to offset " + offset);
+          throw HTTP_416;
+        }
+      }
       response.bodyOutputStream.writeFrom(fis, file.fileSize);
       fis.close();
       
