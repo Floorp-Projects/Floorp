@@ -68,8 +68,6 @@
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
-nsIExceptionProvider* gExceptionProvider = nsnull;
-
 nsDOMScriptObjectFactory::nsDOMScriptObjectFactory() :
   mLoadedAllLanguages(PR_FALSE)
 {
@@ -80,25 +78,18 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory() :
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
 
-  nsCOMPtr<nsIExceptionProvider> provider(new nsDOMExceptionProvider());
-  if (provider) {
-    nsCOMPtr<nsIExceptionService> xs =
-      do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
+  nsCOMPtr<nsIExceptionService> xs =
+    do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
 
-    if (xs) {
-      xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM);
-      xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_RANGE);
+  if (xs) {
+    xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_DOM);
+    xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_DOM_RANGE);
 #ifdef MOZ_SVG
-      xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_SVG);
+    xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_SVG);
 #endif
-      xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_XPATH);
-      xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_XPCONNECT);
-    }
-
-    NS_ASSERTION(!gExceptionProvider, "Registered twice?!");
-    provider.swap(gExceptionProvider);
+    xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_DOM_XPATH);
+    xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_XPCONNECT);
   }
-
   // And pre-create the javascript language.
   NS_CreateJSRuntime(getter_AddRefs(mLanguageArray[NS_STID_INDEX(nsIProgrammingLanguage::JAVASCRIPT)]));
 }
@@ -106,6 +97,7 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory() :
 NS_INTERFACE_MAP_BEGIN(nsDOMScriptObjectFactory)
   NS_INTERFACE_MAP_ENTRY(nsIDOMScriptObjectFactory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIExceptionProvider)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMScriptObjectFactory)
 NS_INTERFACE_MAP_END
 
@@ -295,26 +287,17 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
     nsGlobalWindow::ShutDown();
     nsDOMClassInfo::ShutDown();
 
-    if (gExceptionProvider) {
-      nsCOMPtr<nsIExceptionService> xs =
-        do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
+    nsCOMPtr<nsIExceptionService> xs =
+      do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
 
-      if (xs) {
-        xs->UnregisterExceptionProvider(gExceptionProvider,
-                                        NS_ERROR_MODULE_DOM);
-        xs->UnregisterExceptionProvider(gExceptionProvider,
-                                        NS_ERROR_MODULE_DOM_RANGE);
+    if (xs) {
+      xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_DOM);
+      xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_DOM_RANGE);
 #ifdef MOZ_SVG
-        xs->UnregisterExceptionProvider(gExceptionProvider,
-                                        NS_ERROR_MODULE_SVG);
+      xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_SVG);
 #endif
-        xs->UnregisterExceptionProvider(gExceptionProvider,
-                                        NS_ERROR_MODULE_DOM_XPATH);
-        xs->UnregisterExceptionProvider(gExceptionProvider,
-                                        NS_ERROR_MODULE_XPCONNECT);
-      }
-
-      NS_RELEASE(gExceptionProvider);
+      xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_DOM_XPATH);
+      xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_XPCONNECT);
     }
   }
 
@@ -340,6 +323,30 @@ CreateXPConnectException(nsresult aResult, nsIException *aDefaultException,
 
   NS_ADDREF(*_retval = exception);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMScriptObjectFactory::GetException(nsresult result,
+				       nsIException *aDefaultException,
+				       nsIException **_retval)
+{
+  switch (NS_ERROR_GET_MODULE(result))
+  {
+    case NS_ERROR_MODULE_DOM_RANGE:
+      return NS_NewRangeException(result, aDefaultException, _retval);
+#ifdef MOZ_SVG
+    case NS_ERROR_MODULE_SVG:
+      return NS_NewSVGException(result, aDefaultException, _retval);
+#endif
+    case NS_ERROR_MODULE_DOM_XPATH:
+      return NS_NewXPathException(result, aDefaultException, _retval);
+    case NS_ERROR_MODULE_XPCONNECT:
+      return CreateXPConnectException(result, aDefaultException, _retval);
+    case NS_ERROR_MODULE_DOM_FILE:
+      return NS_NewFileException(result, aDefaultException, _retval);
+    default:
+      return NS_NewDOMException(result, aDefaultException, _retval);
+  }
 }
 
 NS_IMETHODIMP
@@ -386,32 +393,4 @@ nsresult NS_GetScriptRuntimeByID(PRUint32 aScriptTypeID,
   if (NS_FAILED(rv))
     return rv;
   return factory->GetScriptRuntimeByID(aScriptTypeID, aLanguage);
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMExceptionProvider, nsIExceptionProvider)
-
-NS_IMETHODIMP
-nsDOMExceptionProvider::GetException(nsresult result,
-                                     nsIException *aDefaultException,
-                                     nsIException **_retval)
-{
-  switch (NS_ERROR_GET_MODULE(result))
-  {
-    case NS_ERROR_MODULE_DOM_RANGE:
-      return NS_NewRangeException(result, aDefaultException, _retval);
-#ifdef MOZ_SVG
-    case NS_ERROR_MODULE_SVG:
-      return NS_NewSVGException(result, aDefaultException, _retval);
-#endif
-    case NS_ERROR_MODULE_DOM_XPATH:
-      return NS_NewXPathException(result, aDefaultException, _retval);
-    case NS_ERROR_MODULE_XPCONNECT:
-      return CreateXPConnectException(result, aDefaultException, _retval);
-    case NS_ERROR_MODULE_DOM_FILE:
-      return NS_NewFileException(result, aDefaultException, _retval);
-    default:
-      return NS_NewDOMException(result, aDefaultException, _retval);
-  }
-  NS_NOTREACHED("Not reached");
-  return NS_ERROR_UNEXPECTED;
 }
