@@ -4583,6 +4583,7 @@ js_Interpret(JSContext *cx)
                         PCMETER(cache->setmisses++);
                     } else {
                         ASSERT_VALID_PROPERTY_CACHE_HIT(0, obj, obj2, entry);
+                        sprop = NULL;
                         if (obj == obj2) {
                             JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
                             sprop = PCVAL_TO_SPROP(entry->vword);
@@ -4591,7 +4592,7 @@ js_Interpret(JSContext *cx)
                             NATIVE_SET(cx, obj, sprop, &rval);
                         }
                         JS_UNLOCK_OBJ(cx, obj2);
-                        if (obj == obj2) {
+                        if (sprop) {
                             TRACE_2(SetPropHit, entry, sprop);
                             break;
                         }
