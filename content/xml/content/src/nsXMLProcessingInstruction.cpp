@@ -60,7 +60,7 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
   nsCOMPtr<nsINodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
                                      nsnull, kNameSpaceID_None);
-  NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
   nsXMLProcessingInstruction *instance =
     new nsXMLProcessingInstruction(ni, aTarget, aData);
