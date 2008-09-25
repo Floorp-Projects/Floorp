@@ -66,8 +66,6 @@ struct _cairo_xlib_job {
 
 static cairo_xlib_display_t *_cairo_xlib_display_list;
 
-static int buggy_repeat_force = -1;
-
 static void
 _cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
 						cairo_xlib_hook_t *hook);
@@ -218,6 +216,8 @@ _cairo_xlib_display_get (Display *dpy)
     XExtCodes *codes;
     int major_unused, minor_unused;
 
+    static int buggy_repeat_force = -1;
+
     /* There is an apparent deadlock between this mutex and the
      * mutex for the display, but it's actually safe. For the
      * app to call XCloseDisplay() while any other thread is
@@ -312,15 +312,24 @@ _cairo_xlib_display_get (Display *dpy)
     }
 
     /* XXX workaround; see https://bugzilla.mozilla.org/show_bug.cgi?id=413583 */
+    /* If buggy_repeat_force == -1, then initialize.
+     *    - set to -2, meaning "nothing was specified", and we trust the above detection.
+     *    - if MOZ_CAIRO_BUGGY_REPEAT is '0' (exactly), then force buggy repeat off
+     *    - if MOZ_CAIRO_BUGGY_REPEAT is '1' (exactly), then force buggy repeat on
+     */
     if (buggy_repeat_force == -1) {
-        if (getenv("MOZ_CAIRO_NO_BUGGY_REPEAT"))
+        const char *flag = getenv("MOZ_CAIRO_FORCE_BUGGY_REPEAT");
+
+        buggy_repeat_force = -2;
+
+        if (flag && flag[0] == '0')
             buggy_repeat_force = 0;
-        else
+        else if (flag && flag[0] == '1')
             buggy_repeat_force = 1;
     }
 
-    if (buggy_repeat_force)
-        display->buggy_repeat = TRUE;
+    if (buggy_repeat_force != -2)
+        display->buggy_repeat = (buggy_repeat_force == 1);
 
     display->next = _cairo_xlib_display_list;
     _cairo_xlib_display_list = display;
