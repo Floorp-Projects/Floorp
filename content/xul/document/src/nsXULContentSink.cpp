@@ -480,7 +480,7 @@ XULContentSinkImpl::NormalizeAttributeString(const PRUnichar *aExpatName,
     nsCOMPtr<nsINodeInfo> ni;
     ni = mNodeInfoManager->GetNodeInfo(localName, prefix,
                                        nameSpaceID);
-    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
     aName.SetTo(ni);
 
@@ -533,7 +533,7 @@ XULContentSinkImpl::HandleStartElement(const PRUnichar *aName,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
   
   nsresult rv = NS_OK;
   switch (mState) {

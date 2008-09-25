@@ -4297,7 +4297,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     nsCOMPtr<nsINodeInfo> ni;
     ni = mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, aPrefix,
                                                    aNamespaceID);
-    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mAttrsAndChildren.SetAndTakeAttr(ni, aParsedValue);
   }

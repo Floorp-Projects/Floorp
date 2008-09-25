@@ -365,7 +365,7 @@ GetNodeInfos(nsXULPrototypeElement* aPrototype,
         if (name->IsAtom()) {
             ni = aPrototype->mNodeInfo->NodeInfoManager()->
                 GetNodeInfo(name->Atom(), nsnull, kNameSpaceID_None);
-            NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+            NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
         }
         else {
             ni = name->NodeInfo();

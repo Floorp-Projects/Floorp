@@ -167,7 +167,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentFragmentNodeName,
                                            nsnull, kNameSpaceID_None);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   nsDocumentFragment *it = new nsDocumentFragment(nodeInfo);
   if (!it) {
