@@ -122,7 +122,8 @@ protected:
     
     nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                            nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
-                           nsIContent** aResult, PRBool* aAppendContent);
+                           nsIContent** aResult, PRBool* aAppendContent,
+                           PRBool aFromParser);
     
     nsresult AddAttributes(const PRUnichar** aAtts, 
                            nsIContent* aContent);

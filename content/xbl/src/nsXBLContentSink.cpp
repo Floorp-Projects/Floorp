@@ -867,14 +867,15 @@ nsXBLContentSink::ConstructParameter(const PRUnichar **aAtts)
 nsresult
 nsXBLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                 nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
-                                nsIContent** aResult, PRBool* aAppendContent)
+                                nsIContent** aResult, PRBool* aAppendContent,
+                                PRBool aFromParser)
 {
 #ifdef MOZ_XUL
   if (!aNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
 #endif
     return nsXMLContentSink::CreateElement(aAtts, aAttsCount, aNodeInfo,
                                            aLineNumber, aResult,
-                                           aAppendContent);
+                                           aAppendContent, aFromParser);
 #ifdef MOZ_XUL
   }
 
