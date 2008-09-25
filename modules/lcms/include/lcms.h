@@ -34,7 +34,13 @@
 
 //#define USE_FLOAT        1
 // #define USE_C            1
+
+#ifdef WINCE
+// WINCE ARM does not support inline ASM.
+#define USE_C            1
+#else
 #define USE_ASSEMBLER    1
+#endif
 
 // Define this if you are using this package as a DLL (windows only)
 

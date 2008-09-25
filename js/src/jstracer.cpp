@@ -103,9 +103,9 @@ struct __jitstats {
 #define JITSTAT(x) uint64 x;
 #include "jitstats.tbl"
 #undef JITSTAT
-} stat = { 0LL, };
+} jitstats = { 0LL, };
 
-JS_STATIC_ASSERT(sizeof(stat) % sizeof(uint64) == 0);
+JS_STATIC_ASSERT(sizeof(jitstats) % sizeof(uint64) == 0);
 
 enum jitstat_ids {
 #define JITSTAT(x) STAT ## x ## ID,
@@ -139,7 +139,7 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     uint64 result = 0;
     switch (index) {
-#define JITSTAT(x) case STAT ## x ## ID: result = stat.x; break;
+#define JITSTAT(x) case STAT ## x ## ID: result = jitstats.x; break;
 #include "jitstats.tbl"
 #undef JITSTAT
     default:
@@ -173,7 +173,7 @@ js_InitJITStatsClass(JSContext *cx, JSObject *glob)
     JS_InitClass(cx, glob, NULL, &jitstats_class, NULL, 0, jitstats_props, NULL, NULL, NULL);
 }
 
-#define AUDIT(x) (stat.x++)
+#define AUDIT(x) (jitstats.x++)
 #else
 #define AUDIT(x) ((void)0)
 #endif
@@ -2819,7 +2819,7 @@ js_InitJIT(JSTraceMonitor *tm)
         tm->globalTypeMap = new (&gc) TypeMap();
     }
 #if !defined XP_WIN
-    debug_only(memset(&stat, 0, sizeof(stat)));
+    debug_only(memset(&jitstats, 0, sizeof(jitstats)));
 #endif
 }
 
@@ -2830,12 +2830,12 @@ js_FinishJIT(JSTraceMonitor *tm)
     printf("recorder: started(%llu), aborted(%llu), completed(%llu), different header(%llu), "
            "trees trashed(%llu), slot promoted(%llu), unstable loop variable(%llu), "
            "breaks(%llu), returns(%llu)\n",
-           stat.recorderStarted, stat.recorderAborted, stat.traceCompleted,
-           stat.returnToDifferentLoopHeader, stat.treesTrashed, stat.slotPromoted,
-           stat.unstableLoopVariable, stat.breakLoopExits, stat.returnLoopExits);
+           jitstats.recorderStarted, jitstats.recorderAborted, jitstats.traceCompleted,
+           jitstats.returnToDifferentLoopHeader, jitstats.treesTrashed, jitstats.slotPromoted,
+           jitstats.unstableLoopVariable, jitstats.breakLoopExits, jitstats.returnLoopExits);
     printf("monitor: triggered(%llu), exits(%llu), type mismatch(%llu), "
-           "global mismatch(%llu)\n", stat.traceTriggered, stat.sideExitIntoInterpreter,
-           stat.typeMapMismatchAtEntry, stat.globalShapeMismatchAtEntry);
+           "global mismatch(%llu)\n", jitstats.traceTriggered, jitstats.sideExitIntoInterpreter,
+           jitstats.typeMapMismatchAtEntry, jitstats.globalShapeMismatchAtEntry);
 #endif
     if (tm->fragmento != NULL) {
         JS_ASSERT(tm->globalSlots && tm->globalTypeMap);

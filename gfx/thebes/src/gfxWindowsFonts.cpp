@@ -649,7 +649,7 @@ gfxWindowsFont::ComputeMetrics()
     // XXX MSDN (http://msdn.microsoft.com/en-us/library/ms534223.aspx)
     // does not say what the failure modes for GetTextExtentPoint32 are -
     // is it safe to assume it will fail iff the font has no '0'?
-    if (GetTextExtentPoint32(dc, "0", 1, &size))
+    if (GetTextExtentPoint32W(dc, L"0", 1, &size))
         mMetrics->zeroOrAveCharWidth = ROUND(size.cx);
     else
         mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;

@@ -155,6 +155,34 @@ extern "C" {
 
 	MOZCE_SHUNT_API int mozce_printf(const char *, ...);
 
+#ifdef SHUNT_LOG_ENABLED
+    void mozce_DebugInit();
+    void mozce_DebugDeinit();
+    void mozce_DebugWriteToLog(char * str);
+#endif
+
+#ifdef API_LOGGING
+
+#ifdef WINCE_MEMORY_CHECKPOINTING
+    MOZCE_SHUNT_API void mozce_MemoryCheckpoint();
+
+#define WINCE_LOG_API_CALL(x)          mozce_MemoryCheckpoint(); mozce_printf(x)
+#define WINCE_LOG_API_CALL_1(x,y)      mozce_MemoryCheckpoint(); mozce_printf(x,y)
+#define WINCE_LOG_API_CALL_2(x,y,z)    mozce_MemoryCheckpoint(); mozce_printf(x,y,z)
+#else
+#define WINCE_LOG_API_CALL(x)          mozce_printf(x)
+#define WINCE_LOG_API_CALL_1(x,y)      mozce_printf(x,y)
+#define WINCE_LOG_API_CALL_2(x,y,z)    mozce_printf(x,y,z)
+#endif
+
+#else
+
+#define WINCE_LOG_API_CALL(x)
+#define WINCE_LOG_API_CALL_1(x,y)
+#define WINCE_LOG_API_CALL_2(x,y,z)
+
+#endif          // #ifdef API_LOGGING
+
 #ifdef __cplusplus
 };
 #endif

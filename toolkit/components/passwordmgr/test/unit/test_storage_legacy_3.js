@@ -586,6 +586,33 @@ storage = LoginTest.reloadStorage(OUTDIR, "output-451155.txt");
 LoginTest.checkStorageData(storage, [utfHost], [utfUser1, utfUser2]);
 
 
+/*
+ * ---------------------- Bug 454708 ----------------------
+ * Check that previous saved entries that are not valid UTF8
+ * are read without blowing up.
+ */
+
+/* ========== 16 ========== */
+testnum++;
+testdesc = "ensure bogus UTF8 strings don't cause failures."
+
+var badHost = "https://FcK" + String.fromCharCode(0x8a) + ".jp";
+var bad8User = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+bad8User.init(badHost, badHost, null,
+              "dummydude", "itsasecret", "put_user_here", "put_pw_here");
+
+storage = LoginTest.initStorage(INDIR, "signons-454708.txt",
+                               OUTDIR, "output-454708.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+// The output file should contain valid UTF8 now, but the resulting
+// JS string value remains the same.
+
+testdesc = "[flush and reload for verification]"
+storage = LoginTest.reloadStorage(OUTDIR, "output-454708.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
 /* ========== end ========== */
 } catch (e) {
     throw ("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);

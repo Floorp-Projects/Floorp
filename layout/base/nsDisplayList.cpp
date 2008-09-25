@@ -555,8 +555,6 @@ nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
   nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                   aDirtyRect, nsRect(offset, mFrame->GetSize()),
-                                  *mFrame->GetStyleBorder(),
-                                  *mFrame->GetStylePadding(),
                                   mFrame->HonorPrintBackgroundSettings());
 }
 
