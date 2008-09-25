@@ -46,7 +46,7 @@ interface nsIScreenManager : nsISupports
     // Returns the screen that contains the rectangle. If the rect overlaps
     // multiple screens, it picks the screen with the greatest area of intersection.
     //
-    // The coordinates are in pixels (not twips) and in screen coordinates.
+    // The coordinates are in pixels (not app units) and in screen coordinates.
     //
   nsIScreen screenForRect ( in long left, in long top, in long width, in long height ) ;
   
