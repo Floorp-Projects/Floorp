@@ -1206,5 +1206,5 @@ nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
   nsCSSRendering::PaintBackgroundWithSC(PresContext(), aRenderingContext, this,
                                         aDirtyRect, rect,
                                         *GetStyleBackground(), myBorder,
-                                        *GetStylePadding(), PR_TRUE, nsnull);
+                                        PR_TRUE, nsnull);
 }
