@@ -57,8 +57,6 @@ _TEST_FILES = \
   test_threadErrors.html \
   test_threadTimeouts.html \
   test_longThread.html \
-  test_xhr.html \
-  testXHR.txt \
   $(NULL)
 
 libs:: $(_TEST_FILES)

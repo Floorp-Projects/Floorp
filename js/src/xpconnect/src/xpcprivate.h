@@ -3647,8 +3647,8 @@ public:
      * @param cx The JSContext, this can be null, we don't do anything then
      */
     AutoScriptEvaluate(JSContext * cx)
-         : mJSContext(cx), mState(0), mErrorReporterSet(PR_FALSE),
-           mEvaluated(PR_FALSE), mContextHasThread(0) {}
+         : mJSContext(cx), mState(0), mEvaluated(PR_FALSE), 
+           mContextHasThread(0) {}
 
     /**
      * Does the pre script evaluation and sets the error reporter if given
@@ -3665,7 +3665,7 @@ public:
 private:
     JSContext* mJSContext;
     JSExceptionState* mState;
-    PRBool mErrorReporterSet;
+    JSErrorReporter mOldErrorReporter;
     PRBool mEvaluated;
     jsword mContextHasThread;
 
