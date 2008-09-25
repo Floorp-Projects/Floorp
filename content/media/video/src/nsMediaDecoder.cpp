@@ -146,7 +146,7 @@ void nsMediaDecoder::Invalidate()
     }
   }
   nsRect r(nsPoint(0,0), frame->GetSize());
-  frame->Invalidate(r);
+  frame->Invalidate(r, PR_FALSE);
 }
 
 static void ProgressCallback(nsITimer* aTimer, void* aClosure)
