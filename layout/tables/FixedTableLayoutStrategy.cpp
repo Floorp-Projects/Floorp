@@ -47,7 +47,8 @@
 #include "nsTableCellFrame.h"
 
 FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aTableFrame)
-  : mTableFrame(aTableFrame)
+  : nsITableLayoutStrategy(nsITableLayoutStrategy::Fixed)
+  , mTableFrame(aTableFrame)
 {
     MarkIntrinsicWidthsDirty();
 }
@@ -65,28 +66,27 @@ FixedTableLayoutStrategy::GetMinWidth(nsIRenderingContext* aRenderingContext)
         return mMinWidth;
 
     // It's theoretically possible to do something much better here that
-    // depends only on the columns and the first row, but it wouldn't be
-    // compatible with other browsers, or with the use of GetMinWidth by
-    // nsHTMLReflowState to determine the width of a fixed-layout table,
-    // since CSS2.1 says:
+    // depends only on the columns and the first row (where we look at
+    // intrinsic widths inside the first row and then reverse the
+    // algorithm to find the narrowest width that would hold all of
+    // those intrinsic widths), but it wouldn't be compatible with other
+    // browsers, or with the use of GetMinWidth by
+    // nsTableFrame::ComputeSize to determine the width of a fixed
+    // layout table, since CSS2.1 says:
     //   The width of the table is then the greater of the value of the
     //   'width' property for the table element and the sum of the
     //   column widths (plus cell spacing or borders).
 
     // XXX Should we really ignore 'min-width' and 'max-width'?
+    // XXX Should we really ignore widths on column groups?
 
     nsTableCellMap *cellMap = mTableFrame->GetCellMap();
     PRInt32 colCount = cellMap->GetColCount();
     nscoord spacing = mTableFrame->GetCellSpacingX();
 
-    // XXX Should this code do any pixel rounding?
-
     nscoord result = 0;
 
-    // XXX Consider widths on columns or column groups?
-
     if (colCount > 0) {
-        // XXX Should only add columns that have cells originating in them!
         result += spacing * (colCount + 1);
     }
 
@@ -151,8 +151,11 @@ FixedTableLayoutStrategy::GetPrefWidth(nsIRenderingContext* aRenderingContext,
                                        PRBool aComputingSize)
 {
     // It's theoretically possible to do something much better here that
-    // depends only on the columns and the first row, but it wouldn't be
-    // compatible with other browsers.
+    // depends only on the columns and the first row (where we look at
+    // intrinsic widths inside the first row and then reverse the
+    // algorithm to find the narrowest width that would hold all of
+    // those intrinsic widths), but it wouldn't be compatible with other
+    // browsers.
     nscoord result = nscoord_MAX;
     DISPLAY_PREF_WIDTH(mTableFrame, result);
     return result;
@@ -178,22 +181,18 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
     PRInt32 colCount = cellMap->GetColCount();
     nscoord spacing = mTableFrame->GetCellSpacingX();
 
-    // XXX Should this code do any pixel rounding?
-
-    // border-spacing isn't part of the basis for percentages.
-    if (colCount > 0) {
-        // XXX Should only add columns that have cells originating in them!
-        nscoord subtract = spacing * (colCount + 1);
-        tableWidth -= subtract;
-    } else {
+    if (colCount == 0) {
         // No Columns - nothing to compute
         return;
     }
 
+    // border-spacing isn't part of the basis for percentages.
+    tableWidth -= spacing * (colCount + 1);
+
     // XXX This ignores the 'min-width' and 'max-width' properties
     // throughout.  Then again, that's what the CSS spec says to do.
 
-    // XXX Consider widths on columns or column groups?
+    // XXX Should we really ignore widths on column groups?
 
     PRUint32 unassignedCount = 0;
     nscoord unassignedSpace = tableWidth;

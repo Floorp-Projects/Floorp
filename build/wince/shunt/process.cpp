@@ -53,9 +53,7 @@ extern "C" {
 
 MOZCE_SHUNT_API void abort(void)
 {
-#ifdef API_LOGGING
-    mozce_printf("abort called\n");
-#endif
+    WINCE_LOG_API_CALL("abort called\n");
 
 #if defined(DEBUG)
     DebugBreak();
@@ -71,9 +69,8 @@ MOZCE_SHUNT_API char* getenv(const char* inName)
 
 MOZCE_SHUNT_API int putenv(const char *a)
 {
-#ifdef API_LOGGING
-    mozce_printf("putenv called %s\n",a);
-#endif
+    WINCE_LOG_API_CALL_1("mozce_PutEnv called %s\n",a);
+
     int len = strlen(a);
     char* key = (char*) malloc(len*sizeof(char));
     strcpy(key,a);
@@ -88,9 +85,7 @@ MOZCE_SHUNT_API int putenv(const char *a)
 
 MOZCE_SHUNT_API int getpid(void)
 {
-#ifdef API_LOGGING
-    mozce_printf("getpid called\n");
-#endif
+    WINCE_LOG_API_CALL("getpid called\n");
     
     int retval = 0;
     

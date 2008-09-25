@@ -5838,7 +5838,7 @@ JS_SetGCZeal(JSContext *cx, uint8 zeal)
 
 /************************************************************************/
 
-#if !defined(STATIC_JS_API) && defined(XP_WIN)
+#if !defined(STATIC_JS_API) && defined(XP_WIN) && !defined (WINCE)
 
 #include <windows.h>
 
