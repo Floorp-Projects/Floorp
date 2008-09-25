@@ -627,7 +627,6 @@ MAKEFILES_embedding="
   embedding/components/ui/progressDlg/Makefile
   embedding/config/Makefile
   embedding/tests/Makefile
-  embedding/tests/cocoaEmbed/Makefile
   embedding/tests/winEmbed/Makefile
 "
 
