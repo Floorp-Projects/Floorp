@@ -221,11 +221,11 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
     return E_FAIL;
   }
   
-  nsRect sum(0, 0, 0, 0);
+  nsIntRect sum(0, 0, 0, 0);
   nsIFrame *iter = startFrame;
   nsIFrame *stopLoopFrame = endFrame->GetNextContinuation();
   for (; iter != stopLoopFrame; iter = iter->GetNextContinuation()) {
-    nsRect rect = iter->GetScreenRectExternal();
+    nsIntRect rect = iter->GetScreenRectExternal();
     nscoord start = (iter == startFrame) ? presContext->AppUnitsToDevPixels(startPoint.x) : 0;
     nscoord end = (iter == endFrame) ? presContext->AppUnitsToDevPixels(endPoint.x) :
                                        rect.width;
