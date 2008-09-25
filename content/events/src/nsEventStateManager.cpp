@@ -3727,8 +3727,8 @@ nsEventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
       nsEventDispatcher::Dispatch(aTargetContent, aPresContext, &event,
                                   nsnull, &status);
 
-    // adjust the drag hover
-    if (status != nsEventStatus_eConsumeNoDefault)
+    // adjust the drag hover if the dragenter event was cancelled or this is a drag exit
+    if (status == nsEventStatus_eConsumeNoDefault || aMsg == NS_DRAGDROP_EXIT)
       SetContentState((aMsg == NS_DRAGDROP_ENTER) ? aTargetContent : nsnull,
                       NS_EVENT_STATE_DRAGOVER);
   }
