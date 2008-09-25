@@ -707,7 +707,8 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
 
         *vp = JSVAL_VOID;
-        if (js_LookupPropertyWithFlags(cx, proto, id, 0, &obj2, &prop) < 0)
+        if (js_LookupPropertyWithFlags(cx, proto, id, cx->resolveFlags,
+                                       &obj2, &prop) < 0)
             return JS_FALSE;
 
         if (prop) {

@@ -3293,7 +3293,8 @@ JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                   JSProperty **propp)
 {
-    return js_LookupPropertyWithFlags(cx, obj, id, 0, objp, propp) >= 0;
+    return js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
+                                      objp, propp) >= 0;
 }
 
 #define SCOPE_DEPTH_ACCUM(bs,val)                                             \
@@ -3365,8 +3366,8 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
                 if (clasp->flags & JSCLASS_NEW_RESOLVE) {
                     newresolve = (JSNewResolveOp)resolve;
-                    if (!(flags & JSRESOLVE_CLASSNAME) &&
-                        cx->fp && cx->fp->regs) {
+                    if (flags == JSRESOLVE_INFER && cx->fp && cx->fp->regs) {
+                        flags = 0;
                         pc = cx->fp->regs->pc;
                         cs = &js_CodeSpec[*pc];
                         format = cs->format;
@@ -3505,7 +3506,8 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSObject **objp,
     for (scopeIndex = 0; ; scopeIndex++) {
         if (obj->map->ops->lookupProperty == js_LookupProperty) {
             protoIndex =
-                js_LookupPropertyWithFlags(cx, obj, id, 0, &pobj, &prop);
+                js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
+                                           &pobj, &prop);
         } else {
             if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, &prop))
                 return -1;
@@ -3702,7 +3704,8 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     JS_COUNT_OPERATION(cx, JSOW_GET_PROPERTY);
 
     shape = OBJ_SHAPE(obj);
-    protoIndex = js_LookupPropertyWithFlags(cx, obj, id, 0, &obj2, &prop);
+    protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
+                                            &obj2, &prop);
     if (protoIndex < 0)
         return JS_FALSE;
     if (!prop) {
@@ -3803,7 +3806,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
     JS_COUNT_OPERATION(cx, JSOW_SET_PROPERTY);
 
     shape = OBJ_SHAPE(obj);
-    protoIndex = js_LookupPropertyWithFlags(cx, obj, id, 0, &pobj, &prop);
+    protoIndex = js_LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags,
+                                            &pobj, &prop);
     if (protoIndex < 0)
         return JS_FALSE;
 
