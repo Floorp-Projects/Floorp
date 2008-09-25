@@ -50,14 +50,14 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "nsPresContext.h"
-#include "nsMediaDecoder.h"
+#include "nsVideoDecoder.h"
 
 #ifdef PR_LOGGING
 // Logging object for decoder
 PRLogModuleInfo* gVideoDecoderLog = nsnull;
 #endif
 
-nsMediaDecoder::nsMediaDecoder() :
+nsVideoDecoder::nsVideoDecoder() :
   mElement(0),
   mRGBWidth(-1),
   mRGBHeight(-1),
@@ -65,22 +65,16 @@ nsMediaDecoder::nsMediaDecoder() :
   mVideoUpdateLock(nsnull),
   mFramerate(0.0)
 {
-  MOZ_COUNT_CTOR(nsMediaDecoder);
 }
 
-nsMediaDecoder::~nsMediaDecoder()
-{
-  MOZ_COUNT_DTOR(nsMediaDecoder);
-}
-
-PRBool nsMediaDecoder::Init()
+PRBool nsVideoDecoder::Init()
 {
   mVideoUpdateLock = PR_NewLock();
 
   return mVideoUpdateLock != nsnull;
 }
 
-void nsMediaDecoder::Shutdown()
+void nsVideoDecoder::Shutdown()
 {
   if (mVideoUpdateLock) {
     PR_DestroyLock(mVideoUpdateLock);
@@ -89,23 +83,24 @@ void nsMediaDecoder::Shutdown()
 }
 
 
-nsresult nsMediaDecoder::InitLogger() 
+nsresult nsVideoDecoder::InitLogger() 
 {
 #ifdef PR_LOGGING
-  gVideoDecoderLog = PR_NewLogModule("nsMediaDecoder");
+  gVideoDecoderLog = PR_NewLogModule("nsVideoDecoder");
 #endif
   return NS_OK;
 }
 
 static void InvalidateCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsMediaDecoder* decoder = static_cast<nsMediaDecoder*>(aClosure);
+  nsVideoDecoder* decoder = static_cast<nsVideoDecoder*>(aClosure);
   decoder->Invalidate();
 }
 
-nsresult nsMediaDecoder::StartInvalidating(float aFramerate)
+nsresult nsVideoDecoder::StartInvalidating(double aFramerate)
 {
   nsresult rv = NS_OK;
+
   if (!mInvalidateTimer && aFramerate > 0.0) {
     mInvalidateTimer = do_CreateInstance("@mozilla.org/timer;1");
     rv = mInvalidateTimer->InitWithFuncCallback(InvalidateCallback, 
@@ -113,11 +108,10 @@ nsresult nsMediaDecoder::StartInvalidating(float aFramerate)
                                                 static_cast<PRInt32>(1000.0/aFramerate), 
                                                 nsITimer::TYPE_REPEATING_PRECISE);
   }
-
   return rv;
 }
 
-void nsMediaDecoder::StopInvalidating()
+void nsVideoDecoder::StopInvalidating()
 {
   if (mInvalidateTimer) {
     mInvalidateTimer->Cancel();
@@ -125,7 +119,7 @@ void nsMediaDecoder::StopInvalidating()
   }
 }
 
-void nsMediaDecoder::Invalidate()
+void nsVideoDecoder::Invalidate()
 {
   if (!mElement)
     return;
@@ -146,16 +140,16 @@ void nsMediaDecoder::Invalidate()
     }
   }
   nsRect r(nsPoint(0,0), frame->GetSize());
-  frame->Invalidate(r, PR_FALSE);
+  frame->Invalidate(r);
 }
 
 static void ProgressCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsMediaDecoder* decoder = static_cast<nsMediaDecoder*>(aClosure);
+  nsVideoDecoder* decoder = static_cast<nsVideoDecoder*>(aClosure);
   decoder->Progress();
 }
 
-void nsMediaDecoder::Progress()
+void nsVideoDecoder::Progress()
 {
   if (!mElement)
     return;
@@ -163,7 +157,7 @@ void nsMediaDecoder::Progress()
   mElement->DispatchProgressEvent(NS_LITERAL_STRING("progress"));
 }
 
-nsresult nsMediaDecoder::StartProgress()
+nsresult nsVideoDecoder::StartProgress()
 {
   nsresult rv = NS_OK;
 
@@ -177,7 +171,7 @@ nsresult nsMediaDecoder::StartProgress()
   return rv;
 }
 
-nsresult nsMediaDecoder::StopProgress()
+nsresult nsVideoDecoder::StopProgress()
 {
   nsresult rv = NS_OK;
   if (mProgressTimer) {
@@ -187,14 +181,7 @@ nsresult nsMediaDecoder::StopProgress()
   return rv;
 }
 
-void nsMediaDecoder::MediaSizeChanged()
-{
-  nsAutoLock lock(mVideoUpdateLock);
-  if (mElement)
-    mElement->UpdateMediaSize(nsIntSize(mRGBWidth, mRGBHeight));
-}
-
-void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerate, unsigned char* aRGBBuffer)
+void nsVideoDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, double aFramerate, unsigned char* aRGBBuffer)
 {
   if (mRGBWidth != aWidth || mRGBHeight != aHeight) {
     mRGBWidth = aWidth;
@@ -202,12 +189,6 @@ void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerat
     mSizeChanged = PR_TRUE;
     // Delete buffer so we'll reallocate it
     mRGB = nsnull;
-
-    // Inform the element that the size has changed.
-    nsCOMPtr<nsIRunnable> event = 
-      NS_NEW_RUNNABLE_METHOD(nsMediaDecoder, this, MediaSizeChanged); 
-    
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);    
   }
   mFramerate = aFramerate;
 
@@ -218,12 +199,16 @@ void nsMediaDecoder::SetRGBData(PRInt32 aWidth, PRInt32 aHeight, float aFramerat
   }
 }
 
-void nsMediaDecoder::Paint(gfxContext* aContext, const gfxRect& aRect)
+void nsVideoDecoder::Paint(gfxContext* aContext, const gfxRect& aRect)
 {
   nsAutoLock lock(mVideoUpdateLock);
 
   if (!mRGB)
     return;
+
+  if (mFramerate > 0.0) {
+    StartInvalidating(mFramerate);
+  }
 
   /* Create a surface backed by the RGB */
   nsRefPtr<gfxASurface> surface = 
@@ -250,8 +235,8 @@ void nsMediaDecoder::Paint(gfxContext* aContext, const gfxRect& aRect)
 #ifdef DEBUG_FRAME_RATE
   {
     // Output frame rate
-    static float last = double(PR_IntervalToMilliseconds(PR_IntervalNow()))/1000.0;
-    float now = double(PR_IntervalToMilliseconds(PR_IntervalNow()))/1000.0;
+    static double last = double(PR_IntervalToMilliseconds(PR_IntervalNow()))/1000.0;
+    double now = double(PR_IntervalToMilliseconds(PR_IntervalNow()))/1000.0;
     static int count = 0;
     count++;
     if (now-last > 10.0) {
@@ -263,12 +248,12 @@ void nsMediaDecoder::Paint(gfxContext* aContext, const gfxRect& aRect)
 #endif
 }
 
-void nsMediaDecoder::ElementAvailable(nsHTMLMediaElement* anElement)
+void nsVideoDecoder::ElementAvailable(nsHTMLMediaElement* anElement)
 {
   mElement = anElement;
 }
 
-void nsMediaDecoder::ElementUnavailable()
+void nsVideoDecoder::ElementUnavailable()
 {
   mElement = nsnull;
 }
