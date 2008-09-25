@@ -1208,7 +1208,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(XMLHttpProgressEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XMLHttpRequest, nsEventTargetSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
 
   NS_DEFINE_CLASSINFO_DATA(ClientRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1281,7 +1282,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(XMLHttpRequestUpload, nsEventTargetSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ADDPROPERTY)
 
   // DOM Traversal NodeIterator class  
   NS_DEFINE_CLASSINFO_DATA(NodeIterator, nsDOMGenericSH,
@@ -7340,6 +7342,33 @@ nsEventTargetSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
   }
   return nsDOMGenericSH::NewResolve(wrapper, cx, obj, id, flags, objp,
                                     _retval);
+}
+
+NS_IMETHODIMP
+nsEventTargetSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                             JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
+{
+  if (id == sAddEventListener_id) {
+    return NS_OK;
+  }
+  nsISupports* native = wrapper->Native();
+  nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(native);
+  if (target) {
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    target->GetContextForEventHandlers(getter_AddRefs(scriptContext));
+    if (scriptContext) {
+      nsCOMPtr<nsPIDOMWindow> window =
+        do_QueryInterface(scriptContext->GetGlobalObject());
+      if (window) {
+        nsCOMPtr<nsIDocument> doc =
+          do_QueryInterface(window->GetExtantDocument());
+        if (doc) {
+          doc->AddReference(native, wrapper);
+        }
+      }
+    }
+  }
+  return NS_OK;
 }
 
 // Element helper
