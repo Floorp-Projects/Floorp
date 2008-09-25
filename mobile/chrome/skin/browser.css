@@ -179,11 +179,11 @@ toolbarbutton.browser-control-button {
   -moz-image-region: rect(160px 96px 208px 48px);
 }
 
-#tool-prefs {
+#tool-stuff {
   -moz-image-region: rect(208px 48px 256px 0px);
 }
 
-#tool-prefs:hover:active {
+#tool-stuff:hover:active {
   -moz-image-region: rect(208px 96px 256px 48px);
 }
 

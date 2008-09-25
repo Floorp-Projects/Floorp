@@ -226,7 +226,7 @@
       <toolbarbutton id="tool-forward" class="browser-control-button" command="cmd_forward"/>
       <toolbarspring/>
       <toolbarbutton id="tool-actions" class="browser-control-button" command="cmd_actions"/>
-      <toolbarbutton id="tool-prefs" class="browser-control-button" command="cmd_panel"/>
+      <toolbarbutton id="tool-stuff" class="browser-control-button" command="cmd_panel"/>
     </vbox>
 
     <hbox id="panel-container" style="-moz-stack-sizing: ignore;" top="0" left="0">
