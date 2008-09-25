@@ -119,7 +119,7 @@ public:
    */
   nsresult RemoveDocSelectionListener(nsIPresShell *aShell);
 
-  nsRect GetCaretRect(nsIWidget **aOutWidget);
+  nsIntRect GetCaretRect(nsIWidget **aOutWidget);
 
 protected:
   nsresult NormalSelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel);

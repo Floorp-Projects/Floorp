@@ -445,7 +445,7 @@ public:
   // See GUI MESSAGES,
   PRUint32    message;
   // In widget relative coordinates, not modified by layout code.
-  nsPoint     refPoint;
+  nsIntPoint  refPoint;
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
   PRUint32    time;
@@ -531,7 +531,7 @@ public:
   }
 
   /// x,y width, height in pixels (client area)
-  nsRect          *windowSize;    
+  nsIntRect       *windowSize;    
   /// width of entire window (in pixels)
   PRInt32         mWinWidth;    
   /// height of entire window (in pixels)
@@ -593,7 +593,7 @@ public:
   /// area to paint  (should be used instead of rect)
   nsIRegion           *region;
   /// x,y, width, height in pixels of area to paint
-  nsRect              *rect;      
+  nsIntRect           *rect;      
 };
 
 /**
@@ -822,7 +822,7 @@ struct nsTextEventReply
   {
   }
 
-  nsRect mCursorPosition;
+  nsIntRect mCursorPosition;
   PRBool mCursorIsCollapsed;
   nsIWidget* mReferenceWidget;
 };
@@ -961,7 +961,7 @@ public:
     void* mContentsRoot;
     PRUint32 mOffset;
     nsString mString;
-    nsRect mRect; // Finally, the coordinates is system coordinates.
+    nsIntRect mRect; // Finally, the coordinates is system coordinates.
     // The return widget has the caret. This is set at all query events.
     nsIWidget* mFocusedWidget;
   } mReply;
