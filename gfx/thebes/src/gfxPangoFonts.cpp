@@ -48,24 +48,12 @@
 #include "prlink.h"
 #include "gfxTypes.h"
 
-#include "nsUnicodeRange.h"
-
-#include "nsIPref.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsServiceManagerUtils.h"
 #include "nsMathUtils.h"
-
-#include "nsVoidArray.h"
-#include "nsPromiseFlatString.h"
 
 #include "gfxContext.h"
 #include "gfxPlatformGtk.h"
 #include "gfxPangoFonts.h"
 
-#include "nsCRT.h"
-
-#include <locale.h>
 #include <freetype/tttables.h>
 
 #include <cairo.h>
@@ -1714,261 +1702,20 @@ out:
     g_object_unref(context);
 }
 
-
-
-/**
- ** language group helpers
- **/
-
-struct MozPangoLangGroup {
-    const char *mozLangGroup;
-    const char *PangoLang;
-};
-
-static const MozPangoLangGroup MozPangoLangGroups[] = {
-    { "x-western",      "en"    },
-    { "x-central-euro", "pl"    },
-    { "ja",             "ja"    },
-    { "zh-TW",          "zh-tw" },
-    { "zh-CN",          "zh-cn" },
-    { "zh-HK",          "zh-hk" },
-    { "ko",             "ko"    },
-    { "x-cyrillic",     "ru"    },
-    { "x-baltic",       "lv"    },
-    { "el",             "el"    },
-    { "tr",             "tr"    },
-    { "th",             "th"    },
-    { "he",             "he"    },
-    { "ar",             "ar"    },
-    { "x-devanagari",   "hi"    },
-    { "x-tamil",        "ta"    },
-    { "x-armn",         "ar"    },
-    { "x-beng",         "bn"    },
-    { "x-ethi",         "et"    },
-    { "x-geor",         "ka"    },
-    { "x-gujr",         "gu"    },
-    { "x-guru",         "pa"    },
-    { "x-khmr",         "km"    },
-    { "x-mlym",         "ml"    },
-    { "x-cans",         "iu"    },
-    { "x-unicode",      0       },
-    { "x-user-def",     0       },
-};
-
-#define NUM_PANGO_LANG_GROUPS (sizeof (MozPangoLangGroups) / \
-                               sizeof (MozPangoLangGroups[0]))
-
 /* static */
 PangoLanguage *
-GetPangoLanguage(const nsACString& cname)
+GetPangoLanguage(const nsACString& aLangGroup)
 {
     // see if the lang group needs to be translated from mozilla's
     // internal mapping into fontconfig's
-    const struct MozPangoLangGroup *langGroup = nsnull;
+    nsCAutoString lang;
+    gfxFontconfigUtils::GetSampleLangForGroup(aLangGroup, &lang);
 
-    for (unsigned int i=0; i < NUM_PANGO_LANG_GROUPS; ++i) {
-        if (cname.Equals(MozPangoLangGroups[i].mozLangGroup,
-                         nsCaseInsensitiveCStringComparator())) {
-            langGroup = &MozPangoLangGroups[i];
-            break;
-        }
-    }
+    if (lang.IsEmpty())
+        return NULL;
 
-    // if there's no lang group, just use the lang group as it was
-    // passed to us
-    //
-    // we're casting away the const here for the strings - should be
-    // safe.
-    if (!langGroup)
-        return pango_language_from_string(nsPromiseFlatCString(cname).get());
-    else if (langGroup->PangoLang) 
-        return pango_language_from_string(langGroup->PangoLang);
-
-    return nsnull;
+    return pango_language_from_string(lang.get());
 }
-
-// See pango-script-lang-table.h in pango.
-static const MozPangoLangGroup PangoAllLangGroup[] = {
-    { "x-western",      "aa"    },
-    { "x-cyrillic",     "ab"    },
-    { "x-western",      "af"    },
-    { "x-ethi",         "am"    },
-    { "ar",             "ar"    },
-    { "x-western",      "ast"   },
-    { "x-cyrillic",     "ava"   },
-    { "x-western",      "ay"    },
-    { "x-western",      "az"    },
-    { "x-cyrillic",     "ba"    },
-    { "x-western",      "bam"   },
-    { "x-cyrillic",     "be"    },
-    { "x-cyrillic",     "bg"    },
-    { "x-devanagari",   "bh"    },
-    { "x-devanagari",   "bho"   },
-    { "x-western",      "bi"    },
-    { "x-western",      "bin"   },
-    { "x-beng",         "bn"    },
-    { 0,                "bo"    }, // PANGO_SCRIPT_TIBETAN
-    { "x-western",      "br"    },
-    { "x-western",      "bs"    },
-    { "x-cyrillic",     "bua"   },
-    { "x-western",      "ca"    },
-    { "x-cyrillic",     "ce"    },
-    { "x-western",      "ch"    },
-    { "x-cyrillic",     "chm"   },
-    { 0,                "chr"   }, // PANGO_SCRIPT_CHEROKEE
-    { "x-western",      "co"    },
-    { "x-central-euro", "cs"    }, // PANGO_SCRIPT_LATIN
-    { "x-cyrillic",     "cu"    },
-    { "x-cyrillic",     "cv"    },
-    { "x-western",      "cy"    },
-    { "x-western",      "da"    },
-    { "x-central-euro", "de"    }, // PANGO_SCRIPT_LATIN
-    { 0,                "dz"    }, // PANGO_SCRIPT_TIBETAN
-    { "el",             "el"    },
-    { "x-western",      "en"    },
-    { "x-western",      "eo"    },
-    { "x-western",      "es"    },
-    { "x-western",      "et"    },
-    { "x-western",      "eu"    },
-    { "ar",             "fa"    },
-    { "x-western",      "fi"    },
-    { "x-western",      "fj"    },
-    { "x-western",      "fo"    },
-    { "x-western",      "fr"    },
-    { "x-western",      "ful"   },
-    { "x-western",      "fur"   },
-    { "x-western",      "fy"    },
-    { "x-western",      "ga"    },
-    { "x-western",      "gd"    },
-    { "x-ethi",         "gez"   },
-    { "x-western",      "gl"    },
-    { "x-western",      "gn"    },
-    { "x-gujr",         "gu"    },
-    { "x-western",      "gv"    },
-    { "x-western",      "ha"    },
-    { "x-western",      "haw"   },
-    { "he",             "he"    },
-    { "x-devanagari",   "hi"    },
-    { "x-western",      "ho"    },
-    { "x-central-euro", "hr"    }, // PANGO_SCRIPT_LATIN
-    { "x-western",      "hu"    },
-    { "x-armn",         "hy"    },
-    { "x-western",      "ia"    },
-    { "x-western",      "ibo"   },
-    { "x-western",      "id"    },
-    { "x-western",      "ie"    },
-    { "x-cyrillic",     "ik"    },
-    { "x-western",      "io"    },
-    { "x-western",      "is"    },
-    { "x-western",      "it"    },
-    { "x-cans",         "iu"    },
-    { "ja",             "ja"    },
-    { "x-geor",         "ka"    },
-    { "x-cyrillic",     "kaa"   },
-    { "x-western",      "ki"    },
-    { "x-cyrillic",     "kk"    },
-    { "x-western",      "kl"    },
-    { "x-khmr",         "km"    },
-    { 0,                "kn"    }, // PANGO_SCRIPT_KANNADA
-    { "ko",             "ko"    },
-    { "x-devanagari",   "kok"   },
-    { "x-devanagari",   "ks"    },
-    { "x-cyrillic",     "ku"    },
-    { "x-cyrillic",     "kum"   },
-    { "x-cyrillic",     "kv"    },
-    { "x-western",      "kw"    },
-    { "x-cyrillic",     "ky"    },
-    { "x-western",      "la"    },
-    { "x-western",      "lb"    },
-    { "x-cyrillic",     "lez"   },
-    { 0,                "lo"    }, // PANGO_SCRIPT_LAO
-    { "x-western",      "lt"    },
-    { "x-western",      "lv"    },
-    { "x-western",      "mg"    },
-    { "x-western",      "mh"    },
-    { "x-western",      "mi"    },
-    { "x-cyrillic",     "mk"    },
-    { "x-mlym",         "ml"    },
-    { 0,                "mn"    }, // PANGO_SCRIPT_MONGOLIAN
-    { "x-western",      "mo"    },
-    { "x-devanagari",   "mr"    },
-    { "x-western",      "mt"    },
-    { 0,                "my"    }, // PANGO_SCRIPT_MYANMAR
-    { "x-western",      "nb"    },
-    { "x-devanagari",   "ne"    },
-    { "x-western",      "nl"    },
-    { "x-western",      "nn"    },
-    { "x-western",      "no"    },
-    { "x-western",      "ny"    },
-    { "x-western",      "oc"    },
-    { "x-western",      "om"    },
-    { 0,                "or"    }, // PANGO_SCRIPT_ORIYA
-    { "x-cyrillic",     "os"    },
-    { "x-central-euro", "pl"    }, // PANGO_SCRIPT_LATIN
-    { "x-western",      "pt"    },
-    { "x-western",      "rm"    },
-    { "x-western",      "ro"    },
-    { "x-cyrillic",     "ru"    },
-    { "x-devanagari",   "sa"    },
-    { "x-cyrillic",     "sah"   },
-    { "x-western",      "sco"   },
-    { "x-western",      "se"    },
-    { "x-cyrillic",     "sel"   },
-    { "x-cyrillic",     "sh"    },
-    { 0,                "si"    }, // PANGO_SCRIPT_SINHALA
-    { "x-central-euro", "sk"    }, // PANGO_SCRIPT_LATIN
-    { "x-central-euro", "sl"    }, // PANGO_SCRIPT_LATIN
-    { "x-western",      "sm"    },
-    { "x-western",      "sma"   },
-    { "x-western",      "smj"   },
-    { "x-western",      "smn"   },
-    { "x-western",      "sms"   },
-    { "x-western",      "so"    },
-    { "x-western",      "sq"    },
-    { "x-cyrillic",     "sr"    },
-    { "x-western",      "sv"    },
-    { "x-western",      "sw"    },
-    { 0,                "syr"   }, // PANGO_SCRIPT_SYRIAC
-    { "x-tamil",        "ta"    },
-    { 0,                "te"    }, // PANGO_SCRIPT_TELUGU
-    { "x-cyrillic",     "tg"    },
-    { "th",             "th"    },
-    { "x-ethi",         "ti-er" },
-    { "x-ethi",         "ti-et" },
-    { "x-ethi",         "tig"   },
-    { "x-cyrillic",     "tk"    },
-    { 0,                "tl"    }, // PANGO_SCRIPT_TAGALOG
-    { "x-western",      "tn"    },
-    { "x-western",      "to"    },
-    { "x-western",      "tr"    },
-    { "x-western",      "ts"    },
-    { "x-cyrillic",     "tt"    },
-    { "x-western",      "tw"    },
-    { "x-cyrillic",     "tyv"   },
-    { "ar",             "ug"    },
-    { "x-cyrillic",     "uk"    },
-    { "ar",             "ur"    },
-    { "x-cyrillic",     "uz"    },
-    { "x-western",      "ven"   },
-    { "x-western",      "vi"    },
-    { "x-western",      "vo"    },
-    { "x-western",      "vot"   },
-    { "x-western",      "wa"    },
-    { "x-western",      "wen"   },
-    { "x-western",      "wo"    },
-    { "x-western",      "xh"    },
-    { "x-western",      "yap"   },
-    { "he",             "yi"    },
-    { "x-western",      "yo"    },
-    { "zh-CN",          "zh-cn" },
-    { "zh-HK",          "zh-hk" },
-    { "zh-HK",          "zh-mo" },
-    { "zh-CN",          "zh-sg" },
-    { "zh-TW",          "zh-tw" },
-    { "x-western",      "zu"    },
-};
-
-#define NUM_PANGO_ALL_LANG_GROUPS (G_N_ELEMENTS (PangoAllLangGroup))
 
 gfxPangoFontCache::gfxPangoFontCache()
 {
