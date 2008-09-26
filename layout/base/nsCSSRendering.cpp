@@ -369,63 +369,6 @@ DrawLine (nsIRenderingContext& aContext,
   }
 }
 
-// Fill a polygon, skipping that portion which crosses aGap. aGap
-// defines a rectangle gap. This services fieldset legends and only
-// works for points defining a horizontal rectangle.
-static void
-FillPolygon (nsIRenderingContext& aContext, const nsPoint aPoints[],
-             PRInt32 aNumPoints, nsRect* aGap)
-{
-  if (nsnull == aGap) {
-    aContext.FillPolygon(aPoints, aNumPoints);
-  } else if (4 == aNumPoints) {
-    nsPoint gapUpperRight(aGap->x + aGap->width, aGap->y);
-    nsPoint gapLowerRight(aGap->x + aGap->width, aGap->y + aGap->height);
-
-    // sort the 4 points by x
-    nsPoint points[4];
-    for (PRInt32 pX = 0; pX < 4; pX++) {
-      points[pX] = aPoints[pX];
-    }
-    for (PRInt32 i = 0; i < 3; i++) {
-      for (PRInt32 j = i+1; j < 4; j++) { 
-        if (points[j].x < points[i].x) {
-          nsPoint swap = points[i];
-          points[i] = points[j];
-          points[j] = swap;
-        }
-      }
-    }
-
-    nsPoint upperLeft  = (points[0].y <= points[1].y) ? points[0] : points[1];
-    nsPoint lowerLeft  = (points[0].y <= points[1].y) ? points[1] : points[0];
-    nsPoint upperRight = (points[2].y <= points[3].y) ? points[2] : points[3];
-    nsPoint lowerRight = (points[2].y <= points[3].y) ? points[3] : points[2];
-
-
-    if ((aGap->y <= upperLeft.y) && (gapLowerRight.y >= lowerRight.y)) {
-      if ((aGap->x > upperLeft.x) && (aGap->x < upperRight.x)) {
-        nsPoint leftRect[4];
-        leftRect[0] = upperLeft;
-        leftRect[1] = nsPoint(aGap->x, upperLeft.y);
-        leftRect[2] = nsPoint(aGap->x, lowerLeft.y);
-        leftRect[3] = lowerLeft;
-        aContext.FillPolygon(leftRect, 4);
-      } 
-      if ((gapUpperRight.x > upperLeft.x) && (gapUpperRight.x < upperRight.x)) {
-        nsPoint rightRect[4];
-        rightRect[0] = nsPoint(gapUpperRight.x, upperRight.y);
-        rightRect[1] = upperRight;
-        rightRect[2] = lowerRight;
-        rightRect[3] = nsPoint(gapLowerRight.x, lowerRight.y);
-        aContext.FillPolygon(rightRect, 4);
-      } 
-    } else {
-      aContext.FillPolygon(aPoints, aNumPoints);
-    }      
-  }
-}
-
 /**
  * Make a bevel color
  */
