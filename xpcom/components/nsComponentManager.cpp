@@ -578,17 +578,9 @@ static nsresult GetLocationFromDirectoryService(const char* prop,
     if (!directoryService)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIFile> directory;
-    nsresult rv = directoryService->Get(prop, NS_GET_IID(nsIFile),
-                                        getter_AddRefs(directory));
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = directory->Normalize();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    directory.forget(aDirectory);
-    return NS_OK;
+    return directoryService->Get(prop,
+                                 NS_GET_IID(nsIFile),
+                                 (void**)aDirectory);
 }
 
 
