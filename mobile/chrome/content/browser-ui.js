@@ -1,3 +1,4 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -47,6 +48,7 @@ const PANELMODE_BOOKMARKLIST      = 4;
 const PANELMODE_SIDEBAR           = 5;
 const PANELMODE_TABLIST           = 6;
 const PANELMODE_FULL              = 7;
+const PANELMODE_SHORTCUTS         = 8;
 
 var BrowserUI = {
   _panel : null,
@@ -151,7 +153,6 @@ var BrowserUI = {
     getBrowser().addEventListener("DOMLinkAdded", this, true);
 
     Shortcuts.restore();
-    Shortcuts.test();
 
     Browser.content.addEventListener("overpan", this, false);
     Browser.content.addEventListener("pan", this, true);
@@ -316,26 +317,47 @@ var BrowserUI = {
     sidebar.left = toolbar.width = container.boxObject.width;
     sidebar.height = tablist.height = container.boxObject.height - toolbar.boxObject.height;
 
+    function doTheStuff()
+    {
+        this._edit.hidden = true;
+        this._edit.reallyClosePopup();
+        this._caption.hidden = false;
+    }
+
+    function viewURL() { toolbar.setAttribute("mode", "view"); }
+    function editURL() { toolbar.setAttribute("mode", "edit"); }
+
+    function showToolbar() { toolbar.top = 0; }
+    function hideToolbar() { toolbar.top = -toolbar.boxobject.height; }
+
+    function showSidebar() { sidebar.left = toolbar.boxObject.width - sidebar.boxObject.width; }
+    function hideSidebar() { sidebar.left = toolbar.boxObject.width; }
+
+    function showTablist() { tablist.left = 0; }
+    function hideTablist() { tablist.left = -tablist.boxObject.width; }
+
+    function showPane(id)
+    {
+        var nodes = container.childNodes;
+        Array.forEach(container.childNodes, function(n)
+                                            {
+                                              var nid = n.getAttribute("id");
+                                              if (nid != "browser")
+                                                n.hidden = !(nid == id);
+                                            });
+    }
+
     if (aMode == PANELMODE_URLVIEW || aMode == PANELMODE_SIDEBAR ||
         aMode == PANELMODE_TABLIST || aMode == PANELMODE_FULL)
     {
-      toolbar.setAttribute("mode", "view");
-      toolbar.top = 0;
+      doTheStuff();
+      viewURL();
+      showToolbar();
 
-      this._edit.hidden = true;
-      this._edit.reallyClosePopup();
-      this._caption.hidden = false;
-      bookmark.hidden = true;
-      urllist.hidden = true;
-
-      let sidebarTo = toolbar.boxObject.width;
-      let tablistTo = -tablist.boxObject.width;
       if (aMode == PANELMODE_SIDEBAR || aMode == PANELMODE_FULL)
-        sidebarTo -= sidebar.boxObject.width;
+        showSidebar();
       if (aMode == PANELMODE_TABLIST || aMode == PANELMODE_FULL)
-        tablistTo = 0;
-      sidebar.left = sidebarTo;
-      tablist.left = tablistTo;
+        showTablist();
     }
     else if (aMode == PANELMODE_URLEDIT) {
       toolbar.setAttribute("mode", "edit");
@@ -377,6 +399,19 @@ var BrowserUI = {
       urllist.hidden = false;
       urllist.width = container.boxObject.width;
       urllist.height = container.boxObject.height - toolbar.boxObject.height;
+    }
+    else if (aMode == PANELMODE_SHORTCUTS) {
+      this._edit.hidden = true;
+      this._edit.reallyClosePopup();
+      this._caption.hidden = false;
+
+      bookmark.hidden = true;
+      urllist.hidden = true;
+      toolbar.top = -toolbar.boxObject.height;
+      sidebar.left = toolbar.boxObject.width;
+      tablist.left = -tablist.boxObject.width;
+
+      document.getElementById("shortcuts-container").hidden = false;
     }
     else if (aMode == PANELMODE_NONE) {
       toolbar.top = -toolbar.boxObject.height;
