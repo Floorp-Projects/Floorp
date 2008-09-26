@@ -62,10 +62,7 @@ public:
         return sUtils;
     }
 
-    static void Shutdown() {
-        delete sUtils;
-        sUtils = nsnull;
-    }
+    static void Shutdown();
 
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,
@@ -81,6 +78,14 @@ public:
 
     static PRUint8 GetThebesStyle(FcPattern *aPattern); // slant
     static PRUint16 GetThebesWeight(FcPattern *aPattern);
+
+    /**
+     * @param aLangGroup [in] a Mozilla langGroup.
+     * @param aFcLang [out] returns a language suitable for fontconfig
+     *        matching |aLangGroup| or an empty string if no match is found.
+     */
+    static void GetSampleLangForGroup(const nsACString& aLangGroup,
+                                      nsACString *aFcLang);
 
 protected:
     static gfxFontconfigUtils* sUtils;
