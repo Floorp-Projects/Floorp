@@ -378,6 +378,19 @@ var BrowserUI = {
       sidebar.left = newLeft + tabbarW + browserW;
       panelUI.left = newLeft + tabbarW + browserW + sidebarW;
       panelUI.width = browserW;
+
+      if (aMode == UIMODE_NONE)
+        Shortcuts.deinit();
+      else
+      {
+        let addons = document.getElementById("addons-container");
+        if (addons.getAttribute("src") == "")
+          addons.setAttribute("src", "chrome://mozapps/content/extensions/extensions.xul");
+        let dloads = document.getElementById("downloads-container");
+        if (dloads.getAttribute("src") == "")
+          dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
+        Shortcuts.init();
+      }
   },
 
   _sizeControls : function(aEvent) {
@@ -604,7 +617,6 @@ var BrowserUI = {
       urllist.hidden = true;
 
       this._showPanel(UIMODE_NONE);
-      Shortcuts.dismiss();
     }
     else if (aMode == UIMODE_URLEDIT) {
       this._showToolbar(true);
@@ -614,7 +626,6 @@ var BrowserUI = {
       urllist.hidden = true;
 
       this._showPanel(UIMODE_NONE);
-      Shortcuts.dismiss();
     }
     else if (aMode == UIMODE_BOOKMARK) {
       this._showToolbar(true);
@@ -625,7 +636,6 @@ var BrowserUI = {
       bookmark.width = container.boxObject.width;
 
       this._showPanel(UIMODE_NONE);
-      Shortcuts.dismiss();
     }
     else if (aMode == UIMODE_BOOKMARKLIST) {
       this._showToolbar(false);
@@ -639,21 +649,12 @@ var BrowserUI = {
       urllist.height = container.boxObject.height;
 
       this._showPanel(UIMODE_NONE);
-      Shortcuts.dismiss();
     }
     else if (aMode == UIMODE_PANEL) {
       this._showToolbar(true);
       this._editToolbar(false);
 
       bookmark.hidden = true;
-
-      let addons = document.getElementById("addons-container");
-      if (addons.getAttribute("src") == "")
-        addons.setAttribute("src", "chrome://mozapps/content/extensions/extensions.xul");
-      let dloads = document.getElementById("downloads-container");
-      if (dloads.getAttribute("src") == "")
-        dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
-      Shortcuts.edit();
 
       this._showPanel(aMode);
     }
@@ -666,7 +667,6 @@ var BrowserUI = {
       urllist.hidden = true;
       bookmark.hidden = true;
       this._showPanel(aMode);
-      Shortcuts.dismiss();
     }
   },
 
@@ -800,7 +800,6 @@ var BrowserUI = {
       case "cmd_go":
       case "cmd_star":
       case "cmd_bookmarks":
-      case "cmd_shortcuts":
       case "cmd_menu":
       case "cmd_newTab":
       case "cmd_closeTab":
@@ -868,10 +867,6 @@ var BrowserUI = {
       }
       case "cmd_bookmarks":
         this.showBookmarks();
-        break;
-      case "cmd_shortcuts":
-        this.show(PANELMODE_NONE);
-        Shortcuts.edit();
         break;
       case "cmd_menu":
         break;

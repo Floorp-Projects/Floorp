@@ -191,7 +191,7 @@ function ShortcutEditor()
             return 0;
 
         var result;
-        for each (m in modifiers.split(" "))
+        for each (m in modifiers.split(/,\s*|\s+/))
             result |= modifierFlags[m];
         return result;
     }
@@ -408,9 +408,11 @@ function ShortcutEditor()
         }
     }
 
-    // show the window
-    this.edit = function()
+    this.init = function()
     {
+        if (tree)
+            return; // we've already been called
+
         tree = document.getElementById("shortcuts");
 
         var textbox = document.getAnonymousElementByAttribute(tree, "anonid", "input");
@@ -431,16 +433,16 @@ function ShortcutEditor()
         keyCache = undefined;
     }
 
-    this.dismiss = function()
+    this.deinit = function()
     {
         if (!tree)
-            return;
+            return; // got called early, just return
 
         hack();
         var textbox = document.getAnonymousElementByAttribute(tree, "anonid", "input");
         textbox.removeEventListener("keypress", keyListener, true);
         textbox.removeEventListener("reset", resetListener, true);
-        document.getElementById("shortcuts-container").hidden = true;
+        tree.removeEventListener("DOMAttrModified", modificationListener, true);
     };
 
     // also, updating the UI is helpful
@@ -547,10 +549,10 @@ function ShortcutEditor()
          [["control", "a"],                               {exists: true,  modifiers: 2,  key: "a",   keycode: false},      "Ctrl+A"],
          [["meta", "a"],                                  {exists: true,  modifiers: 4,  key: "a",   keycode: false},      "Meta+A"],
          [["shift", "a"],                                 {exists: true,  modifiers: 8,  key: "a",   keycode: false},      "Shift+A"],
-         [["control alt", "a"],                           {exists: true,  modifiers: 3,  key: "a",   keycode: false},      "Ctrl+Alt+A"],
-         [["alt shift", "a"],                             {exists: true,  modifiers: 9,  key: "a",   keycode: false},      "Alt+Shift+A"],
-         [["shift meta", "a"],                            {exists: true,  modifiers: 12, key: "a",   keycode: false},      "Meta+Shift+A"],
-         [["control alt shift", "a"],                     {exists: true,  modifiers: 11, key: "a",   keycode: false},      "Ctrl+Alt+Shift+A"],
+         [["control,alt", "a"],                           {exists: true,  modifiers: 3,  key: "a",   keycode: false},      "Ctrl+Alt+A"],
+         [["alt, shift", "a"],                            {exists: true,  modifiers: 9,  key: "a",   keycode: false},      "Alt+Shift+A"],
+         [["shift ,meta", "a"],                           {exists: true,  modifiers: 12, key: "a",   keycode: false},      "Meta+Shift+A"],
+         [["control , alt shift", "a"],                   {exists: true,  modifiers: 11, key: "a",   keycode: false},      "Ctrl+Alt+Shift+A"],
          [["alt shift meta", "a"],                        {exists: true,  modifiers: 13, key: "a",   keycode: false},      "Alt+Meta+Shift+A"],
          [[undefined, undefined, "VK_BACK"],              {exists: true,  modifiers: 0,  key: false, keycode: "VK_BACK"},  "Backspace"],
          [["control", undefined, "VK_BACK"],              {exists: true,  modifiers: 2,  key: false, keycode: "VK_BACK"},  "Ctrl+Backspace"],
