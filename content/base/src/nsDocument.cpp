@@ -2201,7 +2201,7 @@ nsDocument::GetElementsByClassNameHelper(nsINode* aRootNode,
 
   if (attrValue.Type() == nsAttrValue::eAtomArray) {
     classes->AppendObjects(*(attrValue.GetAtomArrayValue()));
-  } else if (!attrValue.IsEmptyString()) {
+  } else if (attrValue.Type() == nsAttrValue::eAtom) {
     classes->AppendObject(attrValue.GetAtomValue());
   }
   
