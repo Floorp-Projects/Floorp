@@ -49,7 +49,7 @@ default alldep all::
 	$(RM) -rf $(DIST)/include
 	$(RM) -rf $(DIST)/private
 	$(RM) -rf $(DIST)/public
-	$(RM) -rf $(DIST)/dist/bin
+	$(RM) -rf $(DIST)/bin
 	$(RM) -rf _tests
 
 TIERS += base
