@@ -1626,6 +1626,21 @@ function testInnerMissingArgs()
 testInnerMissingArgs.expected = 1;  //Expected: that we don't crash.
 test(testInnerMissingArgs);
 
+function regexpLastIndex()
+{
+    var n = 0;
+    var re = /hi/g;
+    var ss = " hi hi hi hi hi hi hi hi hi hi";
+    for (var i = 0; i < 10; i++) {
+        // re.exec(ss);
+        n += (re.lastIndex > 0) ? 3 : 0;
+        re.lastIndex = 0;
+    }
+    return n;
+}
+regexpLastIndex.expected = 0; // 30;
+test(regexpLastIndex);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
