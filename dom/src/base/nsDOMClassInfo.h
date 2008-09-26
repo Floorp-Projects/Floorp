@@ -75,7 +75,7 @@ struct nsDOMClassInfoData
   const nsIID *mProtoChainInterface;
   const nsIID **mInterfaces;
   PRUint32 mScriptableFlags : 31; // flags must not use more than 31 bits!
-  PRBool mHasClassInterface : 1;
+  PRUint32 mHasClassInterface : 1;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
