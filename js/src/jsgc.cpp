@@ -1926,7 +1926,7 @@ RefillDoubleFreeList(JSContext *cx)
 {
     JSRuntime *rt;
     jsbitmap *doubleFlags, usedBits;
-    JSBool doGC;
+    JSBool didGC = JS_FALSE;
     JSGCArenaInfo *a;
     uintN bit, index;
     JSGCDoubleCell *cell, *list, *lastcell;
@@ -1943,12 +1943,13 @@ RefillDoubleFreeList(JSContext *cx)
         return NULL;
     }
 
-    doGC = rt->gcMallocBytes >= rt->gcMaxMallocBytes && rt->gcPoke;
+    if (rt->gcMallocBytes >= rt->gcMaxMallocBytes && rt->gcPoke
 #ifdef JS_GC_ZEAL
-    doGC = doGC || rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke);
+        && (rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke))
 #endif
-    if (doGC)
+        ) {
         goto do_gc;
+    }
 
     /*
      * Loop until we find a flag bitmap byte with unset bits indicating free
@@ -1963,17 +1964,18 @@ RefillDoubleFreeList(JSContext *cx)
                 !((JSGCArenaInfo *) doubleFlags)->prev) {
                 a = NewGCArena(rt);
                 if (!a) {
-                    if (doGC) {
+                  do_gc:
+                    if (didGC || JS_ON_TRACE(cx)) {
                         METER(rt->gcStats.doubleArenaStats.fail++);
                         JS_UNLOCK_GC(rt);
-                        JS_ReportOutOfMemory(cx);
+                        if (!JS_ON_TRACE(cx))
+                            JS_ReportOutOfMemory(cx);
                         return NULL;
                     }
-                    doGC = JS_TRUE;
-                  do_gc:
                     js_GC(cx, GC_LAST_DITCH);
                     METER(rt->gcStats.doubleArenaStats.retry++);
                     doubleFlags = rt->gcDoubleArenaList.nextDoubleFlags;
+                    didGC = JS_TRUE;
                     continue;
                 }
                 a->list = NULL;
@@ -2120,6 +2122,10 @@ js_AddAsGCBytes(JSContext *cx, size_t sz)
         || rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke)
 #endif
         ) {
+        if (JS_ON_TRACE(cx)) {
+            JS_UNLOCK_GC(rt);
+            return JS_FALSE;
+        }
         js_GC(cx, GC_LAST_DITCH);
         if (rt->gcBytes >= rt->gcMaxBytes ||
             sz > (size_t) (rt->gcMaxBytes - rt->gcBytes)) {
@@ -2902,6 +2908,8 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 void
 js_TraceTraceMonitor(JSTracer *trc, JSTraceMonitor *tm)
 {
+    if (IS_GC_MARKING_TRACER(trc))
+        tm->recoveryDoublePoolPtr = tm->recoveryDoublePool;
 }
 
 void
@@ -3048,6 +3056,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     uint32 nlivearenas, nkilledarenas, nthings;
 #endif
 
+    JS_ASSERT_IF(gckind == GC_LAST_DITCH, !JS_ON_TRACE(cx));
     rt = cx->runtime;
 #ifdef JS_THREADSAFE
     /* Avoid deadlock. */
