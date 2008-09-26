@@ -225,7 +225,7 @@ CViewSourceHTML::CViewSourceHTML()
   mSink = 0;
   mLineNumber = 1;
   mTokenizer = 0;
-  mDocType=eHTML3_Quirks; // why?
+  mDocType=eHTML_Quirks;
   mHasOpenRoot=PR_FALSE;
   mHasOpenBody=PR_FALSE;
 
