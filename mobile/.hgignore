@@ -1,0 +1,7 @@
+# .hgignore - List of filenames hg should ignore
+
+# Filenames that should be ignored wherever they appear
+~$
+\.pyc$
+(^|/)TAGS$
+\.DS_Store$

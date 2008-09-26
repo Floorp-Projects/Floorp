@@ -1,4 +1,5 @@
-/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
+/*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -53,6 +54,7 @@ Cu.import("resource://gre/modules/SpatialNavigation.js");
 // in the style of bug 385809
 __defineGetter__("gPrefService", function () {
   delete gPrefService;
+  var gPrefService;
   return gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                                   .getService(Components.interfaces.nsIPrefBranch2);
 });
@@ -63,18 +65,6 @@ function getBrowser() {
 
 var Browser = {
   _content : null,
-
-  _titleChanged : function(aEvent) {
-    var browser = this.content.browser;
-    if (!browser || aEvent.target != browser.contentDocument)
-      return;
-
-    var docElem = document.documentElement;
-    var title = "";
-    if (aEvent.target.title)
-      title = aEvent.target.title + docElem.getAttribute("titleseparator");
-    document.title = title + docElem.getAttribute("titlemodifier");
-  },
 
   startup : function() {
     window.controllers.appendController(this);
@@ -101,13 +91,20 @@ var Browser = {
       return new ProgressController(content, browser);
     };
 
-    this._content.tabList = document.getElementById("tab-list");
-    this._content.newTab(true);
-    this._content.addEventListener("DOMTitleChanged", this, true);
-    this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
+    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+    os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
+    os.addObserver(gXPInstallObserver, "xpinstall-download-started", false);
+
     BrowserUI.init();
 
-    this._spatialNavigation  = new SpatialNavigation(this.content);
+    window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
+
+    this._content.addEventListener("command", this._handleContentCommand, false);
+    this._content.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
+    this._content.tabList = document.getElementById("tab-list");
+    this._content.newTab(true);
+
+    SpatialNavigation.init(this.content);
 
     this.setupGeolocationPrompt();
 
@@ -154,6 +151,15 @@ var Browser = {
     }
   },
 
+  setPluginState: function(state)
+  {
+    var phs = Components.classes["@mozilla.org/plugin/host;1"]
+                        .getService(Components.interfaces.nsIPluginHost);
+    var plugins = phs.getPluginTags({ });
+     for (i = 0; i < plugins.length; ++i)
+       plugins[i].disabled = state;
+  },
+
   setupGeolocationPrompt: function() {
     try {
       var geolocationService = Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationService);
@@ -163,7 +169,6 @@ var Browser = {
     }
 
     geolocationService.prompt = function(request) {
-
       var notificationBox = Browser.getNotificationBox();
       var notification = notificationBox.getNotificationWithValue("geolocation");
 
@@ -171,29 +176,33 @@ var Browser = {
         var bundle_browser = document.getElementById("bundle_browser");
         var buttons = [{
             label: bundle_browser.getString("gelocation.exactLocation"),
+            subLabel: bundle_browser.getString("gelocation.exactLocation.subLabel"),
             accessKey: bundle_browser.getString("gelocation.exactLocationKey"),
-            callback: function(){request.allow()},
+            callback: function(){request.allow()}
           },
           {
             label: bundle_browser.getString("gelocation.neighborhoodLocation"),
+            subLabel: bundle_browser.getString("gelocation.neighborhoodLocation.subLabel"),
             accessKey: bundle_browser.getString("gelocation.neighborhoodLocationKey"),
-            callback: function(){request.allowButFuzz()},
+            callback: function(){request.allowButFuzz()}
           },
           {
             label: bundle_browser.getString("gelocation.nothingLocation"),
+            subLabel: "",
             accessKey: bundle_browser.getString("gelocation.nothingLocationKey"),
-            callback: function(){request.cancel()},
+            callback: function(){request.cancel()}
           }];
 
         var message = bundle_browser.getFormattedString("geolocation.requestMessage", [request.requestingURI.spec]);
-        notificationBox.appendNotification(message,
-                                           "geolocation",
-                                           null, // todo "chrome://browser/skin/Info.png",
-                                           notificationBox.PRIORITY_INFO_HIGH,
-                                           buttons);
+        var notification = notificationBox.appendNotification(message,
+                             "geolocation", null, // todo "chrome://browser/skin/Info.png",
+                             notificationBox.PRIORITY_INFO_HIGH, buttons);
+        var children = notification.childNodes;
+        for (var b = 0; b < children.length; b++)
+          children[b].setAttribute("sublabel", children[b].buttonInfo.subLabel);
         return 1;
       }
-    };
+    }
   },
 
   get content() {
@@ -208,19 +217,10 @@ var Browser = {
     return this._content.browser;
   },
 
-  handleEvent: function (aEvent) {
-    switch (aEvent.type) {
-      case "DOMTitleChanged":
-        this._titleChanged(aEvent);
-        break;
-    }
-  },
-
   supportsCommand : function(cmd) {
     var isSupported = false;
     switch (cmd) {
       case "cmd_fullscreen":
-      case "cmd_addons":
       case "cmd_downloads":
         isSupported = true;
         break;
@@ -241,34 +241,6 @@ var Browser = {
     switch (cmd) {
       case "cmd_fullscreen":
         window.fullScreen = !window.fullScreen;
-        break;
-      case "cmd_addons":
-      {
-        const EMTYPE = "Extension:Manager";
-
-        var aOpenMode = "extensions";
-        var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-        var needToOpen = true;
-        var windowType = EMTYPE + "-" + aOpenMode;
-        var windows = wm.getEnumerator(windowType);
-        while (windows.hasMoreElements()) {
-          var theEM = windows.getNext().QueryInterface(Ci.nsIDOMWindowInternal);
-          if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
-            theEM.focus();
-            needToOpen = false;
-            break;
-          }
-        }
-
-        if (needToOpen) {
-          const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
-          const EMFEATURES = "chrome,dialog=no,resizable=yes";
-          window.openDialog(EMURL, "", EMFEATURES);
-        }
-        break;
-      }
-      case "cmd_downloads":
-        Cc["@mozilla.org/download-manager-ui;1"].getService(Ci.nsIDownloadManagerUI).show(window);
         break;
     }
   },
@@ -301,8 +273,9 @@ var Browser = {
       findbar.onFindCommand();
     else
       findbar.onFindAgainCommand(Browser.findState == FINDSTATE_FIND_PREVIOUS);
-  },  
-  translatePhoneNumbers: function(){
+  },
+
+  translatePhoneNumbers: function() {
     let doc = getBrowser().contentDocument;
     let textnodes = doc.evaluate("//text()",
                                  doc,
@@ -311,21 +284,76 @@ var Browser = {
                                  null);
     let s, node, lastLastIndex;
     let re = /(\+?1? ?-?\(?\d{3}\)?[ +-\.]\d{3}[ +-\.]\d{4})/
-     for (var i = 0; i < textnodes.snapshotLength; i++) {
-       node = textnodes.snapshotItem(i);
-       s = node.data;
-       if(s.match(re)){
-         s = s.replace(re,"<a href='tel:$1'> $1 </a>");   
-         try{
-           let replacement = doc.createElement("span");
-           replacement.innerHTML = s;
-           node.parentNode.insertBefore(replacement,node);
-           node.parentNode.removeChild(node);
-         }catch(e){
-           //do nothing, but continue
-         }
-       }
-     }
+    for (var i = 0; i < textnodes.snapshotLength; i++) {
+      node = textnodes.snapshotItem(i);
+      s = node.data;
+      if (s.match(re)) {
+        s = s.replace(re, "<a href='tel:$1'> $1 </a>");
+        try {
+          let replacement = doc.createElement("span");
+          replacement.innerHTML = s;
+          node.parentNode.insertBefore(replacement, node);
+          node.parentNode.removeChild(node);
+        } catch(e) {
+          //do nothing, but continue
+        }
+      }
+    }
+  },
+
+  /**
+   * Handle command event bubbling up from content.  This allows us to do chrome-
+   * privileged things based on buttons in, e.g., unprivileged error pages.
+   * Obviously, care should be taken not to trust events that web pages could have
+   * synthesized.
+   */
+  _handleContentCommand: function (aEvent) {
+    // Don't trust synthetic events
+    if (!aEvent.isTrusted)
+      return;
+
+    var ot = aEvent.originalTarget;
+    var errorDoc = ot.ownerDocument;
+
+    // If the event came from an ssl error page, it is probably either the "Add
+    // Exception…" or "Get me out of here!" button
+    if (/^about:neterror\?e=nssBadCert/.test(errorDoc.documentURI)) {
+      if (ot == errorDoc.getElementById('exceptionDialogButton')) {
+        var params = { exceptionAdded : false };
+
+        try {
+          switch (gPrefService.getIntPref("browser.ssl_override_behavior")) {
+            case 2 : // Pre-fetch & pre-populate
+              params.prefetchCert = true;
+            case 1 : // Pre-populate
+              params.location = errorDoc.location.href;
+          }
+        } catch (e) {
+          Components.utils.reportError("Couldn't get ssl_override pref: " + e);
+        }
+
+        window.openDialog('chrome://pippki/content/exceptionDialog.xul',
+                          '','chrome,centerscreen,modal', params);
+
+        // If the user added the exception cert, attempt to reload the page
+        if (params.exceptionAdded)
+          errorDoc.location.reload();
+      }
+      else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
+        // Get the start page from the *default* pref branch, not the user's
+        var defaultPrefs = Cc["@mozilla.org/preferences-service;1"]
+                          .getService(Ci.nsIPrefService).getDefaultBranch(null);
+        var url = "about:blank";
+        try {
+          url = defaultPrefs.getCharPref("browser.startup.homepage");
+          // If url is a pipe-delimited set of pages, just take the first one.
+          if (url.indexOf("|") != -1)
+            url = url.split("|")[0];
+        } catch (e) { /* Fall back on about blank */ }
+
+        Browser.currentBrowser.loadURI(url, null, null, false);
+      }
+    }
   }
 };
 
@@ -339,24 +367,16 @@ ProgressController.prototype = {
 
   init : function(aBrowser) {
     this._browser = aBrowser;
-
-    // FIXME: until we can get proper canvas repainting hooked up, update the canvas every 300ms
-    var tabbrowser = this._tabbrowser;
-    this._refreshInterval = setInterval(function () {
-      tabbrowser.updateCanvasState();
-    }, 400);
   },
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus) {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       if (aRequest && aWebProgress.DOMWindow == this._browser.contentWindow) {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-          BrowserUI.update(TOOLBARSTATE_LOADING);
-          this._tabbrowser.updateCanvasState();
+          BrowserUI.update(TOOLBARSTATE_LOADING, this._browser);
         }
         else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-          BrowserUI.update(TOOLBARSTATE_LOADED);
-          this._tabbrowser.updateCanvasState();
+          BrowserUI.update(TOOLBARSTATE_LOADED, this._browser);
         }
       }
     }
@@ -366,7 +386,7 @@ ProgressController.prototype = {
         aWebProgress.DOMWindow.focus();
         Browser.translatePhoneNumbers();
         this._tabbrowser.updateBrowser(this._browser, true);
-        this._tabbrowser.updateCanvasState(true);
+        this._tabbrowser.updateCanvasState();
         //aWebProgress.DOMWindow.scrollbars.visible = false;
       }
     }
@@ -414,14 +434,12 @@ ProgressController.prototype = {
     if (aWebProgress.DOMWindow == this._browser.contentWindow) {
       BrowserUI.setURI();
       this._tabbrowser.updateBrowser(this._browser, false);
-      this._tabbrowser.updateCanvasState();
     }
   },
 
   // This method is called to indicate a status changes for the currently
   // loading page.  The message is already formatted for display.
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {
-    this._tabbrowser.updateCanvasState();
   },
 
  // Properties used to cache security state used to update the UI
@@ -475,6 +493,87 @@ ProgressController.prototype = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   }
 };
+
+function nsBrowserAccess()
+{
+}
+
+nsBrowserAccess.prototype =
+{
+  QueryInterface : function(aIID)
+  {
+    if (aIID.equals(Ci.nsIBrowserDOMWindow) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  },
+
+  openURI : function(aURI, aOpener, aWhere, aContext)
+  {
+    var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+
+    if (isExternal && aURI && aURI.schemeIs("chrome")) {
+      dump("use -chrome command-line option to load external chrome urls\n");
+      return null;
+    }
+    var loadflags = isExternal ?
+                       Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
+                       Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    var location;
+    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
+      switch (aContext) {
+        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL :
+          aWhere = gPrefService.getIntPref("browser.link.open_external");
+          break;
+        default : // OPEN_NEW or an illegal value
+          aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
+      }
+    }
+
+    var newWindow;
+    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW) {
+      var url = aURI ? aURI.spec : "about:blank";
+      newWindow = openDialog("chrome://browser/content/browser.xul", "_blank",
+                             "all,dialog=no", url, null, null, null);
+    }
+    else {
+      if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
+        var tab = Browser._content.newTab(true);
+        if (tab) {
+          var content = Browser._content;
+          var browser = content.getBrowserForDisplay(content.getDisplayForTab(tab));
+          newWindow = browser.contentWindow;
+        }
+      }
+      else {
+        newWindow = aOpener ? aOpener.top : browser.contentWindow;
+      }
+    }
+      
+    try {
+      var referrer;
+      if (aURI) {
+        if (aOpener) {
+          location = aOpener.location;
+          referrer = Components.classes["@mozilla.org/network/io-service;1"]
+                               .getService(Components.interfaces.nsIIOService)
+                               .newURI(location, null, null);
+        }
+        newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIWebNavigation)
+                 .loadURI(aURI.spec, loadflags, referrer, null, null);
+      }
+      newWindow.focus();
+    } catch(e) { }
+
+    return newWindow;
+  },
+
+  isTabContentWindow : function(aWindow)
+  {
+    return Browser._content.browsers.some(function (browser) browser.contentWindow == aWindow);
+  }
+}
 
 /**
  * Utility class to handle manipulations of the identity indicators in the UI
@@ -852,3 +951,69 @@ const gPopupBlockerObserver = {
     Browser.getNotificationBox().removeCurrentNotification();
   }
 };
+
+const gXPInstallObserver = {
+  observe: function (aSubject, aTopic, aData)
+  {
+    var brandBundle = document.getElementById("bundle_brand");
+    var browserBundle = document.getElementById("bundle_browser");
+    switch (aTopic) {
+      case "xpinstall-install-blocked":
+        var installInfo = aSubject.QueryInterface(Components.interfaces.nsIXPIInstallInfo);
+        var host = installInfo.originatingURI.host;
+        var brandShortName = brandBundle.getString("brandShortName");
+        var notificationName, messageString, buttons;
+        if (!gPrefService.getBoolPref("xpinstall.enabled")) {
+          notificationName = "xpinstall-disabled"
+          if (gPrefService.prefIsLocked("xpinstall.enabled")) {
+            messageString = browserBundle.getString("xpinstallDisabledMessageLocked");
+            buttons = [];
+          }
+          else {
+            messageString = browserBundle.getFormattedString("xpinstallDisabledMessage",
+                                                             [brandShortName, host]);
+            buttons = [{
+              label: browserBundle.getString("xpinstallDisabledButton"),
+              accessKey: browserBundle.getString("xpinstallDisabledButton.accesskey"),
+              popup: null,
+              callback: function editPrefs() {
+                gPrefService.setBoolPref("xpinstall.enabled", true);
+                return false;
+              }
+            }];
+          }
+        }
+        else {
+          notificationName = "xpinstall"
+          messageString = browserBundle.getFormattedString("xpinstallPromptWarning",
+                                                           [brandShortName, host]);
+
+          buttons = [{
+            label: browserBundle.getString("xpinstallPromptAllowButton"),
+            accessKey: browserBundle.getString("xpinstallPromptAllowButton.accesskey"),
+            popup: null,
+            callback: function() {
+              // Force the addon manager panel to appear
+              CommandUpdater.doCommand("cmd_addons");
+
+              var mgr = Cc["@mozilla.org/xpinstall/install-manager;1"].createInstance(Ci.nsIXPInstallManager);
+              mgr.initManagerWithInstallInfo(installInfo);
+              return false;
+            }
+          }];
+        }
+
+        var nBox = Browser.getNotificationBox();
+        if (!nBox.getNotificationWithValue(notificationName)) {
+          const priority = nBox.PRIORITY_WARNING_MEDIUM;
+          const iconURL = "chrome://mozapps/skin/update/update.png";
+          nBox.appendNotification(messageString, notificationName, iconURL, priority, buttons);
+        }
+        break;
+    }
+  }
+};
+
+function getNotificationBox(aWindow) {
+  return Browser.getNotificationBox();
+}

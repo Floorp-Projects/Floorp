@@ -8,18 +8,25 @@ browser.jar:
   content/commandUtil.js               (content/commandUtil.js)
   content/urlbar.xml                   (content/urlbar.xml)
   content/deckbrowser.xml              (content/deckbrowser.xml)
+  content/notification.xml             (content/notification.xml)
   content/browser.css                  (content/browser.css)
   content/scrollbars.css               (content/scrollbars.css)
   content/content.css                  (content/content.css)
-* content/shortcuts.js
+* content/shortcuts.js                 (content/shortcuts.js)
 % content branding %branding/
 % locale branding @AB_CD@ %branding/
   branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
   branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
+% style chrome://mozapps/content/extensions/extensions.xul chrome://browser/skin/extensions.css
+  content/preferences/richpref.xml     (content/preferences/richpref.xml)
+* content/sanitize.xul                 (content/sanitize.xul)
+* content/sanitize.js                  (content/sanitize.js)
 
 classic.jar:
 % skin browser classic/1.0 %
   browser.css                          (skin/browser.css)
+  extensions.css                       (skin/extensions.css)
+  notification.css                     (skin/notification.css)
   images/close.png                     (skin/images/close.png)
   images/close-small.png               (skin/images/close-small.png)
   images/default-favicon.png           (skin/images/default-favicon.png)
@@ -32,6 +39,20 @@ classic.jar:
   images/toolbar.png                   (skin/images/toolbar.png)
   images/mono-toolbar.png              (skin/images/mono-toolbar.png)
   images/toolbar-background.png        (skin/images/toolbar-background.png)
+  images/addressbar_endcap_r_off.png   (skin/images/addressbar_endcap_r_off.png)
+  images/addressbar_endcap_l_off.png   (skin/images/addressbar_endcap_l_off.png)
+  images/addressbar_endcap_r_on.png    (skin/images/addressbar_endcap_r_on.png)
+  images/addressbar_endcap_l_on.png    (skin/images/addressbar_endcap_l_on.png)
+  images/addressbar_middle.png         (skin/images/addressbar_middle.png)
+  images/titlebar.png                  (skin/images/titlebar.png)
+  images/left_sidebar_top.png          (skin/images/left_sidebar_top.png)
+  images/left_sidebar_middle.png       (skin/images/left_sidebar_middle.png)
+  images/left_sidebar_bottom.png       (skin/images/left_sidebar_bottom.png)
+  images/left_buttons.png              (skin/images/left_buttons.png)
+  images/right_sidebar_top.png         (skin/images/right_sidebar_top.png)
+  images/right_sidebar_middle.png      (skin/images/right_sidebar_middle.png)
+  images/right_sidebar_bottom.png      (skin/images/right_sidebar_bottom.png)
+  images/right_buttons.png             (skin/images/right_buttons.png)
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %
@@ -40,3 +61,7 @@ classic.jar:
   shortcuts.properties                 (locale/@AB_CD@/shortcuts.properties)
   search.properties                    (locale/@AB_CD@/search.properties)
   region.properties                    (locale/@AB_CD@/region.properties)
+  preferences.dtd                      (locale/@AB_CD@/preferences.dtd)
+# Fennec-specific overrides of generic strings
+* netError.dtd                         (locale/@AB_CD@/overrides/netError.dtd)
+% override chrome://global/locale/netErrorApp.dtd chrome://browser/locale/netError.dtd
