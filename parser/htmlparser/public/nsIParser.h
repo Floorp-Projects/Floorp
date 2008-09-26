@@ -82,7 +82,6 @@ enum eParserDocType {
   ePlainText = 0,
   eXML,
   eHTML_Quirks,
-  eHTML3_Quirks, // separate, for editor output, since HTML pre-4.0 lacks tbody
   eHTML_Strict
 };
 
