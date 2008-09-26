@@ -578,6 +578,11 @@ XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_FALSE;
   }
 
+  OBJ_TO_INNER_OBJECT(cx, wrappedObj);
+  if (!wrappedObj) {
+    return JS_FALSE;
+  }
+
   // Same origin, pass this request along.
   return XPCWrapper::AddProperty(cx, obj, wrappedObj, id, vp);
 }
@@ -601,6 +606,11 @@ XPC_XOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       // Can't delete properties on foreign objects.
       return ThrowException(rv, cx);
     }
+    return JS_FALSE;
+  }
+
+  OBJ_TO_INNER_OBJECT(cx, wrappedObj);
+  if (!wrappedObj) {
     return JS_FALSE;
   }
 
@@ -682,6 +692,11 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     }
 
     return XPC_XOW_RewrapIfNeeded(cx, obj, vp);
+  }
+
+  OBJ_TO_INNER_OBJECT(cx, wrappedObj);
+  if (!wrappedObj) {
+    return JS_FALSE;
   }
 
   JSObject *proto = nsnull; // Initialize this to quiet GCC.
@@ -774,6 +789,11 @@ XPC_XOW_Enumerate(JSContext *cx, JSObject *obj)
     return JS_FALSE;
   }
 
+  OBJ_TO_INNER_OBJECT(cx, wrappedObj);
+  if (!wrappedObj) {
+    return JS_FALSE;
+  }
+
   return XPCWrapper::Enumerate(cx, obj, wrappedObj);
 }
 
@@ -850,6 +870,11 @@ XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return ok;
   }
 
+  OBJ_TO_INNER_OBJECT(cx, wrappedObj);
+  if (!wrappedObj) {
+    return JS_FALSE;
+  }
+
   return XPCWrapper::NewResolve(cx, obj, wrappedObj, id, flags, objp);
 }
 
@@ -888,6 +913,11 @@ XPC_XOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
       ThrowException(rv, cx);
     }
+    return JS_FALSE;
+  }
+
+  OBJ_TO_INNER_OBJECT(cx, wrappedObj);
+  if (!wrappedObj) {
     return JS_FALSE;
   }
 
@@ -964,6 +994,11 @@ XPC_XOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
   }
 
+  OBJ_TO_INNER_OBJECT(cx, wrappedObj);
+  if (!wrappedObj) {
+    return JS_FALSE;
+  }
+
   JSObject *callee = JSVAL_TO_OBJECT(argv[-2]);
   NS_ASSERTION(GetWrappedObject(cx, callee), "How'd we get here?");
   callee = GetWrappedObject(cx, callee);
@@ -997,6 +1032,11 @@ XPC_XOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       // Can't construct.
       return ThrowException(rv, cx);
     }
+    return JS_FALSE;
+  }
+
+  OBJ_TO_INNER_OBJECT(cx, wrappedObj);
+  if (!wrappedObj) {
     return JS_FALSE;
   }
 
@@ -1117,6 +1157,11 @@ XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
 
     ThrowException(NS_ERROR_FAILURE, cx);
     return nsnull;
+  }
+
+  OBJ_TO_INNER_OBJECT(cx, wrappedObj);
+  if (!wrappedObj) {
+    return JS_FALSE;
   }
 
   JSObject *wrapperIter = JS_NewObject(cx, &sXPC_XOW_JSClass.base, nsnull,
