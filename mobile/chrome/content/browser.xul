@@ -66,10 +66,13 @@
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
-    <stringbundle id="bundle-keys" src="chrome://global/locale/keys.properties"/>
-    <stringbundle id="bundle-platformKeys" src="chrome://global-platform/locale/platformKeys.properties"/>
+    <stringbundle id="bundle_keys" src="chrome://global/locale/keys.properties"/>
+    <stringbundle id="bundle_platformKeys" src="chrome://global-platform/locale/platformKeys.properties"/>
   </stringbundleset>
 
+  <!-- if your extension adds a new command, overlay a new string
+  bundle into this set, and the shortcut editor will look in it for a
+  proper name to call the command. -->
   <stringbundleset id="shortcut-bundles">
     <stringbundle src="chrome://browser/locale/shortcuts.properties"/>
   </stringbundleset>
