@@ -1147,6 +1147,28 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
     }
 }
 
+/* We maintain an emergency reserve pool of doubles so we can recover safely if a trace runs
+   out of memory (doubles or objects). */
+static jsdouble*
+AllocateDoubleFromReservePool(JSContext* cx)
+{
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    JS_ASSERT(tm->recoveryDoublePoolPtr > tm->recoveryDoublePool);
+    return *--tm->recoveryDoublePoolPtr;
+}
+
+static bool
+ReplenishReservePool(JSContext* cx, JSTraceMonitor* tm)
+{
+    while (tm->recoveryDoublePoolPtr < tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) {
+        jsval v;
+        if (!js_NewDoubleInRootedValue(cx, 0.0, &v))
+            return false;
+        *tm->recoveryDoublePoolPtr++ = JSVAL_TO_DOUBLE(v);
+    }
+    return true;
+}
+
 /* Box a value from the native stack back into the jsval format. Integers
    that are too large to fit into a jsval are automatically boxed into
    heap-allocated doubles. */
@@ -1175,10 +1197,22 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
         debug_only_v(printf("double<%g> ", d);)
         if (JSDOUBLE_IS_INT(d, i))
             goto store_int;
-      store_double:
-        /* Its safe to trigger the GC here since we rooted all strings/objects and all the
-           doubles we already processed. */
-        return js_NewDoubleInRootedValue(cx, d, &v) ? true : false;
+      store_double: {
+        /* Its not safe to trigger the GC here, so use an emergency heap if we are out of
+           double boxes. */
+        if (cx->doubleFreeList) {
+#ifdef DEBUG
+            bool ok =
+#endif
+                js_NewDoubleInRootedValue(cx, d, &v);
+            JS_ASSERT(ok);
+            return true;
+        }
+        jsdouble* dp = AllocateDoubleFromReservePool(cx);
+        *dp = d;
+        v = DOUBLE_TO_JSVAL(dp);
+        return true;
+      }
       case JSVAL_STRING:
         v = STRING_TO_JSVAL(*(JSString**)slot);
         debug_only_v(printf("string<%p> ", *(JSString**)slot);)
@@ -1232,18 +1266,6 @@ static int
 FlushNativeGlobalFrame(JSContext* cx, unsigned ngslots, uint16* gslots, uint8* mp, double* np)
 {
     uint8* mp_base = mp;
-    /* Root all string and object references first (we don't need to call the GC for this). */
-    FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
-        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) &&
-            !NativeToValue(cx, *vp, *mp, np + gslots[n])) {
-            return -1;
-        }
-        ++mp;
-    );
-    /* Now do this again but this time for all values (properly quicker than actually checking
-       the type and excluding strings and objects). The GC might kick in when we store doubles,
-       but everything is rooted now (all strings/objects and all doubles we already boxed). */
-    mp = mp_base;
     FORALL_GLOBAL_SLOTS(cx, ngslots, gslots,
         if (!NativeToValue(cx, *vp, *mp, np + gslots[n]))
             return -1;
@@ -1274,15 +1296,15 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, uint8* mp, double* np,
 {
     jsval* stopAt = stopFrame ? &stopFrame->argv[-2] : NULL;
     uint8* mp_base = mp;
-    double* np_base = np;
     /* Root all string and object references first (we don't need to call the GC for this). */
     FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        if (vp == stopAt) goto skip1;
-        if ((*mp == JSVAL_STRING || *mp == JSVAL_OBJECT) && !NativeToValue(cx, *vp, *mp, np))
+        if (vp == stopAt) goto skip;
+        debug_only_v(printf("%s%u=", vpname, vpnum);)
+        if (!NativeToValue(cx, *vp, *mp, np))
             return -1;
         ++mp; ++np
     );
-skip1:
+skip:
     // Restore thisp from the now-restored argv[-1] in each pending frame.
     // Keep in mind that we didn't restore frames at stopFrame and above!
     // Scope to keep |fp| from leaking into the macros we're using.
@@ -1307,20 +1329,6 @@ skip1:
             }
         }
     }
-
-    /* Now do this again but this time for all values (properly quicker than actually checking
-       the type and excluding strings and objects). The GC might kick in when we store doubles,
-       but everything is rooted now (all strings/objects and all doubles we already boxed). */
-    mp = mp_base;
-    np = np_base;
-    FORALL_SLOTS_IN_PENDING_FRAMES(cx, callDepth,
-        if (vp == stopAt) goto skip2;
-        debug_only_v(printf("%s%u=", vpname, vpnum);)
-        if (!NativeToValue(cx, *vp, *mp, np))
-            return -1;
-        ++mp; ++np
-    );
-skip2:
     debug_only_v(printf("\n");)
     return mp - mp_base;
 }
@@ -2017,15 +2025,15 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, TreeInfo* ti,
     tm->onTrace = true;
 
     /* start recording if no exception during construction */
-    JS_TRACE_MONITOR(cx).recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
-                                                            ngslots, globalTypeMap, stackTypeMap,
-                                                            expectedInnerExit);
+    tm->recorder = new (&gc) TraceRecorder(cx, anchor, f, ti,
+                                           ngslots, globalTypeMap, stackTypeMap,
+                                           expectedInnerExit);
     if (cx->throwing) {
         js_AbortRecording(cx, NULL, "setting up recorder failed");
         return false;
     }
     /* clear any leftover error state */
-    JS_TRACE_MONITOR(cx).fragmento->assm()->setError(None);
+    tm->fragmento->assm()->setError(None);
     return true;
 }
 
@@ -2437,6 +2445,17 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
         return NULL;
     }
 
+    /* replenish the reserve pool (this might trigger a GC */
+    if (tm->recoveryDoublePoolPtr <= tm->recoveryDoublePool + MAX_NATIVE_STACK_SLOTS) {
+        JSRuntime* rt = cx->runtime;
+        uintN gcNumber = rt->gcNumber;
+        const void* ip = f->ip;
+        if (!ReplenishReservePool(cx, tm) || (gcNumber != rt->gcNumber)) {
+            *treep = tm->fragmento->newLoop(ip);
+            return NULL;
+        }
+    }
+    
     ti->mismatchCount = 0;
 
     double* entry_sp = &stack[ti->nativeStackBase/sizeof(double)];
@@ -2796,13 +2815,14 @@ js_InitJIT(JSTraceMonitor *tm)
     }
 #endif
     if (!tm->fragmento) {
-        JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap);
+        JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap && !tm->recoveryDoublePool);
         Fragmento* fragmento = new (&gc) Fragmento(core, 24);
         verbose_only(fragmento->labels = new (&gc) LabelMap(core, NULL);)
         fragmento->assm()->setCallTable(builtins);
         tm->fragmento = fragmento;
         tm->globalSlots = new (&gc) SlotList();
         tm->globalTypeMap = new (&gc) TypeMap();
+        tm->recoveryDoublePoolPtr = tm->recoveryDoublePool = new double*[MAX_NATIVE_STACK_SLOTS];
     }
 #if !defined XP_WIN
     debug_only(memset(&jitstats, 0, sizeof(jitstats)));
@@ -2824,7 +2844,7 @@ js_FinishJIT(JSTraceMonitor *tm)
            jitstats.typeMapMismatchAtEntry, jitstats.globalShapeMismatchAtEntry);
 #endif
     if (tm->fragmento != NULL) {
-        JS_ASSERT(tm->globalSlots && tm->globalTypeMap);
+        JS_ASSERT(tm->globalSlots && tm->globalTypeMap && tm->recoveryDoublePool);
         verbose_only(delete tm->fragmento->labels;)
         delete tm->fragmento;
         tm->fragmento = NULL;
@@ -2832,6 +2852,8 @@ js_FinishJIT(JSTraceMonitor *tm)
         tm->globalSlots = NULL;
         delete tm->globalTypeMap;
         tm->globalTypeMap = NULL;
+        delete tm->recoveryDoublePool;
+        tm->recoveryDoublePool = tm->recoveryDoublePoolPtr = NULL;
     }
 }
 
