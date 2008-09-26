@@ -77,6 +77,7 @@ public:
 
   virtual PRBool IsDoneAddingChildren();
   virtual nsresult DoneAddingChildren(PRBool aHaveNotified);
+  virtual void DestroyContent();
 
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
