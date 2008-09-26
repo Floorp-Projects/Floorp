@@ -1380,7 +1380,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
 
   // see if we should use the caret position for the popup
   if (contextMenuKey) {
-    nsIntPoint caretPoint;
+    nsPoint caretPoint;
     // Beware! This may flush notifications via synchronous
     // ScrollSelectionIntoView.
     if (PrepareToUseCaretPosition(((nsGUIEvent*)aEvent)->widget,
@@ -1413,7 +1413,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
 
   if (currentFocus) {
     // Reset event coordinates relative to focused frame in view
-    nsIntPoint targetPt;
+    nsPoint targetPt;
     GetCoordinatesFor(currentFocus, aPresContext, shell, targetPt);
     aEvent->refPoint.x = targetPt.x;
     aEvent->refPoint.y = targetPt.y;
@@ -1441,7 +1441,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
 PRBool
 nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
                                                   nsIPresShell* aShell,
-                                                  nsIntPoint& aTargetPt)
+                                                  nsPoint& aTargetPt)
 {
   nsresult rv;
 
@@ -1534,7 +1534,7 @@ nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
   widgetView->GetNearestWidget(&viewToWidget);
   nsPoint viewDelta = view->GetOffsetTo(widgetView) + viewToWidget;
 
-  // caret coordinates are in app units, convert to pixels
+  // caret coordinates are in twips, convert to pixels
   nsPresContext* presContext = aShell->GetPresContext();
   aTargetPt.x = presContext->AppUnitsToDevPixels(viewDelta.x + caretCoords.x + caretCoords.width);
   aTargetPt.y = presContext->AppUnitsToDevPixels(viewDelta.y + caretCoords.y + caretCoords.height);
@@ -1548,7 +1548,7 @@ void
 nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl, 
                                           nsPresContext *aPresContext,
                                           nsIPresShell *aPresShell, 
-                                          nsIntPoint& aTargetPt)
+                                          nsPoint& aTargetPt)
 {
   nsCOMPtr<nsIContent> focusedContent(do_QueryInterface(aCurrentEl));
   aPresShell->ScrollContentIntoView(focusedContent,

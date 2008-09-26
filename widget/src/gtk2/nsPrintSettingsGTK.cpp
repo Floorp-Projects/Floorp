@@ -611,7 +611,7 @@ nsPrintSettingsGTK::InitUnwriteableMargin()
  * are ignored by the nsPrintSettings::SetUnwriteableMargin functions.)
  */
 NS_IMETHODIMP 
-nsPrintSettingsGTK::SetUnwriteableMarginInTwips(nsIntMargin& aUnwriteableMargin)
+nsPrintSettingsGTK::SetUnwriteableMarginInTwips(nsMargin& aUnwriteableMargin)
 {
   nsPrintSettings::SetUnwriteableMarginInTwips(aUnwriteableMargin);
   gtk_page_setup_set_top_margin(mPageSetup,

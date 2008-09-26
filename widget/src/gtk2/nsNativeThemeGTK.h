@@ -60,12 +60,12 @@ public:
                                   const nsRect& aDirtyRect);
 
   NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
-                             PRUint8 aWidgetType, nsIntMargin* aResult);
+                             PRUint8 aWidgetType, nsMargin* aResult);
 
   virtual NS_HIDDEN_(PRBool) GetWidgetPadding(nsIDeviceContext* aContext,
                                               nsIFrame* aFrame,
                                               PRUint8 aWidgetType,
-                                              nsIntMargin* aResult);
+                                              nsMargin* aResult);
 
   virtual NS_HIDDEN_(PRBool) GetWidgetOverflow(nsIDeviceContext* aContext,
                                                nsIFrame* aFrame,
@@ -74,7 +74,7 @@ public:
 
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext,
                                   nsIFrame* aFrame, PRUint8 aWidgetType,
-                                  nsIntSize* aResult, PRBool* aIsOverridable);
+                                  nsSize* aResult, PRBool* aIsOverridable);
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                 nsIAtom* aAttribute, PRBool* aShouldRepaint);

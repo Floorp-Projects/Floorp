@@ -109,7 +109,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
     return PR_FALSE;
 
   // Prepare the drag image
-  nsIntRect dragRect;
+  nsRect dragRect;
   nsRefPtr<gfxASurface> surface;
   nsPresContext* pc;
   DrawDrag(aDOMNode, aRegion,

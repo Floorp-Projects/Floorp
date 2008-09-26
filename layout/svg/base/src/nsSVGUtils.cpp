@@ -585,7 +585,8 @@ nsRect
 nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
 {
   PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  nsIntRect rect(nsRect::ToOutsidePixels(aRect, appUnitsPerDevPixel));
+  nsRect rect = aRect;
+  rect.ScaleRoundOutInverse(appUnitsPerDevPixel);
 
   while (aFrame) {
     if (aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG)
@@ -601,7 +602,8 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
     aFrame = aFrame->GetParent();
   }
 
-  return nsIntRect::ToAppUnits(rect, appUnitsPerDevPixel);
+  rect.ScaleRoundOut(appUnitsPerDevPixel);
+  return rect;
 }
 
 void
@@ -995,7 +997,8 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
       if (!aDirtyRect->Intersects(filterFrame->GetFilterBBox(aFrame, nsnull)))
         return;
     } else {
-      nsRect rect(nsIntRect::ToAppUnits(*aDirtyRect, aFrame->PresContext()->AppUnitsPerDevPixel()));
+      nsRect rect = *aDirtyRect;
+      rect.ScaleRoundOut(aFrame->PresContext()->AppUnitsPerDevPixel());
       if (!rect.Intersects(aFrame->GetRect()))
         return;
     }

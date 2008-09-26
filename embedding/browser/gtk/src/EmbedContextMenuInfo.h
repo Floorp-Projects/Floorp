@@ -84,7 +84,7 @@ public:
   nsCOMPtr<nsIDOMNode>    mEventNode;
   nsCOMPtr<nsIDOMEventTarget> mEventTarget;
   nsCOMPtr<nsIDOMDocument>mCtxDocument;
-  nsIntRect               mFormRect;
+  nsRect               mFormRect;
   nsCOMPtr<nsIDOMWindow>  mCtxDomWindow;
   nsCOMPtr<nsIDOMEvent>   mCtxEvent;
   nsCOMPtr<nsIDOMNSHTMLElement> mNSHHTMLElement;
