@@ -139,8 +139,8 @@ typedef struct JSTraceMonitor {
     CLS(SlotList)           globalSlots;
     CLS(TypeMap)            globalTypeMap;
     JSFragmentCacheEntry    fcache[JS_FRAGMENT_CACHE_SIZE];
-    jsdouble**              recoveryDoublePool;
-    jsdouble**              recoveryDoublePoolPtr;
+    jsval                   *recoveryDoublePool;
+    jsval                   *recoveryDoublePoolPtr;
 } JSTraceMonitor;
 
 #ifdef JS_TRACER
