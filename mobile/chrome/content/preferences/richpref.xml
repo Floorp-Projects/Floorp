@@ -1,0 +1,175 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Mobile Browser.
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2008
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Daniel Brooks <db48x@yahoo.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<!DOCTYPE bindings PUBLIC "-//MOZILLA//DTD XBL V1.0//EN" "http://www.mozilla.org/xbl">
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="richpref-base">
+    <implementation>
+      <constructor>
+        this.pref._setValue(this.pref.valueFromPreferences, false);
+        this.prefChanged();
+      </constructor>
+
+      <method name="fireEvent">
+        <parameter name="eventName"/>
+        <parameter name="funcStr"/>
+        <body>
+          <![CDATA[
+            var body = funcStr || this.getAttribute(eventName);
+            if (!body)
+              return;
+
+            try
+            {
+              var event = document.createEvent("Events");
+              event.initEvent(eventName, true, true);
+              var f = new Function("event", body);
+              f.call(this, event);
+            }
+            catch (e)
+            {
+              Components.utils.reportError(e);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="inputChanged">
+        <body>
+          this.pref.value = this.value;
+          this.fireEvent("onsynctopreference");
+        </body>
+      </method>
+
+      <method name="prefChanged">
+        <body>
+          this.value = this.pref.value;
+          this.fireEvent("onsyncfrompreference");
+        </body>
+      </method>
+
+      <property name="value" onget="return this.input.value;" onset="return this.input.value = val;"/>
+      <field name="type">this.getAttribute("type");</field>
+      <field name="pref">document.getAnonymousElementByAttribute(this, "anonid", "pref");</field>
+      <field name="input">document.getAnonymousElementByAttribute(this, "anonid", "input");</field>
+    </implementation>
+  </binding>
+
+  <binding id="richpref-bool" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
+    <content>
+      <xul:hbox flex="1" class="prefbox">
+        <xul:vbox flex="1">
+          <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
+          <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
+            <children/>
+          </xul:label>
+        </xul:vbox>
+        <xul:hbox anonid="input-container">
+          <xul:checkbox anonid="input" oncommand="inputChanged();"/>
+        </xul:hbox>
+      </xul:hbox>
+      <xul:preferences>
+        <xul:preference anonid="pref" xbl:inherits="name=pref,type,inverted" instantApply="true" onchange="prefChanged();"/>
+      </xul:preferences>
+    </content>
+
+    <implementation>
+      <property name="value" onget="return this.input.checked;" onset="return this.input.setChecked(val);"/>
+    </implementation>
+  </binding>
+
+  <binding id="richpref-boolint" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
+    <content>
+      <xul:hbox flex="1" class="prefbox">
+        <xul:vbox flex="1">
+          <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
+          <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
+            <children/>
+          </xul:label>
+        </xul:vbox>
+        <xul:hbox anonid="input-container">
+          <xul:checkbox anonid="input" oncommand="inputChanged();"/>
+        </xul:hbox>
+      </xul:hbox>
+      <xul:preferences>
+        <xul:preference anonid="pref" xbl:inherits="name=pref,inverted" type="int" instantApply="true" onchange="prefChanged();"/>
+      </xul:preferences>
+    </content>
+
+    <implementation>
+      <method name="inputChanged">
+        <body>
+          this.pref.value = this.getAttribute(this.value ? "on" : "off");
+          this.fireEvent("onsynctopreference");
+        </body>
+      </method>
+
+      <method name="prefChanged">
+        <body>
+          this.value = this.pref.value == this.getAttribute("on");
+          this.fireEvent("onsyncfrompreference");
+        </body>
+      </method>
+
+      <property name="value" onget="return this.input.checked;" onset="return this.input.setChecked(val);"/>
+    </implementation>
+  </binding>
+
+  <binding id="richpref-button" extends="chrome://browser/content/preferences/richpref.xml#richpref-base">
+    <content>
+      <xul:hbox flex="1" class="prefbox">
+        <xul:vbox flex="1">
+          <xul:label class="preftitle" xbl:inherits="value=title" crop="end" flex="1"/>
+          <xul:label class="prefdesc" xbl:inherits="value=desc" crop="end" flex="1">
+            <children/>
+          </xul:label>
+        </xul:vbox>
+        <xul:hbox anonid="input-container">
+          <children includes="button"/>
+        </xul:hbox>
+      </xul:hbox>
+      <xul:preferences>
+        <xul:preference anonid="pref" xbl:inherits="name=pref,type,inverted" instantApply="true" onchange="prefChanged();"/>
+      </xul:preferences>
+    </content>
+  </binding>
+</bindings>

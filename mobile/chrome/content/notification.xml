@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!DOCTYPE bindings PUBLIC "-//MOZILLA//DTD XBL V1.0//EN" "http://www.mozilla.org/xbl">
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="notification" extends="chrome://global/content/bindings/notification.xml#notification">
+    <resources>
+      <stylesheet src="chrome://browser/skin/notification.css"/>
+    </resources>
+
+    <content>
+      <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
+        <xul:vbox flex="1">
+          <xul:hbox anonid="details" align="center" flex="1">
+            <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image"/>
+            <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
+            <xul:spacer flex="1"/>
+          </xul:hbox>
+          <xul:hbox pack="center"
+                    oncommand="document.getBindingParent(this)._doButtonCommand(event);">
+            <children/>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="notification-button"
+           extends="chrome://global/content/bindings/button.xml#button-base">
+    <resources>
+      <stylesheet src="chrome://browser/skin/notification.css"/>
+    </resources>
+
+    <content orient="vertical">
+      <xul:image class="sn-button-icon" xbl:inherits="src=image"/>
+      <xul:label class="sn-button-text" xbl:inherits="value=label,accesskey,crop"/>
+      <xul:label class="sn-button-extra-text" xbl:inherits="value=sublabel"/>
+    </content>
+  </binding>
+
+</bindings>

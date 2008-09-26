@@ -417,6 +417,8 @@ function ShortcutEditor()
         textbox.addEventListener("keypress", keyListener, true);
         textbox.addEventListener("reset", resetListener, true);
         tree.addEventListener("DOMAttrModified", modificationListener, true);
+
+        fillShortcutList();
     };
 
     function hack()
@@ -431,6 +433,9 @@ function ShortcutEditor()
 
     this.dismiss = function()
     {
+        if (!tree)
+            return;
+
         hack();
         var textbox = document.getAnonymousElementByAttribute(tree, "anonid", "input");
         textbox.removeEventListener("keypress", keyListener, true);
@@ -473,7 +478,7 @@ function ShortcutEditor()
                 {
                     return sb[i].getString(name);
                 }
-                catch (e) { }
+                catch (e) { return null; }
             }
         }
 
@@ -553,7 +558,7 @@ function ShortcutEditor()
          [["meta shift alt control", undefined, "VK_A"],  {exists: true,  modifiers: 15, key: false, keycode: "VK_A"},     "Ctrl+Alt+Meta+Shift+A"],
          [[],                                             {exists: false, modifiers: 0,  key: false, keycode: false},      ""],
          [["control"],                                    {exists: false, modifiers: 2,  key: false, keycode: false},      ""],
-         [["foobar", "a"],                                {exists: true,  modifiers: 2,  key: "a",   keycode: false},      "A"],
+         [["foobar", "a"],                                {exists: true,  modifiers: 0,  key: "a",   keycode: false},      "A"],
          [["alt", "α"],                                   {exists: true,  modifiers: 1,  key: "α",   keycode: false},      "Alt+Α"],
          [["alt", "א"],                                   {exists: true,  modifiers: 1,  key: "א",   keycode: false},      "Alt+א"]
         ].forEach(function doTests(t)

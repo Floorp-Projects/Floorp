@@ -42,6 +42,7 @@ pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.startup.homepage", "http://www.mozilla.org/");
 pref("browser.ui.cursor", false);
+pref("browser.ui.panning.kinetic", true);
 
 /* cache prefs */
 pref("browser.cache.disk.enable", false);
@@ -53,27 +54,25 @@ pref("browser.cache.memory.capacity", 1024);
 pref("network.http.pipelining", true);
 pref("network.http.pipelining.ssl", true);
 pref("network.http.proxy.pipelining", true);
-pref("network.http.pipelining.maxrequests" , 2);
+pref("network.http.pipelining.maxrequests" , 6);
 pref("network.http.keep-alive.timeout", 600);
-pref("network.http.max-connections", 4);
-pref("network.http.max-connections-per-server", 1);
-pref("network.http.max-persistent-connections-per-server", 1);
-pref("network.http.max-persistent-connections-per-proxy", 1);
+pref("network.http.max-connections", 6);
+pref("network.http.max-connections-per-server", 4);
+pref("network.http.max-persistent-connections-per-server", 4);
+pref("network.http.max-persistent-connections-per-proxy", 4);
 
 /* session history */
 pref("browser.sessionhistory.max_total_viewers", 0);
 pref("browser.sessionhistory.max_entries", 50);
 
-/* debugging prefs */
-pref("browser.dom.window.dump.enabled", true);
-pref("javascript.options.showInConsole", true);
-pref("javascript.options.strict", true);
-pref("nglayout.debug.disable_xul_cache", false);
-pref("nglayout.debug.disable_xul_fastload", false);
+/* these should help performance */
+pref("mozilla.widget.force-24bpp", true);
+pref("mozilla.widget.use-buffer-pixmap", true);
+pref("mozilla.widget.disable-native-theme", true);
 
 /* download manager (don't show the window or alert) */
 pref("browser.download.useDownloadDir", true);
-pref("browser.download.folderList", 0);
+pref("browser.download.folderList", 1); // Default to ~/Downloads
 pref("browser.download.manager.showAlertOnComplete", false);
 pref("browser.download.manager.showAlertInterval", 2000);
 pref("browser.download.manager.retention", 2);
@@ -104,21 +103,40 @@ pref("layout.spellcheckDefault", 1);
 
 /* extension manager and xpinstall */
 pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
-pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul?type=themes");
-pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul?type=extensions");
-pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes");
-pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
+pref("xpinstall.dialog.progress.skin", "chrome://browser/content/browser.xul");
+pref("xpinstall.dialog.progress.chrome", "chrome://browser/content/browser.xul");
+pref("xpinstall.dialog.progress.type.skin", "navigator:browser");
+pref("xpinstall.dialog.progress.type.chrome", "navigator:browser");
 pref("extensions.update.enabled", true);
 pref("extensions.update.interval", 86400);
 pref("extensions.dss.enabled", false);
 pref("extensions.dss.switchPending", false);
 pref("extensions.ignoreMTimeChanges", false);
 pref("extensions.logging.enabled", false);
+pref("extensions.hideInstallButton", true);
 
 /* these point at AMO */
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+
+/* preferences for the Get Add-ons pane */
+pref("extensions.getAddons.showPane", true);
+pref("extensions.getAddons.browseAddons", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%");
+pref("extensions.getAddons.maxResults", 5);
+pref("extensions.getAddons.recommended.browseURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/recommended");
+pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/list/featured/all/10/%OS%/%VERSION%");
+pref("extensions.getAddons.search.browseURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/search?q=%TERMS%");
+pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/search/%TERMS%/all/10/%OS%/%VERSION%");
+
+/* blocklist preferences */
+pref("extensions.blocklist.enabled", true);
+pref("extensions.blocklist.interval", 86400);
+pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/2/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/");
+pref("extensions.blocklist.detailsURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/blocklist/");
+
+/* dictionary download preference */
+pref("browser.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/dictionaries/");
 
 /* make clicking on links stand out a bit */
 pref("browser.display.use_focus_colors", true);
@@ -138,15 +156,18 @@ pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.flashBar", 1);
 pref("accessibility.typeaheadfind.linksonly", false);
-pref("accessibility.typeaheadfind.casesensitive", false);
+pref("accessibility.typeaheadfind.casesensitive", 0);
 
 // pointer to the default engine name
 pref("browser.search.defaultenginename",      "chrome://browser/locale/region.properties");
+// SSL error page behaviour
+pref("browser.ssl_override_behavior", 2);
+pref("browser.xul.error_pages.expert_bad_cert", false);
 
 // disable logging for the search service by default
 pref("browser.search.log", false);
 
-// Ordering of Search Engines in the Engine list. 
+// Ordering of Search Engines in the Engine list.
 pref("browser.search.order.1",                "chrome://browser/locale/region.properties");
 pref("browser.search.order.2",                "chrome://browser/locale/region.properties");
 
@@ -209,3 +230,27 @@ pref("places.frecency.tempRedirectVisitBonus", 0);
 pref("places.frecency.defaultVisitBonus", 0);
 pref("places.frecency.unvisitedBookmarkBonus", 140);
 pref("places.frecency.unvisitedTypedBonus", 200);
+
+// disable color management
+pref("gfx.color_management.mode", 0);
+
+// don't allow JS to move and resize existing windows
+pref("dom.disable_window_move_resize", true);
+
+// open in tab preferences
+// 0=default window, 1=current window/tab, 2=new window, 3=new tab in most window
+pref("browser.link.open_external", 3);
+pref("browser.link.open_newwindow", 3);
+
+// controls which bits of private data to clear. by default we clear them all.
+pref("privacy.sanitize.promptOnSanitize", false);
+pref("privacy.item.cache", true);
+pref("privacy.item.cookies", true);
+pref("privacy.item.offlineApps", true);
+pref("privacy.item.history", true);
+pref("privacy.item.formdata", true);
+pref("privacy.item.downloads", true);
+pref("privacy.item.passwords", true);
+pref("privacy.item.sessions", true);
+
+pref("plugins.enabled", false);
