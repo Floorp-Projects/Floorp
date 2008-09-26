@@ -177,8 +177,11 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
 #endif
 
     HKEY hKey;
-    LONG err = ::RegOpenKeyExA(HKEY_CLASSES_ROOT, aProtocolScheme, 0,
-                             KEY_QUERY_VALUE, &hKey);
+    LONG err = ::RegOpenKeyExW(HKEY_CLASSES_ROOT,
+                               NS_ConvertASCIIToUTF16(aProtocolScheme).get(),
+                               0,
+                               KEY_QUERY_VALUE,
+                               &hKey);
     if (err == ERROR_SUCCESS)
     {
       err = ::RegQueryValueExW(hKey, L"URL Protocol", NULL, NULL, NULL, NULL);
