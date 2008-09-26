@@ -782,3 +782,12 @@ nsHTMLMediaElement::GetCurrentPrincipal()
 
   return mDecoder->GetCurrentPrincipal();
 }
+
+void nsHTMLMediaElement::DestroyContent()
+{
+  if (mDecoder) {
+    mDecoder->Stop();
+    mDecoder = nsnull;
+  }
+  nsGenericHTMLElement::DestroyContent();
+}
