@@ -77,7 +77,7 @@ CPPSRCS	+=	gfxOS2Fonts.cpp \
 		$(NULL)
 CPPSRCS +=	gfxPDFSurface.cpp
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
-REQUIRES += uconv
+REQUIRES += uconv locale
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
@@ -92,6 +92,7 @@ ifdef MOZ_X11
 CPPSRCS += gfxXlibSurface.cpp
 endif
 
+REQUIRES += locale
 CPPSRCS +=  gfxPlatformGtk.cpp gfxGdkNativeRenderer.cpp
 CPPSRCS +=	gfxPDFSurface.cpp gfxPSSurface.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
@@ -113,6 +114,7 @@ CPPSRCS += gfxDirectFBSurface.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+REQUIRES += locale
 CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
 CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
 CPPSRCS +=	gfxFT2Fonts.cpp
@@ -123,6 +125,7 @@ EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+REQUIRES += locale
 CPPSRCS	+= 	gfxBeOSSurface.cpp gfxBeOSPlatform.cpp
 CPPSRCS +=	gfxPangoFonts.cpp 
 #CPPSRCS +=	gfxPDFSurface.cpp
