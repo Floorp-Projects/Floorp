@@ -65,7 +65,7 @@ protected:
                         PRInt32 aMovement, PRInt8 aResizerDirection);
 
 protected:
-	nsIntRect mWidgetRect;
+	nsRect mWidgetRect;
 }; // class nsResizerFrame
 
 #endif /* nsResizerFrame_h___ */

@@ -67,7 +67,7 @@ public:
 
   // imgIContainerObserver (override nsStubImageDecoderObserver)
   NS_IMETHOD FrameChanged(imgIContainer *aContainer, gfxIImageFrame *newframe,
-                          nsIntRect *dirtyRect);
+                          nsRect * dirtyRect);
 
   void Init(nsIFrame *aFrame, nsPresContext *aPresContext,
             PRBool aReflowOnLoad);

@@ -48,7 +48,7 @@
 
 class nsIFrame;
 class nsIDocShell;
-struct nsIntRect;
+struct nsRect;
 
 class nsBoxObject : public nsPIBoxObject
 {
@@ -66,7 +66,7 @@ public:
 
   nsIFrame* GetFrame(PRBool aFlushLayout);
   nsIPresShell* GetPresShell(PRBool aFlushLayout);
-  nsresult GetOffsetRect(nsIntRect& aRect);
+  nsresult GetOffsetRect(nsRect& aRect);
   nsresult GetScreenPosition(nsIntPoint& aPoint);
 
   // Given a parent frame and a child frame, find the frame whose
