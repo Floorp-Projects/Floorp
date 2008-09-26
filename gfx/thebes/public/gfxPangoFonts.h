@@ -70,6 +70,50 @@ public:
         
 };
 
+class gfxPangoFont : public gfxFont {
+public:
+    gfxPangoFont (gfxPangoFontEntry *aFontEntry,
+                  const gfxFontStyle *aFontStyle);
+    virtual ~gfxPangoFont ();
+    static already_AddRefed<gfxPangoFont> GetOrMakeFont(PangoFont *aPangoFont);
+
+    static void Shutdown();
+
+    virtual const gfxFont::Metrics& GetMetrics();
+
+    PangoFont *GetPangoFont() { if (!mPangoFont) RealizePangoFont(); return mPangoFont; }
+
+    // Check GetStyle()->sizeAdjust != 0.0 before calling this 
+    gfxFloat GetAdjustedSize() { if (!mPangoFont) RealizePangoFont(); return mAdjustedSize; }
+
+    virtual nsString GetUniqueName();
+
+    // Get the glyphID of a space
+    virtual PRUint32 GetSpaceGlyph() {
+        NS_ASSERTION(GetStyle()->size != 0,
+                     "forgot to short-circuit a text run with zero-sized font?");
+        GetMetrics();
+        return mSpaceGlyph;
+    }
+
+protected:
+    PangoFont *mPangoFont;
+    cairo_scaled_font_t *mCairoFont;
+
+    PRBool   mHasMetrics;
+    PRUint32 mSpaceGlyph;
+    Metrics  mMetrics;
+    gfxFloat mAdjustedSize;
+
+    gfxPangoFont(PangoFont *aPangoFont, gfxPangoFontEntry *aFontEntry,
+                 const gfxFontStyle *aFontStyle);
+    void RealizePangoFont();
+    void GetCharSize(const char aChar, gfxSize& aInkSize, gfxSize& aLogSize,
+                     PRUint32 *aGlyphID = nsnull);
+
+    virtual PRBool SetupCairoFont(gfxContext *aContext);
+};
+
 class THEBES_API gfxPangoFontGroup : public gfxFontGroup {
 public:
     gfxPangoFontGroup (const nsAString& families,
@@ -84,14 +128,9 @@ public:
     virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                     const Parameters *aParams, PRUint32 aFlags);
 
-    virtual gfxFont *GetFontAt(PRInt32 i);
-
-    static void Shutdown();
+    virtual gfxPangoFont *GetFontAt(PRInt32 i);
 
 protected:
-    PangoFont *mBasePangoFont;
-    gfxFloat mAdjustedSize;
-
     // ****** Textrun glyph conversion helpers ******
 
     /**
@@ -123,15 +162,6 @@ protected:
 #endif
 
     void GetFcFamilies(nsAString &aFcFamilies);
-    PangoFont *GetBasePangoFont();
-
-    // Check GetStyle()->sizeAdjust != 0.0 before calling this 
-    gfxFloat GetAdjustedSize()
-    {
-        if (!mBasePangoFont)
-            GetBasePangoFont();
-        return mAdjustedSize;
-    }
 };
 
 class gfxPangoFontWrapper {
