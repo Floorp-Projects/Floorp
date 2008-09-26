@@ -625,6 +625,9 @@ _cairo_lround (double d)
 FILE *
 _cairo_win32_tmpfile (void)
 {
+#ifdef WINCE // we don't have to worry here about permissions
+    return tmpfile();
+#else
     DWORD path_len;
     WCHAR path_name[MAX_PATH + 1];
     WCHAR file_name[MAX_PATH + 1];
@@ -664,6 +667,7 @@ _cairo_win32_tmpfile (void)
     }
 
     return fp;
+#endif /* WINCE */
 }
 
 #endif /* _WIN32 */

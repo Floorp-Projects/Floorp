@@ -26,6 +26,8 @@ nonfatal-assertions.patch: Make assertions non-fatal
 
 buggy-repeat.patch: Unconditionally turn on buggy-repeat handling to bandaid bug 413583.
 
+tmpfile_wince.patch: Make Windows CE use tmpfile() on windows mobile due to the lack of _open_osfhandle and no fs permissions.
+
 ==== pixman patches ====
 
 endian.patch: include cairo-platform.h for endian macros
