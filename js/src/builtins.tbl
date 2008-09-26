@@ -139,6 +139,9 @@ BUILTIN4(Array_2obj,            LO, LO, LO, LO, P, JSObject*, JSContext*, JSObje
 BUILTIN5(Array_3num,            LO, LO, F, F, F, P, JSObject*, JSContext*, JSObject*, jsdouble, jsdouble, jsdouble, 0, 0)
 BUILTIN1(Arguments,             LO,     P,      JSObject*, JSContext*, 0, 0)
 
+// Don't really need an argument here, but we don't support arg-less builtins
+BUILTIN1(Date_now,              LO,     F,      jsdouble, JSContext*, 0, 0)
+
 // soft float
 BUILTIN1(fneg,   F,       F,  jsdouble, jsdouble, 1, 1)
 BUILTIN1(i2f,    LO,      F,  jsdouble, jsint,    1, 1)

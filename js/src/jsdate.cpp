@@ -912,8 +912,8 @@ date_parse(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, result, vp);
 }
 
-static JSBool
-date_now(JSContext *cx, uintN argc, jsval *vp)
+JSBool
+js_date_now(JSContext *cx, uintN argc, jsval *vp)
 {
     return js_NewDoubleInRootedValue(cx, PRMJ_Now() / PRMJ_USEC_PER_MSEC, vp);
 }
@@ -1958,7 +1958,7 @@ date_valueOf(JSContext *cx, uintN argc, jsval *vp)
 static JSFunctionSpec date_static_methods[] = {
     JS_FN("UTC",                 date_UTC,                MAXARGS,0),
     JS_FN("parse",               date_parse,              1,0),
-    JS_FN("now",                 date_now,                0,0),
+    JS_FN("now",                 js_date_now,             0,0),
     JS_FS_END
 };
 

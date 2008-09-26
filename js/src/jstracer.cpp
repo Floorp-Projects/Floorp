@@ -66,6 +66,7 @@
 #include "jsregexp.h"
 #include "jsscope.h"
 #include "jsscript.h"
+#include "jsdate.h"
 #include "jstracer.h"
 
 #include "jsautooplen.h"        // generated headers last
@@ -5034,6 +5035,7 @@ TraceRecorder::record_JSOP_CALL()
         { js_str_substring,            F_String_p_substring_1, "SC",  "i",    FAIL_NULL },
         { js_str_toLowerCase,          F_toLowerCase,          "SC",   "",    FAIL_NULL },
         { js_str_toUpperCase,          F_toUpperCase,          "SC",   "",    FAIL_NULL },
+        { js_date_now,                 F_Date_now,             "C",    "",    INFALLIBLE },
     };
 
     uintN i = 0;
