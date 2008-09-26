@@ -915,15 +915,7 @@ date_parse(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 date_now(JSContext *cx, uintN argc, jsval *vp)
 {
-    int64 us, ms, us2ms;
-    jsdouble msec_time;
-
-    us = PRMJ_Now();
-    JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
-    JSLL_DIV(ms, us, us2ms);
-    JSLL_L2D(msec_time, ms);
-
-    return js_NewDoubleInRootedValue(cx, msec_time, vp);
+    return js_NewDoubleInRootedValue(cx, PRMJ_Now() / PRMJ_USEC_PER_MSEC, vp);
 }
 
 /*
@@ -2044,35 +2036,16 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Date called as function. */
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
-        int64 us, ms, us2ms;
-        jsdouble msec_time;
-
-        /* NSPR 2.0 docs say 'We do not support PRMJ_NowMS and PRMJ_NowS',
-         * so compute ms from PRMJ_Now.
-         */
-        us = PRMJ_Now();
-        JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
-        JSLL_DIV(ms, us, us2ms);
-        JSLL_L2D(msec_time, ms);
-
-        return date_format(cx, msec_time, FORMATSPEC_FULL, rval);
+        return date_format(cx, PRMJ_Now() / PRMJ_USEC_PER_MSEC,
+                           FORMATSPEC_FULL, rval);
     }
 
     /* Date called as constructor. */
     if (argc == 0) {
-        int64 us, ms, us2ms;
-        jsdouble msec_time;
-
         date = date_constructor(cx, obj);
         if (!date)
             return JS_FALSE;
-
-        us = PRMJ_Now();
-        JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
-        JSLL_DIV(ms, us, us2ms);
-        JSLL_L2D(msec_time, ms);
-
-        *date = msec_time;
+        *date = PRMJ_Now() / PRMJ_USEC_PER_MSEC;
     } else if (argc == 1) {
         if (!JSVAL_IS_STRING(argv[0])) {
             /* the argument is a millisecond number */
