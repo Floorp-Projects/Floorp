@@ -700,7 +700,8 @@ nsSVGForeignObjectFrame::InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
 
   nsPresContext* presContext = PresContext();
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
-  nsIntRect r(nsRect::ToOutsidePixels(aRect, presContext->AppUnitsPerDevPixel()));
+  nsIntRect r = aRect;
+  r.ScaleRoundOut(1.0f / presContext->AppUnitsPerDevPixel());
   float x = r.x, y = r.y, w = r.width, h = r.height;
   nsRect rect = GetTransformedRegion(x, y, w, h, tm, presContext);
 

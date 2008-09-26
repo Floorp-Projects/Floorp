@@ -1922,7 +1922,7 @@ void nsAccessibleWrap::UpdateSystemCaret()
   }
 
   nsIWidget *widget;
-  nsIntRect caretRect = caretAccessible->GetCaretRect(&widget);        
+  nsRect caretRect = caretAccessible->GetCaretRect(&widget);        
   HWND caretWnd; 
   if (caretRect.IsEmpty() || !(caretWnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW))) {
     return;

@@ -70,7 +70,7 @@ float nsCocoaUtils::FlippedScreenY(float y)
 }
 
 
-NSRect nsCocoaUtils::GeckoRectToCocoaRect(const nsIntRect &geckoRect)
+NSRect nsCocoaUtils::GeckoRectToCocoaRect(const nsRect &geckoRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -85,17 +85,15 @@ NSRect nsCocoaUtils::GeckoRectToCocoaRect(const nsIntRect &geckoRect)
 }
 
 
-nsIntRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect &cocoaRect)
+nsRect nsCocoaUtils::CocoaRectToGeckoRect(const NSRect &cocoaRect)
 {
   // We only need to change the Y coordinate by starting with the primary screen
   // height and subtracting both the cocoa y origin and the height of the
   // cocoa rect.
-  nsIntRect rect;
-  rect.x = NSToIntFloor(cocoaRect.origin.x);
-  rect.y = NSToIntFloor(MenuBarScreenHeight() - (cocoaRect.origin.y + cocoaRect.size.height));
-  rect.width = NSToIntCeil(cocoaRect.origin.x + cocoaRect.size.width) - rect.x;
-  rect.height = NSToIntCeil(MenuBarScreenHeight() - cocoaRect.origin.y) - rect.y;
-  return rect;
+  return nsRect((nscoord)cocoaRect.origin.x,
+                (nscoord)(MenuBarScreenHeight() - (cocoaRect.origin.y + cocoaRect.size.height)),
+                (nscoord)cocoaRect.size.width,
+                (nscoord)cocoaRect.size.height);
 }
 
 

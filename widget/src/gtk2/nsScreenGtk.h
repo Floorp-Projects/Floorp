@@ -72,8 +72,8 @@ public:
 
 private:
   PRUint32 mScreenNum;
-  nsIntRect mRect;
-  nsIntRect mAvailRect;
+  nsRect mRect; // in pixels, not twips
+  nsRect mAvailRect; // in pixels, not twips
 };
 
 #endif  // nsScreenGtk_h___ 

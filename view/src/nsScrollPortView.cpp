@@ -515,7 +515,7 @@ NS_IMETHODIMP nsScrollPortView::CanScroll(PRBool aHorizontal,
   return NS_OK;
 }
 
-void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsIntPoint aPixDelta,
+void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoint aPixDelta,
                               PRInt32 aP2A)
 {
   if (aTwipsDelta.x != 0 || aTwipsDelta.y != 0)
@@ -565,10 +565,10 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsIntP
       // consistent with the view hierarchy.
       mViewManager->UpdateView(this, NS_VMREFRESH_DEFERRED);
     } else { // if we can blit and have a scrollwidget then scroll.
-      nsIntRect* toScrollPtr = nsnull;
+      nsRect* toScrollPtr = nsnull;
 
 #ifdef XP_WIN
-      nsIntRect toScroll;
+      nsRect toScroll;
       if (!updateRegion.IsEmpty()) {
         nsRegion regionToScroll;
         regionToScroll.Sub(nsRect(nsPoint(0,0), GetBounds().Size()),
@@ -577,13 +577,15 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsIntP
         nsRect biggestRect(0,0,0,0);
         const nsRect* r;
         for (r = iter.Next(); r; r = iter.Next()) {
-          if (PRInt64(r->width)*PRInt64(r->height) > PRInt64(biggestRect.width)*PRInt64(biggestRect.height)) {
+          if (r->width*r->height > biggestRect.width*biggestRect.height) {
             biggestRect = *r;
           }
         }
         toScrollPtr = &toScroll;
-        toScroll = nsRect::ToInsidePixels(biggestRect, aP2A);
-        regionToScroll.Sub(regionToScroll, nsIntRect::ToAppUnits(toScroll, aP2A));
+        biggestRect.ScaleRoundIn(1.0/aP2A);
+        toScroll = biggestRect;
+        biggestRect *= aP2A;
+        regionToScroll.Sub(regionToScroll, biggestRect);
         updateRegion.Or(updateRegion, regionToScroll);
       }
 #endif
@@ -669,7 +671,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aU
   mOffsetX = aX;
   mOffsetY = aY;
 
-  Scroll(scrolledView, twipsDelta, nsIntPoint(dxPx, dyPx), p2a);
+  Scroll(scrolledView, twipsDelta, nsPoint(dxPx, dyPx), p2a);
 
   mViewManager->SynthesizeMouseMove(PR_TRUE);
   
