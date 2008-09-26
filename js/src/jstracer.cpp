@@ -2200,6 +2200,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     /* Make sure the global type map didn't change on us. */
     uint32 globalShape = OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain));
     if (tm->globalShape != globalShape) {
+        AUDIT(globalShapeMismatchAtEntry);
         debug_only_v(printf("Global shape mismatch (%u vs. %u) in RecordTree, flushing cache.\n",
                           globalShape, tm->globalShape);)
         js_FlushJITCache(cx);
@@ -2653,6 +2654,17 @@ js_MonitorLoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
         /* recording was aborted, treat like a regular loop edge hit */
     }
     JS_ASSERT(!tm->recorder);
+
+    /* Do an up-front global shape check, since we'll blow away the jit cache
+       on global shape mismatch, wasting all the other work this method does,
+       if we end up in either js_RecordTree or js_ExecuteTree */
+    uint32 globalShape = OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain));
+    if (tm->globalShape != globalShape) {
+        debug_only_v(printf("Global shape mismatch (%u vs. %u) in js_MonitorLoopEdge, flushing cache.\n",
+                            globalShape, tm->globalShape);)
+        js_FlushJITCache(cx);
+        // Press on to at least increment a hit count
+    }
 
     /* check if our quick cache has an entry for this ip, otherwise ask fragmento. */
     jsbytecode* pc = cx->fp->regs->pc;
