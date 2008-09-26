@@ -49,6 +49,7 @@ default alldep all::
 	$(RM) -rf $(DIST)/include
 	$(RM) -rf $(DIST)/private
 	$(RM) -rf $(DIST)/public
+	$(RM) -rf $(DIST)/bin/components
 	$(RM) -rf _tests
 
 TIERS += base
