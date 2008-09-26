@@ -2456,13 +2456,13 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
         DirtyAllStyles();
     }
 
-    if NS_FAILED(rv)
+    if (NS_FAILED(rv))
         return rv;
 
     if (aOp == nsCanvasRenderingContext2D::TEXT_DRAW_OPERATION_STROKE) {
         // DrawPath takes care of all shadows and composite oddities
         rv = DrawPath(STYLE_STROKE);
-        if NS_FAILED(rv)
+        if (NS_FAILED(rv))
             return rv;
     } else if (doUseIntermediateSurface)
         mThebes->Paint(CurrentState().StyleIsColor(STYLE_FILL) ? 1.0 : CurrentState().globalAlpha);
