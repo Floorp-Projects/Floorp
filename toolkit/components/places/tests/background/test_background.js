@@ -39,6 +39,10 @@
 
 Components.utils.import("resource://gre/modules/PlacesBackground.jsm");
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
 function test_service_exists()
 {
   do_check_neq(PlacesBackground, null);
@@ -83,32 +87,10 @@ function test_two_events_same_thread()
   do_check_eq(event.thread1, event.thread2);
 }
 
-function test_places_background_shutdown_topic()
-{
-  // Ensures that the places shutdown topic is dispatched before the thread is
-  // shutdown.
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  os.addObserver({
-    observe: function(aSubject, aTopic, aData)
-    {
-      // We should still be able to dispatch an event without throwing now!
-      PlacesBackground.dispatch({
-        run: function()
-        {
-          do_test_finished();
-        }
-      }, Ci.nsIEventTarget.DISPATCH_NORMAL);
-    }
-  }, "places-background-shutdown", false);
-  do_test_pending();
-}
-
 let tests = [
   test_service_exists,
   test_isOnCurrentThread,
   test_two_events_same_thread,
-  test_places_background_shutdown_topic,
 ];
 
 function run_test()
