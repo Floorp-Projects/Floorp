@@ -3810,7 +3810,7 @@ bool
 TraceRecorder::guardElemOp(JSObject* obj, LIns* obj_ins, jsid id, size_t op_offset, jsval* vp)
 {
     uint32 shape = OBJ_SHAPE(obj);
-    if (shape == traceMonitor->globalShape)
+    if (JSID_IS_ATOM(id) && shape == traceMonitor->globalShape)
         ABORT_TRACE("elem op probably aliases global");
 
     LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
@@ -4720,7 +4720,8 @@ TraceRecorder::record_JSOP_GETELEM()
         idx_ins = makeNumberInt32(idx_ins);
         if (!js_IndexToId(cx, JSVAL_TO_INT(idx), &id))
             return false;
-        if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+        idx = ID_TO_VALUE(id);
+        if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, getProperty), &v))
             return false;
         LIns* args[] = { idx_ins, obj_ins, cx_ins };
         LIns* v_ins = lir->insCall(F_Any_getelem, args);
