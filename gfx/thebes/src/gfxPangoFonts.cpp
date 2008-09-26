@@ -53,6 +53,7 @@
 #include "gfxContext.h"
 #include "gfxPlatformGtk.h"
 #include "gfxPangoFonts.h"
+#include "gfxFontconfigUtils.h"
 
 #include <freetype/tttables.h>
 
