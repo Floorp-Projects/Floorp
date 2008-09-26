@@ -1641,6 +1641,59 @@ function regexpLastIndex()
 regexpLastIndex.expected = 0; // 30;
 test(regexpLastIndex);
 
+function testHOTLOOPCorrectness() {
+    var b = 0;
+    for (var i = 0; i < HOTLOOP; ++i) {
+	++b;
+    }
+    return b;
+}
+testHOTLOOPCorrectness.expected = HOTLOOP;
+testHOTLOOPCorrectness.jitstats = {
+    recorderStarted: 1,
+    recorderAborted: 0,
+    traceTriggered: 0
+};
+// Change the global shape right before doing the test
+this.testHOTLOOPCorrectnessVar = 1;
+test(testHOTLOOPCorrectness);
+
+function testRUNLOOPCorrectness() {
+    var b = 0;
+    for (var i = 0; i < RUNLOOP; ++i) {
+	++b;
+    }
+    return b;
+}
+testRUNLOOPCorrectness.expected = RUNLOOP;
+testRUNLOOPCorrectness.jitstats = {
+    recorderStarted: 1,
+    recorderAborted: 0,
+    traceTriggered: 1
+};
+// Change the global shape right before doing the test
+this.testRUNLOOPCorrectnessVar = 1;
+test(testRUNLOOPCorrectness);
+
+function testDateNow()
+{
+    // Accessing global.Date for the first time will change the global shape,
+    // so do it before the loop starts; otherwise we have to loop an extra time
+    // to pick things up.
+    var time = Date.now();
+    for (var j = 0; j < RUNLOOP; ++j) {
+	time = Date.now();
+    }
+    return "ok";
+}
+testDateNow.expected = "ok";
+testDateNow.jitstats = {
+    recorderStarted: 1,
+    recorderAborted: 0,
+    traceTriggered: 1
+};
+test(testDateNow);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
