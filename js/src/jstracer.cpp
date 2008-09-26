@@ -5600,8 +5600,12 @@ TraceRecorder::record_JSOP_NEWINIT()
             return false;
         fid = F_FastNewArray;
     } else {
-        if (!js_GetClassObject(cx, globalObj, key, &obj))
+        jsval v_obj;
+        if (!js_FindClassObject(cx, globalObj, INT_TO_JSID(key), &v_obj))
             return false;
+        if (JSVAL_IS_PRIMITIVE(v_obj))
+            ABORT_TRACE("primitive Object value");
+        obj = JSVAL_TO_OBJECT(v_obj);
         fid = F_FastNewObject;
     }
     LIns* args[] = { INS_CONSTPTR(obj), cx_ins };
