@@ -133,7 +133,7 @@ gfxPlatformGtk::~gfxPlatformGtk()
     sFontconfigUtils = nsnull;
 
 #ifdef MOZ_PANGO
-    gfxPangoFontGroup::Shutdown();
+    gfxPangoFont::Shutdown();
 #else
     delete gPlatformFonts;
     gPlatformFonts = NULL;
