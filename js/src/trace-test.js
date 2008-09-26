@@ -1641,6 +1641,40 @@ function regexpLastIndex()
 regexpLastIndex.expected = 0; // 30;
 test(regexpLastIndex);
 
+function testHOTLOOPCorrectness() {
+    var b = 0;
+    for (var i = 0; i < HOTLOOP; ++i) {
+	++b;
+    }
+    return b;
+}
+testHOTLOOPCorrectness.expected = HOTLOOP;
+testHOTLOOPCorrectness.jitstats = {
+    recorderStarted: 1,
+    recorderAborted: 0,
+    traceTriggered: 0
+};
+// Change the global shape right before doing the test
+this.testHOTLOOPCorrectnessVar = 1;
+test(testHOTLOOPCorrectness);
+
+function testRUNLOOPCorrectness() {
+    var b = 0;
+    for (var i = 0; i < RUNLOOP; ++i) {
+	++b;
+    }
+    return b;
+}
+testRUNLOOPCorrectness.expected = RUNLOOP;
+testRUNLOOPCorrectness.jitstats = {
+    recorderStarted: 1,
+    recorderAborted: 0,
+    traceTriggered: 1
+};
+// Change the global shape right before doing the test
+this.testRUNLOOPCorrectnessVar = 1;
+test(testRUNLOOPCorrectness);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
