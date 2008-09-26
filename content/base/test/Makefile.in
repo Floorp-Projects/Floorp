@@ -82,6 +82,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_bug218236_multipart.txt^headers^ \
 		test_bug218277.html \
 		test_bug238409.html \
+		test_bug254337.html \
 		test_bug276037-1.html \
 		test_bug276037-2.xhtml \
 		test_bug308484.html \
@@ -195,6 +196,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug451376.html \
 		test_text_replaceWholeText.html \
 		test_text_wholeText.html \
+		test_bug433533.html \
 		wholeTexty-helper.xml \
 		test_bug444030.xhtml \
 		test_NodeIterator_basics_filters.xhtml \
