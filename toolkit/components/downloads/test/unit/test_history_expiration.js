@@ -88,7 +88,9 @@ function run_test()
   let histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
   // Add the download to places
-  histsvc.addVisit(theURI, Date.now() * 1000, null,
+  // Add the visit in the past to circumvent possible VM timing bugs
+  let yesterday = Date.now() - 24 * 60 * 60 * 1000;
+  histsvc.addVisit(theURI, yesterday * 1000, null,
                    histsvc.TRANSITION_DOWNLOAD, false, 0);
 
   // Get the download manager as history observer and batch expirations
@@ -123,6 +125,6 @@ function run_test()
   prefs.setIntPref("browser.history_expire_days_min", 0);
   prefs.setIntPref("browser.history_expire_days", 0);
 
-  // Expiration happens on a timeout after we set the pref
+  // Expiration happens on a timeout, about 3.5s after we set the pref
   do_test_pending();
 }
