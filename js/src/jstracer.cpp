@@ -4813,6 +4813,10 @@ TraceRecorder::record_JSOP_SETELEM()
     LIns* obj_ins = get(&lval);
     LIns* idx_ins = get(&idx);
     LIns* v_ins = get(&v);
+
+    LIns* boxed_v_ins = v_ins;
+    if (!box_jsval(v, boxed_v_ins))
+        ABORT_TRACE("boxing string-indexed JSOP_SETELEM value");
     
     if (JSVAL_IS_STRING(idx)) {
         jsid id;
@@ -4822,43 +4826,26 @@ TraceRecorder::record_JSOP_SETELEM()
         idx = ID_TO_VALUE(id);
         if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, setProperty), NULL))
             return false;
-        LIns* unboxed_v_ins = v_ins;
-        if (!box_jsval(v, v_ins))
-            ABORT_TRACE("boxing string-indexed JSOP_SETELEM value");
-        LIns* args[] = { v_ins, idx_ins, obj_ins, cx_ins };
+        LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(F_Any_setprop, args);
-        guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);
-        set(&lval, unboxed_v_ins);
-        return true;
-    }
-
-    if (!JSVAL_IS_INT(idx))
+        guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);    
+    } else if (JSVAL_IS_INT(idx)) {
+        idx_ins = makeNumberInt32(idx_ins);
+        LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
+        LIns* res_ins;
+        if (guardDenseArray(obj, obj_ins)) 
+            res_ins = lir->insCall(F_Array_dense_setelem, args);
+        else 
+            res_ins = lir->insCall(F_Any_setelem, args);
+        guard(false, lir->ins_eq0(res_ins), MISMATCH_EXIT);
+    } else {
         ABORT_TRACE("non-string, non-int JSOP_SETELEM index");
-
-    idx_ins = makeNumberInt32(idx_ins);
-    
-    if (!guardDenseArray(obj, obj_ins)) {
-        LIns* unboxed_v_ins = v_ins;
-        if (!box_jsval(v, v_ins))
-            ABORT_TRACE("boxing string-indexed JSOP_SETELEM value");
-        LIns* args[] = { v_ins, idx_ins, obj_ins, cx_ins };
-        LIns* ok_ins = lir->insCall(F_Any_setelem, args);
-        guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);
-        set(&lval, unboxed_v_ins);
-        return true;
     }
-
-    /* ok, box the value we are storing, store it and we are done */
-    LIns* boxed_ins = v_ins;
-    if (!box_jsval(v, boxed_ins))
-        ABORT_TRACE("boxing failed");
-    LIns* args[] = { boxed_ins, idx_ins, obj_ins, cx_ins };
-    LIns* res_ins = lir->insCall(F_Array_dense_setelem, args);
-    guard(false, lir->ins_eq0(res_ins), MISMATCH_EXIT);
-
+    
     jsbytecode* pc = cx->fp->regs->pc;
     if (*pc == JSOP_SETELEM && pc[JSOP_SETELEM_LENGTH] != JSOP_POP)
         set(&lval, v_ins);
+
     return true;
 }
 
