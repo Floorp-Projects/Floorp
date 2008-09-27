@@ -121,7 +121,6 @@ namespace nanojit
 
 	#define DECLARE_PLATFORM_ASSEMBLER()\
         const static Register argRegs[4], retRegs[2];\
-		bool has_cmov;\
 		void STi(Register b, int32_t d, int32_t v);\
 		void LDi(Register r, int32_t v);\
 		void BL(NIns* target);\

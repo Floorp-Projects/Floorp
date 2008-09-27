@@ -904,7 +904,7 @@ namespace nanojit
 		return sizeof(ptr) == 8 ? insImmq((uintptr_t)ptr) : insImm((intptr_t)ptr);
 	}
 
-	LIns* LirWriter::ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse, bool hasConditionalMove)
+	LIns* LirWriter::ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse)
 	{
 		// if not a conditional, make it implicitly an ==0 test (then flop results)
 		if (!cond->isCmp())
@@ -915,7 +915,7 @@ namespace nanojit
 			iffalse = tmp;
 		}
 
-		if (hasConditionalMove)
+		if (avmplus::AvmCore::use_cmov())
 		{
 			return ins2((iftrue->isQuad() || iffalse->isQuad()) ? LIR_qcmov : LIR_cmov, cond, ins2(LIR_2, iftrue, iffalse));
 		}

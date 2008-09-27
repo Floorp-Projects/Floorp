@@ -445,11 +445,18 @@ namespace avmplus
         static GC* gc;
         static String* k_str[];
         static bool sse2_available;
+        static bool cmov_available;
 
         static inline bool
         use_sse2()
         {
             return sse2_available;
+        }
+        
+        static inline bool
+        use_cmov()
+        {
+            return cmov_available;
         }
 
         static inline bool
