@@ -77,7 +77,6 @@ CPPSRCS		= \
 		TestVersionComparator.cpp \
 		TestTextFormatter.cpp \
 		TestPipe.cpp \
-		TestPipes.cpp \
 		TestRacingServiceManager.cpp \
 		TestRegistrationOrder.cpp \
 		TestProxies.cpp \
@@ -95,6 +94,7 @@ CPPSRCS += \
 		TestCRT.cpp \
 		TestEncoding.cpp \
 		TestPermanentAtoms.cpp \
+		TestPipes.cpp \
 		TestThreads.cpp \
 		TestThreadPool.cpp \
 		TestXPIDLString.cpp \
