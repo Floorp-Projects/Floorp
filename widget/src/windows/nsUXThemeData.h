@@ -84,8 +84,8 @@ class nsUXThemeData {
   static const wchar_t *GetClassName(nsUXThemeClass);
 
 public:
-  static const char kThemeLibraryName[];
-  static const char kDwmLibraryName[];
+  static const PRUnichar kThemeLibraryName[];
+  static const PRUnichar kDwmLibraryName[];
   static BOOL sFlatMenus;
   static PRPackedBool sIsXPOrLater;
   static PRPackedBool sIsVistaOrLater;
