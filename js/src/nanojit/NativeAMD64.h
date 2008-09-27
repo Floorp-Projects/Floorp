@@ -152,9 +152,6 @@ namespace nanojit
 	#if !defined WIN64
 	#define DECLARE_PLATFORM_ASSEMBLER()	\
         DECLARE_PLATFORM_ASSEMBLER_START()  \
-        bool sse2;							\
-		bool has_cmov; 						\
-		bool pad[1];						\
 		void nativePageReset();				\
 		void nativePageSetup();				\
         void asm_farg(LInsp);				\

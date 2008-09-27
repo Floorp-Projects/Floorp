@@ -195,7 +195,6 @@ verbose_only( extern const char* regNames[]; )
     void CALL(const CallInfo*);                                         \
     void B_cond_chk(ConditionCode, NIns*, bool);                        \
     void underrunProtect(int bytes);                                    \
-    bool has_cmov;                                                      \
     void nativePageReset();                                             \
     void nativePageSetup();                                             \
     void asm_quad_nochk(Register, const int32_t*);                      \
