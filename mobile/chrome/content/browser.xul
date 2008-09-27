@@ -107,9 +107,7 @@
 
     <!-- scrolling -->
     <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_scrollToBeginning" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_scrollPageDown" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_scrollToEnd" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- editing -->
     <command id="cmd_cut" label="&cut.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -250,8 +248,8 @@
         <toolbarbutton id="tool-shortcuts" class="browser-control-button" oncommand="this.parentNode.nextSibling.selectedIndex=3;"/>
       </vbox>
       <deck id="panel-items" flex="1">
-        <iframe id="addons-container" flex="1" src=""/>
-        <iframe id="downloads-container" flex="1" src=""/>
+        <iframe id="addons-container" flex="1"/>
+        <iframe id="downloads-container" flex="1"/>
 
         <vbox id="prefs-container">
           <hbox pack="center" id="buttons"/>

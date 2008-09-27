@@ -355,8 +355,12 @@ var BrowserUI = {
 
       let newLeft = -tabbarW;
       switch (aMode) {
+        case UIMODE_NONE:
+          Shortcuts.deinit();
+          break;
         case UIMODE_PANEL:
           newLeft = -browserW;
+          this._initPanel();
           break;
         case UIMODE_CONTROLS:
           newLeft = -(tabbarW + sidebarW);
@@ -378,19 +382,16 @@ var BrowserUI = {
       sidebar.left = newLeft + tabbarW + browserW;
       panelUI.left = newLeft + tabbarW + browserW + sidebarW;
       panelUI.width = browserW;
+  },
 
-      if (aMode == UIMODE_NONE)
-        Shortcuts.deinit();
-      else
-      {
-        let addons = document.getElementById("addons-container");
-        if (addons.getAttribute("src") == "")
-          addons.setAttribute("src", "chrome://mozapps/content/extensions/extensions.xul");
-        let dloads = document.getElementById("downloads-container");
-        if (dloads.getAttribute("src") == "")
-          dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
-        Shortcuts.init();
-      }
+  _initPanel : function() {
+    let addons = document.getElementById("addons-container");
+    if (!addons.hasAttribute("src"))
+      addons.setAttribute("src", "chrome://mozapps/content/extensions/extensions.xul");
+    let dloads = document.getElementById("downloads-container");
+    if (!dloads.hasAttribute("src"))
+      dloads.setAttribute("src", "chrome://mozapps/content/downloads/downloads.xul");
+    Shortcuts.init();
   },
 
   _sizeControls : function(aEvent) {
@@ -443,7 +444,6 @@ var BrowserUI = {
 
     window.addEventListener("resize", this, false);
     Shortcuts.restore();
-    Shortcuts.test();
   },
 
   update : function(aState, aBrowser) {

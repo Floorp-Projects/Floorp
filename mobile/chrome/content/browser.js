@@ -156,7 +156,7 @@ var Browser = {
     var phs = Components.classes["@mozilla.org/plugin/host;1"]
                         .getService(Components.interfaces.nsIPluginHost);
     var plugins = phs.getPluginTags({ });
-     for (i = 0; i < plugins.length; ++i)
+     for (var i = 0; i < plugins.length; ++i)
        plugins[i].disabled = state;
   },
 
@@ -549,7 +549,7 @@ nsBrowserAccess.prototype =
         newWindow = aOpener ? aOpener.top : browser.contentWindow;
       }
     }
-      
+
     try {
       var referrer;
       if (aURI) {
