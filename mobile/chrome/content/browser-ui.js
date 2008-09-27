@@ -100,7 +100,13 @@ var BrowserUI = {
     if (browser && aDocument != browser.contentDocument)
       return;
 
-    this._caption.value = aDocument.title;
+    var caption = aDocument.title;
+    if (!caption) {
+      caption = this.getDisplayURI(browser);
+      if (caption == "about:blank")
+        caption = "";
+    }
+    this._caption.value = caption;
 
     var docElem = document.documentElement;
     var title = "";
@@ -520,6 +526,19 @@ var BrowserUI = {
     }
   },
 
+  getDisplayURI : function(browser) {
+    var uri = browser.currentURI;
+
+    if (!this._URIFixup)
+      this._URIFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
+
+    try {
+      uri = this._URIFixup.createExposableURI(uri);
+    } catch (ex) {}
+
+    return uri.spec;
+  },
+
   /* Set the location to the current content */
   setURI : function() {
     var browser = Browser.currentBrowser;
@@ -543,16 +562,7 @@ var BrowserUI = {
       star.removeAttribute("starred");
     }
 
-    var uri = browser.currentURI;
-
-    if (!this._URIFixup)
-      this._URIFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
-
-    try {
-      uri = this._URIFixup.createExposableURI(uri);
-    } catch (ex) {}
-
-    var urlString = uri.spec;
+    var urlString = this.getDisplayURI(browser);
     if (urlString == "about:blank") {
       urlString = "";
       this.show(UIMODE_URLEDIT);
