@@ -40,19 +40,22 @@ var toolbarFolderId = bmsvc.toolbarFolder;
 var status = 0;
 var secondFolderId = 0;
 var firstLoadTime = 0;
+var firstURL = "";
+var secondURL = "";
+
+// stop updating livemarks
+lmsvc.stopUpdateLivemarks();
 
 // add 2 feeds
 const FEED1 = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/rss_as_html.rss";
 gLivemarkId1 = lmsvc.createLivemarkFolderOnly( toolbarFolderId, "foo",
                                              uri("http:/localhost:8888/"),
                                              uri(FEED1), -1);
-bmsvc.removeChildAt( gLivemarkId1, 0 );
 
 const FEED2 = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom";
 gLivemarkId2 = lmsvc.createLivemarkFolderOnly( toolbarFolderId, "bar",
                                              uri("http:/localhost:8888/"),
                                              uri(FEED2), -1);
-bmsvc.removeChildAt( gLivemarkId2, 0 );
 
 var observer =
 {
@@ -87,18 +90,23 @@ var observer =
 bmsvc.addObserver(observer, false);
 
 // start updating livemarks
+firstLoadTime = new Date();
 lmsvc.start();
 
 // First
 function runTest1( folderId ) {
-  if ( folderId == gLivemarkId1 )
-    secondFolderId = gLivemarkId2
-  else if ( folderId == gLivemarkId2 )
+  if ( folderId == gLivemarkId1 ) {
+    secondFolderId = gLivemarkId2;
+    firstURL = "http://www.example.com/index.html";
+    secondURL = "http://example.org/2003/12/13/atom03";
+  } else if ( folderId == gLivemarkId2 ) {
     secondFolderId = gLivemarkId1;
+    firstURL = "http://example.org/2003/12/13/atom03";
+    secondURL = "http://www.example.com/index.html";
+  }
 
   if ( secondFolderId != 0 ) {
     status++;
-    firstLoadTime = new Date();
 
     /* first folder is loading now */
     var options = histsvc.getNewQueryOptions();
@@ -110,7 +118,7 @@ function runTest1( folderId ) {
     var cc = rootNode.childCount;
     ok( cc == 1, "first livemark is empty" );
     var node = rootNode.getChild( 0 );
-    ok( node.uri == "about:livemark-loading",
+    ok( node.uri == firstURL,
         "first livemark item is invalid value "+node.uri);
 
     /* second folder has no item */
@@ -141,7 +149,7 @@ function runTest2( folderId ) {
     var cc = rootNode.childCount;
     ok( cc == 1, "second livemark is empty" );
     var node = rootNode.getChild( 0 );
-    ok( node.uri == "about:livemark-loading",
+    ok( node.uri == secondURL,
         "second livemark item is invalid value "+node.uri);
 
     /* check passed 3sec */
