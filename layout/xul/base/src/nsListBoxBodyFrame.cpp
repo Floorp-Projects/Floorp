@@ -501,14 +501,6 @@ nsListBoxBodyFrame::ReflowCallbackCanceled()
 ///////// nsIListBoxObject ///////////////
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::GetListboxBody(nsIListBoxObject * *aListboxBody)
-{
-  *aListboxBody = this;
-  NS_IF_ADDREF(*aListboxBody);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsListBoxBodyFrame::GetRowCount(PRInt32* aResult)
 {
   *aResult = GetRowCount();
