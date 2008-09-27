@@ -1675,8 +1675,7 @@ testRUNLOOPCorrectness.jitstats = {
 this.testRUNLOOPCorrectnessVar = 1;
 test(testRUNLOOPCorrectness);
 
-function testDateNow()
-{
+function testDateNow() {
     // Accessing global.Date for the first time will change the global shape,
     // so do it before the loop starts; otherwise we have to loop an extra time
     // to pick things up.
@@ -1693,6 +1692,16 @@ testDateNow.jitstats = {
     traceTriggered: 1
 };
 test(testDateNow);
+
+function testINITELEM() 
+{
+    var x;
+    for (var i = 0; i < 10; ++i)
+	x = { 0: 5, 1: 5 };    
+    return x[0] + x[1];
+}
+testINITELEM.expected = 10;
+test(testINITELEM);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
