@@ -1729,6 +1729,14 @@ function testUndefinedBooleanCmp()
 testUndefinedBooleanCmp.expected = "false,true,false,true,false,false,false,false,false,true,false,true,false,false,false,false";
 test(testUndefinedBooleanCmp);
 
+function testConstantBooleanExpr()
+{
+    for (var j = 0; j < 3; ++j) { if(true <= true) { } }
+    return "ok";
+}
+testConstantBooleanExpr.expected = "ok";
+test(testConstantBooleanExpr);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
