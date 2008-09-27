@@ -192,7 +192,7 @@ function ShortcutEditor()
 
         var result;
         for each (m in modifiers.split(/,\s*|\s+/))
-            result |= modifierFlags[m];
+            result |= m in modifierFlags && modifierFlags[m];
         return result;
     }
 
