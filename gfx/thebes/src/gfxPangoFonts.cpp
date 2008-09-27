@@ -1243,6 +1243,7 @@ LockedFTFace::GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph)
 
     const FT_Size_Metrics& ftMetrics = mFace->size->metrics;
 
+    gfxFloat emHeight;
     // Scale for vertical design metric conversion: pixels per design unit.
     gfxFloat yScale;
     if (FT_IS_SCALABLE(mFace)) {
@@ -1254,13 +1255,13 @@ LockedFTFace::GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph)
         // design units to units of 1/64 pixels, so that the result may be
         // interpreted as pixels in 26.6 fixed point format.
         yScale = FLOAT_FROM_26_6(FLOAT_FROM_16_16(ftMetrics.y_scale));
-        aMetrics->emHeight = mFace->units_per_EM * yScale;
+        emHeight = mFace->units_per_EM * yScale;
     } else { // Not scalable.
         // FT_Size_Metrics doc says x_scale is "only relevant for scalable
         // font formats".
         gfxFloat emUnit = mFace->units_per_EM;
-        aMetrics->emHeight = ftMetrics.y_ppem;
-        yScale = aMetrics->emHeight / emUnit;
+        emHeight = ftMetrics.y_ppem;
+        yScale = emHeight / emUnit;
     }
 
     TT_OS2 *os2 =
@@ -1317,7 +1318,7 @@ LockedFTFace::GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph)
             // CSS 2.1, section 4.3.2 Lengths: "In the cases where it is
             // impossible or impractical to determine the x-height, a value of
             // 0.5em should be used."
-            aMetrics->xHeight = 0.5 * aMetrics->emHeight;
+            aMetrics->xHeight = 0.5 * emHeight;
         }
         aMetrics->aveCharWidth = 0.0; // updated below
     }
@@ -1368,7 +1369,7 @@ LockedFTFace::GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph)
         }
     } else { // No underline info.
         // Imitate Pango.
-        aMetrics->underlineSize = aMetrics->emHeight / 14.0;
+        aMetrics->underlineSize = emHeight / 14.0;
         aMetrics->underlineOffset = -aMetrics->underlineSize;
     }
 
@@ -1378,7 +1379,7 @@ LockedFTFace::GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph)
     } else { // No strikeout info.
         aMetrics->strikeoutSize = aMetrics->underlineSize;
         // Use OpenType spec's suggested position for Roman font.
-        aMetrics->strikeoutOffset = aMetrics->emHeight * 409.0 / 2048.0
+        aMetrics->strikeoutOffset = emHeight * 409.0 / 2048.0
             + 0.5 * aMetrics->strikeoutSize;
     }
     SnapLineToPixels(aMetrics->strikeoutOffset, aMetrics->strikeoutSize);
@@ -1403,16 +1404,30 @@ LockedFTFace::GetMetrics(gfxFont::Metrics* aMetrics, PRUint32* aSpaceGlyph)
 
     aMetrics->maxHeight = aMetrics->maxAscent + aMetrics->maxDescent;
 
+    // Make the line height an integer number of pixels so that lines will be
+    // equally spaced (rather than just being snapped to pixels, some up and
+    // some down).  Layout calculates line height from the emHeight +
+    // internalLeading + externalLeading, but first each of these is rounded
+    // to layout units.  To ensure that the result is an integer number of
+    // pixels, round each of the components to pixels.
+    aMetrics->emHeight = NS_floor(emHeight + 0.5);
+
+    // maxHeight will normally be an integer, but round anyway in case
+    // FreeType is configured differently.
+    aMetrics->internalLeading =
+        NS_floor(aMetrics->maxHeight - aMetrics->emHeight + 0.5);
+
+    // Text input boxes currently don't work well with lineHeight
+    // significantly less than maxHeight (with Verdana, for example).
+    lineHeight = NS_floor(PR_MAX(lineHeight, aMetrics->maxHeight) + 0.5);
+    aMetrics->externalLeading =
+        lineHeight - aMetrics->internalLeading - aMetrics->emHeight;
+
     // Ensure emAscent + emDescent == emHeight
     gfxFloat sum = aMetrics->emAscent + aMetrics->emDescent;
     aMetrics->emAscent = sum > 0.0 ?
         aMetrics->emAscent * aMetrics->emHeight / sum : 0.0;
     aMetrics->emDescent = aMetrics->emHeight - aMetrics->emAscent;
-
-    aMetrics->internalLeading = aMetrics->maxHeight - aMetrics->emHeight;
-    // Text input boxes currently don't work well with lineHeight < maxHeight
-    // (with Verdana, for example).
-    aMetrics->externalLeading = PR_MAX(lineHeight - aMetrics->maxHeight, 0);
 }
 
 const gfxFont::Metrics&
