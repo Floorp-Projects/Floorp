@@ -2852,9 +2852,13 @@ js_InitJIT(JSTraceMonitor *tm)
 {
 #if defined NANOJIT_IA32
     if (!did_we_check_sse2) {
+        avmplus::AvmCore::cmov_available =
         avmplus::AvmCore::sse2_available = js_CheckForSSE2();
         did_we_check_sse2 = true;
     }
+#else if defined NANOJIT_AMD64
+    avmplus::AvmCore::cmov_available =
+    avmplus::AvmCore::sse2_available = true;
 #endif
     if (!tm->fragmento) {
         JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap && !tm->recoveryDoublePool);
@@ -3392,8 +3396,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
                                                       JSVAL_TO_BOOLEAN(JSVAL_VOID)),
                                            JSVAL_TO_BOOLEAN(JSVAL_VOID)),
                                 lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_FALSE)),
-                                x,
-                                true);
+                                x);
             if ((l == JSVAL_VOID) || (r == JSVAL_VOID))
                 cond = false;
         }
@@ -5450,7 +5453,7 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
     if (JSVAL_TAG(*vp) == JSVAL_BOOLEAN) {
         // Check to make sure *vp isn't a hole.
         LIns* cins = lir->ins2(LIR_eq, v_ins, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_HOLE)));
-        v_ins = lir->ins_choose(cins, lir->insImm(2), v_ins, true);
+        v_ins = lir->ins_choose(cins, lir->insImm(2), v_ins);
     }
     return v_ins;
 }
@@ -5810,7 +5813,7 @@ TraceRecorder::forInLoop(jsval* vp)
         jsval expected = JSVAL_IS_VOID(*vp) ? JSVAL_STRING : JSVAL_TAG(*vp);
         if (!box_jsval(expected, iter_ins))
             return false;
-        iter_ins = lir->ins_choose(flag_ins, v_ins, iter_ins, true);
+        iter_ins = lir->ins_choose(flag_ins, v_ins, iter_ins);
         if (!unbox_jsval(expected, iter_ins))
             return false;
         set(vp, iter_ins);
@@ -6872,9 +6875,7 @@ TraceRecorder::record_JSOP_LENGTH()
                                             lir->ins2(LIR_piand,
                                                       len_ins,
                                                       INS_CONSTPTR(JSSTRDEP_LENGTH_MASK)),
-                                            masked_len_ins,
-                                            true),
-                            true);
+                                            masked_len_ins));
 
         set(&l, lir->ins1(LIR_i2f, choose_len_ins));
         return true;
