@@ -71,6 +71,12 @@
 
 #include "jsautooplen.h"        // generated headers last
 
+/* Never use JSVAL_IS_BOOLEAN because it restricts the value (true, false) and 
+   the type. What you want to use is JSVAL_TAG(x) == JSVAL_BOOLEAN and then 
+   handle the undefined case properly (bug 457363). */
+#undef JSVAL_IS_BOOLEAN
+#define JSVAL_IS_BOOLEAN(x) JS_STATIC_ASSERT(0) 
+
 /* Number of iterations of a loop where we start tracing.  That is, we don't
    start tracing until the beginning of the HOTLOOP-th iteration. */
 #define HOTLOOP 2
@@ -3130,13 +3136,13 @@ TraceRecorder::switchop()
               addName(lir->ins_eq0(lir->ins_eq0(lir->insCall(F_EqualStrings, args))),
                       "guard(switch on string)"),
               BRANCH_EXIT);
-    } else if (JSVAL_IS_BOOLEAN(v)) {
+    } else if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
         guard(true,
               addName(lir->ins2(LIR_eq, v_ins, lir->insImm(JSVAL_TO_BOOLEAN(v))),
                       "guard(switch on boolean)"),
               BRANCH_EXIT);
     } else {
-        ABORT_TRACE("switch on object, null, or undefined");
+        ABORT_TRACE("switch on object or null");
     }
     return true;
 }
@@ -3344,11 +3350,15 @@ TraceRecorder::cmp(LOpcode op, int flags)
         }
         rnum = js_ValueToNumber(cx, &tmp[1]);
         cond = evalCmp(op, lnum, rnum);
-    } else if (JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r)) {
+    } else if ((JSVAL_TAG(l) == JSVAL_BOOLEAN) && (JSVAL_TAG(r) == JSVAL_BOOLEAN)) {
         // The well-known values of JSVAL_TRUE and JSVAL_FALSE make this very easy.
         // In particular: JSVAL_TO_BOOLEAN(0) < JSVAL_TO_BOOLEAN(1) so all of these comparisons do
         // the right thing.
         cond = evalCmp(op, l, r);
+        // For ==, !=, ===, and !=== the result is magically correct even if undefined (2) is
+        // involved. For the relational operations we need some additional cmov magic to make
+        // the result always false (since undefined becomes NaN per ECMA and that doesn't
+        // compare to anything, even itself). The code for this is emitted a few lines down.
     } else if (JSVAL_IS_OBJECT(l) && JSVAL_IS_OBJECT(r)) {
         if (op != LIR_feq) {
             negate = !(op == LIR_fle || op == LIR_fge);
@@ -3372,6 +3382,20 @@ TraceRecorder::cmp(LOpcode op, int flags)
         if (negate) {
             x = lir->ins_eq0(x);
             cond = !cond;
+        }
+        // For boolean comparison we need a bit post-processing to make the result false if
+        // either side is undefined.
+        if (op != LIR_eq && (JSVAL_TAG(l) == JSVAL_BOOLEAN) && (JSVAL_TAG(r) == JSVAL_BOOLEAN)) {
+            x = lir->ins_choose(lir->ins2i(LIR_eq, 
+                                           lir->ins2i(LIR_and, 
+                                                      lir->ins2(LIR_or, l_ins, r_ins),
+                                                      JSVAL_TO_BOOLEAN(JSVAL_VOID)),
+                                           JSVAL_TO_BOOLEAN(JSVAL_VOID)),
+                                lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_FALSE)),
+                                x,
+                                true);
+            if ((l == JSVAL_VOID) || (r == JSVAL_VOID))
+                cond = false;
         }
     }
     
@@ -6545,7 +6569,10 @@ TraceRecorder::record_JSOP_CALLPROP()
         } else if (JSVAL_IS_NUMBER(l)) {
             i = JSProto_Number;
             debug_only(protoname = "Number.prototype";)
-        } else if (JSVAL_IS_BOOLEAN(l)) {
+        } else if (JSVAL_TAG(l) == JSVAL_BOOLEAN) {
+            if (l == JSVAL_VOID)
+                ABORT_TRACE("callprop on void");
+            guard(false, lir->ins2i(LIR_eq, get(&l), JSVAL_TO_BOOLEAN(JSVAL_VOID)), MISMATCH_EXIT);
             i = JSProto_Boolean;
             debug_only(protoname = "Boolean.prototype";)
         } else {
