@@ -52,6 +52,7 @@ _HTTP_FILES	= \
 		$(NULL)
 
 _CHROME_FILES	= \
+		test_329534.xul \
 		test_371798.xul \
 		test_342484.xul \
 		test_341972a.xul \
