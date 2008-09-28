@@ -4770,6 +4770,7 @@ cairo-qt)
     MOZ_GFX_TOOLKIT=cairo
     MOZ_ENABLE_QT=1
     MOZ_ENABLE_XREMOTE=1
+    USE_ELF_DYNSTR_GC=
 
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
@@ -7344,7 +7345,7 @@ fi
 
 if test -z "$SKIP_PATH_CHECKS"; then
 if test -z "${GLIB_CFLAGS}" || test -z "${GLIB_LIBS}" ; then
-    if test "$MOZ_ENABLE_GTK2"; then
+    if test "$MOZ_ENABLE_GTK2" || test "$USE_ELF_DYNSTR_GC" ; then
         PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
     else
         AM_PATH_GLIB(${GLIB_VERSION})
