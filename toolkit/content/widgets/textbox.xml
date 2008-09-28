@@ -271,6 +271,9 @@
           if (!this.mIgnoreClick) {
             this.mIgnoreFocus = true;
             this.inputField.setSelectionRange(0, 0);
+            if (event.originalTarget == this ||
+                event.originalTarget == this.inputField.parentNode)
+              this.inputField.focus();
           }
         ]]>
       </handler>
@@ -278,10 +281,8 @@
       <handler event="click">
         <![CDATA[
           if (!this.mIgnoreClick && this.clickSelectsAll &&
-              this.inputField.selectionStart == this.inputField.selectionEnd) {
-            this.inputField.focus()
+              this.inputField.selectionStart == this.inputField.selectionEnd)
             this.editor.selectAll();
-          }
         ]]>
       </handler>
     </handlers>
