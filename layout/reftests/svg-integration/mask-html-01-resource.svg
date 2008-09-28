@@ -1,6 +1,10 @@
 <?xml-stylesheet
    type="text/css"
    href="data:text/css,circle { fill: white }" ?>
+<!-- test for javascript: execution: shouldn't happen -->
+<?xml-stylesheet
+   type="text/css"
+   href="javascript:'circle { fill: black }'" ?>
 <svg height="0" xmlns="http://www.w3.org/2000/svg">
   <style type="text/css">
     /* XXXbz this should really be an external reference to mask-html-01.xhtml
