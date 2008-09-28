@@ -816,11 +816,11 @@ nsLayoutUtils::GetEventCoordinatesForNearestView(nsEvent* aEvent,
                                GUIEvent->refPoint, frameView);
 }
 
-static nsPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
-  nsPoint offset(0, 0);
+static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
+  nsIntPoint offset(0, 0);
   nsIWidget* parent = aWidget->GetParent();
   while (parent) {
-    nsRect bounds;
+    nsIntRect bounds;
     aWidget->GetBounds(bounds);
     offset += bounds.TopLeft();
     aWidget = parent;
@@ -839,9 +839,9 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
   nsIWidget* viewWidget = aView->GetNearestWidget(&viewOffset);
 
   nsIWidget* fromRoot;
-  nsPoint fromOffset = GetWidgetOffset(aWidget, fromRoot);
+  nsIntPoint fromOffset(GetWidgetOffset(aWidget, fromRoot));
   nsIWidget* toRoot;
-  nsPoint toOffset = GetWidgetOffset(viewWidget, toRoot);
+  nsIntPoint toOffset(GetWidgetOffset(viewWidget, toRoot));
 
   nsIntPoint widgetPoint;
   if (fromRoot == toRoot) {
@@ -1986,7 +1986,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
 
   const nsStyleDisplay *disp = aFrame->GetStyleDisplay();
   if (aFrame->IsThemed(disp)) {
-    nsSize size(0, 0);
+    nsIntSize size(0, 0);
     PRBool canOverride = PR_TRUE;
     nsPresContext *presContext = aFrame->PresContext();
     presContext->GetTheme()->

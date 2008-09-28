@@ -158,7 +158,7 @@ nsImageLoadingContent::~nsImageLoadingContent()
 NS_IMETHODIMP
 nsImageLoadingContent::FrameChanged(imgIContainer* aContainer,
                                     gfxIImageFrame* aFrame,
-                                    nsRect* aDirtyRect)
+                                    nsIntRect* aDirtyRect)
 {
   LOOP_OVER_OBSERVERS(FrameChanged(aContainer, aFrame, aDirtyRect));
   return NS_OK;
@@ -204,7 +204,7 @@ nsImageLoadingContent::OnStartFrame(imgIRequest* aRequest,
 NS_IMETHODIMP
 nsImageLoadingContent::OnDataAvailable(imgIRequest* aRequest,
                                        gfxIImageFrame* aFrame,
-                                       const nsRect* aRect)
+                                       const nsIntRect* aRect)
 {
   LOOP_OVER_OBSERVERS(OnDataAvailable(aRequest, aFrame, aRect));
   return NS_OK;

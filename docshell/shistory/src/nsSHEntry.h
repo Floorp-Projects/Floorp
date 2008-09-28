@@ -110,7 +110,7 @@ private:
   nsCOMPtr<nsISupports>           mCacheKey;
   nsISHEntry *                    mParent;  // weak reference
   nsCOMPtr<nsISupports>           mWindowState;
-  nsRect                          mViewerBounds;
+  nsIntRect                       mViewerBounds;
   nsCOMArray<nsIDocShellTreeItem> mChildShells;
   nsCOMPtr<nsISupportsArray>      mRefreshURIList;
   nsCOMPtr<nsISupports>           mOwner;

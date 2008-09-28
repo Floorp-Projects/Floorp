@@ -7,18 +7,18 @@ interface nsIPrintSettings;
 
 %{ C++
 class nsIWidget;
-struct nsRect;
+struct nsIntRect;
 %}
 
 [ptr] native nsIWidgetPtr(nsIWidget);
-[ref] native nsRectRef(nsRect);
+[ref] native nsIntRectRef(nsIntRect);
 
-[scriptable, uuid(05b290ac-d880-4900-bb1f-2211b5f8accc)]
+[scriptable, uuid(c9aba5da-7d8b-46a8-87cd-9ab7e16480b8)]
 interface nsIContentViewer : nsISupports
 {
 
   [noscript] void init(in nsIWidgetPtr aParentWidget,
-                       [const] in nsRectRef aBounds);
+                       [const] in nsIntRectRef aBounds);
 
   attribute nsISupports container;
 
@@ -55,8 +55,8 @@ interface nsIContentViewer : nsISupports
 
   attribute nsIDOMDocument DOMDocument;
 
-  [noscript] void getBounds(in nsRectRef aBounds);
-  [noscript] void setBounds([const] in nsRectRef aBounds);
+  [noscript] void getBounds(in nsIntRectRef aBounds);
+  [noscript] void setBounds([const] in nsIntRectRef aBounds);
 
   /**
    * The previous content viewer, which has been |close|d but not

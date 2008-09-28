@@ -139,7 +139,7 @@ nsIWidget         * gRollupWidget   = nsnull;
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild;
 
 // sends gecko an ime composition event
-- (nsRect) sendCompositionEvent:(PRInt32)aEventType;
+- (nsIntRect) sendCompositionEvent:(PRInt32)aEventType;
 
 // sends gecko an ime text event
 - (void) sendTextEvent:(PRUnichar*) aBuffer 
@@ -208,7 +208,7 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 
 static inline void
-GeckoRectToNSRect(const nsRect & inGeckoRect, NSRect & outCocoaRect)
+GeckoRectToNSRect(const nsIntRect & inGeckoRect, NSRect & outCocoaRect)
 {
   outCocoaRect.origin.x = inGeckoRect.x;
   outCocoaRect.origin.y = inGeckoRect.y;
@@ -217,12 +217,12 @@ GeckoRectToNSRect(const nsRect & inGeckoRect, NSRect & outCocoaRect)
 }
 
 static inline void
-NSRectToGeckoRect(const NSRect & inCocoaRect, nsRect & outGeckoRect)
+NSRectToGeckoRect(const NSRect & inCocoaRect, nsIntRect & outGeckoRect)
 {
-  outGeckoRect.x = static_cast<nscoord>(inCocoaRect.origin.x);
-  outGeckoRect.y = static_cast<nscoord>(inCocoaRect.origin.y);
-  outGeckoRect.width = static_cast<nscoord>(inCocoaRect.size.width);
-  outGeckoRect.height = static_cast<nscoord>(inCocoaRect.size.height);
+  outGeckoRect.x = NSToIntFloor(inCocoaRect.origin.x);
+  outGeckoRect.y = NSToIntFloor(inCocoaRect.origin.y);
+  outGeckoRect.width = NSToIntCeil(inCocoaRect.size.width);
+  outGeckoRect.height = NSToIntCeil(inCocoaRect.size.height);
 }
 
 
@@ -452,7 +452,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsChildView, nsBaseWidget, nsIPluginWidget)
 // Utility method for implementing both Create(nsIWidget ...)
 // and Create(nsNativeWidget...)
 nsresult nsChildView::StandardCreate(nsIWidget *aParent,
-                      const nsRect &aRect,
+                      const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
@@ -582,7 +582,7 @@ void nsChildView::TearDownView()
 
 // create a nsChildView
 NS_IMETHODIMP nsChildView::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
+                      const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
@@ -596,7 +596,7 @@ NS_IMETHODIMP nsChildView::Create(nsIWidget *aParent,
 
 // Creates a main nsChildView using a native widget (an NSView)
 NS_IMETHODIMP nsChildView::Create(nsNativeWidget aNativeParent,
-                      const nsRect &aRect,
+                      const nsIntRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
@@ -990,14 +990,14 @@ NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
 
 
 // Get this component dimension
-NS_IMETHODIMP nsChildView::GetBounds(nsRect &aRect)
+NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
 {
   aRect = mBounds;
   return NS_OK;
 }
 
 
-NS_IMETHODIMP nsChildView::SetBounds(const nsRect &aRect)
+NS_IMETHODIMP nsChildView::SetBounds(const nsIntRect &aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1526,7 +1526,7 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
 
 
 // Invalidate this component's visible area
-NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
+NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, PRBool aIsSynchronous)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1576,7 +1576,7 @@ NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIs
 
   // FIXME rewrite to use a Cocoa region when nsIRegion isn't a QD Region
   NSRect r;
-  nsRect bounds;
+  nsIntRect bounds;
   nsIRegion* region = const_cast<nsIRegion*>(aRegion);     // ugh. this method should be const
   region->GetBoundingBox(&bounds.x, &bounds.y, &bounds.width, &bounds.height);
   GeckoRectToNSRect(bounds, r);
@@ -1626,7 +1626,7 @@ NS_IMETHODIMP nsChildView::Update()
 
 // Scroll the bits of a view and its children
 // FIXME: I'm sure the invalidating can be optimized, just no time now.
-NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
+NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsIntRect *aClipRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1648,7 +1648,7 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     // over repainting.  We can scroll like a bat out of hell
     // by not wasting time invalidating the widgets, since it's
     // completely unnecessary to do so.
-    nsRect bounds;
+    nsIntRect bounds;
     kid->GetBounds(bounds);
     kid->Resize(bounds.x + aDx, bounds.y + aDy, bounds.width, bounds.height, PR_FALSE);
   }
@@ -1867,11 +1867,11 @@ NS_IMETHODIMP nsChildView::CalcOffset(PRInt32 &aX,PRInt32 &aY)
 PRBool nsChildView::PointInWidget(Point aThePoint)
 {
   // get the origin in local coordinates
-  nsPoint widgetOrigin(0, 0);
+  nsIntPoint widgetOrigin(0, 0);
   LocalToWindowCoordinate(widgetOrigin);
 
   // get rectangle relatively to the parent
-  nsRect widgetRect;
+  nsIntRect widgetRect;
   GetBounds(widgetRect);
 
   // convert the topLeft corner to local coordinates
@@ -1887,7 +1887,7 @@ PRBool nsChildView::PointInWidget(Point aThePoint)
 //    Convert the given rect to global coordinates.
 //    @param aLocalRect  -- rect in local coordinates of this widget
 //    @param aGlobalRect -- |aLocalRect| in global coordinates
-NS_IMETHODIMP nsChildView::WidgetToScreen(const nsRect& aLocalRect, nsRect& aGlobalRect)
+NS_IMETHODIMP nsChildView::WidgetToScreen(const nsIntRect& aLocalRect, nsIntRect& aGlobalRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1927,7 +1927,7 @@ NS_IMETHODIMP nsChildView::WidgetToScreen(const nsRect& aLocalRect, nsRect& aGlo
 //    Convert the given rect to local coordinates.
 //    @param aGlobalRect  -- rect in screen coordinates 
 //    @param aLocalRect -- |aGlobalRect| in coordinates of this widget
-NS_IMETHODIMP nsChildView::ScreenToWidget(const nsRect& aGlobalRect, nsRect& aLocalRect)
+NS_IMETHODIMP nsChildView::ScreenToWidget(const nsIntRect& aGlobalRect, nsIntRect& aLocalRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -2743,7 +2743,7 @@ NSEvent* gLastDragEvent = nil;
 
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
-  nsRect geckoBounds;
+  nsIntRect geckoBounds;
   mGeckoChild->GetBounds(geckoBounds);
 
   NSRect bounds = [self bounds];
@@ -2787,7 +2787,7 @@ NSEvent* gLastDragEvent = nil;
   targetContext->Clip();
   
   // bounding box of the dirty area
-  nsRect fullRect;
+  nsIntRect fullRect;
   NSRectToGeckoRect(aRect, fullRect);
 
   nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
@@ -4696,14 +4696,14 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 }
 
 
-- (nsRect)sendCompositionEvent:(PRInt32) aEventType
+- (nsIntRect)sendCompositionEvent:(PRInt32) aEventType
 {
 #ifdef DEBUG_IME
   NSLog(@"****in sendCompositionEvent; type = %d", aEventType);
 #endif
 
   if (!mGeckoChild)
-    return nsRect(0, 0, 0, 0);
+    return nsIntRect(0, 0, 0, 0);
 
   // static void init_composition_event( *aEvent, int aType)
   nsCompositionEvent event(PR_TRUE, aEventType, mGeckoChild);
@@ -5068,7 +5068,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   if (!mGeckoChild || theRange.location == NSNotFound)
     return rect;
 
-  nsRect r;
+  nsIntRect r;
   PRBool useCaretRect = theRange.length == 0;
   if (!useCaretRect) {
     nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_CHARACTER_RECT, mGeckoChild);

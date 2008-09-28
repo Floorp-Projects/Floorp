@@ -1525,12 +1525,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   nsCOMPtr<imgIContainer> image;
   req->GetImage(getter_AddRefs(image));
 
-  nsSize imageSize;
-  image->GetWidth(&imageSize.width);
-  image->GetHeight(&imageSize.height);
+  nsIntSize imageIntSize;
+  image->GetWidth(&imageIntSize.width);
+  image->GetHeight(&imageIntSize.height);
 
-  imageSize.width = nsPresContext::CSSPixelsToAppUnits(imageSize.width);
-  imageSize.height = nsPresContext::CSSPixelsToAppUnits(imageSize.height);
+  nsSize imageSize;
+  imageSize.width = nsPresContext::CSSPixelsToAppUnits(imageIntSize.width);
+  imageSize.height = nsPresContext::CSSPixelsToAppUnits(imageIntSize.height);
 
   req = nsnull;
 
@@ -1602,10 +1603,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
           gfxImgFrame->GetNeedsBackground(&needBackgroundColor);
 
           /* check for tiling of a image where frame smaller than container */
-          nsSize iSize;
+          nsIntSize iSize;
           image->GetWidth(&iSize.width);
           image->GetHeight(&iSize.height);
-          nsRect iframeRect;
+          nsIntRect iframeRect;
           gfxImgFrame->GetRect(iframeRect);
           if (iSize.width != iframeRect.width ||
               iSize.height != iframeRect.height) {
@@ -1911,9 +1912,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     } else {
       // Note that the subimage is in tile space so it may cover
       // multiple tiles of the image.
-      subimageRect.ScaleRoundOutInverse(nsIDeviceContext::AppUnitsPerCSSPixel());
+      nsIntRect subimagePxRect(nsRect::ToOutsidePixels(subimageRect, nsIDeviceContext::AppUnitsPerCSSPixel()));
       aRenderingContext.DrawTile(image, absTileRect.x, absTileRect.y,
-              &drawRect, &subimageRect);
+              &drawRect, &subimagePxRect);
     }
   }
 
