@@ -300,7 +300,10 @@ nsSVGUseElement::CreateAnonymousContent()
 
   nsCOMPtr<nsIDOMNode> newnode;
   nsCOMArray<nsINode> unused;
-  nsNodeUtils::Clone(targetContent, PR_TRUE, nsnull, unused,
+  nsNodeInfoManager* nodeInfoManager =
+    targetContent->GetOwnerDoc() == GetOwnerDoc() ?
+      nsnull : GetOwnerDoc()->NodeInfoManager();
+  nsNodeUtils::Clone(targetContent, PR_TRUE, nodeInfoManager, unused,
                      getter_AddRefs(newnode));
 
   nsCOMPtr<nsIContent> newcontent = do_QueryInterface(newnode);
@@ -416,7 +419,8 @@ nsSVGUseElement::LookupHref()
   if (href.IsEmpty())
     return;
 
-  nsCOMPtr<nsIURI> targetURI, baseURI = GetBaseURI();
+  nsCOMPtr<nsIURI> targetURI;
+  nsCOMPtr<nsIURI> baseURI = mOriginal ? mOriginal->GetBaseURI() : GetBaseURI();
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                             GetCurrentDoc(), baseURI);
 
