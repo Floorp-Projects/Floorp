@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: volume attribute set</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<video id='v1'></video><audio id='a1'></audio>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function test(element, value, shouldThrow) {
+  var threw = false;
+  try {
+    element.volume = value;
+  } catch (err if err == "NS_ERROR_DOM_INDEX_SIZE_ERR") {
+    threw = true;
+  }
+  is(shouldThrow, threw, "Case: " +element.id+ " setVolume=" + value);
+}
+
+
+var ids = new Array(document.getElementById('v1'), document.getElementById('a1'));
+
+for (i=0; i<ids.length; i++) {
+  var element = ids[i];
+  test(element, 0.0,false);
+  test(element, 1.0, false);
+  test(element, -0.1, true);
+  test(element, 1.1, true);
+}  
+ 
+</script>
+</pre>
+</body>
+</html>
