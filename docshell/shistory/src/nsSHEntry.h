@@ -102,6 +102,7 @@ private:
   PRUint32                        mPageIdentifier;
   PRInt32                         mScrollPositionX;
   PRInt32                         mScrollPositionY;
+  PRPackedBool                    mSaveContentViewer;
   PRPackedBool                    mIsFrameNavigation;
   PRPackedBool                    mSaveLayoutState;
   PRPackedBool                    mExpired;
