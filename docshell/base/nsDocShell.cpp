@@ -460,8 +460,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         mContentViewer->GetDOMDocument((nsIDOMDocument **) aSink);
         return *aSink ? NS_OK : NS_NOINTERFACE;
     }
-    else if (aIID.Equals(NS_GET_IID(nsIApplicationCacheContainer)) &&
-             NS_SUCCEEDED(EnsureContentViewer())) {
+    else if (aIID.Equals(NS_GET_IID(nsIApplicationCacheContainer))) {
         *aSink = nsnull;
 
         // Return the toplevel document as an
@@ -469,7 +468,17 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
 
         nsCOMPtr<nsIDocShellTreeItem> rootItem;
         GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
-        nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(rootItem);
+        nsCOMPtr<nsIDocShell> rootDocShell = do_QueryInterface(rootItem);
+        if (!rootDocShell)
+            return NS_ERROR_NO_INTERFACE;
+
+        nsCOMPtr<nsIContentViewer> contentViewer;
+        rootDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+        if (!contentViewer)
+            return NS_ERROR_NO_INTERFACE;
+
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        contentViewer->GetDOMDocument(getter_AddRefs(domDoc));
         NS_ASSERTION(domDoc, "Should have a document.");
         if (!domDoc)
             return NS_ERROR_NO_INTERFACE;
