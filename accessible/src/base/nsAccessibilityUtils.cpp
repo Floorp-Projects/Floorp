@@ -52,8 +52,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMDocumentXBL.h"
-#include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMXULContainerElement.h"
@@ -389,24 +387,15 @@ already_AddRefed<nsIDOMElement>
 nsAccUtils::GetDOMElementFor(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
-  nsIDOMElement *element = nsnull;
 
+  nsIDOMElement *element = nsnull;
   if (node->IsNodeOfType(nsINode::eELEMENT))
     CallQueryInterface(node, &element);
-
   else if (node->IsNodeOfType(nsINode::eTEXT))
     CallQueryInterface(node->GetNodeParent(), &element);
-
   else if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
-    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(node));
-    if (htmlDoc) {
-      nsCOMPtr<nsIDOMHTMLElement> bodyElement;
-      htmlDoc->GetBody(getter_AddRefs(bodyElement));
-      CallQueryInterface(bodyElement, &element);
-    } else {
-      nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(node));
-      domDoc->GetDocumentElement(&element);
-    }
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(node));
+    domDoc->GetDocumentElement(&element);
   }
 
   return element;
