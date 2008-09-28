@@ -2465,7 +2465,7 @@ dnl the qsort routine under solaris is faulty
     MOZ_MEMORY=1
     if test -z "$GNU_CC"; then
        NS_USE_NATIVE=1
-       MOZ_FIX_LINK_PATHS='-R $(LIBXUL_DIST)/bin'
+       MOZ_FIX_LINK_PATHS=
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
 
        if test "$CPU_ARCH" != "sparc"; then
