@@ -128,7 +128,7 @@ nsCommonWidget::DispatchDeactivateEvent(void)
 }
 
 void
-nsCommonWidget::DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus)
+nsCommonWidget::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
 {
     nsSizeEvent event(PR_TRUE, NS_SIZE, this);
 
@@ -204,7 +204,7 @@ nsCommonWidget::Show(PRBool aState)
 NS_IMETHODIMP
 nsCommonWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-    mBounds.SizeTo(GetSafeWindowSize(nsIntSize(aWidth, aHeight)));
+    mBounds.SizeTo(GetSafeWindowSize(nsSize(aWidth, aHeight)));
 
     if (!mCreated)
         return NS_OK;
@@ -263,7 +263,7 @@ nsCommonWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
     // synthesize a resize event if this isn't a toplevel
     if (mIsTopLevel || mListenForResizes) {
-        nsIntRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
+        nsRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
         nsEventStatus status;
         DispatchResizeEvent(rect, status);
     }
@@ -277,7 +277,7 @@ nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 {
     mBounds.x = aX;
     mBounds.y = aY;
-    mBounds.SizeTo(GetSafeWindowSize(nsIntSize(aWidth, aHeight)));
+    mBounds.SizeTo(GetSafeWindowSize(nsSize(aWidth, aHeight)));
 
     mPlaced = PR_TRUE;
 
@@ -328,7 +328,7 @@ nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
 
     if (mIsTopLevel || mListenForResizes) {
         // synthesize a resize event
-        nsIntRect rect(aX, aY, aWidth, aHeight);
+        nsRect rect(aX, aY, aWidth, aHeight);
         nsEventStatus status;
         DispatchResizeEvent(rect, status);
     }

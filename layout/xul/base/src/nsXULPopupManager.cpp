@@ -308,7 +308,7 @@ nsXULPopupManager::GetMouseLocation(nsIDOMNode** aNode, PRInt32* aOffset)
 void
 nsXULPopupManager::SetTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup)
 {
-  mCachedMousePoint = nsIntPoint(0, 0);
+  mCachedMousePoint = nsPoint(0, 0);
 
   nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aEvent);
   if (uiEvent) {
@@ -338,14 +338,15 @@ nsXULPopupManager::SetTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup)
               mouseEvent->GetClientY(&mCachedMousePoint.y);
 
               // convert to device pixels
-              mCachedMousePoint.x = presContext->AppUnitsToDevPixels(nsPresContext::CSSPixelsToAppUnits(mCachedMousePoint.x));
-              mCachedMousePoint.y = presContext->AppUnitsToDevPixels(nsPresContext::CSSPixelsToAppUnits(mCachedMousePoint.y));
+              PRInt32 adj = presContext->DeviceContext()->AppUnitsPerDevPixel();
+              mCachedMousePoint.x = nsPresContext::CSSPixelsToAppUnits(mCachedMousePoint.x) / adj;
+              mCachedMousePoint.y = nsPresContext::CSSPixelsToAppUnits(mCachedMousePoint.y) / adj;
             }
             else if (rootFrame) {
               nsPoint pnt =
                 nsLayoutUtils::GetEventCoordinatesRelativeTo(event, rootFrame);
-              mCachedMousePoint = nsIntPoint(presContext->AppUnitsToDevPixels(pnt.x),
-                                             presContext->AppUnitsToDevPixels(pnt.y));
+              mCachedMousePoint = nsPoint(presContext->AppUnitsToDevPixels(pnt.x),
+                                          presContext->AppUnitsToDevPixels(pnt.y));
             }
           }
         }
@@ -998,7 +999,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
                             GetClosestView()->GetNearestWidget(&pnt);
   event.refPoint = mCachedMousePoint;
   nsEventDispatcher::Dispatch(aPopup, aPresContext, &event, nsnull, &status);
-  mCachedMousePoint = nsIntPoint(0, 0);
+  mCachedMousePoint = nsPoint(0, 0);
 
   // if a panel, blur whatever has focus so that the panel can take the focus.
   // This is done after the popupshowing event in case that event is cancelled.

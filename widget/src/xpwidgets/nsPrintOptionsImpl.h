@@ -76,12 +76,12 @@ protected:
   void ReadJustification(const char * aPrefId, PRInt16& aJust,
                          PRInt16 aInitValue);
   void WriteJustification(const char * aPrefId, PRInt16 aJust);
-  void ReadInchesToTwipsPref(const char * aPrefId, PRInt32&  aTwips,
+  void ReadInchesToTwipsPref(const char * aPrefId, nscoord&  aTwips,
                              const char * aMarginPref);
-  void WriteInchesFromTwipsPref(const char * aPrefId, PRInt32 aTwips);
-  void ReadInchesIntToTwipsPref(const char * aPrefId, PRInt32&  aTwips,
+  void WriteInchesFromTwipsPref(const char * aPrefId, nscoord aTwips);
+  void ReadInchesIntToTwipsPref(const char * aPrefId, nscoord&  aTwips,
                                 const char * aMarginPref);
-  void WriteInchesIntFromTwipsPref(const char * aPrefId, PRInt32 aTwips);
+  void WriteInchesIntFromTwipsPref(const char * aPrefId, nscoord aTwips);
 
   nsresult ReadPrefString(const char * aPrefId, nsAString& aString);
   /**

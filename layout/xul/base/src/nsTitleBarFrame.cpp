@@ -159,7 +159,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
    case NS_MOUSE_MOVE: {
        if(mTrackingMouseMove)
        {
-         nsIntPoint nsMoveBy(aEvent->refPoint - mLastPoint);
+         nsPoint nsMoveBy = aEvent->refPoint - mLastPoint;
 
          nsIFrame* parent = GetParent();
          while (parent && parent->GetType() != nsGkAtoms::menuPopupFrame)
@@ -171,7 +171,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
            nsCOMPtr<nsIWidget> widget;
            (static_cast<nsMenuPopupFrame*>(parent))->
              GetWidget(getter_AddRefs(widget));
-           nsIntRect bounds;
+           nsRect bounds;
            widget->GetScreenBounds(bounds);
            widget->Move(bounds.x + nsMoveBy.x, bounds.y + nsMoveBy.y);
          }
