@@ -385,7 +385,7 @@ protected:
   nsWeakFrame mLastDragOverFrame;
 
   // member variables for the d&d gesture state machine
-  nsIntPoint mGestureDownPoint; // screen coordinates
+  nsPoint mGestureDownPoint; // screen coordinates
   // The content to use as target if we start a d&d (what we drag).
   nsCOMPtr<nsIContent> mGestureDownContent;
   // The content of the frame where the mouse-down event occurred. It's the same

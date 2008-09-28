@@ -175,7 +175,7 @@ protected:
 
   void NotifyContentObjectWrapper();
 
-  nsIntPoint GetWindowOriginInPixels(PRBool aWindowless);
+  nsPoint GetWindowOriginInPixels(PRBool aWindowless);
 
   static void PaintPrintPlugin(nsIFrame* aFrame,
                                nsIRenderingContext* aRenderingContext,
@@ -197,7 +197,7 @@ protected:
   friend class nsPluginInstanceOwner;
 private:
   nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
-  nsIntRect                       mWindowlessRect;
+  nsRect                mWindowlessRect;
 
   // For assertions that make it easier to determine if a crash is due
   // to the underlying problem described in bug 136927, and to prevent

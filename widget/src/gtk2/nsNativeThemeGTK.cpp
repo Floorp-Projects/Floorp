@@ -814,7 +814,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 
 NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
-                                  PRUint8 aWidgetType, nsIntMargin* aResult)
+                                  PRUint8 aWidgetType, nsMargin* aResult)
 {
   GtkTextDirection direction = GetTextDirection(aFrame);
   aResult->top = aResult->left = aResult->right = aResult->bottom = 0;
@@ -867,7 +867,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
 PRBool
 nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
                                    nsIFrame* aFrame, PRUint8 aWidgetType,
-                                   nsIntMargin* aResult)
+                                   nsMargin* aResult)
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON_FOCUS:
@@ -931,7 +931,7 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
 NS_IMETHODIMP
 nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
                                        nsIFrame* aFrame, PRUint8 aWidgetType,
-                                       nsIntSize* aResult, PRBool* aIsOverridable)
+                                       nsSize* aResult, PRBool* aIsOverridable)
 {
   aResult->width = aResult->height = 0;
   *aIsOverridable = PR_TRUE;
@@ -1087,7 +1087,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       nsCOMPtr<nsIDeviceContext> dc;
       aContext->GetDeviceContext(*getter_AddRefs(dc));
 
-      nsIntMargin border;
+      nsMargin border;
       nsNativeThemeGTK::GetWidgetBorder(dc, aFrame, aWidgetType, &border);
       aResult->width = border.left + border.right;
       aResult->height = border.top + border.bottom;

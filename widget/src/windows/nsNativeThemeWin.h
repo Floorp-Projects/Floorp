@@ -43,9 +43,6 @@
 #include "nsNativeTheme.h"
 #include <windows.h>
 
-struct nsIntRect;
-struct nsIntSize;
-
 class nsNativeThemeWin : private nsNativeTheme,
                          public nsITheme {
 public:
@@ -61,12 +58,12 @@ public:
   NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
-                             nsIntMargin* aResult);
+                             nsMargin* aResult);
 
   virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsIntMargin* aResult);
+                                  nsMargin* aResult);
 
   virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext,
                                    nsIFrame* aFrame,
@@ -75,7 +72,7 @@ public:
 
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsIntSize* aResult,
+                                  nsSize* aResult,
                                   PRBool* aIsOverridable);
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
@@ -110,11 +107,11 @@ protected:
   nsresult ClassicGetWidgetBorder(nsIDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
-                             nsIntMargin* aResult);
+                             nsMargin* aResult);
 
   nsresult ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsIntSize* aResult,
+                                  nsSize* aResult,
                                   PRBool* aIsOverridable);
 
   PRBool ClassicThemeSupportsWidget(nsPresContext* aPresContext, 
