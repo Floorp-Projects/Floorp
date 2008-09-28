@@ -53,6 +53,7 @@ _TEST_FILES = 	test_autoplay.html \
                 test_playbackRate.html \
                 test_readyState.html \
                 test_start.html \
+                test_volume.html \
 #               test_bug448534.html \
                 320x240.ogg \
                 $(NULL)
