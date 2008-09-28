@@ -6282,6 +6282,9 @@ nsEventStateManager::ShiftFocusByDoc(PRBool aForward)
 
   nsCOMPtr<nsISupports> pcContainer = mPresContext->GetContainer();
   nsCOMPtr<nsIDocShellTreeNode> curNode = do_QueryInterface(pcContainer);
+  if (!curNode) {
+    return;
+  }
 
   // perform a depth first search (preorder) of the docshell tree
   // looking for an HTML Frame or a chrome document

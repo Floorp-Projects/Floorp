@@ -1804,49 +1804,35 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
 
   NS_PRECONDITION(mPresContext, "presContext cannot be null");
   if (mPresContext) {
-    nsresult result = NS_OK;
-
     // first, make sure this is not a chrome shell 
-    nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-    if (container) {
-      nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
-      if (NS_SUCCEEDED(result) && docShell){
-        PRInt32 docShellType;
-        result = docShell->GetItemType(&docShellType);
-        if (NS_SUCCEEDED(result)){
-          if (nsIDocShellTreeItem::typeChrome == docShellType){
-            return NS_OK;
-          }
-        }      
-      }
+    if (nsContentUtils::IsInChromeDocshell(mDocument)) {
+      return NS_OK;
+    }
+
+#ifdef DEBUG_attinasi
+    printf("Setting Preference Style Rules:\n");
+#endif
+    // if here, we need to create rules for the prefs
+    // - this includes the background-color, the text-color,
+    //   the link color, the visited link color and the link-underlining
+    
+    // first clear any exising rules
+    nsresult result = ClearPreferenceStyleRules();
+      
+    // now the link rules (must come after the color rules, or links will not be correct color!)
+    // XXX - when there is both an override and agent pref stylesheet this won't matter,
+    //       as the color rules will be overrides and the links rules will be agent
+    if (NS_SUCCEEDED(result)) {
+      result = SetPrefLinkRules();
     }
     if (NS_SUCCEEDED(result)) {
-    
-#ifdef DEBUG_attinasi
-      printf("Setting Preference Style Rules:\n");
-#endif
-      // if here, we need to create rules for the prefs
-      // - this includes the background-color, the text-color,
-      //   the link color, the visited link color and the link-underlining
-    
-      // first clear any exising rules
-      result = ClearPreferenceStyleRules();
-      
-      // now the link rules (must come after the color rules, or links will not be correct color!)
-      // XXX - when there is both an override and agent pref stylesheet this won't matter,
-      //       as the color rules will be overrides and the links rules will be agent
-      if (NS_SUCCEEDED(result)) {
-        result = SetPrefLinkRules();
-      }
-      if (NS_SUCCEEDED(result)) {
-        result = SetPrefFocusRules();
-      }
-      if (NS_SUCCEEDED(result)) {
-        result = SetPrefNoScriptRule();
-      }
-      if (NS_SUCCEEDED(result)) {
-        result = SetPrefNoFramesRule();
-      }
+      result = SetPrefFocusRules();
+    }
+    if (NS_SUCCEEDED(result)) {
+      result = SetPrefNoScriptRule();
+    }
+    if (NS_SUCCEEDED(result)) {
+      result = SetPrefNoFramesRule();
     }
 #ifdef DEBUG_attinasi
     printf( "Preference Style Rules set: error=%ld\n", (long)result);
@@ -5488,7 +5474,11 @@ nsresult PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
   // Now, find the parent pres shell and send the event there
   nsCOMPtr<nsIDocShellTreeItem> treeItem = 
     do_QueryInterface(container);
-  NS_ASSERTION(treeItem, "No tree item for container.");
+  if (!treeItem) {
+    // Might have gone away, or never been around to start with
+    return NS_ERROR_FAILURE;
+  }
+  
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
   treeItem->GetParent(getter_AddRefs(parentTreeItem));
   nsCOMPtr<nsIDocShell> parentDocShell = 
