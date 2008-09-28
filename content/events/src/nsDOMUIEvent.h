@@ -74,18 +74,18 @@ public:
 protected:
 
   // Internal helper functions
-  nsIntPoint GetClientPoint();
-  nsIntPoint GetScreenPoint();
-  nsIntPoint GetLayerPoint();
-  nsIntPoint GetPagePoint();
+  nsPoint GetClientPoint();
+  nsPoint GetScreenPoint();
+  nsPoint GetLayerPoint();
+  nsPoint GetPagePoint();
   
 protected:
   nsCOMPtr<nsIDOMAbstractView> mView;
   PRInt32 mDetail;
-  nsIntPoint mClientPoint;
+  nsPoint mClientPoint;
   // Screenpoint is mEvent->refPoint.
-  nsIntPoint mLayerPoint;
-  nsIntPoint mPagePoint;
+  nsPoint mLayerPoint;
+  nsPoint mPagePoint;
 };
 
 #define NS_FORWARD_TO_NSDOMUIEVENT \

@@ -102,7 +102,7 @@ protected:
   virtual ~nsScrollPortView();
 
   //private
-  void Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsIntPoint aPixDelta, nscoord aP2A);
+  void Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoint aPixDelta, PRInt32 p2a);
   PRBool CannotBitBlt(nsView* aScrolledView);
 
   nscoord             mOffsetX, mOffsetY;

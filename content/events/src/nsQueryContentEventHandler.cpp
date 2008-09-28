@@ -437,25 +437,25 @@ nsQueryContentEventHandler::QueryRectFor(nsQueryContentEvent* aEvent,
   rv = frame->GetPointFromOffset(aRange->StartOffset(), &posInFrame);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRect rect;
-  rect.y = posInFrame.y;
-  rect.height = frame->GetSize().height;
+  aEvent->mReply.mRect.y = posInFrame.y;
+  aEvent->mReply.mRect.height = frame->GetSize().height;
 
   if (aEvent->message == NS_QUERY_CHARACTER_RECT) {
     nsPoint nextPos;
     rv = frame->GetPointFromOffset(aRange->EndOffset(), &nextPos);
     NS_ENSURE_SUCCESS(rv, rv);
-    rect.x = PR_MIN(posInFrame.x, nextPos.x);
-    rect.width = PR_ABS(posInFrame.x - nextPos.x);
+    aEvent->mReply.mRect.x = PR_MIN(posInFrame.x, nextPos.x);
+    aEvent->mReply.mRect.width = PR_ABS(posInFrame.x - nextPos.x);
   } else {
-    rect.x = posInFrame.x;
-    rect.width = aCaret->GetCaretRect().width;
+    aEvent->mReply.mRect.x = posInFrame.x;
+    aEvent->mReply.mRect.width = aCaret->GetCaretRect().width;
   }
 
-  rv = ConvertToRootViewRelativeOffset(frame, rect);
+  // The coordinates are app units here, they will be converted to system
+  // coordinates by view manager.
+  rv = ConvertToRootViewRelativeOffset(frame, aEvent->mReply.mRect);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aEvent->mReply.mRect = nsRect::ToOutsidePixels(rect, mPresContext->AppUnitsPerDevPixel());
   aEvent->mSucceeded = PR_TRUE;
   return NS_OK;
 }
@@ -504,11 +504,9 @@ nsQueryContentEventHandler::OnQueryCaretRect(nsQueryContentEvent* aEvent)
     NS_ENSURE_SUCCESS(rv, rv);
     if (offset == aEvent->mInput.mOffset) {
       PRBool isCollapsed;
-      nsRect rect;
       rv = caret->GetCaretCoordinates(nsCaret::eTopLevelWindowCoordinates,
-                                      mSelection, &rect,
+                                      mSelection, &aEvent->mReply.mRect,
                                       &isCollapsed, nsnull);
-      aEvent->mReply.mRect = nsRect::ToOutsidePixels(rect, mPresContext->AppUnitsPerDevPixel());
       NS_ENSURE_SUCCESS(rv, rv);
       aEvent->mSucceeded = PR_TRUE;
       return NS_OK;

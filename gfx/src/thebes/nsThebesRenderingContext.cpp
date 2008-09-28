@@ -780,7 +780,7 @@ nsThebesRenderingContext::DrawTile(imgIContainer *aImage,
     aImage->GetCurrentFrame(getter_AddRefs(imgFrame));
     if (!imgFrame) return NS_ERROR_FAILURE;
 
-    nsIntRect imgFrameRect;
+    nsRect imgFrameRect;
     imgFrame->GetRect(imgFrameRect);
 
     nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));

@@ -401,7 +401,7 @@ nsresult
 nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
                             nsIScriptableRegion* aRegion,
                             PRInt32 aScreenX, PRInt32 aScreenY,
-                            nsIntRect* aScreenDragRect,
+                            nsRect* aScreenDragRect,
                             gfxASurface** aSurface,
                             nsPresContext** aPresContext)
 {
@@ -441,11 +441,10 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
       // the region's coordinates are relative to the root frame
       nsIFrame* rootFrame = presShell->GetRootFrame();
       if (rootFrame && *aPresContext) {
-        nsIntRect dragRect;
+        nsRect dragRect;
         aRegion->GetBoundingBox(&dragRect.x, &dragRect.y, &dragRect.width, &dragRect.height);
-        dragRect = nsRect::ToOutsidePixels(nsIntRect::ToAppUnits(dragRect,
-                                                                 nsPresContext::AppUnitsPerCSSPixel()),
-                                           (*aPresContext)->AppUnitsPerDevPixel());
+        dragRect.ScaleRoundOut(nsPresContext::AppUnitsPerCSSPixel());
+        dragRect.ScaleRoundOut(1.0 / (*aPresContext)->AppUnitsPerDevPixel());
 
         nsIntRect screenRect = rootFrame->GetScreenRectExternal();
         aScreenDragRect->SetRect(screenRect.x + dragRect.x, screenRect.y + dragRect.y,
@@ -469,7 +468,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 
   // draw the image for selections
   if (mSelection) {
-    nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
+    nsPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
     nsRefPtr<gfxASurface> surface = presShell->RenderSelection(mSelection, pnt, aScreenDragRect);
     *aSurface = surface;
     NS_IF_ADDREF(*aSurface);
@@ -499,7 +498,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   if (aRegion)
     aRegion->GetRegion(getter_AddRefs(clipRegion));
 
-  nsIntPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
+  nsPoint pnt(aScreenDragRect->x, aScreenDragRect->y);
   nsRefPtr<gfxASurface> surface = presShell->RenderNode(dragNode, clipRegion,
                                                         pnt, aScreenDragRect);
 
@@ -521,7 +520,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                                     nsIImageLoadingContent* aImageLoader,
                                     nsICanvasElement* aCanvas,
                                     PRInt32 aScreenX, PRInt32 aScreenY,
-                                    nsIntRect* aScreenDragRect,
+                                    nsRect* aScreenDragRect,
                                     gfxASurface** aSurface)
 {
   nsCOMPtr<nsIImage> img;
@@ -560,9 +559,9 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     aScreenDragRect->height = height;
   }
 
-  nsIntRect srcRect = *aScreenDragRect;
+  nsRect srcRect = *aScreenDragRect;
   srcRect.MoveTo(0, 0);
-  nsIntRect destRect = srcRect;
+  nsRect destRect = srcRect;
 
   if (destRect.width == 0 || destRect.height == 0)
     return NS_ERROR_FAILURE;

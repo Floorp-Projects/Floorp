@@ -560,7 +560,7 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   PRTime start = PR_Now();
 #endif
 
-  nsIntRect dirtyPxRect(nsRect::ToOutsidePixels(dirtyRect, PresContext()->AppUnitsPerDevPixel()));
+  dirtyRect.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
 
   nsSVGRenderState ctx(&aRenderingContext);
 
@@ -575,7 +575,7 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   // paint children:
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsSVGUtils::PaintChildWithEffects(&ctx, &dirtyPxRect, kid);
+    nsSVGUtils::PaintChildWithEffects(&ctx, &dirtyRect, kid);
   }
 
 #ifdef XP_MACOSX

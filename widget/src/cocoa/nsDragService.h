@@ -67,7 +67,7 @@ public:
 private:
 
   NSImage* ConstructDragImage(nsIDOMNode* aDOMNode,
-                              nsIntRect* aDragRect,
+                              nsRect* aDragRect,
                               nsIScriptableRegion* aRegion);
 
   nsCOMPtr<nsISupportsArray> mDataItems; // only valid for a drag started within gecko

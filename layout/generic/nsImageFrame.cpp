@@ -303,7 +303,7 @@ nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage)
   PRBool intrinsicSizeChanged = PR_FALSE;
   
   if (aImage) {
-    nsIntSize imageSizeInPx;
+    nsSize imageSizeInPx;
     aImage->GetWidth(&imageSizeInPx.width);
     aImage->GetHeight(&imageSizeInPx.height);
     nsSize newSize(nsPresContext::CSSPixelsToAppUnits(imageSizeInPx.width),
@@ -387,7 +387,7 @@ nsImageFrame::IsPendingLoad(imgIContainer* aContainer) const
 }
 
 nsRect
-nsImageFrame::SourceRectToDest(const nsIntRect& aRect)
+nsImageFrame::SourceRectToDest(const nsRect& aRect)
 {
   // When scaling the image, row N of the source image may (depending on
   // the scaling function) be used to draw any row in the destination image
@@ -532,7 +532,7 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
 nsresult
 nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
                               gfxIImageFrame *aFrame,
-                              const nsIntRect *aRect)
+                              const nsRect *aRect)
 {
   // XXX do we need to make sure that the reflow from the
   // OnStartContainer has been processed before we start calling
@@ -644,7 +644,7 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
 nsresult
 nsImageFrame::FrameChanged(imgIContainer *aContainer,
                            gfxIImageFrame *aNewFrame,
-                           nsIntRect *aDirtyRect)
+                           nsRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible()) {
     return NS_OK;
@@ -1838,7 +1838,7 @@ NS_IMETHODIMP nsImageListener::OnStartContainer(imgIRequest *aRequest,
 
 NS_IMETHODIMP nsImageListener::OnDataAvailable(imgIRequest *aRequest,
                                                gfxIImageFrame *aFrame,
-                                               const nsIntRect *aRect)
+                                               const nsRect *aRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
@@ -1858,7 +1858,7 @@ NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest,
 
 NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer,
                                             gfxIImageFrame *newframe,
-                                            nsIntRect * dirtyRect)
+                                            nsRect * dirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
