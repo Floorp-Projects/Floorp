@@ -330,11 +330,16 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
   // A little tricky math here...  Basically when adding an object regardless of
   // what the length was before, it should always be set back to the current and
   // lop off the forward.
+  PRInt32 oldIndex = mIndex;
   mLength = (++mIndex + 1);
 
   // If this is the very first transaction, initialize the list
   if(!mListRoot)
     mListRoot = txn;
+
+  // Evict a content viewer if we might have too many behind us.  Make sure to
+  // do this before calling PurgeHistory, since that might change our indexing.
+  EvictWindowContentViewers(oldIndex, mIndex);
 
   // Purge History list if it is too long
   if ((gHistoryMaxSize >= 0) && (mLength > gHistoryMaxSize))
@@ -583,9 +588,6 @@ nsSHistory::PurgeHistory(PRInt32 aEntries)
     mIndex = -1;
   }
 
-  if (mRootDocShell)
-    mRootDocShell->HistoryPurged(cnt);
-
   return NS_OK;
 }
 
@@ -655,10 +657,8 @@ nsSHistory::GetListener(nsISHistoryListener ** aListener)
 }
 
 NS_IMETHODIMP
-nsSHistory::EvictContentViewers(PRInt32 aPreviousIndex, PRInt32 aIndex)
+nsSHistory::EvictContentViewers()
 {
-  // Check our per SHistory object limit in the currently navigated SHistory
-  EvictWindowContentViewers(aPreviousIndex, aIndex);
   // Check our total limit across all SHistory objects
   EvictGlobalContentViewer();
   return NS_OK;
@@ -798,15 +798,9 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
   PRInt32 startIndex, endIndex;
   if (aToIndex > aFromIndex) { // going forward
     endIndex = aToIndex - gHistoryMaxViewers;
-    if (endIndex <= 0) {
-      return;
-    }
     startIndex = PR_MAX(0, aFromIndex - gHistoryMaxViewers);
   } else { // going backward
     startIndex = aToIndex + gHistoryMaxViewers + 1;
-    if (startIndex >= mLength) {
-      return;
-    }
     endIndex = PR_MIN(mLength, aFromIndex + gHistoryMaxViewers + 1);
   }
 
@@ -834,6 +828,11 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
   }
 #endif
 
+  if (endIndex <= 0 || startIndex >= mLength) {
+    // We can guarantee that there is nothing to do in this case
+    return;
+  }
+  
   EvictContentViewersInRange(startIndex, endIndex);
 }
 
@@ -1126,6 +1125,15 @@ nsSHistory::LoadURI(const PRUnichar* aURI,
 NS_IMETHODIMP
 nsSHistory::GotoIndex(PRInt32 aIndex)
 {
+ 
+  if (mIndex > -1 && PR_ABS(aIndex - mIndex) > gHistoryMaxViewers) {
+    // The current entry is too far from the new index, so mark it so its
+    // content viewer doesn't get saved.
+    nsCOMPtr<nsISHEntry> currentEntry;
+    nsresult rv = GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(currentEntry));
+    if (NS_SUCCEEDED(rv) && currentEntry)
+      currentEntry->SetSaveContentViewerFlag(PR_FALSE);
+  }
   return LoadEntry(aIndex, nsIDocShellLoadInfo::loadHistory, HIST_CMD_GOTOINDEX);
 }
 
@@ -1221,7 +1229,17 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
   }
 
   // Start the load on the appropriate docshell
-  return InitiateLoad(nextEntry, docShell, aLoadType);
+  nsresult rv = InitiateLoad(nextEntry, docShell, aLoadType);
+
+  if (NS_SUCCEEDED(rv)) {
+    // mark the entry as being able to save its content viewer
+    nextEntry->SetSaveContentViewerFlag(PR_TRUE);
+    // evict any content viewers that are now gHistoryMaxViewers
+    // or more away from the new index
+    EvictWindowContentViewers(mIndex, mRequestedIndex);
+  }
+
+  return rv;
 }
 
 
