@@ -37,6 +37,7 @@ include moz-only/reftest.list
 == dynamic-text-02.svg dynamic-text-02-ref.svg
 == dynamic-text-03.svg dynamic-text-03-ref.svg
 == dynamic-use-01.svg pass.svg
+== use-01-extref.svg pass.svg
 == fallback-color-01a.svg pass.svg
 == fallback-color-01b.svg pass.svg
 == fallback-color-02a.svg fallback-color-02-ref.svg
