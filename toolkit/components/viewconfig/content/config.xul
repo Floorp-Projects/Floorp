@@ -76,9 +76,10 @@
   <menuitem id="resetSelected" label="&reset.label;" accesskey="&reset.accesskey;" oncommand="ResetSelected();"/>
 </popup>
 
-<keyset>
+<keyset id="configTreeKeyset" disabled="true">
   <key keycode="VK_ENTER" oncommand="ModifySelected();"/>
   <key keycode="VK_RETURN" oncommand="ModifySelected();"/>
+  <key key="&focusFilter.key;" modifiers="accel" oncommand="document.getElementById('textbox').focus();"/>
 </keyset>
 <deck id="configDeck" flex="1">
   <vbox id="warningScreen" flex="1" align="center">
