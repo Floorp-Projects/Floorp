@@ -54,7 +54,6 @@ _TEST_FILES =\
 		nsIAccessible_name.js \
 		nsIAccessible_name.xbl \
  		nsIAccessible_selects.js \
-		nsIAccessible_states.js \
 		nsIAccessibleEditableText.js \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
@@ -66,7 +65,6 @@ _TEST_FILES =\
 	$(warning test_table_indexes.html temporarily disabled) \
 		test_nsIAccessible_actions.html \
 		test_nsIAccessible_actions.xul \
-		test_nsIAccessible_editablebody.html \
 		test_nsIAccessible_name.html \
 		test_nsIAccessible_name.xul \
  		test_nsIAccessible_selects.html \
