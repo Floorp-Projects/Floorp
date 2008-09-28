@@ -179,31 +179,11 @@ toolbarbutton.browser-control-button {
   -moz-image-region: rect(160px 96px 208px 48px);
 }
 
-#tool-stuff {
+#tool-panel {
   -moz-image-region: rect(208px 48px 256px 0px);
 }
 
-#tool-stuff:hover:active {
-  -moz-image-region: rect(208px 96px 256px 48px);
-}
-
-#tool-addons {
-  -moz-image-region: rect(2px 151px 39px 113px);
-}
-
-#tool-downloads {
-  -moz-image-region: rect(2px 151px 39px 113px);
-}
-
-#tool-preferences {
-  -moz-image-region: rect(2px 151px 39px 113px);
-}
-
-#tool-shortcuts {
-  -moz-image-region: rect(208px 48px 256px 0px);
-}
-
-#tool-shortcuts:hover:active {
+#tool-panel:hover:active {
   -moz-image-region: rect(208px 96px 256px 48px);
 }
 
@@ -376,6 +356,49 @@ richlistitem[type="documenttab"][selected="true"] {
 #retrievetab-button:hover:active {
   list-style-image: url("images/left_buttons.png");
   -moz-image-region: rect(48px 96px 96px 48px);
+}
+
+/* panel UI */
+#panel-container {
+  background: url("images/panel_background.png") transparent top left repeat-x;
+}
+
+toolbarbutton.panel-button {
+  list-style-image: url("chrome://browser/skin/images/panel_buttons.png");
+  background: none !important;            /* override checked style */
+  border-color: transparent !important;   /* override checked style */
+}
+
+#tool-addons {
+  -moz-image-region: rect(48px 48px 96px 0px);
+}
+
+#tool-addons:hover:active, #tool-addons[checked] {
+  -moz-image-region: rect(48px 96px 96px 48px);
+}
+
+#tool-downloads {
+  -moz-image-region: rect(96px 48px 144px 0px);
+}
+
+#tool-downloads:hover:active, #tool-downloads[checked] {
+  -moz-image-region: rect(96px 96px 144px 48px);
+}
+
+#tool-preferences {
+  -moz-image-region: rect(0px 48px 48px 0px);
+}
+
+#tool-preferences:hover:active, #tool-preferences[checked] {
+  -moz-image-region: rect(0px 96px 48px 48px);
+}
+
+#tool-shortcuts {
+  -moz-image-region: rect(0px 48px 48px 0px);
+}
+
+#tool-shortcuts:hover:active, #tool-shortcuts[checked] {
+  -moz-image-region: rect(0px 96px 48px 48px);
 }
 
 /* autocomplete */
