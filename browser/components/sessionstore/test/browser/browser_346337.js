@@ -113,9 +113,7 @@ function test() {
       tabbrowser.removeTab(tab2);
       tabbrowser.removeTab(tab);
       
-      undoCloseTab();
-      
-      tab = tabbrowser.selectedTab;
+      tab = undoCloseTab();
       tab.linkedBrowser.addEventListener("load", function(aEvent) {
         for (let xpath in fieldList)
           if (fieldList[xpath])
