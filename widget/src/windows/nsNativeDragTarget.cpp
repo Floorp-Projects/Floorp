@@ -421,6 +421,11 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
   // Now process the native drag state and then dispatch the event
   ProcessDrag(pData, NS_DRAGDROP_DROP, grfKeyState, aPT, pdwEffect);
 
+  // Let the win drag service know whether this session experienced 
+  // a drop event within the application. Drop will not oocur if the
+  // drop landed outside the app. (used in tab tear off, bug 455884)
+  winDragService->SetDroppedLocal();
+
   // tell the drag service we're done with the session
   serv->EndDragSession(PR_TRUE);
   return S_OK;
