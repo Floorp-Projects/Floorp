@@ -192,7 +192,7 @@ public:
     return mViewToWidgetOffset;
   }
 
-  nsRect CalcWidgetBounds(nsWindowType aType);
+  nsIntRect CalcWidgetBounds(nsWindowType aType);
 
 protected:
   // Do the actual work of ResetWidgetBounds, unconditionally.  Don't

@@ -103,7 +103,7 @@ protected:
   nsresult DrawDrag(nsIDOMNode* aDOMNode,
                     nsIScriptableRegion* aRegion,
                     PRInt32 aScreenX, PRInt32 aScreenY,
-                    nsRect* aScreenDragRect,
+                    nsIntRect* aScreenDragRect,
                     gfxASurface** aSurface,
                     nsPresContext **aPresContext);
 
@@ -115,7 +115,7 @@ protected:
                             nsIImageLoadingContent* aImageLoader,
                             nsICanvasElement* aCanvas,
                             PRInt32 aScreenX, PRInt32 aScreenY,
-                            nsRect* aScreenDragRect,
+                            nsIntRect* aScreenDragRect,
                             gfxASurface** aSurface);
 
   /**

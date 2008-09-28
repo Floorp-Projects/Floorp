@@ -144,11 +144,11 @@ private:
 
     // attempts to create a semi-transparent drag image. Returns TRUE if
     // successful, FALSE if not
-    PRBool SetAlphaPixmap(gfxASurface    *aPixbuf,
-                          GdkDragContext *aContext,
-                          PRInt32         aXOffset,
-                          PRInt32         aYOffset,
-                          const nsRect&   dragRect);
+    PRBool SetAlphaPixmap(gfxASurface     *aPixbuf,
+                          GdkDragContext  *aContext,
+                          PRInt32          aXOffset,
+                          PRInt32          aYOffset,
+                          const nsIntRect &dragRect);
 
 };
 

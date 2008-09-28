@@ -368,7 +368,7 @@ private:
    */
   nsresult InitInternal(nsIWidget* aParentWidget,
                         nsISupports *aState,
-                        const nsRect& aBounds,
+                        const nsIntRect& aBounds,
                         PRBool aDoCreation,
                         PRBool aInPrintPreview,
                         PRBool aNeedMakeCX = PR_TRUE);
@@ -666,7 +666,7 @@ DocumentViewerImpl::GetContainer(nsISupports** aResult)
 
 NS_IMETHODIMP
 DocumentViewerImpl::Init(nsIWidget* aParentWidget,
-                         const nsRect& aBounds)
+                         const nsIntRect& aBounds)
 {
   nsresult rv = CreateDeviceContext(aParentWidget);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -709,7 +709,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReena
   mPresShell->BeginObservingDocument();
 
   // Initialize our view manager
-  nsRect bounds;
+  nsIntRect bounds;
   mWindow->GetBounds(bounds);
 
   nscoord width = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * bounds.width;
@@ -805,7 +805,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReena
 nsresult
 DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                                  nsISupports *aState,
-                                 const nsRect& aBounds,
+                                 const nsIntRect& aBounds,
                                  PRBool aDoCreation,
                                  PRBool aInPrintPreview,
                                  PRBool aNeedMakeCX /*= PR_TRUE*/)
@@ -1247,7 +1247,7 @@ DocumentViewerImpl::Open(nsISupports *aState, nsISHEntry *aSHEntry)
   if (!container)
     return NS_ERROR_NOT_AVAILABLE;
 
-  nsRect bounds;
+  nsIntRect bounds;
   mWindow->GetBounds(bounds);
 
   nsresult rv = InitInternal(mParentWidget, aState, bounds, PR_FALSE, PR_FALSE);
@@ -1736,7 +1736,7 @@ DocumentViewerImpl::GetPresContext(nsPresContext** aResult)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::GetBounds(nsRect& aResult)
+DocumentViewerImpl::GetBounds(nsIntRect& aResult)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(mWindow, "null window");
@@ -1791,7 +1791,7 @@ DocumentViewerImpl::SetPreviousViewer(nsIContentViewer* aViewer)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::SetBounds(const nsRect& aBounds)
+DocumentViewerImpl::SetBounds(const nsIntRect& aBounds)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
@@ -1898,7 +1898,7 @@ DocumentViewerImpl::Show(void)
       return rv;
     }
 
-    nsRect tbounds;
+    nsIntRect tbounds;
     mParentWidget->GetBounds(tbounds);
 
     rv = MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(tbounds.width),
@@ -4085,7 +4085,7 @@ NS_IMETHODIMP DocumentViewerImpl::SetPageMode(PRBool aPageMode, nsIPrintSettings
   // reftests that require a paginated context
   mIsPageMode = aPageMode;
   // Get the current size of what is being viewed
-  nsRect bounds;
+  nsIntRect bounds;
   mWindow->GetBounds(bounds);
 
   if (mPresShell) {

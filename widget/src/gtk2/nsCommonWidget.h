@@ -85,7 +85,7 @@ public:
     void DispatchLostFocusEvent(void);
     void DispatchActivateEvent(void);
     void DispatchDeactivateEvent(void);
-    void DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus);
+    void DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus);
 
     NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
 
@@ -102,7 +102,7 @@ public:
 
     virtual void NativeShow  (PRBool  aAction) = 0;
 
-    virtual nsSize GetSafeWindowSize(nsSize aSize) = 0;
+    virtual nsIntSize GetSafeWindowSize(const nsIntSize &aSize) = 0;
 
     // Some of the nsIWidget methods
     NS_IMETHOD         Show             (PRBool aState);
