@@ -5980,6 +5980,7 @@ function undoCloseMiddleClick(aEvent) {
  * Re-open a closed tab.
  * @param aIndex
  *        The index of the tab (via nsSessionStore.getClosedTabData)
+ * @returns a reference to the reopened tab.
  */
 function undoCloseTab(aIndex) {
   // wallpaper patch to prevent an unnecessary blank tab (bug 343895)
@@ -5992,14 +5993,17 @@ function undoCloseTab(aIndex) {
       !gBrowser.selectedTab.hasAttribute("busy"))
     blankTabToRemove = gBrowser.selectedTab;
 
+  var tab = null;
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
-  if (ss.getClosedTabCount(window) == 0)
-    return;
-  ss.undoCloseTab(window, aIndex || 0);
-
-  if (blankTabToRemove)
-    gBrowser.removeTab(blankTabToRemove);
+  if (ss.getClosedTabCount(window) > (aIndex || 0)) {
+    tab = ss.undoCloseTab(window, aIndex || 0);
+    
+    if (blankTabToRemove)
+      gBrowser.removeTab(blankTabToRemove);
+  }
+  
+  return tab;
 }
 
 /**
