@@ -53,6 +53,8 @@ classic.jar:
   images/right_sidebar_middle.png      (skin/images/right_sidebar_middle.png)
   images/right_sidebar_bottom.png      (skin/images/right_sidebar_bottom.png)
   images/right_buttons.png             (skin/images/right_buttons.png)
+  images/panel_buttons.png             (skin/images/panel_buttons.png)
+  images/panel_background.png          (skin/images/panel_background.png)
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %
