@@ -394,6 +394,10 @@ var BrowserUI = {
     Shortcuts.init();
   },
 
+  switchPane : function(id) {
+    document.getElementById("panel-items").selectedPanel = document.getElementById(id);
+  },
+
   _sizeControls : function(aEvent) {
     var rect = document.getElementById("browser-container").getBoundingClientRect();
     var containerW = rect.right - rect.left;
