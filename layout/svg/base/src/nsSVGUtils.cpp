@@ -408,8 +408,22 @@ nsresult nsSVGUtils::GetReferencedFrame(nsIFrame **aRefFrame, nsIURI* aURI, nsIC
   if (!content)
     return NS_ERROR_FAILURE;
 
-  // Get the Primary Frame
-  NS_ASSERTION(aPresShell, "Get referenced SVG frame -- no pres shell provided");
+  nsIDocument* doc = content->GetCurrentDoc();
+  if (!doc)
+    return NS_ERROR_FAILURE;
+
+  if (aPresShell->GetDocument() != doc) {
+    // External reference; switch to the right presshell
+    aPresShell = doc->GetPrimaryShell();
+  }
+#ifdef DEBUG
+  else {
+    // Get the Primary Frame
+    NS_ASSERTION(aPresShell,
+                 "Get referenced SVG frame -- no pres shell provided");
+  }
+#endif
+  
   if (!aPresShell)
     return NS_ERROR_FAILURE;
 
