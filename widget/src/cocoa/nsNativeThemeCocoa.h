@@ -68,19 +68,19 @@ public:
   NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
-                             nsMargin* aResult);
+                             nsIntMargin* aResult);
 
   virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsMargin* aResult);
+                                  nsIntMargin* aResult);
 
   virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
                                    PRUint8 aWidgetType, nsRect* aOverflowRect);
 
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsSize* aResult, PRBool* aIsOverridable);
+                                  nsIntSize* aResult, PRBool* aIsOverridable);
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                 nsIAtom* aAttribute, PRBool* aShouldRepaint);
   NS_IMETHOD ThemeChanged();
