@@ -817,7 +817,11 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
 
   PRBool makeCX = PR_FALSE;
   if (aDoCreation) {
-    if (aParentWidget && !mPresContext) {
+    // XXXbz this is a nasty hack to do with the fact that we create
+    // presentations both in Init() and in Show()...  Ideally we would only do
+    // it in one place (Show()) and require that callers call init(), open(),
+    // show() in that order or something.
+    if ((aParentWidget || mDocument->GetDisplayDocument()) && !mPresContext) {
       // Create presentation context
       if (mIsPageMode) {
         //Presentation context already created in SetPageMode which is calling this method
@@ -1241,11 +1245,11 @@ DocumentViewerImpl::Open(nsISupports *aState, nsISHEntry *aSHEntry)
   nsRect bounds;
   mWindow->GetBounds(bounds);
 
-  nsresult rv = InitInternal(mParentWidget, aState, bounds, PR_FALSE, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (mDocument)
     mDocument->SetContainer(nsCOMPtr<nsISupports>(do_QueryReferent(mContainer)));
+
+  nsresult rv = InitInternal(mParentWidget, aState, bounds, PR_FALSE, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mPresShell)
     mPresShell->SetForwardingContainer(nsnull);
@@ -2096,13 +2100,14 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   // The document will fill in the document sheets when we create the presshell
   
   // Handle the user sheets.
-  PRInt32 shellType = nsIDocShellTreeItem::typeContent;;
-  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryReferent(mContainer));
-  if (docShell) {
-    docShell->GetItemType(&shellType);
-  }
+#ifdef DEBUG
+  nsCOMPtr<nsISupports> debugDocContainer = aDocument->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> debugDocShell(do_QueryReferent(mContainer));
+  NS_ASSERTION(SameCOMIdentity(debugDocContainer, debugDocShell),
+               "Unexpected containers");
+#endif
   nsICSSStyleSheet* sheet = nsnull;
-  if (shellType == nsIDocShellTreeItem::typeChrome) {
+  if (nsContentUtils::IsInChromeDocshell(aDocument)) {
     sheet = nsLayoutStylesheetCache::UserChromeSheet();
   }
   else {
@@ -2114,7 +2119,9 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
 
   // Append chrome sheets (scrollbars + forms).
   PRBool shouldOverride = PR_FALSE;
-  nsCOMPtr<nsIDocShell> ds(do_QueryInterface(docShell));
+  // We don't want a docshell here for external resource docs, so just
+  // look at mContainer.
+  nsCOMPtr<nsIDocShell> ds(do_QueryReferent(mContainer));
   nsCOMPtr<nsIDOMEventTarget> chromeHandler;
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsICSSStyleSheet> csssheet;
@@ -2291,6 +2298,23 @@ DocumentViewerImpl::CreateDeviceContext(nsIWidget* aWidget)
 {
   NS_PRECONDITION(!mPresShell && !mPresContext && !mWindow,
                   "This will screw up our existing presentation");
+  NS_PRECONDITION(mDocument, "Gotta have a document here");
+  
+  nsIDocument* doc = mDocument->GetDisplayDocument();
+  if (doc) {
+    NS_ASSERTION(!aWidget, "Shouldn't have a widget here");
+    
+    // We want to use our display document's device context if possible
+    nsIPresShell* shell = doc->GetPrimaryShell();
+    if (shell) {
+      nsPresContext* ctx = shell->GetPresContext();
+      if (ctx) {
+        mDeviceContext = ctx->DeviceContext();
+        return NS_OK;
+      }
+    }
+  }
+  
   // Create a device context even if we already have one, since our widget
   // might have changed.
   mDeviceContext = do_CreateInstance(kDeviceContextCID);
@@ -2679,6 +2703,38 @@ SetChildFullZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
   aChild->SetFullZoom(ZoomInfo->mZoom);
 }
 
+PR_STATIC_CALLBACK(PRBool)
+SetExtResourceTextZoom(nsIDocument* aDocument, void* aClosure)
+{
+  // Would it be better to enumerate external resource viewers instead?
+  nsIPresShell* shell = aDocument->GetPrimaryShell();
+  if (shell) {
+    nsPresContext* ctxt = shell->GetPresContext();
+    if (ctxt) {
+      struct ZoomInfo* ZoomInfo = static_cast<struct ZoomInfo*>(aClosure);
+      ctxt->SetTextZoom(ZoomInfo->mZoom);
+    }
+  }
+
+  return PR_TRUE;
+}
+
+PR_STATIC_CALLBACK(PRBool)
+SetExtResourceFullZoom(nsIDocument* aDocument, void* aClosure)
+{
+  // Would it be better to enumerate external resource viewers instead?
+  nsIPresShell* shell = aDocument->GetPrimaryShell();
+  if (shell) {
+    nsPresContext* ctxt = shell->GetPresContext();
+    if (ctxt) {
+      struct ZoomInfo* ZoomInfo = static_cast<struct ZoomInfo*>(aClosure);
+      ctxt->SetFullZoom(ZoomInfo->mZoom);
+    }
+  }
+
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 DocumentViewerImpl::SetTextZoom(float aTextZoom)
 {
@@ -2700,6 +2756,9 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
   if (pc && aTextZoom != mPresContext->TextZoom()) {
       pc->SetTextZoom(aTextZoom);
   }
+
+  // And do the external resources
+  mDocument->EnumerateExternalResources(SetExtResourceTextZoom, &ZoomInfo);
 
   batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   
@@ -2731,6 +2790,9 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
   if (pc) {
     pc->SetFullZoom(aFullZoom);
   }
+
+  // And do the external resources
+  mDocument->EnumerateExternalResources(SetExtResourceFullZoom, &ZoomInfo);
 
   batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
