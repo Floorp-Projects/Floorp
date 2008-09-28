@@ -380,6 +380,12 @@ class JarMaker(object):
       return getModTime(os.path.join(self.basepath, aPath))
     def getOutput(self, name):
       out = self.ensureDirFor(name)
+      # remove previous link or file
+      try:
+        os.remove(out)
+      except OSError, e:
+        if e.errno != 2:
+          raise
       return open(out, 'wb')
     def ensureDirFor(self, name):
       out = os.path.join(self.basepath, name)
