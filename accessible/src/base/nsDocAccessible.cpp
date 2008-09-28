@@ -495,17 +495,13 @@ NS_IMETHODIMP nsDocAccessible::GetDocument(nsIDOMDocument **aDOMDoc)
 NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 {
   NS_ENSURE_ARG_POINTER(aEditor);
+
   *aEditor = nsnull;
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
-  if (!mDocument)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMNode> DOMDocument(do_QueryInterface(mDocument));
-  nsCOMPtr<nsIDOMElement> DOMElement(nsAccUtils::GetDOMElementFor(DOMDocument));
-  nsCOMPtr<nsIContent> content(do_QueryInterface(DOMElement));
-
-  if (!content->HasFlag(NODE_IS_EDITABLE))
+  if (!mDocument->HasFlag(NODE_IS_EDITABLE)) {
     return NS_OK; // Document not editable
+  }
 
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(container));
