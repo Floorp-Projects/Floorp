@@ -7133,9 +7133,9 @@ MOZ_ARG_DISABLE_BOOL(md,
 if test "$_cpp_md_flag"; then
   COMPILER_DEPEND=1
   if test "$OS_ARCH" = "OpenVMS"; then
-    _DEPEND_CFLAGS='$(subst =, ,$(filter-out %/.pp,-MM=-MD=-MF=$(MDDEPDIR)/$(*F).pp))'
+    _DEPEND_CFLAGS='$(subst =, ,$(filter-out %/.pp,-MM=-MD=-MF=$(MDDEPDIR)/$(basename $(@F)).pp))'
   else
-    _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)'
+    _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(basename $(@F)).pp)'
   fi
   dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
   if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then

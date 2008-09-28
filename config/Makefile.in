@@ -62,6 +62,8 @@ TARGETS		= $(HOST_PROGRAM) $(PLSRCS:.pl=) $(SIMPLE_PROGRAMS)
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
 TARGETS		+= elf-dynstr-gc
+MAKE_DIRS	+= $(MDDEPDIR)
+GARBAGE_DIRS	+= $(MDDEPDIR)
 endif
 endif
 
