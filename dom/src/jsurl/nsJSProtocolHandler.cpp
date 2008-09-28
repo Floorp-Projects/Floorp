@@ -137,9 +137,10 @@ nsIScriptGlobalObject* GetGlobalObject(nsIChannel* aChannel)
     // Get the global object owner from the channel
     nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
     NS_QueryNotificationCallbacks(aChannel, globalOwner);
-    NS_ASSERTION(globalOwner, 
-                 "Unable to get an nsIScriptGlobalObjectOwner from the "
-                 "channel!");
+    if (!globalOwner) {
+        NS_WARNING("Unable to get an nsIScriptGlobalObjectOwner from the "
+                   "channel!");
+    }
     if (!globalOwner) {
         return nsnull;
     }
