@@ -29,6 +29,7 @@ classic.jar:
   notification.css                     (skin/notification.css)
   images/close.png                     (skin/images/close.png)
   images/close-small.png               (skin/images/close-small.png)
+  images/tab_close.png                 (skin/images/tab_close.png)
   images/default-favicon.png           (skin/images/default-favicon.png)
   images/identity.png                  (skin/images/identity.png)
   images/starred48.png                 (skin/images/starred48.png)

@@ -296,7 +296,7 @@
     </hbox>
 
     <vbox id="tab-list-container" style="-moz-stack-sizing: ignore;" top="60" left="0">
-      <richlistbox id="tab-list" onselect="BrowserUI.selectTab(this.selectedItem);"/>
+      <richlistbox id="tab-list" onselect="BrowserUI.selectTab(this.selectedItem);" onclosetab="BrowserUI.closeTab(this);"/>
       <hbox>
         <toolbarbutton id="newtab-button" command="cmd_newTab"/>
         <toolbarbutton id="retrievetab-button" command=""/>

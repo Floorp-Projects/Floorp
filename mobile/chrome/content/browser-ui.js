@@ -733,6 +733,11 @@ var BrowserUI = {
     this.show(UIMODE_URLEDIT);
   },
 
+  closeTab : function(aTab) {
+    Browser.content.removeTab(aTab);
+    this.show(UIMODE_NONE);
+  },
+
   selectTab : function(aTab) {
     Browser.content.selectTab(aTab);
     this.show(UIMODE_NONE);
