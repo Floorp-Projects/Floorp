@@ -49,7 +49,7 @@ endif
 ifneq (,$(filter qt,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = icon/qt icon
 endif
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE, $(OS_ARCH)))
 DIRS = icon/win icon
 endif
 ifeq ($(OS_ARCH),OS2)
