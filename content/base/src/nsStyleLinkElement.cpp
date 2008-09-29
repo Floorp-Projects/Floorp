@@ -314,12 +314,8 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     rv = doc->CSSLoader()->
       LoadStyleLink(thisContent, uri, title, media, isAlternate, aObserver,
                     &isAlternate);
-    if (NS_FAILED(rv)) {
-      // Don't propagate LoadStyleLink() errors further than this, since some
-      // consumers (e.g. nsXMLContentSink) will completely abort on innocuous
-      // things like a stylesheet load being blocked by the security system.
+    if (rv == NS_ERROR_FILE_NOT_FOUND) {
       doneLoading = PR_TRUE;
-      isAlternate = PR_FALSE;
       rv = NS_OK;
     }
   }

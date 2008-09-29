@@ -727,11 +727,6 @@ nsFrameLoader::EnsureDocShell()
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (doc->GetDisplayDocument()) {
-    // Don't allow subframe loads in external reference documents
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsCOMPtr<nsIWebNavigation> parentAsWebNav =
     do_GetInterface(doc->GetScriptGlobalObject());
 
