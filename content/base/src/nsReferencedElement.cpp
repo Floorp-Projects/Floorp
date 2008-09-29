@@ -128,26 +128,8 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI, PRBool aWatch
     return;
 
   if (!EqualExceptRef(url, documentURL)) {
-    // Don't take the XBL codepath here, since we'll want to just
-    // normally set up our external resource document and then watch
-    // it as needed.
-    isXBL = PR_FALSE;
-    nsRefPtr<nsIDocument::ExternalResourceLoad> load;
-    doc = doc->RequestExternalResource(url, aFromContent, getter_AddRefs(load));
-    if (!doc) {
-      if (!load || !aWatch) {
-        // Nothing will ever happen here
-        return;
-      }
-
-      DocumentLoadNotification* observer =
-        new DocumentLoadNotification(this, ref);
-      mPendingNotification = observer;
-      if (observer) {
-        load->AddObserver(observer);
-      }
-      // Keep going so we set up our watching stuff a bit
-    }
+    // Oops -- we don't support off-document references
+    return;
   }
 
   // Get the element
@@ -168,8 +150,6 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI, PRBool aWatch
         }
       }
     }
-
-    // We don't have watching working yet for XBL, so bail out here.
     return;
   }
 
@@ -178,31 +158,16 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI, PRBool aWatch
     if (!atom)
       return;
     atom.swap(mWatchID);
-  }
-
-  HaveNewDocument(doc, aWatch, ref);
-}
-
-void
-nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, PRBool aWatch,
-                                     const nsString& aRef)
-{
-  if (aWatch) {
-    mWatchDocument = aDocument;
-    if (mWatchDocument) {
-      mContent = mWatchDocument->AddIDTargetObserver(mWatchID, Observe, this);
-    }
+    mWatchDocument = doc;
+    mContent = mWatchDocument->AddIDTargetObserver(mWatchID, Observe, this);
     return;
   }
   
-  if (!aDocument) {
-    return;
-  }
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDocument);
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
   NS_ASSERTION(domDoc, "Content doesn't reference a dom Document");
 
   nsCOMPtr<nsIDOMElement> element;
-  domDoc->GetElementById(aRef, getter_AddRefs(element));
+  rv = domDoc->GetElementById(ref, getter_AddRefs(element));
   if (element) {
     mContent = do_QueryInterface(element);
   }
@@ -221,9 +186,6 @@ nsReferencedElement::Unlink()
   if (mWatchDocument && mWatchID) {
     mWatchDocument->RemoveIDTargetObserver(mWatchID, Observe, this);
   }
-  if (mPendingNotification) {
-    mPendingNotification->Clear();
-  }
   mWatchDocument = nsnull;
   mWatchID = nsnull;
   mContent = nsnull;
@@ -238,10 +200,8 @@ nsReferencedElement::Observe(nsIContent* aOldContent,
     p->mPendingNotification->SetTo(aNewContent);
   } else {
     NS_ASSERTION(aOldContent == p->mContent, "Failed to track content!");
-    ChangeNotification* watcher =
-      new ChangeNotification(p, aOldContent, aNewContent);
-    p->mPendingNotification = watcher;
-    nsContentUtils::AddScriptRunner(watcher);
+    p->mPendingNotification = new Notification(p, aOldContent, aNewContent);
+    nsContentUtils::AddScriptRunner(p->mPendingNotification);
   }
   PRBool keepTracking = p->IsPersistent();
   if (!keepTracking) {
@@ -249,29 +209,4 @@ nsReferencedElement::Observe(nsIContent* aOldContent,
     p->mWatchID = nsnull;
   }
   return keepTracking;
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsReferencedElement::ChangeNotification,
-                             nsRunnable)
-
-NS_IMPL_ISUPPORTS1(nsReferencedElement::DocumentLoadNotification,
-                   nsIObserver)
-
-NS_IMETHODIMP
-nsReferencedElement::DocumentLoadNotification::Observe(nsISupports* aSubject,
-                                                       const char* aTopic,
-                                                       const PRUnichar* aData)
-{
-  NS_ASSERTION(PL_strcmp(aTopic, "external-resource-document-created") == 0,
-               "Unexpected topic");
-  if (mTarget) {
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aSubject);
-    mTarget->mPendingNotification = nsnull;
-    NS_ASSERTION(!mTarget->mContent, "Why do we have content here?");
-    // If we got here, that means we had Reset() called with aWatch ==
-    // PR_TRUE.  So keep watching if IsPersistent().
-    mTarget->HaveNewDocument(doc, mTarget->IsPersistent(), mRef);
-    mTarget->ContentChanged(nsnull, mTarget->mContent);
-  }
-  return NS_OK;
 }

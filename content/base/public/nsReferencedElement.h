@@ -70,6 +70,9 @@ public:
   nsReferencedElement() {}
   ~nsReferencedElement() {
     Unlink();
+    if (mPendingNotification) {
+      mPendingNotification->Clear();
+    }
   }
 
   /**
@@ -111,42 +114,15 @@ protected:
    * a persistent notification.
    */
   virtual PRBool IsPersistent() { return PR_FALSE; }
-
-  /**
-   * Set ourselves up with our new document.  Note that aDocument might be
-   * null.  Either aWatch must be false or aRef must be empty.
-   */
-  void HaveNewDocument(nsIDocument* aDocument, PRBool aWatch,
-                       const nsString& aRef);
   
 private:
   static PRBool Observe(nsIContent* aOldContent,
                         nsIContent* aNewContent, void* aData);
 
-  class Notification : public nsISupports {
+  class Notification : public nsRunnable {
   public:
-    virtual void SetTo(nsIContent* aTo) = 0;
-    virtual void Clear() { mTarget = nsnull; }
-    virtual ~Notification() {}
-  protected:
-    Notification(nsReferencedElement* aTarget)
-      : mTarget(aTarget)
-    {
-      NS_PRECONDITION(aTarget, "Must have a target");
-    }
-    nsReferencedElement* mTarget;
-  };
-
-  class ChangeNotification : public nsRunnable,
-                             public Notification
-  {
-  public:
-    ChangeNotification(nsReferencedElement* aTarget, nsIContent* aFrom, nsIContent* aTo)
-      : Notification(aTarget), mFrom(aFrom), mTo(aTo)
-    {}
-    virtual ~ChangeNotification() {}
-
-    NS_DECL_ISUPPORTS_INHERITED
+    Notification(nsReferencedElement* aTarget, nsIContent* aFrom, nsIContent* aTo)
+      : mTarget(aTarget), mFrom(aFrom), mTo(aTo) {}
     NS_IMETHOD Run() {
       if (mTarget) {
         mTarget->mPendingNotification = nsnull;
@@ -154,40 +130,15 @@ private:
       }
       return NS_OK;
     }
-    virtual void SetTo(nsIContent* aTo) { mTo = aTo; }
-    virtual void Clear()
-    {
-      Notification::Clear(); mFrom = nsnull; mTo = nsnull;
-    }
-  protected:
+    void SetTo(nsIContent* aTo) { mTo = aTo; }
+    void Clear() { mTarget = nsnull; mFrom = nsnull; mTo = nsnull; }
+  private:
+    nsReferencedElement* mTarget;
     nsCOMPtr<nsIContent> mFrom;
     nsCOMPtr<nsIContent> mTo;
   };
-  friend class ChangeNotification;
+  friend class Notification;
 
-  class DocumentLoadNotification : public Notification,
-                                   public nsIObserver
-  {
-  public:
-    DocumentLoadNotification(nsReferencedElement* aTarget,
-                             const nsString& aRef) :
-      Notification(aTarget)
-    {
-      if (!mTarget->IsPersistent()) {
-        mRef = aRef;
-      }
-    }
-    virtual ~DocumentLoadNotification() {}
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-  private:
-    virtual void SetTo(nsIContent* aTo) { }
-
-    nsString mRef;
-  };
-  friend class DocumentLoadNotification;
-  
   nsCOMPtr<nsIAtom>      mWatchID;
   nsCOMPtr<nsIDocument>  mWatchDocument;
   nsCOMPtr<nsIContent>   mContent;

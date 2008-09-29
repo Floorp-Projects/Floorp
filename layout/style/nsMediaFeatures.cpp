@@ -84,13 +84,9 @@ GetDeviceContextFor(nsPresContext* aPresContext)
   // things right in multi-monitor situations.
   // (It's not clear if this is really needed for GetDepth and GetColor,
   // but do it anyway.)
-  nsIDeviceContext* ctx = nsLayoutUtils::GetDeviceContextForScreenInfo(
+  return nsLayoutUtils::GetDeviceContextForScreenInfo(
     nsCOMPtr<nsIDocShell>(do_QueryInterface(
       nsCOMPtr<nsISupports>(aPresContext->GetContainer()))));
-  if (!ctx) {
-    ctx = aPresContext->DeviceContext();
-  }
-  return ctx;
 }
 
 PR_STATIC_CALLBACK(nsresult)

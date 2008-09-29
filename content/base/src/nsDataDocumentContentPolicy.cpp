@@ -72,28 +72,7 @@ nsDataDocumentContentPolicy::ShouldLoad(PRUint32 aContentType,
       doc = do_QueryInterface(domDoc);
     }
   }
-
-  // DTDs are always OK to load
-  if (!doc || aContentType == nsIContentPolicy::TYPE_DTD) {
-    return NS_OK;
-  }
-
-  // Nothing else is OK to load for data documents
-  if (doc->IsLoadedAsData()) {
-    *aDecision = nsIContentPolicy::REJECT_TYPE;
-    return NS_OK;
-  }
-
-  // Allow all loads for non-external-resource documents
-  if (!doc->GetDisplayDocument()) {
-    return NS_OK;
-  }
-
-  // For external resources, blacklist some load types
-  if (aContentType == nsIContentPolicy::TYPE_OBJECT ||
-      aContentType == nsIContentPolicy::TYPE_DOCUMENT ||
-      aContentType == nsIContentPolicy::TYPE_SUBDOCUMENT ||
-      aContentType == nsIContentPolicy::TYPE_SCRIPT) {
+  if (aContentType != nsIContentPolicy::TYPE_DTD && doc && doc->IsLoadedAsData()) {
     *aDecision = nsIContentPolicy::REJECT_TYPE;
   }
 

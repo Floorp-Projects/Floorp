@@ -2904,28 +2904,6 @@ nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
 }
 
 // static
-PRBool
-nsContentUtils::IsInChromeDocshell(nsIDocument *aDocument)
-{
-  if (!aDocument) {
-    return PR_FALSE;
-  }
-
-  if (aDocument->GetDisplayDocument()) {
-    return IsInChromeDocshell(aDocument->GetDisplayDocument());
-  }
-
-  nsCOMPtr<nsISupports> docContainer = aDocument->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(docContainer));
-  PRInt32 itemType = nsIDocShellTreeItem::typeContent;
-  if (docShell) {
-    docShell->GetItemType(&itemType);
-  }
-
-  return itemType == nsIDocShellTreeItem::typeChrome;
-}
-
-// static
 nsIContentPolicy*
 nsContentUtils::GetContentPolicy()
 {
