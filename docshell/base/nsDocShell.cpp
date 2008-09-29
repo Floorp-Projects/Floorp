@@ -308,6 +308,8 @@ nsDocShell::nsDocShell():
     mMarginHeight(0),
     mItemType(typeContent),
     mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto),
+    mPreviousTransIndex(-1),
+    mLoadedTransIndex(-1),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull)
 #ifdef DEBUG
@@ -1641,6 +1643,42 @@ nsDocShell::SetUseErrorPages(PRBool aUseErrorPages)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetPreviousTransIndex(PRInt32 *aPreviousTransIndex)
+{
+    *aPreviousTransIndex = mPreviousTransIndex;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetLoadedTransIndex(PRInt32 *aLoadedTransIndex)
+{
+    *aLoadedTransIndex = mLoadedTransIndex;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::HistoryPurged(PRInt32 aNumEntries)
+{
+    // These indices are used for fastback cache eviction, to determine
+    // which session history entries are candidates for content viewer
+    // eviction.  We need to adjust by the number of entries that we
+    // just purged from history, so that we look at the right session history
+    // entries during eviction.
+    mPreviousTransIndex = PR_MAX(-1, mPreviousTransIndex - aNumEntries);
+    mLoadedTransIndex = PR_MAX(0, mLoadedTransIndex - aNumEntries);
+
+    PRInt32 count = mChildList.Count();
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsIDocShell> shell = do_QueryInterface(ChildAt(i));
+        if (shell) {
+            shell->HistoryPurged(aNumEntries);
+        }
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
                                     nsIDOMStorage** aStorage)
 {
@@ -2685,11 +2723,28 @@ nsDocShell::DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset)
      * for this subframe in the  CloneAndReplace function.
      */
 
+    // In this case, we will end up calling AddEntry, which increases the
+    // current index by 1
+    nsCOMPtr<nsISHistory> rootSH;
+    GetRootSessionHistory(getter_AddRefs(rootSH));
+    if (rootSH) {
+        rootSH->GetIndex(&mPreviousTransIndex);
+    }
+
     nsresult rv;
     nsCOMPtr<nsIDocShellHistory> parent =
         do_QueryInterface(GetAsSupports(mParent), &rv);
     if (parent) {
         rv = parent->AddChildSHEntry(mOSHE, aNewEntry, aChildOffset);
+    }
+
+
+    if (rootSH) {
+        rootSH->GetIndex(&mLoadedTransIndex);
+#ifdef DEBUG_PAGE_CACHE
+        printf("Previous index: %d, Loaded index: %d\n\n", mPreviousTransIndex,
+               mLoadedTransIndex);
+#endif
     }
 
     return rv;
@@ -5413,17 +5468,12 @@ nsDocShell::CaptureState()
         return NS_ERROR_FAILURE;
     }
 
-    PRBool shouldSaveContentViewer = PR_FALSE;
-    nsresult rv = mOSHE->GetSaveContentViewerFlag(&shouldSaveContentViewer);
-    if (NS_FAILED(rv) || !shouldSaveContentViewer)
-        return NS_ERROR_FAILURE;
-
     nsCOMPtr<nsPIDOMWindow> privWin = do_QueryInterface(mScriptGlobal);
     if (!privWin)
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsISupports> windowState;
-    rv = privWin->SaveWindowState(getter_AddRefs(windowState));
+    nsresult rv = privWin->SaveWindowState(getter_AddRefs(windowState));
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG_PAGE_CACHE
@@ -5734,7 +5784,13 @@ nsDocShell::RestoreFromHistory()
     GetRootSessionHistory(getter_AddRefs(rootSH));
     if (rootSH) {
         nsCOMPtr<nsISHistoryInternal> hist = do_QueryInterface(rootSH);
+        rootSH->GetIndex(&mPreviousTransIndex);
         hist->UpdateIndex();
+        rootSH->GetIndex(&mLoadedTransIndex);
+#ifdef DEBUG_PAGE_CACHE
+        printf("Previous index: %d, Loaded index: %d\n\n", mPreviousTransIndex,
+                   mLoadedTransIndex);
+#endif
     }
 
     // Rather than call Embed(), we will retrieve the viewer from the session
@@ -8052,7 +8108,13 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
         nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
         if (shInternal) {
+            rootSH->GetIndex(&mPreviousTransIndex);
             shInternal->UpdateIndex();
+            rootSH->GetIndex(&mLoadedTransIndex);
+#ifdef DEBUG_PAGE_CACHE
+            printf("Previous index: %d, Loaded index: %d\n\n",
+                   mPreviousTransIndex, mLoadedTransIndex);
+#endif
         }
     }
     PRBool onLocationChangeNeeded = SetCurrentURI(aURI, aChannel,
@@ -8259,7 +8321,13 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
             nsCOMPtr<nsISHistoryInternal>
                 shPrivate(do_QueryInterface(mSessionHistory));
             NS_ENSURE_TRUE(shPrivate, NS_ERROR_FAILURE);
+            mSessionHistory->GetIndex(&mPreviousTransIndex);
             rv = shPrivate->AddEntry(entry, shouldPersist);
+            mSessionHistory->GetIndex(&mLoadedTransIndex);
+#ifdef DEBUG_PAGE_CACHE
+            printf("Previous index: %d, Loaded index: %d\n\n",
+                   mPreviousTransIndex, mLoadedTransIndex);
+#endif
         }
     }
     else {  
