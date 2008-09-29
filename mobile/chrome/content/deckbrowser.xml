@@ -305,10 +305,23 @@
           if (!tab)
             return;
 
+          var nextTab = this.tabList.selectedItem;
+          if (tab == this.tabList.selectedItem) {
+            nextTab = tab.nextSibling;
+            if (!nextTab)
+              nextTab = tab.previousSibling;
+            if (!nextTab)
+              return;
+          }
+
           var display = this.getDisplayForTab(tab);
           if (display)
-            display.removeChild(display);
+            display.parentNode.removeChild(display);
           tab.parentNode.removeChild(tab);
+
+          this.tabList.selectedItem = nextTab;
+          this.displayList.selectedPanel = this.getDisplayForTab(nextTab);
+          this.selectTab(nextTab);
 
           var evt = document.createEvent("Events");
           evt.initEvent("TabClose", true, false);
@@ -343,8 +356,11 @@
               nextDisplay = this.getDisplayForTab(nextTab);
           }
 
+          var uniqueId = Date.now() + displayList.childNodes.length;
+
           if (!display) {
             display = document.createElementNS(XUL_NS, "deck");
+            display.setAttribute("id", "display-" + uniqueId)
             displayList.insertBefore(display, nextDisplay);
           }
           display.appendChild(browser);
@@ -358,6 +374,7 @@
 
           if (!tab) {
             tab = document.createElementNS(XUL_NS, "richlistitem");
+            tab.setAttribute("id", "tab-" + uniqueId)
             tab.setAttribute("type", "documenttab");
             this.tabList.appendChild(tab);
           }
@@ -1221,6 +1238,13 @@
       </xul:stack>
     </content>
     <implementation>
+      <constructor><![CDATA[
+        let close = document.getAnonymousElementByAttribute(this, "anonid", "close");
+        let closefn = new Function("event", parentNode.getAttribute("onclosetab"));
+        var self = this;
+        close.addEventListener("mousedown", function(event) { closefn.call(self, event); event.stopPropagation(); }, true);
+      ]]></constructor>
+
       <method name="updateTab">
         <parameter name="browser"/>
         <body>
@@ -1242,6 +1266,7 @@
           ]]>
         </body>
       </method>
+
       <method name="markInvalid">
         <parameter name="browser"/>
         <body>

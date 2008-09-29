@@ -338,6 +338,16 @@ richlistitem[type="documenttab"][selected="true"] {
   border: 1px solid white !important;
 }
 
+.documenttab-close {
+  width: 24px;
+  height: 24px;
+  list-style-image: url(chrome://browser/skin/images/tab_close.png);
+}
+
+richlistitem[type="documenttab"]:only-child .documenttab-close {
+  display: none;
+}
+
 #newtab-button {
   list-style-image: url("images/left_buttons.png");
   -moz-image-region: rect(0px 48px 48px 0px);
