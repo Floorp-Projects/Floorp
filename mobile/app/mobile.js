@@ -41,8 +41,11 @@ pref("general.useragent.extra.mobile", "@APP_UA_NAME@/@APP_VERSION@");
 pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.startup.homepage", "http://www.mozilla.org/");
-pref("browser.ui.cursor", false);
+pref("browser.ui.cursor", true);
 pref("browser.ui.panning.kinetic", true);
+
+pref("javascript.options.showInConsole", true);
+pref("browser.dom.window.dump.enabled", true);
 
 /* cache prefs */
 pref("browser.cache.disk.enable", false);

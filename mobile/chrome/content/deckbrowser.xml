@@ -10,10 +10,12 @@
   <binding id="deckbrowser">
     <content>
       <xul:deck flex="1" selectedIndex="0">
-        <xul:stack anonid="cstack" flex="1" style="overflow: hidden;">
-          <html:canvas anonid="ccanvas"
-                       moz-opaque="true"
-                       style="-moz-stack-sizing: ignore;"/>
+        <xul:stack flex="1">
+          <html:div anonid="viewport" style="-moz-stack-sizing: ignore; overflow: hidden;">
+            <html:canvas anonid="ccanvas"
+                         moz-opaque="true"
+                         style="height: 100%; width: 100%;"/>
+          </html:div>
         </xul:stack>
         <xul:deck anonid="display-list" flex="1"/>
       </xul:deck>
@@ -27,21 +29,21 @@
       <constructor><![CDATA[
         this._zoomLevel = 1;
 
-        // panning
-        this._stack.addEventListener("mousedown", this.stackEventHandler, true);
-        // need mouseup handled on the window to catch mouseups on e.g. the toolbar
-        window.addEventListener("mouseup", this.stackEventHandler, true);
-        this._stack.addEventListener("mousemove", this.stackEventHandler, true);
-
         var prefsvc = Components.classes["@mozilla.org/preferences-service;1"].
                         getService(Components.interfaces.nsIPrefBranch2);
 
         this._allowKinetic = prefsvc.getBoolPref("browser.ui.panning.kinetic");
 
+        // panning
+        this._viewport.addEventListener("mousedown", this.stackEventHandler, true);
+        // need mouseup handled on the window to catch mouseups on e.g. the toolbar
+        window.addEventListener("mouseup", this.stackEventHandler, true);
+        this._viewport.addEventListener("mousemove", this.stackEventHandler, true);
+
         // zoom
         // FIXME: dblclicks don't work on the device
-        // this._stack.addEventListener("dblclick", this.stackEventHandler, true);
-        this._stack.addEventListener("DOMMouseScroll", this.stackEventHandler, true);
+        // this._viewport.addEventListener("dblclick", this.stackEventHandler, true);
+        this._viewport.addEventListener("DOMMouseScroll", this.stackEventHandler, true);
 
         var self = this;
         var obs = Components.classes["@mozilla.org/observer-service;1"].
@@ -54,7 +56,21 @@
         this.PAN_EVENTS_TO_TRACK = 2;
         this._panEventTracker = new Array(this.PAN_EVENTS_TO_TRACK);
         this._panEventTrackerIndex = 0;
-       ]]></constructor>
+      ]]></constructor>
+
+      <property name="viewportDimensions" readonly="true">
+        <getter><![CDATA[
+          var rect = this._viewport.getBoundingClientRect();
+          return [rect.width, rect.height];
+        ]]></getter>
+      </property>
+
+      <property name="_effectiveViewportDimensions" readonly="true">
+        <getter><![CDATA[
+          var [w, h] = this.viewportDimensions;
+          return [this._screenToPage(w), this._screenToPage(h)];
+        ]]></getter>
+      </property>
 
       <property name="dragData" readonly="true">
         <getter>
@@ -77,8 +93,8 @@
         </getter>
       </property>
 
-      <field name="_stack">
-        document.getAnonymousElementByAttribute(this, "anonid", "cstack");
+      <field name="_viewport">
+        document.getAnonymousElementByAttribute(this, "anonid", "viewport");
       </field>
 
       <field name="_canvas">
@@ -119,17 +135,12 @@
 
       <method name="updateCanvasState">
         <body><![CDATA[
-          this._updateViewState();
-          // clear the whole canvas and redraw
+          // Clear the whole canvas
+          // XXX is this really necessary given zoomToPage's redraw?
           var ctx = this._canvas.getContext("2d");
           ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-          this._browserToCanvas();
-        ]]></body>
-      </method>
 
-      <method name="_updateViewState">
-        <body><![CDATA[
-          // Reset the pan data.
+          // Reset pan data
           this.dragData.pageX = 0;
           this.dragData.pageY = 0;
 
@@ -650,11 +661,11 @@
           // Adjust the zoomLevel to fit the page contents in our window
           // width
           var [contentWidth, ] = this._contentAreaDimensions;
-          var canvasRect = this._canvas.getBoundingClientRect();
-          var canvasWidth = canvasRect.right - canvasRect.left;
+          var [viewportW, ] = this.viewportDimensions;
 
-          if (contentWidth)
-            this._zoomLevel = canvasWidth / contentWidth;
+          this._zoomLevel = viewportW / contentWidth;
+
+          this._browserToCanvas();
         ]]></body>
       </method>
 
@@ -786,13 +797,6 @@
         </getter>
       </property>
 
-      <property name="_effectiveCanvasDimensions" readonly="true">
-        <getter><![CDATA[
-          return [this._screenToPage(this._canvas.width),
-                  this._screenToPage(this._canvas.height)];
-         ]]></getter>
-      </property>
-
       <property name="scrollX" readonly="true">
         <getter><![CDATA[
           return this.dragData.pageX - this._screenToPage(this.dragData.dragX);
@@ -817,25 +821,25 @@
         <parameter name="aY"/>
         <body><![CDATA[
           var [contentAreaWidth, contentAreaHeight] = this._contentAreaDimensions;
-          var [canvasW, canvasH] = this._effectiveCanvasDimensions;
+          var [viewportW, viewportH] = this._effectiveViewportDimensions;
 
-          var offscreenWidth = contentAreaWidth - canvasW;
+          var offscreenWidth = contentAreaWidth - viewportW;
           if (offscreenWidth <= 0) {
             // Content is narrower than viewport, no need to pan horizontally
             aX = 0;
           } else {
-            // min of 0, max of contentAreaWidth - canvasW
+            // min of 0, max of contentAreaWidth - viewportW
             var newPageX = Math.min(this.dragData.pageX  + aX, offscreenWidth);
             newPageX = Math.max(newPageX, 0);
             aX = newPageX - this.dragData.pageX;
           }
 
-          var offscreenHeight = contentAreaHeight - canvasH;
+          var offscreenHeight = contentAreaHeight - viewportH;
           if (offscreenHeight <= 0) {
             // Content is shorter than viewport, no need to pan vertically
             aY = 0;
           } else {
-            // min of 0, max of contentAreaHeight - canvasH
+            // min of 0, max of contentAreaHeight - viewportH
             var newPageY = Math.min(this.dragData.pageY + aY, offscreenHeight);
             newPageY = Math.max(newPageY, 0);
             aY = newPageY - this.dragData.pageY;
@@ -1039,11 +1043,11 @@
           this.dragData.pageX -= this._screenToPage(this.dragData.dragX);
           this.dragData.pageY -= this._screenToPage(this.dragData.dragY);
 
-          // relocate the canvas to 0x0 in the window
+          // reset the drag data
           this.dragData.dragX = 0;
           this.dragData.dragY = 0;
 
-          // update canvas position and draw the canvas at the new location
+          // update the canvas and move it to the right position
           this._browserToCanvas();
           this._updateCanvasPosition();
         ]]></body>

@@ -189,9 +189,11 @@
   </popupset>
 
   <stack id="browser-container" flex="1" style="overflow: hidden;">
-    <vbox id="browser" style="-moz-stack-sizing: ignore; width: 800px; height: 480px;" top="60">
+    <vbox id="contentBox" style="-moz-stack-sizing: ignore; margin-top: 60px; margin: 0;">
       <notificationbox id="notifications" flex="1">
-        <deckbrowser id="content" autocompletepopup="popup_autocomplete_content" flex="1"
+        <deckbrowser id="content"
+                     autocompletepopup="popup_autocomplete_content"
+                     flex="1"
                      onnewtab="CommandUpdater.doCommand('cmd_newTab');"/>
       </notificationbox>
     </vbox>
