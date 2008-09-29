@@ -17,8 +17,7 @@ function test(element, value, shouldThrow) {
   var threw = false;
   try {
     element.volume = value;
-  } catch (err if (err instanceof Components.interfaces.nsIException &&
-                   err.result == Components.results.NS_ERROR_DOM_INDEX_SIZE_ERR)) {
+  } catch (err if err == "NS_ERROR_DOM_INDEX_SIZE_ERR") {
     threw = true;
   }
   is(shouldThrow, threw, "Case: " +element.id+ " setVolume=" + value);
