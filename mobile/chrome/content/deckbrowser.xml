@@ -755,11 +755,12 @@
         <parameter name="aClientX"/>
         <parameter name="aClientY"/>
         <body><![CDATA[
-          // Need to adjust for the toolbar height, etc.
-          var browserTop = this.browser.getBoundingClientRect().top;
+          // Need to adjust for the deckbrowser not being at 0,0
+          // (e.g. due to other browser UI)
+          var browserRect = this.getBoundingClientRect();
 
-          var clickOffsetX = this._screenToPage(aClientX) + this.dragData.pageX;
-          var clickOffsetY = this._screenToPage(aClientY - browserTop) + this.dragData.pageY;
+          var clickOffsetX = this._screenToPage(aClientX - browserRect.left) + this.dragData.pageX;
+          var clickOffsetY = this._screenToPage(aClientY - browserRect.top) + this.dragData.pageY;
 
           // Scroll the browser so that the event is targeted properly
           var cwin = this.browser.contentWindow;
