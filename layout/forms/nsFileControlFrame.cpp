@@ -306,12 +306,7 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   if (!filePicker)
     return NS_ERROR_FAILURE;
 
-  nsPIDOMWindow* win = doc->GetWindow();
-  if (!win) {
-    return NS_ERROR_FAILURE;
-  }
-
-  result = filePicker->Init(win, title, nsIFilePicker::modeOpen);
+  result = filePicker->Init(doc->GetWindow(), title, nsIFilePicker::modeOpen);
   if (NS_FAILED(result))
     return result;
 
