@@ -849,6 +849,25 @@ nsJSChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 NS_IMETHODIMP
 nsJSChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
+    // Figure out whether the LOAD_BACKGROUND bit in aLoadFlags is
+    // actually right.
+    PRBool bogusLoadBackground = PR_FALSE;
+    if (mIsActive && !(mActualLoadFlags & LOAD_BACKGROUND) &&
+        (aLoadFlags & LOAD_BACKGROUND)) {
+        // We're getting a LOAD_BACKGROUND, but it's probably just our own fake
+        // flag being mirrored to us.  The one exception is if our loadgroup is
+        // LOAD_BACKGROUND.
+        PRBool loadGroupIsBackground = PR_FALSE;
+        nsCOMPtr<nsILoadGroup> loadGroup;
+        mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+        if (loadGroup) {
+            nsLoadFlags loadGroupFlags;
+            loadGroup->GetLoadFlags(&loadGroupFlags);
+            loadGroupIsBackground = ((loadGroupFlags & LOAD_BACKGROUND) != 0);
+        }
+        bogusLoadBackground = !loadGroupIsBackground;
+    }
+    
     // Since the javascript channel is never the actual channel that
     // any data is loaded through, don't ever set the
     // LOAD_DOCUMENT_URI flag on it, since that could lead to two
@@ -859,6 +878,12 @@ nsJSChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
     // cancel the current document load on javascript: load start like IE does.
     
     mLoadFlags = aLoadFlags & ~LOAD_DOCUMENT_URI;
+
+    if (bogusLoadBackground) {
+        aLoadFlags = aLoadFlags & ~LOAD_BACKGROUND;
+    }
+
+    mActualLoadFlags = aLoadFlags;
 
     // ... but the underlying stream channel should get this bit, if
     // set, since that'll be the real document channel if the

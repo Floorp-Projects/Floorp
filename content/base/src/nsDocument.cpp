@@ -5727,9 +5727,7 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
 
   // Should we be flushing pending binding constructors in here?
 
-  nsPIDOMWindow *window = GetWindow();
-
-  if (aType <= Flush_ContentAndNotify || !window) {
+  if (aType <= Flush_ContentAndNotify) {
     // Nothing to do here
     return;
   }
