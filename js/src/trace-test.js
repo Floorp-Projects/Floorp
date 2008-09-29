@@ -1737,6 +1737,14 @@ function testConstantBooleanExpr()
 testConstantBooleanExpr.expected = "ok";
 test(testConstantBooleanExpr);
 
+function testNegativeGETELEMIndex()
+{
+    for (let i=0;i<3;++i) /x/[-4];
+    return "ok";
+}
+testNegativeGETELEMIndex.expected = "ok";
+test(testNegativeGETELEMIndex);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
