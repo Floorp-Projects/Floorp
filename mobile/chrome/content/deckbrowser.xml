@@ -680,8 +680,8 @@
           this._zoomLevel = Math.min(zoomLevel, 10);
 
           // pan to the element
-          this._panTo(Math.max(elRect.x - margin, 0),
-                      Math.max(0, elRect.y - margin));
+          this.panTo(Math.max(elRect.x - margin, 0),
+                     Math.max(0, elRect.y - margin));
         ]]></body>
       </method>
 
@@ -1016,13 +1016,77 @@
         ]]></body>
       </method>
 
-      <!-- Pans directly to a given X/Y (in page coordinates) -->
-      <method name="_panTo">
+      <!-- ensures that a given content element is visible -->
+      <method name="ensureElementIsVisible">
+        <parameter name="aElement"/>
+        <body><![CDATA[
+          let elRect = this._getPagePosition(aElement);
+          let [viewportW, viewportH] = this._effectiveViewportDimensions;
+          let curRect = {
+            x: this.dragData.pageX,
+            y: this.dragData.pageY,
+            width: viewportW,
+            height: viewportH
+          }
+
+          // Adjust for part of our viewport being offscreen
+          // XXX this assumes that the browser is meant to be fullscreen
+          let browserRect = this.getBoundingClientRect();
+          curRect.height -= this._screenToPage(Math.abs(browserRect.top));
+          if (browserRect.top < 0)
+            curRect.y -= this._screenToPage(browserRect.top);
+          curRect.width -= this._screenToPage(Math.abs(browserRect.left));
+          if (browserRect.left < 0)
+            curRect.x -= this._screenToPage(browserRect.left);
+
+          let newx = curRect.x;
+          let newy = curRect.y;
+
+          if (elRect.x + elRect.width > curRect.x + curRect.width) {
+              newx = curRect.x + ((elRect.x + elRect.width)-(curRect.x + curRect.width));
+          } else if (elRect.x < curRect.x) {
+              newx = elRect.x;
+          }
+
+          if (elRect.y + elRect.height > curRect.y + curRect.height) {
+              newy = curRect.y + ((elRect.y + elRect.height)-(curRect.y + curRect.height));
+          } else if (elRect.y < curRect.y) {
+              newy = elRect.y;
+          }
+
+          this.panTo(newx, newy);
+        ]]></body>
+      </method>
+
+      <!-- Pans directly to a given content element -->
+      <method name="panToElement">
+        <parameter name="aElement"/>
+        <body><![CDATA[
+          var elRect = this._getPagePosition(aElement);
+
+          this.panTo(elRect.x, elRect.y);
+        ]]></body>
+      </method>
+
+      <!-- Pans directly to a given X/Y (in content coordinates) -->
+      <method name="panTo">
         <parameter name="aX"/>
         <parameter name="aY"/>
         <body><![CDATA[
-          var [deltaX, deltaY] = this._constrainPanCoords(aX - this.dragData.pageX,
-                                                          aY - this.dragData.pageY);
+          this.panBy(aX - this.dragData.pageX, aY - this.dragData.pageY);
+        ]]></body>
+      </method>
+
+      <!-- Pans X/Y pixels (in content coordinates) -->
+      <method name="panBy">
+        <parameter name="dX"/>
+        <parameter name="dY"/>
+        <body><![CDATA[
+          if (dX == 0 && dY == 0)
+            return;
+
+          var [deltaX, deltaY] = this._constrainPanCoords(dX, dY);
+
           this.dragData.pageX += deltaX;
           this.dragData.pageY += deltaY;
 
