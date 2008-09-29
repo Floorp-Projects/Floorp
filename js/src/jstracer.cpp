@@ -4799,16 +4799,18 @@ TraceRecorder::record_JSOP_GETELEM()
     /* At this point we expect a whole number or we bail. */
     if (!JSVAL_IS_INT(idx))
         ABORT_TRACE("non-string, non-int JSOP_GETELEM index");
-
+    if (JSVAL_TO_INT(idx) < 0)
+        ABORT_TRACE("negative JSOP_GETELEM index");
+    
     /* Accessing an object using integer index but not a dense array. */
     if (!OBJ_IS_DENSE_ARRAY(cx, obj)) {
         idx_ins = makeNumberInt32(idx_ins);
+        LIns* args[] = { idx_ins, obj_ins, cx_ins };
         if (!js_IndexToId(cx, JSVAL_TO_INT(idx), &id))
             return false;
         idx = ID_TO_VALUE(id);
         if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, getProperty), &v))
             return false;
-        LIns* args[] = { idx_ins, obj_ins, cx_ins };
         LIns* v_ins = lir->insCall(F_Any_getelem, args);
         guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), MISMATCH_EXIT);
         if (!unbox_jsval(v, v_ins))
@@ -4840,13 +4842,13 @@ TraceRecorder::record_JSOP_SETELEM()
     LIns* obj_ins = get(&lval);
     LIns* idx_ins = get(&idx);
     LIns* v_ins = get(&v);
+    jsid id;
 
     LIns* boxed_v_ins = v_ins;
     if (!box_jsval(v, boxed_v_ins))
-        ABORT_TRACE("boxing string-indexed JSOP_SETELEM value");
+        ABORT_TRACE("boxing JSOP_SETELEM value");
     
     if (JSVAL_IS_STRING(idx)) {
-        jsid id;
         if (!js_ValueToStringId(cx, idx, &id))
             return false;
         // Store the interned string to the stack to save the interpreter from redoing this work.
@@ -4857,13 +4859,21 @@ TraceRecorder::record_JSOP_SETELEM()
         LIns* ok_ins = lir->insCall(F_Any_setprop, args);
         guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);    
     } else if (JSVAL_IS_INT(idx)) {
+        if (JSVAL_TO_INT(idx) < 0)
+            ABORT_TRACE("negative JSOP_GETELEM index");
         idx_ins = makeNumberInt32(idx_ins);
         LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
         LIns* res_ins;
-        if (guardDenseArray(obj, obj_ins)) 
+        if (guardDenseArray(obj, obj_ins)) {
             res_ins = lir->insCall(F_Array_dense_setelem, args);
-        else 
+        } else {
+            if (!js_IndexToId(cx, JSVAL_TO_INT(idx), &id))
+                return false;
+            idx = ID_TO_VALUE(id);
+            if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, getProperty), &v))
+                return false;
             res_ins = lir->insCall(F_Any_setelem, args);
+        }
         guard(false, lir->ins_eq0(res_ins), MISMATCH_EXIT);
     } else {
         ABORT_TRACE("non-string, non-int JSOP_SETELEM index");
