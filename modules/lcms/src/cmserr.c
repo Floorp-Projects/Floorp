@@ -103,7 +103,7 @@ void cmsSignalError(int ErrorCode, const char *ErrorText, ...)
                     _cexit();
 #endif
 
-                  FatalAppExit(0, "lcms is terminating application");
+                  FatalAppExitW(0, L"lcms is terminating application");
               }
               }
 #endif
