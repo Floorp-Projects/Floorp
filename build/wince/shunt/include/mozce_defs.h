@@ -790,6 +790,7 @@ typedef struct
 #endif
 
 #define SHGetSpecialFolderPathW SHGetSpecialFolderPath
+#define SHGetFileInfoW SHGetFileInfo
 
 // On Windows CE, there are some functions that are wide, but there
 // isn't a function named "functionW".
