@@ -11,6 +11,7 @@ cl arm-wince-as.c
 cl arm-wince-gcc.c
 cl arm-wince-lib.c
 cl arm-wince-link.c 
+cl arm-wince-res.c
    
 rm *.obj
 rm *.ilk
