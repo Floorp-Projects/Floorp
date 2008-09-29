@@ -307,7 +307,8 @@ nsFileChannel::MakeFileInputStream(nsIFile *file,
 }
 
 nsresult
-nsFileChannel::OpenContentStream(PRBool async, nsIInputStream **result)
+nsFileChannel::OpenContentStream(PRBool async, nsIInputStream **result,
+                                 nsIChannel** channel)
 {
   // NOTE: the resulting file is a clone, so it is safe to pass it to the
   //       file input stream which will be read on a background thread.
@@ -315,6 +316,24 @@ nsFileChannel::OpenContentStream(PRBool async, nsIInputStream **result)
   nsresult rv = GetFile(getter_AddRefs(file));
   if (NS_FAILED(rv))
     return rv;
+
+  nsCOMPtr<nsIFileProtocolHandler> fileHandler;
+  rv = NS_GetFileProtocolHandler(getter_AddRefs(fileHandler));
+  if (NS_FAILED(rv))
+    return rv;
+    
+  nsCOMPtr<nsIURI> newURI;
+  rv = fileHandler->ReadURLFile(file, getter_AddRefs(newURI));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIChannel> newChannel;
+    rv = NS_NewChannel(getter_AddRefs(newChannel), newURI);
+    if (NS_FAILED(rv))
+      return rv;
+
+    *result = nsnull;
+    newChannel.forget(channel);
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIInputStream> stream;
 
