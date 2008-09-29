@@ -7,7 +7,8 @@
 #endif
 
 #define WCE_BIN    "c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\ce\\bin\\x86_arm\\"
-#define WCE_RC_BIN "c:\\Program Files\\Microsoft SDKs\\Windows\\v6.0a\\bin\\"
+//#define WCE_RC_BIN "c:\\Program Files\\Microsoft SDKs\\Windows\\v6.0a\\bin\\"
+#define WCE_RC_BIN "c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\bin\\"
 #define WCE_CRT    "c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\\ce\\lib\\armv4i"
 #define WCE_INC    "c:\\Program Files\\Windows Mobile 6 SDK\\Smartphone\\Include\\Armv4i"
 #define WCE_LIB    "c:\\Program Files\\Windows Mobile 6 SDK\\Smartphone\\Lib\\Armv4i"
