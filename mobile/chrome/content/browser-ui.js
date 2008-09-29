@@ -52,6 +52,24 @@ const UIMODE_PANEL             = 7;
 const kMaxEngines = 4;
 const kDefaultFavIconURL = "chrome://browser/skin/images/default-favicon.png";
 
+[
+  ["gContentBox",            "contentBox"],
+].forEach(function (elementGlobal) {
+  var [name, id] = elementGlobal;
+  window.__defineGetter__(name, function () {
+    var element = document.getElementById(id);
+    if (!element)
+      return null;
+    delete window[name];
+    return window[name] = element;
+  });
+  window.__defineSetter__(name, function (val) {
+    delete window[name];
+    return window[name] = val;
+  });
+});
+
+
 var BrowserUI = {
   _panel : null,
   _caption : null,
@@ -60,6 +78,19 @@ var BrowserUI = {
   _autocompleteNavbuttons : null,
   _favicon : null,
   _faviconAdded : false,
+
+  _setContentPosition : function (aProp, aValue) {
+    if (aProp == "left") {
+      gContentBox.style.marginLeft = aValue + "px";
+      gContentBox.style.marginRight = -aValue + "px";
+    } else if (aProp == "top") {
+      gContentBox.style.marginTop = aValue + "px";
+      gContentBox.style.marginBottom = -aValue + "px";
+    }
+  },
+  get _contentTop() {
+    return parseInt(gContentBox.style.marginTop);
+  },
 
   _titleChanged : function(aDocument) {
     var browser = Browser.currentBrowser;
@@ -94,18 +125,17 @@ var BrowserUI = {
     this._favicon.src = browser.mIconURL || kDefaultFavIconURL;
 
     let toolbar = document.getElementById("toolbar-main");
-    let browserBox = document.getElementById("browser");
     if (Browser.content.currentTab.chromeTop) {
-      // Browser box was panned, so let's reset it
-      browserBox.top = Browser.content.currentTab.chromeTop;
-      browserBox.left = 0;
-      toolbar.top = browserBox.top - toolbar.boxObject.height;
+      // content box was panned, so let's reset it
+      this._setContentPosition("top", Browser.content.currentTab.chromeTop);
+      this._setContentPosition("left", 0);
+      toolbar.top = this._contentTop - toolbar.boxObject.height;
     }
     else {
       // Must be initial conditions
       toolbar.top = 0;
-      browserBox.top = toolbar.boxObject.height;
-      browserBox.left = 0;
+      this._setContentPosition("top", toolbar.boxObject.height);
+      this._setContentPosition("left", 0);
     }
 
     this.show(UIMODE_NONE);
@@ -186,21 +216,20 @@ var BrowserUI = {
 
   _scrollToolbar : function bui_scrollToolbar(aEvent) {
     var [scrollWidth, ] = Browser.content._contentAreaDimensions;
-    var [canvasW, ] = Browser.content._effectiveCanvasDimensions;
+    var [viewportW, ] = Browser.content._effectiveViewportDimensions;
 
     var pannedUI = false;
 
     if (this._dragData.dragging && Browser.content.scrollY == 0) {
       let toolbar = document.getElementById("toolbar-main");
-      let browser = document.getElementById("browser");
       let dy = this._dragData.lastY - aEvent.screenY;
       this._dragData.dragY += dy;
 
       // NOTE: We should only be scrolling the toolbar if the sidebars are not
-      // visible (browser.left == 0)
-
+      // visible (gContentBox.style.marginLeft == "0px")
+      let sidebarVisible = gContentBox.style.marginLeft != "0px";
       let newTop = null;
-      if (dy > 0 && (toolbar.top > -toolbar.boxObject.height && browser.left == 0)) {
+      if (dy > 0 && (toolbar.top > -toolbar.boxObject.height && !sidebarVisible)) {
         // Scroll the toolbar up unless it is already scrolled up
         newTop = this._dragData.sTop - dy;
 
@@ -212,7 +241,7 @@ var BrowserUI = {
         Browser.content.dragData.sX = aEvent.screenX;
         Browser.content.dragData.sY = aEvent.screenY;
       }
-      else if (dy < 0 && (toolbar.top < 0 && browser.left == 0)) {
+      else if (dy < 0 && (toolbar.top < 0 && !sidebarVisible)) {
         // Scroll the toolbar down unless it is already down
         newTop = this._dragData.sTop - dy;
 
@@ -225,21 +254,20 @@ var BrowserUI = {
       // getting to the deckbrowser.
       if (newTop != null) {
         toolbar.top = newTop;
-        browser.top = newTop + toolbar.boxObject.height;
+        this._setContentPosition("top", newTop + toolbar.boxObject.height);
 
         // Cache the current top so we can use it when switching tabs
-        Browser.content.currentTab.chromeTop = browser.top;
+        Browser.content.currentTab.chromeTop = this._contentTop;
 
         pannedUI = true;
       }
     }
 
-    if (this._dragData.dragging && (Browser.content.scrollX == 0 || (Browser.content.scrollX + canvasW) == scrollWidth)) {
+    if (this._dragData.dragging && (Browser.content.scrollX == 0 || (Browser.content.scrollX + viewportW) == scrollWidth)) {
       let tabbar = document.getElementById("tab-list-container");
       let sidebar = document.getElementById("browser-controls");
       let panelUI = document.getElementById("panel-container");
       let toolbar = document.getElementById("toolbar-main");
-      let browser = document.getElementById("browser");
       let dx = this._dragData.lastX - aEvent.screenX;
       this._dragData.dragX += dx;
 
@@ -249,7 +277,7 @@ var BrowserUI = {
 
         let tabbarW = tabbar.boxObject.width;
         let sidebarW = sidebar.boxObject.width;
-        let browserW = browser.boxObject.width;
+        let contentW = gContentBox.boxObject.width;
 
         // Limit the panning
         if (newLeft > 0)
@@ -269,11 +297,11 @@ var BrowserUI = {
         if (newLeft + tabbarW != 0)
           toolbar.top = 0;
         else
-          toolbar.top = browser.top - toolbar.boxObject.height;
-
-        browser.left = newLeft + tabbarW;
-        sidebar.left = newLeft + tabbarW + browserW;
-        panelUI.left = newLeft + tabbarW + browserW + sidebarW;
+          toolbar.top = this._contentTop - toolbar.boxObject.height;
+  
+        this._setContentPosition("left", newLeft + tabbarW);
+        sidebar.left = newLeft + tabbarW + contentW;
+        panelUI.left = newLeft + tabbarW + contentW + sidebarW;
 
         // Set the UI mode based on where we ended up
         if (newLeft > -(tabbarW - tabbarW / 3) && newLeft <= 0)
@@ -281,7 +309,7 @@ var BrowserUI = {
         else if (newLeft >= -(tabbarW + sidebarW) && newLeft < -(tabbarW + sidebarW / 3))
           this.mode = UIMODE_CONTROLS;
         else
-          this.mode = (browser.top == 0 ? UIMODE_NONE : UIMODE_URLVIEW);
+          this.mode = (gContentBox.style.marginTop == "0px" ? UIMODE_NONE : UIMODE_URLVIEW);
 
         pannedUI = true;
       }
@@ -304,7 +332,6 @@ var BrowserUI = {
 
   _showToolbar : function(aShow) {
     var toolbar = document.getElementById("toolbar-main");
-    var browser = document.getElementById("browser");
 
     if (aShow) {
       // Always show the toolbar, either by floating or panning
@@ -315,12 +342,12 @@ var BrowserUI = {
       else if (toolbar.top < 0) {
         // Partially showing, so show it completely
         toolbar.top = 0;
-        browser.top = toolbar.boxObject.height;
+        this._setContentPosition("top", toolbar.boxObject.height);
       }
     }
     else {
       // If we are floating the toolbar, then hide it again
-      if (browser.top == 0) {
+      if (gContentBox.style.marginTop == "0px") {
         toolbar.top = -toolbar.boxObject.height;
       }
     }
@@ -347,11 +374,10 @@ var BrowserUI = {
       let sidebar = document.getElementById("browser-controls");
       let panelUI = document.getElementById("panel-container");
       let toolbar = document.getElementById("toolbar-main");
-      let browser = document.getElementById("browser");
 
       let tabbarW = tabbar.boxObject.width;
       let sidebarW = sidebar.boxObject.width;
-      let browserW = browser.boxObject.width;
+      let contentW = gContentBox.boxObject.width;
 
       let newLeft = -tabbarW;
       switch (aMode) {
@@ -359,7 +385,7 @@ var BrowserUI = {
           Shortcuts.deinit();
           break;
         case UIMODE_PANEL:
-          newLeft = -browserW;
+          newLeft = -contentW;
           this._initPanel();
           break;
         case UIMODE_CONTROLS:
@@ -378,10 +404,10 @@ var BrowserUI = {
         newToolbarLeft += tabbarW + sidebarW;
       toolbar.left = newToolbarLeft;
 
-      browser.left = newLeft + tabbarW;
-      sidebar.left = newLeft + tabbarW + browserW;
-      panelUI.left = newLeft + tabbarW + browserW + sidebarW;
-      panelUI.width = browserW;
+      this._setContentPosition("left", newLeft + tabbarW);
+      sidebar.left = newLeft + tabbarW + contentW;
+      panelUI.left = newLeft + tabbarW + contentW + sidebarW;
+      panelUI.width = contentW;
   },
 
   _initPanel : function() {
@@ -404,10 +430,6 @@ var BrowserUI = {
     var containerH = rect.bottom - rect.top;
     var toolbar = document.getElementById("toolbar-main");
     var toolbarH = toolbar.boxObject.height;
-
-    var browser = document.getElementById("browser");
-    browser.width = containerW;
-    browser.height = containerH;
 
     var sidebar = document.getElementById("browser-controls");
     var panelUI = document.getElementById("panel-container");
@@ -470,8 +492,7 @@ var BrowserUI = {
       this._faviconAdded = false;
     }
     else if (aState == TOOLBARSTATE_LOADED) {
-      var container = document.getElementById("browser");
-      container.top = toolbar.boxObject.height;
+      this._setContentPosition("top", toolbar.boxObject.height);
 
       toolbar.setAttribute("mode", "view");
 
