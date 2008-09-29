@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: Audio Constructor Test 2</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var timeout = setTimeout(function () {
+                          ok(false, "Test timed out");
+                          SimpleTest.finish();
+                          }, 30000); 
+var a1 = new Audio('sound.ogg');
+a1.onload = function() {
+  ok(a1.networkState == a1.LOADED, "Audio onload");
+  clearTimeout(timeout);
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
