@@ -160,6 +160,15 @@ var Browser = {
         setTimeout(function() { self.currentBrowser.loadURI(whereURI, null, null, false); }, 0);
       }
     }
+
+    var firstRun = true;
+    try { firstRun = gPrefService.getBoolPref("startup.firstRun"); } catch (ex) { }
+    if (firstRun)
+    {
+      document.getElementById("plugins.enabled").pref.value = false;
+      this.setPluginState(false);
+    }
+    gPrefService.setBoolPref("startup.firstRun", false);
   },
 
   setPluginState: function(state)
