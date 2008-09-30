@@ -4764,7 +4764,9 @@ js_Interpret(JSContext *cx)
                 goto error;
             regs.sp = vp + 1;
             LOAD_INTERRUPT_HANDLER(cx);
-          END_CASE(JSOP_NEW)
+            JS_ASSERT(regs.pc[JSOP_NEW_LENGTH] == JSOP_RESUME);
+            len = JSOP_NEW_LENGTH + JSOP_RESUME_LENGTH;
+          END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_CALL)
           BEGIN_CASE(JSOP_EVAL)
@@ -5030,9 +5032,9 @@ js_Interpret(JSContext *cx)
                 cx->rval2set = JS_FALSE;
             }
 #endif /* JS_HAS_LVALUE_RETURN */
-          JS_ASSERT(regs.pc[JSOP_CALL_LENGTH] == JSOP_RESUME);
-          len = JSOP_CALL_LENGTH + JSOP_RESUME_LENGTH;
-          END_VARLEN_CASE
+            JS_ASSERT(regs.pc[JSOP_CALL_LENGTH] == JSOP_RESUME);
+            len = JSOP_CALL_LENGTH + JSOP_RESUME_LENGTH;
+            END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_RESUME)
             /* This case is not truly empty. The tracer is invoked transparently. */
