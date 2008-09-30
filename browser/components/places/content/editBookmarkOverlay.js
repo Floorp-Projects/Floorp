@@ -42,6 +42,11 @@ const MAX_FOLDER_ITEM_IN_MENU_LIST = 5;
 var gEditItemOverlay = {
   _uri: null,
   _itemId: -1,
+  _itemIds: [],
+  _uris: [],
+  _tags: [],
+  _allTags: [],
+  _multiEdit: false,
   _itemType: -1,
   _readOnly: false,
   _microsummaries: null,
@@ -51,6 +56,10 @@ var gEditItemOverlay = {
 
   get itemId() {
     return this._itemId;
+  },
+
+  get multiEdit() {
+    return this._multiEdit;
   },
 
   /**
@@ -91,14 +100,15 @@ var gEditItemOverlay = {
       this._hiddenRows.indexOf("feedLocation") != -1;
     this._element("siteLocationRow").collapsed = !this._isLivemark ||
       this._hiddenRows.indexOf("siteLocation") != -1;
+    this._element("selectionCount").hidden = !this._multiEdit;
   },
 
   /**
    * Initialize the panel
    * @param aFor
    *        Either a places-itemId (of a bookmark, folder or a live bookmark),
-   *        or a URI object (in which case, the panel would be initialized in
-   *        read-only mode).
+   *        an array of itemIds (used for bulk tagging), or a URI object (in 
+   *        which case, the panel would be initialized in read-only mode).
    * @param [optional] aInfo
    *        JS object which stores additional info for the panel
    *        initialization. The following properties may bet set:
@@ -110,6 +120,20 @@ var gEditItemOverlay = {
    *          read-only (view) mode even if the given item is editable.
    */
   initPanel: function EIO_initPanel(aFor, aInfo) {
+    var aItemIdList;
+    if (aFor.length) {
+      aItemIdList = aFor;
+      aFor = aItemIdList[0];
+    }
+    else if (this._multiEdit) {
+      this._multiEdit = false;
+      this._tags = [];
+      this._uris = [];
+      this._allTags = [];
+      this._itemIds = [];
+      this._element("selectionCount").hidden = true;
+    }
+
     this._folderMenuList = this._element("folderMenuList");
     this._folderTree = this._element("folderTree");
 
@@ -162,10 +186,27 @@ var gEditItemOverlay = {
       this._isLivemark = false;
 
       this._initTextField("locationField", this._uri.spec);
-      this._initTextField("tagsField",
-                           PlacesUtils.tagging
-                                      .getTagsForURI(this._uri, {}).join(", "),
-                          false);
+      if (!aItemIdList) {
+        var tags = PlacesUtils.tagging.getTagsForURI(this._uri, {}).join(", ");
+        this._initTextField("tagsField", tags, false);
+      }
+      else {
+        this._multiEdit = true;
+        this._allTags = [];
+        this._itemIds = aItemIdList;
+        var nodeToCheck = 0;
+        for (var i = 0; i < this._itemIds.length; i++) {
+          this._uris[i] = PlacesUtils.bookmarks.getBookmarkURI(this._itemIds[i], {});
+          this._tags[i] = PlacesUtils.tagging.getTagsForURI(this._uris[i], {});
+          if (this._tags[i].length < this._tags[nodeToCheck].length)
+            nodeToCheck =  i;
+        }
+        this._getCommonTags(nodeToCheck);
+        this._initTextField("tagsField", this._allTags.join(", "), false);
+        this._element("itemsCountText").value =
+          PlacesUIUtils.getFormattedString("detailsPane.multipleItems",
+                                           [this._itemIds.length]);
+      }
 
       // tags selector
       this._rebuildTagsSelectorList();
@@ -182,6 +223,24 @@ var gEditItemOverlay = {
         PlacesUtils.bookmarks.addObserver(this, false);
       window.addEventListener("unload", this, false);
       this._observersAdded = true;
+    }
+  },
+
+  _getCommonTags: function(aArrIndex) {
+    var tempArray = this._tags[aArrIndex];
+    var isAllTag;
+    for (var k = 0; k < tempArray.length; k++) {
+      isAllTag = true;
+      for (var j = 0; j < this._tags.length; j++) {
+        if (j == aArrIndex)
+          continue;
+        if (this._tags[j].indexOf(tempArray[k]) == -1) {
+          isAllTag = false;
+          break;
+        }
+      }
+      if (isAllTag)
+        this._allTags.push(tempArray[k]);
     }
   },
 
@@ -462,6 +521,11 @@ var gEditItemOverlay = {
     }
     this._itemId = -1;
     this._uri = null;
+    this._uris = [];
+    this._tags = [];
+    this._allTags = [];
+    this._itemIds = [];
+    this._multiEdit = false;
   },
 
   onTagsFieldBlur: function EIO_onTagsFieldBlur() {
@@ -469,6 +533,13 @@ var gEditItemOverlay = {
   },
 
   _updateTags: function EIO__updateTags() {
+    if (this._multiEdit)
+      this._updateMultipleTagsForItems();
+    else
+      this._updateSingleTagForItem();
+  },
+
+  _updateSingleTagForItem: function EIO__updateSingleTagForItem() {
     var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, { });
     var tags = this._getTagsArrayFromTagField();
     if (tags.length > 0 || currentTags.length > 0) {
@@ -492,6 +563,49 @@ var gEditItemOverlay = {
         var untagTxn = PlacesUIUtils.ptm.untagURI(this._uri, tagsToRemove);
         PlacesUIUtils.ptm.doTransaction(untagTxn);
       }
+    }
+  },
+
+  _updateMultipleTagsForItems: function EIO__updateMultipleTagsForItems() {
+    var tags = this._getTagsArrayFromTagField();
+    if (tags.length > 0 || this._allTags.length > 0) {
+      var tagsToRemove = [];
+      var tagsToAdd = [];
+      var i;
+      for (i = 0; i < this._allTags.length; i++) {
+        if (tags.indexOf(this._allTags[i]) == -1)
+          tagsToRemove.push(this._allTags[i]);
+      }
+      for (i = 0; i < this._tags.length; i++) {
+        tagsToAdd[i] = [];
+        for (var j = 0; j < tags.length; j++) {
+          if (this._tags[i].indexOf(tags[j]) == -1)
+            tagsToAdd[i].push(tags[j]);
+        }
+      }
+
+      PlacesUIUtils.ptm.beginBatch();
+      if (tagsToAdd.length > 0) {
+        var tagTxn;
+        for (i = 0; i < this._uris.length; i++) {
+          if (tagsToAdd[i].length > 0) {
+            tagTxn = PlacesUIUtils.ptm.tagURI(this._uris[i], tagsToAdd[i]);
+            PlacesUIUtils.ptm.doTransaction(tagTxn);
+          }
+        }
+      }
+      if (tagsToRemove.length > 0) {
+        var untagTxn;
+        for (var i = 0; i < this._uris.length; i++) {
+          untagTxn = PlacesUIUtils.ptm.untagURI(this._uris[i], tagsToRemove);
+          PlacesUIUtils.ptm.doTransaction(untagTxn);
+        }
+      }
+      PlacesUIUtils.ptm.endBatch();
+      this._allTags = tags;
+      this._tags = [];
+      for (i = 0; i < this._uris.length; i++)
+        this._tags[i] = PlacesUtils.tagging.getTagsForURI(this._uris[i], {});
     }
   },
 
@@ -822,8 +936,10 @@ var gEditItemOverlay = {
       // Update the tags field when items are checked/unchecked in the listbox
       var tags = this._getTagsArrayFromTagField();
 
-      if (aEvent.target.checked)
-        tags.push(aEvent.target.label);
+      if (aEvent.target.checked) {
+        if (tags.indexOf(aEvent.target.label) == -1)
+          tags.push(aEvent.target.label);
+      }
       else {
         var indexOfItem = tags.indexOf(aEvent.target.label);
         if (indexOfItem != -1)
