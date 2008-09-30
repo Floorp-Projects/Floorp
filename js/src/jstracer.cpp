@@ -2856,7 +2856,7 @@ js_InitJIT(JSTraceMonitor *tm)
         avmplus::AvmCore::sse2_available = js_CheckForSSE2();
         did_we_check_sse2 = true;
     }
-#else if defined NANOJIT_AMD64
+#elif defined NANOJIT_AMD64
     avmplus::AvmCore::cmov_available =
     avmplus::AvmCore::sse2_available = true;
 #endif
@@ -5284,6 +5284,26 @@ TraceRecorder::record_JSOP_CALL()
             break;
           default:
             JS_NOT_REACHED("illegal number of args to traceable native");
+        }
+        
+        /* If we got this far, and we have a charCodeAt, check that charCodeAt isn't going to 
+         * return a NaN. 
+         */
+        if (known->builtin == F_String_p_charCodeAt) {
+            JSString* str = JSVAL_TO_STRING(thisval);
+            jsval& arg = arg1_ins ? arg1 : stackval(-1);
+
+            JS_ASSERT(JSVAL_IS_STRING(thisval)); 
+            JS_ASSERT(isNumber(arg));
+
+            if (JSVAL_IS_INT(arg)) {
+                if (size_t(JSVAL_TO_INT(arg)) >= JSSTRING_LENGTH(str))
+                    ABORT_TRACE("invalid charCodeAt index");
+            } else {
+                double d = js_DoubleToInteger(*JSVAL_TO_DOUBLE(arg));
+                if (d < 0 || JSSTRING_LENGTH(str) <= d)
+                    ABORT_TRACE("invalid charCodeAt index");
+            }
         }
 
 #undef HANDLE_ARG
