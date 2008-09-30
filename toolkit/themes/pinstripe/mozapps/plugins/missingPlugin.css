@@ -24,8 +24,7 @@ html|applet > *|* {
   height: inherit;
 }
 
-html|a {
-  text-align: -moz-center;
+html|a, html|div {
   display: inline-block;
   /* overflow:hidden makes baseline vertical-alignment act like plugins */
   overflow: hidden;
@@ -40,8 +39,28 @@ html|a {
   color: black;
 }
 
+vbox {
+  width: inherit;
+  height: inherit;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
 #missingPluginPlaceholder {
   list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);
+}
+
+#disabledPluginPlaceholder {
+  list-style-image: url(chrome://mozapps/skin/plugins/pluginDisabled.png);
+}
+
+#blockedPluginPlaceholder {
+  list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked.png);
+}
+
+#missingPluginPlaceholder,
+#disabledPluginPlaceholder,
+#blockedPluginPlaceholder {
   display: block;
   border: 0px;
   width: 32px;
