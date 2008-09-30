@@ -4,7 +4,7 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
      class="reftest-wait"
-     onload="setTimeout(doTest,10)"
+     onload="setTimeout(doTest,500)"
      xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Testing that dynamic changes to the element for a given ID are reflected in clip-path</title>
   <defs>
