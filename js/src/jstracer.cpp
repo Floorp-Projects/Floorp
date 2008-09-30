@@ -4676,6 +4676,9 @@ TraceRecorder::record_JSOP_SETPROP()
 bool
 TraceRecorder::record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop)
 {
+    if (sprop->setter == js_watch_set)
+        ABORT_TRACE("watchpoint detected");
+
     jsbytecode* pc = cx->fp->regs->pc;
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
