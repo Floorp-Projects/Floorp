@@ -39,6 +39,64 @@
 
 #include "nsISupports.idl"
 
+interface nsIArray;
+
+/**
+ * Application caches can store a set of namespace entries that affect
+ * loads from the application cache.  If a load from the cache fails
+ * to match an exact cache entry, namespaces entries will be searched
+ * for a substring match, and should be applied appropriately.
+ */
+[scriptable, uuid(96e4c264-2065-4ce9-93bb-43734c62c4eb)]
+interface nsIApplicationCacheNamespace : nsISupports
+{
+    /**
+     * Items matching this namespace can be fetched from the network
+     * when loading from this cache.  The "data" attribute is unused.
+     */
+    const unsigned long NAMESPACE_BYPASS = 1 << 0;
+
+    /**
+     * Items matching this namespace can be fetched from the network
+     * when loading from this cache.  If the load fails, the cache entry
+     * specified by the "data" attribute should be loaded instead.
+     */
+    const unsigned long NAMESPACE_FALLBACK = 1 << 1;
+
+    /**
+     * Items matching this namespace should be cached
+     * opportunistically.  Successful toplevel loads of documents
+     * in this namespace should be placed in the application cache.
+     * Namespaces specifying NAMESPACE_OPPORTUNISTIC may also specify
+     * NAMESPACE_FALLBACK to supply a fallback entry.
+     */
+    const unsigned long NAMESPACE_OPPORTUNISTIC = 1 << 2;
+
+    /**
+     * Initialize the namespace.
+     */
+    void init(in unsigned long itemType,
+              in ACString namespaceSpec,
+              in ACString data);
+
+    /**
+     * The namespace type.
+     */
+    readonly attribute unsigned long itemType;
+
+    /**
+     * The prefix of this namespace.  This should be the asciiSpec of the
+     * URI prefix.
+     */
+    readonly attribute ACString namespaceSpec;
+
+    /**
+     * Data associated with this namespace, such as a fallback.  URI data should
+     * use the asciiSpec of the URI.
+     */
+    readonly attribute ACString data;
+};
+
 /**
  * Application caches store resources for offline use.  Each
  * application cache has a unique client ID for use with
@@ -53,7 +111,7 @@
  * loads.  Inactive caches will be removed from the cache when they are
  * no longer referenced.
  */
-[scriptable, uuid(a9cfbeef-8f8d-49c3-b899-303390383ae9)]
+[scriptable, uuid(1e1a2371-875b-4e57-98ff-a81af1750ca2)]
 interface nsIApplicationCache : nsISupports
 {
     /**
@@ -140,4 +198,16 @@ interface nsIApplicationCache : nsISupports
     void gatherEntries(in PRUint32 typeBits,
                        out unsigned long count,
                        [array, size_is(count)] out string keys);
+
+    /**
+     * Add a set of namespace entries to the application cache.
+     * @param namespaces
+     *        An nsIArray of nsIApplicationCacheNamespace entries.
+     */
+    void addNamespaces(in nsIArray namespaces);
+
+    /**
+     * Get the most specific namespace matching a given key.
+     */
+    nsIApplicationCacheNamespace getMatchingNamespace(in ACString key);
 };

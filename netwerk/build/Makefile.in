@@ -89,6 +89,11 @@ ifeq ($(OS_ARCH),WINNT)
         ../system/win32/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
 endif
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+    SHARED_LIBRARY_LIBS += \
+        ../system/mac/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
+endif
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../dns/src \
@@ -104,6 +109,10 @@ LOCAL_INCLUDES	= \
 
 ifeq ($(OS_ARCH),WINNT)
     LOCAL_INCLUDES += -I$(srcdir)/../system/win32
+endif
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+    LOCAL_INCLUDES += -I$(srcdir)/../system/mac
 endif
 
 ifdef NECKO_COOKIES
@@ -128,6 +137,7 @@ EXTRA_DSO_LDOPTS = \
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += \
+		-framework SystemConfiguration \
 		$(TK_LIBS) \
 	$(NULL)
 endif

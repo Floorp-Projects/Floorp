@@ -374,11 +374,56 @@ main(int argc, char **argv)
                             IDE_array[i].name) == 0 && 
             compare_strings(IDE_array[i-1].name_space, 
                              IDE_array[i].name_space) == 0) {
-            
+            int to_delete = -1;
             /* If one of the interfaces is unresolved, delete that one 
-             * preferentailly.
+             * preferentially. If they're both unresolved, but one of
+             * them has an IID and the other IID is empty, then delete
+             * the one with the empty IID.
              */
             if (!IDE_array[i-1].interface_descriptor) {
+                if (!IDE_array[i].interface_descriptor) {
+                    /* both unresolved, see if one has a zero IID */
+                    if (compare_IDE_with_zero(&IDE_array[i])) {
+                        /* one or both is zero, doesn't really matter */
+                        to_delete = i;
+                    } else if (compare_IDE_with_zero(&IDE_array[i - 1])) {
+                        to_delete = i - 1;
+                    } else if(compare_IIDs(&IDE_array[i-1].iid, &IDE_array[i].iid) == 0) {
+                        /* they're the same, so just pick one */
+                        to_delete = i;
+                    } else {
+                        /*XXX: error, unresolved references with different IIDs? */
+                        char *ns = IDE_array[i].name_space;
+                        fprintf(stderr,
+                        "ERROR: found duplicate unresolved interfaces "
+                        "%s%s%s\n",
+                        ns ? ns : "", ns ? "::" : "", IDE_array[i].name);
+                        return 1;
+                    }
+                }
+                else {
+                    /* just i-1 is unresolved */
+                    to_delete = i - 1;
+                }
+            } else if (!IDE_array[i].interface_descriptor ||
+                       (compare_IIDs(&IDE_array[i-1].iid, &IDE_array[i].iid) == 0)) {
+                to_delete = i;
+            } else {
+                /* Found interfaces with duplicate names but different
+                 * iids! */
+                char *ns = IDE_array[i].name_space;
+                fprintf(stderr,
+                        "ERROR: found duplicate definitions of interface "
+                        "%s%s%s with iids \n",
+                        ns ? ns : "", ns ? "::" : "", IDE_array[i].name);
+                print_IID(&IDE_array[i].iid, stderr);
+                fprintf(stderr, " and ");
+                print_IID(&IDE_array[i-1].iid, stderr);
+                fprintf(stderr, "\n");
+                return 1;
+            }
+
+            if (to_delete == (i - 1)) {
                 /* Shrink the IDE_array to delete the duplicate interface.
                  */
                 if (!shrink_IDE_array(IDE_array, 
@@ -399,44 +444,35 @@ main(int argc, char **argv)
                  * this loop.
                  */
                 trueNumberOfInterfaces--;
-            } else {
-                if (!IDE_array[i].interface_descriptor ||
-                    (compare_IIDs(&IDE_array[i-1].iid, &IDE_array[i].iid) == 0))
-                {
-                    /* Shrink the IDE_array to delete the duplicate interface.
-                     */
-                    if (!shrink_IDE_array(IDE_array, 
-                                          i, 
-                                          trueNumberOfInterfaces)) {
-                        perror("FAILED: shrink_IDE_array");
-                        return 1;
-                    }
-                    /* Update the fix array. This involves moving the deleted 
-                     * entry to the end of the array (rather than deleting it)
-                     * and mapping it to the "replacement" element so we can
-                     * update interface indices appropriately later.
-                     */
-                    update_fix_array(arena, fix_array, i, 
-                                     totalNumberOfInterfaces, i-1);
-                    /* Decrement the true number of interfaces since we just
-                     * deleted one. There's more than one way to get out of
-                     * this loop.
-                     */
-                    trueNumberOfInterfaces--;
-                } else {
-                    /* Found interfaces with duplicate names but different
-                     * iids! */
-                    char *ns = IDE_array[i].name_space;
-                    fprintf(stderr,
-                            "ERROR: found duplicate definitions of interface "
-                            "%s%s%s with iids \n",
-                            ns ? ns : "", ns ? "::" : "", IDE_array[i].name);
-                    print_IID(&IDE_array[i].iid, stderr);
-                    fprintf(stderr, " and ");
-                    print_IID(&IDE_array[i-1].iid, stderr);
-                    fprintf(stderr, "\n");
+            } else if (to_delete == i) {
+                /* Shrink the IDE_array to delete the duplicate interface.
+                 */
+                if (!shrink_IDE_array(IDE_array, 
+                                      i, 
+                                      trueNumberOfInterfaces)) {
+                    perror("FAILED: shrink_IDE_array");
                     return 1;
                 }
+                /* Update the fix array. This involves moving the deleted 
+                 * entry to the end of the array (rather than deleting it)
+                 * and mapping it to the "replacement" element so we can
+                 * update interface indices appropriately later.
+                 */
+                update_fix_array(arena, fix_array, i, 
+                                 totalNumberOfInterfaces, i-1);
+                /* Decrement the true number of interfaces since we just
+                 * deleted one. There's more than one way to get out of
+                 * this loop.
+                 */
+                trueNumberOfInterfaces--;
+            } else {
+                /* XXX: error! */
+                char *ns = IDE_array[i].name_space;
+                fprintf(stderr,
+                        "ERROR: duplicate interfaces, don't know what to do "
+                        "%s%s%s\n",
+                        ns ? ns : "", ns ? "::" : "", IDE_array[i].name);
+                return 1;
             }
         } else {
             /* Only increment if there was no name_space::name collision.

@@ -43,26 +43,14 @@
 #include "nsReferencedElement.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGUtils.h"
-#include "nsTHashtable.h"
+#include "nsSVGFilterFrame.h"
+#include "nsSVGClipPathFrame.h"
+#include "nsSVGMaskFrame.h"
 
-class nsSVGClipPathFrame;
-class nsSVGFilterFrame;
-class nsSVGMaskFrame;
-
-/*
- * SVG elements reference supporting resources by element ID. We need to
- * track when those resources change and when the DOM changes in ways
- * that affect which element is referenced by a given ID (e.g., when
- * element IDs change). The code here is responsible for that.
- * 
- * When a frame references a supporting resource, we create a property
- * object derived from nsSVGRenderingObserver to manage the relationship. The
- * property object is attached to the referencing frame.
- */
-class nsSVGRenderingObserver : public nsStubMutationObserver {
+class nsSVGPropertyBase : public nsStubMutationObserver {
 public:
-  nsSVGRenderingObserver(nsIURI* aURI, nsIFrame *aFrame);
-  virtual ~nsSVGRenderingObserver();
+  nsSVGPropertyBase(nsIURI* aURI, nsIFrame *aFrame);
+  virtual ~nsSVGPropertyBase();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -73,22 +61,13 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  void InvalidateViaReferencedFrame();
-
-  nsIFrame* GetReferencedFrame();
-  /**
-   * @param aOK this is only for the convenience of callers. We set *aOK to false
-   * if this function returns null.
-   */
-  nsIFrame* GetReferencedFrame(nsIAtom* aFrameType, PRBool* aOK);
-
 protected:
-  // This is called when the referenced resource changes.
-  virtual void DoUpdate();
+  // This is called when the referenced filter/mask/clipPath changes
+  virtual void DoUpdate() = 0;
 
   class SourceReference : public nsReferencedElement {
   public:
-    SourceReference(nsSVGRenderingObserver* aContainer) : mContainer(aContainer) {}
+    SourceReference(nsSVGPropertyBase* aContainer) : mContainer(aContainer) {}
   protected:
     virtual void ContentChanged(nsIContent* aFrom, nsIContent* aTo) {
       if (aFrom) {
@@ -106,41 +85,41 @@ protected:
      */
     virtual PRBool IsPersistent() { return PR_TRUE; }
   private:
-    nsSVGRenderingObserver* mContainer;
+    nsSVGPropertyBase* mContainer;
   };
   
+  /**
+   * @param aOK this is only for the convenience of callers. We set *aOK to false
+   * if this function returns null.
+   */
+  nsIFrame* GetReferencedFrame(nsIAtom* aFrameType, PRBool* aOK);
+
   SourceReference mElement;
-  // The frame that this property is attached to
-   nsIFrame *mFrame;
-  // When a presshell is torn down, we don't delete the properties for
-  // each frame until after the frames are destroyed. So here we remember
-  // the presshell for the frames we care about and, before we use the frame,
-  // we test the presshell to see if it's destroying itself. If it is,
-  // then the frame pointer is not valid and we know the frame has gone away.
-  nsIPresShell *mFramePresShell;
-  nsIFrame *mReferencedFrame;
-  nsIPresShell *mReferencedFramePresShell;
+  nsIFrame *mFrame;
 };
 
 class nsSVGFilterProperty :
-  public nsSVGRenderingObserver, public nsISVGFilterProperty {
+  public nsSVGPropertyBase, public nsISVGFilterProperty {
 public:
   nsSVGFilterProperty(nsIURI *aURI, nsIFrame *aFilteredFrame);
 
-  /**
-   * @return the filter frame, or null if there is no filter frame
-   */
-  nsSVGFilterFrame *GetFilterFrame();
+  nsSVGFilterFrame *GetFilterFrame(PRBool *aOK) {
+    return static_cast<nsSVGFilterFrame *>
+      (GetReferencedFrame(nsGkAtoms::svgFilterFrame, aOK));
+  }
   void UpdateRect();
 
   // nsISupports
   NS_DECL_ISUPPORTS
 
+  // nsIMutationObserver
+  NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
+
   // nsISVGFilterProperty
   virtual void Invalidate() { DoUpdate(); }
 
 private:
-  // nsSVGRenderingObserver
+  // nsSVGPropertyBase
   virtual void DoUpdate();
   
   // Tracks a bounding box for the filtered mFrame. We need this so that
@@ -150,125 +129,69 @@ private:
   nsRect mFilterRect;
 };
 
-class nsSVGPaintingProperty : public nsSVGRenderingObserver {
+class nsSVGClipPathProperty : public nsSVGPropertyBase {
 public:
-  nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aClippedFrame)
-    : nsSVGRenderingObserver(aURI, aClippedFrame) {}
+  nsSVGClipPathProperty(nsIURI *aURI, nsIFrame *aClippedFrame)
+    : nsSVGPropertyBase(aURI, aClippedFrame) {}
 
-protected:
+  nsSVGClipPathFrame *GetClipPathFrame(PRBool *aOK) {
+    return static_cast<nsSVGClipPathFrame *>
+      (GetReferencedFrame(nsGkAtoms::svgClipPathFrame, aOK));
+  }
+
+  // nsIMutationObserver
+  NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
+
+private:
   virtual void DoUpdate();
 };
 
-/**
- * A manager for one-shot nsSVGRenderingObserver tracking.
- * nsSVGRenderingObservers can be added or removed. They are not strongly
- * referenced so an observer must be removed before it before it dies.
- * When InvalidateAll is called, all outstanding references get
- * InvalidateViaReferencedFrame()
- * called on them and the list is cleared. The intent is that
- * the observer will force repainting of whatever part of the document
- * is needed, and then at paint time the observer will be re-added.
- * 
- * InvalidateAll must be called before this object is destroyed, i.e.
- * before the referenced frame is destroyed. This should normally happen
- * via nsSVGContainerFrame::RemoveFrame, since only frames in the frame
- * tree should be referenced.
- */
-class nsSVGRenderingObserverList {
+class nsSVGMaskProperty : public nsSVGPropertyBase {
 public:
-  nsSVGRenderingObserverList() { mObservers.Init(5); }
-  ~nsSVGRenderingObserverList() { InvalidateAll(); }
+  nsSVGMaskProperty(nsIURI *aURI, nsIFrame *aMaskedFrame)
+    : nsSVGPropertyBase(aURI, aMaskedFrame) {}
 
-  void Add(nsSVGRenderingObserver* aObserver)
-  { mObservers.PutEntry(aObserver); }
-  void Remove(nsSVGRenderingObserver* aObserver)
-  { mObservers.RemoveEntry(aObserver); }
-  void InvalidateAll();
+  nsSVGMaskFrame *GetMaskFrame(PRBool *aOK) {
+    return static_cast<nsSVGMaskFrame *>
+      (GetReferencedFrame(nsGkAtoms::svgMaskFrame, aOK));
+  }
+
+  // nsIMutationObserver
+  NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
 
 private:
-  nsTHashtable<nsVoidPtrHashKey> mObservers;
+  virtual void DoUpdate();
 };
 
 class nsSVGEffects {
 public:
   struct EffectProperties {
     nsSVGFilterProperty*   mFilter;
-    nsSVGPaintingProperty* mMask;
-    nsSVGPaintingProperty* mClipPath;
-
-    /**
-     * @return the clip-path frame, or null if there is no clip-path frame
-     * @param aOK if a clip-path was specified but the designated element
-     * does not exist or is an element of the wrong type, *aOK is set
-     * to false. Otherwise *aOK is untouched.
-     */
-    nsSVGClipPathFrame *GetClipPathFrame(PRBool *aOK);
-    /**
-     * @return the mask frame, or null if there is no mask frame
-     * @param aOK if a mask was specified but the designated element
-     * does not exist or is an element of the wrong type, *aOK is set
-     * to false. Otherwise *aOK is untouched.
-     */
-    nsSVGMaskFrame *GetMaskFrame(PRBool *aOK);
-    /**
-     * @return the filter frame, or null if there is no filter frame
-     * @param aOK if a filter was specified but the designated element
-     * does not exist or is an element of the wrong type, *aOK is set
-     * to false. Otherwise *aOK is untouched.
-     */
-    nsSVGFilterFrame *GetFilterFrame(PRBool *aOK) {
-      if (!mFilter)
-        return nsnull;
-      nsSVGFilterFrame *filter = mFilter->GetFilterFrame();
-      if (!filter) {
-        *aOK = PR_FALSE;
-      }
-      return filter;
-    }
+    nsSVGMaskProperty*     mMask;
+    nsSVGClipPathProperty* mClipPath;
   };
 
   /**
    * @param aFrame should be the first continuation
    */
   static EffectProperties GetEffectProperties(nsIFrame *aFrame);
+
   /**
    * Called by nsCSSFrameConstructor when style changes require the
    * effect properties on aFrame to be updated
    */
   static void UpdateEffects(nsIFrame *aFrame);
+
   /**
    * @param aFrame should be the first continuation
    */
   static nsSVGFilterProperty *GetFilterProperty(nsIFrame *aFrame);
+  
   static nsSVGFilterFrame *GetFilterFrame(nsIFrame *aFrame) {
     nsSVGFilterProperty *prop = GetFilterProperty(aFrame);
-    return prop ? prop->GetFilterFrame() : nsnull;
+    PRBool ok;
+    return prop ? prop->GetFilterFrame(&ok) : nsnull;
   }
-
-  /**
-   * @param aFrame must be a first-continuation.
-   */
-  static void AddRenderingObserver(nsIFrame *aFrame, nsSVGRenderingObserver *aObserver);
-  /**
-   * @param aFrame must be a first-continuation.
-   */
-  static void RemoveRenderingObserver(nsIFrame *aFrame, nsSVGRenderingObserver *aObserver);
-  /**
-   * This can be called on any first-continuation frame. We walk up to
-   * the nearest observable frame and invalidate its observers.
-   */
-  static void InvalidateRenderingObservers(nsIFrame *aFrame);
-  /**
-   * This can be called on any frame. Direct observers
-   * of this frame are all invalidated.
-   */
-  static void InvalidateDirectRenderingObservers(nsIFrame *aFrame);
-
-  /**
-   * Get an nsSVGPaintingProperty for the frame, creating a fresh one if necessary
-   */
-  static nsSVGPaintingProperty *
-  GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame, nsIAtom *aProp);
 };
 
 #endif /*NSSVGEFFECTS_H_*/
