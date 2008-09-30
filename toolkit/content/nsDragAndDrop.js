@@ -294,6 +294,7 @@ var transferUtils = {
   {
     switch (flavour) {
       case "text/unicode":
+      case "text/plain":
         return aData.replace(/^\s+|\s+$/g, "");
       case "text/x-moz-url":
         return ((aData instanceof Components.interfaces.nsISupportsString) ? aData.toString() : aData).split("\n")[0];
