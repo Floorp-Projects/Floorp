@@ -1745,6 +1745,20 @@ function testNegativeGETELEMIndex()
 testNegativeGETELEMIndex.expected = "ok";
 test(testNegativeGETELEMIndex);
 
+function doTestInvalidCharCodeAt(input)
+{
+    var q = "";
+    for (var i = 0; i < 10; i++)
+       q += input.charCodeAt(i); 
+    return q;
+}
+function testInvalidCharCodeAt()
+{
+    return doTestInvalidCharCodeAt("");
+}
+testInvalidCharCodeAt.expected = "NaNNaNNaNNaNNaNNaNNaNNaNNaNNaN";
+test(testInvalidCharCodeAt);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
