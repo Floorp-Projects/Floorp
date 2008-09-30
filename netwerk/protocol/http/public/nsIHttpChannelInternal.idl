@@ -45,7 +45,7 @@ interface nsIProxyInfo;
  * using any feature exposed by this interface, be aware that this interface 
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(602e8cf0-c387-4598-9e6c-aa4b1551ed1c)]
+[scriptable, uuid(3ce040fb-3933-462a-8d62-80b78fbd0809)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -72,4 +72,10 @@ interface nsIHttpChannelInternal : nsISupports
      *        The cookie header to be parsed.
      */
     void setCookie(in string aCookieHeader);
+
+    /**
+     * Setup this channel as an application cache fallback channel.
+     */
+    void setupFallbackChannel(in string aFallbackKey);
+
 };
