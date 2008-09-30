@@ -161,14 +161,14 @@ var Browser = {
       }
     }
 
-    var firstRun = true;
-    try { firstRun = gPrefService.getBoolPref("startup.firstRun"); } catch (ex) { }
-    if (firstRun)
+    var disablePlugins = true;
+    try { disablePlugins = gPrefService.getBoolPref("temporary.disablePlugins"); } catch (ex) { }
+    if (disablePlugins)
     {
       document.getElementById("plugins.enabled").pref.value = false;
       this.setPluginState(false);
     }
-    gPrefService.setBoolPref("startup.firstRun", false);
+    gPrefService.setBoolPref("temporary.disablePlugins", false);
   },
 
   setPluginState: function(state)
