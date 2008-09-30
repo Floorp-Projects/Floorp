@@ -5030,8 +5030,14 @@ js_Interpret(JSContext *cx)
                 cx->rval2set = JS_FALSE;
             }
 #endif /* JS_HAS_LVALUE_RETURN */
-          END_CASE(JSOP_CALL)
+          JS_ASSERT(regs.pc[JSOP_CALL_LENGTH] == JSOP_RESUME);
+          len = JSOP_CALL_LENGTH + JSOP_RESUME_LENGTH;
+          END_VARLEN_CASE
 
+          BEGIN_CASE(JSOP_RESUME)
+            /* This case is not truly empty. The tracer is invoked transparently. */
+          END_CASE(JSOP_RESUME)
+          
 #if JS_HAS_LVALUE_RETURN
           BEGIN_CASE(JSOP_SETCALL)
             argc = GET_ARGC(regs.pc);
@@ -6794,7 +6800,6 @@ js_Interpret(JSContext *cx)
           L_JSOP_DEFXMLNS:
 # endif
 
-          L_JSOP_UNUSED74:
           L_JSOP_UNUSED76:
           L_JSOP_UNUSED77:
           L_JSOP_UNUSED78:

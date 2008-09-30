@@ -5319,6 +5319,12 @@ TraceRecorder::record_JSOP_CALL()
 }
 
 bool
+TraceRecorder::record_JSOP_RESUME()
+{
+    return true;
+}
+
+bool
 TraceRecorder::name(jsval*& vp)
 {
     JSObject* obj = cx->fp->scopeChain;
@@ -6916,7 +6922,6 @@ TraceRecorder::record_JSOP_HOLE()
 
 #define UNUSED(op) bool TraceRecorder::record_##op() { return false; }
 
-UNUSED(JSOP_UNUSED74)
 UNUSED(JSOP_UNUSED76)
 UNUSED(JSOP_UNUSED77)
 UNUSED(JSOP_UNUSED78)
