@@ -23,3 +23,5 @@
 <!ENTITY missingPlugin.label                                 "Click here to download plugin.">
 <!ENTITY disabledPlugin.label                                "The plugin for this content has been disabled. Click here to manage your plugins.">
 <!ENTITY blockedPlugin.label                                 "This plugin has been blocked for your protection.">
+<!ENTITY disabledPlugin.label                                "The plugin for this content has been disabled. Click here to manage your plugins.">
+<!ENTITY blockedPlugin.label                                 "This plugin has been blocked for your protection.">
