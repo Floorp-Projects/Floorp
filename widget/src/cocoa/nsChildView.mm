@@ -2278,6 +2278,7 @@ NSEvent* gLastDragEvent = nil;
 {
   nsTSMManager::OnDestroyView(self);
   mGeckoChild = nsnull;
+  mWindow = nil;
   // Just in case we're destroyed abruptly and missed the draggingExited
   // or performDragOperation message.
   NS_IF_RELEASE(mDragService);

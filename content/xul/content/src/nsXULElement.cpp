@@ -2488,7 +2488,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
       return NS_ERROR_UNEXPECTED;
 
     // only top level chrome documents can hide the window chrome
-    if (!doc->IsRootDisplayDocument())
+    if (doc->GetParentDocument())
       return NS_OK;
 
     nsIPresShell *shell = doc->GetPrimaryShell();
@@ -2522,7 +2522,7 @@ nsXULElement::SetTitlebarColor(nscolor aColor, PRBool aActive)
     }
 
     // only top level chrome documents can set the titlebar color
-    if (doc->IsRootDisplayDocument()) {
+    if (!doc->GetParentDocument()) {
         nsCOMPtr<nsISupports> container = doc->GetContainer();
         nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
         if (baseWindow) {

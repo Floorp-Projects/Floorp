@@ -44,9 +44,6 @@
 #include "nsDisplayList.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGFilterPaintCallback.h"
-#include "nsSVGFilterFrame.h"
-#include "nsSVGClipPathFrame.h"
-#include "nsSVGMaskFrame.h"
 
 // ----------------------------------------------------------------------
 
@@ -109,12 +106,13 @@ nsRect
 nsSVGIntegrationUtils::ComputeFrameEffectsRect(nsIFrame* aFrame,
                                                const nsRect& aOverflowRect)
 {
+  PRBool isOK;
   nsIFrame* firstFrame =
     nsLayoutUtils::GetFirstContinuationOrSpecialSibling(aFrame);
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
   nsSVGFilterFrame *filterFrame = effectProperties.mFilter ?
-    effectProperties.mFilter->GetFilterFrame() : nsnull;
+    effectProperties.mFilter->GetFilterFrame(&isOK) : nsnull;
   if (!filterFrame)
     return aOverflowRect;
 
@@ -272,9 +270,12 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsIRenderingContext* aCtx,
    */
 
   PRBool isOK = PR_TRUE;
-  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
-  nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
-  nsSVGMaskFrame *maskFrame = effectProperties.GetMaskFrame(&isOK);
+  nsSVGClipPathFrame *clipPathFrame = effectProperties.mClipPath ?
+    effectProperties.mClipPath->GetClipPathFrame(&isOK) : nsnull;
+  nsSVGFilterFrame *filterFrame = effectProperties.mFilter ?
+    effectProperties.mFilter->GetFilterFrame(&isOK) : nsnull;
+  nsSVGMaskFrame *maskFrame = effectProperties.mMask ?
+    effectProperties.mMask->GetMaskFrame(&isOK) : nsnull;
 
   PRBool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : PR_TRUE;
 

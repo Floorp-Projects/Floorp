@@ -84,10 +84,6 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS		+= nsSystemFontsGTK2.cpp
 
-ifdef MOZ_ENABLE_GLITZ
-REQUIRES        += glitzglx
-endif
-
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
@@ -95,16 +91,12 @@ CPPSRCS		+= nsSystemFontsWin.cpp \
 		   $(NULL)
 
 REQUIRES	+= \
-		glitzwgl \
 		cairo \
 		$(NULL)
 
 _OS_LIBS	= usp10
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
-ifdef MOZ_ENABLE_GLITZ
-OS_LIBS += opengl32.lib 
-endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -118,10 +110,6 @@ endif
 
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 CPPSRCS          += nsSystemFontsMac.cpp
- ifdef MOZ_ENABLE_GLITZ
-  REQUIRES         += glitzagl
-  EXTRA_DSO_LDOPTS += -lmozglitzagl -framework OpenGL -framework AGL
- endif
 endif
 
 EXPORTS         += nsIThebesFontMetrics.h

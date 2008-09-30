@@ -205,14 +205,6 @@ EXPORTS += cairo-ft.h
 OS_INCLUDES += $(CAIRO_FT_CFLAGS)
 endif
 
-
-ifdef MOZ_ENABLE_GLITZ
-REQUIRES += glitz
-CSRCS    += cairo-glitz-surface.c
-EXPORTS  += cairo-glitz.h
-endif
-
-
 LOCAL_INCLUDES  += -I$(srcdir)
 
 FORCE_STATIC_LIB = 1

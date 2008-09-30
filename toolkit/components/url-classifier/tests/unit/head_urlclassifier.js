@@ -46,10 +46,6 @@ var prefBranch = Cc["@mozilla.org/preferences-service;1"].
                  getService(Ci.nsIPrefBranch);
 prefBranch.setIntPref("urlclassifier.gethashnoise", 0);
 
-// Enable malware/phishign checking for tests
-prefBranch.setBoolPref("browser.safebrowsing.malware.enabled", true);
-prefBranch.setBoolPref("browser.safebrowsing.enabled", true);
-
 function cleanUp() {
   try {
     // Delete a previously created sqlite file

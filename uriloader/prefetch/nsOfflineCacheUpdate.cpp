@@ -54,11 +54,12 @@
 #include "nsIWebProgress.h"
 #include "nsICryptoHash.h"
 #include "nsICacheEntryDescriptor.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
-#include "nsStringEnumerator.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
 
@@ -88,6 +89,18 @@ private:
     PRUint32 mCount;
     char **mValues;
 };
+
+static nsresult
+DropReferenceFromURL(nsIURI * aURI)
+{
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+    if (url) {
+        nsresult rv = url->SetRef(EmptyCString());
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // nsOfflineCacheUpdateItem::nsISupports
@@ -430,6 +443,7 @@ nsOfflineManifestItem::nsOfflineManifestItem(nsOfflineCacheUpdate *aUpdate,
     , mNeedsUpdate(PR_TRUE)
     , mManifestHashInitialized(PR_FALSE)
 {
+    ReadStrictFileOriginPolicyPref();
 }
 
 nsOfflineManifestItem::~nsOfflineManifestItem()
@@ -510,6 +524,33 @@ nsOfflineManifestItem::ReadManifest(nsIInputStream *aInputStream,
 }
 
 nsresult
+nsOfflineManifestItem::AddNamespace(PRUint32 namespaceType,
+                                    const nsCString &namespaceSpec,
+                                    const nsCString &data)
+
+{
+    nsresult rv;
+    if (!mNamespaces) {
+        mNamespaces = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    nsCOMPtr<nsIApplicationCacheNamespace> ns =
+        do_CreateInstance(NS_APPLICATIONCACHENAMESPACE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ns->Init(nsIApplicationCacheNamespace::NAMESPACE_FALLBACK |
+                  nsIApplicationCacheNamespace::NAMESPACE_OPPORTUNISTIC,
+                  namespaceSpec, data);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mNamespaces->AppendElement(ns, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
+nsresult
 nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegin,
                                           const nsCString::const_iterator &aEnd)
 {
@@ -567,7 +608,7 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
     }
 
     if (line.EqualsLiteral("NETWORK:")) {
-        mParserState = PARSE_NETWORK_ENTRIES;
+        mParserState = PARSE_BYPASS_ENTRIES;
         return NS_OK;
     }
 
@@ -585,6 +626,8 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
         rv = NS_NewURI(getter_AddRefs(uri), line, nsnull, mURI);
         if (NS_FAILED(rv))
             break;
+        if (NS_FAILED(DropReferenceFromURL(uri)))
+            break;
 
         nsCAutoString scheme;
         uri->GetScheme(scheme);
@@ -597,10 +640,79 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
         mExplicitURIs.AppendObject(uri);
         break;
     }
-    case PARSE_FALLBACK_ENTRIES:
-    case PARSE_NETWORK_ENTRIES: {
-        // we don't currently implement fallbacks or whitelists,
-        // ignore these for now.
+
+    case PARSE_FALLBACK_ENTRIES: {
+        PRInt32 separator = line.FindChar(' ');
+        if (separator == kNotFound) {
+            separator = line.FindChar('\t');
+            if (separator == kNotFound)
+                break;
+        }
+
+        nsCString namespaceSpec(Substring(line, 0, separator));
+        nsCString fallbackSpec(Substring(line, separator + 1));
+        namespaceSpec.CompressWhitespace();
+        fallbackSpec.CompressWhitespace();
+
+        nsCOMPtr<nsIURI> namespaceURI;
+        rv = NS_NewURI(getter_AddRefs(namespaceURI), namespaceSpec, nsnull, mURI);
+        if (NS_FAILED(rv))
+            break;
+        if (NS_FAILED(DropReferenceFromURL(namespaceURI)))
+            break;
+        rv = namespaceURI->GetAsciiSpec(namespaceSpec);
+        if (NS_FAILED(rv))
+            break;
+
+
+        nsCOMPtr<nsIURI> fallbackURI;
+        rv = NS_NewURI(getter_AddRefs(fallbackURI), fallbackSpec, nsnull, mURI);
+        if (NS_FAILED(rv))
+            break;
+        if (NS_FAILED(DropReferenceFromURL(fallbackURI)))
+            break;
+        rv = fallbackURI->GetAsciiSpec(fallbackSpec);
+        if (NS_FAILED(rv))
+            break;
+
+        // Manifest and namespace must be same origin
+        if (!NS_SecurityCompareURIs(mURI, namespaceURI,
+                                    mStrictFileOriginPolicy))
+            break;
+
+        // Fallback and namespace must be same origin
+        if (!NS_SecurityCompareURIs(namespaceURI, fallbackURI,
+                                    mStrictFileOriginPolicy))
+            break;
+
+        mFallbackURIs.AppendObject(fallbackURI);
+        mOpportunisticNamespaces.AppendElement(namespaceSpec);
+
+        AddNamespace(nsIApplicationCacheNamespace::NAMESPACE_FALLBACK |
+                     nsIApplicationCacheNamespace::NAMESPACE_OPPORTUNISTIC,
+                     namespaceSpec, fallbackSpec);
+        break;
+    }
+
+    case PARSE_BYPASS_ENTRIES: {
+        nsCOMPtr<nsIURI> bypassURI;
+        rv = NS_NewURI(getter_AddRefs(bypassURI), line, nsnull, mURI);
+        if (NS_FAILED(rv))
+            break;
+
+        nsCAutoString scheme;
+        bypassURI->GetScheme(scheme);
+        PRBool equals;
+        if (NS_FAILED(mURI->SchemeIs(scheme.get(), &equals)) || !equals)
+            break;
+        if (NS_FAILED(DropReferenceFromURL(bypassURI)))
+            break;
+        nsCString spec;
+        if (NS_FAILED(bypassURI->GetAsciiSpec(spec)))
+            break;
+
+        AddNamespace(nsIApplicationCacheNamespace::NAMESPACE_BYPASS,
+                     spec, EmptyCString());
         break;
     }
     }
@@ -678,6 +790,16 @@ nsOfflineManifestItem::CheckNewManifestContentHash(nsIRequest *aRequest)
     }
 
     return NS_OK;
+}
+
+void
+nsOfflineManifestItem::ReadStrictFileOriginPolicyPref()
+{
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    mStrictFileOriginPolicy =
+        (!prefs ||
+         NS_FAILED(prefs->GetBoolPref("security.fileuri.strict_origin_policy",
+                                      &mStrictFileOriginPolicy)));
 }
 
 NS_IMETHODIMP
@@ -948,6 +1070,12 @@ nsOfflineCacheUpdate::HandleManifest(PRBool *aDoUpdate)
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    const nsCOMArray<nsIURI> &fallbackURIs = mManifestItem->GetFallbackURIs();
+    for (PRInt32 i = 0; i < fallbackURIs.Count(); i++) {
+        rv = AddURI(fallbackURIs[i], nsIApplicationCache::ITEM_FALLBACK);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     // The document that requested the manifest is implicitly included
     // as part of that manifest update.
     rv = AddURI(mDocumentURI, nsIApplicationCache::ITEM_IMPLICIT);
@@ -959,6 +1087,12 @@ nsOfflineCacheUpdate::HandleManifest(PRBool *aDoUpdate)
 
     // Add items requested by the script API
     rv = AddExistingItems(nsIApplicationCache::ITEM_DYNAMIC);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Add opportunistically cached items conforming current opportunistic
+    // namespace list
+    rv = AddExistingItems(nsIApplicationCache::ITEM_OPPORTUNISTIC,
+                          &mManifestItem->GetOpportunisticNamespaces());
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aDoUpdate = PR_TRUE;
@@ -1105,9 +1239,16 @@ nsOfflineCacheUpdate::Cancel()
 //-----------------------------------------------------------------------------
 
 nsresult
-nsOfflineCacheUpdate::AddExistingItems(PRUint32 aType)
+nsOfflineCacheUpdate::AddExistingItems(PRUint32 aType,
+                                       nsTArray<nsCString>* namespaceFilter)
 {
     if (!mPreviousApplicationCache) {
+        return NS_OK;
+    }
+
+    if (namespaceFilter && namespaceFilter->Length() == 0) {
+        // Don't bother to walk entries when there are no namespaces
+        // defined.
         return NS_OK;
     }
 
@@ -1120,6 +1261,17 @@ nsOfflineCacheUpdate::AddExistingItems(PRUint32 aType)
     AutoFreeArray autoFree(count, keys);
 
     for (PRUint32 i = 0; i < count; i++) {
+        if (namespaceFilter) {
+            PRBool found = PR_FALSE;
+            for (PRUint32 j = 0; j < namespaceFilter->Length() && !found; j++) {
+                found = StringBeginsWith(nsDependentCString(keys[i]),
+                                         namespaceFilter->ElementAt(j));
+            }
+
+            if (!found)
+                continue;
+        }
+
         nsCOMPtr<nsIURI> uri;
         if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), keys[i]))) {
             rv = AddURI(uri, aType);
@@ -1296,7 +1448,14 @@ nsOfflineCacheUpdate::Finish()
 
     if (!mPartialUpdate) {
         if (mSucceeded) {
-            nsresult rv = mApplicationCache->Activate();
+            nsIArray *namespaces = mManifestItem->GetNamespaces();
+            nsresult rv = mApplicationCache->AddNamespaces(namespaces);
+            if (NS_FAILED(rv)) {
+                NotifyError();
+                mSucceeded = PR_FALSE;
+            }
+
+            rv = mApplicationCache->Activate();
             if (NS_FAILED(rv)) {
                 NotifyError();
                 mSucceeded = PR_FALSE;

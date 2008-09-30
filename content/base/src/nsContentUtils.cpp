@@ -2911,10 +2911,6 @@ nsContentUtils::IsInChromeDocshell(nsIDocument *aDocument)
     return PR_FALSE;
   }
 
-  if (aDocument->GetDisplayDocument()) {
-    return IsInChromeDocshell(aDocument->GetDisplayDocument());
-  }
-
   nsCOMPtr<nsISupports> docContainer = aDocument->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(docContainer));
   PRInt32 itemType = nsIDocShellTreeItem::typeContent;
