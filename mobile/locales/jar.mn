@@ -1,0 +1,16 @@
+#filter substitution
+
+@AB_CD@.jar:
+% locale browser @AB_CD@ %locale/@AB_CD@/browser/
+  locale/@AB_CD@/browser/browser.dtd              (%chrome/browser.dtd)
+  locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
+  locale/@AB_CD@/browser/shortcuts.properties     (%chrome/shortcuts.properties)
+  locale/@AB_CD@/browser/search.properties        (%chrome/search.properties)
+  locale/@AB_CD@/browser/region.properties        (%chrome/region.properties)
+  locale/@AB_CD@/browser/preferences.dtd          (%chrome/preferences.dtd)
+# Fennec-specific overrides of generic strings
+* locale/@AB_CD@/browser/netError.dtd             (%chrome/overrides/netError.dtd)
+% override chrome://global/locale/netErrorApp.dtd chrome://browser/locale/netError.dtd
+% locale branding @AB_CD@ %locale/@AB_CD@/branding/
+  locale/@AB_CD@/branding/brand.dtd               (%chrome/brand/brand.dtd)
+  locale/@AB_CD@/branding/brand.properties        (%chrome/brand/brand.properties)
