@@ -15,8 +15,8 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Juan Lang
-# Portions created by the Initial Developer are Copyright (C) 2006
+# Mozilla Corporation
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,21 +35,23 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko
+MODULE         = necko
+LIBRARY_NAME   = neckosystem_s
+LIBXUL_LIBRARY = 1
+REQUIRES       = xpcom \
+                 string \
+                 $(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-    DIRS += win32
-endif
+FORCE_STATIC_LIB = 1
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-    DIRS += mac
-endif
+CMMSRCS += nsNetworkLinkService.mm
 
 include $(topsrcdir)/config/rules.mk
+
