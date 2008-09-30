@@ -71,8 +71,7 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsSVGContainerFrameBase::IsFrameOfType(
-            aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGContainer));
+    return nsSVGContainerFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
 };
 

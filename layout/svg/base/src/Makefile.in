@@ -104,11 +104,10 @@ include $(topsrcdir)/config/config.mk
 FORCE_STATIC_LIB = 1
 
 EXPORTS = \
-	nsSVGEffects.h \
-	nsSVGFilterInstance.h \
-	nsSVGForeignObjectFrame.h \
 	nsSVGIntegrationUtils.h \
 	nsSVGUtils.h \
+	nsSVGFilterInstance.h \
+	nsSVGForeignObjectFrame.h \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

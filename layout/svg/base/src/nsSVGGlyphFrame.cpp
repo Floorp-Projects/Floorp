@@ -338,7 +338,7 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
   gfx->Save();
   SetupGlobalTransform(gfx);
 
-  if (SetupCairoFill(gfx)) {
+  if (HasFill() && SetupCairoFill(gfx)) {
     gfxMatrix matrix = gfx->CurrentMatrix();
     CharacterIterator iter(this, PR_TRUE);
     iter.SetInitialMatrix(gfx);
@@ -347,7 +347,7 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
     gfx->SetMatrix(matrix);
   }
 
-  if (SetupCairoStroke(gfx)) {
+  if (HasStroke() && SetupCairoStroke(gfx)) {
     // SetupCairoStroke will clear mTextRun whenever
     // there is a pattern or gradient on the text
     CharacterIterator iter(this, PR_TRUE);
@@ -433,10 +433,11 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
   
   gfxRect extent;
 
-  if (SetupCairoStrokeGeometry(tmpCtx)) {
+  if (HasStroke()) {
     AddCharactersToPath(&iter, tmpCtx);
+    SetupCairoStrokeGeometry(tmpCtx);
     extent = tmpCtx->UserToDevice(tmpCtx->GetUserStrokeExtent());
-  } else if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None) {
+  } else if (HasFill()) {
     AddBoundingBoxesToPath(&iter, tmpCtx);
     tmpCtx->IdentityMatrix();
     extent = tmpCtx->GetUserPathExtent();
