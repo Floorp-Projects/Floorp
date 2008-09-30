@@ -302,6 +302,7 @@ nsHttpChannel::Connect(PRBool firstTime)
                 if (!mFallbackChannel && !mFallbackKey.IsEmpty()) {
                     return AsyncCall(&nsHttpChannel::HandleAsyncFallback);
                 }
+                return NS_ERROR_DOCUMENT_NOT_CACHED;
             }
             // otherwise, let's just proceed without using the cache.
         }
