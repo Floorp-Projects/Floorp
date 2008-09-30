@@ -576,14 +576,15 @@ findbar {
 
 /* Popup Bounding Box */
 #identity-popup {
-  -moz-appearance: menupopup;
-  color: MenuText;
-}
-
-#identity-popup-container {
-  background-image: none;
+  -moz-appearance: none;
+  background-color: rgb(90,89,90);
+  border: 1px solid rgb(90,89,90);
+  -moz-border-radius: 0px 0px 8px 8px;
+  padding: 10px 8px 6px 8px;
+  margin-top: 3px;
+  -moz-margin-start: 11px;
+  color:  #ffffff;
   min-width: 280px;
-  padding: 10px;
 }
 
 /* Preferences window */
