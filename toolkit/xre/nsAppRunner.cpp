@@ -273,6 +273,12 @@ static int    gRestartArgc;
 static char **gRestartArgv;
 
 #if defined(MOZ_WIDGET_GTK2)
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) \
+  || defined(NS_TRACE_MALLOC)
+#define CLEANUP_MEMORY 1
+#define PANGO_ENABLE_BACKEND
+#include <pango/pangofc-fontmap.h>
+#endif
 #include <gtk/gtk.h>
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
@@ -395,7 +401,16 @@ static void Output(PRBool isError, const char *fmt, ... )
       flags |= MB_ICONERROR;
     else 
       flags |= MB_ICONINFORMATION;
-    MessageBoxA(NULL, msg, "XULRunner", flags);
+
+    wchar_t wide_msg[1024];
+    MultiByteToWideChar(CP_ACP,
+                        0,
+                        msg,
+                        -1,
+                        wide_msg,
+                        sizeof(wide_msg) / sizeof(wchar_t));
+
+    MessageBoxW(NULL, wide_msg, L"XULRunner", flags);
     PR_smprintf_free(msg);
   }
 #else
@@ -2415,12 +2430,42 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
 #endif /* MOZ_X11 */
   }
   else {
+#if CLEANUP_MEMORY
+    // Get a (new) Pango context that holds a reference to the fontmap that
+    // GTK has been using.  gdk_pango_context_get() must be called while GTK
+    // has a default display.
+    PangoContext *pangoContext = gdk_pango_context_get();
+#endif
+
     if (!theme_is_qt)
       gdk_display_close(display);
-#if GTK_CHECK_VERSION(2,8,0) && \
-  (defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(NS_TRACE_MALLOC))
-    cairo_debug_reset_static_data();
+
+#if CLEANUP_MEMORY
+    // This doesn't take a reference.
+    PangoFontMap *fontmap = pango_context_get_font_map(pangoContext);
+    // Do some shutdown of the fontmap, which releases the fonts, clearing a
+    // bunch of circular references from the fontmap through the fonts back to
+    // itself.  The shutdown that this does is much less than what's done by
+    // the fontmap's finalize, though.
+    if (PANGO_IS_FC_FONT_MAP(fontmap))
+        pango_fc_font_map_shutdown(PANGO_FC_FONT_MAP(fontmap));
+    g_object_unref(pangoContext);
+    // PangoCairo still holds a reference to the fontmap.
+    // Now that we have finished with GTK and Pango, we could unref fontmap,
+    // which would allow us to call FcFini, but removing what is really
+    // Pango's ref feels a bit evil.  Pango-1.22 will have support for
+    // pango_cairo_font_map_set_default(NULL), which would release the
+    // reference on the old fontmap.
+
+#if GTK_CHECK_VERSION(2,8,0)
+    // cairo_debug_reset_static_data() is prototyped through cairo.h included
+    // by gtk.h.
+#ifdef cairo_debug_reset_static_data
+#error "Looks like we're including Mozilla's cairo instead of system cairo"
 #endif
+    cairo_debug_reset_static_data();
+#endif // 2.8.0
+#endif // CLEANUP_MEMORY
   }
 }
 #endif // MOZ_WIDGET_GTK2

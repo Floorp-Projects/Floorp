@@ -166,21 +166,6 @@
   #define NSCAP_LOG_RELEASE(this, ptr)
 #endif
 
-
-
-
-  /*
-    WARNING:
-      VC++4.2 is very picky.  To compile under VC++4.2, the classes must be defined
-      in an order that satisfies:
-    
-        already_AddRefed < nsCOMPtr
-        nsCOMPtr < nsGetterAddRefs
-
-      The other compilers probably won't complain, so please don't reorder these
-      classes, on pain of breaking 4.2 compatibility.
-  */
-
 template <class T>
 struct already_AddRefed
     /*

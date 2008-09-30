@@ -45,7 +45,7 @@ interface nsIApplicationCache;
  * The application cache service manages the set of application cache
  * groups.
  */
-[scriptable, uuid(3f411c68-0d17-420d-839a-6355eea877b9)]
+[scriptable, uuid(23b37fbd-5c55-43a5-b592-abf31c05e967)]
 interface nsIApplicationCacheService : nsISupports
 {
     /**
@@ -68,4 +68,18 @@ interface nsIApplicationCacheService : nsISupports
      * Try to find the best application cache to serve a resource.
      */
     nsIApplicationCache chooseApplicationCache(in ACString key);
+
+    /**
+     * Flags the key as being opportunistically cached.
+     *
+     * This method should also propagate the entry to other
+     * application caches with the same opportunistic namespace, but
+     * this is not currently implemented.
+     *
+     * @param cache
+     *        The cache in which the entry is cached now.
+     * @param key
+     *        The cache entry key.
+     */
+    void cacheOpportunistically(in nsIApplicationCache cache, in ACString key);
 };

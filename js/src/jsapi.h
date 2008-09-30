@@ -1627,6 +1627,10 @@ JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name,
                            uintN flags, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
+JS_LookupPropertyByIdWithFlags(JSContext *cx, JSObject *obj, jsid id,
+                               uintN flags, JSObject **objp, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)

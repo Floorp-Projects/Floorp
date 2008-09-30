@@ -23,6 +23,7 @@ REQUIRES = \
 CPPSRCS	= \
 	gfxASurface.cpp \
 	gfxAlphaRecovery.cpp \
+	gfxBlur.cpp \
 	gfxContext.cpp \
 	gfxImageSurface.cpp \
 	gfxFont.cpp \
@@ -76,7 +77,7 @@ CPPSRCS	+=	gfxOS2Fonts.cpp \
 		$(NULL)
 CPPSRCS +=	gfxPDFSurface.cpp
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
-REQUIRES += uconv
+REQUIRES += uconv locale
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
@@ -91,6 +92,7 @@ ifdef MOZ_X11
 CPPSRCS += gfxXlibSurface.cpp
 endif
 
+REQUIRES += locale
 CPPSRCS +=  gfxPlatformGtk.cpp gfxGdkNativeRenderer.cpp
 CPPSRCS +=	gfxPDFSurface.cpp gfxPSSurface.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
@@ -104,7 +106,7 @@ ifdef MOZ_DFB
 CSRCS = cairo-gdk-utils.c
 endif
 
-EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(MOZ_XFT_LIBS) $(XLDFLAGS) $(XLIBS)
+EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS)
 endif
 
 ifdef MOZ_DFB
@@ -112,22 +114,24 @@ CPPSRCS += gfxDirectFBSurface.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+REQUIRES += locale
 CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
 CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
 CPPSRCS +=	gfxFT2Fonts.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
 #CSRCS = cairo-xlib-utils.c
-EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) $(MOZ_XFT_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS)
+EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) $(XLDFLAGS) $(XLIBS) $(CAIRO_FT_LIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+REQUIRES += locale
 CPPSRCS	+= 	gfxBeOSSurface.cpp gfxBeOSPlatform.cpp
 CPPSRCS +=	gfxPangoFonts.cpp 
 #CPPSRCS +=	gfxPDFSurface.cpp
 CPPSRCS +=	gfxFontconfigUtils.cpp
 CPPSRCS +=	nsUnicodeRange.cpp
-EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(CAIRO_FT_LIBS) -lfontconfig -lpangocairo-1.0
+EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(CAIRO_FT_LIBS) -lfontconfig
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -146,29 +150,6 @@ CMMSRCS = gfxQuartzFontCache.mm
 
 # Always link with OpenGL/AGL
 EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime
-endif
-
-ifdef MOZ_ENABLE_GLITZ
-REQUIRES += 	glitz
-CPPSRCS +=	gfxGlitzSurface.cpp
-
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitz.$(LIB_SUFFIX)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-REQUIRES +=	glitzwgl
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzwgl.$(LIB_SUFFIX)
-OS_LIBS += opengl32.lib 
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-REQUIRES +=	glitzglx
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzglx.$(LIB_SUFFIX)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-REQUIRES +=	glitzagl
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzagl.$(LIB_SUFFIX)
-endif
 endif
 
 EXTRA_DSO_LDOPTS += $(TK_LIBS)

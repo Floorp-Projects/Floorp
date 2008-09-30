@@ -110,7 +110,11 @@ include $(topsrcdir)/config/rules.mk
 DEFINES += -DNS_NO_XPCOM
 
 ifdef _MSC_VER
+ifdef WINCE
+WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
+else
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

@@ -664,6 +664,7 @@ nsTableCellFrame::CellHasVisibleContent(nscoord       height,
                                         nsTableFrame* tableFrame,
                                         nsIFrame* kidFrame)
 {
+  // see  http://www.w3.org/TR/CSS21/tables.html#empty-cells
   if (height > 0)
     return PR_TRUE;
   if (tableFrame->IsBorderCollapse())
@@ -1206,5 +1207,5 @@ nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
   nsCSSRendering::PaintBackgroundWithSC(PresContext(), aRenderingContext, this,
                                         aDirtyRect, rect,
                                         *GetStyleBackground(), myBorder,
-                                        *GetStylePadding(), PR_TRUE, nsnull);
+                                        PR_TRUE, nsnull);
 }

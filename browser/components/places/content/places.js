@@ -229,7 +229,7 @@ var PlacesOrganizer = {
 
     this._setSearchScopeForNode(node);
     if (this._places.treeBoxObject.focused)
-      this._fillDetailsPane(node);
+      this._fillDetailsPane([node]);
   },
 
   /**
@@ -319,8 +319,9 @@ var PlacesOrganizer = {
    */
   onTreeFocus: function PO_onTreeFocus(aEvent) {
     var currentView = aEvent.currentTarget;
-    var selectedNode = currentView.selectedNode;
-    this._fillDetailsPane(selectedNode);
+    var selectedNodes = currentView.selectedNode ? [currentView.selectedNode] :
+                        this._content.getSelectionNodes();
+    this._fillDetailsPane(selectedNodes);
   },
 
   openFlatContainer: function PO_openFlatContainerFlatContainer(aContainer) {
@@ -593,6 +594,13 @@ var PlacesOrganizer = {
 #ifdef XP_WIN
     var infoBoxExpanderLabel = document.getElementById("infoBoxExpanderLabel");
 #endif
+    if (!aNode) {
+      infoBoxExpander.hidden = true;
+#ifdef XP_WIN
+      infoBoxExpanderLabel.hidden = true;
+#endif
+      return;
+    }
     if (aNode.itemId != -1 &&
         ((PlacesUtils.nodeIsFolder(aNode) &&
           !PlacesUtils.nodeIsLivemarkContainer(aNode)) ||
@@ -628,13 +636,13 @@ var PlacesOrganizer = {
 
   onContentTreeSelect: function PO_onContentTreeSelect() {
     if (this._content.treeBoxObject.focused)
-      this._fillDetailsPane(this._content.selectedNode);
+      this._fillDetailsPane(this._content.getSelectionNodes());
   },
 
-  _fillDetailsPane: function PO__fillDetailsPane(aSelectedNode) {
+  _fillDetailsPane: function PO__fillDetailsPane(aNodeList) {
     var infoBox = document.getElementById("infoBox");
     var detailsDeck = document.getElementById("detailsDeck");
-
+    var aSelectedNode = aNodeList.length == 1 ? aNodeList[0] : null;
     // If a textbox within a panel is focused, force-blur it so its contents
     // are saved
     if (gEditItemOverlay.itemId != -1) {
@@ -644,9 +652,10 @@ var PlacesOrganizer = {
           /^editBMPanel.*/.test(focusedElement.parentNode.parentNode.id))
         focusedElement.blur();
 
-      // don't update the panel if we are already editing this node
+      // don't update the panel if we are already editing this node unless we're
+      // in multi-edit mode
       if (aSelectedNode && gEditItemOverlay.itemId == aSelectedNode.itemId &&
-          detailsDeck.selectedIndex == 1)
+          detailsDeck.selectedIndex == 1 && !gEditItemOverlay.multiEdit)
         return;
     }
  
@@ -661,6 +670,7 @@ var PlacesOrganizer = {
         gEditItemOverlay.initPanel(asQuery(aSelectedNode).folderItemId,
                                   { hiddenRows: ["folderPicker"],
                                     forceReadOnly: true });
+
       }
       else {
         var itemId = PlacesUtils.getConcreteItemId(aSelectedNode);
@@ -668,6 +678,31 @@ var PlacesOrganizer = {
                                    PlacesUtils._uri(aSelectedNode.uri),
                                    { hiddenRows: ["folderPicker"] });
       }
+      this._detectAndSetDetailsPaneMinimalState(aSelectedNode);
+    }
+    else if (!aSelectedNode && aNodeList[0]) {
+      var itemIds = [];
+      for (var i = 0; i < aNodeList.length; i++) {
+        if (!PlacesUtils.nodeIsBookmark(aNodeList[i])) {
+          detailsDeck.selectedIndex = 0;
+          var selectItemDesc = document.getElementById("selectItemDescription");
+          var itemsCountLabel = document.getElementById("itemsCountText");
+          selectItemDesc.hidden = false;
+          itemsCountLabel.value =
+            PlacesUIUtils.getFormattedString("detailsPane.multipleItems",
+                                             [aNodeList.length]);
+          return;
+        }
+        itemIds[i] = PlacesUtils.getConcreteItemId(aNodeList[i]);
+      }
+      detailsDeck.selectedIndex = 1;
+      gEditItemOverlay.initPanel(itemIds,
+                                 { hiddenRows: ["folderPicker",
+                                                "loadInSidebar",
+                                                "location",
+                                                "keyword",
+                                                "description",
+                                                "name"]});
       this._detectAndSetDetailsPaneMinimalState(aSelectedNode);
     }
     else {

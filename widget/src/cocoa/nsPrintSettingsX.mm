@@ -48,23 +48,20 @@
 #include "prmem.h"
 #include "prnetdb.h"
 
+
 // This struct should be represented identically on all architectures, and
 // there shouldn't be any padding before the data field.
 struct FrozenHandle {
   PRUint32 size;
-  char     data[0];
+  char data[0];
 };
 
-// Constants
+
 #define PRINTING_PREF_BRANCH            "print."
 #define MAC_OS_X_PAGE_SETUP_PREFNAME    "macosx.pagesetup-2"
 
 
-
-/** ------------------------------------------------------------
- *	Utility class stack-based handle ownership
- */
-
+// Utility class stack-based handle ownership
 class StHandleOwner
 {
 public:
@@ -98,19 +95,15 @@ public:
   }
 
 protected:
-
-  Handle            mHandle;
+  Handle mHandle;
 };
 
-/** ------------------------------------------------------------
- *	Utility class for saving, locking, and restoring handle state
- *  Ok with null handle
- */
 
+//	Utility class for saving, locking, and restoring handle state.
+//  Ok with null handle.
 class StHandleLocker
 {
 public:
-
   StHandleLocker(Handle theHandle)
     :	mHandle(theHandle)
   {
@@ -135,26 +128,20 @@ public:
   }
 
 protected:
-
-  Handle          mHandle;
-  SInt8           mOldHandleState;
+  Handle mHandle;
+  SInt8 mOldHandleState;
 };
 
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsX, 
-                             nsPrintSettings, 
-                             nsIPrintSettingsX)
+NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsX, nsPrintSettings, nsIPrintSettingsX)
 
-/** ---------------------------------------------------
- */
 nsPrintSettingsX::nsPrintSettingsX() :
   mPageFormat(kPMNoPageFormat),
   mPrintSettings(kPMNoPrintSettings)
 {
 }
 
-/** ---------------------------------------------------
- */
+
 nsPrintSettingsX::nsPrintSettingsX(const nsPrintSettingsX& src) :
   mPageFormat(kPMNoPageFormat),
   mPrintSettings(kPMNoPrintSettings)
@@ -162,8 +149,7 @@ nsPrintSettingsX::nsPrintSettingsX(const nsPrintSettingsX& src) :
   *this = src;
 }
 
-/** ---------------------------------------------------
- */
+
 nsPrintSettingsX::~nsPrintSettingsX()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -180,8 +166,7 @@ nsPrintSettingsX::~nsPrintSettingsX()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-/** ---------------------------------------------------
- */
+
 nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -235,8 +220,7 @@ nsPrintSettingsX& nsPrintSettingsX::operator=(const nsPrintSettingsX& rhs)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(*this);
 }
 
-/** ---------------------------------------------------
- */
+
 nsresult nsPrintSettingsX::Init()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -264,14 +248,14 @@ nsresult nsPrintSettingsX::Init()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+
 // Should be called whenever mPageFormat changes.
 NS_IMETHODIMP nsPrintSettingsX::InitUnwriteableMargin()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (mPageFormat == kPMNoPageFormat) {
+  if (mPageFormat == kPMNoPageFormat)
     return NS_OK;
-  }
 
   PMPaper paper;
   PMPaperMargins paperMargin;
@@ -287,8 +271,7 @@ NS_IMETHODIMP nsPrintSettingsX::InitUnwriteableMargin()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;  
 }
 
-/** ---------------------------------------------------
- */
+
 NS_IMETHODIMP nsPrintSettingsX::GetNativePrintSession(PMPrintSession *aNativePrintSession)
 {
    NS_ENSURE_ARG_POINTER(aNativePrintSession);
@@ -305,8 +288,7 @@ NS_IMETHODIMP nsPrintSettingsX::GetNativePrintSession(PMPrintSession *aNativePri
    return printSessionX->GetNativeSession(aNativePrintSession);
 }
 
-/** ---------------------------------------------------
- */
+
 NS_IMETHODIMP nsPrintSettingsX::GetPMPageFormat(PMPageFormat *aPMPageFormat)
 {
   NS_ENSURE_ARG_POINTER(aPMPageFormat);
@@ -319,8 +301,7 @@ NS_IMETHODIMP nsPrintSettingsX::GetPMPageFormat(PMPageFormat *aPMPageFormat)
   return (status == noErr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-/** ---------------------------------------------------
- */
+
 NS_IMETHODIMP nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPMPageFormat)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -339,8 +320,7 @@ NS_IMETHODIMP nsPrintSettingsX::SetPMPageFormat(PMPageFormat aPMPageFormat)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-/** ---------------------------------------------------
- */
+
 NS_IMETHODIMP nsPrintSettingsX::GetPMPrintSettings(PMPrintSettings *aPMPrintSettings)
 {
   NS_ENSURE_ARG_POINTER(aPMPrintSettings);
@@ -352,8 +332,7 @@ NS_IMETHODIMP nsPrintSettingsX::GetPMPrintSettings(PMPrintSettings *aPMPrintSett
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- */
+
 NS_IMETHODIMP nsPrintSettingsX::SetPMPrintSettings(PMPrintSettings aPMPrintSettings)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -371,8 +350,7 @@ NS_IMETHODIMP nsPrintSettingsX::SetPMPrintSettings(PMPrintSettings aPMPrintSetti
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-/** ---------------------------------------------------
- */
+
 NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -436,8 +414,7 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-/** ---------------------------------------------------
- */
+
 NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -488,7 +465,7 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-//-------------------------------------------
+
 nsresult nsPrintSettingsX::_Clone(nsIPrintSettings **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -503,7 +480,6 @@ nsresult nsPrintSettingsX::_Clone(nsIPrintSettings **_retval)
 }
 
 
-//-------------------------------------------
 NS_IMETHODIMP nsPrintSettingsX::_Assign(nsIPrintSettings *aPS)
 {
   nsPrintSettingsX *printSettingsX = static_cast<nsPrintSettingsX*>(aPS);
@@ -513,7 +489,7 @@ NS_IMETHODIMP nsPrintSettingsX::_Assign(nsIPrintSettings *aPS)
   return NS_OK;
 }
 
-//-------------------------------------------
+
 OSStatus nsPrintSettingsX::CreateDefaultPageFormat(PMPrintSession aSession, PMPageFormat& outFormat)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -534,8 +510,7 @@ OSStatus nsPrintSettingsX::CreateDefaultPageFormat(PMPrintSession aSession, PMPa
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(noErr);
 }
-  
-//-------------------------------------------
+
 
 OSStatus nsPrintSettingsX::CreateDefaultPrintSettings(PMPrintSession aSession, PMPrintSettings& outSettings)
 {

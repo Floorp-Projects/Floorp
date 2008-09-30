@@ -41,7 +41,8 @@
 // nsInputStreamChannel
 
 nsresult
-nsInputStreamChannel::OpenContentStream(PRBool async, nsIInputStream **result)
+nsInputStreamChannel::OpenContentStream(PRBool async, nsIInputStream **result,
+                                        nsIChannel** channel)
 {
   NS_ENSURE_TRUE(mContentStream, NS_ERROR_NOT_INITIALIZED);
 

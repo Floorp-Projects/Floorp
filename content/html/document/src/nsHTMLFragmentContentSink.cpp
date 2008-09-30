@@ -421,7 +421,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 
       nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
       nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None);
-      NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
     }
     else if (mNodeInfoCache[nodeType]) {
       nodeInfo = mNodeInfoCache[nodeType];
@@ -435,7 +435,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
       NS_ASSERTION(name, "This should not happen!");
 
       nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None);
-      NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
       NS_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
     }
@@ -523,7 +523,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
           nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
           nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull,
                                                    kNameSpaceID_None);
-          NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+          NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
         }
         else if (mNodeInfoCache[nodeType]) {
           nodeInfo = mNodeInfoCache[nodeType];
@@ -534,7 +534,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
 
           nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull,
                                                    kNameSpaceID_None);
-          NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+          NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
           NS_ADDREF(mNodeInfoCache[nodeType] = nodeInfo);
         }
 
@@ -1177,7 +1177,7 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
         return NS_ERROR_OUT_OF_MEMORY;
       nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull,
                                                kNameSpaceID_None);
-      NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
       rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
       AddAttributes(aNode, content);

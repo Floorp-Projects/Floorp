@@ -229,7 +229,6 @@ nsPrintEngine::nsPrintEngine() :
   mIsDoingPrinting(PR_FALSE),
   mIsDoingPrintPreview(PR_FALSE),
   mProgressDialogIsShown(PR_FALSE),
-  mDocViewerPrint(nsnull),
   mContainer(nsnull),
   mDeviceContext(nsnull),
   mPrt(nsnull),
@@ -269,7 +268,7 @@ void nsPrintEngine::Destroy()
   }
 
 #endif
-
+  mDocViewerPrint = nsnull;
 }
 
 //-------------------------------------------------------
@@ -299,7 +298,7 @@ nsresult nsPrintEngine::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
   NS_ENSURE_ARG_POINTER(aDevContext);
   NS_ENSURE_ARG_POINTER(aParentWidget);
 
-  mDocViewerPrint = aDocViewerPrint; // weak reference
+  mDocViewerPrint = aDocViewerPrint;
   mContainer      = aContainer;      // weak reference
   mDocument       = aDocument;
   mDeviceContext  = aDevContext;     // weak reference

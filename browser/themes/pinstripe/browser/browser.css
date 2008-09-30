@@ -108,7 +108,7 @@
 toolbarbutton.bookmark-item {
   font-weight: bold;
   margin: 0 1px;
-  padding: 0;
+  padding: 0 0 1px 0;
   -moz-padding-start: 7px;
   min-width: 0;
   max-width: 13em;
@@ -748,18 +748,6 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 }
 #print-button:hover:active {
   -moz-image-region: rect(46px, 324px, 69px, 288px);
-}
-
-/* ----- DEFAULT NEW-TAB BUTTON ----- */	
-
-#new-tab-button {
-  -moz-image-region: rect(0px, 360px, 23px, 324px);
-}
-#new-tab-button[disabled="true"] {
-  -moz-image-region: rect(23px, 360px, 46px, 324px);
-}
-#new-tab-button:hover:active {
-  -moz-image-region: rect(46px, 360px, 69px, 324px);
 }
 
 /* ----- DEFAULT NEW-WINDOW BUTTON ----- */	
@@ -1854,35 +1842,42 @@ tabbrowser > tabbox > tabpanels {
 
 
 /**
- * All Tabs Button
+ * New Tab & All Tabs Buttons
  */
 
 .tabs-alltabs-box {
   margin: 0;
-  width: 25px;
 }
 
+.tabs-newtab-button ,
 .tabs-alltabs-button {
-  list-style-image: url("chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png");
   -moz-border-start: 2px solid;
+  -moz-border-end: none;
   -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   -moz-border-right-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   margin: 0;
-  padding: 2px 0 0 0;
+  padding: 0 4px;
 }
+.tabs-newtab-button {
+  list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
+}
+.tabs-alltabs-button {
+  padding-top: 2px;
+  list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png);
+}
+.tabs-newtab-button:hover ,
 .tabs-alltabs-button:hover {
   background-color: rgba(0,0,0,0.10);
 }
+.tabs-newtab-button:hover:active,
 .tabs-alltabs-button:hover:active,
 .tabs-alltabs-button[open="true"] {
   background-color: rgba(0,0,0,0.20);
 }
 
-.tabs-alltabs-button  > .toolbarbutton-menu-dropmarker {
-  display: none;
-}
-
-.tabs-alltabs-button  > .toolbarbutton-text {
+.tabs-newtab-button > .toolbarbutton-text ,
+.tabs-alltabs-button > .toolbarbutton-menu-dropmarker ,
+.tabs-alltabs-button > .toolbarbutton-text {
   display: none;
 }
 

@@ -55,7 +55,22 @@
 #include "nsHashSets.h"
 #include "nsWeakReference.h"
 
+class nsIURI;
 class nsOfflineCacheDevice;
+
+class nsApplicationCacheNamespace : public nsIApplicationCacheNamespace
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAPPLICATIONCACHENAMESPACE
+
+  nsApplicationCacheNamespace() : mItemType(0) {}
+
+private:
+  PRUint32 mItemType;
+  nsCString mNamespaceSpec;
+  nsCString mData;
+};
 
 class nsOfflineCacheEvictionFunction : public mozIStorageFunction {
 public:
@@ -196,19 +211,30 @@ private:
   nsresult EnableEvictionObserver();
   nsresult DisableEvictionObserver();
 
+  PRBool CanUseCache(nsIURI *keyURI, const nsCString &clientID);
+
   nsresult MarkEntry(const nsCString &clientID,
                      const nsACString &key,
                      PRUint32 typeBits);
   nsresult UnmarkEntry(const nsCString &clientID,
                        const nsACString &key,
                        PRUint32 typeBits);
+
+  nsresult CacheOpportunistically(const nsCString &clientID,
+                                  const nsACString &key);
   nsresult GetTypes(const nsCString &clientID,
                     const nsACString &key,
                     PRUint32 *typeBits);
+
+  nsresult GetMatchingNamespace(const nsCString &clientID,
+                                const nsACString &key,
+                                nsIApplicationCacheNamespace **out);
   nsresult GatherEntries(const nsCString &clientID,
                          PRUint32 typeBits,
                          PRUint32 *count,
                          char *** values);
+  nsresult AddNamespace(const nsCString &clientID,
+                        nsIApplicationCacheNamespace *ns);
 
   nsresult RunSimpleQuery(mozIStorageStatement *statment,
                           PRUint32 resultIndex,
@@ -231,11 +257,14 @@ private:
   nsCOMPtr<mozIStorageStatement>  mStatement_MarkEntry;
   nsCOMPtr<mozIStorageStatement>  mStatement_UnmarkEntry;
   nsCOMPtr<mozIStorageStatement>  mStatement_GetTypes;
+  nsCOMPtr<mozIStorageStatement>  mStatement_FindNamespaceEntry;
+  nsCOMPtr<mozIStorageStatement>  mStatement_InsertNamespaceEntry;
   nsCOMPtr<mozIStorageStatement>  mStatement_CleanupUnmarked;
   nsCOMPtr<mozIStorageStatement>  mStatement_GatherEntries;
   nsCOMPtr<mozIStorageStatement>  mStatement_ActivateClient;
   nsCOMPtr<mozIStorageStatement>  mStatement_DeactivateGroup;
   nsCOMPtr<mozIStorageStatement>  mStatement_FindClient;
+  nsCOMPtr<mozIStorageStatement>  mStatement_FindClientByNamespace;
 
   nsCOMPtr<nsILocalFile>          mCacheDirectory;
   PRUint32                        mCacheCapacity;

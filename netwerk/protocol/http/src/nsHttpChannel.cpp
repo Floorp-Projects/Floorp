@@ -26,6 +26,8 @@
  *   Google Inc.
  *   Jan Wrobel <wrobel@blues.ath.cx>
  *   Jan Odvarko <odvarko@gmail.com>
+ *   Dave Camp <dcamp@mozilla.com>
+ *   Honza Bambas <honzab@firemni.cz>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -125,6 +127,8 @@ nsHttpChannel::nsHttpChannel()
     , mResuming(PR_FALSE)
     , mInitedCacheEntry(PR_FALSE)
     , mCacheForOfflineUse(PR_FALSE)
+    , mCachingOpportunistically(PR_FALSE)
+    , mFallbackChannel(PR_FALSE)
     , mTracingEnabled(PR_TRUE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
@@ -292,8 +296,14 @@ nsHttpChannel::Connect(PRBool firstTime)
             LOG(("OpenCacheEntry failed [rv=%x]\n", rv));
             // if this channel is only allowed to pull from the cache, then
             // we must fail if we were unable to open a cache entry.
-            if (mLoadFlags & LOAD_ONLY_FROM_CACHE)
+            if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
+                // If we have a fallback URI (and we're not already
+                // falling back), process the fallback asynchronously.
+                if (!mFallbackChannel && !mFallbackKey.IsEmpty()) {
+                    return AsyncCall(&nsHttpChannel::HandleAsyncFallback);
+                }
                 return NS_ERROR_DOCUMENT_NOT_CACHED;
+            }
             // otherwise, let's just proceed without using the cache.
         }
 
@@ -455,6 +465,42 @@ nsHttpChannel::HandleAsyncNotModified()
     DoNotifyListener();
 
     CloseCacheEntry(PR_TRUE);
+
+    mIsPending = PR_FALSE;
+
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+}
+
+void
+nsHttpChannel::HandleAsyncFallback()
+{
+    NS_PRECONDITION(!mPendingAsyncCallOnResume, "How did that happen?");
+
+    if (mSuspendCount) {
+        LOG(("Waiting until resume to do async fallback [this=%p]\n", this));
+        mPendingAsyncCallOnResume = &nsHttpChannel::HandleAsyncFallback;
+        return;
+    }
+
+    nsresult rv = NS_OK;
+
+    LOG(("nsHttpChannel::HandleAsyncFallback [this=%p]\n", this));
+
+    // since this event is handled asynchronously, it is possible that this
+    // channel could have been canceled, in which case there would be no point
+    // in processing the fallback.
+    if (!mCanceled) {
+        PRBool fallingBack;
+        rv = ProcessFallback(&fallingBack);
+        if (NS_FAILED(rv) || !fallingBack) {
+            // If ProcessFallback fails, then we have to send out the
+            // OnStart/OnStop notifications.
+            LOG(("ProcessFallback failed [rv=%x, %d]\n", rv, fallingBack));
+            mStatus = NS_FAILED(rv) ? rv : NS_ERROR_DOCUMENT_NOT_CACHED;
+            DoNotifyListener();
+        }
+    }
 
     mIsPending = PR_FALSE;
 
@@ -879,6 +925,23 @@ nsHttpChannel::ProcessNormal()
     nsresult rv;
 
     LOG(("nsHttpChannel::ProcessNormal [this=%x]\n", this));
+
+    PRBool succeeded;
+    rv = GetRequestSucceeded(&succeeded);
+    if (NS_SUCCEEDED(rv) && !succeeded) {
+        PRBool fallingBack;
+        rv = ProcessFallback(&fallingBack);
+        if (NS_FAILED(rv)) {
+            DoNotifyListener();
+            return rv;
+        }
+
+        if (fallingBack) {
+            // Do not continue with normal processing, fallback is in
+            // progress now.
+            return NS_OK;
+        }
+    }
 
     // if we're here, then any byte-range requests failed to result in a partial
     // response.  we must clear this flag to prevent BufferPartialContent from
@@ -1313,6 +1376,100 @@ nsHttpChannel::ProcessNotModified()
 }
 
 nsresult
+nsHttpChannel::ProcessFallback(PRBool *fallingBack)
+{
+    LOG(("nsHttpChannel::ProcessFallback [this=%x]\n", this));
+    nsresult rv;
+
+    *fallingBack = PR_FALSE;
+
+    // At this point a load has failed (either due to network problems
+    // or an error returned on the server).  Perform an application
+    // cache fallback if we have a URI to fall back to.
+    if (!mApplicationCache || mFallbackKey.IsEmpty() || mFallbackChannel) {
+        LOG(("  choosing not to fallback [%p,%s,%d]",
+             mApplicationCache.get(), mFallbackKey.get(), mFallbackChannel));
+        return NS_OK;
+    }
+
+    // Make sure the fallback entry hasn't been marked as a foreign
+    // entry.
+    PRUint32 fallbackEntryType;
+    rv = mApplicationCache->GetTypes(mFallbackKey, &fallbackEntryType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (fallbackEntryType & nsIApplicationCache::ITEM_FOREIGN) {
+        // This cache points to a fallback that refers to a different
+        // manifest.  Refuse to fall back.
+        return NS_OK;
+    }
+
+    NS_ASSERTION(fallbackEntryType & nsIApplicationCache::ITEM_FALLBACK,
+                 "Fallback entry not marked correctly!");
+
+    // Kill any opportunistic cache entry, and disable opportunistic
+    // caching for the fallback.
+    if (mOfflineCacheEntry) {
+        mOfflineCacheEntry->Doom();
+        mOfflineCacheEntry = 0;
+        mOfflineCacheAccess = 0;
+    }
+
+    mCacheForOfflineUse = PR_FALSE;
+    mCachingOpportunistically = PR_FALSE;
+    mOfflineCacheClientID.Truncate();
+    mOfflineCacheEntry = 0;
+    mOfflineCacheAccess = 0;
+
+    // Close the current cache entry.
+    if (mCacheEntry)
+        CloseCacheEntry(PR_TRUE);
+
+    // Create a new channel to load the fallback entry.
+    nsRefPtr<nsIChannel> newChannel;
+    rv = gHttpHandler->NewChannel(mURI, getter_AddRefs(newChannel));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = SetupReplacementChannel(mURI, newChannel, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Make sure the new channel loads from the fallback key.
+    nsCOMPtr<nsIHttpChannelInternal> httpInternal =
+        do_QueryInterface(newChannel, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = httpInternal->SetupFallbackChannel(mFallbackKey.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // ... and fallbacks should only load from the cache.
+    PRUint32 newLoadFlags = mLoadFlags | LOAD_REPLACE | LOAD_ONLY_FROM_CACHE;
+    rv = newChannel->SetLoadFlags(newLoadFlags);
+
+    // Inform consumers about this fake redirect
+    PRUint32 redirectFlags = nsIChannelEventSink::REDIRECT_INTERNAL;
+    rv = gHttpHandler->OnChannelRedirect(this, newChannel, redirectFlags);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = newChannel->AsyncOpen(mListener, mListenerContext);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // close down this channel
+    Cancel(NS_BINDING_REDIRECTED);
+
+    // disconnect from our listener
+    mListener = 0;
+    mListenerContext = 0;
+    // and from our callbacks
+    mCallbacks = nsnull;
+    mProgressSink = nsnull;
+
+    *fallingBack = PR_TRUE;
+
+    return NS_OK;
+}
+
+nsresult
 nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
 {
     nsresult rv;
@@ -1402,6 +1559,10 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
 
     nsCOMPtr<nsICacheSession> session;
 
+    // Will be set to true if we've found the right session, but need
+    // to open the cache entry asynchronously.
+    PRBool waitingForValidation = PR_FALSE;
+
     // If we have an application cache, we check it first.
     if (mApplicationCache) {
         nsCAutoString appCacheClientID;
@@ -1421,30 +1582,82 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
         // it may be in use and not yet validated, in which case we'll
         // try asynchronously opening the cache entry.
         //
-        // we need open in ACCESS_READ only because we don't want to
-        // overwrite the offline cache entry non-atomically so
-        // ACCESS_READ will prevent us from writing to the
-        // HTTP-offline cache as a normal cache entry.  XXX: this
-        // needs to be checked.
+        // We open with ACCESS_READ only, because we don't want to
+        // overwrite the offline cache entry non-atomically.
+        // ACCESS_READ will prevent us from writing to the offline
+        // cache as a normal cache entry.
         rv = session->OpenCacheEntry(cacheKey,
                                      nsICache::ACCESS_READ, PR_FALSE,
                                      getter_AddRefs(mCacheEntry));
+        if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
+            accessRequested = nsICache::ACCESS_READ;
+            waitingForValidation = PR_TRUE;
+            rv = NS_OK;
+        }
+
+        if (NS_FAILED(rv) && !mCacheForOfflineUse && !mFallbackChannel) {
+            // Check for namespace match.
+            nsCOMPtr<nsIApplicationCacheNamespace> namespaceEntry;
+            rv = mApplicationCache->GetMatchingNamespace
+                (cacheKey, getter_AddRefs(namespaceEntry));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            PRUint32 namespaceType = 0;
+            if (!namespaceEntry ||
+                NS_FAILED(namespaceEntry->GetItemType(&namespaceType)) ||
+                (namespaceType &
+                 (nsIApplicationCacheNamespace::NAMESPACE_FALLBACK |
+                  nsIApplicationCacheNamespace::NAMESPACE_OPPORTUNISTIC |
+                  nsIApplicationCacheNamespace::NAMESPACE_BYPASS)) == 0) {
+                // When loading from an application cache, only items
+                // on the whitelist or matching a
+                // fallback/opportunistic namespace should hit the
+                // network...
+                mLoadFlags |= LOAD_ONLY_FROM_CACHE;
+
+                // ... and if there were an application cache entry,
+                // we would have found it earlier.
+                return NS_ERROR_CACHE_KEY_NOT_FOUND;
+            }
+
+            if (namespaceType &
+                nsIApplicationCacheNamespace::NAMESPACE_FALLBACK) {
+                rv = namespaceEntry->GetData(mFallbackKey);
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
+
+            if ((namespaceType &
+                 nsIApplicationCacheNamespace::NAMESPACE_OPPORTUNISTIC) &&
+                mLoadFlags & LOAD_DOCUMENT_URI) {
+                // Document loads for items in an opportunistic namespace
+                // should be placed in the offline cache.
+                nsCString clientID;
+                mApplicationCache->GetClientID(clientID);
+
+                mCacheForOfflineUse = !clientID.IsEmpty();
+                SetOfflineCacheClientID(clientID);
+                mCachingOpportunistically = PR_TRUE;
+            }
+        }
     }
 
-    if (!mApplicationCache ||
-        (NS_FAILED(rv) && rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION)) 
-    {
+    if (!mCacheEntry && !waitingForValidation) {
         rv = gHttpHandler->GetCacheSession(storagePolicy,
                                            getter_AddRefs(session));
         if (NS_FAILED(rv)) return rv;
 
         rv = session->OpenCacheEntry(cacheKey, accessRequested, PR_FALSE,
                                      getter_AddRefs(mCacheEntry));
+        if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
+            waitingForValidation = PR_TRUE;
+            rv = NS_OK;
+        }
+        if (NS_FAILED(rv)) return rv;
     }
 
-    if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-        // access to the cache entry has been denied (because the cache entry
-        // is probably in use by another channel).
+    if (waitingForValidation) {
+        // access to the cache entry has been denied (because the
+        // cache entry is probably in use by another channel).
         if (mLoadFlags & LOAD_BYPASS_LOCAL_CACHE_IF_BUSY) {
             LOG(("bypassing local cache since it is busy\n"));
             return NS_ERROR_NOT_AVAILABLE;
@@ -1541,7 +1754,7 @@ nsHttpChannel::GenerateCacheKey(nsACString &cacheKey)
         cacheKey.Truncate();
     
     // Strip any trailing #ref from the URL before using it as the key
-    const char *spec = mSpec.get();
+    const char *spec = mFallbackChannel ? mFallbackKey.get() : mSpec.get();
     const char *p = strchr(spec, '#');
     if (p)
         cacheKey.Append(spec, p - spec);
@@ -1667,9 +1880,11 @@ nsHttpChannel::CheckCache()
     // Don't bother to validate items that are read-only,
     // unless they are read-only because of INHIBIT_CACHING or because
     // we're updating the offline cache.
+    // Don't bother to validate if this is a fallback entry.
     if (mLoadFlags & LOAD_ONLY_FROM_CACHE ||
         (mCacheAccess == nsICache::ACCESS_READ &&
-         !((mLoadFlags & INHIBIT_CACHING) || mCacheForOfflineUse))) {
+         !((mLoadFlags & INHIBIT_CACHING) || mCacheForOfflineUse)) ||
+        mFallbackChannel) {
         mCachedContentIsValid = PR_TRUE;
         return NS_OK;
     }
@@ -2021,9 +2236,25 @@ nsHttpChannel::CloseOfflineCacheEntry()
     if (NS_FAILED(mStatus)) {
         mOfflineCacheEntry->Doom();
     }
+    else {
+        PRBool succeeded;
+        if (NS_SUCCEEDED(GetRequestSucceeded(&succeeded)) && !succeeded)
+            mOfflineCacheEntry->Doom();
+    }
 
     mOfflineCacheEntry = 0;
     mOfflineCacheAccess = 0;
+
+    if (mCachingOpportunistically) {
+        nsCOMPtr<nsIApplicationCacheService> appCacheService =
+            do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID);
+        if (appCacheService) {
+            nsCAutoString cacheKey;
+            GenerateCacheKey(cacheKey);
+            appCacheService->CacheOpportunistically(mApplicationCache,
+                                                    cacheKey);
+        }
+    }
 }
 
 
@@ -2376,6 +2607,15 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
             return NS_ERROR_NOT_RESUMABLE;
         }
         resumableChannel->ResumeAt(mStartPos, mEntityID);
+    }
+
+    // transfer application cache information
+    if (mApplicationCache) {
+        nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer =
+            do_QueryInterface(newChannel);
+        if (appCacheContainer) {
+            appCacheContainer->SetApplicationCache(mApplicationCache);
+        }
     }
 
     // transfer any properties
@@ -4278,6 +4518,17 @@ nsHttpChannel::SetCookie(const char *aCookieHeader)
                                        this);
 }
 
+NS_IMETHODIMP
+nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
+{
+    LOG(("nsHttpChannel::SetupFallbackChannel [this=%x, key=%s]",
+         this, aFallbackKey));
+    mFallbackChannel = PR_TRUE;
+    mFallbackKey = aFallbackKey;
+
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
@@ -4402,6 +4653,15 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
             mStatus == NS_ERROR_NET_TIMEOUT)) {
         if (NS_SUCCEEDED(ProxyFailover()))
             return NS_OK;
+    }
+
+    // on other request errors, try to fall back
+    PRBool fallingBack;
+    if (NS_FAILED(mStatus) &&
+        NS_SUCCEEDED(ProcessFallback(&fallingBack)) &&
+        fallingBack) {
+
+        return NS_OK;
     }
 
     return CallOnStartRequest();

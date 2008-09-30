@@ -69,8 +69,8 @@ void NPP_Shutdown(void)
 //---------------------------------------------------------------------------
 NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
                           NPP pInstance,
-                          uint16 mode,
-                          int16 argc,
+                          uint16_t mode,
+                          int16_t argc,
                           char* argn[],
                           char* argv[],
                           NPSavedData* saved)
@@ -223,9 +223,9 @@ NPError NP_LOADDS NPP_SetWindow(NPP pInstance, NPWindow * pNPWindow)
 NPError NP_LOADDS
 NPP_NewStream(NPP pInstance,
               NPMIMEType type,
-              NPStream *stream, 
+              NPStream *stream,
               NPBool seekable,
-              uint16 *stype)
+              uint16_t *stype)
 {
   dbgOut1("NPP_NewStream");
   if(pInstance == NULL)

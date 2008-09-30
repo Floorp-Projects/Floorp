@@ -328,7 +328,8 @@ nsGNOMEShellService::GetShouldCheckDefaultBrowser(PRBool* aResult)
   if (pserve)
     pserve->GetBranch("", getter_AddRefs(prefs));
 
-  prefs->GetBoolPref(PREF_CHECKDEFAULTBROWSER, aResult);
+  if (prefs)
+    prefs->GetBoolPref(PREF_CHECKDEFAULTBROWSER, aResult);
 
   return NS_OK;
 }
@@ -341,7 +342,8 @@ nsGNOMEShellService::SetShouldCheckDefaultBrowser(PRBool aShouldCheck)
   if (pserve)
     pserve->GetBranch("", getter_AddRefs(prefs));
 
-  prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, aShouldCheck);
+  if (prefs)
+    prefs->SetBoolPref(PREF_CHECKDEFAULTBROWSER, aShouldCheck);
 
   return NS_OK;
 }

@@ -44,10 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS  = $(NULL)
 
-ifdef MOZ_ENABLE_GLITZ
-DIRS += glitz/src
-endif
-
 DIRS += libpixman/src cairo/src
 
 include $(topsrcdir)/config/rules.mk

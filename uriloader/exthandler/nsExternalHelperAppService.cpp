@@ -127,6 +127,15 @@
 // Buffer file writes in 32kb chunks
 #define BUFFERED_OUTPUT_SIZE (1024 * 32)
 
+// Download Folder location constants
+#define NS_PREF_DOWNLOAD_DIR        "browser.download.dir"
+#define NS_PREF_DOWNLOAD_FOLDERLIST "browser.download.folderList"
+enum {
+  NS_FOLDER_VALUE_DESKTOP = 0
+, NS_FOLDER_VALUE_DOWNLOADS = 1
+, NS_FOLDER_VALUE_CUSTOM = 2
+};
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsExternalHelperAppService::mLog = nsnull;
 #endif
@@ -377,6 +386,66 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
 
 
   return handleExternally;
+}
+
+/**
+ * Obtains the download directory to use.  This tends to vary per platform, and
+ * needs to be consistent throughout our codepaths.
+ */
+static nsresult GetDownloadDirectory(nsIFile **_directory)
+{
+  nsCOMPtr<nsIFile> dir;
+#ifdef XP_MACOSX
+  // On OS X, we first try to get the users download location, if it's set.
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, NS_ERROR_UNEXPECTED);
+
+  PRInt32 folderValue = -1;
+  (void) prefs->GetIntPref(NS_PREF_DOWNLOAD_FOLDERLIST, &folderValue);
+  switch (folderValue) {
+    case NS_FOLDER_VALUE_DESKTOP:
+      (void) NS_GetSpecialDirectory(NS_OS_DESKTOP_DIR, getter_AddRefs(dir));
+      break;
+    case NS_FOLDER_VALUE_CUSTOM:
+      {
+        (void) prefs->GetComplexValue(NS_PREF_DOWNLOAD_DIR,
+                                      NS_GET_IID(nsIFile),
+                                      getter_AddRefs(dir));
+        if (!dir) break;
+
+        // We have the directory, and now we need to make sure it exists
+        PRBool dirExists = PR_FALSE;
+        (void) dir->Exists(&dirExists);
+        if (dirExists) break;
+
+        nsresult rv = dir->Create(nsIFile::DIRECTORY_TYPE, 0755);
+        if (NS_FAILED(rv)) {
+          dir = nsnull;
+          break;
+        }
+      }
+      break;
+    case NS_FOLDER_VALUE_DOWNLOADS:
+      // This is just the OS default location, so fall out
+      break;
+  }
+
+  if (!dir) {
+    // If not, we default to the OS X default download location.
+    nsresult rv = NS_GetSpecialDirectory(NS_OSX_DEFAULT_DOWNLOAD_DIR,
+                                         getter_AddRefs(dir));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+#else
+  // On all other platforms, we default to the systems temporary directory.
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
+  NS_ASSERTION(dir, "Somehow we didn't get a download directory!");
+  dir.forget(_directory);
+  return NS_OK;
 }
 
 /**
@@ -1085,6 +1154,12 @@ NS_IMETHODIMP nsExternalAppHandler::GetTimeDownloadStarted(PRTime* aTime)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsExternalAppHandler::GetContentLength(PRInt64 *aContentLength)
+{
+  *aContentLength = mContentLength;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsExternalAppHandler::CloseProgressWindow()
 {
   // release extra state...
@@ -1164,18 +1239,9 @@ void nsExternalAppHandler::EnsureSuggestedFileName()
 
 nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 {
-  nsresult rv;
-
-#ifdef XP_MACOSX
- // create a temp file for the data...and open it for writing.
- // use NS_MAC_DEFAULT_DOWNLOAD_DIR which gets download folder from InternetConfig
- // if it can't get download folder pref, then it uses desktop folder
-  rv = NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR,
-                              getter_AddRefs(mTempFile));
-#else
-  // create a temp file for the data...and open it for writing.
-  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
-#endif
+  // First we need to try to get the destination directory for the temporary
+  // file.
+  nsresult rv = GetDownloadDirectory(getter_AddRefs(mTempFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // At this point, we do not have a filename for the temp file.  For security
@@ -2172,17 +2238,9 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   // download is done prior to launching the helper app.  So that any existing file of that name won't
   // be overwritten we call CreateUnique() before calling MoveFile().  Also note that we use the same
   // directory as originally downloaded to so that MoveFile() just does an in place rename.
-   
+
   nsCOMPtr<nsIFile> fileToUse;
-  
-  // The directories specified here must match those specified in SetUpTempFile().  This avoids
-  // having to do a copy of the file when it finishes downloading and the potential for errors
-  // that would introduce
-#ifdef XP_MACOSX
-  NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(fileToUse));
-#else
-  NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(fileToUse));
-#endif
+  (void) GetDownloadDirectory(getter_AddRefs(fileToUse));
 
   if (mSuggestedFileName.IsEmpty())
   {

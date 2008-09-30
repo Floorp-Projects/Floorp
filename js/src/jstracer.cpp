@@ -3563,7 +3563,9 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
             if (js_FindPropertyHelper(cx, id, &obj, &obj2, &prop, &entry) < 0)
                 ABORT_TRACE("failed to find name");
         } else {
-            int protoIndex = js_LookupPropertyWithFlags(cx, aobj, id, 0, &obj2, &prop);
+            int protoIndex = js_LookupPropertyWithFlags(cx, aobj, id,
+                                                        cx->resolveFlags,
+                                                        &obj2, &prop);
             if (protoIndex < 0)
                 ABORT_TRACE("failed to lookup property");
 

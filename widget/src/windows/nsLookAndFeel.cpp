@@ -327,7 +327,11 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_3DDKSHADOW;
       break;
     case eColor__moz_nativehyperlinktext:
+#ifndef WINCE
       idx = COLOR_HOTLIGHT;
+#else
+      idx = COLOR_HIGHLIGHTTEXT;
+#endif
       break;
     default:
       idx = COLOR_WINDOW;

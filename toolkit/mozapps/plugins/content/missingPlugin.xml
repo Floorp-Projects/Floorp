@@ -50,8 +50,10 @@
            (i.e. for a11y reasons. see Bug 245349).
         -->
       <html:a href="#">
-        <xul:image id="missingPluginPlaceholder"/>
-        &missingPlugin.label;
+        <xul:vbox>
+          <xul:image id="missingPluginPlaceholder"/>
+          <xul:description>&missingPlugin.label;</xul:description>
+        </xul:vbox>
       </html:a>
 
       <!-- Make our fallback content disappear (XBL requires this) -->
@@ -70,6 +72,59 @@
         ]]>
       </handler>
     </handlers>
+  </binding>
+  
+  <binding id="disabledPlugin" inheritstyle="false">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/plugins/missingPlugin.css"/>
+    </resources>
+
+    <content>
+      <!-- This uses html:a instead of something like a div so that it can be
+           tabbed to and just generically behaves more like something clickable
+           (i.e. for a11y reasons. see Bug 245349).
+        -->
+      <html:a href="#">
+        <xul:vbox>
+          <xul:image id="disabledPluginPlaceholder"/>
+          <xul:description>&disabledPlugin.label;</xul:description>
+        </xul:vbox>
+      </html:a>
+
+      <!-- Make our fallback content disappear (XBL requires this) -->
+      <html:div style="display:none;"><children/></html:div>
+    </content>
+
+    <handlers>
+      <handler event="click" button="0">
+        <![CDATA[
+          event.preventDefault();
+
+          // Fire a PluginDisabled event to trigger the infobar
+          var ev = document.createEvent("Events");
+          ev.initEvent("PluginDisabled", true, true);
+          this.dispatchEvent(ev);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+  
+  <binding id="blockedPlugin" inheritstyle="false">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/plugins/missingPlugin.css"/>
+    </resources>
+
+    <content>
+      <html:div>
+        <xul:vbox>
+          <xul:image id="blockedPluginPlaceholder"/>
+          <xul:description>&blockedPlugin.label;</xul:description>
+        </xul:vbox>
+      </html:div>
+
+      <!-- Make our fallback content disappear (XBL requires this) -->
+      <html:div style="display:none;"><children/></html:div>
+    </content>
   </binding>
   
 </bindings>

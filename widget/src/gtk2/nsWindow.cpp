@@ -137,11 +137,6 @@ D_DEBUG_DOMAIN( ns_Window, "nsWindow", "nsWindow" );
 #define D_DEBUG_AT(x,y...)    do {} while (0)
 #endif
 
-#ifdef MOZ_ENABLE_GLITZ
-#include "gfxGlitzSurface.h"
-#include "glitz-glx.h"
-#endif
-
 /* For PrepareNativeWidget */
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
@@ -3361,29 +3356,6 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     }
 
     GdkVisual* visual = nsnull;
-#ifdef MOZ_ENABLE_GLITZ
-    if (gfxPlatform::UseGlitz()) {
-        nsCOMPtr<nsIDeviceContext> dc = aContext;
-        if (!dc) {
-            nsCOMPtr<nsIDeviceContext> dc = do_CreateInstance(kDeviceContextCID);
-            // no parent widget to initialize with
-            dc->Init(nsnull);
-        }
-
-        Display* dpy = GDK_DISPLAY();
-        int defaultScreen = gdk_x11_get_default_screen();
-        glitz_drawable_format_t* format = glitz_glx_find_window_format (dpy, defaultScreen,
-                                                                        0, NULL, 0);
-        if (format) {
-            XVisualInfo* vinfo = glitz_glx_get_visual_info_from_format(dpy, defaultScreen, format);
-            GdkScreen* screen = gdk_display_get_screen(gdk_x11_lookup_xdisplay(dpy), defaultScreen);
-            visual = gdk_x11_screen_lookup_visual(screen, vinfo->visualid);
-        } else {
-            // couldn't find a GLX visual; force Glitz off
-            gfxPlatform::SetUseGlitz(PR_FALSE);
-        }
-    }
-#endif
 
     // ok, create our windows
     switch (mWindowType) {

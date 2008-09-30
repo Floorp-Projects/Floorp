@@ -41,4 +41,12 @@ object:-moz-has-handlerref:-moz-type-unsupported {
   -moz-binding: url('chrome://mozapps/content/plugins/missingPlugin.xml#missingPlugin') !important;
 }
 
+embed:-moz-handler-disabled, applet:-moz-handler-disabled,
+object:-moz-has-handlerref:-moz-handler-disabled {
+  -moz-binding: url('chrome://mozapps/content/plugins/missingPlugin.xml#disabledPlugin') !important;
+}
 
+embed:-moz-handler-blocked, applet:-moz-handler-blocked,
+object:-moz-has-handlerref:-moz-handler-blocked {
+  -moz-binding: url('chrome://mozapps/content/plugins/missingPlugin.xml#blockedPlugin') !important;
+}

@@ -1193,6 +1193,30 @@ MOZCE_SHUNT_API DWORD SetNamedSecurityInfoW(unsigned short* pObjectName,
 }
 
 
+MOZCE_SHUNT_API void FatalAppExitW(UINT uAction, LPCWSTR lpMessageText)
+{
+  if ( ::MessageBoxW(NULL, lpMessageText, L"Runtime Error", MB_OKCANCEL | MB_ICONERROR) == IDCANCEL )
+    return;
+
+  exit(-1);
+}
+
+MOZCE_SHUNT_API int clock() 
+{
+    return -1;
+}
+
+MOZCE_SHUNT_API int GetDIBits(HDC hdc, HBITMAP hbmp, UINT uStartScan, UINT cScanLines, 
+                              LPVOID lpvBits, LPBITMAPINFO lpbi, UINT uUsage) 
+{
+  
+#if 0
+    return GetBitmapBits(hbmp,lpbi->bmiHeader.biSize, lpvBits); 
+#else
+    return 0;
+#endif                 
+                 
+}
 
 #if 0
 {

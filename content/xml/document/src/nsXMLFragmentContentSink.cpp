@@ -115,7 +115,8 @@ protected:
                                nsIContent *aContent);
   virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                  nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
-                                 nsIContent** aResult, PRBool* aAppendContent);
+                                 nsIContent** aResult, PRBool* aAppendContent,
+                                 PRBool aFromParser);
   virtual nsresult CloseElement(nsIContent* aContent);
 
   virtual void MaybeStartLayout(PRBool aIgnorePendingSheets);
@@ -256,11 +257,15 @@ nsXMLFragmentContentSink::SetDocElement(PRInt32 aNameSpaceID,
 nsresult
 nsXMLFragmentContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                         nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
-                                        nsIContent** aResult, PRBool* aAppendContent)
+                                        nsIContent** aResult, PRBool* aAppendContent,
+                                        PRBool aFromParser)
 {
+  // Claim to not be coming from parser, since we don't do any of the
+  // fancy CloseElement stuff.
   nsresult rv = nsXMLContentSink::CreateElement(aAtts, aAttsCount,
-                                aNodeInfo, aLineNumber,
-                                aResult, aAppendContent);
+                                                aNodeInfo, aLineNumber,
+                                                aResult, aAppendContent,
+                                                PR_FALSE);
 
   // When we aren't grabbing all of the content we, never open a doc
   // element, we run into trouble on the first element, so we don't append,
@@ -622,7 +627,7 @@ nsXHTMLParanoidFragmentSink::AddAttributes(const PRUnichar** aAtts,
     nsContentUtils::SplitExpatName(aAtts[0], getter_AddRefs(prefix),
                                    getter_AddRefs(localName), &nameSpaceID);
     nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
-    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
     // check the attributes we allow that contain URIs
     if (IsAttrURI(nodeInfo->NameAtom())) {
       if (!aAtts[1])
@@ -670,7 +675,7 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
   
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
   
   // bounce it if it's not on the whitelist or we're inside
   // <script> or <style>
@@ -691,7 +696,7 @@ nsXHTMLParanoidFragmentSink::HandleStartElement(const PRUnichar *aName,
     nsContentUtils::SplitExpatName(aAtts[i], getter_AddRefs(prefix),
                                    getter_AddRefs(localName), &nameSpaceID);
     nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
-    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
     
     name = nodeInfo->NameAtom();
     // Add if it's xmlns, xml: or on the HTML whitelist
@@ -726,7 +731,7 @@ nsXHTMLParanoidFragmentSink::HandleEndElement(const PRUnichar *aName)
   
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
   
   nsCOMPtr<nsIAtom> name = nodeInfo->NameAtom();
   if (mSkipLevel != 0) {

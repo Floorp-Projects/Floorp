@@ -438,6 +438,9 @@ MOZCE_SHUNT_API wchar_t *_wfullpath(wchar_t *abspath, const wchar_t *relpath, in
 
 MOZCE_SHUNT_API HWND GetAncestor(HWND hwnd, UINT gaFlags);
 
+MOZCE_SHUNT_API int _chdir (const char *dirname);
+MOZCE_SHUNT_API int _wchdir (const wchar_t *dirname);
+
 #ifdef __cplusplus
 };
 #endif

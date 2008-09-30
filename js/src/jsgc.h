@@ -324,6 +324,18 @@ typedef struct JSGCDoubleArenaList {
                                            things */
 } JSGCDoubleArenaList;
 
+typedef struct JSGCFreeListSet JSGCFreeListSet;
+
+struct JSGCFreeListSet {
+    JSGCThing           *array[GC_NUM_FREELISTS];
+    JSGCFreeListSet     *link;
+};
+
+extern const JSGCFreeListSet js_GCEmptyFreeListSet;
+
+extern void
+js_RevokeGCLocalFreeLists(JSContext *cx);
+
 struct JSWeakRoots {
     /* Most recently created things by type, members of the GC's root set. */
     void            *newborn[GCX_NTYPES];

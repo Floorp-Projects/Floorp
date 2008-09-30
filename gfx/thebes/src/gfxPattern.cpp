@@ -118,6 +118,32 @@ gfxPattern::GetMatrix() const
 void
 gfxPattern::SetExtend(GraphicsExtend extend)
 {
+    if (extend == EXTEND_PAD_EDGE) {
+        if (cairo_pattern_get_type(mPattern) == CAIRO_PATTERN_TYPE_SURFACE) {
+            cairo_surface_t *surf = NULL;
+
+            cairo_pattern_get_surface (mPattern, &surf);
+            if (surf) {
+                switch (cairo_surface_get_type(surf)) {
+                    case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
+                    case CAIRO_SURFACE_TYPE_QUARTZ:
+                        extend = EXTEND_NONE;
+                        break;
+
+                    case CAIRO_SURFACE_TYPE_WIN32:
+                    case CAIRO_SURFACE_TYPE_XLIB:
+                    default:
+                        extend = EXTEND_PAD;
+                        break;
+                }
+            }
+        }
+
+        // if something went wrong, or not a surface pattern, use PAD
+        if (extend == EXTEND_PAD_EDGE)
+            extend = EXTEND_PAD;
+    }
+
     cairo_pattern_set_extend(mPattern, (cairo_extend_t)extend);
 }
 

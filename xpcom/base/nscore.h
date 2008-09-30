@@ -388,17 +388,11 @@ typedef PRUint32 nsrefcnt;
 
   /* under VC++ (Windows), we don't have autoconf yet */
 #if defined(_MSC_VER) && (_MSC_VER>=1100)
-  /* VC++ 5.0 and greater implement template specialization, 4.2 is unknown */
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
 
   #define HAVE_CPP_EXPLICIT
   #define HAVE_CPP_TYPENAME
   #define HAVE_CPP_ACCESS_CHANGING_USING
-
-  #if (_MSC_VER==1100)
-      /* VC++5.0 has an internal compiler error (sometimes) without this */
-    #undef HAVE_CPP_ACCESS_CHANGING_USING
-  #endif
 
   #define HAVE_CPP_NAMESPACE_STD
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL

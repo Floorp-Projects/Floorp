@@ -1704,7 +1704,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nsnull,
                                            kNameSpaceID_None);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   // Make root part
   nsIContent *doc_root = mDocument->GetRootContent();
@@ -1732,7 +1732,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // Make head part
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head,
                                            nsnull, kNameSpaceID_None);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   mHead = NS_NewHTMLHeadElement(nodeInfo);
   if (NS_FAILED(rv)) {
