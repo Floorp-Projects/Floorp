@@ -63,7 +63,7 @@ CParserContext::CParserContext(nsScanner* aScanner,
     mParserCommand(aCommand),
     mMultipart(PR_TRUE),
     mCopyUnused(aCopyUnused),
-    mTransferBufferSize(eTransferBufferSize)
+    mNumConsumed(0)
 { 
   MOZ_COUNT_CTOR(CParserContext); 
 } 

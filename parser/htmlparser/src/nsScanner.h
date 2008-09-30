@@ -207,7 +207,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      void Mark(void);
+      PRInt32 Mark(void);
 
       /**
        *  Resets current offset position of input stream to marked position. 
@@ -338,8 +338,11 @@ class nsScanner {
       PRInt32         mFirstNonWhitespacePosition;
       PRInt32         mCharsetSource;
       nsCString       mCharset;
-      nsIUnicodeDecoder *mUnicodeDecoder;
+      nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;
       nsParser        *mParser;
+
+  private:
+      nsScanner &operator =(const nsScanner &); // Not implemented.
 };
 
 #endif
