@@ -106,12 +106,9 @@ function testUpdate() {
 function run_test()
 {
   runTests([
-             // XXX: We need to run testUpdate first, because of a
-             // race condition (bug 457790) calling dbservice.classify()
-             // directly after dbservice.resetDatabase().
-             testUpdate,
              testCleanHostKeys,
              testDirtyHostKeys,
+             testUpdate,
   ]);
 }
 
