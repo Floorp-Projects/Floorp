@@ -108,7 +108,7 @@
 toolbarbutton.bookmark-item {
   font-weight: bold;
   margin: 0 1px;
-  padding: 0;
+  padding: 0 0 1px 0;
   -moz-padding-start: 7px;
   min-width: 0;
   max-width: 13em;
