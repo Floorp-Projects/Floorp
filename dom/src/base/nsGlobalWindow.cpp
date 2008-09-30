@@ -867,6 +867,14 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
   // Kill all of the workers for this window.
   nsDOMThreadService* dts = nsDOMThreadService::get();
   if (dts) {
+    nsIScriptContext *scx = GetContextInternal();
+
+    JSContext *cx = scx ? (JSContext *)scx->GetNativeContext() : nsnull;
+
+    // Have to suspend this request here because CancelWorkersForGlobal will
+    // lock until the worker has died and that could cause a deadlock.
+    JSAutoSuspendRequest asr(cx);
+
     dts->CancelWorkersForGlobal(static_cast<nsIScriptGlobalObject*>(this));
   }
 

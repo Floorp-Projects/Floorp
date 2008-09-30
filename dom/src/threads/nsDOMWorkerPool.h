@@ -53,6 +53,7 @@
 
 class nsDOMWorkerThread;
 class nsIDocument;
+class nsIScriptContext;
 class nsIScriptError;
 class nsIScriptGlobalObject;
 
@@ -84,6 +85,9 @@ public:
     return this;
   }
 
+  nsIDocument* ParentDocument();
+  nsIScriptContext* ScriptContext();
+
 private:
   virtual ~nsDOMWorkerPool();
 
@@ -108,8 +112,6 @@ private:
   PRMonitor* Monitor() {
     return mMonitor;
   }
-
-  nsIDocument* GetParentDocument();
 
   // Weak reference to the window that created and owns this pool.
   nsISupports* mParentGlobal;
