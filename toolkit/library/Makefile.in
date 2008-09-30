@@ -258,7 +258,7 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 endif # WINNT
 ifeq ($(OS_ARCH),WINCE)
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell cellcore uuid ole32 oleaut32 )
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME, aygshell cellcore uuid ole32 oleaut32 Ws2)
 endif
 
 
