@@ -122,6 +122,10 @@ function runMultipleEnginesTestAndFinalize() {
   is(browser.engines[0].uri, "http://first.mozilla.com/search.xml", "first engine wins");
 
   gTestPage.close();
+
+  // Reset the default link handler
+  DOMLinkHandler.handleEvent = gBrowserHandler;
+
   finish();
 }
 
