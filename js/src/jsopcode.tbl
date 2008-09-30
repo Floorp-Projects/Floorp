@@ -184,8 +184,8 @@ OPDEF(JSOP_LOOKUPSWITCH, 71, "lookupswitch", NULL,   -1,  1,  0,  0,  JOF_LOOKUP
 OPDEF(JSOP_STRICTEQ,  72, "stricteq",   NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
 OPDEF(JSOP_STRICTNE,  73, "strictne",   NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
 
-/* Lexical closure constructor. */
-OPDEF(JSOP_UNUSED74,  74, "unused74",   NULL,         1,  0,  0,  0,  JOF_BYTE)
+/* Resume instruction (emitted for the JIT for instructions that can't be restarted). */
+OPDEF(JSOP_RESUME,    74, "resume",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* Variant of JSOP_NULL for default (global) |this| parameter pushing. */
 OPDEF(JSOP_NULLTHIS,  75, js_null_str,  js_null_str,  1,  0,  1, 19,  JOF_BYTE)
@@ -537,5 +537,5 @@ OPDEF(JSOP_LENGTH,        229, "length",       NULL,  1,  1,  1, 18,  JOF_BYTE|J
  * JSOP_NEWARRAY optimizes array literal evaluation using the interpreter stack.
  * JSOP_HOLE pushes a JSVAL_HOLE (used with JSOP_NEWINIT and JSOP_NEWARRAY).
  */
-OPDEF(JSOP_NEWARRAY,      230,"newarray",      NULL,  4, -1,  1, 19,  JOF_UINT24)
-OPDEF(JSOP_HOLE,          231,"hole",          NULL,  1,  0,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_NEWARRAY,      230, "newarray",     NULL,  4, -1,  1, 19,  JOF_UINT24)
+OPDEF(JSOP_HOLE,          231, "hole",         NULL,  1,  0,  1,  0,  JOF_BYTE)
