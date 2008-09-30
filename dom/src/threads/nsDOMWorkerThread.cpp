@@ -62,6 +62,7 @@
 #include "nsDOMWorkerSecurityManager.h"
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerTimeout.h"
+#include "nsDOMWorkerXHR.h"
 
 #define LOG(_args) PR_LOG(gDOMThreadsLog, PR_LOG_DEBUG, _args)
 
@@ -99,6 +100,9 @@ public:
 
   static JSBool LoadScripts(JSContext* aCx, JSObject* aObj, uintN aArgc,
                             jsval* aArgv, jsval* aRval);
+
+  static JSBool NewXMLHttpRequest(JSContext* aCx, JSObject* aObj, uintN aArgc,
+                                  jsval* aArgv, jsval* aRval);
 
 private:
   // Internal helper for SetTimeout and SetInterval.
@@ -303,6 +307,63 @@ nsDOMWorkerFunctions::LoadScripts(JSContext* aCx,
   return JS_TRUE;
 }
 
+JSBool
+nsDOMWorkerFunctions::NewXMLHttpRequest(JSContext* aCx,
+                                        JSObject* aObj,
+                                        uintN aArgc,
+                                        jsval* /* aArgv */,
+                                        jsval* aRval)
+{
+  nsDOMWorkerThread* worker =
+    static_cast<nsDOMWorkerThread*>(JS_GetContextPrivate(aCx));
+  NS_ASSERTION(worker, "This should be set by the DOM thread service!");
+
+  if (worker->IsCanceled()) {
+    return JS_FALSE;
+  }
+
+  if (aArgc) {
+    JS_ReportError(aCx, "Constructor takes no arguments!");
+    return JS_FALSE;
+  }
+
+  nsRefPtr<nsDOMWorkerXHR> xhr = new nsDOMWorkerXHR(worker);
+  if (!xhr) {
+    JS_ReportOutOfMemory(aCx);
+    return JS_FALSE;
+  }
+
+  nsresult rv = xhr->Init();
+  if (NS_FAILED(rv)) {
+    JS_ReportError(aCx, "Failed to construct XHR!");
+    return JS_FALSE;
+  }
+
+  nsCOMPtr<nsISupports> xhrSupports;
+  xhr->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(xhrSupports));
+  NS_ASSERTION(xhrSupports, "Impossible!");
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+
+  nsCOMPtr<nsIXPConnectJSObjectHolder> xhrWrapped;
+  rv = xpc->WrapNative(aCx, aObj, xhrSupports, NS_GET_IID(nsIXMLHttpRequest),
+                       getter_AddRefs(xhrWrapped));
+  if (NS_FAILED(rv)) {
+    JS_ReportError(aCx, "Failed to wrap XHR!");
+    return JS_FALSE;
+  }
+
+  JSObject* xhrJSObj;
+  rv = xhrWrapped->GetJSObject(&xhrJSObj);
+  if (NS_FAILED(rv)) {
+    JS_ReportError(aCx, "Failed to get JSObject!");
+    return JS_FALSE;
+  }
+
+  *aRval = OBJECT_TO_JSVAL(xhrJSObj);
+  return JS_TRUE;
+}
+
 JSFunctionSpec gDOMWorkerFunctions[] = {
   { "dump",                  nsDOMWorkerFunctions::Dump,              1, 0, 0 },
   { "debug",                 nsDOMWorkerFunctions::DebugDump,         1, 0, 0 },
@@ -312,6 +373,7 @@ JSFunctionSpec gDOMWorkerFunctions[] = {
   { "setInterval",           nsDOMWorkerFunctions::SetInterval,       1, 0, 0 },
   { "clearInterval",         nsDOMWorkerFunctions::KillTimeout,       1, 0, 0 },
   { "loadScripts",           nsDOMWorkerFunctions::LoadScripts,       1, 0, 0 },
+  { "XMLHttpRequest",        nsDOMWorkerFunctions::NewXMLHttpRequest, 0, 0, 0 },
 #ifdef MOZ_SHARK
   { "startShark",            js_StartShark,                           0, 0, 0 },
   { "stopShark",             js_StopShark,                            0, 0, 0 },
@@ -551,6 +613,7 @@ nsDOMWorkerThread::Cancel()
 
   // Do this before waiting on the thread service below!
   CancelScriptLoaders();
+  CancelXHRs();
 
   // If we're suspended there's a good chance that we're already paused waiting
   // on the pool's monitor. Waiting on the thread service's lock will deadlock.
@@ -717,7 +780,7 @@ nsDOMWorkerThread::NextTimeout(nsDOMWorkerTimeout* aTimeout)
   return next == &mTimeouts ? nsnull : next;
 }
 
-void
+PRBool
 nsDOMWorkerThread::AddTimeout(nsDOMWorkerTimeout* aTimeout)
 {
   // This should only ever be called on the worker thread... but there's no way
@@ -733,6 +796,10 @@ nsDOMWorkerThread::AddTimeout(nsDOMWorkerTimeout* aTimeout)
 
   nsAutoLock lock(mLock);
 
+  if (IsCanceled()) {
+    return PR_FALSE;
+  }
+
   // XXX Currently stored in the order that they should execute (like the window
   //     timeouts are) but we don't flush all expired timeouts the same way that
   //     the window does... Either we should or this is unnecessary.
@@ -741,11 +808,12 @@ nsDOMWorkerThread::AddTimeout(nsDOMWorkerTimeout* aTimeout)
        timeout = NextTimeout(timeout)) {
     if (timeout->GetInterval() > newInterval) {
       PR_INSERT_BEFORE(aTimeout, timeout);
-      return;
+      return PR_TRUE;
     }
   }
 
   PR_APPEND_LINK(aTimeout, &mTimeouts);
+  return PR_TRUE;
 }
 
 void
@@ -856,6 +924,54 @@ nsDOMWorkerThread::CancelScriptLoaders()
   PRUint32 loaderCount = loaders.Length();
   for (PRUint32 index = 0; index < loaderCount; index++) {
     loaders[index]->Cancel();
+  }
+}
+
+PRBool
+nsDOMWorkerThread::AddXHR(nsDOMWorkerXHR* aXHR)
+{
+  nsAutoLock lock(mLock);
+
+  if (IsCanceled()) {
+    return PR_FALSE;
+  }
+
+#ifdef DEBUG
+  PRBool contains = mXHRs.Contains(aXHR);
+  NS_ASSERTION(!contains, "Adding an XHR twice!");
+#endif
+
+  nsDOMWorkerXHR** newElement = mXHRs.AppendElement(aXHR);
+  NS_ENSURE_TRUE(newElement, PR_FALSE);
+
+  return PR_TRUE;
+}
+
+void
+nsDOMWorkerThread::RemoveXHR(nsDOMWorkerXHR* aXHR)
+{
+  nsAutoLock lock(mLock);
+#ifdef DEBUG
+  PRBool removed =
+#endif
+  mXHRs.RemoveElement(aXHR);
+  NS_WARN_IF_FALSE(removed, "Removed an XHR that was never added?!");
+}
+
+void
+nsDOMWorkerThread::CancelXHRs()
+{
+  nsAutoTArray<nsDOMWorkerXHR*, 20> xhrs;
+
+  // Must call Cancel outside the lock!
+  {
+    nsAutoLock lock(mLock);
+    xhrs.AppendElements(mXHRs);
+  }
+
+  PRUint32 xhrCount = xhrs.Length();
+  for (PRUint32 index = 0; index < xhrCount; index++) {
+    xhrs[index]->Cancel();
   }
 }
 
