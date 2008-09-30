@@ -71,10 +71,10 @@
         </xul:hbox>
         <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
                   anonid="strip"
-                  ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode); event.stopPropagation();"
-                  ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode); event.stopPropagation();"
-                  ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode); event.stopPropagation();"
-                  ondragexit="nsDragAndDrop.dragExit(event, this.parentNode.parentNode); event.stopPropagation();">
+                  ondragstart="this.parentNode.parentNode._onDragStart(event); event.stopPropagation();"
+                  ondragover="this.parentNode.parentNode._onDragOver(event); event.stopPropagation();"
+                  ondrop="this.parentNode.parentNode._onDrop(event); event.stopPropagation();"
+                  ondragleave="this.parentNode.parentNode._onDragLeave(event); event.stopPropagation();">
           <xul:tooltip onpopupshowing="return this.parentNode.parentNode.parentNode.createTooltip(event);"/>
           <xul:menupopup anonid="tabContextMenu" onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
             <xul:menuitem id="context_newTab" label="&newTab.label;" accesskey="&newTab.accesskey;"
@@ -1778,55 +1778,91 @@
         </getter>
       </property>
 
-      <!-- Drag and drop observer API -->
-      <method name="onDragStart">
+      <method name="_onDragStart">
         <parameter name="aEvent"/>
-        <parameter name="aXferData"/>
-        <parameter name="aDragAction"/>
         <body>
         <![CDATA[
-          if (aEvent.target.localName == "tab" &&
+          var target = aEvent.target;
+          if (target.localName == "tab" &&
               aEvent.originalTarget.localName != "toolbarbutton") {
-            aXferData.data = new TransferData();
-
+            var dt = aEvent.dataTransfer;
+            dt.mozSetDataAt("application/x-moz-node", target, 0);
             var URI = this.getBrowserForTab(aEvent.target).currentURI;
             if (URI) {
-              aXferData.data.addDataForFlavour("text/x-moz-url", URI.spec + "\n" + aEvent.target.label);
-              aXferData.data.addDataForFlavour("text/unicode", URI.spec);
-              aXferData.data.addDataForFlavour("text/html", '<a href="' + URI.spec + '">' + aEvent.target.label + '</a>');
+              var spec = URI.spec;
+              dt.mozSetDataAt("text/x-moz-url", spec + "\n" + aEvent.target.label, 0);
+              dt.mozSetDataAt("text/uri-list", spec + "\n" + aEvent.target.label, 0);
+              dt.mozSetDataAt("text/plain", spec, 0);
+              dt.mozSetDataAt("text/html", '<a href="' + spec + '">' + aEvent.target.label + '</a>', 0);
             } else {
-              aXferData.data.addDataForFlavour("text/unicode", "about:blank");
+              dt.mozSetDataAt("text/plain", "about:blank", 0);
             }
           }
         ]]>
         </body>
       </method>
 
-      <method name="canDrop">
+      <field name="mDragTime">0</field>
+      <field name="mDragOverDelay">350</field>
+
+      <field name="_supportedLinkDropTypes"><![CDATA[
+        ["text/x-moz-url", "text/uri-list", "text/plain", "application/x-moz-file"]
+      ]]></field>
+
+      <method name="_setEffectAllowedForDataTransfer">
         <parameter name="aEvent"/>
-        <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.sourceNode &&
-                aDragSession.sourceNode.parentNode == this.mTabContainer &&
-                (aEvent.screenX >= aDragSession.sourceNode.boxObject.screenX &&
-                 aEvent.screenX <= (aDragSession.sourceNode.boxObject.screenX +
-                                    aDragSession.sourceNode.boxObject.width)))
-              return false;
-            return true;
+            var dt = aEvent.dataTransfer;
+            // Disallow dropping multiple items
+            if (dt.mozItemCount > 1)
+              return dt.effectAllowed = "none";
+
+            var types = dt.mozTypesAt(0);
+            var sourceNode = null;
+            // tabs are always added as the first type
+            if (types[0] == "application/x-moz-node") {
+              var sourceNode = dt.mozGetDataAt("application/x-moz-node", 0);
+              if (sourceNode instanceof XULElement &&
+                  sourceNode.localName == "tab" &&
+                  (sourceNode.parentNode == this.mTabContainer ||
+                   (sourceNode.ownerDocument.defaultView instanceof ChromeWindow &&
+                    sourceNode.ownerDocument.documentElement.getAttribute("windowtype") == "navigator:browser"))) {
+                if (sourceNode.parentNode == this.mTabContainer &&
+                    (aEvent.screenX >= sourceNode.boxObject.screenX &&
+                      aEvent.screenX <= (sourceNode.boxObject.screenX +
+                                         sourceNode.boxObject.width))) {
+                  return dt.effectAllowed = "none";                                         
+                }
+
+                return dt.effectAllowed = "copyMove";
+              }
+            }
+
+            for (var i=0; i < this._supportedLinkDropTypes.length; i++) {
+              if (types.contains(this._supportedLinkDropTypes[i])) {
+                // Here we need to to do this manually
+                return dt.effectAllowed = dt.dropEffect = "link";
+              }
+            }
+            return dt.effectAllowed = "none";
           ]]>
         </body>
       </method>
 
-      <field name="mDragTime">0</field>
-      <field name="mDragOverDelay">350</field>
-
-      <method name="onDragOver">
+      <method name="_onDragOver">
         <parameter name="aEvent"/>
-        <parameter name="aFlavour"/>
-        <parameter name="aDragSession"/>
         <body>
           <![CDATA[
+            var effects = this._setEffectAllowedForDataTransfer(aEvent);
+
+            var ib = this.mTabDropIndicatorBar;
+            if (effects == "none") {
+              ib.collapsed = "true";
+              return;
+            }
+            aEvent.preventDefault();
+
             var tabStrip = this.mTabContainer.mTabstrip;
             var ltr = (window.getComputedStyle(this.parentNode, null).direction
                        == "ltr");
@@ -1843,6 +1879,7 @@
                   break;
                 case "scrollbutton-down":
                 case "alltabs-button":
+                case "newtab-button":
                   pixelsToScroll = tabStrip.scrollIncrement;
                   break;
               }
@@ -1850,9 +1887,7 @@
                 tabStrip.scrollByPixels((ltr ? 1 : -1) * pixelsToScroll);
             }
 
-            var isTabDrag = (aDragSession.sourceNode && 
-                             aDragSession.sourceNode.parentNode == this.mTabContainer);
-            if (!isTabDrag && aEvent.target.localName == "tab") {
+            if (effects == "link" && aEvent.target.localName == "tab") {
               if (!this.mDragTime) 
                 this.mDragTime = Date.now();
               if (Date.now() >= this.mDragTime + this.mDragOverDelay)
@@ -1911,27 +1946,27 @@
 
             ind.style.MozMarginStart = newMargin + 'px';
 
-            ib.collapsed = !aDragSession.canDrop;
+            ib.collapsed = false;
           ]]>
         </body>
       </method>
 
-      <method name="onDrop">
+      <method name="_onDrop">
         <parameter name="aEvent"/>
-        <parameter name="aXferData"/>
-        <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            var isCopy = aEvent.dataTransfer.dropEffect == "copy";
+            var dt = aEvent.dataTransfer;
+            var dropEffect = dt.dropEffect;
             var draggedTab;
-            if (aDragSession.sourceNode && aDragSession.sourceNode.localName == "tab" &&
-                (aDragSession.sourceNode.parentNode == this.mTabContainer ||
-                 aDragSession.sourceNode.ownerDocument.defaultView instanceof ChromeWindow &&
-                 aDragSession.sourceNode.ownerDocument.documentElement.getAttribute("windowtype") == "navigator:browser"))
-              draggedTab = aDragSession.sourceNode;
-            if (draggedTab && (isCopy || draggedTab.parentNode == this.mTabContainer)) {
+            if (dropEffect != "link") { // copy or move
+              draggedTab = dt.mozGetDataAt("application/x-moz-node", 0);
+              NS_ASSERT(draggedTab && draggedTab.localName == "tab",
+                        "copy or move action without a tab");
+            }
+
+            if (draggedTab && (dropEffect == "copy" || draggedTab.parentNode == this.mTabContainer)) {
               var newIndex = this.getNewIndex(aEvent);
-              if (isCopy) {
+              if (dropEffect == "copy") {
                 // copy the dropped tab (wherever it's from)
                 var newTab = this.duplicateTab(draggedTab);
                 this.moveTabTo(newTab, newIndex);
@@ -1969,7 +2004,20 @@
               this.setTabTitle(newTab);
             }
             else {
-              var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+              var url;
+              for (var i=0; i < this._supportedLinkDropTypes.length; i++) {
+                let dataType = this._supportedLinkDropTypes[i];
+                // uri-list: for now, support dropping of the first URL
+                // only
+                var isURLList = dataType == "text/uri-list";
+                let urlData = isURLList ?
+                              dt.mozGetDataAt("URL", 0) : dt.mozGetDataAt(dataType, 0);
+                if (urlData) {
+                  url = transferUtils.retrieveURLFromData(urlData, isURLList ? "text/plain" : dataType);
+                  break;
+                }
+              }
+              NS_ASSERT(url, "In the drop event, at least one mime-type should match our supported types");
 
               // valid urls don't contain spaces ' '; if we have a space it isn't a valid url.
               // Also disallow dropping javascript: or data: urls--bail out
@@ -1977,7 +2025,12 @@
                   /^\s*(javascript|data):/.test(url))
                 return;
 
-              nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
+              // XXXmano: temporary fix until dragDropSecurityCheck make the
+              // drag-session an optional paramter
+              var dragService = Cc["@mozilla.org/widget/dragservice;1"].
+                                getService(Ci.nsIDragService);
+              var dragSession = dragService.getCurrentSession();
+              nsDragAndDrop.dragDropSecurityCheck(aEvent, dragSession, url);
 
               var bgLoad = true;
               try {
@@ -1988,7 +2041,7 @@
               if (aEvent.shiftKey)
                 bgLoad = !bgLoad;
 
-              if (document.getBindingParent(aEvent.originalTarget).localName != "tab" || isCopy) {
+              if (document.getBindingParent(aEvent.originalTarget).localName != "tab" || dropEffect == "copy") {
                 // We're adding a new tab.
                 newIndex = this.getNewIndex(aEvent);
                 newTab = this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad, false);
@@ -2010,16 +2063,14 @@
         </body>
       </method>
 
-      <method name="onDragExit">
+      <method name="_onDragLeave">
         <parameter name="aEvent"/>
-        <parameter name="aDragSession"/>
         <body>
           <![CDATA[
             this.mDragTime = 0;
 
-            if (aDragSession.sourceNode &&
-                aDragSession.sourceNode.parentNode == this.mTabContainer &&
-                aDragSession.canDrop) {
+            var dropEffect = aEvent.dataTransfer.dropEffect;
+            if (dropEffect == "move" || dropEffect == "copy") {
               var target = aEvent.relatedTarget;
               while (target && target != this.mStrip)
                 target = target.parentNode;
@@ -2028,18 +2079,6 @@
             }
             this.mTabDropIndicatorBar.collapsed = true;
           ]]>
-        </body>
-      </method>
-
-      <method name="getSupportedFlavours">
-        <body>
-        <![CDATA[
-          var flavourSet = new FlavourSet();
-          flavourSet.appendFlavour("text/x-moz-url");
-          flavourSet.appendFlavour("text/unicode");
-          flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-          return flavourSet;
-        ]]>
         </body>
       </method>
 
@@ -2696,6 +2735,9 @@
                               class="tabbrowser-arrowscrollbox">
             <children/>
           </xul:arrowscrollbox>
+          <xul:toolbarbutton class="tabs-newtab-button" anonid="newtab-button"
+                             command="cmd_newNavigatorTab" chromedir="&locale.dir;"
+                             tooltiptext="&newTabButton.tooltip;"/>
           <xul:stack align="center" pack="end" chromedir="&locale.dir;">
             <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
             <xul:hbox flex="1" class="tabs-alltabs-box-animate" anonid="alltabs-box-animate"/>

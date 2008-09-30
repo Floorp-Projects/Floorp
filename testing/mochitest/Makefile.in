@@ -120,6 +120,12 @@ ifeq ($(host_os), cygwin)
 TEST_DRIVER_PPARGS += -DIS_CYGWIN=1
 endif
 
+ifeq ($(ENABLE_TESTS), 1)
+TEST_DRIVER_PPARGS += -DIS_TEST_BUILD=1
+else
+TEST_DRIVER_PPARGS += -DIS_TEST_BUILD=0
+endif
+
 runtests.py: runtests.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@

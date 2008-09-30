@@ -70,6 +70,146 @@
         this.inputField.removeEventListener("mouseout", this, false);
       ]]></destructor>
 
+      <method name="handleRevert">
+        <body><![CDATA[
+          var throbberElement = document.getElementById("navigator-throbber");
+          var isScrolling = this.popupOpen;
+
+          gBrowser.userTypedValue = null;
+
+          // don't revert to last valid url unless page is NOT loading
+          // and user is NOT key-scrolling through autocomplete list
+          if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
+            URLBarSetURI();
+
+            // If the value isn't empty and the urlbar has focus, select the value.
+            if (this.value && this.hasAttribute("focused"))
+              this.select();
+          }
+
+          // tell widget to revert to last typed text only if the user
+          // was scrolling when they hit escape
+          return !isScrolling;
+        ]]></body>
+      </method>
+
+      <method name="handleCommand">
+        <parameter name="aTriggeringEvent"/>
+        <body><![CDATA[
+          if (aTriggeringEvent instanceof MouseEvent && aTriggeringEvent.button == 2)
+            return; // Do nothing for right clicks
+
+          var [url, postData] = this._canonizeURL(aTriggeringEvent);
+          if (!url)
+            return;
+
+          this.value = url;
+          gBrowser.userTypedValue = url;
+          try {
+            addToUrlbarHistory(url);
+          } catch (ex) {
+            // Things may go wrong when adding url to session history,
+            // but don't let that interfere with the loading of the url.
+            Cu.reportError(ex);
+          }
+
+          if (aTriggeringEvent instanceof MouseEvent) {
+            // We have a mouse event (from the go button), so use the standard
+            // UI link behaviors
+            openUILink(url, aTriggeringEvent, false, false,
+                       true /* allow third party fixup */, postData);
+            return;
+          }
+
+          if (aTriggeringEvent && aTriggeringEvent.altKey) {
+            this.handleRevert();
+            content.focus();
+            gBrowser.loadOneTab(url, null, null, postData, false,
+                                true /* allow third party fixup */);
+            aTriggeringEvent.preventDefault();
+            aTriggeringEvent.stopPropagation();
+          }
+          else
+            loadURI(url, null, postData, true /* allow third party fixup */);
+
+          focusElement(content);
+        ]]></body>
+      </method>
+
+      <method name="_canonizeURL">
+        <parameter name="aTriggeringEvent"/>
+        <body><![CDATA[
+          var url = this.value;
+          if (!url)
+            return ["", null];
+
+          // Only add the suffix when the URL bar value isn't already "URL-like",
+          // and only if we get a keyboard event, to match user expectations.
+          if (!/^\s*(www|https?)\b|\/\s*$/i.test(url) &&
+              (aTriggeringEvent instanceof KeyEvent)) {
+#ifdef XP_MACOSX
+            let accel = aTriggeringEvent.metaKey;
+#else
+            let accel = aTriggeringEvent.ctrlKey;
+#endif
+            let shift = aTriggeringEvent.shiftKey;
+
+            let suffix = "";
+
+            switch (true) {
+              case (accel && shift):
+                suffix = ".org/";
+                break;
+              case (shift):
+                suffix = ".net/";
+                break;
+              case (accel):
+                try {
+                  suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
+                  if (suffix.charAt(suffix.length - 1) != "/")
+                    suffix += "/";
+                } catch(e) {
+                  suffix = ".com/";
+                }
+                break;
+            }
+
+            if (suffix) {
+              // trim leading/trailing spaces (bug 233205)
+              url = url.trim();
+
+              // Tack www. and suffix on.  If user has appended directories, insert
+              // suffix before them (bug 279035).  Be careful not to get two slashes.
+              // Also, don't add the suffix if it's in the original url (bug 233853).
+      
+              let firstSlash = url.indexOf("/");
+              let existingSuffix = url.indexOf(suffix.substring(0, suffix.length - 1));
+
+              // * Logic for slash and existing suffix (example)
+              // No slash, no suffix: Add suffix (mozilla)
+              // No slash, yes suffix: Add slash (mozilla.com)
+              // Yes slash, no suffix: Insert suffix (mozilla/stuff)
+              // Yes slash, suffix before slash: Do nothing (mozilla.com/stuff)
+              // Yes slash, suffix after slash: Insert suffix (mozilla/?stuff=.com)
+      
+              if (firstSlash >= 0) {
+                if (existingSuffix == -1 || existingSuffix > firstSlash)
+                  url = url.substring(0, firstSlash) + suffix +
+                        url.substring(firstSlash + 1);
+              } else
+                url = url + (existingSuffix == -1 ? suffix : "/");
+
+              url = "http://www." + url;
+            }
+          }
+
+          var postData = {};
+          url = getShortcutOrURI(url, postData);
+
+          return [url, postData.value];
+        ]]></body>
+      </method>
+
       <method name="_initURLTooltip">
         <body><![CDATA[
           if (this.focused || this.value == "")
@@ -124,7 +264,7 @@
             } catch (ex) {
               return;
             }
-            handleURLBarCommand();
+            this.handleCommand();
           }
         ]]></body>
       </method>

@@ -143,7 +143,7 @@ public:
     /**
      * Copies the current path and returns the copy.
      */
-    already_AddRefed<gfxPath> CopyPath();
+    already_AddRefed<gfxPath> CopyPath() const;
 
     /**
      * Appends the given path to the current path.
@@ -657,6 +657,66 @@ public:
 
 private:
   gfxContext *mContext;
+};
+
+/**
+ * Sentry helper class for functions with multiple return points that need to
+ * back up the current path of a context and have it automatically restored
+ * before they return. This class assumes that the transformation matrix will
+ * be the same when Save and Restore are called. The calling function must
+ * ensure that this is the case or the path will be copied incorrectly.
+ */
+class THEBES_API gfxContextPathAutoSaveRestore
+{
+public:
+    gfxContextPathAutoSaveRestore() : mContext(nsnull) {}
+
+    gfxContextPathAutoSaveRestore(gfxContext *aContext, PRBool aSave = PR_TRUE) : mContext(aContext)
+    {
+        if (aSave)
+            Save();       
+    }
+
+    ~gfxContextPathAutoSaveRestore()
+    {
+        Restore();
+    }
+
+    void SetContext(gfxContext *aContext, PRBool aSave = PR_TRUE)
+    {
+        mContext = aContext;
+        if (aSave)
+            Save();
+    }
+
+    /**
+     * If a path is already saved, does nothing. Else copies the current path
+     * so that it may be restored.
+     */
+    void Save()
+    {
+        if (!mPath && mContext) {
+            mPath = mContext->CopyPath();
+        }
+    }
+
+    /**
+     * If no path is saved, does nothing. Else replaces the context's path with
+     * a copy of the saved one, and clears the saved path.
+     */
+    void Restore()
+    {
+        if (mPath) {
+            mContext->NewPath();
+            mContext->AppendPath(mPath);
+            mPath = nsnull;
+        }
+    }
+
+private:
+    gfxContext *mContext;
+
+    nsRefPtr<gfxPath> mPath;
 };
 
 #endif /* GFX_CONTEXT_H */

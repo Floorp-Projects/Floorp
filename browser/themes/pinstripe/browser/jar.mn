@@ -118,6 +118,7 @@ classic.jar:
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/alltabs-box-overflow-bkgnd.png         (tabbrowser/alltabs-box-overflow-bkgnd.png)
   skin/classic/browser/tabbrowser/alltabs-box-overflow-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-bkgnd-animate.png)
+  skin/classic/browser/tabbrowser/newtab.png                             (tabbrowser/newtab.png)
   skin/classic/browser/tabbrowser/tab-arrow-start.png                    (tabbrowser/tab-arrow-start.png)
   skin/classic/browser/tabbrowser/tab-arrow-start-bkgnd.png              (tabbrowser/tab-arrow-start-bkgnd.png)
   skin/classic/browser/tabbrowser/tab-arrow-start-bkgnd-animate.png      (tabbrowser/tab-arrow-start-bkgnd-animate.png)

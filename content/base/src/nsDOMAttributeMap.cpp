@@ -386,7 +386,7 @@ nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     nsCOMPtr<nsINodeInfo> ni;
     ni = mContent->NodeInfo()->NodeInfoManager()->
       GetNodeInfo(name->LocalName(), name->GetPrefix(), name->NamespaceID());
-    NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
     return GetAttribute(ni, aReturn);
   }
@@ -455,7 +455,7 @@ nsDOMAttributeMap::GetNamedItemNSInternal(const nsAString& aNamespaceURI,
       nsCOMPtr<nsINodeInfo> ni;
       ni = mContent->NodeInfo()->NodeInfoManager()->
         GetNodeInfo(nameAtom, name->GetPrefix(), nameSpaceID);
-      NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
       return GetAttribute(ni, aReturn, aRemove);
     }

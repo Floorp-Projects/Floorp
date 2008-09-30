@@ -133,16 +133,6 @@ public:
     static void Shutdown();
 
     /**
-     * Return PR_TRUE if we're to use Glitz for acceleration.
-     */
-    static PRBool UseGlitz();
-
-    /**
-     * Force the glitz state to on or off
-     */
-    static void SetUseGlitz(PRBool use);
-
-    /**
      * Create an offscreen surface of the given dimensions
      * and image format.
      */

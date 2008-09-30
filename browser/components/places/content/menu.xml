@@ -661,6 +661,11 @@
         <body><![CDATA[
           PlacesUIUtils.cleanPlacesPopup(aPopup);
 
+          // If this is a livemark container check if the status menuitem has
+          // to be added or removed.
+          if (PlacesUtils.nodeIsLivemarkContainer(aPopup._resultNode))
+            PlacesUIUtils.ensureLivemarkStatusMenuItem(aPopup);
+
           var cc = aPopup._resultNode.childCount;
           if (cc > 0) {
             if (aPopup._emptyMenuItem)
@@ -804,9 +809,13 @@
           if (menuitem.getAttribute("label") != title)
             menuitem.setAttribute("label", title);
 
-          if (!menuitem.hasAttribute("livemark") &&
-              PlacesUtils.nodeIsLivemarkContainer(aNode))
-            menuitem.setAttribute("livemark", "true");
+          if (PlacesUtils.nodeIsLivemarkContainer(aNode)) {
+            if (!menuitem.hasAttribute("livemark"))
+              menuitem.setAttribute("livemark", "true");
+            // If this is a livemark container check if the status menuitem has
+            // to be added or removed.
+            PlacesUIUtils.ensureLivemarkStatusMenuItem(menuitem.firstChild);
+          }
         },
 
         itemReplaced:

@@ -455,9 +455,8 @@
         ]]></body>
       </method>
 
-      <!-- get the total number of results in a specific session or overall if session is null-->
+      <!-- get the total number of results overall -->
       <method name="getResultCount">
-        <parameter name="aSession"/>
         <body><![CDATA[
           return this.view.rowCount;
         ]]></body>
@@ -606,7 +605,6 @@
           this.isSearching = true;
           this.mFirstReturn = true;
           this.mSessionReturns = this.sessionCount;
-          this.mFailureCount = 0;
           this.mFailureItems = 0;
           this.mDefaultMatchFilled = false; // clear out our prefill state.
 
@@ -711,10 +709,8 @@
           if (this.mSessionReturns == 0)
             this.postSearchCleanup();
 
-          ++this.mFailureCount;
-          
           // if all searches are done and they all failed...
-          if (this.mSessionReturns == 0 && this.mFailureCount == this.sessionCount) {
+          if (this.mSessionReturns == 0 && this.getResultCount() == 0) {
             if (this.minResultsForPopup == 0) {
               this.clearResults(true); // clear data and repaint empty
               this.openResultPopup();
@@ -1167,7 +1163,7 @@
       <method name="openResultPopup">
         <body><![CDATA[
           if (!this.mMenuOpen && this.focused &&
-               (this.getResultCount("") >= this.minResultsForPopup
+               (this.getResultCount() >= this.minResultsForPopup
                 || this.mFailureItems)) {
             var w = this.boxObject.width;
             if (w != this.resultsPopup.boxObject.width)

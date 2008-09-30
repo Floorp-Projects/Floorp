@@ -14,14 +14,14 @@ var canvas = document.getElementById('c');
 var ctx = canvas.getContext('2d');
 
 ctx.shadowBlur = 1;
-todo(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
+ok(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
 ctx.shadowBlur = 0.5;
-todo(ctx.shadowBlur === 0.5, "ctx.shadowBlur === 0.5");
+ok(ctx.shadowBlur === 0.5, "ctx.shadowBlur === 0.5");
 ctx.shadowBlur = 1e6;
-todo(ctx.shadowBlur === 1e6, "ctx.shadowBlur === 1e6");
+ok(ctx.shadowBlur === 1e6, "ctx.shadowBlur === 1e6");
 ctx.shadowBlur = 1;
 ctx.shadowBlur = -2;
-todo(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
+ok(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
 ctx.shadowBlur = 0;
 ok(ctx.shadowBlur === 0, "ctx.shadowBlur === 0");
 

@@ -62,14 +62,16 @@ endif
 endif
 
 # Build MMX code either with VC or with gcc-on-x86
-ifneq (arm,$(findstring arm,$(OS_TEST)))
 ifdef _MSC_VER
+ifeq (86,$(findstring 86,$(OS_TEST)))
 USE_MMX=1
 #USE_SSE2=1
 MMX_CFLAGS=
 endif
+endif
 
 ifdef GNU_CC
+
 ifeq (86,$(findstring 86,$(OS_TEST)))
 USE_MMX=1
 MMX_CFLAGS=-mmmx -Winline
@@ -80,12 +82,13 @@ ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 MMX_CFLAGS+=--param inline-unit-growth=10000 --param large-function-growth=10000
 endif
 endif
-endif
+
 ifeq (arm,$(findstring arm,$(OS_TEST)))
 ifdef HAVE_ARM_SIMD
 USE_ARM=1
 endif
 endif
+
 endif
 
 
@@ -127,7 +130,7 @@ endif
 
 ifdef USE_ARM
 CSRCS += pixman-arm.c
-DEFINE += -DUSE_ARM
+DEFINES += -DUSE_ARM
 endif
 
 EXPORTS		= pixman.h pixman-version.h

@@ -102,8 +102,10 @@ private:
     // target.
     nsresult PreLaunchPopup(nsIDOMEvent* aMouseEvent);
 
+#ifndef NS_CONTEXT_MENU_IS_MOUSEUP
     // When a context menu is opened, focus the target of the contextmenu event.
     nsresult FireFocusOnTargetContent(nsIDOMNode* aTargetNode);
+#endif
 
     // |mElement| is the node to which this listener is attached.
     nsCOMPtr<nsIDOMElement> mElement;

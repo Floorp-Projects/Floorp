@@ -609,6 +609,21 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   if (mpchan)
       mIsMultiPartChannel = PR_TRUE;
 
+  /*
+   * If mRequest is null here, then we need to set it so that we'll be able to
+   * cancel it if our Cancel() method is called.  Note that this can only
+   * happen for multipart channels.  We could simply not null out mRequest for
+   * non-last parts, if GetIsLastPart() were reliable, but it's not.  See
+   * https://bugzilla.mozilla.org/show_bug.cgi?id=339610
+   */
+  if (!mRequest) {
+    NS_ASSERTION(mpchan,
+                 "We should have an mRequest here unless we're multipart");
+    nsCOMPtr<nsIChannel> chan;
+    mpchan->GetBaseChannel(getter_AddRefs(chan));
+    mRequest = chan;
+  }
+
   /* set our state variables to their initial values, but advance mState
      to onStartRequest. */
   mImageStatus = imgIRequest::STATUS_NONE;

@@ -392,7 +392,7 @@ var FeedConverterFactory = {
     if (iid.equals(Ci.nsIFactory) ||
         iid.equals(Ci.nsISupports))
       return this;
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 };
 

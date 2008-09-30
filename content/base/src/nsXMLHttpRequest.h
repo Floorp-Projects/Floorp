@@ -117,7 +117,7 @@ public:
   virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                             const nsIID& aIID);
   virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext) = 0;
+  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext);
 
   PRBool HasListenersFor(const nsAString& aType)
   {
@@ -129,6 +129,18 @@ public:
 
   nsresult GetInnerEventListener(nsRefPtr<nsDOMEventListenerWrapper>& aWrapper,
                                  nsIDOMEventListener** aListener);
+
+  nsresult CheckInnerWindowCorrectness()
+  {
+    if (mOwner) {
+      NS_ASSERTION(mOwner->IsInnerWindow(), "Should have inner window here!\n");
+      nsPIDOMWindow* outer = mOwner->GetOuterWindow();
+      if (!outer || outer->GetCurrentInnerWindow() != mOwner) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+    return NS_OK;
+  }
 protected:
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
@@ -137,23 +149,26 @@ protected:
   nsRefPtr<nsDOMEventListenerWrapper> mOnProgressListener;
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
   PRUint32 mLang;
+  // These may be null (native callers or xpcshell).
+  nsCOMPtr<nsIScriptContext> mScriptContext;
+  nsCOMPtr<nsPIDOMWindow>    mOwner; // Inner window.
 };
 
 class nsXMLHttpRequestUpload : public nsXHREventTarget,
                                public nsIXMLHttpRequestUpload
 {
 public:
-  nsXMLHttpRequestUpload(nsPIDOMEventTarget* aOwner) : mOwner(aOwner) {}
+  nsXMLHttpRequestUpload(nsPIDOMWindow* aOwner,
+                         nsIScriptContext* aScriptContext)
+  {
+    mOwner = aOwner;
+    mScriptContext = aScriptContext;
+  }
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXMLHttpRequestUpload,
-                                           nsXHREventTarget)
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::)
   NS_FORWARD_NSIDOMEVENTTARGET(nsXHREventTarget::)
   NS_FORWARD_NSIDOMNSEVENTTARGET(nsXHREventTarget::)
   NS_DECL_NSIXMLHTTPREQUESTUPLOAD
-  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext);
-protected:
-  nsCOMPtr<nsPIDOMEventTarget> mOwner;
 };
 
 class nsXMLHttpRequest : public nsXHREventTarget,
@@ -216,8 +231,6 @@ public:
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
                        PRUint32 argc, jsval* argv);
-
-  virtual nsresult GetContextForEventHandlers(nsIScriptContext** aContext);
 
 
   // This creates a trusted readystatechange event, which is not cancelable and
@@ -288,28 +301,12 @@ protected:
    */
   nsresult CheckChannelForCrossSiteRequest();
 
-  nsresult CheckInnerWindowCorrectness()
-  {
-    if (mOwner) {
-      NS_ASSERTION(mOwner->IsInnerWindow(), "Should have inner window here!\n");
-      nsPIDOMWindow* outer = mOwner->GetOuterWindow();
-      if (!outer || outer->GetCurrentInnerWindow() != mOwner) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-    return NS_OK;
-  }
-
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
   // mReadRequest is different from mChannel for multipart requests
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
-
-  // These may be null (native callers or xpcshell).
-  nsCOMPtr<nsIScriptContext> mScriptContext;
-  nsCOMPtr<nsPIDOMWindow>    mOwner; // Inner window.
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnUploadProgressListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnReadystatechangeListener;

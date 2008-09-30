@@ -406,14 +406,10 @@ function run_test() {
 
   var txn12 = ptSvc.createLivemark(uri("http://feeduri.com"), uri("http://siteuri.com"), "Livemark1", root);
   txn12.doTransaction();
-
-  // Funky stuff going on here.
-  // In placesCreateLivemarkTxn, livemarks.createLivemark actually returns observer._itemAddedId -1
-  // instead of observer._itemAddedId. Check w. someone.
-  do_check_true(lmsvc.isLivemark(observer._itemAddedId-1));
-  do_check_eq(lmsvc.getSiteURI(observer._itemAddedId-1).spec, "http://siteuri.com/");
-  do_check_eq(lmsvc.getFeedURI(observer._itemAddedId-1).spec, "http://feeduri.com/");
-  var lvmkId = observer._itemAddedId-1;
+  do_check_true(lmsvc.isLivemark(observer._itemAddedId));
+  do_check_eq(lmsvc.getSiteURI(observer._itemAddedId).spec, "http://siteuri.com/");
+  do_check_eq(lmsvc.getFeedURI(observer._itemAddedId).spec, "http://feeduri.com/");
+  var lvmkId = observer._itemAddedId;
 
   // editLivemarkSiteURI
   var txn13 = ptSvc.editLivemarkSiteURI(lvmkId, uri("http://NEWsiteuri.com/"));

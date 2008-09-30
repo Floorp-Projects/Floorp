@@ -2,6 +2,6 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == solid-image-1.html solid-image-1-ref.ht
 == transparent-image-1.html transparent-image-1-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == solid-image-2.html solid-image-2-ref.html # bug 445911
 == multicolor-image-1.html multicolor-image-1-ref.html
-fails-if(http.oscpu.match(/Mac\x20OS\x20X\x2010\.4$/)) == multicolor-image-2.html multicolor-image-2-ref.html # fails on OS X 10.4 (bug 448121)
+== multicolor-image-2.html multicolor-image-2-ref.html
 == multicolor-image-3.html multicolor-image-3-ref.html
 != repeat-image-1.html repeat-image-1-ref.html

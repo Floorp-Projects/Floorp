@@ -158,6 +158,18 @@ MOZCE_SHUNT_API int remove(const char* inPath)
     return retval;
 }
 
+MOZCE_SHUNT_API int setmode(FILE*, int) 
+{
+    return 0;
+}
+MOZCE_SHUNT_API int _chdir (const char *dirname)
+{
+    return 0;
+}
+MOZCE_SHUNT_API int _wchdir (const wchar_t *dirname)
+{
+    return 0;
+}
 MOZCE_SHUNT_API char* getcwd(char* buff, size_t size)
 {
     WINCE_LOG_API_CALL("getcwd called.\n");
