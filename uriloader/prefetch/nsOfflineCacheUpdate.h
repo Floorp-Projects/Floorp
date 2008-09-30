@@ -50,6 +50,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMLoadStatus.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIMutableArray.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIApplicationCache.h"
@@ -67,6 +68,7 @@
 class nsOfflineCacheUpdate;
 
 class nsICacheEntryDescriptor;
+class nsIUTF8StringEnumerator;
 
 class nsOfflineCacheUpdateItem : public nsIDOMLoadStatus
                                , public nsIStreamListener
@@ -125,6 +127,12 @@ public:
     virtual ~nsOfflineManifestItem();
 
     nsCOMArray<nsIURI> &GetExplicitURIs() { return mExplicitURIs; }
+    nsCOMArray<nsIURI> &GetFallbackURIs() { return mFallbackURIs; }
+
+    nsTArray<nsCString> &GetOpportunisticNamespaces()
+        { return mOpportunisticNamespaces; }
+    nsIArray *GetNamespaces()
+        { return mNamespaces.get(); }
 
     PRBool ParseSucceeded()
         { return (mParserState != PARSE_INIT && mParserState != PARSE_ERROR); }
@@ -137,6 +145,10 @@ private:
                                   PRUint32 aOffset,
                                   PRUint32 aCount,
                                   PRUint32 *aBytesConsumed);
+
+    nsresult AddNamespace(PRUint32 namespaceType,
+                          const nsCString &namespaceSpec,
+                          const nsCString &data);
 
     nsresult HandleManifestLine(const nsCString::const_iterator &aBegin,
                                 const nsCString::const_iterator &aEnd);
@@ -155,17 +167,31 @@ private:
      */
     nsresult CheckNewManifestContentHash(nsIRequest *aRequest);
 
+    void ReadStrictFileOriginPolicyPref();
+
     enum {
         PARSE_INIT,
         PARSE_CACHE_ENTRIES,
         PARSE_FALLBACK_ENTRIES,
-        PARSE_NETWORK_ENTRIES,
+        PARSE_BYPASS_ENTRIES,
         PARSE_ERROR
     } mParserState;
 
     nsCString mReadBuf;
+
     nsCOMArray<nsIURI> mExplicitURIs;
+    nsCOMArray<nsIURI> mFallbackURIs;
+
+    // All opportunistic caching namespaces.  Used to decide whether
+    // to include previously-opportunistically-cached entries.
+    nsTArray<nsCString> mOpportunisticNamespaces;
+
+    // Array of nsIApplicationCacheNamespace objects specified by the
+    // manifest.
+    nsCOMPtr<nsIMutableArray> mNamespaces;
+
     PRBool mNeedsUpdate;
+    PRBool mStrictFileOriginPolicy;
 
     // manifest hash data
     nsCOMPtr<nsICryptoHash> mManifestHash;
@@ -197,7 +223,11 @@ private:
 
     nsresult ProcessNextURI();
 
-    nsresult AddExistingItems(PRUint32 aType);
+    // Adds items from the previous cache witha type matching aType.
+    // If namespaceFilter is non-null, only items matching the
+    // specified namespaces will be added.
+    nsresult AddExistingItems(PRUint32 aType,
+                              nsTArray<nsCString>* namespaceFilter = nsnull);
 
     nsresult GatherObservers(nsCOMArray<nsIOfflineCacheUpdateObserver> &aObservers);
     nsresult NotifyError();

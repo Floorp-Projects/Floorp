@@ -191,6 +191,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
 
 #ifdef NECKO_OFFLINE_CACHE
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsOfflineCacheDevice, nsOfflineCacheDevice::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsApplicationCacheNamespace)
 #endif
 
 #ifdef NECKO_PROTOCOL_file
@@ -1055,6 +1056,11 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
        NS_APPLICATIONCACHESERVICE_CID,
        NS_APPLICATIONCACHESERVICE_CONTRACTID,
        nsOfflineCacheDeviceConstructor
+    },
+    {  NS_APPLICATIONCACHENAMESPACE_CLASSNAME,
+       NS_APPLICATIONCACHENAMESPACE_CID,
+       NS_APPLICATIONCACHENAMESPACE_CONTRACTID,
+       nsApplicationCacheNamespaceConstructor
     },
 #endif
 
