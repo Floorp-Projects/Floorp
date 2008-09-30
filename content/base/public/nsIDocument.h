@@ -52,13 +52,13 @@
 #include "nsCompatibility.h"
 #include "nsTObserverArray.h"
 #include "nsNodeInfoManager.h"
+#include "nsIStreamListener.h"
+#include "nsIObserver.h"
 
 class nsIContent;
 class nsPresContext;
 class nsIPresShell;
 class nsIDocShell;
-class nsIStreamListener;
-class nsIStreamObserver;
 class nsStyleSet;
 class nsIStyleSheet;
 class nsIStyleRule;
@@ -77,7 +77,6 @@ class nsIChannel;
 class nsIPrincipal;
 class nsIDOMDocument;
 class nsIDOMDocumentType;
-class nsIObserver;
 class nsScriptLoader;
 class nsIContentSink;
 class nsIScriptEventManager;
@@ -97,8 +96,8 @@ class nsFrameLoader;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  { 0xd5b1e3c5, 0x85dc, 0x403e, \
-    { 0xbb, 0x4a, 0x54, 0x66, 0xdc, 0xbe, 0x15, 0x69 } }
+{ 0x189ebc9e, 0x779b, 0x4c49, \
+ { 0x90, 0x8b, 0x9a, 0x80, 0x25, 0x9b, 0xaf, 0xa7 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1004,6 +1003,98 @@ public:
   virtual void TryCancelFrameLoaderInitialization(nsIDocShell* aShell) = 0;
   //  Returns true if the frame loader of aShell is in the finalization list.
   virtual PRBool FrameLoaderScheduledToBeFinalized(nsIDocShell* aShell) = 0;
+
+  /**
+   * Check whether this document is a root document that is not an
+   * external resource.
+   */
+  PRBool IsRootDisplayDocument() const
+  {
+    return !mParentDocument && !mDisplayDocument;
+  }
+
+  /**
+   * Get the document for which this document is an external resource.  This
+   * will be null if this document is not an external resource.  Otherwise,
+   * GetDisplayDocument() will return a non-null document, and
+   * GetDisplayDocument()->GetDisplayDocument() is guaranteed to be null.
+   */
+  nsIDocument* GetDisplayDocument() const
+  {
+    return mDisplayDocument;
+  }
+  
+  /**
+   * Set the display document for this document.  aDisplayDocument must not be
+   * null.
+   */
+  void SetDisplayDocument(nsIDocument* aDisplayDocument)
+  {
+    NS_PRECONDITION(!GetPrimaryShell() &&
+                    !nsCOMPtr<nsISupports>(GetContainer()) &&
+                    !GetWindow() &&
+                    !GetScriptGlobalObject(),
+                    "Shouldn't set mDisplayDocument on documents that already "
+                    "have a presentation or a docshell or a window");
+    NS_PRECONDITION(aDisplayDocument != this, "Should be different document");
+    NS_PRECONDITION(!aDisplayDocument->GetDisplayDocument(),
+                    "Display documents should not nest");
+    mDisplayDocument = aDisplayDocument;
+  }
+
+  /**
+   * A class that represents an external resource load that has begun but
+   * doesn't have a document yet.  Observers can be registered on this object,
+   * and will be notified after the document is created.  Observers registered
+   * after the document has been created will NOT be notified.  When observers
+   * are notified, the subject will be the newly-created document, the topic
+   * will be "external-resource-document-created", and the data will be null.
+   * If document creation fails for some reason, observers will still be
+   * notified, with a null document pointer.
+   */
+  class ExternalResourceLoad : public nsISupports
+  {
+  public:
+    virtual ~ExternalResourceLoad() {}
+
+    void AddObserver(nsIObserver* aObserver) {
+      NS_PRECONDITION(aObserver, "Must have observer");
+      mObservers.AppendElement(aObserver);
+    }
+
+    const nsTArray< nsCOMPtr<nsIObserver> > & Observers() {
+      return mObservers;
+    }
+  protected:
+    nsAutoTArray< nsCOMPtr<nsIObserver>, 8 > mObservers;    
+  };
+
+  /**
+   * Request an external resource document for aURI.  This will return the
+   * resource document if available.  If one is not available yet, it will
+   * start loading as needed, and the pending load object will be returned in
+   * aPendingLoad so that the caller can register an observer to wait for the
+   * load.  If this function returns null and doesn't return a pending load,
+   * that means that there is no resource document for this URI and won't be
+   * one in the future.
+   *
+   * @param aURI the URI to get
+   * @param aRequestingNode the node making the request
+   * @param aPendingLoad the pending load for this request, if any
+   */
+  virtual nsIDocument*
+    RequestExternalResource(nsIURI* aURI,
+                            nsINode* aRequestingNode,
+                            ExternalResourceLoad** aPendingLoad) = 0;
+
+  /**
+   * Enumerate the external resource documents associated with this document.
+   * The enumerator callback should return PR_TRUE to continue enumerating, or
+   * PR_FALSE to stop.
+   */
+  virtual void EnumerateExternalResources(nsSubDocEnumFunc aCallback,
+                                          void* aData) = 0;
+  
 protected:
   ~nsIDocument()
   {
@@ -1099,6 +1190,11 @@ protected:
 
   nsCOMArray<nsINode> mSubtreeModifiedTargets;
   PRUint32            mSubtreeModifiedDepth;
+
+  // If we're an external resource document, this will be non-null and will
+  // point to our "display document": the one that all resource lookups should
+  // go to.
+  nsCOMPtr<nsIDocument> mDisplayDocument;
 
 private:
   // JSObject cache. Only to be used for performance
