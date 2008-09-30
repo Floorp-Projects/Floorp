@@ -37,7 +37,7 @@
 
 DEVENV_FLAG=-
 
-CC=cl
+CC=cl -O2
 
 MOZCE_DEVENV=vs$(MOZ_MSVCVERSION)
 

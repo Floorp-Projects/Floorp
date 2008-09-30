@@ -15,11 +15,11 @@ var ctx = canvas.getContext('2d');
 
 ctx.shadowColor = '#00ff00';
 ctx.shadowColor = 'bogus';
-todo(ctx.shadowColor === '#00ff00', "ctx.shadowColor === '#00ff00'");
+ok(ctx.shadowColor === '#00ff00', "ctx.shadowColor === '#00ff00'");
 ctx.shadowColor = ctx;
-todo(ctx.shadowColor === '#00ff00', "ctx.shadowColor === '#00ff00'");
+ok(ctx.shadowColor === '#00ff00', "ctx.shadowColor === '#00ff00'");
 ctx.shadowColor = undefined;
-todo(ctx.shadowColor === '#00ff00', "ctx.shadowColor === '#00ff00'");
+ok(ctx.shadowColor === '#00ff00', "ctx.shadowColor === '#00ff00'");
 
 SimpleTest.finish();
 

@@ -247,6 +247,7 @@ nsXULPopupListener::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
+#ifndef NS_CONTEXT_MENU_IS_MOUSEUP
 nsresult
 nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
 {
@@ -309,6 +310,7 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
   }
   return rv;
 }
+#endif
 
 // ClosePopup
 //

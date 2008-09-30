@@ -423,7 +423,7 @@ nsFocusController::GetWindowFromDocument(nsIDOMDocument* aDocument)
 {
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
   if (!doc)
-    return NS_OK;
+    return nsnull;
 
   return doc->GetWindow();
 }

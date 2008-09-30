@@ -93,7 +93,6 @@ nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,
   } else if (aDocType == eXML) {
     mFlags |= NS_IPARSER_FLAG_XML;
   } else if (aDocType == eHTML_Quirks ||
-             aDocType == eHTML3_Quirks ||
              aDocType == eHTML_Strict) {
     mFlags |= NS_IPARSER_FLAG_HTML;
   }

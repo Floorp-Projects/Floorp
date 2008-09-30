@@ -695,7 +695,7 @@ public:
 
     *aResult = niMgr->GetNodeInfo(aName, aNodeInfo->GetPrefixAtom(),
                                   aNodeInfo->NamespaceID()).get();
-    return *aResult ? NS_OK : NS_ERROR_FAILURE;
+    return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
 
   /**
@@ -709,7 +709,7 @@ public:
 
     *aResult = niMgr->GetNodeInfo(aNodeInfo->NameAtom(), aPrefix,
                                   aNodeInfo->NamespaceID()).get();
-    return *aResult ? NS_OK : NS_ERROR_FAILURE;
+    return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
 
   /**
@@ -806,6 +806,13 @@ public:
    * Returns true if aDocument is a chrome document
    */
   static PRBool IsChromeDoc(nsIDocument *aDocument);
+
+  /**
+   * Returns true if aDocument belongs to a chrome docshell for
+   * display purposes.  Returns false for null documents or documents
+   * which do not belong to a docshell.
+   */
+  static PRBool IsInChromeDocshell(nsIDocument *aDocument);
 
   /**
    * Release *aSupportsPtr when the shutdown notification is received

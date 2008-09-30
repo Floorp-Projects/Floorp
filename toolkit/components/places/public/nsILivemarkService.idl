@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Annie Sullivan <annie.sullivan@gmail.com>
  *   Joe Hughes <joe@retrovirus.com>
+ *   Takeshi Ichimaru <ayakawa.m@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,7 +43,7 @@
 interface nsIURI;
 interface nsINavBookmarksService;
 
-[scriptable, uuid(0b0985c7-f34b-447a-8d52-ebfb7da94a6a)]
+[scriptable, uuid(2c08ab79-7f9b-40f3-8d04-540b5857b211)]
 interface nsILivemarkService : nsISupports
 {
   /**
@@ -51,6 +52,11 @@ interface nsILivemarkService : nsISupports
    * as bookmarks import to occur without kicking off HTTP traffic.
    */
   void start();
+
+  /**
+   * Stop the livemark refresh timer.
+   */
+  void stopUpdateLivemarks();
 
   /**
    * Creates a new livemark

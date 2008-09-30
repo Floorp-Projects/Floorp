@@ -619,9 +619,13 @@
               this._self.updateChevron();
           }
 
-          if (!element.hasAttribute("livemark") &&
-              PlacesUtils.nodeIsLivemarkContainer(aNode))
-            element.setAttribute("livemark", "true");
+          if (PlacesUtils.nodeIsLivemarkContainer(aNode)) {
+            if (!element.hasAttribute("livemark"))
+              element.setAttribute("livemark", "true");
+            // If this is a livemark container check if the status menuitem has
+            // to be added or removed.
+            PlacesUIUtils.ensureLivemarkStatusMenuItem(element.firstChild);
+          }
         },
 
         itemReplaced:
@@ -1100,6 +1104,11 @@
         <parameter name="aPopup"/>
         <body><![CDATA[
           PlacesUIUtils.cleanPlacesPopup(aPopup);
+
+          // If this is a livemark container check if the status menuitem has
+          // to be added or removed.
+          if (PlacesUtils.nodeIsLivemarkContainer(aPopup._resultNode))
+            PlacesUIUtils.ensureLivemarkStatusMenuItem(aPopup);
 
           var resultNode = aPopup._resultNode;
           if (!resultNode.containerOpen)

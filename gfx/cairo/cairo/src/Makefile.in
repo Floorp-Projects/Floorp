@@ -146,10 +146,9 @@ PDF_EXPORTS = cairo-pdf.h
 PS_EXPORTS = cairo-ps.h
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CSRCS	+= cairo-win32.c \
-	   cairo-win32-font.c \
-	   cairo-win32-surface.c \
-	   cairo-win32-printing-surface.c
+CSRCS	+= 	cairo-win32-font.c \
+			cairo-win32-surface.c \
+			cairo-win32-printing-surface.c
 EXPORTS += cairo-win32.h
 CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
 EXPORTS += $(PDF_EXPORTS)
@@ -205,14 +204,6 @@ CSRCS   += cairo-ft-font.c cairo-type1-subset.c
 EXPORTS += cairo-ft.h
 OS_INCLUDES += $(CAIRO_FT_CFLAGS)
 endif
-
-
-ifdef MOZ_ENABLE_GLITZ
-REQUIRES += glitz
-CSRCS    += cairo-glitz-surface.c
-EXPORTS  += cairo-glitz.h
-endif
-
 
 LOCAL_INCLUDES  += -I$(srcdir)
 

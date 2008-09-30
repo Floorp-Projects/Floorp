@@ -108,6 +108,12 @@ ifeq ($(host_os), cygwin)
 AUTOMATION_PPARGS += -DIS_CYGWIN=1
 endif
 
+ifeq ($(ENABLE_TESTS), 1)
+AUTOMATION_PPARGS += -DIS_TEST_BUILD=1
+else
+AUTOMATION_PPARGS += -DIS_TEST_BUILD=0
+endif
+
 automation.py: automation.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
 	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
@@ -124,3 +130,6 @@ GARBAGE += automation.py profileserver.py genpgocert.py
 
 libs:: $(_PGO_FILES)
 	$(INSTALL) $^ $(_PROFILE_DIR)
+
+tools::
+	$(PYTHON) $(DEPTH)/_profile/pgo/genpgocert.py --gen-server

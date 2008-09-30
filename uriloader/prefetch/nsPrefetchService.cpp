@@ -378,8 +378,11 @@ nsPrefetchNode::OnChannelRedirect(nsIChannel *aOldChannel,
     PRBool match;
     rv = newURI->SchemeIs("http", &match); 
     if (NS_FAILED(rv) || !match) {
-        LOG(("rejected: URL is not of type http\n"));
-        return NS_ERROR_ABORT;
+        rv = newURI->SchemeIs("https", &match); 
+        if (NS_FAILED(rv) || !match) {
+            LOG(("rejected: URL is not of type http/https\n"));
+            return NS_ERROR_ABORT;
+        }
     }
 
     // HTTP request headers are not automatically forwarded to the new channel.
@@ -688,8 +691,9 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     PRBool match;
     rv = aURI->SchemeIs("http", &match); 
     if (NS_FAILED(rv) || !match) {
+        rv = aURI->SchemeIs("https", &match); 
         if (NS_FAILED(rv) || !match) {
-            LOG(("rejected: URL is not of type http\n"));
+            LOG(("rejected: URL is not of type http/https\n"));
             return NS_ERROR_ABORT;
         }
     }
@@ -699,8 +703,9 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
     //
     rv = aReferrerURI->SchemeIs("http", &match);
     if (NS_FAILED(rv) || !match) {
+        rv = aReferrerURI->SchemeIs("https", &match);
         if (NS_FAILED(rv) || !match) {
-            LOG(("rejected: referrer URL is not of type http\n"));
+            LOG(("rejected: referrer URL is neither http nor https\n"));
             return NS_ERROR_ABORT;
         }
     }

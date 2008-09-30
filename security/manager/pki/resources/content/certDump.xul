@@ -54,7 +54,7 @@
   </tree>
   
   <label class="header" value="&certmgr.details.label;"/>
-  <tree id="prettyDumpTree" style="height: 15em"
+  <tree id="prettyDumpTree" style="height: 15em" treelines="true"
             onselect="displaySelected();" hidecolumnpicker="true">
     <treecols>
       <treecol flex="1" id="certDataCol" primary="true" hideheader="true"/>

@@ -101,7 +101,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::videocontrols, nsnull,
                                           kNameSpaceID_XUL);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = NS_NewElement(getter_AddRefs(mVideoControls), kNameSpaceID_XUL, nodeInfo, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);

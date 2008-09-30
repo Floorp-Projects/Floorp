@@ -149,7 +149,7 @@ nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
   newNodeInfo = aDocument->NodeInfoManager()->
     GetNodeInfo(mNodeInfo->NameAtom(), mNodeInfo->GetPrefixAtom(),
                 mNodeInfo->NamespaceID());
-  NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
   NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
   mNodeInfo.swap(newNodeInfo);
 

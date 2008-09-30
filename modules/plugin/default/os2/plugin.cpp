@@ -543,7 +543,7 @@ void CPlugin::URLNotify(const char * szURL)
   NPN_DestroyStream(m_pNPInstance, pStream, NPRES_DONE);
 }
 
-NPError CPlugin::newStream(NPMIMEType type, NPStream *stream, NPBool seekable, uint16 *stype)
+NPError CPlugin::newStream(NPMIMEType type, NPStream *stream, NPBool seekable, uint16_t *stype)
 {
   if (!m_bWaitingStreamFromPFS)
     return NPERR_NO_ERROR;

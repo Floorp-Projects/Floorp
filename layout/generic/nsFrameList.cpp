@@ -172,6 +172,8 @@ nsFrameList::InsertFrame(nsIFrame* aParent,
 {
   NS_PRECONDITION(nsnull != aNewFrame, "null ptr");
   if (nsnull != aNewFrame) {
+    NS_ASSERTION(!aNewFrame->GetNextSibling(), 
+      "the pointer to this sibling will be overwritten");
     if (aParent) {
       aNewFrame->SetParent(aParent);
     }

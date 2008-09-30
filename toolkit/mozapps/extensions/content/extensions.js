@@ -2154,6 +2154,7 @@ function updateOptionalViews() {
   document.getElementById("locales-view").hidden = !showLocales;
   document.getElementById("updates-view").hidden = !showUpdates;
   document.getElementById("installs-view").hidden = !showInstalls;
+  updateVisibilityFlags();
 
   // fall back to the previously selected view or "search" since "installs" became hidden
   if (!showInstalls && gView == "installs") {
@@ -2164,6 +2165,23 @@ function updateOptionalViews() {
       lastSelectedView = viewGroup.getAttribute("last-selected");
 
     showView(lastSelectedView);
+  }
+}
+
+function updateVisibilityFlags() {
+  let children = document.getElementById("installs-view").parentNode._getRadioChildren();
+  let firstVisible = null, lastVisible = null;
+  children.forEach(function(child) {
+    child.removeAttribute("first-visible");
+    child.removeAttribute("last-visible");
+    if (!child.hidden) {
+      firstVisible = firstVisible || child;
+      lastVisible = child;
+    }
+  });
+  if (firstVisible) {
+    firstVisible.setAttribute("first-visible", "true");
+    lastVisible.setAttribute("last-visible", "true");
   }
 }
 

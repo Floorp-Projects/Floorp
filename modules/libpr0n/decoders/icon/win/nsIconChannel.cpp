@@ -308,9 +308,11 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   if (!fileExists)
    infoFlags |= SHGFI_USEFILEATTRIBUTES;
 
+#ifndef WINCE
   if (desiredImageSize > 16)
     infoFlags |= SHGFI_SHELLICONSIZE;
   else
+#endif
     infoFlags |= SHGFI_SMALLICON;
 
   // if we have a content type... then use it! but for existing files, we want

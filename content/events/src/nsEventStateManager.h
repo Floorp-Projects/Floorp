@@ -332,12 +332,14 @@ protected:
    * aSelectionTarget - target to check for selection
    * aDataTransfer - data transfer object that will contain the data to drag
    * aIsSelection - [out] set to true if a selection is being dragged
+   * aIsInEditor - [out] set to true if the content is in an editor field
    * aTargetNode - [out] the draggable node, or null if there isn't one
    */
   void DetermineDragTarget(nsPresContext* aPresContext,
                            nsIContent* aSelectionTarget,
                            nsDOMDataTransfer* aDataTransfer,
                            PRBool* aIsSelection,
+                           PRBool* aIsInEditor,
                            nsIContent** aTargetNode);
 
   /*

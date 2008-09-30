@@ -80,13 +80,6 @@ nsListBoxObject::nsListBoxObject()
 //// nsIListBoxObject
 
 NS_IMETHODIMP
-nsListBoxObject::GetListboxBody(nsIListBoxObject * *aListboxBody)
-{
-  *aListboxBody = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsListBoxObject::GetRowCount(PRInt32 *aResult)
 {
   nsIListBoxObject* body = GetListBoxBody(PR_TRUE);

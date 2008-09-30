@@ -38,6 +38,7 @@
  
 #include "nsAppleFileDecoder.h"
 #include "prmem.h"
+#include "prnetdb.h"
 #include "nsCRT.h"
 
 
@@ -223,6 +224,11 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
         if (m_dataBufferLength == sizeof(ap_header))
         {
           memcpy(&m_headers, m_dataBuffer, sizeof(ap_header));
+          m_headers.magic   = (PRInt32)PR_ntohl((PRUint32)m_headers.magic);
+          m_headers.version = (PRInt32)PR_ntohl((PRUint32)m_headers.version);
+          // m_headers.fill is required to be all zeroes; no endian issues
+          m_headers.entriesCount =
+            (PRInt16)PR_ntohs((PRUint16)m_headers.entriesCount);
 
           /* Check header to be sure we are dealing with the right kind of data, else just write it to the data fork. */
           if ((m_headers.magic == APPLEDOUBLE_MAGIC || m_headers.magic == APPLESINGLE_MAGIC) && 
@@ -264,6 +270,11 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
           for (i = 0; i < m_headers.entriesCount; i ++)
           {
             memcpy(&m_entries[i], &m_dataBuffer[i * sizeof(ap_entry)], sizeof(ap_entry));
+            m_entries[i].id     = (PRInt32)PR_ntohl((PRUint32)m_entries[i].id);
+            m_entries[i].offset =
+              (PRInt32)PR_ntohl((PRUint32)m_entries[i].offset);
+            m_entries[i].length =
+              (PRInt32)PR_ntohl((PRUint32)m_entries[i].length);
             if (m_headers.magic == APPLEDOUBLE_MAGIC)
             {
               PRUint32 offset = m_entries[i].offset + m_entries[i].length;
@@ -335,14 +346,47 @@ NS_IMETHODIMP nsAppleFileDecoder::Write(const char *buffer, PRUint32 bufferSize,
               memcpy(&m_comment[1], buffPtr, m_comment[0]);
               break;
             case ENT_DATES    :
-              if (m_currentPartLength == sizeof(m_dates))
+              if (m_currentPartLength == sizeof(m_dates)) {
                 memcpy(&m_dates, buffPtr, m_currentPartLength);
+                m_dates.create = (PRInt32)PR_ntohl((PRUint32)m_dates.create);
+                m_dates.modify = (PRInt32)PR_ntohl((PRUint32)m_dates.modify);
+                m_dates.backup = (PRInt32)PR_ntohl((PRUint32)m_dates.backup);
+                m_dates.access = (PRInt32)PR_ntohl((PRUint32)m_dates.access);
+              }
               break;
             case ENT_FINFO    :
               if (m_currentPartLength == (sizeof(m_finderInfo) + sizeof(m_finderExtraInfo)))
               {
                 memcpy(&m_finderInfo, buffPtr, sizeof(m_finderInfo));
+                // OSType (four character codes) are still integers; swap them.
+                m_finderInfo.fdType =
+                  (OSType)PR_ntohl((PRUint32)m_finderInfo.fdType);
+                m_finderInfo.fdCreator =
+                  (OSType)PR_ntohl((PRUint32)m_finderInfo.fdCreator);
+                m_finderInfo.fdFlags =
+                  (UInt16)PR_ntohs((PRUint16)m_finderInfo.fdFlags);
+                m_finderInfo.fdLocation.v =
+                  (short)PR_ntohs((PRUint16)m_finderInfo.fdLocation.v);
+                m_finderInfo.fdLocation.h =
+                  (short)PR_ntohs((PRUint16)m_finderInfo.fdLocation.h);
+                m_finderInfo.fdFldr =
+                  (SInt16)PR_ntohs((PRUint16)m_finderInfo.fdFldr);
+
                 memcpy(&m_finderExtraInfo, buffPtr + sizeof(m_finderInfo), sizeof(m_finderExtraInfo));
+                m_finderExtraInfo.fdIconID =
+                  (SInt16)PR_ntohs((PRUint16)m_finderExtraInfo.fdIconID);
+                m_finderExtraInfo.fdReserved[0] =
+                  (SInt16)PR_ntohs((PRUint16)m_finderExtraInfo.fdReserved[0]);
+                m_finderExtraInfo.fdReserved[1] =
+                  (SInt16)PR_ntohs((PRUint16)m_finderExtraInfo.fdReserved[1]);
+                m_finderExtraInfo.fdReserved[2] =
+                  (SInt16)PR_ntohs((PRUint16)m_finderExtraInfo.fdReserved[2]);
+                // fdScript is a byte
+                // fdXFlags is a byte
+                m_finderExtraInfo.fdComment =
+                  (SInt16)PR_ntohs((PRUint16)m_finderExtraInfo.fdComment);
+                m_finderExtraInfo.fdPutAway =
+                  (SInt32)PR_ntohl((PRUint32)m_finderExtraInfo.fdPutAway);
               }
               break;
           }

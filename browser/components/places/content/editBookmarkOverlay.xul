@@ -166,6 +166,14 @@
           <spacer flex="1"/>
         </hbox>
 
+        <row align="center" id="editBMPanel_selectionCount" hidden="true">
+          <spacer flex="3"/>
+          <vbox id="editBMPanel_itemsCountBox" align="center">
+            <label id="editBMPanel_itemsCountText"/>
+          </vbox>
+          <spacer flex="3"/>
+        </row>
+
         <row align="center" id="editBMPanel_tagsRow">
           <label value="&editBookmarkOverlay.tags.label;"
                  accesskey="&editBookmarkOverlay.tags.accesskey;"

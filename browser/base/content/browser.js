@@ -838,6 +838,7 @@ function prepareForStartup() {
   // binding can't fire trusted ones (runs with page privileges).
   gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, true, true);
   gBrowser.addEventListener("PluginBlocklisted", gMissingPluginInstaller.newMissingPlugin, true, true);
+  gBrowser.addEventListener("PluginDisabled", gMissingPluginInstaller.newDisabledPlugin, true, true);
   gBrowser.addEventListener("NewPluginInstalled", gMissingPluginInstaller.refreshBrowser, false);
   gBrowser.addEventListener("NewTab", BrowserOpenTab, false);
   window.addEventListener("AppCommand", HandleAppCommandEvent, true);
@@ -1684,34 +1685,6 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup)
   }
 }
 
-function BrowserLoadURL(aTriggeringEvent, aPostData) {
-  var url = gURLBar.value;
-
-  if (aTriggeringEvent instanceof MouseEvent) {
-    if (aTriggeringEvent.button == 2)
-      return; // Do nothing for right clicks
-
-    // We have a mouse event (from the go button), so use the standard
-    // UI link behaviors
-    openUILink(url, aTriggeringEvent, false, false,
-               true /* allow third party fixup */, aPostData);
-    return;
-  }
-
-  if (aTriggeringEvent && aTriggeringEvent.altKey) {
-    handleURLBarRevert();
-    content.focus();
-    gBrowser.loadOneTab(url, null, null, aPostData, false,
-                        true /* allow third party fixup */);
-    aTriggeringEvent.preventDefault();
-    aTriggeringEvent.stopPropagation();
-  }
-  else
-    loadURI(url, null, aPostData, true /* allow third party fixup */);
-
-  focusElement(content);
-}
-
 function getShortcutOrURI(aURL, aPostDataRef) {
   var shortcutURL = null;
   var keyword = aURL;
@@ -1991,119 +1964,6 @@ function losslessDecodeURI(aURI) {
   value = value.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
                         encodeURIComponent);
   return value;
-}
-
-// Replace the urlbar's value with the url of the page.
-function handleURLBarRevert() {
-  var throbberElement = document.getElementById("navigator-throbber");
-  var isScrolling = gURLBar.popupOpen;
-
-  gBrowser.userTypedValue = null;
-
-  // don't revert to last valid url unless page is NOT loading
-  // and user is NOT key-scrolling through autocomplete list
-  if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
-    URLBarSetURI();
-
-    // If the value isn't empty and the urlbar has focus, select the value.
-    if (gURLBar.value && gURLBar.hasAttribute("focused"))
-      gURLBar.select();
-  }
-
-  // tell widget to revert to last typed text only if the user
-  // was scrolling when they hit escape
-  return !isScrolling;
-}
-
-function handleURLBarCommand(aTriggeringEvent) {
-  if (!gURLBar.value)
-    return;
-
-  var postData = { };
-  canonizeUrl(aTriggeringEvent, postData);
-
-  try {
-    addToUrlbarHistory(gURLBar.value);
-  } catch (ex) {
-    // Things may go wrong when adding url to session history,
-    // but don't let that interfere with the loading of the url.
-  }
-
-  BrowserLoadURL(aTriggeringEvent, postData.value);
-}
-
-function canonizeUrl(aTriggeringEvent, aPostDataRef) {
-  if (!gURLBar || !gURLBar.value)
-    return;
-
-  var url = gURLBar.value;
-
-  // Only add the suffix when the URL bar value isn't already "URL-like".
-  // Since this function is called from handleURLBarCommand, which receives
-  // both mouse (from the go button) and keyboard events, we also make sure not
-  // to do the fixup unless we get a keyboard event, to match user expectations.
-  if (!/^\s*(www|https?)\b|\/\s*$/i.test(url) &&
-      (aTriggeringEvent instanceof KeyEvent)) {
-#ifdef XP_MACOSX
-    var accel = aTriggeringEvent.metaKey;
-#else
-    var accel = aTriggeringEvent.ctrlKey;
-#endif
-    var shift = aTriggeringEvent.shiftKey;
-
-    var suffix = "";
-
-    switch (true) {
-      case (accel && shift):
-        suffix = ".org/";
-        break;
-      case (shift):
-        suffix = ".net/";
-        break;
-      case (accel):
-        try {
-          suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
-          if (suffix.charAt(suffix.length - 1) != "/")
-            suffix += "/";
-        } catch(e) {
-          suffix = ".com/";
-        }
-        break;
-    }
-
-    if (suffix) {
-      // trim leading/trailing spaces (bug 233205)
-      url = url.replace(/^\s+/, "").replace(/\s+$/, "");
-
-      // Tack www. and suffix on.  If user has appended directories, insert
-      // suffix before them (bug 279035).  Be careful not to get two slashes.
-      // Also, don't add the suffix if it's in the original url (bug 233853).
-      
-      var firstSlash = url.indexOf("/");
-      var existingSuffix = url.indexOf(suffix.substring(0, suffix.length - 1));
-
-      // * Logic for slash and existing suffix (example)
-      // No slash, no suffix: Add suffix (mozilla)
-      // No slash, yes suffix: Add slash (mozilla.com)
-      // Yes slash, no suffix: Insert suffix (mozilla/stuff)
-      // Yes slash, suffix before slash: Do nothing (mozilla.com/stuff)
-      // Yes slash, suffix after slash: Insert suffix (mozilla/?stuff=.com)
-      
-      if (firstSlash >= 0) {
-        if (existingSuffix == -1 || existingSuffix > firstSlash)
-          url = url.substring(0, firstSlash) + suffix +
-                url.substring(firstSlash + 1);
-      } else
-        url = url + (existingSuffix == -1 ? suffix : "/");
-
-      url = "http://www." + url;
-    }
-  }
-
-  gURLBar.value = getShortcutOrURI(url, aPostDataRef);
-
-  // Also update this so the browser display keeps the new value (bug 310651)
-  gBrowser.userTypedValue = gURLBar.value;
 }
 
 function UpdateUrlbarSearchSplitterState()
@@ -2641,42 +2501,6 @@ var bookmarksButtonObserver = {
   }
 }
 
-var newTabButtonObserver = {
-  onDragOver: function(aEvent, aFlavour, aDragSession)
-    {
-      var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.label = gNavigatorBundle.getString("droponnewtabbutton");
-      aEvent.target.setAttribute("dragover", "true");
-      return true;
-    },
-  onDragExit: function (aEvent, aDragSession)
-    {
-      var statusTextFld = document.getElementById("statusbar-display");
-      statusTextFld.label = "";
-      aEvent.target.removeAttribute("dragover");
-    },
-  onDrop: function (aEvent, aXferData, aDragSession)
-    {
-      var xferData = aXferData.data.split("\n");
-      var draggedText = xferData[0] || xferData[1];
-      var postData = {};
-      var url = getShortcutOrURI(draggedText, postData);
-      if (url) {
-        nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
-        // allow third-party services to fixup this URL
-        openNewTabWith(url, null, postData.value, aEvent, true);
-      }
-    },
-  getSupportedFlavours: function ()
-    {
-      var flavourSet = new FlavourSet();
-      flavourSet.appendFlavour("text/unicode");
-      flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-      return flavourSet;
-    }
-}
-
 var newWindowButtonObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
     {
@@ -3085,20 +2909,11 @@ function FillHistoryMenu(aParent) {
   return true;
 }
 
-function addToUrlbarHistory(aUrlToAdd)
-{
-  if (!aUrlToAdd)
-     return;
-  if (aUrlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
-     return;
-
-   try {
-     if (aUrlToAdd.indexOf(" ") == -1) {
-       PlacesUIUtils.markPageAsTyped(aUrlToAdd);
-     }
-   }
-   catch(ex) {
-   }
+function addToUrlbarHistory(aUrlToAdd) {
+  if (aUrlToAdd &&
+      aUrlToAdd.indexOf(" ") == -1 &&
+      !/[\x00-\x1F]/.test(aUrlToAdd))
+    PlacesUIUtils.markPageAsTyped(aUrlToAdd);
 }
 
 function toJavaScriptConsole()
@@ -3211,7 +3026,7 @@ function BrowserCustomizeToolbar()
 #else
   window.openDialog(customizeURL,
                     "CustomizeToolbar",
-                    "chrome,all,dependent",
+                    "chrome,titlebar,toolbar,resizable,dependent",
                     gNavToolbox);
 #endif
 }
@@ -4868,6 +4683,7 @@ function middleMousePaste(event)
   var url = readFromClipboard();
   if (!url)
     return;
+
   var postData = { };
   url = getShortcutOrURI(url, postData);
   if (!url)
@@ -4878,6 +4694,7 @@ function middleMousePaste(event)
   } catch (ex) {
     // Things may go wrong when adding url to session history,
     // but don't let that interfere with the loading of the url.
+    Cu.reportError(ex);
   }
 
   openUILink(url,
@@ -5610,7 +5427,7 @@ var MailIntegration = {
   }
 };
 
-function BrowserOpenAddonsMgr()
+function BrowserOpenAddonsMgr(aPane)
 {
   const EMTYPE = "Extension:Manager";
   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
@@ -5618,12 +5435,17 @@ function BrowserOpenAddonsMgr()
   var theEM = wm.getMostRecentWindow(EMTYPE);
   if (theEM) {
     theEM.focus();
+    if (aPane)
+      theEM.showView(aPane);
     return;
   }
 
   const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
   const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
-  window.openDialog(EMURL, "", EMFEATURES);
+  if (aPane)
+    window.openDialog(EMURL, "", EMFEATURES, aPane);
+  else
+    window.openDialog(EMURL, "", EMFEATURES);
 }
 
 function escapeNameValuePair(aName, aValue, aIsFormUrlEncoded)
@@ -5702,9 +5524,6 @@ function SwitchDocumentDirection(aWindow) {
     SwitchDocumentDirection(aWindow.frames[run]);
 }
 
-function missingPluginInstaller(){
-}
-
 function getPluginInfo(pluginElement)
 {
   var tagMimetype;
@@ -5740,6 +5559,9 @@ function getPluginInfo(pluginElement)
   return {mimetype: tagMimetype, pluginsPage: pluginsPage};
 }
 
+function missingPluginInstaller(){
+}
+
 missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
   var missingPluginsArray = {};
 
@@ -5752,7 +5574,12 @@ missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
                       {plugins: missingPluginsArray, browser: gBrowser.selectedBrowser});
   }
 
-  aEvent.preventDefault();
+  aEvent.stopPropagation();
+}
+
+missingPluginInstaller.prototype.managePlugins = function(aEvent){
+  BrowserOpenAddonsMgr("plugins");
+  aEvent.stopPropagation();
 }
 
 missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
@@ -5770,7 +5597,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
       !(aEvent.target instanceof HTMLObjectElement)) {
     aEvent.target.addEventListener("click",
                                    gMissingPluginInstaller.installSinglePlugin,
-                                   false);
+                                   true);
   }
 
   try {
@@ -5778,17 +5605,8 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
       return;
   } catch (ex) {} // if the pref is missing, treat it as false, which shows the infobar
 
-  const browsers = gBrowser.mPanelContainer.childNodes;
-
-  var contentWindow = aEvent.target.ownerDocument.defaultView.top;
-
-  var i = 0;
-  for (; i < browsers.length; i++) {
-    if (gBrowser.getBrowserAtIndex(i).contentWindow == contentWindow)
-      break;
-  }
-
-  var browser = gBrowser.getBrowserAtIndex(i);
+  var browser = gBrowser.getBrowserForDocument(aEvent.target.ownerDocument
+                                                     .defaultView.top.document);
   if (!browser.missingPlugins)
     browser.missingPlugins = {};
 
@@ -5801,22 +5619,23 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   // If there is already a missing plugin notification then do nothing
   if (notificationBox.getNotificationWithValue("missing-plugins"))
     return;
-
-  var bundle_browser = document.getElementById("bundle_browser");
   var blockedNotification = notificationBox.getNotificationWithValue("blocked-plugins");
-  const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-  const iconURL = "chrome://mozapps/skin/plugins/pluginGeneric-16.png";
+  var priority = notificationBox.PRIORITY_WARNING_MEDIUM;
 
-  if (aEvent.type == "PluginBlocklisted" && !blockedNotification) {
-    var messageString = bundle_browser.getString("blockedpluginsMessage.title");
-    var buttons = [{
-      label: bundle_browser.getString("blockedpluginsMessage.infoButton.label"),
-      accessKey: bundle_browser.getString("blockedpluginsMessage.infoButton.accesskey"),
+  if (aEvent.type == "PluginBlocklisted") {
+    if (blockedNotification)
+      return;
+
+    let iconURL = "chrome://mozapps/skin/plugins/pluginBlocked-16.png";
+    let messageString = gNavigatorBundle.getString("blockedpluginsMessage.title");
+    let buttons = [{
+      label: gNavigatorBundle.getString("blockedpluginsMessage.infoButton.label"),
+      accessKey: gNavigatorBundle.getString("blockedpluginsMessage.infoButton.accesskey"),
       popup: null,
       callback: blocklistInfo
     }, {
-      label: bundle_browser.getString("blockedpluginsMessage.searchButton.label"),
-      accessKey: bundle_browser.getString("blockedpluginsMessage.searchButton.accesskey"),
+      label: gNavigatorBundle.getString("blockedpluginsMessage.searchButton.label"),
+      accessKey: gNavigatorBundle.getString("blockedpluginsMessage.searchButton.accesskey"),
       popup: null,
       callback: pluginsMissing
     }];
@@ -5824,23 +5643,34 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
     notificationBox.appendNotification(messageString, "blocked-plugins",
                                        iconURL, priority, buttons);
   }
-
-  if (aEvent.type == "PluginNotFound") {
+  else if (aEvent.type == "PluginNotFound") {
     // Cancel any notification about blocklisting
     if (blockedNotification)
       blockedNotification.close();
 
-    var messageString = bundle_browser.getString("missingpluginsMessage.title");
-    var buttons = [{
-      label: bundle_browser.getString("missingpluginsMessage.button.label"),
-      accessKey: bundle_browser.getString("missingpluginsMessage.button.accesskey"),
+    let iconURL = "chrome://mozapps/skin/plugins/pluginGeneric-16.png";
+    let messageString = gNavigatorBundle.getString("missingpluginsMessage.title");
+    let buttons = [{
+      label: gNavigatorBundle.getString("missingpluginsMessage.button.label"),
+      accessKey: gNavigatorBundle.getString("missingpluginsMessage.button.accesskey"),
       popup: null,
       callback: pluginsMissing
     }];
-
+  
     notificationBox.appendNotification(messageString, "missing-plugins",
                                        iconURL, priority, buttons);
   }
+}
+
+missingPluginInstaller.prototype.newDisabledPlugin = function(aEvent){
+  // Since we are expecting also untrusted events, make sure
+  // that the target is a plugin
+  if (!(aEvent.target instanceof Components.interfaces.nsIObjectLoadingContent))
+    return;
+
+  aEvent.target.addEventListener("click",
+                                 gMissingPluginInstaller.managePlugins,
+                                 true);
 }
 
 missingPluginInstaller.prototype.refreshBrowser = function(aEvent) {
@@ -6164,6 +5994,7 @@ function undoCloseMiddleClick(aEvent) {
  * Re-open a closed tab.
  * @param aIndex
  *        The index of the tab (via nsSessionStore.getClosedTabData)
+ * @returns a reference to the reopened tab.
  */
 function undoCloseTab(aIndex) {
   // wallpaper patch to prevent an unnecessary blank tab (bug 343895)
@@ -6176,14 +6007,17 @@ function undoCloseTab(aIndex) {
       !gBrowser.selectedTab.hasAttribute("busy"))
     blankTabToRemove = gBrowser.selectedTab;
 
+  var tab = null;
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
-  if (ss.getClosedTabCount(window) == 0)
-    return;
-  ss.undoCloseTab(window, aIndex || 0);
-
-  if (blankTabToRemove)
-    gBrowser.removeTab(blankTabToRemove);
+  if (ss.getClosedTabCount(window) > (aIndex || 0)) {
+    tab = ss.undoCloseTab(window, aIndex || 0);
+    
+    if (blankTabToRemove)
+      gBrowser.removeTab(blankTabToRemove);
+  }
+  
+  return tab;
 }
 
 /**
@@ -6575,7 +6409,7 @@ var gIdentityHandler = {
       return; // Left click, space or enter only
 
     // Revert the contents of the location bar, see bug 406779
-    handleURLBarRevert();
+    gURLBar.handleRevert();
 
     // Make sure that the display:none style we set in xul is removed now that
     // the popup is actually needed

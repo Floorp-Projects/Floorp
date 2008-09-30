@@ -280,7 +280,7 @@ protected:
   PRPackedBool mIsDoingPrintPreview; // per DocumentViewer
   PRPackedBool mProgressDialogIsShown;
 
-  nsIDocumentViewerPrint* mDocViewerPrint; // [WEAK] it owns me!
+  nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
   nsISupports*            mContainer;      // [WEAK] it owns me!
   nsIDeviceContext*       mDeviceContext;  // not ref counted
   
