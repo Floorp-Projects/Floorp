@@ -95,6 +95,7 @@ class nsICharsetAlias;
 class nsIDTD;
 class nsScanner;
 class nsIProgressEventSink;
+class nsSpeculativeScriptThread;
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4275 )
@@ -406,7 +407,9 @@ class nsParser : public nsIParser,
      * @return
      */
     nsresult DidBuildModel(nsresult anErrorCode);
-    
+
+    void SpeculativelyParse();
+
 private:
 
     /*******************************************
@@ -457,6 +460,7 @@ protected:
     nsCOMPtr<nsIRequestObserver> mObserver;
     nsCOMPtr<nsIContentSink>     mSink;
     nsIRunnable*                 mContinueEvent;  // weak ref
+    nsRefPtr<nsSpeculativeScriptThread> mSpeculativeScriptThread;
    
     nsCOMPtr<nsIParserFilter> mParserFilter;
     nsTokenAllocator          mTokenAllocator;
