@@ -2351,7 +2351,7 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inl
 {
 #ifdef JS_THREADSAFE
     if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->title.ownercx != cx) {
-        debug_only_v(printf("Global object not owned by this context.\n"););
+        js_AbortRecording(cx, oldpc, "Global object not owned by this context");
         return false; /* we stay away from shared global objects */
     }
 #endif
