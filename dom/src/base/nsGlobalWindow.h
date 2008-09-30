@@ -572,6 +572,8 @@ protected:
 
   static PRBool CanMoveResizeWindows();
 
+  nsresult ConvertCharset(const nsAString& aStr, char** aDest);
+
   PRBool   GetBlurSuppression();
 
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
