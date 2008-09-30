@@ -3231,6 +3231,12 @@ js_Interpret(JSContext *cx)
                 goto error;
             if (rval == JSVAL_HOLE) {
                 rval = JSVAL_FALSE;
+#ifdef JS_TRACER
+                if (TRACE_RECORDER(cx)) {
+                    js_AbortRecording(cx, regs.pc, "Untraceable for-in loop");
+                    ENABLE_TRACER(0);
+                }
+#endif
                 goto end_forinloop;
             }
 
