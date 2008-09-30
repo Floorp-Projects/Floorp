@@ -13,10 +13,7 @@ browser.jar:
   content/scrollbars.css               (content/scrollbars.css)
   content/content.css                  (content/content.css)
 * content/shortcuts.js                 (content/shortcuts.js)
-% content branding %branding/
-% locale branding @AB_CD@ %branding/
-  branding/brand.dtd                   (locale/@AB_CD@/brand/brand.dtd)
-  branding/brand.properties            (locale/@AB_CD@/brand/brand.properties)
+% content branding %content/branding/
 % style chrome://mozapps/content/extensions/extensions.xul chrome://browser/skin/extensions.css
   content/preferences/richpref.xml     (content/preferences/richpref.xml)
 * content/sanitize.xul                 (content/sanitize.xul)
@@ -56,15 +53,3 @@ classic.jar:
   images/right_buttons.png             (skin/images/right_buttons.png)
   images/panel_buttons.png             (skin/images/panel_buttons.png)
   images/panel_background.png          (skin/images/panel_background.png)
-
-@AB_CD@.jar:
-% locale browser @AB_CD@ %
-  browser.dtd                          (locale/@AB_CD@/browser.dtd)
-  browser.properties                   (locale/@AB_CD@/browser.properties)
-  shortcuts.properties                 (locale/@AB_CD@/shortcuts.properties)
-  search.properties                    (locale/@AB_CD@/search.properties)
-  region.properties                    (locale/@AB_CD@/region.properties)
-  preferences.dtd                      (locale/@AB_CD@/preferences.dtd)
-# Fennec-specific overrides of generic strings
-* netError.dtd                         (locale/@AB_CD@/overrides/netError.dtd)
-% override chrome://global/locale/netErrorApp.dtd chrome://browser/locale/netError.dtd
