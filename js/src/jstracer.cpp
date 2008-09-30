@@ -3373,14 +3373,12 @@ TraceRecorder::cmp(LOpcode op, int flags)
         ABORT_TRACE("unsupported operand types for cmp");
     }
 
-    /* If we didn't generate a constant result yet, than emit the comparison now. */
+    /* If we didn't generate a constant result yet, then emit the comparison now. */
     if (!x) {
-        if (!l_ins->isQuad()) {
-            JS_ASSERT(!r_ins->isQuad());
+        /* If the result is not a number or it's not a quad, we must use an integer compare. */
+        if (!isNumber(l) || !l_ins->isQuad()) {
             JS_ASSERT(op >= LIR_feq && op <= LIR_fge);
             op = LOpcode(op + (LIR_eq - LIR_feq));
-        } else {
-            JS_ASSERT(r_ins->isQuad());
         }
         x = lir->ins2(op, l_ins, r_ins);
         if (negate) {
