@@ -2629,6 +2629,7 @@ nsLayoutUtils::CalculateContentBottom(nsIFrame* aFrame)
       childList = aFrame->GetAdditionalChildListName(nextListID);
       nextListID++;
     } while (childList);
+
   }
 
   return contentBottom;

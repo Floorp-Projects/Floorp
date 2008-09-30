@@ -105,10 +105,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface
-// 3459e7bb-2b22-4eb3-b60d-27d9f851b919
+// 626a1563-1bae-4a6e-8d2c-2dc2c13048dd
 #define NS_IFRAME_IID \
-  { 0x3459e7bb, 0x2b22, 0x4eb3, \
-    { 0xb6, 0x0d, 0x27, 0xd9, 0xf8, 0x51, 0xb9, 0x19 } }
+  { 0x626a1563, 0x1bae, 0x4a6e, \
+    { 0x8d, 0x2c, 0x2d, 0xc2, 0xc1, 0x30, 0x48, 0xdd } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -236,9 +236,7 @@ enum {
   // to its coordinate system (e.g. CSS transform, SVG foreignObject).
   // This is used primarily in GetTransformMatrix to optimize for the
   // common case.
-  // ALSO, if this bit is set, the frame's first-continuation may
-  // have an associated nsSVGRenderingObserverList.
-  NS_FRAME_MAY_BE_TRANSFORMED_OR_HAVE_RENDERING_OBSERVERS = 0x00010000,
+  NS_FRAME_MAY_BE_TRANSFORMED =                 0x00010000,
 
 #ifdef IBMBIDI
   // If this bit is set, the frame itself is a bidi continuation,
@@ -1584,23 +1582,22 @@ public:
     eMathML =                           1 << 0,
     eSVG =                              1 << 1,
     eSVGForeignObject =                 1 << 2,
-    eSVGContainer =                     1 << 3,
-    eBidiInlineContainer =              1 << 4,
+    eBidiInlineContainer =              1 << 3,
     // the frame is for a replaced element, such as an image
-    eReplaced =                         1 << 5,
+    eReplaced =                         1 << 4,
     // Frame that contains a block but looks like a replaced element
     // from the outside
-    eReplacedContainsBlock =            1 << 6,
+    eReplacedContainsBlock =            1 << 5,
     // A frame that participates in inline reflow, i.e., one that
     // requires nsHTMLReflowState::mLineLayout.
-    eLineParticipant =                  1 << 7,
-    eXULBox =                           1 << 8,
-    eCanContainOverflowContainers =     1 << 9,
-    eBlockFrame =                       1 << 10,
+    eLineParticipant =                  1 << 6,
+    eXULBox =                           1 << 7,
+    eCanContainOverflowContainers =     1 << 8,
+    eBlockFrame =                       1 << 9,
     // If this bit is set, the frame doesn't allow ignorable whitespace as
     // children. For example, the whitespace between <table>\n<tr>\n<td>
     // will be excluded during the construction of children. 
-    eExcludesIgnorableWhitespace =      1 << 11,
+    eExcludesIgnorableWhitespace =      1 << 10,
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType
     // implementations all call the base class method.  They are only
