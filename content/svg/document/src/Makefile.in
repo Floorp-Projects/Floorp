@@ -54,6 +54,7 @@ REQUIRES	= \
 		  thebes \
 		  dom \
 		  webshell \
+		  docshell \
 		  htmlparser \
 		  necko \
 		  pref \
