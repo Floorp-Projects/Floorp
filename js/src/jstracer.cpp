@@ -4860,7 +4860,7 @@ TraceRecorder::record_JSOP_SETELEM()
         guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);    
     } else if (JSVAL_IS_INT(idx)) {
         if (JSVAL_TO_INT(idx) < 0)
-            ABORT_TRACE("negative JSOP_GETELEM index");
+            ABORT_TRACE("negative JSOP_SETELEM index");
         idx_ins = makeNumberInt32(idx_ins);
         LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
         LIns* res_ins;
@@ -4870,7 +4870,7 @@ TraceRecorder::record_JSOP_SETELEM()
             if (!js_IndexToId(cx, JSVAL_TO_INT(idx), &id))
                 return false;
             idx = ID_TO_VALUE(id);
-            if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, getProperty), &v))
+            if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, setProperty), NULL))
                 return false;
             res_ins = lir->insCall(F_Any_setelem, args);
         }
