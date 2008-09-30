@@ -38,13 +38,15 @@
 #define __NS_SVGPAINTSERVERFRAME_H__
 
 #include "nsSVGContainerFrame.h"
+#include "nsSVGValue.h"
 
 class gfxContext;
 class nsSVGGeometryFrame;
 
 typedef nsSVGContainerFrame nsSVGPaintServerFrameBase;
 
-class nsSVGPaintServerFrame : public nsSVGPaintServerFrameBase
+class nsSVGPaintServerFrame : public nsSVGPaintServerFrameBase,
+                              public nsSVGValue
 {
 protected:
   nsSVGPaintServerFrame(nsStyleContext* aContext) :
@@ -58,6 +60,12 @@ public:
   virtual PRBool SetupPaintServer(gfxContext *aContext,
                                   nsSVGGeometryFrame *aSource,
                                   float aOpacity) = 0;
+  // nsISupports interface:
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  // nsISVGValue interface:
+  NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
+  NS_IMETHOD GetValueString(nsAString& aValue) { return NS_ERROR_NOT_IMPLEMENTED; }
 };
 
 #endif // __NS_SVGPAINTSERVERFRAME_H__
