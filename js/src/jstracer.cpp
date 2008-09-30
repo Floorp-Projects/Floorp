@@ -1121,7 +1121,7 @@ ValueToNative(JSContext* cx, jsval v, uint8 type, double* slot)
              return false;
         }
         *(JSBool*)slot = JSVAL_TO_BOOLEAN(v);
-        debug_only_v(printf("boolean<%d> ", *(bool*)slot);)
+        debug_only_v(printf("boolean<%d> ", *(JSBool*)slot);)
         return true;
       case JSVAL_STRING:
         if (v == JSVAL_VOID) {
@@ -1210,8 +1210,8 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
     jsdouble d;
     switch (type) {
       case JSVAL_BOOLEAN:
-        v = BOOLEAN_TO_JSVAL(*(bool*)slot);
-        debug_only_v(printf("boolean<%d> ", *(bool*)slot);)
+        v = BOOLEAN_TO_JSVAL(*(JSBool*)slot);
+        debug_only_v(printf("boolean<%d> ", *(JSBool*)slot);)
         break;
       case JSVAL_INT:
         i = *(jsint*)slot;
