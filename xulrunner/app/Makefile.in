@@ -84,7 +84,7 @@ REQUIRES = \
 
 CPPSRCS = nsXULRunnerApp.cpp
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 CPPSRCS += nsRegisterGREWin.cpp
 else
 ifneq (,$(filter OS2 Darwin,$(OS_ARCH)))
@@ -145,7 +145,11 @@ include $(topsrcdir)/config/config.mk
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
 # a console application.
+ifdef WINCE
+WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
+else
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
+endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -200,7 +204,7 @@ LDFLAGS += /HEAP:0x40000
 endif
 endif
 
-ifneq (,$(filter-out OS2 WINNT Darwin BeOS,$(OS_ARCH)))
+ifneq (,$(filter-out OS2 WINCE WINNT Darwin BeOS,$(OS_ARCH)))
 
 xulrunner:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
