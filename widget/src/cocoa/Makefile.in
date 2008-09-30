@@ -73,10 +73,6 @@ REQUIRES = xpcom \
 		  imglib2 \
 		  $(NULL)
 
-ifdef MOZ_ENABLE_GLITZ
-REQUIRES += glitz glitzagl
-endif
-
 ifdef ACCESSIBILITY
 REQUIRES += accessibility
 endif

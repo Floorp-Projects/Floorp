@@ -152,29 +152,6 @@ CMMSRCS = gfxQuartzFontCache.mm
 EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime
 endif
 
-ifdef MOZ_ENABLE_GLITZ
-REQUIRES += 	glitz
-CPPSRCS +=	gfxGlitzSurface.cpp
-
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitz.$(LIB_SUFFIX)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-REQUIRES +=	glitzwgl
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzwgl.$(LIB_SUFFIX)
-OS_LIBS += opengl32.lib 
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-REQUIRES +=	glitzglx
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzglx.$(LIB_SUFFIX)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-REQUIRES +=	glitzagl
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzagl.$(LIB_SUFFIX)
-endif
-endif
-
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 
 DEFINES += -DIMPL_THEBES

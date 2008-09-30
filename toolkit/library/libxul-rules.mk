@@ -81,9 +81,6 @@ endif
 endif
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 EXTRA_DSO_LDOPTS += -lcups
-ifdef MOZ_ENABLE_GLITZ
-EXTRA_DSO_LDOPTS += -lmozglitzagl -framework OpenGL -framework AGL
-endif
 endif
 
 export:: dlldeps.cpp
