@@ -417,7 +417,7 @@ struct nsStyleBorder {
 #endif
   PRBool ImageBorderDiffers() const;
  
-  nsStyleSides  mBorderRadius;    // [reset] coord, percent
+  nsStyleCorners mBorderRadius;    // [reset] coord, percent
   nsStyleSides  mBorderImageSplit; // [reset] integer, percent
   PRUint8       mFloatEdge;       // [reset] see nsStyleConsts.h
   PRUint8       mBorderImageHFill; // [reset]
@@ -617,8 +617,7 @@ struct nsStyleOutline {
   static nsChangeHint MaxDifference();
 #endif
  
-  nsStyleSides  mOutlineRadius;    // [reset] coord, percent
-                                   // (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
+  nsStyleCorners  mOutlineRadius; // [reset] coord, percent
 
   // Note that this is a specified value.  You can get the actual values
   // with GetOutlineWidth.  You cannot get the computed value directly.

@@ -223,6 +223,10 @@ BrowserGlue.prototype = {
 
     // handle any UI migration
     this._migrateUI();
+
+    const osvr = Cc['@mozilla.org/observer-service;1'].
+                 getService(Ci.nsIObserverService);
+    osvr.notifyObservers(null, "browser-ui-startup-complete", "");
   },
 
   // profile shutdown handler (contains profile cleanup routines)

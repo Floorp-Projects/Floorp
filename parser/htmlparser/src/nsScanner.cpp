@@ -146,16 +146,15 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream,
   SetDocumentCharset(aCharset, aSource);
 }
 
-nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , PRInt32 aSource) {
-
-  nsresult res = NS_OK;
-
-  if( aSource < mCharsetSource) // priority is lower the the current one , just
-    return res;
+nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , PRInt32 aSource)
+{
+  if (aSource < mCharsetSource) // priority is lower the the current one , just
+    return NS_OK;
 
   nsICharsetAlias* calias = nsParser::GetCharsetAliasService();
   NS_ASSERTION(calias, "Must have the charset alias service!");
 
+  nsresult res = NS_OK;
   if (!mCharset.IsEmpty())
   {
     PRBool same;
@@ -185,17 +184,8 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , PRInt32 aSou
   NS_ASSERTION(nsParser::GetCharsetConverterManager(),
                "Must have the charset converter manager!");
 
-  nsIUnicodeDecoder * decoder = nsnull;
-  res = nsParser::GetCharsetConverterManager()->
-    GetUnicodeDecoderRaw(mCharset.get(), &decoder);
-  if(NS_SUCCEEDED(res) && (nsnull != decoder))
-  {
-     NS_IF_RELEASE(mUnicodeDecoder);
-
-     mUnicodeDecoder = decoder;
-  }
-
-  return res;
+  return nsParser::GetCharsetConverterManager()->
+    GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
 }
 
 
@@ -213,8 +203,6 @@ nsScanner::~nsScanner() {
   }
 
   MOZ_COUNT_DTOR(nsScanner);
-
-  NS_IF_RELEASE(mUnicodeDecoder);
 }
 
 /**
@@ -244,14 +232,21 @@ void nsScanner::RewindToMark(void){
  *  @param   
  *  @return  
  */
-void nsScanner::Mark() {
+PRInt32 nsScanner::Mark() {
+  PRInt32 distance = 0;
   if (mSlidingBuffer) {
+    nsScannerIterator oldStart;
+    mSlidingBuffer->BeginReading(oldStart);
+
+    distance = Distance(oldStart, mCurrentPosition);
+
     mSlidingBuffer->DiscardPrefix(mCurrentPosition);
     mSlidingBuffer->BeginReading(mCurrentPosition);
     mMarkPosition = mCurrentPosition;
   }
+
+  return distance;
 }
- 
 
 /** 
  * Insert data to our underlying input buffer as

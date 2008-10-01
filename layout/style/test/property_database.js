@@ -180,40 +180,50 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "-moz-border-radius-bottomleft", "-moz-border-radius-bottomright", "-moz-border-radius-topleft", "-moz-border-radius-topright" ],
 		initial_values: [ "0", "0px", "0px 0 0 0px" ], /* 0% ? */
-		other_values: [ "3%", "1px", "2em", "3em 2px", "2pt 3% 4em", "2px 2px 2px 2px" ],
-		invalid_values: [ "2px -2px" ]
+		other_values: [ "3%", "1px", "2em", "3em 2px", "2pt 3% 4em", "2px 2px 2px 2px", // circular
+		                "3% / 2%", "1px / 4px", "2em / 1em", "3em 2px / 2px 3em", "2pt 3% 4em / 4pt 1% 5em", "2px 2px 2px 2px / 4px 4px 4px 4px", "1pt / 2pt 3pt", "4pt 5pt / 3pt" // elliptical
+		              ],
+		invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px" ]
 	},
 	"-moz-border-radius-bottomleft": {
 		domProp: "MozBorderRadiusBottomleft",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
-		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: [ "-1px" ]
+		other_values: [ "3%", "1px", "2em", // circular
+		                "3% 2%", "1px 4px", "2em 2pt" // elliptical
+		              ],
+		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"-moz-border-radius-bottomright": {
 		domProp: "MozBorderRadiusBottomright",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
-		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: [ "-1px" ]
+		other_values: [ "3%", "1px", "2em", // circular
+		                "3% 2%", "1px 4px", "2em 2pt" // elliptical
+		              ],
+		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"-moz-border-radius-topleft": {
 		domProp: "MozBorderRadiusTopleft",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
-		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: [ "-1px" ]
+		other_values: [ "3%", "1px", "2em", // circular
+		                "3% 2%", "1px 4px", "2em 2pt" // elliptical
+		              ],
+		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"-moz-border-radius-topright": {
 		domProp: "MozBorderRadiusTopright",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
-		other_values: [ "3%", "1px", "2em" ],
-		invalid_values: [ "-1px" ]
+		other_values: [ "3%", "1px", "2em", // circular
+		                "3% 2%", "1px 4px", "2em 2pt" // elliptical
+		              ],
+		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"-moz-border-right-colors": {
 		domProp: "MozBorderRightColors",
@@ -449,40 +459,50 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "-moz-outline-radius-bottomleft", "-moz-outline-radius-bottomright", "-moz-outline-radius-topleft", "-moz-outline-radius-topright" ],
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: [ "-2px" ]
+		other_values: [ "3%", "1px", "2em", "3em 2px", "2pt 3% 4em", "2px 2px 2px 2px", // circular
+		                "3% / 2%", "1px / 4px", "2em / 1em", "3em 2px / 2px 3em", "2pt 3% 4em / 4pt 1% 5em", "2px 2px 2px 2px / 4px 4px 4px 4px", "1pt / 2pt 3pt", "4pt 5pt / 3pt" // elliptical
+		              ],
+		invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px" ]
 	},
 	"-moz-outline-radius-bottomleft": {
 		domProp: "MozOutlineRadiusBottomleft",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: [ "-2px" ]
+		other_values: [ "3%", "1px", "2em", // circular
+		                "3% 2%", "1px 4px", "2em 2pt" // elliptical
+		              ],
+		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"-moz-outline-radius-bottomright": {
 		domProp: "MozOutlineRadiusBottomright",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: [ "-2px" ]
+		other_values: [ "3%", "1px", "2em", // circular
+		                "3% 2%", "1px 4px", "2em 2pt" // elliptical
+		              ],
+		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"-moz-outline-radius-topleft": {
 		domProp: "MozOutlineRadiusTopleft",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: [ "-2px" ]
+		other_values: [ "3%", "1px", "2em", // circular
+		                "3% 2%", "1px 4px", "2em 2pt" // elliptical
+		              ],
+		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"-moz-outline-radius-topright": {
 		domProp: "MozOutlineRadiusTopright",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
-		other_values: [ "2px", "0.3em", "2%" ],
-		invalid_values: [ "-2px" ]
+		other_values: [ "3%", "1px", "2em", // circular
+		                "3% 2%", "1px 4px", "2em 2pt" // elliptical
+		              ],
+		invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit" ]
 	},
 	"-moz-padding-end": {
 		domProp: "MozPaddingEnd",

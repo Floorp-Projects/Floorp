@@ -548,12 +548,6 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
   return NS_OK;
 }
 
-/* Old function, needs to be removed... it was only used on Mac OS9 */
-NS_IMETHODIMP
-nsAppShellService::TopLevelWindowIsModal(nsIXULWindow *aWindow, PRBool aModal)
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsAppShellService::Observe(nsISupports* aSubject, const char *aTopic,

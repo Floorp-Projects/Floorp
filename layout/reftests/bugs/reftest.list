@@ -919,3 +919,4 @@ fails == 441259-2.html 441259-2-ref.html # bug 441400
 == 451168-1.html 451168-1-ref.html
 == 454361.html about:blank
 == 455280-1.xhtml 455280-1-ref.xhtml
+== 456147.xul 456147-ref.html
