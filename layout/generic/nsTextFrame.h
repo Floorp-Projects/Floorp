@@ -264,7 +264,7 @@ public:
                             const gfxPoint& aTextBaselinePt,
                             nsTextPaintStyle& aTextStyle,
                             PropertyProvider& aProvider,
-                            const nscolor& aOverrideColor = 0);
+                            const nscolor* aOverrideColor = nsnull);
   // helper: paint text frame when we're impacted by at least one selection.
   // Return PR_FALSE if the text was not painted and we should continue with
   // the fast path.

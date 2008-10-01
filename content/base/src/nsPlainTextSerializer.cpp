@@ -609,7 +609,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
 
       if (kNotFound != style.Find("pre-wrap", PR_TRUE, whitespace)) {
 #ifdef DEBUG_preformatted
-        printf("Set mPreFormatted based on style moz-pre-wrap\n");
+        printf("Set mPreFormatted based on style pre-wrap\n");
 #endif
         mPreFormatted = PR_TRUE;
         PRInt32 widthOffset = style.Find("width:");

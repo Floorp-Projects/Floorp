@@ -104,6 +104,8 @@ protected:
 
   void CalcTextSize(nsBoxLayoutState& aBoxLayoutState);
 
+  nsRect CalcTextRect(nsIRenderingContext &aRenderingContext, const nsPoint &aTextOrigin);
+
   nsTextBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
   void CalculateTitleForWidth(nsPresContext*      aPresContext,
@@ -122,6 +124,16 @@ private:
 
   PRBool AlwaysAppendAccessKey();
   PRBool InsertSeparatorBeforeAccessKey();
+
+  void DrawText(nsIRenderingContext& aRenderingContext,
+                         const nsRect&        aTextRect,
+                         const nscolor*       aOverrideColor);
+
+  void PaintOneShadow(gfxContext *     aCtx,
+                      const nsRect&    aTextRect,
+                      nsCSSShadowItem* aShadowDetails,
+                      const nscolor&   aForegroundColor);
+
 
   CroppingStyle mCropType;
   nsString mTitle;

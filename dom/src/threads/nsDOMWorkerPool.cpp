@@ -40,6 +40,7 @@
 #include "nsDOMWorkerPool.h"
 
 // Interfaces
+#include "nsIDocument.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptContext.h"
@@ -102,15 +103,8 @@ nsDOMWorkerPool::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  // GetCurrentJSContext () can return a null context... We shouldn't
-  // ever see that here.
-  JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  NS_ENSURE_TRUE(cx, NS_ERROR_UNEXPECTED);
-
-  nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
-  NS_ENSURE_STATE(scriptContext);
-
-  nsIScriptGlobalObject* globalObject = scriptContext->GetGlobalObject();
+  nsIScriptGlobalObject* globalObject =
+    mParentDocument->GetScriptGlobalObject();
   NS_ENSURE_STATE(globalObject);
 
   nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(globalObject));
@@ -237,11 +231,20 @@ nsDOMWorkerPool::ResumeWorkersForGlobal(nsIScriptGlobalObject* aGlobalObject)
 }
 
 nsIDocument*
-nsDOMWorkerPool::GetParentDocument()
+nsDOMWorkerPool::ParentDocument()
 {
   NS_ASSERTION(NS_IsMainThread(),
                "Don't touch the non-threadsafe document off the main thread!");
   return mParentDocument;
+}
+
+nsIScriptContext*
+nsDOMWorkerPool::ScriptContext()
+{
+  NS_ASSERTION(NS_IsMainThread(),
+               "Don't touch the non-threadsafe script context off the main "
+               "thread!");
+  return mParentDocument->GetScriptGlobalObject()->GetContext();
 }
 
 NS_IMETHODIMP
