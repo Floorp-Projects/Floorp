@@ -330,8 +330,11 @@ NS_IMETHODIMP FileImpl::Seek(PRInt32 whence, PRInt64 offset)
     // To avoid corruption, we flush during a seek. see bug number 18949
     InternalFlush(PR_FALSE);
 
+    const nsInt64 zero = 0;
     nsInt64 position = PR_Seek64(mFileDesc, 0, PR_SEEK_CUR);
     nsInt64 available = PR_Available64(mFileDesc);
+    if (position < zero || available < zero)
+       return NS_FILE_RESULT(PR_FILE_SEEK_ERROR);
     nsInt64 fileSize = position + available;
     nsInt64 newPosition = offset;
     switch (whence)
@@ -340,7 +343,6 @@ NS_IMETHODIMP FileImpl::Seek(PRInt32 whence, PRInt64 offset)
         case NS_SEEK_SET: ; break;
         case NS_SEEK_END: newPosition += fileSize; break;
     }
-    const nsInt64 zero = 0;
     if (newPosition < zero)
     {
         newPosition = 0;
