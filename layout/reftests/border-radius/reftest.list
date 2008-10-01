@@ -1,0 +1,15 @@
+# really basic tests that square, circular, and elliptical border and
+# outline radius are not the same thing
+!= border-square.html about:blank
+!= border-circle.html about:blank
+!= border-ellips.html about:blank
+!= border-square.html border-circle.html
+!= border-square.html border-ellips.html
+!= border-circle.html border-ellips.html
+
+!= outline-square.html about:blank
+!= outline-circle.html about:blank
+!= outline-ellips.html about:blank
+!= outline-square.html outline-circle.html
+!= outline-square.html outline-ellips.html
+!= outline-circle.html outline-ellips.html
