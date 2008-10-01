@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/utils.js");
+
 const TOOLBARSTATE_LOADING        = 1;
 const TOOLBARSTATE_LOADED         = 2;
 const TOOLBARSTATE_INDETERMINATE  = 3;
@@ -298,7 +300,7 @@ var BrowserUI = {
           toolbar.top = 0;
         else
           toolbar.top = this._contentTop - toolbar.boxObject.height;
-  
+
         this._setContentPosition("left", newLeft + tabbarW);
         sidebar.left = newLeft + tabbarW + contentW;
         panelUI.left = newLeft + tabbarW + contentW + sidebarW;
@@ -521,9 +523,7 @@ var BrowserUI = {
 
     // Check for a bookmarked page
     var star = document.getElementById("tool-star");
-    var bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-    var bookmarks = bms.getBookmarkIdsForURI(browser.currentURI, {});
-    if (bookmarks.length > 0) {
+    if (PlacesUtils.getMostRecentBookmarkForURI(browser.currentURI) != -1) {
       star.setAttribute("starred", "true");
     }
     else {
@@ -875,17 +875,15 @@ var BrowserUI = {
         var bookmarkURI = browser.currentURI;
         var bookmarkTitle = browser.contentDocument.title;
 
-        var bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-        if (bookmarks.getBookmarkIdsForURI(bookmarkURI, {}).length == 0) {
-          var bookmarkId = bookmarks.insertBookmark(bookmarks.bookmarksMenuFolder, bookmarkURI, bookmarks.DEFAULT_INDEX, bookmarkTitle);
+        if (PlacesUtils.getMostRecentBookmarkForURI(bookmarkURI) == -1) {
+          var bookmarkId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.bookmarksMenuFolder, bookmarkURI, PlacesUtils.bookmarks.DEFAULT_INDEX, bookmarkTitle);
           document.getElementById("tool-star").setAttribute("starred", "true");
 
           var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
           var favicon = document.getElementById("urlbar-favicon");
           var faviconURI = ios.newURI(favicon.src, null, null);
 
-          var fis = Cc["@mozilla.org/browser/favicon-service;1"].getService(Ci.nsIFaviconService);
-          fis.setAndLoadFaviconForPage(bookmarkURI, faviconURI, true);
+          PlacesUtils.favicons.setAndLoadFaviconForPage(bookmarkURI, faviconURI, true);
 
           this.show(UIMODE_NONE);
         }
@@ -922,8 +920,6 @@ var BrowserUI = {
 var BookmarkHelper = {
   _item : null,
   _uri : null,
-  _bmksvc : null,
-  _tagsvc : null,
 
   _getTagsArrayFromTagField : function() {
     // we don't require the leading space (after each comma)
@@ -942,15 +938,12 @@ var BookmarkHelper = {
   },
 
   edit : function(aURI) {
-    this._bmksvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-    this._tagsvc = Cc["@mozilla.org/browser/tagging-service;1"].getService(Ci.nsITaggingService);
-
     this._uri = aURI;
-    var bookmarkIDs = this._bmksvc.getBookmarkIdsForURI(this._uri, {});
-    if (bookmarkIDs.length > 0) {
-      this._item = bookmarkIDs[0];
-      document.getElementById("bookmark-name").value = this._bmksvc.getItemTitle(this._item);
-      var currentTags = this._tagsvc.getTagsForURI(this._uri, {});
+    this._item = PlacesUtils.getMostRecentBookmarkForURI(this._uri);
+
+    if (this._item != -1) {
+      document.getElementById("bookmark-name").value = PlacesUtils.bookmarks.getItemTitle(this._item);
+      var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
       document.getElementById("bookmark-tags").value = currentTags.join(", ");
       document.getElementById("bookmark-folder").value = ""; // XXX either use this or remove it
     }
@@ -960,7 +953,17 @@ var BookmarkHelper = {
 
   remove : function() {
     if (this._item) {
-      this._bmksvc.removeItem(this._item);
+      // Remove bookmark itself
+      PlacesUtils.bookmarks.removeItem(this._item);
+
+      // If this was the last bookmark (excluding tag-items and livemark
+      // children, see getMostRecentBookmarkForURI) for the bookmark's url,
+      // remove the url from tag containers as well.
+      if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
+        var tags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
+        PlacesUtils.tagging.untagURI(this._uri, tags);
+      }
+
       document.getElementById("tool-star").removeAttribute("starred");
     }
     this.close();
@@ -969,11 +972,11 @@ var BookmarkHelper = {
   save : function() {
     if (this._item) {
       // Update the name
-      this._bmksvc.setItemTitle(this._item, document.getElementById("bookmark-name").value);
+      PlacesUtils.bookmarks.setItemTitle(this._item, document.getElementById("bookmark-name").value);
 
       // Update the tags
       var tags = this._getTagsArrayFromTagField();
-      var currentTags = this._tagsvc.getTagsForURI(this._uri, {});
+      var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
       if (tags.length > 0 || currentTags.length > 0) {
         var tagsToRemove = [];
         var tagsToAdd = [];
@@ -988,9 +991,9 @@ var BookmarkHelper = {
         }
 
         if (tagsToAdd.length > 0)
-          this._tagsvc.tagURI(this._uri, tagsToAdd);
+          PlacesUtils.tagging.tagURI(this._uri, tagsToAdd);
         if (tagsToRemove.length > 0)
-          this._tagsvc.untagURI(this._uri, tagsToRemove);
+          PlacesUtils.tagging.untagURI(this._uri, tagsToRemove);
       }
 
     }
