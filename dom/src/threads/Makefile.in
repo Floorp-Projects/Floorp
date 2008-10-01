@@ -51,11 +51,14 @@ FORCE_STATIC_LIB = 1
 REQUIRES = \
   caps \
   content \
+  gfx \
   js \
   layout \
+  locale \
   necko \
   pref \
   string \
+  thebes \
   widget \
   xpcom \
   xpconnect \
@@ -69,10 +72,14 @@ CPPSRCS = \
   nsDOMWorkerSecurityManager.cpp \
   nsDOMWorkerThread.cpp \
   nsDOMWorkerTimeout.cpp \
+  nsDOMWorkerXHR.cpp \
+  nsDOMWorkerXHRProxy.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/src/base \
+  -I$(topsrcdir)/content/base/src \
+  -I$(topsrcdir)/content/events/src \
   $(NULL)
 
 ifdef ENABLE_TESTS
@@ -80,3 +87,5 @@ DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+#CXXFLAGS += $(WARNINGS_AS_ERRORS)

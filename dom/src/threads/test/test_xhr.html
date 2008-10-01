@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads XHR(Bug 450452 )
+-->
+<head>
+  <title>Test for DOM Worker Threads XHR (Bug 450452 )</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450452">DOM Worker Threads XHR (Bug 450452)</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  function workerScript() {
+    var xhr = new XMLHttpRequest();
+
+    function onload(event) {
+      if (event.target.status != 200) {
+        var message = { type: "error",
+                        error: event.target.status };
+        postMessageToPool(message.toSource());
+      }
+
+      var message = { type: "load",
+                      data: xhr.responseText };
+      postMessageToPool(message.toSource());
+    }
+
+    xhr.onload = onload;
+    xhr.addEventListener("load", onload, false);
+    xhr.removeEventListener("load", onload, false);
+    if (!xhr.onload) {
+      var message = { type: "error",
+                      error: "Lost message listener!" };
+      postMessageToPool(message.toSource());
+    }
+
+    xhr.addEventListener("error", function(event) {
+      var message = { type: "error",
+                      error: event.target.status };
+      postMessageToPool(message.toSource());
+    }, false);
+
+    function onprogress(event) {
+      var message = { type: "progress",
+                      current: event.position,
+                      total: event.totalSize };
+      postMessageToPool(message.toSource());
+    }
+    xhr.addEventListener("progress", onprogress, false);
+
+    xhr.addEventListener("foopety", function(event) {}, false);
+    xhr.removeEventListener("doopety", function(event) {}, false);
+
+    var upload = xhr.upload;
+    upload.onprogress = function(event) { };
+    upload.addEventListener("readystatechange", function(event) { }, false);
+    upload.removeEventListener("readystatechange", function(event) { }, false);
+    upload.addEventListener("load", function(event) { }, false);
+    upload.removeEventListener("readystatechange", function(event) { }, false);
+
+    this.messageListener = function(message, source) {
+      if (xhr.readystate > 0) {
+        throw "XHR already running!";
+      }
+      xhr.open("GET", message);
+      xhr.send(null);
+    }
+  }
+
+  var pool = navigator.newWorkerPool();
+  pool.messageListener = function(message, source) {
+    var args = eval(message);
+    switch (args.type) {
+      case "progress": {
+        ok(parseInt(args.current) <= parseInt(args.total));
+      } break;
+      case "error": {
+        ok(false, "XHR error: " + args.error);
+      } break;
+      case "load": {
+        is(args.data, "A noisy noise annoys an oyster.");
+        document.getElementById("content").textContent = args.data;
+        SimpleTest.finish();
+      } break;
+      default: {
+        ok(false, "Unexpected message");
+        SimpleTest.finish();
+      }
+    }
+  };
+
+  pool.errorListener = function(error, source) {
+    ok(false, "Worker had an error:" + error);
+    SimpleTest.finish();
+  }
+
+  var worker = pool.createWorker("(" + workerScript + ")();");
+  worker.postMessage("testXHR.txt");
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+
