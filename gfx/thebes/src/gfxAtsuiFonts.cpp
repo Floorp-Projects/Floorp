@@ -274,8 +274,8 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
 
     mMetrics.emHeight = size;
 
-    mMetrics.maxAscent = atsMetrics.ascent * size;
-    mMetrics.maxDescent = - (atsMetrics.descent * size);
+    mMetrics.maxAscent = NS_ceil(atsMetrics.ascent * size);
+    mMetrics.maxDescent = NS_ceil(- (atsMetrics.descent * size));
 
     mMetrics.maxHeight = mMetrics.maxAscent + mMetrics.maxDescent;
 
@@ -441,11 +441,6 @@ gfxAtsuiFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID,
             return;
         }
     }
-#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
-    if (!aNeedTight) {
-        ++gGlyphExtentsSetupFallBackToTight;
-    }
-#endif
 
     double d2a = appUnitsPerDevUnit;
     gfxRect bounds(metrics.topLeft.x*d2a, (metrics.topLeft.y - metrics.height)*d2a,
