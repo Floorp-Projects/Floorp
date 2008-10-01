@@ -116,6 +116,7 @@ JS_PROTO(File,                  29,     FILE_INIT)
 JS_PROTO(Block,                 30,     js_InitBlockClass)
 JS_PROTO(XMLFilter,             31,     XMLFILTER_INIT)
 JS_PROTO(NoSuchMethod,          32,     NO_SUCH_METHOD_INIT)
+JS_PROTO(JSON,                  33,     js_InitJSONClass)
 
 #undef SCRIPT_INIT
 #undef XML_INIT
