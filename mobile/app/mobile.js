@@ -44,9 +44,6 @@ pref("browser.startup.homepage", "http://www.mozilla.org/");
 pref("browser.ui.cursor", false);
 pref("browser.ui.panning.kinetic", true);
 
-pref("javascript.options.showInConsole", true);
-pref("browser.dom.window.dump.enabled", true);
-
 /* cache prefs */
 pref("browser.cache.disk.enable", false);
 pref("browser.cache.disk.capacity", 0);
