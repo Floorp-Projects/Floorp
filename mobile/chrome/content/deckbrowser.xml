@@ -244,7 +244,7 @@
             for (let i = 0; i < aEvent.clientRects.length; i++) {
               let e = aEvent.clientRects.item(i);
               //dump(Math.floor(e.left) + ", " + Math.floor(e.top) + ", " + Math.ceil(e.width) + ", " + Math.ceil(e.height) + "\n");
-              self._browserToCanvas2(Math.floor(e.left), Math.floor(e.top), Math.ceil(e.width), Math.ceil(e.height));
+              self._redrawRect(Math.floor(e.left), Math.floor(e.top), Math.ceil(e.width), Math.ceil(e.height));
             }
           }
         });
@@ -538,7 +538,7 @@
         ]]></body>
       </method>
 
-      <method name="_browserToCanvas2">
+      <method name="_redrawRect">
         <parameter name="x"/>
         <parameter name="y"/>
         <parameter name="width"/>
