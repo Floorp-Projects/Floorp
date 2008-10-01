@@ -83,6 +83,10 @@ namespace nanojit
 	void Assembler::nInit(AvmCore* core)
 	{
         OSDep::getDate();
+#ifdef NANOJIT_ADM64
+        avmplus::AvmCore::cmov_available =
+        avmplus::AvmCore::sse2_available = true;
+#endif
 	}
 
 	NIns* Assembler::genPrologue(RegisterMask needSaving)

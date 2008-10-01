@@ -2856,9 +2856,6 @@ js_InitJIT(JSTraceMonitor *tm)
         avmplus::AvmCore::sse2_available = js_CheckForSSE2();
         did_we_check_sse2 = true;
     }
-#elif defined NANOJIT_AMD64
-    avmplus::AvmCore::cmov_available =
-    avmplus::AvmCore::sse2_available = true;
 #endif
     if (!tm->fragmento) {
         JS_ASSERT(!tm->globalSlots && !tm->globalTypeMap && !tm->recoveryDoublePool);
