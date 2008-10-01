@@ -4734,16 +4734,24 @@ CSSParserImpl::ParseDirectionalBoxProperty(nsCSSProperty aProperty,
 PRBool
 CSSParserImpl::ParseBoxCornerRadius(nsCSSProperty aPropID)
 {
-  nsCSSValue temp;
-  if (!ParsePositiveVariant(temp, VARIANT_HLP, nsnull))
+  nsCSSValue dimenX, dimenY;
+  // required first value
+  if (! ParsePositiveVariant(dimenX, VARIANT_HLP, nsnull))
     return PR_FALSE;
+  // optional second value (forbidden if first value is inherit/initial)
+  if (dimenX.GetUnit() == eCSSUnit_Inherit ||
+      dimenX.GetUnit() == eCSSUnit_Initial ||
+      ! ParsePositiveVariant(dimenY, VARIANT_LP, nsnull))
+    dimenY = dimenX;
+
   NS_ASSERTION(nsCSSProps::kTypeTable[aPropID] == eCSSType_ValuePair,
                nsPrintfCString(64, "type error (property='%s')",
                                nsCSSProps::GetStringValue(aPropID).get())
                .get());
   nsCSSValuePair& storage =
     *static_cast<nsCSSValuePair*>(mTempData.PropertyAt(aPropID));
-  storage.SetBothValuesTo(temp);
+  storage.mXValue = dimenX;
+  storage.mYValue = dimenY;
   mTempData.SetPropertyBit(aPropID);
   return PR_TRUE;
 }
@@ -4752,38 +4760,65 @@ PRBool
 CSSParserImpl::ParseBoxCornerRadii(nsCSSCornerSizes& aRadii,
                                    const nsCSSProperty aPropIDs[])
 {
-  nsCSSRect temp;
-  PRInt32 count = 0;
+  // Rectangles are used as scratch storage.
+  // top => top-left, right => top-right,
+  // bottom => bottom-right, left => bottom-left.
+  nsCSSRect dimenX, dimenY;
+  PRInt32 countX = 0, countY = 0;
+
   NS_FOR_CSS_SIDES (side) {
-    if (! ParsePositiveVariant(temp.*nsCSSRect::sides[side], VARIANT_HLP,
-                               nsnull))
+    if (! ParsePositiveVariant(dimenX.*nsCSSRect::sides[side],
+                               side > 0 ? VARIANT_LP : VARIANT_HLP, nsnull))
       break;
-    count++;
+    countX++;
   }
-  if ((count == 0) || !ExpectEndProperty())
+  if (countX == 0)
     return PR_FALSE;
 
-  if (count > 1) { // verify no more than single inherit or initial
+  if (ExpectSymbol('/', PR_TRUE)) {
     NS_FOR_CSS_SIDES (side) {
-      nsCSSUnit unit = (temp.*(nsCSSRect::sides[side])).GetUnit();
-      if (eCSSUnit_Inherit == unit || eCSSUnit_Initial == unit)
-        return PR_FALSE;
+      if (! ParsePositiveVariant(dimenY.*nsCSSRect::sides[side],
+                                 VARIANT_LP, nsnull))
+        break;
+      countY++;
     }
+    if (countY == 0)
+      return PR_FALSE;
+  }
+  if (!ExpectEndProperty())
+    return PR_FALSE;
+
+  // if 'initial' or 'inherit' was used, it must be the only value
+  if (countX > 1 || countY > 0) {
+    nsCSSUnit unit = dimenX.mTop.GetUnit();
+    if (eCSSUnit_Inherit == unit || eCSSUnit_Initial == unit)
+      return PR_FALSE;
+  }
+
+  // if we have no Y-values, use the X-values
+  if (countY == 0) {
+    dimenY = dimenX;
+    countY = countX;
   }
 
   // Provide missing values by replicating some of the values found
-  switch (count) {
-    case 1: // Make right == top
-      temp.mRight = temp.mTop;
-    case 2: // Make bottom == top
-      temp.mBottom = temp.mTop;
-    case 3: // Make left == right
-      temp.mLeft = temp.mRight;
+  switch (countX) {
+    case 1: dimenX.mRight = dimenX.mTop;  // top-right same as top-left, and
+    case 2: dimenX.mBottom = dimenX.mTop; // bottom-right same as top-left, and 
+    case 3: dimenX.mLeft = dimenX.mRight; // bottom-left same as top-right
+  }
+
+  switch (countY) {
+    case 1: dimenY.mRight = dimenY.mTop;  // top-right same as top-left, and
+    case 2: dimenY.mBottom = dimenY.mTop; // bottom-right same as top-left, and 
+    case 3: dimenY.mLeft = dimenY.mRight; // bottom-left same as top-right
   }
 
   NS_FOR_CSS_SIDES(side) {
-    aRadii.GetFullCorner(NS_SIDE_TO_FULL_CORNER(side, PR_FALSE))
-      .SetBothValuesTo(temp.*nsCSSRect::sides[side]);
+    nsCSSValuePair& corner =
+      aRadii.GetFullCorner(NS_SIDE_TO_FULL_CORNER(side, PR_FALSE));
+    corner.mXValue = dimenX.*nsCSSRect::sides[side];
+    corner.mYValue = dimenY.*nsCSSRect::sides[side];
     mTempData.SetPropertyBit(aPropIDs[side]);
   }
   return PR_TRUE;
