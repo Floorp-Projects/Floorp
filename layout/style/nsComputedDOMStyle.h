@@ -84,6 +84,10 @@ private:
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
+  nsresult GetEllipseRadii(const nsStyleCorners& aRadius,
+                           PRUint8 aFullCorner,
+                           nsIDOMCSSValue** aValue);
+
   nsresult GetOffsetWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
 
   nsresult GetAbsoluteOffset(PRUint8 aSide, nsIDOMCSSValue** aValue);
@@ -98,13 +102,9 @@ private:
 
   nsresult GetBorderStyleFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetBorderRadiusFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
-
   nsresult GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
 
   nsresult GetBorderColorFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
-
-  nsresult GetOutlineRadiusFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
 
   nsresult GetMarginWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
 

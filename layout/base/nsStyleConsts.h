@@ -56,6 +56,40 @@
 
 #define NS_FOR_CSS_SIDES(var_) for (PRInt32 var_ = 0; var_ < 4; ++var_)
 
+// Indices into "full corner" arrays (nsCSSCornerSizes e.g.)
+#define NS_CORNER_TOP_LEFT     0
+#define NS_CORNER_TOP_RIGHT    1
+#define NS_CORNER_BOTTOM_RIGHT 2
+#define NS_CORNER_BOTTOM_LEFT  3
+
+#define NS_FOR_CSS_FULL_CORNERS(var_) for (PRInt32 var_ = 0; var_ < 4; ++var_)
+
+// Indices into "half corner" arrays (nsStyleCorners e.g.)
+#define NS_CORNER_TOP_LEFT_X      0
+#define NS_CORNER_TOP_LEFT_Y      1
+#define NS_CORNER_TOP_RIGHT_X     2
+#define NS_CORNER_TOP_RIGHT_Y     3
+#define NS_CORNER_BOTTOM_RIGHT_X  4
+#define NS_CORNER_BOTTOM_RIGHT_Y  5
+#define NS_CORNER_BOTTOM_LEFT_X   6
+#define NS_CORNER_BOTTOM_LEFT_Y   7
+
+#define NS_FOR_CSS_HALF_CORNERS(var_) for (PRInt32 var_ = 0; var_ < 8; ++var_)
+
+// The results of these conversion macros are exhaustively checked in
+// nsStyleCoord.cpp.
+// Arguments must not have side effects.
+
+#define NS_HALF_CORNER_IS_X(var_) (!((var_)%2))
+#define NS_HALF_TO_FULL_CORNER(var_) ((var_)/2)
+#define NS_FULL_TO_HALF_CORNER(var_, vert_) ((var_)*2 + !!(vert_))
+
+#define NS_SIDE_IS_VERTICAL(side_) ((side_) % 2)
+#define NS_SIDE_TO_FULL_CORNER(side_, second_) \
+  (((side_) + !!(second_)) % 4)
+#define NS_SIDE_TO_HALF_CORNER(side_, second_, parallel_) \
+  ((((side_) + !!(second_))*2 + ((side_) + !(parallel_))%2) % 8)
+
 // {margin,border-{width,style,color},padding}-{left,right}-{ltr,rtl}-source
 #define NS_BOXPROP_SOURCE_PHYSICAL 0
 #define NS_BOXPROP_SOURCE_LOGICAL  1

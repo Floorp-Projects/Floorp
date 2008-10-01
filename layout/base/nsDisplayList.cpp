@@ -500,7 +500,7 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
 
   return (hasBG && NS_GET_A(bg->mBackgroundColor) == 255 &&
           bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER &&
-          !nsLayoutUtils::HasNonZeroSide(mFrame->GetStyleBorder()->
+          !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->
                                          mBorderRadius));
 }
 
@@ -517,7 +517,7 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
   if (!hasBG)
     return PR_TRUE;
   if ((bg->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) &&
-      !nsLayoutUtils::HasNonZeroSide(mFrame->GetStyleBorder()->mBorderRadius) &&
+      !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius) &&
       bg->mBackgroundClip == NS_STYLE_BG_CLIP_BORDER)
     return PR_TRUE;
   return PR_FALSE;
@@ -592,7 +592,7 @@ nsDisplayOutline::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   const nsStyleOutline* outline = mFrame->GetStyleOutline();
   nsPoint origin = aBuilder->ToReferenceFrame(mFrame);
   if (nsRect(origin, mFrame->GetSize()).Contains(aVisibleRegion->GetBounds()) &&
-      !nsLayoutUtils::HasNonZeroSide(outline->mOutlineRadius)) {
+      !nsLayoutUtils::HasNonZeroCorner(outline->mOutlineRadius)) {
     if (outline->mOutlineOffset >= 0) {
       // the visible region is entirely inside the border-rect, and the outline
       // isn't rendered inside the border-rect, so the outline is not visible
@@ -622,7 +622,7 @@ nsDisplayBorder::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   const nsStyleBorder *styleBorder;
   if (paddingRect.Contains(aVisibleRegion->GetBounds()) &&
       !(styleBorder = mFrame->GetStyleBorder())->IsBorderImageLoaded() &&
-      !nsLayoutUtils::HasNonZeroSide(styleBorder->mBorderRadius)) {
+      !nsLayoutUtils::HasNonZeroCorner(styleBorder->mBorderRadius)) {
     // the visible region is entirely inside the content rect, and no part
     // of the border is rendered inside the content rect, so we are not
     // visible

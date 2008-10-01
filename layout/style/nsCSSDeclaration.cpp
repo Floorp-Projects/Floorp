@@ -554,8 +554,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
     case eCSSProperty_padding: 
     case eCSSProperty_border_color: 
     case eCSSProperty_border_style: 
-    case eCSSProperty__moz_border_radius: 
-    case eCSSProperty__moz_outline_radius: 
     case eCSSProperty_border_width: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(aProperty);
@@ -572,6 +570,49 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
           !(aValue.Append(PRUnichar(' ')),
             AppendValueToString(subprops[3], aValue))) {
         aValue.Truncate();
+      }
+      break;
+    }
+    case eCSSProperty__moz_border_radius: 
+    case eCSSProperty__moz_outline_radius: {
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      NS_ASSERTION(nsCSSProps::kTypeTable[subprops[0]] == eCSSType_ValuePair &&
+                   nsCSSProps::kTypeTable[subprops[1]] == eCSSType_ValuePair &&
+                   nsCSSProps::kTypeTable[subprops[2]] == eCSSType_ValuePair &&
+                   nsCSSProps::kTypeTable[subprops[3]] == eCSSType_ValuePair,
+                   "type mismatch");
+      nsCSSCompressedDataBlock *data = GetValueIsImportant(aProperty)
+                                     ? mImportantData : mData;
+      const nsCSSValuePair* vals[4] = {
+        static_cast<const nsCSSValuePair*>(data->StorageFor(subprops[0])),
+        static_cast<const nsCSSValuePair*>(data->StorageFor(subprops[1])),
+        static_cast<const nsCSSValuePair*>(data->StorageFor(subprops[2])),
+        static_cast<const nsCSSValuePair*>(data->StorageFor(subprops[3]))
+      };
+
+      AppendCSSValueToString(aProperty, vals[0]->mXValue, aValue);
+      aValue.Append(PRUnichar(' '));
+      AppendCSSValueToString(aProperty, vals[1]->mXValue, aValue);
+      aValue.Append(PRUnichar(' '));
+      AppendCSSValueToString(aProperty, vals[2]->mXValue, aValue);
+      aValue.Append(PRUnichar(' '));
+      AppendCSSValueToString(aProperty, vals[3]->mXValue, aValue);
+        
+      // For compatibility, only write a slash and the y-values
+      // if they're not identical to the x-values.
+      if (vals[0]->mXValue != vals[0]->mYValue ||
+          vals[1]->mXValue != vals[1]->mYValue ||
+          vals[2]->mXValue != vals[2]->mYValue ||
+          vals[3]->mXValue != vals[3]->mYValue) {
+        aValue.AppendLiteral(" / ");
+        AppendCSSValueToString(aProperty, vals[0]->mYValue, aValue);
+        aValue.Append(PRUnichar(' '));
+        AppendCSSValueToString(aProperty, vals[1]->mYValue, aValue);
+        aValue.Append(PRUnichar(' '));
+        AppendCSSValueToString(aProperty, vals[2]->mYValue, aValue);
+        aValue.Append(PRUnichar(' '));
+        AppendCSSValueToString(aProperty, vals[3]->mYValue, aValue);
       }
       break;
     }

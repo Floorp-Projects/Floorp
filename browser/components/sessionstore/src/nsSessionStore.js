@@ -1159,6 +1159,13 @@ SessionStoreService.prototype = {
     if (!aTabData.entries[tabIndex])
       return;
     
+    let selectedPageStyle = aBrowser.markupDocumentViewer.authorStyleDisabled ? "_nostyle" :
+                            this._getSelectedPageStyle(aBrowser.contentWindow);
+    if (selectedPageStyle)
+      aTabData.pageStyle = selectedPageStyle;
+    else if (aTabData.pageStyle)
+      delete aTabData.pageStyle;
+    
     this._updateTextAndScrollDataForFrame(aWindow, aBrowser.contentWindow,
                                           aTabData.entries[tabIndex],
                                           !aTabData._formDataSaved, aFullData);
@@ -1215,7 +1222,29 @@ SessionStoreService.prototype = {
       }
     }
     aData.scroll = aContent.scrollX + "," + aContent.scrollY;
-   },
+  },
+
+  /**
+   * determine the title of the currently enabled style sheet (if any)
+   * and recurse through the frameset if necessary
+   * @param   aContent is a frame reference
+   * @returns the title style sheet determined to be enabled (empty string if none)
+   */
+  _getSelectedPageStyle: function sss_getSelectedPageStyle(aContent) {
+    const forScreen = /(?:^|,)\s*(?:all|screen)\s*(?:,|$)/i;
+    for (let i = 0; i < aContent.document.styleSheets.length; i++) {
+      let ss = aContent.document.styleSheets[i];
+      let media = ss.media.mediaText;
+      if (!ss.disabled && ss.title && (!media || forScreen.test(media)))
+        return ss.title
+    }
+    for (let i = 0; i < aContent.frames.length; i++) {
+      let selectedPageStyle = this._getSelectedPageStyle(aContent.frames[i]);
+      if (selectedPageStyle)
+        return selectedPageStyle;
+    }
+    return "";
+  },
 
   /**
    * collect the state of all form elements
@@ -1692,6 +1721,7 @@ SessionStoreService.prototype = {
       // (mainly scroll state and text data)
       browser.__SS_restore_data = tabData.entries[activeIndex] || {};
       browser.__SS_restore_text = tabData.text || "";
+      browser.__SS_restore_pageStyle = tabData.pageStyle || "";
       browser.__SS_restore_tab = tab;
       browser.__SS_restore = this.restoreDocument_proxy;
       browser.addEventListener("load", browser.__SS_restore, true);
@@ -1868,6 +1898,7 @@ SessionStoreService.prototype = {
       }
     }
     
+    let selectedPageStyle = this.__SS_restore_pageStyle;
     function restoreTextDataAndScrolling(aContent, aData, aPrefix) {
       if (aData.formdata)
         restoreFormData(aContent.document, aData.formdata);
@@ -1879,6 +1910,9 @@ SessionStoreService.prototype = {
       if (aData.scroll && /(\d+),(\d+)/.test(aData.scroll)) {
         aContent.scrollTo(RegExp.$1, RegExp.$2);
       }
+      Array.forEach(aContent.document.styleSheets, function(aSS) {
+        aSS.disabled = aSS.title && aSS.title != selectedPageStyle;
+      });
       for (var i = 0; i < aContent.frames.length; i++) {
         if (aData.children && aData.children[i]) {
           restoreTextDataAndScrolling(aContent.frames[i], aData.children[i], i + "|" + aPrefix);
@@ -1897,6 +1931,7 @@ SessionStoreService.prototype = {
         content = content.wrappedJSObject;
       }
       restoreTextDataAndScrolling(content, this.__SS_restore_data, "");
+      this.markupDocumentViewer.authorStyleDisabled = selectedPageStyle == "_nostyle";
       
       // notify the tabbrowser that this document has been completely restored
       var event = this.ownerDocument.createEvent("Events");
@@ -1907,6 +1942,7 @@ SessionStoreService.prototype = {
     this.removeEventListener("load", this.__SS_restore, true);
     delete this.__SS_restore_data;
     delete this.__SS_restore_text;
+    delete this.__SS_restore_pageStyle;
     delete this.__SS_restore_tab;
     delete this.__SS_restore;
   },

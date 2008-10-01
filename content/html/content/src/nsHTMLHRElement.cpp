@@ -276,18 +276,13 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 
       // If it would be noticeable, set the border radius to
       // 100% on all corners
-      nsCSSRect& borderRadius = aData->mMarginData->mBorderRadius;
-      if (borderRadius.mTop.GetUnit() == eCSSUnit_Null) {
-        borderRadius.mTop.SetPercentValue(1.0f);
-      }
-      if (borderRadius.mRight.GetUnit() == eCSSUnit_Null) {
-        borderRadius.mRight.SetPercentValue(1.0f);
-      }
-      if (borderRadius.mBottom.GetUnit() == eCSSUnit_Null) {
-        borderRadius.mBottom.SetPercentValue(1.0f);
-      }
-      if (borderRadius.mLeft.GetUnit() == eCSSUnit_Null) {
-        borderRadius.mLeft.SetPercentValue(1.0f);
+      nsCSSCornerSizes& corners = aData->mMarginData->mBorderRadius;
+
+      NS_FOR_CSS_HALF_CORNERS(hc) {
+        nsCSSValue& dimen = corners.GetHalfCorner(hc);
+        if (dimen.GetUnit() == eCSSUnit_Null) {
+          dimen.SetPercentValue(1.0f);
+        }
       }
     }
   }

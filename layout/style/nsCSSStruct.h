@@ -46,6 +46,7 @@
 #define nsCSSStruct_h___
 
 #include "nsCSSValue.h"
+#include "nsStyleConsts.h"
 #include <stdio.h>
 
 // Prefer nsCSSValue::Array for lists of fixed size.
@@ -136,8 +137,78 @@ struct nsCSSValuePair {
     mYValue = aValue;
   }
 
+  void Reset() {
+    mXValue.Reset();
+    mYValue.Reset();
+  }
+
+  PRBool HasValue() const {
+    return mXValue.GetUnit() != eCSSUnit_Null ||
+           mYValue.GetUnit() != eCSSUnit_Null;
+  }
+
   nsCSSValue mXValue;
   nsCSSValue mYValue;
+};
+
+struct nsCSSCornerSizes {
+  nsCSSCornerSizes(void);
+  nsCSSCornerSizes(const nsCSSCornerSizes& aCopy);
+  ~nsCSSCornerSizes();
+
+  // argument is a "full corner" constant from nsStyleConsts.h
+  nsCSSValuePair const & GetFullCorner(PRUint32 aCorner) const {
+    return (this->*corners[aCorner]);
+  }
+  nsCSSValuePair & GetFullCorner(PRUint32 aCorner) {
+    return (this->*corners[aCorner]);
+  }
+
+  // argument is a "half corner" constant from nsStyleConsts.h
+  const nsCSSValue& GetHalfCorner(PRUint32 hc) const {
+    nsCSSValuePair const & fc = this->*corners[NS_HALF_TO_FULL_CORNER(hc)];
+    return NS_HALF_CORNER_IS_X(hc) ? fc.mXValue : fc.mYValue;
+  }
+  nsCSSValue & GetHalfCorner(PRUint32 hc) {
+    nsCSSValuePair& fc = this->*corners[NS_HALF_TO_FULL_CORNER(hc)];
+    return NS_HALF_CORNER_IS_X(hc) ? fc.mXValue : fc.mYValue;
+  }
+  
+  PRBool operator==(const nsCSSCornerSizes& aOther) const {
+    NS_FOR_CSS_FULL_CORNERS(corner) {
+      if (this->GetFullCorner(corner) != aOther.GetFullCorner(corner))
+        return PR_FALSE;
+    }
+    return PR_TRUE;
+  }
+
+  PRBool operator!=(const nsCSSCornerSizes& aOther) const {
+    NS_FOR_CSS_FULL_CORNERS(corner) {
+      if (this->GetFullCorner(corner) != aOther.GetFullCorner(corner))
+        return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
+  PRBool HasValue() const {
+    NS_FOR_CSS_FULL_CORNERS(corner) {
+      if (this->GetFullCorner(corner).HasValue())
+        return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
+  void SetAllCornersTo(const nsCSSValue& aValue);
+  void Reset();
+
+  nsCSSValuePair mTopLeft;
+  nsCSSValuePair mTopRight;
+  nsCSSValuePair mBottomRight;
+  nsCSSValuePair mBottomLeft;
+
+protected:
+  typedef nsCSSValuePair nsCSSCornerSizes::*corner_type;
+  static const corner_type corners[4];
 };
 
 struct nsCSSValueListRect {
@@ -337,12 +408,12 @@ struct nsCSSMargin : public nsCSSStruct  {
   nsCSSValue  mBorderLeftStyleRTLSource;
   nsCSSValue  mBorderRightStyleLTRSource;
   nsCSSValue  mBorderRightStyleRTLSource;
-  nsCSSRect   mBorderRadius;  // (extension)
+  nsCSSCornerSizes mBorderRadius;
   nsCSSValue  mOutlineWidth;
   nsCSSValue  mOutlineColor;
   nsCSSValue  mOutlineStyle;
   nsCSSValue  mOutlineOffset;
-  nsCSSRect   mOutlineRadius; // (extension)
+  nsCSSCornerSizes mOutlineRadius;
   nsCSSValue  mFloatEdge; // NEW
   nsCSSValue  mBorderImage;
   nsCSSValueList* mBoxShadow;

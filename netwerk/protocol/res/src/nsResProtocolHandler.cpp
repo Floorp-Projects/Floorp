@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Darin Fisher <darin@netscape.com>
  *   Benjamin Smedberg <bsmedberg@covad.net>
+ *   Daniel Veditz <dveditz@cruzio.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -176,6 +177,9 @@ nsResProtocolHandler::Init()
     //XXXbsmedberg Neil wants a resource://pchrome/ for the profile chrome dir...
     // but once I finish multiple chrome registration I'm not sure that it is needed
 
+    // XXX dveditz: resource://pchrome/ defeats profile directory salting
+    // if web content can load it. Tread carefully.
+
     return rv;
 }
 
@@ -229,7 +233,36 @@ nsResProtocolHandler::NewURI(const nsACString &aSpec,
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(resURL);
 
-    rv = resURL->Init(nsIStandardURL::URLTYPE_STANDARD, -1, aSpec, aCharset, aBaseURI);
+    // unescape any %2f and %2e to make sure nsStandardURL coalesces them.
+    // Later net_GetFileFromURLSpec() will do a full unescape and we want to
+    // treat them the same way the file system will. (bugs 380994, 394075)
+    nsCAutoString spec;
+    const char *src = aSpec.BeginReading();
+    const char *end = aSpec.EndReading();
+    const char *last = src;
+
+    spec.SetCapacity(aSpec.Length()+1);
+    for ( ; src < end; ++src) {
+        if (*src == '%' && (src < end-2) && *(src+1) == '2') {
+           char ch = '\0';
+           if (*(src+2) == 'f' || *(src+2) == 'F')
+             ch = '/';
+           else if (*(src+2) == 'e' || *(src+2) == 'E')
+             ch = '.';
+
+           if (ch) {
+             if (last < src)
+               spec.Append(last, src-last);
+             spec.Append(ch);
+             src += 2;
+             last = src+1; // src will be incremented by the loop
+           }
+        }
+    }
+    if (last < src)
+      spec.Append(last, src-last);
+
+    rv = resURL->Init(nsIStandardURL::URLTYPE_STANDARD, -1, spec, aCharset, aBaseURI);
     if (NS_SUCCEEDED(rv))
         rv = CallQueryInterface(resURL, result);
     NS_RELEASE(resURL);

@@ -11,7 +11,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video><source></video><audio></audio>
+<video><source></video><audio><source></audio>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 is(HTMLElement.EMPTY, undefined);
@@ -95,6 +95,15 @@ is(document.getElementsByTagName("source")[0].DATA_UNAVAILABLE, undefined);
 is(document.getElementsByTagName("source")[0].CAN_SHOW_CURRENT_FRAME, undefined);
 is(document.getElementsByTagName("source")[0].CAN_PLAY, undefined);
 is(document.getElementsByTagName("source")[0].CAN_PLAY_THROUGH, undefined);
+is(document.getElementsByTagName("source")[1].EMPTY, undefined);
+is(document.getElementsByTagName("source")[1].LOADING, undefined);
+is(document.getElementsByTagName("source")[1].LOADED_METADATA, undefined);
+is(document.getElementsByTagName("source")[1].LOADED_FIRST_FRAME, undefined);
+is(document.getElementsByTagName("source")[1].LOADED, undefined);
+is(document.getElementsByTagName("source")[1].DATA_UNAVAILABLE, undefined);
+is(document.getElementsByTagName("source")[1].CAN_SHOW_CURRENT_FRAME, undefined);
+is(document.getElementsByTagName("source")[1].CAN_PLAY, undefined);
+is(document.getElementsByTagName("source")[1].CAN_PLAY_THROUGH, undefined);
 is(HTMLElement.prototype.EMPTY, undefined);
 is(HTMLElement.prototype.LOADING, undefined);
 is(HTMLElement.prototype.LOADED_METADATA, undefined);

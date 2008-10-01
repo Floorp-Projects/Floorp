@@ -55,7 +55,6 @@
 #include "nsIAssociatedContentSecurity.h"
 #include "nsXPIDLString.h"
 #include "nsNSSShutDown.h"
-#include "nsIClientAuthDialogs.h"
 #include "nsAutoPtr.h"
 #include "nsNSSCertificate.h"
 
@@ -133,7 +132,6 @@ class nsNSSSocketInfo : public nsITransportSecurityInfo,
                         public nsIAssociatedContentSecurity,
                         public nsISerializable,
                         public nsIClassInfo,
-                        public nsIClientAuthUserDecision,
                         public nsNSSShutDownObject,
                         public nsOnPK11LogoutCancelObject
 {
@@ -150,7 +148,6 @@ public:
   NS_DECL_NSIASSOCIATEDCONTENTSECURITY
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
-  NS_DECL_NSICLIENTAUTHUSERDECISION
 
   nsresult SetSecurityState(PRUint32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
@@ -223,7 +220,6 @@ protected:
   PRPackedBool mHasCleartextPhase;
   PRPackedBool mHandshakeInProgress;
   PRPackedBool mAllowTLSIntoleranceTimeout;
-  PRPackedBool mRememberClientAuthCertificate;
   PRIntervalTime mHandshakeStartTime;
   PRInt32 mPort;
   nsXPIDLCString mHostName;
