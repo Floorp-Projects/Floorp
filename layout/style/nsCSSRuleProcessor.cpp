@@ -82,6 +82,10 @@
 #include "nsTArray.h"
 #include "nsContentUtils.h"
 #include "nsIMediaList.h"
+#include "gfxPlatform.h"
+#include "gfxUserFontSet.h"
+#include "nsCSSRules.h"
+#include "nsFontFaceLoader.h"
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static nsTArray< nsCOMPtr<nsIAtom> >* sSystemMetrics = 0;
@@ -2292,6 +2296,129 @@ struct CascadeEnumData {
   PLArenaPool& mArena;
 };
 
+static void
+InsertFontFaceRule(nsICSSRule* aRule, gfxUserFontSet* fs)
+{
+  nsCSSFontFaceRule *fontFace = static_cast<nsCSSFontFaceRule*> (aRule);
+  PRInt32 type;
+  NS_ASSERTION(NS_SUCCEEDED(aRule->GetType(type)) 
+               && type == nsICSSRule::FONT_FACE_RULE, 
+               "InsertFontFaceRule passed a non-fontface CSS rule");
+  
+  // fontFace->List();
+  
+  nsAutoString fontfamily, valueString;
+  nsCSSValue val;
+  
+  PRUint32 unit;
+  PRUint32 weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+  PRUint32 stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  PRUint32 italicStyle = FONT_STYLE_NORMAL;
+  
+  // set up family name
+  fontFace->GetDesc(eCSSFontDesc_Family, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_String) {
+    val.GetStringValue(fontfamily);
+    fontfamily.Trim("\"");
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_String, 
+                 "@font-face family name has non-string unit type");
+    return;
+  }
+  
+  // set up weight
+  fontFace->GetDesc(eCSSFontDesc_Weight, val);
+  unit = val.GetUnit();
+  if (unit != eCSSUnit_Null) {
+    if (unit == eCSSUnit_Normal) {
+      weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+    } else {
+      weight = val.GetIntValue();
+    }
+  }
+  
+  // set up stretch
+  fontFace->GetDesc(eCSSFontDesc_Stretch, val);
+  unit = val.GetUnit();
+  if (unit != eCSSUnit_Null) {
+    if (unit == eCSSUnit_Normal) {
+      stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+    } else {
+      stretch = val.GetIntValue();
+    }
+  }
+  
+  // set up font style
+  fontFace->GetDesc(eCSSFontDesc_Style, val);
+  if (val.GetUnit() != eCSSUnit_Null) {
+    if (val.GetUnit() == eCSSUnit_Normal) {
+      italicStyle = FONT_STYLE_NORMAL;
+    } else {
+      italicStyle = val.GetIntValue();
+    }
+  }
+  
+  // set up src array
+  nsTArray<gfxFontFaceSrc> srcArray;
+
+  fontFace->GetDesc(eCSSFontDesc_Src, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Array) {
+    nsCSSValue::Array *srcArr = val.GetArrayValue();
+    PRUint32 i, numSrc = srcArr->Count(), faceIndex = 0;
+    
+    for (i = 0; i < numSrc; i++) {
+      val = srcArr->Item(i);
+      unit = val.GetUnit();
+      gfxFontFaceSrc *face = srcArray.AppendElements(1);
+      if (!face)
+        return;
+            
+      switch (unit) {
+       
+      case eCSSUnit_Local_Font:
+        val.GetStringValue(face->mLocalName);
+        face->mIsLocal = PR_TRUE;
+        face->mURI = nsnull;
+        face->mFormatFlags = 0;
+        break;
+      case eCSSUnit_URL:
+        face->mIsLocal = PR_FALSE;
+        face->mURI = val.GetURLValue();
+        face->mLocalName.Truncate();
+        face->mFormatFlags = 0;
+        while (i + 1 < numSrc && (val = srcArr->Item(i+1), 
+                 val.GetUnit() == eCSSUnit_Font_Format)) {
+          nsDependentString valueString(val.GetStringBufferValue());
+          if (valueString.LowerCaseEqualsASCII("opentype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE; 
+          } else if (valueString.LowerCaseEqualsASCII("truetype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE; 
+          } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT; 
+          } else if (valueString.LowerCaseEqualsASCII("embedded-opentype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;   
+          } else if (valueString.LowerCaseEqualsASCII("svg")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;   
+          }
+          i++;
+        }
+        break;
+      default:
+        NS_ASSERTION(unit == eCSSUnit_Local_Font || unit == eCSSUnit_URL,
+                     "strange unit type in font-face src array");
+        break;
+      }
+     }
+  }
+  
+  if (!fontfamily.IsEmpty() && srcArray.Length() > 0) {
+    fs->AddFontFace(fontfamily, srcArray, weight, stretch, italicStyle);
+  }
+  
+}
+
 static PRBool
 InsertRuleByWeight(nsICSSRule* aRule, void* aData)
 {
@@ -2325,9 +2452,27 @@ InsertRuleByWeight(nsICSSRule* aRule, void* aData)
       if (!groupRule->EnumerateRulesForwards(InsertRuleByWeight, aData))
         return PR_FALSE;
   }
+  else if (nsICSSRule::FONT_FACE_RULE == type 
+             && gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
+    nsPresContext *presContext = data->mPresContext;
+    gfxUserFontSet *fs = presContext->GetUserFontSet();
+    if (!fs) {
+      nsFontFaceLoaderContext *loaderCtx = new nsFontFaceLoaderContext(presContext);
+      if (!loaderCtx)
+        return PR_FALSE;
+      fs = new gfxUserFontSet(loaderCtx); // user font set owns loader context
+      if (!fs) {
+        delete loaderCtx;
+        return PR_FALSE;
+      }
+      presContext->SetUserFontSet(fs);
+    }
+    
+    InsertFontFaceRule(aRule, fs);
+  }
+
   return PR_TRUE;
 }
-
 
 static PRBool
 CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
