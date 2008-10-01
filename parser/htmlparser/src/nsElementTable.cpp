@@ -1055,7 +1055,7 @@ const nsHTMLElement gHTMLElements[] = {
 #if defined(MOZ_MEDIA)
   {
     /*tag*/                             eHTMLTag_source,
-    /*req-parent excl-parent*/          eHTMLTag_video,eHTMLTag_unknown,
+    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gSourceParents,&gSourceParents,
     /*autoclose starttags and endtags*/ &gPAutoClose, 0, 0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,
