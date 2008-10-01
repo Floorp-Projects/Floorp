@@ -195,21 +195,21 @@ var Browser = {
       if (!notification) {
         var bundle_browser = document.getElementById("bundle_browser");
         var buttons = [{
-            label: bundle_browser.getString("gelocation.exactLocation"),
-            subLabel: bundle_browser.getString("gelocation.exactLocation.subLabel"),
-            accessKey: bundle_browser.getString("gelocation.exactLocationKey"),
+            label: bundle_browser.getString("geolocation.exactLocation"),
+            subLabel: bundle_browser.getString("geolocation.exactLocation.subLabel"),
+            accessKey: bundle_browser.getString("geolocation.exactLocationKey"),
             callback: function(){request.allow()}
           },
           {
-            label: bundle_browser.getString("gelocation.neighborhoodLocation"),
-            subLabel: bundle_browser.getString("gelocation.neighborhoodLocation.subLabel"),
-            accessKey: bundle_browser.getString("gelocation.neighborhoodLocationKey"),
+            label: bundle_browser.getString("geolocation.neighborhoodLocation"),
+            subLabel: bundle_browser.getString("geolocation.neighborhoodLocation.subLabel"),
+            accessKey: bundle_browser.getString("geolocation.neighborhoodLocationKey"),
             callback: function(){request.allowButFuzz()}
           },
           {
-            label: bundle_browser.getString("gelocation.nothingLocation"),
+            label: bundle_browser.getString("geolocation.nothingLocation"),
             subLabel: "",
-            accessKey: bundle_browser.getString("gelocation.nothingLocationKey"),
+            accessKey: bundle_browser.getString("geolocation.nothingLocationKey"),
             callback: function(){request.cancel()}
           }];
 
