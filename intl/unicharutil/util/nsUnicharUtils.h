@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -77,6 +77,15 @@ public:
                           PRUint32 aLength) const;
   virtual int operator() (PRUnichar,
                           PRUnichar) const;
+};
+
+class nsCaseInsensitiveStringArrayComparator
+{
+public:
+  template<class A, class B>
+  PRBool Equals(const A& a, const B& b) const {
+    return a.Equals(b, nsCaseInsensitiveStringComparator());
+  }
 };
 
 inline PRBool

@@ -594,7 +594,7 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
 
     nsSVGFilterProperty *property = nsSVGEffects::GetFilterProperty(aFrame);
     if (property) {
-      nsSVGFilterFrame *filter = property->GetFilterFrame(nsnull);
+      nsSVGFilterFrame *filter = property->GetFilterFrame();
       if (filter) {
         rect = filter->GetInvalidationBBox(aFrame, rect);
       }
@@ -621,6 +621,8 @@ nsSVGUtils::UpdateGraphic(nsISVGChildFrame *aSVGFrame)
 {
   nsIFrame *frame;
   CallQueryInterface(aSVGFrame, &frame);
+
+  nsSVGEffects::InvalidateRenderingObservers(frame);
 
   if (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
@@ -985,8 +987,7 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
     nsSVGEffects::GetEffectProperties(aFrame);
 
   PRBool isOK = PR_TRUE;
-  nsSVGFilterFrame *filterFrame = effectProperties.mFilter ?
-    effectProperties.mFilter->GetFilterFrame(&isOK) : nsnull;
+  nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
 
   /* Check if we need to draw anything. HasValidCoveredRect only returns
    * true for path geometry and glyphs, so basically we're traversing
@@ -1024,10 +1025,8 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
   gfxContext *gfx = aContext->GetGfxContext();
   PRBool complexEffects = PR_FALSE;
 
-  nsSVGClipPathFrame *clipPathFrame = effectProperties.mClipPath ?
-    effectProperties.mClipPath->GetClipPathFrame(&isOK) : nsnull;
-  nsSVGMaskFrame *maskFrame = effectProperties.mMask ?
-    effectProperties.mMask->GetMaskFrame(&isOK) : nsnull;
+  nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
+  nsSVGMaskFrame *maskFrame = effectProperties.GetMaskFrame(&isOK);
 
   PRBool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : PR_TRUE;
 
@@ -1105,14 +1104,6 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
   gfx->Restore();
 }
 
-void
-nsSVGUtils::UpdateEffects(nsIFrame *aFrame)
-{
-  aFrame->DeleteProperty(nsGkAtoms::filter);
-  aFrame->DeleteProperty(nsGkAtoms::mask);
-  aFrame->DeleteProperty(nsGkAtoms::clipPath);
-}
-
 PRBool
 nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
 {
@@ -1121,7 +1112,7 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, const nsPoint &aPoint)
   if (!props.mClipPath)
     return PR_TRUE;
 
-  nsSVGClipPathFrame *clipPathFrame = props.mClipPath->GetClipPathFrame(nsnull);
+  nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame(nsnull);
   if (!clipPathFrame) {
     // clipPath is not a valid resource, so nothing gets painted, so
     // hit-testing must fail.
@@ -1435,8 +1426,9 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
     if (type == nsGkAtoms::svgImageFrame)
       return PR_TRUE;
     if (type == nsGkAtoms::svgPathGeometryFrame) {
-      nsSVGGeometryFrame *geom = static_cast<nsSVGGeometryFrame*>(aFrame);
-      if (!(geom->HasFill() && geom->HasStroke()))
+      const nsStyleSVG *style = aFrame->GetStyleSVG();
+      if (style->mFill.mType == eStyleSVGPaintType_None &&
+          style->mStroke.mType == eStyleSVGPaintType_None)
         return PR_TRUE;
     }
   }

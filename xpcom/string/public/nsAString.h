@@ -84,6 +84,14 @@ class NS_COM nsCaseInsensitiveCStringComparator
       virtual int operator()( char_type, char_type ) const;
   };
 
+class nsCaseInsensitiveCStringArrayComparator
+  {
+    public:
+      template<class A, class B>
+      PRBool Equals(const A& a, const B& b) const {
+        return a.Equals(b, nsCaseInsensitiveCStringComparator());
+      }
+  };
 
   // included here for backwards compatibility
 #ifndef nsSubstringTuple_h___
