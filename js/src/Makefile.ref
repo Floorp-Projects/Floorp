@@ -188,8 +188,7 @@ JS_HFILES =		\
 	jsmath.h	\
 	jsnum.h		\
 	jsobj.h		\
-	json.h		\
-	jsopcode.h	\
+	jsopcode.h      \
 	jsparse.h	\
 	jsarena.h	\
 	jsclist.h	\
@@ -288,7 +287,6 @@ JS_CPPFILES =		\
 	jsmath.cpp	\
 	jsnum.cpp	\
 	jsobj.cpp	\
-	json.cpp	\
 	jsopcode.cpp	\
 	jsparse.cpp	\
 	jsprf.cpp	\
