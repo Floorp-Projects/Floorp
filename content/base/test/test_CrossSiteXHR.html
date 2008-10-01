@@ -436,6 +436,133 @@ function runTest() {
   }
 
 
+  // Test cookie behavior
+  tests = [{ pass: 1,
+             method: "GET",
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 0,
+             method: "GET",
+             withCred: 1,
+             allowCred: 0,
+           },
+           { pass: 0,
+             method: "GET",
+             withCred: 1,
+             allowCred: 1,
+             origin: "*",
+           },
+           { pass: 1,
+             method: "GET",
+             withCred: 0,
+             allowCred: 1,
+             origin: "*",
+           },
+           { pass: 1,
+             method: "GET",
+             setCookie: "a=1",
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             cookie: "a=1",
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             noCookie: 1,
+             withCred: 0,
+             allowCred: 1,
+           },
+           { pass: 0,
+             method: "GET",
+             noCookie: 1,
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             setCookie: "a=2",
+             withCred: 0,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             cookie: "a=1",
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             setCookie: "a=2",
+             withCred: 1,
+             allowCred: 1,
+           },
+           { pass: 1,
+             method: "GET",
+             cookie: "a=2",
+             withCred: 1,
+             allowCred: 1,
+           },
+           ];
+
+  for each(test in tests) {
+    req = {
+      url: baseURL + "allowOrigin=" + escape(test.origin || origin),
+      method: test.method,
+      headers: test.headers,
+      withCred: test.withCred,
+    };
+
+    if (test.allowCred)
+      req.url += "&allowCred";
+
+    if (test.setCookie)
+      req.url += "&setCookie=" + escape(test.setCookie);
+    if (test.cookie)
+      req.url += "&cookie=" + escape(test.cookie);
+    if (test.noCookie)
+      req.url += "&noCookie";
+
+    if ("allowHeaders" in test)
+      req.url += "&allowHeaders=" + escape(test.allowHeaders);
+    if ("allowMethods" in test)
+      req.url += "&allowMethods=" + escape(test.allowMethods);
+
+    loaderWindow.postMessage(req.toSource(), origin);
+
+    res = eval(yield);
+    if (test.pass) {
+      is(res.didFail, false,
+        "shouldn't have failed in test for " + test.toSource());
+      is(res.status, 200, "wrong status in test for " + test.toSource());
+      is(res.responseXML, "<res>hello pass</res>",
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "<res>hello pass</res>\n",
+         "wrong responseText in test for " + test.toSource());
+      is(res.events.join(","),
+         "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load",
+         "wrong responseText in test for " + test.toSource());
+    }
+    else {
+      is(res.didFail, true,
+        "should have failed in test for " + test.toSource());
+      is(res.status, 0, "wrong status in test for " + test.toSource());
+      is(res.responseXML, null,
+         "wrong responseXML in test for " + test.toSource());
+      is(res.responseText, "",
+         "wrong responseText in test for " + test.toSource());
+      is(res.events.join(","),
+         "opening,rs1,sending,rs1,loadstart,rs2,rs4,error",
+         "wrong events in test for " + test.toSource());
+      is(res.progressEvents, 0,
+         "wrong events in test for " + test.toSource());
+    }
+  }
+
   SimpleTest.finish();
 
   yield;

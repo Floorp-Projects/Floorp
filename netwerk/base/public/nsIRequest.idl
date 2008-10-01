@@ -214,4 +214,11 @@ interface nsIRequest : nsISupports
     const unsigned long VALIDATE_ALWAYS           = 1 << 11;
     const unsigned long VALIDATE_NEVER            = 1 << 12;
     const unsigned long VALIDATE_ONCE_PER_SESSION = 1 << 13;
+
+    /**
+     * When set, this flag indicates that no user-specific data should be added
+     * to the request when opened. This means that things like authorization
+     * tokens or cookie headers should not be added.
+     */
+    const unsigned long LOAD_ANONYMOUS = 1 << 14;
 };

@@ -63,9 +63,11 @@ NS_IMPL_ISUPPORTS4(nsCrossSiteListenerProxy, nsIStreamListener,
 nsCrossSiteListenerProxy::nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
                                                    nsIPrincipal* aRequestingPrincipal,
                                                    nsIChannel* aChannel,
+                                                   PRBool aWithCredentials,
                                                    nsresult* aResult)
   : mOuterListener(aOuter),
     mRequestingPrincipal(aRequestingPrincipal),
+    mWithCredentials(aWithCredentials),
     mRequestApproved(PR_FALSE),
     mHasBeenCrossSite(PR_FALSE),
     mIsPreflight(PR_FALSE)
@@ -80,11 +82,13 @@ nsCrossSiteListenerProxy::nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
 nsCrossSiteListenerProxy::nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
                                                    nsIPrincipal* aRequestingPrincipal,
                                                    nsIChannel* aChannel,
+                                                   PRBool aWithCredentials,
                                                    const nsCString& aPreflightMethod,
                                                    const nsTArray<nsCString>& aPreflightHeaders,
                                                    nsresult* aResult)
   : mOuterListener(aOuter),
     mRequestingPrincipal(aRequestingPrincipal),
+    mWithCredentials(aWithCredentials),
     mRequestApproved(PR_FALSE),
     mHasBeenCrossSite(PR_FALSE),
     mIsPreflight(PR_TRUE),
@@ -219,7 +223,7 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
     NS_LITERAL_CSTRING("Access-Control-Allow-Origin"), allowedOriginHeader);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!allowedOriginHeader.EqualsLiteral("*")) {
+  if (mWithCredentials || !allowedOriginHeader.EqualsLiteral("*")) {
     nsCAutoString origin;
     rv = GetOrigin(mRequestingPrincipal, origin);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -229,6 +233,17 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest)
     }
   }
 
+  // Check Access-Control-Allow-Credentials header
+  if (mWithCredentials) {
+    nsCAutoString allowCredentialsHeader;
+    rv = http->GetResponseHeader(
+      NS_LITERAL_CSTRING("Access-Control-Allow-Credentials"), allowCredentialsHeader);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!allowCredentialsHeader.EqualsLiteral("true")) {
+      return NS_ERROR_DOM_BAD_URI;
+    }
+  }
 
   if (mIsPreflight) {
     nsCAutoString headerVal;
@@ -389,6 +404,17 @@ nsCrossSiteListenerProxy::UpdateChannel(nsIChannel* aChannel)
                          headers, PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
     }
+  }
+
+  // Make cookie-less if needed
+  if (mIsPreflight || !mWithCredentials) {
+    nsLoadFlags flags;
+    rv = http->GetLoadFlags(&flags);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    flags |= nsIRequest::LOAD_ANONYMOUS;
+    rv = http->SetLoadFlags(flags);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;

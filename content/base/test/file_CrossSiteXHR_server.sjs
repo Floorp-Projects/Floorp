@@ -3,7 +3,7 @@ function handleRequest(request, response)
   try {
   var query = {};
   request.queryString.split('&').forEach(function (val) {
-    var [name, value] = val.split('=');
+    [name, value] = val.split('=');
     query[name] = unescape(value);
   });
 
@@ -35,12 +35,36 @@ function handleRequest(request, response)
     throw "Origin had wrong value. Expected " + query.origin + " got " +
           request.getHeader("Origin");
   }
+  if ("cookie" in query) {
+    cookies = {};
+    request.getHeader("Cookie").split(/ *; */).forEach(function (val) {
+      [name, value] = val.split('=');
+      cookies[name] = unescape(value);
+    });
+    
+    query.cookie.split(",").forEach(function (val) {
+      [name, value] = val.split('=');
+      if (cookies[name] != value) {
+        throw "Cookie " + name  + " had wrong value. Expected " + value +
+              " got " + cookies[name];
+      }
+    });
+  }
+  if ("noCookie" in query && request.hasHeader("Cookie")) {
+    throw "Got cookies when didn't expect to";
+  }
 
 
   // Send response
 
   if (query.allowOrigin && (!isPreflight || !query.noAllowPreflight))
     response.setHeader("Access-Control-Allow-Origin", query.allowOrigin);
+
+  if (query.allowCred)
+    response.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (query.setCookie)
+    response.setHeader("Set-Cookie", query.setCookie + "; path=/");
 
 
   if (isPreflight) {

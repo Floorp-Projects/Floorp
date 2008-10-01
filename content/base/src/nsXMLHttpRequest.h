@@ -124,7 +124,7 @@ public:
   }
 
   CacheEntry* GetEntry(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                       PRBool aCreate);
+                       PRBool aWithCredentials, PRBool aCreate);
 
   void Clear();
 
@@ -134,7 +134,7 @@ private:
                          void* aUserData);
 
   static PRBool GetCacheKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                            nsACString& _retval);
+                            PRBool aWithCredentials, nsACString& _retval);
 
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
   PRCList mList;
