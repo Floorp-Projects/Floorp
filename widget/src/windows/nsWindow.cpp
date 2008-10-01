@@ -5534,7 +5534,9 @@ DWORD nsWindow::WindowStyle()
 
     case eWindowType_popup:
       if (mTransparencyMode == eTransparencyGlass) {
-        style = WS_OVERLAPPED;
+        /* Glass seems to need WS_CAPTION or WS_THICKFRAME to work.
+           WS_THICKFRAME has issues with autohiding popups but looks better */
+        style = WS_POPUP | WS_THICKFRAME;
       } else {
         style = WS_OVERLAPPED | WS_POPUP;
       }
