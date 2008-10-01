@@ -127,6 +127,7 @@
 #define XML_HTTP_REQUEST_MPART_HEADERS  (1 << 15) // Internal
 #define XML_HTTP_REQUEST_USE_XSITE_AC   (1 << 16) // Internal
 #define XML_HTTP_REQUEST_NEED_AC_PREFLIGHT (1 << 17) // Internal
+#define XML_HTTP_REQUEST_AC_WITH_CREDENTIALS (1 << 18) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNINITIALIZED |         \
@@ -293,10 +294,11 @@ public:
                     nsIStreamListener* aOuterListener,
                     nsISupports* aOuterContext,
                     nsIPrincipal* aReferrerPrincipal,
-                    const nsACString& aRequestMethod)
+                    const nsACString& aRequestMethod,
+                    PRBool aWithCredentials)
    : mOuterChannel(aOuterChannel), mOuterListener(aOuterListener),
      mOuterContext(aOuterContext), mReferrerPrincipal(aReferrerPrincipal),
-     mRequestMethod(aRequestMethod)
+     mRequestMethod(aRequestMethod), mWithCredentials(aWithCredentials)
   { }
 
   NS_DECL_ISUPPORTS
@@ -313,6 +315,7 @@ private:
   nsCOMPtr<nsISupports> mOuterContext;
   nsCOMPtr<nsIPrincipal> mReferrerPrincipal;
   nsCString mRequestMethod;
+  PRBool mWithCredentials;
 };
 
 NS_IMPL_ISUPPORTS4(nsACProxyListener, nsIStreamListener, nsIRequestObserver,
@@ -366,7 +369,7 @@ nsACProxyListener::AddResultToCache(nsIRequest *aRequest)
 
   nsAccessControlLRUCache::CacheEntry* entry =
     nsXMLHttpRequest::sAccessControlCache->
-    GetEntry(uri, mReferrerPrincipal, PR_TRUE);
+    GetEntry(uri, mReferrerPrincipal, mWithCredentials, PR_TRUE);
   if (!entry) {
     return;
   }
@@ -886,10 +889,11 @@ nsAccessControlLRUCache::CacheEntry::CheckRequest(const nsCString& aMethod,
 nsAccessControlLRUCache::CacheEntry*
 nsAccessControlLRUCache::GetEntry(nsIURI* aURI,
                                   nsIPrincipal* aPrincipal,
+                                  PRBool aWithCredentials,
                                   PRBool aCreate)
 {
   nsCString key;
-  if (!GetCacheKey(aURI, aPrincipal, key)) {
+  if (!GetCacheKey(aURI, aPrincipal, aWithCredentials, key)) {
     NS_WARNING("Invalid cache key!");
     return nsnull;
   }
@@ -983,6 +987,7 @@ nsAccessControlLRUCache::RemoveExpiredEntries(const nsACString& aKey,
 /* static */ PRBool
 nsAccessControlLRUCache::GetCacheKey(nsIURI* aURI,
                                      nsIPrincipal* aPrincipal,
+                                     PRBool aWithCredentials,
                                      nsACString& _retval)
 {
   NS_ASSERTION(aURI, "Null uri!");
@@ -1002,11 +1007,20 @@ nsAccessControlLRUCache::GetCacheKey(nsIURI* aURI,
     port.AppendInt(portInt);
   }
 
+  nsCAutoString cred;
+  if (aWithCredentials) {
+    _retval.AssignLiteral("cred");
+  }
+  else {
+    _retval.AssignLiteral("nocred");
+  }
+
   nsCAutoString spec;
   rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-  _retval.Assign(scheme + space + host + space + port + space + spec);
+  _retval.Assign(cred + space + scheme + space + host + space + port + space +
+                 spec);
 
   return PR_TRUE;
 }
@@ -2572,6 +2586,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   rv = CheckChannelForCrossSiteRequest(mChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRBool withCredentials = !!(mState & XML_HTTP_REQUEST_AC_WITH_CREDENTIALS);
+
   if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
     // Check if we need to do a preflight request.
     NS_ENSURE_TRUE(httpChannel, NS_ERROR_DOM_BAD_URI);
@@ -2610,7 +2626,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
       nsAccessControlLRUCache::CacheEntry* entry =
         sAccessControlCache ?
-        sAccessControlCache->GetEntry(uri, mPrincipal, PR_FALSE) :
+        sAccessControlCache->GetEntry(uri, mPrincipal, withCredentials, PR_FALSE) :
         nsnull;
 
       if (!entry || !entry->CheckRequest(method, mACUnsafeHeaders)) {
@@ -2653,7 +2669,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     // Always create a nsCrossSiteListenerProxy here even if it's
     // a same-origin request right now, since it could be redirected.
     listener = new nsCrossSiteListenerProxy(listener, mPrincipal, mChannel,
-                                            &rv);
+                                            withCredentials, &rv);
     NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -2689,12 +2705,14 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // a GET request to the same URI. Set that up if needed
   if (mACGetChannel) {
     nsCOMPtr<nsIStreamListener> acProxyListener =
-      new nsACProxyListener(mChannel, listener, nsnull, mPrincipal, method);
+      new nsACProxyListener(mChannel, listener, nsnull, mPrincipal, method,
+                            withCredentials);
     NS_ENSURE_TRUE(acProxyListener, NS_ERROR_OUT_OF_MEMORY);
 
     acProxyListener =
       new nsCrossSiteListenerProxy(acProxyListener, mPrincipal, mACGetChannel,
-                                   method, mACUnsafeHeaders, &rv);
+                                   withCredentials, method, mACUnsafeHeaders,
+                                   &rv);
     NS_ENSURE_TRUE(acProxyListener, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2921,6 +2939,33 @@ nsXMLHttpRequest::SetMozBackgroundRequest(PRBool aMozBackgroundRequest)
     mState &= ~XML_HTTP_REQUEST_BACKGROUND;
   }
 
+  return NS_OK;
+}
+
+/* attribute boolean withCredentials; */
+NS_IMETHODIMP
+nsXMLHttpRequest::GetWithCredentials(PRBool *_retval)
+{
+  *_retval = !!(mState & XML_HTTP_REQUEST_AC_WITH_CREDENTIALS);
+
+  return NS_OK;
+}
+
+/* attribute boolean withCredentials; */
+NS_IMETHODIMP
+nsXMLHttpRequest::SetWithCredentials(PRBool aWithCredentials)
+{
+  // Return error if we're already processing a request
+  if (XML_HTTP_REQUEST_SENT & mState) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  if (aWithCredentials) {
+    mState |= XML_HTTP_REQUEST_AC_WITH_CREDENTIALS;
+  }
+  else {
+    mState &= ~XML_HTTP_REQUEST_AC_WITH_CREDENTIALS;
+  }
   return NS_OK;
 }
 
