@@ -5865,6 +5865,8 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #ifdef MOZ_XUL
       nsRefPtr<gfxASurface> targetSurface;
       if (eTransparencyTransparent == mTransparencyMode) {
+        if (mTransparentSurface == nsnull)
+          SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
         targetSurface = mTransparentSurface;
       } else {
         targetSurface = new gfxWindowsSurface(hDC);
