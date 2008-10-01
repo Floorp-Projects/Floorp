@@ -48,6 +48,7 @@
 #include "nsSVGMatrix.h"
 #include "nsSVGRect.h"
 #include "nsSVGUtils.h"
+#include "nsSVGEffects.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPatternElement.h"
 #include "nsSVGGeometryFrame.h"
@@ -68,59 +69,13 @@ static void printRect(char *msg, nsIDOMSVGRect *aRect);
 nsSVGPatternFrame::nsSVGPatternFrame(nsStyleContext* aContext,
                                      nsIDOMSVGURIReference *aRef) :
   nsSVGPatternFrameBase(aContext),
-  mNextPattern(nsnull),
-  mLoopFlag(PR_FALSE)
+  mLoopFlag(PR_FALSE), mPaintLoopFlag(PR_FALSE),
+  mNoHRefURI(PR_FALSE)
 {
   if (aRef) {
     // Get the hRef
     aRef->GetHref(getter_AddRefs(mHref));
   }
-}
-
-nsSVGPatternFrame::~nsSVGPatternFrame()
-{
-  WillModify(mod_die);
-  if (mNextPattern)
-    mNextPattern->RemoveObserver(this);
-
-  // Notify the world that we're dying
-  DidModify(mod_die);
-}
-
-//----------------------------------------------------------------------
-// nsISupports methods:
-
-NS_INTERFACE_MAP_BEGIN(nsSVGPatternFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGPatternFrameBase)
-
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-NS_IMETHODIMP
-nsSVGPatternFrame::WillModifySVGObservable(nsISVGValue* observable,
-                                            modificationType aModType)
-{
-  WillModify(aModType);
-  return NS_OK;
-}
-                                                                                
-NS_IMETHODIMP
-nsSVGPatternFrame::DidModifySVGObservable(nsISVGValue* observable, 
-                                          nsISVGValue::modificationType aModType)
-{
-  nsIFrame *pattern = nsnull;
-  CallQueryInterface(observable, &pattern);
-  // Is this a pattern we are observing that is going away?
-  if (mNextPattern && aModType == nsISVGValue::mod_die && pattern) {
-    // Yes, we need to handle this differently
-    if (mNextPattern == pattern) {
-      mNextPattern = nsnull;
-    }
-  }
-  // Something we depend on was modified -- pass it on!
-  DidModify(aModType);
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -129,9 +84,8 @@ nsSVGPatternFrame::DidModifySVGObservable(nsISVGValue* observable,
 NS_IMETHODIMP
 nsSVGPatternFrame::DidSetStyleContext()
 {
-  WillModify();
-  DidModify();
-  return NS_OK;
+  nsSVGEffects::InvalidateRenderingObservers(this);
+  return nsSVGPatternFrameBase::DidSetStyleContext();
 }
 
 NS_IMETHODIMP
@@ -149,19 +103,16 @@ nsSVGPatternFrame::AttributeChanged(PRInt32         aNameSpaceID,
        aAttribute == nsGkAtoms::height ||
        aAttribute == nsGkAtoms::preserveAspectRatio ||
        aAttribute == nsGkAtoms::viewBox)) {
-    WillModify();
-    DidModify();
-    return NS_OK;
-  } 
+    nsSVGEffects::InvalidateRenderingObservers(this);
+  }
 
   if (aNameSpaceID == kNameSpaceID_XLink &&
       aAttribute == nsGkAtoms::href) {
-    if (mNextPattern)
-      mNextPattern->RemoveObserver(this);
-    mNextPattern = nsnull;
-    WillModify();
-    DidModify();
-    return NS_OK;
+    // Blow away our reference, if any
+    DeleteProperty(nsGkAtoms::href);
+    mNoHRefURI = PR_FALSE;
+    // And update whoever references us
+    nsSVGEffects::InvalidateRenderingObservers(this);
   }
 
   return nsSVGPatternFrameBase::AttributeChanged(aNameSpaceID,
@@ -181,11 +132,11 @@ nsSVGPatternFrame::GetType() const
 // need to return *our current* transformation
 // matrix, which depends on our units parameters
 // and X, Y, Width, and Height
-already_AddRefed<nsIDOMSVGMatrix> 
+already_AddRefed<nsIDOMSVGMatrix>
 nsSVGPatternFrame::GetCanvasTM()
 {
   nsIDOMSVGMatrix *rCTM;
-  
+
   if (mCTM) {
     rCTM = mCTM;
     NS_IF_ADDREF(rCTM);
@@ -200,7 +151,7 @@ nsSVGPatternFrame::GetCanvasTM()
       NS_NewSVGMatrix(&rCTM);
     }
   }
-  return rCTM;  
+  return rCTM;
 }
 
 nsresult
@@ -212,7 +163,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   /*
    * General approach:
    *    Set the content geometry stuff
-   *    Calculate our bbox (using x,y,width,height & patternUnits & 
+   *    Calculate our bbox (using x,y,width,height & patternUnits &
    *                        patternTransform)
    *    Create the surface
    *    Calculate the content transformation matrix
@@ -341,10 +292,17 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   // Set our geometrical parent
   mSource = aSource;
 
-  for (nsIFrame* kid = firstKid; kid;
-       kid = kid->GetNextSibling()) {
-    nsSVGUtils::PaintChildWithEffects(&tmpState, nsnull, kid);
+  // Delay checking mPaintLoopFlag until here so we can give back a clear
+  // surface if there's a loop
+  if (!mPaintLoopFlag) {
+    mPaintLoopFlag = PR_TRUE;
+    for (nsIFrame* kid = firstKid; kid;
+         kid = kid->GetNextSibling()) {
+      nsSVGUtils::PaintChildWithEffects(&tmpState, nsnull, kid);
+    }
+    mPaintLoopFlag = PR_FALSE;
   }
+
   mSource = nsnull;
 
   if (aGraphicOpacity != 1.0f) {
@@ -365,16 +323,21 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
 NS_IMETHODIMP
 nsSVGPatternFrame::GetPatternFirstChild(nsIFrame **kid)
 {
-  nsresult rv = NS_OK;
-
   // Do we have any children ourselves?
-  if (!(*kid = mFrames.FirstChild())) {
-    // No, see if we chain to someone who does
-    if (checkURITarget())
-      rv = mNextPattern->GetPatternFirstChild(kid);
-    else
-      rv = NS_ERROR_FAILURE; // No children = error
+  *kid = mFrames.FirstChild();
+  if (*kid)
+    return NS_OK;
+
+  // No, see if we chain to someone who does
+  nsSVGPatternFrame *next = GetReferencedPattern();
+
+  mLoopFlag = PR_TRUE;
+  if (!next || next->mLoopFlag) {
+    mLoopFlag = PR_FALSE;
+    return NS_ERROR_FAILURE;
   }
+
+  nsresult rv = next->GetPatternFirstChild(kid);
   mLoopFlag = PR_FALSE;
   return rv;
 }
@@ -382,246 +345,157 @@ nsSVGPatternFrame::GetPatternFirstChild(nsIFrame **kid)
 PRUint16
 nsSVGPatternFrame::GetPatternUnits()
 {
-  PRUint16 rv;
-
   // See if we need to get the value from another pattern
-  if (!checkURITarget(nsGkAtoms::patternUnits)) {
-    // No, return the values
-    nsSVGPatternElement *patternElement = static_cast<nsSVGPatternElement*>
-                                                     (mContent);
-    rv = patternElement->mEnumAttributes[nsSVGPatternElement::PATTERNUNITS].GetAnimValue();
-  } else {
-    // Yes, get it from the target
-    rv = mNextPattern->GetPatternUnits();
-  }  
-  mLoopFlag = PR_FALSE;
-  return rv;
+  nsSVGPatternElement *patternElement =
+    GetPatternWithAttr(nsGkAtoms::patternUnits, mContent);
+  return patternElement->mEnumAttributes[nsSVGPatternElement::PATTERNUNITS].GetAnimValue();
 }
 
 PRUint16
 nsSVGPatternFrame::GetPatternContentUnits()
 {
-  PRUint16 rv;
-
-  // See if we need to get the value from another pattern
-  if (!checkURITarget(nsGkAtoms::patternContentUnits)) {
-    // No, return the values
-    nsSVGPatternElement *patternElement = static_cast<nsSVGPatternElement*>
-                                                     (mContent);
-    rv = patternElement->mEnumAttributes[nsSVGPatternElement::PATTERNCONTENTUNITS].GetAnimValue();
-  } else {
-    // Yes, get it from the target
-    rv = mNextPattern->GetPatternContentUnits();
-  }  
-  mLoopFlag = PR_FALSE;
-  return rv;
+  nsSVGPatternElement *patternElement =
+    GetPatternWithAttr(nsGkAtoms::patternContentUnits, mContent);
+  return patternElement->mEnumAttributes[nsSVGPatternElement::PATTERNCONTENTUNITS].GetAnimValue();
 }
 
 gfxMatrix
 nsSVGPatternFrame::GetPatternTransform()
 {
-  gfxMatrix matrix;
-  // See if we need to get the value from another pattern
-  if (!checkURITarget(nsGkAtoms::patternTransform)) {
-    // No, return the values
-    nsSVGPatternElement *patternElement = static_cast<nsSVGPatternElement*>
-                                                     (mContent);
-    nsCOMPtr<nsIDOMSVGTransformList> lTrans;
-    patternElement->mPatternTransform->GetAnimVal(getter_AddRefs(lTrans));
-    nsCOMPtr<nsIDOMSVGMatrix> patternTransform =
-      nsSVGTransformList::GetConsolidationMatrix(lTrans);
-    if (patternTransform) {
-      matrix = nsSVGUtils::ConvertSVGMatrixToThebes(patternTransform);
-    }
-  } else {
-    // Yes, get it from the target
-    matrix = mNextPattern->GetPatternTransform();
-  }
-  mLoopFlag = PR_FALSE;
+  nsSVGPatternElement *patternElement =
+    GetPatternWithAttr(nsGkAtoms::patternTransform, mContent);
 
+  gfxMatrix matrix;
+  nsCOMPtr<nsIDOMSVGTransformList> lTrans;
+  patternElement->mPatternTransform->GetAnimVal(getter_AddRefs(lTrans));
+  nsCOMPtr<nsIDOMSVGMatrix> patternTransform =
+    nsSVGTransformList::GetConsolidationMatrix(lTrans);
+  if (patternTransform) {
+    matrix = nsSVGUtils::ConvertSVGMatrixToThebes(patternTransform);
+  }
   return matrix;
 }
 
 NS_IMETHODIMP
 nsSVGPatternFrame::GetViewBox(nsIDOMSVGRect **aViewBox)
 {
-  // See if we need to get the value from another pattern
-  if (!checkURITarget(nsGkAtoms::viewBox)) {
-    // No, return the values
-    nsCOMPtr<nsIDOMSVGFitToViewBox> patternElement = 
-                                            do_QueryInterface(mContent);
-    nsCOMPtr<nsIDOMSVGAnimatedRect> viewBox;
-    patternElement->GetViewBox(getter_AddRefs(viewBox));
-    viewBox->GetAnimVal(aViewBox);
-  } else {
-    // Yes, get it from the target
-    mNextPattern->GetViewBox(aViewBox);
-  }
-  mLoopFlag = PR_FALSE;
-  return NS_OK;
+  nsSVGPatternElement *patternElement =
+    GetPatternWithAttr(nsGkAtoms::viewBox, mContent);
+
+  nsCOMPtr<nsIDOMSVGAnimatedRect> viewBox;
+  patternElement->GetViewBox(getter_AddRefs(viewBox));
+  return viewBox->GetAnimVal(aViewBox);
 }
 
 NS_IMETHODIMP
-nsSVGPatternFrame::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio 
+nsSVGPatternFrame::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio
                                           **aPreserveAspectRatio)
 {
-  // See if we need to get the value from another pattern
-  if (!checkURITarget(nsGkAtoms::preserveAspectRatio)) {
-    // No, return the values
-    nsCOMPtr<nsIDOMSVGFitToViewBox> patternElement = 
-                                            do_QueryInterface(mContent);
-    patternElement->GetPreserveAspectRatio(aPreserveAspectRatio);
-  } else {
-    // Yes, get it from the target
-    mNextPattern->GetPreserveAspectRatio(aPreserveAspectRatio);
-  }
-  mLoopFlag = PR_FALSE;
-  return NS_OK;
+  nsSVGPatternElement *patternElement =
+    GetPatternWithAttr(nsGkAtoms::preserveAspectRatio, mContent);
+
+  return patternElement->GetPreserveAspectRatio(aPreserveAspectRatio);
 }
 
 nsSVGLength2 *
 nsSVGPatternFrame::GetX()
 {
-  nsSVGLength2 *rv = nsnull;
-
-  // See if we need to get the value from another pattern
-  if (checkURITarget(nsGkAtoms::x)) {
-    // Yes, get it from the target
-    rv = mNextPattern->GetX();
-  } else {
-    // No, return the values
-    nsSVGPatternElement *pattern =
-      static_cast<nsSVGPatternElement*>(mContent);
-    rv = &pattern->mLengthAttributes[nsSVGPatternElement::X];
-  }
-  mLoopFlag = PR_FALSE;
-  return rv;
+  nsSVGPatternElement *pattern = GetPatternWithAttr(nsGkAtoms::x, mContent);
+  return &pattern->mLengthAttributes[nsSVGPatternElement::X];
 }
 
 nsSVGLength2 *
 nsSVGPatternFrame::GetY()
 {
-  nsSVGLength2 *rv = nsnull;
-
-  // See if we need to get the value from another pattern
-  if (checkURITarget(nsGkAtoms::y)) {
-    // Yes, get it from the target
-    rv = mNextPattern->GetY();
-  } else {
-    // No, return the values
-    nsSVGPatternElement *pattern =
-      static_cast<nsSVGPatternElement*>(mContent);
-    rv = &pattern->mLengthAttributes[nsSVGPatternElement::Y];
-  }
-  mLoopFlag = PR_FALSE;
-  return rv;
+  nsSVGPatternElement *pattern = GetPatternWithAttr(nsGkAtoms::y, mContent);
+  return &pattern->mLengthAttributes[nsSVGPatternElement::Y];
 }
 
 nsSVGLength2 *
 nsSVGPatternFrame::GetWidth()
 {
-  nsSVGLength2 *rv = nsnull;
-
-  // See if we need to get the value from another pattern
-  if (checkURITarget(nsGkAtoms::width)) {
-    // Yes, get it from the target
-    rv = mNextPattern->GetWidth();
-  } else {
-    // No, return the values
-    nsSVGPatternElement *pattern =
-      static_cast<nsSVGPatternElement*>(mContent);
-    rv = &pattern->mLengthAttributes[nsSVGPatternElement::WIDTH];
-  }
-  mLoopFlag = PR_FALSE;
-  return rv;
+  nsSVGPatternElement *pattern = GetPatternWithAttr(nsGkAtoms::width, mContent);
+  return &pattern->mLengthAttributes[nsSVGPatternElement::WIDTH];
 }
 
 nsSVGLength2 *
 nsSVGPatternFrame::GetHeight()
 {
-  nsSVGLength2 *rv = nsnull;
-
-  // See if we need to get the value from another pattern
-  if (checkURITarget(nsGkAtoms::height)) {
-    // Yes, get it from the target
-    rv = mNextPattern->GetHeight();
-  } else {
-    // No, return the values
-    nsSVGPatternElement *pattern =
-      static_cast<nsSVGPatternElement*>(mContent);
-    rv = &pattern->mLengthAttributes[nsSVGPatternElement::HEIGHT];
-  }
-  mLoopFlag = PR_FALSE;
-  return rv;
+  nsSVGPatternElement *pattern = GetPatternWithAttr(nsGkAtoms::height, mContent);
+  return &pattern->mLengthAttributes[nsSVGPatternElement::HEIGHT];
 }
 
 // Private (helper) methods
-PRBool 
-nsSVGPatternFrame::checkURITarget(nsIAtom *attr) {
-  // Was the attribute explicitly set?
-  if (mContent->HasAttr(kNameSpaceID_None, attr)) {
-    // Yes, just return
-    return PR_FALSE;
+nsSVGPatternFrame *
+nsSVGPatternFrame::GetReferencedPattern()
+{
+  if (mNoHRefURI)
+    return nsnull;
+
+  nsSVGPaintingProperty *property =
+    static_cast<nsSVGPaintingProperty*>(GetProperty(nsGkAtoms::href));
+
+  if (!property) {
+    // Fetch our pattern element's xlink:href attribute
+    nsAutoString href;
+    mHref->GetAnimVal(href);
+    if (href.IsEmpty()) {
+      mNoHRefURI = PR_TRUE;
+      return nsnull; // no URL
+    }
+
+    // Convert href to an nsIURI
+    nsCOMPtr<nsIURI> targetURI;
+    nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
+    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
+                                              mContent->GetCurrentDoc(), base);
+
+    property = nsSVGEffects::GetPaintingProperty(targetURI, this, nsGkAtoms::href);
+    if (!property)
+      return nsnull;
   }
-  return checkURITarget();
+
+  nsIFrame *result = property->GetReferencedFrame();
+  if (!result)
+    return nsnull;
+
+  nsIAtom* frameType = result->GetType();
+  if (frameType != nsGkAtoms::svgPatternFrame)
+    return nsnull;
+
+  return static_cast<nsSVGPatternFrame*>(result);
 }
 
-PRBool
-nsSVGPatternFrame::checkURITarget(void) {
-  nsIFrame *nextPattern;
-  mLoopFlag = PR_TRUE; // Set our loop detection flag
-  // Have we already figured out the next Pattern?
-  if (mNextPattern != nsnull) {
-    return PR_TRUE;
-  }
+nsSVGPatternElement *
+nsSVGPatternFrame::GetPatternWithAttr(nsIAtom *aAttrName, nsIContent *aDefault)
+{
+  if (mContent->HasAttr(kNameSpaceID_None, aAttrName))
+    return static_cast<nsSVGPatternElement *>(mContent);
 
-  // check if we reference another pattern to "inherit" its children
-  // or attributes
-  nsAutoString href;
-  mHref->GetAnimVal(href);
-  // Do we have URI?
-  if (href.IsEmpty()) {
-    return PR_FALSE; // No, return the default
-  }
+  nsSVGPatternElement *pattern = static_cast<nsSVGPatternElement *>(aDefault);
 
-  nsCOMPtr<nsIURI> targetURI;
-  nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
-  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI),
-    href, mContent->GetCurrentDoc(), base);
+  nsSVGPatternFrame *next = GetReferencedPattern();
+  if (!next)
+    return pattern;
 
-  // Note that we are using *our* frame tree for this call, 
-  // otherwise we're going to have to get the PresShell in each call
-  if (NS_SUCCEEDED(
-          nsSVGUtils::GetReferencedFrame(&nextPattern, targetURI, 
-                                         mContent, 
-                                         PresContext()->PresShell()))) {
-    nsIAtom* frameType = nextPattern->GetType();
-    if (frameType != nsGkAtoms::svgPatternFrame)
-      return PR_FALSE;
-    mNextPattern = (nsSVGPatternFrame *)nextPattern;
-    // Are we looping?
-    if (mNextPattern->mLoopFlag) {
-      // Yes, remove the reference and return an error
-      NS_WARNING("Pattern loop detected!");
-      mNextPattern = nsnull;
-      return PR_FALSE;
-    }
-    // Add ourselves to the observer list
-    if (mNextPattern) {
-      // Can't use the NS_ADD macro here because of nsISupports ambiguity
-      mNextPattern->AddObserver(this);
-    }
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  // Set mLoopFlag before checking mNextGrad->mLoopFlag in case we are mNextGrad
+  mLoopFlag = PR_TRUE;
+  // XXXjwatt: we should really send an error to the JavaScript Console here:
+  NS_WARN_IF_FALSE(!next->mLoopFlag, "gradient reference loop detected "
+                                     "while inheriting attribute!");
+  if (!next->mLoopFlag)
+    pattern = next->GetPatternWithAttr(aAttrName, aDefault);
+  mLoopFlag = PR_FALSE;
+
+  return pattern;
 }
 
 // -------------------------------------------------------------------------
 // Helper functions
 // -------------------------------------------------------------------------
 
-nsresult 
-nsSVGPatternFrame::GetPatternRect(nsIDOMSVGRect **patternRect, 
+nsresult
+nsSVGPatternFrame::GetPatternRect(nsIDOMSVGRect **patternRect,
                                   nsIDOMSVGRect *bbox,
                                   nsIDOMSVGMatrix *callerCTM,
                                   nsSVGElement *content)
@@ -677,7 +551,7 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **aCTM,
     float width, height;
     callerBBox->GetWidth(&width);
     callerBBox->GetHeight(&height);
-    NS_NewSVGMatrix(getter_AddRefs(tCTM), width, 0.0f, 0.0f, 
+    NS_NewSVGMatrix(getter_AddRefs(tCTM), width, 0.0f, 0.0f,
                     height, 0.0f, 0.0f);
   } else {
     float scale = nsSVGUtils::MaxExpansion(callerCTM);
@@ -748,7 +622,7 @@ nsSVGPatternFrame::GetPatternMatrix(nsIDOMSVGRect *bbox,
 }
 
 nsresult
-nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM, 
+nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
                                      nsIDOMSVGRect **aBBox,
                                      nsSVGElement **aContent,
                                      nsSVGGeometryFrame *aSource)
@@ -781,7 +655,7 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
     CallQueryInterface(aSource, &callerSVGFrame);
 
   callerSVGFrame->SetMatrixPropagation(PR_FALSE);
-  callerSVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION | 
+  callerSVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
                                    nsISVGChildFrame::TRANSFORM_CHANGED );
   callerSVGFrame->GetBBox(aBBox);
   callerSVGFrame->SetMatrixPropagation(PR_TRUE);
@@ -888,7 +762,7 @@ nsIFrame* NS_NewSVGPatternFrame(nsIPresShell*   aPresShell,
   }
 
   nsCOMPtr<nsIDOMSVGURIReference> ref = do_QueryInterface(aContent);
-  NS_ASSERTION(ref, 
+  NS_ASSERTION(ref,
                "NS_NewSVGPatternFrame -- Content doesn't support nsIDOMSVGURIReference");
 
 #ifdef DEBUG_scooter
@@ -907,11 +781,11 @@ static void printCTM(char *msg, gfxMatrix aCTM)
 static void printCTM(char *msg, nsIDOMSVGMatrix *aCTM)
 {
   float a,b,c,d,e,f;
-  aCTM->GetA(&a); 
-  aCTM->GetB(&b); 
+  aCTM->GetA(&a);
+  aCTM->GetB(&b);
   aCTM->GetC(&c);
-  aCTM->GetD(&d); 
-  aCTM->GetE(&e); 
+  aCTM->GetD(&d);
+  aCTM->GetE(&e);
   aCTM->GetF(&f);
   printf("%s {%f,%f,%f,%f,%f,%f}\n",msg,a,b,c,d,e,f);
 }
@@ -919,10 +793,10 @@ static void printCTM(char *msg, nsIDOMSVGMatrix *aCTM)
 static void printRect(char *msg, nsIDOMSVGRect *aRect)
 {
   float x,y,width,height;
-  aRect->GetX(&x); 
-  aRect->GetY(&y); 
-  aRect->GetWidth(&width); 
-  aRect->GetHeight(&height); 
+  aRect->GetX(&x);
+  aRect->GetY(&y);
+  aRect->GetWidth(&width);
+  aRect->GetHeight(&height);
   printf("%s {%f,%f,%f,%f}\n",msg,x,y,width,height);
 }
 #endif
