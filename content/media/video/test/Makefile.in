@@ -43,7 +43,9 @@ relativesrcdir  = content/media/video/test
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_autoplay.html \
+_TEST_FILES = 	test_audio1.html \
+		test_audio2.html \
+                test_autoplay.html \
                 test_constants.html \
                 test_controls.html \
                 test_currentTime.html \
@@ -53,6 +55,7 @@ _TEST_FILES = 	test_autoplay.html \
                 test_playbackRate.html \
                 test_readyState.html \
                 test_start.html \
+                sound.ogg \
 #               test_bug448534.html \
                 320x240.ogg \
                 $(NULL)

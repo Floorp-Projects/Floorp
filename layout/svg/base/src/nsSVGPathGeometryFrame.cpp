@@ -363,8 +363,8 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 
   if (mask & HITTEST_MASK_FILL)
     isHit = context.PointInFill(userSpacePoint);
-  if (!isHit && (mask & HITTEST_MASK_STROKE)) {
-    SetupCairoStrokeHitGeometry(&context);
+  if (!isHit && (mask & HITTEST_MASK_STROKE) &&
+      SetupCairoStrokeHitGeometry(&context)) {
     isHit = context.PointInStroke(userSpacePoint);
   }
 
@@ -431,8 +431,7 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 
   gfxRect extent;
 
-  if (HasStroke()) {
-    SetupCairoStrokeGeometry(&context);
+  if (SetupCairoStrokeGeometry(&context)) {
     extent = context.GetUserStrokeExtent();
     if (!IsDegeneratePath(extent)) {
       extent = context.UserToDevice(extent);
@@ -653,11 +652,11 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
     break;
   }
 
-  if (HasFill() && SetupCairoFill(gfx)) {
+  if (SetupCairoFill(gfx)) {
     gfx->Fill();
   }
 
-  if (HasStroke() && SetupCairoStroke(gfx)) {
+  if (SetupCairoStroke(gfx)) {
     gfx->Stroke();
   }
 

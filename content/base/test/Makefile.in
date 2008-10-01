@@ -217,6 +217,11 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug454326.html \
 		test_bug457746.html \
 		bug457746.sjs \
+		test_CrossSiteXHR.html \
+		file_CrossSiteXHR_inner.html \
+		file_CrossSiteXHR_server.sjs \
+		test_CrossSiteXHR_cache.html \
+		file_CrossSiteXHR_cache_server.sjs \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
