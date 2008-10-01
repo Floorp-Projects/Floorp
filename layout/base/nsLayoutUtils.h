@@ -821,11 +821,17 @@ public:
   static void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
 
   /**
-   * Determine if any style coordinate is nonzero
-   *   @param aCoord the style sides
+   * Determine if any corner radius is of nonzero size
+   *   @param aCorners the |nsStyleCorners| object to check
    *   @return PR_TRUE unless all the coordinates are 0%, 0 or null.
+   *
+   * A corner radius with one dimension zero and one nonzero is
+   * treated as a nonzero-radius corner, even though it will end up
+   * being rendered like a zero-radius corner.  This is because such
+   * corners are not expected to appear outside of test cases, and it's
+   * simpler to implement the test this way.
    */
-  static PRBool HasNonZeroSide(const nsStyleSides& aSides);
+  static PRBool HasNonZeroCorner(const nsStyleCorners& aCorners);
 
   /**
    * Determine if a widget is likely to require transparency or translucency.

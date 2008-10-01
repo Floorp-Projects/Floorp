@@ -40,6 +40,7 @@
 #include "nsStyleCoord.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "prlog.h"
 
 nsStyleCoord::nsStyleCoord(nsStyleUnit aUnit)
   : mUnit(aUnit)
@@ -170,6 +171,7 @@ void nsStyleCoord::SetNoneValue(void)
   mValue.mInt = 0;
 }
 
+#ifdef DEBUG
 void nsStyleCoord::AppendToString(nsString& aBuffer) const
 {
   if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
@@ -203,8 +205,23 @@ void nsStyleCoord::ToString(nsString& aBuffer) const
   aBuffer.Truncate();
   AppendToString(aBuffer);
 }
+#endif
 
-
+// used by nsStyleSides and nsStyleCorners
+#define COMPARE_INDEXED_COORD(i)                                              \
+  PR_BEGIN_MACRO                                                              \
+  if (mUnits[i] != aOther.mUnits[i])                                          \
+    return PR_FALSE;                                                          \
+  if ((eStyleUnit_Percent <= mUnits[i]) &&                                    \
+      (mUnits[i] < eStyleUnit_Coord)) {                                       \
+    if (mValues[i].mFloat != aOther.mValues[i].mFloat)                        \
+      return PR_FALSE;                                                        \
+  }                                                                           \
+  else {                                                                      \
+    if (mValues[i].mInt != aOther.mValues[i].mInt)                            \
+      return PR_FALSE;                                                        \
+  }                                                                           \
+  PR_END_MACRO
 
 
 nsStyleSides::nsStyleSides(void)
@@ -212,30 +229,12 @@ nsStyleSides::nsStyleSides(void)
   memset(this, 0x00, sizeof(nsStyleSides));
 }
 
-#define COMPARE_SIDE(side)                                                    \
-  if ((eStyleUnit_Percent <= mUnits[side]) &&                                 \
-      (mUnits[side] < eStyleUnit_Coord)) {                                    \
-    if (mValues[side].mFloat != aOther.mValues[side].mFloat)                  \
-      return PR_FALSE;                                                        \
-  }                                                                           \
-  else {                                                                      \
-    if (mValues[side].mInt != aOther.mValues[side].mInt)                      \
-      return PR_FALSE;                                                        \
-  }
-
 PRBool nsStyleSides::operator==(const nsStyleSides& aOther) const
 {
-  if ((mUnits[NS_SIDE_LEFT] == aOther.mUnits[NS_SIDE_LEFT]) && 
-      (mUnits[NS_SIDE_TOP] == aOther.mUnits[NS_SIDE_TOP]) &&
-      (mUnits[NS_SIDE_RIGHT] == aOther.mUnits[NS_SIDE_RIGHT]) &&
-      (mUnits[NS_SIDE_BOTTOM] == aOther.mUnits[NS_SIDE_BOTTOM])) {
-    COMPARE_SIDE(NS_SIDE_LEFT);
-    COMPARE_SIDE(NS_SIDE_TOP);
-    COMPARE_SIDE(NS_SIDE_RIGHT);
-    COMPARE_SIDE(NS_SIDE_BOTTOM);
-    return PR_TRUE;
+  NS_FOR_CSS_SIDES(i) {
+    COMPARE_INDEXED_COORD(i);
   }
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 void nsStyleSides::Reset(void)
@@ -243,6 +242,7 @@ void nsStyleSides::Reset(void)
   memset(this, 0x00, sizeof(nsStyleSides));
 }
 
+#ifdef DEBUG
 void nsStyleSides::AppendToString(nsString& aBuffer) const
 {
   aBuffer.AppendLiteral("left: ");
@@ -263,4 +263,136 @@ void nsStyleSides::ToString(nsString& aBuffer) const
   aBuffer.Truncate();
   AppendToString(aBuffer);
 }
+#endif
 
+nsStyleCorners::nsStyleCorners()
+{
+  memset(this, 0x00, sizeof(nsStyleCorners));
+}
+
+PRBool
+nsStyleCorners::operator==(const nsStyleCorners& aOther) const
+{
+  NS_FOR_CSS_HALF_CORNERS(i) {
+    COMPARE_INDEXED_COORD(i);
+  }
+  return PR_TRUE;
+}
+
+void nsStyleCorners::Reset(void)
+{
+  memset(this, 0x00, sizeof(nsStyleCorners));
+}
+
+#ifdef DEBUG
+void nsStyleCorners::AppendToString(nsString& aBuffer) const
+{
+  aBuffer.AppendLiteral("top-left: ");
+  Get(NS_CORNER_TOP_LEFT_X).AppendToString(aBuffer);
+  Get(NS_CORNER_TOP_LEFT_Y).AppendToString(aBuffer);
+  
+  aBuffer.AppendLiteral("top-right: ");
+  Get(NS_CORNER_TOP_RIGHT_X).AppendToString(aBuffer);
+  Get(NS_CORNER_TOP_RIGHT_Y).AppendToString(aBuffer);
+
+  aBuffer.AppendLiteral("bottom-right: ");
+  Get(NS_CORNER_BOTTOM_RIGHT_X).AppendToString(aBuffer);
+  Get(NS_CORNER_BOTTOM_RIGHT_Y).AppendToString(aBuffer);
+
+  aBuffer.AppendLiteral("bottom-left: ");
+  Get(NS_CORNER_BOTTOM_LEFT_X).AppendToString(aBuffer);
+  Get(NS_CORNER_BOTTOM_LEFT_Y).AppendToString(aBuffer);
+}
+
+void nsStyleCorners::ToString(nsString& aBuffer) const
+{
+  aBuffer.Truncate();
+  AppendToString(aBuffer);
+}
+#endif
+
+// Validation of NS_SIDE_IS_VERTICAL and NS_HALF_CORNER_IS_X.
+#define CASE(side, result)                                                    \
+  PR_STATIC_ASSERT(NS_SIDE_IS_VERTICAL(side) == result)
+CASE(NS_SIDE_TOP,    PR_FALSE);
+CASE(NS_SIDE_RIGHT,  PR_TRUE);
+CASE(NS_SIDE_BOTTOM, PR_FALSE);
+CASE(NS_SIDE_LEFT,   PR_TRUE);
+#undef CASE
+
+#define CASE(corner, result)                                                  \
+  PR_STATIC_ASSERT(NS_HALF_CORNER_IS_X(corner) == result)
+CASE(NS_CORNER_TOP_LEFT_X,     PR_TRUE);
+CASE(NS_CORNER_TOP_LEFT_Y,     PR_FALSE);
+CASE(NS_CORNER_TOP_RIGHT_X,    PR_TRUE);
+CASE(NS_CORNER_TOP_RIGHT_Y,    PR_FALSE);
+CASE(NS_CORNER_BOTTOM_RIGHT_X, PR_TRUE);
+CASE(NS_CORNER_BOTTOM_RIGHT_Y, PR_FALSE);
+CASE(NS_CORNER_BOTTOM_LEFT_X,  PR_TRUE);
+CASE(NS_CORNER_BOTTOM_LEFT_Y,  PR_FALSE);
+#undef CASE
+
+// Validation of NS_HALF_TO_FULL_CORNER.
+#define CASE(corner, result)                                                  \
+  PR_STATIC_ASSERT(NS_HALF_TO_FULL_CORNER(corner) == result)
+CASE(NS_CORNER_TOP_LEFT_X,     NS_CORNER_TOP_LEFT);
+CASE(NS_CORNER_TOP_LEFT_Y,     NS_CORNER_TOP_LEFT);
+CASE(NS_CORNER_TOP_RIGHT_X,    NS_CORNER_TOP_RIGHT);
+CASE(NS_CORNER_TOP_RIGHT_Y,    NS_CORNER_TOP_RIGHT);
+CASE(NS_CORNER_BOTTOM_RIGHT_X, NS_CORNER_BOTTOM_RIGHT);
+CASE(NS_CORNER_BOTTOM_RIGHT_Y, NS_CORNER_BOTTOM_RIGHT);
+CASE(NS_CORNER_BOTTOM_LEFT_X,  NS_CORNER_BOTTOM_LEFT);
+CASE(NS_CORNER_BOTTOM_LEFT_Y,  NS_CORNER_BOTTOM_LEFT);
+#undef CASE
+
+// Validation of NS_FULL_TO_HALF_CORNER.
+#define CASE(corner, vert, result)                                            \
+  PR_STATIC_ASSERT(NS_FULL_TO_HALF_CORNER(corner, vert) == result)
+CASE(NS_CORNER_TOP_LEFT,     PR_FALSE, NS_CORNER_TOP_LEFT_X);
+CASE(NS_CORNER_TOP_LEFT,     PR_TRUE,  NS_CORNER_TOP_LEFT_Y);
+CASE(NS_CORNER_TOP_RIGHT,    PR_FALSE, NS_CORNER_TOP_RIGHT_X);
+CASE(NS_CORNER_TOP_RIGHT,    PR_TRUE,  NS_CORNER_TOP_RIGHT_Y);
+CASE(NS_CORNER_BOTTOM_RIGHT, PR_FALSE, NS_CORNER_BOTTOM_RIGHT_X);
+CASE(NS_CORNER_BOTTOM_RIGHT, PR_TRUE,  NS_CORNER_BOTTOM_RIGHT_Y);
+CASE(NS_CORNER_BOTTOM_LEFT,  PR_FALSE, NS_CORNER_BOTTOM_LEFT_X);
+CASE(NS_CORNER_BOTTOM_LEFT,  PR_TRUE,  NS_CORNER_BOTTOM_LEFT_Y);
+#undef CASE
+
+// Validation of NS_SIDE_TO_{FULL,HALF}_CORNER.
+#define CASE(side, second, result)                                            \
+  PR_STATIC_ASSERT(NS_SIDE_TO_FULL_CORNER(side, second) == result)
+CASE(NS_SIDE_TOP,    PR_FALSE, NS_CORNER_TOP_LEFT);
+CASE(NS_SIDE_TOP,    PR_TRUE,  NS_CORNER_TOP_RIGHT);
+
+CASE(NS_SIDE_RIGHT,  PR_FALSE, NS_CORNER_TOP_RIGHT);
+CASE(NS_SIDE_RIGHT,  PR_TRUE,  NS_CORNER_BOTTOM_RIGHT);
+
+CASE(NS_SIDE_BOTTOM, PR_FALSE, NS_CORNER_BOTTOM_RIGHT);
+CASE(NS_SIDE_BOTTOM, PR_TRUE,  NS_CORNER_BOTTOM_LEFT);
+
+CASE(NS_SIDE_LEFT,   PR_FALSE, NS_CORNER_BOTTOM_LEFT);
+CASE(NS_SIDE_LEFT,   PR_TRUE,  NS_CORNER_TOP_LEFT);
+#undef CASE
+
+#define CASE(side, second, parallel, result)                                  \
+  PR_STATIC_ASSERT(NS_SIDE_TO_HALF_CORNER(side, second, parallel) == result)
+CASE(NS_SIDE_TOP,    PR_FALSE, PR_TRUE,  NS_CORNER_TOP_LEFT_X);
+CASE(NS_SIDE_TOP,    PR_FALSE, PR_FALSE, NS_CORNER_TOP_LEFT_Y);
+CASE(NS_SIDE_TOP,    PR_TRUE,  PR_TRUE,  NS_CORNER_TOP_RIGHT_X);
+CASE(NS_SIDE_TOP,    PR_TRUE,  PR_FALSE, NS_CORNER_TOP_RIGHT_Y);
+
+CASE(NS_SIDE_RIGHT,  PR_FALSE, PR_FALSE, NS_CORNER_TOP_RIGHT_X);
+CASE(NS_SIDE_RIGHT,  PR_FALSE, PR_TRUE,  NS_CORNER_TOP_RIGHT_Y);
+CASE(NS_SIDE_RIGHT,  PR_TRUE,  PR_FALSE, NS_CORNER_BOTTOM_RIGHT_X);
+CASE(NS_SIDE_RIGHT,  PR_TRUE,  PR_TRUE,  NS_CORNER_BOTTOM_RIGHT_Y);
+
+CASE(NS_SIDE_BOTTOM, PR_FALSE, PR_TRUE,  NS_CORNER_BOTTOM_RIGHT_X);
+CASE(NS_SIDE_BOTTOM, PR_FALSE, PR_FALSE, NS_CORNER_BOTTOM_RIGHT_Y);
+CASE(NS_SIDE_BOTTOM, PR_TRUE,  PR_TRUE,  NS_CORNER_BOTTOM_LEFT_X);
+CASE(NS_SIDE_BOTTOM, PR_TRUE,  PR_FALSE, NS_CORNER_BOTTOM_LEFT_Y);
+
+CASE(NS_SIDE_LEFT,   PR_FALSE, PR_FALSE, NS_CORNER_BOTTOM_LEFT_X);
+CASE(NS_SIDE_LEFT,   PR_FALSE, PR_TRUE,  NS_CORNER_BOTTOM_LEFT_Y);
+CASE(NS_SIDE_LEFT,   PR_TRUE,  PR_FALSE, NS_CORNER_TOP_LEFT_X);
+CASE(NS_SIDE_LEFT,   PR_TRUE,  PR_TRUE,  NS_CORNER_TOP_LEFT_Y);
+#undef CASE
