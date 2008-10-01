@@ -613,6 +613,157 @@ testdesc = "[flush and reload for verification]"
 storage = LoginTest.reloadStorage(OUTDIR, "output-454708.txt");
 LoginTest.checkStorageData(storage, [], [bad8User]);
 
+
+/*
+ * ---------------------- Bug 457358 ----------------------
+ * need to reset UTF8 converter after it encounters invalid input
+ * (pwmgr problems in FF3.0.3)
+ */
+
+/* ========== 17 ========== */
+testnum++;
+testdesc = "ensure UTF8 converter isn't left in bad state."
+
+var utfRealm = "Acc" +
+               String.fromCharCode(0xe8) +
+               "s reserv" +
+               String.fromCharCode(0xe9);
+bad8User.init("https://bugzilla.mozilla.org", null, utfRealm,
+            "dummydude", "itsasecret", "", "");
+
+storage = LoginTest.initStorage(INDIR, "signons-457358-1.txt",
+                               OUTDIR, "output-457358-1.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+// The output file should contain valid UTF8 now, but the resulting
+// JS string value remains the same.
+
+testdesc = "[flush and reload for verification]"
+storage = LoginTest.reloadStorage(OUTDIR, "output-457358-1.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+/* ========== 18 ========== */
+testnum++;
+testdesc = "ensure UTF8 converter isn't left in bad state."
+
+// The username field here is "Acc" + String.fromCharCode(0xe8), but the last
+// character is invalid UTF8 -- it's the beginning of a multibyte sequence,
+// but at the end of the input. The unicode converter silently truncates the
+// string, and will throw when we feed it the next chunk of input (the
+// encrypted username)
+//
+// Test for an expected login -- everthing fine except for the truncated field
+// name (which we don't use anyway)
+bad8User.init("https://bugzilla.mozilla.org", "https://bugzilla.mozilla.org", null,
+            "dummydude", "itsasecret", "Acc", "pass");
+
+storage = LoginTest.initStorage(INDIR, "signons-457358-2.txt",
+                               OUTDIR, "output-457358-2.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+// The output file should contain valid UTF8 now, but the resulting
+// JS string value remains the same.
+
+testdesc = "[flush and reload for verification]"
+storage = LoginTest.reloadStorage(OUTDIR, "output-457358-2.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+/* ========== 19 ========== */
+testnum++;
+testdesc = "ensure UTF8 converter isn't left in bad state."
+
+// As with previous test, but triggered with both field names.
+
+bad8User.init("https://bugzilla.mozilla.org", "https://bugzilla.mozilla.org", null,
+            "dummydude", "itsasecret", "u-Acc", "p-Acc");
+
+storage = LoginTest.initStorage(INDIR, "signons-457358-3.txt",
+                               OUTDIR, "output-457358-3.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+// The output file should contain valid UTF8 now, but the resulting
+// JS string value remains the same.
+
+testdesc = "[flush and reload for verification]"
+storage = LoginTest.reloadStorage(OUTDIR, "output-457358-3.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+/* ========== 20 ========== */
+testnum++;
+testdesc = "ensure UTF8 converter isn't left in bad state."
+
+// Last character in the realm, this time. Not trunated, because the
+// "http://site.com (realm)" format means there's always a trailing character,
+// so the conversino throws.
+
+bad8User.init("https://bugzilla.mozilla.org", null, "Acc" + String.fromCharCode(0xe8),
+            "dummydude", "itsasecret", "", "");
+
+storage = LoginTest.initStorage(INDIR, "signons-457358-4.txt",
+                               OUTDIR, "output-457358-4.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+// The output file should contain valid UTF8 now, but the resulting
+// JS string value remains the same.
+
+testdesc = "[flush and reload for verification]"
+storage = LoginTest.reloadStorage(OUTDIR, "output-457358-4.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+/* ========== 21 ========== */
+testnum++;
+testdesc = "ensure UTF8 converter isn't left in bad state."
+
+// Like last test, but try adding and removing a login too.
+
+bad8User.init("https://bugzilla.mozilla.org", null, "Acc" + String.fromCharCode(0xe8),
+            "dummydude", "itsasecret", "", "");
+
+storage = LoginTest.initStorage(INDIR, "signons-457358-4.txt",
+                               OUTDIR, "output-457358-4b.txt");
+
+var anotherUser = Cc["@mozilla.org/login-manager/loginInfo;1"].
+              createInstance(Ci.nsILoginInfo);
+anotherUser.init("http://mozilla.org", null,
+                 String.fromCharCode(0xe8) + "xtra user " + String.fromCharCode(0x0163) + "est",
+                 "dummydude", "itsasecret", "", "");
+
+storage.addLogin(anotherUser);
+LoginTest.checkStorageData(storage, [], [bad8User, anotherUser]);
+
+testdesc = "[flush and reload for verification]"
+storage = LoginTest.reloadStorage(OUTDIR, "output-457358-4b.txt");
+LoginTest.checkStorageData(storage, [], [bad8User, anotherUser]);
+
+storage.removeLogin(anotherUser);
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+testdesc = "[flush and reload for verification 2]"
+storage = LoginTest.reloadStorage(OUTDIR, "output-457358-4b.txt");
+LoginTest.checkStorageData(storage, [], [bad8User]);
+
+/* ========== 22 ========== */
+testnum++;
+testdesc = "ensure UTF8 converter isn't left in bad state."
+
+// The first login's username (plaintext) is invalid UTF8. It's handled as a
+// bad decryption so we don't see the login, but make sure the other login in
+// the file is ok.
+
+// This is the first login:
+//bad8User.init("https://www.google.com", "https://www.google.com", null,
+//              "Acc" + String.fromCharCode(0xe8) + "ss", "passw", "un", "pw");
+anotherUser.init("https://bugzilla.mozilla.org", null, "extra user test",
+                 "dummydude", "itsasecret", "", "");
+
+storage = LoginTest.initStorage(INDIR, "signons-457358-5.txt",
+                               OUTDIR, "output-457358-5.txt");
+LoginTest.checkStorageData(storage, [], [anotherUser]);
+
+testdesc = "[flush and reload for verification]"
+storage = LoginTest.reloadStorage(OUTDIR, "output-457358-5.txt");
+LoginTest.checkStorageData(storage, [], [anotherUser]);
+
 /* ========== end ========== */
 } catch (e) {
     throw ("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);
