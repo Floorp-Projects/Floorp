@@ -78,6 +78,7 @@
 #include "nsIWidget.h"
 #include "gfxMatrix.h"
 #include "gfxTypes.h"
+#include "gfxUserFontSet.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -1493,10 +1494,13 @@ nsresult
 nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
                                              nsIFontMetrics** aFontMetrics)
 {
-  return aStyleContext->PresContext()->DeviceContext()->
-    GetMetricsFor(aStyleContext->GetStyleFont()->mFont,
+  // pass the user font set object into the device context to pass along to CreateFontGroup
+  gfxUserFontSet* fs = aStyleContext->PresContext()->GetUserFontSet();
+  
+  return aStyleContext->PresContext()->DeviceContext()->GetMetricsFor(
+                  aStyleContext->GetStyleFont()->mFont,
                   aStyleContext->GetStyleVisibility()->mLangGroup,
-                  *aFontMetrics);
+                  *aFontMetrics, fs);
 }
 
 nsIFrame*
