@@ -71,7 +71,8 @@ public:
     nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
     gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
-                                  const gfxFontStyle *aStyle);
+                                  const gfxFontStyle *aStyle
+                                  gfxUserFontSet *aUserFontSet);
 
     // Given a string and a font we already have, find the font that
     // supports the most code points and most closely resembles aFont.

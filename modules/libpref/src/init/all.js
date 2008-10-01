@@ -134,6 +134,9 @@ pref("gfx.color_management.mode", 2);
 pref("gfx.color_management.display_profile", "");
 pref("gfx.color_management.rendering_intent", 0);
 
+pref("gfx.downloadable_fonts.enabled", true);
+pref("gfx.downloadable_fonts.enforce_same_site_origin", true);
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 

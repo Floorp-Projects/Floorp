@@ -79,7 +79,8 @@ public:
     nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
     gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
-                                  const gfxFontStyle *aStyle);
+                                  const gfxFontStyle *aStyle,
+                                  gfxUserFontSet *aUserFontSet);
 
 #ifndef MOZ_PANGO
     FontFamily *FindFontFamily(const nsAString& aName);

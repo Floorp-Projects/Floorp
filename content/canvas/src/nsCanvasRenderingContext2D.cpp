@@ -1975,7 +1975,7 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                        fontStyle->mFont.systemFont,
                        fontStyle->mFont.familyNameQuirks);
 
-    CurrentState().fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name, &style);
+    CurrentState().fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name, &style, presShell->GetPresContext()->GetUserFontSet());
     NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
     CurrentState().font = font;
     return NS_OK;

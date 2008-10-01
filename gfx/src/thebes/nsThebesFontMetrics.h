@@ -57,7 +57,8 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
-                     nsIDeviceContext *aContext);
+                     nsIDeviceContext *aContext, 
+                     gfxUserFontSet *aUserFontSet = nsnull);
     NS_IMETHOD  Destroy();
     NS_IMETHOD  GetXHeight(nscoord& aResult);
     NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);

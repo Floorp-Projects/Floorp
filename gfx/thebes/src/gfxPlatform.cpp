@@ -56,6 +56,7 @@
 #include "gfxImageSurface.h"
 #include "gfxTextRunCache.h"
 #include "gfxTextRunWordCache.h"
+#include "gfxUserFontSet.h"
 
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
@@ -303,6 +304,29 @@ gfxPlatform::UpdateFontList()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+#define GFX_DOWNLOADABLE_FONTS_ENABLED "gfx.downloadable_fonts.enabled"
+
+PRBool
+gfxPlatform::DownloadableFontsEnabled()
+{
+    static PRBool initialized = PR_FALSE;
+    static PRBool allowDownloadableFonts = PR_FALSE;
+
+    if (initialized == PR_FALSE) {
+        initialized = PR_TRUE;
+        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs) {
+            PRBool allow;
+            nsresult rv = prefs->GetBoolPref(GFX_DOWNLOADABLE_FONTS_ENABLED, &allow);
+            if (NS_SUCCEEDED(rv))
+                allowDownloadableFonts = allow;
+        }
+    }
+
+    return allowDownloadableFonts;
+}
+
 
 static void
 AppendGenericFontFromPref(nsString& aFonts, const char *aLangGroup, const char *aGenericName)

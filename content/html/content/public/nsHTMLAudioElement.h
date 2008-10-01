@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLAudioElement.h"
-#include "nsIJSNativeInitializer.h"
 #include "nsHTMLMediaElement.h"
 #include "nsVideoDecoder.h"
 
@@ -44,8 +43,7 @@ typedef PRUint16 nsMediaNetworkState;
 typedef PRUint16 nsMediaReadyState;
 
 class nsHTMLAudioElement : public nsHTMLMediaElement,
-                           public nsIDOMHTMLAudioElement,
-                           public nsIJSNativeInitializer
+                           public nsIDOMHTMLAudioElement
 {
 public:
   nsHTMLAudioElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
@@ -68,10 +66,6 @@ public:
 
   // nsIDOMHTMLAudioElement
   NS_DECL_NSIDOMHTMLAUDIOELEMENT
-
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
-                        JSObject* aObj, PRUint32 argc, jsval* argv);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,

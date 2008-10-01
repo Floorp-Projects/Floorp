@@ -59,6 +59,10 @@ class gfxImageSurface;
 class gfxFont;
 class gfxFontGroup;
 struct gfxFontStyle;
+class gfxUserFontSet;
+struct gfxDownloadedFontData;
+class gfxFontEntry;
+class nsIURI;
 
 // pref lang id's for font prefs
 // !!! needs to match the list of pref font.default.xx entries listed in all.js !!!
@@ -184,7 +188,30 @@ public:
      * Create the appropriate platform font group
      */
     virtual gfxFontGroup *CreateFontGroup(const nsAString& aFamilies,
-                                          const gfxFontStyle *aStyle) = 0;
+                                          const gfxFontStyle *aStyle,
+                                          gfxUserFontSet *aUserFontSet) = 0;
+                                          
+                                          
+    /**
+     * Look up a local platform font using the full font face name (needed to support @font-face src local() )
+     */
+    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName) { return nsnull; }
+
+    /**
+     * Activate a platform font (needed to support @font-face src url() )
+     *
+     * Note: MakePlatformFont implementation is responsible for removing font file data, since data may need to 
+     * persist beyond this call.
+     */
+    virtual gfxFontEntry* MakePlatformFont(const gfxFontEntry *aProxyEntry, const gfxDownloadedFontData* aFontData) { return nsnull; }
+
+    /**
+     * Whether to allow downloadable fonts via @font-face rules
+     */
+    virtual PRBool DownloadableFontsEnabled();
+
+    // check whether format is supported on a platform or not (if unclear, returns true)
+    virtual PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags) { return PR_FALSE; }
 
     void GetPrefFonts(const char *aLangGroup, nsString& array, PRBool aAppendUnicode = PR_TRUE);
 
