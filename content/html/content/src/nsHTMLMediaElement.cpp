@@ -390,6 +390,9 @@ NS_IMETHODIMP nsHTMLMediaElement::GetVolume(float *aVolume)
 
 NS_IMETHODIMP nsHTMLMediaElement::SetVolume(float aVolume)
 {
+  if (aVolume < 0.0f || aVolume > 1.0f)
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
   if (mMuted) 
     mMutedVolume = aVolume;
   else {
