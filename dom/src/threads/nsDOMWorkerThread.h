@@ -117,6 +117,7 @@ _class::GetClassIDNoAlloc(nsCID* _classIDNoAlloc)                             \
 class nsDOMWorkerPool;
 class nsDOMWorkerScriptLoader;
 class nsDOMWorkerTimeout;
+class nsDOMWorkerXHR;
 
 class nsDOMWorkerThread : public nsDOMWorkerBase,
                           public nsIDOMWorkerThread,
