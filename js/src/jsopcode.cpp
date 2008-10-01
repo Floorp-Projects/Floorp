@@ -3522,6 +3522,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     todo = Sprint(&ss->sprinter, "");
                 }
 #endif
+                LOCAL_ASSERT(pc[len] == JSOP_RESUME);
+                len += JSOP_RESUME_LENGTH;
                 break;
 
               case JSOP_DELNAME:
