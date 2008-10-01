@@ -77,10 +77,17 @@ class nsILoadGroup;
 
 class nsAccessControlLRUCache
 {
+public:
+  struct TokenTime
+  {
+    nsCString token;
+    PRTime expirationTime;
+  };
+
   struct CacheEntry : public PRCList
   {
-    CacheEntry(const nsACString& aKey, PRTime aValue)
-    : key(aKey), value(aValue)
+    CacheEntry(nsCString& aKey)
+      : mKey(aKey)
     {
       MOZ_COUNT_CTOR(nsAccessControlLRUCache::CacheEntry);
     }
@@ -89,12 +96,16 @@ class nsAccessControlLRUCache
     {
       MOZ_COUNT_DTOR(nsAccessControlLRUCache::CacheEntry);
     }
-    
-    nsCString key;
-    PRTime value;
+
+    void PurgeExpired(PRTime now);
+    PRBool CheckRequest(const nsCString& aMethod,
+                        const nsTArray<nsCString>& aCustomHeaders);
+
+    nsCString mKey;
+    nsTArray<TokenTime> mMethods;
+    nsTArray<TokenTime> mHeaders;
   };
 
-public:
   nsAccessControlLRUCache()
   {
     MOZ_COUNT_CTOR(nsAccessControlLRUCache);
@@ -112,17 +123,12 @@ public:
     return mTable.Init();
   }
 
-  void GetEntry(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                PRTime* _retval);
-
-  void PutEntry(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                PRTime aValue);
+  CacheEntry* GetEntry(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                       PRBool aCreate);
 
   void Clear();
 
 private:
-  PRBool GetEntryInternal(const nsACString& aKey, CacheEntry** _retval);
-
   PR_STATIC_CALLBACK(PLDHashOperator)
     RemoveExpiredEntries(const nsACString& aKey, nsAutoPtr<CacheEntry>& aValue,
                          void* aUserData);
@@ -389,6 +395,7 @@ protected:
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsCOMPtr<nsIChannel> mACGetChannel;
+  nsTArray<nsCString> mACUnsafeHeaders;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnUploadProgressListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnReadystatechangeListener;
@@ -427,10 +434,6 @@ protected:
   nsIRequestObserver* mRequestObserver;
 
   PRUint32 mState;
-
-  // List of potentially dangerous headers explicitly set using
-  // SetRequestHeader.
-  nsTArray<nsCString> mExtraRequestHeaders;
 
   nsRefPtr<nsXMLHttpRequestUpload> mUpload;
   PRUint32 mUploadTransferred;
