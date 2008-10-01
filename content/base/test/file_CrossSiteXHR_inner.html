@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script>
+window.addEventListener('message', function(e) {
+
+  sendData = null;
+
+  req = eval(e.data);
+  var res = {
+    didFail: false,
+    events: [],
+    progressEvents: 0
+  };
+  
+  var xhr = new XMLHttpRequest();
+  for each(type in ["load", "abort", "error", "loadstart"]) {
+    xhr.addEventListener(type, function(e) {
+      res.events.push(e.type);
+    }, false);
+  }
+  xhr.addEventListener("readystatechange", function(e) {
+    res.events.push("rs" + xhr.readyState);
+  }, false);
+  xhr.addEventListener("progress", function(e) {
+    res.progressEvents++;
+  }, false);
+  if (req.uploadProgress) {
+    if (req.uploadProgress == "uploadProgress") {
+      xhr.addEventListener("uploadProgress", function(e) {
+        res.progressEvents++;
+      }, false);
+    }
+    else {
+      xhr.upload.addEventListener(req.uploadProgress, function(e) {
+        res.progressEvents++;
+      }, false);
+    }
+  }
+  xhr.onload = function () {
+    res.status = xhr.status;
+    res.responseXML = xhr.responseXML ?
+      (new XMLSerializer()).serializeToString(xhr.responseXML) :
+      null;
+    res.responseText = xhr.responseText;
+    post(e, res);
+  };
+  xhr.onerror = function () {
+    res.didFail = true;
+    res.status = xhr.status;
+    res.responseXML = xhr.responseXML ?
+      (new XMLSerializer()).serializeToString(xhr.responseXML) :
+      null;
+    res.responseText = xhr.responseText;
+    post(e, res);
+  }
+
+  if (req.withCred)
+    xhr.withCredentials = true;
+
+  res.events.push("opening");
+  xhr.open(req.method, req.url, true);
+
+  for (header in req.headers) {
+    xhr.setRequestHeader(header, req.headers[header]);
+  }
+
+  res.events.push("sending");
+  xhr.send(sendData);
+
+}, false);
+
+function post(e, res) {
+  e.source.postMessage(res.toSource(), "http://localhost:8888");
+}
+
+</script>
+</head>
+<body>
+Inner page
+</body>
+</html>

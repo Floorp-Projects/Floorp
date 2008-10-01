@@ -1,0 +1,5 @@
+<box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <stack>
+    <label top="30px" left="30px" style="color: green; text-shadow: grey 3px 3px;" value="Hello"/>
+  </stack>
+</box>

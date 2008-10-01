@@ -1751,6 +1751,12 @@ found:
 }
 
 PRBool
+nsEventListenerManager::HasListeners()
+{
+  return !mListeners.IsEmpty();
+}
+
+PRBool
 nsEventListenerManager::HasUnloadListeners()
 {
   PRUint32 count = mListeners.Length();

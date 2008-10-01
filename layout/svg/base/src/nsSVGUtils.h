@@ -90,17 +90,10 @@ class nsISVGChildFrame;
 
 #define NS_STATE_SVG_DIRTY            0x00400000
 
-/* Do we have a paint server for fill with a valid URL? */
-#define NS_STATE_SVG_FILL_PSERVER     0x00800000
-/* Do we have a paint server for stroke with a valid URL? */
-#define NS_STATE_SVG_STROKE_PSERVER   0x01000000
-/* Do we have any paint servers with valid URLs? */
-#define NS_STATE_SVG_PSERVER_MASK     0x01800000
-
 /* are we the child of a non-display container? */
-#define NS_STATE_SVG_NONDISPLAY_CHILD 0x02000000
+#define NS_STATE_SVG_NONDISPLAY_CHILD 0x00800000
 
-#define NS_STATE_SVG_PROPAGATE_TRANSFORM 0x04000000
+#define NS_STATE_SVG_PROPAGATE_TRANSFORM 0x01000000
 
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.
@@ -352,13 +345,6 @@ public:
   PaintChildWithEffects(nsSVGRenderState *aContext,
                         nsIntRect *aDirtyRect,
                         nsIFrame *aFrame);
-
-  /**
-   * Called by nsCSSFrameConstructor when style changes require the
-   * effect properties on aFrame to be updated
-   */
-  static void
-  UpdateEffects(nsIFrame *aFrame);
 
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  Returns true if no clipPath set. */

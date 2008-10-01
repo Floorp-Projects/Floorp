@@ -2298,12 +2298,13 @@ ServerHandler.prototype =
                                       Ci.nsIFileInputStream.CLOSE_ON_EOF);
         var sis = new ScriptableInputStream(fis);
         var s = Cu.Sandbox(gGlobalObject);
+        s.importFunction(dump, "dump");
         Cu.evalInSandbox(sis.read(file.fileSize), s);
         s.handleRequest(metadata, response);
       }
       catch (e)
       {
-        dumpn("*** error running SJS: " + e);
+        dump("*** error running SJS: " + e + " on line " + (e.lineNumber-2192) + "\n");
         throw HTTP_500;
       }
     }

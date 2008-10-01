@@ -52,8 +52,8 @@ class nsIAtom;
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0x6ee5eeeb, 0x1bf3, 0x4865, \
-  { 0xa9, 0x52, 0x3b, 0x3e, 0x97, 0x9b, 0x4a, 0xb3 } }
+{ 0x0056ac6b, 0xc25b, 0x4fbb, \
+  { 0x92, 0x98, 0x8d, 0xce, 0x53, 0x6e } }
 
 
 class nsIEventListenerManager : public nsISupports {
@@ -188,6 +188,11 @@ public:
    * Returns PR_TRUE if there is at least one event listener for aEventName.
    */
   virtual PRBool HasListenersFor(const nsAString& aEventName) = 0;
+
+  /**
+   * Returns PR_TRUE if there is at least one event listener.
+   */
+  virtual PRBool HasListeners() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventListenerManager,

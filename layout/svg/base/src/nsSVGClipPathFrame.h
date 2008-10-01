@@ -102,12 +102,11 @@ public:
 
   nsIFrame *mClipParent;
   nsCOMPtr<nsIDOMSVGMatrix> mClipParentMatrix;
+  // recursion prevention flag
+  PRPackedBool mInUse;
 
   // nsSVGContainerFrame methods:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
-
-  // recursion prevention flag
-  PRPackedBool mInUse;
 };
 
 #endif

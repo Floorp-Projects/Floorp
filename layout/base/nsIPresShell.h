@@ -102,11 +102,10 @@ class gfxContext;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-
-// 134e504f-4fd1-4590-9f5d-899afee63d0f
+// 5c103bc2-788e-4bbe-b82e-635bea34e78f
 #define NS_IPRESSHELL_IID \
-{ 0x134e504f, 0x4fd1, 0x4590, \
-  { 0x9f, 0x5d, 0x89, 0x9a, 0xfe, 0xe6, 0x3d, 0x0f } }
+{ 0x5c103bc2, 0x788e, 0x4bbe, \
+  { 0xb8, 0x2e, 0x63, 0x5b, 0xea, 0x34, 0xe7, 0x8f } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -165,6 +164,8 @@ public:
    * times to make form controls behave nicely when printed.
    */
   NS_IMETHOD Destroy() = 0;
+  
+  PRBool IsDestroying() { return mIsDestroying; }
 
   // All frames owned by the shell are allocated from an arena.  They are also recycled
   // using free lists (separate free lists being maintained for each size_t).
