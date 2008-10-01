@@ -560,6 +560,11 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
             LOG(("adding leading slash to path\n"));
             leadingSlash = 1;
             buf[i++] = '/';
+            // basename must exist, even if empty (bugs 113508, 429347)
+            if (mBasename.mLen == -1) {
+                mBasename.mPos = i;
+                mBasename.mLen = 0;
+            }
         }
 
         // record corrected (file)path starting position
