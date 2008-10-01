@@ -364,7 +364,9 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
     mBorder.side(side) = medium;
     mBorderStyle[side] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
     mBorderColor[side] = NS_RGB(0, 0, 0);
-    mBorderRadius.Set(side, nsStyleCoord(0));
+  }
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    mBorderRadius.Set(corner, nsStyleCoord(0));
   }
 
   mBorderColors = nsnull;
@@ -402,6 +404,9 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
   NS_FOR_CSS_SIDES(side) {
     mBorderStyle[side] = aSrc.mBorderStyle[side];
     mBorderColor[side] = aSrc.mBorderColor[side];
+  }
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    mBorderRadius.Set(corner, aSrc.mBorderRadius.Get(corner));
   }
 }
 
@@ -512,8 +517,8 @@ nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {
   // spacing values not inherited
   nsStyleCoord zero(0);
-  NS_FOR_CSS_SIDES(side) {
-    mOutlineRadius.Set(side, zero);
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    mOutlineRadius.Set(corner, zero);
   }
 
   mOutlineOffset = 0;

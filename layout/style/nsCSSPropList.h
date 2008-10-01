@@ -260,15 +260,15 @@
 
 CSS_PROP_DISPLAY(-moz-appearance, appearance, MozAppearance, Display, mAppearance, eCSSType_Value, kAppearanceKTable)
 CSS_PROP_SHORTHAND(-moz-border-radius, _moz_border_radius, MozBorderRadius)
-CSS_PROP_BORDER(-moz-border-radius-topleft, _moz_border_radius_topLeft, MozBorderRadiusTopleft, Margin, mBorderRadius.mTop, eCSSType_Value, nsnull)
-CSS_PROP_BORDER(-moz-border-radius-topright, _moz_border_radius_topRight, MozBorderRadiusTopright, Margin, mBorderRadius.mRight, eCSSType_Value, nsnull)
-CSS_PROP_BORDER(-moz-border-radius-bottomleft, _moz_border_radius_bottomLeft, MozBorderRadiusBottomleft, Margin, mBorderRadius.mLeft, eCSSType_Value, nsnull)
-CSS_PROP_BORDER(-moz-border-radius-bottomright, _moz_border_radius_bottomRight, MozBorderRadiusBottomright, Margin, mBorderRadius.mBottom, eCSSType_Value, nsnull)
+CSS_PROP_BORDER(-moz-border-radius-topleft, _moz_border_radius_topLeft, MozBorderRadiusTopleft, Margin, mBorderRadius.mTopLeft, eCSSType_ValuePair, nsnull)
+CSS_PROP_BORDER(-moz-border-radius-topright, _moz_border_radius_topRight, MozBorderRadiusTopright, Margin, mBorderRadius.mTopRight, eCSSType_ValuePair, nsnull)
+CSS_PROP_BORDER(-moz-border-radius-bottomright, _moz_border_radius_bottomRight, MozBorderRadiusBottomright, Margin, mBorderRadius.mBottomRight, eCSSType_ValuePair, nsnull)
+CSS_PROP_BORDER(-moz-border-radius-bottomleft, _moz_border_radius_bottomLeft, MozBorderRadiusBottomleft, Margin, mBorderRadius.mBottomLeft, eCSSType_ValuePair, nsnull)
 CSS_PROP_SHORTHAND(-moz-outline-radius, _moz_outline_radius, MozOutlineRadius)
-CSS_PROP_OUTLINE(-moz-outline-radius-topleft, _moz_outline_radius_topLeft, MozOutlineRadiusTopleft, Margin, mOutlineRadius.mTop, eCSSType_Value, nsnull)
-CSS_PROP_OUTLINE(-moz-outline-radius-topright, _moz_outline_radius_topRight, MozOutlineRadiusTopright, Margin, mOutlineRadius.mRight, eCSSType_Value, nsnull)
-CSS_PROP_OUTLINE(-moz-outline-radius-bottomleft, _moz_outline_radius_bottomLeft, MozOutlineRadiusBottomleft, Margin, mOutlineRadius.mLeft, eCSSType_Value, nsnull)
-CSS_PROP_OUTLINE(-moz-outline-radius-bottomright, _moz_outline_radius_bottomRight, MozOutlineRadiusBottomright, Margin, mOutlineRadius.mBottom, eCSSType_Value, nsnull)
+CSS_PROP_OUTLINE(-moz-outline-radius-topleft, _moz_outline_radius_topLeft, MozOutlineRadiusTopleft, Margin, mOutlineRadius.mTopLeft, eCSSType_ValuePair, nsnull)
+CSS_PROP_OUTLINE(-moz-outline-radius-topright, _moz_outline_radius_topRight, MozOutlineRadiusTopright, Margin, mOutlineRadius.mTopRight, eCSSType_ValuePair, nsnull)
+CSS_PROP_OUTLINE(-moz-outline-radius-bottomright, _moz_outline_radius_bottomRight, MozOutlineRadiusBottomright, Margin, mOutlineRadius.mBottomRight, eCSSType_ValuePair, nsnull)
+CSS_PROP_OUTLINE(-moz-outline-radius-bottomleft, _moz_outline_radius_bottomLeft, MozOutlineRadiusBottomleft, Margin, mOutlineRadius.mBottomLeft, eCSSType_ValuePair, nsnull)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_FONT(-x-system-font, _x_system_font, X, Font, mSystemFont, eCSSType_Value, kFontKTable)
 #endif
