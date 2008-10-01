@@ -243,6 +243,6 @@ namespace nsDOMWorkerProxiedXHRFunctions
   MAKE_PROXIED_FUNCTION1(OverrideMimeType, const nsACString&);
 
   MAKE_PROXIED_FUNCTION1(SetMultipart, PRBool);
-};
+}
 
 #endif /* __NSDOMWORKERXHRPROXIEDFUNCTIONS_H__ */
