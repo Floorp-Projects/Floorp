@@ -162,7 +162,6 @@ CSS_KEY(-moz-oddtreerow, _moz_oddtreerow)
 CSS_KEY(-moz-oriya, _moz_oriya)
 CSS_KEY(-moz-persian, _moz_persian)
 CSS_KEY(-moz-popup, _moz_popup)
-CSS_KEY(-moz-pre-wrap, _moz_pre_wrap)
 CSS_KEY(-moz-pull-down-menu, _moz_pull_down_menu)
 CSS_KEY(-moz-right, _moz_right)
 CSS_KEY(-moz-run-in, _moz_run_in) // Disabled because not supported.
