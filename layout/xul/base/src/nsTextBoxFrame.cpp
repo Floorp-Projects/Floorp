@@ -384,13 +384,13 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
       }
     }
 
-    DrawText(aRenderingContext, textRect, 0);
+    DrawText(aRenderingContext, textRect, nsnull);
 }
 
 void
 nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
                          const nsRect&        aTextRect,
-                         const nscolor&       aOverrideColor)
+                         const nscolor*       aOverrideColor)
 {
     nsPresContext* presContext = PresContext();
 
@@ -409,7 +409,7 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
       const nsStyleTextReset* styleText = context->GetStyleTextReset();
       
       if (decorMask & styleText->mTextDecoration) {  // a decoration defined here
-        nscolor color = aOverrideColor ? aOverrideColor : context->GetStyleColor()->mColor;
+        nscolor color = aOverrideColor ? *aOverrideColor : context->GetStyleColor()->mColor;
     
         if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decorMask & styleText->mTextDecoration) {
           underColor = color;
@@ -484,7 +484,7 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
 
     CalculateUnderline(aRenderingContext);
 
-    aRenderingContext.SetColor(aOverrideColor ? aOverrideColor : GetStyleColor()->mColor);
+    aRenderingContext.SetColor(aOverrideColor ? *aOverrideColor : GetStyleColor()->mColor);
 
 #ifdef IBMBIDI
     nsresult rv = NS_ERROR_FAILURE;
@@ -584,7 +584,7 @@ void nsTextBoxFrame::PaintOneShadow(gfxContext*      aCtx,
   // Draw the text onto our alpha-only surface to capture the alpha values.
   // Remember that the box blur context has a device offset on it, so we don't need to
   // translate any coordinates to fit on the surface.
-  DrawText(*renderingContext, shadowRect, shadowColor);
+  DrawText(*renderingContext, shadowRect, &shadowColor);
   contextBoxBlur.DoPaint();
   aCtx->Restore();
 }
