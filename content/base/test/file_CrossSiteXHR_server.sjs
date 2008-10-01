@@ -56,7 +56,7 @@ function handleRequest(request, response)
 
 
   // Send response
-
+       
   if (query.allowOrigin && (!isPreflight || !query.noAllowPreflight))
     response.setHeader("Access-Control-Allow-Origin", query.allowOrigin);
 
