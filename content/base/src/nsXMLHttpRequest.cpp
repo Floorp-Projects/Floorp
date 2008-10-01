@@ -1003,8 +1003,7 @@ nsAccessControlLRUCache::GetCacheKey(nsIURI* aURI,
   if (uri) {
     uri->GetScheme(scheme);
     uri->GetHost(host);
-    PRInt32 portInt = NS_GetRealPort(uri);
-    port.AppendInt(portInt);
+    port.AppendInt(NS_GetRealPort(uri));
   }
 
   nsCAutoString cred;
