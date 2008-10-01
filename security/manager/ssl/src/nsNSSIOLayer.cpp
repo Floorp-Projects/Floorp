@@ -58,7 +58,6 @@
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsIClientAuthDialogs.h"
-#include "nsClientAuthRemember.h"
 #include "nsICertOverrideService.h"
 #include "nsIBadCertListener2.h"
 #include "nsISSLErrorListener.h"
@@ -238,7 +237,7 @@ void nsNSSSocketInfo::virtualDestroyNSSReference()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS9(nsNSSSocketInfo,
+NS_IMPL_THREADSAFE_ISUPPORTS8(nsNSSSocketInfo,
                               nsITransportSecurityInfo,
                               nsISSLSocketControl,
                               nsIInterfaceRequestor,
@@ -246,8 +245,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS9(nsNSSSocketInfo,
                               nsIIdentityInfo,
                               nsIAssociatedContentSecurity,
                               nsISerializable,
-                              nsIClassInfo,
-                              nsIClientAuthUserDecision)
+                              nsIClassInfo)
 
 nsresult
 nsNSSSocketInfo::GetHandshakePending(PRBool *aHandshakePending)
@@ -299,19 +297,6 @@ void nsNSSSocketInfo::SetCanceled(PRBool aCanceled)
 PRBool nsNSSSocketInfo::GetCanceled()
 {
   return mCanceled;
-}
-
-NS_IMETHODIMP nsNSSSocketInfo::GetRememberClientAuthCertificate(PRBool *aRememberClientAuthCertificate)
-{
-  NS_ENSURE_ARG_POINTER(aRememberClientAuthCertificate);
-  *aRememberClientAuthCertificate = mRememberClientAuthCertificate;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsNSSSocketInfo::SetRememberClientAuthCertificate(PRBool aRememberClientAuthCertificate)
-{
-  mRememberClientAuthCertificate = aRememberClientAuthCertificate;
-  return NS_OK;
 }
 
 void nsNSSSocketInfo::SetHasCleartextPhase(PRBool aHasCleartextPhase)
@@ -2479,10 +2464,12 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
   nsNSSShutDownPreventionLock locker;
   void* wincx = NULL;
   SECStatus ret = SECFailure;
+  nsresult rv;
   nsNSSSocketInfo* info = NULL;
   PRArenaPool* arena = NULL;
   char** caNameStrings;
   CERTCertificate* cert = NULL;
+  CERTCertificate* serverCert = NULL;
   SECKEYPrivateKey* privKey = NULL;
   CERTCertList* certList = NULL;
   CERTCertListNode* node;
@@ -2606,63 +2593,13 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
         goto noCert;
     }
   }
-  else { // Not Auto => ask
-    /* Get the SSL Certificate */
-    CERTCertificate* serverCert = NULL;
-    CERTCertificateCleaner serverCertCleaner(serverCert);
-    serverCert = SSL_PeerCertificate(socket);
-    if (serverCert == NULL) {
-      /* couldn't get the server cert: what do I do? */
-      goto loser;
-    }
-
-    nsXPIDLCString hostname;
-    info->GetHostName(getter_Copies(hostname));
-
-    nsresult rv;
-    NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
-    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
-    // it's ok to keep our raw pointer to the nsClientAuthRememberService
-    // as long as we hold the reference to the nssComponent.
-    // Yes, this sucks, but this is branch only code,
-    // and I don't want to deal with new interfaces, and want to use full
-    // typed pointers.
-    // Note nsINSSComponent is NOT exposed to anywhere outside of PSM.
-    nsClientAuthRememberService *cars = nsnull;
-    if (nssComponent) {
-      nssComponent->GetClientAuthRememberService(&cars);
-    }
-
-    PRBool hasRemembered = PR_FALSE;
-    nsCString rememberedNickname;
-    if (cars) {
-      PRBool found;
-      nsresult rv = cars->HasRememberedDecision(hostname, 
-                                                serverCert,
-                                                rememberedNickname, &found);
-      if (NS_SUCCEEDED(rv) && found) {
-        hasRemembered = PR_TRUE;
-      }
-    }
-
-    PRBool canceled = PR_FALSE;
-
-if (hasRemembered)
-{
-  if (rememberedNickname.IsEmpty())
-    canceled = PR_TRUE;
   else {
-    char *const_nickname = const_cast<char*>(rememberedNickname.get());
-    cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), const_nickname);
-  }
-}
-else
-{
     /* user selects a cert to present */
     nsIClientAuthDialogs *dialogs = NULL;
     PRInt32 selectedIndex = -1;
     PRUnichar **certNicknameList = NULL;
     PRUnichar **certDetailsList = NULL;
+    PRBool canceled;
 
     /* find all user certs that are for SSL */
     /* note that we are allowing expired certs in this list */
@@ -2719,6 +2656,13 @@ else
 
     NS_ASSERTION(nicknames->numnicknames == NumberOfCerts, "nicknames->numnicknames != NumberOfCerts");
 
+    /* Get the SSL Certificate */
+    serverCert = SSL_PeerCertificate(socket);
+    if (serverCert == NULL) {
+      /* couldn't get the server cert: what do I do? */
+      goto loser;
+    }
+
     /* Get CN and O of the subject and O of the issuer */
     char *ccn = CERT_GetCommonName(&serverCert->subject);
     charCleaner ccnCleaner(ccn);
@@ -2726,6 +2670,8 @@ else
 
     PRInt32 port;
     info->GetPort(&port);
+    char *hostname = SSL_RevealURL(socket);
+    charCleaner hostnameCleaner(hostname);
 
     nsString cn_host_port;
     if (ccn && strcmp(ccn, hostname) == 0) {
@@ -2748,6 +2694,8 @@ else
     char *cissuer = CERT_GetOrgName(&serverCert->issuer);
     NS_ConvertUTF8toUTF16 issuer(cissuer);
     if (cissuer) PORT_Free(cissuer);
+
+    CERT_DestroyCertificate(serverCert);
 
     certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
     if (!certNicknameList)
@@ -2816,12 +2764,9 @@ else
     
     if (NS_FAILED(rv)) goto loser;
 
-    // even if the user has canceled, we want to remember that, to avoid repeating prompts
-    PRBool wantRemember = PR_FALSE;
-    info->GetRememberClientAuthCertificate(&wantRemember);
+    if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
 
     int i;
-    if (!canceled)
     for (i = 0, node = CERT_LIST_HEAD(certList);
          !CERT_LIST_END(node, certList);
          ++i, node = CERT_LIST_NEXT(node)) {
@@ -2831,15 +2776,6 @@ else
         break;
       }
     }
-
-    if (cars && wantRemember) {
-      cars->RememberDecision(hostname, 
-                             serverCert, 
-                             canceled ? 0 : cert);
-    }
-}
-
-    if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
 
     if (cert == NULL) {
       goto loser;
