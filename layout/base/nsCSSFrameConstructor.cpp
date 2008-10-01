@@ -148,7 +148,7 @@
 #include "nsMathMLParts.h"
 #endif
 #ifdef MOZ_SVG
-#include "nsSVGUtils.h"
+#include "nsSVGEffects.h"
 #endif
 
 nsIFrame*
@@ -9826,7 +9826,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       NS_ASSERTION(frame, "This shouldn't happen");
 #ifdef MOZ_SVG
       if (hint & nsChangeHint_UpdateEffects) {
-        nsSVGUtils::UpdateEffects(frame);
+        nsSVGEffects::UpdateEffects(frame);
       }
 #endif
       if (hint & nsChangeHint_ReflowFrame) {
