@@ -75,7 +75,23 @@ public:
     nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
     gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
-                                  const gfxFontStyle *aStyle);
+                                  const gfxFontStyle *aStyle,
+                                  gfxUserFontSet *aUserFontSet);
+
+    /**
+     * Look up a local platform font using the full font face name (needed to support @font-face src local() )
+     */
+    virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName);
+
+    /**
+     * Activate a platform font (needed to support @font-face src url() )
+     */
+    virtual gfxFontEntry* MakePlatformFont(const gfxFontEntry *aProxyEntry, const gfxDownloadedFontData* aFontData);
+
+    /**
+     * Check whether format is supported on a platform or not (if unclear, returns true)
+     */
+    virtual PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
 
     /* Given a string and a font we already have find the font that
      * supports the most code points and most closely resembles aFont

@@ -164,9 +164,10 @@ gfxOS2Platform::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFa
 
 gfxFontGroup *
 gfxOS2Platform::CreateFontGroup(const nsAString &aFamilies,
-                                const gfxFontStyle *aStyle)
+                const gfxFontStyle *aStyle,
+                gfxUserFontSet *aUserFontSet)
 {
-    return new gfxOS2FontGroup(aFamilies, aStyle);
+    return new gfxOS2FontGroup(aFamilies, aStyle, aUserFontSet);
 }
 
 already_AddRefed<gfxOS2Font>

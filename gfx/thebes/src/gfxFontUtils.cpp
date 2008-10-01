@@ -45,6 +45,8 @@
 #include "nsIPrefService.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIStreamBufferAccess.h"
+#include "nsILocalFile.h"
 
 #define NO_RANGE_FOUND 126 // bit 126 in the font unicode ranges is required to be 0
 
@@ -469,4 +471,558 @@ void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& a
 
 }
 
+// for now, this is only needed on Windows
 
+#ifdef XP_WIN
+
+// TrueType/OpenType table handling code
+
+// need byte aligned structs
+#pragma pack(1)
+
+struct AutoSwap_PRUint16 {
+    operator PRUint16() { return NS_SWAP16(value); }
+    operator PRUint32() { return NS_SWAP16(value); }
+    PRUint16  value;
+};
+
+struct AutoSwap_PRInt16 {
+    operator PRInt16() { return NS_SWAP16(value); }
+    operator PRUint32() { return NS_SWAP16(value); }
+    PRInt16  value;
+};
+
+struct AutoSwap_PRUint32 {
+    operator PRUint32() { return NS_SWAP32(value); }
+    PRUint32  value;
+};
+
+struct AutoSwap_PRUint64 {
+    operator PRUint64() { return NS_SWAP64(value); }
+    PRUint64  value;
+};
+
+struct SFNTHeader {
+    AutoSwap_PRUint32    sfntVersion;            // Fixed, 0x00010000 for version 1.0.
+    AutoSwap_PRUint16    numTables;              // Number of tables.
+    AutoSwap_PRUint16    searchRange;            // (Maximum power of 2 <= numTables) x 16.
+    AutoSwap_PRUint16    entrySelector;          // Log2(maximum power of 2 <= numTables).
+    AutoSwap_PRUint16    rangeShift;             // NumTables x 16-searchRange.        
+};
+
+struct TableDirEntry {
+    AutoSwap_PRUint32    tag;                    // 4 -byte identifier.
+    AutoSwap_PRUint32    checkSum;               // CheckSum for this table.
+    AutoSwap_PRUint32    offset;                 // Offset from beginning of TrueType font file.
+    AutoSwap_PRUint32    length;                 // Length of this table.        
+};
+
+struct HeadTable {
+    enum {
+        HEAD_MAGIC_NUMBER = 0x5F0F3CF5
+    };
+
+    AutoSwap_PRUint32    tableVersionNumber;    // Fixed, 0x00010000 for version 1.0.
+    AutoSwap_PRUint32    fontRevision;          // Set by font manufacturer.
+    AutoSwap_PRUint32    checkSumAdjustment;    // To compute: set it to 0, sum the entire font as ULONG, then store 0xB1B0AFBA - sum.
+    AutoSwap_PRUint32    magicNumber;           // Set to 0x5F0F3CF5.
+    AutoSwap_PRUint16    flags;
+    AutoSwap_PRUint16    unitsPerEm;            // Valid range is from 16 to 16384. This value should be a power of 2 for fonts that have TrueType outlines.
+    AutoSwap_PRUint64    created;               // Number of seconds since 12:00 midnight, January 1, 1904. 64-bit integer
+    AutoSwap_PRUint64    modified;              // Number of seconds since 12:00 midnight, January 1, 1904. 64-bit integer
+    AutoSwap_PRInt16     xMin;                  // For all glyph bounding boxes.
+    AutoSwap_PRInt16     yMin;                  // For all glyph bounding boxes.
+    AutoSwap_PRInt16     xMax;                  // For all glyph bounding boxes.
+    AutoSwap_PRInt16     yMax;                  // For all glyph bounding boxes.
+    AutoSwap_PRUint16    macStyle;              // Bit 0: Bold (if set to 1);
+    AutoSwap_PRUint16    lowestRecPPEM;         // Smallest readable size in pixels.
+    AutoSwap_PRInt16     fontDirectionHint;
+    AutoSwap_PRInt16     indexToLocFormat;
+    AutoSwap_PRInt16     glyphDataFormat;
+};
+
+// name table has a header, followed by name records, followed by string data
+struct NameHeader {
+    AutoSwap_PRUint16    format;                 // Format selector (=0).
+    AutoSwap_PRUint16    count;                  // Number of name records.
+    AutoSwap_PRUint16    stringOffset;           // Offset to start of string storage (from start of table)
+};
+
+struct NameRecord {
+    AutoSwap_PRUint16    platformID;             // Platform ID
+    AutoSwap_PRUint16    encodingID;             // Platform-specific encoding ID
+    AutoSwap_PRUint16    languageID;             // Language ID
+    AutoSwap_PRUint16    nameID;                 // Name ID.
+    AutoSwap_PRUint16    length;                 // String length (in bytes).
+    AutoSwap_PRUint16    offset;                 // String offset from start of storage area (in bytes).
+
+    enum {
+        NAME_ID_FAMILY = 1,
+        NAME_ID_STYLE = 2,
+        NAME_ID_FULL = 4,
+        NAME_ID_VERSION = 5,
+        PLATFORM_ID_UNICODE = 0,                 // Mac OS uses this typically
+        PLATFORM_ID_MICROSOFT = 3,
+        ENCODING_ID_MICROSOFT_UNICODEBMP = 1,    // with Microsoft platformID, BMP-only Unicode encoding
+        LANG_ID_MICROSOFT_EN_US = 0x0409         // with Microsoft platformID, EN US lang code
+    };
+};
+
+struct OS2Table {
+    AutoSwap_PRUint16    version;                // 0004 = OpenType 1.5
+    AutoSwap_PRInt16     xAvgCharWidth;
+    AutoSwap_PRUint16    usWeightClass;
+    AutoSwap_PRUint16    usWidthClass;
+    AutoSwap_PRUint16    fsType;
+    AutoSwap_PRInt16     ySubscriptXSize;
+    AutoSwap_PRInt16     ySubscriptYSize;
+    AutoSwap_PRInt16     ySubscriptXOffset;
+    AutoSwap_PRInt16     ySubscriptYOffset;
+    AutoSwap_PRInt16     ySuperscriptXSize;
+    AutoSwap_PRInt16     ySuperscriptYSize;
+    AutoSwap_PRInt16     ySuperscriptXOffset;
+    AutoSwap_PRInt16     ySuperscriptYOffset;
+    AutoSwap_PRInt16     yStrikeoutSize;
+    AutoSwap_PRInt16     yStrikeoutPosition;
+    AutoSwap_PRInt16     sFamilyClass;
+    PRUint8              panose[10];
+    AutoSwap_PRUint32    unicodeRange1;
+    AutoSwap_PRUint32    unicodeRange2;
+    AutoSwap_PRUint32    unicodeRange3;
+    AutoSwap_PRUint32    unicodeRange4;
+    PRUint8              achVendID[4];
+    AutoSwap_PRUint16    fsSelection;
+    AutoSwap_PRUint16    usFirstCharIndex;
+    AutoSwap_PRUint16    usLastCharIndex;
+    AutoSwap_PRInt16     sTypoAscender;
+    AutoSwap_PRInt16     sTypoDescender;
+    AutoSwap_PRInt16     sTypoLineGap;
+    AutoSwap_PRUint16    usWinAscent;
+    AutoSwap_PRUint16    usWinDescent;
+    AutoSwap_PRUint32    codePageRange1;
+    AutoSwap_PRUint32    codePageRange2;
+    AutoSwap_PRInt16     sxHeight;
+    AutoSwap_PRInt16     sCapHeight;
+    AutoSwap_PRUint16    usDefaultChar;
+    AutoSwap_PRUint16    usBreakChar;
+    AutoSwap_PRUint16    usMaxContext;
+};
+
+// Embedded OpenType (EOT) handling
+// needed for dealing with downloadable fonts on Windows
+//
+// EOT version 0x00020001
+// based on http://www.w3.org/Submission/2008/SUBM-EOT-20080305/
+//
+// EOT header consists of a fixed-size portion containing general font
+// info, followed by a variable-sized portion containing name data,
+// followed by the actual TT/OT font data (non-byte values are always
+// stored in big-endian format)
+//
+// EOT header is stored in *little* endian order!!
+
+struct EOTFixedHeader {
+
+    PRUint32      eotSize;            // Total structure length in PRUint8s (including string and font data)
+    PRUint32      fontDataSize;       // Length of the OpenType font (FontData) in PRUint8s
+    PRUint32      version;            // Version number of this format - 0x00010000
+    PRUint32      flags;              // Processing Flags
+    PRUint8       panose[10];         // The PANOSE value for this font - See http://www.microsoft.com/typography/otspec/os2.htm#pan
+    PRUint8       charset;            // In Windows this is derived from TEXTMETRIC.tmCharSet. This value specifies the character set of the font. DEFAULT_CHARSET (0x01) indicates no preference. - See http://msdn2.microsoft.com/en-us/library/ms534202.aspx
+    PRUint8       italic;             // If the bit for ITALIC is set in OS/2.fsSelection, the value will be 0x01 - See http://www.microsoft.com/typography/otspec/os2.htm#fss
+    PRUint32      weight;             // The weight value for this font - See http://www.microsoft.com/typography/otspec/os2.htm#wtc
+    PRUint16      fsType;             // Type flags that provide information about embedding permissions - See http://www.microsoft.com/typography/otspec/os2.htm#fst
+    PRUint16      magicNumber;        // Magic number for EOT file - 0x504C. Used to check for data corruption.
+    PRUint32      unicodeRange1;      // OS/2.UnicodeRange1 (bits 0-31) - See http://www.microsoft.com/typography/otspec/os2.htm#ur
+    PRUint32      unicodeRange2;      // OS/2.UnicodeRange2 (bits 32-63) - See http://www.microsoft.com/typography/otspec/os2.htm#ur
+    PRUint32      unicodeRange3;      // OS/2.UnicodeRange3 (bits 64-95) - See http://www.microsoft.com/typography/otspec/os2.htm#ur
+    PRUint32      unicodeRange4;      // OS/2.UnicodeRange4 (bits 96-127) - See http://www.microsoft.com/typography/otspec/os2.htm#ur
+    PRUint32      codePageRange1;     // CodePageRange1 (bits 0-31) - See http://www.microsoft.com/typography/otspec/os2.htm#cpr
+    PRUint32      codePageRange2;     // CodePageRange2 (bits 32-63) - See http://www.microsoft.com/typography/otspec/os2.htm#cpr
+    PRUint32      checkSumAdjustment; // head.CheckSumAdjustment - See http://www.microsoft.com/typography/otspec/head.htm
+    PRUint32      reserved[4];        // Reserved - must be 0
+    PRUint16      padding1;           // Padding to maintain long alignment. Padding value must always be set to 0x0000.
+
+    enum {
+        EOT_VERSION = 0x00020001,
+        EOT_MAGIC_NUMBER = 0x504c,
+        EOT_DEFAULT_CHARSET = 0x01,
+        EOT_EMBED_PRINT_PREVIEW = 0x0004,
+        EOT_FAMILY_NAME_INDEX = 0,    // order of names in variable portion of EOT header
+        EOT_STYLE_NAME_INDEX = 1,
+        EOT_VERSION_NAME_INDEX = 2,
+        EOT_FULL_NAME_INDEX = 3,
+        EOT_NUM_NAMES = 4
+    };
+
+};
+
+// EOT variable-sized header (version 0x00020001 - contains 4 name
+// fields, each with the structure):
+//
+//   // number of bytes in the name array
+//   PRUint16 size;
+//   // array of UTF-16 chars, total length = <size> bytes
+//   // note: english version of name record string
+//   PRUint8  name[size]; 
+//
+// This structure is used for the following names, each separated by two
+// bytes of padding (always 0 with no padding after the rootString):
+//
+//   familyName  - based on name ID = 1
+//   styleName   - based on name ID = 2
+//   versionName - based on name ID = 5
+//   fullName    - based on name ID = 4
+//   rootString  - used to restrict font usage to a specific domain
+//
+
+class AutoCloseFile {
+public:
+    AutoCloseFile(PRFileDesc *aFileDesc) 
+        : mFile(aFileDesc) { }
+    ~AutoCloseFile() { PR_Close(mFile); }
+    PRFileDesc *mFile;
+};
+
+static PRFileDesc *
+OpenFontFile(nsIFile *aFontData)
+{
+    // open up the font file
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFontData);
+    if (!localFile)
+        return nsnull;
+
+    PRFileDesc *fd;
+    nsresult rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+    if (NS_FAILED(rv) || !fd)
+        return nsnull;
+
+    return fd;
+}
+
+static PRBool
+IsValidVersion(PRUint32 version)
+{
+    // normally 0x00010000, CFF-style OT fonts == 'OTTO' and Apple TT fonts = 'true'
+    return version == 0x10000 || version == 'OTTO' || version == 'true';
+}
+
+// copy and swap UTF-16 values, assume no surrogate pairs, can be in place
+static void
+CopySwapUTF16(PRUint16 *aInBuf, PRUint16 *aOutBuf, PRUint32 aLen)
+{
+    PRUint16 *end = aInBuf + aLen;
+    while (aInBuf < end) {
+        PRUint16 value = *aInBuf;
+        *aOutBuf = (value >> 8) | (value & 0xff) << 8;
+        aOutBuf++;
+        aInBuf++;
+    }
+}
+
+// name table stores set of name record structures, followed by
+// large block containing all the strings.  name record offset and length
+// indicates the offset and length within that block.
+// http://www.microsoft.com/typography/otspec/name.htm
+struct NameRecordData {
+    PRUint32  offset;
+    PRUint32  length;
+};
+
+#if DEBUG
+static void DumpEOTHeader(PRUint8 *aHeader, PRUint32 aHeaderLen)
+{
+    PRUint32 offset = 0;
+    PRUint8 *ch = aHeader;
+
+    printf("\n\nlen == %d\n\n", aHeaderLen);
+    while (offset < aHeaderLen) {
+        printf("%7.7x    ", offset);
+        int i;
+        for (i = 0; i < 16; i++) {
+            printf("%2.2x  ", *ch++);
+        }
+        printf("\n");
+        offset += 16;
+    }
+}
+#endif
+
+nsresult
+gfxFontUtils::MakeEOTHeader(nsIFile *aFontData, nsTArray<PRUint8> *aHeader, 
+                            PRBool *aIsCFF)
+{
+    PRInt32 bytesRead;
+
+    // assume TrueType
+    *aIsCFF = PR_FALSE;
+
+    NS_ASSERTION(aHeader, "null header");
+    NS_ASSERTION(aHeader->Length() == 0, "non-empty header passed in");
+    NS_ASSERTION(aIsCFF, "null boolean ptr");
+
+    if (!aHeader->AppendElements(sizeof(EOTFixedHeader)))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    EOTFixedHeader *eotHeader = reinterpret_cast<EOTFixedHeader*> (aHeader->Elements());
+    memset(eotHeader, 0, sizeof(EOTFixedHeader));
+
+    // open the font file
+    PRFileDesc *fd = OpenFontFile(aFontData);
+    if (!fd)
+        return NS_ERROR_FAILURE;
+
+    AutoCloseFile autoCloseFile(fd);
+
+    PRFileInfo64 fileInfo;
+    if (PR_GetOpenFileInfo64(fd, &fileInfo) != PR_SUCCESS 
+        || fileInfo.size > PRInt64(0xFFFFFFFF)) 
+        return NS_ERROR_FAILURE;
+
+    PRUint32 fontDataSize = PRUint32(fileInfo.size);
+
+    // set up header fields
+    eotHeader->fontDataSize = fontDataSize;
+    eotHeader->version = EOTFixedHeader::EOT_VERSION;
+    eotHeader->flags = 0;  // don't specify any special processing
+    eotHeader->charset = EOTFixedHeader::EOT_DEFAULT_CHARSET;
+    eotHeader->fsType = EOTFixedHeader::EOT_EMBED_PRINT_PREVIEW;
+    eotHeader->magicNumber = EOTFixedHeader::EOT_MAGIC_NUMBER;
+
+    // read in the sfnt header
+    SFNTHeader sfntHeader;
+    bytesRead = PR_Read(fd, &sfntHeader, sizeof(SFNTHeader));
+    if (bytesRead != sizeof(SFNTHeader) || !IsValidVersion(sfntHeader.sfntVersion))
+        return NS_ERROR_FAILURE;
+
+    // iterate through the table headers to find the head, name and OS/2 tables
+    PRBool foundHead = PR_FALSE, foundOS2 = PR_FALSE, foundName = PR_FALSE, foundGlyphs = PR_FALSE;
+    PRUint32 headOffset, headLen, nameOffset, nameLen, os2Offset, os2Len;
+    PRUint32 i, numTables;
+
+    numTables = sfntHeader.numTables;
+    for (i = 0; i < numTables; i++) {
+        TableDirEntry dirEntry;
+        bytesRead = PR_Read(fd, &dirEntry, sizeof(TableDirEntry));
+        if (bytesRead != sizeof(TableDirEntry))
+            return NS_ERROR_FAILURE;
+
+        switch (dirEntry.tag) {
+
+        case 'head':
+            foundHead = PR_TRUE;
+            headOffset = dirEntry.offset;
+            headLen = dirEntry.length;
+            if (headLen < sizeof(HeadTable))
+                return NS_ERROR_FAILURE;
+            break;
+
+        case 'name':
+            foundName = PR_TRUE;
+            nameOffset = dirEntry.offset;
+            nameLen = dirEntry.length;
+            break;
+
+        case 'OS/2':
+            foundOS2 = PR_TRUE;
+            os2Offset = dirEntry.offset;
+            os2Len = dirEntry.length;
+            break;
+
+        case 'glyf':  // TrueType-style quadratic glyph table
+            foundGlyphs = PR_TRUE;
+            break;
+
+        case 'CFF ':  // PS-style cubic glyph table
+            foundGlyphs = PR_TRUE;
+            *aIsCFF = PR_TRUE;
+            break;
+
+        default:
+            break;
+        }
+
+        if (foundHead && foundName && foundOS2 && foundGlyphs)
+            break;
+    }
+
+    // require these three tables on Windows
+    if (!foundHead || !foundName || !foundOS2)
+        return NS_ERROR_FAILURE;
+
+    // read in the data from those tables
+    PROffset64 offset;
+
+    // -- head table data
+    HeadTable  headData;
+    offset = PR_Seek64(fd, PROffset64(headOffset), PR_SEEK_SET);
+    if (offset == -1)
+        return NS_ERROR_FAILURE;
+    bytesRead = PR_Read(fd, &headData, sizeof(HeadTable));
+    if (bytesRead != sizeof(HeadTable) || headData.magicNumber != HeadTable::HEAD_MAGIC_NUMBER)
+        return NS_ERROR_FAILURE;
+
+    eotHeader->checkSumAdjustment = headData.checkSumAdjustment;
+
+    // -- name table data
+
+    // -- first, read name table header
+    NameHeader nameHeader;
+
+    offset = PR_Seek64(fd, PROffset64(nameOffset), PR_SEEK_SET);
+    if (offset == -1)
+        return NS_ERROR_FAILURE;
+    bytesRead = PR_Read(fd, &nameHeader, sizeof(NameHeader));
+    if (bytesRead != sizeof(NameHeader))
+        return NS_ERROR_FAILURE;
+
+    // -- seek point is now at the start of name records
+
+    // -- iterate through name records, look for specific name ids with
+    //    matching platform/encoding/etc. and store offset/lengths
+    NameRecordData names[EOTFixedHeader::EOT_NUM_NAMES] = {0};
+    PRUint32 nameCount = nameHeader.count;
+
+    for (i = 0; i < nameCount; i++) {
+        NameRecord nameRecord;
+
+        bytesRead = PR_Read(fd, &nameRecord, sizeof(NameRecord));
+        if (bytesRead != sizeof(NameRecord))
+            return NS_ERROR_FAILURE;
+
+        // looking for Microsoft English US name strings, skip others
+        if (PRUint32(nameRecord.platformID) != NameRecord::PLATFORM_ID_MICROSOFT || 
+                PRUint32(nameRecord.encodingID) != NameRecord::ENCODING_ID_MICROSOFT_UNICODEBMP || 
+                PRUint32(nameRecord.languageID) != NameRecord::LANG_ID_MICROSOFT_EN_US)
+            continue;
+
+        switch ((PRUint32)nameRecord.nameID) {
+
+        case NameRecord::NAME_ID_FAMILY:
+            names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].offset = nameRecord.offset;
+            names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length = nameRecord.length;
+            break;
+
+        case NameRecord::NAME_ID_STYLE:
+            names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].offset = nameRecord.offset;
+            names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length = nameRecord.length;
+            break;
+
+        case NameRecord::NAME_ID_FULL:
+            names[EOTFixedHeader::EOT_FULL_NAME_INDEX].offset = nameRecord.offset;
+            names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length = nameRecord.length;
+            break;
+
+        case NameRecord::NAME_ID_VERSION:
+            names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].offset = nameRecord.offset;
+            names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length = nameRecord.length;
+            break;
+
+        default:
+            break;
+        }
+
+        if (names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length &&
+            names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length &&
+            names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length &&
+            names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length)
+            break;
+    }
+
+    if (!(names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length &&
+          names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length &&
+          names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length &&
+          names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length)) 
+    {
+        return NS_ERROR_FAILURE;
+    }        
+
+    // -- expand buffer if needed to include variable-length portion
+    PRUint32 eotVariableLength = 0;
+    eotVariableLength = (names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length & (~1)) +
+                        (names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length & (~1)) +
+                        (names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length & (~1)) +
+                        (names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length & (~1)) +
+                        EOTFixedHeader::EOT_NUM_NAMES * (2 /* size */ 
+                                                         + 2 /* padding */) +
+                        2 /* null root string size */;
+
+    if (!aHeader->AppendElements(eotVariableLength))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // append the string data to the end of the EOT header
+    PRUint8 *eotEnd = aHeader->Elements() + sizeof(EOTFixedHeader);
+    PROffset64 strOffset;
+    PRUint32 strLen;
+
+    for (i = 0; i < EOTFixedHeader::EOT_NUM_NAMES; i++) {
+        PRUint32 namelen = names[i].length;
+        PRUint32 nameoff = names[i].offset;  // offset from base of string storage
+
+        strOffset = nameOffset + PRUint32(nameHeader.stringOffset) + nameoff;
+        offset = PR_Seek64(fd, strOffset, PR_SEEK_SET);
+        if (offset == -1)
+            return NS_ERROR_FAILURE;
+
+        // output 2-byte str size   
+        strLen = namelen & (~1);  // UTF-16 string len must be even
+        *((PRUint16*) eotEnd) = PRUint16(strLen);
+        eotEnd += 2;
+
+        // read in actual string and swap bytes from big-endian
+        // (TrueType/OpenType) to little-endian (EOT)
+        bytesRead = PR_Read(fd, eotEnd, strLen);
+        if (PRUint32(bytesRead) != strLen)
+            return NS_ERROR_FAILURE;
+
+        // length is number of UTF-16 chars, not bytes    
+        CopySwapUTF16(reinterpret_cast<PRUint16*>(eotEnd), 
+                      reinterpret_cast<PRUint16*>(eotEnd), 
+                      (strLen >> 1));  
+        eotEnd += strLen;
+
+        // add 2-byte zero padding to the end of each string
+        *eotEnd++ = 0;
+        *eotEnd++ = 0;
+
+       // Note: Microsoft's WEFT tool produces name strings which
+       // include an extra null at the end of each string, in addition
+       // to the 2-byte zero padding that separates the string fields. 
+       // Don't think this is important to imitate...
+    }
+
+    // append null root string size
+    *eotEnd++ = 0;
+    *eotEnd++ = 0;
+
+    NS_ASSERTION(eotEnd == aHeader->Elements() + aHeader->Length(), 
+                 "header length calculation incorrect");
+                 
+    // -- OS/2 table data
+    OS2Table  os2Data;
+    offset = PR_Seek64(fd, PROffset64(os2Offset), PR_SEEK_SET);
+    if (offset == -1)
+        return NS_ERROR_FAILURE;
+    bytesRead = PR_Read(fd, &os2Data, sizeof(OS2Table));
+    if (bytesRead != sizeof(OS2Table))
+        return NS_ERROR_FAILURE;
+
+    memcpy(eotHeader->panose, os2Data.panose, sizeof(eotHeader->panose));
+
+    eotHeader->italic = (PRUint16) os2Data.fsSelection & 0x01;
+    eotHeader->weight = os2Data.usWeightClass;
+    eotHeader->unicodeRange1 = os2Data.unicodeRange1;
+    eotHeader->unicodeRange2 = os2Data.unicodeRange2;
+    eotHeader->unicodeRange3 = os2Data.unicodeRange3;
+    eotHeader->unicodeRange4 = os2Data.unicodeRange4;
+    eotHeader->codePageRange1 = os2Data.codePageRange1;
+    eotHeader->codePageRange2 = os2Data.codePageRange2;
+
+    eotHeader->eotSize = aHeader->Length() + fontDataSize;
+
+    // DumpEOTHeader(aHeader->Elements(), aHeader->Length());
+
+    return NS_OK;
+}
+
+#endif

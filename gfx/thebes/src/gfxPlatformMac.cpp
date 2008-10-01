@@ -44,6 +44,7 @@
 
 #include "gfxQuartzFontCache.h"
 #include "gfxAtsuiFonts.h"
+#include "gfxUserFontSet.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -115,9 +116,36 @@ gfxPlatformMac::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFa
 
 gfxFontGroup *
 gfxPlatformMac::CreateFontGroup(const nsAString &aFamilies,
-                                const gfxFontStyle *aStyle)
+                                const gfxFontStyle *aStyle,
+                                gfxUserFontSet *aUserFontSet)
 {
-    return new gfxAtsuiFontGroup(aFamilies, aStyle);
+    return new gfxAtsuiFontGroup(aFamilies, aStyle, aUserFontSet);
+}
+
+gfxFontEntry* 
+gfxPlatformMac::LookupLocalFont(const nsAString& aFontName)
+{
+    return gfxQuartzFontCache::SharedFontCache()->LookupLocalFont(aFontName);
+}
+
+gfxFontEntry* 
+gfxPlatformMac::MakePlatformFont(const gfxFontEntry *aProxyEntry, const gfxDownloadedFontData* aFontData)
+{
+    return gfxQuartzFontCache::SharedFontCache()->MakePlatformFont(aProxyEntry, aFontData);
+}
+
+PRBool
+gfxPlatformMac::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags)
+{
+    // reject based on format flags
+    if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_EOT | gfxUserFontSet::FLAG_FORMAT_SVG)) {
+        return PR_FALSE;
+    }
+
+    // reject based on filetype in URI
+
+    // otherwise, return true
+    return PR_TRUE;
 }
 
 nsresult

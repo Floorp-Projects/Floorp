@@ -55,7 +55,6 @@
 #include "nsXPCOMStrings.h"
 #include "prlock.h"
 #include "nsThreadUtils.h"
-#include "nsJSUtils.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
@@ -69,33 +68,13 @@
 #include "nsIDOMProgressEvent.h"
 #include "nsHTMLMediaError.h"
 
-nsGenericHTMLElement*
-NS_NewHTMLAudioElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
-{
-  /*
-   * nsHTMLAudioElement's will be created without a nsINodeInfo passed in
-   * if someone says "var audio = new Audio();" in JavaScript, in a case like
-   * that we request the nsINodeInfo from the document's nodeinfo list.
-   */
-  nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
-  if (!nodeInfo) {
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
-    NS_ENSURE_TRUE(doc, nsnull);
-
-    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::audio, nsnull,
-                                                   kNameSpaceID_None);
-    NS_ENSURE_TRUE(nodeInfo, nsnull);
-  }
-
-  return new nsHTMLAudioElement(nodeInfo);
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Audio)
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
 
 NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLAudioElement, nsHTMLMediaElement)
-NS_INTERFACE_TABLE_INHERITED2(nsHTMLAudioElement, nsIDOMHTMLAudioElement, nsIJSNativeInitializer)
+  NS_INTERFACE_TABLE_INHERITED1(nsHTMLAudioElement, nsIDOMHTMLAudioElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAudioElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLAudioElement)
@@ -138,22 +117,4 @@ nsresult nsHTMLAudioElement::InitializeDecoder(nsAString& aChosenMediaResource)
     mDecoder->ElementAvailable(this);
 
   return nsHTMLMediaElement::InitializeDecoder(aChosenMediaResource);
-}
-
-NS_IMETHODIMP
-nsHTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
-                               JSObject *aObj, PRUint32 argc, jsval *argv)
-{
-  if (argc <= 0) {
-    // Nothing to do here if we don't get any arguments.
-    return NS_OK;
-  }
-
-  // The only (optional) argument is the url of the audio
-  JSString* jsstr = JS_ValueToString(aContext, argv[0]);
-  if (!jsstr)
-    return NS_ERROR_FAILURE;
-
-  nsDependentJSString str(jsstr);
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::src, str, PR_TRUE);
 }

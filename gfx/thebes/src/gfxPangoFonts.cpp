@@ -784,8 +784,9 @@ FontCallback (const nsAString& fontName, const nsACString& genericName,
 }
 
 gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
-                                      const gfxFontStyle *aStyle)
-    : gfxFontGroup(families, aStyle),
+                                      const gfxFontStyle *aStyle,
+                                      gfxUserFontSet *aUserFontSet)
+    : gfxFontGroup(families, aStyle, aUserFontSet),
       mBasePangoFont(nsnull), mAdjustedSize(0)
 {
     mFonts.AppendElements(1);
@@ -800,7 +801,7 @@ gfxPangoFontGroup::~gfxPangoFontGroup()
 gfxFontGroup *
 gfxPangoFontGroup::Copy(const gfxFontStyle *aStyle)
 {
-    return new gfxPangoFontGroup(mFamilies, aStyle);
+    return new gfxPangoFontGroup(mFamilies, aStyle, mUserFontSet);
 }
 
 // A string of family names suitable for fontconfig
