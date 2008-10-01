@@ -69,7 +69,7 @@ void
 Assembler::nInit(AvmCore*)
 {
     // all ARMs have conditional move
-    has_cmov = true;
+    avmplus::AvmCore::cmov_available = true;
 }
 
 NIns*
