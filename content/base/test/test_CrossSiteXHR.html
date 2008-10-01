@@ -261,6 +261,14 @@ function runTest() {
                { method: "DELETE",
                  allowMethods: "  ,,  PUT ,,  ,    , DELETE  ,  ,",
                },
+               { method: "POST",
+                 headers: { "Content-Type": "text/plain" },
+                 uploadProgress: "uploadprogress",
+               },
+               { method: "POST",
+                 headers: { "Content-Type": "text/plain" },
+                 uploadProgress: "progress",
+               },
                ];
   failTests = [{ method: "GET",
                  headers: { "x-my-header": "myValue" },
@@ -340,6 +348,16 @@ function runTest() {
                { method: "PUT",
                  allowMethods: "put",
                },
+               { method: "POST",
+                 headers: { "Content-Type": "text/plain" },
+                 noAllowPreflight: 1,
+                 uploadProgress: "uploadprogress",
+               },
+               { method: "POST",
+                 headers: { "Content-Type": "text/plain" },
+                 noAllowPreflight: 1,
+                 uploadProgress: "progress",
+               },
                ];
 
   for each(test in passTests) {
@@ -349,6 +367,7 @@ function runTest() {
            "&requestMethod=" + test.method,
       method: test.method,
       headers: test.headers,
+      uploadProgress: test.uploadProgress,
     };
 
     if (test.noAllowPreflight)
@@ -388,6 +407,7 @@ function runTest() {
       url: baseURL + "allowOrigin=" + escape(origin),
       method: test.method,
       headers: test.headers,
+      uploadProgress: test.uploadProgress,
     };
 
     if (test.noAllowPreflight)

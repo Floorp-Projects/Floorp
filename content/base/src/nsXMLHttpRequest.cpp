@@ -1649,7 +1649,10 @@ nsXMLHttpRequest::DispatchProgressEvent(nsPIDOMEventTarget* aTarget,
                                         PRUint64 aLoaded, PRUint64 aTotal,
                                         PRUint64 aPosition, PRUint64 aTotalSize)
 {
-  if (aType.IsEmpty()) {
+  NS_ASSERTION(aTarget, "null target");
+  if (aType.IsEmpty() ||
+      (!AllowUploadProgress() &&
+       (aTarget == mUpload || aType.EqualsLiteral(UPLOADPROGRESS_STR)))) {
     return;
   }
 
@@ -2575,7 +2578,9 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     
     nsCAutoString method;
     httpChannel->GetRequestMethod(method);
-    if (!mACUnsafeHeaders.IsEmpty()) {
+    if (!mACUnsafeHeaders.IsEmpty() ||
+        HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
+        (mUpload && mUpload->HasListeners())) {
       mState |= XML_HTTP_REQUEST_NEED_AC_PREFLIGHT;
     }
     else if (method.LowerCaseEqualsLiteral("post")) {
@@ -3112,6 +3117,13 @@ nsXMLHttpRequest::OnStatus(nsIRequest *aRequest, nsISupports *aContext, nsresult
   }
 
   return NS_OK;
+}
+
+PRBool
+nsXMLHttpRequest::AllowUploadProgress()
+{
+  return !(mState & XML_HTTP_REQUEST_USE_XSITE_AC) ||
+    (mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT);
 }
 
 /////////////////////////////////////////////////////
