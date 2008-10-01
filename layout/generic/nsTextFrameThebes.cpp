@@ -3836,7 +3836,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
                                   const gfxPoint& aTextBaselinePt,
                                   nsTextPaintStyle& aTextPaintStyle,
                                   PropertyProvider& aProvider,
-                                  const nscolor& aOverrideColor)
+                                  const nscolor* aOverrideColor)
 {
   TextDecorations decorations =
     GetTextDecorations(aTextPaintStyle.PresContext());
@@ -3856,14 +3856,14 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
 
   nscolor lineColor;
   if (decorations.HasOverline()) {
-    lineColor = aOverrideColor ? aOverrideColor : decorations.mOverColor;
+    lineColor = aOverrideColor ? *aOverrideColor : decorations.mOverColor;
     size.height = fontMetrics.underlineSize;
     nsCSSRendering::PaintDecorationLine(
       aCtx, lineColor, pt, size, ascent, fontMetrics.maxAscent,
       NS_STYLE_TEXT_DECORATION_OVERLINE, NS_STYLE_BORDER_STYLE_SOLID);
   }
   if (decorations.HasUnderline()) {
-    lineColor = aOverrideColor ? aOverrideColor : decorations.mUnderColor;
+    lineColor = aOverrideColor ? *aOverrideColor : decorations.mUnderColor;
     size.height = fontMetrics.underlineSize;
     gfxFloat offset = aProvider.GetFontGroup()->GetUnderlineOffset();
     nsCSSRendering::PaintDecorationLine(
@@ -3871,7 +3871,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
       NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID);
   }
   if (decorations.HasStrikeout()) {
-    lineColor = aOverrideColor ? aOverrideColor : decorations.mStrikeColor;
+    lineColor = aOverrideColor ? *aOverrideColor : decorations.mStrikeColor;
     size.height = fontMetrics.strikeoutSize;
     gfxFloat offset = fontMetrics.strikeoutOffset;
     nsCSSRendering::PaintDecorationLine(
@@ -4157,7 +4157,7 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
   nsTextPaintStyle textPaintStyle(this);
   PaintTextDecorations(shadowContext, aDirtyRect, aFramePt + shadowOffset,
                        aTextBaselinePt + shadowOffset,
-                       textPaintStyle, *aProvider, shadowColor);
+                       textPaintStyle, *aProvider, &shadowColor);
 
   contextBoxBlur.DoPaint();
   aCtx->Restore();

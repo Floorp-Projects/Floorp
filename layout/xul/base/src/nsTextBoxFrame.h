@@ -127,7 +127,7 @@ private:
 
   void DrawText(nsIRenderingContext& aRenderingContext,
                          const nsRect&        aTextRect,
-                         const nscolor&       aOverrideColor);
+                         const nscolor*       aOverrideColor);
 
   void PaintOneShadow(gfxContext *     aCtx,
                       const nsRect&    aTextRect,
