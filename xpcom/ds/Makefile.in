@@ -104,7 +104,7 @@ EXPORTS		= \
 		nsStringEnumerator.h \
 		nsHashPropertyBag.h \
 		nsWhitespaceTokenizer.h \
-		nsCommaseparatedTokenizer.h \
+		nsCommaSeparatedTokenizer.h \
 		$(NULL)			
 
 XPIDLSRCS	= \
