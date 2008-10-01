@@ -913,3 +913,17 @@ nsDOMWorkerXHR::SetOnreadystatechange(nsIDOMEventListener* aOnreadystatechange)
   return mXHRProxy->AddEventListener(LISTENER_TYPE_READYSTATECHANGE,
                                     aOnreadystatechange, PR_TRUE, PR_FALSE);
 }
+
+NS_IMETHODIMP
+nsDOMWorkerXHR::GetWithCredentials(PRBool* aWithCredentials)
+{
+  NS_ENSURE_ARG_POINTER(aWithCredentials);
+  *aWithCredentials = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHR::SetWithCredentials(PRBool aWithCredentials)
+{
+  return NS_OK;
+}
