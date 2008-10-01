@@ -80,6 +80,10 @@ LoginManagerStorage_mozStorage.prototype = {
         return this.__utfConverter;
     },
 
+    _utfConverterReset : function() {
+        this.__utfConverter = null;
+    },
+
     __profileDir: null,  // nsIFile for the user's profile dir
     get _profileDir() {
         if (!this.__profileDir)
@@ -918,6 +922,9 @@ LoginManagerStorage_mozStorage.prototype = {
         } catch (e) {
             this.log("Failed to decrypt string: " + cipherText +
                 " (" + e.name + ")");
+
+            // In the unlikely event the converter threw, reset it.
+            this._utfConverterReset();
 
             // If the user clicks Cancel, we get NS_ERROR_NOT_AVAILABLE.
             // If the cipherText is bad / wrong key, we get NS_ERROR_FAILURE
