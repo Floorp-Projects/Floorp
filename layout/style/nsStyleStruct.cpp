@@ -803,12 +803,39 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mTextRendering = aSource.mTextRendering;
 }
 
+static PRBool PaintURIChanged(const nsStyleSVGPaint& aPaint1,
+                              const nsStyleSVGPaint& aPaint2)
+{
+  if (aPaint1.mType != aPaint2.mType) {
+    return aPaint1.mType == eStyleSVGPaintType_Server ||
+           aPaint2.mType == eStyleSVGPaintType_Server;
+  }
+  return aPaint1.mType == eStyleSVGPaintType_Server &&
+    !EqualURIs(aPaint1.mPaint.mPaintServer, aPaint2.mPaint.mPaintServer);
+}
+
 nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 {
-  if ( mFill                  != aOther.mFill                  ||
-       mStroke                != aOther.mStroke                ||
+  nsChangeHint hint = nsChangeHint(0);
 
-       !EqualURIs(mMarkerEnd, aOther.mMarkerEnd)               ||
+  if (mTextRendering != aOther.mTextRendering) {
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    // May be needed for non-svg frames
+    NS_UpdateHint(hint, nsChangeHint_ReflowFrame);
+  }
+
+  if (mFill != aOther.mFill ||
+      mStroke != aOther.mStroke) {
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    if (PaintURIChanged(mFill, aOther.mFill) ||
+        PaintURIChanged(mStroke, aOther.mStroke)) {
+      NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
+    }
+    // Nothing more to do, below we can only set "repaint"
+    return hint;
+  }
+
+  if ( !EqualURIs(mMarkerEnd, aOther.mMarkerEnd)               ||
        !EqualURIs(mMarkerMid, aOther.mMarkerMid)               ||
        !EqualURIs(mMarkerStart, aOther.mMarkerStart)           ||
 
@@ -823,28 +850,32 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mColorInterpolation    != aOther.mColorInterpolation    ||
        mColorInterpolationFilters != aOther.mColorInterpolationFilters ||
        mFillRule              != aOther.mFillRule              ||
-       mPointerEvents         != aOther.mPointerEvents         ||
        mShapeRendering        != aOther.mShapeRendering        ||
        mStrokeDasharrayLength != aOther.mStrokeDasharrayLength ||
        mStrokeLinecap         != aOther.mStrokeLinecap         ||
        mStrokeLinejoin        != aOther.mStrokeLinejoin        ||
-       mTextAnchor            != aOther.mTextAnchor            ||
-       mTextRendering         != aOther.mTextRendering)
-    return NS_STYLE_HINT_VISUAL;
+       mTextAnchor            != aOther.mTextAnchor) {
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    return hint;
+  }
 
   // length of stroke dasharrays are the same (tested above) - check entries
   for (PRUint32 i=0; i<mStrokeDasharrayLength; i++)
-    if (mStrokeDasharray[i] != aOther.mStrokeDasharray[i])
-      return NS_STYLE_HINT_VISUAL;
+    if (mStrokeDasharray[i] != aOther.mStrokeDasharray[i]) {
+      NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+      return hint;
+    }
 
-  return NS_STYLE_HINT_NONE;
+  return hint;
 }
 
 #ifdef DEBUG
 /* static */
 nsChangeHint nsStyleSVG::MaxDifference()
 {
-  return NS_STYLE_HINT_VISUAL;
+  return NS_CombineHint(NS_CombineHint(nsChangeHint_UpdateEffects,
+                                       nsChangeHint_ReflowFrame),
+                                       nsChangeHint_RepaintFrame);
 }
 #endif
 
@@ -891,14 +922,12 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
     NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
     NS_UpdateHint(hint, nsChangeHint_ReflowFrame);
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
-  }
-
-  if (mStopColor             != aOther.mStopColor     ||
-      mFloodColor            != aOther.mFloodColor    ||
-      mLightingColor         != aOther.mLightingColor ||
-      mStopOpacity           != aOther.mStopOpacity   ||
-      mFloodOpacity          != aOther.mFloodOpacity  ||
-      mDominantBaseline != aOther.mDominantBaseline)
+  } else if (mStopColor        != aOther.mStopColor     ||
+             mFloodColor       != aOther.mFloodColor    ||
+             mLightingColor    != aOther.mLightingColor ||
+             mStopOpacity      != aOther.mStopOpacity   ||
+             mFloodOpacity     != aOther.mFloodOpacity  ||
+             mDominantBaseline != aOther.mDominantBaseline)
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
 
   return hint;
