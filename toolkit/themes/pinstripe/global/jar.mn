@@ -169,6 +169,8 @@ classic.jar:
 +  skin/classic/global/notification/critical-bar-background.png       (notification/critical-bar-background.png)
 +  skin/classic/global/notification/info-bar-background.png           (notification/info-bar-background.png)
 +  skin/classic/global/notification/warning-bar-background.png        (notification/warning-bar-background.png)
++  skin/classic/global/media/videocontrols.css                        (media/videocontrols.css)
++  skin/classic/global/media/videocontrols.png                        (media/videocontrols.png)
 +  skin/classic/global/menu/menu-arrow-dis.gif                        (menu/menu-arrow-dis.gif)
 +  skin/classic/global/menu/menu-arrow-hov.gif                        (menu/menu-arrow-hov.gif)
 +  skin/classic/global/menu/menu-arrow.gif                            (menu/menu-arrow.gif)
