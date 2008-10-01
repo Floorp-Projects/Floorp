@@ -299,15 +299,6 @@ static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                               nscolor aBackgroundColor,
                               nscolor aBorderColor);
 
-static void DrawLine(nsIRenderingContext& aContext, 
-                     nscoord aX1, nscoord aY1, nscoord aX2, nscoord aY2,
-                     nsRect* aGap);
-
-static void FillPolygon(nsIRenderingContext& aContext, 
-                        const nsPoint aPoints[],
-                        PRInt32 aNumPoints,
-                        nsRect* aGap);
-
 static gfxRect GetTextDecorationRectInternal(const gfxPoint& aPt,
                                              const gfxSize& aLineSize,
                                              const gfxFloat aAscent,
@@ -340,33 +331,6 @@ void nsCSSRendering::Shutdown()
 {
   delete gInlineBGData;
   gInlineBGData = nsnull;
-}
-
-// Draw a line, skipping that portion which crosses aGap. aGap defines
-// a rectangle gap. This services fieldset legends and only works for
-// coords defining horizontal lines.
-static void
-DrawLine (nsIRenderingContext& aContext, 
-          nscoord aX1, nscoord aY1, nscoord aX2, nscoord aY2, nsRect* aGap)
-{
-  if (nsnull == aGap) {
-    aContext.DrawLine(aX1, aY1, aX2, aY2);
-  } else {
-    nscoord x1 = (aX1 < aX2) ? aX1 : aX2;
-    nscoord x2 = (aX1 < aX2) ? aX2 : aX1;
-    nsPoint gapUpperRight(aGap->x + aGap->width, aGap->y);
-    nsPoint gapLowerRight(aGap->x + aGap->width, aGap->y + aGap->height);
-    if ((aGap->y <= aY1) && (gapLowerRight.y >= aY2)) {
-      if ((aGap->x > x1) && (aGap->x < x2)) {
-        aContext.DrawLine(x1, aY1, aGap->x, aY1);
-      } 
-      if ((gapLowerRight.x > x1) && (gapLowerRight.x < x2)) {
-        aContext.DrawLine(gapUpperRight.x, aY2, x2, aY2);
-      } 
-    } else {
-      aContext.DrawLine(aX1, aY1, aX2, aY2);
-    }
-  }
 }
 
 /**
