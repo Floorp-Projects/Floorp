@@ -69,7 +69,6 @@
 #include "nsNSSCallbacks.h"
 
 #include "nsNSSHelper.h"
-#include "nsClientAuthRemember.h"
 
 #define NS_NSSCOMPONENT_CID \
 {0xa277189c, 0x1dd1, 0x11b2, {0xa8, 0xc9, 0xe4, 0xe8, 0xbf, 0xb1, 0x33, 0x8e}}
@@ -172,8 +171,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token) = 0;
   
-  NS_IMETHOD GetClientAuthRememberService(nsClientAuthRememberService **cars) = 0;
-
   NS_IMETHOD EnsureIdentityInfoLoaded() = 0;
 };
 
@@ -262,7 +259,6 @@ public:
   NS_IMETHOD ShutdownSmartCardThread(SECMODModule *module);
   NS_IMETHOD PostEvent(const nsAString &eventType, const nsAString &token);
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token);
-  NS_IMETHOD GetClientAuthRememberService(nsClientAuthRememberService **cars);
   NS_IMETHOD EnsureIdentityInfoLoaded();
 
 private:
@@ -328,7 +324,6 @@ private:
   nsSSLThread *mSSLThread;
   nsCertVerificationThread *mCertVerificationThread;
   nsNSSHttpInterface mHttpForNSS;
-  nsRefPtr<nsClientAuthRememberService> mClientAuthRememberService;
 
   static PRStatus PR_CALLBACK IdentityInfoInit(void);
   PRCallOnceType mIdentityInfoCallOnce;
