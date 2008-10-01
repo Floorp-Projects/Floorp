@@ -3279,6 +3279,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
     bool cond;
     LIns* l_ins = get(&l);
     LIns* r_ins = get(&r);
+    bool fp = false;
 
     // CMP_STRICT is only set for JSOP_STRICTEQ and JSOP_STRICTNE, which correspond to the
     // === and !== operators. negate is true for !== and false for ===. The strict equality
@@ -3310,6 +3311,8 @@ TraceRecorder::cmp(LOpcode op, int flags)
     } else if (isNumber(l) || isNumber(r)) {
         jsval tmp[2] = {l, r};
         JSAutoTempValueRooter tvr(cx, 2, tmp);
+        
+        fp = true;
 
         // TODO: coerce non-numbers to numbers if it's not string-on-string above
         jsdouble lnum;
@@ -3373,7 +3376,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
     /* If we didn't generate a constant result yet, then emit the comparison now. */
     if (!x) {
         /* If the result is not a number or it's not a quad, we must use an integer compare. */
-        if (!isNumber(l) || !l_ins->isQuad()) {
+        if (!fp) {
             JS_ASSERT(op >= LIR_feq && op <= LIR_fge);
             op = LOpcode(op + (LIR_eq - LIR_feq));
         }
