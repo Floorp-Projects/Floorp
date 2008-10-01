@@ -245,7 +245,7 @@ nsResProtocolHandler::NewURI(const nsACString &aSpec,
     for ( ; src < end; ++src) {
         if (*src == '%' && (src < end-2) && *(src+1) == '2') {
            char ch = '\0';
-           if (*(src+2) == 'f' || *(src+1) == 'F')
+           if (*(src+2) == 'f' || *(src+2) == 'F')
              ch = '/';
            else if (*(src+2) == 'e' || *(src+2) == 'E')
              ch = '.';
