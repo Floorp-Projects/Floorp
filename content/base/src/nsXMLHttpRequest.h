@@ -350,10 +350,8 @@ public:
 
   static void ShutdownACCache()
   {
-    if (sAccessControlCache) {
-      delete sAccessControlCache;
-      sAccessControlCache = nsnull;
-    }
+    delete sAccessControlCache;
+    sAccessControlCache = nsnull;
   }
 
   PRBool AllowUploadProgress();
