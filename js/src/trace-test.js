@@ -1759,6 +1759,14 @@ function testInvalidCharCodeAt()
 testInvalidCharCodeAt.expected = "NaNNaNNaNNaNNaNNaNNaNNaNNaNNaN";
 test(testInvalidCharCodeAt);
 
+function FPQuadCmp()
+{
+    for (let j = 0; j < 3; ++j) { true == 0; }
+    return "ok";
+}
+FPQuadCmp.expected = "ok";
+test(FPQuadCmp);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
