@@ -50,6 +50,7 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsIRenderingContext.h"
+#include "gfxUserFontSet.h"
 
 NS_IMPL_ISUPPORTS3(DeviceContextImpl, nsIDeviceContext, nsIObserver, nsISupportsWeakReference)
 
@@ -213,7 +214,7 @@ DeviceContextImpl::GetLocaleLangGroup(void)
 }
 
 NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont,
-  nsIAtom* aLangGroup, nsIFontMetrics*& aMetrics)
+  nsIAtom* aLangGroup, nsIFontMetrics*& aMetrics, gfxUserFontSet *aUserFontSet)
 {
   if (nsnull == mFontCache) {
     nsresult  rv = CreateFontCache();
@@ -230,10 +231,12 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont,
     aLangGroup = mLocaleLangGroup;
   }
 
-  return mFontCache->GetMetricsFor(aFont, aLangGroup, aMetrics);
+  return mFontCache->GetMetricsFor(aFont, aLangGroup, aMetrics, aUserFontSet);
 }
 
-NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics)
+NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, 
+                                               nsIFontMetrics*& aMetrics, 
+                                               gfxUserFontSet *aUserFontSet)
 {
   if (nsnull == mFontCache) {
     nsresult  rv = CreateFontCache();
@@ -244,7 +247,8 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetri
     // XXX temporary fix for performance problem -- erik
     GetLocaleLangGroup();
   }
-  return mFontCache->GetMetricsFor(aFont, mLocaleLangGroup, aMetrics);
+  return mFontCache->GetMetricsFor(aFont, mLocaleLangGroup, 
+                                   aMetrics, aUserFontSet);
 }
 
 NS_IMETHODIMP DeviceContextImpl::GetDepth(PRUint32& aDepth)
@@ -469,7 +473,7 @@ nsFontCache::GetDeviceContext(nsIDeviceContext *&aContext) const
 
 nsresult
 nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
-  nsIFontMetrics *&aMetrics)
+  nsIFontMetrics *&aMetrics, gfxUserFontSet *aUserFontSet)
 {
   // First check our cache
   // start from the end, which is where we put the most-recent-used element
@@ -497,7 +501,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   aMetrics = nsnull;
   nsresult rv = CreateFontMetricsInstance(&fm);
   if (NS_FAILED(rv)) return rv;
-  rv = fm->Init(aFont, aLangGroup, mContext);
+  rv = fm->Init(aFont, aLangGroup, mContext, aUserFontSet);
   if (NS_SUCCEEDED(rv)) {
     // the mFontMetrics list has the "head" at the end, because append is
     // cheaper than insert
@@ -516,7 +520,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   Compact();
   rv = CreateFontMetricsInstance(&fm);
   if (NS_FAILED(rv)) return rv;
-  rv = fm->Init(aFont, aLangGroup, mContext);
+  rv = fm->Init(aFont, aLangGroup, mContext, aUserFontSet);
   if (NS_SUCCEEDED(rv)) {
     mFontMetrics.AppendElement(fm);
     aMetrics = fm;

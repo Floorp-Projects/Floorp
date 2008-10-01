@@ -66,6 +66,7 @@
 // This also pulls in gfxTypes.h, which we cannot include directly.
 #include "gfxRect.h"
 #include "nsRegion.h"
+
 class nsImageLoader;
 #ifdef IBMBIDI
 class nsBidiPresUtils;
@@ -91,6 +92,7 @@ class nsIAtom;
 struct nsStyleBackground;
 template <class T> class nsRunnableMethod;
 class nsIRunnable;
+class gfxUserFontSet;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;
@@ -778,6 +780,9 @@ public:
   }
 
   PRBool           SupressingResizeReflow() const { return mSupressResizeReflow; }
+  
+  gfxUserFontSet* GetUserFontSet();
+  void SetUserFontSet(gfxUserFontSet *aUserFontSet);
 
   void NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc);
   void FireDOMPaintEvent();
@@ -845,6 +850,9 @@ protected:
   nsRegion              mSameDocDirtyRegion;
   nsRegion              mCrossDocDirtyRegion;
 
+  // container for per-context fonts (downloadable, SVG, etc.)
+  gfxUserFontSet* mUserFontSet;
+  
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
   PRInt32               mFontScaler;
   nscoord               mMinimumFontSize;

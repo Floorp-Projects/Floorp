@@ -95,7 +95,7 @@ private:
 
 class THEBES_API gfxOS2FontGroup : public gfxFontGroup {
 public:
-    gfxOS2FontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle);
+    gfxOS2FontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle, gfxUserFontSet *aUserFontSet);
     virtual ~gfxOS2FontGroup();
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);

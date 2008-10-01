@@ -44,6 +44,7 @@
 #include "cairo.h"
 
 #include "gfxFont.h"
+#include "gfxUserFontSet.h"
 
 struct THEBES_API gfxFontTestItem {
     gfxFontTestItem(const nsCString& fontName,
