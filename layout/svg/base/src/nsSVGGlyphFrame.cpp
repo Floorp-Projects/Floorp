@@ -1253,7 +1253,7 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
                            font.familyNameQuirks);
 
     nsRefPtr<gfxFontGroup> fontGroup =
-      gfxPlatform::GetPlatform()->CreateFontGroup(font.name, &fontStyle);
+      gfxPlatform::GetPlatform()->CreateFontGroup(font.name, &fontStyle, presContext->GetUserFontSet());
 
     PRUint32 flags = gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX |
       nsLayoutUtils::GetTextRunFlagsForStyle(GetStyleContext(), GetStyleText(), GetStyleFont());

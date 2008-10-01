@@ -52,7 +52,9 @@ REQUIRES = \
 	cairo \
 	pref \
 	lcms \
+	necko \
 	unicharutil \
+	nspr \
 	$(NULL)
 
 # All platforms

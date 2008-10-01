@@ -312,18 +312,32 @@ public:
     static inline PRUint32
     ReadLongAt(const PRUint8 *aBuf, PRUint32 aIndex)
     {
-        return ((aBuf[aIndex] << 24) | (aBuf[aIndex + 1] << 16) | (aBuf[aIndex + 2] << 8) | (aBuf[aIndex + 3]));
+        return ((aBuf[aIndex] << 24) | (aBuf[aIndex + 1] << 16) | 
+                (aBuf[aIndex + 2] << 8) | (aBuf[aIndex + 3]));
     }
     
     static nsresult
-    ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap);
+    ReadCMAPTableFormat12(PRUint8 *aBuf, PRInt32 aLength, 
+                          gfxSparseBitSet& aCharacterMap);
     
     static nsresult 
-    ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, gfxSparseBitSet& aCharacterMap);
+    ReadCMAPTableFormat4(PRUint8 *aBuf, PRInt32 aLength, 
+                         gfxSparseBitSet& aCharacterMap);
 
     static nsresult
     ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap,
              PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont);
+      
+#ifdef XP_WIN
+    // given a TrueType/OpenType data file, produce a EOT-format header
+    // for use with Windows T2Embed API AddFontResource type API's
+    // effectively hide existing fonts with matching names aHeaderLen is
+    // the size of the header buffer on input, the actual size of the
+    // EOT header on output aIsCFF returns whether the font has PS style
+    // glyphs or not (as opposed to TrueType glyphs)
+    static nsresult
+    MakeEOTHeader(nsIFile *aFontData, nsTArray<PRUint8> *aHeader, PRBool *aIsCFF);
+#endif
 
     static inline bool IsJoiner(PRUint32 ch) {
         return (ch == 0x200C ||
@@ -338,7 +352,8 @@ public:
     static PRUint8 CharRangeBit(PRUint32 ch);
     
     // for a given font list pref name, set up a list of font names
-    static void GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& aFontList);
+    static void GetPrefsFontList(const char *aPrefName, 
+                                 nsTArray<nsString>& aFontList);
 
 };
 
@@ -400,7 +415,8 @@ public:
         InitLoader();
 
         // start timer
-        mTimer->InitWithFuncCallback(LoaderTimerCallback, this, aDelay, nsITimer::TYPE_REPEATING_SLACK);
+        mTimer->InitWithFuncCallback(LoaderTimerCallback, this, aDelay, 
+                                     nsITimer::TYPE_REPEATING_SLACK);
     }
 
     // cancel the timer and cleanup

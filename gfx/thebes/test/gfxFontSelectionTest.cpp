@@ -288,7 +288,7 @@ PRBool
 RunTest (TestEntry *test, gfxContext *ctx) {
     nsRefPtr<gfxFontGroup> fontGroup;
 
-    fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->utf8FamilyString), &test->fontStyle);
+    fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->utf8FamilyString), &test->fontStyle, nsnull);
 
     nsAutoPtr<gfxTextRun> textRun;
     gfxTextRunFactory::Parameters params = {
