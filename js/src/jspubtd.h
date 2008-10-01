@@ -154,7 +154,6 @@ typedef struct JSXDRState        JSXDRState;
 typedef struct JSExceptionState  JSExceptionState;
 typedef struct JSLocaleCallbacks JSLocaleCallbacks;
 typedef struct JSSecurityCallbacks JSSecurityCallbacks;
-typedef struct JSONParser        JSONParser;
 
 /* JSClass (and JSObjectOps where appropriate) function pointer typedefs. */
 

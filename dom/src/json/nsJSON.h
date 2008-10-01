@@ -40,7 +40,6 @@
 #define nsJSON_h__
 
 #include "jsprvtd.h"
-#include "jsapi.h"
 #include "nsIJSON.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -53,6 +52,9 @@
 
 class nsIURI;
 
+#define JSON_MAX_DEPTH  2048
+#define JSON_PARSER_BUFSIZE 1024
+
 class NS_STACK_CLASS nsJSONWriter
 {
 public:
@@ -61,6 +63,7 @@ public:
   virtual ~nsJSONWriter();
   nsresult SetCharset(const char *aCharset);
   nsCOMPtr<nsIOutputStream> mStream;
+  nsresult WriteString(const PRUnichar* aBuffer, PRUint32);
   nsresult Write(const PRUnichar *aBuffer, PRUint32 aLength);
   nsString mOutputString;
   PRBool DidWrite();
@@ -86,6 +89,9 @@ public:
   NS_DECL_NSIJSON
 
 protected:
+  JSBool   ToJSON(JSContext *cx, jsval *vp);
+  nsresult EncodeObject(JSContext *cx, jsval *vp, nsJSONWriter *writer,
+                        JSObject *whitelist, PRUint32 depth);
   nsresult EncodeInternal(nsJSONWriter *writer);
   nsresult DecodeInternal(nsIInputStream *aStream,
                           PRInt32 aContentLength,
@@ -95,6 +101,34 @@ protected:
 
 NS_IMETHODIMP
 NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
+enum JSONParserState {
+    JSON_PARSE_STATE_INIT,
+    JSON_PARSE_STATE_OBJECT_VALUE,
+    JSON_PARSE_STATE_VALUE,
+    JSON_PARSE_STATE_OBJECT,
+    JSON_PARSE_STATE_OBJECT_PAIR,
+    JSON_PARSE_STATE_OBJECT_IN_PAIR,
+    JSON_PARSE_STATE_ARRAY,
+    JSON_PARSE_STATE_STRING,
+    JSON_PARSE_STATE_STRING_ESCAPE,
+    JSON_PARSE_STATE_STRING_HEX,
+    JSON_PARSE_STATE_NUMBER,
+    JSON_PARSE_STATE_KEYWORD,
+    JSON_PARSE_STATE_FINISHED
+};
+
+enum JSONDataType {
+  JSON_DATA_STRING,
+  JSON_DATA_KEYSTRING,
+  JSON_DATA_NUMBER,
+  JSON_DATA_KEYWORD
+};
+
+class nsJSONObjectStack : public nsTArray<JSObject *>,
+                          public JSTempValueRooter
+{
+};
 
 class nsJSONListener : public nsIStreamListener
 {
@@ -107,16 +141,52 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
 protected:
-  PRBool mNeedsConverter;
-  JSONParser *mJSONParser;
+
+  /* Used while handling \uNNNN in strings */
+  PRUnichar mHexChar;
+  PRUint8 mNumHex;
+
   JSContext *mCx;
   jsval *mRootVal;
+  PRBool mNeedsConverter;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+  JSONParserState *mStatep;
+  JSONParserState mStateStack[JSON_MAX_DEPTH];
+  nsString mStringBuffer;
   nsCString mSniffBuffer;
+
+  nsresult PushState(JSONParserState state);
+  nsresult PopState();
   nsresult ProcessBytes(const char* aBuffer, PRUint32 aByteLength);
   nsresult ConsumeConverted(const char* aBuffer, PRUint32 aByteLength);
   nsresult Consume(const PRUnichar *data, PRUint32 len);
-  void Cleanup();
+
+  // helper to determine whether a character could be part of a number
+  PRBool IsNumChar(PRUnichar c) 
+  {
+    if ((c <= '9' && c >= '0') ||
+        c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E')
+      return PR_TRUE;
+
+    return PR_FALSE;
+  }
+
+  // These handle parsed tokens. Could be split to separate interface.
+  nsJSONObjectStack mObjectStack;
+
+  nsresult PushValue(JSObject *aParent, jsval aValue);
+  nsresult PushObject(JSObject *aObj);
+  nsresult OpenObject();
+  nsresult CloseObject();
+  nsresult OpenArray();
+  nsresult CloseArray();
+
+  nsresult HandleData(JSONDataType aType, const PRUnichar *aBuf,
+                      PRUint32 aLength);
+  nsresult HandleString(const PRUnichar *aBuf, PRUint32 aLength);
+  nsresult HandleNumber(const PRUnichar *aBuf, PRUint32 aLength);
+  nsresult HandleKeyword(const PRUnichar *aBuf, PRUint32 aLength);
+  nsString mObjectKey;
 };
 
 #endif
