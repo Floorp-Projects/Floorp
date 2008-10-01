@@ -68,8 +68,7 @@ function test_setQuery()
     [
      ["http://example.com", "http://example.com/?foo"],
      ["http://example.com/bar", "http://example.com/bar?foo"],
-     /* Can't test the path-less thing because of bug 429347 */
-     /* ["http://example.com#bar", "http://example.com/?foo#bar"], */
+     ["http://example.com#bar", "http://example.com/?foo#bar"],
      ["http://example.com/#bar", "http://example.com/?foo#bar"],
      ["http://example.com/?longerthanfoo#bar", "http://example.com/?foo#bar"],
      ["http://example.com/?longerthanfoo", "http://example.com/?foo"],

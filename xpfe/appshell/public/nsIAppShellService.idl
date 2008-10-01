@@ -48,7 +48,7 @@ interface nsIAppShell;
 struct JSContext;
 %}
 
-[scriptable, uuid(93a28ba2-7e22-11d9-9b6f-000a95d535fa)]
+[scriptable, uuid(361facd0-6e9a-4ff1-a0d4-450744cf0023)]
 interface nsIAppShellService : nsISupports
 {
   /**
@@ -134,14 +134,4 @@ interface nsIAppShellService : nsISupports
    * @param aWindow you see the pattern
    */
   void unregisterTopLevelWindow(in nsIXULWindow aWindow);
-
-  /**
-   * The appshell service needs to be informed of modal XUL windows currently
-   * open. Call this method as a window becomes modal or as it becomes
-   * nonmodal.
-   * @param aWindow no surprises here
-   * @param aModal true if aWindow is becoming modal
-   *               false if aWindow is becoming nonmodal (or being closed)
-   */
-  void topLevelWindowIsModal(in nsIXULWindow aWindow, in boolean aModal);
 };
