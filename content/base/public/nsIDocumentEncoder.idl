@@ -102,7 +102,7 @@ interface nsIDocumentEncoder : nsISupports
 
   /**
    * Output as though the content is preformatted
-   * (e.g. maybe it's wrapped in a MOZ_PRE or MOZ_PRE_WRAP style tag)
+   * (e.g. maybe it's wrapped in a PRE or PRE_WRAP style tag)
    * XXXbz this doesn't seem to be used by all serializers... document?  How
    * does this interact with
    * OutputFormatted/OutputRaw/OutputPreformatted/OutputFormatFlowed?

@@ -92,12 +92,16 @@ public:
                             getter_AddRefs(targetIsPool));
 #endif
 
-    LOG(("Posting message '%s' from %s [0x%p] to %s [0x%p]",
-         utf8Message.get(), sourceIsPool ? poolStr : workerStr,
-         static_cast<void*>(mSource.get()), targetIsPool ? poolStr : workerStr,
-         static_cast<void*>(mTarget.get())));
+    if (!(mTarget->IsCanceled() || mSource->IsCanceled())) {
+      LOG(("Posting message '%s' from %s [0x%p] to %s [0x%p]",
+           utf8Message.get(),
+           sourceIsPool ? poolStr : workerStr,
+           static_cast<void*>(mSource.get()),
+           targetIsPool ? poolStr : workerStr,
+           static_cast<void*>(mTarget.get())));
 
-    mTarget->HandleMessage(mMessage, mSource);
+      mTarget->HandleMessage(mMessage, mSource);
+    }
 
     return NS_OK;
   }
