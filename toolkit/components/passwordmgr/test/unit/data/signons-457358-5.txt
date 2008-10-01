@@ -1,0 +1,18 @@
+#2e
+.
+https://www.google.com
+un
+MDIEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECAcH36OqRDPBBAj4u1kKe2oefQ==
+*pw
+MDIEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECDG4MxIBIm3IBAjLrxoeWcW5eg==
+https://www.google.com
+---
+.
+https://bugzilla.mozilla.org (extra user test)
+
+MDoEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECEnlbhAkNBbBBBCexD5eaffSLGH/ORiFlQ4X
+*
+MDoEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECHmiTaseYjkkBBAA0ILJTFSa5CnlpD5PTEYR
+
+---
+.
