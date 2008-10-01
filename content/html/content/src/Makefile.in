@@ -155,7 +155,6 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../xbl/src \
 		-I$(srcdir)/../../../../layout/style \
 		-I$(srcdir)/../../../../layout/tables \
-		-I$(srcdir)/../../../../dom/src/base \
 		-I$(srcdir) \
 		$(NULL)
 
