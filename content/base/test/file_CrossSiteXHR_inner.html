@@ -25,6 +25,18 @@ window.addEventListener('message', function(e) {
   xhr.addEventListener("progress", function(e) {
     res.progressEvents++;
   }, false);
+  if (req.uploadProgress) {
+    if (req.uploadProgress == "uploadProgress") {
+      xhr.addEventListener("uploadProgress", function(e) {
+        res.progressEvents++;
+      }, false);
+    }
+    else {
+      xhr.upload.addEventListener(req.uploadProgress, function(e) {
+        res.progressEvents++;
+      }, false);
+    }
+  }
   xhr.onload = function () {
     res.status = xhr.status;
     res.responseXML = xhr.responseXML ?
