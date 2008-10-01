@@ -1,9 +1,5 @@
 <?xml version="1.0"?>
 
-<!-- 
-     SVG Icons from the BSD Licensed BlueSphere Icon Theme: 
-     http://svgicons.sourceforge.net/
--->
 <bindings id="videoContolBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -11,261 +7,221 @@
    xmlns:svg="http://www.w3.org/2000/svg">
 
   <binding id="videoControls">
-    <content>
-      <xul:vbox flex="1"/>
-      <xul:hbox flex="0" pack="center">
-        <xul:button class="centerplay" flex="0" style="opacity:0.6;" vcattr="center-play" label="Play">
-	  <svg:svg 
-	     width="32px" 
-	     height="32px" 
-	     viewBox="0 0 508 508" 
-	     xmlns="http://www.w3.org/2000/svg">
-	    <defs>
-	      <radialGradient 
-		 cx="220"
-		 cy="220"
-		 r="151"
-		 fx="220"
-		 fy="220"
-		 gradientUnits="userSpaceOnUse"
-		 style="stroke:#000000;stroke-width:1;">
-		<stop
-		   offset="0"
-		   style="stop-color:#73ffff;stroke:#000000;stroke-width:1;" />
-		<stop
-		   offset="0.28"
-		   style="stop-color:#2EA6B9;stroke:#000000;stroke-width:1;" />
-		<stop
-		   offset="1"
-		   style="stop-color:#006b8b;stroke:#000000;stroke-width:1;" />
-	      </radialGradient>
-	      <linearGradient
-		 id="gradient"
-		 x1="0.380952"
-		 y1="0.0859375"
-		 x2="-0.111111"
-		 y2="1.00781"
-		 gradientUnits="objectBoundingBox"
-		 spreadMethod="pad" />
-	    </defs>
-	    <g transform="translate(24,-1.6)">
-	      <path
-		 style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#a4c9ee;stroke-width:10.824;stroke-linejoin:round;stroke-opacity:0.701961;"
-		 d="M 338.593 175.32 L 435.492 261.836 L 339.257 355.345 L 338.593 175.32 z "
-		 transform="matrix(1.72603,0,0,1.94683,-397.314,-245.978)"
-		 />
-	      <path
-		 style="fill:url(#gradient);fill-opacity:0.992157;fill-rule:evenodd;stroke:#0c6671;stroke-width:9.60304;stroke-opacity:0.992157;"
-		 d="M 355.635 183.469 L 437.887 259.936 L 355.817 342.102 L 355.635 183.469 z "
-		 transform="matrix(1.67014,0,0,1.75639,-395.375,-194.413)"
-		 />
-	    </g>
-	  </svg:svg>
-	</xul:button>
-      </xul:hbox>
-      <xul:vbox flex="2" pack="end">
-        <xul:hbox flex="0" pack="center" style="opacity:0.6;">
-          <xul:button class="controlbar" flex="0" vcattr="pause" label="Pause">
-	    <svg:svg
-	       width="32px"
-	       height="32px"
-	       viewBox="0 0 508 508"
-	       xmlns="http://www.w3.org/2000/svg">
-	      <defs>
-		<radialGradient
-		   cx="220"
-		   cy="220"
-		   r="151"
-		   fx="220"
-		   fy="220"
-		   gradientUnits="userSpaceOnUse"
-		   style="stroke:#000000;stroke-width:1;">
-		  <stop
-		     offset="0"
-		     style="stop-color:#73ffff;stroke:#000000;stroke-width:1;" />
-		  <stop
-		     offset="0.28"
-		     style="stop-color:#2EA6B9;stroke:#000000;stroke-width:1;" />
-		  <stop
-		     offset="1"
-		     style="stop-color:#006b8b;stroke:#000000;stroke-width:1;" />
-		</radialGradient>
-		<linearGradient
-		   id="gradient"
-		   x1="0.506276"
-		   y1="0.046875"
-		   x2="0.506276"
-		   y2="0.984375"
-		   gradientUnits="objectBoundingBox"
-		   spreadMethod="pad" />
-	      </defs>
-	      <g transform="matrix(0,-1,1,0,-205,520)">
-		<rect
-		   style="fill-rule:evenodd;stroke:#a4c9ee;stroke-width:16;stroke-opacity:0.701961;"
-		   x="121"
-		   y="297"
-		   width="256"
-		   height="147" />
-		<rect
-		   style="fill:url(#gradient);fill-rule:evenodd;stroke:#0c6671;stroke-width:14;"
-		   x="135"
-		   y="308"
-		   width="232"
-		   height="125"/>
-	      </g>
-	      <g transform="matrix(0,-1,1,0,-22,520)">
-		<rect
-		   style="fill-rule:evenodd;stroke:#a4c9ee;stroke-width:16;stroke-opacity:0.701961;"
-		   x="121"
-		   y="297"
-		   width="256"
-		   height="147"/>
-		<rect
-		   style="fill:url(#gradient);fill-rule:evenodd;stroke:#0c6671;stroke-width:14;"
-		   x="135"
-		   y="308"
-		   width="232"
-		   height="125"/>
-	      </g>
-	    </svg:svg>
-	  </xul:button>
-          <xul:button class="controlbar" flex="0" vcattr="stop" label="Stop">
-	    <svg:svg
-	       width="32px"
-	       height="32px"
-	       viewBox="0 0 508 508"
-	       xmlns="http://www.w3.org/2000/svg">
-	      <defs>
-		<radialGradient
-		   cx="220"
-		   cy="220"
-		   r="151"
-		   fx="220"
-		   fy="220"
-		   gradientUnits="userSpaceOnUse"
-		   style="stroke:#000000;stroke-width:1;">
-		  <stop
-		     offset="0"
-		     style="stop-color:#73ffff;stroke:#000000;stroke-width:1;" />
-		  <stop
-		     offset="0.2809"
-		     style="stop-color:#2EA6B9;stroke:#000000;stroke-width:1;" />
-		  <stop
-		     offset="1"
-		     style="stop-color:#006b8b;stroke:#000000;stroke-width:1;" />
-		</radialGradient>
-		<linearGradient
-		   id="gradient"
-		   x1="0.506276"
-		   y1="0.046875"
-		   x2="0.506276"
-		   y2="0.984375"
-		   gradientUnits="objectBoundingBox"
-		   spreadMethod="pad" />
-	      </defs>
-	      <g transform="matrix(0,-1,1.5,0,-340,497)">
-		<rect
-		   style="fill-rule:evenodd;stroke:#a4c9ee;stroke-width:16;stroke-opacity:0.701961;"
-		   x="121"
-		   y="297"
-		   width="256"
-		   height="147"/>
-		<rect
-		   style="fill:url(#gradient);fill-rule:evenodd;stroke:#0c6671;stroke-width:14;"
-		   x="135"
-		   y="308"
-		   width="232"
-		   height="125"/>
-	      </g>
-	    </svg:svg>
-	  </xul:button>
-        </xul:hbox>
-      </xul:vbox>
-    </content>
+
+    <resources>
+        <stylesheet src="chrome://global/skin/media/videocontrols.css"/>
+    </resources>
+
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        <spacer flex="1"/>
+        <stack xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+            <hbox id="controlsBackground">
+                <image id="playButton"
+                       onclick="this.parentNode.parentNode.parentNode.Utils.togglePause();"/>
+                <box id="controlsMiddle" flex="1"/>
+                <image id="muteButton"
+                       onclick="this.parentNode.parentNode.parentNode.Utils.toggleMute();"/>
+            </hbox>
+        </stack>
+    </xbl:content>
 
     <implementation implements="nsISecurityCheckedComponent">
-      <!-- nsISecurityCheckedComponent -->
-      <method name="canCreateWrapper">
-	<parameter name="aIID"/>
-	<body>
-	  return "AllAccess";
-	 </body>
-      </method>	
+        <!-- nsISecurityCheckedComponent -->
+        <method name="canCreateWrapper">
+            <parameter name="aIID"/>
+            <body>
+                return "AllAccess";
+            </body>
+        </method> 
 
-      <method name="canCallMethod">
-	<parameter name="aIID"/>
-	<parameter name="aMethodName"/> 
-	<body>
-	  return "AllAccess";
-	 </body>
-      </method>	
+        <method name="canCallMethod">
+            <parameter name="aIID"/>
+            <parameter name="aMethodName"/> 
+            <body>
+                return "AllAccess";
+            </body>
+        </method> 
 
-      <method name="canGetProperty">
-	<parameter name="aIID"/>
-	<parameter name="aPropertyName"/> 
-	<body>
-	  return "AllAccess";
-	 </body>
-      </method>	
+        <method name="canGetProperty">
+            <parameter name="aIID"/>
+            <parameter name="aPropertyName"/> 
+            <body>
+                return "AllAccess";
+            </body>
+        </method> 
 
-      <method name="canSetProperty">
-	<parameter name="aIID"/>
-	<parameter name="aPropertyName"/>
-	<body>
-	  return "AllAccess";
-	 </body>
-      </method>	
+        <method name="canSetProperty">
+            <parameter name="aIID"/>
+            <parameter name="aPropertyName"/>
+            <body>
+                return "AllAccess";
+            </body>
+        </method> 
 
-      <method name="QueryInterface">
-	<parameter name="aIID"/>
-	<body>
-          <![CDATA[
-	  if(!iid.equals(Components.interfaces.nsISecurityCheckedComponent))
-	    throw Components.results.NS_ERROR_NO_INTERFACE;
-	  return this;
-         ]]>
-	 </body>
-      </method>	
+        <method name="QueryInterface">
+            <parameter name="aIID"/>
+            <body>
+            <![CDATA[
+            if (!iid.equals(Components.interfaces.nsISecurityCheckedComponent))
+                throw Components.results.NS_ERROR_NO_INTERFACE;
+            return this;
+            ]]>
+            </body>
+        </method>
 
-      <constructor>
-        this.init();
-      </constructor>
+        <constructor>
+            <![CDATA[
+            this.init();
+            ]]>
+        </constructor>
 
-      <method name="init">
-        <body>
-          <![CDATA[
+        <field name="Utils">
+            <![CDATA[ ({
+                debug : false,
+                video : null,
+                controls : null,
+                playButton : null,
+                muteButton : null,
+
+                animationSteps : 8,
+                animationStep : 0,
+                animationDirection : 1,
+                animationTimer : null,
+
+                onMediaEvent : function (aEvent) {
+                    this.log("Got " + aEvent.type + " media event");
+                    switch (aEvent.type) {
+                        case "play":
+                            this.playButton.setAttribute("paused", false);
+                            break;
+                        case "pause":
+                            this.playButton.setAttribute("paused", true);
+                            break;
+                        case "volumechange":
+                            this.muteButton.setAttribute("muted", this.video.muted);
+                            break;
+                        default:
+                            this.log("!!! event " + aEvent.type + " not handled!");
+                    }
+
+                    return false;
+                },
+
+                fadeControls : function (self) {
+                    self.log("fadeControls @" + self.animationStep);
+                    self.animationStep += self.animationDirection;
+
+                    if (self.animationStep <= 0) {
+                        self.animationStep = 0;
+                        clearInterval(self.animationTimer);
+                        self.animationTimer = null;
+                    } else if (self.animationStep >= self.animationSteps) {
+                        self.animationStep = self.animationSteps;
+                        clearInterval(self.animationTimer);
+                        self.animationTimer = null;
+                    }
+
+                    // XXX might be good to do logarithmic steps, maybe use timer error too (for smoothness)?
+                    self.controls.style.opacity = self.animationStep / self.animationSteps;
+                },
+
+                togglePause : function () {
+                    if (this.video.paused)
+                        this.video.play();
+                    else
+                        this.video.pause();
+
+                    // We'll handle style changes in the event listener for
+                    // the "play" and "pause" events, same as if content
+                    // script was controlling video playback.
+                },
+
+                toggleMute : function () {
+                    this.video.muted = !this.video.muted;
+
+                    // We'll handle style changes in the event listener for
+                    // the "volumechange" event, same as if content script was
+                    // controlling volume.
+                },
+
+                isChildNode : function (node) {
+                    while (node) {
+                        if (node == this.controls)
+                            break;
+                        node = node.parentNode;
+                    }
+                    return (node == this);
+                },
+
+                log : function (msg) {
+                    if (this.debug)
+                        dump("videoctl: " + msg + "\n");
+                }
+            }) ]]>
+        </field>
+
+        <method name="init">
+            <body>
+            <![CDATA[
             var self = this;
             var video = this.parentNode;
+            this.Utils.video = video;
+            this.Utils.controls = self;
 
-            var centerPlay = document.getAnonymousElementByAttribute(this, "vcattr", "center-play");
-            video.addEventListener("play", function() {
-              self.setAttribute("class", "playing");
-            }, false);
-            video.addEventListener("pause", function() {
-              self.setAttribute("class", "");
-            }, false);
-            video.addEventListener("ended", function() {
-              self.setAttribute("class", "");
-            }, false);
-            
-            centerPlay.addEventListener("click", function() {
-              video.play(); 
-            }, false);
+            this.Utils.playButton = document.getAnonymousElementByAttribute(self, "id", "playButton");
+            this.Utils.muteButton = document.getAnonymousElementByAttribute(self, "id", "muteButton");
 
-            var pause = document.getAnonymousElementByAttribute(this, "vcattr", "pause");
-            pause.addEventListener("click", function() {
-              video.pause(); 
-            }, false);
-            var stop = document.getAnonymousElementByAttribute(this, "vcattr", "stop");
-            stop.addEventListener("click", function() {
-              video.pause();
-              video.currentTime = 0.0;
-            }, false);
-          ]]>
-        </body>
-      </method>
-      <destructor>
-      </destructor>      
+            // Set initial state of play/pause button.
+            // XXX (force to a bool, due to bug 457964)
+            this.Utils.playButton.setAttribute("paused", video.paused ? true : false);
+
+            function eventBouncer(aEvent) {
+                self.Utils.onMediaEvent(aEvent);
+            }
+
+            this.style.opacity = 0;
+
+            video.addEventListener("play",         eventBouncer, false);
+            video.addEventListener("pause",        eventBouncer, false);
+            video.addEventListener("volumechange", eventBouncer, false);
+
+            this.Utils.log("--- videocontrols initialized ---");
+            ]]>
+            </body>
+        </method>
+
     </implementation>
+
+    <handlers>
+        <handler event="mouseover">
+            <![CDATA[
+            // Ignore events caused by transitions between child nodes.
+            if (this.Utils.isChildNode(event.relatedTarget))
+                return;
+
+            // Don't show controls unless they're enabled
+            // XXX sucks that spec defaults to controls=false. :-(
+            // XXX add support for dynamically hiding controls w/o waiting for mouseout?
+            if (!this.Utils.video.controls)
+                return;
+
+            this.Utils.animationDirection = 1;
+            if (!this.Utils.animationTimer)
+                this.Utils.animationTimer = setInterval(this.Utils.fadeControls, 50, this.Utils);
+            ]]>
+        </handler>
+
+        <handler event="mouseout">
+            <![CDATA[
+            // Ignore events caused by transitions between child nodes.
+            if (this.Utils.isChildNode(event.relatedTarget))
+                return;
+
+            this.Utils.animationDirection = -1;
+            if (!this.Utils.animationTimer)
+                this.Utils.animationTimer = setInterval(this.Utils.fadeControls, 50, this.Utils);
+            ]]>
+        </handler>
+    </handlers>
   </binding>
 </bindings>

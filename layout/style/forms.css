@@ -600,27 +600,9 @@ input[type="file"] > input[type="text"] {
 }
 
 video > xul|videocontrols {
-  display: none;
-}
-video[controls] > xul|videocontrols {
   display: -moz-box;
   -moz-box-orient: vertical;
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#videoControls");
-}
-
-video[controls] > xul|videocontrols xul|button.controlbar {
-  visibility: hidden;
-}
-
-video[controls] > xul|videocontrols xul|button.centerplay {
-  visibility: visible;
-}
-video[controls] > xul|videocontrols.playing xul|button.centerplay {
-  visibility: hidden;
-}
-
-video[controls]:hover > xul|videocontrols.playing xul|button.controlbar {
-  visibility: visible;
 }
 
 %if OSARCH==OS2
