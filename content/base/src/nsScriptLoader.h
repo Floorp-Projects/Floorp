@@ -205,7 +205,22 @@ public:
    */
   void EndDeferringScripts();
 
+  /**
+   * Adds aURI to the preload list and starts loading it.
+   *
+   * @param aURI The URI of the external script.
+   * @param aCharset The charset parameter for the script.
+   * @param aType The type parameter for the script.
+   */
+  virtual void PreloadURI(nsIURI *aURI, const nsAString &aCharset,
+                          const nsAString &aType);
+
 protected:
+  /**
+   * Start a load for aRequest's URI.
+   */
+  nsresult StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType);
+
   /**
    * Process any pending requests asyncronously (i.e. off an event) if there
    * are any. Note that this is a no-op if there aren't any currently pending
@@ -253,6 +268,25 @@ protected:
   nsIDocument* mDocument;                   // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
   nsCOMArray<nsScriptLoadRequest> mRequests;
+
+  // In mRequests, the additional information here is stored by the element.
+  struct PreloadInfo {
+    nsRefPtr<nsScriptLoadRequest> mRequest;
+    nsString mCharset;
+  };
+
+  struct PreloadRequestComparator {
+    PRBool Equals(const PreloadInfo &aPi, nsScriptLoadRequest * const &aRequest)
+        const
+    {
+      return aRequest == aPi.mRequest;
+    }
+  };
+  struct PreloadURIComparator {
+    PRBool Equals(const PreloadInfo &aPi, nsIURI * const &aURI) const;
+  };
+  nsTArray<PreloadInfo> mPreloads;
+
   nsCOMPtr<nsIScriptElement> mCurrentScript;
   // XXXbz do we want to cycle-collect these or something?  Not sure.
   nsTArray< nsRefPtr<nsScriptLoader> > mPendingChildLoaders;
