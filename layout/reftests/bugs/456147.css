@@ -13,6 +13,7 @@ window {
 label, text, description {
   color: black;
   font: normal normal normal 12pt/14pt serif;
+  height: 30px;
 }
 vbox#under {
   text-decoration: underline;
