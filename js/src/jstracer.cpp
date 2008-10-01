@@ -3891,14 +3891,14 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
 bool
 TraceRecorder::guardElemOp(JSObject* obj, LIns* obj_ins, jsid id, size_t op_offset, jsval* vp)
 {
-    uint32 shape = OBJ_SHAPE(obj);
-    if (JSID_IS_ATOM(id) && shape == traceMonitor->globalShape)
-        ABORT_TRACE("elem op probably aliases global");
-
     LIns* map_ins = lir->insLoad(LIR_ldp, obj_ins, (int)offsetof(JSObject, map));
     LIns* ops_ins;
     if (!map_is_native(obj->map, map_ins, ops_ins, op_offset))
         return false;
+
+    uint32 shape = OBJ_SHAPE(obj);
+    if (JSID_IS_ATOM(id) && shape == traceMonitor->globalShape)
+        ABORT_TRACE("elem op probably aliases global");
 
     JSObject* pobj;
     JSProperty* prop;
