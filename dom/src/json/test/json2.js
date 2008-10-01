@@ -68,9 +68,9 @@
 /*jslint evil: true */
 /*extern JSON */
 
-if (!this.crockfordJSON) {
+if (!this.JSON) {
 
-    crockfordJSON = function () {
+    JSON = function () {
 
         function f(n) {    // Format integers to have at least two digits.
             return n < 10 ? '0' + n : n;
