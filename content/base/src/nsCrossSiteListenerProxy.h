@@ -62,10 +62,12 @@ public:
   nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
                            nsIPrincipal* aRequestingPrincipal,
                            nsIChannel* aChannel,
+                           PRBool aWithCredentials,
                            nsresult* aResult);
   nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
                            nsIPrincipal* aRequestingPrincipal,
                            nsIChannel* aChannel,
+                           PRBool aWithCredentials,
                            const nsCString& aPreflightMethod,
                            const nsTArray<nsCString>& aPreflightHeaders,
                            nsresult* aResult);
@@ -83,6 +85,7 @@ private:
   nsCOMPtr<nsIStreamListener> mOuterListener;
   nsCOMPtr<nsIPrincipal> mRequestingPrincipal;
   nsCOMPtr<nsIInterfaceRequestor> mOuterNotificationCallbacks;
+  PRBool mWithCredentials;
   PRBool mRequestApproved;
   PRBool mHasBeenCrossSite;
   PRBool mIsPreflight;

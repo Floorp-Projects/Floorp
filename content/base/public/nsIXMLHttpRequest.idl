@@ -101,7 +101,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(acda85ab-d06c-4176-b834-6d129ca97ca3)]
+[scriptable, uuid(48ce10a0-c585-4e8f-a5f5-1ac1e47cc501)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -320,6 +320,16 @@ interface nsIXMLHttpRequest : nsISupports
    * will simply fail instead.
    */
   attribute boolean mozBackgroundRequest;
+
+  /**
+   * When set to true attempts to make cross-site Access-Control requests
+   * with credentials such as cookies and authorization headers.
+   *
+   * Never affects same-site requests.
+   *
+   * Defaults to false.
+   */
+  attribute boolean withCredentials;
 
   /**
    * Initialize the object for use from C++ code with the principal, script
