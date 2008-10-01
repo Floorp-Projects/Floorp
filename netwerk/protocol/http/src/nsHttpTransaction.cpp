@@ -213,6 +213,23 @@ nsHttpTransaction::Init(PRUint8 caps,
     if (requestHead->Method() == nsHttp::Head)
         mNoContent = PR_TRUE;
 
+    // Make sure that there is "Content-Length: 0" header in the requestHead
+    // in case of POST and PUT methods when there is no requestBody and
+    // requestHead doesn't contain "Transfer-Encoding" header.
+    //
+    // RFC1945 section 7.2.2:
+    //   HTTP/1.0 requests containing an entity body must include a valid
+    //   Content-Length header field.
+    //
+    // RFC2616 section 4.4:
+    //   For compatibility with HTTP/1.0 applications, HTTP/1.1 requests
+    //   containing a message-body MUST include a valid Content-Length header
+    //   field unless the server is known to be HTTP/1.1 compliant.
+    if ((requestHead->Method() == nsHttp::Post || requestHead->Method() == nsHttp::Put) &&
+        !requestBody && !requestHead->PeekHeader(nsHttp::Transfer_Encoding)) {
+        requestHead->SetHeader(nsHttp::Content_Length, NS_LITERAL_CSTRING("0"));
+    }
+
     // grab a weak reference to the request head
     mRequestHead = requestHead;
 
