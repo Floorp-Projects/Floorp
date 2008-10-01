@@ -2396,37 +2396,6 @@ JS_PUBLIC_API(char *)
 JS_EncodeString(JSContext *cx, JSString *str);
 
 /************************************************************************/
-/*
- * JSON functions
- */
-typedef JSBool (* JSONWriteCallback)(const jschar *buf, uint32 len, void *data);
-
-/*
- * JSON.stringify as specificed by ES3.1 (draft)
- */
-JS_PUBLIC_API(JSBool)
-JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, 
-             JSONWriteCallback callback, void *data);
-
-/*
- * Retrieve a toJSON function. If found, set vp to its result.
- */
-JS_PUBLIC_API(JSBool)
-JS_TryJSON(JSContext *cx, jsval *vp);
-
-/*
- * JSON.parse as specificed by ES3.1 (draft)
- */
-JS_PUBLIC_API(JSONParser *)
-JS_BeginJSONParse(JSContext *cx, jsval *vp);
-
-JS_PUBLIC_API(JSBool)
-JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len);
-
-JS_PUBLIC_API(JSBool)
-JS_FinishJSONParse(JSContext *cx, JSONParser *jp);
-
-/************************************************************************/
 
 /*
  * Locale specific string conversion and error message callbacks.

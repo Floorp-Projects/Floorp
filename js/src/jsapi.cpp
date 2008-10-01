@@ -69,7 +69,6 @@
 #include "jslock.h"
 #include "jsmath.h"
 #include "jsnum.h"
-#include "json.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsparse.h"
@@ -1351,7 +1350,6 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
            js_InitExceptionClasses(cx, obj) &&
            js_InitMathClass(cx, obj) &&
            js_InitNumberClass(cx, obj) &&
-           js_InitJSONClass(cx, obj) &&
            js_InitRegExpClass(cx, obj) &&
            js_InitStringClass(cx, obj) &&
            js_InitEval(cx, obj) &&
@@ -1435,7 +1433,6 @@ static JSStdName standard_class_atoms[] = {
 #if JS_HAS_GENERATORS
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
 #endif
-    {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
     {NULL,                              0, NULL, NULL}
 };
 
@@ -5524,42 +5521,6 @@ JS_PUBLIC_API(char *)
 JS_EncodeString(JSContext *cx, JSString *str)
 {
     return js_DeflateString(cx, JSSTRING_CHARS(str), JSSTRING_LENGTH(str));
-}
-
-JS_PUBLIC_API(JSBool)
-JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, 
-             JSONWriteCallback callback, void *data)
-{
-    CHECK_REQUEST(cx);
-    return js_Stringify(cx, vp, replacer, callback, data, 0);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_TryJSON(JSContext *cx, jsval *vp)
-{
-    CHECK_REQUEST(cx);
-    return js_TryJSON(cx, vp);
-}
-
-JS_PUBLIC_API(JSONParser *)
-JS_BeginJSONParse(JSContext *cx, jsval *vp)
-{
-    CHECK_REQUEST(cx);
-    return js_BeginJSONParse(cx, vp);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len)
-{
-    CHECK_REQUEST(cx);
-    return js_ConsumeJSONText(cx, jp, data, len);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_FinishJSONParse(JSContext *cx, JSONParser *jp)
-{
-    CHECK_REQUEST(cx);
-    return js_FinishJSONParse(cx, jp);
 }
 
 /*

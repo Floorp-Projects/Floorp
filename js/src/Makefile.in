@@ -140,7 +140,6 @@ CPPSRCS		= \
 		jsmath.cpp \
 		jsnum.cpp \
 		jsobj.cpp \
-		json.cpp \
 		jsopcode.cpp \
 		jsparse.cpp \
 		jsprf.cpp \
@@ -188,7 +187,6 @@ EXPORTS		= \
 		jsmath.h \
 		jsnum.h \
 		jsobj.h \
-		json.h \
 		jsopcode.tbl \
 		jsopcode.h \
 		jsotypes.h \
