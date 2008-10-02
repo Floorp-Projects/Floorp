@@ -2581,7 +2581,9 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 void
 PresShell::CreateResizeEventTimer ()
 {
-  KillResizeEventTimer();
+  // if we already have a timer set, ignore this call
+  if (mResizeEventTimer)
+    return;
 
   if (mIsDocumentGone)
     return;
@@ -2616,6 +2618,9 @@ PresShell::FireResizeEvent()
 {
   if (mIsDocumentGone)
     return;
+
+  // allow a new timer to be set
+  mResizeEventTimer = nsnull;
 
   //Send resize event from here.
   nsEvent event(PR_TRUE, NS_RESIZE_EVENT);
