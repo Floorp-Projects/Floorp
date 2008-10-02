@@ -40,7 +40,7 @@ pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
 pref("general.useragent.extra.mobile", "@APP_UA_NAME@/@APP_VERSION@");
 pref("browser.chromeURL", "chrome://browser/content/");
 
-pref("browser.startup.homepage", "http://www.mozilla.org/");
+pref("browser.startup.homepage", "about:firstrun");
 pref("browser.ui.cursor", false);
 pref("browser.ui.panning.kinetic", true);
 
