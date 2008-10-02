@@ -1767,6 +1767,17 @@ function FPQuadCmp()
 FPQuadCmp.expected = "ok";
 test(FPQuadCmp);
 
+function testDestructuring() {
+    var t = 0;
+    for (var i = 0; i < HOTLOOP + 1; ++i) {
+        var [r, g, b] = [1, 1, 1];
+        t += r + g + b;
+    }
+    return t
+}
+testDestructuring.expected = (HOTLOOP + 1) * 3;
+test(testDestructuring);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
