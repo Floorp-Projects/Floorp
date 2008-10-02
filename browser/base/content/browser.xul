@@ -230,7 +230,12 @@
       <label crop="center" flex="1"/>
     </tooltip>
 
-    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" noautofocus="true" noautohide="true" level="top">
+    <panel id="ctrlTab-panel" class="KUI-panel" hidden="true" noautofocus="true" level="top"
+#ifdef XP_WIN
+# XXX bug 457997
+      noautohide="true"
+#endif
+    >
       <label id="ctrlTab-label" flex="1"/>
       <svg:svg id="ctrlTab-svgRoot">
         <svg:defs>
