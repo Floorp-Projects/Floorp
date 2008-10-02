@@ -427,7 +427,7 @@ main(int argc, char *argv[])
         }
 
         // The first arc in the sorted set will have the largest
-        // weight. Pull it out, and emit it's sink.
+        // weight. Pull it out, and emit its sink.
         arc_count_index_t::iterator max = sorted_arcs.begin();
         call_graph_arc *arc = const_cast<call_graph_arc *>(*max);
 

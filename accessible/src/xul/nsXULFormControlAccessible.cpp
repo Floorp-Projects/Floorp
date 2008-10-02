@@ -92,7 +92,7 @@ NS_IMETHODIMP nsXULButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aN
 }
 
 /**
-  * Tell the button to do it's action
+  * Tell the button to do its action
   */
 NS_IMETHODIMP nsXULButtonAccessible::DoAction(PRUint8 index)
 {
@@ -271,7 +271,7 @@ NS_IMETHODIMP nsXULDropmarkerAccessible::GetActionName(PRUint8 aIndex, nsAString
 }
 
 /**
-  * Tell the Dropmarker to do it's action
+  * Tell the Dropmarker to do its action
   */
 NS_IMETHODIMP nsXULDropmarkerAccessible::DoAction(PRUint8 index)
 {
@@ -893,7 +893,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetActionName(PRUint8 aIndex, nsAString&
 }
 
 /**
-  * Tell the button to do it's action
+  * Tell the button to do its action
   */
 NS_IMETHODIMP nsXULTextFieldAccessible::DoAction(PRUint8 index)
 {

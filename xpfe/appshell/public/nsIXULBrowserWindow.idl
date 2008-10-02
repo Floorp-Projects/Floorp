@@ -45,7 +45,7 @@ interface nsIDOMElement;
 /**
  * The nsIXULBrowserWindow supplies the methods that may be called from the
  * internals of the browser area to tell the containing xul window to update
- * it's ui. 
+ * its ui. 
  */
 [scriptable, uuid(67a601df-f091-4894-a2e2-2e6cfebb35ea)]
 interface nsIXULBrowserWindow : nsISupports

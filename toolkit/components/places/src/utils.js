@@ -1271,7 +1271,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Serializes the given node (and all it's descendents) as JSON
+   * Serializes the given node (and all its descendents) as JSON
    * and writes the serialization to the given output stream.
    * 
    * @param   aNode

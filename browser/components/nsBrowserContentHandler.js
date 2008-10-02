@@ -143,7 +143,7 @@ function needHomepageOverride(prefb) {
 }
 
 // Copies a pref override file into the user's profile pref-override folder,
-// and then tells the pref service to reload it's default prefs.
+// and then tells the pref service to reload its default prefs.
 function copyPrefOverride() {
   try {
     var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]

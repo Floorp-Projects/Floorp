@@ -66,7 +66,7 @@ function test() {
   testRootNode.containerOpen = true;
   is(testRootNode.childCount, 0, "confirm test root node is a container, and is empty");
 
-  // create folder A, fill it, validate it's contents
+  // create folder A, fill it, validate its contents
   var folderAId = PlacesUtils.bookmarks.createFolder(testRootId, "A", -1);
   populate(folderAId);
   var folderANode = PlacesUtils.getFolderContents(folderAId).root;

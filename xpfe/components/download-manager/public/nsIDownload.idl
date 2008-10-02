@@ -112,7 +112,7 @@ interface nsIDownload : nsITransfer {
 
     /**
      * Optional. If set, it will contain the target's relevant MIME information.
-     * This includes it's MIME Type, helper app, and whether that helper should be
+     * This includes its MIME Type, helper app, and whether that helper should be
      * executed.
      */
     readonly attribute nsIMIMEInfo MIMEInfo;

@@ -469,7 +469,7 @@ OBJID_WINDOW<br>
 <p style="margin-left: 40px;">MSAA has a well deseved reputation for
 quirkiness. It is not "plug and play", and will take a lot of
 testing/refinement before your solution works with any product. Here are
-some of it's quirks and some solutions/workarounds:<br>
+some of its quirks and some solutions/workarounds:<br>
 </p>
 <div style="margin-left: 40px;"><big><a name="Crash_prone"></a>MSAA can
 be crash prone</big><br>
@@ -495,7 +495,7 @@ accessibility object should be called whenever the document or UI object
 it refers to goes away. The easiest way to do that is to keep a pointer
 to an accessible in each internal UI object. If that pointer is
 non-null, then there is an accessible object for it. Whenever the UI
-object is destroyed, shutdown it's accessible object as well. In
+object is destroyed, shutdown its accessible object as well. In
 Gecko/Mozilla we are not allowed to keep this extra pointer for each
 accessible object, so when accessibility is turned on we use a hash
 table to cache these objects. Such a cache must be kept in perfect sync

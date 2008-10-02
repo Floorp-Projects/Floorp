@@ -258,7 +258,7 @@ NO_PKG_FILES += \
 	necko_unit_tests \
 	$(NULL)
 
-# browser/locales/Makefile uses this makefile for it's variable defs, but
+# browser/locales/Makefile uses this makefile for its variable defs, but
 # doesn't want the libs:: rule.
 ifndef PACKAGER_NO_LIBS
 libs:: make-package

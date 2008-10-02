@@ -66,7 +66,7 @@ interface nsIRDFResource : nsIRDFNode {
 
     /**
      * This method is called by the nsIRDFService after constructing
-     * a resource object to initialize it's URI. You would not normally
+     * a resource object to initialize its URI. You would not normally
      * call this method directly
      */
     void Init(in string uri);

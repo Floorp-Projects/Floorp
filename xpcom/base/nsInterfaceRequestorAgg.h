@@ -41,7 +41,7 @@
 
 /**
  * This function returns an instance of nsIInterfaceRequestor that aggregates
- * two nsIInterfaceRequestor instances.  It's GetInterface method queries
+ * two nsIInterfaceRequestor instances.  Its GetInterface method queries
  * aFirst for the requested interface and will query aSecond only if aFirst
  * failed to supply the requested interface.  Both aFirst and aSecond may
  * be null.

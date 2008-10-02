@@ -71,7 +71,7 @@
 #   mozilla.org.)
 #
 
-# This script computes a line using linear regression; it's output is
+# This script computes a line using linear regression; its output is
 # of the form:
 #
 #   <b1> * x + <b0>

@@ -629,7 +629,7 @@ interface nsIAddonInstallListener : nsISupports
 
   /**
    * Called when an add-on compatibility check starts. This will be called 
-   * during an install if an add-on is incompatible according to it's
+   * during an install if an add-on is incompatible according to its
    * install.rdf.
    * @param   addon
    *          The add-on that the compatibility check will be for

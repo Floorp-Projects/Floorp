@@ -136,7 +136,7 @@ private:
   nsCOMPtr<nsIDOMNode> mCurrentControl;  // Selection controller for the currently focused control
 
   // Info for the the last selection event.
-  // If it was on a control, then it's control's selection. Otherwise, it's for
+  // If it was on a control, then its control's selection. Otherwise, it's for
   // a document where the selection changed.
   nsCOMPtr<nsIWeakReference> mLastUsedSelection; // Weak ref to nsISelection
   nsCOMPtr<nsIAccessibleText> mLastTextAccessible;
