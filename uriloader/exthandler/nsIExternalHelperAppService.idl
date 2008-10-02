@@ -104,7 +104,7 @@ interface nsPIExternalAppLauncher : nsISupports
  * Note that cancelling the load via the nsICancelable interface will release
  * the reference to the launcher dialog.
  */
-[scriptable, uuid(cc75c21a-0a79-4f68-90e1-563253d0c555)]
+[scriptable, uuid(d9a19faf-497b-408c-b995-777d956b72c0)]
 interface nsIHelperAppLauncher : nsICancelable
 {
   /**
