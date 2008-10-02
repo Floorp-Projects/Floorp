@@ -1,5 +1,14 @@
 #filter substitution
 
+firstrun.jar:
+% content firstrun %content/ contentaccessible=yes
+  content/firstrun_splash.png           (skin/firstrun/firstrun_splash.png)
+  content/firstrun_arrow_r.png          (skin/firstrun/firstrun_arrow_r.png)
+  content/firstrun_arrow_l.png          (skin/firstrun/firstrun_arrow_l.png)
+  content/firstrun_background.jpg       (skin/firstrun/firstrun_background.jpg)
+  content/firstrun.css                  (skin/firstrun/firstrun.css)
+  content/firstrun.xhtml                (content/firstrun/firstrun.xhtml)
+
 browser.jar:
 % content browser %content/
 * content/browser.xul                  (content/browser.xul)

@@ -48,8 +48,9 @@ XPIDL_MODULE = browsercompsbase
 #XPIDLSRCS = \
 #	$(NULL)
 
-#EXTRA_PP_COMPONENTS = \
-#	$(NULL)
+EXTRA_COMPONENTS = \
+	aboutFirstrun.js \
+	$(NULL)
 
 DIRS = protocols \
 	$(NULL)
