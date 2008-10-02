@@ -67,7 +67,7 @@ interface nsIRDFRemoteDataSource : nsISupports
     void Refresh(in boolean aBlocking);
 
     /**
-     * Request that a data source write it's contents out to 
+     * Request that a data source write its contents out to 
      * permanent storage, if applicable.
      */
     void Flush();

@@ -2070,7 +2070,7 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
   while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&results)) && results) {
 
     // The results will be in order of index. Even if we don't add a node
-    // because it was excluded, we need to count it's index, so do that
+    // because it was excluded, we need to count its index, so do that
     // before doing anything else. Index was initialized to -1 above, so
     // it will start counting at 0 the first time through the loop.
     index ++;

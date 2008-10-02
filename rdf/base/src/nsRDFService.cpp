@@ -1023,7 +1023,7 @@ RDFServiceImpl::GetResource(const nsACString& aURI, nsIRDFResource** aResource)
     rv = factory->CreateInstance(nsnull, NS_GET_IID(nsIRDFResource), (void**) &result);
     if (NS_FAILED(rv)) return rv;
 
-    // Now initialize it with it's URI. At this point, the resource
+    // Now initialize it with its URI. At this point, the resource
     // implementation should register itself with the RDF service.
     rv = result->Init(flatURI.get());
     if (NS_FAILED(rv)) {

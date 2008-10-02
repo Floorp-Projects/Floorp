@@ -61,7 +61,7 @@ function checkCert(channel) {
 }
 
 /**
- * This class implements nsIBadCertListener.  It's job is to prevent "bad cert"
+ * This class implements nsIBadCertListener.  Its job is to prevent "bad cert"
  * security dialogs from being shown to the user.  It is better to simply fail
  * if the certificate is bad. See bug 304286.
  */

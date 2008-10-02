@@ -190,7 +190,7 @@ function newURI(spec) {
 /**
  * Checks whether this blocklist element is valid for the current OS and ABI.
  * If the element has an "os" attribute then the current OS must appear in
- * it's comma separated list for the element to be valid. Similarly for the
+ * its comma separated list for the element to be valid. Similarly for the
  * xpcomabi attribute.
  */
 function matchesOSABI(blocklistElement) {

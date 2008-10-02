@@ -1761,7 +1761,7 @@ int map2tsv(Options* inOptions)
 
             /*
             **  Guess using offsets.
-            **  Is there a next symbol available?  If so, it's start offset is the end of this symbol.
+            **  Is there a next symbol available?  If so, its start offset is the end of this symbol.
             **  Otherwise, our section offset + length is the end of this symbol.
             **
             **  The trick is, the DB size can not go beyond the offset size, for sanity.

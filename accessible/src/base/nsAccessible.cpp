@@ -538,7 +538,7 @@ NS_IMETHODIMP nsAccessible::Shutdown()
   mNextSibling = nsnull;
 
   // Invalidate the child count and pointers to other accessibles, also make
-  // sure none of it's children point to this parent
+  // sure none of its children point to this parent
   InvalidateChildren();
   if (mParent) {
     nsCOMPtr<nsPIAccessible> privateParent(do_QueryInterface(mParent));
@@ -1975,7 +1975,7 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
     // Check if label's value attribute is used
     if (xulLabel && NS_SUCCEEDED(xulLabel->GetValue(label)) && label.IsEmpty()) {
       // If no value attribute, a non-empty label must contain
-      // children that define it's text -- possibly using HTML
+      // children that define its text -- possibly using HTML
       AppendFlatStringFromSubtree(labelContent, &label);
     }
   }
@@ -2653,7 +2653,7 @@ nsAccessible::GetValue(nsAString& aValue)
   if (!aValue.IsEmpty())
     return NS_OK;
 
-  // Check if it's an simple xlink.
+  // Check if it's a simple xlink.
   if (nsAccUtils::IsXLink(content)) {
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
     if (presShell)
@@ -2788,7 +2788,7 @@ nsAccessible::GetNumActions(PRUint8 *aNumActions)
   if (!content)
     return NS_OK;
 
-  // Check if it's an simple xlink.
+  // Check if it's a simple xlink.
   if (nsAccUtils::IsXLink(content)) {
     *aNumActions = 1;
     return NS_OK;
@@ -2816,7 +2816,7 @@ nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  // Check if it's simple xlink.
+  // Check if it's a simple xlink.
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (nsAccUtils::IsXLink(content)) {
     aName.AssignLiteral("jump");
@@ -2859,7 +2859,7 @@ nsAccessible::DoAction(PRUint8 aIndex)
 
   PRBool doAction = PR_FALSE;
 
-  // Check if it's simple xlink.
+  // Check if it's a simple xlink.
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (nsAccUtils::IsXLink(content))
     doAction = PR_TRUE;
@@ -3454,7 +3454,7 @@ nsAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
   if (aIndex != 0)
     return NS_ERROR_INVALID_ARG;
 
-  // Check if it's simple xlink.
+  // Check if it's a simple xlink.
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (nsAccUtils::IsXLink(content)) {
     nsAutoString href;

@@ -172,7 +172,7 @@ sub main {
 #            essentially calls `kill -9 $pid`.
 #            the reason this exists is because i can't figure
 #            out how to kill apprunner yet, since i can't grab
-#            it's pid. (it's harder than you think.)
+#            its pid. (it's harder than you think.)
 #            when i figure it out, i'll fix it here, then all will 
 #            be great. until then, all apprunners are killed!)
 ################################################################
