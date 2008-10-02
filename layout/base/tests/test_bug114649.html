@@ -55,8 +55,8 @@ function handle_child_resize()
 
 function check_for_resize_events()
 {
-	todo(gGotEventsAt.length >= 2, "got continuous events");
-	todo_isnot(gGotEventsAt[0], 400, "got continuous events");
+	ok(gGotEventsAt.length >= 2, "got continuous events");
+	isnot(gGotEventsAt[0], 400, "got continuous events");
 	is(gGotEventsAt[gGotEventsAt.length - 1], 400, "got last event");
 	SimpleTest.finish();
 }
