@@ -71,7 +71,7 @@ NS_IMETHODIMP nsXULTabAccessible::GetActionName(PRUint8 aIndex, nsAString& aName
   return NS_ERROR_INVALID_ARG;
 }
 
-/** Tell the tab to do it's action */
+/** Tell the tab to do its action */
 NS_IMETHODIMP nsXULTabAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Switch) {

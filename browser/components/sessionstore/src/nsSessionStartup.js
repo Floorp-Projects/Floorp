@@ -49,7 +49,7 @@
 # * The session file stores a session.state property, that 
 # * indicates whether the browser is currently running. When the browser shuts 
 # * down, the field is changed to "stopped". At startup, this field is read, and
-# * if it's value is "running", then it's assumed that the browser had previously
+# * if its value is "running", then it's assumed that the browser had previously
 # * crashed, or at the very least that something bad happened, and that we should
 # * restore the session.
 # * 

@@ -257,7 +257,7 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
     // Add the GRE's component directory to searchPath if the 
     // application is using an GRE.
     // An application indicates that it's using an GRE by returning
-    // a valid nsIFile via it's directory service provider interface.
+    // a valid nsIFile via its directory service provider interface.
     //
     // Please see http://www.mozilla.org/projects/embedding/MRE.html
     // for more info. on GREs

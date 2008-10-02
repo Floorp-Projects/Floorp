@@ -231,7 +231,7 @@ LoginManagerStorage_legacy.prototype = {
 
         var key = login.hostname;
 
-        // If first entry for key, create an Array to hold it's logins.
+        // If first entry for key, create an Array to hold its logins.
         var rollback;
         if (!this._logins[key]) {
             this._logins[key] = [];

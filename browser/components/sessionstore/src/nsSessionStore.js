@@ -40,7 +40,7 @@
  * 
  * Overview
  * This service keeps track of a user's session, storing the various bits
- * required to return the browser to it's current state. The relevant data is 
+ * required to return the browser to its current state. The relevant data is 
  * stored in memory, and is periodically saved to disk in a file in the 
  * profile directory. The service is started at first window load, in
  * delayedStartup, and will restore the session from the data received from
@@ -567,7 +567,7 @@ SessionStoreService.prototype = {
   },
 
   /**
-   * When a tab closes, collect it's properties
+   * When a tab closes, collect its properties
    * @param aWindow
    *        Window reference
    * @param aTab

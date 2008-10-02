@@ -75,7 +75,7 @@ interface nsIAnnotationService : nsISupports
     // Removed at application exit.
     const unsigned short EXPIRE_SESSION = 0;
 
-    // NOTE: 1 is skipped due to it's temporary use as EXPIRE_NEVER in bug #319455.
+    // NOTE: 1 is skipped due to its temporary use as EXPIRE_NEVER in bug #319455.
 
     // For general page settings, things the user is interested in seeing
     // if they come back to this page some time in the near future.

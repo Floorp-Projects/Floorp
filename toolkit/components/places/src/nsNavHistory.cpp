@@ -1503,7 +1503,7 @@ nsNavHistory::CleanUpOnQuit()
   if (NS_SUCCEEDED(rv)) {
     mozStorageTransaction transaction(mDBConn, PR_FALSE);
     // 1. Indexes are moved along with the renamed table. Since we're dropping
-    // that table, we're also dropping it's indexes, and later re-creating them
+    // that table, we're also dropping its indexes, and later re-creating them
     // for the new table.
     rv = mDBConn->ExecuteSimpleSQL(
         NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_urlindex"));

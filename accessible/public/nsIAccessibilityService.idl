@@ -86,7 +86,7 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
 
   /**
    * Invalidate the accessibility cache associated with aPresShell, for accessibles
-   * that were generated for aContainerContent and it's subtree.
+   * that were generated for aContainerContent and its subtree.
    * The container content node for the change is passed in, rather than the
    * changed presentation for the content node itself.
    * @param aPresShell         The presShell where changes occured
