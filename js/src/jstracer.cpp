@@ -6172,7 +6172,8 @@ TraceRecorder::record_JSOP_NAMEDFUNOBJ()
 bool
 TraceRecorder::record_JSOP_SETLOCALPOP()
 {
-    return false;
+    var(GET_SLOTNO(cx->fp->regs->pc), stack(-1));
+    return true;
 }
 
 bool
