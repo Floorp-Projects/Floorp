@@ -214,7 +214,13 @@ js_Math_max(jsdouble d, jsdouble p)
 
     if (p == 0 && p == d && fd_copysign(1.0, d) == -1)
         return p;
-    return (d > p) ? d : p;
+    /* 
+     * Note: it is essential that you write the ternary expression here such
+     * that the false branch produces d not p, as the case of p=-0, d=0, for
+     * which we wind up in this expression but evaluate either > order as
+     * false, whether we do p>d *or* d>p.
+     */
+    return (p > d) ? p : d;
 }
 
 JSBool FASTCALL
