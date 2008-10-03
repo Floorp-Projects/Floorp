@@ -344,6 +344,12 @@ js_math_max(JSContext *cx, uintN argc, jsval *vp)
         if (x == 0 && x == z && fd_copysign(1.0, z) == -1)
             z = x;
         else
+            /* 
+             * Note: it is essential that you write the ternary expression
+             * here such that the false branch produces z not x, as the case
+             * of x=-0, z=0, for which we wind up in this expression but
+             * evaluate either > order as false, whether we do x>z *or* z>x.
+             */
             z = (x > z) ? x : z;
     }
     return js_NewNumberInRootedValue(cx, z, vp);
