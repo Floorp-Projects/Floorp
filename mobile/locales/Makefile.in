@@ -43,11 +43,11 @@ relativesrcdir = mobile/locales
 
 include $(DEPTH)/config/autoconf.mk
 
-vpath %.xml $(srcdir)/$(MOZ_UI_LOCALE)/chrome/searchplugins
+vpath %.xml $(srcdir)/$(MOZ_UI_LOCALE)/searchplugins
 
 DEFINES += -DAB_CD=$(MOZ_UI_LOCALE) -DPACKAGE=browser
 
-SEARCH_PLUGINS = $(shell cat $(srcdir)/$(MOZ_UI_LOCALE)/chrome/searchplugins/list.txt)
+SEARCH_PLUGINS = $(shell cat $(srcdir)/$(MOZ_UI_LOCALE)/searchplugins/list.txt)
 
 libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/searchplugins
