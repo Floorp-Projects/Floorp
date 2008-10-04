@@ -390,16 +390,17 @@ ProgressController.prototype = {
   },
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    // we currently only care if we're getting things for the main document, not sub-frames
+    // we currently only care about state changes for the main document,
+    // not sub-frames
     if (aWebProgress.DOMWindow != this._browser.contentWindow) {
       return;
     }
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_START)
-	BrowserUI.update(TOOLBARSTATE_LOADING, this._browser);
+        BrowserUI.update(TOOLBARSTATE_LOADING, this._browser);
       else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
-	BrowserUI.update(TOOLBARSTATE_LOADED, this._browser);
+        BrowserUI.update(TOOLBARSTATE_LOADED, this._browser);
     }
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {

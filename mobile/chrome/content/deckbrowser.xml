@@ -136,7 +136,7 @@
       <method name="updateCanvasState">
         <body><![CDATA[
           // Clear the whole canvas
-          // we clear the whole canvas becaues the browser's width or height
+          // we clear the whole canvas because the browser's width or height
           // could be less than the area we end up actually drawing.
           // XXX we could be smarter about this and only clear when necessary
           var ctx = this._canvas.getContext("2d");
