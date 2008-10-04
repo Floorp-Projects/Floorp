@@ -34,8 +34,6 @@
 <!ENTITY bookmarkFolder.label  "Folder:">
 <!ENTITY bookmarkTags.label    "Tags:">
 <!ENTITY bookmarkRemove.label  "Remove Bookmark">
-<!ENTITY bookmarkCancel.label  "Cancel">
-<!ENTITY bookmarkDone.label    "Done">
 
 <!ENTITY findOnCmd.label     "Find in This Page…">
 <!ENTITY findOnCmd.accesskey "F">

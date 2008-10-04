@@ -344,8 +344,7 @@
         <hbox id="bookmark-buttons">
           <button label="&bookmarkRemove.label;" oncommand="BookmarkHelper.remove()"/>
           <spacer flex="1"/>
-          <button label="&bookmarkCancel.label;" oncommand="BookmarkHelper.close()"/>
-          <button label="&bookmarkDone.label;" oncommand="BookmarkHelper.save()"/>
+          <button id="bookmark-close" oncommand="BookmarkHelper.close()"/>
         </hbox>
       </vbox>
     </vbox>

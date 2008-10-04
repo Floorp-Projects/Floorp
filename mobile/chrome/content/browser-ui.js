@@ -947,8 +947,10 @@ var BookmarkHelper = {
       document.getElementById("bookmark-tags").value = currentTags.join(", ");
       document.getElementById("bookmark-folder").value = ""; // XXX either use this or remove it
     }
+    document.getElementById("bookmark-name").focus();
 
     window.addEventListener("keypress", this, true);
+    document.getElementById("bookmark-form").addEventListener("change", this, true);
   },
 
   remove : function() {
@@ -997,11 +999,12 @@ var BookmarkHelper = {
       }
 
     }
-    this.close();
   },
 
   close : function() {
     window.removeEventListener("keypress", this, true);
+    document.getElementById("bookmark-form").removeEventListener("change", this, true);
+
     this._item = null;
     BrowserUI.show(UIMODE_NONE);
   },
@@ -1009,8 +1012,13 @@ var BookmarkHelper = {
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       case "keypress":
-        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
+        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
+          document.getElementById("bookmark-close").focus();
           this.close();
+        }
+        break;
+      case "change":
+        this.save();
         break;
     }
   }
