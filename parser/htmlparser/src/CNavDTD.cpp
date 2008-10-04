@@ -2274,7 +2274,7 @@ CNavDTD::CanOmit(eHTMLTags aParent, eHTMLTags aChild, PRInt32& aParentContains)
   if (-1 == aParentContains) {
     aParentContains = CanContain(aParent, aChild);
   }
-  
+
   if (aParentContains || aChild == aParent) {
     return PR_FALSE;
   }
@@ -2292,6 +2292,12 @@ CNavDTD::CanOmit(eHTMLTags aParent, eHTMLTags aChild, PRInt32& aParentContains)
   }
 
   if (gHTMLElements[aParent].HasSpecialProperty(kSaveMisplaced)) {
+    return PR_TRUE;
+  }
+
+  if (aParent == eHTMLTag_body) {
+    // There are very few tags that the body does not contain. If we get here
+    // the best thing to do is just drop them.
     return PR_TRUE;
   }
 
