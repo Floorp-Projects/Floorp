@@ -3100,7 +3100,12 @@ TraceRecorder::ifop()
         jsdouble d = asNumber(v);
         jsdpun u;
         u.d = 0;
-        guard(d == 0 || JSDOUBLE_IS_NaN(d),
+        /* If we're building a trace with NaN, we need to account for non-NaN, non-zero values.
+         * Otherwise we will check (0 == N) and expect the wrong value.
+         */
+        if (JSDOUBLE_IS_NaN(d))
+            guard(false, lir->ins2(LIR_feq, v_ins, v_ins), BRANCH_EXIT);
+        guard(d == 0 || !JSDOUBLE_IS_NaN(d),
               lir->ins2(LIR_feq, v_ins, lir->insImmq(u.u64)),
               BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
