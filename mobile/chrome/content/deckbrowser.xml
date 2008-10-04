@@ -136,7 +136,9 @@
       <method name="updateCanvasState">
         <body><![CDATA[
           // Clear the whole canvas
-          // XXX is this really necessary given zoomToPage's redraw?
+          // we clear the whole canvas becaues the browser's width or height
+          // could be less than the area we end up actually drawing.
+          // XXX we could be smarter about this and only clear when necessary
           var ctx = this._canvas.getContext("2d");
           ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
@@ -517,7 +519,6 @@
 
       <method name="_browserToCanvas">
         <body><![CDATA[
-
           // FIXME: canvas needs to know it's actual width/height
           // we should be able to use _canvas.width/_canvas.height here
           // and can, most of the time
