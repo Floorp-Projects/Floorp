@@ -171,13 +171,13 @@ var Browser = {
     gPrefService.setBoolPref("temporary.disablePlugins", false);
   },
 
-  setPluginState: function(state)
+  setPluginState: function(enabled)
   {
     var phs = Components.classes["@mozilla.org/plugin/host;1"]
                         .getService(Components.interfaces.nsIPluginHost);
     var plugins = phs.getPluginTags({ });
      for (var i = 0; i < plugins.length; ++i)
-       plugins[i].disabled = state;
+       plugins[i].disabled = !enabled;
   },
 
   setupGeolocationPrompt: function() {
