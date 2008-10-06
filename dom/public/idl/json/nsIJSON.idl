@@ -48,19 +48,15 @@ interface nsIScriptGlobalObject;
 [scriptable, uuid(45464c36-efde-4cb5-8e00-07480533ff35)]
 interface nsIJSON : nsISupports
 {
-  AString encode(/* in JSObject value,
-                 /* [optional] in JSObject whitelist */);
+  AString encode(/* in JSObject value */);
 
   void encodeToStream(in nsIOutputStream stream,
                       in string charset,
                       in boolean writeBOM
-                      /* in JSObject value,
-                      /* [optional] in JSObject optFilter */);
+                      /* in JSObject value */);
 
-  void /* JSObject */ decode(in AString str
-                             /* , [optional] in JSObject whitelist */);
+  void /* JSObject */ decode(in AString str);
 
   void /* JSObject */ decodeFromStream(in nsIInputStream stream,
-                                       in long contentLength
-                                       /*[optional] in JSObject optFilter */);
+                                       in long contentLength);
 };
