@@ -5279,7 +5279,8 @@ PresShell::RenderNode(nsIDOMNode* aNode,
   
   nsCOMPtr<nsIDOMRange> range;
   NS_NewRange(getter_AddRefs(range));
-  range->SelectNode(aNode);
+  if (NS_FAILED(range->SelectNode(aNode)))
+    return nsnull;
 
   RangePaintInfo* info = CreateRangePaintInfo(range, area);
   if (info && !rangeItems.AppendElement(info)) {
