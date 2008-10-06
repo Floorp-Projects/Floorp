@@ -51,8 +51,7 @@
 #include "prmem.h"
 
 nsresult
-nsDataChannel::OpenContentStream(PRBool async, nsIInputStream **result,
-                                 nsIChannel** channel)
+nsDataChannel::OpenContentStream(PRBool async, nsIInputStream **result)
 {
     NS_ENSURE_TRUE(URI(), NS_ERROR_NOT_INITIALIZED);
 
