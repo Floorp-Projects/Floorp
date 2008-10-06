@@ -15,5 +15,5 @@ if (!outputDir.exists()) {
 } else if (!outputDir.isDirectory()) {
   do_throw(outputName + " is not a directory?")
 }
-var JSON = null;
+var crockfordJSON = null;
 do_import_script("dom/src/json/test/json2.js");
