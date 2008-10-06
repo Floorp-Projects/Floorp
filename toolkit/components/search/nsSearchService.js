@@ -87,6 +87,13 @@ const SHERLOCK_FILE_EXT = "src";
 // Delay for lazy serialization (ms)
 const LAZY_SERIALIZE_DELAY = 100;
 
+// Delay for batching invalidation of the JSON cache (ms)
+const CACHE_INVALIDATION_DELAY = 1000;
+
+// Current cache version. This should be incremented if the format of the cache
+// file is modified.
+const CACHE_VERSION = 1;
+
 const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
 
 // Supported extensions for Sherlock plugin icons
@@ -195,6 +202,24 @@ function isUsefulLine(aLine) {
   return !(/^\s*($|#)/i.test(aLine));
 }
 
+__defineGetter__("gObsSvc", function() {
+  delete this.gObsSvc;
+  return this.gObsSvc = Cc["@mozilla.org/observer-service;1"].
+                        getService(Ci.nsIObserverService);
+});
+
+__defineGetter__("gIoSvc", function() {
+  delete this.gIoSvc;
+  return this.gIoSvc = Cc["@mozilla.org/network/io-service;1"].
+                       getService(Ci.nsIIOService);
+});
+
+__defineGetter__("gPrefSvc", function() {
+  delete this.gPrefSvc;
+  return this.gPrefSvc = Cc["@mozilla.org/preferences-service;1"].
+                         getService(Ci.nsIPrefBranch);
+});
+
 /**
  * Prefixed to all search debug output.
  */
@@ -216,16 +241,8 @@ function DO_LOG(aText) {
  * to allow enabling/disabling without a restart.
  */
 function PREF_LOG(aText) {
-  var prefB = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-  var shouldLog = false;
-  try {
-    shouldLog = prefB.getBoolPref(BROWSER_SEARCH_PREF + "log");
-  } catch (ex) {}
-
-  if (shouldLog) {
+  if (getBoolPref(BROWSER_SEARCH_PREF + "log", false))
     DO_LOG(aText);
-  }
 }
 var LOG = PREF_LOG;
 
@@ -430,10 +447,8 @@ function closeSafeOutputStream(aFOS) {
  * @returns an nsIURI object, or null if the creation of the URI failed.
  */
 function makeURI(aURLSpec, aCharset) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
   try {
-    return ios.newURI(aURLSpec, aCharset, null);
+    return gIoSvc.newURI(aURLSpec, aCharset, null);
   } catch (ex) { }
 
   return null;
@@ -444,13 +459,14 @@ function makeURI(aURLSpec, aCharset) {
  * @param aKey
  *        The directory service key indicating the directory to get.
  */
-function getDir(aKey) {
+let _dirSvc = null;
+function getDir(aKey, aIFace) {
   ENSURE_ARG(aKey, "getDir requires a directory key!");
 
-  var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
-                    getService(Ci.nsIProperties);
-  var dir = fileLocator.get(aKey, Ci.nsIFile);
-  return dir;
+  if (!_dirSvc)
+    _dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+               getService(Ci.nsIProperties);
+  return _dirSvc.get(aKey, aIFace || Ci.nsIFile);
 }
 
 /**
@@ -588,9 +604,7 @@ function getLocale() {
     return locale;
 
   // Not localized
-  var prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-  return prefs.getCharPref(localePref);
+  return gPrefSvc.getCharPref(localePref);
 }
 
 /**
@@ -600,11 +614,9 @@ function getLocale() {
  * @returns aDefault if the requested pref doesn't exist.
  */
 function getLocalizedPref(aPrefName, aDefault) {
-  var prefB = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
   const nsIPLS = Ci.nsIPrefLocalizedString;
   try {
-    return prefB.getComplexValue(aPrefName, nsIPLS).data;
+    return gPrefSvc.getComplexValue(aPrefName, nsIPLS).data;
   } catch (ex) {}
 
   return aDefault;
@@ -616,14 +628,12 @@ function getLocalizedPref(aPrefName, aDefault) {
  *        The name of the pref to set.
  */
 function setLocalizedPref(aPrefName, aValue) {
-  var prefB = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
   const nsIPLS = Ci.nsIPrefLocalizedString;
   try {
     var pls = Components.classes["@mozilla.org/pref-localizedstring;1"]
                         .createInstance(Ci.nsIPrefLocalizedString);
     pls.data = aValue;
-    prefB.setComplexValue(aPrefName, nsIPLS, pls);
+    gPrefSvc.setComplexValue(aPrefName, nsIPLS, pls);
   } catch (ex) {}
 }
 
@@ -634,10 +644,8 @@ function setLocalizedPref(aPrefName, aValue) {
  * @returns aDefault if the requested pref doesn't exist.
  */
 function getBoolPref(aName, aDefault) {
-  var prefB = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
   try {
-    return prefB.getBoolPref(aName);
+    return gPrefSvc.getBoolPref(aName);
   } catch (ex) {
     return aDefault;
   }
@@ -690,6 +698,15 @@ function sanitizeName(aName) {
 }
 
 /**
+ * Retrieve a pref from the search param branch.
+ *
+ * @param prefName
+ *        The name of the pref.
+ **/
+function getMozParamPref(prefName)
+  gPrefSvc.getCharPref(BROWSER_SEARCH_PREF + "param." + prefName);
+
+/**
  * Notifies watchers of SEARCH_ENGINE_TOPIC about changes to an engine or to
  * the state of the search service.
  *
@@ -701,10 +718,8 @@ function sanitizeName(aName) {
  * @see nsIBrowserSearchService.idl
  */
 function notifyAction(aEngine, aVerb) {
-  var os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
   LOG("NOTIFY: Engine: \"" + aEngine.name + "\"; Verb: \"" + aVerb + "\"");
-  os.notifyObservers(aEngine, SEARCH_ENGINE_TOPIC, aVerb);
+  gObsSvc.notifyObservers(aEngine, SEARCH_ENGINE_TOPIC, aVerb);
 }
 
 /**
@@ -739,9 +754,7 @@ function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
 
   var distributionID = MOZ_DISTRIBUTION_ID;
   try {
-    var prefB = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    distributionID = prefB.getCharPref(BROWSER_SEARCH_PREF + "distributionID");
+    distributionID = gPrefSvc.getCharPref(BROWSER_SEARCH_PREF + "distributionID");
   }
   catch (ex) { }
 
@@ -820,6 +833,8 @@ function EngineURL(aType, aMethod, aTemplate) {
   this.type     = type;
   this.method   = method;
   this.params   = [];
+  // Don't serialize expanded mozparams
+  this.mozparams = {};
 
   var templateURI = makeURI(aTemplate);
   ENSURE(templateURI, "new EngineURL: template is not a valid URI!",
@@ -842,6 +857,11 @@ EngineURL.prototype = {
 
   addParam: function SRCH_EURL_addParam(aName, aValue) {
     this.params.push(new QueryParameter(aName, aValue));
+  },
+
+  _addMozParam: function SRCH_EURL__addMozParam(aObj) {
+    aObj.mozparam = true;
+    this.mozparams[aObj.name] = aObj;
   },
 
   getSubmission: function SRCH_EURL_getSubmission(aSearchTerms, aEngine) {
@@ -869,12 +889,7 @@ EngineURL.prototype = {
       // stream and supply that as POSTDATA.
       var stringStream = Cc["@mozilla.org/io/string-input-stream;1"].
                          createInstance(Ci.nsIStringInputStream);
-#ifdef MOZILLA_1_8_BRANCH
-# bug 318193
-      stringStream.setData(dataString, dataString.length);
-#else
       stringStream.data = dataString;
-#endif
 
       postData = Cc["@mozilla.org/network/mime-input-stream;1"].
                  createInstance(Ci.nsIMIMEInputStream);
@@ -884,6 +899,50 @@ EngineURL.prototype = {
     }
 
     return new Submission(makeURI(url), postData);
+  },
+
+  _initWithJSON: function SRC_EURL__initWithJSON(aJson, aIsDefault) {
+    if (!aJson.params)
+      return;
+
+    for (let i = 0; i < aJson.params.length; ++i) {
+      let param = aJson.params[i];
+      if (param.mozparam) {
+        if (param.condition == "defaultEngine") {
+          if (aIsDefault)
+            this.addParam(param.name, param.trueValue);
+          else
+            this.addParam(param.name, param.falseValue);
+        } else if (param.condition == "pref") {
+          let value = getMozParamPref(param.pref);
+          this.addParam(param.name, value);
+        }
+        this._addMozParam(param);
+      }
+      else
+        this.addParam(param.name, param.value);
+    }
+  },
+
+  /**
+   * Creates a JavaScript object that represents this URL.
+   * @returns An object suitable for serialization as JSON.
+   **/
+  _serializeToJSON: function SRCH_EURL__serializeToJSON() {
+    var json = {
+      template: this.template,
+    };
+
+    if (this.type != URLTYPE_SEARCH_HTML)
+      json.type = this.type;
+    if (this.method != "GET")
+      json.method = this.method;
+
+    function collapseMozParams(aParam)
+      this.mozparams[aParam.name] || aParam;
+    json.params = this.params.map(collapseMozParams, this);
+
+    return json;
   },
 
   /**
@@ -1059,9 +1118,7 @@ Engine.prototype = {
 
     LOG("_initFromURI: Downloading engine from: \"" + this._uri.spec + "\".");
 
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-    var chan = ios.newChannelFromURI(this._uri);
+    var chan = gIoSvc.newChannelFromURI(this._uri);
 
     if (this._engineToUpdate && (chan instanceof Ci.nsIHttpChannel)) {
       var lastModified = engineMetadataService.getAttr(this._engineToUpdate,
@@ -1296,9 +1353,7 @@ Engine.prototype = {
         if (!this._readOnly) {
           LOG("_setIcon: Downloading icon: \"" + uri.spec +
               "\" for engine: \"" + this.name + "\"");
-          var ios = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
-          var chan = ios.newChannelFromURI(uri);
+          var chan = gIoSvc.newChannelFromURI(uri);
 
           function iconLoadCallback(aByteArray, aEngine) {
             // This callback may run after we've already set a preferred icon,
@@ -1441,31 +1496,25 @@ Engine.prototype = {
         var value;
         switch (param.getAttribute("condition")) {
           case "defaultEngine":
-            const defPref = BROWSER_SEARCH_PREF + "defaultenginename";
-            var defaultPrefB = Cc["@mozilla.org/preferences-service;1"].
-                               getService(Ci.nsIPrefService).
-                               getDefaultBranch(null);
-            const nsIPLS = Ci.nsIPrefLocalizedString;
-            var defaultName;
-            try {
-              defaultName = defaultPrefB.getComplexValue(defPref, nsIPLS).data;
-            } catch (ex) {}
-
             // If this engine was the default search engine, use the true value
-            if (this.name == defaultName)
+            if (this._isDefaultEngine())
               value = param.getAttribute("trueValue");
             else
               value = param.getAttribute("falseValue");
             url.addParam(param.getAttribute("name"), value);
+            url._addMozParam({"name": param.getAttribute("name"),
+                              "falseValue": param.getAttribute("falseValue"),
+                              "trueValue": param.getAttribute("trueValue"),
+                              "condition": "defaultEngine"});
             break;
 
           case "pref":
             try {
-              var prefB = Cc["@mozilla.org/preferences-service;1"].
-                          getService(Ci.nsIPrefBranch);
-              value = prefB.getCharPref(BROWSER_SEARCH_PREF + "param." +
-                                        param.getAttribute("pref"));
+              value = getMozParamPref(param.getAttribute("pref"), value);
               url.addParam(param.getAttribute("name"), value);
+              url._addMozParam({"pref": param.getAttribute("pref"),
+                                "name": param.getAttribute("name"),
+                                "condition": "pref"});
             } catch (e) { }
             break;
         }
@@ -1473,6 +1522,17 @@ Engine.prototype = {
     }
 
     this._urls.push(url);
+  },
+
+  _isDefaultEngine: function SRCH_ENG__isDefaultEngine() {
+    let defaultPrefB = gPrefSvc.QueryInterface(Ci.nsIPrefService)
+                               .getDefaultBranch(BROWSER_SEARCH_PREF);
+    let nsIPLS = Ci.nsIPrefLocalizedString;
+    let defaultEngine;
+    try {
+      defaultEngine = defaultPrefB.getComplexValue("defaultenginename", nsIPLS).data;
+    } catch (ex) {}
+    return this.name == defaultEngine;
   },
 
   /**
@@ -1860,6 +1920,79 @@ Engine.prototype = {
   },
 
   /**
+   * Init from a JSON record.
+   **/
+  _initWithJSON: function SRCH_ENG__initWithJSON(aJson) {
+    this._name = aJson._name;
+    this._description = aJson.description;
+    if (aJson._hasPreferredIcon == undefined)
+      this._hasPreferredIcon = true;
+    else
+      this._hasPreferredIcon = false;
+    this._hidden = aJson.hidden || null;
+    this._type = aJson.type || SEARCH_TYPE_MOZSEARCH;
+    this._queryCharset = aJson.queryCharset || DEFAULT_QUERY_CHARSET;
+    this._searchForm = aJson.searchForm;
+    this.__installLocation = aJson._installLocation || SEARCH_APP_DIR;
+    this._updateInterval = aJson._updateInterval || null;
+    this._updateURL = aJson._updateURL || null;
+    this._iconUpdateURL = aJson._iconUpdateURL || null;
+    if (aJson._readOnly == undefined)
+      this._readOnly = true;
+    else
+      this._readOnly = false;
+    this._iconURI = makeURI(aJson._iconURL);
+    for (let i = 0; i < aJson._urls.length; ++i) {
+      let url = aJson._urls[i];
+      let engineURL = new EngineURL(url.type || URLTYPE_SEARCH_HTML,
+                                    url.method || "GET", url.template);
+      engineURL._initWithJSON(url, this._isDefaultEngine());
+      this._urls.push(engineURL);
+    }
+  },
+
+  /**
+   * Creates a JavaScript object that represents this engine.
+   * @param aFilter
+   *        Whether or not to filter out common default values. Recommended for
+   *        use with _initWithJSON().
+   * @returns An object suitable for serialization as JSON.
+   **/
+  _serializeToJSON: function SRCH_ENG__serializeToJSON(aFilter) {
+    var json = {
+      _name: this._name,
+      description: this.description,
+      filePath: this._file.QueryInterface(Ci.nsILocalFile).persistentDescriptor,
+      searchForm: this.searchForm,
+      _iconURL: this._iconURL,
+      _urls: [url._serializeToJSON() for each(url in this._urls)] 
+    };
+
+    if (this._installLocation != SEARCH_APP_DIR || !aFilter)
+      json._installLocation = this._installLocation;
+    if (this._updateInterval || !aFilter)
+      json.updateInterval = this._updateInterval;
+    if (this._updateURL || !aFilter)
+      json._updateURL = this._updateURL;
+    if (this._iconUpdateURL || !aFilter)
+      json._iconUpdateURL = this._iconUpdateURL;
+    if (!this._hasPreferredIcon || !aFilter)
+      json._hasPreferredIcon = this._hasPreferredIcon;
+    if (this.hidden || !aFilter)
+      json.hidden = this.hidden;
+    if (this.type != SEARCH_TYPE_MOZSEARCH || !aFilter)
+      json.type = this.type;
+    if (this.queryCharset != DEFAULT_QUERY_CHARSET || !aFilter)
+      json.queryCharset = this.queryCharset;
+    if (this._dataType != SEARCH_DATA_XML || !aFilter)
+      json._dataType = this._dataType;
+    if (!this._readOnly || !aFilter)
+      json._readOnly = this._readOnly;
+
+    return json;
+  },
+
+  /**
    * Returns an XML document object containing the search plugin information,
    * which can later be used to reload the engine.
    */
@@ -2209,32 +2342,15 @@ SearchService.prototype = {
   _needToSetOrderPrefs: false,
 
   _init: function() {
-    var prefB = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    var shouldLog = false;
-    try {
-      shouldLog = prefB.getBoolPref(BROWSER_SEARCH_PREF + "log");
-    } catch (ex) {}
-
-    if (shouldLog) {
-      // Replace the empty LOG function with the useful one
+    // Replace empty LOG function with the useful one if the log pref is set.
+    if (getBoolPref(BROWSER_SEARCH_PREF + "log", false))
       LOG = DO_LOG;
-    }
 
     engineMetadataService.init();
     engineUpdateService.init();
 
+    this._loadEngines();
     this._addObservers();
-
-    var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
-                      getService(Ci.nsIProperties);
-    var locations = fileLocator.get(NS_APP_SEARCH_DIR_LIST,
-                                    Ci.nsISimpleEnumerator);
-
-    while (locations.hasMoreElements()) {
-      var location = locations.getNext().QueryInterface(Ci.nsIFile);
-      this._loadEngines(location);
-    }
 
     // Now that all engines are loaded, build the sorted engine list
     this._buildSortedEngineList();
@@ -2243,6 +2359,131 @@ SearchService.prototype = {
                                           "selectedEngine");
     this._currentEngine = this.getEngineByName(selectedEngineName) ||
                           this.defaultEngine;
+  },
+
+  _buildCache: function SRCH_SVC__buildCache() {
+    if (!getBoolPref(BROWSER_SEARCH_PREF + "cache.enabled", true))
+      return;
+
+    let cache = {};
+    let locale = getLocale();
+    let buildID = Cc["@mozilla.org/xre/app-info;1"].
+                  getService(Ci.nsIXULAppInfo).platformBuildID;
+
+    // Allows us to force a cache refresh should the cache format change.
+    cache.version = CACHE_VERSION;
+    // We don't want to incur the costs of stat()ing each plugin on every
+    // startup when the only (supported) time they will change is during
+    // runtime (where we refresh for changes through the API) and app updates
+    // (where the buildID is obviously going to change).
+    // Extension-shipped plugins are the only exception to this, but their
+    // directories are blown away during updates, so we'll detect their changes.
+    cache.buildID = buildID;
+    cache.locale = locale;
+
+    for each (let engine in this._engines) {
+      let parent = engine._file.parent.path;
+      if (!cache[parent]) {
+        let cacheEntry = {};
+        cacheEntry.lastModifiedTime = parent.lastModifiedTime;
+        cacheEntry.engines = [];
+        cache[parent] = cacheEntry;
+      }
+      cache[parent].engines.push(engine._serializeToJSON(true));
+    }
+
+    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+    let stream = Cc["@mozilla.org/network/file-output-stream;1"].
+                 createInstance(Ci.nsIFileOutputStream);
+    let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
+                    createInstance(Ci.nsIConverterOutputStream);
+    let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
+    cacheFile.append("search.json");
+
+    try {
+      LOG("_buildCache: Writing to cache file.");
+      stream.init(cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), PERMS_FILE, 0);
+      converter.init(stream, "UTF-8", 0, 0x0000);
+      converter.writeString(json.encode(cache));
+    } catch (ex) {
+      LOG("_buildCache: Could not write to cache file: " + ex);
+    } finally {
+      converter.close();
+      stream.close();
+    }
+  },
+
+  _loadEngines: function SRCH_SVC__loadEngines() {
+    // See if we have a cache file so we don't have to parse a bunch of XML.
+    let cache = {};
+    let cacheEnabled = getBoolPref(BROWSER_SEARCH_PREF + "cache.enabled", true);
+    if (cacheEnabled) {
+      let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
+      cacheFile.append("search.json");
+      if (cacheFile.exists())
+        cache = this._readCacheFile(cacheFile);
+    }
+
+    let locations = getDir(NS_APP_SEARCH_DIR_LIST, Ci.nsISimpleEnumerator);
+    let locale = getLocale();
+    let buildID = Cc["@mozilla.org/xre/app-info;1"].
+                  getService(Ci.nsIXULAppInfo).platformBuildID;
+
+    // loop through our directories and check the cache object
+    let rebuildCache = false;
+    while (locations.hasMoreElements()) {
+      let dir = locations.getNext().QueryInterface(Ci.nsIFile);
+      let path = dir.path;
+      if (!cache[path] || cache[path].lastModifiedTime < dir.lastModifiedTime ||
+          cache.locale != locale || cache.buildID != buildID ||
+          cache.version != CACHE_VERSION) {
+        LOG("_loadEngines: Absent or outdated cache. Loading engines from disk.");
+        this._loadEnginesFromDir(dir);
+        rebuildCache = true;
+      } else {
+        this._loadEnginesFromCache(cache[path]);
+      }
+    }
+
+    if (rebuildCache && cacheEnabled)
+      this._buildCache();
+  },
+
+  _readCacheFile: function SRCH_SVC__readCacheFile(aFile) {
+    let stream = Cc["@mozilla.org/network/file-input-stream;1"].
+                 createInstance(Ci.nsIFileInputStream);
+    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+
+    try {
+      stream.init(aFile, MODE_RDONLY, PERMS_FILE, 0);
+      return json.decodeFromStream(stream, stream.available());
+    } catch(ex) {
+      LOG("_readCacheFile: Error reading cache file: " + ex);
+    } finally {
+      stream.close();
+    }
+    return false;
+  },
+
+  _batchTimer: null,
+  _batchCacheInvalidation: function SRCH_SVC__batchCacheInvalidation() {
+    let callback = {
+      self: this,
+      notify: function SRCH_SVC_batchTimerNotify(aTimer) {
+        LOG("_batchCacheInvalidation: Invalidating engine cache");
+        this.self._buildCache();
+        this.self._batchTimer = null;
+      }
+    };
+
+    if (!this._batchTimer) {
+      this._batchTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this._batchTimer.initWithCallback(callback, CACHE_INVALIDATION_DELAY,
+                                        Ci.nsITimer.TYPE_ONE_SHOT);
+    } else {
+      this._batchTimer.delay = CACHE_INVALIDATION_DELAY;
+      LOG("_batchCacheInvalidation: Batch timer reset");
+    }
   },
 
   _addEngineToStore: function SRCH_SVC_addEngineToStore(aEngine) {
@@ -2309,17 +2550,29 @@ SearchService.prototype = {
     }
   },
 
-  _loadEngines: function SRCH_SVC_loadEngines(aDir) {
-    LOG("_loadEngines: Searching in " + aDir.path + " for search engines.");
+  _loadEnginesFromCache: function SRCH_SVC__loadEnginesFromCache(aDir) {
+    let engines = aDir.engines;
+    LOG("_loadEnginesFromCache: Loading from cache. " + engines.length + " engines to load.");
+    for (let i = 0; i < engines.length; i++) {
+      let json = engines[i];
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.persistentDescriptor = json.filePath;
+      let engine = new Engine(file, json._dataType, json._readOnly);
+      engine._initWithJSON(json);
+      this._addEngineToStore(engine);
+    }
+  },
+
+  _loadEnginesFromDir: function SRCH_SVC__loadEnginesFromDir(aDir) {
+    LOG("_loadEnginesFromDir: Searching in " + aDir.path + " for search engines.");
 
     // Check whether aDir is the user profile dir
     var isInProfile = aDir.equals(getDir(NS_APP_USER_SEARCH_DIR));
 
     var files = aDir.directoryEntries
                     .QueryInterface(Ci.nsIDirectoryEnumerator);
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
 
+    var addedEngines = [];
     while (files.hasMoreElements()) {
       var file = files.nextFile;
 
@@ -2327,7 +2580,7 @@ SearchService.prototype = {
       if (!file.isFile() || file.fileSize == 0 || file.isHidden())
         continue;
 
-      var fileURL = ios.newFileURI(file).QueryInterface(Ci.nsIURL);
+      var fileURL = gIoSvc.newFileURI(file).QueryInterface(Ci.nsIURL);
       var fileExtension = fileURL.fileExtension.toLowerCase();
       var isWritable = isInProfile && file.isWritable();
 
@@ -2349,7 +2602,7 @@ SearchService.prototype = {
         addedEngine = new Engine(file, dataType, !isWritable);
         addedEngine._initFromFile();
       } catch (ex) {
-        LOG("_loadEngines: Failed to load " + file.path + "!\n" + ex);
+        LOG("_loadEnginesFromDir: Failed to load " + file.path + "!\n" + ex);
         continue;
       }
 
@@ -2358,7 +2611,7 @@ SearchService.prototype = {
           try {
             this._convertSherlockFile(addedEngine, fileURL.fileBaseName);
           } catch (ex) {
-            LOG("_loadEngines: Failed to convert: " + fileURL.path + "\n" + ex);
+            LOG("_loadEnginesFromDir: Failed to convert: " + fileURL.path + "\n" + ex);
             // The engine couldn't be converted, mark it as read-only
             addedEngine._readOnly = true;
           }
@@ -2368,12 +2621,14 @@ SearchService.prototype = {
         if (!addedEngine._iconURI) {
           var icon = this._findSherlockIcon(file, fileURL.fileBaseName);
           if (icon)
-            addedEngine._iconURI = ios.newFileURI(icon);
+            addedEngine._iconURI = gIoSvc.newFileURI(icon);
         }
       }
 
       this._addEngineToStore(addedEngine);
+      addedEngines.push(addedEngine);
     }
+    return addedEngines;
   },
 
   _saveSortedEngineList: function SRCH_SVC_saveSortedEngineList() {
@@ -2383,9 +2638,7 @@ SearchService.prototype = {
 
     // Set the useDB pref to indicate that from now on we should use the order
     // information stored in the database.
-    var prefB = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    prefB.setBoolPref(BROWSER_SEARCH_PREF + "useDBForOrder", true);
+    gPrefSvc.setBoolPref(BROWSER_SEARCH_PREF + "useDBForOrder", true);
 
     var engines = this._getSortedEngines(true);
     var values = [];
@@ -2438,13 +2691,11 @@ SearchService.prototype = {
       var prefName;
 
       try {
-        var prefB = Cc["@mozilla.org/preferences-service;1"].
-                    getService(Ci.nsIPrefBranch);
         var extras =
-          prefB.getChildList(BROWSER_SEARCH_PREF + "order.extra.", { });
+          gPrefSvc.getChildList(BROWSER_SEARCH_PREF + "order.extra.", { });
 
         for each (prefName in extras) {
-          engineName = prefB.getCharPref(prefName);
+          engineName = gPrefSvc.getCharPref(prefName);
 
           engine = this._engines[engineName];
           if (!engine || engine.name in addedEngines)
@@ -2637,13 +2888,11 @@ SearchService.prototype = {
 
     // First, look at the "browser.search.order.extra" branch.
     try {
-      var prefB = Cc["@mozilla.org/preferences-service;1"].
-                  getService(Ci.nsIPrefBranch);
-      var extras = prefB.getChildList(BROWSER_SEARCH_PREF + "order.extra.",
-                                      {});
+      var extras = gPrefSvc.getChildList(BROWSER_SEARCH_PREF + "order.extra.",
+                                         {});
 
       for each (var prefName in extras) {
-        engineName = prefB.getCharPref(prefName);
+        engineName = gPrefSvc.getCharPref(prefName);
 
         if (!(engineName in engineOrder))
           engineOrder[engineName] = i++;
@@ -2710,6 +2959,7 @@ SearchService.prototype = {
     engine._initFromMetadata(aName, aIconURL, aAlias, aDescription,
                              aMethod, aTemplate);
     this._addEngineToStore(engine);
+    this._batchCacheInvalidation();
   },
 
   addEngine: function SRCH_SVC_addEngine(aEngineURL, aDataType, aIconURL,
@@ -2857,12 +3107,9 @@ SearchService.prototype = {
 
     var currentEnginePref = BROWSER_SEARCH_PREF + "selectedEngine";
 
-    var prefB = Cc["@mozilla.org/preferences-service;1"].
-      getService(Ci.nsIPrefService).QueryInterface(Ci.nsIPrefBranch);
-
     if (this._currentEngine == this.defaultEngine) {
-      if (prefB.prefHasUserValue(currentEnginePref))
-        prefB.clearUserPref(currentEnginePref);
+      if (gPrefSvc.prefHasUserValue(currentEnginePref))
+        gPrefSvc.clearUserPref(currentEnginePref);
     }
     else {
       setLocalizedPref(currentEnginePref, this._currentEngine.name);
@@ -2875,36 +3122,45 @@ SearchService.prototype = {
   observe: function SRCH_SVC_observe(aEngine, aTopic, aVerb) {
     switch (aTopic) {
       case SEARCH_ENGINE_TOPIC:
-        if (aVerb == SEARCH_ENGINE_LOADED) {
-          var engine = aEngine.QueryInterface(Ci.nsISearchEngine);
-          LOG("nsSearchService::observe: Done installation of " + engine.name
-              + ".");
-          this._addEngineToStore(engine.wrappedJSObject);
-          if (engine.wrappedJSObject._useNow) {
-            LOG("nsSearchService::observe: setting current");
-            this.currentEngine = aEngine;
-          }
+        switch (aVerb) {
+          case SEARCH_ENGINE_LOADED:
+            var engine = aEngine.QueryInterface(Ci.nsISearchEngine);
+            LOG("nsSearchService::observe: Done installation of " + engine.name
+                + ".");
+            this._addEngineToStore(engine.wrappedJSObject);
+            if (engine.wrappedJSObject._useNow) {
+              LOG("nsSearchService::observe: setting current");
+              this.currentEngine = aEngine;
+            }
+            this._batchCacheInvalidation();
+            break;
+          case SEARCH_ENGINE_CHANGED:
+          case SEARCH_ENGINE_REMOVED:
+            this._batchCacheInvalidation();
+            break;
         }
         break;
+
       case QUIT_APPLICATION_TOPIC:
         this._removeObservers();
         this._saveSortedEngineList();
+        if (this._batchTimer) {
+          // Flush to disk immediately
+          this._batchTimer.cancel();
+          this._buildCache();
+        }
         break;
     }
   },
 
   _addObservers: function SRCH_SVC_addObservers() {
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.addObserver(this, SEARCH_ENGINE_TOPIC, false);
-    os.addObserver(this, QUIT_APPLICATION_TOPIC, false);
+    gObsSvc.addObserver(this, SEARCH_ENGINE_TOPIC, false);
+    gObsSvc.addObserver(this, QUIT_APPLICATION_TOPIC, false);
   },
 
   _removeObservers: function SRCH_SVC_removeObservers() {
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.removeObserver(this, SEARCH_ENGINE_TOPIC);
-    os.removeObserver(this, QUIT_APPLICATION_TOPIC);
+    gObsSvc.removeObserver(this, SEARCH_ENGINE_TOPIC);
+    gObsSvc.removeObserver(this, QUIT_APPLICATION_TOPIC);
   },
 
   QueryInterface: function SRCH_SVC_QI(aIID) {
@@ -3034,14 +3290,7 @@ const SEARCH_UPDATE_LOG_PREFIX = "*** Search update: ";
  * logging pref (browser.search.update.log) is set to true.
  */
 function ULOG(aText) {
-  var prefB = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-  var shouldLog = false;
-  try {
-    shouldLog = prefB.getBoolPref(BROWSER_SEARCH_PREF + "update.log");
-  } catch (ex) {}
-
-  if (shouldLog) {
+  if (getBoolPref(BROWSER_SEARCH_PREF + "update.log", false)) {
     dump(SEARCH_UPDATE_LOG_PREFIX + aText + "\n");
     var consoleService = Cc["@mozilla.org/consoleservice;1"].
                          getService(Ci.nsIConsoleService);
@@ -3054,9 +3303,7 @@ var engineUpdateService = {
     var tm = Cc["@mozilla.org/updates/timer-manager;1"].
              getService(Ci.nsIUpdateTimerManager);
     // figure out how often to check for any expired engines
-    var prefB = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
-    var interval = prefB.getIntPref(BROWSER_SEARCH_PREF + "updateinterval");
+    var interval = gPrefSvc.getIntPref(BROWSER_SEARCH_PREF + "updateinterval");
 
     // Interval is stored in hours
     var seconds = interval * 3600;
