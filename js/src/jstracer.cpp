@@ -3098,11 +3098,15 @@ TraceRecorder::ifop()
         guard(JSVAL_IS_NULL(v), lir->ins_eq0(v_ins), BRANCH_EXIT);
     } else if (isNumber(v)) {
         jsdouble d = asNumber(v);
-        jsdpun u;
-        u.d = 0;
-        guard(d == 0 || JSDOUBLE_IS_NaN(d),
-              lir->ins2(LIR_feq, v_ins, lir->insImmq(u.u64)),
-              BRANCH_EXIT);
+        if (JSDOUBLE_IS_NaN(d)) {
+            guard(false, lir->ins2(LIR_feq, v_ins, v_ins), BRANCH_EXIT);
+        } else {
+            jsdpun u;
+            u.d = 0;
+            guard(d == 0,
+                  lir->ins2(LIR_feq, v_ins, lir->insImmq(u.u64)),
+                  BRANCH_EXIT);
+        }
     } else if (JSVAL_IS_STRING(v)) {
         guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
               lir->ins_eq0(lir->ins2(LIR_piand,
