@@ -143,8 +143,7 @@ nsFtpChannel::GetProxyInfo(nsIProxyInfo** aProxyInfo)
 //-----------------------------------------------------------------------------
 
 nsresult
-nsFtpChannel::OpenContentStream(PRBool async, nsIInputStream **result,
-                                nsIChannel** channel)
+nsFtpChannel::OpenContentStream(PRBool async, nsIInputStream **result)
 {
     if (!async)
         return NS_ERROR_NOT_IMPLEMENTED;

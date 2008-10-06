@@ -65,8 +65,7 @@ protected:
   nsresult MakeFileInputStream(nsIFile *file, nsCOMPtr<nsIInputStream> &stream,
                                nsCString &contentType);
 
-  virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result,
-                                     nsIChannel** channel);
+  virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result);
 
 private:
   nsCOMPtr<nsIInputStream> mUploadStream;

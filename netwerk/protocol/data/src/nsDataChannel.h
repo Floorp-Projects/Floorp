@@ -52,8 +52,7 @@ public:
     }
 
 protected:
-    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result,
-                                       nsIChannel** channel);
+    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result);
 };
 
 #endif /* nsDataChannel_h___ */
