@@ -82,12 +82,13 @@ var BrowserUI = {
   _faviconAdded : false,
 
   _setContentPosition : function (aProp, aValue) {
+    let value = Math.round(aValue);
     if (aProp == "left") {
-      gContentBox.style.marginLeft = aValue + "px";
-      gContentBox.style.marginRight = -aValue + "px";
+      gContentBox.style.marginLeft = value + "px";
+      gContentBox.style.marginRight = -value + "px";
     } else if (aProp == "top") {
-      gContentBox.style.marginTop = aValue + "px";
-      gContentBox.style.marginBottom = -aValue + "px";
+      gContentBox.style.marginTop = value + "px";
+      gContentBox.style.marginBottom = -value + "px";
     }
   },
   get _contentTop() {

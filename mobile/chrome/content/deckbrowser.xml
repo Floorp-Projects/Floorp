@@ -609,10 +609,13 @@
 
       <method name="_updateCanvasPosition">
         <body><![CDATA[
-          this._canvas.style.marginLeft = this.dragData.dragX + "px";
-          this._canvas.style.marginRight = -this.dragData.dragX + "px";
-          this._canvas.style.marginTop = this.dragData.dragY + "px";
-          this._canvas.style.marginBottom = -this.dragData.dragY + "px";
+          let x = Math.round(this.dragData.dragX);
+          let y = Math.round(this.dragData.dragY);
+          
+          this._canvas.style.marginLeft = x + "px";
+          this._canvas.style.marginRight = -x + "px";
+          this._canvas.style.marginTop = y + "px";
+          this._canvas.style.marginBottom = -y + "px";
 
           // Force a sync redraw
           window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
