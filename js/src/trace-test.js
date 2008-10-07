@@ -2071,6 +2071,14 @@ function testResumeOp() {
 testResumeOp.expected = "16151413121110987654321";
 test(testResumeOp);
 
+function testUndefinedCmp() {
+    var a = false;
+    for (var j = 0; j < 4; ++j) { if (undefined < false) { a = true; } }
+    return a;
+}
+testUndefinedCmp.expected = false;
+test(testUndefinedCmp);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
