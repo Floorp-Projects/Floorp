@@ -797,15 +797,18 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                      JSProperty **propp)
 {
     uint32 i;
+    JSBool isIndex;
 
     if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
         return JS_TRUE;
 
-    if (!js_IdIsIndex(ID_TO_VALUE(id), &i) || attrs != JSPROP_ENUMERATE) {
+    isIndex = js_IdIsIndex(ID_TO_VALUE(id), &i);
+    if (!isIndex || attrs != JSPROP_ENUMERATE) {
         if (!ENSURE_SLOW_ARRAY(cx, obj))
             return JS_FALSE;
-        return js_DefineProperty(cx, obj, id, value, getter, setter, attrs,
-                                 propp);
+        if (isIndex && STOBJ_IS_DELEGATE(obj))
+            cx->runtime->anyArrayProtoHasElement = JS_TRUE;
+        return js_DefineProperty(cx, obj, id, value, getter, setter, attrs, propp);
     }
 
     return array_setProperty(cx, obj, id, &value);
