@@ -638,7 +638,7 @@ nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
       destroyQueueTail = &(*destroyQueueTail)->mNextSibling;
     } while (*destroyQueueTail);
   }
-  mChildrenTaggedPtr = nsnull;
+  mChildren.asVoid = nsnull;
 
   if (aDestroyQueueTail) {
     // Our caller destroys the queue.
@@ -679,11 +679,11 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
   : mPresContext(aContext),
     mParent(aParent),
     mRule(aRule),
-    mChildrenTaggedPtr(nsnull),
     mDependentBits((PRUint32(aLevel) << NS_RULE_NODE_LEVEL_SHIFT) |
                    (aIsImportant ? NS_RULE_NODE_IS_IMPORTANT : 0)),
     mNoneBits(0)
 {
+  mChildren.asVoid = nsnull;
   MOZ_COUNT_CTOR(nsRuleNode);
   NS_IF_ADDREF(mRule);
 
