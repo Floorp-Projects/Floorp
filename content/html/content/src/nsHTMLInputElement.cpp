@@ -46,7 +46,6 @@
 #include "nsIPhonetic.h"
 
 #include "nsIControllers.h"
-#include "nsIFocusController.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
@@ -1265,124 +1264,75 @@ nsHTMLInputElement::Focus()
 void
 nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
 {
-  if (!aPresContext)
-    return;
-
-  // We can't be focus'd if we aren't in a document
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc)
-    return;
-
-  // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
-    return;
-  }
- 
-  // If the window is not active, do not allow the focus to bring the
-  // window to the front.  We update the focus controller, but do
-  // nothing else.
-  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
-  if (win) {
-    nsIFocusController *focusController = win->GetRootFocusController();
-    if (focusController) {
-      PRBool isActive = PR_FALSE;
-      focusController->GetActive(&isActive);
-      if (!isActive) {
-        focusController->SetFocusedWindow(win);
-        focusController->SetFocusedElement(this);
-
-        return;
-      }
-    }
-  }
-
-  SetFocusAndScrollIntoView(aPresContext);
+  DoSetFocus(aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::Select()
 {
-  nsresult rv = NS_OK;
-
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc)
-    return NS_OK;
-
-  // first see if we are disabled or not. If disabled then do nothing.
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
+  if (mType != NS_FORM_INPUT_PASSWORD && mType != NS_FORM_INPUT_TEXT) {
     return NS_OK;
   }
 
-  if (mType == NS_FORM_INPUT_PASSWORD || mType == NS_FORM_INPUT_TEXT) {
-    // XXX Bug?  We have to give the input focus before contents can be
-    // selected
+  // XXX Bug?  We have to give the input focus before contents can be
+  // selected
 
-    nsCOMPtr<nsPresContext> presContext = GetPresContext();
+  FocusTristate state = FocusState();
+  if (state == eUnfocusable) {
+    return NS_OK;
+  }
 
-    // If the window is not active, do not allow the select to bring the
-    // window to the front.  We update the focus controller, but do
-    // nothing else.
-    nsPIDOMWindow *win = doc->GetWindow();
-    if (win) {
-      nsIFocusController *focusController = win->GetRootFocusController();
-      if (focusController) {
-        PRBool isActive = PR_FALSE;
-        focusController->GetActive(&isActive);
-        if (!isActive) {
-          focusController->SetFocusedWindow(win);
-          focusController->SetFocusedElement(this);
-          SelectAll(presContext);
-          return NS_OK;
-        }
-      }
-    }
+  nsCOMPtr<nsPresContext> presContext = GetPresContext();
+  if (state == eInactiveWindow) {
+    SelectAll(presContext);
+    return NS_OK;
+  }
 
-    // Just like SetFocus() but without the ScrollIntoView()!
-    nsEventStatus status = nsEventStatus_eIgnore;
+  // Just like SetFocus() but without the ScrollIntoView()!
+  nsEventStatus status = nsEventStatus_eIgnore;
     
-    //If already handling select event, don't dispatch a second.
-    if (!GET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT)) {
-      nsEvent event(nsContentUtils::IsCallerChrome(), NS_FORM_SELECTED);
+  //If already handling select event, don't dispatch a second.
+  if (!GET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT)) {
+    nsEvent event(nsContentUtils::IsCallerChrome(), NS_FORM_SELECTED);
 
-      SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_TRUE);
-      nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                  presContext, &event, nsnull, &status);
-      SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_FALSE);
+    SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_TRUE);
+    nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                                presContext, &event, nsnull, &status);
+    SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_FALSE);
+  }
+
+  // If the DOM event was not canceled (e.g. by a JS event handler
+  // returning false)
+  if (status == nsEventStatus_eIgnore) {
+    PRBool shouldFocus = ShouldFocus(this);
+
+    if (presContext && shouldFocus) {
+      nsIEventStateManager *esm = presContext->EventStateManager();
+      // XXX Fix for bug 135345 - ESM currently does not check to see if we
+      // have focus before attempting to set focus again and may cause
+      // infinite recursion.  For now check if we have focus and do not set
+      // focus again if already focused.
+      PRInt32 currentState;
+      esm->GetContentState(this, currentState);
+      if (!(currentState & NS_EVENT_STATE_FOCUS) &&
+          !esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
+        return NS_OK; // We ended up unfocused, e.g. due to a DOM event handler.
+      }
     }
 
-    // If the DOM event was not canceled (e.g. by a JS event handler
-    // returning false)
-    if (status == nsEventStatus_eIgnore) {
-      PRBool shouldFocus = ShouldFocus(this);
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
-      if (presContext && shouldFocus) {
-        nsIEventStateManager *esm = presContext->EventStateManager();
-        // XXX Fix for bug 135345 - ESM currently does not check to see if we
-        // have focus before attempting to set focus again and may cause
-        // infinite recursion.  For now check if we have focus and do not set
-        // focus again if already focused.
-        PRInt32 currentState;
-        esm->GetContentState(this, currentState);
-        if (!(currentState & NS_EVENT_STATE_FOCUS) &&
-            !esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
-          return rv; // We ended up unfocused, e.g. due to a DOM event handler.
-        }
+    if (formControlFrame) {
+      if (shouldFocus) {
+        formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
       }
 
-      nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
-
-      if (formControlFrame) {
-        if (shouldFocus) {
-          formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-        }
-
-        // Now Select all the text!
-        SelectAll(presContext);
-      }
+      // Now Select all the text!
+      SelectAll(presContext);
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 void
