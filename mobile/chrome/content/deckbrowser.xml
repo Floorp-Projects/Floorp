@@ -11,7 +11,7 @@
     <content>
       <xul:deck flex="1" selectedIndex="0">
         <xul:stack flex="1">
-          <html:div anonid="viewport" style="-moz-stack-sizing: ignore; overflow: hidden;">
+          <html:div anonid="viewport" style="-moz-stack-sizing: ignore; overflow: hidden; background-image:url('chrome://browser/content/checkerboard.png')">
             <html:canvas anonid="ccanvas"
                          moz-opaque="true"
                          style="height: 100%; width: 100%;"/>
@@ -607,6 +607,16 @@
         ]]></body>
       </method>
 
+      <method name="_updateCheckerboard">
+        <body><![CDATA[
+          
+          let x = Math.round(this.dragData.dragX);
+          let y = Math.round(this.dragData.dragY);
+
+          this._viewport.style.backgroundPosition =  x+"px "+ y+"px";
+        ]]></body>
+      </method>
+
       <method name="_updateCanvasPosition">
         <body><![CDATA[
           let x = Math.round(this.dragData.dragX);
@@ -616,6 +626,9 @@
           this._canvas.style.marginRight = -x + "px";
           this._canvas.style.marginTop = y + "px";
           this._canvas.style.marginBottom = -y + "px";
+
+          this._updateCheckerboard();
+
 
           // Force a sync redraw
           window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
