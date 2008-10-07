@@ -229,16 +229,20 @@ js_Array_dense_setelem(JSContext* cx, JSObject* obj, jsint i, jsval v)
 {
     JS_ASSERT(OBJ_IS_DENSE_ARRAY(cx, obj));
 
-    jsuint length = ARRAY_DENSE_LENGTH(obj);
-    if ((jsuint)i < length) {
-        if (obj->dslots[i] == JSVAL_HOLE) {
-            if (i >= obj->fslots[JSSLOT_ARRAY_LENGTH])
-                obj->fslots[JSSLOT_ARRAY_LENGTH] = i + 1;
-            obj->fslots[JSSLOT_ARRAY_COUNT]++;
+    do {
+        jsuint length = ARRAY_DENSE_LENGTH(obj);
+        if ((jsuint)i < length) {
+            if (obj->dslots[i] == JSVAL_HOLE) {
+                if (cx->runtime->anyArrayProtoHasElement)
+                    break;
+                if (i >= obj->fslots[JSSLOT_ARRAY_LENGTH])
+                    obj->fslots[JSSLOT_ARRAY_LENGTH] = i + 1;
+                obj->fslots[JSSLOT_ARRAY_COUNT]++;
+            }
+            obj->dslots[i] = v;
+            return JS_TRUE;
         }
-        obj->dslots[i] = v;
-        return JS_TRUE;
-    }
+    } while (0);
     return OBJ_SET_PROPERTY(cx, obj, INT_TO_JSID(i), &v);
 }
 
