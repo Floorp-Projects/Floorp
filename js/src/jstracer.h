@@ -203,6 +203,15 @@ public:
 
 extern struct nanojit::CallInfo builtins[];
 
+enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID, FAIL_JSVAL };
+struct JSTraceableNative {
+    JSFastNative native;
+    int          builtin;
+    const char  *prefix;
+    const char  *argtypes;
+    JSTNErrType  errtype;
+};
+ 
 class TraceRecorder : public GCObject {
     JSContext*              cx;
     JSTraceMonitor*         traceMonitor;
@@ -239,6 +248,7 @@ class TraceRecorder : public GCObject {
     Queue<jsbytecode*>      inlinedLoopEdges;
     Queue<jsbytecode*>      cfgMerges;
     jsval*                  global_dslots;
+    JSTraceableNative*      pendingTraceableNative;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
@@ -363,6 +373,7 @@ public:
     bool record_SetPropHit(JSPropCacheEntry* entry, JSScopeProperty* sprop);
     bool record_SetPropMiss(JSPropCacheEntry* entry);
     bool record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
+    bool record_FastNativeCallComplete();
     
     void deepAbort() { deepAborted = true; }
     bool wasDeepAborted() { return deepAborted; }
