@@ -2626,6 +2626,8 @@ js_Interpret(JSContext *cx)
             atoms = script->atomMap.vector;                                   \
             currentVersion = (JSVersion) script->version;                     \
             JS_ASSERT(fp->regs == &regs);                                     \
+            if (cx->throwing)                                                 \
+                goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
 
