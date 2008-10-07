@@ -307,13 +307,23 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     nsCOMArray<nsINodeInfo> nodeInfos;
 
     rv |= aStream->Read32(&count);
-    nsAutoString namespaceURI, qualifiedName;
+    nsAutoString namespaceURI, prefixStr, localName;
+    PRBool prefixIsNull;
+    nsCOMPtr<nsIAtom> prefix;
     for (i = 0; i < count; ++i) {
         rv |= aStream->ReadString(namespaceURI);
-        rv |= aStream->ReadString(qualifiedName);
+        rv |= aStream->ReadBoolean(&prefixIsNull);
+        if (prefixIsNull) {
+            prefix = nsnull;
+        } else {
+            rv |= aStream->ReadString(prefixStr);
+            prefix = do_GetAtom(prefixStr);
+        }
+        rv |= aStream->ReadString(localName);
 
         nsCOMPtr<nsINodeInfo> nodeInfo;
-        rv |= mNodeInfoManager->GetNodeInfo(qualifiedName, namespaceURI, getter_AddRefs(nodeInfo));
+        rv |= mNodeInfoManager->GetNodeInfo(localName, prefix, namespaceURI,
+                                            getter_AddRefs(nodeInfo));
         if (!nodeInfos.AppendObject(nodeInfo))
             rv |= NS_ERROR_OUT_OF_MEMORY;
     }
@@ -428,9 +438,17 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
         rv |= nodeInfo->GetNamespaceURI(namespaceURI);
         rv |= aStream->WriteWStringZ(namespaceURI.get());
 
-        nsAutoString qualifiedName;
-        nodeInfo->GetQualifiedName(qualifiedName);
-        rv |= aStream->WriteWStringZ(qualifiedName.get());
+        nsAutoString prefix;
+        nodeInfo->GetPrefix(prefix);
+        PRBool nullPrefix = DOMStringIsNull(prefix);
+        rv |= aStream->WriteBoolean(nullPrefix);
+        if (!nullPrefix) {
+            rv |= aStream->WriteWStringZ(prefix.get());
+        }
+
+        nsAutoString localName;
+        nodeInfo->GetName(localName);
+        rv |= aStream->WriteWStringZ(localName.get());
     }
 
     // Now serialize the document contents
