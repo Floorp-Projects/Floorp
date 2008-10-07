@@ -3158,6 +3158,9 @@ nsCSSFrameConstructor::GetParentFrame(PRInt32                  aNameSpaceID,
   aParentFrame = &aParentFrameIn;
   aIsPseudoParent = PR_FALSE;
 
+  nsFrameState savedStateBits  = aState.mAdditionalStateBits;
+  aState.mAdditionalStateBits &= ~NS_FRAME_GENERATED_CONTENT;
+
   if (nsGkAtoms::tableOuterFrame == aChildFrameType) { // table child
     if (IsTableRelated(parentFrameType, PR_TRUE) &&
         (nsGkAtoms::tableCaptionFrame != parentFrameType) ) { // need pseudo cell parent
@@ -3226,6 +3229,7 @@ nsCSSFrameConstructor::GetParentFrame(PRInt32                  aNameSpaceID,
     aIsPseudoParent = PR_TRUE;
   }
 
+  aState.mAdditionalStateBits = savedStateBits;
   return rv;
 }
 
@@ -3412,10 +3416,13 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
        // with a frame based on something other than display.
        childIsSpecialContent || // looked it up before
        IsSpecialContent(aChildContent, aTag, aNameSpaceID, aChildStyle))) {
+    nsFrameState savedStateBits  = aState.mAdditionalStateBits;
+    aState.mAdditionalStateBits &= ~NS_FRAME_GENERATED_CONTENT;
     nsresult rv = GetPseudoCellFrame(aNameSpaceID, aState, *aParentFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
+    aState.mAdditionalStateBits = savedStateBits;
 
     NS_ASSERTION(aState.mPseudoFrames.mCellInner.mFrame,
                  "Must have inner cell frame now!");
