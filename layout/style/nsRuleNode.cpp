@@ -5299,38 +5299,74 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
     nValues += NS_ARRAY_LENGTH(paddingValues);
   }
 
-  // We need to be careful not to count styles covered up by
-  // user-important or UA-important declarations.
-  for (nsRuleNode* ruleNode = aStyleContext->GetRuleNode(); ruleNode;
-       ruleNode = ruleNode->GetParent()) {
-    nsIStyleRule *rule = ruleNode->GetRule();
-    if (rule) {
-      ruleData.mLevel = ruleNode->GetLevel();
-      ruleData.mIsImportantRule = ruleNode->IsImportantRule();
-      rule->MapRuleInfoInto(&ruleData);
-      // Do the same nulling out as in GetBorderData, GetBackgroundData
-      // or GetPaddingData.
-      // We are sharing with some style rule.  It really owns the data.
-      marginData.mBoxShadow = nsnull;
+  nsStyleContext* styleContext = aStyleContext;
 
-      if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
-          ruleData.mLevel == nsStyleSet::eUserSheet) {
-        // This is a rule whose effect we want to ignore, so if any of
-        // the properties we care about were set, set them to the dummy
-        // value that they'll never otherwise get.
-        for (PRUint32 i = 0; i < nValues; ++i)
-          if (values[i]->GetUnit() != eCSSUnit_Null)
-            values[i]->SetDummyValue();
-      } else {
-        // If any of the values we care about was set by the above rule,
-        // we have author style.
-        for (PRUint32 i = 0; i < nValues; ++i)
-          if (values[i]->GetUnit() != eCSSUnit_Null &&
-              values[i]->GetUnit() != eCSSUnit_Dummy) // see above
-            return PR_TRUE;
+  // We need to be careful not to count styles covered up by user-important or
+  // UA-important declarations.  But we do want to catch explicit inherit
+  // styling in those and check our parent style context to see whether we have
+  // user styling for those properties.  Note that we don't care here about
+  // inheritance due to lack of a specified value, since all the properties we
+  // care about are reset properties.
+  PRBool haveExplicitUAInherit;
+  do {
+    haveExplicitUAInherit = PR_FALSE;
+    for (nsRuleNode* ruleNode = styleContext->GetRuleNode(); ruleNode;
+         ruleNode = ruleNode->GetParent()) {
+      nsIStyleRule *rule = ruleNode->GetRule();
+      if (rule) {
+        ruleData.mLevel = ruleNode->GetLevel();
+        ruleData.mIsImportantRule = ruleNode->IsImportantRule();
+        rule->MapRuleInfoInto(&ruleData);
+        // Do the same nulling out as in GetBorderData, GetBackgroundData
+        // or GetPaddingData.
+        // We are sharing with some style rule.  It really owns the data.
+        marginData.mBoxShadow = nsnull;
+
+        if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
+            ruleData.mLevel == nsStyleSet::eUserSheet) {
+          // This is a rule whose effect we want to ignore, so if any of
+          // the properties we care about were set, set them to the dummy
+          // value that they'll never otherwise get.
+          for (PRUint32 i = 0; i < nValues; ++i) {
+            nsCSSUnit unit = values[i]->GetUnit();
+            if (unit != eCSSUnit_Null &&
+                unit != eCSSUnit_Dummy &&
+                unit != eCSSUnit_DummyInherit) {
+              if (unit == eCSSUnit_Inherit) {
+                haveExplicitUAInherit = PR_TRUE;
+                values[i]->SetDummyInheritValue();
+              } else {
+                values[i]->SetDummyValue();
+              }
+            }
+          }
+        } else {
+          // If any of the values we care about was set by the above rule,
+          // we have author style.
+          for (PRUint32 i = 0; i < nValues; ++i)
+            if (values[i]->GetUnit() != eCSSUnit_Null &&
+                values[i]->GetUnit() != eCSSUnit_Dummy && // see above
+                values[i]->GetUnit() != eCSSUnit_DummyInherit)
+              return PR_TRUE;
+        }
       }
     }
-  }
+
+    if (haveExplicitUAInherit) {
+      // reset all the eCSSUnit_Null values to eCSSUnit_Dummy (since they're
+      // not styled by the author, or by anyone else), and then reset all the
+      // eCSSUnit_DummyInherit values to eCSSUnit_Null (so we will be able to
+      // detect them being styled by the author) and move up to our parent
+      // style context.
+      for (PRUint32 i = 0; i < nValues; ++i)
+        if (values[i]->GetUnit() == eCSSUnit_Null)
+          values[i]->SetDummyValue();
+      for (PRUint32 i = 0; i < nValues; ++i)
+        if (values[i]->GetUnit() == eCSSUnit_DummyInherit)
+          values[i]->Reset();
+      styleContext = styleContext->GetParent();
+    }
+  } while (haveExplicitUAInherit && styleContext);
 
   return PR_FALSE;
 }
