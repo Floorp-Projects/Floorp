@@ -311,41 +311,41 @@ CSS_PROP_SHORTHAND(border-left, border_left, BorderLeft, 0)
 CSS_PROP_SHORTHAND(border-left-color, border_left_color, BorderLeftColor, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-left-color-value, border_left_color_value, X, 0, Margin, mBorderColor.mLeft, eCSSType_Value, kBorderColorKTable)
-CSS_PROP_BORDER(border-left-color-ltr-source, border_left_color_ltr_source, X, 0, Margin, mBorderLeftColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_BORDER(border-left-color-rtl-source, border_left_color_rtl_source, X, 0, Margin, mBorderLeftColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-color-ltr-source, border_left_color_ltr_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-color-rtl-source, border_left_color_rtl_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_BORDER(-moz-border-left-colors, border_left_colors, MozBorderLeftColors, 0, Margin, mBorderColors.mLeft, eCSSType_ValueList, nsnull)
 CSS_PROP_SHORTHAND(border-left-style, border_left_style, BorderLeftStyle, 0) // on/off will need reflow
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-left-style-value, border_left_style_value, X, 0, Margin, mBorderStyle.mLeft, eCSSType_Value, kBorderStyleKTable)
-CSS_PROP_BORDER(border-left-style-ltr-source, border_left_style_ltr_source, X, 0, Margin, mBorderLeftStyleLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_BORDER(border-left-style-rtl-source, border_left_style_rtl_source, X, 0, Margin, mBorderLeftStyleRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-style-ltr-source, border_left_style_ltr_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftStyleLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-style-rtl-source, border_left_style_rtl_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftStyleRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_SHORTHAND(border-left-width, border_left_width, BorderLeftWidth, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-left-width-value, border_left_width_value, X, 0, Margin, mBorderWidth.mLeft, eCSSType_Value, kBorderWidthKTable)
-CSS_PROP_BORDER(border-left-width-ltr-source, border_left_width_ltr_source, X, 0, Margin, mBorderLeftWidthLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_BORDER(border-left-width-rtl-source, border_left_width_rtl_source, X, 0, Margin, mBorderLeftWidthRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-width-ltr-source, border_left_width_ltr_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftWidthLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-left-width-rtl-source, border_left_width_rtl_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderLeftWidthRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_SHORTHAND(border-right, border_right, BorderRight, 0)
 CSS_PROP_SHORTHAND(border-right-color, border_right_color, BorderRightColor, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-right-color-value, border_right_color_value, X, 0, Margin, mBorderColor.mRight, eCSSType_Value, kBorderColorKTable)
-CSS_PROP_BORDER(border-right-color-ltr-source, border_right_color_ltr_source, X, 0, Margin, mBorderRightColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_BORDER(border-right-color-rtl-source, border_right_color_rtl_source, X, 0, Margin, mBorderRightColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-color-ltr-source, border_right_color_ltr_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightColorLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-color-rtl-source, border_right_color_rtl_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightColorRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_BORDER(-moz-border-right-colors, border_right_colors, MozBorderRightColors, 0, Margin, mBorderColors.mRight, eCSSType_ValueList, nsnull)
 CSS_PROP_SHORTHAND(border-right-style, border_right_style, BorderRightStyle, 0) // on/off will need reflow
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-right-style-value, border_right_style_value, X, 0, Margin, mBorderStyle.mRight, eCSSType_Value, kBorderStyleKTable)
-CSS_PROP_BORDER(border-right-style-ltr-source, border_right_style_ltr_source, X, 0, Margin, mBorderRightStyleLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_BORDER(border-right-style-rtl-source, border_right_style_rtl_source, X, 0, Margin, mBorderRightStyleRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-style-ltr-source, border_right_style_ltr_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightStyleLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-style-rtl-source, border_right_style_rtl_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightStyleRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_SHORTHAND(border-right-width, border_right_width, BorderRightWidth, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_BORDER(border-right-width-value, border_right_width_value, X, 0, Margin, mBorderWidth.mRight, eCSSType_Value, kBorderWidthKTable)
-CSS_PROP_BORDER(border-right-width-ltr-source, border_right_width_ltr_source, X, 0, Margin, mBorderRightWidthLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_BORDER(border-right-width-rtl-source, border_right_width_rtl_source, X, 0, Margin, mBorderRightWidthRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-width-ltr-source, border_right_width_ltr_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightWidthLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_BORDER(border-right-width-rtl-source, border_right_width_rtl_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mBorderRightWidthRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_TABLEBORDER(border-spacing, border_spacing, BorderSpacing, 0, Table, mBorderSpacing, eCSSType_ValuePair, nsnull) // XXX bug 3935
 CSS_PROP_SHORTHAND(-moz-border-start, border_start, MozBorderStart, 0)
@@ -423,14 +423,14 @@ CSS_PROP_MARGIN(margin-end-value, margin_end_value, X, 0, Margin, mMarginEnd, eC
 CSS_PROP_SHORTHAND(margin-left, margin_left, MarginLeft, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_MARGIN(margin-left-value, margin_left_value, X, 0, Margin, mMargin.mLeft, eCSSType_Value, nsnull)
-CSS_PROP_MARGIN(margin-left-ltr-source, margin_left_ltr_source, X, 0, Margin, mMarginLeftLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_MARGIN(margin-left-rtl-source, margin_left_rtl_source, X, 0, Margin, mMarginLeftRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_MARGIN(margin-left-ltr-source, margin_left_ltr_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mMarginLeftLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_MARGIN(margin-left-rtl-source, margin_left_rtl_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mMarginLeftRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_SHORTHAND(margin-right, margin_right, MarginRight, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_MARGIN(margin-right-value, margin_right_value, X, 0, Margin, mMargin.mRight, eCSSType_Value, nsnull)
-CSS_PROP_MARGIN(margin-right-ltr-source, margin_right_ltr_source, X, 0, Margin, mMarginRightLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_MARGIN(margin-right-rtl-source, margin_right_rtl_source, X, 0, Margin, mMarginRightRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_MARGIN(margin-right-ltr-source, margin_right_ltr_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mMarginRightLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_MARGIN(margin-right-rtl-source, margin_right_rtl_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mMarginRightRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_SHORTHAND(-moz-margin-start, margin_start, MozMarginStart, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
@@ -462,14 +462,14 @@ CSS_PROP_PADDING(padding-end-value, padding_end_value, X, 0, Margin, mPaddingEnd
 CSS_PROP_SHORTHAND(padding-left, padding_left, PaddingLeft, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_PADDING(padding-left-value, padding_left_value, X, 0, Margin, mPadding.mLeft, eCSSType_Value, nsnull)
-CSS_PROP_PADDING(padding-left-ltr-source, padding_left_ltr_source, X, 0, Margin, mPaddingLeftLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_PADDING(padding-left-rtl-source, padding_left_rtl_source, X, 0, Margin, mPaddingLeftRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_PADDING(padding-left-ltr-source, padding_left_ltr_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mPaddingLeftLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_PADDING(padding-left-rtl-source, padding_left_rtl_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mPaddingLeftRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_SHORTHAND(padding-right, padding_right, PaddingRight, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
 CSS_PROP_PADDING(padding-right-value, padding_right_value, X, 0, Margin, mPadding.mRight, eCSSType_Value, nsnull)
-CSS_PROP_PADDING(padding-right-ltr-source, padding_right_ltr_source, X, 0, Margin, mPaddingRightLTRSource, eCSSType_Value, kBoxPropSourceKTable)
-CSS_PROP_PADDING(padding-right-rtl-source, padding_right_rtl_source, X, 0, Margin, mPaddingRightRTLSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_PADDING(padding-right-ltr-source, padding_right_ltr_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mPaddingRightLTRSource, eCSSType_Value, kBoxPropSourceKTable)
+CSS_PROP_PADDING(padding-right-rtl-source, padding_right_rtl_source, X, CSS_PROPERTY_DIRECTIONAL_SOURCE, Margin, mPaddingRightRTLSource, eCSSType_Value, kBoxPropSourceKTable)
 #endif
 CSS_PROP_SHORTHAND(-moz-padding-start, padding_start, MozPaddingStart, 0)
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
