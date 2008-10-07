@@ -102,7 +102,9 @@ public:
   }
 #endif
 
-protected:
+private:
+  static PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
+
   RuleCascadeData* GetRuleCascade(nsPresContext* aPresContext);
   void RefreshRuleCascade(nsPresContext* aPresContext);
 
