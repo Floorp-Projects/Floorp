@@ -2026,6 +2026,26 @@ this.__proto__.a = 3; for (var j = 0; j < 4; ++j) { [a]; }
 testGlobalProtoAccess.expected = "ok";
 test(testGlobalProtoAccess);
 
+function testNewDate()
+{
+    // Accessing global.Date for the first time will change the global shape,
+    // so do it before the loop starts; otherwise we have to loop an extra time
+    // to pick things up.
+    var start = new Date();
+    var time = new Date();
+    for (var j = 0; j < RUNLOOP; ++j) {
+	time = new Date();
+    }
+    return time > 0 && time >= start;
+}
+testNewDate.expected = true;
+testNewDate.jitstats = {
+    recorderStarted: 1,
+    recorderAborted: 0,
+    traceTriggered: 1
+};
+test(testNewDate);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));
