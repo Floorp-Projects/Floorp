@@ -89,7 +89,7 @@ public:
                                             PRInt32 aNamespaceID);
   nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                        PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
-  nsresult GetNodeInfo(const nsAString& aQualifiedName,
+  nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                        const nsAString& aNamespaceURI,
                        nsINodeInfo** aNodeInfo);
 
