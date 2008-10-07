@@ -848,12 +848,6 @@ TypeMap::captureStackTypes(JSContext* cx, unsigned callDepth)
         }
         *m++ = type;
     );
-    /* If we are capturing the stack state on a JSOP_RESUME instruction, the value on top of
-       the stack is a boxed value. */
-    if (*cx->fp->regs->pc == JSOP_RESUME) {
-        JS_ASSERT(m > map);
-        m[-1] = JSVAL_BOXED;
-    }
 }
 
 /* Compare this type map to another one and see whether they match. */
@@ -1726,6 +1720,11 @@ TraceRecorder::snapshot(ExitType exitType)
         *m++ = determineSlotType(vp);
     );
     JS_ASSERT(unsigned(m - exit.typeMap) == ngslots + stackSlots);
+
+    /* If we are capturing the stack state on a JSOP_RESUME instruction, the value on top of
+       the stack is a boxed value. */
+    if (*cx->fp->regs->pc == JSOP_RESUME) 
+        m[-1] = JSVAL_BOXED;
     return &exit;
 }
 
@@ -4343,15 +4342,6 @@ TraceRecorder::record_JSOP_NEG()
     return false;
 }
 
-enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID };
-struct JSTraceableNative {
-    JSFastNative native;
-    int          builtin;
-    const char  *prefix;
-    const char  *argtypes;
-    JSTNErrType  errtype;
-};
-
 JSBool
 js_Array(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
 
@@ -5086,6 +5076,8 @@ TraceRecorder::record_JSOP_CALL()
 
     static JSTraceableNative knownNatives[] = {
         { js_array_join,               F_Array_p_join,         "TC",  "s",    FAIL_NULL },
+        { js_array_push,               F_Array_p_push1,        "TC",  "v",    FAIL_JSVAL },
+        { js_array_pop,                F_Array_p_pop,          "TC",  "",     FAIL_JSVAL },
         { js_math_sin,                 F_Math_sin,             "",    "d",    INFALLIBLE },
         { js_math_cos,                 F_Math_cos,             "",    "d",    INFALLIBLE },
         { js_math_pow,                 F_Math_pow,             "",    "dd",   INFALLIBLE },
@@ -5299,6 +5291,9 @@ TraceRecorder::record_JSOP_CALL()
         } else if (argtype == 'f') {                                           \
             if (!VALUE_IS_FUNCTION(cx, arg))                                   \
                 continue; /* might have another specialization for arg */      \
+        } else if (argtype == 'v') {                                           \
+            if (!box_jsval(arg, *argp))                                        \
+                return false;                                                  \
         } else {                                                               \
             continue;     /* might have another specialization for arg */      \
         }                                                                      \
@@ -5351,30 +5346,74 @@ TraceRecorder::record_JSOP_CALL()
         JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
 #endif
 
-        LIns* res_ins = lir->insCall(known->builtin, args);
+        rval_ins = lir->insCall(known->builtin, args);
+
         switch (known->errtype) {
           case FAIL_NULL:
-            guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
+            guard(false, lir->ins_eq0(rval_ins), OOM_EXIT);
             break;
           case FAIL_NEG:
           {
-            res_ins = lir->ins1(LIR_i2f, res_ins);
+            rval_ins = lir->ins1(LIR_i2f, rval_ins);
             jsdpun u;
             u.d = 0.0;
-            guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(u.u64)), OOM_EXIT);
+            guard(false, lir->ins2(LIR_flt, rval_ins, lir->insImmq(u.u64)), OOM_EXIT);
             break;
           }
           case FAIL_VOID:
-            guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+            guard(false, lir->ins2i(LIR_eq, rval_ins, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+            break;
+          case FAIL_JSVAL:
+            guard(false, lir->ins2i(LIR_eq, rval_ins, JSVAL_ERROR_COOKIE), OOM_EXIT);
             break;
           default:;
         }
-        set(&fval, res_ins);
+        
+        set(&fval, rval_ins);
+        
+        /* The return value will be processed by FastNativeCallComplete since we have to
+           know the actual return value type for calls that return jsval (like Array_p_pop). */
+        pendingTraceableNative = known;
+        
         return true;
     }
 
     /* Didn't find it. */
     ABORT_TRACE("unknown native");
+}
+
+bool
+TraceRecorder::record_FastNativeCallComplete()
+{
+    JS_ASSERT(pendingTraceableNative);
+    
+    /* At this point the generated code has already called the native function
+       and we can no longer fail back to the original pc location (JSOP_CALL)
+       because that would cause the interpreter to re-execute the native 
+       function, which might have side effects. Instead we advance pc to
+       the JSOP_RESUME opcode that follows JSOP_CALL. snapshot() which is
+       invoked from unbox_jsval() will see that we are currently parked on
+       a JSOP_RESUME instruction and it will indicate in the type map that
+       the element on top of the stack is a boxed value which doesn't need
+       to be boxed if the type guard generated by unbox_jsval() fails. */
+    JSFrameRegs* regs = cx->fp->regs;
+    regs->pc += JSOP_CALL_LENGTH;
+    JS_ASSERT(*regs->pc == JSOP_RESUME);
+
+    jsval& v = stackval(-1);
+    LIns* v_ins = get(&v);
+    
+    bool ok = true;
+    if (pendingTraceableNative->errtype == FAIL_JSVAL) {
+        ok = unbox_jsval(v, v_ins);
+        if (ok)
+            set(&v, v_ins);
+    }
+
+    /* Restore the original pc location. The interpreter will advance pc to
+       step over JSOP_RESUME. */
+    regs->pc -= JSOP_CALL_LENGTH;
+    return ok;
 }
 
 bool

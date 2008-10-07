@@ -5000,6 +5000,7 @@ js_Interpret(JSContext *cx)
                     regs.sp = vp + 1;
                     if (!ok)
                         goto error;
+                    TRACE_0(FastNativeCallComplete);
                     goto end_call;
                 }
             }
