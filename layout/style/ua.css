@@ -143,7 +143,9 @@
 *|*::-moz-scrolled-page-sequence {
   /* e.g., text inputs, select boxes */
   padding: inherit;
-  display: inherit;
+  /* The display doesn't affect the kind of frame constructed here.  This just
+     affects auto-width sizing of the block we create. */
+  display: block;
   -moz-box-orient: inherit;
   /* make unicode-bidi inherit, otherwise it has no effect on text inputs and
      blocks with overflow: scroll; */
