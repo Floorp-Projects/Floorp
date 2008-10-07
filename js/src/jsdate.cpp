@@ -478,9 +478,6 @@ msFromTime(jsdouble t)
  * We use the first reseved slot to store UTC time, and the second for caching
  * the local time. The initial value of the cache entry is NaN.
  */
-const uint32 JSSLOT_UTC_TIME    = JSSLOT_PRIVATE;
-const uint32 JSSLOT_LOCAL_TIME  = JSSLOT_PRIVATE + 1;
-
 const uint32 DATE_RESERVED_SLOTS = 2;
 
 JSClass js_DateClass = {
@@ -2027,8 +2024,8 @@ date_constructor(JSContext *cx, JSObject* obj)
     return date;
 }
 
-static JSBool
-Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+JSBool
+js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsdouble *date;
     JSString *str;
@@ -2099,7 +2096,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
 
     /* set static LocalTZA */
     LocalTZA = -(PRMJ_LocalGMTDifference() * msPerSecond);
-    proto = JS_InitClass(cx, obj, NULL, &js_DateClass, Date, MAXARGS,
+    proto = JS_InitClass(cx, obj, NULL, &js_DateClass, js_Date, MAXARGS,
                          NULL, date_methods, NULL, date_static_methods);
     if (!proto)
         return NULL;

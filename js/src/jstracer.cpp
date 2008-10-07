@@ -4359,6 +4359,9 @@ js_Array(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
 JSBool
 js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
+JSBool
+js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+
 bool
 TraceRecorder::record_JSOP_NEW()
 {
@@ -4401,6 +4404,7 @@ TraceRecorder::record_JSOP_NEW()
         { (JSFastNative)js_Array,  F_Array_2obj,    "pC", "oo",  FAIL_NULL },
         { (JSFastNative)js_Array,  F_Array_3num,    "pC", "ddd", FAIL_NULL },
         { (JSFastNative)js_Object, F_FastNewObject, "fC", "",    FAIL_NULL },
+        { (JSFastNative)js_Date,   F_FastNewDate,   "pC", "",    FAIL_NULL },
     };
 
     for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {

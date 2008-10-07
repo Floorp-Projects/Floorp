@@ -141,6 +141,7 @@ BUILTIN1(Arguments,             LO,     P,      JSObject*, JSContext*, 0, 0)
 
 // Don't really need an argument here, but we don't support arg-less builtins
 BUILTIN1(Date_now,              LO,     F,      jsdouble, JSContext*, 0, 0)
+BUILTIN2(FastNewDate,           LO, LO, P,      JSObject*, JSContext*, JSObject*, 0, 0)
 
 // soft float
 BUILTIN1(fneg,   F,       F,  jsdouble, jsdouble, 1, 1)
