@@ -3419,6 +3419,7 @@ TraceRecorder::cmp(LOpcode op, int flags)
                                            JSVAL_TO_BOOLEAN(JSVAL_VOID)),
                                 lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_FALSE)),
                                 x);
+            x = lir->ins_eq0(lir->ins_eq0(x));
             if ((l == JSVAL_VOID) || (r == JSVAL_VOID))
                 cond = false;
         }
