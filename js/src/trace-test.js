@@ -1820,7 +1820,9 @@ load("mandelbrot-results.js");
 
   // Now set up our colors
   var colors = [];
-  for (var colorNameIdx in colorNames) {
+  // 3-part for loop (iterators buggy, we will add a separate test for them)
+  for (var colorNameIdx = 0; colorNameIdx < colorNames.length; ++colorNameIdx) {
+  //for (var colorNameIdx in colorNames) {
     colorNameIdx = parseInt(colorNameIdx);
     colors.push([colorNameIdx, colorNameIdx, colorNameIdx, 0]);
   }
@@ -2045,6 +2047,29 @@ testNewDate.jitstats = {
     traceTriggered: 1
 };
 test(testNewDate);
+
+function testArrayPushPop() {
+    var a = [], sum1 = 0, sum2 = 0;
+    for (var i = 0; i < 10; ++i)
+	sum1 += a.push(i);
+    for (var i = 0; i < 10; ++i)
+	sum2 += a.pop();
+    a.push(sum1);
+    a.push(sum2);
+    return a.join(",");
+}
+testArrayPushPop.expected = "55,45";
+test(testArrayPushPop);
+
+function testResumeOp() {
+    var a = [1,"2",3,"4",5,"6",7,"8",9,"10",11,"12",13,"14",15,"16"];
+    var x = "";
+    while (a.length > 0)
+        x += a.pop();
+    return x;
+}
+testResumeOp.expected = "16151413121110987654321";
+test(testResumeOp);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
