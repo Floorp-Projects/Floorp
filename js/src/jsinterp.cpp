@@ -4701,21 +4701,25 @@ js_Interpret(JSContext *cx)
             rval = FETCH_OPND(-1);
             FETCH_OBJECT(cx, -3, lval, obj);
             FETCH_ELEMENT_ID(obj, -2, id);
-            if (OBJ_IS_DENSE_ARRAY(cx, obj) && JSID_IS_INT(id)) {
-                jsuint length;
+            do {
+                if (OBJ_IS_DENSE_ARRAY(cx, obj) && JSID_IS_INT(id)) {
+                    jsuint length;
 
-                length = ARRAY_DENSE_LENGTH(obj);
-                i = JSID_TO_INT(id);
-                if ((jsuint)i < length) {
-                    if (obj->dslots[i] == JSVAL_HOLE) {
-                        if (i >= obj->fslots[JSSLOT_ARRAY_LENGTH])
-                            obj->fslots[JSSLOT_ARRAY_LENGTH] = i + 1;
-                        obj->fslots[JSSLOT_ARRAY_COUNT]++;
+                    length = ARRAY_DENSE_LENGTH(obj);
+                    i = JSID_TO_INT(id);
+                    if ((jsuint)i < length) {
+                        if (obj->dslots[i] == JSVAL_HOLE) {
+                            if (rt->anyArrayProtoHasElement)
+                                break;
+                            if (i >= obj->fslots[JSSLOT_ARRAY_LENGTH])
+                                obj->fslots[JSSLOT_ARRAY_LENGTH] = i + 1;
+                            obj->fslots[JSSLOT_ARRAY_COUNT]++;
+                        }
+                        obj->dslots[i] = rval;
+                        goto end_setelem;
                     }
-                    obj->dslots[i] = rval;
-                    goto end_setelem;
                 }
-            }
+            } while (0);
             if (!OBJ_SET_PROPERTY(cx, obj, id, &rval))
                 goto error;
         end_setelem:

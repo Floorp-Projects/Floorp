@@ -2238,7 +2238,7 @@ js_SynthesizeFrame(JSContext* cx, const FrameInfo& fi)
             return -1;
     }
 
-    // FIXME: we must count stack slots from caller's operand stack up to (but not including)
+    // FIXME? we must count stack slots from caller's operand stack up to (but not including)
     // callee's, including missing arguments. Could we shift everything down to the caller's
     // fp->slots (where vars start) and avoid some of the complexity?
     return (fi.s.spdist - cx->fp->down->script->nfixed) +
@@ -3890,14 +3890,13 @@ TraceRecorder::guardDenseArrayIndex(JSObject* obj, jsint idx, LIns* obj_ins,
 
     LIns* length_ins = stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH);
 
-    // guard(index >= 0)
-    guard(true, lir->ins2i(LIR_ge, idx_ins, 0), MISMATCH_EXIT);
+    // guard(0 <= index && index < length)
+    guard(true, lir->ins2(LIR_ult, idx_ins, length_ins), MISMATCH_EXIT);
 
-    // guard(index < length)
-    guard(true, lir->ins2(LIR_lt, idx_ins, length_ins), MISMATCH_EXIT);
+    // At this point, the guard above => 0 < length <=> obj->dslots != null.
+    JS_ASSERT(obj->dslots);
 
     // guard(index < capacity)
-    guard(false, lir->ins_eq0(dslots_ins), MISMATCH_EXIT);
     guard(true,
           lir->ins2(LIR_lt, idx_ins, lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval))),
           MISMATCH_EXIT);
@@ -4805,20 +4804,27 @@ TraceRecorder::record_JSOP_GETELEM()
 
     if (JSVAL_IS_PRIMITIVE(lval))
         ABORT_TRACE("JSOP_GETLEM on a primitive");
-    
+
     JSObject* obj = JSVAL_TO_OBJECT(lval);
     jsval id;
     jsval v;
     LIns* v_ins;
-    
+
     /* Property access using a string name. */
     if (JSVAL_IS_STRING(idx)) {
         if (!js_ValueToStringId(cx, idx, &id))
             return false;
         // Store the interned string to the stack to save the interpreter from redoing this work.
         idx = ID_TO_VALUE(id);
-        if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, getProperty), &v))
-            return false;
+        jsuint index;
+        if (js_IdIsIndex(idx, &index) && guardDenseArray(obj, obj_ins)) {
+            v = (index >= ARRAY_DENSE_LENGTH(obj)) ? JSVAL_HOLE : obj->dslots[index];
+            if (v == JSVAL_HOLE)
+                ABORT_TRACE("can't see through hole in dense array");
+        } else {
+            if (!guardElemOp(obj, obj_ins, id, offsetof(JSObjectOps, getProperty), &v))
+                return false;
+        }
         LIns* args[] = { idx_ins, obj_ins, cx_ins };
         v_ins = lir->insCall(F_Any_getprop, args);
         guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_ERROR_COOKIE)), MISMATCH_EXIT);
@@ -4827,13 +4833,13 @@ TraceRecorder::record_JSOP_GETELEM()
         set(&lval, v_ins);
         return true;
     }
-    
+
     /* At this point we expect a whole number or we bail. */
     if (!JSVAL_IS_INT(idx))
         ABORT_TRACE("non-string, non-int JSOP_GETELEM index");
     if (JSVAL_TO_INT(idx) < 0)
         ABORT_TRACE("negative JSOP_GETELEM index");
-    
+
     /* Accessing an object using integer index but not a dense array. */
     if (!OBJ_IS_DENSE_ARRAY(cx, obj)) {
         idx_ins = makeNumberInt32(idx_ins);
@@ -4879,7 +4885,7 @@ TraceRecorder::record_JSOP_SETELEM()
     LIns* boxed_v_ins = v_ins;
     if (!box_jsval(v, boxed_v_ins))
         ABORT_TRACE("boxing JSOP_SETELEM value");
-    
+
     if (JSVAL_IS_STRING(idx)) {
         if (!js_ValueToStringId(cx, idx, &id))
             return false;
@@ -4889,7 +4895,7 @@ TraceRecorder::record_JSOP_SETELEM()
             return false;
         LIns* args[] = { boxed_v_ins, idx_ins, obj_ins, cx_ins };
         LIns* ok_ins = lir->insCall(F_Any_setprop, args);
-        guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);    
+        guard(false, lir->ins_eq0(ok_ins), MISMATCH_EXIT);
     } else if (JSVAL_IS_INT(idx)) {
         if (JSVAL_TO_INT(idx) < 0)
             ABORT_TRACE("negative JSOP_SETELEM index");
@@ -4910,7 +4916,7 @@ TraceRecorder::record_JSOP_SETELEM()
     } else {
         ABORT_TRACE("non-string, non-int JSOP_SETELEM index");
     }
-    
+
     jsbytecode* pc = cx->fp->regs->pc;
     if (*pc == JSOP_SETELEM && pc[JSOP_SETELEM_LENGTH] != JSOP_POP)
         set(&lval, v_ins);
@@ -5317,15 +5323,16 @@ TraceRecorder::record_JSOP_CALL()
           default:
             JS_NOT_REACHED("illegal number of args to traceable native");
         }
-        
-        /* If we got this far, and we have a charCodeAt, check that charCodeAt isn't going to 
-         * return a NaN. 
+
+        /*
+         * If we got this far, and we have a charCodeAt, check that charCodeAt
+         * isn't going to return a NaN.
          */
         if (known->builtin == F_String_p_charCodeAt) {
             JSString* str = JSVAL_TO_STRING(thisval);
             jsval& arg = arg1_ins ? arg1 : stackval(-1);
 
-            JS_ASSERT(JSVAL_IS_STRING(thisval)); 
+            JS_ASSERT(JSVAL_IS_STRING(thisval));
             JS_ASSERT(isNumber(arg));
 
             if (JSVAL_IS_INT(arg)) {
@@ -5509,19 +5516,26 @@ TraceRecorder::elem(jsval& oval, jsval& idx, jsval*& vp, LIns*& v_ins, LIns*& ad
     LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
     if (!guardDenseArrayIndex(obj, i, obj_ins, dslots_ins, idx_ins))
         return false;
+
+    // We can't "see through" a hole to a possible Array.prototype property, so
+    // we abort here and guard below (after unboxing).
     vp = &obj->dslots[i];
+    if (*vp == JSVAL_HOLE)
+        ABORT_TRACE("can't see through hole in dense array");
 
     addr_ins = lir->ins2(LIR_piadd, dslots_ins,
                          lir->ins2i(LIR_pilsh, idx_ins, (sizeof(jsval) == 4) ? 2 : 3));
 
-    /* load the value, check the type (need to check JSVAL_HOLE only for booleans) */
+    /* Load the value and guard on its type to unbox it. */
     v_ins = lir->insLoad(LIR_ldp, addr_ins, 0);
     if (!unbox_jsval(*vp, v_ins))
         return false;
+
     if (JSVAL_TAG(*vp) == JSVAL_BOOLEAN) {
-        // Check to make sure *vp isn't a hole.
-        LIns* cins = lir->ins2(LIR_eq, v_ins, lir->insImm(JSVAL_TO_BOOLEAN(JSVAL_HOLE)));
-        v_ins = lir->ins_choose(cins, lir->insImm(2), v_ins);
+        // Optimize to guard for a hole only after untagging, so we know that
+        // we have a boolean, to avoid an extra guard for non-boolean values.
+        guard(false, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_TO_BOOLEAN(JSVAL_HOLE))),
+              MISMATCH_EXIT);
     }
     return v_ins;
 }
@@ -6025,10 +6039,20 @@ TraceRecorder::record_JSOP_IN()
                 if (!guardDenseArrayIndex(obj, idx, obj_ins, dslots_ins, idx_ins))
                     ABORT_TRACE("dense array index out of bounds");
 
-                cond = obj->dslots[idx] != JSVAL_HOLE;
-                x = lir->ins_eq0(lir->ins2(LIR_eq,
-                                           lir->insLoad(LIR_ldp, dslots_ins, idx * sizeof(jsval)),
-                                           INS_CONST(JSVAL_HOLE)));
+                // We can't "see through" a hole to a possible Array.prototype
+                // property, so we must abort/guard.
+                if (obj->dslots[idx] == JSVAL_HOLE)
+                    ABORT_TRACE("can't see through hole in dense array");
+
+                LIns* addr_ins = lir->ins2(LIR_piadd, dslots_ins,
+                                           lir->ins2i(LIR_pilsh, idx_ins,
+                                                      (sizeof(jsval) == 4) ? 2 : 3));
+                guard(false,
+                      lir->ins2(LIR_eq, lir->insLoad(LIR_ldp, addr_ins, 0), INS_CONST(JSVAL_HOLE)),
+                      MISMATCH_EXIT);
+
+                cond = true;
+                x = INS_CONST(cond);
                 break;
             }
 

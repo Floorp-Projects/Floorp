@@ -324,6 +324,13 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
         }
         return JS_FALSE;
     }
+
+    // Maintain the "any Array prototype has indexed properties hazard" flag.
+    if (slot == JSSLOT_PROTO &&
+        OBJ_IS_ARRAY(cx, pobj) &&
+        pobj->fslots[JSSLOT_ARRAY_LENGTH] != 0) {
+        rt->anyArrayProtoHasElement = JS_TRUE;
+    }
     return JS_TRUE;
 }
 
