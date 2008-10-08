@@ -53,7 +53,7 @@
 #endif
 
 #include "plugin.h"
-#include "npupp.h"
+#include "npfunctions.h"
 
 static NPIdentifier sFoo_id;
 static NPIdentifier sBar_id;
