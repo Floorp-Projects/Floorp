@@ -52,6 +52,13 @@
 #include "nsIClassInfoImpl.h"
 
 #include "windows.h"
+
+// For older version (<6.0) of the VC Compiler
+#if (_MSC_VER == 1100)
+#include <objbase.h>
+DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
+#endif
+
 #include "shlobj.h"
 
 #include <sys/stat.h>
@@ -89,6 +96,7 @@ private:
     nsLocalFile(const nsLocalFile& other);
     ~nsLocalFile() {}
 
+    PRPackedBool mDirty;            // cached information can only be used when this is PR_FALSE
     PRPackedBool mFollowSymlinks;   // should we follow symlinks when working on this file
     
     // this string will always be in native format!
@@ -102,8 +110,9 @@ private:
     // mWorkingPath
     nsString mShortWorkingPath;
 
-    // call ResolveAndStat() whenever this needs to be up-to-date
     PRFileInfo64 mFileInfo64;
+
+    void MakeDirty() { mDirty = PR_TRUE; mShortWorkingPath.Truncate(); }
 
     nsresult ResolveAndStat();
     nsresult ResolveShortcut();
