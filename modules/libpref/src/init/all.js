@@ -113,6 +113,9 @@ pref("browser.display.focus_background_color", "#117722");
 pref("browser.display.focus_text_color",     "#ffffff");
 pref("browser.display.focus_ring_width",     1);
 pref("browser.display.focus_ring_on_anything", false);
+// focus ring border style.
+// 0 = solid border, 1 = dotted border
+pref("browser.display.focus_ring_style", 1);
 
 pref("browser.helperApps.alwaysAsk.force",  false);
 pref("browser.helperApps.neverAsk.saveToDisk", "");

@@ -655,6 +655,9 @@ nsPresContext::GetUserPreferences()
     nsContentUtils::GetBoolPref("browser.display.focus_ring_on_anything",
                                 mFocusRingOnAnything);
 
+  mFocusRingStyle =
+          nsContentUtils::GetIntPref("browser.display.focus_ring_style",
+                                      mFocusRingStyle);
   // * use fonts?
   mUseDocumentFonts =
     nsContentUtils::GetIntPref("browser.display.use_document_fonts") != 0;
