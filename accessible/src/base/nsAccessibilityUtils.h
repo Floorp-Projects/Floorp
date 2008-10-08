@@ -153,7 +153,8 @@ public:
    * Return DOM element related with the given node, i.e.
    * a) itself if it is DOM element
    * b) parent element if it is text node
-   * c) document element if it is document node.
+   * c) body element if it is HTML document node
+   * d) document element if it is document node.
    *
    * @param aNode  [in] the given DOM node
    */
