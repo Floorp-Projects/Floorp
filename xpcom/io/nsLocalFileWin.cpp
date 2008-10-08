@@ -718,7 +718,8 @@ NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 //-----------------------------------------------------------------------------
 
 nsLocalFile::nsLocalFile()
-  : mFollowSymlinks(PR_FALSE)
+  : mDirty(PR_TRUE)
+  , mFollowSymlinks(PR_FALSE)
 {
 }
 
@@ -758,7 +759,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
 //-----------------------------------------------------------------------------
 
 nsLocalFile::nsLocalFile(const nsLocalFile& other)
-  : mFollowSymlinks(other.mFollowSymlinks)
+  : mDirty(PR_TRUE)
+  , mFollowSymlinks(other.mFollowSymlinks)
   , mWorkingPath(other.mWorkingPath)
 {
 }
@@ -796,6 +798,10 @@ nsLocalFile::ResolveShortcut()
 nsresult
 nsLocalFile::ResolveAndStat()
 {
+    // if we aren't dirty then we are already done
+    if (!mDirty)
+        return NS_OK;
+
     // we can't resolve/stat anything that isn't a valid NSPR addressable path
     if (mWorkingPath.IsEmpty())
         return NS_ERROR_FILE_INVALID_PATH;
@@ -818,6 +824,7 @@ nsLocalFile::ResolveAndStat()
         || mFileInfo64.type != PR_FILE_FILE 
         || !IsShortcutPath(mWorkingPath))
     {
+        mDirty = PR_FALSE;
         return NS_OK;
     }
 
@@ -836,6 +843,7 @@ nsLocalFile::ResolveAndStat()
     if (NS_FAILED(GetFileInfo(mResolvedPath, &mFileInfo64)))
         return NS_ERROR_FILE_NOT_FOUND;
 
+    mDirty = PR_FALSE;
     return NS_OK;
 }
 
@@ -872,6 +880,8 @@ nsLocalFile::InitWithFile(nsILocalFile *aFile)
 NS_IMETHODIMP
 nsLocalFile::InitWithPath(const nsAString &filePath)
 {
+    MakeDirty();
+
     nsAString::const_iterator begin, end;
     filePath.BeginReading(begin);
     filePath.EndReading(end);
@@ -1090,6 +1100,8 @@ nsLocalFile::AppendInternal(const nsAFlatString &node, PRBool multipleComponents
     else if (node.FindChar(L'\\') != kNotFound)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 #endif
+
+    MakeDirty();
     
     mWorkingPath.Append(NS_LITERAL_STRING("\\") + node);
     
@@ -1253,6 +1265,7 @@ nsLocalFile::Normalize()
         mWorkingPath.Truncate(filePathLen--);
     } 
 
+    MakeDirty();
 #else // WINCE
     // WINCE FIX
 #endif 
@@ -1281,6 +1294,8 @@ nsLocalFile::GetLeafName(nsAString &aLeafName)
 NS_IMETHODIMP
 nsLocalFile::SetLeafName(const nsAString &aLeafName)
 {
+    MakeDirty();
+
     if(mWorkingPath.IsEmpty())
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
@@ -1665,6 +1680,8 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, PRBool foll
     // If we moved, we want to adjust this.
     if (move)
     {
+        MakeDirty();
+
         nsAutoString newParentPath;
         newParentDir->GetPath(newParentPath);
 
@@ -1818,6 +1835,7 @@ nsLocalFile::Remove(PRBool recursive)
     if (rv == (nsresult)-1)
         rv = NSRESULT_FOR_ERRNO();
     
+    MakeDirty();
     return rv;
 }
 
@@ -1886,6 +1904,8 @@ nsLocalFile::SetLastModifiedTime(PRInt64 aLastModifiedTime)
     // results as SetLastModifiedTimeOfLink)
 
     rv = SetModDate(aLastModifiedTime, mResolvedPath.get());
+    if (NS_SUCCEEDED(rv))
+        MakeDirty();
 
     return rv;
 }
@@ -1896,7 +1916,12 @@ nsLocalFile::SetLastModifiedTimeOfLink(PRInt64 aLastModifiedTime)
 {
     // The caller is assumed to have already called IsSymlink 
     // and to have found that this file is a link. 
-    return SetModDate(aLastModifiedTime, mWorkingPath.get());
+
+    nsresult rv = SetModDate(aLastModifiedTime, mWorkingPath.get());
+    if (NS_SUCCEEDED(rv))
+        MakeDirty();
+
+    return rv;
 }
 
 nsresult
@@ -2092,14 +2117,19 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
                                  FILE_ATTRIBUTE_NORMAL,  // file attributes
                                  NULL);
     if (hFile == INVALID_HANDLE_VALUE)
+    {
         return ConvertWinError(GetLastError());
+    }
 
     // seek the file pointer to the new, desired end of file
     // and then truncate the file at that position
     rv = NS_ERROR_FAILURE;
     aFileSize = MyFileSeek64(hFile, aFileSize, FILE_BEGIN);
     if (aFileSize != -1 && SetEndOfFile(hFile))
+    {
+        MakeDirty();
         rv = NS_OK;
+    }
 
     CloseHandle(hFile);
     return rv;
@@ -2183,6 +2213,7 @@ nsLocalFile::Exists(PRBool *_retval)
     NS_ENSURE_ARG(_retval);
     *_retval = PR_FALSE;
 
+    MakeDirty();
     nsresult rv = ResolveAndStat();
     *_retval = NS_SUCCEEDED(rv);
 
@@ -2536,6 +2567,7 @@ nsLocalFile::GetFollowLinks(PRBool *aFollowLinks)
 NS_IMETHODIMP
 nsLocalFile::SetFollowLinks(PRBool aFollowLinks)
 {
+    MakeDirty();
     mFollowSymlinks = aFollowLinks;
     return NS_OK;
 }
