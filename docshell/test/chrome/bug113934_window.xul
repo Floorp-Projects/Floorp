@@ -4,12 +4,9 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <hbox>
-    <vbox>
-      <browser type="content" id="f1" width="300" height="200"/>
-      <browser type="content" id="f2" width="300" height="200"/>
+    <vbox id="box1">
     </vbox>
-    <vbox>
-      <browser type="content" id="f3" width="30" height="200"/>
+    <vbox id="box2">
     </vbox>
     <spacer flex="1"/>
   </hbox>
@@ -17,7 +14,7 @@
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
     var imports = [ "SimpleTest", "is", "isnot", "ok", "snapshotWindow",
-                    "compareSnapshots" ];
+                    "compareSnapshots", "onerror" ];
     for each (var import in imports) {
       window[import] = window.opener.wrappedJSObject[import];
     }
@@ -25,6 +22,21 @@
     function $(id) {
       return document.getElementById(id);
     }
+
+    function addBrowser(parent, id, width, height) {
+      var b =
+        document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "browser");
+      var type = window.location.search.slice(1);
+      is(type == "chrome" || type == "content", true, "Unexpected type");
+      b.setAttribute("type", type);
+      b.setAttribute("id", id);
+      b.setAttribute("width", width);
+      b.setAttribute("height", height);
+      $(parent).appendChild(b);
+    }
+    addBrowser("box1", "f1", 300, 200);
+    addBrowser("box1", "f2", 300, 200);
+    addBrowser("box2", "f3", 30, 200);
 
     /** Test for Bug 113934 **/
     var doc1 =
