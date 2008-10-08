@@ -94,6 +94,13 @@ function run_test()
   histsvc.addVisit(theURI, yesterday * 1000, null,
                    histsvc.TRANSITION_DOWNLOAD, false, 0);
   dump("added the download to history\n");
+  let histobs = {
+    onPageExpired: function(aURI, aVisitTime, aWholeVisit)
+    {
+      dump("onPageExpired(" + aURI.spec + ", " + aVisitTime + ", " + aWholeVisit + ")\n");
+    }
+  };
+  histsvc.addObserver(histobs, false);
 
   // Get the download manager as history observer and batch expirations
   let histobs = dm.QueryInterface(Ci.nsINavHistoryObserver);
