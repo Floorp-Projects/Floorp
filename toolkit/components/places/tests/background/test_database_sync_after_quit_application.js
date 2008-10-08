@@ -39,85 +39,31 @@
 
 Components.utils.import("resource://gre/modules/PlacesBackground.jsm");
 
-function test_service_exists()
-{
-  do_check_neq(PlacesBackground, null);
-}
-
-function test_isOnCurrentThread()
-{
-  do_check_false(PlacesBackground.isOnCurrentThread());
-
-  let event = {
-    run: function()
-    {
-      do_check_true(PlacesBackground.isOnCurrentThread());
-    }
-  };
-  PlacesBackground.dispatch(event, Ci.nsIEventTarget.DISPATCH_SYNC);
-}
-
-function test_two_events_same_thread()
-{
-  // This test imports PlacesBackground.jsm onto two different objects to
-  // ensure that the thread is the same for both.
-  let event = {
-    run: function()
-    {
-      let tm = Cc["@mozilla.org/thread-manager;1"].
-               getService(Ci.nsIThreadManager);
-
-      if (!this.thread1)
-        this.thread1 = tm.currentThread;
-      else
-        this.thread2 = tm.currentThread;
-    }
-  };
-
-  let obj1 = { };
-  Components.utils.import("resource://gre/modules/PlacesBackground.jsm", obj1);
-  obj1.PlacesBackground.dispatch(event, Ci.nsIEventTarget.DISPATCH_SYNC);
-  let obj2 = { };
-  Components.utils.import("resource://gre/modules/PlacesBackground.jsm", obj2);
-  obj2.PlacesBackground.dispatch(event, Ci.nsIEventTarget.DISPATCH_SYNC);
-  do_check_eq(event.thread1, event.thread2);
-}
-
-function test_places_background_shutdown_topic()
-{
-  // Ensures that the places shutdown topic is dispatched before the thread is
-  // shutdown.
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  os.addObserver({
-    observe: function(aSubject, aTopic, aData)
-    {
-      // We should still be able to dispatch an event without throwing now!
-      PlacesBackground.dispatch({
-        run: function()
-        {
-          do_test_finished();
-        }
-      }, Ci.nsIEventTarget.DISPATCH_NORMAL);
-    }
-  }, "places-background-shutdown", false);
-  do_test_pending();
-}
-
-let tests = [
-  test_service_exists,
-  test_isOnCurrentThread,
-  test_two_events_same_thread,
-  test_places_background_shutdown_topic,
-];
+const TEST_URI = "http://test.com/";
+const kSyncPrefName = "syncDBTableIntervalInSecs";
+const SYNC_INTERVAL = 600; // ten minutes
 
 function run_test()
 {
-  for (let i = 0; i < tests.length; i++)
-    tests[i]();
+  // First set the preference for the timer to a really large value so it won't
+  // run before the test finishes.
+  let prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefService).
+              getBranch("places.");
+  prefs.setIntPref(kSyncPrefName, SYNC_INTERVAL);
 
-  // xpcshell doesn't dispatch shutdown-application
+  // Now add the visit
+  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsINavHistoryService);
+  let id = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
+                       hs.TRANSITION_TYPED, false, 0);
+
+  // Notify that we are quitting the app - we should sync!
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   os.notifyObservers(null, "quit-application", null);
+
+  // Check the visit.  The background thread should have joined with the main
+  // thread by now if everything is working correctly.
+  new_test_visit_uri_event(id, TEST_URI, true, false).run();
 }
