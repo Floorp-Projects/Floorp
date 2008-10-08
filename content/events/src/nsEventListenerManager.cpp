@@ -339,6 +339,7 @@ nsIDOMEventGroup* gDOM2EventGroup = nsnull;
 nsDataHashtable<nsISupportsHashKey, PRUint32>* gEventIdTable = nsnull;
 
 PRUint32 nsEventListenerManager::mInstanceCount = 0;
+PRUint32 nsEventListenerManager::sCreatedCount = 0;
 
 nsEventListenerManager::nsEventListenerManager() :
   mTarget(nsnull),
@@ -346,6 +347,7 @@ nsEventListenerManager::nsEventListenerManager() :
   mNoListenerForEvent(NS_EVENT_TYPE_NULL)
 {
   ++mInstanceCount;
+  ++sCreatedCount;
 }
 
 nsEventListenerManager::~nsEventListenerManager() 
@@ -1072,10 +1074,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
     }
   }
 
-  // nsCxPusher will push and pop (automatically) the current cx onto the
-  // context stack
-  nsCxPusher pusher;
-  if (NS_SUCCEEDED(result) && pusher.Push(aCurrentTarget)) {
+  if (NS_SUCCEEDED(result)) {
     // nsIDOMEvent::currentTarget is set in nsEventDispatcher.
     result = aListener->HandleEvent(aDOMEvent);
   }
@@ -1095,7 +1094,7 @@ static const EventDispatchData* sLatestEventDispData = nsnull;
 nsresult
 nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
                                     nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                    nsISupports* aCurrentTarget,
+                                    nsPIDOMEventTarget* aCurrentTarget,
                                     PRUint32 aFlags,
                                     nsEventStatus* aEventStatus)
 {
@@ -1155,6 +1154,10 @@ found:
   nsAutoTObserverArray<nsListenerStruct, 2>::EndLimitedIterator iter(mListeners);
   nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
   PRBool hasListener = PR_FALSE;
+  // nsCxPusher will push and pop (automatically) the current cx onto the
+  // context stack
+  nsCxPusher pusher;
+  PRBool didPush = PR_FALSE;
   while (iter.HasMore()) {
     nsListenerStruct* ls = &iter.GetNext();
     PRBool useTypeInterface =
@@ -1178,9 +1181,14 @@ found:
           if (*aDOMEvent) {
             nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = ls->mListener;
             if (useTypeInterface) {
+              if (didPush) {
+                didPush = PR_FALSE;
+                pusher.Pop();
+              }
               DispatchToInterface(*aDOMEvent, ls->mListener,
                                   dispData->method, *typeData->iid);
-            } else if (useGenericInterface) {
+            } else if (useGenericInterface &&
+                       (didPush || (didPush = pusher.Push(aCurrentTarget)))) {
               HandleEventSubType(ls, ls->mListener, *aDOMEvent,
                                  aCurrentTarget, aFlags);
             }

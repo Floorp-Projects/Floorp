@@ -5996,7 +5996,8 @@ nsDocument::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Load events must not propagate to |window| object, see bug 335251.
   if (aVisitor.mEvent->message != NS_LOAD) {
-    aVisitor.mParentTarget = GetWindow();
+    nsCOMPtr<nsPIDOMEventTarget> parentTarget = do_QueryInterface(GetWindow());
+    aVisitor.mParentTarget = parentTarget;
   }
   return NS_OK;
 }
