@@ -611,6 +611,7 @@ function jsTestDriverBrowserInit()
 
   if (testpath)
   {
+    testpath = decodeURIComponent(testpath);
     gTestPath = testpath;
   }
 
@@ -635,7 +636,32 @@ function jsTestDriverBrowserInit()
 
   if (!versionmatches)
   {
-    gVersion = 150;
+    value = 'text/javascript;version=';
+    if (testpath.match(/^js1_6/))
+    {
+      gVersion = 160;
+      value += '1.6';
+    }
+    else if (testpath.match(/^js1_7/))
+    {
+      gVersion = 170;
+      value += '1.7';
+    }
+    else if (testpath.match(/^js1_8/))
+    {
+      gVersion = 180;
+      value += '1.8';
+    }
+    else if (testpath.match(/^js1_8_1/))
+    {
+      gVersion = 180;
+      value += '1.8';
+    }
+    else
+    {
+      gVersion = 150;
+      value += '1.5';
+    }
   }
   else
   {
