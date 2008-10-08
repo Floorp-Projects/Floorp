@@ -10,6 +10,9 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/nsIAccessible_actions.js"></script>
 
@@ -20,6 +23,76 @@
         {
           ID: "clickable",
           actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "button",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "checkbox_unchecked",
+          actionName: "check",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "checkbox_checked",
+          actionName: "uncheck",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "combobox_collapsed",
+          actionName: "open",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "combobox_expanded",
+          actionName: "close",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "link",
+          actionName: "jump",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "menuitem",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "menuitemcheckbox",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "menuitemradio",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "option",
+          actionName: "select",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "radio",
+          actionName: "select",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "tab",
+          actionName: "switch",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "textbox",
+          actionName: "activate",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "treeitem",
+          actionName: "activate",
           events: CLICK_EVENTS
         }
       ];
@@ -45,5 +118,40 @@
 
   <div id="clickable" onclick="">Clickable text</div>
 
+  <div id="button" role="button">Button</span>
+
+  <div id="checkbox_unchecked" role="checkbox">Checkbox</span>
+
+  <div id="checkbox_checked" role="checkbox" aria-checked="true">Checkbox</span>
+
+  <div id="combobox_collapsed" role="combobox">
+    <div id="option" role="option">Option of collapsed combobox</div>
+  </div>
+
+  <div id="combobox_expanded" role="combobox" aria-expanded="true">
+    <div role="option">Option of expanded combobox</div>
+  </div>
+
+  <div id="link" role="link">Link</div>
+
+  <div role="menu">
+    <div id="menuitem" role="menuitem">Menuitem</div>
+    <div id="menuitemcheckbox" role="menuitemcheckbox">Menuitem checkbox</div>
+    <div id="menuitemradio" role="menuitemradio">Menuitem radio</div>
+  </div>
+
+  <div role="radiogroup">
+    <div id="radio" role="radio">Radio</div>
+  </div>
+
+  <div role="tablist">
+    <div id="tab" role="tab">Tab</div>
+  </div>
+
+  <div id="textbox" role="textbox">Textbox</div>
+
+  <div role="tree">
+    <div id="treeitem" role="treeitem">Treeitem</div>
+  </div>
 </body>
 </html>
