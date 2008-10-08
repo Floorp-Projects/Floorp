@@ -434,7 +434,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
     goto out;
 }
 
-JS_FRIEND_API(bool) JS_FASTCALL
+JS_FRIEND_API(JSBool) JS_FASTCALL
 js_CloseIterator(JSContext *cx, jsval v)
 {
     JSObject *obj;

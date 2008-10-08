@@ -54,8 +54,10 @@ static char dempty[] = "<null>";
 char *
 jsdtrace_funcclass_name(JSFunction *fun)
 {
-    return (!FUN_INTERPRETED(fun) && fun->u.n.clasp)
-           ? (char *)fun->u.n.clasp->name
+    return (!FUN_INTERPRETED(fun) &&
+            !(fun->flags & JSFUN_TRACEABLE) &&
+            FUN_CLASP(fun))
+           ? (char *)FUN_CLASP(fun)->name
            : dempty;
 }
 
