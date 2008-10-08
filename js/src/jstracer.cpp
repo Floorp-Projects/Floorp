@@ -5166,6 +5166,10 @@ TraceRecorder::record_JSOP_CALL()
             *argp = INS_CONSTPTR(cx->runtime);                                 \
         } else if (argtype == 'P') {                                           \
             *argp = INS_CONSTPTR(pc);                                          \
+        } else if (argtype == 'D') {  /* this, as a number */                  \
+            if (!isNumber(thisval))                                            \
+                continue;                                                      \
+            *argp = this_ins;                                                  \
         } else {                                                               \
             JS_NOT_REACHED("unknown prefix arg type");                         \
         }                                                                      \

@@ -1085,6 +1085,13 @@ function testDoubleToStr() {
 testDoubleToStr.expected = 5.5*200;
 test(testDoubleToStr);
 
+function testNumberToString() {
+    var x = new Number(0);
+    for (var i = 0; i < 4; i++)
+        x.toString();
+}
+test(testNumberToString);
+
 function testDecayingInnerLoop() {
     var i, j, k = 10;
     for (i = 0; i < 5000; ++i) {
@@ -1988,7 +1995,7 @@ load("mandelbrot-results.js");
   const escapeComputations = [ computeEscapeSpeedObjects,
                                computeEscapeSpeedOneObject,
                                computeEscapeSpeedDoubles ];
-  // Test all possible escape-speeed generation codepaths, using the
+  // Test all possible escape-speed generation codepaths, using the
   // imageData + sparse array avoidance storage.
   doImageData = true;
   avoidSparseArray = true;
