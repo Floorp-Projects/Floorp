@@ -66,6 +66,7 @@ _TEST_FILES =\
 	$(warning test_table_indexes.html temporarily disabled) \
 		test_nsIAccessible_actions.html \
 		test_nsIAccessible_actions.xul \
+		test_nsIAccessible_applicationAccessible.html \
 		test_nsIAccessible_editablebody.html \
 		test_nsIAccessible_editabledoc.html \
 		test_nsIAccessible_name.html \
