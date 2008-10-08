@@ -5225,7 +5225,7 @@ if test "$ACCESSIBILITY"; then
     AC_DEFINE(ACCESSIBILITY)
 fi
 
-if test -n "$ACCESSIBILITY" -a "$COMPILE_ENVIRONMET" = "1"; then
+if test -n "$ACCESSIBILITY" -a "$COMPILE_ENVIRONMENT" = "1"; then
 case "$target" in
 *-mingw*|*-cygwin*|*-msvc*|*-mks*)
     if test "$ac_cv_header_atlbase_h" = "no"; then
