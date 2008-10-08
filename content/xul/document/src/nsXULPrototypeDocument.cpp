@@ -62,7 +62,7 @@
 #include "nsDOMCID.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
-
+#include "nsCCUncollectableMarker.h"
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
@@ -177,12 +177,6 @@ nsXULPrototypeDocument::~nsXULPrototypeDocument()
     if (mGlobalObject) {
         // cleaup cycles etc.
         mGlobalObject->ClearGlobalObjectOwner();
-    }
-
-    PRUint32 count = mProcessingInstructions.Length();
-    for (PRUint32 i = 0; i < count; i++)
-    {
-        mProcessingInstructions[i]->Release();
     }
 
     if (mRoot)
@@ -334,7 +328,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
         rv |= aStream->Read32(&type);
 
         if ((nsXULPrototypeNode::Type)type == nsXULPrototypeNode::eType_PI) {
-            nsXULPrototypePI* pi = new nsXULPrototypePI();
+            nsRefPtr<nsXULPrototypePI> pi = new nsXULPrototypePI();
             if (! pi) {
                rv |= NS_ERROR_OUT_OF_MEMORY;
                break;
@@ -389,7 +383,7 @@ GetNodeInfos(nsXULPrototypeElement* aPrototype,
     }
 
     // Search children
-    for (i = 0; i < aPrototype->mNumChildren; ++i) {
+    for (i = 0; i < aPrototype->mChildren.Length(); ++i) {
         nsXULPrototypeNode* child = aPrototype->mChildren[i];
         if (child->mType == nsXULPrototypeNode::eType_Element) {
             rv = GetNodeInfos(static_cast<nsXULPrototypeElement*>(child),
@@ -513,7 +507,7 @@ nsXULPrototypeDocument::AddProcessingInstruction(nsXULPrototypePI* aPI)
     return NS_OK;
 }
 
-const nsTArray<nsXULPrototypePI*>&
+const nsTArray<nsRefPtr<nsXULPrototypePI> >&
 nsXULPrototypeDocument::GetProcessingInstructions() const
 {
     return mProcessingInstructions;

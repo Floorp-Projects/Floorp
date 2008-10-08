@@ -154,6 +154,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMNSEvent.h"
+#include "nsCCUncollectableMarker.h"
 
 /**
  * Three bits are used for XUL Element's lazy state.
@@ -373,8 +374,13 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULElement,
                                                   nsGenericElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPrototype,
-                                                  nsXULPrototypeElement)
+    nsIDocument* currentDoc = tmp->GetCurrentDoc();
+    if (currentDoc && nsCCUncollectableMarker::InGeneration(
+                          currentDoc->GetMarkedCCGeneration())) {
+        return NS_OK;
+    }
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mPrototype,
+                                                    nsXULPrototypeElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsXULElement, nsGenericElement)
@@ -2619,8 +2625,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
             if (!name.IsAtom())
                 cb.NoteXPCOMChild(name.NodeInfo());
         }
-        for (i = 0; i < elem->mNumChildren; ++i) {
-            NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i],
+        for (i = 0; i < elem->mChildren.Length(); ++i) {
+            NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(elem->mChildren[i].get(),
                                                          nsXULPrototypeNode,
                                                          "mChildren[i]")
         }
@@ -2718,9 +2724,9 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
     }
 
     // Now write children
-    rv |= aStream->Write32(PRUint32(mNumChildren));
-    for (i = 0; i < mNumChildren; i++) {
-        nsXULPrototypeNode* child = mChildren[i];
+    rv |= aStream->Write32(PRUint32(mChildren.Length()));
+    for (i = 0; i < mChildren.Length(); i++) {
+        nsXULPrototypeNode* child = mChildren[i].get();
         switch (child->mType) {
         case eType_Element:
         case eType_Text:
@@ -2803,20 +2809,17 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     }
 
     rv |= aStream->Read32(&number);
-    mNumChildren = PRInt32(number);
+    PRUint32 numChildren = PRInt32(number);
 
-    if (mNumChildren > 0) {
-        mChildren = new nsXULPrototypeNode*[mNumChildren];
-        if (! mChildren)
+    if (numChildren > 0) {
+        if (!mChildren.SetCapacity(numChildren))
             return NS_ERROR_OUT_OF_MEMORY;
 
-        memset(mChildren, 0, sizeof(nsXULPrototypeNode*) * mNumChildren);
-
-        for (i = 0; i < mNumChildren; i++) {
+        for (i = 0; i < numChildren; i++) {
             rv |= aStream->Read32(&number);
             Type childType = (Type)number;
 
-            nsXULPrototypeNode* child = nsnull;
+            nsRefPtr<nsXULPrototypeNode> child;
 
             switch (childType) {
             case eType_Element:
@@ -2874,7 +2877,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 rv = NS_ERROR_UNEXPECTED;
             }
 
-            mChildren[i] = child;
+            mChildren.AppendElement(child);
 
             // Oh dear. Something failed during the deserialization.
             // We don't know what.  But likely consequences of failed
@@ -2984,7 +2987,6 @@ nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLangID, PRUint32 aLineNo, P
       mLangVersion(aVersion),
       mScriptObject(aLangID)
 {
-    NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
     NS_ASSERTION(aLangID != nsIProgrammingLanguage::UNKNOWN,
                  "The language ID must be known and constant");
 }
