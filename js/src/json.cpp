@@ -143,7 +143,7 @@ js_json_stringify(JSContext *cx, uintN argc, jsval *vp)
     if (ok) {
         jsval sv = STRING_TO_JSVAL(s);
         StringifyClosure sc(cx, &sv);
-	JSAutoTempValueRooter tvr(cx, 1, sc.s); 
+        JSAutoTempValueRooter tvr(cx, 1, sc.s);
         ok = js_Stringify(cx, &v, NULL, &WriteCallback, &sc, 0);
         *vp = *sc.s;
     }
@@ -221,7 +221,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
     jschar output = jschar(isArray ? '[' : '{');
     if (!callback(&output, 1, data))
         return JS_FALSE;
-    
+
     JSObject *iterObj = NULL;
     jsint i = 0;
     jsuint length = 0;
@@ -323,7 +323,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
 
         if (!JSVAL_IS_PRIMITIVE(outputValue)) {
             // recurse
-          ok = js_Stringify(cx, &outputValue, replacer, callback, data, depth + 1);
+            ok = js_Stringify(cx, &outputValue, replacer, callback, data, depth + 1);
         } else {
             JSString *outputString;
             s = JS_ValueToString(cx, outputValue);
@@ -336,7 +336,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
                 ok = write_string(cx, callback, data, JS_GetStringChars(s), JS_GetStringLength(s));
                 if (!ok)
                     break;
-                
+
                 continue;
             }
 
@@ -381,7 +381,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
 }
 
 // helper to determine whether a character could be part of a number
-static JSBool IsNumChar(jschar c) 
+static JSBool IsNumChar(jschar c)
 {
     return ((c <= '9' && c >= '0') || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E');
 }
@@ -398,7 +398,7 @@ js_BeginJSONParse(JSContext *cx, jsval *rootVal)
 
     JSONParser *jp = (JSONParser*) JS_malloc(cx, sizeof(JSONParser));
     if (!jp)
-        return NULL;        
+        return NULL;
     jp->buffer = NULL;
 
     jp->objectStack = arr;
@@ -431,7 +431,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp)
 
     if (jp->buffer)
         js_FinishStringBuffer(jp->buffer);
-    
+
     JS_free(cx, jp->buffer);
     if (!JS_RemoveRoot(cx, jp->objectStack))
         return JS_FALSE;
@@ -440,7 +440,6 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp)
 
     return ok;
 }
-
 
 static JSBool
 PushState(JSONParser *jp, JSONParserState state)
@@ -464,7 +463,7 @@ PopState(JSONParser *jp)
     if (jp->statep < jp->stateStack) {
         jp->statep = jp->stateStack;
         return JS_FALSE;
-    } 
+    }
 
     if (*jp->statep == JSON_PARSE_STATE_INIT)
         *jp->statep = JSON_PARSE_STATE_FINISHED;
@@ -476,7 +475,7 @@ static JSBool
 PushValue(JSContext *cx, JSONParser *jp, JSObject *parent, jsval value)
 {
     JSAutoTempValueRooter tvr(cx, 1, &value);
-  
+ 
     JSBool ok;
     if (OBJ_IS_ARRAY(cx, parent)) {
         jsuint len;
@@ -505,7 +504,7 @@ PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
 
     // Check if this is the root object
     if (len == 0) {
-        *jp->rootVal = v;        
+        *jp->rootVal = v;
         if (!JS_SetElement(cx, jp->objectStack, 0, jp->rootVal))
             return JS_FALSE;
         return JS_TRUE;
@@ -579,7 +578,7 @@ HandleNumber(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
     JSObject *obj = JSVAL_TO_OBJECT(o);
 
     const jschar *ep;
-    double val;    
+    double val;
     if (!js_strtod(cx, buf, buf + len, &ep, &val) || ep != buf + len)
         return JS_FALSE;
 
@@ -684,7 +683,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
         PushState(jp, JSON_PARSE_STATE_OBJECT_VALUE);
     }
 
-    for (i = 0; i < len; i++) {        
+    for (i = 0; i < len; i++) {
         jschar c = data[i];
         switch (*jp->statep) {
             case JSON_PARSE_STATE_VALUE :
@@ -692,7 +691,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                     // empty array
                     if (!PopState(jp))
                         return JS_FALSE;
-                    if (*jp->statep != JSON_PARSE_STATE_ARRAY) 
+                    if (*jp->statep != JSON_PARSE_STATE_ARRAY)
                         return JS_FALSE; // unexpected char
                     if (!CloseArray(cx, jp) || !PopState(jp))
                         return JS_FALSE;
@@ -707,7 +706,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 if (c == '"') {
                     *jp->statep = JSON_PARSE_STATE_STRING;
                     break;
-                } 
+                }
 
                 if (IsNumChar(c)) {
                     *jp->statep = JSON_PARSE_STATE_NUMBER;
@@ -737,7 +736,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 break;
 
             case JSON_PARSE_STATE_OBJECT :
-                if (c == '}') {                    
+                if (c == '}') {
                     if (!CloseObject(cx, jp) || !PopState(jp))
                         return JS_FALSE;
                 } else if (c == ',') {
@@ -759,6 +758,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                     return JS_FALSE; // unexpected
                 }
                 break;
+
             case JSON_PARSE_STATE_OBJECT_PAIR :
                 if (c == '"') {
                     // we want to be waiting for a : when the string has been read
@@ -773,6 +773,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                   return JS_FALSE; // unexpected
                 }
                 break;
+
             case JSON_PARSE_STATE_OBJECT_IN_PAIR:
                 if (c == ':') {
                     *jp->statep = JSON_PARSE_STATE_VALUE;
@@ -780,6 +781,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                     return JS_FALSE; // unexpected
                 }
                 break;
+
             case JSON_PARSE_STATE_STRING:
                 if (c == '"') {
                     if (!PopState(jp))
@@ -798,9 +800,9 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                     js_AppendChar(jp->buffer, c);
                 }
                 break;
-        
+
             case JSON_PARSE_STATE_STRING_ESCAPE:
-                switch(c) {
+                switch (c) {
                     case '"':
                     case '\\':
                     case '/':
@@ -824,6 +826,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                 js_AppendChar(jp->buffer, c);
                 *jp->statep = JSON_PARSE_STATE_STRING;
                 break;
+
             case JSON_PARSE_STATE_STRING_HEX:
                 if (('0' <= c) && (c <= '9'))
                   jp->hexChar = (jp->hexChar << 4) | (c - '0');
@@ -841,36 +844,40 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
                     *jp->statep = JSON_PARSE_STATE_STRING;
                 }
                 break;
+
             case JSON_PARSE_STATE_KEYWORD:
                 if (JS7_ISLET(c)) {
                     js_AppendChar(jp->buffer, c);
                 } else {
                     // this character isn't part of the keyword, process it again
                     i--;
-                    if(!PopState(jp))
+                    if (!PopState(jp))
                         return JS_FALSE;
-                
+
                     if (!HandleData(cx, jp, JSON_DATA_KEYWORD, jp->buffer->base, STRING_BUFFER_OFFSET(jp->buffer)))
                         return JS_FALSE;
                 }
                 break;
+
             case JSON_PARSE_STATE_NUMBER:
                 if (IsNumChar(c)) {
                     js_AppendChar(jp->buffer, c);
                 } else {
                     // this character isn't part of the number, process it again
                     i--;
-                    if(!PopState(jp))
+                    if (!PopState(jp))
                         return JS_FALSE;
                     if (!HandleData(cx, jp, JSON_DATA_NUMBER, jp->buffer->base, STRING_BUFFER_OFFSET(jp->buffer)))
                         return JS_FALSE;
                 }
                 break;
+
             case JSON_PARSE_STATE_FINISHED:
                 if (!JS_ISXMLSPACE(c))
                   return JS_FALSE; // extra input
 
                 break;
+
             default:
                 JS_NOT_REACHED("Invalid JSON parser state");
       }
