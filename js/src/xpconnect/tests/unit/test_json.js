@@ -37,8 +37,8 @@
 function run_test() {
   // converts an object to a JSON string and tests its integrity
   function toJSONString(a) {
-    var res = JSON.toString(a);
-    if (!JSON.isMostlyHarmless(res))
+    var res = JSONModule.toString(a);
+    if (!JSONModule.isMostlyHarmless(res))
       throw new SyntaxError("Invalid JSON string: " + res);
     return res;
   }
@@ -46,7 +46,7 @@ function run_test() {
   // ensures that an object can't be converted to a JSON string
   function isInvalidType(a) {
     try {
-      JSON.toString(a);
+      JSONModule.toString(a);
       return false;
     } catch (ex) {
       return ex.name == "TypeError";
@@ -55,15 +55,15 @@ function run_test() {
   // ensures that a string can't be converted back to a JavaScript object
   function isInvalidSyntax(a) {
     try {
-      JSON.fromString(a);
+      JSONModule.fromString(a);
       return false;
     } catch (ex) {
       return ex.name == "SyntaxError";
     }
   }
   
-  Components.utils.import("resource://gre/modules/JSON.jsm");
-  do_check_eq(typeof(JSON), "object");
+  Components.utils.import("resource://gre/modules/JSONModule.jsm");
+  do_check_eq(typeof(JSONModule), "object");
   
   // some of the tests are adapted from /testing/mochitest/tests/test_Base.js
   do_check_eq(toJSONString(true), "true");
@@ -89,50 +89,50 @@ function run_test() {
   
   var obj = { a: 1, b: "2", c: [-3e+30] };
   do_check_eq(toJSONString(obj), '{"a":1,"b":"2","c":[-3e+30]}');
-  do_check_eq(JSON.toString(obj, ["b", "c"] /* keys to drop */), '{"a":1}');
+  do_check_eq(JSONModule.toString(obj, ["b", "c"] /* keys to drop */), '{"a":1}');
   
   do_check_true(isInvalidType(function() { }));
   
   // make sure that toJSONString actually works...
-  do_check_eq(toJSONString(obj), JSON.toString(obj));
+  do_check_eq(toJSONString(obj), JSONModule.toString(obj));
   
-  do_check_eq(JSON.fromString("true"), true);
-  do_check_eq(JSON.fromString("false"), false);
-  do_check_eq(JSON.fromString("1"), 1);
-  do_check_eq(JSON.fromString('"2.2"'), "2.2");
-  do_check_eq(JSON.fromString("1.23e-45"), 1.23e-45);
+  do_check_eq(JSONModule.fromString("true"), true);
+  do_check_eq(JSONModule.fromString("false"), false);
+  do_check_eq(JSONModule.fromString("1"), 1);
+  do_check_eq(JSONModule.fromString('"2.2"'), "2.2");
+  do_check_eq(JSONModule.fromString("1.23e-45"), 1.23e-45);
   do_check_true(isInvalidSyntax("NaN"));
   
-  do_check_eq(JSON.fromString('"Foo-Bar \\b\\t\\n\\f\\r\\"\\\\ \\u0001\\u20ac"'),
+  do_check_eq(JSONModule.fromString('"Foo-Bar \\b\\t\\n\\f\\r\\"\\\\ \\u0001\\u20ac"'),
                               "Foo-Bar \b\t\n\f\r\"\\ \x01\u20ac");
   do_check_true(isInvalidSyntax('"multi\nline"'));
-  do_check_eq(JSON.fromString("null"), null);
+  do_check_eq(JSONModule.fromString("null"), null);
   do_check_true(isInvalidSyntax("."));
   
-  var res = JSON.fromString('[1,"2",3.3]');
+  var res = JSONModule.fromString('[1,"2",3.3]');
   do_check_eq(res.length, 3);
   do_check_eq(res[2], 3.3);
   // res is an instance of the sandbox's array
   do_check_false(res instanceof Array);
   
-  res = JSON.fromString(toJSONString(obj));
+  res = JSONModule.fromString(toJSONString(obj));
   do_check_eq(res.a, obj.a);
   do_check_eq(res.b, obj.b);
   do_check_eq(res.c.length, obj.c.length);
   do_check_eq(res.c[0], obj.c[0]);
   
-  // those would throw on JSON.fromString if there's no object |a|
-  do_check_true(JSON.isMostlyHarmless("a"));
-  do_check_true(JSON.isMostlyHarmless("a[0]"));
-  do_check_true(JSON.isMostlyHarmless('a["alert(\\"P0wn3d!\\");"]'));
+  // those would throw on JSONModule.fromString if there's no object |a|
+  do_check_true(JSONModule.isMostlyHarmless("a"));
+  do_check_true(JSONModule.isMostlyHarmless("a[0]"));
+  do_check_true(JSONModule.isMostlyHarmless('a["alert(\\"P0wn3d!\\");"]'));
   
-  do_check_false(JSON.isMostlyHarmless('(function() { alert("P0wn3d!"); })()'));
-  do_check_false(JSON.isMostlyHarmless('{ get a() { return "P0wn3d!"; } }'));
+  do_check_false(JSONModule.isMostlyHarmless('(function() { alert("P0wn3d!"); })()'));
+  do_check_false(JSONModule.isMostlyHarmless('{ get a() { return "P0wn3d!"; } }'));
   
   // this string shouldn't cause a "script stack space quota is exhausted" error
   let bigString = " ";
   while (bigString.length < (1 << 22))
     bigString += bigString;
   
-  do_check_eq(JSON.fromString(toJSONString(bigString)), bigString);
+  do_check_eq(JSONModule.fromString(toJSONString(bigString)), bigString);
 }
