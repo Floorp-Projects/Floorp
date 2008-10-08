@@ -298,8 +298,13 @@
             try {
               uri = ioService.newURI(val, null, null);
             } catch (e) {}
-            if (uri && !uri.schemeIs("javascript") && !uri.schemeIs("data"))
+
+            if (uri && !uri.schemeIs("javascript") && !uri.schemeIs("data")) {
               val = uri.spec;
+
+              // Parentheses are known to confuse third-party applications (bug 458565).
+              val = val.replace(/[()]/g, function (c) escape(c));
+            }
           }
 
           return val;
