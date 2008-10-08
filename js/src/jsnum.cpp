@@ -582,7 +582,7 @@ num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 JS_DEFINE_CALLINFO_2(STRING, NumberToString, CONTEXT, DOUBLE, 1, 1)
 
 static const JSTraceableNative num_toString_trcinfo[] = {
-    { num_toString,             &ci_NumberToString,       "TC",   "",    FAIL_NULL }
+    { num_toString,             &ci_NumberToString,       "DC",   "",    FAIL_NULL }
 };
 
 #endif /* JS_TRACER */
