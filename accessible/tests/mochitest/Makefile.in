@@ -54,6 +54,7 @@ _TEST_FILES =\
 		nsIAccessible_name.js \
 		nsIAccessible_name.xbl \
  		nsIAccessible_selects.js \
+		nsIAccessible_states.js \
 		nsIAccessibleEditableText.js \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
@@ -68,6 +69,7 @@ _TEST_FILES =\
 		test_nsIAccessible_name.html \
 		test_nsIAccessible_name.xul \
  		test_nsIAccessible_selects.html \
+		test_nsIAccessible_states.html \
 		test_nsIAccessible_focus.html \
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleEditableText.html \

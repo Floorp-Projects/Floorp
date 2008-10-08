@@ -2464,6 +2464,17 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
+  const PRUint32 kExpandCollapseStates =
+    nsIAccessibleStates::STATE_COLLAPSED | nsIAccessibleStates::STATE_EXPANDED;
+  if ((*aState & kExpandCollapseStates) == kExpandCollapseStates) {
+    // Cannot be both expanded and collapsed -- this happens in ARIA expanded
+    // combobox because of limitation of nsARIAMap.
+    // XXX: Perhaps we will be able to make this less hacky if we support
+    // extended states in nsARIAMap, e.g. derive COLLAPSED from
+    // EXPANDABLE && !EXPANDED.
+    *aState &= ~nsIAccessibleStates::STATE_COLLAPSED;
+  }
+
   // Set additional states which presence depends on another states.
   if (!aExtraState)
     return NS_OK;
@@ -2473,19 +2484,9 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
                     nsIAccessibleStates::EXT_STATE_SENSITIVE;
   }
 
-  const PRUint32 kExpandCollapseStates =
-    nsIAccessibleStates::STATE_COLLAPSED | nsIAccessibleStates::STATE_EXPANDED;
-  if (*aState & kExpandCollapseStates) {
+  if ((*aState & nsIAccessibleStates::STATE_COLLAPSED) ||
+      (*aState & nsIAccessibleStates::STATE_EXPANDED))
     *aExtraState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
-    if ((*aState & kExpandCollapseStates) == kExpandCollapseStates) {
-      // Cannot be both expanded and collapsed -- this happens 
-      // in ARIA expanded combobox because of limitation of nsARIAMap
-      // XXX Perhaps we will be able to make this less hacky if 
-      // we support extended states in nsARIAMap, e.g. derive
-      // COLLAPSED from EXPANDABLE && !EXPANDED
-      *aExtraState &= ~nsIAccessibleStates::STATE_COLLAPSED;
-    }
-  }
 
   if (mRoleMapEntry) {
     // If an object has an ancestor with the activedescendant property
