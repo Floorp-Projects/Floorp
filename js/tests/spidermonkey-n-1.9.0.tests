@@ -88,3 +88,12 @@ js1_5/Regress/regress-106244.js
 # do not ignore unicode formatting chars/trunk - bug 274152
 #
 ecma_3/Unicode/uc-001.js
+# bug 408002
+js1_5/Regress/regress-320119.js
+# bug 450275
+js1_5/extensions/regress-434837-01.js
+# bug 380469
+js1_7/geniter/regress-347739.js
+js1_7/geniter/regress-349012-01.js
+js1_7/geniter/regress-349331.js
+js1_7/iterable/regress-340526-02.js
