@@ -1167,7 +1167,7 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 == 446100-1f.html about:blank
 == 446100-1g.html about:blank
 == 446100-1h.html about:blank
-# == 448193.html 448193-ref.html  # Fails due to 2 small single-pixel differences
+fuzzy(127,2) == 448193.html 448193-ref.html
 # == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
 != 449149-1a.html about:blank
 != 449149-1b.html about:blank
