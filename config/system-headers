@@ -996,7 +996,6 @@ prtpool.h
 prtrace.h
 prtypes.h
 prvrsion.h
-prwin16.h
 plbase64.h
 plerror.h
 plgetopt.h

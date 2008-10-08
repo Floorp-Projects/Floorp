@@ -87,7 +87,6 @@ dist/include/nspr/prtpool.h
 dist/include/nspr/prtrace.h
 dist/include/nspr/prtypes.h
 dist/include/nspr/prvrsion.h
-dist/include/nspr/prwin16.h
 dist/include/nspr/plarenas.h
 dist/include/nspr/plarena.h
 dist/include/nspr/plhash.h
