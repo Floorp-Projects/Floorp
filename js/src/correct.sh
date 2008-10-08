@@ -8,7 +8,7 @@ for i in correct/*.js; do
     echo -n jit:' '
     JIT=`Darwin_OPT.OBJ/js -j -f $i`
     echo $JIT' '
-    if [ $INTERP != "true" -o $JIT != "true" ]
+    if [ "$INTERP" != "true" -o "$JIT" != "true" ]
     then
         FAILURES=${FAILURES}" "${i}
     fi

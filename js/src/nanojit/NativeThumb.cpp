@@ -171,7 +171,7 @@ namespace nanojit
 	
 	void Assembler::asm_call(LInsp ins)
 	{
-        const CallInfo* call = callInfoFor(ins->fid());
+        const CallInfo* call = ins->callInfo();
 		uint32_t atypes = call->_argtypes;
 		uint32_t roffset = 0;
 

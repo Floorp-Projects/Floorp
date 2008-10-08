@@ -1074,7 +1074,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
             break;
 
         /* Make this constructor make objects of class Exception. */
-        fun->u.n.clasp = &js_ErrorClass;
+        FUN_CLASP(fun) = &js_ErrorClass;
 
         /* Make the prototype and constructor links. */
         if (!js_SetClassPrototype(cx, FUN_OBJECT(fun), protos[i],

@@ -54,6 +54,7 @@
 #include "jsutil.h" /* Added by JSIFY */
 #include "jsapi.h"
 #include "jsatom.h"
+#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdtoa.h"
@@ -98,8 +99,8 @@ num_isFinite(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
-JSBool
-js_num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     jsdouble d;
@@ -122,9 +123,25 @@ js_num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, d, vp);
 }
 
+#ifdef JS_TRACER
+jsdouble FASTCALL
+js_ParseFloat(JSContext* cx, JSString* str)
+{
+    const jschar* bp;
+    const jschar* end;
+    const jschar* ep;
+    jsdouble d;
+
+    JSSTRING_CHARS_AND_END(str, bp, end);
+    if (!js_strtod(cx, bp, end, &ep, &d) || ep == bp)
+        return js_NaN;
+    return d;
+}
+#endif
+
 /* See ECMA 15.1.2.2. */
-JSBool
-js_num_parseInt(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+num_parseInt(JSContext *cx, uintN argc, jsval *vp)
 {
     jsint radix;
     JSString *str;
@@ -165,6 +182,30 @@ js_num_parseInt(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, d, vp);
 }
 
+#ifdef JS_TRACER
+jsdouble FASTCALL
+js_ParseInt(JSContext* cx, JSString* str)
+{
+    const jschar* bp;
+    const jschar* end;
+    const jschar* ep;
+    jsdouble d;
+
+    JSSTRING_CHARS_AND_END(str, bp, end);
+    if (!js_strtointeger(cx, bp, end, &ep, 0, &d) || ep == bp)
+        return js_NaN;
+    return d;
+}
+
+jsdouble FASTCALL
+js_ParseIntDouble(jsdouble d)
+{
+    if (!JSDOUBLE_IS_FINITE(d))
+        return js_NaN;
+    return floor(d);
+}
+#endif
+
 const char js_Infinity_str[]   = "Infinity";
 const char js_NaN_str[]        = "NaN";
 const char js_isNaN_str[]      = "isNaN";
@@ -172,11 +213,27 @@ const char js_isFinite_str[]   = "isFinite";
 const char js_parseFloat_str[] = "parseFloat";
 const char js_parseInt_str[]   = "parseInt";
 
+#ifdef JS_TRACER
+
+JS_DEFINE_CALLINFO_2(DOUBLE, ParseInt, CONTEXT, STRING,     1, 1)
+JS_DEFINE_CALLINFO_1(DOUBLE, ParseIntDouble, DOUBLE,        1, 1)
+JS_DEFINE_CALLINFO_2(DOUBLE, ParseFloat, CONTEXT, STRING,   1, 1)
+
+static const JSTraceableNative num_parseInt_trcinfo[] = {
+    { num_parseInt,             &ci_ParseInt,             "C",   "s",    INFALLIBLE | JSTN_MORE },
+    { num_parseInt,             &ci_ParseIntDouble,       "",    "d",    INFALLIBLE }
+};
+static const JSTraceableNative num_parseFloat_trcinfo[] = {
+    { num_parseFloat,           &ci_ParseFloat,           "C",   "s",    INFALLIBLE }
+};
+
+#endif /* JS_TRACER */
+
 static JSFunctionSpec number_functions[] = {
     JS_FN(js_isNaN_str,         num_isNaN,              1,0),
     JS_FN(js_isFinite_str,      num_isFinite,           1,0),
-    JS_FN(js_parseFloat_str,    js_num_parseFloat,      1,0),
-    JS_FN(js_parseInt_str,      js_num_parseInt,        2,0),
+    JS_TN(js_parseFloat_str,    num_parseFloat,      1,0, num_parseFloat_trcinfo),
+    JS_TN(js_parseInt_str,      num_parseInt,        2,0, num_parseInt_trcinfo),
     JS_FS_END
 };
 
@@ -274,8 +331,8 @@ js_IntToCString(jsint i, char *buf, size_t bufSize)
     return cp;
 }
 
-JSBool
-js_num_toString(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+num_toString(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval v;
     jsdouble d;
@@ -332,7 +389,7 @@ num_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
      * Create the string, move back to bytes to make string twiddling
      * a bit easier and so we can insert platform charset seperators.
      */
-    if (!js_num_toString(cx, 0, vp))
+    if (!num_toString(cx, 0, vp))
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_STRING(*vp));
     numStr = JSVAL_TO_STRING(*vp);
@@ -515,21 +572,32 @@ static JSBool
 num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 {
     if (argc == 0 || JSVAL_IS_VOID(vp[2]))
-        return js_num_toString(cx, 0, vp);
+        return num_toString(cx, 0, vp);
     return num_to(cx, DTOSTR_STANDARD, DTOSTR_PRECISION, 1, MAX_PRECISION, 0,
                   argc, vp);
 }
 
+#ifdef JS_TRACER
+
+JS_DEFINE_CALLINFO_2(STRING, NumberToString, CONTEXT, DOUBLE, 1, 1)
+
+static const JSTraceableNative num_toString_trcinfo[] = {
+    { num_toString,             &ci_NumberToString,       "TC",   "",    FAIL_NULL }
+};
+
+#endif /* JS_TRACER */
+
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,       num_toSource,       0,JSFUN_THISP_NUMBER),
+    JS_FN(js_toSource_str,       num_toSource,          0,JSFUN_THISP_NUMBER),
 #endif
-    JS_FN(js_toString_str,       js_num_toString,    1,JSFUN_THISP_NUMBER),
-    JS_FN(js_toLocaleString_str, num_toLocaleString, 0,JSFUN_THISP_NUMBER),
-    JS_FN(js_valueOf_str,        num_valueOf,        0,JSFUN_THISP_NUMBER),
-    JS_FN("toFixed",             num_toFixed,        1,JSFUN_THISP_NUMBER),
-    JS_FN("toExponential",       num_toExponential,  1,JSFUN_THISP_NUMBER),
-    JS_FN("toPrecision",         num_toPrecision,    1,JSFUN_THISP_NUMBER),
+    JS_TN(js_toString_str,       num_toString,          1,JSFUN_THISP_NUMBER,
+          num_toString_trcinfo),
+    JS_FN(js_toLocaleString_str, num_toLocaleString,    0,JSFUN_THISP_NUMBER),
+    JS_FN(js_valueOf_str,        num_valueOf,           0,JSFUN_THISP_NUMBER),
+    JS_FN("toFixed",             num_toFixed,           1,JSFUN_THISP_NUMBER),
+    JS_FN("toExponential",       num_toExponential,     1,JSFUN_THISP_NUMBER),
+    JS_FN("toPrecision",         num_toPrecision,       1,JSFUN_THISP_NUMBER),
     JS_FS_END
 };
 

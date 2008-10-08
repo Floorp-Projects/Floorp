@@ -396,18 +396,12 @@ extern void
 js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map);
 
 extern JSBool
-js_obj_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp);
-
-extern JSBool
 js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
                         jsval *vp);
 
 extern JSBool
 js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
                   jsval *vp);
-
-extern JSBool
-js_obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp);
 
 extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
@@ -726,9 +720,6 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj);
 extern const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop);
-
-extern JSBool
-js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 #ifdef DEBUG
 JS_FRIEND_API(void) js_DumpChars(const jschar *s, size_t n);

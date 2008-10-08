@@ -55,6 +55,7 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
+#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsemit.h"
@@ -1177,8 +1178,8 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
     return caller->script->filename;
 }
 
-JSBool
-js_obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+static JSBool
+obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *caller;
     JSBool indirectCall;
@@ -1475,8 +1476,8 @@ obj_unwatch(JSContext *cx, uintN argc, jsval *vp)
  */
 
 /* Proposed ECMA 15.2.4.5. */
-JSBool
-js_obj_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+obj_hasOwnProperty(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
 
@@ -1555,6 +1556,19 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
     return JS_TRUE;
 }
 
+#ifdef JS_TRACER
+int32 FASTCALL
+js_Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
+{
+    jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
+    jsval v;
+    if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &v))
+        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+    return JSVAL_TO_BOOLEAN(v);
+}
+#endif
+
 /* Proposed ECMA 15.2.4.6. */
 static JSBool
 obj_isPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
@@ -1570,8 +1584,8 @@ obj_isPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
 }
 
 /* Proposed ECMA 15.2.4.7. */
-JSBool
-js_obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
 {
     jsid id;
     JSObject *obj;
@@ -1582,6 +1596,19 @@ js_obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     return obj && js_PropertyIsEnumerable(cx, obj, id, vp);
 }
+
+#ifdef JS_TRACER
+int32 FASTCALL
+js_Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
+{
+    jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
+    jsval v;
+    if (!js_PropertyIsEnumerable(cx, obj, id, &v))
+        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+    return JSVAL_TO_BOOLEAN(v);
+}
+#endif
 
 JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
@@ -1782,6 +1809,20 @@ const char js_lookupGetter_str[] = "__lookupGetter__";
 const char js_lookupSetter_str[] = "__lookupSetter__";
 #endif
 
+#ifdef JS_TRACER
+
+JS_DEFINE_CALLINFO_3(INT32, Object_p_hasOwnProperty, CONTEXT, OBJECT, STRING,       0, 0)
+JS_DEFINE_CALLINFO_3(INT32, Object_p_propertyIsEnumerable, CONTEXT, OBJECT, STRING, 0, 0)
+
+static const JSTraceableNative obj_hasOwnProperty_trcinfo[] = {
+    { obj_hasOwnProperty,       &ci_Object_p_hasOwnProperty,       "TC",  "s", FAIL_VOID }
+};
+static const JSTraceableNative obj_propertyIsEnumerable_trcinfo[] = {
+    { obj_propertyIsEnumerable, &ci_Object_p_propertyIsEnumerable, "TC",  "s", FAIL_VOID }
+};
+
+#endif /* JS_TRACER */
+
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,             obj_toSource,                0,0),
@@ -1793,9 +1834,11 @@ static JSFunctionSpec object_methods[] = {
     JS_FN(js_watch_str,                obj_watch,                   2,0),
     JS_FN(js_unwatch_str,              obj_unwatch,                 1,0),
 #endif
-    JS_FN(js_hasOwnProperty_str,       js_obj_hasOwnProperty,       1,0),
+    JS_TN(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0,
+          obj_hasOwnProperty_trcinfo),
     JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
-    JS_FN(js_propertyIsEnumerable_str, js_obj_propertyIsEnumerable, 1,0),
+    JS_TN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0,
+          obj_propertyIsEnumerable_trcinfo),
 #if JS_HAS_GETTER_SETTER
     JS_FN(js_defineGetter_str,         obj_defineGetter,            2,0),
     JS_FN(js_defineSetter_str,         obj_defineSetter,            2,0),
@@ -1806,7 +1849,7 @@ static JSFunctionSpec object_methods[] = {
 };
 
 static JSFunctionSpec object_static_methods[] = {
-    JS_FN("getPrototypeOf",            obj_getPrototypeOf,       1,0),
+    JS_FN("getPrototypeOf",            obj_getPrototypeOf,          1,0),
     JS_FS_END
 };
 
@@ -2291,7 +2334,7 @@ js_InitEval(JSContext *cx, JSObject *obj)
 {
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
     if (!js_DefineFunction(cx, obj, cx->runtime->atomState.evalAtom,
-                           js_obj_eval, 1, 0)) {
+                           obj_eval, 1, 0)) {
         return NULL;
     }
 

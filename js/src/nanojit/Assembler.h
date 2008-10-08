@@ -111,24 +111,6 @@ namespace nanojit
 		// fargs = args - iargs
 	};
 
-	#define FUNCTIONID(name) CI_avmplus_##name
-
-	#define INTERP_FOPCODE_LIST_BEGIN											enum FunctionID {
-	#define INTERP_FOPCODE_LIST_ENTRY_PRIM(nm)									
-	#define INTERP_FOPCODE_LIST_ENTRY_FUNCPRIM(nm,argtypes,cse,fold,ret,args)	FUNCTIONID(nm),
-	#define INTERP_FOPCODE_LIST_ENTRY_SUPER(nm,off)								
-	#define INTERP_FOPCODE_LIST_ENTRY_EXTERN(nm,off)							
-	#define INTERP_FOPCODE_LIST_ENTRY_LITC(nm,i)								
-	#define INTERP_FOPCODE_LIST_END												CI_Max } ;
-	#include "vm_fops.h"
-	#undef INTERP_FOPCODE_LIST_BEGIN
-	#undef INTERP_FOPCODE_LIST_ENTRY_PRIM
-	#undef INTERP_FOPCODE_LIST_ENTRY_FUNCPRIM
-	#undef INTERP_FOPCODE_LIST_ENTRY_SUPER
-	#undef INTERP_FOPCODE_LIST_ENTRY_EXTERN
-	#undef INTERP_FOPCODE_LIST_ENTRY_LITC
-	#undef INTERP_FOPCODE_LIST_END
-
 	#ifdef AVMPLUS_WIN32
 		#define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
 	#else
@@ -218,12 +200,6 @@ namespace nanojit
 			debug_only( void		registerConsistencyCheck(LIns** resv); )
 			
 			Stats		_stats;		
-
-			const CallInfo* callInfoFor(uint32_t fid);
-			const CallInfo* callInfoFor(LInsp call)
-			{
-				return callInfoFor(call->fid());
-			}
 
 		private:
 			

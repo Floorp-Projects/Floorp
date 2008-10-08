@@ -56,6 +56,7 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
+#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdate.h"
@@ -2784,7 +2785,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
          * we know to create an object of this class when we call the
          * constructor.
          */
-        fun->u.n.clasp = clasp;
+        FUN_CLASP(fun) = clasp;
 
         /*
          * Optionally construct the prototype object, before the class has
@@ -4380,6 +4381,7 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
     jsval fsv;
     JSFunctionSpec *fs;
     JSObject *tmp;
+    JSFastNative native;
 
     if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(*vp), 0, &fsv))
         return JS_FALSE;
@@ -4424,7 +4426,14 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
     if (argc != 0)
         --argc;
 
-    return ((JSFastNative) fs->call)(cx, argc, vp);
+    native =
+#ifdef JS_TRACER
+             (fs->flags & JSFUN_TRACEABLE)
+             ? ((JSTraceableNative *) fs->call)->native
+             :
+#endif
+               (JSFastNative) fs->call;
+    return native(cx, argc, vp);
 }
 
 static JSBool
@@ -4515,7 +4524,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
                                     ? (JSNative)
                                       js_generic_fast_native_method_dispatcher
                                     : js_generic_native_method_dispatcher,
-                                    fs->nargs + 1, flags);
+                                    fs->nargs + 1,
+                                    flags & ~JSFUN_TRACEABLE);
             if (!fun)
                 return JS_FALSE;
             fun->u.n.extra = (uint16)fs->extra;

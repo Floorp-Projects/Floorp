@@ -49,6 +49,7 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
+#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsdbgapi.h"
@@ -2089,7 +2090,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 
     /* Initialize all function members. */
     fun->nargs = nargs;
-    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_INTERPRETED);
+    fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_INTERPRETED | JSFUN_TRACEABLE);
     if (flags & JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         JS_ASSERT(nargs == 0);
@@ -2100,10 +2101,20 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         fun->u.i.names.taggedAtom = 0;
 #endif
     } else {
-        fun->u.n.native = native;
         fun->u.n.extra = 0;
         fun->u.n.spare = 0;
-        fun->u.n.clasp = NULL;
+        if (flags & JSFUN_TRACEABLE) {
+#ifdef JS_TRACER
+            JSTraceableNative *trcinfo = (JSTraceableNative *) native;
+            fun->u.n.native = (JSNative) trcinfo->native;
+            FUN_TRCINFO(fun) = trcinfo;
+#else
+            JS_ASSERT(0);
+#endif
+        } else {
+            fun->u.n.native = native;
+            FUN_CLASP(fun) = NULL;
+        }
     }
     fun->atom = atom;
 
