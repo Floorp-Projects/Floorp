@@ -3542,6 +3542,12 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
       return rv;
     }
 
+    if (!mInitialContainingBlock) {
+      // The frame we're constructing will be the initial containing block.
+      // Set mInitialContainingBlock before processing children.
+      mInitialContainingBlock = aNewOuterFrame;
+    }
+
     nsFrameItems childItems;
     rv = ProcessChildren(aState, aContent, aNewInnerFrame, PR_TRUE, childItems,
                          PR_FALSE);
@@ -4297,6 +4303,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   // set the primary frame
   aState.mFrameManager->SetPrimaryFrameFor(aDocElement, contentFrame);
 
+  NS_ASSERTION(processChildren ? !mInitialContainingBlock :
+                 mInitialContainingBlock == contentFrame,
+               "unexpected mInitialContainingBlock");
   mInitialContainingBlock = contentFrame;
 
   // Figure out which frame has the main style for the document element,
@@ -7715,8 +7724,7 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
     if (frame->IsFrameOfType(nsIFrame::eMathML)) {
       // If it's mathml, bail out -- no absolute positioning out from inside
       // mathml frames.  Note that we don't make this part of the loop
-      // condition because of the mInitialContainingBlock stuff at the
-      // end of this method...
+      // condition because of the stuff at the end of this method...
       return nsnull;
     }
     
@@ -12314,6 +12322,12 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
 
   // See if we need to create a view, e.g. the frame is absolutely positioned
   nsHTMLContainerFrame::CreateViewForFrame(blockFrame, contentParent, PR_FALSE);
+
+  if (!mInitialContainingBlock) {
+    // The frame we're constructing will be the initial containing block.
+    // Set mInitialContainingBlock before processing children.
+    mInitialContainingBlock = *aNewFrame;
+  }
 
   // We should make the outer frame be the absolute containing block,
   // if one is required. We have to do this because absolute
