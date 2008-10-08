@@ -278,7 +278,29 @@ private:
     PRPackedBool mDidGetFlags;
     PRPackedBool mMustFreeName;
 };
- 
+
+class AutoCxPusher {
+public:
+    AutoCxPusher(nsIJSContextStack *aStack, JSContext *cx)
+        : mStack(aStack), mContext(cx)
+    {
+        if (NS_FAILED(mStack->Push(mContext))) {
+            mStack = nsnull;
+        }
+    }
+
+    ~AutoCxPusher()
+    {
+        if (mStack) {
+            mStack->Pop(nsnull);
+        }
+    }
+
+private:
+    nsCOMPtr<nsIJSContextStack> mStack;
+    JSContext *mContext;
+};
+
 JSContext *
 nsScriptSecurityManager::GetCurrentJSContext()
 {
@@ -487,8 +509,8 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSObject *obj,
     nsresult rv =
         ssm->CheckPropertyAccess(cx, target, STOBJ_GET_CLASS(obj)->name, id,
                                  (mode & JSACC_WRITE) ?
-                                 nsIXPCSecurityManager::ACCESS_SET_PROPERTY :
-                                 nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+                                 (PRInt32)nsIXPCSecurityManager::ACCESS_SET_PROPERTY :
+                                 (PRInt32)nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
     if (NS_FAILED(rv))
         return JS_FALSE; // Security check failed (XXX was an error reported?)
@@ -3397,6 +3419,7 @@ nsScriptSecurityManager::InitPolicies()
     // Get a JS context - we need it to create internalized strings later.
     JSContext* cx = GetSafeJSContext();
     NS_ASSERTION(cx, "failed to get JS context");
+    AutoCxPusher autoPusher(mJSContextStack, cx);
     rv = InitDomainPolicy(cx, "default", mDefaultPolicy);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3429,8 +3452,8 @@ nsScriptSecurityManager::InitPolicies()
 
         nsCAutoString sitesPrefName(
             NS_LITERAL_CSTRING(sPolicyPrefix) +
-				    nsDependentCString(nameBegin) +
-				    NS_LITERAL_CSTRING(".sites"));
+            nsDependentCString(nameBegin) +
+            NS_LITERAL_CSTRING(".sites"));
         nsXPIDLCString domainList;
         rv = mSecurityPref->SecurityGetCharPref(sitesPrefName.get(),
                                                 getter_Copies(domainList));
