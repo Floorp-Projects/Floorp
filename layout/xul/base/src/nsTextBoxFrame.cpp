@@ -946,6 +946,7 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
       nsPoint origin(0,0);
       nsRect textRect = CalcTextRect(*aBoxLayoutState.GetRenderingContext(), origin);
       nsRect overflowRect(nsLayoutUtils::GetTextShadowRectsUnion(textRect, this));
+      overflowRect.UnionRect(overflowRect, nsRect(nsPoint(0, 0), GetSize()));
       FinishAndStoreOverflow(&overflowRect, GetSize());
     }
     return rv;
