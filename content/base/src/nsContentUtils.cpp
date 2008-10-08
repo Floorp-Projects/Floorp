@@ -2691,7 +2691,7 @@ IsContextOnStack(nsIJSContextStack *aStack, JSContext *aContext)
 }
 
 PRBool
-nsCxPusher::Push(nsISupports *aCurrentTarget)
+nsCxPusher::Push(nsPIDOMEventTarget *aCurrentTarget)
 {
   if (mScx) {
     NS_ERROR("Whaaa! No double pushing with nsCxPusher::Push()!");
@@ -2699,10 +2699,9 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsPIDOMEventTarget> eventTarget = do_QueryInterface(aCurrentTarget);
-  NS_ENSURE_TRUE(eventTarget, PR_FALSE);
+  NS_ENSURE_TRUE(aCurrentTarget, PR_FALSE);
   nsCOMPtr<nsIScriptContext> scx;
-  nsresult rv = eventTarget->GetContextForEventHandlers(getter_AddRefs(scx));
+  nsresult rv = aCurrentTarget->GetContextForEventHandlers(getter_AddRefs(scx));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   JSContext* cx = nsnull;
 
@@ -2735,18 +2734,15 @@ nsCxPusher::Push(JSContext *cx)
       return PR_TRUE;
     }
 
-    if (!mStack) {
-      mStack = do_GetService(kJSStackContractID);
-    }
-
-    if (mStack) {
-      if (IsContextOnStack(mStack, cx)) {
+    nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
+    if (stack) {
+      if (IsContextOnStack(stack, cx)) {
         // If the context is on the stack, that means that a script
         // is running at the moment in the context.
         mScriptIsRunning = PR_TRUE;
       }
 
-      mStack->Push(cx);
+      stack->Push(cx);
     }
   }
   return PR_TRUE;
@@ -2755,7 +2751,8 @@ nsCxPusher::Push(JSContext *cx)
 void
 nsCxPusher::Pop()
 {
-  if (!mScx || !mStack) {
+  nsIThreadJSContextStack* stack = nsContentUtils::ThreadJSContextStack();
+  if (!mScx || !stack) {
     mScx = nsnull;
 
     NS_ASSERTION(!mScriptIsRunning, "Huh, this can't be happening, "
@@ -2765,7 +2762,7 @@ nsCxPusher::Pop()
   }
 
   JSContext *unused;
-  mStack->Pop(&unused);
+  stack->Pop(&unused);
 
   if (!mScriptIsRunning) {
     // No JS is running in the context, but executing the event handler might have
