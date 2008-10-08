@@ -142,6 +142,8 @@ pref("browser.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.com/
 pref("browser.display.use_focus_colors", true);
 pref("browser.display.focus_background_color", "#ffffa0");
 pref("browser.display.focus_text_color", "#00000");
+pref("browser.display.focus_ring_on_anything", true);
+pref("browser.display.focus_ring_style", 0);
 
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);
