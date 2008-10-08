@@ -1,9 +1,0 @@
-product=firefox
-branch=1.9.1
-profilename=firefox-1.9.1-too-much-gc-profile
-profiledirectory=/tmp/firefox-1.9.1-too-much-gc-profile
-executablepath=${BUILDDIR}/1.9.1-too-much-gc/mozilla/firefox-debug/dist
-userpreferences=${TEST_DIR}/prefs/test-user.js
-extensiondir=${TEST_DIR}/xpi
-buildtype=debug
-TEST_MOZILLA_HG=http://hg.mozilla.org/mozilla-central
