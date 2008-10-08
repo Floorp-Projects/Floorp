@@ -84,6 +84,7 @@ function run_test()
     stmt.reset();
     stmt.finalize();
   }
+  dump("added the download to the database\n");
 
   let histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
@@ -92,6 +93,7 @@ function run_test()
   let yesterday = Date.now() - 24 * 60 * 60 * 1000;
   histsvc.addVisit(theURI, yesterday * 1000, null,
                    histsvc.TRANSITION_DOWNLOAD, false, 0);
+  dump("added the download to history\n");
 
   // Get the download manager as history observer and batch expirations
   let histobs = dm.QueryInterface(Ci.nsINavHistoryObserver);
@@ -103,6 +105,7 @@ function run_test()
   const kRemoveTopic = "download-manager-remove-download";
   let testObs = {
     observe: function(aSubject, aTopic, aData) {
+      dump("observing " + aTopic + "\n");
       if (aTopic != kRemoveTopic)
         return;
 
@@ -114,6 +117,7 @@ function run_test()
       histobs.onEndUpdateBatch();
       obs.removeObserver(testObs, kRemoveTopic);
       do_test_finished();
+      dump("and we are done\n");
     }
   };
   obs.addObserver(testObs, kRemoveTopic, false);
@@ -127,4 +131,5 @@ function run_test()
 
   // Expiration happens on a timeout, about 3.5s after we set the pref
   do_test_pending();
+  dump("waiting for the observer callback\n");
 }
