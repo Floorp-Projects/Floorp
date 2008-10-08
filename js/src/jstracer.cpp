@@ -3095,41 +3095,55 @@ LIns* TraceRecorder::makeNumberInt32(LIns* f)
 }
 
 bool
-TraceRecorder::ifop()
+TraceRecorder::ifop(bool negate)
 {
     jsval& v = stackval(-1);
     LIns* v_ins = get(&v);
+    bool cond;
+    LIns* x;
     /* no need to guard if condition is constant */
     if (v_ins->isconst() || v_ins->isconstq())
         return true;
     if (JSVAL_TAG(v) == JSVAL_BOOLEAN) {
-        guard(JSVAL_TO_BOOLEAN(v) != 1,
-              lir->ins_eq0(lir->ins2i(LIR_eq, v_ins, 1)),
-              BRANCH_EXIT);
+        /* test for boolean is true, negate later if we are testing for false */
+        cond = JSVAL_TO_BOOLEAN(v) == 1;
+        x = lir->ins2i(LIR_eq, v_ins, 1);
     } else if (JSVAL_IS_OBJECT(v)) {
-        guard(JSVAL_IS_NULL(v), lir->ins_eq0(v_ins), BRANCH_EXIT);
+        /* Test whether object evaluates to false is easier, so invert negate which by default
+           expects us to test for the value to evaluate to true. */
+        cond = JSVAL_IS_NULL(v);
+        x = lir->ins_eq0(v_ins);
+        negate = !negate;
     } else if (isNumber(v)) {
         jsdouble d = asNumber(v);
-        if (JSDOUBLE_IS_NaN(d)) {
-            guard(false, lir->ins2(LIR_feq, v_ins, v_ins), BRANCH_EXIT);
-        } else {
-            jsdpun u;
-            u.d = 0;
-            guard(d == 0,
-                  lir->ins2(LIR_feq, v_ins, lir->insImmq(u.u64)),
-                  BRANCH_EXIT);
-        }
+        cond = JSDOUBLE_IS_NaN(d) || (d == 0);
+        jsdpun u;
+        u.d = 0;
+        x = lir->ins2(LIR_and, 
+                      lir->ins2(LIR_feq, v_ins, v_ins),
+                      lir->ins_eq0(lir->ins2(LIR_feq, v_ins, lir->insImmq(u.u64))));
+        /* We have to emit a comparison here since LIR_and can't flow into the guard, so
+           invert negate and negate x here. */
+        x = lir->ins_eq0(x);
+        negate = !negate;
     } else if (JSVAL_IS_STRING(v)) {
-        guard(JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0,
-              lir->ins_eq0(lir->ins2(LIR_piand,
-                                     lir->insLoad(LIR_ldp, 
-                                                  v_ins, 
-                                                  (int)offsetof(JSString, length)),
-                                     INS_CONSTPTR(JSSTRING_LENGTH_MASK))),
-              BRANCH_EXIT);
+        /* We are checking whether the string converts to false, so invert negate as above. */
+        cond = JSSTRING_LENGTH(JSVAL_TO_STRING(v)) == 0;
+        x = lir->ins_eq0(lir->ins2(LIR_piand,
+                                   lir->insLoad(LIR_ldp, 
+                                                v_ins, 
+                                                (int)offsetof(JSString, length)),
+                                   INS_CONSTPTR(JSSTRING_LENGTH_MASK)));
+        negate = !negate;
     } else {
         JS_NOT_REACHED("ifop");
+        return false;
     }
+    if (negate) {
+        cond = !cond;
+        x = lir->ins_eq0(x);
+    }
+    guard(cond, x, BRANCH_EXIT); 
     return true;
 }
 
@@ -4091,13 +4105,13 @@ bool
 TraceRecorder::record_JSOP_IFEQ()
 {
     trackCfgMerges(cx->fp->regs->pc);
-    return ifop();
+    return ifop(false);
 }
 
 bool
 TraceRecorder::record_JSOP_IFNE()
 {
-    return ifop();
+    return ifop(true);
 }
 
 bool
@@ -5608,13 +5622,13 @@ TraceRecorder::record_JSOP_TRUE()
 bool
 TraceRecorder::record_JSOP_OR()
 {
-    return ifop();
+    return ifop(false);
 }
 
 bool
 TraceRecorder::record_JSOP_AND()
 {
-    return ifop();
+    return ifop(true);
 }
 
 bool
