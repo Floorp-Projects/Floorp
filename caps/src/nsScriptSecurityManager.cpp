@@ -319,6 +319,14 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
     return NS_SecurityCompareURIs(aSourceURI, aTargetURI, sStrictFileOriginPolicy);
 }
 
+// SecurityHashURI is consistent with SecurityCompareURIs because NS_SecurityHashURI
+// is consistent with NS_SecurityCompareURIs.  See nsNetUtil.h.
+PRUint32
+nsScriptSecurityManager::SecurityHashURI(nsIURI* aURI)
+{
+    return NS_SecurityHashURI(aURI);
+}
+
 NS_IMETHODIMP
 nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
                                              nsIPrincipal** aPrincipal)
@@ -900,6 +908,27 @@ nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSubject,
     return NS_ERROR_DOM_PROP_ACCESS_DENIED;
 }
 
+// It's important that
+//
+//   CheckSameOriginPrincipal(A, B, PR_FALSE) == NS_OK
+//
+// imply
+//
+//   HashPrincipalByOrigin(A) == HashPrincipalByOrigin(B)
+//
+// if principals A and B could ever be used as keys in a hashtable.
+// Violation of this invariant leads to spurious failures of hashtable
+// lookups.  See bug 454850.
+
+/*static*/ PRUint32
+nsScriptSecurityManager::HashPrincipalByOrigin(nsIPrincipal* aPrincipal)
+{
+    nsCOMPtr<nsIURI> uri;
+    aPrincipal->GetDomain(getter_AddRefs(uri));
+    if (!uri)
+        aPrincipal->GetURI(getter_AddRefs(uri));
+    return SecurityHashURI(uri);
+}
 
 nsresult
 nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
