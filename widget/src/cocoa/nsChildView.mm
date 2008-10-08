@@ -258,7 +258,7 @@ UnderlineAttributeToTextRangeType(PRUint32 aUnderlineStyle, NSRange selRange)
   // ime send you some part of text in 1 (NSSingleUnderlineStyle) and some part in 2. 
   // ftang will ask apple for more details
   //
-  // it probably means show 1-pixel thickness underline vs 2-pixel thickness
+  // It probably means show 1-pixel thickness underline vs 2-pixel thickness.
   
   PRUint32 attr;
   if (selRange.length == 0) {
