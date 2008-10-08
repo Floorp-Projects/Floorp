@@ -5231,7 +5231,7 @@ if test "$ACCESSIBILITY"; then
     AC_DEFINE(ACCESSIBILITY)
 fi
 
-if test -n "$ACCESSIBILITY"; then
+if test -n "$ACCESSIBILITY" -a "$COMPILE_ENVIRONMET" = "1"; then
 case "$target" in
 *-mingw*|*-cygwin*|*-msvc*|*-mks*)
     if test "$ac_cv_header_atlbase_h" = "no"; then
@@ -5846,6 +5846,7 @@ then
     AC_MSG_ERROR([Cannot enable ActiveX scripting support when ActiveX support is disabled.])
 fi
 
+if test "$COMPILE_ENVIRONMENT" = "1"; then
 if test -n "$XPC_IDISPATCH_SUPPORT" -o -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT" -o -z "$MOZ_NO_ACTIVEX_SUPPORT"; then
 case "$target" in
 *-mingw*|*-cygwin*|*-msvc*|*-mks*)
@@ -5854,6 +5855,7 @@ case "$target" in
     fi
     ;;
 esac
+fi
 fi
 
 dnl ========================================================
@@ -5902,6 +5904,7 @@ MOZ_ARG_DISABLE_BOOL(vista-sdk-requirements,
                            Do not build Vista SDK specific code],
    MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1,
    MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=)
+if test -n "$COMPILE_ENVIRONMENT"; then
 if test -n "$MOZ_DISABLE_VISTA_SDK_REQUIREMENTS"; then
     AC_MSG_WARN([Resulting builds will not be compatible with Windows Vista. (bug 428970)])
     AC_DEFINE(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
@@ -5917,6 +5920,7 @@ case "$target" in
     fi
     ;;
 esac
+fi
 fi
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
 AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
