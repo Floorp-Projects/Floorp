@@ -913,7 +913,8 @@ js_InitJSONClass(JSContext *cx, JSObject *obj)
     if (!JSON)
         return NULL;
     if (!JS_DefineProperty(cx, obj, js_JSON_str, OBJECT_TO_JSVAL(JSON),
-                           JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE))
+                           JS_PropertyStub, JS_PropertyStub,
+                           JSPROP_READONLY | JSPROP_PERMANENT))
         return NULL;
 
     if (!JS_DefineFunctions(cx, JSON, json_static_methods))
