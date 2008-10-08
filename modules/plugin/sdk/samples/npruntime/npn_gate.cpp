@@ -40,7 +40,7 @@
 // Implementation of Netscape entry points (NPN_*)
 //
 #include "npapi.h"
-#include "npupp.h"
+#include "npfunctions.h"
 
 #ifndef HIBYTE
 #define HIBYTE(x) ((((uint32_t)(x)) & 0xff00) >> 8)
