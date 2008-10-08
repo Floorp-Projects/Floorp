@@ -61,7 +61,7 @@ namespace nanojit
 			for (;;) {
 				LInsp i = in->read();
 				if (!i || i->isGuard() 
-					|| i->isCall() && !assm->_functions[i->fid()]._cse
+					|| i->isCall() && !i->callInfo()->_cse
 					|| !assm->ignoreInstruction(i))
 					return i;
 			}
@@ -311,12 +311,6 @@ namespace nanojit
 		NanoAssertMsg( onPage(_nIns)&& onPage(_nExitIns,true), "Native instruction pointer overstep paging bounds; check overrideProtect for last instruction");
 	}
 	#endif
-
-	const CallInfo* Assembler::callInfoFor(uint32_t fid)
-	{	
-		NanoAssert(fid < CI_Max);
-		return &_functions[fid];
-	}
 
 	#ifdef _DEBUG
 	

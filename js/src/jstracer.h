@@ -49,23 +49,7 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsinterp.h"
-
-#include "nanojit/nanojit.h"
-
-/*
- * We use a magic boxed pointer value to represent error conditions that
- * trigger a side exit. The address is so low that it should never be actually
- * in use. If it is, a performance regression occurs, not an actual runtime
- * error.
- */
-#define JSVAL_ERROR_COOKIE OBJECT_TO_JSVAL((void*)0x10)
-
-/*
- * We also need a magic unboxed 32-bit integer that signals an error.  Again if
- * this number is hit we experience a performance regression, not a runtime
- * error.
- */
-#define INT32_ERROR_COOKIE 0xffffabcd
+#include "jsbuiltins.h"
 
 template <typename T>
 class Queue : public GCObject {
@@ -199,17 +183,6 @@ public:
     TreeInfo(nanojit::Fragment* _fragment) { 
         fragment = _fragment;
     }
-};
-
-extern struct nanojit::CallInfo builtins[];
-
-enum JSTNErrType { INFALLIBLE, FAIL_NULL, FAIL_NEG, FAIL_VOID, FAIL_JSVAL };
-struct JSTraceableNative {
-    JSFastNative native;
-    int          builtin;
-    const char  *prefix;
-    const char  *argtypes;
-    JSTNErrType  errtype;
 };
  
 class TraceRecorder : public GCObject {

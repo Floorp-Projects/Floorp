@@ -48,12 +48,15 @@
 #include "prmjtime.h"
 #include "jsapi.h"
 #include "jsatom.h"
+#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jslock.h"
 #include "jsmath.h"
 #include "jsnum.h"
 #include "jsobj.h"
+
+extern jsdouble js_NaN;
 
 #ifndef M_E
 #define M_E             2.7182818284590452354
@@ -223,8 +226,8 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-JSBool
-js_math_ceil(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+math_ceil(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -239,8 +242,8 @@ js_math_ceil(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-JSBool
-js_math_cos(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+math_cos(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -283,8 +286,8 @@ math_exp(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-JSBool
-js_math_floor(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+math_floor(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -299,8 +302,8 @@ js_math_floor(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-JSBool
-js_math_log(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+math_log(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -321,8 +324,8 @@ js_math_log(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-JSBool
-js_math_max(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+math_max(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z = *cx->runtime->jsNegativeInfinity;
     jsval *argv;
@@ -383,8 +386,8 @@ math_min(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-JSBool
-js_math_pow(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+math_pow(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, y, z;
 
@@ -488,8 +491,8 @@ js_random_nextDouble(JSRuntime *rt)
     return d / rt->rngDscale;
 }
 
-JSBool
-js_math_random(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+math_random(JSContext *cx, uintN argc, jsval *vp)
 {
     JSRuntime *rt;
     jsdouble z;
@@ -533,8 +536,8 @@ math_round(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-JSBool
-js_math_sin(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+math_sin(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -549,8 +552,8 @@ js_math_sin(JSContext *cx, uintN argc, jsval *vp)
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
-JSBool
-js_math_sqrt(JSContext *cx, uintN argc, jsval *vp)
+static JSBool
+math_sqrt(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
@@ -590,28 +593,99 @@ math_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
+#ifdef JS_TRACER
+
+#define MATH_BUILTIN_1(name)                                                  \
+    jsdouble FASTCALL js_Math_##name(jsdouble d) { return name(d); }          \
+    JS_DEFINE_CALLINFO_1(DOUBLE, Math_##name, DOUBLE, 1, 1)                   \
+    static const JSTraceableNative math_##name##_trcinfo =                    \
+        { math_##name, &ci_Math_##name, "", "d", INFALLIBLE };
+
+MATH_BUILTIN_1(sin)
+MATH_BUILTIN_1(cos)
+MATH_BUILTIN_1(sqrt)
+MATH_BUILTIN_1(floor)
+MATH_BUILTIN_1(ceil)
+
+jsdouble FASTCALL
+js_Math_log(jsdouble d)
+{
+#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+    if (d < 0)
+        return js_NaN;
+#endif
+    return log(d);
+}
+
+jsdouble FASTCALL
+js_Math_max(jsdouble d, jsdouble p)
+{
+    if (JSDOUBLE_IS_NaN(d) || JSDOUBLE_IS_NaN(p))
+        return js_NaN;
+
+    if (p == 0 && p == d && fd_copysign(1.0, d) == -1)
+        return p;
+    return (d > p) ? d : p;
+}
+
+jsdouble FASTCALL
+js_Math_pow(jsdouble d, jsdouble p)
+{
+    if (!JSDOUBLE_IS_FINITE(p) && (d == 1.0 || d == -1.0))
+        return js_NaN;
+    if (p == 0)
+        return 1.0;
+    return pow(d, p);
+}
+
+jsdouble FASTCALL
+js_Math_random(JSRuntime* rt)
+{
+    JS_LOCK_RUNTIME(rt);
+    js_random_init(rt);
+    jsdouble z = js_random_nextDouble(rt);
+    JS_UNLOCK_RUNTIME(rt);
+    return z;
+}
+
+JS_DEFINE_CALLINFO_1(DOUBLE, Math_log,    DOUBLE,          1, 1)
+JS_DEFINE_CALLINFO_2(DOUBLE, Math_max,    DOUBLE, DOUBLE,  1, 1)
+JS_DEFINE_CALLINFO_2(DOUBLE, Math_pow,    DOUBLE, DOUBLE,  1, 1)
+JS_DEFINE_CALLINFO_1(DOUBLE, Math_random, RUNTIME,         0, 0)
+
+static const JSTraceableNative math_log_trcinfo =
+    { math_log,    &ci_Math_log,    "",    "d",    INFALLIBLE };
+static const JSTraceableNative math_max_trcinfo =
+    { math_max,    &ci_Math_max,    "",    "dd",   INFALLIBLE };
+static const JSTraceableNative math_pow_trcinfo =
+    { math_pow,    &ci_Math_pow,    "",    "dd",   INFALLIBLE };
+static const JSTraceableNative math_random_trcinfo =
+    { math_random, &ci_Math_random, "R",   "",     INFALLIBLE };
+
+#endif /* JS_TRACER */
+
 static JSFunctionSpec math_static_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,  math_toSource,      0, 0),
+    JS_FN(js_toSource_str,  math_toSource,        0, 0),
 #endif
-    JS_FN("abs",            math_abs,           1, 0),
-    JS_FN("acos",           math_acos,          1, 0),
-    JS_FN("asin",           math_asin,          1, 0),
-    JS_FN("atan",           math_atan,          1, 0),
-    JS_FN("atan2",          math_atan2,         2, 0),
-    JS_FN("ceil",           js_math_ceil,       1, 0),
-    JS_FN("cos",            js_math_cos,        1, 0),
-    JS_FN("exp",            math_exp,           1, 0),
-    JS_FN("floor",          js_math_floor,      1, 0),
-    JS_FN("log",            js_math_log,        1, 0),
-    JS_FN("max",            js_math_max,        2, 0),
-    JS_FN("min",            math_min,           2, 0),
-    JS_FN("pow",            js_math_pow,        2, 0),
-    JS_FN("random",         js_math_random,     0, 0),
-    JS_FN("round",          math_round,         1, 0),
-    JS_FN("sin",            js_math_sin,        1, 0),
-    JS_FN("sqrt",           js_math_sqrt,       1, 0),
-    JS_FN("tan",            math_tan,           1, 0),
+    JS_FN("abs",            math_abs,             1, 0),
+    JS_FN("acos",           math_acos,            1, 0),
+    JS_FN("asin",           math_asin,            1, 0),
+    JS_FN("atan",           math_atan,            1, 0),
+    JS_FN("atan2",          math_atan2,           2, 0),
+    JS_TN("ceil",           math_ceil,            1, 0, &math_ceil_trcinfo),
+    JS_TN("cos",            math_cos,             1, 0, &math_cos_trcinfo),
+    JS_FN("exp",            math_exp,             1, 0),
+    JS_TN("floor",          math_floor,           1, 0, &math_floor_trcinfo),
+    JS_TN("log",            math_log,             1, 0, &math_log_trcinfo),
+    JS_TN("max",            math_max,             2, 0, &math_max_trcinfo),
+    JS_FN("min",            math_min,             2, 0),
+    JS_TN("pow",            math_pow,             2, 0, &math_pow_trcinfo),
+    JS_TN("random",         math_random,          0, 0, &math_random_trcinfo),
+    JS_FN("round",          math_round,           1, 0),
+    JS_TN("sin",            math_sin,             1, 0, &math_sin_trcinfo),
+    JS_TN("sqrt",           math_sqrt,            1, 0, &math_sqrt_trcinfo),
+    JS_FN("tan",            math_tan,             1, 0),
     JS_FS_END
 };
 

@@ -158,7 +158,7 @@ Assembler::genEpilogue(RegisterMask restore)
 void
 Assembler::asm_call(LInsp ins)
 {
-    const CallInfo* call = callInfoFor(ins->fid());
+    const CallInfo* call = ins->callInfo();
     Reservation *callRes = getresv(ins);
 
     uint32_t atypes = call->_argtypes;

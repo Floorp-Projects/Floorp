@@ -215,16 +215,17 @@ ifdef ENABLE_JIT
 VPATH		+= $(srcdir)/nanojit
 
 EXPORTS += \
+		builtins.tbl    \
+		jsbuiltins.h    \
 		Assembler.h     \
 		LIR.h		\
 		avmplus.h	\
-		vm_fops.h	\
 		Fragmento.h	\
 		Native.h	\
 		Native$(NANOJIT_ARCH).h \
 		RegAlloc.h	\
 		nanojit.h	\
-		builtins.tbl \
+		TraceTreeDrawer.h \
 		$(NULL)
 
 CPPSRCS += \
@@ -239,7 +240,6 @@ CPPSRCS += \
 		$(NULL)
 
 ifdef DEBUG
-EXPORTS += TraceTreeDrawer.h
 CPPSRCS += TraceTreeDrawer.cpp
 endif
 
