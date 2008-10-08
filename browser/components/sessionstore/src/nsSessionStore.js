@@ -2322,10 +2322,10 @@ SessionStoreService.prototype = {
    * @return the object's JSON representation
    */
   _toJSONString: function sss_toJSONString(aJSObject) {
-    let str = JSON.toString(aJSObject, ["_tab", "_hosts", "_formDataSaved"] /* keys to drop */);
+    let str = JSONModule.toString(aJSObject, ["_tab", "_hosts", "_formDataSaved"] /* keys to drop */);
     
     // sanity check - so that API consumers can just eval this string
-    if (!JSON.isMostlyHarmless(str))
+    if (!JSONModule.isMostlyHarmless(str))
       throw new Error("JSON conversion failed unexpectedly!");
     
     return str;
