@@ -1019,9 +1019,6 @@ HOST_OS_ARCH=`echo $host_os | sed -e 's|/|_|g'`
 # at lesser performance (the Win95 target uses threads; the WinNT target
 # uses fibers).
 #
-# When OS_TARGET=WIN16 is specified, then a Windows 3.11 (16bit) target
-# is built. See: win16_3.11.mk for lots more about the Win16 target.
-#
 # If OS_TARGET is not specified, it defaults to $(OS_ARCH), i.e., no
 # cross-compilation.
 #
@@ -1279,9 +1276,6 @@ if test -z "$OS_TARGET"; then
 fi
 if test "$OS_TARGET" = "WIN95"; then
     OS_RELEASE="4.0"
-fi
-if test "$OS_TARGET" = "WIN16"; then
-    OS_RELEASE=
 fi
 OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
