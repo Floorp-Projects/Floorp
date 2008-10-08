@@ -159,7 +159,7 @@ case $bisect_branch in
         # i.e. the first good changeset. so we reverse the nature
         # of good and bad.
 
-        if [[ $localgood < $localbad ]]; then
+        if (( $localgood < $localbad )); then
             cat <<EOF
 
 searching for a regression between $localgood:$bisect_good and $localbad:$bisect_bad
