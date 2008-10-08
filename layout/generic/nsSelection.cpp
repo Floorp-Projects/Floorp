@@ -5893,21 +5893,20 @@ nsTypedSelection::RemoveRange(nsIDOMRange* aRange)
   for (PRInt32 i = 0; i < affectedRanges.Count(); i ++)
     selectFrames(presContext, affectedRanges[i], PR_TRUE);
 
-  // When the selection is user-created it makes sense to scroll the range
-  // into view. The spell-check selection, however, is created and destroyed
-  // in the background. We don't want to scroll in this case or the view
-  // might appear to be moving randomly (bug 337871).
-  if (mType != nsISelectionController::SELECTION_SPELLCHECK &&
-      aRange == mAnchorFocusRange.get())
-  {
-    PRInt32 cnt = mRanges.Length();
-    if (cnt > 0)
-    {
-      setAnchorFocusRange(cnt - 1);//reset anchor to LAST range.
+  PRInt32 cnt = mRanges.Length();
+  if (aRange == mAnchorFocusRange.get()) {
+    // Reset anchor to LAST range or clear it if there are no ranges.
+    setAnchorFocusRange(cnt - 1);
+
+    // When the selection is user-created it makes sense to scroll the range
+    // into view. The spell-check selection, however, is created and destroyed
+    // in the background. We don't want to scroll in this case or the view
+    // might appear to be moving randomly (bug 337871).
+    if (mType != nsISelectionController::SELECTION_SPELLCHECK && cnt > 0)
       ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION, PR_FALSE,
                      PR_FALSE);
-    }
   }
+
   if (!mFrameSelection)
     return NS_OK;//nothing to do
   return mFrameSelection->NotifySelectionListeners(GetType());
