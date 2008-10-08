@@ -534,21 +534,6 @@ main(int argc, char* argv[])
     TestSegmentedBuffer();
 #endif
 
-#if 0   // obsolete old implementation
-    nsCOMPtr<nsIInputStream> in;
-    nsCOMPtr<nsIOutputStream> out;
-    rv = TP_NewPipe(getter_AddRefs(in), getter_AddRefs(out), 4096 * 4);
-    if (NS_FAILED(rv)) {
-        printf("TP_NewPipe failed\n");
-        return -1;
-    }
-
-    rv = TestPipe(in, out);
-    if (NS_FAILED(rv)) {
-        printf("TestPipe failed\n");
-        return -1;
-    }
-#endif
 #if 0
     TestSearch("foo", 8);
     TestSearch("bar", 6);
