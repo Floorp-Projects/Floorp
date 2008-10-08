@@ -470,9 +470,13 @@ namespace nanojit
 		// convenience
 	    LIns*		insLoadi(LIns *base, int disp);
 	    LIns*		insLoad(LOpcode op, LIns *base, int disp);
+		// Inserts a conditional to execute and branches to execute if
+		// the condition is true and false respectively.
 	    LIns*		ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse);
 	    // Inserts an integer comparison to 0
 	    LIns*		ins_eq0(LIns* oprnd1);
+		// Inserts a binary operation where the second operand is an
+		// integer immediate.
         LIns*       ins2i(LOpcode op, LIns *oprnd1, int32_t);
 		LIns*		qjoin(LInsp lo, LInsp hi);
 		LIns*		insImmPtr(const void *ptr);
