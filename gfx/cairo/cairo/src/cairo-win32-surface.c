@@ -87,7 +87,7 @@ _cairo_win32_print_gdi_error (const char *context)
     void *lpMsgBuf;
     DWORD last_error = GetLastError ();
 
-    if (!FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER |
+    if (!FormatMessageW (FORMAT_MESSAGE_ALLOCATE_BUFFER |
 			 FORMAT_MESSAGE_FROM_SYSTEM,
 			 NULL,
 			 last_error,
@@ -96,7 +96,7 @@ _cairo_win32_print_gdi_error (const char *context)
 			 0, NULL)) {
 	fprintf (stderr, "%s: Unknown GDI error", context);
     } else {
-	fprintf (stderr, "%s: %s", context, (char *)lpMsgBuf);
+	fwprintf (stderr, "%S: %s", context, (char *)lpMsgBuf);
 
 	LocalFree (lpMsgBuf);
     }
@@ -748,7 +748,7 @@ _composite_alpha_blend (cairo_win32_surface_t *dst,
 	if (VER_PLATFORM_WIN32_WINDOWS != os.dwPlatformId ||
 	    os.dwMajorVersion != 4 || os.dwMinorVersion != 10)
 	{
-	    HMODULE msimg32_dll = LoadLibraryA ("msimg32");
+	    HMODULE msimg32_dll = LoadLibraryW (L"msimg32");
 
 	    if (msimg32_dll != NULL)
 		alpha_blend = (cairo_alpha_blend_func_t)GetProcAddress (msimg32_dll,
