@@ -37,10 +37,10 @@
 
 add_makefiles "
 mobile/Makefile
+mobile/app/Makefile
 mobile/chrome/Makefile
 mobile/chrome/branding/Makefile
 mobile/chrome/content/Makefile
-mobile/app/Makefile
 mobile/installer/Makefile
 mobile/installer/debian/changelog
 mobile/installer/debian/compat

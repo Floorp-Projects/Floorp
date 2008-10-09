@@ -190,8 +190,7 @@ toolbarbutton.browser-control-button {
 }
 
 .tool-search {
-  list-style-image: url("chrome://browser/skin/images/mono-toolbar.png");
-  -moz-image-region: rect(0px 36px 36px 0px);
+  list-style-image: url("chrome://browser/skin/images/navigation_magnifier.png");
 }
 
 #toolbar-main[mode="loading"] > #urlbar-container > #urlbar-icons > #tool-go,
@@ -211,6 +210,10 @@ toolbarbutton.browser-control-button {
 
 .searchengine {
   -moz-box-orient: horizontal;
+  color: white;
+}
+.searchengine > .toolbarbutton-text {
+  font-size: 12pt !important;
 }
 
 #urlbar-container {
@@ -273,7 +276,7 @@ toolbarbutton.browser-control-button {
   background: url("images/addressbar_endcap_r_on.png") transparent top left no-repeat;
 }
 
-/* URL List */
+/* URL List and navigation bar */
 #urllist-container {
   background-color: rgba(123,125,123,0.9);
   padding: 8px;
@@ -288,17 +291,15 @@ toolbarbutton.browser-control-button {
   list-style-image: url("chrome://browser/skin/images/close-small.png");
 }
 
-#urllist-items, .autocomplete-richlistbox {
-  -moz-appearance: none !important;
-  background-color: rgba(207,207,207,0.9);
-  border: 2px solid #fff !important;
-  -moz-border-radius: 10px;
+#popup_autocomplete {
+  background: url(images/navigation_background.png) transparent repeat-x;
+  -moz-appearance: none;
+  padding-top: 8px !important;
 }
 
 .urllist-item {
   -moz-appearance: none !important;
   margin: 8px;
-  color: #000;
 }
 
 .urllist-image {
@@ -306,11 +307,82 @@ toolbarbutton.browser-control-button {
   height: 24px;
 }
 
-#urllist-search, #autocomplete_navbuttons {
+/* old rules */
+#urllist-items {
+  -moz-appearance: none !important;
   background-color: rgba(207,207,207,0.9);
   border: 2px solid #fff !important;
   -moz-border-radius: 10px;
-  _moz-box-align: start;
+}
+
+/* XXX new rules that don't work
+#urllist-items {
+  -moz-appearance: none;
+}
+
+#urllist-items,
+*/
+#autocomplete_navbuttons {
+  -moz-border-image: url(images/navigation_search_caps.png) 0 23 0 23;
+  border-width: 0 23px;
+  background-color: transparent;
+  margin-top: 12px;
+  min-height: 50px;
+  padding-left: -10px !important;
+}
+
+#PopupAutoCompleteRichResult {
+  direction: ltr !important;
+}
+
+#popup_autocomplete scrollbox {
+  background: rgb(46,45,45);
+}
+
+.autocomplete-richlistbox {
+  -moz-appearance: none !important;
+  -moz-border-image: url(images/navigation_url_caps.png) 25 24 25 24 stretch stretch;
+  border-width: 26px 25px;
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.autocomplete-richlistitem {
+  border-bottom: 0; /* override toolkit style */
+  padding: 16px;
+  padding-top: 0px;
+  padding-left: 0px;
+  color: white;
+  background-color: transparent;
+}
+
+.ac-result-type-bookmark {
+  list-style-image: url("chrome://browser/skin/images/page-starred.png");
+  width: 16px;
+  height: 16px;
+}
+
+.ac-result-type-tag {
+  list-style-image: url("chrome://browser/skin/images/tag.png");
+  width: 16px;
+  height: 16px;
+}
+
+.ac-comment {
+  font-size: 16pt !important;
+}
+
+.ac-extra > .ac-comment {
+  font-size: inherit !important;
+}
+
+.ac-comment[selected="true"] {
+  color: inherit !important;
+}
+
+/* Hide URL box */
+.ac-url-box {
+  display: none;
 }
 
 /* tab list */
@@ -411,53 +483,6 @@ toolbarbutton.panel-button {
 
 #tool-shortcuts:hover:active, #tool-shortcuts[checked] {
   -moz-image-region: rect(0px 96px 48px 48px);
-}
-
-/* autocomplete */
-
-#popup_autocomplete {
-  -moz-appearance: none;
-  background-color: rgba(207,207,207,0.9);
-}
-
-#autocomplete_navbuttons {
-  margin-top: 12px;
-}
-
-#PopupAutoCompleteRichResult {
-  direction: ltr !important;
-}
-
-.ac-result-type-bookmark {
-   list-style-image: url("chrome://browser/skin/images/page-starred.png");
-   width: 16px;
-   height: 16px;
- }
-
-.ac-result-type-tag {
-   list-style-image: url("chrome://browser/skin/images/tag.png");
-   width: 16px;
-   height: 16px;
- }
-
-.ac-comment {
-  font-size: 1.15em;
-}
-
-.ac-extra > .ac-comment {
-  font-size: inherit;
-}
-
-.ac-url-box {
-  display: none;
-}
-
-.ac-url-text {
-  color: GrayText;
-}
-
-.ac-comment[selected="true"], .ac-url-text[selected="true"] {
-  color: inherit !important;
 }
 
 /* find bar */

@@ -63,3 +63,7 @@ classic.jar:
   images/right_buttons.png             (skin/images/right_buttons.png)
   images/panel_buttons.png             (skin/images/panel_buttons.png)
   images/panel_background.png          (skin/images/panel_background.png)
+  images/navigation_url_caps.png       (skin/images/navigation_url_caps.png)
+  images/navigation_background.png     (skin/images/navigation_background.png)
+  images/navigation_search_caps.png    (skin/images/navigation_search_caps.png)
+  images/navigation_magnifier.png      (skin/images/navigation_magnifier.png)
