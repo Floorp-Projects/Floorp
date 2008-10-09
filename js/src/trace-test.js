@@ -1549,7 +1549,7 @@ testNestedExitStackOuter.expected = 81;
 testNestedExitStackOuter.jitstats = {
     recorderStarted: 4,
     recorderAborted: 0,
-    traceTriggered: 9
+    traceTriggered: 7
 };
 test(testNestedExitStackOuter);
 
