@@ -99,7 +99,7 @@
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
 
-#if !defined(WINCE) && !defined(XP_OS2)
+#if !defined(XP_OS2)
 #include "nsWindowsRegKey.h"
 #endif
 
@@ -281,7 +281,7 @@ void XXXNeverCalled()
     nsXPCOMCycleCollectionParticipant();
     nsCycleCollector_collect();
 
-#if !defined(WINCE) && !defined(XP_OS2)
+#if !defined(XP_OS2)
     NS_NewWindowsRegKey(nsnull);
 #endif
 
