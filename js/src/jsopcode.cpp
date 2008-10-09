@@ -3943,6 +3943,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     LOCAL_ASSERT(GET_ARGC(pc) == 0);
                     len = JSOP_CALL_LENGTH;
 
+                    /* Skip over the waiting JSOP_RESUME. */
+                    LOCAL_ASSERT(pc[len] == JSOP_RESUME);
+                    len += JSOP_RESUME_LENGTH;
+
                     /*
                      * Arrange to parenthesize this genexp unless:
                      *
