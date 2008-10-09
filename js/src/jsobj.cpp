@@ -5419,7 +5419,7 @@ js_DumpId(jsid id)
     fputc('\n', stderr);
 }
 
-void
+static void
 dumpScopeProp(JSScopeProperty *sprop)
 {
     jsid id = sprop->id;
@@ -5449,6 +5449,7 @@ js_DumpObject(JSObject *obj)
     uint32 i, slots;
     JSClass *clasp;
     jsuint reservedEnd;
+    JSBool sharesScope = JS_FALSE;
 
     fprintf(stderr, "object %p\n", (void *) obj);
     clasp = STOBJ_GET_CLASS(obj);
@@ -5475,17 +5476,18 @@ js_DumpObject(JSObject *obj)
         if (SCOPE_IS_SEALED(scope))
             fprintf(stderr, "sealed\n");
 
-        if (proto && scope == OBJ_SCOPE(proto)) {
-            fprintf(stderr, "shares scope with proto (%s at %p)\n",
+        sharesScope = (scope->object != obj);
+        if (sharesScope) {
+            fprintf(stderr, "no own properties - see proto (%s at %p)\n",
                     STOBJ_GET_CLASS(proto)->name, proto);
-        }
-
-        fprintf(stderr, "properties:\n");
-        for (JSScopeProperty *sprop = SCOPE_LAST_PROP(scope); sprop;
-             sprop = sprop->parent) {
-            if (!SCOPE_HAD_MIDDLE_DELETE(scope) ||
-                SCOPE_HAS_PROPERTY(scope, sprop)) {
-                dumpScopeProp(sprop);
+        } else {
+            fprintf(stderr, "properties:\n");
+            for (JSScopeProperty *sprop = SCOPE_LAST_PROP(scope); sprop;
+                 sprop = sprop->parent) {
+                if (!SCOPE_HAD_MIDDLE_DELETE(scope) ||
+                    SCOPE_HAS_PROPERTY(scope, sprop)) {
+                    dumpScopeProp(sprop);
+                }
             }
         }
     } else {
@@ -5494,15 +5496,15 @@ js_DumpObject(JSObject *obj)
     }
 
     fprintf(stderr, "slots:\n");
-    slots = obj->map->freeslot;
     reservedEnd = JSSLOT_PRIVATE;
     if (clasp->flags & JSCLASS_HAS_PRIVATE)
         reservedEnd++;
     reservedEnd += JSCLASS_RESERVED_SLOTS(clasp);
+    slots = sharesScope ? reservedEnd : obj->map->freeslot;
     for (i = 0; i < slots; i++) {
         fprintf(stderr, " %3d ", i);
         if (i == JSSLOT_PRIVATE && (clasp->flags & JSCLASS_HAS_PRIVATE)) {
-            fprintf(stderr, "(private) = %p",
+            fprintf(stderr, "(private) = %p\n",
                     JSVAL_TO_PRIVATE(STOBJ_GET_SLOT(obj, i)));
             continue;
         }
