@@ -260,6 +260,14 @@ protected:
   nsresult GetAttrValue(nsIAtom *aAriaProperty, double *aValue);
 
   /**
+   * Return the action rule based on ARIA enum constants EActionRule
+   * (see nsARIAMap.h). Used by GetNumActions() and GetActionName().
+   *
+   * @param aStates  [in] states of the accessible
+   */
+  PRUint32 GetActionRule(PRUint32 aStates);
+
+  /**
    * Fires platform accessible event. It's notification method only. It does
    * change nothing on Gecko side. Mostly you should use
    * nsIAccessible::FireAccessibleEvent excepting special cases like we have

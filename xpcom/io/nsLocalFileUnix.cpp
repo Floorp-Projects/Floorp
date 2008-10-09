@@ -1086,7 +1086,9 @@ nsLocalFile::SetPermissions(PRUint32 aPermissions)
 NS_IMETHODIMP
 nsLocalFile::SetPermissionsOfLink(PRUint32 aPermissions)
 {
-    return SetPermissions(aPermissions);
+    // There isn't a consistent mechanism for doing this on UNIX platforms. We
+    // might want to carefully implement this in the future though.
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

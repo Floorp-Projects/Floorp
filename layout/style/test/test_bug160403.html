@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=160403
+-->
+<head>
+  <title>Test for Bug 160403</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=160403">Mozilla Bug 160403</a>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 160403 **/
+
+var element = document.getElementById("content");
+var style = element.style;
+
+element.setAttribute("style", "border-top-style: dotted");
+is(style.getPropertyValue("border-top-style"), "dotted");
+is(style.getPropertyPriority("border-top-style"), "");
+is(style.getPropertyValue("border-style"), "");
+is(style.getPropertyPriority("border-style"), "");
+
+element.setAttribute("style", "border-top-style: dotted ! important");
+is(style.getPropertyValue("border-top-style"), "dotted");
+is(style.getPropertyPriority("border-top-style"), "important");
+is(style.getPropertyValue("border-style"), "");
+is(style.getPropertyPriority("border-style"), "");
+
+element.setAttribute("style", "border-top-style: dotted ! important; border-bottom-style: dotted ! important; border-left-style: dotted ! important");
+is(style.getPropertyValue("border-top-style"), "dotted");
+is(style.getPropertyPriority("border-top-style"), "important");
+is(style.getPropertyValue("border-style"), "");
+is(style.getPropertyPriority("border-style"), "");
+
+element.setAttribute("style", "border-top-style: dotted ! important; border-right-style: dotted; border-bottom-style: dotted ! important; border-left-style: dotted ! important");
+is(style.getPropertyValue("border-top-style"), "dotted");
+is(style.getPropertyPriority("border-top-style"), "important");
+is(style.getPropertyValue("border-right-style"), "dotted");
+is(style.getPropertyPriority("border-right-style"), "");
+is(style.getPropertyValue("border-style"), "");
+is(style.getPropertyPriority("border-style"), "");
+
+element.setAttribute("style", "border-top-style: dotted ! important; border-right-style: dotted ! important; border-bottom-style: dotted ! important; border-left-style: dotted ! important");
+is(style.getPropertyValue("border-top-style"), "dotted");
+is(style.getPropertyPriority("border-top-style"), "important");
+is(style.getPropertyValue("border-right-style"), "dotted");
+is(style.getPropertyPriority("border-right-style"), "important");
+isnot(style.getPropertyValue("border-style"), "");
+is(style.getPropertyPriority("border-style"), "important");
+
+</script>
+</pre>
+</body>
+</html>
