@@ -50,7 +50,7 @@ groupbox {
   padding: 5px;
 }
 
-groupbox:not(:-moz-system-metric(windows-default-theme)) {
+groupbox:-moz-system-metric(windows-classic) {
   border-width: 2px;
   -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
   -moz-border-right-colors: ThreeDHighlight ThreeDShadow;
