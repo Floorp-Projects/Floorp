@@ -337,7 +337,7 @@ endif
 	$(PERL) $(MOZILLA_DIR)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v -x "$(XPIDL_LINK)"
 
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
-	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar $(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
+	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) "$(DIST)/$(PKG_PATH)$(PKG_BASENAME).tar" "$(DIST)/$(PKG_PATH)$(PKG_BASENAME).dmg" $@ $(EXCLUDE_LIST)
 # NOTE: this must be a tar now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
 	@echo "Creating package directory..."
