@@ -212,29 +212,24 @@ MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
     return 0;
 }
 
-static void mode2binstr(int mode, char* buffer)
+static void flags2binstr(int flags, char* buffer)
 {
-    if (mode & O_RDWR || (mode & O_WRONLY))  // write only == read|write
+		// this is not even close to correct.
+		// we need this only temporarly -- we are hoping to remove
+		// open/close/read/write in favor of fopen directly.
+
+    if (flags & O_RDWR || (flags & O_WRONLY))  // write only == read|write
     {
-        if (mode & O_CREAT)
-        {
-            strcpy(buffer, "wb+");
-        }
-        else if (mode & O_APPEND)
+        if (flags & O_APPEND)
         {
             strcpy(buffer, "ab+");
         }
-        else if (mode & O_TRUNC)
+        else
         {
             strcpy(buffer, "wb+");
         }
-        
-        else if (mode == O_RDWR)
-        {
-            strcpy(buffer, "rb+");
-        }
     }
-    else if (mode & O_RDONLY)
+    else
     {
         strcpy(buffer, "rb");
     }
@@ -247,15 +242,15 @@ MOZCE_SHUNT_API int open(const char *pathname, int flags, int mode)
     _initfds();
     
     
-    char modestr[10];
-    *modestr = '\0';
+    char flagsstr[10];
+    *flagsstr = '\0';
     
-    mode2binstr(mode, modestr);
-    if (*modestr == '\0')
+    flags2binstr(flags, flagsstr);
+    if (*flagsstr == '\0')
         return -1;
     
     
-    FILE* file = fopen(pathname, modestr);
+    FILE* file = fopen(pathname, flagsstr);
     
     int fd = -1;
     
