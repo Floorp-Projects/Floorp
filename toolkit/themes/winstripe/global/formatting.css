@@ -136,6 +136,12 @@
       color                 : GrayText;
     }    
 
+  label[disabled="true"]:-moz-system-metric(windows-classic)
+    {
+      color                 : ThreeDShadow;
+      text-shadow           : 1px 1px ThreeDHighlight;
+    }
+
   description, label
     {
       cursor              : default;
