@@ -1,81 +1,9 @@
 #include "nsISupports.idl"
 
-[uuid(1979e980-1cfd-11d3-915e-0000863011c5)]
+[uuid(1979e980-1cfd-11d3-915e-0000863011c4)]
 interface nsITestProxy : nsISupports 
 {
-long Test(in long p1, in long p2);
-nsresult Test2();
-nsresult Test3(in nsISupports p1, out nsISupports p2);
-
-nsresult Test1_1(inout PRInt32 p1);
-nsresult Test1_2(inout PRInt64 p1);
-nsresult Test1_3(inout float p1);
-nsresult Test1_4(inout double p1);
-nsresult Test1_5(inout nsISupports p1);
-
-nsresult Test2_1(inout PRInt32 p1, inout PRInt32 p2);
-nsresult Test2_2(inout PRInt64 p1, inout PRInt64 p2);
-nsresult Test2_3(inout float p1, inout float p2);
-nsresult Test2_4(inout double p1, inout double p2);
-nsresult Test2_5(inout nsISupports p1, inout nsISupports p2);
-
-nsresult Test3_1(inout PRInt32 p1, inout PRInt32 p2, inout PRInt32 p3);
-nsresult Test3_2(inout PRInt64 p1, inout PRInt64 p2, inout PRInt64 p3);
-nsresult Test3_3(inout float p1, inout float p2, inout float p3);
-nsresult Test3_4(inout double p1, inout double p2, inout double p3);
-nsresult Test3_5(inout nsISupports p1, inout nsISupports p2, inout nsISupports p3);
-
-nsresult Test4_1(inout PRInt32 p1, inout PRInt32 p2, inout PRInt32 p3, inout PRInt32 p4);
-nsresult Test4_2(inout PRInt64 p1, inout PRInt64 p2, inout PRInt64 p3, inout PRInt64 p4);
-nsresult Test4_3(inout float p1, inout float p2, inout float p3, inout float p4);
-nsresult Test4_4(inout double p1, inout double p2, inout double p3, inout double p4);
-nsresult Test4_5(inout nsISupports p1, inout nsISupports p2, inout nsISupports p3, inout nsISupports p4);
-
-nsresult Test5_1(inout PRInt32 p1, inout PRInt32 p2, inout PRInt32 p3, inout PRInt32 p4, inout PRInt32 p5);
-nsresult Test5_2(inout PRInt64 p1, inout PRInt64 p2, inout PRInt64 p3, inout PRInt64 p4, inout PRInt64 p5);
-nsresult Test5_3(inout float p1, inout float p2, inout float p3, inout float p4, inout float p5);
-nsresult Test5_4(inout double p1, inout double p2, inout double p3, inout double p4, inout double p5);
-nsresult Test5_5(inout nsISupports p1, inout nsISupports p2, inout nsISupports p3, inout nsISupports p4, inout nsISupports p5);
-
-nsresult Test6_1(inout PRInt32 p1, inout PRInt32 p2, inout PRInt32 p3, inout PRInt32 p4, inout PRInt32 p5, inout PRInt32 p6);
-nsresult Test6_2(inout PRInt64 p1, inout PRInt64 p2, inout PRInt64 p3, inout PRInt64 p4, inout PRInt64 p5, inout PRInt64 p6);
-nsresult Test6_3(inout float p1, inout float p2, inout float p3, inout float p4, inout float p5, inout float p6);
-nsresult Test6_4(inout double p1, inout double p2, inout double p3, inout double p4, inout double p5, inout double p6);
-nsresult Test6_5(inout nsISupports p1, inout nsISupports p2, inout nsISupports p3, inout nsISupports p4, inout nsISupports p5, inout nsISupports p6);
-
-nsresult Test7_1(inout PRInt32 p1, inout PRInt32 p2, inout PRInt32 p3, inout PRInt32 p4, inout PRInt32 p5, inout PRInt32 p6, inout PRInt32 p7);
-nsresult Test7_2(inout PRInt64 p1, inout PRInt64 p2, inout PRInt64 p3, inout PRInt64 p4, inout PRInt64 p5, inout PRInt64 p6, inout PRInt64 p7);
-nsresult Test7_3(inout float p1, inout float p2, inout float p3, inout float p4, inout float p5, inout float p6, inout float p7);
-nsresult Test7_4(inout double p1, inout double p2, inout double p3, inout double p4, inout double p5, inout double p6, inout double p7);
-nsresult Test7_5(inout nsISupports p1, inout nsISupports p2, inout nsISupports p3, inout nsISupports p4, inout nsISupports p5, inout nsISupports p6, inout nsISupports p7);
-
-nsresult Test8_1(inout PRInt32 p1, inout PRInt32 p2, inout PRInt32 p3, inout PRInt32 p4, inout PRInt32 p5, inout PRInt32 p6, inout PRInt32 p7, inout PRInt32 p8);
-nsresult Test8_2(inout PRInt64 p1, inout PRInt64 p2, inout PRInt64 p3, inout PRInt64 p4, inout PRInt64 p5, inout PRInt64 p6, inout PRInt64 p7, inout PRInt64 p8);
-nsresult Test8_3(inout float p1, inout float p2, inout float p3, inout float p4, inout float p5, inout float p6, inout float p7, inout float p8);
-nsresult Test8_4(inout double p1, inout double p2, inout double p3, inout double p4, inout double p5, inout double p6, inout double p7, inout double p8);
-nsresult Test8_5(inout nsISupports p1, inout nsISupports p2, inout nsISupports p3, inout nsISupports p4, inout nsISupports p5, inout nsISupports p6, inout nsISupports p7, inout nsISupports p8);
-
-nsresult Test9_1(inout PRInt32 p1, inout PRInt32 p2, inout PRInt32 p3, inout PRInt32 p4, inout PRInt32 p5, inout PRInt32 p6, inout PRInt32 p7, inout PRInt32 p8, inout PRInt32 p9);
-nsresult Test9_2(inout PRInt64 p1, inout PRInt64 p2, inout PRInt64 p3, inout PRInt64 p4, inout PRInt64 p5, inout PRInt64 p6, inout PRInt64 p7, inout PRInt64 p8, inout PRInt64 p9);
-nsresult Test9_3(inout float p1, inout float p2, inout float p3, inout float p4, inout float p5, inout float p6, inout float p7, inout float p8, inout float p9);
-nsresult Test9_4(inout double p1, inout double p2, inout double p3, inout double p4, inout double p5, inout double p6, inout double p7, inout double p8, inout double p9);
-nsresult Test9_5(inout nsISupports p1, inout nsISupports p2, inout nsISupports p3, inout nsISupports p4, inout nsISupports p5, inout nsISupports p6, inout nsISupports p7, inout nsISupports p8, inout nsISupports p9);
-
-nsresult Test10_1(inout PRInt32 p1, inout PRInt32 p2, inout PRInt32 p3, inout PRInt32 p4, inout PRInt32 p5, inout PRInt32 p6, inout PRInt32 p7, inout PRInt32 p8, inout PRInt32 p9, inout PRInt32 p10);
-nsresult Test10_2(inout PRInt64 p1, inout PRInt64 p2, inout PRInt64 p3, inout PRInt64 p4, inout PRInt64 p5, inout PRInt64 p6, inout PRInt64 p7, inout PRInt64 p8, inout PRInt64 p9, inout PRInt64 p10);
-nsresult Test10_3(inout float p1, inout float p2, inout float p3, inout float p4, inout float p5, inout float p6, inout float p7, inout float p8, inout float p9, inout float p10);
-nsresult Test10_4(inout double p1, inout double p2, inout double p3, inout double p4, inout double p5, inout double p6, inout double p7, inout double p8, inout double p9, inout double p10);
-nsresult Test10_5(inout nsISupports p1, inout nsISupports p2, inout nsISupports p3, inout nsISupports p4, inout nsISupports p5, inout nsISupports p6, inout nsISupports p7, inout nsISupports p8, inout nsISupports p9, inout nsISupports p10);
-
+    long Test(in long p1, in long p2);
+    void Test2();
+    void Test3(in nsISupports p1, out nsISupports p2);
 };
-
-
-[uuid(1979e980-1cfd-11d3-915e-0000863011c6)]
-interface nsITestProxy2 : nsISupports 
-{
-long Test(in long p1, in long p2);
-nsresult Test2();
-nsresult Test3(in nsISupports p1, out nsISupports p2);
-
-};
-
