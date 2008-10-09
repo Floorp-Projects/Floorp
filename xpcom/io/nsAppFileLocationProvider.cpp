@@ -85,11 +85,7 @@
 #endif
 
 // define default product directory
-#ifdef WINCE
-#define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING("Mozilla")
-#else
 #define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING(MOZ_USER_DIR)
-#endif
 
 // Locally defined keys used by nsAppDirectoryEnumerator
 #define NS_ENV_PLUGINS_DIR          "EnvPlugins"    // env var MOZ_PLUGIN_PATH
@@ -349,15 +345,6 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     rv = directoryService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
-    if (NS_FAILED(rv)) return rv;
-#elif defined(WINCE)
-    nsCOMPtr<nsIProperties> directoryService = 
-             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
-    if (localDir)
-        rv = localDir->AppendNative(NS_LITERAL_CSTRING("profile"));
     if (NS_FAILED(rv)) return rv;
 #elif defined(XP_WIN)
     nsCOMPtr<nsIProperties> directoryService = 
