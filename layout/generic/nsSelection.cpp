@@ -1407,7 +1407,8 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
             BidiLevelFromMove(mShell, pos.mResultContent, pos.mContentOffset, aKeycode, tHint);
       }
     }
-    result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinueSelection, PR_FALSE);
+    result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset,
+                       tHint, aContinueSelection, PR_FALSE);
   } else if (aKeycode == nsIDOMKeyEvent::DOM_VK_RIGHT && !aContinueSelection) {
     // Collapse selection if PeekOffset failed, we either
     //  1. bumped into the BRFrame, bug 207623
@@ -1417,17 +1418,13 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     PRBool isBRFrame = frame->GetType() == nsGkAtoms::brFrame;
     mDomSelections[index]->Collapse(weakNodeUsed, offsetused);
     // Note: 'frame' might be dead here.
-    if (isBRFrame) {
-      tHint = mHint;    // 1: make the line below restore the original hint
-    }
-    else {
-      tHint = HINTLEFT; // 2: we're now at the end of the frame to the left
+    if (!isBRFrame) {
+      mHint = HINTLEFT; // We're now at the end of the frame to the left.
     }
     result = NS_OK;
   }
   if (NS_SUCCEEDED(result))
   {
-    mHint = tHint; //save the hint parameter now for the next time
     result = mDomSelections[index]->
       ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
                      PR_FALSE, PR_FALSE);
@@ -1825,7 +1822,6 @@ nsFrameSelection::HandleClick(nsIContent *aNewFocus,
     }
   }
 
-  mHint = HINT(aHint);
   // Don't take focus when dragging off of a table
   if (!mDragSelectingCells)
   {
@@ -1835,7 +1831,8 @@ nsFrameSelection::HandleClick(nsIContent *aNewFocus,
         AdjustForMaintainedSelection(aNewFocus, aContentOffset))
       return NS_OK; //shift clicked to maintained selection. rejected.
 
-    return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
+    return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, HINT(aHint),
+                     aContinueSelection, aMultipleSelection);
   }
   
   return NS_OK;
@@ -1924,6 +1921,7 @@ nsresult
 nsFrameSelection::TakeFocus(nsIContent *aNewFocus,
                             PRUint32    aContentOffset,
                             PRUint32    aContentEndOffset,
+                            HINT        aHint,
                             PRBool      aContinueSelection,
                             PRBool      aMultipleSelection)
 {
@@ -1947,10 +1945,12 @@ nsFrameSelection::TakeFocus(nsIContent *aNewFocus,
     return NS_ERROR_FAILURE;
   //END HACKHACKHACK /checking for root frames/content
 
+  mHint = aHint;
+  
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
   nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNewFocus);
   //traverse through document and unselect crap here
-  if (!aContinueSelection){ //single click? setting cursor down
+  if (!aContinueSelection) {//single click? setting cursor down
     PRUint32 batching = mBatching;//hack to use the collapse code.
     PRBool changes = mChangesDuringBatching;
     mBatching = 1;
@@ -2389,7 +2389,7 @@ nsFrameSelection::SelectAll()
   }
   PRInt32 numChildren = rootContent->GetChildCount();
   PostReason(nsISelectionListener::NO_REASON);
-  return TakeFocus(rootContent, 0, numChildren, PR_FALSE, PR_FALSE);
+  return TakeFocus(rootContent, 0, numChildren, HINTLEFT, PR_FALSE, PR_FALSE);
 }
 
 //////////END FRAMESELECTION
@@ -3436,7 +3436,7 @@ nsFrameSelection::SetAncestorLimiter(nsIContent *aLimiter)
       ClearNormalSelection();
       if (mAncestorLimiter) {
         PostReason(nsISelectionListener::NO_REASON);
-        TakeFocus(mAncestorLimiter, 0, 0, PR_FALSE, PR_FALSE);
+        TakeFocus(mAncestorLimiter, 0, 0, HINTLEFT, PR_FALSE, PR_FALSE);
       }
     }
   }
