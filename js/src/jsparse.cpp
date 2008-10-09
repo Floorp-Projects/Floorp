@@ -2110,7 +2110,7 @@ CloneParseTree(JSContext *cx, JSParseNode *opn, JSTreeContext *tc)
     pn->pn_arity = opn->pn_arity;
 
     switch (pn->pn_arity) {
-#define NULLCHECK(e)   if (!(e)) return NULL
+#define NULLCHECK(e)   if (!(e)) return NULL; else
 
       case PN_FUNC:
         NULLCHECK(pn->pn_funpob =
