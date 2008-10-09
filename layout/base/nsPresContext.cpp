@@ -209,7 +209,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   mFocusBackgroundColor = mBackgroundColor;
   mFocusRingWidth = 1;
 
-  mLanguageSpecificTransformType = eLanguageSpecificTransformType_Unknown;
   if (aType == eContext_Galley) {
     mMedium = nsGkAtoms::screen;
   } else {
@@ -939,14 +938,6 @@ nsPresContext::UpdateCharSet(const nsAFlatCString& aCharSet)
     NS_IF_RELEASE(mLangGroup);
     mLangGroup = mLangService->LookupCharSet(aCharSet.get()).get();  // addrefs
 
-    if (mLangGroup == nsGkAtoms::Japanese && mEnableJapaneseTransform) {
-      mLanguageSpecificTransformType =
-        eLanguageSpecificTransformType_Japanese;
-    }
-    else {
-      mLanguageSpecificTransformType =
-        eLanguageSpecificTransformType_None;
-    }
     // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
 #if !defined(XP_BEOS) 
     if (mLangGroup == nsGkAtoms::Unicode) {
@@ -1102,21 +1093,15 @@ nsPresContext::SetImageAnimationModeExternal(PRUint16 aMode)
 }
 
 already_AddRefed<nsIFontMetrics>
-nsPresContext::GetMetricsForInternal(const nsFont& aFont)
+nsPresContext::GetMetricsFor(const nsFont& aFont)
 {
   nsIFontMetrics* metrics = nsnull;
   mDeviceContext->GetMetricsFor(aFont, mLangGroup, metrics);
   return metrics;
 }
 
-already_AddRefed<nsIFontMetrics>
-nsPresContext::GetMetricsForExternal(const nsFont& aFont)
-{
-  return GetMetricsForInternal(aFont);
-}
-
 const nsFont*
-nsPresContext::GetDefaultFontInternal(PRUint8 aFontID) const
+nsPresContext::GetDefaultFont(PRUint8 aFontID) const
 {
   const nsFont *font;
   switch (aFontID) {
@@ -1149,12 +1134,6 @@ nsPresContext::GetDefaultFontInternal(PRUint8 aFontID) const
       break;
   }
   return font;
-}
-
-const nsFont*
-nsPresContext::GetDefaultFontExternal(PRUint8 aFontID) const
-{
-  return GetDefaultFontInternal(aFontID);
 }
 
 void

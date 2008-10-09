@@ -275,17 +275,8 @@ public:
   /**
    * Get the font metrics for a given font.
    */
-  virtual NS_HIDDEN_(already_AddRefed<nsIFontMetrics>)
-   GetMetricsForExternal(const nsFont& aFont);
   NS_HIDDEN_(already_AddRefed<nsIFontMetrics>)
-    GetMetricsForInternal(const nsFont& aFont);
-#ifdef _IMPL_NS_LAYOUT
-  already_AddRefed<nsIFontMetrics> GetMetricsFor(const nsFont& aFont)
-  { return GetMetricsForInternal(aFont); }
-#else
-  already_AddRefed<nsIFontMetrics> GetMetricsFor(const nsFont& aFont)
-  { return GetMetricsForExternal(aFont); }
-#endif
+  GetMetricsFor(const nsFont& aFont);
 
   /**
    * Get the default font corresponding to the given ID.  This object is
@@ -304,15 +295,7 @@ public:
    * preferences for the given generic and the pres context's language
    * group, and its size set to the default variable font size.
    */
-  virtual NS_HIDDEN_(const nsFont*) GetDefaultFontExternal(PRUint8 aFontID) const;
-  NS_HIDDEN_(const nsFont*) GetDefaultFontInternal(PRUint8 aFontID) const;
-#ifdef _IMPL_NS_LAYOUT
-  const nsFont* GetDefaultFont(PRUint8 aFontID) const
-  { return GetDefaultFontInternal(aFontID); }
-#else
-  const nsFont* GetDefaultFont(PRUint8 aFontID) const
-  { return GetDefaultFontExternal(aFontID); }
-#endif
+  NS_HIDDEN_(const nsFont*) GetDefaultFont(PRUint8 aFontID) const;
 
   /** Get a cached boolean pref, by its type */
   // *  - initially created for bugs 31816, 20760, 22963
@@ -539,9 +522,6 @@ public:
   { return NSAppUnitsToFloatPixels(aAppUnits,
                                    nsIDeviceContext::AppUnitsPerCSSPixel()); }
 
-  static gfxFloat AppUnitsToGfxCSSPixels(nscoord aAppUnits)
-  { return nsIDeviceContext::AppUnitsToGfxCSSPixels(aAppUnits); }
-
   nscoord DevPixelsToAppUnits(PRInt32 aPixels) const
   { return NSIntPixelsToAppUnits(aPixels,
                                  mDeviceContext->AppUnitsPerDevPixel()); }
@@ -574,32 +554,12 @@ public:
                     TwipsToAppUnits(marginInTwips.right),
                     TwipsToAppUnits(marginInTwips.bottom)); }
 
-  PRInt32 AppUnitsToTwips(nscoord aTwips) const
-  { return NS_INCHES_TO_TWIPS((float)aTwips /
-                              mDeviceContext->AppUnitsPerInch()); }
-
   nscoord PointsToAppUnits(float aPoints) const
   { return NSToCoordRound(aPoints * mDeviceContext->AppUnitsPerInch() /
                           POINTS_PER_INCH_FLOAT); }
-  float AppUnitsToPoints(nscoord aAppUnits) const
-  { return (float)aAppUnits / mDeviceContext->AppUnitsPerInch() *
-      POINTS_PER_INCH_FLOAT; }
 
   nscoord RoundAppUnitsToNearestDevPixels(nscoord aAppUnits) const
   { return DevPixelsToAppUnits(AppUnitsToDevPixels(aAppUnits)); }
-
-  /**
-   * Get the language-specific transform type for the current document.
-   * This tells us whether we need to perform special language-dependent
-   * transformations such as Unicode U+005C (backslash) to Japanese
-   * Yen Sign (Unicode U+00A5, JIS 0x5C).
-   *
-   * @param aType returns type, must be non-NULL
-   */
-  nsLanguageSpecificTransformType LanguageSpecificTransformType() const
-  {
-    return mLanguageSpecificTransformType;
-  }
 
   struct ScrollbarStyles {
     // Always one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
@@ -854,7 +814,6 @@ protected:
   // container for per-context fonts (downloadable, SVG, etc.)
   gfxUserFontSet* mUserFontSet;
   
-  nsLanguageSpecificTransformType mLanguageSpecificTransformType;
   PRInt32               mFontScaler;
   nscoord               mMinimumFontSize;
 
