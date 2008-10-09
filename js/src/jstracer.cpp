@@ -1861,6 +1861,8 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     if (!verifyTypeStability()) {
         AUDIT(unstableLoopVariable);
         debug_only_v(printf("Trace rejected: unstable loop variables.\n");)
+        if (!trashTree)
+            fragment->blacklist();
         return;
     }
     SideExit *exit = snapshot(LOOP_EXIT);
