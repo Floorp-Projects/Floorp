@@ -184,8 +184,7 @@
                      align="center" pack="center">
           <label value="&searchtab.label;" accesskey="&searchtab.accesskey;" 
                  control="findText"/>
-          <textbox id="findText" type="timed" timeout="500"
-                   oncommand="doFind();"/>
+          <textbox id="findText" type="timed" oncommand="doFind();"/>
         </toolbaritem>
       </toolbar>
     </toolbox>
