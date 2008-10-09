@@ -182,8 +182,6 @@
 #include <Events.h>
 #endif
 
-extern "C" void ShowOSAlert(const char* aMessage);
-
 #ifdef DEBUG
 #include "prlog.h"
 #endif
