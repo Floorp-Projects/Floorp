@@ -2546,7 +2546,7 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToIns
                                                      PRInt32 aOffset, PRBool suppressIME)
 {
   nsRefPtr<EditTxn> txn;
-  nsresult result;
+  nsresult result = NS_OK;
   // suppressIME s used when editor must insert text, yet this text is not
   // part of current ime operation.  example: adjusting whitespace around an ime insertion.
   if (mIMETextRangeList && mInIMEMode && !suppressIME)
@@ -2557,14 +2557,14 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToIns
       mIMETextOffset = aOffset;
     }
     PRUint16 len ;
-    result = mIMETextRangeList->GetLength(&len);
-    if (NS_SUCCEEDED(result) && len > 0)
+    len = mIMETextRangeList->GetLength();
+    if (len > 0)
     {
       nsCOMPtr<nsIPrivateTextRange> range;
       for (PRUint16 i = 0; i < len; i++) 
       {
-        result = mIMETextRangeList->Item(i, getter_AddRefs(range));
-        if (NS_SUCCEEDED(result) && range)
+        range = mIMETextRangeList->Item(i);
+        if (range)
         {
           PRUint16 type;
           result = range->GetRangeType(&type);
@@ -4453,14 +4453,13 @@ nsEditor::SetIsIMEComposing(){
   PRUint16 listlen, type;
 
   mIsIMEComposing = PR_FALSE;
-  nsresult result = mIMETextRangeList->GetLength(&listlen);
-  if (NS_FAILED(result)) return;
+  listlen = mIMETextRangeList->GetLength();
 
   for (PRUint16 i = 0; i < listlen; i++)
   {
-      result = mIMETextRangeList->Item(i, getter_AddRefs(rangePtr));
-      if (NS_FAILED(result)) continue;
-      result = rangePtr->GetRangeType(&type);
+      rangePtr = mIMETextRangeList->Item(i);
+      if (!rangePtr) continue;
+      nsresult result = rangePtr->GetRangeType(&type);
       if (NS_FAILED(result)) continue;
       if ( type == nsIPrivateTextRange::TEXTRANGE_RAWINPUT ||
            type == nsIPrivateTextRange::TEXTRANGE_CONVERTEDTEXT ||
