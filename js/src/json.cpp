@@ -66,21 +66,20 @@ JSClass js_JSONClass = {
 JSBool
 js_json_parse(JSContext *cx, uintN argc, jsval *vp)
 {
-    JSString *s;
+    JSString *s = NULL;
     jsval *argv = vp + 2;
 
     // Must throw an Error if there isn't a first arg
-    if (!JS_ConvertArguments(cx, argc, argv, "s", &s))
+    if (!JS_ConvertArguments(cx, argc, argv, "S", &s))
         return JS_FALSE;
 
-    JSBool ok;  
+
     JSONParser *jp = js_BeginJSONParse(cx, vp);
-    if (!jp)
-        ok = JS_FALSE;
+    JSBool ok = jp != NULL;
 
     if (ok) {
         ok = js_ConsumeJSONText(cx, jp, JS_GetStringChars(s), JS_GetStringLength(s));
-        ok  &= js_FinishJSONParse(cx, jp);
+        ok &= js_FinishJSONParse(cx, jp);
     }
 
     if (!ok)
@@ -144,7 +143,7 @@ js_json_stringify(JSContext *cx, uintN argc, jsval *vp)
     if (ok) {
         jsval sv = STRING_TO_JSVAL(s);
         StringifyClosure sc(cx, &sv);
-        JSAutoTempValueRooter tvr(cx, 1, sc.s); 
+	JSAutoTempValueRooter tvr(cx, 1, sc.s); 
         ok = js_Stringify(cx, &v, NULL, &WriteCallback, &sc, 0);
         *vp = *sc.s;
     }
@@ -193,7 +192,7 @@ write_string(JSContext *cx, JSONWriteCallback callback, void *data, const jschar
             unsigned int len = JS_snprintf(ubuf, sizeof(ubuf), "%.2x", buf[i]);
             JS_ASSERT(len == 2);
             // TODO: don't allocate a JSString just to inflate (js_InflateStringToBuffer on static?)
-            JSString *us = JS_NewString(cx, ubuf, len);
+            JSString *us = JS_NewStringCopyN(cx, ubuf, len);
             if (!callback(JS_GetStringChars(us), len, data))
                 return JS_FALSE;
             mark = i + 1;
