@@ -3130,9 +3130,12 @@ TraceRecorder::ifop(bool negate)
         JS_NOT_REACHED("ifop");
         return false;
     }
-    if (!x->isCond())
-        x = lir->ins_eq0(lir->ins_eq0(x));
-    guard(cond, x, BRANCH_EXIT); 
+    bool expected = cond;
+    if (!x->isCond()) {
+        x = lir->ins_eq0(x);
+        expected = !expected;
+    }
+    guard(expected, x, BRANCH_EXIT); 
     return true;
 }
 
