@@ -1908,15 +1908,6 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   // NS_STYLE_USER_SELECT_TOGGLE, need to change this logic
   PRBool useFrameSelection = (selectStyle == NS_STYLE_USER_SELECT_TEXT);
 
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
-  ContentOffsets offsets = GetContentOffsetsFromPoint(pt);
-
-  if (!IsMouseCaptured(aPresContext) && offsets.content) {
-    nsIFrame* capturingFrame = shell->GetPrimaryFrameFor(offsets.content);
-    if (capturingFrame)
-      capturingFrame->CaptureMouse(aPresContext, PR_TRUE);
-  }
-
   // XXX This is screwy; it really should use the selection frame, not the
   // event frame
   const nsFrameSelection* frameselection = nsnull;
@@ -1925,6 +1916,19 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   else
     frameselection = shell->ConstFrameSelection();
 
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+  ContentOffsets offsets = GetContentOffsetsFromPoint(pt);
+  
+  if (!IsMouseCaptured(aPresContext) && offsets.content) {
+    PRInt32 offset;
+    nsIFrame* capturingFrame = frameselection->
+      GetFrameForNodeOffset(offsets.content, offsets.offset, 
+                            nsFrameSelection::HINT(offsets.associateWithNext),
+                            &offset);
+    if (capturingFrame)
+      capturingFrame->CaptureMouse(aPresContext, PR_TRUE);
+  }
+    
   if (frameselection->GetDisplaySelection() == nsISelectionController::SELECTION_OFF)
     return NS_OK;//nothing to do we cannot affect selection from here
 
