@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 
-<bindings id="PreferencesSkinBindings"
+<bindings id="filefieldBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="fileField" extends="chrome://global/content/bindings/general.xml#control-item">
+  <binding id="filefield" extends="chrome://global/content/bindings/general.xml#basetext">
     <content>
-      <xul:stringbundle anonid="bundle" src="chrome://mozapps/locale/preferences/preferences.properties"/>
+      <xul:stringbundle anonid="bundle" src="chrome://global/locale/filefield.properties"/>
       <xul:hbox class="fileFieldContentBox" align="center" flex="1" xbl:inherits="disabled">
         <xul:image class="fileFieldIcon" xbl:inherits="src=image,disabled"/>
         <xul:textbox class="fileFieldLabel" xbl:inherits="value=label,disabled,accesskey,tabindex,aria-labelledby" flex="1" readonly="true"/>
