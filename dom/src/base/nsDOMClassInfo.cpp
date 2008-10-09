@@ -7589,13 +7589,10 @@ nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   if (ok && JSVAL_IS_INT(len_val)) {
     PRInt32 length = JSVAL_TO_INT(len_val);
-    char buf[11];
 
     for (PRInt32 i = 0; ok && i < length; ++i) {
-      PR_snprintf(buf, sizeof(buf), "%d", i);
-
-      ok = ::JS_DefineProperty(cx, obj, buf, JSVAL_VOID, nsnull, nsnull,
-                               JSPROP_ENUMERATE | JSPROP_SHARED);
+      ok = ::JS_DefineElement(cx, obj, i, JSVAL_VOID, nsnull, nsnull,
+                              JSPROP_ENUMERATE | JSPROP_SHARED);
     }
   }
 

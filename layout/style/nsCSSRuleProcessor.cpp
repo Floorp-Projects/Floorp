@@ -2474,8 +2474,8 @@ InsertRuleByWeight(nsICSSRule* aRule, void* aData)
   return PR_TRUE;
 }
 
-static PRBool
-CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
+/* static */ PRBool
+nsCSSRuleProcessor::CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
 {
   nsCSSStyleSheet*  sheet = static_cast<nsCSSStyleSheet*>(aSheet);
   CascadeEnumData* data = static_cast<CascadeEnumData*>(aData);

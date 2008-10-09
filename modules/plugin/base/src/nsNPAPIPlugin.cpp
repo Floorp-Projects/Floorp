@@ -259,146 +259,56 @@ nsNPAPIPlugin::CheckClassInitialized(void)
   // XXX It'd be nice to make this const and initialize it statically...
   CALLBACKS.size = sizeof(CALLBACKS);
   CALLBACKS.version = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
-
-  CALLBACKS.geturl =
-    NewNPN_GetURLProc(FP2TV(_geturl));
-
-  CALLBACKS.posturl =
-    NewNPN_PostURLProc(FP2TV(_posturl));
-
-  CALLBACKS.requestread =
-    NewNPN_RequestReadProc(FP2TV(_requestread));
-
-  CALLBACKS.newstream =
-    NewNPN_NewStreamProc(FP2TV(_newstream));
-
-  CALLBACKS.write =
-    NewNPN_WriteProc(FP2TV(_write));
-
-  CALLBACKS.destroystream =
-    NewNPN_DestroyStreamProc(FP2TV(_destroystream));
-
-  CALLBACKS.status =
-    NewNPN_StatusProc(FP2TV(_status));
-
-  CALLBACKS.uagent =
-    NewNPN_UserAgentProc(FP2TV(_useragent));
-
-  CALLBACKS.memalloc =
-    NewNPN_MemAllocProc(FP2TV(_memalloc));
-
-  CALLBACKS.memfree =
-    NewNPN_MemFreeProc(FP2TV(_memfree));
-
-  CALLBACKS.memflush =
-    NewNPN_MemFlushProc(FP2TV(_memflush));
-
-  CALLBACKS.reloadplugins =
-    NewNPN_ReloadPluginsProc(FP2TV(_reloadplugins));
+  CALLBACKS.geturl = ((NPN_GetURLProcPtr)FP2TV(_geturl));
+  CALLBACKS.posturl = ((NPN_PostURLProcPtr)FP2TV(_posturl));
+  CALLBACKS.requestread = ((NPN_RequestReadProcPtr)FP2TV(_requestread));
+  CALLBACKS.newstream = ((NPN_NewStreamProcPtr)FP2TV(_newstream));
+  CALLBACKS.write = ((NPN_WriteProcPtr)FP2TV(_write));
+  CALLBACKS.destroystream = ((NPN_DestroyStreamProcPtr)FP2TV(_destroystream));
+  CALLBACKS.status = ((NPN_StatusProcPtr)FP2TV(_status));
+  CALLBACKS.uagent = ((NPN_UserAgentProcPtr)FP2TV(_useragent));
+  CALLBACKS.memalloc = ((NPN_MemAllocProcPtr)FP2TV(_memalloc));
+  CALLBACKS.memfree = ((NPN_MemFreeProcPtr)FP2TV(_memfree));
+  CALLBACKS.memflush = ((NPN_MemFlushProcPtr)FP2TV(_memflush));
+  CALLBACKS.reloadplugins = ((NPN_ReloadPluginsProcPtr)FP2TV(_reloadplugins));
 
   // Deprecated API callbacks.
-  CALLBACKS.getJavaEnv =
-    NewNPN_GetJavaEnvProc(FP2TV(_getJavaEnv));
-  CALLBACKS.getJavaPeer =
-    NewNPN_GetJavaPeerProc(FP2TV(_getJavaPeer));
+  CALLBACKS.getJavaEnv = ((NPN_GetJavaEnvProcPtr)FP2TV(_getJavaEnv));
+  CALLBACKS.getJavaPeer = ((NPN_GetJavaPeerProcPtr)FP2TV(_getJavaPeer));
+  CALLBACKS.geturlnotify = ((NPN_GetURLNotifyProcPtr)FP2TV(_geturlnotify));
+  CALLBACKS.posturlnotify = ((NPN_PostURLNotifyProcPtr)FP2TV(_posturlnotify));
+  CALLBACKS.getvalue = ((NPN_GetValueProcPtr)FP2TV(_getvalue));
+  CALLBACKS.setvalue = ((NPN_SetValueProcPtr)FP2TV(_setvalue));
+  CALLBACKS.invalidaterect = ((NPN_InvalidateRectProcPtr)FP2TV(_invalidaterect));
+  CALLBACKS.invalidateregion = ((NPN_InvalidateRegionProcPtr)FP2TV(_invalidateregion));
+  CALLBACKS.forceredraw = ((NPN_ForceRedrawProcPtr)FP2TV(_forceredraw));
+  CALLBACKS.getstringidentifier = ((NPN_GetStringIdentifierProcPtr)FP2TV(_getstringidentifier));
+  CALLBACKS.getstringidentifiers = ((NPN_GetStringIdentifiersProcPtr)FP2TV(_getstringidentifiers));
+  CALLBACKS.getintidentifier = ((NPN_GetIntIdentifierProcPtr)FP2TV(_getintidentifier));
+  CALLBACKS.identifierisstring = ((NPN_IdentifierIsStringProcPtr)FP2TV(_identifierisstring));
+  CALLBACKS.utf8fromidentifier = ((NPN_UTF8FromIdentifierProcPtr)FP2TV(_utf8fromidentifier));
+  CALLBACKS.intfromidentifier = ((NPN_IntFromIdentifierProcPtr)FP2TV(_intfromidentifier));
+  CALLBACKS.createobject = ((NPN_CreateObjectProcPtr)FP2TV(_createobject));
+  CALLBACKS.retainobject = ((NPN_RetainObjectProcPtr)FP2TV(_retainobject));
+  CALLBACKS.releaseobject = ((NPN_ReleaseObjectProcPtr)FP2TV(_releaseobject));
+  CALLBACKS.invoke = ((NPN_InvokeProcPtr)FP2TV(_invoke));
+  CALLBACKS.invokeDefault = ((NPN_InvokeDefaultProcPtr)FP2TV(_invokeDefault));
+  CALLBACKS.evaluate = ((NPN_EvaluateProcPtr)FP2TV(_evaluate));
+  CALLBACKS.getproperty = ((NPN_GetPropertyProcPtr)FP2TV(_getproperty));
+  CALLBACKS.setproperty = ((NPN_SetPropertyProcPtr)FP2TV(_setproperty));
+  CALLBACKS.removeproperty = ((NPN_RemovePropertyProcPtr)FP2TV(_removeproperty));
+  CALLBACKS.hasproperty = ((NPN_HasPropertyProcPtr)FP2TV(_hasproperty));
+  CALLBACKS.hasmethod = ((NPN_HasMethodProcPtr)FP2TV(_hasmethod));
+  CALLBACKS.enumerate = ((NPN_EnumerateProcPtr)FP2TV(_enumerate));
+  CALLBACKS.construct = ((NPN_ConstructProcPtr)FP2TV(_construct));
+  CALLBACKS.releasevariantvalue = ((NPN_ReleaseVariantValueProcPtr)FP2TV(_releasevariantvalue));
+  CALLBACKS.setexception = ((NPN_SetExceptionProcPtr)FP2TV(_setexception));
+  CALLBACKS.pushpopupsenabledstate = ((NPN_PushPopupsEnabledStateProcPtr)FP2TV(_pushpopupsenabledstate));
+  CALLBACKS.poppopupsenabledstate = ((NPN_PopPopupsEnabledStateProcPtr)FP2TV(_poppopupsenabledstate));
+  CALLBACKS.pluginthreadasynccall = ((NPN_PluginThreadAsyncCallProcPtr)FP2TV(_pluginthreadasynccall));
 
-  CALLBACKS.geturlnotify =
-    NewNPN_GetURLNotifyProc(FP2TV(_geturlnotify));
-
-  CALLBACKS.posturlnotify =
-    NewNPN_PostURLNotifyProc(FP2TV(_posturlnotify));
-
-  CALLBACKS.getvalue =
-    NewNPN_GetValueProc(FP2TV(_getvalue));
-
-  CALLBACKS.setvalue =
-    NewNPN_SetValueProc(FP2TV(_setvalue));
-
-  CALLBACKS.invalidaterect =
-    NewNPN_InvalidateRectProc(FP2TV(_invalidaterect));
-
-  CALLBACKS.invalidateregion =
-    NewNPN_InvalidateRegionProc(FP2TV(_invalidateregion));
-
-  CALLBACKS.forceredraw =
-    NewNPN_ForceRedrawProc(FP2TV(_forceredraw));
-
-  CALLBACKS.getstringidentifier =
-    NewNPN_GetStringIdentifierProc(FP2TV(_getstringidentifier));
-
-  CALLBACKS.getstringidentifiers =
-    NewNPN_GetStringIdentifiersProc(FP2TV(_getstringidentifiers));
-
-  CALLBACKS.getintidentifier =
-    NewNPN_GetIntIdentifierProc(FP2TV(_getintidentifier));
-
-  CALLBACKS.identifierisstring =
-    NewNPN_IdentifierIsStringProc(FP2TV(_identifierisstring));
-
-  CALLBACKS.utf8fromidentifier =
-    NewNPN_UTF8FromIdentifierProc(FP2TV(_utf8fromidentifier));
-
-  CALLBACKS.intfromidentifier =
-    NewNPN_IntFromIdentifierProc(FP2TV(_intfromidentifier));
-
-  CALLBACKS.createobject =
-    NewNPN_CreateObjectProc(FP2TV(_createobject));
-
-  CALLBACKS.retainobject =
-    NewNPN_RetainObjectProc(FP2TV(_retainobject));
-
-  CALLBACKS.releaseobject =
-    NewNPN_ReleaseObjectProc(FP2TV(_releaseobject));
-
-  CALLBACKS.invoke =
-    NewNPN_InvokeProc(FP2TV(_invoke));
-
-  CALLBACKS.invokeDefault =
-    NewNPN_InvokeDefaultProc(FP2TV(_invokeDefault));
-
-  CALLBACKS.evaluate =
-    NewNPN_EvaluateProc(FP2TV(_evaluate));
-
-  CALLBACKS.getproperty =
-    NewNPN_GetPropertyProc(FP2TV(_getproperty));
-
-  CALLBACKS.setproperty =
-    NewNPN_SetPropertyProc(FP2TV(_setproperty));
-
-  CALLBACKS.removeproperty =
-    NewNPN_RemovePropertyProc(FP2TV(_removeproperty));
-
-  CALLBACKS.hasproperty =
-    NewNPN_HasPropertyProc(FP2TV(_hasproperty));
-
-  CALLBACKS.hasmethod =
-    NewNPN_HasMethodProc(FP2TV(_hasmethod));
-
-  CALLBACKS.enumerate =
-    NewNPN_EnumerateProc(FP2TV(_enumerate));
-
-  CALLBACKS.construct =
-    NewNPN_ConstructProc(FP2TV(_construct));
-
-  CALLBACKS.releasevariantvalue =
-    NewNPN_ReleaseVariantValueProc(FP2TV(_releasevariantvalue));
-
-  CALLBACKS.setexception =
-    NewNPN_SetExceptionProc(FP2TV(_setexception));
-
-  CALLBACKS.pushpopupsenabledstate =
-    NewNPN_PushPopupsEnabledStateProc(FP2TV(_pushpopupsenabledstate));
-
-  CALLBACKS.poppopupsenabledstate =
-    NewNPN_PopPopupsEnabledStateProc(FP2TV(_poppopupsenabledstate));
-
-  CALLBACKS.pluginthreadasynccall =
-    NewNPN_PluginThreadAsyncCallProc(FP2TV(_pluginthreadasynccall));
-
-  if (!sPluginThreadAsyncCallLock) {
-    sPluginThreadAsyncCallLock =
-      nsAutoLock::NewLock("sPluginThreadAsyncCallLock");
-  }
+  if (!sPluginThreadAsyncCallLock)
+    sPluginThreadAsyncCallLock = nsAutoLock::NewLock("sPluginThreadAsyncCallLock");
 
   initialized = PR_TRUE;
 
@@ -461,17 +371,15 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
   {
     // call into the entry point
     NP_MAIN pfnMain = (NP_MAIN)PR_FindSymbol(aLibrary, "main");
-
-    if (pfnMain == NULL)
+    if (!pfnMain)
       return;
 
     NPError error;
-    NPP_ShutdownUPP pfnMainShutdown;
+    NPP_ShutdownProcPtr pfnMainShutdown;
     NS_TRY_SAFE_CALL_RETURN(error,
-                            CallNPP_MainEntryProc(pfnMain,
-                                                  &(nsNPAPIPlugin::CALLBACKS),
-                                                  &np_callbacks,
-                                                  &pfnMainShutdown),
+                            (*pfnMain)(&(nsNPAPIPlugin::CALLBACKS),
+                                       &np_callbacks,
+                                       &pfnMainShutdown),
                             aLibrary,
                             nsnull);
     
@@ -494,20 +402,20 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
   // pointers.
   fCallbacks.size = sizeof(fCallbacks);
   fCallbacks.version = np_callbacks.version;
-  fCallbacks.newp = (NPP_NewUPP) TV2FP(np_callbacks.newp);
-  fCallbacks.destroy = (NPP_DestroyUPP) TV2FP(np_callbacks.destroy);
-  fCallbacks.setwindow = (NPP_SetWindowUPP) TV2FP(np_callbacks.setwindow);
-  fCallbacks.newstream = (NPP_NewStreamUPP) TV2FP(np_callbacks.newstream);
+  fCallbacks.newp = (NPP_NewProcPtr) TV2FP(np_callbacks.newp);
+  fCallbacks.destroy = (NPP_DestroyProcPtr) TV2FP(np_callbacks.destroy);
+  fCallbacks.setwindow = (NPP_SetWindowProcPtr) TV2FP(np_callbacks.setwindow);
+  fCallbacks.newstream = (NPP_NewStreamProcPtr) TV2FP(np_callbacks.newstream);
   fCallbacks.destroystream =
-    (NPP_DestroyStreamUPP) TV2FP(np_callbacks.destroystream);
-  fCallbacks.asfile = (NPP_StreamAsFileUPP) TV2FP(np_callbacks.asfile);
-  fCallbacks.writeready = (NPP_WriteReadyUPP) TV2FP(np_callbacks.writeready);
-  fCallbacks.write = (NPP_WriteUPP) TV2FP(np_callbacks.write);
-  fCallbacks.print = (NPP_PrintUPP) TV2FP(np_callbacks.print);
-  fCallbacks.event = (NPP_HandleEventUPP) TV2FP(np_callbacks.event);
-  fCallbacks.urlnotify = (NPP_URLNotifyUPP) TV2FP(np_callbacks.urlnotify);
-  fCallbacks.getvalue = (NPP_GetValueUPP) TV2FP(np_callbacks.getvalue);
-  fCallbacks.setvalue = (NPP_SetValueUPP) TV2FP(np_callbacks.setvalue);
+    (NPP_DestroyStreamProcPtr) TV2FP(np_callbacks.destroystream);
+  fCallbacks.asfile = (NPP_StreamAsFileProcPtr) TV2FP(np_callbacks.asfile);
+  fCallbacks.writeready = (NPP_WriteReadyProcPtr) TV2FP(np_callbacks.writeready);
+  fCallbacks.write = (NPP_WriteProcPtr) TV2FP(np_callbacks.write);
+  fCallbacks.print = (NPP_PrintProcPtr) TV2FP(np_callbacks.print);
+  fCallbacks.event = (NPP_HandleEventProcPtr) TV2FP(np_callbacks.event);
+  fCallbacks.urlnotify = (NPP_URLNotifyProcPtr) TV2FP(np_callbacks.urlnotify);
+  fCallbacks.getvalue = (NPP_GetValueProcPtr) TV2FP(np_callbacks.getvalue);
+  fCallbacks.setvalue = (NPP_SetValueProcPtr) TV2FP(np_callbacks.setvalue);
 #else // for everyone else
   memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
   fShutdownEntry = aShutdown;
@@ -832,9 +740,9 @@ nsNPAPIPlugin::Shutdown(void)
   NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,
                  ("NPP Shutdown to be called: this=%p\n", this));
 
-  if (fShutdownEntry != nsnull) {
+  if (fShutdownEntry) {
 #if defined(XP_MACOSX)
-    CallNPP_ShutdownProc(fShutdownEntry);
+    (*fShutdownEntry)();
     if (fPluginRefNum > 0)
       ::CloseResFile(fPluginRefNum);
 #else

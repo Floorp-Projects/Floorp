@@ -157,10 +157,7 @@ nsresult nsNPAPIPluginStreamListener::CleanUpStream(NPReason reason)
     PRLibrary* lib = nsnull;
     lib = mInst->fLibrary;
     NPError error;
-    NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyStreamProc(callbacks->destroystream,
-                                                               npp,
-                                                               &mNPStream,
-                                                               reason), lib, mInst);
+    NS_TRY_SAFE_CALL_RETURN(error, (*callbacks->destroystream)(npp, &mNPStream, reason), lib, mInst);
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP DestroyStream called: this=%p, npp=%p, reason=%d, return=%d, url=%s\n",
@@ -200,11 +197,7 @@ void nsNPAPIPluginStreamListener::CallURLNotify(NPReason reason)
     NPP npp;
     mInst->GetNPP(&npp);
 
-    NS_TRY_SAFE_CALL_VOID(CallNPP_URLNotifyProc(callbacks->urlnotify,
-                                                npp,
-                                                mNotifyURL,
-                                                reason,
-                                                mNotifyData), mInst->fLibrary, mInst);
+    NS_TRY_SAFE_CALL_VOID((*callbacks->urlnotify)(npp, mNotifyURL, reason, mNotifyData), mInst->fLibrary, mInst);
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP URLNotify called: this=%p, npp=%p, notify=%p, reason=%d, url=%s\n",
@@ -250,12 +243,7 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 
   mStreamInfo = pluginInfo;
 
-  NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewStreamProc(callbacks->newstream,
-                                                       npp,
-                                                       (char *)contentType,
-                                                       &mNPStream,
-                                                       seekable,
-                                                       &streamType), mInst->fLibrary, mInst);
+  NS_TRY_SAFE_CALL_RETURN(error, (*callbacks->newstream)(npp, (char*)contentType, &mNPStream, seekable, &streamType), mInst->fLibrary, mInst);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP NewStream called: this=%p, npp=%p, mime=%s, seek=%d, type=%d, return=%d, url=%s\n",
@@ -498,11 +486,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
     while (mStreamBufferByteCount > 0) {
       PRInt32 numtowrite;
       if (callbacks->writeready) {
-        NS_TRY_SAFE_CALL_RETURN(numtowrite, 
-                                CallNPP_WriteReadyProc(callbacks->writeready,
-                                                       npp, &mNPStream),
-                                mInst->fLibrary, mInst);
-
+        NS_TRY_SAFE_CALL_RETURN(numtowrite, (*callbacks->writeready)(npp, &mNPStream), mInst->fLibrary, mInst);
         NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                        ("NPP WriteReady called: this=%p, npp=%p, "
                         "return(towrite)=%d, url=%s\n",
@@ -549,12 +533,7 @@ nsNPAPIPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
       }
 
       PRInt32 writeCount = 0; // bytes consumed by plugin instance
-      NS_TRY_SAFE_CALL_RETURN(writeCount, 
-                              CallNPP_WriteProc(callbacks->write, npp,
-                                                &mNPStream, streamPosition,
-                                                numtowrite,
-                                                ptrStreamBuffer),
-                              mInst->fLibrary, mInst);
+      NS_TRY_SAFE_CALL_RETURN(writeCount, (*callbacks->write)(npp, &mNPStream, streamPosition, numtowrite, ptrStreamBuffer), mInst->fLibrary, mInst);
 
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
                      ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, "
@@ -662,10 +641,7 @@ nsNPAPIPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
   PRLibrary* lib = nsnull;
   lib = mInst->fLibrary;
 
-  NS_TRY_SAFE_CALL_VOID(CallNPP_StreamAsFileProc(callbacks->asfile,
-                                                   npp,
-                                                   &mNPStream,
-                                                   fileName), lib, mInst);
+  NS_TRY_SAFE_CALL_VOID((*callbacks->asfile)(npp, &mNPStream, fileName), lib, mInst);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP StreamAsFile called: this=%p, npp=%p, url=%s, file=%s\n",
@@ -911,7 +887,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Stop(void)
       listener->CleanUpStream(NPRES_USER_BREAK);
   }
 
-  NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyProc(fCallbacks->destroy, &fNPP, &sdata), fLibrary, this);
+  NS_TRY_SAFE_CALL_RETURN(error, (*fCallbacks->destroy)(&fNPP, &sdata), fLibrary, this);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP Destroy called: this=%p, npp=%p, return=%d\n", this, &fNPP, error));
@@ -1062,14 +1038,7 @@ nsresult nsNPAPIPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   PRBool oldVal = mInPluginInitCall;
   mInPluginInitCall = PR_TRUE;
 
-  NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewProc(fCallbacks->newp,
-                                          (char *)mimetype,
-                                          &fNPP,
-                                          (PRUint16)mode,
-                                          count,
-                                          (char**)names,
-                                          (char**)values,
-                                          NULL), fLibrary,this);
+  NS_TRY_SAFE_CALL_RETURN(error, (*fCallbacks->newp)((char*)mimetype, &fNPP, (PRUint16)mode, count, (char**)names, (char**)values, NULL), fLibrary,this);
 
   mInPluginInitCall = oldVal;
 
@@ -1124,9 +1093,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(nsPluginWindow* window)
     PRBool oldVal = mInPluginInitCall;
     mInPluginInitCall = PR_TRUE;
 
-    NS_TRY_SAFE_CALL_RETURN(error, CallNPP_SetWindowProc(fCallbacks->setwindow,
-                                  &fNPP,
-                                  (NPWindow*) window), fLibrary, this);
+    NS_TRY_SAFE_CALL_RETURN(error, (*fCallbacks->setwindow)(&fNPP, (NPWindow*)window), fLibrary, this);
 
     mInPluginInitCall = oldVal;
 
@@ -1206,11 +1173,8 @@ NS_IMETHODIMP nsNPAPIPluginInstance::Print(nsPluginPrint* platformPrint)
     }
   }
 
-  if (fCallbacks->print) {
-      NS_TRY_SAFE_CALL_VOID(CallNPP_PrintProc(fCallbacks->print,
-                                              &fNPP,
-                                              thePrint), fLibrary, this);
-  }
+  if (fCallbacks->print)
+      NS_TRY_SAFE_CALL_VOID((*fCallbacks->print)(&fNPP, thePrint), fLibrary, this);
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP PrintProc called: this=%p, pDC=%p, [x=%d,y=%d,w=%d,h=%d], clip[t=%d,b=%d,l=%d,r=%d]\n",
@@ -1242,9 +1206,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* h
   
   if (fCallbacks->event) {
 #ifdef XP_MACOSX
-    result = CallNPP_HandleEventProc(fCallbacks->event,
-                                     &fNPP,
-                                     (void*) event->event);
+    result = (*fCallbacks->event)(&fNPP, (void*)event->event);
 
 #elif defined(XP_WIN) || defined(XP_OS2)
       NPEvent npEvent;
@@ -1252,14 +1214,10 @@ NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* h
       npEvent.wParam = event->wParam;
       npEvent.lParam = event->lParam;
 
-      NS_TRY_SAFE_CALL_RETURN(result, CallNPP_HandleEventProc(fCallbacks->event,
-                                    &fNPP,
-                                    (void*)&npEvent), fLibrary, this);
+      NS_TRY_SAFE_CALL_RETURN(result, (*fCallbacks->event)(&fNPP, (void*)&npEvent), fLibrary, this);
 
 #else // MOZ_X11 or other
-      result = CallNPP_HandleEventProc(fCallbacks->event,
-                                       &fNPP,
-                                       (void*)&event->event);
+      result = (*fCallbacks->event)(&fNPP, (void*)&event->event);
 #endif
 
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
@@ -1278,12 +1236,7 @@ nsresult nsNPAPIPluginInstance::GetValueInternal(NPPVariable variable, void* val
   if (fCallbacks->getvalue && mStarted) {
     PluginDestructionGuard guard(this);
 
-    NS_TRY_SAFE_CALL_RETURN(res, 
-                            CallNPP_GetValueProc(fCallbacks->getvalue, 
-                                                 &fNPP, 
-                                                 variable, 
-                                                 value), 
-                                                 fLibrary, this);
+    NS_TRY_SAFE_CALL_RETURN(res, (*fCallbacks->getvalue)(&fNPP, variable, value), fLibrary, this);
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
     this, &fNPP, variable, value, res));
@@ -1297,8 +1250,7 @@ nsresult nsNPAPIPluginInstance::GetValueInternal(NPPVariable variable, void* val
       if (res == NS_OK)
       {
         nsIID *iid = nsnull; 
-        res = CallNPP_GetValueProc(fCallbacks->getvalue, &fNPP, 
-                                   NPPVpluginScriptableIID, (void *)&iid);
+        res = (*fCallbacks->getvalue)(&fNPP, NPPVpluginScriptableIID, (void *)&iid);
         if (res == NS_OK)
           res = wrapper->MaybeWrap(*iid, *(nsISupports**)value,
                                    (nsISupports**)value);

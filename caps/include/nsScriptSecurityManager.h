@@ -402,14 +402,18 @@ public:
      * false otherwise.
      */
     static PRBool SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI);
+    static PRUint32 SecurityHashURI(nsIURI* aURI);
 
     static nsresult 
     ReportError(JSContext* cx, const nsAString& messageTag,
                 nsIURI* aSource, nsIURI* aTarget);
+
     static nsresult
     CheckSameOriginPrincipal(nsIPrincipal* aSubject,
                              nsIPrincipal* aObject,
                              PRBool aIsCheckConnect);
+    static PRUint32
+    HashPrincipalByOrigin(nsIPrincipal* aPrincipal);
 
     static PRBool
     GetStrictFileOriginPolicy()
