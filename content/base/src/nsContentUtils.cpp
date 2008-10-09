@@ -3948,9 +3948,7 @@ nsContentUtils::GetNativeEvent(nsIDOMEvent* aDOMEvent)
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aDOMEvent));
   if (!privateEvent)
     return nsnull;
-  nsEvent* nativeEvent;
-  privateEvent->GetInternalNSEvent(&nativeEvent);
-  return nativeEvent;
+  return privateEvent->GetInternalNSEvent();
 }
 
 //static

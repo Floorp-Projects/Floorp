@@ -5201,10 +5201,9 @@ PostMessageEvent::Run()
   if (shell)
     presContext = shell->GetPresContext();
 
-  nsEvent* internalEvent;
   nsCOMPtr<nsIPrivateDOMEvent> privEvent = do_QueryInterface(message);
   privEvent->SetTrusted(mTrustedCaller);
-  privEvent->GetInternalNSEvent(&internalEvent);
+  nsEvent *internalEvent = privEvent->GetInternalNSEvent();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEventDispatcher::Dispatch(static_cast<nsPIDOMWindow*>(mTargetWindow),
