@@ -891,6 +891,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     this->trashTree = false;
     this->whichTreeToTrash = _fragment->root;
     this->global_dslots = this->globalObj->dslots;
+    this->terminate = false;
 
     debug_only_v(printf("recording starting from %s:%u@%u\n", cx->fp->script->filename,
                         js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
@@ -970,17 +971,6 @@ unsigned
 TraceRecorder::getCallDepth() const
 {
     return callDepth;
-}
-
-/* Determine whether we should unroll a loop (only do so at most once for every loop). */
-bool
-TraceRecorder::trackLoopEdges()
-{
-    jsbytecode* pc = cx->fp->regs->pc;
-    if (inlinedLoopEdges.contains(pc))
-        return false;
-    inlinedLoopEdges.add(pc);
-    return true;
 }
 
 /* Determine the offset in the native global frame for a jsval we track */
@@ -1546,9 +1536,9 @@ TraceRecorder::get(jsval* p) const
     return tracker.get(p);
 }
 
-/* Determine whether a bytecode location (pc) terminates a loop or is a path within the loop. */
+/* Determine whether the current branch instruction terminates the loop. */
 static bool
-js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* header, jsbytecode* pc)
+js_IsLoopExit(jsbytecode* pc, jsbytecode* header)
 {
     switch (*pc) {
       case JSOP_LT:
@@ -1591,6 +1581,24 @@ js_IsLoopExit(JSContext* cx, JSScript* script, jsbytecode* header, jsbytecode* p
         return pc + GET_JUMPX_OFFSET(pc) == header;
 
       default:;
+    }
+    return false;
+}
+
+/* Determine whether the current branch is a loop edge (taken or not taken). */
+static bool
+js_IsLoopEdge(jsbytecode* pc, jsbytecode* header)
+{
+    switch (*pc) {
+    case JSOP_IFEQ:
+    case JSOP_IFNE:
+        return ((pc + GET_JUMP_OFFSET(pc)) == header);
+    case JSOP_IFEQX:
+    case JSOP_IFNEX:
+        return ((pc + GET_JUMPX_OFFSET(pc)) == header);
+    default:
+        JS_ASSERT((*pc == JSOP_AND) || (*pc == JSOP_ANDX) || 
+                  (*pc == JSOP_OR) || (*pc == JSOP_ORX));
     }
     return false;
 }
@@ -1675,8 +1683,7 @@ SideExit*
 TraceRecorder::snapshot(ExitType exitType)
 {
     JSStackFrame* fp = cx->fp;
-    if (exitType == BRANCH_EXIT && 
-        js_IsLoopExit(cx, fp->script, (jsbytecode*)fragment->root->ip, fp->regs->pc))
+    if (exitType == BRANCH_EXIT && js_IsLoopExit(cx->fp->regs->pc, (jsbytecode*)fragment->root->ip))
         exitType = LOOP_EXIT;
     /* Generate the entry map and stash it in the trace. */
     unsigned stackSlots = js_NativeStackSlots(cx, callDepth);
@@ -1971,14 +1978,46 @@ TraceRecorder::trackCfgMerges(jsbytecode* pc)
     }
 }
 
+/* Invert the direction of the guard if this is a loop edge that is not 
+   taken (thin loop). */
+void
+TraceRecorder::flipIf(jsbytecode* pc, bool& cond)
+{
+    if (js_IsLoopEdge(pc, (jsbytecode*)fragment->root->ip)) {
+        switch (*pc) {
+        case JSOP_IFEQ:
+        case JSOP_IFEQX:
+            if (!cond)
+                return;
+            break;
+        case JSOP_IFNE:
+        case JSOP_IFNEX:
+            if (cond)
+                return;
+            break;
+        default:
+            JS_NOT_REACHED("flipIf");
+        }
+        /* We are about to walk out of the loop, so terminate it with
+           an inverse loop condition. */
+        debug_only_v(printf("Walking out of the loop, terminating it anyway.\n");)
+        cond = !cond;
+        terminate = true;
+    }
+}
+
 /* Emit code for a fused IFEQ/IFNE. */
 void
 TraceRecorder::fuseIf(jsbytecode* pc, bool cond, LIns* x)
 {
+    if (x->isconst()) // no need to guard if condition is constant
+        return;
     if (*pc == JSOP_IFEQ) {
+        flipIf(pc, cond);
         guard(cond, x, BRANCH_EXIT);
         trackCfgMerges(pc); 
     } else if (*pc == JSOP_IFNE) {
+        flipIf(pc, cond);
         guard(cond, x, BRANCH_EXIT);
     }
 }
@@ -2361,6 +2400,25 @@ static GuardRecord*
 js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount, 
                GuardRecord** innermostNestedGuardp);
 
+static void
+js_CloseLoop(JSContext* cx)
+{
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    Fragmento* fragmento = tm->fragmento;
+    TraceRecorder* r = tm->recorder;
+    JS_ASSERT(fragmento && r);
+
+    if (fragmento->assm()->error()) {
+        js_AbortRecording(cx, NULL, "Error during recording");
+        /* If we ran out of memory, flush the code cache and abort. */
+        if (fragmento->assm()->error() == OutOMem)
+            js_FlushJITCache(cx);
+        return;
+    }
+    r->closeLoop(fragmento);
+    js_DeleteRecorder(cx);
+}
+
 bool
 js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlineCallCount)
 {
@@ -2372,16 +2430,8 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inl
 #endif
     Fragmento* fragmento = JS_TRACE_MONITOR(cx).fragmento;
     /* If we hit our own loop header, close the loop and compile the trace. */
-    if (r->isLoopHeader(cx)) { 
-        if (fragmento->assm()->error()) {
-            js_AbortRecording(cx, oldpc, "Error during recording");
-            /* If we ran out of memory, flush the code cache and abort. */
-            if (fragmento->assm()->error() == OutOMem)
-                js_FlushJITCache(cx);
-            return false; /* done recording */
-        }
-        r->closeLoop(fragmento);
-        js_DeleteRecorder(cx);
+    if (r->isLoopHeader(cx)) {
+        js_CloseLoop(cx);
         return false; /* done recording */
     }
     /* does this branch go to an inner loop? */
@@ -2420,9 +2470,6 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inl
             return false;
         }
     }
-    /* try to unroll the inner loop a bit, maybe it connects back to our loop header eventually */
-    if ((!f || !f->code()) && r->trackLoopEdges())
-        return true;
     /* not returning to our own loop header, not an inner loop we can call, abort trace */
     AUDIT(returnToDifferentLoopHeader);
     debug_only_v(printf("loop edge %d -> %d, header %d\n",
@@ -2761,6 +2808,11 @@ js_MonitorRecording(TraceRecorder* tr)
 {
     JSContext* cx = tr->cx;
 
+    if (tr->walkedOutOfLoop()) {
+        js_CloseLoop(cx);
+        return false;
+    }
+    
     // Clear one-shot flag used to communicate between record_JSOP_CALL and record_EnterFrame.
     tr->applyingArguments = false;
 
@@ -3095,7 +3147,7 @@ LIns* TraceRecorder::makeNumberInt32(LIns* f)
 }
 
 bool
-TraceRecorder::ifop(bool negate)
+TraceRecorder::ifop()
 {
     jsval& v = stackval(-1);
     LIns* v_ins = get(&v);
@@ -3130,6 +3182,7 @@ TraceRecorder::ifop(bool negate)
         JS_NOT_REACHED("ifop");
         return false;
     }
+    flipIf(cx->fp->regs->pc, cond);
     bool expected = cond;
     if (!x->isCond()) {
         x = lir->ins_eq0(x);
@@ -4097,13 +4150,13 @@ bool
 TraceRecorder::record_JSOP_IFEQ()
 {
     trackCfgMerges(cx->fp->regs->pc);
-    return ifop(false);
+    return ifop();
 }
 
 bool
 TraceRecorder::record_JSOP_IFNE()
 {
-    return ifop(true);
+    return ifop();
 }
 
 bool
@@ -5614,13 +5667,13 @@ TraceRecorder::record_JSOP_TRUE()
 bool
 TraceRecorder::record_JSOP_OR()
 {
-    return ifop(false);
+    return ifop();
 }
 
 bool
 TraceRecorder::record_JSOP_AND()
 {
-    return ifop(true);
+    return ifop();
 }
 
 bool

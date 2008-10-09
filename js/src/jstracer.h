@@ -218,10 +218,10 @@ class TraceRecorder : public GCObject {
     bool                    applyingArguments;
     bool                    trashTree;
     nanojit::Fragment*      whichTreeToTrash;
-    Queue<jsbytecode*>      inlinedLoopEdges;
     Queue<jsbytecode*>      cfgMerges;
     jsval*                  global_dslots;
     JSTraceableNative*      pendingTraceableNative;
+    bool                    terminate;
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
@@ -261,7 +261,7 @@ class TraceRecorder : public GCObject {
     nanojit::LIns* f2i(nanojit::LIns* f);
     nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
     
-    bool ifop(bool negate);
+    bool ifop();
     bool switchop();
     bool inc(jsval& v, jsint incr, bool pre = true);
     bool inc(jsval& v, nanojit::LIns*& v_ins, jsint incr, bool pre = true);
@@ -316,6 +316,7 @@ class TraceRecorder : public GCObject {
     bool forInLoop(jsval* vp);
 
     void trackCfgMerges(jsbytecode* pc);
+    void flipIf(jsbytecode* pc, bool& cond);
     void fuseIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
 
 public:
@@ -339,7 +340,6 @@ public:
     void prepareTreeCall(nanojit::Fragment* inner);
     void emitTreeCall(nanojit::Fragment* inner, nanojit::GuardRecord* lr);
     unsigned getCallDepth() const;
-    bool trackLoopEdges();
     
     bool record_EnterFrame();
     bool record_LeaveFrame();
@@ -350,7 +350,8 @@ public:
     
     void deepAbort() { deepAborted = true; }
     bool wasDeepAborted() { return deepAborted; }
-
+    bool walkedOutOfLoop() { return terminate; }
+    
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
     bool record_##op();
 # include "jsopcode.tbl"
