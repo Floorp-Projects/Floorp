@@ -487,17 +487,17 @@ public:
   {
     return mInner->SetOriginalTarget(aTarget);
   }
-  NS_IMETHOD IsDispatchStopped(PRBool* aIsDispatchPrevented)
+  NS_IMETHOD_(PRBool) IsDispatchStopped()
   {
-    return mInner->IsDispatchStopped(aIsDispatchPrevented);
+    return mInner->IsDispatchStopped();
   }
-  NS_IMETHOD GetInternalNSEvent(nsEvent** aNSEvent)
+  NS_IMETHOD_(nsEvent*) GetInternalNSEvent()
   {
-    return mInner->GetInternalNSEvent(aNSEvent);
+    return mInner->GetInternalNSEvent();
   }
-  NS_IMETHOD HasOriginalTarget(PRBool* aResult)
+  NS_IMETHOD_(PRBool) HasOriginalTarget()
   {
-    return mInner->HasOriginalTarget(aResult);
+    return mInner->HasOriginalTarget();
   }
   NS_IMETHOD SetTrusted(PRBool aTrusted)
   {
