@@ -4915,13 +4915,30 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
             nsPresContext::AppUnitsToFloatCSSPixels(aRect.width),
             nsPresContext::AppUnitsToFloatCSSPixels(aRect.height));
   aThebesContext->Save();
-  aThebesContext->Clip(r);
 
-  aThebesContext->PushGroup(NS_GET_A(aBackgroundColor) == 0xff ?
-                            gfxASurface::CONTENT_COLOR :
-                            gfxASurface::CONTENT_COLOR_ALPHA);
+  aThebesContext->NewPath();
+#ifdef MOZ_GFX_MOBILE_OPTIMIZE
+  aThebesContext->Rectangle(r, PR_TRUE);
+#else
+  aThebesContext->Rectangle(r);
+#endif
+  aThebesContext->Clip();
 
-  aThebesContext->Save();
+  // we can avoid using a temporary surface if we're using OPERATOR_OVER
+  // and our background color has no alpha (so we'll be compositing on top
+  // of a fully opaque solid color region)
+  PRBool needsGroup = PR_TRUE;
+  if (aThebesContext->CurrentOperator() == gfxContext::OPERATOR_OVER &&
+      NS_GET_A(aBackgroundColor) == 0xff)
+    needsGroup = PR_FALSE;
+
+  if (needsGroup) {
+    aThebesContext->PushGroup(NS_GET_A(aBackgroundColor) == 0xff ?
+                              gfxASurface::CONTENT_COLOR :
+                              gfxASurface::CONTENT_COLOR_ALPHA);
+
+    aThebesContext->Save();
+  }
 
   // draw background color
   if (NS_GET_A(aBackgroundColor) > 0) {
@@ -4931,8 +4948,9 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
   }
 
   // we want the window to be composited as a single image using
-  // whatever operator was set, so set this to the default OVER;
-  // the original operator will be present when we PopGroup
+  // whatever operator was set; set OPERATOR_OVER here, which is
+  // either already the case, or overrides the operator in a group.
+  // the original operator will be present when we PopGroup.
   aThebesContext->SetOperator(gfxContext::OPERATOR_OVER);
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
@@ -4979,9 +4997,12 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
     }
   }
 
-  aThebesContext->Restore();
-  aThebesContext->PopGroupToSource();
-  aThebesContext->Paint();
+  // if we had to use a group, paint it to the destination now
+  if (needsGroup) {
+    aThebesContext->Restore();
+    aThebesContext->PopGroupToSource();
+    aThebesContext->Paint();
+  }
 
   aThebesContext->Restore();
 
