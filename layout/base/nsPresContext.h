@@ -373,7 +373,8 @@ public:
   PRBool GetUseFocusColors() const { return mUseFocusColors; }
   PRUint8 FocusRingWidth() const { return mFocusRingWidth; }
   PRBool GetFocusRingOnAnything() const { return mFocusRingOnAnything; }
- 
+  PRUint8 GetFocusRingStyle() const { return mFocusRingStyle; }
+
 
   /**
    * Set up observers so that aTargetFrame will be invalidated when
@@ -893,6 +894,7 @@ protected:
   unsigned              mUnderlineLinks : 1;
   unsigned              mUseFocusColors : 1;
   unsigned              mFocusRingOnAnything : 1;
+  unsigned              mFocusRingStyle : 1;
   unsigned              mDrawImageBackground : 1;
   unsigned              mDrawColorBackground : 1;
   unsigned              mNeverAnimate : 1;

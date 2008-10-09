@@ -2464,6 +2464,17 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
+  const PRUint32 kExpandCollapseStates =
+    nsIAccessibleStates::STATE_COLLAPSED | nsIAccessibleStates::STATE_EXPANDED;
+  if ((*aState & kExpandCollapseStates) == kExpandCollapseStates) {
+    // Cannot be both expanded and collapsed -- this happens in ARIA expanded
+    // combobox because of limitation of nsARIAMap.
+    // XXX: Perhaps we will be able to make this less hacky if we support
+    // extended states in nsARIAMap, e.g. derive COLLAPSED from
+    // EXPANDABLE && !EXPANDED.
+    *aState &= ~nsIAccessibleStates::STATE_COLLAPSED;
+  }
+
   // Set additional states which presence depends on another states.
   if (!aExtraState)
     return NS_OK;
@@ -2473,19 +2484,9 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
                     nsIAccessibleStates::EXT_STATE_SENSITIVE;
   }
 
-  const PRUint32 kExpandCollapseStates =
-    nsIAccessibleStates::STATE_COLLAPSED | nsIAccessibleStates::STATE_EXPANDED;
-  if (*aState & kExpandCollapseStates) {
+  if ((*aState & nsIAccessibleStates::STATE_COLLAPSED) ||
+      (*aState & nsIAccessibleStates::STATE_EXPANDED))
     *aExtraState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
-    if ((*aState & kExpandCollapseStates) == kExpandCollapseStates) {
-      // Cannot be both expanded and collapsed -- this happens 
-      // in ARIA expanded combobox because of limitation of nsARIAMap
-      // XXX Perhaps we will be able to make this less hacky if 
-      // we support extended states in nsARIAMap, e.g. derive
-      // COLLAPSED from EXPANDABLE && !EXPANDED
-      *aExtraState &= ~nsIAccessibleStates::STATE_COLLAPSED;
-    }
-  }
 
   if (mRoleMapEntry) {
     // If an object has an ancestor with the activedescendant property
@@ -2774,7 +2775,7 @@ NS_IMETHODIMP nsAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-/* PRUint8 getAccNumActions (); */
+// readonly attribute PRUint8 numActions
 NS_IMETHODIMP
 nsAccessible::GetNumActions(PRUint8 *aNumActions)
 {
@@ -2784,23 +2785,11 @@ nsAccessible::GetNumActions(PRUint8 *aNumActions)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
-  if (!content)
+  PRUint32 actionRule = GetActionRule(State(this));
+  if (actionRule == eNoAction)
     return NS_OK;
 
-  // Check if it's a simple xlink.
-  if (nsAccUtils::IsXLink(content)) {
-    *aNumActions = 1;
-    return NS_OK;
-  }
-
-  // Has registered 'click' event handler.
-  PRBool isOnclick = nsAccUtils::HasListener(content,
-                                             NS_LITERAL_STRING("click"));
-
-  if (isOnclick)
-    *aNumActions = 1;
-  
+  *aNumActions = 1;
   return NS_OK;
 }
 
@@ -2816,26 +2805,49 @@ nsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  // Check if it's a simple xlink.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (nsAccUtils::IsXLink(content)) {
-    aName.AssignLiteral("jump");
-    return NS_OK;
-  }
+  PRUint32 states = State(this);
+  PRUint32 actionRule = GetActionRule(states);
 
-  // Has registered 'click' event handler.
-  PRBool isOnclick = nsAccUtils::HasListener(content,
-                                             NS_LITERAL_STRING("click"));
-  
-  if (isOnclick) {
-    aName.AssignLiteral("click");
-    return NS_OK;
+ switch (actionRule) {
+   case eActivateAction:
+     aName.AssignLiteral("activate");
+     return NS_OK;
+
+   case eClickAction:
+     aName.AssignLiteral("click");
+     return NS_OK;
+
+   case eCheckUncheckAction:
+     if (states & nsIAccessibleStates::STATE_CHECKED)
+       aName.AssignLiteral("uncheck");
+     else
+       aName.AssignLiteral("check");
+     return NS_OK;
+
+   case eJumpAction:
+     aName.AssignLiteral("jump");
+     return NS_OK;
+
+   case eOpenCloseAction:
+     if (states & nsIAccessibleStates::STATE_COLLAPSED)
+       aName.AssignLiteral("open");
+     else
+       aName.AssignLiteral("close");
+     return NS_OK;
+
+   case eSelectAction:
+     aName.AssignLiteral("select");
+     return NS_OK;
+
+   case eSwitchAction:
+     aName.AssignLiteral("switch");
+     return NS_OK;
   }
 
   return NS_ERROR_INVALID_ARG;
 }
 
-/* DOMString getActionDescription (in PRUint8 index); */
+// AString getActionDescription(in PRUint8 index)
 NS_IMETHODIMP
 nsAccessible::GetActionDescription(PRUint8 aIndex, nsAString& aDescription)
 {
@@ -2847,7 +2859,7 @@ nsAccessible::GetActionDescription(PRUint8 aIndex, nsAString& aDescription)
   return GetTranslatedString(name, aDescription);
 }
 
-/* void doAction (in PRUint8 index); */
+// void doAction(in PRUint8 index)
 NS_IMETHODIMP
 nsAccessible::DoAction(PRUint8 aIndex)
 {
@@ -2857,19 +2869,10 @@ nsAccessible::DoAction(PRUint8 aIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  PRBool doAction = PR_FALSE;
-
-  // Check if it's a simple xlink.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (nsAccUtils::IsXLink(content))
-    doAction = PR_TRUE;
-
-  // Has registered 'click' event handler.
-  if (!doAction)
-    doAction = nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"));
-  
-  if (doAction)
+  if (GetActionRule(State(this)) != eNoAction) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
     return DoCommand(content);
+  }
 
   return NS_ERROR_INVALID_ARG;
 }
@@ -3671,6 +3674,31 @@ nsAccessible::GetAttrValue(nsIAtom *aProperty, double *aValue)
     *aValue = value.ToFloat(&result);
 
   return result;
+}
+
+PRUint32
+nsAccessible::GetActionRule(PRUint32 aStates)
+{
+  if (aStates & nsIAccessibleStates::STATE_UNAVAILABLE)
+    return eNoAction;
+
+  // Check if it's simple xlink.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (nsAccUtils::IsXLink(content))
+    return eJumpAction;
+
+  // Has registered 'click' event handler.
+  PRBool isOnclick = nsAccUtils::HasListener(content,
+                                             NS_LITERAL_STRING("click"));
+
+  if (isOnclick)
+    return eClickAction;
+
+  // Get an action based on ARIA role.
+  if (mRoleMapEntry)
+    return mRoleMapEntry->actionRule;
+
+  return eNoAction;
 }
 
 PRBool nsAccessible::MustPrune(nsIAccessible *aAccessible)

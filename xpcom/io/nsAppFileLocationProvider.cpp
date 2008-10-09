@@ -514,7 +514,7 @@ NS_IMPL_ISUPPORTS1(nsAppDirectoryEnumerator, nsISimpleEnumerator)
 /* nsPathsDirectoryEnumerator and PATH_SEPARATOR
  * are not used on MacOS/X. */
 
-#if defined(XP_WIN) || defined(XP_OS2)/* Win32, Win16, and OS/2 */
+#if defined(XP_WIN) || defined(XP_OS2) /* Win32 and OS/2 */
 #define PATH_SEPARATOR ';'
 #else /*if defined(XP_UNIX) || defined(XP_BEOS)*/
 #define PATH_SEPARATOR ':'

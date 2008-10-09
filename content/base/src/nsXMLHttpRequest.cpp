@@ -2578,10 +2578,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // Reset responseXML
   mDocument = nsnull;
 
-  if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
-    mState |= XML_HTTP_REQUEST_SYNCLOOPING;
-  }
-
   rv = CheckChannelForCrossSiteRequest(mChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2686,7 +2682,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // When we are sync loading, we need to bypass the local cache when it would
   // otherwise block us waiting for exclusive access to the cache.  If we don't
   // do this, then we could dead lock in some cases (see bug 309424).
-  else if (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
+  else if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
     AddLoadFlags(mChannel,
         nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
     if (mACGetChannel) {
@@ -2737,6 +2733,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
   // If we're synchronous, spin an event loop here and wait
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
+    mState |= XML_HTTP_REQUEST_SYNCLOOPING;
     nsIThread *thread = NS_GetCurrentThread();
     while (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
       if (!NS_ProcessNextEvent(thread)) {

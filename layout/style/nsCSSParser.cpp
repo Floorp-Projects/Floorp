@@ -5785,11 +5785,14 @@ CSSParserImpl::ParseBackground()
   mTempData.mColor.mBackPosition.mYValue.SetPercentValue(0.0f);
   mTempData.SetPropertyBit(eCSSProperty_background_position);
   // including the ones that we can't set from the shorthand.
-  mTempData.mColor.mBackClip.SetInitialValue();
+  mTempData.mColor.mBackClip.SetIntValue(NS_STYLE_BG_CLIP_BORDER,
+                                         eCSSUnit_Enumerated);
   mTempData.SetPropertyBit(eCSSProperty__moz_background_clip);
-  mTempData.mColor.mBackOrigin.SetInitialValue();
+  mTempData.mColor.mBackOrigin.SetIntValue(NS_STYLE_BG_ORIGIN_PADDING,
+                                           eCSSUnit_Enumerated);
   mTempData.SetPropertyBit(eCSSProperty__moz_background_origin);
-  mTempData.mColor.mBackInlinePolicy.SetInitialValue();
+  mTempData.mColor.mBackInlinePolicy.SetIntValue(
+    NS_STYLE_BG_INLINE_POLICY_CONTINUOUS, eCSSUnit_Enumerated);
   mTempData.SetPropertyBit(eCSSProperty__moz_background_inline_policy);
 
   // XXX If ParseSingleValueProperty were table-driven (bug 376079) and
