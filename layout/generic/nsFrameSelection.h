@@ -556,7 +556,8 @@ public:
 private:
   nsresult TakeFocus(nsIContent *aNewFocus,
                      PRUint32 aContentOffset,
-                     PRUint32 aContentEndOffset, 
+                     PRUint32 aContentEndOffset,
+                     HINT aHint,
                      PRBool aContinueSelection,
                      PRBool aMultipleSelection);
 
