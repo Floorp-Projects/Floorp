@@ -3631,14 +3631,14 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             }
 
             /*
-             * A destructuring initialiser assignment preceded by var is
-             * always evaluated promptly, even if it is to the left of 'in'
-             * in a for-in loop.  As with 'for (var x = i in o)...', this
-             * will cause the entire 'var [a, b] = i' to be hoisted out of
-             * the head of the loop.
+             * A destructuring initialiser assignment preceded by var will
+             * never occur to the left of 'in' in a for-in loop.  As with 'for
+             * (var x = i in o)...', this will cause the entire 'var [a, b] =
+             * i' to be hoisted out of the loop.
              */
             JS_ASSERT(pn2->pn_type == TOK_ASSIGN);
-            if (pn->pn_count == 1 && !forInLet) {
+            JS_ASSERT(!forInVar);
+            if (pn->pn_count == 1) {
                 /*
                  * If this is the only destructuring assignment in the list,
                  * try to optimize to a group assignment.  If we're in a let
@@ -3663,45 +3663,8 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             if (!EmitDestructuringDecls(cx, cg, PN_OP(pn), pn3))
                 return JS_FALSE;
 
-#if JS_HAS_BLOCK_SCOPE
-            /*
-             * If this is a 'for (let [x, y] = i in o) ...' let declaration,
-             * throw away i if it is a useless expression.
-             */
-            if (forInLet) {
-                JSBool useful = JS_FALSE;
-
-                JS_ASSERT(pn->pn_count == 1);
-                if (!CheckSideEffects(cx, cg, pn2->pn_right, &useful))
-                    return JS_FALSE;
-                if (!useful)
-                    return JS_TRUE;
-            }
-#endif
-
             if (!js_EmitTree(cx, cg, pn2->pn_right))
                 return JS_FALSE;
-
-#if JS_HAS_BLOCK_SCOPE
-            /*
-             * The expression i in 'for (let [x, y] = i in o) ...', which is
-             * pn2->pn_right above, appears to have side effects.  We've just
-             * emitted code to evaluate i, but we must not destructure i yet.
-             * Let the TOK_FOR: code in js_EmitTree do the destructuring to
-             * emit the right combination of source notes and bytecode for the
-             * decompiler.
-             *
-             * This has the effect of hoisting the evaluation of i out of the
-             * for-in loop, without hoisting the let variables, which must of
-             * course be scoped by the loop.  Set PNX_POPVAR to cause JSOP_POP
-             * to be emitted, just before returning from this function.
-             */
-            if (forInVar) {
-                pn->pn_extra |= PNX_POPVAR;
-                if (forInLet)
-                    break;
-            }
-#endif
 
             /*
              * Veto pn->pn_op if inLetHead to avoid emitting a SRC_DESTRUCT
@@ -3737,22 +3700,7 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
             pn3 = pn2->pn_expr;
             if (pn3) {
-#if JS_HAS_BLOCK_SCOPE
-                /*
-                 * If this is a 'for (let x = i in o) ...' let declaration,
-                 * throw away i if it is a useless expression.
-                 */
-                if (forInLet) {
-                    JSBool useful = JS_FALSE;
-
-                    JS_ASSERT(pn->pn_count == 1);
-                    if (!CheckSideEffects(cx, cg, pn3, &useful))
-                        return JS_FALSE;
-                    if (!useful)
-                        return JS_TRUE;
-                }
-#endif
-
+                JS_ASSERT(!forInVar);
                 if (op == JSOP_SETNAME) {
                     JS_ASSERT(!let);
                     EMIT_INDEX_OP(JSOP_BINDNAME, atomIndex);
@@ -3772,11 +3720,9 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                     tc->topStmt = stmt->down;
                     tc->topScopeStmt = scopeStmt->downScope;
                 }
-#ifdef __GNUC__
-                else {
-                    stmt = scopeStmt = NULL;    /* quell GCC overwarning */
-                }
-#endif
+# ifdef __GNUC__
+                else stmt = scopeStmt = NULL;   /* quell GCC overwarning */
+# endif
 #endif
 
                 oldflags = cg->treeContext.flags;
@@ -3795,27 +3741,17 @@ EmitVariables(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         }
 
         /*
-         * 'for (var x in o) ...' and 'for (var x = i in o) ...' call the
-         * TOK_VAR case, but only the initialized case (a strange one that
-         * falls out of ECMA-262's grammar) wants to run past this point.
-         * Both cases must conditionally emit a JSOP_DEFVAR, above.  Note
-         * that the parser error-checks to ensure that pn->pn_count is 1.
-         *
-         * 'for (let x = i in o) ...' must evaluate i before the loop, and
-         * subject it to useless expression elimination.  The variable list
-         * in pn is a single let declaration if pn_op == JSOP_NOP.  We test
-         * the let local in order to break early in this case, as well as in
-         * the 'for (var x in o)' case.
-         *
-         * XXX Narcissus keeps track of variable declarations in the node
-         * for the script being compiled, so there's no need to share any
-         * conditional prolog code generation there.  We could do likewise,
-         * but it's a big change, requiring extra allocation, so probably
-         * not worth the trouble for SpiderMonkey.
+         * The parser rewrites 'for (var x = i in o)' to hoist 'var x = i' --
+         * likewise 'for (let x = i in o)' becomes 'i; for (let x in o)' using
+         * a TOK_SEQ node to make the two statements appear as one. Therefore
+         * if this declaration is part of a for-in loop head, we do not need to
+         * emit op or any source note. Our caller, the TOK_FOR/TOK_IN case in
+         * js_EmitTree, will annotate appropriately.
          */
         JS_ASSERT(pn3 == pn2->pn_expr);
-        if (forInVar && (!pn3 || let)) {
+        if (forInVar) {
             JS_ASSERT(pn->pn_count == 1);
+            JS_ASSERT(!pn3);
             break;
         }
 
@@ -5133,9 +5069,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ok = js_PopStatementCG(cx, cg);
         break;
 
-      case TOK_BODY:
+      case TOK_SEQ:
         JS_ASSERT(pn->pn_arity == PN_LIST);
-        js_PushStatement(&cg->treeContext, &stmtInfo, STMT_BODY, top);
+        js_PushStatement(&cg->treeContext, &stmtInfo, STMT_SEQ, top);
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;

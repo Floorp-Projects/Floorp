@@ -134,8 +134,8 @@ typedef enum JSTokenType {
     TOK_ARRAYPUSH = 79,                 /* array push within comprehension */
     TOK_LEXICALSCOPE = 80,              /* block scope AST node label */
     TOK_LET = 81,                       /* let keyword */
-    TOK_BODY = 82,                      /* synthetic body of function with
-                                           destructuring formal parameters */
+    TOK_SEQ = 82,                       /* synthetic sequence of statements,
+                                           not a block */
     TOK_RESERVED,                       /* reserved keywords */
     TOK_LIMIT                           /* domain size */
 } JSTokenType;
