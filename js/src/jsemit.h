@@ -66,8 +66,7 @@ typedef enum JSStmtType {
     STMT_LABEL,                 /* labeled statement:  L: s */
     STMT_IF,                    /* if (then) statement */
     STMT_ELSE,                  /* else clause of if statement */
-    STMT_BODY,                  /* synthetic body of function with
-                                   destructuring formal parameters */
+    STMT_SEQ,                   /* synthetic sequence of statements */
     STMT_BLOCK,                 /* compound statement: { s1[;... sN] } */
     STMT_SWITCH,                /* switch statement */
     STMT_WITH,                  /* with statement */
