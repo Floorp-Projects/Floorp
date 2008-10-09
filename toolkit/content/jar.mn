@@ -44,6 +44,8 @@ toolkit.jar:
 *+ content/global/bindings/dialog.xml          (widgets/dialog.xml)
 *+ content/global/bindings/editor.xml          (widgets/editor.xml)
 *  content/global/bindings/expander.xml        (widgets/expander.xml)
+*  content/global/bindings/filefield.xml       (widgets/filefield.xml)
+*+ content/global/bindings/findbar.xml         (widgets/findbar.xml)
 *+ content/global/bindings/general.xml         (widgets/general.xml)
 *+ content/global/bindings/groupbox.xml        (widgets/groupbox.xml)
 *+ content/global/bindings/listbox.xml         (widgets/listbox.xml)
@@ -70,7 +72,6 @@ toolkit.jar:
 *+ content/global/bindings/tree.xml            (widgets/tree.xml)
 *+ content/global/bindings/videocontrols.xml   (widgets/videocontrols.xml)
 *+ content/global/bindings/wizard.xml          (widgets/wizard.xml)
-*+ content/global/bindings/findbar.xml         (widgets/findbar.xml)
 #ifdef XP_MACOSX
 *  content/global/macWindowMenu.js             (macWindowMenu.js)
 #endif
