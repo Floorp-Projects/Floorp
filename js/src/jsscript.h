@@ -53,9 +53,9 @@ JS_BEGIN_EXTERN_C
  * for-in loops.
  */
 typedef enum JSTryNoteKind {
-    JSTN_CATCH,
-    JSTN_FINALLY,
-    JSTN_ITER
+    JSTRY_CATCH,
+    JSTRY_FINALLY,
+    JSTRY_ITER
 } JSTryNoteKind;
 
 /*

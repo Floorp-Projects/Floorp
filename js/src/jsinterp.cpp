@@ -6958,7 +6958,7 @@ js_Interpret(JSContext *cx)
             }
 
             switch (tn->kind) {
-              case JSTN_CATCH:
+              case JSTRY_CATCH:
                 JS_ASSERT(*regs.pc == JSOP_ENTERBLOCK);
 
 #if JS_HAS_GENERATORS
@@ -6975,7 +6975,7 @@ js_Interpret(JSContext *cx)
                 len = 0;
                 DO_NEXT_OP(len);
 
-              case JSTN_FINALLY:
+              case JSTRY_FINALLY:
                 /*
                  * Push (true, exception) pair for finally to indicate that
                  * [retsub] should rethrow the exception.
@@ -6986,7 +6986,7 @@ js_Interpret(JSContext *cx)
                 len = 0;
                 DO_NEXT_OP(len);
 
-              case JSTN_ITER:
+              case JSTRY_ITER:
                 /*
                  * This is similar to JSOP_ENDITER in the interpreter loop
                  * except the code now uses a reserved stack slot to save and
