@@ -4536,7 +4536,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * body of for-in loop when closing the iterator object.
              */
             JS_ASSERT(js_CodeSpec[JSOP_ENDITER].format & JOF_TMPSLOT);
-            if (!NewTryNote(cx, cg, JSTN_ITER, cg->stackDepth, top,
+            if (!NewTryNote(cx, cg, JSTRY_ITER, cg->stackDepth, top,
                             CG_OFFSET(cg)) ||
                 js_Emit1(cx, cg, JSOP_ENDITER) < 0) {
                 return JS_FALSE;
@@ -4837,7 +4837,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * (first to last for a given nesting level, inner to outer by level).
          */
         if (pn->pn_kid2 &&
-            !NewTryNote(cx, cg, JSTN_CATCH, depth, tryStart, tryEnd)) {
+            !NewTryNote(cx, cg, JSTRY_CATCH, depth, tryStart, tryEnd)) {
             return JS_FALSE;
         }
 
@@ -4847,7 +4847,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * for the try{}finally{} case.
          */
         if (pn->pn_kid3 &&
-            !NewTryNote(cx, cg, JSTN_FINALLY, depth, tryStart, finallyStart)) {
+            !NewTryNote(cx, cg, JSTRY_FINALLY, depth, tryStart, finallyStart)) {
             return JS_FALSE;
         }
         break;

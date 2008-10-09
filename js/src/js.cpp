@@ -1350,9 +1350,9 @@ Notes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-JS_STATIC_ASSERT(JSTN_CATCH == 0);
-JS_STATIC_ASSERT(JSTN_FINALLY == 1);
-JS_STATIC_ASSERT(JSTN_ITER == 2);
+JS_STATIC_ASSERT(JSTRY_CATCH == 0);
+JS_STATIC_ASSERT(JSTRY_FINALLY == 1);
+JS_STATIC_ASSERT(JSTRY_ITER == 2);
 
 static const char* const TryNoteNames[] = { "catch", "finally", "iter" };
 
