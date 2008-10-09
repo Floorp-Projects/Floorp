@@ -183,8 +183,10 @@ toolbarbutton.browser-control-button {
   -moz-image-region: rect(208px 48px 256px 0px);
 }
 
-#tool-panel:hover:active {
+#tool-panel:hover:active, #tool-panel[checked] {
   -moz-image-region: rect(208px 96px 256px 48px);
+  background: none !important;            /* override checked style */
+  border-color: transparent !important;   /* override checked style */
 }
 
 .tool-search {
