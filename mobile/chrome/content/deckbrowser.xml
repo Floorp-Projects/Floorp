@@ -14,7 +14,7 @@
           <html:div anonid="viewport" style="-moz-stack-sizing: ignore; overflow: hidden; background-image:url('chrome://browser/content/checkerboard.png')">
             <html:canvas anonid="ccanvas"
                          moz-opaque="true"
-                         style="height: 100%; width: 100%;"/>
+                         style="height: 200%; width: 200%;"/>
           </html:div>
         </xul:stack>
         <xul:deck anonid="display-list" flex="1"/>
@@ -69,6 +69,14 @@
         <getter><![CDATA[
           var [w, h] = this.viewportDimensions;
           return [this._screenToPage(w), this._screenToPage(h)];
+        ]]></getter>
+      </property>
+
+      <property name="_effectiveCanvasDimensions" readonly="true">
+        <getter><![CDATA[
+          let canvasRect = this._canvas.getBoundingClientRect();
+          return [this._screenToPage(canvasRect.width),
+                  this._screenToPage(canvasRect.height)];
         ]]></getter>
       </property>
 
@@ -426,7 +434,8 @@
           canvas.setAttribute("height", domWin.innerHeight);
 
           var ctx = canvas.getContext("2d");
-          ctx.drawWindow(domWin, 0, 0, domWin.innerWidth, domWin.innerHeight, "white");
+          ctx.drawWindow(domWin, 0, 0,
+                         domWin.innerWidth, domWin.innerHeight, "white");
           display.insertBefore(canvas, display.firstChild);
 
           display.lastAccess = Date.now();
@@ -517,25 +526,57 @@
         ]]></body>
       </method>
 
+      <property name="_canvasPageOffset" readonly="true">
+        <getter><![CDATA[
+          let [canvasW, canvasH] = this._effectiveCanvasDimensions;
+          let [viewportW, viewportH] = this._effectiveViewportDimensions;
+          let offscreenCanvasW = (canvasW - viewportW);
+          let offscreenCanvasH = (canvasH - viewportH);
+          let [contentWidth, contentHeight] = this._contentAreaDimensions;
+
+          let left = Math.max(-this.dragData.pageX, -(offscreenCanvasW / 2));
+          let rightMost = (contentWidth - canvasW);
+          if (left > rightMost && rightMost > 0)
+            left = rightMost;
+
+          let top = Math.max(-this.dragData.pageY, -(offscreenCanvasH / 2));
+          let bottomMost = (contentHeight - canvasH);
+          if (top > bottomMost && bottomMost > 0)
+            top = bottomMost;
+
+          return [left, top];
+        ]]></getter>
+      </property>
+      
+      <property name="_drawOffset" readonly="true">
+        <getter><![CDATA[
+          let [offX, offY] = this._canvasPageOffset;
+          return [this.dragData.pageX + offX, this.dragData.pageY + offY];
+        ]]></getter>
+      </property>
+
       <method name="_browserToCanvas">
         <body><![CDATA[
           // FIXME: canvas needs to know it's actual width/height
           // we should be able to use _canvas.width/_canvas.height here
           // and can, most of the time
           var rect = this._canvas.getBoundingClientRect();
-          var w = rect.right - rect.left;
-          var h = rect.bottom - rect.top;
-          this._canvas.width = w;
-          this._canvas.height = h;
+          this._canvas.width = rect.width;
+          this._canvas.height = rect.height;
+
+          var [x, y] = this._drawOffset;
 
           var ctx = this._canvas.getContext("2d");
           ctx.save();
           ctx.scale(this._zoomLevel, this._zoomLevel);
           ctx.drawWindow(this.browser.contentWindow,
-                         this.dragData.pageX, this.dragData.pageY,
-                         this._screenToPage(w), this._screenToPage(h),
+                         x, y,
+                         this._screenToPage(rect.width),
+                         this._screenToPage(rect.height),
                          "white");
           ctx.restore();
+          
+          this._updateCanvasPosition();
         ]]></body>
       </method>
 
@@ -545,7 +586,6 @@
         <parameter name="width"/>
         <parameter name="height"/>
         <body><![CDATA[
-
           function intersect(r1, r2) {
             let xmost1 = r1.x + r1.width;
             let ymost1 = r1.y + r1.height;
@@ -595,7 +635,10 @@
 
           ctx.save();
           ctx.scale(this._zoomLevel, this._zoomLevel);
-          ctx.translate(dest.x - this.dragData.pageX, dest.y - this.dragData.pageY);
+
+          var [offX, offY] = this._drawOffset;
+          ctx.translate(dest.x - offX,
+                        dest.y - offY);
 
           ctx.drawWindow(this.browser.contentWindow,
                          dest.x, dest.y,
@@ -603,13 +646,11 @@
                          "white");
 
           ctx.restore();
-
         ]]></body>
       </method>
 
       <method name="_updateCheckerboard">
         <body><![CDATA[
-          
           let x = Math.round(this.dragData.dragX);
           let y = Math.round(this.dragData.dragY);
 
@@ -621,14 +662,16 @@
         <body><![CDATA[
           let x = Math.round(this.dragData.dragX);
           let y = Math.round(this.dragData.dragY);
-          
+
+          let [offX, offY] = this._canvasPageOffset;
+          [x, y] = [this._pageToScreen(offX) + x, this._pageToScreen(offY) + y];
+
           this._canvas.style.marginLeft = x + "px";
           this._canvas.style.marginRight = -x + "px";
           this._canvas.style.marginTop = y + "px";
           this._canvas.style.marginBottom = -y + "px";
 
           this._updateCheckerboard();
-
 
           // Force a sync redraw
           window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -727,8 +770,8 @@
         <body><![CDATA[
           var r = aElement.getBoundingClientRect();
           var retVal = {
-            width: r.right - r.left,
-            height: r.bottom - r.top,
+            width: r.width,
+            height: r.height,
             x: r.left,
             y: r.top
           };
@@ -994,7 +1037,6 @@
           let nextX = self.dragData.dragX + dx;
           let nextY = self.dragData.dragY + dy;
 
-
           // make sure we're still between original and destination coords
           if((self.dragData.originalX > nextX &&
               nextX > self.dragData.destinationX) ||
@@ -1131,7 +1173,6 @@
 
           // update the canvas and move it to the right position
           this._browserToCanvas();
-          this._updateCanvasPosition();
         ]]></body>
       </method>
 
