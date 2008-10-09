@@ -61,15 +61,19 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
+#include "testproxyclasses.h"
+
+
 #include "prlog.h"
 #ifdef PR_LOGGING
-static PRLogModuleInfo *sLog = PR_NewLogModule("Test");
+PRLogModuleInfo *sLog = PR_NewLogModule("Test");
 #define LOG(args) PR_LOG(sLog, PR_LOG_DEBUG, args)
 #else
 #define LOG(args) printf args
 #endif
 
-namespace proxytests {
+
+
 
 static nsresult
 GetThreadFromPRThread(PRThread *prthread, nsIThread **result)
@@ -81,117 +85,10 @@ GetThreadFromPRThread(PRThread *prthread, nsIThread **result)
   return tm->GetThreadFromPRThread(prthread, result);
 }
 
-/***************************************************************************/
-/* nsTestXPCFoo                                                            */
-/***************************************************************************/
-class nsTestXPCFoo : public nsITestProxy
-{
-    NS_DECL_ISUPPORTS
-    NS_IMETHOD Test(PRInt32 p1, PRInt32 p2, PRInt32* retval);
-    NS_IMETHOD Test2();
-    NS_IMETHOD Test3(nsISupports *p1, nsISupports **p2);
-
-    nsTestXPCFoo();
-};
-
-nsTestXPCFoo::nsTestXPCFoo()
-{
-    NS_ADDREF_THIS();
-}
-
-NS_IMPL_ISUPPORTS1(nsTestXPCFoo, nsITestProxy)
-
-NS_IMETHODIMP nsTestXPCFoo::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
-{
-    LOG(("TEST: Thread (%d) Test Called successfully! Party on...\n", p1));
-    *retval = p1+p2;
-    return NS_OK;
-}
 
 
-NS_IMETHODIMP nsTestXPCFoo::Test2()
-{
-    LOG(("TEST: The quick brown netscape jumped over the old lazy ie..\n"));
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsTestXPCFoo::Test3(nsISupports *p1, nsISupports **p2)
-{
-    if (p1 != nsnull)
-    {
-        nsITestProxy *test;
-
-        p1->QueryInterface(NS_GET_IID(nsITestProxy), (void**)&test);
-        
-        test->Test2();
-        PRInt32 a;
-        test->Test( 1, 2, &a);
-        LOG(("TEST: \n1+2=%d\n",a));
-    }
-
-
-    *p2 = new nsTestXPCFoo();
-    return NS_OK;
-}
-
-/***************************************************************************/
-/* nsTestXPCFoo2                                                           */
-/***************************************************************************/
-class nsTestXPCFoo2 : public nsITestProxy
-{
-    NS_DECL_ISUPPORTS
-    NS_IMETHOD Test(PRInt32 p1, PRInt32 p2, PRInt32* retval);
-    NS_IMETHOD Test2();
-    NS_IMETHOD Test3(nsISupports *p1, nsISupports **p2);
-
-    nsTestXPCFoo2();
-};
-
-nsTestXPCFoo2::nsTestXPCFoo2()
-{
-    NS_ADDREF_THIS();
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsTestXPCFoo2, nsITestProxy)
-
-NS_IMETHODIMP nsTestXPCFoo2::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
-{
-    LOG(("TEST: calling back to caller!\n"));
-
-    nsCOMPtr<nsIProxyObjectManager> manager =
-            do_GetService(NS_XPCOMPROXY_CONTRACTID);
-
-    LOG(("TEST: ProxyObjectManager: %p \n", (void *) manager.get()));
-    
-    PR_ASSERT(manager);
-
-    nsCOMPtr<nsIThread> thread;
-    GetThreadFromPRThread((PRThread *) p1, getter_AddRefs(thread));
-    NS_ENSURE_STATE(thread);
-
-    nsCOMPtr<nsITestProxy> proxyObject;
-    manager->GetProxyForObject(thread, NS_GET_IID(nsITestProxy), this, NS_PROXY_SYNC, (void**)&proxyObject);
-    proxyObject->Test3(nsnull, nsnull);
-    
-    LOG(("TEST: Deleting Proxy Object\n"));
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP nsTestXPCFoo2::Test2()
-{
-    LOG(("TEST: nsTestXPCFoo2::Test2() called\n"));
-
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP nsTestXPCFoo2::Test3(nsISupports *p1, nsISupports **p2)
-{
-    LOG(("TEST: Got called"));
-    return NS_OK;
-}
+// I really do not like the forced SIMPLE_PROGRAMS Makefile paradigm
+#include "testproxyclasses.cpp"
 
 
 
@@ -251,7 +148,6 @@ void TestCase_TwoClassesOneInterface(void *arg)
         rv = proxyObject->Test(threadNumber, 0, &a);   
         printf("Thread (%d) error: %d.\n", threadNumber, rv);
 
-
         printf("Thread (%d) Prior to calling proxyObject->Test2.\n", threadNumber);
         rv = proxyObject->Test2();   
         printf("Thread (%d) error: %d.\n", threadNumber, rv);
@@ -272,21 +168,582 @@ void TestCase_TwoClassesOneInterface(void *arg)
 #endif
 
 
+void TestCase_1_Failure()
+{
+        nsCOMPtr<nsIProxyObjectManager> manager =
+                do_GetService(NS_XPCOMPROXY_CONTRACTID);
+
+        LOG(("TestCase_1_Failure: ProxyObjectManager: %p\n", (void *) manager.get()));
+
+        PR_ASSERT(manager);
+
+        nsITestProxy         *proxyObject;
+        nsTestXPCFoo*         foo   = new nsTestXPCFoo();
+
+        PR_ASSERT(foo);
+
+        LOG(("TestCase_1_Failure: xsTestXPCFoo Object Created [0x%08X] => \n", foo));
+
+        PRInt32 a1;
+        nsresult rv, r;
+
+        a1=10;
+        LOG(("TestCase_1_Failure: DIRECT 1_1: Entry: [%d] => \n", a1));
+        printf("TestCase_1_Failure: DIRECT 1_1: Entry: [%d] => \n", a1);
+        rv = foo->Test1_1(&a1, &r);
+        LOG(("TestCase_1_Failure: DIRECT 1_1: Return:                                         => [%d] --> Returns %d, rv=%d\n", a1, r, rv));
+        printf("TestCase_1_Failure: DIRECT 1_1: Return: => [%d] --> Returns %d, rv=%d\n", a1, r, rv);
+
+
+        nsCOMPtr<nsIThread> eventLoopThread;
+        NS_NewThread(getter_AddRefs(eventLoopThread));
+
+        PRThread *eventLoopPRThread;
+        eventLoopThread->GetPRThread(&eventLoopPRThread);
+        PR_ASSERT(eventLoopPRThread);
+
+        nsCOMPtr<nsIThread> thread;
+        GetThreadFromPRThread(eventLoopPRThread, getter_AddRefs(thread));
+
+        manager->GetProxyForObject(thread, NS_GET_IID(nsITestProxy), foo, NS_PROXY_SYNC, (void**)&proxyObject);
+
+        LOG(("TestCase_1_Failure: Deleting real nsTestXPCFoo Object [0x%08X]\n", foo));
+        NS_RELEASE(foo);
+
+        if (proxyObject)
+        {
+                a1=10;
+                LOG(("TestCase_1_Failure: PROXY 1_1: Entry: [%d] => \n", a1));
+                printf("TestCase_1_Failure: PROXY 1_1: Entry: [%d] => \n", a1);
+                rv = proxyObject->Test1_1(&a1, &r);
+                LOG(("TestCase_1_Failure: PROXY 1_1: Return:                                         => [%d] --> Returns %d, rv=%d\n", a1, r, rv));
+                printf("TestCase_1_Failure: PROXY 1_1: Return: => [%d] --> Returns %d, rv=%d\n", a1, r, rv);
+
+                LOG(("TestCase_1_Failure: Deleting Proxy Object [0x%08X]\n", proxyObject));
+                NS_RELEASE(proxyObject);
+        }
+
+        PR_Sleep( PR_MillisecondsToInterval(1000) );  // If your thread goes away, your stack goes away.  Only use ASYNC on calls that do not have out parameters
+}
+
+
+void TestCase_1_DirectTests(nsTestXPCFoo *foo)
+{
+        PRInt32 a1, b1, c1, d1, e1, f1, g1, h1, i1, j1;
+        nsresult rv, r;
+        a1=10; b1=20; c1=30; d1=40; e1=50; f1=60; g1=70; h1=80; i1=90; j1=100;
+        LOG(("NestedLoop: DIRECT TEST 10_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1));
+        printf("NestedLoop: DIRECT TEST 10_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1);
+        rv = foo->Test10_1(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &i1, &j1, &r);
+        LOG(("NestedLoop: DIRECT TEST 10_1: Return:                                         => [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, r, rv));
+        printf("NestedLoop: DIRECT TEST 10_1: Return: => [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40; e1=50; f1=60; g1=70; h1=80; i1=90;
+        LOG(("NestedLoop: DIRECT TEST 9_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1));
+        printf("NestedLoop: DIRECT TEST 9_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1);
+        rv = foo->Test9_1(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &i1, &r);
+        LOG(("NestedLoop: DIRECT TEST 9_1: Return:                                         => [%d, %d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, r, rv));
+        printf("NestedLoop: DIRECT TEST 9_1: Return: => [%d, %d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40; e1=50; f1=60; g1=70; h1=80;
+        LOG(("NestedLoop: DIRECT TEST 8_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1));
+        printf("NestedLoop: DIRECT TEST 8_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1);
+        rv = foo->Test8_1(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &r);
+        LOG(("NestedLoop: DIRECT TEST 8_1: Return:                                         => [%d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, r, rv));
+        printf("NestedLoop: DIRECT TEST 8_1: Return: => [%d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40; e1=50; f1=60; g1=70;
+        LOG(("NestedLoop: DIRECT TEST 7_1: Entry: [%d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1));
+        printf("NestedLoop: DIRECT TEST 7_1: Entry: [%d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1);
+        rv = foo->Test7_1(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &r);
+        LOG(("NestedLoop: DIRECT TEST 7_1: Return:                                         => [%d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, r, rv));
+        printf("NestedLoop: DIRECT TEST 7_1: Return: => [%d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40; e1=50; f1=60;
+        LOG(("NestedLoop: DIRECT TEST 6_1: Entry: [%d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1));
+        printf("NestedLoop: DIRECT TEST 6_1: Entry: [%d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1);
+        rv = foo->Test6_1(&a1, &b1, &c1, &d1, &e1, &f1, &r);
+        LOG(("NestedLoop: DIRECT TEST 6_1: Return:                                         => [%d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, r, rv));
+        printf("NestedLoop: DIRECT TEST 6_1: Return: => [%d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40; e1=50;
+        LOG(("NestedLoop: DIRECT TEST 5_1: Entry: [%d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1));
+        printf("NestedLoop: DIRECT TEST 5_1: Entry: [%d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1);
+        rv = foo->Test5_1(&a1, &b1, &c1, &d1, &e1, &r);
+        LOG(("NestedLoop: DIRECT TEST 5_1: Return:                                         => [%d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, r, rv));
+        printf("NestedLoop: DIRECT TEST 5_1: Return: => [%d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40;
+        LOG(("NestedLoop: DIRECT TEST 4_1: Entry: [%d, %d, %d, %d] => \n", a1, b1, c1, d1));
+        printf("NestedLoop: DIRECT TEST 4_1: Entry: [%d, %d, %d, %d] => \n", a1, b1, c1, d1);
+        rv = foo->Test4_1(&a1, &b1, &c1, &d1, &r);
+        LOG(("NestedLoop: DIRECT TEST 4_1: Return:                                         => [%d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, r, rv));
+        printf("NestedLoop: DIRECT TEST 4_1: Return: => [%d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, r, rv);
+
+        a1=10; b1=20; c1=30;
+        LOG(("NestedLoop: DIRECT TEST 3_1: Entry: [%d, %d, %d] => \n", a1, b1, c1));
+        printf("NestedLoop: DIRECT TEST 3_1: Entry: [%d, %d, %d] => \n", a1, b1, c1);
+        rv = foo->Test3_1(&a1, &b1, &c1, &r);
+        LOG(("NestedLoop: DIRECT TEST 3_1: Return:                                         => [%d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, r, rv));
+        printf("NestedLoop: DIRECT TEST 3_1: Return: => [%d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, r, rv);
+
+        a1=10; b1=20;
+        LOG(("NestedLoop: DIRECT TEST 2_1: Entry: [%d, %d] => \n", a1, b1));
+        printf("NestedLoop: DIRECT TEST 2_1: Entry: [%d, %d] => \n", a1, b1);
+        rv = foo->Test2_1(&a1, &b1, &r);
+        LOG(("NestedLoop: DIRECT TEST 2_1: Return:                                         => [%d, %d] --> Returns %d, rv=%d\n", a1, b1, r, rv));
+        printf("NestedLoop: DIRECT TEST 2_1: Return: => [%d, %d] --> Returns %d, rv=%d\n", a1, b1, r, rv);
+
+        a1=10;
+        LOG(("NestedLoop: DIRECT TEST 1_1: Entry: [%d] => \n", a1));
+        printf("NestedLoop: DIRECT TEST 1_1: Entry: [%d] => \n", a1);
+        rv = foo->Test1_1(&a1, &r);
+        LOG(("NestedLoop: DIRECT TEST 1_1: Return:                                         => [%d] --> Returns %d, rv=%d\n", a1, r, rv));
+        printf("NestedLoop: DIRECT TEST 1_1: Return: => [%d] --> Returns %d, rv=%d\n", a1, r, rv);
+}
+
+
+void TestCase_1_ProxyTests(nsITestProxy *proxyObject)
+{
+        PRInt32 a1, b1, c1, d1, e1, f1, g1, h1, i1, j1;
+        nsresult rv, r;
+        a1=10; b1=20; c1=30; d1=40; e1=50; f1=60; g1=70; h1=80; i1=90; j1=100;
+        LOG(("NestedLoop: TEST 10_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1));
+        printf("NestedLoop: TEST 10_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1);
+        rv = proxyObject->Test10_1(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &i1, &j1, &r);
+        LOG(("NestedLoop: TEST 10_1: Return:                                         => [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, r, rv));
+        printf("NestedLoop: TEST 10_1: Return: => [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40; e1=50; f1=60; g1=70; h1=80; i1=90;
+        LOG(("NestedLoop: TEST 9_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1));
+        printf("NestedLoop: TEST 9_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1);
+        rv = proxyObject->Test9_1(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &i1, &r);
+        LOG(("NestedLoop: TEST 9_1: Return:                                         => [%d, %d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, r, rv));
+        printf("NestedLoop: TEST 9_1: Return: => [%d, %d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40; e1=50; f1=60; g1=70; h1=80;
+        LOG(("NestedLoop: TEST 8_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1));
+        printf("NestedLoop: TEST 8_1: Entry: [%d, %d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1, h1);
+        rv = proxyObject->Test8_1(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &r);
+        LOG(("NestedLoop: TEST 8_1: Return:                                         => [%d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, r, rv));
+        printf("NestedLoop: TEST 8_1: Return: => [%d, %d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40; e1=50; f1=60; g1=70;
+        LOG(("NestedLoop: TEST 7_1: Entry: [%d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1));
+        printf("NestedLoop: TEST 7_1: Entry: [%d, %d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1, g1);
+        rv = proxyObject->Test7_1(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &r);
+        LOG(("NestedLoop: TEST 7_1: Return:                                         => [%d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, r, rv));
+        printf("NestedLoop: TEST 7_1: Return: => [%d, %d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40; e1=50; f1=60;
+        LOG(("NestedLoop: TEST 6_1: Entry: [%d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1));
+        printf("NestedLoop: TEST 6_1: Entry: [%d, %d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1, f1);
+        rv = proxyObject->Test6_1(&a1, &b1, &c1, &d1, &e1, &f1, &r);
+        LOG(("NestedLoop: TEST 6_1: Return:                                         => [%d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, r, rv));
+        printf("NestedLoop: TEST 6_1: Return: => [%d, %d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40; e1=50;
+        LOG(("NestedLoop: TEST 5_1: Entry: [%d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1));
+        printf("NestedLoop: TEST 5_1: Entry: [%d, %d, %d, %d, %d] => \n", a1, b1, c1, d1, e1);
+        rv = proxyObject->Test5_1(&a1, &b1, &c1, &d1, &e1, &r);
+        LOG(("NestedLoop: TEST 5_1: Return:                                         => [%d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, r, rv));
+        printf("NestedLoop: TEST 5_1: Return: => [%d, %d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, r, rv);
+
+        a1=10; b1=20; c1=30; d1=40;
+        LOG(("NestedLoop: TEST 4_1: Entry: [%d, %d, %d, %d] => \n", a1, b1, c1, d1));
+        printf("NestedLoop: TEST 4_1: Entry: [%d, %d, %d, %d] => \n", a1, b1, c1, d1);
+        rv = proxyObject->Test4_1(&a1, &b1, &c1, &d1, &r);
+        LOG(("NestedLoop: TEST 4_1: Return:                                         => [%d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, r, rv));
+        printf("NestedLoop: TEST 4_1: Return: => [%d, %d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, d1, r, rv);
+
+        a1=10; b1=20; c1=30;
+        LOG(("NestedLoop: TEST 3_1: Entry: [%d, %d, %d] => \n", a1, b1, c1));
+        printf("NestedLoop: TEST 3_1: Entry: [%d, %d, %d] => \n", a1, b1, c1);
+        rv = proxyObject->Test3_1(&a1, &b1, &c1, &r);
+        LOG(("NestedLoop: TEST 3_1: Return:                                         => [%d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, r, rv));
+        printf("NestedLoop: TEST 3_1: Return: => [%d, %d, %d] --> Returns %d, rv=%d\n", a1, b1, c1, r, rv);
+
+        a1=10; b1=20;
+        LOG(("NestedLoop: TEST 2_1: Entry: [%d, %d] => \n", a1, b1));
+        printf("NestedLoop: TEST 2_1: Entry: [%d, %d] => \n", a1, b1);
+        rv = proxyObject->Test2_1(&a1, &b1, &r);
+        LOG(("NestedLoop: TEST 2_1: Return:                                         => [%d, %d] --> Returns %d, rv=%d\n", a1, b1, r, rv));
+        printf("NestedLoop: TEST 2_1: Return: => [%d, %d] --> Returns %d, rv=%d\n", a1, b1, r, rv);
+
+        a1=10;
+        LOG(("NestedLoop: TEST 1_1: Entry: [%d] => \n", a1));
+        printf("NestedLoop: TEST 1_1: Entry: [%d] => \n", a1);
+        rv = proxyObject->Test1_1(&a1, &r);
+        LOG(("NestedLoop: TEST 1_1: Return:                                         => [%d] --> Returns %d, rv=%d\n", a1, r, rv));
+        printf("NestedLoop: TEST 1_1: Return: => [%d] --> Returns %d, rv=%d\n", a1, r, rv);
+}
+
+
+void TestCase_2_ProxyTests(nsITestProxy *proxyObject)
+{
+        PRInt64 a1, b1, c1, d1, e1, f1, g1, h1, i1, j1;
+        nsresult rv, r;
+        a1=100; b1=200; c1=300; d1=400; e1=500; f1=600; g1=700; h1=800; i1=900; j1=1000;
+        LOG(("NestedLoop: TEST 10_2: Entry: [%g, %g, %g, %g, %g, %g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1));
+        printf("NestedLoop: TEST 10_2: Entry: [%g, %g, %g, %g, %g, %g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1);
+        rv = proxyObject->Test10_2(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &i1, &j1, &r);
+        LOG(("NestedLoop: TEST 10_2: Return:                                         => [%g, %g, %g, %g, %g, %g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, r, rv));
+        printf("NestedLoop: TEST 10_2: Return: => [%g, %g, %g, %g, %g, %g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, r, rv);
+
+        a1=100; b1=200; c1=300; d1=400; e1=500; f1=600; g1=700; h1=800; i1=900;
+        LOG(("NestedLoop: TEST 9_2: Entry: [%g, %g, %g, %g, %g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1));
+        printf("NestedLoop: TEST 9_2: Entry: [%g, %g, %g, %g, %g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1);
+        rv = proxyObject->Test9_2(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &i1, &r);
+        LOG(("NestedLoop: TEST 9_2: Return:                                         => [%g, %g, %g, %g, %g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, r, rv));
+        printf("NestedLoop: TEST 9_2: Return: => [%g, %g, %g, %g, %g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, r, rv);
+
+        a1=100; b1=200; c1=300; d1=400; e1=500; f1=600; g1=700; h1=800;
+        LOG(("NestedLoop: TEST 8_2: Entry: [%g, %g, %g, %g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1, f1, g1, h1));
+        printf("NestedLoop: TEST 8_2: Entry: [%g, %g, %g, %g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1, f1, g1, h1);
+        rv = proxyObject->Test8_2(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &r);
+        LOG(("NestedLoop: TEST 8_2: Return:                                         => [%g, %g, %g, %g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, r, rv));
+        printf("NestedLoop: TEST 8_2: Return: => [%g, %g, %g, %g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, r, rv);
+
+        a1=100; b1=200; c1=300; d1=400; e1=500; f1=600; g1=700;
+        LOG(("NestedLoop: TEST 7_2: Entry: [%g, %g, %g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1, f1, g1));
+        printf("NestedLoop: TEST 7_2: Entry: [%g, %g, %g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1, f1, g1);
+        rv = proxyObject->Test7_2(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &r);
+        LOG(("NestedLoop: TEST 7_2: Return:                                         => [%g, %g, %g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, r, rv));
+        printf("NestedLoop: TEST 7_2: Return: => [%g, %g, %g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, r, rv);
+
+        a1=100; b1=200; c1=300; d1=400; e1=500; f1=600;
+        LOG(("NestedLoop: TEST 6_2: Entry: [%g, %g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1, f1));
+        printf("NestedLoop: TEST 6_2: Entry: [%g, %g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1, f1);
+        rv = proxyObject->Test6_2(&a1, &b1, &c1, &d1, &e1, &f1, &r);
+        LOG(("NestedLoop: TEST 6_2: Return:                                         => [%g, %g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, r, rv));
+        printf("NestedLoop: TEST 6_2: Return: => [%g, %g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, r, rv);
+
+        a1=100; b1=200; c1=300; d1=400; e1=500;
+        LOG(("NestedLoop: TEST 5_2: Entry: [%g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1));
+        printf("NestedLoop: TEST 5_2: Entry: [%g, %g, %g, %g, %g] => \n", a1, b1, c1, d1, e1);
+        rv = proxyObject->Test5_2(&a1, &b1, &c1, &d1, &e1, &r);
+        LOG(("NestedLoop: TEST 5_2: Return:                                         => [%g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, r, rv));
+        printf("NestedLoop: TEST 5_2: Return: => [%g, %g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, r, rv);
+
+        a1=100; b1=200; c1=300; d1=400;
+        LOG(("NestedLoop: TEST 4_2: Entry: [%g, %g, %g, %g] => \n", a1, b1, c1, d1));
+        printf("NestedLoop: TEST 4_2: Entry: [%g, %g, %g, %g] => \n", a1, b1, c1, d1);
+        rv = proxyObject->Test4_2(&a1, &b1, &c1, &d1, &r);
+        LOG(("NestedLoop: TEST 4_2: Return:                                         => [%g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, r, rv));
+        printf("NestedLoop: TEST 4_2: Return: => [%g, %g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, d1, r, rv);
+
+        a1=100; b1=200; c1=300;
+        LOG(("NestedLoop: TEST 3_2: Entry: [%g, %g, %g] => \n", a1, b1, c1));
+        printf("NestedLoop: TEST 3_2: Entry: [%g, %g, %g] => \n", a1, b1, c1);
+        rv = proxyObject->Test3_2(&a1, &b1, &c1, &r);
+        LOG(("NestedLoop: TEST 3_2: Return:                                         => [%g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, r, rv));
+        printf("NestedLoop: TEST 3_2: Return: => [%g, %g, %g] --> Returns %d, rv=%d\n", a1, b1, c1, r, rv);
+
+        a1=100; b1=200;
+        LOG(("NestedLoop: TEST 2_2: Entry: [%g, %g] => \n", a1, b1));
+        printf("NestedLoop: TEST 2_2: Entry: [%g, %g] => \n", a1, b1);
+        rv = proxyObject->Test2_2(&a1, &b1, &r);
+        LOG(("NestedLoop: TEST 2_2: Return:                                         => [%g, %g] --> Returns %d, rv=%d\n", a1, b1, r, rv));
+        printf("NestedLoop: TEST 2_2: Return: => [%g, %g] --> Returns %d, rv=%d\n", a1, b1, r, rv);
+
+        a1=100;
+        LOG(("NestedLoop: TEST 1_2: Entry: [%g] => \n", a1));
+        printf("NestedLoop: TEST 1_2: Entry: [%g] => \n", a1);
+        rv = proxyObject->Test1_2(&a1, &r);
+        LOG(("NestedLoop: TEST 1_2: Return:                                         => [%g] --> Returns %d, rv=%d\n", a1, r, rv));
+        printf("NestedLoop: TEST 1_2: Return: => [%g] --> Returns %d, rv=%d\n", a1, r, rv);
+}
+
+
+void TestCase_3_ProxyTests(nsITestProxy *proxyObject)
+{
+        float a1, b1, c1, d1, e1, f1, g1, h1, i1, j1;
+        nsresult rv, r;
+        a1=10.0; b1=20.0; c1=30.0; d1=40.0; e1=50.0; f1=60.0; g1=70.0; h1=80.0; i1=90.0; j1=100.0;
+        LOG(("NestedLoop: TEST 10_3: Entry: [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1));
+        printf("NestedLoop: TEST 10_3: Entry: [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1);
+        rv = proxyObject->Test10_3(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &i1, &j1, &r);
+        LOG(("NestedLoop: TEST 10_3: Return:                                         => [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, r, rv));
+        printf("NestedLoop: TEST 10_3: Return: => [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, r, rv);
+
+        a1=10.0; b1=20.0; c1=30.0; d1=40.0; e1=50.0; f1=60.0; g1=70.0; h1=80.0; i1=90.0;
+        LOG(("NestedLoop: TEST 9_3: Entry: [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1));
+        printf("NestedLoop: TEST 9_3: Entry: [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1);
+        rv = proxyObject->Test9_3(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &i1, &r);
+        LOG(("NestedLoop: TEST 9_3: Return:                                         => [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, r, rv));
+        printf("NestedLoop: TEST 9_3: Return: => [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, r, rv);
+
+        a1=10.0; b1=20.0; c1=30.0; d1=40.0; e1=50.0; f1=60.0; g1=70.0; h1=80.0;
+        LOG(("NestedLoop: TEST 8_3: Entry: [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1, f1, g1, h1));
+        printf("NestedLoop: TEST 8_3: Entry: [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1, f1, g1, h1);
+        rv = proxyObject->Test8_3(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &r);
+        LOG(("NestedLoop: TEST 8_3: Return:                                         => [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, r, rv));
+        printf("NestedLoop: TEST 8_3: Return: => [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, r, rv);
+
+        a1=10.0; b1=20.0; c1=30.0; d1=40.0; e1=50.0; f1=60.0; g1=70.0;
+        LOG(("NestedLoop: TEST 7_3: Entry: [%lf, %lf, %lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1, f1, g1));
+        printf("NestedLoop: TEST 7_3: Entry: [%lf, %lf, %lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1, f1, g1);
+        rv = proxyObject->Test7_3(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &r);
+        LOG(("NestedLoop: TEST 7_3: Return:                                         => [%lf, %lf, %lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, r, rv));
+        printf("NestedLoop: TEST 7_3: Return: => [%lf, %lf, %lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, r, rv);
+
+        a1=10.0; b1=20.0; c1=30.0; d1=40.0; e1=50.0; f1=60.0;
+        LOG(("NestedLoop: TEST 6_3: Entry: [%lf, %lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1, f1));
+        printf("NestedLoop: TEST 6_3: Entry: [%lf, %lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1, f1);
+        rv = proxyObject->Test6_3(&a1, &b1, &c1, &d1, &e1, &f1, &r);
+        LOG(("NestedLoop: TEST 6_3: Return:                                         => [%lf, %lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, r, rv));
+        printf("NestedLoop: TEST 6_3: Return: => [%lf, %lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, r, rv);
+
+        a1=10.0; b1=20.0; c1=30.0; d1=40.0; e1=50.0;
+        LOG(("NestedLoop: TEST 5_3: Entry: [%lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1));
+        printf("NestedLoop: TEST 5_3: Entry: [%lf, %lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1, e1);
+        rv = proxyObject->Test5_3(&a1, &b1, &c1, &d1, &e1, &r);
+        LOG(("NestedLoop: TEST 5_3: Return:                                         => [%lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, r, rv));
+        printf("NestedLoop: TEST 5_3: Return: => [%lf, %lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, r, rv);
+
+        a1=10.0; b1=20.0; c1=30.0; d1=40.0;
+        LOG(("NestedLoop: TEST 4_3: Entry: [%lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1));
+        printf("NestedLoop: TEST 4_3: Entry: [%lf, %lf, %lf, %lf] => \n", a1, b1, c1, d1);
+        rv = proxyObject->Test4_3(&a1, &b1, &c1, &d1, &r);
+        LOG(("NestedLoop: TEST 4_3: Return:                                         => [%lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, r, rv));
+        printf("NestedLoop: TEST 4_3: Return: => [%lf, %lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, d1, r, rv);
+
+        a1=10.0; b1=20.0; c1=30.0;
+        LOG(("NestedLoop: TEST 3_3: Entry: [%lf, %lf, %lf] => \n", a1, b1, c1));
+        printf("NestedLoop: TEST 3_3: Entry: [%lf, %lf, %lf] => \n", a1, b1, c1);
+        rv = proxyObject->Test3_3(&a1, &b1, &c1, &r);
+        LOG(("NestedLoop: TEST 3_3: Return:                                         => [%lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, r, rv));
+        printf("NestedLoop: TEST 3_3: Return: => [%lf, %lf, %lf] --> Returns %d, rv=%d\n", a1, b1, c1, r, rv);
+
+        a1=10.0; b1=20.0;
+        LOG(("NestedLoop: TEST 2_3: Entry: [%lf, %lf] => \n", a1, b1));
+        printf("NestedLoop: TEST 2_3: Entry: [%lf, %lf] => \n", a1, b1);
+        rv = proxyObject->Test2_3(&a1, &b1, &r);
+        LOG(("NestedLoop: TEST 2_3: Return:                                         => [%lf, %lf] --> Returns %d, rv=%d\n", a1, b1, r, rv));
+        printf("NestedLoop: TEST 2_3: Return: => [%lf, %lf] --> Returns %d, rv=%d\n", a1, b1, r, rv);
+
+        a1=10.0;
+        LOG(("NestedLoop: TEST 1_3: Entry: [%lf] => \n", a1));
+        printf("NestedLoop: TEST 1_3: Entry: [%lf] => \n", a1);
+        rv = proxyObject->Test1_3(&a1, &r);
+        LOG(("NestedLoop: TEST 1_3: Return:                                         => [%lf] --> Returns %d, rv=%d\n", a1, r, rv));
+        printf("NestedLoop: TEST 1_3: Return: => [%lf] --> Returns %d, rv=%d\n", a1, r, rv);
+}
+
+
+void TestCase_4_ProxyTests(nsITestProxy *proxyObject)
+{
+        double a1, b1, c1, d1, e1, f1, g1, h1, i1, j1;
+        nsresult rv, r;
+        a1=100.0; b1=200.0; c1=300.0; d1=400.0; e1=500.0; f1=600.0; g1=700.0; h1=800.0; i1=900.0; j1=1000.0;
+        LOG(("NestedLoop: TEST 10_4: Entry: [%le, %le, %le, %le, %le, %le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1));
+        printf("NestedLoop: TEST 10_4: Entry: [%le, %le, %le, %le, %le, %le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1);
+        rv = proxyObject->Test10_4(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &i1, &j1, &r);
+        LOG(("NestedLoop: TEST 10_4: Return:                                         => [%le, %le, %le, %le, %le, %le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, r, rv));
+        printf("NestedLoop: TEST 10_4: Return: => [%le, %le, %le, %le, %le, %le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, r, rv);
+
+        a1=100.0; b1=200.0; c1=300.0; d1=400.0; e1=500.0; f1=600.0; g1=700.0; h1=800.0; i1=900.0;
+        LOG(("NestedLoop: TEST 9_4: Entry: [%le, %le, %le, %le, %le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1));
+        printf("NestedLoop: TEST 9_4: Entry: [%le, %le, %le, %le, %le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1, f1, g1, h1, i1);
+        rv = proxyObject->Test9_4(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &i1, &r);
+        LOG(("NestedLoop: TEST 9_4: Return:                                         => [%le, %le, %le, %le, %le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, r, rv));
+        printf("NestedLoop: TEST 9_4: Return: => [%le, %le, %le, %le, %le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, i1, r, rv);
+
+        a1=100.0; b1=200.0; c1=300.0; d1=400.0; e1=500.0; f1=600.0; g1=700.0; h1=800.0;
+        LOG(("NestedLoop: TEST 8_4: Entry: [%le, %le, %le, %le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1, f1, g1, h1));
+        printf("NestedLoop: TEST 8_4: Entry: [%le, %le, %le, %le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1, f1, g1, h1);
+        rv = proxyObject->Test8_4(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &h1, &r);
+        LOG(("NestedLoop: TEST 8_4: Return:                                         => [%le, %le, %le, %le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, r, rv));
+        printf("NestedLoop: TEST 8_4: Return: => [%le, %le, %le, %le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, h1, r, rv);
+
+        a1=100.0; b1=200.0; c1=300.0; d1=400.0; e1=500.0; f1=600.0; g1=700.0;
+        LOG(("NestedLoop: TEST 7_4: Entry: [%le, %le, %le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1, f1, g1));
+        printf("NestedLoop: TEST 7_4: Entry: [%le, %le, %le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1, f1, g1);
+        rv = proxyObject->Test7_4(&a1, &b1, &c1, &d1, &e1, &f1, &g1, &r);
+        LOG(("NestedLoop: TEST 7_4: Return:                                         => [%le, %le, %le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, r, rv));
+        printf("NestedLoop: TEST 7_4: Return: => [%le, %le, %le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, g1, r, rv);
+
+        a1=100.0; b1=200.0; c1=300.0; d1=400.0; e1=500.0; f1=600.0;
+        LOG(("NestedLoop: TEST 6_4: Entry: [%le, %le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1, f1));
+        printf("NestedLoop: TEST 6_4: Entry: [%le, %le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1, f1);
+        rv = proxyObject->Test6_4(&a1, &b1, &c1, &d1, &e1, &f1, &r);
+        LOG(("NestedLoop: TEST 6_4: Return:                                         => [%le, %le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, r, rv));
+        printf("NestedLoop: TEST 6_4: Return: => [%le, %le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, f1, r, rv);
+
+        a1=100.0; b1=200.0; c1=300.0; d1=400.0; e1=500.0;
+        LOG(("NestedLoop: TEST 5_4: Entry: [%le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1));
+        printf("NestedLoop: TEST 5_4: Entry: [%le, %le, %le, %le, %le] => \n", a1, b1, c1, d1, e1);
+        rv = proxyObject->Test5_4(&a1, &b1, &c1, &d1, &e1, &r);
+        LOG(("NestedLoop: TEST 5_4: Return:                                         => [%le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, r, rv));
+        printf("NestedLoop: TEST 5_4: Return: => [%le, %le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, e1, r, rv);
+
+        a1=100.0; b1=200.0; c1=300.0; d1=400.0;
+        LOG(("NestedLoop: TEST 4_4: Entry: [%le, %le, %le, %le] => \n", a1, b1, c1, d1));
+        printf("NestedLoop: TEST 4_4: Entry: [%le, %le, %le, %le] => \n", a1, b1, c1, d1);
+        rv = proxyObject->Test4_4(&a1, &b1, &c1, &d1, &r);
+        LOG(("NestedLoop: TEST 4_4: Return:                                         => [%le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, r, rv));
+        printf("NestedLoop: TEST 4_4: Return: => [%le, %le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, d1, r, rv);
+
+        a1=100.0; b1=200.0; c1=300.0;
+        LOG(("NestedLoop: TEST 3_4: Entry: [%le, %le, %le] => \n", a1, b1, c1));
+        printf("NestedLoop: TEST 3_4: Entry: [%le, %le, %le] => \n", a1, b1, c1);
+        rv = proxyObject->Test3_4(&a1, &b1, &c1, &r);
+        LOG(("NestedLoop: TEST 3_4: Return:                                         => [%le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, r, rv));
+        printf("NestedLoop: TEST 3_4: Return: => [%le, %le, %le] --> Returns %d, rv=%d\n", a1, b1, c1, r, rv);
+
+        a1=100.0; b1=200.0;
+        LOG(("NestedLoop: TEST 2_4: Entry: [%le, %le] => \n", a1, b1));
+        printf("NestedLoop: TEST 2_4: Entry: [%le, %le] => \n", a1, b1);
+        rv = proxyObject->Test2_4(&a1, &b1, &r);
+        LOG(("NestedLoop: TEST 2_4: Return:                                         => [%le, %le] --> Returns %d, rv=%d\n", a1, b1, r, rv));
+        printf("NestedLoop: TEST 2_4: Return: => [%le, %le] --> Returns %d, rv=%d\n", a1, b1, r, rv);
+
+        a1=100.0;
+        LOG(("NestedLoop: TEST 1_4: Entry: [%le] => \n", a1));
+        printf("NestedLoop: TEST 1_4: Entry: [%le] => \n", a1);
+        rv = proxyObject->Test1_4(&a1, &r);
+        LOG(("NestedLoop: TEST 1_4: Return:                                         => [%le] --> Returns %d, rv=%d\n", a1, r, rv));
+        printf("NestedLoop: TEST 1_4: Return: => [%le] --> Returns %d, rv=%d\n", a1, r, rv);
+}
+
+
+void TestCase_5_ProxyTests(nsITestProxy *proxyObject)
+{
+        //nsITestProxy *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9, *p10;
+        nsISupports *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9, *p10;
+        p1 = p2 = p3 = p4 = p5 = p6 = p7 = p8 = p9 = p10 = NULL;
+        nsresult rv, r;
+
+        printf("\n\nNestedLoop: TestCase_5_ProxyTests: **** NOTE **** You can verify that the sub-tests of TEST 1_5 worked by looking at the \\NSPR.LOG file on your device!\n\n");
+
+        LOG(("NestedLoop: TEST 1_5: Entry: [0x%08X] => \n",
+             p1));
+        printf("NestedLoop: TEST 1_5: Entry: [0x%08X] => \n",
+             p1);
+        rv = proxyObject->Test1_5(&p1, &r);
+        LOG(("NestedLoop: TEST 1_5: Return:                                         => [0x%08X] --> Returns %d, rv=%d\n",
+             p1, r, rv));
+        printf("NestedLoop: TEST 1_5: Return: => [0x%08X] --> Returns %d, rv=%d\n",
+             p1, r, rv);
+
+        LOG(("NestedLoop: TEST 2_5: Entry: [0x%08X, 0x%08X] => \n",
+             p1, p2));
+        printf("NestedLoop: TEST 2_5: Entry: [0x%08X, 0x%08X] => \n",
+             p1, p2);
+        rv = proxyObject->Test2_5(&p1, &p2, &r);
+        LOG(("NestedLoop: TEST 2_5: Return:                                         => [0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, r, rv));
+        printf("NestedLoop: TEST 2_5: Return: => [0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, r, rv);
+
+        LOG(("NestedLoop: TEST 3_5: Entry: [0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3));
+        printf("NestedLoop: TEST 3_5: Entry: [0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3);
+        rv = proxyObject->Test3_5(&p1, &p2, &p3, &r);
+        LOG(("NestedLoop: TEST 3_5: Return:                                         => [0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, r, rv));
+        printf("NestedLoop: TEST 3_5: Return: => [0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, r, rv);
+
+        LOG(("NestedLoop: TEST 4_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4));
+        printf("NestedLoop: TEST 4_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4);
+        rv = proxyObject->Test4_5(&p1, &p2, &p3, &p4, &r);
+        LOG(("NestedLoop: TEST 4_5: Return:                                         => [0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, r, rv));
+        printf("NestedLoop: TEST 4_5: Return: => [0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, r, rv);
+
+        LOG(("NestedLoop: TEST 5_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5));
+        printf("NestedLoop: TEST 5_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5);
+        rv = proxyObject->Test5_5(&p1, &p2, &p3, &p4, &p5, &r);
+        LOG(("NestedLoop: TEST 5_5: Return:                                         => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, r, rv));
+        printf("NestedLoop: TEST 5_5: Return: => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, r, rv);
+
+        LOG(("NestedLoop: TEST 6_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5, p6));
+        printf("NestedLoop: TEST 6_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5, p6);
+        rv = proxyObject->Test6_5(&p1, &p2, &p3, &p4, &p5, &p6, &r);
+        LOG(("NestedLoop: TEST 6_5: Return:                                         => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, p6, r, rv));
+        printf("NestedLoop: TEST 6_5: Return: => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, p6, r, rv);
+
+        LOG(("NestedLoop: TEST 7_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5, p6, p7));
+        printf("NestedLoop: TEST 7_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5, p6, p7);
+        rv = proxyObject->Test7_5(&p1, &p2, &p3, &p4, &p5, &p6, &p7, &r);
+        LOG(("NestedLoop: TEST 7_5: Return:                                         => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, p6, p7, r, rv));
+        printf("NestedLoop: TEST 7_5: Return: => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, p6, p7, r, rv);
+
+        LOG(("NestedLoop: TEST 8_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5, p6, p7, p8));
+        printf("NestedLoop: TEST 8_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5, p6, p7, p8);
+        rv = proxyObject->Test8_5(&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8, &r);
+        LOG(("NestedLoop: TEST 8_5: Return:                                         => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, p6, p7, p8, r, rv));
+        printf("NestedLoop: TEST 8_5: Return: => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, p6, p7, p8, r, rv);
+
+        LOG(("NestedLoop: TEST 9_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5, p6, p7, p8, p9));
+        printf("NestedLoop: TEST 9_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5, p6, p7, p8, p9);
+        rv = proxyObject->Test9_5(&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8, &p9, &r);
+        LOG(("NestedLoop: TEST 9_5: Return:                                         => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, p6, p7, p8, p9, r, rv));
+        printf("NestedLoop: TEST 9_5: Return: => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, p6, p7, p8, p9, r, rv);
+
+        LOG(("NestedLoop: TEST 10_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5, p6, p7, p8, p9, p10));
+        printf("NestedLoop: TEST 10_5: Entry: [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] => \n",
+             p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+        rv = proxyObject->Test10_5(&p1, &p2, &p3, &p4, &p5, &p6, &p7, &p8, &p9, &p10, &r);
+        LOG(("NestedLoop: TEST 10_5: Return:                                         => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, r, rv));
+        printf("NestedLoop: TEST 10_5: Return: => [0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X] --> Returns %d, rv=%d\n",
+             p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, r, rv);
+
+        NS_RELEASE(p10);
+        NS_RELEASE(p9);
+        NS_RELEASE(p8);
+        NS_RELEASE(p7);
+        NS_RELEASE(p6);
+        NS_RELEASE(p5);
+        NS_RELEASE(p4);
+        NS_RELEASE(p3);
+        NS_RELEASE(p2);
+        NS_RELEASE(p1);
+}
+
 
 void TestCase_NestedLoop(nsIThread *thread, PRInt32 index)
 {
     nsCOMPtr<nsIProxyObjectManager> manager =
             do_GetService(NS_XPCOMPROXY_CONTRACTID);
 
-    LOG(("TEST: ProxyObjectManager: %p\n", (void *) manager.get()));
+    LOG(("NestedLoop: ProxyObjectManager: %p\n", (void *) manager.get()));
     
     PR_ASSERT(manager);
 
     nsITestProxy         *proxyObject;
-    nsTestXPCFoo2*        foo   = new nsTestXPCFoo2();
+    nsTestXPCFoo*         foo   = new nsTestXPCFoo();
     
     PR_ASSERT(foo);
     
+    TestCase_1_DirectTests(foo);
     
     manager->GetProxyForObject(thread, NS_GET_IID(nsITestProxy), foo, NS_PROXY_SYNC, (void**)&proxyObject);
     
@@ -296,26 +753,40 @@ void TestCase_NestedLoop(nsIThread *thread, PRInt32 index)
         
         nsresult rv;
         
-        LOG(("TEST: Deleting real Object (%d)\n", index));
+        LOG(("NestedLoop: Deleting real Object (%d)\n", index));
         NS_RELEASE(foo);
    
         PRInt32 retval;
         
-        LOG(("TEST: Getting EventThread...\n"));
+        LOG(("NestedLoop: Getting EventThread...\n"));
 
         //nsCOMPtr<nsIThread> curThread = do_GetCurrentThread();
         PRThread *curThread = PR_GetCurrentThread();
         if (curThread)
         {
-            LOG(("TEST: Thread (%d) Prior to calling proxyObject->Test.\n", index));
+            LOG(("NestedLoop: Thread (%d) Prior to calling proxyObject->Test.\n", index));
             rv = proxyObject->Test(NS_PTR_TO_INT32((void*)curThread), 0, &retval);   // XXX broken on 64-bit arch
-            LOG(("TEST: Thread (%d) proxyObject error: %x.\n", index, rv));
+            LOG(("NestedLoop: Thread (%d) proxyObject error: %x.\n", index, rv));
 
-            LOG(("TEST: Deleting Proxy Object (%d)\n", index));
-            NS_RELEASE(proxyObject);
-        }    
+        } else {
+                LOG(("NestedLoop: No EventThread Found!\n"));
+        }
+
+        TestCase_1_ProxyTests(proxyObject);
+        TestCase_2_ProxyTests(proxyObject);
+        TestCase_3_ProxyTests(proxyObject);
+        TestCase_4_ProxyTests(proxyObject);
+        TestCase_5_ProxyTests(proxyObject);
+
+        LOG(("NestedLoop: Deleting Proxy Object (%d)\n", index));
+        NS_RELEASE(proxyObject);
 
         PR_Sleep( PR_MillisecondsToInterval(1000) );  // If your thread goes away, your stack goes away.  Only use ASYNC on calls that do not have out parameters
+    }
+    else
+    {
+        LOG(("NestedLoop: COULD NOT GET PROXY OBJECT!!!\n"));
+        printf("NestedLoop: COULD NOT GET PROXY OBJECT!!!\n");
     }
 }
 
@@ -411,7 +882,9 @@ public:
 
         PRInt32 a;
         proxyObject->Test(1, 2, &a);
-        proxyObject->Test2();
+
+        nsresult rv;
+        proxyObject->Test2(&rv);
         
         NS_RELEASE(proxyObject);
         delete foo;
@@ -488,17 +961,12 @@ RunApartmentTest()
     return NS_OK;
 }
 
-} // namespace
 
-using namespace proxytests;
-
-int
-main(int argc, char **argv)
+int do_my_test(int numberOfThreads)
 {
-    int numberOfThreads = 1;
 
-    if (argc > 1)
-        numberOfThreads = atoi(argv[1]);
+    if ( sLog == NULL )
+		sLog = PR_NewLogModule("Test");
 
     NS_InitXPCOM2(nsnull, nsnull, nsnull);
 
@@ -508,13 +976,15 @@ main(int argc, char **argv)
         NS_GetComponentRegistrar(getter_AddRefs(registrar));
         registrar->AutoRegister(nsnull);
 
-        RunApartmentTest();
-
+#if 0
+        TestCase_1_Failure();
+#else
         nsCOMPtr<nsIThread> eventLoopThread;
         NS_NewThread(getter_AddRefs(eventLoopThread));
 
-        nsCOMPtr<nsIRunnable> test = new TestSyncProxyToSelf();
-        eventLoopThread->Dispatch(test, NS_DISPATCH_NORMAL);
+	nsCOMPtr<nsIRunnable> test;
+        //test = new TestSyncProxyToSelf();
+        //eventLoopThread->Dispatch(test, NS_DISPATCH_NORMAL);
 
         PRThread *eventLoopPRThread;
         eventLoopThread->GetPRThread(&eventLoopPRThread);
@@ -548,6 +1018,8 @@ main(int argc, char **argv)
 
         LOG(("TEST: Shutting down event loop thread\n"));
         eventLoopThread->Shutdown();
+#endif
+       
     }
 
     LOG(("TEST: Calling Cleanup.\n"));
@@ -556,3 +1028,33 @@ main(int argc, char **argv)
     LOG(("TEST: Return zero.\n"));
     return 0;
 }
+
+
+
+int
+   main(void *myThis, int argc, char **argv)
+{
+        int numberOfThreads = 1;
+
+        if (argc > 1)
+                numberOfThreads = atoi(argv[1]);
+
+        return do_my_test(numberOfThreads);
+}
+
+
+
+
+
+
+LRESULT APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
+{
+        do_my_test(1);
+        
+        return 0;
+}
+
+
+
+
+
