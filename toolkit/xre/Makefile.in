@@ -107,7 +107,6 @@ CPPSRCS = \
 	nsXREDirProvider.cpp \
 	nsNativeAppSupportBase.cpp \
 	nsAppData.cpp \
-	showOSAlert.cpp \
 	$(NULL)
 
 DEFINES += -DIMPL_XREAPI
