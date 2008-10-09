@@ -62,7 +62,7 @@ function run_test() {
     }
   }
   
-  Components.utils.import("resource://gre/modules/JSONModule.jsm");
+  Components.utils.import("resource://gre/modules/JSON.jsm");
   do_check_eq(typeof(JSONModule), "object");
   
   // some of the tests are adapted from /testing/mochitest/tests/test_Base.js
