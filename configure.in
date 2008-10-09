@@ -6090,7 +6090,9 @@ if test $NS_OSSO; then
     if test -z "$MOZ_ENABLE_DBUS"; then
         AC_MSG_ERROR([DBus is required when building for OSSO])
     fi
-    AC_DEFINE(NS_OSSO)     
+    AC_DEFINE(NS_OSSO)
+    dnl XXX this should go somewhere else; it's not just for OSSO
+    AC_DEFINE(MOZ_GFX_OPTIMIZE_MOBILE)
 fi
 AC_SUBST(LIBOSSO_CFLAGS)
 AC_SUBST(LIBOSSO_LIBS)
