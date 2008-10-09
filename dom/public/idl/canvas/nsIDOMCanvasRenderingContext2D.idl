@@ -161,6 +161,10 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   // ImageData createImageData(in float w, in float h);
   void createImageData();
 
+  // image smoothing mode -- if disabled, images won't be smoothed
+  // if scaled.
+  attribute boolean mozImageSmoothingEnabled;
+
   /**
    * Renders a region of a window into the canvas.  The contents of
    * the window's viewport are rendered, ignoring viewport clipping
