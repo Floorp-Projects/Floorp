@@ -46,7 +46,6 @@
 #include "nsINodeInfo.h"
 #include "nsCOMArray.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsDataHashtable.h"
 #include "nsString.h"
 
 #ifdef MOZ_XTF
@@ -72,73 +71,11 @@ PRBool NS_SVGEnabled();
 #define kSVGNameSpaceURI "http://www.w3.org/2000/svg"
 #define kXMLEventsNameSpaceURI "http://www.w3.org/2001/xml-events"
 
-class nsNameSpaceKey : public PLDHashEntryHdr
-{
-public:
-  typedef const nsAString* KeyType;
-  typedef const nsAString* KeyTypePointer;
+static nsINameSpaceManager* sNameSpaceManager = nsnull;
 
-  nsNameSpaceKey(KeyTypePointer aKey) : mKey(aKey)
-  {
-  }
-  nsNameSpaceKey(const nsNameSpaceKey& toCopy) : mKey(toCopy.mKey)
-  {
-  }
+NS_IMPL_ISUPPORTS1(nsINameSpaceManager, nsINameSpaceManager)
 
-  KeyType GetKey() const
-  {
-    return mKey;
-  }
-  PRBool KeyEquals(KeyType aKey) const
-  {
-    return mKey->Equals(*aKey);
-  }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey)
-  {
-    return aKey;
-  }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    return HashString(*aKey);
-  }
-
-  enum { 
-    ALLOW_MEMMOVE = PR_TRUE
-  };
-
-private:
-  const nsAString* mKey;
-};
-
-class NameSpaceManagerImpl : public nsINameSpaceManager {
-public:
-  virtual ~NameSpaceManagerImpl()
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-
-  nsresult Init();
-
-  nsresult RegisterNameSpace(const nsAString& aURI,  PRInt32& aNameSpaceID);
-
-  nsresult GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI);
-  PRInt32 GetNameSpaceID(const nsAString& aURI);
-
-  PRBool HasElementCreator(PRInt32 aNameSpaceID);
-
-private:
-  nsresult AddNameSpace(const nsAString& aURI, const PRInt32 aNameSpaceID);
-
-  nsDataHashtable<nsNameSpaceKey,PRInt32> mURIToIDTable;
-  nsStringArray mURIArray;
-};
-
-static NameSpaceManagerImpl* sNameSpaceManager = nsnull;
-
-NS_IMPL_ISUPPORTS1(NameSpaceManagerImpl, nsINameSpaceManager)
-
-nsresult NameSpaceManagerImpl::Init()
+nsresult nsINameSpaceManager::Init()
 {
   nsresult rv = mURIToIDTable.Init(32);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -166,8 +103,8 @@ nsresult NameSpaceManagerImpl::Init()
 }
 
 nsresult
-NameSpaceManagerImpl::RegisterNameSpace(const nsAString& aURI, 
-                                        PRInt32& aNameSpaceID)
+nsINameSpaceManager::RegisterNameSpace(const nsAString& aURI, 
+                                       PRInt32& aNameSpaceID)
 {
   if (aURI.IsEmpty()) {
     aNameSpaceID = kNameSpaceID_None; // xmlns="", see bug 75700 for details
@@ -191,7 +128,7 @@ NameSpaceManagerImpl::RegisterNameSpace(const nsAString& aURI,
 }
 
 nsresult
-NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI)
+nsINameSpaceManager::GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI)
 {
   NS_PRECONDITION(aNameSpaceID >= 0, "Bogus namespace ID");
   
@@ -208,7 +145,7 @@ NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI)
 }
 
 PRInt32
-NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI)
+nsINameSpaceManager::GetNameSpaceID(const nsAString& aURI)
 {
   if (aURI.IsEmpty()) {
     return kNameSpaceID_None; // xmlns="", see bug 75700 for details
@@ -262,7 +199,7 @@ NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
 }
 
 PRBool
-NameSpaceManagerImpl::HasElementCreator(PRInt32 aNameSpaceID)
+nsINameSpaceManager::HasElementCreator(PRInt32 aNameSpaceID)
 {
   return aNameSpaceID == kNameSpaceID_XHTML ||
 #ifdef MOZ_XUL
@@ -275,11 +212,11 @@ NameSpaceManagerImpl::HasElementCreator(PRInt32 aNameSpaceID)
          aNameSpaceID == kNameSpaceID_SVG ||
 #endif
          aNameSpaceID == kNameSpaceID_XMLEvents ||
-         PR_FALSE;
+    PR_FALSE;
 }
 
-nsresult NameSpaceManagerImpl::AddNameSpace(const nsAString& aURI,
-                                            const PRInt32 aNameSpaceID)
+nsresult nsINameSpaceManager::AddNameSpace(const nsAString& aURI,
+                                           const PRInt32 aNameSpaceID)
 {
   if (aNameSpaceID < 0) {
     // We've wrapped...  Can't do anything else here; just bail.
@@ -309,7 +246,7 @@ NS_GetNameSpaceManager(nsINameSpaceManager** aInstancePtrResult)
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
   if (!sNameSpaceManager) {
-    nsCOMPtr<NameSpaceManagerImpl> manager = new NameSpaceManagerImpl();
+    nsCOMPtr<nsINameSpaceManager> manager = new nsINameSpaceManager();
     if (manager) {
       nsresult rv = manager->Init();
       if (NS_SUCCEEDED(rv)) {
