@@ -911,6 +911,7 @@ fails == 441259-2.html 441259-2-ref.html # bug 441400
 == 444928-1.html 444928-1-ref.html
 == 444928-2.html 444928-2-ref.html
 != 444928-3.html 444928-3-notref.html
+# == 448193.html 448193-ref.html  # Fails due to 2 small single-pixel differences
 # == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
 == 449171-1.html 449171-ref.html
 == 449519-1.html 449519-1-ref.html
