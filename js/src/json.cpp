@@ -524,6 +524,21 @@ PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
     return JS_TRUE;
 }
 
+static JSObject *
+GetTopOfObjectStack(JSContext *cx, JSONParser *jp)
+{
+    jsuint length;
+    if (!JS_GetArrayLength(cx, jp->objectStack, &length))
+        return NULL;
+    
+    jsval o;
+    if (!JS_GetElement(cx, jp->objectStack, length - 1, &o))
+        return NULL;
+    
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(o));
+    return JSVAL_TO_OBJECT(o);
+}
+
 static JSBool
 OpenObject(JSContext *cx, JSONParser *jp)
 {
@@ -560,30 +575,21 @@ CloseObject(JSContext *cx, JSONParser *jp)
 static JSBool
 CloseArray(JSContext *cx, JSONParser *jp)
 {
-  return CloseObject(cx, jp);
+    return CloseObject(cx, jp);
 }
 
 static JSBool
 HandleNumber(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
 {
-    JSBool ok;
-    jsuint length;
-    if (!JS_GetArrayLength(cx, jp->objectStack, &length))
-        return JS_FALSE;
-
-    jsval o;
-    if (!JS_GetElement(cx, jp->objectStack, length - 1, &o))
-        return JS_FALSE;
-    JS_ASSERT(JSVAL_IS_OBJECT(o));
-    JSObject *obj = JSVAL_TO_OBJECT(o);
-
     const jschar *ep;
     double val;
     if (!js_strtod(cx, buf, buf + len, &ep, &val) || ep != buf + len)
         return JS_FALSE;
 
+    JSBool ok;
     jsval numVal;
-    if (JS_NewNumberValue(cx, val, &numVal))
+    JSObject *obj = GetTopOfObjectStack(cx, jp);
+    if (obj && JS_NewNumberValue(cx, val, &numVal))
         ok = PushValue(cx, jp, obj, numVal);
     else
         ok = JS_FALSE; // decode error
@@ -594,18 +600,9 @@ HandleNumber(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
 static JSBool
 HandleString(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
 {
-    jsuint length;
-    if (!JS_GetArrayLength(cx, jp->objectStack, &length))
-        return JS_FALSE;
-
-    jsval o;
-    if (!JS_GetElement(cx, jp->objectStack, length - 1, &o))
-        return JS_FALSE;
-    JS_ASSERT(JSVAL_IS_OBJECT(o));
-    JSObject *obj = JSVAL_TO_OBJECT(o);
-
+    JSObject *obj = GetTopOfObjectStack(cx, jp);
     JSString *str = JS_NewUCStringCopyN(cx, buf, len);
-    if (!str)
+    if (!obj || !str)
         return JS_FALSE;
 
     return PushValue(cx, jp, obj, STRING_TO_JSVAL(str));
@@ -628,15 +625,9 @@ HandleKeyword(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
     else
         return JS_FALSE;
 
-    jsuint length;
-    if (!JS_GetArrayLength(cx, jp->objectStack, &length))
+    JSObject *obj = GetTopOfObjectStack(cx, jp);
+    if (!obj)
         return JS_FALSE;
-
-    jsval o;
-    if (!JS_GetElement(cx, jp->objectStack, length - 1, &o))
-        return JS_FALSE;
-    JS_ASSERT(JSVAL_IS_OBJECT(o));
-    JSObject *obj = JSVAL_TO_OBJECT(o);
 
     return PushValue(cx, jp, obj, keyword);
 }
