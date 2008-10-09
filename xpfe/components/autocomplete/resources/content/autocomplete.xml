@@ -912,9 +912,6 @@
           // stop the queued up lookup on a timer
           this.clearTimer();
 
-          if (this.ignoreInputEvent)
-            return;
-          
           if (this.disableAutoComplete)
             return;
 
@@ -1437,7 +1434,7 @@
 
     <handlers>
       <handler event="input"
-               action="this.processInput();"/>
+               action="if (!this.ignoreInputEvent) this.processInput();"/>
 
       <handler event="keydown" phase="capturing"
                 action="return this.processKeyDown(event);"/>
