@@ -829,6 +829,13 @@ nsXHREventTarget::GetContextForEventHandlers(nsIScriptContext** aContext)
 
 /////////////////////////////////////////////
 
+nsXMLHttpRequestUpload::~nsXMLHttpRequestUpload()
+{
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
+}
+
 NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequestUpload)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestUpload)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpRequestUpload)
