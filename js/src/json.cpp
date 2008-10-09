@@ -402,7 +402,7 @@ js_BeginJSONParse(JSContext *cx, jsval *rootVal)
     jp->buffer = NULL;
 
     jp->objectStack = arr;
-    if (!JS_AddRoot(cx, jp->objectStack))
+    if (!js_AddRoot(cx, &jp->objectStack, "JSON parse stack"))
         goto bad;
 
     jp->hexChar = 0;
@@ -433,7 +433,7 @@ js_FinishJSONParse(JSContext *cx, JSONParser *jp)
         js_FinishStringBuffer(jp->buffer);
 
     JS_free(cx, jp->buffer);
-    if (!JS_RemoveRoot(cx, jp->objectStack))
+    if (!js_RemoveRoot(cx->runtime, &jp->objectStack))
         return JS_FALSE;
     JSBool ok = *jp->statep == JSON_PARSE_STATE_FINISHED;
     JS_free(cx, jp);
