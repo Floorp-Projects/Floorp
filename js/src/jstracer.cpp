@@ -2116,7 +2116,7 @@ js_StartRecorder(JSContext* cx, GuardRecord* anchor, Fragment* f, TreeInfo* ti,
                                            ngslots, globalTypeMap, stackTypeMap,
                                            expectedInnerExit);
     if (cx->throwing) {
-        js_AbortRecording(cx, NULL, "setting up recorder failed");
+        js_AbortRecording(cx, "setting up recorder failed");
         return false;
     }
     /* clear any leftover error state */
@@ -2411,7 +2411,7 @@ js_CloseLoop(JSContext* cx)
     JS_ASSERT(fragmento && r);
 
     if (fragmento->assm()->error()) {
-        js_AbortRecording(cx, NULL, "Error during recording");
+        js_AbortRecording(cx, "Error during recording");
         /* If we ran out of memory, flush the code cache and abort. */
         if (fragmento->assm()->error() == OutOMem)
             js_FlushJITCache(cx);
@@ -2422,11 +2422,11 @@ js_CloseLoop(JSContext* cx)
 }
 
 bool
-js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inlineCallCount)
+js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
     if (OBJ_SCOPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain))->title.ownercx != cx) {
-        js_AbortRecording(cx, oldpc, "Global object not owned by this context");
+        js_AbortRecording(cx, "Global object not owned by this context");
         return false; /* we stay away from shared global objects */
     }
 #endif
@@ -2448,15 +2448,14 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inl
         if (!lr) {
             /* js_ExecuteTree might have flushed the cache and aborted us already. */
             if (JS_TRACE_MONITOR(cx).recorder)
-                js_AbortRecording(cx, oldpc, "Couldn't call inner tree");
+                js_AbortRecording(cx, "Couldn't call inner tree");
             return false;
         }
         switch (lr->exit->exitType) {
         case LOOP_EXIT:
             /* If the inner tree exited on an unknown loop exit, grow the tree around it. */
             if (innermostNestedGuard) {
-                js_AbortRecording(cx, oldpc,
-                                  "Inner tree took different side exit, abort recording");
+                js_AbortRecording(cx, "Inner tree took different side exit, abort recording");
                 return js_AttemptToExtendTree(cx, innermostNestedGuard, lr);
             }
             /* emit a call to the inner tree and continue recording the outer tree trace */
@@ -2464,21 +2463,20 @@ js_RecordLoopEdge(JSContext* cx, TraceRecorder* r, jsbytecode* oldpc, uintN& inl
             return true;
         case BRANCH_EXIT:
             /* abort recording the outer tree, extend the inner tree */
-            js_AbortRecording(cx, oldpc, "Inner tree is trying to grow, abort outer recording");
+            js_AbortRecording(cx, "Inner tree is trying to grow, abort outer recording");
             return js_AttemptToExtendTree(cx, lr, NULL);
         default:
             debug_only_v(printf("exit_type=%d\n", lr->exit->exitType);)
-            js_AbortRecording(cx, oldpc, "Inner tree not suitable for calling");
+            js_AbortRecording(cx, "Inner tree not suitable for calling");
             return false;
         }
     }
     /* not returning to our own loop header, not an inner loop we can call, abort trace */
     AUDIT(returnToDifferentLoopHeader);
-    debug_only_v(printf("loop edge %d -> %d, header %d\n",
-            oldpc - cx->fp->script->code,
-            cx->fp->regs->pc - cx->fp->script->code,
-            (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
-    js_AbortRecording(cx, oldpc, "Loop edge does not return to header");
+    debug_only_v(printf("loop edge to %d, header %d\n",
+                 cx->fp->regs->pc - cx->fp->script->code,
+                 (jsbytecode*)r->getFragment()->root->ip - cx->fp->script->code));
+    js_AbortRecording(cx, "Loop edge does not return to header");
     return false;
 }
 
@@ -2737,13 +2735,13 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
 }
 
 bool
-js_MonitorLoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount)
+js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* Is the recorder currently active? */
     if (tm->recorder) {
-        if (js_RecordLoopEdge(cx, tm->recorder, oldpc, inlineCallCount))
+        if (js_RecordLoopEdge(cx, tm->recorder, inlineCallCount))
             return true;
         /* recording was aborted, treat like a regular loop edge hit */
     }
@@ -2820,13 +2818,13 @@ js_MonitorRecording(TraceRecorder* tr)
 
     // In the future, handle dslots realloc by computing an offset from dslots instead.
     if (tr->global_dslots != tr->globalObj->dslots) {
-        js_AbortRecording(cx, NULL, "globalObj->dslots reallocated");
+        js_AbortRecording(cx, "globalObj->dslots reallocated");
         return false;
     }
 
     // Process deepAbort() requests now.
     if (tr->wasDeepAborted()) {
-        js_AbortRecording(cx, NULL, "deep abort requested");
+        js_AbortRecording(cx, "deep abort requested");
         return false;
     }
 
@@ -2857,7 +2855,7 @@ js_MonitorRecording(TraceRecorder* tr)
 }
 
 void
-js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
+js_AbortRecording(JSContext* cx, const char* reason)
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     JS_ASSERT(tm->recorder != NULL);
@@ -2866,10 +2864,9 @@ js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason)
     /* Abort the trace and blacklist its starting point. */
     AUDIT(recorderAborted);
     if (cx->fp) {
-        debug_only_v(if (!abortpc) abortpc = cx->fp->regs->pc;
-                     printf("Abort recording (line %d, pc %d): %s.\n",
-                            js_PCToLineNumber(cx, cx->fp->script, abortpc),
-                            abortpc - cx->fp->script->code, reason);)
+        debug_only_v(printf("Abort recording (line %d, pc %d): %s.\n",
+                            js_PCToLineNumber(cx, cx->fp->script, cx->fp->regs->pc),
+                            cx->fp->regs->pc - cx->fp->script->code, reason);)
     }
     f->blacklist();
     js_DeleteRecorder(cx);
@@ -2984,7 +2981,7 @@ js_FlushJITCache(JSContext* cx)
     debug_only_v(printf("Flushing cache.\n"););
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     if (tm->recorder)
-        js_AbortRecording(cx, NULL, "flush cache");
+        js_AbortRecording(cx, "flush cache");
     Fragmento* fragmento = tm->fragmento;
     if (fragmento) {
         fragmento->clearFrags();

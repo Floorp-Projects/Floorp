@@ -375,7 +375,7 @@ public:
 #define TRACE_ARGS_(tr,x,args)                                                \
     JS_BEGIN_MACRO                                                            \
         if (!tr->record_##x args) {                                           \
-            js_AbortRecording(cx, NULL, #x);                                  \
+            js_AbortRecording(cx, #x);                                        \
             ENABLE_TRACER(0);                                                 \
         }                                                                     \
     JS_END_MACRO
@@ -393,13 +393,13 @@ public:
 #define TRACE_2(x,a,b)          TRACE_ARGS(x, (a, b))
 
 extern bool
-js_MonitorLoopEdge(JSContext* cx, jsbytecode* oldpc, uintN& inlineCallCount);
+js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount);
 
 extern bool
 js_MonitorRecording(TraceRecorder *tr);
 
 extern void
-js_AbortRecording(JSContext* cx, jsbytecode* abortpc, const char* reason);
+js_AbortRecording(JSContext* cx, const char* reason);
 
 extern void
 js_InitJIT(JSTraceMonitor *tm);
