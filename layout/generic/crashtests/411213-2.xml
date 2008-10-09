@@ -1,0 +1,8 @@
+<html xmlns="http://www.w3.org/1999/xhtml" style="direction: rtl;">
+<body onload="document.getElementById('i').style.fontSize = '10em';">
+
+<div style="-moz-column-width: 60px;"><div id="i" style="overflow: -moz-hidden-unscrollable; white-space: pre;">
+ b</div></div>
+
+</body>
+</html>
