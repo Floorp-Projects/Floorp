@@ -177,8 +177,8 @@ public:
     {
     }
 
-    gfxPattern* GetPattern() {
-        return mPattern;
+    void Apply(gfxContext* ctx) {
+        ctx->SetPattern(mPattern);
     }
 
     /* nsIDOMCanvasGradient */
@@ -240,8 +240,8 @@ public:
     {
     }
 
-    gfxPattern* GetPattern() {
-        return mPattern;
+    void Apply(gfxContext* ctx) {
+        ctx->SetPattern(mPattern);
     }
     
     nsIPrincipal* Principal() { return mPrincipal; }
@@ -536,9 +536,7 @@ protected:
                          globalAlpha(1.0),             
                          shadowBlur(0.0),
                          textAlign(TEXT_ALIGN_START),
-                         textBaseline(TEXT_BASELINE_ALPHABETIC),
-                         imageSmoothingEnabled(PR_TRUE)
-        { }
+                         textBaseline(TEXT_BASELINE_ALPHABETIC) { }
 
         ContextState(const ContextState& other)
             : shadowOffset(other.shadowOffset),
@@ -547,8 +545,7 @@ protected:
               font(other.font),
               fontGroup(other.fontGroup),
               textAlign(other.textAlign),
-              textBaseline(other.textBaseline),
-              imageSmoothingEnabled(other.imageSmoothingEnabled)
+              textBaseline(other.textBaseline)
         {
             for (int i = 0; i < STYLE_MAX; i++) {
                 colorStyles[i] = other.colorStyles[i];
@@ -594,8 +591,6 @@ protected:
         nscolor colorStyles[STYLE_MAX];
         nsCOMPtr<nsCanvasGradient> gradientStyles[STYLE_MAX];
         nsCOMPtr<nsCanvasPattern> patternStyles[STYLE_MAX];
-
-        PRPackedBool imageSmoothingEnabled;
     };
 
     nsTArray<ContextState> mStyleStack;
@@ -849,21 +844,12 @@ nsCanvasRenderingContext2D::ApplyStyle(Style aWhichStyle,
 
         DoDrawImageSecurityCheck(pattern->Principal(),
                                  pattern->GetForceWriteOnly());
-
-        gfxPattern* gpat = pattern->GetPattern();
-
-        if (CurrentState().imageSmoothingEnabled)
-            gpat->SetFilter(1 /*CAIRO_FILTER_GOOD*/);
-        else
-            gpat->SetFilter(0 /*CAIRO_FILTER_FAST*/);
-
-        mThebes->SetPattern(gpat);
+        pattern->Apply(mThebes);
         return;
     }
 
     if (CurrentState().gradientStyles[aWhichStyle]) {
-        gfxPattern* gpat = CurrentState().gradientStyles[aWhichStyle]->GetPattern();
-        mThebes->SetPattern(gpat);
+        CurrentState().gradientStyles[aWhichStyle]->Apply(mThebes);
         return;
     }
 
@@ -2944,11 +2930,6 @@ nsCanvasRenderingContext2D::DrawImage()
     pattern = new gfxPattern(imgsurf);
     pattern->SetMatrix(matrix);
 
-    if (CurrentState().imageSmoothingEnabled)
-        pattern->SetFilter(1 /*CAIRO_FILTER_GOOD*/);
-    else
-        pattern->SetFilter(0 /*CAIRO_FILTER_FAST*/);
-
     pathSR.Save();
 
     {
@@ -3820,22 +3801,6 @@ nsCanvasRenderingContext2D::CreateImageData()
     ncc->SetReturnValueWasSet(PR_TRUE);
 
     return NS_OK;
+
 }
 
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetMozImageSmoothingEnabled(PRBool *retVal)
-{
-    *retVal = CurrentState().imageSmoothingEnabled;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetMozImageSmoothingEnabled(PRBool val)
-{
-    if (val != CurrentState().imageSmoothingEnabled) {
-        CurrentState().imageSmoothingEnabled = val;
-        DirtyAllStyles();
-    }
-
-    return NS_OK;
-}
