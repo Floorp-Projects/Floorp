@@ -45,8 +45,8 @@ relativesrcdir	= security/ssl
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_CHROME_FILES	= \
-		$(NULL)
+# _CHROME_FILES	= \
+#		$(NULL)
 #	test_bug413909.html \ # Leaks the world.
 
 libs:: $(_CHROME_FILES)
