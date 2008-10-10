@@ -20,7 +20,7 @@ function test() {
 
   waitForExplicitFinish();
   var activeWin = Application.activeWindow;
-  gTestPage = activeWin.open(url("chrome://mochikit/content/browser/browser/base/content/test/autodiscovery.html"));
+  gTestPage = activeWin.open(url("chrome://mochikit/content/browser/browser/base/content/test/discovery.html"));
   gTestPage.focus();
   setTimeout(iconDiscovery, 1000);
 }
