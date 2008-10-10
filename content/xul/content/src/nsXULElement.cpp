@@ -156,18 +156,6 @@
 #include "nsIDOMNSEvent.h"
 #include "nsCCUncollectableMarker.h"
 
-/**
- * Three bits are used for XUL Element's lazy state.
- */
-#define XUL_ELEMENT_CHILDREN_MUST_BE_REBUILT \
-  (nsXULElement::eChildrenMustBeRebuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
-
-#define XUL_ELEMENT_TEMPLATE_CONTENTS_BUILT \
-  (nsXULElement::eTemplateContentsBuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
-
-#define XUL_ELEMENT_CONTAINER_CONTENTS_BUILT \
-  (nsXULElement::eContainerContentsBuilt << XUL_ELEMENT_LAZY_STATE_OFFSET)
-
 // Global object maintenance
 nsICSSParser* nsXULPrototypeElement::sCSSParser = nsnull;
 nsIXBLService * nsXULElement::gXBLService = nsnull;
@@ -929,52 +917,10 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     nsGenericElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-PRUint32
-nsXULElement::GetChildCount() const
-{
-    if (NS_FAILED(EnsureContentsGenerated())) {
-        return 0;
-    }
-
-    return PeekChildCount();
-}
-
-nsIContent *
-nsXULElement::GetChildAt(PRUint32 aIndex) const
-{
-    if (NS_FAILED(EnsureContentsGenerated())) {
-        return nsnull;
-    }
-
-    return mAttrsAndChildren.GetSafeChildAt(aIndex);
-}
-
-nsIContent * const *
-nsXULElement::GetChildArray() const
-{
-    if (NS_FAILED(EnsureContentsGenerated())) {
-        return nsnull;
-    }
-
-    return mAttrsAndChildren.GetChildArray();
-}
-
-PRInt32
-nsXULElement::IndexOf(nsINode* aPossibleChild) const
-{
-    if (NS_FAILED(EnsureContentsGenerated())) {
-        return -1;
-    }
-
-    return mAttrsAndChildren.IndexOfChild(aPossibleChild);
-}
-
 nsresult
 nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-    nsresult rv = EnsureContentsGenerated();
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    nsresult rv;
     nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
     if (!oldKid) {
       return NS_OK;
@@ -1751,65 +1697,6 @@ nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 
 //----------------------------------------------------------------------
 // Implementation methods
-
-nsresult
-nsXULElement::EnsureContentsGenerated(void) const
-{
-    if (GetFlags() & XUL_ELEMENT_CHILDREN_MUST_BE_REBUILT) {
-        // Ensure that the element is actually _in_ the document tree;
-        // otherwise, somebody is trying to generate children for a node
-        // that's not currently in the content model.
-        NS_PRECONDITION(IsInDoc(), "element not in tree");
-        if (!IsInDoc())
-            return NS_ERROR_NOT_INITIALIZED;
-
-        // XXX hack because we can't use "mutable"
-        nsXULElement* unconstThis = const_cast<nsXULElement*>(this);
-
-        // Clear this value *first*, so we can re-enter the nsIContent
-        // getters if needed.
-        unconstThis->ClearLazyState(eChildrenMustBeRebuilt);
-
-        // Walk up our ancestor chain, looking for an element with a
-        // XUL content model builder attached to it.
-        nsIContent* element = unconstThis;
-
-        do {
-            nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(element);
-            if (xulele) {
-                nsCOMPtr<nsIXULTemplateBuilder> builder;
-                xulele->GetBuilder(getter_AddRefs(builder));
-                if (builder) {
-                    if (HasAttr(kNameSpaceID_None, nsGkAtoms::xulcontentsgenerated)) {
-                        unconstThis->ClearLazyState(eChildrenMustBeRebuilt);
-                        return NS_OK;
-                    }
-
-                    return builder->CreateContents(unconstThis, PR_FALSE);
-                }
-            }
-
-            element = element->GetParent();
-        } while (element);
-
-        NS_ERROR("lazy state set with no XUL content builder in ancestor chain");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    return NS_OK;
-}
-
-// No need to implement AppendChildTo. The default implementation will call
-// GetChildCount which will call EnsureContentsGenerated
-nsresult
-nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify)
-{
-  nsresult rv = EnsureContentsGenerated();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return nsGenericElement::InsertChildAt(aKid, aIndex, aNotify);
-}
-
 
 /// XXX GetID must be defined here because we have proto attrs.
 nsIAtom*

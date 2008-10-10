@@ -466,34 +466,13 @@ public:
 
  */
 
-#define XUL_ELEMENT_LAZY_STATE_OFFSET NODE_TYPE_SPECIFIC_BITS_OFFSET
+#define XUL_ELEMENT_TEMPLATE_GENERATED 1 << NODE_TYPE_SPECIFIC_BITS_OFFSET
 
 class nsScriptEventHandlerOwnerTearoff;
 
 class nsXULElement : public nsGenericElement, public nsIDOMXULElement
 {
 public:
-    /**
-     * These flags are used to maintain bookkeeping information for partially-
-     * constructed content.
-     *
-     *   eChildrenMustBeRebuilt
-     *     The element's children are invalid or unconstructed, and should
-     *     be reconstructed.
-     *
-     *   eTemplateContentsBuilt
-     *     Child content that is built from a XUL template has been
-     *     constructed. 
-     *
-     *   eContainerContentsBuilt
-     *     Child content that is built by following the ``containment''
-     *     property in a XUL template has been built.
-     */
-    enum LazyState {
-        eChildrenMustBeRebuilt  = 0x1,
-        eTemplateContentsBuilt  = 0x2,
-        eContainerContentsBuilt = 0x4
-    };
 
     /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
     static nsXULElement* FromContent(nsIContent *aContent)
@@ -530,13 +509,7 @@ public:
                                                        nsGenericElement)
 
     // nsINode
-    virtual PRUint32 GetChildCount() const;
-    virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-    virtual nsIContent * const * GetChildArray() const;
-    virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
     virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
-    virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                   PRBool aNotify);
 
     // nsIContent
     virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -591,14 +564,13 @@ public:
     NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
     // XUL element methods
-    PRUint32 PeekChildCount() const
-    { return mAttrsAndChildren.ChildCount(); }
-    void SetLazyState(LazyState aFlags)
-    { SetFlags(aFlags << XUL_ELEMENT_LAZY_STATE_OFFSET); }
-    void ClearLazyState(LazyState aFlags)
-    { UnsetFlags(aFlags << XUL_ELEMENT_LAZY_STATE_OFFSET); }
-    PRBool GetLazyState(LazyState aFlag)
-    { return !!(GetFlags() & (aFlag << XUL_ELEMENT_LAZY_STATE_OFFSET)); }
+    /**
+     * The template-generated flag is used to indicate that a
+     * template-generated element has already had its children generated.
+     */
+    void SetTemplateGenerated() { SetFlags(XUL_ELEMENT_TEMPLATE_GENERATED); }
+    void ClearTemplateGenerated() { UnsetFlags(XUL_ELEMENT_TEMPLATE_GENERATED); }
+    PRBool GetTemplateGenerated() { return !!(GetFlags() & XUL_ELEMENT_TEMPLATE_GENERATED); }
 
     // nsIDOMNode
     NS_FORWARD_NSIDOMNODE(nsGenericElement::)
