@@ -634,7 +634,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
   if (nodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
       !mHasProcessedBase) {
     // The first base wins
-    rv = ProcessBASETag(aContent);
+    ProcessBASETag(aContent);
     mHasProcessedBase = PR_TRUE;
   }
   else if (nodeInfo->Equals(nsGkAtoms::meta, kNameSpaceID_XHTML) &&
