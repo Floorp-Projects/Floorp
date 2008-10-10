@@ -4917,7 +4917,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
   aThebesContext->Save();
 
   aThebesContext->NewPath();
-#ifdef MOZ_GFX_MOBILE_OPTIMIZE
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
   aThebesContext->Rectangle(r, PR_TRUE);
 #else
   aThebesContext->Rectangle(r);
