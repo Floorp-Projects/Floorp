@@ -6366,7 +6366,7 @@ if test "$MOZ_MEMORY"; then
   darwin*)
     AC_DEFINE(MOZ_MEMORY_DARWIN)
     ;;
-  *-freebsd*)
+  *freebsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
   *linux*)
