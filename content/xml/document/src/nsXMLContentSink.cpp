@@ -631,7 +631,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
   }
   
   if (nodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
-           !mHasProcessedBase) {
+      !mHasProcessedBase) {
     // The first base wins
     rv = ProcessBASETag(aContent);
     mHasProcessedBase = PR_TRUE;
@@ -783,12 +783,10 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
   return rv;
 }
 
-nsresult
+void
 nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
 {
   NS_ASSERTION(aContent, "missing base-element");
-
-  nsresult rv = NS_OK;
 
   if (mDocument) {
     nsAutoString value;
@@ -799,7 +797,7 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
 
     if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, value)) {
       nsCOMPtr<nsIURI> baseURI;
-      rv = NS_NewURI(getter_AddRefs(baseURI), value);
+      nsresult rv = NS_NewURI(getter_AddRefs(baseURI), value);
       if (NS_SUCCEEDED(rv)) {
         rv = mDocument->SetBaseURI(baseURI); // The document checks if it is legal to set this base
         if (NS_SUCCEEDED(rv)) {
@@ -808,8 +806,6 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
       }
     }
   }
-
-  return rv;
 }
 
 
