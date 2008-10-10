@@ -578,21 +578,22 @@ nsresult
 mozStorageStatement::ExecuteAsync(mozIStorageStatementCallback *aCallback,
                                   mozIStoragePendingStatement **_stmt)
 {
-    // Clone this statement
-    nsRefPtr<mozStorageStatement> stmt(new mozStorageStatement());
-    NS_ENSURE_TRUE(stmt, NS_ERROR_OUT_OF_MEMORY);
-
-    nsCAutoString sql(sqlite3_sql(mDBStatement));
-    nsresult rv = stmt->Initialize(mDBConnection, sql);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Clone this statement.  We only need a sqlite3_stmt object, so we can
+    // avoid all the extra work that making a new mozStorageStatement would
+    // normally involve and use the SQLite API.
+    sqlite3 *db = mDBConnection->GetNativeConnection();
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sqlite3_sql(mDBStatement), -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+        return ConvertResultCode(rc);
 
     // Transfer the bindings
-    int rc = sqlite3_transfer_bindings(mDBStatement, stmt->mDBStatement);
+    rc = sqlite3_transfer_bindings(mDBStatement, stmt);
     if (rc != SQLITE_OK)
         return ConvertResultCode(rc);
 
     // Dispatch to the background.
-    rv = NS_executeAsync(stmt, aCallback, _stmt);
+    nsresult rv = NS_executeAsync(stmt, aCallback, _stmt);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Reset this statement.
