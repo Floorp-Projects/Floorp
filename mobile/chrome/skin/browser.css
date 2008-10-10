@@ -244,7 +244,7 @@ toolbarbutton.browser-control-button {
 }
 
 #urlbar-throbber[loading] {
-  list-style-image: url("chrome://browser/skin/images/throbber.gif");
+  list-style-image: url("chrome://browser/skin/images/throbber.png");
 }
 
 #urlbar-editarea {
