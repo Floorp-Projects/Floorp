@@ -214,7 +214,8 @@ var BrowserUI = {
     lastX : 0,
     lastY : 0,
     sTop : 0,
-    sLeft : 0
+    sLeft : 0,
+    uiMode : UIMODE_NONE
   },
 
   _scrollToolbar : function bui_scrollToolbar(aEvent) {
@@ -288,6 +289,20 @@ var BrowserUI = {
         else if (newLeft < -(tabbarW + sidebarW))
           newLeft = -(tabbarW + sidebarW);
 
+        // Set the UI mode based on where we ended up
+        if (newLeft > -(tabbarW - tabbarW / 3) && newLeft <= 0) {
+          if (this._dragData.uiMode == UIMODE_CONTROLS)
+            return;
+          this.mode = UIMODE_TABS;
+        }
+        else if (newLeft >= -(tabbarW + sidebarW) && newLeft < -(tabbarW + sidebarW / 3)) {
+          if (this._dragData.uiMode == UIMODE_TABS)
+            return;
+          this.mode = UIMODE_CONTROLS;
+        }
+        else
+          this.mode = (gContentBox.style.marginTop == "0px" ? UIMODE_NONE : UIMODE_URLVIEW);
+
         tabbar.left = newLeft;
 
         // Never let the toolbar pan off the screen
@@ -305,14 +320,6 @@ var BrowserUI = {
         this._setContentPosition("left", newLeft + tabbarW);
         sidebar.left = newLeft + tabbarW + contentW;
         panelUI.left = newLeft + tabbarW + contentW + sidebarW;
-
-        // Set the UI mode based on where we ended up
-        if (newLeft > -(tabbarW - tabbarW / 3) && newLeft <= 0)
-          this.mode = UIMODE_TABS;
-        else if (newLeft >= -(tabbarW + sidebarW) && newLeft < -(tabbarW + sidebarW / 3))
-          this.mode = UIMODE_CONTROLS;
-        else
-          this.mode = (gContentBox.style.marginTop == "0px" ? UIMODE_NONE : UIMODE_URLVIEW);
 
         pannedUI = true;
       }
@@ -804,9 +811,11 @@ var BrowserUI = {
         this._dragData.screenY = this._dragData.lastY = aEvent.screenY;
         this._dragData.sTop = document.getElementById("toolbar-main").top;
         this._dragData.sLeft = document.getElementById("tab-list-container").left;
+        this._dragData.uiMode = this.mode;
         break;
       case "mouseup":
         this._dragData.dragging = false;
+        this._dragData.uiMode = UIMODE_NONE;
         // Cause the UI to snap, if needed
         this._showPanel(this.mode);
         break;
