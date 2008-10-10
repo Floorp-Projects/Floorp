@@ -104,6 +104,8 @@
     <command id="cmd_actions" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_panel" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_sanitize" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_zoomin" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_zoomout" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- scrolling -->
     <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -138,6 +140,8 @@
     <!-- misc -->
     <key id="key_menu" keycode="VK_F4" command="cmd_menu"/>
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
+    <key id="key_zoomin" keycode="VK_F7" command="cmd_zoomin"/>
+    <key id="key_zoomout" keycode="VK_F8" command="cmd_zoomout"/>
 
     <!-- tabs -->
     <key id="key_newTab" key="T" modifiers="accel" command="cmd_newTab"/>

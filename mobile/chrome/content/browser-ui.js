@@ -851,6 +851,8 @@ var BrowserUI = {
       case "cmd_actions":
       case "cmd_panel":
       case "cmd_sanitize":
+      case "cmd_zoomin":
+      case "cmd_zoomout":
         isSupported = true;
         break;
       default:
@@ -928,6 +930,12 @@ var BrowserUI = {
         this.show(mode);
         break;
       }
+      case "cmd_zoomin":
+        Browser.content.zoom(-1);
+        break;
+      case "cmd_zoomout":
+        Browser.content.zoom(1);
+        break;
     }
   }
 };
