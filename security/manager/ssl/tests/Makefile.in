@@ -20,7 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Brian Ryner <bryner@brianryner.com>
+#   Jan Bambas <honzab@firemni.cz>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,12 +36,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 MODULE		= pipnss
-DIRS		  = src public tests
+DIRS		= mochitest
+XPCSHELL_TESTS  = unit
 
 include $(topsrcdir)/config/rules.mk

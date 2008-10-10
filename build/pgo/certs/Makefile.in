@@ -48,6 +48,7 @@ _CERTS_DIR = $(_PROFILE_DIR)/certs
 
 # Extension of files must be '.server'
 _SERVER_CERTS = \
+    bug413909cert.server \
     $(NULL)
   
 # Extension of files must be '.ca'
