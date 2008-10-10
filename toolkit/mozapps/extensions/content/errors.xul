@@ -14,7 +14,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is The Update Service.
+# The Original Code is The Extension Manager.
 #
 # The Initial Developer of the Original Code is
 # Ben Goodger.
@@ -40,7 +40,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 
-<!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/update/errors.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/extensions/errors.dtd">
 
 <dialog id="errors"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
