@@ -275,27 +275,15 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLButtonAccessible::GetName(nsAString& aName)
+nsresult
+nsHTMLButtonAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE; // Node shut down
-  }
-
   nsAutoString name;
-  // Prefer aria-labelledby attribute for name
-  if (content->HasAttr(kNameSpaceID_None,
-                       nsAccessibilityAtoms::aria_label) ||
-      content->HasAttr(kNameSpaceID_None,
-                       nsAccessibilityAtoms::aria_labelledby)) {
-    GetHTMLName(name, PR_FALSE);
-  }
+  GetHTMLName(name, PR_FALSE);
 
   if (name.IsEmpty()) {
     // no label from HTML or ARIA
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
     if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
                           name) &&
         !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
@@ -408,11 +396,17 @@ nsHTMLTextFieldAccessible::GetName(nsAString& aName)
 {
   aName.Truncate();
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
-  if (!content) {
+  if (IsDefunct())
     return NS_ERROR_FAILURE;
-  }
-  nsresult rv = GetHTMLName(aName, PR_FALSE);
+
+  nsresult rv = GetARIAName(aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aName.IsEmpty())
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  rv = nsAccessible::GetHTMLName(aName, PR_FALSE);
   if (NS_FAILED(rv) || !aName.IsEmpty() || !content->GetBindingParent()) {
     return rv;
   }
@@ -614,20 +608,14 @@ nsIContent* nsHTMLGroupboxAccessible::GetLegend()
   return nsnull;
 }
 
-NS_IMETHODIMP
-nsHTMLGroupboxAccessible::GetName(nsAString& aName)
+nsresult
+nsHTMLGroupboxAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
+  nsresult rv = nsAccessible::GetNameInternal(aName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;
-  }
-  if (mRoleMapEntry) {
-    nsAccessible::GetName(aName);
-    if (!aName.IsEmpty()) {
-      return NS_OK;
-    }
-  }
+  if (!aName.IsEmpty())
+    return NS_OK;
 
   nsIContent *legendContent = GetLegend();
   if (legendContent) {

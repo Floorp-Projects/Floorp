@@ -49,7 +49,8 @@ nsXULMenuitemAccessible(aDOMNode, aShell)
 {
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessibleWrap::GetName(nsAString& aName)
+NS_IMETHODIMP
+nsXULMenuitemAccessibleWrap::GetName(nsAString& aName)
 {
   // XXX This should be done in get_accName() so that nsIAccessible::GetName()]
   // provides the same results on all platforms

@@ -417,11 +417,9 @@ NS_IMETHODIMP nsXULGroupboxAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULGroupboxAccessible::GetName(nsAString& aName)
+nsresult
+nsXULGroupboxAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
   nsCOMPtr<nsIAccessible> label;
   GetAccessibleRelated(nsIAccessibleRelation::RELATION_LABELLED_BY,
                        getter_AddRefs(label));
