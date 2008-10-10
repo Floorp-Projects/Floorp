@@ -85,7 +85,6 @@ _TEST_FILES =\
 		test_nsIAccessibleTable_3.html \
 		test_nsIAccessibleTable_4.html \
 		test_nsIAccessibleTable_listboxes.xul \
-		test_nsIAccessNode_invalidation.html \
 		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \
 		test_textattrs.html \
@@ -94,6 +93,7 @@ _TEST_FILES =\
 		testTextboxes.js \
 		test_bug428479.html \
 		test_bug429285.html \
+		test_bug434464.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
