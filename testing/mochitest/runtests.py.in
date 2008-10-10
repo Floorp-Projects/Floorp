@@ -375,8 +375,8 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     #   0 TOTAL              17     192  419115886    2 ...
     # 833 nsTimerImpl        60     120      24726    2 ...
     lineRe = re.compile(r"^\s*\d+\s+(?P<name>\S+)\s+"
-                        r"(?P<size>\d+)\s+(?P<bytesLeaked>\d+)\s+"
-                        r"\d+\s+(?P<numLeaked>\d+)")
+                        r"(?P<size>-?\d+)\s+(?P<bytesLeaked>-?\d+)\s+"
+                        r"\d+\s+(?P<numLeaked>-?\d+)")
     thresholdExceeded = False
     seenTotal = False
     prefix = "TEST-PASS"
@@ -385,9 +385,13 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       if not matches:
         continue
       name = matches.group("name")
+      size = int(matches.group("size"))
+      bytesLeaked = int(matches.group("bytesLeaked"))
+      numLeaked = int(matches.group("numLeaked"))
+      if size < 0 or bytesLeaked < 0 or numLeaked < 0:
+        log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | negative leaks caught!")
       if "TOTAL" == name:
         seenTotal = True
-        bytesLeaked = int(matches.group("bytesLeaked"))
         if bytesLeaked > threshold:
           thresholdExceeded = True
           prefix = "TEST-UNEXPECTED-FAIL"
@@ -400,7 +404,6 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
         else:
           log.info("TEST-PASS | runtests-leaks | no leaks detected!")
       else:
-        numLeaked = int(matches.group("numLeaked"))
         if numLeaked != 0:
           if numLeaked > 1:
             instance = "instances"
