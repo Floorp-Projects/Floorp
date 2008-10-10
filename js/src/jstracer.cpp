@@ -373,6 +373,11 @@ Oracle::clear()
     _dontDemote.reset();
 }
 
+#if defined(NJ_SOFTFLOAT)
+JS_DECLARE_CALLINFO(i2f)
+JS_DECLARE_CALLINFO(u2f)
+#endif
+
 static bool isi2f(LInsp i)
 {
     if (i->isop(LIR_i2f))
@@ -468,6 +473,92 @@ static bool overflowSafe(LIns* i)
 }
 
 #if defined(NJ_SOFTFLOAT)
+/* soft float */
+
+jsdouble FASTCALL
+js_fneg(jsdouble x)
+{
+    return -x;
+}
+
+jsdouble FASTCALL
+js_i2f(int32 i)
+{
+    return i;
+}
+
+jsdouble FASTCALL
+js_u2f(jsuint u)
+{
+    return u;
+}
+
+int32 FASTCALL
+js_fcmpeq(jsdouble x, jsdouble y)
+{
+    return x==y;
+}
+
+int32 FASTCALL
+js_fcmplt(jsdouble x, jsdouble y)
+{
+    return x < y;
+}
+
+int32 FASTCALL
+js_fcmple(jsdouble x, jsdouble y)
+{
+    return x <= y;
+}
+
+int32 FASTCALL
+js_fcmpgt(jsdouble x, jsdouble y)
+{
+    return x > y;
+}
+
+int32 FASTCALL
+js_fcmpge(jsdouble x, jsdouble y)
+{
+    return x >= y;
+}
+
+jsdouble FASTCALL
+js_fmul(jsdouble x, jsdouble y)
+{
+    return x * y;
+}
+
+jsdouble FASTCALL
+js_fadd(jsdouble x, jsdouble y)
+{
+    return x + y;
+}
+
+jsdouble FASTCALL
+js_fdiv(jsdouble x, jsdouble y)
+{
+    return x / y;
+}
+
+jsdouble FASTCALL
+js_fsub(jsdouble x, jsdouble y)
+{
+    return x - y;
+}
+
+JS_DEFINE_CALLINFO_1(DOUBLE,    fneg, DOUBLE,               1, 1)
+JS_DEFINE_CALLINFO_1(DOUBLE,    i2f, INT32,                 1, 1)
+JS_DEFINE_CALLINFO_1(DOUBLE,    u2f, UINT32,                1, 1)
+JS_DEFINE_CALLINFO_2(INT32,     fcmpeq, DOUBLE, DOUBLE,     1, 1)
+JS_DEFINE_CALLINFO_2(INT32,     fcmplt, DOUBLE, DOUBLE,     1, 1)
+JS_DEFINE_CALLINFO_2(INT32,     fcmple, DOUBLE, DOUBLE,     1, 1)
+JS_DEFINE_CALLINFO_2(INT32,     fcmpgt, DOUBLE, DOUBLE,     1, 1)
+JS_DEFINE_CALLINFO_2(INT32,     fcmpge, DOUBLE, DOUBLE,     1, 1)
+JS_DEFINE_CALLINFO_2(DOUBLE,    fmul, DOUBLE, DOUBLE,       1, 1)
+JS_DEFINE_CALLINFO_2(DOUBLE,    fadd, DOUBLE, DOUBLE,       1, 1)
+JS_DEFINE_CALLINFO_2(DOUBLE,    fdiv, DOUBLE, DOUBLE,       1, 1)
+JS_DEFINE_CALLINFO_2(DOUBLE,    fsub, DOUBLE, DOUBLE,       1, 1)
 
 class SoftFloatFilter: public LirWriter
 {
