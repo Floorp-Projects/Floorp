@@ -2369,6 +2369,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     return NS_OK;
   }
 
+  NS_ASSERTION(!mDidInitialReflow, "Why are we being called?");
+
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
   mDidInitialReflow = PR_TRUE;
 
