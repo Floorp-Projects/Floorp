@@ -1710,7 +1710,10 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
     if (NS_FAILED(rv)) return rv;
 
     // Recurse to children
-    PRUint32 count = aElement->GetChildCount();
+    nsXULElement *xulcontent = nsXULElement::FromContent(aElement);
+
+    PRUint32 count =
+        xulcontent ? xulcontent->PeekChildCount() : aElement->GetChildCount();
 
     while (count-- > 0) {
         rv = AddSubtreeToDocument(aElement->GetChildAt(count));
@@ -3754,7 +3757,17 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
             return NS_ERROR_FAILURE;
 
         builder->Init(aElement);
-        builder->CreateContents(aElement, PR_FALSE);
+
+        nsXULElement *xulContent = nsXULElement::FromContent(aElement);
+        if (xulContent) {
+            // Mark the XUL element as being lazy, so the template builder
+            // will run when layout first asks for these nodes.
+            xulContent->SetLazyState(nsXULElement::eChildrenMustBeRebuilt);
+        }
+        else {
+            // Force construction of immediate template sub-content _now_.
+            builder->CreateContents(aElement, PR_FALSE);
+        }
     }
 
     return NS_OK;

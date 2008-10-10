@@ -1144,11 +1144,13 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
         if (xuldoc)
             xuldoc->SetTemplateBuilderFor(mRoot, nsnull);
 
-        // clear the template state when removing content so that template
-        // content will be regenerated again if the content is reinserted
+        // clear the lazy state when removing content so that it will be
+        // regenerated again if the content is reinserted
         nsXULElement *xulcontent = nsXULElement::FromContent(mRoot);
-        if (xulcontent)
-            xulcontent->ClearTemplateGenerated();
+        if (xulcontent) {
+            xulcontent->ClearLazyState(nsXULElement::eTemplateContentsBuilt);
+            xulcontent->ClearLazyState(nsXULElement::eContainerContentsBuilt);
+        }
 
         mDB = nsnull;
         mCompDB = nsnull;
