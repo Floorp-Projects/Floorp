@@ -40,8 +40,6 @@
 
 #include "nsISupports.h"
 #include "nsStringGlue.h"
-#include "nsDataHashtable.h"
-#include "nsVoidArray.h"
 
 class nsIAtom;
 class nsString;
@@ -83,64 +81,18 @@ static const PRInt32 kNameSpaceID_None = 0;
  *
  */
 
-class nsNameSpaceKey : public PLDHashEntryHdr
-{
-public:
-  typedef const nsAString* KeyType;
-  typedef const nsAString* KeyTypePointer;
-
-  nsNameSpaceKey(KeyTypePointer aKey) : mKey(aKey)
-  {
-  }
-  nsNameSpaceKey(const nsNameSpaceKey& toCopy) : mKey(toCopy.mKey)
-  {
-  }
-
-  KeyType GetKey() const
-  {
-    return mKey;
-  }
-  PRBool KeyEquals(KeyType aKey) const
-  {
-    return mKey->Equals(*aKey);
-  }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey)
-  {
-    return aKey;
-  }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    return HashString(*aKey);
-  }
-
-  enum { 
-    ALLOW_MEMMOVE = PR_TRUE
-  };
-
-private:
-  const nsAString* mKey;
-};
-
-
 class nsINameSpaceManager : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INAMESPACEMANAGER_IID)
-  NS_DECL_ISUPPORTS
-  nsresult RegisterNameSpace(const nsAString& aURI,
-                             PRInt32& aNameSpaceID);
 
-  nsresult GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI);
-  PRInt32 GetNameSpaceID(const nsAString& aURI);
+  virtual nsresult RegisterNameSpace(const nsAString& aURI,
+                                     PRInt32& aNameSpaceID) = 0;
 
-  PRBool HasElementCreator(PRInt32 aNameSpaceID);
+  virtual nsresult GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI) = 0;
+  virtual PRInt32 GetNameSpaceID(const nsAString& aURI) = 0;
 
-  nsresult Init();  
-private:
-  nsresult AddNameSpace(const nsAString& aURI, const PRInt32 aNameSpaceID);
-
-  nsDataHashtable<nsNameSpaceKey,PRInt32> mURIToIDTable;
-  nsStringArray mURIArray;
+  virtual PRBool HasElementCreator(PRInt32 aNameSpaceID) = 0;
 };
  
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINameSpaceManager, NS_INAMESPACEMANAGER_IID)
