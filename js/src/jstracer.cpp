@@ -4531,6 +4531,26 @@ TraceRecorder::record_JSOP_NEW()
         return interpretedFunctionCall(fval, fun, argc, true);
     }
 
+    /*
+     * The prefix string (the first one) can contain the following characters:
+     * 'C': a JSContext* argument
+     * 'T': |this| as a JSObject* argument
+     * 'f': The function object being new'd as a JSObject* argument
+     * 'p': The prototype object to use for the construction as a JSObject*
+     *
+     * The corresponding things will get passed as arguments to the builtin in
+     * reverse order (so pC means JSContext* as the first arg, and the
+     * prototype as the second arg).
+     *
+     * The argtypes string (the second one) can contain the following
+     * characters:
+     * 'd': a number (double) argument
+     * 'i': an integer argument
+     * 'o': a JSObject* argument
+     *
+     * Again, these will be passed to the builtin in reverse order, coming
+     * after the arguments passed by the prefix string.
+     */
     static JSTraceableNative knownNatives[] = {
         { (JSFastNative)js_Array,  &ci_FastNewArray,  "pC", "",    FAIL_NULL },
         { (JSFastNative)js_Array,  &ci_Array_1int,    "pC", "i",   FAIL_NULL },
