@@ -213,15 +213,15 @@ private:
     void             DoomActiveEntries(void);
 
     static
-    PLDHashOperator PR_CALLBACK  DeactivateAndClearEntry(PLDHashTable *    table,
-                                                         PLDHashEntryHdr * hdr,
-                                                         PRUint32          number,
-                                                         void *            arg);
+    PLDHashOperator  DeactivateAndClearEntry(PLDHashTable *    table,
+                                             PLDHashEntryHdr * hdr,
+                                             PRUint32          number,
+                                             void *            arg);
     static
-    PLDHashOperator PR_CALLBACK  RemoveActiveEntry(PLDHashTable *    table,
-                                                   PLDHashEntryHdr * hdr,
-                                                   PRUint32          number,
-                                                   void *            arg);
+    PLDHashOperator  RemoveActiveEntry(PLDHashTable *    table,
+                                       PLDHashEntryHdr * hdr,
+                                       PRUint32          number,
+                                       void *            arg);
 #if defined(PR_LOGGING)
     void LogCacheStatistics();
 #endif

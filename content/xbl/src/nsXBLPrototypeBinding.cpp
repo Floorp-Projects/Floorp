@@ -332,7 +332,7 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PRIntn)
+static PRIntn
 TraverseInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback &cb = 
@@ -345,7 +345,7 @@ TraverseInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
   return kHashEnumerateNext;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 TraverseBinding(nsHashKey *aKey, void *aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback *cb = 
@@ -646,7 +646,7 @@ struct InsertionData {
     :mBinding(aBinding), mPrototype(aPrototype) {}
 };
 
-PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
+PRBool InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsXBLInsertionPointEntry* entry = static_cast<nsXBLInsertionPointEntry*>(aData);
   InsertionData* data = static_cast<InsertionData*>(aClosure);
@@ -946,7 +946,7 @@ struct nsXBLAttrChangeData
 };
 
 // XXXbz this duplicates lots of AttributeChanged
-PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
+PRBool SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsXBLAttributeEntry* entry = static_cast<nsXBLAttributeEntry*>(aData);
   nsXBLAttrChangeData* changeData = static_cast<nsXBLAttrChangeData*>(aClosure);
@@ -1012,7 +1012,7 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
   return PR_TRUE;
 }
 
-PRBool PR_CALLBACK SetAttrsNS(nsHashKey* aKey, void* aData, void* aClosure)
+PRBool SetAttrsNS(nsHashKey* aKey, void* aData, void* aClosure)
 {
   if (aData && aClosure) {
     nsPRUint32Key * key = static_cast<nsPRUint32Key*>(aKey);
@@ -1072,14 +1072,14 @@ nsXBLPrototypeBinding::ShouldBuildChildFrames() const
   return PR_TRUE;
 }
 
-static PRBool PR_CALLBACK
+static PRBool
 DeleteAttributeEntry(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsXBLAttributeEntry::Destroy(static_cast<nsXBLAttributeEntry*>(aData));
   return PR_TRUE;
 }
 
-static PRBool PR_CALLBACK
+static PRBool
 DeleteAttributeTable(nsHashKey* aKey, void* aData, void* aClosure)
 {
   delete static_cast<nsObjectHashtable*>(aData);
@@ -1203,7 +1203,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
   }
 }
 
-static PRBool PR_CALLBACK
+static PRBool
 DeleteInsertionPointEntry(nsHashKey* aKey, void* aData, void* aClosure)
 {
   static_cast<nsXBLInsertionPointEntry*>(aData)->Release();

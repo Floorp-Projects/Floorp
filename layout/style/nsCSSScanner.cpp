@@ -268,7 +268,7 @@ nsCSSScanner::SetLowLevelError(nsresult aErrorCode)
 #ifdef CSS_REPORT_PARSE_ERRORS
 #define CSS_ERRORS_PREF "layout.css.report_errors"
 
-PR_STATIC_CALLBACK(int)
+static int
 CSSErrorsPrefChanged(const char *aPref, void *aClosure)
 {
   gReportErrors = nsContentUtils::GetBoolPref(CSS_ERRORS_PREF, PR_TRUE);

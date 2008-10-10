@@ -242,7 +242,7 @@ public:
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
 };
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 EventListenerManagerHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                                   const void *key)
 {
@@ -251,7 +251,7 @@ EventListenerManagerHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   return PR_TRUE;
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 EventListenerManagerHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
   EventListenerManagerMapEntry *lm =
@@ -2600,7 +2600,7 @@ nsContentUtils::UnregisterPrefCallback(const char *aPref,
     sPref->UnregisterCallback(aPref, aCallback, aClosure);
 }
 
-static int PR_CALLBACK
+static int
 BoolVarChanged(const char *aPref, void *aClosure)
 {
   PRBool* cache = static_cast<PRBool*>(aClosure);

@@ -111,7 +111,7 @@ MakeColorPref(const char *colstr)
   return colorref;
 }
 
-int PR_CALLBACK
+int
 nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
 {
   nsPresContext*  presContext = (nsPresContext*)instance_data;
@@ -149,7 +149,7 @@ IsVisualCharset(const nsCString& aCharset)
 #endif // IBMBIDI
 
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 destroy_loads(const void * aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
 {
   aData->Destroy();
@@ -298,7 +298,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPresContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPresContext)
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 TraverseImageLoader(const void * aKey, nsCOMPtr<nsImageLoader>& aData,
                     void* aClosure)
 {
@@ -1027,7 +1027,7 @@ static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, PRUint16 aMode)
 }
 
  // Enumeration call back for HashTable
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 set_animation_mode(const void * aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
 {
   imgIRequest* imgReq = aData->GetRequest();

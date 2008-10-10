@@ -346,7 +346,7 @@ static const nsModuleComponentInfo components[] =
 
 };
 
-PR_STATIC_CALLBACK(void)
+static void
 nsWidgetGtk2ModuleDtor(nsIModule *aSelf)
 {
   nsFilePicker::Shutdown();

@@ -986,7 +986,7 @@ end:
 
 /* ------------------------------------------------------------------------- */
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 EnumerateTargetMapAndNotify(const nsID    &aKey,
                             ipcTargetData *aData,
                             void          *aClosure)

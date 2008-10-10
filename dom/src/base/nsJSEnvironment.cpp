@@ -1135,7 +1135,7 @@ static const char js_zeal_option_str[]   = JS_OPTIONS_DOT_STR "gczeal";
 static const char js_jit_content_str[]   = JS_OPTIONS_DOT_STR "jit.content";
 static const char js_jit_chrome_str[]    = JS_OPTIONS_DOT_STR "jit.chrome";
 
-int PR_CALLBACK
+int
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
   nsJSContext *context = reinterpret_cast<nsJSContext *>(data);
@@ -3699,7 +3699,7 @@ nsJSRuntime::Startup()
   gCollation = nsnull;
 }
 
-static int PR_CALLBACK
+static int
 MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
 {
   // Default limit on script run time to 10 seconds. 0 means let
@@ -3725,7 +3725,7 @@ MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
   return 0;
 }
 
-static int PR_CALLBACK
+static int
 ReportAllJSExceptionsPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   PRBool reportAll = nsContentUtils::GetBoolPref(aPrefName, PR_FALSE);

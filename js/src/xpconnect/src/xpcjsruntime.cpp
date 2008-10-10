@@ -328,7 +328,7 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
     }
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 TraceJSObject(PRUint32 aLangID, void *aScriptThing, void *aClosure)
 {
     if(aLangID == nsIProgrammingLanguage::JAVASCRIPT)

@@ -65,8 +65,7 @@ class mozSanitizingHTMLSerializer : public nsIContentSerializer,
 public:
   mozSanitizingHTMLSerializer();
   virtual ~mozSanitizingHTMLSerializer();
-  static PRBool PR_CALLBACK ReleaseProperties(nsHashKey* key, void* data,
-                                              void* closure);
+  static PRBool ReleaseProperties(nsHashKey* key, void* data, void* closure);
 
   NS_DECL_ISUPPORTS
 

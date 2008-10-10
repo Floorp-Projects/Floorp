@@ -742,7 +742,7 @@ nsNavBookmarks::RecursiveAddBookmarkHash(PRInt64 aPlaceID,
 //    an Int64 history page ID) as the userArg and removes all redirect
 //    destinations that reference it.
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RemoveBookmarkHashCallback(nsTrimInt64HashKey::KeyType aKey,
                            PRInt64& aPlaceId, void* aUserArg)
 {

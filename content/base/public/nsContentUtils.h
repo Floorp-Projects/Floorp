@@ -1359,8 +1359,7 @@ private:
   static nsIDOMScriptObjectFactory *GetDOMScriptObjectFactory();
 
   static nsresult HoldScriptObject(PRUint32 aLangID, void* aObject);
-  PR_STATIC_CALLBACK(void) DropScriptObject(PRUint32 aLangID, void *aObject,
-                                            void *aClosure);
+  static void DropScriptObject(PRUint32 aLangID, void *aObject, void *aClosure);
 
   static PRBool CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
                                 nsIPrincipal* aPrincipal);

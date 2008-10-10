@@ -534,7 +534,7 @@ XPCPerThreadData::~XPCPerThreadData()
     }
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 xpc_ThreadDataDtorCB(void* ptr)
 {
     XPCPerThreadData* data = (XPCPerThreadData*) ptr;
