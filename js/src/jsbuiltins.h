@@ -49,6 +49,31 @@ enum { JSTN_ERRTYPE_MASK = 7, JSTN_MORE = 8 };
 
 #define JSTN_ERRTYPE(jstn)  ((jstn)->flags & JSTN_ERRTYPE_MASK)
 
+/*
+ * |prefix| and |argtypes| declare what arguments should be passed to the
+ * native function.  Except when declaring constructors (which do their own
+ * special thing), |prefix| can contain the following characters:
+ *
+ * 'C': a JSContext* argument
+ * 'T': |this| as a JSObject* argument (only applies if |this| is an object)
+ * 'S': |this| as a JSString* argument (only applies if |this| is a string)
+ * 'R': a JSRuntime* argument
+ * 'P': the pc as a jsbytecode*
+ * 'D': |this| as a number (jsdouble*)
+ *
+ * The corresponding things will get passed as arguments to the builtin in
+ * reverse order (so TC means JSContext* as the first arg, and the
+ * JSObject* for |this| as the second arg).
+ *
+ * |argtypes| can contain the following characters:
+ * 'd': a number (double) argument
+ * 'i': an integer argument
+ * 's': a JSString* argument
+ * 'o': a JSObject* argument
+ * 'r': a JSObject* argument that is of class js_RegExpClass
+ * 'f': a JSObject* argument that is of class js_FunctionClass
+ * 'v': a jsval argument (boxing whatever value is actually being passed in)
+ */
 struct JSTraceableNative {
     JSFastNative            native;
     const nanojit::CallInfo *builtin;
