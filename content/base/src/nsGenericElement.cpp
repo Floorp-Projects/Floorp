@@ -786,6 +786,13 @@ nsNSElementTearoff::GetFirstElementChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
+#ifdef MOZ_XUL
+  nsXULElement* xul = nsXULElement::FromContent(mContent);
+  if (xul) {
+    xul->EnsureContentsGenerated();
+  }
+#endif
+
   nsAttrAndChildArray& children = mContent->mAttrsAndChildren;
   PRUint32 i, count = children.ChildCount();
   for (i = 0; i < count; ++i) {
@@ -802,6 +809,13 @@ NS_IMETHODIMP
 nsNSElementTearoff::GetLastElementChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
+
+#ifdef MOZ_XUL
+  nsXULElement* xul = nsXULElement::FromContent(mContent);
+  if (xul) {
+    xul->EnsureContentsGenerated();
+  }
+#endif
 
   nsAttrAndChildArray& children = mContent->mAttrsAndChildren;
   PRUint32 i = children.ChildCount();
@@ -824,6 +838,13 @@ nsNSElementTearoff::GetPreviousElementSibling(nsIDOMElement** aResult)
   if (!parent) {
     return NS_OK;
   }
+
+#ifdef MOZ_XUL
+  nsXULElement* xul = nsXULElement::FromContent(parent);
+  if (xul) {
+    xul->EnsureContentsGenerated();
+  }
+#endif
 
   NS_ASSERTION(parent->IsNodeOfType(nsINode::eELEMENT) ||
                parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
@@ -856,6 +877,13 @@ nsNSElementTearoff::GetNextElementSibling(nsIDOMElement** aResult)
   if (!parent) {
     return NS_OK;
   }
+
+#ifdef MOZ_XUL
+  nsXULElement* xul = nsXULElement::FromContent(parent);
+  if (xul) {
+    xul->EnsureContentsGenerated();
+  }
+#endif
 
   NS_ASSERTION(parent->IsNodeOfType(nsINode::eELEMENT) ||
                parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
