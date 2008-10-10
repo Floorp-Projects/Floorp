@@ -138,7 +138,7 @@ nsDocAccessible::~nsDocAccessible()
 ////////////////////////////////////////////////////////////////////////////////
 // nsDocAccessible. nsISupports
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ElementTraverser(const void *aKey, nsIAccessNode *aAccessNode,
                  void *aUserArg)
 {

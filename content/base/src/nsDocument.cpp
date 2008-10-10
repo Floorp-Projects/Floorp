@@ -271,7 +271,7 @@ nsUint32ToContentHashEntry::InitHashSet(HashSet** aSet)
   return NS_OK;
 }
 
-static PLDHashOperator PR_CALLBACK
+static PLDHashOperator
 nsUint32ToContentHashEntryVisitorCallback(nsISupportsHashKey* aEntry,
                                           void* aClosure)
 {
@@ -395,7 +395,7 @@ struct FireChangeArgs {
   nsIContent* mTo;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FireChangeEnumerator(nsIdentifierMapEntry::ChangeCallbackEntry *aEntry, void *aArg)
 {
   FireChangeArgs* args = static_cast<FireChangeArgs*>(aArg);
@@ -1452,7 +1452,7 @@ nsDocument::nsDocument(const char* aContentType)
   SetDOMStringToNull(mLastStyleSheetSet);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ClearAllBoxObjects(const void* aKey, nsPIBoxObject* aBoxObject, void* aUserArg)
 {
   if (aBoxObject) {
@@ -1616,7 +1616,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDocument,
                                                         nsNodeUtils::LastRelease(this))
 
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
                 void *arg)
 {
@@ -1632,7 +1632,7 @@ SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RadioGroupsTraverser(const nsAString& aKey, nsRadioGroupStruct* aData,
                      void* aClosure)
 {
@@ -1653,7 +1653,7 @@ RadioGroupsTraverser(const nsAString& aKey, nsRadioGroupStruct* aData,
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 BoxObjectTraverser(const void* key, nsPIBoxObject* boxObject, void* userArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
@@ -1676,7 +1676,7 @@ public:
   }
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 LinkMapTraverser(nsUint32ToContentHashEntry* aEntry, void* userArg)
 {
   LinkMapTraversalVisitor visitor;
@@ -1685,7 +1685,7 @@ LinkMapTraverser(nsUint32ToContentHashEntry* aEntry, void* userArg)
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 IdentifierMapEntryTraverse(nsIdentifierMapEntry *aEntry, void *aArg)
 {
   nsCycleCollectionTraversalCallback *cb =
@@ -2971,7 +2971,7 @@ nsDocument::GetPrimaryShell() const
   return mShellsAreHidden ? nsnull : mPresShells.SafeElementAt(0, nsnull);
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 SubDocClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
   SubDocMapEntry *e = static_cast<SubDocMapEntry *>(entry);
@@ -2983,7 +2983,7 @@ SubDocClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   }
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 SubDocInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 {
   SubDocMapEntry *e =
@@ -3082,7 +3082,7 @@ nsDocument::GetSubDocumentFor(nsIContent *aContent) const
   return nsnull;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FindContentEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
                       PRUint32 number, void *arg)
 {
@@ -5707,7 +5707,7 @@ nsDocument::SetDocumentURI(const nsAString& aDocumentURI)
 
 static void BlastSubtreeToPieces(nsINode *aNode);
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 BlastFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
 {
   nsCOMPtr<nsIAttribute> *attr =
@@ -6756,7 +6756,7 @@ struct SubDocEnumArgs
   void *data;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 SubDocHashEnum(PLDHashTable *table, PLDHashEntryHdr *hdr,
                PRUint32 number, void *arg)
 {
@@ -6778,7 +6778,7 @@ nsDocument::EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData)
   }
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CanCacheSubDocument(PLDHashTable *table, PLDHashEntryHdr *hdr,
                     PRUint32 number, void *arg)
 {

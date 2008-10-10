@@ -81,7 +81,7 @@ struct ChildrenHashEntry : public PLDHashEntryHdr {
   nsRuleNode *mRuleNode;
 };
 
-/* static */ PR_CALLBACK PLDHashNumber
+/* static */ PLDHashNumber
 nsRuleNode::ChildrenHashHashKey(PLDHashTable *aTable, const void *aKey)
 {
   const nsRuleNode::Key *key =
@@ -91,7 +91,7 @@ nsRuleNode::ChildrenHashHashKey(PLDHashTable *aTable, const void *aKey)
   return PL_DHashVoidPtrKeyStub(aTable, key->mRule);
 }
 
-/* static */ PR_CALLBACK PRBool
+/* static */ PRBool
 nsRuleNode::ChildrenHashMatchEntry(PLDHashTable *aTable,
                                    const PLDHashEntryHdr *aHdr,
                                    const void *aKey)
@@ -602,7 +602,7 @@ nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
   return aPresContext->AllocateFromShell(sz);
 }
 
-/* static */ PR_CALLBACK PLDHashOperator
+/* static */ PLDHashOperator
 nsRuleNode::EnqueueRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                     PRUint32 number, void *arg)
 {
@@ -819,8 +819,8 @@ struct PropertyCheckData {
  * result, and it returns the revised one.
  */
 typedef nsRuleNode::RuleDetail
-  (* PR_CALLBACK CheckCallbackFn)(const nsRuleDataStruct& aData,
-                                  nsRuleNode::RuleDetail aResult);
+  (* CheckCallbackFn)(const nsRuleDataStruct& aData,
+                      nsRuleNode::RuleDetail aResult);
 
 /* the information for all the properties in a style struct */
 struct StructCheckData {
@@ -869,7 +869,7 @@ ExamineCSSRect(const nsCSSRect* aRect,
   }
 }
 
-PR_STATIC_CALLBACK(nsRuleNode::RuleDetail)
+static nsRuleNode::RuleDetail
 CheckFontCallback(const nsRuleDataStruct& aData,
                   nsRuleNode::RuleDetail aResult)
 {
@@ -910,7 +910,7 @@ CheckFontCallback(const nsRuleDataStruct& aData,
   return aResult;
 }
 
-PR_STATIC_CALLBACK(nsRuleNode::RuleDetail)
+static nsRuleNode::RuleDetail
 CheckColorCallback(const nsRuleDataStruct& aData,
                    nsRuleNode::RuleDetail aResult)
 {
@@ -5175,7 +5175,7 @@ nsRuleNode::Mark()
     node->mDependentBits |= NS_RULE_NODE_GC_MARK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 SweepRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
                       PRUint32 number, void *arg)
 {

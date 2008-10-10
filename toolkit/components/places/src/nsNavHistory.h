@@ -628,7 +628,7 @@ protected:
   };
   typedef nsDataHashtable<nsCStringHashKey, RedirectInfo> RedirectHash;
   RedirectHash mRecentRedirects;
-  PR_STATIC_CALLBACK(PLDHashOperator) ExpireNonrecentRedirects(
+  static PLDHashOperator ExpireNonrecentRedirects(
       nsCStringHashKey::KeyType aKey, RedirectInfo& aData, void* aUserArg);
   PRBool GetRedirectFor(const nsACString& aDestination, nsACString& aSource,
                         PRTime* aTime, PRUint32* aRedirectType);

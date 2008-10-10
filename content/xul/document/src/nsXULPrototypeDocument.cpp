@@ -115,7 +115,7 @@ nsXULPDGlobalObject* nsXULPrototypeDocument::gSystemGlobal;
 PRUint32 nsXULPrototypeDocument::gRefCnt;
 
 
-void PR_CALLBACK
+void
 nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
 {
     nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(cx, obj);
@@ -131,7 +131,7 @@ nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
 }
 
 
-JSBool PR_CALLBACK
+JSBool
 nsXULPDGlobalObject_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
     JSBool did_resolve = JS_FALSE;

@@ -649,7 +649,7 @@ struct SortData
     xptiWorkingSet*   mWorkingSet;
 };
 
-PR_STATIC_CALLBACK(int)
+static int
 xptiSortFileList(const void * p1, const void *p2, void * closure)
 {
     nsILocalFile* pFile1 = *((nsILocalFile**) p1);
@@ -1358,7 +1358,7 @@ struct TwoWorkingSets
     xptiWorkingSet* aDestWorkingSet;
 };        
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 xpti_Merger(PLDHashTable *table, PLDHashEntryHdr *hdr,
             PRUint32 number, void *arg)
 {
@@ -1632,7 +1632,7 @@ xptiInterfaceInfoManager::WriteToLog(const char *fmt, ...)
     }
 }        
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 xpti_ResolvedFileNameLogger(PLDHashTable *table, PLDHashEntryHdr *hdr,
                             PRUint32 number, void *arg)
 {
@@ -1809,7 +1809,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **
     return entry->GetName(_retval);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 xpti_ArrayAppender(PLDHashTable *table, PLDHashEntryHdr *hdr,
                    PRUint32 number, void *arg)
 {
@@ -1847,7 +1847,7 @@ struct ArrayAndPrefix
     PRUint32          length;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 xpti_ArrayPrefixAppender(PLDHashTable *table, PLDHashEntryHdr *hdr,
                          PRUint32 number, void *arg)
 {

@@ -202,25 +202,25 @@
 // ENTRY_CLASS: the classname of the entry
 //
 #define DHASH_CALLBACKS(ENTRY_CLASS)                                          \
-PR_STATIC_CALLBACK(PLDHashNumber)                                             \
+static PLDHashNumber                                                          \
 ENTRY_CLASS##HashKey(PLDHashTable* table, const void* key)                    \
 {                                                                             \
   return ENTRY_CLASS::HashKey(key);                                           \
 }                                                                             \
-PR_STATIC_CALLBACK(PRBool)                                                    \
+static PRBool                                                                 \
 ENTRY_CLASS##MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,    \
                         const void *key)                                      \
 {                                                                             \
   const ENTRY_CLASS* e = static_cast<const ENTRY_CLASS*>(entry);              \
   return e->MatchEntry(key);                                                  \
 }                                                                             \
-PR_STATIC_CALLBACK(void)                                                      \
+static void                                                                   \
 ENTRY_CLASS##ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)          \
 {                                                                             \
   ENTRY_CLASS* e = static_cast<ENTRY_CLASS *>(entry);                         \
   e->~ENTRY_CLASS();                                                          \
 }                                                                             \
-PR_STATIC_CALLBACK(PRBool)                                                    \
+static PRBool                                                                 \
 ENTRY_CLASS##InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,           \
                        const void *key)                                       \
 {                                                                             \

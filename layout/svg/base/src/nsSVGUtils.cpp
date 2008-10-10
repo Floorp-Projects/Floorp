@@ -165,7 +165,7 @@ static const PRUint8 gsRGBToLinearRGBMap[256] = {
 static PRBool gSVGEnabled;
 static const char SVG_PREF_STR[] = "svg.enabled";
 
-PR_STATIC_CALLBACK(int)
+static int
 SVGPrefChanged(const char *aPref, void *aClosure)
 {
   PRBool prefVal = nsContentUtils::GetBoolPref(SVG_PREF_STR);

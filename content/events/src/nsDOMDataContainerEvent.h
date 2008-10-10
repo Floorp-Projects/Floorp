@@ -57,7 +57,7 @@ public:
   NS_DECL_NSIDOMDATACONTAINEREVENT
 
 private:
-  static PLDHashOperator PR_CALLBACK
+  static PLDHashOperator
     TraverseEntry(const nsAString& aKey, nsIVariant *aDataItem, void* aUserArg);
 
   nsInterfaceHashtable<nsStringHashKey, nsIVariant> mData;

@@ -47,8 +47,7 @@ class nsPresContext;
 class nsCSSValue;
 
 typedef nsresult
-(* PR_CALLBACK nsMediaFeatureValueGetter)(nsPresContext* aPresContext,
-                                          nsCSSValue& aResult);
+(* nsMediaFeatureValueGetter)(nsPresContext* aPresContext, nsCSSValue& aResult);
 
 struct nsMediaFeature {
     nsIAtom **mName; // extra indirection to point to nsGkAtoms members

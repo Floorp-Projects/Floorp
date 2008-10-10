@@ -59,7 +59,7 @@ static const PRInt32 kScanKeywords[] = {
   eCSSKeyword_UNKNOWN,                  -1
 };
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     nscoord width = aPresContext->GetVisibleArea().width;
@@ -68,7 +68,7 @@ GetWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     nscoord height = aPresContext->GetVisibleArea().height;
@@ -93,7 +93,7 @@ GetDeviceContextFor(nsPresContext* aPresContext)
   return ctx;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetDeviceWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // XXX: I'm not sure if this is really the right thing for print:
@@ -106,7 +106,7 @@ GetDeviceWidth(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetDeviceHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // XXX: I'm not sure if this is really the right thing for print:
@@ -119,7 +119,7 @@ GetDeviceHeight(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetOrientation(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     nsSize size = aPresContext->GetVisibleArea().Size();
@@ -135,7 +135,7 @@ GetOrientation(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetAspectRatio(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     nsRefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2);
@@ -149,7 +149,7 @@ GetAspectRatio(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetDeviceAspectRatio(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     nsRefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2);
@@ -168,7 +168,7 @@ GetDeviceAspectRatio(nsPresContext* aPresContext, nsCSSValue& aResult)
 }
 
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetColor(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // FIXME:  This implementation is bogus.  nsThebesDeviceContext
@@ -191,7 +191,7 @@ GetColor(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetColorIndex(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // We should return zero if the device does not use a color lookup
@@ -204,7 +204,7 @@ GetColorIndex(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetMonochrome(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // For color devices we should return 0.
@@ -214,7 +214,7 @@ GetMonochrome(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetResolution(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // Resolution values are in device pixels, not CSS pixels.
@@ -224,7 +224,7 @@ GetResolution(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetScan(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // Since Gecko doesn't support the 'tv' media type, the 'scan'
@@ -233,7 +233,7 @@ GetScan(nsPresContext* aPresContext, nsCSSValue& aResult)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 GetGrid(nsPresContext* aPresContext, nsCSSValue& aResult)
 {
     // Gecko doesn't support grid devices (e.g., ttys), so the 'grid'

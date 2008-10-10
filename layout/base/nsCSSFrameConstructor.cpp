@@ -13199,7 +13199,7 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
 }
 
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CollectRestyles(nsISupports* aContent,
                 nsCSSFrameConstructor::RestyleData& aData,
                 void* aRestyleArrayPtr)

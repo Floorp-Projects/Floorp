@@ -108,7 +108,7 @@ static const nsModuleComponentInfo components[] = {
 #endif
 };
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 xpcModuleCtor(nsIModule* self)
 {
     nsXPConnect::InitStatics();
@@ -125,7 +125,7 @@ xpcModuleCtor(nsIModule* self)
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 xpcModuleDtor(nsIModule* self)
 {
     // Release our singletons

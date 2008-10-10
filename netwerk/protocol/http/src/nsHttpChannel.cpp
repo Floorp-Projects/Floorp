@@ -2530,7 +2530,7 @@ nsHttpChannel::ClearBogusContentEncodingIfNeeded()
 // nsHttpChannel <redirect>
 //-----------------------------------------------------------------------------
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CopyProperties(const nsAString& aKey, nsIVariant *aData, void *aClosure)
 {
     nsIWritablePropertyBag* bag = static_cast<nsIWritablePropertyBag*>

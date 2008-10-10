@@ -126,7 +126,7 @@ struct PlaceholderMapEntry : public PLDHashEntryHdr {
   nsPlaceholderFrame *placeholderFrame;
 };
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 PlaceholderMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
@@ -163,7 +163,7 @@ struct PrimaryFrameMapEntry : public PLDHashEntryHdr {
   // These ops should be used if/when we switch back to a 2-word entry.
   // See comment in |PrimaryFrameMapEntry| above.
 #if 0
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 PrimaryFrameMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
@@ -521,7 +521,7 @@ nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame
   }
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 UnregisterPlaceholders(PLDHashTable* table, PLDHashEntryHdr* hdr,
                        PRUint32 number, void* arg)
 {
@@ -1828,7 +1828,7 @@ nsFrameManagerBase::UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
   }
 }
 
-PR_STATIC_CALLBACK(PRIntn)
+static PRIntn
 RemoveUndisplayedEntry(PLHashEntry* he, PRIntn i, void* arg)
 {
   UndisplayedNode*  node = (UndisplayedNode*)(he->value);
