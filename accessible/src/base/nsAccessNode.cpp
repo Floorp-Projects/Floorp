@@ -495,32 +495,36 @@ nsAccessNode::ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY)
 nsresult
 nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
 {
+  *aAccessNode = nsnull;
+  
   nsIAccessibilityService *accService = GetAccService();
-  NS_ENSURE_STATE(accService);
+  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
-  // XXX: always try to get accessible, see bug 434464. This should be fixed
-  // in bug 453832.
-  nsCOMPtr<nsIAccessible> accessible;
-  accService->GetAccessibleInWeakShell(aNode, mWeakShell,
-                                       getter_AddRefs(accessible));
+  nsCOMPtr<nsIAccessNode> accessNode;
+  accService->GetCachedAccessNode(aNode, mWeakShell, getter_AddRefs(accessNode));
 
-  if (accessible) {
-    CallQueryInterface(accessible, aAccessNode);
+  if (!accessNode) {
+    nsCOMPtr<nsIAccessible> accessible;
+    accService->GetAccessibleInWeakShell(aNode, mWeakShell,
+                                         getter_AddRefs(accessible));
+
+    accessNode = do_QueryInterface(accessible);
+  }
+
+  if (accessNode) {
+    NS_ADDREF(*aAccessNode = accessNode);
     return NS_OK;
   }
 
-  // Try to get access node from cache. XXX: see bug 453832 for invalidation
-  // problems.
-  accService->GetCachedAccessNode(aNode, mWeakShell, aAccessNode);
-  if (*aAccessNode)
-    return NS_OK;
-
-  nsRefPtr<nsAccessNode> newAccessNode =
-    new nsAccessNodeWrap(aNode, mWeakShell);
-  NS_ENSURE_TRUE(newAccessNode, NS_ERROR_OUT_OF_MEMORY);
+  nsAccessNode *newAccessNode = new nsAccessNode(aNode, mWeakShell);
+  if (!newAccessNode) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   NS_ADDREF(*aAccessNode = newAccessNode);
-  return newAccessNode->Init();
+  newAccessNode->Init();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
