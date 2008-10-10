@@ -58,9 +58,9 @@ public:
   nsHTMLImageAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetName(nsAString& aName);
   NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);

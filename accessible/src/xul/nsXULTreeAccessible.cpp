@@ -795,6 +795,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::Shutdown()
 NS_IMETHODIMP
 nsXULTreeitemAccessible::GetName(nsAString& aName)
 {
+  // XXX: we should take into account ARIA usage for content tree. 
   aName.Truncate();
 
   if (IsDefunct())
