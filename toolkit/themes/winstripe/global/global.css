@@ -165,6 +165,10 @@ resizer[dir="bottomright"] {
   cursor: se-resize;
 }
 
+window:not([active="true"]) menubar > menu {
+  color: ThreeDShadow;
+}
+
 /* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
 
 sidebarheader {
