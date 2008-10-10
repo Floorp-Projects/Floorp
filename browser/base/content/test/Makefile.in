@@ -55,10 +55,11 @@ _BROWSER_FILES = browser_bug321000.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
                  browser_bug413915.js \
-                 browser_autodiscovery.js \
                  browser_bug420160.js \
+                 browser_bug427559.js \
                  browser_bug441778.js \
-                 autodiscovery.html \
+                 browser_discovery.js \
+                 discovery.html \
                  moz.png \
                  browser_getshortcutoruri.js \
                  browser_page_style_menu.js \
@@ -69,13 +70,6 @@ _BROWSER_FILES = browser_bug321000.js \
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 _BROWSER_FILES += browser_customize.js \
-    $(NULL)
-endif
-
-# disable tests on linux for now..
-ifneq ($(OS_ARCH),Linux)
-_BROWSER_FILES += \
-                 browser_bug427559.js \
     $(NULL)
 endif
 

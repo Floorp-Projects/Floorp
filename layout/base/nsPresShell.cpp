@@ -2293,19 +2293,17 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow,
   if (!aFocusController)
     return;
 
-  nsCOMPtr<nsIDOMWindowInternal> ourWin = do_QueryInterface(aOurWindow);
-
   nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
   aFocusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
   if (!focusedWindow) {
-    // This should never really happen, but if it does, assume
-    // we can focus ourself to keep the window from being keydead.
-    focusedWindow = ourWin;
+    // This happens if the window has not been shown yet. We don't need to
+    // focus anything now because showing the window will set the focus.
+    return;
   }
 
   // Walk up the document chain, starting with focusedWindow's document.
   // We stop walking when we find a document that has a null DOMWindow
-  // (meaning that the DOMWindow has a new document now) or find ourWin
+  // (meaning that the DOMWindow has a new document now) or find aOurWindow
   // as the document's window.  We also stop if we hit aDocument, since
   // that means there is a child document which loaded before us that's
   // already been given focus.
@@ -2328,7 +2326,7 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow,
   while (curDoc) {
     nsPIDOMWindow *curWin = curDoc->GetWindow();
 
-    if (!curWin || curWin == ourWin)
+    if (!curWin || curWin == aOurWindow)
       break;
 
     curDoc = curDoc->GetParentDocument();
@@ -2337,20 +2335,20 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow,
   }
 
   if (!curDoc) {
-    // We reached the top of the document chain, and did not encounter ourWin
-    // or a windowless document. So, focus should be unaffected by this
-    // document load.
+    // We reached the top of the document chain, and did not encounter
+    // aOurWindow or a windowless document. So, focus should be unaffected
+    // by this document load.
     return;
   }
 
   PRBool active;
   aFocusController->GetActive(&active);
   if (active)
-    ourWin->Focus();
+    aOurWindow->Focus();
 
   // We need to ensure that the focus controller is updated, since it may be
   // suppressed when this function is called.
-  aFocusController->SetFocusedWindow(ourWin);
+  aFocusController->SetFocusedWindow(aOurWindow);
 }
 
 NS_IMETHODIMP
