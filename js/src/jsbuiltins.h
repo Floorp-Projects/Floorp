@@ -55,11 +55,11 @@ enum { JSTN_ERRTYPE_MASK = 7, JSTN_MORE = 8 };
  * special thing), |prefix| can contain the following characters:
  *
  * 'C': a JSContext* argument
- * 'T': |this| as a JSObject* argument (only applies if |this| is an object)
- * 'S': |this| as a JSString* argument (only applies if |this| is a string)
+ * 'T': |this| as a JSObject* argument (bails if |this| is not an object)
+ * 'S': |this| as a JSString* argument (bails if |this| is not a string)
  * 'R': a JSRuntime* argument
  * 'P': the pc as a jsbytecode*
- * 'D': |this| as a number (jsdouble*)
+ * 'D': |this| as a number (jsdouble)
  *
  * The corresponding things will get passed as arguments to the builtin in
  * reverse order (so TC means JSContext* as the first arg, and the
