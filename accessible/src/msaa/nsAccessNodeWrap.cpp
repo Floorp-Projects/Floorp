@@ -381,121 +381,86 @@ __try {
   return E_FAIL;
 }
 
-ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
+STDMETHODIMP
+nsAccessNodeWrap::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
-  if (!node) 
-    return NULL;
+__try {
+  *aNode = NULL;
 
-  nsAccessNodeWrap *newNode = NULL;
+  nsCOMPtr<nsIAccessNode> accessNode;
+  nsresult rv = GetParentNode(getter_AddRefs(accessNode));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+
+  return QueryISimpleDOMNode(accessNode, aNode);
+} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
+
+  return S_OK;
+}
+
+STDMETHODIMP
+nsAccessNodeWrap::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+{
+__try {
+  *aNode = NULL;
+
+  nsCOMPtr<nsIAccessNode> accessNode;
+  nsresult rv = GetFirstChildNode(getter_AddRefs(accessNode));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
   
-  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-  nsCOMPtr<nsIDocument> doc;
-
-  if (content) 
-    doc = content->GetDocument();
-  else {
-    // Get the document via QueryInterface, since there is no content node
-    doc = do_QueryInterface(node);
-    content = do_QueryInterface(node);
-  }
-
-  if (!doc)
-    return NULL;
-
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  if (!accService)
-    return NULL;
-
-  ISimpleDOMNode *iNode = NULL;
-  nsCOMPtr<nsIAccessible> nsAcc;
-  accService->GetAccessibleInWeakShell(node, mWeakShell, getter_AddRefs(nsAcc));
-  if (nsAcc) {
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(nsAcc));
-    NS_ASSERTION(accessNode, "nsIAccessible impl does not inherit from nsIAccessNode");
-    IAccessible *msaaAccessible;
-    nsAcc->GetNativeInterface((void**)&msaaAccessible); // addrefs
-    msaaAccessible->QueryInterface(IID_ISimpleDOMNode, (void**)&iNode); // addrefs
-    msaaAccessible->Release(); // Release IAccessible
-  }
-  else {
-    newNode = new nsAccessNodeWrap(node, mWeakShell);
-    if (!newNode)
-      return NULL;
-
-    newNode->Init();
-    iNode = static_cast<ISimpleDOMNode*>(newNode);
-    iNode->AddRef();
-  }
-
-  return iNode;
-}
-
-
-STDMETHODIMP nsAccessNodeWrap::get_parentNode(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
-{
-__try {
-  if (!mDOMNode)
-    return E_FAIL;
- 
-  nsCOMPtr<nsIDOMNode> node;
-  mDOMNode->GetParentNode(getter_AddRefs(node));
-  *aNode = MakeAccessNode(node);
+  return QueryISimpleDOMNode(accessNode, aNode);
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
 
-STDMETHODIMP nsAccessNodeWrap::get_firstChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+STDMETHODIMP
+nsAccessNodeWrap::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (!mDOMNode)
-    return E_FAIL;
- 
-  nsCOMPtr<nsIDOMNode> node;
-  mDOMNode->GetFirstChild(getter_AddRefs(node));
-  *aNode = MakeAccessNode(node);
+  *aNode = NULL;
+
+  nsCOMPtr<nsIAccessNode> accessNode;
+  nsresult rv = GetLastChildNode(getter_AddRefs(accessNode));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+  
+  return QueryISimpleDOMNode(accessNode, aNode);
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
 
-STDMETHODIMP nsAccessNodeWrap::get_lastChild(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+STDMETHODIMP
+nsAccessNodeWrap::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
-  __try {
-  if (!mDOMNode)
-    return E_FAIL;
+__try {
+  *aNode = NULL;
 
-  nsCOMPtr<nsIDOMNode> node;
-  mDOMNode->GetLastChild(getter_AddRefs(node));
-  *aNode = MakeAccessNode(node);
+  nsCOMPtr<nsIAccessNode> accessNode;
+  nsresult rv = GetPreviousSiblingNode(getter_AddRefs(accessNode));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+  
+  return QueryISimpleDOMNode(accessNode, aNode);
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
 }
 
-STDMETHODIMP nsAccessNodeWrap::get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+STDMETHODIMP
+nsAccessNodeWrap::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  if (!mDOMNode)
-    return E_FAIL;
+  *aNode = NULL;
 
-  nsCOMPtr<nsIDOMNode> node;
-  mDOMNode->GetPreviousSibling(getter_AddRefs(node));
-  *aNode = MakeAccessNode(node);
-} __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
-
-  return S_OK;
-}
-
-STDMETHODIMP nsAccessNodeWrap::get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
-{
-__try {
-  if (!mDOMNode)
-    return E_FAIL;
-
-  nsCOMPtr<nsIDOMNode> node;
-  mDOMNode->GetNextSibling(getter_AddRefs(node));
-  *aNode = MakeAccessNode(node);
+  nsCOMPtr<nsIAccessNode> accessNode;
+  nsresult rv = GetNextSiblingNode(getter_AddRefs(accessNode));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+  
+  return QueryISimpleDOMNode(accessNode, aNode);
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -506,19 +471,14 @@ nsAccessNodeWrap::get_childAt(unsigned aChildIndex,
                               ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
 {
 __try {
-  *aNode = nsnull;
+  *aNode = NULL;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content)
-    return E_FAIL;  // Node already shut down
-
-  nsCOMPtr<nsIDOMNode> node =
-    do_QueryInterface(content->GetChildAt(aChildIndex));
-
-  if (!node)
-    return E_FAIL; // No such child
-
-  *aNode = MakeAccessNode(node);
+  nsCOMPtr<nsIAccessNode> accessNode;
+  nsresult rv = GetChildNodeAt(aChildIndex, getter_AddRefs(accessNode));
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+  
+  return QueryISimpleDOMNode(accessNode, aNode);
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
 
   return S_OK;
@@ -639,6 +599,27 @@ int nsAccessNodeWrap::FilterA11yExceptions(unsigned int aCode, EXCEPTION_POINTER
     NS_NOTREACHED("We should only be catching crash exceptions");
   }
   return EXCEPTION_CONTINUE_SEARCH;
+}
+
+HRESULT
+nsAccessNodeWrap::QueryISimpleDOMNode(nsIAccessNode *aAccessNode,
+                                      ISimpleDOMNode __RPC_FAR *__RPC_FAR *aNode)
+{
+  if (!aAccessNode)
+    return S_OK;
+
+  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(aAccessNode));
+  if (!winAccessNode)
+    return E_FAIL;
+
+  void *instancePtr = NULL;
+  nsresult rv =  winAccessNode->QueryNativeInterface(IID_ISimpleDOMNode,
+                                                     &instancePtr);
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+
+  *aNode = static_cast<ISimpleDOMNode*>(instancePtr);
+  return S_OK;
 }
 
 HRESULT
