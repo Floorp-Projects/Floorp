@@ -2200,7 +2200,7 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
 {
   PRBool zoom = PR_FALSE;
   PRInt32 baseSize = (PRInt32) aPresContext->
-    GetDefaultFont(aFont->mFlags & NS_STYLE_FONT_FACE_MASK)->size;
+    GetDefaultFont(aFont->mGenericID)->size;
   if (eCSSUnit_Enumerated == aFontData.mSize.GetUnit()) {
     PRInt32 value = aFontData.mSize.GetIntValue();
     PRInt32 scaler = aPresContext->FontScaler();
@@ -2408,31 +2408,29 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
         (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks &&
          aFontData.mFamilyFromHTML);
     aFont->mFont.systemFont = PR_FALSE;
-    aFont->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
     // Technically this is redundant with the code below, but it's good
     // to have since we'll still want it once we get rid of
     // SetGenericFont (bug 380915).
-    aFont->mFlags |= aGenericFontID;
+    aFont->mGenericID = aGenericFontID;
   }
   else if (eCSSUnit_System_Font == aFontData.mFamily.GetUnit()) {
     aFont->mFont.name = systemFont.name;
     aFont->mFont.familyNameQuirks = PR_FALSE;
     aFont->mFont.systemFont = PR_TRUE;
-    aFont->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
+    aFont->mGenericID = kGenericFont_NONE;
   }
   else if (eCSSUnit_Inherit == aFontData.mFamily.GetUnit()) {
     aInherited = PR_TRUE;
     aFont->mFont.name = aParentFont->mFont.name;
     aFont->mFont.familyNameQuirks = aParentFont->mFont.familyNameQuirks;
     aFont->mFont.systemFont = aParentFont->mFont.systemFont;
-    aFont->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
-    aFont->mFlags |= (aParentFont->mFlags & NS_STYLE_FONT_FACE_MASK);
+    aFont->mGenericID = aParentFont->mGenericID;
   }
   else if (eCSSUnit_Initial == aFontData.mFamily.GetUnit()) {
     aFont->mFont.name = defaultVariableFont->name;
     aFont->mFont.familyNameQuirks = PR_FALSE;
     aFont->mFont.systemFont = defaultVariableFont->systemFont;
-    aFont->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
+    aFont->mGenericID = kGenericFont_NONE;
   }
 
   // When we're in the loop in SetGenericFont, we must ensure that we
@@ -2440,8 +2438,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   // to be careful not to touch it when we're called directly from
   // ComputeFontData, because we could have a start struct.
   if (aGenericFontID != kGenericFont_NONE) {
-    aFont->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
-    aFont->mFlags |= aGenericFontID;
+    aFont->mGenericID = aGenericFontID;
   }
 
   // font-style: enum, normal, inherit, initial, -moz-system-font
@@ -2587,7 +2584,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
   contextPath.AppendElement(aContext);
   nsStyleContext* higherContext = aContext->GetParent();
   while (higherContext) {
-    if (higherContext->GetStyleFont()->mFlags & aGenericFontID) {
+    if (higherContext->GetStyleFont()->mGenericID == aGenericFontID) {
       // done walking up the higher contexts
       break;
     }
