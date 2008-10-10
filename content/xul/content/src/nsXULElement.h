@@ -570,7 +570,7 @@ public:
      */
     void SetTemplateGenerated() { SetFlags(XUL_ELEMENT_TEMPLATE_GENERATED); }
     void ClearTemplateGenerated() { UnsetFlags(XUL_ELEMENT_TEMPLATE_GENERATED); }
-    PRBool GetTemplateGenerated() { return !!(GetFlags() & XUL_ELEMENT_TEMPLATE_GENERATED); }
+    PRBool GetTemplateGenerated() { return HasFlag(XUL_ELEMENT_TEMPLATE_GENERATED); }
 
     // nsIDOMNode
     NS_FORWARD_NSIDOMNODE(nsGenericElement::)

@@ -744,7 +744,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 //    <label value="?title"/>
                 //  </vbox>
                 rv = BuildContentFromTemplate(tmplKid, aResourceNode, realKid, PR_FALSE,
-                                              aIsSelfReference, aChild, PR_FALSE, aMatch,
+                                              PR_FALSE, aChild, PR_FALSE, aMatch,
                                               nsnull /* don't care */,
                                               nsnull /* don't care */);
                 if (NS_FAILED(rv)) return rv;
