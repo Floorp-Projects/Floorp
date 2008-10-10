@@ -59,6 +59,10 @@ protected:
     mInUse2(PR_FALSE) {}
 
 public:
+  // nsIFrame interface:
+  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aModType);
   /**
    * Get the "type" of the frame
    *

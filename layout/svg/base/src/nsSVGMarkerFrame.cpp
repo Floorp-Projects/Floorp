@@ -40,6 +40,7 @@
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryFrame.h"
 #include "nsSVGMatrix.h"
+#include "nsSVGEffects.h"
 #include "nsSVGMarkerElement.h"
 #include "nsSVGPathGeometryElement.h"
 #include "gfxContext.h"
@@ -67,6 +68,36 @@ NS_GetSVGMarkerElement(nsIURI *aURI, nsIContent *aContent)
     return content;
 
   return nsnull;
+}
+
+//----------------------------------------------------------------------
+// nsIFrame methods:
+
+NS_IMETHODIMP
+nsSVGMarkerFrame::AttributeChanged(PRInt32  aNameSpaceID,
+                                   nsIAtom* aAttribute,
+                                   PRInt32  aModType)
+{
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::markerUnits ||
+       aAttribute == nsGkAtoms::refX ||
+       aAttribute == nsGkAtoms::refY ||
+       aAttribute == nsGkAtoms::markerWidth ||
+       aAttribute == nsGkAtoms::markerHeight ||
+       aAttribute == nsGkAtoms::orient ||
+       aAttribute == nsGkAtoms::preserveAspectRatio ||
+       aAttribute == nsGkAtoms::viewBox)) {
+    nsSVGEffects::InvalidateRenderingObservers(this);
+  }
+
+  return nsSVGMarkerFrameBase::AttributeChanged(aNameSpaceID,
+                                                aAttribute, aModType);
+}
+
+nsIAtom *
+nsSVGMarkerFrame::GetType() const
+{
+  return nsGkAtoms::svgMarkerFrame;
 }
 
 //----------------------------------------------------------------------
@@ -226,13 +257,6 @@ nsSVGMarkerFrame::RegionMark(nsSVGPathGeometryFrame *aMarkedFrame,
 
   // Now get the combined covered region
   return nsSVGUtils::GetCoveredRegion(mFrames);
-}
-
-
-nsIAtom *
-nsSVGMarkerFrame::GetType() const
-{
-  return nsGkAtoms::svgMarkerFrame;
 }
 
 void
