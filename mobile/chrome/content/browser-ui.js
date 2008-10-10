@@ -290,18 +290,23 @@ var BrowserUI = {
           newLeft = -(tabbarW + sidebarW);
 
         // Set the UI mode based on where we ended up
+        var noneMode = (gContentBox.style.marginTop == "0px" ? UIMODE_NONE : UIMODE_URLVIEW);
         if (newLeft > -(tabbarW - tabbarW / 3) && newLeft <= 0) {
-          if (this._dragData.uiMode == UIMODE_CONTROLS)
+          if (this._dragData.uiMode == UIMODE_CONTROLS) {
+            this.mode = noneMode;
             return;
+          }
           this.mode = UIMODE_TABS;
         }
         else if (newLeft >= -(tabbarW + sidebarW) && newLeft < -(tabbarW + sidebarW / 3)) {
-          if (this._dragData.uiMode == UIMODE_TABS)
+          if (this._dragData.uiMode == UIMODE_TABS) {
+            this.mode = noneMode;
             return;
+          }
           this.mode = UIMODE_CONTROLS;
         }
         else
-          this.mode = (gContentBox.style.marginTop == "0px" ? UIMODE_NONE : UIMODE_URLVIEW);
+          this.mode = noneMode;
 
         tabbar.left = newLeft;
 
