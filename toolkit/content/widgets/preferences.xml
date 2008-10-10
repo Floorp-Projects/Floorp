@@ -76,8 +76,7 @@
       <property name="type" readonly="true">
         <getter>
           <![CDATA[
-            var doc = document.documentElement;
-            return doc.type || "";
+            return document.documentElement.type || "";
           ]]>
         </getter>
       </property>
@@ -85,7 +84,8 @@
         <getter>
           <![CDATA[
             var doc = document.documentElement;
-            return doc.instantApply || this.rootBranch.getBoolPref("browser.preferences.instantApply");
+            return this.type == "child" ? doc.instantApply
+                                        : doc.instantApply || this.rootBranch.getBoolPref("browser.preferences.instantApply");
           ]]>
         </getter>
       </property>
