@@ -1067,7 +1067,7 @@ struct TraceData
   void* closure;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 TraceXBLHandlers(const void* aKey, void* aData, void* aClosure)
 {
   TraceData* data = static_cast<TraceData*>(aClosure);
@@ -6932,7 +6932,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_ERROR_FAILURE;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FirePendingStorageEvents(const nsAString& aKey, PRBool aData, void *userArg)
 {
   nsGlobalWindow *win = static_cast<nsGlobalWindow *>(userArg);

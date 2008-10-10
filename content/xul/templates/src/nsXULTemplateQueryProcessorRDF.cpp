@@ -88,7 +88,7 @@ nsIRDFResource*           nsXULTemplateQueryProcessorRDF::kRDF_type;
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTemplateQueryProcessorRDF)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXULTemplateQueryProcessorRDF)
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 BindingDependenciesTraverser(nsISupports* key,
                              nsCOMArray<nsXULTemplateResultRDF>* array,
                              void* userArg)
@@ -104,7 +104,7 @@ BindingDependenciesTraverser(nsISupports* key,
     return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 MemoryElementTraverser(const PRUint32& key,
                        nsCOMArray<nsXULTemplateResultRDF>* array,
                        void* userArg)
@@ -120,7 +120,7 @@ MemoryElementTraverser(const PRUint32& key,
     return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RuleToBindingTraverser(nsISupports* key, RDFBindingSet* binding, void* userArg)
 {
     nsCycleCollectionTraversalCallback *cb = 

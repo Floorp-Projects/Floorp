@@ -51,4 +51,4 @@ struct pref_saveArgs {
 PLDHashOperator
 pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg);
 
-int PR_CALLBACK pref_CompareStrings(const void *v1, const void *v2, void* unused);
+int pref_CompareStrings(const void *v1, const void *v2, void* unused);

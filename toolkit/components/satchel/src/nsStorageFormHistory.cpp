@@ -700,7 +700,7 @@ static void SwapBytes(PRUnichar* aBuffer)
 }
 
 // Enumerator callback to add an entry to the FormHistory
-/* static */ PLDHashOperator PR_CALLBACK
+/* static */ PLDHashOperator
 nsFormHistoryImporter::AddToFormHistoryCB(const nsCSubstring &aRowID,
                                           const nsTArray<nsCString> *aValues,
                                           void *aData)

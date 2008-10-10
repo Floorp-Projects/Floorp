@@ -1942,7 +1942,7 @@ nsCacheService::ClearActiveEntries()
 }
 
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
                                         PLDHashEntryHdr * hdr,
                                         PRUint32          number,
@@ -1973,7 +1973,7 @@ nsCacheService::DoomActiveEntries()
 }
 
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 nsCacheService::RemoveActiveEntry(PLDHashTable *    table,
                                   PLDHashEntryHdr * hdr,
                                   PRUint32          number,

@@ -4969,7 +4969,7 @@ struct pluginFileinDirectory
 
 // QuickSort callback for comparing the modification time of two files
 // if the times are the same, compare the filenames
-static int PR_CALLBACK ComparePluginFileInDirectory (const void *v1, const void *v2, void *)
+static int ComparePluginFileInDirectory (const void *v1, const void *v2, void *)
 {
   const pluginFileinDirectory* pfd1 = static_cast<const pluginFileinDirectory*>(v1);
   const pluginFileinDirectory* pfd2 = static_cast<const pluginFileinDirectory*>(v2);

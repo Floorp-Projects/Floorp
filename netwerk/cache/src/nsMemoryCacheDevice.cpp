@@ -484,7 +484,7 @@ nsMemoryCacheDevice::SetCapacity(PRInt32  capacity)
 
 
 #ifdef DEBUG
-static PLDHashOperator PR_CALLBACK
+static PLDHashOperator
 CountEntry(PLDHashTable * table, PLDHashEntryHdr * hdr, PRUint32 number, void * arg)
 {
     PRInt32 *entryCount = (PRInt32 *)arg;

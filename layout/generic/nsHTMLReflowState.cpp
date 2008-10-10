@@ -1546,7 +1546,7 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPres
 }
 
 // Prefs callback to pick up changes
-PR_STATIC_CALLBACK(int)
+static int
 PrefsChanged(const char *aPrefName, void *instance)
 {
   sBlinkIsAllowed =

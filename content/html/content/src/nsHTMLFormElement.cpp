@@ -527,7 +527,7 @@ nsHTMLFormElement::Init()
 
 // nsISupports
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ElementTraverser(const nsAString& key, nsIDOMHTMLInputElement* element,
                  void* userArg)
 {
@@ -2092,7 +2092,7 @@ nsFormControlList::FlushPendingNotifications()
   }
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ControlTraverser(const nsAString& key, nsISupports* control, void* userArg)
 {
   nsCycleCollectionTraversalCallback *cb = 

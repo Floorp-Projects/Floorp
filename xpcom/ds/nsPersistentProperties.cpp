@@ -615,7 +615,7 @@ nsPersistentProperties::GetStringProperty(const nsACString& aKey,
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 AddElemToArray(PLDHashTable* table, PLDHashEntryHdr *hdr,
                PRUint32 i, void *arg)
 {
