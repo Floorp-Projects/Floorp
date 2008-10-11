@@ -78,20 +78,44 @@ function dump(msg)
 var gDirectionalBias = 10;
 var gRectFudge = 1;
 
+// modifier values
+const kAlt   = "alt";
+const kShift = "shift";
+const kCtrl  = "ctrl";
+const kNone  = "none";
+
 function _onInputKeyPress (event, callback) {
 
-  // If it isn't an arrow key, bail.
-  if (event.keyCode != event.DOM_VK_LEFT  &&
-      event.keyCode != event.DOM_VK_RIGHT &&
-      event.keyCode != event.DOM_VK_UP    &&
-      event.keyCode != event.DOM_VK_DOWN  )
+  // If it isn't enabled, bail.
+  if (!PrefObserver['enabled'])
     return;
-  
-  // check to see if we are in a textarea or text input element, and if so,
-  // ensure that we let the arrow keys work properly.
+
+  if (event.keyCode != PrefObserver['keyCodeDown']  &&
+      event.keyCode != PrefObserver['keyCodeRight'] &&
+      event.keyCode != PrefObserver['keyCodeUp'] &&
+      event.keyCode != PrefObserver['keyCodeLeft'])
+    return;
+
+  // If it is not using the modifiers it should, bail.
+  if (!event.altKey && PrefObserver['modifierAlt'])
+    return;
+
+  if (!event.shiftKey && PrefObserver['modifierShift'])
+    return;
+
+  if (!event.crtlKey && PrefObserver['modifierCtrl'])
+    return;
 
   var target = event.target;
-  
+
+  var doc = target.ownerDocument;
+
+  // If it is XUL content (e.g. about:config), bail.
+  if (!PrefObserver['xulContentEnabled'] && doc instanceof Ci.nsIDOMXULDocument)
+    return ;
+
+  // check to see if we are in a textarea or text input element, and if so,
+  // ensure that we let the arrow keys work properly.
   if (target instanceof Ci.nsIDOMHTMLHtmlElement) {
       _focusNextUsingCmdDispatcher(event, callback);
       return;
@@ -105,10 +129,9 @@ function _onInputKeyPress (event, callback) {
       return;
     
     // if there is no text, there is nothing special to do.
-    
     if (target.textLength > 0) {
-
-      if (event.keyCode == event.DOM_VK_RIGHT || event.keyCode == event.DOM_VK_DOWN  ) {
+      if (event.keyCode == PrefObserver['keyCodeRight'] ||
+          event.keyCode == PrefObserver['keyCodeDown'] ) {
         // we are moving forward into the document
         if (target.textLength != target.selectionEnd)
           return;
@@ -125,12 +148,12 @@ function _onInputKeyPress (event, callback) {
   // Check to see if we are in a select
   if (target instanceof Ci.nsIDOMHTMLSelectElement)
   {
-    if (event.keyCode == event.DOM_VK_DOWN  ) {
+    if (event.keyCode == PrefObserver['keyCodeDown']) {
       if (target.selectedIndex + 1 < target.length)
         return;
     }
-    
-    if (event.keyCode == event.DOM_VK_UP) {
+
+    if (event.keyCode == PrefObserver['keyCodeUp']) {
       if (target.selectedIndex > 0)
         return;
     }
@@ -157,12 +180,11 @@ function _onInputKeyPress (event, callback) {
     
     return Ci.nsIDOMNodeFilter.FILTER_SKIP;
   }
+
   var bestElementToFocus = null;
   var distanceToBestElement = Infinity;
   var focusedRect = _inflateRect(target.getBoundingClientRect(),
                                  - gRectFudge);
-
-  var doc = target.ownerDocument;
 
   var treeWalker = doc.createTreeWalker(doc, Ci.nsIDOMNodeFilter.SHOW_ELEMENT, snavfilter, false);
   var nextNode;
@@ -218,7 +240,7 @@ function _focusNextUsingCmdDispatcher(event, callback) {
     var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
     var window = windowMediator.getMostRecentWindow("navigator:browser");
 
-    if (event.keyCode == event.DOM_VK_RIGHT || event.keyCode == event.DOM_VK_DOWN  ) {
+    if (event.keyCode == PrefObserver['keyCodeRight'] || event.keyCode != PrefObserver['keyCodeDown']) {
       window.document.commandDispatcher.advanceFocus();
     } else {
       window.document.commandDispatcher.rewindFocus();
@@ -230,21 +252,21 @@ function _focusNextUsingCmdDispatcher(event, callback) {
 
 function _isRectInDirection(event, focusedRect, anotherRect)
 {
-    if (event.keyCode == event.DOM_VK_LEFT) {  
-      return (anotherRect.left < focusedRect.left);
-    }
-    
-    if (event.keyCode == event.DOM_VK_RIGHT) {
-      return (anotherRect.right > focusedRect.right);
-    }
-    
-    if (event.keyCode == event.DOM_VK_UP) {
-      return (anotherRect.top < focusedRect.top);
-    }
-    
-    if (event.keyCode == event.DOM_VK_DOWN) {
-      return (anotherRect.bottom > focusedRect.bottom);
-    }
+  if (event.keyCode == PrefObserver['keyCodeLeft']) {
+    return (anotherRect.left < focusedRect.left);
+  }
+
+  if (event.keyCode == PrefObserver['keyCodeRight']) {
+    return (anotherRect.right > focusedRect.right);
+  }
+
+  if (event.keyCode == PrefObserver['keyCodeUp']) {
+    return (anotherRect.top < focusedRect.top);
+  }
+
+  if (event.keyCode == PrefObserver['keyCodeDown']) {
+    return (anotherRect.bottom > focusedRect.bottom);
+  }
     return false;
 }
 
@@ -271,9 +293,9 @@ function _spatialDistance(event, a, b)
 {
   var inlineNavigation = false;
   var mx, my, nx, ny;
-  
-  if (event.keyCode == event.DOM_VK_LEFT) {
-    
+
+  if (event.keyCode == PrefObserver['keyCodeLeft']) {
+
     //  |---|
     //  |---|
     //
@@ -301,11 +323,11 @@ function _spatialDistance(event, a, b)
     else {
       mx = a.left;
       my = 0;
-      nx = b.right; 
-      ny = 0;    
+      nx = b.right;
+      ny = 0;
     }
-  } else if (event.keyCode == event.DOM_VK_RIGHT) {
-    
+  } else if (event.keyCode == PrefObserver['keyCodeRight']) {
+
     //         |---|
     //         |---|
     //
@@ -332,11 +354,11 @@ function _spatialDistance(event, a, b)
     } else {
       mx = a.right;
       my = 0;
-      nx = b.left; 
-      ny = 0;	    
+      nx = b.left;
+      ny = 0;
     }
-  } else if (event.keyCode == event.DOM_VK_UP) {
-    
+  } else if (event.keyCode == PrefObserver['keyCodeUp']) {
+
     //  |---|  |---|  |---|
     //  |---|  |---|  |---|
     //
@@ -363,8 +385,8 @@ function _spatialDistance(event, a, b)
       nx = 0;
       ny = b.bottom;
     }
-  } else if (event.keyCode == event.DOM_VK_DOWN) {
-    
+  } else if (event.keyCode == PrefObserver['keyCodeDown']) {
+
     //         |---|
     //         |---|
     //
@@ -394,15 +416,15 @@ function _spatialDistance(event, a, b)
   }
   
   var scopedRect = _inflateRect(a, gRectFudge);
-  
-  if (event.keyCode == event.DOM_VK_LEFT || 
-      event.keyCode == event.DOM_VK_RIGHT) {
+
+  if (event.keyCode == PrefObserver['keyCodeLeft'] ||
+      event.keyCode == PrefObserver['keyCodeRight']) {
     scopedRect.left = 0;
     scopedRect.right = Infinity;
     inlineNavigation = _containsRect(scopedRect, b);
   }
-  else if (event.keyCode == event.DOM_VK_UP ||
-           event.keyCode == event.DOM_VK_DOWN) {
+  else if (event.keyCode == PrefObserver['keyCodeUp'] ||
+           event.keyCode == PrefObserver['keyCodeDown']) {
     scopedRect.top = 0;
     scopedRect.bottom = Infinity;
     inlineNavigation = _containsRect(scopedRect, b);
@@ -417,3 +439,115 @@ function _spatialDistance(event, a, b)
   return d;
 }
 
+// Snav preference observer
+
+PrefObserver = {
+
+  register: function()
+  {
+    this.prefService = Cc["@mozilla.org/preferences-service;1"]
+                       .getService(Ci.nsIPrefService);
+
+    this._branch = this.prefService.getBranch("snav.");
+    this._branch.QueryInterface(Ci.nsIPrefBranch2);
+    this._branch.addObserver("", this, false);
+
+    // set current or default pref values
+    this.observe(null, "nsPref:changed", "enabled");
+    this.observe(null, "nsPref:changed", "xulContentEnabled");
+    this.observe(null, "nsPref:changed", "keyCode.modifier");
+    this.observe(null, "nsPref:changed", "keyCode.right");
+    this.observe(null, "nsPref:changed", "keyCode.up");
+    this.observe(null, "nsPref:changed", "keyCode.down");
+    this.observe(null, "nsPref:changed", "keyCode.left");
+  },
+
+  observe: function(aSubject, aTopic, aData)
+  {
+    if(aTopic != "nsPref:changed")
+      return;
+
+    // aSubject is the nsIPrefBranch we're observing (after appropriate QI)
+    // aData is the name of the pref that's been changed (relative to aSubject)
+    switch (aData) {
+      case "enabled":
+        try {
+          this.enabled = this._branch.getBoolPref("enabled");
+        } catch(e) {
+          this.enabled = false;
+        }
+        break;
+      case "xulContentEnabled":
+        try {
+          this.xulContentEnabled = this._branch.getBoolPref("xulContentEnabled");
+        } catch(e) {
+          this.xulContentEnabled = false;
+        }
+        break;
+
+      case "keyCode.modifier":
+        try {
+          this.keyCodeModifier = this._branch.getCharPref("keyCode.modifier");
+
+          // resetting modifiers
+          this.modifierAlt = false;
+          this.modifierShift = false;
+          this.modifierCtrl = false;
+
+          if (this.keyCodeModifier != this.kNone)
+          {
+            // use are using '+' as a separator in about:config.
+            var mods = this.keyCodeModifier.split(/\++/);
+            for (var i = 0; i < mods.length; i++) {
+              var mod = mods[i].toLowerCase();
+              if (mod == "")
+                continue;
+              else if (mod == kAlt)
+                this.modifierAlt = true;
+              else if (mod == kShift)
+                this.modifierShift = true;
+              else if (mod == kCtrl)
+                this.modifierCtrl = true;
+              else {
+                this.keyCodeModifier = kNone;
+                break;
+              }
+            }
+          }
+        } catch(e) {
+            this.keyCodeModifier = kNone;
+        }
+        break;
+      case "keyCode.up":
+        try {
+          this.keyCodeUp = this._branch.getIntPref("keyCode.up");
+        } catch(e) {
+          this.keyCodeUp = Ci.nsIDOMKeyEvent.DOM_VK_UP;
+        }
+        break;
+      case "keyCode.down":
+        try {
+          this.keyCodeDown = this._branch.getIntPref("keyCode.down");
+        } catch(e) {
+          this.keyCodeDown = Ci.nsIDOMKeyEvent.DOM_VK_DOWN;
+        }
+        break;
+      case "keyCode.left":
+        try {
+          this.keyCodeLeft = this._branch.getIntPref("keyCode.left");
+        } catch(e) {
+          this.keyCodeLeft = Ci.nsIDOMKeyEvent.DOM_VK_LEFT;
+        }
+        break;
+      case "keyCode.right":
+        try {
+          this.keyCodeRight = this._branch.getIntPref("keyCode.right");
+        } catch(e) {
+          this.keyCodeRight = Ci.nsIDOMKeyEvent.DOM_VK_RIGHT;
+        }
+        break;
+    }
+  },
+}
+
+PrefObserver.register();
