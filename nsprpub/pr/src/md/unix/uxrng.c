@@ -145,39 +145,39 @@ GetHighResClock(void *buf, size_t maxbytes)
 #include <sys/stat.h>
 #include <fcntl.h>
 
-static int      fdDevRandom;
-static PRCallOnceType coOpenDevRandom;
+static int      fdDevURandom;
+static PRCallOnceType coOpenDevURandom;
 
-static PRStatus OpenDevRandom( void )
+static PRStatus OpenDevURandom( void )
 {
-    fdDevRandom = open( "/dev/random", O_RDONLY );
-    return((-1 == fdDevRandom)? PR_FAILURE : PR_SUCCESS );
-} /* end OpenDevRandom() */
+    fdDevURandom = open( "/dev/urandom", O_RDONLY );
+    return((-1 == fdDevURandom)? PR_FAILURE : PR_SUCCESS );
+} /* end OpenDevURandom() */
 
-static size_t GetDevRandom( void *buf, size_t size )
+static size_t GetDevURandom( void *buf, size_t size )
 {
     int bytesIn;
     int rc;
 
-    rc = PR_CallOnce( &coOpenDevRandom, OpenDevRandom );
+    rc = PR_CallOnce( &coOpenDevURandom, OpenDevURandom );
     if ( PR_FAILURE == rc ) {
         _PR_MD_MAP_OPEN_ERROR( errno );
         return(0);
     }
 
-    bytesIn = read( fdDevRandom, buf, size );
+    bytesIn = read( fdDevURandom, buf, size );
     if ( -1 == bytesIn ) {
         _PR_MD_MAP_READ_ERROR( errno );
         return(0);
     }
 
     return( bytesIn );
-} /* end GetDevRandom() */
+} /* end GetDevURandom() */
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
 {             
-    return(GetDevRandom( buf, maxbytes ));
+    return(GetDevURandom( buf, maxbytes ));
 }
 
 #elif defined(NCR)
