@@ -57,19 +57,6 @@ NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCont
   return new (aPresShell) nsSVGMarkerFrame(aContext);
 }
 
-nsIContent *
-NS_GetSVGMarkerElement(nsIURI *aURI, nsIContent *aContent)
-{
-  nsIContent* content = nsContentUtils::GetReferencedElement(aURI, aContent);
-
-  nsCOMPtr<nsIDOMSVGMarkerElement> marker = do_QueryInterface(content);
-
-  if (marker)
-    return content;
-
-  return nsnull;
-}
-
 //----------------------------------------------------------------------
 // nsIFrame methods:
 

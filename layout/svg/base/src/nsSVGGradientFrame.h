@@ -42,7 +42,6 @@
 #include "nsSVGPaintServerFrame.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
-#include "nsIDOMSVGAnimatedString.h"
 #include "nsSVGElement.h"
 #include "gfxPattern.h"
 
