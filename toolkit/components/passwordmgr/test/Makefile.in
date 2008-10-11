@@ -77,7 +77,6 @@ MOCHI_TESTS = \
 MOCHI_CONTENT = \
 		pwmgr_common.js \
 		prompt_common.js \
-		notification_common.js \
 		authenticate.sjs \
 		formsubmit.sjs \
 		subtst_notifications_1.html \
@@ -86,9 +85,6 @@ MOCHI_CONTENT = \
 		subtst_notifications_4.html \
 		subtst_notifications_5.html \
 		subtst_notifications_6.html \
-		subtst_notifications_8.html \
-		subtst_notifications_9.html \
-		subtst_notifications_10.html \
 		$(NULL)
 
 XPCSHELL_TESTS  = unit
