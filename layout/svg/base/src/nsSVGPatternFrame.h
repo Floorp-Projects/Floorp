@@ -64,7 +64,7 @@ public:
                                          nsIContent*   aContent,
                                          nsStyleContext* aContext);
 
-  nsSVGPatternFrame(nsStyleContext* aContext) : nsSVGPatternFrameBase(aContext) {}
+  nsSVGPatternFrame(nsStyleContext* aContext);
 
   nsresult PaintPattern(gfxASurface **surface,
                         gfxMatrix *patternMatrix,
@@ -103,9 +103,6 @@ public:
 #endif // DEBUG
 
 protected:
-  nsSVGPatternFrame(nsStyleContext* aContext,
-                    nsIDOMSVGURIReference *aRef);
-
   // Internal methods for handling referenced patterns
   nsSVGPatternFrame* GetReferencedPattern();
   // Helper to look at our pattern and then along its reference chain (if any)
@@ -150,7 +147,6 @@ private:
   nsCOMPtr<nsIDOMSVGMatrix>         mCTM;
 
 protected:
-  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
   // This flag is used to detect loops in xlink:href processing
   PRPackedBool                      mLoopFlag;
   // This flag is used to detect loops when painting this pattern
