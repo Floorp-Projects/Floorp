@@ -887,6 +887,9 @@ SessionStoreService.prototype = {
 
 
   persistTabAttribute: function sss_persistTabAttribute(aName) {
+    if (this.xulAttributes.indexOf(aName) != -1)
+      return; // this attribute is already being tracked
+    
     this.xulAttributes.push(aName);
     this.saveStateDelayed();
   },
