@@ -47,7 +47,7 @@
 #if defined(XP_MAC)
   #include <stat.h>
 #else
-  #ifdef XP_OS2_EMX
+  #ifdef XP_OS2
     #include <sys/types.h>
   #endif
 #endif
