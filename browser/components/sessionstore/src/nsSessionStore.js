@@ -1285,10 +1285,8 @@ SessionStoreService.prototype = {
    *        document reference
    */
   _collectFormDataForFrame: function sss_collectFormDataForFrame(aDocument) {
-    let formNodesXPath = "//textarea|//select|//xhtml:textarea|//xhtml:select|" +
-      "//input[not(@type) or @type='text' or @type='checkbox' or @type='radio' or @type='file']|" +
-      "//xhtml:input[not(@type) or @type='text' or @type='checkbox' or @type='radio' or @type='file']";
-    let formNodes = aDocument.evaluate(formNodesXPath, aDocument, XPathHelper.resolveNS,
+    let formNodes = aDocument.evaluate(XPathHelper.restorableFormNodes, aDocument,
+                                       XPathHelper.resolveNS,
                                        Ci.nsIDOMXPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
     let node = formNodes.iterateNext();
     if (!node)
@@ -2458,6 +2456,24 @@ let XPathHelper = {
     return !/'/.test(aArg) ? "'" + aArg + "'" :
            !/"/.test(aArg) ? '"' + aArg + '"' :
            "concat('" + aArg.replace(/'+/g, "',\"$&\",'") + "')";
+  },
+
+  /**
+   * @returns an XPath query to all savable form field nodes
+   */
+  get restorableFormNodes() {
+    // for a comprehensive list of all available <INPUT> types see
+    // http://mxr.mozilla.org/mozilla-central/search?string=kInputTypeTable
+    let ignoreTypes = ["password", "hidden", "button", "image", "submit", "reset"];
+    // XXXzeniko work-around until lower-case has been implemented (bug 398389)
+    let toLowerCase = '"ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"';
+    let ignore = "not(translate(@type, " + toLowerCase + ")='" +
+      ignoreTypes.join("' or translate(@type, " + toLowerCase + ")='") + "')";
+    let formNodesXPath = "//textarea|//select|//xhtml:textarea|//xhtml:select|" +
+      "//input[" + ignore + "]|//xhtml:input[" + ignore + "]";
+    
+    delete this.restorableFormNodes;
+    return (this.restorableFormNodes = formNodesXPath);
   }
 };
 
