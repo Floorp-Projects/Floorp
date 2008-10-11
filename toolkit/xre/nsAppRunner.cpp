@@ -1489,7 +1489,7 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
 #include "nsWindowsRestart.cpp"
 #endif
 
-#if defined(XP_OS2) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3) // broken OS/2 GCC
+#if defined(XP_OS2) && (__KLIBC__ == 0 && __KLIBC_MINOR__ >= 6) // broken kLibc
 // Copy the environment maintained by the C library into an ASCIIZ array
 // that can be used to pass it on to the OS/2 Dos* APIs (which otherwise
 // don't know anything about the stuff set by PR_SetEnv() or setenv()).
@@ -1616,8 +1616,8 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   if (NS_FAILED(rv))
     return rv;
 
-#if defined(XP_OS2) && (__GNUC__ == 3 && __GNUC_MINOR__ == 3)
-  // implementation of _execv() is broken with GCC 3.3.x on OS/2
+#if defined(XP_OS2) && (__KLIBC__ == 0 && __KLIBC_MINOR__ >= 6)
+  // implementation of _execv() is broken with kLibc 0.6.x and later
   if (OS2LaunchChild(exePath.get(), gRestartArgc, gRestartArgv) == -1)
     return NS_ERROR_FAILURE;
 #elif defined(XP_OS2)
