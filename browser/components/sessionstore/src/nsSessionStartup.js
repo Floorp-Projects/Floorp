@@ -141,6 +141,7 @@ SessionStartup.prototype = {
       var observerService = Cc["@mozilla.org/observer-service;1"].
                             getService(Ci.nsIObserverService);
       observerService.addObserver(this, "domwindowopened", true);
+      observerService.addObserver(this, "browser:purge-session-history", true);
     }
   },
 
@@ -173,6 +174,13 @@ SessionStartup.prototype = {
         self._onWindowOpened(window);
         window.removeEventListener("load", arguments.callee, false);
       }, false);
+      break;
+    case "browser:purge-session-history":
+      // reset all state on sanitization
+      this._iniString = null;
+      this._sessionType = Ci.nsISessionStartup.NO_SESSION;
+      // no need in repeating this, since startup state won't change
+      observerService.removeObserver(this, "browser:purge-session-history");
       break;
     }
   },
