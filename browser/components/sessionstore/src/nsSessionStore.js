@@ -122,8 +122,9 @@ SessionStoreService.prototype = {
                                          Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 
-  // xul:tab attributes to (re)store (extensions might want to hook in here)
-  xulAttributes: [],
+  // xul:tab attributes to (re)store (extensions might want to hook in here);
+  // the favicon is always saved for the about:sessionrestore page
+  xulAttributes: ["image"],
 
   // set default load state
   _loadState: STATE_STOPPED,
@@ -149,6 +150,9 @@ SessionStoreService.prototype = {
 
   // not-"dirty" windows usually don't need to have their data updated
   _dirtyWindows: {},
+
+  // counts the number of crashes since the last clean start
+  _recentCrashes: 0,
 
 /* ........ Global Event Handlers .............. */
 
@@ -218,6 +222,23 @@ SessionStoreService.prototype = {
             this._writeFile(this._sessionFileBackup, iniString);
           }
           catch (ex) { } // nothing else we can do here
+          
+          this._recentCrashes = (this._initialState.session &&
+                                 this._initialState.session.recentCrashes || 0) + 1;
+          
+          const SIX_HOURS_IN_MS = 6 * 60 * 60 * 1000;
+          let max_resumed_crashes =
+            this._prefBranch.getIntPref("sessionstore.max_resumed_crashes");
+          let sessionAge = this._initialState.session &&
+                           this._initialState.session.lastUpdate &&
+                           (Date.now() - this._initialState.session.lastUpdate);
+          let needsRestorePage = max_resumed_crashes != -1 &&
+                                 (this._recentCrashes > max_resumed_crashes ||
+                                  sessionAge && sessionAge >= SIX_HOURS_IN_MS);
+          if (needsRestorePage)
+            // replace the crashed session with a restore-page-only session
+            this._initialState =
+              { windows: [{ tabs: [{ entries: [{ url: "about:sessionrestore"}] }] }] };
         }
         
         // make sure that at least the first window doesn't have anything hidden
@@ -1208,7 +1229,8 @@ SessionStoreService.prototype = {
     }
     var isHTTPS = this._getURIFromString((aContent.parent || aContent).
                                          document.location.href).schemeIs("https");
-    if (aFullData || this._checkPrivacyLevel(isHTTPS)) {
+    if (aFullData || this._checkPrivacyLevel(isHTTPS) ||
+        aContent.top.document.location.href == "about:sessionrestore") {
       if (aFullData || aUpdateFormData) {
         let formData = this._collectFormDataForFrame(aContent.document);
         if (formData)
@@ -2102,7 +2124,12 @@ SessionStoreService.prototype = {
       return;
     
     var oState = this._getCurrentState(aUpdateAll);
-    oState.session = { state: ((this._loadState == STATE_RUNNING) ? STATE_RUNNING_STR : STATE_STOPPED_STR) };
+    oState.session = {
+      state: this._loadState == STATE_RUNNING ? STATE_RUNNING_STR : STATE_STOPPED_STR,
+      lastUpdate: Date.now()
+    };
+    if (this._recentCrashes)
+      oState.session.recentCrashes = this._recentCrashes;
     
     var stateString = Cc["@mozilla.org/supports-string;1"].
                         createInstance(Ci.nsISupportsString);
