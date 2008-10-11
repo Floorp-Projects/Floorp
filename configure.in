@@ -2288,7 +2288,10 @@ case "$target" in
 *-os2*)
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+    AC_DEFINE(OS2)
     AC_DEFINE(XP_OS2)
+    AC_DEFINE(OS2EMX_PLAIN_CHAR)
+    AC_DEFINE(TCPV40HDRS)
     USE_SHORT_LIBNAME=1
     DLL_PREFIX=
     LIB_PREFIX=
@@ -2297,6 +2300,22 @@ case "$target" in
     DLL_SUFFIX=".dll"
     IMPORT_LIB_SUFFIX=lib
     DSO_PIC_CFLAGS=
+    AR=emxomfar
+    AR_FLAGS='r $@'
+    CFLAGS="$CFLAGS -Zomf"
+    CXXFLAGS="$CXXFLAGS -Zomf"
+    DSO_LDOPTS='-Zdll'
+    BIN_FLAGS='-Zlinker /ST:0x100000'
+    IMPLIB='emximp -o'
+    FILTER='emxexp -o'
+    LDFLAGS='-Zmap'
+    WARNINGS_AS_ERRORS='-Werror'
+    MOZ_DEBUG_FLAGS="-g -fno-inline"
+    MOZ_OPTIMIZE_FLAGS="-O2"
+    MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
+    MOZ_XPCOM_OBSOLETE_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcomct.lib'
+    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcomcor.lib'
+    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
     MOZ_ENABLE_POSTSCRIPT=
@@ -2309,91 +2328,26 @@ case "$target" in
     else
         AC_MSG_ERROR([MOZTOOLS is not set])
     fi
+    if test -n "$MOZ_OS2_HIGH_MEMORY"; then
+        DSO_LDOPTS="$DSO_LDOPTS -Zhigh-mem"
+        LDFLAGS="$LDFLAGS -Zhigh-mem"
+        MOZ_OPTIMIZE_LDFLAGS="$MOZ_OPTIMIZE_LDFLAGS -Zhigh-mem"
+        AC_DEFINE(MOZ_OS2_HIGH_MEMORY)
+    fi
 
-    # EMX/GCC build
-    if test -n "$GNU_CC"; then
-        AC_DEFINE(OS2)
-        AC_DEFINE(XP_OS2_EMX)
-        AC_DEFINE(OS2EMX_PLAIN_CHAR)
-        AC_DEFINE(TCPV40HDRS)
-        AR=emxomfar
-        AR_FLAGS='r $@'
-        CFLAGS="$CFLAGS -Zomf"
-        CXXFLAGS="$CXXFLAGS -Zomf"
-        DSO_LDOPTS='-Zdll'
-        BIN_FLAGS='-Zlinker /ST:0x100000'
-        IMPLIB='emximp -o'
-        FILTER='emxexp -o'
-        LDFLAGS='-Zmap'
-        WARNINGS_AS_ERRORS='-Werror'
-        MOZ_DEBUG_FLAGS="-g -fno-inline"
-        MOZ_OPTIMIZE_FLAGS="-O2"
-        MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
-        MOZ_XPCOM_OBSOLETE_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcomct.lib'
-        DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcomcor.lib'
-        LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
-        if test -n "$MOZ_OS2_HIGH_MEMORY"; then
-          DSO_LDOPTS="$DSO_LDOPTS -Zhigh-mem"
-          LDFLAGS="$LDFLAGS -Zhigh-mem"
-          MOZ_OPTIMIZE_LDFLAGS="$MOZ_OPTIMIZE_LDFLAGS -Zhigh-mem"
-          AC_DEFINE(MOZ_OS2_HIGH_MEMORY)
-        fi
+    # GCC for OS/2 currently predefines these, but we don't want them
+    _DEFINES_CFLAGS="$_DEFINES_CFLAGS -Uunix -U__unix -U__unix__"
+    _DEFINES_CXXFLAGS="$_DEFINES_CXXFLAGS -Uunix -U__unix -U__unix__"
 
-        # GCC for OS/2 currently predefines these, but we don't want them
-        _DEFINES_CFLAGS="$_DEFINES_CFLAGS -Uunix -U__unix -U__unix__"
-        _DEFINES_CXXFLAGS="$_DEFINES_CXXFLAGS -Uunix -U__unix -U__unix__"
-
-        AC_CACHE_CHECK(for __declspec(dllexport),
-           ac_os2_declspec,
-           [AC_TRY_COMPILE([__declspec(dllexport) void ac_os2_declspec(void) {}],
-                           [return 0;],
-                           ac_os2_declspec="yes",
-                           ac_os2_declspec="no")])
-        if test "$ac_os2_declspec" = "yes"; then
-           FILTER='true'
-           MOZ_OS2_USE_DECLSPEC='1'
-        fi
-        
-    # Visual Age C++ build
-    elif test "$VACPP" = "yes"; then
-        MOZ_BUILD_ROOT=`pwd -D`
-        OBJ_SUFFIX=obj
-        AR=-ilib
-        AR_FLAGS='/NOL /NOI /O:$(subst /,\\,$@)'
-        AR_LIST='/L'
-        AR_EXTRACT='-*'
-        AR_DELETE='-'
-        AS=alp
-        ASFLAGS='-Mb'
-        AS_DASH_C_FLAG=''
-        ASM_SUFFIX=asm
-        LD='-ilink'
-        CFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9"
-        CXXFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9 /Gx+"
-        MOZ_DEBUG_FLAGS="/Ti+"
-        WARNINGS_AS_ERRORS='-WX'
-        MOZ_OPTIMIZE_FLAGS="/O+ /Gl+ /G5 /qarch=pentium"
-        LDFLAGS="/NOL /M"
-        MOZ_DEBUG_LDFLAGS="/DE"
-        MOZ_OPTIMIZE_LDFLAGS="/OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
-        DSO_LDOPTS=''
-        DSO_PIC_CFLAGS=
-        IMPLIB='implib /NOL /NOI'
-        FILTER='cppfilt -q -B -P'
-        AC_DEFINE(NO_ANSI_KEYWORDS)
-        AC_DEFINE(OS2,4)
-        AC_DEFINE(_X86_)
-        AC_DEFINE(XP_OS2_VACPP)
-        AC_DEFINE(TCPV40HDRS)
-        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-        AC_DEFINE(STDC_HEADERS)
-        MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-        MKSHLIB='$(LD) $(DSO_LDOPTS)'
-        MKCSHLIB='$(LD) $(DSO_LDOPTS)'
-        MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/mozjs.lib'
-        MOZ_XPCOM_OBSOLETE_LIBS='$(LIBXUL_DIST)/lib/xpcomct.lib'
-        DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcomcor.lib'
-        LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
+    AC_CACHE_CHECK(for __declspec(dllexport),
+        ac_os2_declspec,
+        [AC_TRY_COMPILE([__declspec(dllexport) void ac_os2_declspec(void) {}],
+                        [return 0;],
+                        ac_os2_declspec="yes",
+                        ac_os2_declspec="no")])
+    if test "$ac_os2_declspec" = "yes"; then
+        FILTER='true'
+        MOZ_OS2_USE_DECLSPEC='1'
     fi
     ;;
 
@@ -2656,14 +2610,6 @@ if test "$ac_cv_siginfo_t" = true ; then
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
-fi
-
-dnl Visual Age for os/2 also defines size_t and off_t in certain 
-dnl  header files.  These defines make Visual Age use the mozilla
-dnl  defines types.
-if test "$VACPP" = "yes"; then
-   AC_DEFINE(__size_t)
-   AC_DEFINE(__off_t)
 fi
 
 dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
@@ -4077,10 +4023,7 @@ if test -n "$MOZ_NATIVE_NSPR"; then
     CFLAGS=$_SAVE_CFLAGS
 else
     NSPR_CFLAGS='`$(DEPTH)/nsprpub/config/nspr-config --prefix='${LIBXUL_DIST}' --includedir='${LIBXUL_DIST}'/include/nspr --cflags`'
-    # explicitly set libs for Visual Age C++ for OS/2
-    if test "$OS_ARCH" = "OS2" -a "$VACPP" = "yes"; then
-        NSPR_LIBS="${LIBXUL_DIST}/lib/nspr${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plc${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plds${NSPR_VERSION}.lib ${_PTHREAD_LDFLAGS}"
-    elif test "$OS_ARCH" = "WINCE"; then
+    if test "$OS_ARCH" = "WINCE"; then
         NSPR_CFLAGS="-I${LIBXUL_DIST}/include/nspr"
         NSPR_LIBS="${LIBXUL_DIST}/lib/nspr${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plc${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plds${NSPR_VERSION}.lib "
     elif test "$OS_ARCH" = "WINNT"; then
@@ -8097,9 +8040,7 @@ fi # COMPILE_ENVIRONMENT
 dnl Set various defines and substitutions
 dnl ========================================================
 
-if test "$OS_ARCH" = "OS2" -a "$VACPP" = "yes"; then
-      LIBS='so32dll.lib tcp32dll.lib'
-elif test "$OS_ARCH" = "BeOS"; then
+if test "$OS_ARCH" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
   MOZ_MOVEMAIL=1
 elif test "$OS_ARCH" = "Darwin"; then
@@ -8340,11 +8281,9 @@ fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
     AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
-    if test ! "$VACPP" && test "$OS_ARCH" != "WINNT" && test "$OS_ARCH" != "WINCE"; then
+    if test "$OS_ARCH" != "WINNT" && test "$OS_ARCH" != "WINCE"; then
        NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$LIBXUL_DIST --exec-prefix=$MOZ_BUILD_ROOT/dist --libdir=$LIBXUL_DIST/lib --libs`
        $PERL -pi.bak -e "s '^NSPR_LIBS\\s*=.*'NSPR_LIBS = $NSPR_LIBS'" config/autoconf.mk
-    fi
-    if test "$OS_ARCH" != "WINNT" && test "$OS_ARCH" != "WINCE" ; then
        NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$LIBXUL_DIST --exec-prefix=$MOZ_BUILD_ROOT/dist --includedir=$LIBXUL_DIST/include/nspr --cflags`
        $PERL -pi.bak -e "s '^NSPR_CFLAGS\\s*=.*'NSPR_CFLAGS = $NSPR_CFLAGS'" config/autoconf.mk
     fi

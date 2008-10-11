@@ -88,9 +88,4 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-# XXX os/2's gcc crashes on nsPrefMigration.cpp ("virtual memory exhausted")
-ifeq ($(MOZ_OS2_TOOLS),EMX)
-CXXFLAGS	:= $(filter-out -g,$(CXXFLAGS))
-endif
-
 
