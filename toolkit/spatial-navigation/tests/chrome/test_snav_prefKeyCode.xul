@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+
+<window title="Mozilla Bug 444801"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad();">
+
+    <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <script type="application/javascript" src="SpatialNavUtils.js"></script>
+
+    <body id="some-content" xmlns="http://www.w3.org/1999/xhtml">
+
+      <a id="start" href="https://bugzilla.mozilla.org/show_bug.cgi?id=444801">Mozilla Bug 444801</a>
+    <table
+ style="text-align: left; width: 100%; margin-left: auto; margin-right: auto;" border="1" cellpadding="2" cellspacing="2">
+      <tbody>
+        <tr>
+          <td style="vertical-align: top; text-align: center;"><a id="1" href="a">test</a></td>
+          <td style="vertical-align: top; text-align: center;"><a id="2" href="a">test</a></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top; text-align: center;"><a id="3" href="a">test</a></td>
+          <td style="vertical-align: top; text-align: center;"><a id="4" href="a">test</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+  Components.utils.import("resource://gre/modules/SpatialNavigation.js");
+
+  var moveTable = [
+  ["D", "1"],
+  ["D", "3"],
+  ["R", "4"],
+  ["U", "2"],
+  ["L", "1"],
+  ["DONE", "DONE"],
+  ];
+
+  var prefs = [
+  ["enabled",           "bool", true],
+  ["xulContentEnabled", "bool", true],
+  ["keyCode.modifier",  "char", "none"],
+  ["keyCode.right",     "int",  82], // DOM_VK_R
+  ["keyCode.left",      "int",  76], // DOM_VK_L
+  ["keyCode.down",      "int",  68], // DOM_VK_D
+  ["keyCode.up",        "int",  85], // DOM_VK_U
+  ];
+
+  function onLoad()
+  {
+    prepareTest(prefs);
+
+    // starting the test itself.
+    var x = document.getElementById("some-content");
+    SpatialNavigation.init(x);
+
+    // get to a known place.
+    document.getElementById("start").focus();
+
+    testMoves(moveTable);
+
+    SimpleTest.waitForExplicitFinish();
+
+    SpatialNavigation.uninit();
+  }
+
+  ]]>
+  </script>
+</window>
