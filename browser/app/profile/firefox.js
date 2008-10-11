@@ -695,6 +695,9 @@ pref("browser.sessionstore.postdata", 0);
 pref("browser.sessionstore.privacy_level", 1);
 // how many tabs can be reopened (per window)
 pref("browser.sessionstore.max_tabs_undo", 10);
+// number of crashes that can occur before the about:sessionrestore page is displayed
+// (this pref has no effect if more than 6 hours have passed since the last crash)
+pref("browser.sessionstore.max_resumed_crashes", 1);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
