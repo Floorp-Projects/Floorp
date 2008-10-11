@@ -1303,9 +1303,15 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 
 #endif
 
+// ContextCallback calls are chained
+static JSContextCallback gOldJSContextCallback;
+
 static JSBool
 ContextCallback(JSContext *cx, uintN contextOp)
 {
+    if (gOldJSContextCallback && !gOldJSContextCallback(cx, contextOp))
+        return JS_FALSE;
+
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, my_ErrorReporter);
         JS_SetVersion(cx, JSVERSION_LATEST);
@@ -1357,7 +1363,7 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
-        JS_SetContextCallback(rt, ContextCallback);
+        gOldJSContextCallback = JS_SetContextCallback(rt, ContextCallback);
 
         cx = JS_NewContext(rt, 8192);
         if (!cx) {
@@ -1480,7 +1486,6 @@ main(int argc, char **argv, char **envp)
         cxstack = nsnull;
         JS_GC(cx);
         JS_DestroyContext(cx);
-        xpc->SyncJSContexts();
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM( NULL );
