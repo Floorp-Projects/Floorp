@@ -38,10 +38,7 @@
 #define NSSVGTEXTPATHFRAME_H
 
 #include "nsSVGTSpanFrame.h"
-#include "nsIDOMSVGAnimatedString.h"
 #include "nsSVGLengthList.h"
-
-class nsSVGTextPathFrame;
 
 typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
 
