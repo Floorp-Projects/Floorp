@@ -6560,9 +6560,8 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
         if (changed) {
           kidRenumberedABullet = PR_TRUE;
 
-          // Invalidate the bullet content area since it may look different now
-          nsRect damageRect(nsPoint(0, 0), listItem->mBullet->GetSize());
-          listItem->mBullet->Invalidate(damageRect);
+          // The ordinal changed - mark the bullet frame dirty.
+          listItem->ChildIsDirty(listItem->mBullet);
         }
       }
 
