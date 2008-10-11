@@ -3897,7 +3897,7 @@ nsXPCComponents::NewResolve(nsIXPConnectWrappedNative *wrapper,
                             jsval id, PRUint32 flags,
                             JSObject * *objp, PRBool *_retval)
 {
-    XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     if(!rt)
         return NS_ERROR_FAILURE;
 
@@ -3928,7 +3928,7 @@ nsXPCComponents::GetProperty(nsIXPConnectWrappedNative *wrapper,
                              JSContext * cx, JSObject * obj,
                              jsval id, jsval * vp, PRBool *_retval)
 {
-    XPCContext* xpcc = nsXPConnect::GetContext(cx);
+    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
     if(!xpcc)
         return NS_ERROR_FAILURE;
 
@@ -3963,7 +3963,7 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
                              JSContext * cx, JSObject * obj, jsval id,
                              jsval * vp, PRBool *_retval)
 {
-    XPCContext* xpcc = nsXPConnect::GetContext(cx);
+    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
     if(!xpcc)
         return NS_ERROR_FAILURE;
 
