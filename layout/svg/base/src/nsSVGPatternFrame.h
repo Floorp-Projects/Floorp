@@ -39,7 +39,6 @@
 #ifndef __NS_SVGPATTERNFRAME_H__
 #define __NS_SVGPATTERNFRAME_H__
 
-#include "nsIDOMSVGAnimatedString.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsSVGPaintServerFrame.h"
 #include "gfxMatrix.h"

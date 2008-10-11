@@ -234,13 +234,6 @@ public:
                             nsSVGElement *aContent,
                             const nsStyleCoord &aCoord);
   /*
-   * Gets an internal frame for an element referenced by a URI.  Note that this
-   * only works for URIs that reference elements within the same document.
-   */
-  static nsresult GetReferencedFrame(nsIFrame **aRefFrame, nsIURI* aURI,
-                                     nsIContent *aContent, nsIPresShell *aPresShell);
-
-  /*
    * Return the nearest viewport element
    */
   static nsresult GetNearestViewportElement(nsIContent *aContent,
