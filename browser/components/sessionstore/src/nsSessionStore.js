@@ -1099,12 +1099,20 @@ SessionStoreService.prototype = {
       if (storageData[uri.spec] || !(aFullData || this._checkPrivacyLevel(uri.schemeIs("https"))))
         continue;
 
-      let storage = aDocShell.getSessionStorageForURI(uri);
-      if (!storage || storage.length == 0)
+      let storage, storageItemCount;
+      try {
+        storage = aDocShell.getSessionStorageForURI(uri);
+        storageItemCount = storage.length;
+        if (storageItemCount == 0)
+          continue;
+      }
+      catch (ex) {
+        // sessionStorage might throw if it's turned off, see bug 458954
         continue;
+      }
 
       let data = storageData[uri.spec] = {};
-      for (let j = 0; j < storage.length; j++) {
+      for (let j = 0; j < storageItemCount; j++) {
         try {
           let key = storage.key(j);
           let item = storage.getItem(key);
