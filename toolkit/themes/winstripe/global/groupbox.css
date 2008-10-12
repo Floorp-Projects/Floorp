@@ -72,3 +72,10 @@ caption {
 tabpanels caption {
   background-color: menu;
 }
+
+.caption-text {
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 1px;
+  -moz-margin-end: 2px;
+}
