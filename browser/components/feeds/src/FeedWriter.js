@@ -1372,26 +1372,21 @@ FeedWriter.prototype = {
   _setFaviconForWebReader:
   function FW__setFaviconForWebReader(aURI, aMenuItem) {
     var faviconsSvc = this._faviconService;
-    var faviconURL = null;
+    var faviconURI = null;
     try {
-      faviconURL = faviconsSvc.getFaviconForPage(aURI);
+      faviconURI = faviconsSvc.getFaviconForPage(aURI);
     }
     catch(ex) { }
 
-    if (faviconURL) {
-      var mimeType = { };
-      var bytes = faviconsSvc.getFaviconData(faviconURL, mimeType,
-                                             { /* dataLen */ });
-      if (bytes) {
-        var dataURI = "data:" + mimeType.value + ";" + "base64," +
-                      btoa(String.fromCharCode.apply(null, bytes));
-
+    if (faviconURI) {
+      var dataURL = faviconsSvc.getFaviconDataAsDataURL(faviconURI);
+      if (dataURL) {
         this._contentSandbox.menuItem = aMenuItem;
-        this._contentSandbox.dataURI = dataURI;
-        var codeStr = "menuItem.setAttribute('image', dataURI);";
+        this._contentSandbox.dataURL = dataURL;
+        var codeStr = "menuItem.setAttribute('image', dataURL);";
         Cu.evalInSandbox(codeStr, this._contentSandbox);
         this._contentSandbox.menuItem = null;
-        this._contentSandbox.dataURI = null;
+        this._contentSandbox.dataURL = null;
 
         return true;
       }
