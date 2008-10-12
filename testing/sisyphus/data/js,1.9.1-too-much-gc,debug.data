@@ -1,0 +1,5 @@
+product=js
+branch=1.9.1
+jsshellsourcepath=${BUILDDIR}/1.9.1-too-much-gc/mozilla/js/src
+buildtype=debug
+TEST_MOZILLA_HG=http://hg.mozilla.org/mozilla-central
