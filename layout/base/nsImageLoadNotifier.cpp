@@ -39,7 +39,7 @@
 
 /* class to notify frames of background image loads */
 
-#include "nsImageLoader.h"
+#include "nsImageLoadNotifier.h"
 
 #include "imgILoader.h"
 
@@ -61,17 +61,18 @@
 // Paint forcing
 #include "prenv.h"
 
-NS_IMPL_ISUPPORTS2(nsImageLoader, imgIDecoderObserver, imgIContainerObserver)
+NS_IMPL_ISUPPORTS2(nsImageLoadNotifier, imgIDecoderObserver, imgIContainerObserver)
 
-nsImageLoader::nsImageLoader(nsIFrame *aFrame, PRBool aReflowOnLoad, 
-                             nsImageLoader *aNextLoader)
+nsImageLoadNotifier::nsImageLoadNotifier(nsIFrame *aFrame,
+                                         PRBool aReflowOnLoad, 
+                                         nsImageLoadNotifier *aNextLoader)
   : mFrame(aFrame),
     mReflowOnLoad(aReflowOnLoad),
     mNextLoader(aNextLoader)
 {
 }
 
-nsImageLoader::~nsImageLoader()
+nsImageLoadNotifier::~nsImageLoadNotifier()
 {
   mFrame = nsnull;
 
@@ -80,12 +81,13 @@ nsImageLoader::~nsImageLoader()
   }
 }
 
-/* static */ already_AddRefed<nsImageLoader>
-nsImageLoader::Create(nsIFrame *aFrame, imgIRequest *aRequest, 
-                      PRBool aReflowOnLoad, nsImageLoader *aNextLoader)
+/* static */ already_AddRefed<nsImageLoadNotifier>
+nsImageLoadNotifier::Create(nsIFrame *aFrame, imgIRequest *aRequest, 
+                            PRBool aReflowOnLoad,
+                            nsImageLoadNotifier *aNextLoader)
 {
-  nsRefPtr<nsImageLoader> loader =
-    new nsImageLoader(aFrame, aReflowOnLoad, aNextLoader);
+  nsRefPtr<nsImageLoadNotifier> loader =
+    new nsImageLoadNotifier(aFrame, aReflowOnLoad, aNextLoader);
 
   loader->Load(aRequest);
 
@@ -93,13 +95,13 @@ nsImageLoader::Create(nsIFrame *aFrame, imgIRequest *aRequest,
 }
 
 void
-nsImageLoader::Destroy()
+nsImageLoadNotifier::Destroy()
 {
   // Destroy the chain with only one level of recursion.
-  nsRefPtr<nsImageLoader> list = mNextLoader;
+  nsRefPtr<nsImageLoadNotifier> list = mNextLoader;
   mNextLoader = nsnull;
   while (list) {
-    nsRefPtr<nsImageLoader> todestroy = list;
+    nsRefPtr<nsImageLoadNotifier> todestroy = list;
     list = todestroy->mNextLoader;
     todestroy->mNextLoader = nsnull;
     todestroy->Destroy();
@@ -115,7 +117,7 @@ nsImageLoader::Destroy()
 }
 
 nsresult
-nsImageLoader::Load(imgIRequest *aImage)
+nsImageLoadNotifier::Load(imgIRequest *aImage)
 {
   NS_ASSERTION(!mRequest, "can't reuse image loaders");
 
@@ -136,8 +138,8 @@ nsImageLoader::Load(imgIRequest *aImage)
 
                     
 
-NS_IMETHODIMP nsImageLoader::OnStartContainer(imgIRequest *aRequest,
-                                              imgIContainer *aImage)
+NS_IMETHODIMP nsImageLoadNotifier::OnStartContainer(imgIRequest *aRequest,
+                                                    imgIContainer *aImage)
 {
   if (aImage)
   {
@@ -153,8 +155,8 @@ NS_IMETHODIMP nsImageLoader::OnStartContainer(imgIRequest *aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageLoader::OnStopFrame(imgIRequest *aRequest,
-                                         gfxIImageFrame *aFrame)
+NS_IMETHODIMP nsImageLoadNotifier::OnStopFrame(imgIRequest *aRequest,
+                                               gfxIImageFrame *aFrame)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
@@ -181,9 +183,9 @@ NS_IMETHODIMP nsImageLoader::OnStopFrame(imgIRequest *aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
-                                          gfxIImageFrame *newframe,
-                                          nsRect * dirtyRect)
+NS_IMETHODIMP nsImageLoadNotifier::FrameChanged(imgIContainer *aContainer,
+                                                gfxIImageFrame *newframe,
+                                                nsRect * dirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
@@ -207,7 +209,7 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
 
 
 void
-nsImageLoader::RedrawDirtyFrame(const nsRect* aDamageRect)
+nsImageLoadNotifier::RedrawDirtyFrame(const nsRect* aDamageRect)
 {
   if (mReflowOnLoad) {
     nsIPresShell *shell = mFrame->PresContext()->GetPresShell();
