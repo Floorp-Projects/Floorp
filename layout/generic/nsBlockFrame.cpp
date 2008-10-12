@@ -390,11 +390,9 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   }
   PRInt32 numInlineLines = 0;
   PRInt32 numBlockLines = 0;
-  if (! mLines.empty()) {
-    for (const_line_iterator line = begin_lines(), line_end = end_lines();
-         line != line_end;
-         ++line)
-    {
+  if (!mLines.empty()) {
+    const_line_iterator line = begin_lines(), line_end = end_lines();
+    for ( ; line != line_end; ++line) {
       if (line->IsBlock())
         numBlockLines++;
       else
@@ -415,19 +413,33 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   aIndent++;
 
   // Output the lines
-  if (! mLines.empty()) {
-    for (const_line_iterator line = begin_lines(), line_end = end_lines();
-         line != line_end;
-         ++line)
-    {
+  if (!mLines.empty()) {
+    const_line_iterator line = begin_lines(), line_end = end_lines();
+    for ( ; line != line_end; ++line) {
       line->List(out, aIndent);
     }
+  }
+
+  // Output the overflow lines.
+  const nsLineList* overflowLines = GetOverflowLines();
+  if (overflowLines && !overflowLines->empty()) {
+    IndentBy(out, aIndent);
+    fputs("Overflow-lines<\n", out);
+    const_line_iterator line = begin_lines(), line_end = end_lines();
+    for ( ; line != line_end; ++line) {
+      line->List(out, aIndent + 1);
+    }
+    IndentBy(out, aIndent);
+    fputs(">\n", out);
   }
 
   nsIAtom* listName = nsnull;
   PRInt32 listIndex = 0;
   for (;;) {
     listName = GetAdditionalChildListName(listIndex++);
+    if (nsGkAtoms::overflowList == listName) {
+      continue; // skip the overflow list - we printed the overflow lines above
+    }
     if (nsnull == listName) {
       break;
     }
