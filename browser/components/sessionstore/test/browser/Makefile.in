@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_TEST_FILES = \
 	browser_339445.js \
 	browser_339445_sample.html \
+	browser_345898.js \
 	browser_346337.js \
 	browser_346337_sample.html \
 	browser_350525.js \
