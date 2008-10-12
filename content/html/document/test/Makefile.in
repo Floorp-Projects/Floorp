@@ -73,6 +73,12 @@ _TEST_FILES = 	test_bug1682.html \
 		test_form-parsing.html \
 		test_viewport.html \
 		test_documentAll.html \
+		test_bug448564.html \
+		bug448564-iframe-1.html \
+		bug448564-iframe-2.html \
+		bug448564-iframe-3.html \
+		bug448564-echo.sjs \
+		bug448564-submit.js \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
