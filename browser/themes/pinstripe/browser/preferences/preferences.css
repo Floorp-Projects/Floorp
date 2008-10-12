@@ -63,10 +63,6 @@
   margin: 0;
 }
 
-.paneSelector > radio[pane] {
-  -moz-binding: url("chrome://browser/skin/browser.xml#radio-shadow") !important;
-}
-
 .paneSelector radio {
   border-right: 2px solid transparent;
   border-left: 2px solid transparent;
