@@ -56,8 +56,7 @@
 #include "jsscope.h"
 #include "jsstr.h"
 #include "jsbuiltins.h"
-
-#include "nanojit.h"
+#include "jstracer.h"
 
 using namespace avmplus;
 using namespace nanojit;
@@ -271,8 +270,11 @@ js_CallTree(InterpState* state, Fragment* f)
         /* This only occurs once a tree call guard mismatches and we unwind the tree call stack.
            We store the first (innermost) tree call guard in state and we will try to grow
            the outer tree the failing call was in starting at that guard. */
-        if (!state->lastTreeCallGuard)
+        if (!state->lastTreeCallGuard) {
             state->lastTreeCallGuard = lr;
+            FrameInfo* rp = (FrameInfo*)state->rp;
+            state->rpAtLastTreeCall = rp + lr->calldepth;
+        }
     } else {
         /* If the tree exits on a regular (non-nested) guard, keep updating lastTreeExitGuard
            with that guard. If we mismatch on a tree call guard, this will contain the last

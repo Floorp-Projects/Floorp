@@ -1696,19 +1696,6 @@ js_IsLoopEdge(jsbytecode* pc, jsbytecode* header)
     return false;
 }
 
-struct FrameInfo {
-    JSObject*       callee;     // callee function object
-    jsbytecode*     callpc;     // pc of JSOP_CALL in caller script
-    uint8*          typemap;    // typemap for the stack frame
-    union {
-        struct {
-            uint16  spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
-            uint16  argc;       // actual argument count, may be < fun->nargs
-        } s;
-        uint32      word;       // for spdist/argc LIR store in record_JSOP_CALL
-    };
-};
-
 /* Promote slots if necessary to match the called tree' type map and report error if thats
    impossible. */
 bool
@@ -2656,6 +2643,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     state.cx = cx;
     state.lastTreeExitGuard = NULL;
     state.lastTreeCallGuard = NULL;
+    state.rpAtLastTreeCall = NULL;
     union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
     u.code = f->code();
 
@@ -2686,6 +2674,10 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     if (!onTrace)
         tm->onTrace = false;
 
+    /* Except if we find that this is a nested bailout, the guard the call returned is the
+       one we have to use to adjust pc and sp. */
+    GuardRecord* innermost = lr;
+
     /* While executing a tree we do not update state.sp and state.rp even if they grow. Instead,
        guards tell us by how much sp and rp should be incremented in case of a side exit. When
        calling a nested tree, however, we actively adjust sp and rp. If we have such frames
@@ -2696,12 +2688,29 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
        visible and only the guard we exited on will tells us about). */
     FrameInfo* rp = (FrameInfo*)state.rp;
     if (lr->exit->exitType == NESTED_EXIT) {
-        if (state.lastTreeCallGuard)
-            lr = state.lastTreeCallGuard;
-        JS_ASSERT(lr->exit->exitType == NESTED_EXIT);
+        GuardRecord* nested = state.lastTreeCallGuard;
+        if (!nested) {
+            /* If lastTreeCallGuard is not set in state, we only have a single level of
+               nesting in this exit, so lr itself is the innermost and outermost nested
+               guard, and hence we set nested to lr. The calldepth of the innermost guard
+               is not added to state.rp, so we do it here manually. For a nesting depth
+               greater than 1 the CallTree builtin already added the innermost guard's
+               calldepth to state.rpAtLastTreeCall. */
+            nested = lr;
+            rp += lr->calldepth;
+        } else {
+            /* During unwinding state.rp gets overwritten at every step and we restore
+               it here to its state at the innermost nested guard. The builtin already
+               added the calldepth of that innermost guard to rpAtLastTreeCall. */
+            rp = (FrameInfo*)state.rpAtLastTreeCall;
+        }
+        innermost = state.lastTreeExitGuard;
         if (innermostNestedGuardp)
-            *innermostNestedGuardp = lr;
-        rp += lr->calldepth;
+            *innermostNestedGuardp = nested;
+        JS_ASSERT(nested);
+        JS_ASSERT(nested->exit->exitType == NESTED_EXIT);
+        JS_ASSERT(state.lastTreeExitGuard);
+        JS_ASSERT(state.lastTreeExitGuard->exit->exitType != NESTED_EXIT);
     }
     while (callstack < rp) {
         /* Synthesize a stack frame and write out the values in it using the type map pointer
@@ -2724,26 +2733,17 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
         stack += slots;
     }
 
-    /* If we bail out on a nested exit, the final state is contained in the innermost
-       guard which we stored in lastTreeExitGuard. */
-    if (lr->exit->exitType == NESTED_EXIT)
-        lr = state.lastTreeExitGuard;
-    JS_ASSERT(lr->exit->exitType != NESTED_EXIT);
-
-    /* sp_adj and ip_adj are relative to the tree we exit out of, not the tree we
-       entered into (which might be different in the presence of nested trees). */
-    ti = (TreeInfo*)lr->from->root->vmprivate;
-
     /* We already synthesized the frames around the innermost guard. Here we just deal
        with additional frames inside the tree we are bailing out from. */
     JS_ASSERT(rp == callstack);
-    unsigned calldepth = lr->calldepth;
+    unsigned calldepth = innermost->calldepth;
     unsigned calldepth_slots = 0;
     for (unsigned n = 0; n < calldepth; ++n) {
         int nslots = js_SynthesizeFrame(cx, callstack[n]);
         if (nslots < 0)
             return NULL;
         calldepth_slots += nslots;
+        ++inlineCallCount;
 #ifdef DEBUG        
         JSStackFrame* fp = cx->fp;
         debug_only_v(printf("synthesized shallow frame for %s:%u@%u\n",
@@ -2755,12 +2755,12 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
     /* Adjust sp and pc relative to the tree we exited from (not the tree we entered
        into). These are our final values for sp and pc since js_SynthesizeFrame has
        already taken care of all frames in between. */
-    SideExit* e = lr->exit;
+    SideExit* e = innermost->exit;
     JSStackFrame* fp = cx->fp;
 
     /* If we are not exiting from an inlined frame the state->sp is spbase, otherwise spbase
        is whatever slots frames around us consume. */
-    fp->regs->pc = (jsbytecode*)lr->from->root->ip + e->ip_adj;
+    fp->regs->pc = (jsbytecode*)innermost->from->root->ip + e->ip_adj;
     fp->regs->sp = StackBase(fp) + (e->sp_adj / sizeof(double)) - calldepth_slots;
     JS_ASSERT(fp->slots + fp->script->nfixed +
               js_ReconstructStackDepth(cx, fp->script, fp->regs->pc) == fp->regs->sp);
@@ -2817,12 +2817,6 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
 #endif
 
     AUDIT(sideExitIntoInterpreter);
-
-    if (!lr) /* did the tree actually execute? */
-        return NULL;
-
-    /* Adjust inlineCallCount (we already compensated for any outer nested frames). */
-    inlineCallCount += lr->calldepth;
 
     return lr;
 }
