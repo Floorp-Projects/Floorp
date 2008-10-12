@@ -6,7 +6,6 @@ classic.jar:
   skin/classic/browser/bookmark-open-mid.png
   skin/classic/browser/bookmark-open-right.png
 * skin/classic/browser/browser.css                          (browser.css)
-  skin/classic/browser/browser.xml
   skin/classic/browser/contextDialogBackground.png
 * skin/classic/browser/engineManager.css                    (engineManager.css)
   skin/classic/browser/expander-round.png 

@@ -5,7 +5,6 @@ classic.jar:
 # section at the bottom of this file
 *       skin/classic/browser/aboutSessionRestore.css                 (aboutSessionRestore.css)
 *       skin/classic/browser/browser.css                             (browser.css)
-        skin/classic/browser/browser.xml
 *       skin/classic/browser/engineManager.css                       (engineManager.css)
         skin/classic/browser/Info.png                                (Info.png)
         skin/classic/browser/identity.png                            (identity.png)
@@ -94,7 +93,6 @@ classic.jar:
 % skin browser classic/1.0 %skin/classic/aero/browser/ os=WINNT osversion>=6
 *       skin/classic/aero/browser/aboutSessionRestore.css            (aboutSessionRestore.css)
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
-        skin/classic/aero/browser/browser.xml
 *       skin/classic/aero/browser/engineManager.css                  (engineManager.css)
         skin/classic/aero/browser/Info.png                           (Info-aero.png)
         skin/classic/aero/browser/identity.png                       (identity-aero.png)
