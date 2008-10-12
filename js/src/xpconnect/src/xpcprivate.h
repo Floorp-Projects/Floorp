@@ -954,6 +954,8 @@ public:
     NS_IMETHOD SetReturnValueWasSet(PRBool aValue);
     NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo **aResult);
     NS_IMETHOD GetCalleeClassInfo(nsIClassInfo **aResult);
+    NS_IMETHOD GetPreviousCallContext(nsAXPCNativeCallContext **aResult);
+    NS_IMETHOD GetLanguage(PRUint16 *aResult);
 
     enum {NO_ARGS = (uintN) -1};
 
@@ -3618,8 +3620,8 @@ public:
      * @param cx The JSContext, this can be null, we don't do anything then
      */
     AutoScriptEvaluate(JSContext * cx)
-         : mJSContext(cx), mState(0), mEvaluated(PR_FALSE), 
-           mContextHasThread(0) {}
+         : mJSContext(cx), mState(0), mErrorReporterSet(PR_FALSE),
+           mEvaluated(PR_FALSE), mContextHasThread(0) {}
 
     /**
      * Does the pre script evaluation and sets the error reporter if given
@@ -3636,7 +3638,7 @@ public:
 private:
     JSContext* mJSContext;
     JSExceptionState* mState;
-    JSErrorReporter mOldErrorReporter;
+    PRBool mErrorReporterSet;
     PRBool mEvaluated;
     jsword mContextHasThread;
 
