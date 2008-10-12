@@ -99,6 +99,7 @@
 #include "nsITextControlFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPercentHeightObserver.h"
+#include "nsStyleStructInlines.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
