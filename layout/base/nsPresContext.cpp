@@ -49,7 +49,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
 #include "nsStyleSet.h"
-#include "nsImageLoader.h"
+#include "nsImageLoadNotifier.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIRenderingContext.h"
@@ -150,7 +150,7 @@ IsVisualCharset(const nsCString& aCharset)
 
 
 static PLDHashOperator
-destroy_loads(const void * aKey, nsRefPtr<nsImageLoader>& aData, void* closure)
+destroy_notifiers(const void * aKey, nsRefPtr<nsImageLoadNotifier>& aData, void* closure)
 {
   aData->Destroy();
   return PL_DHASH_NEXT;
@@ -231,7 +231,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
 
 nsPresContext::~nsPresContext()
 {
-  mImageLoaders.Enumerate(destroy_loads, nsnull);
+  mImageNotifiers.Enumerate(destroy_notifiers, nsnull);
 
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
@@ -299,7 +299,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPresContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPresContext)
 
 static PLDHashOperator
-TraverseImageLoader(const void * aKey, nsRefPtr<nsImageLoader>& aData,
+TraverseImageNotifier(const void * aKey, nsRefPtr<nsImageLoadNotifier>& aData,
                     void* aClosure)
 {
   nsCycleCollectionTraversalCallback *cb =
@@ -317,7 +317,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLookAndFeel); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLangGroup); // an atom
 
-  tmp->mImageLoaders.Enumerate(TraverseImageLoader, &cb);
+  tmp->mImageNotifiers.Enumerate(TraverseImageNotifier, &cb);
 
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLangService); // a service
@@ -339,8 +339,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
   // NS_RELEASE(tmp->mLookAndFeel); // a service
   // NS_RELEASE(tmp->mLangGroup); // an atom
 
-  tmp->mImageLoaders.Enumerate(destroy_loads, nsnull);
-  tmp->mImageLoaders.Clear();
+  tmp->mImageNotifiers.Enumerate(destroy_notifiers, nsnull);
+  tmp->mImageNotifiers.Clear();
 
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLangService); // a service
@@ -813,7 +813,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     mDeviceContext->FlushFontCache();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 
-  if (!mImageLoaders.Init())
+  if (!mImageNotifiers.Init())
     return NS_ERROR_OUT_OF_MEMORY;
   
   // Get the look and feel service here; default colors will be initialized
@@ -1025,9 +1025,9 @@ static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, PRUint16 aMode)
 
  // Enumeration call back for HashTable
 static PLDHashOperator
-set_animation_mode(const void * aKey, nsRefPtr<nsImageLoader>& aData, void* closure)
+set_animation_mode(const void * aKey, nsRefPtr<nsImageLoadNotifier>& aData, void* closure)
 {
-  for (nsImageLoader *loader = aData; loader;
+  for (nsImageLoadNotifier *loader = aData; loader;
        loader = loader->GetNextLoader()) {
     imgIRequest* imgReq = loader->GetRequest();
     SetImgAnimModeOnImgReq(imgReq, (PRUint16)NS_PTR_TO_INT32(closure));
@@ -1069,7 +1069,7 @@ nsPresContext::SetImageAnimationModeInternal(PRUint16 aMode)
 
   // This hash table contains a list of background images
   // so iterate over it and set the mode
-  mImageLoaders.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
+  mImageNotifiers.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
 
   // Now walk the content tree and set the animation mode 
   // on all the images
@@ -1167,26 +1167,26 @@ nsPresContext::SetFullZoom(float aZoom)
 }
 
 void
-nsPresContext::SetImageLoaders(nsIFrame* aTargetFrame,
-                               nsImageLoader* aImageLoaders)
+nsPresContext::SetImageNotifiers(nsIFrame* aTargetFrame,
+                                 nsImageLoadNotifier* aImageNotifiers)
 {
-  nsRefPtr<nsImageLoader> oldLoaders;
-  mImageLoaders.Get(aTargetFrame, getter_AddRefs(oldLoaders));
+  nsRefPtr<nsImageLoadNotifier> oldNotifiers;
+  mImageNotifiers.Get(aTargetFrame, getter_AddRefs(oldNotifiers));
 
-  if (aImageLoaders) {
-    mImageLoaders.Put(aTargetFrame, aImageLoaders);
-  } else if (oldLoaders) {
-    mImageLoaders.Remove(aTargetFrame);
+  if (aImageNotifiers) {
+    mImageNotifiers.Put(aTargetFrame, aImageNotifiers);
+  } else if (oldNotifiers) {
+    mImageNotifiers.Remove(aTargetFrame);
   }
 
-  if (oldLoaders)
-    oldLoaders->Destroy();
+  if (oldNotifiers)
+    oldNotifiers->Destroy();
 }
 
 void
 nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
 {
-  SetImageLoaders(aTargetFrame, nsnull);
+  SetImageNotifiers(aTargetFrame, nsnull);
 }
 
 void
