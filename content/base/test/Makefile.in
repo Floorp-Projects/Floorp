@@ -222,6 +222,11 @@ _TEST_FILES = 	test_bug5141.html \
 		file_CrossSiteXHR_server.sjs \
 		test_CrossSiteXHR_cache.html \
 		file_CrossSiteXHR_cache_server.sjs \
+		test_XHRDocURI.html \
+		file_XHRDocURI.xml \
+		file_XHRDocURI.xml^headers^ \
+		file_XHRDocURI.text \
+		file_XHRDocURI.text^headers^ \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
