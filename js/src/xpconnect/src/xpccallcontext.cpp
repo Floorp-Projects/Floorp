@@ -537,3 +537,19 @@ XPCCallContext::SetIDispatchInfo(XPCNativeInterface* iface,
 }
 
 #endif
+
+NS_IMETHODIMP
+XPCCallContext::GetPreviousCallContext(nsAXPCNativeCallContext **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = GetPrevCallContext();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+XPCCallContext::GetLanguage(PRUint16 *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = GetCallerLanguage();
+  return NS_OK;
+}
