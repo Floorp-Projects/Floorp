@@ -890,11 +890,6 @@ public:
 
 };
 
-// Bit values for StartLoadImage's aImageStatus
-#define NS_LOAD_IMAGE_STATUS_ERROR      0x1
-#define NS_LOAD_IMAGE_STATUS_SIZE       0x2
-#define NS_LOAD_IMAGE_STATUS_BITS       0x4
-
 #ifdef DEBUG
 
 struct nsAutoLayoutPhase {
