@@ -41,6 +41,7 @@
 
 #include "nsIDOMDataContainerEvent.h"
 #include "nsDOMEvent.h"
+#include "nsInterfaceHashtable.h"
 
 class nsDOMDataContainerEvent : public nsDOMEvent,
                                 public nsIDOMDataContainerEvent
