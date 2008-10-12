@@ -1240,6 +1240,7 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
       }
       case JSVAL_STRING:
         v = STRING_TO_JSVAL(*(JSString**)slot);
+        JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING); /* if this fails the pointer was not aligned */
         debug_only_v(printf("string<%p> ", *(JSString**)slot);)
         break;
       case JSVAL_BOXED:
@@ -1249,6 +1250,7 @@ NativeToValue(JSContext* cx, jsval& v, uint8 type, double* slot)
       default:
         JS_ASSERT(type == JSVAL_OBJECT);
         v = OBJECT_TO_JSVAL(*(JSObject**)slot);
+        JS_ASSERT(JSVAL_TAG(v) == JSVAL_OBJECT); /* if this fails the pointer was not aligned */
         debug_only_v(printf("object<%p:%s> ", JSVAL_TO_OBJECT(v),
                             JSVAL_IS_NULL(v)
                             ? "null"
@@ -2028,9 +2030,9 @@ int
 nanojit::StackFilter::getTop(LInsp guard)
 {
     if (sp == frag->lirbuf->sp)
-        return guard->exit()->sp_adj + sizeof(double);
+        return guard->exit()->sp_adj;
     JS_ASSERT(sp == frag->lirbuf->rp);
-    return guard->exit()->rp_adj + sizeof(FrameInfo);
+    return guard->exit()->rp_adj;
 }
 
 #if defined NJ_VERBOSE
@@ -6674,10 +6676,11 @@ TraceRecorder::record_JSOP_CALLPROP()
     jsval& l = stackval(-1);
     JSObject* obj;
     LIns* obj_ins;
+    LIns* this_ins;
     if (!JSVAL_IS_PRIMITIVE(l)) {
         obj = JSVAL_TO_OBJECT(l);
         obj_ins = get(&l);
-        stack(0, obj_ins); // |this| for subsequent call
+        this_ins = obj_ins; // |this| for subsequent call
     } else {
         jsint i;
         debug_only(const char* protoname = NULL;)
@@ -6703,7 +6706,7 @@ TraceRecorder::record_JSOP_CALLPROP()
 
         obj_ins = INS_CONSTPTR(obj);
         debug_only(obj_ins = addName(obj_ins, protoname);)
-        stack(0, get(&l)); // use primitive as |this|
+        this_ins = get(&l); // use primitive as |this|
     }
 
     JSObject* obj2;
@@ -6721,6 +6724,7 @@ TraceRecorder::record_JSOP_CALLPROP()
             ABORT_TRACE("callee does not accept primitive |this|");
     }
 
+    stack(0, this_ins);
     stack(-1, INS_CONSTPTR(PCVAL_TO_OBJECT(pcval)));
     return true;
 }
