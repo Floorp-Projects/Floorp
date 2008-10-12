@@ -54,17 +54,17 @@ class nsIURI;
  *
  * Each frame's image loaders form a linked list.
  */
-class nsImageLoader : public nsStubImageDecoderObserver
+class nsImageLoadNotifier : public nsStubImageDecoderObserver
 {
 private:
-  nsImageLoader(nsIFrame *aFrame, PRBool aReflowOnLoad,
-                nsImageLoader *aNextLoader);
-  virtual ~nsImageLoader();
+  nsImageLoadNotifier(nsIFrame *aFrame, PRBool aReflowOnLoad,
+                      nsImageLoadNotifier *aNextLoader);
+  virtual ~nsImageLoadNotifier();
 
 public:
-  static already_AddRefed<nsImageLoader>
+  static already_AddRefed<nsImageLoadNotifier>
     Create(nsIFrame *aFrame, imgIRequest *aRequest,
-           PRBool aReflowOnLoad, nsImageLoader *aNextLoader);
+           PRBool aReflowOnLoad, nsImageLoadNotifier *aNextLoader);
 
   NS_DECL_ISUPPORTS
 
@@ -85,7 +85,7 @@ public:
   void Destroy();
 
   imgIRequest *GetRequest() { return mRequest; }
-  nsImageLoader *GetNextLoader() { return mNextLoader; }
+  nsImageLoadNotifier *GetNextLoader() { return mNextLoader; }
 
 private:
   nsresult Load(imgIRequest *aImage);
@@ -94,5 +94,5 @@ private:
   nsIFrame *mFrame;
   nsCOMPtr<imgIRequest> mRequest;
   PRBool mReflowOnLoad;
-  nsRefPtr<nsImageLoader> mNextLoader;
+  nsRefPtr<nsImageLoadNotifier> mNextLoader;
 };
