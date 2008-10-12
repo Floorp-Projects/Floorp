@@ -184,6 +184,19 @@ public:
         fragment = _fragment;
     }
 };
+
+struct FrameInfo {
+    JSObject*       callee;     // callee function object
+    jsbytecode*     callpc;     // pc of JSOP_CALL in caller script
+    uint8*          typemap;    // typemap for the stack frame
+    union {
+        struct {
+            uint16  spdist;     // distance from fp->slots to fp->regs->sp at JSOP_CALL
+            uint16  argc;       // actual argument count, may be < fun->nargs
+        } s;
+        uint32      word;       // for spdist/argc LIR store in record_JSOP_CALL
+    };
+};
  
 class TraceRecorder : public GCObject {
     JSContext*              cx;

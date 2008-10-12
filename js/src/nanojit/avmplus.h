@@ -344,6 +344,7 @@ namespace avmplus
         nanojit::GuardRecord* lastTreeExitGuard; /* guard we exited on during a tree call */
         nanojit::GuardRecord* lastTreeCallGuard; /* guard we want to grow from if the tree
                                                     call exit guard mismatched */
+        void* rpAtLastTreeCall; /* value of rp at innermost tree call guard */
     };
 
     class String
