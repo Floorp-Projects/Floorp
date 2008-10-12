@@ -70,14 +70,6 @@ treechildren::-moz-tree-image(partial) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif");
 }
 
-/* XXXzeniko will need an appropriate color here (or none?) */
-treechildren::-moz-tree-row(alternate) {
-  background-color: #EEEEEE;
-}
-treechildren::-moz-tree-row(alternate, selected) {
-  background-color: Highlight;
-}
-
 #buttons {
   width: 100%;
 }
