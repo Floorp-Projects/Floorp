@@ -725,17 +725,25 @@ SessionStoreService.prototype = {
   },
 
   getWindowState: function sss_getWindowState(aWindow) {
-    if (!aWindow.__SSi && aWindow.__SS_dyingCache)
-      return this._toJSONString({ windows: [aWindow.__SS_dyingCache] });
+    if (!aWindow.__SSi && !aWindow.__SS_dyingCache)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     
+    if (!aWindow.__SSi)
+      return this._toJSONString({ windows: [aWindow.__SS_dyingCache] });
     return this._toJSONString(this._getWindowState(aWindow));
   },
 
   setWindowState: function sss_setWindowState(aWindow, aState, aOverwrite) {
+    if (!aWindow.__SSi)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
     this.restoreWindow(aWindow, "(" + aState + ")", aOverwrite);
   },
 
   getTabState: function sss_getTabState(aTab) {
+    if (!aTab.ownerDocument || !aTab.ownerDocument.defaultView.__SSi)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
     var tabState = this._collectTabData(aTab);
     
     var window = aTab.ownerDocument.defaultView;
@@ -746,10 +754,9 @@ SessionStoreService.prototype = {
 
   setTabState: function sss_setTabState(aTab, aState) {
     var tabState = this._safeEval("(" + aState + ")");
-    if (!tabState.entries) {
-      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
-      return;
-    }
+    if (!tabState.entries || !aTab.ownerDocument || !aTab.ownerDocument.defaultView.__SSi)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
     tabState._tab = aTab;
     
     var window = aTab.ownerDocument.defaultView;
@@ -757,6 +764,10 @@ SessionStoreService.prototype = {
   },
 
   duplicateTab: function sss_duplicateTab(aWindow, aTab) {
+    if (!aTab.ownerDocument || !aTab.ownerDocument.defaultView.__SSi ||
+        !aWindow.getBrowser)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
     var tabState = this._collectTabData(aTab, true);
     var sourceWindow = aTab.ownerDocument.defaultView;
     this._updateTextAndScrollDataForTab(sourceWindow, aTab.linkedBrowser, tabState, true);
@@ -772,61 +783,49 @@ SessionStoreService.prototype = {
     if (!aWindow.__SSi && aWindow.__SS_dyingCache)
       return aWindow.__SS_dyingCache._closedTabs.length;
     if (!aWindow.__SSi)
+      // XXXzeniko shouldn't we throw here?
       return 0; // not a browser window, or not otherwise tracked by SS.
     
     return this._windows[aWindow.__SSi]._closedTabs.length;
   },
 
-  closedTabNameAt: function sss_closedTabNameAt(aWindow, aIx) {
-    var tabs;
-    
-    if (aWindow.__SSi && aWindow.__SSi in this._windows)
-      tabs = this._windows[aWindow.__SSi]._closedTabs;
-    else if (aWindow.__SS_dyingCache)
-      tabs = aWindow.__SS_dyingCache._closedTabs;
-    else
-      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
-    
-    return tabs && aIx in tabs ? tabs[aIx].title : null;
-  },
-
   getClosedTabData: function sss_getClosedTabDataAt(aWindow) {
-    if (!aWindow.__SSi && aWindow.__SS_dyingCache)
-      return this._toJSONString(aWindow.__SS_dyingCache._closedTabs);
+    if (!aWindow.__SSi && !aWindow.__SS_dyingCache)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     
+    if (!aWindow.__SSi)
+      return this._toJSONString(aWindow.__SS_dyingCache._closedTabs);
     return this._toJSONString(this._windows[aWindow.__SSi]._closedTabs);
   },
 
   undoCloseTab: function sss_undoCloseTab(aWindow, aIndex) {
-    var tab = null;
+    if (!aWindow.__SSi)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
     var closedTabs = this._windows[aWindow.__SSi]._closedTabs;
 
     // default to the most-recently closed tab
     aIndex = aIndex || 0;
+    if (!(aIndex in closedTabs))
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+    
+    // fetch the data of closed tab, while removing it from the array
+    let closedTab = closedTabs.splice(aIndex, 1).shift();
+    let closedTabState = closedTab.state;
 
-    if (aIndex in closedTabs) {
-      var browser = aWindow.getBrowser();
+    // create a new tab
+    let browser = aWindow.gBrowser;
+    let tab = closedTabState._tab = browser.addTab();
+      
+    // restore the tab's position
+    browser.moveTabTo(tab, closedTab.pos);
 
-      // fetch the data of closed tab, while removing it from the array
-      var closedTab = closedTabs.splice(aIndex, 1).shift();
-      var closedTabState = closedTab.state;
+    // restore tab content
+    this.restoreHistoryPrecursor(aWindow, [closedTabState], 1, 0, 0);
 
-      // create a new tab
-      tab = closedTabState._tab = browser.addTab();
-        
-      // restore the tab's position
-      browser.moveTabTo(tab, closedTab.pos);
-  
-      // restore tab content
-      this.restoreHistoryPrecursor(aWindow, [closedTabState], 1, 0, 0);
-
-      // focus the tab's content area
-      var content = browser.getBrowserForTab(tab).contentWindow;
-      aWindow.setTimeout(function() { content.focus(); }, 0);
-    }
-    else {
-      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
-    }
+    // focus the tab's content area
+    let content = browser.getBrowserForTab(tab).contentWindow;
+    aWindow.setTimeout(function() { content.focus(); }, 0);
     
     return tab;
   },
@@ -836,13 +835,11 @@ SessionStoreService.prototype = {
       var data = this._windows[aWindow.__SSi].extData || {};
       return data[aKey] || "";
     }
-    else if (aWindow.__SS_dyingCache) {
+    if (aWindow.__SS_dyingCache) {
       data = aWindow.__SS_dyingCache.extData || {};
       return data[aKey] || "";
     }
-    else {
-      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
-    }
+    throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
   setWindowValue: function sss_setWindowValue(aWindow, aKey, aStringValue) {
@@ -854,15 +851,16 @@ SessionStoreService.prototype = {
       this.saveStateDelayed(aWindow);
     }
     else {
-      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     }
   },
 
   deleteWindowValue: function sss_deleteWindowValue(aWindow, aKey) {
-    if (this._windows[aWindow.__SSi].extData[aKey])
+    if (aWindow.__SSi && this._windows[aWindow.__SSi].extData &&
+        this._windows[aWindow.__SSi].extData[aKey])
       delete this._windows[aWindow.__SSi].extData[aKey];
     else
-      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
 
   getTabValue: function sss_getTabValue(aTab, aKey) {
@@ -879,12 +877,11 @@ SessionStoreService.prototype = {
   },
 
   deleteTabValue: function sss_deleteTabValue(aTab, aKey) {
-    if (aTab.__SS_extdata[aKey])
+    if (aTab.__SS_extdata && aTab.__SS_extdata[aKey])
       delete aTab.__SS_extdata[aKey];
     else
-      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
   },
-
 
   persistTabAttribute: function sss_persistTabAttribute(aName) {
     if (this.xulAttributes.indexOf(aName) != -1)
