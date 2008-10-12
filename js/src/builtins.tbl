@@ -91,17 +91,3 @@ BUILTIN2(STRING,    TypeOfBoolean, CONTEXT, INT32,                              
 BUILTIN2(DOUBLE,    BooleanToNumber, CONTEXT, INT32,                            1, 1)
 BUILTIN2(STRING,    ObjectToString, CONTEXT, OBJECT,                            0, 0)
 BUILTIN1(OBJECT,    Arguments, CONTEXT,                                         0, 0)
-
-// soft float
-BUILTIN1(DOUBLE,    fneg, DOUBLE,                                               1, 1)
-BUILTIN1(DOUBLE,    i2f, INT32,                                                 1, 1)
-BUILTIN1(DOUBLE,    u2f, UINT32,                                                1, 1)
-BUILTIN2(INT32,     fcmpeq, DOUBLE, DOUBLE,                                     1, 1)
-BUILTIN2(INT32,     fcmplt, DOUBLE, DOUBLE,                                     1, 1)
-BUILTIN2(INT32,     fcmple, DOUBLE, DOUBLE,                                     1, 1)
-BUILTIN2(INT32,     fcmpgt, DOUBLE, DOUBLE,                                     1, 1)
-BUILTIN2(INT32,     fcmpge, DOUBLE, DOUBLE,                                     1, 1)
-BUILTIN2(DOUBLE,    fmul, DOUBLE, DOUBLE,                                       1, 1)
-BUILTIN2(DOUBLE,    fadd, DOUBLE, DOUBLE,                                       1, 1)
-BUILTIN2(DOUBLE,    fdiv, DOUBLE, DOUBLE,                                       1, 1)
-BUILTIN2(DOUBLE,    fsub, DOUBLE, DOUBLE,                                       1, 1)
