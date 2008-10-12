@@ -661,10 +661,6 @@ endif
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-ifdef USE_PREBINDING
-export LD_PREBIND=1
-export LD_SEG_ADDR_TABLE=$(shell cd $(topsrcdir); pwd)/config/prebind-address-table
-endif # USE_PREBINDING
 ifdef NEXT_ROOT
 export NEXT_ROOT
 PBBUILD = NEXT_ROOT= $(PBBUILD_BIN)
