@@ -298,11 +298,8 @@ pref("browser.history_expire_days", 180);
 pref("browser.history_expire_days_min", 90);
 pref("browser.history_expire_sites", 40000);
 
-// handle external links
-// 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
-pref("browser.link.open_external", 3);
-
 // handle links targeting new windows
+// 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
 pref("browser.link.open_newwindow", 3);
 
 // 0: no restrictions - divert everything
