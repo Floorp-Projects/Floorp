@@ -56,6 +56,7 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "jsapi.h"
+#include "jsdbgapi.h"
 #include "jsprf.h"
 #include "nscore.h"
 #include "nsMemory.h"
@@ -83,10 +84,6 @@
 #endif
 
 #include "nsIJSContextStack.h"
-
-#if defined(MOZ_SHARK) || defined(MOZ_CALLGRIND)
-#include "jsdbgapi.h"
-#endif
 
 /***************************************************************************/
 
