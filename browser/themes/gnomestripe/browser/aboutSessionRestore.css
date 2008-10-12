@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
 %endif
 
 #errorPageContainer {
-  background-image: url("chrome://global/skin/icons/question-48.png");
+  background-image: url("moz-icon://stock/gtk-dialog-question?size=dialog");
 }
 
 #tabList {
@@ -57,11 +58,7 @@ treechildren::-moz-tree-image(noicon) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 treechildren::-moz-tree-image(container, noicon) {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-treechildren::-moz-tree-image(container, open, noicon) {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
 }
 treechildren::-moz-tree-image(checked) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
@@ -70,9 +67,8 @@ treechildren::-moz-tree-image(partial) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif");
 }
 
-/* XXXzeniko will need an appropriate color here (or none?) */
 treechildren::-moz-tree-row(alternate) {
-  background-color: #EEEEEE;
+  background-color: -moz-oddtreerow;
 }
 treechildren::-moz-tree-row(alternate, selected) {
   background-color: Highlight;
@@ -80,7 +76,9 @@ treechildren::-moz-tree-row(alternate, selected) {
 
 #buttons {
   width: 100%;
+  -moz-box-direction: reverse;
 }
 #buttons > button {
   margin-top: 2em;
+  -moz-margin-start: 5px;
 }
