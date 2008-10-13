@@ -91,9 +91,7 @@ nsDirectoryIndexStream::nsDirectoryIndexStream()
            ("nsDirectoryIndexStream[%p]: created", this));
 }
 
-static int PR_CALLBACK compare(nsIFile* aElement1,
-                               nsIFile* aElement2,
-                               void* aData)
+static int compare(nsIFile* aElement1, nsIFile* aElement2, void* aData)
 {
     if (!NS_IsNativeUTF8()) {
         // don't check for errors, because we can't report them anyway

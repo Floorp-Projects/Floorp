@@ -62,7 +62,7 @@
 #include "nsDOMCID.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
-
+#include "nsCCUncollectableMarker.h"
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
@@ -115,7 +115,7 @@ nsXULPDGlobalObject* nsXULPrototypeDocument::gSystemGlobal;
 PRUint32 nsXULPrototypeDocument::gRefCnt;
 
 
-void PR_CALLBACK
+void
 nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
 {
     nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(cx, obj);
@@ -131,7 +131,7 @@ nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
 }
 
 
-JSBool PR_CALLBACK
+JSBool
 nsXULPDGlobalObject_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
     JSBool did_resolve = JS_FALSE;
@@ -177,12 +177,6 @@ nsXULPrototypeDocument::~nsXULPrototypeDocument()
     if (mGlobalObject) {
         // cleaup cycles etc.
         mGlobalObject->ClearGlobalObjectOwner();
-    }
-
-    PRUint32 count = mProcessingInstructions.Length();
-    for (PRUint32 i = 0; i < count; i++)
-    {
-        mProcessingInstructions[i]->Release();
     }
 
     if (mRoot)
@@ -307,13 +301,23 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     nsCOMArray<nsINodeInfo> nodeInfos;
 
     rv |= aStream->Read32(&count);
-    nsAutoString namespaceURI, qualifiedName;
+    nsAutoString namespaceURI, prefixStr, localName;
+    PRBool prefixIsNull;
+    nsCOMPtr<nsIAtom> prefix;
     for (i = 0; i < count; ++i) {
         rv |= aStream->ReadString(namespaceURI);
-        rv |= aStream->ReadString(qualifiedName);
+        rv |= aStream->ReadBoolean(&prefixIsNull);
+        if (prefixIsNull) {
+            prefix = nsnull;
+        } else {
+            rv |= aStream->ReadString(prefixStr);
+            prefix = do_GetAtom(prefixStr);
+        }
+        rv |= aStream->ReadString(localName);
 
         nsCOMPtr<nsINodeInfo> nodeInfo;
-        rv |= mNodeInfoManager->GetNodeInfo(qualifiedName, namespaceURI, getter_AddRefs(nodeInfo));
+        rv |= mNodeInfoManager->GetNodeInfo(localName, prefix, namespaceURI,
+                                            getter_AddRefs(nodeInfo));
         if (!nodeInfos.AppendObject(nodeInfo))
             rv |= NS_ERROR_OUT_OF_MEMORY;
     }
@@ -324,7 +328,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
         rv |= aStream->Read32(&type);
 
         if ((nsXULPrototypeNode::Type)type == nsXULPrototypeNode::eType_PI) {
-            nsXULPrototypePI* pi = new nsXULPrototypePI();
+            nsRefPtr<nsXULPrototypePI> pi = new nsXULPrototypePI();
             if (! pi) {
                rv |= NS_ERROR_OUT_OF_MEMORY;
                break;
@@ -379,7 +383,7 @@ GetNodeInfos(nsXULPrototypeElement* aPrototype,
     }
 
     // Search children
-    for (i = 0; i < aPrototype->mNumChildren; ++i) {
+    for (i = 0; i < aPrototype->mChildren.Length(); ++i) {
         nsXULPrototypeNode* child = aPrototype->mChildren[i];
         if (child->mType == nsXULPrototypeNode::eType_Element) {
             rv = GetNodeInfos(static_cast<nsXULPrototypeElement*>(child),
@@ -428,9 +432,17 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
         rv |= nodeInfo->GetNamespaceURI(namespaceURI);
         rv |= aStream->WriteWStringZ(namespaceURI.get());
 
-        nsAutoString qualifiedName;
-        nodeInfo->GetQualifiedName(qualifiedName);
-        rv |= aStream->WriteWStringZ(qualifiedName.get());
+        nsAutoString prefix;
+        nodeInfo->GetPrefix(prefix);
+        PRBool nullPrefix = DOMStringIsNull(prefix);
+        rv |= aStream->WriteBoolean(nullPrefix);
+        if (!nullPrefix) {
+            rv |= aStream->WriteWStringZ(prefix.get());
+        }
+
+        nsAutoString localName;
+        nodeInfo->GetName(localName);
+        rv |= aStream->WriteWStringZ(localName.get());
     }
 
     // Now serialize the document contents
@@ -495,7 +507,7 @@ nsXULPrototypeDocument::AddProcessingInstruction(nsXULPrototypePI* aPI)
     return NS_OK;
 }
 
-const nsTArray<nsXULPrototypePI*>&
+const nsTArray<nsRefPtr<nsXULPrototypePI> >&
 nsXULPrototypeDocument::GetProcessingInstructions() const
 {
     return mProcessingInstructions;

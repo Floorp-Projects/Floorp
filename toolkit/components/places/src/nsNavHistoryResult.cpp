@@ -841,7 +841,7 @@ PRInt32 nsNavHistoryContainerResultNode::SortComparison_StringLess(
 //    need to worry about tiebreaking. When there are no bookmark indices,
 //    everything will be -1 and we don't worry about sorting.
 
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_Bookmark(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_Bookmark(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return a->mBookmarkIndex - b->mBookmarkIndex;
@@ -856,7 +856,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_Bookmark(
 //
 //    The collation object must be allocated before sorting on title!
 
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TitleLess(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_TitleLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   PRUint32 aType;
@@ -878,7 +878,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TitleLess(
   }
   return value;
 }
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TitleGreater(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_TitleGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -SortComparison_TitleLess(a, b, closure);
@@ -889,7 +889,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TitleGreater
 //    Equal times will be very unusual, but it is important that there is some
 //    deterministic ordering of the results so they don't move around.
 
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateLess(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_DateLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   PRInt32 value = ComparePRTime(a->mTime, b->mTime);
@@ -901,7 +901,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateLess(
   }
   return value;
 }
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateGreater(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_DateGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -nsNavHistoryContainerResultNode::SortComparison_DateLess(a, b, closure);
@@ -910,7 +910,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateGreater(
 // nsNavHistoryContainerResultNode::SortComparison_DateAdded*
 //
 
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateAddedLess(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_DateAddedLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   PRInt32 value = ComparePRTime(a->mDateAdded, b->mDateAdded);
@@ -922,7 +922,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateAddedLes
   }
   return value;
 }
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateAddedGreater(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_DateAddedGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -nsNavHistoryContainerResultNode::SortComparison_DateAddedLess(a, b, closure);
@@ -932,7 +932,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateAddedGre
 // nsNavHistoryContainerResultNode::SortComparison_LastModified*
 //
 
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_LastModifiedLess(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_LastModifiedLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   PRInt32 value = ComparePRTime(a->mLastModified, b->mLastModified);
@@ -944,7 +944,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_LastModified
   }
   return value;
 }
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_LastModifiedGreater(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_LastModifiedGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -nsNavHistoryContainerResultNode::SortComparison_LastModifiedLess(a, b, closure);
@@ -955,7 +955,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_LastModified
 //    Certain types of parent nodes are treated specially because URIs are not
 //    valid (like days or hosts).
 
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_URILess(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_URILess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   PRInt32 value;
@@ -975,14 +975,14 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_URILess(
   }
   return value;
 }
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_URIGreater(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_URIGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -SortComparison_URILess(a, b, closure);
 }
 
 // nsNavHistoryContainerResultNode::SortComparison_Keyword*
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_KeywordLess(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_KeywordLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   PRInt32 value = 0;
@@ -1012,13 +1012,13 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_KeywordLess(
   return value;
 }
 
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_KeywordGreater(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_KeywordGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -SortComparison_KeywordLess(a, b, closure);
 }
 
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   nsCAutoString annoName(static_cast<char*>(closure));
@@ -1156,7 +1156,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_AnnotationLe
 
   return value;
 }
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_AnnotationGreater(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_AnnotationGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -SortComparison_AnnotationLess(a, b, closure);
@@ -1166,7 +1166,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_AnnotationGr
 //
 //    Fall back on dates for conflict resolution
 
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_VisitCountLess(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_VisitCountLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   PRInt32 value = CompareIntegers(a->mAccessCount, b->mAccessCount);
@@ -1177,7 +1177,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_VisitCountLe
   }
   return value;
 }
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_VisitCountGreater(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_VisitCountGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -nsNavHistoryContainerResultNode::SortComparison_VisitCountLess(a, b, closure);
@@ -1185,7 +1185,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_VisitCountGr
 
 
 // nsNavHistoryContainerResultNode::SortComparison_Tags*
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TagsLess(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_TagsLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   PRInt32 value = 0;
@@ -1206,7 +1206,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TagsLess(
   return value;
 }
 
-PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TagsGreater(
+PRInt32 nsNavHistoryContainerResultNode::SortComparison_TagsGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -SortComparison_TagsLess(a, b, closure);
@@ -1700,7 +1700,7 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
 //    should be sure to set recursive to false, since child folders will have
 //    their own callbacks registered.
 
-static void PR_CALLBACK setTitleCallback(
+static void setTitleCallback(
     nsNavHistoryResultNode* aNode, void* aClosure)
 {
   const nsACString* newTitle = reinterpret_cast<nsACString*>(aClosure);
@@ -1811,6 +1811,12 @@ nsNavHistoryContainerResultNode::AppendURINode(
   *_retval = nsnull;
   if (!IsDynamicContainer())
     return NS_ERROR_INVALID_ARG; // we must be a dynamic container
+
+  // If we are child of an ExcludeItems parent or root, we should not append
+  // URI Nodes.
+  if ((mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
+      (mParent && mParent->mOptions->ExcludeItems()))
+    return NS_OK;
 
   nsRefPtr<nsNavHistoryResultNode> result =
       new nsNavHistoryResultNode(aURI, aTitle, aAccessCount, aTime, aIconURI);
@@ -2448,14 +2454,6 @@ nsNavHistoryQueryResultNode::ClearChildren(PRBool aUnregister)
 nsresult
 nsNavHistoryQueryResultNode::Refresh()
 {
-  // Some queries can return other queries. In this case calling Refresh
-  // for each child query could cause a major slowdown. We should not refresh
-  // nested queries that are not currently expanded, since we are already 
-  // refreshing the containing one.
-  if (mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
-      !mExpanded)
-    return NS_OK;
-
   // Ignore refreshes when there is a batch, EndUpdateBatch will do a refresh
   // to get all the changes.
   if (mBatchInProgress)
@@ -2467,8 +2465,14 @@ nsNavHistoryQueryResultNode::Refresh()
   if (mIndentLevel > -1 && !mParent)
     return NS_OK;
 
-  if (! mExpanded) {
-    // when we are not expanded, we don't update, just invalidate and unhook
+  // Do not refresh if we are not expanded or if we are child of a query
+  // containing other queries. In this case calling Refresh for each child
+  // query could cause a major slowdown. We should not refresh nested
+  // queries, since we will already refresh the parent one.
+  if (!mExpanded ||
+      (mParent && mParent->IsQuery() &&
+       mParent->GetAsQuery()->IsContainersQuery())) {
+    // Don't update, just invalidate and unhook
     ClearChildren(PR_TRUE);
     return NS_OK; // no updates in tree state
   }
@@ -2804,7 +2808,7 @@ nsNavHistoryQueryResultNode::OnClearHistory()
 // nsNavHistoryQueryResultNode::OnPageChanged
 //
 
-static void PR_CALLBACK setFaviconCallback(
+static void setFaviconCallback(
    nsNavHistoryResultNode* aNode, void* aClosure)
 {
   const nsCString* newFavicon = static_cast<nsCString*>(aClosure);
@@ -3427,7 +3431,8 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     rv = history->BookmarkIdToResultNode(aItemId, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  else if (itemType == nsINavBookmarksService::TYPE_FOLDER) {
+  else if (itemType == nsINavBookmarksService::TYPE_FOLDER ||
+           itemType == nsINavBookmarksService::TYPE_DYNAMIC_CONTAINER) {
     rv = bookmarks->ResultNodeForContainer(aItemId, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -3691,7 +3696,7 @@ nsNavHistorySeparatorResultNode::nsNavHistorySeparatorResultNode()
 // nsNavHistoryResult **********************************************************
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsNavHistoryResult)
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RemoveBookmarkFolderObserversCallback(nsTrimInt64HashKey::KeyType aKey,
                                       nsNavHistoryResult::FolderObserverList*& aData,
                                       void* userArg)
@@ -3706,7 +3711,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsNavHistoryResult)
   tmp->mBookmarkFolderObservers.Enumerate(&RemoveBookmarkFolderObserversCallback, nsnull);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END 
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 TraverseBookmarkFolderObservers(nsTrimInt64HashKey::KeyType aKey,
                                 nsNavHistoryResult::FolderObserverList*& aData,
                                 void* aUserArg)

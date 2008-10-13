@@ -49,7 +49,7 @@
 #include "nsIScriptablePlugin.h"
 #include "nsIPluginInstanceInternal.h"
 
-#include "npupp.h"
+#include "npfunctions.h"
 #include "prlink.h"
 
 class nsNPAPIPluginStreamListener;

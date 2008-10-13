@@ -39,7 +39,7 @@
 #define npplat_h_
 
 #include "npapi.h"
-#include "npupp.h"
+#include "npfunctions.h"
 
 #ifdef XP_WIN
 #include "windows.h"

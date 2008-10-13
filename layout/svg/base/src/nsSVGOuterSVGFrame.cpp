@@ -385,7 +385,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ReflowForeignObject(nsVoidPtrHashKey *aEntry, void* aUserArg)
 {
   static_cast<nsSVGForeignObjectFrame*>

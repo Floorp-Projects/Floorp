@@ -373,6 +373,8 @@ public:
     nsGenericHTMLElement* mContent;
     PRUint32 mNumFlushed;
     PRInt32 mInsertionPoint;
+
+    nsIContent *Add(nsIContent *child);
   };
 
   Node* mStack;
@@ -728,8 +730,10 @@ SinkContext::DidAddContent(nsIContent* aContent)
     }
 #endif
 
-    mSink->NotifyInsert(parent, aContent,
-                        mStack[mStackPos - 1].mInsertionPoint - 1);
+    PRInt32 childIndex = mStack[mStackPos - 1].mInsertionPoint - 1;
+    NS_ASSERTION(parent->GetChildAt(childIndex) == aContent,
+                 "Flushing the wrong child.");
+    mSink->NotifyInsert(parent, aContent, childIndex);
     mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
   } else if (mSink->IsTimeToNotify()) {
     SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
@@ -833,15 +837,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   rv = mSink->AddAttributes(aNode, content);
   MaybeSetForm(content, nodeType, mSink);
 
-  nsGenericHTMLElement* parent = mStack[mStackPos - 2].mContent;
-
-  if (mStack[mStackPos - 2].mInsertionPoint != -1) {
-    parent->InsertChildAt(content,
-                          mStack[mStackPos - 2].mInsertionPoint++,
-                          PR_FALSE);
-  } else {
-    parent->AppendChildTo(content, PR_FALSE);
-  }
+  mStack[mStackPos - 2].Add(content);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -898,6 +894,19 @@ SinkContext::HaveNotifiedForCurrentContent() const
   }
 
   return PR_TRUE;
+}
+
+nsIContent *
+SinkContext::Node::Add(nsIContent *child)
+{
+  if (mInsertionPoint != -1) {
+    NS_ASSERTION(mNumFlushed == mContent->GetChildCount(),
+                 "Inserting multiple children without flushing.");
+    mContent->InsertChildAt(child, mInsertionPoint++, PR_FALSE);
+  } else {
+    mContent->AppendChildTo(child, PR_FALSE);
+  }
+  return child;
 }
 
 nsresult
@@ -1151,19 +1160,8 @@ SinkContext::AddLeaf(nsGenericHTMLElement* aContent)
   if (mStackPos <= 0) {
     return NS_ERROR_FAILURE;
   }
-
-  nsGenericHTMLElement* parent = mStack[mStackPos - 1].mContent;
-
-  // If the parent has an insertion point, insert rather than append.
-  if (mStack[mStackPos - 1].mInsertionPoint != -1) {
-    parent->InsertChildAt(aContent,
-                          mStack[mStackPos - 1].mInsertionPoint++,
-                          PR_FALSE);
-  } else {
-    parent->AppendChildTo(aContent, PR_FALSE);
-  }
-
-  DidAddContent(aContent);
+  
+  DidAddContent(mStack[mStackPos - 1].Add(aContent));
 
 #ifdef DEBUG
   if (SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
@@ -1199,25 +1197,16 @@ SinkContext::AddComment(const nsIParserNode& aNode)
     return NS_ERROR_FAILURE;
   }
 
-  nsGenericHTMLElement* parent;
-  if (!mSink->mBody && !mSink->mFrameset && mSink->mHead) {
-    // XXXbz but this will make DidAddContent use the wrong parent for
-    // the notification!  That seems so bogus it's not even funny.
-    parent = mSink->mHead;
-  } else {
-    parent = mStack[mStackPos - 1].mContent;
+  {
+    Node &parentNode = mStack[mStackPos - 1];
+    nsGenericHTMLElement *parent = parentNode.mContent;
+    if (!mSink->mBody && !mSink->mFrameset && mSink->mHead)
+      // XXXbz but this will make DidAddContent use the wrong parent for
+      // the notification!  That seems so bogus it's not even funny.
+      parentNode.mContent = mSink->mHead;
+    DidAddContent(parentNode.Add(comment));
+    parentNode.mContent = parent;
   }
-
-  // If the parent has an insertion point, insert rather than append.
-  if (mStack[mStackPos - 1].mInsertionPoint != -1) {
-    parent->InsertChildAt(comment,
-                          mStack[mStackPos - 1].mInsertionPoint++,
-                          PR_FALSE);
-  } else {
-    parent->AppendChildTo(comment, PR_FALSE);
-  }
-
-  DidAddContent(comment);
 
 #ifdef DEBUG
   if (SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
@@ -1383,10 +1372,11 @@ SinkContext::FlushTags()
 #endif
         if ((mStack[stackPos].mInsertionPoint != -1) &&
             (mStackPos > (stackPos + 1))) {
+          PRInt32 childIndex = mStack[stackPos].mInsertionPoint - 1;
           nsIContent* child = mStack[stackPos + 1].mContent;
-          mSink->NotifyInsert(content,
-                              child,
-                              mStack[stackPos].mInsertionPoint - 1);
+          NS_ASSERTION(content->GetChildAt(childIndex) == child,
+                       "Flushing the wrong child.");
+          mSink->NotifyInsert(content, child, childIndex);
         } else {
           mSink->NotifyAppend(content, mStack[stackPos].mNumFlushed);
         }
@@ -1487,18 +1477,9 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         return NS_ERROR_FAILURE;
       }
 
-      nsGenericHTMLElement* parent = mStack[mStackPos - 1].mContent;
-      if (mStack[mStackPos - 1].mInsertionPoint != -1) {
-        parent->InsertChildAt(mLastTextNode,
-                              mStack[mStackPos - 1].mInsertionPoint++,
-                              PR_FALSE);
-      } else {
-        parent->AppendChildTo(mLastTextNode, PR_FALSE);
-      }
+      DidAddContent(mStack[mStackPos - 1].Add(mLastTextNode));
 
       didFlush = PR_TRUE;
-
-      DidAddContent(mLastTextNode);
     }
   }
 
@@ -1936,12 +1917,24 @@ HTMLContentSink::EndContext(PRInt32 aPosition)
   PRInt32 n = mContextStack.Count() - 1;
   SinkContext* sc = (SinkContext*) mContextStack.ElementAt(n);
 
-  NS_ASSERTION(sc->mStack[aPosition].mType == mCurrentContext->mStack[0].mType,
+  const SinkContext::Node &bottom = mCurrentContext->mStack[0];
+  
+  NS_ASSERTION(sc->mStack[aPosition].mType == bottom.mType,
                "ending a wrong context");
 
   mCurrentContext->FlushTextAndRelease();
+  
+  NS_ASSERTION(bottom.mContent->GetChildCount() == bottom.mNumFlushed,
+               "Node at base of context stack not fully flushed.");
 
-  sc->mStack[aPosition].mNumFlushed = mCurrentContext->mStack[0].mNumFlushed;
+  // Flushing tags before the assertion on the previous line would
+  // undoubtedly prevent the assertion from failing, but it shouldn't
+  // be failing anyway, FlushTags or no.  Flushing here is nevertheless
+  // a worthwhile precaution, since we lose some information (e.g.,
+  // mInsertionPoints) when we end the current context.
+  mCurrentContext->FlushTags();
+
+  sc->mStack[aPosition].mNumFlushed = bottom.mNumFlushed;
 
   for (PRInt32 i = 0; i<mCurrentContext->mStackPos; i++) {
     NS_IF_RELEASE(mCurrentContext->mStack[i].mContent);

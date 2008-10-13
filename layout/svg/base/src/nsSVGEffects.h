@@ -150,10 +150,28 @@ private:
   nsRect mFilterRect;
 };
 
+class nsSVGMarkerProperty : public nsSVGRenderingObserver {
+public:
+  nsSVGMarkerProperty(nsIURI *aURI, nsIFrame *aFrame)
+    : nsSVGRenderingObserver(aURI, aFrame) {}
+
+protected:
+  virtual void DoUpdate();
+};
+
+class nsSVGTextPathProperty : public nsSVGRenderingObserver {
+public:
+  nsSVGTextPathProperty(nsIURI *aURI, nsIFrame *aFrame)
+    : nsSVGRenderingObserver(aURI, aFrame) {}
+
+protected:
+  virtual void DoUpdate();
+};
+ 
 class nsSVGPaintingProperty : public nsSVGRenderingObserver {
 public:
-  nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aClippedFrame)
-    : nsSVGRenderingObserver(aURI, aClippedFrame) {}
+  nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame)
+    : nsSVGRenderingObserver(aURI, aFrame) {}
 
 protected:
   virtual void DoUpdate();
@@ -264,6 +282,16 @@ public:
    */
   static void InvalidateDirectRenderingObservers(nsIFrame *aFrame);
 
+  /**
+   * Get an nsSVGMarkerProperty for the frame, creating a fresh one if necessary
+   */
+  static nsSVGMarkerProperty *
+  GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, nsIAtom *aProp);
+  /**
+   * Get an nsSVGTextPathProperty for the frame, creating a fresh one if necessary
+   */
+  static nsSVGTextPathProperty *
+  GetTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, nsIAtom *aProp);
   /**
    * Get an nsSVGPaintingProperty for the frame, creating a fresh one if necessary
    */

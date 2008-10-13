@@ -35,12 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NPAPI_H_
 #include "npapi.h"
-#endif
-#ifndef _NPUPP_H_
-#include "npupp.h"
-#endif
+#include "npfunctions.h"
 
 #include "nsDefaultPlugin.h"
 

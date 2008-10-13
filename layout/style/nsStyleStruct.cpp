@@ -113,7 +113,7 @@ static nsChangeHint CalcShadowDifference(nsCSSShadowArray* lhs,
 //
 nsStyleFont::nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext)
   : mFont(aFont),
-    mFlags(NS_STYLE_FONT_DEFAULT)
+    mGenericID(kGenericFont_NONE)
 {
   mSize = mFont.size = nsStyleFont::ZoomText(aPresContext, mFont.size);
 #ifdef MOZ_MATHML
@@ -128,7 +128,7 @@ nsStyleFont::nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext)
 nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
   : mFont(aSrc.mFont)
   , mSize(aSrc.mSize)
-  , mFlags(aSrc.mFlags)
+  , mGenericID(aSrc.mGenericID)
 #ifdef MOZ_MATHML
   , mScriptLevel(aSrc.mScriptLevel)
   , mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize)
@@ -140,7 +140,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 
 nsStyleFont::nsStyleFont(nsPresContext* aPresContext)
   : mFont(*(aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID))),
-    mFlags(NS_STYLE_FONT_DEFAULT)
+    mGenericID(kGenericFont_NONE)
 {
   mSize = mFont.size = nsStyleFont::ZoomText(aPresContext, mFont.size);
 #ifdef MOZ_MATHML

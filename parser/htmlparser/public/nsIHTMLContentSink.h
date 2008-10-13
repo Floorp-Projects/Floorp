@@ -87,10 +87,8 @@
   { 0xa8, 0x16, 0xe6, 0xac, 0x73, 0xa7, 0x04, 0x3c } }
 
 
-#if defined(XP_MAC) || defined(WINCE) 
+#if defined(XP_MAC) 
 #define MAX_REFLOW_DEPTH  75    //setting to 75 to prevent layout from crashing on mac. Bug 55095.
-                                //We will also change this for WinCE as it usually has a strict
-                                //memory upper limit (no vm, ~32mb)
 #else
 #define MAX_REFLOW_DEPTH  200   //windows and linux (etc) can do much deeper structures.
 #endif

@@ -127,7 +127,7 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 
 #include "SpecialSystemDirectory.h"
 
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
 #include "nsWindowsRegKey.h"
 #endif
 
@@ -264,7 +264,7 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
 }
 
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 RegisterGenericFactory(nsIComponentRegistrar* registrar,
                        const nsModuleComponentInfo *info)
 {
@@ -438,7 +438,7 @@ static const nsModuleComponentInfo components[] = {
 
     COMPONENT(UUID_GENERATOR, nsUUIDGeneratorConstructor),
 
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
     COMPONENT(WINDOWSREGKEY, nsWindowsRegKeyConstructor),
 #endif
 

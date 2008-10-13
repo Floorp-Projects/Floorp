@@ -94,10 +94,20 @@ toolbarbutton[open="true"] {
 toolbarbutton[disabled="true"],
 toolbarbutton[disabled="true"]:hover,
 toolbarbutton[disabled="true"]:hover:active,
-toolbarbutton[disabled="true"][open="true"] {
+toolbarbutton[disabled="true"][open="true"],
+toolbarbutton[disabled="true"][checked="true"] {
   border-color: transparent;
   padding: 3px;
-  color: GrayText !important;
+  color: GrayText;
+}
+
+toolbarbutton[disabled="true"]:-moz-system-metric(windows-classic),
+toolbarbutton[disabled="true"]:-moz-system-metric(windows-classic):hover,
+toolbarbutton[disabled="true"]:-moz-system-metric(windows-classic):hover:active,
+toolbarbutton[disabled="true"][open="true"]:-moz-system-metric(windows-classic),
+toolbarbutton[disabled="true"][checked="true"]:-moz-system-metric(windows-classic) {
+  color: ThreeDShadow;
+  text-shadow: 1px 1px ThreeDHighlight;
 }
 
 /* ..... checked state ..... */

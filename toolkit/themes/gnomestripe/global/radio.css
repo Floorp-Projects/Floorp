@@ -95,7 +95,7 @@ radio[disabled="true"] > .radio-spacer-box > .radio-check-box1 {
 }
 
 radio[disabled="true"] {
-  color: GrayText !important;
+  color: GrayText;
 }
 
 /* ::::: checkmark image ::::: */
@@ -123,7 +123,7 @@ radio[disabled="true"] {
   list-style-image: none;
 }
 
-radio:hover {
+radio:not([disabled="true"]):hover {
   color: -moz-buttonhovertext;
 }
 

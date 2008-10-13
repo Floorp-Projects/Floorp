@@ -258,7 +258,7 @@ NS_IMETHODIMP
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
 
-PR_STATIC_CALLBACK(nsresult) Initialize(nsIModule* aSelf);
+static nsresult Initialize(nsIModule* aSelf);
 static void Shutdown();
 
 #ifdef MOZ_XTF
@@ -326,7 +326,7 @@ static PRBool gInitialized = PR_FALSE;
 // Perform our one-time intialization for this module
 
 // static
-nsresult PR_CALLBACK
+nsresult
 Initialize(nsIModule* aSelf)
 {
   NS_PRECONDITION(!gInitialized, "module already initialized");

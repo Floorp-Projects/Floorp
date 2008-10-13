@@ -48,7 +48,7 @@
 
 //mmptemp
 
-static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
+static nsEventStatus HandleEvent(nsGUIEvent *aEvent);
 
 
 //#define SHOW_VIEW_BORDERS
@@ -155,7 +155,7 @@ static ViewWrapper* GetWrapperFor(nsIWidget* aWidget)
 //
 // Main events handler
 //
-nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
+nsEventStatus HandleEvent(nsGUIEvent *aEvent)
 { 
 //printf(" %d %d %d (%d,%d) \n", aEvent->widget, aEvent->widgetSupports, 
 //       aEvent->message, aEvent->point.x, aEvent->point.y);

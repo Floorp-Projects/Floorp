@@ -432,7 +432,7 @@ function fillRowWithFlex(aRow)
 
 /**
  * Makes sure that an item that has been cloned from a template
- * is stripped of all properties that may adversely affect it's
+ * is stripped of all properties that may adversely affect its
  * appearance in the palette.
  */
 function cleanUpItemForPalette(aItem, aWrapper)
@@ -466,7 +466,7 @@ function cleanUpItemForPalette(aItem, aWrapper)
 
 /**
  * Makes sure that an item that has been cloned from a template
- * is stripped of all properties that may adversely affect it's
+ * is stripped of all properties that may adversely affect its
  * appearance in the toolbar.  Store critical properties on the 
  * wrapper so they can be put back on the item when we're done.
  */
@@ -860,7 +860,7 @@ var toolbarDNDObserver =
       if (wrapper.parentNode.lastPermanentChild && wrapper.parentNode.lastPermanentChild.id == wrapper.firstChild.id)
         return;
 
-      // Remove the item from it's place in the toolbar.
+      // Remove the item from its place in the toolbar.
       wrapper.parentNode.removeChild(wrapper);
 
       // Determine which toolbar we are dropping on.

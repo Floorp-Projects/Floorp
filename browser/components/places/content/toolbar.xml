@@ -79,6 +79,7 @@
                            collapsed="true"
                            onpopupshowing="chevronPopupShowing(event);">
           <xul:menupopup anonid="chevronPopup"
+                         xbl:inherits="tooltip"
 #ifndef XP_MACOSX
                          context="placesContext"
 #endif
