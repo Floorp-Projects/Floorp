@@ -931,13 +931,15 @@ class JSAutoTempValueRooter
         JS_POP_TEMP_ROOT(mContext, &mTvr);
     }
 
+  protected:
+    JSContext *mContext;
+
   private:
 #ifndef AIX
     static void *operator new(size_t);
     static void operator delete(void *, size_t);
 #endif
 
-    JSContext *mContext;
     JSTempValueRooter mTvr;
 };
 

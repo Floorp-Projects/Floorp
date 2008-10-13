@@ -1397,6 +1397,25 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
 
 /********************************/
 
+class AutoExceptionRestorer : public JSAutoTempValueRooter
+{
+public:
+    AutoExceptionRestorer(JSContext *cx, jsval v)
+        : JSAutoTempValueRooter(cx, v),
+          mVal(v)
+    {
+        JS_ClearPendingException(mContext);
+    }
+
+    ~AutoExceptionRestorer()
+    {
+        JS_SetPendingException(mContext, mVal);
+    }
+
+private:
+    jsval mVal;
+};
+
 // static
 nsresult
 XPCConvert::JSValToXPCException(XPCCallContext& ccx,
@@ -1406,6 +1425,7 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
                                 nsIException** exceptn)
 {
     JSContext* cx = ccx.GetJSContext();
+    AutoExceptionRestorer aer(cx, s);
 
     if(!JSVAL_IS_PRIMITIVE(s))
     {
