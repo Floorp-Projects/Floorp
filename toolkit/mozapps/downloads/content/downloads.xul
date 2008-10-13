@@ -183,7 +183,7 @@
                ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
   </richlistbox>
 
-  <windowdragbox id="search" align="center">
+  <hbox id="search" align="center">
     <button id="clearListButton" command="cmd_clearList"
             label="&cmd.clearList.label;"
             accesskey="&cmd.clearList.accesskey;"
@@ -191,6 +191,6 @@
     <spacer flex="1"/>
     <textbox type="search" id="searchbox"
              oncommand="buildDownloadList();" emptytext="&searchBox.label;"/>
-  </windowdragbox>
+  </hbox>
 
 </window>
