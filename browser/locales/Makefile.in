@@ -73,8 +73,8 @@ DEFINES += \
 	-DMOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
 	-DLOCALE_SRCDIR=$(call core_abspath,$(LOCALE_SRCDIR)) \
-	-DPKG_BASENAME=$(PKG_BASENAME) \
-	-DPKG_INST_BASENAME=$(PKG_INST_BASENAME) \
+	-DPKG_BASENAME="$(PKG_BASENAME)" \
+	-DPKG_INST_BASENAME="$(PKG_INST_BASENAME)" \
 	$(NULL)
 
 ifndef MOZ_BRANDING_DIRECTORY
@@ -193,7 +193,7 @@ PACKAGER_NO_LIBS = 1
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
 
-repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
+repackage-win32-installer: WIN32_INSTALLER_OUT="$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 repackage-win32-installer: $(WIN32_INSTALLER_IN) $(SUBMAKEFILES)
 ifneq (en-US,$(AB_CD))
 	@echo "Verifying $(AB_CD) installer variable usage"
@@ -228,7 +228,7 @@ endif
 	    app.7z > $(WIN32_INSTALLER_OUT)
 	chmod 0755 $(WIN32_INSTALLER_OUT)
 
-repackage-win32-installer-%: WIN32_INSTALLER_IN=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
+repackage-win32-installer-%: "WIN32_INSTALLER_IN=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 repackage-win32-installer-%: $(WIN32_INSTALLER_IN)
 	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN=$(WIN32_INSTALLER_IN)
 
@@ -339,7 +339,7 @@ endif
 	@echo "Downloaded $(EN_US_BINARY_URL)/$(PACKAGE) to $(_ABS_DIST)/$(PACKAGE)"
 ifeq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -D $(_ABS_DIST)/$(PKG_INST_PATH)
-	@$(WGET) -nv --output-document $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe
+	@$(WGET) -nv --output-document "$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe"
 	@echo "Downloaded $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe to $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME)"
 endif
 

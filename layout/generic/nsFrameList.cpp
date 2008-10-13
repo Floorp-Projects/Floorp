@@ -327,8 +327,7 @@ nsFrameList::GetLength() const
   return count;
 }
 
-static int PR_CALLBACK CompareByContentOrder(const void* aF1, const void* aF2,
-                                             void* aDummy)
+static int CompareByContentOrder(const void* aF1, const void* aF2, void* aDummy)
 {
   const nsIFrame* f1 = static_cast<const nsIFrame*>(aF1);
   const nsIFrame* f2 = static_cast<const nsIFrame*>(aF2);

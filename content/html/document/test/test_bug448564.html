@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448564
+-->
+<head>
+  <title>Test for Bug 448564</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  
+  <script type="text/javascript;version=1.8">
+    var toCheck = [];
+
+    function flush() {
+      if (!check)
+        return;
+
+      for each (let qs in toCheck)
+        check(qs);
+
+      toCheck.length = 0;
+    }
+
+    function checkQueryString(queryString) {
+      toCheck.push(queryString);
+      flush();
+    }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448564">Mozilla Bug 448564</a>
+<p id="display">
+  <iframe src="bug448564-iframe-1.html"></iframe>
+  <iframe src="bug448564-iframe-2.html"></iframe>
+  <iframe src="bug448564-iframe-3.html"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 448564 **/
+
+var checksToDo = document.getElementsByTagName("iframe").length;
+
+function check(queryString) {
+  is(queryString.split("&").sort().join("&"),
+     "a=aval&b=bval&c=cval&d=dval",
+     "Not all form fields were properly submitted.");
+  if (--checksToDo == 0)
+    SimpleTest.finish();
+}
+
+flush();
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

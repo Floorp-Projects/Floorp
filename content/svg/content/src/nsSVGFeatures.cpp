@@ -50,46 +50,9 @@
 #include "nsIContent.h"
 #include "nsContentUtils.h"
 #include "nsWhitespaceTokenizer.h"
+#include "nsCommaSeparatedTokenizer.h"
 #include "nsStyleUtil.h"
 #include "nsSVGUtils.h"
-
-class nsSVGCommaTokenizer
-{
-public:
-  nsSVGCommaTokenizer(const nsSubstring& aSource) {
-    aSource.BeginReading(mIter);
-    aSource.EndReading(mEnd);
-
-    while (mIter != mEnd && *mIter == ',') {
-      ++mIter;
-    }
-  }
-
-  /**
-   * Checks if any more tokens are available.
-   */
-  PRBool hasMoreTokens() {
-    return mIter != mEnd;
-  }
-
-  /**
-   * Returns the next token.
-   */
-  const nsDependentSubstring nextToken() {
-    nsSubstring::const_char_iterator begin = mIter;
-    while (mIter != mEnd && *mIter != ',') {
-      ++mIter;
-    }
-    nsSubstring::const_char_iterator end = mIter;
-    while (mIter != mEnd && *mIter == ',') {
-      ++mIter;
-    }
-    return Substring(begin, end);
-  }
-
-private:
-  nsSubstring::const_char_iterator mIter, mEnd;
-};
 
 /**
  * Check whether we support the given feature string.
@@ -144,11 +107,11 @@ MatchesLanguagePreferences(const nsSubstring& aAttribute, const nsSubstring& aLa
 {
   const nsDefaultStringComparator defaultComparator;
 
-  nsSVGCommaTokenizer attributeTokenizer(aAttribute);
+  nsCommaSeparatedTokenizer attributeTokenizer(aAttribute);
 
   while (attributeTokenizer.hasMoreTokens()) {
     const nsSubstring &attributeToken = attributeTokenizer.nextToken();
-    nsSVGCommaTokenizer languageTokenizer(aLanguagePreferences);
+    nsCommaSeparatedTokenizer languageTokenizer(aLanguagePreferences);
     while (languageTokenizer.hasMoreTokens()) {
       if (nsStyleUtil::DashMatchCompare(attributeToken,
                                         languageTokenizer.nextToken(),

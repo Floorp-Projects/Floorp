@@ -660,7 +660,7 @@ XPC_NW_Finalize(JSContext *cx, JSObject *obj)
 {
   // We must not use obj's private data here since it's likely that it
   // has already been finalized.
-  XPCJSRuntime *rt = nsXPConnect::GetRuntime();
+  XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
 
   {
     // scoped lock

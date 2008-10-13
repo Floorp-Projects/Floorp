@@ -138,7 +138,7 @@ nsDocAccessible::~nsDocAccessible()
 ////////////////////////////////////////////////////////////////////////////////
 // nsDocAccessible. nsISupports
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ElementTraverser(const void *aKey, nsIAccessNode *aAccessNode,
                  void *aUserArg)
 {
@@ -176,7 +176,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsHyperTextAccessible)
 NS_IMPL_ADDREF_INHERITED(nsDocAccessible, nsHyperTextAccessible)
 NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsHyperTextAccessible)
 
-NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName)
+NS_IMETHODIMP
+nsDocAccessible::GetName(nsAString& aName)
 {
   nsresult rv = NS_OK;
   aName.Truncate();
@@ -184,7 +185,8 @@ NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName)
     rv = mParent->GetName(aName); // Allow owning iframe to override the name
   }
   if (aName.IsEmpty()) {
-    rv = nsAccessible::GetName(aName); // Allow name via aria-labelledby or title attribute
+    // Allow name via aria-labelledby or title attribute
+    rv = nsAccessible::GetName(aName);
   }
   if (aName.IsEmpty()) {
     rv = GetTitle(aName);   // Try title element
@@ -495,12 +497,21 @@ NS_IMETHODIMP nsDocAccessible::GetDocument(nsIDOMDocument **aDOMDoc)
 NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 {
   NS_ENSURE_ARG_POINTER(aEditor);
-
   *aEditor = nsnull;
-  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
+  if (!mDocument)
+    return NS_ERROR_FAILURE;
+
+  // Check if document is editable (designMode="on" case). Otherwise check if
+  // the html:body (for HTML document case) or document element is editable.
   if (!mDocument->HasFlag(NODE_IS_EDITABLE)) {
-    return NS_OK; // Document not editable
+    nsCOMPtr<nsIDOMNode> DOMDocument(do_QueryInterface(mDocument));
+    nsCOMPtr<nsIDOMElement> DOMElement =
+      nsAccUtils::GetDOMElementFor(DOMDocument);
+    nsCOMPtr<nsIContent> content(do_QueryInterface(DOMElement));
+
+    if (!content->HasFlag(NODE_IS_EDITABLE))
+      return NS_OK;
   }
 
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();

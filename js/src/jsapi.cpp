@@ -5537,7 +5537,7 @@ JS_EncodeString(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, 
+JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
              JSONWriteCallback callback, void *data)
 {
     CHECK_REQUEST(cx);

@@ -446,7 +446,7 @@ void ProcessWindowsMessages()
 // we startup and disabled after we startup if memory is a concern.
 //***********************************************************
 
-PR_STATIC_CALLBACK(void *)
+static void *
 zlibAlloc(void *opaque, uInt items, uInt size)
 {
   nsRecyclingAllocator *zallocator = (nsRecyclingAllocator *)opaque;
@@ -461,7 +461,7 @@ zlibAlloc(void *opaque, uInt items, uInt size)
     return calloc(items, size);
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 zlibFree(void *opaque, void *ptr)
 {
   nsRecyclingAllocator *zallocator = (nsRecyclingAllocator *)opaque;

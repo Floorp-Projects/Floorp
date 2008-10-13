@@ -70,7 +70,7 @@ DeviceContextImpl::DeviceContextImpl()
 #endif
 }
 
-static PRBool PR_CALLBACK DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
+static PRBool DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
 {
   delete ((nsString*)aValue);
   return PR_TRUE;

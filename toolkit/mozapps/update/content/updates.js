@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+
 const nsIUpdateItem           = Components.interfaces.nsIUpdateItem;
 const nsIIncrementalDownload  = Components.interfaces.nsIIncrementalDownload;
 
@@ -908,229 +910,6 @@ var gLicensePage = {
 };
 
 /**
- * Formats status messages for a download operation based on the progress
- * of the download.
- * @constructor
- */
-function DownloadStatusFormatter() {
-  this._startTime = Math.floor((new Date()).getTime() / 1000);
-  this._elapsed = 0;
-
-  var us = gUpdates.strings;
-  this._statusFormat = us.getString("statusFormat");
-
-  this._progressFormat = us.getString("progressFormat");
-  this._progressFormatKBMB = us.getString("progressFormatKBMB");
-  this._progressFormatKBKB = us.getString("progressFormatKBKB");
-  this._progressFormatMBMB = us.getString("progressFormatMBMB");
-  this._progressFormatUnknownMB = us.getString("progressFormatUnknownMB");
-  this._progressFormatUnknownKB = us.getString("progressFormatUnknownKB");
-
-  this._rateFormat = us.getString("rateFormat");
-  this._rateFormatKBSec = us.getString("rateFormatKBSec");
-  this._rateFormatMBSec = us.getString("rateFormatMBSec");
-
-  this._timeFormat = us.getString("timeFormat");
-  this._longTimeFormat = us.getString("longTimeFormat");
-  this._shortTimeFormat = us.getString("shortTimeFormat");
-
-  this._remain = us.getString("remain");
-  this._unknownFilesize = us.getString("unknownFilesize");
-}
-DownloadStatusFormatter.prototype = {
-  /**
-   * Time when the download started (in seconds since epoch)
-   */
-  _startTime: 0,
-
-  /**
-   * Time elapsed since the start of the download operation (in seconds)
-   */
-  _elapsed: -1,
-
-  /**
-   * Transfer rate of the download
-   */
-  _rate: 0,
-
-  /**
-   * Transfer rate of the download, formatted as text
-   */
-  _rateFormatted: "",
-
-  /**
-   * Transfer rate, formatted into text container
-   */
-  _rateFormattedContainer: "",
-
-  /**
-   * Number of Kilobytes downloaded so far in the form:
-   *  376KB of 9.3MB
-   */
-  progress: "",
-
-  /**
-   * Format a human-readable status message based on the current download
-   * progress.
-   * @param   currSize
-   *          The current number of bytes transferred
-   * @param   finalSize
-   *          The total number of bytes to be transferred
-   * @returns A human readable status message, e.g.
-   *          "3.4 of 4.7MB; 01:15 remain"
-   */
-  formatStatus: function(currSize, finalSize) {
-    var now = Math.floor((new Date()).getTime() / 1000);
-
-    // 1) Determine the Download Progress in Kilobytes
-    var total = parseInt(finalSize/1024 + 0.5);
-    this.progress = this._formatKBytes(parseInt(currSize/1024 + 0.5), total);
-
-    var progress = this._replaceInsert(this._progressFormat, 1, this.progress);
-    var rateFormatted = "";
-
-    // 2) Determine the Transfer Rate
-    var oldElapsed = this._elapsed;
-    this._elapsed = now - this._startTime;
-    if (oldElapsed != this._elapsed) {
-      this._rate = this._elapsed ? Math.floor((currSize / 1024) / this._elapsed) : 0;
-      var isKB = true;
-      if (parseInt(this._rate / 1024) > 0) {
-        this._rate = (this._rate / 1024).toFixed(1);
-        isKB = false;
-      }
-      if (this._rate > 100)
-        this._rate = Math.round(this._rate);
-
-      if (this._rate) {
-        var format = isKB ? this._rateFormatKBSec : this._rateFormatMBSec;
-        this._rateFormatted = this._replaceInsert(format, 1, this._rate);
-        this._rateFormattedContainer = this._replaceInsert(" " + this._rateFormat, 1, this._rateFormatted);
-      }
-    }
-    progress = this._replaceInsert(progress, 2, this._rateFormattedContainer);
-
-
-    // 3) Determine the Time Remaining
-    var remainingTime = "";
-    if (this._rate && (finalSize > 0)) {
-      remainingTime = Math.floor(((finalSize - currSize) / 1024) / this._rate);
-      remainingTime = this._formatSeconds(remainingTime);
-      remainingTime = this._replaceInsert(this._timeFormat, 1, remainingTime)
-      remainingTime = this._replaceInsert(remainingTime, 2, this._remain);
-    }
-
-    //
-    // [statusFormat:
-    //  [progressFormat:
-    //   [[progressFormatKBKB|
-    //     progressFormatKBMB|
-    //     progressFormatMBMB|
-    //     progressFormatUnknownKB|
-    //     progressFormatUnknownMB
-    //    ][rateFormat]]
-    //  ][timeFormat]
-    // ]
-    var status = this._statusFormat;
-    status = this._replaceInsert(status, 1, progress);
-    status = this._replaceInsert(status, 2, remainingTime);
-    return status;
-  },
-
-  /**
-   * Inserts a string into another string at the specified index, e.g. for
-   * the format string var foo ="#1 #2 #3", |_replaceInsert(foo, 2, "test")|
-   * returns "#1 test #3";
-   * @param   format
-   *          The format string
-   * @param   index
-   *          The Index to insert into
-   * @param   value
-   *          The value to insert
-   * @returns The string with the value inserted.
-   */
-  _replaceInsert: function(format, index, value) {
-    return format.replace(new RegExp("#" + index), value);
-  },
-
-  /**
-   * Formats progress in the form of kilobytes transfered vs. total to
-   * transfer.
-   * @param   currentKB
-   *          The current amount of data transfered, in kilobytes.
-   * @param   totalKB
-   *          The total amount of data that must be transfered, in kilobytes.
-   * @returns A string representation of the progress, formatted according to:
-   *
-   *            KB           totalKB           returns
-   *            x, < 1MB     y < 1MB           x of y KB
-   *            x, < 1MB     y >= 1MB          x KB of y MB
-   *            x, >= 1MB    y >= 1MB          x of y MB
-   */
-  _formatKBytes: function(currentKB, totalKB) {
-    var progressHasMB = parseInt(currentKB / 1024) > 0;
-    var totalHasMB = parseInt(totalKB / 1024) > 0;
-
-    var format = "";
-    if (!progressHasMB && !totalHasMB) {
-      if (!totalKB) {
-        format = this._progressFormatUnknownKB;
-        format = this._replaceInsert(format, 1, currentKB);
-      } else {
-        format = this._progressFormatKBKB;
-        format = this._replaceInsert(format, 1, currentKB);
-        format = this._replaceInsert(format, 2, totalKB);
-      }
-    }
-    else if (progressHasMB && totalHasMB) {
-      format = this._progressFormatMBMB;
-      format = this._replaceInsert(format, 1, (currentKB / 1024).toFixed(1));
-      format = this._replaceInsert(format, 2, (totalKB / 1024).toFixed(1));
-    }
-    else if (totalHasMB && !progressHasMB) {
-      format = this._progressFormatKBMB;
-      format = this._replaceInsert(format, 1, currentKB);
-      format = this._replaceInsert(format, 2, (totalKB / 1024).toFixed(1));
-    }
-    else if (progressHasMB && !totalHasMB) {
-      format = this._progressFormatUnknownMB;
-      format = this._replaceInsert(format, 1, (currentKB / 1024).toFixed(1));
-    }
-    return format;
-  },
-
-  /**
-   * Formats a time in seconds into something human readable.
-   * @param   seconds
-   *          The time to format
-   * @returns A human readable string representing the date.
-   */
-  _formatSeconds: function(seconds) {
-    // Determine number of hours/minutes/seconds
-    var hours = (seconds - (seconds % 3600)) / 3600;
-    seconds -= hours * 3600;
-    var minutes = (seconds - (seconds % 60)) / 60;
-    seconds -= minutes * 60;
-
-    // Pad single digit values
-    if (hours < 10)
-      hours = "0" + hours;
-    if (minutes < 10)
-      minutes = "0" + minutes;
-    if (seconds < 10)
-      seconds = "0" + seconds;
-
-    // Insert hours, minutes, and seconds into result string.
-    var result = parseInt(hours) ? this._longTimeFormat : this._shortTimeFormat;
-    result = this._replaceInsert(result, 1, hours);
-    result = this._replaceInsert(result, 2, minutes);
-    result = this._replaceInsert(result, 3, seconds);
-
-    return result;
-  }
-};
-
-/**
  * The "Update is Downloading" page - provides feedback for the download
  * process plus a pause/resume UI
  */
@@ -1150,14 +929,11 @@ var gDownloadingPage = {
   _label_downloadStatus : null,
 
   /**
-   * An instance of the status formatter object
+   * Member variables for updating download status
    */
-  _statusFormatter  : null,
-  get statusFormatter() {
-    if (!this._statusFormatter)
-      this._statusFormatter = new DownloadStatusFormatter();
-    return this._statusFormatter;
-  },
+  _lastSec : Infinity,
+  _startTime : Date.now(),
+  _pausedStatus : "",
 
   /**
    * Initialize
@@ -1240,6 +1016,30 @@ var gDownloadingPage = {
   },
 
   /**
+   * Update download progress status to show time left, speed, and progress.
+   * Also updates the status needed for pausing the download.
+   *
+   * @param aCurr
+   *        Current number of bytes transferred
+   * @param aMax
+   *        Total file size of the download
+   * @return Current active download status
+   */
+  _updateDownloadStatus: function(aCurr, aMax) {
+    let status;
+
+    // Get the download time left and progress
+    let rate = aCurr / (Date.now() - this._startTime) * 1000;
+    [status, this._lastSec] =
+      DownloadUtils.getDownloadStatus(aCurr, aMax, rate, this._lastSec);
+
+    // Get the download progress for pausing
+    this._pausedStatus = DownloadUtils.getTransferTotal(aCurr, aMax);
+
+    return status;
+  },
+
+  /**
    * Whether or not we are currently paused
    */
   _paused       : false,
@@ -1289,9 +1089,7 @@ var gDownloadingPage = {
     else {
       var patch = gUpdates.update.selectedPatch;
       patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
-      patch.setProperty("status",
-        gUpdates.strings.getFormattedString("pausedStatus",
-        [this.statusFormatter.progress]));
+      patch.setProperty("status", this._pausedStatus);
       updates.pauseDownload();
     }
     this._paused = !this._paused;
@@ -1386,7 +1184,7 @@ var gDownloadingPage = {
         "/" + maxProgress);
 
     var name = gUpdates.strings.getFormattedString("downloadingPrefix", [gUpdates.update.name]);
-    var status = this.statusFormatter.formatStatus(progress, maxProgress);
+    let status = this._updateDownloadStatus(progress, maxProgress);
     var progress = Math.round(100 * (progress/maxProgress));
 
     var p = gUpdates.update.selectedPatch;
@@ -1468,7 +1266,6 @@ var gDownloadingPage = {
         var verificationFailed = document.getElementById("verificationFailed");
         verificationFailed.hidden = false;
 
-        this._statusFormatter = null;
         return;
       }
       break;

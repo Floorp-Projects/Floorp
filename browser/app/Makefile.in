@@ -231,14 +231,6 @@ include $(topsrcdir)/config/static-rules.mk
 DEFINES += -DIMPL_XREAPI
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-ifdef BUILD_STATIC_LIBS
-ifdef USE_PREBINDING
-BIN_FLAGS += -Wl,-headerpad -Wl,5a0c
-endif
-endif
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 LIBS += -lphexlib
 endif

@@ -45,23 +45,14 @@
 
 #include "nsDataObj.h"
 #include "nsClipboard.h"
-#include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsVoidArray.h"
 #include "nsITransferable.h"
-#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "IEnumFE.h"
-#include "nsCOMPtr.h"
-#include "nsIComponentManager.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsXPIDLString.h"
 #include "nsIImage.h"
 #include "nsImageClipboard.h"
-#include "nsIDirectoryService.h"
-#include "nsILocalFile.h"
-#include "nsDirectoryServiceDefs.h"
-#include "prprf.h"
 #include "nsCRT.h"
 #include "nsPrintfCString.h"
 #include "nsIStringBundle.h"
@@ -69,6 +60,8 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsXPCOMStrings.h"
+#include "nscore.h"
+#include "prtypes.h"
 
 // XXX for older version of PSDK where IAsyncOperation and related stuff is not available
 // but this should be removed when parocles config is updated
@@ -273,7 +266,6 @@ STDMETHODIMP nsDataObj::CStream::Stat(STATSTG* statstg, DWORD dwFlags)
   }
 
   SYSTEMTIME st;
-  FILETIME ft;
 
   statstg->type = STGTY_STREAM;
 
@@ -339,8 +331,6 @@ HRESULT nsDataObj::CreateStream(IStream **outStream)
   return S_OK;
 }
 
-ULONG nsDataObj::g_cRef = 0;
-
 EXTERN_C GUID CDECL CLSID_nsDataObj =
 	{ 0x1bba7640, 0xdf52, 0x11cf, { 0x82, 0x7b, 0, 0xa0, 0x24, 0x3a, 0xe5, 0x05 } };
 
@@ -360,11 +350,10 @@ EXTERN_C GUID CDECL CLSID_nsDataObj =
 // construction 
 //-----------------------------------------------------
 nsDataObj::nsDataObj(nsIURI * uri)
-: m_cRef(0), mTransferable(nsnull)
+  : m_cRef(0), mTransferable(nsnull),
+    mIsAsyncMode(FALSE), mIsInOperation(FALSE)
 {
-  mDataFlavors    = new nsVoidArray();
-  m_enumFE        = new CEnumFormatEtc(32);
- 
+  m_enumFE = new CEnumFormatEtc(32);
   m_enumFE->AddRef();
 
   if (uri) {
@@ -372,9 +361,6 @@ nsDataObj::nsDataObj(nsIURI * uri)
     // so it can create a SourceURL for CF_HTML flavour
     uri->GetSpec(mSourceURL);
   }
-
-  mIsAsyncMode = FALSE;
-  mIsInOperation = FALSE;
 }
 //-----------------------------------------------------
 // destruction
@@ -383,13 +369,10 @@ nsDataObj::~nsDataObj()
 {
   NS_IF_RELEASE(mTransferable);
 
-  for (PRInt32 i = 0; i < mDataFlavors->Count(); ++i) {
-    nsCString* df = reinterpret_cast<nsCString *>(mDataFlavors->ElementAt(i));
-    delete df;
+  for (PRInt32 i = 0; i < mDataFlavors.Count(); ++i) {
+    delete reinterpret_cast<nsCString *>(mDataFlavors.ElementAt(i));
   }
-  delete mDataFlavors;
 
-  m_cRef = 0;
   m_enumFE->Release();
 
   // Free arbitrary system formats
@@ -424,7 +407,6 @@ STDMETHODIMP nsDataObj::QueryInterface(REFIID riid, void** ppv)
 //-----------------------------------------------------
 STDMETHODIMP_(ULONG) nsDataObj::AddRef()
 {
-	++g_cRef;
 	++m_cRef;
 	NS_LOG_ADDREF(this, m_cRef, "nsDataObj", sizeof(*this));
   //PRNTDEBUG3("nsDataObj::AddRef  >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef+1), this);
@@ -436,8 +418,6 @@ STDMETHODIMP_(ULONG) nsDataObj::AddRef()
 STDMETHODIMP_(ULONG) nsDataObj::Release()
 {
   //PRNTDEBUG3("nsDataObj::Release >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef-1), this);
-	if (0 < g_cRef)
-		--g_cRef;
 
 	--m_cRef;
 	NS_LOG_RELEASE(this, m_cRef, "nsDataObj");
@@ -494,7 +474,7 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   FORMATETC fe;
   m_enumFE->Reset();
   while (NOERROR == m_enumFE->Next(1, &fe, &count)) {
-    nsCString * df = reinterpret_cast<nsCString*>(mDataFlavors->SafeElementAt(dfInx));
+    nsCString * df = reinterpret_cast<nsCString*>(mDataFlavors.SafeElementAt(dfInx));
     if ( df ) {
       if (FormatsMatch(fe, *pFE)) {
         pSTM->pUnkForRelease = NULL;        // caller is responsible for deleting this data
@@ -748,15 +728,13 @@ STDMETHODIMP nsDataObj::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *ppEnum)
   PRNTDEBUG("nsDataObj::EnumFormatEtc\n");
 
   switch (dwDir) {
-    case DATADIR_GET: {
-       m_enumFE->Clone(ppEnum);
-    } break;
+    case DATADIR_GET:
+      m_enumFE->Clone(ppEnum);
+      break;
     case DATADIR_SET:
-        *ppEnum=NULL;
-        break;
+      // fall through
     default:
-        *ppEnum=NULL;
-        break;
+      *ppEnum = NULL;
   } // switch
 
   if (NULL == *ppEnum)
@@ -829,20 +807,6 @@ STDMETHODIMP nsDataObj::StartOperation(IBindCtx *pbcReserved)
 {
   mIsInOperation = TRUE;
   return S_OK;
-}
-
-//-----------------------------------------------------
-// other methods
-//-----------------------------------------------------
-ULONG nsDataObj::GetCumRefCount()
-{
-	return g_cRef;
-}
-
-//-----------------------------------------------------
-ULONG nsDataObj::GetRefCount() const
-{
-	return m_cRef;
 }
 
 //-----------------------------------------------------
@@ -1457,7 +1421,7 @@ void nsDataObj::AddDataFlavor(const char* aDataFlavor, LPFORMATETC aFE)
   else 
 #endif
   {
-    mDataFlavors->AppendElement(new nsCString(aDataFlavor));
+    mDataFlavors.AppendElement(new nsCString(aDataFlavor));
     m_enumFE->AddFE(aFE);
   }
 }

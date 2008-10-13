@@ -66,7 +66,10 @@ members = [
     'nsIDOMWindow.name',
     'nsIDOMWindow.parent',
     'nsIDOMWindow.top',
-    'nsIDOMWindow.document',
+    # Several window properties are magically resolved, including
+    # location, _content, navigator, document, and window itself.
+    # These do not need quick stubs.
+    #'nsIDOMWindow.document',
     'nsIDOMWindow.getSelection',
     'nsIDOMWindowCollection.item',
     'nsIDOMWindowCollection.length',

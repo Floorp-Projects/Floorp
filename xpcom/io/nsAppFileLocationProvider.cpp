@@ -85,11 +85,7 @@
 #endif
 
 // define default product directory
-#ifdef WINCE
-#define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING("Mozilla")
-#else
 #define DEFAULT_PRODUCT_DIR NS_LITERAL_CSTRING(MOZ_USER_DIR)
-#endif
 
 // Locally defined keys used by nsAppDirectoryEnumerator
 #define NS_ENV_PLUGINS_DIR          "EnvPlugins"    // env var MOZ_PLUGIN_PATH
@@ -99,6 +95,8 @@
 #define NS_MACOSX_USER_PLUGIN_DIR   "OSXUserPlugins"
 #define NS_MACOSX_LOCAL_PLUGIN_DIR  "OSXLocalPlugins"
 #define NS_MAC_CLASSIC_PLUGIN_DIR   "MacSysPlugins"
+#elif XP_UNIX
+#define NS_SYSTEM_PLUGINS_DIR       "SysPlugins"
 #endif
 
 #define DEFAULTS_DIR_NAME           NS_LITERAL_CSTRING("defaults")
@@ -254,6 +252,13 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistent, nsIFile
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
     }
+#ifdef XP_UNIX
+    else if (nsCRT::strcmp(prop, NS_SYSTEM_PLUGINS_DIR) == 0) {
+        static const char *const sysLPlgDir = "/usr/lib/mozilla/plugins";
+        rv = NS_NewNativeLocalFile(nsDependentCString(sysLPlgDir),
+                                   PR_FALSE, getter_AddRefs(localFile));
+    }
+#endif
 #endif
     else if (nsCRT::strcmp(prop, NS_APP_SEARCH_DIR) == 0)
     {
@@ -349,15 +354,6 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     rv = directoryService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
-    if (NS_FAILED(rv)) return rv;
-#elif defined(WINCE)
-    nsCOMPtr<nsIProperties> directoryService = 
-             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
-    if (localDir)
-        rv = localDir->AppendNative(NS_LITERAL_CSTRING("profile"));
     if (NS_FAILED(rv)) return rv;
 #elif defined(XP_WIN)
     nsCOMPtr<nsIProperties> directoryService = 
@@ -514,7 +510,7 @@ NS_IMPL_ISUPPORTS1(nsAppDirectoryEnumerator, nsISimpleEnumerator)
 /* nsPathsDirectoryEnumerator and PATH_SEPARATOR
  * are not used on MacOS/X. */
 
-#if defined(XP_WIN) || defined(XP_OS2)/* Win32, Win16, and OS/2 */
+#if defined(XP_WIN) || defined(XP_OS2) /* Win32 and OS/2 */
 #define PATH_SEPARATOR ';'
 #else /*if defined(XP_UNIX) || defined(XP_BEOS)*/
 #define PATH_SEPARATOR ':'
@@ -596,7 +592,11 @@ nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_ret
 
         *_retval = new nsAppDirectoryEnumerator(this, keys);
 #else
+#ifdef XP_UNIX
+        static const char* keys[] = { nsnull, NS_USER_PLUGINS_DIR, NS_APP_PLUGINS_DIR, NS_SYSTEM_PLUGINS_DIR, nsnull };
+#else
         static const char* keys[] = { nsnull, NS_USER_PLUGINS_DIR, NS_APP_PLUGINS_DIR, nsnull };
+#endif
         if (!keys[0] && !(keys[0] = PR_GetEnv("MOZ_PLUGIN_PATH"))) {
             static const char nullstr = 0;
             keys[0] = &nullstr;

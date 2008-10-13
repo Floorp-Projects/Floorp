@@ -90,6 +90,9 @@ struct CharacterDataChangeInfo
 /**
  * Mutation observer interface
  *
+ * See nsINode::AddMutationObserver, nsINode::RemoveMutationObserver for how to
+ * attach or remove your observers.
+ *
  * WARNING: During these notifications, you are not allowed to perform
  * any mutations to the current or any other document, or start a
  * network load.  If you need to perform such operations do that

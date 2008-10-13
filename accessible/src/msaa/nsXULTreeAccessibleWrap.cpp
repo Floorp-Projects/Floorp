@@ -113,7 +113,8 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetBounds(PRInt32 *x, PRInt32 *y, PRI
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetName(nsAString& aName)
+NS_IMETHODIMP
+nsXULTreeitemAccessibleWrap::GetName(nsAString& aName)
 {
   NS_ENSURE_STATE(mTree);
   nsCOMPtr<nsITreeColumns> cols;

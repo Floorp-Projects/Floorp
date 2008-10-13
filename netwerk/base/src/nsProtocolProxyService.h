@@ -290,7 +290,7 @@ protected:
      */
     NS_HIDDEN_(PRBool) CanUseProxy(nsIURI *uri, PRInt32 defaultPort);
 
-    static PRBool PR_CALLBACK CleanupFilterArray(void *aElement, void *aData);
+    static PRBool CleanupFilterArray(void *aElement, void *aData);
 
 public:
     // The Sun Forte compiler and others implement older versions of the

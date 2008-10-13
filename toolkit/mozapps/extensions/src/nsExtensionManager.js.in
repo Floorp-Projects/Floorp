@@ -3683,7 +3683,7 @@ ExtensionManager.prototype = {
 
       if (ds.getItemProperty(id, "providesUpdatesSecurely") == "false") {
         /* It's possible the previous version did not understand updateKeys so
-         * check if we can import one for this addon from it's manifest. */
+         * check if we can import one for this addon from its manifest. */
         installRDF = location.getItemFile(id, FILE_INSTALL_MANIFEST);
         if (installRDF.exists()) {
           metadataDS = getInstallManifest(installRDF);

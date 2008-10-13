@@ -1,4 +1,4 @@
 load 382636-1.xml
 load 382636-2.svg
 load 382636-3.xhtml
-load 382636-4.xul # Throws (bug 42976)
+load 382636-4.xul # Throws (bug 455856)

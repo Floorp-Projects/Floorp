@@ -285,7 +285,7 @@ nsCounterManager::CounterListFor(const nsSubstring& aCounterName)
     return counterList;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RecalcDirtyLists(const nsAString& aKey, nsCounterList* aList, void* aClosure)
 {
     if (aList->IsDirty())
@@ -310,7 +310,7 @@ struct DestroyNodesData {
     PRBool mDestroyedAny;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 DestroyNodesInList(const nsAString& aKey, nsCounterList* aList, void* aClosure)
 {
     DestroyNodesData *data = static_cast<DestroyNodesData*>(aClosure);
@@ -330,7 +330,7 @@ nsCounterManager::DestroyNodesFor(nsIFrame *aFrame)
 }
 
 #ifdef DEBUG
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 DumpList(const nsAString& aKey, nsCounterList* aList, void* aClosure)
 {
     printf("Counter named \"%s\":\n", NS_ConvertUTF16toUTF8(aKey).get());

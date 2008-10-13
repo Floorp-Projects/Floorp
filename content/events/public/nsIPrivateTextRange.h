@@ -40,6 +40,7 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
+#include "nsCOMPtr.h"
 
 #define NS_IPRIVATETEXTRANGE_IID \
 {0xb471ab41, 0x2a79, 0x11d3, \
@@ -76,8 +77,8 @@ class nsIPrivateTextRangeList : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRIVATETEXTRANGELIST_IID)
 
-  NS_IMETHOD    GetLength(PRUint16* aLength)=0;
-  NS_IMETHOD    Item(PRUint16 aIndex, nsIPrivateTextRange** aReturn)=0;
+  NS_IMETHOD_(PRUint16) GetLength()=0;
+  NS_IMETHOD_(already_AddRefed<nsIPrivateTextRange>) Item(PRUint16 aIndex)=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateTextRangeList,

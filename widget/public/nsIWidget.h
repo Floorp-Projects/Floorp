@@ -71,7 +71,7 @@ class   nsIContent;
  * The return value determines whether or not the default action should take place.
  */
 
-typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
+typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 
 /**
  * Flags for the getNativeData function.

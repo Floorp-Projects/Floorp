@@ -126,7 +126,7 @@ struct PlaceholderMapEntry : public PLDHashEntryHdr {
   nsPlaceholderFrame *placeholderFrame;
 };
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 PlaceholderMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
@@ -163,7 +163,7 @@ struct PrimaryFrameMapEntry : public PLDHashEntryHdr {
   // These ops should be used if/when we switch back to a 2-word entry.
   // See comment in |PrimaryFrameMapEntry| above.
 #if 0
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 PrimaryFrameMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
@@ -275,7 +275,7 @@ nsFrameManager::Destroy()
   // Destroy the frame hierarchy.
   mPresShell->SetIgnoreFrameDestruction(PR_TRUE);
 
-  mIsDestroyingFrames = PR_TRUE;  // This flag prevents GetPrimaryFrameFor from returning pointers to destroyed frames
+  mIsDestroying = PR_TRUE;  // This flag prevents GetPrimaryFrameFor from returning pointers to destroyed frames
 
   // Unregister all placeholders before tearing down the frame tree
   nsFrameManager::ClearPlaceholderFrameMap();
@@ -324,12 +324,12 @@ nsIFrame*
 nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent,
                                    PRInt32 aIndexHint)
 {
+  NS_ASSERTION(!mIsDestroyingFrames,
+               "GetPrimaryFrameFor() called while frames are being destroyed!");
   NS_ENSURE_TRUE(aContent, nsnull);
 
-  if (mIsDestroyingFrames) {
-#ifdef DEBUG
-    printf("GetPrimaryFrameFor() called while nsFrameManager is being destroyed!\n");
-#endif
+  if (mIsDestroying) {
+    NS_ERROR("GetPrimaryFrameFor() called while nsFrameManager is being destroyed!");
     return nsnull;
   }
 
@@ -521,7 +521,7 @@ nsFrameManager::UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame
   }
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 UnregisterPlaceholders(PLDHashTable* table, PLDHashEntryHdr* hdr,
                        PRUint32 number, void* arg)
 {
@@ -684,6 +684,10 @@ nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
                             nsIAtom*        aListName,
                             nsIFrame*       aOldFrame)
 {
+#ifdef DEBUG  
+  PRBool wasDestroyingFrames = mIsDestroyingFrames;
+  mIsDestroyingFrames = PR_TRUE;
+#endif
   // In case the reflow doesn't invalidate anything since it just leaves
   // a gap where the old frame was, we invalidate it here.  (This is
   // reasonably likely to happen when removing a last child in a way
@@ -692,7 +696,11 @@ nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
   // is important in the presence of absolute positioning
   aOldFrame->Invalidate(aOldFrame->GetOverflowRect());
 
-  return aParentFrame->RemoveFrame(aListName, aOldFrame);
+  nsresult rv = aParentFrame->RemoveFrame(aListName, aOldFrame);
+#ifdef DEBUG  
+  mIsDestroyingFrames = wasDestroyingFrames;
+#endif
+  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -1064,24 +1072,6 @@ CaptureChange(nsStyleContext* aOldContext, nsStyleContext* aNewContext,
   return aMinChange;
 }
 
-static PRBool
-ShouldStopImage(imgIRequest *aOldImage, imgIRequest *aNewImage)
-{
-  if (!aOldImage)
-    return PR_FALSE;
-
-  PRBool stopImages = !aNewImage;
-  if (!stopImages) {
-    nsCOMPtr<nsIURI> oldURI, newURI;
-    aOldImage->GetURI(getter_AddRefs(oldURI));
-    aNewImage->GetURI(getter_AddRefs(newURI));
-    PRBool equal;
-    stopImages =
-      NS_FAILED(oldURI->Equals(newURI, &equal)) || !equal;
-  }
-  return stopImages;
-}
-
 nsChangeHint
 nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
                                       nsIFrame          *aFrame,
@@ -1216,33 +1206,6 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
         if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
           // if frame gets regenerated, let it keep old context
           aFrame->SetStyleContext(newContext);
-        }
-        // if old context had image and new context does not have the same image, 
-        // stop the image load for the frame
-        if (ShouldStopImage(
-              oldContext->GetStyleBackground()->mBackgroundImage,
-              newContext->GetStyleBackground()->mBackgroundImage)) {
-          // stop the image loading for the frame, the image has changed
-          aPresContext->StopBackgroundImageFor(aFrame);
-        }
-
-        imgIRequest *newBorderImage =
-          newContext->GetStyleBorder()->GetBorderImage();
-        if (ShouldStopImage(oldContext->GetStyleBorder()->GetBorderImage(),
-                            newBorderImage)) {
-          // stop the image loading for the frame, the image has changed
-          aPresContext->StopBorderImageFor(aFrame);
-        }
-
-        // Since the CalcDifference call depended on the result of
-        // GetActualBorder() and that result depends on whether the
-        // image has loaded, start the image load now so that we'll get
-        // notified when it completes loading and can do a restyle.
-        // Otherwise, the image might finish loading from the network
-        // before we start listening to its notifications, and then
-        // we'll never know that it's finished loading.
-        if (newBorderImage) {
-          aPresContext->LoadBorderImage(newBorderImage, aFrame);
         }
       }
       oldContext->Release();
@@ -1828,7 +1791,7 @@ nsFrameManagerBase::UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
   }
 }
 
-PR_STATIC_CALLBACK(PRIntn)
+static PRIntn
 RemoveUndisplayedEntry(PLHashEntry* he, PRIntn i, void* arg)
 {
   UndisplayedNode*  node = (UndisplayedNode*)(he->value);

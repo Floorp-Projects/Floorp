@@ -262,7 +262,7 @@ struct AtomTableEntry : public PLDHashEntryHdr {
   }
 };
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 AtomTableGetHash(PLDHashTable *table, const void *key)
 {
   const AtomTableEntry *e = static_cast<const AtomTableEntry*>(key);
@@ -277,7 +277,7 @@ AtomTableGetHash(PLDHashTable *table, const void *key)
   return nsCRT::HashCode(e->getUTF8String(), e->getLength());
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 AtomTableMatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
                   const void *key)
 {
@@ -309,7 +309,7 @@ AtomTableMatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
   return memcmp(atomString, str, length * sizeof(char)) == 0;
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 AtomTableClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
   AtomTableEntry *he = static_cast<AtomTableEntry*>(entry);
@@ -335,7 +335,7 @@ AtomTableClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   he->ClearAtom();
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 AtomTableInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                    const void *key)
 {
@@ -362,7 +362,7 @@ static const PLDHashTableOps AtomTableOps = {
 
 #ifdef DEBUG
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 DumpAtomLeaks(PLDHashTable *table, PLDHashEntryHdr *he,
               PRUint32 index, void *arg)
 {

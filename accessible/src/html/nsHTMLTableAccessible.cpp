@@ -204,11 +204,11 @@ nsHTMLTableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aName)
+nsresult
+nsHTMLTableAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();  // Default name is blank
+  nsAccessible::GetNameInternal(aName);
 
-  nsAccessible::GetName(aName);
   if (aName.IsEmpty()) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
     if (content) { 

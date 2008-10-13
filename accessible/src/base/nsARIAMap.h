@@ -70,6 +70,19 @@ enum EValueRule
   eHasValueMinMax    // Supports value, min and max from aria-valuenow, aria-valuemin and aria-valuemax
 };
 
+// Should we expose action based on the ARIA role?
+enum EActionRule
+{
+  eNoAction,
+  eActivateAction,
+  eClickAction,
+  eCheckUncheckAction,
+  eJumpAction,
+  eOpenCloseAction,
+  eSelectAction,
+  eSwitchAction
+};
+
 // Used for an nsStateMapEntry if a given state attribute supports "true" and "false"
 #define kBoolState 0
 
@@ -99,7 +112,10 @@ struct nsRoleMapEntry
   
   // Value mapping rule: how to compute nsIAccessible value
   EValueRule valueRule;
-  
+
+  // Action mapping rule, how to expose nsIAccessible action
+  EActionRule actionRule;
+
   // Automatic state mapping rule: always include in nsIAccessibleStates
   PRUint32 state;   // or kNoReqStates if no nsIAccessibleStates are automatic for this role.
   
