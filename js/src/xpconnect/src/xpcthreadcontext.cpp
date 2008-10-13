@@ -60,16 +60,7 @@ XPCJSContextStack::~XPCJSContextStack()
         JS_SetContextThread(mOwnSafeJSContext);
         JS_DestroyContext(mOwnSafeJSContext);
         mOwnSafeJSContext = nsnull;
-        SyncJSContexts();
     }
-}
-
-void
-XPCJSContextStack::SyncJSContexts()
-{
-    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if(xpc)
-        xpc->SyncJSContexts();
 }
 
 /* readonly attribute PRInt32 count; */
@@ -274,7 +265,6 @@ XPCJSContextStack::SetSafeJSContext(JSContext * aSafeJSContext)
     {
         JS_DestroyContextNoGC(mOwnSafeJSContext);
         mOwnSafeJSContext = nsnull;
-        SyncJSContexts();
     }
 
     mSafeJSContext = aSafeJSContext;
@@ -466,8 +456,6 @@ XPCPerThreadData::XPCPerThreadData()
         mCallContext(nsnull),
         mResolveName(0),
         mResolvingWrapper(nsnull),
-        mMostRecentJSContext(nsnull),
-        mMostRecentXPCContext(nsnull),
         mExceptionManager(nsnull),
         mException(nsnull),
         mExceptionManagerNotAvailable(JS_FALSE),
@@ -534,7 +522,7 @@ XPCPerThreadData::~XPCPerThreadData()
     }
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 xpc_ThreadDataDtorCB(void* ptr)
 {
     XPCPerThreadData* data = (XPCPerThreadData*) ptr;

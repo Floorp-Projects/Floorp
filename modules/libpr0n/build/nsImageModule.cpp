@@ -310,14 +310,14 @@ static const nsModuleComponentInfo components[] =
 #endif
 };
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 imglib_Initialize(nsIModule* aSelf)
 {
   imgLoader::InitCache();
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 imglib_Shutdown(nsIModule* aSelf)
 {
   imgLoader::Shutdown();

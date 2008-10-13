@@ -60,14 +60,14 @@ struct HashTableEntry : PLDHashEntryHdr {
 };
 
 
-static PLDHashNumber PR_CALLBACK
+static PLDHashNumber
 HashKey( PLDHashTable *table, const void *key)
 {
     return (PLDHashNumber) NS_PTR_TO_INT32(key);
 }
 
 
-static PRBool PR_CALLBACK
+static PRBool
 MatchEntry(PLDHashTable *              /* table */,
             const PLDHashEntryHdr *       header,
             const void *                  key)
@@ -76,7 +76,7 @@ MatchEntry(PLDHashTable *              /* table */,
     return (hashEntry->mBinding->mRecord.HashNumber() == (PLDHashNumber) NS_PTR_TO_INT32(key));
 }
 
-static void PR_CALLBACK
+static void
 MoveEntry(PLDHashTable *           /* table */,
           const PLDHashEntryHdr *     src,
           PLDHashEntryHdr       *     dst)
@@ -85,7 +85,7 @@ MoveEntry(PLDHashTable *           /* table */,
 }
 
 
-static void PR_CALLBACK
+static void
 ClearEntry(PLDHashTable *      /* table */,
            PLDHashEntryHdr *      header)
 {
@@ -364,7 +364,7 @@ nsDiskCacheBindery::RemoveBinding(nsDiskCacheBinding * binding)
  *  ActiveBinding : PLDHashTable enumerate function to verify active bindings
  */
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 ActiveBinding(PLDHashTable *    table,
               PLDHashEntryHdr * hdr,
               PRUint32          number,

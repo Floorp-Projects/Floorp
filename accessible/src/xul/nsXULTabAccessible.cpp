@@ -296,12 +296,10 @@ NS_IMETHODIMP nsXULTabsAccessible::GetValue(nsAString& _retval)
   return NS_OK;
 }
 
-/** no name*/
-NS_IMETHODIMP
-nsXULTabsAccessible::GetName(nsAString& aName)
+nsresult
+nsXULTabsAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
+  // no name
   return NS_OK;
 }
 

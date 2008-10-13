@@ -795,7 +795,7 @@ nsJSCID::CreateInstance(nsISupports **_retval)
 
     // Do the security check if necessary
 
-    XPCContext* xpcc = nsXPConnect::GetContext(cx);
+    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
 
     nsIXPCSecurityManager* sm;
     sm = xpcc->GetAppropriateSecurityManager(
@@ -868,7 +868,7 @@ nsJSCID::GetService(nsISupports **_retval)
 
     // Do the security check if necessary
 
-    XPCContext* xpcc = nsXPConnect::GetContext(cx);
+    XPCContext* xpcc = XPCContext::GetXPCContext(cx);
 
     nsIXPCSecurityManager* sm;
     sm = xpcc->GetAppropriateSecurityManager(
@@ -914,7 +914,7 @@ nsJSCID::Construct(nsIXPConnectWrappedNative *wrapper,
                    PRUint32 argc, jsval * argv, jsval * vp,
                    PRBool *_retval)
 {
-    XPCJSRuntime* rt = nsXPConnect::GetRuntime();
+    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     if(!rt)
         return NS_ERROR_FAILURE;
 

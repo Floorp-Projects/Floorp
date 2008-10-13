@@ -151,15 +151,15 @@ protected:
   
 protected:
 
-  static PLDHashNumber PR_CALLBACK HashKey(PLDHashTable *table, const void *key);
+  static PLDHashNumber HashKey(PLDHashTable *table, const void *key);
 
-  static PRBool PR_CALLBACK        HashMatchEntry(PLDHashTable *table,
-                                                  const PLDHashEntryHdr *entry, const void *key);
+  static PRBool        HashMatchEntry(PLDHashTable *table,
+                                      const PLDHashEntryHdr *entry, const void *key);
   
-  static void PR_CALLBACK          HashMoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
-                                                 PLDHashEntryHdr *to);
+  static void          HashMoveEntry(PLDHashTable *table, const PLDHashEntryHdr *from,
+                                     PLDHashEntryHdr *to);
   
-  static void PR_CALLBACK          HashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry);
+  static void          HashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry);
   
                                   
 protected:

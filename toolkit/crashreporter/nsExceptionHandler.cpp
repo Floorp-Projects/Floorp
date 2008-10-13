@@ -747,9 +747,9 @@ static PRBool DoFindInReadable(const nsACString& str, const nsACString& value)
   return FindInReadable(value, start, end);
 }
 
-static PLDHashOperator PR_CALLBACK EnumerateEntries(const nsACString& key,
-                                                    nsCString entry,
-                                                    void* userData)
+static PLDHashOperator EnumerateEntries(const nsACString& key,
+                                        nsCString entry,
+                                        void* userData)
 {
   crashReporterAPIData->Append(key + NS_LITERAL_CSTRING("=") + entry +
                                NS_LITERAL_CSTRING("\n"));

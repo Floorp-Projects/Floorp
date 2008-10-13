@@ -333,7 +333,7 @@ CSSLoaderImpl::SetCompatibilityMode(nsCompatibility aCompatMode)
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CollectNonAlternates(nsURIAndPrincipalHashKey *aKey,
                      SheetLoadData* &aData,
                      void* aClosure)
@@ -2146,7 +2146,7 @@ nsresult NS_NewCSSLoader(nsICSSLoader** aLoader)
   return CallQueryInterface(it, aLoader);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 StopLoadingSheetCallback(nsURIAndPrincipalHashKey* aKey,
                          SheetLoadData*& aData,
                          void* aClosure)
@@ -2213,7 +2213,7 @@ struct StopLoadingSheetsByURIClosure {
   CSSLoaderImpl::LoadDataArray& array;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 StopLoadingSheetByURICallback(nsURIAndPrincipalHashKey* aKey,
                               SheetLoadData*& aData,
                               void* aClosure)
@@ -2328,7 +2328,7 @@ CSSLoaderImpl::RemoveObserver(nsICSSLoaderObserver* aObserver)
   mObservers.RemoveElement(aObserver);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CollectLoadDatas(nsURIAndPrincipalHashKey *aKey,
                  SheetLoadData* &aData,
                  void* aClosure)

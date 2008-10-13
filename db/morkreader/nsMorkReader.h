@@ -128,9 +128,9 @@ class NS_STACK_CLASS nsMorkReader
   // The callback can return PL_DHASH_NEXT to continue enumerating,
   // or PL_DHASH_STOP to stop.
   typedef PLDHashOperator
-  (*PR_CALLBACK RowEnumerator)(const nsCSubstring &rowID, 
-                               const nsTArray<nsCString> *values,
-                               void *userData);
+  (* RowEnumerator)(const nsCSubstring &rowID,
+                    const nsTArray<nsCString> *values,
+                    void *userData);
 
   // Initialize the importer object's data structures
   nsresult Init();

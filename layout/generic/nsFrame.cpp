@@ -99,6 +99,7 @@
 #include "nsITextControlFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPercentHeightObserver.h"
+#include "nsStyleStructInlines.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -119,6 +120,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
+#include "nsImageLoadNotifier.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGIntegrationUtils.h"
@@ -552,6 +554,27 @@ nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
 // Subclass hook for style post processing
 NS_IMETHODIMP nsFrame::DidSetStyleContext()
 {
+  // Ensure that this frame gets invalidates (and, in the case of some
+  // 'border-image's, reflows) when images that affect it load.
+  nsRefPtr<nsImageLoadNotifier> notifierChain;
+
+  const nsStyleBackground *background = GetStyleBackground();
+  imgIRequest *newBackgroundImage = background->mBackgroundImage;
+  if (newBackgroundImage) {
+    notifierChain = nsImageLoadNotifier::Create(this, newBackgroundImage,
+                                                PR_FALSE, notifierChain);
+  }
+
+  const nsStyleBorder *border = GetStyleBorder();
+  imgIRequest *newBorderImage = border->GetBorderImage();
+  if (newBorderImage) {
+    notifierChain = nsImageLoadNotifier::Create(this, newBorderImage,
+                                                border->ImageBorderDiffers(),
+                                                notifierChain);
+  }
+
+  PresContext()->SetImageNotifiers(this, notifierChain);
+
   return NS_OK;
 }
 

@@ -76,7 +76,6 @@ private:
 
 public:
   // nsIFrame interface:
-  virtual void Destroy();
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
@@ -137,10 +136,24 @@ private:
             rect.Width() == 0 && rect.Height() == 0);
   }
 
-  nsSVGMarkerProperty *GetMarkerProperty();
-  void UpdateMarkerProperty();
+  struct MarkerProperties {
+    nsSVGMarkerProperty* mMarkerStart;
+    nsSVGMarkerProperty* mMarkerMid;
+    nsSVGMarkerProperty* mMarkerEnd;
 
-  void RemovePathProperties();
+    PRBool MarkersExist() const {
+      return mMarkerStart || mMarkerMid || mMarkerEnd;
+    }
+
+    nsSVGMarkerFrame *GetMarkerStartFrame();
+    nsSVGMarkerFrame *GetMarkerMidFrame();
+    nsSVGMarkerFrame *GetMarkerEndFrame();
+  };
+
+  /**
+   * @param aFrame should be the first continuation
+   */
+  static MarkerProperties GetMarkerProperties(nsSVGPathGeometryFrame *aFrame);
 
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
 };

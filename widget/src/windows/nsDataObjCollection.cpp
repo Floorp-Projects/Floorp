@@ -36,8 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDataObjCollection.h"
-//#include "nsString.h"
-#include "nsVoidArray.h"
 #include "nsITransferable.h"
 #include "nsClipboard.h"
 #include "IEnumFE.h"
@@ -54,8 +52,6 @@
 #define PRNTDEBUG3(_x1, _x2, _x3) // printf(_x1, _x2, _x3);
 #endif
 
-ULONG nsDataObjCollection::g_cRef = 0;
-
 EXTERN_C GUID CDECL CLSID_nsDataObjCollection =
 { 0x2d851b91, 0xd4c, 0x11d3, { 0x96, 0xd4, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } };
 
@@ -67,15 +63,10 @@ EXTERN_C GUID CDECL CLSID_nsDataObjCollection =
 // construction 
 //-----------------------------------------------------
 nsDataObjCollection::nsDataObjCollection()
+  : m_cRef(0), mTransferable(nsnull)
 {
-	m_cRef	        = 0;
-  mTransferable   = nsnull;
-  mDataFlavors    = new nsVoidArray();
-  mDataObjects    = new nsVoidArray();
-
   m_enumFE = new CEnumFormatEtc(32);
   m_enumFE->AddRef();
-
 }
 
 //-----------------------------------------------------
@@ -84,22 +75,19 @@ nsDataObjCollection::nsDataObjCollection()
 nsDataObjCollection::~nsDataObjCollection()
 {
   NS_IF_RELEASE(mTransferable);
+
   PRInt32 i;
-  for (i=0;i<mDataFlavors->Count();i++) {
-    nsString * df = (nsString *)mDataFlavors->ElementAt(i);
-    delete df;
+
+  for (i = 0; i < mDataFlavors.Count(); ++i) {
+    delete (nsString *)mDataFlavors.ElementAt(i);
   }
-  delete mDataFlavors;
  
-  for (i=0;i<mDataObjects->Count();i++) {
-    IDataObject * dataObj = (IDataObject *)mDataObjects->ElementAt(i);
+  for (i = 0; i < mDataObjects.Count(); ++i) {
+    IDataObject * dataObj = (IDataObject *)mDataObjects.ElementAt(i);
     NS_RELEASE(dataObj);
   }
-  delete mDataObjects;
 
-	m_cRef = 0;
   m_enumFE->Release();
-
 }
 
 
@@ -128,7 +116,6 @@ STDMETHODIMP nsDataObjCollection::QueryInterface(REFIID riid, void** ppv)
 //-----------------------------------------------------
 STDMETHODIMP_(ULONG) nsDataObjCollection::AddRef()
 {
-	++g_cRef;
   //PRNTDEBUG3("nsDataObjCollection::AddRef  >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef+1), this);
 	return ++m_cRef;
 }
@@ -138,8 +125,6 @@ STDMETHODIMP_(ULONG) nsDataObjCollection::AddRef()
 STDMETHODIMP_(ULONG) nsDataObjCollection::Release()
 {
   //PRNTDEBUG3("nsDataObjCollection::Release >>>>>>>>>>>>>>>>>> %d on %p\n", (m_cRef-1), this);
-	if (0 < g_cRef)
-		--g_cRef;
 
 	if (0 != --m_cRef)
 		return m_cRef;
@@ -169,8 +154,8 @@ STDMETHODIMP nsDataObjCollection::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   PRNTDEBUG("nsDataObjCollection::GetData\n");
   PRNTDEBUG3("  format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
 
-  for (PRInt32 i=0;i<mDataObjects->Count();i++) {
-    IDataObject * dataObj = (IDataObject *)mDataObjects->ElementAt(i);
+  for (PRInt32 i = 0; i < mDataObjects.Count(); ++i) {
+    IDataObject * dataObj = (IDataObject *)mDataObjects.ElementAt(i);
     if (S_OK == dataObj->GetData(pFE, pSTM)) {
       return S_OK;
     }
@@ -204,8 +189,8 @@ STDMETHODIMP nsDataObjCollection::QueryGetData(LPFORMATETC pFE)
   }
 
 
-  for (PRInt32 i=0;i<mDataObjects->Count();i++) {
-    IDataObject * dataObj = (IDataObject *)mDataObjects->ElementAt(i);
+  for (PRInt32 i = 0; i < mDataObjects.Count(); ++i) {
+    IDataObject * dataObj = (IDataObject *)mDataObjects.ElementAt(i);
     if (S_OK == dataObj->QueryGetData(pFE)) {
       return S_OK;
     }
@@ -239,15 +224,13 @@ STDMETHODIMP nsDataObjCollection::EnumFormatEtc(DWORD dwDir, LPENUMFORMATETC *pp
   PRNTDEBUG("nsDataObjCollection::EnumFormatEtc\n");
 
   switch (dwDir) {
-    case DATADIR_GET: {
-       m_enumFE->Clone(ppEnum);
-    } break;
+    case DATADIR_GET:
+      m_enumFE->Clone(ppEnum);
+      break;
     case DATADIR_SET:
-        *ppEnum=NULL;
-        break;
+      // fall through
     default:
-        *ppEnum=NULL;
-        break;
+      *ppEnum = NULL;
   } // switch
 
   // Since a new one has been created, 
@@ -283,20 +266,6 @@ STDMETHODIMP nsDataObjCollection::EnumDAdvise(LPENUMSTATDATA *ppEnum)
 {
   PRNTDEBUG("nsDataObjCollection::EnumDAdvise\n");
 	return ResultFromScode(E_FAIL);
-}
-
-//-----------------------------------------------------
-// other methods
-//-----------------------------------------------------
-ULONG nsDataObjCollection::GetCumRefCount()
-{
-	return g_cRef;
-}
-
-//-----------------------------------------------------
-ULONG nsDataObjCollection::GetRefCount() const
-{
-	return m_cRef;
 }
 
 //-----------------------------------------------------
@@ -369,9 +338,8 @@ void nsDataObjCollection::AddDataFlavor(nsString * aDataFlavor, LPFORMATETC aFE)
   // Later, OLE will tell us it's needs a certain type of FORMATETC (text, unicode, etc)
   // so we will look up data flavor that corresponds to the FE
   // and then ask the transferable for that type of data
-  mDataFlavors->AppendElement(new nsString(*aDataFlavor));
+  mDataFlavors.AppendElement(new nsString(*aDataFlavor));
   m_enumFE->AddFE(aFE);
-
 }
 
 //-----------------------------------------------------
@@ -380,6 +348,5 @@ void nsDataObjCollection::AddDataFlavor(nsString * aDataFlavor, LPFORMATETC aFE)
 void nsDataObjCollection::AddDataObject(IDataObject * aDataObj)
 {
   NS_ADDREF(aDataObj);
-  mDataObjects->AppendElement(aDataObj);
-
+  mDataObjects.AppendElement(aDataObj);
 }

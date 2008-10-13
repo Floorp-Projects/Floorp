@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=437448
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-function runTest()
+function runTests()
 {
   var doc = $("svg").contentWindow.document;
   var filter = doc.getElementById("filter");
@@ -104,14 +104,6 @@ function runTest()
   convolve.result.baseVal = "bar";
   is(convolve.result.animVal, "bar", "string animVal");
   is(convolve.getAttribute("result"), "bar", "string attribute");
-}
-
-function runTests() {
-  runTest();
-
-  var doc = $("svg").contentWindow.document;
-  
-  runTest();
 
   SimpleTest.finish();
 }

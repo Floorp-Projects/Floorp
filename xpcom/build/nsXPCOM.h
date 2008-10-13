@@ -98,9 +98,9 @@ DECL_CLASS(nsITraceRefcnt);
  *
  * @status FROZEN
  */
-typedef nsresult (PR_CALLBACK *nsGetModuleProc)(nsIComponentManager *aCompMgr,
-                                                nsIFile* location,
-                                                nsIModule** return_cobj);
+typedef nsresult (*nsGetModuleProc)(nsIComponentManager *aCompMgr,
+                                    nsIFile* location,
+                                    nsIModule** return_cobj);
 
 /**
  * Initialises XPCOM. You must call one of the NS_InitXPCOM methods

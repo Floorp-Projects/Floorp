@@ -423,6 +423,29 @@ NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)
 {
+  JSStackFrame * fp = nsnull;
+  while ((fp = JS_FrameIterator(cx, &fp))) {
+    if (!JS_IsNativeFrame(cx, fp)) {
+      return;
+    }
+  }
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  if (xpc) {
+    nsAXPCNativeCallContext *cc = nsnull;
+    xpc->GetCurrentNativeCallContext(&cc);
+    if (cc) {
+      nsAXPCNativeCallContext *prev = cc;
+      while (NS_SUCCEEDED(prev->GetPreviousCallContext(&prev)) && prev) {
+        PRUint16 lang;
+        if (NS_SUCCEEDED(prev->GetLanguage(&lang)) &&
+          lang == nsAXPCNativeCallContext::LANG_JS) {
+          return;
+        }
+      }
+    }
+  }
+
   // XXX this means we are not going to get error reports on non DOM contexts
   nsIScriptContext *context = nsJSUtils::GetDynamicScriptContext(cx);
 
@@ -487,18 +510,12 @@ NS_ScriptErrorReporter(JSContext *cx,
               nsCOMPtr<nsIURI> errorURI;
               NS_NewURI(getter_AddRefs(errorURI), report->filename);
 
-              nsCOMPtr<nsIURI> codebase;
-              p->GetURI(getter_AddRefs(codebase));
-
-              if (errorURI && codebase) {
+              if (errorURI) {
                 // FIXME: Once error reports contain the origin of the
                 // error (principals) we should change this to do the
                 // security check based on the principals and not
                 // URIs. See bug 387476.
-                sameOrigin =
-                  NS_SUCCEEDED(sSecurityManager->
-                               CheckSameOriginURI(errorURI, codebase,
-                                                  PR_FALSE));
+                sameOrigin = NS_SUCCEEDED(p->CheckMayLoad(errorURI, PR_FALSE));
               }
             }
 
@@ -1135,7 +1152,7 @@ static const char js_zeal_option_str[]   = JS_OPTIONS_DOT_STR "gczeal";
 static const char js_jit_content_str[]   = JS_OPTIONS_DOT_STR "jit.content";
 static const char js_jit_chrome_str[]    = JS_OPTIONS_DOT_STR "jit.chrome";
 
-int PR_CALLBACK
+int
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
   nsJSContext *context = reinterpret_cast<nsJSContext *>(data);
@@ -1207,11 +1224,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   ++sContextCount;
 
   mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS | JSOPTION_ANONFUNFIX;
-
-  // Let xpconnect resync its JSContext tracker. We do this before creating
-  // a new JSContext just in case the heap manager recycles the JSContext
-  // struct.
-  nsContentUtils::XPConnect()->SyncJSContexts();
 
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
@@ -3699,7 +3711,7 @@ nsJSRuntime::Startup()
   gCollation = nsnull;
 }
 
-static int PR_CALLBACK
+static int
 MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
 {
   // Default limit on script run time to 10 seconds. 0 means let
@@ -3725,7 +3737,7 @@ MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
   return 0;
 }
 
-static int PR_CALLBACK
+static int
 ReportAllJSExceptionsPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   PRBool reportAll = nsContentUtils::GetBoolPref(aPrefName, PR_FALSE);

@@ -264,7 +264,7 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
 }
 
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 RegisterGenericFactory(nsIComponentRegistrar* registrar,
                        const nsModuleComponentInfo *info)
 {

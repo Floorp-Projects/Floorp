@@ -539,7 +539,7 @@ inline PRInt32 KeyboardLayout::GetKeyIndex (PRUint8 aVirtualKey)
   return xlat [aVirtualKey];
 }
 
-int PR_CALLBACK KeyboardLayout::CompareDeadKeyEntries (const void* aArg1, const void* aArg2, void*)
+int KeyboardLayout::CompareDeadKeyEntries (const void* aArg1, const void* aArg2, void*)
 {
   const DeadKeyEntry* arg1 = static_cast<const DeadKeyEntry*>(aArg1);
   const DeadKeyEntry* arg2 = static_cast<const DeadKeyEntry*>(aArg2);

@@ -103,9 +103,9 @@ button[checked="true"] {
   -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow transparent;
 }
 
-button:hover:active > .button-box:not(:-moz-system-metric(windows-default-theme)),
-button[open="true"] > .button-box:not(:-moz-system-metric(windows-default-theme)),
-button[checked="true"] > .button-box:not(:-moz-system-metric(windows-default-theme)) {
+button:hover:active > .button-box:-moz-system-metric(windows-classic),
+button[open="true"] > .button-box:-moz-system-metric(windows-classic),
+button[checked="true"] > .button-box:-moz-system-metric(windows-classic) {
   padding-top: 2px;
   padding-bottom: 1px;
   -moz-padding-start: 4px;
@@ -120,6 +120,11 @@ button[disabled="true"] {
   -moz-border-bottom-colors: transparent ThreeDDarkShadow ThreeDShadow !important;
   -moz-border-left-colors: transparent ThreeDHighlight ThreeDLightShadow !important;
   color: GrayText;
+}
+
+button[disabled="true"]:-moz-system-metric(windows-classic) {
+  color: ThreeDShadow;
+  text-shadow: 1px 1px ThreeDHighlight;
 }
 
 button[disabled="true"] > .button-box {
