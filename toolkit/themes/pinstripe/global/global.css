@@ -145,6 +145,7 @@ statusbar {
   margin: 0px !important;
   padding: 0px 16px 1px 1px;
   -moz-appearance: none;
+  text-shadow: rgba(255, 255, 255, 0.4) 0 1px;
 }
 
 statusbarpanel {
