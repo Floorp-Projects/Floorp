@@ -147,9 +147,6 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   PRBool IsShorthandAttr(const nsIAtom* aAttrName,
                          const nsIAtom* aElementName);
 
-  virtual void AppendToStringConvertLF(const nsAString& aStr,
-                                       nsAString& aOutputStr);
-
   // Functions to check for newlines that needs to be added between nodes in
   // the root of a document.
   void MaybeAddNewline(nsAString& aStr);
@@ -158,18 +155,9 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   PRInt32 mPrefixIndex;
   nsVoidArray mNameSpaceStack;
 
-  // nsIDocumentEncoder flags
-  PRUint32  mFlags;
-
-  // characters to use for line break
-  nsString  mLineBreak;
-
   // The charset that was passed to Init()
   nsCString mCharset;
   
-  // current column position
-  PRInt32   mColPos;
-
   PRPackedBool mInAttribute;
   PRPackedBool mAddNewline;
 };
