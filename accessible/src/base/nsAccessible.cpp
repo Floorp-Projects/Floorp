@@ -1863,13 +1863,17 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDProperty, nsString &aNa
 nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtree)
 {
   nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
-  if (!content)
+  if (!content) {
+    aLabel.SetIsVoid(PR_TRUE);
     return NS_OK;
+  }
 
   nsIContent *labelContent = GetHTMLLabelContent(content);
   if (labelContent) {
     nsAutoString label;
-    AppendFlatStringFromSubtree(labelContent, &label);
+    nsresult rv = AppendFlatStringFromSubtree(labelContent, &label);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     label.CompressWhitespace();
     if (!label.IsEmpty()) {
       aLabel = label;
@@ -1880,9 +1884,10 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
   if (aCanAggregateSubtree) {
     // Don't use AppendFlatStringFromSubtree for container widgets like menulist
     nsresult rv = AppendFlatStringFromSubtree(content, &aLabel);
-    if (NS_SUCCEEDED(rv) && !aLabel.IsEmpty()) {
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!aLabel.IsEmpty())
       return NS_OK;
-    }
   }
 
   // Still try the title as as fallback method in that case.
@@ -1890,6 +1895,7 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
                         aLabel)) {
     aLabel.SetIsVoid(PR_TRUE);
   }
+
   return NS_OK;
 }
 
