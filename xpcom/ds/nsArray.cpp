@@ -48,7 +48,7 @@ struct findIndexOfClosure
     PRUint32 resultIndex;
 };
 
-PR_STATIC_CALLBACK(PRBool) FindElementCallback(void* aElement, void* aClosure);
+static PRBool FindElementCallback(void* aElement, void* aClosure);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsArray)
   NS_INTERFACE_MAP_ENTRY(nsIArray)

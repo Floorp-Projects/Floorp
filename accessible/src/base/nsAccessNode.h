@@ -102,7 +102,7 @@ class nsAccessNode: public nsIAccessNode,
                               void* aUniqueID, nsIAccessNode **aAccessNode);
     static void ClearCache(nsAccessNodeHashtable& aCache);
 
-    static PLDHashOperator PR_CALLBACK ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg);
+    static PLDHashOperator ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg);
 
     // Static cache methods for global document cache
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDocument *aDocument);

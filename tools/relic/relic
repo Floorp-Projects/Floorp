@@ -338,7 +338,6 @@ _g_basename_to_comment_info = {
     "awk_pkginfo-sparc": (["#"], ),
     "pkgdepend_64bit": (["#"], ),
     "WIN32": (["#"], ),
-    "WIN16": (["#"], ),
     "Makefile.linux": (["#"], ),
 
     "README": ([""], ["#"]),

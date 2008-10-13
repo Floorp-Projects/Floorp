@@ -306,7 +306,7 @@ NS_NewXULDocument(nsIXULDocument** result)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULDocument)
 
-static PLDHashOperator PR_CALLBACK
+static PLDHashOperator
 TraverseTemplateBuilders(nsISupports* aKey, nsIXULTemplateBuilder* aData,
                          void* aContext)
 {
@@ -321,7 +321,7 @@ TraverseTemplateBuilders(nsISupports* aKey, nsIXULTemplateBuilder* aData,
     return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator PR_CALLBACK
+static PLDHashOperator
 TraverseObservers(nsIURI* aKey, nsIObserver* aData, void* aContext)
 {
     nsCycleCollectionTraversalCallback *cb =
@@ -647,7 +647,7 @@ nsXULDocument::OnDocumentParserError()
   return PR_TRUE;
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
     BroadcasterMapEntry* entry =
@@ -2791,7 +2791,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FirePendingMergeNotification(nsIURI* aKey, nsCOMPtr<nsIObserver>& aObserver, void* aClosure)
 {
     aObserver->Observe(aKey, "xul-overlay-merged", EmptyString().get());

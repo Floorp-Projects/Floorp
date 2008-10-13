@@ -300,7 +300,7 @@ ConnWrite(ipcConnectionState *s)
   return rv;
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 ConnThread(void *arg)
 {
   PRInt32 num;

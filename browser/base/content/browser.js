@@ -4077,16 +4077,9 @@ nsBrowserAccess.prototype =
                        Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                        Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     var location;
-    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
-      switch (aContext) {
-        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL :
-          aWhere = gPrefService.getIntPref("browser.link.open_external");
-          break;
-        default : // OPEN_NEW or an illegal value
-          aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
-      }
-    }
-    switch(aWhere) {
+    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW)
+      aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
+    switch (aWhere) {
       case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
         // FIXME: Bug 408379. So how come this doesn't send the
         // referrer like the other loads do?

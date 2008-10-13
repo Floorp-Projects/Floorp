@@ -56,7 +56,7 @@ static char sccsid[] = "@(#)hash_bigkey.c	8.3 (Berkeley) 5/31/94";
  *	collect_data
  */
 
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2_VACPP)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
 #include <sys/param.h>
 #endif
 

@@ -120,6 +120,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug430392.html \
 		bug441930_iframe.html \
 		test_bug441930.html \
+		test_bug442801.html \
 		test_bug448166.html \
 		$(NULL)
 

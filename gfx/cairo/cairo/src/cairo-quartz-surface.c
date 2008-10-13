@@ -806,7 +806,6 @@ SurfacePatternDrawFunc (void *ainfo, CGContextRef context)
 	/* Then unflip the Y-axis again, and draw the image above the point. */
 	CGContextScaleCTM (context, 1, -1);
 	CGContextDrawImage (context, info->imageBounds, info->image);
-
     }
 }
 
@@ -872,8 +871,8 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
      * image surface that it's backed by.
      */
     info->image = image;
-
     info->imageBounds = CGRectMake (0, 0, extents.width, extents.height);
+    info->do_reflect = FALSE;
 
     pbounds.origin.x = 0;
     pbounds.origin.y = 0;

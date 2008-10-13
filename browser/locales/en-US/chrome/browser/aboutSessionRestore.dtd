@@ -1,0 +1,16 @@
+<!ENTITY restorepage.title          "Restore Previous Session">
+<!ENTITY restorepage.titletext      "Your Last &brandShortName; Session Closed Unexpectedly">
+<!ENTITY restorepage.shortDesc      "You can restore the tabs and windows from your previous session, or start a new session if they are no longer needed. Our apologies for the inconvenience.">
+<!ENTITY restorepage.remedies       "If &brandShortName; closes repeatedly:">
+<!ENTITY restorepage.dueToChrome    "Try disabling any recently added extensions in the Add-ons Manager.">
+<!ENTITY restorepage.dueToContent   "Try restoring your session without any Web pages you suspect might be causing the crash:">
+
+<!ENTITY restorepage.restoreButton  "Restore Previous Session">
+<!ENTITY restorepage.restore.access "R">
+<!ENTITY restorepage.cancelButton   "Start New Session">
+<!ENTITY restorepage.cancel.access  "S">
+
+<!ENTITY restorepage.restoreHeader  "Restore">
+<!ENTITY restorepage.listHeader     "Windows and Tabs">
+<!-- LOCALIZATION NOTE: %S will be replaced with a number. -->
+<!ENTITY restorepage.windowLabel    "Window #&#37;S">

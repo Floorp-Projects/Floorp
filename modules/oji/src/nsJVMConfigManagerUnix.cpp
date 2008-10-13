@@ -62,7 +62,7 @@ nsJVMConfigManagerUnix::nsJVMConfigManagerUnix()
     InitJVMConfigList();
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 FreeJVMConfig(nsHashKey *aKey, void *aData, void* aClosure)
 {
     nsJVMConfig* config = static_cast<nsJVMConfig *>(aData);
@@ -72,7 +72,7 @@ FreeJVMConfig(nsHashKey *aKey, void *aData, void* aClosure)
     return PR_TRUE;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 AppendJVMConfig(nsHashKey *aKey, void *aData, void* aClosure)
 {
     nsJVMConfig* config = static_cast<nsJVMConfig *>(aData);

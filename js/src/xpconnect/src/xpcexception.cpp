@@ -167,7 +167,7 @@ void
 nsXPCException::SetThrownJSVal(jsval v)
 {
     mThrownJSVal = JSVAL_IS_TRACEABLE(v)
-        ? new XPCTraceableVariant(nsXPConnect::GetRuntime(), v)
+        ? new XPCTraceableVariant(nsXPConnect::GetRuntimeInstance(), v)
         : new XPCVariant(v);
 }
 

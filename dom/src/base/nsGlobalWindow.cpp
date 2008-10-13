@@ -87,7 +87,6 @@
 // Interfaces Needed
 #include "nsIWidget.h"
 #include "nsIBaseWindow.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIContent.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
@@ -347,8 +346,6 @@ PRInt32 gTimeoutCnt                                    = 0;
 static NS_DEFINE_CID(kJVMServiceCID, NS_JVMMANAGER_CID);
 #endif
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID,
-                     NS_ICHARSETCONVERTERMANAGER_CID);
 
 static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 
@@ -1070,7 +1067,7 @@ struct TraceData
   void* closure;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 TraceXBLHandlers(const void* aKey, void* aData, void* aClosure)
 {
   TraceData* data = static_cast<TraceData*>(aClosure);
@@ -5204,10 +5201,9 @@ PostMessageEvent::Run()
   if (shell)
     presContext = shell->GetPresContext();
 
-  nsEvent* internalEvent;
   nsCOMPtr<nsIPrivateDOMEvent> privEvent = do_QueryInterface(message);
   privEvent->SetTrusted(mTrustedCaller);
-  privEvent->GetInternalNSEvent(&internalEvent);
+  nsEvent *internalEvent = privEvent->GetInternalNSEvent();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEventDispatcher::Dispatch(static_cast<nsPIDOMWindow*>(mTargetWindow),
@@ -5989,65 +5985,6 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction)
   }
 
   return NS_OK;
-}
-
-nsresult
-nsGlobalWindow::ConvertCharset(const nsAString& aStr, char** aDest)
-{
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIUnicodeEncoder> encoder;
-
-  nsCOMPtr<nsICharsetConverterManager>
-    ccm(do_GetService(kCharsetConverterManagerCID));
-  NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
-
-  // Get the document character set
-  nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8")); // default to utf-8
-  if (mDoc) {
-    charset = mDoc->GetDocumentCharacterSet();
-  }
-
-  // Get an encoder for the character set
-  result = ccm->GetUnicodeEncoderRaw(charset.get(),
-                                     getter_AddRefs(encoder));
-  if (NS_FAILED(result))
-    return result;
-
-  result = encoder->Reset();
-  if (NS_FAILED(result))
-    return result;
-
-  PRInt32 maxByteLen, srcLen;
-  srcLen = aStr.Length();
-
-  const nsPromiseFlatString& flatSrc = PromiseFlatString(aStr);
-  const PRUnichar* src = flatSrc.get();
-
-  // Get the expected length of result string
-  result = encoder->GetMaxLength(src, srcLen, &maxByteLen);
-  if (NS_FAILED(result))
-    return result;
-
-  // Allocate a buffer of the maximum length
-  *aDest = (char *) nsMemory::Alloc(maxByteLen + 1);
-  PRInt32 destLen2, destLen = maxByteLen;
-  if (!*aDest)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // Convert from unicode to the character set
-  result = encoder->Convert(src, &srcLen, *aDest, &destLen);
-  if (NS_FAILED(result)) {    
-    nsMemory::Free(*aDest);
-    *aDest = nsnull;
-    return result;
-  }
-
-  // Allow the encoder to finish the conversion
-  destLen2 = maxByteLen - destLen;
-  encoder->Finish(*aDest + destLen, &destLen2);
-  (*aDest)[destLen + destLen2] = '\0';
-
-  return result;
 }
 
 PRBool
@@ -6995,7 +6932,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_ERROR_FAILURE;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FirePendingStorageEvents(const nsAString& aKey, PRBool aData, void *userArg)
 {
   nsGlobalWindow *win = static_cast<nsGlobalWindow *>(userArg);

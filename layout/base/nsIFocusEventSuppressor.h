@@ -39,7 +39,7 @@
 #define nsIFocusEventSuppressor_h___
 #include "nsISupports.h"
 
-typedef void (*PR_CALLBACK nsFocusEventSuppressorCallback)(PRBool aSuppress);
+typedef void (* nsFocusEventSuppressorCallback)(PRBool aSuppress);
 
 #define NS_NSIFOCUSEVENTSUPPRESSORSERVICE_IID \
   { 0x8aae5cee, 0x59ab, 0x42d4, \

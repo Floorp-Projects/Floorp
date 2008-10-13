@@ -97,7 +97,7 @@ struct GetKeysEnumData
     nsresult res;
 };
 
-PR_CALLBACK PLDHashOperator
+ PLDHashOperator
 GetKeysEnumerate(const char *key, nsISupports* data,
                  void *arg)
 {

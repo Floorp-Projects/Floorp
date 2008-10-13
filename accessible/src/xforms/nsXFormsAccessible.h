@@ -79,11 +79,11 @@ public:
   // that it is bound to.
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 
-  // Returns value of child xforms 'label' element.
-  NS_IMETHOD GetName(nsAString& aName);
-
   // Returns value of child xforms 'hint' element.
   NS_IMETHOD GetDescription(nsAString& aDescription);
+
+  // Returns value of child xforms 'label' element.
+  virtual nsresult GetNameInternal(nsAString& aName);
 
   // Appends ARIA 'datatype' property based on datatype of instance node that
   // element is bound to.

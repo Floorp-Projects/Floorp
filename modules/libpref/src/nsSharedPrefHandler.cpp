@@ -66,8 +66,8 @@ const char kExceptionListCommentChar = '#';
 const PRUint32 kCurrentPrefsTransactionDataVersion = 1;
 
 // Static function prototypes
-static PRBool PR_CALLBACK enumFind(void* aElement, void *aData);
-static PRBool PR_CALLBACK enumFree(void* aElement, void *aData);
+static PRBool enumFind(void* aElement, void *aData);
+static PRBool enumFree(void* aElement, void *aData);
 static PRInt32 ReadLine(FILE* inStm, nsACString& destString);
 
 
@@ -363,7 +363,7 @@ NS_IMETHODIMP nsSharedPrefHandler::OnFlushReply(PRUint32 aQueueID, PRUint32 aSta
 // Static functions
 //*****************************************************************************   
 
-static PRBool PR_CALLBACK enumFind(void* aElement, void *aData)
+static PRBool enumFind(void* aElement, void *aData)
 {
   char *elemStr = static_cast<char*>(aElement);
   char *searchStr = static_cast<char*>(aData);
@@ -371,7 +371,7 @@ static PRBool PR_CALLBACK enumFind(void* aElement, void *aData)
   return (strncmp(elemStr, searchStr, strlen(elemStr)) != 0);
 }
 
-static PRBool PR_CALLBACK enumFree(void* aElement, void *aData)
+static PRBool enumFree(void* aElement, void *aData)
 {
   if (aElement)
     nsMemory::Free(aElement);

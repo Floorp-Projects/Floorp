@@ -142,7 +142,7 @@ struct RuleHashTableEntry : public PLDHashEntryHdr {
   RuleValue *mRules; // linked list of |RuleValue|, null-terminated
 };
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 RuleHash_CIHashKey(PLDHashTable *table, const void *key)
 {
   nsIAtom *atom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
@@ -154,8 +154,7 @@ RuleHash_CIHashKey(PLDHashTable *table, const void *key)
 }
 
 typedef nsIAtom*
-(* PR_CALLBACK RuleHashGetKey)    (PLDHashTable *table,
-                                   const PLDHashEntryHdr *entry);
+(* RuleHashGetKey) (PLDHashTable *table, const PLDHashEntryHdr *entry);
 
 struct RuleHashTableOps {
   PLDHashTableOps ops;
@@ -172,7 +171,7 @@ ToLocalOps(const PLDHashTableOps *aOps)
            (((const char*) aOps) - offsetof(RuleHashTableOps, ops));
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 RuleHash_CIMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                       const void *key)
 {
@@ -192,7 +191,7 @@ RuleHash_CIMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return (nsCRT::strcasecmp(entry_str, match_str) == 0);
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 RuleHash_CSMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                       const void *key)
 {
@@ -204,7 +203,7 @@ RuleHash_CSMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return match_atom == entry_atom;
 }
 
-PR_STATIC_CALLBACK(nsIAtom*)
+static nsIAtom*
 RuleHash_TagTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
@@ -212,7 +211,7 @@ RuleHash_TagTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
   return entry->mRules->mSelector->mTag;
 }
 
-PR_STATIC_CALLBACK(nsIAtom*)
+static nsIAtom*
 RuleHash_ClassTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
@@ -220,7 +219,7 @@ RuleHash_ClassTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
   return entry->mRules->mSelector->mClassList->mAtom;
 }
 
-PR_STATIC_CALLBACK(nsIAtom*)
+static nsIAtom*
 RuleHash_IdTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
@@ -228,13 +227,13 @@ RuleHash_IdTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
   return entry->mRules->mSelector->mIDList->mAtom;
 }
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 RuleHash_NameSpaceTable_HashKey(PLDHashTable *table, const void *key)
 {
   return NS_PTR_TO_INT32(key);
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 RuleHash_NameSpaceTable_MatchEntry(PLDHashTable *table,
                                    const PLDHashEntryHdr *hdr,
                                    const void *key)
@@ -663,7 +662,7 @@ struct AttributeSelectorEntry : public PLDHashEntryHdr {
   nsVoidArray *mSelectors;
 };
 
-PR_STATIC_CALLBACK(void)
+static void
 AttributeSelectorClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
   AttributeSelectorEntry *entry = static_cast<AttributeSelectorEntry*>(hdr);
@@ -1978,7 +1977,7 @@ struct StateEnumData {
   nsReStyleHint change;
 };
 
-PR_STATIC_CALLBACK(PRBool) StateEnumFunc(void* aSelector, void* aData)
+static PRBool StateEnumFunc(void* aSelector, void* aData)
 {
   StateEnumData *enumData = static_cast<StateEnumData*>(aData);
   StateRuleProcessorData *data = enumData->data;
@@ -2032,7 +2031,7 @@ struct AttributeEnumData {
 };
 
 
-PR_STATIC_CALLBACK(PRBool) AttributeEnumFunc(void* aSelector, void* aData)
+static PRBool AttributeEnumFunc(void* aSelector, void* aData)
 {
   AttributeEnumData *enumData = static_cast<AttributeEnumData*>(aData);
   AttributeRuleProcessorData *data = enumData->data;
@@ -2244,13 +2243,13 @@ struct RuleByWeightEntry : public PLDHashEntryHdr {
   PerWeightData data; // mWeight is key, mRules are value
 };
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 HashIntKey(PLDHashTable *table, const void *key)
 {
   return PLDHashNumber(NS_PTR_TO_INT32(key));
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 MatchWeightEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                  const void *key)
 {
@@ -2497,8 +2496,8 @@ nsCSSRuleProcessor::CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
   return PR_TRUE;
 }
 
-PR_STATIC_CALLBACK(int) CompareWeightData(const void* aArg1, const void* aArg2,
-                                         void* closure)
+static int CompareWeightData(const void* aArg1, const void* aArg2,
+                             void* closure)
 {
   const PerWeightData* arg1 = static_cast<const PerWeightData*>(aArg1);
   const PerWeightData* arg2 = static_cast<const PerWeightData*>(aArg2);
@@ -2517,7 +2516,7 @@ struct FillWeightArrayData {
 };
 
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 FillWeightArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
                 PRUint32 number, void *arg)
 {
