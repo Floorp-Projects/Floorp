@@ -98,12 +98,12 @@ struct StringifyClosure
     jsval *s;
 };
 
-static
-JSBool WriteCallback(const jschar *buf, uint32 len, void *data)
+static JSBool
+WriteCallback(const jschar *buf, uint32 len, void *data)
 {
     StringifyClosure *sc = static_cast<StringifyClosure*>(data);
     JSString *s1 = JSVAL_TO_STRING(*sc->s);
-    JSString *s2 = JS_NewUCStringCopyN(sc->cx, buf, len);
+    JSString *s2 = js_NewStringCopyN(sc->cx, buf, len);
     if (!s2)
         return JS_FALSE;
 
@@ -227,7 +227,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
     jsuint length = 0;
 
     if (isArray) {
-        if (!JS_GetArrayLength(cx, obj, &length))
+        if (!js_GetLengthProperty(cx, obj, &length))
             return JS_FALSE;
     } else {
         if (!js_ValueToIterator(cx, JSITER_ENUMERATE, vp))
@@ -258,7 +258,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
             if (JSVAL_IS_STRING(key)) {
                 ks = JSVAL_TO_STRING(key);
             } else {
-                ks = JS_ValueToString(cx, key);
+                ks = js_ValueToString(cx, key);
                 if (!ks) {
                     ok = JS_FALSE;
                     break;
@@ -305,7 +305,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
 
         // If this isn't an array, we need to output a key
         if (!isArray) {
-            s = JS_ValueToString(cx, key);
+            s = js_ValueToString(cx, key);
             if (!s) {
                 ok = JS_FALSE;
                 break;
@@ -326,7 +326,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer,
             ok = js_Stringify(cx, &outputValue, replacer, callback, data, depth + 1);
         } else {
             JSString *outputString;
-            s = JS_ValueToString(cx, outputValue);
+            s = js_ValueToString(cx, outputValue);
             if (!s) {
                 ok = JS_FALSE;
                 break;
@@ -392,7 +392,7 @@ js_BeginJSONParse(JSContext *cx, jsval *rootVal)
     if (!cx)
         return NULL;
 
-    JSObject *arr = JS_NewArrayObject(cx, 0, NULL);
+    JSObject *arr = js_NewArrayObject(cx, 0, NULL);
     if (!arr)
         return NULL;
 
@@ -479,7 +479,7 @@ PushValue(JSContext *cx, JSONParser *jp, JSObject *parent, jsval value)
     JSBool ok;
     if (OBJ_IS_ARRAY(cx, parent)) {
         jsuint len;
-        ok = JS_GetArrayLength(cx, parent, &len);
+        ok = js_GetLengthProperty(cx, parent, &len);
         if (ok)
             ok = JS_SetElement(cx, parent, len, &value);
     } else {
@@ -495,7 +495,7 @@ static JSBool
 PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
 {
     jsuint len;
-    if (!JS_GetArrayLength(cx, jp->objectStack, &len))
+    if (!js_GetLengthProperty(cx, jp->objectStack, &len))
         return JS_FALSE;
     if (len >= JSON_MAX_DEPTH)
         return JS_FALSE; // decoding error
@@ -528,7 +528,7 @@ static JSObject *
 GetTopOfObjectStack(JSContext *cx, JSONParser *jp)
 {
     jsuint length;
-    if (!JS_GetArrayLength(cx, jp->objectStack, &length))
+    if (!js_GetLengthProperty(cx, jp->objectStack, &length))
         return NULL;
     
     jsval o;
@@ -542,7 +542,7 @@ GetTopOfObjectStack(JSContext *cx, JSONParser *jp)
 static JSBool
 OpenObject(JSContext *cx, JSONParser *jp)
 {
-    JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
+    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL, 0);
     if (!obj)
         return JS_FALSE;
 
@@ -553,7 +553,7 @@ static JSBool
 OpenArray(JSContext *cx, JSONParser *jp)
 {
     // Add an array to an existing array or object
-    JSObject *arr = JS_NewArrayObject(cx, 0, NULL);
+    JSObject *arr = js_NewArrayObject(cx, 0, NULL);
     if (!arr)
         return JS_FALSE;
 
@@ -564,9 +564,9 @@ static JSBool
 CloseObject(JSContext *cx, JSONParser *jp)
 {
     jsuint len;
-    if (!JS_GetArrayLength(cx, jp->objectStack, &len))
+    if (!js_GetLengthProperty(cx, jp->objectStack, &len))
         return JS_FALSE;
-    if (!JS_SetArrayLength(cx, jp->objectStack, len - 1))
+    if (!js_SetLengthProperty(cx, jp->objectStack, len - 1))
         return JS_FALSE;
 
     return JS_TRUE;
@@ -601,7 +601,7 @@ static JSBool
 HandleString(JSContext *cx, JSONParser *jp, const jschar *buf, uint32 len)
 {
     JSObject *obj = GetTopOfObjectStack(cx, jp);
-    JSString *str = JS_NewUCStringCopyN(cx, buf, len);
+    JSString *str = js_NewStringCopyN(cx, buf, len);
     if (!obj || !str)
         return JS_FALSE;
 
@@ -643,7 +643,7 @@ HandleData(JSContext *cx, JSONParser *jp, JSONDataType type, const jschar *buf, 
       break;
 
     case JSON_DATA_KEYSTRING:
-      jp->objectKey = JS_NewUCStringCopyN(cx, buf, len);
+      jp->objectKey = js_NewStringCopyN(cx, buf, len);
       ok = JS_TRUE;
       break;
 
