@@ -101,4 +101,23 @@ function run_test() {
   do_check_eq(rootNode.childCount, 2);
   do_check_eq(rootNode.getChild(1).title, "remote container sample");
   rootNode.containerOpen = false;
+
+  // Bug 457686
+  // If the dynamic container is child of an excludeItems query it should not
+  // append uri nodes.
+  // The dynamic container should only return an empty folder on opening.
+  options = histsvc.getNewQueryOptions();
+  options.excludeItems = true;
+  query = histsvc.getNewQuery();
+  query.setFolders([remoteContainer], 1);
+  result = histsvc.executeQuery(query, options);
+  rootNode = result.root;
+  rootNode.containerOpen = true;
+  do_check_eq(rootNode.childCount, 1);
+  folder = rootNode.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
+  do_check_eq(folder.itemId, exposedFolder);
+  folder.containerOpen = true;
+  do_check_eq(folder.childCount, 0);
+  folder.containerOpen = false;
+  rootNode.containerOpen = false;
 }
