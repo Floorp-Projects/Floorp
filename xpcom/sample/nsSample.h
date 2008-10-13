@@ -114,7 +114,7 @@ public:
     /* NS_IMETHOD WriteValue(const char *aPrefix); */
 
     /**
-     * nsISample.idl specifies all of it's string types as string, instead
+     * nsISample.idl specifies all of its string types as string, instead
      * of wstring (wide string), the Unicode type.  If the world were a
      * perfect place, all normal strings in XPCOM interfaces would be unicode.
      * If this type had been specified as wstring, it would appear as

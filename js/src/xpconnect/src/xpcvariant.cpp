@@ -71,7 +71,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
         nsVariant::Cleanup(&mData);
 
     if(!JSVAL_IS_NULL(mJSVal))
-        RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
+        RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
 }
 
 void XPCTraceableVariant::TraceJS(JSTracer* trc)
@@ -108,7 +108,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
     if(JSVAL_IS_TRACEABLE(tmp->mJSVal))
     {
         XPCTraceableVariant *v = static_cast<XPCTraceableVariant*>(tmp);
-        v->RemoveFromRootSet(nsXPConnect::GetRuntime()->GetJSRuntime());
+        v->RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
     }
     tmp->mJSVal = JSVAL_NULL;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END

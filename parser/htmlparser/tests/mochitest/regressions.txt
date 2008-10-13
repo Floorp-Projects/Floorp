@@ -423,3 +423,12 @@ x { content:"</style" } "
 |       <input>
 |         type=" hidden"
 
+#data
+<html><head><source>text<body><link>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     "text"
+|     <link>

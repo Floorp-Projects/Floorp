@@ -512,7 +512,7 @@ TestSearch(const char* delim, PRUint32 segSize)
 #endif
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef DEBUG
+#if !defined(MOZ_ENABLE_LIBXUL) && defined(DEBUG)
 extern NS_COM void
 TestSegmentedBuffer();
 #endif
@@ -529,26 +529,11 @@ main(int argc, char* argv[])
     if (argc > 1 && nsCRT::strcmp(argv[1], "-trace") == 0)
         gTrace = PR_TRUE;
 
-#ifdef DEBUG
+#if !defined(MOZ_ENABLE_LIBXUL) && defined(DEBUG)
     printf("Testing segmented buffer...\n");
     TestSegmentedBuffer();
 #endif
 
-#if 0   // obsolete old implementation
-    nsCOMPtr<nsIInputStream> in;
-    nsCOMPtr<nsIOutputStream> out;
-    rv = TP_NewPipe(getter_AddRefs(in), getter_AddRefs(out), 4096 * 4);
-    if (NS_FAILED(rv)) {
-        printf("TP_NewPipe failed\n");
-        return -1;
-    }
-
-    rv = TestPipe(in, out);
-    if (NS_FAILED(rv)) {
-        printf("TestPipe failed\n");
-        return -1;
-    }
-#endif
 #if 0
     TestSearch("foo", 8);
     TestSearch("bar", 6);

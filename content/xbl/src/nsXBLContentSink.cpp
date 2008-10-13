@@ -880,7 +880,7 @@ nsXBLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   }
 
   *aAppendContent = PR_TRUE;
-  nsXULPrototypeElement* prototype = new nsXULPrototypeElement();
+  nsRefPtr<nsXULPrototypeElement> prototype = new nsXULPrototypeElement();
   if (!prototype)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -891,15 +891,7 @@ nsXBLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
 
   AddAttributesToXULPrototype(aAtts, aAttsCount, prototype);
 
-  nsresult rv = nsXULElement::Create(prototype, mDocument, PR_FALSE, aResult);
-
-  // XUL prototype elements start with a refcnt of 1 to represent
-  // ownership by the XUL prototype document.  In our case we have no
-  // prototype document, so release that reference.  The Create call
-  // above took a reference.
-  prototype->Release();
-
-  return rv;
+  return nsXULElement::Create(prototype, mDocument, PR_FALSE, aResult);
 #endif
 }
 

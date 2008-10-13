@@ -49,7 +49,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
 #include "nsStyleSet.h"
-#include "nsImageLoader.h"
+#include "nsImageLoadNotifier.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIRenderingContext.h"
@@ -111,7 +111,7 @@ MakeColorPref(const char *colstr)
   return colorref;
 }
 
-int PR_CALLBACK
+int
 nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
 {
   nsPresContext*  presContext = (nsPresContext*)instance_data;
@@ -149,8 +149,8 @@ IsVisualCharset(const nsCString& aCharset)
 #endif // IBMBIDI
 
 
-PR_STATIC_CALLBACK(PLDHashOperator)
-destroy_loads(const void * aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
+static PLDHashOperator
+destroy_notifiers(const void * aKey, nsRefPtr<nsImageLoadNotifier>& aData, void* closure)
 {
   aData->Destroy();
   return PL_DHASH_NEXT;
@@ -209,7 +209,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   mFocusBackgroundColor = mBackgroundColor;
   mFocusRingWidth = 1;
 
-  mLanguageSpecificTransformType = eLanguageSpecificTransformType_Unknown;
   if (aType == eContext_Galley) {
     mMedium = nsGkAtoms::screen;
   } else {
@@ -232,7 +231,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
 
 nsPresContext::~nsPresContext()
 {
-  mImageLoaders.Enumerate(destroy_loads, nsnull);
+  mImageNotifiers.Enumerate(destroy_notifiers, nsnull);
 
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
@@ -299,8 +298,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPresContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPresContext)
 
-PR_STATIC_CALLBACK(PLDHashOperator)
-TraverseImageLoader(const void * aKey, nsCOMPtr<nsImageLoader>& aData,
+static PLDHashOperator
+TraverseImageNotifier(const void * aKey, nsRefPtr<nsImageLoadNotifier>& aData,
                     void* aClosure)
 {
   nsCycleCollectionTraversalCallback *cb =
@@ -318,7 +317,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLookAndFeel); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLangGroup); // an atom
 
-  tmp->mImageLoaders.Enumerate(TraverseImageLoader, &cb);
+  tmp->mImageNotifiers.Enumerate(TraverseImageNotifier, &cb);
 
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLangService); // a service
@@ -340,8 +339,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
   // NS_RELEASE(tmp->mLookAndFeel); // a service
   // NS_RELEASE(tmp->mLangGroup); // an atom
 
-  tmp->mImageLoaders.Enumerate(destroy_loads, nsnull);
-  tmp->mImageLoaders.Clear();
+  tmp->mImageNotifiers.Enumerate(destroy_notifiers, nsnull);
+  tmp->mImageNotifiers.Clear();
 
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLangService); // a service
@@ -655,6 +654,9 @@ nsPresContext::GetUserPreferences()
     nsContentUtils::GetBoolPref("browser.display.focus_ring_on_anything",
                                 mFocusRingOnAnything);
 
+  mFocusRingStyle =
+          nsContentUtils::GetIntPref("browser.display.focus_ring_style",
+                                      mFocusRingStyle);
   // * use fonts?
   mUseDocumentFonts =
     nsContentUtils::GetIntPref("browser.display.use_document_fonts") != 0;
@@ -811,10 +813,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     mDeviceContext->FlushFontCache();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 
-  if (!mImageLoaders.Init())
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  if (!mBorderImageLoaders.Init())
+  if (!mImageNotifiers.Init())
     return NS_ERROR_OUT_OF_MEMORY;
   
   // Get the look and feel service here; default colors will be initialized
@@ -936,14 +935,6 @@ nsPresContext::UpdateCharSet(const nsAFlatCString& aCharSet)
     NS_IF_RELEASE(mLangGroup);
     mLangGroup = mLangService->LookupCharSet(aCharSet.get()).get();  // addrefs
 
-    if (mLangGroup == nsGkAtoms::Japanese && mEnableJapaneseTransform) {
-      mLanguageSpecificTransformType =
-        eLanguageSpecificTransformType_Japanese;
-    }
-    else {
-      mLanguageSpecificTransformType =
-        eLanguageSpecificTransformType_None;
-    }
     // bug 39570: moved from nsLanguageAtomService::LookupCharSet()
 #if !defined(XP_BEOS) 
     if (mLangGroup == nsGkAtoms::Unicode) {
@@ -1033,11 +1024,14 @@ static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, PRUint16 aMode)
 }
 
  // Enumeration call back for HashTable
-PR_STATIC_CALLBACK(PLDHashOperator)
-set_animation_mode(const void * aKey, nsCOMPtr<nsImageLoader>& aData, void* closure)
+static PLDHashOperator
+set_animation_mode(const void * aKey, nsRefPtr<nsImageLoadNotifier>& aData, void* closure)
 {
-  imgIRequest* imgReq = aData->GetRequest();
-  SetImgAnimModeOnImgReq(imgReq, (PRUint16)NS_PTR_TO_INT32(closure));
+  for (nsImageLoadNotifier *loader = aData; loader;
+       loader = loader->GetNextLoader()) {
+    imgIRequest* imgReq = loader->GetRequest();
+    SetImgAnimModeOnImgReq(imgReq, (PRUint16)NS_PTR_TO_INT32(closure));
+  }
   return PL_DHASH_NEXT;
 }
 
@@ -1075,7 +1069,7 @@ nsPresContext::SetImageAnimationModeInternal(PRUint16 aMode)
 
   // This hash table contains a list of background images
   // so iterate over it and set the mode
-  mImageLoaders.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
+  mImageNotifiers.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
 
   // Now walk the content tree and set the animation mode 
   // on all the images
@@ -1099,21 +1093,15 @@ nsPresContext::SetImageAnimationModeExternal(PRUint16 aMode)
 }
 
 already_AddRefed<nsIFontMetrics>
-nsPresContext::GetMetricsForInternal(const nsFont& aFont)
+nsPresContext::GetMetricsFor(const nsFont& aFont)
 {
   nsIFontMetrics* metrics = nsnull;
   mDeviceContext->GetMetricsFor(aFont, mLangGroup, metrics);
   return metrics;
 }
 
-already_AddRefed<nsIFontMetrics>
-nsPresContext::GetMetricsForExternal(const nsFont& aFont)
-{
-  return GetMetricsForInternal(aFont);
-}
-
 const nsFont*
-nsPresContext::GetDefaultFontInternal(PRUint8 aFontID) const
+nsPresContext::GetDefaultFont(PRUint8 aFontID) const
 {
   const nsFont *font;
   switch (aFontID) {
@@ -1148,12 +1136,6 @@ nsPresContext::GetDefaultFontInternal(PRUint8 aFontID) const
   return font;
 }
 
-const nsFont*
-nsPresContext::GetDefaultFontExternal(PRUint8 aFontID) const
-{
-  return GetDefaultFontInternal(aFontID);
-}
-
 void
 nsPresContext::SetFullZoom(float aZoom)
 {
@@ -1184,66 +1166,29 @@ nsPresContext::SetFullZoom(float aZoom)
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 }
 
-imgIRequest*
-nsPresContext::DoLoadImage(nsPresContext::ImageLoaderTable& aTable,
-                           imgIRequest* aImage,
-                           nsIFrame* aTargetFrame,
-                           PRBool aReflowOnLoad)
+void
+nsPresContext::SetImageNotifiers(nsIFrame* aTargetFrame,
+                                 nsImageLoadNotifier* aImageNotifiers)
 {
-  // look and see if we have a loader for the target frame.
-  nsCOMPtr<nsImageLoader> loader;
-  aTable.Get(aTargetFrame, getter_AddRefs(loader));
+  nsRefPtr<nsImageLoadNotifier> oldNotifiers;
+  mImageNotifiers.Get(aTargetFrame, getter_AddRefs(oldNotifiers));
 
-  if (!loader) {
-    loader = new nsImageLoader();
-    if (!loader)
-      return nsnull;
-
-    loader->Init(aTargetFrame, this, aReflowOnLoad);
-    mImageLoaders.Put(aTargetFrame, loader);
+  if (aImageNotifiers) {
+    mImageNotifiers.Put(aTargetFrame, aImageNotifiers);
+  } else if (oldNotifiers) {
+    mImageNotifiers.Remove(aTargetFrame);
   }
 
-  loader->Load(aImage);
-
-  imgIRequest *request = loader->GetRequest();
-
-  return request;
-}
-
-imgIRequest*
-nsPresContext::LoadImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
-{
-  return DoLoadImage(mImageLoaders, aImage, aTargetFrame, PR_FALSE);
-}
-
-imgIRequest*
-nsPresContext::LoadBorderImage(imgIRequest* aImage, nsIFrame* aTargetFrame)
-{
-  return DoLoadImage(mBorderImageLoaders, aImage, aTargetFrame,
-                     aTargetFrame->GetStyleBorder()->ImageBorderDiffers());
+  if (oldNotifiers)
+    oldNotifiers->Destroy();
 }
 
 void
 nsPresContext::StopImagesFor(nsIFrame* aTargetFrame)
 {
-  StopBackgroundImageFor(aTargetFrame);
-  StopBorderImageFor(aTargetFrame);
+  SetImageNotifiers(aTargetFrame, nsnull);
 }
 
-void
-nsPresContext::DoStopImageFor(nsPresContext::ImageLoaderTable& aTable,
-                              nsIFrame* aTargetFrame)
-{
-  nsCOMPtr<nsImageLoader> loader;
-  aTable.Get(aTargetFrame, getter_AddRefs(loader));
-
-  if (loader) {
-    loader->Destroy();
-
-    aTable.Remove(aTargetFrame);
-  }
-}
-  
 void
 nsPresContext::SetContainer(nsISupports* aHandler)
 {

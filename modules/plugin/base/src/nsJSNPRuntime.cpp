@@ -992,7 +992,7 @@ public:
 };
 
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 JSObjWrapperHash(PLDHashTable *table, const void *key)
 {
   const nsJSObjWrapperKey *e = static_cast<const nsJSObjWrapperKey *>(key);
@@ -1000,7 +1000,7 @@ JSObjWrapperHash(PLDHashTable *table, const void *key)
   return (PLDHashNumber)((PRWord)e->mJSObj ^ (PRWord)e->mNpp) >> 2;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 JSObjWrapperHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
                            const void *key)
 {
@@ -1756,7 +1756,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
 
 // PLDHashTable enumeration callbacks for destruction code.
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 JSObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                     PRUint32 number, void *arg)
 {
@@ -1792,7 +1792,7 @@ struct NppAndCx
   JSContext *cx;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 NPObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                     PRUint32 number, void *arg)
 {

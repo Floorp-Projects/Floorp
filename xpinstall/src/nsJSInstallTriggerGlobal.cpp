@@ -78,7 +78,7 @@ void ConvertJSValToStr(nsString&  aString,
   }
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 FinalizeInstallTriggerGlobal(JSContext *cx, JSObject *obj);
 
 /***********************************************************************/

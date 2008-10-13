@@ -226,6 +226,7 @@ bin/components/extensions.xpt
 bin/components/update.xpt
 bin/components/nsSessionStartup.js
 bin/components/nsSessionStore.js
+bin/components/aboutSessionRestore.js
 bin/components/sessionstore.xpt
 bin/components/nsURLFormatter.js
 bin/components/urlformatter.xpt

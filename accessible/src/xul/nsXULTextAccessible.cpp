@@ -55,19 +55,15 @@ nsHyperTextAccessibleWrap(aDomNode, aShell)
 { 
 }
 
-/* wstring getName (); */
-NS_IMETHODIMP
-nsXULTextAccessible::GetName(nsAString& aName)
+nsresult
+nsXULTextAccessible::GetNameInternal(nsAString& aName)
 { 
-  aName.Truncate();
-
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node shut down
-  }
+
   // if the value attr doesn't exist, the screen reader must get the accessible text
   // from the accessible text interface or from the children
-  return content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -120,11 +116,9 @@ nsLeafAccessible(aDomNode, aShell)
 { 
 }
 
-NS_IMETHODIMP
-nsXULTooltipAccessible::GetName(nsAString& aName)
+nsresult
+nsXULTooltipAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
   return GetXULName(aName, PR_TRUE);
 }
 
@@ -174,14 +168,9 @@ nsXULLinkAccessible::GetValue(nsAString& aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULLinkAccessible::GetName(nsAString& aName)
+nsresult
+nsXULLinkAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
   if (!aName.IsEmpty())

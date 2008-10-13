@@ -1,0 +1,4 @@
+#filter substitution
+[D-BUS Service]
+Name=org.mozilla.@MOZ_APP_NAME@
+Exec=@installdir@/xulrunner

@@ -112,6 +112,13 @@ function cleanup()
   if (dbFile.exists())
     try { dbFile.remove(true); } catch(e) { /* stupid windows box */ }
 
+  // remove places.sqlite since expiration won't work properly if we do not have
+  // a clean database file.
+  dbFile = dirSvc.get("ProfD", Ci.nsIFile);
+  dbFile.append("places.sqlite");
+  if (dbFile.exists())
+    try { dbFile.remove(true); } catch(e) { /* stupid windows box */ }
+
   // removing downloaded file
   var destFile = dirSvc.get("ProfD", Ci.nsIFile);
   destFile.append("download.result");

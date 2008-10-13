@@ -124,7 +124,7 @@ static HINSTANCE gShell32DLLInst = NULL;
 
 NS_COM void StartupSpecialSystemDirectory()
 {
-#if defined (XP_WIN) && !defined (WINCE)
+#if defined (XP_WIN)
     // SHGetKnownFolderPath is only available on Windows Vista
     // so that we need to use GetProcAddress to get the pointer.
     gShell32DLLInst = LoadLibrary("Shell32.dll");
@@ -522,20 +522,14 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #endif
             
         case OS_TemporaryDirectory:
-#if defined (XP_WIN) && !defined (WINCE)
-        {
+#if defined (XP_WIN)
+            {
             DWORD len = ::GetTempPathW(MAX_PATH, path);
             if (len == 0)
                 break;
             return NS_NewLocalFile(nsDependentString(path, len), 
                                    PR_TRUE, 
                                    aFile);
-        }
-#elif defined (WINCE)
-        {
-            return NS_NewNativeLocalFile(NS_LITERAL_CSTRING("\\Temp"), 
-                                         PR_TRUE, 
-                                         aFile);
         }
 #elif defined(XP_OS2)
         {

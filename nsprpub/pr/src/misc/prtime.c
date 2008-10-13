@@ -1696,6 +1696,7 @@ PR_ParseTimeString(
 PR_IMPLEMENT(PRUint32)
 PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
 {
+    size_t rv;
     struct tm a;
     a.tm_sec = tm->tm_sec;
     a.tm_min = tm->tm_min;
@@ -1719,7 +1720,16 @@ PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
     a.tm_gmtoff = tm->tm_params.tp_gmt_offset + tm->tm_params.tp_dst_offset;
 #endif
 
-    return strftime(buf, buflen, fmt, &a);
+    rv = strftime(buf, buflen, fmt, &a);
+    if (!rv && buf && buflen > 0) {
+        /*
+         * When strftime fails, the contents of buf are indeterminate.
+         * Some callers don't check the return value from this function,
+         * so store an empty string in buf in case they try to print it.
+         */
+        buf[0] = '\0';
+    }
+    return rv;
 }
 
 

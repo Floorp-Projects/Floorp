@@ -75,7 +75,7 @@ struct nsFindFrameHint
   nsFindFrameHint() : mPrimaryFrameForPrevSibling(nsnull) { }
 };
 
-typedef void (PR_CALLBACK nsLazyFrameConstructionCallback)
+typedef void (nsLazyFrameConstructionCallback)
              (nsIContent* aContent, nsIFrame* aFrame, void* aArg);
 
 class nsFrameConstructorState;

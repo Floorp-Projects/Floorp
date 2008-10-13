@@ -83,7 +83,12 @@ radio[disabled="true"] > .radio-check-box1 {
 }
 
 radio[disabled="true"] {
-  color: GrayText !important;
+  color: GrayText;
+}
+
+radio[disabled="true"]:-moz-system-metric(windows-classic) {
+  color: ThreeDShadow;
+  text-shadow: 1px 1px ThreeDHighlight;
 }
 
 /* ::::: checkmark image ::::: */

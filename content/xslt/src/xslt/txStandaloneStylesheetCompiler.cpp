@@ -119,7 +119,7 @@ TX_CompileStylesheetPath(const txParsedURL& aURL, txStylesheet** aResult)
 // shortcut macro for redirection into txDriver method calls
 #define TX_DRIVER(_userData) static_cast<txDriver*>(_userData)
 
-PR_STATIC_CALLBACK(void)
+static void
 startElement(void *aUserData, const XML_Char *aName, const XML_Char **aAtts)
 {
     if (!aUserData) {
@@ -129,7 +129,7 @@ startElement(void *aUserData, const XML_Char *aName, const XML_Char **aAtts)
     TX_DRIVER(aUserData)->StartElement(aName, aAtts);
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 endElement(void *aUserData, const XML_Char* aName)
 {
     if (!aUserData) {
@@ -139,7 +139,7 @@ endElement(void *aUserData, const XML_Char* aName)
     TX_DRIVER(aUserData)->EndElement(aName);
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 charData(void* aUserData, const XML_Char* aChars, int aLength)
 {
     if (!aUserData) {
@@ -149,7 +149,7 @@ charData(void* aUserData, const XML_Char* aChars, int aLength)
     TX_DRIVER(aUserData)->CharacterData(aChars, aLength);
 }
 
-PR_STATIC_CALLBACK(int)
+static int
 externalEntityRefHandler(XML_Parser aParser,
                          const XML_Char *aContext,
                          const XML_Char *aBase,

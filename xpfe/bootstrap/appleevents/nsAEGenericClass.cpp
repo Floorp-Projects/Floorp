@@ -453,7 +453,7 @@ void AEGenericClass::HandleMake(AEDesc *token, const AppleEvent *appleEvent, App
 	//   then deal with it correctly later.
 	if (objectSpec.descriptorType == typeNull) 
 	{
-		::AEDisposeDesc(token);			// destroy it's old representation, token will now be null descriptor
+		::AEDisposeDesc(token);			// destroy its old representation, token will now be null descriptor
 	}
 	else
 	{

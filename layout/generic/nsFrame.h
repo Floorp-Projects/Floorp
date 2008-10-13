@@ -563,8 +563,13 @@ public:
   static void GetLastLeaf(nsPresContext* aPresContext, nsIFrame **aFrame);
   static void GetFirstLeaf(nsPresContext* aPresContext, nsIFrame **aFrame);
 
-  // return the line number of the aFrame, and (optionally) the containing block frame.
-  static PRInt32 GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock = nsnull);
+  // Return the line number of the aFrame, and (optionally) the containing block
+  // frame.
+  // If aScrollLock is true, don't break outside scrollframes when looking for a
+  // containing block frame.
+  static PRInt32 GetLineNumber(nsIFrame *aFrame,
+                               PRBool aLockScroll,
+                               nsIFrame** aContainingBlock = nsnull);
 
 protected:
 

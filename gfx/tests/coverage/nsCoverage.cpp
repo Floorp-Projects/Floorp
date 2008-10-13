@@ -252,7 +252,7 @@ nsPoint *pointlist;
  * Main Handler
  *--------------------------------------------------------------------------------
  */
-nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
+nsEventStatus HandleEvent(nsGUIEvent *aEvent)
 { 
    nsEventStatus result = nsEventStatus_eIgnore;
 

@@ -719,9 +719,7 @@ nsPrincipal::GetHashValue(PRUint32* aValue)
     *aValue = nsCRT::HashCode(mCert->fingerprint.get());
   }
   else {
-    nsCAutoString str;
-    mCodebase->GetSpec(str);
-    *aValue = nsCRT::HashCode(str.get());
+    *aValue = nsScriptSecurityManager::HashPrincipalByOrigin(this);
   }
 
   return NS_OK;
@@ -846,7 +844,7 @@ struct CapabilityList
   nsCString* denied;
 };
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 AppendCapability(nsHashKey *aKey, void *aData, void *capListPtr)
 {
   CapabilityList* capList = (CapabilityList*)capListPtr;
@@ -973,7 +971,7 @@ nsPrincipal::GetPreferences(char** aPrefName, char** aID,
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 ReadAnnotationEntry(nsIObjectInputStream* aStream, nsHashKey** aKey,
                     void** aData)
 {
@@ -995,7 +993,7 @@ ReadAnnotationEntry(nsIObjectInputStream* aStream, nsHashKey** aKey,
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 FreeAnnotationEntry(nsIObjectInputStream* aStream, nsHashKey* aKey,
                     void* aData)
 {
@@ -1087,7 +1085,7 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 WriteScalarValue(nsIObjectOutputStream* aStream, void* aData)
 {
   PRUint32 value = NS_PTR_TO_INT32(aData);

@@ -4358,7 +4358,7 @@ nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL,
   return StringBeginsWith(aHistoryURL, aUserURL);
 }
 
-int PR_CALLBACK
+int
 nsGlobalHistory::AutoCompleteSortComparison(nsIMdbRow* row1, nsIMdbRow* row2,
                                             void* closureVoid)
 {

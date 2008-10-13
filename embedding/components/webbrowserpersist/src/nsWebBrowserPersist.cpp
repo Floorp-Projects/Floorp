@@ -2404,7 +2404,7 @@ nsWebBrowserPersist::FixRedirectedChannelEntry(nsIChannel *aNewChannel)
     return NS_OK;
 }
 
-PRBool PR_CALLBACK
+PRBool
 nsWebBrowserPersist::EnumFixRedirect(nsHashKey *aKey, void *aData, void* closure)
 {
     FixRedirectData *data = (FixRedirectData *) closure;
@@ -2456,7 +2456,7 @@ nsWebBrowserPersist::CalcTotalProgress()
     }
 }
 
-PRBool PR_CALLBACK
+PRBool
 nsWebBrowserPersist::EnumCalcProgress(nsHashKey *aKey, void *aData, void* closure)
 {
     nsWebBrowserPersist *pthis = (nsWebBrowserPersist *) closure;
@@ -2472,7 +2472,7 @@ nsWebBrowserPersist::EnumCalcProgress(nsHashKey *aKey, void *aData, void* closur
     return PR_TRUE;
 }
 
-PRBool PR_CALLBACK
+PRBool
 nsWebBrowserPersist::EnumCalcUploadProgress(nsHashKey *aKey, void *aData, void* closure)
 {
     if (aData && closure)
@@ -2485,7 +2485,7 @@ nsWebBrowserPersist::EnumCalcUploadProgress(nsHashKey *aKey, void *aData, void* 
     return PR_TRUE;
 }
 
-PRBool PR_CALLBACK
+PRBool
 nsWebBrowserPersist::EnumCountURIsToPersist(nsHashKey *aKey, void *aData, void* closure)
 {
     URIData *data = (URIData *) aData;
@@ -2497,7 +2497,7 @@ nsWebBrowserPersist::EnumCountURIsToPersist(nsHashKey *aKey, void *aData, void* 
     return PR_TRUE;
 }
 
-PRBool PR_CALLBACK
+PRBool
 nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure)
 {
     URIData *data = (URIData *) aData;
@@ -2548,7 +2548,7 @@ nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure
     return PR_TRUE;
 }
 
-PRBool PR_CALLBACK
+PRBool
 nsWebBrowserPersist::EnumCleanupOutputMap(nsHashKey *aKey, void *aData, void* closure)
 {
     nsCOMPtr<nsISupports> keyPtr;
@@ -2567,7 +2567,7 @@ nsWebBrowserPersist::EnumCleanupOutputMap(nsHashKey *aKey, void *aData, void* cl
 }
 
 
-PRBool PR_CALLBACK
+PRBool
 nsWebBrowserPersist::EnumCleanupURIMap(nsHashKey *aKey, void *aData, void* closure)
 {
     URIData *data = (URIData *) aData;
@@ -2579,7 +2579,7 @@ nsWebBrowserPersist::EnumCleanupURIMap(nsHashKey *aKey, void *aData, void* closu
 }
 
 
-PRBool PR_CALLBACK
+PRBool
 nsWebBrowserPersist::EnumCleanupUploadList(nsHashKey *aKey, void *aData, void* closure)
 {
     nsCOMPtr<nsISupports> keyPtr;

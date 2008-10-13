@@ -260,7 +260,7 @@ static nsModuleComponentInfo components[] = {
 PRLogModuleInfo *gNegotiateLog;
 
 // setup nspr logging ...
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 InitNegotiateAuth(nsIModule *self)
 {
   gNegotiateLog = PR_NewLogModule("negotiateauth");
@@ -270,7 +270,7 @@ InitNegotiateAuth(nsIModule *self)
 #define InitNegotiateAuth nsnull
 #endif
 
-PR_STATIC_CALLBACK(void)
+static void
 DestroyNegotiateAuth(nsIModule *self)
 {
   nsAuthGSSAPI::Shutdown();

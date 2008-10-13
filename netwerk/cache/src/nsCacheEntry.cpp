@@ -500,13 +500,13 @@ nsCacheEntryHashTable::VisitEntries( PLDHashEnumerator etor, void *arg)
  *  hash table operation callback functions
  */
 
-PLDHashNumber PR_CALLBACK
+PLDHashNumber
 nsCacheEntryHashTable::HashKey( PLDHashTable *table, const void *key)
 {
     return PL_DHashStringKey(table,((nsCString *)key)->get());
 }
 
-PRBool PR_CALLBACK
+PRBool
 nsCacheEntryHashTable::MatchEntry(PLDHashTable *       /* table */,
                                   const PLDHashEntryHdr * hashEntry,
                                   const void *            key)
@@ -518,7 +518,7 @@ nsCacheEntryHashTable::MatchEntry(PLDHashTable *       /* table */,
 }
 
 
-void PR_CALLBACK
+void
 nsCacheEntryHashTable::MoveEntry(PLDHashTable * /* table */,
                                  const PLDHashEntryHdr *from,
                                  PLDHashEntryHdr       *to)
@@ -528,7 +528,7 @@ nsCacheEntryHashTable::MoveEntry(PLDHashTable * /* table */,
 }
 
 
-void PR_CALLBACK
+void
 nsCacheEntryHashTable::ClearEntry(PLDHashTable * /* table */,
                                   PLDHashEntryHdr * hashEntry)
 {

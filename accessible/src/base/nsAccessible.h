@@ -91,6 +91,14 @@ private:
 };
 
 
+#define NS_ACCESSIBLE_IMPL_CID                          \
+{  /* 4E36C7A8-9203-4ef9-B619-271DDF6BB839 */           \
+  0x4e36c7a8,                                           \
+  0x9203,                                               \
+  0x4ef9,                                               \
+  { 0xb6, 0x19, 0x27, 0x1d, 0xdf, 0x6b, 0xb8, 0x39 }    \
+}
+
 class nsAccessible : public nsAccessNodeWrap, 
                      public nsIAccessible, 
                      public nsPIAccessible,
@@ -110,15 +118,32 @@ public:
   NS_DECL_NSIACCESSIBLEHYPERLINK
   NS_DECL_NSIACCESSIBLESELECTABLE
   NS_DECL_NSIACCESSIBLEVALUE
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLE_IMPL_CID)
 
   // nsIAccessNode
   NS_IMETHOD Shutdown();
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Public methods
+
+  /**
+   * Returns the accessible name specified by ARIA.
+   */
+  nsresult GetARIAName(nsAString& aName);
+
+  /**
+   * Returns the accessible name provided by native markup. It doesn't take
+   * into account ARIA stuffs used to specify the name.
+   */
+  virtual nsresult GetNameInternal(nsAString& aName);
 
   /**
    * Return the state of accessible that doesn't take into account ARIA states.
    * Use nsIAccessible::finalState() to get all states for accessible. If
    * second argument is omitted then second bit field of accessible state won't
    * be calculated.
+   *
+   * XXX: should be renamed into GetStateInternal
    */
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 
@@ -127,6 +152,11 @@ public:
    * attributes.
    */
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Helper methods
+  //
+  // XXX: should be moved into utility class
 
 #ifdef DEBUG_A11Y
   static PRBool IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible);
@@ -260,6 +290,14 @@ protected:
   nsresult GetAttrValue(nsIAtom *aAriaProperty, double *aValue);
 
   /**
+   * Return the action rule based on ARIA enum constants EActionRule
+   * (see nsARIAMap.h). Used by GetNumActions() and GetActionName().
+   *
+   * @param aStates  [in] states of the accessible
+   */
+  PRUint32 GetActionRule(PRUint32 aStates);
+
+  /**
    * Fires platform accessible event. It's notification method only. It does
    * change nothing on Gecko side. Mostly you should use
    * nsIAccessible::FireAccessibleEvent excepting special cases like we have
@@ -278,6 +316,8 @@ protected:
   PRInt32 mAccChildCount;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessible,
+                              NS_ACCESSIBLE_IMPL_CID)
 
 #endif  
 

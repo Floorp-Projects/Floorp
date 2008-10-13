@@ -209,14 +209,14 @@ struct nsHostDBEnt : PLDHashEntryHdr
     nsHostRecord *rec;
 };
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 HostDB_HashKey(PLDHashTable *table, const void *key)
 {
     const nsHostKey *hk = static_cast<const nsHostKey *>(key);
     return PL_DHashStringKey(table, hk->host) ^ hk->flags ^ hk->af;
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 HostDB_MatchEntry(PLDHashTable *table,
                   const PLDHashEntryHdr *entry,
                   const void *key)
@@ -229,7 +229,7 @@ HostDB_MatchEntry(PLDHashTable *table,
             he->rec->af == hk->af;
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 HostDB_MoveEntry(PLDHashTable *table,
                  const PLDHashEntryHdr *from,
                  PLDHashEntryHdr *to)
@@ -238,7 +238,7 @@ HostDB_MoveEntry(PLDHashTable *table,
             static_cast<const nsHostDBEnt *>(from)->rec;
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 HostDB_ClearEntry(PLDHashTable *table,
                   PLDHashEntryHdr *entry)
 {
@@ -268,7 +268,7 @@ HostDB_ClearEntry(PLDHashTable *table,
     NS_RELEASE(he->rec);
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 HostDB_InitEntry(PLDHashTable *table,
                  PLDHashEntryHdr *entry,
                  const void *key)
@@ -290,7 +290,7 @@ static PLDHashTableOps gHostDB_ops =
     HostDB_InitEntry,
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 HostDB_RemoveEntry(PLDHashTable *table,
                    PLDHashEntryHdr *hdr,
                    PRUint32 number,
@@ -676,7 +676,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
 
 //----------------------------------------------------------------------------
 
-void PR_CALLBACK
+void
 nsHostResolver::ThreadFunc(void *arg)
 {
     LOG(("nsHostResolver::ThreadFunc entering\n"));
