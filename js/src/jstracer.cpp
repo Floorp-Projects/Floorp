@@ -2818,7 +2818,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
 
     AUDIT(sideExitIntoInterpreter);
 
-    return lr;
+    return innermost;
 }
 
 bool
