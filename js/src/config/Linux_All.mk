@@ -60,17 +60,6 @@ ifeq (86,$(findstring 86,$(CPU_ARCH)))
 CPU_ARCH = x86
 OS_CFLAGS += -DX86_LINUX -DAVMPLUS_IA32 -DAVMPLUS_UNIX -DAVMPLUS_LINUX
 NANOJIT_ARCH = i386
-
-ifeq (gcc, $(CC))
-# if using gcc on x86, check version for opt bug 
-# (http://bugzilla.mozilla.org/show_bug.cgi?id=24892)
-GCC_VERSION := $(shell gcc -v 2>&1 | grep version | awk '{ print $$3 }')
-GCC_LIST:=$(sort 2.91.66 $(GCC_VERSION) )
-
-ifeq (2.91.66, $(firstword $(GCC_LIST)))
-CFLAGS+= -DGCC_OPT_BUG
-endif # gcc 2.91.66
-endif # gcc
 endif # 86
 endif # !x86_64
 

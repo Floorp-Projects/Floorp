@@ -871,26 +871,11 @@ LoginManager.prototype = {
         if (existingLogin) {
             this.log("Found an existing login matching this form submission");
 
-            /*
-             * Change password if needed.
-             *
-             * If the login has a username, change the password w/o prompting
-             * (because we can be fairly sure there's only one password
-             * associated with the username). But for logins without a
-             * username, ask the user... Some sites use a password-only "login"
-             * in different contexts (enter your PIN, answer a security
-             * question, etc), and without a username we can't be sure if
-             * modifying an existing login is the right thing to do.
-             */
+            // Change password if needed.
             if (existingLogin.password != formLogin.password) {
-                if (formLogin.username) {
-                    this.log("...Updating password for existing login.");
-                    this.modifyLogin(existingLogin, formLogin);
-                } else {
-                    this.log("...passwords differ, prompting to change.");
-                    prompter = getPrompter(win);
-                    prompter.promptToChangePassword(existingLogin, formLogin);
-                }
+                this.log("...passwords differ, prompting to change.");
+                prompter = getPrompter(win);
+                prompter.promptToChangePassword(existingLogin, formLogin);
             }
 
             return;

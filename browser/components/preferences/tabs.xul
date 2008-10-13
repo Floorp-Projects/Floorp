@@ -53,7 +53,6 @@
             helpTopic="prefs-tabs">
 
     <preferences id="tabsPreferences">
-      <preference id="browser.link.open_external"      name="browser.link.open_external"      type="int"/>
       <preference id="browser.link.open_newwindow"     name="browser.link.open_newwindow"     type="int"/>
       <preference id="browser.tabs.autoHide"           name="browser.tabs.autoHide"           type="bool" inverted="true"/>
       <preference id="browser.tabs.loadInBackground"   name="browser.tabs.loadInBackground"   type="bool" inverted="true"/>
@@ -68,7 +67,7 @@
     <vbox id="tabPrefsBox" align="start" flex="1">
       <checkbox id="linkTargeting" label="&newWindowsAsTabs.label;"
                 accesskey="&newWindowsAsTabs.accesskey;"
-                preference="browser.link.open_external"
+                preference="browser.link.open_newwindow"
                 onsyncfrompreference="return gTabsPane.readLinkTarget();"
                 onsynctopreference="return gTabsPane.writeLinkTarget();"/>
       <checkbox id="warnCloseMultiple" label="&warnCloseMultipleTabs.label;"

@@ -47,7 +47,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsIContentSniffer.h"
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CopyProperties(const nsAString &key, nsIVariant *data, void *closure)
 {
   nsIWritablePropertyBag *bag =

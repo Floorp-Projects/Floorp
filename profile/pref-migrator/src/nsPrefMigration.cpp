@@ -2273,7 +2273,7 @@ nsPrefMigration::DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathN
   we'll also be converting:
 
   Please make sure that any pref that contains native characters
-  in it's value is not included in this list as we do not want to 
+  in its value is not included in this list as we do not want to 
   convert them into UTF-8 format. Prefs are being get and set in a 
   unicode format (FileXPref) now and there is no need for 
   conversion of those prefs. 

@@ -105,7 +105,7 @@ struct nsRequestInfo : public PLDHashEntryHdr
 };
 
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 RequestInfoHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                          const void *key)
 {
@@ -1437,7 +1437,7 @@ nsRequestInfo * nsDocLoader::GetRequestInfo(nsIRequest *aRequest)
 
 // PLDHashTable enumeration callback that just removes every entry
 // from the hash.
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RemoveInfoCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
                    void *arg)
 {
@@ -1456,7 +1456,7 @@ void nsDocLoader::ClearRequestInfoHash(void)
 }
 
 // PLDHashTable enumeration callback that calculates the max progress.
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CalcMaxProgressCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
                         PRUint32 number, void *arg)
 {

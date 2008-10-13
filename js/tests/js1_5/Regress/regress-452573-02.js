@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-452573-01.js';
+var gTestfile = 'regress-452573-02.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 452573;
 var summary = 'Do not assert with JIT: "(((rmask(rr) & FpRegs) != 0))"';

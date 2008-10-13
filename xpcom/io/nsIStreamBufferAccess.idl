@@ -129,7 +129,7 @@ interface nsIStreamBufferAccess : nsISupports
 # if defined HAVE_LONG_LONG
 #  if PR_BYTES_PER_LONG == 8
 #   define ULL_(x)     x ## UL
-#  elif (defined WIN32 || defined WIN16) && !defined __GNUC__
+#  elif defined WIN32 && !defined __GNUC__
 #   define ULL_(x)     ((uint64) x ## i64)
 #  else
 #   define ULL_(x)     x ## ULL

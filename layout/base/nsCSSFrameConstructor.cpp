@@ -3158,6 +3158,9 @@ nsCSSFrameConstructor::GetParentFrame(PRInt32                  aNameSpaceID,
   aParentFrame = &aParentFrameIn;
   aIsPseudoParent = PR_FALSE;
 
+  nsFrameState savedStateBits  = aState.mAdditionalStateBits;
+  aState.mAdditionalStateBits &= ~NS_FRAME_GENERATED_CONTENT;
+
   if (nsGkAtoms::tableOuterFrame == aChildFrameType) { // table child
     if (IsTableRelated(parentFrameType, PR_TRUE) &&
         (nsGkAtoms::tableCaptionFrame != parentFrameType) ) { // need pseudo cell parent
@@ -3226,6 +3229,7 @@ nsCSSFrameConstructor::GetParentFrame(PRInt32                  aNameSpaceID,
     aIsPseudoParent = PR_TRUE;
   }
 
+  aState.mAdditionalStateBits = savedStateBits;
   return rv;
 }
 
@@ -3412,10 +3416,13 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
        // with a frame based on something other than display.
        childIsSpecialContent || // looked it up before
        IsSpecialContent(aChildContent, aTag, aNameSpaceID, aChildStyle))) {
+    nsFrameState savedStateBits  = aState.mAdditionalStateBits;
+    aState.mAdditionalStateBits &= ~NS_FRAME_GENERATED_CONTENT;
     nsresult rv = GetPseudoCellFrame(aNameSpaceID, aState, *aParentFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
+    aState.mAdditionalStateBits = savedStateBits;
 
     NS_ASSERTION(aState.mPseudoFrames.mCellInner.mFrame,
                  "Must have inner cell frame now!");
@@ -3533,6 +3540,12 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
                          aStyleContext, parentFrame);
     if (NS_FAILED(rv)) {
       return rv;
+    }
+
+    if (!mInitialContainingBlock) {
+      // The frame we're constructing will be the initial containing block.
+      // Set mInitialContainingBlock before processing children.
+      mInitialContainingBlock = aNewOuterFrame;
     }
 
     nsFrameItems childItems;
@@ -4290,6 +4303,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
   // set the primary frame
   aState.mFrameManager->SetPrimaryFrameFor(aDocElement, contentFrame);
 
+  NS_ASSERTION(processChildren ? !mInitialContainingBlock :
+                 mInitialContainingBlock == contentFrame,
+               "unexpected mInitialContainingBlock");
   mInitialContainingBlock = contentFrame;
 
   // Figure out which frame has the main style for the document element,
@@ -7708,8 +7724,7 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
     if (frame->IsFrameOfType(nsIFrame::eMathML)) {
       // If it's mathml, bail out -- no absolute positioning out from inside
       // mathml frames.  Note that we don't make this part of the loop
-      // condition because of the mInitialContainingBlock stuff at the
-      // end of this method...
+      // condition because of the stuff at the end of this method...
       return nsnull;
     }
     
@@ -12308,6 +12323,12 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   // See if we need to create a view, e.g. the frame is absolutely positioned
   nsHTMLContainerFrame::CreateViewForFrame(blockFrame, contentParent, PR_FALSE);
 
+  if (!mInitialContainingBlock) {
+    // The frame we're constructing will be the initial containing block.
+    // Set mInitialContainingBlock before processing children.
+    mInitialContainingBlock = *aNewFrame;
+  }
+
   // We should make the outer frame be the absolute containing block,
   // if one is required. We have to do this because absolute
   // positioning must be computed with respect to the CSS dimensions
@@ -13178,7 +13199,7 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
 }
 
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CollectRestyles(nsISupports* aContent,
                 nsCSSFrameConstructor::RestyleData& aData,
                 void* aRestyleArrayPtr)

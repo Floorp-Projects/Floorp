@@ -91,9 +91,13 @@ class nsXULGroupboxAccessible : public nsAccessibleWrap
 {
 public:
   nsXULGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated);
+
+  // nsAccessible
+  virtual nsresult GetNameInternal(nsAString& aName);
 };
 
 class nsXULProgressMeterAccessible : public nsFormControlAccessible

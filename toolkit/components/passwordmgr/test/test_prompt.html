@@ -6,6 +6,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <script type="text/javascript" src="prompt_common.js"></script>
+  <script type="text/javascript" src="notification_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -22,11 +23,14 @@ Login Manager test: username/password prompts
 /** Test for Login Manager: username / password prompts. **/
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-var pwmgr, login1, login2A, login2B, login3A, login3B;
+var pwmgr, tmplogin, login1, login2A, login2B, login3A, login3B, login4;
 
 function initLogins() {
   pwmgr = Cc["@mozilla.org/login-manager;1"].
           getService(Ci.nsILoginManager);
+
+  tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+             createInstance(Ci.nsILoginInfo);
 
   login1  = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
@@ -38,6 +42,8 @@ function initLogins() {
             createInstance(Ci.nsILoginInfo);
   login3B = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
+  login4  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+            createInstance(Ci.nsILoginInfo);
 
   login1.init("http://example.com", null, "http://example.com",
               "", "examplepass", "", "");
@@ -45,17 +51,19 @@ function initLogins() {
                "user1name", "user1pass", "", "");
   login2B.init("http://example2.com", null, "http://example2.com",
                "user2name", "user2pass", "", "");
-
   login3A.init("http://localhost:8888", null, "mochitest",
                "mochiuser1", "mochipass1", "", "");
   login3B.init("http://localhost:8888", null, "mochitest2",
                "mochiuser2", "mochipass2", "", "");
+  login4.init("http://localhost:8888", null, "mochitest3",
+               "mochiuser3", "mochipass3-old", "", "");
 
   pwmgr.addLogin(login1);
   pwmgr.addLogin(login2A);
   pwmgr.addLogin(login2B);
   pwmgr.addLogin(login3A);
   pwmgr.addLogin(login3B);
+  pwmgr.addLogin(login4);
 }
 
 function finishTest() {
@@ -65,10 +73,19 @@ function finishTest() {
   pwmgr.removeLogin(login2B);
   pwmgr.removeLogin(login3A);
   pwmgr.removeLogin(login3B);
+  pwmgr.removeLogin(login4);
 
   SimpleTest.finish();
 }
 
+/*
+ * handleDialog
+ *
+ * Invoked a short period of time after calling startCallbackTimer(), and
+ * allows testing the actual auth dialog while it's being displayed. Tests
+ * should call startCallbackTimer() each time the auth dialog is expected (the
+ * timer is a one-shot).
+ */
 function handleDialog(doc, testNum) {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "handleDialog running for test " + testNum);
@@ -235,6 +252,27 @@ function handleDialog(doc, testNum) {
         is(password, "mochipass2", "Checking filled password");
         break;
 
+    // (1002 doesn't trigger a dialog)
+
+    case 1003:
+        is(username, "mochiuser1", "Checking filled username");
+        is(password, "mochipass1", "Checking filled password");
+        passfield.setAttribute("value", "mochipass1-new");
+        break;
+
+    case 1004:
+        is(username, "mochiuser3", "Checking filled username");
+        is(password, "mochipass3-old", "Checking filled password");
+        passfield.setAttribute("value", "mochipass3-new");
+        break;
+
+    case 1005:
+        is(username, "", "Checking filled username");
+        is(password, "", "Checking filled password");
+        userfield.setAttribute("value", "mochiuser3");
+        passfield.setAttribute("value", "mochipass3-old");
+        break;
+
     default:
         ok(false, "Uhh, unhandled switch for testNum #" + testNum);
         break;
@@ -250,6 +288,11 @@ function handleDialog(doc, testNum) {
 }
 
 
+/*
+ * handleLoad
+ *
+ * Called when a load event is fired at the subtest's iframe.
+ */
 function handleLoad() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "handleLoad running for test " + testNum);
@@ -295,6 +338,73 @@ function handleLoad() {
         is(username, "mochiuser1", "Checking for echoed username");
         is(password, "mochipass1", "Checking for echoed password");
 
+        // Same realm we've already authenticated to, but with a different
+        // expected password (to trigger an auth prompt, and change-password
+        // notification bar).
+        startCallbackTimer();
+        iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
+        break;
+
+    case 1003:
+        testNum++;
+        is(authok, "PASS", "Checking for successful authentication");
+        is(username, "mochiuser1", "Checking for echoed username");
+        is(password, "mochipass1-new", "Checking for echoed password");
+
+        // Check for the notification bar, and change the password.
+        bar = getNotificationBar(notifyBox, "password-change");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Change");
+
+        // Housekeeping: change it back
+        tmpLogin.init("http://localhost:8888", null, "mochitest",
+                      "mochiuser1", "mochipass1-new", "", "");
+        pwmgr.modifyLogin(tmpLogin, login3A);
+
+        // Same as last test, but for a realm we haven't already authenticated
+        // to (but have an existing saved login for, so that we'll trigger
+        // a change-password notification bar.
+        startCallbackTimer();
+        iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
+        break;
+
+    case 1004:
+        testNum++;
+        is(authok, "PASS", "Checking for successful authentication");
+        is(username, "mochiuser3", "Checking for echoed username");
+        is(password, "mochipass3-new", "Checking for echoed password");
+
+        // Check for the notification bar, and change the password.
+        bar = getNotificationBar(notifyBox, "password-change");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Change");
+
+        // Housekeeping: change it back to the original login4. Actually,
+        // just delete it and we'll re-add it as the next test.
+        tmpLogin.init("http://localhost:8888", null, "mochitest3",
+                      "mochiuser3", "mochipass3-new", "", "");
+        pwmgr.removeLogin(tmpLogin);
+        // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
+        var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+                      getService(Ci.nsIHttpAuthManager);
+        authMgr.clearAll();
+
+        // Trigger a new prompt, so we can test adding a new login.
+        startCallbackTimer();
+        iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
+        break;
+
+    case 1005:
+        testNum++;
+        is(authok, "PASS", "Checking for successful authentication");
+        is(username, "mochiuser3", "Checking for echoed username");
+        is(password, "mochipass3-old", "Checking for echoed password");
+
+        // Check for the notification bar, and change the password.
+        bar = getNotificationBar(notifyBox, "password-save");
+        ok(bar, "got notification bar");
+        clickNotificationButton(bar, "Remember");
+
         finishTest();
         break;
 
@@ -337,7 +447,14 @@ var pword  = { value : null };
 var result = { value : null };
 var isOk;
 
-// XXX Add test for host that doesn't yet exist to test login-saving logic
+// The notification box (not *bar*) is a constant, per-tab container. So, we
+// only need to fetch it once.
+var notifyBox = getNotificationBox(window.top);
+ok(notifyBox, "Got notification box");
+
+// Remove any notification bars that might be left over from other tests.
+notifyBox.removeAllNotifications(true);
+
 
 // ===== test 1 ===== 
 var testNum = 1;
@@ -689,8 +806,8 @@ iframe.onload = handleLoad;
 
 // clear plain HTTP auth sessions before the test, to allow
 // running them more than once.
-var authMgr = Components.classes['@mozilla.org/network/http-auth-manager;1']
-                        .getService(Components.interfaces.nsIHttpAuthManager);
+var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+              getService(Ci.nsIHttpAuthManager);
 authMgr.clearAll();
 
 // ===== test 1000 =====

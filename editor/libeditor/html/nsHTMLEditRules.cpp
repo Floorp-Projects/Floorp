@@ -7573,26 +7573,28 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
   nsCOMPtr<nsIDOMNode> theblock;
   if (IsBlockNode(selNode)) theblock = selNode;
   else theblock = mHTMLEditor->GetBlockNodeParent(selNode);
-  PRBool bIsEmptyNode;
-  res = mHTMLEditor->IsEmptyNode(theblock, &bIsEmptyNode, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) return res;
-  // check if br can go into the destination node
-  if (bIsEmptyNode && mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("br")))
-  {
-    nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
-    if (!rootElement) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
-    if (selNode == rootNode)
+  if (theblock && mHTMLEditor->IsEditable(theblock)) {
+    PRBool bIsEmptyNode;
+    res = mHTMLEditor->IsEmptyNode(theblock, &bIsEmptyNode, PR_FALSE, PR_FALSE);
+    if (NS_FAILED(res)) return res;
+    // check if br can go into the destination node
+    if (bIsEmptyNode && mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("br")))
     {
-      // Our root node is completely empty. Don't add a <br> here.
-      // AfterEditInner() will add one for us when it calls
-      // CreateBogusNodeIfNeeded()!
-      return NS_OK;
-    }
+      nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
+      if (!rootElement) return NS_ERROR_FAILURE;
+      nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+      if (selNode == rootNode)
+      {
+        // Our root node is completely empty. Don't add a <br> here.
+        // AfterEditInner() will add one for us when it calls
+        // CreateBogusNodeIfNeeded()!
+        return NS_OK;
+      }
 
-    nsCOMPtr<nsIDOMNode> brNode;
-    // we know we can skip the rest of this routine given the cirumstance
-    return CreateMozBR(selNode, selOffset, address_of(brNode));
+      nsCOMPtr<nsIDOMNode> brNode;
+      // we know we can skip the rest of this routine given the cirumstance
+      return CreateMozBR(selNode, selOffset, address_of(brNode));
+    }
   }
   
   // are we in a text node? 

@@ -262,34 +262,11 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
 
 
 nsresult
-nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
+nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                const nsAString& aNamespaceURI,
                                nsINodeInfo** aNodeInfo)
 {
-  NS_ENSURE_ARG(!aQualifiedName.IsEmpty());
-
-  nsAString::const_iterator start, end;
-  aQualifiedName.BeginReading(start);
-  aQualifiedName.EndReading(end);
-
-  nsCOMPtr<nsIAtom> prefixAtom;
-
-  nsAString::const_iterator iter(start);
-
-  if (FindCharInReadable(':', iter, end)) {
-    prefixAtom = do_GetAtom(Substring(start, iter));
-    NS_ENSURE_TRUE(prefixAtom, NS_ERROR_OUT_OF_MEMORY);
-
-    start = ++iter; // step over the ':'
-
-    if (iter == end) {
-      // No data after the ':'.
-
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(Substring(start, end));
+  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
   PRInt32 nsid = kNameSpaceID_None;
@@ -300,7 +277,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  *aNodeInfo = GetNodeInfo(nameAtom, prefixAtom, nsid).get();
+  *aNodeInfo = GetNodeInfo(nameAtom, aPrefix, nsid).get();
   return *aNodeInfo ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

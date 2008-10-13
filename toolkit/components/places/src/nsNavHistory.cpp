@@ -1503,7 +1503,7 @@ nsNavHistory::CleanUpOnQuit()
   if (NS_SUCCEEDED(rv)) {
     mozStorageTransaction transaction(mDBConn, PR_FALSE);
     // 1. Indexes are moved along with the renamed table. Since we're dropping
-    // that table, we're also dropping it's indexes, and later re-creating them
+    // that table, we're also dropping its indexes, and later re-creating them
     // for the new table.
     rv = mDBConn->ExecuteSimpleSQL(
         NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_urlindex"));
@@ -4546,7 +4546,7 @@ nsNavHistory::SetURIGeckoFlags(nsIURI* aURI, PRUint32 aFlags)
 //    is visited. See GetRedirectFor for more information
 
 // this is the expiration callback function that deletes stale entries
-PLDHashOperator PR_CALLBACK nsNavHistory::ExpireNonrecentRedirects(
+PLDHashOperator nsNavHistory::ExpireNonrecentRedirects(
     nsCStringHashKey::KeyType aKey, RedirectInfo& aData, void* aUserArg)
 {
   PRInt64* threshold = reinterpret_cast<PRInt64*>(aUserArg);
@@ -5475,7 +5475,7 @@ nsNavHistory::CheckIsRecentEvent(RecentEventHash* hashTable,
 //
 //    This goes through our
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ExpireNonrecentEventsCallback(nsCStringHashKey::KeyType aKey,
                               PRInt64& aData,
                               void* userArg)

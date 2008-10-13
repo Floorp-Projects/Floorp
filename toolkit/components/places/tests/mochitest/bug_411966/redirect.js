@@ -137,6 +137,7 @@ StreamListener.prototype = {
 
   // we are faking an XPCOM interface, so we need to implement QI
   QueryInterface : function(aIID) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     if (aIID.equals(Components.interfaces.nsISupports) ||
         aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
         aIID.equals(Components.interfaces.nsIChannelEventSink) ||
