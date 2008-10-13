@@ -126,46 +126,28 @@ nsHTMLImageAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLImageAccessible::GetName(nsAString& aName)
+nsresult
+nsHTMLImageAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    
   // No alt attribute means AT can repair if there is no accessible name
   // alt="" with no title or aria-labelledby means image is presentational and 
   // AT should leave accessible name empty
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   PRBool hasAltAttrib =
     content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt, aName);
-  if (aName.IsEmpty()) {
-    if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_label) ||
-        content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_labelledby)) {
-      // Use HTML label or DHTML accessibility's label or labelledby attribute for name
-      // GetHTMLName will also try title attribute as a last resort
-      nsresult rv = GetARIAName(aName);
-      NS_ENSURE_SUCCESS(rv, rv);
+  if (!aName.IsEmpty())
+    return NS_OK;
 
-      if (!aName.IsEmpty())
-        return NS_OK;
+  nsresult rv = GetHTMLName(aName, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = GetHTMLName(aName, PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    if (aName.IsEmpty()) { // No name from alt or aria-labelledby
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aName);
-      if (!hasAltAttrib && aName.IsEmpty()) { 
-        // Still no accessible name and no alt attribute is present.
-        // SetIsVoid() is different from empty string -- this means a name was not 
-        // provided by author and AT repair of the name is allowed.
-        aName.SetIsVoid(PR_TRUE);
-      }
-    }
+  if (aName.IsVoid() && hasAltAttrib) {
+    // No accessible name but empty alt attribute is present. This means a name
+    // was provided by author and AT repair of the name isn't allowed.
+    aName.Truncate();
   }
+
   return NS_OK;
 }
 
