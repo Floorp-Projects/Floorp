@@ -25,6 +25,11 @@
         0
       </field>
       
+      <!-- Set by customizeToolbar.js -->
+      <field name="customizing">
+        false
+      </field>
+
       <constructor>
         <![CDATA[
           // Look to see if there is a toolbarset.
@@ -266,6 +271,19 @@
           ]]>
         </body>
       </method>      
+    </implementation>
+  </binding>
+
+  <binding id="toolbar-drag"
+           extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+    <implementation>
+      <constructor>
+        Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm");
+        let draggableThis = new WindowDraggingElement(this, window);
+        draggableThis.mouseDownCheck = function(e) {
+          return !this.parentNode.customizing; // Don't move while customizing.
+        }
+      </constructor>
     </implementation>
   </binding>
 
