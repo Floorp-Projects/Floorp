@@ -625,7 +625,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Element, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Attr, nsAttributeSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           NODE_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Text, nsNodeSH,
                            NODE_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Comment, nsNodeSH,
@@ -4186,8 +4186,8 @@ nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper)
    }
 
    if (doc) {
-     nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-     doc->AddReference(content, aWrapper);
+     nsCOMPtr<nsINode> n(do_QueryInterface(node));
+     doc->AddReference(n, aWrapper);
    }
    return NS_OK;
 }
