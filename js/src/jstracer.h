@@ -315,7 +315,7 @@ class TraceRecorder : public GCObject {
     bool getProp(JSObject* obj, nanojit::LIns* obj_ins);
     bool getProp(jsval& v);
     bool getThis(nanojit::LIns*& this_ins);
-    
+
     bool box_jsval(jsval v, nanojit::LIns*& v_ins);
     bool unbox_jsval(jsval v, nanojit::LIns*& v_ins);
     bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp);
@@ -326,6 +326,7 @@ class TraceRecorder : public GCObject {
     void clearFrameSlotsFromCache();
     bool guardShapelessCallee(jsval& callee);
     bool interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc, bool constructing);
+    bool functionCall(bool constructing);
     bool forInLoop(jsval* vp);
 
     void trackCfgMerges(jsbytecode* pc);
