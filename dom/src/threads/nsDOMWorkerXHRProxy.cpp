@@ -560,13 +560,13 @@ nsDOMWorkerXHRProxy::FlipOwnership()
 
   for (; index < MAX_UPLOAD_LISTENER_TYPE; index++) {
     eventName.AssignASCII(nsDOMWorkerXHREventTarget::sListenerTypes[index]);
-    (xhrTarget->*function)(eventName, this, PR_FALSE);
-    (uploadTarget->*function)(eventName, this, PR_FALSE);
+    (xhrTarget.get()->*function)(eventName, this, PR_FALSE);
+    (uploadTarget.get()->*function)(eventName, this, PR_FALSE);
   }
 
   for (; index < MAX_XHR_LISTENER_TYPE; index++) {
     eventName.AssignASCII(nsDOMWorkerXHREventTarget::sListenerTypes[index]);
-    (xhrTarget->*function)(eventName, this, PR_FALSE);
+    (xhrTarget.get()->*function)(eventName, this, PR_FALSE);
   }
 
   if (mOwnedByXHR) {
