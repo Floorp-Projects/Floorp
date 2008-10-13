@@ -3431,7 +3431,8 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     rv = history->BookmarkIdToResultNode(aItemId, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  else if (itemType == nsINavBookmarksService::TYPE_FOLDER) {
+  else if (itemType == nsINavBookmarksService::TYPE_FOLDER ||
+           itemType == nsINavBookmarksService::TYPE_DYNAMIC_CONTAINER) {
     rv = bookmarks->ResultNodeForContainer(aItemId, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
   }
