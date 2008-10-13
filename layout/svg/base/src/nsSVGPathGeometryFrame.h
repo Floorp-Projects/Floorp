@@ -80,7 +80,7 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  NS_IMETHOD DidSetStyleContext();
+  virtual void DidSetStyleContext();
 
   /**
    * Get the "type" of the frame
