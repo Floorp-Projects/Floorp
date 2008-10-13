@@ -4491,17 +4491,21 @@ js_Object(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 JSBool
 js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
+JSBool
+js_fun_apply(JSContext* cx, uintN argc, jsval* vp);
+
 bool
-TraceRecorder::record_JSOP_NEW()
+TraceRecorder::functionCall(bool constructing)
 {
-    /* Get immediate argc and find the constructor function. */
-    jsbytecode *pc = cx->fp->regs->pc;
-    unsigned argc = GET_ARGC(pc);
+    JSStackFrame* fp = cx->fp;
+    jsbytecode *pc = fp->regs->pc;
+    uintN argc = GET_ARGC(pc);
     jsval& fval = stackval(0 - (2 + argc));
-    JS_ASSERT(&fval >= StackBase(cx->fp));
+    JS_ASSERT(&fval >= StackBase(fp));
 
     jsval& tval = stackval(0 - (argc + 1));
     LIns* this_ins = get(&tval);
+
     if (this_ins->isconstp() && !this_ins->constvalp() && !guardShapelessCallee(fval))
         return false;
 
@@ -4517,48 +4521,115 @@ TraceRecorder::record_JSOP_NEW()
      * class being Function and the function being interpreted.
      */
     JS_ASSERT(VALUE_IS_FUNCTION(cx, fval));
-    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
+    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
 
     if (FUN_INTERPRETED(fun)) {
-        LIns* args[] = { get(&fval), cx_ins };
-        LIns* tv_ins = lir->insCall(&ci_FastNewObject, args);
-        guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
-        set(&tval, tv_ins);
-        return interpretedFunctionCall(fval, fun, argc, true);
+        if (constructing) {
+            LIns* args[] = { get(&fval), cx_ins };
+            LIns* tv_ins = lir->insCall(&ci_FastNewObject, args);
+            guard(false, lir->ins_eq0(tv_ins), OOM_EXIT);
+            set(&tval, tv_ins);
+        }
+        return interpretedFunctionCall(fval, fun, argc, constructing);
     }
 
-    /*
-     * The prefix string (the first one) can contain the following characters:
-     * 'C': a JSContext* argument
-     * 'T': |this| as a JSObject* argument
-     * 'f': The function object being new'd as a JSObject* argument
-     * 'p': The prototype object to use for the construction as a JSObject*
-     *
-     * The corresponding things will get passed as arguments to the builtin in
-     * reverse order (so pC means JSContext* as the first arg, and the
-     * prototype as the second arg).
-     *
-     * The argtypes string (the second one) can contain the following
-     * characters:
-     * 'd': a number (double) argument
-     * 'i': an integer argument
-     * 'o': a JSObject* argument
-     *
-     * Again, these will be passed to the builtin in reverse order, coming
-     * after the arguments passed by the prefix string.
-     */
+    LIns* arg1_ins = NULL;
+    jsval arg1 = JSVAL_VOID;
+    jsval thisval = tval;
+    if (!constructing && FUN_FAST_NATIVE(fun) == js_fun_apply) {
+        if (argc != 2)
+            ABORT_TRACE("can't trace Function.prototype.apply with other than 2 args");
+
+        if (!guardShapelessCallee(tval))
+            return false;
+        JSObject* tfunobj = JSVAL_TO_OBJECT(tval);
+        JSFunction* tfun = GET_FUNCTION_PRIVATE(cx, tfunobj);
+
+        jsval& oval = stackval(-2);
+        if (JSVAL_IS_PRIMITIVE(oval))
+            ABORT_TRACE("can't trace Function.prototype.apply with primitive 1st arg");
+
+        jsval& aval = stackval(-1);
+        if (JSVAL_IS_PRIMITIVE(aval))
+            ABORT_TRACE("can't trace Function.prototype.apply with primitive 2nd arg");
+        JSObject* aobj = JSVAL_TO_OBJECT(aval);
+
+        LIns* aval_ins = get(&aval);
+        if (!aval_ins->isCall())
+            ABORT_TRACE("can't trace Function.prototype.apply on non-builtin-call 2nd arg");
+
+        if (aval_ins->callInfo() == &ci_Arguments) {
+            JS_ASSERT(OBJ_GET_CLASS(cx, aobj) == &js_ArgumentsClass);
+            JS_ASSERT(OBJ_GET_PRIVATE(cx, aobj) == fp);
+            if (!FUN_INTERPRETED(tfun))
+                ABORT_TRACE("can't trace Function.prototype.apply(native_function, arguments)");
+
+            // We can only fasttrack applys where the argument array we pass in has the
+            // same length (fp->argc) as the number of arguments the function expects (tfun->nargs).
+            argc = fp->argc;
+            if (tfun->nargs != argc || fp->fun->nargs != argc)
+                ABORT_TRACE("can't trace Function.prototype.apply(scripted_function, arguments)");
+
+            jsval* sp = fp->regs->sp - 4;
+            set(sp, get(&tval));
+            *sp++ = tval;
+            set(sp, get(&oval));
+            *sp++ = oval;
+            jsval* newsp = sp + argc;
+            if (newsp > fp->slots + fp->script->nslots) {
+                JSArena* a = cx->stackPool.current;
+                if (jsuword(newsp) > a->limit)
+                    ABORT_TRACE("can't grow stack for Function.prototype.apply");
+                if (jsuword(newsp) > a->avail)
+                    a->avail = jsuword(newsp);
+            }
+
+            jsval* argv = fp->argv;
+            for (uintN i = 0; i < JS_MIN(argc, 2); i++) {
+                set(&sp[i], get(&argv[i]));
+                sp[i] = argv[i];
+            }
+            applyingArguments = true;
+            return interpretedFunctionCall(tval, tfun, argc, false);
+        }
+
+        if (aval_ins->callInfo() != &ci_Array_1str)
+            ABORT_TRACE("can't trace Function.prototype.apply on other than [str] 2nd arg");
+
+        JS_ASSERT(OBJ_IS_ARRAY(cx, aobj));
+        JS_ASSERT(aobj->fslots[JSSLOT_ARRAY_LENGTH] == 1);
+        JS_ASSERT(JSVAL_IS_STRING(aobj->dslots[0]));
+
+        if (FUN_INTERPRETED(tfun))
+            ABORT_TRACE("can't trace Function.prototype.apply for scripted functions");
+
+        if (!(tfun->flags & JSFUN_TRACEABLE))
+            ABORT_TRACE("Function.prototype.apply on untraceable native");
+
+        thisval = oval;
+        this_ins = get(&oval);
+        arg1_ins = callArgN(aval_ins, 1);
+        arg1 = aobj->dslots[0];
+        fun = tfun;
+        argc = 1;
+    }
+
+    if (!constructing && !(fun->flags & JSFUN_TRACEABLE))
+        ABORT_TRACE("untraceable native");
+
     static JSTraceableNative knownNatives[] = {
-        { (JSFastNative)js_Array,  &ci_FastNewArray,  "pC", "",    FAIL_NULL },
-        { (JSFastNative)js_Array,  &ci_Array_1int,    "pC", "i",   FAIL_NULL },
-        { (JSFastNative)js_Array,  &ci_Array_2obj,    "pC", "oo",  FAIL_NULL },
-        { (JSFastNative)js_Array,  &ci_Array_3num,    "pC", "ddd", FAIL_NULL },
-        { (JSFastNative)js_Object, &ci_FastNewObject, "fC", "",    FAIL_NULL },
+        { (JSFastNative)js_Array,  &ci_FastNewArray,  "pC", "",    FAIL_NULL | JSTN_MORE },
+        { (JSFastNative)js_Array,  &ci_Array_1int,    "pC", "i",   FAIL_NULL | JSTN_MORE },
+        { (JSFastNative)js_Array,  &ci_Array_2obj,    "pC", "oo",  FAIL_NULL | JSTN_MORE },
+        { (JSFastNative)js_Array,  &ci_Array_3num,    "pC", "ddd", FAIL_NULL | JSTN_MORE },
+        { (JSFastNative)js_Object, &ci_FastNewObject, "fC", "",    FAIL_NULL | JSTN_MORE },
         { (JSFastNative)js_Date,   &ci_FastNewDate,   "pC", "",    FAIL_NULL },
     };
 
-    for (uintN i = 0; i < JS_ARRAY_LENGTH(knownNatives); i++) {
-        JSTraceableNative* known = &knownNatives[i];
-        if ((JSFastNative)fun->u.n.native != known->native)
+    LIns* args[5];
+    JSTraceableNative* known = constructing ? knownNatives : FUN_TRCINFO(fun);
+    do {
+        if (constructing && (JSFastNative)fun->u.n.native != known->native)
             continue;
 
         uintN knownargc = strlen(known->argtypes);
@@ -4566,7 +4637,7 @@ TraceRecorder::record_JSOP_NEW()
             continue;
 
         intN prefixc = strlen(known->prefix);
-        LIns* args[5];
+        JS_ASSERT(prefixc <= 3);
         LIns** argp = &args[argc + prefixc - 1];
         char argtype;
 
@@ -4574,122 +4645,152 @@ TraceRecorder::record_JSOP_NEW()
         memset(args, 0xCD, sizeof(args));
 #endif
 
-#define HANDLE_PREFIX(i)                                                       \
-    JS_BEGIN_MACRO                                                             \
-        argtype = known->prefix[i];                                            \
-        if (argtype == 'C') {                                                  \
-            *argp = cx_ins;                                                    \
-        } else if (argtype == 'T') {                                           \
-            *argp = this_ins;                                                  \
-        } else if (argtype == 'f') {                                           \
-            *argp = INS_CONSTPTR(JSVAL_TO_OBJECT(fval));                       \
-        } else if (argtype == 'p') {                                           \
-            JSObject* ctor = JSVAL_TO_OBJECT(fval);                            \
-            jsval pval;                                                        \
-            if (!OBJ_GET_PROPERTY(cx, ctor,                                    \
-                                  ATOM_TO_JSID(cx->runtime->atomState          \
-                                               .classPrototypeAtom),           \
-                                  &pval)) {                                    \
-                ABORT_TRACE("error getting prototype from constructor");       \
-            }                                                                  \
-            if (!JSVAL_IS_OBJECT(pval))                                        \
-                ABORT_TRACE("got primitive prototype from constructor");       \
-            *argp = INS_CONSTPTR(JSVAL_TO_OBJECT(pval));                       \
-        } else {                                                               \
-            JS_NOT_REACHED("unknown prefix arg type");                         \
-        }                                                                      \
-        argp--;                                                                \
-    JS_END_MACRO
-
-        switch (prefixc) {
-          case 3:
-            HANDLE_PREFIX(2);
-            /* FALL THROUGH */
-          case 2:
-            HANDLE_PREFIX(1);
-            /* FALL THROUGH */
-          case 1:
-            HANDLE_PREFIX(0);
-            /* FALL THROUGH */
-          case 0:
-            break;
-          default:
-            JS_NOT_REACHED("illegal number of prefix args");
+        uintN i;
+        for (i = prefixc; i--; ) {
+            argtype = known->prefix[i];
+            if (argtype == 'C') {
+                *argp = cx_ins;
+            } else if (argtype == 'T') {   /* this, as an object */
+                if (!JSVAL_IS_OBJECT(thisval))
+                    goto next_specialization;
+                *argp = this_ins;
+            } else if (argtype == 'S') {   /* this, as a string */
+                if (!JSVAL_IS_STRING(thisval))
+                    goto next_specialization;
+                *argp = this_ins;
+            } else if (argtype == 'f') {
+                *argp = INS_CONSTPTR(JSVAL_TO_OBJECT(fval));
+            } else if (argtype == 'p') {
+                JSObject* ctor = JSVAL_TO_OBJECT(fval);
+                jsval pval;
+                if (!OBJ_GET_PROPERTY(cx, ctor,
+                                      ATOM_TO_JSID(cx->runtime->atomState
+                                                   .classPrototypeAtom),
+                                      &pval)) {
+                    ABORT_TRACE("error getting prototype from constructor");
+                }
+                if (!JSVAL_IS_OBJECT(pval))
+                    ABORT_TRACE("got primitive prototype from constructor");
+                *argp = INS_CONSTPTR(JSVAL_TO_OBJECT(pval));
+            } else if (argtype == 'R') {
+                *argp = INS_CONSTPTR(cx->runtime);
+            } else if (argtype == 'P') {
+                *argp = INS_CONSTPTR(pc);
+            } else if (argtype == 'D') {  /* this, as a number */
+                if (!isNumber(thisval))
+                    goto next_specialization;
+                *argp = this_ins;
+            } else {
+                JS_NOT_REACHED("unknown prefix arg type");
+            }
+            argp--;
         }
 
-#undef HANDLE_PREFIX
+        for (i = knownargc; i--; ) {
+            jsval& arg = (!constructing && i == 0 && arg1_ins) ? arg1 : stackval(-(i + 1));
+            *argp = (!constructing && i == 0 && arg1_ins) ? arg1_ins : get(&arg);
 
-#define HANDLE_ARG(i)                                                          \
-    {                                                                          \
-        jsval& arg = stackval(-(i + 1));                                       \
-        argtype = known->argtypes[i];                                          \
-        if (argtype == 'd' || argtype == 'i') {                                \
-            if (!isNumber(arg))                                                \
-                continue; /* might have another specialization for arg */      \
-            *argp = get(&arg);                                                 \
-            if (argtype == 'i')                                                \
-                *argp = f2i(*argp);                                            \
-        } else if (argtype == 'o') {                                           \
-            if (!JSVAL_IS_OBJECT(arg))                                         \
-                continue; /* might have another specialization for arg */      \
-            *argp = get(&arg);                                                 \
-        } else {                                                               \
-            continue;     /* might have another specialization for arg */      \
-        }                                                                      \
-        argp--;                                                                \
-    }
-
-        switch (knownargc) {
-          case 4:
-            HANDLE_ARG(3);
-            /* FALL THROUGH */
-          case 3:
-            HANDLE_ARG(2);
-            /* FALL THROUGH */
-          case 2:
-            HANDLE_ARG(1);
-            /* FALL THROUGH */
-          case 1:
-            HANDLE_ARG(0);
-            /* FALL THROUGH */
-          case 0:
-            break;
-          default:
-            JS_NOT_REACHED("illegal number of args to traceable native");
+            argtype = known->argtypes[i];
+            if (argtype == 'd' || argtype == 'i') {
+                if (!isNumber(arg))
+                    goto next_specialization;
+                if (argtype == 'i')
+                    *argp = f2i(*argp);
+            } else if (argtype == 'o') {
+                if (!JSVAL_IS_OBJECT(arg))
+                    goto next_specialization;
+            } else if (argtype == 's') {
+                if (!JSVAL_IS_STRING(arg))
+                    goto next_specialization;
+            } else if (argtype == 'r') {
+                if (!VALUE_IS_REGEXP(cx, arg))
+                    goto next_specialization;
+            } else if (argtype == 'f') {
+                if (!VALUE_IS_FUNCTION(cx, arg))
+                    goto next_specialization;
+            } else if (argtype == 'v') {
+                if (!box_jsval(arg, *argp))
+                    return false;
+            } else {
+                goto next_specialization;
+            }
+            argp--;
         }
 
-#undef HANDLE_ARG
+        /*
+         * If we got this far, and we have a charCodeAt, check that charCodeAt
+         * isn't going to return a NaN.
+         */
+        if (!constructing && known->builtin == &ci_String_p_charCodeAt) {
+            JSString* str = JSVAL_TO_STRING(thisval);
+            jsval& arg = arg1_ins ? arg1 : stackval(-1);
 
-#if defined _DEBUG
-        JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
-#endif
+            JS_ASSERT(JSVAL_IS_STRING(thisval));
+            JS_ASSERT(isNumber(arg));
 
-        LIns* res_ins = lir->insCall(known->builtin, args);
-        switch (JSTN_ERRTYPE(known)) {
-          case FAIL_NULL:
-            guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
-            break;
-          case FAIL_NEG:
-          {
-            res_ins = lir->ins1(LIR_i2f, res_ins);
-            jsdpun u;
-            u.d = 0.0;
-            guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(u.u64)), OOM_EXIT);
-            break;
-          }
-          case FAIL_VOID:
-            guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
-            break;
-          default:;
+            if (JSVAL_IS_INT(arg)) {
+                if (size_t(JSVAL_TO_INT(arg)) >= JSSTRING_LENGTH(str))
+                    ABORT_TRACE("invalid charCodeAt index");
+            } else {
+                double d = js_DoubleToInteger(*JSVAL_TO_DOUBLE(arg));
+                if (d < 0 || JSSTRING_LENGTH(str) <= d)
+                    ABORT_TRACE("invalid charCodeAt index");
+            }
         }
-        set(&fval, res_ins);
-        return true;
-    }
+        goto success;
 
+next_specialization:;
+    } while ((known++)->flags & JSTN_MORE);
+
+    if (!constructing)
+        ABORT_TRACE("unknown native");
     if (!(fun->flags & JSFUN_TRACEABLE) && FUN_CLASP(fun))
         ABORT_TRACE("can't trace native constructor");
-
     ABORT_TRACE("can't trace unknown constructor");
+
+success:
+#if defined _DEBUG
+    JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
+#endif
+
+    LIns* res_ins = lir->insCall(known->builtin, args);
+    if (!constructing)
+        rval_ins = res_ins;
+    switch (JSTN_ERRTYPE(known)) {
+      case FAIL_NULL:
+        guard(false, lir->ins_eq0(res_ins), OOM_EXIT);
+        break;
+      case FAIL_NEG:
+      {
+        res_ins = lir->ins1(LIR_i2f, res_ins);
+        jsdpun u;
+        u.d = 0.0;
+        guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmq(u.u64)), OOM_EXIT);
+        break;
+      }
+      case FAIL_VOID:
+        guard(false, lir->ins2i(LIR_eq, res_ins, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
+        break;
+      default:;
+    }
+    set(&fval, res_ins);
+
+    if (!constructing) {
+        /*
+         * The return value will be processed by FastNativeCallComplete since
+         * we have to know the actual return value type for calls that return
+         * jsval (like Array_p_pop).
+         */
+        pendingTraceableNative = known;
+    }
+
+    return true;
+}
+
+bool
+TraceRecorder::record_JSOP_NEW()
+{
+    return functionCall(true);
 }
 
 bool
@@ -5174,302 +5275,10 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     return true;
 }
 
-JSBool js_fun_apply(JSContext* cx, uintN argc, jsval* vp);
-
 bool
 TraceRecorder::record_JSOP_CALL()
 {
-    JSStackFrame* fp = cx->fp;
-    jsbytecode *pc = fp->regs->pc;
-    uintN argc = GET_ARGC(pc);
-    jsval& fval = stackval(0 - (argc + 2));
-    JS_ASSERT(&fval >= StackBase(fp));
-
-    jsval& tval = stackval(0 - (argc + 1));
-    LIns* this_ins = get(&tval);
-
-    if (this_ins->isconstp() && !this_ins->constvalp() && !guardShapelessCallee(fval))
-        return false;
-
-    /*
-     * Require that the callee be a function object, to avoid guarding on its
-     * class here. We know if the callee and this were pushed by JSOP_CALLNAME
-     * or JSOP_CALLPROP that callee is a *particular* function, since these hit
-     * the property cache and guard on the object (this) in which the callee
-     * was found. So it's sufficient to test here that the particular function
-     * is interpreted, not guard on that condition.
-     *
-     * Bytecode sequences that push shapeless callees must guard on the callee
-     * class being Function and the function being interpreted.
-     */
-    JS_ASSERT(VALUE_IS_FUNCTION(cx, fval));
-    JSFunction* fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(fval));
-
-    if (FUN_INTERPRETED(fun))
-        return interpretedFunctionCall(fval, fun, argc, false);
-
-    if (FUN_SLOW_NATIVE(fun))
-        ABORT_TRACE("slow native");
-
-    LIns* arg1_ins = NULL;
-    jsval arg1 = JSVAL_VOID;
-    jsval thisval = tval;
-    if ((JSFastNative)fun->u.n.native == js_fun_apply) {
-        if (argc != 2)
-            ABORT_TRACE("can't trace Function.prototype.apply with other than 2 args");
-
-        if (!guardShapelessCallee(tval))
-            return false;
-        JSObject* tfunobj = JSVAL_TO_OBJECT(tval);
-        JSFunction* tfun = GET_FUNCTION_PRIVATE(cx, tfunobj);
-
-        jsval& oval = stackval(-2);
-        if (JSVAL_IS_PRIMITIVE(oval))
-            ABORT_TRACE("can't trace Function.prototype.apply with primitive 1st arg");
-
-        jsval& aval = stackval(-1);
-        if (JSVAL_IS_PRIMITIVE(aval))
-            ABORT_TRACE("can't trace Function.prototype.apply with primitive 2nd arg");
-        JSObject* aobj = JSVAL_TO_OBJECT(aval);
-
-        LIns* aval_ins = get(&aval);
-        if (!aval_ins->isCall())
-            ABORT_TRACE("can't trace Function.prototype.apply on non-builtin-call 2nd arg");
-
-        if (aval_ins->callInfo() == &ci_Arguments) {
-            JS_ASSERT(OBJ_GET_CLASS(cx, aobj) == &js_ArgumentsClass);
-            JS_ASSERT(OBJ_GET_PRIVATE(cx, aobj) == fp);
-            if (!FUN_INTERPRETED(tfun))
-                ABORT_TRACE("can't trace Function.prototype.apply(native_function, arguments)");
-
-            // We can only fasttrack applys where the argument array we pass in has the
-            // same length (fp->argc) as the number of arguments the function expects (tfun->nargs).
-            argc = fp->argc;
-            if (tfun->nargs != argc || fp->fun->nargs != argc)
-                ABORT_TRACE("can't trace Function.prototype.apply(scripted_function, arguments)");
-
-            jsval* sp = fp->regs->sp - 4;
-            set(sp, get(&tval));
-            *sp++ = tval;
-            set(sp, get(&oval));
-            *sp++ = oval;
-            jsval* newsp = sp + argc;
-            if (newsp > fp->slots + fp->script->nslots) {
-                JSArena* a = cx->stackPool.current;
-                if (jsuword(newsp) > a->limit)
-                    ABORT_TRACE("can't grow stack for Function.prototype.apply");
-                if (jsuword(newsp) > a->avail)
-                    a->avail = jsuword(newsp);
-            }
-
-            jsval* argv = fp->argv;
-            for (uintN i = 0; i < JS_MIN(argc, 2); i++) {
-                set(&sp[i], get(&argv[i]));
-                sp[i] = argv[i];
-            }
-            applyingArguments = true;
-            return interpretedFunctionCall(tval, tfun, argc, false);
-        }
-
-        if (aval_ins->callInfo() != &ci_Array_1str)
-            ABORT_TRACE("can't trace Function.prototype.apply on other than [str] 2nd arg");
-
-        JS_ASSERT(OBJ_IS_ARRAY(cx, aobj));
-        JS_ASSERT(aobj->fslots[JSSLOT_ARRAY_LENGTH] == 1);
-        JS_ASSERT(JSVAL_IS_STRING(aobj->dslots[0]));
-
-        if (FUN_INTERPRETED(tfun))
-            ABORT_TRACE("can't trace Function.prototype.apply for scripted functions");
-
-        if (!(tfun->flags & JSFUN_TRACEABLE))
-            ABORT_TRACE("Function.prototype.apply on untraceable native");
-
-        thisval = oval;
-        this_ins = get(&oval);
-        arg1_ins = callArgN(aval_ins, 1);
-        arg1 = aobj->dslots[0];
-        fun = tfun;
-        argc = 1;
-    }
-
-    if (!(fun->flags & JSFUN_TRACEABLE))
-        ABORT_TRACE("untraceable native");
-
-    JSTraceableNative* known = FUN_TRCINFO(fun);
-    do {
-        uintN knownargc = strlen(known->argtypes);
-        if (argc != knownargc)
-            continue;
-
-        intN prefixc = strlen(known->prefix);
-        LIns* args[5];
-        LIns** argp = &args[argc + prefixc - 1];
-        char argtype;
-
-#if defined _DEBUG
-        memset(args, 0xCD, sizeof(args));
-#endif
-
-/*
- * NB: do not use JS_BEGIN_MACRO/JS_END_MACRO or the do-while(0) loop they hide,
- * because of the embedded continues below.
- */
-#define HANDLE_PREFIX(i)                                                       \
-    {                                                                          \
-        argtype = known->prefix[i];                                            \
-        if (argtype == 'C') {                                                  \
-            *argp = cx_ins;                                                    \
-        } else if (argtype == 'T') {   /* this, as an object */                \
-            if (!JSVAL_IS_OBJECT(thisval))                                     \
-                continue;                                                      \
-            *argp = this_ins;                                                  \
-        } else if (argtype == 'S') {   /* this, as a string */                 \
-            if (!JSVAL_IS_STRING(thisval))                                     \
-                continue;                                                      \
-            *argp = this_ins;                                                  \
-        } else if (argtype == 'R') {                                           \
-            *argp = INS_CONSTPTR(cx->runtime);                                 \
-        } else if (argtype == 'P') {                                           \
-            *argp = INS_CONSTPTR(pc);                                          \
-        } else if (argtype == 'D') {  /* this, as a number */                  \
-            if (!isNumber(thisval))                                            \
-                continue;                                                      \
-            *argp = this_ins;                                                  \
-        } else {                                                               \
-            JS_NOT_REACHED("unknown prefix arg type");                         \
-        }                                                                      \
-        argp--;                                                                \
-    }
-
-        switch (prefixc) {
-          case 3:
-            HANDLE_PREFIX(2);
-            /* FALL THROUGH */
-          case 2:
-            HANDLE_PREFIX(1);
-            /* FALL THROUGH */
-          case 1:
-            HANDLE_PREFIX(0);
-            /* FALL THROUGH */
-          case 0:
-            break;
-          default:
-            JS_NOT_REACHED("illegal number of prefix args");
-        }
-
-#undef HANDLE_PREFIX
-
-/*
- * NB: do not use JS_BEGIN_MACRO/JS_END_MACRO or the do-while(0) loop they hide,
- * because of the embedded continues below.
- */
-#define HANDLE_ARG(i)                                                          \
-    {                                                                          \
-        jsval& arg = (i == 0 && arg1_ins) ? arg1 : stackval(-(i + 1));         \
-        *argp = (i == 0 && arg1_ins) ? arg1_ins : get(&arg);                   \
-        argtype = known->argtypes[i];                                          \
-        if (argtype == 'd' || argtype == 'i') {                                \
-            if (!isNumber(arg))                                                \
-                continue; /* might have another specialization for arg */      \
-            if (argtype == 'i')                                                \
-                *argp = f2i(*argp);                                            \
-        } else if (argtype == 's') {                                           \
-            if (!JSVAL_IS_STRING(arg))                                         \
-                continue; /* might have another specialization for arg */      \
-        } else if (argtype == 'r') {                                           \
-            if (!VALUE_IS_REGEXP(cx, arg))                                     \
-                continue; /* might have another specialization for arg */      \
-        } else if (argtype == 'f') {                                           \
-            if (!VALUE_IS_FUNCTION(cx, arg))                                   \
-                continue; /* might have another specialization for arg */      \
-        } else if (argtype == 'v') {                                           \
-            if (!box_jsval(arg, *argp))                                        \
-                return false;                                                  \
-        } else {                                                               \
-            continue;     /* might have another specialization for arg */      \
-        }                                                                      \
-        argp--;                                                                \
-    }
-
-        switch (knownargc) {
-          case 4:
-            HANDLE_ARG(3);
-            /* FALL THROUGH */
-          case 3:
-            HANDLE_ARG(2);
-            /* FALL THROUGH */
-          case 2:
-            HANDLE_ARG(1);
-            /* FALL THROUGH */
-          case 1:
-            HANDLE_ARG(0);
-            /* FALL THROUGH */
-          case 0:
-            break;
-          default:
-            JS_NOT_REACHED("illegal number of args to traceable native");
-        }
-
-        /*
-         * If we got this far, and we have a charCodeAt, check that charCodeAt
-         * isn't going to return a NaN.
-         */
-        if (known->builtin == &ci_String_p_charCodeAt) {
-            JSString* str = JSVAL_TO_STRING(thisval);
-            jsval& arg = arg1_ins ? arg1 : stackval(-1);
-
-            JS_ASSERT(JSVAL_IS_STRING(thisval));
-            JS_ASSERT(isNumber(arg));
-
-            if (JSVAL_IS_INT(arg)) {
-                if (size_t(JSVAL_TO_INT(arg)) >= JSSTRING_LENGTH(str))
-                    ABORT_TRACE("invalid charCodeAt index");
-            } else {
-                double d = js_DoubleToInteger(*JSVAL_TO_DOUBLE(arg));
-                if (d < 0 || JSSTRING_LENGTH(str) <= d)
-                    ABORT_TRACE("invalid charCodeAt index");
-            }
-        }
-
-#undef HANDLE_ARG
-
-#if defined _DEBUG
-        JS_ASSERT(args[0] != (LIns *)0xcdcdcdcd);
-#endif
-
-        rval_ins = lir->insCall(known->builtin, args);
-
-        switch (JSTN_ERRTYPE(known)) {
-          case FAIL_NULL:
-            guard(false, lir->ins_eq0(rval_ins), OOM_EXIT);
-            break;
-          case FAIL_NEG:
-          {
-            rval_ins = lir->ins1(LIR_i2f, rval_ins);
-            jsdpun u;
-            u.d = 0.0;
-            guard(false, lir->ins2(LIR_flt, rval_ins, lir->insImmq(u.u64)), OOM_EXIT);
-            break;
-          }
-          case FAIL_VOID:
-            guard(false, lir->ins2i(LIR_eq, rval_ins, JSVAL_TO_BOOLEAN(JSVAL_VOID)), OOM_EXIT);
-            break;
-          case FAIL_JSVAL:
-            guard(false, lir->ins2i(LIR_eq, rval_ins, JSVAL_ERROR_COOKIE), OOM_EXIT);
-            break;
-          default:;
-        }
-        
-        set(&fval, rval_ins);
-        
-        /* The return value will be processed by FastNativeCallComplete since we have to
-           know the actual return value type for calls that return jsval (like Array_p_pop). */
-        pendingTraceableNative = known;
-        
-        return true;
-    } while ((known++)->flags & JSTN_MORE);
-
-    ABORT_TRACE("unknown native");
+    return functionCall(false);
 }
 
 bool

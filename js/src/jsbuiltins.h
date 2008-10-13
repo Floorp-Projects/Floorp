@@ -51,8 +51,7 @@ enum { JSTN_ERRTYPE_MASK = 7, JSTN_MORE = 8 };
 
 /*
  * |prefix| and |argtypes| declare what arguments should be passed to the
- * native function.  Except when declaring constructors (which do their own
- * special thing), |prefix| can contain the following characters:
+ * native function.  |prefix| can contain the following characters:
  *
  * 'C': a JSContext* argument
  * 'T': |this| as a JSObject* argument (bails if |this| is not an object)
@@ -60,6 +59,8 @@ enum { JSTN_ERRTYPE_MASK = 7, JSTN_MORE = 8 };
  * 'R': a JSRuntime* argument
  * 'P': the pc as a jsbytecode*
  * 'D': |this| as a number (jsdouble)
+ * 'f': the function being called, as a JSObject*
+ * 'p': the .prototype of the function, as a JSObject*
  *
  * The corresponding things will get passed as arguments to the builtin in
  * reverse order (so TC means JSContext* as the first arg, and the
