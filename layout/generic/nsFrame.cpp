@@ -552,7 +552,8 @@ nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
 }
 
 // Subclass hook for style post processing
-NS_IMETHODIMP nsFrame::DidSetStyleContext()
+/* virtual */ void
+nsFrame::DidSetStyleContext()
 {
   // Ensure that this frame gets invalidates (and, in the case of some
   // 'border-image's, reflows) when images that affect it load.
@@ -574,8 +575,6 @@ NS_IMETHODIMP nsFrame::DidSetStyleContext()
   }
 
   PresContext()->SetImageNotifiers(this, notifierChain);
-
-  return NS_OK;
 }
 
 /* virtual */ nsMargin

@@ -80,7 +80,7 @@ public:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
   // nsIFrame interface:
-  NS_IMETHOD DidSetStyleContext();
+  virtual void DidSetStyleContext();
 
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
