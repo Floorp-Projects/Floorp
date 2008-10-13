@@ -220,6 +220,7 @@ class TraceRecorder : public GCObject {
 #ifdef NJ_SOFTFLOAT
     nanojit::LirWriter*     float_filter;
 #endif
+    nanojit::LIns*          loop_header_ins;
     nanojit::LIns*          cx_ins;
     nanojit::LIns*          gp_ins;
     nanojit::LIns*          eos_ins;

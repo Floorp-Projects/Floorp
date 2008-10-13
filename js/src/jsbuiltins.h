@@ -145,7 +145,7 @@ struct JSTraceableNative {
 #define _JS_DEFINE_CALLINFO(name, crtype, cargtypes, argtypes, cse, fold)      \
     crtype FASTCALL js_##name cargtypes;                                       \
     const nanojit::CallInfo ci_##name =                                        \
-        { (intptr_t) &js_##name, argtypes, cse, fold _JS_CI_NAME(name) };
+        { (intptr_t) &js_##name, argtypes, cse, fold, nanojit::ABI_FASTCALL _JS_CI_NAME(name) };
 
 /*
  * Declare a C function named js_<op> and a CallInfo struct named ci_<op> so

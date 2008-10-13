@@ -38,6 +38,11 @@
 
 #include "nanojit.h"
 #include <stdio.h>
+#include <ctype.h>
+
+#ifdef PERFM
+#include "../vprof/vprof.h"
+#endif /* PERFM */
 
 namespace nanojit
 {
@@ -45,9 +50,9 @@ namespace nanojit
 	#ifdef FEATURE_NANOJIT
 
 	const uint8_t operandCount[] = {
-	/* 0 */		2, 2, /*trace*/0, /*nearskip*/0, /*skip*/0, /*neartramp*/0, /*tramp*/0, 2, 2, 2,
-	/* 10 */	/*param*/0, 2, 2, 2, 2, 2, 2, 2, /*call*/0, /*loop*/0,
-	/* 20 */	/*x*/0, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+	/* 0 */		/*trace*/0, /*nearskip*/0, /*skip*/0, /*neartramp*/0, /*tramp*/0, 2, 2, 2, 2, /*addp*/2, 
+	/* 10 */	/*param*/0, 2, 2, /*alloc*/0, 2, /*ret*/1, /*live*/1, /*calli*/0, /*call*/0, /*loop*/0,
+	/* 20 */	/*x*/0, 0, 1, 1, /*label*/0, 2, 2, 2, 2, 2,
 	/* 30 */	2, 2, /*short*/0, /*int*/0, 2, 2, /*neg*/1, 2, 2, 2,
 #if defined NANOJIT_64BIT
 	/* 40 */	/*callh*/0, 2, 2, 2, /*not*/1, 2, 2, 2, /*xt*/1, /*xf*/1,
@@ -55,9 +60,9 @@ namespace nanojit
 	/* 40 */	/*callh*/1, 2, 2, 2, /*not*/1, 2, 2, 2, /*xt*/1, /*xf*/1,
 #endif
 	/* 50 */	/*qlo*/1, /*qhi*/1, 2, /*ov*/1, /*cs*/1, 2, 2, 2, 2, 2,
-	/* 60 */	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	/* 70 */	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	/* 80 */	2, 2, /*fcall*/0, 2, 2, 2, 2, 2, 2, 2,
+	/* 60 */	2, 2, 2, 2, 2, /*file*/1, /*line*/1, 2, 2, 2,
+	/* 70 */	2, 2, 2, 2, 2, 2, 2, 2, 2, /*fret*/1,
+	/* 80 */	2, /*fcalli*/0, /*fcall*/0, 2, 2, 2, 2, 2, 2, 2,
 	/* 90 */	2, 2, 2, 2, 2, 2, 2, /*quad*/0, 2, 2,
 	/* 100 */	/*fneg*/1, 2, 2, 2, 2, 2, /*i2f*/1, /*u2f*/1, 2, 2,
 	/* 110 */	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -68,17 +73,17 @@ namespace nanojit
 	#ifdef NJ_VERBOSE
 
 	const char* lirNames[] = {
-	/* 0-9 */	"0","1","trace","nearskip","skip","neartramp","tramp","7","8","9",
-	/* 10-19 */	"param","st","ld","13","sti","15","16","17","call","loop",
-	/* 20-29 */ "x","21","22","23","24","25","feq","flt","fgt","fle",
+	/* 0-9 */	"start","nearskip","skip","neartramp","tramp","5","6","7","8","addp",
+	/* 10-19 */	"param","st","ld","alloc","sti","ret","live","calli","call","loop",
+	/* 20-29 */ "x","j","jt","jf","label","25","feq","flt","fgt","fle",
 	/* 30-39 */ "fge","cmov","short","int","ldc","","neg","add","sub","mul",
 	/* 40-49 */ "callh","and","or","xor","not","lsh","rsh","ush","xt","xf",
 	/* 50-59 */ "qlo","qhi","ldcb","ov","cs","eq","lt","gt","le","ge",
 	/* 60-63 */ "ult","ugt","ule","uge",
-	/* 64-69 */ "LIR64","65","66","67","68","69",
-	/* 70-79 */ "70","71","72","73","74","stq","ldq","77","stqi","79",
-	/* 80-89 */ "80","81","fcall","83","84","85","86","87","qiand","qiadd",
-	/* 90-99 */ "90","91","92","93","qcmov","95","96","quad","98","99",
+	/* 64-69 */ "LIR64","file","line","67","68","69",
+	/* 70-79 */ "70","71","72","73","74","stq","ldq","77","stqi","fret",
+	/* 80-89 */ "80","fcalli","fcall","83","84","85","86","87","88","89",
+	/* 90-99 */ "90","91","92","93","94","95","96","quad","ldqc","99",
 	/* 100-109 */ "fneg","fadd","fsub","fmul","fdiv","qjoin","i2f","u2f","qior","qilsh",
 	/* 110-119 */ "110","111","112","113","114","115","116","117","118","119",
 	/* 120-127 */ "120","121","122","123","124","125","126","127"
@@ -98,16 +103,12 @@ namespace nanojit
 	
 	// LCompressedBuffer
 	LirBuffer::LirBuffer(Fragmento* frago, const CallInfo* functions)
-		: _frago(frago), _functions(functions)
+		: _frago(frago), _functions(functions), abi(ABI_FASTCALL), _start(0)
 	{
-		_start = 0;
 		clear();
 		_start = pageAlloc();
 		if (_start)
-		{
-			verbose_only(_start->seq = 0;)
 			_unused = &_start->lir[0];
-		}
 		//buffer_count++;
 		//fprintf(stderr, "LirBuffer %x start %x\n", (int)this, (int)_start);
 	}
@@ -158,15 +159,16 @@ namespace nanojit
 	}
 	#endif 
 
-#ifdef NJ_VERBOSE
-	int LirBuffer::insCount() {
+	int32_t LirBuffer::insCount() 
+	{
+		// doesn't include embedded constants nor LIR_skip payload
 		return _stats.lir;
 	}
-	int LirBuffer::byteCount() {
-		return (_stats.pages-1) * (sizeof(Page)-sizeof(PageHeader)) +
-			(_unused - &_unused->page()->lir[0]) * sizeof(LIns);
+	int32_t LirBuffer::byteCount() 
+	{
+		return ((_stats.pages-1) * sizeof(Page)) +
+			((int32_t)_unused - (int32_t)pageTop(_unused));
 	}
-#endif
 
 	Page* LirBuffer::pageAlloc()
 	{
@@ -199,7 +201,6 @@ namespace nanojit
 		{
 			lastPage->next = page;  // forward link to next page 
 			_unused = &page->lir[0];
-            verbose_only(page->seq = lastPage->seq+1;)
 			//fprintf(stderr, "Fragmento::ensureRoom stamping %x with %x; start %x unused %x\n", (int)pageBottom(last), (int)page, (int)_start, (int)_unused);
 			debug_only( validate(); )
 			return true;
@@ -218,8 +219,8 @@ namespace nanojit
 		if (!samepage(last,last+2*count)
 			&& _buf->addPage()) 
 		{
-			// link LIR stream back to prior instruction (careful insFar relies on _unused...)
-			insFar(LIR_skip, last-1);
+			// link LIR stream back to prior instruction (careful insLink relies on _unused...)
+			insLink(LIR_skip, last-1);
 		}
 		return !_buf->outOmem();
 	}
@@ -241,14 +242,15 @@ namespace nanojit
     LIns* LIns::deref(int32_t off) const
     {
 		LInsp i = (LInsp) this-1 - off;
-        while (i->isTramp())
+        while (i && i->isTramp()) {
             i = i->ref();
+        }
 		return i;
     }
 
 	LInsp LirBufWriter::ensureReferenceable(LInsp i, int32_t addedDistance)
 	{
-		NanoAssert(!i->isTramp());
+		NanoAssert(i != 0 && !i->isTramp());
 		LInsp next = _buf->next();
 		LInsp from = next + 2*addedDistance;
 		if (canReference(from,i))
@@ -259,7 +261,7 @@ namespace nanojit
             return rpref;
 
 		// need a trampoline to get to i
-		LInsp tramp = insFar(LIR_tramp, i);
+		LInsp tramp = insLink(LIR_tramp, i);
 		NanoAssert( tramp->ref() == i );
 
         if (i == _buf->sp)
@@ -311,10 +313,17 @@ namespace nanojit
 	LInsp LirBufWriter::ins0(LOpcode op)
 	{
 		ensureRoom(1);
-		LInsp l = _buf->next();
+        LirBuffer *b = this->_buf;
+		LInsp l = b->next();
 		l->initOpcode(op);
-		_buf->commit(1);
-		_buf->_stats.lir++;
+		b->commit(1);
+		b->_stats.lir++;
+		if (op == LIR_start) {
+			// create params for saved regs -- processor specific
+			for (int i=0; i < NumSavedRegs; i++) {
+				insParam(i, 1);
+			}
+		}
 		return l;
 	}
 	
@@ -325,8 +334,7 @@ namespace nanojit
 
 		LInsp l = _buf->next();
 		l->initOpcode(op);
-		if (r1)
-			l->setOprnd1(r1);
+		l->setOprnd1(r1);
 
 		_buf->commit(1);
 		_buf->_stats.lir++;
@@ -337,14 +345,12 @@ namespace nanojit
 	{
 		ensureRoom(3);
 		LInsp r1 = ensureReferenceable(o1,2);
-		LInsp r2 = ensureReferenceable(o2,1);
+        LInsp r2 = o2==o1 ? r1 : ensureReferenceable(o2,1);
 
 		LInsp l = _buf->next();
 		l->initOpcode(op);
-		if (r1)
-			l->setOprnd1(r1);
-		if (r2)
-			l->setOprnd2(r2);
+		l->setOprnd1(r1);
+		l->setOprnd2(r2);
 
 		_buf->commit(1);
 		_buf->_stats.lir++;
@@ -363,45 +369,79 @@ namespace nanojit
 		return ins2(op, c, data);
 	}
 
-    LInsp LirBufWriter::insParam(int32_t arg)
+	LInsp LirBufWriter::insBranch(LOpcode op, LInsp condition, LInsp toLabel)
+	{
+		if (!toLabel)
+			toLabel = insFar(LIR_tramp,0); //empty tramp
+        if (!condition) {
+            // unconditional, just point to something
+            condition = toLabel;
+        }
+	    return ins2(op,condition,toLabel);
+	}
+
+    LInsp LirBufWriter::insAlloc(int32_t size)
     {
+        size = (size+3)>>2; // # of required 32bit words
+        NanoAssert(isU16(size));
 		ensureRoom(1);
 		LInsp l = _buf->next();
-		l->initOpcode(LIR_param);
-		l->c.imm8a = Assembler::argRegs[arg];
-
+		l->initOpcode(LIR_alloc);
+		l->i.imm16 = uint16_t(size);
 		_buf->commit(1);
 		_buf->_stats.lir++;
+		return l;
+    }
+
+    LInsp LirBufWriter::insParam(int32_t arg, int32_t kind)
+    {
+		ensureRoom(1);
+        LirBuffer *b = this->_buf;
+		LInsp l = b->next();
+		l->initOpcode(LIR_param);
+        NanoAssert(isU8(arg) && isU8(kind));
+		l->c.imm8a = arg;
+        l->c.imm8b = kind;
+        if (kind) {
+            NanoAssert(arg < NumSavedRegs);
+            b->savedParams[arg] = l;
+        }
+		b->commit(1);
+		b->_stats.lir++;
 		return l;
     }
 	
 	LInsp LirBufWriter::insFar(LOpcode op, LInsp target)
 	{
-        NanoAssert(op == LIR_skip || op == LIR_tramp);
+		ensureRoom(2);
         LInsp l = _buf->next();
-        int d = target-l;
-        if (isS24(d)) {
-    		ensureRoom(1);
-            l->initOpcode(LOpcode(op-1)); // nearskip or neartramp
-            l->t.imm24 = d;
-            _buf->commit(1);
-            return l;
-        }
-        else {
-            #if defined NANOJIT_64BIT
-            const unsigned int extra = 1;
-            #else
-            const unsigned int extra = 0;
-            #endif
 
-            ensureRoom(2 + extra);
-            // write the pointer and instruction
-            l = _buf->next()+1+extra;
-            *((LInsp*)(l-1-extra)) = target;
-            l->initOpcode(op);
-            _buf->commit(2+extra);
-		    return l;
+		// write the pointer and operation
+		l = _buf->next()+1;
+		*((LInsp*)(l-1)) = target;
+		l->initOpcode(op);
+		_buf->commit(2);
+		_buf->_stats.lir++;
+		return l;
+	}
+	
+	LInsp LirBufWriter::insLink(LOpcode op, LInsp target)
+	{
+        NanoAssert(op == LIR_skip || op == LIR_tramp);
+		ensureRoom(2);  // must be before _buf->next() 		
+        LInsp l = _buf->next();
+        if (can24bReach(l,target))
+		{
+            l->initOpcode(LOpcode(op-1)); // nearskip or neartramp
+            l->t.imm24 = target-l;
+            _buf->commit(1);
+			_buf->_stats.lir++;
         }
+        else
+		{
+			l = insFar(op,target);
+		}
+		return l;
 	}
 	
 	LInsp LirBufWriter::insImm(int32_t imm)
@@ -439,7 +479,7 @@ namespace nanojit
 		ensureRoom(n+2);
 		LInsp last = _buf->next()-1;
 		_buf->commit(n);
-		return insFar(LIR_skip, last);
+		return insLink(LIR_skip, last);
 	}
 
 	LInsp LirReader::read()	
@@ -462,6 +502,8 @@ namespace nanojit
 #endif
 				case LIR_call:
 				case LIR_fcall:
+                case LIR_calli:
+                case LIR_fcalli:
 					i -= i->callInsWords();
 					break;
 
@@ -491,7 +533,7 @@ namespace nanojit
 					i -= 3;
 					break;
 
-				case LIR_trace:
+				case LIR_start:
 					_i = 0;  // start of trace
 					return cur;
 			}
@@ -509,6 +551,23 @@ namespace nanojit
 	bool FASTCALL isCond(LOpcode c) {
 		return (c == LIR_ov) || (c == LIR_cs) || isCmp(c);
 	}
+
+    bool FASTCALL isFloat(LOpcode c) {
+        switch (c) {
+            default:
+                return false;
+            case LIR_fadd:
+            case LIR_fsub:
+            case LIR_fmul:
+            case LIR_fdiv:
+            case LIR_fneg:
+            case LIR_fcall:
+            case LIR_fcalli:
+            case LIR_i2f:
+            case LIR_u2f:
+                return true;
+        }
+    }
     
 	bool LIns::isCmp() const {
 		return nanojit::isCmp(u.code);
@@ -522,33 +581,6 @@ namespace nanojit
 		return ((u.code & LIR64) != 0 || u.code == LIR_callh);
 	}
     
-	bool LIns::isCall() const
-	{
-		return ((u.code&~LIR64) == LIR_call
-				|| (u.code == LIR_callh));
-	}
-
-	bool LIns::isGuard() const
-	{
-		return u.code==LIR_x || u.code==LIR_xf || u.code==LIR_xt || u.code==LIR_loop;
-	}
-
-    bool LIns::isStore() const
-    {
-		int c = u.code & ~LIR64;
-        return c == LIR_st || c == LIR_sti;
-    }
-
-    bool LIns::isLoad() const
-    {
-        return u.code == LIR_ldq || u.code == LIR_ld || u.code == LIR_ldc;
-    }
-
-	bool LIns::isconst() const
-	{
-		return (opcode()&~1) == LIR_short;
-	}
-
 	bool LIns::isconstval(int32_t val) const
 	{
 		return isconst() && constval()==val;
@@ -584,6 +616,12 @@ namespace nanojit
 		i.imm16 = int16_t(x);
 	}
 
+	void LIns::setimm24(int32_t x)
+	{
+		NanoAssert(isS24(x));
+		t.imm24 = x;
+	}
+
 	void LIns::setresv(uint32_t resv)
 	{
 		NanoAssert(isU8(resv));
@@ -616,6 +654,28 @@ namespace nanojit
     {
         sti.disp = d;
     }
+
+    LIns **LIns::targetAddr() {
+		NanoAssert(isBranch());
+		LInsp i = (LInsp) this-1 - u.oprnd_2;
+        NanoAssert(i->isTramp());
+        LInsp ref;
+        while ((ref=i->ref()) != 0 && ref->isTramp())
+            i = ref;
+		NanoAssert(i->isop(LIR_tramp));
+		return (LIns**)(i-1);
+    }
+
+    void LIns::target(LInsp label) {
+        NanoAssert(label && label->isop(LIR_label));
+        *(targetAddr()) = label;
+	}
+
+	LInsp LIns::getTarget()
+	{
+        NanoAssert(isBranch());
+        return oprnd2();
+	}
 
 	LInsp	LIns::oprnd1() const	
 	{
@@ -673,9 +733,26 @@ namespace nanojit
 			if (i->isop(LIR_qjoin))
 				return i->oprnd2();
 		}
+		else if (i->isconst()) {
+			int32_t c = i->constval();
+			if (v == LIR_neg)
+				return insImm(-c);
+			if (v == LIR_not)
+				return insImm(~c);
+		}
 		else if (v == i->opcode() && (v == LIR_not || v == LIR_neg || v == LIR_fneg)) {
+            // not(not(x)) = x;  neg(neg(x)) = x;  fneg(fneg(x)) = x;
 			return i->oprnd1();
 		}
+        /* [ed 8.27.08] this causes a big slowdown in gameoflife.as.  why?
+        else if (i->isconst()) {
+            if (v == LIR_i2f) {
+                return insImmf(i->constval());
+            }
+            else if (v == LIR_u2f) {
+                return insImmf((uint32_t)i->constval());
+            }
+        }*/
 
 		// todo
 		// -(a-b) = b-a
@@ -754,7 +831,7 @@ namespace nanojit
 		else if (oprnd1->isconstq() && oprnd2->isconstq())
 		{
 			double c1 = oprnd1->constvalf();
-			double c2 = oprnd1->constvalf();
+			double c2 = oprnd2->constvalf();
 			if (v == LIR_feq)
 				return insImm(c1 == c2);
 			if (v == LIR_flt)
@@ -768,7 +845,7 @@ namespace nanojit
 		}
 		else if (oprnd1->isconst() && !oprnd2->isconst())
 		{
-			if (v == LIR_add || v == LIR_mul ||
+			if (v == LIR_add || v == LIR_addp || v == LIR_mul ||
 				v == LIR_fadd || v == LIR_fmul ||
 				v == LIR_xor || v == LIR_or || v == LIR_and ||
 				v == LIR_eq) {
@@ -824,7 +901,7 @@ namespace nanojit
 
 			if (c == 0)
 			{
-				if (v == LIR_add || v == LIR_or || v == LIR_xor ||
+				if (v == LIR_add || v == LIR_addp || v == LIR_or || v == LIR_xor ||
 					v == LIR_sub || v == LIR_lsh || v == LIR_rsh || v == LIR_ush)
 					return oprnd1;
 				else if (v == LIR_and || v == LIR_mul)
@@ -885,6 +962,18 @@ namespace nanojit
 		return out->insGuard(v, c, x);
 	}
 
+    LIns* ExprFilter::insBranch(LOpcode v, LIns *c, LIns *t)
+    {
+        if (v == LIR_jt || v == LIR_jf) {
+            while (c->isop(LIR_eq) && c->oprnd1()->isCmp() && c->oprnd2()->isconstval(0)) {
+                // jt(eq(cmp,0)) => jf(cmp)   or   jf(eq(cmp,0)) => jt(cmp)
+                v = LOpcode(v ^ 1);
+                c = c->oprnd1();
+            }
+        }
+        return out->insBranch(v, c, t);
+    }
+
     LIns* LirWriter::insLoadi(LIns *base, int disp) 
     { 
         return insLoad(LIR_ld,base,disp);
@@ -895,10 +984,26 @@ namespace nanojit
 		return insLoad(op, base, insImm(disp));
 	}
 
+    LIns* LirWriter::store(LInsp value, LInsp base, int32_t d)
+    {
+		return isS8(d) ? insStorei(value, base, d)
+			: insStore(value, base, insImm(d));
+    }
+
 	LIns* LirWriter::ins_eq0(LIns* oprnd1)
 	{
 		return ins2i(LIR_eq, oprnd1, 0);
 	}
+
+    LIns* LirWriter::insImmf(double f)
+    {
+        union {
+            double f;
+            uint64_t q;
+        } u;
+        u.f = f;
+        return insImmq(u.q);
+    }
 
 	LIns* LirWriter::qjoin(LInsp lo, LInsp hi)
 	{
@@ -937,19 +1042,21 @@ namespace nanojit
     LIns* LirBufWriter::insCall(const CallInfo *ci, LInsp args[])
 	{
 		static const LOpcode k_callmap[] = { LIR_call, LIR_fcall, LIR_call, LIR_callh };
+		static const LOpcode k_callimap[] = { LIR_calli, LIR_fcalli, LIR_calli, LIR_skip };
 
 		uint32_t argt = ci->_argtypes;
-		LOpcode op = k_callmap[argt & 3];
+        LOpcode op = (ci->isIndirect() ? k_callimap : k_callmap)[argt & 3];
+        NanoAssert(op != LIR_skip); // LIR_skip here is just an error condition
 
-        ArgSize sizes[10];
+        ArgSize sizes[2*MAXARGS];
         uint32_t argc = ci->get_sizes(sizes);
 
 #ifdef NJ_SOFTFLOAT
 		if (op == LIR_fcall)
 			op = LIR_callh;
-		LInsp args2[5*2]; // arm could require 2 args per double
+		LInsp args2[MAXARGS*2]; // arm could require 2 args per double
 		int32_t j = 0;
-		for (int32_t i = 0; i < 5; i++) {
+		for (int32_t i = 0; i < MAXARGS; i++) {
 			argt >>= 2;
 			ArgSize a = ArgSize(argt&3);
 			if (a == ARGSIZE_F) {
@@ -964,7 +1071,7 @@ namespace nanojit
         NanoAssert(j == argc);
 #endif
 
-		NanoAssert(argc < 8);
+		NanoAssert(argc <= MAXARGS);
 		uint32_t words = argwords(argc);
 		ensureRoom(words+LIns::callInfoWords+1+argc);  // ins size + possible tramps
 		for (uint32_t i=0; i < argc; i++)
@@ -989,8 +1096,8 @@ namespace nanojit
 
     using namespace avmplus;
 
-	StackFilter::StackFilter(LirFilter *in, GC *gc, Fragment *frag, LInsp sp) 
-		: LirFilter(in), gc(gc), frag(frag), sp(sp), top(0)
+	StackFilter::StackFilter(LirFilter *in, GC *gc, LirBuffer *lirbuf, LInsp sp) 
+		: LirFilter(in), gc(gc), lirbuf(lirbuf), sp(sp), top(0)
 	{}
 
 	LInsp StackFilter::read() 
@@ -1030,6 +1137,11 @@ namespace nanojit
 					}
 				}
 			}
+			/* 
+			 * NB: If there is a backward branch other than the loop-restart branch, this is
+			 * going to be wrong. Unfortunately there doesn't seem to be an easy way to detect
+			 * such branches. Just do not create any.
+			 */
 			else if (i->isGuard())
 			{
 				stk.reset();
@@ -1086,13 +1198,19 @@ namespace nanojit
 	}
 
 	LInsHashSet::LInsHashSet(GC* gc) : 
-			m_list(gc, kInitialCap), m_used(0), m_gc(gc)
+			m_used(0), m_cap(kInitialCap), m_gc(gc)
 	{
 #ifdef MEMORY_INFO
-		m_list.set_meminfo_name("LInsHashSet.list");
+//		m_list.set_meminfo_name("LInsHashSet.list");
 #endif
-		m_list.set(kInitialCap-1, 0);
+        LInsp *list = (LInsp*) gc->Alloc(sizeof(LInsp)*m_cap);
+        WB(gc, this, &m_list, list);
 	}
+
+    void LInsHashSet::clear() {
+        memset(m_list, 0, sizeof(LInsp)*m_cap);
+        m_used = 0;
+    }
 	
 	/*static*/ uint32_t FASTCALL LInsHashSet::hashcode(LInsp i)
 	{
@@ -1173,30 +1291,30 @@ namespace nanojit
 
 	void FASTCALL LInsHashSet::grow()
 	{
-		const uint32_t newcap = m_list.size() << 1;
-		InsList newlist(m_gc, newcap);
+		const uint32_t newcap = m_cap << 1;
+        LInsp *newlist = (LInsp*) m_gc->Alloc(newcap * sizeof(LInsp));
+        LInsp *list = m_list;
 #ifdef MEMORY_INFO
-		newlist.set_meminfo_name("LInsHashSet.list");
+//		newlist.set_meminfo_name("LInsHashSet.list");
 #endif
-		newlist.set(newcap-1, 0);
-		for (uint32_t i=0, n=m_list.size(); i < n; i++)
-		{
-			LInsp name = m_list.get(i);
+		for (uint32_t i=0, n=m_cap; i < n; i++) {
+			LInsp name = list[i];
 			if (!name) continue;
 			uint32_t j = find(name, hashcode(name), newlist, newcap);
-			newlist.set(j, name);
+            newlist[j] = name;
 		}
-		m_list.become(newlist);
+        m_cap = newcap;
+        WB(m_gc, this, &m_list, newlist);
 	}
 
-	uint32_t FASTCALL LInsHashSet::find(LInsp name, uint32_t hash, const InsList& list, uint32_t cap)
+	uint32_t FASTCALL LInsHashSet::find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap)
 	{
 		const uint32_t bitmask = (cap - 1) & ~0x1;
 
 		uint32_t n = 7 << 1;
 		hash &= bitmask;  
 		LInsp k;
-		while ((k = list.get(hash)) != NULL &&
+		while ((k = list[hash]) != NULL &&
 			(!LIns::sameop(k,name) || !equals(k, name)))
 		{
 			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
@@ -1208,23 +1326,23 @@ namespace nanojit
 	{
 		// this is relatively short-lived so let's try a more aggressive load factor
 		// in the interest of improving performance
-		if (((m_used+1)<<1) >= m_list.size()) // 0.50
+		if (((m_used+1)<<1) >= m_cap) // 0.50
 		{
 			grow();
-			k = find(name, hashcode(name), m_list, m_list.size());
+			k = find(name, hashcode(name), m_list, m_cap);
 		}
-		NanoAssert(!m_list.get(k));
+		NanoAssert(!m_list[k]);
 		m_used++;
-		m_list.set(k, name);
-		return name;
+        return m_list[k] = name;
 	}
 
 	void LInsHashSet::replace(LInsp i)
 	{
-		uint32_t k = find(i, hashcode(i), m_list, m_list.size());
-		if (m_list.get(k)) {
+        LInsp *list = m_list;
+		uint32_t k = find(i, hashcode(i), list, m_cap);
+		if (list[k]) {
 			// already there, so replace it
-			m_list.set(k, i);
+			list[k] = i;
 		} else {
 			add(i, k);
 		}
@@ -1259,13 +1377,13 @@ namespace nanojit
 
 	LInsp LInsHashSet::find32(int32_t a, uint32_t &i)
 	{
-		uint32_t cap = m_list.size();
-		const InsList& list = m_list;
+		uint32_t cap = m_cap;
+		const LInsp *list = m_list;
 		const uint32_t bitmask = (cap - 1) & ~0x1;
 		uint32_t hash = hashimm(a) & bitmask;
 		uint32_t n = 7 << 1;
 		LInsp k;
-		while ((k = list.get(hash)) != NULL && 
+		while ((k = list[hash]) != NULL && 
 			(!k->isconst() || k->constval() != a))
 		{
 			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
@@ -1276,13 +1394,13 @@ namespace nanojit
 
 	LInsp LInsHashSet::find64(uint64_t a, uint32_t &i)
 	{
-		uint32_t cap = m_list.size();
-		const InsList& list = m_list;
+		uint32_t cap = m_cap;
+		const LInsp *list = m_list;
 		const uint32_t bitmask = (cap - 1) & ~0x1;
 		uint32_t hash = hashimmq(a) & bitmask;  
 		uint32_t n = 7 << 1;
 		LInsp k;
-		while ((k = list.get(hash)) != NULL && 
+		while ((k = list[hash]) != NULL && 
 			(!k->isconstq() || k->constvalq() != a))
 		{
 			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
@@ -1293,13 +1411,13 @@ namespace nanojit
 
 	LInsp LInsHashSet::find1(LOpcode op, LInsp a, uint32_t &i)
 	{
-		uint32_t cap = m_list.size();
-		const InsList& list = m_list;
+		uint32_t cap = m_cap;
+		const LInsp *list = m_list;
 		const uint32_t bitmask = (cap - 1) & ~0x1;
 		uint32_t hash = hash1(op,a) & bitmask;  
 		uint32_t n = 7 << 1;
 		LInsp k;
-		while ((k = list.get(hash)) != NULL && 
+		while ((k = list[hash]) != NULL && 
 			(k->opcode() != op || k->oprnd1() != a))
 		{
 			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
@@ -1310,13 +1428,13 @@ namespace nanojit
 
 	LInsp LInsHashSet::find2(LOpcode op, LInsp a, LInsp b, uint32_t &i)
 	{
-		uint32_t cap = m_list.size();
-		const InsList& list = m_list;
+		uint32_t cap = m_cap;
+		const LInsp *list = m_list;
 		const uint32_t bitmask = (cap - 1) & ~0x1;
 		uint32_t hash = hash2(op,a,b) & bitmask;  
 		uint32_t n = 7 << 1;
 		LInsp k;
-		while ((k = list.get(hash)) != NULL && 
+		while ((k = list[hash]) != NULL && 
 			(k->opcode() != op || k->oprnd1() != a || k->oprnd2() != b))
 		{
 			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
@@ -1335,13 +1453,13 @@ namespace nanojit
 
 	LInsp LInsHashSet::findcall(const CallInfo *ci, uint32_t argc, LInsp args[], uint32_t &i)
 	{
-		uint32_t cap = m_list.size();
-		const InsList& list = m_list;
+		uint32_t cap = m_cap;
+		const LInsp *list = m_list;
 		const uint32_t bitmask = (cap - 1) & ~0x1;
 		uint32_t hash = hashcall(ci, argc, args) & bitmask;  
 		uint32_t n = 7 << 1;
 		LInsp k;
-		while ((k = list.get(hash)) != NULL &&
+		while ((k = list[hash]) != NULL &&
 			(!k->isCall() || k->callInfo() != ci || !argsmatch(k, argc, args)))
 		{
 			hash = (hash + (n += 2)) & bitmask;		// quadratic probe
@@ -1404,26 +1522,24 @@ namespace nanojit
 		}
 	};
 
-    void live(GC *gc, Assembler *assm, Fragment *frag)
+    void live(GC *gc, LirBuffer *lirbuf)
 	{
 		// traverse backwards to find live exprs and a few other stats.
 
-		LInsp sp = frag->lirbuf->sp;
-		LInsp rp = frag->lirbuf->rp;
 		LiveTable live(gc);
 		uint32_t exits = 0;
-		LirBuffer *lirbuf = frag->lirbuf;
         LirReader br(lirbuf);
-		StackFilter sf(&br, gc, frag, sp);
-		StackFilter r(&sf, gc, frag, rp);
-        int total = 0;
-        live.add(frag->lirbuf->state, r.pos());
+		StackFilter sf(&br, gc, lirbuf, lirbuf->sp);
+		StackFilter r(&sf, gc, lirbuf, lirbuf->rp);
+		int total = 0;
+        if (lirbuf->state)
+            live.add(lirbuf->state, r.pos());
 		for (LInsp i = r.read(); i != 0; i = r.read())
 		{
             total++;
 
             // first handle side-effect instructions
-			if (i->isStore() || i->isGuard() || i->isCall() && !i->callInfo()->_cse)
+			if (!i->isCse(lirbuf->_functions))
 			{
 				live.add(i,0);
                 if (i->isGuard())
@@ -1458,17 +1574,22 @@ namespace nanojit
 			}
 		}
  
-		assm->outputf("live instruction count %ld, total %ld, max pressure %d",
+		printf("live instruction count %d, total %u, max pressure %d\n",
 			live.retired.size(), total, live.maxlive);
-        assm->outputf("side exits %ld", exits);
+        printf("side exits %u\n", exits);
 
 		// print live exprs, going forwards
-		LirNameMap *names = frag->lirbuf->names;
+		LirNameMap *names = lirbuf->names;
+        bool newblock = true;
 		for (int j=live.retired.size()-1; j >= 0; j--) 
         {
             RetiredEntry *e = live.retired[j];
-            char livebuf[1000], *s=livebuf;
+            char livebuf[4000], *s=livebuf;
             *s = 0;
+            if (!newblock && e->i->isop(LIR_label)) {
+                printf("\n");
+            }
+            newblock = false;
             for (int k=0,n=e->live.size(); k < n; k++) {
 				strcpy(s, names->formatRef(e->live[k]));
 				s += strlen(s);
@@ -1476,8 +1597,10 @@ namespace nanojit
 				NanoAssert(s < livebuf+sizeof(livebuf));
             }
 			printf("%-60s %s\n", livebuf, names->formatIns(e->i));
-			if (e->i->isGuard())
+            if (e->i->isGuard() || e->i->isBranch() || isRet(e->i->opcode())) {
 				printf("\n");
+                newblock = true;
+            }
 		}
 	}
 
@@ -1516,7 +1639,12 @@ namespace nanojit
 
 	void LirNameMap::copyName(LInsp i, const char *s, int suffix) {
 		char s2[200];
-		sprintf(s2,"%s%d", s,suffix);
+		if (isdigit(s[strlen(s)-1])) {
+			// if s ends with a digit, add '_' to clarify the suffix
+			sprintf(s2,"%s_%d", s, suffix);
+		} else {
+			sprintf(s2,"%s%d", s, suffix);
+		}
 		addName(i, labels->core->newString(s2));
 	}
 
@@ -1575,11 +1703,6 @@ namespace nanojit
 	{
 		char sbuf[200];
 		char *s = sbuf;
-		if (!i->isStore() && !i->isGuard() && !i->isop(LIR_trace)) {
-			sprintf(s, "%s = ", formatRef(i));
-			s += strlen(s);
-		}
-
 		LOpcode op = i->opcode();
 		switch(op)
 		{
@@ -1590,15 +1713,20 @@ namespace nanojit
 				break;
 			}
 
+            case LIR_alloc: {
+                sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], i->size());
+                break;
+            }
+
 			case LIR_quad:
 			{
 				int32_t *p = (int32_t*) (i-2);
-				sprintf(s, "#%X:%X", p[1], p[0]);
+				sprintf(s, "#%X:%X /* %g */", p[1], p[0], i->constvalf());
 				break;
 			}
 
 			case LIR_loop:
-			case LIR_trace:
+			case LIR_start:
 				sprintf(s, "%s", lirNames[op]);
 				break;
 
@@ -1607,7 +1735,7 @@ namespace nanojit
 #endif
 			case LIR_fcall:
 			case LIR_call: {
-				sprintf(s, "%s ( ", i->callInfo()->_name);
+				sprintf(s, "%s = %s ( ", formatRef(i), i->callInfo()->_name);
 				for (int32_t j=i->argc()-1; j >= 0; j--) {
 					s += strlen(s);
 					sprintf(s, "%s ",formatRef(i->arg(j)));
@@ -1616,11 +1744,59 @@ namespace nanojit
 				sprintf(s, ")");
 				break;
 			}
+			case LIR_fcalli:
+			case LIR_calli: {
+                int32_t argc = i->argc();
+				sprintf(s, "%s = [%s] ( ", formatRef(i), formatRef(i->arg(argc-1)));
+                s += strlen(s);
+                argc--;
+				for (int32_t j=argc-1; j >= 0; j--) {
+					s += strlen(s);
+					sprintf(s, "%s ",formatRef(i->arg(j)));
+				}
+				s += strlen(s);
+				sprintf(s, ")");
+				break;
+			}
 
-			case LIR_param:
-                sprintf(s, "%s %s", lirNames[op], gpn(i->imm8()));
+			case LIR_param: { 
+				uint32_t arg = i->imm8();
+				if (!i->imm8b()) {
+					if (arg < sizeof(Assembler::argRegs)/sizeof(Assembler::argRegs[0])) {
+						sprintf(s, "%s = %s %d %s", formatRef(i), lirNames[op],
+							arg, gpn(Assembler::argRegs[arg]));
+					} else {
+						sprintf(s, "%s = %s %d", formatRef(i), lirNames[op], arg);
+					}
+				} else {
+					sprintf(s, "%s = %s %d %s", formatRef(i), lirNames[op],
+						arg, gpn(Assembler::savedRegs[arg]));
+				}
+				break;
+			}
+
+			case LIR_label:
+                sprintf(s, "%s:", formatRef(i));
 				break;
 
+			case LIR_jt:
+			case LIR_jf:
+                sprintf(s, "%s %s -> %s", lirNames[op], formatRef(i->oprnd1()), 
+                    i->oprnd2() ? formatRef(i->oprnd2()) : "unpatched");
+				break;
+
+			case LIR_j:
+                sprintf(s, "%s -> %s", lirNames[op], 
+                    i->oprnd2() ? formatRef(i->oprnd2()) : "unpatched");
+				break;
+
+            case LIR_live:
+			case LIR_ret:
+            case LIR_fret:
+                sprintf(s, "%s %s", lirNames[op], formatRef(i->oprnd1()));
+				break;
+				
+            case LIR_callh:
 			case LIR_neg:
 			case LIR_fneg:
 			case LIR_i2f:
@@ -1630,7 +1806,7 @@ namespace nanojit
             case LIR_ov:
             case LIR_cs:
 			case LIR_not: 
-				sprintf(s, "%s %s", lirNames[op], formatRef(i->oprnd1()));
+				sprintf(s, "%s = %s %s", formatRef(i), lirNames[op], formatRef(i->oprnd1()));
 				break;
 
 			case LIR_x:
@@ -1640,6 +1816,7 @@ namespace nanojit
 				break;
 
 			case LIR_add:
+			case LIR_addp:
 			case LIR_sub: 
 		 	case LIR_mul: 
 			case LIR_fadd:
@@ -1670,7 +1847,7 @@ namespace nanojit
             case LIR_qiand:
             case LIR_qilsh:
             case LIR_qior:
-				sprintf(s, "%s %s, %s", lirNames[op],
+				sprintf(s, "%s = %s %s, %s", formatRef(i), lirNames[op],
 					formatRef(i->oprnd1()), 
 					formatRef(i->oprnd2()));
 				break;
@@ -1683,7 +1860,7 @@ namespace nanojit
 
 			case LIR_qcmov:
 			case LIR_cmov:
-                sprintf(s, "%s ? %s : %s", 
+                sprintf(s, "%s = %s %s ? %s : %s", formatRef(i), lirNames[op],
 					formatRef(i->oprnd1()), 
 					formatRef(i->oprnd2()->oprnd1()), 
 					formatRef(i->oprnd2()->oprnd2()));
@@ -1692,8 +1869,9 @@ namespace nanojit
 			case LIR_ld: 
 			case LIR_ldc: 
 			case LIR_ldq: 
+			case LIR_ldqc: 
 			case LIR_ldcb: 
-				sprintf(s, "%s %s[%s]", lirNames[op],
+				sprintf(s, "%s = %s %s[%s]", formatRef(i), lirNames[op],
 					formatRef(i->oprnd1()), 
 					formatRef(i->oprnd2()));
 				break;
@@ -1702,7 +1880,7 @@ namespace nanojit
             case LIR_sti:
 			case LIR_stq: 
             case LIR_stqi:
-				sprintf(s, "%s[%d] = %s", 
+				sprintf(s, "%s %s[%d] = %s", lirNames[op],
 					formatRef(i->oprnd2()), 
 					i->immdisp(), 
 					formatRef(i->oprnd1()));
@@ -1833,13 +2011,13 @@ namespace nanojit
 		verbose_only( assm->_outputCache = &asmOutput; )
 
 		verbose_only(if (assm->_verbose && core->config.verbose_live)
-			live(gc, assm, triggerFrag);)
+			live(gc, triggerFrag->lirbuf);)
 
 		bool treeCompile = core->config.tree_opt && (triggerFrag->kind == BranchTrace);
 		RegAllocMap regMap(gc);
 		NInsList loopJumps(gc);
 #ifdef MEMORY_INFO
-		loopJumps.set_meminfo_name("LIR loopjumps");
+//		loopJumps.set_meminfo_name("LIR loopjumps");
 #endif
 		assm->beginAssembly(triggerFrag, &regMap);
 
@@ -1884,6 +2062,7 @@ namespace nanojit
 		verbose_only(if (assm->_verbose) 
 			assm->outputf("compiling trunk %s",
 				frago->labels->format(root));)
+		NanoAssert(!frago->core()->config.tree_opt || root == root->anchor || root->kind == MergeTrace);			
 		assm->endAssembly(root, loopJumps);
 			
 		// reverse output so that assembly is displayed low-to-high
@@ -1899,12 +2078,50 @@ namespace nanojit
 			root->link(assm);
 			if (treeCompile) root->linkBranches(assm);
 		}
+    }
 
-#if defined(NJ_VERBOSE)
-        for (size_t i = 0; i < asmOutput.size(); i++) {
-            gc->Free(asmOutput.get(i));
+    LInsp LoadFilter::insLoad(LOpcode v, LInsp base, LInsp disp)
+    {
+        if (base != sp && base != rp && (v == LIR_ld || v == LIR_ldq)) {
+            uint32_t k;
+            LInsp found = exprs.find2(v, base, disp, k);
+            if (found)
+                return found;
+            return exprs.add(out->insLoad(v,base,disp), k);
         }
-#endif
+        return out->insLoad(v, base, disp);
+    }
+
+    void LoadFilter::clear(LInsp p)
+    {
+        if (p != sp && p != rp)
+            exprs.clear();
+    }
+
+    LInsp LoadFilter::insStore(LInsp v, LInsp b, LInsp d)
+    {
+        clear(b);
+        return out->insStore(v, b, d);
+    }
+
+    LInsp LoadFilter::insStorei(LInsp v, LInsp b, int32_t d)
+    {
+        clear(b);
+        return out->insStorei(v, b, d);
+    }
+
+    LInsp LoadFilter::insCall(const CallInfo *call, LInsp args[])
+    {
+        if (!call->_cse)
+            exprs.clear();
+        return out->insCall(call, args);
+    }
+
+    LInsp LoadFilter::ins0(LOpcode op)
+    {
+        if (op == LIR_label)
+            exprs.clear();
+        return out->ins0(op);
     }
 
 	#endif /* FEATURE_NANOJIT */
@@ -1957,7 +2174,7 @@ namespace nanojit
 				return dup(b);
 			}
 			else if (p > start && p < end) {
-				int d = (intptr_t(p)-intptr_t(start)) >> e->align;
+				int32_t d = int32_t(intptr_t(p)-intptr_t(start)) >> e->align;
 				if (addrs)
 					sprintf(b, "%p %s+%d", p, name, d);
 				else
@@ -1981,7 +2198,7 @@ namespace nanojit
 
 	const char *LabelMap::dup(const char *b)
 	{
-		int need = strlen(b)+1;
+		size_t need = strlen(b)+1;
 		char *s = end;
 		end += need;
 		if (end > buf+sizeof(buf)) {
