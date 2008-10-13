@@ -14,7 +14,6 @@ mapping* next;
 
 int map_put(const char* key,const char* val);
 char*  map_get(const char* key);
-#define DEBUG_NSPR_ALL
 static int init_i =1;
 static mapping initial_map[] = {
 #ifdef DEBUG_NSPR_ALL
