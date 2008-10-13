@@ -633,7 +633,7 @@ nsObjectFrame::Destroy()
   nsObjectFrameSuper::Destroy();
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsObjectFrame::DidSetStyleContext()
 {
   if (HasView()) {
@@ -646,7 +646,7 @@ nsObjectFrame::DidSetStyleContext()
     }
   }
 
-  return nsObjectFrameSuper::DidSetStyleContext();
+  nsObjectFrameSuper::DidSetStyleContext();
 }
 
 nsIAtom*
