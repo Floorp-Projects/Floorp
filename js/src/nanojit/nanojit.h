@@ -42,6 +42,8 @@
 #include <stddef.h>
 #include "avmplus.h"
 
+#ifdef FEATURE_NANOJIT
+
 #ifdef AVMPLUS_IA32
 #define NANOJIT_IA32
 #elif AVMPLUS_ARM
@@ -72,6 +74,8 @@ namespace nanojit
 	typedef avmplus::SortedMap<SideExit*,RegAlloc*,avmplus::LIST_GCObjects> RegAllocMap;
 	typedef avmplus::List<LIns*,avmplus::LIST_NonGCObjects>	InsList;
 	typedef avmplus::List<char*, avmplus::LIST_GCObjects> StringList;
+
+    const uint32_t MAXARGS = 8;
 
 	#if defined(_MSC_VER) && _MSC_VER < 1400
 		static void NanoAssertMsgf(bool a,const char *f,...) {}
@@ -113,12 +117,12 @@ namespace nanojit
 	#define verbose_output						if (verbose_enabled()) Assembler::output
 	#define verbose_outputf						if (verbose_enabled()) Assembler::outputf
 	#define verbose_enabled()					(_verbose)
-	#define verbose_only(x)						x
+	#define verbose_only(...)					__VA_ARGS__
 #else
 	#define verbose_output
 	#define verbose_outputf
 	#define verbose_enabled()
-	#define verbose_only(x)
+	#define verbose_only(...)
 #endif /*NJ_VERBOSE*/
 
 #ifdef _DEBUG
@@ -172,4 +176,5 @@ namespace nanojit
 #include "Assembler.h"
 #include "TraceTreeDrawer.h"
 
+#endif // FEATURE_NANOJIT
 #endif // __nanojit_h__

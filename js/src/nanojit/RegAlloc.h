@@ -51,15 +51,28 @@ namespace nanojit
 	class RegAlloc MMGC_SUBCLASS_DECL
 	{
 		public:
-			RegAlloc() {}
+            RegAlloc() : free(0), used(0), priority(0) {}
 			void	clear();
 			bool	isFree(Register r); 
 			void	addFree(Register r);
 			void	removeFree(Register r);
 			void	addActive(Register r, LIns* ins);
+            void    useActive(Register r);
 			void	removeActive(Register r);
-			LIns*	getActive(Register r); 
 			void	retire(Register r);
+            bool    isValid() {
+                return (free|used) != 0;
+            }
+
+            int32_t getPriority(Register r) {
+                NanoAssert(r != UnknownReg && active[r]);
+                return usepri[r];
+            }
+
+	        LIns* getActive(Register r) {
+		        NanoAssert(r != UnknownReg);
+		        return active[r];
+	        }
 
 			debug_only( uint32_t	countFree(); )
 			debug_only( uint32_t	countActive(); )
@@ -68,11 +81,11 @@ namespace nanojit
 			debug_only( uint32_t	count; )
 			debug_only( RegisterMask managed; )    // bitfield of 0..NJ_MAX_REGISTERS denoting which are under our management                     
 
-			// RegisterMask is a 32-bit value, so we can never have more than 32 active.
-			// hardcode 32 here in case we have non-contiguous register numbers
-			LIns*	active[32];  // active[r] = OP that defines r
+			LIns*	active[LastReg + 1];  // active[r] = OP that defines r
+			int32_t usepri[LastReg + 1]; // used priority. lower = more likely to spill.
 			RegisterMask	free;
 			RegisterMask	used;
+            int32_t         priority;
 
 			verbose_only( static void formatRegisters(RegAlloc& regs, char* s, Fragment*); )
 
