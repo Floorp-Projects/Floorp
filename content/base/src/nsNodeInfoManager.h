@@ -151,9 +151,8 @@ protected:
   void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
 
 private:
-  static PRIntn PR_CALLBACK NodeInfoInnerKeyCompare(const void *key1,
-                                                    const void *key2);
-  static PLHashNumber PR_CALLBACK GetNodeInfoInnerHashValue(const void *key);
+  static PRIntn NodeInfoInnerKeyCompare(const void *key1, const void *key2);
+  static PLHashNumber GetNodeInfoInnerHashValue(const void *key);
 
   nsAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD

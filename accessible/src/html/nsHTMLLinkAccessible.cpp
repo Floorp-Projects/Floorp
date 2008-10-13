@@ -57,14 +57,9 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLLinkAccessible, nsHyperTextAccessibleWrap,
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
-NS_IMETHODIMP
-nsHTMLLinkAccessible::GetName(nsAString& aName)
+nsresult
+nsHTMLLinkAccessible::GetNameInternal(nsAString& aName)
 { 
-  aName.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsresult rv = AppendFlatStringFromSubtree(content, &aName);
   NS_ENSURE_SUCCESS(rv, rv);

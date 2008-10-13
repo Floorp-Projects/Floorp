@@ -95,7 +95,7 @@ checkbox[disabled="true"] > .checkbox-spacer-box > .checkbox-check {
 }
 
 checkbox[disabled="true"] {
-  color: GrayText !important;
+  color: GrayText;
 }
 
 /* ::::: checkmark image ::::: */
@@ -111,7 +111,7 @@ checkbox[disabled="true"] {
   background: -moz-Field no-repeat 50% 50%;
 }
 
-checkbox:hover {
+checkbox:not([disabled="true"]):hover {
   color: -moz-buttonhovertext;
 }
 

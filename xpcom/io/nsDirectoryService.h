@@ -80,7 +80,7 @@ class nsDirectoryService : public nsIDirectoryService,
 private:
     nsresult GetCurrentProcessDirectory(nsILocalFile** aFile);
     
-    static PRBool PR_CALLBACK ReleaseValues(nsHashKey* key, void* data, void* closure);
+    static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
     nsSupportsHashtable mHashtable;
     nsCOMPtr<nsISupportsArray> mProviders;
 

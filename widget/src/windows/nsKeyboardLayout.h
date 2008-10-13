@@ -151,7 +151,7 @@ class KeyboardLayout
   static PRUint8 GetShiftState (const PBYTE aKbdState);
   static void SetShiftState (PBYTE aKbdState, PRUint8 aShiftState);
   static inline PRInt32 GetKeyIndex (PRUint8 aVirtualKey);
-  static int PR_CALLBACK CompareDeadKeyEntries (const void* aArg1, const void* aArg2, void* aData);
+  static int CompareDeadKeyEntries (const void* aArg1, const void* aArg2, void* aData);
   static PRBool AddDeadKeyEntry (PRUint16 aBaseChar, PRUint16 aCompositeChar, DeadKeyEntry* aDeadKeyArray, PRUint32 aEntries);
   PRBool EnsureDeadKeyActive (PRBool aIsActive, PRUint8 aDeadKey, const PBYTE aDeadKeyKbdState);
   PRUint32 GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE aDeadKeyKbdState, PRUint16 aShiftStatesWithBaseChars,

@@ -75,10 +75,10 @@ struct PrefCallbackData {
 
 
 // Prototypes
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
   pref_enumChild(PLDHashTable *table, PLDHashEntryHdr *heh,
                  PRUint32 i, void *arg);
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
   NotifyObserver(const char *newpref, void *data);
 
 /*
@@ -724,7 +724,7 @@ NS_IMETHODIMP nsPrefBranch::Observe(nsISupports *aSubject, const char *aTopic, c
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(nsresult) NotifyObserver(const char *newpref, void *data)
+static nsresult NotifyObserver(const char *newpref, void *data)
 {
   PrefCallbackData *pData = (PrefCallbackData *)data;
 
@@ -865,7 +865,7 @@ nsresult nsPrefBranch::getValidatedPrefName(const char *aPrefName, const char **
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 pref_enumChild(PLDHashTable *table, PLDHashEntryHdr *heh,
                PRUint32 i, void *arg)
 {

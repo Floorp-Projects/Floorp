@@ -458,7 +458,7 @@ public:
   nsCOMArray<nsINode> &mNodesWithProperties;
 };
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
 {
   nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aData);

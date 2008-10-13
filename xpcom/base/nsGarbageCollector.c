@@ -65,7 +65,7 @@ extern FILE *GC_stdout, *GC_stderr;
 extern void GC_gcollect(void);
 extern void GC_clear_roots(void);
 
-static PRStatus PR_CALLBACK scanner(PRThread* t, void** baseAddr, PRUword count, void* closure)
+static PRStatus scanner(PRThread* t, void** baseAddr, PRUword count, void* closure)
 {
 	char* begin = (char*)baseAddr;
 	char* end = (char*)(baseAddr + count);

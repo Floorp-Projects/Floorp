@@ -39,10 +39,6 @@ notification[type="critical"] .messageImage {
   -moz-margin-start: 5px;
 }
 
-.messageButton {
-  margin: 0px 5px 0px 5px;
-}
-
 .messageCloseButton {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }

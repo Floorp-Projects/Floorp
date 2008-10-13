@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 203727</title>
+</head>
+<body>
+
+<ol id="ol">
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+<li>x</li>
+</ol>
+
+<script>
+ var x = document.body.offsetHeight;
+
+ var ol = document.getElementById('ol');
+ var lis = document.getElementsByTagName('li');
+ var child1 = lis[3];
+ var child2 = lis[4];
+ var child3 = lis[5];
+ ol.removeChild(child1);
+ ol.removeChild(child2);
+ ol.removeChild(child3);
+</script>
+
+</body>
+</html>

@@ -228,7 +228,7 @@ nsDOMStorageManager::Shutdown()
 #endif
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ClearStorage(nsDOMStorageEntry* aEntry, void* userArg)
 {
   aEntry->mStorage->ClearAll();
@@ -364,7 +364,7 @@ nsDOMStorageEntry::~nsDOMStorageEntry()
 {
 }
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 SessionStorageTraverser(nsSessionStorageEntry* aEntry, void* userArg) {
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(userArg);
@@ -510,7 +510,7 @@ private:
   ItemCounterState(); // Not to be implemented
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ItemCounter(nsSessionStorageEntry* aEntry, void* userArg)
 {
   ItemCounterState *state = (ItemCounterState *)userArg;
@@ -558,7 +558,7 @@ private:
   IndexFinderData(); // Not to be implemented
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 IndexFinder(nsSessionStorageEntry* aEntry, void* userArg)
 {
   IndexFinderData *data = (IndexFinderData *)userArg;
@@ -931,7 +931,7 @@ nsDOMStorage::SetSecure(const nsAString& aKey, PRBool aSecure)
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ClearStorageItem(nsSessionStorageEntry* aEntry, void* userArg)
 {
   aEntry->mItem->SetValueInternal(EmptyString());
@@ -944,7 +944,7 @@ nsDOMStorage::ClearAll()
   mItems.EnumerateEntries(ClearStorageItem, nsnull);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 CopyStorageItems(nsSessionStorageEntry* aEntry, void* userArg)
 {
   nsDOMStorage* newstorage = static_cast<nsDOMStorage*>(userArg);
@@ -984,7 +984,7 @@ struct KeysArrayBuilderStruct
   nsTArray<nsString> *keys;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 KeysArrayBuilder(nsSessionStorageEntry* aEntry, void* userArg)
 {
   KeysArrayBuilderStruct *keystruct = (KeysArrayBuilderStruct *)userArg;

@@ -1655,9 +1655,9 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
           ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_WRITE,
                                       eCSSUnit_Enumerated);
         }
-        else {
-          ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_ONLY,
-                                      eCSSUnit_Enumerated);
+        else if (value->Equals(nsGkAtoms::_false, eIgnoreCase)) {
+            ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_ONLY,
+                                        eCSSUnit_Enumerated);
         }
       }
     }

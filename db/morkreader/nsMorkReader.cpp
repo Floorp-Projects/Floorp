@@ -145,7 +145,7 @@ nsMorkReader::Init()
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 DeleteStringArray(const nsCSubstring& aKey,
                   nsTArray<nsCString> *aData,
                   void *aUserArg)
@@ -170,7 +170,7 @@ struct AddColumnClosure
   nsresult result;
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 AddColumn(const nsCSubstring &id, nsCString name, void *userData)
 {
   AddColumnClosure *closure = static_cast<AddColumnClosure*>(userData);

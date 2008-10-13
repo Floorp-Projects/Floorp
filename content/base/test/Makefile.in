@@ -210,6 +210,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug453521.html \
 		test_bug391728.html \
 		file_bug391728.html \
+		test_bug454325.html \
 		file_bug391728_2.html \
 		test_bug368972.html \
 		test_bug450160.html \
@@ -221,6 +222,11 @@ _TEST_FILES = 	test_bug5141.html \
 		file_CrossSiteXHR_server.sjs \
 		test_CrossSiteXHR_cache.html \
 		file_CrossSiteXHR_cache_server.sjs \
+		test_XHRDocURI.html \
+		file_XHRDocURI.xml \
+		file_XHRDocURI.xml^headers^ \
+		file_XHRDocURI.text \
+		file_XHRDocURI.text^headers^ \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

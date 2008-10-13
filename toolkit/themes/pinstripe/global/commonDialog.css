@@ -1,0 +1,27 @@
+#commonDialog {
+  line-height: 13px;
+}
+
+#infoContainer {
+  max-width: 33em;
+}
+
+#loginContainer {
+  padding-top: 10px;
+}
+
+#info\.icon {
+  -moz-margin-end: 14px;
+}
+
+#info\.title,
+#info\.header,
+#info\.body {
+  font: menu;
+  line-height: 16px;
+  margin-bottom: 6px;
+}
+
+.dialogTitle {
+  font-weight: bold;
+}

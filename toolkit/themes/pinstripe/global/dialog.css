@@ -63,6 +63,41 @@ dialog {
   font: menu;
 }
 
+.dialog-button[dlgtype="help"] {
+  min-width: 1px;
+  padding: 0;
+  -moz-appearance: none;
+  -moz-box-align: start;
+  height: 24px;
+  width: 24px;
+  margin: 4px;
+}
+
+.dialog-button[dlgtype="help"][disabled] {
+  opacity: 0.5;
+}
+
+.dialog-button[dlgtype="help"]:focus {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -2px;
+  -moz-outline-radius: 100%;
+}
+
+.dialog-button[dlgtype="help"] > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/icons/question-mark.png");
+  -moz-image-region: rect(0 24px 24px 0); 
+  padding: 0;
+  margin: 0;
+}
+
+.dialog-button[dlgtype="help"]:active > .button-box > .button-icon {
+  -moz-image-region: rect(0 48px 24px 24px); 
+}
+
+.dialog-button[dlgtype="help"] > .button-box > .button-text {
+  display: none;
+}
+
 /* ::::: dialog header ::::: */
 
 dialogheader {
@@ -102,14 +137,12 @@ dialogheader {
 	font-weight: bold !important;
 }
 
-#loginContainer {
-	padding-top: 10px;
-}
+/*XXX - belongs to toolkit/content/finddialog.xul: */
 
 #findDialog, #findDialog > menu, #findDialog > groupbox {
 	font: menu !important;
 }
 
-#dialog.caseSensitive {
+#dialog\.caseSensitive {
 	margin-top: 8px;
 }
