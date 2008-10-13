@@ -73,7 +73,7 @@ static NS_METHOD nsAccessProxyRegistrationProc(nsIComponentManager *aCompMgr,
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsAccessProxy,nsAccessProxy::GetInstance)
 
-static void PR_CALLBACK AccessProxyModuleDtor(nsIModule* self)
+static void AccessProxyModuleDtor(nsIModule* self)
 {
     nsAccessProxy::ReleaseInstance();
 }

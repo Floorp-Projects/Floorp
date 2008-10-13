@@ -1565,7 +1565,7 @@ void nsCSSStyleSheet::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-static PRBool PR_CALLBACK
+static PRBool
 EnumClearRuleCascades(void* aProcessor, void* aData)
 {
   nsCSSRuleProcessor* processor =

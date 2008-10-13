@@ -53,16 +53,11 @@
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext,
-                                       nsIDOMSVGURIReference *aRef) :
+nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext) :
   nsSVGGradientFrameBase(aContext),
   mLoopFlag(PR_FALSE),
   mNoHRefURI(PR_FALSE)
 {
-  if (aRef) {
-    // Get the href
-    aRef->GetHref(getter_AddRefs(mHref));
-  }
 }
 
 //----------------------------------------------------------------------
@@ -303,8 +298,8 @@ nsSVGGradientFrame::GetReferencedGradient()
 
   if (!property) {
     // Fetch our gradient element's xlink:href attribute
-    nsAutoString href;
-    mHref->GetAnimVal(href);
+    nsSVGGradientElement *grad = static_cast<nsSVGGradientElement *>(mContent);
+    const nsString &href = grad->mStringAttributes[nsSVGGradientElement::HREF].GetAnimValue();
     if (href.IsEmpty()) {
       mNoHRefURI = PR_TRUE;
       return nsnull; // no URL
@@ -620,10 +615,7 @@ NS_NewSVGLinearGradientFrame(nsIPresShell*   aPresShell,
     return nsnull;
   }
 
-  nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
-  NS_ASSERTION(aRef, "NS_NewSVGLinearGradientFrame -- Content doesn't support nsIDOMSVGURIReference");
-
-  return new (aPresShell) nsSVGLinearGradientFrame(aContext, aRef);
+  return new (aPresShell) nsSVGLinearGradientFrame(aContext);
 }
 
 nsIFrame*
@@ -637,8 +629,5 @@ NS_NewSVGRadialGradientFrame(nsIPresShell*   aPresShell,
     return nsnull;
   }
 
-  nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
-  NS_ASSERTION(aRef, "NS_NewSVGRadialGradientFrame -- Content doesn't support nsIDOMSVGURIReference");
-
-  return new (aPresShell) nsSVGRadialGradientFrame(aContext, aRef);
+  return new (aPresShell) nsSVGRadialGradientFrame(aContext);
 }

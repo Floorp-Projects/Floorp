@@ -78,7 +78,7 @@ bmsvc.setItemTitle(bm2, newTitle);
   this gets called after our observer gets notified of onItemChanged
   which is triggered by updating the item's title.
   after receiving the notification, our original query should also
-  have been live-updated, so we can iterate through it's children,
+  have been live-updated, so we can iterate through its children,
   to check that only the modified bookmark has changed.
 */
 function runTest() {

@@ -555,9 +555,11 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
     innerSize.height -= aReflowState.mComputedBorderPadding.TopBottom();
   }
 
-  nsIViewManager* vm = mInnerView->GetViewManager();
-  vm->MoveViewTo(mInnerView, offset.x, offset.y);
-  vm->ResizeView(mInnerView, nsRect(nsPoint(0, 0), innerSize), PR_TRUE);
+  if (mInnerView) {
+    nsIViewManager* vm = mInnerView->GetViewManager();
+    vm->MoveViewTo(mInnerView, offset.x, offset.y);
+    vm->ResizeView(mInnerView, nsRect(nsPoint(0, 0), innerSize), PR_TRUE);
+  }
 
   // Determine if we need to repaint our border, background or outline
   CheckInvalidateSizeChange(aDesiredSize);

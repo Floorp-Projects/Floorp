@@ -87,7 +87,7 @@ private:
 };
 
 
-static void PR_CALLBACK detach_JVMContext(void* storage)
+static void detach_JVMContext(void* storage)
 {
 	JVMContext* context = reinterpret_cast<JVMContext*>(storage);
 	

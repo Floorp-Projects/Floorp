@@ -292,7 +292,7 @@ private:
 
   nsCOMPtr<nsISupports> mGlobalWrapperRef;
 
-  static int PR_CALLBACK JSOptionChangedCallback(const char *pref, void *data);
+  static int JSOptionChangedCallback(const char *pref, void *data);
 
   static JSBool DOMOperationCallback(JSContext *cx);
 };

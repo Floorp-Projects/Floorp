@@ -182,7 +182,7 @@ nsXMLNameSpaceMap::FindPrefix(PRInt32 aNameSpaceID) const
   return nsnull;
 }
 
-PR_STATIC_CALLBACK(PRBool) DeleteEntry(void *aElement, void *aData)
+static PRBool DeleteEntry(void *aElement, void *aData)
 {
   delete static_cast<nsNameSpaceEntry*>(aElement);
   return PR_TRUE;

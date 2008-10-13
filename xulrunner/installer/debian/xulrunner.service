@@ -1,4 +1,0 @@
-[D-BUS Service]
-Name=org.mozilla.xulrunner
-Exec=/usr/local/xulrunner/xulrunner 
-

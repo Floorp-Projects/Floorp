@@ -868,6 +868,22 @@ protected:
 
   void SetFocusAndScrollIntoView(nsPresContext* aPresContext);
 
+  // A sane SetFocus implementation for focusable form controls
+  void DoSetFocus(nsPresContext* aPresContext);
+
+  // The focusability state of this form control.  eUnfocusable means that it
+  // shouldn't be focused at all, eInactiveWindow means it's in an inactive
+  // window, eActiveWindow means it's in an active window.
+  enum FocusTristate {
+    eUnfocusable,
+    eInactiveWindow,
+    eActiveWindow
+  };
+
+  // Get our focus state.  If this returns eInactiveWindow, it will set this
+  // element as the focused element for that window.
+  FocusTristate FocusState();
+
   /** The form that contains this control */
   nsIForm* mForm;
 };

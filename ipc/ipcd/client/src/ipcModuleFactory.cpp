@@ -175,13 +175,13 @@ static const nsModuleComponentInfo components[] = {
 
 //-----------------------------------------------------------------------------
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 ipcdclient_init(nsIModule *module)
 {
   return IPC_Init();
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 ipcdclient_shutdown(nsIModule *module)
 {
   IPC_Shutdown();

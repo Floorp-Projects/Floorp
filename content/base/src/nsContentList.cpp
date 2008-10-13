@@ -192,14 +192,14 @@ struct ContentListHashEntry : public PLDHashEntryHdr
   nsContentList* mContentList;
 };
 
-PR_STATIC_CALLBACK(PLDHashNumber)
+static PLDHashNumber
 ContentListHashtableHashKey(PLDHashTable *table, const void *key)
 {
   const nsContentListKey* list = static_cast<const nsContentListKey *>(key);
   return list->GetHash();
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 ContentListHashtableMatchEntry(PLDHashTable *table,
                                const PLDHashEntryHdr *entry,
                                const void *key)

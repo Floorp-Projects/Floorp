@@ -745,11 +745,9 @@ out:
 void 
 XPCNativeSet::ClearCacheEntryForClassInfo(nsIClassInfo* classInfo)
 {
-    XPCJSRuntime* rt;
-    ClassInfo2NativeSetMap* map;
-    
-    if(nsnull != (rt = nsXPConnect::GetRuntime()) && 
-       nsnull != (map = rt->GetClassInfo2NativeSetMap()))
+    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
+    ClassInfo2NativeSetMap* map = rt->GetClassInfo2NativeSetMap();
+    if(map)
     {   // scoped lock
         XPCAutoLock lock(rt->GetMapLock());
         map->Remove(classInfo);

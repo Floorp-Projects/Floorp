@@ -114,22 +114,19 @@ enum {
 };
 
 typedef PRIntn
-(*PR_CALLBACK nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* aClosure);
+(* nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* aClosure);
 
 typedef nsresult
-(*PR_CALLBACK nsHashtableReadEntryFunc)(nsIObjectInputStream *aStream,
-                                        nsHashKey **aKey,
-                                        void **aData);
+(* nsHashtableReadEntryFunc)(nsIObjectInputStream *aStream, nsHashKey **aKey,
+                             void **aData);
 
 // NB: may be called with null aKey or aData, to free just one of the two.
 typedef void
-(*PR_CALLBACK nsHashtableFreeEntryFunc)(nsIObjectInputStream *aStream,
-                                        nsHashKey *aKey,
-                                        void *aData);
+(* nsHashtableFreeEntryFunc)(nsIObjectInputStream *aStream, nsHashKey *aKey,
+                             void *aData);
 
 typedef nsresult
-(*PR_CALLBACK nsHashtableWriteDataFunc)(nsIObjectOutputStream *aStream,
-                                        void *aData);
+(* nsHashtableWriteDataFunc)(nsIObjectOutputStream *aStream, void *aData);
 
 class NS_COM nsHashtable {
   protected:
@@ -164,7 +161,7 @@ class NS_COM nsHashtable {
 // nsObjectHashtable: an nsHashtable where the elements are C++ objects to be
 // deleted
 
-typedef void* (*PR_CALLBACK nsHashtableCloneElementFunc)(nsHashKey *aKey, void *aData, void* aClosure);
+typedef void* (* nsHashtableCloneElementFunc)(nsHashKey *aKey, void *aData, void* aClosure);
 
 class NS_COM nsObjectHashtable : public nsHashtable {
   public:
@@ -180,9 +177,9 @@ class NS_COM nsObjectHashtable : public nsHashtable {
     PRBool RemoveAndDelete(nsHashKey *aKey);
 
   protected:
-    static PLDHashOperator PR_CALLBACK CopyElement(PLDHashTable* table,
-                                                   PLDHashEntryHdr* hdr,
-                                                   PRUint32 i, void *arg);
+    static PLDHashOperator CopyElement(PLDHashTable* table,
+                                       PLDHashEntryHdr* hdr,
+                                       PRUint32 i, void *arg);
     
     nsHashtableCloneElementFunc mCloneElementFun;
     void*                       mCloneElementClosure;
@@ -199,7 +196,7 @@ class NS_COM nsSupportsHashtable
   : private nsHashtable
 {
   public:
-    typedef PRBool (* PR_CALLBACK EnumFunc) (nsHashKey *aKey, void *aData, void* aClosure);
+    typedef PRBool (* EnumFunc) (nsHashKey *aKey, void *aData, void* aClosure);
 
     nsSupportsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE)
       : nsHashtable(aSize, threadSafe) {}
@@ -223,10 +220,10 @@ class NS_COM nsSupportsHashtable
     void Reset();
 
   private:
-    static PRBool PR_CALLBACK ReleaseElement(nsHashKey *, void *, void *);
-    static PLDHashOperator PR_CALLBACK EnumerateCopy(PLDHashTable*,
-                                                     PLDHashEntryHdr* hdr,
-                                                     PRUint32 i, void *arg);
+    static PRBool ReleaseElement(nsHashKey *, void *, void *);
+    static PLDHashOperator EnumerateCopy(PLDHashTable*,
+                                         PLDHashEntryHdr* hdr,
+                                         PRUint32 i, void *arg);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

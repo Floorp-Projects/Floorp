@@ -42,6 +42,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef ENABLE_TESTS
+DIRS            += tests
+endif
+
 MODULE		= editor
 LIBRARY_NAME	= htmleditor_s
 LIBXUL_LIBRARY	= 1

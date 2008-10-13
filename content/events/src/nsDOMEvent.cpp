@@ -328,11 +328,10 @@ nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
   return GetTarget(aOriginalTarget);
 }
 
-NS_IMETHODIMP
-nsDOMEvent::HasOriginalTarget(PRBool* aResult)
+NS_IMETHODIMP_(PRBool)
+nsDOMEvent::HasOriginalTarget()
 {
-  *aResult = !!(mEvent->originalTarget);
-  return NS_OK;
+  return !!mEvent->originalTarget;
 }
 
 NS_IMETHODIMP
@@ -1052,23 +1051,16 @@ NS_METHOD nsDOMEvent::SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMEvent::IsDispatchStopped(PRBool* aIsDispatchStopped)
+NS_IMETHODIMP_(PRBool)
+nsDOMEvent::IsDispatchStopped()
 {
-  if (mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
-    *aIsDispatchStopped = PR_TRUE;
-  } else {
-    *aIsDispatchStopped = PR_FALSE;
-  }
-  return NS_OK;
+  return !!(mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH);
 }
 
-NS_IMETHODIMP
-nsDOMEvent::GetInternalNSEvent(nsEvent** aNSEvent)
+NS_IMETHODIMP_(nsEvent*)
+nsDOMEvent::GetInternalNSEvent()
 {
-  NS_ENSURE_ARG_POINTER(aNSEvent);
-  *aNSEvent = mEvent;
-  return NS_OK;
+  return mEvent;
 }
 
 // return true if eventName is contained within events, delimited by

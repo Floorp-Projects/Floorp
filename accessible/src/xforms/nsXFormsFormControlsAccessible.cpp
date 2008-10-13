@@ -55,14 +55,11 @@ nsXFormsLabelAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsLabelAccessible::GetName(nsAString& aName)
+nsresult
+nsXFormsLabelAccessible::GetNameInternal(nsAString& aName)
 {
   // XXX Correct name calculation for this, see bug 453594.
-  nsAutoString name;
-  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::aria_labelledby, name);
-  aName = name;
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

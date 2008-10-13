@@ -111,6 +111,7 @@
 #include "nsLayoutUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
+#include "nsIFocusController.h"
 
 class nsINodeInfo;
 class nsIDOMNodeList;
@@ -1654,9 +1655,9 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
           ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_WRITE,
                                       eCSSUnit_Enumerated);
         }
-        else {
-          ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_ONLY,
-                                      eCSSUnit_Enumerated);
+        else if (value->Equals(nsGkAtoms::_false, eIgnoreCase)) {
+            ui->mUserModify.SetIntValue(NS_STYLE_USER_MODIFY_READ_ONLY,
+                                        eCSSUnit_Enumerated);
         }
       }
     }
@@ -2668,6 +2669,53 @@ nsGenericHTMLFormElement::SetFocusAndScrollIntoView(nsPresContext* aPresContext)
       }
     }
   }
+}
+
+void
+nsGenericHTMLFormElement::DoSetFocus(nsPresContext* aPresContext)
+{
+  if (!aPresContext)
+    return;
+
+  if (FocusState() == eActiveWindow) {
+    SetFocusAndScrollIntoView(aPresContext);
+  }
+}
+
+nsGenericHTMLFormElement::FocusTristate
+nsGenericHTMLFormElement::FocusState()
+{
+  // We can't be focused if we aren't in a document
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc)
+    return eUnfocusable;
+
+  // first see if we are disabled or not. If disabled then do nothing.
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
+    return eUnfocusable;
+  }
+
+  // If the window is not active, do not allow the focus to bring the
+  // window to the front.  We update the focus controller, but do
+  // nothing else.
+  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
+  if (win) {
+    nsIFocusController *focusController = win->GetRootFocusController();
+    if (focusController) {
+      PRBool isActive = PR_FALSE;
+      focusController->GetActive(&isActive);
+      if (!isActive) {
+        focusController->SetFocusedWindow(win);
+        nsCOMPtr<nsIDOMElement> el =
+          do_QueryInterface(static_cast<nsGenericHTMLElement*>(this));
+        focusController->SetFocusedElement(el);
+
+        return eInactiveWindow;
+      }
+    }
+  }
+
+  return eActiveWindow;
 }
 
 //----------------------------------------------------------------------

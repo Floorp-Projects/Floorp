@@ -63,7 +63,7 @@ struct StaticModuleInfo : public PLDHashEntryHdr {
     StaticModuleInfo   *next;
 };
 
-PR_STATIC_CALLBACK(void)
+static void
 info_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     StaticModuleInfo *info = static_cast<StaticModuleInfo *>(entry);
@@ -71,7 +71,7 @@ info_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     info->~StaticModuleInfo();
 }
 
-PR_STATIC_CALLBACK(PRBool)
+static PRBool
 info_InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 {
     // Construct so that our nsCOMPtr is zeroed, etc.

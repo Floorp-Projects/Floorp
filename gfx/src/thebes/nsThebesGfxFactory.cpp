@@ -137,13 +137,13 @@ static const nsModuleComponentInfo components[] =
     gfxImageFrameConstructor },
 };
 
-PR_STATIC_CALLBACK(nsresult)
+static nsresult
 nsThebesGfxModuleCtor(nsIModule *self)
 {
     return gfxPlatform::Init();
 }
 
-PR_STATIC_CALLBACK(void)
+static void
 nsThebesGfxModuleDtor(nsIModule *self)
 {
     nsThebesDeviceContext::Shutdown();

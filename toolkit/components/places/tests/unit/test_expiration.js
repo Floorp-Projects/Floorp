@@ -448,7 +448,7 @@ function run_test() {
   var expirationDate = (Date.now() - (8 * 86400 * 1000)) * 1000;
   dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
-  // modify it's value
+  // modify its value
   annosvc.setPageAnnotation(testURI, testAnnoName, "mod", 0, annosvc.EXPIRE_DAYS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, "mod", 0, annosvc.EXPIRE_DAYS);
   // add a uri and then remove it, to trigger expiration

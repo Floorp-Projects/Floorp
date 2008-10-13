@@ -530,11 +530,7 @@ interface nsIXPConnect : nsISupports
                              in nsIStackFrame  aCaller);
 
     /**
-    * XPConnect builds internal objects that parallel, and are one-to-one with,
-    * the JSContexts in the JSRuntime. It builds these objects as needed.
-    * This method tells XPConnect to resynchronize its representations with the
-    * list of JSContexts currently 'alive' in the JSRuntime. This allows it
-    * to cleanup any representations of JSContexts that are no longer valid.
+    * Deprecated do-nothing function.
     */
     void syncJSContexts();
 

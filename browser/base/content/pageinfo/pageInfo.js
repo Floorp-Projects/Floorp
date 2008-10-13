@@ -258,7 +258,7 @@ var onProcessFrame = [ ];
 var onProcessElement = [ ];
 
 // These functions are called once when all the elements in all of the target
-// document (and all of it's subframes, if any) have been processed
+// document (and all of its subframes, if any) have been processed
 var onFinished = [ ];
 
 // These functions are called once when the Page Info window is closed.

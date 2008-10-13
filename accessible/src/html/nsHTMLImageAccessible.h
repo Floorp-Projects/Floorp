@@ -58,7 +58,6 @@ public:
   nsHTMLImageAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
@@ -77,6 +76,7 @@ public:
   NS_DECL_NSIACCESSIBLEIMAGE
 
   // nsAccessible
+  virtual nsresult GetNameInternal(nsAString& aName);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
 protected:

@@ -38,7 +38,7 @@
 # This is a partial python port of nsinstall.
 # It's intended to be used when there's no natively compile nsinstall
 # available, and doesn't intend to be fully equivalent.
-# It's major use is for l10n repackaging on systems that don't have
+# Its major use is for l10n repackaging on systems that don't have
 # a full build environment set up.
 # The basic limitation is, it doesn't even try to link and ignores
 # all related options.

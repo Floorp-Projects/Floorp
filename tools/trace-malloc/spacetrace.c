@@ -688,7 +688,7 @@ recalculateAllocationCost(STOptions * inOptions, STContext * inContext,
     /*
      ** Now, see if they desire a callsite update.
      ** As mentioned previously, we decide if the run desires us to
-     **  manipulate the callsite data only if it's stamp is set.
+     **  manipulate the callsite data only if its stamp is set.
      ** We change all callsites and parent callsites to have that
      **  stamp as well, so as to mark them as being relevant to
      **  the current run in question.
@@ -1461,7 +1461,7 @@ getLiveAllocationByHeapID(STRun * aRun, PRUint32 aHeapID)
 /*
 ** appendEvent
 **
-** Given an allocation, append a new event to it's lifetime.
+** Given an allocation, append a new event to its lifetime.
 ** Returns the new event on success, otherwise NULL.
 */
 STAllocEvent *
@@ -2871,7 +2871,7 @@ displayMemoryLeaks(STRequest * inRequest, STRun * aRun)
             current = aRun->mAllocations[loop];
             if (NULL != current && 0 != current->mEventCount) {
                 /*
-                 ** In order to be a leak, the last event of it's life must
+                 ** In order to be a leak, the last event of its life must
                  **  NOT be a free operation.
                  **
                  ** A free operation is just that, a free.

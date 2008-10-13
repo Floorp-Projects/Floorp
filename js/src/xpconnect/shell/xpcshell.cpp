@@ -56,6 +56,7 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "jsapi.h"
+#include "jsdbgapi.h"
 #include "jsprf.h"
 #include "nscore.h"
 #include "nsMemory.h"
@@ -83,10 +84,6 @@
 #endif
 
 #include "nsIJSContextStack.h"
-
-#if defined(MOZ_SHARK) || defined(MOZ_CALLGRIND)
-#include "jsdbgapi.h"
-#endif
 
 /***************************************************************************/
 
@@ -119,6 +116,33 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     int i, j, k, n;
     char *prefix = NULL, *tmp;
     const char *ctmp;
+    JSStackFrame * fp = nsnull;
+    nsCOMPtr<nsIXPConnect> xpc;
+
+    // Don't report an exception from inner JS frames as the callers may intend
+    // to handle it.
+    while ((fp = JS_FrameIterator(cx, &fp))) {
+        if (!JS_IsNativeFrame(cx, fp)) {
+            return;
+        }
+    }
+
+    // In some cases cx->fp is null here so use XPConnect to tell us about inner
+    // frames.
+    if ((xpc = do_GetService(nsIXPConnect::GetCID()))) {
+        nsAXPCNativeCallContext *cc = nsnull;
+        xpc->GetCurrentNativeCallContext(&cc);
+        if (cc) {
+            nsAXPCNativeCallContext *prev = cc;
+            while (NS_SUCCEEDED(prev->GetPreviousCallContext(&prev)) && prev) {
+                PRUint16 lang;
+                if (NS_SUCCEEDED(prev->GetLanguage(&lang)) &&
+                    lang == nsAXPCNativeCallContext::LANG_JS) {
+                    return;
+                }
+            }
+        }
+    }
 
     if (!report) {
         fprintf(gErrFile, "%s\n", message);
@@ -1303,9 +1327,15 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 
 #endif
 
+// ContextCallback calls are chained
+static JSContextCallback gOldJSContextCallback;
+
 static JSBool
 ContextCallback(JSContext *cx, uintN contextOp)
 {
+    if (gOldJSContextCallback && !gOldJSContextCallback(cx, contextOp))
+        return JS_FALSE;
+
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, my_ErrorReporter);
         JS_SetVersion(cx, JSVERSION_LATEST);
@@ -1357,7 +1387,7 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
-        JS_SetContextCallback(rt, ContextCallback);
+        gOldJSContextCallback = JS_SetContextCallback(rt, ContextCallback);
 
         cx = JS_NewContext(rt, 8192);
         if (!cx) {
@@ -1480,7 +1510,6 @@ main(int argc, char **argv, char **envp)
         cxstack = nsnull;
         JS_GC(cx);
         JS_DestroyContext(cx);
-        xpc->SyncJSContexts();
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM( NULL );

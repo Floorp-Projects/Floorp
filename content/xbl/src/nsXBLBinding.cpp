@@ -287,7 +287,7 @@ nsXBLBinding::~nsXBLBinding(void)
   NS_RELEASE(info);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 TraverseKey(nsISupports* aKey, nsInsertionPointList* aData, void* aClosure)
 {
   nsCycleCollectionTraversalCallback &cb = 
@@ -407,7 +407,7 @@ struct ContentListData : public EnumData {
   {}
 };
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 BuildContentLists(nsISupports* aKey,
                   nsAutoPtr<nsInsertionPointList>& aData,
                   void* aClosure)
@@ -500,7 +500,7 @@ BuildContentLists(nsISupports* aKey,
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 RealizeDefaultContent(nsISupports* aKey,
                       nsAutoPtr<nsInsertionPointList>& aData,
                       void* aClosure)
@@ -561,7 +561,7 @@ RealizeDefaultContent(nsISupports* aKey,
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
+static PLDHashOperator
 ChangeDocumentForDefaultContent(nsISupports* aKey,
                                 nsAutoPtr<nsInsertionPointList>& aData,
                                 void* aClosure)
