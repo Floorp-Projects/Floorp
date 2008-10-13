@@ -421,6 +421,21 @@ function run() {
   should_not_apply("(grid");
   should_apply("all,(grid");
   should_not_apply("(grid,all");
+  // bug 454226
+  should_apply(",all");
+  should_apply("all,");
+  should_apply(",all,");
+  should_apply("all,badmedium");
+  should_apply("badmedium,all");
+  should_not_apply(",badmedium,");
+  should_apply("all,(badexpression)");
+  should_apply("(badexpression),all");
+  should_not_apply("(badexpression),badmedium");
+  should_not_apply("badmedium,(badexpression)");
+  should_apply("all,[badsyntax]");
+  should_apply("[badsyntax],all");
+  should_not_apply("badmedium,[badsyntax]");
+  should_not_apply("[badsyntax],badmedium");
 
   SimpleTest.finish();
 }

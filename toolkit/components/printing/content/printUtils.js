@@ -120,7 +120,7 @@ var PrintUtils = {
     // For the browser implemented via XUL with the PP toolbar we cannot let it be
     // automatically opened from the print engine because the XUL scrollbars in the PP window
     // will layout before the content window and a crash will occur.
-    // Doing it all from script, means it lays out before hand and we can let printing do it's own thing
+    // Doing it all from script, means it lays out before hand and we can let printing do its own thing
     var PPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                .getService(Components.interfaces.nsIPrintingPromptService);
     // just in case we are already printing, 

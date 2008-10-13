@@ -607,7 +607,7 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
           NS_ConvertUTF16toUTF8(font->mFont.name).get(),
           font->mFont.size,
           font->mSize,
-          font->mFlags);
+          font->mGenericID);
 
   // COLOR
   IndentBy(out,aIndent);

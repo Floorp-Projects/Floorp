@@ -99,6 +99,7 @@
 #include "nsITextControlFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPercentHeightObserver.h"
+#include "nsStyleStructInlines.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -119,6 +120,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
+#include "nsImageLoadNotifier.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGIntegrationUtils.h"
@@ -552,6 +554,27 @@ nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
 // Subclass hook for style post processing
 NS_IMETHODIMP nsFrame::DidSetStyleContext()
 {
+  // Ensure that this frame gets invalidates (and, in the case of some
+  // 'border-image's, reflows) when images that affect it load.
+  nsRefPtr<nsImageLoadNotifier> notifierChain;
+
+  const nsStyleBackground *background = GetStyleBackground();
+  imgIRequest *newBackgroundImage = background->mBackgroundImage;
+  if (newBackgroundImage) {
+    notifierChain = nsImageLoadNotifier::Create(this, newBackgroundImage,
+                                                PR_FALSE, notifierChain);
+  }
+
+  const nsStyleBorder *border = GetStyleBorder();
+  imgIRequest *newBorderImage = border->GetBorderImage();
+  if (newBorderImage) {
+    notifierChain = nsImageLoadNotifier::Create(this, newBorderImage,
+                                                border->ImageBorderDiffers(),
+                                                notifierChain);
+  }
+
+  PresContext()->SetImageNotifiers(this, notifierChain);
+
   return NS_OK;
 }
 
@@ -1908,15 +1931,6 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   // NS_STYLE_USER_SELECT_TOGGLE, need to change this logic
   PRBool useFrameSelection = (selectStyle == NS_STYLE_USER_SELECT_TEXT);
 
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
-  ContentOffsets offsets = GetContentOffsetsFromPoint(pt);
-
-  if (!IsMouseCaptured(aPresContext) && offsets.content) {
-    nsIFrame* capturingFrame = shell->GetPrimaryFrameFor(offsets.content);
-    if (capturingFrame)
-      capturingFrame->CaptureMouse(aPresContext, PR_TRUE);
-  }
-
   // XXX This is screwy; it really should use the selection frame, not the
   // event frame
   const nsFrameSelection* frameselection = nsnull;
@@ -1925,6 +1939,19 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   else
     frameselection = shell->ConstFrameSelection();
 
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+  ContentOffsets offsets = GetContentOffsetsFromPoint(pt);
+  
+  if (!IsMouseCaptured(aPresContext) && offsets.content) {
+    PRInt32 offset;
+    nsIFrame* capturingFrame = frameselection->
+      GetFrameForNodeOffset(offsets.content, offsets.offset, 
+                            nsFrameSelection::HINT(offsets.associateWithNext),
+                            &offset);
+    if (capturingFrame)
+      capturingFrame->CaptureMouse(aPresContext, PR_TRUE);
+  }
+    
   if (frameselection->GetDisplaySelection() == nsISelectionController::SELECTION_OFF)
     return NS_OK;//nothing to do we cannot affect selection from here
 
@@ -5077,7 +5104,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       nsIFrame *blockFrame = this;
 
       while (NS_FAILED(result)){
-        PRInt32 thisLine = nsFrame::GetLineNumber(blockFrame, &blockFrame);
+        PRInt32 thisLine = nsFrame::GetLineNumber(blockFrame, aPos->mScrollViewStop, &blockFrame);
         if (thisLine < 0) 
           return  NS_ERROR_FAILURE;
         result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(iter));
@@ -5171,7 +5198,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       nsCOMPtr<nsILineIteratorNavigator> it;
       // Adjusted so that the caret can't get confused when content changes
       nsIFrame* blockFrame = AdjustFrameForSelectionStyles(this);
-      PRInt32 thisLine = nsFrame::GetLineNumber(blockFrame, &blockFrame);
+      PRInt32 thisLine = nsFrame::GetLineNumber(blockFrame, aPos->mScrollViewStop, &blockFrame);
       if (thisLine < 0)
         return NS_ERROR_FAILURE;
       result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
@@ -5336,7 +5363,7 @@ nsFrame::CheckVisibility(nsPresContext* , PRInt32 , PRInt32 , PRBool , PRBool *,
 
 
 PRInt32
-nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
+nsFrame::GetLineNumber(nsIFrame *aFrame, PRBool aLockScroll, nsIFrame** aContainingBlock)
 {
   NS_ASSERTION(aFrame, "null aFrame");
   nsFrameManager* frameManager = aFrame->PresContext()->FrameManager();
@@ -5362,6 +5389,8 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
     blockFrame = thisBlock->GetParent();
     result = NS_OK;
     if (blockFrame) {
+      if (aLockScroll && blockFrame->GetType() == nsGkAtoms::scrollFrame)
+        return -1;
       result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
     }
   }
@@ -5396,7 +5425,7 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
     nsIFrame *blockFrame;
     nsCOMPtr<nsILineIteratorNavigator> it; 
     
-    PRInt32 thisLine = nsFrame::GetLineNumber(traversedFrame, &blockFrame);
+    PRInt32 thisLine = nsFrame::GetLineNumber(traversedFrame, aScrollViewStop, &blockFrame);
     if (thisLine < 0)
       return NS_ERROR_FAILURE;
     nsresult result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));

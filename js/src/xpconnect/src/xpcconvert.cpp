@@ -1469,20 +1469,16 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
                found)
             {
                 // lets try to build a wrapper around the JSObject
-                XPCContext* xpcc;
-                if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
-                {
-                    nsXPCWrappedJS* jswrapper;
-                    nsresult rv =
-                        nsXPCWrappedJS::GetNewOrUsed(ccx, obj,
-                                                NS_GET_IID(nsIException),
-                                                nsnull, &jswrapper);
-                    if(NS_FAILED(rv))
-                        return rv;
-                    *exceptn = reinterpret_cast<nsIException*>
-                                               (jswrapper);
-                    return NS_OK;
-                }
+                nsXPCWrappedJS* jswrapper;
+                nsresult rv =
+                    nsXPCWrappedJS::GetNewOrUsed(ccx, obj,
+                                                 NS_GET_IID(nsIException),
+                                                 nsnull, &jswrapper);
+                if(NS_FAILED(rv))
+                    return rv;
+                *exceptn = reinterpret_cast<nsIException*>
+                           (jswrapper);
+                return NS_OK;
             }
 
 

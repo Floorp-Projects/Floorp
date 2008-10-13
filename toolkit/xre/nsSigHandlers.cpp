@@ -118,7 +118,7 @@ void abnormal_exit_handler(int signum)
 
 extern "C" {
 
-PR_STATIC_CALLBACK(void) PrintStackFrame(void *aPC, void *aClosure)
+static void PrintStackFrame(void *aPC, void *aClosure)
 {
   char buf[1024];
   nsCodeAddressDetails details;

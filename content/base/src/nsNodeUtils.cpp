@@ -458,7 +458,7 @@ public:
   nsCOMArray<nsINode> &mNodesWithProperties;
 };
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
 {
   nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aData);
@@ -516,6 +516,20 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   nsINodeInfo *nodeInfo = aNode->mNodeInfo;
   nsCOMPtr<nsINodeInfo> newNodeInfo;
   if (nodeInfoManager) {
+
+    // Don't allow importing/adopting nodes from non-privileged "scriptable"
+    // documents to "non-scriptable" documents.
+    nsIDocument* newDoc = nodeInfoManager->GetDocument();
+    nsIDocument* currentDoc = aNode->GetOwnerDoc();
+    NS_ENSURE_STATE(newDoc && currentDoc);
+    PRBool hasHadScriptHandlingObject = PR_FALSE;
+    if (!newDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
+        !hasHadScriptHandlingObject) {
+      NS_ENSURE_STATE(nsContentUtils::IsChromeDoc(currentDoc) ||
+                      (!currentDoc->GetScriptHandlingObject(hasHadScriptHandlingObject) &&
+                       !hasHadScriptHandlingObject));
+    }
+
     newNodeInfo = nodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),
                                                nodeInfo->GetPrefixAtom(),
                                                nodeInfo->NamespaceID());

@@ -196,7 +196,7 @@ typedef struct XPCOMFunctions{
 
 } XPCOMFunctions;
 
-typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);
+typedef nsresult (*GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);
 XPCOM_API(nsresult)
 NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 

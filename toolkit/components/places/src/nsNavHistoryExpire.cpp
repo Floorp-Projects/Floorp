@@ -840,7 +840,7 @@ nsNavHistoryExpire::ExpireEmbeddedLinks(mozIStorageConnection* aConnection)
 //    visits, bookmarks or "place:" URIs.
 //
 //    The aMaxRecords parameter is an optional cap on the number of 
-//    records to delete. If it's value is -1, all records will be deleted.
+//    records to delete. If its value is -1, all records will be deleted.
 
 nsresult
 nsNavHistoryExpire::ExpireHistoryParanoid(mozIStorageConnection* aConnection,

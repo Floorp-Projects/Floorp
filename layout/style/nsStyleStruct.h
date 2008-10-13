@@ -105,11 +105,14 @@ struct nsStyleFont {
   void Destroy(nsPresContext* aContext);
 
   nsFont  mFont;        // [inherited]
-  nscoord mSize;        // [inherited] Our "computed size". Can be different from mFont.size
-                        // which is our "actual size" and is enforced to be >= the user's
-                        // preferred min-size. mFont.size should be used for display purposes
-                        // while mSize is the value to return in getComputedStyle() for example.
-  PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
+  nscoord mSize;        // [inherited] Our "computed size". Can be different
+                        // from mFont.size which is our "actual size" and is
+                        // enforced to be >= the user's preferred min-size.
+                        // mFont.size should be used for display purposes
+                        // while mSize is the value to return in
+                        // getComputedStyle() for example.
+  PRUint8 mGenericID;   // [inherited] generic CSS font family, if any;
+                        // value is a kGenericFont_* constant, see nsFont.h.
 
 #ifdef MOZ_MATHML
   // MathML scriptlevel support

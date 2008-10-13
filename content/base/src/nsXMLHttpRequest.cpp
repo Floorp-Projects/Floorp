@@ -829,6 +829,13 @@ nsXHREventTarget::GetContextForEventHandlers(nsIScriptContext** aContext)
 
 /////////////////////////////////////////////
 
+nsXMLHttpRequestUpload::~nsXMLHttpRequestUpload()
+{
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
+}
+
 NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequestUpload)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestUpload)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XMLHttpRequestUpload)
@@ -1264,8 +1271,8 @@ nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
 {
   NS_ENSURE_ARG_POINTER(aResponseXML);
   *aResponseXML = nsnull;
-  if ((XML_HTTP_REQUEST_COMPLETED & mState) && mDocument) {
-    *aResponseXML = mDocument;
+  if ((XML_HTTP_REQUEST_COMPLETED & mState) && mResponseXML) {
+    *aResponseXML = mResponseXML;
     NS_ADDREF(*aResponseXML);
   }
 
@@ -1317,7 +1324,7 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
   nsresult rv = NS_OK;
 
   nsCAutoString dataCharset;
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(mResponseXML));
   if (document) {
     dataCharset = document->GetDocumentCharacterSet();
   } else {
@@ -1479,7 +1486,7 @@ nsXMLHttpRequest::Abort()
   if (mACGetChannel) {
     mACGetChannel->Cancel(NS_BINDING_ABORTED);
   }
-  mDocument = nsnull;
+  mResponseXML = nsnull;
   mResponseBody.Truncate();
   mState |= XML_HTTP_REQUEST_ABORTED;
 
@@ -1612,21 +1619,6 @@ nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
   }
 
   return NS_OK;
-}
-
-nsIURI *
-nsXMLHttpRequest::GetBaseURI()
-{
-  if (!mScriptContext) {
-    return nsnull;
-  }
-
-  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
-  if (!doc) {
-    return nsnull;
-  }
-
-  return doc->GetBaseURI();
 }
 
 nsresult
@@ -1812,14 +1804,20 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
 
   mState &= ~XML_HTTP_REQUEST_MPART_HEADERS;
 
-  rv = NS_NewURI(getter_AddRefs(uri), url, nsnull, GetBaseURI());
+  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
+  
+  nsCOMPtr<nsIURI> baseURI;
+  if (doc) {
+    baseURI = doc->GetBaseURI();
+  }
+
+  rv = NS_NewURI(getter_AddRefs(uri), url, nsnull, baseURI);
   if (NS_FAILED(rv)) return rv;
 
   // mScriptContext should be initialized because of GetBaseURI() above.
   // Still need to consider the case that doc is nsnull however.
   rv = CheckInnerWindowCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XMLHTTPREQUEST,
                                  uri,
@@ -1911,10 +1909,6 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url)
 
     JSContext* cx;
     rv = cc->GetJSContext(&cx);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIURI> targetURI;
-    rv = NS_NewURI(getter_AddRefs(targetURI), url, nsnull, GetBaseURI());
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     // Find out if UniversalBrowserRead privileges are enabled
@@ -2043,6 +2037,7 @@ IsSameOrBaseChannel(nsIRequest* aPossibleBase, nsIChannel* aChannel)
 NS_IMETHODIMP
 nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
+  nsresult rv;
   if (!mFirstStartRequestSeen && mRequestObserver) {
     mFirstStartRequestSeen = PR_TRUE;
     mRequestObserver->OnStartRequest(request, ctxt);
@@ -2084,48 +2079,6 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   mState &= ~XML_HTTP_REQUEST_MPART_HEADERS;
   ChangeState(XML_HTTP_REQUEST_LOADED);
 
-  nsIURI* uri = GetBaseURI();
-
-  // Create an empty document from it.  Here we have to cheat a little bit...
-  // Setting the base URI to |uri| won't work if the document has a null
-  // principal, so use mPrincipal when creating the document, then reset the
-  // principal.
-  const nsAString& emptyStr = EmptyString();
-  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(mOwner);
-  nsresult rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, uri,
-                                               uri, mPrincipal, global,
-                                               getter_AddRefs(mDocument));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-  if (doc) {
-    doc->SetPrincipal(documentPrincipal);
-  }
-
-  if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
-    if (htmlDoc) {
-      htmlDoc->DisableCookieAccess();
-    }
-  }
-
-  // Reset responseBody
-  mResponseBody.Truncate();
-
-  // Register as a load listener on the document
-  nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(mDocument));
-  if (target) {
-    nsWeakPtr requestWeak =
-      do_GetWeakReference(static_cast<nsIXMLHttpRequest*>(this));
-    nsCOMPtr<nsIDOMEventListener> proxy = new nsLoadListenerProxy(requestWeak);
-    if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
-
-    // This will addref the proxy
-    rv = target->AddEventListenerByIID(static_cast<nsIDOMEventListener*>
-                                                  (proxy),
-                                       NS_GET_IID(nsIDOMLoadListener));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  }
-
   nsresult status;
   request->GetStatus(&status);
   mErrorLoad = mErrorLoad || NS_FAILED(status);
@@ -2136,6 +2089,10 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
                           PR_TRUE, mUploadTotal, mUploadTotal);
   }
 
+  // Reset responseBody
+  mResponseBody.Truncate();
+
+  // Set up responseXML
   PRBool parseBody = PR_TRUE;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (httpChannel) {
@@ -2165,21 +2122,63 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   }
 
   if (mState & XML_HTTP_REQUEST_PARSEBODY) {
+    nsCOMPtr<nsIURI> baseURI, docURI;
+    nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
+
+    if (doc) {
+      docURI = doc->GetDocumentURI();
+      baseURI = doc->GetBaseURI();
+    }
+
+    // Create an empty document from it.  Here we have to cheat a little bit...
+    // Setting the base URI to |baseURI| won't work if the document has a null
+    // principal, so use mPrincipal when creating the document, then reset the
+    // principal.
+    const nsAString& emptyStr = EmptyString();
+    nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(mOwner);
+    rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, docURI,
+                                        baseURI, mPrincipal, global,
+                                        getter_AddRefs(mResponseXML));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDocument> responseDoc = do_QueryInterface(mResponseXML);
+    responseDoc->SetPrincipal(documentPrincipal);
+
+    if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
+      nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mResponseXML);
+      if (htmlDoc) {
+        htmlDoc->DisableCookieAccess();
+      }
+    }
+
+    // Register as a load listener on the document
+    nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(mResponseXML));
+    if (target) {
+      nsWeakPtr requestWeak =
+        do_GetWeakReference(static_cast<nsIXMLHttpRequest*>(this));
+      nsCOMPtr<nsIDOMEventListener> proxy = new nsLoadListenerProxy(requestWeak);
+      if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
+
+      // This will addref the proxy
+      rv = target->AddEventListenerByIID(static_cast<nsIDOMEventListener*>
+                                                    (proxy),
+                                         NS_GET_IID(nsIDOMLoadListener));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+
+
     nsCOMPtr<nsIStreamListener> listener;
     nsCOMPtr<nsILoadGroup> loadGroup;
     channel->GetLoadGroup(getter_AddRefs(loadGroup));
 
-    nsCOMPtr<nsIDocument> document(do_QueryInterface(mDocument));
-    if (!document) {
-      return NS_ERROR_FAILURE;
-    }
-
-    rv = document->StartDocumentLoad(kLoadAsData, channel, loadGroup, nsnull,
-                                     getter_AddRefs(listener), PR_TRUE);
+    rv = responseDoc->StartDocumentLoad(kLoadAsData, channel, loadGroup,
+                                        nsnull, getter_AddRefs(listener),
+                                        !(mState & XML_HTTP_REQUEST_USE_XSITE_AC));
     NS_ENSURE_SUCCESS(rv, rv);
 
     mXMLParserStreamListener = listener;
-    return mXMLParserStreamListener->OnStartRequest(request, ctxt);
+    rv = mXMLParserStreamListener->OnStartRequest(request, ctxt);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -2303,11 +2302,11 @@ nsXMLHttpRequest::RequestCompleted()
   // we should null out the document member. The idea in this
   // check here is that if there is no document element it is not
   // an XML document. We might need a fancier check...
-  if (mDocument) {
+  if (mResponseXML) {
     nsCOMPtr<nsIDOMElement> root;
-    mDocument->GetDocumentElement(getter_AddRefs(root));
+    mResponseXML->GetDocumentElement(getter_AddRefs(root));
     if (!root) {
-      mDocument = nsnull;
+      mResponseXML = nsnull;
     }
   }
 
@@ -2576,11 +2575,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   mResponseBody.Truncate();
 
   // Reset responseXML
-  mDocument = nsnull;
-
-  if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
-    mState |= XML_HTTP_REQUEST_SYNCLOOPING;
-  }
+  mResponseXML = nsnull;
 
   rv = CheckChannelForCrossSiteRequest(mChannel);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2686,7 +2681,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // When we are sync loading, we need to bypass the local cache when it would
   // otherwise block us waiting for exclusive access to the cache.  If we don't
   // do this, then we could dead lock in some cases (see bug 309424).
-  else if (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
+  else if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
     AddLoadFlags(mChannel,
         nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
     if (mACGetChannel) {
@@ -2737,6 +2732,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
   // If we're synchronous, spin an event loop here and wait
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
+    mState |= XML_HTTP_REQUEST_SYNCLOOPING;
     nsIThread *thread = NS_GetCurrentThread();
     while (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
       if (!NS_ProcessNextEvent(thread)) {
@@ -3023,7 +3019,7 @@ nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 nsresult
 nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 {
-  mDocument = nsnull;
+  mResponseXML = nsnull;
   ChangeState(XML_HTTP_REQUEST_COMPLETED);
 
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;

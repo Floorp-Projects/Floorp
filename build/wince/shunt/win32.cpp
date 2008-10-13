@@ -55,13 +55,13 @@ extern "C" {
 
 #define MOZCE_NOT_IMPLEMENTED(fname) \
   SetLastError(0); \
-  mozce_printf("-- " fname  " called\n"); \
+  mozce_printf("-- %s called\n", fname); \
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
   return 0;
 
 #define MOZCE_NOT_IMPLEMENTED_RV(fname, rv) \
   SetLastError(0); \
-  mozce_printf("-- " fname  " called\n"); \
+  mozce_printf("-- %s called\n", fname); \
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
   return rv;
 

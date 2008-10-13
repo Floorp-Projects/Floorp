@@ -69,17 +69,14 @@ static PRLibrary *elib = nsnull;
 
 #define WAV_MIN_LENGTH 44
 
-typedef int (PR_CALLBACK *EsdOpenSoundType)(const char *host);
-typedef int (PR_CALLBACK *EsdCloseType)(int);
+typedef int (*EsdOpenSoundType)(const char *host);
+typedef int (*EsdCloseType)(int);
 
 /* used to play the sounds from the find symbol call */
-typedef int (PR_CALLBACK *EsdPlayStreamType)  (int, 
-                                               int, 
-                                               const char *, 
-                                               const char *);
-typedef int  (PR_CALLBACK *EsdAudioOpenType)  (void);
-typedef int  (PR_CALLBACK *EsdAudioWriteType) (const void *, int);
-typedef void (PR_CALLBACK *EsdAudioCloseType) (void);
+typedef int  (*EsdPlayStreamType) (int, int, const char *, const char *);
+typedef int  (*EsdAudioOpenType)  (void);
+typedef int  (*EsdAudioWriteType) (const void *, int);
+typedef void (*EsdAudioCloseType) (void);
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 

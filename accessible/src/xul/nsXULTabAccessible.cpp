@@ -71,7 +71,7 @@ NS_IMETHODIMP nsXULTabAccessible::GetActionName(PRUint8 aIndex, nsAString& aName
   return NS_ERROR_INVALID_ARG;
 }
 
-/** Tell the tab to do it's action */
+/** Tell the tab to do its action */
 NS_IMETHODIMP nsXULTabAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Switch) {
@@ -296,12 +296,10 @@ NS_IMETHODIMP nsXULTabsAccessible::GetValue(nsAString& _retval)
   return NS_OK;
 }
 
-/** no name*/
-NS_IMETHODIMP
-nsXULTabsAccessible::GetName(nsAString& aName)
+nsresult
+nsXULTabsAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
+  // no name
   return NS_OK;
 }
 

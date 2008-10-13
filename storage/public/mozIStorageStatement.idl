@@ -180,6 +180,9 @@ interface mozIStorageStatement : mozIStorageValueArray {
    * Execute a query asynchronously using any currently bound parameters.  This
    * statement can be reused immediately, and reset does not need to be called.
    *
+   * Note:  If you have any custom defined functions, they must be re-entrant
+   *        since they can be called on multiple threads.
+   *
    * @param aCallback [optional]
    *        The callback object that will be notified of progress, errors, and
    *        completion.

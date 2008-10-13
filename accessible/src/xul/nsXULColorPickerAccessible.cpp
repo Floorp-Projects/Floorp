@@ -92,11 +92,9 @@ nsXULColorPickerTileAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULColorPickerTileAccessible::GetName(nsAString& aName)
+nsresult
+nsXULColorPickerTileAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
   return GetXULName(aName);
 }
 

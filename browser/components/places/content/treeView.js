@@ -567,7 +567,7 @@ PlacesTreeView.prototype = {
 
     // Need to redraw the rows around this one because session boundaries
     // may have changed. For example, if we add a page to a session, the
-    // previous page will need to be redrawn because it's session border
+    // previous page will need to be redrawn because its session border
     // will disappear.
     if (this._showSessions) {
       if (newViewIndex > 0)
@@ -606,7 +606,7 @@ PlacesTreeView.prototype = {
   /**
    * THIS FUNCTION DOES NOT HANDLE cases where a collapsed node is being
    * removed but the node it is collapsed with is not being removed (this then
-   * just swap out the removee with it's collapsing partner). The only time
+   * just swap out the removee with its collapsing partner). The only time
    * when we really remove things is when deleting URIs, which will apply to
    * all collapsees. This function is called sometimes when resorting items.
    * However, we won't do this when sorted by date because dates will never

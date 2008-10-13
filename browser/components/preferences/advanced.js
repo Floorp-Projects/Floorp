@@ -163,7 +163,7 @@ var gAdvancedPane = {
   readCacheSize: function ()
   {
     var preference = document.getElementById("browser.cache.disk.capacity");
-    return preference.value / 1000;
+    return preference.value / 1024;
   },
 
   /**
@@ -174,7 +174,7 @@ var gAdvancedPane = {
   {
     var cacheSize = document.getElementById("cacheSize");
     var intValue = parseInt(cacheSize.value, 10);
-    return isNaN(intValue) ? 0 : intValue * 1000;
+    return isNaN(intValue) ? 0 : intValue * 1024;
   },
 
   /**

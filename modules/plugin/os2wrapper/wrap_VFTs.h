@@ -161,13 +161,13 @@ typedef struct vftable_nsIServiceManagerObsolete
     VFTDELTA_DECL(UnregisterService)
     nsresult (*VFTCALL UnregisterServiceByContractID)(void *pvThis, const char* aContractID);
     VFTDELTA_DECL(UnregisterServiceByContractID)
-    nsresult (*VFTCALL GetService)(void *pvThis, const nsCID& aClass, const nsIID& aIID, nsISupports* *result, nsIShutdownListener* shutdownListener = nsnull);
+    nsresult (*VFTCALL GetService)(void *pvThis, const nsCID& aClass, const nsIID& aIID, nsISupports* *result, nsIShutdownListener* shutdownListener);
     VFTDELTA_DECL(GetService)
-    nsresult (*VFTCALL GetServiceByContractID)(void *pvThis, const char* aContractID, const nsIID& aIID, nsISupports* *result, nsIShutdownListener* shutdownListener = nsnull);
+    nsresult (*VFTCALL GetServiceByContractID)(void *pvThis, const char* aContractID, const nsIID& aIID, nsISupports* *result, nsIShutdownListener* shutdownListener);
     VFTDELTA_DECL(GetServiceByContractID)
-    nsresult (*VFTCALL ReleaseService)(void *pvThis, const nsCID& aClass, nsISupports* service, nsIShutdownListener* shutdownListener = nsnull);
+    nsresult (*VFTCALL ReleaseService)(void *pvThis, const nsCID& aClass, nsISupports* service, nsIShutdownListener* shutdownListener);
     VFTDELTA_DECL(ReleaseService)
-    nsresult (*VFTCALL ReleaseServiceByContractID)(void *pvThis, const char* aContractID, nsISupports* service, nsIShutdownListener* shutdownListener = nsnull);
+    nsresult (*VFTCALL ReleaseServiceByContractID)(void *pvThis, const char* aContractID, nsISupports* service, nsIShutdownListener* shutdownListener);
     VFTDELTA_DECL(ReleaseServiceByContractID)
     #else
     nsresult (*VFTCALL RegisterServiceByContractID)(void *pvThis, const char* aContractID, nsISupports* aService);
@@ -178,13 +178,13 @@ typedef struct vftable_nsIServiceManagerObsolete
     VFTDELTA_DECL(UnregisterServiceByContractID)
     nsresult (*VFTCALL UnregisterService)(void *pvThis, const nsCID& aClass);
     VFTDELTA_DECL(UnregisterService)
-    nsresult (*VFTCALL GetServiceByContractID)(void *pvThis, const char* aContractID, const nsIID& aIID, nsISupports* *result, nsIShutdownListener* shutdownListener = nsnull);
+    nsresult (*VFTCALL GetServiceByContractID)(void *pvThis, const char* aContractID, const nsIID& aIID, nsISupports* *result, nsIShutdownListener* shutdownListener);
     VFTDELTA_DECL(GetServiceByContractID)
-    nsresult (*VFTCALL GetService)(void *pvThis, const nsCID& aClass, const nsIID& aIID, nsISupports* *result, nsIShutdownListener* shutdownListener = nsnull);
+    nsresult (*VFTCALL GetService)(void *pvThis, const nsCID& aClass, const nsIID& aIID, nsISupports* *result, nsIShutdownListener* shutdownListener);
     VFTDELTA_DECL(GetService)
-    nsresult (*VFTCALL ReleaseServiceByContractID)(void *pvThis, const char* aContractID, nsISupports* service, nsIShutdownListener* shutdownListener = nsnull);
+    nsresult (*VFTCALL ReleaseServiceByContractID)(void *pvThis, const char* aContractID, nsISupports* service, nsIShutdownListener* shutdownListener);
     VFTDELTA_DECL(ReleaseServiceByContractID)
-    nsresult (*VFTCALL ReleaseService)(void *pvThis, const nsCID& aClass, nsISupports* service, nsIShutdownListener* shutdownListener = nsnull);
+    nsresult (*VFTCALL ReleaseService)(void *pvThis, const nsCID& aClass, nsISupports* service, nsIShutdownListener* shutdownListener);
     VFTDELTA_DECL(ReleaseService)
     #endif
 } VFTnsIServiceManagerObsolete;
@@ -233,23 +233,23 @@ typedef struct vftable_nsIPluginManager
     VFTDELTA_DECL(ReloadPlugins)
     nsresult (*VFTCALL UserAgent)(void *pvThis, const char * * resultingAgentString);
     VFTDELTA_DECL(UserAgent)
-    nsresult (*VFTCALL GetURL)(void *pvThis, nsISupports* pluginInst, const char* url, const char* target = NULL,
-                                  nsIPluginStreamListener* streamListener = NULL, const char* altHost = NULL, const char* referrer = NULL,
-                                  PRBool forceJSEnabled = PR_FALSE);
+    nsresult (*VFTCALL GetURL)(void *pvThis, nsISupports* pluginInst, const char* url, const char* target,
+                                  nsIPluginStreamListener* streamListener, const char* altHost, const char* referrer,
+                                  PRBool forceJSEnabled);
     VFTDELTA_DECL(GetURL)
     nsresult (*VFTCALL PostURL)(void *pvThis, nsISupports* pluginInst, const char* url, PRUint32 postDataLen, const char* postData,
-                                   PRBool isFile = PR_FALSE, const char* target = NULL, nsIPluginStreamListener* streamListener = NULL,
-                                   const char* altHost = NULL, const char* referrer = NULL, PRBool forceJSEnabled = PR_FALSE,
-                                   PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
+                                   PRBool isFile, const char* target, nsIPluginStreamListener* streamListener,
+                                   const char* altHost, const char* referrer, PRBool forceJSEnabled,
+                                   PRUint32 postHeadersLength, const char* postHeaders);
     VFTDELTA_DECL(PostURL)
     nsresult (*VFTCALL RegisterPlugin)(void *pvThis, REFNSIID aCID, const char *aPluginName, const char *aDescription, const char * * aMimeTypes,
                                           const char * * aMimeDescriptions, const char * * aFileExtensions, PRInt32 aCount);
     VFTDELTA_DECL(RegisterPlugin)
     nsresult (*VFTCALL UnregisterPlugin)(void *pvThis, REFNSIID aCID);
     VFTDELTA_DECL(UnregisterPlugin)
-    nsresult (*VFTCALL GetURLWithHeaders)(void *pvThis, nsISupports* pluginInst, const char* url, const char* target = NULL,
-                                             nsIPluginStreamListener* streamListener = NULL, const char* altHost = NULL, const char* referrer = NULL,
-                                             PRBool forceJSEnabled = PR_FALSE, PRUint32 getHeadersLength = 0, const char* getHeaders = NULL);
+    nsresult (*VFTCALL GetURLWithHeaders)(void *pvThis, nsISupports* pluginInst, const char* url, const char* target,
+                                             nsIPluginStreamListener* streamListener, const char* altHost, const char* referrer,
+                                             PRBool forceJSEnabled, PRUint32 getHeadersLength, const char* getHeaders);
     VFTDELTA_DECL(GetURLWithHeaders)
 } VFTnsIPluginManager;
 
@@ -404,21 +404,21 @@ typedef struct vftable_nsIComponentManager
 typedef struct vftable_nsISecureEnv
 {
     VFTnsISupports  base;
-    nsresult (*VFTCALL NewObject)(void *pvThis, jclass clazz, jmethodID methodID, jvalue *args, jobject* result, nsISecurityContext* ctx = NULL);
+    nsresult (*VFTCALL NewObject)(void *pvThis, jclass clazz, jmethodID methodID, jvalue *args, jobject* result, nsISecurityContext* ctx);
     VFTDELTA_DECL(NewObject)
-    nsresult (*VFTCALL CallMethod)(void *pvThis, jni_type type, jobject obj, jmethodID methodID, jvalue *args, jvalue* result, nsISecurityContext* ctx = NULL);
+    nsresult (*VFTCALL CallMethod)(void *pvThis, jni_type type, jobject obj, jmethodID methodID, jvalue *args, jvalue* result, nsISecurityContext* ctx);
     VFTDELTA_DECL(CallMethod)
-    nsresult (*VFTCALL CallNonvirtualMethod)(void *pvThis, jni_type type, jobject obj, jclass clazz, jmethodID methodID, jvalue *args, jvalue* result, nsISecurityContext* ctx = NULL);
+    nsresult (*VFTCALL CallNonvirtualMethod)(void *pvThis, jni_type type, jobject obj, jclass clazz, jmethodID methodID, jvalue *args, jvalue* result, nsISecurityContext* ctx);
     VFTDELTA_DECL(CallNonvirtualMethod)
-    nsresult (*VFTCALL GetField)(void *pvThis, jni_type type, jobject obj, jfieldID fieldID, jvalue* result, nsISecurityContext* ctx = NULL);
+    nsresult (*VFTCALL GetField)(void *pvThis, jni_type type, jobject obj, jfieldID fieldID, jvalue* result, nsISecurityContext* ctx);
     VFTDELTA_DECL(GetField)
-    nsresult (*VFTCALL SetField)(void *pvThis, jni_type type, jobject obj, jfieldID fieldID, jvalue val, nsISecurityContext* ctx = NULL);
+    nsresult (*VFTCALL SetField)(void *pvThis, jni_type type, jobject obj, jfieldID fieldID, jvalue val, nsISecurityContext* ctx);
     VFTDELTA_DECL(SetField)
-    nsresult (*VFTCALL CallStaticMethod)(void *pvThis, jni_type type, jclass clazz, jmethodID methodID, jvalue *args, jvalue* result, nsISecurityContext* ctx = NULL);
+    nsresult (*VFTCALL CallStaticMethod)(void *pvThis, jni_type type, jclass clazz, jmethodID methodID, jvalue *args, jvalue* result, nsISecurityContext* ctx);
     VFTDELTA_DECL(CallStaticMethod)
-    nsresult (*VFTCALL GetStaticField)(void *pvThis, jni_type type, jclass clazz, jfieldID fieldID, jvalue* result, nsISecurityContext* ctx = NULL);
+    nsresult (*VFTCALL GetStaticField)(void *pvThis, jni_type type, jclass clazz, jfieldID fieldID, jvalue* result, nsISecurityContext* ctx);
     VFTDELTA_DECL(GetStaticField)
-    nsresult (*VFTCALL SetStaticField)(void *pvThis, jni_type type, jclass clazz, jfieldID fieldID, jvalue val, nsISecurityContext* ctx = NULL);
+    nsresult (*VFTCALL SetStaticField)(void *pvThis, jni_type type, jclass clazz, jfieldID fieldID, jvalue val, nsISecurityContext* ctx);
     VFTDELTA_DECL(SetStaticField)
     nsresult (*VFTCALL GetVersion)(void *pvThis, jint* version);
     VFTDELTA_DECL(GetVersion)
@@ -690,7 +690,7 @@ typedef struct vftable_nsIJVMConsole
     nsresult (*VFTCALL Hide)(void *pvThis);
     nsresult (*VFTCALL IsVisible)(void *pvThis, PRBool *result);
     */
-    nsresult (*VFTCALL Print)(void *pvThis, const char* msg, const char* encodingName = NULL);
+    nsresult (*VFTCALL Print)(void *pvThis, const char* msg, const char* encodingName);
     VFTDELTA_DECL(Print)
 } VFTnsIJVMConsole;
 
@@ -773,13 +773,13 @@ typedef struct vtable_nsIJVMThreadManager
     nsresult (*VFTCALL GetCurrentThread)(void *pvThis, PRThread **threadID);
 #endif
     VFTDELTA_DECL(GetCurrentThread)
-    nsresult (*VFTCALL Sleep)(void *pvThis, PRUint32 milli/* = 0*/);
+    nsresult (*VFTCALL Sleep)(void *pvThis, PRUint32 milli);
     VFTDELTA_DECL(Sleep)
     nsresult (*VFTCALL EnterMonitor)(void *pvThis, void* address);
     VFTDELTA_DECL(EnterMonitor)
     nsresult (*VFTCALL ExitMonitor)(void *pvThis, void* address);
     VFTDELTA_DECL(ExitMonitor)
-    nsresult (*VFTCALL Wait)(void *pvThis, void* address, PRUint32 milli/* = 0*/);
+    nsresult (*VFTCALL Wait)(void *pvThis, void* address, PRUint32 milli);
     VFTDELTA_DECL(Wait)
     nsresult (*VFTCALL Notify)(void *pvThis, void* address);
     VFTDELTA_DECL(Notify)

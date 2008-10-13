@@ -75,7 +75,7 @@ BuildKeyNameFromFontName(nsAString &aName)
     ToLowerCase(aName);
 }
 
-int PR_CALLBACK
+int
 gfxWindowsPlatform::PrefChangedCallback(const char *aPrefName, void *closure)
 {
     // XXX this could be made to only clear out the cache for the prefs that were changed
@@ -154,7 +154,7 @@ struct FontListData {
     nsStringArray& mStringArray;
 };
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 gfxWindowsPlatform::HashEnumFunc(nsStringHashKey::KeyType aKey,
                                  nsRefPtr<FontFamily>& aFontFamily,
                                  void* userArg)
@@ -284,9 +284,9 @@ struct FontFamilyListData {
         : mFamilyArray(aFamilyArray)
     {}
 
-    static PLDHashOperator PR_CALLBACK AppendFamily(nsStringHashKey::KeyType aKey,
-                                                    nsRefPtr<FontFamily>& aFamilyEntry,
-                                                    void *aUserArg)
+    static PLDHashOperator AppendFamily(nsStringHashKey::KeyType aKey,
+                                        nsRefPtr<FontFamily>& aFamilyEntry,
+                                        void *aUserArg)
     {
         FontFamilyListData *data = (FontFamilyListData*)aUserArg;
         data->mFamilyArray.AppendElement(aFamilyEntry);
@@ -443,7 +443,7 @@ struct FontSearch {
     nsRefPtr<FontEntry> bestMatch;
 };
 
-PLDHashOperator PR_CALLBACK
+PLDHashOperator
 gfxWindowsPlatform::FindFontForCharProc(nsStringHashKey::KeyType aKey,
                                         nsRefPtr<FontFamily>& aFontFamily,
                                         void* userArg)

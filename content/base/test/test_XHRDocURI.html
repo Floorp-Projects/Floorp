@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=459470
+-->
+<head>
+  <title>XMLHttpRequest return document URIs</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <base href="http://example.org/">
+</head>
+<body>
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=459470">Mozilla Bug 459470</a>
+<p id="display">
+<iframe id=loader></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+SimpleTest.waitForExplicitFinish();
+
+gen = runTest();
+gen.next();
+
+function runTest() {
+  is(document.baseURI, "http://example.org/", "wrong doc baseURI");
+
+  xhr = new XMLHttpRequest;
+  xhr.open("GET", "http://localhost:8888/tests/content/base/test/file_XHRDocURI.xml");
+  xhr.onreadystatechange = function(e) {
+    if (!xhr.responseXML)
+      return;
+    is(xhr.responseXML.documentURI, "http://localhost:8888/tests/content/base/test/file_XHRDocURI.xml",
+       "wrong url");
+    is(xhr.responseXML.baseURI, "http://localhost:8888/tests/content/base/test/file_XHRDocURI.xml",
+       "wrong base");
+    if (xhr.readyState == 4) {
+      gen.next();
+    }
+  };
+  xhr.send();
+  yield;
+
+
+  xhr = new XMLHttpRequest;
+  xhr.open("GET", "http://localhost:8888/tests/content/base/test/file_XHRDocURI.text");
+  xhr.onreadystatechange = function(e) {
+    is(xhr.responseXML, null, "should not have document");
+    if (xhr.readyState == 4)
+      gen.next();
+  };
+  xhr.send();
+  yield;
+
+  xhr = new XMLHttpRequest;
+  xhr.open("GET", "http://example.com/tests/content/base/test/file_XHRDocURI.xml");
+  xhr.onreadystatechange = function(e) {
+    if (!xhr.responseXML)
+      return;
+    is(xhr.responseXML.documentURI, document.documentURI,
+       "wrong url");
+    is(xhr.responseXML.baseURI, document.baseURI,
+       "wrong base");
+    if (xhr.readyState == 4)
+      gen.next();
+  };
+  xhr.send();
+  yield;
+
+  xhr = new XMLHttpRequest;
+  xhr.open("GET", "http://example.com/tests/content/base/test/file_XHRDocURI.text");
+  xhr.onreadystatechange = function(e) {
+    is(xhr.responseXML, null, "should not have document");
+    if (xhr.readyState == 4)
+      gen.next();
+  };
+  xhr.send();
+  yield;
+  
+  SimpleTest.finish();
+  yield;
+}
+
+</script>
+</pre>
+</body>
+</html>

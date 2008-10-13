@@ -229,7 +229,7 @@ NowCalibrate()
 #define LASTLOCK_SPINCOUNT 4096
 
 #ifdef JS_THREADSAFE
-static PRStatus PR_CALLBACK
+static PRStatus
 NowInit(void)
 {
     memset(&calibration, 0, sizeof(calibration));

@@ -226,7 +226,7 @@ nsParentalControlsServiceWin::RequestURIOverride(nsIURI *aTarget, nsIInterfaceRe
     return NS_ERROR_INVALID_ARG;
 
   HWND hWnd = nsnull;
-  // If we have a native window, use it's handle instead
+  // If we have a native window, use its handle instead
   nsCOMPtr<nsIWidget> widget(do_GetInterface(aWindowContext));
   if (widget)
     hWnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
@@ -265,7 +265,7 @@ nsParentalControlsServiceWin::RequestURIOverrides(nsIArray *aTargets, nsIInterfa
   }
 
   HWND hWnd = nsnull;
-  // If we have a native window, use it's handle instead
+  // If we have a native window, use its handle instead
   nsCOMPtr<nsIWidget> widget(do_GetInterface(aWindowContext));
   if (widget)
     hWnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);

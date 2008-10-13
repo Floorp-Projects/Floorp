@@ -803,7 +803,7 @@ nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
   return NS_OK;
 }
 
-int PR_CALLBACK 
+int
 nsFormHistory::SortComparison(const void *v1, const void *v2, void *closureVoid) 
 {
   PRUint32 *index1 = (PRUint32 *)v1;

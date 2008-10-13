@@ -64,6 +64,8 @@ enum nsCSSUnit {
   eCSSUnit_System_Font  = 6,      // (n/a) value is -moz-use-system-font
   eCSSUnit_Dummy        = 7,      // (n/a) a fake but specified value, used
                                   //       only in temporary values
+  eCSSUnit_DummyInherit = 8,      // (n/a) a fake but specified value, used
+                                  //       only in temporary values
   eCSSUnit_String       = 10,     // (PRUnichar*) a string value
   eCSSUnit_Attr         = 11,     // (PRUnichar*) a attr(string) value
   eCSSUnit_Local_Font   = 12,     // (PRUnichar*) a local font name
@@ -143,7 +145,7 @@ public:
   explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
-    NS_ASSERTION(aUnit <= eCSSUnit_Dummy, "not a valueless unit");
+    NS_ASSERTION(aUnit <= eCSSUnit_DummyInherit, "not a valueless unit");
   }
 
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
@@ -285,6 +287,7 @@ public:
   NS_HIDDEN_(void)  SetNormalValue();
   NS_HIDDEN_(void)  SetSystemFontValue();
   NS_HIDDEN_(void)  SetDummyValue();
+  NS_HIDDEN_(void)  SetDummyInheritValue();
   NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument)
                                    const;  // Not really const, but pretending
 

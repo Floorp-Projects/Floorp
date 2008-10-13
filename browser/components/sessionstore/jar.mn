@@ -1,0 +1,3 @@
+browser.jar:
+*   content/browser/aboutSessionRestore.xhtml             (content/aboutSessionRestore.xhtml) 
+    content/browser/aboutSessionRestore.js                (content/aboutSessionRestore.js)
