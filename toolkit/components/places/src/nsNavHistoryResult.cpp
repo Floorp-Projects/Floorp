@@ -2448,14 +2448,6 @@ nsNavHistoryQueryResultNode::ClearChildren(PRBool aUnregister)
 nsresult
 nsNavHistoryQueryResultNode::Refresh()
 {
-  // Some queries can return other queries. In this case calling Refresh
-  // for each child query could cause a major slowdown. We should not refresh
-  // nested queries that are not currently expanded, since we are already 
-  // refreshing the containing one.
-  if (mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
-      !mExpanded)
-    return NS_OK;
-
   // Ignore refreshes when there is a batch, EndUpdateBatch will do a refresh
   // to get all the changes.
   if (mBatchInProgress)
@@ -2467,8 +2459,14 @@ nsNavHistoryQueryResultNode::Refresh()
   if (mIndentLevel > -1 && !mParent)
     return NS_OK;
 
-  if (! mExpanded) {
-    // when we are not expanded, we don't update, just invalidate and unhook
+  // Do not refresh if we are not expanded or if we are child of a query
+  // containing other queries. In this case calling Refresh for each child
+  // query could cause a major slowdown. We should not refresh nested
+  // queries, since we will already refresh the parent one.
+  if (!mExpanded ||
+      (mParent && mParent->IsQuery() &&
+       mParent->GetAsQuery()->IsContainersQuery())) {
+    // Don't update, just invalidate and unhook
     ClearChildren(PR_TRUE);
     return NS_OK; // no updates in tree state
   }
