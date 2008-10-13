@@ -109,6 +109,7 @@ namespace nanojit
 	typedef int RegisterMask;
 
 	/* RBX, R13-R15 */
+	static const int NumSavedRegs = 3;
 	static const RegisterMask SavedRegs = /*(1<<RBX) |*/ /*(1<<R12) |*/ (1<<R13) | (1<<R14) | (1<<R15);
 	/* RAX, RCX, RDX, RDI, RSI, R8-R11 */
 	static const RegisterMask TempRegs = (1<<RAX) | (1<<RCX) | (1<<RDX) | (1<<R8) | (1<<R9) | (1<<R10) | (1<<R11) | (1<<RDI) | (1<<RSI);

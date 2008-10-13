@@ -326,6 +326,8 @@ public:
 
 #define DWB(x) x
 #define DRCWB(x) x
+#define WB(gc, container, addr, value) do { *(addr) = (value); } while(0)
+#define WBRC(gc, container, addr, value) do { *(addr) = (value); } while(0)
 
 #define MMGC_MEM_TYPE(x)
 

@@ -344,16 +344,12 @@ math_max(JSContext *cx, uintN argc, jsval *vp)
             *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
             return JS_TRUE;
         }
-        if (x == 0 && x == z && fd_copysign(1.0, z) == -1)
-            z = x;
-        else
-            /* 
-             * Note: it is essential that you write the ternary expression
-             * here such that the false branch produces z not x, as the case
-             * of x=-0, z=0, for which we wind up in this expression but
-             * evaluate either > order as false, whether we do x>z *or* z>x.
-             */
+        if (x == 0 && x == z) {
+            if (fd_copysign(1.0, z) == -1)
+                z = x;
+        } else {
             z = (x > z) ? x : z;
+        }
     }
     return js_NewNumberInRootedValue(cx, z, vp);
 }
@@ -378,9 +374,10 @@ math_min(JSContext *cx, uintN argc, jsval *vp)
             *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
             return JS_TRUE;
         }
-        if (x == 0 && x == z && fd_copysign(1.0,x) == -1)
-            z = x;
-        else
+        if (x == 0 && x == z) {
+            if (fd_copysign(1.0, x) == -1)
+                z = x;
+        } else
             z = (x < z) ? x : z;
     }
     return js_NewNumberInRootedValue(cx, z, vp);
@@ -623,9 +620,13 @@ js_Math_max(jsdouble d, jsdouble p)
     if (JSDOUBLE_IS_NaN(d) || JSDOUBLE_IS_NaN(p))
         return js_NaN;
 
-    if (p == 0 && p == d && fd_copysign(1.0, d) == -1)
-        return p;
-    return (d > p) ? d : p;
+    if (p == 0 && p == d) {
+        if (fd_copysign(1.0, d) == -1)
+            return p;
+        else
+            return d;
+    }
+    return (p > d) ? p : d;
 }
 
 jsdouble FASTCALL

@@ -1000,12 +1000,14 @@ TraceRecorder::TraceRecorder(JSContext* cx, GuardRecord* _anchor, Fragment* _fra
     lir = cse_filter = new (&gc) CseFilter(lir, &gc);
     lir = expr_filter = new (&gc) ExprFilter(lir);
     lir = func_filter = new (&gc) FuncFilter(lir, *this);
-    lir->ins0(LIR_trace);
+    lir->ins0(LIR_start);
 
     if (!nanojit::AvmCore::config.tree_opt || fragment->root == fragment) {
-        lirbuf->state = addName(lir->insParam(0), "state");
-        lirbuf->param1 = addName(lir->insParam(1), "param1");
+        lirbuf->state = addName(lir->insParam(0, 0), "state");
+        lirbuf->param1 = addName(lir->insParam(1, 0), "param1");
     }
+    loop_header_ins = addName(lir->ins0(LIR_label), "loop_header");
+
     lirbuf->sp = addName(lir->insLoad(LIR_ldp, lirbuf->state, (int)offsetof(InterpState, sp)), "sp");
     lirbuf->rp = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, rp)), "rp");
     cx_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, cx)), "cx");
@@ -1955,10 +1957,9 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
     SideExit *exit = snapshot(LOOP_EXIT);
     exit->target = fragment->root;
     if (fragment == fragment->root) {
-        fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), exit);
-    } else {
-        fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exit);
+        fragment->lastIns = lir->insBranch(LIR_j, NULL, loop_header_ins);
     }
+    fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), exit);
     compile(fragmento);
 
     debug_only_v(printf("recording completed at %s:%u@%u via closeLoop\n", cx->fp->script->filename,
@@ -2107,9 +2108,9 @@ TraceRecorder::fuseIf(jsbytecode* pc, bool cond, LIns* x)
 int
 nanojit::StackFilter::getTop(LInsp guard)
 {
-    if (sp == frag->lirbuf->sp)
+    if (sp == lirbuf->sp)
         return guard->exit()->sp_adj;
-    JS_ASSERT(sp == frag->lirbuf->rp);
+    JS_ASSERT(sp == lirbuf->rp);
     return guard->exit()->rp_adj;
 }
 
@@ -2387,7 +2388,7 @@ js_RecordTree(JSContext* cx, JSTraceMonitor* tm, Fragment* f)
     while (f->code() && f->peer)
         f = f->peer;
     if (f->code())
-        f = JS_TRACE_MONITOR(cx).fragmento->newLoop(f->ip);
+        f = JS_TRACE_MONITOR(cx).fragmento->getAnchor(f->ip);
 
     f->calldepth = 0;
     f->root = f;
@@ -2604,7 +2605,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
                             OBJ_SHAPE(globalObj), tm->globalShape);)
         const void* ip = f->ip;
         js_FlushJITCache(cx);
-        *treep = tm->fragmento->newLoop(ip);
+        *treep = tm->fragmento->getAnchor(ip);
         return NULL;
     }
 
@@ -2624,7 +2625,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
         bool didGC;
         const void* ip = f->ip;
         if (!ReplenishReservePool(cx, tm, didGC) || didGC) {
-            *treep = tm->fragmento->newLoop(ip);
+            *treep = tm->fragmento->getAnchor(ip);
             return NULL;
         }
     }
@@ -2663,6 +2664,7 @@ js_ExecuteTree(JSContext* cx, Fragment** treep, uintN& inlineCallCount,
         tm->onTrace = true;
     GuardRecord* lr;
     
+    debug_only(fflush(NULL);)
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
     SIMULATE_FASTCALL(lr, &state, NULL, u.func);
 #else
@@ -2854,7 +2856,7 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount)
     } else {
         f = tm->fragmento->getLoop(pc);
         if (!f)
-            f = tm->fragmento->newLoop(pc);
+            f = tm->fragmento->getAnchor(pc);
         cacheEntry->pc = pc;
         cacheEntry->fragment = f;
     }

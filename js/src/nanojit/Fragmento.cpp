@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nanojit.h"
+#undef MEMORY_INFO
 
 namespace nanojit
 {	
@@ -58,16 +59,17 @@ namespace nanojit
 	 */
 	Fragmento::Fragmento(AvmCore* core, uint32_t cacheSizeLog2) 
 		: _allocList(core->GetGC()),
-			_max_pages(1 << (calcSaneCacheSize(cacheSizeLog2) - NJ_LOG2_PAGE_SIZE))
+			_max_pages(1 << (calcSaneCacheSize(cacheSizeLog2) - NJ_LOG2_PAGE_SIZE)),
+			_pagesGrowth(1)
 	{
 #ifdef MEMORY_INFO
 		_allocList.set_meminfo_name("Fragmento._allocList");
 #endif
+		NanoAssert(_max_pages > _pagesGrowth); // shrink growth if needed 
 		_core = core;
 		GC *gc = core->GetGC();
 		_frags = new (gc) FragmentMap(gc, 128);
 		_assm = new (gc) nanojit::Assembler(this);
-        _pageGrowth = 1;
 		verbose_only( enterCounts = new (gc) BlockHist(gc); )
 		verbose_only( mergeCounts = new (gc) BlockHist(gc); )
 	}
@@ -109,10 +111,10 @@ namespace nanojit
 	{
         NanoAssert(sizeof(Page) == NJ_PAGE_SIZE);
 		if (!_pageList) {
-			pagesGrow(_pageGrowth);	// try to get more mem
-            if ((_pageGrowth << 1) < _max_pages)
-                _pageGrowth <<= 1;
-        }
+			pagesGrow(_pagesGrowth);	// try to get more mem
+			            if ((_pagesGrowth << 1) < _max_pages)
+							_pagesGrowth <<= 1;						
+		}
 		Page *page = _pageList;
 		if (page)
 		{
@@ -221,7 +223,7 @@ namespace nanojit
 		return _core;
 	}
 
-	Fragment* Fragmento::newLoop(const void* ip)
+    Fragment* Fragmento::getAnchor(const void* ip)
 	{
         Fragment *f = newFrag(ip);
         Fragment *p = _frags->get(ip);
@@ -480,7 +482,7 @@ namespace nanojit
 	{
 		int c = hist->count(ip);
 		if (_assm->_verbose)
-			_assm->outputf("++ %s %d", core()->interp.labels->format(ip), c);
+			_assm->outputf("++ %s %d", labels->format(ip), c);
 	}
 
 	void Fragmento::countIL(uint32_t il, uint32_t abc)
