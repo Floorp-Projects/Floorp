@@ -24,6 +24,7 @@
  *    Josh Aas <josh@mozilla.com>
  *    Colin Barrett <cbarrett@mozilla.com>
  *    Matthew Gregan <kinetik@flim.org>
+ *    Markus Stange <mstange@themasta.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -71,6 +72,14 @@ extern "C" {
   CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
 }
 
+// Workaround for NSCell control tint drawing
+// Without this workaround, NSCells are always drawn with the clear control tint
+// as long as they're not attached to an NSControl which is a subview of an active window.
+// XXXmstange Why doesn't Webkit need this?
+@implementation NSCell (ControlTintWorkaround)
+- (int)_realControlTint { return [self controlTint]; }
+@end
+
 // Copied from nsLookAndFeel.h
 // Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.
 static const int kThemeScrollBarArrowsBoth = 2;
@@ -108,6 +117,8 @@ static int EnumSizeForCocoaSize(NSControlSize cocoaControlSize) {
 
 static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize, const float marginSet[][3][4])
 {
+  if (!marginSet)
+    return;
   static int osIndex = nsToolkit::OnLeopardOrLater() ? leopardOS : tigerOS;
   int controlSize = EnumSizeForCocoaSize(cocoaControlSize);
   const float* buttonMargins = marginSet[osIndex][controlSize];
@@ -161,8 +172,9 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
 
   mRadioButtonCell = [[NSButtonCell alloc] initTextCell:nil];
   [mRadioButtonCell setButtonType:NSRadioButton];
-  [mRadioButtonCell setBezelStyle:NSRoundedBezelStyle];
-  [mRadioButtonCell setHighlightsBy:NSPushInCellMask];
+
+  mCheckboxCell = [[NSButtonCell alloc] initTextCell:nil];
+  [mCheckboxCell setButtonType:NSSwitchButton];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -173,46 +185,7 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
 
   [mPushButtonCell release];
   [mRadioButtonCell release];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-void
-nsNativeThemeCocoa::DrawCheckbox(CGContextRef cgContext, ThemeButtonKind inKind,
-                                 const HIRect& inBoxRect, PRBool inChecked,
-                                 PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  HIThemeButtonDrawInfo bdi;
-  bdi.version = 0;
-  bdi.kind = inKind;
-
-  BOOL isActive = FrameIsInActiveWindow(aFrame);
-
-  if (inDisabled)
-    bdi.state = kThemeStateUnavailable;
-  else if ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))
-    bdi.state = kThemeStatePressed;
-  else
-    bdi.state = isActive ? kThemeStateActive : kThemeStateInactive;
-
-  bdi.value = inChecked ? kThemeButtonOn : kThemeButtonOff;
-  bdi.adornment = (inState & NS_EVENT_STATE_FOCUS && isActive) ? kThemeAdornmentFocus : kThemeAdornmentNone;
-
-  HIRect drawFrame = inBoxRect;
-
-  // on Tiger, shift the checkbox rendering down 1px to get the frame
-  // in the right spot
-  if (!nsToolkit::OnLeopardOrLater() && inKind == kThemeSmallCheckBox)
-    drawFrame.origin.y += 1;
-
-  HIThemeDrawButton(&drawFrame, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
-
-#if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
-  CGContextFillRect(cgContext, inBoxRect);
-#endif
+  [mCheckboxCell release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -232,77 +205,75 @@ nsNativeThemeCocoa::DrawCheckbox(CGContextRef cgContext, ThemeButtonKind inKind,
  * destRect - the size and position of the resulting control rectangle
  * controlSize - the NSControlSize which will be given to the NSCell before
  *  asking it to render
- * naturalWidth, naturalHeight - The natural dimensions of this control.
+ * naturalSize - The natural dimensions of this control.
  *  If the control rect size is not equal to either of these, a scale
  *  will be applied to the context so that rendering the control at the
  *  natural size will result in it filling the destRect space.
  *  If a control has no natural dimensions in either/both axes, pass 0.0f.
- * minWidth, minHeight - The minimum dimensions of this control.
+ * minimumSize - The minimum dimensions of this control.
  *  If the control rect size is less than the minimum for a given axis,
  *  a scale will be applied to the context so that the minimum is used
  *  for drawing.  If a control has no minimum dimensions in either/both
  *  axes, pass 0.0f.
  * marginSet - an array of margins; a multidimensional array of [2][3][4],
- *  with the first two array elements being margins for Tiger or Leopard,
- *  the next three being control size (mini, small, regular), and the 4
- *  being the 4 margin values.
- * doSaveCTM - whether this routine should bother to save the CTM before
- *  manipuating; if the caller has already done this, pass PR_FALSE.
+ *  with the first dimension being the OS version (Tiger or Leopard),
+ *  the second being the control size (mini, small, regular), and the third
+ *  being the 4 margin values (left, top, right, bottom).
+ * flip - Whether to draw the control mirrored
+ * needsBuffer - Set this to false if no buffer should be used. Bypassing the
+ *  buffer is faster but it can lead to painting problems with accumulating
+ *  focus rings.
  */
-void
-nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
-                                        CGContextRef cgContext,
-                                        const HIRect& destRect,
-                                        NSControlSize controlSize,
-                                        float naturalWidth, float naturalHeight,
-                                        float minWidth, float minHeight,
-                                        const float marginSet[][3][4],
-                                        PRBool doSaveCTM)
+static void DrawCellWithScaling(NSCell *cell,
+                                CGContextRef cgContext,
+                                const HIRect& destRect,
+                                NSControlSize controlSize,
+                                NSSize naturalSize,
+                                NSSize minimumSize,
+                                const float marginSet[][3][4],
+                                PRBool flip,
+                                PRBool needsBuffer = PR_TRUE)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSRect drawRect = NSMakeRect(destRect.origin.x, destRect.origin.y, destRect.size.width, destRect.size.height);
 
-  CGAffineTransform savedCTM;
-  NSGraphicsContext* savedContext = NULL;
+  if (naturalSize.width != 0.0f)
+    drawRect.size.width = naturalSize.width;
+  if (naturalSize.height != 0.0f)
+    drawRect.size.height = naturalSize.height;
 
-  float xscale = 1.0f, yscale = 1.0f;
+  // Keep aspect ratio when scaling if one dimension is free.
+  if (naturalSize.width == 0.0f && naturalSize.height != 0.0f)
+    drawRect.size.width = destRect.size.width * naturalSize.height / destRect.size.height;
+  if (naturalSize.height == 0.0f && naturalSize.width != 0.0f)
+    drawRect.size.height = destRect.size.height * naturalSize.width / destRect.size.width;
 
-  if (naturalWidth != 0.0f) {
-    xscale = drawRect.size.width / naturalWidth;
-    drawRect.size.width = naturalWidth;
-  }
-  else if (minWidth != 0.0f &&
-           drawRect.size.width < minWidth)
-  {
-    xscale = drawRect.size.width / minWidth;
-    drawRect.size.width = minWidth;
-  }
+  // Honor minimum sizes.
+  if (drawRect.size.width < minimumSize.width)
+    drawRect.size.width = minimumSize.width;
+  if (drawRect.size.height < minimumSize.height)
+    drawRect.size.height = minimumSize.height;
 
-  if (naturalHeight != 0.0f) {
-    yscale = drawRect.size.height / naturalHeight;
-    drawRect.size.height = naturalHeight;
-  }
-  else if (minHeight != 0.0f &&
-           drawRect.size.height < minHeight)
-  {
-    yscale = drawRect.size.height / minHeight;
-    drawRect.size.height = minHeight;
-  }
+  CGAffineTransform savedCTM = CGContextGetCTM(cgContext);
+  NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
 
-  if (doSaveCTM)
-    savedCTM = CGContextGetCTM(cgContext);
+  if (flip) {
+    // This flips the image in place and is necessary to work around a bug in the way
+    // NSButtonCell draws buttons.
+    CGContextScaleCTM(cgContext, 1.0f, -1.0f);
+    CGContextTranslateCTM(cgContext, 0.0f, -(2.0 * destRect.origin.y + destRect.size.height));
+  }
 
   // Fall back to no scaling if the area of our cell (in pixels^2) is too large.
-  if (drawRect.size.width * drawRect.size.height > CELL_SCALING_MAX_AREA)
-    xscale = yscale = 1.0f;
+  BOOL noBufferOverride = (drawRect.size.width * drawRect.size.height > CELL_SCALING_MAX_AREA);
 
-  if (xscale == 1.0f && yscale == 1.0f) {
+  if ((!needsBuffer && drawRect.size.width == destRect.size.width &&
+       drawRect.size.height == destRect.size.height) || noBufferOverride) {
     // Inflate the rect Gecko gave us by the margin for the control.
     InflateControlRect(&drawRect, controlSize, marginSet);
 
     // Set up the graphics context we've been asked to draw to.
-    savedContext = [NSGraphicsContext currentContext];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
 
     // [NSView focusView] may return nil here, but
@@ -331,7 +302,6 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
 
     CGContextTranslateCTM(ctx, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
 
-    savedContext = [NSGraphicsContext currentContext];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:YES]];
 
     // [NSView focusView] may return nil here, but
@@ -343,20 +313,23 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
     CGImageRef img = CGBitmapContextCreateImage(ctx);
 
     // Drop the image into the original destination rectangle, scaling to fit
-    // XXX in theory we should scale this MAX_FOCUS_RING_WIDTH here by xscale/yscale,
-    // but in practice, this looks better.
-    CGContextDrawImage(cgContext, CGRectMake(destRect.origin.x - MAX_FOCUS_RING_WIDTH,
-                                             destRect.origin.y - MAX_FOCUS_RING_WIDTH,
-                                             destRect.size.width + MAX_FOCUS_RING_WIDTH * 2,
-                                             destRect.size.height + MAX_FOCUS_RING_WIDTH * 2),
+    // Only scale MAX_FOCUS_RING_WIDTH by xscale/yscale when the resulting rect
+    // doesn't extend beyond the overflow rect
+    float xscale = destRect.size.width / drawRect.size.width;
+    float yscale = destRect.size.height / drawRect.size.height;
+    float scaledFocusRingX = xscale < 1.0f ? MAX_FOCUS_RING_WIDTH * xscale : MAX_FOCUS_RING_WIDTH;
+    float scaledFocusRingY = yscale < 1.0f ? MAX_FOCUS_RING_WIDTH * yscale : MAX_FOCUS_RING_WIDTH;
+    CGContextDrawImage(cgContext, CGRectMake(destRect.origin.x - scaledFocusRingX,
+                                             destRect.origin.y - scaledFocusRingY,
+                                             destRect.size.width + scaledFocusRingX * 2,
+                                             destRect.size.height + scaledFocusRingY * 2),
                        img);
 
     CGImageRelease(img);
     CGContextRelease(ctx);
   }
 
-  if (doSaveCTM)
-    CGContextSetCTM(cgContext, savedCTM);
+  CGContextSetCTM(cgContext, savedCTM);
 
   [NSGraphicsContext setCurrentContext:savedContext];
 
@@ -368,54 +341,202 @@ nsNativeThemeCocoa::DrawCellWithScaling(NSCell *cell,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+struct CellRenderSettings {
+  // The natural dimensions of the control.
+  // If a control has no natural dimensions in either/both axes, set to 0.0f.
+  NSSize naturalSizes[3];
+
+  // The minimum dimensions of the control.
+  // If a control has no minimum dimensions in either/both axes, set to 0.0f.
+  NSSize minimumSizes[3];
+
+  // A multidimensional array of [2][3][4],
+  // with the first dimension being the OS version (Tiger or Leopard),
+  // the second being the control size (mini, small, regular), and the third
+  // being the 4 margin values (left, top, right, bottom).
+  float margins[2][3][4];
+};
+
+/*
+ * Draw the given NSCell into the given cgContext with a nice control size.
+ *
+ * This function is similar to DrawCellWithScaling, but it decides what
+ * control size to use based on the destRect's size.
+ * Scaling is only applied when the difference between the destRect's size
+ * and the next smaller natural size is greater than sSnapTolerance. Otherwise
+ * it snaps to the next smaller control size without scaling because unscaled
+ * controls look nicer.
+ */
+static const float sSnapTolerance = 1.0f;
+static void DrawCellWithSnapping(NSCell *cell,
+                                 CGContextRef cgContext,
+                                 const HIRect& destRect,
+                                 const CellRenderSettings settings,
+                                 PRBool flip,
+                                 float verticalAlignFactor,
+                                 PRBool needsBuffer = PR_TRUE)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  const float rectWidth = destRect.size.width, rectHeight = destRect.size.height;
+  const NSSize *sizes = settings.naturalSizes;
+  const NSSize miniSize = sizes[EnumSizeForCocoaSize(NSMiniControlSize)];
+  const NSSize smallSize = sizes[EnumSizeForCocoaSize(NSSmallControlSize)];
+  const NSSize regularSize = sizes[EnumSizeForCocoaSize(NSRegularControlSize)];
+
+  NSControlSize controlSizeX = NSRegularControlSize, controlSizeY = NSRegularControlSize;
+  HIRect drawRect = destRect;
+
+  if (rectWidth <= miniSize.width + sSnapTolerance)
+    controlSizeX = NSMiniControlSize;
+  else if(rectWidth <= smallSize.width + sSnapTolerance)
+    controlSizeX = NSSmallControlSize;
+
+  if (rectHeight <= miniSize.height + sSnapTolerance)
+    controlSizeY = NSMiniControlSize;
+  else if(rectHeight <= smallSize.height + sSnapTolerance)
+    controlSizeY = NSSmallControlSize;
+
+  NSControlSize controlSize = NSRegularControlSize;
+  int sizeIndex = 0;
+
+  // At some sizes, don't scale but snap.
+  const NSControlSize smallerControlSize =
+    EnumSizeForCocoaSize(controlSizeX) < EnumSizeForCocoaSize(controlSizeY) ?
+    controlSizeX : controlSizeY;
+  const int smallerControlSizeIndex = EnumSizeForCocoaSize(smallerControlSize);
+  float diffWidth = rectWidth - sizes[smallerControlSizeIndex].width;
+  float diffHeight = rectHeight - sizes[smallerControlSizeIndex].height;
+  if (diffWidth >= 0.0f && diffHeight >= 0.0f &&
+      diffWidth <= sSnapTolerance && diffHeight <= sSnapTolerance) {
+    // Snap to the smaller control size.
+    controlSize = smallerControlSize;
+    sizeIndex = smallerControlSizeIndex;
+    // Resize and center the drawRect.
+    if (sizes[sizeIndex].width) {
+      drawRect.origin.x += ceil((destRect.size.width - sizes[sizeIndex].width) / 2);
+      drawRect.size.width = sizes[sizeIndex].width;
+    }
+    if (sizes[sizeIndex].height) {
+      drawRect.origin.y += floor((destRect.size.height - sizes[sizeIndex].height) * verticalAlignFactor);
+      drawRect.size.height = sizes[sizeIndex].height;
+    }
+  } else {
+    // Use the larger control size.
+    controlSize = EnumSizeForCocoaSize(controlSizeX) > EnumSizeForCocoaSize(controlSizeY) ?
+                  controlSizeX : controlSizeY;
+    sizeIndex = EnumSizeForCocoaSize(controlSize);
+   }
+
+  [cell setControlSize:controlSize];
+
+  NSSize minimumSize = settings.minimumSizes ? settings.minimumSizes[sizeIndex] : NSZeroSize;
+  DrawCellWithScaling(cell, cgContext, drawRect, controlSize, sizes[sizeIndex],
+                      minimumSize, settings.margins, flip, needsBuffer);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+static float VerticalAlignFactor(nsIFrame *aFrame)
+{
+  if (!aFrame)
+    return 0.5f; // default: center
+
+  const nsStyleCoord& va = aFrame->GetStyleTextReset()->mVerticalAlign;
+  PRUint8 intval = (va.GetUnit() == eStyleUnit_Enumerated)
+                     ? va.GetIntValue()
+                     : NS_STYLE_VERTICAL_ALIGN_MIDDLE;
+  switch (intval) {
+    case NS_STYLE_VERTICAL_ALIGN_TOP:
+    case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
+      return 0.0f;
+
+    case NS_STYLE_VERTICAL_ALIGN_SUB:
+    case NS_STYLE_VERTICAL_ALIGN_SUPER:
+    case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
+    case NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE:
+      return 0.5f;
+
+    case NS_STYLE_VERTICAL_ALIGN_BASELINE:
+    case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
+    case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+      return 1.0f;
+
+    default:
+      NS_NOTREACHED("invalid vertical-align");
+      return 0.5f;
+  }
+}
+
 // These are the sizes that Gecko needs to request to draw if it wants
 // to get a standard-sized Aqua radio button drawn. Note that the rects
 // that draw these are actually a little bigger.
-#define NATURAL_MINI_RADIO_BUTTON_WIDTH 11
-#define NATURAL_MINI_RADIO_BUTTON_HEIGHT 11
-#define NATURAL_SMALL_RADIO_BUTTON_WIDTH 14
-#define NATURAL_SMALL_RADIO_BUTTON_HEIGHT 14
-#define NATURAL_REGULAR_RADIO_BUTTON_WIDTH 16
-#define NATURAL_REGULAR_RADIO_BUTTON_HEIGHT 16
-
-// These were calculated by testing all three sizes on the respective operating system.
-static const float radioButtonMargins[2][3][4] =
-{
-  { // Tiger
-    {0, 0, 0, 0}, // mini     - if we ever use this we'll have to calculate it
-    {0, 0, 0, 0}, // small    - if we ever use this we'll have to calculate it
-    {0, 3, 0, -3}  // regular
+static const CellRenderSettings radioSettings = {
+  {
+    NSMakeSize(11, 11), // mini
+    NSMakeSize(13, 13), // small
+    NSMakeSize(16, 16)  // regular
   },
-  { // Leopard
-    {0, 4, 0, -4}, // mini
-    {0, 3, 0, -3}, // small
-    {0, 3, 0, -3}  // regular
+  {
+    NSZeroSize, NSZeroSize, NSZeroSize
+  },
+  {
+    { // Tiger
+      {0, 0, 0, 0},     // mini
+      {0, 2, 1, 1},     // small
+      {0, 1, 0, -1}     // regular
+    },
+    { // Leopard
+      {0, 0, 0, 0},     // mini
+      {0, 1, 1, 1},     // small
+      {0, 0, 0, 0}      // regular
+    }
+  }
+};
+
+static const CellRenderSettings checkboxSettings = {
+  {
+    NSMakeSize(11, 11), // mini
+    NSMakeSize(13, 13), // small
+    NSMakeSize(16, 16)  // regular
+  },
+  {
+    NSZeroSize, NSZeroSize, NSZeroSize
+  },
+  {
+    { // Tiger
+      {0, 1, 0, 0},     // mini
+      {0, 2, 0, 1},     // small
+      {0, 1, 0, 1}      // regular
+    },
+    { // Leopard
+      {0, 1, 0, 0},     // mini
+      {0, 1, 0, 1},     // small
+      {0, 1, 0, 1}      // regular
+    }
   }
 };
 
 void
-nsNativeThemeCocoa::DrawRadioButton(CGContextRef cgContext, const HIRect& inBoxRect, PRBool inSelected,
-                                    PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame)
+nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, PRBool inCheckbox,
+                                        const HIRect& inBoxRect, PRBool inSelected,
+                                        PRBool inDisabled, PRInt32 inState,
+                                        nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSRect drawRect = NSMakeRect(inBoxRect.origin.x, inBoxRect.origin.y, inBoxRect.size.width, inBoxRect.size.height);
+  NSButtonCell *cell = inCheckbox ? mCheckboxCell : mRadioButtonCell;
 
-  [mRadioButtonCell setEnabled:(!inDisabled && FrameIsInActiveWindow(aFrame))];
-  [mRadioButtonCell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS)];
-  [mRadioButtonCell setState:(inSelected ? NSOnState : NSOffState)];
-  [mRadioButtonCell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
-
-  // Always use a regular size control because for some reason NSCell doesn't respect other
-  // size choices here. Maybe because of a rendering context/ctm setup it doesn't like?
-  NSControlSize controlSize = NSRegularControlSize;
-  [mRadioButtonCell setControlSize:controlSize];
-
-  DrawCellWithScaling(mRadioButtonCell, cgContext, inBoxRect, controlSize,
-                      NATURAL_REGULAR_RADIO_BUTTON_WIDTH, NATURAL_REGULAR_RADIO_BUTTON_HEIGHT,
-                      0.0f, 0.0f,
-                      radioButtonMargins, PR_TRUE);
-
+  [cell setEnabled:!inDisabled];
+  [cell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS)];
+  [cell setState:(inSelected ? NSOnState : NSOffState)];
+  [cell setHighlighted:((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))];
+  [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint] : NSClearControlTint)];
+ 
+  DrawCellWithSnapping(cell, cgContext, inBoxRect,
+                       inCheckbox ? checkboxSettings : radioSettings,
+                       nsToolkit::OnLeopardOrLater(),  // Tiger doesn't need flipping
+                       VerticalAlignFactor(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -468,25 +589,12 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
                                    isActive)];
   [mPushButtonCell setShowsFirstResponder:(inState & NS_EVENT_STATE_FOCUS) && !inDisabled && isActive];
 
-  CGAffineTransform savedCTM = CGContextGetCTM(cgContext);
-
-  // This flips the image in place and is necessary to work around a bug in the way
-  // NSButtonCell draws buttons.
-  CGContextScaleCTM(cgContext, 1.0f, -1.0f);
-  CGContextTranslateCTM(cgContext, 0.0f, -(2.0 * drawRect.origin.y + drawRect.size.height));
-
-  // Set up the graphics context we've been asked to draw to.
-
   // If the button is tall enough, draw the square button style so that buttons with
   // non-standard content look good. Otherwise draw normal rounded aqua buttons.
   if (drawRect.size.height > DO_SQUARE_BUTTON_HEIGHT) {
-    NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
-    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
-
     [mPushButtonCell setBezelStyle:NSShadowlessSquareBezelStyle];
-    [mPushButtonCell drawWithFrame:drawRect inView:[NSView focusView]];
-
-    [NSGraphicsContext setCurrentContext:savedContext];
+    DrawCellWithScaling(mPushButtonCell, cgContext, inBoxRect, NSRegularControlSize,
+                        NSZeroSize, NSMakeSize(14, 0), NULL, PR_TRUE);
   } else {
     [mPushButtonCell setBezelStyle:NSRoundedBezelStyle];
 
@@ -510,12 +618,10 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
     [mPushButtonCell setControlSize:controlSize];
 
     DrawCellWithScaling(mPushButtonCell, cgContext, inBoxRect, controlSize,
-                        0.0f, naturalHeight,
-                        minWidth, 0.0f,
-                        pushButtonMargins, PR_FALSE);
+                        NSMakeSize(0.0f, naturalHeight),
+                        NSMakeSize(minWidth, 0.0f),
+                        pushButtonMargins, PR_TRUE);
   }
-
-  CGContextSetCTM (cgContext, savedCTM);
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
@@ -1224,16 +1330,14 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_CHECKBOX:
-      DrawCheckbox(cgContext, kThemeCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState, aFrame);
-      break;
-
     case NS_THEME_CHECKBOX_SMALL:
-      DrawCheckbox(cgContext, kThemeSmallCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState, aFrame);
-      break;
-
     case NS_THEME_RADIO:
-    case NS_THEME_RADIO_SMALL:
-      DrawRadioButton(cgContext, macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState, aFrame);
+    case NS_THEME_RADIO_SMALL: {
+      PRBool isCheckbox = (aWidgetType == NS_THEME_CHECKBOX ||
+                           aWidgetType == NS_THEME_CHECKBOX_SMALL);
+      DrawCheckboxOrRadio(cgContext, isCheckbox, macRect, GetCheckedOrSelected(aFrame, !isCheckbox),
+                          IsDisabled(aFrame), eventState, aFrame);
+    }
       break;
 
     case NS_THEME_BUTTON:
@@ -1664,40 +1768,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       ::GetThemeMetric(kThemeMetricLittleArrowsWidth, &buttonWidth);
       ::GetThemeMetric(kThemeMetricLittleArrowsHeight, &buttonHeight);
       aResult->SizeTo(buttonWidth, buttonHeight);
-      *aIsOverridable = PR_FALSE;
-      break;
-    }
-
-    case NS_THEME_CHECKBOX:
-    {
-      SInt32 boxHeight = 0, boxWidth = 0;
-      ::GetThemeMetric(kThemeMetricCheckBoxWidth, &boxWidth);
-      ::GetThemeMetric(kThemeMetricCheckBoxHeight, &boxHeight);
-      aResult->SizeTo(boxWidth, boxHeight);
-      *aIsOverridable = PR_FALSE;
-      break;
-    }
-
-    case NS_THEME_CHECKBOX_SMALL:
-    {
-      SInt32 boxHeight = 0, boxWidth = 0;
-      ::GetThemeMetric(kThemeMetricSmallCheckBoxWidth, &boxWidth);
-      ::GetThemeMetric(kThemeMetricSmallCheckBoxHeight, &boxHeight);
-      aResult->SizeTo(boxWidth, boxHeight - 1);
-      *aIsOverridable = PR_FALSE;
-      break;
-    }
-
-    case NS_THEME_RADIO:
-    {
-      aResult->SizeTo(NATURAL_REGULAR_RADIO_BUTTON_WIDTH, NATURAL_REGULAR_RADIO_BUTTON_HEIGHT);
-      *aIsOverridable = PR_FALSE;
-      break;
-    }
-
-    case NS_THEME_RADIO_SMALL:
-    {
-      aResult->SizeTo(NATURAL_SMALL_RADIO_BUTTON_WIDTH, NATURAL_SMALL_RADIO_BUTTON_HEIGHT);
       *aIsOverridable = PR_FALSE;
       break;
     }
