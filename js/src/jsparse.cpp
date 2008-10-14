@@ -6288,7 +6288,7 @@ Boolish(JSParseNode *pn)
         /*
          * A generator expression as an if or loop condition has no effects, it
          * simply results in a truthy object reference. This condition folding
-         * ing is needed for the decompiler. See bug 442342 and bug 443074.
+         * is needed for the decompiler. See bug 442342 and bug 443074.
          */
         if (pn->pn_count != 1)
             break;
