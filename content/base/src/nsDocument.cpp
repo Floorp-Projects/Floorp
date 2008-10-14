@@ -813,7 +813,8 @@ ExternalResourceEnumerator(nsIURI* aKey,
 {
   nsExternalResourceEnumArgs* args =
     static_cast<nsExternalResourceEnumArgs*>(aClosure);
-  PRBool next = args->callback(aData->mDocument, args->data);
+  PRBool next =
+    aData->mDocument ? args->callback(aData->mDocument, args->data) : PR_TRUE;
   return next ? PL_DHASH_NEXT : PL_DHASH_STOP;
 }
 

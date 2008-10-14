@@ -784,7 +784,7 @@ public:
   /**
    * Enumerate all subdocuments.
    * The enumerator callback should return PR_TRUE to continue enumerating, or
-   * PR_FALSE to stop.
+   * PR_FALSE to stop.  This will never get passed a null aDocument.
    */
   typedef PRBool (*nsSubDocEnumFunc)(nsIDocument *aDocument, void *aData);
   virtual void EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
@@ -1090,7 +1090,7 @@ public:
   /**
    * Enumerate the external resource documents associated with this document.
    * The enumerator callback should return PR_TRUE to continue enumerating, or
-   * PR_FALSE to stop.
+   * PR_FALSE to stop.  This callback will never get passed a null aDocument.
    */
   virtual void EnumerateExternalResources(nsSubDocEnumFunc aCallback,
                                           void* aData) = 0;
