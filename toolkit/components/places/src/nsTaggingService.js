@@ -242,8 +242,14 @@ TaggingService.prototype = {
       tagNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
       tagNode.containerOpen = true;
       var cc = tagNode.childCount;
-      for (var i=0; i < cc; i++)
-        uris.push(gIoService.newURI(tagNode.getChild(i).uri, null, null));
+      for (var i = 0; i < cc; i++) {
+        try {
+          uris.push(gIoService.newURI(tagNode.getChild(i).uri, null, null));
+        } catch (ex) {
+          // This is an invalid node, tags should only contain valid uri nodes.
+          // continue to next node.
+        }
+      }
       tagNode.containerOpen = false;
     }
     return uris;
