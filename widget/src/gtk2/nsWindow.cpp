@@ -2202,16 +2202,11 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
     PRPackedBool synthEvent = PR_FALSE;
 #ifdef MOZ_X11
     XEvent xevent;
-
-    while (XPending (GDK_WINDOW_XDISPLAY(aEvent->window))) {
-        XEvent peeked;
-        XPeekEvent (GDK_WINDOW_XDISPLAY(aEvent->window), &peeked);
-        if (peeked.xany.window != GDK_WINDOW_XWINDOW(aEvent->window)
-            || peeked.type != MotionNotify)
-            break;
-
+    
+    while (XCheckWindowEvent(GDK_WINDOW_XDISPLAY(aEvent->window),
+                             GDK_WINDOW_XWINDOW(aEvent->window),
+                             ButtonMotionMask, &xevent)) {
         synthEvent = PR_TRUE;
-        XNextEvent (GDK_WINDOW_XDISPLAY(aEvent->window), &xevent);
     }
 
     // if plugins still keeps the focus, get it back
