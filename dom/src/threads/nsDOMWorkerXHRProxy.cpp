@@ -441,6 +441,36 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDOMWorkerXHRWrappedListener,
                               nsIDOMEventListener)
 
+class nsDOMWorkerXHRAttachUploadListenersRunnable : public nsRunnable
+{
+public:
+  nsDOMWorkerXHRAttachUploadListenersRunnable(nsDOMWorkerXHRProxy* aProxy)
+  : mProxy(aProxy) {
+    NS_ASSERTION(aProxy, "Null pointer!");
+  }
+
+  NS_IMETHOD Run() {
+    if (!mProxy->mOwnedByXHR) {
+      NS_ASSERTION(mProxy->mWantUploadListeners, "Inconsistent state!");
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMEventTarget> upload(do_QueryInterface(mProxy->mUpload));
+    NS_ASSERTION(upload, "This shouldn't fail!");
+
+    nsAutoString eventName;
+    for (PRUint32 index = 0; index < MAX_UPLOAD_LISTENER_TYPE; index++) {
+      eventName.AssignASCII(nsDOMWorkerXHREventTarget::sListenerTypes[index]);
+      upload->AddEventListener(eventName, mProxy, PR_FALSE);
+    }
+
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsDOMWorkerXHRProxy> mProxy;
+};
+
 nsDOMWorkerXHRProxy::nsDOMWorkerXHRProxy(nsDOMWorkerXHR* aWorkerXHR)
 : mWorkerXHR(aWorkerXHR),
   mXHR(nsnull),
@@ -449,6 +479,7 @@ nsDOMWorkerXHRProxy::nsDOMWorkerXHRProxy(nsDOMWorkerXHR* aWorkerXHR)
   mSyncEventQueue(nsnull),
   mChannelID(-1),
   mOwnedByXHR(PR_FALSE),
+  mWantUploadListeners(PR_FALSE),
   mCanceled(PR_FALSE)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
@@ -621,9 +652,6 @@ nsDOMWorkerXHRProxy::FlipOwnership()
   nsCOMPtr<nsIDOMEventTarget> xhrTarget(do_QueryInterface(mXHR));
   NS_ASSERTION(xhrTarget, "This shouldn't fail!");
 
-  nsCOMPtr<nsIDOMEventTarget> uploadTarget(do_QueryInterface(mUpload));
-  NS_ASSERTION(uploadTarget, "This shouldn't fail!");
-
   // If mWorkerXHR has no outstanding refs from JS then we are about to die.
   // Hold an extra ref here to make sure that we live through this call.
   nsRefPtr<nsDOMWorkerXHRProxy> kungFuDeathGrip(this);
@@ -635,10 +663,15 @@ nsDOMWorkerXHRProxy::FlipOwnership()
   nsAutoString eventName;
   PRUint32 index = 0;
 
-  for (; index < MAX_UPLOAD_LISTENER_TYPE; index++) {
-    eventName.AssignASCII(nsDOMWorkerXHREventTarget::sListenerTypes[index]);
-    (xhrTarget.get()->*function)(eventName, this, PR_FALSE);
-    (uploadTarget.get()->*function)(eventName, this, PR_FALSE);
+  if (mWantUploadListeners) {
+    nsCOMPtr<nsIDOMEventTarget> uploadTarget(do_QueryInterface(mUpload));
+    NS_ASSERTION(uploadTarget, "This shouldn't fail!");
+
+    for (; index < MAX_UPLOAD_LISTENER_TYPE; index++) {
+      eventName.AssignASCII(nsDOMWorkerXHREventTarget::sListenerTypes[index]);
+      (xhrTarget.get()->*function)(eventName, this, PR_FALSE);
+      (uploadTarget.get()->*function)(eventName, this, PR_FALSE);
+    }
   }
 
   for (; index < MAX_XHR_LISTENER_TYPE; index++) {
@@ -664,10 +697,6 @@ nsDOMWorkerXHRProxy::AddEventListener(PRUint32 aType,
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  if (mCanceled) {
-    return NS_ERROR_ABORT;
-  }
-
   if ((aUploadListener && aType >= MAX_UPLOAD_LISTENER_TYPE) ||
       aType >= MAX_XHR_LISTENER_TYPE) {
     // Silently fail on junk events.
@@ -679,37 +708,63 @@ nsDOMWorkerXHRProxy::AddEventListener(PRUint32 aType,
   WrappedListener& onXListener = aUploadListener ? mUploadOnXListeners[aType] :
                                                    mXHROnXListeners[aType];
 
-  nsAutoLock lock(mWorkerXHR->Lock());
+  {
+    nsAutoLock lock(mWorkerXHR->Lock());
 
-#ifdef DEBUG
-  if (!aListener) {
-    NS_ASSERTION(aOnXListener, "Shouldn't pass a null listener!");
-  }
-#endif
-
-  if (aOnXListener) {
-    // Remove the old one from the array if it exists.
-    if (onXListener) {
-#ifdef DEBUG
-      PRBool removed =
-#endif
-      listeners.RemoveElement(onXListener);
-      NS_ASSERTION(removed, "Should still be in the array!");
+    if (mCanceled) {
+      return NS_ERROR_ABORT;
     }
 
+#ifdef DEBUG
     if (!aListener) {
-      onXListener = nsnull;
-      return NS_OK;
+      NS_ASSERTION(aOnXListener, "Shouldn't pass a null listener!");
+    }
+#endif
+
+    if (aOnXListener) {
+      // Remove the old one from the array if it exists.
+      if (onXListener) {
+#ifdef DEBUG
+        PRBool removed =
+#endif
+        listeners.RemoveElement(onXListener);
+        NS_ASSERTION(removed, "Should still be in the array!");
+      }
+
+      if (!aListener) {
+        onXListener = nsnull;
+        return NS_OK;
+      }
+
+      onXListener = new nsDOMWorkerXHRWrappedListener(aListener);
+      NS_ENSURE_TRUE(onXListener, NS_ERROR_OUT_OF_MEMORY);
+
+      aListener = onXListener;
     }
 
-    onXListener = new nsDOMWorkerXHRWrappedListener(aListener);
-    NS_ENSURE_TRUE(onXListener, NS_ERROR_OUT_OF_MEMORY);
-
-    aListener = onXListener;
+    Listener* added = listeners.AppendElement(aListener);
+    NS_ENSURE_TRUE(added, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  Listener* added = listeners.AppendElement(aListener);
-  NS_ENSURE_TRUE(added, NS_ERROR_OUT_OF_MEMORY);
+  // If this is the first time we're setting an upload listener then we have to
+  // hit the main thread to attach the upload listeners.
+  if (aUploadListener && aListener && !mWantUploadListeners) {
+    mWantUploadListeners = PR_TRUE;
+
+    nsRefPtr<nsDOMWorkerXHRAttachUploadListenersRunnable> attachRunnable =
+      new nsDOMWorkerXHRAttachUploadListenersRunnable(this);
+    NS_ENSURE_TRUE(attachRunnable, NS_ERROR_OUT_OF_MEMORY);
+
+    nsRefPtr<nsResultReturningRunnable> runnable =
+      new nsResultReturningRunnable(mMainThread, attachRunnable,
+                                    mWorkerXHR->mWorker);
+    NS_ENSURE_TRUE(runnable, NS_ERROR_OUT_OF_MEMORY);
+
+    nsresult rv = runnable->Dispatch();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
 
   return NS_OK;
 }
