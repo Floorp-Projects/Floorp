@@ -4132,7 +4132,9 @@ TraceRecorder::record_EnterFrame()
 
     if (++callDepth >= MAX_CALLDEPTH)
         ABORT_TRACE("exceeded maximum call depth");
-    if (fp->script == fp->down->script)
+    // FIXME: Allow and attempt to inline a single level of recursion until we compile 
+    //        recursive calls as independent trees (459301).
+    if (fp->script == fp->down->script && fp->down->down && fp->down->down->script == fp->script)
         ABORT_TRACE("recursive call");
     
     debug_only_v(printf("EnterFrame %s, callDepth=%d\n",
