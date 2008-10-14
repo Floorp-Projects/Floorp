@@ -1425,7 +1425,7 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   // Find the load group for the page, and add ourselves to it. This way any
   // pending requests will be automatically aborted if the user leaves the page.
   nsCOMPtr<nsILoadGroup> loadGroup;
-  if (!(mState & XML_HTTP_REQUEST_BACKGROUND)) {
+  if (doc && !(mState & XML_HTTP_REQUEST_BACKGROUND)) {
     loadGroup = doc->GetDocumentLoadGroup();
   }
 
