@@ -4283,13 +4283,13 @@ js_Regexp_p_test(JSContext* cx, JSObject* regexp, JSString* str)
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     return *vp == JSVAL_TRUE;
 }
-#endif
 
 JS_DEFINE_CALLINFO_3(BOOL,       Regexp_p_test, CONTEXT, OBJECT, STRING,                     1, 1)
 
 static const JSTraceableNative regexp_test_trcinfo[] = {
     { regexp_test,           &ci_Regexp_p_test,        "TC", "s",    FAIL_VOID }
 };
+#endif
 
 static JSFunctionSpec regexp_methods[] = {
 #if JS_HAS_TOSOURCE
