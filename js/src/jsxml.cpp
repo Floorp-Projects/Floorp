@@ -1835,8 +1835,8 @@ ParseXMLSource(JSContext *cx, JSString *src)
     JSXMLArray nsarray;
     uintN flags;
 
-    static const char prefix[] = "<parent xmlns='";
-    static const char middle[] = "'>";
+    static const char prefix[] = "<parent xmlns=\"";
+    static const char middle[] = "\">";
     static const char suffix[] = "</parent>";
 
 #define constrlen(constr)   (sizeof(constr) - 1)
@@ -1844,6 +1844,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     if (!js_GetDefaultXMLNamespace(cx, &nsval))
         return NULL;
     uri = GetURI(JSVAL_TO_OBJECT(nsval));
+    uri = js_EscapeAttributeValue(cx, uri, JS_FALSE);
 
     urilen = JSSTRING_LENGTH(uri);
     srclen = JSSTRING_LENGTH(src);
