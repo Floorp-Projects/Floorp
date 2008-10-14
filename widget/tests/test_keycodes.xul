@@ -28,6 +28,7 @@
   <!-- for some reason, if we don't have 'accesskey' here, adding it dynamically later
        doesn't work! -->
   <button id="button" accesskey="z">Hello</button>
+  <input type="text" id="textbox" value=""/>
 </p>
 <div id="content" style="display: none">
   
@@ -93,7 +94,8 @@ if (navigator.platform.indexOf("Mac") == 0) {
     "Swedish":0x41d,
     "Arabic":0x401,
     "Hebrew":0x40d,
-    "Japanese":0x411
+    "Japanese":0x411,
+    "Lithuanian":0x10427
   };
 }
 
@@ -116,9 +118,9 @@ function eventToString(aEvent)
   return name;  
 }
 
-function synthesizeKey(aEvent)
+function synthesizeKey(aEvent, aFocusElementId)
 {
-  document.getElementById("button").focus();
+  document.getElementById(aFocusElementId).focus();
 
   synthesizeNativeKey(keyboardLayouts[aEvent.layout],
                       aEvent.keyCode, aEvent, aEvent.chars, aEvent.unmodifiedChars);
@@ -141,7 +143,7 @@ function runPressTests()
   {
     pressList = [];
     
-    synthesizeKey(aEvent);
+    synthesizeKey(aEvent, "button");
 
     var name = eventToString(aEvent);
 
@@ -312,7 +314,7 @@ function runAccessKeyTests()
     activationCount = 0;
     button.setAttribute("accesskey", aAccessKey);
 
-    synthesizeKey(aEvent);
+    synthesizeKey(aEvent, "button");
 
     var name = eventToString(aEvent);
 
@@ -409,7 +411,7 @@ function runXULKeyTests()
     var elem = document.getElementById(aElem);
     elem.activeCount = 0;
 
-    synthesizeKey(aEvent);
+    synthesizeKey(aEvent, "button");
 
     var name = eventToString(aEvent);
 
@@ -496,11 +498,53 @@ function runXULKeyTests()
   }
 }
 
+function runTextInputTests()
+{
+  var textbox = document.getElementById("textbox");
+
+  function testKey(aEvent, aExpectText) {
+    textbox.value = "";
+    textbox.focus();
+
+    synthesizeKey(aEvent, "textbox");
+
+    var name = eventToString(aEvent);
+
+    is(textbox.value, aExpectText, name + " does not input correct text.");
+  }
+
+  if (navigator.platform.indexOf("Win") == 0) {
+    // Basic sanity checks
+    testKey({layout:"US", keyCode:65, chars:"a"},
+            "a");
+    testKey({layout:"US", keyCode:65, shift:1, chars:"A"},
+            "A");
+    // When Ctrl+Alt are pressed, any text should not be inputted.
+    testKey({layout:"US", keyCode:65, ctrl:1, alt:1, chars:""},
+            "");
+
+    // Lithuanian AltGr should be consumed at 9/0 keys pressed
+    testKey({layout:"Lithuanian", keyCode:56, chars:"\u016B"},
+            "\u016B");
+    testKey({layout:"Lithuanian", keyCode:57, chars:"9"},
+            "9");
+    testKey({layout:"Lithuanian", keyCode:48, chars:"0"},
+            "0");
+    testKey({layout:"Lithuanian", keyCode:56, ctrl:1, alt:1, chars:"8"},
+            "8");
+    testKey({layout:"Lithuanian", keyCode:57, ctrl:1, alt:1, chars:"9"},
+            "9");
+    testKey({layout:"Lithuanian", keyCode:48, ctrl:1, alt:1, chars:"0"},
+            "0");
+  }
+}
+
 function runTest()
 {
   runPressTests();
   runAccessKeyTests();
   runXULKeyTests();
+  runTextInputTests();
   SimpleTest.finish();
 }
 
