@@ -278,32 +278,32 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetRole(PRUint32 *_retval)
 nsresult
 nsHTMLButtonAccessible::GetNameInternal(nsAString& aName)
 {
-  nsAutoString name;
-  GetHTMLName(name, PR_FALSE);
+  nsresult rv = nsAccessible::GetNameInternal(aName);
+  if (!aName.IsEmpty())
+    return NS_OK;
 
-  if (name.IsEmpty()) {
-    // no label from HTML or ARIA
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
-                          name) &&
-        !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
-                          name)) {
-      // Use the button's (default) label if nothing else works
-      nsIFrame* frame = GetFrame();
-      if (frame) {
-        nsIFormControlFrame* fcFrame;
-        CallQueryInterface(frame, &fcFrame);
-        if (fcFrame)
-          fcFrame->GetFormProperty(nsAccessibilityAtoms::defaultLabel, name);
-      }
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+  // No name from HTML or ARIA
+  nsAutoString name;
+  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
+                        name) &&
+      !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
+                        name)) {
+    // Use the button's (default) label if nothing else works
+    nsIFrame* frame = GetFrame();
+    if (frame) {
+      nsIFormControlFrame* fcFrame = nsnull;
+      CallQueryInterface(frame, &fcFrame);
+      if (fcFrame)
+        fcFrame->GetFormProperty(nsAccessibilityAtoms::defaultLabel, name);
     }
-    if (name.IsEmpty() &&
-        !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title,
-                          name) &&
-        !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::src,
-                          name)) {
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::data, name);
-    }
+  }
+
+  if (name.IsEmpty() &&
+      !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::src,
+                        name)) {
+    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::data, name);
   }
 
   name.CompressWhitespace();
@@ -370,6 +370,12 @@ nsHTML4ButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
+nsresult
+nsHTML4ButtonAccessible::GetNameInternal(nsAString& aName)
+{
+  return GetHTMLName(aName, PR_TRUE);
+}
+
 // --- textfield -----
 
 nsHTMLTextFieldAccessible::nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
@@ -391,26 +397,20 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLTextFieldAccessible::GetName(nsAString& aName)
+nsresult
+nsHTMLTextFieldAccessible::GetNameInternal(nsAString& aName)
 {
-  aName.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = GetARIAName(aName);
+  nsresult rv = nsAccessible::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aName.IsEmpty())
     return NS_OK;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
-  rv = nsAccessible::GetHTMLName(aName, PR_FALSE);
-  if (NS_FAILED(rv) || !aName.IsEmpty() || !content->GetBindingParent()) {
-    return rv;
-  }
+  if (!content->GetBindingParent())
+    return NS_OK;
 
+  // XXX: bug 459640
   // There's a binding parent.
   // This means we're part of another control, so use parent accessible for name.
   // This ensures that a textbox inside of a XUL widget gets
