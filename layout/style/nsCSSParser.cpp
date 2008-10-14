@@ -5623,6 +5623,9 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_white_space:
     return ParseVariant(aValue, VARIANT_HMK,
                         nsCSSProps::kWhitespaceKTable);
+  case eCSSProperty__moz_window_shadow:
+    return ParseVariant(aValue, VARIANT_HOK,
+                        nsCSSProps::kWindowShadowKTable);
   case eCSSProperty_word_wrap:
     return ParseVariant(aValue, VARIANT_HMK,
                         nsCSSProps::kWordwrapKTable);

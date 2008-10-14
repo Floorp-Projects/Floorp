@@ -3120,6 +3120,12 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
               parentUI->mForceBrokenImageIcon,
               0, 0, 0, 0, 0);
 
+  // -moz-window-shadow: enum, none, inherit, initial
+  SetDiscrete(uiData.mWindowShadow, ui->mWindowShadow, inherited,
+              SETDSC_ENUMERATED | SETDSC_NONE, parentUI->mWindowShadow,
+              NS_STYLE_WINDOW_SHADOW_DEFAULT, 0,
+              NS_STYLE_WINDOW_SHADOW_NONE, 0, 0);
+
   COMPUTE_END_RESET(UIReset, ui)
 }
 
