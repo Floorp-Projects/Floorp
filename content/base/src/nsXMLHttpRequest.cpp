@@ -2306,12 +2306,12 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
 
   // Check that we haven't already opened the channel. We can't rely on
   // the channel throwing from mChannel->SetRequestHeader since we might
-  // still be waiting for mACGetChannel to actually open mChannel
-  if (mACGetChannel) {
+  // still be waiting for mACPreflightChannel to actually open mChannel
+  if (mACPreflightChannel) {
     PRBool pending;
-    rv = mACGetChannel->IsPending(&pending);
+    rv = mACPreflightChannel->IsPending(&pending);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     if (pending) {
       return NS_ERROR_IN_PROGRESS;
     }
