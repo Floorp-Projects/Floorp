@@ -30,6 +30,7 @@ addLoadEvent(function() {
           .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
   viewer.fullZoom = 2;
   is(true, true, "Gotta test something");
+  viewer.fullZoom = 1;
   SimpleTest.finish();
 });
 </script>
