@@ -74,7 +74,7 @@ typedef PRInt16 DownloadType;
 
 class nsDownload;
 
-#if defined(XP_WIN) && !defined(__MINGW32__)
+#ifdef DOWNLOAD_SCANNER
 #include "nsDownloadScanner.h"
 #endif
 
@@ -239,7 +239,7 @@ protected:
   enum QuitBehavior GetQuitBehavior();
 
   // Virus scanner for windows
-#if defined(XP_WIN) && !defined(__MINGW32__)
+#ifdef DOWNLOAD_SCANNER
 private:
   nsRefPtr<nsDownloadScanner> mScanner;
 #endif
