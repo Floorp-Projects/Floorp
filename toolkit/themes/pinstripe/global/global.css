@@ -309,6 +309,7 @@ description {
   background-color: transparent;
   background-position: right top;
   -moz-appearance: none;
+  -moz-window-shadow: none;
 }
 
 #autoscroller[scrolldir="NS"] {
