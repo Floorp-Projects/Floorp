@@ -43,9 +43,6 @@
   class _name : public SyncEventCapturingRunnable \
   { \
   public: \
-    _name (nsDOMWorkerXHRProxy* aXHR, SyncEventQueue* aQueue) \
-    : SyncEventCapturingRunnable(aXHR, aQueue) { } \
-  \
     virtual nsresult RunInternal() \
     { \
       nsCOMPtr<nsIXMLHttpRequest> xhr = mXHR->GetXMLHttpRequest(); \
@@ -60,8 +57,7 @@
   class _name : public SyncEventCapturingRunnable \
   { \
   public: \
-     _name (nsDOMWorkerXHRProxy* aXHR, SyncEventQueue* aQueue, _arg1 aArg1) \
-    : SyncEventCapturingRunnable(aXHR, aQueue), mArg1(aArg1) { } \
+    _name (_arg1 aArg1) : mArg1(aArg1) { } \
   \
     virtual nsresult RunInternal() \
     { \
@@ -79,9 +75,7 @@
   class _name : public SyncEventCapturingRunnable \
   { \
   public: \
-    _name (nsDOMWorkerXHRProxy* aXHR, SyncEventQueue* aQueue, _arg1 aArg1, \
-           _arg2 aArg2) \
-    : SyncEventCapturingRunnable(aXHR, aQueue), mArg1(aArg1), mArg2(aArg2) { } \
+    _name (_arg1 aArg1, _arg2 aArg2) : mArg1(aArg1), mArg2(aArg2) { } \
   \
     virtual nsresult RunInternal() \
     { \
@@ -96,34 +90,6 @@
     _arg2 mArg2; \
   }
 
-#define RUN_PROXIED_FUNCTION(_name, _args) \
-  PR_BEGIN_MACRO \
-    NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!"); \
-    \
-    if (mCanceled) { \
-      return NS_ERROR_ABORT; \
-    } \
-    SyncEventQueue queue; \
-    \
-    nsCOMPtr<nsIRunnable> method = new :: _name _args; \
-    NS_ENSURE_TRUE(method, NS_ERROR_OUT_OF_MEMORY); \
-    \
-    nsRefPtr<nsResultReturningRunnable> runnable = \
-      new nsResultReturningRunnable(mMainThread, method, mWorkerXHR->mWorker); \
-    NS_ENSURE_TRUE(runnable, NS_ERROR_OUT_OF_MEMORY); \
-    \
-    nsresult _rv = runnable->Dispatch(); \
-    \
-    PRUint32 queueLength = queue.Length(); \
-    for (PRUint32 index = 0; index < queueLength; index++) { \
-      queue[index]->Run(); \
-    } \
-    \
-    if (NS_FAILED(_rv)) { \
-      return _rv; \
-    } \
-  PR_END_MACRO
-
 namespace nsDOMWorkerProxiedXHRFunctions
 {
   typedef nsDOMWorkerXHRProxy::SyncEventQueue SyncEventQueue;
@@ -131,16 +97,23 @@ namespace nsDOMWorkerProxiedXHRFunctions
   class SyncEventCapturingRunnable : public nsRunnable
   {
   public:
-    SyncEventCapturingRunnable(nsDOMWorkerXHRProxy* aXHR,
-                               SyncEventQueue* aQueue)
-    : mXHR(aXHR), mQueue(aQueue) {
+    SyncEventCapturingRunnable()
+    : mXHR(nsnull), mQueue(nsnull) { }
+
+    void Init(nsDOMWorkerXHRProxy* aXHR,
+              SyncEventQueue* aQueue) {
       NS_ASSERTION(aXHR, "Null pointer!");
       NS_ASSERTION(aQueue, "Null pointer!");
+
+      mXHR = aXHR;
+      mQueue = aQueue;
     }
 
     virtual nsresult RunInternal() = 0;
 
     NS_IMETHOD Run() {
+      NS_ASSERTION(mXHR && mQueue, "Forgot to call Init!");
+
       SyncEventQueue* oldQueue = mXHR->SetSyncEventQueue(mQueue);
 
       nsresult rv = RunInternal();
@@ -158,9 +131,6 @@ namespace nsDOMWorkerProxiedXHRFunctions
   class Abort : public SyncEventCapturingRunnable
   {
   public:
-    Abort (nsDOMWorkerXHRProxy* aXHR, SyncEventQueue* aQueue)
-    : SyncEventCapturingRunnable(aXHR, aQueue) { }
-
     virtual nsresult RunInternal() {
       return mXHR->Abort();
     }
@@ -169,12 +139,11 @@ namespace nsDOMWorkerProxiedXHRFunctions
   class OpenRequest : public SyncEventCapturingRunnable
   {
   public:
-    OpenRequest(nsDOMWorkerXHRProxy* aXHR, SyncEventQueue* aQueue,
-                const nsACString& aMethod, const nsACString& aUrl,
+    OpenRequest(const nsACString& aMethod, const nsACString& aUrl,
                 PRBool aAsync, const nsAString& aUser,
                 const nsAString& aPassword)
-    : SyncEventCapturingRunnable(aXHR, aQueue), mMethod(aMethod), mUrl(aUrl),
-      mAsync(aAsync), mUser(aUser), mPassword(aPassword) { }
+    : mMethod(aMethod), mUrl(aUrl), mAsync(aAsync), mUser(aUser),
+      mPassword(aPassword) { }
   
     virtual nsresult RunInternal() {
       return mXHR->OpenRequest(mMethod, mUrl, mAsync, mUser, mPassword);
@@ -204,6 +173,10 @@ namespace nsDOMWorkerProxiedXHRFunctions
   MAKE_PROXIED_FUNCTION1(SetMultipart, PRBool);
 
   MAKE_PROXIED_FUNCTION1(GetMultipart, PRBool*);
+
+  MAKE_PROXIED_FUNCTION1(GetWithCredentials, PRBool*);
+
+  MAKE_PROXIED_FUNCTION1(SetWithCredentials, PRBool);
 }
 
 #endif /* __NSDOMWORKERXHRPROXIEDFUNCTIONS_H__ */
