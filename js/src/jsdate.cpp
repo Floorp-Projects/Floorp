@@ -416,13 +416,8 @@ DaylightSavingTA(jsdouble t)
     return result;
 }
 
-static jsdouble
-AdjustTime(jsdouble date)
-{
-    jsdouble t = DaylightSavingTA(date) + LocalTZA;
-    t = (LocalTZA > 0) ? fmod(t, msPerDay) : -fmod(msPerDay - t, msPerDay);
-    return t;
-}
+
+#define AdjustTime(t)   fmod(LocalTZA + DaylightSavingTA(t), msPerDay)
 
 #define LocalTime(t)    ((t) + AdjustTime(t))
 
