@@ -255,6 +255,8 @@ namespace nsDOMWorkerProxiedXHRFunctions
   MAKE_PROXIED_FUNCTION1(OverrideMimeType, const nsACString&);
 
   MAKE_PROXIED_FUNCTION1(SetMultipart, PRBool);
+
+  MAKE_PROXIED_FUNCTION1(GetMultipart, PRBool*);
 }
 
 #endif /* __NSDOMWORKERXHRPROXIEDFUNCTIONS_H__ */

@@ -444,7 +444,6 @@ nsDOMWorkerXHRProxy::nsDOMWorkerXHRProxy(nsDOMWorkerXHR* aWorkerXHR)
   mUpload(nsnull),
   mSyncEventQueue(nsnull),
   mOwnedByXHR(PR_FALSE),
-  mMultipart(PR_FALSE),
   mCanceled(PR_FALSE)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
@@ -1015,11 +1014,13 @@ nsDOMWorkerXHRProxy::OverrideMimeType(const nsACString& aMimetype)
 nsresult
 nsDOMWorkerXHRProxy::GetMultipart(PRBool* aMultipart)
 {
+  NS_ASSERTION(aMultipart, "Null pointer!");
+
   if (mCanceled) {
     return NS_ERROR_ABORT;
   }
 
-  *aMultipart = mMultipart;
+  RUN_PROXIED_FUNCTION(GetMultipart, (this, &queue, aMultipart));
   return NS_OK;
 }
 
@@ -1027,7 +1028,6 @@ nsresult
 nsDOMWorkerXHRProxy::SetMultipart(PRBool aMultipart)
 {
   RUN_PROXIED_FUNCTION(SetMultipart, (this, &queue, aMultipart));
-  mMultipart = aMultipart;
   return NS_OK;
 }
 
