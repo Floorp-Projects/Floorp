@@ -172,7 +172,6 @@ protected:
   // Whether or not this object is owned by the real XHR object.
   PRPackedBool mOwnedByXHR;
 
-  PRPackedBool mMultipart;
   PRPackedBool mCanceled;
 };
 
