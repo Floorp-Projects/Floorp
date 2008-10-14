@@ -2175,6 +2175,7 @@ tabpanels.plain {
   -moz-border-radius: 10px;
   margin-top: -1px;
   margin-left: -1px;
+  -moz-window-shadow: none;
 }
 
 /* ::::: Ctrl-Tab Panel ::::: */
