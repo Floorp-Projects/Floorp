@@ -2126,6 +2126,36 @@ function testReallyDeepNestedExit()
 testReallyDeepNestedExit.expected = 198;
 test(testReallyDeepNestedExit);
 
+function testRegExpTest() {
+    var r = /abc/;
+    var flag = false;
+    for (var i = 0; i < 10; ++i)
+	flag = r.test("abc");
+    return flag;
+}
+testRegExpTest.expected = true;
+test(testRegExpTest);
+
+function testNumToString() {
+    var r = [];
+    var d = 123456789;
+    for (var i = 0; i < 10; ++i) {
+	r = [
+	     d.toString(),
+	     (-d).toString(),
+	     d.toString(10),
+	     (-d).toString(10),
+	     d.toString(16),
+	     (-d).toString(16),
+	     d.toString(36),
+	     (-d).toString(36)
+        ];
+    }
+    return r.join(",");
+}
+testNumToString.expected = "123456789,-123456789,123456789,-123456789,75bcd15,-75bcd15,21i3v9,-21i3v9";
+test(testNumToString);
+
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 print("\npassed:", passes.length && passes.join(","));
 print("\nFAILED:", fails.length && fails.join(","));

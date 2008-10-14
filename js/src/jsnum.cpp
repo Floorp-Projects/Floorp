@@ -304,7 +304,7 @@ num_toSource(JSContext *cx, uintN argc, jsval *vp)
 
 /* The buf must be big enough for MIN_INT to fit including '-' and '\0'. */
 char *
-js_IntToCString(jsint i, char *buf, size_t bufSize)
+js_IntToCString(jsint i, jsint base, char *buf, size_t bufSize)
 {
     char *cp;
     jsuint u;
@@ -318,12 +318,30 @@ js_IntToCString(jsint i, char *buf, size_t bufSize)
      * Build the string from behind. We use multiply and subtraction
      * instead of modulus because that's much faster.
      */
-    do {
-        jsuint newu = u / 10;
-        *--cp = (char)(u - newu * 10) + '0';
-        u = newu;
-    } while (u != 0);
-
+    switch (base) {
+    case 10:
+      do {
+          jsuint newu = u / 10;
+          *--cp = (char)(u - newu * 10) + '0';
+          u = newu;
+      } while (u != 0);
+      break;
+    case 16:
+      do {
+          jsuint newu = u / 16;
+          *--cp = "0123456789abcdef"[u - newu * 16];
+          u = newu;
+      } while (u != 0);
+      break;
+    default:
+      JS_ASSERT(base >= 2 && base <= 36);
+      do {
+          jsuint newu = u / base;
+          *--cp = "0123456789abcdefghijklmnopqrstuvwxyz"[u - newu * base];
+          u = newu;
+      } while (u != 0);
+      break;
+    }
     if (i < 0)
         *--cp = '-';
 
@@ -350,7 +368,7 @@ num_toString(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         if (base < 2 || base > 36) {
             char numBuf[12];
-            char *numStr = js_IntToCString(base, numBuf, sizeof numBuf);
+            char *numStr = js_IntToCString(base, 10, numBuf, sizeof numBuf);
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX,
                                  numStr);
             return JS_FALSE;
@@ -579,10 +597,12 @@ num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef JS_TRACER
 
-JS_DEFINE_CALLINFO_2(STRING, NumberToString, CONTEXT, DOUBLE, 1, 1)
+JS_DEFINE_CALLINFO_3(STRING, NumberToStringWithBase, CONTEXT, DOUBLE, INT32, 1, 1)
+JS_DEFINE_CALLINFO_2(STRING, NumberToString,         CONTEXT, DOUBLE,        1, 1)
 
 static const JSTraceableNative num_toString_trcinfo[] = {
-    { num_toString,             &ci_NumberToString,       "DC",   "",    FAIL_NULL }
+    { num_toString,             &ci_NumberToStringWithBase, "DC",  "i",    FAIL_NULL | JSTN_MORE},
+    { num_toString,             &ci_NumberToString,         "DC",   "",    FAIL_NULL }
 };
 
 #endif /* JS_TRACER */
@@ -776,16 +796,19 @@ js_NewNumberInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
 }
 
 char *
-js_NumberToCString(JSContext *cx, jsdouble d, char *buf, size_t bufSize)
+js_NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufSize)
 {
     jsint i;
     char *numStr;
 
     JS_ASSERT(bufSize >= DTOSTR_STANDARD_BUFFER_SIZE);
     if (JSDOUBLE_IS_INT(d, i)) {
-        numStr = js_IntToCString(i, buf, bufSize);
+        numStr = js_IntToCString(i, base, buf, bufSize);
     } else {
-        numStr = JS_dtostr(buf, bufSize, DTOSTR_STANDARD, 0, d);
+        if (base == 10)
+            numStr = JS_dtostr(buf, bufSize, DTOSTR_STANDARD, 0, d);
+        else
+            numStr = JS_dtobasestr(base, d);
         if (!numStr) {
             JS_ReportOutOfMemory(cx);
             return NULL;
@@ -795,15 +818,23 @@ js_NumberToCString(JSContext *cx, jsdouble d, char *buf, size_t bufSize)
 }
 
 JSString * JS_FASTCALL
-js_NumberToString(JSContext *cx, jsdouble d)
+js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 {
     char buf[DTOSTR_STANDARD_BUFFER_SIZE];
     char *numStr;
 
-    numStr = js_NumberToCString(cx, d, buf, sizeof buf);
+    if (base < 2 || base > 36)
+        return NULL;
+    numStr = js_NumberToCString(cx, d, base, buf, sizeof buf);
     if (!numStr)
         return NULL;
     return JS_NewStringCopyZ(cx, numStr);
+}
+
+JSString * JS_FASTCALL
+js_NumberToString(JSContext *cx, jsdouble d)
+{
+    return js_NumberToStringWithBase(cx, d, 10);
 }
 
 jsdouble
