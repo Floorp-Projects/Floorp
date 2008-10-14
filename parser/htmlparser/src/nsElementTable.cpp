@@ -179,8 +179,6 @@ const int kNoPropRange=0;
 const int kDefaultPropRange=1;
 const int kBodyPropRange=2;
 
-PRBool CanBeContainedLI(eHTMLTags aChildTag,nsDTDContext &aContext);
-
 //*********************************************************************************************
 //
 //        Now let's declare the element table...
@@ -1301,51 +1299,6 @@ void CheckElementTable() {
   }
 }
 #endif
-
-/**
- * This is called to answer the CanBeContained question when LI is the parent
- * @update	gess 10/13/00
- * @param 
- * @return
- */ 
-PRBool CanBeContainedLI(eHTMLTags aChildTag,nsDTDContext &aContext) {
-  PRBool result=PR_TRUE;
-
-  //walk the parent hierarchy, to see if the LI is in a block or an inline.
-  PRInt32 anIndex=aContext.GetCount();
-  PRBool  theLIHasABlockParent=PR_FALSE;
-
-  PRBool theChildIsBlock=PR_FALSE;
-  
-  if((aChildTag>eHTMLTag_unknown) && (aChildTag<eHTMLTag_userdefined)) {
-    theChildIsBlock=  (eHTMLTag_dt==aChildTag) || 
-                      (eHTMLTag_dd==aChildTag) ||
-                      (gHTMLElements[aChildTag].IsMemberOf(kBlock))       || 
-                      (gHTMLElements[aChildTag].IsMemberOf(kBlockEntity)) || 
-                      (gHTMLElements[aChildTag].IsMemberOf(kHeading))     || 
-                      (gHTMLElements[aChildTag].IsMemberOf(kPreformatted))|| 
-                      (gHTMLElements[aChildTag].IsMemberOf(kList)); 
-  }
-
-  if(theChildIsBlock) {
-
-    while(--anIndex>0) {
-      eHTMLTags aParent=aContext.TagAt(anIndex);
-      if((eHTMLTag_ul==aParent) ||
-         (eHTMLTag_ol==aParent) || 
-         (eHTMLTag_table==aParent) ||
-         (eHTMLTag_dir==aParent)) {
-        theLIHasABlockParent=PR_TRUE;
-        break;
-      }
-    }
-    result=theLIHasABlockParent;
-  }    
-  else {
-    result=PR_TRUE;
-  }
-  return result;
-}
 
 /**
  *  Call this to find the index of a given child, or (if not found)
