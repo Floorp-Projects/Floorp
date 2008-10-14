@@ -464,7 +464,8 @@ js_CompileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *principals,
                        const char *filename, uintN lineno);
 
 extern JSBool
-js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc);
+js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc,
+                 bool inCond = false);
 
 #if JS_HAS_XML_SUPPORT
 JS_FRIEND_API(JSParseNode *)

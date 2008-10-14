@@ -2078,11 +2078,16 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         break;
 
       case PN_LIST:
-        if (pn->pn_type == TOK_NEW ||
-            pn->pn_type == TOK_LP ||
-            pn->pn_type == TOK_LB ||
-            pn->pn_type == TOK_RB ||
-            pn->pn_type == TOK_RC) {
+        if (pn->pn_op == JSOP_NOP ||
+            pn->pn_op == JSOP_OR || pn->pn_op == JSOP_AND ||
+            pn->pn_op == JSOP_STRICTEQ || pn->pn_op == JSOP_STRICTNE) {
+            /*
+             * Non-operators along with ||, &&, ===, and !== never invoke
+             * toString or valueOf.
+             */
+            for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next)
+                ok &= CheckSideEffects(cx, cg, pn2, answer);
+        } else {
             /*
              * All invocation operations (construct: TOK_NEW, call: TOK_LP)
              * are presumed to be useful, because they may have side effects
@@ -2094,14 +2099,12 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
              * (the JSOP_ARGUMENTS special case below, in the PN_BINARY case,
              * does not apply here: arguments[i][j] might invoke a getter).
              *
-             * Array and object initializers (TOK_RB and TOK_RC lists) must be
-             * considered useful, because they are sugar for constructor calls
-             * (to Array and Object, respectively).
+             * Likewise, array and object initialisers may call prototype
+             * setters (the __defineSetter__ built-in, and writable __proto__
+             * on Array.prototype create this hazard). Initialiser list nodes
+             * have JSOP_NEWINIT in their pn_op.
              */
             *answer = JS_TRUE;
-        } else {
-            for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next)
-                ok &= CheckSideEffects(cx, cg, pn2, answer);
         }
         break;
 
@@ -2138,11 +2141,21 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 }
             }
         } else {
-            /*
-             * We can't easily prove that neither operand ever denotes an
-             * object with a toString or valueOf method.
-             */
-            *answer = JS_TRUE;
+            if (pn->pn_op == JSOP_OR || pn->pn_op == JSOP_AND ||
+                pn->pn_op == JSOP_STRICTEQ || pn->pn_op == JSOP_STRICTNE) {
+                /*
+                 * ||, &&, ===, and !== do not convert their operands via
+                 * toString or valueOf method calls.
+                 */
+                ok = CheckSideEffects(cx, cg, pn->pn_left, answer) &&
+                     CheckSideEffects(cx, cg, pn->pn_right, answer);
+            } else {
+                /*
+                 * We can't easily prove that neither operand ever denotes an
+                 * object with a toString or valueOf method.
+                 */
+                *answer = JS_TRUE;
+            }
         }
         break;
 
@@ -2172,6 +2185,14 @@ CheckSideEffects(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 break;
             }
             break;
+
+          case TOK_UNARYOP:
+            if (pn->pn_op == JSOP_NOT) {
+                /* ! does not convert its operand via toString or valueOf. */
+                ok = CheckSideEffects(cx, cg, pn->pn_kid, answer);
+                break;
+            }
+            /* FALL THROUGH */
 
           default:
             /*

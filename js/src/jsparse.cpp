@@ -2885,22 +2885,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 pn2 = Expr(cx, ts, tc);
                 if (!pn2)
                     return NULL;
-
-                if (pn2->pn_type == TOK_LP &&
-                    pn2->pn_head->pn_type == TOK_FUNCTION &&
-                    (pn2->pn_head->pn_flags & TCF_GENEXP_LAMBDA)) {
-                    /*
-                     * A generator expression as loop condition is useless.
-                     * It won't be called, and as an object it evaluates to
-                     * true in boolean contexts without any conversion hook
-                     * being called.
-                     *
-                     * This useless condition elimination is mandatory, to
-                     * help the decompiler. See bug 442342.
-                     */
-                    RecycleTree(pn2, tc);
-                    pn2 = NULL;
-                }
             }
 
             /* Parse the update expression or null into pn3. */
@@ -2916,11 +2900,11 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     return NULL;
             }
 
-            /* Build the RESERVED node to use as the left kid of pn. */
+            /* Build the FORHEAD node to use as the left kid of pn. */
             pn4 = NewParseNode(cx, ts, PN_TERNARY, tc);
             if (!pn4)
                 return NULL;
-            pn4->pn_type = TOK_RESERVED;
+            pn4->pn_type = TOK_FORHEAD;
             pn4->pn_op = JSOP_NOP;
             pn4->pn_kid1 = pn1;
             pn4->pn_kid2 = pn2;
@@ -4619,6 +4603,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                         break;
                     }
                     pn3->pn_type = TOK_NUMBER;
+                    pn3->pn_op = JSOP_DOUBLE;
                     pn3->pn_dval = index;
                 }
                 pn2->pn_op = JSOP_GETELEM;
@@ -5393,6 +5378,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!pn)
             return NULL;
         pn->pn_type = TOK_RB;
+        pn->pn_op = JSOP_NEWINIT;
 
 #if JS_HAS_SHARP_VARS
         if (defsharp) {
@@ -5526,6 +5512,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         if (!pn)
             return NULL;
         pn->pn_type = TOK_RC;
+        pn->pn_op = JSOP_NEWINIT;
 
 #if JS_HAS_SHARP_VARS
         if (defsharp) {
@@ -5855,6 +5842,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         pn = NewParseNode(cx, ts, PN_NULLARY, tc);
         if (!pn)
             return NULL;
+        pn->pn_op = JSOP_DOUBLE;
         pn->pn_dval = CURRENT_TOKEN(ts).t_dval;
 #if JS_HAS_SHARP_VARS
         notsharp = JS_TRUE;
@@ -6286,8 +6274,52 @@ recur:
 #undef TAIL_RECURSE
 }
 
+static int
+Boolish(JSParseNode *pn)
+{
+    switch (pn->pn_op) {
+      case JSOP_DOUBLE:
+        return pn->pn_dval != 0;
+
+      case JSOP_STRING:
+        return JSSTRING_LENGTH(ATOM_TO_STRING(pn->pn_atom)) != 0;
+
+      case JSOP_CALL:
+        /*
+         * A generator expression as an if or loop condition has no effects, it
+         * simply results in a truthy object reference. This condition folding
+         * ing is needed for the decompiler. See bug 442342 and bug 443074.
+         */
+        if (pn->pn_count != 1)
+            break;
+        JSParseNode *pn2 = pn->pn_head;
+        if (pn2->pn_type != TOK_FUNCTION)
+            break;
+        if (!(pn2->pn_flags & TCF_GENEXP_LAMBDA))
+            break;
+        /* FALL THROUGH */
+
+      case JSOP_DEFFUN:
+      case JSOP_NAMEDFUNOBJ:
+      case JSOP_ANONFUNOBJ:
+      case JSOP_THIS:
+      case JSOP_TRUE:
+        return 1;
+
+      case JSOP_NULL:
+      case JSOP_FALSE:
+        return 0;
+
+      default:;
+    }
+    return -1;
+}
+
+#define Truthy(pn) (Boolish(pn) == 1)
+#define Falsy(pn)  (Boolish(pn) == 0)
+
 JSBool
-js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
+js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 {
     JSParseNode *pn1 = NULL, *pn2 = NULL, *pn3 = NULL;
 
@@ -6362,28 +6394,44 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         pn1 = pn->pn_kid1;
         pn2 = pn->pn_kid2;
         pn3 = pn->pn_kid3;
-        if (pn1 && !js_FoldConstants(cx, pn1, tc))
+        if (pn1 && !js_FoldConstants(cx, pn1, tc, pn->pn_type == TOK_IF))
             return JS_FALSE;
-        if (pn2 && !js_FoldConstants(cx, pn2, tc))
-            return JS_FALSE;
+        if (pn2) {
+            if (!js_FoldConstants(cx, pn2, tc, pn->pn_type == TOK_FORHEAD))
+                return JS_FALSE;
+            if (pn->pn_type == TOK_FORHEAD && pn2->pn_op == JSOP_TRUE) {
+                RecycleTree(pn2, tc);
+                pn->pn_kid2 = NULL;
+            }
+        }
         if (pn3 && !js_FoldConstants(cx, pn3, tc))
             return JS_FALSE;
         break;
 
       case PN_BINARY:
-        /* First kid may be null (for default case in switch). */
         pn1 = pn->pn_left;
         pn2 = pn->pn_right;
-        if (pn1 && !js_FoldConstants(cx, pn1, tc))
+
+        /* Propagate inCond through logical connectives. */
+        if (pn->pn_type == TOK_OR || pn->pn_type == TOK_AND) {
+            if (!js_FoldConstants(cx, pn1, tc, inCond))
+                return JS_FALSE;
+            if (!js_FoldConstants(cx, pn2, tc, inCond))
+                return JS_FALSE;
+            break;
+        }
+
+        /* First kid may be null (for default case in switch). */
+        if (pn1 && !js_FoldConstants(cx, pn1, tc, pn->pn_type == TOK_WHILE))
             return JS_FALSE;
-        if (!js_FoldConstants(cx, pn2, tc))
+        if (!js_FoldConstants(cx, pn2, tc, pn->pn_type == TOK_DO))
             return JS_FALSE;
         break;
 
       case PN_UNARY:
         /* Our kid may be null (e.g. return; vs. return e;). */
         pn1 = pn->pn_kid;
-        if (pn1 && !js_FoldConstants(cx, pn1, tc))
+        if (pn1 && !js_FoldConstants(cx, pn1, tc, inCond))
             return JS_FALSE;
         break;
 
@@ -6475,6 +6523,30 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         RecycleTree(pn2, tc);
         if (pn3 && pn3 != pn2)
             RecycleTree(pn3, tc);
+        break;
+
+      case TOK_OR:
+        if (inCond) {
+            if (Truthy(pn1)) {
+                RecycleTree(pn2, tc);
+                PN_MOVE_NODE(pn, pn1);
+            } else if (Falsy(pn1)) {
+                RecycleTree(pn1, tc);
+                PN_MOVE_NODE(pn, pn2);
+            }
+        }
+        break;
+
+      case TOK_AND:
+        if (inCond) {
+            if (Falsy(pn1)) {
+                RecycleTree(pn2, tc);
+                PN_MOVE_NODE(pn, pn1);
+            } else if (Truthy(pn1)) {
+                RecycleTree(pn1, tc);
+                PN_MOVE_NODE(pn, pn2);
+            }
+        }
         break;
 
       case TOK_ASSIGN:
@@ -6705,6 +6777,22 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 #endif /* JS_HAS_XML_SUPPORT */
 
       default:;
+    }
+
+    if (inCond) {
+        int cond = Boolish(pn);
+        if (cond >= 0) {
+            if (pn->pn_arity == PN_LIST) {
+                pn2 = pn->pn_head;
+                do {
+                    pn3 = pn2->pn_next;
+                    RecycleTree(pn2, tc);
+                } while ((pn2 = pn3) != NULL);
+            }
+            pn->pn_type = TOK_PRIMARY;
+            pn->pn_op = cond ? JSOP_TRUE : JSOP_FALSE;
+            pn->pn_arity = PN_NULLARY;
+        }
     }
 
     return JS_TRUE;
