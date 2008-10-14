@@ -83,6 +83,7 @@
 #include "nsXMLHttpRequest.h"
 #include "nsIFocusEventSuppressor.h"
 #include "nsDOMThreadService.h"
+#include "nsCrossSiteListenerProxy.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -346,7 +347,7 @@ nsLayoutStatics::Shutdown()
   nsAudioStream::ShutdownLibrary();
 #endif
 
-  nsXMLHttpRequest::ShutdownACCache();
+  nsCrossSiteListenerProxy::ShutdownPreflightCache();
 }
 
 void
