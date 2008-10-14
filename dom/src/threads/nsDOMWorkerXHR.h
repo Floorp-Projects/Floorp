@@ -54,6 +54,8 @@
 // DOMWorker includes
 #include "nsDOMWorkerThread.h"
 
+class nsDOMWorkerXHR;
+class nsDOMWorkerXHREvent;
 class nsDOMWorkerXHRProxy;
 
 class nsDOMWorkerXHREventTarget : public nsIXMLHttpRequestEventTarget
@@ -84,8 +86,6 @@ public:
 protected:
   virtual ~nsDOMWorkerXHREventTarget() { }
 };
-
-class nsDOMWorkerXHR;
 
 class nsDOMWorkerXHRUpload : public nsDOMWorkerXHREventTarget,
                              public nsIXMLHttpRequestUpload,
@@ -124,6 +124,7 @@ class nsDOMWorkerXHR : public nsDOMWorkerXHREventTarget,
                        public nsIXMLHttpRequest,
                        public nsIClassInfo
 {
+  friend class nsDOMWorkerXHREvent;
   friend class nsDOMWorkerXHRProxy;
   friend class nsDOMWorkerXHRUpload;
 

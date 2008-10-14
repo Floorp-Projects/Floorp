@@ -179,11 +179,6 @@ nsDOMWorkerXHREvent::nsDOMWorkerXHREvent(nsDOMWorkerXHRProxy* aXHRProxy)
   mLengthComputable(PR_FALSE)
 {
   NS_ASSERTION(aXHRProxy, "Can't be null!");
-
-  nsIDOMEventTarget* target =
-    static_cast<nsIDOMEventTarget*>(aXHRProxy->mWorkerXHR);
-  mTarget = do_QueryInterface(target);
-  NS_ASSERTION(mTarget, "Must support nsIDOMEventTarget!");
 }
 
 NS_IMPL_ADDREF_INHERITED(nsDOMWorkerXHREvent, nsRunnable)
@@ -232,12 +227,20 @@ nsDOMWorkerXHREvent::Init(nsIDOMEvent* aEvent)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  rv = aEvent->GetTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMEventTarget> mainThreadTarget;
+  rv = aEvent->GetTarget(getter_AddRefs(mainThreadTarget));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIXMLHttpRequestUpload> upload(do_QueryInterface(target));
-  mUploadEvent = !!upload;
+  nsCOMPtr<nsIXMLHttpRequestUpload> upload(do_QueryInterface(mainThreadTarget));
+  if (upload) {
+    mUploadEvent = PR_TRUE;
+    mTarget =
+      static_cast<nsDOMWorkerXHREventTarget*>(mXHRProxy->mWorkerXHR->mUpload);
+  }
+  else {
+    mUploadEvent = PR_FALSE;
+    mTarget = mXHRProxy->mWorkerXHR;
+  }
 
   PRBool boolVal;
   rv = aEvent->GetBubbles(&boolVal);
