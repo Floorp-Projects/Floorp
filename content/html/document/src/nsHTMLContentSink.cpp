@@ -2065,7 +2065,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     // insertionPoint is not -1, but this code will try to handle
     // those cases too.
 
-    PRBool oldUpdates = mUpdatesInNotification;
+    PRUint32 oldUpdates = mUpdatesInNotification;
     mUpdatesInNotification = 0;
     if (insertionPoint != -1) {
       NotifyInsert(parent, mBody, insertionPoint - 1);
@@ -2227,7 +2227,7 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
     // insertionPoint is not -1, but this code will try to handle
     // those cases too.
 
-    PRBool oldUpdates = mUpdatesInNotification;
+    PRUint32 oldUpdates = mUpdatesInNotification;
     mUpdatesInNotification = 0;
     if (insertionPoint != -1) {
       NotifyInsert(parent, mFrameset, insertionPoint - 1);
