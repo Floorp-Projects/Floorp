@@ -136,6 +136,7 @@ typedef enum JSTokenType {
     TOK_LET = 81,                       /* let keyword */
     TOK_SEQ = 82,                       /* synthetic sequence of statements,
                                            not a block */
+    TOK_FORHEAD = 83,                   /* head of for(;;)-style loop */
     TOK_RESERVED,                       /* reserved keywords */
     TOK_LIMIT                           /* domain size */
 } JSTokenType;
