@@ -96,78 +96,6 @@
     _arg2 mArg2; \
   }
 
-#define MAKE_PROXIED_FUNCTION3(_name, _arg1, _arg2, _arg3) \
-  class _name : public SyncEventCapturingRunnable \
-  { \
-  public: \
-    _name (nsDOMWorkerXHRProxy* aXHR, SyncEventQueue* aQueue, _arg1 aArg1, \
-           _arg2 aArg2, _arg3 aArg3) \
-    : SyncEventCapturingRunnable(aXHR, aQueue), mArg1(aArg1), mArg2(aArg2), \
-      mArg3(aArg3) { } \
-  \
-    virtual nsresult RunInternal() \
-    { \
-      nsCOMPtr<nsIXMLHttpRequest> xhr = mXHR->GetXMLHttpRequest(); \
-      if (xhr) { \
-        return xhr-> _name (mArg1, mArg2, mArg3); \
-      } \
-      return NS_OK; \
-    } \
-  private: \
-    _arg1 mArg1; \
-    _arg2 mArg2; \
-    _arg3 mArg3; \
-  }
-
-#define MAKE_PROXIED_FUNCTION4(_name, _arg1, _arg2, _arg3, _arg4) \
-  class _name : public SyncEventCapturingRunnable \
-  { \
-  public: \
-    _name (nsDOMWorkerXHRProxy* aXHR, SyncEventQueue* aQueue, _arg1 aArg1, \
-           _arg2 aArg2, _arg3 aArg3, _arg4 aArg4) \
-    : SyncEventCapturingRunnable(aXHR, aQueue), mArg1(aArg1), mArg2(aArg2), \
-      mArg3(aArg3), mArg4(aArg4) { } \
-  \
-    virtual nsresult RunInternal() \
-    { \
-      nsCOMPtr<nsIXMLHttpRequest> xhr = mXHR->GetXMLHttpRequest(); \
-      if (xhr) { \
-        return xhr-> _name (mArg1, mArg2, mArg3, mArg4); \
-      } \
-      return NS_OK; \
-    } \
-  private: \
-    _arg1 mArg1; \
-    _arg2 mArg2; \
-    _arg3 mArg3; \
-    _arg4 mArg4; \
-  }
-
-#define MAKE_PROXIED_FUNCTION5(_name, _arg1, _arg2, _arg3, _arg4, _arg5) \
-  class _name : public SyncEventCapturingRunnable \
-  { \
-  public: \
-    _name (nsDOMWorkerXHRProxy* aXHR, SyncEventQueue* aQueue, _arg1 aArg1, \
-           _arg2 aArg2, _arg3 aArg3, _arg4 aArg4, _arg5 aArg5) \
-    : SyncEventCapturingRunnable(aXHR, aQueue), mArg1(aArg1), mArg2(aArg2), \
-      mArg3(aArg3), mArg4(aArg4), mArg5(aArg5) { } \
-  \
-    virtual nsresult RunInternal() \
-    { \
-      nsCOMPtr<nsIXMLHttpRequest> xhr = mXHR->GetXMLHttpRequest(); \
-      if (xhr) { \
-        return xhr-> _name (mArg1, mArg2, mArg3, mArg4, mArg5); \
-      } \
-      return NS_OK; \
-    } \
-  private: \
-    _arg1 mArg1; \
-    _arg2 mArg2; \
-    _arg3 mArg3; \
-    _arg4 mArg4; \
-    _arg5 mArg5; \
-  }
-
 #define RUN_PROXIED_FUNCTION(_name, _args) \
   PR_BEGIN_MACRO \
     NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!"); \
@@ -238,12 +166,31 @@ namespace nsDOMWorkerProxiedXHRFunctions
     }
   };
 
+  class OpenRequest : public SyncEventCapturingRunnable
+  {
+  public:
+    OpenRequest(nsDOMWorkerXHRProxy* aXHR, SyncEventQueue* aQueue,
+                const nsACString& aMethod, const nsACString& aUrl,
+                PRBool aAsync, const nsAString& aUser,
+                const nsAString& aPassword)
+    : SyncEventCapturingRunnable(aXHR, aQueue), mMethod(aMethod), mUrl(aUrl),
+      mAsync(aAsync), mUser(aUser), mPassword(aPassword) { }
+  
+    virtual nsresult RunInternal() {
+      return mXHR->OpenRequest(mMethod, mUrl, mAsync, mUser, mPassword);
+    }
+
+  private:
+    nsCString mMethod;
+    nsCString mUrl;
+    PRBool mAsync;
+    nsString mUser;
+    nsString mPassword;
+  };
+
   MAKE_PROXIED_FUNCTION1(GetAllResponseHeaders, char**);
 
   MAKE_PROXIED_FUNCTION2(GetResponseHeader, const nsACString&, nsACString&);
-
-  MAKE_PROXIED_FUNCTION5(OpenRequest, const nsACString&, const nsACString&,
-                         PRBool, const nsAString&, const nsAString&);
 
   MAKE_PROXIED_FUNCTION1(Send, nsIVariant*);
 
