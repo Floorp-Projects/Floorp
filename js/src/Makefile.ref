@@ -104,9 +104,7 @@ endif
 # XCFLAGS may be set in the environment or on the gmake command line
 #
 #CFLAGS += -DDEBUG -DDEBUG_brendan -DJS_ARENAMETER -DJS_HASHMETER -DJS_DUMP_PROPTREE_STATS -DJS_DUMP_SCOPE_METERS -DJS_SCOPE_DEPTH_METER -DJS_BASIC_STATS
-CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
-INTERP_CFLAGS   += $(INTERP_OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(INTERP_XCFLAGS)
-BUILTINS_CFLAGS += $(BUILTINS_OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS) $(BUILTINS_XCFLAGS)
+CFLAGS          += $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 
 LDFLAGS		= $(XLDFLAGS)
 LDFLAGS += $(OS_LDFLAGS)
@@ -376,7 +374,7 @@ GARBAGE	+= $(AUTO_HEADERS:$(OBJDIR)/jsauto%.h=$(OBJDIR)/js%gen.obj)
 
 $(AUTO_HEADERS): $(OBJDIR)/jsauto%.h: js%gen.cpp
 	@$(MAKE_OBJDIR)
-	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $<
+	$(CXX) -Fo$(OBJDIR)/ -c $(CFLAGS) $(OPTIMIZER) $<
 	link.exe -out:"$(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX)" $(EXE_LINK_FLAGS) $(OBJDIR)/js$*gen.obj
 	$(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $@
 else
@@ -384,7 +382,7 @@ else
 GARBAGE	+= $(AUTO_HEADERS:$(OBJDIR)/jsauto%.h=$(OBJDIR)/js%gen.d)
 $(AUTO_HEADERS): $(OBJDIR)/jsauto%.h: js%gen.cpp
 	@$(MAKE_OBJDIR)
-	$(CXX) -o $(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $(CFLAGS) $(LDFLAGS) $<
+	$(CXX) -o $(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $(CFLAGS) $(OPTIMIZER) $(LDFLAGS) $<
 	$(OBJDIR)/js$*gen$(HOST_BIN_SUFFIX) $@
 
 endif
