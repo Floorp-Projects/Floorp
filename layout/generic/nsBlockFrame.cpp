@@ -904,7 +904,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // like tables will gain significant bloat.
   PRBool needSpaceManager = nsBlockFrame::BlockNeedsSpaceManager(this);
   if (needSpaceManager)
-    autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
+    autoSpaceManager.CreateSpaceManager(aPresContext);
 
   // OK, some lines may be reflowed. Blow away any saved line cursor because
   // we may invalidate the nondecreasing combinedArea.y/yMost invariant,
