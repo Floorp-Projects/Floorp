@@ -59,7 +59,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLLinkAccessible, nsHyperTextAccessibleWrap,
 
 nsresult
 nsHTMLLinkAccessible::GetNameInternal(nsAString& aName)
-{ 
+{
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsresult rv = AppendFlatStringFromSubtree(content, &aName);
   NS_ENSURE_SUCCESS(rv, rv);
