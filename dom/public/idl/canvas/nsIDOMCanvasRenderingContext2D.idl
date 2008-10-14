@@ -60,7 +60,7 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, uuid(ac35c6a9-bea7-4e5f-85f6-ed43a13c6a2b)]
+[scriptable, uuid(66e6d87c-759c-43a7-b3d3-3348180b35df)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -161,6 +161,12 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   // ImageData createImageData(in float w, in float h);
   void createImageData();
 
+  // Show the caret if appropriate when drawing
+  const unsigned long DRAWWINDOW_DRAW_CARET   = 0x01;
+  // Don't flush pending layout notifications that could otherwise
+  // be batched up
+  const unsigned long DRAWWINDOW_DO_NOT_FLUSH = 0x02;
+
   /**
    * Renders a region of a window into the canvas.  The contents of
    * the window's viewport are rendered, ignoring viewport clipping
@@ -176,6 +182,9 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
    * before we render the window into it. This color may be
    * transparent/translucent. It is given as a CSS color string
    * (e.g., rgb() or rgba()).
+   *
+   * @param flags Uused to better control the drawWindow call.
+   * Flags can be ORed together.
    *
    * Of course, the rendering obeys the current scale, transform and
    * globalAlpha values.
@@ -194,5 +203,6 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
    * only.
    */
   void drawWindow(in nsIDOMWindow window, in long x, in long y,
-                  in long w, in long h, in DOMString bgColor);
+                  in long w, in long h, in DOMString bgColor,
+                  [optional] in unsigned long flags);
 };
