@@ -85,7 +85,7 @@
 
 #if defined(XP_WIN) && !defined(WINCE) 
 #include <shlobj.h>
-#ifndef __MINGW32__
+#ifdef DOWNLOAD_SCANNER
 #include "nsDownloadScanner.h"
 #endif
 #endif
@@ -139,7 +139,7 @@ nsDownloadManager::GetSingleton()
 
 nsDownloadManager::~nsDownloadManager()
 {
-#if defined(XP_WIN) && !defined(__MINGW32__)
+#ifdef DOWNLOAD_SCANNER
   mScanner = nsnull;
 #endif
   gDownloadManagerService = nsnull;
@@ -909,7 +909,7 @@ nsDownloadManager::Init()
                                    getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if defined(XP_WIN) && !defined(__MINGW32__) && !defined(WINCE)
+#ifdef DOWNLOAD_SCANNER
   mScanner = new nsDownloadScanner();
   if (!mScanner)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1415,7 +1415,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   }
 
   DownloadState startState = nsIDownloadManager::DOWNLOAD_QUEUED;
-#if defined(XP_WIN) && !defined(__MINGW32__) && !defined(WINCE)
+#ifdef DOWNLOAD_SCANNER
   if (mScanner) {
     AVCheckPolicyState res = mScanner->CheckPolicy(aSource, aTarget);
     if (res == AVPOLICY_BLOCKED) {
@@ -2065,7 +2065,7 @@ nsDownload::SetState(DownloadState aState)
       // Transfers are finished, so break the reference cycle
       Finalize();
       break;
-#if defined(XP_WIN) && !defined(__MINGW32__) && !defined(WINCE)
+#ifdef DOWNLOAD_SCANNER
     case nsIDownloadManager::DOWNLOAD_SCANNING:
     {
       nsresult rv = mDownloadManager->mScanner ? mDownloadManager->mScanner->ScanDownload(this) : NS_ERROR_NOT_INITIALIZED;
