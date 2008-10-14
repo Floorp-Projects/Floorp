@@ -4291,7 +4291,7 @@ js_Regexp_p_test(JSContext* cx, JSObject* regexp, JSString* str)
  * because the function returns a boolean during recording, and "with possible
  * error" from FAIL_VOID below.
  */
-JS_DEFINE_CALLINFO_3(INT,       Regexp_p_test, CONTEXT, OBJECT, STRING,                     1, 1)
+JS_DEFINE_CALLINFO_3(INT32,     Regexp_p_test, CONTEXT, OBJECT, STRING,                     1, 1)
 
 static const JSTraceableNative regexp_test_trcinfo[] = {
     { regexp_test,           &ci_Regexp_p_test,        "TC", "s",    FAIL_VOID }
