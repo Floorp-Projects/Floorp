@@ -2240,13 +2240,18 @@ NSEvent* gLastDragEvent = nil;
                                                           kCorePboardType_urln,
                                                           nil]];
   [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(systemColorChanged)
+                                           selector:@selector(systemMetricsChanged)
                                                name:NSControlTintDidChangeNotification
                                              object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(systemColorChanged)
+                                           selector:@selector(systemMetricsChanged)
                                                name:NSSystemColorsDidChangeNotification
                                              object:nil];
+  [[NSDistributedNotificationCenter defaultCenter] addObserver:self
+                                                      selector:@selector(systemMetricsChanged)
+                                                          name:@"AppleAquaScrollBarVariantChanged"
+                                                        object:nil
+                                            suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately]; 
 
   return self;
 
@@ -2267,6 +2272,7 @@ NSEvent* gLastDragEvent = nil;
     sLastViewEntered = nil;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
 
   [super dealloc];    
 
@@ -2319,7 +2325,7 @@ NSEvent* gLastDragEvent = nil;
 }
 
 
-- (void)systemColorChanged
+- (void)systemMetricsChanged
 {
   if (!mGeckoChild)
     return;
