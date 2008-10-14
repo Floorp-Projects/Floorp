@@ -65,6 +65,7 @@
 #include "nsIDOMElement.h"
 #include "nsMenuBarX.h"
 #include "nsMenuUtilsX.h"
+#include "nsStyleConsts.h"
 
 #include "gfxPlatform.h"
 #include "lcms.h"
@@ -800,7 +801,6 @@ void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
     }
     [mWindow setOpaque:!aTransparent];
     [mWindow setBackgroundColor:(aTransparent ? [NSColor clearColor] : [NSColor whiteColor])];
-    [mWindow setHasShadow:!aTransparent];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -1311,6 +1311,18 @@ NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   [NSApp requestUserAttention:NSInformationalRequest];
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if ([mWindow hasShadow] != (aStyle != NS_STYLE_WINDOW_SHADOW_NONE))
+    [mWindow setHasShadow:(aStyle != NS_STYLE_WINDOW_SHADOW_NONE)];
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

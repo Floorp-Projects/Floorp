@@ -166,6 +166,8 @@ enum {
   // All views are always opaque (non-transparent). The only exception is when we're
   // the content view in a transparent XUL window.
   BOOL mIsTransparent;
+  PRIntervalTime mLastShadowInvalidation;
+  BOOL mNeedsShadowInvalidation;
 
   // Holds our drag service across multiple drag calls. The reference to the
   // service is obtained when the mouse enters the view and is released when
@@ -366,6 +368,7 @@ public:
   
   virtual nsTransparencyMode GetTransparencyMode();
   virtual void                SetTransparencyMode(nsTransparencyMode aMode);
+  NS_IMETHOD        SetWindowShadowStyle(PRInt32 aStyle);
   
   // Mac specific methods
   virtual PRBool    PointInWidget(Point aThePoint);

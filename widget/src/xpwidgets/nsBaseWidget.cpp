@@ -570,6 +570,17 @@ nsTransparencyMode nsBaseWidget::GetTransparencyMode() {
 
 //-------------------------------------------------------------------------
 //
+// Set window shadow style
+//
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsBaseWidget::SetWindowShadowStyle(PRInt32 aMode)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//-------------------------------------------------------------------------
+//
 // Hide window borders/decorations for this widget
 //
 //-------------------------------------------------------------------------
