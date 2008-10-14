@@ -22,8 +22,6 @@
  * Contributor(s):
  *   Mike Pinkerton <pinkerton@netscape.com>
  *   Gus Verdun <gustavoverdun@aol.com>
- *   Kathleen Brade <brade@comcast.net>
- *   Mark Smith <mcs@pearlcrescent.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -113,7 +111,7 @@ public:
   ~nsImageFromClipboard ( ) ;
   
     // Retrieve the newly created image
-  nsresult GetEncodedImageStream (unsigned char * aClipboardData, const char * aMIMEFormat, nsIInputStream** outImage);
+  nsresult GetEncodedImageStream (unsigned char * aClipboardData, nsIInputStream** outImage);
 
 private:
 
