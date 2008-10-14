@@ -42,6 +42,7 @@
 #define nsStyleConsts_h___
 
 #include "nsFont.h"
+#include "nsIWidget.h"
 
 // cairo doesn't support invert
 // #define GFX_HAS_INVERT
@@ -709,10 +710,6 @@
 #define NS_STYLE_IME_MODE_ACTIVE                2
 #define NS_STYLE_IME_MODE_DISABLED              3
 #define NS_STYLE_IME_MODE_INACTIVE              4
-
-// See nsStyleUIReset
-#define NS_STYLE_WINDOW_SHADOW_NONE             0
-#define NS_STYLE_WINDOW_SHADOW_DEFAULT          1
 
 #ifdef MOZ_SVG
 // See nsStyleSVG

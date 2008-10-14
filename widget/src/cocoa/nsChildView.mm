@@ -179,6 +179,9 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 - (BOOL)isPaintingSuppressed;
 
+- (void)maybeInvalidateShadow;
+- (void)invalidateShadow;
+
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
  // a context menu (click-hold)
@@ -774,6 +777,28 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+
+// This is called by nsContainerFrame on the root widget for all window types
+// except popup windows (when nsCocoaWindow::SetWindowShadowStyle is used instead).
+NS_IMETHODIMP nsChildView::SetWindowShadowStyle(PRInt32 aStyle)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Find out if this is a window we created by seeing if the delegate is WindowDelegate. If it is,
+  // tell the nsCocoaWindow to set the shadow style.
+  id windowDelegate = [[mView nativeWindow] delegate];
+  if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
+    nsCocoaWindow *widget = [(WindowDelegate *)windowDelegate geckoWidget];
+    if (widget) {
+      widget->SetWindowShadowStyle(aStyle);
+    }
+  }
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 
@@ -2733,6 +2758,38 @@ NSEvent* gLastDragEvent = nil;
 }
 
 
+// Limit shadow invalidation to 10 times per second.
+static const PRInt32 sShadowInvalidationInterval = 100;
+- (void)maybeInvalidateShadow
+{
+  if (!mIsTransparent || ![mWindow hasShadow])
+    return;
+
+  PRIntervalTime now = PR_IntervalNow();
+  PRInt32 elapsed = PR_IntervalToMilliseconds(now - mLastShadowInvalidation);
+  if (!mLastShadowInvalidation ||
+      elapsed >= sShadowInvalidationInterval) {
+    [mWindow invalidateShadow];
+    mLastShadowInvalidation = now;
+    mNeedsShadowInvalidation = NO;
+  } else if (!mNeedsShadowInvalidation) {
+    mNeedsShadowInvalidation = YES;
+    [self performSelector:@selector(invalidateShadow)
+               withObject:nil
+               afterDelay:(sShadowInvalidationInterval - elapsed) / 1000.0];
+  }
+}
+
+
+- (void)invalidateShadow
+{
+  if (!mNeedsShadowInvalidation)
+    return;
+  [mWindow invalidateShadow];
+  mNeedsShadowInvalidation = NO;
+}
+
+
 - (BOOL)isPaintingSuppressed
 {
   NSWindow* win = [self window];
@@ -2810,6 +2867,10 @@ NSEvent* gLastDragEvent = nil;
   mGeckoChild->DispatchWindowEvent(paintEvent);
   if (!mGeckoChild)
     return;
+
+  // If we're a transparent window, and our contents have changed, we need
+  // to make sure the shadow is updated to the new contents.
+  [self maybeInvalidateShadow];
 
   paintEvent.renderingContext = nsnull;
   paintEvent.region = nsnull;
