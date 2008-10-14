@@ -4284,7 +4284,14 @@ js_Regexp_p_test(JSContext* cx, JSObject* regexp, JSString* str)
     return *vp == JSVAL_TRUE;
 }
 
-JS_DEFINE_CALLINFO_3(BOOL,       Regexp_p_test, CONTEXT, OBJECT, STRING,                     1, 1)
+/*
+ * Return type is INT here because the C builtin returns jsint, not JSBool. (It
+ * can return a value other than JS_TRUE or JS_FALSE on error.)  The real
+ * return type is "boolean with possible error"; the tracer knows "boolean"
+ * because the function returns a boolean during recording, and "with possible
+ * error" from FAIL_VOID below.
+ */
+JS_DEFINE_CALLINFO_3(INT,       Regexp_p_test, CONTEXT, OBJECT, STRING,                     1, 1)
 
 static const JSTraceableNative regexp_test_trcinfo[] = {
     { regexp_test,           &ci_Regexp_p_test,        "TC", "s",    FAIL_VOID }
