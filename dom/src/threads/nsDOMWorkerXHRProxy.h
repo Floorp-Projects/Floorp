@@ -94,7 +94,17 @@ public:
 
   nsresult Abort();
 
+  nsresult OpenRequest(const nsACString& aMethod,
+                       const nsACString& aUrl,
+                       PRBool aAsync,
+                       const nsAString& aUser,
+                       const nsAString& aPassword);
+
   SyncEventQueue* SetSyncEventQueue(SyncEventQueue* aQueue);
+
+  PRInt32 ChannelID() {
+    return mChannelID;
+  }
 
 protected:
   nsresult InitInternal();
@@ -130,11 +140,6 @@ protected:
   nsresult GetAllResponseHeaders(char** _retval);
   nsresult GetResponseHeader(const nsACString& aHeader,
                              nsACString& _retval);
-  nsresult OpenRequest(const nsACString& aMethod,
-                       const nsACString& aUrl,
-                       PRBool aAsync,
-                       const nsAString& aUser,
-                       const nsAString& aPassword);
   nsresult Send(nsIVariant* aBody);
   nsresult SendAsBinary(const nsAString& aBody);
   nsresult GetResponseText(nsAString& _retval);
@@ -168,6 +173,8 @@ protected:
   nsTArray<WrappedListener> mUploadOnXListeners;
 
   SyncEventQueue* mSyncEventQueue;
+
+  PRInt32 mChannelID;
 
   // Whether or not this object is owned by the real XHR object.
   PRPackedBool mOwnedByXHR;
