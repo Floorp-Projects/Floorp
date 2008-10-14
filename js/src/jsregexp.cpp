@@ -51,6 +51,7 @@
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
+#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsfun.h"
@@ -4273,6 +4274,23 @@ regexp_test(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
+#ifdef JS_TRACER
+jsint FASTCALL
+js_Regexp_p_test(JSContext* cx, JSObject* regexp, JSString* str)
+{
+    jsval vp[3] = { JSVAL_NULL, OBJECT_TO_JSVAL(regexp), STRING_TO_JSVAL(str) };
+    if (!regexp_exec_sub(cx, regexp, 1, vp + 2, JS_TRUE, vp))
+        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
+    return *vp == JSVAL_TRUE;
+}
+#endif
+
+JS_DEFINE_CALLINFO_3(BOOL,       Regexp_p_test, CONTEXT, OBJECT, STRING,                     1, 1)
+
+static const JSTraceableNative regexp_test_trcinfo[] = {
+    { regexp_test,           &ci_Regexp_p_test,        "TC", "s",    FAIL_VOID }
+};
+
 static JSFunctionSpec regexp_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  regexp_toString,    0,0),
@@ -4280,7 +4298,7 @@ static JSFunctionSpec regexp_methods[] = {
     JS_FN(js_toString_str,  regexp_toString,    0,0),
     JS_FN("compile",        regexp_compile,     2,0),
     JS_FN("exec",           regexp_exec,        1,0),
-    JS_FN("test",           regexp_test,        1,0),
+    JS_TN("test",           regexp_test,        1,0, regexp_test_trcinfo),
     JS_FS_END
 };
 
