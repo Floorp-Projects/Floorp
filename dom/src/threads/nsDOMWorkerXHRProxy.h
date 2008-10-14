@@ -78,6 +78,8 @@ class nsDOMWorkerXHRProxy : public nsRunnable,
     (const nsAString&, nsIDOMEventListener*, PRBool);
 
 public:
+  typedef nsAutoTArray<nsCOMPtr<nsIRunnable>, 5> SyncEventQueue;
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIRUNNABLE
@@ -91,6 +93,8 @@ public:
   nsIXMLHttpRequest* GetXMLHttpRequest();
 
   nsresult Abort();
+
+  SyncEventQueue* SetSyncEventQueue(SyncEventQueue* aQueue);
 
 protected:
   nsresult InitInternal();
@@ -162,6 +166,8 @@ protected:
 
   nsTArray<ListenerArray> mUploadListeners;
   nsTArray<WrappedListener> mUploadOnXListeners;
+
+  SyncEventQueue* mSyncEventQueue;
 
   // Whether or not this object is owned by the real XHR object.
   PRPackedBool mOwnedByXHR;

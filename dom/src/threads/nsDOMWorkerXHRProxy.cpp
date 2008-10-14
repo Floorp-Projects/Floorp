@@ -442,6 +442,7 @@ nsDOMWorkerXHRProxy::nsDOMWorkerXHRProxy(nsDOMWorkerXHR* aWorkerXHR)
   mXHR(nsnull),
   mConcreteXHR(nsnull),
   mUpload(nsnull),
+  mSyncEventQueue(nsnull),
   mOwnedByXHR(PR_FALSE),
   mMultipart(PR_FALSE),
   mCanceled(PR_FALSE)
@@ -910,8 +911,18 @@ nsDOMWorkerXHRProxy::HandleEvent(nsIDOMEvent* aEvent)
   nsresult rv = newEvent->Init(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsDOMThreadService::get()->Dispatch(mWorkerXHR->mWorker, newEvent);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // If we're supposed to be capturing events for synchronous execution then
+  // place this event in the queue. Otherwise schedule it for the worker via
+  // the thread service.
+  if (mSyncEventQueue) {
+    nsCOMPtr<nsIRunnable>* newElement =
+      mSyncEventQueue->AppendElement(newEvent);
+    NS_ENSURE_TRUE(newElement, NS_ERROR_OUT_OF_MEMORY);
+  }
+  else {
+    rv = nsDOMThreadService::get()->Dispatch(mWorkerXHR->mWorker, newEvent);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
@@ -932,14 +943,23 @@ nsDOMWorkerXHRProxy::Abort()
     return xhr->Abort();
   }
 
-  RUN_PROXIED_FUNCTION(Abort, (this));
+  RUN_PROXIED_FUNCTION(Abort, (this, &queue));
   return NS_OK;
+}
+
+nsDOMWorkerXHRProxy::SyncEventQueue*
+nsDOMWorkerXHRProxy::SetSyncEventQueue(SyncEventQueue* aQueue)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  SyncEventQueue* oldQueue = mSyncEventQueue;
+  mSyncEventQueue = aQueue;
+  return oldQueue;
 }
 
 nsresult
 nsDOMWorkerXHRProxy::GetAllResponseHeaders(char** _retval)
 {
-  RUN_PROXIED_FUNCTION(GetAllResponseHeaders, (this, _retval));
+  RUN_PROXIED_FUNCTION(GetAllResponseHeaders, (this, &queue, _retval));
   return NS_OK;
 }
 
@@ -947,7 +967,7 @@ nsresult
 nsDOMWorkerXHRProxy::GetResponseHeader(const nsACString& aHeader,
                                        nsACString& _retval)
 {
-  RUN_PROXIED_FUNCTION(GetResponseHeader, (this, aHeader, _retval));
+  RUN_PROXIED_FUNCTION(GetResponseHeader, (this, &queue, aHeader, _retval));
   return NS_OK;
 }
 
@@ -958,7 +978,7 @@ nsDOMWorkerXHRProxy::OpenRequest(const nsACString& aMethod,
                                  const nsAString& aUser,
                                  const nsAString& aPassword)
 {
-  RUN_PROXIED_FUNCTION(OpenRequest, (this, aMethod, aUrl, aAsync, aUser,
+  RUN_PROXIED_FUNCTION(OpenRequest, (this, &queue, aMethod, aUrl, aAsync, aUser,
                                      aPassword));
   return NS_OK;
 }
@@ -966,14 +986,14 @@ nsDOMWorkerXHRProxy::OpenRequest(const nsACString& aMethod,
 nsresult
 nsDOMWorkerXHRProxy::Send(nsIVariant* aBody)
 {
-  RUN_PROXIED_FUNCTION(Send, (this, aBody));
+  RUN_PROXIED_FUNCTION(Send, (this, &queue, aBody));
   return NS_OK;
 }
 
 nsresult
 nsDOMWorkerXHRProxy::SendAsBinary(const nsAString& aBody)
 {
-  RUN_PROXIED_FUNCTION(SendAsBinary, (this, aBody));
+  RUN_PROXIED_FUNCTION(SendAsBinary, (this, &queue, aBody));
   return NS_OK;
 }
 
@@ -981,14 +1001,14 @@ nsresult
 nsDOMWorkerXHRProxy::SetRequestHeader(const nsACString& aHeader,
                                       const nsACString& aValue)
 {
-  RUN_PROXIED_FUNCTION(SetRequestHeader, (this, aHeader, aValue));
+  RUN_PROXIED_FUNCTION(SetRequestHeader, (this, &queue, aHeader, aValue));
   return NS_OK;
 }
 
 nsresult
 nsDOMWorkerXHRProxy::OverrideMimeType(const nsACString& aMimetype)
 {
-  RUN_PROXIED_FUNCTION(OverrideMimeType, (this, aMimetype));
+  RUN_PROXIED_FUNCTION(OverrideMimeType, (this, &queue, aMimetype));
   return NS_OK;
 }
 
@@ -1006,7 +1026,7 @@ nsDOMWorkerXHRProxy::GetMultipart(PRBool* aMultipart)
 nsresult
 nsDOMWorkerXHRProxy::SetMultipart(PRBool aMultipart)
 {
-  RUN_PROXIED_FUNCTION(SetMultipart, (this, aMultipart));
+  RUN_PROXIED_FUNCTION(SetMultipart, (this, &queue, aMultipart));
   mMultipart = aMultipart;
   return NS_OK;
 }
