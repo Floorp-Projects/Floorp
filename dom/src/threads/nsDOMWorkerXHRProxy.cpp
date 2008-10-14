@@ -39,6 +39,8 @@
 #include "nsDOMWorkerXHRProxy.h"
 
 // Interfaces
+#include "nsIDOMEvent.h"
+#include "nsIDOMProgressEvent.h"
 #include "nsIThread.h"
 #include "nsIVariant.h"
 #include "nsIXMLHttpRequest.h"
@@ -121,7 +123,7 @@ private:
 };
 
 class nsDOMWorkerXHREvent : public nsRunnable,
-                            public nsIDOMEvent,
+                            public nsIDOMProgressEvent,
                             public nsIClassInfo
 {
   friend class nsDOMWorkerXHRProxy;
@@ -131,6 +133,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIDOMEVENT
+  NS_DECL_NSIDOMPROGRESSEVENT
   NS_DECL_NSICLASSINFO
 
   nsDOMWorkerXHREvent(nsDOMWorkerXHRProxy* aXHRProxy);
@@ -151,9 +154,13 @@ protected:
   nsCString mStatusText;
   nsresult mStatus;
   PRInt32 mReadyState;
+  PRUint32 mLoaded;
+  PRUint32 mTotal;
   PRPackedBool mBubbles;
   PRPackedBool mCancelable;
   PRPackedBool mUploadEvent;
+  PRPackedBool mProgressEvent;
+  PRPackedBool mLengthComputable;
 };
 
 nsDOMWorkerXHREvent::nsDOMWorkerXHREvent(nsDOMWorkerXHRProxy* aXHRProxy)
@@ -163,9 +170,13 @@ nsDOMWorkerXHREvent::nsDOMWorkerXHREvent(nsDOMWorkerXHRProxy* aXHRProxy)
   mTimeStamp(0),
   mStatus(NS_OK),
   mReadyState(0),
+  mLoaded(0),
+  mTotal(0),
   mBubbles(PR_FALSE),
   mCancelable(PR_FALSE),
-  mUploadEvent(PR_FALSE)
+  mUploadEvent(PR_FALSE),
+  mProgressEvent(PR_FALSE),
+  mLengthComputable(PR_FALSE)
 {
   NS_ASSERTION(aXHRProxy, "Can't be null!");
 
@@ -175,9 +186,15 @@ nsDOMWorkerXHREvent::nsDOMWorkerXHREvent(nsDOMWorkerXHRProxy* aXHRProxy)
   NS_ASSERTION(mTarget, "Must support nsIDOMEventTarget!");
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsDOMWorkerXHREvent, nsRunnable,
-                                                  nsIDOMEvent,
-                                                  nsIClassInfo)
+NS_IMPL_ADDREF_INHERITED(nsDOMWorkerXHREvent, nsRunnable)
+NS_IMPL_RELEASE_INHERITED(nsDOMWorkerXHREvent, nsRunnable)
+
+NS_INTERFACE_MAP_BEGIN(nsDOMWorkerXHREvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMProgressEvent, mProgressEvent)
+NS_INTERFACE_MAP_END_INHERITING(nsRunnable)
 
 NS_IMPL_CI_INTERFACE_GETTER1(nsDOMWorkerXHREvent, nsIDOMEvent)
 
@@ -196,6 +213,23 @@ nsDOMWorkerXHREvent::Init(nsIDOMEvent* aEvent)
   if (mType >= MAX_XHR_LISTENER_TYPE) {
     NS_ERROR("Shouldn't get this type of event!");
     return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIDOMProgressEvent> progressEvent(do_QueryInterface(aEvent));
+  if (progressEvent) {
+    mProgressEvent = PR_TRUE;
+
+    PRBool lengthComputable;
+    rv = progressEvent->GetLengthComputable(&lengthComputable);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mLengthComputable = lengthComputable ? PR_TRUE : PR_FALSE;
+
+    rv = progressEvent->GetLoaded(&mLoaded);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = progressEvent->GetTotal(&mTotal);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMPtr<nsIDOMEventTarget> target;
@@ -222,7 +256,6 @@ nsDOMWorkerXHREvent::Init(nsIDOMEvent* aEvent)
 
   return NS_OK;
 }
-
 
 nsresult
 nsDOMWorkerXHREvent::Init(nsIXMLHttpRequest* aXHR)
@@ -337,6 +370,42 @@ nsDOMWorkerXHREvent::InitEvent(const nsAString& aEventTypeArg,
                                PRBool aCancelableArg)
 {
   NS_WARNING("InitEvent doesn't do anything here!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetLengthComputable(PRBool* aLengthComputable)
+{
+  NS_ENSURE_ARG_POINTER(aLengthComputable);
+  *aLengthComputable = mLengthComputable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetLoaded(PRUint32* aLoaded)
+{
+  NS_ENSURE_ARG_POINTER(aLoaded);
+  *aLoaded = mLoaded;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::GetTotal(PRUint32* aTotal)
+{
+  NS_ENSURE_ARG_POINTER(aTotal);
+  *aTotal = mTotal;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerXHREvent::InitProgressEvent(const nsAString_internal& aTypeArg,
+                                       PRBool aCanBubbleArg,
+                                       PRBool aCancelableArg,
+                                       PRBool aLengthComputableArg,
+                                       PRUint32 aLoadedArg,
+                                       PRUint32 aTotalArg)
+{
+  NS_WARNING("InitProgressEvent doesn't do anything here!");
   return NS_OK;
 }
 
