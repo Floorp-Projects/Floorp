@@ -76,8 +76,8 @@ class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x909852b5, 0xb9e6, 0x4d94, \
-  { 0x8d, 0xe3, 0x05, 0x16, 0x34, 0x80, 0x0b, 0x73 } }
+{ 0x3d2b6b38, 0x810d, 0x4ac5, \
+  { 0x81, 0x7c, 0xb9, 0x70, 0x81, 0x80, 0x4d, 0x9f } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -380,6 +380,24 @@ public:
   }
 
   /**
+   * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a paint event listener.
+   */
+  void SetHasPaintEventListeners()
+  {
+    mMayHavePaintEventListener = PR_TRUE;
+  }
+
+  /**
+   * Call this to check whether some node (this window, its document,
+   * or content in that document) has a paint event listener.
+   */
+  PRBool HasPaintEventListeners()
+  {
+    return mMayHavePaintEventListener;
+  }
+  
+  /**
    * Initialize window.java and window.Packages, and start LiveConnect
    * if we're running with a non-NPRuntime enabled Java plugin.
    */
@@ -398,6 +416,7 @@ protected:
     : mFrameElement(nsnull), mDocShell(nsnull), mModalStateDepth(0),
       mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
       mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
+      mMayHavePaintEventListener(PR_FALSE),
       mIsModalContentWindow(PR_FALSE), mInnerWindow(nsnull),
       mOuterWindow(aOuterWindow)
   {
@@ -427,6 +446,7 @@ protected:
   PRPackedBool           mIsDocumentLoaded;
   PRPackedBool           mIsHandlingResizeEvent;
   PRPackedBool           mIsInnerWindow;
+  PRPackedBool           mMayHavePaintEventListener;
 
   // This variable is used on both inner and outer windows (and they
   // should match).
