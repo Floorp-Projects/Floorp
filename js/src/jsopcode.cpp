@@ -63,6 +63,7 @@
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsiter.h"
+#include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsregexp.h"
@@ -71,10 +72,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsstaticcheck.h"
-
-#if JS_HAS_DESTRUCTURING
-# include "jsnum.h"
-#endif
 
 #include "jsautooplen.h"
 
@@ -1270,11 +1267,6 @@ GetLocal(SprintStack *ss, jsint i)
 #undef LOCAL_ASSERT
 }
 
-#if JS_HAS_DESTRUCTURING
-
-#define LOCAL_ASSERT(expr)  LOCAL_ASSERT_RV(expr, NULL)
-#define LOAD_OP_DATA(pc)    (oplen = (cs = &js_CodeSpec[op=(JSOp)*pc])->length)
-
 static JSBool
 IsVarSlot(JSPrinter *jp, jsbytecode *pc, jsint *indexp)
 {
@@ -1293,6 +1285,11 @@ IsVarSlot(JSPrinter *jp, jsbytecode *pc, jsint *indexp)
     *indexp = slot;
     return JS_FALSE;
 }
+
+#if JS_HAS_DESTRUCTURING
+
+#define LOCAL_ASSERT(expr)  LOCAL_ASSERT_RV(expr, NULL)
+#define LOAD_OP_DATA(pc)    (oplen = (cs = &js_CodeSpec[op=(JSOp)*pc])->length)
 
 static jsbytecode *
 DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc);
@@ -2254,7 +2251,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_POPN:
               {
-                uintN newtop, oldtop, i;
+                uintN newtop, oldtop;
 
                 /*
                  * The compiler models operand stack depth and fixes the stack
@@ -2276,7 +2273,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                                   VarPrefix(sn));
                     if (todo < 0)
                         return NULL;
-                    for (i = newtop; i < oldtop; i++) {
+                    for (uintN i = newtop; i < oldtop; i++) {
                         rval = OFF2STR(&ss->sprinter, ss->offsets[i]);
                         if (Sprint(&ss->sprinter, ss_format,
                                    (i == newtop) ? "" : ", ",
