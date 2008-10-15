@@ -4201,8 +4201,17 @@ TraceRecorder::record_JSOP_PUSH()
 bool
 TraceRecorder::record_JSOP_POPV()
 {
-    // We should not have to implement JSOP_POPV or JSOP_STOP's rval setting.
-    return false;
+    jsval& rval = stackval(-1);
+    LIns *rval_ins = get(&rval);
+    if (!box_jsval(rval, rval_ins))
+        return false;
+
+    // Store it in cx->fp->rval. NB: Tricky dependencies. cx->fp is the right
+    // frame because POPV appears only in global and eval code and we don't
+    // trace JSOP_EVAL or leaving the frame where tracing started.
+    LIns *fp_ins = lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp));
+    lir->insStorei(rval_ins, fp_ins, offsetof(JSStackFrame, rval));
+    return true;
 }
 
 bool TraceRecorder::record_JSOP_ENTERWITH()
