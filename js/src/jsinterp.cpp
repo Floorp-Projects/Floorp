@@ -2738,12 +2738,17 @@ js_Interpret(JSContext *cx)
 
     LOAD_INTERRUPT_HANDLER(cx);
 
-    /* Initialize the pc and pc registers unless we're resuming a generator. */
+#if !JS_HAS_GENERATORS
+    JS_ASSERT(!fp->regs);
+#else
+    /* Initialize the pc and sp registers unless we're resuming a generator. */
     if (JS_LIKELY(!fp->regs)) {
+#endif
         ASSERT_NOT_THROWING(cx);
         regs.pc = script->code;
         regs.sp = StackBase(fp);
         fp->regs = &regs;
+#if JS_HAS_GENERATORS
     } else {
         JSGenerator *gen;
 
@@ -2771,6 +2776,7 @@ js_Interpret(JSContext *cx)
             goto error;
         }
     }
+#endif /* JS_HAS_GENERATORS */
 
     /*
      * It is important that "op" be initialized before calling DO_OP because
@@ -7053,6 +7059,7 @@ js_Interpret(JSContext *cx)
     if (TRACE_RECORDER(cx))
         js_AbortRecording(cx, "recording out of js_Interpret");
 #endif
+#if JS_HAS_GENERATORS
     if (JS_UNLIKELY(fp->flags & JSFRAME_YIELDING)) {
         JSGenerator *gen;
 
@@ -7061,7 +7068,9 @@ js_Interpret(JSContext *cx)
         gen->frame.regs = &gen->savedRegs;
         JS_PROPERTY_CACHE(cx).disabled -= js_CountWithBlocks(cx, fp);
         JS_ASSERT(JS_PROPERTY_CACHE(cx).disabled >= 0);
-    } else {
+    } else
+#endif /* JS_HAS_GENERATORS */
+    {
         JS_ASSERT(!fp->blockChain);
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
         fp->regs = NULL;

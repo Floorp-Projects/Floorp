@@ -1663,6 +1663,23 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     return JS_TRUE;
 }
 
+static JSBool
+MakeSetCall(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN msg)
+{
+    JSParseNode *pn2;
+
+    JS_ASSERT(pn->pn_arity == PN_LIST);
+    JS_ASSERT(pn->pn_op == JSOP_CALL || pn->pn_op == JSOP_EVAL);
+    pn2 = pn->pn_head;
+    if (pn2->pn_type == TOK_FUNCTION && (pn2->pn_flags & TCF_GENEXP_LAMBDA)) {
+        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), pn,
+                                    JSREPORT_ERROR, msg);
+        return JS_FALSE;
+    }
+    pn->pn_op = JSOP_SETCALL;
+    return JS_TRUE;
+}
+
 #if JS_HAS_DESTRUCTURING
 
 static JSBool
@@ -1699,23 +1716,6 @@ BindDestructuringVar(JSContext *cx, BindData *data, JSParseNode *pn,
         pn->pn_op = JSOP_SETNAME;
         pn->pn_const = JS_FALSE;
     }
-    return JS_TRUE;
-}
-
-static JSBool
-MakeSetCall(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, uintN msg)
-{
-    JSParseNode *pn2;
-
-    JS_ASSERT(pn->pn_arity == PN_LIST);
-    JS_ASSERT(pn->pn_op == JSOP_CALL || pn->pn_op == JSOP_EVAL);
-    pn2 = pn->pn_head;
-    if (pn2->pn_type == TOK_FUNCTION && (pn2->pn_flags & TCF_GENEXP_LAMBDA)) {
-        js_ReportCompileErrorNumber(cx, TS(tc->parseContext), pn,
-                                    JSREPORT_ERROR, msg);
-        return JS_FALSE;
-    }
-    pn->pn_op = JSOP_SETCALL;
     return JS_TRUE;
 }
 
@@ -6370,7 +6370,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         pn2 = pn->pn_right;
 
         /* Propagate inCond through logical connectives. */
-        if (pn->pn_type == TOK_OR || pn->pn_type == TOK_AND) {
+        if (pn->pn_op == JSOP_OR || pn->pn_op == JSOP_AND ||
+            pn->pn_op == JSOP_STRICTEQ || pn->pn_op == JSOP_STRICTNE) {
             if (!js_FoldConstants(cx, pn1, tc, inCond))
                 return JS_FALSE;
             if (!js_FoldConstants(cx, pn2, tc, inCond))
@@ -6388,8 +6389,12 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
       case PN_UNARY:
         /* Our kid may be null (e.g. return; vs. return e;). */
         pn1 = pn->pn_kid;
-        if (pn1 && !js_FoldConstants(cx, pn1, tc, inCond))
+        if (pn1 &&
+            !js_FoldConstants(cx, pn1, tc,
+                              (inCond && pn->pn_type == TOK_RP) ||
+                              pn->pn_op == JSOP_NOT)) {
             return JS_FALSE;
+        }
         break;
 
       case PN_NAME:
