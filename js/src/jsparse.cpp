@@ -6370,8 +6370,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         pn2 = pn->pn_right;
 
         /* Propagate inCond through logical connectives. */
-        if (pn->pn_op == JSOP_OR || pn->pn_op == JSOP_AND ||
-            pn->pn_op == JSOP_STRICTEQ || pn->pn_op == JSOP_STRICTNE) {
+        if (pn->pn_type == TOK_OR || pn->pn_type == TOK_AND) {
             if (!js_FoldConstants(cx, pn1, tc, inCond))
                 return JS_FALSE;
             if (!js_FoldConstants(cx, pn2, tc, inCond))
@@ -6389,12 +6388,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
       case PN_UNARY:
         /* Our kid may be null (e.g. return; vs. return e;). */
         pn1 = pn->pn_kid;
-        if (pn1 &&
-            !js_FoldConstants(cx, pn1, tc,
-                              (inCond && pn->pn_type == TOK_RP) ||
-                              pn->pn_op == JSOP_NOT)) {
+        if (pn1 && !js_FoldConstants(cx, pn1, tc, inCond))
             return JS_FALSE;
-        }
         break;
 
       case PN_NAME:
