@@ -573,7 +573,8 @@
                          x, y,
                          this._screenToPage(rect.width),
                          this._screenToPage(rect.height),
-                         "white");
+                         "white",
+                         ctx.DRAWWINDOW_DO_NOT_FLUSH);
           ctx.restore();
           
           this._updateCanvasPosition();
@@ -643,7 +644,8 @@
           ctx.drawWindow(this.browser.contentWindow,
                          dest.x, dest.y,
                          dest.width, dest.height,
-                         "white");
+                         "white",
+                         ctx.DRAWWINDOW_DO_NOT_FLUSH);
 
           ctx.restore();
         ]]></body>
