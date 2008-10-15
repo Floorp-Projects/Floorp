@@ -59,6 +59,7 @@
 #include "nsWidgetAtoms.h"
 #include "nsToolkit.h"
 #include "nsCocoaWindow.h"
+#include "nsNativeThemeColors.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -1189,7 +1190,7 @@ nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inB
 
   // Draw the gradient
   UnifiedGradientInfo info = { titlebarHeight, inBoxRect.size.height, isMain, NO };
-  struct CGFunctionCallbacks callbacks = { 0, unifiedShading, NULL };
+  struct CGFunctionCallbacks callbacks = { 0, nsCocoaWindow::UnifiedShading, NULL };
   CGFunctionRef function = CGFunctionCreate(&info, 1,  NULL, 4, NULL, &callbacks);
   float srcY = inBoxRect.origin.y;
   float dstY = srcY + inBoxRect.size.height - 1;
