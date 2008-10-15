@@ -38,7 +38,7 @@
 #ifndef nsIEventListenerManager_h__
 #define nsIEventListenerManager_h__
 
-#include "nsEvent.h"
+#include "nsGUIEvent.h"
 #include "nsISupports.h"
 
 class nsPresContext;
@@ -53,14 +53,18 @@ class nsPIDOMEventTarget;
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0x0cdf1660, 0x3ac1, 0x4b84, \
-  { 0xa9, 0x35, 0xc0, 0xc0, 0xe5, 0x5d, 0x73, 0xca } }
-
+{ 0xadfdc265, 0xea1c, 0x4c0b, \
+  { 0x91, 0xca, 0x37, 0x67, 0x2c, 0x83, 0x92, 0x1f } }
 
 class nsIEventListenerManager : public nsISupports {
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEVENTLISTENERMANAGER_IID)
+
+  nsIEventListenerManager() : mMayHavePaintEventListener(PR_FALSE),
+    mMayHaveMutationListeners(PR_FALSE),
+    mNoListenerForEvent(NS_EVENT_TYPE_NULL)
+  {}
 
   /**
   * Sets events listeners of all types.
@@ -194,6 +198,21 @@ public:
    * Returns PR_TRUE if there is at least one event listener.
    */
   virtual PRBool HasListeners() = 0;
+
+
+  /**
+   * Returns PR_TRUE if there may be a paint event listener registered,
+   * PR_FALSE if there definitely isn't.
+   */
+  PRBool MayHavePaintEventListener() { return mMayHavePaintEventListener; }
+
+protected:
+  PRUint32 mMayHavePaintEventListener : 1;
+  PRUint32 mMayHaveMutationListeners : 1;
+  // These two member variables are used to cache the information
+  // about the last event which was handled but for which event listener manager
+  // didn't have event listeners.
+  PRUint32 mNoListenerForEvent : 30;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventListenerManager,
