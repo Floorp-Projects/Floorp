@@ -251,10 +251,17 @@
             if (self.dragData.dragging || self.dragData.kineticId)
               return;
 
+            let cwin = self.browser.contentWindow;
+
             for (let i = 0; i < aEvent.clientRects.length; i++) {
               let e = aEvent.clientRects.item(i);
-              //dump(Math.floor(e.left) + ", " + Math.floor(e.top) + ", " + Math.ceil(e.width) + ", " + Math.ceil(e.height) + "\n");
-              self._redrawRect(Math.floor(e.left), Math.floor(e.top), Math.ceil(e.width), Math.ceil(e.height));
+              //dump(Math.floor(e.left + cwin.scrollX),
+              //     Math.floor(e.top + cwin.scrollY),
+              //     Math.ceil(e.width), Math.ceil(e.height));
+              self._redrawRect(Math.floor(e.left + cwin.scrollX),
+                               Math.floor(e.top + cwin.scrollY),
+                               Math.ceil(e.width), Math.ceil(e.height));
+
             }
           }
         });
@@ -760,9 +767,6 @@
           var [x, y] = this._clientToContentCoords(aX, aY);
           var element =  cdoc.elementFromPoint(x, y);
 
-          // Reset scroll state
-          this.browser.contentWindow.scrollTo(0, 0);
-
           return element;
         ]]></body>
       </method>
@@ -801,9 +805,6 @@
                              aEvent.button || 0,
                              aEvent.detail || 1,
                              0);
-
-          // Reset scroll state
-          cwin.scrollTo(0, 0);
         ]]></body>
       </method>
 
