@@ -827,22 +827,56 @@ nsXMLContentSink::GetTarget()
 }
 
 nsresult
-nsXMLContentSink::FlushText()
+nsXMLContentSink::FlushText(PRBool aReleaseTextNode)
 {
-  if (mTextLength == 0) {
-    return NS_OK;
+  nsresult rv = NS_OK;
+
+  if (mTextLength != 0) {
+    if (mLastTextNode) {
+      if ((mLastTextNodeSize + mTextLength) > mTextSize && !mXSLTProcessor) {
+        mLastTextNodeSize = 0;
+        mLastTextNode = nsnull;
+        FlushText(aReleaseTextNode);
+      } else {
+        PRBool notify = HaveNotifiedForCurrentContent();
+        // We could probably always increase mInNotification here since
+        // if AppendText doesn't notify it shouldn't trigger evil code.
+        // But just in case it does, we don't want to mask any notifications.
+        if (notify) {
+          ++mInNotification;
+        }
+        rv = mLastTextNode->AppendText(mText, mTextLength, notify);
+        if (notify) {
+          --mInNotification;
+        }
+
+        mLastTextNodeSize += mTextLength;
+        mTextLength = 0;
+      }
+    } else {
+      nsCOMPtr<nsIContent> textContent;
+      rv = NS_NewTextNode(getter_AddRefs(textContent),
+                          mNodeInfoManager);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mLastTextNode = textContent;
+      
+      // Set the text in the text node
+      textContent->SetText(mText, mTextLength, PR_FALSE);
+      mLastTextNodeSize += mTextLength;
+      mTextLength = 0;
+
+      // Add text to its parent
+      rv = AddContentAsLeaf(textContent);
+    }
   }
 
-  nsCOMPtr<nsIContent> textContent;
-  nsresult rv = NS_NewTextNode(getter_AddRefs(textContent), mNodeInfoManager);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Set the text in the text node
-  textContent->SetText(mText, mTextLength, PR_FALSE);
-  mTextLength = 0;
-
-  // Add text to its parent
-  return AddContentAsLeaf(textContent);
+  if (aReleaseTextNode) {
+    mLastTextNodeSize = 0;
+    mLastTextNode = nsnull;
+  }
+  
+  return rv;
 }
 
 nsIContent*
@@ -1581,7 +1615,7 @@ nsXMLContentSink::FlushPendingNotifications(mozFlushType aType)
       FlushTags();
     }
     else {
-      FlushText();
+      FlushText(PR_FALSE);
     }
     if (aType >= Flush_Layout) {
       // Make sure that layout has started so that the reflow flush
@@ -1615,7 +1649,7 @@ nsXMLContentSink::FlushTags()
     mBeganUpdate = PR_TRUE;
 
     // Don't release last text node in case we need to add to it again
-    FlushText();
+    FlushText(PR_FALSE);
 
     // Start from the base of the stack (growing downward) and do
     // a notification from the node that is closest to the root of
