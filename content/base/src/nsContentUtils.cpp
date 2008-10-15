@@ -3953,36 +3953,34 @@ nsContentUtils::GetNativeEvent(nsIDOMEvent* aDOMEvent)
 
 //static
 PRBool
-nsContentUtils::DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
+nsContentUtils::DOMEventToNativeKeyEvent(nsIDOMKeyEvent* aKeyEvent,
                                          nsNativeKeyEvent* aNativeEvent,
                                          PRBool aGetCharCode)
 {
-  nsCOMPtr<nsIDOMNSUIEvent> uievent = do_QueryInterface(aDOMEvent);
+  nsCOMPtr<nsIDOMNSUIEvent> uievent = do_QueryInterface(aKeyEvent);
   PRBool defaultPrevented;
   uievent->GetPreventDefault(&defaultPrevented);
   if (defaultPrevented)
     return PR_FALSE;
 
-  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aDOMEvent);
+  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aKeyEvent);
   PRBool trusted = PR_FALSE;
   nsevent->GetIsTrusted(&trusted);
   if (!trusted)
     return PR_FALSE;
 
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aDOMEvent);
-
   if (aGetCharCode) {
-    keyEvent->GetCharCode(&aNativeEvent->charCode);
+    aKeyEvent->GetCharCode(&aNativeEvent->charCode);
   } else {
     aNativeEvent->charCode = 0;
   }
-  keyEvent->GetKeyCode(&aNativeEvent->keyCode);
-  keyEvent->GetAltKey(&aNativeEvent->altKey);
-  keyEvent->GetCtrlKey(&aNativeEvent->ctrlKey);
-  keyEvent->GetShiftKey(&aNativeEvent->shiftKey);
-  keyEvent->GetMetaKey(&aNativeEvent->metaKey);
+  aKeyEvent->GetKeyCode(&aNativeEvent->keyCode);
+  aKeyEvent->GetAltKey(&aNativeEvent->altKey);
+  aKeyEvent->GetCtrlKey(&aNativeEvent->ctrlKey);
+  aKeyEvent->GetShiftKey(&aNativeEvent->shiftKey);
+  aKeyEvent->GetMetaKey(&aNativeEvent->metaKey);
 
-  aNativeEvent->nativeEvent = GetNativeEvent(aDOMEvent);
+  aNativeEvent->nativeEvent = GetNativeEvent(aKeyEvent);
 
   return PR_TRUE;
 }

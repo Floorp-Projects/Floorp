@@ -67,13 +67,16 @@ public:
   nsCSSStyleSheetInner(nsICSSStyleSheet* aPrimarySheet);
   nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
                        nsCSSStyleSheet* aPrimarySheet);
-  virtual ~nsCSSStyleSheetInner();
+  ~nsCSSStyleSheetInner();
 
-  virtual nsCSSStyleSheetInner* CloneFor(nsCSSStyleSheet* aPrimarySheet);
-  virtual void AddSheet(nsICSSStyleSheet* aSheet);
-  virtual void RemoveSheet(nsICSSStyleSheet* aSheet);
+  nsCSSStyleSheetInner* CloneFor(nsCSSStyleSheet* aPrimarySheet);
+  void AddSheet(nsICSSStyleSheet* aSheet);
+  void RemoveSheet(nsICSSStyleSheet* aSheet);
 
-  virtual void RebuildNameSpaces();
+  void RebuildNameSpaces();
+
+  // Create a new namespace map
+  nsresult CreateNamespaceMap();
 
   nsAutoVoidArray        mSheets;
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
@@ -204,6 +207,9 @@ protected:
   // inner, error otherwise.  This will also succeed if the subject has
   // UniversalBrowserWrite.
   nsresult SubjectSubsumesInnerPrincipal() const;
+
+  // Add the namespace mapping from this @namespace rule to our namespace map
+  nsresult RegisterNamespaceRule(nsICSSRule* aRule);
 
 protected:
   nsString              mTitle;

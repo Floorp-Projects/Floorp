@@ -262,6 +262,8 @@ nsJARChannel::Init(nsIURI *uri)
     if (NS_FAILED(rv))
         return rv;
 
+    mOriginalURI = mJarURI;
+
     // Prevent loading jar:javascript URIs (see bug 290982).
     nsCOMPtr<nsIURI> innerURI;
     rv = mJarURI->GetJARFile(getter_AddRefs(innerURI));
@@ -441,17 +443,15 @@ nsJARChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
 NS_IMETHODIMP
 nsJARChannel::GetOriginalURI(nsIURI **aURI)
 {
-    if (mOriginalURI)
-        *aURI = mOriginalURI;
-    else
-        *aURI = mJarURI;
-    NS_IF_ADDREF(*aURI);
+    *aURI = mOriginalURI;
+    NS_ADDREF(*aURI);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::SetOriginalURI(nsIURI *aURI)
 {
+    NS_ENSURE_ARG_POINTER(aURI);
     mOriginalURI = aURI;
     return NS_OK;
 }

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads
+-->
+<head>
+  <title>Test for DOM Worker Threads Recursion</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  function workerScript() {
+    function recurse() {
+      recurse();
+    }
+
+    this.messageListener = function(message, source) {
+      switch (message) {
+        case "start":
+          recurse();
+          break;
+        default:
+      }
+    }
+  }
+
+  var pool = navigator.newWorkerPool();
+
+  pool.errorListener = function(error, source) {
+    is(error.message,
+       '[JavaScript Error: "too much recursion" {file: "DOMWorker inline ' +
+       'script" line: 4}]');
+    SimpleTest.finish();
+  }
+
+  var worker = pool.createWorker("(" + workerScript + ")();");
+  worker.postMessage("start");
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

@@ -146,7 +146,7 @@ protected:
   
 
   // nsXMLContentSink overrides
-  nsresult FlushText();
+  nsresult FlushText(PRBool aReleaseTextNode = PR_TRUE);
 
   // nsIExpatSink overrides
   NS_IMETHOD ReportError(const PRUnichar* aErrorText,

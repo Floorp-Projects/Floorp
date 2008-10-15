@@ -93,15 +93,23 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// 0e64821f-00a2-4adc-ac3b-3439d61f4491
+// 8c91457a-ef86-4da1-b4f9-36022dcc6c7e
 #define NS_IWIDGET_IID \
-{ 0x0e64821f, 0x00a2, 0x4adc, \
-  { 0xac, 0x3b, 0x34, 0x39, 0xd6, 0x1f, 0x44, 0x91 } }
+{ 0x8c91457a, 0xef86, 0x4da1, \
+  { 0xb4, 0xf9, 0x36, 0x02, 0x2d, 0xcc, 0x6c, 0x7e } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and APIs. This is necessary
 // to ensure cross-platform code.
 typedef void* nsNativeWidget;
+
+/*
+ * Window shadow styles
+ * Also used for the -moz-window-shadow CSS property
+ */
+
+#define NS_STYLE_WINDOW_SHADOW_NONE             0
+#define NS_STYLE_WINDOW_SHADOW_DEFAULT          1
 
 /**
  * Border styles
@@ -710,6 +718,11 @@ class nsIWidget : public nsISupports {
      * widget.
      */
     virtual nsTransparencyMode GetTransparencyMode() = 0;
+
+    /**
+     * Set the shadow style of the window.
+     */
+    NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle) = 0;
 
     /** 
      * Hide window chrome (borders, buttons) for this widget.

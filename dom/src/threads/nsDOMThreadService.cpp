@@ -320,7 +320,7 @@ public:
     // Make sure we have a JSContext to run everything on.
     JSContext* cx = (JSContext*)PR_GetThreadPrivate(gJSContextIndex);
     NS_ASSERTION(cx, "nsDOMThreadService didn't give us a context!");
-  
+
     JS_SetContextPrivate(cx, mWorker);
 
     // Tell the worker which context it will be using
@@ -347,6 +347,9 @@ public:
 protected:
 
   void RunQueue() {
+    JSContext* cx = (JSContext*)PR_GetThreadPrivate(gJSContextIndex);
+    NS_ASSERTION(cx, "nsDOMThreadService didn't give us a context!");
+
     while (1) {
       nsCOMPtr<nsIRunnable> runnable;
       {
@@ -366,6 +369,9 @@ protected:
           return;
         }
       }
+
+      // Clear out any old cruft hanging around in the regexp statics.
+      JS_ClearRegExpStatics(cx);
 
 #ifdef DEBUG
       nsresult rv =

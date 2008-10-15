@@ -3816,12 +3816,13 @@ nsHttpChannel::GetOriginalURI(nsIURI **originalURI)
 {
     NS_ENSURE_ARG_POINTER(originalURI);
     *originalURI = mOriginalURI;
-    NS_IF_ADDREF(*originalURI);
+    NS_ADDREF(*originalURI);
     return NS_OK;
 }
 NS_IMETHODIMP
 nsHttpChannel::SetOriginalURI(nsIURI *originalURI)
 {
+    NS_ENSURE_ARG_POINTER(originalURI);
     mOriginalURI = originalURI;
     return NS_OK;
 }

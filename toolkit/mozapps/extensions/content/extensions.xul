@@ -267,7 +267,8 @@
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
-              command="cmd_continue"/>
+              command="cmd_continue"
+              hidden="true"/>
       <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
               accesskey="&cmd.installUpdatesAll.accesskey;"
               tooltiptext="&cmd.installUpdatesAll.tooltip;"
@@ -282,7 +283,8 @@
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
-              command="cmd_continue"/>
+              command="cmd_continue"
+              hidden="true"/>
       <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
               accesskey="&cmd.installUpdatesAll.accesskey;"
               tooltiptext="&cmd.installUpdatesAll.tooltip;"

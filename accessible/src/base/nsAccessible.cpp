@@ -1881,7 +1881,10 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
     }
   }
 
-  if (aCanAggregateSubtree) {
+  PRBool canAggregateName = mRoleMapEntry ?
+                            mRoleMapEntry->nameRule == eNameOkFromChildren :
+                            aCanAggregateSubtree;
+  if (canAggregateName) {
     // Don't use AppendFlatStringFromSubtree for container widgets like menulist
     nsresult rv = AppendFlatStringFromSubtree(content, &aLabel);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1987,8 +1990,12 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
     parent = parent->GetParent();
   }
 
-  // Don't use AppendFlatStringFromSubtree for container widgets like menulist
-  return aCanAggregateSubtree? AppendFlatStringFromSubtree(content, &aLabel) : NS_OK;
+  PRBool canAggregateName = mRoleMapEntry ?
+                            mRoleMapEntry->nameRule == eNameOkFromChildren :
+                            aCanAggregateSubtree;
+
+  return canAggregateName ?
+         AppendFlatStringFromSubtree(content, &aLabel) : NS_OK;
 }
 
 PRBool nsAccessible::IsNodeRelevant(nsIDOMNode *aNode)
@@ -3587,18 +3594,15 @@ nsAccessible::GetARIAName(nsAString& aName)
 nsresult
 nsAccessible::GetNameInternal(nsAString& aName)
 {
-  PRBool canAggregateName = mRoleMapEntry &&
-    mRoleMapEntry->nameRule == eNameOkFromChildren;
-
   nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
   if (!content)
     return NS_OK;
 
   if (content->IsNodeOfType(nsINode::eHTML))
-    return GetHTMLName(aName, canAggregateName);
+    return GetHTMLName(aName, PR_FALSE);
 
   if (content->IsNodeOfType(nsINode::eXUL))
-    return GetXULName(aName, canAggregateName);
+    return GetXULName(aName, PR_FALSE);
 
   return NS_OK;
 }

@@ -81,7 +81,7 @@ public:
                                    nsIContent*     aChild,
                                    PRBool          aAppend);
 
-  NS_IMETHOD  DidSetStyleContext();
+  virtual void DidSetStyleContext();
 
   NS_IMETHOD  SetSelected(nsPresContext* aPresContext,
                           nsIDOMRange*    aRange,

@@ -1397,11 +1397,13 @@ richlistitem[selected="true"][current="true"] > hbox > .ac-result-type-bookmark,
 
 /* ----- SIDEBAR ELEMENTS ----- */
 
-#sidebar,
+#sidebar { 
+  background-color: #d4dde5;
+}
+
 sidebarheader { 
   background-color: #d4dde5;
   padding: 2px;
-  text-transform: uppercase;
 }
 
 #sidebar-box {
@@ -2175,6 +2177,7 @@ tabpanels.plain {
   -moz-border-radius: 10px;
   margin-top: -1px;
   margin-left: -1px;
+  -moz-window-shadow: none;
 }
 
 /* ::::: Ctrl-Tab Panel ::::: */

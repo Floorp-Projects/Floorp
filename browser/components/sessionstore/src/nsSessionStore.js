@@ -226,19 +226,10 @@ SessionStoreService.prototype = {
           this._recentCrashes = (this._initialState.session &&
                                  this._initialState.session.recentCrashes || 0) + 1;
           
-          const SIX_HOURS_IN_MS = 6 * 60 * 60 * 1000;
-          let max_resumed_crashes =
-            this._prefBranch.getIntPref("sessionstore.max_resumed_crashes");
-          let sessionAge = this._initialState.session &&
-                           this._initialState.session.lastUpdate &&
-                           (Date.now() - this._initialState.session.lastUpdate);
-          let needsRestorePage = max_resumed_crashes != -1 &&
-                                 (this._recentCrashes > max_resumed_crashes ||
-                                  sessionAge && sessionAge >= SIX_HOURS_IN_MS);
-          if (needsRestorePage)
+          if (this._needsRestorePage(this._initialState, this._recentCrashes))
             // replace the crashed session with a restore-page-only session
             this._initialState =
-              { windows: [{ tabs: [{ entries: [{ url: "about:sessionrestore"}] }] }] };
+              { windows: [{ tabs: [{ entries: [{ url: "about:sessionrestore" }] }] }] };
         }
         
         // make sure that at least the first window doesn't have anything hidden
@@ -2336,6 +2327,32 @@ SessionStoreService.prototype = {
       if (ex.result != Components.results.NS_ERROR_NOT_INITIALIZED)
         debug(ex);
     }
+  },
+
+  /**
+   * @param aState is a session state
+   * @param aRecentCrashes is the number of consecutive crashes
+   * @returns whether a restore page will be needed for the session state
+   */
+  _needsRestorePage: function sss_needsRestorePage(aState, aRecentCrashes) {
+    const SIX_HOURS_IN_MS = 6 * 60 * 60 * 1000;
+    
+    // don't wrap a single about:sessionrestore page
+    let winData = aState.windows || null;
+    if (winData && winData.length == 1 && winData[0].tabs &&
+        winData[0].tabs.length == 1 && winData[0].tabs[0].entries &&
+        winData[0].tabs[0].entries.length == 1 &&
+        winData[0].tabs[0].entries[0].url == "about:sessionrestore")
+      return false;
+    
+    let max_resumed_crashes =
+      this._prefBranch.getIntPref("sessionstore.max_resumed_crashes");
+    let sessionAge = aState.session && aState.session.lastUpdate &&
+                     (Date.now() - aState.session.lastUpdate);
+    
+    return max_resumed_crashes != -1 &&
+           (aRecentCrashes > max_resumed_crashes ||
+            sessionAge && sessionAge >= SIX_HOURS_IN_MS);
   },
 
   /**

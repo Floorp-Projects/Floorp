@@ -508,7 +508,10 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
       nsIFrame *rootFrame = aPresContext->PresShell()->FrameConstructor()->GetRootElementStyleFrame();
       if(rootFrame && NS_THEME_WIN_GLASS == rootFrame->GetStyleDisplay()->mAppearance)
         mode = eTransparencyGlass;
-      aView->GetWidget()->SetTransparencyMode(mode);
+      nsIWidget* widget = aView->GetWidget();
+      widget->SetTransparencyMode(mode);
+      if (rootFrame)
+        widget->SetWindowShadowStyle(rootFrame->GetStyleUIReset()->mWindowShadow);
     }
   }
 }

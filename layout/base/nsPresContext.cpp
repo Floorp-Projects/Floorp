@@ -84,6 +84,7 @@
 #include "nsRuleNode.h"
 #include "nsEventDispatcher.h"
 #include "gfxUserFontSet.h"
+#include "nsIEventListenerManager.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -1541,10 +1542,10 @@ nsPresContext::SetUserFontSet(gfxUserFontSet *aUserFontSet)
 void
 nsPresContext::FireDOMPaintEvent()
 {
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
-  if (!docShell)
+  nsCOMPtr<nsPIDOMWindow> ourWindow = mDocument->GetWindow();
+  if (!ourWindow)
     return;
-  nsCOMPtr<nsPIDOMWindow> ourWindow = do_GetInterface(docShell);
+
   nsISupports* eventTarget = ourWindow;
   if (mSameDocDirtyRegion.IsEmpty() && !IsChrome()) {
     // Don't tell the window about this event, it should not know that
@@ -1570,10 +1571,43 @@ nsPresContext::FireDOMPaintEvent()
   nsEventDispatcher::Dispatch(eventTarget, this, &event);
 }
 
+static PRBool MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
+{
+  if (!aInnerWindow)
+    return PR_FALSE;
+  if (aInnerWindow->HasPaintEventListeners())
+    return PR_TRUE;
+
+  nsPIDOMEventTarget* chromeEventHandler = aInnerWindow->GetChromeEventHandler();
+  if (!chromeEventHandler)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIEventListenerManager> manager;
+  chromeEventHandler->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+  if (manager && manager->MayHavePaintEventListener())
+    return PR_TRUE;
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(chromeEventHandler);
+  if (node)
+    return MayHavePaintEventListener(node->GetOwnerDoc()->GetInnerWindow());
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(chromeEventHandler);
+  if (window)
+    return MayHavePaintEventListener(window);
+
+  return PR_FALSE;
+}
+
 void
 nsPresContext::NotifyInvalidation(const nsRect& aRect, PRBool aIsCrossDoc)
 {
-  if (aRect.IsEmpty())
+  // If there is no paint event listener, then we don't need to fire
+  // the asynchronous event. We don't even need to record invalidation.
+  // MayHavePaintEventListener is pretty cheap and we could make it
+  // even cheaper by providing a more efficient
+  // nsPIDOMWindow::GetListenerManager.
+  if (aRect.IsEmpty() ||
+      !MayHavePaintEventListener(mDocument->GetInnerWindow()))
     return;
 
   if (mSameDocDirtyRegion.IsEmpty() && mCrossDocDirtyRegion.IsEmpty()) {

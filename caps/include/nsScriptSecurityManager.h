@@ -587,7 +587,6 @@ private:
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
     nsInterfaceHashtable<PrincipalKey, nsIPrincipal> mPrincipals;
-    nsCOMPtr<nsIThreadJSContextStack> mJSContextStack;
     PRPackedBool mIsJavaScriptEnabled;
     PRPackedBool mIsMailJavaScriptEnabled;
     PRPackedBool mIsWritingPrefs;
@@ -601,6 +600,7 @@ private:
 
     static nsIIOService    *sIOService;
     static nsIXPConnect    *sXPConnect;
+    static nsIThreadJSContextStack* sJSContextStack;
     static nsIStringBundle *sStrBundle;
     static JSRuntime       *sRuntime;
 };

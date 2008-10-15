@@ -225,7 +225,7 @@ nsSVGGlyphFrame::CharacterDataChanged(nsPresContext*  aPresContext,
 #define CLAMP_MAX_SIZE 200
 #define PRECISE_SIZE   200
 
-NS_IMETHODIMP
+/* virtual */ void
 nsSVGGlyphFrame::DidSetStyleContext()
 {
   nsSVGGlyphFrameBase::DidSetStyleContext();
@@ -234,8 +234,6 @@ nsSVGGlyphFrame::DidSetStyleContext()
     ClearTextRun();
     NotifyGlyphMetricsChange();
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
