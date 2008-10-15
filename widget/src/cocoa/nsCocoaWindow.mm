@@ -66,6 +66,7 @@
 #include "nsMenuBarX.h"
 #include "nsMenuUtilsX.h"
 #include "nsStyleConsts.h"
+#include "nsNativeThemeColors.h"
 
 #include "gfxPlatform.h"
 #include "lcms.h"
@@ -1407,6 +1408,27 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 }
 
 
+// Callback used by the default titlebar and toolbar shading.
+// *aIn == 0 at the top of the titlebar/toolbar, *aIn == 1 at the bottom
+/* static */ void
+nsCocoaWindow::UnifiedShading(void* aInfo, const float* aIn, float* aOut)
+{
+  UnifiedGradientInfo* info = (UnifiedGradientInfo*)aInfo;
+  // The gradient percentage at the bottom of the titlebar / top of the toolbar
+  float start = info->titlebarHeight / (info->titlebarHeight + info->toolbarHeight - 1);
+  const float startGrey = NativeGreyColorAsFloat(headerStartGrey, info->windowIsMain);
+  const float endGrey = NativeGreyColorAsFloat(headerEndGrey, info->windowIsMain);
+  // *aIn is the gradient percentage of the titlebar or toolbar gradient,
+  // a is the gradient percentage of the whole unified gradient.
+  float a = info->drawTitlebar ? *aIn * start : start + *aIn * (1 - start);
+  float result = (1.0f - a) * startGrey + a * endGrey;
+  aOut[0] = result;
+  aOut[1] = result;
+  aOut[2] = result;
+  aOut[3] = 1.0f;
+}
+
+
 @implementation WindowDelegate
 
 
@@ -1983,8 +2005,8 @@ void patternDraw(void* aInfo, CGContextRef aContext)
 
   // If the titlebar color is nil, draw the default titlebar shading.
   if (!titlebarColor) {
-    // Create and draw a CGShading that uses unifiedShading() as its callback.
-    CGFunctionCallbacks callbacks = {0, unifiedShading, NULL};
+    // Create and draw a CGShading that uses nsCocoaWindow::UnifiedShading() as its callback.
+    CGFunctionCallbacks callbacks = {0, nsCocoaWindow::UnifiedShading, NULL};
     CGFunctionRef function = CGFunctionCreate(&info, 1, NULL, 4, NULL, &callbacks);
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     CGShadingRef shading = CGShadingCreateAxial(colorSpace,
