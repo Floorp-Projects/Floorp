@@ -1153,40 +1153,48 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // resetting the size. Because of this, we must not reflow our abs-pos children
   // in that situation --- what we think is our "new size"
   // will not be our real new size. This also happens to be more efficient.
-  if (mAbsoluteContainer.HasAbsoluteFrames() &&
-      !aReflowState.WillReflowAgainForClearance()) {
-    nsRect childBounds;
-    nsSize containingBlockSize
-      = CalculateContainingBlockSizeForAbsolutes(aReflowState,
-                                                 nsSize(aMetrics.width, aMetrics.height));
+  if (mAbsoluteContainer.HasAbsoluteFrames()) {
+    if (aReflowState.WillReflowAgainForClearance()) {
+      // Make sure that when we reflow again we'll actually reflow all the abs
+      // pos frames that might conceivably depend on our size.  Sadly, we can't
+      // do much better than that, because we don't really know what our size
+      // will be, and it might in fact not change on the followup reflow!
+      mAbsoluteContainer.MarkSizeDependentFramesDirty();
+    } else {
+      nsRect childBounds;
+      nsSize containingBlockSize =
+        CalculateContainingBlockSizeForAbsolutes(aReflowState,
+                                                 nsSize(aMetrics.width,
+                                                        aMetrics.height));
 
-    // Mark frames that depend on changes we just made to this frame as dirty:
-    // Now we can assume that the padding edge hasn't moved.
-    // We need to reflow the absolutes if one of them depends on
-    // its placeholder position, or the containing block size in a
-    // direction in which the containing block size might have
-    // changed.
-    PRBool cbWidthChanged = aMetrics.width != oldSize.width;
-    PRBool isRoot = !GetContent()->GetParent();
-    // If isRoot and we have auto height, then we are the initial
-    // containing block and the containing block height is the
-    // viewport height, which can't change during incremental
-    // reflow.
-    PRBool cbHeightChanged =
-      !(isRoot && NS_UNCONSTRAINEDSIZE == aReflowState.ComputedHeight()) &&
-      aMetrics.height != oldSize.height;
+      // Mark frames that depend on changes we just made to this frame as dirty:
+      // Now we can assume that the padding edge hasn't moved.
+      // We need to reflow the absolutes if one of them depends on
+      // its placeholder position, or the containing block size in a
+      // direction in which the containing block size might have
+      // changed.
+      PRBool cbWidthChanged = aMetrics.width != oldSize.width;
+      PRBool isRoot = !GetContent()->GetParent();
+      // If isRoot and we have auto height, then we are the initial
+      // containing block and the containing block height is the
+      // viewport height, which can't change during incremental
+      // reflow.
+      PRBool cbHeightChanged =
+        !(isRoot && NS_UNCONSTRAINEDSIZE == aReflowState.ComputedHeight()) &&
+        aMetrics.height != oldSize.height;
 
-    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
-                                   state.mReflowStatus,
-                                   containingBlockSize.width,
-                                   containingBlockSize.height, PR_TRUE,
-                                   cbWidthChanged, cbHeightChanged,
-                                   &childBounds);
+      rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
+                                     state.mReflowStatus,
+                                     containingBlockSize.width,
+                                     containingBlockSize.height, PR_TRUE,
+                                     cbWidthChanged, cbHeightChanged,
+                                     &childBounds);
 
-    //XXXfr Why isn't this rv (and others in this file) checked/returned?
+      //XXXfr Why isn't this rv (and others in this file) checked/returned?
 
-    // Factor the absolutely positioned child bounds into the overflow area
-    aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
+      // Factor the absolutely positioned child bounds into the overflow area
+      aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
+    }
   }
 
   // Determine if we need to repaint our border, background or outline
