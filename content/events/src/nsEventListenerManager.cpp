@@ -520,7 +520,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     mMayHavePaintEventListener = PR_TRUE;
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window) {
-      window->SetHasPaintEventListener();
+      window->SetHasPaintEventListeners();
     }
   } else if (aType >= NS_MUTATION_START && aType <= NS_MUTATION_END) {
     // For mutation listeners, we need to update the global bit on the DOM window.
