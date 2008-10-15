@@ -80,7 +80,7 @@ nsresult nsIconChannel::Init(nsIURI* uri)
 {
   NS_ASSERTION(uri, "no uri");
   mUrl = uri;
-  
+  mOriginalURI = uri;
   nsresult rv;
   mPump = do_CreateInstance(NS_INPUTSTREAMPUMP_CONTRACTID, &rv);
   return rv;
@@ -158,13 +158,14 @@ NS_IMETHODIMP nsIconChannel::OnDataAvailable(nsIRequest* aRequest,
 
 NS_IMETHODIMP nsIconChannel::GetOriginalURI(nsIURI* *aURI)
 {
-  *aURI = mOriginalURI ? mOriginalURI : mUrl;
+  *aURI = mOriginalURI;
   NS_ADDREF(*aURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsIconChannel::SetOriginalURI(nsIURI* aURI)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   mOriginalURI = aURI;
   return NS_OK;
 }
