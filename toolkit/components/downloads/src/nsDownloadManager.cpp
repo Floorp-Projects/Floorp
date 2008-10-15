@@ -2273,6 +2273,10 @@ nsDownload::SetState(DownloadState aState)
       break;
     case nsIDownloadManager::DOWNLOAD_DIRTY:
       mDownloadManager->SendEvent(this, "dl-dirty");
+      break;
+    case nsIDownloadManager::DOWNLOAD_CANCELED:
+      mDownloadManager->SendEvent(this, "dl-cancel");
+      break;
     default:
       break;
   }
