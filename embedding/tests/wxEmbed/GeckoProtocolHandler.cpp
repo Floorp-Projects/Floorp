@@ -272,6 +272,7 @@ NS_IMPL_ISUPPORTS4(GeckoProtocolChannel, nsIRequest, nsIChannel, nsIRequestObser
 nsresult GeckoProtocolChannel::Init(nsIURI *aURI)
 {
     mURI = aURI;
+    mOriginalURI = aURI;
     return NS_OK;
 }
 
@@ -328,7 +329,7 @@ GeckoProtocolChannel::Resume()
 NS_IMETHODIMP
 GeckoProtocolChannel::GetOriginalURI(nsIURI* *aURI)
 {
-    *aURI = mOriginalURI ? mOriginalURI : mURI;
+    *aURI = mOriginalURI;
     NS_ADDREF(*aURI);
     return NS_OK;
 }
@@ -336,6 +337,7 @@ GeckoProtocolChannel::GetOriginalURI(nsIURI* *aURI)
 NS_IMETHODIMP
 GeckoProtocolChannel::SetOriginalURI(nsIURI* aURI)
 {
+    NS_ENSURE_ARG_POINTER(aURI);
     mOriginalURI = aURI;
     return NS_OK;
 }

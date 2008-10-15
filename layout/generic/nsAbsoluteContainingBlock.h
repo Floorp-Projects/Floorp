@@ -127,6 +127,8 @@ public:
 
   PRBool  HasAbsoluteFrames() {return mAbsoluteFrames.NotEmpty();}
 
+  void MarkSizeDependentFramesDirty();
+
 protected:
   // Returns PR_TRUE if the position of f depends on the position of
   // its placeholder or if the position or size of f depends on a

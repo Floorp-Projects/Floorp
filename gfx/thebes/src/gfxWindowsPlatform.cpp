@@ -56,7 +56,6 @@
 #include "gfxUserFontSet.h"
 
 #include <string>
-#include <time.h>
 
 #include "lcms.h"
 
@@ -639,11 +638,10 @@ static void MakeUniqueFontName(PRUnichar aName[LF_FACESIZE])
 {
     static PRUint32 fontCount = 0;
     ++fontCount;
-    PRUint32 time = (PRUint32) _time32(nsnull);
 
     char buf[LF_FACESIZE];
 
-    sprintf(buf, "mozfont%8.8x%8.8x", time, fontCount);  // slightly retarded, figure something better later...
+    sprintf(buf, "mozfont%8.8x%8.8x", ::GetTickCount(), fontCount);  // slightly retarded, figure something better later...
 
     nsCAutoString fontName(buf);
 
@@ -671,17 +669,17 @@ typedef struct
 
 LONG WINAPI TTLoadEmbeddedFont
 (
-    __out HANDLE*   phFontReference,            // on completion, contains handle to identify embedded font installed
+    HANDLE*  phFontReference,           // on completion, contains handle to identify embedded font installed
                                         // on system
-    __in ULONG    ulFlags,                  // flags specifying the request 
-    __out ULONG*    pulPrivStatus,          // on completion, contains the embedding status
-    __in ULONG     ulPrivs,                 // allows for the reduction of licensing privileges
-    __out ULONG*    pulStatus,              // on completion, may contain status flags for request 
-    __in READEMBEDPROC lpfnReadFromStream,  // callback function for doc/disk reads
-    __in LPVOID    lpvReadStream,           // the input stream tokin
-    __in_opt LPWSTR    szWinFamilyName,         // the new 16 bit windows family name can be NULL
-    __in_opt LPSTR    szMacFamilyName,          // the new 8 bit mac family name can be NULL
-    __in_opt TTLOADINFO* pTTLoadInfo                // optional security
+    ULONG    ulFlags,                   // flags specifying the request 
+    ULONG*   pulPrivStatus,             // on completion, contains the embedding status
+    ULONG    ulPrivs,                   // allows for the reduction of licensing privileges
+    ULONG*   pulStatus,                 // on completion, may contain status flags for request 
+    READEMBEDPROC lpfnReadFromStream,   // callback function for doc/disk reads
+    LPVOID   lpvReadStream,             // the input stream tokin
+    LPWSTR   szWinFamilyName,           // the new 16 bit windows family name can be NULL
+    LPSTR    szMacFamilyName,           // the new 8 bit mac family name can be NULL
+    TTLOADINFO* pTTLoadInfo             // optional security
 );
 
 #endif // __t2embapi__

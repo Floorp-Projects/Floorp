@@ -2149,6 +2149,27 @@ nsComputedDOMStyle::GetWhiteSpace(nsIDOMCSSValue** aValue)
 }
 
 nsresult
+nsComputedDOMStyle::GetWindowShadow(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleUIReset *uiData = GetStyleUIReset();
+
+  if (uiData->mWindowShadow != NS_STYLE_WINDOW_SHADOW_NONE) {
+    const nsAFlatCString& windowShadow =
+      nsCSSProps::ValueToKeyword(uiData->mWindowShadow,
+                                 nsCSSProps::kWindowShadowKTable);
+    val->SetIdent(windowShadow);
+  } else {
+    val->SetIdent(nsGkAtoms::none);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+
+nsresult
 nsComputedDOMStyle::GetWordWrap(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -4200,6 +4221,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(user_input,                    UserInput),
     COMPUTED_STYLE_MAP_ENTRY(user_modify,                   UserModify),
     COMPUTED_STYLE_MAP_ENTRY(user_select,                   UserSelect),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_window_shadow,            WindowShadow),
     COMPUTED_STYLE_MAP_ENTRY(word_wrap,                     WordWrap)
 
 #ifdef MOZ_SVG

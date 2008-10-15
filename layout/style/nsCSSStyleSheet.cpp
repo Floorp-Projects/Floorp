@@ -893,44 +893,59 @@ nsCSSStyleSheetInner::RemoveSheet(nsICSSStyleSheet* aSheet)
   }
 }
 
+static void
+AddNamespaceRuleToMap(nsICSSRule* aRule, nsXMLNameSpaceMap* aMap)
+{
+#ifdef DEBUG
+  PRInt32 type;
+  aRule->GetType(type);
+  NS_ASSERTION(type == nsICSSRule::NAMESPACE_RULE, "Bogus rule type");
+#endif
+
+  nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule = do_QueryInterface(aRule);
+  
+  nsCOMPtr<nsIAtom> prefix;
+  nsAutoString  urlSpec;
+  nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
+  nameSpaceRule->GetURLSpec(urlSpec);
+
+  aMap->AddPrefix(prefix, urlSpec);
+}
+
 static PRBool
 CreateNameSpace(nsICSSRule* aRule, void* aNameSpacePtr)
 {
   PRInt32 type = nsICSSRule::UNKNOWN_RULE;
   aRule->GetType(type);
   if (nsICSSRule::NAMESPACE_RULE == type) {
-    nsICSSNameSpaceRule*  nameSpaceRule = (nsICSSNameSpaceRule*)aRule;
-    nsXMLNameSpaceMap *nameSpaceMap =
-      static_cast<nsXMLNameSpaceMap*>(aNameSpacePtr);
-
-    nsIAtom*      prefix = nsnull;
-    nsAutoString  urlSpec;
-    nameSpaceRule->GetPrefix(prefix);
-    nameSpaceRule->GetURLSpec(urlSpec);
-
-    nameSpaceMap->AddPrefix(prefix, urlSpec);
+    AddNamespaceRuleToMap(aRule,
+                          static_cast<nsXMLNameSpaceMap*>(aNameSpacePtr));
     return PR_TRUE;
   }
-  // stop if not namespace, import or charset because namespace can't follow anything else
-  return (((nsICSSRule::CHARSET_RULE == type) || 
-           (nsICSSRule::IMPORT_RULE)) ? PR_TRUE : PR_FALSE); 
+  // stop if not namespace, import or charset because namespace can't follow
+  // anything else
+  return (nsICSSRule::CHARSET_RULE == type || nsICSSRule::IMPORT_RULE == type);
 }
 
 void 
 nsCSSStyleSheetInner::RebuildNameSpaces()
 {
-  if (mNameSpaceMap) {
-    mNameSpaceMap->Clear();
-  } else {
-    mNameSpaceMap = nsXMLNameSpaceMap::Create();
-    if (!mNameSpaceMap) {
-      return; // out of memory
-    }
+  // Just nuke our existing namespace map, if any
+  if (NS_SUCCEEDED(CreateNamespaceMap())) {
+    mOrderedRules.EnumerateForwards(CreateNameSpace, mNameSpaceMap);
   }
-
-  mOrderedRules.EnumerateForwards(CreateNameSpace, mNameSpaceMap);
 }
 
+nsresult
+nsCSSStyleSheetInner::CreateNamespaceMap()
+{
+  mNameSpaceMap = nsXMLNameSpaceMap::Create();
+  NS_ENSURE_TRUE(mNameSpaceMap, NS_ERROR_OUT_OF_MEMORY);
+  // Override the default namespace map behavior for the null prefix to
+  // return the wildcard namespace instead of the null namespace.
+  mNameSpaceMap->AddPrefix(nsnull, kNameSpaceID_Unknown);
+  return NS_OK;
+}
 
 // -------------------------------
 // CSS Style Sheet
@@ -1370,19 +1385,8 @@ nsCSSStyleSheet::AppendStyleRule(nsICSSRule* aRule)
     PRInt32 type = nsICSSRule::UNKNOWN_RULE;
     aRule->GetType(type);
     if (nsICSSRule::NAMESPACE_RULE == type) {
-      if (!mInner->mNameSpaceMap) {
-        mInner->mNameSpaceMap = nsXMLNameSpaceMap::Create();
-        NS_ENSURE_TRUE(mInner->mNameSpaceMap, NS_ERROR_OUT_OF_MEMORY);
-      }
-
-      nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule(do_QueryInterface(aRule));
-
-      nsCOMPtr<nsIAtom> prefix;
-      nsAutoString  urlSpec;
-      nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
-      nameSpaceRule->GetURLSpec(urlSpec);
-
-      mInner->mNameSpaceMap->AddPrefix(prefix, urlSpec);
+      nsresult rv = RegisterNamespaceRule(aRule);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
   return NS_OK;
@@ -1630,6 +1634,18 @@ nsCSSStyleSheet::SubjectSubsumesInnerPrincipal() const
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
+  return NS_OK;
+}
+
+nsresult
+nsCSSStyleSheet::RegisterNamespaceRule(nsICSSRule* aRule)
+{
+  if (!mInner->mNameSpaceMap) {
+    nsresult rv = mInner->CreateNamespaceMap();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  AddNamespaceRuleToMap(aRule, mInner->mNameSpaceMap);
   return NS_OK;
 }
 
@@ -1927,19 +1943,11 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
     PRInt32 type = nsICSSRule::UNKNOWN_RULE;
     cssRule->GetType(type);
     if (type == nsICSSRule::NAMESPACE_RULE) {
-      if (!mInner->mNameSpaceMap) {
-        mInner->mNameSpaceMap = nsXMLNameSpaceMap::Create();
-        NS_ENSURE_TRUE(mInner->mNameSpaceMap, NS_ERROR_OUT_OF_MEMORY);
-      }
-
-      nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule(do_QueryInterface(cssRule));
-    
-      nsCOMPtr<nsIAtom> prefix;
-      nsAutoString urlSpec;
-      nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
-      nameSpaceRule->GetURLSpec(urlSpec);
-
-      mInner->mNameSpaceMap->AddPrefix(prefix, urlSpec);
+      // XXXbz does this screw up when inserting a namespace rule before
+      // another namespace rule that binds the same prefix to a different
+      // namespace?
+      result = RegisterNamespaceRule(cssRule);
+      NS_ENSURE_SUCCESS(result, result);
     }
 
     // We don't notify immediately for @import rules, but rather when

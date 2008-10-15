@@ -1189,12 +1189,12 @@ public:
   static const nsDependentString GetLocalizedEllipsis();
 
   /**
-   * The routine GetNativeEvent is used to fill nsNativeKeyEvent
-   * nsNativeKeyEvent. It's also used in DOMEventToNativeKeyEvent.
+   * The routine GetNativeEvent is used to fill nsNativeKeyEvent.
+   * It's also used in DOMEventToNativeKeyEvent.
    * See bug 406407 for details.
    */
   static nsEvent* GetNativeEvent(nsIDOMEvent* aDOMEvent);
-  static PRBool DOMEventToNativeKeyEvent(nsIDOMEvent* aDOMEvent,
+  static PRBool DOMEventToNativeKeyEvent(nsIDOMKeyEvent* aKeyEvent,
                                          nsNativeKeyEvent* aNativeEvent,
                                          PRBool aGetCharCode);
 

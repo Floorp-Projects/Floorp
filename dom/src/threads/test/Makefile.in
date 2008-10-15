@@ -57,6 +57,8 @@ _TEST_FILES = \
   test_threadErrors.html \
   test_threadTimeouts.html \
   test_longThread.html \
+  test_recursion.html \
+  test_regExpStatics.html \
   test_xhr.html \
   testXHR.txt \
   $(NULL)

@@ -41,6 +41,7 @@
 #define _mozStorageEvents_h_
 
 #include "nscore.h"
+#include "nsTArray.h"
 #include "mozStorageBackground.h"
 struct sqlite3_stmt;
 class mozIStorageStatementCallback;
@@ -50,15 +51,18 @@ class mozIStoragePendingStatement;
  * Executes a statement in the background, and passes results back to the
  * caller.
  *
- * @param aStatement
- *        The SQLite statement to execute in the background.
+ * @param aStatements
+ *        The SQLite statements to execute in the background.
+ * @param aConnection
+ *        The connection that created the statements to execute.
  * @param aCallback
  *        The callback that is notified of results, completion, and errors.
  * @param _stmt
- *        The handle to control the execution of the statement.
+ *        The handle to control the execution of the statements.
  */
 nsresult NS_executeAsync(
-  sqlite3_stmt *aStatement,
+  nsTArray<sqlite3_stmt *> &aStatements,
+  mozIStorageConnection *aConnection,
   mozIStorageStatementCallback *aCallback,
   mozIStoragePendingStatement **_stmt
 );

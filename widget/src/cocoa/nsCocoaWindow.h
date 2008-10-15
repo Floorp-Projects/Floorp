@@ -47,7 +47,6 @@
 #include "nsBaseWidget.h"
 #include "nsPIWidgetCocoa.h"
 #include "nsAutoPtr.h"
-#include "nsNativeThemeColors.h"
 
 class nsCocoaWindow;
 class nsChildView;
@@ -125,25 +124,6 @@ struct UnifiedGradientInfo {
   BOOL windowIsMain;
   BOOL drawTitlebar; // NO for toolbar, YES for titlebar
 };
-
-// Callback used by the default titlebar and toolbar shading.
-// *aIn == 0 at the top of the titlebar/toolbar, *aIn == 1 at the bottom
-static void unifiedShading(void* aInfo, const float* aIn, float* aOut)
-{
-  UnifiedGradientInfo* info = (UnifiedGradientInfo*)aInfo;
-  // The gradient percentage at the bottom of the titlebar / top of the toolbar
-  float start = info->titlebarHeight / (info->titlebarHeight + info->toolbarHeight - 1);
-  const float startGrey = NativeGreyColorAsFloat(headerStartGrey, info->windowIsMain);
-  const float endGrey = NativeGreyColorAsFloat(headerEndGrey, info->windowIsMain);
-  // *aIn is the gradient percentage of the titlebar or toolbar gradient,
-  // a is the gradient percentage of the whole unified gradient.
-  float a = info->drawTitlebar ? *aIn * start : start + *aIn * (1 - start);
-  float result = (1.0f - a) * startGrey + a * endGrey;
-  aOut[0] = result;
-  aOut[1] = result;
-  aOut[2] = result;
-  aOut[3] = 1.0f;
-}
 
 // NSColor subclass that allows us to draw separate colors both in the titlebar 
 // and for background of the window.
@@ -276,6 +256,7 @@ public:
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);
     virtual nsTransparencyMode GetTransparencyMode();
     virtual void SetTransparencyMode(nsTransparencyMode aMode);
+    NS_IMETHOD SetWindowShadowStyle(PRInt32 aStyle);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, PRBool aActive);
 
     // dispatch an NS_SIZEMODE event on miniaturize or deminiaturize
@@ -301,6 +282,8 @@ public:
 
     NS_IMETHOD BeginSecureKeyboardInput();
     NS_IMETHOD EndSecureKeyboardInput();
+
+    static void UnifiedShading(void* aInfo, const float* aIn, float* aOut);
 
 protected:
   

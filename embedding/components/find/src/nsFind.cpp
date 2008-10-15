@@ -122,7 +122,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIContentIterator
-  virtual nsresult Init(nsIContent* aRoot)
+  virtual nsresult Init(nsINode* aRoot)
   {
     NS_NOTREACHED("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -139,9 +139,9 @@ public:
   virtual void Last();
   virtual void Next();
   virtual void Prev();
-  virtual nsIContent* GetCurrentNode();
+  virtual nsINode* GetCurrentNode();
   virtual PRBool IsDone();
-  virtual nsresult PositionAt(nsIContent* aCurNode);
+  virtual nsresult PositionAt(nsINode* aCurNode);
 
 private:
   nsCOMPtr<nsIContentIterator> mOuterIterator;
@@ -237,7 +237,7 @@ nsFindContentIterator::Prev()
   MaybeSetupInnerIterator();
 }
 
-nsIContent*
+nsINode*
 nsFindContentIterator::GetCurrentNode()
 {
   if (mInnerIterator && !mInnerIterator->IsDone()) {
@@ -255,9 +255,9 @@ nsFindContentIterator::IsDone() {
 }
 
 nsresult
-nsFindContentIterator::PositionAt(nsIContent* aCurNode)
+nsFindContentIterator::PositionAt(nsINode* aCurNode)
 {
-  nsIContent* oldNode = mOuterIterator->GetCurrentNode();
+  nsINode* oldNode = mOuterIterator->GetCurrentNode();
   nsresult rv = mOuterIterator->PositionAt(aCurNode);
   if (NS_SUCCEEDED(rv)) {
     MaybeSetupInnerIterator();
@@ -333,7 +333,8 @@ nsFindContentIterator::MaybeSetupInnerIterator()
 {
   mInnerIterator = nsnull;
 
-  nsIContent* content = mOuterIterator->GetCurrentNode();
+  nsCOMPtr<nsIContent> content =
+    do_QueryInterface(mOuterIterator->GetCurrentNode());
   if (!content || !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL))
     return;
 
@@ -645,7 +646,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
 {
   nsresult rv;
 
-  nsIContent *content = nsnull;
+  nsCOMPtr<nsIContent> content;
 
   if (!mIterator || aContinueOk)
   {
@@ -699,7 +700,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     if (!aStartPoint)
       aStartPoint = aSearchRange;
 
-    content = mIterator->GetCurrentNode();
+    content = do_QueryInterface(mIterator->GetCurrentNode());
 #ifdef DEBUG_FIND
     nsCOMPtr<nsIDOMNode> dnode (do_QueryInterface(content));
     printf(":::::: Got the first node "); DumpNode(dnode);
@@ -739,7 +740,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     else
       mIterator->Next();
 
-    content = mIterator->GetCurrentNode();
+    content = do_QueryInterface(mIterator->GetCurrentNode());
     if (!content)
       break;
 

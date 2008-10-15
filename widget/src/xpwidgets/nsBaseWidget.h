@@ -106,6 +106,7 @@ public:
   NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
   virtual void            SetTransparencyMode(nsTransparencyMode aMode);
   virtual nsTransparencyMode GetTransparencyMode();
+  NS_IMETHOD              SetWindowShadowStyle(PRInt32 aStyle);
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   virtual nsIRenderingContext* GetRenderingContext();

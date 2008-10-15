@@ -89,7 +89,7 @@ nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 
 // static
 nsresult
-nsRange::CompareNodeToRange(nsIContent* aNode, nsIDOMRange* aRange,
+nsRange::CompareNodeToRange(nsINode* aNode, nsIDOMRange* aRange,
                             PRBool *outNodeBefore, PRBool *outNodeAfter)
 {
   nsresult rv;
@@ -101,7 +101,7 @@ nsRange::CompareNodeToRange(nsIContent* aNode, nsIDOMRange* aRange,
 
 // static
 nsresult
-nsRange::CompareNodeToRange(nsIContent* aNode, nsIRange* aRange,
+nsRange::CompareNodeToRange(nsINode* aNode, nsIRange* aRange,
                             PRBool *outNodeBefore, PRBool *outNodeAfter)
 {
   NS_ENSURE_STATE(aNode);
@@ -124,14 +124,11 @@ nsRange::CompareNodeToRange(nsIContent* aNode, nsIRange* aRange,
   nsINode* parent = aNode->GetNodeParent();
   if (!parent) {
     // can't make a parent/offset pair to represent start or 
-    // end of the root node, becasue it has no parent.
+    // end of the root node, because it has no parent.
     // so instead represent it by (node,0) and (node,numChildren)
     parent = aNode;
     nodeStart = 0;
     nodeEnd = aNode->GetChildCount();
-    if (!nodeEnd) {
-      return NS_ERROR_FAILURE;
-    }
   }
   else {
     nodeStart = parent->IndexOf(aNode);
@@ -928,10 +925,10 @@ RangeSubtreeIterator::GetCurrentNode()
     NS_ADDREF(node = mEnd);
   else if (mIterState == eUseIterator && mIter)
   {
-    nsIContent *content = mIter->GetCurrentNode();
+    nsINode* n = mIter->GetCurrentNode();
 
-    if (content) {
-      CallQueryInterface(content, &node);
+    if (n) {
+      CallQueryInterface(n, &node);
     }
   }
 
@@ -1948,8 +1945,9 @@ nsresult nsRange::ToString(nsAString& aReturn)
   */
 
   nsCOMPtr<nsIContentIterator> iter;
-  NS_NewContentIterator(getter_AddRefs(iter));
-  nsresult rv = iter->Init(this);
+  nsresult rv = NS_NewContentIterator(getter_AddRefs(iter));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = iter->Init(this);
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsString tempString;
@@ -1958,23 +1956,23 @@ nsresult nsRange::ToString(nsAString& aReturn)
   // close tag order, and grab the text from any text node
   while (!iter->IsDone())
   {
-    nsIContent *cN = iter->GetCurrentNode();
+    nsINode *n = iter->GetCurrentNode();
 
 #ifdef DEBUG_range
     // If debug, dump it:
-    cN->List(stdout);
+    n->List(stdout);
 #endif /* DEBUG */
-    nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(cN) );
+    nsCOMPtr<nsIDOMText> textNode(do_QueryInterface(n));
     if (textNode) // if it's a text node, get the text
     {
-      if (cN == mStartParent) // only include text past start offset
+      if (n == mStartParent) // only include text past start offset
       {
         PRUint32 strLength;
         textNode->GetLength(&strLength);
         textNode->SubstringData(mStartOffset,strLength-mStartOffset,tempString);
         aReturn += tempString;
       }
-      else if (cN == mEndParent)  // only include text before end offset
+      else if (n == mEndParent)  // only include text before end offset
       {
         textNode->SubstringData(0,mEndOffset,tempString);
         aReturn += tempString;

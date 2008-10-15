@@ -342,9 +342,7 @@ PRUint32 nsEventListenerManager::mInstanceCount = 0;
 PRUint32 nsEventListenerManager::sCreatedCount = 0;
 
 nsEventListenerManager::nsEventListenerManager() :
-  mTarget(nsnull),
-  mMayHaveMutationListeners(PR_FALSE),
-  mNoListenerForEvent(NS_EVENT_TYPE_NULL)
+  mTarget(nsnull)
 {
   ++mInstanceCount;
   ++sCreatedCount;
@@ -430,6 +428,27 @@ nsEventListenerManager::GetTypeDataForEventName(nsIAtom* aName)
   return nsnull;
 }
 
+nsPIDOMWindow*
+nsEventListenerManager::GetInnerWindowForTarget()
+{
+  nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
+  if (node) {
+    // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
+    // if that's the XBL document?
+    nsIDocument* document = node->GetOwnerDoc();
+    if (document)
+      return document->GetInnerWindow();
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mTarget);
+  if (window) {
+    NS_ASSERTION(window->IsInnerWindow(), "Target should not be an outer window");
+    return window;
+  }
+
+  return nsnull;
+}
+
 nsresult
 nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
                                          PRUint32 aType,
@@ -497,29 +516,19 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   ls->mHandlerIsString = PR_FALSE;
   ls->mTypeData = aTypeData;
 
-  // For mutation listeners, we need to update the global bit on the DOM window.
-  // Otherwise we won't actually fire the mutation event.
-  if (aType >= NS_MUTATION_START && aType <= NS_MUTATION_END) {
+  if (aType == NS_AFTERPAINT) {
+    mMayHavePaintEventListener = PR_TRUE;
+    nsPIDOMWindow* window = GetInnerWindowForTarget();
+    if (window) {
+      window->SetHasPaintEventListeners();
+    }
+  } else if (aType >= NS_MUTATION_START && aType <= NS_MUTATION_END) {
+    // For mutation listeners, we need to update the global bit on the DOM window.
+    // Otherwise we won't actually fire the mutation event.
     mMayHaveMutationListeners = PR_TRUE;
     // Go from our target to the nearest enclosing DOM window.
-    nsCOMPtr<nsPIDOMWindow> window;
-    nsCOMPtr<nsIDocument> document;
-    nsCOMPtr<nsINode> node(do_QueryInterface(mTarget));
-    if (node) {
-      // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
-      // if that's the XBL document?
-      document = node->GetOwnerDoc();
-      if (document) {
-        window = document->GetInnerWindow();
-      }
-    }
-
-    if (!window) {
-      window = do_QueryInterface(mTarget);
-    }
+    nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window) {
-      NS_ASSERTION(window->IsInnerWindow(),
-                   "Setting mutation listener bits on outer window?");
       // If aType is NS_MUTATION_SUBTREEMODIFIED, we need to listen all
       // mutations. nsContentUtils::HasMutationListeners relies on this.
       window->SetMutationListeners((aType == NS_MUTATION_SUBTREEMODIFIED) ?

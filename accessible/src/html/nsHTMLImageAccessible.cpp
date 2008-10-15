@@ -139,7 +139,7 @@ nsHTMLImageAccessible::GetNameInternal(nsAString& aName)
   if (!aName.IsEmpty())
     return NS_OK;
 
-  nsresult rv = GetHTMLName(aName, PR_FALSE);
+  nsresult rv = nsAccessible::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aName.IsVoid() && hasAltAttrib) {

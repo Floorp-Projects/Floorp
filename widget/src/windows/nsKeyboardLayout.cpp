@@ -153,9 +153,20 @@ PRUint32 VirtualKey::GetUniChars (PRUint8 aShiftState, PRUint16* aUniChars, PRUi
 
     if (numOfChars)
     {
-      if (!(numOfChars == numOfUnshiftedChars &&
-            memcmp (aUniChars, unshiftedChars, numOfChars * sizeof (PRUint16)) == 0))
+      if ((aShiftState & (eAlt | eCtrl)) == (eAlt | eCtrl)) {
+        // Even if the shifted chars and the unshifted chars are same, we
+        // should consume the Alt key state and the Ctrl key state when
+        // AltGr key is pressed. Because if we don't consume them, the input
+        // events are ignored on nsEditor. (I.e., Users cannot input the
+        // characters with this key combination.)
         *aFinalShiftState &= ~(eAlt | eCtrl);
+      } else if (!(numOfChars == numOfUnshiftedChars &&
+                   memcmp (aUniChars, unshiftedChars,
+                           numOfChars * sizeof (PRUint16)) == 0)) {
+        // Otherwise, we should consume the Alt key state and the Ctrl key state
+        // only when the shifted chars and unshifted chars are different.
+        *aFinalShiftState &= ~(eAlt | eCtrl);
+      }
     } else
     {
       if (numOfUnshiftedChars)
