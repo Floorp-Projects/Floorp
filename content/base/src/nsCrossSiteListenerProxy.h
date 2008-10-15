@@ -39,13 +39,17 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsIURI.h"
 #include "nsTArray.h"
+#include "nsIContentSink.h"
+#include "nsIXMLContentSink.h"
+#include "nsIExpatSink.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
 
 class nsIURI;
 class nsIParser;
 class nsIPrincipal;
-class nsIHttpChannel;
 
 extern PRBool
 IsValidHTTPToken(const nsCSubstring& aToken);
@@ -67,19 +71,6 @@ public:
                            const nsCString& aPreflightMethod,
                            const nsTArray<nsCString>& aPreflightHeaders,
                            nsresult* aResult);
-
-  static nsresult CheckPreflight(nsIHttpChannel* aRequestChannel,
-                                 nsIStreamListener* aRequestListener,
-                                 nsISupports* aRequestContext,
-                                 nsIPrincipal* aRequestingPrincipal,
-                                 PRBool aForcePreflight,
-                                 nsTArray<nsCString>& aUnsafeHeaders,
-                                 PRBool aWithCredentials,
-                                 PRBool* aPreflighted,
-                                 nsIChannel** aPreflightChannel,
-                                 nsIStreamListener** aPreflightListener);
-
-  static void ShutdownPreflightCache();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
