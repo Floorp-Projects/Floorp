@@ -4578,7 +4578,8 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext,
     // Now iterated through the child frames and set them
     while (!aInnerIter->IsDone())
     {
-      nsIContent *innercontent = aInnerIter->GetCurrentNode();
+      nsCOMPtr<nsIContent> innercontent =
+        do_QueryInterface(aInnerIter->GetCurrentNode());
 
       frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(innercontent);
       if (frame)
@@ -4672,7 +4673,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIDOMRange *aRange,
 
     while (!iter->IsDone())
     {
-      content = iter->GetCurrentNode();
+      content = do_QueryInterface(iter->GetCurrentNode());
 
       selectFrames(aPresContext, inneriter, content, aRange, presShell,aFlags);
 
