@@ -332,6 +332,19 @@ nsAbsoluteContainingBlock::DestroyFrames(nsIFrame* aDelegatingFrame)
   mAbsoluteFrames.DestroyFrames();
 }
 
+void
+nsAbsoluteContainingBlock::MarkSizeDependentFramesDirty()
+{
+  for (nsIFrame* kidFrame = mAbsoluteFrames.FirstChild();
+       kidFrame;
+       kidFrame = kidFrame->GetNextSibling()) {
+    if (FrameDependsOnContainer(kidFrame, PR_TRUE, PR_TRUE)) {
+      // Add the weakest flags that will make sure we reflow this frame later
+      kidFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+    }
+  }
+}
+
 // XXX Optimize the case where it's a resize reflow and the absolutely
 // positioned child has the exact same size and position and skip the
 // reflow...

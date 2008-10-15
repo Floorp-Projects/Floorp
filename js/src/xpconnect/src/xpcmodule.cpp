@@ -66,7 +66,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCException)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCJSContextStackIterator)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect, nsXPConnect::GetSingleton)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIJSContextStack, nsXPCThreadJSContextStackImpl::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCComponents_Interfaces)
 
@@ -83,7 +82,7 @@ NS_DECL_CLASSINFO(nsXPCException)
 static const nsModuleComponentInfo components[] = {
   {nsnull, NS_JS_ID_CID,                         XPC_ID_CONTRACTID,            nsJSIDConstructor             },
   {nsnull, NS_XPCONNECT_CID,                     XPC_XPCONNECT_CONTRACTID,     nsIXPConnectConstructor       },
-  {nsnull, NS_XPC_THREAD_JSCONTEXT_STACK_CID,    XPC_CONTEXT_STACK_CONTRACTID, nsIJSContextStackConstructor  },
+  {nsnull, NS_XPC_THREAD_JSCONTEXT_STACK_CID,    XPC_CONTEXT_STACK_CONTRACTID, nsIXPConnectConstructor  },
   {nsnull, NS_XPCEXCEPTION_CID,                  XPC_EXCEPTION_CONTRACTID,     nsXPCExceptionConstructor, nsnull, nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsXPCException), nsnull, &NS_CLASSINFO_NAME(nsXPCException), nsIClassInfo::DOM_OBJECT },
   {nsnull, NS_JS_RUNTIME_SERVICE_CID,            XPC_RUNTIME_CONTRACTID,       nsIXPConnectConstructor},
   {NS_SCRIPTERROR_CLASSNAME, NS_SCRIPTERROR_CID, NS_SCRIPTERROR_CONTRACTID,    nsScriptErrorConstructor      },
@@ -114,7 +113,6 @@ xpcModuleCtor(nsIModule* self)
     nsXPCException::InitStatics();
     XPCWrappedNativeScope::InitStatics();
     XPCPerThreadData::InitStatics();
-    nsXPCThreadJSContextStackImpl::InitStatics();
 
 #ifdef XPC_IDISPATCH_SUPPORT
     XPCIDispatchExtension::InitStatics();
@@ -128,7 +126,6 @@ xpcModuleDtor(nsIModule* self)
 {
     // Release our singletons
     nsXPConnect::ReleaseXPConnectSingleton();
-    nsXPCThreadJSContextStackImpl::FreeSingleton();
     xpc_DestroyJSxIDClassObjects();
 #ifdef XPC_IDISPATCH_SUPPORT
     nsDispatchSupport::FreeSingleton();

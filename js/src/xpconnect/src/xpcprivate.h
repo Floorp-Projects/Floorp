@@ -446,12 +446,17 @@ const PRBool OBJ_IS_NOT_GLOBAL = PR_FALSE;
 {0xb5e65b52, 0x1dd1, 0x11b2, \
     { 0xae, 0x8f, 0xf0, 0x92, 0x8e, 0xd8, 0x84, 0x82 }}
 
+#define NS_XPC_THREAD_JSCONTEXT_STACK_CID  \
+{ 0xff8c4d10, 0x3194, 0x11d3, \
+    { 0x98, 0x85, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+
 class nsXPConnect : public nsIXPConnect,
                     public nsIThreadObserver,
                     public nsSupportsWeakReference,
                     public nsCycleCollectionJSRuntime,
                     public nsCycleCollectionParticipant,
-                    public nsIJSRuntimeService
+                    public nsIJSRuntimeService,
+                    public nsIThreadJSContextStack
 {
 public:
     // all the interface method declarations...
@@ -459,6 +464,8 @@ public:
     NS_DECL_NSIXPCONNECT
     NS_DECL_NSITHREADOBSERVER
     NS_DECL_NSIJSRUNTIMESERVICE
+    NS_DECL_NSIJSCONTEXTSTACK
+    NS_DECL_NSITHREADJSCONTEXTSTACK
 
     // non-interface implementation
 public:
@@ -470,10 +477,6 @@ public:
     // Gets addref'd pointer
     static nsresult GetInterfaceInfoManager(nsIInterfaceInfoSuperManager** iim,
                                             nsXPConnect* xpc = nsnull);
-
-    // Gets addref'd pointer
-    static nsresult GetContextStack(nsIThreadJSContextStack** stack,
-                                    nsXPConnect* xpc = nsnull);
 
     static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
 
@@ -559,7 +562,6 @@ private:
 
     XPCJSRuntime*            mRuntime;
     nsCOMPtr<nsIInterfaceInfoSuperManager> mInterfaceInfoManager;
-    nsIThreadJSContextStack* mContextStack;
     nsIXPCSecurityManager*   mDefaultSecurityManager;
     PRUint16                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
@@ -3226,40 +3228,6 @@ private:
     // Cached per thread data for the main thread. Only safe to access
     // if cx->thread == sMainJSThread.
     static XPCPerThreadData *sMainThreadData;
-};
-
-/**************************************************************/
-
-#define NS_XPC_THREAD_JSCONTEXT_STACK_CID  \
-{ 0xff8c4d10, 0x3194, 0x11d3, \
-    { 0x98, 0x85, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-
-class nsXPCThreadJSContextStackImpl : public nsIThreadJSContextStack,
-                                      public nsSupportsWeakReference
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIJSCONTEXTSTACK
-    NS_DECL_NSITHREADJSCONTEXTSTACK
-
-    // This returns and AddRef'd pointer. It does not do this with an out param
-    // only because this form  is required by generic module macro:
-    // NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR
-    static nsXPCThreadJSContextStackImpl* GetSingleton();
-
-    static void InitStatics() { gXPCThreadJSContextStack = nsnull; }
-    static void FreeSingleton();
-
-    nsXPCThreadJSContextStackImpl();
-    virtual ~nsXPCThreadJSContextStackImpl();
-
-private:
-    XPCJSContextStack* GetStackForCurrentThread(JSContext *cx = nsnull)
-        {XPCPerThreadData* data = XPCPerThreadData::GetData(cx);
-         return data ? data->GetJSContextStack() : nsnull;}
-
-    static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack;
-    friend class nsXPCJSContextStackIterator;
 };
 
 /***************************************************************************/

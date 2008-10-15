@@ -3333,7 +3333,9 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
     MaybeGC(mContext);
   }
 
-  mOperationCallbackTime = LL_ZERO;
+  if (aTerminated) {
+    mOperationCallbackTime = LL_ZERO;
+  }
 }
 
 nsresult

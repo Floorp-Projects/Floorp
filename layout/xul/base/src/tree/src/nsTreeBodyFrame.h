@@ -121,7 +121,7 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  NS_IMETHOD DidSetStyleContext();
+  virtual void DidSetStyleContext();
 
   friend nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell);
   friend class nsTreeColumn;

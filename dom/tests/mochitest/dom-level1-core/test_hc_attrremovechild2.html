@@ -82,10 +82,8 @@ function testFails (test) {
 }
 function markTodos() {
   if (todoTests[docName]) {
-    // mark the failures as todos
     var failures = filter(testFails, SimpleTest._tests);
-    // shouldn't be 0 failures
-    todo(SimpleTest._tests != 0 && failures == 0, "test marked todo should fail somewhere");
+    ok(SimpleTest._tests != 0 && failures == 0, "test failed somewhere");
   }
 }
 

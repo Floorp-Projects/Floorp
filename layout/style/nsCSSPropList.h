@@ -517,6 +517,7 @@ CSS_PROP_BACKENDONLY(volume, volume, Volume, 0, Aural, mVolume, eCSSType_Value, 
 CSS_PROP_TEXT(white-space, white_space, WhiteSpace, 0, Text, mWhiteSpace, eCSSType_Value, kWhitespaceKTable)
 CSS_PROP_BACKENDONLY(widows, widows, Widows, 0, Breaks, mWidows, eCSSType_Value, nsnull)
 CSS_PROP_POSITION(width, width, Width, 0, Position, mWidth, eCSSType_Value, kWidthKTable)
+CSS_PROP_UIRESET(-moz-window-shadow, _moz_window_shadow, MozWindowShadow, 0, UserInterface, mWindowShadow, eCSSType_Value, kWindowShadowKTable)
 CSS_PROP_TEXT(word-spacing, word_spacing, WordSpacing, 0, Text, mWordSpacing, eCSSType_Value, nsnull)
 CSS_PROP_TEXT(word-wrap, word_wrap, WordWrap, 0, Text, mWordWrap, eCSSType_Value, kWordwrapKTable)
 CSS_PROP_POSITION(z-index, z_index, ZIndex, 0, Position, mZIndex, eCSSType_Value, nsnull)

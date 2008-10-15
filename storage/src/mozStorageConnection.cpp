@@ -54,6 +54,7 @@
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageFunction.h"
 
+#include "mozStorageEvents.h"
 #include "mozStorageUnicodeFunctions.h"
 #include "mozStorageConnection.h"
 #include "mozStorageService.h"
@@ -356,6 +357,60 @@ mozStorageConnection::ExecuteSimpleSQL(const nsACString& aSQLStatement)
     }
 
     return NS_OK;
+}
+
+nsresult
+mozStorageConnection::ExecuteAsync(mozIStorageStatement ** aStatements,
+                                   PRUint32 aNumStatements,
+                                   mozIStorageStatementCallback *aCallback,
+                                   mozIStoragePendingStatement **_stmt)
+{
+    int rc = SQLITE_OK;
+    nsTArray<sqlite3_stmt *> stmts(aNumStatements);
+    for (PRUint32 i = 0; i < aNumStatements && rc == SQLITE_OK; i++) {
+        sqlite3_stmt *old_stmt = aStatements[i]->GetNativeStatementPointer();
+        NS_ASSERTION(sqlite3_db_handle(old_stmt) == mDBConn,
+                     "Statement must be from this database connection!");
+
+        // Clone this statement.  We only need a sqlite3_stmt object, so we can
+        // avoid all the extra work that making a new mozStorageStatement would
+        // normally involve and use the SQLite API.
+        sqlite3_stmt *new_stmt;
+        rc = sqlite3_prepare_v2(mDBConn, sqlite3_sql(old_stmt), -1, &new_stmt,
+                                NULL);
+        if (rc != SQLITE_OK)
+            break;
+
+        // Transfer the bindings
+        rc = sqlite3_transfer_bindings(old_stmt, new_stmt);
+        if (rc != SQLITE_OK)
+            break;
+
+        if (!stmts.AppendElement(new_stmt)) {
+            rc = SQLITE_NOMEM;
+            break;
+        }
+    }
+
+    // Dispatch to the background
+    nsresult rv = NS_OK;
+    if (rc == SQLITE_OK)
+        rv = NS_executeAsync(stmts, this, aCallback, _stmt);
+
+    // We had a failure, so we need to clean up...
+    if (rc != SQLITE_OK || NS_FAILED(rv)) {
+        for (PRUint32 i = 0; i < stmts.Length(); i++)
+            (void)sqlite3_finalize(stmts[i]);
+
+        if (rc != SQLITE_OK)
+            rv = ConvertResultCode(rc);
+    }
+
+    // Always reset all the statements
+    for (PRUint32 i = 0; i < aNumStatements; i++)
+        (void)aStatements[i]->Reset();
+
+    return rv;
 }
 
 NS_IMETHODIMP

@@ -50,8 +50,8 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
 
     function onprogress(event) {
       var message = { type: "progress",
-                      current: event.position,
-                      total: event.totalSize };
+                      current: event.loaded,
+                      total: event.total };
       postMessageToPool(message.toSource());
     }
     xhr.addEventListener("progress", onprogress, false);

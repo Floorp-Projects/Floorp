@@ -375,13 +375,14 @@ NS_IMETHODIMP
 nsBaseChannel::GetOriginalURI(nsIURI **aURI)
 {
   *aURI = OriginalURI();
-  NS_IF_ADDREF(*aURI);
+  NS_ADDREF(*aURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBaseChannel::SetOriginalURI(nsIURI *aURI)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   mOriginalURI = aURI;
   return NS_OK;
 }

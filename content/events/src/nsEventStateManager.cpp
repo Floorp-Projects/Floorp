@@ -2889,7 +2889,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         case MOUSE_SCROLL_N_LINES:
           {
             DoScrollText(presContext, aTargetFrame, msEvent, msEvent->delta,
-                         (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
+                         !!(msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
                          eScrollByLine);
           }
           break;
@@ -2897,7 +2897,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         case MOUSE_SCROLL_PAGE:
           {
             DoScrollText(presContext, aTargetFrame, msEvent, msEvent->delta,
-                         (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
+                         !!(msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
                          eScrollByPage);
           }
           break;
@@ -2905,7 +2905,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         case MOUSE_SCROLL_PIXELS:
           {
             DoScrollText(presContext, aTargetFrame, msEvent, msEvent->delta,
-                         (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
+                         !!(msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
                          eScrollByPixel);
           }
           break;

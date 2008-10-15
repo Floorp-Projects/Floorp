@@ -186,15 +186,12 @@ main(int argc, char **argv)
 
 #ifdef XP_WIN
   wchar_t wide_path[MAX_PATH];
-  MultiByteToWideChar(CP_ACP,
-		      0,
-		      iniPath,
-		      -1,
-		      wide_path,
-		      MAX_PATH);
-  
   if (!::GetModuleFileNameW(NULL, wide_path, MAX_PATH))
     return 1;
+
+  WideCharToMultiByte(CP_ACP, 0, wide_path,-1,
+		      iniPath, MAX_PATH, NULL, NULL);
+  
 
 #elif defined(XP_OS2)
    PPIB ppib;

@@ -3624,11 +3624,11 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+/* virtual */ void
 nsTextFrame::DidSetStyleContext()
 {
+  nsFrame::DidSetStyleContext();
   ClearTextRun();
-  return NS_OK;
 } 
 
 class nsDisplayText : public nsDisplayItem {

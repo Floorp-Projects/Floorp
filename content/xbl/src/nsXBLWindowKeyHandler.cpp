@@ -374,19 +374,20 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
       }
     }
 
-    PRBool handled;
+    PRBool handled = PR_FALSE;
     if (aEventType == nsGkAtoms::keypress) {
-      nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_TRUE);
-      handled = sNativeEditorBindings->KeyPress(nativeEvent,
-                                                DoCommandCallback, controllers);
+      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_TRUE))
+        handled = sNativeEditorBindings->KeyPress(nativeEvent,
+                                                  DoCommandCallback, controllers);
     } else if (aEventType == nsGkAtoms::keyup) {
-      nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE);
-      handled = sNativeEditorBindings->KeyUp(nativeEvent,
-                                             DoCommandCallback, controllers);
-    } else {
-      nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE);
-      handled = sNativeEditorBindings->KeyDown(nativeEvent,
+      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE))
+        handled = sNativeEditorBindings->KeyUp(nativeEvent,
                                                DoCommandCallback, controllers);
+    } else {
+      NS_ASSERTION(aEventType == nsGkAtoms::keydown, "unknown key event type");
+      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, PR_FALSE))
+        handled = sNativeEditorBindings->KeyDown(nativeEvent,
+                                                 DoCommandCallback, controllers);
     }
 
     if (handled)

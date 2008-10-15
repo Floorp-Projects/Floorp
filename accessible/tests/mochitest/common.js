@@ -91,7 +91,7 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj)
   } else {
     var elm = document.getElementById(aAccOrElmOrID);
     if (!elm) {
-      ok(false, "Can't get DOM element for " + aID);
+      ok(false, "Can't get DOM element for " + aAccOrElmOrID);
       return null;
     }
   }
