@@ -6285,6 +6285,7 @@ Boolish(JSParseNode *pn)
         return JSSTRING_LENGTH(ATOM_TO_STRING(pn->pn_atom)) != 0;
 
       case JSOP_CALL:
+      {
         /*
          * A generator expression as an if or loop condition has no effects, it
          * simply results in a truthy object reference. This condition folding
@@ -6298,6 +6299,7 @@ Boolish(JSParseNode *pn)
         if (!(pn2->pn_flags & TCF_GENEXP_LAMBDA))
             break;
         /* FALL THROUGH */
+      }
 
       case JSOP_DEFFUN:
       case JSOP_NAMEDFUNOBJ:
