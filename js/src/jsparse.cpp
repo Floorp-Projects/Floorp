@@ -6284,6 +6284,7 @@ Boolish(JSParseNode *pn)
       case JSOP_STRING:
         return JSSTRING_LENGTH(ATOM_TO_STRING(pn->pn_atom)) != 0;
 
+#if JS_HAS_GENERATOR_EXPRS
       case JSOP_CALL:
       {
         /*
@@ -6300,6 +6301,7 @@ Boolish(JSParseNode *pn)
             break;
         /* FALL THROUGH */
       }
+#endif
 
       case JSOP_DEFFUN:
       case JSOP_NAMEDFUNOBJ:
