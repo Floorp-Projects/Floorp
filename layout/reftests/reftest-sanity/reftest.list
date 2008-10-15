@@ -6,6 +6,9 @@
 == test-async.xul test-async-ref.xul
 == test-async.html test-async-ref.html
 
+# test that zoom works (and really zooms, not just scales)
+== test-zoom.html test-zoom-ref.html
+
 # Makes sure that the file: protocol handler and HTTP server both
 # choose HTML vs. XHTML processing based on the file extensions.
 != html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.xhtml
