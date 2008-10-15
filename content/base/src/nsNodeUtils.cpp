@@ -590,6 +590,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
         aNode->GetListenerManager(PR_FALSE, getter_AddRefs(elm));
         if (elm) {
           window->SetMutationListeners(elm->MutationListenerBits());
+          if (elm->MayHavePaintEventListener()) {
+            window->SetHasPaintEventListeners();
+          }
         }
       }
     }
