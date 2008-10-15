@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -35,64 +35,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsIContentIterator_h___
-#define __nsIContentIterator_h___
+/*
+ * Implementation of DOM Core's nsIDOMText node.
+ */
 
-#include "nsISupports.h"
+#include "nsGenericDOMDataNode.h"
+#include "nsIDOMText.h"
+#include "nsIDOM3Text.h"
+#include "nsContentUtils.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMMutationEvent.h"
+#include "nsIAttribute.h"
+#include "nsIDocument.h"
+#include "nsThreadUtils.h"
 
-class nsINode;
-class nsIDOMRange;
-
-#define NS_ICONTENTITERATOR_IID \
-{ 0x716a396c, 0xdc4e, 0x4d10, \
-  { 0xbd, 0x07, 0x27, 0xee, 0xae, 0x85, 0xe3, 0x86 } }
-
-class nsIContentIterator : public nsISupports
+/**
+ * Class used to implement DOM text nodes
+ */
+class nsTextNode : public nsGenericDOMDataNode,
+                   public nsIDOMText
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTITERATOR_IID)
+  nsTextNode(nsINodeInfo *aNodeInfo);
+  virtual ~nsTextNode();
 
-  /* Initializes an iterator for the subtree rooted by the node aRoot
-   */
-  virtual nsresult Init(nsINode* aRoot) = 0;
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
-  /* Initializes an iterator for the subtree defined by the range aRange
-   */
-  virtual nsresult Init(nsIDOMRange* aRange) = 0;
+  // nsIDOMNode
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
 
-  /** First will reset the list.
-   */
-  virtual void First() = 0;
+  // nsIDOMCharacterData
+  NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
 
-  /** Last will reset the list to the end.
-   */
-  virtual void Last() = 0;
+  // nsIDOMText
+  NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
 
-  /** Next will advance the list.
-   */
-  virtual void Next() = 0;
+  // nsIContent
+  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
-  /** Prev will decrement the list.
-   */
-  virtual void Prev() = 0;
+  nsresult BindToAttribute(nsIAttribute* aAttr);
+  nsresult UnbindFromAttribute();
 
-  /** CurrentItem will return the current item, or null if the list is empty
-   *  @return the current node
-   */
-  virtual nsINode *GetCurrentNode() = 0;
-
-  /** return if the collection is at the end. that is the beginning following a call to Prev
-   *  and it is the end of the list following a call to next
-   *  @return if the iterator is done.
-   */
-  virtual PRBool IsDone() = 0;
-
-  /** PositionAt will position the iterator to the supplied node
-   */
-  virtual nsresult PositionAt(nsINode* aCurNode) = 0;
+#ifdef DEBUG
+  virtual void List(FILE* out, PRInt32 aIndent) const;
+  virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
+#endif
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentIterator, NS_ICONTENTITERATOR_IID)
-
-#endif // __nsIContentIterator_h___
-

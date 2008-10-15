@@ -39,8 +39,7 @@
  * Implementation of DOM Core's nsIDOMText node.
  */
 
-#include "nsGenericDOMDataNode.h"
-#include "nsIDOMText.h"
+#include "nsTextNode.h"
 #include "nsIDOM3Text.h"
 #include "nsContentUtils.h"
 #include "nsIDOMEventListener.h"
@@ -50,35 +49,6 @@
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
 
-/**
- * Class used to implement DOM text nodes
- */
-class nsTextNode : public nsGenericDOMDataNode,
-                   public nsIDOMText
-{
-public:
-  nsTextNode(nsINodeInfo *aNodeInfo);
-  virtual ~nsTextNode();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
-
-  // nsIDOMCharacterData
-  NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
-
-  // nsIDOMText
-  NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
-
-  // nsIContent
-  virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-#ifdef DEBUG
-  virtual void List(FILE* out, PRInt32 aIndent) const;
-  virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
-#endif
-};
 
 /**
  * class used to implement attr() generated content
@@ -232,6 +202,28 @@ nsTextNode::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
   }
 
   return it;
+}
+
+nsresult
+nsTextNode::BindToAttribute(nsIAttribute* aAttr)
+{
+  NS_ASSERTION(!IsInDoc(), "Unbind before binding!");
+  NS_ASSERTION(!GetNodeParent(), "Unbind before binding!");
+  NS_ASSERTION(HasSameOwnerDoc(aAttr), "Wrong owner document!");
+
+  mParentPtrBits = reinterpret_cast<PtrBits>(aAttr);
+  return NS_OK;
+}
+
+nsresult
+nsTextNode::UnbindFromAttribute()
+{
+  NS_ASSERTION(GetNodeParent(), "Bind before unbinging!");
+  NS_ASSERTION(GetNodeParent() &&
+               GetNodeParent()->IsNodeOfType(nsINode::eATTRIBUTE),
+               "Use this method only to unbind from an attribute!");
+  mParentPtrBits = 0;
+  return NS_OK;
 }
 
 #ifdef DEBUG
