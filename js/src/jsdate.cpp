@@ -920,8 +920,8 @@ date_now(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-jsdouble FASTCALL
-js_Date_now(JSContext*)
+static jsdouble FASTCALL
+date_now_tn(JSContext*)
 {
     return PRMJ_Now() / PRMJ_USEC_PER_MSEC;
 }
@@ -1967,12 +1967,12 @@ date_valueOf(JSContext *cx, uintN argc, jsval *vp)
 #ifdef JS_TRACER
 
 // Don't really need an argument here, but we don't support arg-less builtins
-JS_DEFINE_CALLINFO_1(DOUBLE, Date_now, CONTEXT, 0, 0)
+JS_DEFINE_CALLINFO_1(static, DOUBLE, date_now_tn, CONTEXT, 0, 0)
 
-JS_DEFINE_CALLINFO_2(OBJECT, FastNewDate, CONTEXT, OBJECT, 0, 0)
+JS_DEFINE_CALLINFO_2(extern, OBJECT, js_FastNewDate, CONTEXT, OBJECT, 0, 0)
 
 static JSTraceableNative date_now_trcinfo[] = {
-    { date_now, &ci_Date_now, "C", "", INFALLIBLE }
+    { date_now, &_JS_CALLINFO(date_now_tn), "C", "", INFALLIBLE }
 };
 
 #endif /* JS_TRACER */
@@ -2134,7 +2134,7 @@ js_FastNewDate(JSContext* cx, JSObject* proto)
     jsdouble* date = js_NewWeaklyRootedDouble(cx, 0.0);
     if (!date)
         return NULL;
-    *date = js_Date_now(cx);
+    *date = date_now_tn(cx);
     obj->fslots[JSSLOT_UTC_TIME] = DOUBLE_TO_JSVAL(date);
     obj->fslots[JSSLOT_LOCAL_TIME] = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);;
 

@@ -593,10 +593,10 @@ math_toSource(JSContext *cx, uintN argc, jsval *vp)
 #ifdef JS_TRACER
 
 #define MATH_BUILTIN_1(name)                                                  \
-    jsdouble FASTCALL js_Math_##name(jsdouble d) { return name(d); }          \
-    JS_DEFINE_CALLINFO_1(DOUBLE, Math_##name, DOUBLE, 1, 1)                   \
+    static jsdouble FASTCALL math_##name##_tn(jsdouble d) { return name(d); } \
+    JS_DEFINE_CALLINFO_1(static, DOUBLE, math_##name##_tn, DOUBLE, 1, 1)      \
     static const JSTraceableNative math_##name##_trcinfo =                    \
-        { math_##name, &ci_Math_##name, "", "d", INFALLIBLE };
+        { math_##name, &_JS_CALLINFO(math_##name##_tn), "", "d", INFALLIBLE };
 
 MATH_BUILTIN_1(sin)
 MATH_BUILTIN_1(cos)
@@ -604,8 +604,8 @@ MATH_BUILTIN_1(sqrt)
 MATH_BUILTIN_1(floor)
 MATH_BUILTIN_1(ceil)
 
-jsdouble FASTCALL
-js_Math_log(jsdouble d)
+static jsdouble FASTCALL
+math_log_tn(jsdouble d)
 {
 #if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
     if (d < 0)
@@ -614,8 +614,8 @@ js_Math_log(jsdouble d)
     return log(d);
 }
 
-jsdouble FASTCALL
-js_Math_max(jsdouble d, jsdouble p)
+static jsdouble FASTCALL
+math_max_tn(jsdouble d, jsdouble p)
 {
     if (JSDOUBLE_IS_NaN(d) || JSDOUBLE_IS_NaN(p))
         return js_NaN;
@@ -629,8 +629,8 @@ js_Math_max(jsdouble d, jsdouble p)
     return (p > d) ? p : d;
 }
 
-jsdouble FASTCALL
-js_Math_pow(jsdouble d, jsdouble p)
+static jsdouble FASTCALL
+math_pow_tn(jsdouble d, jsdouble p)
 {
     if (!JSDOUBLE_IS_FINITE(p) && (d == 1.0 || d == -1.0))
         return js_NaN;
@@ -639,8 +639,8 @@ js_Math_pow(jsdouble d, jsdouble p)
     return pow(d, p);
 }
 
-jsdouble FASTCALL
-js_Math_random(JSRuntime* rt)
+static jsdouble FASTCALL
+math_random_tn(JSRuntime* rt)
 {
     JS_LOCK_RUNTIME(rt);
     js_random_init(rt);
@@ -649,19 +649,19 @@ js_Math_random(JSRuntime* rt)
     return z;
 }
 
-JS_DEFINE_CALLINFO_1(DOUBLE, Math_log,    DOUBLE,          1, 1)
-JS_DEFINE_CALLINFO_2(DOUBLE, Math_max,    DOUBLE, DOUBLE,  1, 1)
-JS_DEFINE_CALLINFO_2(DOUBLE, Math_pow,    DOUBLE, DOUBLE,  1, 1)
-JS_DEFINE_CALLINFO_1(DOUBLE, Math_random, RUNTIME,         0, 0)
+JS_DEFINE_CALLINFO_1(static, DOUBLE, math_log_tn, DOUBLE,           1, 1)
+JS_DEFINE_CALLINFO_2(static, DOUBLE, math_max_tn, DOUBLE, DOUBLE,   1, 1)
+JS_DEFINE_CALLINFO_2(static, DOUBLE, math_pow_tn, DOUBLE, DOUBLE,   1, 1)
+JS_DEFINE_CALLINFO_1(static, DOUBLE, math_random_tn, RUNTIME,       0, 0)
 
 static const JSTraceableNative math_log_trcinfo =
-    { math_log,    &ci_Math_log,    "",    "d",    INFALLIBLE };
+    { math_log,    &_JS_CALLINFO(math_log_tn),      "",    "d",    INFALLIBLE };
 static const JSTraceableNative math_max_trcinfo =
-    { math_max,    &ci_Math_max,    "",    "dd",   INFALLIBLE };
+    { math_max,    &_JS_CALLINFO(math_max_tn),      "",    "dd",   INFALLIBLE };
 static const JSTraceableNative math_pow_trcinfo =
-    { math_pow,    &ci_Math_pow,    "",    "dd",   INFALLIBLE };
+    { math_pow,    &_JS_CALLINFO(math_pow_tn),      "",    "dd",   INFALLIBLE };
 static const JSTraceableNative math_random_trcinfo =
-    { math_random, &ci_Math_random, "R",   "",     INFALLIBLE };
+    { math_random, &_JS_CALLINFO(math_random_tn),   "R",   "",     INFALLIBLE };
 
 #endif /* JS_TRACER */
 

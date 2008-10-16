@@ -142,81 +142,96 @@ struct JSTraceableNative {
 #define _JS_ARGSIZE2(ctype, size)  size##_RETSIZE
 #define _JS_ARGSIZE(tyname)        _JS_EXPAND(_JS_ARGSIZE2 _JS_TYPEINFO_##tyname)
 
-#define _JS_DEFINE_CALLINFO(name, crtype, cargtypes, argtypes, cse, fold)      \
-    crtype FASTCALL js_##name cargtypes;                                       \
-    const nanojit::CallInfo ci_##name =                                        \
-        { (intptr_t) &js_##name, argtypes, cse, fold, nanojit::ABI_FASTCALL _JS_CI_NAME(name) };
+#define _JS_static_TN(t)  static t
+#define _JS_static_CI     static
+#define _JS_extern_TN(t)  extern t
+#define _JS_extern_CI
+#define _JS_FRIEND_TN(t)  extern JS_FRIEND_API(t)
+#define _JS_FRIEND_CI
+#define _JS_EXPAND_TN_LINKAGE(linkage, t)  _JS_##linkage##_TN(t)
+#define _JS_EXPAND_CI_LINKAGE(linkage)     _JS_##linkage##_CI
+
+#define _JS_CALLINFO(name) name##_ci
+
+#define _JS_DEFINE_CALLINFO(linkage, name, crtype, cargtypes, argtypes, cse, fold)                \
+    _JS_EXPAND_TN_LINKAGE(linkage, crtype) FASTCALL name cargtypes;                               \
+    _JS_EXPAND_CI_LINKAGE(linkage) const nanojit::CallInfo _JS_CALLINFO(name) =                   \
+        { (intptr_t) &name, argtypes, cse, fold, nanojit::ABI_FASTCALL _JS_CI_NAME(name) };
 
 /*
- * Declare a C function named js_<op> and a CallInfo struct named ci_<op> so
- * the tracer can call it.
+ * Declare a C function named <op> and a CallInfo struct named <op>_callinfo so the
+ * tracer can call it. |linkage| controls the visibility of both the function
+ * and the CallInfo global. It can be extern, static, or FRIEND, which
+ * specifies JS_FRIEND_API linkage for the function.
  */
-#define JS_DEFINE_CALLINFO_1(rt, op, at0, cse, fold)                                              \
-    _JS_DEFINE_CALLINFO(op, _JS_CTYPE(rt), (_JS_CTYPE(at0)),                                      \
+#define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, cse, fold)                                     \
+    _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE(rt), (_JS_CTYPE(at0)),                             \
                         (_JS_ARGSIZE(at0) << 2) | _JS_RETSIZE(rt), cse, fold)
-#define JS_DEFINE_CALLINFO_2(rt, op, at0, at1, cse, fold)                                         \
-    _JS_DEFINE_CALLINFO(op, _JS_CTYPE(rt), (_JS_CTYPE(at0), _JS_CTYPE(at1)),                      \
+#define JS_DEFINE_CALLINFO_2(linkage, rt, op, at0, at1, cse, fold)                                \
+    _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE(rt), (_JS_CTYPE(at0), _JS_CTYPE(at1)),             \
                         (_JS_ARGSIZE(at0) << 4) | (_JS_ARGSIZE(at1) << 2) | _JS_RETSIZE(rt),      \
                         cse, fold)
-#define JS_DEFINE_CALLINFO_3(rt, op, at0, at1, at2, cse, fold)                                    \
-    _JS_DEFINE_CALLINFO(op, _JS_CTYPE(rt), (_JS_CTYPE(at0), _JS_CTYPE(at1), _JS_CTYPE(at2)),      \
+#define JS_DEFINE_CALLINFO_3(linkage, rt, op, at0, at1, at2, cse, fold)                           \
+    _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE(rt),                                               \
+                        (_JS_CTYPE(at0), _JS_CTYPE(at1), _JS_CTYPE(at2)),                         \
                         (_JS_ARGSIZE(at0) << 6) | (_JS_ARGSIZE(at1) << 4) |                       \
                         (_JS_ARGSIZE(at2) << 2) | _JS_RETSIZE(rt),                                \
                         cse, fold)
-#define JS_DEFINE_CALLINFO_4(rt, op, at0, at1, at2, at3, cse, fold)                               \
-    _JS_DEFINE_CALLINFO(op, _JS_CTYPE(rt), (_JS_CTYPE(at0), _JS_CTYPE(at1), _JS_CTYPE(at2),       \
-                                            _JS_CTYPE(at3)),                                      \
+#define JS_DEFINE_CALLINFO_4(linkage, rt, op, at0, at1, at2, at3, cse, fold)                      \
+    _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE(rt),                                               \
+                        (_JS_CTYPE(at0), _JS_CTYPE(at1), _JS_CTYPE(at2), _JS_CTYPE(at3)),         \
                         (_JS_ARGSIZE(at0) << 8) | (_JS_ARGSIZE(at1) << 6) |                       \
                         (_JS_ARGSIZE(at2) << 4) | (_JS_ARGSIZE(at3) << 2) | _JS_RETSIZE(rt),      \
                         cse, fold)
-#define JS_DEFINE_CALLINFO_5(rt, op, at0, at1, at2, at3, at4, cse, fold)                          \
-    _JS_DEFINE_CALLINFO(op, _JS_CTYPE(rt), (_JS_CTYPE(at0), _JS_CTYPE(at1), _JS_CTYPE(at2),       \
-                                            _JS_CTYPE(at3), _JS_CTYPE(at4)),                      \
+#define JS_DEFINE_CALLINFO_5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)                 \
+    _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE(rt),                                               \
+                        (_JS_CTYPE(at0), _JS_CTYPE(at1), _JS_CTYPE(at2), _JS_CTYPE(at3),          \
+                         _JS_CTYPE(at4)),                                                         \
                         (_JS_ARGSIZE(at0) << 10) | (_JS_ARGSIZE(at1) << 8) |                      \
                         (_JS_ARGSIZE(at2) << 6) | (_JS_ARGSIZE(at3) << 4) |                       \
                         (_JS_ARGSIZE(at4) << 2) | _JS_RETSIZE(rt),                                \
                         cse, fold)
 
-#define JS_DECLARE_CALLINFO(name)  extern const nanojit::CallInfo ci_##name;
+#define JS_DECLARE_CALLINFO(name)  extern const nanojit::CallInfo _JS_CALLINFO(name);
 
 #else
 
-#define JS_DEFINE_CALLINFO_1(rt, op, at0, cse, fold)
-#define JS_DEFINE_CALLINFO_2(rt, op, at0, at1, cse, fold)
-#define JS_DEFINE_CALLINFO_3(rt, op, at0, at1, at2, cse, fold)
-#define JS_DEFINE_CALLINFO_4(rt, op, at0, at1, at2, at3, cse, fold)
-#define JS_DEFINE_CALLINFO_5(rt, op, at0, at1, at2, at3, at4, cse, fold)
+#define JS_DEFINE_CALLINFO_1(linkage, rt, op, at0, cse, fold)
+#define JS_DEFINE_CALLINFO_2(linkage, rt, op, at0, at1, cse, fold)
+#define JS_DEFINE_CALLINFO_3(linkage, rt, op, at0, at1, at2, cse, fold)
+#define JS_DEFINE_CALLINFO_4(linkage, rt, op, at0, at1, at2, at3, cse, fold)
+#define JS_DEFINE_CALLINFO_5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)
 #define JS_DECLARE_CALLINFO(name)
 
 #endif /* !JS_TRACER */
 
 /* Defined in jsarray.cpp */
-JS_DECLARE_CALLINFO(Array_dense_setelem)
-JS_DECLARE_CALLINFO(FastNewArray)
-JS_DECLARE_CALLINFO(Array_1int)
-JS_DECLARE_CALLINFO(Array_1str)
-JS_DECLARE_CALLINFO(Array_2obj)
-JS_DECLARE_CALLINFO(Array_3num)
+JS_DECLARE_CALLINFO(js_Array_dense_setelem)
+JS_DECLARE_CALLINFO(js_FastNewArray)
+JS_DECLARE_CALLINFO(js_Array_1int)
+JS_DECLARE_CALLINFO(js_Array_1str)
+JS_DECLARE_CALLINFO(js_Array_2obj)
+JS_DECLARE_CALLINFO(js_Array_3num)
 
 /* Defined in jsdate.cpp */
-JS_DECLARE_CALLINFO(FastNewDate)
+JS_DECLARE_CALLINFO(js_FastNewDate)
 
 /* Defined in jsnum.cpp */
-JS_DECLARE_CALLINFO(NumberToString)
+JS_DECLARE_CALLINFO(js_NumberToString)
 
 /* Defined in jsstr.cpp */
-JS_DECLARE_CALLINFO(ConcatStrings)
-JS_DECLARE_CALLINFO(String_getelem)
-JS_DECLARE_CALLINFO(String_p_charCodeAt)
-JS_DECLARE_CALLINFO(EqualStrings)
-JS_DECLARE_CALLINFO(CompareStrings)
+JS_DECLARE_CALLINFO(js_ConcatStrings)
+JS_DECLARE_CALLINFO(js_String_getelem)
+JS_DECLARE_CALLINFO(js_String_p_charCodeAt)
+JS_DECLARE_CALLINFO(js_EqualStrings)
+JS_DECLARE_CALLINFO(js_CompareStrings)
 
 /* Defined in jsbuiltins.cpp */
-#define BUILTIN1(rt, op, at0,                     cse, fold)  JS_DECLARE_CALLINFO(op)
-#define BUILTIN2(rt, op, at0, at1,                cse, fold)  JS_DECLARE_CALLINFO(op)
-#define BUILTIN3(rt, op, at0, at1, at2,           cse, fold)  JS_DECLARE_CALLINFO(op)
-#define BUILTIN4(rt, op, at0, at1, at2, at3,      cse, fold)  JS_DECLARE_CALLINFO(op)
-#define BUILTIN5(rt, op, at0, at1, at2, at3, at4, cse, fold)  JS_DECLARE_CALLINFO(op)
+#define BUILTIN1(linkage, rt, op, at0,                     cse, fold)  JS_DECLARE_CALLINFO(op)
+#define BUILTIN2(linkage, rt, op, at0, at1,                cse, fold)  JS_DECLARE_CALLINFO(op)
+#define BUILTIN3(linkage, rt, op, at0, at1, at2,           cse, fold)  JS_DECLARE_CALLINFO(op)
+#define BUILTIN4(linkage, rt, op, at0, at1, at2, at3,      cse, fold)  JS_DECLARE_CALLINFO(op)
+#define BUILTIN5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)  JS_DECLARE_CALLINFO(op)
 #include "builtins.tbl"
 #undef BUILTIN
 #undef BUILTIN1
