@@ -334,8 +334,10 @@ MAKEFILES_liboggplay="
   media/liboggplay/include/oggplay/Makefile
 "
 
-MAKEFILES_liboggplay_audio="
-  media/liboggplay_audio/Makefile
+MAKEFILES_libsydneyaudio="
+  media/libsydneyaudio/Makefile
+  media/libsydneyaudio/include/Makefile
+  media/libsydneyaudio/src/Makefile
 "
 
 MAKEFILES_oji="
@@ -1126,6 +1128,6 @@ if [ "$MOZ_OGG" ]; then
    $MAKEFILES_libogg
    $MAKEFILES_libfishsound
    $MAKEFILES_liboggplay
-   $MAKEFILES_liboggplay_audio
+   $MAKEFILES_libsydneyaudio
  "
 fi

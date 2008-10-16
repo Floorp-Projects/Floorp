@@ -17,7 +17,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Michael Martin
- *                 Chris Double (chris.double@double.co.nz)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,15 +32,13 @@
  *
  * ***** END LICENSE BLOCK ***** *
  */
-#include <stdlib.h>
+
 #include <pthread.h>
-#include <alsa/asoundlib.h>
+#include <AudioUnit/AudioUnit.h>
 #include "sydney_audio.h"
 
-/* ALSA implementation based heavily on sydney_audio_mac.c */
-
 /*
- * The audio interface is based on a "pull" I/O model, which means you
+ * The Mac's audio interface is based on a "pull" I/O model, which means you
  * can't just provide a data buffer and tell the audio device to play; you must
  * register a callback and provide data as the device asks for it. To support
  * sydney audio's "write-to-play" style interface, we have to buffer up the
@@ -69,10 +66,9 @@ struct sa_buf {
 };
 
 struct sa_stream {
-  snd_pcm_t*        output_unit;
-  pthread_t         thread_id;
+  AudioUnit         output_unit;
   pthread_mutex_t   mutex;
-  char              playing;
+  bool              playing;
   int64_t           bytes_played;
 
   /* audio format info */
@@ -99,7 +95,10 @@ struct sa_stream {
 #error BUF_LIMIT must be at least 2!
 #endif
 
-static void audio_callback(void* s);
+
+static OSStatus audio_callback(void *arg, AudioUnitRenderActionFlags *action_flags,
+  const AudioTimeStamp *time_stamp, UInt32 bus_num, UInt32 n_frames, AudioBufferList *data);
+
 static sa_buf *new_buffer(void);
 
 
@@ -118,7 +117,6 @@ sa_stream_create_pcm(
   unsigned  int       rate,
   unsigned  int       n_channels
 ) {
-  sa_stream_t   * s = 0;
 
   /*
    * Make sure we return a NULL stream pointer on failure.
@@ -138,6 +136,7 @@ sa_stream_create_pcm(
   /*
    * Allocate the instance and required resources.
    */
+  sa_stream_t   * s;
   if ((s = malloc(sizeof(sa_stream_t))) == NULL) {
     return SA_ERROR_OOM;
   }
@@ -152,8 +151,7 @@ sa_stream_create_pcm(
   }
 
   s->output_unit  = NULL;
-  s->thread_id    = 0;
-  s->playing      = 0;
+  s->playing      = FALSE;
   s->bytes_played = 0;
   s->rate         = rate;
   s->n_channels   = n_channels;
@@ -176,23 +174,79 @@ sa_stream_open(sa_stream_t *s) {
     return SA_ERROR_INVALID;
   }
 
-  if (snd_pcm_open(&s->output_unit, 
-		   "default", 
-		   SND_PCM_STREAM_PLAYBACK, 
-		   0) < 0) {
+  /*
+   * Open the default audio output unit.
+   */
+  ComponentDescription desc;
+  desc.componentType         = kAudioUnitType_Output;
+  desc.componentSubType      = kAudioUnitSubType_DefaultOutput;
+  desc.componentManufacturer = kAudioUnitManufacturer_Apple;
+  desc.componentFlags        = 0;
+  desc.componentFlagsMask    = 0;
+
+  Component comp = FindNextComponent(NULL, &desc);
+  if (comp == NULL) {
     return SA_ERROR_NO_DEVICE;
   }
-  
-  if (snd_pcm_set_params(s->output_unit,
-			 SND_PCM_FORMAT_S16_LE,
-			 SND_PCM_ACCESS_RW_INTERLEAVED,
-			 s->n_channels,
-			 s->rate,
-			 1,
-			 0) < 0) {
-    snd_pcm_close(s->output_unit);
-    s->output_unit = NULL;
+
+  if (OpenAComponent(comp, &s->output_unit) != noErr) {
+    return SA_ERROR_NO_DEVICE;
+  }
+
+  /*
+   * Set up the render callback used to feed audio data into the output unit.
+   */
+  AURenderCallbackStruct input;
+  input.inputProc       = audio_callback;
+  input.inputProcRefCon = s;
+  if (AudioUnitSetProperty(s->output_unit, kAudioUnitProperty_SetRenderCallback,
+      kAudioUnitScope_Input, 0, &input, sizeof(input)) != 0) {
+    return SA_ERROR_SYSTEM;
+  }
+
+  /*
+   * Set up the format description for our audio data. Apple uses the
+   * following terminology:
+   *
+   * sample = a single data value for one channel
+   * frame  = a set of samples that includes one sample for each channel
+   * packet = the smallest indivisible block of audio data; for uncompressed
+   *          audio (which is what we have), this is one frame
+   * rate   = the number of complete frames per second
+   *
+   * Note that this definition of frame differs from, well, pretty much everyone
+   * else's. See this really long link for more info:
+   *
+   * http://developer.apple.com/documentation/MusicAudio/Reference/CoreAudioDataTypesRef/Reference/reference.html#//apple_ref/c/tdef/AudioStreamBasicDescription
+   */
+  AudioStreamBasicDescription fmt;
+  fmt.mFormatID         = kAudioFormatLinearPCM;
+  fmt.mFormatFlags      = kLinearPCMFormatFlagIsSignedInteger |
+#ifdef __BIG_ENDIAN__
+                          kLinearPCMFormatFlagIsBigEndian |
+#endif
+                          kLinearPCMFormatFlagIsPacked;
+  fmt.mSampleRate       = s->rate;
+  fmt.mChannelsPerFrame = s->n_channels;
+  fmt.mBitsPerChannel   = s->bytes_per_ch * 8;
+  fmt.mFramesPerPacket  = 1;  /* uncompressed audio */
+  fmt.mBytesPerFrame    = fmt.mChannelsPerFrame * fmt.mBitsPerChannel / 8;
+  fmt.mBytesPerPacket   = fmt.mBytesPerFrame * fmt.mFramesPerPacket;
+
+  /*
+   * We're feeding data in to the output bus of the audio system, so we set
+   * the format description on the input scope of the device, using the very
+   * obvious element value of 0 to indicate the output bus.
+   *
+   * http://developer.apple.com/technotes/tn2002/tn2091.html
+   */
+  if (AudioUnitSetProperty(s->output_unit, kAudioUnitProperty_StreamFormat,
+      kAudioUnitScope_Input, 0, &fmt, sizeof(AudioStreamBasicDescription)) != 0) {
     return SA_ERROR_NOT_SUPPORTED;
+  }
+
+  if (AudioUnitInitialize(s->output_unit) != 0) {
+    return SA_ERROR_SYSTEM;
   }
 
   return SA_SUCCESS;
@@ -201,7 +255,6 @@ sa_stream_open(sa_stream_t *s) {
 
 int
 sa_stream_destroy(sa_stream_t *s) {
-  int result = SA_SUCCESS;
 
   if (s == NULL) {
     return SA_SUCCESS;
@@ -210,15 +263,17 @@ sa_stream_destroy(sa_stream_t *s) {
   pthread_mutex_lock(&s->mutex);
 
   /*
-   * This causes the thread sending data to ALSA to stop
-   */
-  s->thread_id = 0;
-
-  /*
    * Shut down the audio output device.
    */
+  int result = SA_SUCCESS;
   if (s->output_unit != NULL) {
-    if (s->playing && snd_pcm_close(s->output_unit) < 0) {
+    if (s->playing && AudioOutputUnitStop(s->output_unit) != 0) {
+      result = SA_ERROR_SYSTEM;
+    }
+    if (AudioUnitUninitialize(s->output_unit) != 0) {
+      result = SA_ERROR_SYSTEM;
+    }
+    if (CloseComponent(s->output_unit) != noErr) {
       result = SA_ERROR_SYSTEM;
     }
   }
@@ -251,7 +306,6 @@ sa_stream_destroy(sa_stream_t *s) {
 
 int
 sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
-  int result = SA_SUCCESS;
 
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
@@ -265,6 +319,7 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
   /*
    * Append the new data to the end of our buffer list.
    */
+  int result = SA_SUCCESS;
   while (1) {
     unsigned int avail = s->bl_tail->size - s->bl_tail->end;
 
@@ -310,8 +365,8 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
           break;
         }
         while (s->n_bufs == BUF_LIMIT) {
-          struct timespec ts = {0, 1000000};
           pthread_mutex_unlock(&s->mutex);
+          struct timespec ts = {0, 1000000};
           nanosleep(&ts, NULL);
           pthread_mutex_lock(&s->mutex);
         }
@@ -340,8 +395,8 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
    * better not to be inside the lock when we enable the audio callback.
    */
   if (!s->playing) {
-    s->playing = 1;
-    if (pthread_create(&s->thread_id, NULL, (void *)audio_callback, s) != 0) {
+    s->playing = TRUE;
+    if (AudioOutputUnitStart(s->output_unit) != 0) {
       result = SA_ERROR_SYSTEM;
     }
   }
@@ -350,92 +405,91 @@ sa_stream_write(sa_stream_t *s, const void *data, size_t nbytes) {
 }
 
 
-static void audio_callback(void* data)
-{
-  sa_stream_t* s = (sa_stream_t*)data;
-  snd_pcm_uframes_t buffer_size;
-  snd_pcm_uframes_t period_size;
-  unsigned int bytes_per_frame = s->n_channels * s->bytes_per_ch;
-  char* buffer = 0;
+static OSStatus
+audio_callback(
+  void                        * arg,
+  AudioUnitRenderActionFlags  * action_flags,
+  const AudioTimeStamp        * time_stamp,
+  UInt32                        bus_num,
+  UInt32                        n_frames,
+  AudioBufferList             * data
+) {
 
 #ifdef TIMING_TRACE
   printf(".");  /* audio read 'tick' */
 #endif
 
-  snd_pcm_get_params(s->output_unit, &buffer_size, &period_size);
- 
-  buffer = malloc(period_size * bytes_per_frame);
- 
-  while(1) {
-   char* dst = buffer;
-   unsigned int bytes_to_copy   = period_size * bytes_per_frame;
-   snd_pcm_sframes_t frames;
+  /*
+   * We're dealing with interleaved data, so the system should only
+   * have provided one buffer to be filled.
+   */
+  assert(data->mNumberBuffers == 1);
 
-   pthread_mutex_lock(&s->mutex);
-   if (!s->thread_id)
-     break;
+  sa_stream_t     * s = arg;
 
-    /*
-     * Consume data from the start of the buffer list.
-     */
-    while (1) {
-      unsigned int avail = s->bl_head->end - s->bl_head->start;
-      assert(s->bl_head->start <= s->bl_head->end);
+  pthread_mutex_lock(&s->mutex);
 
-      if (avail >= bytes_to_copy) {
-	/*
-	 * We have all we need in the head buffer, so just grab it and go.
-	 */
-	memcpy(dst, s->bl_head->data + s->bl_head->start, bytes_to_copy);
-	s->bl_head->start += bytes_to_copy;
-	s->bytes_played += bytes_to_copy;
-	break;
-	
-      } else {
-	sa_buf* next = 0;
-	/*
-	 * Copy what we can from the head and move on to the next buffer.
-	 */
-	memcpy(dst, s->bl_head->data + s->bl_head->start, avail);
-	s->bl_head->start += avail;
-	dst += avail;
-	bytes_to_copy -= avail;
-	s->bytes_played += avail;
+  unsigned char   * dst             = data->mBuffers[0].mData;
+  unsigned int      bytes_per_frame = s->n_channels * s->bytes_per_ch;
+  unsigned int      bytes_to_copy   = n_frames * bytes_per_frame;
 
-	/*
-	 * We want to free the now-empty buffer, but not if it's also the
-	 * current tail. If it is the tail, we don't have enough data to fill
-	 * the destination buffer, so we'll just zero it out and give up.
-	 */
-	next = s->bl_head->next;
-	if (next == NULL) {
+  /*
+   * Keep track of the number of bytes we've consumed so far. mSampleTime
+   * is actually the number of *frames* that have been consumed by the
+   * audio output unit so far. I don't know why it's a float.
+   */
+  assert(time_stamp->mFlags & kAudioTimeStampSampleTimeValid);
+  s->bytes_played = (int64_t)time_stamp->mSampleTime * bytes_per_frame;
+
+  /*
+   * Consume data from the start of the buffer list.
+   */
+  while (1) {
+    assert(s->bl_head->start <= s->bl_head->end);
+    unsigned int avail = s->bl_head->end - s->bl_head->start;
+
+    if (avail >= bytes_to_copy) {
+
+      /*
+       * We have all we need in the head buffer, so just grab it and go.
+       */
+      memcpy(dst, s->bl_head->data + s->bl_head->start, bytes_to_copy);
+      s->bl_head->start += bytes_to_copy;
+      break;
+
+    } else {
+
+      /*
+       * Copy what we can from the head and move on to the next buffer.
+       */
+      memcpy(dst, s->bl_head->data + s->bl_head->start, avail);
+      s->bl_head->start += avail;
+      dst += avail;
+      bytes_to_copy -= avail;
+
+      /*
+       * We want to free the now-empty buffer, but not if it's also the
+       * current tail. If it is the tail, we don't have enough data to fill
+       * the destination buffer, so we'll just zero it out and give up.
+       */
+      sa_buf  * next = s->bl_head->next;
+      if (next == NULL) {
 #ifdef TIMING_TRACE
-	  printf("!");  /* not enough audio data */
+        printf("!");  /* not enough audio data */
 #endif
-	  memset(dst, 0, bytes_to_copy);
-	  break;
-	}
-	free(s->bl_head);
-	s->bl_head = next;
-	s->n_bufs--;
-	
-      } /* if (avail >= bytes_to_copy), else */
-      
-    } /* while (1) */
-    
-    pthread_mutex_unlock(&s->mutex);
-    
-    frames = snd_pcm_writei(s->output_unit, buffer, period_size);
-    if (frames < 0) {
-      frames = snd_pcm_recover(s->output_unit, frames, 1);
-      if (frames < 0) {
-	printf("snc_pcm_recover error: %s\n", snd_strerror(frames));
+        memset(dst, 0, bytes_to_copy);
+        break;
       }
-      if(frames > 0 && frames < period_size)
-	printf("short write (expected %d, wrote %d)\n", (int)period_size, (int)frames);;
-    }
-  }
-  free(buffer);
+      free(s->bl_head);
+      s->bl_head = next;
+      s->n_bufs--;
+
+    } /* if (avail >= bytes_to_copy), else */
+
+  } /* while (1) */
+
+  pthread_mutex_unlock(&s->mutex);
+  return noErr;
 }
 
 
@@ -448,8 +502,6 @@ static void audio_callback(void* data)
 
 int
 sa_stream_get_write_size(sa_stream_t *s, size_t *size) {
-  sa_buf  * b;
-  size_t    used = 0;
 
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
@@ -458,13 +510,12 @@ sa_stream_get_write_size(sa_stream_t *s, size_t *size) {
   pthread_mutex_lock(&s->mutex);
 
   /*
-   * Sum up the used portions of our buffers and subtract that from
-   * the pre-defined max allowed allocation.
+   * The sum of the free space in the tail buffer plus the size of any new
+   * buffers represents the write space available before blocking.
    */
-  for (b = s->bl_head; b != NULL; b = b->next) {
-    used += b->end - b->start;
-  }
-  *size = BUF_SIZE * BUF_LIMIT - used;
+  unsigned int avail = s->bl_tail->size - s->bl_tail->end;
+  avail += (BUF_LIMIT - s->n_bufs) * BUF_SIZE;
+  *size = avail;
 
   pthread_mutex_unlock(&s->mutex);
   return SA_SUCCESS;
@@ -496,9 +547,7 @@ sa_stream_pause(sa_stream_t *s) {
   }
 
   pthread_mutex_lock(&s->mutex);
-#if 0 /* TODO */
   AudioOutputUnitStop(s->output_unit);
-#endif
   pthread_mutex_unlock(&s->mutex);
   return SA_SUCCESS;
 }
@@ -518,9 +567,8 @@ sa_stream_resume(sa_stream_t *s) {
    * so we need to clear our tracking value to keep that in sync.
    */
   s->bytes_played = 0;
-#if 0 /* TODO */
   AudioOutputUnitStart(s->output_unit);
-#endif
+
   pthread_mutex_unlock(&s->mutex);
   return SA_SUCCESS;
 }
@@ -539,6 +587,33 @@ new_buffer(void) {
 }
 
 
+int
+sa_stream_drain(sa_stream_t *s)
+{
+  if (s == NULL || s->output_unit == NULL) {
+    return SA_ERROR_NO_INIT;
+  }
+
+  while (1) {
+    pthread_mutex_lock(&s->mutex);
+    sa_buf  * b;
+    size_t    used = 0;
+    for (b = s->bl_head; b != NULL; b = b->next) {
+      used += b->end - b->start;
+    }
+    pthread_mutex_unlock(&s->mutex);
+
+    if (used == 0) {
+      break;
+    }
+
+    struct timespec ts = {0, 1000000};
+    nanosleep(&ts, NULL);
+  }
+  return SA_SUCCESS;
+}
+
+
 
 /*
  * -----------------------------------------------------------------------------
@@ -548,95 +623,32 @@ new_buffer(void) {
 
 int
 sa_stream_set_volume_abs(sa_stream_t *s, float vol) {
-  snd_mixer_t* mixer = 0;
-  snd_mixer_elem_t* elem = 0;
+
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
   }
 
-  if (snd_mixer_open(&mixer, 0) < 0) {
-    return SA_ERROR_SYSTEM;
-  }
-
-  if (snd_mixer_attach(mixer, "default") < 0) {
-    snd_mixer_close(mixer);
-    return SA_ERROR_SYSTEM;
-  }
-
-  if (snd_mixer_selem_register(mixer, NULL, NULL) < 0) {
-    snd_mixer_close(mixer);
-    return SA_ERROR_SYSTEM;
-  }
-
-  if (snd_mixer_load(mixer) < 0) {
-    snd_mixer_close(mixer);
-    return SA_ERROR_SYSTEM;
-  }
-
-#if 0
-  snd_mixer_elem_t* elem = 0;
-  for (elem = snd_mixer_first_elem(mixer); elem != NULL; elem = snd_mixer_elem_next(elem)) {
-    if (snd_mixer_selem_has_playback_volume(elem)) {
-      printf("Playback %s\n", snd_mixer_selem_get_name(elem));
-    }
-    else {
-      printf("No Playback: %s\n", snd_mixer_selem_get_name(elem));
-    }
-  }
-#endif
-  elem = snd_mixer_first_elem(mixer);
-  if (elem && snd_mixer_selem_has_playback_volume(elem)) {
-    long min = 0;
-    long max = 0;
-    if (snd_mixer_selem_get_playback_volume_range(elem, &min, &max) >= 0) {
-      snd_mixer_selem_set_playback_volume_all(elem, (max-min)*vol + min);
-    } 
-  }
-  snd_mixer_close(mixer);
-
+  pthread_mutex_lock(&s->mutex);
+  AudioUnitSetParameter(s->output_unit, kHALOutputParam_Volume,
+      kAudioUnitParameterFlag_Output, 0, vol, 0);
+  pthread_mutex_unlock(&s->mutex);
   return SA_SUCCESS;
 }
 
 
 int
 sa_stream_get_volume_abs(sa_stream_t *s, float *vol) {
-  snd_mixer_t* mixer = 0;
-  snd_mixer_elem_t* elem = 0;
-  long value = 0;
 
   if (s == NULL || s->output_unit == NULL) {
     return SA_ERROR_NO_INIT;
   }
 
-  if (snd_mixer_open(&mixer, 0) < 0) {
-    return SA_ERROR_SYSTEM;
-  }
-
-  if (snd_mixer_attach(mixer, "default") < 0) {
-    snd_mixer_close(mixer);
-    return SA_ERROR_SYSTEM;
-  }
-
-  if (snd_mixer_selem_register(mixer, NULL, NULL) < 0) {
-    snd_mixer_close(mixer);
-    return SA_ERROR_SYSTEM;
-  }
-
-  if (snd_mixer_load(mixer) < 0) {
-    snd_mixer_close(mixer);
-    return SA_ERROR_SYSTEM;
-  }
-
-  elem = snd_mixer_first_elem(mixer);
-  if (elem && snd_mixer_selem_get_playback_volume(elem, 0, &value) >= 0) {
-    long min = 0;
-    long max = 0;
-    if (snd_mixer_selem_get_playback_volume_range(elem, &min, &max) >= 0) {
-      *vol = (float)(value-min)/(float)(max-min);
-    } 
-  }
-  snd_mixer_close(mixer);
-
+  pthread_mutex_lock(&s->mutex);
+  Float32 local_vol = 0;
+  AudioUnitGetParameter(s->output_unit, kHALOutputParam_Volume,
+      kAudioUnitParameterFlag_Output, 0, &local_vol);
+  *vol = local_vol;
+  pthread_mutex_unlock(&s->mutex);
   return SA_SUCCESS;
 }
 
@@ -703,7 +715,6 @@ UNSUPPORTED(int sa_stream_write_ni(sa_stream_t *s, unsigned int channel, const v
 UNSUPPORTED(int sa_stream_pwrite(sa_stream_t *s, const void *data, size_t nbytes, int64_t offset, sa_seek_t whence))
 UNSUPPORTED(int sa_stream_pwrite_ni(sa_stream_t *s, unsigned int channel, const void *data, size_t nbytes, int64_t offset, sa_seek_t whence))
 UNSUPPORTED(int sa_stream_get_read_size(sa_stream_t *s, size_t *size))
-UNSUPPORTED(int sa_stream_drain(sa_stream_t *s))
 
 const char *sa_strerror(int code) { return NULL; }
 

@@ -156,7 +156,7 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
 	$(DEPTH)/media/liboggplay/src/liboggplay/$(LIB_PREFIX)oggplay.$(LIB_SUFFIX) \
 	$(DEPTH)/media/liboggz/src/liboggz/$(LIB_PREFIX)oggz.$(LIB_SUFFIX) \
-	$(DEPTH)/media/liboggplay_audio/$(LIB_PREFIX)oggplay_audio.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libsydneyaudio/src/$(LIB_PREFIX)sydneyaudio.$(LIB_SUFFIX) \
 	$(DEPTH)/media/libtheora/lib/$(LIB_PREFIX)theora.$(LIB_SUFFIX) \
 	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
 	$(NULL)
