@@ -42,7 +42,7 @@
 #include "nsAutoPtr.h"
 #include "nsAudioStream.h"
 extern "C" {
-#include "oggplay_audio/sydney_audio.h"
+#include "sydneyaudio/sydney_audio.h"
 }
 
 #ifdef PR_LOGGING
