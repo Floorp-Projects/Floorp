@@ -39,7 +39,7 @@
 #include "nsTextUtils.h"
 
 #include "nsAccessNode.h"
-#include "nsAccessibilityUtils.h"
+#include "nsCoreUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsLangTextAttr
@@ -52,7 +52,7 @@ nsLangTextAttr::Equal(nsIDOMElement *aElm)
     return PR_FALSE;
 
   nsAutoString lang;
-  nsAccUtils::GetLanguageFor(content, mRootContent, lang);
+  nsCoreUtils::GetLanguageFor(content, mRootContent, lang);
 
   return lang == mLang;
 }
@@ -191,7 +191,7 @@ nsBackgroundTextAttr::nsBackgroundTextAttr(nsIFrame *aFrame,
 PRBool
 nsBackgroundTextAttr::Equal(nsIDOMElement *aElm)
 {
-  nsIFrame *frame = nsAccUtils::GetFrameFor(aElm);
+  nsIFrame *frame = nsCoreUtils::GetFrameFor(aElm);
   if (!frame)
     return PR_FALSE;
 

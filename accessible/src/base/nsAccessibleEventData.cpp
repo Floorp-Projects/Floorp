@@ -38,7 +38,7 @@
 
 #include "nsAccessibleEventData.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsAccessibilityUtils.h"
+#include "nsCoreUtils.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessNode.h"
 #include "nsIDocument.h"
@@ -322,8 +322,8 @@ nsAccEvent::ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire)
             thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
             continue;
           }
-          if (nsAccUtils::IsAncestorOf(tailEvent->mDOMNode,
-                                       thisEvent->mDOMNode)) {
+          if (nsCoreUtils::IsAncestorOf(tailEvent->mDOMNode,
+                                        thisEvent->mDOMNode)) {
             // thisDOMNode is a descendant of tailDOMNode
             // Do not emit thisEvent, also apply this result to sibling
             // nodes of thisDOMNode.
@@ -332,8 +332,8 @@ nsAccEvent::ApplyEventRules(nsCOMArray<nsIAccessibleEvent> &aEventsToFire)
                             thisEvent->mDOMNode, nsAccEvent::eDoNotEmit);
             continue;
           }
-          if (nsAccUtils::IsAncestorOf(thisEvent->mDOMNode,
-                                       tailEvent->mDOMNode)) {
+          if (nsCoreUtils::IsAncestorOf(thisEvent->mDOMNode,
+                                        tailEvent->mDOMNode)) {
             // tailDOMNode is a descendant of thisDOMNode
             // Do not emit tailEvent, also apply this result to sibling
             // nodes of tailDOMNode.
@@ -381,7 +381,7 @@ nsAccEvent::ApplyToSiblings(nsCOMArray<nsIAccessibleEvent> &aEventsToFire,
     nsRefPtr<nsAccEvent> accEvent = GetAccEventPtr(aEventsToFire[index]);
     if (accEvent->mEventType == aEventType &&
         accEvent->mEventRule != nsAccEvent::eDoNotEmit &&
-        nsAccUtils::AreSiblings(accEvent->mDOMNode, aDOMNode)) {
+        nsCoreUtils::AreSiblings(accEvent->mDOMNode, aDOMNode)) {
       accEvent->mEventRule = aEventRule;
     }
   }

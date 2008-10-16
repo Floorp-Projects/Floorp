@@ -379,8 +379,8 @@ __try {
   PRInt32 groupLevel = 0;
   PRInt32 itemsInGroup = 0;
   PRInt32 positionInGroup = 0;
-  nsAccUtils::GetAccGroupAttrs(attributes, &groupLevel, &positionInGroup,
-                               &itemsInGroup);
+  nsCoreUtils::GetAccGroupAttrs(attributes, &groupLevel, &positionInGroup,
+                                &itemsInGroup);
 
   if (positionInGroup > 0) {
     if (groupLevel > 0) {
