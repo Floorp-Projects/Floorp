@@ -192,8 +192,8 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
   }
 
   nsCOMPtr<nsIAccessible> accessible = GetFirstAvailableAccessible(focusNode, PR_TRUE);
-  nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
-                           accessible);
+  nsCoreUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
+                            accessible);
 
   return NS_OK;
 }

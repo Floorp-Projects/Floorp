@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAccessibilityUtils_h_
-#define nsAccessibilityUtils_h_
+#ifndef nsCoreUtils_h_
+#define nsCoreUtils_h_
 
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessible.h"
@@ -52,7 +52,7 @@
 #include "nsPoint.h"
 #include "nsIAccessibleDocument.h"
 
-class nsAccUtils
+class nsCoreUtils
 {
 public:
   /**

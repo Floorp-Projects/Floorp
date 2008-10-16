@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessibilityUtils.h"
+#include "nsCoreUtils.h"
 
 #include "nsIAccessibleStates.h"
 #include "nsIAccessibleTypes.h"
@@ -77,8 +77,8 @@
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 void
-nsAccUtils::GetAccAttr(nsIPersistentProperties *aAttributes, nsIAtom *aAttrName,
-                       nsAString& aAttrValue)
+nsCoreUtils::GetAccAttr(nsIPersistentProperties *aAttributes,
+                        nsIAtom *aAttrName, nsAString& aAttrValue)
 {
   aAttrValue.Truncate();
 
@@ -88,8 +88,8 @@ nsAccUtils::GetAccAttr(nsIPersistentProperties *aAttributes, nsIAtom *aAttrName,
 }
 
 void
-nsAccUtils::SetAccAttr(nsIPersistentProperties *aAttributes, nsIAtom *aAttrName,
-                       const nsAString& aAttrValue)
+nsCoreUtils::SetAccAttr(nsIPersistentProperties *aAttributes,
+                        nsIAtom *aAttrName, const nsAString& aAttrValue)
 {
   nsAutoString oldValue;
   nsCAutoString attrName;
@@ -99,9 +99,9 @@ nsAccUtils::SetAccAttr(nsIPersistentProperties *aAttributes, nsIAtom *aAttrName,
 }
 
 void
-nsAccUtils::GetAccGroupAttrs(nsIPersistentProperties *aAttributes,
-                             PRInt32 *aLevel, PRInt32 *aPosInSet,
-                             PRInt32 *aSetSize)
+nsCoreUtils::GetAccGroupAttrs(nsIPersistentProperties *aAttributes,
+                              PRInt32 *aLevel, PRInt32 *aPosInSet,
+                              PRInt32 *aSetSize)
 {
   *aLevel = 0;
   *aPosInSet = 0;
@@ -133,7 +133,7 @@ nsAccUtils::GetAccGroupAttrs(nsIPersistentProperties *aAttributes,
 }
 
 PRBool
-nsAccUtils::HasAccGroupAttrs(nsIPersistentProperties *aAttributes)
+nsCoreUtils::HasAccGroupAttrs(nsIPersistentProperties *aAttributes)
 {
   nsAutoString value;
 
@@ -147,9 +147,9 @@ nsAccUtils::HasAccGroupAttrs(nsIPersistentProperties *aAttributes)
 }
 
 void
-nsAccUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
-                             PRInt32 aLevel, PRInt32 aPosInSet,
-                             PRInt32 aSetSize)
+nsCoreUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
+                              PRInt32 aLevel, PRInt32 aPosInSet,
+                              PRInt32 aSetSize)
 {
   nsAutoString value;
 
@@ -170,8 +170,8 @@ nsAccUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
 }
 
 void
-nsAccUtils::SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
-                                               nsIPersistentProperties *aAttributes)
+nsCoreUtils::SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
+                                                nsIPersistentProperties *aAttributes)
 {
   nsCOMPtr<nsIDOMXULSelectControlItemElement> item(do_QueryInterface(aNode));
   if (!item)
@@ -209,8 +209,8 @@ nsAccUtils::SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
 }
 
 void
-nsAccUtils::SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
-                                           nsIPersistentProperties *aAttributes)
+nsCoreUtils::SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
+                                            nsIPersistentProperties *aAttributes)
 {
   nsCOMPtr<nsIDOMXULContainerItemElement> item(do_QueryInterface(aNode));
   if (!item)
@@ -285,7 +285,7 @@ nsAccUtils::SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
 }
 
 PRBool
-nsAccUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
+nsCoreUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
 {
   NS_ENSURE_TRUE(aContent, PR_FALSE);
   nsCOMPtr<nsIEventListenerManager> listenerManager;
@@ -295,9 +295,9 @@ nsAccUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
 }
 
 PRBool
-nsAccUtils::DispatchMouseEvent(PRUint32 aEventType,
-                               nsIPresShell *aPresShell,
-                               nsIContent *aContent)
+nsCoreUtils::DispatchMouseEvent(PRUint32 aEventType,
+                                nsIPresShell *aPresShell,
+                                nsIContent *aContent)
 {
   nsIFrame *frame = aPresShell->GetPrimaryFrameFor(aContent);
   if (!frame)
@@ -337,7 +337,7 @@ nsAccUtils::DispatchMouseEvent(PRUint32 aEventType,
 }
 
 PRUint32
-nsAccUtils::GetAccessKeyFor(nsIContent *aContent)
+nsCoreUtils::GetAccessKeyFor(nsIContent *aContent)
 {
   if (!aContent)
     return 0;
@@ -370,8 +370,8 @@ nsAccUtils::GetAccessKeyFor(nsIContent *aContent)
 }
 
 nsresult
-nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                         PRBool aIsAsynch)
+nsCoreUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+                          PRBool aIsAsynch)
 {
   NS_ENSURE_ARG(aAccessible);
 
@@ -386,7 +386,7 @@ nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
 }
 
 already_AddRefed<nsIDOMElement>
-nsAccUtils::GetDOMElementFor(nsIDOMNode *aNode)
+nsCoreUtils::GetDOMElementFor(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
   nsIDOMElement *element = nsnull;
@@ -416,8 +416,8 @@ nsAccUtils::GetDOMElementFor(nsIDOMNode *aNode)
 }
 
 PRBool
-nsAccUtils::IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
-                         nsIDOMNode *aPossibleDescendantNode)
+nsCoreUtils::IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
+                          nsIDOMNode *aPossibleDescendantNode)
 {
   NS_ENSURE_TRUE(aPossibleAncestorNode && aPossibleDescendantNode, PR_FALSE);
 
@@ -434,8 +434,8 @@ nsAccUtils::IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
 }
 
 PRBool
-nsAccUtils::AreSiblings(nsIDOMNode *aDOMNode1,
-                       nsIDOMNode *aDOMNode2)
+nsCoreUtils::AreSiblings(nsIDOMNode *aDOMNode1,
+                        nsIDOMNode *aDOMNode2)
 {
   NS_ENSURE_TRUE(aDOMNode1 && aDOMNode2, PR_FALSE);
 
@@ -449,7 +449,7 @@ nsAccUtils::AreSiblings(nsIDOMNode *aDOMNode1,
 }
 
 already_AddRefed<nsIAccessible>
-nsAccUtils::GetAncestorWithRole(nsIAccessible *aDescendant, PRUint32 aRole)
+nsCoreUtils::GetAncestorWithRole(nsIAccessible *aDescendant, PRUint32 aRole)
 {
   nsCOMPtr<nsIAccessible> parentAccessible = aDescendant, testRoleAccessible;
   while (NS_SUCCEEDED(parentAccessible->GetParent(getter_AddRefs(testRoleAccessible))) &&
@@ -471,8 +471,9 @@ nsAccUtils::GetAncestorWithRole(nsIAccessible *aDescendant, PRUint32 aRole)
 }
 
 void
-nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem, nsIContent *aStartContent,
-                                  nsIAccessible **aTreeItemParentResult)
+nsCoreUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
+                                   nsIContent *aStartContent,
+                                   nsIAccessible **aTreeItemParentResult)
 {
   *aTreeItemParentResult = nsnull;
   nsAutoString levelStr;
@@ -546,10 +547,10 @@ nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem, nsIContent *aSt
 }
 
 nsresult
-nsAccUtils::ScrollSubstringTo(nsIFrame *aFrame,
-                              nsIDOMNode *aStartNode, PRInt32 aStartIndex,
-                              nsIDOMNode *aEndNode, PRInt32 aEndIndex,
-                              PRUint32 aScrollType)
+nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame,
+                               nsIDOMNode *aStartNode, PRInt32 aStartIndex,
+                               nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+                               PRUint32 aScrollType)
 {
   PRInt16 vPercent, hPercent;
   ConvertScrollTypeToPercents(aScrollType, &vPercent, &hPercent);
@@ -559,10 +560,10 @@ nsAccUtils::ScrollSubstringTo(nsIFrame *aFrame,
 }
 
 nsresult
-nsAccUtils::ScrollSubstringTo(nsIFrame *aFrame,
-                              nsIDOMNode *aStartNode, PRInt32 aStartIndex,
-                              nsIDOMNode *aEndNode, PRInt32 aEndIndex,
-                              PRInt16 aVPercent, PRInt16 aHPercent)
+nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame,
+                               nsIDOMNode *aStartNode, PRInt32 aStartIndex,
+                               nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+                               PRInt16 aVPercent, PRInt16 aHPercent)
 {
   if (!aFrame || !aStartNode || !aEndNode)
     return NS_ERROR_FAILURE;
@@ -598,9 +599,9 @@ nsAccUtils::ScrollSubstringTo(nsIFrame *aFrame,
 }
 
 void
-nsAccUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
-                               nsIFrame *aFrame,
-                               const nsIntPoint& aPoint)
+nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
+                                nsIFrame *aFrame,
+                                const nsIntPoint& aPoint)
 {
   nsIScrollableFrame *scrollableFrame = nsnull;
   CallQueryInterface(aScrollableFrame, &scrollableFrame);
@@ -624,9 +625,9 @@ nsAccUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
 }
 
 void
-nsAccUtils::ConvertScrollTypeToPercents(PRUint32 aScrollType,
-                                        PRInt16 *aVPercent,
-                                        PRInt16 *aHPercent)
+nsCoreUtils::ConvertScrollTypeToPercents(PRUint32 aScrollType,
+                                         PRInt16 *aVPercent,
+                                         PRInt16 *aHPercent)
 {
   switch (aScrollType)
   {
@@ -661,10 +662,10 @@ nsAccUtils::ConvertScrollTypeToPercents(PRUint32 aScrollType,
 }
 
 nsresult
-nsAccUtils::ConvertToScreenCoords(PRInt32 aX, PRInt32 aY,
-                                  PRUint32 aCoordinateType,
-                                  nsIAccessNode *aAccessNode,
-                                  nsIntPoint *aCoords)
+nsCoreUtils::ConvertToScreenCoords(PRInt32 aX, PRInt32 aY,
+                                   PRUint32 aCoordinateType,
+                                   nsIAccessNode *aAccessNode,
+                                   nsIntPoint *aCoords)
 {
   NS_ENSURE_ARG_POINTER(aCoords);
 
@@ -696,9 +697,9 @@ nsAccUtils::ConvertToScreenCoords(PRInt32 aX, PRInt32 aY,
 }
 
 nsresult
-nsAccUtils::ConvertScreenCoordsTo(PRInt32 *aX, PRInt32 *aY,
-                                  PRUint32 aCoordinateType,
-                                  nsIAccessNode *aAccessNode)
+nsCoreUtils::ConvertScreenCoordsTo(PRInt32 *aX, PRInt32 *aY,
+                                   PRUint32 aCoordinateType,
+                                   nsIAccessNode *aAccessNode)
 {
   switch (aCoordinateType) {
     case nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE:
@@ -730,7 +731,7 @@ nsAccUtils::ConvertScreenCoordsTo(PRInt32 *aX, PRInt32 *aY,
 }
 
 nsIntPoint
-nsAccUtils::GetScreenCoordsForWindow(nsIDOMNode *aNode)
+nsCoreUtils::GetScreenCoordsForWindow(nsIDOMNode *aNode)
 {
   nsIntPoint coords(0, 0);
   nsCOMPtr<nsIDocShellTreeItem> treeItem(GetDocShellTreeItemFor(aNode));
@@ -756,7 +757,7 @@ nsAccUtils::GetScreenCoordsForWindow(nsIDOMNode *aNode)
 }
 
 nsIntPoint
-nsAccUtils::GetScreenCoordsForWindow(nsIAccessNode *aAccessNode)
+nsCoreUtils::GetScreenCoordsForWindow(nsIAccessNode *aAccessNode)
 {
   nsCOMPtr<nsIDOMNode> DOMNode;
   aAccessNode->GetDOMNode(getter_AddRefs(DOMNode));
@@ -767,7 +768,7 @@ nsAccUtils::GetScreenCoordsForWindow(nsIAccessNode *aAccessNode)
 }
 
 nsIntPoint
-nsAccUtils::GetScreenCoordsForParent(nsIAccessNode *aAccessNode)
+nsCoreUtils::GetScreenCoordsForParent(nsIAccessNode *aAccessNode)
 {
   nsCOMPtr<nsPIAccessNode> parent;
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(aAccessNode));
@@ -793,7 +794,7 @@ nsAccUtils::GetScreenCoordsForParent(nsIAccessNode *aAccessNode)
 }
 
 already_AddRefed<nsIDocShellTreeItem>
-nsAccUtils::GetDocShellTreeItemFor(nsIDOMNode *aNode)
+nsCoreUtils::GetDocShellTreeItemFor(nsIDOMNode *aNode)
 {
   if (!aNode)
     return nsnull;
@@ -816,7 +817,7 @@ nsAccUtils::GetDocShellTreeItemFor(nsIDOMNode *aNode)
 }
 
 nsIFrame*
-nsAccUtils::GetFrameFor(nsIDOMElement *aElm)
+nsCoreUtils::GetFrameFor(nsIDOMElement *aElm)
 {
   nsCOMPtr<nsIPresShell> shell = nsAccessNode::GetPresShellFor(aElm);
   if (!shell)
@@ -830,14 +831,14 @@ nsAccUtils::GetFrameFor(nsIDOMElement *aElm)
 }
 
 PRBool
-nsAccUtils::GetID(nsIContent *aContent, nsAString& aID)
+nsCoreUtils::GetID(nsIContent *aContent, nsAString& aID)
 {
   nsIAtom *idAttribute = aContent->GetIDAttributeName();
   return idAttribute ? aContent->GetAttr(kNameSpaceID_None, idAttribute, aID) : PR_FALSE;
 }
 
 PRBool
-nsAccUtils::IsXLink(nsIContent *aContent)
+nsCoreUtils::IsXLink(nsIContent *aContent)
 {
   if (!aContent)
     return PR_FALSE;
@@ -848,23 +849,23 @@ nsAccUtils::IsXLink(nsIContent *aContent)
 }
 
 nsIContent*
-nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode, 
-                                        nsIAtom *aRelationAttr,
-                                        nsIAtom *aTagName,
-                                        PRUint32 aAncestorLevelsToSearch)
+nsCoreUtils::FindNeighbourPointingToNode(nsIContent *aForNode, 
+                                         nsIAtom *aRelationAttr,
+                                         nsIAtom *aTagName,
+                                         PRUint32 aAncestorLevelsToSearch)
 {
   return FindNeighbourPointingToNode(aForNode, &aRelationAttr, 1, aTagName, aAncestorLevelsToSearch);
 }
 
 nsIContent*
-nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode, 
-                                        nsIAtom **aRelationAttrs,
-                                        PRUint32 aAttrNum,
-                                        nsIAtom *aTagName,
-                                        PRUint32 aAncestorLevelsToSearch)
+nsCoreUtils::FindNeighbourPointingToNode(nsIContent *aForNode, 
+                                         nsIAtom **aRelationAttrs,
+                                         PRUint32 aAttrNum,
+                                         nsIAtom *aTagName,
+                                         PRUint32 aAncestorLevelsToSearch)
 {
   nsAutoString controlID;
-  if (!nsAccUtils::GetID(aForNode, controlID)) {
+  if (!nsCoreUtils::GetID(aForNode, controlID)) {
     if (!aForNode->IsInAnonymousSubtree())
       return nsnull;
 
@@ -931,12 +932,12 @@ nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode,
 
 // Pass in aAriaProperty = null and aRelationAttr == nsnull if any <label> will do
 nsIContent*
-nsAccUtils::FindDescendantPointingToID(const nsString *aId,
-                                       nsIContent *aLookContent,
-                                       nsIAtom **aRelationAttrs,
-                                       PRUint32 aAttrNum,
-                                       nsIContent *aExcludeContent,
-                                       nsIAtom *aTagType)
+nsCoreUtils::FindDescendantPointingToID(const nsString *aId,
+                                        nsIContent *aLookContent,
+                                        nsIAtom **aRelationAttrs,
+                                        PRUint32 aAttrNum,
+                                        nsIContent *aExcludeContent,
+                                        nsIAtom *aTagType)
 {
   // Surround id with spaces for search
   nsCAutoString idWithSpaces(' ');
@@ -948,22 +949,22 @@ nsAccUtils::FindDescendantPointingToID(const nsString *aId,
 }
 
 nsIContent*
-nsAccUtils::FindDescendantPointingToID(const nsString *aId,
-                                       nsIContent *aLookContent,
-                                       nsIAtom *aRelationAttr,
-                                       nsIContent *aExcludeContent,
-                                       nsIAtom *aTagType)
+nsCoreUtils::FindDescendantPointingToID(const nsString *aId,
+                                        nsIContent *aLookContent,
+                                        nsIAtom *aRelationAttr,
+                                        nsIContent *aExcludeContent,
+                                        nsIAtom *aTagType)
 {
   return FindDescendantPointingToID(aId, aLookContent, &aRelationAttr, 1, aExcludeContent, aTagType);
 }
 
 nsIContent*
-nsAccUtils::FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
-                                           nsIContent *aLookContent,
-                                           nsIAtom **aRelationAttrs,
-                                           PRUint32 aAttrNum,
-                                           nsIContent *aExcludeContent,
-                                           nsIAtom *aTagType)
+nsCoreUtils::FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
+                                            nsIContent *aLookContent,
+                                            nsIAtom **aRelationAttrs,
+                                            PRUint32 aAttrNum,
+                                            nsIContent *aExcludeContent,
+                                            nsIAtom *aTagType)
 {
   NS_ENSURE_TRUE(aLookContent, nsnull);
   NS_ENSURE_TRUE(aRelationAttrs && *aRelationAttrs, nsnull);
@@ -1010,8 +1011,8 @@ nsAccUtils::FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
 }
 
 void
-nsAccUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
-                           nsAString& aLanguage)
+nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
+                            nsAString& aLanguage)
 {
   aLanguage.Truncate();
 
@@ -1023,7 +1024,7 @@ nsAccUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
 }
 
 nsRoleMapEntry*
-nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
+nsCoreUtils::GetRoleMapEntry(nsIDOMNode *aNode)
 {
   nsIContent *content = nsAccessible::GetRoleContent(aNode);
   nsAutoString roleString;
@@ -1059,7 +1060,7 @@ nsAccUtils::GetRoleMapEntry(nsIDOMNode *aNode)
 }
 
 PRBool
-nsAccUtils::IsARIAPropForObjectAttr(nsIAtom *aAtom)
+nsCoreUtils::IsARIAPropForObjectAttr(nsIAtom *aAtom)
 {
   return aAtom != nsAccessibilityAtoms::aria_activedescendant &&
          aAtom != nsAccessibilityAtoms::aria_checked &&
@@ -1085,8 +1086,9 @@ nsAccUtils::IsARIAPropForObjectAttr(nsIAtom *aAtom)
          aAtom != nsAccessibilityAtoms::aria_valuetext;
 }
 
-void nsAccUtils::GetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
-                                                nsIContent *aStartContent, nsIContent *aTopContent)
+void nsCoreUtils::GetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
+                                             nsIContent *aStartContent,
+                                             nsIContent *aTopContent)
 {
   nsAutoString atomic, live, relevant, channel, busy;
   nsIContent *ancestor = aStartContent;
