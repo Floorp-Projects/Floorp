@@ -6388,8 +6388,12 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
       case PN_UNARY:
         /* Our kid may be null (e.g. return; vs. return e;). */
         pn1 = pn->pn_kid;
-        if (pn1 && !js_FoldConstants(cx, pn1, tc, inCond))
+        if (pn1 &&
+            !js_FoldConstants(cx, pn1, tc,
+                              (inCond && pn->pn_type == TOK_RP) ||
+                              pn->pn_op == JSOP_NOT)) {
             return JS_FALSE;
+        }
         break;
 
       case PN_NAME:
