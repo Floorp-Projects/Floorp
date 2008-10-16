@@ -197,16 +197,10 @@ public:
     : mBuilder(aBuilder), mInnerList(aInnerList), mOffset(aOffset) {}
 
   virtual void Paint(nsSVGRenderState *aContext, nsIFrame *aTarget,
-                     const nsIntRect* aDirtyRect, nsIDOMSVGMatrix *aTransform)
+                     const nsIntRect* aDirtyRect)
   {
     nsIRenderingContext* ctx = aContext->GetRenderingContext(aTarget);
     gfxContext* gfxCtx = aContext->GetGfxContext();
-
-    if (aTransform) {
-      // Transform by aTransform first
-      gfxMatrix m = nsSVGUtils::ConvertSVGMatrixToThebes(aTransform);
-      gfxCtx->Multiply(m);
-    }
 
     // We're expected to paint with 1 unit equal to 1 CSS pixel. But
     // mInnerList->Paint expects 1 unit to equal 1 device pixel. So
