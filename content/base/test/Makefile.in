@@ -47,8 +47,6 @@ DIRS += \
   chrome \
   $(NULL)
 
-MODULE = content
-
 CPP_UNIT_TESTS += TestNativeXMLHttpRequest.cpp TestPlainTextSerializer.cpp
 
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/tests
@@ -73,10 +71,6 @@ LIBS += \
   $(XPCOM_GLUE_LDOPTS) \
   $(NSPR_LIBS) \
   $(NULL)
-
-XPCSHELL_TESTS = \
-               unit \
-               $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -173,25 +167,6 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug420700.html \
 		test_bug421602.html \
 		test_bug422537.html \
-		test_bug424359-1.html \
-		file_htmlserializer_1.html \
-		file_htmlserializer_1_bodyonly.html \
-		file_htmlserializer_1_format.html \
-		file_htmlserializer_1_linebreak.html \
-		file_htmlserializer_1_links.html \
-		file_htmlserializer_1_noflag.html \
-		file_htmlserializer_1_noformatpre.html \
-		file_htmlserializer_1_raw.html \
-		file_htmlserializer_1_nested_body.html \
-		file_htmlserializer_1_sibling_body.html \
-		file_htmlserializer_1_sibling_body_only_body.html \
-		file_htmlserializer_1_no_body.html \
-		test_bug424359-2.html \
-		file_htmlserializer_2.html \
-		file_htmlserializer_2_basic.html \
-		file_htmlserializer_2_enthtml.html \
-		file_htmlserializer_2_entw3c.html \
-		file_htmlserializer_2_latin1.html \
 		test_bug424212.html \
 		test_bug425013.html \
 		bug426308-redirect.sjs \

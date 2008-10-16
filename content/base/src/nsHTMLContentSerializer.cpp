@@ -22,7 +22,6 @@
  *
  * Contributor(s):
  *   Ryan Jones <sciguyryan@gmail.com>
- *   Laurent Jouanneau <laurent.jouanneau@disruptive-innovations.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -68,7 +67,6 @@
 #include "nsLWBrkCIID.h"
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
-#include "nsILineBreaker.h"
 
 #define kIndentStr NS_LITERAL_STRING("  ")
 #define kLessThan NS_LITERAL_STRING("<")
@@ -91,11 +89,13 @@ nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
 
 nsHTMLContentSerializer::nsHTMLContentSerializer()
 : mIndent(0),
-  mInBody(0),
+  mColPos(0),
+  mInBody(PR_FALSE),
   mAddSpace(PR_FALSE),
   mMayIgnoreLineBreakSequence(PR_FALSE),
   mIsWholeDocument(PR_FALSE),
-  mInCDATA(PR_FALSE)
+  mInCDATA(PR_FALSE),
+  mNeedLineBreaker(PR_TRUE)
 {
 }
 
@@ -116,10 +116,7 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
                               const char* aCharSet, PRBool aIsCopying,
                               PRBool aIsWholeDocument)
 {
-  nsresult rv;
-  rv = nsXMLContentSerializer::Init(aFlags, aWrapColumn, aCharSet, aIsCopying, aIsWholeDocument);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  mFlags = aFlags;
   if (!aWrapColumn) {
     mMaxColumn = 72;
   }
@@ -134,8 +131,24 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
                                                              : PR_FALSE;
   mBodyOnly = (mFlags & nsIDocumentEncoder::OutputBodyOnly) ? PR_TRUE
                                                             : PR_FALSE;
+  // Set the line break character:
+  if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
+      && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) { // Windows
+    mLineBreak.AssignLiteral("\r\n");
+  }
+  else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) { // Mac
+    mLineBreak.AssignLiteral("\r");
+  }
+  else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) { // Unix/DOM
+    mLineBreak.AssignLiteral("\n");
+  }
+  else {
+    mLineBreak.AssignLiteral(NS_LINEBREAK);         // Platform/default
+  }
 
   mPreLevel = 0;
+
+  mCharset = aCharSet;
 
   // set up entity converter if we are going to need it
   if (mFlags & nsIDocumentEncoder::OutputEncodeW3CEntities) {
@@ -152,6 +165,14 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
                                     nsAString& aStr)
 {
   NS_ENSURE_ARG(aText);
+
+  if (mNeedLineBreaker) {
+    mNeedLineBreaker = PR_FALSE;
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aText->GetOwnerDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
+  }
 
   nsAutoString data;
 
@@ -637,7 +658,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   }
 
   if (name == nsGkAtoms::body) {
-    ++mInBody;
+    mInBody = PR_TRUE;
   }
 
   if (LineBreakBeforeOpen(name, hasDirtyAttr)) {
@@ -837,10 +858,6 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     MaybeFlagNewline(aElement);
   }
 
-  if (name == nsGkAtoms::body) {
-    --mInBody;
-  }
-
   mInCDATA = PR_FALSE;
 
   return NS_OK;
@@ -1017,6 +1034,31 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
   }
 
   aOutputStr.Append(aStr);
+}
+
+void
+nsHTMLContentSerializer::AppendToStringConvertLF(const nsAString& aStr,
+                                                 nsAString& aOutputStr)
+{
+  // Convert line-endings to mLineBreak
+  PRUint32 start = 0;
+  PRUint32 theLen = aStr.Length();
+  while (start < theLen) {
+    PRInt32 eol = aStr.FindChar('\n', start);
+    if (eol == kNotFound) {
+      nsDependentSubstring dataSubstring(aStr, start, theLen - start);
+      AppendToString(dataSubstring, aOutputStr);
+      start = theLen;
+    }
+    else {
+      nsDependentSubstring dataSubstring(aStr, start, eol - start);
+      AppendToString(dataSubstring, aOutputStr);
+      AppendToString(mLineBreak, aOutputStr);
+      start = eol + 1;
+      if (start == theLen)
+        mColPos = 0;
+    }
+  }
 }
 
 PRBool
