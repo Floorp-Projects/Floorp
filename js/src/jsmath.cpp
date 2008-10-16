@@ -377,8 +377,9 @@ math_min(JSContext *cx, uintN argc, jsval *vp)
         if (x == 0 && x == z) {
             if (fd_copysign(1.0, x) == -1)
                 z = x;
-        } else
+        } else {
             z = (x < z) ? x : z;
+        }
     }
     return js_NewNumberInRootedValue(cx, z, vp);
 }
@@ -623,8 +624,7 @@ math_max_tn(jsdouble d, jsdouble p)
     if (p == 0 && p == d) {
         if (fd_copysign(1.0, d) == -1)
             return p;
-        else
-            return d;
+        return d;
     }
     return (p > d) ? p : d;
 }
