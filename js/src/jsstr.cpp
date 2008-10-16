@@ -781,16 +781,16 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-JSString* FASTCALL
-js_String_p_substring(JSContext* cx, JSString* str, int32 begin, int32 end)
+static JSString* FASTCALL
+String_p_substring(JSContext* cx, JSString* str, int32 begin, int32 end)
 {
     JS_ASSERT(end >= begin);
     JS_ASSERT(JS_ON_TRACE(cx));
     return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
 }
 
-JSString* FASTCALL
-js_String_p_substring_1(JSContext* cx, JSString* str, int32 begin)
+static JSString* FASTCALL
+String_p_substring_1(JSContext* cx, JSString* str, int32 begin)
 {
     int32 end = JSSTRING_LENGTH(str);
     JS_ASSERT(end >= begin);
@@ -1430,8 +1430,8 @@ str_match(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-JSObject* FASTCALL
-js_String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp)
+static JSObject* FASTCALL
+String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp)
 {
     jsval vp[3] = { JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
     if (!js_StringMatchHelper(cx, 1, vp, pc))
@@ -1441,8 +1441,8 @@ js_String_p_match(JSContext* cx, JSString* str, jsbytecode *pc, JSObject* regexp
     return JSVAL_TO_OBJECT(vp[0]);
 }
 
-JSObject* FASTCALL
-js_String_p_match_obj(JSContext* cx, JSObject* str, jsbytecode *pc, JSObject* regexp)
+static JSObject* FASTCALL
+String_p_match_obj(JSContext* cx, JSObject* str, jsbytecode *pc, JSObject* regexp)
 {
     jsval vp[3] = { JSVAL_NULL, OBJECT_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp) };
     if (!js_StringMatchHelper(cx, 1, vp, pc))
@@ -1754,8 +1754,8 @@ str_replace(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-JSString* FASTCALL
-js_String_p_replace_str(JSContext* cx, JSString* str, JSObject* regexp, JSString* repstr)
+static JSString* FASTCALL
+String_p_replace_str(JSContext* cx, JSString* str, JSObject* regexp, JSString* repstr)
 {
     jsval vp[4] = {
         JSVAL_NULL, STRING_TO_JSVAL(str), OBJECT_TO_JSVAL(regexp), STRING_TO_JSVAL(repstr)
@@ -1766,8 +1766,8 @@ js_String_p_replace_str(JSContext* cx, JSString* str, JSObject* regexp, JSString
     return JSVAL_TO_STRING(vp[0]);
 }
 
-JSString* FASTCALL
-js_String_p_replace_str2(JSContext* cx, JSString* str, JSString* patstr, JSString* repstr)
+static JSString* FASTCALL
+String_p_replace_str2(JSContext* cx, JSString* str, JSString* patstr, JSString* repstr)
 {
     jsval vp[4] = {
         JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(patstr), STRING_TO_JSVAL(repstr)
@@ -1778,9 +1778,9 @@ js_String_p_replace_str2(JSContext* cx, JSString* str, JSString* patstr, JSStrin
     return JSVAL_TO_STRING(vp[0]);
 }
 
-JSString* FASTCALL
-js_String_p_replace_str3(JSContext* cx, JSString* str, JSString* patstr, JSString* repstr,
-                         JSString* flagstr)
+static JSString* FASTCALL
+String_p_replace_str3(JSContext* cx, JSString* str, JSString* patstr, JSString* repstr,
+                      JSString* flagstr)
 {
     jsval vp[5] = {
         JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(patstr), STRING_TO_JSVAL(repstr),
@@ -2095,8 +2095,8 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-JSObject* FASTCALL
-js_String_p_split(JSContext* cx, JSString* str, JSString* sepstr)
+static JSObject* FASTCALL
+String_p_split(JSContext* cx, JSString* str, JSString* sepstr)
 {
     // FIXME: Avoid building and then parsing this array.
     jsval vp[4] = { JSVAL_NULL, STRING_TO_JSVAL(str), STRING_TO_JSVAL(sepstr), JSVAL_VOID };
@@ -2183,8 +2183,8 @@ str_concat(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-JSString* FASTCALL
-js_String_p_concat_1int(JSContext* cx, JSString* str, int32 i)
+static JSString* FASTCALL
+String_p_concat_1int(JSContext* cx, JSString* str, int32 i)
 {
     // FIXME: should be able to use stack buffer and avoid istr...
     JSString* istr = js_NumberToString(cx, i);
@@ -2193,8 +2193,8 @@ js_String_p_concat_1int(JSContext* cx, JSString* str, int32 i)
     return js_ConcatStrings(cx, str, istr);
 }
 
-JSString* FASTCALL
-js_String_p_concat_2str(JSContext* cx, JSString* str, JSString* a, JSString* b)
+static JSString* FASTCALL
+String_p_concat_2str(JSContext* cx, JSString* str, JSString* a, JSString* b)
 {
     str = js_ConcatStrings(cx, str, a);
     if (str)
@@ -2202,8 +2202,8 @@ js_String_p_concat_2str(JSContext* cx, JSString* str, JSString* a, JSString* b)
     return NULL;
 }
 
-JSString* FASTCALL
-js_String_p_concat_3str(JSContext* cx, JSString* str, JSString* a, JSString* b, JSString* c)
+static JSString* FASTCALL
+String_p_concat_3str(JSContext* cx, JSString* str, JSString* a, JSString* b, JSString* c)
 {
     str = js_ConcatStrings(cx, str, a);
     if (str) {
@@ -2460,59 +2460,59 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
     return js_GetUnitString(cx, str, (size_t)i);
 }
 
-JS_DEFINE_CALLINFO_2(BOOL,      EqualStrings, STRING, STRING,                               1, 1)
-JS_DEFINE_CALLINFO_2(INT32,     CompareStrings, STRING, STRING,                             1, 1)
+JS_DEFINE_CALLINFO_2(extern, BOOL,   js_EqualStrings, STRING, STRING,                       1, 1)
+JS_DEFINE_CALLINFO_2(extern, INT32,  js_CompareStrings, STRING, STRING,                     1, 1)
 
-JS_DEFINE_CALLINFO_4(STRING,    String_p_substring, CONTEXT, STRING, INT32, INT32,          1, 1)
-JS_DEFINE_CALLINFO_3(STRING,    String_p_substring_1, CONTEXT, STRING, INT32,               1, 1)
-JS_DEFINE_CALLINFO_3(STRING,    String_getelem, CONTEXT, STRING, INT32,                     1, 1)
-JS_DEFINE_CALLINFO_2(INT32,     String_p_charCodeAt, STRING, INT32,                         1, 1)
-JS_DEFINE_CALLINFO_3(STRING,    ConcatStrings, CONTEXT, STRING, STRING,                     1, 1)
-JS_DEFINE_CALLINFO_3(STRING,    String_p_concat_1int, CONTEXT, STRING, INT32,               1, 1)
-JS_DEFINE_CALLINFO_4(STRING,    String_p_concat_2str, CONTEXT, STRING, STRING, STRING,      1, 1)
-JS_DEFINE_CALLINFO_5(STRING,    String_p_concat_3str, CONTEXT, STRING, STRING, STRING, STRING, 1, 1)
-JS_DEFINE_CALLINFO_4(OBJECT,    String_p_match, CONTEXT, STRING, PC, OBJECT,                1, 1)
-JS_DEFINE_CALLINFO_4(OBJECT,    String_p_match_obj, CONTEXT, OBJECT, PC, OBJECT,            1, 1)
-JS_DEFINE_CALLINFO_4(STRING,    String_p_replace_str, CONTEXT, STRING, OBJECT, STRING,      1, 1)
-JS_DEFINE_CALLINFO_4(STRING,    String_p_replace_str2, CONTEXT, STRING, STRING, STRING,     1, 1)
-JS_DEFINE_CALLINFO_5(STRING,    String_p_replace_str3, CONTEXT, STRING, STRING, STRING, STRING, 1, 1)
-JS_DEFINE_CALLINFO_3(OBJECT,    String_p_split, CONTEXT, STRING, STRING,                    0, 0)
-JS_DEFINE_CALLINFO_2(STRING,    toLowerCase, CONTEXT, STRING,                               1, 1)
-JS_DEFINE_CALLINFO_2(STRING,    toUpperCase, CONTEXT, STRING,                               1, 1)
+JS_DEFINE_CALLINFO_4(static, STRING, String_p_substring, CONTEXT, STRING, INT32, INT32,     1, 1)
+JS_DEFINE_CALLINFO_3(static, STRING, String_p_substring_1, CONTEXT, STRING, INT32,          1, 1)
+JS_DEFINE_CALLINFO_3(extern, STRING, js_String_getelem, CONTEXT, STRING, INT32,             1, 1)
+JS_DEFINE_CALLINFO_2(extern, INT32,  js_String_p_charCodeAt, STRING, INT32,                 1, 1)
+JS_DEFINE_CALLINFO_3(extern, STRING, js_ConcatStrings, CONTEXT, STRING, STRING,             1, 1)
+JS_DEFINE_CALLINFO_3(static, STRING, String_p_concat_1int, CONTEXT, STRING, INT32,          1, 1)
+JS_DEFINE_CALLINFO_4(static, STRING, String_p_concat_2str, CONTEXT, STRING, STRING, STRING, 1, 1)
+JS_DEFINE_CALLINFO_5(static, STRING, String_p_concat_3str, CONTEXT, STRING, STRING, STRING, STRING, 1, 1)
+JS_DEFINE_CALLINFO_4(static, OBJECT, String_p_match, CONTEXT, STRING, PC, OBJECT,           1, 1)
+JS_DEFINE_CALLINFO_4(static, OBJECT, String_p_match_obj, CONTEXT, OBJECT, PC, OBJECT,       1, 1)
+JS_DEFINE_CALLINFO_4(static, STRING, String_p_replace_str, CONTEXT, STRING, OBJECT, STRING, 1, 1)
+JS_DEFINE_CALLINFO_4(static, STRING, String_p_replace_str2, CONTEXT, STRING, STRING, STRING, 1, 1)
+JS_DEFINE_CALLINFO_5(static, STRING, String_p_replace_str3, CONTEXT, STRING, STRING, STRING, STRING, 1, 1)
+JS_DEFINE_CALLINFO_3(static, OBJECT, String_p_split, CONTEXT, STRING, STRING,               0, 0)
+JS_DEFINE_CALLINFO_2(extern, STRING, js_toLowerCase, CONTEXT, STRING,                       1, 1)
+JS_DEFINE_CALLINFO_2(extern, STRING, js_toUpperCase, CONTEXT, STRING,                       1, 1)
 
 static const JSTraceableNative str_substring_trcinfo[] = {
-    { str_substring,         &ci_String_p_substring,   "SC",  "ii",   FAIL_NULL | JSTN_MORE},
-    { str_substring,         &ci_String_p_substring_1, "SC",  "i",    FAIL_NULL }
+    { str_substring,         &_JS_CALLINFO(String_p_substring),   "SC",  "ii",   FAIL_NULL | JSTN_MORE},
+    { str_substring,         &_JS_CALLINFO(String_p_substring_1), "SC",  "i",    FAIL_NULL }
 };
 static const JSTraceableNative str_charAt_trcinfo[] = {
-    { str_charAt,            &ci_String_getelem,       "SC",  "i",    FAIL_NULL }
+    { str_charAt,            &_JS_CALLINFO(js_String_getelem),    "SC",  "i",    FAIL_NULL }
 };
 static const JSTraceableNative str_charCodeAt_trcinfo[] = {
-    { str_charCodeAt,        &ci_String_p_charCodeAt,  "S",   "i",    FAIL_NEG }
+    { str_charCodeAt,        &_JS_CALLINFO(js_String_p_charCodeAt), "S",   "i",    FAIL_NEG }
 };
 static const JSTraceableNative str_concat_trcinfo[] = {
-    { str_concat,            &ci_String_p_concat_1int, "SC",  "i",    FAIL_NULL | JSTN_MORE },
-    { str_concat,            &ci_ConcatStrings,        "SC",  "s",    FAIL_NULL | JSTN_MORE },
-    { str_concat,            &ci_String_p_concat_2str, "SC",  "ss",   FAIL_NULL | JSTN_MORE },
-    { str_concat,            &ci_String_p_concat_3str, "SC",  "sss",  FAIL_NULL }
+    { str_concat,            &_JS_CALLINFO(String_p_concat_1int), "SC",  "i",    FAIL_NULL | JSTN_MORE },
+    { str_concat,            &_JS_CALLINFO(js_ConcatStrings),     "SC",  "s",    FAIL_NULL | JSTN_MORE },
+    { str_concat,            &_JS_CALLINFO(String_p_concat_2str), "SC",  "ss",   FAIL_NULL | JSTN_MORE },
+    { str_concat,            &_JS_CALLINFO(String_p_concat_3str), "SC",  "sss",  FAIL_NULL }
 };
 static const JSTraceableNative str_match_trcinfo[] = {
-    { str_match,             &ci_String_p_match,       "PSC", "r",    FAIL_VOID | JSTN_MORE },
-    { str_match,             &ci_String_p_match_obj,   "PTC", "r",    FAIL_VOID }
+    { str_match,             &_JS_CALLINFO(String_p_match),       "PSC", "r",    FAIL_VOID | JSTN_MORE },
+    { str_match,             &_JS_CALLINFO(String_p_match_obj),   "PTC", "r",    FAIL_VOID }
 };
 static const JSTraceableNative str_replace_trcinfo[] = {
-    { str_replace,           &ci_String_p_replace_str, "SC",  "sr",   FAIL_NULL | JSTN_MORE },
-    { str_replace,           &ci_String_p_replace_str2,"SC",  "ss",   FAIL_NULL | JSTN_MORE },
-    { str_replace,           &ci_String_p_replace_str3,"SC",  "sss",  FAIL_NULL }
+    { str_replace,           &_JS_CALLINFO(String_p_replace_str), "SC",  "sr",   FAIL_NULL | JSTN_MORE },
+    { str_replace,           &_JS_CALLINFO(String_p_replace_str2),"SC",  "ss",   FAIL_NULL | JSTN_MORE },
+    { str_replace,           &_JS_CALLINFO(String_p_replace_str3),"SC",  "sss",  FAIL_NULL }
 };
 static const JSTraceableNative str_split_trcinfo[] = {
-    { str_split,             &ci_String_p_split,       "SC",  "s",    FAIL_NULL }
+    { str_split,             &_JS_CALLINFO(String_p_split),       "SC",  "s",    FAIL_NULL }
 };
 static const JSTraceableNative str_toLowerCase_trcinfo[] = {
-    { str_toLowerCase,       &ci_toLowerCase,          "SC",   "",    FAIL_NULL }
+    { str_toLowerCase,       &_JS_CALLINFO(js_toLowerCase),       "SC",   "",    FAIL_NULL }
 };
 static const JSTraceableNative str_toUpperCase_trcinfo[] = {
-    { str_toUpperCase,       &ci_toUpperCase,          "SC",   "",    FAIL_NULL }
+    { str_toUpperCase,       &_JS_CALLINFO(js_toUpperCase),       "SC",   "",    FAIL_NULL }
 };
 
 #endif /* JS_TRACER */
@@ -2640,8 +2640,8 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef JS_TRACER
 
-JSString* FASTCALL
-js_String_fromCharCode(JSContext* cx, int32 i)
+static JSString* FASTCALL
+String_fromCharCode(JSContext* cx, int32 i)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
     jschar c = (jschar)i;
@@ -2650,10 +2650,10 @@ js_String_fromCharCode(JSContext* cx, int32 i)
     return js_NewStringCopyN(cx, &c, 1);
 }
 
-JS_DEFINE_CALLINFO_2(STRING, String_fromCharCode, CONTEXT, INT32, 1, 1)
+JS_DEFINE_CALLINFO_2(static, STRING, String_fromCharCode, CONTEXT, INT32, 1, 1)
 
 static const JSTraceableNative str_fromCharCode_trcinfo[] = {
-    { str_fromCharCode, &ci_String_fromCharCode, "C", "i", FAIL_NULL }};
+    { str_fromCharCode, &_JS_CALLINFO(String_fromCharCode), "C", "i", FAIL_NULL }};
 
 #endif /* JS_TRACER */
 

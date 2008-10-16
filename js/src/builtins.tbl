@@ -43,6 +43,9 @@
  *
  * The macro arguments are:
  *
+ * - 'extern' to indicate extern linkage for these functions and the associated
+ *   CallInfo.
+ *
  * - The return type. This identifier must name one of the _JS_TYPEINFO_*
  *   macros defined in jsbuiltins.h.
  *
@@ -63,31 +66,31 @@
  * Do not use bool FASTCALL, use JSBool only!
  */
 
-BUILTIN2(JSVAL,     BoxDouble, CONTEXT, DOUBLE,                                 1, 1)
-BUILTIN2(JSVAL,     BoxInt32, CONTEXT, INT32,                                   1, 1)
-BUILTIN1(DOUBLE,    UnboxDouble, JSVAL,                                         1, 1)
-BUILTIN1(INT32,     UnboxInt32, JSVAL,                                          1, 1)
-BUILTIN2(DOUBLE,    dmod, DOUBLE, DOUBLE,                                       1, 1)
-BUILTIN2(INT32,     imod, INT32, INT32,                                         1, 1)
-BUILTIN1(INT32,     DoubleToInt32, DOUBLE,                                      1, 1)
-BUILTIN1(UINT32,    DoubleToUint32, DOUBLE,                                     1, 1)
+BUILTIN2(extern, JSVAL,     js_BoxDouble, CONTEXT, DOUBLE,                      1, 1)
+BUILTIN2(extern, JSVAL,     js_BoxInt32, CONTEXT, INT32,                        1, 1)
+BUILTIN1(extern, DOUBLE,    js_UnboxDouble, JSVAL,                              1, 1)
+BUILTIN1(extern, INT32,     js_UnboxInt32, JSVAL,                               1, 1)
+BUILTIN2(extern, DOUBLE,    js_dmod, DOUBLE, DOUBLE,                            1, 1)
+BUILTIN2(extern, INT32,     js_imod, INT32, INT32,                              1, 1)
+BUILTIN1(extern, INT32,     js_DoubleToInt32, DOUBLE,                           1, 1)
+BUILTIN1(extern, UINT32,    js_DoubleToUint32, DOUBLE,                          1, 1)
 
-BUILTIN2(DOUBLE,    StringToNumber, CONTEXT, STRING,                            1, 1)
-BUILTIN2(INT32,     StringToInt32, CONTEXT, STRING,                             1, 1)
-BUILTIN3(JSVAL,     Any_getprop, CONTEXT, OBJECT, STRING,                       0, 0)
-BUILTIN4(BOOL,      Any_setprop, CONTEXT, OBJECT, STRING, JSVAL,                0, 0)
-BUILTIN3(JSVAL,     Any_getelem, CONTEXT, OBJECT, UINT32,                       0, 0)
-BUILTIN4(BOOL,      Any_setelem, CONTEXT, OBJECT, UINT32, JSVAL,                0, 0)
-BUILTIN3(OBJECT,    FastValueToIterator, CONTEXT, UINT32, JSVAL,                0, 0)
-BUILTIN2(JSVAL,     FastCallIteratorNext, CONTEXT, OBJECT,                      0, 0)
-BUILTIN2(BOOL,      CloseIterator, CONTEXT, JSVAL,                              0, 0)
-BUILTIN2(GUARDRECORD, CallTree, INTERPSTATE, FRAGMENT,                          0, 0)
-BUILTIN2(OBJECT,    FastNewObject, CONTEXT, OBJECT,                             0, 0)
-BUILTIN3(BOOL,      AddProperty, CONTEXT, OBJECT, SCOPEPROP,                    0, 0)
-BUILTIN3(BOOL,      HasNamedProperty, CONTEXT, OBJECT, STRING,                  0, 0)
-BUILTIN3(JSVAL,     CallGetter, CONTEXT, OBJECT, SCOPEPROP,                     0, 0)
-BUILTIN2(STRING,    TypeOfObject, CONTEXT, OBJECT,                              1, 1)
-BUILTIN2(STRING,    TypeOfBoolean, CONTEXT, INT32,                              1, 1)
-BUILTIN2(DOUBLE,    BooleanToNumber, CONTEXT, INT32,                            1, 1)
-BUILTIN2(STRING,    ObjectToString, CONTEXT, OBJECT,                            0, 0)
-BUILTIN1(OBJECT,    Arguments, CONTEXT,                                         0, 0)
+BUILTIN2(extern, DOUBLE,    js_StringToNumber, CONTEXT, STRING,                 1, 1)
+BUILTIN2(extern, INT32,     js_StringToInt32, CONTEXT, STRING,                  1, 1)
+BUILTIN3(extern, JSVAL,     js_Any_getprop, CONTEXT, OBJECT, STRING,            0, 0)
+BUILTIN4(extern, BOOL,      js_Any_setprop, CONTEXT, OBJECT, STRING, JSVAL,     0, 0)
+BUILTIN3(extern, JSVAL,     js_Any_getelem, CONTEXT, OBJECT, UINT32,            0, 0)
+BUILTIN4(extern, BOOL,      js_Any_setelem, CONTEXT, OBJECT, UINT32, JSVAL,     0, 0)
+BUILTIN3(extern, OBJECT,    js_FastValueToIterator, CONTEXT, UINT32, JSVAL,     0, 0)
+BUILTIN2(extern, JSVAL,     js_FastCallIteratorNext, CONTEXT, OBJECT,           0, 0)
+BUILTIN2(extern, BOOL,      js_CloseIterator, CONTEXT, JSVAL,                   0, 0)
+BUILTIN2(extern, GUARDRECORD, js_CallTree, INTERPSTATE, FRAGMENT,               0, 0)
+BUILTIN2(extern, OBJECT,    js_FastNewObject, CONTEXT, OBJECT,                  0, 0)
+BUILTIN3(extern, BOOL,      js_AddProperty, CONTEXT, OBJECT, SCOPEPROP,         0, 0)
+BUILTIN3(extern, BOOL,      js_HasNamedProperty, CONTEXT, OBJECT, STRING,       0, 0)
+BUILTIN3(extern, JSVAL,     js_CallGetter, CONTEXT, OBJECT, SCOPEPROP,          0, 0)
+BUILTIN2(extern, STRING,    js_TypeOfObject, CONTEXT, OBJECT,                   1, 1)
+BUILTIN2(extern, STRING,    js_TypeOfBoolean, CONTEXT, INT32,                   1, 1)
+BUILTIN2(extern, DOUBLE,    js_BooleanToNumber, CONTEXT, INT32,                 1, 1)
+BUILTIN2(extern, STRING,    js_ObjectToString, CONTEXT, OBJECT,                 0, 0)
+BUILTIN1(extern, OBJECT,    js_Arguments, CONTEXT,                              0, 0)

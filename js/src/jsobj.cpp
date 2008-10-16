@@ -1557,8 +1557,8 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
 }
 
 #ifdef JS_TRACER
-int32 FASTCALL
-js_Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
+static int32 FASTCALL
+Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
     jsval v;
@@ -1598,8 +1598,8 @@ obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-int32 FASTCALL
-js_Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
+static int32 FASTCALL
+Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
 {
     jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
     jsval v;
@@ -1811,14 +1811,14 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 
 #ifdef JS_TRACER
 
-JS_DEFINE_CALLINFO_3(INT32, Object_p_hasOwnProperty, CONTEXT, OBJECT, STRING,       0, 0)
-JS_DEFINE_CALLINFO_3(INT32, Object_p_propertyIsEnumerable, CONTEXT, OBJECT, STRING, 0, 0)
+JS_DEFINE_CALLINFO_3(static, INT32, Object_p_hasOwnProperty, CONTEXT, OBJECT, STRING,       0, 0)
+JS_DEFINE_CALLINFO_3(static, INT32, Object_p_propertyIsEnumerable, CONTEXT, OBJECT, STRING, 0, 0)
 
 static const JSTraceableNative obj_hasOwnProperty_trcinfo[] = {
-    { obj_hasOwnProperty,       &ci_Object_p_hasOwnProperty,       "TC",  "s", FAIL_VOID }
+    { obj_hasOwnProperty,       &_JS_CALLINFO(Object_p_hasOwnProperty),       "TC",  "s", FAIL_VOID }
 };
 static const JSTraceableNative obj_propertyIsEnumerable_trcinfo[] = {
-    { obj_propertyIsEnumerable, &ci_Object_p_propertyIsEnumerable, "TC",  "s", FAIL_VOID }
+    { obj_propertyIsEnumerable, &_JS_CALLINFO(Object_p_propertyIsEnumerable), "TC",  "s", FAIL_VOID }
 };
 
 #endif /* JS_TRACER */
