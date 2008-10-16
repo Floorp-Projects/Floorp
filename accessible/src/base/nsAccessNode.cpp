@@ -378,7 +378,7 @@ already_AddRefed<nsIAccessibleDocument> nsAccessNode::GetDocAccessible()
 already_AddRefed<nsRootAccessible> nsAccessNode::GetRootAccessible()
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   NS_ASSERTION(docShellTreeItem, "No docshell tree item for mDOMNode");
   if (!docShellTreeItem) {
     return nsnull;
@@ -469,7 +469,7 @@ nsAccessNode::ScrollTo(PRUint32 aScrollType)
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   PRInt16 vPercent, hPercent;
-  nsAccUtils::ConvertScrollTypeToPercents(aScrollType, &vPercent, &hPercent);
+  nsCoreUtils::ConvertScrollTypeToPercents(aScrollType, &vPercent, &hPercent);
   return shell->ScrollContentIntoView(content, vPercent, hPercent);
 }
 
@@ -487,7 +487,7 @@ nsAccessNode::ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY)
 
   nsIFrame *parentFrame = frame;
   while ((parentFrame = parentFrame->GetParent()))
-    nsAccUtils::ScrollFrameToPoint(parentFrame, frame, coords);
+    nsCoreUtils::ScrollFrameToPoint(parentFrame, frame, coords);
 
   return NS_OK;
 }
@@ -652,7 +652,7 @@ nsAccessNode::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
 {
   *aCssDecl = nsnull;
 
-  nsCOMPtr<nsIDOMElement> domElement = nsAccUtils::GetDOMElementFor(aNode);
+  nsCOMPtr<nsIDOMElement> domElement = nsCoreUtils::GetDOMElementFor(aNode);
   if (!domElement)
     return;
 
@@ -886,7 +886,7 @@ nsAccessNode::GetLanguage(nsAString& aLanguage)
     }
   }
 
-  nsAccUtils::GetLanguageFor(content, nsnull, aLanguage);
+  nsCoreUtils::GetLanguageFor(content, nsnull, aLanguage);
 
   if (aLanguage.IsEmpty()) { // Nothing found, so use document's language
     nsIDocument *doc = content->GetOwnerDoc();

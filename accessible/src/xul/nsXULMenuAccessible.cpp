@@ -419,7 +419,7 @@ nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
   if (elt) {
     nsAutoString accesskey;
-    // We do not use nsAccUtils::GetAccesskeyFor() because accesskeys for
+    // We do not use nsCoreUtils::GetAccesskeyFor() because accesskeys for
     // menu are't registered by nsIEventStateManager.
     elt->GetAttribute(NS_LITERAL_STRING("accesskey"), accesskey);
     if (accesskey.IsEmpty())

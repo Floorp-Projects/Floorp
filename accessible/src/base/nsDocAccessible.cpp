@@ -117,7 +117,7 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   mAccessNodeCache.Init(kDefaultCacheSize);
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(docShellTreeItem);
   if (docShell) {
     PRUint32 busyFlags;
@@ -203,7 +203,7 @@ NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
   *aRole = nsIAccessibleRole::ROLE_PANE; // Fall back
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   if (docShellTreeItem) {
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
     docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
@@ -371,7 +371,7 @@ NS_IMETHODIMP nsDocAccessible::TakeFocus()
   }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
@@ -507,7 +507,7 @@ NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
   if (!mDocument->HasFlag(NODE_IS_EDITABLE)) {
     nsCOMPtr<nsIDOMNode> DOMDocument(do_QueryInterface(mDocument));
     nsCOMPtr<nsIDOMElement> DOMElement =
-      nsAccUtils::GetDOMElementFor(DOMDocument);
+      nsCoreUtils::GetDOMElementFor(DOMDocument);
     nsCOMPtr<nsIContent> content(do_QueryInterface(DOMElement));
 
     if (!content->HasFlag(NODE_IS_EDITABLE))
@@ -617,7 +617,7 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
   }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   ShutdownChildDocuments(treeItem);
 
   RemoveEventListeners();
@@ -873,7 +873,7 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
   }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   if (!treeItem) {
     return NS_OK;
   }
@@ -897,7 +897,7 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
     // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
     if (gLastFocusedNode) {
       nsCOMPtr<nsIDocShellTreeItem> focusedTreeItem =
-        nsAccUtils::GetDocShellTreeItemFor(gLastFocusedNode);
+        nsCoreUtils::GetDocShellTreeItemFor(gLastFocusedNode);
       if (focusedTreeItem) {
         nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
         focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));
@@ -1480,7 +1480,7 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
         do_QueryInterface(changeAccessible);
       nsCOMPtr<nsIDOMNode> childNode;
       childAccessNode->GetDOMNode(getter_AddRefs(childNode));
-      if (!nsAccUtils::IsAncestorOf(aChangeNode, childNode)) {
+      if (!nsCoreUtils::IsAncestorOf(aChangeNode, childNode)) {
         break;  // We only want accessibles with DOM nodes as children of this node
       }
       length += TextLength(child);

@@ -135,7 +135,7 @@ nsRootAccessible::GetName(nsAString& aName)
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
@@ -195,7 +195,7 @@ PRUint32 nsRootAccessible::GetChromeFlags()
   // by nsIWebBrowserChrome::CHROME_WINDOW_[FLAGNAME]
   // Not simple: nsIXULWindow is not just a QI from nsIDOMWindow
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   NS_ENSURE_TRUE(treeItem, 0);
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
@@ -386,7 +386,7 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
   // This also works for firing events for error pages
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    nsAccUtils::GetDocShellTreeItemFor(aDocNode);
+    nsCoreUtils::GetDocShellTreeItemFor(aDocNode);
   NS_ASSERTION(treeItem, "No docshelltreeitem for aDocNode");
   if (!treeItem) {
     return;
@@ -498,12 +498,14 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       finalFocusAccessible->GetRole(&naturalRole);
       if (role != naturalRole) { // Must be a DHTML menuitem
         nsCOMPtr<nsIAccessible> menuBarAccessible =
-          nsAccUtils::GetAncestorWithRole(finalFocusAccessible, nsIAccessibleRole::ROLE_MENUBAR);
+          nsAccUtils::GetAncestorWithRole(finalFocusAccessible,
+                                          nsIAccessibleRole::ROLE_MENUBAR);
         nsCOMPtr<nsIAccessNode> menuBarAccessNode = do_QueryInterface(menuBarAccessible);
         if (menuBarAccessNode) {
           menuBarAccessNode->GetDOMNode(getter_AddRefs(mCurrentARIAMenubar));
           if (mCurrentARIAMenubar) {
-            nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_START, menuBarAccessible);
+            nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_START,
+                                     menuBarAccessible);
           }
         }
       }
@@ -653,7 +655,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     // It's also the case when a popup gets focus in ATK -- when it closes
     // we need to fire an event to restore focus to where it was
     if (!gLastFocusedNode ||
-        !nsAccUtils::IsAncestorOf(aTargetNode, gLastFocusedNode)) {
+        !nsCoreUtils::IsAncestorOf(aTargetNode, gLastFocusedNode)) {
       return NS_OK;  // And was not focused on an item inside the popup
     }
     // Focus was on or inside of a popup that's being hidden
@@ -912,11 +914,13 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   }
   else if (eventType.EqualsLiteral("DOMMenuBarActive")) {  // Always asynch, always from user input
     nsAccEvent::PrepareForEvent(aTargetNode, PR_TRUE);
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_START, accessible, PR_TRUE);
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_START,
+                             accessible, PR_TRUE);
   }
   else if (eventType.EqualsLiteral("DOMMenuBarInactive")) {  // Always asynch, always from user input
     nsAccEvent::PrepareForEvent(aTargetNode, PR_TRUE);
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_END, accessible, PR_TRUE);
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_END,
+                             accessible, PR_TRUE);
     FireCurrentFocusEvent();
   }
   else if (eventType.EqualsLiteral("ValueChange")) {
@@ -924,7 +928,8 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   }
 #ifdef DEBUG
   else if (eventType.EqualsLiteral("mouseover")) {
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_DRAGDROP_START, accessible);
+    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_DRAGDROP_START,
+                             accessible);
   }
 #endif
   return NS_OK;
@@ -1057,7 +1062,7 @@ NS_IMETHODIMP nsRootAccessible::GetAccessibleRelated(PRUint32 aRelationType,
   }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   nsCOMPtr<nsIDocShellTreeItem> contentTreeItem = GetContentDocShell(treeItem);
   // there may be no content area, so we need a null check
   if (contentTreeItem) {
@@ -1078,7 +1083,7 @@ NS_IMETHODIMP nsRootAccessible::FireDocLoadEvents(PRUint32 aEventType)
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   NS_ASSERTION(docShellTreeItem, "No doc shell tree item for document");
   NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
   PRInt32 contentType;

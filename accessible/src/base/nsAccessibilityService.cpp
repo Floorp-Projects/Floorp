@@ -39,7 +39,8 @@
 // NOTE: alphabetically ordered
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
-#include "nsAccessibilityUtils.h"
+#include "nsCoreUtils.h"
+#include "nsAccUtils.h"
 #include "nsARIAMap.h"
 #include "nsIContentViewer.h"
 #include "nsCURILoader.h"
@@ -591,7 +592,7 @@ nsAccessibilityService::CreateHyperTextAccessible(nsISupports *aFrame, nsIAccess
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
   
-  if (nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) {
+  if (nsCoreUtils::HasListener(content, NS_LITERAL_STRING("click"))) {
     // nsLinkableAccessible inherits from nsHyperTextAccessible, but
     // it also includes code for dealing with the onclick
     *aAccessible = new nsLinkableAccessible(node, weakShell);
@@ -1270,7 +1271,7 @@ nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn,
 static PRBool HasRelatedContent(nsIContent *aContent)
 {
   nsAutoString id;
-  if (!aContent || !nsAccUtils::GetID(aContent, id) || id.IsEmpty()) {
+  if (!aContent || !nsCoreUtils::GetID(aContent, id) || id.IsEmpty()) {
     return PR_FALSE;
   }
 
@@ -1279,7 +1280,8 @@ static PRBool HasRelatedContent(nsIContent *aContent)
                               nsAccessibilityAtoms::aria_owns,
                               nsAccessibilityAtoms::aria_controls,
                               nsAccessibilityAtoms::aria_flowto};
-  if (nsAccUtils::FindNeighbourPointingToNode(aContent, relationAttrs, NS_ARRAY_LENGTH(relationAttrs))) {
+  if (nsCoreUtils::FindNeighbourPointingToNode(aContent, relationAttrs,
+                                               NS_ARRAY_LENGTH(relationAttrs))) {
     return PR_TRUE;
   }
 
@@ -1527,7 +1529,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           GetAccessibleInShell(tableNode, aPresShell, getter_AddRefs(tableAccessible));
           if (!tableAccessible && !content->IsFocusable()) {
 #ifdef DEBUG
-            nsRoleMapEntry *tableRoleMapEntry = nsAccUtils::GetRoleMapEntry(tableNode);
+            nsRoleMapEntry *tableRoleMapEntry =
+              nsAccUtils::GetRoleMapEntry(tableNode);
             NS_ASSERTION(tableRoleMapEntry &&
                          !nsCRT::strcmp(tableRoleMapEntry->roleString, "presentation"),
                          "No accessible for parent table and it didn't have role of presentation");
@@ -1594,9 +1597,9 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // correspond to the doc accessible and will be created in any case
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
       (frame->IsFocusable() ||
-       (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
+       (isHTML && nsCoreUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
        HasUniversalAriaProperty(content, aWeakShell) || roleMapEntry ||
-       HasRelatedContent(content) || nsAccUtils::IsXLink(content))) {
+       HasRelatedContent(content) || nsCoreUtils::IsXLink(content))) {
     // This content is focusable or has an interesting dynamic content accessibility property.
     // If it's interesting we need it in the accessibility hierarchy so that events or
     // other accessibles can point to it, or so that it can hold a state, etc.

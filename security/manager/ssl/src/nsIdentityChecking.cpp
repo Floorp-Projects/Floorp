@@ -947,7 +947,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag &resultOidTag, PRBool &validEV)
   rev.chainTests.cert_rev_method_independent_flags =
     revMethodIndependentFlags;
 
-  CERTValInParam cvin[3];
+  CERTValInParam cvin[4];
   cvin[0].type = cert_pi_policyOID;
   cvin[0].value.arraySize = 1; 
   cvin[0].value.array.oids = &oid_tag;

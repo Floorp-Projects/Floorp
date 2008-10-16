@@ -53,14 +53,10 @@ function test() {
   var sel = window.getSelection();
   var editor = document.getElementById("editor");
 
-  var todo1 = false;
-  var todo2 = false;
-
   function testRight(node, offset) {
     synthesizeKey("VK_RIGHT", {});
     is(sel.anchorNode, node, "Right movement broken in \"" + editor.innerHTML + "\"");
-    var is_func2 = todo2 ? todo_is : is;
-    is_func2(sel.anchorOffset, offset, "Right movement broken in \"" + editor.innerHTML + "\"");
+    is(sel.anchorOffset, offset, "Right movement broken in \"" + editor.innerHTML + "\"");
   }
 
   function selErrString(dir) {
@@ -79,10 +75,8 @@ function test() {
   function testDelete(node, offset, text) {
     synthesizeKey("VK_DELETE", {});
     is(sel.anchorNode, node, "Delete broken in \"" + editor.innerHTML + "\"");
-    var is_func2 = todo2 ? todo_is : is;
-    is_func2(sel.anchorOffset, offset, "Delete broken in \"" + editor.innerHTML + "\"");
-    var is_func1 = todo1 ? todo_is : is;
-    is_func1(editor.textContent, text, "Delete broken in \"" + editor.innerHTML + "\"");
+    is(sel.anchorOffset, offset, "Delete broken in \"" + editor.innerHTML + "\"");
+    is(editor.textContent, text, "Delete broken in \"" + editor.innerHTML + "\"");
   }
 
   function testBackspace(node, offset, text) {
@@ -95,7 +89,6 @@ function test() {
   // Test cell-wise deletion of Delete
   editor.innerHTML = "สวัสดีพ่อแม่พี่น้อง";
   sel.collapse(editor.firstChild, 0);
-  todo1 = true;
   testRight(editor.firstChild, 1);
   testDelete(editor.firstChild, 1, "สสดีพ่อแม่พี่น้อง");
   testRight(editor.firstChild, 2);
@@ -104,13 +97,10 @@ function test() {
   testDelete(editor.firstChild, 4, "สสพ่แม่พี่น้อง");
   testRight(editor.firstChild, 5);
   testDelete(editor.firstChild, 5, "สสพ่แพี่น้อง");
-  todo2 = true;
   testRight(editor.firstChild, 8);
   testDelete(editor.firstChild, 8, "สสพ่แพี่อง");
   testRight(editor.firstChild, 9);
   testDelete(editor.firstChild, 9, "สสพ่แพี่อ");
-  todo1 = false;
-  todo2 = false;
 
   // Test character-wise deletion of Backspace
   editor.innerHTML = "สวัสดีพ่อแม่พี่น้อง";
@@ -165,6 +155,19 @@ function test() {
   testDelete(editor, 0, "");
 
   restoreEatSpace();
+
+  // Tests for Bug 419217
+
+  editor.innerHTML = "foo<div>bar</div>";
+  sel.collapse(editor.firstChild, 3);
+  testDelete(editor.firstChild, 3, "foobar");
+
+  // Tests for Bug 419406
+
+  editor.innerHTML = "helloשלום";
+  sel.collapse(editor.firstChild, 4);
+  testRight(editor.firstChild, 5);
+  testDelete(editor.firstChild, 5, "helloשלום");
 
   SimpleTest.finish();
 }

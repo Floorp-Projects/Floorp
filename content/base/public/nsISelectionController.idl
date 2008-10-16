@@ -51,7 +51,7 @@ interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
-[scriptable, uuid(29a6d846-e100-4933-ad7a-2e19d91eb692)]
+[scriptable, uuid(b5c3ffc4-f48a-4f25-86e1-4cf79db1bcbb)]
 interface nsISelectionController : nsISelectionDisplay
 {
    const short SELECTION_NONE=0;
@@ -164,6 +164,13 @@ interface nsISelectionController : nsISelectionDisplay
    *  @param aExtend  should it collapse the selection of extend it?
    */
     void characterMove(in boolean forward, in boolean extend);
+
+   /**
+    * CharacterExtendForDelete will extend the selection one character cell
+    * forward in the document.
+    * this method is used internally for handling del key.
+    */
+    [noscript] void characterExtendForDelete();
 
    /** WordMove will move the selection one word forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE

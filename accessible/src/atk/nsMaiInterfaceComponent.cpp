@@ -76,7 +76,7 @@ refAccessibleAtPointCB(AtkComponent *aComponent,
     if (aCoordType == ATK_XY_WINDOW) {
         nsCOMPtr<nsIDOMNode> domNode;
         accWrap->GetDOMNode(getter_AddRefs(domNode));
-        nsIntPoint winCoords = nsAccUtils::GetScreenCoordsForWindow(domNode);
+        nsIntPoint winCoords = nsCoreUtils::GetScreenCoordsForWindow(domNode);
         aAccX += winCoords.x;
         aAccY += winCoords.y;
     }
@@ -117,7 +117,7 @@ getExtentsCB(AtkComponent *aComponent,
     if (aCoordType == ATK_XY_WINDOW) {
         nsCOMPtr<nsIDOMNode> domNode;
         accWrap->GetDOMNode(getter_AddRefs(domNode));
-        nsIntPoint winCoords = nsAccUtils::GetScreenCoordsForWindow(domNode);
+        nsIntPoint winCoords = nsCoreUtils::GetScreenCoordsForWindow(domNode);
         nsAccX -= winCoords.x;
         nsAccY -= winCoords.y;
     }
