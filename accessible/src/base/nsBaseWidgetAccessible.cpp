@@ -42,7 +42,7 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleDocument.h"
 #include "nsAccessibleWrap.h"
-#include "nsAccessibilityUtils.h"
+#include "nsCoreUtils.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsGUIEvent.h"
 #include "nsHyperTextAccessibleWrap.h"
@@ -256,8 +256,8 @@ void
 nsLinkableAccessible::CacheActionContent()
 {
   nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
-  PRBool isOnclick = nsAccUtils::HasListener(walkUpContent,
-                                             NS_LITERAL_STRING("click"));
+  PRBool isOnclick = nsCoreUtils::HasListener(walkUpContent,
+                                              NS_LITERAL_STRING("click"));
 
   if (isOnclick) {
     mActionContent = walkUpContent;
@@ -266,8 +266,8 @@ nsLinkableAccessible::CacheActionContent()
   }
 
   while ((walkUpContent = walkUpContent->GetParent())) {
-    isOnclick = nsAccUtils::HasListener(walkUpContent,
-                                        NS_LITERAL_STRING("click"));
+    isOnclick = nsCoreUtils::HasListener(walkUpContent,
+                                         NS_LITERAL_STRING("click"));
   
     nsCOMPtr<nsIDOMNode> walkUpNode(do_QueryInterface(walkUpContent));
 

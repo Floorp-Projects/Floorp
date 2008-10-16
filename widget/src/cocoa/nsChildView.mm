@@ -201,6 +201,93 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 #pragma mark -
 
+// Key code constants
+enum
+{
+  kEscapeKeyCode      = 0x35,
+  kRCommandKeyCode    = 0x36, // right command key
+  kCommandKeyCode     = 0x37,
+  kShiftKeyCode       = 0x38,
+  kCapsLockKeyCode    = 0x39,
+  kOptionkeyCode      = 0x3A,
+  kControlKeyCode     = 0x3B,
+  kRShiftKeyCode      = 0x3C, // right shift key
+  kROptionKeyCode     = 0x3D, // right option key
+  kRControlKeyCode    = 0x3E, // right control key
+  kClearKeyCode       = 0x47,
+
+  // function keys
+  kF1KeyCode          = 0x7A,
+  kF2KeyCode          = 0x78,
+  kF3KeyCode          = 0x63,
+  kF4KeyCode          = 0x76,
+  kF5KeyCode          = 0x60,
+  kF6KeyCode          = 0x61,
+  kF7KeyCode          = 0x62,
+  kF8KeyCode          = 0x64,
+  kF9KeyCode          = 0x65,
+  kF10KeyCode         = 0x6D,
+  kF11KeyCode         = 0x67,
+  kF12KeyCode         = 0x6F,
+  kF13KeyCode         = 0x69,
+  kF14KeyCode         = 0x6B,
+  kF15KeyCode         = 0x71,
+  
+  kPrintScreenKeyCode = kF13KeyCode,
+  kScrollLockKeyCode  = kF14KeyCode,
+  kPauseKeyCode       = kF15KeyCode,
+  
+  // keypad
+  kKeypad0KeyCode     = 0x52,
+  kKeypad1KeyCode     = 0x53,
+  kKeypad2KeyCode     = 0x54,
+  kKeypad3KeyCode     = 0x55,
+  kKeypad4KeyCode     = 0x56,
+  kKeypad5KeyCode     = 0x57,
+  kKeypad6KeyCode     = 0x58,
+  kKeypad7KeyCode     = 0x59,
+  kKeypad8KeyCode     = 0x5B,
+  kKeypad9KeyCode     = 0x5C,
+
+// The following key codes are not defined until Mac OS X 10.5
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+  kVK_ANSI_1          = 0x12,
+  kVK_ANSI_2          = 0x13,
+  kVK_ANSI_3          = 0x14,
+  kVK_ANSI_4          = 0x15,
+  kVK_ANSI_5          = 0x17,
+  kVK_ANSI_6          = 0x16,
+  kVK_ANSI_7          = 0x1A,
+  kVK_ANSI_8          = 0x1C,
+  kVK_ANSI_9          = 0x19,
+  kVK_ANSI_0          = 0x1D,
+#endif
+
+  kKeypadMultiplyKeyCode  = 0x43,
+  kKeypadAddKeyCode       = 0x45,
+  kKeypadSubtractKeyCode  = 0x4E,
+  kKeypadDecimalKeyCode   = 0x41,
+  kKeypadDivideKeyCode    = 0x4B,
+  kKeypadEqualsKeyCode    = 0x51, // no correpsonding gecko key code
+  kEnterKeyCode           = 0x4C,
+  kReturnKeyCode          = 0x24,
+  kPowerbookEnterKeyCode  = 0x34, // Enter on Powerbook's keyboard is different
+  
+  kInsertKeyCode          = 0x72, // also help key
+  kDeleteKeyCode          = 0x75, // also forward delete key
+  kTabKeyCode             = 0x30,
+  kTildeKeyCode           = 0x32,
+  kBackspaceKeyCode       = 0x33,
+  kHomeKeyCode            = 0x73, 
+  kEndKeyCode             = 0x77,
+  kPageUpKeyCode          = 0x74,
+  kPageDownKeyCode        = 0x79,
+  kLeftArrowKeyCode       = 0x7B,
+  kRightArrowKeyCode      = 0x7C,
+  kUpArrowKeyCode         = 0x7E,
+  kDownArrowKeyCode       = 0x7D
+};
+
 
 /* Convenience routines to go from a gecko rect to cocoa NSRects and back
  *
@@ -1377,7 +1464,9 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
     }
   }
   int windowNumber = [[mView window] windowNumber];
-  NSEvent* downEvent = [NSEvent keyEventWithType:NSKeyDown
+  BOOL sendFlagsChangedEvent = aNativeKeyCode == kCapsLockKeyCode;
+  NSEventType eventType = sendFlagsChangedEvent ? NSFlagsChanged : NSKeyDown;
+  NSEvent* downEvent = [NSEvent keyEventWithType:eventType
                                         location:NSMakePoint(0,0)
                                    modifierFlags:modifierFlags
                                        timestamp:0
@@ -1388,15 +1477,17 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                        isARepeat:NO
                                          keyCode:aNativeKeyCode];
 
-  NSEvent* upEvent = [ChildView makeNewCocoaEventWithType:NSKeyUp
-                                                fromEvent:downEvent];
+  NSEvent* upEvent = sendFlagsChangedEvent ? nil :
+                       [ChildView makeNewCocoaEventWithType:NSKeyUp
+                                                  fromEvent:downEvent];
 
-  if (downEvent && upEvent) {
+  if (downEvent && (sendFlagsChangedEvent || upEvent)) {
     KeyboardLayoutOverride currentLayout = gOverrideKeyboardLayout;
     gOverrideKeyboardLayout.mKeyboardLayout = aNativeKeyboardLayout;
     gOverrideKeyboardLayout.mOverrideEnabled = PR_TRUE;
     [NSApp sendEvent:downEvent];
-    [NSApp sendEvent:upEvent];
+    if (upEvent)
+      [NSApp sendEvent:upEvent];
     // processKeyDownEvent and keyUp block exceptions so we're sure to
     // reach here to restore gOverrideKeyboardLayout
     gOverrideKeyboardLayout = currentLayout;
@@ -3865,94 +3956,6 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Key code constants
-enum
-{
-  kEscapeKeyCode      = 0x35,
-  kRCommandKeyCode    = 0x36, // right command key
-  kCommandKeyCode     = 0x37,
-  kShiftKeyCode       = 0x38,
-  kCapsLockKeyCode    = 0x39,
-  kOptionkeyCode      = 0x3A,
-  kControlKeyCode     = 0x3B,
-  kRShiftKeyCode      = 0x3C, // right shift key
-  kROptionKeyCode     = 0x3D, // right option key
-  kRControlKeyCode    = 0x3E, // right control key
-  kClearKeyCode       = 0x47,
-
-  // function keys
-  kF1KeyCode          = 0x7A,
-  kF2KeyCode          = 0x78,
-  kF3KeyCode          = 0x63,
-  kF4KeyCode          = 0x76,
-  kF5KeyCode          = 0x60,
-  kF6KeyCode          = 0x61,
-  kF7KeyCode          = 0x62,
-  kF8KeyCode          = 0x64,
-  kF9KeyCode          = 0x65,
-  kF10KeyCode         = 0x6D,
-  kF11KeyCode         = 0x67,
-  kF12KeyCode         = 0x6F,
-  kF13KeyCode         = 0x69,
-  kF14KeyCode         = 0x6B,
-  kF15KeyCode         = 0x71,
-  
-  kPrintScreenKeyCode = kF13KeyCode,
-  kScrollLockKeyCode  = kF14KeyCode,
-  kPauseKeyCode       = kF15KeyCode,
-  
-  // keypad
-  kKeypad0KeyCode     = 0x52,
-  kKeypad1KeyCode     = 0x53,
-  kKeypad2KeyCode     = 0x54,
-  kKeypad3KeyCode     = 0x55,
-  kKeypad4KeyCode     = 0x56,
-  kKeypad5KeyCode     = 0x57,
-  kKeypad6KeyCode     = 0x58,
-  kKeypad7KeyCode     = 0x59,
-  kKeypad8KeyCode     = 0x5B,
-  kKeypad9KeyCode     = 0x5C,
-
-// The following key codes are not defined until Mac OS X 10.5
-#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
-  kVK_ANSI_1          = 0x12,
-  kVK_ANSI_2          = 0x13,
-  kVK_ANSI_3          = 0x14,
-  kVK_ANSI_4          = 0x15,
-  kVK_ANSI_5          = 0x17,
-  kVK_ANSI_6          = 0x16,
-  kVK_ANSI_7          = 0x1A,
-  kVK_ANSI_8          = 0x1C,
-  kVK_ANSI_9          = 0x19,
-  kVK_ANSI_0          = 0x1D,
-#endif
-
-  kKeypadMultiplyKeyCode  = 0x43,
-  kKeypadAddKeyCode       = 0x45,
-  kKeypadSubtractKeyCode  = 0x4E,
-  kKeypadDecimalKeyCode   = 0x41,
-  kKeypadDivideKeyCode    = 0x4B,
-  kKeypadEqualsKeyCode    = 0x51, // no correpsonding gecko key code
-  kEnterKeyCode           = 0x4C,
-  kReturnKeyCode          = 0x24,
-  kPowerbookEnterKeyCode  = 0x34, // Enter on Powerbook's keyboard is different
-  
-  kInsertKeyCode          = 0x72, // also help key
-  kDeleteKeyCode          = 0x75, // also forward delete key
-  kTabKeyCode             = 0x30,
-  kTildeKeyCode           = 0x32,
-  kBackspaceKeyCode       = 0x33,
-  kHomeKeyCode            = 0x73, 
-  kEndKeyCode             = 0x77,
-  kPageUpKeyCode          = 0x74,
-  kPageDownKeyCode        = 0x79,
-  kLeftArrowKeyCode       = 0x7B,
-  kRightArrowKeyCode      = 0x7C,
-  kUpArrowKeyCode         = 0x7E,
-  kDownArrowKeyCode       = 0x7D
-};
-
-
 static PRBool IsPrintableChar(PRUnichar aChar)
 {
   return (aChar >= 0x20 && aChar <= 0x7E) || aChar >= 0xA0;
@@ -4353,7 +4356,9 @@ static SInt32
 GetScriptFromKeyboardLayout(SInt32 aLayoutID)
 {
   switch (aLayoutID) {
+    case 0:                      // US
     case 3:                      // German
+    case 224:                    // Swedish
     case -2:     return smRoman; // US-Extended
     case -18944: return smGreek; // Greek
     default: NS_NOTREACHED("unknown keyboard layout");

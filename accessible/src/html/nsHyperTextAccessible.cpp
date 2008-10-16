@@ -1201,7 +1201,7 @@ nsHyperTextAccessible::GetDefaultTextAttributes(nsIPersistentProperties **aAttri
   if (!mDOMNode)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMElement> element = nsAccUtils::GetDOMElementFor(mDOMNode);
+  nsCOMPtr<nsIDOMElement> element = nsCoreUtils::GetDOMElementFor(mDOMNode);
 
   nsCSSTextAttr textAttr(PR_TRUE, element, nsnull);
   while (textAttr.Iterate()) {
@@ -1211,7 +1211,7 @@ nsHyperTextAccessible::GetDefaultTextAttributes(nsIPersistentProperties **aAttri
       attributes->SetStringProperty(name, value, oldValue);
   }
 
-  nsIFrame *sourceFrame = nsAccUtils::GetFrameFor(element);
+  nsIFrame *sourceFrame = nsCoreUtils::GetFrameFor(element);
   if (sourceFrame) {
     nsBackgroundTextAttr backgroundTextAttr(sourceFrame, nsnull);
 
@@ -1572,7 +1572,7 @@ nsHyperTextAccessible::GetAssociatedEditor(nsIEditor **aEditor)
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(docShellTreeItem));
   if (!editingSession)
     return NS_OK; // No editing session interface
@@ -1667,7 +1667,7 @@ PRInt32 nsHyperTextAccessible::GetCaretLineNumber()
   nsCOMPtr<nsIDOMNode> caretNode;
   domSel->GetFocusNode(getter_AddRefs(caretNode));
   nsCOMPtr<nsIContent> caretContent = do_QueryInterface(caretNode);
-  if (!caretContent || !nsAccUtils::IsAncestorOf(mDOMNode, caretNode)) {
+  if (!caretContent || !nsCoreUtils::IsAncestorOf(mDOMNode, caretNode)) {
     return -1;
   }
 
@@ -1987,8 +1987,8 @@ nsHyperTextAccessible::ScrollSubstringTo(PRInt32 aStartIndex, PRInt32 aEndIndex,
                                            &endOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return nsAccUtils::ScrollSubstringTo(GetFrame(), startNode, startOffset,
-                                       endNode, endOffset, aScrollType);
+  return nsCoreUtils::ScrollSubstringTo(GetFrame(), startNode, startOffset,
+                                        endNode, endOffset, aScrollType);
 }
 
 // void nsIAccessibleText::
@@ -2028,7 +2028,7 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
     if (scrollableFrame) {
       if (!initialScrolled) {
         // Scroll substring to the given point. Turn the point into percents
-        // relative scrollable area to use nsAccUtils::ScrollSubstringTo.
+        // relative scrollable area to use nsCoreUtils::ScrollSubstringTo.
         nsIntRect frameRect = parentFrame->GetScreenRectExternal();
         PRInt32 devOffsetX = coords.x - frameRect.x;
         PRInt32 devOffsetY = coords.y - frameRect.y;
@@ -2040,9 +2040,9 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
         PRInt16 hPercent = offsetPoint.x * 100 / size.width;
         PRInt16 vPercent = offsetPoint.y * 100 / size.height;
 
-        rv = nsAccUtils::ScrollSubstringTo(GetFrame(), startNode, startOffset,
-                                           endNode, endOffset,
-                                           vPercent, hPercent);
+        rv = nsCoreUtils::ScrollSubstringTo(GetFrame(), startNode, startOffset,
+                                            endNode, endOffset,
+                                            vPercent, hPercent);
         NS_ENSURE_SUCCESS(rv, rv);
 
         initialScrolled = PR_TRUE;
@@ -2051,7 +2051,7 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
         // scrollable area. If there are nested scrollable areas then make
         // sure we scroll lower areas to the given point inside currently
         // traversed scrollable area.
-        nsAccUtils::ScrollFrameToPoint(parentFrame, frame, coords);
+        nsCoreUtils::ScrollFrameToPoint(parentFrame, frame, coords);
       }
     }
     frame = parentFrame;
@@ -2285,13 +2285,13 @@ nsHyperTextAccessible::GetLangTextAttributes(PRBool aIncludeDefAttrs,
                                              PRInt32 *aEndHTOffset,
                                              nsIPersistentProperties *aAttributes)
 {
-  nsCOMPtr<nsIDOMElement> sourceElm(nsAccUtils::GetDOMElementFor(aSourceNode));
+  nsCOMPtr<nsIDOMElement> sourceElm(nsCoreUtils::GetDOMElementFor(aSourceNode));
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(sourceElm));
   nsCOMPtr<nsIContent> rootContent(do_QueryInterface(mDOMNode));
 
   nsAutoString lang;
-  nsAccUtils::GetLanguageFor(content, rootContent, lang);
+  nsCoreUtils::GetLanguageFor(content, rootContent, lang);
 
   nsAutoString rootLang;
   nsresult rv = GetLanguage(rootLang);
@@ -2320,8 +2320,8 @@ nsHyperTextAccessible::GetCSSTextAttributes(PRBool aIncludeDefAttrs,
                                             PRInt32 *aEndHTOffset,
                                             nsIPersistentProperties *aAttributes)
 {
-  nsCOMPtr<nsIDOMElement> sourceElm(nsAccUtils::GetDOMElementFor(aSourceNode));
-  nsCOMPtr<nsIDOMElement> rootElm(nsAccUtils::GetDOMElementFor(mDOMNode));
+  nsCOMPtr<nsIDOMElement> sourceElm(nsCoreUtils::GetDOMElementFor(aSourceNode));
+  nsCOMPtr<nsIDOMElement> rootElm(nsCoreUtils::GetDOMElementFor(mDOMNode));
 
   nsCSSTextAttr textAttr(aIncludeDefAttrs, sourceElm, rootElm);
   while (textAttr.Iterate()) {
@@ -2335,12 +2335,12 @@ nsHyperTextAccessible::GetCSSTextAttributes(PRBool aIncludeDefAttrs,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsIFrame *sourceFrame = nsAccUtils::GetFrameFor(sourceElm);
+  nsIFrame *sourceFrame = nsCoreUtils::GetFrameFor(sourceElm);
   if (sourceFrame) {
     nsIFrame *rootFrame = nsnull;
 
     if (!aIncludeDefAttrs)
-      rootFrame = nsAccUtils::GetFrameFor(rootElm);
+      rootFrame = nsCoreUtils::GetFrameFor(rootElm);
 
     nsBackgroundTextAttr backgroundTextAttr(sourceFrame, rootFrame);
     nsAutoString value;
@@ -2364,7 +2364,7 @@ nsHyperTextAccessible::GetRangeForTextAttr(nsIDOMNode *aNode,
                                            PRInt32 *aStartHTOffset,
                                            PRInt32 *aEndHTOffset)
 {
-  nsCOMPtr<nsIDOMElement> rootElm(nsAccUtils::GetDOMElementFor(mDOMNode));
+  nsCOMPtr<nsIDOMElement> rootElm(nsCoreUtils::GetDOMElementFor(mDOMNode));
   NS_ENSURE_STATE(rootElm);
 
   nsCOMPtr<nsIDOMNode> tmpNode(aNode);
@@ -2380,7 +2380,7 @@ nsHyperTextAccessible::GetRangeForTextAttr(nsIDOMNode *aNode,
 
   // Navigate backwards (find the start offset).
   while (currNode && currNode != rootElm) {
-    nsCOMPtr<nsIDOMElement> currElm(nsAccUtils::GetDOMElementFor(currNode));
+    nsCOMPtr<nsIDOMElement> currElm(nsCoreUtils::GetDOMElementFor(currNode));
     NS_ENSURE_STATE(currElm);
 
     if (currNode != aNode && !aComparer->Equal(currElm)) {
@@ -2414,7 +2414,7 @@ nsHyperTextAccessible::GetRangeForTextAttr(nsIDOMNode *aNode,
   PRBool moveIntoSubtree = PR_TRUE;
   currNode = aNode;
   while (currNode && currNode != rootElm) {
-    nsCOMPtr<nsIDOMElement> currElm(nsAccUtils::GetDOMElementFor(currNode));
+    nsCOMPtr<nsIDOMElement> currElm(nsCoreUtils::GetDOMElementFor(currNode));
     NS_ENSURE_STATE(currElm);
 
     // Stop new end offset searching if the given text attribute changes its
@@ -2460,7 +2460,7 @@ nsHyperTextAccessible::FindEndOffsetInSubtree(nsIDOMNode *aCurrNode,
   if (!aCurrNode)
     return PR_FALSE;
 
-  nsCOMPtr<nsIDOMElement> currElm(nsAccUtils::GetDOMElementFor(aCurrNode));
+  nsCOMPtr<nsIDOMElement> currElm(nsCoreUtils::GetDOMElementFor(aCurrNode));
   NS_ENSURE_STATE(currElm);
 
   // If the given text attribute (pointed by nsTextAttr object) changes its
@@ -2511,7 +2511,7 @@ nsHyperTextAccessible::FindStartOffsetInSubtree(nsIDOMNode *aCurrNode,
       return PR_TRUE;
   }
 
-  nsCOMPtr<nsIDOMElement> currElm(nsAccUtils::GetDOMElementFor(aCurrNode));
+  nsCOMPtr<nsIDOMElement> currElm(nsCoreUtils::GetDOMElementFor(aCurrNode));
   NS_ENSURE_STATE(currElm);
 
   // If the given text attribute (pointed by nsTextAttr object) changes its

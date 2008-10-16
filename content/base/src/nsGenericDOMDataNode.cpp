@@ -997,7 +997,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsText3Tearoff)
 NS_IMETHODIMP
 nsText3Tearoff::GetIsElementContentWhitespace(PRBool *aReturn)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aReturn = mNode->TextIsOnlyWhitespace();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

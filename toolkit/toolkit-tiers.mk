@@ -123,8 +123,8 @@ tier_gecko_dirs += \
 		media/libfishsound \
 		media/libogg \
 		media/liboggplay \
-		media/liboggplay_audio \
 		media/liboggz \
+		media/libsydneyaudio \
 		media/libtheora \
 		media/libvorbis \
 		$(NULL)
