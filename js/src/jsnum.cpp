@@ -124,8 +124,8 @@ num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-jsdouble FASTCALL
-js_ParseFloat(JSContext* cx, JSString* str)
+static jsdouble FASTCALL
+ParseFloat(JSContext* cx, JSString* str)
 {
     const jschar* bp;
     const jschar* end;
@@ -183,8 +183,8 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-jsdouble FASTCALL
-js_ParseInt(JSContext* cx, JSString* str)
+static jsdouble FASTCALL
+ParseInt(JSContext* cx, JSString* str)
 {
     const jschar* bp;
     const jschar* end;
@@ -197,8 +197,8 @@ js_ParseInt(JSContext* cx, JSString* str)
     return d;
 }
 
-jsdouble FASTCALL
-js_ParseIntDouble(jsdouble d)
+static jsdouble FASTCALL
+ParseIntDouble(jsdouble d)
 {
     if (!JSDOUBLE_IS_FINITE(d))
         return js_NaN;
@@ -215,16 +215,16 @@ const char js_parseInt_str[]   = "parseInt";
 
 #ifdef JS_TRACER
 
-JS_DEFINE_CALLINFO_2(DOUBLE, ParseInt, CONTEXT, STRING,     1, 1)
-JS_DEFINE_CALLINFO_1(DOUBLE, ParseIntDouble, DOUBLE,        1, 1)
-JS_DEFINE_CALLINFO_2(DOUBLE, ParseFloat, CONTEXT, STRING,   1, 1)
+JS_DEFINE_CALLINFO_2(static, DOUBLE, ParseInt, CONTEXT, STRING,     1, 1)
+JS_DEFINE_CALLINFO_1(static, DOUBLE, ParseIntDouble, DOUBLE,        1, 1)
+JS_DEFINE_CALLINFO_2(static, DOUBLE, ParseFloat, CONTEXT, STRING,   1, 1)
 
 static const JSTraceableNative num_parseInt_trcinfo[] = {
-    { num_parseInt,             &ci_ParseInt,             "C",   "s",    INFALLIBLE | JSTN_MORE },
-    { num_parseInt,             &ci_ParseIntDouble,       "",    "d",    INFALLIBLE }
+    { num_parseInt,     &_JS_CALLINFO(ParseInt),        "C",    "s",    INFALLIBLE | JSTN_MORE },
+    { num_parseInt,     &_JS_CALLINFO(ParseIntDouble),  "",     "d",    INFALLIBLE }
 };
 static const JSTraceableNative num_parseFloat_trcinfo[] = {
-    { num_parseFloat,           &ci_ParseFloat,           "C",   "s",    INFALLIBLE }
+    { num_parseFloat,   &_JS_CALLINFO(ParseFloat),      "C",    "s",    INFALLIBLE }
 };
 
 #endif /* JS_TRACER */
@@ -597,12 +597,12 @@ num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef JS_TRACER
 
-JS_DEFINE_CALLINFO_3(STRING, NumberToStringWithBase, CONTEXT, DOUBLE, INT32, 1, 1)
-JS_DEFINE_CALLINFO_2(STRING, NumberToString,         CONTEXT, DOUBLE,        1, 1)
+JS_DEFINE_CALLINFO_3(static, STRING, NumberToStringWithBase, CONTEXT, DOUBLE, INT32, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, STRING, js_NumberToString,      CONTEXT, DOUBLE,        1, 1)
 
 static const JSTraceableNative num_toString_trcinfo[] = {
-    { num_toString,             &ci_NumberToStringWithBase, "DC",  "i",    FAIL_NULL | JSTN_MORE},
-    { num_toString,             &ci_NumberToString,         "DC",   "",    FAIL_NULL }
+    { num_toString,             &NumberToStringWithBase_ci, "DC",  "i",    FAIL_NULL | JSTN_MORE},
+    { num_toString,             &js_NumberToString_ci,      "DC",   "",    FAIL_NULL }
 };
 
 #endif /* JS_TRACER */
@@ -817,8 +817,8 @@ js_NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufS
     return numStr;
 }
 
-JSString * JS_FASTCALL
-js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
+static JSString * JS_FASTCALL
+NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 {
     char buf[DTOSTR_STANDARD_BUFFER_SIZE];
     char *numStr;
@@ -834,7 +834,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d)
 {
-    return js_NumberToStringWithBase(cx, d, 10);
+    return NumberToStringWithBase(cx, d, 10);
 }
 
 jsdouble

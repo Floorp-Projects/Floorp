@@ -182,9 +182,6 @@ js_NewNumberInRootedValue(JSContext *cx, jsdouble d, jsval *vp);
 extern JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d);
 
-extern JSString * JS_FASTCALL
-js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base);
-
 /*
  * Convert int to C string. The buf must be big enough for MIN_INT to fit
  * including '-' and '\0'.

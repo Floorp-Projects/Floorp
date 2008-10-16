@@ -4275,8 +4275,8 @@ regexp_test(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-jsint FASTCALL
-js_Regexp_p_test(JSContext* cx, JSObject* regexp, JSString* str)
+static jsint FASTCALL
+Regexp_p_test(JSContext* cx, JSObject* regexp, JSString* str)
 {
     jsval vp[3] = { JSVAL_NULL, OBJECT_TO_JSVAL(regexp), STRING_TO_JSVAL(str) };
     if (!regexp_exec_sub(cx, regexp, 1, vp + 2, JS_TRUE, vp))
@@ -4291,10 +4291,10 @@ js_Regexp_p_test(JSContext* cx, JSObject* regexp, JSString* str)
  * because the function returns a boolean during recording, and "with possible
  * error" from FAIL_VOID below.
  */
-JS_DEFINE_CALLINFO_3(INT32,     Regexp_p_test, CONTEXT, OBJECT, STRING,                     1, 1)
+JS_DEFINE_CALLINFO_3(static, INT32, Regexp_p_test, CONTEXT, OBJECT, STRING,  1, 1)
 
 static const JSTraceableNative regexp_test_trcinfo[] = {
-    { regexp_test,           &ci_Regexp_p_test,        "TC", "s",    FAIL_VOID }
+    { regexp_test,           &Regexp_p_test_ci,        "TC", "s",    FAIL_VOID }
 };
 #endif
 
