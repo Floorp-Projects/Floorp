@@ -706,7 +706,7 @@ nsXULTreeAccessible::TreeViewInvalidated(PRInt32 aStartRow, PRInt32 aEndRow,
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (name != cachedName) {
-          nsCoreUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, acc);
+          nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, acc);
           treeItemAcc->SetCachedName(name);
         }
       }
@@ -1041,14 +1041,14 @@ nsXULTreeitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribu
   PRInt32 posInSet = topCount;
 
   // set the group attributes
-  nsCoreUtils::SetAccGroupAttrs(aAttributes, level + 1, posInSet, setSize);
+  nsAccUtils::SetAccGroupAttrs(aAttributes, level + 1, posInSet, setSize);
 
   // set the "cycles" attribute
   PRBool isCycler;
   mColumn->GetCycler(&isCycler);
   if (isCycler) {
-    nsCoreUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::cycles,
-                            NS_LITERAL_STRING("true"));
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::cycles,
+                           NS_LITERAL_STRING("true"));
   }
 
   return NS_OK;

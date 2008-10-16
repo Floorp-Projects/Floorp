@@ -2169,7 +2169,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
   }
 
   // Level/setsize/posinset
-  if (!nsCoreUtils::HasAccGroupAttrs(attributes)) {
+  if (!nsAccUtils::HasAccGroupAttrs(attributes)) {
     // The role of an accessible can be pointed by ARIA attribute but ARIA
     // posinset, level, setsize may be skipped. Therefore we calculate here
     // these properties to map them into description.
@@ -2254,8 +2254,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
         }
       }
 
-      nsCoreUtils::SetAccGroupAttrs(attributes, groupLevel, positionInGroup,
-                                    setSize);
+      nsAccUtils::SetAccGroupAttrs(attributes, groupLevel, positionInGroup,
+                                   setSize);
     }
   }
 
@@ -2269,7 +2269,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       attrAtom->GetUTF8String(&attrStr);
       if (PL_strncmp(attrStr, "aria-", 5)) 
         continue; // Not ARIA
-      if (!nsCoreUtils::IsARIAPropForObjectAttr(attrAtom))
+      if (!nsAccUtils::IsARIAPropForObjectAttr(attrAtom))
         continue; // No need to expose obj attribute -- will be exposed some other way
       nsAutoString value;
       if (content->GetAttr(kNameSpaceID_None, attrAtom, value)) {
@@ -2304,7 +2304,7 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   // Let the class from an iframe's document be exposed, don't override from <iframe class>
   nsAutoString _class;
   if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::_class, _class))
-    nsCoreUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::_class, _class);
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::_class, _class);
 
   // Get container-foo computed live region properties based on the closest container with
   // the live region attribute. 
@@ -2321,8 +2321,8 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     NS_ENSURE_STATE(docNode);
     nsIContent *topContent = GetRoleContent(docNode);
     NS_ENSURE_STATE(topContent);
-    nsCoreUtils::GetLiveContainerAttributes(aAttributes, startContent,
-                                            topContent);
+    nsAccUtils::SetLiveContainerAttributes(aAttributes, startContent,
+                                           topContent);
     // Allow ARIA live region markup from outer documents to override
     nsCOMPtr<nsISupports> container = doc->GetContainer();
     nsIDocShellTreeItem *docShellTreeItem = nsnull;
@@ -2346,8 +2346,8 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
                                       NS_LITERAL_STRING("display"),
                                       displayValue);
   if (NS_SUCCEEDED(rv))
-    nsCoreUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::display,
-                            displayValue);
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::display,
+                           displayValue);
   return NS_OK;
 }
 
@@ -2378,7 +2378,7 @@ nsAccessible::GroupPosition(PRInt32 *aGroupLevel,
     return NS_ERROR_FAILURE;
   }
   PRInt32 level, posInSet, setSize;
-  nsCoreUtils::GetAccGroupAttrs(attributes, &level, &posInSet, &setSize);
+  nsAccUtils::GetAccGroupAttrs(attributes, &level, &posInSet, &setSize);
 
   if (!posInSet && !setSize)
     return NS_OK;
@@ -2980,7 +2980,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
         do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_owns));
       if (!relatedNode && mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
         // This is an ARIA tree that doesn't use owns, so we need to get the parent the hard way
-        nsCoreUtils::GetARIATreeItemParent(this, content, aRelated);
+        nsAccUtils::GetARIATreeItemParent(this, content, aRelated);
         return NS_OK;
       }
       // If accessible is in its own Window then we should provide NODE_CHILD_OF relation
