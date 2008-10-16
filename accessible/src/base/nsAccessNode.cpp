@@ -481,8 +481,8 @@ nsAccessNode::ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY)
     return NS_ERROR_FAILURE;
 
   nsIntPoint coords;
-  nsresult rv = nsCoreUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
-                                                   this, &coords);
+  nsresult rv = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
+                                                  this, &coords);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame *parentFrame = frame;

@@ -80,6 +80,7 @@ CPPSRCS = \
   nsOuterDocAccessible.cpp \
   nsAccessibilityAtoms.cpp \
   nsCoreUtils.cpp \
+  nsAccUtils.cpp \
   nsAccessibilityService.cpp \
   nsAccessible.cpp \
   nsAccessibleRelation.cpp \

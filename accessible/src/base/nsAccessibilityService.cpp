@@ -40,6 +40,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
+#include "nsAccUtils.h"
 #include "nsARIAMap.h"
 #include "nsIContentViewer.h"
 #include "nsCURILoader.h"
@@ -453,7 +454,7 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
 
   nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(*aRootAcc));
   privateAccessNode->Init();
-  nsRoleMapEntry *roleMapEntry = nsCoreUtils::GetRoleMapEntry(rootNode);
+  nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(rootNode);
   nsCOMPtr<nsPIAccessible> privateAccessible =
     do_QueryInterface(privateAccessNode);
   privateAccessible->SetRoleMapEntry(roleMapEntry);
@@ -1480,7 +1481,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsRoleMapEntry *roleMapEntry = nsCoreUtils::GetRoleMapEntry(aNode);
+  nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(aNode);
   if (roleMapEntry && !nsCRT::strcmp(roleMapEntry->roleString, "presentation") &&
       !content->IsFocusable()) { // For presentation only
     // Only create accessible for role of "presentation" if it is focusable --
@@ -1529,7 +1530,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           if (!tableAccessible && !content->IsFocusable()) {
 #ifdef DEBUG
             nsRoleMapEntry *tableRoleMapEntry =
-              nsCoreUtils::GetRoleMapEntry(tableNode);
+              nsAccUtils::GetRoleMapEntry(tableNode);
             NS_ASSERTION(tableRoleMapEntry &&
                          !nsCRT::strcmp(tableRoleMapEntry->roleString, "presentation"),
                          "No accessible for parent table and it didn't have role of presentation");

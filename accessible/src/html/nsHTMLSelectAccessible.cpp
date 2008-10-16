@@ -578,8 +578,8 @@ nsHTMLSelectOptionAccessible::GetAttributesInternal(nsIPersistentProperties *aAt
     }
   }
 
-  nsCoreUtils::SetAccGroupAttrs(aAttributes, level, posInSet,
-                                static_cast<PRInt32>(setSize));
+  nsAccUtils::SetAccGroupAttrs(aAttributes, level, posInSet,
+                               static_cast<PRInt32>(setSize));
   return  NS_OK;
 }
 
@@ -861,8 +861,8 @@ void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibl
     return;
   }
 
-  nsCoreUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
-                            multiSelect);
+  nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
+                           multiSelect);
 
   PRUint32 state = State(optionAccessible);
   PRUint32 eventType;
@@ -873,7 +873,7 @@ void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibl
     eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
   }
 
-  nsCoreUtils::FireAccEvent(eventType, optionAccessible);
+  nsAccUtils::FireAccEvent(eventType, optionAccessible);
 }
 
 nsIContent* nsHTMLSelectOptionAccessible::GetSelectState(PRUint32* aState,

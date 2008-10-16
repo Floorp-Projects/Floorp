@@ -332,7 +332,7 @@ nsHTMLImageAccessible::GetImagePosition(PRUint32 aCoordType,
   if (NS_FAILED(rv))
     return rv;
 
-  return nsCoreUtils::ConvertScreenCoordsTo(aX, aY, aCoordType, this);
+  return nsAccUtils::ConvertScreenCoordsTo(aX, aY, aCoordType, this);
 }
 
 NS_IMETHODIMP
@@ -376,7 +376,7 @@ nsHTMLImageAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   nsAutoString src;
   content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::src, src);
   if (!src.IsEmpty())
-    nsCoreUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::src, src);
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::src, src);
 
   return NS_OK;
 }
