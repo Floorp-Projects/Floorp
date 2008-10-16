@@ -6516,8 +6516,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 } while ((pn1 = *pnp) != NULL);
 
                 // We may have to change arity from LIST to BINARY.
+                pn1 = pn->pn_head;
                 if (pn->pn_count == 2) {
-                    pn1 = pn->pn_head;
                     pn2 = pn1->pn_next;
                     pn1->pn_next = NULL;
                     JS_ASSERT(!pn2->pn_next);
