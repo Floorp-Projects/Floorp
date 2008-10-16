@@ -127,7 +127,7 @@ textarea {
   text-indent: 0;
   -moz-user-select: text;
   text-shadow: none;
-  word-wrap: break-word !important;
+  word-wrap: break-word;
 }
 
 textarea > scrollbar {

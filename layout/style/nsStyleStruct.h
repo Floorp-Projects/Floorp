@@ -812,7 +812,7 @@ struct nsStyleText {
   }
 
   PRBool WordCanWrap() const {
-    return mWordWrap == NS_STYLE_WORDWRAP_BREAK_WORD;
+    return WhiteSpaceCanWrap() && mWordWrap == NS_STYLE_WORDWRAP_BREAK_WORD;
   }
 };
 
