@@ -6370,8 +6370,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         pn2 = pn->pn_right;
 
         /* Propagate inCond through logical connectives. */
-        if (pn->pn_op == JSOP_OR || pn->pn_op == JSOP_AND ||
-            pn->pn_op == JSOP_STRICTEQ || pn->pn_op == JSOP_STRICTNE) {
+        if (pn->pn_type == TOK_OR || pn->pn_type == TOK_AND) {
             if (!js_FoldConstants(cx, pn1, tc, inCond))
                 return JS_FALSE;
             if (!js_FoldConstants(cx, pn2, tc, inCond))
@@ -6517,8 +6516,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
                 } while ((pn1 = *pnp) != NULL);
 
                 // We may have to change arity from LIST to BINARY.
+                pn1 = pn->pn_head;
                 if (pn->pn_count == 2) {
-                    pn1 = pn->pn_head;
                     pn2 = pn1->pn_next;
                     pn1->pn_next = NULL;
                     JS_ASSERT(!pn2->pn_next);
