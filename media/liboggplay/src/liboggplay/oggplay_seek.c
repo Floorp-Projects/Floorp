@@ -82,7 +82,7 @@ oggplay_seek(OggPlay *me, ogg_int64_t milliseconds) {
    * this will occur as soon as the thread calls oggplay_buffer_release_next
    */
 
-  trash = malloc(sizeof(OggPlaySeekTrash));
+  trash = calloc(sizeof(OggPlaySeekTrash), 1);
 
   /*
    * store the old buffer in it next.
