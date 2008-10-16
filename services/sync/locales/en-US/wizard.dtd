@@ -1,17 +1,15 @@
 <!ENTITY wizard.title                     "Weave Setup">
 
 <!ENTITY intro.title                      "Welcome to Weave">
-<!ENTITY intro-weave1.description         "Weave is an experiment from Mozilla Labs that provides a framework for the deep integration of online services with the browser to enable exciting new user experiences.">
-<!ENTITY intro-weave2.description         "This development milestone adds additional data synchronization, encryption, and messaging capabilities to the platform.">
-<!ENTITY intro-weave3.description         "When you install this version of Weave, it will encrypt and back up most of your browser settings and metadata to a server (e.g. bookmarks, browsing history, cookies, etc.) and synchronize them between multiple computers. It will also enable read-only sharing of bookmark folders with another Weave user.">
+<!ENTITY intro.label                      "Weave is an experiment from Mozilla Labs that provides a framework for the deep integration of online services with the browser to enable exciting new user experiences.">
 <!ENTITY intro-more.label                 "Learn more about the Weave project">
-<!ENTITY intro-more.link                  "http://labs.mozilla.com">
-<!ENTITY intro-warning.description        "Warning: Use at your own risk! Back up Firefox data before continuing with installation.">
-
-<!ENTITY eula.title                       "Software License Agreement">
-<!ENTITY eula.description                 "Terms and conditions for using this software.">
-<!ENTITY eula.accept                      "I accept the terms of the License Agreement">
-<!ENTITY eula.decline                     "I do NOT accept the terms of the License Agreement">
+<!ENTITY intro-more.link                  "http://labs.mozilla.com/projects/weave/">
+<!ENTITY intro-terms1.label               "The Weave Services are made available to you subject to terms of services, which contain certain restrictions, disclaimers of warranty, and limitations of liability. The full set of terms may be found">
+<!ENTITY intro-terms2.label               "here">
+<!ENTITY intro-terms2.link                "http://foo">
+<!ENTITY intro-terms3.label               ".">
+<!ENTITY intro-terms.accept               "I accept the terms of the Weave Services">
+<!ENTITY intro-terms.decline              "I do NOT accept the terms of the Weave Services">
 
 <!ENTITY welcome.title			  "Setup Options">
 <!ENTITY curUser-title.label              "Set Up Another Computer">
