@@ -2312,6 +2312,12 @@ nsFrameSelection::CharacterMove(PRBool aForward, PRBool aExtend)
 }
 
 nsresult
+nsFrameSelection::CharacterExtendForDelete()
+{
+  return MoveCaret(nsIDOMKeyEvent::DOM_VK_DELETE, PR_TRUE, eSelectCharacter);
+}
+
+nsresult
 nsFrameSelection::WordMove(PRBool aForward, PRBool aExtend)
 {
   if (aForward)
