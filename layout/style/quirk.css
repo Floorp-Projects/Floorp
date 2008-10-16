@@ -37,29 +37,16 @@
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
 
-/* Quirk: input images have a blue border (b=28010) */ 
-
-/* default border */
-input[type=image] {
-  border: 2px solid blue;
-}
-
-/* border when disabled -- only change color to gray */
-input[type=image][disabled] {
-  border-color: GrayText;
-}
-
-
 /* Quirk: make orphaned LIs have inside bullet (b=1049) */
 
 /* force inside position for orphaned lis */
 li {
-  list-style-position: inside; 
+  list-style-position: inside;
 }
 
 /* restore outside position for lists inside LIs */
-li ul, li ol, li dir, li menu { 
-  list-style-position: outside; 
+li ul, li ol, li dir, li menu {
+  list-style-position: outside;
 }
 
 /* undo previous two rules for properly nested lists */
@@ -71,12 +58,12 @@ menu ul, menu ol, menu dir, menu menu, menu li {
 }
 
 
-/* Quirk: ensure that we get proper padding if the very first 
+/* Quirk: ensure that we get proper padding if the very first
  * node in an LI is another UL or OL. This is an ugly way to
  * fix the problem, because it extends the LI up into what
  * would otherwise appear to be the ULs space. (b=38832) */
 
-/* Note: this fix will fail once we implement marker box 
+/* Note: this fix will fail once we implement marker box
  * alignment correctly. */
 li > ul:-moz-first-node,
 li > ol:-moz-first-node {
@@ -256,17 +243,17 @@ img[align=right] {
 }
 
 
-/* Quirk: Make sure that the residual style tags' size info. 
+/* Quirk: Make sure that the residual style tags' size info.
  * does not take precedence over heading tags' size. (b=77352)
- * Note: This special attribute is set only for a residual 
+ * Note: This special attribute is set only for a residual
  * style tag within a heading tag.
  */
 
 /* XXX This is a potential performance problem.  This should not be
  * using an attribute!
  */
-*[_moz-rs-heading] { 
-  font-size: inherit !important; 
+*[_moz-rs-heading] {
+  font-size: inherit !important;
 }
 
 
