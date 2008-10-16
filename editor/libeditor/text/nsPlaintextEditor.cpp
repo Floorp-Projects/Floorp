@@ -637,6 +637,63 @@ nsPlaintextEditor::GetTextSelectionOffsets(nsISelection *aSelection,
   return NS_OK;
 }
 
+nsresult
+nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
+                                            nsIEditor::EDirection *aAction)
+{
+  nsresult result;
+
+  PRBool bCollapsed;
+  result = aSelection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(result)) return result;
+
+  if (*aAction == eNextWord || *aAction == ePreviousWord
+      || (*aAction == eNext && bCollapsed)
+      || *aAction == eToBeginningOfLine || *aAction == eToEndOfLine)
+  {
+    nsCOMPtr<nsISelectionController> selCont (do_QueryReferent(mSelConWeak));
+    if (!selCont)
+      return NS_ERROR_NO_INTERFACE;
+
+    switch (*aAction)
+    {
+      case eNextWord:
+        result = selCont->WordExtendForDelete(PR_TRUE);
+        // DeleteSelectionImpl doesn't handle these actions
+        // because it's inside batching, so don't confuse it:
+        *aAction = eNone;
+        break;
+      case ePreviousWord:
+        result = selCont->WordExtendForDelete(PR_FALSE);
+        *aAction = eNone;
+        break;
+      case eNext:
+        result = selCont->CharacterExtendForDelete();
+        *aAction = eNone;
+        break;
+      case ePrevious:
+        /* FIXME: extend selection over UTF-16 surrogates for Bug #332636
+         * and set *aAction = eNone
+         */
+        result = NS_OK;
+        break;
+      case eToBeginningOfLine:
+        selCont->IntraLineMove(PR_TRUE, PR_FALSE);          // try to move to end
+        result = selCont->IntraLineMove(PR_FALSE, PR_TRUE); // select to beginning
+        *aAction = eNone;
+        break;
+      case eToEndOfLine:
+        result = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
+        *aAction = eNext;
+        break;
+      default:       // avoid several compiler warnings
+        result = NS_OK;
+        break;
+    }
+  }
+  return result;
+}
+
 NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -673,45 +730,6 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
     { 
       aAction = eNone;
     }
-
-  // If it's one of these modes,
-  // we have to extend the selection first.
-  // This needs to happen inside selection batching,
-  // otherwise the deleted text is autocopied to the clipboard.
-  if (aAction == eNextWord || aAction == ePreviousWord
-      || aAction == eToBeginningOfLine || aAction == eToEndOfLine)
-  {
-    nsCOMPtr<nsISelectionController> selCont (do_QueryReferent(mSelConWeak));
-    if (!selCont)
-      return NS_ERROR_NO_INTERFACE;
-
-    switch (aAction)
-    {
-        case eNextWord:
-          result = selCont->WordExtendForDelete(PR_TRUE);
-          // DeleteSelectionImpl doesn't handle these actions
-          // because it's inside batching, so don't confuse it:
-          aAction = eNone;
-          break;
-        case ePreviousWord:
-          result = selCont->WordExtendForDelete(PR_FALSE);
-          aAction = eNone;
-          break;
-        case eToBeginningOfLine:
-          selCont->IntraLineMove(PR_TRUE, PR_FALSE);          // try to move to end
-          result = selCont->IntraLineMove(PR_FALSE, PR_TRUE); // select to beginning
-          aAction = eNone;
-          break;
-        case eToEndOfLine:
-          result = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
-          aAction = eNext;
-          break;
-        default:       // avoid several compiler warnings
-          result = NS_OK;
-          break;
-    }
-    NS_ENSURE_SUCCESS(result, result);
-  }
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kDeleteSelection);
   ruleInfo.collapsedAction = aAction;
