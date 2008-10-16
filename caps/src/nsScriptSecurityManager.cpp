@@ -1989,27 +1989,6 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
         //-- Check to see if we already have this principal.
         nsCOMPtr<nsIPrincipal> fromTable;
         mPrincipals.Get(principal, getter_AddRefs(fromTable));
-        if (!fromTable)
-        {
-            //-- Check to see if we have a more general principal
-
-            // XXXbz if only GetOrigin returned a URI!  Or better yet if the
-            // HashKey function on principals were smarter.  As it is, we can
-            // have cases where two principals will have different hashkeys but
-            // test equal via KeyEquals, which is absolutely silly.  That's
-            // what we're working around here.
-            nsXPIDLCString originUrl;
-            rv = principal->GetOrigin(getter_Copies(originUrl));
-            if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsIURI> newURI;
-            rv = NS_NewURI(getter_AddRefs(newURI), originUrl, nsnull, sIOService);
-            if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsIPrincipal> principal2;
-            rv = CreateCodebasePrincipal(newURI, getter_AddRefs(principal2));
-            if (NS_FAILED(rv)) return rv;
-            mPrincipals.Get(principal2, getter_AddRefs(fromTable));
-        }
-
         if (fromTable) {
             // We found an existing codebase principal.  But it might have a
             // generic codebase for this origin on it.  Install our particular
