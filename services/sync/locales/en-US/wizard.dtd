@@ -6,7 +6,7 @@
 <!ENTITY intro-more.link                  "http://labs.mozilla.com/projects/weave/">
 <!ENTITY intro-terms1.label               "The Weave Services are made available to you subject to terms of services, which contain certain restrictions, disclaimers of warranty, and limitations of liability. The full set of terms may be found">
 <!ENTITY intro-terms2.label               "here">
-<!ENTITY intro-terms2.link                "http://foo">
+<!ENTITY intro-terms2.link                "http://labs.mozilla.com/projects/weave/tos/">
 <!ENTITY intro-terms3.label               ".">
 <!ENTITY intro-terms.accept               "I accept the terms of the Weave Services">
 <!ENTITY intro-terms.decline              "I do NOT accept the terms of the Weave Services">
