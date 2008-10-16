@@ -38,7 +38,7 @@
 #ifndef nsIEventListenerManager_h__
 #define nsIEventListenerManager_h__
 
-#include "nsGUIEvent.h"
+#include "nsEvent.h"
 #include "nsISupports.h"
 
 class nsPresContext;
@@ -63,7 +63,7 @@ public:
 
   nsIEventListenerManager() : mMayHavePaintEventListener(PR_FALSE),
     mMayHaveMutationListeners(PR_FALSE),
-    mNoListenerForEvent(NS_EVENT_TYPE_NULL)
+    mNoListenerForEvent(0)
   {}
 
   /**
