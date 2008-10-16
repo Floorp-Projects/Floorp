@@ -172,9 +172,10 @@ STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring(
     /* [in] */ unsigned int aEndIndex)
 {
 __try {
-  nsresult rv = nsAccUtils::ScrollSubstringTo(GetFrame(), mDOMNode, aStartIndex,
-                                              mDOMNode, aEndIndex,
-                                              nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
+  nsresult rv =
+    nsCoreUtils::ScrollSubstringTo(GetFrame(), mDOMNode, aStartIndex,
+                                   mDOMNode, aEndIndex,
+                                   nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
   if (NS_FAILED(rv))
     return E_FAIL;
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }

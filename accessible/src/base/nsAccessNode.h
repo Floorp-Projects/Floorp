@@ -45,7 +45,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsAccessibilityUtils.h"
+#include "nsCoreUtils.h"
 
 #include "nsIAccessibleTypes.h"
 #include "nsIAccessNode.h"

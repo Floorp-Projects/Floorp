@@ -341,8 +341,9 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
       if (isXUL) {
         // Try XUL <description control="[id]">description text</description>
         nsIContent *descriptionContent =
-          nsAccUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::control,
-                                                  nsAccessibilityAtoms::description);
+          nsCoreUtils::FindNeighbourPointingToNode(content,
+                                                   nsAccessibilityAtoms::control,
+                                                   nsAccessibilityAtoms::description);
 
         if (descriptionContent) {
           // We have a description content node
@@ -436,14 +437,14 @@ nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
   if (!content)
     return NS_ERROR_FAILURE;
 
-  PRUint32 key = nsAccUtils::GetAccessKeyFor(content);
+  PRUint32 key = nsCoreUtils::GetAccessKeyFor(content);
   if (!key && content->IsNodeOfType(nsIContent::eELEMENT)) {
     // Copy access key from label node unless it is labeled
     // via an ancestor <label>, in which case that would be redundant
     nsCOMPtr<nsIContent> labelContent(GetLabelContent(content));
     nsCOMPtr<nsIDOMNode> labelNode = do_QueryInterface(labelContent);
-    if (labelNode && !nsAccUtils::IsAncestorOf(labelNode, mDOMNode))
-      key = nsAccUtils::GetAccessKeyFor(labelContent);
+    if (labelNode && !nsCoreUtils::IsAncestorOf(labelNode, mDOMNode))
+      key = nsCoreUtils::GetAccessKeyFor(labelContent);
   }
 
   if (!key)
@@ -1070,7 +1071,7 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     *aState |= nsIAccessibleStates::STATE_FLOATING;
 
   // Add 'linked' state for simple xlink.
-  if (nsAccUtils::IsXLink(content))
+  if (nsCoreUtils::IsXLink(content))
     *aState |= nsIAccessibleStates::STATE_LINKED;
 
   return NS_OK;
@@ -1495,7 +1496,7 @@ nsAccessible::TakeFocus()
   // the ID of the desired element.
   if (!frame->IsFocusable()) {
     nsAutoString id;
-    if (content && nsAccUtils::GetID(content, id)) {
+    if (content && nsCoreUtils::GetID(content, id)) {
 
       nsCOMPtr<nsIContent> ancestorContent = content;
       while ((ancestorContent = ancestorContent->GetParent()) &&
@@ -1768,8 +1769,8 @@ nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent,
 nsIContent *nsAccessible::GetLabelContent(nsIContent *aForNode)
 {
   if (aForNode->IsNodeOfType(nsINode::eXUL))
-    return nsAccUtils::FindNeighbourPointingToNode(aForNode, nsAccessibilityAtoms::control,
-                                                   nsAccessibilityAtoms::label);
+    return nsCoreUtils::FindNeighbourPointingToNode(aForNode, nsAccessibilityAtoms::control,
+                                                    nsAccessibilityAtoms::label);
 
   return GetHTMLLabelContent(aForNode);
 }
@@ -1793,12 +1794,12 @@ nsIContent* nsAccessible::GetHTMLLabelContent(nsIContent *aForNode)
       // for="control_id" attribute. To save computing time, only 
       // look for those inside of a form element
       nsAutoString forId;
-      if (!nsAccUtils::GetID(aForNode, forId)) {
+      if (!nsCoreUtils::GetID(aForNode, forId)) {
         break;
       }
       // Actually we'll be walking down the content this time, with a depth first search
-      return nsAccUtils::FindDescendantPointingToID(&forId, walkUpContent,
-                                                    nsAccessibilityAtoms::_for);
+      return nsCoreUtils::FindDescendantPointingToID(&forId, walkUpContent,
+                                                     nsAccessibilityAtoms::_for);
     }
   }
 
@@ -1950,8 +1951,8 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
   if (NS_FAILED(rv) || label.IsEmpty()) {
     label.Truncate();
     nsIContent *labelContent =
-      nsAccUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::control,
-                                              nsAccessibilityAtoms::label);
+      nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::control,
+                                               nsAccessibilityAtoms::label);
 
     nsCOMPtr<nsIDOMXULLabelElement> xulLabel(do_QueryInterface(labelContent));
     // Check if label's value attribute is used
@@ -2125,7 +2126,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 
   nsAutoString id;
   nsAutoString oldValueUnused;
-  if (nsAccUtils::GetID(content, id)) {
+  if (nsCoreUtils::GetID(content, id)) {
     // Expose ID. If an <iframe id> exists override the one on the <body> of the source doc,
     // because the specific instance is what makes the ID useful for scripts
     attributes->SetStringProperty(NS_LITERAL_CSTRING("id"), id, oldValueUnused);
@@ -2168,7 +2169,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
   }
 
   // Level/setsize/posinset
-  if (!nsAccUtils::HasAccGroupAttrs(attributes)) {
+  if (!nsCoreUtils::HasAccGroupAttrs(attributes)) {
     // The role of an accessible can be pointed by ARIA attribute but ARIA
     // posinset, level, setsize may be skipped. Therefore we calculate here
     // these properties to map them into description.
@@ -2253,8 +2254,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
         }
       }
 
-      nsAccUtils::SetAccGroupAttrs(attributes, groupLevel, positionInGroup,
-                                   setSize);
+      nsCoreUtils::SetAccGroupAttrs(attributes, groupLevel, positionInGroup,
+                                    setSize);
     }
   }
 
@@ -2268,7 +2269,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       attrAtom->GetUTF8String(&attrStr);
       if (PL_strncmp(attrStr, "aria-", 5)) 
         continue; // Not ARIA
-      if (!nsAccUtils::IsARIAPropForObjectAttr(attrAtom))
+      if (!nsCoreUtils::IsARIAPropForObjectAttr(attrAtom))
         continue; // No need to expose obj attribute -- will be exposed some other way
       nsAutoString value;
       if (content->GetAttr(kNameSpaceID_None, attrAtom, value)) {
@@ -2303,7 +2304,7 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   // Let the class from an iframe's document be exposed, don't override from <iframe class>
   nsAutoString _class;
   if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::_class, _class))
-    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::_class, _class);
+    nsCoreUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::_class, _class);
 
   // Get container-foo computed live region properties based on the closest container with
   // the live region attribute. 
@@ -2320,7 +2321,8 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     NS_ENSURE_STATE(docNode);
     nsIContent *topContent = GetRoleContent(docNode);
     NS_ENSURE_STATE(topContent);
-    nsAccUtils::GetLiveContainerAttributes(aAttributes, startContent, topContent);
+    nsCoreUtils::GetLiveContainerAttributes(aAttributes, startContent,
+                                            topContent);
     // Allow ARIA live region markup from outer documents to override
     nsCOMPtr<nsISupports> container = doc->GetContainer();
     nsIDocShellTreeItem *docShellTreeItem = nsnull;
@@ -2344,8 +2346,8 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
                                       NS_LITERAL_STRING("display"),
                                       displayValue);
   if (NS_SUCCEEDED(rv))
-    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::display,
-                           displayValue);
+    nsCoreUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::display,
+                            displayValue);
   return NS_OK;
 }
 
@@ -2376,7 +2378,7 @@ nsAccessible::GroupPosition(PRInt32 *aGroupLevel,
     return NS_ERROR_FAILURE;
   }
   PRInt32 level, posInSet, setSize;
-  nsAccUtils::GetAccGroupAttrs(attributes, &level, &posInSet, &setSize);
+  nsCoreUtils::GetAccGroupAttrs(attributes, &level, &posInSet, &setSize);
 
   if (!posInSet && !setSize)
     return NS_OK;
@@ -2444,7 +2446,7 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
         tabPanelAccessNode->GetDOMNode(getter_AddRefs(tabPanelNode));
         NS_ENSURE_STATE(tabPanelNode);
 
-        if (nsAccUtils::IsAncestorOf(tabPanelNode, gLastFocusedNode))
+        if (nsCoreUtils::IsAncestorOf(tabPanelNode, gLastFocusedNode))
           *aState |= nsIAccessibleStates::STATE_SELECTED;
       }
     }
@@ -2481,7 +2483,7 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
     // is the current one that would get focus if the user navigates to the container widget.
     nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
     nsAutoString id;
-    if (content && nsAccUtils::GetID(content, id)) {
+    if (content && nsCoreUtils::GetID(content, id)) {
       nsIContent *ancestorContent = content;
       nsAutoString activeID;
       while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
@@ -2641,7 +2643,7 @@ nsAccessible::GetValue(nsAString& aValue)
     return NS_OK;
 
   // Check if it's a simple xlink.
-  if (nsAccUtils::IsXLink(content)) {
+  if (nsCoreUtils::IsXLink(content)) {
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
     if (presShell)
       return presShell->GetLinkLocation(mDOMNode, aValue);
@@ -2755,7 +2757,7 @@ NS_IMETHODIMP nsAccessible::GetRole(PRUint32 *aRole)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (nsAccUtils::IsXLink(content))
+  if (nsCoreUtils::IsXLink(content))
     *aRole = nsIAccessibleRole::ROLE_LINK;
 
   return NS_OK;
@@ -2938,7 +2940,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       if (relatedID.IsEmpty()) {
         relatedNode =
-          do_QueryInterface(nsAccUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_labelledby));
+          do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_labelledby));
       }
       break;
     }
@@ -2953,14 +2955,14 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
     {
       if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_describedby, relatedID)) {
         relatedNode = do_QueryInterface(
-          nsAccUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::control, nsAccessibilityAtoms::description));
+          nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::control, nsAccessibilityAtoms::description));
       }
       break;
     }
   case nsIAccessibleRelation::RELATION_DESCRIPTION_FOR:
     {
       relatedNode =
-        do_QueryInterface(nsAccUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_describedby));
+        do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_describedby));
 
       if (!relatedNode && content->Tag() == nsAccessibilityAtoms::description &&
           content->IsNodeOfType(nsINode::eXUL)) {
@@ -2975,10 +2977,10 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
   case nsIAccessibleRelation::RELATION_NODE_CHILD_OF:
     {
       relatedNode =
-        do_QueryInterface(nsAccUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_owns));
+        do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_owns));
       if (!relatedNode && mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
         // This is an ARIA tree that doesn't use owns, so we need to get the parent the hard way
-        nsAccUtils::GetARIATreeItemParent(this, content, aRelated);
+        nsCoreUtils::GetARIATreeItemParent(this, content, aRelated);
         return NS_OK;
       }
       // If accessible is in its own Window then we should provide NODE_CHILD_OF relation
@@ -3001,7 +3003,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
   case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
     {
       relatedNode =
-        do_QueryInterface(nsAccUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_controls));
+        do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_controls));
       break;
     }
   case nsIAccessibleRelation::RELATION_CONTROLLER_FOR:
@@ -3017,7 +3019,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
   case nsIAccessibleRelation::RELATION_FLOWS_FROM:
     {
       relatedNode =
-        do_QueryInterface(nsAccUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_flowto));
+        do_QueryInterface(nsCoreUtils::FindNeighbourPointingToNode(content, nsAccessibilityAtoms::aria_flowto));
       break;
     }
   case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON:
@@ -3199,12 +3201,12 @@ void nsAccessible::DoCommandCallback(nsITimer *aTimer, void *aClosure)
                                    NS_PRESSHELL_SCROLL_ANYWHERE);
 
   // Fire mouse down and mouse up events.
-  PRBool res = nsAccUtils::DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, presShell,
-                                              content);
+  PRBool res = nsCoreUtils::DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, presShell,
+                                               content);
   if (!res)
     return;
 
-  nsAccUtils::DispatchMouseEvent(NS_MOUSE_BUTTON_UP, presShell, content);
+  nsCoreUtils::DispatchMouseEvent(NS_MOUSE_BUTTON_UP, presShell, content);
 }
 
 /*
@@ -3445,7 +3447,7 @@ nsAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 
   // Check if it's a simple xlink.
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (nsAccUtils::IsXLink(content)) {
+  if (nsCoreUtils::IsXLink(content)) {
     nsAutoString href;
     content->GetAttr(kNameSpaceID_XLink, nsAccessibilityAtoms::href, href);
 
@@ -3714,12 +3716,12 @@ nsAccessible::GetActionRule(PRUint32 aStates)
 
   // Check if it's simple xlink.
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (nsAccUtils::IsXLink(content))
+  if (nsCoreUtils::IsXLink(content))
     return eJumpAction;
 
   // Has registered 'click' event handler.
-  PRBool isOnclick = nsAccUtils::HasListener(content,
-                                             NS_LITERAL_STRING("click"));
+  PRBool isOnclick = nsCoreUtils::HasListener(content,
+                                              NS_LITERAL_STRING("click"));
 
   if (isOnclick)
     return eClickAction;

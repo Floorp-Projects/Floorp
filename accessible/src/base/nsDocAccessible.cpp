@@ -117,7 +117,7 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   mAccessNodeCache.Init(kDefaultCacheSize);
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(docShellTreeItem);
   if (docShell) {
     PRUint32 busyFlags;
@@ -203,7 +203,7 @@ NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
   *aRole = nsIAccessibleRole::ROLE_PANE; // Fall back
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   if (docShellTreeItem) {
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
     docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
@@ -247,7 +247,7 @@ NS_IMETHODIMP nsDocAccessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
   nsIContent *ownerContent = parentDoc->FindContentForSubDocument(mDocument);
   nsCOMPtr<nsIDOMNode> ownerNode(do_QueryInterface(ownerContent));
   if (ownerNode) {
-    nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(ownerNode);
+    nsRoleMapEntry *roleMapEntry = nsCoreUtils::GetRoleMapEntry(ownerNode);
     if (roleMapEntry)
       mRoleMapEntry = roleMapEntry; // Override
   }
@@ -371,7 +371,7 @@ NS_IMETHODIMP nsDocAccessible::TakeFocus()
   }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
@@ -507,7 +507,7 @@ NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
   if (!mDocument->HasFlag(NODE_IS_EDITABLE)) {
     nsCOMPtr<nsIDOMNode> DOMDocument(do_QueryInterface(mDocument));
     nsCOMPtr<nsIDOMElement> DOMElement =
-      nsAccUtils::GetDOMElementFor(DOMDocument);
+      nsCoreUtils::GetDOMElementFor(DOMDocument);
     nsCOMPtr<nsIContent> content(do_QueryInterface(DOMElement));
 
     if (!content->HasFlag(NODE_IS_EDITABLE))
@@ -617,7 +617,7 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
   }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   ShutdownChildDocuments(treeItem);
 
   RemoveEventListeners();
@@ -873,7 +873,7 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
   }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
+    nsCoreUtils::GetDocShellTreeItemFor(mDOMNode);
   if (!treeItem) {
     return NS_OK;
   }
@@ -897,7 +897,7 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
     // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
     if (gLastFocusedNode) {
       nsCOMPtr<nsIDocShellTreeItem> focusedTreeItem =
-        nsAccUtils::GetDocShellTreeItemFor(gLastFocusedNode);
+        nsCoreUtils::GetDocShellTreeItemFor(gLastFocusedNode);
       if (focusedTreeItem) {
         nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
         focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));
@@ -922,7 +922,7 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
       FireAccessibleEvent(accEvent);
     }
 
-    nsAccUtils::FireAccEvent(aEventType, this);
+    nsCoreUtils::FireAccEvent(aEventType, this);
   }
   return NS_OK;
 }
@@ -937,7 +937,7 @@ void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
     // We only want to fire accessibilty scroll event when scrolling stops or pauses
     // Therefore, we wait for no scroll events to occur between 2 ticks of this timer
     // That indicates a pause in scrolling, so we fire the accessibilty scroll event
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SCROLLING_END, docAcc);
+    nsCoreUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SCROLLING_END, docAcc);
 
     docAcc->mScrollPositionChangedTicks = 0;
     if (docAcc->mScrollWatchTimer) {
@@ -1480,7 +1480,7 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
         do_QueryInterface(changeAccessible);
       nsCOMPtr<nsIDOMNode> childNode;
       childAccessNode->GetDOMNode(getter_AddRefs(childNode));
-      if (!nsAccUtils::IsAncestorOf(aChangeNode, childNode)) {
+      if (!nsCoreUtils::IsAncestorOf(aChangeNode, childNode)) {
         break;  // We only want accessibles with DOM nodes as children of this node
       }
       length += TextLength(child);
@@ -1677,7 +1677,7 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
           // line-number object attribute on it
           nsCOMPtr<nsIAccessible> accForFocus;
           GetAccService()->GetAccessibleFor(gLastFocusedNode, getter_AddRefs(accForFocus));
-          nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_ALERT, accForFocus);
+          nsCoreUtils::FireAccEvent(nsIAccessibleEvent::EVENT_ALERT, accForFocus);
 #endif
           nsCOMPtr<nsIAccessibleCaretMoveEvent> caretMoveEvent =
             new nsAccCaretMoveEvent(accessible, caretOffset);
@@ -1689,8 +1689,8 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
           PRInt32 selectionCount;
           accessibleText->GetSelectionCount(&selectionCount);
           if (selectionCount) {  // There's a selection so fire selection change as well
-            nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED,
-                                     accessible, PR_TRUE);
+            nsCoreUtils::FireAccEvent(nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED,
+                                      accessible, PR_TRUE);
           }
         } 
       }
@@ -1773,8 +1773,8 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
       if (!popup) {
         // Popup elements already fire these via DOMMenuInactive
         // handling in nsRootAccessible::HandleEvent
-        nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
-                                 accessible);
+        nsCoreUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
+                                  accessible);
       }
     }
     nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(accessible);
@@ -2013,7 +2013,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 
     // Check to see change occured in an ARIA menu, and fire
     // an EVENT_MENUPOPUP_START if it did.
-    nsRoleMapEntry *roleMapEntry = nsAccUtils::GetRoleMapEntry(childNode);
+    nsRoleMapEntry *roleMapEntry = nsCoreUtils::GetRoleMapEntry(childNode);
     if (roleMapEntry && roleMapEntry->role == nsIAccessibleRole::ROLE_MENUPOPUP) {
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
                               childNode, nsAccEvent::eRemoveDupes,
@@ -2034,7 +2034,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       if (!ancestorNode) {
         break;
       }
-      roleMapEntry = nsAccUtils::GetRoleMapEntry(ancestorNode);
+      roleMapEntry = nsCoreUtils::GetRoleMapEntry(ancestorNode);
     }
   }
 
