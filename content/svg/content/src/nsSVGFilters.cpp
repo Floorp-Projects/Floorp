@@ -71,9 +71,11 @@
 #include "nsSVGFilterElement.h"
 #include "nsSVGString.h"
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) 
 // Prevent Windows redefining LoadImage
+#ifndef WINCE
 #undef LoadImage
+#endif
 #endif
 
 static void
