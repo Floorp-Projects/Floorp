@@ -239,10 +239,12 @@ nsSVGMarkerProperty::DoUpdate()
     return;
 
   if (mFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
-    if (outerSVGFrame) {
-      // marker changes can change the covered region
-      outerSVGFrame->UpdateAndInvalidateCoveredRegion(mFrame);
+    if (!(mFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+      nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
+      if (outerSVGFrame) {
+        // marker changes can change the covered region
+        outerSVGFrame->UpdateAndInvalidateCoveredRegion(mFrame);
+      }
     }
   } else {
     InvalidateAllContinuations(mFrame);
