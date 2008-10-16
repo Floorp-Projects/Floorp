@@ -800,6 +800,11 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
     NS_LITERAL_CSTRING("PRAGMA locking_mode = EXCLUSIVE"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // We use the TRUNCATE journal mode to reduce the number of fsyncs
+  rv = mDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("PRAGMA journal_mode = TRUNCATE"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // moz_places
   if (!tableExists) {
     *aMadeChanges = DB_MIGRATION_CREATED;
