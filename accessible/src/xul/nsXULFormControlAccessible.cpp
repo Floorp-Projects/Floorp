@@ -582,7 +582,7 @@ nsXULRadioButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAttr
   nsresult rv = nsFormControlAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCoreUtils::SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
+  nsAccUtils::SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
 
   return NS_OK;
 }
@@ -684,7 +684,7 @@ nsXULToolbarButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAt
     }
   }
   
-  nsCoreUtils::SetAccGroupAttrs(aAttributes, 0, posInSet, setSize);
+  nsAccUtils::SetAccGroupAttrs(aAttributes, 0, posInSet, setSize);
 
   return NS_OK;
 }

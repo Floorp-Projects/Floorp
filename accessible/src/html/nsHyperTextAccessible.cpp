@@ -1217,8 +1217,8 @@ nsHyperTextAccessible::GetDefaultTextAttributes(nsIPersistentProperties **aAttri
 
     nsAutoString value;
     if (backgroundTextAttr.Get(value)) {
-      nsCoreUtils::SetAccAttr(attributes,
-                              nsAccessibilityAtoms::backgroundColor, value);
+      nsAccUtils::SetAccAttr(attributes,
+                             nsAccessibilityAtoms::backgroundColor, value);
     }
   }
 
@@ -1256,8 +1256,8 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
   if (headLevel) {
     nsAutoString strHeadLevel;
     strHeadLevel.AppendInt(headLevel);
-    nsCoreUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::level,
-                            strHeadLevel);
+    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::level,
+                           strHeadLevel);
   }
   
   // Indicate when the current object uses block-level formatting
@@ -1276,8 +1276,8 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
     if (lineNumber >= 1) {
       nsAutoString strLineNumber;
       strLineNumber.AppendInt(lineNumber);
-      nsCoreUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::lineNumber,
-                              strLineNumber);
+      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::lineNumber,
+                             strLineNumber);
     }
   }
 
@@ -1314,7 +1314,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRangeExtents(PRInt32 aStartOffset, PRInt
   *aWidth = boundsRect.width;
   *aHeight = boundsRect.height;
 
-  return nsCoreUtils::ConvertScreenCoordsTo(aX, aY, aCoordType, this);
+  return nsAccUtils::ConvertScreenCoordsTo(aX, aY, aCoordType, this);
 }
 
 /*
@@ -1337,8 +1337,8 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
   nsIntRect frameScreenRect = hyperFrame->GetScreenRectExternal();
 
   nsIntPoint coords;
-  nsresult rv = nsCoreUtils::ConvertToScreenCoords(aX, aY, aCoordType,
-                                                   this, &coords);
+  nsresult rv = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordType,
+                                                  this, &coords);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // coords are currently screen coordinates, and we need to turn them into
@@ -2006,8 +2006,8 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
     return NS_ERROR_FAILURE;
 
   nsIntPoint coords;
-  nsresult rv = nsCoreUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
-                                                   this, &coords);
+  nsresult rv = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
+                                                  this, &coords);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 startOffset, endOffset;
@@ -2266,8 +2266,8 @@ nsHyperTextAccessible::GetSpellTextAttribute(nsIDOMNode *aNode,
         *aHTEndOffset = endHTOffset;
 
       if (aAttributes) {
-        nsCoreUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::invalid,
-                                NS_LITERAL_STRING("spelling"));
+        nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::invalid,
+                               NS_LITERAL_STRING("spelling"));
       }
 
       return NS_OK;
@@ -2303,8 +2303,8 @@ nsHyperTextAccessible::GetLangTextAttributes(PRBool aIncludeDefAttrs,
     // element or we should include default values of text attribute.
     const nsAString& resultLang = lang.IsEmpty() ? rootLang : lang;
     if (!resultLang.IsEmpty() && (aIncludeDefAttrs || lang != rootLang))
-      nsCoreUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::language,
-                              resultLang);
+      nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::language,
+                             resultLang);
   }
 
   nsLangTextAttr textAttr(lang, rootContent);
@@ -2345,8 +2345,8 @@ nsHyperTextAccessible::GetCSSTextAttributes(PRBool aIncludeDefAttrs,
     nsBackgroundTextAttr backgroundTextAttr(sourceFrame, rootFrame);
     nsAutoString value;
     if (backgroundTextAttr.Get(value)) {
-      nsCoreUtils::SetAccAttr(aAttributes,
-                              nsAccessibilityAtoms::backgroundColor, value);
+      nsAccUtils::SetAccAttr(aAttributes,
+                             nsAccessibilityAtoms::backgroundColor, value);
     }
 
     nsresult rv = GetRangeForTextAttr(aSourceNode, &backgroundTextAttr,
