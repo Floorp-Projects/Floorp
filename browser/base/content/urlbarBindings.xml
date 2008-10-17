@@ -418,7 +418,7 @@
     <handlers>
       <handler event="focus" phase="capturing" action="this._hideURLTooltip();"/>
       <handler event="dragover" phase="capturing" action="nsDragAndDrop.dragOver(event, this);"/>
-      <handler event="dragdrop" phase="capturing" action="nsDragAndDrop.drop(event, this);"/>
+      <handler event="drop" phase="capturing" action="nsDragAndDrop.drop(event, this);"/>
       <handler event="select"><![CDATA[
         if (!Cc["@mozilla.org/widget/clipboard;1"]
                .getService(Ci.nsIClipboard)

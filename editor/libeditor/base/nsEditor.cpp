@@ -104,6 +104,7 @@
 #include "JoinElementTxn.h"
 #include "nsStyleSheetTxns.h"
 #include "IMETextTxn.h"
+#include "nsString.h"
 
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
@@ -319,8 +320,14 @@ nsEditor::InstallEventListeners()
   rv |= piTarget->AddEventListenerByIID(mCompositionListenerP,
                                         NS_GET_IID(nsIDOMCompositionListener));
 
-  rv |= piTarget->AddEventListenerByIID(mDragListenerP,
-                                        NS_GET_IID(nsIDOMDragListener));
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(piTarget));
+  if (target) {
+    rv |= target->AddEventListener(NS_LITERAL_STRING("dragstart"), mDragListenerP, PR_FALSE);
+    rv |= target->AddEventListener(NS_LITERAL_STRING("dragenter"), mDragListenerP, PR_FALSE);
+    rv |= target->AddEventListener(NS_LITERAL_STRING("dragover"), mDragListenerP, PR_FALSE);
+    rv |= target->AddEventListener(NS_LITERAL_STRING("dragleave"), mDragListenerP, PR_FALSE);
+    rv |= target->AddEventListener(NS_LITERAL_STRING("drop"), mDragListenerP, PR_FALSE);
+  }
 
   if (NS_FAILED(rv))
   {
@@ -388,8 +395,14 @@ nsEditor::RemoveEventListeners()
 
     if (mDragListenerP)
     {
-      piTarget->RemoveEventListenerByIID(mDragListenerP,
-                                         NS_GET_IID(nsIDOMDragListener));
+      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(piTarget));
+      if (target) {
+        target->RemoveEventListener(NS_LITERAL_STRING("dragstart"), mDragListenerP, PR_FALSE);
+        target->RemoveEventListener(NS_LITERAL_STRING("dragenter"), mDragListenerP, PR_FALSE);
+        target->RemoveEventListener(NS_LITERAL_STRING("dragover"), mDragListenerP, PR_FALSE);
+        target->RemoveEventListener(NS_LITERAL_STRING("dragleave"), mDragListenerP, PR_FALSE);
+        target->RemoveEventListener(NS_LITERAL_STRING("drop"), mDragListenerP, PR_FALSE);
+      }
     }
   }
 }
