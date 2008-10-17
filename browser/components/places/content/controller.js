@@ -879,11 +879,22 @@ PlacesController.prototype = {
       if (PlacesUtils.nodeIsFolder(node))
         removedFolders.push(node);
       else if (PlacesUtils.nodeIsTagQuery(node.parent)) {
-        var queries = asQuery(node.parent).getQueries({});
-        var folders = queries[0].getFolders({});
+        var tagItemId = PlacesUtils.getConcreteItemId(node.parent);
         var uri = PlacesUtils._uri(node.uri);
-        var tagItemId = folders[0];
         transactions.push(PlacesUIUtils.ptm.untagURI(uri, [tagItemId]));
+        continue;
+      }
+      else if (PlacesUtils.nodeIsTagQuery(node) && node.parent &&
+               PlacesUtils.nodeIsQuery(node.parent) &&
+               asQuery(node.parent).queryOptions.resultType ==
+                 Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY) {
+        // Untag all URIs tagged with this tag only if the tag container is
+        // child of the "Tags" query in the library, in all other places we
+        // must only remove the query node.
+        var tag = node.title;
+        var URIs = PlacesUtils.tagging.getURIsForTag(tag);
+        for (var j = 0; j < URIs.length; j++)
+          transactions.push(PlacesUIUtils.ptm.untagURI(URIs[j], [tag]));
         continue;
       }
       else if (PlacesUtils.nodeIsQuery(node.parent) &&
