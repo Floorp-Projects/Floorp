@@ -413,6 +413,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBVisitToURLResult; // kGetInfoIndex_* results
   mozIStorageStatement *GetDBVisitToVisitResult();
   nsCOMPtr<mozIStorageStatement> mDBVisitToVisitResult; // kGetInfoIndex_* results
+  mozIStorageStatement *GetDBBookmarkToUrlResult();
   nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
 
   // nsICharsetResolver
