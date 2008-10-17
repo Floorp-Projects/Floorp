@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *  Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,23 +38,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/PlacesBackground.jsm");
+/**
+ * This test ensures that when adding a visit, then syncing, and adding another
+ * visit to the same url creates two visits and that we only end up with one
+ * entry in moz_places.
+ */
+
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+         getService(Ci.nsINavHistoryService);
+var db = Cc["@mozilla.org/browser/nav-history-service;1"].
+         getService(Ci.nsPIPlacesDatabase).
+         DBConnection;
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefService).
+            getBranch("places.");
 
 const TEST_URI = "http://test.com/";
+
 const kSyncPrefName = "syncDBTableIntervalInSecs";
 const SYNC_INTERVAL = 1;
 
 function run_test()
 {
   // First set the preference for the timer to a small value
-  let prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefService).
-              getBranch("places.");
   prefs.setIntPref(kSyncPrefName, SYNC_INTERVAL);
 
-  // Now add the visit
-  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsINavHistoryService);
+  // Now add the first visit
   let id = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
                        hs.TRANSITION_TYPED, false, 0);
 
@@ -63,9 +73,55 @@ function run_test()
   timer.initWithCallback({
     notify: function(aTimer)
     {
-      PlacesBackground.dispatch(new_test_visit_uri_event(id, TEST_URI, true, true),
-                                Ci.nsIEventTarget.DISPATCH_NORMAL);
+      new_test_visit_uri_event(id, TEST_URI, true);
+
+      // Get the place_id and pass it on
+      let db = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+      let stmt = db.createStatement(
+        "SELECT place_id " +
+        "FROM moz_historyvisits " +
+        "WHERE id = ?"
+      );
+      stmt.bindInt64Parameter(0, id);
+      do_check_true(stmt.executeStep());
+      continue_test(id, stmt.getInt64(0));
+      stmt.finalize();
+      stmt = null;
     }
   }, (SYNC_INTERVAL * 1000) * 2, Ci.nsITimer.TYPE_ONE_SHOT);
   do_test_pending();
+}
+
+function continue_test(aLastVisitId, aPlaceId)
+{
+  // Now we add another visit
+  let id = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
+                       hs.TRANSITION_TYPED, false, 0);
+  do_check_neq(aLastVisitId, id);
+
+  // Check the visit, but after enough time has passed for the DB flush service
+  // to have fired it's timer.
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback({
+    notify: function(aTimer)
+    {
+      new_test_visit_uri_event(id, TEST_URI, true);
+
+      // Check to make sure we have the same place_id
+      let db = hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+      let stmt = db.createStatement(
+        "SELECT * " +
+        "FROM moz_historyvisits " +
+        "WHERE id = ?1 " +
+        "AND place_id = ?2"
+      );
+      stmt.bindInt64Parameter(0, id);
+      stmt.bindInt64Parameter(1, aPlaceId);
+      do_check_true(stmt.executeStep());
+      stmt.finalize();
+      stmt = null;
+
+      finish_test();
+    }
+  }, (SYNC_INTERVAL * 1000) * 2, Ci.nsITimer.TYPE_ONE_SHOT);
 }
