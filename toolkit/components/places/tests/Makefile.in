@@ -49,6 +49,7 @@ MODULE		= test_places
 XPCSHELL_TESTS = \
                  autocomplete \
                  background \
+                 sync \
                  bookmarks \
                  queries \
                  unit \
