@@ -1588,8 +1588,38 @@ static const char* months[] =
    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
+
+// Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
+// requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
+static void
+print_gmt_string(char* buf, size_t size, jsdouble utctime)
+{
+    JS_snprintf(buf, size, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
+                days[WeekDay(utctime)],
+                DateFromTime(utctime),
+                months[MonthFromTime(utctime)],
+                YearFromTime(utctime),
+                HourFromTime(utctime),
+                MinFromTime(utctime),
+                SecFromTime(utctime));
+}
+
+static void
+print_iso_string(char* buf, size_t size, jsdouble utctime)
+{
+    JS_snprintf(buf, size, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ",
+                YearFromTime(utctime),
+                MonthFromTime(utctime) + 1,
+                DateFromTime(utctime),
+                HourFromTime(utctime),
+                MinFromTime(utctime),
+                SecFromTime(utctime),
+                msFromTime(utctime));
+}
+
 static JSBool
-date_toGMTString(JSContext *cx, uintN argc, jsval *vp)
+date_utc_format(JSContext *cx, jsval *vp,
+                void (*printFunc)(char*, size_t, jsdouble))
 {
     char buf[100];
     JSString *str;
@@ -1601,23 +1631,25 @@ date_toGMTString(JSContext *cx, uintN argc, jsval *vp)
     if (!JSDOUBLE_IS_FINITE(utctime)) {
         JS_snprintf(buf, sizeof buf, js_NaN_date_str);
     } else {
-        /* Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
-         * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
-         */
-        JS_snprintf(buf, sizeof buf, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
-                    days[WeekDay(utctime)],
-                    DateFromTime(utctime),
-                    months[MonthFromTime(utctime)],
-                    YearFromTime(utctime),
-                    HourFromTime(utctime),
-                    MinFromTime(utctime),
-                    SecFromTime(utctime));
+        (*printFunc)(buf, sizeof buf, utctime);
     }
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
+}
+
+static JSBool
+date_toGMTString(JSContext *cx, uintN argc, jsval *vp)
+{
+    return date_utc_format(cx, vp, print_gmt_string);
+}
+
+static JSBool
+date_toISOString(JSContext *cx, uintN argc, jsval *vp)
+{
+    return date_utc_format(cx, vp, print_iso_string);
 }
 
 /* for Date.toLocaleString; interface to PRMJTime date struct.
@@ -2027,6 +2059,9 @@ static JSFunctionSpec date_methods[] = {
     JS_FN("toLocaleFormat",      date_toLocaleFormat,     0,0),
     JS_FN("toDateString",        date_toDateString,       0,0),
     JS_FN("toTimeString",        date_toTimeString,       0,0),
+    JS_FN("toISOString",         date_toISOString,        0,0),
+    JS_FN(js_toJSON_str,         date_toISOString,        0,0),
+
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,       date_toSource,           0,0),
 #endif
