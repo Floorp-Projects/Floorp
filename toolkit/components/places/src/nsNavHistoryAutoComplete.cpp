@@ -117,6 +117,7 @@ const PRUnichar kTitleTagsSeparatorChars[] = { ' ', 0x2013, ' ', 0 };
      "(SELECT rev_host FROM moz_places WHERE id = b.fk)) " \
    "ORDER BY frecency DESC LIMIT 1) "
 
+void GetAutoCompleteBaseQuery(nsACString& aQuery) {
 // Define common pieces of various queries
 // XXX bug 412736
 // in the case of a frecency tie, break it with h.typed and h.visit_count
@@ -129,7 +130,7 @@ const PRUnichar kTitleTagsSeparatorChars[] = { ' ', 0x2013, ' ', 0 };
 
 // Note: h.frecency is selected because we need it for ordering, but will
 // not be read later and we don't have an associated kAutoCompleteIndex_
-const nsCString kAutoCompleteBaseQuery = NS_LITERAL_CSTRING(
+  aQuery = NS_LITERAL_CSTRING(
       "SELECT h.url, h.title, f.url") + BOOK_TAG_SQL + NS_LITERAL_CSTRING(", "
         "h.visit_count, h.frecency "
       "FROM moz_places_temp h "
@@ -148,6 +149,7 @@ const nsCString kAutoCompleteBaseQuery = NS_LITERAL_CSTRING(
         "ORDER BY h.frecency DESC LIMIT (?2 + ?3) "
       ") "
       "ORDER BY 8 DESC LIMIT ?2 OFFSET ?3");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsNavHistoryAutoComplete Helper Functions
@@ -305,7 +307,8 @@ nsNavHistory::GetDBAutoCompleteHistoryQuery()
   if (mDBAutoCompleteHistoryQuery)
     return mDBAutoCompleteHistoryQuery;
 
-  nsCString AutoCompleteHistoryQuery = kAutoCompleteBaseQuery;
+  nsCString AutoCompleteHistoryQuery;
+  GetAutoCompleteBaseQuery(AutoCompleteHistoryQuery);
   AutoCompleteHistoryQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
                                             "AND h.visit_count > 0");
   nsresult rv = mDBConn->CreateStatement(AutoCompleteHistoryQuery,
@@ -325,7 +328,8 @@ nsNavHistory::GetDBAutoCompleteStarQuery()
   if (mDBAutoCompleteStarQuery)
     return mDBAutoCompleteStarQuery;
 
-  nsCString AutoCompleteStarQuery = kAutoCompleteBaseQuery;
+  nsCString AutoCompleteStarQuery;
+  GetAutoCompleteBaseQuery(AutoCompleteStarQuery);
   AutoCompleteStarQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
                                          "AND bookmark IS NOT NULL");
   nsresult rv = mDBConn->CreateStatement(AutoCompleteStarQuery,
@@ -345,7 +349,8 @@ nsNavHistory::GetDBAutoCompleteTagsQuery()
   if (mDBAutoCompleteTagsQuery)
     return mDBAutoCompleteTagsQuery;
 
-  nsCString AutoCompleteTagsQuery = kAutoCompleteBaseQuery;
+  nsCString AutoCompleteTagsQuery;
+  GetAutoCompleteBaseQuery(AutoCompleteTagsQuery);
   AutoCompleteTagsQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
                                          "AND tags IS NOT NULL");
   nsresult rv = mDBConn->CreateStatement(AutoCompleteTagsQuery,
@@ -394,7 +399,8 @@ nsNavHistory::GetDBFeedbackIncrease()
 nsresult
 nsNavHistory::CreateAutoCompleteQueries()
 {
-  nsCString AutoCompleteQuery = kAutoCompleteBaseQuery;
+  nsCString AutoCompleteQuery;
+  GetAutoCompleteBaseQuery(AutoCompleteQuery);
   AutoCompleteQuery.ReplaceSubstring("{ADDITIONAL_CONDITIONS}",
                                      (mAutoCompleteOnlyTyped ?
                                         "AND h.typed = 1" : ""));
