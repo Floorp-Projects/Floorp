@@ -1959,7 +1959,11 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 #ifdef XP_MACOSX
   if (me->isControl)
     return NS_OK;//short ciruit. hard coded for mac due to time restraints.
+  PRBool control = me->isMeta;
+#else
+  PRBool control = me->isControl;
 #endif
+
   nsCOMPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
   if (me->clickCount >1 )
   {
@@ -1967,7 +1971,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     // so no need for nsWeakFrame.
     fc->SetMouseDownState(PR_TRUE);
     fc->SetMouseDoubleDown(PR_TRUE);
-    return HandleMultiplePress(aPresContext, aEvent, aEventStatus);
+    return HandleMultiplePress(aPresContext, aEvent, aEventStatus, control);
   }
 
   if (!offsets.content)
@@ -2036,12 +2040,6 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
   fc->SetMouseDownState(PR_TRUE);
 
-#ifdef XP_MACOSX
-  PRBool control = me->isMeta;
-#else
-  PRBool control = me->isControl;
-#endif
-
   // Do not touch any nsFrame members after this point without adding
   // weakFrame checks.
   rv = fc->HandleClick(offsets.content, offsets.StartOffset(),
@@ -2074,8 +2072,9 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
  */
 NS_IMETHODIMP
 nsFrame::HandleMultiplePress(nsPresContext* aPresContext, 
-                             nsGUIEvent*     aEvent,
-                             nsEventStatus*  aEventStatus)
+                             nsGUIEvent*    aEvent,
+                             nsEventStatus* aEventStatus,
+                             PRBool         aControlHeld)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
@@ -2130,7 +2129,8 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
 
   return frame->PeekBackwardAndForward(beginAmount, endAmount,
                                        offsets.offset, aPresContext,
-                                       beginAmount != eSelectWord);
+                                       beginAmount != eSelectWord,
+                                       aControlHeld);
 }
 
 NS_IMETHODIMP
@@ -2138,23 +2138,13 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                                 nsSelectionAmount aAmountForward,
                                 PRInt32 aStartPos,
                                 nsPresContext* aPresContext,
-                                PRBool aJumpLines)
+                                PRBool aJumpLines,
+                                PRBool aMultipleSelection)
 {
-  nsCOMPtr<nsISelectionController> selcon;
-  nsresult rv = GetSelectionController(aPresContext, getter_AddRefs(selcon));
-  if (NS_FAILED(rv)) return rv;
-
-  if (!selcon)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  // Use peek offset one way then the other:
-  nsCOMPtr<nsIContent> startContent;
-  nsCOMPtr<nsIDOMNode> startNode;
-  nsCOMPtr<nsIContent> endContent;
-  nsCOMPtr<nsIDOMNode> endNode;
-
   nsIFrame* baseFrame = this;
   PRInt32 baseOffset = aStartPos;
+  nsresult rv;
+
   if (aAmountBack == eSelectWord) {
     // To avoid selecting the previous word when at start of word,
     // first move one character forward.
@@ -2173,6 +2163,8 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
       baseOffset = pos.mContentOffset;
     }
   }
+
+  // Use peek offset one way then the other:  
   nsPeekOffsetStruct startpos;
   startpos.SetData(aAmountBack,
                    eDirPrevious,
@@ -2199,26 +2191,22 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   if (NS_FAILED(rv))
     return rv;
 
-  endNode = do_QueryInterface(endpos.mResultContent, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  startNode = do_QueryInterface(startpos.mResultContent, &rv);
+  // Keep frameSelection alive.
+  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+
+  rv = frameSelection->HandleClick(startpos.mResultContent,
+                                   startpos.mContentOffset, startpos.mContentOffset,
+                                   PR_FALSE, aMultipleSelection,
+                                   nsFrameSelection::HINTRIGHT);
   if (NS_FAILED(rv))
     return rv;
 
-  // Keep frameSelection alive.
-  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
-  nsCOMPtr<nsISelection> selection;
-  if (NS_SUCCEEDED(selcon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                        getter_AddRefs(selection)))){
-    rv = selection->Collapse(startNode,startpos.mContentOffset);
-    if (NS_FAILED(rv))
-      return rv;
-    rv = selection->Extend(endNode,endpos.mContentOffset);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-  //no release 
+  rv = frameSelection->HandleClick(endpos.mResultContent,
+                                   endpos.mContentOffset, endpos.mContentOffset,
+                                   PR_TRUE, PR_FALSE,
+                                   nsFrameSelection::HINTLEFT);
+  if (NS_FAILED(rv))
+    return rv;
 
   // maintain selection
   return frameSelection->MaintainSelection(aAmountBack);
