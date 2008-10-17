@@ -654,12 +654,16 @@ protected:
   static const PRInt32 kAutoCompleteIndex_VisitCount;
   nsCOMPtr<mozIStorageStatement> mDBCurrentQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
+  mozIStorageStatement* GetDBAutoCompleteHistoryQuery();
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteHistoryQuery; //  kAutoCompleteIndex_* results
+  mozIStorageStatement* GetDBAutoCompleteStarQuery();
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteStarQuery; //  kAutoCompleteIndex_* results
+  mozIStorageStatement* GetDBAutoCompleteTagsQuery();
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteTagsQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBPreviousQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBAdaptiveQuery; //  kAutoCompleteIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBKeywordQuery; //  kAutoCompleteIndex_* results
+  mozIStorageStatement* GetDBFeedbackIncrease();
   nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
   /**
