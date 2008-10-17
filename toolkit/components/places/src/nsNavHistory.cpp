@@ -996,6 +996,9 @@ nsNavHistory::InitTempTables()
     "CREATE INDEX moz_places_temp_frecencyindex ON moz_places_temp (frecency)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_SYNC_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
 
   // moz_historyvisits_temp
   rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_TEMP);
@@ -1014,6 +1017,9 @@ nsNavHistory::InitTempTables()
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE INDEX moz_historyvisits_temp_dateindex "
     "ON moz_historyvisits_temp (visit_date)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_SYNC_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
