@@ -55,7 +55,7 @@ class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
   NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGInnerSVGFrame(nsStyleContext* aContext) :
-    nsSVGInnerSVGFrameBase(aContext), mPropagateTransform(PR_TRUE) {}
+    nsSVGInnerSVGFrameBase(aContext) {}
   
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -110,8 +110,6 @@ protected:
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
-
-  PRPackedBool mPropagateTransform;
 };
 
 //----------------------------------------------------------------------
@@ -166,7 +164,7 @@ nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
     }
 
     nsCOMPtr<nsIDOMSVGMatrix> clipTransform;
-    if (!mPropagateTransform) {
+    if (!GetMatrixPropagation()) {
       NS_NewSVGMatrix(getter_AddRefs(clipTransform));
     } else {
       clipTransform = static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM();
@@ -329,7 +327,7 @@ nsSVGInnerSVGFrame::NotifyViewportChange()
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGInnerSVGFrame::GetCanvasTM()
 {
-  if (!mPropagateTransform) {
+  if (!GetMatrixPropagation()) {
     nsIDOMSVGMatrix *retval;
     if (mOverrideCTM) {
       retval = mOverrideCTM;
