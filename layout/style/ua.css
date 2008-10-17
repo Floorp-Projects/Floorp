@@ -127,7 +127,7 @@
 *|*::-moz-anonymous-block, *|*::-moz-anonymous-positioned-block {
   /* we currently inherit from the inline that is split */
   outline: inherit;
-  -moz-outline-offset: inherit;
+  outline-offset: inherit;
   clip-path: inherit;
   filter: inherit;
   mask: inherit;
