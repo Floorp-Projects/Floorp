@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,19 +38,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/PlacesBackground.jsm");
+var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+         getService(Ci.nsINavHistoryService);
+var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+         getService(Ci.nsINavBookmarksService);
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefService).
+            getBranch("places.");
 
 const TEST_URI = "http://test.com/";
 
+const kSyncPrefName = "syncDBTableIntervalInSecs";
+const SYNC_INTERVAL = 1;
+
 function run_test()
 {
-  // First insert it
-  let bh = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-           getService(Ci.nsINavBookmarksService);
-  let id = bh.insertBookmark(bh.unfiledBookmarksFolder, uri(TEST_URI),
-                             bh.DEFAULT_INDEX, "test");
+  // First set the preference for the timer to a small value
+  prefs.setIntPref(kSyncPrefName, SYNC_INTERVAL);
 
-  PlacesBackground.dispatch(new_test_bookmark_uri_event(id, TEST_URI, true, true),
-                            Ci.nsIEventTarget.DISPATCH_NORMAL);
+  // Now add the visit
+  let id = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
+                       hs.TRANSITION_TYPED, false, 0);
+
+  // Check the visit, but after enough time has passed for the DB flush service
+  // to have fired it's timer.
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback({
+    notify: function(aTimer)
+    {
+      new_test_visit_uri_event(id, TEST_URI, true, true);
+    }
+  }, (SYNC_INTERVAL * 1000) * 2, Ci.nsITimer.TYPE_ONE_SHOT);
   do_test_pending();
 }

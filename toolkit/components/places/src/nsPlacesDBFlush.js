@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/PlacesBackground.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
@@ -47,7 +47,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-const kPlacesBackgroundShutdown = "places-background-shutdown";
+const kQuitApplication = "quit-application";
+const kSyncFinished = "places-sync-finished";
 
 const kSyncPrefName = "syncDBTableIntervalInSecs";
 const kDefaultSyncInterval = 120;
@@ -57,27 +58,11 @@ const kDefaultSyncInterval = 120;
 
 function nsPlacesDBFlush()
 {
-  //////////////////////////////////////////////////////////////////////////////
-  //// Smart Getters
-
-  this.__defineGetter__("_db", function() {
-    delete this._db;
-    return this._db = Cc["@mozilla.org/browser/nav-history-service;1"].
-                      getService(Ci.nsPIPlacesDatabase).
-                      DBConnection;
-  });
-
-  this.__defineGetter__("_bh", function() {
-    delete this._bh;
-    return this._bh = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                      getService(Ci.nsINavBookmarksService);
-  });
-
+  this._prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefService).
+              getBranch("places.");
 
   // Get our sync interval
-  this._prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefService).
-                getBranch("places.");
   try {
     // We want to silently fail if the preference does not exist, and use a
     // default to fallback to.
@@ -91,13 +76,16 @@ function nsPlacesDBFlush()
   }
 
   // Register observers
-  this._bh.addObserver(this, false);
+  this._bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+             getService(Ci.nsINavBookmarksService);
+  this._bs.addObserver(this, false);
 
-  this._prefs.QueryInterface(Ci.nsIPrefBranch2).addObserver("", this, false);
+  this._os = Cc["@mozilla.org/observer-service;1"].
+             getService(Ci.nsIObserverService);
+  this._os.addObserver(this, kQuitApplication, false);
 
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  os.addObserver(this, kPlacesBackgroundShutdown, false);
+  this._prefs.QueryInterface(Ci.nsIPrefBranch2)
+             .addObserver("", this, false);
 
   // Create our timer to update everything
   this._timer = this._newTimer();
@@ -109,11 +97,13 @@ nsPlacesDBFlush.prototype = {
 
   observe: function DBFlush_observe(aSubject, aTopic, aData)
   {
-    if (aTopic == kPlacesBackgroundShutdown) {
-      this._bh.removeObserver(this);
+    if (aTopic == kQuitApplication) {
+      this._bs.removeObserver(this);
+      this._os.removeObserver(this, kQuitApplication);
+      this._prefs.QueryInterface(Ci.nsIPrefBranch2).removeObserver("", this);
       this._timer.cancel();
       this._timer = null;
-      this._syncAll();
+      this._syncTables(["places", "historyvisits"]);
     }
     else if (aTopic == "nsPref:changed" && aData == kSyncPrefName) {
       // Get the new pref value, and then update our timer
@@ -148,18 +138,18 @@ nsPlacesDBFlush.prototype = {
     this._inBatchMode = false;
 
     // We need to sync and restore our timer now.
-    this._syncAll();
+    this._syncTables(["places", "historyvisits"]);
     this._timer = this._newTimer();
   },
 
-  onItemAdded: function() this._syncMozPlaces(),
+  onItemAdded: function() this._syncTables(["places"]),
 
   onItemChanged: function DBFlush_onItemChanged(aItemId, aProperty,
                                                          aIsAnnotationProperty,
                                                          aValue)
   {
     if (aProperty == "uri")
-      this._syncMozPlaces();
+      this._syncTables(["places"]);
   },
 
   onItemRemoved: function() { },
@@ -169,78 +159,63 @@ nsPlacesDBFlush.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsITimerCallback
 
-  notify: function() this._syncAll(),
+  notify: function() this._syncTables(["places", "historyvisits"]),
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// mozIStorageStatementCallback
+
+  handleCompletion: function DBFlush_handleCompletion(aReason)
+  {
+    if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+      // Dispatch a notification that sync has finished.
+      this._os.notifyObservers(null, kSyncFinished, null);
+    }
+  },
 
   //////////////////////////////////////////////////////////////////////////////
   //// nsPlacesDBFlush
+  _syncInterval: kDefaultSyncInterval,
 
   /**
-   * Dispatches an event to the background thread to run _doSyncMozX("places").
+   * Execute async statements to sync temporary places table.
+   * @param aTableNames
+   *        array of table names that should be synced, as moz_{TableName}_temp.
    */
-  _syncMozPlaces: function DBFlush_syncMozPlaces()
+  _syncTables: function DBFlush_syncTables(aTableNames)
   {
     // No need to do extra work if we are in batch mode
     if (this._inBatchMode)
       return;
 
-    let self = this;
-    PlacesBackground.dispatch({
-      run: function() self._doSyncMozX("places")
-    }, Ci.nsIEventTarget.DISPATCH_NORMAL);
+    let statements = [];
+    for (let i = 0; i < aTableNames.length; i++)
+      statements.push(this._getSyncTableStatement(aTableNames[i]));
+
+    // Execute sync statements async in a transaction
+    this._db.executeAsync(statements, statements.length, this);
   },
 
   /**
-   * Dispatches an event to the background thread to sync all temporary tables.
+   * Generate the statement to synchronizes the moz_{aTableName} and
+   * moz_{aTableName}_temp by copying all the data from the temporary table
+   * into the permanent one.
+   * Most of the work is done through triggers defined in nsPlacesTriggers.h,
+   * they sync back to disk, then delete the data in the temporary table.
+   * @param aTableName
+   *        name of the table to build statement for, as moz_{TableName}_temp.
    */
-  _syncAll: function DBFlush_syncAll()
-  {
-    let self = this;
-    PlacesBackground.dispatch({
-      run: function() {
-        // We try to get a transaction, but if we can't don't worry
-        let ourTransaction = false;
-        try {
-          this._db.beginTransaction();
-          ourTransaction = true;
-        }
-        catch (e) { }
-
-        try {
-          // This needs to also sync moz_places in order to maintain data
-          // integrity
-          self._doSyncMozX("places");
-          self._doSyncMozX("historyvisits");
-        }
-        catch (e) {
-          if (ourTransaction)
-            this._db.rollbackTransaction();
-          throw e;
-        }
-
-        if (ourTransaction)
-          this._db.commitTransaction();
-      }
-    }, Ci.nsIEventTarget.DISPATCH_NORMAL);
-  },
-
-  /**
-   * Synchronizes the moz_{aName} and moz_{aName}_temp by copying all the data
-   * from the temporary table into the permanent one.  It then deletes the data
-   * in the temporary table.  All of this is done in a transaction that is
-   * rolled back upon failure at any point.
-   */
-  _doSyncMozX: function DBFlush_doSyncMozX(aName)
+  _getSyncTableStatement: function DBFlush_getSyncTableStatement(aTableName)
   {
     // Delete all the data in the temp table.
-    // We have triggers setup that ensure that the data is transfered over
-   // upon deletion.
-   this._db.executeSimpleSQL("DELETE FROM moz_" + aName + "_temp");
+    // We have triggers setup that ensure that the data is transferred over
+    // upon deletion.
+    return this._db.createStatement("DELETE FROM moz_" + aTableName + "_temp");
   },
 
   /**
-   * Creates a new timer bases on this._timerInterval.
+   * Creates a new timer based on this._syncInterval.
    *
-   * @returns a REPEATING_SLACK nsITimer that runs every this._timerInterval.
+   * @returns a REPEATING_SLACK nsITimer that runs every this._syncInterval.
    */
   _newTimer: function DBFlush_newTimer()
   {
@@ -266,6 +241,16 @@ nsPlacesDBFlush.prototype = {
     Ci.nsITimerCallback,
   ])
 };
+
+//////////////////////////////////////////////////////////////////////////////
+//// Smart Getters
+
+nsPlacesDBFlush.prototype.__defineGetter__("_db", function() {
+  delete nsPlacesDBFlush._db;
+  return nsPlacesDBFlush._db = Cc["@mozilla.org/browser/nav-history-service;1"].
+                               getService(Ci.nsPIPlacesDatabase).
+                               DBConnection;
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module Registration
