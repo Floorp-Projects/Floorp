@@ -110,7 +110,7 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   NS_ENSURE_SUCCESS(rv, rv);
 
   while (parentAcc) {
-    if (Role(parentAcc) == nsIAccessibleRole::ROLE_TABLE) {
+    if (nsAccUtils::Role(parentAcc) == nsIAccessibleRole::ROLE_TABLE) {
       // Table accessible must implement nsIAccessibleTable interface but if
       // it isn't happen (for example because of ARIA usage) we shouldn't fail
       // on getting other attributes.
@@ -159,7 +159,7 @@ void nsHTMLTableAccessible::CacheChildren()
     nsAccessible::CacheChildren();
     nsCOMPtr<nsIAccessible> captionAccessible;
     while (NextChild(captionAccessible)) {
-      if (Role(captionAccessible) == nsIAccessibleRole::ROLE_CAPTION) {
+      if (nsAccUtils::Role(captionAccessible) == nsIAccessibleRole::ROLE_CAPTION) {
         nsCOMPtr<nsIAccessible> captionParentAccessible;
         captionAccessible->GetParent(getter_AddRefs(captionParentAccessible));
         if (captionParentAccessible != this) {
@@ -270,9 +270,9 @@ nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
 {
   nsCOMPtr<nsIAccessible> firstChild;
   GetFirstChild(getter_AddRefs(firstChild));
-  if (firstChild && Role(firstChild) == nsIAccessibleRole::ROLE_CAPTION) {
+  if (nsAccUtils::Role(firstChild) == nsIAccessibleRole::ROLE_CAPTION)
     NS_ADDREF(*aCaption = firstChild);
-  }
+
   return NS_OK;
 }
 
@@ -1066,7 +1066,8 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   }
 
   // Check role and role attribute
-  PRBool hasNonTableRole = (Role(this) != nsIAccessibleRole::ROLE_TABLE);
+  PRBool hasNonTableRole =
+    (nsAccUtils::Role(this) != nsIAccessibleRole::ROLE_TABLE);
   if (hasNonTableRole) {
     RETURN_LAYOUT_ANSWER(PR_FALSE, "Has role attribute");
   }
@@ -1140,8 +1141,8 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
     nodeList->Item(rowCount, getter_AddRefs(rowNode));
 
     nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl;
-    GetComputedStyleDeclaration(EmptyString(), rowNode,
-                                getter_AddRefs(styleDecl));
+    nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), rowNode,
+                                             getter_AddRefs(styleDecl));
     NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
 
     lastRowColor = color;

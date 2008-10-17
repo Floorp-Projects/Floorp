@@ -14,8 +14,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This just needs to include npapi headers, change the path to whatever works for you
-#include "npapi.h"
+// This just needs to include NPAPI headers, change the path to whatever works
+// for you. Note that "XP_MACOSX=1" is defined in the project so that the NPAPI
+// headers know we're compiling for Mac OS X.
+#include "../../../../base/public/npapi.h"
+#include "../../../../base/public/npfunctions.h"
 
 NPError NP_Initialize(NPNetscapeFuncs *browserFuncs);
 NPError NP_GetEntryPoints(NPPluginFuncs *pluginFuncs);

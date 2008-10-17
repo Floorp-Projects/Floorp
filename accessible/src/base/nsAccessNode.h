@@ -111,13 +111,6 @@ class nsAccessNode: public nsIAccessNode,
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDocShellTreeItem *aContainer, PRBool aCanCreate = PR_FALSE);
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDOMNode *aNode);
 
-    static already_AddRefed<nsIDOMNode> GetDOMNodeForContainer(nsISupports *aContainer);
-    static already_AddRefed<nsIPresShell> GetPresShellFor(nsIDOMNode *aStartNode);
-    
-    static void GetComputedStyleDeclaration(const nsAString& aPseudoElt,
-                                            nsIDOMNode *aNode,
-                                            nsIDOMCSSStyleDeclaration **aCssDecl);
-
     already_AddRefed<nsRootAccessible> GetRootAccessible();
 
     static nsIDOMNode *gLastFocusedNode;
