@@ -1,0 +1,16 @@
+<html>
+<head>
+<title>Crash [@ nsCSSValueList::~nsCSSValueList] with adding a lot of values in css property</title>
+</head>
+<body>
+<div style="border: 1px solid black; width: 100px; height: 100px;"></div>
+<script>
+function forceFree() {
+  var str = ' rotate(1deg)';
+  for(var i=0;i<17;i++) {str += str;}
+ document.getElementsByTagName('div')[0].style.MozTransform = str;  
+}
+setTimeout(forceFree,100);
+</script>
+</body>
+</html>
