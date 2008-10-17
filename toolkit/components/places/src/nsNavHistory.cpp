@@ -1256,66 +1256,6 @@ nsNavHistory::InitStatements()
     getter_AddRefs(mDBVisitsForFrecency));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // find places with invalid frecencies (frecency < 0)
-  // invalid frecencies can happen in these scenarios:
-  // 1) we've done "clear private data"
-  // 2) we've expired or deleted visits
-  // 3) we've migrated from an older version, before global frecency
-  //
-  // from older versions, unmigrated bookmarks might be hidden,
-  // so we can't exclude hidden places (by doing "WHERE hidden <> 1")
-  // from our query, as we want to calculate the frecency for those
-  // places and unhide them (if they are not livemark items and not
-  // place: queries.)
-  //
-  // Note, we are not limiting ourselves to places with visits
-  // because we may not have any if the place is a bookmark and
-  // we expired or deleted all the visits. 
-  // We get two sets of places that are 1) most visited and 2) random so that
-  // we don't get stuck recalculating frecencies that end up being -1 every
-  // time
-  // Since we don't need real random results and ORDER BY RANDOM() is slow
-  // we will jump at a random rowid in the table and we will get random results
-  // only from moz_places since temp will be synched there sometimes.  
-  // Notice that frecency is invalidated as frecency = -visit_count
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT * FROM ( "
-        "SELECT id, visit_count, hidden, typed, frecency, url "
-        "FROM ( "
-          "SELECT * FROM moz_places_temp "
-          "WHERE frecency < 0 "
-          "UNION ALL "
-          "SELECT * FROM ( "
-            "SELECT * FROM moz_places "
-            "WHERE +id NOT IN (SELECT id FROM moz_places_temp) "
-            "AND frecency < 0 "
-            "ORDER BY frecency ASC LIMIT ROUND(?1 / 2) "
-          ") "
-        ") ORDER BY frecency ASC LIMIT ROUND(?1 / 2)) "
-      "UNION "
-      "SELECT * FROM ( "
-        "SELECT id, visit_count, hidden, typed, frecency, url "
-        "FROM moz_places "
-        "WHERE frecency < 0 "
-        "AND ROWID >= ABS(RANDOM() % (SELECT MAX(ROWID) FROM moz_places)) "
-        "LIMIT ROUND(?1 / 2))"),
-    getter_AddRefs(mDBInvalidFrecencies));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // This query finds random old places to update frecency because frequently
-  // visited places will have their frecencies updated when visited.
-  // We can limit the selection to moz_places since results in temp tables
-  // have been most likely visited recently.
-  // Since we don't need real random results and ORDER BY RANDOM() is slow
-  // we will jump at a random rowid in the table.
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, visit_count, hidden, typed, frecency, url "
-     "FROM moz_places "
-     "WHERE ROWID >= ABS(RANDOM() % (SELECT MAX(ROWID) FROM moz_places)) "
-     "LIMIT ?1"),
-    getter_AddRefs(mDBOldFrecencies));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // mDBUpdateFrecencyAndHidden
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_places_view SET frecency = ?2, hidden = ?3 WHERE id = ?1"),
@@ -7185,11 +7125,11 @@ nsNavHistory::RecalculateFrecencies(PRInt32 aCount, PRBool aRecalcOld)
 {
   mozStorageTransaction transaction(mDBConn, PR_TRUE);
 
-  nsresult rv = RecalculateFrecenciesInternal(mDBInvalidFrecencies, aCount);
+  nsresult rv = RecalculateFrecenciesInternal(GetDBInvalidFrecencies(), aCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aRecalcOld) {
-    rv = RecalculateFrecenciesInternal(mDBOldFrecencies, aCount);
+    rv = RecalculateFrecenciesInternal(GetDBOldFrecencies(), aCount);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -7394,6 +7334,84 @@ nsNavHistory::GetDBBookmarkToUrlResult()
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   return mDBBookmarkToUrlResult;
+}
+
+mozIStorageStatement *
+nsNavHistory::GetDBInvalidFrecencies()
+{
+  if (mDBInvalidFrecencies)
+    return mDBInvalidFrecencies;
+
+  // find places with invalid frecencies (frecency < 0)
+  // invalid frecencies can happen in these scenarios:
+  // 1) we've done "clear private data"
+  // 2) we've expired or deleted visits
+  // 3) we've migrated from an older version, before global frecency
+  //
+  // from older versions, unmigrated bookmarks might be hidden,
+  // so we can't exclude hidden places (by doing "WHERE hidden <> 1")
+  // from our query, as we want to calculate the frecency for those
+  // places and unhide them (if they are not livemark items and not
+  // place: queries.)
+  //
+  // Note, we are not limiting ourselves to places with visits
+  // because we may not have any if the place is a bookmark and
+  // we expired or deleted all the visits. 
+  // We get two sets of places that are 1) most visited and 2) random so that
+  // we don't get stuck recalculating frecencies that end up being -1 every
+  // time
+  // Since we don't need real random results and ORDER BY RANDOM() is slow
+  // we will jump at a random rowid in the table and we will get random results
+  // only from moz_places since temp will be synched there sometimes.  
+  // Notice that frecency is invalidated as frecency = -visit_count
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT * FROM ( "
+        "SELECT id, visit_count, hidden, typed, frecency, url "
+        "FROM ( "
+          "SELECT * FROM moz_places_temp "
+          "WHERE frecency < 0 "
+          "UNION ALL "
+          "SELECT * FROM ( "
+            "SELECT * FROM moz_places "
+            "WHERE +id NOT IN (SELECT id FROM moz_places_temp) "
+            "AND frecency < 0 "
+            "ORDER BY frecency ASC LIMIT ROUND(?1 / 2) "
+          ") "
+        ") ORDER BY frecency ASC LIMIT ROUND(?1 / 2)) "
+      "UNION "
+      "SELECT * FROM ( "
+        "SELECT id, visit_count, hidden, typed, frecency, url "
+        "FROM moz_places "
+        "WHERE frecency < 0 "
+        "AND ROWID >= ABS(RANDOM() % (SELECT MAX(ROWID) FROM moz_places)) "
+        "LIMIT ROUND(?1 / 2))"),
+    getter_AddRefs(mDBInvalidFrecencies));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mDBInvalidFrecencies;
+}
+
+mozIStorageStatement *
+nsNavHistory::GetDBOldFrecencies()
+{
+  if (mDBOldFrecencies)
+    return mDBOldFrecencies;
+
+  // This query finds random old places to update frecency because frequently
+  // visited places will have their frecencies updated when visited.
+  // We can limit the selection to moz_places since results in temp tables
+  // have been most likely visited recently.
+  // Since we don't need real random results and ORDER BY RANDOM() is slow
+  // we will jump at a random rowid in the table.
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, visit_count, hidden, typed, frecency, url "
+     "FROM moz_places "
+     "WHERE ROWID >= ABS(RANDOM() % (SELECT MAX(ROWID) FROM moz_places)) "
+     "LIMIT ?1"),
+    getter_AddRefs(mDBOldFrecencies));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  return mDBOldFrecencies;
 }
 
 // nsICharsetResolver **********************************************************
