@@ -1601,9 +1601,29 @@ nsNavHistory::MigrateV7Up(mozIStorageConnection* aDBConn)
 {
   mozStorageTransaction transaction(aDBConn, PR_FALSE);
 
+  // Temporary migration code for bug 396300
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+  PRInt64 unfiledFolder, rootFolder;
+  bookmarks->GetUnfiledBookmarksFolder(&unfiledFolder);
+  bookmarks->GetPlacesRoot(&rootFolder);
+
+  nsCOMPtr<mozIStorageStatement> moveUnfiledBookmarks;
+  nsresult rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_bookmarks SET parent = ?1 WHERE type = ?2 AND parent=?3"),
+    getter_AddRefs(moveUnfiledBookmarks));
+  rv = moveUnfiledBookmarks->BindInt64Parameter(0, unfiledFolder);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = moveUnfiledBookmarks->BindInt32Parameter(1, nsINavBookmarksService::TYPE_BOOKMARK);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = moveUnfiledBookmarks->BindInt64Parameter(2, rootFolder);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = moveUnfiledBookmarks->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Create a statement to test for trigger creation
   nsCOMPtr<mozIStorageStatement> triggerDetection;
-  nsresult rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
+  rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT name "
       "FROM sqlite_master "
       "WHERE type = 'trigger' "
