@@ -239,10 +239,11 @@ public:
    * These functions return non-owning references to the locale-specific
    * objects for places components.
    */
-  nsIStringBundle* GetBundle()
-    { return mBundle; }
+  nsIStringBundle* GetBundle();
   nsICollation* GetCollation();
   void GetStringFromName(const PRUnichar* aName, nsACString& aResult);
+  void GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName,
+                          nsACString& aResult);
 
   // returns true if history has been disabled
   PRBool IsHistoryDisabled() { return mExpireDaysMax == 0; }
@@ -585,9 +586,6 @@ protected:
   nsresult ResultsAsList(mozIStorageStatement* statement,
                          nsNavHistoryQueryOptions* aOptions,
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
-
-  void GetAgeInDaysString(PRInt32 aInt, const PRUnichar *aName, 
-                          nsACString& aResult);
 
   void TitleForDomain(const nsCString& domain, nsACString& aTitle);
 
