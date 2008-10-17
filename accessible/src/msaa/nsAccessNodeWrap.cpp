@@ -316,7 +316,8 @@ __try{
     return E_FAIL;
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  GetComputedStyleDeclaration(EmptyString(), mDOMNode, getter_AddRefs(cssDecl));
+  nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), mDOMNode,
+                                           getter_AddRefs(cssDecl));
   NS_ENSURE_TRUE(cssDecl, E_FAIL);
 
   PRUint32 length;
@@ -351,7 +352,8 @@ __try {
     return E_FAIL;
  
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  GetComputedStyleDeclaration(EmptyString(), mDOMNode, getter_AddRefs(cssDecl));
+  nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), mDOMNode,
+                                           getter_AddRefs(cssDecl));
   NS_ENSURE_TRUE(cssDecl, E_FAIL);
 
   PRUint32 index;

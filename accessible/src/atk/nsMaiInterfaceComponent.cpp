@@ -69,7 +69,7 @@ refAccessibleAtPointCB(AtkComponent *aComponent,
                        AtkCoordType aCoordType)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aComponent));
-    if (!accWrap || nsAccessibleWrap::MustPrune(accWrap))
+    if (!accWrap || nsAccUtils::MustPrune(accWrap))
         return nsnull;
 
     // nsIAccessible getChildAtPoint (x,y) is in screen pixels.
