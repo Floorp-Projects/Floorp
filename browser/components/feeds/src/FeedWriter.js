@@ -845,7 +845,7 @@ FeedWriter.prototype = {
 
   // nsIDomEventListener
   handleEvent: function(event) {
-    // see comments in the write method
+    // see comments in init()
     event = new XPCNativeWrapper(event);
     if (event.target.ownerDocument != this._document) {
       LOG("FeedWriter.handleEvent: Someone passed the feed writer as a listener to the events of another document!");
@@ -1331,8 +1331,11 @@ FeedWriter.prototype = {
 
   // nsIObserver
   observe: function FW_observe(subject, topic, data) {
+    // see init()
+    subject = new XPCNativeWrapper(subject);
+    
     if (!this._window) {
-      // this._window is null unless this.write was called with a trusted
+      // this._window is null unless this.init was called with a trusted
       // window object.
       return;
     }
@@ -1397,6 +1400,9 @@ FeedWriter.prototype = {
 
    // nsINavHistoryService
    onPageChanged: function FW_onPageChanged(aURI, aWhat, aValue) {
+     // see init()
+     aURI = new XPCNativeWrapper(aURI);
+
      if (aWhat == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
        // Go through the readers menu and look for the corresponding
        // reader menu-item for the page if any.
