@@ -1068,10 +1068,9 @@ NS_IMETHODIMP nsRootAccessible::GetAccessibleRelated(PRUint32 aRelationType,
   if (contentTreeItem) {
     nsCOMPtr<nsIAccessibleDocument> accDoc =
       GetDocAccessibleFor(contentTreeItem, PR_TRUE);
-    NS_ASSERTION(accDoc, "No EMBEDS document");
-    if (accDoc) {
-      accDoc->QueryInterface(NS_GET_IID(nsIAccessible), (void**)aRelated);
-    }
+
+    if (accDoc)
+      CallQueryInterface(accDoc, aRelated);
   }
   return NS_OK;
 }

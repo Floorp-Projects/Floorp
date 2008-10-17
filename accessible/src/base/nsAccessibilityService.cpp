@@ -1367,7 +1367,6 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     }
     else {
       CreateRootAccessible(aPresShell, nodeIsDoc, getter_AddRefs(newAcc)); // Does Init() for us
-      NS_WARN_IF_FALSE(newAcc, "No root/doc accessible created");
     }
 
     *aFrameHint = aPresShell->GetRootFrame();
