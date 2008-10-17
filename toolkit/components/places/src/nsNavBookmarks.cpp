@@ -105,20 +105,12 @@ NS_IMPL_ISUPPORTS3(nsNavBookmarks,
 nsresult
 nsNavBookmarks::Init()
 {
-  nsresult rv;
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = bundleService->CreateBundle("chrome://places/locale/places.properties",
-                                   getter_AddRefs(mBundle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsNavHistory *history = History();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   mDBConn = history->GetStorageConnection();
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  rv = InitStatements();
+  nsresult rv = InitStatements();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = FillBookmarksHash();
@@ -546,34 +538,37 @@ nsNavBookmarks::InitRoots()
 nsresult
 nsNavBookmarks::InitDefaults()
 {
+  nsIStringBundle *bundle = History()->GetBundle();
+  NS_ENSURE_TRUE(bundle, NS_ERROR_OUT_OF_MEMORY);
+
   // Bookmarks Menu
   nsXPIDLString bookmarksTitle;
-  nsresult rv = mBundle->GetStringFromName(NS_LITERAL_STRING("BookmarksMenuFolderTitle").get(),
-                                           getter_Copies(bookmarksTitle));
+  nsresult rv = bundle->GetStringFromName(NS_LITERAL_STRING("BookmarksMenuFolderTitle").get(),
+                                          getter_Copies(bookmarksTitle));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetItemTitle(mBookmarksRoot, NS_ConvertUTF16toUTF8(bookmarksTitle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Bookmarks Toolbar
   nsXPIDLString toolbarTitle;
-  rv = mBundle->GetStringFromName(NS_LITERAL_STRING("BookmarksToolbarFolderTitle").get(),
-                                  getter_Copies(toolbarTitle));
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BookmarksToolbarFolderTitle").get(),
+                                 getter_Copies(toolbarTitle));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetItemTitle(mToolbarFolder, NS_ConvertUTF16toUTF8(toolbarTitle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Unsorted Bookmarks
   nsXPIDLString unfiledTitle;
-  rv = mBundle->GetStringFromName(NS_LITERAL_STRING("UnsortedBookmarksFolderTitle").get(),
-                                  getter_Copies(unfiledTitle));
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("UnsortedBookmarksFolderTitle").get(),
+                                 getter_Copies(unfiledTitle));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetItemTitle(mUnfiledRoot, NS_ConvertUTF16toUTF8(unfiledTitle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Tags
   nsXPIDLString tagsTitle;
-  rv = mBundle->GetStringFromName(NS_LITERAL_STRING("TagsFolderTitle").get(),
-                                  getter_Copies(tagsTitle));
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("TagsFolderTitle").get(),
+                                 getter_Copies(tagsTitle));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetItemTitle(mTagRoot, NS_ConvertUTF16toUTF8(tagsTitle));
   NS_ENSURE_SUCCESS(rv, rv);
