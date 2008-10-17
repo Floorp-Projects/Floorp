@@ -105,17 +105,18 @@
  * copies the row from the permanent table over to the temp table if it does not
  * exist in the temporary table.  Then, it will update the temporary table with
  * the new data.
+ * We use INSERT OR IGNORE to avoid looking if the place already exists in the
+ * temp table.
  */
 #define CREATE_PLACES_VIEW_UPDATE_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMPORARY TRIGGER moz_places_view_update_trigger " \
   "INSTEAD OF UPDATE " \
   "ON moz_places_view " \
   "BEGIN " \
-    "INSERT INTO moz_places_temp " \
+    "INSERT OR IGNORE INTO moz_places_temp " \
     "SELECT * " \
     "FROM moz_places " \
-    "WHERE id = OLD.id " \
-    "AND id NOT IN (SELECT id FROM moz_places_temp); " \
+    "WHERE id = OLD.id; " \
     "UPDATE moz_places_temp " \
     "SET url = IFNULL(NEW.url, OLD.url), " \
         "title = IFNULL(NEW.title, OLD.title), " \
@@ -134,6 +135,8 @@
  * the new data into the temporary table, ensuring that the new id is one
  * greater than the largest id value found.  It then updates moz_places_view
  * with the new visit count.
+ * We use INSERT OR IGNORE to avoid looking if the place already exists in the
+ * temp table. 
  */
 #define CREATE_HISTORYVISITS_VIEW_INSERT_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMPORARY TRIGGER moz_historyvisits_view_insert_trigger " \
@@ -147,7 +150,12 @@
                 "(SELECT IFNULL(MAX(id), 0) FROM moz_historyvisits)) + 1, " \
             "NEW.from_visit, NEW.place_id, NEW.visit_date, NEW.visit_type, " \
             "NEW.session); " \
-    "UPDATE moz_places_view " \
+    "INSERT OR IGNORE INTO moz_places_temp " \
+    "SELECT * " \
+    "FROM moz_places " \
+    "WHERE id = NEW.place_id " \
+    "AND NEW.visit_type NOT IN (0, 4, 7); " \
+    "UPDATE moz_places_temp " \
     "SET visit_count = visit_count + 1 " \
     "WHERE id = NEW.place_id " \
     "AND NEW.visit_type NOT IN (0, 4, 7); " /* invalid, EMBED, DOWNLOAD */ \
@@ -159,6 +167,8 @@
  * It removes any entry in the temporary table, and removes any entry in the
  * permanent table as well.  It then updates moz_places_view with the new visit
  * count.
+ * We use INSERT OR IGNORE to avoid looking if the place already exists in the
+ * temp table.
  */
 #define CREATE_HISTORYVISITS_VIEW_DELETE_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMPORARY TRIGGER moz_historyvisits_view_delete_trigger " \
@@ -169,9 +179,14 @@
     "WHERE id = OLD.id; " \
     "DELETE FROM moz_historyvisits " \
     "WHERE id = OLD.id; " \
-    "UPDATE moz_places_view " \
+    "INSERT OR IGNORE INTO moz_places_temp " \
+    "SELECT * " \
+    "FROM moz_places " \
+    "WHERE id = OLD.place_id " \
+    "AND OLD.visit_type NOT IN (0, 4, 7); " \
+    "UPDATE moz_places_temp " \
     "SET visit_count = visit_count - 1 " \
-    "WHERE moz_places_view.id = OLD.place_id " \
+    "WHERE id = OLD.place_id " \
     "AND OLD.visit_type NOT IN (0, 4, 7); " /* invalid, EMBED, DOWNLOAD */ \
   "END" \
 )
@@ -181,17 +196,18 @@
  * first copies the row from the permanent table over to the temp table if it
  * does not exist in the temporary table.  Then it will update the temporary
  * table with the new data.
+ * We use INSERT OR IGNORE to avoid looking if the visit already exists in the
+ * temp table.
  */
 #define CREATE_HISTORYVISITS_VIEW_UPDATE_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMPORARY TRIGGER moz_historyvisits_view_update_trigger " \
   "INSTEAD OF UPDATE " \
   "ON moz_historyvisits_view " \
   "BEGIN " \
-    "INSERT INTO moz_historyvisits_temp " \
+    "INSERT OR IGNORE INTO moz_historyvisits_temp " \
     "SELECT * " \
     "FROM moz_historyvisits " \
-    "WHERE id = OLD.id " \
-    "AND id NOT IN (SELECT id FROM moz_historyvisits_temp); " \
+    "WHERE id = OLD.id; " \
     "UPDATE moz_historyvisits_temp " \
     "SET from_visit = IFNULL(NEW.from_visit, OLD.from_visit), " \
         "place_id = IFNULL(NEW.place_id, OLD.place_id), " \
