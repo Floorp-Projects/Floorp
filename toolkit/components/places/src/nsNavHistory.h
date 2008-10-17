@@ -434,12 +434,14 @@ protected:
   nsresult CalculateFrecency(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, nsCAutoString &aURL, PRInt32 *aFrecency);
   nsresult CalculateFrecencyInternal(PRInt64 aPageID, PRInt32 aTyped, PRInt32 aVisitCount, PRBool aIsBookmarked, PRInt32 *aFrecency);
   nsCOMPtr<mozIStorageStatement> mDBVisitsForFrecency;
-  nsCOMPtr<mozIStorageStatement> mDBInvalidFrecencies;
-  nsCOMPtr<mozIStorageStatement> mDBOldFrecencies;
   nsCOMPtr<mozIStorageStatement> mDBUpdateFrecencyAndHidden;
   nsCOMPtr<mozIStorageStatement> mDBGetPlaceVisitStats;
   nsCOMPtr<mozIStorageStatement> mDBGetBookmarkParentsForPlace;
   nsCOMPtr<mozIStorageStatement> mDBFullVisitCount;
+  mozIStorageStatement *GetDBInvalidFrecencies();
+  nsCOMPtr<mozIStorageStatement> mDBInvalidFrecencies;
+  mozIStorageStatement *GetDBOldFrecencies();
+  nsCOMPtr<mozIStorageStatement> mDBOldFrecencies;
 
   /**
    * Initializes the database file.  If the database does not exist, was
