@@ -237,14 +237,11 @@ public:
 
   /**
    * These functions return non-owning references to the locale-specific
-   * objects for places components. Guaranteed to return non-NULL.
+   * objects for places components.
    */
   nsIStringBundle* GetBundle()
     { return mBundle; }
-  nsILocale* GetLocale()
-    { return mLocale; }
-  nsICollation* GetCollation()
-    { return mCollation; }
+  nsICollation* GetCollation();
   nsIDateTimeFormat* GetDateFormatter()
     { return mDateFormatter; }
   void GetStringFromName(const PRUnichar* aName, nsACString& aResult);
@@ -613,7 +610,6 @@ protected:
 
   // localization
   nsCOMPtr<nsIStringBundle> mBundle;
-  nsCOMPtr<nsILocale> mLocale;
   nsCOMPtr<nsICollation> mCollation;
   nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
 
