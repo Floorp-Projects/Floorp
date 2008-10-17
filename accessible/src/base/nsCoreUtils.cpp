@@ -52,7 +52,11 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMViewCSS.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDocShell.h"
+#include "nsIDocumentViewer.h"
+#include "nsIContentViewer.h"
 #include "nsIEventListenerManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -60,6 +64,7 @@
 #include "nsIEventStateManager.h"
 #include "nsISelection2.h"
 #include "nsISelectionController.h"
+#include "nsPIDOMWindow.h"
 #include "nsGUIEvent.h"
 
 #include "nsContentCID.h"
@@ -181,6 +186,30 @@ nsCoreUtils::GetDOMElementFor(nsIDOMNode *aNode)
   }
 
   return element;
+}
+
+nsIContent*
+nsCoreUtils::GetRoleContent(nsIDOMNode *aDOMNode)
+{
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
+  if (!content) {
+    nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aDOMNode));
+    if (domDoc) {
+      nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(aDOMNode));
+      if (htmlDoc) {
+        nsCOMPtr<nsIDOMHTMLElement> bodyElement;
+        htmlDoc->GetBody(getter_AddRefs(bodyElement));
+        content = do_QueryInterface(bodyElement);
+      }
+      else {
+        nsCOMPtr<nsIDOMElement> docElement;
+        domDoc->GetDocumentElement(getter_AddRefs(docElement));
+        content = do_QueryInterface(docElement);
+      }
+    }
+  }
+
+  return content;
 }
 
 PRBool
@@ -383,7 +412,7 @@ nsCoreUtils::GetDocShellTreeItemFor(nsIDOMNode *aNode)
 nsIFrame*
 nsCoreUtils::GetFrameFor(nsIDOMElement *aElm)
 {
-  nsCOMPtr<nsIPresShell> shell = nsAccessNode::GetPresShellFor(aElm);
+  nsCOMPtr<nsIPresShell> shell = GetPresShellFor(aElm);
   if (!shell)
     return nsnull;
   
@@ -392,6 +421,61 @@ nsCoreUtils::GetFrameFor(nsIDOMElement *aElm)
     return nsnull;
   
   return shell->GetPrimaryFrameFor(content);
+}
+
+PRBool
+nsCoreUtils::IsCorrectFrameType(nsIFrame *aFrame, nsIAtom *aAtom)
+{
+  NS_ASSERTION(aFrame != nsnull,
+               "aFrame is null in call to IsCorrectFrameType!");
+  NS_ASSERTION(aAtom != nsnull,
+               "aAtom is null in call to IsCorrectFrameType!");
+  
+  return aFrame->GetType() == aAtom;
+}
+
+already_AddRefed<nsIPresShell>
+nsCoreUtils::GetPresShellFor(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  aNode->GetOwnerDocument(getter_AddRefs(domDocument));
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
+  if (!doc) // This is necessary when the node is the document node
+    doc = do_QueryInterface(aNode);
+
+  nsIPresShell *presShell = nsnull;
+  if (doc) {
+    presShell = doc->GetPrimaryShell();
+    NS_IF_ADDREF(presShell);
+  }
+
+  return presShell;
+}
+
+already_AddRefed<nsIDOMNode>
+nsCoreUtils::GetDOMNodeForContainer(nsIDocShellTreeItem *aContainer)
+{
+  nsCOMPtr<nsIDocShell> shell = do_QueryInterface(aContainer);
+
+  nsCOMPtr<nsIContentViewer> cv;
+  shell->GetContentViewer(getter_AddRefs(cv));
+
+  if (!cv)
+    return nsnull;
+
+  nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+  if (!docv)
+    return nsnull;
+
+  nsCOMPtr<nsIDocument> doc;
+  docv->GetDocument(getter_AddRefs(doc));
+  if (!doc)
+    return nsnull;
+
+  nsIDOMNode* node = nsnull;
+  CallQueryInterface(doc.get(), &node);
+  return node;
 }
 
 PRBool
@@ -574,6 +658,49 @@ nsCoreUtils::FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
   return nsnull;
 }
 
+nsIContent*
+nsCoreUtils::GetLabelContent(nsIContent *aForNode)
+{
+  if (aForNode->IsNodeOfType(nsINode::eXUL))
+    return FindNeighbourPointingToNode(aForNode, nsAccessibilityAtoms::control,
+                                       nsAccessibilityAtoms::label);
+
+  return GetHTMLLabelContent(aForNode);
+}
+
+nsIContent*
+nsCoreUtils::GetHTMLLabelContent(nsIContent *aForNode)
+{
+  // Get either <label for="[id]"> element which explictly points to aForNode,
+  // or <label> ancestor which implicitly point to it.
+  nsIContent *walkUpContent = aForNode;
+  
+  // Go up tree get name of ancestor label if there is one. Don't go up farther
+  // than form element.
+  while ((walkUpContent = walkUpContent->GetParent()) != nsnull) {
+    nsIAtom *tag = walkUpContent->Tag();
+    if (tag == nsAccessibilityAtoms::label)
+      return walkUpContent;  // An ancestor <label> implicitly points to us
+
+    if (tag == nsAccessibilityAtoms::form ||
+        tag == nsAccessibilityAtoms::body) {
+      // Reached top ancestor in form
+      // There can be a label targeted at this control using the 
+      // for="control_id" attribute. To save computing time, only 
+      // look for those inside of a form element
+      nsAutoString forId;
+      if (!GetID(aForNode, forId))
+        break;
+
+      // Actually we'll be walking down the content this time, with a depth first search
+      return FindDescendantPointingToID(&forId, walkUpContent,
+                                        nsAccessibilityAtoms::_for);
+    }
+  }
+
+  return nsnull;
+}
+
 void
 nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
                             nsAString& aLanguage)
@@ -585,4 +712,28 @@ nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
          !walkUp->GetAttr(kNameSpaceID_None,
                           nsAccessibilityAtoms::lang, aLanguage))
     walkUp = walkUp->GetParent();
+}
+
+void
+nsCoreUtils::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
+                                         nsIDOMNode *aNode,
+                                         nsIDOMCSSStyleDeclaration **aCssDecl)
+{
+  *aCssDecl = nsnull;
+
+  nsCOMPtr<nsIDOMElement> domElement = GetDOMElementFor(aNode);
+  if (!domElement)
+    return;
+
+  // Returns number of items in style declaration
+  nsCOMPtr<nsIContent> content = do_QueryInterface(domElement);
+  nsCOMPtr<nsIDocument> doc = content->GetDocument();
+  if (!doc)
+    return;
+
+  nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(doc->GetWindow()));
+  if (!viewCSS)
+    return;
+
+  viewCSS->GetComputedStyle(domElement, aPseudoElt, aCssDecl);
 }

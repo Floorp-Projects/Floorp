@@ -108,8 +108,9 @@ class nsAccessibleWrap : public nsAccessible
       
       nsCOMPtr<nsIAccessible> curParent = GetParent();
       while (curParent) {
-        if (MustPrune(curParent))
+        if (nsAccUtils::MustPrune(curParent))
           return PR_TRUE;
+
         nsCOMPtr<nsIAccessible> newParent;
         curParent->GetParent(getter_AddRefs(newParent));
         curParent.swap(newParent);
