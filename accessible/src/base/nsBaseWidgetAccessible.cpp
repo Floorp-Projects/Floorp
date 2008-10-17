@@ -130,7 +130,7 @@ nsLinkableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   if (mIsLink) {
     *aState |= nsIAccessibleStates::STATE_LINKED;
     nsCOMPtr<nsIAccessible> actionAcc = GetActionAccessible();
-    if (actionAcc && (State(actionAcc) & nsIAccessibleStates::STATE_TRAVERSED))
+    if (nsAccUtils::State(actionAcc) & nsIAccessibleStates::STATE_TRAVERSED)
       *aState |= nsIAccessibleStates::STATE_TRAVERSED;
   }
 
@@ -275,8 +275,8 @@ nsLinkableAccessible::CacheActionContent()
     GetAccService()->GetAccessibleInWeakShell(walkUpNode, mWeakShell,
                                               getter_AddRefs(walkUpAcc));
 
-    if (walkUpAcc && Role(walkUpAcc) == nsIAccessibleRole::ROLE_LINK &&
-        (State(walkUpAcc) & nsIAccessibleStates::STATE_LINKED)) {
+    if (nsAccUtils::Role(walkUpAcc) == nsIAccessibleRole::ROLE_LINK &&
+        nsAccUtils::State(walkUpAcc) & nsIAccessibleStates::STATE_LINKED) {
       mIsLink = PR_TRUE;
       mActionContent = walkUpContent;
       return;

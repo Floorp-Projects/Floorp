@@ -883,14 +883,14 @@ NS_IMETHODIMP nsXULListitemAccessible::GetRole(PRUint32 *aRole)
   nsCOMPtr<nsIAccessible> listAcc = GetListAccessible();
   NS_ENSURE_STATE(listAcc);
 
-  if (Role(listAcc) == nsIAccessibleRole::ROLE_TABLE) {
+  if (nsAccUtils::Role(listAcc) == nsIAccessibleRole::ROLE_TABLE) {
     *aRole = nsIAccessibleRole::ROLE_ROW;
     return NS_OK;
   }
 
   if (mIsCheckbox)
     *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
-  else if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
+  else if (nsAccUtils::Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST)
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX_OPTION;
   else
     *aRole = nsIAccessibleRole::ROLE_RICH_OPTION;
