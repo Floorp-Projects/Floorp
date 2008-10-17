@@ -883,6 +883,10 @@ nsNavHistory::InitDB(PRInt16 *aMadeChanges)
 
   // DO NOT PUT ANY SCHEMA-MODIFYING THINGS HERE
 
+  rv = InitTempTables();
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = InitViews();
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = InitFunctions();
   NS_ENSURE_SUCCESS(rv, rv);
   rv = InitStatements();
@@ -958,6 +962,88 @@ NS_IMETHODIMP mozStorageFunctionGetUnreversedHost::OnFunctionCall(
     result->SetAsAString(NS_LITERAL_STRING(""));
   }
   NS_ADDREF(*_retval = result);
+  return NS_OK;
+}
+
+nsresult
+nsNavHistory::InitTempTables()
+{
+  nsresult rv;
+
+  // moz_places_temp
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_TEMP);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE UNIQUE INDEX moz_places_temp_url_uniqueindex ON moz_places_temp (url)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX moz_places_temp_faviconindex ON moz_places_temp (favicon_id)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX moz_places_temp_hostindex ON moz_places_temp (rev_host)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX moz_places_temp_visitcount ON moz_places_temp (visit_count)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX moz_places_temp_frecencyindex ON moz_places_temp (frecency)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+
+  // moz_historyvisits_temp
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_TEMP);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX moz_historyvisits_temp_placedateindex "
+    "ON moz_historyvisits_temp (place_id, visit_date)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX moz_historyvisits_temp_fromindex "
+    "ON moz_historyvisits_temp (from_visit)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX moz_historyvisits_temp_dateindex "
+    "ON moz_historyvisits_temp (visit_date)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+nsNavHistory::InitViews()
+{
+  nsresult rv;
+
+  // moz_places_view
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_VIEW);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_PLACES_VIEW_INSERT_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_PLACES_VIEW_DELETE_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_PLACES_VIEW_UPDATE_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // moz_historyvisits_view
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS_VIEW);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_VIEW_INSERT_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_VIEW_DELETE_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_VIEW_UPDATE_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
