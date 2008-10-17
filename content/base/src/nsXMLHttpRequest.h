@@ -64,6 +64,9 @@
 #include "nsIJSNativeInitializer.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMLSProgressEvent.h"
+#include "nsClassHashtable.h"
+#include "nsHashKeys.h"
+#include "prclist.h"
 #include "prtime.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMNSEvent.h"
@@ -71,6 +74,71 @@
 #include "nsDOMProgressEvent.h"
 
 class nsILoadGroup;
+
+class nsAccessControlLRUCache
+{
+public:
+  struct TokenTime
+  {
+    nsCString token;
+    PRTime expirationTime;
+  };
+
+  struct CacheEntry : public PRCList
+  {
+    CacheEntry(nsCString& aKey)
+      : mKey(aKey)
+    {
+      MOZ_COUNT_CTOR(nsAccessControlLRUCache::CacheEntry);
+    }
+    
+    ~CacheEntry()
+    {
+      MOZ_COUNT_DTOR(nsAccessControlLRUCache::CacheEntry);
+    }
+
+    void PurgeExpired(PRTime now);
+    PRBool CheckRequest(const nsCString& aMethod,
+                        const nsTArray<nsCString>& aCustomHeaders);
+
+    nsCString mKey;
+    nsTArray<TokenTime> mMethods;
+    nsTArray<TokenTime> mHeaders;
+  };
+
+  nsAccessControlLRUCache()
+  {
+    MOZ_COUNT_CTOR(nsAccessControlLRUCache);
+    PR_INIT_CLIST(&mList);
+  }
+
+  ~nsAccessControlLRUCache()
+  {
+    Clear();
+    MOZ_COUNT_DTOR(nsAccessControlLRUCache);
+  }
+
+  PRBool Initialize()
+  {
+    return mTable.Init();
+  }
+
+  CacheEntry* GetEntry(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                       PRBool aWithCredentials, PRBool aCreate);
+
+  void Clear();
+
+private:
+  PR_STATIC_CALLBACK(PLDHashOperator)
+    RemoveExpiredEntries(const nsACString& aKey, nsAutoPtr<CacheEntry>& aValue,
+                         void* aUserData);
+
+  static PRBool GetCacheKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
+                            PRBool aWithCredentials, nsACString& _retval);
+
+  nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
+  PRCList mList;
+};
 
 class nsDOMEventListenerWrapper : public nsIDOMEventListener
 {
@@ -265,12 +333,35 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXMLHttpRequest,
                                            nsXHREventTarget)
 
+  static PRBool EnsureACCache()
+  {
+    if (sAccessControlCache)
+      return PR_TRUE;
+
+    nsAutoPtr<nsAccessControlLRUCache> newCache(new nsAccessControlLRUCache());
+    NS_ENSURE_TRUE(newCache, PR_FALSE);
+
+    if (newCache->Initialize()) {
+      sAccessControlCache = newCache.forget();
+      return PR_TRUE;
+    }
+
+    return PR_FALSE;
+  }
+
+  static void ShutdownACCache()
+  {
+    delete sAccessControlCache;
+    sAccessControlCache = nsnull;
+  }
+
   PRBool AllowUploadProgress();
+
+  static nsAccessControlLRUCache* sAccessControlCache;
 
 protected:
   friend class nsMultipartProxyListener;
 
-  nsresult SetUploadDataAndType(nsIVariant* aBody);
   nsresult DetectCharset(nsACString& aCharset);
   nsresult ConvertBodyToText(nsAString& aOutBuffer);
   static NS_METHOD StreamReaderFunc(nsIInputStream* in,
@@ -283,6 +374,8 @@ protected:
   // determines if the onreadystatechange listener should be called.
   nsresult ChangeState(PRUint32 aState, PRBool aBroadcast = PR_TRUE);
   nsresult RequestCompleted();
+  nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
+  nsIURI *GetBaseURI();
 
   nsresult RemoveAddEventListener(const nsAString& aType,
                                   nsRefPtr<nsDOMEventListenerWrapper>& aCurrent,
@@ -307,7 +400,7 @@ protected:
   // mReadRequest is different from mChannel for multipart requests
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mResponseXML;
-  nsCOMPtr<nsIChannel> mACPreflightChannel;
+  nsCOMPtr<nsIChannel> mACGetChannel;
   nsTArray<nsCString> mACUnsafeHeaders;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnUploadProgressListener;
