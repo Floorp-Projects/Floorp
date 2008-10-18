@@ -696,7 +696,7 @@ static TTDeleteEmbeddedFontProc TTDeleteEmbeddedFontPtr = nsnull;
 
 static void InitializeFontEmbeddingProcs()
 {
-    HMODULE fontlib = LoadLibrary("t2embed.dll");
+    HMODULE fontlib = LoadLibraryW(L"t2embed.dll");
     if (!fontlib)
         return;
     TTLoadEmbeddedFontPtr = (TTLoadEmbeddedFontProc) GetProcAddress(fontlib, "TTLoadEmbeddedFont");

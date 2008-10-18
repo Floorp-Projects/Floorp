@@ -45,6 +45,25 @@
 
 #include "nsBaseAppShell.h"
 
+typedef struct _nsCocoaAppModalWindowListItem {
+  _nsCocoaAppModalWindowListItem() : mPrev(NULL), mWindow(nil), mSession(nil) {}
+  struct _nsCocoaAppModalWindowListItem *mPrev;
+  NSWindow *mWindow;       // Weak
+  NSModalSession mSession; // Weak (not retainable)
+} nsCocoaAppModalWindowListItem;
+
+class nsCocoaAppModalWindowList {
+public:
+  nsCocoaAppModalWindowList() : mList(NULL) {}
+  ~nsCocoaAppModalWindowList();
+  nsresult Push(NSWindow *aWindow, NSModalSession aSession);
+  nsresult Pop(NSWindow *aWindow, NSModalSession aSession);
+  NSModalSession CurrentSession();
+private:
+  nsCocoaAppModalWindowListItem *mList;
+};
+
+
 @class AppShellDelegate;
 
 class nsAppShell : public nsBaseAppShell

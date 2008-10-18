@@ -196,7 +196,6 @@ nsAutoFilterInstance::~nsAutoFilterInstance()
   if (!mTarget)
     return;
 
-  mTarget->SetOverrideCTM(nsnull);
   mTarget->SetMatrixPropagation(PR_TRUE);
   mTarget->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
                             nsISVGChildFrame::TRANSFORM_CHANGED);
