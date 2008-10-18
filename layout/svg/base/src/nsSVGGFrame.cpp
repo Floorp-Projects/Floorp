@@ -80,32 +80,12 @@ nsSVGGFrame::NotifySVGChanged(PRUint32 aFlags)
   nsSVGGFrameBase::NotifySVGChanged(aFlags);
 }
 
-NS_IMETHODIMP
-nsSVGGFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
-{
-  mOverrideCTM = aCTM;
-  return NS_OK;
-}
-
-already_AddRefed<nsIDOMSVGMatrix>
-nsSVGGFrame::GetOverrideCTM()
-{
-  nsIDOMSVGMatrix *matrix = mOverrideCTM.get();
-  NS_IF_ADDREF(matrix);
-  return matrix;
-}
-
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGGFrame::GetCanvasTM()
 {
   if (!GetMatrixPropagation()) {
     nsIDOMSVGMatrix *retval;
-    if (mOverrideCTM) {
-      retval = mOverrideCTM;
-      NS_ADDREF(retval);
-    } else {
-      NS_NewSVGMatrix(&retval);
-    }
+    NS_NewSVGMatrix(&retval);
     return retval;
   }
 
