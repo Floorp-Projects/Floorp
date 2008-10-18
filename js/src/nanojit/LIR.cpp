@@ -250,7 +250,7 @@ namespace nanojit
 
 	LInsp LirBufWriter::ensureReferenceable(LInsp i, int32_t addedDistance)
 	{
-		NanoAssert(i != 0 && !i->isTramp());
+		NanoAssert(i != 0 /* && !i->isTramp()*/);
 		LInsp next = _buf->next();
 		LInsp from = next + 2*addedDistance;
 		if (canReference(from,i))
