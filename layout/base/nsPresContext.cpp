@@ -1553,6 +1553,9 @@ nsPresContext::FireDOMPaintEvent()
     // (Events sent to the window get propagated to the chrome event handler
     // automatically.)
     eventTarget = ourWindow->GetChromeEventHandler();
+    if (!eventTarget) {
+      return;
+    }
   }
   // Events sent to the window get propagated to the chrome event handler
   // automatically.
