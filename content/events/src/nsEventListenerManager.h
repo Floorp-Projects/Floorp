@@ -151,7 +151,7 @@ protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEventListener* aListener,
                               nsIDOMEvent* aDOMEvent,
-                              nsISupports* aCurrentTarget,
+                              nsPIDOMEventTarget* aCurrentTarget,
                               PRUint32 aPhaseFlags);
   nsresult CompileEventHandlerInternal(nsIScriptContext *aContext,
                                        void *aScopeObject,
