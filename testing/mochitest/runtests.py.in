@@ -456,9 +456,8 @@ def maybeForceLeakThreshold(options):
       # We still leak a nondeterministic amount running browser-chrome tests.
       pass
     else:
-      # We leak nothing on Windows or OS X running normal Mochitests.
-      if automation.IS_MAC or automation.IS_WIN32:
-        options.leakThreshold = 0
+      # Normal Mochitests: no leaks.
+      options.leakThreshold = 0
 
 def makeTestConfig(options):
   "Creates a test configuration file for customizing test execution."
