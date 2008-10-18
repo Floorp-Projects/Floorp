@@ -1095,9 +1095,10 @@ class nsIWidget : public nsISupports {
         CTRL_R = 0x0800,
         ALT_L = 0x1000, // includes Option
         ALT_R = 0x2000,
-        COMMAND = 0x4000,
-        HELP = 0x8000,
-        FUNCTION = 0x10000,
+        COMMAND_L = 0x4000,
+        COMMAND_R = 0x8000,
+        HELP = 0x10000,
+        FUNCTION = 0x100000,
         NUMERIC_KEY_PAD = 0x01000000 // when the key is coming from the keypad
     };
     /**

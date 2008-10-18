@@ -127,8 +127,6 @@ public:
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   virtual PRBool GetMatrixPropagation();
-  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM) { return NS_ERROR_FAILURE; }
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM() { return nsnull; }
   NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_FALSE; }
   NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
 

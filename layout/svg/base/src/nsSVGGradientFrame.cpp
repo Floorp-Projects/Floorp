@@ -166,26 +166,9 @@ nsSVGGradientFrame::GetGradientTransform(nsSVGGeometryFrame *aSource)
                  "Unknown gradientUnits type");
     // objectBoundingBox is the default anyway
 
-    nsISVGChildFrame *frame = nsnull;
-    if (aSource) {
-      if (callerType == nsGkAtoms::svgGlyphFrame)
-        CallQueryInterface(aSource->GetParent(), &frame);
-      else
-        CallQueryInterface(aSource, &frame);
-    }
-    nsCOMPtr<nsIDOMSVGRect> rect;
-    if (frame) {
-      nsCOMPtr<nsIDOMSVGMatrix> matrix = frame->GetOverrideCTM();
-      frame->SetMatrixPropagation(PR_FALSE);
-      frame->SetOverrideCTM(nsnull);
-      frame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                              nsISVGChildFrame::TRANSFORM_CHANGED);
-      frame->GetBBox(getter_AddRefs(rect));
-      frame->SetMatrixPropagation(PR_TRUE);
-      frame->SetOverrideCTM(matrix);
-      frame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                              nsISVGChildFrame::TRANSFORM_CHANGED);
-    }
+    nsIFrame *frame = (callerType == nsGkAtoms::svgGlyphFrame) ?
+                        aSource->GetParent() : aSource;
+    nsCOMPtr<nsIDOMSVGRect> rect = nsSVGUtils::GetBBox(frame);
     if (rect) {
       float x, y, width, height;
       rect->GetX(&x);
