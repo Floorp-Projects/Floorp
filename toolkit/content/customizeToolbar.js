@@ -56,7 +56,8 @@ function InitWithToolbox(aToolbox)
 {
   gToolbox = aToolbox;
   gToolboxDocument = gToolbox.ownerDocument;
-  
+  gToolbox.customizing = true;
+
   gToolbox.addEventListener("dragstart", onToolbarDragStart, false);
   gToolbox.addEventListener("dragover", onToolbarDragOver, false);
   gToolbox.addEventListener("dragleave", onToolbarDragLeave, false);
@@ -67,6 +68,7 @@ function InitWithToolbox(aToolbox)
 
 function finishToolbarCustomization()
 {
+  gToolbox.customizing = false;
   removeToolboxListeners();
   unwrapToolbarItems();
   persistCurrentSets();
