@@ -5766,7 +5766,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  PRUint32 message = keyDown ? NS_KEY_DOWN : NS_KEY_UP;
+  PRUint32 message = isKeyDown ? NS_KEY_DOWN : NS_KEY_UP;
 
   // Fire a key event.
   nsKeyEvent geckoEvent(PR_TRUE, message, nsnull);
