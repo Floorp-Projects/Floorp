@@ -6279,7 +6279,7 @@ Boolish(JSParseNode *pn)
 {
     switch (pn->pn_op) {
       case JSOP_DOUBLE:
-        return pn->pn_dval != 0;
+        return pn->pn_dval != 0 && !JSDOUBLE_IS_NaN(pn->pn_dval);
 
       case JSOP_STRING:
         return JSSTRING_LENGTH(ATOM_TO_STRING(pn->pn_atom)) != 0;
@@ -6728,6 +6728,14 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             pn->pn_arity = PN_NULLARY;
             pn->pn_dval = d;
             RecycleTree(pn1, tc);
+        } else if (pn1->pn_type == TOK_PRIMARY) {
+            if (pn->pn_op == JSOP_NOT &&
+                (pn1->pn_op == JSOP_TRUE ||
+                 pn1->pn_op == JSOP_FALSE)) {
+                PN_MOVE_NODE(pn, pn1);
+                pn->pn_op = (pn->pn_op == JSOP_TRUE) ? JSOP_FALSE : JSOP_TRUE;
+                RecycleTree(pn1, tc);
+            }
         }
         break;
 
