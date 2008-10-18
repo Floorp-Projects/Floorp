@@ -1442,9 +1442,13 @@ static KeyboardLayoutOverride gOverrideKeyboardLayout;
 static const PRUint32 sModifierFlagMap[][2] = {
   { nsIWidget::CAPS_LOCK, NSAlphaShiftKeyMask },
   { nsIWidget::SHIFT_L, NSShiftKeyMask },
+  { nsIWidget::SHIFT_R, NSShiftKeyMask },
   { nsIWidget::CTRL_L, NSControlKeyMask },
+  { nsIWidget::CTRL_R, NSControlKeyMask },
   { nsIWidget::ALT_L, NSAlternateKeyMask },
-  { nsIWidget::COMMAND, NSCommandKeyMask },
+  { nsIWidget::ALT_R, NSAlternateKeyMask },
+  { nsIWidget::COMMAND_L, NSCommandKeyMask },
+  { nsIWidget::COMMAND_R, NSCommandKeyMask },
   { nsIWidget::NUMERIC_KEY_PAD, NSNumericPadKeyMask },
   { nsIWidget::HELP, NSHelpKeyMask },
   { nsIWidget::FUNCTION, NSFunctionKeyMask }
@@ -1464,7 +1468,19 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
     }
   }
   int windowNumber = [[mView window] windowNumber];
-  BOOL sendFlagsChangedEvent = aNativeKeyCode == kCapsLockKeyCode;
+  BOOL sendFlagsChangedEvent = NO;
+  switch (aNativeKeyCode) {
+    case kCapsLockKeyCode:
+    case kRCommandKeyCode:
+    case kCommandKeyCode:
+    case kShiftKeyCode:
+    case kOptionkeyCode:
+    case kControlKeyCode:
+    case kRShiftKeyCode:
+    case kROptionKeyCode:
+    case kRControlKeyCode:
+      sendFlagsChangedEvent = YES;
+  }
   NSEventType eventType = sendFlagsChangedEvent ? NSFlagsChanged : NSKeyDown;
   NSEvent* downEvent = [NSEvent keyEventWithType:eventType
                                         location:NSMakePoint(0,0)
