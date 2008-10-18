@@ -2247,7 +2247,7 @@ Engine.prototype = {
 
   // from nsISearchEngine
   addParam: function SRCH_ENG_addParam(aName, aValue, aResponseType) {
-    if (!aName || (aValue === null))
+    if (!aName || (aValue == null))
       FAIL("missing name or value for nsISearchEngine::addParam!");
     ENSURE_WARN(!this._readOnly,
                 "called nsISearchEngine::addParam on a read-only engine!",
