@@ -74,8 +74,6 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM();
   virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
@@ -112,7 +110,6 @@ private:
   void UpdateGlyphPositioning(PRBool aForceGlobalTransform);
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
-  nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
 
   enum UpdateState { unsuspended, suspended };
   UpdateState mMetricsState;

@@ -416,7 +416,8 @@
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>
 
-      <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
+      <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center"
+                   mousethrough="always">
         <button id="navigator-throbber" disabled="true"/>
       </toolbaritem>
 

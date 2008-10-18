@@ -111,8 +111,6 @@ protected:
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   virtual PRBool GetMatrixPropagation();
-  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM();
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_FALSE; }
   NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
@@ -154,8 +152,6 @@ private:
    * @param aFrame should be the first continuation
    */
   static MarkerProperties GetMarkerProperties(nsSVGPathGeometryFrame *aFrame);
-
-  nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
 };
 
 #endif // __NS_SVGPATHGEOMETRYFRAME_H__

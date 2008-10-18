@@ -115,3 +115,12 @@ js1_7/geniter/regress-347739.js
 js1_7/geniter/regress-349012-01.js
 js1_7/geniter/regress-349331.js
 js1_7/iterable/regress-340526-02.js
+# bug 443074
+e4x/decompilation/regress-373678.js
+js1_5/decompilation/regress-351336.js
+js1_5/decompilation/regress-351626.js
+js1_5/decompilation/regress-354878.js
+js1_5/decompilation/regress-373678.js
+js1_5/extensions/regress-352281.js
+js1_7/decompilation/regress-346642-01.js
+js1_7/decompilation/regress-349605.js
