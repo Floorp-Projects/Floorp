@@ -509,11 +509,11 @@ nsTextEditorDragListener::HandleEvent(nsIDOMEvent* aEvent)
     if (eventType.EqualsLiteral("dragstart"))
       return DragStart(dragEvent);
     if (eventType.EqualsLiteral("dragenter"))
-      return DragStart(dragEvent);
+      return DragEnter(dragEvent);
     if (eventType.EqualsLiteral("dragover"))
       return DragOver(dragEvent);
     if (eventType.EqualsLiteral("dragleave"))
-      return DragStart(dragEvent);
+      return DragLeave(dragEvent);
     if (eventType.EqualsLiteral("drop"))
       return Drop(dragEvent);
   }
