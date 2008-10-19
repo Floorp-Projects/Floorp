@@ -229,6 +229,8 @@ _TEST_FILES = 	test_bug5141.html \
 		file_XHRDocURI.text \
 		file_XHRDocURI.text^headers^ \
 		test_bug459424.html \
+		test_bug444546.html \
+		bug444546.sjs \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
