@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+
+#c3, #c4 {
+  display: none;
+}
+
+input:checked + label {
+  background-color: yellow;
+}
+
+</style>
+
+<script type="text/javascript">
+
+function toggleAllCheckboxes()
+{
+  for (var i = 1; i <= 4; ++i) {
+    var cb = document.getElementById('c'+i);
+    cb.checked = !cb.checked;
+  }
+}
+
+</script>
+</head>
+
+<body onload="toggleAllCheckboxes();">
+
+<div><input type="checkbox" name="test" id="c1"><label for="c1">check #c1</label></div>
+<div><input type="checkbox" name="test" id="c2" checked><label for="c2">check #c2</label></div>
+<div><input type="checkbox" name="test" id="c3"><label for="c3">check #c3</label></div>
+<div><input type="checkbox" name="test" id="c4" checked><label for="c4">check #c4</label></div>
+
+</body>
+</html>
