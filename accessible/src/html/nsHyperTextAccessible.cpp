@@ -2236,6 +2236,20 @@ nsHyperTextAccessible::GetSpellTextAttribute(nsIDOMNode *aNode,
     PRInt16 result;
     rv = nsrange->ComparePoint(aNode, aNodeOffset, &result);
     NS_ENSURE_SUCCESS(rv, rv);
+    // ComparePoint checks boundary points, but we need to check that
+    // text at aNodeOffset is inside the range.
+    // See also bug 460690.
+    if (result == 0) {
+      nsCOMPtr<nsIDOMNode> end;
+      rv = range->GetEndContainer(getter_AddRefs(end));
+      NS_ENSURE_SUCCESS(rv, rv);
+      PRInt32 endOffset;
+      rv = range->GetEndOffset(&endOffset);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (aNode == end && aNodeOffset == endOffset) {
+        result = 1;
+      }
+    }
 
     if (result == 1) { // range is before point
       PRInt32 startHTOffset = 0;
