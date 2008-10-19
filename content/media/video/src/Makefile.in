@@ -42,10 +42,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_OGG
-ifeq ($(OS_ARCH),Linux)
-DEFINES += -DSYDNEY_AUDIO_NO_POSITION
-endif
-
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 DEFINES += -DSYDNEY_AUDIO_NO_VOLUME -DSYDNEY_AUDIO_NO_POSITION
 endif
@@ -89,13 +85,15 @@ REQUIRES	= \
 		$(NULL)
 
 CPPSRCS		= \
-		nsVideoDecoder.cpp \
+		nsMediaDecoder.cpp \
 		$(NULL)
 
 ifdef MOZ_OGG
 CPPSRCS		+= \
 		nsAudioStream.cpp \
 		nsChannelReader.cpp \
+		nsChannelToPipeListener.cpp \
+		nsMediaStream.cpp \
 		nsOggDecoder.cpp \
 		$(NULL)
 endif
