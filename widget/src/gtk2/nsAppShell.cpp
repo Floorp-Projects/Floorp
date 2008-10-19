@@ -41,7 +41,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <gdk/gdkwindow.h>
-#include "nsCommonWidget.h"
 #include "nsAppShell.h"
 #include "prlog.h"
 #include "prenv.h"

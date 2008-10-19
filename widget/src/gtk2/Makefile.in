@@ -94,7 +94,6 @@ CPPSRCS		= \
 		nsWidgetFactory.cpp \
 		nsToolkit.cpp \
 		nsBidiKeyboard.cpp \
-		nsCommonWidget.cpp \
 		nsLookAndFeel.cpp \
 		nsGtkKeyUtils.cpp \
 		nsFilePicker.cpp \
