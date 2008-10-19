@@ -295,6 +295,12 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPageURI,
     }
   }
 
+  nsNavHistory* historyService = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(historyService, NS_ERROR_OUT_OF_MEMORY);
+
+  if (historyService->InPrivateBrowsingMode())
+    return NS_OK;
+
   if (iconId == -1) {
     // We did not find any entry, so create a new one
     *aHasData = PR_FALSE;
@@ -323,9 +329,6 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPageURI,
   }
 
   // now link our icon entry with the page
-  nsNavHistory* historyService = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(historyService, NS_ERROR_OUT_OF_MEMORY);
-
   PRInt64 pageId;
   rv = historyService->GetUrlIdFor(aPageURI, &pageId, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);

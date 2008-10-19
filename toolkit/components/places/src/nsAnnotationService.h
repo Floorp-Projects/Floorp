@@ -171,6 +171,8 @@ protected:
   static nsresult GetPlaceIdForURI(nsIURI* aURI, PRInt64* _retval,
                                    PRBool aAutoCreate = PR_TRUE);
 
+  PRBool InPrivateBrowsingMode() const;
+
   void CallSetForPageObservers(nsIURI* aURI, const nsACString& aName);
   void CallSetForItemObservers(PRInt64 aItemId, const nsACString& aName);
 
