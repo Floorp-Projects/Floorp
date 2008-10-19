@@ -229,9 +229,11 @@ _TEST_FILES = 	test_bug5141.html \
 		file_XHRDocURI.text \
 		file_XHRDocURI.text^headers^ \
 		test_bug459424.html \
-		test_bug444546.html \
-		bug444546.sjs \
 		$(NULL)
+
+# Disabled for now. Mochitest isn't reliable enough for these.
+# test_bug444546.html \
+# bug444546.sjs \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
