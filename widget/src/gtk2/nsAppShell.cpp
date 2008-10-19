@@ -42,6 +42,7 @@
 #include <errno.h>
 #include <gdk/gdkwindow.h>
 #include "nsAppShell.h"
+#include "nsWindow.h"
 #include "prlog.h"
 #include "prenv.h"
 
