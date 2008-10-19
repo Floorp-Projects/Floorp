@@ -53,9 +53,18 @@ _TEST_FILES = 	test_autoplay.html \
                 test_playbackRate.html \
                 test_readyState.html \
                 test_start.html \
+                test_seek1.html \
+                test_seek2.html \
+                test_seek3.html \
+                test_seek4.html \
+                test_seek5.html \
+                test_seek6.html \
+                test_seek7.html \
+                test_seek8.html \
                 test_volume.html \
-#               test_bug448534.html \
                 320x240.ogg \
+                seek.ogg \
+#                test_bug448534.html \
                 $(NULL)
 
 libs:: $(_TEST_FILES)

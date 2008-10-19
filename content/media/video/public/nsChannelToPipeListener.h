@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -35,43 +34,67 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIDOMHTMLAudioElement.h"
-#include "nsHTMLMediaElement.h"
+#if !defined(nsChannelToPipeListener_h_)
+#define nsChannelToPipeListener_h_
 
-typedef PRUint16 nsMediaNetworkState;
-typedef PRUint16 nsMediaReadyState;
+#include "nsCOMPtr.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
+#include "nsIRequestObserver.h"
+#include "nsIStreamListener.h"
+#include "nsIPrincipal.h"
 
-class nsHTMLAudioElement : public nsHTMLMediaElement,
-                           public nsIDOMHTMLAudioElement
+// Constant for download and playback rates that are unknown, or otherwise
+// unable to be computed.
+#define NS_MEDIA_UNKNOWN_RATE -1.0
+
+class nsMediaDecoder;
+
+/* 
+   Reads all data on the input stream of a channel and
+   writes it to a pipe. This allows a seperate thread to
+   read data from a channel running on the main thread
+*/
+class nsChannelToPipeListener : public nsIStreamListener
 {
-public:
-  nsHTMLAudioElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
-  virtual ~nsHTMLAudioElement();
+  // ISupports
+  NS_DECL_ISUPPORTS
 
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  // IRequestObserver
+  NS_DECL_NSIREQUESTOBSERVER
 
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsHTMLMediaElement::)
+  // IStreamListener
+  NS_DECL_NSISTREAMLISTENER
 
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsHTMLMediaElement::)
+  public:
+  nsChannelToPipeListener(nsMediaDecoder* aDecoder);
+  nsresult Init();
+  nsresult GetInputStream(nsIInputStream** aStream);
+  void Stop();
+  void Cancel();
 
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsHTMLMediaElement::)
+  // Return the download rate in bytes per second. Returns 
+  // less than zero if the download has complated.
+  double BytesPerSecond() const;
 
-  // nsIDOMHTMLMediaElement
-  NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(nsHTMLMediaElement::)
+  nsIPrincipal* GetCurrentPrincipal();
 
-  // nsIDOMHTMLAudioElement
-  NS_DECL_NSIDOMHTMLAUDIOELEMENT
+private:
+  nsCOMPtr<nsIInputStream> mInput;
+  nsCOMPtr<nsIOutputStream> mOutput;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsRefPtr<nsMediaDecoder> mDecoder;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
-protected:
-  virtual nsresult InitializeDecoder(nsAString& aChosenMediaResource);
+  // Interval when download started. Used in
+  // computing bytes per second download rate.
+  PRIntervalTime mIntervalStart;
+
+  // Interval when last downloaded bytes occurred. Used in computer
+  // bytes per second download rate.
+  PRIntervalTime mIntervalEnd;
+
+  // Total bytes transferred so far
+  PRInt64 mTotalBytes;
 };
+
+#endif

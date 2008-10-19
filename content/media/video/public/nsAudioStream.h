@@ -72,6 +72,10 @@ class nsAudioStream
   // channels in this audio stream.
   nsresult Write(float* aBuf, PRUint32 count);
 
+  // Return the number of sound samples that can be written to the audio device
+  // without blocking.
+  PRInt32 Available();
+
   // Store in aTime the position (in seconds) of the audio sample currently 
   // being played by the audio hardware.
   nsresult GetTime(double* aTime);
