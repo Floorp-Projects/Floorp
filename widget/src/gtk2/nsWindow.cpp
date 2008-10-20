@@ -2557,29 +2557,23 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
     sIsDraggingOutOf = PR_FALSE;
 
     // see if we can compress this event
+    // XXXldb Why skip every other motion event when we have multiple,
+    // but not more than that?
     PRPackedBool synthEvent = PR_FALSE;
-    GdkEvent* gdkevent = NULL;
+#ifdef MOZ_X11
+    XEvent xevent;
 
-    while (GdkEvent *peeked = gdk_display_peek_event (gdk_drawable_get_display (GDK_DRAWABLE(aEvent->window)))) {
-        PRPackedBool wrongType = PR_FALSE;
-
-        if (peeked->any.window != aEvent->window
-            || peeked->type != GDK_MOTION_NOTIFY)
-            wrongType = PR_TRUE;
-
-        gdk_event_free (peeked);
-
-        if (wrongType)
+    while (XPending (GDK_WINDOW_XDISPLAY(aEvent->window))) {
+        XEvent peeked;
+        XPeekEvent (GDK_WINDOW_XDISPLAY(aEvent->window), &peeked);
+        if (peeked.xany.window != GDK_WINDOW_XWINDOW(aEvent->window)
+            || peeked.type != MotionNotify)
             break;
 
         synthEvent = PR_TRUE;
-        if (gdkevent)
-            gdk_event_free (gdkevent);
-        gdkevent = gdk_event_get ();
-        aEvent = &gdkevent->motion;
+        XNextEvent (GDK_WINDOW_XDISPLAY(aEvent->window), &xevent);
     }
 
-#if MOZ_X11
     // if plugins still keeps the focus, get it back
     if (gPluginFocusWindow && gPluginFocusWindow != this) {
         nsRefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
@@ -2589,29 +2583,55 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
 
-    // XXX see OnScrollEvent()
-    if (synthEvent || aEvent->window == mDrawingarea->inner_window) {
+    if (synthEvent) {
+#ifdef MOZ_X11
+        event.refPoint.x = nscoord(xevent.xmotion.x);
+        event.refPoint.y = nscoord(xevent.xmotion.y);
+
+        event.isShift   = (xevent.xmotion.state & GDK_SHIFT_MASK)
+            ? PR_TRUE : PR_FALSE;
+        event.isControl = (xevent.xmotion.state & GDK_CONTROL_MASK)
+            ? PR_TRUE : PR_FALSE;
+        event.isAlt     = (xevent.xmotion.state & GDK_MOD1_MASK)
+            ? PR_TRUE : PR_FALSE;
+
+        event.time = xevent.xmotion.time;
+#else
         event.refPoint.x = nscoord(aEvent->x);
         event.refPoint.y = nscoord(aEvent->y);
-    } else {
-        nsRect windowRect;
-        ScreenToWidget(nsRect(nscoord(aEvent->x_root), nscoord(aEvent->y_root), 1, 1), windowRect);
 
-        event.refPoint.x = windowRect.x;
-        event.refPoint.y = windowRect.y;
+        event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
+            ? PR_TRUE : PR_FALSE;
+        event.isControl = (aEvent->state & GDK_CONTROL_MASK)
+            ? PR_TRUE : PR_FALSE;
+        event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
+            ? PR_TRUE : PR_FALSE;
+
+        event.time = aEvent->time;
+#endif /* MOZ_X11 */
     }
+    else {
+        // XXX see OnScrollEvent()
+        if (aEvent->window == mDrawingarea->inner_window) {
+            event.refPoint.x = nscoord(aEvent->x);
+            event.refPoint.y = nscoord(aEvent->y);
+        } else {
+            nsRect windowRect;
+            ScreenToWidget(nsRect(nscoord(aEvent->x_root), nscoord(aEvent->y_root), 1, 1), windowRect);
 
-    event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-        ? PR_TRUE : PR_FALSE;
-    event.isControl = (aEvent->state & GDK_CONTROL_MASK)
-        ? PR_TRUE : PR_FALSE;
-    event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-        ? PR_TRUE : PR_FALSE;
+            event.refPoint.x = windowRect.x;
+            event.refPoint.y = windowRect.y;
+        }
 
-    event.time = aEvent->time;
+        event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
+            ? PR_TRUE : PR_FALSE;
+        event.isControl = (aEvent->state & GDK_CONTROL_MASK)
+            ? PR_TRUE : PR_FALSE;
+        event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
+            ? PR_TRUE : PR_FALSE;
 
-    if (synthEvent)
-        gdk_event_free (gdkevent);
+        event.time = aEvent->time;
+    }
 
     nsEventStatus status;
     DispatchEvent(&event, status);
