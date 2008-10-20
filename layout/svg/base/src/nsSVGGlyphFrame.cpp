@@ -298,7 +298,8 @@ nsSVGGlyphFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
+nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
+                          const nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;

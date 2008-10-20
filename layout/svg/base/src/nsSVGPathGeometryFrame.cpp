@@ -114,7 +114,7 @@ nsSVGPathGeometryFrame::GetType() const
 
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::PaintSVG(nsSVGRenderState *aContext,
-                                 nsIntRect *aDirtyRect)
+                                 const nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
