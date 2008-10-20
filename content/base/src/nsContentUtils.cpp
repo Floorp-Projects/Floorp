@@ -158,6 +158,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDragService.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIOfflineCacheUpdate.h"
+#include "nsCPrefetchService.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -824,17 +826,34 @@ nsContentUtils::GetOfflineAppManifest(nsIDOMWindow *aWindow, nsIURI **aURI)
 PRBool
 nsContentUtils::OfflineAppAllowed(nsIURI *aURI)
 {
-  return NS_OfflineAppAllowed(aURI, sPrefBranch);
+  nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
+    do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+  if (!updateService) {
+    return PR_FALSE;
+  }
+
+  PRBool allowed;
+  nsresult rv = updateService->OfflineAppAllowedForURI(aURI,
+                                                       sPrefBranch,
+                                                       &allowed);
+  return NS_SUCCEEDED(rv) && allowed;
 }
 
 /* static */
 PRBool
 nsContentUtils::OfflineAppAllowed(nsIPrincipal *aPrincipal)
 {
-  nsCOMPtr<nsIURI> codebaseURI;
-  aPrincipal->GetURI(getter_AddRefs(codebaseURI));
+  nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
+    do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
+  if (!updateService) {
+    return PR_FALSE;
+  }
 
-  return OfflineAppAllowed(codebaseURI);
+  PRBool allowed;
+  nsresult rv = updateService->OfflineAppAllowed(aPrincipal,
+                                                 sPrefBranch,
+                                                 &allowed);
+  return NS_SUCCEEDED(rv) && allowed;
 }
 
 // static
