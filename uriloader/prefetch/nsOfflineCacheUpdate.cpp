@@ -54,6 +54,8 @@
 #include "nsIWebProgress.h"
 #include "nsICryptoHash.h"
 #include "nsICacheEntryDescriptor.h"
+#include "nsIPermissionManager.h"
+#include "nsIPrincipal.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsNetCID.h"
@@ -2063,3 +2065,73 @@ nsOfflineCacheUpdateService::OnSecurityChange(nsIWebProgress *aWebProgress,
     NS_NOTREACHED("notification excluded in AddProgressListener(...)");
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsOfflineCacheUpdateService::OfflineAppAllowed(nsIPrincipal *aPrincipal,
+                                               nsIPrefBranch *aPrefBranch,
+                                               PRBool *aAllowed)
+{
+    nsCOMPtr<nsIURI> codebaseURI;
+    nsresult rv = aPrincipal->GetURI(getter_AddRefs(codebaseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return OfflineAppAllowedForURI(codebaseURI, aPrefBranch, aAllowed);
+}
+
+NS_IMETHODIMP
+nsOfflineCacheUpdateService::OfflineAppAllowedForURI(nsIURI *aURI,
+                                                     nsIPrefBranch *aPrefBranch,
+                                                     PRBool *aAllowed)
+{
+    *aAllowed = PR_FALSE;
+
+    nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
+    if (!innerURI)
+        return NS_OK;
+
+    // only http and https applications can use offline APIs.
+    PRBool match;
+    nsresult rv = innerURI->SchemeIs("http", &match);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!match) {
+        rv = innerURI->SchemeIs("https", &match);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (!match) {
+            return NS_OK;
+        }
+    }
+
+    nsCOMPtr<nsIPermissionManager> permissionManager =
+        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+    if (!permissionManager) {
+        return NS_OK;
+    }
+
+    PRUint32 perm;
+    permissionManager->TestExactPermission(innerURI, "offline-app", &perm);
+
+    if (perm == nsIPermissionManager::UNKNOWN_ACTION) {
+        nsCOMPtr<nsIPrefBranch> branch = aPrefBranch;
+        if (!branch) {
+            branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        }
+        if (branch) {
+            rv = branch->GetBoolPref("offline-apps.allow_by_default", aAllowed);
+            if (NS_FAILED(rv)) {
+                *aAllowed = PR_FALSE;
+            }
+        }
+
+        return NS_OK;
+    }
+
+    if (perm == nsIPermissionManager::DENY_ACTION) {
+        return NS_OK;
+    }
+
+    *aAllowed = PR_TRUE;
+
+    return NS_OK;
+}
+
