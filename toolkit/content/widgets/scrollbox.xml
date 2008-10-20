@@ -42,6 +42,10 @@
     </content>
 
     <implementation>
+      <destructor><![CDATA[
+        this._stopSmoothScroll();
+      ]]></destructor>
+
       <field name="_scrollbox">
         document.getAnonymousElementByAttribute(this, "anonid", "scrollbox");
       </field>
@@ -303,8 +307,10 @@
 
       <method name="_stopSmoothScroll">
         <body><![CDATA[
-          clearInterval(this._smoothScrollTimer);
-          this._isScrolling = 0;
+          if (this._isScrolling) {
+            clearInterval(this._smoothScrollTimer);
+            this._isScrolling = 0;
+          }
         ]]></body>
       </method>
 
