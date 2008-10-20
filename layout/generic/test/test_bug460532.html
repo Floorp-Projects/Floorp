@@ -43,6 +43,7 @@ function click_460532(){
   var content = document.getElementById('content');
   var rect = content.getBoundingClientRect();
   wu.sendMouseEvent('mousedown', rect.left+5, rect.top+5, 0, 1, 0);
+  wu.sendMouseEvent('mouseup', rect.left+5, rect.top+5, 0, 1, 0);
   ok(true, "pass");
   SimpleTest.finish();
 }
