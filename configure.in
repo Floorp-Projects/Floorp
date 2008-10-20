@@ -1295,6 +1295,7 @@ if test "$GNU_CC"; then
     WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
+    ASFLAGS="$ASFLAGS -fPIC"
     _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
     _MOZ_RTTI_FLAGS_OFF=${_COMPILER_PREFIX}-fno-rtti
     _MOZ_EXCEPTIONS_FLAGS_ON='-fhandle-exceptions'
