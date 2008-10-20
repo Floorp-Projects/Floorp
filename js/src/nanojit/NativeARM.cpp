@@ -300,7 +300,14 @@ Assembler::nRegisterResetAll(RegAlloc& a)
     // add scratch registers to our free list for the allocator
     a.clear();
     a.used = 0;
-    a.free = rmask(R0) | rmask(R1) | rmask(R2) | rmask(R3) | rmask(R4) | rmask(R5) | FpRegs;
+    a.free =
+        rmask(R0) | rmask(R1) | rmask(R2) | rmask(R3) | rmask(R4) |
+        rmask(R5) | rmask(R6) | rmask(R7) | rmask(R8) | rmask(R9) |
+        rmask(R10);
+#ifdef NJ_ARM_VFP
+    a.free |= FpRegs;
+#endif
+
     debug_only(a.managed = a.free);
 }
 
