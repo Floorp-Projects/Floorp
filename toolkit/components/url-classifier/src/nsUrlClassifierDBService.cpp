@@ -131,7 +131,7 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 // want to change schema, or to recover from updating bugs.  When an
 // implementation version change is detected, the database is scrapped
 // and we start over.
-#define IMPLEMENTATION_VERSION 5
+#define IMPLEMENTATION_VERSION 6
 
 #define MAX_HOST_COMPONENTS 5
 #define MAX_PATH_COMPONENTS 4
@@ -455,21 +455,6 @@ public:
   virtual nsresult BindStatement(const nsUrlClassifierEntry& entry,
                                  mozIStorageStatement* statement);
 
-  // Read the entries for a given key/table from the database
-  nsresult ReadEntries(const nsUrlClassifierDomainHash& key,
-                       PRUint32 tableId,
-                       nsTArray<nsUrlClassifierEntry>& entry);
-
-  // Read the entries for a given key/table/chunk from the database
-  nsresult ReadEntries(const nsUrlClassifierDomainHash& key,
-                       PRUint32 tableId,
-                       PRUint32 chunkId,
-                       nsTArray<nsUrlClassifierEntry>& entry);
-
-  // Read the entries for a given host key from the database.
-  nsresult ReadEntries(const nsUrlClassifierDomainHash& key,
-                       nsTArray<nsUrlClassifierEntry>& entry);
-
   // Read the entry with a given ID from the database
   nsresult ReadEntry(PRInt64 id, nsUrlClassifierEntry& entry, PRBool *exists);
 
@@ -498,18 +483,12 @@ public:
   // replaced with nsIRandomGenerator when 419739 is fixed.
   nsresult RandomNumber(PRInt64 *randomNum);
 
-  // Retrieve the lookup statement for this table.
-  mozIStorageStatement *LookupStatement() { return mLookupStatement; }
-
 protected:
   nsresult ReadEntries(mozIStorageStatement *statement,
                        nsTArray<nsUrlClassifierEntry>& entries);
   nsUrlClassifierDBServiceWorker *mWorker;
   nsCOMPtr<mozIStorageConnection> mConnection;
 
-  nsCOMPtr<mozIStorageStatement> mLookupStatement;
-  nsCOMPtr<mozIStorageStatement> mLookupWithTableStatement;
-  nsCOMPtr<mozIStorageStatement> mLookupWithChunkStatement;
   nsCOMPtr<mozIStorageStatement> mLookupWithIDStatement;
 
   nsCOMPtr<mozIStorageStatement> mInsertStatement;
@@ -535,26 +514,8 @@ nsUrlClassifierStore::Init(nsUrlClassifierDBServiceWorker *worker,
 
   nsresult rv = mConnection->CreateStatement
     (NS_LITERAL_CSTRING("SELECT * FROM ") + entriesName +
-     NS_LITERAL_CSTRING(" WHERE domain=?1"),
-     getter_AddRefs(mLookupStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mConnection->CreateStatement
-    (NS_LITERAL_CSTRING("SELECT * FROM ") + entriesName +
-     NS_LITERAL_CSTRING(" WHERE domain=?1 AND table_id=?2"),
-     getter_AddRefs(mLookupWithTableStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mConnection->CreateStatement
-    (NS_LITERAL_CSTRING("SELECT * FROM ") + entriesName +
      NS_LITERAL_CSTRING(" WHERE id=?1"),
      getter_AddRefs(mLookupWithIDStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mConnection->CreateStatement
-    (NS_LITERAL_CSTRING("SELECT * FROM ") + entriesName +
-     NS_LITERAL_CSTRING(" WHERE domain=?1 AND table_id=?2 AND chunk_id=?3"),
-     getter_AddRefs(mLookupWithChunkStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mConnection->CreateStatement
@@ -608,10 +569,7 @@ nsUrlClassifierStore::Init(nsUrlClassifierDBServiceWorker *worker,
 void
 nsUrlClassifierStore::Close()
 {
-  mLookupStatement = nsnull;
-  mLookupWithTableStatement = nsnull;
   mLookupWithIDStatement = nsnull;
-  mLookupWithChunkStatement = nsnull;
 
   mInsertStatement = nsnull;
   mUpdateStatement = nsnull;
@@ -742,55 +700,6 @@ nsUrlClassifierStore::ReadEntries(mozIStorageStatement *statement,
 }
 
 nsresult
-nsUrlClassifierStore::ReadEntries(const nsUrlClassifierDomainHash& hash,
-                                  PRUint32 tableId,
-                                  nsTArray<nsUrlClassifierEntry>& entries)
-{
-  mozStorageStatementScoper scoper(mLookupWithTableStatement);
-
-  nsresult rv = mLookupWithTableStatement->BindBlobParameter
-                  (0, hash.buf, DOMAIN_LENGTH);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mLookupWithTableStatement->BindInt32Parameter(1, tableId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return ReadEntries(mLookupWithTableStatement, entries);
-}
-
-nsresult
-nsUrlClassifierStore::ReadEntries(const nsUrlClassifierDomainHash& hash,
-                                  PRUint32 tableId,
-                                  PRUint32 chunkId,
-                                  nsTArray<nsUrlClassifierEntry>& entries)
-{
-  mozStorageStatementScoper scoper(mLookupWithChunkStatement);
-
-  nsresult rv = mLookupWithChunkStatement->BindBlobParameter
-                  (0, hash.buf, DOMAIN_LENGTH);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mLookupWithChunkStatement->BindInt32Parameter(1, tableId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mLookupWithChunkStatement->BindInt32Parameter(2, chunkId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return ReadEntries(mLookupWithChunkStatement, entries);
-}
-
-nsresult
-nsUrlClassifierStore::ReadEntries(const nsUrlClassifierDomainHash& hash,
-                                  nsTArray<nsUrlClassifierEntry>& entries)
-{
-  mozStorageStatementScoper scoper(mLookupStatement);
-
-  nsresult rv = mLookupStatement->BindBlobParameter
-                  (0, hash.buf, DOMAIN_LENGTH);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return ReadEntries(mLookupStatement, entries);
-}
-
-nsresult
 nsUrlClassifierStore::ReadEntry(PRInt64 id,
                                 nsUrlClassifierEntry& entry,
                                 PRBool *exists)
@@ -883,6 +792,22 @@ public:
   nsresult Init(nsUrlClassifierDBServiceWorker *worker,
                 mozIStorageConnection *connection,
                 const nsACString& entriesTableName);
+
+  void Close();
+
+  // Read the entries for a given key/table/chunk from the database
+  nsresult ReadAddEntries(const nsUrlClassifierDomainHash& key,
+                          PRUint32 tableId,
+                          PRUint32 chunkId,
+                          nsTArray<nsUrlClassifierEntry>& entry);
+
+  // Read the entries for a given host key from the database.
+  nsresult ReadAddEntries(const nsUrlClassifierDomainHash& key,
+                          nsTArray<nsUrlClassifierEntry>& entry);
+
+protected:
+  nsCOMPtr<mozIStorageStatement> mLookupStatement;
+  nsCOMPtr<mozIStorageStatement> mLookupWithChunkStatement;
 };
 
 nsresult
@@ -908,7 +833,61 @@ nsUrlClassifierAddStore::Init(nsUrlClassifierDBServiceWorker *worker,
      getter_AddRefs(mUpdateStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = mConnection->CreateStatement
+    (NS_LITERAL_CSTRING("SELECT * FROM ") + entriesTableName +
+     NS_LITERAL_CSTRING(" WHERE domain=?1"),
+     getter_AddRefs(mLookupStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mConnection->CreateStatement
+    (NS_LITERAL_CSTRING("SELECT * FROM ") + entriesTableName +
+     NS_LITERAL_CSTRING(" WHERE domain=?1 AND table_id=?2 AND chunk_id=?3"),
+     getter_AddRefs(mLookupWithChunkStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
+}
+
+void
+nsUrlClassifierAddStore::Close()
+{
+  nsUrlClassifierStore::Close();
+
+  mLookupStatement = nsnull;
+  mLookupWithChunkStatement = nsnull;
+}
+
+nsresult
+nsUrlClassifierAddStore::ReadAddEntries(const nsUrlClassifierDomainHash& hash,
+                                        PRUint32 tableId,
+                                        PRUint32 chunkId,
+                                        nsTArray<nsUrlClassifierEntry>& entries)
+{
+  mozStorageStatementScoper scoper(mLookupWithChunkStatement);
+
+  nsresult rv = mLookupWithChunkStatement->BindBlobParameter
+                  (0, hash.buf, DOMAIN_LENGTH);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mLookupWithChunkStatement->BindInt32Parameter(1, tableId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mLookupWithChunkStatement->BindInt32Parameter(2, chunkId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return ReadEntries(mLookupWithChunkStatement, entries);
+}
+
+nsresult
+nsUrlClassifierAddStore::ReadAddEntries(const nsUrlClassifierDomainHash& hash,
+                                        nsTArray<nsUrlClassifierEntry>& entries)
+{
+  mozStorageStatementScoper scoper(mLookupStatement);
+
+  nsresult rv = mLookupStatement->BindBlobParameter
+                  (0, hash.buf, DOMAIN_LENGTH);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return ReadEntries(mLookupStatement, entries);
 }
 
 // -------------------------------------------------------------------------
@@ -935,12 +914,16 @@ public:
   virtual nsresult BindStatement(const nsUrlClassifierEntry& entry,
                                  mozIStorageStatement* statement);
 
-  // Read a sub entry that would apply to the given add
-  nsresult ReadSubEntries(const nsUrlClassifierEntry &addEntry,
+  // Read sub entries for a given add chunk
+  nsresult ReadSubEntries(PRUint32 tableId, PRUint32 chunkId,
                           nsTArray<nsUrlClassifierEntry> &subEntry);
+
+  // Expire sub entries for a given add chunk
+  nsresult ExpireAddChunk(PRUint32 tableId, PRUint32 chunkId);
 
 protected:
   nsCOMPtr<mozIStorageStatement> mLookupWithAddChunkStatement;
+  nsCOMPtr<mozIStorageStatement> mExpireAddChunkStatement;
 };
 
 nsresult
@@ -968,8 +951,14 @@ nsUrlClassifierSubStore::Init(nsUrlClassifierDBServiceWorker *worker,
 
   rv = mConnection->CreateStatement
     (NS_LITERAL_CSTRING("SELECT * FROM ") + entriesTableName +
-     NS_LITERAL_CSTRING(" WHERE domain=?1 AND table_id=?2 AND add_chunk_id=?3"),
+     NS_LITERAL_CSTRING(" WHERE table_id=?1 AND add_chunk_id=?2"),
      getter_AddRefs(mLookupWithAddChunkStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mConnection->CreateStatement
+    (NS_LITERAL_CSTRING("DELETE FROM ") + entriesTableName +
+     NS_LITERAL_CSTRING(" WHERE table_id=?1 AND add_chunk_id=?2"),
+     getter_AddRefs(mExpireAddChunkStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -997,20 +986,30 @@ nsUrlClassifierSubStore::BindStatement(const nsUrlClassifierEntry& entry,
 }
 
 nsresult
-nsUrlClassifierSubStore::ReadSubEntries(const nsUrlClassifierEntry &addEntry,
+nsUrlClassifierSubStore::ReadSubEntries(PRUint32 tableId, PRUint32 addChunkId,
                                         nsTArray<nsUrlClassifierEntry>& entries)
 {
   mozStorageStatementScoper scoper(mLookupWithAddChunkStatement);
 
-  nsresult rv = mLookupWithAddChunkStatement->BindBlobParameter
-                  (0, addEntry.mKey.buf, DOMAIN_LENGTH);
+  nsresult rv = mLookupWithAddChunkStatement->BindInt32Parameter(0, tableId);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mLookupWithAddChunkStatement->BindInt32Parameter(1, addEntry.mTableId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mLookupWithAddChunkStatement->BindInt32Parameter(2, addEntry.mChunkId);
+  rv = mLookupWithAddChunkStatement->BindInt32Parameter(1, addChunkId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return ReadEntries(mLookupWithAddChunkStatement, entries);
+}
+
+nsresult
+nsUrlClassifierSubStore::ExpireAddChunk(PRUint32 tableId, PRUint32 addChunkId)
+{
+  mozStorageStatementScoper scoper(mExpireAddChunkStatement);
+
+  nsresult rv = mExpireAddChunkStatement->BindInt32Parameter(0, tableId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mExpireAddChunkStatement->BindInt32Parameter(1, addChunkId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mExpireAddChunkStatement->Execute();
 }
 
 void
@@ -1018,6 +1017,7 @@ nsUrlClassifierSubStore::Close()
 {
   nsUrlClassifierStore::Close();
   mLookupWithAddChunkStatement = nsnull;
+  mExpireAddChunkStatement = nsnull;
 }
 
 // -------------------------------------------------------------------------
@@ -1553,7 +1553,7 @@ nsUrlClassifierDBServiceWorker::CheckKey(const nsACString& spec,
     mCachedEntries.Clear();
     nsUrlClassifierDomainHash hostKeyHash;
     hostKeyHash.FromPlaintext(hostKey, mCryptoHash);
-    mMainStore.ReadEntries(hostKeyHash, mCachedEntries);
+    mMainStore.ReadAddEntries(hostKeyHash, mCachedEntries);
     mCachedHostKey = hostKey;
   }
 
@@ -2389,7 +2389,7 @@ nsUrlClassifierDBServiceWorker::GetChunkLists(PRUint32 tableId,
   rv = mGetChunkListsStatement->GetUTF8String(1, subChunks);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LOG(("Getting chunks for %d, got %s %s",
+  LOG(("Getting chunks for %d, got %s/%s",
        tableId,
        PromiseFlatCString(addChunks).get(),
        PromiseFlatCString(subChunks).get()));
@@ -2529,25 +2529,17 @@ nsUrlClassifierDBServiceWorker::AddChunk(PRUint32 tableId,
   nsTArray<PRUint32> entryIDs;
 
   nsAutoTArray<nsUrlClassifierEntry, 5> subEntries;
-  nsUrlClassifierDomainHash lastKey;
+  rv = mPendingSubStore.ReadSubEntries(tableId, chunkNum, subEntries);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   for (PRUint32 i = 0; i < entries.Length(); i++) {
     nsUrlClassifierEntry& thisEntry = entries[i];
 
     HandlePendingLookups();
 
-    if (i == 0 || lastKey != thisEntry.mKey) {
-      subEntries.Clear();
-      rv = mPendingSubStore.ReadSubEntries(thisEntry, subEntries);
-      NS_ENSURE_SUCCESS(rv, rv);
-      lastKey = thisEntry.mKey;
-    }
-
     PRBool writeEntry = PR_TRUE;
     for (PRUint32 j = 0; j < subEntries.Length(); j++) {
       if (thisEntry.SubMatch(subEntries[j])) {
-        rv = mPendingSubStore.DeleteEntry(subEntries[j]);
-        NS_ENSURE_SUCCESS(rv, rv);
         subEntries.RemoveElementAt(j);
 
         writeEntry = PR_FALSE;
@@ -2562,6 +2554,9 @@ nsUrlClassifierDBServiceWorker::AddChunk(PRUint32 tableId,
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
+
+  rv = mPendingSubStore.ExpireAddChunk(tableId, chunkNum);
+  NS_ENSURE_SUCCESS(rv, rv);
 
 #if defined(PR_LOGGING)
   if (LOG_ENABLED()) {
@@ -2610,7 +2605,7 @@ nsUrlClassifierDBServiceWorker::SubChunk(PRUint32 tableId,
                                          PRUint32 chunkNum,
                                          nsTArray<nsUrlClassifierEntry>& entries)
 {
-  nsresult rv = CacheChunkLists(tableId, PR_FALSE, PR_TRUE);
+  nsresult rv = CacheChunkLists(tableId, PR_TRUE, PR_TRUE);
 
   if (!InsertChunkId(mCachedSubChunks, chunkNum)) {
     LOG(("Ignoring duplicate sub chunk %d in table %d", chunkNum, tableId));
@@ -2627,26 +2622,31 @@ nsUrlClassifierDBServiceWorker::SubChunk(PRUint32 tableId,
 
     HandlePendingLookups();
 
+    // Check if we have the add chunk associated with the sub.
+    PRBool haveAdds = (mCachedAddChunks.BinaryIndexOf(thisEntry.mAddChunkId) !=
+                       mCachedAddChunks.NoIndex);
+
     if (i == 0 || lastKey != thisEntry.mKey) {
       existingEntries.Clear();
-      rv = mMainStore.ReadEntries(thisEntry.mKey, thisEntry.mTableId,
-                                  thisEntry.mAddChunkId, existingEntries);
-      NS_ENSURE_SUCCESS(rv, rv);
       lastKey = thisEntry.mKey;
+
+      if (haveAdds) {
+        rv = mMainStore.ReadAddEntries(thisEntry.mKey, thisEntry.mTableId,
+                                       thisEntry.mAddChunkId, existingEntries);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
 
-    PRUint32 writeEntry = PR_TRUE;
     for (PRUint32 j = 0; j < existingEntries.Length(); j++) {
       if (existingEntries[j].SubMatch(thisEntry)) {
         rv = mMainStore.DeleteEntry(existingEntries[j]);
         NS_ENSURE_SUCCESS(rv, rv);
         existingEntries.RemoveElementAt(j);
-        writeEntry = PR_FALSE;
         break;
       }
     }
 
-    if (writeEntry) {
+    if (!haveAdds) {
       // Save this entry in the pending subtraction store.
       rv = mPendingSubStore.WriteEntry(thisEntry);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -3504,8 +3504,8 @@ nsUrlClassifierDBServiceWorker::MaybeCreateTables(mozIStorageConnection* connect
 
   rv = connection->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS"
-                       " moz_subs_domain_index"
-                       " ON moz_subs(domain)"));
+                       " moz_subs_addchunk_index"
+                       " ON moz_subs(add_chunk_id)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = connection->ExecuteSimpleSQL(
