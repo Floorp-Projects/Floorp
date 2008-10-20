@@ -100,11 +100,7 @@ namespace nanojit
             if (!block.isEmpty()) {
 			    for (int j=0,n=block.size(); j < n; j++) {
 					LIns *i = block[j];
-				    assm->outputf("    %s", names->formatIns(block[j]));
-					if (i->isop(LIR_label)) {
-						assm->outputf("        %p:", assm->_nIns);
-						assm->output("");
-					}
+					assm->outputf("    %s", names->formatIns(i));
 				}
 			    block.clear();
             }
@@ -132,7 +128,7 @@ namespace nanojit
 			else {
                 if (flushnext)
                     flush();
-				flush_add(i);//block.add(i);
+				block.add(i);//flush_add(i);
                 if (i->isop(LIR_label))
                     flushnext = true;
 			}
@@ -158,6 +154,7 @@ namespace nanojit
 		nInit(core);
 		verbose_only( _verbose = !core->quiet_opt() && core->verbose() );
 		verbose_only( _outputCache = 0);
+		verbose_only( outlineEOL[0] = '\0');
 		
 		internalReset();
 		pageReset();
@@ -636,13 +633,8 @@ namespace nanojit
 		int d = disp(resv);
 		Register rr = resv->reg;
 		bool quad = i->opcode() == LIR_param || i->isQuad();
+		verbose_only( if (d && _verbose) { outputForEOL("  <= spill %s", _thisfrag->lirbuf->names->formatRef(i)); } )
 		asm_spill(rr, d, pop, quad);
-		if (d) 
-		{
-			verbose_only(if (_verbose) {
-				outputf("        spill %s",_thisfrag->lirbuf->names->formatRef(i));
-			})
-		}
 	}
 
 	void Assembler::freeRsrcOf(LIns *i, bool pop)
@@ -821,8 +813,8 @@ namespace nanojit
         _labels.clear();
         _patches.clear();
 
-		verbose_only( verbose_outputf("        %p:",_nIns) );
-		verbose_only( verbose_output("        epilogue:") );
+		verbose_only( outputAddr=true; )
+		verbose_only( asm_output("[epilogue]"); )
 	}
 	
 	void Assembler::assemble(Fragment* frag,  NInsList& loopJumps)
@@ -894,8 +886,8 @@ namespace nanojit
 		if (!error())
 		{
 			fragEntry = genPrologue();
-			verbose_only( verbose_outputf("        %p:",_nIns); )
-			verbose_only( verbose_output("        prologue"); )
+			verbose_only( outputAddr=true; )
+			verbose_only( asm_output("[prologue]"); )
 		}
 		
 		// something bad happened?
@@ -1292,11 +1284,6 @@ namespace nanojit
                         }
                         JMP(0);
     					_patches.put(_nIns, to);
-                        verbose_only(
-                            verbose_outputf("        Loop %s -> %s", 
-                                lirNames[ins->opcode()], 
-                                _thisfrag->lirbuf->names->formatRef(to));
-                        )
                     }
 					break;
 				}
@@ -1328,11 +1315,6 @@ namespace nanojit
                         }
                         NIns *branch = asm_branch(op == LIR_jf, cond, 0, false);
 			            _patches.put(branch,to);
-                        verbose_only(
-                            verbose_outputf("Loop %s -> %s", 
-                                lirNames[ins->opcode()], 
-                                _thisfrag->lirbuf->names->formatRef(to));
-                        )
                     }
 					break;
 				}					
@@ -1352,10 +1334,8 @@ namespace nanojit
                         intersectRegisterState(label->regs);
                         //asm_align_code();
                         label->addr = _nIns;
-                        verbose_only(
-                            verbose_outputf("Loop %s", _thisfrag->lirbuf->names->formatRef(ins));
-                        )
                     }
+					verbose_only( if (_verbose) { outputAddr=true; asm_output1("[%s]", _thisfrag->lirbuf->names->formatRef(ins)); } )
 					break;
 				}
 
@@ -1718,29 +1698,34 @@ namespace nanojit
 	{
 		// evictions and pops first
 		RegisterMask skip = 0;
+		verbose_only(bool shouldMention=false; )
 		for (Register r=FirstReg; r <= LastReg; r = nextreg(r))
 		{
 			LIns * curins = _allocator.getActive(r);
 			LIns * savedins = saved.getActive(r);
 			if (curins == savedins)
 			{
-				verbose_only( if (curins) verbose_outputf("        skip %s", regNames[r]); )
+				//verbose_only( if (curins) verbose_outputf("                                              skip %s", regNames[r]); )
 				skip |= rmask(r);
 			}
 			else 
 			{
                 if (curins) {
                     //_nvprof("intersect-evict",1);
+					verbose_only( shouldMention=true; )
 					evict(r);
                 }
 				
     			#ifdef NANOJIT_IA32
-				if (savedins && (rmask(r) & x87Regs))
+				if (savedins && (rmask(r) & x87Regs)) {
+					verbose_only( shouldMention=true; )
 					FSTP(r);
+				}
 				#endif
 			}
 		}
         assignSaved(saved, skip);
+		verbose_only( if (shouldMention) verbose_outputf("                                              merging registers (intersect) with existing edge");  )
 	}
 
 	/**
@@ -1754,6 +1739,7 @@ namespace nanojit
 	void Assembler::unionRegisterState(RegAlloc& saved)
 	{
 		// evictions and pops first
+		verbose_only(bool shouldMention=false; )
 		RegisterMask skip = 0;
 		for (Register r=FirstReg; r <= LastReg; r = nextreg(r))
 		{
@@ -1761,13 +1747,14 @@ namespace nanojit
 			LIns * savedins = saved.getActive(r);
 			if (curins == savedins)
 			{
-				verbose_only( if (curins) verbose_outputf("        skip %s", regNames[r]); )
+				//verbose_only( if (curins) verbose_outputf("                                              skip %s", regNames[r]); )
 				skip |= rmask(r);
 			}
 			else 
 			{
                 if (curins && savedins) {
                     //_nvprof("union-evict",1);
+					verbose_only( shouldMention=true; )
 					evict(r);
                 }
 				
@@ -1781,11 +1768,13 @@ namespace nanojit
 						// so we must evict here to keep x87 stack balanced.
 						evict(r);
 					}
+					verbose_only( shouldMention=true; )
 				}
 				#endif
 			}
 		}
         assignSaved(saved, skip);
+		verbose_only( if (shouldMention) verbose_outputf("                                              merging registers (union) with existing edge");  )
     }
 
     void Assembler::assignSaved(RegAlloc &saved, RegisterMask skip)
@@ -1807,6 +1796,15 @@ namespace nanojit
 
 	#ifdef NJ_VERBOSE
 		char Assembler::outline[8192];
+		char Assembler::outlineEOL[512];
+
+		void Assembler::outputForEOL(const char* format, ...)
+		{
+			va_list args;
+			va_start(args, format);
+			outlineEOL[0] = '\0';
+			vsprintf(outlineEOL, format, args);
+		}
 
 		void Assembler::outputf(const char* format, ...)
 		{
@@ -1835,7 +1833,6 @@ namespace nanojit
 		{
 			if (!verbose_enabled())
 				return;
-			if (*s != '^')
 				output(s);
 		}
 
