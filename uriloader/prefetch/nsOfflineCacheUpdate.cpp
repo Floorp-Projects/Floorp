@@ -1159,17 +1159,22 @@ nsOfflineCacheUpdate::LoadCompleted()
     PRUint16 status;
     rv = item->GetStatus(&status);
 
-    // Check for failures.  4XX and 5XX errors will cause the update to fail.
+    // Check for failures.  4XX and 5XX errors on items explicitly
+    // listed in the manifest will cause the update to fail.
     if (NS_FAILED(rv) || status == 0 || status >= 400) {
-        mSucceeded = PR_FALSE;
-        NotifyError();
-        Finish();
-        return;
+        if (item->mItemType &
+            (nsIApplicationCache::ITEM_EXPLICIT |
+             nsIApplicationCache::ITEM_FALLBACK)) {
+            mSucceeded = PR_FALSE;
+        }
+    } else {
+        rv = mApplicationCache->MarkEntry(item->mCacheKey, item->mItemType);
+        if (NS_FAILED(rv)) {
+            mSucceeded = PR_FALSE;
+        }
     }
 
-    rv = mApplicationCache->MarkEntry(item->mCacheKey, item->mItemType);
-    if (NS_FAILED(rv)) {
-        mSucceeded = PR_FALSE;
+    if (!mSucceeded) {
         NotifyError();
         Finish();
         return;
