@@ -281,8 +281,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
                       eContentTypeInherit, parentWidget);
 #endif
   nsIWidget* widget = aView->GetWidget();
-  widget->SetTransparencyMode(viewHasTransparentContent ?
-      eTransparencyTransparent : eTransparencyOpaque);
+  widget->SetTransparencyMode(mode);
   widget->SetWindowShadowStyle(GetStyleUIReset()->mWindowShadow);
   return NS_OK;
 }
