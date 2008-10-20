@@ -89,9 +89,9 @@ namespace nanojit
 		NanoAssert(_max_pages > _pagesGrowth); // shrink growth if needed 
 		_core = core;
 		GC *gc = core->GetGC();
-		_assm = new (gc) nanojit::Assembler(this);
-		verbose_only( enterCounts = new (gc) BlockHist(gc); )
-		verbose_only( mergeCounts = new (gc) BlockHist(gc); )
+		_assm = NJ_NEW(gc, nanojit::Assembler)(this);
+		verbose_only( enterCounts = NJ_NEW(gc, BlockHist)(gc); )
+		verbose_only( mergeCounts = NJ_NEW(gc, BlockHist)(gc); )
 	}
 
 	Fragmento::~Fragmento()
@@ -108,12 +108,12 @@ namespace nanojit
 #endif
             entry = _allocList.removeLast();
 			_gcHeap->Free( entry->page, entry->allocSize );
-            delete entry;
+            NJ_DELETE(entry);
 		}
-        delete _assm;
+        NJ_DELETE(_assm);
 #if defined(NJ_VERBOSE)
-        delete enterCounts;
-        delete mergeCounts;
+        NJ_DELETE(enterCounts);
+        NJ_DELETE(mergeCounts);
 #endif
 		NanoAssert(_stats.freePages == _stats.pages );
 	}
@@ -188,7 +188,7 @@ namespace nanojit
 			NanoAssert((int*)memory == pageTop(memory));
 			//fprintf(stderr,"head alloc of %d at %x of %d pages using nj page size of %d\n", gcpages, (intptr_t)memory, (intptr_t)_gcHeap->kNativePageSize, NJ_PAGE_SIZE);
 
-            entry = new (_core->gc) AllocEntry;
+            entry = NJ_NEW(_core->gc, AllocEntry);
             entry->page = memory;
             entry->allocSize = gcpages;
             _allocList.add(entry);
@@ -221,11 +221,11 @@ namespace nanojit
 		while (peer) {
 			Fragment *next = peer->peer;
 			peer->releaseTreeMem(this);
-			delete peer;
+			NJ_DELETE(peer);
 			peer = next;
 		}
 		f->releaseTreeMem(this);
-		delete f;
+		NJ_DELETE(f);
 	}
 
 	void Fragmento::clearFrag(const void* ip)
@@ -561,7 +561,7 @@ namespace nanojit
     Fragment *Fragmento::newFrag(const void* ip)
     {
 		GC *gc = _core->gc;
-        Fragment *f = new (gc) Fragment(ip);
+        Fragment *f = NJ_NEW(gc, Fragment)(ip);
 		f->blacklistLevel = 5;
         f->recordAttempts = 0;
         return f;
@@ -633,7 +633,7 @@ namespace nanojit
 		{
 			Fragment* next = branch->nextbranch;
 			branch->releaseTreeMem(frago);  // @todo safer here to recurse in case we support nested trees
-            delete branch;
+            NJ_DELETE(branch);
 			branch = next;
 		}
 	}

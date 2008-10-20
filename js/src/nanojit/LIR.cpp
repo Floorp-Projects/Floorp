@@ -103,9 +103,7 @@ namespace nanojit
 		//buffer_count--;
 		//fprintf(stderr, "~LirBuffer %x start %x\n", (int)this, (int)_start);
 		clear();
-#ifdef DEBUG		
-        delete names;
-#endif        
+		verbose_only(if (names) NJ_DELETE(names);)
 		_frago = 0;
 	}
 	
@@ -1485,7 +1483,7 @@ namespace nanojit
         ~LiveTable()
         {
             for (size_t i = 0; i < retired.size(); i++) {
-                delete retired.get(i);
+                NJ_DELETE(retired.get(i));
             }
 
         }
@@ -1496,7 +1494,7 @@ namespace nanojit
             }
 		}
         void retire(LInsp i, GC *gc) {
-            RetiredEntry *e = new (gc) RetiredEntry(gc);
+            RetiredEntry *e = NJ_NEW(gc, RetiredEntry)(gc);
             e->i = i;
             for (int j=0, n=live.size(); j < n; j++) {
                 LInsp l = live.keyAt(j);
@@ -1611,13 +1609,13 @@ namespace nanojit
 
         while ((e = names.removeLast()) != NULL) {
             labels->core->freeString(e->name);
-            delete e;
+            NJ_DELETE(e);
         }
     }
 
 	bool LirNameMap::addName(LInsp i, Stringp name) {
 		if (!names.containsKey(i)) { 
-			Entry *e = new (labels->core->gc) Entry(name);
+			Entry *e = NJ_NEW(labels->core->gc, Entry)(name);
 			names.put(i, e);
             return true;
 		}
@@ -2048,7 +2046,7 @@ namespace nanojit
 							frago->labels->format(frag->ip)); )
 					
 					NanoAssert(frag->kind == BranchTrace);
-					RegAlloc* regs = new (gc) RegAlloc();
+					RegAlloc* regs = NJ_NEW(gc, RegAlloc)();
 					assm->copyRegisters(regs);
 					assm->releaseRegisters();
 					SideExit* exit = frag->spawnedFrom;
@@ -2133,7 +2131,7 @@ namespace nanojit
         
         while ((e = names.removeLast()) != NULL) {
             core->freeString(e->name);
-            delete e;
+            NJ_DELETE(e);
         } 
     }
 
@@ -2148,7 +2146,7 @@ namespace nanojit
     {
 		if (!this || names.containsKey(p))
 			return;
-		Entry *e = new (core->gc) Entry(name, size<<align, align);
+		Entry *e = NJ_NEW(core->gc, Entry)(name, size<<align, align);
 		names.put(p, e);
     }
 
