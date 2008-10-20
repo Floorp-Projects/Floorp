@@ -1072,7 +1072,7 @@ namespace nanojit
         NanoAssert(j == argc);
 #endif
 
-		NanoAssert(argc <= MAXARGS);
+		NanoAssert(argc <= (int)MAXARGS);
 		uint32_t words = argwords(argc);
 		ensureRoom(words+LIns::callInfoWords+1+argc);  // ins size + possible tramps
 		for (int32_t i=0; i < argc; i++)
