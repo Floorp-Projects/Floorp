@@ -1889,7 +1889,7 @@ namespace nanojit
     }
 
     void LabelStateMap::add(LIns *label, NIns *addr, RegAlloc &regs) {
-        LabelState *st = new (gc) LabelState(addr, regs);
+        LabelState *st = NJ_NEW(gc, LabelState)(addr, regs);
         labels.put(label, st);
     }
 
