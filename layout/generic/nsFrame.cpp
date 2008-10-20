@@ -2000,6 +2000,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
   if (isSelected)
   {
+    PRBool inSelection = PR_FALSE;
     details = frameselection->LookUpSelection(offsets.content, 0,
         offsets.EndOffset(), PR_FALSE);
 
@@ -2008,33 +2009,33 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
     // within any selected region of the frame.
     //
 
-    if (details)
+    SelectionDetails *curDetail = details;
+
+    while (curDetail)
     {
-      SelectionDetails *curDetail = details;
-
-      while (curDetail)
+      //
+      // If the user clicked inside a selection, then just
+      // return without doing anything. We will handle placing
+      // the caret later on when the mouse is released. We ignore
+      // the spellcheck and find selections.
+      //
+      if (curDetail->mType != nsISelectionController::SELECTION_SPELLCHECK &&
+          curDetail->mType != nsISelectionController::SELECTION_FIND &&
+          curDetail->mStart <= offsets.StartOffset() &&
+          offsets.EndOffset() <= curDetail->mEnd)
       {
-        //
-        // If the user clicked inside a selection, then just
-        // return without doing anything. We will handle placing
-        // the caret later on when the mouse is released. We ignore
-        // the spellcheck and find selections.
-        //
-        if (curDetail->mType != nsISelectionController::SELECTION_SPELLCHECK &&
-            curDetail->mType != nsISelectionController::SELECTION_FIND &&
-            curDetail->mStart <= offsets.StartOffset() &&
-            offsets.EndOffset() <= curDetail->mEnd)
-        {
-          delete details;
-          fc->SetMouseDownState(PR_FALSE);
-          fc->SetDelayedCaretData(me);
-          return NS_OK;
-        }
-
-        curDetail = curDetail->mNext;
+        inSelection = PR_TRUE;
       }
 
-      delete details;
+      SelectionDetails *nextDetail = curDetail->mNext;
+      delete curDetail;
+      curDetail = nextDetail;
+    }
+
+    if (inSelection) {
+      fc->SetMouseDownState(PR_FALSE);
+      fc->SetDelayedCaretData(me);
+      return NS_OK;
     }
   }
 

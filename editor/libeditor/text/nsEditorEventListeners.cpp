@@ -506,8 +506,8 @@ nsTextEditorDragListener::HandleEvent(nsIDOMEvent* aEvent)
   if (dragEvent) {
     nsAutoString eventType;
     aEvent->GetType(eventType);
-    if (eventType.EqualsLiteral("dragstart"))
-      return DragStart(dragEvent);
+    if (eventType.EqualsLiteral("draggesture"))
+      return DragGesture(dragEvent);
     if (eventType.EqualsLiteral("dragenter"))
       return DragEnter(dragEvent);
     if (eventType.EqualsLiteral("dragover"))
@@ -522,11 +522,11 @@ nsTextEditorDragListener::HandleEvent(nsIDOMEvent* aEvent)
 
 
 nsresult
-nsTextEditorDragListener::DragStart(nsIDOMDragEvent* aDragEvent)
+nsTextEditorDragListener::DragGesture(nsIDOMDragEvent* aDragEvent)
 {
   if ( !mEditor )
     return NS_ERROR_NULL_POINTER;
-  
+
   // ...figure out if a drag should be started...
   PRBool canDrag;
   nsresult rv = mEditor->CanDrag(aDragEvent, &canDrag);
