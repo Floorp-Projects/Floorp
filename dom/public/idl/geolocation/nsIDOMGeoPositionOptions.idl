@@ -37,8 +37,8 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(03723BAE-E1EC-4F35-965F-0A9FDF573D86)]
+[scriptable, uuid(74FA3BE6-4CBF-47C7-9BE1-FB9F17DD0D5D)]
 interface nsIDOMGeoPositionOptions : nsISupports
 {
-  attribute boolean enableHiqhAccuracy;
+  attribute boolean enableHighAccuracy;
 };
