@@ -3170,13 +3170,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Display, (), display, parentDisplay,
                       Display, displayData)
-  nsIAtom* pseudoTag = aContext->GetPseudoType();
-  PRBool generatedContent = (pseudoTag == nsCSSPseudoElements::before || 
-                             pseudoTag == nsCSSPseudoElements::after);
-  NS_ASSERTION(!generatedContent || parentContext,
-               "Must have parent context for generated content");
-  if (parentDisplay == display && generatedContent)
-    parentDisplay = parentContext->GetStyleDisplay();
 
   // opacity: factor, inherit, initial
   SetFactor(displayData.mOpacity, display->mOpacity, inherited,
@@ -3374,7 +3367,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     // and 'position'.  Since generated content can't be floated or
     // positioned, we can deal with it here.
 
-    if (nsCSSPseudoElements::firstLetter == pseudoTag) {
+    if (nsCSSPseudoElements::firstLetter == aContext->GetPseudoType()) {
       // a non-floating first-letter must be inline
       // XXX this fix can go away once bug 103189 is fixed correctly
       display->mDisplay = NS_STYLE_DISPLAY_INLINE;
