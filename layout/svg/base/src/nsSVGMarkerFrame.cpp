@@ -204,7 +204,7 @@ nsSVGMarkerFrame::PaintMark(nsSVGRenderState *aContext,
       // The CTM of each frame referencing us may be different.
       SVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
                                  nsISVGChildFrame::TRANSFORM_CHANGED);
-      nsSVGUtils::PaintChildWithEffects(aContext, nsnull, kid);
+      nsSVGUtils::PaintFrameWithEffects(aContext, nsnull, kid);
     }
   }
 

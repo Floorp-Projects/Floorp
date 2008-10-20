@@ -962,8 +962,8 @@ public:
 };
 
 void
-nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
-                                  nsIntRect *aDirtyRect,
+nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
+                                  const nsIntRect *aDirtyRect,
                                   nsIFrame *aFrame)
 {
   nsISVGChildFrame *svgChildFrame;

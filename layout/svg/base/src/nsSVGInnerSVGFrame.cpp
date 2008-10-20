@@ -83,7 +83,7 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect);
+  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, const nsIntRect *aDirtyRect);
   virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
 
@@ -147,7 +147,8 @@ nsSVGInnerSVGFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext, nsIntRect *aDirtyRect)
+nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext,
+                             const nsIntRect *aDirtyRect)
 {
   gfxContextAutoSaveRestore autoSR;
 

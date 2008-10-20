@@ -229,7 +229,7 @@ GetTransformedRegion(float aX, float aY, float aWidth, float aHeight,
 
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
-                                  nsIntRect *aDirtyRect)
+                                  const nsIntRect *aDirtyRect)
 {
   if (IsDisabled())
     return NS_OK;
