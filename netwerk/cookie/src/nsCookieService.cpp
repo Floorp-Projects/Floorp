@@ -661,7 +661,7 @@ nsCookieService::Observe(nsISupports     *aSubject,
       if (mPrivateHostTable.IsInitialized() || mPrivateHostTable.Init()) {
         mHostTable = &mPrivateHostTable;
         mCookieCount = mHostTable->Count();
-        NotifyChanged(nsnull, NS_LITERAL_STRING("cleared").get());
+        NotifyChanged(nsnull, NS_LITERAL_STRING("reload").get());
       }
       // close the connection to the on-disk DB
       mStmtInsert = nsnull;
