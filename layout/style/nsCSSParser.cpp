@@ -6882,7 +6882,7 @@ CSSParserImpl::ParseFunction(const nsString &aFunction,
   PRUint16 numElements = (foundValues.Length() <= MAX_ALLOWED_ELEMS ?
                           foundValues.Length() + 1 : MAX_ALLOWED_ELEMS);
   nsRefPtr<nsCSSValue::Array> convertedArray =
-	  nsCSSValue::Array::Create(numElements);
+    nsCSSValue::Array::Create(numElements);
   if (!convertedArray) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
     return PR_FALSE;
@@ -7042,7 +7042,7 @@ static PRBool GetFunctionParseInformation(nsCSSKeyword aToken,
 PRBool CSSParserImpl::ReadSingleTransform(nsCSSValueList **& aTail)
 {
   typedef nsTArray<nsCSSValue>::size_type arrlen_t;
-	
+
   if (!GetToken(PR_TRUE))
     return PR_FALSE;
   
