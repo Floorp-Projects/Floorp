@@ -350,6 +350,7 @@ namespace nanojit
 	    asm_mmq(rb, dr, FP, da);
 	}
 
+
 	void Assembler::asm_quad(LInsp ins)
 	{
 		Reservation *rR = getresv(ins);
@@ -363,10 +364,477 @@ namespace nanojit
 		}
 	}
 
-	bool Assembler::asm_qlo(LInsp ins, LInsp q)
+	NIns* Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
 	{
-		(void)ins; (void)q;
-		return false;
+		NIns* at = 0;
+		LOpcode condop = cond->opcode();
+		NanoAssert(cond->isCond());
+#ifndef NJ_SOFTFLOAT
+		if (condop >= LIR_feq && condop <= LIR_fge)
+		{
+			return asm_jmpcc(branchOnFalse, cond, targ);
+		}
+#endif
+		// produce the branch
+		if (branchOnFalse)
+		{
+			if (condop == LIR_eq)
+				JNE(targ);
+			else if (condop == LIR_ov)
+				JNO(targ);
+			else if (condop == LIR_cs)
+				JNC(targ);
+			else if (condop == LIR_lt)
+				JNL(targ);
+			else if (condop == LIR_le)
+				JNLE(targ);
+			else if (condop == LIR_gt)
+				JNG(targ);
+			else if (condop == LIR_ge)
+				JNGE(targ);
+			else if (condop == LIR_ult)
+				JNB(targ);
+			else if (condop == LIR_ule)
+				JNBE(targ);
+			else if (condop == LIR_ugt)
+				JNA(targ);
+			else //if (condop == LIR_uge)
+				JNAE(targ);
+		}
+		else // op == LIR_xt
+		{
+			if (condop == LIR_eq)
+				JE(targ);
+			else if (condop == LIR_ov)
+				JO(targ);
+			else if (condop == LIR_cs)
+				JC(targ);
+			else if (condop == LIR_lt)
+				JL(targ);
+			else if (condop == LIR_le)
+				JLE(targ);
+			else if (condop == LIR_gt)
+				JG(targ);
+			else if (condop == LIR_ge)
+				JGE(targ);
+			else if (condop == LIR_ult)
+				JB(targ);
+			else if (condop == LIR_ule)
+				JBE(targ);
+			else if (condop == LIR_ugt)
+				JA(targ);
+			else //if (condop == LIR_uge)
+				JAE(targ);
+		}
+		at = _nIns;
+		asm_cmp(cond);
+		return at;
+	}
+
+	void Assembler::asm_cmp(LIns *cond)
+	{
+        LOpcode condop = cond->opcode();
+        
+        // LIR_ov and LIR_cs recycle the flags set by arithmetic ops
+        if ((condop == LIR_ov) || (condop == LIR_cs))
+            return;
+        
+        LInsp lhs = cond->oprnd1();
+		LInsp rhs = cond->oprnd2();
+		Reservation *rA, *rB;
+
+		// Not supported yet.
+		NanoAssert(!lhs->isQuad() && !rhs->isQuad());
+
+		// ready to issue the compare
+		if (rhs->isconst())
+		{
+			int c = rhs->constval();
+			if (c == 0 && cond->isop(LIR_eq)) {
+				Register r = findRegFor(lhs, GpRegs);
+				TEST(r,r);
+			// No 64-bit immediates so fall-back to below
+			}
+			else if (!rhs->isQuad()) {
+				Register r = getBaseReg(lhs, c, GpRegs);
+				CMPi(r, c);
+			}
+		}
+		else
+		{
+			findRegFor2(GpRegs, lhs, rA, rhs, rB);
+			Register ra = rA->reg;
+			Register rb = rB->reg;
+			CMP(ra, rb);
+		}
+	}
+
+	void Assembler::asm_loop(LInsp ins, NInsList& loopJumps)
+	{
+		(void)ins;
+		JMP_long_placeholder(); // jump to SOT	
+		verbose_only( if (_verbose && _outputCache) { _outputCache->removeLast(); outputf("         jmp   SOT"); } );
+		
+		loopJumps.add(_nIns);
+
+		#ifdef NJ_VERBOSE
+		// branching from this frag to ourself.
+		if (_frago->core()->config.show_stats)
+		LDi(argRegs[1], int((Fragment*)_thisfrag));
+		#endif
+
+		assignSavedParams();
+
+		// restore first parameter, the only one we use
+		LInsp state = _thisfrag->lirbuf->state;
+		findSpecificRegFor(state, argRegs[state->imm8()]); 
+	}	
+
+	void Assembler::asm_fcond(LInsp ins)
+	{
+		// only want certain regs 
+		Register r = prepResultReg(ins, AllowableFlagRegs);
+		asm_setcc(r, ins);
+#ifdef NJ_ARM_VFP
+		SETE(r);
+#else
+		// SETcc only sets low 8 bits, so extend 
+		MOVZX8(r,r);
+		SETNP(r);
+#endif
+		asm_fcmp(ins);
+	}
+				
+	void Assembler::asm_cond(LInsp ins)
+	{
+		// only want certain regs 
+		LOpcode op = ins->opcode();			
+		Register r = prepResultReg(ins, AllowableFlagRegs);
+		// SETcc only sets low 8 bits, so extend 
+		MOVZX8(r,r);
+		if (op == LIR_eq)
+			SETE(r);
+		else if (op == LIR_ov)
+			SETO(r);
+		else if (op == LIR_cs)
+			SETC(r);
+		else if (op == LIR_lt)
+			SETL(r);
+		else if (op == LIR_le)
+			SETLE(r);
+		else if (op == LIR_gt)
+			SETG(r);
+		else if (op == LIR_ge)
+			SETGE(r);
+		else if (op == LIR_ult)
+			SETB(r);
+		else if (op == LIR_ule)
+			SETBE(r);
+		else if (op == LIR_ugt)
+			SETA(r);
+		else // if (op == LIR_uge)
+			SETAE(r);
+		asm_cmp(ins);
+	}
+	
+	void Assembler::asm_arith(LInsp ins)
+	{
+		LOpcode op = ins->opcode();			
+		LInsp lhs = ins->oprnd1();
+		LInsp rhs = ins->oprnd2();
+
+		Register rb = UnknownReg;
+		RegisterMask allow = GpRegs;
+		bool forceReg = (op == LIR_mul || !rhs->isconst());
+
+#ifdef NANOJIT_ARM
+		// Arm can't do an immediate op with immediates
+		// outside of +/-255 (for AND) r outside of
+		// 0..255 for others.
+		if (!forceReg)
+		{
+			if (rhs->isconst() && !isU8(rhs->constval()))
+				forceReg = true;
+		}
+#endif
+
+		if (lhs != rhs && forceReg)
+		{
+			if ((rb = asm_binop_rhs_reg(ins)) == UnknownReg) {
+				rb = findRegFor(rhs, allow);
+			}
+			allow &= ~rmask(rb);
+		}
+		else if ((op == LIR_add||op == LIR_addp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
+			// add alloc+const, use lea
+			Register rr = prepResultReg(ins, allow);
+			int d = findMemFor(lhs) + rhs->constval();
+			LEA(rr, d, FP);
+		}
+
+		Register rr = prepResultReg(ins, allow);
+		Reservation* rA = getresv(lhs);
+		Register ra;
+		// if this is last use of lhs in reg, we can re-use result reg
+		if (rA == 0 || (ra = rA->reg) == UnknownReg)
+			ra = findSpecificRegFor(lhs, rr);
+		// else, rA already has a register assigned.
+
+		if (forceReg)
+		{
+			if (lhs == rhs)
+				rb = ra;
+
+			if (op == LIR_add || op == LIR_addp)
+				ADD(rr, rb);
+			else if (op == LIR_sub)
+				SUB(rr, rb);
+			else if (op == LIR_mul)
+				MUL(rr, rb);
+			else if (op == LIR_and)
+				AND(rr, rb);
+			else if (op == LIR_or)
+				OR(rr, rb);
+			else if (op == LIR_xor)
+				XOR(rr, rb);
+			else if (op == LIR_lsh)
+				SHL(rr, rb);
+			else if (op == LIR_rsh)
+				SAR(rr, rb);
+			else if (op == LIR_ush)
+				SHR(rr, rb);
+			else
+				NanoAssertMsg(0, "Unsupported");
+		}
+		else
+		{
+			int c = rhs->constval();
+			if (op == LIR_add || op == LIR_addp) {
+				{
+					ADDi(rr, c); 
+				}
+			} else if (op == LIR_sub) {
+				{
+					SUBi(rr, c); 
+				}
+			} else if (op == LIR_and)
+				ANDi(rr, c);
+			else if (op == LIR_or)
+				ORi(rr, c);
+			else if (op == LIR_xor)
+				XORi(rr, c);
+			else if (op == LIR_lsh)
+				SHLi(rr, c);
+			else if (op == LIR_rsh)
+				SARi(rr, c);
+			else if (op == LIR_ush)
+				SHRi(rr, c);
+			else
+				NanoAssertMsg(0, "Unsupported");
+		}
+
+		if ( rr != ra ) 
+			MR(rr,ra);
+	}
+	
+	void Assembler::asm_neg_not(LInsp ins)
+	{
+		LOpcode op = ins->opcode();			
+		Register rr = prepResultReg(ins, GpRegs);
+
+		LIns* lhs = ins->oprnd1();
+		Reservation *rA = getresv(lhs);
+		// if this is last use of lhs in reg, we can re-use result reg
+		Register ra;
+		if (rA == 0 || (ra=rA->reg) == UnknownReg)
+			ra = findSpecificRegFor(lhs, rr);
+		// else, rA already has a register assigned.
+
+		if (op == LIR_not)
+			NOT(rr); 
+		else
+			NEG(rr); 
+
+		if ( rr != ra ) 
+			MR(rr,ra); 
+	}
+				
+	void Assembler::asm_ld(LInsp ins)
+	{
+		LOpcode op = ins->opcode();			
+		LIns* base = ins->oprnd1();
+		LIns* disp = ins->oprnd2();
+		Register rr = prepResultReg(ins, GpRegs);
+		int d = disp->constval();
+		Register ra = getBaseReg(base, d, GpRegs);
+		if (op == LIR_ldcb)
+			LD8Z(rr, d, ra);
+		else
+			LD(rr, d, ra); 
+	}
+
+	void Assembler::asm_cmov(LInsp ins)
+	{
+		LOpcode op = ins->opcode();			
+		LIns* condval = ins->oprnd1();
+		NanoAssert(condval->isCmp());
+
+		LIns* values = ins->oprnd2();
+
+		NanoAssert(values->opcode() == LIR_2);
+		LIns* iftrue = values->oprnd1();
+		LIns* iffalse = values->oprnd2();
+
+		NanoAssert(op == LIR_qcmov || (!iftrue->isQuad() && !iffalse->isQuad()));
+		
+		const Register rr = prepResultReg(ins, GpRegs);
+
+		// this code assumes that neither LD nor MR nor MRcc set any of the condition flags.
+		// (This is true on Intel, is it true on all architectures?)
+		const Register iffalsereg = findRegFor(iffalse, GpRegs & ~rmask(rr));
+		if (op == LIR_cmov) {
+			switch (condval->opcode())
+			{
+				// note that these are all opposites...
+				case LIR_eq:	MRNE(rr, iffalsereg);	break;
+				case LIR_ov:    MRNO(rr, iffalsereg);   break;
+				case LIR_cs:    MRNC(rr, iffalsereg);   break;
+				case LIR_lt:	MRGE(rr, iffalsereg);	break;
+				case LIR_le:	MRG(rr, iffalsereg);	break;
+				case LIR_gt:	MRLE(rr, iffalsereg);	break;
+				case LIR_ge:	MRL(rr, iffalsereg);	break;
+				case LIR_ult:	MRAE(rr, iffalsereg);	break;
+				case LIR_ule:	MRA(rr, iffalsereg);	break;
+				case LIR_ugt:	MRBE(rr, iffalsereg);	break;
+				case LIR_uge:	MRB(rr, iffalsereg);	break;
+				debug_only( default: NanoAssert(0); break; )
+			}
+		} else if (op == LIR_qcmov) {
+			NanoAssert(0);
+		}
+		/*const Register iftruereg =*/ findSpecificRegFor(iftrue, rr);
+		asm_cmp(condval);
+	}
+				
+	void Assembler::asm_qhi(LInsp ins)
+	{
+		Register rr = prepResultReg(ins, GpRegs);
+		LIns *q = ins->oprnd1();
+		int d = findMemFor(q);
+		LD(rr, d+4, FP);
+	}
+
+	void Assembler::asm_param(LInsp ins)
+	{
+		uint32_t a = ins->imm8();
+		uint32_t kind = ins->imm8b();
+		if (kind == 0) {
+			// ordinary param
+			AbiKind abi = _thisfrag->lirbuf->abi;
+			uint32_t abi_regcount = abi == ABI_FASTCALL ? 2 : abi == ABI_THISCALL ? 1 : 0;
+			if (a < abi_regcount) {
+				// incoming arg in register
+				prepResultReg(ins, rmask(argRegs[a]));
+			} else {
+				// incoming arg is on stack, and EBP points nearby (see genPrologue)
+				Register r = prepResultReg(ins, GpRegs);
+				int d = (a - abi_regcount) * sizeof(intptr_t) + 8;
+				LD(r, d, FP); 
+			}
+		}
+		else {
+			// saved param
+			prepResultReg(ins, rmask(savedRegs[a]));
+		}
+	}
+
+	void Assembler::asm_short(LInsp ins)
+	{
+		Register rr = prepResultReg(ins, GpRegs);
+		int32_t val = ins->imm16();
+		if (val == 0)
+			XOR(rr,rr);
+		else
+			LDi(rr, val);
+	}
+
+	void Assembler::asm_int(LInsp ins)
+	{
+		Register rr = prepResultReg(ins, GpRegs);
+		int32_t val = ins->imm32();
+		if (val == 0)
+			XOR(rr,rr);
+		else
+			LDi(rr, val);
+	}
+
+	void Assembler::asm_quad(LInsp ins)
+	{
+    	Reservation *rR = getresv(ins);
+		Register rr = rR->reg;
+		if (rr != UnknownReg)
+		{
+			// @todo -- add special-cases for 0 and 1
+			_allocator.retire(rr);
+			rR->reg = UnknownReg;
+			NanoAssert((rmask(rr) & FpRegs) != 0);
+
+			const double d = ins->constvalf();
+            const uint64_t q = ins->constvalq();
+			if (rmask(rr) & XmmRegs) {
+				if (q == 0.0) {
+                    // test (int64)0 since -0.0 == 0.0
+					SSE_XORPDr(rr, rr);
+				} else if (d == 1.0) {
+					// 1.0 is extremely frequent and worth special-casing!
+					static const double k_ONE = 1.0;
+					LDSDm(rr, &k_ONE);
+				} else {
+					findMemFor(ins);
+					const int d = disp(rR);
+					SSE_LDQ(rr, d, FP);
+				}
+			} else {
+				if (q == 0.0) {
+                    // test (int64)0 since -0.0 == 0.0
+					FLDZ();
+				} else if (d == 1.0) {
+					FLD1();
+				} else {
+					findMemFor(ins);
+					int d = disp(rR);
+					FLDQ(d,FP);
+				}
+			}
+		}
+
+		// @todo, if we used xor, ldsd, fldz, etc above, we don't need mem here
+		int d = disp(rR);
+		freeRsrcOf(ins, false);
+		if (d)
+		{
+			const int32_t* p = (const int32_t*) (ins-2);
+			STi(FP,d+4,p[1]);
+			STi(FP,d,p[0]);
+		}
+	}
+	
+	void Assembler::asm_qlo(LInsp ins)
+	{
+		LIns *q = ins->oprnd1();
+		Reservation *resv = getresv(ins);
+		Register rr = resv->reg;
+		if (rr == UnknownReg) {
+			// store quad in spill loc
+			int d = disp(resv);
+			freeRsrcOf(ins, false);
+			Register qr = findRegFor(q, XmmRegs);
+			SSE_MOVDm(d, FP, qr);
+		} else {
+			freeRsrcOf(ins, false);
+			Register qr = findRegFor(q, XmmRegs);
+			SSE_MOVD(rr,qr);
+		}
 	}
 
 	void Assembler::asm_nongp_copy(Register r, Register s)
