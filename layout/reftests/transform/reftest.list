@@ -87,3 +87,4 @@ random == rotate-1e.html rotate-1-ref.html
 == matrix-5a.html matrix-5-ref.html
 == matrix-6a.html matrix-6-ref.html
 == matrix-7a.html matrix-7-ref.html
+== propagate-inherit-boolean.html propagate-inherit-boolean-ref.html

@@ -3155,7 +3155,7 @@ static nsStyleTransformMatrix ReadTransforms(const nsCSSValueList* aList,
     /* Read in a single transform matrix, then accumulate it with the total. */
     nsStyleTransformMatrix currMatrix;
     currMatrix.SetToTransformFunction(currElem.GetArrayValue(), aContext,
-                                      aPresContext);
+                                      aPresContext, aInherited);
     result *= currMatrix;
   }
   return result;
