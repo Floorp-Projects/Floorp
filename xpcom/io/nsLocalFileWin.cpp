@@ -900,12 +900,16 @@ nsLocalFile::InitWithPath(const nsAString &filePath)
     PRUnichar *path = nsnull;
     PRInt32 pathLen = 0;
 
-    if ( ( (secondChar == L':') && !FindCharInReadable(L'/', begin, end) ) ||  // normal path
-#ifdef WINCE
-         ( (firstChar == L'\\') )   // wince absolute path or network path
+    if (( 
+         !FindCharInReadable(L'/', begin, end) )   //normal path
+#ifndef WINCE
+        && (secondChar == L':') ||  // additional normal path condition
+        (secondChar == L'\\') &&    // addtional network path condition 
 #else
-         ( (firstChar == L'\\') && (secondChar == L'\\') )   // network path
-#endif
+        ||
+#endif 
+        (firstChar == L'\\')    // wince absolute path or network path
+
          )
     {
         // This is a native path
