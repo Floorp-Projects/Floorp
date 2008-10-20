@@ -234,20 +234,20 @@ nsStyleTransformMatrix::operator *(const nsStyleTransformMatrix &aOther) const
 
 /* Helper function to fill in an nscoord with the specified nsCSSValue. */
 static void SetCoordToValue(const nsCSSValue &aValue,
-			    nsStyleContext* aContext,
-			    nsPresContext* aPresContext,
-			    PRBool &aInherited, nscoord &aOut)
+                            nsStyleContext* aContext,
+                            nsPresContext* aPresContext,
+                            PRBool &aInherited, nscoord &aOut)
 {
   aOut = nsRuleNode::CalcLength(aValue, aContext, aPresContext, aInherited);
 }
 
 /* Helper function to process a matrix entry. */
 static void ProcessMatrix(float aMain[4], nscoord aDelta[2],
-			  float aX[2], float aY[2],
-			  const nsCSSValue::Array* aData,
-			  nsStyleContext* aContext,
-			  nsPresContext* aPresContext,
-			  PRBool& aInherited)
+                          float aX[2], float aY[2],
+                          const nsCSSValue::Array* aData,
+                          nsStyleContext* aContext,
+                          nsPresContext* aPresContext,
+                          PRBool& aInherited)
 {
   NS_PRECONDITION(aData->Count() == 7, "Invalid array!");
 
@@ -278,10 +278,10 @@ static void ProcessMatrix(float aMain[4], nscoord aDelta[2],
 
 /* Helper function to process a translatex function. */
 static void ProcessTranslateX(nscoord aDelta[2], float aX[2],
-			      const nsCSSValue::Array* aData,
-			      nsStyleContext* aContext,
-			      nsPresContext* aPresContext
-			      PRBool& aInherited)
+                              const nsCSSValue::Array* aData,
+                              nsStyleContext* aContext,
+                              nsPresContext* aPresContext
+                              PRBool& aInherited)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
 
@@ -305,10 +305,10 @@ static void ProcessTranslateX(nscoord aDelta[2], float aX[2],
 
 /* Helper function to process a translatey function. */
 static void ProcessTranslateY(nscoord aDelta[2], float aY[2],
-			      const nsCSSValue::Array* aData,
-			      nsStyleContext* aContext,
-			      nsPresContext* aPresContext,
-			      PRBool& aInherited)
+                              const nsCSSValue::Array* aData,
+                              nsStyleContext* aContext,
+                              nsPresContext* aPresContext,
+                              PRBool& aInherited)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
 
@@ -332,10 +332,10 @@ static void ProcessTranslateY(nscoord aDelta[2], float aY[2],
 
 /* Helper function to process a translate function. */
 static void ProcessTranslate(nscoord aDelta[2], float aX[2], float aY[2],
-			     const nsCSSValue::Array* aData,
-			     nsStyleContext* aContext,
-			     nsPresContext* aPresContext,
-			     PRBool& aInherited)
+                             const nsCSSValue::Array* aData,
+                             nsStyleContext* aContext,
+                             nsPresContext* aPresContext,
+                             PRBool& aInherited)
 {
   NS_PRECONDITION(aData->Count() == 2 || aData->Count() == 3, "Invalid array!");
 
@@ -399,10 +399,10 @@ static void ProcessScale(float aMain[4], const nsCSSValue::Array* aData)
    */
   const nsCSSValue& scaleX = aData->Item(1);
   const nsCSSValue& scaleY = (aData->Count() == 2 ? scaleX :
-			      aData->Item(2));
+                              aData->Item(2));
 
   ProcessScaleHelper(scaleX.GetFloatValue(),
-		     scaleY.GetFloatValue(), aMain);
+                     scaleY.GetFloatValue(), aMain);
 }
 
 /* Helper function that, given a set of angles, constructs the appropriate
@@ -542,8 +542,8 @@ nsStyleTransformMatrix::operator ==(const nsStyleTransformMatrix &aOther) const
 
   for (PRInt32 index = 0; index < 2; ++index)
     if (mDelta[index] != aOther.mDelta[index] ||
-	mX[index] != aOther.mX[index] ||
-	mY[index] != aOther.mY[index])
+        mX[index] != aOther.mX[index] ||
+        mY[index] != aOther.mY[index])
       return PR_FALSE;
 
   return PR_TRUE;
