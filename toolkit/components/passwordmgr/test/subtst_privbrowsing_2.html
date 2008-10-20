@@ -1,0 +1,31 @@
+<html>
+<head>
+  <title>Subtest for Login Manager notifications (private browsing)</title>
+</head>
+<body>
+<h2>Subtest 2</h2>
+<!--
+  Make sure that the password-change notification appears outside of
+  the private mode, but not inside it.
+-->
+<form id="form" action="formsubmit.sjs">
+  <input id="pass" name="pass" type="password">
+  <input id="newpass" name="newpass" type="password">
+  <button type='submit'>Submit</button>
+</form>
+
+<script>
+function submitForm() {
+  passField.value = "notifyp1";
+  passField2.value = "notifyp2";
+  form.submit();
+}
+
+window.onload = submitForm;
+var form      = document.getElementById("form");
+var passField = document.getElementById("pass");
+var passField2 = document.getElementById("newpass");
+
+</script>
+</body>
+</html>
