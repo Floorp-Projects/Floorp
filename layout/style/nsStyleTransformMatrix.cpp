@@ -280,7 +280,7 @@ static void ProcessMatrix(float aMain[4], nscoord aDelta[2],
 static void ProcessTranslateX(nscoord aDelta[2], float aX[2],
                               const nsCSSValue::Array* aData,
                               nsStyleContext* aContext,
-                              nsPresContext* aPresContext
+                              nsPresContext* aPresContext,
                               PRBool& aInherited)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
