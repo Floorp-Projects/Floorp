@@ -226,8 +226,9 @@ namespace nanojit
 			void		unionRegisterState(RegAlloc& saved);
             void        assignSaved(RegAlloc &saved, RegisterMask skip);
 	        LInsp       findVictim(RegAlloc& regs, RegisterMask allow);
-		
-			int			findMemFor(LIns* i);
+
+            Register    getBaseReg(LIns *i, int &d, RegisterMask allow);
+            int			findMemFor(LIns* i);
 			Register	findRegFor(LIns* i, RegisterMask allow);
 			void		findRegFor2(RegisterMask allow, LIns* ia, Reservation* &ra, LIns *ib, Reservation* &rb);
 			Register	findSpecificRegFor(LIns* i, Register w);
@@ -290,7 +291,7 @@ namespace nanojit
 			void		asm_restore(LInsp, Reservation*, Register);
 			void		asm_load(int d, Register r);
 			void		asm_spilli(LInsp i, Reservation *resv, bool pop);
-			void		asm_spill(Register rr, int d, bool pop=false, bool quad=false);
+			void		asm_spill(Register rr, int d, bool pop, bool quad);
 			void		asm_load64(LInsp i);
 			void		asm_pusharg(LInsp p);
 			NIns*		asm_adjustBranch(NIns* at, NIns* target);
