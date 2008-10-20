@@ -1003,67 +1003,89 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
 #endif
 
     if (!sheet) {
-      // Then complete sheets.
+      // Then our per-document complete sheets.
       nsURIAndPrincipalHashKey key(aURI, aLoaderPrincipal);
       
       mCompleteSheets.Get(&key, getter_AddRefs(sheet));
       LOG(("  From completed: %p", sheet.get()));
+    }
     
-      // Then loading sheets
-      if (!sheet && !aSyncLoad) {
-        aSheetState = eSheetLoading;
+    if (sheet) {
+#ifdef DEBUG
+      // This sheet came from the XUL cache or our per-document hashtable; it
+      // better be a complete sheet.
+      PRBool complete = PR_FALSE;
+      sheet->GetComplete(complete);
+      NS_ASSERTION(complete,
+                   "Sheet thinks it's not complete while we think it is");
+#endif
+      // Make sure it hasn't been modified; if it has, we can't use it
+      PRBool modified = PR_TRUE;
+      sheet->IsModified(&modified);
+      if (modified) {
+        LOG(("  Not cloning completed sheet %p because it's been modified",
+             sheet.get()));
+        sheet = nsnull;
+      }
+    }
+
+    // Then loading sheets
+    if (!sheet && !aSyncLoad) {
+      aSheetState = eSheetLoading;
+      SheetLoadData* loadData = nsnull;
+      nsURIAndPrincipalHashKey key(aURI, aLoaderPrincipal);      
+      mLoadingDatas.Get(&key, &loadData);
+      if (loadData) {
+        sheet = loadData->mSheet;
+        LOG(("  From loading: %p", sheet.get()));
+
+#ifdef DEBUG
+        PRBool debugEqual;
+        NS_ASSERTION((!aLoaderPrincipal && !loadData->mLoaderPrincipal) ||
+                     (aLoaderPrincipal && loadData->mLoaderPrincipal &&
+                      NS_SUCCEEDED(aLoaderPrincipal->
+                                   Equals(loadData->mLoaderPrincipal,
+                                          &debugEqual)) && debugEqual),
+                     "Principals should be the same");
+#endif
+      }
+
+      // Then alternate sheets
+      if (!sheet) {
+        aSheetState = eSheetPending;
         SheetLoadData* loadData = nsnull;
-        mLoadingDatas.Get(&key, &loadData);
+        mPendingDatas.Get(&key, &loadData);
         if (loadData) {
           sheet = loadData->mSheet;
-          LOG(("  From loading: %p", sheet.get()));
+          LOG(("  From pending: %p", sheet.get()));
 
 #ifdef DEBUG
           PRBool debugEqual;
           NS_ASSERTION((!aLoaderPrincipal && !loadData->mLoaderPrincipal) ||
                        (aLoaderPrincipal && loadData->mLoaderPrincipal &&
                         NS_SUCCEEDED(aLoaderPrincipal->
-                                       Equals(loadData->mLoaderPrincipal,
-                                              &debugEqual)) && debugEqual),
+                                     Equals(loadData->mLoaderPrincipal,
+                                            &debugEqual)) && debugEqual),
                        "Principals should be the same");
 #endif
-        }
-
-        // Then alternate sheets
-        if (!sheet) {
-          aSheetState = eSheetPending;
-          SheetLoadData* loadData = nsnull;
-          mPendingDatas.Get(&key, &loadData);
-          if (loadData) {
-            sheet = loadData->mSheet;
-            LOG(("  From pending: %p", sheet.get()));
-
-#ifdef DEBUG
-            PRBool debugEqual;
-            NS_ASSERTION((!aLoaderPrincipal && !loadData->mLoaderPrincipal) ||
-                         (aLoaderPrincipal && loadData->mLoaderPrincipal &&
-                          NS_SUCCEEDED(aLoaderPrincipal->
-                                         Equals(loadData->mLoaderPrincipal,
-                                                &debugEqual)) && debugEqual),
-                         "Principals should be the same");
-#endif
-          }
         }
       }
     }
 
     if (sheet) {
-      // We can use this cached sheet if it's either incomplete or unmodified
+      // The sheet we have now should be either incomplete or unmodified
+#ifdef DEBUG
       PRBool modified = PR_TRUE;
       sheet->IsModified(&modified);
       PRBool complete = PR_FALSE;
       sheet->GetComplete(complete);
-      if (!modified || !complete) {
-        // Proceed on failures; at worst we'll try to create one below
-        sheet->Clone(nsnull, nsnull, nsnull, nsnull, aSheet);
-        NS_ASSERTION(complete || aSheetState != eSheetComplete,
-                     "Sheet thinks it's not complete while we think it is");
-      }
+      NS_ASSERTION(!modified || !complete,
+                   "Unexpected modified complete sheet");
+      NS_ASSERTION(complete || aSheetState != eSheetComplete,
+                   "Sheet thinks it's not complete while we think it is");
+#endif
+      rv = sheet->Clone(nsnull, nsnull, nsnull, nsnull, aSheet);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 

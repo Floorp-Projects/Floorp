@@ -322,7 +322,8 @@ nsEditor::InstallEventListeners()
 
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(piTarget));
   if (target) {
-    rv |= target->AddEventListener(NS_LITERAL_STRING("dragstart"), mDragListenerP, PR_FALSE);
+    // See bug 455215, we cannot use the standard dragstart event yet
+    rv |= target->AddEventListener(NS_LITERAL_STRING("draggesture"), mDragListenerP, PR_FALSE);
     rv |= target->AddEventListener(NS_LITERAL_STRING("dragenter"), mDragListenerP, PR_FALSE);
     rv |= target->AddEventListener(NS_LITERAL_STRING("dragover"), mDragListenerP, PR_FALSE);
     rv |= target->AddEventListener(NS_LITERAL_STRING("dragleave"), mDragListenerP, PR_FALSE);
@@ -397,7 +398,7 @@ nsEditor::RemoveEventListeners()
     {
       nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(piTarget));
       if (target) {
-        target->RemoveEventListener(NS_LITERAL_STRING("dragstart"), mDragListenerP, PR_FALSE);
+        target->RemoveEventListener(NS_LITERAL_STRING("draggesture"), mDragListenerP, PR_FALSE);
         target->RemoveEventListener(NS_LITERAL_STRING("dragenter"), mDragListenerP, PR_FALSE);
         target->RemoveEventListener(NS_LITERAL_STRING("dragover"), mDragListenerP, PR_FALSE);
         target->RemoveEventListener(NS_LITERAL_STRING("dragleave"), mDragListenerP, PR_FALSE);

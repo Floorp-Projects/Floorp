@@ -58,8 +58,14 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
     path.ReplaceChar(PRUnichar(0x5Cu), PRUnichar(0x2Fu));
 
     nsCAutoString escPath;
+
+    // Windows Desktop paths beging with a drive letter, so need an 'extra'
+    // slash at the begining
+#ifdef WINCE  //  /Windows  => file:///Windows
+    NS_NAMED_LITERAL_CSTRING(prefix, "file://");
+#else  // C:\Windows =>  file:///C:/Windows
     NS_NAMED_LITERAL_CSTRING(prefix, "file:///");
-  
+#endif  
     // Escape the path with the directory mask
     NS_ConvertUTF16toUTF8 ePath(path);
     if (NS_EscapeURL(ePath.get(), -1, esc_Directory+esc_Forced, escPath))
@@ -133,9 +139,11 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
     if (path.Length() != strlen(path.get()))
         return NS_ERROR_FILE_INVALID_PATH;
 
+#ifndef WINCE
     // remove leading '\'
     if (path.CharAt(0) == '\\')
         path.Cut(0, 1);
+#endif
 
     if (IsUTF8(path))
         rv = localFile->InitWithPath(NS_ConvertUTF8toUTF16(path));
