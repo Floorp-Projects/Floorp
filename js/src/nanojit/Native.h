@@ -98,10 +98,14 @@ namespace nanojit {
 		#define PRFX					counter_increment(native);\
 			if (verbose_enabled()) {\
 				outline[0]='\0';\
-				sprintf(outline, "                   ");\
+				if (outputAddr) { sprintf(outline, "         %8p  ",_nIns); } \
+				else { sprintf(outline, "                   "); } \
 				sprintf(&outline[19]
 		#define PSFX					Assembler::outputAlign(outline, 45);\
 			RegAlloc::formatRegisters(_allocator, outline, _thisfrag);\
+			strcat(outline,outlineEOL); \
+			outlineEOL[0]='\0'; \
+			outputAddr = false; \
 			Assembler::output_asm(outline); }
 		//#define PRFX					fprintf(stdout
 		//#define PSFX					fprintf(stdout,"\n")
