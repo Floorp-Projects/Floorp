@@ -159,15 +159,12 @@ typedef struct _FragInfo {
     NIns*           epilogue;
 } FragInfo;
 
-#ifdef NJ_ARM_VFP
-static const RegisterMask SavedFpRegs = 1<<D0 | 1<<D1 | 1<<D2 | 1<<D3 | 1<<D4 | 1<<D5 | 1<<D6 | 1<<D7;
-static const RegisterMask SavedRegs = 1<<R4 | 1<<R5 | 1<<R6 | 1<<R7 | 1<<R8 | 1<<R9 | 1<<R10 | SavedFpRegs;
-static const int NumSavedRegs = 15;
-#else
+// D0-D6 are not saved; D7-D15 are, but we don't use those,
+// so we don't have to worry about saving/restoring them
 static const RegisterMask SavedFpRegs = 0;
 static const RegisterMask SavedRegs = 1<<R4 | 1<<R5 | 1<<R6 | 1<<R7 | 1<<R8 | 1<<R9 | 1<<R10;
 static const int NumSavedRegs = 7;
-#endif
+
 static const RegisterMask FpRegs = 1<<D0 | 1<<D1 | 1<<D2 | 1<<D3 | 1<<D4 | 1<<D5 | 1<<D6; // no D7; S14-S15 are used for i2f/u2f.
 static const RegisterMask GpRegs = 0x07FF;
 static const RegisterMask AllowableFlagRegs = 1<<R0 | 1<<R1 | 1<<R2 | 1<<R3 | 1<<R4 | 1<<R5 | 1<<R6 | 1<<R7 | 1<<R8 | 1<<R9 | 1<<R10;
@@ -209,6 +206,7 @@ verbose_only( extern const char* regNames[]; )
     void nativePageSetup();                                             \
     void asm_quad_nochk(Register, const int32_t*);                      \
     void asm_add_imm(Register, Register, int32_t);                      \
+    void asm_fcmp(LInsp);                                               \
     int* _nSlot;                                                        \
     int* _nExitSlot;
 
