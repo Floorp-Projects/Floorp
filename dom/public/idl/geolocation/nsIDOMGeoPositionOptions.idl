@@ -41,4 +41,5 @@
 interface nsIDOMGeoPositionOptions : nsISupports
 {
   attribute boolean enableHighAccuracy;
+  attribute unsigned long timeout;
 };

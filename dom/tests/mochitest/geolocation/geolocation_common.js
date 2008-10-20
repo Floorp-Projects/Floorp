@@ -113,7 +113,7 @@ function attachPrompt() {
                            .getService(Components.interfaces.nsIGeolocationService);
   old_prompt = geolocationService.prompt;
 
-	if(DELAYED_PROMPT)
+  if(DELAYED_PROMPT)
     geolocationService.prompt = delayed_prompt;
   else
     geolocationService.prompt = geolocation_prompt;
