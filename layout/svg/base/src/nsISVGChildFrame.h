@@ -51,8 +51,8 @@ class nsIDOMSVGMatrix;
 class nsSVGRenderState;
 
 #define NS_ISVGCHILDFRAME_IID \
-{ 0x91253119, 0x4fe4, 0x4628, \
-  { 0xaf, 0x25, 0x4e, 0x4b, 0x43, 0x5f, 0x66, 0xf2 } }
+{ 0xfc3ee9b2, 0xaf40, 0x416d, \
+  { 0xa8, 0x51, 0xb4, 0x68, 0xa4, 0xe4, 0x8b, 0xcd } }
 
 class nsISVGChildFrame : public nsISupports {
 public:
@@ -61,7 +61,8 @@ public:
 
   // Paint this frame - aDirtyRect is the area being redrawn, in frame
   // offset pixel coordinates
-  NS_IMETHOD PaintSVG(nsSVGRenderState* aContext, nsIntRect *aDirtyRect)=0;
+  NS_IMETHOD PaintSVG(nsSVGRenderState* aContext,
+                      const nsIntRect *aDirtyRect)=0;
 
   // Check if this frame or children contain the given point,
   // specified in app units relative to the origin of the outer

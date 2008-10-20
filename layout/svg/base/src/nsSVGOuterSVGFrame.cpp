@@ -448,7 +448,7 @@ public:
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
                             HitTestState* aState);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect);
+                     const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("SVGEventReceiver")
 };
 
@@ -462,7 +462,7 @@ nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
 
 void
 nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
-     const nsRect& aDirtyRect)
+                    const nsRect& aDirtyRect)
 {
   static_cast<nsSVGOuterSVGFrame*>(mFrame)->
     Paint(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
@@ -572,11 +572,7 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   }
 #endif
 
-  // paint children:
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsSVGUtils::PaintChildWithEffects(&ctx, &dirtyRect, kid);
-  }
+  nsSVGUtils::PaintFrameWithEffects(&ctx, &dirtyRect, this);
 
 #ifdef XP_MACOSX
   if (mEnableBitmapFallback) {
@@ -758,6 +754,12 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGOuterSVGFrame::GetCanvasTM()
 {
+  if (!GetMatrixPropagation()) {
+    nsIDOMSVGMatrix *retval;
+    NS_NewSVGMatrix(&retval);
+    return retval;
+  }
+
   if (!mCanvasTM) {
     nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(mContent);
 
