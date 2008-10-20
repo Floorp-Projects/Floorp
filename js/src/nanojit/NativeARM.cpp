@@ -64,16 +64,15 @@ const char* regNames[] = {"r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10
 
 const Register Assembler::argRegs[] = { R0, R1, R2, R3 };
 const Register Assembler::retRegs[] = { R0, R1 };
+const Register Assembler::savedRegs[] = { R4, R5, R6, R7, R8, R9, R10 };
 
 void
 Assembler::nInit(AvmCore*)
 {
-    // all ARMs have conditional move
-    avmplus::AvmCore::cmov_available = true;
 }
 
 NIns*
-Assembler::genPrologue(RegisterMask needSaving)
+Assembler::genPrologue()
 {
     /**
      * Prologue
@@ -81,16 +80,14 @@ Assembler::genPrologue(RegisterMask needSaving)
 
     // NJ_RESV_OFFSET is space at the top of the stack for us
     // to use for parameter passing (8 bytes at the moment)
-    uint32_t stackNeeded = 4 * _activation.highwatermark + NJ_STACK_OFFSET;
+    uint32_t stackNeeded = STACK_GRANULARITY * _activation.highwatermark + NJ_STACK_OFFSET;
     uint32_t savingCount = 0;
 
-    uint32_t savingMask = 0;
-    savingCount = 9; //R4-R10,R11,LR
-    savingMask = SavedRegs | rmask(FRAME_PTR);
-    (void)needSaving;
+    uint32_t savingMask = SavedRegs | rmask(FP) | rmask(LR);
+    savingCount = NumSavedRegs+2; 
 
     // so for alignment purposes we've pushed  return addr, fp, and savingCount registers
-    uint32_t stackPushed = 4 * (2+savingCount);
+    uint32_t stackPushed = STACK_GRANULARITY * savingCount;
     uint32_t aligned = alignUp(stackNeeded + stackPushed, NJ_ALIGN_STACK);
     int32_t amt = aligned - stackPushed;
 
@@ -102,8 +99,8 @@ Assembler::genPrologue(RegisterMask needSaving)
     verbose_only( verbose_output("         patch entry"); )
     NIns *patchEntry = _nIns;
 
-    MR(FRAME_PTR, SP);
-    PUSH_mask(savingMask|rmask(LR));
+    MR(FP, SP);
+    PUSH_mask(savingMask);
     return patchEntry;
 }
 
@@ -130,7 +127,7 @@ Assembler::nFragExit(LInsp guard)
     }
 
     // pop the stack frame first
-    MR(SP, FRAME_PTR);
+    MR(SP, FP);
 
 #ifdef NJ_VERBOSE
     if (_frago->core()->config.show_stats) {
@@ -146,11 +143,14 @@ Assembler::nFragExit(LInsp guard)
 }
 
 NIns*
-Assembler::genEpilogue(RegisterMask restore)
+Assembler::genEpilogue()
 {
     BX(LR); // return
-    MR(R0,R2); // return LinkRecord*
-    RegisterMask savingMask = restore | rmask(FRAME_PTR) | rmask(LR);
+
+    // this is needed if we jump here from nFragExit
+    //MR(R0,R2); // return LinkRecord*
+
+    RegisterMask savingMask = SavedRegs | rmask(FP) | rmask(LR);
     POP_mask(savingMask); // regs
     return _nIns;
 }
@@ -252,6 +252,62 @@ Assembler::asm_call(LInsp ins)
             roffset = 1;
     }
 }
+
+    void Assembler::asm_arg(ArgSize sz, LInsp p, Register r)
+    {
+        if (sz == ARGSIZE_Q) 
+        {
+			// ref arg - use lea
+			if (r != UnknownReg)
+			{
+				// arg in specific reg
+				int da = findMemFor(p);
+				LEA(r, da, FP);
+			}
+			else
+			{
+				NanoAssert(0); // not supported
+			}
+		}
+        else if (sz == ARGSIZE_LO)
+		{
+			if (r != UnknownReg) {
+				// arg goes in specific register
+                if (p->isconst()) {
+					LDi(r, p->constval());
+                } else {
+            		Reservation* rA = getresv(p);
+                    if (rA) {
+                        if (rA->reg == UnknownReg) {
+                            // load it into the arg reg
+                            int d = findMemFor(p);
+                            if (p->isop(LIR_alloc)) {
+                                LEA(r, d, FP);
+                            } else {
+                                LD(r, d, FP);
+                            }
+                        } else {
+                            // it must be in a saved reg
+                            MR(r, rA->reg);
+                        }
+                    } 
+                    else {
+                        // this is the last use, so fine to assign it
+                        // to the scratch reg, it's dead after this point.
+    					findSpecificRegFor(p, r);
+                    }
+                }
+			}
+            else {
+				asm_pusharg(p);
+			}
+		}
+        else
+		{
+            NanoAssert(sz == ARGSIZE_F);
+			asm_farg(p);
+		}
+    }
     
 void
 Assembler::nMarkExecute(Page* page, int32_t count, bool enable)
@@ -399,15 +455,11 @@ Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
 }
 
 void
-Assembler::asm_spill(LInsp i, Reservation *resv, bool pop)
+Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
 {
-    (void)i;
-    (void)pop;
-    //fprintf (stderr, "resv->arIndex: %d\n", resv->arIndex);
-    if (resv->arIndex) {
-        int d = disp(resv);
-        // save to spill location
-        Register rr = resv->reg;
+    (void) pop;
+    (void) quad;
+    if (d) {
         if (IsFpReg(rr)) {
             if (isS8(d >> 2)) {
                 FSTD(rr, FP, d);
@@ -418,11 +470,6 @@ Assembler::asm_spill(LInsp i, Reservation *resv, bool pop)
         } else {
             STR(rr, FP, d);
         }
-
-        verbose_only(if (_verbose){
-                outputf("        spill %s",_thisfrag->lirbuf->names->formatRef(i));
-            }
-        )
     }
 }
 
@@ -623,7 +670,7 @@ Assembler::asm_nongp_copy(Register r, Register s)
 }
 
 Register
-Assembler::asm_binop_rhs_reg(LInsp ins)
+Assembler::asm_binop_rhs_reg(LInsp)
 {
     return UnknownReg;
 }
@@ -871,7 +918,7 @@ Assembler::LD32_nochk(Register r, int32_t imm)
 void
 Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
 {
-    int32 offs = PC_OFFSET_FROM(_t,_nIns-1);
+    int32_t offs = PC_OFFSET_FROM(_t,_nIns-1);
     //fprintf(stderr, "B_cond_chk target: 0x%08x offset: %d @0x%08x\n", _t, offs, _nIns-1);
     if (isS24(offs)) {
         if (_chk) underrunProtect(4);
@@ -1094,7 +1141,7 @@ Assembler::asm_fcmp(LInsp ins)
 }
 
 Register
-Assembler::asm_prep_fcall(Reservation* rR, LInsp ins)
+Assembler::asm_prep_fcall(Reservation*, LInsp)
 {
     // We have nothing to do here; we do it all in asm_call.
     return UnknownReg;

@@ -545,13 +545,7 @@ namespace nanojit
     {
         if (value->isconst())
         {
-			Register rb;
-            if (base->isop(LIR_alloc)) {
-                rb = FP;
-                dr += findMemFor(base);
-            } else {
-                rb = findRegFor(base, GpRegs);
-            }
+			Register rb = getBaseReg(base, dr, GpRegs);
             int c = value->constval();
 			STi(rb, dr, c);
         }
@@ -616,20 +610,6 @@ namespace nanojit
 #endif	
 	}
 
-	void Assembler::asm_spilli(LInsp i, Reservation *resv, bool pop)
-	{
-		int d = disp(resv);
-		Register rr = resv->reg;
-		bool quad = i->opcode() == LIR_param || i->isQuad();
-		asm_spill(rr, d, pop, quad);
-		if (d) 
-		{
-			verbose_only(if (_verbose) {
-				outputf("        spill %s",_thisfrag->lirbuf->names->formatRef(i));
-			})
-		}
-	}
-
 	void Assembler::asm_load64(LInsp ins)
 	{
 		LIns* base = ins->oprnd1();
@@ -640,13 +620,7 @@ namespace nanojit
 		if (rr != UnknownReg && rmask(rr) & XmmRegs)
 		{
 			freeRsrcOf(ins, false);
-			Register rb;
-            if (base->isop(LIR_alloc)) {
-                rb = FP;
-                db += findMemFor(base);
-            } else {
-                rb = findRegFor(base, GpRegs);
-            }
+			Register rb = getBaseReg(base, db, GpRegs);
 			SSE_LDQ(rr, db, rb);
 		}
 #if defined NANOJIT_AMD64

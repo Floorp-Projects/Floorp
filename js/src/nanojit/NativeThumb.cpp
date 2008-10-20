@@ -60,12 +60,7 @@ namespace nanojit
 #endif
     const Register Assembler::argRegs[] = { R0, R1, R2, R3 };
     const Register Assembler::retRegs[] = { R0, R1 };
-
-#ifdef NJ_THUMB_JIT
 	const Register Assembler::savedRegs[] = { R4, R5, R6, R7 };
-#else
-	const Register Assembler::savedRegs[] = { R4, R5, R6, R7, R8, R9, R10 };
-#endif
 
 	void Assembler::nInit(AvmCore*)
 	{
