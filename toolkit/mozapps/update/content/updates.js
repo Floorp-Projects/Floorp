@@ -226,6 +226,16 @@ var gUpdates = {
     // Show or hide the extra buttons
     be1.hidden = extraButton1String == null;
     be2.hidden = extraButton2String == null;
+
+    // If cancelButtonString is non-null, remove the icon associated
+    // with the "cancel" button, since this icon won't match the new
+    // label and accesskey. If cancelButtonString is null, _setButton
+    // took care of resetting the label and accesskey to their default
+    // values, so we can reset the icon to cancel.
+    if (cancelButtonString)
+        bc.removeAttribute("icon");
+    else
+        bc.setAttribute("icon", "cancel");
   },
 
   never: function () {
