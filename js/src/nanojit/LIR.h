@@ -39,8 +39,6 @@
 #ifndef __nanojit_LIR__
 #define __nanojit_LIR__
 
-namespace avmplus { class RegionTracker; }
-
 /**
  * Fundamentally, the arguments to the various operands can be grouped along
  * two dimensions.  One dimension is size: can the arguments fit into a 32-bit
@@ -945,7 +943,6 @@ namespace nanojit
     class Assembler;
 
     void compile(Assembler *assm, Fragment *frag);
-    verbose_only( void printTracker(const char* s, avmplus::RegionTracker& trk, Assembler* assm); )
 	verbose_only(void live(GC *gc, LirBuffer *lirbuf);)
 
 	class StackFilter: public LirFilter
