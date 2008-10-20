@@ -22,6 +22,8 @@
  * Contributor(s):
  *   Mike Pinkerton <pinkerton@netscape.com>
  *   Gus Verdun <gustavoverdun@aol.com>
+ *   Kathleen Brade <brade@comcast.net>
+ *   Mark Smith <mcs@pearlcrescent.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
  
  
+#include "nsITransferable.h"
 #include "nsImageClipboard.h"
 #include "nsGfxCIID.h"
 #include "nsMemory.h"
@@ -202,12 +205,13 @@ nsImageFromClipboard :: ~nsImageFromClipboard ( )
 //
 // GetEncodedImageStream
 //
-// Take the raw clipboard image data and convert it to a JPG in the form of a nsIInputStream
+// Take the raw clipboard image data and convert it to aMIMEFormat in the form of a nsIInputStream
 //
 nsresult 
-nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, nsIInputStream** aInputStream )
+nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, const char * aMIMEFormat, nsIInputStream** aInputStream )
 {
   NS_ENSURE_ARG_POINTER (aInputStream);
+  NS_ENSURE_ARG_POINTER (aMIMEFormat);
   nsresult rv;
   *aInputStream = nsnull;
 
@@ -225,9 +229,16 @@ nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, ns
     BYTE  * pGlobal = (BYTE *) aClipboardData;
     // Convert the clipboard image into RGB packed pixel data
     rv = ConvertColorBitMap((unsigned char *) (pGlobal + header->bmiHeader.biSize), header, rgbData);
-    // if that succeeded, encode the bitmap as a JPG. Don't return early or we risk leaking rgbData
+    // if that succeeded, encode the bitmap as aMIMEFormat data. Don't return early or we risk leaking rgbData
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/jpeg", &rv);
+      nsCAutoString encoderCID(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
+
+      // Map image/jpg to image/jpeg (which is how the encoder is registered).
+      if (strcmp(aMIMEFormat, kJPEGImageMime) == 0)
+        encoderCID.Append("image/jpeg");
+      else
+        encoderCID.Append(aMIMEFormat);
+      nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get(), &rv);
       if (NS_SUCCEEDED(rv)){
         rv = encoder->InitFromData(rgbData, 0, width, height, 3 * width /* RGB * # pixels in a row */, 
                                    imgIEncoder::INPUT_FORMAT_RGB, EmptyString());

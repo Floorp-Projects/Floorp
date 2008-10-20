@@ -74,7 +74,7 @@ public:
                                         nsIWidget       * aWindow,
                                         nsITransferable * aTransferable);
   static nsresult GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aIndex, UINT aFormat, void ** aData, PRUint32 * aLen);
-  static nsresult GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aIndex, UINT aFormat, void ** aData, PRUint32 * aLen);
+  static nsresult GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aIndex, UINT aFormat, const char * aMIMEImageFormat, void ** aData, PRUint32 * aLen);
   static nsresult GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen);
   static UINT     GetFormat(const char* aMimeStr);
 

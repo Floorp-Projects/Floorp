@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=444800
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 444800" onload="initAndRunTests()">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=444800"
+     target="_blank">Mozilla Bug 444800</a>
+  <p/>
+  <img id="bitmapImage" src="data:image/bmp;base64,Qk2KAwAAAAAAAIoAAAB8AAAADwAAABAAAAABABgAAAAAAAADAAASCwAAEgsAAAAAAAAAAAAAAAD%2FAAD%2FAAD%2FAAAAAAAA%2FwEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F0vf%2FAABc8tKY%2F%2F%2F%2FyNfq3Mi9%2F%2F%2F70vf%2FAABP8s2R%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2Fzff%2FAABB8s2R5f%2F%2FAAB5LgAA%2F%2B7Czff%2FAABB7s2R%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2Fzff%2FAABB99KRpdz%2FAAAAAAAA4Ktm0vv%2FAABB7s2R%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2Fzff%2FAABB7teYQZHNkS4AebfImAAA1%2FfyAABP7s2R%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2Fzff%2FAABByMiYAAB5159P0v%2F%2FAABBwtKrAABc7s2R%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2Fzff%2FAABPcIJwAAAA%2B%2BW3%2F%2F%2F%2FAHC3gnBBAABP7s2R%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2Fzff%2FAABcAAAAmE8A%2F%2F%2Fy%2F%2F%2F%2Fn9LyAAAAAAAA7s2Y%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FzfL%2FAABcAAAA4LFw%2F%2F%2F%2F%2F%2F%2F%2F4P%2F%2FAAB5AAAA7s2R%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F0vf%2FAABmXAAA%2F%2B7I%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FXJ%2FSAAAA8s2Y%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FAAAA%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FAAAA"/>
+  <p/>
+  <pre id="test">
+  </pre>
+  </body>
+
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+const knsIClipboard = Components.interfaces.nsIClipboard;
+
+function copyImageToClipboard()
+{
+  var tmpNode = document.popupNode;
+  document.popupNode = document.getElementById("bitmapImage");
+
+  const kCmd = "cmd_copyImageContents";
+  var controller = top.document.commandDispatcher
+                   .getControllerForCommand(kCmd);
+  ok((controller && controller.isCommandEnabled(kCmd)), "have copy command");
+  controller.doCommand(kCmd);
+
+  document.popupNode = tmpNode;
+}
+
+function runImageClipboardTests(aCBSvc, aImageType)
+{
+  // Verify that hasDataMatchingFlavors() is working correctly.
+  var typeArray = [ aImageType ];
+  var hasImage = aCBSvc.hasDataMatchingFlavors(typeArray, typeArray.length,
+                                               knsIClipboard.kGlobalClipboard);
+  ok(hasImage, aImageType + " - hasDataMatchingFlavors()");
+
+  // Verify that getData() is working correctly.
+  var xfer = Components.classes["@mozilla.org/widget/transferable;1"]
+                       .createInstance(Components.interfaces.nsITransferable);
+  xfer.addDataFlavor(aImageType);
+  aCBSvc.getData(xfer, knsIClipboard.kGlobalClipboard);
+
+  var typeObj = {}, dataObj = {}, lenObj = {};
+  xfer.getAnyTransferData(typeObj, dataObj, lenObj);
+  var gotValue = (null != dataObj.value);
+  ok(gotValue, aImageType + " - getData() returned a value");
+  if (gotValue)
+  {
+    const knsIInputStream = Components.interfaces.nsIInputStream;
+    var imgStream = dataObj.value.QueryInterface(knsIInputStream);
+    ok((null != imgStream), aImageType + " - got an nsIInputStream");
+    var bytesAvailable = imgStream.available();
+    ok((bytesAvailable > 10), aImageType + " - got some data");
+  }
+}
+
+function initAndRunTests()
+{
+  SimpleTest.waitForExplicitFinish();
+
+  copyImageToClipboard();
+
+  var cbSvc = Components.classes["@mozilla.org/widget/clipboard;1"]
+                        .getService(knsIClipboard);
+
+  // Work around a problem on Windows where clipboard is not ready after copy.
+  setTimeout(function() { runTests(cbSvc); }, 0);
+}
+
+function runTests(aCBSvc)
+{
+  runImageClipboardTests(aCBSvc, "image/png");
+  runImageClipboardTests(aCBSvc, "image/jpg");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+</window>
