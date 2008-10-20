@@ -221,25 +221,3 @@ interface nsINetUtil : nsISupports
                                         out long aCharsetStart,
                                         out long aCharsetEnd);
 };
-
-/**
- * nsINetUtil methods added in mozilla 1.9.1.
- *
- * XXX bug 451255: Merge this up in to nsINetUtil as soon as possible.
- */
-[scriptable, uuid(da76ab60-2ec5-4649-84c4-4954a08f6d37)]
-interface nsINetUtil_MOZILLA_1_9_1 : nsISupports
-{
-    /**
-     * Checks whether a document at the given URI should have access
-     * to the offline cache.
-     * @param aURI
-     *        The URI to check
-     * @param aPrefBranch
-     *        The pref branch to use to check the
-     *        offline-apps.allow_by_default pref.  If not specified,
-     *        the pref service will be used.
-     */
-    boolean OfflineAppAllowed(in nsIURI aURI,
-                              in nsIPrefBranch aPrefBranch);
-};
