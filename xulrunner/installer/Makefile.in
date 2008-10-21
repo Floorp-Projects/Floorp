@@ -77,7 +77,7 @@ regdir = /etc/gre.d
 
 install:: $(MOZILLA_VERSION).system.conf
 	$(NSINSTALL) -D $(DESTDIR)$(regdir)
-	$(SYSINSTALL) $^ $(DESTDIR)$(regdir)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(regdir)
 endif
 
 # Add pkg-config files to the install:: target
