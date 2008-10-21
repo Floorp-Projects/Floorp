@@ -1854,8 +1854,7 @@ case "$target" in
         MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS=1
     ;;
     mips*)
-        CFLAGS="$CFLAGS -Wa,-xgot"
-        CXXFLAGS="$CXXFLAGS -Wa,-xgot"
+        MOZ_DEBUG_FLAGS="-g" # We want inlining
     ;;
     esac
     ;;
