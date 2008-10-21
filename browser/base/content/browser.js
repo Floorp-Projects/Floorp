@@ -2697,8 +2697,10 @@ const BrowserSearch = {
     }
 
     // Append the URI and an appropriate title to the browser data.
+    // Use documentURIObject in the check for shouldLoadFavIcon so that we
+    // do the right thing with about:-style error pages.  Bug 453442
     var iconURL = null;
-    if (gBrowser.shouldLoadFavIcon(browser.currentURI))
+    if (gBrowser.shouldLoadFavIcon(browser.contentDocument.documentURIObject))
       iconURL = browser.currentURI.prePath + "/favicon.ico";
 
     var hidden = false;
