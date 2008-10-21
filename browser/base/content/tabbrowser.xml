@@ -672,8 +672,9 @@
         <parameter name="aPopupMenu"/>
         <body>
           <![CDATA[
-            this.mContextTab = document.popupNode;
-            var disabled = this.mPanelContainer.childNodes.length == 1;
+            this.mContextTab = document.popupNode.localName == "tab" ?
+                               document.popupNode : this.selectedTab;
+            var disabled = this.mTabs.length == 1;
             var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
             for (var i = 0; i < menuItems.length; i++)
               menuItems[i].disabled = disabled;
@@ -1344,16 +1345,11 @@
         <body>
           <![CDATA[
             if (this.warnAboutClosingTabs(false)) {
-              if (aTab.localName != "tab")
-                aTab = this.mCurrentTab;
-              else
-                this.mTabContainer.selectedItem = aTab;
+              this.selectedTab = aTab;
 
-              var childNodes = this.mTabContainer.childNodes;
-
-              for (var i = childNodes.length - 1; i >= 0; --i) {
-                if (childNodes[i] != aTab)
-                  this.removeTab(childNodes[i]);
+              for (let i = this.mTabs.length - 1; i >= 0; --i) {
+                if (this.mTabs[i] != aTab)
+                  this.removeTab(this.mTabs[i]);
               }
             }
           ]]>
@@ -1398,9 +1394,6 @@
         <parameter name="aCloseWindowWithLastTab"/>
         <body>
           <![CDATA[
-            if (aTab.localName != "tab")
-              aTab = this.mCurrentTab;
-
             if (aFireBeforeUnload) {
               let ds = this.getBrowserForTab(aTab).docShell;
               if (ds.contentViewer && !ds.contentViewer.permitUnload())
@@ -1638,9 +1631,6 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            if (aTab.localName != "tab")
-              aTab = this.mCurrentTab;
-
             this.getBrowserForTab(aTab).reload();
           ]]>
         </body>
