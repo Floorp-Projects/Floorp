@@ -602,7 +602,9 @@
                 } catch (e) { }
               }
             }
-            else if (this.shouldLoadFavIcon(browser.currentURI)) {
+            // Use documentURIObject in the check for shouldLoadFavIcon so that we
+            // do the right thing with about:-style error pages.  Bug 453442
+            else if (this.shouldLoadFavIcon(browser.contentDocument.documentURIObject)) {
               var url = browser.currentURI.prePath + "/favicon.ico";
               if (!this.isFailedIcon(url))
                 this.setIcon(aTab, url);
