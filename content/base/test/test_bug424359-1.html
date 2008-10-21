@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for HTML serializer</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=424359">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="testframe" src="file_htmlserializer_1.html">
+  </iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+
+function loadFileContent(aFile, aCharset) {
+    //if(aAsIso == undefined) aAsIso = false;
+    if(aCharset == undefined)
+        aCharset = 'UTF-8';
+
+    var baseUri = Components.classes['@mozilla.org/network/standard-url;1']
+                   .createInstance(Components.interfaces.nsIURI);
+    baseUri.spec = window.location.href;
+
+    var ios = Components.classes['@mozilla.org/network/io-service;1']
+            .getService(Components.interfaces.nsIIOService);
+    var chann = ios.newChannel(aFile, aCharset, baseUri);
+
+    var cis = Components.interfaces.nsIConverterInputStream;
+
+    var inputStream = Components.classes["@mozilla.org/intl/converter-input-stream;1"]
+                       .createInstance(cis);
+    inputStream.init(chann.open(), aCharset, 1024, cis.DEFAULT_REPLACEMENT_CHARACTER);
+    var str = {}, content = '';
+    while (inputStream.readString(4096, str) != 0) {
+        content += str.value;
+    }
+    return content;
+}
+
+
+function testHtmlSerializer_1 () {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  const de = Components.interfaces.nsIDocumentEncoder
+  var encoder = Components.classes["@mozilla.org/layout/documentEncoder;1?type=text/html"]
+                   .createInstance(Components.interfaces.nsIDocumentEncoder);
+
+  var doc = $("testframe").contentDocument;
+  var out, expected;
+
+  // in the following tests, we must use the OutputLFLineBreak flag, to avoid
+  // to have the default line break of the platform in the result, so the test
+  // can pass on all platform
+
+  //------------ no flags
+  encoder.init(doc, "text/html", de.OutputLFLineBreak);
+  encoder.setCharset("UTF-8");
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_noflag.html");
+  is(out, expected, "test no flags");
+
+  //------------- unsupported flags
+  // since the following flags are not supported, we should
+  // have a result like the one without flag
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputPreformatted);
+  out = encoder.encodeToString();
+  is(out, expected, "test OutputPreformatted");
+
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputWrap);
+  out = encoder.encodeToString();
+  is(out, expected, "test OutputWrap");
+
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputFormatFlowed);
+  out = encoder.encodeToString();
+  is(out, expected, "test OutputFormatFlowed");
+
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputNoScriptContent);
+  out = encoder.encodeToString();
+  is(out, expected, "test OutputNoScriptContent");
+
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputNoFramesContent);
+  out = encoder.encodeToString();
+  is(out, expected, "test OutputNoFramesContent");
+
+
+  //------------ OutputFormatted
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputFormatted);
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_format.html");
+  is(out, expected, "test OutputFormatted");
+
+  //------------ OutputRaw
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputRaw);
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_raw.html");
+  is(out, expected, "test OutputRaw");
+
+  //------------ OutputBodyOnly
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputBodyOnly);
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_bodyonly.html");
+  is(out, expected, "test OutputBodyOnly");
+
+
+
+  //------------ OutputAbsoluteLinks
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputAbsoluteLinks);
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_links.html");
+  is(out, expected, "test OutputAbsoluteLinks");
+
+  //------------ OutputLFLineBreak
+  encoder.init(doc, "text/html",de.OutputLFLineBreak);
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_linebreak.html");
+  is(out, expected, "test OutputLFLineBreak");
+
+  //------------ OutputCRLineBreak
+  encoder.init(doc, "text/html",de.OutputCRLineBreak);
+  out = encoder.encodeToString();
+  expected = expected.replace(/\n/mg, "\r");
+  is(out, expected, "test OutputCRLineBreak");
+
+  //------------ OutputLFLineBreak + OutputCRLineBreak
+  encoder.init(doc, "text/html",de.OutputLFLineBreak | de.OutputCRLineBreak);
+  out = encoder.encodeToString();
+  expected = expected.replace(/\r/mg, "\r\n");
+  is(out, expected, "test OutputLFLineBreak + OutputCRLineBreak");
+
+  //------------ OutputNoFormattingInPre
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputNoFormattingInPre);
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_noformatpre.html");
+  is(out, expected, "test OutputNoFormattingInPre");
+
+  // ------------- nested body elements
+  var body2 = doc.createElement('body');
+  var p = doc.createElement('p');
+  p.appendChild(doc.createTextNode("this is an other body element"));
+  body2.appendChild(p);
+  var body = doc.getElementsByTagName('body')[0];
+  body.appendChild(body2);
+
+  is(doc.getElementsByTagName('body').length, 2); // to be sure we have two body elements
+
+  encoder.init(doc, "text/html", de.OutputLFLineBreak);
+  encoder.setCharset("UTF-8");
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_nested_body.html");
+  is(out, expected, "test with two nested body elements");
+
+  // ------------- two body elements
+  body.parentNode.insertBefore(body2, body);
+
+  is(doc.getElementsByTagName('body').length, 2); // to be sure we have two body elements
+  encoder.init(doc, "text/html", de.OutputLFLineBreak);
+  encoder.setCharset("UTF-8");
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_sibling_body.html");
+  is(out, expected, "test with two body elements");
+
+  encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputBodyOnly);
+  encoder.setCharset("UTF-8");
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_sibling_body_only_body.html");
+  is(out, expected, "test with two body elements, and output body only");
+
+  // --------------- no body element
+  doc.documentElement.removeChild(body);
+  doc.documentElement.removeChild(body2);
+
+  encoder.init(doc, "text/html", de.OutputLFLineBreak);
+  encoder.setCharset("UTF-8");
+  out = encoder.encodeToString();
+  expected = loadFileContent("file_htmlserializer_1_no_body.html");
+  is(out, expected, "test with no body element");
+
+
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(testHtmlSerializer_1);
+
+</script>
+</pre>
+<!--<h1>1</h1><h2>result</h2><textarea id="t1" cols="80" rows="20"></textarea>
+          <h2>expected</h2><textarea id="t1e" cols="80" rows="20"></textarea>-->
+
+</body>
+</html>
+
+
