@@ -1053,6 +1053,9 @@ pref("layout.frames.force_resizability", false);
 // pref to report CSS errors to the error console
 pref("layout.css.report_errors", true);
 
+// Should the :visited selector ever match (otherwise :link matches instead)?
+pref("layout.css.visited_links_enabled", true);
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
