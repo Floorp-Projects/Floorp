@@ -93,4 +93,3 @@ install-plugin: build-plugin
 
 build-plugin:
 	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
-	printf "NSPLMOSS" > "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin/Contents/PkgInfo"
