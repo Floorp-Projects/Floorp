@@ -1,0 +1,27 @@
+<html>
+<head>
+  <title>Subtest for Login Manager notifications (private browsing)</title>
+</head>
+<body>
+<h2>Subtest 3</h2>
+<!--
+  Make sure that the user/pass fields are auto-filled outside of
+  the private mode, but not inside it.
+-->
+<form id="form" action="formsubmit.sjs">
+  <input id="user" name="user" type="text">
+  <input id="pass" name="pass" type="password">
+  <button type='submit'>Submit</button>
+</form>
+
+<script>
+function submitForm() {
+  form.submit();
+}
+
+window.onload = submitForm;
+var form      = document.getElementById("form");
+
+</script>
+</body>
+</html>

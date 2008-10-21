@@ -292,6 +292,7 @@ public:
   NS_IMETHOD              Show(PRBool aState);
   NS_IMETHOD              IsVisible(PRBool& outState);
 
+  NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
 
   NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
