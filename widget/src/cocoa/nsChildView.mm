@@ -2421,6 +2421,13 @@ NSEvent* gLastDragEvent = nil;
   nsTSMManager::OnDestroyView(self);
   mGeckoChild = nsnull;
   mWindow = nil;
+
+  // A child widget can be destroyed without being unfocused (by Gecko).
+  WindowDataMap* windowMap = [WindowDataMap sharedWindowDataMap];
+  TopLevelWindowData* windowData = [windowMap dataForWindow:[self window]];
+  if (windowData)
+    [windowData markShouldUnfocus:self];
+
   // Just in case we're destroyed abruptly and missed the draggingExited
   // or performDragOperation message.
   NS_IF_RELEASE(mDragService);
@@ -2755,6 +2762,22 @@ NSEvent* gLastDragEvent = nil;
 {
   if (!mGeckoChild)
     return;
+
+  // Keep track of the results of calling sendFocusEvent: in our NSWindow.
+  WindowDataMap* windowMap = [WindowDataMap sharedWindowDataMap];
+  TopLevelWindowData* windowData = [windowMap dataForWindow:[self window]];
+  if (windowData) {
+    switch (eventType) {
+      case NS_LOSTFOCUS:
+        [windowData markShouldUnfocus:self];
+        break;
+      case NS_GOTFOCUS:
+        [windowData markShouldFocus:self];
+        break;
+      default:
+        break;
+    }
+  }
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent focusGuiEvent(PR_TRUE, eventType, mGeckoChild);
