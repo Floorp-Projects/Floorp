@@ -117,6 +117,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_style_struct_copy_constructors.html \
 		test_value_computation.html \
 		test_value_storage.html \
+		test_visited_pref.html \
 		css_properties.js \
 		property_database.js \
 		unstyled.xml \
