@@ -972,8 +972,38 @@ NS_IMETHODIMP nsChildView::Show(PRBool aState)
 }
 
 
-nsIWidget*
-nsChildView::GetParent(void)
+//-------------------------------------------------------------------------
+//
+// Reset the parent of this widget
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsChildView::SetParent(nsIWidget* aNewParent)
+{
+  NS_ENSURE_ARG(aNewParent);
+
+  // make sure we stay alive
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+  
+  // remove us from our existing parent
+  if (mParentWidget)
+    mParentWidget->RemoveChild(this);
+  [mView removeFromSuperview];      // we hold a ref to mView, so this is OK
+  
+  // add us to the new parent
+  aNewParent->AddChild(this);
+  mParentWidget = aNewParent;
+  mParentView   = (NSView*)aNewParent->GetNativeData(NS_NATIVE_WIDGET);
+  [mParentView addSubview:mView];
+  
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Get this widget's parent
+//
+//-------------------------------------------------------------------------
+nsIWidget* nsChildView::GetParent(void)
 {
   return mParentWidget;
 }
