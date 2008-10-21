@@ -2967,23 +2967,12 @@ static JSPropertySpec array_props[] = {
     {0,0,0,0,0}
 };
 
-#ifdef JS_TRACER
-
-JS_DEFINE_CALLINFO_3(static, STRING,    Array_p_join, CONTEXT, OBJECT, STRING,  0, 0)
-JS_DEFINE_CALLINFO_3(static, JSVAL,     Array_p_push1, CONTEXT, OBJECT, JSVAL,  0, 0)
-JS_DEFINE_CALLINFO_2(static, JSVAL,     Array_p_pop, CONTEXT, OBJECT,           0, 0)
-
-static JSTraceableNative array_join_trcinfo[] = {
-    { array_join, &_JS_CALLINFO(Array_p_join),  "TC",  "s", FAIL_NULL }
-};
-static JSTraceableNative array_push_trcinfo[] = {
-    { array_push, &_JS_CALLINFO(Array_p_push1), "TC",  "v", FAIL_JSVAL }
-};
-static JSTraceableNative array_pop_trcinfo[] = {
-    { array_pop,  &_JS_CALLINFO(Array_p_pop),   "TC",  "",  FAIL_JSVAL }
-};
-
-#endif /* JS_TRACER */
+JS_DEFINE_TRCINFO_1(array_join,
+    (3, (static, STRING_FAIL, Array_p_join, CONTEXT, THIS, STRING,  0, 0)))
+JS_DEFINE_TRCINFO_1(array_push,
+    (3, (static, JSVAL_FAIL, Array_p_push1, CONTEXT, THIS, JSVAL,  0, 0)))
+JS_DEFINE_TRCINFO_1(array_pop,
+    (2, (static, JSVAL_FAIL, Array_p_pop, CONTEXT, THIS,           0, 0)))
 
 static JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE

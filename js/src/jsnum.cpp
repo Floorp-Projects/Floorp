@@ -215,23 +215,18 @@ const char js_parseInt_str[]   = "parseInt";
 
 #ifdef JS_TRACER
 
-JS_DEFINE_CALLINFO_2(static, DOUBLE, ParseInt, CONTEXT, STRING,     1, 1)
-JS_DEFINE_CALLINFO_1(static, DOUBLE, ParseIntDouble, DOUBLE,        1, 1)
-JS_DEFINE_CALLINFO_2(static, DOUBLE, ParseFloat, CONTEXT, STRING,   1, 1)
+JS_DEFINE_TRCINFO_2(num_parseInt,
+    (2, (static, DOUBLE, ParseInt, CONTEXT, STRING,     1, 1)),
+    (1, (static, DOUBLE, ParseIntDouble, DOUBLE,        1, 1)))
 
-static const JSTraceableNative num_parseInt_trcinfo[] = {
-    { num_parseInt,     &_JS_CALLINFO(ParseInt),        "C",    "s",    INFALLIBLE | JSTN_MORE },
-    { num_parseInt,     &_JS_CALLINFO(ParseIntDouble),  "",     "d",    INFALLIBLE }
-};
-static const JSTraceableNative num_parseFloat_trcinfo[] = {
-    { num_parseFloat,   &_JS_CALLINFO(ParseFloat),      "C",    "s",    INFALLIBLE }
-};
+JS_DEFINE_TRCINFO_1(num_parseFloat,
+    (2, (static, DOUBLE, ParseFloat, CONTEXT, STRING,   1, 1)))
 
 #endif /* JS_TRACER */
 
 static JSFunctionSpec number_functions[] = {
-    JS_FN(js_isNaN_str,         num_isNaN,              1,0),
-    JS_FN(js_isFinite_str,      num_isFinite,           1,0),
+    JS_FN(js_isNaN_str,         num_isNaN,           1,0),
+    JS_FN(js_isFinite_str,      num_isFinite,        1,0),
     JS_TN(js_parseFloat_str,    num_parseFloat,      1,0, num_parseFloat_trcinfo),
     JS_TN(js_parseInt_str,      num_parseInt,        2,0, num_parseInt_trcinfo),
     JS_FS_END
@@ -597,13 +592,9 @@ num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef JS_TRACER
 
-JS_DEFINE_CALLINFO_3(static, STRING, NumberToStringWithBase, CONTEXT, DOUBLE, INT32, 1, 1)
-JS_DEFINE_CALLINFO_2(extern, STRING, js_NumberToString,      CONTEXT, DOUBLE,        1, 1)
-
-static const JSTraceableNative num_toString_trcinfo[] = {
-    { num_toString,             &NumberToStringWithBase_ci, "DC",  "i",    FAIL_NULL | JSTN_MORE},
-    { num_toString,             &js_NumberToString_ci,      "DC",   "",    FAIL_NULL }
-};
+JS_DEFINE_TRCINFO_2(num_toString,
+    (3, (static, STRING, NumberToStringWithBase, CONTEXT, THIS_DOUBLE, INT32, 1, 1)),
+    (2, (extern, STRING, js_NumberToString,      CONTEXT, THIS_DOUBLE,        1, 1)))
 
 #endif /* JS_TRACER */
 
