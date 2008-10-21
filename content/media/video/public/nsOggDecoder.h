@@ -326,7 +326,7 @@ class nsOggDecoder : public nsMediaDecoder
   void GetCurrentURI(nsIURI** aURI);
   nsIPrincipal* GetCurrentPrincipal();
 
-  virtual void UpdateBytesDownloaded(PRUint32 aBytes);
+  virtual void UpdateBytesDownloaded(PRUint64 aBytes);
 
   // Called when the video file has completed downloading.
   // Call on the main thread only.
@@ -378,7 +378,7 @@ protected:
 
   // Return the current number of bytes loaded from the video file.
   // This is used for progress events.
-  virtual PRUint32 GetBytesLoaded();
+  virtual PRUint64 GetBytesLoaded();
 
   // Return the size of the video file in bytes.
   // This is used for progress events.
@@ -411,7 +411,7 @@ private:
    * The following members should be accessed on the main thread only
    ******/
   // Total number of bytes downloaded so far. 
-  PRUint32 mBytesDownloaded;
+  PRUint64 mBytesDownloaded;
 
   // The URI of the current resource
   nsCOMPtr<nsIURI> mURI;

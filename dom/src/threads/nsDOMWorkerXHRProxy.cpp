@@ -199,8 +199,8 @@ protected:
   nsCString mStatusText;
   nsresult mStatus;
   PRInt32 mReadyState;
-  PRUint32 mLoaded;
-  PRUint32 mTotal;
+  PRUint64 mLoaded;
+  PRUint64 mTotal;
   PRInt32 mChannelID;
   PRPackedBool mBubbles;
   PRPackedBool mCancelable;
@@ -453,7 +453,7 @@ nsDOMWorkerXHREvent::GetLengthComputable(PRBool* aLengthComputable)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerXHREvent::GetLoaded(PRUint32* aLoaded)
+nsDOMWorkerXHREvent::GetLoaded(PRUint64* aLoaded)
 {
   NS_ENSURE_ARG_POINTER(aLoaded);
   *aLoaded = mLoaded;
@@ -461,7 +461,7 @@ nsDOMWorkerXHREvent::GetLoaded(PRUint32* aLoaded)
 }
 
 NS_IMETHODIMP
-nsDOMWorkerXHREvent::GetTotal(PRUint32* aTotal)
+nsDOMWorkerXHREvent::GetTotal(PRUint64* aTotal)
 {
   NS_ENSURE_ARG_POINTER(aTotal);
   *aTotal = mTotal;
@@ -473,8 +473,8 @@ nsDOMWorkerXHREvent::InitProgressEvent(const nsAString_internal& aTypeArg,
                                        PRBool aCanBubbleArg,
                                        PRBool aCancelableArg,
                                        PRBool aLengthComputableArg,
-                                       PRUint32 aLoadedArg,
-                                       PRUint32 aTotalArg)
+                                       PRUint64 aLoadedArg,
+                                       PRUint64 aTotalArg)
 {
   NS_WARNING("InitProgressEvent doesn't do anything here!");
   return NS_OK;
