@@ -236,6 +236,8 @@ nsLayoutStatics::Initialize()
   }
 #endif
 
+  nsCSSRuleProcessor::Startup();
+
 #ifdef MOZ_XUL
   rv = nsXULPopupManager::Init();
   if (NS_FAILED(rv)) {
