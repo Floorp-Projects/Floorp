@@ -243,6 +243,8 @@ pref("dom.disable_window_move_resize", true);
 // 0=default window, 1=current window/tab, 2=new window, 3=new tab in most window
 pref("browser.link.open_external", 3);
 pref("browser.link.open_newwindow", 3);
+// 0=force all new windows to tabs, 1=don't force, 2=only force those with no features set
+pref("browser.link.open_newwindow.restriction", 0);
 
 // controls which bits of private data to clear. by default we clear them all.
 pref("privacy.sanitize.promptOnSanitize", false);
