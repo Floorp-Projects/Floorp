@@ -595,9 +595,8 @@ math_toSource(JSContext *cx, uintN argc, jsval *vp)
 
 #define MATH_BUILTIN_1(name)                                                  \
     static jsdouble FASTCALL math_##name##_tn(jsdouble d) { return name(d); } \
-    JS_DEFINE_CALLINFO_1(static, DOUBLE, math_##name##_tn, DOUBLE, 1, 1)      \
-    static const JSTraceableNative math_##name##_trcinfo =                    \
-        { math_##name, &_JS_CALLINFO(math_##name##_tn), "", "d", INFALLIBLE };
+    JS_DEFINE_TRCINFO_1(math_##name,                                          \
+        (1, (static, DOUBLE, math_##name##_tn, DOUBLE, 1, 1)))
 
 MATH_BUILTIN_1(sin)
 MATH_BUILTIN_1(cos)
@@ -649,19 +648,14 @@ math_random_tn(JSRuntime* rt)
     return z;
 }
 
-JS_DEFINE_CALLINFO_1(static, DOUBLE, math_log_tn, DOUBLE,           1, 1)
-JS_DEFINE_CALLINFO_2(static, DOUBLE, math_max_tn, DOUBLE, DOUBLE,   1, 1)
-JS_DEFINE_CALLINFO_2(static, DOUBLE, math_pow_tn, DOUBLE, DOUBLE,   1, 1)
-JS_DEFINE_CALLINFO_1(static, DOUBLE, math_random_tn, RUNTIME,       0, 0)
-
-static const JSTraceableNative math_log_trcinfo =
-    { math_log,    &_JS_CALLINFO(math_log_tn),      "",    "d",    INFALLIBLE };
-static const JSTraceableNative math_max_trcinfo =
-    { math_max,    &_JS_CALLINFO(math_max_tn),      "",    "dd",   INFALLIBLE };
-static const JSTraceableNative math_pow_trcinfo =
-    { math_pow,    &_JS_CALLINFO(math_pow_tn),      "",    "dd",   INFALLIBLE };
-static const JSTraceableNative math_random_trcinfo =
-    { math_random, &_JS_CALLINFO(math_random_tn),   "R",   "",     INFALLIBLE };
+JS_DEFINE_TRCINFO_1(math_log,
+    (1, (static, DOUBLE, math_log_tn, DOUBLE,           1, 1)))
+JS_DEFINE_TRCINFO_1(math_max,
+    (2, (static, DOUBLE, math_max_tn, DOUBLE, DOUBLE,   1, 1)))
+JS_DEFINE_TRCINFO_1(math_pow,
+    (2, (static, DOUBLE, math_pow_tn, DOUBLE, DOUBLE,   1, 1)))
+JS_DEFINE_TRCINFO_1(math_random,
+    (1, (static, DOUBLE, math_random_tn, RUNTIME,       0, 0)))
 
 #endif /* JS_TRACER */
 
@@ -674,18 +668,18 @@ static JSFunctionSpec math_static_methods[] = {
     JS_FN("asin",           math_asin,            1, 0),
     JS_FN("atan",           math_atan,            1, 0),
     JS_FN("atan2",          math_atan2,           2, 0),
-    JS_TN("ceil",           math_ceil,            1, 0, &math_ceil_trcinfo),
-    JS_TN("cos",            math_cos,             1, 0, &math_cos_trcinfo),
+    JS_TN("ceil",           math_ceil,            1, 0, math_ceil_trcinfo),
+    JS_TN("cos",            math_cos,             1, 0, math_cos_trcinfo),
     JS_FN("exp",            math_exp,             1, 0),
-    JS_TN("floor",          math_floor,           1, 0, &math_floor_trcinfo),
-    JS_TN("log",            math_log,             1, 0, &math_log_trcinfo),
-    JS_TN("max",            math_max,             2, 0, &math_max_trcinfo),
+    JS_TN("floor",          math_floor,           1, 0, math_floor_trcinfo),
+    JS_TN("log",            math_log,             1, 0, math_log_trcinfo),
+    JS_TN("max",            math_max,             2, 0, math_max_trcinfo),
     JS_FN("min",            math_min,             2, 0),
-    JS_TN("pow",            math_pow,             2, 0, &math_pow_trcinfo),
-    JS_TN("random",         math_random,          0, 0, &math_random_trcinfo),
+    JS_TN("pow",            math_pow,             2, 0, math_pow_trcinfo),
+    JS_TN("random",         math_random,          0, 0, math_random_trcinfo),
     JS_FN("round",          math_round,           1, 0),
-    JS_TN("sin",            math_sin,             1, 0, &math_sin_trcinfo),
-    JS_TN("sqrt",           math_sqrt,            1, 0, &math_sqrt_trcinfo),
+    JS_TN("sin",            math_sin,             1, 0, math_sin_trcinfo),
+    JS_TN("sqrt",           math_sqrt,            1, 0, math_sqrt_trcinfo),
     JS_FN("tan",            math_tan,             1, 0),
     JS_FS_END
 };
