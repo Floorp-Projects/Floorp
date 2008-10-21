@@ -198,4 +198,3 @@ GARBAGE += \
 		$(NULL)
 
 -include dom_quickstubs.depends
-
