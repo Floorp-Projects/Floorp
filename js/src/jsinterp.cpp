@@ -2857,7 +2857,6 @@ js_Interpret(JSContext *cx)
 
           /* No-ops for ease of decompilation. */
           ADD_EMPTY_CASE(JSOP_NOP)
-          ADD_EMPTY_CASE(JSOP_GROUP)
           ADD_EMPTY_CASE(JSOP_CONDSWITCH)
           ADD_EMPTY_CASE(JSOP_TRY)
           ADD_EMPTY_CASE(JSOP_FINALLY)
@@ -5137,15 +5136,11 @@ js_Interpret(JSContext *cx)
             if (!prop) {
                 /* Kludge to allow (typeof foo == "undefined") tests. */
                 endpc = script->code + script->length;
-                for (pc2 = regs.pc + JSOP_NAME_LENGTH; pc2 < endpc; pc2++) {
-                    op2 = (JSOp)*pc2;
-                    if (op2 == JSOP_TYPEOF) {
-                        PUSH_OPND(JSVAL_VOID);
-                        len = JSOP_NAME_LENGTH;
-                        DO_NEXT_OP(len);
-                    }
-                    if (op2 != JSOP_GROUP)
-                        break;
+                op2 = (JSOp) regs.pc[JSOP_NAME_LENGTH];
+                if (op2 == JSOP_TYPEOF) {
+                    PUSH_OPND(JSVAL_VOID);
+                    len = JSOP_NAME_LENGTH;
+                    DO_NEXT_OP(len);
                 }
                 goto atom_not_defined;
             }
@@ -6841,6 +6836,7 @@ js_Interpret(JSContext *cx)
           L_JSOP_UNUSED77:
           L_JSOP_UNUSED78:
           L_JSOP_UNUSED79:
+          L_JSOP_UNUSED131:
           L_JSOP_UNUSED201:
           L_JSOP_UNUSED202:
           L_JSOP_UNUSED203:

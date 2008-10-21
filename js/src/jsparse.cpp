@@ -4516,7 +4516,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 } else if (tt == TOK_RP) {
                     JSParseNode *group = pn3;
 
-                    /* Recycle the useless TOK_RP/JSOP_GROUP node. */
+                    /* Recycle the useless TOK_RP node. */
                     pn3 = group->pn_kid;
                     group->pn_kid = NULL;
                     RecycleTree(group, tc);

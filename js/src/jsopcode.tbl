@@ -78,9 +78,9 @@
  * 12           <<, >>, >>>             JSOP_LSH, JSOP_RSH, JSOP_URSH
  * 13           +, -, etc.              JSOP_ADD, JSOP_SUB, etc.
  * 14           *, /, %                 JSOP_MUL, JSOP_DIV, JSOP_MOD
- * 15           !, ~, etc.              JSOP_NOT, JSOP_BITNOT, etc.
+ * 15           !, ~, delete, etc.      JSOP_NOT, JSOP_BITNOT, JSOP_DEL*, etc.
  * 16           3.14, 0, etc.           JSOP_DOUBLE, JSOP_ZERO, etc.
- * 17           delete, new             JSOP_DEL*, JSOP_NEW
+ * 17           new                     JSOP_NEW
  * 18           x.y, f(), etc.          JSOP_GETPROP, JSOP_CALL, etc.
  * 19           x, null, etc.           JSOP_NAME, JSOP_NULL, etc.
  *
@@ -139,9 +139,9 @@ OPDEF(JSOP_NOT,       32, "not",        "!",          1,  1,  1, 15,  JOF_BYTE|J
 OPDEF(JSOP_BITNOT,    33, "bitnot",     "~",          1,  1,  1, 15,  JOF_BYTE)
 OPDEF(JSOP_NEG,       34, "neg",        "- ",         1,  1,  1, 15,  JOF_BYTE)
 OPDEF(JSOP_NEW,       35, js_new_str,   NULL,         3, -1,  1, 17,  JOF_UINT16|JOF_INVOKE)
-OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         3,  0,  1, 17,  JOF_ATOM|JOF_NAME|JOF_DEL)
-OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         3,  1,  1, 17,  JOF_ATOM|JOF_PROP|JOF_DEL)
-OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
+OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         3,  0,  1, 15,  JOF_ATOM|JOF_NAME|JOF_DEL)
+OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         3,  1,  1, 15,  JOF_ATOM|JOF_PROP|JOF_DEL)
+OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 15,  JOF_BYTE |JOF_ELEM|JOF_DEL)
 OPDEF(JSOP_TYPEOF,    39, js_typeof_str,NULL,         1,  1,  1, 15,  JOF_BYTE|JOF_DETECTING)
 OPDEF(JSOP_VOID,      40, js_void_str,  NULL,         1,  1,  1, 15,  JOF_BYTE)
 
@@ -181,8 +181,8 @@ OPDEF(JSOP_TABLESWITCH,  70, "tableswitch",  NULL,   -1,  1,  0,  0,  JOF_TABLES
 OPDEF(JSOP_LOOKUPSWITCH, 71, "lookupswitch", NULL,   -1,  1,  0,  0,  JOF_LOOKUPSWITCH|JOF_DETECTING|JOF_PARENHEAD)
 
 /* New, infallible/transitive identity ops. */
-OPDEF(JSOP_STRICTEQ,  72, "stricteq",   NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
-OPDEF(JSOP_STRICTNE,  73, "strictne",   NULL,         1,  2,  1,  10,  JOF_BYTE|JOF_DETECTING)
+OPDEF(JSOP_STRICTEQ,  72, "stricteq",   "===",        1,  2,  1, 10,  JOF_BYTE|JOF_DETECTING|JOF_LEFTASSOC)
+OPDEF(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, 10,  JOF_BYTE|JOF_DETECTING|JOF_LEFTASSOC)
 
 /* Resume instruction (emitted for the JIT for instructions that can't be restarted). */
 OPDEF(JSOP_RESUME,    74, "resume",     NULL,         1,  0,  0,  0,  JOF_BYTE)
@@ -318,7 +318,7 @@ OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 19,  JOF_OBJECT
 OPDEF(JSOP_SETLOCALPOP, 130, "setlocalpop", NULL,     3,  1,  0,  3,  JOF_LOCAL|JOF_NAME|JOF_SET)
 
 /* Parenthesization opcode to help the decompiler. */
-OPDEF(JSOP_GROUP,       131, "group",       NULL,     1,  0,  0, 19,  JOF_BYTE)
+OPDEF(JSOP_UNUSED131,   131, "unused131",   NULL,     1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Host object extension: given 'o.item(i) = j', the left-hand side compiles
@@ -419,7 +419,7 @@ OPDEF(JSOP_GETFUNNS,      185,"getfunns",   NULL,     1,  0,  1, 19,  JOF_BYTE)
  */
 OPDEF(JSOP_GETUPVAR,      186,"getupvar",   NULL,     3,  0,  1, 19,  JOF_UINT16|JOF_NAME)
 
-OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 17,  JOF_BYTE |JOF_ELEM|JOF_DEL)
+OPDEF(JSOP_DELDESC,       187,"deldesc",    NULL,     1,  2,  1, 15,  JOF_BYTE|JOF_ELEM|JOF_DEL)
 
 /*
  * Opcode to hold 24-bit immediate integer operands.

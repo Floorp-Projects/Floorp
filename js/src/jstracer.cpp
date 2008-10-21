@@ -6175,12 +6175,6 @@ TraceRecorder::record_JSOP_SETLOCALPOP()
 }
 
 bool
-TraceRecorder::record_JSOP_GROUP()
-{
-    return true; // no-op
-}
-
-bool
 TraceRecorder::record_JSOP_SETCALL()
 {
     return false;
@@ -6952,6 +6946,7 @@ UNUSED(JSOP_UNUSED76)
 UNUSED(JSOP_UNUSED77)
 UNUSED(JSOP_UNUSED78)
 UNUSED(JSOP_UNUSED79)
+UNUSED(JSOP_UNUSED131)
 UNUSED(JSOP_UNUSED201)
 UNUSED(JSOP_UNUSED202)
 UNUSED(JSOP_UNUSED203)
