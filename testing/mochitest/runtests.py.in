@@ -377,7 +377,6 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     lineRe = re.compile(r"^\s*\d+\s+(?P<name>\S+)\s+"
                         r"(?P<size>-?\d+)\s+(?P<bytesLeaked>-?\d+)\s+"
                         r"\d+\s+(?P<numLeaked>-?\d+)")
-    thresholdExceeded = False
     seenTotal = False
     prefix = "TEST-PASS"
     for line in leaks:
@@ -392,20 +391,26 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
         log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | negative leaks caught!")
       if "TOTAL" == name:
         seenTotal = True
-        if bytesLeaked > threshold:
-          thresholdExceeded = True
+        # Check for leaks.
+        if bytesLeaked < 0 or bytesLeaked > threshold:
           prefix = "TEST-UNEXPECTED-FAIL"
-          log.info("TEST-UNEXPECTED-FAIL | runtests-leaks | leaked %d bytes during test execution (should "
-                   "have leaked no more than %d bytes)",
-                   bytesLeaked, threshold)
+          leakLog = "TEST-UNEXPECTED-FAIL | runtests-leaks | leaked " + \
+                     str(bytesLeaked) + " bytes during test execution"
         elif bytesLeaked > 0:
-          log.info("TEST-PASS | runtests-leaks | WARNING leaked %d bytes during test execution",
-                   bytesLeaked)
+          leakLog = "TEST-PASS | runtests-leaks | WARNING leaked " + \
+                     str(bytesLeaked) + " bytes during test execution"
         else:
-          log.info("TEST-PASS | runtests-leaks | no leaks detected!")
+          leakLog = "TEST-PASS | runtests-leaks | no leaks detected!"
+        # Remind the threshold if it is not 0, which is the goal.
+        if threshold != 0:
+          leakLog += (threshold == INFINITY) \
+                     and (" (no threshold set)") \
+                     or  (" (threshold set at " + str(threshold) + " bytes)")
+        # Log the information.
+        log.info(leakLog)
       else:
         if numLeaked != 0:
-          if numLeaked > 1:
+          if abs(numLeaked) > 1:
             instance = "instances"
             rest = " each (%s bytes total)" % matches.group("bytesLeaked")
           else:
