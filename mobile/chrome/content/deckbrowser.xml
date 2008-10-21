@@ -121,7 +121,7 @@
         <getter>
           <![CDATA[
             var browsers = [];
-            var tabList = this.tabList.childNodes;
+            var tabList = this.tabList.children;
             for (var t = 0; t < tabList.length; t++)
               browsers.push(getBrowserForDisplay(this.displayList.childNodes[t]));
             return browsers;
@@ -165,7 +165,7 @@
       <method name="getDisplayForTab">
         <parameter name="tab"/>
         <body><![CDATA[
-          var tabList = this.tabList.childNodes;
+          var tabList = this.tabList.children;
           for (var t = 0; t < tabList.length; t++) {
             if (tab == tabList[t])
               return this.displayList.childNodes[t];
@@ -182,7 +182,7 @@
           var displayList = this.displayList.childNodes;
           for (var t = 0; t < displayList.length; t++) {
             if (display == displayList[t])
-              return this.tabList.childNodes[t];
+              return this.tabList.getItemAtIndex(t);
           }
 
           return null;
@@ -333,11 +333,11 @@
           if (!tab)
             return;
 
-          var nextTab = this.tabList.selectedItem;
-          if (tab == this.tabList.selectedItem) {
-            nextTab = tab.nextSibling;
-            if (!nextTab)
-              nextTab = tab.previousSibling;
+          var tabList = this.tabList;
+          var nextTab = tabList.selectedItem;
+          var tabidx = tabList.getIndexOfItem(tab);
+          if (tab == tabList.selectedItem) {
+            nextTab = tabList.getItemAtIndex(tabidx + 1) || tabList.getItemAtIndex(tabidx - 1);
             if (!nextTab)
               return;
           }
@@ -345,7 +345,15 @@
           var display = this.getDisplayForTab(tab);
           if (display)
             display.parentNode.removeChild(display);
-          tab.parentNode.removeChild(tab);
+          tabList.removeTab(tab);
+
+          // redraw the tabs
+          for (var t = tabidx; t < this.tabList.itemCount; t++) {
+            var tab = tabList.getItemAtIndex(t);
+            var browser = this.getBrowserForDisplay(this.getDisplayForTab(tab));
+            if (browser)
+              tab.updateTab(browser);
+          }
 
           this.tabList.selectedItem = nextTab;
           this.displayList.selectedPanel = this.getDisplayForTab(nextTab);
@@ -404,7 +412,7 @@
             tab = document.createElementNS(XUL_NS, "richlistitem");
             tab.setAttribute("id", "tab-" + uniqueId)
             tab.setAttribute("type", "documenttab");
-            this.tabList.appendChild(tab);
+            this.tabList.addTab(tab);
           }
 
           if (tab == this.tabList.selectedItem) {
@@ -1370,7 +1378,7 @@
     <implementation>
       <constructor><![CDATA[
         let close = document.getAnonymousElementByAttribute(this, "anonid", "close");
-        let closefn = new Function("event", this.parentNode.getAttribute("onclosetab"));
+        let closefn = new Function("event", this.control.getAttribute("onclosetab"));
         var self = this;
         close.addEventListener("mousedown", function(event) { closefn.call(self, event); event.stopPropagation(); }, true);
       ]]></constructor>
@@ -1412,6 +1420,72 @@
             ctx.lineTo(63, 58);
             ctx.stroke();
             ctx.restore();
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- very hacky, used to display richlistitems in multiple columns -->
+  <binding id="tablist"
+           extends="chrome://global/content/bindings/richlistbox.xml#richlistbox">
+    <content>
+      <children includes="listheader"/>
+      <xul:scrollbox allowevents="true" orient="horizontal" anonid="main-box"
+                     flex="1" style="overflow: auto;">
+        <children/>
+      </xul:scrollbox>
+    </content>
+
+    <implementation>
+      <field name="tabsPerColumn">4</field>
+      <property name="children" readonly="true">
+        <getter>
+          <![CDATA[
+            var childNodes = [];
+            for (var box = this.firstChild; box; box = box.nextSibling) {
+              for (var child = box.firstChild; child; child = child.nextSibling) {
+                if (child instanceof Components.interfaces.nsIDOMXULSelectControlItemElement)
+                  childNodes.push(child);
+              }
+            }
+            return childNodes;
+          ]]>
+        </getter>
+      </property>
+      <method name="addTab">
+        <parameter name="tab"/>
+        <body>
+          <![CDATA[
+            if (this.children.length % this.tabsPerColumn == 0)
+              this.appendChild(document.createElement("vbox"));
+            this.lastChild.appendChild(tab);
+
+            return tab;
+          ]]>
+        </body>
+      </method>
+      <method name="removeTab">
+        <parameter name="tab"/>
+        <body>
+          <![CDATA[
+            var idx = this.getIndexOfItem(tab);
+            if (idx == -1)
+              return;
+
+            // remove all later tabs and readd them so that there aren't empty columns
+            var count = this.itemCount - 1;
+            var tomove = [ ];
+            for (var c = count; c >= idx; c--) {
+              var tab = this.getItemAtIndex(c);
+              tomove.push(tab.parentNode.removeChild(tab));
+              if (!this.lastChild.hasChildNodes())
+                this.removeChild(this.lastChild);
+            }
+
+            // subtract 2 because the tab to remove should not be added back again
+            for (var m = tomove.length - 2; m >= 0; m--)
+              this.addTab(tomove[m]);
           ]]>
         </body>
       </method>
