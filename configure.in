@@ -1148,7 +1148,7 @@ CYGWIN32_NT|CYGWIN_NT*|MINGW*_NT*)
     ;;
 AIX)
     OS_RELEASE=`uname -v`.`uname -r`
-    OS_TEST=`uname -p`
+    OS_TEST=${target_cpu}
     ;;
 BSD_386)
     OS_ARCH=BSD
@@ -1250,7 +1250,7 @@ case "$OS_TEST" in
     CPU_ARCH=x86
     ;;
 
-powerpc* | ppc)
+powerpc* | ppc | rs6000)
     CPU_ARCH=ppc
     ;;
 
@@ -1621,15 +1621,15 @@ case "$target" in
         if test "$COMPILE_ENVIRONMENT"; then
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
-            AC_MSG_CHECKING([for VisualAge C++ compiler version >= 5.0.2.0])
+            AC_MSG_CHECKING([for VisualAge C++ compiler version >= 6.0.0.3])
             AC_TRY_COMPILE([],
-                [#if (__IBMCPP__ < 502)
+                [#if (__IBMCPP__ < 600)
                  #error "Bad compiler"
                  #endif],
                 _BAD_COMPILER=,_BAD_COMPILER=1)
             if test -n "$_BAD_COMPILER"; then
                 AC_MSG_RESULT([no])    
-                AC_MSG_ERROR([VisualAge C++ version 5.0.2.0 or higher is required to build.])
+                AC_MSG_ERROR([VisualAge C++ version 6.0.0.3 or higher is required to build.])
             else
                 AC_MSG_RESULT([yes])    
             fi
