@@ -161,7 +161,7 @@ namespace nanojit
             underrunProtect(n);
             _nIns -= n;
             memcpy(_nIns, nop[n-1], n);
-            asm_output1("nop%d", n);
+            asm_output("nop%d", n);
         }
     }
 
