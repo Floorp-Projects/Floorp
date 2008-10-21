@@ -273,8 +273,6 @@ members = [
     # (See bug 453331.)
     #'nsIDOMEventTarget.addEventListener',
     'nsIDOMEventListener.handleEvent',
-    'nsIDOMCustomEvent.setCurrentTarget',
-    'nsIDOMCustomEvent.setEventPhase',
     'nsIDOMDocumentEvent.createEvent',
     'nsIDOMMouseEvent.clientX',
     'nsIDOMMouseEvent.clientY',
