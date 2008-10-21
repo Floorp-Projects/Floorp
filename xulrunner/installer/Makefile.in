@@ -118,6 +118,7 @@ endif
 	-e "s|%sdkdir%|$(sdkdir)|" \
 	-e "s|%MOZ_APP_NAME%|$(MOZ_APP_NAME)|" \
 	-e "s|%MOZILLA_VERSION%|$(MOZ_APP_VERSION)|" \
+	-e "s|%WCHAR_CFLAGS%|$(WCHAR_CFLAGS)|" \
 	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
 	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" \
 	-e "s|%NSPR_NAME%|$(NSPR_NAME)|" \
