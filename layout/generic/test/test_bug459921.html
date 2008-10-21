@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=459921
+-->
+<head>
+  <title>Test for Bug 459921</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=459921">Mozilla Bug 459921</a>
+<p id="display"></p>
+<div id="content">
+World <span id="wide">Wide</span> <span id="web">Web</span>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 459921 **/
+
+function test() {
+  var sel = window.getSelection();
+
+  // Ctrl[Cmd]-doubleclick "Web".
+  var web = document.getElementById('web');
+  synthesizeMouse(web, 3, 3, { type: "mousedown", clickCount: 2, accelKey: true });
+
+  // Drag to the very beginning of "Wide" and release.
+  var wide = document.getElementById('wide');
+  synthesizeMouse(wide, 1, 3, { type: "mousemove", accelKey: true });
+  synthesizeMouse(wide, 1, 3, { type: "mouseup", clickCount: 2, accelKey: true });
+
+  var selstr = sel.toString();
+  is(selstr, "Wide Web");
+
+  SimpleTest.finish();
+}
+
+function doe() {
+  setTimeout(test, 0);
+}
+
+addLoadEvent(doe);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
