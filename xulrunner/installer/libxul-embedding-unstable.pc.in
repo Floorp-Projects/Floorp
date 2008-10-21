@@ -8,4 +8,4 @@ Name: libxul-embedding-unstable
 Description: Static library for version-independent embedding of the Mozilla runtime (unstable API)
 Version: %MOZILLA_VERSION%
 Libs: -L${sdkdir}/lib -lxpcomglue
-Cflags: -DXPCOM_GLUE -I${includedir}/${includetype} -fshort-wchar
+Cflags: -DXPCOM_GLUE -I${includedir}/${includetype} %WCHAR_CFLAGS%

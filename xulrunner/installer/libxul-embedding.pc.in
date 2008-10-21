@@ -12,4 +12,4 @@ Name: libxul-embedding
 Description: Static library for version-independent embedding of the Mozilla runtime
 Version: %MOZILLA_VERSION%
 Libs: -L${sdkdir}/lib -lxpcomglue
-Cflags: -DXPCOM_GLUE -I${includedir}/${includetype} -fshort-wchar
+Cflags: -DXPCOM_GLUE -I${includedir}/${includetype} %WCHAR_CFLAGS%
