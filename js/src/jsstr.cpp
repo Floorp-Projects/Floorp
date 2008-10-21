@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -733,6 +733,29 @@ str_toString(JSContext *cx, uintN argc, jsval *vp)
 /*
  * Java-like string native methods.
  */
+
+static JSString *
+SubstringTail(JSContext *cx, JSString *str, jsdouble length, jsdouble begin, jsdouble end)
+{
+    if (begin < 0)
+        begin = 0;
+    else if (begin > length)
+        begin = length;
+
+    if (end < 0)
+        end = 0;
+    else if (end > length)
+        end = length;
+    if (end < begin) {
+        /* ECMA emulates old JDK1.0 java.lang.String.substring. */
+        jsdouble tmp = begin;
+        begin = end;
+        end = tmp;
+    }
+
+    return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
+}
+
 static JSBool
 str_substring(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -747,11 +770,6 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         length = JSSTRING_LENGTH(str);
         begin = js_DoubleToInteger(d);
-        if (begin < 0)
-            begin = 0;
-        else if (begin > length)
-            begin = length;
-
         if (argc == 1) {
             end = length;
         } else {
@@ -759,20 +777,9 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
             if (JSVAL_IS_NULL(vp[3]))
                 return JS_FALSE;
             end = js_DoubleToInteger(d);
-            if (end < 0)
-                end = 0;
-            else if (end > length)
-                end = length;
-            if (end < begin) {
-                /* ECMA emulates old JDK1.0 java.lang.String.substring. */
-                jsdouble tmp = begin;
-                begin = end;
-                end = tmp;
-            }
         }
 
-        str = js_NewDependentString(cx, str, (size_t)begin,
-                                    (size_t)(end - begin));
+        str = SubstringTail(cx, str, length, begin, end);
         if (!str)
             return JS_FALSE;
     }
@@ -784,18 +791,19 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
 static JSString* FASTCALL
 String_p_substring(JSContext* cx, JSString* str, int32 begin, int32 end)
 {
-    JS_ASSERT(end >= begin);
     JS_ASSERT(JS_ON_TRACE(cx));
-    return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
+
+    size_t length = JSSTRING_LENGTH(str);
+    return SubstringTail(cx, str, length, begin, end);
 }
 
 static JSString* FASTCALL
 String_p_substring_1(JSContext* cx, JSString* str, int32 begin)
 {
-    int32 end = JSSTRING_LENGTH(str);
-    JS_ASSERT(end >= begin);
     JS_ASSERT(JS_ON_TRACE(cx));
-    return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
+
+    size_t length = JSSTRING_LENGTH(str);
+    return SubstringTail(cx, str, length, begin, length);
 }
 #endif
 
