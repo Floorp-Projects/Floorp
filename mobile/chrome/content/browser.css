@@ -6,6 +6,10 @@ deckbrowser {
     -moz-binding: url("chrome://browser/content/urlbar.xml#autocomplete-aligned");
 }
 
+#tab-list {
+    -moz-binding: url("chrome://browser/content/deckbrowser.xml#tablist");
+}
+
 richlistitem[type="documenttab"] {
     -moz-binding: url("chrome://browser/content/deckbrowser.xml#documenttab");
 }
