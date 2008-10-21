@@ -575,7 +575,7 @@ FindFullNameForFace(const ENUMLOGFONTEXW *lpelfe,
 // callback called for each family name, based on the assumption that the 
 // first part of the full name is the family name
 
-static PLDHashOperator PR_CALLBACK
+static PLDHashOperator
 FindFullName(nsStringHashKey::KeyType aKey,
              nsRefPtr<FontFamily>& aFontFamily,
              void* userArg)
