@@ -1391,14 +1391,13 @@
         </body>
       </method>
 
-      <!-- Returns the tab being removed.  This might not be the same as aTab,
-           in cases when aTab is not actually a tab -->
+      <!-- Returns everything that _endRemoveTab needs in an array. -->
       <method name="_beginRemoveTab">
         <parameter name="aTab"/>
         <parameter name="aFireBeforeUnload"/>
+        <parameter name="aCloseWindowWithLastTab"/>
         <body>
           <![CDATA[
-            this._browsers = null; // invalidate cache
             if (aTab.localName != "tab")
               aTab = this.mCurrentTab;
 
@@ -1408,13 +1407,19 @@
                 return null;
             }
 
-            var l = this.mTabContainer.childNodes.length;
+            var closeWindow = false;
+            var l = this.mTabs.length;
             if (l == 1) {
-              if (this.mPrefs.getBoolPref("browser.tabs.closeWindowWithLastTab")) {
-                closeWindow(true);
-                return null;
-              }
-              BrowserOpenTab();
+              closeWindow = aCloseWindowWithLastTab != null ?
+                            aCloseWindowWithLastTab :
+                            this.mPrefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
+
+              // BrowserOpenTab focuses the location bar. Use it only if that's
+              // really wanted.
+              if (closeWindow)
+                this.addTab("about:blank");
+              else
+                BrowserOpenTab();
               l++;
             }
             if (l == 2) {
@@ -1424,12 +1429,14 @@
                 this.setStripVisibilityTo(false);
             }
 
-            // see notes in addTab
-            var _delayedUpdate = function (aTabContainer) {
-              aTabContainer.adjustTabstrip();
-              aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
-            };
-            setTimeout(_delayedUpdate, 0, this.mTabContainer);
+            if (!closeWindow) {
+              // see notes in addTab
+              let _delayedUpdate = function (aTabContainer) {
+                aTabContainer.adjustTabstrip();
+                aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
+              };
+              setTimeout(_delayedUpdate, 0, this.mTabContainer);
+            }
 
             // We're committed to closing the tab now.  
             // Dispatch a notification.
@@ -1443,7 +1450,7 @@
 
             // Remove the tab's filter and progress listener.
             const filter = this.mTabFilters[index];
-            var oldBrowser = this.getBrowserAtIndex(index);
+            var oldBrowser = this.getBrowserForTab(aTab);
             oldBrowser.webProgress.removeProgressListener(filter);
             filter.removeProgressListener(this.mTabListeners[index]);
             this.mTabFilters.splice(index, 1);
@@ -1456,24 +1463,25 @@
             oldBrowser.setAttribute("type", "content-targetable");
 
             // Remove this tab as the owner of any other tabs, since it's going away.
-            for (var i = 0; i < this.mTabs.length; ++i) {
-              var tab = this.mTabContainer.childNodes[i];
+            for (let i = 0; i < l; ++i) {
+              let tab = this.mTabs[i];
               if ("owner" in tab && tab.owner == aTab)
                 // |tab| is a child of the tab we're removing, make it an orphan
                 tab.owner = null;
             }
 
-            return aTab;
+            return [aTab, closeWindow];
           ]]>
         </body>
       </method>
 
       <method name="_endRemoveTab">
-        <parameter name="aTab"/>
+        <parameter name="args"/>
         <body>
           <![CDATA[
-            if (!aTab)
+            if (!args)
               return;
+            var [aTab, aCloseWindow] = args;
 
             var browser = this.getBrowserForTab(aTab);
             var length = this.mTabs.length;
@@ -1538,9 +1546,8 @@
             else {
               if ("owner" in aTab && aTab.owner &&
                   this.mPrefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
-                for (var i = 0; i < length; ++i) {
-                  var tab = this.mTabContainer.childNodes[i];
-                  if (tab == aTab.owner) {
+                for (let i = 0; i < length; ++i) {
+                  if (this.mTabs[i] == aTab.owner) {
                     newIndex = i;
                     break;
                   }
@@ -1553,9 +1560,9 @@
             // Select the new tab
             this.selectedTab = this.mTabs[newIndex];
 
-            for (i = aTab._tPos; i < length; i++) {
-              this.mTabContainer.childNodes[i]._tPos = i;
-            }
+            for (let i = aTab._tPos; i < length; i++)
+              this.mTabs[i]._tPos = i;
+
             this.mTabBox.selectedPanel = this.getBrowserForTab(this.mCurrentTab).parentNode;
             this.mCurrentTab._selected = true;
 
@@ -1564,6 +1571,9 @@
             // see comment above destroy above
             browser.focusedWindow = null;
             browser.focusedElement = null;
+
+            if (aCloseWindow)
+              closeWindow(true);
           ]]>
         </body>
       </method>
@@ -1575,11 +1585,11 @@
           <![CDATA[
             var remoteBrowser =
               aOtherTab.ownerDocument.defaultView.getBrowser();
-            var tabCount = remoteBrowser.mTabs.length;
 
             // First, start teardown of the other browser.  Make sure to not
-            // fire the beforeunload event in the process.
-            var tabToRemove = remoteBrowser._beginRemoveTab(aOtherTab, false);
+            // fire the beforeunload event in the process.  Close the other
+            // window if this was its last tab.
+            var endRemoveArgs = remoteBrowser._beginRemoveTab(aOtherTab, false, true);
 
             // Unhook our progress listener
             var ourIndex = aOurTab._tPos;
@@ -1594,7 +1604,7 @@
             ourBrowser.swapDocShells(remoteBrowser.getBrowserForTab(aOtherTab));
 
             // Finish tearing down the tab that's going away.
-            remoteBrowser._endRemoveTab(tabToRemove);
+            remoteBrowser._endRemoveTab(endRemoveArgs);
 
             // Restore the progress listener
             tabListener = this.mTabProgressListener(aOurTab, ourBrowser,
@@ -1602,13 +1612,9 @@
             this.mTabListeners[ourIndex] = tabListener;
             filter.addProgressListener(tabListener,
               Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-              
+
             ourBrowser.webProgress.addProgressListener(filter,
               Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-
-            // close the other window if this was its last tab
-            if (tabCount == 1)
-              aOtherTab.ownerDocument.defaultView.close();
           ]]>
         </body>
       </method>
