@@ -26,15 +26,20 @@ function test() {
 
   // Ctrl[Cmd]-doubleclick "Web".
   var web = document.getElementById('web');
-  synthesizeMouse(web, 3, 3, { type: "mousedown", clickCount: 2, accelKey: true });
+  synthesizeMouse(web, 3, 3, { type: 'mousedown', clickCount: 2, accelKey: true });
 
   // Drag to the very beginning of "Wide" and release.
   var wide = document.getElementById('wide');
-  synthesizeMouse(wide, 1, 3, { type: "mousemove", accelKey: true });
-  synthesizeMouse(wide, 1, 3, { type: "mouseup", clickCount: 2, accelKey: true });
+  synthesizeMouse(wide, 1, 3, { type: 'mousemove', accelKey: true });
+  synthesizeMouse(wide, 1, 3, { type: 'mouseup', clickCount: 2, accelKey: true });
 
   var selstr = sel.toString();
-  is(selstr, "Wide Web");
+  is(selstr, 'Wide Web');
+
+  // Hack to work around bug 426195
+  synthesizeMouse(document.body, 0, 0, { type: 'mousedown' });
+  synthesizeMouse(document.body, 0, 0, { type: 'mousemove' });
+  synthesizeMouse(document.body, 0, 0, { type: 'mouseup' });
 
   SimpleTest.finish();
 }
