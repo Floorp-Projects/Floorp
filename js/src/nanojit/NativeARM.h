@@ -199,7 +199,6 @@ verbose_only( extern const char* regNames[]; )
     void LD32_nochk(Register r, int32_t imm);                           \
     void BL(NIns*);                                                     \
     void BL_far(NIns*);                                                 \
-    void CALL(const CallInfo*);                                         \
     void B_cond_chk(ConditionCode, NIns*, bool);                        \
     void underrunProtect(int bytes);                                    \
     void nativePageReset();                                             \
