@@ -589,8 +589,12 @@ typedef enum JSSrcNoteType {
                                    or a destructuring object initialiser */
     SRC_GENEXP      = 1,        /* JSOP_ANONFUNOBJ from generator expression */
     SRC_IF_ELSE     = 2,        /* JSOP_IFEQ bytecode is from an if-then-else */
-    SRC_WHILE       = 3,        /* JSOP_IFEQ is from a while loop */
-    SRC_FOR         = 4,        /* JSOP_NOP or JSOP_POP in for loop head */
+    SRC_FOR_IN      = 2,        /* JSOP_GOTO to for-in loop condition from
+                                   before loop (same arity as SRC_IF_ELSE) */
+    SRC_FOR         = 3,        /* JSOP_NOP or JSOP_POP in for(;;) loop head */
+    SRC_WHILE       = 4,        /* JSOP_GOTO to for or while loop condition
+                                   from before loop, else JSOP_NOP at top of
+                                   do-while loop */
     SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
                                    also used on JSOP_ENDINIT if extra comma
                                    at end of array literal: [1,2,,] */
