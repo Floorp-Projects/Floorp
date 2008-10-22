@@ -535,17 +535,23 @@ nsTreeColumns::GetNamedColumn(const nsAString& aId, nsITreeColumn** _retval)
   return NS_OK;
 }
 
+nsITreeColumn*
+nsTreeColumns::GetColumnAt(PRInt32 aIndex)
+{
+  EnsureColumns();
+  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
+    if (currCol->GetIndex() == aIndex) {
+      return currCol;
+    }
+  }
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsTreeColumns::GetColumnAt(PRInt32 aIndex, nsITreeColumn** _retval)
 {
   EnsureColumns();
-  *_retval = nsnull;
-  for (nsTreeColumn* currCol = mFirstColumn; currCol; currCol = currCol->GetNext()) {
-    if (currCol->GetIndex() == aIndex) {
-      NS_ADDREF(*_retval = currCol);
-      break;
-    }
-  }
+  NS_IF_ADDREF(*_retval = GetColumnAt(aIndex));
   return NS_OK;
 }
 

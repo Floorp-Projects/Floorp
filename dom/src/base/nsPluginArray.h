@@ -60,6 +60,25 @@ public:
 
   nsresult GetPluginHost(nsIPluginHost** aPluginHost);
 
+  nsIDOMPlugin* GetItemAt(PRUint32 aIndex, nsresult* aResult);
+
+  static nsPluginArray* FromSupports(nsISupports* aSupports)
+  {
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMPluginArray> array_qi = do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMPluginArray pointer as the nsISupports
+      // pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(array_qi == static_cast<nsIDOMPluginArray*>(aSupports),
+                   "Uh, fix QI!");
+    }
+#endif
+
+    return static_cast<nsPluginArray*>(aSupports);
+  }
+
 private:
   nsresult GetPlugins();
   PRBool AllowPlugins();
@@ -83,6 +102,25 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMPLUGIN
+
+  nsIDOMMimeType* GetItemAt(PRUint32 aIndex, nsresult* aResult);
+
+  static nsPluginElement* FromSupports(nsISupports* aSupports)
+  {
+#ifdef DEBUG
+    {
+      nsCOMPtr<nsIDOMPlugin> plugin_qi = do_QueryInterface(aSupports);
+
+      // If this assertion fires the QI implementation for the object in
+      // question doesn't use the nsIDOMPlugin pointer as the nsISupports
+      // pointer. That must be fixed, or we'll crash...
+      NS_ASSERTION(plugin_qi == static_cast<nsIDOMPlugin*>(aSupports),
+                   "Uh, fix QI!");
+    }
+#endif
+
+    return static_cast<nsPluginElement*>(aSupports);
+  }
 
 private:
   nsresult GetMimeTypes();
