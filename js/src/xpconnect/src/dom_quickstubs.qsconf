@@ -268,8 +268,6 @@ members = [
     # the conflict is specially resolved in nsDOMClassInfo.cpp.
     # (See bug 453331.)
     #'nsIDOMEventTarget.addEventListener',
-    'nsIDOMCustomEvent.setCurrentTarget',
-    'nsIDOMCustomEvent.setEventPhase',
     'nsIDOMDocumentEvent.createEvent',
     'nsIDOMMouseEvent.clientX',
     'nsIDOMMouseEvent.clientY',
