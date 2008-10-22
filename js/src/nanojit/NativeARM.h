@@ -511,8 +511,8 @@ typedef enum {
         asm_output3("ldr %s, [%s, #%d]",gpn(_d),gpn(_b),(_off));        \
     } while(0)
 
-#define LDR(_d,_b,_off)        LDR_chk(_d,_b,_off,0)
-#define LDR_nochk(_d,_b,_off)  LDR_chk(_d,_b,_off,1)
+#define LDR(_d,_b,_off)        LDR_chk(_d,_b,_off,1)
+#define LDR_nochk(_d,_b,_off)  LDR_chk(_d,_b,_off,0)
 
 // i386 compat, for Assembler.cpp
 #define LD(reg,offset,base)    LDR_chk(reg,base,offset,1)
