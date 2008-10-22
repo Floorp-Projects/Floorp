@@ -17,8 +17,8 @@ function getLinkFile()
 }
 
 const ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-const link = getLinkFile();
-const linkURI = ios.newFileURI(link);
+var link;
+var linkURI;
 const newURI = ios.newURI("http://www.mozilla.org/", null, null);
   
 function NotificationCallbacks(origURI, newURI)
@@ -112,6 +112,9 @@ function run_test()
   if (!isWindows && !isLinux) {
     return;
   }
+
+  link = getLinkFile();
+  linkURI = ios.newFileURI(link);
 
   do_test_pending();
 
