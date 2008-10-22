@@ -51,7 +51,7 @@ $SCRIPT -p product -b branch  -x executablepath -f filename [-d datafiles]
 
 variable            description
 ===============     ============================================================
--p product          required. firefox|thunderbird
+-p product          required. firefox, thunderbird or fennec
 -b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
 -x executablepath   required. directory where to install build
 -f filename         required. path to filename where installer is stored
@@ -68,21 +68,21 @@ EOF
 unset product branch executablepath filename datafiles
 
 while getopts $options optname ; 
-  do 
-  case $optname in
-      p) product=$OPTARG;;
-      b) branch=$OPTARG;;
-      x) executablepath=$OPTARG;;
-      f) filename=$OPTARG;;
-      d) datafiles=$OPTARG;;
-  esac
+do 
+    case $optname in
+        p) product=$OPTARG;;
+        b) branch=$OPTARG;;
+        x) executablepath=$OPTARG;;
+        f) filename=$OPTARG;;
+        d) datafiles=$OPTARG;;
+    esac
 done
 
 # include environment variables
 loaddata $datafiles
 
 if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$filename" ]]
-    then
+then
     usage
 fi
 
@@ -113,56 +113,58 @@ else
     
     case "$OSID" in
         linux)
-        if echo $filetype | grep -iq 'bzip2'; then
-            tar -jxvf $filename -C "$executablepath"
-        elif echo $filetype | grep -iq 'gzip'; then
-            tar -zxvf $filename -C "$executablepath" 
-        else
-            error "unknown file type $filetype" $LINENO
-        fi
-        ;; 
+            if echo $filetype | grep -iq 'bzip2'; then
+                tar -jxvf $filename -C "$executablepath"
+            elif echo $filetype | grep -iq 'gzip'; then
+                tar -zxvf $filename -C "$executablepath" 
+            else
+                error "unknown file type $filetype" $LINENO
+            fi
+            ;; 
 
-        mac)
-        # answer license prompt
-        result=`$TEST_DIR/bin/hdiutil-expect.ex $filename`
-        # now get the volume data
-	    #result=`hdiutil attach $filename`
-        disk=`echo $result | sed 's@.*\(/dev/[^ ]*\).*/dev.*/dev.*@\1@'`
-        # remove the carriage return inserted by expect
-        volume=`echo $result | sed "s|[^a-zA-Z0-9/]||g" | sed 's@.*\(/Volumes/.*\)@\1@'`
-        echo "disk=$disk"
-        echo "volume=$volume"
-        if [[ -z "$disk" || -z "$volume" ]]; then
-            error "mounting disk image: $result" $LINENO
-        fi
+        darwin)
+            # answer license prompt
+            result=`$TEST_DIR/bin/hdiutil-expect.ex $filename`
+            # Now get the volume data
+	        #result=`hdiutil attach $filename`
+            disk=`echo $result | sed 's@.*\(/dev/[^ ]*\).*/dev.*/dev.*@\1@'`
+            # remove the carriage return inserted by expect
+            volume=`echo $result | sed "s|[^a-zA-Z0-9/]||g" | sed 's@.*\(/Volumes/.*\)@\1@'`
+            echo "disk=$disk"
+            echo "volume=$volume"
+            if [[ -z "$disk" || -z "$volume" ]]; then
+                error "mounting disk image: $result" $LINENO
+            fi
 
-        for app in $volume/*.app; do
-            cp -R $app $executablepath
-        done
+            for app in $volume/*.app; do
+                cp -R $app $executablepath
+            done
 
-        hdiutil detach $disk
-        ;;
+            hdiutil detach $disk
+            ;;
     esac
 
-    #
-    # patch unix-like startup scripts to exec instead of 
-    # forking new processes
-    #
-    executable=`get_executable $product $branch $executablepath`
+    if [[ "$product" != "fennec" ]]; then
+        #
+        # patch unix-like startup scripts to exec instead of 
+        # forking new processes
+        #
+        executable=`get_executable $product $branch $executablepath`
 
-    executabledir=`dirname $executable`
+        executabledir=`dirname $executable`
 
-    # patch to use exec to prevent forked processes
-    cd "$executabledir"
-    if [ -e "$product" ]; then
-	    echo "$SCRIPT: patching $product"
-	    cp $TEST_DIR/bin/$product.diff .
-	    patch -N -p0 < $product.diff
-    fi
-    if [ -e run-mozilla.sh ]; then
-	    echo "$SCRIPT: patching run-mozilla.sh"
-	    cp $TEST_DIR/bin/run-mozilla.diff .
-	    patch -N -p0 < run-mozilla.diff
+        # patch to use exec to prevent forked processes
+        cd "$executabledir"
+        if [ -e "$product" ]; then
+	        echo "$SCRIPT: patching $product"
+	        cp $TEST_DIR/bin/$product.diff .
+	        patch -N -p0 < $product.diff
+        fi
+        if [ -e run-mozilla.sh ]; then
+	        echo "$SCRIPT: patching run-mozilla.sh"
+	        cp $TEST_DIR/bin/run-mozilla.diff .
+	        patch -N -p0 < run-mozilla.diff
+        fi
     fi
 fi
 
