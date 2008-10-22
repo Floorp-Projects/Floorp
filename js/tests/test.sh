@@ -80,7 +80,7 @@ usage: test.sh -p product -b branch -T buildtype -x executablepath -N profilenam
 
 variable            description
 ===============     ============================================================
--p product          required. firefox|thunderbird|js
+-p product          required. firefox|thunderbird|js|fennec
 -b branch           required. 1.8.0|1.8.1|1.9.0|1.9.1
 -s jsshellsourcepath       required for shell. path to js shell source directory mozilla/js/src
 -T buildtype        required. one of opt debug
@@ -198,7 +198,7 @@ case $product in
         executable="$jsshellsourcepath/$JS_OBJDIR/js$EXE_EXT"
         ;;
 
-    firefox|thunderbird)
+    firefox|thunderbird|fennec)
         if [[ -z "$branch" || -z "$buildtype"  || -z "$executablepath" || -z "$profilename" ]]; then
             usage
         fi
