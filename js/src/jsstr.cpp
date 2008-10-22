@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=80:
+ * vim: set ts=8 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -733,6 +733,29 @@ str_toString(JSContext *cx, uintN argc, jsval *vp)
 /*
  * Java-like string native methods.
  */
+
+static JSString *
+SubstringTail(JSContext *cx, JSString *str, jsdouble length, jsdouble begin, jsdouble end)
+{
+    if (begin < 0)
+        begin = 0;
+    else if (begin > length)
+        begin = length;
+
+    if (end < 0)
+        end = 0;
+    else if (end > length)
+        end = length;
+    if (end < begin) {
+        /* ECMA emulates old JDK1.0 java.lang.String.substring. */
+        jsdouble tmp = begin;
+        begin = end;
+        end = tmp;
+    }
+
+    return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
+}
+
 static JSBool
 str_substring(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -747,11 +770,6 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         length = JSSTRING_LENGTH(str);
         begin = js_DoubleToInteger(d);
-        if (begin < 0)
-            begin = 0;
-        else if (begin > length)
-            begin = length;
-
         if (argc == 1) {
             end = length;
         } else {
@@ -759,20 +777,9 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
             if (JSVAL_IS_NULL(vp[3]))
                 return JS_FALSE;
             end = js_DoubleToInteger(d);
-            if (end < 0)
-                end = 0;
-            else if (end > length)
-                end = length;
-            if (end < begin) {
-                /* ECMA emulates old JDK1.0 java.lang.String.substring. */
-                jsdouble tmp = begin;
-                begin = end;
-                end = tmp;
-            }
         }
 
-        str = js_NewDependentString(cx, str, (size_t)begin,
-                                    (size_t)(end - begin));
+        str = SubstringTail(cx, str, length, begin, end);
         if (!str)
             return JS_FALSE;
     }
@@ -784,18 +791,19 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
 static JSString* FASTCALL
 String_p_substring(JSContext* cx, JSString* str, int32 begin, int32 end)
 {
-    JS_ASSERT(end >= begin);
     JS_ASSERT(JS_ON_TRACE(cx));
-    return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
+
+    size_t length = JSSTRING_LENGTH(str);
+    return SubstringTail(cx, str, length, begin, end);
 }
 
 static JSString* FASTCALL
 String_p_substring_1(JSContext* cx, JSString* str, int32 begin)
 {
-    int32 end = JSSTRING_LENGTH(str);
-    JS_ASSERT(end >= begin);
     JS_ASSERT(JS_ON_TRACE(cx));
-    return js_NewDependentString(cx, str, (size_t)begin, (size_t)(end - begin));
+
+    size_t length = JSSTRING_LENGTH(str);
+    return SubstringTail(cx, str, length, begin, length);
 }
 #endif
 
@@ -2451,7 +2459,6 @@ str_sub(JSContext *cx, uintN argc, jsval *vp)
 #endif /* JS_HAS_STR_HTML_HELPERS */
 
 #ifdef JS_TRACER
-
 JSString* FASTCALL
 js_String_getelem(JSContext* cx, JSString* str, int32 i)
 {
@@ -2459,63 +2466,36 @@ js_String_getelem(JSContext* cx, JSString* str, int32 i)
         return NULL;
     return js_GetUnitString(cx, str, (size_t)i);
 }
+#endif
 
 JS_DEFINE_CALLINFO_2(extern, BOOL,   js_EqualStrings, STRING, STRING,                       1, 1)
 JS_DEFINE_CALLINFO_2(extern, INT32,  js_CompareStrings, STRING, STRING,                     1, 1)
 
-JS_DEFINE_CALLINFO_4(static, STRING, String_p_substring, CONTEXT, STRING, INT32, INT32,     1, 1)
-JS_DEFINE_CALLINFO_3(static, STRING, String_p_substring_1, CONTEXT, STRING, INT32,          1, 1)
-JS_DEFINE_CALLINFO_3(extern, STRING, js_String_getelem, CONTEXT, STRING, INT32,             1, 1)
-JS_DEFINE_CALLINFO_2(extern, INT32,  js_String_p_charCodeAt, STRING, INT32,                 1, 1)
-JS_DEFINE_CALLINFO_3(extern, STRING, js_ConcatStrings, CONTEXT, STRING, STRING,             1, 1)
-JS_DEFINE_CALLINFO_3(static, STRING, String_p_concat_1int, CONTEXT, STRING, INT32,          1, 1)
-JS_DEFINE_CALLINFO_4(static, STRING, String_p_concat_2str, CONTEXT, STRING, STRING, STRING, 1, 1)
-JS_DEFINE_CALLINFO_5(static, STRING, String_p_concat_3str, CONTEXT, STRING, STRING, STRING, STRING, 1, 1)
-JS_DEFINE_CALLINFO_4(static, OBJECT, String_p_match, CONTEXT, STRING, PC, OBJECT,           1, 1)
-JS_DEFINE_CALLINFO_4(static, OBJECT, String_p_match_obj, CONTEXT, OBJECT, PC, OBJECT,       1, 1)
-JS_DEFINE_CALLINFO_4(static, STRING, String_p_replace_str, CONTEXT, STRING, OBJECT, STRING, 1, 1)
-JS_DEFINE_CALLINFO_4(static, STRING, String_p_replace_str2, CONTEXT, STRING, STRING, STRING, 1, 1)
-JS_DEFINE_CALLINFO_5(static, STRING, String_p_replace_str3, CONTEXT, STRING, STRING, STRING, STRING, 1, 1)
-JS_DEFINE_CALLINFO_3(static, OBJECT, String_p_split, CONTEXT, STRING, STRING,               0, 0)
-JS_DEFINE_CALLINFO_2(extern, STRING, js_toLowerCase, CONTEXT, STRING,                       1, 1)
-JS_DEFINE_CALLINFO_2(extern, STRING, js_toUpperCase, CONTEXT, STRING,                       1, 1)
-
-static const JSTraceableNative str_substring_trcinfo[] = {
-    { str_substring,         &_JS_CALLINFO(String_p_substring),   "SC",  "ii",   FAIL_NULL | JSTN_MORE},
-    { str_substring,         &_JS_CALLINFO(String_p_substring_1), "SC",  "i",    FAIL_NULL }
-};
-static const JSTraceableNative str_charAt_trcinfo[] = {
-    { str_charAt,            &_JS_CALLINFO(js_String_getelem),    "SC",  "i",    FAIL_NULL }
-};
-static const JSTraceableNative str_charCodeAt_trcinfo[] = {
-    { str_charCodeAt,        &_JS_CALLINFO(js_String_p_charCodeAt), "S",   "i",    FAIL_NEG }
-};
-static const JSTraceableNative str_concat_trcinfo[] = {
-    { str_concat,            &_JS_CALLINFO(String_p_concat_1int), "SC",  "i",    FAIL_NULL | JSTN_MORE },
-    { str_concat,            &_JS_CALLINFO(js_ConcatStrings),     "SC",  "s",    FAIL_NULL | JSTN_MORE },
-    { str_concat,            &_JS_CALLINFO(String_p_concat_2str), "SC",  "ss",   FAIL_NULL | JSTN_MORE },
-    { str_concat,            &_JS_CALLINFO(String_p_concat_3str), "SC",  "sss",  FAIL_NULL }
-};
-static const JSTraceableNative str_match_trcinfo[] = {
-    { str_match,             &_JS_CALLINFO(String_p_match),       "PSC", "r",    FAIL_VOID | JSTN_MORE },
-    { str_match,             &_JS_CALLINFO(String_p_match_obj),   "PTC", "r",    FAIL_VOID }
-};
-static const JSTraceableNative str_replace_trcinfo[] = {
-    { str_replace,           &_JS_CALLINFO(String_p_replace_str), "SC",  "sr",   FAIL_NULL | JSTN_MORE },
-    { str_replace,           &_JS_CALLINFO(String_p_replace_str2),"SC",  "ss",   FAIL_NULL | JSTN_MORE },
-    { str_replace,           &_JS_CALLINFO(String_p_replace_str3),"SC",  "sss",  FAIL_NULL }
-};
-static const JSTraceableNative str_split_trcinfo[] = {
-    { str_split,             &_JS_CALLINFO(String_p_split),       "SC",  "s",    FAIL_NULL }
-};
-static const JSTraceableNative str_toLowerCase_trcinfo[] = {
-    { str_toLowerCase,       &_JS_CALLINFO(js_toLowerCase),       "SC",   "",    FAIL_NULL }
-};
-static const JSTraceableNative str_toUpperCase_trcinfo[] = {
-    { str_toUpperCase,       &_JS_CALLINFO(js_toUpperCase),       "SC",   "",    FAIL_NULL }
-};
-
-#endif /* JS_TRACER */
+JS_DEFINE_TRCINFO_2(str_substring,
+    (4, (static, STRING_FAIL,      String_p_substring, CONTEXT, THIS_STRING, INT32, INT32,   1, 1)),
+    (3, (static, STRING_FAIL,      String_p_substring_1, CONTEXT, THIS_STRING, INT32,        1, 1)))
+JS_DEFINE_TRCINFO_1(str_charAt,
+    (3, (extern, STRING_FAIL,      js_String_getelem, CONTEXT, THIS_STRING, INT32,           1, 1)))
+JS_DEFINE_TRCINFO_1(str_charCodeAt,
+    (2, (extern, INT32_FAIL,       js_String_p_charCodeAt, THIS_STRING, INT32,               1, 1)))
+JS_DEFINE_TRCINFO_4(str_concat,
+    (3, (static, STRING_FAIL,      String_p_concat_1int, CONTEXT, THIS_STRING, INT32,        1, 1)),
+    (3, (extern, STRING_FAIL,      js_ConcatStrings, CONTEXT, THIS_STRING, STRING,           1, 1)),
+    (4, (static, STRING_FAIL,      String_p_concat_2str, CONTEXT, THIS_STRING, STRING, STRING, 1, 1)),
+    (5, (static, STRING_FAIL,      String_p_concat_3str, CONTEXT, THIS_STRING, STRING, STRING, STRING, 1, 1)))
+JS_DEFINE_TRCINFO_2(str_match,
+    (4, (static, OBJECT_FAIL_VOID, String_p_match, CONTEXT, THIS_STRING, PC, REGEXP,         1, 1)),
+    (4, (static, OBJECT_FAIL_VOID, String_p_match_obj, CONTEXT, THIS, PC, REGEXP,            1, 1)))
+JS_DEFINE_TRCINFO_3(str_replace,
+    (4, (static, STRING_FAIL,      String_p_replace_str, CONTEXT, THIS_STRING, REGEXP, STRING, 1, 1)),
+    (4, (static, STRING_FAIL,      String_p_replace_str2, CONTEXT, THIS_STRING, STRING, STRING, 1, 1)),
+    (5, (static, STRING_FAIL,      String_p_replace_str3, CONTEXT, THIS_STRING, STRING, STRING, STRING, 1, 1)))
+JS_DEFINE_TRCINFO_1(str_split,
+    (3, (static, OBJECT_FAIL_NULL, String_p_split, CONTEXT, THIS_STRING, STRING,             0, 0)))
+JS_DEFINE_TRCINFO_1(str_toLowerCase,
+    (2, (extern, STRING_FAIL,      js_toLowerCase, CONTEXT, THIS_STRING,                     1, 1)))
+JS_DEFINE_TRCINFO_1(str_toUpperCase,
+    (2, (extern, STRING_FAIL,      js_toUpperCase, CONTEXT, THIS_STRING,                     1, 1)))
 
 #define GENERIC           JSFUN_GENERIC_NATIVE
 #define PRIMITIVE         JSFUN_THISP_PRIMITIVE
@@ -2639,7 +2619,6 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
 }
 
 #ifdef JS_TRACER
-
 static JSString* FASTCALL
 String_fromCharCode(JSContext* cx, int32 i)
 {
@@ -2649,13 +2628,10 @@ String_fromCharCode(JSContext* cx, int32 i)
         return js_GetUnitStringForChar(cx, c);
     return js_NewStringCopyN(cx, &c, 1);
 }
+#endif
 
-JS_DEFINE_CALLINFO_2(static, STRING, String_fromCharCode, CONTEXT, INT32, 1, 1)
-
-static const JSTraceableNative str_fromCharCode_trcinfo[] = {
-    { str_fromCharCode, &_JS_CALLINFO(String_fromCharCode), "C", "i", FAIL_NULL }};
-
-#endif /* JS_TRACER */
+JS_DEFINE_TRCINFO_1(str_fromCharCode,
+    (2, (static, STRING_FAIL, String_fromCharCode, CONTEXT, INT32, 1, 1)))
 
 static JSFunctionSpec string_static_methods[] = {
     JS_TN("fromCharCode", str_fromCharCode, 1, 0, str_fromCharCode_trcinfo),

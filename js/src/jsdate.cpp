@@ -1960,22 +1960,11 @@ date_valueOf(JSContext *cx, uintN argc, jsval *vp)
     return date_toString(cx, argc, vp);
 }
 
-/*
- * creation and destruction
- */
-
-#ifdef JS_TRACER
-
-// Don't really need an argument here, but we don't support arg-less builtins
-JS_DEFINE_CALLINFO_1(static, DOUBLE, date_now_tn, CONTEXT, 0, 0)
-
 JS_DEFINE_CALLINFO_2(extern, OBJECT, js_FastNewDate, CONTEXT, OBJECT, 0, 0)
 
-static JSTraceableNative date_now_trcinfo[] = {
-    { date_now, &_JS_CALLINFO(date_now_tn), "C", "", INFALLIBLE }
-};
-
-#endif /* JS_TRACER */
+// Don't really need an argument here, but we don't support arg-less builtins
+JS_DEFINE_TRCINFO_1(date_now,
+    (1, (static, DOUBLE, date_now_tn, CONTEXT, 0, 0)))
 
 static JSFunctionSpec date_static_methods[] = {
     JS_FN("UTC",                 date_UTC,                MAXARGS,0),
