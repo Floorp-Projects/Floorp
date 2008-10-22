@@ -119,7 +119,7 @@ Assembler::nFragExit(LInsp guard)
 
         // we need to know that there's an extra immediate value available
         // for us; always force a far jump here.
-        BL_far(_epilogue);
+        JMP_far(_epilogue);
 
         // stick the jmp pointer to the start of the sequence
         lr->jmp = _nIns;
@@ -706,27 +706,27 @@ Assembler::nativePageSetup()
 NIns*
 Assembler::asm_adjustBranch(NIns* at, NIns* target)
 {
-    // This always got emitted as a BL_far sequence; at points
-    // to the first of 4 instructions.  Ensure that we're where
+    // This always got emitted as a JMP_far sequence; at points
+    // to the first of 3 instructions.  Ensure that we're where
     // we think we were..
-    NanoAssert(at[1] == (NIns)( COND_AL | OP_IMM | (1<<23) | (PC<<16) | (LR<<12) | (4) ));
-    NanoAssert(at[2] == (NIns)( COND_AL | (0x9<<21) | (0xFFF<<8) | (1<<4) | (IP) ));
+    NanoAssert(at[0] == (NIns)( COND_AL | (0x59<<20) | (PC<<16) | (IP<<12) | (0) ));
+    NanoAssert(at[1] == (NIns)( COND_AL | (0x9<<21) | (0xFFF<<8) | (1<<4) | (IP) ));
 
-    NIns* was = (NIns*) at[3];
+    NIns* was = (NIns*) at[2];
 
     //fprintf (stderr, "Adjusting branch @ 0x%8x: 0x%x -> 0x%x\n", at+3, at[3], target);
 
-    at[3] = (NIns)target;
+    at[2] = (NIns)target;
 
 #if defined(UNDER_CE)
     // we changed the code, so we need to do this (sadly)
     FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
 #elif defined(AVMPLUS_LINUX)
-    __clear_cache((char*)at, (char*)(at+4));
+    __clear_cache((char*)at, (char*)(at+3));
 #endif
 
 #ifdef AVMPLUS_PORTING_API
-    NanoJIT_PortAPI_FlushInstructionCache(at, at+4);
+    NanoJIT_PortAPI_FlushInstructionCache(at, at+3);
 #endif
 
     return was;
@@ -765,6 +765,27 @@ Assembler::underrunProtect(int bytes)
         // make sure that there's always a slot pointer
         _nSlot = pageDataStart(_nIns);
     }
+}
+
+void
+Assembler::JMP_far(NIns* addr)
+{
+    // we have to stick an immediate into the stream
+    underrunProtect(12);
+
+    // TODO use a slot in const pool for address, but emit single insn
+    // for branch if offset fits
+
+    // the address
+    *(--_nIns) = (NIns)((addr));
+    // bx ip             // branch to the address we loaded earlier
+    *(--_nIns) = (NIns)( COND_AL | (0x9<<21) | (0xFFF<<8) | (1<<4) | (IP) );
+    // ldr ip, [pc + #0] // load the address into ip, reading it from [pc]
+    *(--_nIns) = (NIns)( COND_AL | (0x59<<20) | (PC<<16) | (IP<<12) | (0));
+
+    //fprintf (stderr, "JMP_far sequence @ 0x%08x\n", _nIns);
+
+    asm_output1("b %p (32-bit)", addr);
 }
 
 void
