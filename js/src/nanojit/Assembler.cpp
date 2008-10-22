@@ -291,7 +291,7 @@ namespace nanojit
 		{
 			page->next = list;
 			list = page;
-			nMarkExecute(page);
+			nMarkExecute(page, PAGE_READ|PAGE_WRITE|PAGE_EXEC);
 			_stats.pages++;
 		}
 		else
