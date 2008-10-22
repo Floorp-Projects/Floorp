@@ -1090,22 +1090,18 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
 // static
 JSObject *
 XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
-                               JSObject *callee)
+                               nsIPrincipal *aObjectPrincipal)
 {
-  if (callee) {
-    nsCOMPtr<nsIPrincipal> prin;
-
+  if (aObjectPrincipal) {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
-    nsresult rv = ssm->GetObjectPrincipal(cx, callee, getter_AddRefs(prin));
-    if (NS_SUCCEEDED(rv) && prin) {
-      PRBool isSystem;
-      rv = ssm->IsSystemPrincipal(prin, &isSystem);
-      if (NS_SUCCEEDED(rv) && !isSystem) {
-        jsval v = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
-        if (!XPCNativeWrapperCtor(cx, JSVAL_TO_OBJECT(v), 1, &v, &v))
-          return nsnull;
-        return JSVAL_TO_OBJECT(v);
-      }
+
+    PRBool isSystem;
+    nsresult rv = ssm->IsSystemPrincipal(aObjectPrincipal, &isSystem);
+    if (NS_SUCCEEDED(rv) && !isSystem) {
+      jsval v = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
+      if (!XPCNativeWrapperCtor(cx, JSVAL_TO_OBJECT(v), 1, &v, &v))
+        return nsnull;
+      return JSVAL_TO_OBJECT(v);
     }
   }
 
