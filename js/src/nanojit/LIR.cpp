@@ -139,6 +139,9 @@ namespace nanojit
 		_unused = 0;
 		_stats.lir = 0;
 		_noMem = 0;
+		for (size_t i = 0; i < NumSavedRegs; ++i)
+			savedParams[i] = NULL;
+		explicitSavedParams = false;
 	}
 
 	#ifdef _DEBUG
@@ -318,12 +321,6 @@ namespace nanojit
 		l->initOpcode(op);
 		b->commit(1);
 		b->_stats.lir++;
-		if (op == LIR_start) {
-			// create params for saved regs -- processor specific
-			for (int i=0; i < NumSavedRegs; i++) {
-				insParam(i, 1);
-			}
-		}
 		return l;
 	}
 	
@@ -403,6 +400,7 @@ namespace nanojit
         if (kind) {
             NanoAssert(arg < NumSavedRegs);
             b->savedParams[arg] = l;
+            b->explicitSavedParams = true;
         }
 		b->commit(1);
 		b->_stats.lir++;

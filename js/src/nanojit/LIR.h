@@ -852,6 +852,7 @@ namespace nanojit
             AbiKind abi;
             LInsp state,param1,sp,rp;
             LInsp savedParams[NumSavedRegs];
+            bool explicitSavedParams;
 			
 		protected:
 			friend class LirBufWriter;
