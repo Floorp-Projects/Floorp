@@ -64,27 +64,22 @@ namespace nanojit
 	/* ARM registers */
 	typedef enum 
 	{
-		R0  = 0,
-		R1  = 1,
-		R2  = 2,
-		R3  = 3,
-		R4  = 4,
-		R5  = 5,
-		R6  = 6,
-		R7  = 7,
-		R8  = 8,
-		//R9  = 9,
-		//R10 = 10,
-		//R11  = 11,
-		IP  = 12,
-		SP  = 13,
-		LR  = 14,
-		PC  = 15,
-
-		FP = SP,
-		
-		// helpers
-		FRAME_PTR = R7,
+		R0  = 0,  // 32bit return value, aka A1
+		R1  = 1,  // msw of 64bit return value, A2
+		R2  = 2,  // A3
+		R3  = 3,  // A4
+		R4  = 4,  // V1
+		R5  = 5,  // V2
+		R6  = 6,  // V3
+		R7  = 7,  // V4
+		R8  = 8,  // V5
+		R9  = 9,   // V6, SB (stack base)
+		R10 = 10,  // V7, SL
+		FP  = 11,  // V8, frame pointer 
+		IP  = 12,  // intra-procedure call scratch register
+		SP  = 13,  // stack pointer
+		LR  = 14,  // link register (BL sets LR = return address)
+		PC  = 15,  // program counter
 		
 		FirstReg = 0,
 		LastReg = 5,
