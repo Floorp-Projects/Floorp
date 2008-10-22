@@ -362,10 +362,8 @@ namespace nanojit
 		return ins2(op,base,d);
 	}
 
-	LInsp LirBufWriter::insGuard(LOpcode op, LInsp c, SideExit *x)
+	LInsp LirBufWriter::insGuard(LOpcode op, LInsp c, LInsp data)
 	{
-		LInsp data = skip(SideExitSize(x));
-		*((SideExit*)data->payload()) = *x;
 		return ins2(op, c, data);
 	}
 
@@ -935,7 +933,7 @@ namespace nanojit
 		return out->ins2(v, oprnd1, oprnd2);
 	}
 
-	LIns* ExprFilter::insGuard(LOpcode v, LInsp c, SideExit *x)
+	LIns* ExprFilter::insGuard(LOpcode v, LInsp c, LInsp x)
 	{
 		if (v == LIR_xt || v == LIR_xf) {
 			if (c->isconst()) {
@@ -1468,10 +1466,10 @@ namespace nanojit
 		return k;
 	}
 
-    SideExit *LIns::exit()
+    GuardRecord *LIns::record()
     {
         NanoAssert(isGuard());
-        return (SideExit*)oprnd2()->payload();
+        return (GuardRecord*)oprnd2()->payload();
     }
 
 #ifdef NJ_VERBOSE
@@ -1498,7 +1496,7 @@ namespace nanojit
         }
 		void add(LInsp i, LInsp use) {
             if (!i->isconst() && !i->isconstq() && !live.containsKey(i)) {
-                NanoAssert(i->opcode() < sizeof(lirNames) / sizeof(lirNames[0]));
+                NanoAssert(unsigned(i->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
                 live.put(i,use);
             }
 		}
@@ -1550,7 +1548,7 @@ namespace nanojit
 			if (live.contains(i))
 			{
 				live.retire(i,gc);
-                NanoAssert(i->opcode() < sizeof(operandCount) / sizeof(operandCount[0]));
+                NanoAssert(unsigned(i->opcode()) < sizeof(operandCount) / sizeof(operandCount[0]));
 				if (i->isStore()) {
 					live.add(i->oprnd2(),i); // base
 					live.add(i->oprnd1(),i); // val
@@ -1690,7 +1688,7 @@ namespace nanojit
 				}
 #endif
 			} else {
-                NanoAssert(ref->opcode() < sizeof(lirNames) / sizeof(lirNames[0]));
+                NanoAssert(unsigned(ref->opcode()) < sizeof(lirNames) / sizeof(lirNames[0]));
 				copyName(ref, lirNames[ref->opcode()], lircounts.add(ref->opcode()));
 			}
 			StringNullTerminatedUTF8 cname(gc, names.get(ref)->name);
@@ -1955,7 +1953,7 @@ namespace nanojit
 		return out->insLoad(v,base,disp);
 	}
 
-	LInsp CseFilter::insGuard(LOpcode v, LInsp c, SideExit *x)
+	LInsp CseFilter::insGuard(LOpcode v, LInsp c, LInsp x)
 	{
 		if (isCse(v)) {
 			// conditional guard
@@ -2027,9 +2025,6 @@ namespace nanojit
 		{
 			// recompile the entire tree
 			root = triggerFrag->root;
-			root->removeIntraLinks();
-			root->unlink(assm);			// unlink all incoming jumps ; since the compile() can fail
-			root->unlinkBranches(assm); // no one jumps into a branch (except from within the tree) so safe to clear the links table
 			root->fragEntry = 0;
 			root->releaseCode(frago);
 			
@@ -2050,7 +2045,7 @@ namespace nanojit
 					RegAlloc* regs = new (gc) RegAlloc();
 					assm->copyRegisters(regs);
 					assm->releaseRegisters();
-					SideExit* exit = frag->spawnedFrom->exit();
+					SideExit* exit = frag->spawnedFrom;
 					regMap.put(exit, regs);
 				}
 				frag = frag->treeBranches;
@@ -2069,14 +2064,11 @@ namespace nanojit
 		verbose_only( assm->_outputCache = 0; )
 		verbose_only(for(int i=asmOutput.size()-1; i>=0; --i) { assm->outputf("%s",asmOutput.get(i)); } );
 
-		if (assm->error())
-		{
+		if (assm->error()) {
 			root->fragEntry = 0;
-		}
-		else
-		{
-			root->link(assm);
-			if (treeCompile) root->linkBranches(assm);
+		} else {
+		    root->link(assm);
+		    if (treeCompile) root->linkBranches(assm);
 		}
     }
 

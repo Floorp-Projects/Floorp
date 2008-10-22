@@ -202,6 +202,7 @@ namespace nanojit
 		return (argc+3)>>2;
 	}
 
+	struct GuardRecord;
     struct SideExit;
     struct Page;
 
@@ -506,7 +507,7 @@ namespace nanojit
         LIns **targetAddr();
 		LIns* getTarget();
 
-        SideExit *exit();
+        GuardRecord *record();
 
 		inline uint32_t argc() const {
 			NanoAssert(isCall());
@@ -554,7 +555,7 @@ namespace nanojit
 		virtual LInsp ins2(LOpcode v, LIns* a, LIns* b) {
 			return out->ins2(v, a, b);
 		}
-		virtual LInsp insGuard(LOpcode v, LIns *c, SideExit *x) {
+		virtual LInsp insGuard(LOpcode v, LIns *c, LIns *x) {
 			return out->insGuard(v, c, x);
 		}
 		virtual LInsp insBranch(LOpcode v, LInsp condition, LInsp to) {
@@ -721,7 +722,7 @@ namespace nanojit
             }
 		}
 
-		LIns* insGuard(LOpcode op, LInsp cond, SideExit *x) {
+		LIns* insGuard(LOpcode op, LInsp cond, LIns *x) {
 			return add_flush(out->insGuard(op,cond,x));
 		}
 
@@ -771,7 +772,7 @@ namespace nanojit
 		ExprFilter(LirWriter *out) : LirWriter(out) {}
 		LIns* ins1(LOpcode v, LIns* a);
 	    LIns* ins2(LOpcode v, LIns* a, LIns* b);
-		LIns* insGuard(LOpcode, LIns *cond, SideExit *);
+		LIns* insGuard(LOpcode, LIns *cond, LIns *);
         LIns* insBranch(LOpcode, LIns *cond, LIns *target);
 	};
 
@@ -822,7 +823,7 @@ namespace nanojit
 		LIns* ins2(LOpcode v, LInsp, LInsp);
 		LIns* insLoad(LOpcode v, LInsp b, LInsp d);
 		LIns* insCall(const CallInfo *call, LInsp args[]);
-		LIns* insGuard(LOpcode op, LInsp cond, SideExit *x);
+		LIns* insGuard(LOpcode op, LInsp cond, LIns *x);
 	};
 
 	class LirBuffer : public GCFinalizedObject
@@ -888,7 +889,7 @@ namespace nanojit
 			LInsp	insImm(int32_t imm);
 			LInsp	insImmq(uint64_t imm);
 		    LInsp	insCall(const CallInfo *call, LInsp args[]);
-			LInsp	insGuard(LOpcode op, LInsp cond, SideExit *x);
+			LInsp	insGuard(LOpcode op, LInsp cond, LIns *x);
 			LInsp	insBranch(LOpcode v, LInsp condition, LInsp to);
 			LInsp   insAlloc(int32_t size);
 
