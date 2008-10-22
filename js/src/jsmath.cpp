@@ -131,7 +131,7 @@ math_acos(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+#if defined(SOLARIS) && defined(__GNUC__)
     if (x < -1 || 1 < x) {
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
@@ -153,7 +153,7 @@ math_asin(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+#if defined(SOLARIS) && defined(__GNUC__)
     if (x < -1 || 1 < x) {
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
@@ -210,7 +210,7 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
     }
 #endif
 
-#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+#if defined(SOLARIS) && defined(__GNUC__)
     if (x == 0) {
         if (JSDOUBLE_IS_NEGZERO(y)) {
             z = fd_copysign(M_PI, x);
@@ -314,7 +314,7 @@ math_log(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+#if defined(SOLARIS) && defined(__GNUC__)
     if (x < 0) {
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
@@ -610,7 +610,7 @@ MATH_BUILTIN_1(ceil)
 jsdouble FASTCALL
 js_Math_log(jsdouble d)
 {
-#if !JS_USE_FDLIBM_MATH && defined(SOLARIS) && defined(__GNUC__)
+#if defined(SOLARIS) && defined(__GNUC__)
     if (d < 0)
         return js_NaN;
 #endif
