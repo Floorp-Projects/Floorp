@@ -2373,10 +2373,15 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   NS_ENSURE_SUCCESS(rv, rv);
 
   float textzoom;
+  float zoomMin = ((float)nsContentUtils::GetIntPref("zoom.minPercent", 50)) / 100;
+  float zoomMax = ((float)nsContentUtils::GetIntPref("zoom.maxPercent", 300)) / 100;
   mv->GetTextZoom(&textzoom);
   textzoom += ((float)change) / 10;
-  if (textzoom > 0 && textzoom <= 20)
-    mv->SetTextZoom(textzoom);
+  if (textzoom < zoomMin)
+    textzoom = zoomMin;
+  else if (textzoom > zoomMax)
+    textzoom = zoomMax;
+  mv->SetTextZoom(textzoom);
 
   return NS_OK;
 }
