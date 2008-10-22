@@ -178,11 +178,6 @@ namespace nanojit
 			int32_t&		hits()							{ return _hits; }
             void            blacklist();
 			bool			isBlacklisted()		{ return _hits < 0; }
-			void			resetLinks();
-			void			addLink(GuardRecord* lnk);
-			void            addLink(SideExit* exit);
-			void			link(Assembler* assm);
-			void			linkBranches(Assembler* assm);
 			debug_only( bool hasOnlyTreeLinks(); )
 			void			releaseLirBuffer();
 			void			releaseCode(Fragmento* frago);

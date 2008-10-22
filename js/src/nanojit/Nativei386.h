@@ -402,6 +402,7 @@ namespace nanojit
 	underrunProtect(5);	\
 	intptr_t tt = (intptr_t)t - (intptr_t)_nIns;	\
 	JMP_long_nochk_offset(tt);	\
+    verbose_only( verbose_outputf("        %p:",_nIns); ) \
 	} while(0)
 
 #define JMP(t)		do { 	\
@@ -419,10 +420,6 @@ namespace nanojit
 
 #define JMPc 0xe9
 		
-#define JMP_long_placeholder()	do {\
-	underrunProtect(5);				\
-	JMP_long_nochk_offset(0xffffffff); } while(0)
-	
 // this should only be used when you can guarantee there is enough room on the page
 #define JMP_long_nochk_offset(o) do {\
 		verbose_only( NIns* next = _nIns; (void)next; ) \
