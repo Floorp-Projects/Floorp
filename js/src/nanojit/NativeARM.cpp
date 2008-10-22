@@ -210,7 +210,7 @@ Assembler::asm_call(LInsp ins)
     }
 #endif
 
-    CALL(call);
+    BL((NIns*)(call->_address));
 
     ArgSize sizes[10];
     uint32_t argc = call->get_sizes(sizes);
@@ -812,15 +812,6 @@ Assembler::BL(NIns* addr)
     } else {
         BL_far(addr);
     }
-}
-
-void
-Assembler::CALL(const CallInfo *ci)
-{
-    intptr_t addr = ci->_address;
-
-    BL((NIns*)addr);
-    asm_output1("   (call %s)", ci->_name);
 }
 
 void
