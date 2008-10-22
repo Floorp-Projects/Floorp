@@ -188,13 +188,11 @@ dom_quickstubs.h dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  --cachedir=$(DEPTH)/xpcom/idl-parser \
 	  --header-output dom_quickstubs.h \
 	  --stub-output dom_quickstubs.cpp \
-	  --makedepend-output dom_quickstubs.depends \
+	  --makedepend-output $(MDDEPDIR)/dom_qsgen.pp \
 	  $(srcdir)/dom_quickstubs.qsconf
 
 GARBAGE += \
 		dom_quickstubs.h \
 		dom_quickstubs.cpp \
-		dom_quickstubs.depends \
+		$(MDDEPDIR)/dom_qsgen.pp \
 		$(NULL)
-
--include dom_quickstubs.depends
