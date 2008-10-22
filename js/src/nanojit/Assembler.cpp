@@ -674,7 +674,7 @@ namespace nanojit
         AvmAssert(rec);
         while (rec) {
             patch(rec);
-            rec = rec->peer;
+            rec = rec->next;
         }
     }
     
@@ -850,10 +850,19 @@ namespace nanojit
 
 	void Assembler::endAssembly(Fragment* frag, NInsList& loopJumps)
 	{
+	    NIns* SOT = 0;
+	    if (frag->isRoot()) {
+	        SOT = _nIns;
+            verbose_only( verbose_outputf("        %p:",_nIns); )
+	    } else {
+	        SOT = frag->root->fragEntry;
+	    }
+        AvmAssert(SOT);
 		while(!loopJumps.isEmpty())
 		{
 			NIns* loopJump = (NIns*)loopJumps.removeLast();
-			nPatchBranch(loopJump, _nIns);
+            verbose_only( verbose_outputf("patching %p to %p", loopJump, SOT); )
+			nPatchBranch(loopJump, SOT);
 		}
 
 		NIns* patchEntry = 0;

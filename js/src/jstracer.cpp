@@ -1000,11 +1000,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, SideExit* _anchor, Fragment* _fragme
     lir = func_filter = new (&gc) FuncFilter(lir, *this);
     lir->ins0(LIR_start);
 
-    if (!nanojit::AvmCore::config.tree_opt || fragment->root == fragment) {
+    if (!nanojit::AvmCore::config.tree_opt || fragment->root == fragment) 
         lirbuf->state = addName(lir->insParam(0, 0), "state");
-        lirbuf->param1 = addName(lir->insParam(1, 0), "param1");
-    }
-    loop_header_ins = addName(lir->ins0(LIR_label), "loop_header");
 
     lirbuf->sp = addName(lir->insLoad(LIR_ldp, lirbuf->state, (int)offsetof(InterpState, sp)), "sp");
     lirbuf->rp = addName(lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, rp)), "rp");
@@ -1782,7 +1779,6 @@ TraceRecorder::snapshot(ExitType exitType)
     rec->exit = exit;
     /* setup side exit structure */
     memset(exit, 0, sizeof(SideExit));
-    exit->guards = rec;
     exit->from = fragment;
     exit->calldepth = callDepth;
     exit->numGlobalSlots = ngslots;
@@ -1791,6 +1787,7 @@ TraceRecorder::snapshot(ExitType exitType)
         ? nativeStackOffset(&cx->fp->argv[-2])/sizeof(double)
         : 0;
     exit->exitType = exitType;
+    exit->addGuard(rec);
     /* If we take a snapshot on a goto, advance to the target address. This avoids inner
        trees returning on a break goto, which the outer recorder then would confuse with
        a break in the outer tree. */
@@ -1930,10 +1927,8 @@ TraceRecorder::compile(Fragmento* fragmento)
     }
     ++treeInfo->branchCount;
     ::compile(fragmento->assm(), fragment);
-    if (anchor) {
-        fragment->addLink(anchor);
+    if (anchor) 
         fragmento->assm()->patch(anchor);
-    }
     JS_ASSERT(fragment->code());
     JS_ASSERT(!fragment->vmprivate);
     if (fragment == fragment->root)
@@ -1961,11 +1956,8 @@ TraceRecorder::closeLoop(Fragmento* fragmento)
         return;
     }
     LIns* skip = snapshot(LOOP_EXIT);
-    if (fragment == fragment->root) {
-        fragment->lastIns = lir->insBranch(LIR_j, NULL, loop_header_ins);
-    }
     ((GuardRecord*)skip->payload())->exit->target = fragment->root;
-    fragment->lastIns = lir->insGuard(LIR_x, lir->insImm(1), skip);
+    fragment->lastIns = lir->insGuard(LIR_loop, lir->insImm(1), skip);
     compile(fragmento);
 
     debug_only_v(printf("recording completed at %s:%u@%u via closeLoop\n", cx->fp->script->filename,

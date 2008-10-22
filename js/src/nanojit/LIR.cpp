@@ -139,7 +139,7 @@ namespace nanojit
 		_unused = 0;
 		_stats.lir = 0;
 		_noMem = 0;
-		for (size_t i = 0; i < NumSavedRegs; ++i)
+		for (int i = 0; i < NumSavedRegs; ++i)
 			savedParams[i] = NULL;
 		explicitSavedParams = false;
 	}
@@ -2065,9 +2065,6 @@ namespace nanojit
 
 		if (assm->error()) {
 			root->fragEntry = 0;
-		} else {
-		    root->link(assm);
-		    if (treeCompile) root->linkBranches(assm);
 		}
     }
 
