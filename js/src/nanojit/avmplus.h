@@ -183,7 +183,6 @@ namespace nanojit
     {
         void *jmp;
         GuardRecord* next;
-        GuardRecord* peer;
         SideExit* exit;
     };
     
@@ -200,6 +199,12 @@ namespace nanojit
         uint32 numStackSlots;
         uint32 numStackSlotsBelowCurrentFrame;
         ExitType exitType;
+        
+        void addGuard(GuardRecord* lr) 
+        {
+            lr->next = guards;
+            guards = lr;
+        }
 	};
     
     static inline uint8* getTypeMap(SideExit* exit) { return (uint8*)(exit + 1); }

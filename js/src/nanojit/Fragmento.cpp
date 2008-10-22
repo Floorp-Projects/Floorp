@@ -511,69 +511,6 @@ namespace nanojit
 		NanoAssert(_pages == 0);
     }
 
-    void Fragment::addLink(GuardRecord* lnk)
-    {
-        //fprintf(stderr,"addLink %x from %X target %X\n",(int)lnk,(int)lnk->from,(int)lnk->target);
-        lnk->next = _links;
-        _links = lnk;
-    }
-
-    void Fragment::addLink(SideExit* exit)
-    {
-        GuardRecord* rec = exit->guards;
-        AvmAssert(rec);
-        while (rec) {
-            addLink(rec);
-            rec = rec->peer;
-        }
-    }
-    
-    void Fragment::link(Assembler* assm)
-    {
-        // patch all jumps into this fragment
-        GuardRecord* lr = _links;
-        while (lr)
-        {
-            GuardRecord* next = lr->next;
-            Fragment* from = lr->exit->target;
-            if (from && from->fragEntry) assm->patch(lr);
-            lr = next;
-        }
-    }
-
-#ifdef _DEBUG
-    bool Fragment::hasOnlyTreeLinks()
-    {
-        // check that all incoming links are on the same tree
-        bool isIt = true;
-        GuardRecord *lr = _links;
-        while (lr)
-        {
-            GuardRecord *next = lr->next;
-            NanoAssert(lr->exit->target == this);  // def'n of GuardRecord
-            if (lr->exit->from->root != root)
-            {
-                isIt = false;
-                break;
-            }
-            lr = next;
-        }       
-        return isIt;            
-    }
-#endif
-
-    void Fragment::linkBranches(Assembler* assm)
-    {
-        // should only be called on root of tree
-        NanoAssert(isRoot());
-        Fragment* frag = treeBranches;
-        while(frag)
-        {
-            if (frag->fragEntry) frag->link(assm);
-            frag = frag->treeBranches;
-        }
-    }
-
     void Fragment::blacklist()
     {
         blacklistLevel++;
