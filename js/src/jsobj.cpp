@@ -1560,8 +1560,11 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
 static int32 FASTCALL
 Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
 {
-    jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
+    jsid id;
     jsval v;
+
+    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id))
+        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     if (!js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &v))
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
@@ -3323,9 +3326,6 @@ Detecting(JSContext *cx, jsbytecode *pc)
                        op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
             }
             return JS_FALSE;
-
-          case JSOP_GROUP:
-            break;
 
           default:
             /*

@@ -250,7 +250,7 @@ namespace nanojit
 
 	LInsp LirBufWriter::ensureReferenceable(LInsp i, int32_t addedDistance)
 	{
-		NanoAssert(i != 0 && !i->isTramp());
+		NanoAssert(i != 0 /* && !i->isTramp()*/);
 		LInsp next = _buf->next();
 		LInsp from = next + 2*addedDistance;
 		if (canReference(from,i))
@@ -1047,38 +1047,39 @@ namespace nanojit
         NanoAssert(op != LIR_skip); // LIR_skip here is just an error condition
 
         ArgSize sizes[2*MAXARGS];
-        uint32_t argc = ci->get_sizes(sizes);
+        int32_t argc = ci->get_sizes(sizes);
 
 #ifdef NJ_SOFTFLOAT
 		if (op == LIR_fcall)
 			op = LIR_callh;
 		LInsp args2[MAXARGS*2]; // arm could require 2 args per double
 		int32_t j = 0;
-		for (int32_t i = 0; i < MAXARGS; i++) {
+		int32_t i = 0;
+		while (j < argc) {
 			argt >>= 2;
 			ArgSize a = ArgSize(argt&3);
 			if (a == ARGSIZE_F) {
-				LInsp q = args[i];
+				LInsp q = args[i++];
 				args2[j++] = ins1(LIR_qhi, q);
 				args2[j++] = ins1(LIR_qlo, q);
-			} else if (a != ARGSIZE_NONE) {
-				args2[j++] = args[i];
+			} else {
+				args2[j++] = args[i++];
 			}
 		}
 		args = args2;
         NanoAssert(j == argc);
 #endif
 
-		NanoAssert(argc <= MAXARGS);
+		NanoAssert(argc <= (int)MAXARGS);
 		uint32_t words = argwords(argc);
 		ensureRoom(words+LIns::callInfoWords+1+argc);  // ins size + possible tramps
-		for (uint32_t i=0; i < argc; i++)
+		for (int32_t i=0; i < argc; i++)
 			args[i] = ensureReferenceable(args[i], argc-i);
 		uint8_t* offs = (uint8_t*)_buf->next();
 		LIns *l = _buf->next() + words;
 		*(const CallInfo **)l = ci;
 		l += LIns::callInfoWords;
-		for (uint32_t i=0; i < argc; i++)
+		for (int32_t i=0; i < argc; i++)
 			offs[i] = (uint8_t) l->reference(args[i]);
 #if defined NANOJIT_64BIT
 		l->initOpcode(op);

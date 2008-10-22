@@ -210,7 +210,7 @@ js_Any_setprop(JSContext* cx, JSObject* obj, JSString* idstr, jsval v)
 }
 
 jsval FASTCALL
-js_Any_getelem(JSContext* cx, JSObject* obj, uint32 index)
+js_Any_getelem(JSContext* cx, JSObject* obj, int32 index)
 {
     jsval v;
     jsid id;
@@ -224,7 +224,7 @@ js_Any_getelem(JSContext* cx, JSObject* obj, uint32 index)
 }
 
 JSBool FASTCALL
-js_Any_setelem(JSContext* cx, JSObject* obj, uint32 index, jsval v)
+js_Any_setelem(JSContext* cx, JSObject* obj, int32 index, jsval v)
 {
     jsid id;
     if (index < 0)

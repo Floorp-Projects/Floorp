@@ -374,8 +374,8 @@ Oracle::clear()
 }
 
 #if defined(NJ_SOFTFLOAT)
-JS_DECLARE_CALLINFO(i2f)
-JS_DECLARE_CALLINFO(u2f)
+JS_DEFINE_CALLINFO_1(static, DOUBLE,    i2f, INT32,                 1, 1)
+JS_DEFINE_CALLINFO_1(static, DOUBLE,    u2f, UINT32,                1, 1)
 #endif
 
 static bool isi2f(LInsp i)
@@ -475,90 +475,88 @@ static bool overflowSafe(LIns* i)
 #if defined(NJ_SOFTFLOAT)
 /* soft float */
 
+JS_DEFINE_CALLINFO_1(static, DOUBLE,    fneg, DOUBLE,               1, 1)
+JS_DEFINE_CALLINFO_2(static, INT32,     fcmpeq, DOUBLE, DOUBLE,     1, 1)
+JS_DEFINE_CALLINFO_2(static, INT32,     fcmplt, DOUBLE, DOUBLE,     1, 1)
+JS_DEFINE_CALLINFO_2(static, INT32,     fcmple, DOUBLE, DOUBLE,     1, 1)
+JS_DEFINE_CALLINFO_2(static, INT32,     fcmpgt, DOUBLE, DOUBLE,     1, 1)
+JS_DEFINE_CALLINFO_2(static, INT32,     fcmpge, DOUBLE, DOUBLE,     1, 1)
+JS_DEFINE_CALLINFO_2(static, DOUBLE,    fmul, DOUBLE, DOUBLE,       1, 1)
+JS_DEFINE_CALLINFO_2(static, DOUBLE,    fadd, DOUBLE, DOUBLE,       1, 1)
+JS_DEFINE_CALLINFO_2(static, DOUBLE,    fdiv, DOUBLE, DOUBLE,       1, 1)
+JS_DEFINE_CALLINFO_2(static, DOUBLE,    fsub, DOUBLE, DOUBLE,       1, 1)
+
 jsdouble FASTCALL
-js_fneg(jsdouble x)
+fneg(jsdouble x)
 {
     return -x;
 }
 
 jsdouble FASTCALL
-js_i2f(int32 i)
+i2f(int32 i)
 {
     return i;
 }
 
 jsdouble FASTCALL
-js_u2f(jsuint u)
+u2f(jsuint u)
 {
     return u;
 }
 
 int32 FASTCALL
-js_fcmpeq(jsdouble x, jsdouble y)
+fcmpeq(jsdouble x, jsdouble y)
 {
     return x==y;
 }
 
 int32 FASTCALL
-js_fcmplt(jsdouble x, jsdouble y)
+fcmplt(jsdouble x, jsdouble y)
 {
     return x < y;
 }
 
 int32 FASTCALL
-js_fcmple(jsdouble x, jsdouble y)
+fcmple(jsdouble x, jsdouble y)
 {
     return x <= y;
 }
 
 int32 FASTCALL
-js_fcmpgt(jsdouble x, jsdouble y)
+fcmpgt(jsdouble x, jsdouble y)
 {
     return x > y;
 }
 
 int32 FASTCALL
-js_fcmpge(jsdouble x, jsdouble y)
+fcmpge(jsdouble x, jsdouble y)
 {
     return x >= y;
 }
 
 jsdouble FASTCALL
-js_fmul(jsdouble x, jsdouble y)
+fmul(jsdouble x, jsdouble y)
 {
     return x * y;
 }
 
 jsdouble FASTCALL
-js_fadd(jsdouble x, jsdouble y)
+fadd(jsdouble x, jsdouble y)
 {
     return x + y;
 }
 
 jsdouble FASTCALL
-js_fdiv(jsdouble x, jsdouble y)
+fdiv(jsdouble x, jsdouble y)
 {
     return x / y;
 }
 
 jsdouble FASTCALL
-js_fsub(jsdouble x, jsdouble y)
+fsub(jsdouble x, jsdouble y)
 {
     return x - y;
 }
-
-JS_DEFINE_CALLINFO_1(DOUBLE,    fneg, DOUBLE,               1, 1)
-JS_DEFINE_CALLINFO_1(DOUBLE,    i2f, INT32,                 1, 1)
-JS_DEFINE_CALLINFO_1(DOUBLE,    u2f, UINT32,                1, 1)
-JS_DEFINE_CALLINFO_2(INT32,     fcmpeq, DOUBLE, DOUBLE,     1, 1)
-JS_DEFINE_CALLINFO_2(INT32,     fcmplt, DOUBLE, DOUBLE,     1, 1)
-JS_DEFINE_CALLINFO_2(INT32,     fcmple, DOUBLE, DOUBLE,     1, 1)
-JS_DEFINE_CALLINFO_2(INT32,     fcmpgt, DOUBLE, DOUBLE,     1, 1)
-JS_DEFINE_CALLINFO_2(INT32,     fcmpge, DOUBLE, DOUBLE,     1, 1)
-JS_DEFINE_CALLINFO_2(DOUBLE,    fmul, DOUBLE, DOUBLE,       1, 1)
-JS_DEFINE_CALLINFO_2(DOUBLE,    fadd, DOUBLE, DOUBLE,       1, 1)
-JS_DEFINE_CALLINFO_2(DOUBLE,    fdiv, DOUBLE, DOUBLE,       1, 1)
-JS_DEFINE_CALLINFO_2(DOUBLE,    fsub, DOUBLE, DOUBLE,       1, 1)
 
 class SoftFloatFilter: public LirWriter
 {
@@ -6164,12 +6162,6 @@ TraceRecorder::record_JSOP_SETLOCALPOP()
 }
 
 bool
-TraceRecorder::record_JSOP_GROUP()
-{
-    return true; // no-op
-}
-
-bool
 TraceRecorder::record_JSOP_SETCALL()
 {
     return false;
@@ -6941,6 +6933,7 @@ UNUSED(JSOP_UNUSED76)
 UNUSED(JSOP_UNUSED77)
 UNUSED(JSOP_UNUSED78)
 UNUSED(JSOP_UNUSED79)
+UNUSED(JSOP_UNUSED131)
 UNUSED(JSOP_UNUSED201)
 UNUSED(JSOP_UNUSED202)
 UNUSED(JSOP_UNUSED203)
