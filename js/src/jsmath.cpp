@@ -115,7 +115,7 @@ math_abs(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_fabs(x);
+    z = fabs(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -137,7 +137,7 @@ math_acos(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 #endif
-    z = fd_acos(x);
+    z = acos(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -159,7 +159,7 @@ math_asin(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 #endif
-    z = fd_asin(x);
+    z = asin(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -175,7 +175,7 @@ math_atan(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_atan(x);
+    z = atan(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -222,7 +222,7 @@ math_atan2(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 #endif
-    z = fd_atan2(x, y);
+    z = atan2(x, y);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -238,7 +238,7 @@ math_ceil(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_ceil(x);
+    z = ceil(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -254,7 +254,7 @@ math_cos(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_cos(x);
+    z = cos(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -282,7 +282,7 @@ math_exp(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 #endif
-    z = fd_exp(x);
+    z = exp(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -298,7 +298,7 @@ math_floor(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_floor(x);
+    z = floor(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -320,7 +320,7 @@ math_log(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 #endif
-    z = fd_log(x);
+    z = log(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -414,7 +414,7 @@ math_pow(JSContext *cx, uintN argc, jsval *vp)
         *vp = JSVAL_ONE;
         return JS_TRUE;
     }
-    z = fd_pow(x, y);
+    z = pow(x, y);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -532,7 +532,7 @@ math_round(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_copysign(fd_floor(x + 0.5), x);
+    z = fd_copysign(floor(x + 0.5), x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -548,7 +548,7 @@ math_sin(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_sin(x);
+    z = sin(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -564,7 +564,7 @@ math_sqrt(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_sqrt(x);
+    z = sqrt(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
@@ -580,7 +580,7 @@ math_tan(JSContext *cx, uintN argc, jsval *vp)
     x = js_ValueToNumber(cx, &vp[2]);
     if (JSVAL_IS_NULL(vp[2]))
         return JS_FALSE;
-    z = fd_tan(x);
+    z = tan(x);
     return js_NewNumberInRootedValue(cx, z, vp);
 }
 
