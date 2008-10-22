@@ -694,25 +694,26 @@ namespace nanojit
 
     void Assembler::patch(GuardRecord *lr)
     {
-        Fragment *frag = lr->target;
+        Fragment *frag = lr->exit->target;
 		NanoAssert(frag->fragEntry != 0);
 		NIns* was = asm_adjustBranch((NIns*)lr->jmp, frag->fragEntry);
-		if (!lr->origTarget) lr->origTarget = was;
 		verbose_only(verbose_outputf("patching jump at %p to target %p (was %p)\n",
 			lr->jmp, frag->fragEntry, was);)
     }
 
-    void Assembler::unpatch(GuardRecord *lr)
+    void Assembler::patch(SideExit *exit)
     {
-		NIns* was = asm_adjustBranch((NIns*)lr->jmp, (NIns*)lr->origTarget);
-		(void)was;
-		verbose_only(verbose_outputf("unpatching jump at %p to original target %p (was %p)\n",
-			lr->jmp, lr->origTarget, was);)
+        GuardRecord *rec = exit->guards;
+        AvmAssert(rec);
+        while (rec) {
+            patch(rec);
+            rec = rec->peer;
+        }
     }
-
+    
     NIns* Assembler::asm_exit(LInsp guard)
     {
-		SideExit *exit = guard->exit();
+		SideExit *exit = guard->record()->exit;
 		NIns* at = 0;
 		if (!_branchStateMap->get(exit))
 		{
@@ -739,7 +740,7 @@ namespace nanojit
         verbose_only(bool priorVerbose = _verbose; )
 		verbose_only( _verbose = verbose_enabled() && _frago->core()->config.verbose_exits; )
         verbose_only( int32_t nativeSave = _stats.native );
-		verbose_only(verbose_outputf("--------------------------------------- end exit block SID %d", guard->exit()->sid);)
+		verbose_only(verbose_outputf("--------------------------------------- end exit block %p", guard);)
 
 		RegAlloc capture = _allocator;
 
@@ -759,11 +760,9 @@ namespace nanojit
 		// restore the callee-saved register (aka saved params)
 		assignSavedParams();
 
-		// if/when we patch this exit to jump over to another fragment,
-		// that fragment will need its parameters set up just like ours.
-        LInsp stateins = _thisfrag->lirbuf->state;
-		Register state = findSpecificRegFor(stateins, argRegs[stateins->imm8()]);
-		asm_bailout(guard, state);
+        // restore first parameter, the only one we use
+        LInsp state = _thisfrag->lirbuf->state;
+        findSpecificRegFor(state, argRegs[state->imm8()]); 
 
 		intersectRegisterState(capture);
 
@@ -857,11 +856,10 @@ namespace nanojit
 		verbose_only(_thisfrag->compileNbr++; )
 		verbose_only(_frago->_stats.compiles++; )
 		verbose_only(_frago->_stats.totalCompiles++; )
-		_latestGuard = 0;
 		_inExit = false;	
         gen(rdr, loopJumps);
 		frag->fragEntry = _nIns;
-		frag->outbound = core->config.tree_opt? _latestGuard : 0;
+		//frag->outbound = core->config.tree_opt? _latestGuard : 0;
 		//fprintf(stderr, "assemble frag %X entry %X\n", (int)frag, (int)frag->fragEntry);
 
         if (!error()) {
@@ -2127,49 +2125,6 @@ namespace nanojit
 		debug_only(saved.used = 0);  // marker that we are no longer in exit path
 	}
 	
-	/**																 
-	 * Guard records are laid out in the exit block buffer (_nInsExit),
-	 * intersperced with the code.   Preceding the record are the native
-	 * instructions associated with the record (i.e. the exit code).
-	 * 
-	 * The layout is as follows:
-	 * 
-	 * [ native code ] [ GuardRecord1 ]
-	 * ...
-	 * [ native code ] [ GuardRecordN ]
-	 * 
-	 * The guard record 'code' field should be used to locate 
-	 * the start of the native code associated with the
-	 * exit block. N.B the code may lie in a different page 
-	 * than the guard record  
-	 * 
-	 * The last guard record is used for the unconditional jump
-	 * at the end of the trace. 
-	 * 
-	 * NOTE:  It is also not guaranteed that the native code 
-	 *        is contained on a single page.
-	 */
-	GuardRecord* Assembler::placeGuardRecord(LInsp guard)
-	{
-		// we align the guards to 4Byte boundary
-		size_t size = GuardRecordSize(guard);
-		SideExit *exit = guard->exit();
-		NIns* ptr = (NIns*)alignTo(_nIns-size, 4);
-		underrunProtect( (intptr_t)_nIns-(intptr_t)ptr );  // either got us a new page or there is enough space for us
-		GuardRecord* rec = (GuardRecord*) alignTo(_nIns-size,4);
-		rec->outgoing = _latestGuard;
-		_latestGuard = rec;
-		_nIns = (NIns*)rec;
-		rec->next = 0;
-		rec->origTarget = 0;		
-		rec->target = exit->target;
-		rec->from = _thisfrag;
-		initGuardRecord(guard,rec);
-		if (exit->target) 
-			exit->target->addLink(rec);
-		return rec;
-	}
-
 	void Assembler::setCallTable(const CallInfo* functions)
 	{
 		_functions = functions;

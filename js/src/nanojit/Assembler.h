@@ -187,7 +187,7 @@ namespace nanojit
 			void		copyRegisters(RegAlloc* copyTo);
 			void		releaseRegisters();
             void        patch(GuardRecord *lr);
-			void		unpatch(GuardRecord *lr);
+            void        patch(SideExit *exit);
 			AssmError   error()	{ return _err; }
 			void		setError(AssmError e) { _err = e; }
 			void		setCallTable(const CallInfo *functions);
@@ -210,9 +210,6 @@ namespace nanojit
 			void		gen(LirFilter* toCompile, NInsList& loopJumps);
 			NIns*		genPrologue();
 			NIns*		genEpilogue();
-
-			GuardRecord* placeGuardRecord(LInsp guard);
-			void		initGuardRecord(LInsp guard, GuardRecord*);
 
 			uint32_t	arReserve(LIns* l);
 			void    	arFree(uint32_t idx);
@@ -254,7 +251,6 @@ namespace nanojit
             GC*					_gc;
             DWB(Fragment*)		_thisfrag;
 			RegAllocMap*		_branchStateMap;
-			GuardRecord*		_latestGuard;
 		
 			const CallInfo	*_functions;
 			
@@ -302,7 +298,6 @@ namespace nanojit
 			void		asm_u2f(LInsp ins);
 			Register	asm_prep_fcall(Reservation *rR, LInsp ins);
 			void		asm_nongp_copy(Register r, Register s);
-			void		asm_bailout(LInsp guard, Register state);
 			void		asm_call(LInsp);
             void        asm_arg(ArgSize, LInsp, Register);
 			Register	asm_binop_rhs_reg(LInsp ins);
