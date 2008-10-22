@@ -291,7 +291,7 @@ SetupDevModeFromSettings(LPDEVMODE aDevMode, nsIPrintSettings* aPrintSettings)
 // Helper Function - Free and reallocate the string
 static nsresult 
 SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, 
-                            LPDEVMODE         aDevMode)
+                            LPDEVMODEW         aDevMode)
 {
   if (aPrintSettings == nsnull) {
     return NS_ERROR_FAILURE;
@@ -1015,8 +1015,8 @@ ShowNativePrintDialog(HWND              aHWnd,
     }
 
     // Setup local Data members
-    psWin->SetDeviceName(device);
-    psWin->SetDriverName(driver);
+    psWin->SetDeviceName(NS_ConvertUTF8toUTF16(device).get());
+    psWin->SetDriverName(NS_ConvertUTF8toUTF16(driver).get());
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
     printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
@@ -1067,7 +1067,7 @@ ShowNativePrintDialog(HWND              aHWnd,
     ::GlobalUnlock(prntdlg.hDevNames);
 
     // Transfer the settings from the native data to the PrintSettings
-    LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
+    LPDEVMODEW devMode = (LPDEVMODEW)::GlobalLock(prntdlg.hDevMode);
     if (devMode == NULL) {
       ::GlobalFree(hGlobalDevMode);
       return NS_ERROR_FAILURE;
