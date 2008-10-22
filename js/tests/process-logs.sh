@@ -113,6 +113,7 @@ for testlogfile in `ls $testlogfiles`; do
     case "$testlogfile" in
         *,js,*) testtype=shell;;
         *,firefox,*) testtype=browser;;
+        *,fennec,*) testtype=browser;;
         *) error "unknown testtype in logfile $testlogfile" $LINENO;;
     esac
 

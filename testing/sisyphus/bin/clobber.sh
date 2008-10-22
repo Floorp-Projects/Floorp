@@ -17,7 +17,7 @@
 #
 # The Initial Developer of the Original Code is
 # Mozilla Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2006.
+# Portions created by the Initial Developer are Copyright (C) 2008.
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -44,20 +44,22 @@ case $product in
     firefox|thunderbird|fennec)
 #        cd $BUILDTREE/mozilla
 
-        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk clean" 2>&1; then
-            error "during client.mk clean" $LINENO
+        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla; make -f client.mk clobber" 2>&1; then
+            error "during client.mk clobber" $LINENO
         fi
         ;;
 
     js)
 #        cd $BUILDTREE/mozilla/js/src/editline
-        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/editline; make -f Makefile.ref clean" 2>&1; then
-            error "during editline clean" $LINENO
+        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src/editline; make -f Makefile.ref clobber" 2>&1; then
+            error "during editline clobber" $LINENO
         fi
 
 #        cd ..
-        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref clean" 2>&1; then
-            error "during SpiderMonkey clean" $LINENO
+        if ! $buildbash $bashlogin -c "cd $BUILDTREE/mozilla/js/src; make -f Makefile.ref clobber" 2>&1; then
+            echo "error during SpiderMonkey clobber." $LINENO
+            echo "Forcing clobber" $LINENO
+            rm -fR $BUILDTREE/mozilla/js/src/*_*.OBJ
         fi
         ;;
 esac
