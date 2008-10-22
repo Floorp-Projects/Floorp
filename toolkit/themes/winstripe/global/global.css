@@ -261,6 +261,10 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
   text-shadow: 1px 1px ThreeDHighlight;
 }
 
+.tooltip-label {
+  margin: 0;
+}
+
 .header {
   font-weight: bold;
 }
