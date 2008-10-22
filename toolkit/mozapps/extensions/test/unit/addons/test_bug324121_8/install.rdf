@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<!-- Compatible to install -->
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>bug324121_8@tests.mozilla.org</em:id>
+    <em:version>1</em:version>
+    
+    <em:targetApplication>
+      <Description>
+        <em:id>toolkit@mozilla.org</em:id>
+        <em:minVersion>1</em:minVersion>
+        <em:maxVersion>2</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    
+    <em:name>Bug 324121 Test 8</em:name>
+    <em:updateURL>http://localhost:4444/data/test_bug324121_8.rdf</em:updateURL>
+    
+  </Description>      
+</RDF>
+
