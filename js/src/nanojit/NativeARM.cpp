@@ -106,7 +106,7 @@ Assembler::genPrologue()
 void
 Assembler::nFragExit(LInsp guard)
 {
-    SideExit* exit = guard->exit();
+    SideExit* exit = guard->record()->exit;
     Fragment *frag = exit->target;
     GuardRecord *lr;
 
@@ -115,7 +115,7 @@ Assembler::nFragExit(LInsp guard)
         lr = 0;
     } else {
         // target doesn't exit yet.  emit jump to epilog, and set up to patch later.
-        lr = placeGuardRecord(guard);
+        lr = guard->record();
 
         // we need to know that there's an extra immediate value available
         // for us; always force a far jump here.
