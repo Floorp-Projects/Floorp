@@ -273,11 +273,9 @@ namespace nanojit
             avmplus::List<LIns*, avmplus::LIST_GCObjects> pending_lives;
 
 			void		asm_cmp(LIns *cond);
-#ifndef NJ_SOFTFLOAT
 			void		asm_fcmp(LIns *cond);
             void        asm_setcc(Register res, LIns *cond);
             NIns *      asm_jmpcc(bool brOnFalse, LIns *cond, NIns *target);
-#endif
 			void		asm_mmq(Register rd, int dd, Register rs, int ds);
             NIns*       asm_exit(LInsp guard);
 			NIns*		asm_leave_trace(LInsp guard);
