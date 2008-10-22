@@ -42,6 +42,7 @@
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGTextPathFrame.h"
+#include "nsCSSFrameConstructor.h"
 
 NS_IMPL_ISUPPORTS1(nsSVGRenderingObserver, nsIMutationObserver)
 
@@ -219,9 +220,9 @@ nsSVGFilterProperty::DoUpdate()
   if (mFrame->IsFrameOfType(nsIFrame::eSVG)) {
     nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
     if (outerSVGFrame) {
-      outerSVGFrame->Invalidate(mFilterRect);
-      UpdateRect();
-      outerSVGFrame->Invalidate(mFilterRect);
+      mFramePresShell->FrameConstructor()->PostRestyleEvent(
+        mFrame->GetContent(), nsReStyleHint(0),
+        nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateEffects));
     }
   } else {
     InvalidateAllContinuations(mFrame);
@@ -385,6 +386,13 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
 
   aFrame->DeleteProperty(nsGkAtoms::stroke);
   aFrame->DeleteProperty(nsGkAtoms::fill);
+
+  // Ensure that the filter's covered area is recalculated correctly
+  // We can't do that in DoUpdate as the referenced frame may not be valid
+  const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
+  if (style->mFilter) {
+    GetEffectProperty(style->mFilter, aFrame, nsGkAtoms::filter, CreateFilterProperty);
+  }
 }
 
 nsSVGFilterProperty *
