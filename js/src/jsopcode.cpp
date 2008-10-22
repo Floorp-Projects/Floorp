@@ -2019,20 +2019,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * problem).
                      */
                     op = (JSOp) pc[oplen];
-                    LOCAL_ASSERT(op != saveop);
-                }
-                rval = POP_STR_PREC(cs->prec + (!inXML && !!(cs->format & JOF_LEFTASSOC)));
-                lval = POP_STR_PREC(cs->prec + (!inXML && !(cs->format & JOF_LEFTASSOC)));
-                if (op != saveop) {
+                    rval = POP_STR();
+                    lval = POP_STR();
                     /* Print only the right operand of the assignment-op. */
                     todo = SprintCString(&ss->sprinter, rval);
                     op = saveop;
                 } else if (!inXML) {
+                    rval = POP_STR_PREC(cs->prec + !!(cs->format & JOF_LEFTASSOC));
+                    lval = POP_STR_PREC(cs->prec + !(cs->format & JOF_LEFTASSOC));
                     todo = Sprint(&ss->sprinter, "%s %s %s",
                                   lval, token, rval);
                 } else {
                     /* In XML, just concatenate the two operands. */
                     LOCAL_ASSERT(op == JSOP_ADD);
+                    rval = POP_STR();
+                    lval = POP_STR();
                     todo = Sprint(&ss->sprinter, ss_format, lval, rval);
                 }
                 break;
