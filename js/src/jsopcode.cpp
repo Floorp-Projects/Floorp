@@ -2902,7 +2902,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                         break;
                     --pos;
                 }
-                JS_ASSERT_IF(saveop == JSOP_ARRAYPUSH, pos == GET_UINT16(pc));
+                JS_ASSERT_IF(saveop == JSOP_ARRAYPUSH,
+                             jp->script->nfixed + pos == GET_UINT16(pc));
 
 #if JS_HAS_GENERATOR_EXPRS
                 if (saveop == JSOP_YIELD) {
