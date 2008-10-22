@@ -1767,8 +1767,53 @@ TraceRecorder::snapshot(ExitType exitType)
     /* It's sufficient to track the native stack use here since all stores above the
        stack watermark defined by guards are killed. */
     trackNativeStackUse(stackSlots + 1);
-    /* reserve space for the type map */
+    /* Capture the type map into a temporary location. */
     unsigned ngslots = traceMonitor->globalSlots->length();
+    unsigned typemap_size = (stackSlots + ngslots) * sizeof(uint8);
+    uint8* typemap = (uint8*)alloca(typemap_size);
+    uint8* m = typemap;
+    /* Determine the type of a store by looking at the current type of the actual value the
+       interpreter is using. For numbers we have to check what kind of store we used last
+       (integer or double) to figure out what the side exit show reflect in its typemap. */
+    FORALL_SLOTS(cx, ngslots, traceMonitor->globalSlots->data(), callDepth,
+        *m++ = determineSlotType(vp);
+    );
+    JS_ASSERT(unsigned(m - typemap) == ngslots + stackSlots);
+    /* If we are capturing the stack state on a JSOP_RESUME instruction, the value on top of
+       the stack is a boxed value. */
+    jsbytecode* pc = fp->regs->pc;
+    if (*pc == JSOP_RESUME) 
+        m[-1] = JSVAL_BOXED;
+    /* If we take a snapshot on a goto, advance to the target address. This avoids inner
+       trees returning on a break goto, which the outer recorder then would confuse with
+       a break in the outer tree. */
+    if (*pc == JSOP_GOTO) 
+        pc += GET_JUMP_OFFSET(pc);
+    else if (*pc == JSOP_GOTOX)
+        pc += GET_JUMPX_OFFSET(pc);
+    int ip_adj = pc - (jsbytecode*)fragment->root->ip;
+    /* Check if we already have a matching side exit. If so use that side exit structure,
+       otherwise we have to create our own. */
+    SideExit** exits = treeInfo->sideExits.data();
+    unsigned nexits = treeInfo->sideExits.length();
+    for (unsigned n = 0; n < nexits; ++n) {
+        SideExit* e = exits[n];
+        if (exitType == LOOP_EXIT &&
+            e->exitType == exitType && 
+            e->ip_adj == ip_adj && 
+            !memcmp(getTypeMap(exits[n]), typemap, typemap_size)) {
+            LIns* data = lir_buf_writer->skip(sizeof(GuardRecord));
+            GuardRecord* rec = (GuardRecord*)data->payload();
+            /* setup guard record structure with shared side exit */
+            memset(rec, 0, sizeof(GuardRecord));
+            SideExit* exit = exits[n];
+            rec->exit = exit;
+            exit->addGuard(rec);
+            AUDIT(mergedLoopExits);
+            return data;
+        }
+    }
+    /* We couldn't find a matching side exit, so create our own side exit structure. */
     LIns* data = lir_buf_writer->skip(sizeof(GuardRecord) +
                                       sizeof(SideExit) + 
                                       (stackSlots + ngslots) * sizeof(uint8));
@@ -1788,30 +1833,15 @@ TraceRecorder::snapshot(ExitType exitType)
         : 0;
     exit->exitType = exitType;
     exit->addGuard(rec);
-    /* If we take a snapshot on a goto, advance to the target address. This avoids inner
-       trees returning on a break goto, which the outer recorder then would confuse with
-       a break in the outer tree. */
-    jsbytecode* pc = fp->regs->pc;
-    if (*pc == JSOP_GOTO) 
-        pc += GET_JUMP_OFFSET(pc);
-    else if (*pc == JSOP_GOTOX)
-        pc += GET_JUMPX_OFFSET(pc);
-    exit->ip_adj = pc - (jsbytecode*)fragment->root->ip;
+    exit->ip_adj = ip_adj;
     exit->sp_adj = (stackSlots * sizeof(double)) - treeInfo->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo);
-    uint8* m = getTypeMap(exit);
-    /* Determine the type of a store by looking at the current type of the actual value the
-       interpreter is using. For numbers we have to check what kind of store we used last
-       (integer or double) to figure out what the side exit show reflect in its typemap. */
-    FORALL_SLOTS(cx, ngslots, traceMonitor->globalSlots->data(), callDepth,
-        *m++ = determineSlotType(vp);
-    );
-    JS_ASSERT(unsigned(m - getTypeMap(exit)) == ngslots + stackSlots);
-
-    /* If we are capturing the stack state on a JSOP_RESUME instruction, the value on top of
-       the stack is a boxed value. */
-    if (*cx->fp->regs->pc == JSOP_RESUME) 
-        m[-1] = JSVAL_BOXED;
+    memcpy(getTypeMap(exit), typemap, typemap_size);
+    /* BIG FAT WARNING: If compilation fails, we currently don't reset the lirbuf so its safe
+       to keep references to the side exits here. If we ever start rewinding those lirbufs,
+       we have to make sure we purge the side exits that then no longer will be in valid
+       memory. */
+    treeInfo->sideExits.add(exit);
     return data;
 }
 
